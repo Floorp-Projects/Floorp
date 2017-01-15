@@ -92,9 +92,10 @@ goog.scope(function() {
                 gl.bufferSubData(gl.ARRAY_BUFFER, 15, data);
                 this.expectError(gl.INVALID_VALUE);
 
-                bufferedLogToConsole('gl.INVALID_VALUE is generated if data is null.');
-                gl.bufferSubData(gl.ARRAY_BUFFER, 0, null);
-                this.expectError(gl.INVALID_VALUE);
+                bufferedLogToConsole('An exception is thrown if data is null.');
+                this.expectThrowNoError(function() {
+                    gl.bufferSubData(gl.ARRAY_BUFFER, 0, null);
+                });
 
                 gl.deleteBuffer(buffer);
             }
@@ -1095,7 +1096,6 @@ goog.scope(function() {
             es3fNegativeBufferApiTests.init(gl);
             tcuTestCase.runner.runCallback(tcuTestCase.runTestCases);
         } catch (err) {
-            console.log(err);
             bufferedLogToConsole(err);
             tcuTestCase.runner.terminate();
         }

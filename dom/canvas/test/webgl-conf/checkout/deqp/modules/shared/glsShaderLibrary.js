@@ -932,9 +932,6 @@ var gluShaderUtil = framework.opengl.gluShaderUtil;
                     assumeToken(Token.TOKEN_SHADER_SOURCE);
                 /** @type {string} */ var source = parseShaderSource(m_curTokenStr);
 
-                //    console.log("old: " + m_curTokenStr);
-                //    console.log("new: " + source);
-
                     advanceToken();
                     switch (token) {
                         case Token.TOKEN_BOTH: bothSource = source; break;

@@ -296,34 +296,6 @@ rrRenderer.PrimitiveList.prototype.getNextPrimitive = function(reset) {
 };
 
 /**
- * @param {Array<number>} v
- * @param {Array<number>} v1
- * @param {Array<number>} v2
- * @param {Array<number>} v3
- * @return {Array<number>}
- */
-rrRenderer.getBarycentricCoefficients = function(v, v1, v2, v3) {
-    var b = [];
-
-    var x = v[0];
-    var y = v[1];
-    var x1 = v1[0];
-    var x2 = v2[0];
-    var x3 = v3[0];
-    var y1 = v1[1];
-    var y2 = v2[1];
-    var y3 = v3[1];
-
-    var det = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
-
-    b[0] = ((y2 - y3) * (x - x3) + (x3 - x2) * (y - y3)) / det;
-    b[1] = ((y3 - y1) * (x - x3) + (x1 - x3) * (y - y3)) / det;
-    b[2] = 1 - b[0] - b[1];
-
-    return b;
-};
-
-/**
  * @param {rrRenderState.RenderState} state
  * @param {rrRenderer.RenderTarget} renderTarget
  * @param {Array<rrFragmentOperations.Fragment>} fragments Fragments to write
@@ -386,7 +358,7 @@ void FragmentProcessor::render (const rr::MultisamplePixelBufferAccess& msColorB
     var stencilState = state.stencilStates[fragmentFacing];
     var colorMaskFactor = [state.colorMask[0] ? 1 : 0, state.colorMask[1] ? 1 : 0, state.colorMask[2] ? 1 : 0, state.colorMask[3] ? 1 : 0];
     var colorMaskNegationFactor = [state.colorMask[0] ? false : true, state.colorMask[1] ? false : true, state.colorMask[2] ? false : true, state.colorMask[3] ? false : true];
-    var sRGBTarget = false;
+    var sRGBTarget = state.sRGBEnabled && colorBuffer.getFormat().isSRGB();
 
     // Scissor test.
 
@@ -550,6 +522,389 @@ rrRenderer.clipTest = function(x, y, z, rect) {
     return true;
 };
 
+// Rasterizer configuration
+rrRenderer.RASTERIZER_SUBPIXEL_BITS = 8;
+rrRenderer.RASTERIZER_MAX_SAMPLES_PER_FRAGMENT = 16;
+
+// Referenced from rrRasterizer.hpp
+
+/**
+ * Get coverage bit value
+ * @param {number} numSamples
+ * @param {number} x
+ * @param {number} y
+ * @param {number} sampleNdx
+ * @return {number}
+ */
+rrRenderer.getCoverageBit = function(numSamples, x, y, sampleNdx) {
+    var maxSamples = 16;
+    assertMsgOptions(maxSamples >= rrRenderer.RASTERIZER_MAX_SAMPLES_PER_FRAGMENT, 'maxSamples should not greater than ' + rrRenderer.RASTERIZER_MAX_SAMPLES_PER_FRAGMENT, false, true);
+    assertMsgOptions(deMath.deInRange32(numSamples, 1, maxSamples) && deMath.deInBounds32(x, 0, 2) && deMath.deInBounds32(y, 0, 2), 'numSamples, x or y not in bound', false, true);
+    return 1 << ((x * 2 + y) * numSamples + sampleNdx);
+};
+
+/**
+ * Get all sample bits for fragment
+ * @param {number} numSamples
+ * @param {number} x
+ * @param {number} y
+ * @return {number}
+ */
+rrRenderer.getCoverageFragmentSampleBits = function(numSamples, x, y) {
+    assertMsgOptions(deMath.deInBounds32(x, 0, 2) && deMath.deInBounds32(y, 0, 2), 'x or y is not in bound 0 to 2', false, true);
+    var fragMask = (1 << numSamples) - 1;
+    return fragMask << (x * 2 + y) * numSamples;
+};
+
+/**
+ * Set coverage bit in coverage mask
+ * @param {number} mask
+ * @param {number} numSamples
+ * @param {number} x
+ * @param {number} y
+ * @param {number} sampleNdx
+ * @param {number} val
+ * @return {number}
+ */
+rrRenderer.setCoverageValue = function(mask, numSamples, x, y, sampleNdx, val) {
+    var bit = rrRenderer.getCoverageBit(numSamples, x, y, sampleNdx);
+    return val ? (mask | bit) : (mask & ~bit);
+};
+
+/**
+ * Test if any sample for fragment is live
+ * @param {number} mask
+ * @param {number} numSamples
+ * @param {number} x
+ * @param {number} y
+ * @return {number}
+ */
+rrRenderer.getCoverageAnyFragmentSampleLive = function(mask, numSamples, x, y) {
+    return (mask & rrRenderer.getCoverageFragmentSampleBits(numSamples, x, y)) != 0;
+};
+
+// Referenced from rrRasterizer.cpp
+
+/**
+ * Pixel coord to sub pixel coord
+ * @param {number} v
+ * @return {number}
+ */
+rrRenderer.toSubpixelCoord = function(v) {
+    return Math.trunc(v * (1 << rrRenderer.RASTERIZER_SUBPIXEL_BITS) + (v < 0 ? -0.5 : 0.5));
+};
+
+/**
+ * Floor sub pixel coord to pixel coord
+ * @param {number} coord
+ * @param {boolean} fillEdge
+ * @return {number}
+ */
+rrRenderer.floorSubpixelToPixelCoord = function(coord, fillEdge) {
+    if (coord >= 0)
+        return Math.trunc((coord - (fillEdge ? 1 : 0)) >> rrRenderer.RASTERIZER_SUBPIXEL_BITS);
+    else
+        return Math.trunc((coord - ((1 << rrRenderer.RASTERIZER_SUBPIXEL_BITS) - (fillEdge ? 0 : 1))) >> rrRenderer.RASTERIZER_SUBPIXEL_BITS);
+};
+
+/**
+ * Ceil sub pixel coord to pixel coord
+ * @param {number} coord
+ * @param {boolean} fillEdge
+ * @return {number}
+ */
+rrRenderer.ceilSubpixelToPixelCoord = function(coord, fillEdge) {
+    if (coord >= 0)
+        return Math.trunc((coord + (1 << rrRenderer.RASTERIZER_SUBPIXEL_BITS) - (fillEdge ? 0 : 1)) >> rrRenderer.RASTERIZER_SUBPIXEL_BITS);
+    else
+        return Math.trunc((coord + (fillEdge ? 1 : 0)) >> rrRenderer.RASTERIZER_SUBPIXEL_BITS);
+};
+
+/**
+ * \brief Edge function - referenced from struct EdgeFunction in rrRasterizer.hpp
+ *
+ * Edge function can be evaluated for point P (in a fixed-point coordinates
+ * with RASTERIZER_SUBPIXEL_BITS fractional part) by computing
+ * D = a * Px + b * Py + c
+ *
+ * D will be fixed-point value where lower (RASTERIZER_SUBPIXEL_BITS * 2) bits
+ * will be fractional part.
+ *
+ * Member function evaluateEdge, reverseEdge and isInsideCCW are referenced from rrRasterizer.cpp.
+ *
+ * @param {number} a
+ * @param {number} b
+ * @param {number} c
+ * @param {boolean} inclusive
+ */
+rrRenderer.edgeFunction = function(a, b, c, inclusive) {
+    this.a = a;
+    this.b = b;
+    this.c = c;
+    this.inclusive = inclusive; // True if edge is inclusive according to fill rules
+};
+
+/**
+ * Evaluate point (x,y)
+ * @param {number} x
+ * @param {number} y
+ * @return {number}
+ */
+rrRenderer.edgeFunction.prototype.evaluateEdge = function(x, y) {
+    return this.a * x + this.b * y + this.c;
+};
+
+/**
+ * Reverse edge (e.g. from CCW to CW)
+ */
+rrRenderer.edgeFunction.prototype.reverseEdge = function () {
+    this.a = -this.a;
+    this.b = -this.b;
+    this.c = -this.c;
+    this.inclusive = !this.inclusive;
+};
+
+/**
+ * Determine if a point with value edgeVal is inside the CCW region of the edge
+ * @param {number} edgeVal
+ * @return {boolean}
+ */
+rrRenderer.edgeFunction.prototype.isInsideCCW = function(edgeVal) {
+    return this.inclusive ? edgeVal >= 0 : edgeVal > 0;
+};
+
+/**
+ * Init an edge function in counter-clockwise (CCW) orientation
+ * @param {number} horizontalFill
+ * @param {number} verticalFill
+ * @param {number} x0
+ * @param {number} y0
+ * @param {number} x1
+ * @param {number} y1
+ * @return {rrRenderer.edgeFunction}
+ */
+rrRenderer.initEdgeCCW = function(horizontalFill, verticalFill, x0, y0, x1, y1) {
+    var xd = x1 - x0;
+    var yd = y1 - y0;
+    var inclusive = false;
+
+    if (yd == 0)
+        inclusive = verticalFill == rrRenderState.VerticalFill.BOTTOM ? xd >= 0 : xd <= 0;
+    else
+        inclusive = horizontalFill == rrRenderState.HorizontalFill.LEFT ? yd <= 0 : yd >=0;
+
+    return new rrRenderer.edgeFunction(y0 - y1, x1 - x0, x0 * y1 - y0 * x1, inclusive);
+};
+
+/**
+ * \brief Triangle rasterizer - referenced from class TriangleRasterizer in rrRasterizer.hpp
+ *
+ * Triangle rasterizer implements following features:
+ * - Rasterization using fixed-point coordinates
+ * - 1-sample rasterization (the value of numSamples always equals 1 in sglrReferenceContext)
+ * - Depth interpolation
+ * - Perspective-correct barycentric computation for interpolation
+ * - Visible face determination
+ * - Clipping - native dEQP does clipping before rasterization; see function drawBasicPrimitives
+ *              in rrRenderer.cpp for more details
+ *
+ * It does not (and will not) implement following:
+ * - Triangle setup
+ * - Degenerate elimination
+ * - Coordinate transformation (inputs are in screen-space)
+ * - Culling - logic can be implemented outside by querying visible face
+ * - Scissoring - (this can be done by controlling viewport rectangle)
+ * - Any per-fragment operations
+ *
+ * @param {rrRenderState.RenderState} state
+ */
+rrRenderer.triangleRasterizer = function(state) {
+    this.m_viewport = state.viewport;
+    this.m_winding = state.rasterization.winding;
+    this.m_horizontalFill = state.rasterization.horizontalFill;
+    this.m_verticalFill = state.rasterization.verticalFill;
+};
+
+/**
+ * Initialize triangle rasterization
+ * @param {vec} v0  Screen-space coordinates (x, y, z) and 1/w for vertex 0
+ * @param {vec} v1  Screen-space coordinates (x, y, z) and 1/w for vertex 1
+ * @param {vec} v2  Screen-space coordinates (x, y, z) and 1/w for vertex 2
+ */
+rrRenderer.triangleRasterizer.prototype.init = function(v0, v1, v2) {
+    this.m_v0 = v0;
+    this.m_v1 = v1;
+    this.m_v2 = v2;
+
+    // Positions in fixed-point coordinates
+    var x0 = rrRenderer.toSubpixelCoord(v0[0]);
+    var y0 = rrRenderer.toSubpixelCoord(v0[1]);
+    var x1 = rrRenderer.toSubpixelCoord(v1[0]);
+    var y1 = rrRenderer.toSubpixelCoord(v1[1]);
+    var x2 = rrRenderer.toSubpixelCoord(v2[0]);
+    var y2 = rrRenderer.toSubpixelCoord(v2[1]);
+
+    // Initialize edge functions
+    if (this.m_winding == rrRenderState.Winding.CCW) {
+        this.m_edge01 = rrRenderer.initEdgeCCW(this.m_horizontalFill, this.m_verticalFill, x0, y0, x1, y1);
+        this.m_edge12 = rrRenderer.initEdgeCCW(this.m_horizontalFill, this.m_verticalFill, x1, y1, x2, y2);
+        this.m_edge20 = rrRenderer.initEdgeCCW(this.m_horizontalFill, this.m_verticalFill, x2, y2, x0, y0);
+    } else {
+        // Reverse edges
+        this.m_edge01 = rrRenderer.initEdgeCCW(this.m_horizontalFill, this.m_verticalFill, x1, y1, x0, y0);
+        this.m_edge12 = rrRenderer.initEdgeCCW(this.m_horizontalFill, this.m_verticalFill, x2, y2, x1, y1);
+        this.m_edge20 = rrRenderer.initEdgeCCW(this.m_horizontalFill, this.m_verticalFill, x0, y0, x2, y2);
+    }
+
+    // Determine face
+    var s = this.m_edge01.evaluateEdge(x2, y2);
+    var positiveArea = (this.m_winding == rrRenderState.Winding.CCW ) ? s > 0 : s < 0;
+    this.m_face = positiveArea ? rrDefs.FaceType.FACETYPE_FRONT : rrDefs.FaceType.FACETYPE_BACK;
+    if (!positiveArea) {
+        // Reverse edges so that we can use CCW area tests & interpolation
+        this.m_edge01.reverseEdge();
+        this.m_edge12.reverseEdge();
+        this.m_edge20.reverseEdge();
+    }
+
+    // Bounding box
+    var minX = Math.min(x0, x1, x2);
+    var maxX = Math.max(x0, x1, x2);
+    var minY = Math.min(y0, y1, y2);
+    var maxY = Math.max(y0, y1, y2);
+
+    this.m_bboxMin = [];
+    this.m_bboxMax = [];
+    this.m_bboxMin[0] = rrRenderer.floorSubpixelToPixelCoord(minX, this.m_horizontalFill == rrRenderState.HorizontalFill.LEFT);
+    this.m_bboxMin[1] = rrRenderer.floorSubpixelToPixelCoord(minY, this.m_verticalFill == rrRenderState.VerticalFill.BOTTOM);
+    this.m_bboxMax[0] = rrRenderer.ceilSubpixelToPixelCoord(maxX, this.m_horizontalFill == rrRenderState.HorizontalFill.RIGHT);
+    this.m_bboxMax[1] = rrRenderer.ceilSubpixelToPixelCoord(maxY, this.m_verticalFill == rrRenderState.VerticalFill.TOP);
+
+    // Clamp to viewport
+    var wX0 = this.m_viewport.rect.left;
+    var wY0 = this.m_viewport.rect.bottom;
+    var wX1 = wX0 + this.m_viewport.rect.width - 1;
+    var wY1 = wY0 + this.m_viewport.rect.height - 1;
+
+    this.m_bboxMin[0] = deMath.clamp(this.m_bboxMin[0], wX0, wX1);
+    this.m_bboxMin[1] = deMath.clamp(this.m_bboxMin[1], wY0, wY1);
+    this.m_bboxMax[0] = deMath.clamp(this.m_bboxMax[0], wX0, wX1);
+    this.m_bboxMax[1] = deMath.clamp(this.m_bboxMax[1], wY0, wY1);
+
+    this.m_curPos = [this.m_bboxMin[0], this.m_bboxMin[1]];
+};
+
+rrRenderer.triangleRasterizer.prototype.rasterize = function() {
+    var fragmentPackets = [];
+    var halfPixel = 1 << (rrRenderer.RASTERIZER_SUBPIXEL_BITS - 1);
+
+    // For depth interpolation; given barycentrics A, B, C = (1 - A -B)
+    // We can reformulate the usual z = z0 * A + z1 * B + z2 * C into more
+    // stable equation z = A * (z0 - z2) + B * (z1 - z2) + z2
+    var za = this.m_v0[2] - this.m_v2[2];
+    var zb = this.m_v1[2] - this.m_v2[2];
+    var zc = this.m_v2[2];
+
+    var zn = this.m_viewport.zn;
+    var zf = this.m_viewport.zf;
+    var depthScale = (zf - zn) / 2;
+    var depthBias = (zf + zn) / 2;
+
+    while (this.m_curPos[1] <= this.m_bboxMax[1]) {
+        var x0 = this.m_curPos[0];
+        var y0 = this.m_curPos[1];
+
+        // Subpixel coords of (x0, y0), (x0 + 1, y0), (x0, y0 + 1), (x0 + 1, y0 + 1)
+        var sx0 = rrRenderer.toSubpixelCoord(x0) + halfPixel;
+        var sx1 = rrRenderer.toSubpixelCoord(x0 + 1) + halfPixel;
+        var sy0 = rrRenderer.toSubpixelCoord(y0) + halfPixel;
+        var sy1 = rrRenderer.toSubpixelCoord(y0 + 1) + halfPixel;
+
+        var sx = [sx0, sx1, sx0, sx1];
+        var sy = [sy0, sy0, sy1, sy1];
+
+        // Viewport test
+        var outX1 = x0 + 1 == this.m_viewport.rect.left + this.m_viewport.rect.width;
+        var outY1 = y0 + 1 == this.m_viewport.rect.bottom + this.m_viewport.rect.height;
+
+        // Coverage
+        var coverage = 0;
+
+        // Evaluate edge values
+        var e01 = [];
+        var e12 = [];
+        var e20 = [];
+        for (var i = 0; i < 4; i++) {
+            e01.push(this.m_edge01.evaluateEdge(sx[i], sy[i]));
+            e12.push(this.m_edge12.evaluateEdge(sx[i], sy[i]));
+            e20.push(this.m_edge20.evaluateEdge(sx[i], sy[i]));
+        }
+
+        // Compute coverage mask
+        coverage = rrRenderer.setCoverageValue(coverage, 1, 0, 0, 0, this.m_edge01.isInsideCCW(e01[0]) && this.m_edge12.isInsideCCW(e12[0]) && this.m_edge20.isInsideCCW(e20[0]));
+        coverage = rrRenderer.setCoverageValue(coverage, 1, 1, 0, 0, !outX1 && this.m_edge01.isInsideCCW(e01[1]) && this.m_edge12.isInsideCCW(e12[1]) && this.m_edge20.isInsideCCW(e20[1]));
+        coverage = rrRenderer.setCoverageValue(coverage, 1, 0, 1, 0, !outY1 && this.m_edge01.isInsideCCW(e01[2]) && this.m_edge12.isInsideCCW(e12[2]) && this.m_edge20.isInsideCCW(e20[2]));
+        coverage = rrRenderer.setCoverageValue(coverage, 1, 1, 1, 0, !outX1 && !outY1 && this.m_edge01.isInsideCCW(e01[3]) && this.m_edge12.isInsideCCW(e12[3]) && this.m_edge20.isInsideCCW(e20[3]));
+
+        // Advance to next location
+        this.m_curPos[0] += 2;
+        if (this.m_curPos[0] > this.m_bboxMax[0]) {
+            this.m_curPos[0] = this.m_bboxMin[0];
+            this.m_curPos[1] += 2;
+        }
+
+        if (coverage == 0)
+            continue; // Discard
+
+        // Compute depth and barycentric coordinates
+        var edgeSum = deMath.add(deMath.add(e01, e12), e20);
+        var z0 = deMath.divide(e12, edgeSum);
+        var z1 = deMath.divide(e20, edgeSum);
+
+        var b0 = deMath.multiply(e12, [this.m_v0[3], this.m_v0[3], this.m_v0[3], this.m_v0[3]]);
+        var b1 = deMath.multiply(e20, [this.m_v1[3], this.m_v1[3], this.m_v1[3], this.m_v1[3]]);
+        var b2 = deMath.multiply(e01, [this.m_v2[3], this.m_v2[3], this.m_v2[3], this.m_v2[3]]);
+        var bSum = deMath.add(deMath.add(b0, b1), b2);
+        var barycentric0 = deMath.divide(b0, bSum);
+        var barycentric1 = deMath.divide(b1, bSum);
+        var barycentric2 = deMath.subtract(deMath.subtract([1, 1, 1, 1], barycentric0), barycentric1);
+
+        // In native dEQP, after rasterization, the pixel (x0, y0) actually represents four pixels:
+        // (x0, y0), (x0 + 1, y0), (x0, y0 + 1) and (x0 + 1, y0 + 1).
+        // The barycentrics and depths of these four pixels are to be computed after rasterization:
+        // barycentrics are computed in function shadeFragments in es3fFboTestUtil.cpp;
+        // depths are computed in function writeFragmentPackets in rrRenderer.cpp.
+
+        // In js, pixels are processed one after another, so their depths and barycentrics should be computed immediately.
+
+        // Determine if (x0, y0), (x0 + 1, y0), (x0, y0 + 1), (x0 + 1, y0 + 1) can be rendered
+        for (var fragNdx = 0; fragNdx < 4; fragNdx++) {
+            var xo = fragNdx % 2;
+            var yo = Math.trunc(fragNdx / 2);
+            var x = x0 + xo;
+            var y = y0 + yo;
+
+            // The value of numSamples always equals 1 in sglrReferenceContext.
+            if(rrRenderer.getCoverageAnyFragmentSampleLive(coverage, 1, xo, yo)) {
+                // Barycentric coordinates - referenced from function readTriangleVarying in rrShadingContext.hpp
+                var b = [barycentric0[fragNdx], barycentric1[fragNdx], barycentric2[fragNdx]];
+
+                // Depth - referenced from writeFragmentPackets in rrRenderer.cpp
+                var depth = z0[fragNdx] * za + z1[fragNdx] * zb + zc;
+                depth = depth * depthScale + depthBias;
+
+                // Clip test
+                // Native dEQP does clipping test before rasterization.
+                if (!rrRenderer.clipTest(x, y, depth, this.m_viewport.rect))
+                    continue;
+
+                fragmentPackets.push(new rrFragmentOperations.Fragment(b, [x, y], depth));
+            }
+        }
+    }
+    return fragmentPackets;
+};
+
 /**
  * @param {rrRenderState.RenderState} state
  * @param {rrRenderer.RenderTarget} renderTarget
@@ -573,6 +928,8 @@ rrRenderer.drawTriangles = function(state, renderTarget, program, vertexAttribs,
             result.push(vertices[indices[i]]);
         return result;
     };
+
+    // Referenced from native dEQP Renderer::drawInstanced() in rrRenderer.cpp
 
     var primitives = new rrRenderer.PrimitiveList(primitive, count, first);
     // Do not draw if nothing to draw
@@ -603,10 +960,12 @@ rrRenderer.drawTriangles = function(state, renderTarget, program, vertexAttribs,
     }
     program.shadeVertices(vertexAttribs, vertexPackets, numVertexPackets);
 
-    var zn = state.viewport.zn;
-    var zf = state.viewport.zf;
-    var depthScale = (zf - zn) / 2;
-    var depthBias = (zf + zn) / 2;
+    // Referenced from native dEQP Renderer::rasterizePrimitive() for triangle rasterization in rrRenderer.cpp
+
+    // In native dEQP, only maxFragmentPackets packets are processed per rasterize-shade-write loop;
+    // in js all packets are processed in one loop.
+
+    var rasterizer = new rrRenderer.triangleRasterizer(state);
 
     for (var prim = primitives.getNextPrimitive(true); prim.length > 0; prim = primitives.getNextPrimitive()) {
         var vertices = selectVertices(vertexPackets, prim);
@@ -615,32 +974,22 @@ rrRenderer.drawTriangles = function(state, renderTarget, program, vertexAttribs,
         var v1 = rrRenderer.transformGLToWindowCoords(state, vertices[1]);
         var v2 = rrRenderer.transformGLToWindowCoords(state, vertices[2]);
 
+        rasterizer.init(v0, v1, v2);
+
+        // Culling
+        if ((state.cullMode == rrRenderState.CullMode.FRONT && rasterizer.m_face == rrDefs.FaceType.FACETYPE_FRONT) ||
+            (state.cullMode == rrRenderState.CullMode.BACK && rasterizer.m_face == rrDefs.FaceType.FACETYPE_BACK))
+        return;
+
+        /* TODO: Add Polygon Offset and Depth Clamp */
+
         // Compute a conservative integer bounding box for the triangle
         var minX = Math.floor(Math.min(v0[0], v1[0], v2[0]));
         var maxX = Math.ceil(Math.max(v0[0], v1[0], v2[0]));
         var minY = Math.floor(Math.min(v0[1], v1[1], v2[1]));
         var maxY = Math.ceil(Math.max(v0[1], v1[1], v2[1]));
 
-        var fragmentPackets = [];
-        for (var i = minX; i <= maxX; i++) {
-            for (var j = minY; j <= maxY; j++) {
-                var x = i + 0.5;
-                var y = j + 0.5;
-
-                // A pixel is inside the triangle iff all its barycentric coordinates are non-negative
-                var b = rrRenderer.getBarycentricCoefficients([x, y], v0, v1, v2);
-                if (b[0] < 0 || b[1] < 0 || b[2] < 0) {
-                    continue;
-                }
-
-                var depth = v0[2] * b[0] + v1[2] * b[1] + v2[2] * b[2];
-                depth = depth * depthScale + depthBias;
-                if (!rrRenderer.clipTest(i, j, depth, state.viewport.rect))
-                    continue;
-                fragmentPackets.push(new rrFragmentOperations.Fragment(b, [i, j], depth));
-            }
-        }
-
+        // Shading context
         var shadingContext = new rrShadingContext.FragmentShadingContext(
             vertices[0].outputs,
             vertices[1].outputs,
@@ -648,8 +997,13 @@ rrRenderer.drawTriangles = function(state, renderTarget, program, vertexAttribs,
         );
         shadingContext.setSize(maxX - minX, maxY - minY);
 
+        // Rasterize
+        var fragmentPackets = rasterizer.rasterize();
+
+        // Shade
         program.shadeFragments(fragmentPackets, shadingContext);
 
+        // Handle fragment shader outputs
         rrRenderer.writeFragments2(state, renderTarget, fragmentPackets);
     }
 };

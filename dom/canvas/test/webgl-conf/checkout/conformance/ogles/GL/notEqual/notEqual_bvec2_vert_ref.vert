@@ -41,7 +41,7 @@ bvec2 ne(in bvec2 a, in bvec2 b)
 void main (void)
 {
 	vec2 c = floor(1.5 * gtf_Color.rg);   // 1/3 true, 2/3 false
-	vec2 result = vec2(ne(bvec2(c), bvec2(true))); 
+	vec2 result = vec2(ne(bvec2(c), bvec2(true)));
 	color = vec4(result, 0.0, 1.0);
 	gl_Position = gtf_ModelViewProjectionMatrix * gtf_Vertex;
 }

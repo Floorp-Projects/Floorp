@@ -37,10 +37,10 @@ void main (void)
 {
 	float x;
 	// Declare a 4 by 4 matrix with unique elements.
-	mat4 a = mat4( 1.0,  2.0,  3.0,  4.0,   
-	               5.0,  6.0,  7.0,  8.0,   
-	               9.0, 10.0, 11.0, 12.0,   
-	              13.0, 14.0, 15.0, 16.0);  
+	mat4 a = mat4( 1.0,  2.0,  3.0,  4.0,
+	               5.0,  6.0,  7.0,  8.0,
+	               9.0, 10.0, 11.0, 12.0,
+	              13.0, 14.0, 15.0, 16.0);
 
 	// Check each element.
 	bool elms = true;
