@@ -56,7 +56,7 @@ void main (void)
 	sum2 = sum2 + s.nest_a.nest_b.b[0][2];
 	sum1 = sum1 + s.nest_a.a[0][3];
 	sum2 = sum2 + s.nest_a.nest_b.b[0][3];
-	
+
 	sum1 = sum1 + s.nest_a.a[1][0];
 	sum2 = sum2 + s.nest_a.nest_b.b[1][0];
 	sum1 = sum1 + s.nest_a.a[1][1];
@@ -65,7 +65,7 @@ void main (void)
 	sum2 = sum2 + s.nest_a.nest_b.b[1][2];
 	sum1 = sum1 + s.nest_a.a[1][3];
 	sum2 = sum2 + s.nest_a.nest_b.b[1][3];
-	
+
 	sum1 = sum1 + s.nest_a.a[2][0];
 	sum2 = sum2 + s.nest_a.nest_b.b[2][0];
 	sum1 = sum1 + s.nest_a.a[2][1];
@@ -74,7 +74,7 @@ void main (void)
 	sum2 = sum2 + s.nest_a.nest_b.b[2][2];
 	sum1 = sum1 + s.nest_a.a[2][3];
 	sum2 = sum2 + s.nest_a.nest_b.b[2][3];
-	
+
 	sum1 = sum1 + s.nest_a.a[3][0];
 	sum2 = sum2 + s.nest_a.nest_b.b[3][0];
 	sum1 = sum1 + s.nest_a.a[3][1];

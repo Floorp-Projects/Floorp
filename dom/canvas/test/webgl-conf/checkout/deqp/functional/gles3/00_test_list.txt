@@ -1,6 +1,11 @@
-builtinprecision/00_test_list.txt
+--min-version 2.0.1 builtinprecision/00_test_list.txt
 draw/00_test_list.txt
 fbocolorbuffer/00_test_list.txt
+fboinvalidate/00_test_list.txt
+fborender/00_test_list.txt
+fragmentoutput/00_test_list.txt
+framebufferblit/00_test_list.txt
+primitiverestart/00_test_list.txt
 shaderindexing/00_test_list.txt
 shadermatrix/00_test_list.txt
 shaderoperator/00_test_list.txt
@@ -22,15 +27,13 @@ clipping.html
 defaultvertexattribute.html
 fbocompleteness.html
 fbodepthbuffer.html
-fboinvalidate.html
-fbomultisample.html
-fborender.html
+fbomultisample.2_samples.html
+fbomultisample.4_samples.html
+fbomultisample.8_samples.html
 fbostatequery.html
 fbostencilbuffer.html
 floatstatequery.html
 fragdepth.html
-fragmentoutput.html
-framebufferblit.html
 indexedstatequery.html
 instancedrendering.html
 integerstatequery.html
@@ -43,9 +46,9 @@ negativeshaderapi.html
 negativestateapi.html
 negativetextureapi.html
 negativevertexarrayapi.html
-occlusionquery.html
+occlusionquery_strict.html
+occlusionquery_conservative.html
 pixelbufferobject.html
-primitiverestart.html
 rasterizerdiscard.html
 rbostatequery.html
 readpixel.html
@@ -54,7 +57,9 @@ samplerstatequery.html
 shaderapi.html
 shaderbuiltinvar.html
 shadercommonfunction.html
-shaderderivate.html
+shaderderivate_dfdx.html
+shaderderivate_dfdy.html
+shaderderivate_fwidth.html
 shaderloop_for.html
 shaderloop_while.html
 shaderloop_do_while.html

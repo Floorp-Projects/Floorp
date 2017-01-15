@@ -41,7 +41,7 @@ bvec2 gte(in ivec2 a, in ivec2 b)
 void main (void)
 {
 	vec2 c = floor(10.0 * gtf_Color.rg - 4.5);   // round to the nearest integer
-	vec2 result = vec2(gte(ivec2(c), ivec2(0))); 
+	vec2 result = vec2(gte(ivec2(c), ivec2(0)));
 	color = vec4(result, 0.0, 1.0);
 	gl_Position = gtf_ModelViewProjectionMatrix * gtf_Vertex;
 }

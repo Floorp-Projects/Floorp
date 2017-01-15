@@ -42,7 +42,7 @@ void main (void)
 	float gray = 0.0;
 	if( (s2.a[0]) && (s2.a[1]) && (s2.b[0]) && (!s2.b[1]) && (s2.b[2]) && (s2.c[0]) && (s2.c[1]) && (s2.c[2]) && (s2.c[3]) )
 	  gray=1.0;
-	else 
+	else
           gray =0.0;
 	color = vec4(gray, gray, gray, 1.0);
 	gl_Position = gtf_ModelViewProjectionMatrix * gtf_Vertex;

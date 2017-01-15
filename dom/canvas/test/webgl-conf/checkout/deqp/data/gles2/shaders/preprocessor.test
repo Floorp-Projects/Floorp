@@ -1306,6 +1306,9 @@ group conditional_inclusion "Conditional Inclusion Tests"
 
 	case basic_2
 		values { output float out0 = 1.0; }
+		# Note: this is expected to fail contrary to native dEQP,
+		# see https://github.com/KhronosGroup/WebGL/pull/1523
+		expect compile_fail
 		both ""
 			precision mediump float;
 			${DECLARATIONS}
@@ -2642,65 +2645,20 @@ end # builtin
 
 group pragmas "Pragma Tests"
 
-	case pragma_vertex
-		values { output float out0 = 1.0; }
+	# Note: pragma_vertex was removed compared to the native dEQP.
+	# This test was in the gles2-failures.txt skip list in the
+	# native dEQP. While it seemed theoretically correct, in
+	# practice, linking the program failed on Mac OS on all GPU
+	# types. Since this version of the dEQP is unlikely to be
+	# revisited, the test was removed here, rather than adding it
+	# to tcuSkipList.js.
 
-		vertex ""
-			#pragma
-			#pragma STDGL invariant(all)
-			#pragma debug(off)
-			#pragma optimize(off)
-
-			precision mediump float;
-			${VERTEX_DECLARATIONS}
-			varying float v_val;
-			void main()
-			{
-				v_val = 1.0;
-				${VERTEX_OUTPUT}
-			}
-		""
-		fragment ""
-			precision mediump float;
-			${FRAGMENT_DECLARATIONS}
-			invariant varying float v_val;
-			void main()
-			{
-				out0 = v_val;
-				${FRAGMENT_OUTPUT}
-			}
-		""
-	end
-
-	case pragma_fragment
-		values { output float out0 = 1.0; }
-
-		vertex ""
-			precision mediump float;
-			${VERTEX_DECLARATIONS}
-			varying float v_val;
-			void main()
-			{
-				v_val = 1.0;
-				${VERTEX_OUTPUT}
-			}
-		""
-		fragment ""
-			#pragma
-			#pragma STDGL invariant(all)
-			#pragma debug(off)
-			#pragma optimize(off)
-
-			precision mediump float;
-			${FRAGMENT_DECLARATIONS}
-			varying float v_val;
-			void main()
-			{
-				out0 = v_val;
-				${FRAGMENT_OUTPUT}
-			}
-		""
-	end
+	# Note: pragma_fragment was removed compared to the native dEQP.
+	# This test was buggy; it required that a varying that was not
+	# invariant in the vertex shader, but invariant in the fragment
+	# shader, must link. The test was in the gles2-failures.txt skip
+	# list in the native test suite. To avoid confusion the test was
+	# removed here, rather than adding it to tcuSkipList.js.
 
 	case pragma_macro_exp
 		values { output float out0 = 1.0; }
