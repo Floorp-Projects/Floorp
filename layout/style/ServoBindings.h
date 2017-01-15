@@ -293,6 +293,7 @@ void Gecko_CSSValue_SetAngle(nsCSSValueBorrowedMut css_value, float radians);
 void Gecko_CSSValue_SetCalc(nsCSSValueBorrowedMut css_value, nsStyleCoord::CalcValue calc);
 void Gecko_CSSValue_SetFunction(nsCSSValueBorrowedMut css_value, int32_t len);
 nsCSSValueBorrowedMut Gecko_CSSValue_GetArrayItem(nsCSSValueBorrowedMut css_value, int32_t index);
+void Gecko_CSSValue_Drop(nsCSSValueBorrowedMut css_value);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 bool Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id);
 
