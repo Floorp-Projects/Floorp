@@ -15,7 +15,6 @@
 #include "nsTArray.h"
 #include "js/TypeDecls.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/dom/TypedArray.h"
 
 namespace mozilla {
 

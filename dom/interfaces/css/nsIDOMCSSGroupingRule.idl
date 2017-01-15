@@ -3,15 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsISupports.idl"
-
-interface nsIDOMCSSRuleList;
+#include "nsIDOMCSSRule.idl"
 
 /**
  * Interface for at-rules that have child rules in the CSS OM.
  */
 [scriptable, uuid(a0e3324a-f911-4baf-9591-5322c76cbb0d)]
-interface nsIDOMCSSGroupingRule : nsISupports
+interface nsIDOMCSSGroupingRule : nsIDOMCSSRule
 {
   readonly attribute nsIDOMCSSRuleList cssRules;
 
