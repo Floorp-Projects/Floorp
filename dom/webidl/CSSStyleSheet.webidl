@@ -7,6 +7,8 @@
  * http://dev.w3.org/csswg/cssom/
  */
 
+interface CSSRule;
+
 enum CSSStyleSheetParsingMode {
   "author",
   "user",

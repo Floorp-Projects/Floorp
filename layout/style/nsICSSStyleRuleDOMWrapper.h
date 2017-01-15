@@ -18,11 +18,6 @@
 #define NS_ICSS_STYLE_RULE_DOM_WRAPPER_IID \
 {0xcee1bbb6, 0x0a32, 0x4cf3, {0x8d, 0x42, 0xba, 0x39, 0x38, 0xe9, 0xec, 0xaa}}
 
-namespace mozilla {
-namespace css {
-class StyleRule;
-} // namespace css
-} // namespace mozilla
 
 class nsICSSStyleRuleDOMWrapper : public nsIDOMCSSStyleRule {
 public:
