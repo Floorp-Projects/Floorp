@@ -295,8 +295,11 @@ goog.scope(function() {
 
         this.addChild(new es3fSyncTests.FenceSyncCase('client_wait_sync_smalldraw', '', 10, es3fSyncTests.WaitCommand.CLIENT_WAIT_SYNC, 0, 0, 0));
         this.addChild(new es3fSyncTests.FenceSyncCase('client_wait_sync_largedraw', '', 100000, es3fSyncTests.WaitCommand.CLIENT_WAIT_SYNC, 0, 0, 0));
-        this.addChild(new es3fSyncTests.FenceSyncCase('client_wait_sync_timeout_smalldraw', '', 10, es3fSyncTests.WaitCommand.CLIENT_WAIT_SYNC, 0, 10, 0));
-        this.addChild(new es3fSyncTests.FenceSyncCase('client_wait_sync_timeout_largedraw', '', 100000, es3fSyncTests.WaitCommand.CLIENT_WAIT_SYNC, 0, 10, 0));
+
+        // Originally the next two test cases' timeout is 10, but in WebGL2 that could be illegal.
+        var max = gl.getParameter(gl.MAX_CLIENT_WAIT_TIMEOUT_WEBGL) || 0;
+        this.addChild(new es3fSyncTests.FenceSyncCase('client_wait_sync_timeout_smalldraw', '', 10, es3fSyncTests.WaitCommand.CLIENT_WAIT_SYNC, 0, max, 0));
+        this.addChild(new es3fSyncTests.FenceSyncCase('client_wait_sync_timeout_largedraw', '', 100000, es3fSyncTests.WaitCommand.CLIENT_WAIT_SYNC, 0, max, 0));
 
         this.addChild(new es3fSyncTests.FenceSyncCase('client_wait_sync_flush_auto', '', 100000, es3fSyncTests.WaitCommand.CLIENT_WAIT_SYNC, gl.SYNC_FLUSH_COMMANDS_BIT, 0, 0));
         this.addChild(new es3fSyncTests.FenceSyncCase('client_wait_sync_flush_manual', '', 100000, es3fSyncTests.WaitCommand.CLIENT_WAIT_SYNC, 0, 0, es3fSyncTests.CaseOptions.FLUSH_BEFORE_WAIT));
