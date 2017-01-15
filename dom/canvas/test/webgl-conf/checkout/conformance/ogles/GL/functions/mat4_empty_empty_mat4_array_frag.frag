@@ -91,7 +91,7 @@ bool is_all(const in mat4 par, const in float value)
 		ret = false;
 	if(par[0][3] != value)
 		ret = false;
-	
+
 	if(par[1][0] != value)
 		ret = false;
 	if(par[1][1] != value)
@@ -100,7 +100,7 @@ bool is_all(const in mat4 par, const in float value)
 		ret = false;
 	if(par[1][3] != value)
 		ret = false;
-		
+
 	if(par[2][0] != value)
 		ret = false;
 	if(par[2][1] != value)
@@ -109,7 +109,7 @@ bool is_all(const in mat4 par, const in float value)
 		ret = false;
 	if(par[2][3] != value)
 		ret = false;
-		
+
 	if(par[3][0] != value)
 		ret = false;
 	if(par[3][1] != value)

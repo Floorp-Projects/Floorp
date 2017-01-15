@@ -464,20 +464,16 @@ group varying "Varying linkage"
 			""
 		end
 
-		# different interpolation
-		case differing_interpolation_1
+		# interpolation_mismatch
+		case interpolation_mismatch_1
 			version 300 es
 			desc "varying interpolation different (flat vs. smooth)"
 			expect link_fail
-			values
-			{
-				input float in0		= [ -1.25 | -25.0 | 1.0 | 2.25 | 3.4 | 16.0 ];
-				output float out0	= [ -1.25 | -25.0 | 1.0 | 2.25 | 3.4 | 16.0 ];
-			}
 
 			vertex ""
 				#version 300 es
 				${VERTEX_DECLARATIONS}
+				in highp float in0;
 				flat out mediump float var;
 				void main()
 				{
@@ -492,8 +488,7 @@ group varying "Varying linkage"
 				in mediump float var;
 				void main()
 				{
-					out0 = var;
-					${FRAGMENT_OUTPUT}
+					${FRAG_COLOR} = vec4(var);
 				}
 			""
 		end
@@ -502,7 +497,6 @@ group varying "Varying linkage"
 		case differing_interpolation_2
 			version 300 es
 			desc "varying interpolation different (smooth vs. centroid)"
-			expect link_fail
 			values
 			{
 				input float in0		= [ -1.25 | -25.0 | 1.0 | 2.25 | 3.4 | 16.0 ];
@@ -2348,6 +2342,125 @@ group varying "Varying linkage"
 end
 
 group uniform "Uniform linkage"
+	group basic "Default block uniforms of scalar and vector types"
+		case precision_conflict_1
+			version 300 es
+			desc "Vertex side uniform has highp, fragment side uniform mediump."
+			expect link_fail
+			values {output float out0 = 3.0;}
+			vertex ""
+				#version 300 es
+				${VERTEX_DECLARATIONS}
+				uniform highp float u_val;
+				out mediump float res;
+				void main()
+				{
+					res = u_val;
+					${VERTEX_OUTPUT}
+				}
+			""
+			fragment ""
+				#version 300 es
+				precision mediump float;
+				uniform float u_val;
+				${FRAGMENT_DECLARATIONS}
+				in mediump float res;
+				void main()
+				{
+					out0 = u_val + res;
+					${FRAGMENT_OUTPUT}
+				}
+			""
+		end
+		case precision_conflict_2
+			version 300 es
+			desc "Vertex side uniform has highp, fragment side uniform mediump."
+			expect link_fail
+			values {output float out0 = 3.0;}
+			vertex ""
+				#version 300 es
+				${VERTEX_DECLARATIONS}
+				uniform highp float u_val;
+				out mediump float res;
+				void main()
+				{
+					res = u_val;
+					${VERTEX_OUTPUT}
+				}
+			""
+			fragment ""
+				#version 300 es
+				precision highp float;
+				uniform mediump float u_val;
+				${FRAGMENT_DECLARATIONS}
+				in mediump float res;
+				void main()
+				{
+					out0 = u_val + res;
+					${FRAGMENT_OUTPUT}
+				}
+			""
+		end
+		case precision_conflict_3
+			version 300 es
+			desc "Vertex side uniform has lowp, fragment side uniform highp."
+			expect link_fail
+			values {output float out0 = 3.0;}
+			vertex ""
+				#version 300 es
+				${VERTEX_DECLARATIONS}
+				uniform lowp int u_val;
+				out mediump float res;
+				void main()
+				{
+					res = float(u_val);
+					${VERTEX_OUTPUT}
+				}
+			""
+			fragment ""
+				#version 300 es
+				precision highp float;
+				uniform highp int u_val;
+				${FRAGMENT_DECLARATIONS}
+				in mediump float res;
+				void main()
+				{
+					out0 = float(u_val) + res;
+					${FRAGMENT_OUTPUT}
+				}
+			""
+		end
+		case precision_conflict_4
+			version 300 es
+			desc "Vertex side uniform has lowp, fragment side uniform mediump."
+			expect link_fail
+			values {output float out0 = 3.0;}
+			vertex ""
+				#version 300 es
+				${VERTEX_DECLARATIONS}
+				uniform lowp vec3 u_val;
+				out mediump float res;
+				void main()
+				{
+					res = u_val.y;
+					${VERTEX_OUTPUT}
+				}
+			""
+			fragment ""
+				#version 300 es
+				precision highp float;
+				uniform mediump vec3 u_val;
+				${FRAGMENT_DECLARATIONS}
+				in mediump float res;
+				void main()
+				{
+					out0 = u_val.z + res;
+					${FRAGMENT_OUTPUT}
+				}
+			""
+		end
+	end
+
 	group struct "Uniform structs"
 		# Struct linkage handling
 		case basic
@@ -3494,43 +3607,6 @@ group uniform "Uniform linkage"
 	end
 
 	group block "Uniform blocks"
-		case precision_mismatch
-			version 300 es
-			expect link_fail
-			vertex ""
-				#version 300 es
-
-				uniform Block
-				{
-					highp vec4 val;
-				};
-
-				${VERTEX_DECLARATIONS}
-				out mediump float res;
-				void main()
-				{
-					res = val.x;
-					${VERTEX_OUTPUT}
-				}
-			""
-			fragment ""
-				#version 300 es
-
-				uniform Block
-				{
-					mediump vec4 val;
-				};
-
-				precision mediump float;
-				${FRAGMENT_DECLARATIONS}
-				in mediump float res;
-				void main()
-				{
-					dEQP_FragColor = val;
-				}
-			""
-		end
-
 		case type_mismatch
 			version 300 es
 			expect link_fail
@@ -3606,46 +3682,9 @@ group uniform "Uniform linkage"
 			""
 		end
 
-		case layout_qualifier_mismatch_1
-			version 300 es
-			expect link_fail
-			vertex ""
-				#version 300 es
-
-				layout(std140) uniform Block
-				{
-					highp vec4 val;
-				};
-
-				${VERTEX_DECLARATIONS}
-				out mediump float res;
-				void main()
-				{
-					res = val.x;
-					${VERTEX_OUTPUT}
-				}
-			""
-			fragment ""
-				#version 300 es
-
-				uniform Block
-				{
-					highp vec4 val;
-				};
-
-				precision mediump float;
-				${FRAGMENT_DECLARATIONS}
-				in mediump float res;
-				void main()
-				{
-					dEQP_FragColor = vec4(val);
-				}
-			""
-		end
-
 		case layout_qualifier_mismatch_2
 			version 300 es
-			expect link_fail
+			expect compile_fail
 			vertex ""
 				#version 300 es
 

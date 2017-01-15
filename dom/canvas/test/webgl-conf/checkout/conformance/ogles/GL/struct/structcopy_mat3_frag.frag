@@ -29,7 +29,7 @@ precision mediump float;
 varying vec4 color;
 
 struct sabcd
-{ 
+{
  mat3 a;
 };
 
@@ -40,7 +40,7 @@ void main (void)
 	s2 = s;
 	float sum=0.0;
 	int i,j;
-	
+
 	sum = sum + s2.a[0][0];
 	sum = sum + s2.a[0][1];
 	sum = sum + s2.a[0][2];
@@ -50,6 +50,6 @@ void main (void)
 	sum = sum + s2.a[2][0];
 	sum = sum + s2.a[2][1];
 	sum = sum + s2.a[2][2];
-	
+
 	gl_FragColor =  vec4( vec3(  sum / 550.0  ), 1.0);
 }

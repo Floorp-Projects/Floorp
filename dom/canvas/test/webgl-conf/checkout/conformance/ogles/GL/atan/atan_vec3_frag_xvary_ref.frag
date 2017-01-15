@@ -37,7 +37,7 @@ void main (void)
 	vec3 sign = vec3(1.0);
 	vec4 result = vec4(0.0, 0.0, 0.0, 1.0);
 
-		
+
 	if(c[0] < 0.0)
 	{
 		sign[0] = -1.0;
@@ -82,7 +82,7 @@ void main (void)
 
 		result[0] = sign[0] * (M_PI / 2.0 - atan_c[0]) / M_PI + 0.5;
 	}
-		
+
 	if(c[1] < 0.0)
 	{
 		sign[1] = -1.0;
@@ -127,8 +127,8 @@ void main (void)
 
 		result[1] = sign[1] * (M_PI / 2.0 - atan_c[1]) / M_PI + 0.5;
 	}
-	
-	
+
+
 	if(c[2] < 0.0)
 	{
 		sign[2] = -1.0;

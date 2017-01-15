@@ -31,10 +31,10 @@ varying vec4 color;
 bool _all(in bvec2 a)
 {
 	bool temp = true;
-	
+
 	if(!a[0]) temp = false;
 	if(!a[1]) temp = false;
-	
+
 	return temp;
 }
 

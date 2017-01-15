@@ -43,7 +43,7 @@ bvec3 ne(in vec3 a, in vec3 b)
 void main (void)
 {
 	vec3 c = floor(10.0 * gtf_Color.rgb - 4.5);   // round to the nearest integer
-	vec3 result = vec3(ne(c, vec3(0.0))); 
+	vec3 result = vec3(ne(c, vec3(0.0)));
 	color = vec4(result, 1.0);
 	gl_Position = gtf_ModelViewProjectionMatrix * gtf_Vertex;
 }

@@ -45,6 +45,6 @@ bvec2 eq(in bvec2 a, in bvec2 b)
 void main (void)
 {
 	vec2 c = floor(1.5 * color.rg);   // 1/3 true, 2/3 false
-	vec2 result = vec2(eq(bvec2(c), bvec2(true))); 
+	vec2 result = vec2(eq(bvec2(c), bvec2(true)));
 	gl_FragColor = vec4(result, 0.0, 1.0);
 }

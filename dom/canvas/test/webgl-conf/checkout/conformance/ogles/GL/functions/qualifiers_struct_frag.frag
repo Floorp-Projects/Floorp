@@ -40,7 +40,7 @@ sabcd qualifiers(in sabcd a, out sabcd b, inout sabcd c, const in sabcd d,
 sabcd e)
 {
         sabcd one = sabcd(1.0, 1.0, 1.0, 1.0);
-        
+
         b = a;
 
         c.a += d.a;

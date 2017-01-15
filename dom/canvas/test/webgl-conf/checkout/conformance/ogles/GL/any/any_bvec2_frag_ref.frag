@@ -31,7 +31,7 @@ varying vec4 color;
 bool _any(in bvec2 a)
 {
 	bool temp = false;
-	
+
 	if(a[0]) temp = true;
 	if(a[1]) temp = true;
 
