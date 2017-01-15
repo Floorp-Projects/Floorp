@@ -11,7 +11,7 @@
 namespace mozilla {
 
 AndroidMediaDecoder::AndroidMediaDecoder(MediaDecoderOwner* aOwner,
-                                         const nsACString& aType)
+                                         const MediaContentType& aType)
   : MediaDecoder(aOwner), mType(aType)
 {
 }

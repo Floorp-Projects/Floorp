@@ -100,6 +100,7 @@ this.Heartbeat = class {
 
     // so event handlers are consistent
     this.handleWindowClosed = this.handleWindowClosed.bind(this);
+    this.close = this.close.bind(this);
 
     if (this.options.engagementButtonLabel) {
       this.buttons = [{
@@ -208,7 +209,7 @@ this.Heartbeat = class {
     }, surveyDuration);
 
     this.sandboxManager.addHold("heartbeat");
-    CleanupManager.addCleanupHandler(() => this.close());
+    CleanupManager.addCleanupHandler(this.close);
   }
 
   maybeNotifyHeartbeat(name, data = {}) {
@@ -281,10 +282,7 @@ this.Heartbeat = class {
       this.eventEmitter.emit("TelemetrySent", Cu.cloneInto(payload, this.sandboxManager.sandbox));
 
       // Survey is complete, clear out the expiry timer & survey configuration
-      if (this.surveyEndTimer) {
-        clearTimeout(this.surveyEndTimer);
-        this.surveyEndTimer = null;
-      }
+      this.endTimerIfPresent("surveyEndTimer");
 
       this.pingSent = true;
       this.surveyResults = null;
@@ -315,12 +313,16 @@ this.Heartbeat = class {
       this.chromeWindow.gBrowser.selectedTab = this.chromeWindow.gBrowser.addTab(this.options.postAnswerUrl.toString());
     }
 
-    if (this.surveyEndTimer) {
-      clearTimeout(this.surveyEndTimer);
-      this.surveyEndTimer = null;
-    }
+    this.endTimerIfPresent("surveyEndTimer");
 
-    setTimeout(() => this.close(), NOTIFICATION_TIME);
+    this.engagementCloseTimer = setTimeout(() => this.close(), NOTIFICATION_TIME);
+  }
+
+  endTimerIfPresent(timerName) {
+    if (this[timerName]) {
+      clearTimeout(this[timerName]);
+      this[timerName] = null;
+    }
   }
 
   handleWindowClosed() {
@@ -333,6 +335,10 @@ this.Heartbeat = class {
   }
 
   cleanup() {
+    // Kill the timers which might call things after we've cleaned up:
+    this.endTimerIfPresent("surveyEndTimer");
+    this.endTimerIfPresent("engagementCloseTimer");
+
     this.sandboxManager.removeHold("heartbeat");
     // remove listeners
     this.chromeWindow.removeEventListener("SSWindowClosing", this.handleWindowClosed);
@@ -340,7 +346,10 @@ this.Heartbeat = class {
     this.chromeWindow = null;
     this.notificationBox = null;
     this.notification = null;
+    this.notice = null;
     this.eventEmitter = null;
     this.sandboxManager = null;
+    // Ensure we don't re-enter and release the CleanupManager's reference to us:
+    CleanupManager.removeCleanupHandler(this.close);
   }
 };

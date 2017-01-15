@@ -25,7 +25,7 @@ typedef mozilla::layers::Image Image;
 typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
 
 AndroidMediaReader::AndroidMediaReader(AbstractMediaDecoder *aDecoder,
-                                       const nsACString& aContentType) :
+                                       const MediaContentType& aContentType) :
   MediaDecoderReader(aDecoder),
   mType(aContentType),
   mPlugin(nullptr),
