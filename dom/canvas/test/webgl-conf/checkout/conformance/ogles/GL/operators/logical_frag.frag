@@ -33,15 +33,15 @@ void main (void)
 bool result = true;
 	bool a = true;
 	bool b = true;
-	
+
 	if( (a&&b) )
 		result = result && true;
-	else 
+	else
 		result = result && false;
-	
+
 	if( (a||b) )
 		result = result && true;
-	else 
+	else
 		result = result && false;
 
 	if( !(a^^b) )
@@ -51,15 +51,15 @@ bool result = true;
 
 	a = true;
 	b = false;
-	
+
 	if( !(a&&b) )
 		result = result && true;
-	else 
+	else
 		result = result && false;
-	
+
 	if( (a||b) )
 		result = result && true;
-	else 
+	else
 		result = result && false;
 
 	if( (a^^b) )
@@ -72,12 +72,12 @@ bool result = true;
 
 	if( !(a&&b) )
 		result = result && true;
-	else 
+	else
 		result = result && false;
-	
+
 	if( (a||b) )
 		result = result && true;
-	else 
+	else
 		result = result && false;
 
 	if( (a^^b) )
@@ -90,12 +90,12 @@ bool result = true;
 
 	if( !(a&&b) )
 		result = result && true;
-	else 
+	else
 		result = result && false;
-	
+
 	if( !(a||b) )
 		result = result && true;
-	else 
+	else
 		result = result && false;
 
 	if( !(a^^b) )

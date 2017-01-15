@@ -78,7 +78,7 @@ void main (void)
 			if(y < 0.0) result.r -= 0.5;
 			else if(y > 0.0) result.r += 0.5;
 	}
-	
+
 	color = result;
 	gl_Position = gtf_ModelViewProjectionMatrix * gtf_Vertex;
 }

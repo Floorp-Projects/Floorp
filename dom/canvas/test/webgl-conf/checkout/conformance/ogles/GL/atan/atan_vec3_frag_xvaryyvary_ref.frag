@@ -39,7 +39,7 @@ void main (void)
 	vec3 sign = vec3(1.0);
 	vec4 result = vec4(0.0, 0.0, 0.0, 1.0);
 	const float epsilon = 1.0e-4;
-	
+
 	// Avoid evaluating atan(0, x) for x < epsilon because it's implementation-dependent
 	if(x[0] > epsilon || abs(y[0]) > epsilon)
 	{
@@ -92,10 +92,10 @@ void main (void)
 			if(y[0] < 0.0) result[0] -= 0.5;
 			else if(y[0] > 0.0) result[0] += 0.5;
 	}
-	
+
 	if(x[1] > epsilon || abs(y[1]) > epsilon)
 	{
-	
+
 		if(x[1] < 0.0 ^^ y[1] < 0.0)
 		{
 			sign[1] = -1.0;
@@ -123,7 +123,7 @@ void main (void)
 		else
 		{
 			c[1] = abs(x[1] / y[1]);
-	
+
 			// Taylors series expansion for atan
 			atan_c[1] += scale[1] * pow(c[1], float(1)) / float(1);
 			scale[1] *= -1.0;
@@ -145,10 +145,10 @@ void main (void)
 			if(y[1] < 0.0) result[1] -= 0.5;
 			else if(y[1] > 0.0) result[1] += 0.5;
 	}
-	
+
 	if(x[2] > epsilon || abs(y[2]) > epsilon)
 	{
-	
+
 		if(x[2] < 0.0 ^^ y[2] < 0.0)
 		{
 			sign[2] = -1.0;
