@@ -27,6 +27,7 @@ goog.require('framework.common.tcuTestCase');
 goog.require('framework.common.tcuTexture');
 goog.require('functional.gles3.es3fApiCase');
 goog.require('framework.opengl.gluTexture');
+goog.require('framework.opengl.gluTextureUtil');
 
 goog.scope(function() {
 
@@ -35,6 +36,12 @@ goog.scope(function() {
     var es3fApiCase = functional.gles3.es3fApiCase;
     var tcuTestCase = framework.common.tcuTestCase;
     var gluTexture = framework.opengl.gluTexture;
+    var gluTextureUtil = framework.opengl.gluTextureUtil;
+
+    function etc2Unsupported() {
+        debug("Skipping test: no support for WEBGL_compressed_texture_etc");
+    }
+
 
     /**
      * @param {number} width
@@ -69,6 +76,8 @@ goog.scope(function() {
     * @param {WebGL2RenderingContext} gl
     */
     es3fNegativeTextureApiTests.init = function(gl) {
+
+        var haveCompressedTextureETC = gluTextureUtil.enableCompressedTextureETC();
 
         var testGroup = tcuTestCase.runner.testCases;
 
@@ -125,6 +134,7 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedteximage2d_invalid_target', 'Invalid gl.compressedTexImage2D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
 
             /** @type {Array<WebGLTexture>} */ var texture = [];
             texture[0] = gl.createTexture();
@@ -187,6 +197,7 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedteximage2d_neg_level', 'Invalid gl.compressedTexImage2D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
 
 
             /** @type {Array<WebGLTexture>} */ var texture = [];
@@ -222,6 +233,7 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedteximage2d_max_level', 'Invalid gl.compressedTexImage2D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
 
 
             /** @type {Array<WebGLTexture>} */ var texture = [];
@@ -263,6 +275,7 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedteximage2d_neg_width_height', 'Invalid gl.compressedTexImage2D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
 
 
             /** @type {Array<WebGLTexture>} */ var texture = [];
@@ -340,6 +353,7 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedteximage2d_max_width_height', 'Invalid gl.compressedTexImage2D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
 
 
             /** @type {Array<WebGLTexture>} */ var texture = [];
@@ -418,6 +432,7 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedteximage2d_invalid_border', 'Invalid gl.compressedTexImage2D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
 
 
             /** @type {Array<WebGLTexture>} */ var texture = [];
@@ -482,6 +497,7 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedteximage2d_invalid_size', 'Invalid gl.compressedTexImage2D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
 
 
             /** @type {WebGLTexture} */ var texture;
@@ -973,14 +989,14 @@ goog.scope(function() {
             bufferedLogToConsole('gl.INVALID_VALUE is generated if level is greater than log_2(gl.MAX_TEXTURE_SIZE) for 2D texture targets.');
             /** @type{number} */ var log2MaxTextureSize = Math.floor(Math.log2(/** @type{number} */(gl.getParameter(gl.MAX_TEXTURE_SIZE)))) + 1;
             gl.copyTexSubImage2D(gl.TEXTURE_2D, log2MaxTextureSize, 0, 0, 0, 0, 4, 4);
-            this.expectError(gl.INVALID_VALUE);
+            this.expectError([gl.INVALID_VALUE, gl.INVALID_OPERATION]);
 
             bufferedLogToConsole('gl.INVALID_VALUE is generated if level is greater than log_2(gl.MAX_CUBE_MAP_SIZE) for cubemap targets.');
             /** @type{number} */ var log2MaxCubemapSize = Math.floor(Math.log2(/** @type{number} */(gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE)))) + 1;
             var local = this;
             es3fNegativeTextureApiTests.forCubeFaces(function(faceGL) {
                 gl.copyTexSubImage2D(faceGL, log2MaxCubemapSize, 0, 0, 0, 0, 4, 4);
-                local.expectError(gl.INVALID_VALUE);
+                local.expectError([gl.INVALID_VALUE, gl.INVALID_OPERATION]);
             });
 
             gl.deleteTexture(texture[0]);
@@ -1108,6 +1124,8 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('generatemipmap', 'Invalid gl.generateMipmap() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
+
             /** @type{Array<WebGLTexture>} */ var texture = [];
             /** @type{WebGLFramebuffer} */ var fbo;
             texture[0] = gl.createTexture();
@@ -1608,14 +1626,14 @@ goog.scope(function() {
             bufferedLogToConsole('gl.INVALID_VALUE is generated if level is greater than log_2(gl.MAX_TEXTURE_SIZE).');
             /** @type{number} */ var log2MaxTextureSize = Math.floor(Math.log2(/** @type{number} */(gl.getParameter(gl.MAX_TEXTURE_SIZE)))) + 1;
             gl.texSubImage2D(gl.TEXTURE_2D, log2MaxTextureSize, 0, 0, 0, 0, gl.RGB, gl.UNSIGNED_BYTE, uint8);
-            this.expectError(gl.INVALID_VALUE);
+            this.expectError([gl.INVALID_VALUE, gl.INVALID_OPERATION]);
 
             bufferedLogToConsole('gl.INVALID_VALUE is generated if level is greater than log_2(gl.MAX_CUBE_MAP_TEXTURE_SIZE).');
             /** @type{number} */ var log2MaxCubemapSize = Math.floor(Math.log2(/** @type{number} */(gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE)))) + 1;
             var local = this;
             es3fNegativeTextureApiTests.forCubeFaces(function(faceGL) {
                 gl.texSubImage2D(faceGL, log2MaxCubemapSize, 0, 0, 0, 0, gl.RGB, gl.UNSIGNED_BYTE, uint8);
-                local.expectError(gl.INVALID_VALUE);
+                local.expectError([gl.INVALID_VALUE, gl.INVALID_OPERATION]);
             });
 
             gl.deleteTexture(texture[0]);
@@ -1780,6 +1798,8 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedtexsubimage2d', 'Invalid gl.compressedTexSubImage2D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
+
             /** @type{WebGLTexture} */ var texture;
             texture = gl.createTexture();
             gl.bindTexture (gl.TEXTURE_2D, texture);
@@ -1816,6 +1836,8 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedtexsubimage2d_neg_level', 'Invalid gl.compressedTexSubImage2D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
+
             /** @type{Array<WebGLTexture>} */ var texture = [];
             texture[0] = gl.createTexture();
             texture[1] = gl.createTexture();
@@ -1845,6 +1867,8 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedtexsubimage2d_max_level', 'Invalid gl.compressedTexSubImage2D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
+
             /** @type{Array<WebGLTexture>} */ var texture = [];
             texture[0] = gl.createTexture();
             texture[1] = gl.createTexture();
@@ -1860,14 +1884,14 @@ goog.scope(function() {
             bufferedLogToConsole('gl.INVALID_VALUE is generated if level is greater than log_2(gl.MAX_TEXTURE_SIZE).');
             /** @type{number} */ var log2MaxTextureSize = Math.floor(Math.log2(/** @type{number} */(gl.getParameter(gl.MAX_TEXTURE_SIZE)))) + 1;
             gl.compressedTexSubImage2D(gl.TEXTURE_2D, log2MaxTextureSize, 0, 0, 0, 0, gl.COMPRESSED_RGBA8_ETC2_EAC, new Uint8Array(0));
-            this.expectError(gl.INVALID_VALUE);
+            this.expectError([gl.INVALID_VALUE, gl.INVALID_OPERATION]);
 
             bufferedLogToConsole('gl.INVALID_VALUE is generated if level is greater than log_2(gl.MAX_CUBE_MAP_TEXTURE_SIZE).');
             /** @type{number} */ var log2MaxCubemapSize = Math.floor(Math.log2(/** @type{number} */(gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE)))) + 1;
             var local = this;
             es3fNegativeTextureApiTests.forCubeFaces(function(faceGL) {
                 gl.compressedTexSubImage2D(faceGL, log2MaxCubemapSize, 0, 0, 0, 0, gl.COMPRESSED_RGBA8_ETC2_EAC, new Uint8Array(0));
-                local.expectError(gl.INVALID_VALUE);
+                local.expectError([gl.INVALID_VALUE, gl.INVALID_OPERATION]);
             });
 
             gl.deleteTexture(texture[0]);
@@ -1876,6 +1900,8 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedtexsubimage2d_neg_offset', 'Invalid gl.compressedTexSubImage2D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
+
             /** @type{ WebGLTexture} */ var texture;
             texture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -1898,6 +1924,8 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedtexsubimage2d_invalid_offset', 'Invalid gl.compressedTexSubImage2D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
+
             /** @type{WebGLTexture} */ var texture;
             texture = gl.createTexture();
             gl.bindTexture (gl.TEXTURE_2D, texture);
@@ -1918,6 +1946,8 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedtexsubimage2d_neg_width_height', 'Invalid gl.compressedTexSubImage2D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
+
             /** @type{WebGLTexture} */ var texture;
             texture = gl.createTexture();
             gl.bindTexture (gl.TEXTURE_2D, texture);
@@ -1937,6 +1967,8 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedtexsubimage2d_invalid_size', 'Invalid gl.compressedTexImage2D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
+
             /** @type{WebGLTexture} */ var texture;
             texture = gl.createTexture();
             gl.bindTexture (gl.TEXTURE_2D, texture);
@@ -2216,11 +2248,11 @@ goog.scope(function() {
             /** @type {ArrayBufferView} */ var uint8 = new Uint8Array(4);
             bufferedLogToConsole('gl.INVALID_VALUE is generated if level is greater than log_2(gl.MAX_3D_TEXTURE_SIZE).');
             gl.texSubImage3D(gl.TEXTURE_3D, log2Max3DTextureSize, 0, 0, 0, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, uint8);
-            this.expectError(gl.INVALID_VALUE);
+            this.expectError([gl.INVALID_VALUE, gl.INVALID_OPERATION]);
 
             bufferedLogToConsole('gl.INVALID_VALUE is generated if level is greater than log_2(gl.MAX_TEXTURE_SIZE).');
             gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, log2MaxTextureSize, 0, 0, 0, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, uint8);
-            this.expectError(gl.INVALID_VALUE);
+            this.expectError([gl.INVALID_VALUE, gl.INVALID_OPERATION]);
 
             gl.deleteTexture(texture[0]);
             gl.deleteTexture(texture[1]);
@@ -2356,11 +2388,11 @@ goog.scope(function() {
 
             bufferedLogToConsole('gl.INVALID_VALUE is generated if level is greater than log_2(gl.MAX_3D_TEXTURE_SIZE).');
             gl.copyTexSubImage3D(gl.TEXTURE_3D, log2Max3DTextureSize, 0, 0, 0, 0, 0, 4, 0);
-            this.expectError(gl.INVALID_VALUE);
+            this.expectError([gl.INVALID_VALUE, gl.INVALID_OPERATION]);
 
             bufferedLogToConsole('gl.INVALID_VALUE is generated if level is greater than log_2(gl.MAX_TEXTURE_SIZE).');
             gl.copyTexSubImage3D(gl.TEXTURE_2D_ARRAY, log2MaxTextureSize, 0, 0, 0, 0, 0, 4, 0);
-            this.expectError(gl.INVALID_VALUE);
+            this.expectError([gl.INVALID_VALUE, gl.INVALID_OPERATION]);
 
             gl.deleteTexture(texture[0]);
             gl.deleteTexture(texture[1]);
@@ -2459,6 +2491,7 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedteximage3d', 'Invalid gl.compressedTexImage3D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
 
             /** @type{Array<WebGLTexture>} */ var texture = [];
 
@@ -2486,6 +2519,8 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedteximage3d_neg_level', 'Invalid gl.compressedTexImage3D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
+
             /** @type{ WebGLTexture} */ var texture;
             texture = gl.createTexture();
             gl.bindTexture (gl.TEXTURE_2D_ARRAY, texture);
@@ -2499,6 +2534,8 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedteximage3d_max_level', 'Invalid gl.compressedTexImage3D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
+
             /** @type{ WebGLTexture} */ var texture;
             texture = gl.createTexture();
             gl.bindTexture (gl.TEXTURE_2D_ARRAY, texture);
@@ -2506,7 +2543,7 @@ goog.scope(function() {
             bufferedLogToConsole('gl.INVALID_VALUE is generated if level is greater than log_2(gl.MAX_TEXTURE_SIZE).');
             /** @type{number} */ var log2MaxTextureSize = Math.floor(Math.log2(/** @type{number} */(gl.getParameter(gl.MAX_TEXTURE_SIZE)))) + 1;
             gl.compressedTexImage3D(gl.TEXTURE_2D_ARRAY, log2MaxTextureSize, gl.COMPRESSED_RGBA8_ETC2_EAC, 0, 0, 0, 0, new Uint8Array(0));
-            this.expectError(gl.INVALID_VALUE);
+            this.expectError([gl.INVALID_VALUE, gl.INVALID_OPERATION]);
 
             gl.deleteTexture(texture);
 
@@ -2514,6 +2551,8 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedteximage3d_neg_width_height_depth', 'Invalid gl.compressedTexImage3D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
+
             /** @type{ WebGLTexture} */ var texture;
             texture = gl.createTexture();
             gl.bindTexture (gl.TEXTURE_2D_ARRAY, texture);
@@ -2534,6 +2573,7 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedteximage3d_max_width_height_depth', 'Invalid gl.compressedTexImage3D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
 
             /** @type{ WebGLTexture} */ var texture;
             texture = gl.createTexture();
@@ -2557,6 +2597,7 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedteximage3d_invalid_border', 'Invalid gl.compressedTexImage3D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
 
             /** @type{ WebGLTexture} */ var texture;
             texture = gl.createTexture();
@@ -2574,6 +2615,7 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedteximage3d_invalid_size', 'Invalid gl.compressedTexImage3D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
 
             /** @type{ WebGLTexture} */ var texture;
             texture = gl.createTexture();
@@ -2597,6 +2639,8 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedtexsubimage3d', 'Invalid gl.compressedTexSubImage3D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
+
             bufferedLogToConsole('gl.INVALID_ENUM is generated if target is invalid.');
             /** @type{WebGLTexture} */ var texture;
             texture = gl.createTexture();
@@ -2636,6 +2680,8 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedtexsubimage3d_neg_level', 'Invalid gl.compressedTexSubImage3D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
+
             /** @type{WebGLTexture} */ var texture;
             texture = gl.createTexture();
             gl.bindTexture (gl.TEXTURE_2D_ARRAY, texture);
@@ -2651,6 +2697,8 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedtexsubimage3d_max_level', 'Invalid gl.compressedTexSubImage3D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
+
             /** @type{WebGLTexture} */ var texture;
             texture = gl.createTexture();
             gl.bindTexture (gl.TEXTURE_2D_ARRAY, texture);
@@ -2660,13 +2708,15 @@ goog.scope(function() {
             bufferedLogToConsole('gl.INVALID_VALUE is generated if level is greater than log_2(gl.MAX_TEXTURE_SIZE).');
             /** @type{number} */ var log2MaxTextureSize = Math.floor(Math.log2(/** @type{number} */(gl.getParameter(gl.MAX_TEXTURE_SIZE)))) + 1;
             gl.compressedTexSubImage3D(gl.TEXTURE_2D_ARRAY, log2MaxTextureSize, 0, 0, 0, 0, 0, 0, gl.COMPRESSED_RGBA8_ETC2_EAC, new Uint8Array(0));
-            this.expectError(gl.INVALID_VALUE);
+            this.expectError([gl.INVALID_VALUE, gl.INVALID_OPERATION]);
 
             gl.deleteTexture(texture);
         }));
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedtexsubimage3d_neg_offset', 'Invalid gl.compressedTexSubImage3D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
+
             /** @type{WebGLTexture} */ var texture;
             texture = gl.createTexture();
             gl.bindTexture (gl.TEXTURE_2D_ARRAY, texture);
@@ -2688,6 +2738,8 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedtexsubimage3d_invalid_offset', 'Invalid gl.compressedTexSubImage3D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
+
             /** @type{WebGLTexture} */ var texture;
             texture = gl.createTexture();
             gl.bindTexture (gl.TEXTURE_2D_ARRAY, texture);
@@ -2710,6 +2762,8 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedtexsubimage3d_neg_width_height_depth', 'Invalid gl.compressedTexSubImage3D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
+
             /** @type{WebGLTexture} */ var texture;
             texture = gl.createTexture();
             gl.bindTexture (gl.TEXTURE_2D_ARRAY, texture);
@@ -2731,6 +2785,8 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('compressedtexsubimage3d_invalid_size', 'Invalid gl.compressedTexSubImage3D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
+
             /** @type{WebGLTexture} */ var texture;
             texture = gl.createTexture();
             gl.bindTexture (gl.TEXTURE_2D_ARRAY, texture);
@@ -2751,6 +2807,7 @@ goog.scope(function() {
 
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('texstorage2d', 'Invalid gl.texStorage2D() usage', gl,
         function() {
+            if (!haveCompressedTextureETC) { etc2Unsupported(); return; }
             /** @type{WebGLTexture} */ var texture;
             texture = gl.createTexture();
             gl.bindTexture (gl.TEXTURE_2D, texture);

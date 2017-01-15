@@ -145,7 +145,7 @@ function denormalizeColor(srcInternalFormat, destType, color) {
     case gl.SRGB8_ALPHA8:
     case gl.RGB10_A2:
       srcIsNormalized = true;
-      tol = 5;
+      tol = 6;
       break;
     case gl.RGBA4:
       srcIsNormalized = true;
@@ -191,6 +191,7 @@ function denormalizeColor(srcInternalFormat, destType, color) {
       result[2] = result[2] * 0x1F;
       break;
     case gl.UNSIGNED_INT_2_10_10_10_REV:
+      tol = 25;
       result[0] = result[0] * 0x3FF;
       result[1] = result[1] * 0x3FF;
       result[2] = result[2] * 0x3FF;
@@ -656,4 +657,3 @@ var successfullyParsed = true;
 <script src="../../js/js-test-post.js"></script>
 </body>
 </html>
-

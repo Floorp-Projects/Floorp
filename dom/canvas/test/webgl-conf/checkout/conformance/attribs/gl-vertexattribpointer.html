@@ -66,34 +66,37 @@ if (!gl) {
   var vertexObject = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, vertexObject);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(0), gl.STATIC_DRAW);
-  
+
   if (wtu.getDefault3DContextVersion() < 2) {
     gl.vertexAttribPointer(0, 1, gl.INT, 0, 0, 0);
     wtu.glErrorShouldBe(gl, gl.INVALID_ENUM,
-	    "vertexAttribPointer should not support INT");
+            "vertexAttribPointer should not support INT");
     gl.vertexAttribPointer(0, 1, gl.UNSIGNED_INT, 0, 0, 0);
     wtu.glErrorShouldBe(gl, gl.INVALID_ENUM,
-	    "vertexAttribPointer should not support UNSIGNED_INT");
+            "vertexAttribPointer should not support UNSIGNED_INT");
     gl.vertexAttribPointer(0, 1, gl.FIXED, 0, 0, 0);
     wtu.glErrorShouldBe(gl, gl.INVALID_ENUM,
-	    "vertexAttribPointer should not support FIXED");
+            "vertexAttribPointer should not support FIXED");
   }
 
   var checkVertexAttribPointer = function(
       gl, err, reason, size, type, normalize, stride, offset) {
     gl.vertexAttribPointer(0, size, type, normalize, stride, offset);
+    var succeeded = (err == gl.NO_ERROR);
     wtu.glErrorShouldBe(gl, err,
         "gl.vertexAttribPointer(0, " + size +
         ", gl." + wtu.glEnumToString(gl, type) +
         ", " + normalize +
         ", " + stride +
         ", " + offset +
-        ") should " + (err == gl.NO_ERROR ? "succeed " : "fail ") + reason);
-    shouldBe('gl.getVertexAttrib(0, gl.VERTEX_ATTRIB_ARRAY_SIZE)', size.toString());
-    shouldBe('gl.getVertexAttrib(0, gl.VERTEX_ATTRIB_ARRAY_TYPE)', 'gl.' + wtu.glEnumToString(gl, type));
-    shouldBe('gl.getVertexAttrib(0, gl.VERTEX_ATTRIB_ARRAY_NORMALIZED)', normalize.toString());
-    shouldBe('gl.getVertexAttrib(0, gl.VERTEX_ATTRIB_ARRAY_STRIDE)', stride.toString());
-    shouldBe('gl.getVertexAttribOffset(0, gl.VERTEX_ATTRIB_ARRAY_POINTER)', offset.toString());
+        ") should " + (succeeded ? "succeed " : "fail ") + reason);
+    if (succeeded) {
+      shouldBe('gl.getVertexAttrib(0, gl.VERTEX_ATTRIB_ARRAY_SIZE)', size.toString());
+      shouldBe('gl.getVertexAttrib(0, gl.VERTEX_ATTRIB_ARRAY_TYPE)', 'gl.' + wtu.glEnumToString(gl, type));
+      shouldBe('gl.getVertexAttrib(0, gl.VERTEX_ATTRIB_ARRAY_NORMALIZED)', normalize.toString());
+      shouldBe('gl.getVertexAttrib(0, gl.VERTEX_ATTRIB_ARRAY_STRIDE)', stride.toString());
+      shouldBe('gl.getVertexAttribOffset(0, gl.VERTEX_ATTRIB_ARRAY_POINTER)', offset.toString());
+    }
   }
 
   var types = [

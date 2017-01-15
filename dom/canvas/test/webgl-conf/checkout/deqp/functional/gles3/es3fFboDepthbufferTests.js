@@ -77,6 +77,7 @@ setParentClass(es3fFboDepthbufferTests.BasicFboDepthCase, es3fFboTestCase.FboTes
 
 es3fFboDepthbufferTests.BasicFboDepthCase.prototype.preCheck = function() {
         this.checkFormatSupport(this.m_format);
+        return true; // No exception thrown
     };
 
 es3fFboDepthbufferTests.BasicFboDepthCase.prototype.render = function(dst) {
@@ -169,6 +170,7 @@ setParentClass(es3fFboDepthbufferTests.DepthWriteClampCase, es3fFboTestCase.FboT
 
 es3fFboDepthbufferTests.DepthWriteClampCase.prototype.preCheck = function() {
         this.checkFormatSupport(this.m_format);
+        return true; // No exception thrown
     };
 
 es3fFboDepthbufferTests.DepthWriteClampCase.prototype.render = function(dst) {
@@ -253,6 +255,7 @@ setParentClass(es3fFboDepthbufferTests.DepthTestClampCase, es3fFboTestCase.FboTe
 
 es3fFboDepthbufferTests.DepthTestClampCase.prototype.preCheck = function() {
         this.checkFormatSupport(this.m_format);
+        return true; // No exception thrown
     };
 
 es3fFboDepthbufferTests.DepthTestClampCase.prototype.render = function(dst) {

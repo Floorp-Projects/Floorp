@@ -508,14 +508,14 @@ goog.scope(function() {
         var wasReadBufferCreated = false;
         try {
             if (targetHint == gl.ELEMENT_ARRAY_BUFFER || targetHint == gl.TRANSFORM_FEEDBACK_BUFFER) {
-                var readBuffer = new ArrayBuffer(offset + numBytes);
+                var readBuffer = new Uint8Array(offset + numBytes);
                 gl.getBufferSubData(targetHint, 0, readBuffer);
                 buffer = gl.createBuffer();
 
                 wasReadBufferCreated = true;
 
                 gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-                gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array(readBuffer), gl.STATIC_DRAW);
+                gl.bufferData(gl.ARRAY_BUFFER, readBuffer, gl.STATIC_DRAW);
             }
 
             var result = this.verifyNoTarget(buffer, reference, offset, numBytes);

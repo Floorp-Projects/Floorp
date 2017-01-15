@@ -347,7 +347,7 @@ goog.scope(function() {
             /** @type {glsShaderRenderCase.TextureBinding} */ var binding = bindings[ndx];
 
             this.textures[ndx] = new glsShaderRenderCase.ShaderSampler();
-            
+
             if (binding.getType() == gluTexture.Type.TYPE_NONE)
                 continue;
 

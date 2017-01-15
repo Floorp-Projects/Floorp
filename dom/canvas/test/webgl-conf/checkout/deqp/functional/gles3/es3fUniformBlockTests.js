@@ -710,8 +710,9 @@ goog.scope(function() {
          es3fUniformBlockTests.createRandomCaseGroup(randomGroup, 'nested_structs_instance_arrays', 'Nested structs, instance arrays, per-block buffers', glsUniformBlockCase.BufferMode.BUFFERMODE_PER_BLOCK, allShaders | allLayouts | unused | allBasicTypes | matFlags | glsRandomUniformBlockCase.FeatureBits.FEATURE_STRUCTS | glsRandomUniformBlockCase.FeatureBits.FEATURE_INSTANCE_ARRAYS, 25, 125);
          es3fUniformBlockTests.createRandomCaseGroup(randomGroup, 'nested_structs_arrays_instance_arrays', 'Nested structs, instance arrays, per-block buffers', glsUniformBlockCase.BufferMode.BUFFERMODE_PER_BLOCK, allShaders | allLayouts | unused | allBasicTypes | matFlags | glsRandomUniformBlockCase.FeatureBits.FEATURE_STRUCTS | glsRandomUniformBlockCase.FeatureBits.FEATURE_ARRAYS | glsRandomUniformBlockCase.FeatureBits.FEATURE_INSTANCE_ARRAYS, 25, 175);
 
-         es3fUniformBlockTests.createRandomCaseGroup(randomGroup, 'all_per_block_buffers', 'All random features, per-block buffers', glsUniformBlockCase.BufferMode.BUFFERMODE_PER_BLOCK, allFeatures, 50, 200);
-         es3fUniformBlockTests.createRandomCaseGroup(randomGroup, 'all_shared_buffer', 'All random features, shared buffer', glsUniformBlockCase.BufferMode.BUFFERMODE_SINGLE, allFeatures, 50, 250);
+         // Disabled: WebGL does not support shared or packed uniform buffers.
+         //es3fUniformBlockTests.createRandomCaseGroup(randomGroup, 'all_per_block_buffers', 'All random features, per-block buffers', glsUniformBlockCase.BufferMode.BUFFERMODE_PER_BLOCK, allFeatures, 50, 200);
+         //es3fUniformBlockTests.createRandomCaseGroup(randomGroup, 'all_shared_buffer', 'All random features, shared buffer', glsUniformBlockCase.BufferMode.BUFFERMODE_SINGLE, allFeatures, 50, 250);
          bufferedLogToConsole('ubo.random: Tests created');
     };
 

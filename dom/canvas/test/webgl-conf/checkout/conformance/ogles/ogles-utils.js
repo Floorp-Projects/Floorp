@@ -512,7 +512,7 @@ function drawWithProgram(program, programInfo, test) {
     var min_required = programInfo.builtin_uniforms.min_required;
     if (num_builtins_found < min_required) {
       testFailed("only found " + num_builtins_found + " of " + min_required +
-		 " required built-in uniforms: " + valid_values);
+                 " required built-in uniforms: " + valid_values);
     }
   }
 
