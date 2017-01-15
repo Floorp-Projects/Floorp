@@ -33,10 +33,6 @@ class CSSRuleList;
 class SRIMetadata;
 } // namespace dom
 
-namespace css {
-class Rule;
-}
-
 /**
  * Superclass for data common to CSSStyleSheet and ServoStyleSheet.
  */
@@ -152,7 +148,7 @@ public:
   // The XPCOM SetDisabled is fine for WebIDL.
 
   // WebIDL CSSStyleSheet API
-  virtual css::Rule* GetDOMOwnerRule() const = 0;
+  virtual nsIDOMCSSRule* GetDOMOwnerRule() const = 0;
   dom::CSSRuleList* GetCssRules(nsIPrincipal& aSubjectPrincipal,
                                 ErrorResult& aRv);
   uint32_t InsertRule(const nsAString& aRule, uint32_t aIndex,

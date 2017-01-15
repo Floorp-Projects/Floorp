@@ -20,7 +20,6 @@ class nsString;
 namespace mozilla {
 
 class CSSStyleSheet;
-class StyleSheet;
 
 namespace css {
 
@@ -35,8 +34,10 @@ private:
   ImportRule(const ImportRule& aCopy);
   ~ImportRule();
 public:
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ImportRule, Rule)
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ImportRule, mozilla::css::Rule)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+
+  DECL_STYLE_RULE_INHERIT
 
   using Rule::GetStyleSheet; // unhide since nsIDOMCSSImportRule has its own GetStyleSheet
 
@@ -45,25 +46,17 @@ public:
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
   virtual int32_t GetType() const override;
-  using Rule::GetType;
   virtual already_AddRefed<Rule> Clone() const override;
 
   void SetSheet(CSSStyleSheet*);
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  // nsIDOMCSSRule interface
+  NS_DECL_NSIDOMCSSRULE
 
   // nsIDOMCSSImportRule interface
   NS_DECL_NSIDOMCSSIMPORTRULE
-
-  // WebIDL interface
-  uint16_t Type() const override;
-  void GetCssTextImpl(nsAString& aCssText) const override;
-  // The XPCOM GetHref is fine, since it never fails.
-  nsMediaList* Media() const { return mMedia; }
-  StyleSheet* GetStyleSheet() const;
 
 private:
   nsString  mURLSpec;

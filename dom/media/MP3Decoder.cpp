@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MP3Decoder.h"
+#include "MediaContentType.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaFormatReader.h"
 #include "MP3Demuxer.h"
@@ -37,12 +38,14 @@ MP3Decoder::IsEnabled() {
 }
 
 /* static */
-bool MP3Decoder::CanHandleMediaType(const nsACString& aType,
-                                    const nsAString& aCodecs)
+bool MP3Decoder::IsSupportedType(const MediaContentType& aContentType)
 {
-  if (aType.EqualsASCII("audio/mp3") || aType.EqualsASCII("audio/mpeg")) {
-    return IsEnabled() &&
-      (aCodecs.IsEmpty() || aCodecs.EqualsASCII("mp3"));
+  if (aContentType.Type() == MEDIAMIMETYPE("audio/mp3")
+      || aContentType.Type() == MEDIAMIMETYPE("audio/mpeg")) {
+    return
+      IsEnabled()
+      && (aContentType.ExtendedType().Codecs().IsEmpty()
+          || aContentType.ExtendedType().Codecs().AsString().EqualsASCII("mp3"));
   }
   return false;
 }
