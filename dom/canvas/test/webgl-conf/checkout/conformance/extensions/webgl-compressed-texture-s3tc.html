@@ -184,6 +184,7 @@ function runTestExtension() {
     }
 
     supportedFormats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
+    // There should be exactly 4 formats for both WebGL 1.0 and WebGL 2.0.
     shouldBe("supportedFormats.length", "4");
 
     // check that all 4 formats exist
@@ -213,6 +214,11 @@ function testDXT1_RGB() {
             data: img_8x8_rgb_dxt1,
             format: ext.COMPRESSED_RGB_S3TC_DXT1_EXT,
             hasAlpha: false,
+            subX0: 0,
+            subY0: 0,
+            subWidth: 4,
+            subHeight: 4,
+            subData: img_4x4_rgb_dxt1
         }
     ];
     testDXTTextures(tests);
@@ -236,7 +242,6 @@ function testDXT1_RGBA() {
             format: ext.COMPRESSED_RGBA_S3TC_DXT1_EXT,
             // This is a special case -- the texture is still opaque
             // though it's RGBA.
-            hasAlpha: false,
         }
     ];
     testDXTTextures(tests);
@@ -257,6 +262,11 @@ function testDXT3_RGBA() {
             data: img_8x8_rgba_dxt3,
             format: ext.COMPRESSED_RGBA_S3TC_DXT3_EXT,
             hasAlpha: true,
+            subX0: 0,
+            subY0: 0,
+            subWidth: 4,
+            subHeight: 4,
+            subData: img_4x4_rgba_dxt3
         }
     ];
     testDXTTextures(tests);
@@ -277,6 +287,11 @@ function testDXT5_RGBA() {
             data: img_8x8_rgba_dxt5,
             format: ext.COMPRESSED_RGBA_S3TC_DXT5_EXT,
             hasAlpha: true,
+            subX0: 0,
+            subY0: 0,
+            subWidth: 4,
+            subHeight: 4,
+            subData: img_4x4_rgba_dxt5
         }
     ];
     testDXTTextures(tests);
@@ -429,6 +444,25 @@ function uncompressDXT(width, height, data, format) {
     return dest;
 }
 
+function uncompressDXTIntoSubRegion(width, height, subX0, subY0, subWidth, subHeight, data, format)
+{
+    if (width % 4 || height % 4 || subX0 % 4 || subY0 % 4 || subWidth % 4 || subHeight % 4)
+        throw "bad dimension";
+
+    var dest = new Uint8Array(width * height * 4);
+    var blocksAcross = subWidth / 4;
+    var blocksDown = subHeight / 4;
+    var blockSize = getBlockSize(format);
+    for (var yy = 0; yy < blocksDown; ++yy) {
+        for (var xx = 0; xx < blocksAcross; ++xx) {
+            uncompressDXTBlock(
+                dest, subX0 + xx * 4, subY0 + yy * 4, width, data,
+                (yy * blocksAcross + xx) * blockSize, format);
+        }
+    }
+    return dest;
+}
+
 function copyRect(data, srcX, srcY, dstX, dstY, width, height, stride) {
   var bytesPerLine = width * 4;
   var srcOffset = srcX * 4 + srcY * stride;
@@ -463,6 +497,31 @@ function testDXTTexture(test, useTexStorage) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     if (useTexStorage) {
+        if (test.subData) {
+            var uncompressedDataSub = uncompressDXTIntoSubRegion(
+                width, height, test.subX0, test.subY0, test.subWidth, test.subHeight, test.subData, format);
+            var tex1 = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, tex1);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+            gl.texStorage2D(gl.TEXTURE_2D, 1, format, width, height);
+            wtu.glErrorShouldBe(gl, gl.NO_ERROR, "allocating compressed texture via texStorage2D");
+            gl.compressedTexSubImage2D(
+                gl.TEXTURE_2D, 0, test.subX0, test.subY0, test.subWidth, test.subHeight, format, test.subData);
+            wtu.glErrorShouldBe(gl, gl.NO_ERROR, "uploading compressed texture data via compressedTexSubImage2D");
+
+            wtu.clearAndDrawUnitQuad(gl);
+            wtu.glErrorShouldBe(gl, gl.NO_ERROR, "drawing unit quad 1");
+            compareRect(width, height, test.channels, uncompressedDataSub, "NEAREST");
+
+            // Clean up and recover
+            gl.deleteTexture(tex1);
+            gl.bindTexture(gl.TEXTURE_2D, tex);
+        }
+
         gl.texStorage2D(gl.TEXTURE_2D, 1, format, width, height);
         wtu.glErrorShouldBe(gl, gl.NO_ERROR, "allocating compressed texture via texStorage2D");
         wtu.clearAndDrawUnitQuad(gl);
@@ -480,13 +539,13 @@ function testDXTTexture(test, useTexStorage) {
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "after clearing generateMipmap error");
     wtu.clearAndDrawUnitQuad(gl);
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "drawing unit quad 1");
-    compareRect(width, height, test.channels, width, height, uncompressedData, data, format, "NEAREST");
+    compareRect(width, height, test.channels, uncompressedData, "NEAREST");
     // Test again with linear filtering.
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     wtu.clearAndDrawUnitQuad(gl);
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "drawing unit quad 2");
-    compareRect(width, height, test.channels, width, height, uncompressedData, data, format, "LINEAR");
+    compareRect(width, height, test.channels, uncompressedData, "LINEAR");
 
     if (!useTexStorage) {
         // It's not allowed to redefine textures defined via texStorage2D.
@@ -587,14 +646,14 @@ function testDXTTexture(test, useTexStorage) {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
             wtu.clearAndDrawUnitQuad(gl);
-            compareRect(width, height, test.channels, width, height, uncompressedData, data, format, "NEAREST");
+            compareRect(width, height, test.channels, uncompressedData, "NEAREST");
             wtu.glErrorShouldBe(gl, gl.NO_ERROR, "drawing unit quad");
             // Next test LINEAR filtering.
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
             wtu.clearAndDrawUnitQuad(gl);
             wtu.glErrorShouldBe(gl, gl.NO_ERROR, "drawing unit quad");
-            compareRect(width, height, test.channels, width, height, uncompressedData, data, format, "LINEAR");
+            compareRect(width, height, test.channels, uncompressedData, "LINEAR");
         }
     }
 }
@@ -608,7 +667,7 @@ function insertImg(element, caption, img) {
     element.appendChild(div);
 }
 
-function makeImage(imageWidth, imageHeight, dataWidth, data, alpha) {
+function makeImage(imageWidth, imageHeight, data, alpha) {
     var scale = 8;
     var c = document.createElement("canvas");
     c.width = imageWidth * scale;
@@ -616,7 +675,7 @@ function makeImage(imageWidth, imageHeight, dataWidth, data, alpha) {
     var ctx = c.getContext("2d");
     for (var yy = 0; yy < imageHeight; ++yy) {
         for (var xx = 0; xx < imageWidth; ++xx) {
-            var offset = (yy * dataWidth + xx) * 4;
+            var offset = (yy * imageWidth + xx) * 4;
             ctx.fillStyle = "rgba(" +
                     data[offset + 0] + "," +
                     data[offset + 1] + "," +
@@ -627,43 +686,35 @@ function makeImage(imageWidth, imageHeight, dataWidth, data, alpha) {
     }
     return wtu.makeImageFromCanvas(c);
 }
-function compareRect(
-        actualWidth, actualHeight, actualChannels,
-        dataWidth, dataHeight, expectedData,
-        testData, testFormat, filteringMode) {
-    var actual = new Uint8Array(actualWidth * actualHeight * 4);
-    gl.readPixels(
-            0, 0, actualWidth, actualHeight, gl.RGBA, gl.UNSIGNED_BYTE, actual);
+
+function compareRect(width, height, channels, expectedData, filteringMode) {
+    var actual = new Uint8Array(width * height * 4);
+    gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, actual);
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "reading back pixels");
 
     var div = document.createElement("div");
     div.className = "testimages";
-    insertImg(div, "expected", makeImage(
-            actualWidth, actualHeight, dataWidth, expectedData,
-            actualChannels == 4));
-    insertImg(div, "actual", makeImage(
-            actualWidth, actualHeight, actualWidth, actual,
-            actualChannels == 4));
+    insertImg(div, "expected", makeImage(width, height, expectedData, channels == 4));
+    insertImg(div, "actual", makeImage(width, height, actual, channels == 4));
     div.appendChild(document.createElement('br'));
     document.getElementById("console").appendChild(div);
 
     var failed = false;
-    for (var yy = 0; yy < actualHeight; ++yy) {
-        for (var xx = 0; xx < actualWidth; ++xx) {
-            var actualOffset = (yy * actualWidth + xx) * 4;
-            var expectedOffset = (yy * dataWidth + xx) * 4;
+    for (var yy = 0; yy < height; ++yy) {
+        for (var xx = 0; xx < width; ++xx) {
+            var offset = (yy * width + xx) * 4;
             var expected = [
-                    expectedData[expectedOffset + 0],
-                    expectedData[expectedOffset + 1],
-                    expectedData[expectedOffset + 2],
-                    (actualChannels == 3 ? 255 : expectedData[expectedOffset + 3])
+                expectedData[offset + 0],
+                expectedData[offset + 1],
+                expectedData[offset + 2],
+                (channels == 3 ? 255 : expectedData[offset + 3])
             ];
             for (var jj = 0; jj < 4; ++jj) {
-                if (actual[actualOffset + jj] != expected[jj]) {
+                if (actual[offset + jj] != expected[jj]) {
                     failed = true;
-                    var was = actual[actualOffset + 0].toString();
+                    var was = actual[offset + 0].toString();
                     for (var j = 1; j < 4; ++j) {
-                        was += "," + actual[actualOffset + j];
+                        was += "," + actual[offset + j];
                     }
                     testFailed('at (' + xx + ', ' + yy +
                                          ') expected: ' + expected + ' was ' + was);

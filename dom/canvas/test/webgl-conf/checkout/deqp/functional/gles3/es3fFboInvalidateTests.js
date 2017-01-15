@@ -453,6 +453,7 @@ setParentClass(es3fFboInvalidateTests.InvalidateFboRenderCase, es3fFboTestCase.F
 es3fFboInvalidateTests.InvalidateFboRenderCase.prototype.preCheck = function() {
     if (this.m_colorFmt != gl.NONE) this.checkFormatSupport(this.m_colorFmt);
     if (this.m_depthStencilFmt != gl.NONE) this.checkFormatSupport(this.m_depthStencilFmt);
+    return true; // No exception thrown
 };
 
 es3fFboInvalidateTests.InvalidateFboRenderCase.prototype.render = function(dst) {
@@ -557,6 +558,7 @@ setParentClass(es3fFboInvalidateTests.InvalidateFboUnbindReadCase, es3fFboTestCa
 es3fFboInvalidateTests.InvalidateFboUnbindReadCase.prototype.preCheck = function() {
     if (this.m_colorFmt != gl.NONE) this.checkFormatSupport(this.m_colorFmt);
     if (this.m_depthStencilFmt != gl.NONE) this.checkFormatSupport(this.m_depthStencilFmt);
+    return true; // No exception thrown
 };
 
 es3fFboInvalidateTests.InvalidateFboUnbindReadCase.prototype.render = function(dst) {
@@ -667,6 +669,7 @@ setParentClass(es3fFboInvalidateTests.InvalidateFboUnbindBlitCase, es3fFboTestCa
 es3fFboInvalidateTests.InvalidateFboUnbindBlitCase.prototype.preCheck = function() {
     if (this.m_colorFmt != gl.NONE) this.checkFormatSupport(this.m_colorFmt);
     if (this.m_depthStencilFmt != gl.NONE) this.checkFormatSupport(this.m_depthStencilFmt);
+    return true; // No exception thrown
 };
 
 es3fFboInvalidateTests.InvalidateFboUnbindBlitCase.prototype.render = function(dst) {
@@ -787,6 +790,7 @@ setParentClass(es3fFboInvalidateTests.InvalidateSubFboUnbindReadCase, es3fFboTes
 es3fFboInvalidateTests.InvalidateSubFboUnbindReadCase.prototype.preCheck = function() {
     if (this.m_colorFmt != gl.NONE) this.checkFormatSupport(this.m_colorFmt);
     if (this.m_depthStencilFmt != gl.NONE) this.checkFormatSupport(this.m_depthStencilFmt);
+    return true; // No exception thrown
 };
 
 es3fFboInvalidateTests.InvalidateSubFboUnbindReadCase.prototype.compare = function(reference, result) {
@@ -804,7 +808,7 @@ es3fFboInvalidateTests.InvalidateSubFboUnbindReadCase.prototype.render = functio
     var attachments = getFBODiscardAttachments(this.m_invalidateBuffers);
     // Create fbo.
     var transferFmt = gluTextureUtil.getTransferFormat(colorFmt);
-    var gradShader = new es3fFboTestUtil.GradientShader(gluShaderUtil.DataType.FLOAT_VEC4);
+    var gradShader = new es3fFboTestUtil.GradientShader(es3fFboTestUtil.getFragmentOutputType(colorFmt));
     var gradShaderID = ctx.createProgram(gradShader);
     var invalidateX = 0;
     var invalidateY = 0;
@@ -818,7 +822,8 @@ es3fFboInvalidateTests.InvalidateSubFboUnbindReadCase.prototype.render = functio
     var colorTex = ctx.createTexture();
     ctx.bindTexture(gl.TEXTURE_2D, colorTex);
     ctx.texImage2D(gl.TEXTURE_2D, 0, this.m_colorFmt, this.getWidth(), this.getHeight(), 0, transferFmt.format, transferFmt.dataType, null);
-    ctx.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    ctx.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    ctx.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
     if (this.m_depthStencilFmt != gl.NONE) {
         transferFmt = gluTextureUtil.getTransferFormat(depthStencilFmt);
@@ -842,8 +847,8 @@ es3fFboInvalidateTests.InvalidateSubFboUnbindReadCase.prototype.render = functio
 
     this.checkFramebufferStatus(gl.FRAMEBUFFER);
 
-    ctx.clearColor(0, 0, 0, 1);
-    ctx.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+    this.clearColorBuffer(colorFmt, [0.0, 0.0, 0.0, 1.0]);
+    ctx.clear(gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 
     ctx.enable(gl.DEPTH_TEST);
     ctx.enable(gl.STENCIL_TEST);
@@ -858,6 +863,9 @@ es3fFboInvalidateTests.InvalidateSubFboUnbindReadCase.prototype.render = functio
     ctx.bindFramebuffer(gl.FRAMEBUFFER, null);
     ctx.disable(gl.DEPTH_TEST);
     ctx.disable(gl.STENCIL_TEST);
+
+    ctx.clearColor(0.25, 0.5, 0.75, 1);
+    ctx.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 
     // Limit read area using scissor.
     ctx.scissor(readX, readY, readW, readH);
@@ -911,6 +919,7 @@ setParentClass(es3fFboInvalidateTests.InvalidateSubFboRenderCase, es3fFboTestCas
 es3fFboInvalidateTests.InvalidateSubFboRenderCase.prototype.preCheck = function() {
     if (this.m_colorFmt != gl.NONE) this.checkFormatSupport(this.m_colorFmt);
     if (this.m_depthStencilFmt != gl.NONE) this.checkFormatSupport(this.m_depthStencilFmt);
+    return true; // No exception thrown
 };
 
 es3fFboInvalidateTests.InvalidateSubFboRenderCase.prototype.render = function(dst) {
@@ -1010,6 +1019,7 @@ setParentClass(es3fFboInvalidateTests.InvalidateSubFboUnbindBlitCase, es3fFboTes
 es3fFboInvalidateTests.InvalidateSubFboUnbindBlitCase.prototype.preCheck = function() {
     if (this.m_colorFmt != gl.NONE) this.checkFormatSupport(this.m_colorFmt);
     if (this.m_depthStencilFmt != gl.NONE) this.checkFormatSupport(this.m_depthStencilFmt);
+    return true; // No exception thrown
 };
 
 es3fFboInvalidateTests.InvalidateSubFboUnbindBlitCase.prototype.render = function(dst) {
@@ -1328,8 +1338,12 @@ es3fFboInvalidateTests.FboInvalidateTests.prototype.init = function() {
         subFboGroup.addChild(new es3fFboInvalidateTests.InvalidateSubFboUnbindBlitCase('unbind_blit_msaa_depth_stencil', '', 4, gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT));
     }
     // invalidate.format.
-    var formatGroup = new tcuTestCase.DeqpTest('format', 'Invalidating framebuffers with selected formats');
-    this.addChild(formatGroup);
+    var numFormatSubGroups = 3;
+    var formatGroup = [];
+    for (var ii = 0; ii < numFormatSubGroups; ++ii) {
+        formatGroup[ii] = new tcuTestCase.DeqpTest('format', 'Invalidating framebuffers with selected formats');
+        this.addChild(formatGroup[ii]);
+    }
     // Color buffer formats.
     var colorFormats = [
         // RGBA formats
@@ -1390,11 +1404,11 @@ es3fFboInvalidateTests.FboInvalidateTests.prototype.init = function() {
 
     // Colorbuffer tests use invalidate, unbind, read test.
     for (var ndx = 0; ndx < colorFormats.length; ndx++)
-        formatGroup.addChild(new es3fFboInvalidateTests.InvalidateSubFboUnbindReadCase(es3fFboTestUtil.getFormatName(colorFormats[ndx]), '', colorFormats[ndx], gl.NONE, gl.COLOR_BUFFER_BIT));
+        formatGroup[ndx % numFormatSubGroups].addChild(new es3fFboInvalidateTests.InvalidateSubFboUnbindReadCase(es3fFboTestUtil.getFormatName(colorFormats[ndx]), '', colorFormats[ndx], gl.NONE, gl.COLOR_BUFFER_BIT));
 
     // Depth/stencilbuffer tests use invalidate, render test.
     for (var ndx = 0; ndx < depthStencilFormats.length; ndx++)
-        formatGroup.addChild(new es3fFboInvalidateTests.InvalidateSubFboRenderCase(es3fFboTestUtil.getFormatName(depthStencilFormats[ndx]), '', gl.RGBA8, depthStencilFormats[ndx], gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT));
+        formatGroup[ndx % numFormatSubGroups].addChild(new es3fFboInvalidateTests.InvalidateSubFboRenderCase(es3fFboTestUtil.getFormatName(depthStencilFormats[ndx]), '', gl.RGBA8, depthStencilFormats[ndx], gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT));
 
     // invalidate.target
     var targetGroup = new tcuTestCase.DeqpTest('target', 'Invalidate target');
@@ -1432,7 +1446,7 @@ es3fFboInvalidateTests.FboInvalidateTests.prototype.init = function() {
 * Run test
 * @param {WebGL2RenderingContext} context
 */
-es3fFboInvalidateTests.run = function(context) {
+es3fFboInvalidateTests.run = function(context, range) {
     gl = context;
     //Set up Test Root parameters
     var state = tcuTestCase.runner;
@@ -1443,6 +1457,8 @@ es3fFboInvalidateTests.run = function(context) {
     description(state.testCases.getDescription());
 
     try {
+        if (range)
+            state.setRange(range);
         //Run test cases
         tcuTestCase.runTestCases();
     }

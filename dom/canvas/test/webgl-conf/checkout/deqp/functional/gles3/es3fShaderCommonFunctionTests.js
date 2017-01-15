@@ -618,7 +618,7 @@ goog.scope(function() {
         /** @type {number} */ var rounded = (q > 0.5) ? (truncated + 1) : // Rounded up
             (q == 0.5 && (truncated % 2 != 0)) ? (truncated + 1) : // Round to nearest even at 0.5
             truncated; // Rounded down
-        return rounded === 0 && v < 0 ? -0 : rounded;
+        return rounded;
     };
 
     /**
@@ -689,7 +689,6 @@ goog.scope(function() {
     es3fShaderCommonFunctionTests.RoundEvenCase.prototype.compare = function(inputs, outputs) {
         /** @type {gluShaderUtil.DataType} */ var type = this.m_spec.inputs[0].varType.getBasicType();
         /** @type {gluShaderUtil.precision} */ var precision = this.m_spec.inputs[0].varType.getPrecision();
-        /** @type {boolean} */ var hasSignedZero = es3fShaderCommonFunctionTests.supportsSignedZero(precision);
         /** @type {number} */ var scalarSize = gluShaderUtil.getDataTypeScalarSize(type);
         /** @type {number} */ var in0;
         /** @type {number} */ var out0;
@@ -701,9 +700,7 @@ goog.scope(function() {
                 out0 = outputs[0][compNdx];
                 /** @type {number} */ var ref = es3fShaderCommonFunctionTests.roundEven(in0);
 
-                /** @type {number} */ var ulpDiff = hasSignedZero ?
-                    es3fShaderCommonFunctionTests.getUlpDiff(out0, ref) :
-                    es3fShaderCommonFunctionTests.getUlpDiffIgnoreZeroSign(out0, ref);
+                /** @type {number} */ var ulpDiff = es3fShaderCommonFunctionTests.getUlpDiffIgnoreZeroSign(out0, ref);
 
                 if (ulpDiff > 0) {
                     this.m_failMsg += 'Expected [' + compNdx + '] = ' + ref + ', got ULP diff ' + ulpDiff;

@@ -53,7 +53,7 @@
     varying vec2 v_texCoord;
     uniform sampler2D u_texture;
     void main() {
-        // Shader swizzles color channels so we can tell if the draw succeeded. 
+        // Shader swizzles color channels so we can tell if the draw succeeded.
         gl_FragColor = texture2D(u_texture, v_texCoord).gbra;
     }
     </script>

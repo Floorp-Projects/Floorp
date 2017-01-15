@@ -78,7 +78,7 @@ for (var ii = 0; ii < 2; ++ii) {
         testFailed("WebGL context does not exist");
     } else {
         testPassed("WebGL context exists");
-    
+
         var drawType = (ii == 0) ? gl.STATIC_DRAW : gl.DYNAMIC_DRAW;
         debug("Testing " + ((ii == 0) ? "STATIC_DRAW" : "DYNAMIC_DRAW"));
 
@@ -98,17 +98,17 @@ for (var ii = 0; ii < 2; ++ii) {
 
 function runDrawTests(drawType) {
     debug("Test that draws with unsigned integer indices produce the expected results");
-    
+
     canvas.width = 50; canvas.height = 50;
     gl.viewport(0, 0, canvas.width, canvas.height);
-    
+
     var program = wtu.setupNoTexCoordTextureProgram(gl);
 
     function setupDraw(s) {
         // Create a vertex buffer that cannot be fully indexed via shorts
         var quadArrayLen = 65537 * 3;
         var quadArray = new Float32Array(quadArrayLen);
-        
+
         // Leave all but the last 4 values zero-ed out
         var idx = quadArrayLen - 12;
 

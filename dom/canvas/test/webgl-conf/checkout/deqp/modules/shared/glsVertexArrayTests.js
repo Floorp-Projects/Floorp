@@ -202,7 +202,7 @@ goog.scope(function() {
             'int', // glsVertexArrayTests.deArray.InputType.INT
             'unsigned_int', // glsVertexArrayTests.deArray.InputType.UNSIGNED_INT
             'half', // glsVertexArrayTests.deArray.InputType.HALF
-            'usigned_int2_10_10_10', // glsVertexArrayTests.deArray.InputType.UNSIGNED_INT_2_10_10_10
+            'unsigned_int2_10_10_10', // glsVertexArrayTests.deArray.InputType.UNSIGNED_INT_2_10_10_10
             'int2_10_10_10' // glsVertexArrayTests.deArray.InputType.INT_2_10_10_10
         ];
         DE_ASSERT(types.length == Object.keys(glsVertexArrayTests.deArray.InputType).length);

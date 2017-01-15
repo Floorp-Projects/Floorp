@@ -264,7 +264,6 @@ var decompressEAC11Block = function(dst, src, signedMode) {
              var dstOffset = (y * ETC2_BLOCK_WIDTH + x);
              var pixelBitNdx = 45 - 3 * pixelNdx;
              var modifierNdx = (getBit64(src, pixelBitNdx + 2) << 2) | (getBit64(src, pixelBitNdx + 1) << 1) | getBit64(src, pixelBitNdx);
-             // console.log('TableIndex: ' + tableNdx + ' ModifierNdx: ' + modifierNdx);
              var modifier = modifierTable[tableNdx][modifierNdx];
 
             if (signedMode) {
