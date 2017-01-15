@@ -227,8 +227,8 @@ goog.scope(function() {
         // Image origin must be visible (for baseColor)
         DE_ASSERT(Math.min(this.m_dstRect[0], this.m_dstRect[2]) >= 0);
         DE_ASSERT(Math.min(this.m_dstRect[1], this.m_dstRect[3]) >= 0);
-        /** @const {tcuRGBA.RGBA} */ var cellColorA = tcuRGBA.newRGBAFromArray(this.m_gridCellColorA);
-        /** @const {tcuRGBA.RGBA} */ var cellColorB = tcuRGBA.newRGBAFromArray(this.m_gridCellColorB);
+        /** @const {tcuRGBA.RGBA} */ var cellColorA = tcuRGBA.newRGBAFromVec(this.m_gridCellColorA);
+        /** @const {tcuRGBA.RGBA} */ var cellColorB = tcuRGBA.newRGBAFromVec(this.m_gridCellColorB);
         // TODO: implement
         // const tcu::RGBA threshold = this.m_context.getRenderTarget().getPixelFormat().getColorThreshold() + tcu::RGBA(7,7,7,7);
         /** @type {tcuRGBA.RGBA} */ var threshold = tcuRGBA.newRGBAComponents(7, 7, 7, 7);
@@ -477,9 +477,10 @@ goog.scope(function() {
         /** @const {Array<number>} */ var dstSize = [132, 128];
 
         // Blit rectangle tests.
-        /** @type {tcuTestCase.DeqpTest} */ var rectGroup = tcuTestCase.newTest('rect', 'Blit rectangle tests');
-        this.addChild(rectGroup);
         for (var rectNdx = 0; rectNdx < copyRects.length; rectNdx++) {
+            /** @type {tcuTestCase.DeqpTest} */ var rectGroup = tcuTestCase.newTest('rect', 'Blit rectangle tests');
+            this.addChild(rectGroup);
+
             for (var swzNdx = 0; swzNdx < swizzles.length; swzNdx++) {
                 /** @type {string} */ var name = copyRects[rectNdx].name + (swizzles[swzNdx].name ? ('_' + swizzles[swzNdx].name) : '');
                 /** @type {Array<number>} */ var srcSwz = swizzles[swzNdx].srcSwizzle;
@@ -494,6 +495,8 @@ goog.scope(function() {
 
         // Nearest filter tests
         for (var rectNdx = 0; rectNdx < filterConsistencyRects.length; rectNdx++) {
+            /** @type {tcuTestCase.DeqpTest} */ var rectGroup = tcuTestCase.newTest('rect', 'Blit rectangle tests');
+            this.addChild(rectGroup);
             for (var swzNdx = 0; swzNdx < swizzles.length; swzNdx++) {
                 var name = 'nearest_consistency_' + filterConsistencyRects[rectNdx].name + (swizzles[swzNdx].name ? ('_' + swizzles[swzNdx].name) : '');
                 var srcSwz = swizzles[swzNdx].srcSwizzle;
@@ -506,10 +509,9 @@ goog.scope(function() {
         }
 
         // .conversion
-        /** @type {tcuTestCase.DeqpTest} */ var conversionGroup = tcuTestCase.newTest('conversion', 'Color conversion tests');
-        this.addChild(conversionGroup);
-
         for (var srcFmtNdx = 0; srcFmtNdx < colorFormats.length; srcFmtNdx++) {
+            /** @type {tcuTestCase.DeqpTest} */ var conversionGroup = tcuTestCase.newTest('conversion', 'Color conversion tests');
+            this.addChild(conversionGroup);
             for (var dstFmtNdx = 0; dstFmtNdx < colorFormats.length; dstFmtNdx++) {
                 /** @type {number} */ var srcFormat = colorFormats[srcFmtNdx];
                 /** @type {tcuTexture.TextureFormat} */ var srcTexFmt = gluTextureUtil.mapGLInternalFormat(srcFormat);
@@ -567,9 +569,12 @@ goog.scope(function() {
             new Area('out_of_bounds', es3fFramebufferBlitTests.BlitArea.AREA_OUT_OF_BOUNDS)
         ];
 
-        /** @type {tcuTestCase.DeqpTest} */ var defaultFbGroup = tcuTestCase.newTest('default_framebuffer', 'Blits with default framebuffer');
-        this.addChild(defaultFbGroup);
-
+        var numDefaultFbSubGroups = 7;
+        /** @type {Array<tcuTestCase.DeqpTest>} */ var defaultFbGroup = [];
+        for (var ii = 0; ii < numDefaultFbSubGroups; ++ii) {
+            defaultFbGroup[ii] = tcuTestCase.newTest('default_framebuffer', 'Blits with default framebuffer');
+            this.addChild(defaultFbGroup[ii]);
+        }
         for (var fmtNdx = 0; fmtNdx < colorFormats.length; fmtNdx++) {
             var format = colorFormats[fmtNdx];
             var texFmt = gluTextureUtil.mapGLInternalFormat(format);
@@ -582,7 +587,7 @@ goog.scope(function() {
                 fmtClass != tcuTexture.TextureChannelClass.SIGNED_FIXED_POINT)
                 continue; // Conversion not supported.
 
-            defaultFbGroup.addChild(new es3fFramebufferBlitTests.BlitDefaultFramebufferCase(es3fFboTestUtil.getFormatName(format), '', format, filter));
+            defaultFbGroup[fmtNdx % numDefaultFbSubGroups].addChild(new es3fFramebufferBlitTests.BlitDefaultFramebufferCase(es3fFboTestUtil.getFormatName(format), '', format, filter));
 
             for (var areaNdx = 0; areaNdx < areas.length; areaNdx++) {
                 var name = areas[areaNdx].name;
@@ -591,13 +596,13 @@ goog.scope(function() {
 
                 if (addNearest) {
 
-                    defaultFbGroup.addChild(new es3fFramebufferBlitTests.DefaultFramebufferBlitCase((es3fFboTestUtil.getFormatName(format) + '_nearest_' + name + '_blit_from_default'), '', format, gl.NEAREST, es3fFramebufferBlitTests.BlitDirection.BLIT_DEFAULT_TO_TARGET, areas[areaNdx].area));
-                    defaultFbGroup.addChild(new es3fFramebufferBlitTests.DefaultFramebufferBlitCase((es3fFboTestUtil.getFormatName(format) + '_nearest_' + name + '_blit_to_default'), '', format, gl.NEAREST, es3fFramebufferBlitTests.BlitDirection.BLIT_TO_DEFAULT_FROM_TARGET, areas[areaNdx].area));
+                    defaultFbGroup[fmtNdx % numDefaultFbSubGroups].addChild(new es3fFramebufferBlitTests.DefaultFramebufferBlitCase((es3fFboTestUtil.getFormatName(format) + '_nearest_' + name + '_blit_from_default'), '', format, gl.NEAREST, es3fFramebufferBlitTests.BlitDirection.BLIT_DEFAULT_TO_TARGET, areas[areaNdx].area));
+                    defaultFbGroup[fmtNdx % numDefaultFbSubGroups].addChild(new es3fFramebufferBlitTests.DefaultFramebufferBlitCase((es3fFboTestUtil.getFormatName(format) + '_nearest_' + name + '_blit_to_default'), '', format, gl.NEAREST, es3fFramebufferBlitTests.BlitDirection.BLIT_TO_DEFAULT_FROM_TARGET, areas[areaNdx].area));
                 }
 
                 if (addLinear) {
-                    defaultFbGroup.addChild(new es3fFramebufferBlitTests.DefaultFramebufferBlitCase((es3fFboTestUtil.getFormatName(format) + '_linear_' + name + '_blit_from_default'), '', format, gl.LINEAR, es3fFramebufferBlitTests.BlitDirection.BLIT_DEFAULT_TO_TARGET, areas[areaNdx].area));
-                    defaultFbGroup.addChild(new es3fFramebufferBlitTests.DefaultFramebufferBlitCase((es3fFboTestUtil.getFormatName(format) + '_linear_' + name + '_blit_to_default'), '', format, gl.LINEAR, es3fFramebufferBlitTests.BlitDirection.BLIT_TO_DEFAULT_FROM_TARGET, areas[areaNdx].area));
+                    defaultFbGroup[fmtNdx % numDefaultFbSubGroups].addChild(new es3fFramebufferBlitTests.DefaultFramebufferBlitCase((es3fFboTestUtil.getFormatName(format) + '_linear_' + name + '_blit_from_default'), '', format, gl.LINEAR, es3fFramebufferBlitTests.BlitDirection.BLIT_DEFAULT_TO_TARGET, areas[areaNdx].area));
+                    defaultFbGroup[fmtNdx % numDefaultFbSubGroups].addChild(new es3fFramebufferBlitTests.DefaultFramebufferBlitCase((es3fFboTestUtil.getFormatName(format) + '_linear_' + name + '_blit_to_default'), '', format, gl.LINEAR, es3fFramebufferBlitTests.BlitDirection.BLIT_TO_DEFAULT_FROM_TARGET, areas[areaNdx].area));
                 }
             }
         }
@@ -644,6 +649,7 @@ goog.scope(function() {
     es3fFramebufferBlitTests.BlitColorConversionCase.prototype.preCheck = function() {
         this.checkFormatSupport(this.m_srcFormat);
         this.checkFormatSupport(this.m_dstFormat);
+        return true; // No exception thrown
     };
 
     /**
@@ -717,14 +723,16 @@ goog.scope(function() {
         ctx.viewport(0, 0, this.m_size[0], this.m_size[1]);
 
         // Render gradients.
-        ctx.bindFramebuffer(gl.FRAMEBUFFER, srcFbo);
-        gradientToDstShader.setGradient(ctx, gradShaderDstID, dstRangeInfo.valueMin, dstRangeInfo.valueMax);
-
-        rrUtil.drawQuad(ctx, gradShaderDstID, [-1, -1, 0], [1, 1, 0]);
-
-        ctx.bindFramebuffer(gl.FRAMEBUFFER, dstFbo);
-        gradientToSrcShader.setGradient(ctx, gradShaderSrcID, srcRangeInfo.valueMin, dstRangeInfo.valueMax);
-        rrUtil.drawQuad(ctx, gradShaderSrcID, [-1, -1, 0], [1, 1, 0]);
+        for (var ndx = 0; ndx < 2; ndx++) {
+            ctx.bindFramebuffer(gl.FRAMEBUFFER, ndx ? dstFbo : srcFbo);
+            if (ndx) {
+                gradientToDstShader.setGradient(ctx, gradShaderDstID, dstRangeInfo.valueMax, dstRangeInfo.valueMin);
+                rrUtil.drawQuad(ctx, gradShaderDstID, [-1, -1, 0], [1, 1, 0]);
+            } else {
+                gradientToSrcShader.setGradient(ctx, gradShaderSrcID, srcRangeInfo.valueMin, srcRangeInfo.valueMax);
+                rrUtil.drawQuad(ctx, gradShaderSrcID, [-1, -1, 0], [1, 1, 0]);
+            }
+        }
 
         // Execute copy.
         ctx.bindFramebuffer(gl.READ_FRAMEBUFFER, srcFbo);
@@ -798,6 +806,7 @@ goog.scope(function() {
      */
     es3fFramebufferBlitTests.BlitDepthStencilCase.prototype.preCheck = function() {
         this.checkFormatSupport(this.m_format);
+        return true; // No exception thrown
     };
 
     /**
@@ -965,6 +974,7 @@ goog.scope(function() {
      */
     es3fFramebufferBlitTests.BlitDefaultFramebufferCase.prototype.preCheck = function() {
         this.checkFormatSupport(this.m_format);
+        return true; // No exception thrown
     };
 
     /**
@@ -1218,7 +1228,7 @@ goog.scope(function() {
         this.checkError();
     };
 
-    es3fFramebufferBlitTests.run = function(context) {
+    es3fFramebufferBlitTests.run = function(context, range) {
         gl = context;
         //Set up root Test
         var state = tcuTestCase.runner;
@@ -1236,11 +1246,13 @@ goog.scope(function() {
         try {
             //Create test cases
             test.init();
+            if (range)
+                state.setRange(range);
             //Run test cases
             tcuTestCase.runTestCases();
         }
         catch (err) {
-            console.log(err);
+            bufferedLogToConsole(err);
             testFailedOptions('Failed to es3fFramebufferBlitTests.run tests', false);
             tcuTestCase.runner.terminate();
         }

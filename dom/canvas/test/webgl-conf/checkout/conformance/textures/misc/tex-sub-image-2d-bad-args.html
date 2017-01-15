@@ -66,15 +66,10 @@ gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, -1, gl.RGBA, gl.UNSIGNED_BYTE, c);
 wtu.glErrorShouldBe(gl, gl.INVALID_VALUE, "negative y");
 gl.texSubImage2D(gl.TEXTURE_2D, -1, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, c);
 wtu.glErrorShouldBe(gl, gl.INVALID_VALUE, "negative level");
-
-var text = "Should throw with no image data.";
-try {
-    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-    testFailed(text);
-} catch(e) {
-    testPassed(text);
-}
-wtu.glErrorShouldBe(gl, gl.NO_ERROR, "no image data");
+shouldThrow("gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)");
+wtu.glErrorShouldBe(gl, gl.NO_ERROR);
+gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+wtu.glErrorShouldBe(gl, gl.INVALID_VALUE, "null pixels");
 
 // GL_INVALID_VALUE may be generated if level is greater than log 2 max, where max is the returned value of GL_MAX_TEXTURE_SIZE.
 // GL_INVALID_OPERATION is generated if the texture array has not been defined by a previous  glTexImage2D or glCopyTexImage2D operation whose internalformat matches the format of glTexSubImage2D.
@@ -105,15 +100,15 @@ if (contextVersion < 2) {
     gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGB, gl.UNSIGNED_SHORT_5_6_5, c);
     wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "type not same as original RGB");
 }
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_SHORT_4_4_4_4, c);
-wtu.glErrorShouldBe(gl, gl.NO_ERROR, "make texture RGBA 4_4_4_4");
-gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_SHORT_4_4_4_4, c);
-wtu.glErrorShouldBe(gl, gl.NO_ERROR, "format same as original RGBA 4_4_4_4");
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
+wtu.glErrorShouldBe(gl, gl.NO_ERROR, "make texture RGBA UNSIGNED_BYTE");
+gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, c);
+wtu.glErrorShouldBe(gl, gl.NO_ERROR, "format same as original");
 gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGB, gl.UNSIGNED_BYTE, c);
-wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "format not same as original RGBA 4_4_4_4");
+wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "format not same as original");
 if (contextVersion < 2) {
-    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, c);
-    wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "type not same as original RGBA 4_4_4_4");
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_SHORT_4_4_4_4, c);
+    wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "type not same as original");
 }
 
 // Large canvas will trigger GPU-to-GPU fast path in chrome,
@@ -122,23 +117,23 @@ var largeCanvas = document.createElement("canvas");
 largeCanvas.width = 257;
 largeCanvas.height = 257;
 var largeCanvasContext = largeCanvas.getContext("2d");
-gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_SHORT_4_4_4_4, largeCanvas);
-wtu.glErrorShouldBe(gl, gl.NO_ERROR, "make texture RGBA 4_4_4_4");
-gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_SHORT_4_4_4_4, c);
-wtu.glErrorShouldBe(gl, gl.NO_ERROR, "format same as original RGBA 4_4_4_4");
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, largeCanvas);
+wtu.glErrorShouldBe(gl, gl.NO_ERROR, "make texture RGBA UNSIGNED_BYTE");
+gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, c);
+wtu.glErrorShouldBe(gl, gl.NO_ERROR, "format same as original");
 gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGB, gl.UNSIGNED_BYTE, c);
-wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "format not same as original RGBA 4_4_4_4");
+wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "format not same as original");
 if (contextVersion < 2) {
-    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, c);
-    wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "type not same as original RGBA 4_4_4_4");
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_SHORT_4_4_4_4, c);
+    wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "type not same as original");
 }
-gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_SHORT_4_4_4_4, largeCanvas);
-wtu.glErrorShouldBe(gl, gl.NO_ERROR, "format same as original RGBA 4_4_4_4");
+gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, largeCanvas);
+wtu.glErrorShouldBe(gl, gl.NO_ERROR, "format same as original");
 gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGB, gl.UNSIGNED_BYTE, largeCanvas);
-wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "format not same as original RGBA 4_4_4_4");
+wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "format not same as original");
 if (contextVersion < 2) {
-    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, largeCanvas);
-    wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "type not same as original RGBA 4_4_4_4");
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_SHORT_4_4_4_4, largeCanvas);
+    wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "type not same as original");
 }
 
 var maxCubeMapTextureSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE);

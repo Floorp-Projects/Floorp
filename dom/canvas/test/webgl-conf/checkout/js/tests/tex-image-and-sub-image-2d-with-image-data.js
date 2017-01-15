@@ -81,11 +81,40 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
         runTest();
     }
 
-    function runOneIteration(useTexSubImage2D, flipY, premultiplyAlpha, bindingTarget, program)
+    function runOneIteration(useTexSubImage2D, flipY, premultiplyAlpha,
+                             sourceSubRectangle, expected,
+                             bindingTarget, program)
     {
+        sourceSubRectangleString = '';
+        if (sourceSubRectangle) {
+            sourceSubRectangleString = ', sourceSubRectangle=' + sourceSubRectangle;
+        }
+        debug('');
         debug('Testing ' + (useTexSubImage2D ? 'texSubImage2D' : 'texImage2D') +
               ' with flipY=' + flipY + ' and premultiplyAlpha=' + premultiplyAlpha +
-              ', bindingTarget=' + (bindingTarget == gl.TEXTURE_2D ? 'TEXTURE_2D' : 'TEXTURE_CUBE_MAP'));
+              ', bindingTarget=' + (bindingTarget == gl.TEXTURE_2D ? 'TEXTURE_2D' : 'TEXTURE_CUBE_MAP') +
+              sourceSubRectangleString);
+
+        var loc;
+        var skipCorner = false;
+        if (bindingTarget == gl.TEXTURE_CUBE_MAP) {
+            loc = gl.getUniformLocation(program, "face");
+            switch (gl[pixelFormat]) {
+              case gl.RED_INTEGER:
+              case gl.RG_INTEGER:
+              case gl.RGB_INTEGER:
+              case gl.RGBA_INTEGER:
+                // https://github.com/KhronosGroup/WebGL/issues/1819
+                skipCorner = true;
+                break;
+            }
+        }
+
+        if (skipCorner && expected.length == 1 && (flipY ^ sourceSubRectangle[1] == 0)) {
+            debug("Test skipped, see WebGL#1819");
+            return;
+        }
+
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         // Enable writes to the RGBA channels
         gl.colorMask(1, 1, 1, 0);
@@ -107,16 +136,42 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
                        gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
                        gl.TEXTURE_CUBE_MAP_NEGATIVE_Z];
         }
+        // Handle the source sub-rectangle if specified (WebGL 2.0 only)
+        if (sourceSubRectangle) {
+            gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, sourceSubRectangle[0]);
+            gl.pixelStorei(gl.UNPACK_SKIP_ROWS, sourceSubRectangle[1]);
+        }
         // Upload the image into the texture
         for (var tt = 0; tt < targets.length; ++tt) {
-            if (useTexSubImage2D) {
-                // Initialize the texture to black first
-                gl.texImage2D(targets[tt], 0, gl[internalFormat], imageData.width, imageData.height, 0,
-                              gl[pixelFormat], gl[pixelType], null);
-                gl.texSubImage2D(targets[tt], 0, 0, 0, gl[pixelFormat], gl[pixelType], imageData);
+            if (sourceSubRectangle) {
+                if (useTexSubImage2D) {
+                    // Initialize the texture to black first
+                    gl.texImage2D(targets[tt], 0, gl[internalFormat],
+                                  sourceSubRectangle[2], sourceSubRectangle[3], 0,
+                                  gl[pixelFormat], gl[pixelType], null);
+                    gl.texSubImage2D(targets[tt], 0, 0, 0,
+                                     sourceSubRectangle[2], sourceSubRectangle[3],
+                                     gl[pixelFormat], gl[pixelType], imageData);
+                } else {
+                    gl.texImage2D(targets[tt], 0, gl[internalFormat],
+                                  sourceSubRectangle[2], sourceSubRectangle[3], 0,
+                                  gl[pixelFormat], gl[pixelType], imageData);
+                }
             } else {
-                gl.texImage2D(targets[tt], 0, gl[internalFormat], gl[pixelFormat], gl[pixelType], imageData);
+                if (useTexSubImage2D) {
+                    // Initialize the texture to black first
+                    gl.texImage2D(targets[tt], 0, gl[internalFormat], imageData.width, imageData.height, 0,
+                                  gl[pixelFormat], gl[pixelType], null);
+                    gl.texSubImage2D(targets[tt], 0, 0, 0, gl[pixelFormat], gl[pixelType], imageData);
+                } else {
+                    gl.texImage2D(targets[tt], 0, gl[internalFormat], gl[pixelFormat], gl[pixelType], imageData);
+                }
             }
+        }
+
+        if (sourceSubRectangle) {
+            gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0);
+            gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0);
         }
 
         var width = gl.canvas.width;
@@ -124,17 +179,19 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
         var height = gl.canvas.height;
         var halfHeight = Math.floor(height / 2);
 
-        var top = flipY ? 0 : (height - halfHeight);
-        var bottom = flipY ? (height - halfHeight) : 0;
+        var top = 0;
+        var bottom = height - halfHeight;
+        var left = 0;
+        var right = width - halfWidth;
 
-        var tl = redColor;
-        var tr = premultiplyAlpha ? blackColor : redColor;
-        var bl = greenColor;
-        var br = premultiplyAlpha ? blackColor : greenColor;
-
-        var loc;
-        if (bindingTarget == gl.TEXTURE_CUBE_MAP) {
-            loc = gl.getUniformLocation(program, "face");
+        var tl, tr, bl, br;
+        if (expected.length == 1) {
+            tl = tr = bl = br = expected[0];
+        } else {
+            tl = expected[0];
+            tr = expected[1];
+            bl = expected[2];
+            br = expected[3];
         }
 
         for (var tt = 0; tt < targets.length; ++tt) {
@@ -146,12 +203,14 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
 
             // Check the top pixel and bottom pixel and make sure they have
             // the right color.
-            debug("Checking " + (flipY ? "top" : "bottom"));
-            wtu.checkCanvasRect(gl, 0, bottom, halfWidth, halfHeight, tl, "shouldBe " + tl);
-            wtu.checkCanvasRect(gl, halfWidth, bottom, halfWidth, halfHeight, tr, "shouldBe " + tr);
-            debug("Checking " + (flipY ? "bottom" : "top"));
-            wtu.checkCanvasRect(gl, 0, top, halfWidth, halfHeight, bl, "shouldBe " + bl);
-            wtu.checkCanvasRect(gl, halfWidth, top, halfWidth, halfHeight, br, "shouldBe " + br);
+            wtu.checkCanvasRect(gl, left, top, halfWidth, halfHeight, tl, "shouldBe " + tl);
+            if (!skipCorner) {
+                wtu.checkCanvasRect(gl, right, top, halfWidth, halfHeight, tr, "shouldBe " + tr);
+            }
+            wtu.checkCanvasRect(gl, left, bottom, halfWidth, halfHeight, bl, "shouldBe " + bl);
+            if (!skipCorner) {
+                wtu.checkCanvasRect(gl, right, bottom, halfWidth, halfHeight, br, "shouldBe " + br);
+            }
         }
     }
 
@@ -167,19 +226,39 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
     }
 
     function runTestOnBindingTarget(bindingTarget, program) {
+        var k = blackColor;
+        var r = redColor;
+        var g = greenColor;
         var cases = [
-            { sub: false, flipY: true, premultiplyAlpha: false },
-            { sub: false, flipY: false, premultiplyAlpha: false },
-            { sub: false, flipY: true, premultiplyAlpha: true },
-            { sub: false, flipY: false, premultiplyAlpha: true },
-            { sub: true, flipY: true, premultiplyAlpha: false },
-            { sub: true, flipY: false, premultiplyAlpha: false },
-            { sub: true, flipY: true, premultiplyAlpha: true },
-            { sub: true, flipY: false, premultiplyAlpha: true },
+            { expected: [r, r, g, g], flipY: false, premultiplyAlpha: false, sub: false },
+            { expected: [r, r, g, g], flipY: false, premultiplyAlpha: false, sub: true },
+            { expected: [r, k, g, k], flipY: false, premultiplyAlpha: true, sub: false },
+            { expected: [r, k, g, k], flipY: false, premultiplyAlpha: true, sub: true },
+            { expected: [g, g, r, r], flipY: true, premultiplyAlpha: false, sub: false },
+            { expected: [g, g, r, r], flipY: true, premultiplyAlpha: false, sub: true },
+            { expected: [g, k, r, k], flipY: true, premultiplyAlpha: true, sub: false },
+            { expected: [g, k, r, k], flipY: true, premultiplyAlpha: true, sub: true },
         ];
+
+        if (wtu.getDefault3DContextVersion() > 1) {
+            var morecases = [];
+            // Make 2 copies of the original case: top left and bottom right 1x1 rectangles
+            for (var i = 0; i < cases.length; i++) {
+                for (var subX = 0; subX <= 1; subX++) {
+                    var subY = subX == 0 ? 1 : 0;
+                    // shallow-copy cases[i] into newcase
+                    var newcase = Object.assign({}, cases[i]);
+                    newcase.expected = [cases[i].expected[subY * 2 + subX]];
+                    newcase.sourceSubRectangle = [subX, subY, 1, 1];
+                    morecases.push(newcase);
+                }
+            }
+            cases = cases.concat(morecases);
+        }
 
         for (var i in cases) {
             runOneIteration(cases[i].sub, cases[i].flipY, cases[i].premultiplyAlpha,
+                            cases[i].sourceSubRectangle, cases[i].expected,
                             bindingTarget, program);
         }
     }

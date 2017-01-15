@@ -1729,7 +1729,7 @@ goog.scope(function() {
             if (!this.testTextureSize(testSizes[currentIteration - 1]))
                 testFailedOptions('Fail: Case ' + (currentIteration - 1) + ' Got unexpected texture size', false);
             else
-				testPassedOptions('Pass', true);
+                testPassedOptions('Pass', true);
 
             return tcuTestCase.IterateResult.CONTINUE;
         }
@@ -2381,7 +2381,8 @@ goog.scope(function() {
                 es3fShaderTextureFunctionTests.getCaseSpec('isampler3d_bias', es3fShaderTextureFunctionTests.TexFunction.TEXTUREPROJ, [0.9, 1.05, -0.08, -0.75], [-1.13, -1.7, -1.7, -0.75],    true,    -2.0,    2.0,    true, [3, -8, 7],    tex3DInt, es3fShaderTextureFunctionTests.evalTexture3DProjOffsetBias, es3fShaderTextureFunctionTests.CaseFlags.FRAGMENT),
                 es3fShaderTextureFunctionTests.getCaseSpec('usampler3d_bias', es3fShaderTextureFunctionTests.TexFunction.TEXTUREPROJ, [0.9, 1.05, -0.08, -0.75], [-1.13, -1.7, -1.7, -0.75],    true,    -2.0,    2.0,    true, [-8, 7, 3],    tex3DUint, es3fShaderTextureFunctionTests.evalTexture3DProjOffsetBias, es3fShaderTextureFunctionTests.CaseFlags.FRAGMENT),
 
-                es3fShaderTextureFunctionTests.getCaseSpec('sampler2dshadow', es3fShaderTextureFunctionTests.TexFunction.TEXTUREPROJ, [0.2, 0.6, 0.0, 1.5], [-2.25, -3.45, 1.5, 1.5],    false,    0.0,    0.0,    true, [-8, 7, 0],    tex2DShadow, es3fShaderTextureFunctionTests.evalTexture2DShadowProjOffset, es3fShaderTextureFunctionTests.CaseFlags.VERTEX),
+                // NOTE: offset changed from [-8, 7, 0] in native dEQP to [7, -8, 0] per https://github.com/KhronosGroup/WebGL/issues/2033
+                es3fShaderTextureFunctionTests.getCaseSpec('sampler2dshadow', es3fShaderTextureFunctionTests.TexFunction.TEXTUREPROJ, [0.2, 0.6, 0.0, 1.5], [-2.25, -3.45, 1.5, 1.5],    false,    0.0,    0.0,    true, [7, -8, 0],    tex2DShadow, es3fShaderTextureFunctionTests.evalTexture2DShadowProjOffset, es3fShaderTextureFunctionTests.CaseFlags.VERTEX),
                 es3fShaderTextureFunctionTests.getCaseSpec('sampler2dshadow', es3fShaderTextureFunctionTests.TexFunction.TEXTUREPROJ, [0.2, 0.6, 0.0, 1.5], [-2.25, -3.45, 1.5, 1.5],    false,    0.0,    0.0,    true, [7, -8, 0],    tex2DMipmapShadow, es3fShaderTextureFunctionTests.evalTexture2DShadowProjOffset, es3fShaderTextureFunctionTests.CaseFlags.FRAGMENT),
                 es3fShaderTextureFunctionTests.getCaseSpec('sampler2dshadow_bias', es3fShaderTextureFunctionTests.TexFunction.TEXTUREPROJ, [0.2, 0.6, 0.0, 1.5], [-2.25, -3.45, 1.5, 1.5],    true,    -2.0,    2.0,    true, [-8, 7, 0],    tex2DShadow, es3fShaderTextureFunctionTests.evalTexture2DShadowProjOffsetBias,    es3fShaderTextureFunctionTests.CaseFlags.FRAGMENT)
             ];
@@ -2474,7 +2475,7 @@ goog.scope(function() {
 
                 es3fShaderTextureFunctionTests.getCaseSpec('sampler2dshadow', es3fShaderTextureFunctionTests.TexFunction.TEXTUREPROJLOD, [0.2, 0.6, 0.0, 1.5], [-2.25, -3.45, 1.5, 1.5],    false,    -1.0,    9.0,    true, [-8, 7, 0],    tex2DMipmapShadow, es3fShaderTextureFunctionTests.evalTexture2DShadowProjLodOffset,    es3fShaderTextureFunctionTests.CaseFlags.BOTH)
             ];
-        	es3fShaderTextureFunctionTests.createCaseGroup(this, 'textureprojlodoffset', 'textureProjLodOffset() Tests', textureProjLodOffsetCases);
+            es3fShaderTextureFunctionTests.createCaseGroup(this, 'textureprojlodoffset', 'textureProjLodOffset() Tests', textureProjLodOffsetCases);
 
             // textureGrad() cases
             // \note Only one of dudx, dudy, dvdx, dvdy is non-zero since spec allows approximating p from derivates by various methods.

@@ -624,31 +624,25 @@ function runBoundDeleteTests() {
         gl.deleteBuffer(colorBuffer);
         gl.deleteBuffer(positionBuffer);
 
-        var expectRetained = (ii != 0);
-        var shouldBeStr = (expectRetained ? "retained" : "cleared");
-
+        // The buffers should not be accessible at this point. Deleted objects that are bound
+        // in the current context undergo an automatic unbinding
         var boundPositionBuffer = gl.getVertexAttrib(0, gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING);
-        if (expectRetained != (boundPositionBuffer == positionBuffer)) {
-            testFailed("Position attrib stored buffer should be " + shouldBeStr + ".");
+        if(boundPositionBuffer == positionBuffer) {
+            testFailed("Position buffer should be automatically unbound when deleted");
         }
-
         var boundColorBuffer = gl.getVertexAttrib(1, gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING);
-        if (expectRetained != (boundColorBuffer == colorBuffer)) {
-            testFailed("Color attrib stored buffer should be " + shouldBeStr + ".");
+        if(boundColorBuffer == colorBuffer) {
+            testFailed("Color buffer should be automatically unbound when deleted");
         }
 
-        // If retained, everything should still work. If cleared, drawing should now fail.
         gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_BYTE, 0);
-        var expectedError = (expectRetained ? gl.NO_ERROR : gl.INVALID_OPERATION);
-        wtu.glErrorShouldBe(gl, expectedError,
-                            "Draw call should " + (expectRetained ? "not " : "") + "fail.");
+        wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "Draw call should fail with unbound position and color buffers");
 
-        if (!gl.isBuffer(positionBuffer)) {
-            testFailed("Position buffer should count for isBuffer.");
-        }
-        if (!gl.isBuffer(colorBuffer)) {
-            testFailed("Color buffer should count for isBuffer.");
-        }
+        var isPositionBuffer = gl.isBuffer(positionBuffer);
+        var isColorBuffer    = gl.isBuffer(colorBuffer);
+
+        if(isPositionBuffer)  testFailed("Position buffer should no longer exist after last ref removed");
+        if(isColorBuffer)     testFailed("Color buffer should no longer exist after last ref removed");
     }
 }
 
