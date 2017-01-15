@@ -48,11 +48,11 @@ void main (void)
     float1 = float(bool4);
     float1 = float(int_1);
     int_1 = int(float1);
-    int_1 = int(bool4); 
+    int_1 = int(bool4);
 
     {
         int a, b, c;
-        
+
         a = b;
         b = c;
         {
@@ -62,7 +62,7 @@ void main (void)
             c = d;
             {
                 int a, d, e;
-                
+
                 a = d;
                 d = e;
             }
@@ -120,7 +120,7 @@ void main (void)
         --int_1;
 
     bool4 = BoolConst1 && ! (int_1 != 0) && ! BoolConst1  && ! (FloatConst1 != 0.0) && (FloatConst1 != 0.0) && (float1 != 0.0);
-    
+
     float1 = 5 != 0 ? float1 : float(int_1);
     float1 = BoolConst1 ? float1 : float(int_1);
 

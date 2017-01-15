@@ -29,7 +29,7 @@ precision mediump float;
 varying vec4 color;
 
 struct sabcd
-{ 
+{
  mat2 a;
 };
 

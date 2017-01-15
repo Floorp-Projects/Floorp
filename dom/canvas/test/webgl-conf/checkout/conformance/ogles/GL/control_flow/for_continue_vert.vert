@@ -36,10 +36,10 @@ void main (void)
 	  count++;
 	  if(count == 5)
             continue;
-	  else 
+	  else
 	    val += count;
 	}
-	
+
 
 	float gray;
 	if( val == 50)

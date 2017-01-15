@@ -2,6 +2,7 @@
 --min-version 1.0.2 context-attribute-preserve-drawing-buffer.html
 context-attributes-alpha-depth-stencil-antialias.html
 --min-version 1.0.4 context-size-change.html
+--min-version 1.0.4 context-no-alpha-fbo-with-alpha.html
 --min-version 1.0.2 --slow context-creation-and-destruction.html
 --min-version 1.0.3 --slow context-creation.html
 --min-version 1.0.3 --slow context-eviction-with-garbage-collection.html

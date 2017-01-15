@@ -38,7 +38,7 @@ void main (void)
 		result = black;
 	if((m[0][1] != 0.0))
 		result = black;
-	
+
 	if((m[1][0] != 0.0))
 		result = black;
 	if((m[1][1] != 0.5))

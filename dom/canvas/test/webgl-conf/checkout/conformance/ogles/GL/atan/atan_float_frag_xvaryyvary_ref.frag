@@ -42,7 +42,7 @@ void main (void)
 	float sign = 1.0;
 	vec4 result = vec4(0.0, 0.0, 0.0, 1.0);
 	const float epsilon = 1.0e-4;
-	
+
 	// Avoid evaluating atan(0, x) for x < epsilon because it's implementation-dependent
 	if(x > epsilon || abs(y) > epsilon)
 	{
@@ -82,7 +82,7 @@ void main (void)
 			if(y < 0.0) result.r -= 0.5;
 			else if(y > 0.0) result.r += 0.5;
 	}
-	
+
 	gl_FragColor = result;
 }
 
