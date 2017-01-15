@@ -41,8 +41,8 @@ void main (void)
 	float gray = 0.0;
 	if( (s2.a[0]) && (s2.a[1]) && (s2.b[0]) && (!s2.b[1]) && (s2.b[2]) && (s2.c[0]) && (s2.c[1]) && (s2.c[2]) )
 	  gray=1.0;
-	else 
+	else
           gray =0.0;
-	
+
 	gl_FragColor = vec4(gray, gray, gray, 1.0);
 }

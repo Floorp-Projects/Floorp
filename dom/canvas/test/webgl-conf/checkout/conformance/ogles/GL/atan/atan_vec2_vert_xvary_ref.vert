@@ -81,7 +81,7 @@ void main (void)
 
 		result[0] = sign[0] * (M_PI / 2.0 - atan_c[0]) / M_PI + 0.5;
 	}
-	
+
 
 	if(c[1] < 0.0)
 	{

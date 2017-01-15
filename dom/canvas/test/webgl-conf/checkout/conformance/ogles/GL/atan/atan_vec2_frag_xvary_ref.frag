@@ -36,7 +36,7 @@ void main (void)
 	vec2 scale = vec2(1.0);
 	vec2 sign = vec2(1.0);
 	vec4 result = vec4(0.0, 0.0, 0.0, 1.0);
-	
+
 	if(c[0] < 0.0)
 	{
 		sign[0] = -1.0;
@@ -81,8 +81,8 @@ void main (void)
 
 		result[0] = sign[0] * (M_PI / 2.0 - atan_c[0]) / M_PI + 0.5;
 	}
-	
-	
+
+
 	if(c[1] < 0.0)
 	{
 		sign[1] = -1.0;
