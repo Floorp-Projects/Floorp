@@ -145,10 +145,9 @@ ServoStyleSheet::List(FILE* aOut, int32_t aIndex) const
 }
 #endif
 
-css::Rule*
+nsIDOMCSSRule*
 ServoStyleSheet::GetDOMOwnerRule() const
 {
-  NS_ERROR("stylo: Don't know how to get DOM owner rule for ServoStyleSheet");
   return nullptr;
 }
 

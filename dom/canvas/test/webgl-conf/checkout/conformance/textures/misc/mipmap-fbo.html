@@ -54,20 +54,20 @@ function testMipmapGeneration() {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 32, 32, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
     gl.bindTexture(gl.TEXTURE_2D, null);
-                
+
     // setup framebuffer //
     var fbo = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-                
+
     // fill the framebuffer //
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.viewport(0, 0, 32, 32);
     gl.clearColor(1, 0, 1, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-                
+
     // generate mipmap //
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.generateMipmap(gl.TEXTURE_2D);
@@ -75,7 +75,7 @@ function testMipmapGeneration() {
     var program = wtu.setupTexturedQuad(gl);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
-                
+
     // readback //
     wtu.checkCanvas(gl, [255, 0, 255, 255]);
 }

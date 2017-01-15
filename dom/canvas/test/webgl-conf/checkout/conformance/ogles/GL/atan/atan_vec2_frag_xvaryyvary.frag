@@ -35,7 +35,7 @@ void main (void)
 	vec2 y = 2.0 * (color.bb - 0.5);
 	const float epsilon = 1.0e-4;
 	gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-	
+
 	// Avoid evaluating atan(0, x) for x < epsilon because it's implementation-dependent
 	if(x[0] > epsilon || abs(y[0]) > epsilon)
 	{

@@ -679,6 +679,13 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     // Pops iterator from the top of the stack. Pushes the result of |.next()|
     // onto the stack.
     MOZ_MUST_USE bool emitIteratorNext(ParseNode* pn, bool allowSelfHosted = false);
+    MOZ_MUST_USE bool emitIteratorClose(
+        mozilla::Maybe<JumpTarget> yieldStarTryStart = mozilla::Nothing(),
+        bool allowSelfHosted = false);
+
+    template <typename InnerEmitter>
+    MOZ_MUST_USE bool wrapWithDestructuringIteratorCloseTryNote(int32_t iterDepth,
+                                                                InnerEmitter emitter);
 
     // Check if the value on top of the stack is "undefined". If so, replace
     // that value on the stack with the value defined by |defaultExpr|.
@@ -726,7 +733,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     MOZ_MUST_USE bool emitSelfHostedCallFunction(ParseNode* pn);
     MOZ_MUST_USE bool emitSelfHostedResumeGenerator(ParseNode* pn);
     MOZ_MUST_USE bool emitSelfHostedForceInterpreter(ParseNode* pn);
-    MOZ_MUST_USE bool emitSelfHostedAllowContentSpread(ParseNode* pn);
+    MOZ_MUST_USE bool emitSelfHostedAllowContentIter(ParseNode* pn);
 
     MOZ_MUST_USE bool emitComprehensionFor(ParseNode* compFor);
     MOZ_MUST_USE bool emitComprehensionForIn(ParseNode* pn);

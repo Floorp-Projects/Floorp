@@ -1916,8 +1916,16 @@
      *   Stack: => this
      */ \
     macro(JSOP_GLOBALTHIS,    186,"globalthis", NULL,     1,  0,  1,  JOF_BYTE) \
-    macro(JSOP_UNUSED187,     187,"unused187",  NULL,     1,  0,  0,  JOF_BYTE) \
-    \
+    /*
+     * Pushes a boolean indicating whether the top of the stack is
+     * MagicValue(JS_GENERATOR_CLOSING).
+     *
+     *   Category: Statements
+     *   Type: For-In Statement
+     *   Operands:
+     *   Stack: val => val, res
+     */ \
+    macro(JSOP_ISGENCLOSING,  187, "isgenclosing",   NULL,         1,  1,  2,  JOF_BYTE) \
     /*
      * Pushes unsigned 24-bit int immediate integer operand onto the stack.
      *   Category: Literals

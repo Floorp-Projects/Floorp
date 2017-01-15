@@ -386,16 +386,17 @@ function runDrawTests() {
     return (index == 0) ? [0, 0, 255, 255] : [0, 255, 0, 255];
   });
 
-  // By default, gl_FragColor only writes to color number zero.
-  // In GLES SL 3.00 context, drawBuffers can specify the color buffers that gl_FragColor should write into.
-  // See GLES3 spec section 4.2.1 Selecting Buffers for Writing.
-  debug("test that an OpenGL ES Shading Language 3.00 shader with a single output color writes to color buffers specified by drawBuffers");
+  // If there is only a single output, the location defaults to zero if not specified.
+  // See GLSL ES Spec 3.00.4, Section 4.3.8.2, Output Layout Qualifiers.
+  debug("test that an OpenGL ES Shading Language 3.00 shader with a single output color defaults to color number zero");
   gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
   gl.drawBuffers(bufs);
   gl.useProgram(redProgram);
   wtu.drawUnitQuad(gl);
 
-  checkAttachmentsForColor(attachments, [255, 0, 0, 255]);
+  checkAttachmentsForColorFn(attachments, function(attachment, index) {
+    return (index == 0) ? [255, 0, 0, 255] : [0, 255, 0, 255];
+  });
 
   if (maxUsable > 1) {
     // Prepare for following tests by clearing all attachments to red.

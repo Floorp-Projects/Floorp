@@ -1408,6 +1408,12 @@ CSSProperties.prototype.marginLeft;
 
 /**
  * @type {string}
+ * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-markerOffset
+ */
+CSSProperties.prototype.markerOffset;
+
+/**
+ * @type {string}
  * @see http://www.w3.org/TR/DOM-Level-2-Style/css.html#CSS-CSSProperties-marks
  */
 CSSProperties.prototype.marks;
