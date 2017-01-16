@@ -9,8 +9,7 @@ const protocol = require("devtools/shared/protocol");
 
 const { Cu, Ci } = require("chrome");
 
-const { on, once, off, emit } = events;
-const { method, Arg, Option, RetVal, types } = protocol;
+const { on, off, emit } = events;
 
 const { sandbox, evaluate } = require("sdk/loader/sandbox");
 const { Class } = require("sdk/core/heritage");
@@ -38,7 +37,7 @@ const ERR_DIRECTOR_UNINSTALLED_SCRIPTID = "uninstalled director-script id";
  * A MessagePort Actor allowing communication through messageport events
  * over the remote debugging protocol.
  */
-var MessagePortActor = exports.MessagePortActor = protocol.ActorClassWithSpec(messagePortSpec, {
+var MessagePortActor = protocol.ActorClassWithSpec(messagePortSpec, {
   /**
    * Create a MessagePort actor.
    *
@@ -91,7 +90,7 @@ var MessagePortActor = exports.MessagePortActor = protocol.ActorClassWithSpec(me
     // and call the actor start method to start receiving messages
     // from the MessagePort's queue.
     this.port.onmessage = (evt) => {
-      var ports;
+      let ports;
 
       // TODO: test these wrapped ports
       if (Array.isArray(evt.ports)) {
@@ -138,18 +137,20 @@ var MessagePortActor = exports.MessagePortActor = protocol.ActorClassWithSpec(me
   },
 });
 
+exports.MessagePortActor = MessagePortActor;
+
 /**
- * The Director Script Actor manage javascript code running in a non-privileged sandbox with the same
- * privileges of the target global (browser tab or a firefox os app).
+ * The Director Script Actor manage javascript code running in a non-privileged sandbox
+ * with the same privileges of the target global (browser tab or a firefox os app).
  *
- * After retrieving an instance of this actor (from the tab director actor), you'll need to set it up
- * by calling setup().
+ * After retrieving an instance of this actor (from the tab director actor), you'll
+ * need to set it up by calling setup().
  *
- * After the setup, this actor will automatically attach/detach the content script (and optionally a
- * directly connect the debugger client and the content script using a MessageChannel) on tab
- * navigation.
+ * After the setup, this actor will automatically attach/detach the content script
+ * (and optionally a directly connect the debugger client and the content script using
+ * a MessageChannel) on tab navigation.
  */
-var DirectorScriptActor = exports.DirectorScriptActor = protocol.ActorClassWithSpec(directorScriptSpec, {
+var DirectorScriptActor = protocol.ActorClassWithSpec(directorScriptSpec, {
   /**
    * Creates the director script actor
    *
@@ -184,8 +185,8 @@ var DirectorScriptActor = exports.DirectorScriptActor = protocol.ActorClassWithS
   },
 
   /**
-   * Starts listening to the tab global created, in order to create the director-script sandbox
-   * using the configured scriptCode, attached/detached automatically to the tab
+   * Starts listening to the tab global created, in order to create the director-script
+   * sandbox using the configured scriptCode, attached/detached automatically to the tab
    * window on tab navigation.
    *
    * @param Boolean reload
@@ -204,7 +205,8 @@ var DirectorScriptActor = exports.DirectorScriptActor = protocol.ActorClassWithS
     on(this.tabActor, "window-ready", this._onGlobalCreated);
     on(this.tabActor, "window-destroyed", this._onGlobalDestroyed);
 
-    // optional skip attach (needed by director-manager for director scripts bulk activation)
+    // optional skip attach (needed by director-manager for director scripts
+    // bulk activation)
     if (skipAttach) {
       return;
     }
@@ -213,7 +215,11 @@ var DirectorScriptActor = exports.DirectorScriptActor = protocol.ActorClassWithS
       this.window.location.reload();
     } else {
       // fake a global created event to attach without reload
-      this._onGlobalCreated({ id: getWindowID(this.window), window: this.window, isTopLevel: true });
+      this._onGlobalCreated({
+        id: getWindowID(this.window),
+        window: this.window,
+        isTopLevel: true
+      });
     }
   },
 
@@ -272,7 +278,7 @@ var DirectorScriptActor = exports.DirectorScriptActor = protocol.ActorClassWithS
 
       // attach the global window
       this._lastAttachedWinId = id;
-      var port = this._scriptSandbox.attach(window, id);
+      let port = this._scriptSandbox.attach(window, id);
       this._onDirectorScriptAttach(window, port);
     } catch (e) {
       this._onDirectorScriptError(e);
@@ -334,10 +340,13 @@ var DirectorScriptActor = exports.DirectorScriptActor = protocol.ActorClassWithS
   }
 });
 
+exports.DirectorScriptActor = DirectorScriptActor;
+
 /**
- * The DirectorManager Actor is a tab actor which manages enabling/disabling director scripts.
+ * The DirectorManager Actor is a tab actor which manages enabling/disabling
+ * director scripts.
  */
-const DirectorManagerActor = exports.DirectorManagerActor = protocol.ActorClassWithSpec(directorManagerSpec, {
+exports.DirectorManagerActor = protocol.ActorClassWithSpec(directorManagerSpec, {
   /* init & destroy methods */
   initialize: function (conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
@@ -438,7 +447,7 @@ const DirectorManagerActor = exports.DirectorManagerActor = protocol.ActorClassW
    * (and create the actor instance if it doesn't exists yet).
    */
   getByScriptId: function (scriptId) {
-    var id = scriptId;
+    let id = scriptId;
     // raise an unknown director-script id exception
     if (!DirectorRegistry.checkInstalled(id)) {
       console.error(ERR_DIRECTOR_UNKNOWN_SCRIPTID, id);
@@ -454,7 +463,6 @@ const DirectorManagerActor = exports.DirectorManagerActor = protocol.ActorClassW
 
       // test lazy director-script (e.g. uninstalled in the parent process)
       if (!directorScriptDefinition) {
-
         console.error(ERR_DIRECTOR_UNINSTALLED_SCRIPTID, id);
         throw Error(ERR_DIRECTOR_UNINSTALLED_SCRIPTID);
       }
@@ -491,12 +499,12 @@ const DirectorScriptSandbox = Class({
   },
 
   attach: function (window, innerId) {
-    this._innerId = innerId,
+    this._innerId = innerId;
     this._window = window;
     this._proto = Cu.createObjectIn(this._window);
 
-    var id = this._scriptId;
-    var uri = this._scriptCode;
+    let id = this._scriptId;
+    let uri = this._scriptCode;
 
     this._sandbox = sandbox(window, {
       sandboxName: uri,
@@ -515,7 +523,7 @@ const DirectorScriptSandbox = Class({
 
     // create a CommonJS module object which match the interface from addon-sdk
     // (addon-sdk/sources/lib/toolkit/loader.js#L678-L686)
-    var module = Cu.cloneInto(Object.create(null, {
+    let module = Cu.cloneInto(Object.create(null, {
       id: { enumerable: true, value: id },
       uri: { enumerable: true, value: uri },
       exports: { enumerable: true, value: Cu.createObjectIn(this._sandbox) }
@@ -530,7 +538,11 @@ const DirectorScriptSandbox = Class({
       exports: { enumerable: true, value: module.exports },
       console: {
         enumerable: true,
-        value: Cu.cloneInto(directorScriptConsole, this._sandbox, { cloneFunctions: true })
+        value: Cu.cloneInto(
+          directorScriptConsole,
+          this._sandbox,
+          { cloneFunctions: true }
+        )
       }
     });
 
@@ -544,7 +556,8 @@ const DirectorScriptSandbox = Class({
     });
 
     // TODO: if the debugger target is local, the debugger client could pass
-    // to the director actor the resource url instead of the entire javascript source code.
+    // to the director actor the resource url instead of the entire javascript
+    // source code.
 
     // evaluate the director script source in the sandbox
     evaluate(this._sandbox, this._scriptCode, "javascript:" + this._scriptCode);
@@ -553,14 +566,17 @@ const DirectorScriptSandbox = Class({
     let { port1, port2 } = new this._window.MessageChannel();
 
     // prepare the unload callbacks queue
-    var sandboxOnUnloadQueue = this._sandboxOnUnloadQueue = [];
+    let sandboxOnUnloadQueue = this._sandboxOnUnloadQueue = [];
 
     // create the attach options
-    var attachOptions = this._attachOptions = Cu.createObjectIn(this._sandbox);
+    let attachOptions = this._attachOptions = Cu.createObjectIn(this._sandbox);
     Object.defineProperties(attachOptions, {
       port: { enumerable: true, value: port1 },
       window: { enumerable: true, value: window },
-      scriptOptions: { enumerable: true, value: Cu.cloneInto(this._scriptOptions, this._sandbox) },
+      scriptOptions: {
+        enumerable: true,
+        value: Cu.cloneInto(this._scriptOptions, this._sandbox)
+      },
       onUnload: {
         enumerable: true,
         value: Cu.cloneInto(function (cb) {
@@ -573,7 +589,7 @@ const DirectorScriptSandbox = Class({
     });
 
     // select the attach method
-    var exports = this._proto.module.exports;
+    let exports = this._proto.module.exports;
     if (this._scriptOptions && "attachMethod" in this._scriptOptions) {
       this._sandboxOnAttach = exports[this._scriptOptions.attachMethod];
     } else {
@@ -591,7 +607,7 @@ const DirectorScriptSandbox = Class({
 
     return port2;
   },
-  destroy:  function (onError) {
+  destroy: function (onError) {
     // evaluate queue unload methods if any
     while (this._sandboxOnUnloadQueue && this._sandboxOnUnloadQueue.length > 0) {
       let cb = this._sandboxOnUnloadQueue.pop();
