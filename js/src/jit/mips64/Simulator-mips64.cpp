@@ -3016,6 +3016,21 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
               case ff_c_f_fmt:
                 MOZ_CRASH();
                 break;
+              case ff_movz_fmt:
+                if (rt == 0) {
+                  setFpuRegisterDouble(fd_reg, getFpuRegisterDouble(fs_reg));
+                }
+                break;
+              case ff_movn_fmt:
+                if (rt != 0) {
+                  setFpuRegisterDouble(fd_reg, getFpuRegisterDouble(fs_reg));
+                }
+                break;
+              case ff_movf_fmt:
+                if (testFCSRBit(fcsr_cc)) {
+                  setFpuRegisterDouble(fd_reg, getFpuRegisterDouble(fs_reg));
+                }
+                break;
               default:
                 MOZ_CRASH();
             }
