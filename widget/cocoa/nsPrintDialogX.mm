@@ -184,6 +184,8 @@ NS_IMETHODIMP
 nsPrintDialogServiceX::ShowPageSetup(nsPIDOMWindowOuter *aParent,
                                      nsIPrintSettings *aNSSettings)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
   NS_PRECONDITION(aParent, "aParent must not be null");
   NS_PRECONDITION(aNSSettings, "aSettings must not be null");
   NS_ENSURE_TRUE(aNSSettings, NS_ERROR_FAILURE);
@@ -199,6 +201,8 @@ nsPrintDialogServiceX::ShowPageSetup(nsPIDOMWindowOuter *aParent,
   nsCocoaUtils::CleanUpAfterNativeAppModalDialog();
 
   return button == NSFileHandlingPanelOKButton ? NS_OK : NS_ERROR_ABORT;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 // Accessory view

@@ -132,14 +132,15 @@ private:
                         bool includeSubdomains, uint32_t flags,
                         SecurityPropertyState aHSTSState, bool aIsPreload);
   nsresult ProcessHeaderInternal(uint32_t aType, nsIURI* aSourceURI,
-                                 const char* aHeader, nsISSLStatus* aSSLStatus,
+                                 const nsCString& aHeader,
+                                 nsISSLStatus* aSSLStatus,
                                  uint32_t aFlags, uint64_t* aMaxAge,
                                  bool* aIncludeSubdomains,
                                  uint32_t* aFailureResult);
-  nsresult ProcessSTSHeader(nsIURI* aSourceURI, const char* aHeader,
+  nsresult ProcessSTSHeader(nsIURI* aSourceURI, const nsCString& aHeader,
                             uint32_t flags, uint64_t* aMaxAge,
                             bool* aIncludeSubdomains, uint32_t* aFailureResult);
-  nsresult ProcessPKPHeader(nsIURI* aSourceURI, const char* aHeader,
+  nsresult ProcessPKPHeader(nsIURI* aSourceURI, const nsCString& aHeader,
                             nsISSLStatus* aSSLStatus, uint32_t flags,
                             uint64_t* aMaxAge, bool* aIncludeSubdomains,
                             uint32_t* aFailureResult);

@@ -4,8 +4,13 @@
 
 /* import-globals-from head.js */
 
-// Basic test to assert that the storage tree and table corresponding to each
-// item in the storage tree is correctly displayed
+// A second basic test to assert that the storage tree and table corresponding
+// to each item in the storage tree is correctly displayed.
+
+// This test differs from browser_storage_basic.js because the URLs we load
+// include fragments e.g. http://example.com/test.js#abcdefg
+//                                                  ^^^^^^^^
+//                                                  fragment
 
 // Entries that should be present in the tree for this test
 // Format for each entry in the array :
@@ -124,7 +129,8 @@ function* testTables() {
 }
 
 add_task(function* () {
-  yield openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
+  yield openTabAndSetupStorage(
+    MAIN_DOMAIN + "storage-listings-with-fragment.html#abc");
 
   testTree();
   yield testTables();

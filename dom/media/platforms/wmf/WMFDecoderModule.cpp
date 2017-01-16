@@ -210,7 +210,9 @@ WMFDecoderModule::Supports(const TrackInfo& aTrackInfo,
        WMFDecoderModule::HasAAC()) {
     return true;
   }
-  if (MP4Decoder::IsH264(aTrackInfo.mMimeType) && WMFDecoderModule::HasH264()) {
+  if (MP4Decoder::IsH264(aTrackInfo.mMimeType) &&
+      WMFDecoderModule::HasH264() &&
+      !MediaPrefs::PDMWMFAllowUnsupportedResolutions()) {
     const VideoInfo* videoInfo = aTrackInfo.GetAsVideoInfo();
     MOZ_ASSERT(videoInfo);
     // Check Windows format constraints, based on:

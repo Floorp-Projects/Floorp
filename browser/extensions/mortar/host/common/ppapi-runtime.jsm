@@ -1668,6 +1668,9 @@ class PPAPIInstance {
       case 'setFullscreen':
         this.mm.sendAsyncMessage("ppapi.js:setFullscreen", message.fullscreen);
         break;
+      case 'save':
+        this.mm.sendAsyncMessage("ppapipdf.js:save");
+        break;
       case 'viewport':
       case 'rotateClockwise':
       case 'rotateCounterclockwise':
