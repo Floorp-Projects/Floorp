@@ -72,7 +72,7 @@ def get_blobber_url(branch, job):
     if job_data:
         try:
             for item in job_data["results"]:
-                if item["value"] == "wpt_raw.log":
+                if item["value"] == "wpt_raw.log" or item["value"] == "log_raw.log":
                     return item["url"]
         except:
             return None
@@ -96,7 +96,8 @@ def get_structured_logs(branch, commit, dest=None):
 
     for result in job_data["results"]:
         job_type_name = result["job_type_name"]
-        if job_type_name.startswith("W3C Web Platform"):
+        if (job_type_name.startswith("W3C Web Platform") or
+            job_type_name.startswith("test-") and "-web-platform-tests-" in job_type_name):
             url = get_blobber_url(branch, result)
             if url:
                 prefix = result["platform"] # platform
