@@ -97,8 +97,6 @@ GetMapShallowSizesOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 size_t
 GetHistogramSizesofIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
-void
-IPCTimerFired(nsITimer* aTimer, void* aClosure);
 } // namespace TelemetryHistogram
 
 #endif // TelemetryHistogram_h__
