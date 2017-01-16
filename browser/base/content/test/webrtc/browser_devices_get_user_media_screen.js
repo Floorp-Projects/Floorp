@@ -335,6 +335,8 @@ var gTests = [
     yield expectObserverCalled("getUserMedia:response:deny");
     yield expectObserverCalled("recording-window-ended");
     yield checkNotSharing();
+    SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
+    SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
   }
 },
 
@@ -355,6 +357,8 @@ var gTests = [
     yield expectObserverCalled("getUserMedia:response:deny");
     yield expectObserverCalled("recording-window-ended");
     yield checkNotSharing();
+    SitePermissions.remove(null, "screen", gBrowser.selectedBrowser);
+    SitePermissions.remove(null, "camera", gBrowser.selectedBrowser);
   }
 },
 
@@ -499,10 +503,10 @@ var gTests = [
 {
   desc: "Only persistent block is possible for screen sharing",
   run: function* checkPersistentPermissions() {
-    let Perms = Services.perms;
-    let uri = gBrowser.selectedBrowser.documentURI;
-    let devicePerms = Perms.testExactPermission(uri, "screen");
-    is(devicePerms, Perms.UNKNOWN_ACTION,
+    let browser = gBrowser.selectedBrowser;
+    let uri = browser.documentURI;
+    let devicePerms = SitePermissions.get(uri, "screen", browser);
+    is(devicePerms.state, SitePermissions.UNKNOWN,
        "starting without screen persistent permissions");
 
     let promise = promisePopupNotificationShown("webRTC-shareDevices");
@@ -533,7 +537,10 @@ var gTests = [
     yield expectObserverCalled("recording-window-ended");
     yield checkNotSharing();
 
-    is(Perms.testExactPermission(uri, "screen"), Perms.DENY_ACTION,
+    let permission = SitePermissions.get(uri, "screen", browser);
+    is(permission.state, SitePermissions.BLOCK,
+       "screen sharing is blocked");
+    is(permission.scope, SitePermissions.SCOPE_PERSISTENT,
        "screen sharing is persistently blocked");
 
     // Request screensharing again, expect an immediate failure.
@@ -543,7 +550,7 @@ var gTests = [
     yield expectObserverCalled("recording-window-ended");
 
     // Now set the permission to allow and expect a prompt.
-    Perms.add(uri, "screen", Perms.ALLOW_ACTION);
+    SitePermissions.set(uri, "screen", SitePermissions.ALLOW);
 
     // Request devices and expect a prompt despite the saved 'Allow' permission.
     promise = promisePopupNotificationShown("webRTC-shareDevices");
@@ -564,7 +571,7 @@ var gTests = [
     });
     yield expectObserverCalled("getUserMedia:response:deny");
     yield expectObserverCalled("recording-window-ended");
-    Perms.remove(uri, "screen");
+    SitePermissions.remove(uri, "screen", browser);
   }
 }
 
