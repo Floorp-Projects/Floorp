@@ -45,24 +45,6 @@ struct ParamTraits<WRImageFormat>
 };
 
 template<>
-struct ParamTraits<WRImageKey>
-{
-  static void
-  Write(Message* aMsg, const WRImageKey& aParam)
-  {
-    WriteParam(aMsg, aParam.a);
-    WriteParam(aMsg, aParam.b);
-  }
-
-  static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WRImageKey* aResult)
-  {
-    return ReadParam(aMsg, aIter, &aResult->a)
-        && ReadParam(aMsg, aIter, &aResult->b);
-  }
-};
-
-template<>
 struct ParamTraits<WRBorderStyle>
   : public ContiguousEnumSerializer<
         WRBorderStyle,

@@ -47,6 +47,9 @@ public:
   bool RenderToTarget(gfx::DrawTarget& aTarget);
 
   /// Render thread only.
+  void SetProfilerEnabled(bool aEnabled);
+
+  /// Render thread only.
   ~RendererOGL();
 
   /// Render thread only.

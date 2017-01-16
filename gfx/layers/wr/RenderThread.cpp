@@ -81,15 +81,31 @@ RenderThread::IsInRenderThread()
 void
 RenderThread::AddRenderer(gfx::WindowId aWindowId, UniquePtr<RendererOGL> aRenderer)
 {
+  MOZ_ASSERT(IsInRenderThread());
   mRenderers[aWindowId] = Move(aRenderer);
 }
 
 void
 RenderThread::RemoveRenderer(gfx::WindowId aWindowId)
 {
+  MOZ_ASSERT(IsInRenderThread());
   mRenderers.erase(aWindowId);
 }
 
+RendererOGL*
+RenderThread::GetRenderer(gfx::WindowId aWindowId)
+{
+  MOZ_ASSERT(IsInRenderThread());
+
+  auto it = mRenderers.find(aWindowId);
+  MOZ_ASSERT(it != mRenderers.end());
+
+  if (it == mRenderers.end()) {
+    return nullptr;
+  }
+
+  return &*it->second;
+}
 
 void
 RenderThread::NewFrameReady(gfx::WindowId aWindowId)
@@ -150,6 +166,8 @@ RenderThread::RunEvent(gfx::WindowId aWindowId, UniquePtr<RendererEvent> aEvent)
 void
 RenderThread::UpdateAndRender(gfx::WindowId aWindowId)
 {
+  MOZ_ASSERT(IsInRenderThread());
+
   auto it = mRenderers.find(aWindowId);
   MOZ_ASSERT(it != mRenderers.end());
   if (it == mRenderers.end()) {

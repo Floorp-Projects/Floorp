@@ -109,32 +109,44 @@ struct ByteBuffer
 };
 
 struct WindowId {
-  explicit WindowId(uint64_t aHandle) : mHandle(aHandle) {}
+  explicit WindowId(WRWindowId aHandle) : mHandle(aHandle) {}
   bool operator<(const WindowId& aOther) const { return mHandle < aOther.mHandle; }
+  bool operator==(const WindowId& aOther) const { return mHandle == aOther.mHandle; }
 
-  uint64_t mHandle;
+  WRWindowId mHandle;
 };
 
 struct PipelineId {
-  explicit PipelineId(uint64_t aHandle) : mHandle(aHandle) {}
+  explicit PipelineId(WRPipelineId aHandle) : mHandle(aHandle) {}
   bool operator<(const PipelineId& aOther) const { return mHandle < aOther.mHandle; }
+  bool operator==(const PipelineId& aOther) const { return mHandle == aOther.mHandle; }
 
-  uint64_t mHandle;
+  WRPipelineId mHandle;
 };
 
 // TODO: We need to merge this with the notion of transaction id.
 struct Epoch {
-  explicit Epoch(uint32_t aHandle) : mHandle(aHandle) {}
+  explicit Epoch(WREpoch aHandle) : mHandle(aHandle) {}
   bool operator<(const Epoch& aOther) const { return mHandle < aOther.mHandle; }
+  bool operator==(const Epoch& aOther) const { return mHandle == aOther.mHandle; }
 
-  uint32_t mHandle;
+  WREpoch mHandle;
 };
 
 struct FontKey {
-  explicit FontKey(uint64_t aHandle) : mHandle(aHandle) {}
+  explicit FontKey(WRFontKey aHandle) : mHandle(aHandle) {}
   bool operator<(const FontKey& aOther) const { return mHandle < aOther.mHandle; }
+  bool operator==(const FontKey& aOther) const { return mHandle == aOther.mHandle; }
 
-  uint64_t mHandle;
+  WRFontKey mHandle;
+};
+
+struct ImageKey {
+  explicit ImageKey(WRImageKey aHandle) : mHandle(aHandle) {}
+  bool operator<(const ImageKey& aOther) const { return mHandle < aOther.mHandle; }
+  bool operator==(const ImageKey& aOther) const { return mHandle == aOther.mHandle; }
+
+  WRImageKey mHandle;
 };
 
 

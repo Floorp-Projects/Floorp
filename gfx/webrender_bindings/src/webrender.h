@@ -23,14 +23,11 @@ enum WRImageFormat {
     RGBAF32
 };
 
-struct WRImageKey {
-  uint32_t a;
-  uint32_t b;
-
-  bool operator==(const WRImageKey& aRhs) const {
-    return a == aRhs.a && b == aRhs.b;
-  }
-};
+typedef uint64_t WRWindowId;
+typedef uint64_t WRImageKey;
+typedef uint64_t WRFontKey;
+typedef uint64_t WRPipelineId;
+typedef uint32_t WREpoch;
 
 struct WRColor {
   float r;
@@ -204,7 +201,7 @@ WR_INLINE void
 wr_renderer_set_profiler_enabled(WrRenderer* renderer, bool enabled) WR_FUNC;
 
 WR_INLINE bool
-wr_renderer_current_epoch(WrRenderer* renderer, uint64_t pipeline_id, uint32_t* out_epoch) WR_FUNC;
+wr_renderer_current_epoch(WrRenderer* renderer, WRPipelineId pipeline_id, WREpoch* out_epoch) WR_FUNC;
 
 WR_INLINE bool
 wr_renderer_delete(WrRenderer* renderer) WR_FUNC;
@@ -215,7 +212,7 @@ wr_gl_init(void* aGLContext) WR_FUNC;
 struct WrAPI;
 
 WR_INLINE void
-wr_window_new(uint64_t window_id,
+wr_window_new(WRWindowId window_id,
               bool enable_profiler,
               WrAPI** out_api,
               WrRenderer** out_renderer) WR_FUNC;
@@ -239,28 +236,33 @@ wr_api_update_image(WrAPI* api, WRImageKey key,
                     uint32_t width, uint32_t height,
                     WRImageFormat format, uint8_t *bytes, size_t size) WR_FUNC;
 
-WR_INLINE uint64_t
+WR_INLINE void
 wr_api_delete_image(WrAPI* api, WRImageKey key) WR_FUNC;
 
+WR_INLINE void
+wr_api_set_root_pipeline(WrAPI* api, WRPipelineId pipeline_id) WR_FUNC;
 
 WR_INLINE void
-wr_window_init_pipeline_epoch(wrwindowstate* window, uint64_t pipeline, uint32_t width, uint32_t height) WR_FUNC;
+wr_api_set_root_display_list(WrAPI* api, WRState* state, uint32_t epoch, float w, float h) WR_FUNC;
 
-//WR_INLINE void
-//wr_api_add_raw_font(WrAPI* api, uint8_t* font_buffer, size_t buffer_size) WR_FUNC;
+WR_INLINE void
+wr_window_init_pipeline_epoch(wrwindowstate* window, WRPipelineId pipeline, uint32_t width, uint32_t height) WR_FUNC;
 
-WR_INLINE uint64_t
+WR_INLINE WRFontKey
+wr_api_add_raw_font(WrAPI* api, uint8_t* font_buffer, size_t buffer_size) WR_FUNC;
+
+WR_INLINE WRFontKey
 wr_window_add_raw_font(wrwindowstate* window, uint8_t* font_buffer, size_t buffer_size) WR_FUNC;
 
 WR_INLINE wrwindowstate*
-wr_init_window(uint64_t root_pipeline_id,
+wr_init_window(WRPipelineId root_pipeline_id,
                void* webrender_bridge_ptr,
                bool enable_profiler,
                WRExternalImageHandler* handler = nullptr)
 WR_FUNC;
 
 WR_INLINE WRState*
-wr_state_new(uint32_t width, uint32_t height, uint64_t pipeline_id) WR_FUNC;
+wr_state_new(uint32_t width, uint32_t height, WRPipelineId pipeline_id) WR_FUNC;
 
 WR_INLINE void
 wr_state_delete(WRState* state) WR_FUNC;
@@ -334,7 +336,7 @@ WR_INLINE void
 wr_dp_push_text(WRState* wrState,
                 WRRect bounds, WRRect clip,
                 WRColor color,
-                uint64_t font_Key,
+                WRFontKey font_Key,
                 const WRGlyphInstance* glyphs,
                 uint32_t glyph_count, float glyph_size) WR_FUNC;
 
@@ -353,11 +355,11 @@ WR_FUNC;
 // TODO: Remove.
 WR_INLINE void
 wr_window_dp_push_iframe(wrwindowstate* wrWindow, WRState* wrState, WRRect bounds, WRRect clip,
-                   uint64_t layers_id)
+                        WRPipelineId layers_id)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_iframe(WRState* wrState, WRRect bounds, WRRect clip, uint64_t layers_id) WR_FUNC;
+wr_dp_push_iframe(WRState* wrState, WRRect bounds, WRRect clip, WRPipelineId layers_id) WR_FUNC;
 
 // TODO: Remove.
 // It is the responsibility of the caller to manage the dst_buffer memory
