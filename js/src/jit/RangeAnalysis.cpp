@@ -1218,8 +1218,14 @@ Range*
 Range::NaNToZero(TempAllocator& alloc, const Range *op)
 {
     Range* copy = new(alloc) Range(*op);
-    if (copy->canBeNaN())
+    if (copy->canBeNaN()) {
         copy->max_exponent_ = Range::IncludesInfinity;
+        if (!copy->canBeZero()) {
+            Range zero;
+            zero.setDoubleSingleton(0);
+            copy->unionWith(&zero);
+        }
+    }
     copy->refineToExcludeNegativeZero();
     return copy;
 }

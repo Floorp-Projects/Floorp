@@ -284,3 +284,39 @@ telemetry.test:
     keyed: true
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'main'
+      - 'content'
+
+  content_only_uint:
+    bug_numbers:
+      - 1278556
+    description: A testing uint scalar; not meant to be touched.
+    expires: never
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'content'
+
+  all_processes_uint:
+    bug_numbers:
+      - 1278556
+    description: A testing uint scalar; not meant to be touched.
+    expires: never
+    kind: uint
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'all'
+
+  all_child_processes_string:
+    bug_numbers:
+      - 1278556
+    description: A testing string scalar; not meant to be touched.
+    expires: never
+    kind: string
+    notification_emails:
+      - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'all_childs'
