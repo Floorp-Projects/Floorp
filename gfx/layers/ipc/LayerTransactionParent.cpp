@@ -160,6 +160,20 @@ LayerTransactionParent::~LayerTransactionParent()
 {
 }
 
+void
+LayerTransactionParent::SetLayerManager(LayerManagerComposite* aLayerManager)
+{
+  mLayerManager = aLayerManager;
+  const ManagedContainer<PLayerParent>& layers = ManagedPLayerParent();
+  for (auto iter = layers.ConstIter(); !iter.Done(); iter.Next()) {
+    ShadowLayerParent* slp =
+      static_cast<ShadowLayerParent*>(iter.Get()->GetKey());
+    if (slp->AsLayer() && slp->AsLayer()->AsLayerComposite()) {
+      slp->AsLayer()->AsLayerComposite()->SetLayerManager(aLayerManager);
+    }
+  }
+}
+
 bool
 LayerTransactionParent::RecvShutdown()
 {
