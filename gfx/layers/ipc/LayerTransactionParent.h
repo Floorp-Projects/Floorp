@@ -57,6 +57,8 @@ public:
 
   LayerManagerComposite* layer_manager() const { return mLayerManager; }
 
+  void SetLayerManager(LayerManagerComposite* aLayerManager);
+
   uint64_t GetId() const { return mId; }
   Layer* GetRoot() const { return mRoot; }
 
