@@ -14,18 +14,16 @@
 #include "nsClassHashtable.h"
 #include "nsITelemetry.h"
 
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ToJSValue.h"
-#include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/StartupTimeline.h"
 #include "mozilla/StaticMutex.h"
-#include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
 
 #include "TelemetryCommon.h"
 #include "TelemetryHistogram.h"
+#include "TelemetryIPCAccumulator.h"
 
 #include "base/histogram.h"
 
@@ -37,7 +35,6 @@ using base::FlagHistogram;
 using base::LinearHistogram;
 using mozilla::StaticMutex;
 using mozilla::StaticMutexAutoLock;
-using mozilla::StaticAutoPtr;
 using mozilla::Telemetry::Accumulation;
 using mozilla::Telemetry::KeyedAccumulation;
 using mozilla::Telemetry::Common::LogToBrowserConsole;
@@ -197,13 +194,6 @@ AddonMapType gAddonMap;
 // The singleton StatisticsRecorder object for this process.
 base::StatisticsRecorder* gStatisticsRecorder = nullptr;
 
-// For batching and sending child process accumulations to the parent
-nsITimer* gIPCTimer = nullptr;
-mozilla::Atomic<bool, mozilla::Relaxed> gIPCTimerArmed(false);
-mozilla::Atomic<bool, mozilla::Relaxed> gIPCTimerArming(false);
-StaticAutoPtr<nsTArray<Accumulation>> gAccumulations;
-StaticAutoPtr<nsTArray<KeyedAccumulation>> gKeyedAccumulations;
-
 } // namespace
 
 
@@ -222,17 +212,6 @@ const mozilla::Telemetry::ID kRecordingInitiallyDisabledIDs[] = {
   mozilla::Telemetry::TELEMETRY_TEST_COUNT_INIT_NO_RECORD,
   mozilla::Telemetry::TELEMETRY_TEST_KEYED_COUNT_INIT_NO_RECORD
 };
-
-// Sending each remote accumulation immediately places undue strain on the
-// IPC subsystem. Batch the remote accumulations for a period of time before
-// sending them all at once. This value was chosen as a balance between data
-// timeliness and performance (see bug 1218576)
-const uint32_t kBatchTimeoutMs = 2000;
-
-// To stop growing unbounded in memory while waiting for kBatchTimeoutMs to
-// drain the g*Accumulations arrays, request an immediate flush if the arrays
-// manage to reach this high water mark of elements.
-const size_t kAccumulationsArrayHighWaterMark = 5 * 1024;
 
 } // namespace
 
@@ -338,18 +317,6 @@ HistogramInfo::label_id(const char* label, uint32_t* labelId) const
   }
 
   return NS_ERROR_FAILURE;
-}
-
-void internal_DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent)
-{
-  nsCOMPtr<nsIRunnable> event(aEvent);
-  nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
-  if (NS_FAILED(rv)) {
-    NS_WARNING("NS_FAILED DispatchToMainThread. Maybe we're shutting down?");
-    return;
-  }
-  thread->Dispatch(event, 0);
 }
 
 } // namespace
@@ -1328,40 +1295,6 @@ internal_SetHistogramRecordingEnabled(mozilla::Telemetry::ID aID, bool aEnabled)
   MOZ_ASSERT(false, "Telemetry::SetHistogramRecordingEnabled(...) id not found");
 }
 
-void internal_armIPCTimerMainThread()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  gIPCTimerArming = false;
-  if (gIPCTimerArmed) {
-    return;
-  }
-  if (!gIPCTimer) {
-    CallCreateInstance(NS_TIMER_CONTRACTID, &gIPCTimer);
-  }
-  if (gIPCTimer) {
-    gIPCTimer->InitWithFuncCallback(TelemetryHistogram::IPCTimerFired,
-                                    nullptr, kBatchTimeoutMs,
-                                    nsITimer::TYPE_ONE_SHOT);
-    gIPCTimerArmed = true;
-  }
-}
-
-void internal_armIPCTimer()
-{
-  if (gIPCTimerArmed || gIPCTimerArming) {
-    return;
-  }
-  gIPCTimerArming = true;
-  if (NS_IsMainThread()) {
-    internal_armIPCTimerMainThread();
-  } else {
-    internal_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
-      StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-      internal_armIPCTimerMainThread();
-    }));
-  }
-}
-
 bool
 internal_RemoteAccumulate(mozilla::Telemetry::ID aId, uint32_t aSample)
 {
@@ -1373,16 +1306,7 @@ internal_RemoteAccumulate(mozilla::Telemetry::ID aId, uint32_t aSample)
   if (NS_SUCCEEDED(rv) && !h->IsRecordingEnabled()) {
     return true;
   }
-  if (!gAccumulations) {
-    gAccumulations = new nsTArray<Accumulation>();
-  }
-  if (gAccumulations->Length() == kAccumulationsArrayHighWaterMark) {
-    internal_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
-      TelemetryHistogram::IPCTimerFired(nullptr, nullptr);
-    }));
-  }
-  gAccumulations->AppendElement(Accumulation{aId, aSample});
-  internal_armIPCTimer();
+  TelemetryIPCAccumulator::AccumulateChildHistogram(aId, aSample);
   return true;
 }
 
@@ -1400,16 +1324,7 @@ internal_RemoteAccumulate(mozilla::Telemetry::ID aId,
   if (!keyed->IsRecordingEnabled()) {
     return false;
   }
-  if (!gKeyedAccumulations) {
-    gKeyedAccumulations = new nsTArray<KeyedAccumulation>();
-  }
-  if (gKeyedAccumulations->Length() == kAccumulationsArrayHighWaterMark) {
-    internal_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
-      TelemetryHistogram::IPCTimerFired(nullptr, nullptr);
-    }));
-  }
-  gKeyedAccumulations->AppendElement(KeyedAccumulation{aId, aSample, aKey});
-  internal_armIPCTimer();
+  TelemetryIPCAccumulator::AccumulateChildKeyedHistogram(aId, aKey, aSample);
   return true;
 }
 
@@ -2127,11 +2042,6 @@ void TelemetryHistogram::DeInitializeGlobalState()
   gHistogramMap.Clear();
   gKeyedHistograms.Clear();
   gAddonMap.Clear();
-  gAccumulations = nullptr;
-  gKeyedAccumulations = nullptr;
-  if (gIPCTimer) {
-    NS_RELEASE(gIPCTimer);
-  }
   gInitDone = false;
 }
 
@@ -2651,63 +2561,4 @@ TelemetryHistogram::GetHistogramSizesofIncludingThis(mozilla::MallocSizeOf
     n += h->SizeOfIncludingThis(aMallocSizeOf);
   }
   return n;
-}
-
-// This method takes the lock only to double-buffer the batched telemetry.
-// It releases the lock before calling out to IPC code which can (and does)
-// Accumulate (which would deadlock)
-//
-// To ensure we don't loop IPCTimerFired->AccumulateChild->arm timer, we don't
-// unset gIPCTimerArmed until the IPC completes
-//
-// This function must be called on the main thread, otherwise IPC will fail.
-void
-TelemetryHistogram::IPCTimerFired(nsITimer* aTimer, void* aClosure)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  nsTArray<Accumulation> accumulationsToSend;
-  nsTArray<KeyedAccumulation> keyedAccumulationsToSend;
-  {
-    StaticMutexAutoLock locker(gTelemetryHistogramMutex);
-    if (gAccumulations) {
-      accumulationsToSend.SwapElements(*gAccumulations);
-    }
-    if (gKeyedAccumulations) {
-      keyedAccumulationsToSend.SwapElements(*gKeyedAccumulations);
-    }
-  }
-
-  switch (XRE_GetProcessType()) {
-    case GeckoProcessType_Content: {
-      mozilla::dom::ContentChild* contentChild = mozilla::dom::ContentChild::GetSingleton();
-      mozilla::Unused << NS_WARN_IF(!contentChild);
-      if (contentChild) {
-        if (accumulationsToSend.Length()) {
-          mozilla::Unused <<
-            NS_WARN_IF(!contentChild->SendAccumulateChildHistogram(accumulationsToSend));
-        }
-        if (keyedAccumulationsToSend.Length()) {
-          mozilla::Unused <<
-            NS_WARN_IF(!contentChild->SendAccumulateChildKeyedHistogram(keyedAccumulationsToSend));
-        }
-      }
-      break;
-    }
-    case GeckoProcessType_GPU: {
-      if (mozilla::gfx::GPUParent* gpu = mozilla::gfx::GPUParent::GetSingleton()) {
-        if (accumulationsToSend.Length()) {
-          mozilla::Unused << gpu->SendAccumulateChildHistogram(accumulationsToSend);
-        }
-        if (keyedAccumulationsToSend.Length()) {
-          mozilla::Unused << gpu->SendAccumulateChildKeyedHistogram(keyedAccumulationsToSend);
-        }
-      }
-      break;
-    }
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unsupported process type");
-      break;
-  }
-
-  gIPCTimerArmed = false;
 }
