@@ -34,7 +34,7 @@ add_task(function test_check_urls_before_restoring() {
 
 function getState(url) {
   return JSON.stringify({
-    entries: [{url: URL, triggeringPrincipal_base64: triggeringPrincipal}],
+    entries: [{url: URL}],
     formdata: {url: url, id: {text: "foobar"}}
   });
 }
