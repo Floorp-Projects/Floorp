@@ -11,6 +11,7 @@
 #include "mozilla/Range.h"
 #include "mozilla/gfx/webrender.h"
 #include "mozilla/layers/WebRenderTypes.h"
+#include "Units.h"
 
 namespace mozilla {
 
@@ -36,15 +37,44 @@ public:
 
   gfx::WindowId GetId() const { return mId; }
 
+  void SetRootDisplayList(gfx::Color aBgColor,
+                          gfx::Epoch aEpoch,
+                          LayerSize aViewportSize,
+                          DisplayListBuilder& aBuilder);
+
+  void SetRootPipeline(gfx::PipelineId aPipeline);
+
+  gfx::ImageKey AddImageBuffer(gfx::IntSize aSize,
+                               uint32_t aStride,
+                               gfx::SurfaceFormat aFormat,
+                               Range<uint8_t> aBytes);
+
+  gfx::ImageKey AddExternalImageHandle(gfx::IntSize aSize,
+                                       gfx::SurfaceFormat aFormat,
+                                       uint64_t aHandle);
+
+  void UpdateImageBuffer(gfx::ImageKey aKey,
+                         gfx::IntSize aSize,
+                         gfx::SurfaceFormat aFormat,
+                         Range<uint8_t> aBytes);
+
+  void DeleteImage(gfx::ImageKey aKey);
+
+  gfx::FontKey AddRawFont(Range<uint8_t> aBytes);
+
+  void DeleteFont(gfx::FontKey aKey);
+
+  void SetProfilerEnabled(bool aEnabled);
+
 protected:
   WebRenderAPI(WrAPI* aRawApi, gfx::WindowId aId)
-  : mWrApi(aRawApi)
+  : mWRApi(aRawApi)
   , mId(aId)
   {}
 
   ~WebRenderAPI();
 
-  WrAPI* mWrApi;
+  WrAPI* mWRApi;
   gfx::WindowId mId;
 
   friend class NewRenderer;
@@ -108,6 +138,8 @@ public:
   WRState* Raw() { return mWRState; }
 protected:
   WRState* mWRState;
+
+  friend class WebRenderAPI;
 };
 
 } // namespace

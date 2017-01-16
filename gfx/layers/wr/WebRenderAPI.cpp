@@ -13,6 +13,29 @@
 namespace mozilla {
 namespace layers {
 
+inline Maybe<WRImageFormat>
+SurfaceFormatToWRImageFormat(gfx::SurfaceFormat aFormat) {
+  // TODO: fix the formats (RGB/BGR permutations, etc.)
+  switch (aFormat) {
+    case gfx::SurfaceFormat::R8G8B8A8:
+    case gfx::SurfaceFormat::B8G8R8A8:
+    case gfx::SurfaceFormat::A8R8G8B8:
+      return Some(WRImageFormat::RGBA8);
+    case gfx::SurfaceFormat::B8G8R8X8:
+    case gfx::SurfaceFormat::R8G8B8X8:
+    case gfx::SurfaceFormat::X8R8G8B8:
+    case gfx::SurfaceFormat::R8G8B8:
+    case gfx::SurfaceFormat::B8G8R8:
+      return Some(WRImageFormat::RGB8);
+    case gfx::SurfaceFormat::A8:
+      return Some(WRImageFormat::A8);
+    case gfx::SurfaceFormat::UNKNOWN:
+      return Some(WRImageFormat::Invalid);
+    default:
+      return Nothing();
+  }
+}
+
 class NewRenderer : public RendererEvent
 {
 public:
@@ -20,7 +43,7 @@ public:
               RefPtr<widget::CompositorWidget>&& aWidget,
               SynchronousTask* aTask,
               bool aEnableProfiler)
-  : mWrApi(aApi)
+  : mWRApi(aApi)
   , mBridge(aBridge)
   , mCompositorWidget(Move(aWidget))
   , mTask(aTask)
@@ -46,7 +69,7 @@ public:
     wr_gl_init(&*gl);
 
     WrRenderer* wrRenderer = nullptr;
-    wr_window_new(aWindowId.mHandle, this->mEnableProfiler, mWrApi, &wrRenderer);
+    wr_window_new(aWindowId.mHandle, this->mEnableProfiler, mWRApi, &wrRenderer);
     MOZ_ASSERT(wrRenderer);
 
     RefPtr<RenderThread> thread = &aRenderThread;
@@ -60,7 +83,7 @@ public:
     aRenderThread.AddRenderer(aWindowId, Move(renderer));
   }
 
-  WrAPI** mWrApi;
+  WrAPI** mWRApi;
   CompositorBridgeParentBase* mBridge;
   RefPtr<widget::CompositorWidget> mCompositorWidget;
   SynchronousTask* mTask;
@@ -129,7 +152,7 @@ WebRenderAPI::~WebRenderAPI()
   // in the non-webrender targets.
   // We should be able to remove this #ifdef if/when we remove the
   // MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE annotations in webrender.h
-  wr_api_delete(mWrApi);
+  wr_api_delete(mWRApi);
 #endif
 
   SynchronousTask task("Destroy WebRenderAPI");
@@ -138,6 +161,102 @@ WebRenderAPI::~WebRenderAPI()
   // this needs PR #688
   RenderThread::Get()->RunEvent(mId, Move(event));
   task.Wait();
+}
+
+void
+WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
+                                 gfx::Epoch aEpoch,
+                                 LayerSize aViewportSize,
+                                 DisplayListBuilder& aBuilder)
+{
+  wr_api_set_root_display_list(mWRApi, aBuilder.mWRState,
+                               aEpoch.mHandle,
+                               aViewportSize.width, aViewportSize.height);
+}
+
+void
+WebRenderAPI::SetRootPipeline(gfx::PipelineId aPipeline)
+{
+  wr_api_set_root_pipeline(mWRApi, aPipeline.mHandle);
+}
+
+gfx::ImageKey
+WebRenderAPI::AddImageBuffer(gfx::IntSize aSize,
+                             uint32_t aStride,
+                             gfx::SurfaceFormat aFormat,
+                             Range<uint8_t> aBytes)
+{
+  auto format = SurfaceFormatToWRImageFormat(aFormat).value();
+  return gfx::ImageKey(wr_api_add_image(mWRApi,
+                                        aSize.width, aSize.height,
+                                        aStride, format,
+                                        &aBytes[0], aBytes.length()));
+}
+
+gfx::ImageKey
+WebRenderAPI::AddExternalImageHandle(gfx::IntSize aSize,
+                                     gfx::SurfaceFormat aFormat,
+                                     uint64_t aHandle)
+{
+  auto format = SurfaceFormatToWRImageFormat(aFormat).value();
+  return gfx::ImageKey(wr_api_add_external_image_texture(mWRApi,
+                                                         aSize.width, aSize.height, format,
+                                                         aHandle));
+}
+
+void
+WebRenderAPI::UpdateImageBuffer(gfx::ImageKey aKey,
+                                gfx::IntSize aSize,
+                                gfx::SurfaceFormat aFormat,
+                                Range<uint8_t> aBytes)
+{
+  auto format = SurfaceFormatToWRImageFormat(aFormat).value();
+  wr_api_update_image(mWRApi,
+                      aKey.mHandle,
+                      aSize.width, aSize.height, format,
+                      &aBytes[0], aBytes.length());
+}
+
+void
+WebRenderAPI::DeleteImage(gfx::ImageKey aKey)
+{
+  wr_api_delete_image(mWRApi, aKey.mHandle);
+}
+
+gfx::FontKey
+WebRenderAPI::AddRawFont(Range<uint8_t> aBytes)
+{
+  return gfx::FontKey(wr_api_add_raw_font(mWRApi, &aBytes[0], aBytes.length()));
+}
+
+void
+WebRenderAPI::DeleteFont(gfx::FontKey aKey)
+{
+  printf("XXX - WebRender does not seem to implement deleting a font! Leaking it...\n");
+}
+
+class EnableProfiler : public RendererEvent
+{
+public:
+  explicit EnableProfiler(bool aEnabled) : mEnabled(aEnabled) { MOZ_COUNT_CTOR(EnableProfiler); }
+  ~EnableProfiler()  { MOZ_COUNT_DTOR(EnableProfiler); }
+
+  virtual void Run(RenderThread& aRenderThread, gfx::WindowId aWindowId) override
+  {
+    auto renderer = aRenderThread.GetRenderer(aWindowId);
+    if (renderer) {
+      renderer->SetProfilerEnabled(mEnabled);
+    }
+  }
+
+  bool mEnabled;
+};
+
+void
+WebRenderAPI::SetProfilerEnabled(bool aEnabled)
+{
+  auto event = MakeUnique<EnableProfiler>(aEnabled);
+  RenderThread::Get()->RunEvent(mId, Move(event));
 }
 
 DisplayListBuilder::DisplayListBuilder(const LayerIntSize& aSize, gfx::PipelineId aId)
@@ -163,7 +282,7 @@ DisplayListBuilder::Begin(const LayerIntSize& aSize)
 void
 DisplayListBuilder::End(WebRenderAPI& aApi, gfx::Epoch aEpoch)
 {
-  wr_dp_end(mWRState, aApi.mWrApi, aEpoch.mHandle);
+  wr_dp_end(mWRState, aApi.mWRApi, aEpoch.mHandle);
 }
 
 void
