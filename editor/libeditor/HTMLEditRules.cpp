@@ -40,6 +40,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMText.h"
+#include "nsIFrame.h"
 #include "nsIHTMLAbsPosEditor.h"
 #include "nsIHTMLDocument.h"
 #include "nsINode.h"
@@ -1710,14 +1711,33 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
         *selNode->AsContent(), selOffset, HTMLEditor::EmptyContainers::no,
         getter_AddRefs(leftCite), getter_AddRefs(rightCite));
     NS_ENSURE_STATE(newOffset != -1);
+
+    // Add an invisible <br> to the end of the left part if it was a <span> of
+    // style="display: block". This is important, since when serialising the
+    // cite to plain text, the span which caused the visual break is discarded.
+    // So the added <br> will guarantee that the serialiser will insert a
+    // break where the user saw one.
+    if (leftCite &&
+        leftCite->IsHTMLElement(nsGkAtoms::span) &&
+        leftCite->GetPrimaryFrame()->IsFrameOfType(nsIFrame::eBlockFrame)) {
+       nsCOMPtr<nsINode> lastChild = leftCite->GetLastChild();
+       if (lastChild && !lastChild->IsHTMLElement(nsGkAtoms::br)) {
+         // We ignore the result here.
+         nsCOMPtr<Element> invisBR =
+           mHTMLEditor->CreateBR(leftCite, leftCite->Length());
+      }
+    }
+
     selNode = citeNode->GetParentNode();
     NS_ENSURE_STATE(mHTMLEditor);
     nsCOMPtr<Element> brNode = mHTMLEditor->CreateBR(selNode, newOffset);
     NS_ENSURE_STATE(brNode);
+
     // want selection before the break, and on same line
     aSelection->SetInterlinePosition(true);
     rv = aSelection->Collapse(selNode, newOffset);
     NS_ENSURE_SUCCESS(rv, rv);
+
     // if citeNode wasn't a block, we might also want another break before it.
     // We need to examine the content both before the br we just added and also
     // just after it.  If we don't have another br or block boundary adjacent,
@@ -1737,13 +1757,16 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
         wsObjAfterBR.NextVisibleNode(selNode, newOffset + 1,
                                      address_of(visNode), &visOffset, &wsType);
         if (wsType == WSType::normalWS || wsType == WSType::text ||
-            wsType == WSType::special) {
+            wsType == WSType::special ||
+            // In case we're at the very end.
+            wsType == WSType::thisBlock) {
           NS_ENSURE_STATE(mHTMLEditor);
           brNode = mHTMLEditor->CreateBR(selNode, newOffset);
           NS_ENSURE_STATE(brNode);
         }
       }
     }
+
     // delete any empty cites
     bool bEmptyCite = false;
     if (leftCite) {
@@ -1760,6 +1783,7 @@ HTMLEditRules::SplitMailCites(Selection* aSelection,
         }
       }
     }
+
     if (rightCite) {
       NS_ENSURE_STATE(mHTMLEditor);
       rv = mHTMLEditor->IsEmptyNode(rightCite, &bEmptyCite, true, false);
