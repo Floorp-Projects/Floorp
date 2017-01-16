@@ -7412,10 +7412,12 @@ var gIdentityHandler = {
             // If the permission item we were looking for doesn't exist,
             // the user has temporarily allowed sharing and we need to add
             // an item in the permissions array to reflect this.
-            let permission =
-              SitePermissions.getPermissionDetails(id, SitePermissions.SCOPE_REQUEST);
-            permission.inUse = true;
-            permissions.push(permission);
+            permissions.push({
+              id,
+              state: SitePermissions.ALLOW,
+              scope: SitePermissions.SCOPE_REQUEST,
+              inUse: true,
+            });
           }
         }
       }
@@ -7476,7 +7478,7 @@ var gIdentityHandler = {
       state = SitePermissions.ALLOW;
       scope = SitePermissions.SCOPE_REQUEST;
     }
-    stateLabel.textContent = SitePermissions.getStateLabel(state, scope);
+    stateLabel.textContent = SitePermissions.getCurrentStateLabel(state, scope);
 
     let button = document.createElement("button");
     button.setAttribute("class", "identity-popup-permission-remove-button");
