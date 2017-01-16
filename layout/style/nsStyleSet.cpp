@@ -1858,10 +1858,12 @@ nsStyleSet::WalkDisableTextZoomRule(Element* aElement, nsRuleWalker* aRuleWalker
 }
 
 already_AddRefed<nsStyleContext>
-nsStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
-                                      CSSPseudoElementType aType,
-                                      nsStyleContext* aParentContext,
-                                      Element* aPseudoElement)
+nsStyleSet::ResolvePseudoElementStyleInternal(
+  Element* aParentElement,
+  CSSPseudoElementType aType,
+  nsStyleContext* aParentContext,
+  Element* aPseudoElement,
+  AnimationFlag aAnimationFlag)
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
 
@@ -1897,7 +1899,9 @@ nsStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
   uint32_t flags = eNoFlags;
   if (aType == CSSPseudoElementType::before ||
       aType == CSSPseudoElementType::after) {
-    flags |= eDoAnimation;
+    if (aAnimationFlag == eWithAnimation) {
+      flags |= eDoAnimation;
+    }
   } else {
     // Flex and grid containers don't expect to have any pseudo-element children
     // aside from ::before and ::after.  So if we have such a child, we're not
@@ -1909,6 +1913,33 @@ nsStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
   return GetContext(aParentContext, ruleNode, visitedRuleNode,
                     nsCSSPseudoElements::GetPseudoAtom(aType), aType,
                     aParentElement, flags);
+}
+
+already_AddRefed<nsStyleContext>
+nsStyleSet::ResolvePseudoElementStyle(Element* aParentElement,
+                                      CSSPseudoElementType aType,
+                                      nsStyleContext* aParentContext,
+                                      Element* aPseudoElement)
+{
+  return ResolvePseudoElementStyleInternal(aParentElement,
+                                           aType,
+                                           aParentContext,
+                                           aPseudoElement,
+                                           eWithAnimation);
+}
+
+already_AddRefed<nsStyleContext>
+nsStyleSet::ResolvePseudoElementStyleWithoutAnimation(
+  Element* aParentElement,
+  CSSPseudoElementType aType,
+  nsStyleContext* aParentContext,
+  Element* aPseudoElement)
+{
+  return ResolvePseudoElementStyleInternal(aParentElement,
+                                           aType,
+                                           aParentContext,
+                                           aPseudoElement,
+                                           eWithoutAnimation);
 }
 
 already_AddRefed<nsStyleContext>
