@@ -9,6 +9,7 @@
 #include "ConnectionWorker.h"
 #include "nsIDOMClassInfo.h"
 #include "Constants.h"
+#include "mozilla/Telemetry.h"
 #include "WorkerPrivate.h"
 
 /**
@@ -39,6 +40,7 @@ Connection::Connection(nsPIDOMWindowInner* aWindow)
   , mDHCPGateway(kDefaultDHCPGateway)
   , mBeenShutDown(false)
 {
+  Telemetry::Accumulate(Telemetry::NETWORK_CONNECTION_COUNT, 1);
 }
 
 Connection::~Connection()
