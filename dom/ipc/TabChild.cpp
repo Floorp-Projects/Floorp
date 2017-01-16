@@ -383,6 +383,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mDidSetRealShowInfo(false)
   , mDidLoadURLInit(false)
   , mIsFreshProcess(false)
+  , mSkipKeyPress(false)
   , mLayerObserverEpoch(0)
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
   , mNativeWindowHandle(0)
@@ -1778,10 +1779,52 @@ TabChild::RecvNativeSynthesisResponse(const uint64_t& aObserverId,
   return IPC_OK();
 }
 
+// In case handling repeated keys takes much time, we skip firing new ones.
+bool
+TabChild::SkipRepeatedKeyEvent(const WidgetKeyboardEvent& aEvent)
+{
+  if (mRepeatedKeyEventTime.IsNull() ||
+      !aEvent.mIsRepeat ||
+      (aEvent.mMessage != eKeyDown && aEvent.mMessage != eKeyPress)) {
+    mRepeatedKeyEventTime = TimeStamp();
+    mSkipKeyPress = false;
+    return false;
+  }
+
+  if ((aEvent.mMessage == eKeyDown &&
+       (mRepeatedKeyEventTime > aEvent.mTimeStamp)) ||
+      (mSkipKeyPress && (aEvent.mMessage == eKeyPress))) {
+    // If we skip a keydown event, also the following keypress events should be
+    // skipped.
+    mSkipKeyPress |= aEvent.mMessage == eKeyDown;
+    return true;
+  }
+
+  if (aEvent.mMessage == eKeyDown) {
+    // If keydown wasn't skipped, nor should the possible following keypress.
+    mRepeatedKeyEventTime = TimeStamp();
+    mSkipKeyPress = false;
+  }
+  return false;
+}
+
+void
+TabChild::UpdateRepeatedKeyEventEndTime(const WidgetKeyboardEvent& aEvent)
+{
+  if (aEvent.mIsRepeat &&
+      (aEvent.mMessage == eKeyDown || aEvent.mMessage == eKeyPress)) {
+    mRepeatedKeyEventTime = TimeStamp::Now();
+  }
+}
+
 mozilla::ipc::IPCResult
 TabChild::RecvRealKeyEvent(const WidgetKeyboardEvent& event,
                            const MaybeNativeKeyBinding& aBindings)
 {
+  if (SkipRepeatedKeyEvent(event)) {
+    return IPC_OK();
+  }
+
   AutoCacheNativeKeyCommands autoCache(mPuppetWidget);
 
   if (event.mMessage == eKeyPress) {
@@ -1803,6 +1846,10 @@ TabChild::RecvRealKeyEvent(const WidgetKeyboardEvent& event,
   WidgetKeyboardEvent localEvent(event);
   localEvent.mWidget = mPuppetWidget;
   nsEventStatus status = APZCCallbackHelper::DispatchWidgetEvent(localEvent);
+
+  // Update the end time of the possible repeated event so that we can skip
+  // some incoming events in case event handling took long time.
+  UpdateRepeatedKeyEventEndTime(localEvent);
 
   if (event.mMessage == eKeyDown) {
     mIgnoreKeyPressEvent = status == nsEventStatus_eConsumeNoDefault;
