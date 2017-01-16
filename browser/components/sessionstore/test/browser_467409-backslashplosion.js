@@ -18,14 +18,15 @@
 // 3b. Check that there are no backslashes in the formdata
 // 3c. Check that formdata doesn't require JSON.parse
 
-const CRASH_STATE = {windows: [{tabs: [{entries: [{url: "about:mozilla" }]}]}]};
+const CRASH_STATE = {windows: [{tabs: [{entries: [{url: "about:mozilla",
+                                                   triggeringPrincipal_base64: triggeringPrincipal }]}]}]};
 const STATE = createEntries(CRASH_STATE);
 const STATE2 = createEntries({windows: [{tabs: [STATE]}]});
 const STATE3 = createEntries(JSON.stringify(CRASH_STATE));
 
 function createEntries(sessionData) {
   return {
-    entries: [{url: "about:sessionrestore"}],
+    entries: [{url: "about:sessionrestore", triggeringPrincipal_base64: triggeringPrincipal}],
     formdata: {id: {sessionData: sessionData}, url: "about:sessionrestore"}
   };
 }
