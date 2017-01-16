@@ -27,7 +27,6 @@
 const {Ci} = require("chrome");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const protocol = require("devtools/shared/protocol");
-const {method, Arg} = protocol;
 const events = require("sdk/event/core");
 const Heritage = require("sdk/core/heritage");
 const EventEmitter = require("devtools/shared/event-emitter");
@@ -36,7 +35,7 @@ const {reflowSpec} = require("devtools/shared/specs/reflow");
 /**
  * The reflow actor tracks reflows and emits events about them.
  */
-var ReflowActor = exports.ReflowActor = protocol.ActorClassWithSpec(reflowSpec, {
+exports.ReflowActor = protocol.ActorClassWithSpec(reflowSpec, {
   initialize: function (conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
 
@@ -199,7 +198,7 @@ Observable.prototype = {
 var gIgnoreLayoutChanges = false;
 exports.setIgnoreLayoutChanges = function (ignore, syncReflowNode) {
   if (syncReflowNode) {
-    let forceSyncReflow = syncReflowNode.offsetWidth;
+    let forceSyncReflow = syncReflowNode.offsetWidth; // eslint-disable-line
   }
   gIgnoreLayoutChanges = ignore;
 };
@@ -432,7 +431,7 @@ function ReflowObserver(tabActor, callback) {
 
 ReflowObserver.prototype = Heritage.extend(Observable.prototype, {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIReflowObserver,
-    Ci.nsISupportsWeakReference]),
+                                         Ci.nsISupportsWeakReference]),
 
   _startListeners: function (windows) {
     for (let window of windows) {

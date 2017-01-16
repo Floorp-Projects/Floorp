@@ -78,7 +78,8 @@ function RegisteredActorFactory(options, prefix) {
     }
   }
 }
-RegisteredActorFactory.prototype.createObservedActorFactory = function (conn, parentActor) {
+RegisteredActorFactory.prototype.createObservedActorFactory = function (conn,
+  parentActor) {
   return new ObservedActorFactory(this._getConstructor, this._prefix, conn, parentActor);
 };
 exports.RegisteredActorFactory = RegisteredActorFactory;
@@ -110,9 +111,9 @@ function ObservedActorFactory(getConstructor, prefix, conn, parentActor) {
 }
 ObservedActorFactory.prototype.createActor = function () {
   // Fetch the actor constructor
-  let c = this._getConstructor();
+  let C = this._getConstructor();
   // Instantiate a new actor instance
-  let instance = new c(this._conn, this._parentActor);
+  let instance = new C(this._conn, this._parentActor);
   instance.conn = this._conn;
   instance.parentID = this._parentActor.actorID;
   // We want the newly-constructed actor to completely replace the factory
@@ -124,21 +125,20 @@ ObservedActorFactory.prototype.createActor = function () {
 };
 exports.ObservedActorFactory = ObservedActorFactory;
 
-
 /**
  * Methods shared between RootActor and BrowserTabActor.
  */
 
 /**
- * Populate |this._extraActors| as specified by |aFactories|, reusing whatever
+ * Populate |this._extraActors| as specified by |factories|, reusing whatever
  * actors are already there. Add all actors in the final extra actors table to
- * |aPool|.
+ * |pool|.
  *
  * The root actor and the tab actor use this to instantiate actors that other
  * parts of the browser have specified with DebuggerServer.addTabActor and
  * DebuggerServer.addGlobalActor.
  *
- * @param aFactories
+ * @param factories
  *     An object whose own property names are the names of properties to add to
  *     some reply packet (say, a tab actor grip or the "listTabs" response
  *     form), and whose own property values are actor constructor functions, as
@@ -146,7 +146,7 @@ exports.ObservedActorFactory = ObservedActorFactory;
  *
  * @param this
  *     The BrowserRootActor or BrowserTabActor with which the new actors will
- *     be associated. It should support whatever API the |aFactories|
+ *     be associated. It should support whatever API the |factories|
  *     constructor functions might be interested in, as it is passed to them.
  *     For the sake of CommonCreateExtraActors itself, it should have at least
  *     the following properties:
@@ -162,44 +162,44 @@ exports.ObservedActorFactory = ObservedActorFactory;
  *     - actorID
  *        The actor's name, for use as the new actors' parentID.
  */
-exports.createExtraActors = function createExtraActors(aFactories, aPool) {
+exports.createExtraActors = function createExtraActors(factories, pool) {
   // Walk over global actors added by extensions.
-  for (let name in aFactories) {
+  for (let name in factories) {
     let actor = this._extraActors[name];
     if (!actor) {
       // Register another factory, but this time specific to this connection.
       // It creates a fake actor that looks like an regular actor in the pool,
       // but without actually instantiating the actor.
       // It will only be instantiated on the first request made to the actor.
-      actor = aFactories[name].createObservedActorFactory(this.conn, this);
+      actor = factories[name].createObservedActorFactory(this.conn, this);
       this._extraActors[name] = actor;
     }
 
     // If the actor already exists in the pool, it may have been instantiated,
     // so make sure not to overwrite it by a non-instantiated version.
-    if (!aPool.has(actor.actorID)) {
-      aPool.addActor(actor);
+    if (!pool.has(actor.actorID)) {
+      pool.addActor(actor);
     }
   }
 };
 
 /**
  * Append the extra actors in |this._extraActors|, constructed by a prior call
- * to CommonCreateExtraActors, to |aObject|.
+ * to CommonCreateExtraActors, to |object|.
  *
- * @param aObject
+ * @param object
  *     The object to which the extra actors should be added, under the
- *     property names given in the |aFactories| table passed to
+ *     property names given in the |factories| table passed to
  *     CommonCreateExtraActors.
  *
  * @param this
  *     The BrowserRootActor or BrowserTabActor whose |_extraActors| table we
  *     should use; see above.
  */
-exports.appendExtraActors = function appendExtraActors(aObject) {
+exports.appendExtraActors = function appendExtraActors(object) {
   for (let name in this._extraActors) {
     let actor = this._extraActors[name];
-    aObject[name] = actor.actorID;
+    object[name] = actor.actorID;
   }
 };
 
@@ -210,9 +210,8 @@ exports.appendExtraActors = function appendExtraActors(aObject) {
  * used to accumulate and quickly dispose of groups of actors that
  * share a lifetime.
  */
-function ActorPool(aConnection)
-{
-  this.conn = aConnection;
+function ActorPool(connection) {
+  this.conn = connection;
   this._actors = {};
 }
 
@@ -220,7 +219,7 @@ ActorPool.prototype = {
   /**
    * Destroy the pool. This will remove all actors from the pool.
    */
-  destroy: function AP_destroy() {
+  destroy: function APDestroy() {
     for (let id in this._actors) {
       this.removeActor(this._actors[id]);
     }
@@ -230,27 +229,27 @@ ActorPool.prototype = {
    * Add an actor to the pool. If the actor doesn't have an ID, allocate one
    * from the connection.
    *
-   * @param Object aActor
+   * @param Object actor
    *        The actor to be added to the pool.
    */
-  addActor: function AP_addActor(aActor) {
-    aActor.conn = this.conn;
-    if (!aActor.actorID) {
-      let prefix = aActor.actorPrefix;
-      if (!prefix && typeof aActor == "function") {
+  addActor: function APAddActor(actor) {
+    actor.conn = this.conn;
+    if (!actor.actorID) {
+      let prefix = actor.actorPrefix;
+      if (!prefix && typeof actor == "function") {
         // typeName is a convention used with protocol.js-based actors
-        prefix = aActor.prototype.actorPrefix || aActor.prototype.typeName;
+        prefix = actor.prototype.actorPrefix || actor.prototype.typeName;
       }
-      aActor.actorID = this.conn.allocID(prefix || undefined);
+      actor.actorID = this.conn.allocID(prefix || undefined);
     }
 
     // If the actor is already in a pool, remove it without destroying it.
-    if (aActor.registeredPool) {
-      delete aActor.registeredPool._actors[aActor.actorID];
+    if (actor.registeredPool) {
+      delete actor.registeredPool._actors[actor.actorID];
     }
-    aActor.registeredPool = this;
+    actor.registeredPool = this;
 
-    this._actors[aActor.actorID] = aActor;
+    this._actors[actor.actorID] = actor;
   },
 
   /**
@@ -268,26 +267,26 @@ ActorPool.prototype = {
     }
   },
 
-  get: function AP_get(aActorID) {
-    return this._actors[aActorID] || undefined;
+  get: function APGet(actorID) {
+    return this._actors[actorID] || undefined;
   },
 
-  has: function AP_has(aActorID) {
-    return aActorID in this._actors;
+  has: function APHas(actorID) {
+    return actorID in this._actors;
   },
 
   /**
    * Returns true if the pool is empty.
    */
-  isEmpty: function AP_isEmpty() {
+  isEmpty: function APIsEmpty() {
     return Object.keys(this._actors).length == 0;
   },
 
   /**
    * Match the api expected by the protocol library.
    */
-  unmanage: function (aActor) {
-    return this.removeActor(aActor);
+  unmanage: function (actor) {
+    return this.removeActor(actor);
   },
 
   forEach: function (callback) {
@@ -475,14 +474,14 @@ exports.GeneratedLocation = GeneratedLocation;
  *        The expected state.
  * @param String activity
  *        Additional info about what's going on.
- * @param Function method
+ * @param Function methodFunc
  *        The actor method to proceed with when the actor is in the expected
  *        state.
  *
  * @returns Function
  *          The decorated method.
  */
-function expectState(expectedState, method, activity) {
+function expectState(expectedState, methodFunc, activity) {
   return function (...args) {
     if (this.state !== expectedState) {
       const msg = `Wrong state while ${activity}:` +
@@ -491,7 +490,7 @@ function expectState(expectedState, method, activity) {
       return promise.reject(new Error(msg));
     }
 
-    return method.apply(this, args);
+    return methodFunc.apply(this, args);
   };
 }
 
@@ -517,7 +516,7 @@ exports.actorBridge = actorBridge;
  * Like `actorBridge`, but without a spec definition, for when the actor is
  * created with `ActorClassWithSpec` rather than vanilla `ActorClass`.
  */
-function actorBridgeWithSpec (methodName) {
+function actorBridgeWithSpec(methodName) {
   return method(function () {
     return this.bridge[methodName].apply(this.bridge, arguments);
   });
