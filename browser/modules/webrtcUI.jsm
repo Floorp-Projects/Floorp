@@ -333,14 +333,30 @@ function getHost(uri, href) {
 }
 
 function prompt(aBrowser, aRequest) {
-  let {audioDevices: audioDevices, videoDevices: videoDevices,
-       sharingScreen: sharingScreen, sharingAudio: sharingAudio,
-       requestTypes: requestTypes} = aRequest;
+  let { audioDevices, videoDevices, sharingScreen, sharingAudio,
+        requestTypes } = aRequest;
   let uri = Services.io.newURI(aRequest.documentURI);
   let host = getHost(uri);
   let chromeDoc = aBrowser.ownerDocument;
   let stringBundle = chromeDoc.defaultView.gNavigatorBundle;
-  let stringId = "getUserMedia.share" + requestTypes.join("And") + "2.message";
+
+  // Mind the order, because for simplicity we're iterating over the list using
+  // "includes()". This allows the rotation of string identifiers. We list the
+  // full identifiers here so they can be cross-referenced more easily.
+  let joinedRequestTypes = requestTypes.join("And");
+  let stringId = [
+    // Individual request types first.
+    "getUserMedia.shareCamera2.message",
+    "getUserMedia.shareMicrophone2.message",
+    "getUserMedia.shareScreen3.message",
+    "getUserMedia.shareAudioCapture2.message",
+    // Combinations of the above request types last.
+    "getUserMedia.shareCameraAndMicrophone2.message",
+    "getUserMedia.shareCameraAndAudioCapture2.message",
+    "getUserMedia.shareScreenAndMicrophone3.message",
+    "getUserMedia.shareScreenAndAudioCapture3.message",
+  ].find(id => id.includes(joinedRequestTypes));
+
   let message = stringBundle.getFormattedString(stringId, [host]);
 
   let notification; // Used by action callbacks.
@@ -377,7 +393,7 @@ function prompt(aBrowser, aRequest) {
   // share without prompting).
   let reasonForNoPermanentAllow = "";
   if (sharingScreen) {
-    reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.screen";
+    reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.screen2";
   } else if (sharingAudio) {
     reasonForNoPermanentAllow = "getUserMedia.reasonForNoPermanentAllow.audio";
   } else if (!aRequest.secure) {
