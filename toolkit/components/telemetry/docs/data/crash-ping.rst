@@ -2,7 +2,18 @@
 "crash" ping
 ============
 
-This ping is captured after the main Firefox process crashes, whether or not the crash report is submitted to crash-stats.mozilla.org. It includes non-identifying metadata about the crash.
+This ping is captured after the main Firefox process crashes or after a content
+process crashes, whether or not the crash report is submitted to
+crash-stats.mozilla.org. It includes non-identifying metadata about the crash.
+
+This ping is sent either by the ```CrashManager``` or by the crash reporter
+client. The ```CrashManager``` is responsible for sending crash pings for the
+content process crashes, which are sent right after the crash is detected,
+as well as for main process crashes, which are sent after Firefox restarts
+successfully. The crash reporter client sends crash pings only for main process
+crashes whether or not the user also reports the crash. The crash reporter
+client will not send the crash ping if telemetry has been disabled in Firefox
+though.
 
 The environment block that is sent with this ping varies: if Firefox was running long enough to record the environment block before the crash, then the environment at the time of the crash will be recorded and ``hasCrashEnvironment`` will be true. If Firefox crashed before the environment was recorded, ``hasCrashEnvironment`` will be false and the recorded environment will be the environment at time of submission.
 
@@ -13,7 +24,6 @@ Structure:
 .. code-block:: js
 
     {
-      version: 1,
       type: "crash",
       ... common ping data
       clientId: <UUID>,
@@ -21,6 +31,7 @@ Structure:
       processType: <type>, // Type of process that crashed, see below for a list of types
       payload: {
         crashDate: "YYYY-MM-DD",
+        version: 1,
         sessionId: <UUID>, // may be missing for crashes that happen early
                            // in startup. Added in Firefox 48 with the
                            // intention of uplifting to Firefox 46
