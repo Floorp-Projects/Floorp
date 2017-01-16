@@ -32,7 +32,6 @@ const SCRIPTS = [
   "browser/base/content/browser-addons.js",
   "browser/base/content/browser-ctrlTab.js",
   "browser/base/content/browser-customization.js",
-  "browser/base/content/browser-devedition.js",
   "browser/base/content/browser-feeds.js",
   "browser/base/content/browser-fullScreenAndPointerLock.js",
   "browser/base/content/browser-fullZoom.js",

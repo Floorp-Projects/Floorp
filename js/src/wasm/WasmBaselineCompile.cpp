@@ -206,6 +206,18 @@ static const Register ScratchRegARM = CallTempReg2;
 # define FLOAT_TO_I64_CALLOUT
 #endif
 
+template<MIRType t>
+struct RegTypeOf {
+    static_assert(t == MIRType::Float32 || t == MIRType::Double, "Float mask type");
+};
+
+template<> struct RegTypeOf<MIRType::Float32> {
+    static constexpr RegTypeName value = RegTypeName::Float32;
+};
+template<> struct RegTypeOf<MIRType::Double> {
+    static constexpr RegTypeName value = RegTypeName::Float64;
+};
+
 class BaseCompiler
 {
     // We define our own ScratchRegister abstractions, deferring to
@@ -791,16 +803,8 @@ class BaseCompiler
     // individually then d0 becomes allocatable.
 
     template<MIRType t>
-    FloatRegisters::SetType maskFromTypeFPU() {
-        static_assert(t == MIRType::Float32 || t == MIRType::Double, "Float mask type");
-        if (t == MIRType::Float32)
-            return FloatRegisters::AllSingleMask;
-        return FloatRegisters::AllDoubleMask;
-    }
-
-    template<MIRType t>
     bool hasFPU() {
-        return !!(availFPU_.bits() & maskFromTypeFPU<t>());
+        return availFPU_.hasAny<RegTypeOf<t>::value>();
     }
 
     bool isAvailable(FloatRegister r) {
@@ -814,12 +818,7 @@ class BaseCompiler
 
     template<MIRType t>
     FloatRegister allocFPU() {
-        MOZ_ASSERT(hasFPU<t>());
-        FloatRegister r =
-            FloatRegisterSet::Intersect(FloatRegisterSet(availFPU_.bits()),
-                                        FloatRegisterSet(maskFromTypeFPU<t>())).getAny();
-        availFPU_.take(r);
-        return r;
+        return availFPU_.takeAny<RegTypeOf<t>::value>();
     }
 
     void freeFPU(FloatRegister r) {

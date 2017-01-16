@@ -12,6 +12,8 @@
 #include <limits.h>
 #include <stdint.h>
 
+#include "jit/shared/Architecture-shared.h"
+
 #include "js/Utility.h"
 
 // GCC versions 4.6 and above define __ARM_PCS_VFP to denote a hard-float
@@ -285,6 +287,37 @@ class FloatRegisters
     static const uint32_t TotalPhys = 32;
     static uint32_t ActualTotalPhys();
 
+    // ARM float registers overlap in a way that for 1 double registers, in the
+    // range d0-d15, we have 2 singles register in the range s0-s31. d16-d31
+    // have no single register aliases.  The aliasing rule state that d{n}
+    // aliases s{2n} and s{2n+1}, for n in [0 .. 15].
+    //
+    // The register set is used to represent either allocatable register or live
+    // registers. The register maps d0-d15 and s0-s31 to a single bit each. The
+    // registers d16-d31 are not used at the moment.
+    //
+    // uuuu uuuu uuuu uuuu dddd dddd dddd dddd ssss ssss ssss ssss ssss ssss ssss ssss
+    //                     ^                 ^ ^                                     ^
+    //                     '-- d15      d0 --' '-- s31                          s0 --'
+    //
+    // LiveSet are handled by adding the bit of each register without
+    // considering the aliases.
+    //
+    // AllocatableSet are handled by adding and removing the bit of each
+    // aligned-or-dominated-aliased registers.
+    //
+    //     ...0...00... : s{2n}, s{2n+1} and d{n} are not available
+    //     ...1...01... : s{2n} is available (*)
+    //     ...0...10... : s{2n+1} is available
+    //     ...1...11... : s{2n}, s{2n+1} and d{n} are available
+    //
+    // (*) Note that d{n} bit is set, but is not available because s{2n+1} bit
+    // is not set, which is required as d{n} dominates s{2n+1}. The d{n} bit is
+    // set, because s{2n} is aligned.
+    //
+    //        |        d{n}       |
+    //        | s{2n+1} |  s{2n}  |
+    //
     typedef uint64_t SetType;
     static const SetType AllSingleMask = (1ull << TotalSingle) - 1;
     static const SetType AllDoubleMask = ((1ull << TotalDouble) - 1) << TotalSingle;
@@ -357,12 +390,9 @@ class VFPRegister
 
   protected:
     RegType kind : 2;
-    // ARM doesn't have more than 32 registers. Don't take more bits than we'll
-    // need. Presently, we don't have plans to address the upper and lower
-    // halves of the double registers seprately, so 5 bits should suffice. If we
-    // do decide to address them seprately (vmov, I'm looking at you), we will
-    // likely specify it as a separate field.
   public:
+    // ARM doesn't have more than 32 registers of each type, so 5 bits should
+    // suffice.
     uint32_t code_ : 5;
   protected:
     bool _isInvalid : 1;
@@ -370,7 +400,7 @@ class VFPRegister
 
   public:
     constexpr VFPRegister(uint32_t r, RegType k)
-      : kind(k), code_ (Code(r)), _isInvalid(false), _isMissing(false)
+      : kind(k), code_(Code(r)), _isInvalid(false), _isMissing(false)
     { }
     constexpr VFPRegister()
       : kind(Double), code_(Code(0)), _isInvalid(true), _isMissing(false)
@@ -533,7 +563,7 @@ class VFPRegister
     //   s1.alignedOrDominatedAliasedSet() == s1.
     //   d0.alignedOrDominatedAliasedSet() == s0 | s1 | d0.
     //
-    // This way the Allocator register set does not have to do any arithmetics
+    // This way the Allocatable register set does not have to do any arithmetics
     // to know if a register is available or not, as we have the following
     // relations:
     //
@@ -551,6 +581,19 @@ class VFPRegister
 
         MOZ_ASSERT(isDouble());
         return (SetType(0b11) << (code_ * 2)) | (SetType(1) << (32 + code_));
+    }
+
+    static constexpr RegTypeName DefaultType = RegTypeName::Float64;
+
+    template <RegTypeName = DefaultType>
+    static SetType LiveAsIndexableSet(SetType s) {
+        return SetType(0);
+    }
+
+    template <RegTypeName Name = DefaultType>
+    static SetType AllocatableAsIndexableSet(SetType s) {
+        static_assert(Name != RegTypeName::Any, "Allocatable set are not iterable");
+        return SetType(0);
     }
 
     static uint32_t SetSize(SetType x) {
@@ -571,6 +614,79 @@ class VFPRegister
     }
 
 };
+
+template <> inline VFPRegister::SetType
+VFPRegister::LiveAsIndexableSet<RegTypeName::Float32>(SetType set)
+{
+    return set & FloatRegisters::AllSingleMask;
+}
+
+template <> inline VFPRegister::SetType
+VFPRegister::LiveAsIndexableSet<RegTypeName::Float64>(SetType set)
+{
+    return set & FloatRegisters::AllDoubleMask;
+}
+
+template <> inline VFPRegister::SetType
+VFPRegister::LiveAsIndexableSet<RegTypeName::Any>(SetType set)
+{
+    return set;
+}
+
+template <> inline VFPRegister::SetType
+VFPRegister::AllocatableAsIndexableSet<RegTypeName::Float32>(SetType set)
+{
+    // Single registers are not dominating any smaller registers, thus masking
+    // is enough to convert an allocatable set into a set of register list all
+    // single register available.
+    return set & FloatRegisters::AllSingleMask;
+}
+
+template <> inline VFPRegister::SetType
+VFPRegister::AllocatableAsIndexableSet<RegTypeName::Float64>(SetType set)
+{
+    // An allocatable float register set is represented as follow:
+    //
+    // uuuu uuuu uuuu uuuu dddd dddd dddd dddd ssss ssss ssss ssss ssss ssss ssss ssss
+    //                     ^                 ^ ^                                     ^
+    //                     '-- d15      d0 --' '-- s31                          s0 --'
+    //
+    //     ...0...00... : s{2n}, s{2n+1} and d{n} are not available
+    //     ...1...01... : s{2n} is available
+    //     ...0...10... : s{2n+1} is available
+    //     ...1...11... : s{2n}, s{2n+1} and d{n} are available
+    //
+    // The goal of this function is to return the set of double registers which
+    // are available as an indexable bit set. This implies that iff a double bit
+    // is set in the returned set, then the register is available.
+    //
+    // To do so, this functions converts the 32 bits set of single registers
+    // into a 16 bits set of equivalent double registers. Then, we mask out
+    // double registers which do not have all the single register that compose
+    // them. As d{n} bit is set when s{2n} is available, we only need to take
+    // s{2n+1} into account.
+
+    // Convert  s7s6s5s4 s3s2s1s0  into  s7s5s3s1, for all s0-s31.
+    SetType s2d = AllocatableAsIndexableSet<RegTypeName::Float32>(set);
+    static_assert(FloatRegisters::TotalSingle == 32, "Wrong mask");
+    s2d = (0xaaaaaaaa & s2d) >> 1; // Filter s{2n+1} registers.
+    // Group adjacent bits as follow:
+    //     0.0.s3.s1 == ((0.s3.0.s1) >> 1 | (0.s3.0.s1)) & 0b0011;
+    s2d = ((s2d >> 1) | s2d) & 0x33333333; // 0a0b --> 00ab
+    s2d = ((s2d >> 2) | s2d) & 0x0f0f0f0f; // 00ab00cd --> 0000abcd
+    s2d = ((s2d >> 4) | s2d) & 0x00ff00ff;
+    s2d = ((s2d >> 8) | s2d) & 0x0000ffff;
+    // Move the s7s5s3s1 to the aliased double positions.
+    s2d = s2d << FloatRegisters::TotalSingle;
+
+    // Note: We currently do not use any representation for d16-d31.
+    static_assert(FloatRegisters::TotalDouble == 16,
+        "d16-d31 do not have a single register mapping");
+
+    // Filter out any double register which are not allocatable due to
+    // non-aligned dominated single registers.
+    return set & s2d;
+}
 
 // The only floating point register set that we work with are the VFP Registers.
 typedef VFPRegister FloatRegister;
