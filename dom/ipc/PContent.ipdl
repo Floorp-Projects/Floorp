@@ -343,6 +343,11 @@ struct GMPCapabilityData
     GMPAPITags[] capabilities;
 };
 
+/**
+ * The PContent protocol is a top-level protocol between the UI process
+ * and a content process. There is exactly one PContentParent/PContentChild pair
+ * for each content process.
+ */
 nested(upto inside_cpow) sync protocol PContent
 {
     parent spawns PPluginModule;
