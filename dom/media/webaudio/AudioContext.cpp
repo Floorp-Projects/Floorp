@@ -529,12 +529,12 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
   if (aSuccessCallback.WasPassed()) {
     successCallback = &aSuccessCallback.Value();
   }
-  RefPtr<WebAudioDecodeJob> job(
+  UniquePtr<WebAudioDecodeJob> job(
     new WebAudioDecodeJob(contentType, this,
                           promise, successCallback, failureCallback));
   AsyncDecodeWebAudio(contentType.get(), data, length, *job);
   // Transfer the ownership to mDecodeJobs
-  mDecodeJobs.AppendElement(job.forget());
+  mDecodeJobs.AppendElement(Move(job));
 
   return promise.forget();
 }
@@ -542,7 +542,14 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
 void
 AudioContext::RemoveFromDecodeQueue(WebAudioDecodeJob* aDecodeJob)
 {
-  mDecodeJobs.RemoveElement(aDecodeJob);
+  // Since UniquePtr doesn't provide an operator== which allows you to compare
+  // against raw pointers, we need to iterate manually.
+  for (uint32_t i = 0; i < mDecodeJobs.Length(); ++i) {
+    if (mDecodeJobs[i].get() == aDecodeJob) {
+      mDecodeJobs.RemoveElementAt(i);
+      break;
+    }
+  }
 }
 
 void
