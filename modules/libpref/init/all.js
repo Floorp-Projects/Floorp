@@ -859,8 +859,6 @@ pref("canvas.imagebitmap_extensions.enabled", true);
 // further checks.
 pref("accessibility.force_disabled", 0);
 
-pref("accessibility.ipc_architecture.enabled", true);
-
 pref("accessibility.AOM.enabled", false);
 
 #ifdef XP_WIN
