@@ -488,7 +488,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     CodeOffset call(Register reg) PER_SHARED_ARCH;
     CodeOffset call(Label* label) PER_SHARED_ARCH;
-    void call(const Address& addr) DEFINED_ON(x86_shared);
+    void call(const Address& addr) DEFINED_ON(x86_shared, arm, arm64);
     void call(ImmWord imm) PER_SHARED_ARCH;
     // Call a target native function, which is neither traceable nor movable.
     void call(ImmPtr imm) PER_SHARED_ARCH;

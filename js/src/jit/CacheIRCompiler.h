@@ -339,6 +339,7 @@ class MOZ_RAII CacheRegisterAllocator
     // Returns the register for the given operand. If the operand is currently
     // not in a register, it will load it into one.
     ValueOperand useValueRegister(MacroAssembler& masm, ValOperandId val);
+    ValueOperand useFixedValueRegister(MacroAssembler& masm, ValOperandId valId, ValueOperand reg);
     Register useRegister(MacroAssembler& masm, TypedOperandId typedId);
 
     // Allocates an output register for the given operand.
