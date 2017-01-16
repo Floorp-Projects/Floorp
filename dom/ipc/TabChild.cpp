@@ -151,8 +151,6 @@ NS_IMPL_ISUPPORTS(TabChildSHistoryListener,
                   nsIPartialSHistoryListener,
                   nsISupportsWeakReference)
 
-static const CSSSize kDefaultViewportSize(980, 480);
-
 static const char BEFORE_FIRST_PAINT[] = "before-first-paint";
 
 typedef nsDataHashtable<nsUint64HashKey, TabChild*> TabChildMap;

@@ -10,6 +10,9 @@ const UNFILTERED_URI_COUNT = "browser.engagement.unfiltered_uri_count";
 
 const TELEMETRY_SUBSESSION_TOPIC = "internal-telemetry-after-subsession-split";
 
+// Reset internal URI counter in case URIs were opened by other tests.
+Services.obs.notifyObservers(null, TELEMETRY_SUBSESSION_TOPIC, "");
+
 /**
  * Waits for the web progress listener associated with this tab to fire an
  * onLocationChange for a non-error page.

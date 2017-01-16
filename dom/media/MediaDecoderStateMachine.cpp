@@ -295,14 +295,13 @@ protected:
 
     auto s = new S(master);
 
-    MOZ_ASSERT(master->mState != s->GetState() ||
-               master->mState == DECODER_STATE_SEEKING);
+    MOZ_ASSERT(GetState() != s->GetState() ||
+               GetState() == DECODER_STATE_SEEKING);
 
     SLOG("change state to: %s", ToStateStr(s->GetState()));
 
     Exit();
 
-    master->mState = s->GetState();
     master->mStateObj.reset(s);
     return s->Enter(Move(aArgs)...);
   }
@@ -2739,7 +2738,6 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
 
   RefPtr<MediaDecoderStateMachine> self = this;
   OwnerThread()->Dispatch(NS_NewRunnableFunction([self] () {
-    MOZ_ASSERT(self->mState == DECODER_STATE_DECODING_METADATA);
     MOZ_ASSERT(!self->mStateObj);
     auto s = new DecodeMetadataState(self);
     self->mStateObj.reset(s);
@@ -2768,8 +2766,6 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
   MOZ_ASSERT(OnTaskQueue());
   // Should try to start playback only after decoding first frames.
   MOZ_ASSERT(mSentFirstFrameLoadedEvent);
-  MOZ_ASSERT(mState == DECODER_STATE_DECODING ||
-             mState == DECODER_STATE_COMPLETED);
 
   if (IsPlaying()) {
     // Logging this case is really spammy - don't do it.
@@ -2837,7 +2833,7 @@ const char*
 MediaDecoderStateMachine::ToStateStr()
 {
   MOZ_ASSERT(OnTaskQueue());
-  return ToStateStr(mState);
+  return ToStateStr(mStateObj->GetState());
 }
 
 void MediaDecoderStateMachine::VolumeChanged()
@@ -3181,8 +3177,6 @@ bool MediaDecoderStateMachine::HasLowBufferedData()
 bool MediaDecoderStateMachine::HasLowBufferedData(int64_t aUsecs)
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mState >= DECODER_STATE_DECODING,
-             "Must have loaded first frame for mBuffered to be valid");
 
   // If we don't have a duration, mBuffered is probably not going to have
   // a useful buffered range. Return false here so that we don't get stuck in
@@ -3295,8 +3289,6 @@ RefPtr<ShutdownPromise>
 MediaDecoderStateMachine::FinishShutdown()
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mState == DECODER_STATE_SHUTDOWN,
-             "How did we escape from the shutdown state?");
   DECODER_LOG("Shutting down state machine task queue");
   return OwnerThread()->BeginShutdown();
 }
@@ -3316,14 +3308,6 @@ MediaDecoderStateMachine::ResetDecode(TrackSet aTracks)
 {
   MOZ_ASSERT(OnTaskQueue());
   DECODER_LOG("MediaDecoderStateMachine::Reset");
-
-  // We should be resetting because we're seeking, shutting down, or entering
-  // dormant state. We could also be in the process of going dormant, and have
-  // just switched to exiting dormant before we finished entering dormant,
-  // hence the DECODING_NONE case below.
-  MOZ_ASSERT(IsShutdown() ||
-             mState == DECODER_STATE_SEEKING ||
-             mState == DECODER_STATE_DORMANT);
 
   // Assert that aTracks specifies to reset the video track because we
   // don't currently support resetting just the audio track.
@@ -3677,7 +3661,7 @@ MediaDecoderStateMachine::DumpDebugInfo()
     mStateObj->DumpDebugInfo();
     DUMP_LOG(
       "GetMediaTime=%lld GetClock=%lld mMediaSink=%p "
-      "mState=%s mPlayState=%d mSentFirstFrameLoadedEvent=%d IsPlaying=%d "
+      "state=%s mPlayState=%d mSentFirstFrameLoadedEvent=%d IsPlaying=%d "
       "mAudioStatus=%s mVideoStatus=%s mDecodedAudioEndTime=%lld mDecodedVideoEndTime=%lld "
       "mAudioCompleted=%d mVideoCompleted=%d",
       GetMediaTime(), mMediaSink->IsStarted() ? GetClock() : -1, mMediaSink.get(),

@@ -8,6 +8,7 @@
 
 Cu.import("resource://gre/modules/Integration.jsm", this);
 Cu.import("resource:///modules/PermissionUI.jsm", this);
+Cu.import("resource:///modules/SitePermissions.jsm", this);
 
 /**
  * Given a <xul:browser> at some non-internal web page,
@@ -221,8 +222,7 @@ add_task(function* test_with_permission_key() {
     let mainAction = {
       label: "Allow",
       accessKey: "M",
-      action: Ci.nsIPermissionManager.ALLOW_ACTION,
-      expiryType: Ci.nsIPermissionManager.EXPIRE_SESSION,
+      action: SitePermissions.ALLOW,
       callback() {
         allowed = true;
       }
@@ -232,8 +232,7 @@ add_task(function* test_with_permission_key() {
     let secondaryAction = {
       label: "Deny",
       accessKey: "D",
-      action: Ci.nsIPermissionManager.DENY_ACTION,
-      expiryType: Ci.nsIPermissionManager.EXPIRE_SESSION,
+      action: SitePermissions.BLOCK,
       callback() {
         denied = true;
       }
@@ -242,7 +241,7 @@ add_task(function* test_with_permission_key() {
     let mockRequest = makeMockPermissionRequest(browser);
     let principal = mockRequest.principal;
     registerCleanupFunction(function() {
-      Services.perms.removeFromPrincipal(principal, kTestPermissionKey);
+      SitePermissions.remove(principal.URI, kTestPermissionKey);
     });
 
     let TestPrompt = {
@@ -269,20 +268,28 @@ add_task(function* test_with_permission_key() {
       PopupNotifications.getNotification(kTestNotificationID, browser);
     Assert.ok(notification, "Should have gotten the notification");
 
-    let curPerm =
-      Services.perms.testPermissionFromPrincipal(principal,
-                                                 kTestPermissionKey);
-    Assert.equal(curPerm, Ci.nsIPermissionManager.UNKNOWN_ACTION,
+    let curPerm = SitePermissions.get(principal.URI, kTestPermissionKey, browser);
+    Assert.equal(curPerm.state, SitePermissions.UNKNOWN,
                  "Should be no permission set to begin with.");
 
-    // First test denying the permission request.
+    // First test denying the permission request without the checkbox checked.
+    let popupNotification = getPopupNotificationNode();
+    popupNotification.checkbox.checked = false;
+
     Assert.equal(notification.secondaryActions.length, 1,
                  "There should only be 1 secondary action");
     yield clickSecondaryAction();
-    curPerm = Services.perms.testPermissionFromPrincipal(principal,
-                                                         kTestPermissionKey);
-    Assert.equal(curPerm, Ci.nsIPermissionManager.DENY_ACTION,
-                 "Should have denied the action");
+    curPerm = SitePermissions.get(principal.URI, kTestPermissionKey, browser);
+    Assert.deepEqual(curPerm, {
+                       state: SitePermissions.BLOCK,
+                       scope: SitePermissions.SCOPE_TEMPORARY,
+                     }, "Should have denied the action temporarily");
+    // Try getting the permission without passing the browser object (should fail).
+    curPerm = SitePermissions.get(principal.URI, kTestPermissionKey);
+    Assert.deepEqual(curPerm, {
+                       state: SitePermissions.UNKNOWN,
+                       scope: SitePermissions.SCOPE_PERSISTENT,
+                     }, "Should have made no permanent permission entry");
     Assert.ok(denied, "The secondaryAction callback should have fired");
     Assert.ok(!allowed, "The mainAction callback should not have fired");
     Assert.ok(mockRequest._cancelled,
@@ -291,7 +298,7 @@ add_task(function* test_with_permission_key() {
               "The request should not have been allowed");
 
     // Clear the permission and pretend we never denied
-    Services.perms.removeFromPrincipal(principal, kTestPermissionKey);
+    SitePermissions.remove(principal.URI, kTestPermissionKey, browser);
     denied = false;
     mockRequest._cancelled = false;
 
@@ -301,12 +308,40 @@ add_task(function* test_with_permission_key() {
     TestPrompt.prompt();
     yield shownPromise;
 
-    // Next test allowing the permission request.
+    // Test denying the permission request.
+    Assert.equal(notification.secondaryActions.length, 1,
+                 "There should only be 1 secondary action");
+    yield clickSecondaryAction();
+    curPerm = SitePermissions.get(principal.URI, kTestPermissionKey);
+    Assert.deepEqual(curPerm, {
+                       state: SitePermissions.BLOCK,
+                       scope: SitePermissions.SCOPE_PERSISTENT
+                     }, "Should have denied the action");
+    Assert.ok(denied, "The secondaryAction callback should have fired");
+    Assert.ok(!allowed, "The mainAction callback should not have fired");
+    Assert.ok(mockRequest._cancelled,
+              "The request should have been cancelled");
+    Assert.ok(!mockRequest._allowed,
+              "The request should not have been allowed");
+
+    // Clear the permission and pretend we never denied
+    SitePermissions.remove(principal.URI, kTestPermissionKey);
+    denied = false;
+    mockRequest._cancelled = false;
+
+    // Bring the PopupNotification back up now...
+    shownPromise =
+      BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+    TestPrompt.prompt();
+    yield shownPromise;
+
+    // Test allowing the permission request.
     yield clickMainAction();
-    curPerm = Services.perms.testPermissionFromPrincipal(principal,
-                                                         kTestPermissionKey);
-    Assert.equal(curPerm, Ci.nsIPermissionManager.ALLOW_ACTION,
-                 "Should have allowed the action");
+    curPerm = SitePermissions.get(principal.URI, kTestPermissionKey);
+    Assert.deepEqual(curPerm, {
+                       state: SitePermissions.ALLOW,
+                       scope: SitePermissions.SCOPE_PERSISTENT
+                     }, "Should have allowed the action");
     Assert.ok(!denied, "The secondaryAction callback should not have fired");
     Assert.ok(allowed, "The mainAction callback should have fired");
     Assert.ok(!mockRequest._cancelled,
