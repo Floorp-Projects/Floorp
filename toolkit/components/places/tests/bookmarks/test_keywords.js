@@ -2,7 +2,7 @@ const URI1 = NetUtil.newURI("http://test1.mozilla.org/");
 const URI2 = NetUtil.newURI("http://test2.mozilla.org/");
 const URI3 = NetUtil.newURI("http://test3.mozilla.org/");
 
-function check_keyword(aURI, aKeyword) {
+function* check_keyword(aURI, aKeyword) {
   if (aKeyword)
     aKeyword = aKeyword.toLowerCase();
 
@@ -16,11 +16,11 @@ function check_keyword(aURI, aKeyword) {
   }
 
   if (aKeyword) {
-    let uri = PlacesUtils.bookmarks.getURIForKeyword(aKeyword);
-    Assert.equal(uri.spec, aURI.spec);
+    let uri = yield PlacesUtils.keywords.fetch(aKeyword);
+    Assert.equal(uri.url, aURI.spec);
     // Check case insensitivity.
-    uri = PlacesUtils.bookmarks.getURIForKeyword(aKeyword.toUpperCase());
-    Assert.equal(uri.spec, aURI.spec);
+    uri = yield PlacesUtils.keywords.fetch(aKeyword.toUpperCase());
+    Assert.equal(uri.url, aURI.spec);
   }
 }
 
@@ -66,10 +66,6 @@ function expectNotifications() {
 }
 
 add_task(function test_invalid_input() {
-  Assert.throws(() => PlacesUtils.bookmarks.getURIForKeyword(null),
-                /NS_ERROR_ILLEGAL_VALUE/);
-  Assert.throws(() => PlacesUtils.bookmarks.getURIForKeyword(""),
-                /NS_ERROR_ILLEGAL_VALUE/);
   Assert.throws(() => PlacesUtils.bookmarks.getKeywordForBookmark(null),
                 /NS_ERROR_ILLEGAL_VALUE/);
   Assert.throws(() => PlacesUtils.bookmarks.getKeywordForBookmark(0),
