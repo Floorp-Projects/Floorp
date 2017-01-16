@@ -3045,47 +3045,6 @@ nsNavBookmarks::GetKeywordForBookmark(int64_t aBookmarkId, nsAString& aKeyword)
 
 
 NS_IMETHODIMP
-nsNavBookmarks::GetURIForKeyword(const nsAString& aUserCasedKeyword,
-                                 nsIURI** aURI)
-{
-  NS_ENSURE_ARG_POINTER(aURI);
-  NS_ENSURE_TRUE(!aUserCasedKeyword.IsEmpty(), NS_ERROR_INVALID_ARG);
-  *aURI = nullptr;
-
-  PLACES_WARN_DEPRECATED();
-
-  // Shortcuts are always lowercased internally.
-  nsAutoString keyword(aUserCasedKeyword);
-  ToLowerCase(keyword);
-
-  nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(NS_LITERAL_CSTRING(
-    "SELECT h.url "
-    "FROM moz_places h "
-    "JOIN moz_keywords k ON k.place_id = h.id "
-    "WHERE k.keyword = :keyword"
-  ));
-  NS_ENSURE_STATE(stmt);
-  mozStorageStatementScoper scoper(stmt);
-
-  nsresult rv = stmt->BindStringByName(NS_LITERAL_CSTRING("keyword"), keyword);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool hasMore;
-  if (NS_SUCCEEDED(stmt->ExecuteStep(&hasMore)) && hasMore) {
-    nsAutoCString spec;
-    rv = stmt->GetUTF8String(0, spec);
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), spec);
-    NS_ENSURE_SUCCESS(rv, rv);
-    uri.forget(aURI);
-  }
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
 nsNavBookmarks::RunInBatchMode(nsINavHistoryBatchCallback* aCallback,
                                nsISupports* aUserData) {
   PROFILER_LABEL("nsNavBookmarks", "RunInBatchMode",
