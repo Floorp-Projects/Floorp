@@ -910,8 +910,8 @@ EffectCompositor::GetBaseStyle(nsCSSPropertyID aProperty,
 
   RefPtr<nsStyleContext> styleContextWithoutAnimation =
     aStyleContext->PresContext()->StyleSet()->AsGecko()->
-      ResolveStyleWithoutAnimation(&aElement, aStyleContext,
-                                   eRestyle_AllHintsWithAnimations);
+      ResolveStyleByRemovingAnimation(&aElement, aStyleContext,
+                                      eRestyle_AllHintsWithAnimations);
 
   DebugOnly<bool> success =
     StyleAnimationValue::ExtractComputedValue(aProperty,
