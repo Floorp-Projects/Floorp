@@ -956,7 +956,7 @@ ContentParent::RecvCreateChildProcess(const IPCTabContext& aContext,
   cpm->AddContentProcess(cp, this->ChildID());
 
   if (cpm->AddGrandchildProcess(this->ChildID(), cp->ChildID()) &&
-      cpm->RegisterRemoteFrame(aTabId, aOpenerTabId, aContext, cp->ChildID())) {
+      cpm->RegisterRemoteFrame(aTabId, ChildID(), aOpenerTabId, aContext, cp->ChildID())) {
     return IPC_OK();
   }
 
@@ -1188,6 +1188,7 @@ ContentParent::CreateBrowser(const TabContext& aContext,
     }
     ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
     cpm->RegisterRemoteFrame(tabId,
+                             ContentParentId(0),
                              openerTabId,
                              aContext.AsIPCTabContext(),
                              constructorSender->ChildID());
@@ -1591,9 +1592,10 @@ ContentParent::RecvAllocateLayerTreeId(const ContentParentId& aCpId,
   // correspond to the process that this ContentParent represents or be a
   // child of it.
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  RefPtr<ContentParent> contentParent = cpm->GetContentProcessById(aCpId);
   if (ChildID() != aCpId) {
     ContentParentId parent;
-    if (!cpm->GetParentProcessId(aCpId, &parent) ||
+    if (!cpm->GetParentProcessId(contentParent->ChildID(), &parent) ||
         ChildID() != parent) {
       return IPC_FAIL_NO_REASON(this);
     }
@@ -1601,7 +1603,6 @@ ContentParent::RecvAllocateLayerTreeId(const ContentParentId& aCpId,
 
   // GetTopLevelTabParentByProcessAndTabId will make sure that aTabId
   // lives in the process for aCpId.
-  RefPtr<ContentParent> contentParent = cpm->GetContentProcessById(aCpId);
   RefPtr<TabParent> browserParent =
     cpm->GetTopLevelTabParentByProcessAndTabId(aCpId, aTabId);
   MOZ_ASSERT(contentParent && browserParent);
