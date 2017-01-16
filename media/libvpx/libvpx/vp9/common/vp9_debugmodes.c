@@ -35,7 +35,7 @@ static void print_mi_data(VP9_COMMON *cm, FILE *file, const char *descriptor,
     fprintf(file, "%c ", prefix);
     for (mi_col = 0; mi_col < cols; mi_col++) {
       fprintf(file, "%2d ",
-              *((int*) ((char *) (&mi[0]->mbmi) +
+              *((int*) ((char *) (mi[0]) +
                                   member_offset)));
       mi++;
     }
@@ -53,18 +53,18 @@ void vp9_print_modes_and_motion_vectors(VP9_COMMON *cm, const char *file) {
   int rows = cm->mi_rows;
   int cols = cm->mi_cols;
 
-  print_mi_data(cm, mvs, "Partitions:", offsetof(MB_MODE_INFO, sb_type));
-  print_mi_data(cm, mvs, "Modes:", offsetof(MB_MODE_INFO, mode));
-  print_mi_data(cm, mvs, "Ref frame:", offsetof(MB_MODE_INFO, ref_frame[0]));
-  print_mi_data(cm, mvs, "Transform:", offsetof(MB_MODE_INFO, tx_size));
-  print_mi_data(cm, mvs, "UV Modes:", offsetof(MB_MODE_INFO, uv_mode));
+  print_mi_data(cm, mvs, "Partitions:", offsetof(MODE_INFO, sb_type));
+  print_mi_data(cm, mvs, "Modes:", offsetof(MODE_INFO, mode));
+  print_mi_data(cm, mvs, "Ref frame:", offsetof(MODE_INFO, ref_frame[0]));
+  print_mi_data(cm, mvs, "Transform:", offsetof(MODE_INFO, tx_size));
+  print_mi_data(cm, mvs, "UV Modes:", offsetof(MODE_INFO, uv_mode));
 
   // output skip infomation.
   log_frame_info(cm, "Skips:", mvs);
   for (mi_row = 0; mi_row < rows; mi_row++) {
     fprintf(mvs, "S ");
     for (mi_col = 0; mi_col < cols; mi_col++) {
-      fprintf(mvs, "%2d ", mi[0]->mbmi.skip);
+      fprintf(mvs, "%2d ", mi[0]->skip);
       mi++;
     }
     fprintf(mvs, "\n");
@@ -78,8 +78,8 @@ void vp9_print_modes_and_motion_vectors(VP9_COMMON *cm, const char *file) {
   for (mi_row = 0; mi_row < rows; mi_row++) {
     fprintf(mvs, "V ");
     for (mi_col = 0; mi_col < cols; mi_col++) {
-      fprintf(mvs, "%4d:%4d ", mi[0]->mbmi.mv[0].as_mv.row,
-                               mi[0]->mbmi.mv[0].as_mv.col);
+      fprintf(mvs, "%4d:%4d ", mi[0]->mv[0].as_mv.row,
+                               mi[0]->mv[0].as_mv.col);
       mi++;
     }
     fprintf(mvs, "\n");

@@ -12,8 +12,8 @@
 
 #include "vp9/common/vp9_filter.h"
 
-DECLARE_ALIGNED(256, const InterpKernel,
-                vp9_bilinear_filters[SUBPEL_SHIFTS]) = {
+DECLARE_ALIGNED(256, static const InterpKernel,
+                bilinear_filters[SUBPEL_SHIFTS]) = {
   { 0, 0, 0, 128,   0, 0, 0, 0 },
   { 0, 0, 0, 120,   8, 0, 0, 0 },
   { 0, 0, 0, 112,  16, 0, 0, 0 },
@@ -33,8 +33,8 @@ DECLARE_ALIGNED(256, const InterpKernel,
 };
 
 // Lagrangian interpolation filter
-DECLARE_ALIGNED(256, const InterpKernel,
-                vp9_sub_pel_filters_8[SUBPEL_SHIFTS]) = {
+DECLARE_ALIGNED(256, static const InterpKernel,
+                sub_pel_filters_8[SUBPEL_SHIFTS]) = {
   { 0,   0,   0, 128,   0,   0,   0,  0},
   { 0,   1,  -5, 126,   8,  -3,   1,  0},
   { -1,   3, -10, 122,  18,  -6,   2,  0},
@@ -54,8 +54,8 @@ DECLARE_ALIGNED(256, const InterpKernel,
 };
 
 // DCT based filter
-DECLARE_ALIGNED(256, const InterpKernel,
-                vp9_sub_pel_filters_8s[SUBPEL_SHIFTS]) = {
+DECLARE_ALIGNED(256, static const InterpKernel,
+                sub_pel_filters_8s[SUBPEL_SHIFTS]) = {
   {0,   0,   0, 128,   0,   0,   0, 0},
   {-1,   3,  -7, 127,   8,  -3,   1, 0},
   {-2,   5, -13, 125,  17,  -6,   3, -1},
@@ -75,8 +75,8 @@ DECLARE_ALIGNED(256, const InterpKernel,
 };
 
 // freqmultiplier = 0.5
-DECLARE_ALIGNED(256, const InterpKernel,
-                vp9_sub_pel_filters_8lp[SUBPEL_SHIFTS]) = {
+DECLARE_ALIGNED(256, static const InterpKernel,
+                sub_pel_filters_8lp[SUBPEL_SHIFTS]) = {
   { 0,  0,  0, 128,  0,  0,  0,  0},
   {-3, -1, 32,  64, 38,  1, -3,  0},
   {-2, -2, 29,  63, 41,  2, -3,  0},
@@ -96,15 +96,9 @@ DECLARE_ALIGNED(256, const InterpKernel,
 };
 
 
-static const InterpKernel* vp9_filter_kernels[4] = {
-  vp9_sub_pel_filters_8,
-  vp9_sub_pel_filters_8lp,
-  vp9_sub_pel_filters_8s,
-  vp9_bilinear_filters
+const InterpKernel *vp9_filter_kernels[4] = {
+  sub_pel_filters_8,
+  sub_pel_filters_8lp,
+  sub_pel_filters_8s,
+  bilinear_filters
 };
-
-const InterpKernel *vp9_get_interp_kernel(INTERP_FILTER filter) {
-  assert(filter != SWITCHABLE);
-  return vp9_filter_kernels[filter];
-}
-

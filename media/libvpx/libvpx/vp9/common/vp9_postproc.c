@@ -12,25 +12,27 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "./vpx_dsp_rtcd.h"
 #include "./vpx_config.h"
 #include "./vpx_scale_rtcd.h"
 #include "./vp9_rtcd.h"
 
+#include "vpx_dsp/vpx_dsp_common.h"
 #include "vpx_ports/mem.h"
+#include "vpx_ports/system_state.h"
 #include "vpx_scale/vpx_scale.h"
 #include "vpx_scale/yv12config.h"
 
 #include "vp9/common/vp9_onyxc_int.h"
 #include "vp9/common/vp9_postproc.h"
-#include "vp9/common/vp9_systemdependent.h"
 #include "vp9/common/vp9_textblit.h"
 
 #if CONFIG_VP9_POSTPROC
-static const short kernel5[] = {
+static const int16_t kernel5[] = {
   1, 1, 4, 1, 1
 };
 
-const short vp9_rv[] = {
+const int16_t vp9_rv[] = {
   8, 5, 2, 2, 8, 12, 4, 9, 8, 3,
   0, 3, 9, 0, 0, 0, 8, 3, 14, 4,
   10, 1, 11, 14, 1, 14, 9, 6, 12, 11,
@@ -320,7 +322,7 @@ void vp9_mbpost_proc_down_c(uint8_t *dst, int pitch,
     int sumsq = 0;
     int sum   = 0;
     uint8_t d[16];
-    const short *rv2 = rv3 + ((c * 17) & 127);
+    const int16_t *rv2 = rv3 + ((c * 17) & 127);
 
     for (i = -8; i <= 6; i++) {
       sumsq += s[i * pitch] * s[i * pitch];
@@ -544,7 +546,7 @@ static void fillrd(struct postproc_state *state, int q, int a) {
   double sigma;
   int ai = a, qi = q, i;
 
-  vp9_clear_system_state();
+  vpx_clear_system_state();
 
   sigma = ai + .5 + .6 * (63 - qi) / 63.0;
 
@@ -586,32 +588,6 @@ static void fillrd(struct postproc_state *state, int q, int a) {
   state->last_noise = a;
 }
 
-void vp9_plane_add_noise_c(uint8_t *start, char *noise,
-                           char blackclamp[16],
-                           char whiteclamp[16],
-                           char bothclamp[16],
-                           unsigned int width, unsigned int height, int pitch) {
-  unsigned int i, j;
-
-  // TODO(jbb): why does simd code use both but c doesn't,  normalize and
-  // fix..
-  (void) bothclamp;
-  for (i = 0; i < height; i++) {
-    uint8_t *pos = start + i * pitch;
-    char  *ref = (char *)(noise + (rand() & 0xff));  // NOLINT
-
-    for (j = 0; j < width; j++) {
-      if (pos[j] < blackclamp[0])
-        pos[j] = blackclamp[0];
-
-      if (pos[j] > 255 + whiteclamp[0])
-        pos[j] = 255 + whiteclamp[0];
-
-      pos[j] += ref[j];
-    }
-  }
-}
-
 static void swap_mi_and_prev_mi(VP9_COMMON *cm) {
   // Current mip will be the prev_mip for the next frame.
   MODE_INFO *temp = cm->postproc_state.prev_mip;
@@ -625,7 +601,7 @@ static void swap_mi_and_prev_mi(VP9_COMMON *cm) {
 
 int vp9_post_proc_frame(struct VP9Common *cm,
                         YV12_BUFFER_CONFIG *dest, vp9_ppflags_t *ppflags) {
-  const int q = MIN(105, cm->lf.filter_level * 2);
+  const int q = VPXMIN(105, cm->lf.filter_level * 2);
   const int flags = ppflags->post_proc_flag;
   YV12_BUFFER_CONFIG *const ppbuf = &cm->post_proc_buffer;
   struct postproc_state *const ppstate = &cm->postproc_state;
@@ -638,7 +614,7 @@ int vp9_post_proc_frame(struct VP9Common *cm,
     return 0;
   }
 
-  vp9_clear_system_state();
+  vpx_clear_system_state();
 
   // Alloc memory for prev_mip in the first frame.
   if (cm->current_video_frame == 1) {
@@ -659,7 +635,7 @@ int vp9_post_proc_frame(struct VP9Common *cm,
       const int width = ALIGN_POWER_OF_TWO(cm->width, 4);
       const int height = ALIGN_POWER_OF_TWO(cm->height, 4);
 
-      if (vp9_alloc_frame_buffer(&cm->post_proc_buffer_int, width, height,
+      if (vpx_alloc_frame_buffer(&cm->post_proc_buffer_int, width, height,
                                  cm->subsampling_x, cm->subsampling_y,
 #if CONFIG_VP9_HIGHBITDEPTH
                                  cm->use_highbitdepth,
@@ -677,7 +653,7 @@ int vp9_post_proc_frame(struct VP9Common *cm,
     }
   }
 
-  if (vp9_realloc_frame_buffer(&cm->post_proc_buffer, cm->width, cm->height,
+  if (vpx_realloc_frame_buffer(&cm->post_proc_buffer, cm->width, cm->height,
                                cm->subsampling_x, cm->subsampling_y,
 #if CONFIG_VP9_HIGHBITDEPTH
                                cm->use_highbitdepth,
@@ -725,8 +701,7 @@ int vp9_post_proc_frame(struct VP9Common *cm,
         ppstate->last_noise != noise_level) {
       fillrd(ppstate, 63 - q, noise_level);
     }
-
-    vp9_plane_add_noise(ppbuf->y_buffer, ppstate->noise, ppstate->blackclamp,
+    vpx_plane_add_noise(ppbuf->y_buffer, ppstate->noise, ppstate->blackclamp,
                         ppstate->whiteclamp, ppstate->bothclamp,
                         ppbuf->y_width, ppbuf->y_height, ppbuf->y_stride);
   }

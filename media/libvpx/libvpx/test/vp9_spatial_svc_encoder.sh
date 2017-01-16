@@ -54,7 +54,7 @@ vp9_spatial_svc() {
   if [ "$(vp9_encode_available)" = "yes" ]; then
     local readonly test_name="vp9_spatial_svc"
     for layers in $(seq 1 ${vp9_ssvc_test_layers}); do
-      vp9_spatial_svc_encoder "${test_name}" -l ${layers}
+      vp9_spatial_svc_encoder "${test_name}" -sl ${layers}
     done
   fi
 }

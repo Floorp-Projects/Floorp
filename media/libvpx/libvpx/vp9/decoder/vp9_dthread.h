@@ -12,8 +12,12 @@
 #define VP9_DECODER_VP9_DTHREAD_H_
 
 #include "./vpx_config.h"
-#include "vp9/common/vp9_thread.h"
+#include "vpx_util/vpx_thread.h"
 #include "vpx/internal/vpx_codec_internal.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct VP9Common;
 struct VP9Decoder;
@@ -44,15 +48,15 @@ typedef struct FrameWorkerData {
   int frame_decoded;        // Finished decoding current frame.
 } FrameWorkerData;
 
-void vp9_frameworker_lock_stats(VP9Worker *const worker);
-void vp9_frameworker_unlock_stats(VP9Worker *const worker);
-void vp9_frameworker_signal_stats(VP9Worker *const worker);
+void vp9_frameworker_lock_stats(VPxWorker *const worker);
+void vp9_frameworker_unlock_stats(VPxWorker *const worker);
+void vp9_frameworker_signal_stats(VPxWorker *const worker);
 
 // Wait until ref_buf has been decoded to row in real pixel unit.
 // Note: worker may already finish decoding ref_buf and release it in order to
 // start decoding next frame. So need to check whether worker is still decoding
 // ref_buf.
-void vp9_frameworker_wait(VP9Worker *const worker, RefCntBuffer *const ref_buf,
+void vp9_frameworker_wait(VPxWorker *const worker, RefCntBuffer *const ref_buf,
                           int row);
 
 // FrameWorker broadcasts its decoding progress so other workers that are
@@ -60,7 +64,11 @@ void vp9_frameworker_wait(VP9Worker *const worker, RefCntBuffer *const ref_buf,
 void vp9_frameworker_broadcast(RefCntBuffer *const buf, int row);
 
 // Copy necessary decoding context from src worker to dst worker.
-void vp9_frameworker_copy_context(VP9Worker *const dst_worker,
-                                  VP9Worker *const src_worker);
+void vp9_frameworker_copy_context(VPxWorker *const dst_worker,
+                                  VPxWorker *const src_worker);
+
+#ifdef __cplusplus
+}    // extern "C"
+#endif
 
 #endif  // VP9_DECODER_VP9_DTHREAD_H_

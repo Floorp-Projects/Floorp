@@ -8,6 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 #include <string>
+
+#include "third_party/googletest/src/include/gtest/gtest.h"
+
 #include "./vpx_config.h"
 #if ARCH_X86 || ARCH_X86_64
 #include "vpx_ports/x86.h"
@@ -22,8 +25,8 @@ extern void vp9_rtcd();
 extern void vpx_dsp_rtcd();
 extern void vpx_scale_rtcd();
 }
-#include "third_party/googletest/src/include/gtest/gtest.h"
 
+#if ARCH_X86 || ARCH_X86_64
 static void append_negative_gtest_filter(const char *str) {
   std::string filter = ::testing::FLAGS_gtest_filter;
   // Negative patterns begin with one '-' followed by a ':' separated list.
@@ -31,6 +34,7 @@ static void append_negative_gtest_filter(const char *str) {
   filter += str;
   ::testing::FLAGS_gtest_filter = filter;
 }
+#endif  // ARCH_X86 || ARCH_X86_64
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
@@ -53,7 +57,7 @@ int main(int argc, char **argv) {
     append_negative_gtest_filter(":AVX.*:AVX/*");
   if (!(simd_caps & HAS_AVX2))
     append_negative_gtest_filter(":AVX2.*:AVX2/*");
-#endif
+#endif  // ARCH_X86 || ARCH_X86_64
 
 #if !CONFIG_SHARED
 // Shared library builds don't support whitebox tests

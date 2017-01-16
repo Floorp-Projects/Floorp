@@ -10,6 +10,8 @@
 
 #include <limits.h>
 #include <math.h>
+#include "vpx_dsp/vpx_dsp_common.h"
+#include "vpx_ports/system_state.h"
 
 #include "vp9/encoder/vp9_aq_complexity.h"
 #include "vp9/encoder/vp9_aq_variance.h"
@@ -33,9 +35,6 @@ static const double aq_c_var_thresholds[AQ_C_STRENGTHS][AQ_C_SEGMENTS] =
     {-3.5, -2.5, -1.5, 100.00, 100.0},
     {-3.0, -2.0, -1.0, 100.00, 100.0} };
 
-#define DEFAULT_COMPLEXITY 64
-
-
 static int get_aq_c_strength(int q_index, vpx_bit_depth_t bit_depth) {
   // Approximate base quatizer (truncated to int)
   const int base_quant = vp9_ac_quant(q_index, 0, bit_depth) / 4;
@@ -47,9 +46,9 @@ void vp9_setup_in_frame_q_adj(VP9_COMP *cpi) {
   struct segmentation *const seg = &cm->seg;
 
   // Make SURE use of floating point in this function is safe.
-  vp9_clear_system_state();
+  vpx_clear_system_state();
 
-  if (cm->frame_type == KEY_FRAME ||
+  if (frame_is_intra_only(cm) || cm->error_resilient_mode ||
       cpi->refresh_alt_ref_frame ||
       (cpi->refresh_golden_frame && !cpi->rc.is_src_frame_alt_ref)) {
     int segment;
@@ -105,7 +104,6 @@ void vp9_setup_in_frame_q_adj(VP9_COMP *cpi) {
 
 #define DEFAULT_LV_THRESH 10.0
 #define MIN_DEFAULT_LV_THRESH 8.0
-#define VAR_STRENGTH_STEP 0.25
 // Select a segment for the current block.
 // The choice of segment for a block depends on the ratio of the projected
 // bits for the block vs a target average and its spatial complexity.
@@ -116,8 +114,8 @@ void vp9_caq_select_segment(VP9_COMP *cpi, MACROBLOCK *mb, BLOCK_SIZE bs,
   const int mi_offset = mi_row * cm->mi_cols + mi_col;
   const int bw = num_8x8_blocks_wide_lookup[BLOCK_64X64];
   const int bh = num_8x8_blocks_high_lookup[BLOCK_64X64];
-  const int xmis = MIN(cm->mi_cols - mi_col, num_8x8_blocks_wide_lookup[bs]);
-  const int ymis = MIN(cm->mi_rows - mi_row, num_8x8_blocks_high_lookup[bs]);
+  const int xmis = VPXMIN(cm->mi_cols - mi_col, num_8x8_blocks_wide_lookup[bs]);
+  const int ymis = VPXMIN(cm->mi_rows - mi_row, num_8x8_blocks_high_lookup[bs]);
   int x, y;
   int i;
   unsigned char segment;
@@ -133,9 +131,9 @@ void vp9_caq_select_segment(VP9_COMP *cpi, MACROBLOCK *mb, BLOCK_SIZE bs,
     double low_var_thresh;
     const int aq_strength = get_aq_c_strength(cm->base_qindex, cm->bit_depth);
 
-    vp9_clear_system_state();
+    vpx_clear_system_state();
     low_var_thresh = (cpi->oxcf.pass == 2)
-      ? MAX(cpi->twopass.mb_av_energy, MIN_DEFAULT_LV_THRESH)
+      ? VPXMAX(cpi->twopass.mb_av_energy, MIN_DEFAULT_LV_THRESH)
       : DEFAULT_LV_THRESH;
 
     vp9_setup_src_planes(mb, cpi->Source, mi_row, mi_col);

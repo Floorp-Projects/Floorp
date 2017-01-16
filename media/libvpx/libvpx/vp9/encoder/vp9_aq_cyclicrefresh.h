@@ -12,7 +12,10 @@
 #ifndef VP9_ENCODER_VP9_AQ_CYCLICREFRESH_H_
 #define VP9_ENCODER_VP9_AQ_CYCLICREFRESH_H_
 
+#include "vpx/vpx_integer.h"
 #include "vp9/common/vp9_blockd.h"
+#include "vp9/encoder/vp9_block.h"
+#include "vp9/encoder/vp9_skin_detection.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,12 +30,47 @@ extern "C" {
 // Maximum rate target ratio for setting segment delta-qp.
 #define CR_MAX_RATE_TARGET_RATIO 4.0
 
-// Boost factor for rate target ratio, for segment CR_SEGMENT_ID_BOOST2.
-#define CR_BOOST2_FAC 1.7
+struct CYCLIC_REFRESH {
+  // Percentage of blocks per frame that are targeted as candidates
+  // for cyclic refresh.
+  int percent_refresh;
+  // Maximum q-delta as percentage of base q.
+  int max_qdelta_perc;
+  // Superblock starting index for cycling through the frame.
+  int sb_index;
+  // Controls how long block will need to wait to be refreshed again, in
+  // excess of the cycle time, i.e., in the case of all zero motion, block
+  // will be refreshed every (100/percent_refresh + time_for_refresh) frames.
+  int time_for_refresh;
+  // Target number of (8x8) blocks that are set for delta-q.
+  int target_num_seg_blocks;
+  // Actual number of (8x8) blocks that were applied delta-q.
+  int actual_num_seg1_blocks;
+  int actual_num_seg2_blocks;
+  // RD mult. parameters for segment 1.
+  int rdmult;
+  // Cyclic refresh map.
+  signed char *map;
+  // Map of the last q a block was coded at.
+  uint8_t *last_coded_q_map;
+  // Thresholds applied to the projected rate/distortion of the coding block,
+  // when deciding whether block should be refreshed.
+  int64_t thresh_rate_sb;
+  int64_t thresh_dist_sb;
+  // Threshold applied to the motion vector (in units of 1/8 pel) of the
+  // coding block, when deciding whether block should be refreshed.
+  int16_t motion_thresh;
+  // Rate target ratio to set q delta.
+  double rate_ratio_qdelta;
+  // Boost factor for rate target ratio, for segment CR_SEGMENT_ID_BOOST2.
+  int rate_boost_fac;
+  double low_content_avg;
+  int qindex_delta[3];
+  int reduce_refresh;
+};
 
 struct VP9_COMP;
 
-struct CYCLIC_REFRESH;
 typedef struct CYCLIC_REFRESH CYCLIC_REFRESH;
 
 CYCLIC_REFRESH *vp9_cyclic_refresh_alloc(int mi_rows, int mi_cols);
@@ -53,9 +91,15 @@ int vp9_cyclic_refresh_rc_bits_per_mb(const struct VP9_COMP *cpi, int i,
 // check if we should reset the segment_id, and update the cyclic_refresh map
 // and segmentation map.
 void vp9_cyclic_refresh_update_segment(struct VP9_COMP *const cpi,
-                                       MB_MODE_INFO *const mbmi,
+                                       MODE_INFO *const mi,
                                        int mi_row, int mi_col, BLOCK_SIZE bsize,
-                                       int64_t rate, int64_t dist, int skip);
+                                       int64_t rate, int64_t dist, int skip,
+                                       struct macroblock_plane *const p);
+
+void vp9_cyclic_refresh_update_sb_postencode(struct VP9_COMP *const cpi,
+                                             const MODE_INFO *const mi,
+                                             int mi_row, int mi_col,
+                                             BLOCK_SIZE bsize);
 
 // Update the segmentation map, and related quantities: cyclic refresh map,
 // refresh sb_index, and target number of blocks to be refreshed.
@@ -77,6 +121,8 @@ void vp9_cyclic_refresh_update_parameters(struct VP9_COMP *const cpi);
 void vp9_cyclic_refresh_setup(struct VP9_COMP *const cpi);
 
 int vp9_cyclic_refresh_get_rdmult(const CYCLIC_REFRESH *cr);
+
+void vp9_cyclic_refresh_reset_resize(struct VP9_COMP *const cpi);
 
 static INLINE int cyclic_refresh_segment_id_boosted(int segment_id) {
   return segment_id == CR_SEGMENT_ID_BOOST1 ||

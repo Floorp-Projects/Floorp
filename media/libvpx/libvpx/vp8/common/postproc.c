@@ -10,6 +10,7 @@
 
 
 #include "vpx_config.h"
+#include "vpx_dsp_rtcd.h"
 #include "vp8_rtcd.h"
 #include "vpx_scale_rtcd.h"
 #include "vpx_scale/yv12config.h"
@@ -490,54 +491,6 @@ static void fillrd(struct postproc_state *state, int q, int a)
     state->last_noise = a;
 }
 
-/****************************************************************************
- *
- *  ROUTINE       : plane_add_noise_c
- *
- *  INPUTS        : unsigned char *Start    starting address of buffer to add gaussian
- *                                  noise to
- *                  unsigned int Width    width of plane
- *                  unsigned int Height   height of plane
- *                  int  Pitch    distance between subsequent lines of frame
- *                  int  q        quantizer used to determine amount of noise
- *                                  to add
- *
- *  OUTPUTS       : None.
- *
- *  RETURNS       : void.
- *
- *  FUNCTION      : adds gaussian noise to a plane of pixels
- *
- *  SPECIAL NOTES : None.
- *
- ****************************************************************************/
-void vp8_plane_add_noise_c(unsigned char *Start, char *noise,
-                           char blackclamp[16],
-                           char whiteclamp[16],
-                           char bothclamp[16],
-                           unsigned int Width, unsigned int Height, int Pitch)
-{
-    unsigned int i, j;
-    (void)bothclamp;
-
-    for (i = 0; i < Height; i++)
-    {
-        unsigned char *Pos = Start + i * Pitch;
-        char  *Ref = (char *)(noise + (rand() & 0xff));
-
-        for (j = 0; j < Width; j++)
-        {
-            if (Pos[j] < blackclamp[0])
-                Pos[j] = blackclamp[0];
-
-            if (Pos[j] > 255 + whiteclamp[0])
-                Pos[j] = 255 + whiteclamp[0];
-
-            Pos[j] += Ref[j];
-        }
-    }
-}
-
 /* Blend the macro block with a solid colored square.  Leave the
  * edges unblended to give distinction to macro blocks in areas
  * filled with the same color block.
@@ -675,6 +628,7 @@ void vp8_blend_b_c (unsigned char *y, unsigned char *u, unsigned char *v,
     }
 }
 
+#if CONFIG_POSTPROC_VISUALIZER
 static void constrain_line (int x_0, int *x_1, int y_0, int *y_1, int width, int height)
 {
     int dx;
@@ -717,6 +671,7 @@ static void constrain_line (int x_0, int *x_1, int y_0, int *y_1, int width, int
             *x_1 = ((0-y_0)*dx)/dy + x_0;
     }
 }
+#endif  // CONFIG_POSTPROC_VISUALIZER
 
 #if CONFIG_POSTPROC
 int vp8_post_proc_frame(VP8_COMMON *oci, YV12_BUFFER_CONFIG *dest, vp8_ppflags_t *ppflags)
@@ -826,7 +781,7 @@ int vp8_post_proc_frame(VP8_COMMON *oci, YV12_BUFFER_CONFIG *dest, vp8_ppflags_t
             fillrd(&oci->postproc_state, 63 - q, noise_level);
         }
 
-        vp8_plane_add_noise
+        vpx_plane_add_noise
         (oci->post_proc_buffer.y_buffer,
          oci->postproc_state.noise,
          oci->postproc_state.blackclamp,

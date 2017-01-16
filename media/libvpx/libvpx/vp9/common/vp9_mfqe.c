@@ -120,8 +120,8 @@ static void copy_mem32x32(const uint8_t *src, int src_stride,
                 dst + dst_stride * 16 + 16, dst_stride);
 }
 
-void copy_mem64x64(const uint8_t *src, int src_stride,
-                   uint8_t *dst, int dst_stride) {
+static void copy_mem64x64(const uint8_t *src, int src_stride,
+                          uint8_t *dst, int dst_stride) {
   copy_mem32x32(src, src_stride, dst, dst_stride);
   copy_mem32x32(src + 32, src_stride, dst + 32, dst_stride);
   copy_mem32x32(src + src_stride * 32, src_stride,
@@ -203,12 +203,12 @@ static void mfqe_block(BLOCK_SIZE bs, const uint8_t *y, const uint8_t *u,
 static int mfqe_decision(MODE_INFO *mi, BLOCK_SIZE cur_bs) {
   // Check the motion in current block(for inter frame),
   // or check the motion in the correlated block in last frame (for keyframe).
-  const int mv_len_square = mi->mbmi.mv[0].as_mv.row *
-                            mi->mbmi.mv[0].as_mv.row +
-                            mi->mbmi.mv[0].as_mv.col *
-                            mi->mbmi.mv[0].as_mv.col;
+  const int mv_len_square = mi->mv[0].as_mv.row *
+                            mi->mv[0].as_mv.row +
+                            mi->mv[0].as_mv.col *
+                            mi->mv[0].as_mv.col;
   const int mv_threshold = 100;
-  return mi->mbmi.mode >= NEARESTMV &&  // Not an intra block
+  return mi->mode >= NEARESTMV &&  // Not an intra block
          cur_bs >= BLOCK_16X16 &&
          mv_len_square <= mv_threshold;
 }
@@ -220,7 +220,7 @@ static void mfqe_partition(VP9_COMMON *cm, MODE_INFO *mi, BLOCK_SIZE bs,
                            uint8_t *yd, uint8_t *ud, uint8_t *vd,
                            int yd_stride, int uvd_stride) {
   int mi_offset, y_offset, uv_offset;
-  const BLOCK_SIZE cur_bs = mi->mbmi.sb_type;
+  const BLOCK_SIZE cur_bs = mi->sb_type;
   const int qdiff = cm->base_qindex - cm->postproc_state.last_base_qindex;
   const int bsl = b_width_log2_lookup[bs];
   PARTITION_TYPE partition = partition_lookup[bsl][cur_bs];

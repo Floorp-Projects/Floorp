@@ -12,7 +12,7 @@
 #ifndef VP8_COMMON_INVTRANS_H_
 #define VP8_COMMON_INVTRANS_H_
 
-#include "vpx_config.h"
+#include "./vpx_config.h"
 #include "vp8_rtcd.h"
 #include "blockd.h"
 #include "onyxc_int.h"
@@ -37,7 +37,7 @@ static void eob_adjust(char *eobs, short *diff)
     }
 }
 
-static void vp8_inverse_transform_mby(MACROBLOCKD *xd)
+static INLINE void vp8_inverse_transform_mby(MACROBLOCKD *xd)
 {
     short *DQC = xd->dequant_y1;
 

@@ -15,6 +15,7 @@
 /* Trees map alphabets into huffman-like codes suitable for an arithmetic
    bit coder.  Timothy S Murphy  11 October 2004 */
 
+#include "./vpx_config.h"
 #include "vp8/common/treecoder.h"
 
 #include "boolhuff.h"       /* for now */
@@ -46,7 +47,7 @@ typedef BOOL_CODER vp8_writer;
 
 /* Both of these return bits, not scaled bits. */
 
-static unsigned int vp8_cost_branch(const unsigned int ct[2], vp8_prob p)
+static INLINE unsigned int vp8_cost_branch(const unsigned int ct[2], vp8_prob p)
 {
     /* Imitate existing calculation */
 
@@ -76,7 +77,7 @@ static void vp8_treed_write
     }
     while (n);
 }
-static void vp8_write_token
+static INLINE void vp8_write_token
 (
     vp8_writer *const w,
     vp8_tree t,
@@ -107,7 +108,7 @@ static int vp8_treed_cost(
 
     return c;
 }
-static int vp8_cost_token
+static INLINE int vp8_cost_token
 (
     vp8_tree t,
     const vp8_prob *const p,

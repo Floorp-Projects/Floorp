@@ -91,13 +91,15 @@ if CONFIG['OS_TARGET'] == 'Android':
 if CONFIG['CLANG_CL'] or not CONFIG['_MSC_VER']:
     for f in SOURCES:
         if f.endswith('.c'):
-            if 'sse2' in f:
+            if 'sse2.c' in f:
                 SOURCES[f].flags += CONFIG['SSE2_FLAGS']
-            if 'ssse3' in f:
+            if 'ssse3.c' in f:
                 SOURCES[f].flags += ['-mssse3']
-            if 'sse4' in f:
+            if 'sse4.c' in f:
                 SOURCES[f].flags += ['-msse4.1']
-            if 'avx2' in f:
+            if 'avx.c' in f:
+                SOURCES[f].flags += ['-mavx']
+            if 'avx2.c' in f:
                 SOURCES[f].flags += ['-mavx2']
 
 # Suppress warnings in third-party code.

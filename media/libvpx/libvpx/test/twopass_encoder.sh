@@ -23,7 +23,8 @@ twopass_encoder_verify_environment() {
   fi
 }
 
-# Runs twopass_encoder using the codec specified by $1.
+# Runs twopass_encoder using the codec specified by $1 with a frame limit of
+# 100.
 twopass_encoder() {
   local encoder="${LIBVPX_BIN_PATH}/twopass_encoder${VPX_TEST_EXE_SUFFIX}"
   local codec="$1"
@@ -35,7 +36,7 @@ twopass_encoder() {
   fi
 
   eval "${VPX_TEST_PREFIX}" "${encoder}" "${codec}" "${YUV_RAW_INPUT_WIDTH}" \
-      "${YUV_RAW_INPUT_HEIGHT}" "${YUV_RAW_INPUT}" "${output_file}" \
+      "${YUV_RAW_INPUT_HEIGHT}" "${YUV_RAW_INPUT}" "${output_file}" 100 \
       ${devnull}
 
   [ -e "${output_file}" ] || return 1
@@ -47,16 +48,13 @@ twopass_encoder_vp8() {
   fi
 }
 
-# TODO(tomfinegan): Add a frame limit param to twopass_encoder and enable this
-# test. VP9 is just too slow right now: This test takes 31m16s+ on a fast
-# machine.
-DISABLED_twopass_encoder_vp9() {
+twopass_encoder_vp9() {
   if [ "$(vp9_encode_available)" = "yes" ]; then
     twopass_encoder vp9 || return 1
   fi
 }
 
 twopass_encoder_tests="twopass_encoder_vp8
-                       DISABLED_twopass_encoder_vp9"
+                       twopass_encoder_vp9"
 
 run_tests twopass_encoder_verify_environment "${twopass_encoder_tests}"

@@ -150,7 +150,7 @@ int vpx_img_read(vpx_image_t *img, FILE *file);
 
 double sse_to_psnr(double samples, double peak, double mse);
 
-#if CONFIG_VP9 && CONFIG_VP9_HIGHBITDEPTH
+#if CONFIG_VP9_HIGHBITDEPTH
 void vpx_img_upshift(vpx_image_t *dst, vpx_image_t *src, int input_shift);
 void vpx_img_downshift(vpx_image_t *dst, vpx_image_t *src, int down_shift);
 void vpx_img_truncate_16_to_8(vpx_image_t *dst, vpx_image_t *src);

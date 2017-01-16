@@ -26,17 +26,6 @@ int stats_open_file(stats_io_t *stats, const char *fpf, int pass) {
     stats->buf.buf = NULL;
     res = (stats->file != NULL);
   } else {
-#if USE_POSIX_MMAP
-    struct stat stat_buf;
-    int fd;
-
-    fd = open(fpf, O_RDONLY);
-    stats->file = fdopen(fd, "rb");
-    fstat(fd, &stat_buf);
-    stats->buf.sz = stat_buf.st_size;
-    stats->buf.buf = mmap(NULL, stats->buf.sz, PROT_READ, MAP_PRIVATE, fd, 0);
-    res = (stats->buf.buf != NULL);
-#else
     size_t nbytes;
 
     stats->file = fopen(fpf, "rb");
@@ -58,7 +47,6 @@ int stats_open_file(stats_io_t *stats, const char *fpf, int pass) {
 
     nbytes = fread(stats->buf.buf, 1, stats->buf.sz, stats->file);
     res = (nbytes == stats->buf.sz);
-#endif  /* USE_POSIX_MMAP */
   }
 
   return res;
@@ -82,11 +70,7 @@ int stats_open_mem(stats_io_t *stats, int pass) {
 void stats_close(stats_io_t *stats, int last_pass) {
   if (stats->file) {
     if (stats->pass == last_pass) {
-#if USE_POSIX_MMAP
-      munmap(stats->buf.buf, stats->buf.sz);
-#else
       free(stats->buf.buf);
-#endif  /* USE_POSIX_MMAP */
     }
 
     fclose(stats->file);

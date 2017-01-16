@@ -71,6 +71,8 @@ int I400ToI420(const uint8* src_y, int src_stride_y,
                uint8* dst_v, int dst_stride_v,
                int width, int height);
 
+#define J400ToJ420 I400ToI420
+
 // Convert NV12 to I420.
 LIBYUV_API
 int NV12ToI420(const uint8* src_y, int src_stride_y,
