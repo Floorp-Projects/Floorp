@@ -1523,3 +1523,141 @@ IRGenerator::maybeGuardInt32Index(const Value& index, ValOperandId indexId,
 
     return false;
 }
+
+SetPropIRGenerator::SetPropIRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind,
+                                       bool* isTemporarilyUnoptimizable, HandleValue lhsVal,
+                                       HandleValue idVal, HandleValue rhsVal)
+  : IRGenerator(cx, pc, cacheKind),
+    lhsVal_(lhsVal),
+    idVal_(idVal),
+    rhsVal_(rhsVal),
+    isTemporarilyUnoptimizable_(isTemporarilyUnoptimizable),
+    preliminaryObjectAction_(PreliminaryObjectAction::None),
+    updateStubId_(cx, JSID_EMPTY),
+    needUpdateStub_(false)
+{}
+
+bool
+SetPropIRGenerator::tryAttachStub()
+{
+    AutoAssertNoPendingException aanpe(cx_);
+
+    ValOperandId lhsValId(writer.setInputOperandId(0));
+    ValOperandId rhsValId(writer.setInputOperandId(1));
+
+    RootedId id(cx_);
+    bool nameOrSymbol;
+    if (!ValueToNameOrSymbolId(cx_, idVal_, &id, &nameOrSymbol)) {
+        cx_->clearPendingException();
+        return false;
+    }
+
+    if (lhsVal_.isObject()) {
+        RootedObject obj(cx_, &lhsVal_.toObject());
+        if (obj->watched())
+            return false;
+
+        ObjOperandId objId = writer.guardIsObject(lhsValId);
+        if (nameOrSymbol) {
+            if (tryAttachNativeSetSlot(obj, objId, id, rhsValId))
+                return true;
+            if (tryAttachUnboxedExpandoSetSlot(obj, objId, id, rhsValId))
+                return true;
+        }
+        return false;
+    }
+
+    return false;
+}
+
+static void
+EmitStoreSlotAndReturn(CacheIRWriter& writer, ObjOperandId objId, NativeObject* nobj, Shape* shape,
+                       ValOperandId rhsId)
+{
+    if (nobj->isFixedSlot(shape->slot())) {
+        size_t offset = NativeObject::getFixedSlotOffset(shape->slot());
+        writer.storeFixedSlot(objId, offset, rhsId);
+    } else {
+        size_t offset = nobj->dynamicSlotIndex(shape->slot()) * sizeof(Value);
+        writer.storeDynamicSlot(objId, offset, rhsId);
+    }
+    writer.returnFromIC();
+}
+
+static Shape*
+LookupShapeForSetSlot(NativeObject* obj, jsid id)
+{
+    Shape* shape = obj->lookupPure(id);
+    if (shape && shape->hasSlot() && shape->hasDefaultSetter() && shape->writable())
+        return shape;
+    return nullptr;
+}
+
+bool
+SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj, ObjOperandId objId, HandleId id,
+                                           ValOperandId rhsId)
+{
+    if (!obj->isNative())
+        return false;
+
+    RootedShape propShape(cx_, LookupShapeForSetSlot(&obj->as<NativeObject>(), id));
+    if (!propShape)
+        return false;
+
+    RootedObjectGroup group(cx_, JSObject::getGroup(cx_, obj));
+    if (!group) {
+        cx_->recoverFromOutOfMemory();
+        return false;
+    }
+
+    // For some property writes, such as the initial overwrite of global
+    // properties, TI will not mark the property as having been
+    // overwritten. Don't attach a stub in this case, so that we don't
+    // execute another write to the property without TI seeing that write.
+    EnsureTrackPropertyTypes(cx_, obj, id);
+    if (!PropertyHasBeenMarkedNonConstant(obj, id)) {
+        *isTemporarilyUnoptimizable_ = true;
+        return false;
+    }
+
+    // For Baseline, we have to guard on both the shape and group, because the
+    // type update IC applies to a single group. When we port the Ion IC, we can
+    // do a bit better and avoid the group guard if we don't have to guard on
+    // the property types.
+    NativeObject* nobj = &obj->as<NativeObject>();
+    writer.guardGroup(objId, nobj->group());
+    writer.guardShape(objId, nobj->lastProperty());
+
+    if (IsPreliminaryObject(obj))
+        preliminaryObjectAction_ = PreliminaryObjectAction::NotePreliminary;
+    else
+        preliminaryObjectAction_ = PreliminaryObjectAction::Unlink;
+
+    setUpdateStubInfo(id);
+    EmitStoreSlotAndReturn(writer, objId, nobj, propShape, rhsId);
+    return true;
+}
+
+bool
+SetPropIRGenerator::tryAttachUnboxedExpandoSetSlot(HandleObject obj, ObjOperandId objId,
+                                                   HandleId id, ValOperandId rhsId)
+{
+    if (!obj->is<UnboxedPlainObject>())
+        return false;
+
+    UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando();
+    if (!expando)
+        return false;
+
+    Shape* propShape = LookupShapeForSetSlot(expando, id);
+    if (!propShape)
+        return false;
+
+    writer.guardGroup(objId, obj->group());
+    ObjOperandId expandoId = writer.guardAndLoadUnboxedExpando(objId);
+    writer.guardShape(expandoId, expando->lastProperty());
+
+    setUpdateStubInfo(id);
+    EmitStoreSlotAndReturn(writer, expandoId, expando, propShape, rhsId);
+    return true;
+}

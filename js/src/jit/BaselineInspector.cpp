@@ -171,6 +171,49 @@ GetCacheIRReceiverForUnboxedProperty(ICCacheIR_Monitored* stub, ReceiverGuard* r
     return reader.matchOp(CacheOp::LoadUnboxedPropertyResult, objId);
 }
 
+static bool
+GetCacheIRReceiverForNativeSetSlot(ICCacheIR_Updated* stub, ReceiverGuard* receiver)
+{
+    // We match either:
+    //
+    //   GuardIsObject 0
+    //   GuardGroup 0
+    //   GuardShape 0
+    //   StoreFixedSlot 0 or StoreDynamicSlot 0
+    //
+    // or
+    //
+    //   GuardIsObject 0
+    //   GuardGroup 0
+    //   1: GuardAndLoadUnboxedExpando 0
+    //   GuardShape 1
+    //   StoreFixedSlot 1 or StoreDynamicSlot 1
+
+    *receiver = ReceiverGuard();
+    CacheIRReader reader(stub->stubInfo());
+
+    ObjOperandId objId = ObjOperandId(0);
+    if (!reader.matchOp(CacheOp::GuardIsObject, objId))
+        return false;
+
+    if (!reader.matchOp(CacheOp::GuardGroup, objId))
+        return false;
+    ObjectGroup* group = stub->stubInfo()->getStubField<ObjectGroup*>(stub, reader.stubOffset());
+
+    if (reader.matchOp(CacheOp::GuardAndLoadUnboxedExpando, objId))
+        objId = reader.objOperandId();
+
+    if (!reader.matchOp(CacheOp::GuardShape, objId))
+        return false;
+    Shape* shape = stub->stubInfo()->getStubField<Shape*>(stub, reader.stubOffset());
+
+    if (!reader.matchOpEither(CacheOp::StoreFixedSlot, CacheOp::StoreDynamicSlot))
+        return false;
+
+    *receiver = ReceiverGuard(group, shape);
+    return true;
+}
+
 bool
 BaselineInspector::maybeInfoForPropertyOp(jsbytecode* pc, ReceiverVector& receivers,
                                           ObjectGroupVector& convertUnboxedGroups)
@@ -199,9 +242,11 @@ BaselineInspector::maybeInfoForPropertyOp(jsbytecode* pc, ReceiverVector& receiv
                 receivers.clear();
                 return true;
             }
-        } else if (stub->isSetProp_Native()) {
-            receiver = ReceiverGuard(stub->toSetProp_Native()->group(),
-                                     stub->toSetProp_Native()->shape());
+        } else if (stub->isCacheIR_Updated()) {
+            if (!GetCacheIRReceiverForNativeSetSlot(stub->toCacheIR_Updated(), &receiver)) {
+                receivers.clear();
+                return true;
+            }
         } else if (stub->isSetProp_Unboxed()) {
             receiver = ReceiverGuard(stub->toSetProp_Unboxed()->group(), nullptr);
         } else {
