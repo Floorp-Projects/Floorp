@@ -128,6 +128,13 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
     }
 
     @Override
+    public void refresh() {
+        super.refresh();
+        forwardButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_menu_forward));
+        backButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_menu_back));
+    }
+
+    @Override
     public void setNextFocusDownId(int nextId) {
         super.setNextFocusDownId(nextId);
         backButton.setNextFocusDownId(nextId);

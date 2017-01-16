@@ -9,6 +9,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Telemetry.h"
+#include "nsDependentString.h"
 #include "nsISiteSecurityService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsSiteSecurityService.h"
@@ -181,8 +182,8 @@ FindPinningInformation(const char* hostname, mozilla::pkix::Time time,
     bool found;
     bool includeSubdomains;
     nsTArray<nsCString> pinArray;
-    rv = sssService->GetKeyPinsForHostname(evalHost, time, pinArray,
-                                           &includeSubdomains, &found);
+    rv = sssService->GetKeyPinsForHostname(nsDependentCString(evalHost), time,
+                                           pinArray, &includeSubdomains, &found);
     if (NS_FAILED(rv)) {
       return rv;
     }

@@ -181,9 +181,23 @@ class nsStyleSet final
   // data with eRestyle_AllHintsWithAnimations, or by using any other
   // hints that are allowed by ResolveStyleWithReplacement.
   already_AddRefed<nsStyleContext>
-    ResolveStyleWithoutAnimation(mozilla::dom::Element* aElement,
-                                 nsStyleContext* aStyleContext,
-                                 nsRestyleHint aWhichToRemove);
+    ResolveStyleByRemovingAnimation(mozilla::dom::Element* aElement,
+                                    nsStyleContext* aStyleContext,
+                                    nsRestyleHint aWhichToRemove);
+
+  // Similar to the above, but resolving style without all animation data in
+  // the first place.
+  already_AddRefed<nsStyleContext>
+    ResolveStyleWithoutAnimation(mozilla::dom::Element* aTarget,
+                                 nsStyleContext* aParentContext);
+
+  // Pseudo-element version of the above, ResolveStyleWithoutAnimation.
+  already_AddRefed<nsStyleContext>
+  ResolvePseudoElementStyleWithoutAnimation(
+    mozilla::dom::Element* aParentElement,
+    mozilla::CSSPseudoElementType aType,
+    nsStyleContext* aParentContext,
+    mozilla::dom::Element* aPseudoElement);
 
   // Get a style context for a text node (which no rules will match).
   //
@@ -525,6 +539,23 @@ private:
              mozilla::CSSPseudoElementType aPseudoType,
              mozilla::dom::Element* aElementForAnimation,
              uint32_t aFlags);
+
+  enum AnimationFlag {
+    eWithAnimation,
+    eWithoutAnimation,
+  };
+  already_AddRefed<nsStyleContext>
+  ResolveStyleForInternal(mozilla::dom::Element* aElement,
+                          nsStyleContext* aParentContext,
+                          TreeMatchContext& aTreeMatchContext,
+                          AnimationFlag aAnimationFlag);
+
+  already_AddRefed<nsStyleContext>
+  ResolvePseudoElementStyleInternal(mozilla::dom::Element* aParentElement,
+                                    mozilla::CSSPseudoElementType aType,
+                                    nsStyleContext* aParentContext,
+                                    mozilla::dom::Element* aPseudoElement,
+                                    AnimationFlag aAnimationFlag);
 
   nsPresContext* PresContext() { return mRuleTree->PresContext(); }
 
