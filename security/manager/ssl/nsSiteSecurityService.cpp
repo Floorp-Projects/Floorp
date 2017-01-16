@@ -21,11 +21,10 @@
 #include "nsIX509Cert.h"
 #include "nsNSSComponent.h"
 #include "nsNetUtil.h"
+#include "nsPromiseFlatString.h"
 #include "nsSecurityHeaderParser.h"
-#include "nsString.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
-#include "pkix/pkixtypes.h"
 #include "plstr.h"
 #include "prnetdb.h"
 #include "prprf.h"
@@ -436,26 +435,28 @@ nsSiteSecurityService::RemoveState(uint32_t aType, nsIURI* aURI,
 }
 
 static bool
-HostIsIPAddress(const char *hostname)
+HostIsIPAddress(const nsCString& hostname)
 {
   PRNetAddr hostAddr;
-  return (PR_StringToNetAddr(hostname, &hostAddr) == PR_SUCCESS);
+  PRErrorCode prv = PR_StringToNetAddr(hostname.get(), &hostAddr);
+  return (prv == PR_SUCCESS);
 }
 
 NS_IMETHODIMP
 nsSiteSecurityService::ProcessHeader(uint32_t aType,
                                      nsIURI* aSourceURI,
-                                     const char* aHeader,
+                                     const nsACString& aHeader,
                                      nsISSLStatus* aSSLStatus,
                                      uint32_t aFlags,
                                      uint64_t* aMaxAge,
                                      bool* aIncludeSubdomains,
                                      uint32_t* aFailureResult)
 {
-   // Child processes are not allowed direct access to this.
-   if (!XRE_IsParentProcess()) {
-     MOZ_CRASH("Child process: no direct access to nsISiteSecurityService::ProcessHeader");
-   }
+  // Child processes are not allowed direct access to this.
+  if (!XRE_IsParentProcess()) {
+    MOZ_CRASH("Child process: no direct access to "
+              "nsISiteSecurityService::ProcessHeader");
+  }
 
   if (aFailureResult) {
     *aFailureResult = nsISiteSecurityService::ERROR_UNKNOWN;
@@ -465,32 +466,35 @@ nsSiteSecurityService::ProcessHeader(uint32_t aType,
                  NS_ERROR_NOT_IMPLEMENTED);
 
   NS_ENSURE_ARG(aSSLStatus);
-  return ProcessHeaderInternal(aType, aSourceURI, aHeader, aSSLStatus, aFlags,
-                               aMaxAge, aIncludeSubdomains, aFailureResult);
+  return ProcessHeaderInternal(aType, aSourceURI, PromiseFlatCString(aHeader),
+                               aSSLStatus, aFlags, aMaxAge, aIncludeSubdomains,
+                               aFailureResult);
 }
 
 NS_IMETHODIMP
 nsSiteSecurityService::UnsafeProcessHeader(uint32_t aType,
                                            nsIURI* aSourceURI,
-                                           const char* aHeader,
+                                           const nsACString& aHeader,
                                            uint32_t aFlags,
                                            uint64_t* aMaxAge,
                                            bool* aIncludeSubdomains,
                                            uint32_t* aFailureResult)
 {
-   // Child processes are not allowed direct access to this.
-   if (!XRE_IsParentProcess()) {
-     MOZ_CRASH("Child process: no direct access to nsISiteSecurityService::UnsafeProcessHeader");
-   }
+  // Child processes are not allowed direct access to this.
+  if (!XRE_IsParentProcess()) {
+    MOZ_CRASH("Child process: no direct access to "
+              "nsISiteSecurityService::UnsafeProcessHeader");
+  }
 
-  return ProcessHeaderInternal(aType, aSourceURI, aHeader, nullptr, aFlags,
-                               aMaxAge, aIncludeSubdomains, aFailureResult);
+  return ProcessHeaderInternal(aType, aSourceURI, PromiseFlatCString(aHeader),
+                               nullptr, aFlags, aMaxAge, aIncludeSubdomains,
+                               aFailureResult);
 }
 
 nsresult
 nsSiteSecurityService::ProcessHeaderInternal(uint32_t aType,
                                              nsIURI* aSourceURI,
-                                             const char* aHeader,
+                                             const nsCString& aHeader,
                                              nsISSLStatus* aSSLStatus,
                                              uint32_t aFlags,
                                              uint64_t* aMaxAge,
@@ -540,7 +544,7 @@ nsSiteSecurityService::ProcessHeaderInternal(uint32_t aType,
   nsAutoCString host;
   nsresult rv = GetHost(aSourceURI, host);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (HostIsIPAddress(host.get())) {
+  if (HostIsIPAddress(host)) {
     /* Don't process headers if a site is accessed by IP address. */
     return NS_OK;
   }
@@ -562,7 +566,7 @@ nsSiteSecurityService::ProcessHeaderInternal(uint32_t aType,
 
 static uint32_t
 ParseSSSHeaders(uint32_t aType,
-                const char* aHeader,
+                const nsCString& aHeader,
                 bool& foundIncludeSubdomains,
                 bool& foundMaxAge,
                 bool& foundUnrecognizedDirective,
@@ -703,7 +707,7 @@ ParseSSSHeaders(uint32_t aType,
 
 nsresult
 nsSiteSecurityService::ProcessPKPHeader(nsIURI* aSourceURI,
-                                        const char* aHeader,
+                                        const nsCString& aHeader,
                                         nsISSLStatus* aSSLStatus,
                                         uint32_t aFlags,
                                         uint64_t* aMaxAge,
@@ -713,7 +717,7 @@ nsSiteSecurityService::ProcessPKPHeader(nsIURI* aSourceURI,
   if (aFailureResult) {
     *aFailureResult = nsISiteSecurityService::ERROR_UNKNOWN;
   }
-  SSSLOG(("SSS: processing HPKP header '%s'", aHeader));
+  SSSLOG(("SSS: processing HPKP header '%s'", aHeader.get()));
   NS_ENSURE_ARG(aSSLStatus);
 
   const uint32_t aType = nsISiteSecurityService::HEADER_HPKP;
@@ -877,7 +881,7 @@ nsSiteSecurityService::ProcessPKPHeader(nsIURI* aSourceURI,
 
 nsresult
 nsSiteSecurityService::ProcessSTSHeader(nsIURI* aSourceURI,
-                                        const char* aHeader,
+                                        const nsCString& aHeader,
                                         uint32_t aFlags,
                                         uint64_t* aMaxAge,
                                         bool* aIncludeSubdomains,
@@ -886,7 +890,7 @@ nsSiteSecurityService::ProcessSTSHeader(nsIURI* aSourceURI,
   if (aFailureResult) {
     *aFailureResult = nsISiteSecurityService::ERROR_UNKNOWN;
   }
-  SSSLOG(("SSS: processing HSTS header '%s'", aHeader));
+  SSSLOG(("SSS: processing HSTS header '%s'", aHeader.get()));
 
   const uint32_t aType = nsISiteSecurityService::HEADER_HSTS;
   bool foundMaxAge = false;
@@ -965,12 +969,12 @@ nsSiteSecurityService::IsSecureURI(uint32_t aType, nsIURI* aURI,
   nsresult rv = GetHost(aURI, hostname);
   NS_ENSURE_SUCCESS(rv, rv);
   /* An IP address never qualifies as a secure URI. */
-  if (HostIsIPAddress(hostname.get())) {
+  if (HostIsIPAddress(hostname)) {
     *aResult = false;
     return NS_OK;
   }
 
-  return IsSecureHost(aType, hostname.get(), aFlags, aCached, aResult);
+  return IsSecureHost(aType, hostname, aFlags, aCached, aResult);
 }
 
 int STSPreloadCompare(const void *key, const void *entry)
@@ -1109,16 +1113,16 @@ nsSiteSecurityService::HostHasHSTSEntry(const nsAutoCString& aHost,
 }
 
 NS_IMETHODIMP
-nsSiteSecurityService::IsSecureHost(uint32_t aType, const char* aHost,
+nsSiteSecurityService::IsSecureHost(uint32_t aType, const nsACString& aHost,
                                     uint32_t aFlags, bool* aCached,
                                     bool* aResult)
 {
-   // Child processes are not allowed direct access to this.
-   if (!XRE_IsParentProcess() && aType != nsISiteSecurityService::HEADER_HSTS) {
-     MOZ_CRASH("Child process: no direct access to nsISiteSecurityService::IsSecureHost for non-HSTS entries");
-   }
+  // Child processes are not allowed direct access to this.
+  if (!XRE_IsParentProcess() && aType != nsISiteSecurityService::HEADER_HSTS) {
+    MOZ_CRASH("Child process: no direct access to "
+              "nsISiteSecurityService::IsSecureHost for non-HSTS entries");
+  }
 
-  NS_ENSURE_ARG(aHost);
   NS_ENSURE_ARG(aResult);
 
   // Only HSTS and HPKP are supported at the moment.
@@ -1133,7 +1137,8 @@ nsSiteSecurityService::IsSecureHost(uint32_t aType, const char* aHost,
   }
 
   /* An IP address never qualifies as a secure URI. */
-  if (HostIsIPAddress(aHost)) {
+  const nsCString& flatHost = PromiseFlatCString(aHost);
+  if (HostIsIPAddress(flatHost)) {
     return NS_OK;
   }
 
@@ -1148,12 +1153,14 @@ nsSiteSecurityService::IsSecureHost(uint32_t aType, const char* aHost,
     }
     bool enforceTestMode = certVerifier->mPinningMode ==
                            CertVerifier::PinningMode::pinningEnforceTestMode;
-    return PublicKeyPinningService::HostHasPins(aHost, mozilla::pkix::Now(),
+    return PublicKeyPinningService::HostHasPins(flatHost.get(),
+                                                mozilla::pkix::Now(),
                                                 enforceTestMode, *aResult);
   }
 
   // Holepunch chart.apis.google.com and subdomains.
-  nsAutoCString host(PublicKeyPinningService::CanonicalizeHostname(aHost));
+  nsAutoCString host(
+    PublicKeyPinningService::CanonicalizeHostname(flatHost.get()));
   if (host.EqualsLiteral("chart.apis.google.com") ||
       StringEndsWith(host, NS_LITERAL_CSTRING(".chart.apis.google.com"))) {
     if (aCached) {
@@ -1227,25 +1234,28 @@ bool entryStateNotOK(SiteHPKPState& state, mozilla::pkix::Time& aEvalTime) {
 }
 
 NS_IMETHODIMP
-nsSiteSecurityService::GetKeyPinsForHostname(const char* aHostname,
+nsSiteSecurityService::GetKeyPinsForHostname(const nsACString& aHostname,
                                              mozilla::pkix::Time& aEvalTime,
                                              /*out*/ nsTArray<nsCString>& pinArray,
                                              /*out*/ bool* aIncludeSubdomains,
-                                             /*out*/ bool* afound) {
-   // Child processes are not allowed direct access to this.
-   if (!XRE_IsParentProcess()) {
-     MOZ_CRASH("Child process: no direct access to nsISiteSecurityService::GetKeyPinsForHostname");
-   }
+                                             /*out*/ bool* afound)
+{
+  // Child processes are not allowed direct access to this.
+  if (!XRE_IsParentProcess()) {
+    MOZ_CRASH("Child process: no direct access to "
+              "nsISiteSecurityService::GetKeyPinsForHostname");
+  }
 
   NS_ENSURE_ARG(afound);
-  NS_ENSURE_ARG(aHostname);
 
-  SSSLOG(("Top of GetKeyPinsForHostname for %s", aHostname));
+  const nsCString& flatHostname = PromiseFlatCString(aHostname);
+  SSSLOG(("Top of GetKeyPinsForHostname for %s", flatHostname.get()));
   *afound = false;
   *aIncludeSubdomains = false;
   pinArray.Clear();
 
-  nsAutoCString host(PublicKeyPinningService::CanonicalizeHostname(aHostname));
+  nsAutoCString host(
+    PublicKeyPinningService::CanonicalizeHostname(flatHostname.get()));
   nsAutoCString storageKey;
   SetStorageKey(storageKey, host, nsISiteSecurityService::HEADER_HPKP);
 
@@ -1279,18 +1289,19 @@ nsSiteSecurityService::GetKeyPinsForHostname(const char* aHostname,
 }
 
 NS_IMETHODIMP
-nsSiteSecurityService::SetKeyPins(const char* aHost, bool aIncludeSubdomains,
+nsSiteSecurityService::SetKeyPins(const nsACString& aHost,
+                                  bool aIncludeSubdomains,
                                   int64_t aExpires, uint32_t aPinCount,
                                   const char** aSha256Pins,
                                   bool aIsPreload,
                                   /*out*/ bool* aResult)
 {
-   // Child processes are not allowed direct access to this.
-   if (!XRE_IsParentProcess()) {
-     MOZ_CRASH("Child process: no direct access to nsISiteSecurityService::SetKeyPins");
-   }
+  // Child processes are not allowed direct access to this.
+  if (!XRE_IsParentProcess()) {
+    MOZ_CRASH("Child process: no direct access to "
+              "nsISiteSecurityService::SetKeyPins");
+  }
 
-  NS_ENSURE_ARG_POINTER(aHost);
   NS_ENSURE_ARG_POINTER(aResult);
   NS_ENSURE_ARG_POINTER(aSha256Pins);
 
@@ -1308,27 +1319,31 @@ nsSiteSecurityService::SetKeyPins(const char* aHost, bool aIncludeSubdomains,
   SiteHPKPState dynamicEntry(aExpires, SecurityPropertySet,
                              aIncludeSubdomains, sha256keys);
   // we always store data in permanent storage (ie no flags)
-  nsAutoCString host(PublicKeyPinningService::CanonicalizeHostname(aHost));
+  const nsCString& flatHost = PromiseFlatCString(aHost);
+  nsAutoCString host(
+    PublicKeyPinningService::CanonicalizeHostname(flatHost.get()));
   return SetHPKPState(host.get(), dynamicEntry, 0, aIsPreload);
 }
 
 NS_IMETHODIMP
-nsSiteSecurityService::SetHSTSPreload(const char* aHost,
+nsSiteSecurityService::SetHSTSPreload(const nsACString& aHost,
                                       bool aIncludeSubdomains,
                                       int64_t aExpires,
                               /*out*/ bool* aResult)
 {
-   // Child processes are not allowed direct access to this.
-   if (!XRE_IsParentProcess()) {
-     MOZ_CRASH("Child process: no direct access to nsISiteSecurityService::SetHSTSPreload");
-   }
+  // Child processes are not allowed direct access to this.
+  if (!XRE_IsParentProcess()) {
+    MOZ_CRASH("Child process: no direct access to "
+              "nsISiteSecurityService::SetHSTSPreload");
+  }
 
-  NS_ENSURE_ARG_POINTER(aHost);
   NS_ENSURE_ARG_POINTER(aResult);
 
   SSSLOG(("Top of SetHSTSPreload"));
 
-  nsAutoCString host(PublicKeyPinningService::CanonicalizeHostname(aHost));
+  const nsCString& flatHost = PromiseFlatCString(aHost);
+  nsAutoCString host(
+    PublicKeyPinningService::CanonicalizeHostname(flatHost.get()));
   return SetHSTSState(nsISiteSecurityService::HEADER_HSTS, host.get(), aExpires,
                       aIncludeSubdomains, 0, SecurityPropertySet, true);
 }

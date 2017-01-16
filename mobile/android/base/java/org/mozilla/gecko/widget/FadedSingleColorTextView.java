@@ -9,7 +9,7 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.LinearGradient;
 import android.graphics.Shader;
-import android.support.v4.view.ViewCompat;
+import android.support.v4.text.BidiFormatter;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -24,6 +24,7 @@ import android.view.View;
 public class FadedSingleColorTextView extends FadedTextView {
     // Shader for the fading edge.
     private FadedTextGradient mTextGradient;
+    private boolean mIsTextDirectionRtl;
 
     public FadedSingleColorTextView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -39,11 +40,19 @@ public class FadedSingleColorTextView extends FadedTextView {
 
         final boolean needsEllipsis = needsEllipsis();
         if (needsEllipsis && needsNewGradient) {
-            final boolean isRTL = ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL;
-            mTextGradient = new FadedTextGradient(width, fadeWidth, color, isRTL);
+            mTextGradient = new FadedTextGradient(width, fadeWidth, color, mIsTextDirectionRtl);
         }
 
         getPaint().setShader(needsEllipsis ? mTextGradient : null);
+    }
+
+    @Override
+    public void setText(CharSequence text, BufferType type) {
+        super.setText(text, type);
+        mIsTextDirectionRtl = BidiFormatter.getInstance().isRtl((String) text);
+        if (mIsTextDirectionRtl) {
+            setTextDirection(TEXT_DIRECTION_RTL);
+        }
     }
 
     @Override
