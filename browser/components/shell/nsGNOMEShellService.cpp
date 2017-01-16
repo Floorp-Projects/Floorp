@@ -359,7 +359,7 @@ WriteImage(const nsCString& aPath, imgIContainer* aImage)
   return res ? NS_OK : NS_ERROR_FAILURE;
 #endif
 }
-                 
+
 NS_IMETHODIMP
 nsGNOMEShellService::SetDesktopBackground(nsIDOMElement* aElement, 
                                           int32_t aPosition)
