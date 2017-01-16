@@ -34,13 +34,13 @@ function test() {
   // create a new state for testing
   const REMEMBER = Date.now(), FORGET = Math.random();
   let testState = {
-    windows: [ { tabs: [{ entries: [{ url: "http://example.com/", triggeringPrincipal_base64: triggeringPrincipal }] }], selected: 1 } ],
+    windows: [ { tabs: [{ entries: [{ url: "http://example.com/" }] }], selected: 1 } ],
     _closedWindows : [
       // _closedWindows[0]
       {
         tabs: [
-          { entries: [{ url: "http://example.com/", triggeringPrincipal_base64: triggeringPrincipal, title: REMEMBER }] },
-          { entries: [{ url: "http://mozilla.org/", triggeringPrincipal_base64: triggeringPrincipal, title: FORGET }] }
+          { entries: [{ url: "http://example.com/", title: REMEMBER }] },
+          { entries: [{ url: "http://mozilla.org/", title: FORGET }] }
         ],
         selected: 2,
         title: "mozilla.org",
@@ -49,11 +49,11 @@ function test() {
       // _closedWindows[1]
       {
         tabs: [
-         { entries: [{ url: "http://mozilla.org/", triggeringPrincipal_base64: triggeringPrincipal, title: FORGET }] },
-         { entries: [{ url: "http://example.com/", triggeringPrincipal_base64: triggeringPrincipal, title: REMEMBER }] },
-         { entries: [{ url: "http://example.com/", triggeringPrincipal_base64: triggeringPrincipal, title: REMEMBER }] },
-         { entries: [{ url: "http://mozilla.org/", triggeringPrincipal_base64: triggeringPrincipal, title: FORGET }] },
-         { entries: [{ url: "http://example.com/", triggeringPrincipal_base64: triggeringPrincipal, title: REMEMBER }] }
+         { entries: [{ url: "http://mozilla.org/", title: FORGET }] },
+         { entries: [{ url: "http://example.com/", title: REMEMBER }] },
+         { entries: [{ url: "http://example.com/", title: REMEMBER }] },
+         { entries: [{ url: "http://mozilla.org/", title: FORGET }] },
+         { entries: [{ url: "http://example.com/", title: REMEMBER }] }
         ],
         selected: 5,
         _closedTabs: []
@@ -61,15 +61,15 @@ function test() {
       // _closedWindows[2]
       {
         tabs: [
-          { entries: [{ url: "http://example.com/", triggeringPrincipal_base64: triggeringPrincipal, title: REMEMBER }] }
+          { entries: [{ url: "http://example.com/", title: REMEMBER }] }
         ],
         selected: 1,
         _closedTabs: [
           {
             state: {
               entries: [
-                { url: "http://mozilla.org/", triggeringPrincipal_base64: triggeringPrincipal, title: FORGET },
-                { url: "http://mozilla.org/again", triggeringPrincipal_base64: triggeringPrincipal, title: "doesn't matter" }
+                { url: "http://mozilla.org/", title: FORGET },
+                { url: "http://mozilla.org/again", title: "doesn't matter" }
               ]
             },
             pos: 1,
@@ -78,7 +78,7 @@ function test() {
           {
             state: {
               entries: [
-                { url: "http://example.com", triggeringPrincipal_base64: triggeringPrincipal, title: REMEMBER }
+                { url: "http://example.com", title: REMEMBER }
               ]
             },
             title: REMEMBER
