@@ -3,6 +3,7 @@
 /certutil
 /firefox-bin
 /gtest/***
+/pingsender
 /pk12util
 /ssltunnel
 /xpcshell
