@@ -1140,6 +1140,13 @@ ModuleBuilder::processExport(frontend::ParseNode* pn)
     bool isDefault = pn->getKind() == PNK_EXPORT_DEFAULT;
     ParseNode* kid = isDefault ? pn->pn_left : pn->pn_kid;
 
+    if (isDefault && pn->pn_right) {
+        // This is an export default containing an expression.
+        RootedAtom localName(cx_, cx_->names().starDefaultStar);
+        RootedAtom exportName(cx_, cx_->names().default_);
+        return appendExportEntry(exportName, localName);
+    }
+
     switch (kid->getKind()) {
       case PNK_EXPORT_SPEC_LIST:
         MOZ_ASSERT(!isDefault);
@@ -1153,53 +1160,46 @@ ModuleBuilder::processExport(frontend::ParseNode* pn)
         break;
 
       case PNK_CLASS: {
-          const ClassNode& cls = kid->as<ClassNode>();
-          MOZ_ASSERT(cls.names());
-          RootedAtom localName(cx_, cls.names()->innerBinding()->pn_atom);
-          RootedAtom exportName(cx_, isDefault ? cx_->names().default_ : localName.get());
-          if (!appendExportEntry(exportName, localName))
-              return false;
-          break;
+        const ClassNode& cls = kid->as<ClassNode>();
+        MOZ_ASSERT(cls.names());
+        RootedAtom localName(cx_, cls.names()->innerBinding()->pn_atom);
+        RootedAtom exportName(cx_, isDefault ? cx_->names().default_ : localName.get());
+        if (!appendExportEntry(exportName, localName))
+            return false;
+        break;
       }
 
       case PNK_VAR:
       case PNK_CONST:
       case PNK_LET: {
-          MOZ_ASSERT(kid->isArity(PN_LIST));
-          for (ParseNode* var = kid->pn_head; var; var = var->pn_next) {
-              if (var->isKind(PNK_ASSIGN))
-                  var = var->pn_left;
-              MOZ_ASSERT(var->isKind(PNK_NAME));
-              RootedAtom localName(cx_, var->pn_atom);
-              RootedAtom exportName(cx_, isDefault ? cx_->names().default_ : localName.get());
-              if (!appendExportEntry(exportName, localName))
-                  return false;
-          }
-          break;
+        MOZ_ASSERT(kid->isArity(PN_LIST));
+        for (ParseNode* var = kid->pn_head; var; var = var->pn_next) {
+            if (var->isKind(PNK_ASSIGN))
+                var = var->pn_left;
+            MOZ_ASSERT(var->isKind(PNK_NAME));
+            RootedAtom localName(cx_, var->pn_atom);
+            RootedAtom exportName(cx_, isDefault ? cx_->names().default_ : localName.get());
+            if (!appendExportEntry(exportName, localName))
+                return false;
+        }
+        break;
       }
 
       case PNK_FUNCTION: {
-          RootedFunction func(cx_, kid->pn_funbox->function());
-          if (!func->isArrow()) {
-              RootedAtom localName(cx_, func->explicitName());
-              RootedAtom exportName(cx_, isDefault ? cx_->names().default_ : localName.get());
-              MOZ_ASSERT_IF(isDefault, localName);
-              if (!appendExportEntry(exportName, localName))
-                  return false;
-              break;
-          }
-      }
-
-      MOZ_FALLTHROUGH; // Arrow functions are handled below.
-
-      default:
-        MOZ_ASSERT(isDefault);
-        RootedAtom localName(cx_, cx_->names().starDefaultStar);
-        RootedAtom exportName(cx_, cx_->names().default_);
+        RootedFunction func(cx_, kid->pn_funbox->function());
+        MOZ_ASSERT(!func->isArrow());
+        RootedAtom localName(cx_, func->explicitName());
+        RootedAtom exportName(cx_, isDefault ? cx_->names().default_ : localName.get());
+        MOZ_ASSERT_IF(isDefault, localName);
         if (!appendExportEntry(exportName, localName))
             return false;
         break;
+      }
+
+      default:
+        MOZ_CRASH("Unexpected parse node");
     }
+
     return true;
 }
 
