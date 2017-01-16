@@ -20,6 +20,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/widget/CompositorWidget.h"
+#include "mozilla/widget/WinCompositorWidget.h"
 
 namespace mozilla {
 namespace gl {
@@ -443,17 +444,9 @@ GLContextProviderWGL::CreateWrappingExisting(void*, void*)
 }
 
 already_AddRefed<GLContext>
-GLContextProviderWGL::CreateForCompositorWidget(CompositorWidget* aCompositorWidget, bool aForceAccelerated)
-{
-    return CreateForWindow(aCompositorWidget->RealWidget(),
-                           aCompositorWidget->GetCompositorOptions().UseWebRender(),
-                           aForceAccelerated);
-}
-
-already_AddRefed<GLContext>
-GLContextProviderWGL::CreateForWindow(nsIWidget* aWidget,
-                                      bool aWebRender,
-                                      bool aForceAccelerated)
+CreateForWidget(HWND aHwnd,
+                bool aWebRender,
+                bool aForceAccelerated)
 {
     if (!sWGLLib.EnsureInitialized()) {
         return nullptr;
@@ -465,7 +458,7 @@ GLContextProviderWGL::CreateForWindow(nsIWidget* aWidget,
        * wglCreateContext will fail.
        */
 
-    HDC dc = (HDC)aWidget->GetNativeData(NS_NATIVE_GRAPHIC);
+    HDC dc = ::GetDC(aHwnd);
 
     SetPixelFormat(dc, sWGLLib.GetWindowPixelFormat(), nullptr);
     HGLRC context;
@@ -496,6 +489,20 @@ GLContextProviderWGL::CreateForWindow(nsIWidget* aWidget,
     glContext->SetIsDoubleBuffered(true);
 
     return glContext.forget();
+}
+
+already_AddRefed<GLContext>
+GLContextProviderWGL::CreateForCompositorWidget(CompositorWidget* aCompositorWidget, bool aForceAccelerated)
+{
+    return CreateForWidget(aCompositorWidget->AsWindows()->GetHwnd(),
+                           aCompositorWidget->GetCompositorOptions().UseWebRender(),
+                           aForceAccelerated);
+}
+
+already_AddRefed<GLContext>
+GLContextProviderWGL::CreateForWindow(nsIWidget* aWidget, bool aWebRender, bool aForceAccelerated)
+{
+    return CreateForWidget((HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW), aWebRender, aForceAccelerated);
 }
 
 static already_AddRefed<GLContextWGL>
