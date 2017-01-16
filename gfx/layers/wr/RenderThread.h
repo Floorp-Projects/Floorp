@@ -78,6 +78,9 @@ public:
   /// Can only be called from the render thread.
   void RemoveRenderer(gfx::WindowId aWindowId);
 
+  /// Can only be called from the render thread.
+  RendererOGL* GetRenderer(gfx::WindowId aWindowId);
+
   // RenderNotifier implementation
 
   /// Automatically forwarded to the render thread.

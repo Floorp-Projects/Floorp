@@ -77,7 +77,6 @@ pub unsafe extern fn wr_renderer_readback(width: u32, height: u32,
                                 slice);
 }
 
-
 #[no_mangle]
 pub extern fn wr_renderer_set_profiler_enabled(renderer: &mut Renderer, enabled: bool) {
     renderer.set_profiler_enabled(enabled);
@@ -619,6 +618,11 @@ pub extern fn wr_update_image(window: &mut WrWindowState, key: ImageKey, width: 
 #[no_mangle]
 pub extern fn wr_delete_image(window: &mut WrWindowState, key: ImageKey) {
     wr_api_delete_image(&mut window.api, key);
+}
+
+#[no_mangle]
+pub extern fn wr_api_set_root_pipeline(api: &mut RenderApi, pipeline_id: u64) {
+    api.set_root_pipeline(u64_to_pipeline_id(pipeline_id));
 }
 
 #[no_mangle]

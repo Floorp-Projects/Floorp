@@ -105,5 +105,11 @@ RendererOGL::Render(uint64_t aTransactionId)
   return true;
 }
 
+void
+RendererOGL::SetProfilerEnabled(bool aEnabled)
+{
+  wr_renderer_set_profiler_enabled(mWrRenderer, aEnabled);
+}
+
 }
 }
