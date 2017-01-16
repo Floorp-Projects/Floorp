@@ -9,11 +9,11 @@ const PREF_CLOCK_SKEW_SECONDS = "services.blocklist.clock_skew_seconds";
 
 // Check to ensure maybeSync is called with correct values when a changes
 // document contains information on when a collection was last modified
-add_task(function* test_check_maybeSync(){
+add_task(function* test_check_maybeSync() {
   const changesPath = "/v1/buckets/monitor/collections/changes/records";
 
   // register a handler
-  function handleResponse (serverTimeMillis, request, response) {
+  function handleResponse(serverTimeMillis, request, response) {
     try {
       const sampled = getSampleResponse(request, server.identity.primaryPort);
       if (!sampled) {
@@ -87,7 +87,7 @@ add_task(function* test_check_maybeSync(){
   Services.prefs.setIntPref(PREF_LAST_UPDATE, 0);
   // If server has no change, a 304 is received, maybeSync() is not called.
   updater.addTestBlocklistClient("test-collection", {
-    maybeSync: () => {throw new Error("Should not be called");}
+    maybeSync: () => { throw new Error("Should not be called"); }
   });
   yield updater.checkVersions();
   // Last update is overwritten
@@ -95,7 +95,7 @@ add_task(function* test_check_maybeSync(){
 
 
   // Simulate a server error.
-  function simulateErrorResponse (request, response) {
+  function simulateErrorResponse(request, response) {
     response.setHeader("Date", (new Date(3000)).toUTCString());
     response.setHeader("Content-Type", "application/json; charset=UTF-8");
     response.write(JSON.stringify({

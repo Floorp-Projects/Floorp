@@ -61,9 +61,7 @@ RestyleTracker::Document() const {
 
 struct RestyleEnumerateData : RestyleTracker::Hints {
   RefPtr<dom::Element> mElement;
-#if defined(MOZ_ENABLE_PROFILER_SPS)
   UniqueProfilerBacktrace mBacktrace;
-#endif
 };
 
 inline void
@@ -257,12 +255,10 @@ RestyleTracker::DoProcessRestyles()
               data->mRestyleHint, MarkerTracingType::START)));
         }
 
-#if defined(MOZ_ENABLE_PROFILER_SPS)
         Maybe<GeckoProfilerTracingRAII> profilerRAII;
         if (profiler_feature_active("restyle")) {
           profilerRAII.emplace("Paint", "Styles", Move(data->mBacktrace));
         }
-#endif
         ProcessOneRestyle(element, data->mRestyleHint, data->mChangeHint,
                           data->mRestyleHintData);
         AddRestyleRootsIfAwaitingRestyle(data->mDescendants);
@@ -337,9 +333,7 @@ RestyleTracker::DoProcessRestyles()
           // We can move data since we'll be clearing mPendingRestyles after
           // we finish enumerating it.
           restyle->mRestyleHintData = Move(data->mRestyleHintData);
-#if defined(MOZ_ENABLE_PROFILER_SPS)
           restyle->mBacktrace = Move(data->mBacktrace);
-#endif
 
 #ifdef RESTYLE_LOGGING
           count++;
@@ -365,12 +359,10 @@ RestyleTracker::DoProcessRestyles()
                       index++, count);
           LOG_RESTYLE_INDENT();
 
-#if defined(MOZ_ENABLE_PROFILER_SPS)
           Maybe<GeckoProfilerTracingRAII> profilerRAII;
           if (profiler_feature_active("restyle")) {
             profilerRAII.emplace("Paint", "Styles", Move(currentRestyle->mBacktrace));
           }
-#endif
           if (isTimelineRecording) {
             timelines->AddMarkerForDocShell(docShell, Move(
               MakeUnique<RestyleTimelineMarker>(

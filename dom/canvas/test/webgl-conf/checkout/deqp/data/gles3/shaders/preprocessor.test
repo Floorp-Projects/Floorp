@@ -1647,8 +1647,10 @@ group conditional_inclusion "Conditional Inclusion Tests"
 
 	case basic_2
 		version 300 es
-		expect compile_fail
 		values { output float out0 = 1.0; }
+		# Note: this is expected to fail contrary to native dEQP,
+		# see https://github.com/KhronosGroup/WebGL/pull/1523
+		expect compile_fail
 		both ""
 			#version 300 es
 			precision mediump float;
@@ -1669,8 +1671,10 @@ group conditional_inclusion "Conditional Inclusion Tests"
 
 	case defined_macro_defined_test
 		version 300 es
-		expect compile_fail
 		values { output float out0 = 1.0; }
+		# Note: this is expected to fail contrary to native dEQP,
+		# see https://github.com/KhronosGroup/WebGL/pull/1523
+		expect compile_fail
 		both ""
 			#version 300 es
 			precision mediump float;
@@ -1691,8 +1695,10 @@ group conditional_inclusion "Conditional Inclusion Tests"
 
 	case defined_macro_undef
 		version 300 es
-		expect compile_fail
 		values { output float out0 = 1.0; }
+		# Note: this is expected to fail contrary to native dEQP,
+		# see https://github.com/KhronosGroup/WebGL/pull/1523
+		expect compile_fail
 		both ""
 			#version 300 es
 			precision mediump float;
@@ -1715,8 +1721,10 @@ group conditional_inclusion "Conditional Inclusion Tests"
 
 	case define_defined
 		version 300 es
-		expect compile_fail
 		values { output float out0 = 1.0; }
+		# Note: this is expected to fail contrary to native dEQP,
+		# see https://github.com/KhronosGroup/WebGL/pull/1523
+		expect compile_fail
 		both ""
 			#version 300 es
 			precision mediump float;
@@ -1739,8 +1747,10 @@ group conditional_inclusion "Conditional Inclusion Tests"
 
 	case define_defined_outside_if
 		version 300 es
-		expect compile_fail
 		values { output float out0 = 1.0; }
+		# Note: this is expected to fail contrary to native dEQP,
+		# see https://github.com/KhronosGroup/WebGL/pull/1523
+		expect compile_fail
 		both ""
 			#version 300 es
 			precision mediump float;
@@ -3420,6 +3430,10 @@ group pragmas "Pragma Tests"
 	end
 
 	case pragma_unrecognized_token
+		# Note: upstream dEQP uses unicode characters here but we can't test
+		# this in WebGL because it requires strings passed to glShaderSource
+		# to be ASCII. This would cause the test to fail at glShaderSource
+		# instead of glCompileShader, which is not what we want to test.
 		version 300 es
 		expect build_successful
 		both ""
@@ -3583,6 +3597,10 @@ group extensions "Extension Tests"
 	end
 
 	case invalid_char_in_name
+		# Note: upstream dEQP uses unicode characters here but we can't test
+		# this in WebGL because it requires strings passed to glShaderSource
+		# to be ASCII. This would cause the test to fail at glShaderSource
+		# instead of glCompileShader, which is not what we want to test.
 		version 300 es
 		expect compile_fail
 		both ""
@@ -3598,6 +3616,10 @@ group extensions "Extension Tests"
 	end
 
 	case invalid_char_in_behavior
+		# Note: upstream dEQP uses unicode characters here but we can't test
+		# this in WebGL because it requires strings passed to glShaderSource
+		# to be ASCII. This would cause the test to fail at glShaderSource
+		# instead of glCompileShader, which is not what we want to test.
 		version 300 es
 		expect compile_fail
 		both ""

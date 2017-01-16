@@ -20,7 +20,7 @@ basicauth[Utils.encodeUTF8(JAPANESE)] = "Basic am9obmRvZTrjk7/jl7/jm7/jn78=";
 var server_password;
 
 function login_handling(handler) {
-  return function (request, response) {
+  return function(request, response) {
     let basic = basicauth[server_password];
 
     if (basic && (request.getHeader("Authorization") == basic)) {
@@ -63,7 +63,7 @@ function run_test() {
   do_test_pending();
   let server = httpd_setup({
     "/1.1/johndoe/info/collections":    login_handling(collectionsHelper.handler),
-    "/1.1/johndoe/storage/meta/global": upd("meta",   new ServerWBO("global").handler()),
+    "/1.1/johndoe/storage/meta/global": upd("meta", new ServerWBO("global").handler()),
     "/1.1/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),
     "/user/1.0/johndoe/password":       change_password
   });

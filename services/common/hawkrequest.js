@@ -53,7 +53,7 @@ const Prefs = new Preferences("services.common.rest.");
  */
 
 this.HAWKAuthenticatedRESTRequest =
- function HawkAuthenticatedRESTRequest(uri, credentials, extra={}) {
+ function HawkAuthenticatedRESTRequest(uri, credentials, extra = {}) {
   RESTRequest.call(this, uri);
 
   this.credentials = credentials;
@@ -79,7 +79,7 @@ HAWKAuthenticatedRESTRequest.prototype = {
         localtimeOffsetMsec: this.localtimeOffsetMsec,
         credentials: this.credentials,
         payload: data && JSON.stringify(data) || "",
-        contentType: contentType,
+        contentType,
       };
       let header = CryptoUtils.computeHAWK(this.uri, method, options);
       this.setHeader("Authorization", header.field);
@@ -157,19 +157,19 @@ this.Intl = function Intl() {
 };
 
 this.Intl.prototype = {
-  init: function() {
+  init() {
     Services.prefs.addObserver("intl.accept_languages", this, false);
   },
 
-  uninit: function() {
+  uninit() {
     Services.prefs.removeObserver("intl.accept_languages", this);
   },
 
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     this.readPref();
   },
 
-  readPref: function() {
+  readPref() {
     this._everRead = true;
     try {
       this._accepted = Services.prefs.getComplexValue(

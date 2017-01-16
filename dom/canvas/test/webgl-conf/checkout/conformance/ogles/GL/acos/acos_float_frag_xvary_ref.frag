@@ -62,15 +62,15 @@ void main (void)
 	asinValues[14] = 0.848062;
 	asinValues[15] = 1.06544;
 	asinValues[16] = 1.5708;
-	
+
 	const float M_PI = 3.14159265358979323846;
 	float c = 2.0 * (color.r - 0.5);
-	
+
 	float arrVal = (c + 1.0) * 8.0;
 	int arr0 = int(floor(arrVal));
 	float weight = arrVal - floor(arrVal);
 	float asin_c = 0.0;
-	
+
 	if (arr0 == 0)
 		asin_c = lerp(asinValues[0], asinValues[1], weight);
 	else if (arr0 == 1)

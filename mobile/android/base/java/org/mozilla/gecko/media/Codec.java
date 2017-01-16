@@ -32,21 +32,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
     private final class Callbacks implements AsyncCodec.Callbacks {
         @Override
         public void onInputBufferAvailable(AsyncCodec codec, int index) {
-            if (mFlushing) {
-                // Flush invalidates all buffers.
-                return;
-            }
-
             mInputProcessor.onBuffer(index);
         }
 
         @Override
         public void onOutputBufferAvailable(AsyncCodec codec, int index, MediaCodec.BufferInfo info) {
-            if (mFlushing) {
-                // Flush invalidates all buffers.
-                return;
-            }
-
             mOutputProcessor.onBuffer(index, info);
         }
 
@@ -66,6 +56,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         private Queue<Integer> mAvailableInputBuffers = new LinkedList<>();
         private Queue<Sample> mDequeuedSamples = new LinkedList<>();
         private Queue<Sample> mInputSamples = new LinkedList<>();
+        private boolean mStopped;
 
         private synchronized Sample onAllocate(int size) {
             Sample sample = mSamplePool.obtainInput(size);
@@ -95,6 +86,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         }
 
         private synchronized void onBuffer(int index) {
+            if (mStopped) {
+                return;
+            }
+
             if (!mHasInputCapacitySet) {
                 int capacity = mCodec.getInputBuffer(index).capacity();
                 if (capacity > 0) {
@@ -143,7 +138,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
         private synchronized void reset() {
             for (Sample s : mInputSamples) {
-                mSamplePool.recycleInput(s);
+                if (!s.isEOS()) {
+                    mSamplePool.recycleInput(s);
+                }
             }
             mInputSamples.clear();
 
@@ -154,15 +151,34 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
             mAvailableInputBuffers.clear();
         }
+
+        private synchronized void start() {
+            if (!mStopped) {
+                return;
+            }
+            mStopped = false;
+        }
+
+        private synchronized void stop() {
+            if (mStopped) {
+                return;
+            }
+            mStopped = true;
+            reset();
+        }
     }
 
     private class OutputProcessor {
         private boolean mHasOutputCapacitySet;
         private Queue<Integer> mSentIndices = new LinkedList<>();
         private Queue<Sample> mSentOutputs = new LinkedList<>();
-
+        private boolean mStopped;
 
         private synchronized void onBuffer(int index, MediaCodec.BufferInfo info) {
+            if (mStopped) {
+                return;
+            }
+
             ByteBuffer output = mCodec.getOutputBuffer(index);
             if (!mHasOutputCapacitySet) {
                 int capacity = output.capacity();
@@ -198,7 +214,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
         private void outputDummy(MediaCodec.BufferInfo info) {
             try {
-                if (DEBUG) Log.d(LOGTAG, "return dummy sample");
+                if (DEBUG) { Log.d(LOGTAG, "return dummy sample"); }
                 mCallbacks.onOutput(Sample.create(null, info, null));
             } catch (RemoteException e) {
                 // Dead recipient.
@@ -238,13 +254,27 @@ import java.util.concurrent.ConcurrentLinkedQueue;
             }
             mSentOutputs.clear();
         }
+
+        private synchronized void start() {
+            if (!mStopped) {
+                return;
+            }
+            mStopped = false;
+        }
+
+        private synchronized void stop() {
+            if (mStopped) {
+                return;
+            }
+            mStopped = true;
+            reset();
+        }
     }
 
     private volatile ICodecCallbacks mCallbacks;
     private AsyncCodec mCodec;
     private InputProcessor mInputProcessor;
     private OutputProcessor mOutputProcessor;
-    private volatile boolean mFlushing = false;
     private SamplePool mSamplePool;
     private Queue<Sample> mSentOutputs = new ConcurrentLinkedQueue<>();
     // Value will be updated after configure called.
@@ -277,11 +307,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         }
 
         if (mCodec != null) {
-            if (DEBUG) Log.d(LOGTAG, "release existing codec: " + mCodec);
+            if (DEBUG) { Log.d(LOGTAG, "release existing codec: " + mCodec); }
             releaseCodec();
         }
 
-        if (DEBUG) Log.d(LOGTAG, "configure " + this);
+        if (DEBUG) { Log.d(LOGTAG, "configure " + this); }
 
         MediaFormat fmt = format.asFormat();
         String codecName = getDecoderForFormat(fmt);
@@ -306,7 +336,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
                 mIsAdaptivePlaybackSupported = codec.isAdaptivePlaybackSupported(
                                                    fmt.getString(MediaFormat.KEY_MIME));
                 if (mIsAdaptivePlaybackSupported) {
-                    if (DEBUG) Log.d(LOGTAG, "codec supports adaptive playback  = " + mIsAdaptivePlaybackSupported);
+                    if (DEBUG) { Log.d(LOGTAG, "codec supports adaptive playback  = " + mIsAdaptivePlaybackSupported); }
                     // TODO: may need to find a way to not use hard code to decide the max w/h.
                     fmt.setInteger(MediaFormat.KEY_MAX_WIDTH, 1920);
                     fmt.setInteger(MediaFormat.KEY_MAX_HEIGHT, 1080);
@@ -318,10 +348,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
             mInputProcessor = new InputProcessor();
             mOutputProcessor = new OutputProcessor();
             mSamplePool = new SamplePool(codecName);
-            if (DEBUG) Log.d(LOGTAG, codec.toString() + " created");
+            if (DEBUG) { Log.d(LOGTAG, codec.toString() + " created"); }
             return true;
         } catch (Exception e) {
-            if (DEBUG) Log.d(LOGTAG, "FAIL: cannot create codec -- " + codecName);
+            if (DEBUG) { Log.d(LOGTAG, "FAIL: cannot create codec -- " + codecName); }
             e.printStackTrace();
             return false;
         }
@@ -333,8 +363,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
     }
 
     private void releaseCodec() {
-        mInputProcessor.reset();
-        mOutputProcessor.reset();
+        // In case Codec.stop() is not called yet.
+        mInputProcessor.stop();
+        mOutputProcessor.stop();
         try {
             mCodec.release();
         } catch (Exception e) {
@@ -369,8 +400,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
     @Override
     public synchronized void start() throws RemoteException {
-        if (DEBUG) Log.d(LOGTAG, "start " + this);
-        mFlushing = false;
+        if (DEBUG) { Log.d(LOGTAG, "start " + this); }
+        mInputProcessor.start();
+        mOutputProcessor.start();
         try {
             mCodec.start();
         } catch (Exception e) {
@@ -391,7 +423,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
     @Override
     public synchronized void stop() throws RemoteException {
-        if (DEBUG) Log.d(LOGTAG, "stop " + this);
+        if (DEBUG) { Log.d(LOGTAG, "stop " + this); }
+        mInputProcessor.stop();
+        mOutputProcessor.stop();
         try {
             mCodec.stop();
         } catch (Exception e) {
@@ -401,18 +435,18 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
     @Override
     public synchronized void flush() throws RemoteException {
-        mFlushing = true;
-        if (DEBUG) Log.d(LOGTAG, "flush " + this);
-        mInputProcessor.reset();
-        mOutputProcessor.reset();
+        if (DEBUG) { Log.d(LOGTAG, "flush " + this); }
+        mInputProcessor.stop();
+        mOutputProcessor.stop();
         try {
             mCodec.flush();
+            if (DEBUG) { Log.d(LOGTAG, "flushed " + this); }
+            mInputProcessor.start();
+            mOutputProcessor.start();
+            mCodec.resumeReceivingInputs();
         } catch (Exception e) {
             reportError(Error.FATAL, e);
         }
-
-        mFlushing = false;
-        if (DEBUG) Log.d(LOGTAG, "flushed " + this);
     }
 
     @Override
@@ -432,7 +466,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
     @Override
     public synchronized void release() throws RemoteException {
-        if (DEBUG) Log.d(LOGTAG, "release " + this);
+        if (DEBUG) { Log.d(LOGTAG, "release " + this); }
         releaseCodec();
         mSamplePool.reset();
         mSamplePool = null;

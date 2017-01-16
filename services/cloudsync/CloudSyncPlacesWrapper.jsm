@@ -14,13 +14,13 @@ Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource:///modules/PlacesUIUtils.jsm");
 Cu.import("resource://services-common/utils.js");
 
-var PlacesQueries = function () {
+var PlacesQueries = function() {
 }
 
 PlacesQueries.prototype = {
   cachedStmts: {},
 
-  getQuery: function (queryString) {
+  getQuery(queryString) {
     if (queryString in this.cachedStmts) {
       return this.cachedStmts[queryString];
     }
@@ -30,13 +30,13 @@ PlacesQueries.prototype = {
   }
 };
 
-var PlacesWrapper = function () {
+var PlacesWrapper = function() {
 }
 
 PlacesWrapper.prototype = {
   placesQueries: new PlacesQueries(),
 
-  guidToLocalId: function (guid) {
+  guidToLocalId(guid) {
     let deferred = Promise.defer();
 
     let stmt = "SELECT id AS item_id " +
@@ -58,7 +58,7 @@ PlacesWrapper.prototype = {
     return deferred.promise;
   },
 
-  localIdToGuid: function (id) {
+  localIdToGuid(id) {
     let deferred = Promise.defer();
 
     let stmt = "SELECT guid " +
@@ -80,7 +80,7 @@ PlacesWrapper.prototype = {
     return deferred.promise;
   },
 
-  getItemsById: function (ids, types) {
+  getItemsById(ids, types) {
     let deferred = Promise.defer();
     let stmt = "SELECT b.id, b.type, b.parent, b.position, b.title, b.guid, b.dateAdded, b.lastModified, p.url " +
                "FROM moz_bookmarks b " +
@@ -95,7 +95,7 @@ PlacesWrapper.prototype = {
     return deferred.promise;
   },
 
-  getItemsByParentId: function (parents, types) {
+  getItemsByParentId(parents, types) {
     let deferred = Promise.defer();
     let stmt = "SELECT b.id, b.type, b.parent, b.position, b.title, b.guid, b.dateAdded, b.lastModified, p.url " +
                "FROM moz_bookmarks b " +
@@ -110,7 +110,7 @@ PlacesWrapper.prototype = {
     return deferred.promise;
   },
 
-  getItemsByGuid: function (guids, types) {
+  getItemsByGuid(guids, types) {
     let deferred = Promise.defer();
     guids = guids.map(JSON.stringify);
     let stmt = "SELECT b.id, b.type, b.parent, b.position, b.title, b.guid, b.dateAdded, b.lastModified, p.url " +
@@ -126,7 +126,7 @@ PlacesWrapper.prototype = {
     return deferred.promise;
   },
 
-  updateCachedFolderIds: function (folderCache, folder) {
+  updateCachedFolderIds(folderCache, folder) {
     let deferred = Promise.defer();
     let stmt = "SELECT id, guid " +
                "FROM moz_bookmarks " +
@@ -137,7 +137,7 @@ PlacesWrapper.prototype = {
     query.params.item_type = PlacesUtils.bookmarks.TYPE_FOLDER;
 
     this.asyncQuery(query, ["id", "guid"]).then(
-      function (items) {
+      function(items) {
         let previousIds = folderCache.getChildren(folder);
         let currentIds = new Set();
         for (let item of items) {
@@ -175,7 +175,7 @@ PlacesWrapper.prototype = {
     return deferred.promise;
   },
 
-  getLocalIdsWithAnnotation: function (anno) {
+  getLocalIdsWithAnnotation(anno) {
     let deferred = Promise.defer();
     let stmt = "SELECT a.item_id " +
                "FROM moz_anno_attributes n " +
@@ -186,7 +186,7 @@ PlacesWrapper.prototype = {
     query.params.anno_name = anno.toString();
 
     this.asyncQuery(query, ["item_id"])
-        .then(function (items) {
+        .then(function(items) {
                 let results = [];
                 for (let item of items) {
                   results.push(item.item_id);
@@ -198,7 +198,7 @@ PlacesWrapper.prototype = {
     return deferred.promise;
   },
 
-  getItemAnnotationsForLocalId: function (id) {
+  getItemAnnotationsForLocalId(id) {
     let deferred = Promise.defer();
     let stmt = "SELECT a.name, b.content " +
                "FROM moz_anno_attributes a " +
@@ -209,7 +209,7 @@ PlacesWrapper.prototype = {
     query.params.item_id = id;
 
     this.asyncQuery(query, ["name", "content"])
-        .then(function (results) {
+        .then(function(results) {
                 let annos = {};
                 for (let result of results) {
                   annos[result.name] = result.content;
@@ -221,7 +221,7 @@ PlacesWrapper.prototype = {
     return deferred.promise;
   },
 
-  insertBookmark: function (parent, uri, index, title, guid) {
+  insertBookmark(parent, uri, index, title, guid) {
     let parsedURI;
     try {
       parsedURI = CommonUtils.makeURI(uri)
@@ -237,7 +237,7 @@ PlacesWrapper.prototype = {
     }
   },
 
-  setItemAnnotation: function (item, anno, value, flags, exp) {
+  setItemAnnotation(item, anno, value, flags, exp) {
     try {
       return Promise.resolve(PlacesUtils.annotations.setItemAnnotation(item, anno, value, flags, exp));
     } catch (e) {
@@ -245,7 +245,7 @@ PlacesWrapper.prototype = {
     }
   },
 
-  itemHasAnnotation: function (item, anno) {
+  itemHasAnnotation(item, anno) {
     try {
       return Promise.resolve(PlacesUtils.annotations.itemHasAnnotation(item, anno));
     } catch (e) {
@@ -253,7 +253,7 @@ PlacesWrapper.prototype = {
     }
   },
 
-  createFolder: function (parent, name, index, guid) {
+  createFolder(parent, name, index, guid) {
     try {
       return Promise.resolve(PlacesUtils.bookmarks.createFolder(parent, name, index, guid));
     } catch (e) {
@@ -261,7 +261,7 @@ PlacesWrapper.prototype = {
     }
   },
 
-  removeFolderChildren: function (folder) {
+  removeFolderChildren(folder) {
     try {
       PlacesUtils.bookmarks.removeFolderChildren(folder);
       return Promise.resolve();
@@ -270,7 +270,7 @@ PlacesWrapper.prototype = {
     }
   },
 
-  insertSeparator: function (parent, index, guid) {
+  insertSeparator(parent, index, guid) {
     try {
       return Promise.resolve(PlacesUtils.bookmarks.insertSeparator(parent, index, guid));
     } catch (e) {
@@ -278,7 +278,7 @@ PlacesWrapper.prototype = {
     }
   },
 
-  removeItem: function (item) {
+  removeItem(item) {
     try {
       return Promise.resolve(PlacesUtils.bookmarks.removeItem(item));
     } catch (e) {
@@ -286,7 +286,7 @@ PlacesWrapper.prototype = {
     }
   },
 
-  setItemDateAdded: function (item, dateAdded) {
+  setItemDateAdded(item, dateAdded) {
     try {
       return Promise.resolve(PlacesUtils.bookmarks.setItemDateAdded(item, dateAdded));
     } catch (e) {
@@ -294,7 +294,7 @@ PlacesWrapper.prototype = {
     }
   },
 
-  setItemLastModified: function (item, lastModified) {
+  setItemLastModified(item, lastModified) {
     try {
       return Promise.resolve(PlacesUtils.bookmarks.setItemLastModified(item, lastModified));
     } catch (e) {
@@ -302,7 +302,7 @@ PlacesWrapper.prototype = {
     }
   },
 
-  setItemTitle: function (item, title) {
+  setItemTitle(item, title) {
     try {
       return Promise.resolve(PlacesUtils.bookmarks.setItemTitle(item, title));
     } catch (e) {
@@ -310,7 +310,7 @@ PlacesWrapper.prototype = {
     }
   },
 
-  changeBookmarkURI: function (item, uri) {
+  changeBookmarkURI(item, uri) {
     try {
       uri = CommonUtils.makeURI(uri);
       return Promise.resolve(PlacesUtils.bookmarks.changeBookmarkURI(item, uri));
@@ -319,7 +319,7 @@ PlacesWrapper.prototype = {
     }
   },
 
-  moveItem: function (item, parent, index) {
+  moveItem(item, parent, index) {
     try {
       return Promise.resolve(PlacesUtils.bookmarks.moveItem(item, parent, index));
     } catch (e) {
@@ -327,7 +327,7 @@ PlacesWrapper.prototype = {
     }
   },
 
-  setItemIndex: function (item, index) {
+  setItemIndex(item, index) {
     try {
       return Promise.resolve(PlacesUtils.bookmarks.setItemIndex(item, index));
     } catch (e) {
@@ -335,11 +335,11 @@ PlacesWrapper.prototype = {
     }
   },
 
-  asyncQuery: function (query, names) {
+  asyncQuery(query, names) {
     let deferred = Promise.defer();
     let storageCallback = {
       results: [],
-      handleResult: function (results) {
+      handleResult(results) {
         if (!names) {
           return;
         }
@@ -354,11 +354,11 @@ PlacesWrapper.prototype = {
         }
       },
 
-      handleError: function (error) {
+      handleError(error) {
         deferred.reject(error);
       },
 
-      handleCompletion: function (reason) {
+      handleCompletion(reason) {
         if (REASON_ERROR == reason) {
           return;
         }

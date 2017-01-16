@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaPrefs.h"
+#include "MediaContentType.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaFormatReader.h"
 #include "OggDemuxer.h"
@@ -25,41 +26,28 @@ MediaDecoderStateMachine* OggDecoder::CreateStateMachine()
 
 /* static */
 bool
-OggDecoder::IsEnabled()
+OggDecoder::IsSupportedType(const MediaContentType& aContentType)
 {
-  return MediaPrefs::OggEnabled();
-}
-
-/* static */
-bool
-OggDecoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
-                               const nsAString& aCodecs)
-{
-  if (!IsEnabled()) {
+  if (!MediaPrefs::OggEnabled()) {
     return false;
   }
 
-  const bool isOggAudio = aMIMETypeExcludingCodecs.EqualsASCII("audio/ogg");
-  const bool isOggVideo =
-    aMIMETypeExcludingCodecs.EqualsASCII("video/ogg") ||
-    aMIMETypeExcludingCodecs.EqualsASCII("application/ogg");
-
-  if (!isOggAudio && !isOggVideo) {
+  if (aContentType.Type() != MEDIAMIMETYPE("audio/ogg") &&
+      aContentType.Type() != MEDIAMIMETYPE("video/ogg") &&
+      aContentType.Type() != MEDIAMIMETYPE("application/ogg")) {
     return false;
   }
 
-  nsTArray<nsCString> codecMimes;
-  if (aCodecs.IsEmpty()) {
+  const bool isOggVideo = (aContentType.Type() != MEDIAMIMETYPE("audio/ogg"));
+
+  const MediaCodecs& codecs = aContentType.ExtendedType().Codecs();
+  if (codecs.IsEmpty()) {
     // WebM guarantees that the only codecs it contained are vp8, vp9, opus or vorbis.
     return true;
   }
   // Verify that all the codecs specified are ones that we expect that
   // we can play.
-  nsTArray<nsString> codecs;
-  if (!ParseCodecsString(aCodecs, codecs)) {
-    return false;
-  }
-  for (const nsString& codec : codecs) {
+  for (const auto& codec : codecs.Range()) {
     if ((IsOpusEnabled() && codec.EqualsLiteral("opus")) ||
         codec.EqualsLiteral("vorbis") ||
         (MediaPrefs::FlacInOgg() && codec.EqualsLiteral("flac"))) {

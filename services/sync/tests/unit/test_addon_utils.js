@@ -19,7 +19,7 @@ prefs.set("extensions.getAddons.get.url",
 loadAddonTestFunctions();
 startupManager();
 
-function createAndStartHTTPServer(port=HTTP_PORT) {
+function createAndStartHTTPServer(port = HTTP_PORT) {
   try {
     let server = new HttpServer();
 
@@ -81,7 +81,7 @@ add_test(function test_ignore_untrusted_source_uris() {
 
   for (let s of bad) {
     let sourceURI = ioService.newURI(s);
-    let addon = {sourceURI: sourceURI, name: "bad", id: "bad"};
+    let addon = {sourceURI, name: "bad", id: "bad"};
 
     let canInstall = AddonUtils.canInstallAddon(addon);
     do_check_false(canInstall, "Correctly rejected a bad URL");
@@ -89,7 +89,7 @@ add_test(function test_ignore_untrusted_source_uris() {
 
   for (let s of good) {
     let sourceURI = ioService.newURI(s);
-    let addon = {sourceURI: sourceURI, name: "good", id: "good"};
+    let addon = {sourceURI, name: "good", id: "good"};
 
     let canInstall = AddonUtils.canInstallAddon(addon);
     do_check_true(canInstall, "Correctly accepted a good URL");
@@ -115,12 +115,12 @@ add_test(function test_source_uri_rewrite() {
 
     installCalled = true;
 
-    AddonUtils.getInstallFromSearchResult(addon, function (error, install) {
+    AddonUtils.getInstallFromSearchResult(addon, function(error, install) {
       do_check_null(error);
       do_check_eq(SERVER_ADDRESS + "/require.xpi?src=sync",
                   install.sourceURI.spec);
 
-      cb(null, {id: addon.id, addon: addon, install: install});
+      cb(null, {id: addon.id, addon, install});
     }, false);
   };
 

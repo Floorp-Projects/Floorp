@@ -160,8 +160,6 @@ gluTexture.Texture2D.prototype.upload = function() {
         var access = this.m_refTexture.getLevel(levelNdx);
         DE_ASSERT(access.getRowPitch() == access.getFormat().getPixelSize() * access.getWidth());
         var data = access.getDataPtr();
-        // console.log(data);
-        //debug('Level ' + levelNdx + ' format ' + wtu.glEnumToString(gl, this.m_format) + ' transfer Format ' + wtu.glEnumToString(gl, transferFormat.format) + ' datatype ' + wtu.glEnumToString(gl, transferFormat.dataType));
         gl.texImage2D(gl.TEXTURE_2D, levelNdx, this.m_format, access.getWidth(), access.getHeight(), 0 /* border */, transferFormat.format, transferFormat.dataType, access.getDataPtr());
     }
 

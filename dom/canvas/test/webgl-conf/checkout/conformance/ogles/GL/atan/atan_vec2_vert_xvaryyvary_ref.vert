@@ -92,7 +92,7 @@ void main (void)
 			if(y[0] < 0.0) result[0] -= 0.5;
 			else if(y[0] > 0.0) result[0] += 0.5;
 	}
-			
+
 	if(x[1] > epsilon || abs(y[1]) > epsilon)
 	{
 		if(x[1] < 0.0 ^^ y[1] < 0.0)
@@ -144,7 +144,7 @@ void main (void)
 			if(y[1] < 0.0) result[1] -= 0.5;
 			else if(y[1] > 0.0) result[1] += 0.5;
 	}
-	
+
 	color = result;
 	gl_Position = gtf_ModelViewProjectionMatrix * gtf_Vertex;
 }

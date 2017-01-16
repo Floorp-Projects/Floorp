@@ -601,6 +601,12 @@ impl nsACString {
     pub unsafe fn as_str_unchecked(&self) -> &str {
         str::from_utf8_unchecked(self)
     }
+
+    pub fn truncate(&mut self) {
+        unsafe {
+            Gecko_TruncateCString(self);
+        }
+    }
 }
 
 impl<'a> From<&'a str> for nsCString<'a> {
@@ -704,6 +710,12 @@ impl nsAString {
             Gecko_AppendUTF8toString(self, &*s);
         }
     }
+
+    pub fn truncate(&mut self) {
+        unsafe {
+            Gecko_TruncateString(self);
+        }
+    }
 }
 
 // NOTE: The From impl for a string slice for nsString produces a <'static>
@@ -757,10 +769,12 @@ extern "C" {
     fn Gecko_FinalizeCString(this: *mut nsACString);
     fn Gecko_AssignCString(this: *mut nsACString, other: *const nsACString);
     fn Gecko_AppendCString(this: *mut nsACString, other: *const nsACString);
+    fn Gecko_TruncateCString(this: *mut nsACString);
 
     fn Gecko_FinalizeString(this: *mut nsAString);
     fn Gecko_AssignString(this: *mut nsAString, other: *const nsAString);
     fn Gecko_AppendString(this: *mut nsAString, other: *const nsAString);
+    fn Gecko_TruncateString(this: *mut nsAString);
 
     // Gecko implementation in nsReadableUtils.cpp
     fn Gecko_AppendUTF16toCString(this: *mut nsACString, other: *const nsAString);

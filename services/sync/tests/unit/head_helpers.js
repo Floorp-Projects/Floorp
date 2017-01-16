@@ -37,7 +37,7 @@ XPCOMUtils.defineLazyGetter(this, 'SyncPingValidator', function() {
 });
 
 var provider = {
-  getFile: function(prop, persistent) {
+  getFile(prop, persistent) {
     persistent.value = true;
     switch (prop) {
       case "ExtPrefDL":
@@ -157,7 +157,7 @@ function installAddon(name) {
  */
 function uninstallAddon(addon) {
   let cb = Async.makeSyncCallback();
-  let listener = {onUninstalled: function(uninstalled) {
+  let listener = {onUninstalled(uninstalled) {
     if (uninstalled.id == addon.id) {
       AddonManager.removeAddonListener(listener);
       cb(uninstalled);
@@ -169,7 +169,7 @@ function uninstallAddon(addon) {
   Async.waitForSyncCallback(cb);
 }
 
-function generateNewKeys(collectionKeys, collections=null) {
+function generateNewKeys(collectionKeys, collections = null) {
   let wbo = collectionKeys.generateNewKeysWBO(collections);
   let modified = new_timestamp();
   collectionKeys.setContents(wbo.cleartext, modified);
@@ -179,12 +179,12 @@ function generateNewKeys(collectionKeys, collections=null) {
 // These reflect part of the internal structure of TabEngine,
 // and stub part of Service.wm.
 
-function mockShouldSkipWindow (win) {
+function mockShouldSkipWindow(win) {
   return win.closed ||
          win.mockIsPrivate;
 }
 
-function mockGetTabState (tab) {
+function mockGetTabState(tab) {
   return tab;
 }
 
@@ -204,7 +204,7 @@ function mockGetWindowEnumerator(url, numWindows, numTabs, indexes, moreURLs) {
       closed: false,
       mockIsPrivate: false,
       gBrowser: {
-        tabs: tabs,
+        tabs,
       },
     };
     elements.push(win);
@@ -229,7 +229,7 @@ function mockGetWindowEnumerator(url, numWindows, numTabs, indexes, moreURLs) {
       tabs: [],
     },
   });
- 
+
   elements.push({
     closed: false,
     mockIsPrivate: true,
@@ -239,10 +239,10 @@ function mockGetWindowEnumerator(url, numWindows, numTabs, indexes, moreURLs) {
   });
 
   return {
-    hasMoreElements: function () {
+    hasMoreElements() {
       return elements.length;
     },
-    getNext: function () {
+    getNext() {
       return elements.shift();
     },
   };
@@ -450,7 +450,7 @@ function promiseOneObserver(topic, callback) {
   return new Promise((resolve, reject) => {
     let observer = function(subject, data) {
       Svc.Obs.remove(topic, observer);
-      resolve({ subject: subject, data: data });
+      resolve({ subject, data });
     }
     Svc.Obs.add(topic, observer)
   });

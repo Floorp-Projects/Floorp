@@ -81,14 +81,18 @@ add_task(function* setup() {
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
 
+  // Enable event recording for the events tested here.
+  Services.telemetry.setEventRecordingEnabled("navigation", true);
+
   // Make sure to restore the engine once we're done.
   registerCleanupFunction(function* () {
     Services.telemetry.canRecordExtended = oldCanRecord;
     Services.search.currentEngine = originalEngine;
     Services.search.removeEngine(engine);
-    Services.prefs.clearUserPref(SUGGEST_URLBAR_PREF, true);
+    Services.prefs.clearUserPref(SUGGEST_URLBAR_PREF);
     Services.prefs.clearUserPref(ONEOFF_URLBAR_PREF);
     yield PlacesTestUtils.clearHistory();
+    Services.telemetry.setEventRecordingEnabled("navigation", false);
   });
 });
 

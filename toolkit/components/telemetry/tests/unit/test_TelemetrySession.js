@@ -716,6 +716,9 @@ add_task(function* test_checkSubsessionEvents() {
   Telemetry.clearEvents();
   yield TelemetryController.testReset();
 
+  // Enable recording for the test events.
+  Telemetry.setEventRecordingEnabled("telemetry.test", true);
+
   // Record some events.
   let expected = [
     ["telemetry.test", "test1", "object1", "a", null],

@@ -114,7 +114,7 @@ UserAPI10Client.prototype = {
     request.put(body);
   },
 
-  _getRequest: function _getRequest(username, path, password=null) {
+  _getRequest: function _getRequest(username, path, password = null) {
     let url = this.baseURI + username + path;
     let request = new RESTRequest(url);
 
@@ -135,13 +135,10 @@ UserAPI10Client.prototype = {
     let body = request.response.body;
     if (body == "0") {
       cb(null, false);
-      return;
     } else if (body == "1") {
       cb(null, true);
-      return;
     } else {
       cb(new Error("Unknown response from server: " + body), null);
-      return;
     }
   },
 
@@ -178,7 +175,6 @@ UserAPI10Client.prototype = {
     }
 
     cb(error, null);
-    return;
   },
 
   _onChangePassword: function _onChangePassword(cb, request, error) {
@@ -218,7 +214,6 @@ UserAPI10Client.prototype = {
     error.body = response.body;
 
     cb(error, null);
-    return;
   },
 };
 Object.freeze(UserAPI10Client.prototype);

@@ -28,7 +28,7 @@ function contentHandler(request, response) {
 function getWarningMessages(log) {
   let warnMessages = [];
   let warn = log.warn;
-  log.warn = function (message) {
+  log.warn = function(message) {
     let regEx = /The response body\'s length of: \d+ doesn\'t match the header\'s content-length of: \d+/i
     if (message.match(regEx)) {
       warnMessages.push(message);
@@ -60,7 +60,7 @@ add_test(function test_async_resource_logs_content_length_mismatch() {
 
   let warnMessages = getWarningMessages(asyncResource._log);
 
-  asyncResource.get(function (error, content) {
+  asyncResource.get(function(error, content) {
     equal(error, null);
     equal(content, BODY);
     notEqual(warnMessages.length, 0, "test that warning was logged");
@@ -85,7 +85,7 @@ add_test(function test_sync_storage_request_logs_content_length_mismatch() {
   // content-length mismatch.
   request.charset = "";
 
-  request.get(function (error) {
+  request.get(function(error) {
     equal(error, null);
     equal(this.response.body, BODY);
     notEqual(warnMessages.length, 0, "test that a warning was logged");
