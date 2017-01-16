@@ -277,6 +277,8 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
   // Skip updating properties when we are composing style.
   // FIXME: Bug 1324966. Drop this check once we have a function to get
   // nsStyleContext without resolving animating style.
+  MOZ_DIAGNOSTIC_ASSERT(!mIsComposingStyle,
+                        "Should not be called while processing ComposeStyle()");
   if (mIsComposingStyle) {
     return;
   }
@@ -363,7 +365,8 @@ KeyframeEffectReadOnly::GetUnderlyingStyle(
     // If we are composing with composite operation that is not 'replace'
     // and we have not composed style for the property yet, we have to get
     // the base style for the property.
-    RefPtr<nsStyleContext> styleContext = GetTargetStyleContext();
+    RefPtr<nsStyleContext> styleContext =
+      GetTargetStyleContextWithoutAnimation();
     result = EffectCompositor::GetBaseStyle(aProperty,
                                             styleContext,
                                             *mTarget->mElement,
@@ -443,7 +446,7 @@ KeyframeEffectReadOnly::EnsureBaseStylesForCompositor(
       }
 
       if (!styleContext) {
-        styleContext = GetTargetStyleContext();
+        styleContext = GetTargetStyleContextWithoutAnimation();
       }
       MOZ_RELEASE_ASSERT(styleContext);
 
@@ -464,6 +467,8 @@ KeyframeEffectReadOnly::ComposeStyle(
   RefPtr<AnimValuesStyleRule>& aStyleRule,
   const nsCSSPropertyIDSet& aPropertiesToSkip)
 {
+  MOZ_DIAGNOSTIC_ASSERT(!mIsComposingStyle,
+                        "Should not be called recursively");
   if (mIsComposingStyle) {
     return;
   }
@@ -900,8 +905,9 @@ KeyframeEffectReadOnly::RequestRestyle(
   }
 }
 
+template<KeyframeEffectReadOnly::AnimationStyle aAnimationStyle>
 already_AddRefed<nsStyleContext>
-KeyframeEffectReadOnly::GetTargetStyleContext()
+KeyframeEffectReadOnly::DoGetTargetStyleContext()
 {
   nsIPresShell* shell = GetPresShell();
   if (!shell) {
@@ -914,8 +920,27 @@ KeyframeEffectReadOnly::GetTargetStyleContext()
   nsIAtom* pseudo = mTarget->mPseudoType < CSSPseudoElementType::Count
                     ? nsCSSPseudoElements::GetPseudoAtom(mTarget->mPseudoType)
                     : nullptr;
-  return nsComputedDOMStyle::GetStyleContextForElement(mTarget->mElement,
-                                                       pseudo, shell);
+
+  if (aAnimationStyle == AnimationStyle::Include) {
+    return nsComputedDOMStyle::GetStyleContextForElement(mTarget->mElement,
+                                                         pseudo,
+                                                         shell);
+  }
+
+  return nsComputedDOMStyle::GetStyleContextForElementWithoutAnimation(
+    mTarget->mElement, pseudo, shell);
+}
+
+already_AddRefed<nsStyleContext>
+KeyframeEffectReadOnly::GetTargetStyleContext()
+{
+  return DoGetTargetStyleContext<AnimationStyle::Include>();
+}
+
+already_AddRefed<nsStyleContext>
+KeyframeEffectReadOnly::GetTargetStyleContextWithoutAnimation()
+{
+  return DoGetTargetStyleContext<AnimationStyle::Skip>();
 }
 
 #ifdef DEBUG

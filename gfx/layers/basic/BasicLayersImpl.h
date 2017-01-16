@@ -127,6 +127,26 @@ FillRectWithMask(gfx::DrawTarget* aDT,
                  const gfx::DrawOptions& aOptions,
                  Layer* aMaskLayer);
 
+void
+FillPathWithMask(gfx::DrawTarget* aDT,
+                 const gfx::Path* aPath,
+                 const gfx::Rect& aClipRect,
+                 const gfx::Color& aColor,
+                 const gfx::DrawOptions& aOptions,
+                 gfx::SourceSurface* aMaskSource = nullptr,
+                 const gfx::Matrix* aMaskTransform = nullptr);
+void
+FillPathWithMask(gfx::DrawTarget* aDT,
+                 const gfx::Path* aPath,
+                 const gfx::Rect& aClipRect,
+                 gfx::SourceSurface* aSurface,
+                 gfx::SamplingFilter aSamplingFilter,
+                 const gfx::DrawOptions& aOptions,
+                 gfx::ExtendMode aExtendMode,
+                 gfx::SourceSurface* aMaskSource,
+                 const gfx::Matrix* aMaskTransform,
+                 const gfx::Matrix* aSurfaceTransform);
+
 BasicImplData*
 ToData(Layer* aLayer);
 

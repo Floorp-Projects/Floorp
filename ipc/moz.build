@@ -18,7 +18,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     DIRS += ['unixfd', 'unixsocket']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    DIRS += ['hal', 'keystore', 'netd']
+    DIRS += ['hal', 'netd']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     DIRS += ['contentproc']
