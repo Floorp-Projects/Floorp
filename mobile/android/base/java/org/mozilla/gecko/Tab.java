@@ -37,6 +37,7 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -433,13 +434,13 @@ public class Tab {
         return mHasTouchListeners;
     }
 
-    public synchronized void addFavicon(String faviconURL, int faviconSize, String mimeType) {
+    public synchronized void addFavicon(@NonNull String faviconURL, int faviconSize, String mimeType) {
         mIconRequestBuilder
                 .icon(IconDescriptor.createFavicon(faviconURL, faviconSize, mimeType))
                 .deferBuild();
     }
 
-    public synchronized void addTouchicon(String iconUrl, int faviconSize, String mimeType) {
+    public synchronized void addTouchicon(@NonNull String iconUrl, int faviconSize, String mimeType) {
         mIconRequestBuilder
                 .icon(IconDescriptor.createTouchicon(iconUrl, faviconSize, mimeType))
                 .deferBuild();
