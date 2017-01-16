@@ -43,7 +43,7 @@ add_task(function* () {
 
   yield checkState([
     [
-      ["cookies", "test1.example.org"],
+      ["cookies", "http://test1.example.org"],
       [
         getCookieId("c1", "test1.example.org", "/browser"),
         getCookieId("c2", "test1.example.org", "/browser")
@@ -60,7 +60,7 @@ add_task(function* () {
 
   yield checkState([
     [
-      ["cookies", "test1.example.org"],
+      ["cookies", "http://test1.example.org"],
       [
         getCookieId("c1", "test1.example.org", "/browser"),
         getCookieId("c2", "test1.example.org", "/browser")
@@ -78,7 +78,7 @@ add_task(function* () {
 
   yield checkState([
     [
-      ["cookies", "test1.example.org"],
+      ["cookies", "http://test1.example.org"],
       [
         getCookieId("c1", "test1.example.org", "/browser"),
         getCookieId("c2", "test1.example.org", "/browser"),
@@ -100,7 +100,7 @@ add_task(function* () {
 
   yield checkState([
     [
-      ["cookies", "test1.example.org"],
+      ["cookies", "http://test1.example.org"],
       [
         getCookieId("c1", "test1.example.org", "/browser"),
         getCookieId("c2", "test1.example.org", "/browser"),
@@ -122,7 +122,7 @@ add_task(function* () {
 
   yield checkState([
     [
-      ["cookies", "test1.example.org"],
+      ["cookies", "http://test1.example.org"],
       [
         getCookieId("c2", "test1.example.org", "/browser"),
         getCookieId("c3", "test1.example.org",
@@ -145,7 +145,7 @@ add_task(function* () {
 
   yield checkState([
     [
-      ["cookies", "test1.example.org"],
+      ["cookies", "http://test1.example.org"],
       [
         getCookieId("c2", "test1.example.org", "/browser"),
         getCookieId("c4", "test1.example.org",
@@ -163,7 +163,7 @@ add_task(function* () {
 
   yield checkState([
     [
-      ["cookies", "test1.example.org"],
+      ["cookies", "http://test1.example.org"],
       [
         getCookieId("c4", "test1.example.org",
                     "/browser/devtools/client/storage/test/")
@@ -179,7 +179,7 @@ add_task(function* () {
   yield gUI.once("store-objects-updated");
 
   yield checkState([
-    [["cookies", "test1.example.org"], [ ]],
+    [["cookies", "http://test1.example.org"], [ ]],
   ]);
 
   ok(gUI.sidebar.hidden, "Sidebar is hidden when no rows");

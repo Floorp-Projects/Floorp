@@ -270,6 +270,10 @@ Compositor::DrawGeometry(const gfx::Rect& aRect,
                          const gfx::Rect& aVisibleRect,
                          const Maybe<gfx::Polygon>& aGeometry)
 {
+  if (aRect.IsEmpty()) {
+    return;
+  }
+
   if (!aGeometry || !SupportsLayerGeometry()) {
     DrawQuad(aRect, aClipRect, aEffectChain,
              aOpacity, aTransform, aVisibleRect);
@@ -283,7 +287,37 @@ Compositor::DrawGeometry(const gfx::Rect& aRect,
 
   const gfx::Polygon clipped = aGeometry->ClipPolygon(aRect);
 
-  for (gfx::Triangle& triangle : clipped.ToTriangles()) {
+  DrawPolygon(clipped, aRect, aClipRect, aEffectChain,
+              aOpacity, aTransform, aVisibleRect);
+}
+
+void
+Compositor::DrawTriangles(const nsTArray<gfx::TexturedTriangle>& aTriangles,
+                          const gfx::Rect& aRect,
+                          const gfx::IntRect& aClipRect,
+                          const EffectChain& aEffectChain,
+                          gfx::Float aOpacity,
+                          const gfx::Matrix4x4& aTransform,
+                          const gfx::Rect& aVisibleRect)
+{
+  for (const gfx::TexturedTriangle& triangle : aTriangles) {
+    DrawTriangle(triangle, aClipRect, aEffectChain,
+                 aOpacity, aTransform, aVisibleRect);
+  }
+}
+
+void
+Compositor::DrawPolygon(const gfx::Polygon& aPolygon,
+                        const gfx::Rect& aRect,
+                        const gfx::IntRect& aClipRect,
+                        const EffectChain& aEffectChain,
+                        gfx::Float aOpacity,
+                        const gfx::Matrix4x4& aTransform,
+                        const gfx::Rect& aVisibleRect)
+{
+  nsTArray<gfx::TexturedTriangle> texturedTriangles;
+
+  for (gfx::Triangle& triangle : aPolygon.ToTriangles()) {
     const gfx::Rect intersection = aRect.Intersect(triangle.BoundingBox());
 
     // Cull invisible triangles.
@@ -311,9 +345,11 @@ Compositor::DrawGeometry(const gfx::Rect& aRect,
                                texturedEffect->mTextureCoords);
     }
 
-    DrawTriangle(texturedTriangle, aClipRect, aEffectChain,
-                 aOpacity, aTransform, aVisibleRect);
+    texturedTriangles.AppendElement(Move(texturedTriangle));
   }
+
+  DrawTriangles(texturedTriangles, aRect, aClipRect, aEffectChain,
+                aOpacity, aTransform, aVisibleRect);
 }
 
 void

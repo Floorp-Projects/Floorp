@@ -9,7 +9,14 @@
  * loaded the plugin lives. It communicates with the process where the PPAPI
  * implementation lives.
  */
-const { utils: Cu } = Components;
+const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                          "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                             "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 let mm = pluginElement.frameLoader.messageManager;
 let containerWindow = pluginElement.ownerDocument.defaultView;
@@ -90,6 +97,79 @@ mm.addMessageListener("ppapi.js:setFullscreen", ({ data }) => {
   } else {
     containerWindow.document.exitFullscreen();
   }
+});
+
+mm.addMessageListener("ppapipdf.js:save", () => {
+  let url = containerWindow.document.location;
+  let filename = "document.pdf";
+  let regex = /[^\/#\?]+\.pdf$/i;
+
+  let result = regex.exec(url.hash) ||
+               regex.exec(url.search) ||
+               regex.exec(url.pathname);
+  if (result) {
+    filename = result[0];
+  }
+
+  let originalUri = NetUtil.newURI(url.href);
+  let extHelperAppSvc =
+        Cc["@mozilla.org/uriloader/external-helper-app-service;1"].
+           getService(Ci.nsIExternalHelperAppService);
+
+  let docIsPrivate =
+    PrivateBrowsingUtils.isContentWindowPrivate(containerWindow);
+  let netChannel = NetUtil.newChannel({
+    uri: originalUri,
+    loadUsingSystemPrincipal: true,
+  });
+
+  if ("nsIPrivateBrowsingChannel" in Ci &&
+      netChannel instanceof Ci.nsIPrivateBrowsingChannel) {
+    netChannel.setPrivate(docIsPrivate);
+  }
+  NetUtil.asyncFetch(netChannel, function(aInputStream, aResult) {
+    if (!Components.isSuccessCode(aResult)) {
+      return;
+    }
+    // Create a nsIInputStreamChannel so we can set the url on the channel
+    // so the filename will be correct.
+    let channel = Cc["@mozilla.org/network/input-stream-channel;1"].
+                     createInstance(Ci.nsIInputStreamChannel);
+    channel.QueryInterface(Ci.nsIChannel);
+    channel.contentDisposition = Ci.nsIChannel.DISPOSITION_ATTACHMENT;
+    channel.contentDispositionFilename = filename;
+    channel.setURI(originalUri);
+    channel.loadInfo = netChannel.loadInfo;
+    channel.contentStream = aInputStream;
+    if ("nsIPrivateBrowsingChannel" in Ci &&
+        channel instanceof Ci.nsIPrivateBrowsingChannel) {
+      channel.setPrivate(docIsPrivate);
+    }
+
+    let listener = {
+      extListener: null,
+      onStartRequest(aRequest, aContext) {
+        var loadContext = containerWindow
+                            .QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIWebNavigation)
+                            .QueryInterface(Ci.nsILoadContext);
+        this.extListener = extHelperAppSvc.doContent(
+          "application/pdf", aRequest, loadContext, false);
+        this.extListener.onStartRequest(aRequest, aContext);
+      },
+      onStopRequest(aRequest, aContext, aStatusCode) {
+        if (this.extListener) {
+          this.extListener.onStopRequest(aRequest, aContext, aStatusCode);
+        }
+      },
+      onDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount) {
+        this.extListener
+          .onDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount);
+      }
+    };
+
+    channel.asyncOpen2(listener);
+  });
 });
 
 mm.loadFrameScript("resource://ppapi.js/ppapi-instance.js", true);
