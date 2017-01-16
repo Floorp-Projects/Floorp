@@ -449,16 +449,17 @@ nsComputedDOMStyle::GetStyleContextForElement(Element* aElement,
 }
 
 namespace {
-class MOZ_STACK_CLASS AutoSkipAnimationRules final
+class MOZ_STACK_CLASS StyleResolver final
 {
 public:
-  AutoSkipAnimationRules(nsPresContext* aPresContext,
-                         nsComputedDOMStyle::AnimationFlag aAnimationFlag)
+  StyleResolver(nsPresContext* aPresContext,
+                nsComputedDOMStyle::AnimationFlag aAnimationFlag)
+    : mAnimationFlag(aAnimationFlag)
   {
     MOZ_ASSERT(aPresContext);
 
     // Nothing to do if we are going to resolve style *with* animation.
-    if (aAnimationFlag == nsComputedDOMStyle::eWithAnimation) {
+    if (mAnimationFlag == nsComputedDOMStyle::eWithAnimation) {
       return;
     }
 
@@ -474,7 +475,89 @@ public:
     }
   }
 
-  ~AutoSkipAnimationRules()
+  already_AddRefed<nsStyleContext>
+  ResolveWithAnimation(StyleSetHandle aStyleSet,
+                       Element* aElement,
+                       CSSPseudoElementType aType,
+                       nsStyleContext* aParentContext,
+                       nsComputedDOMStyle::StyleType aStyleType,
+                       bool aInDocWithShell)
+  {
+    MOZ_ASSERT(mAnimationFlag == nsComputedDOMStyle::eWithAnimation,
+      "AnimationFlag should be eWithAnimation");
+
+    RefPtr<nsStyleContext> result;
+
+    if (aType != CSSPseudoElementType::NotPseudo) {
+      nsIFrame* frame = nsLayoutUtils::GetStyleFrame(aElement);
+      Element* pseudoElement =
+        frame && aInDocWithShell ? frame->GetPseudoElement(aType) : nullptr;
+      result = aStyleSet->ResolvePseudoElementStyle(aElement, aType,
+                                                    aParentContext,
+                                                    pseudoElement);
+    } else {
+      result = aStyleSet->ResolveStyleFor(aElement, aParentContext,
+                                          LazyComputeBehavior::Allow);
+    }
+    if (aStyleType == nsComputedDOMStyle::StyleType::eDefaultOnly) {
+      // We really only want the user and UA rules.  Filter out the other ones.
+      nsTArray< nsCOMPtr<nsIStyleRule> > rules;
+      for (nsRuleNode* ruleNode = result->RuleNode();
+           !ruleNode->IsRoot();
+           ruleNode = ruleNode->GetParent()) {
+        if (ruleNode->GetLevel() == SheetType::Agent ||
+            ruleNode->GetLevel() == SheetType::User) {
+          rules.AppendElement(ruleNode->GetRule());
+        }
+      }
+
+      // We want to build a list of user/ua rules that is in order from least to
+      // most important, so we have to reverse the list.
+      // Integer division to get "stop" is purposeful here: if length is odd, we
+      // don't have to do anything with the middle element of the array.
+      for (uint32_t i = 0, length = rules.Length(), stop = length / 2;
+           i < stop; ++i) {
+        rules[i].swap(rules[length - i - 1]);
+      }
+
+      result = aStyleSet->AsGecko()->ResolveStyleForRules(aParentContext,
+                                                          rules);
+    }
+    return result.forget();
+  }
+
+  already_AddRefed<nsStyleContext>
+  ResolveWithoutAnimation(StyleSetHandle aStyleSet,
+                          Element* aElement,
+                          CSSPseudoElementType aType,
+                          nsStyleContext* aParentContext,
+                          bool aInDocWithShell)
+  {
+    MOZ_ASSERT(!aStyleSet->IsServo(),
+      "Bug 1311257: Servo backend does not support the base value yet");
+    MOZ_ASSERT(mAnimationFlag == nsComputedDOMStyle::eWithoutAnimation,
+      "AnimationFlag should be eWithoutAnimation");
+
+    RefPtr<nsStyleContext> result;
+
+    if (aType != CSSPseudoElementType::NotPseudo) {
+      nsIFrame* frame = nsLayoutUtils::GetStyleFrame(aElement);
+      Element* pseudoElement =
+        frame && aInDocWithShell ? frame->GetPseudoElement(aType) : nullptr;
+      result =
+        aStyleSet->AsGecko()->ResolvePseudoElementStyleWithoutAnimation(
+          aElement, aType,
+          aParentContext,
+          pseudoElement);
+    } else {
+      result =
+        aStyleSet->AsGecko()->ResolveStyleWithoutAnimation(aElement,
+                                                           aParentContext);
+    }
+    return result.forget();
+  }
+
+  ~StyleResolver()
   {
     if (mRestyleManager) {
       mRestyleManager->SetSkipAnimationRules(mOldSkipAnimationRules);
@@ -484,6 +567,7 @@ public:
 private:
   RestyleManager* mRestyleManager = nullptr;
   bool mOldSkipAnimationRules = false;
+  nsComputedDOMStyle::AnimationFlag mAnimationFlag;
 };
 }
 
@@ -557,7 +641,6 @@ nsComputedDOMStyle::DoGetStyleContextForElementNoFlush(
     return servoSet->ResolveTransientStyle(aElement, type);
   }
 
-  RefPtr<nsStyleContext> sc;
   RefPtr<nsStyleContext> parentContext;
   nsIContent* parent = aPseudo ? aElement : aElement->GetParent();
   // Don't resolve parent context for document fragments.
@@ -567,43 +650,20 @@ nsComputedDOMStyle::DoGetStyleContextForElementNoFlush(
                                                      aStyleType);
   }
 
-  AutoSkipAnimationRules autoSkipAnimationRule(presContext, aAnimationFlag);
+  StyleResolver styleResolver(presContext, aAnimationFlag);
 
-  if (type != CSSPseudoElementType::NotPseudo) {
-    nsIFrame* frame = nsLayoutUtils::GetStyleFrame(aElement);
-    Element* pseudoElement =
-      frame && inDocWithShell ? frame->GetPseudoElement(type) : nullptr;
-    sc = styleSet->ResolvePseudoElementStyle(aElement, type, parentContext,
-                                             pseudoElement);
-  } else {
-    sc = styleSet->ResolveStyleFor(aElement, parentContext, LazyComputeBehavior::Allow);
+  if (aAnimationFlag == eWithAnimation) {
+    return styleResolver.ResolveWithAnimation(styleSet,
+                                              aElement, type,
+                                              parentContext,
+                                              aStyleType,
+                                              inDocWithShell);
   }
 
-  if (aStyleType == eDefaultOnly) {
-    // We really only want the user and UA rules.  Filter out the other ones.
-    nsTArray< nsCOMPtr<nsIStyleRule> > rules;
-    for (nsRuleNode* ruleNode = sc->RuleNode();
-         !ruleNode->IsRoot();
-         ruleNode = ruleNode->GetParent()) {
-      if (ruleNode->GetLevel() == SheetType::Agent ||
-          ruleNode->GetLevel() == SheetType::User) {
-        rules.AppendElement(ruleNode->GetRule());
-      }
-    }
-
-    // We want to build a list of user/ua rules that is in order from least to
-    // most important, so we have to reverse the list.
-    // Integer division to get "stop" is purposeful here: if length is odd, we
-    // don't have to do anything with the middle element of the array.
-    for (uint32_t i = 0, length = rules.Length(), stop = length / 2;
-         i < stop; ++i) {
-      rules[i].swap(rules[length - i - 1]);
-    }
-
-    sc = styleSet->AsGecko()->ResolveStyleForRules(parentContext, rules);
-  }
-
-  return sc.forget();
+  return styleResolver.ResolveWithoutAnimation(styleSet,
+                                               aElement, type,
+                                               parentContext,
+                                               inDocWithShell);
 }
 
 
