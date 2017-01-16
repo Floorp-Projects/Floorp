@@ -7864,10 +7864,7 @@ HTMLEditRules::PopListItem(nsIDOMNode* aListItem,
   *aOutOfList = false;
 
   nsCOMPtr<nsINode> curParent = listItem->GetParentNode();
-  if (NS_WARN_IF(!curParent)) {
-    return NS_ERROR_FAILURE;
-  }
-  int32_t offset = curParent->IndexOf(listItem);
+  int32_t offset = curParent ? curParent->IndexOf(listItem) : -1;
 
   if (!HTMLEditUtils::IsListItem(listItem)) {
     return NS_ERROR_FAILURE;
