@@ -44,7 +44,7 @@ PrefsEngine.prototype = {
   syncPriority: 1,
   allowSkippedRecord: false,
 
-  getChangedIDs: function () {
+  getChangedIDs() {
     // No need for a proper timestamp (no conflict resolution needed).
     let changedIDs = {};
     if (this._tracker.modified)
@@ -52,12 +52,12 @@ PrefsEngine.prototype = {
     return changedIDs;
   },
 
-  _wipeClient: function () {
+  _wipeClient() {
     SyncEngine.prototype._wipeClient.call(this);
     this.justWiped = true;
   },
 
-  _reconcile: function (item) {
+  _reconcile(item) {
     // Apply the incoming item if we don't care about the local data
     if (this.justWiped) {
       this.justWiped = false;
@@ -70,7 +70,7 @@ PrefsEngine.prototype = {
 
 function PrefStore(name, engine) {
   Store.call(this, name, engine);
-  Svc.Obs.add("profile-before-change", function () {
+  Svc.Obs.add("profile-before-change", function() {
     this.__prefs = null;
   }, this);
 }
@@ -85,7 +85,7 @@ PrefStore.prototype = {
     return this.__prefs;
   },
 
-  _getSyncPrefs: function () {
+  _getSyncPrefs() {
     let syncPrefs = Cc["@mozilla.org/preferences-service;1"]
                       .getService(Ci.nsIPrefService)
                       .getBranch(PREF_SYNC_PREFS_PREFIX)
@@ -95,12 +95,12 @@ PrefStore.prototype = {
     return controlPrefs.concat(syncPrefs);
   },
 
-  _isSynced: function (pref) {
+  _isSynced(pref) {
     return pref.startsWith(PREF_SYNC_PREFS_PREFIX) ||
            this._prefs.get(PREF_SYNC_PREFS_PREFIX + pref, false);
   },
 
-  _getAllPrefs: function () {
+  _getAllPrefs() {
     let values = {};
     for (let pref of this._getSyncPrefs()) {
       if (this._isSynced(pref)) {
@@ -111,7 +111,7 @@ PrefStore.prototype = {
     return values;
   },
 
-  _updateLightWeightTheme (themeID) {
+  _updateLightWeightTheme(themeID) {
     let themeObject = null;
     if (themeID) {
       themeObject = LightweightThemeManager.getUsedTheme(themeID);
@@ -119,7 +119,7 @@ PrefStore.prototype = {
     LightweightThemeManager.currentTheme = themeObject;
   },
 
-  _setAllPrefs: function (values) {
+  _setAllPrefs(values) {
     let selectedThemeIDPref = "lightweightThemes.selectedThemeID";
     let selectedThemeIDBefore = this._prefs.get(selectedThemeIDPref, null);
     let selectedThemeIDAfter = selectedThemeIDBefore;
@@ -148,7 +148,7 @@ PrefStore.prototype = {
           } else {
             try {
               this._prefs.set(pref, value);
-            } catch(ex) {
+            } catch (ex) {
               this._log.trace("Failed to set pref: " + pref + ": " + ex);
             }
           }
@@ -161,22 +161,22 @@ PrefStore.prototype = {
     }
   },
 
-  getAllIDs: function () {
+  getAllIDs() {
     /* We store all prefs in just one WBO, with just one GUID */
     let allprefs = {};
     allprefs[PREFS_GUID] = true;
     return allprefs;
   },
 
-  changeItemID: function (oldID, newID) {
+  changeItemID(oldID, newID) {
     this._log.trace("PrefStore GUID is constant!");
   },
 
-  itemExists: function (id) {
+  itemExists(id) {
     return (id === PREFS_GUID);
   },
 
-  createRecord: function (id, collection) {
+  createRecord(id, collection) {
     let record = new PrefRec(collection, id);
 
     if (id == PREFS_GUID) {
@@ -188,15 +188,15 @@ PrefStore.prototype = {
     return record;
   },
 
-  create: function (record) {
+  create(record) {
     this._log.trace("Ignoring create request");
   },
 
-  remove: function (record) {
+  remove(record) {
     this._log.trace("Ignoring remove request");
   },
 
-  update: function (record) {
+  update(record) {
     // Silently ignore pref updates that are for other apps.
     if (record.id != PREFS_GUID)
       return;
@@ -205,7 +205,7 @@ PrefStore.prototype = {
     this._setAllPrefs(record.value);
   },
 
-  wipe: function () {
+  wipe() {
     this._log.trace("Ignoring wipe request");
   }
 };
@@ -238,16 +238,16 @@ PrefTracker.prototype = {
     return this.__prefs;
   },
 
-  startTracking: function () {
+  startTracking() {
     Services.prefs.addObserver("", this, false);
   },
 
-  stopTracking: function () {
+  stopTracking() {
     this.__prefs = null;
     Services.prefs.removeObserver("", this);
   },
 
-  observe: function (subject, topic, data) {
+  observe(subject, topic, data) {
     Tracker.prototype.observe.call(this, subject, topic, data);
 
     switch (topic) {

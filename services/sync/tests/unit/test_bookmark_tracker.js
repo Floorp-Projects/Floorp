@@ -216,7 +216,7 @@ add_task(async function test_batch_tracking() {
   await startTracking();
 
   PlacesUtils.bookmarks.runInBatchMode({
-    runBatched: function() {
+    runBatched() {
       let folder = PlacesUtils.bookmarks.createFolder(
         PlacesUtils.bookmarks.bookmarksMenuFolder,
         "Test Folder", PlacesUtils.bookmarks.DEFAULT_INDEX);
@@ -240,10 +240,10 @@ add_task(async function test_nested_batch_tracking() {
   await startTracking();
 
   PlacesUtils.bookmarks.runInBatchMode({
-    runBatched: function() {
+    runBatched() {
 
       PlacesUtils.bookmarks.runInBatchMode({
-        runBatched: function() {
+        runBatched() {
           let folder = PlacesUtils.bookmarks.createFolder(
             PlacesUtils.bookmarks.bookmarksMenuFolder,
             "Test Folder", PlacesUtils.bookmarks.DEFAULT_INDEX);
@@ -276,7 +276,7 @@ add_task(async function test_tracker_sql_batching() {
   await startTracking();
 
   PlacesUtils.bookmarks.runInBatchMode({
-    runBatched: function() {
+    runBatched() {
       for (let i = 0; i < numItems; i++) {
         let syncBmkID = PlacesUtils.bookmarks.insertBookmark(
                           PlacesUtils.bookmarks.unfiledBookmarksFolder,

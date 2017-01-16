@@ -14,7 +14,7 @@ add_task(async function test_processIncoming_abort() {
 
   let collection = new ServerCollection();
   let id = Utils.makeGUID();
-  let payload = encryptPayload({id: id, denomination: "Record No. " + id});
+  let payload = encryptPayload({id, denomination: "Record No. " + id});
   collection.insert(id, payload);
 
   let server = sync_httpd_setup({
@@ -30,7 +30,7 @@ add_task(async function test_processIncoming_abort() {
   meta_global.payload.engines = {rotary: {version: engine.version,
                                           syncID: engine.syncID}};
   _("Fake applyIncoming to abort.");
-  engine._store.applyIncoming = function (record) {
+  engine._store.applyIncoming = function(record) {
     let ex = {code: Engine.prototype.eEngineAbortApplyIncoming,
               cause: "Nooo"};
     _("Throwing: " + JSON.stringify(ex));

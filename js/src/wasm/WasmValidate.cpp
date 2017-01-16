@@ -1089,11 +1089,13 @@ DecodeTableSection(Decoder& d, ModuleEnvironment* env)
     if (!d.readVarU32(&numTables))
         return d.fail("failed to read number of tables");
 
-    if (numTables != 1)
-        return d.fail("the number of tables must be exactly one");
+    if (numTables > 1)
+        return d.fail("the number of tables must be at most one");
 
-    if (!DecodeTableLimits(d, &env->tables))
-        return false;
+    for (uint32_t i = 0; i < numTables; ++i) {
+        if (!DecodeTableLimits(d, &env->tables))
+            return false;
+    }
 
     if (!d.finishSection(sectionStart, sectionSize, "table"))
         return false;
@@ -1114,11 +1116,13 @@ DecodeMemorySection(Decoder& d, ModuleEnvironment* env)
     if (!d.readVarU32(&numMemories))
         return d.fail("failed to read number of memories");
 
-    if (numMemories != 1)
-        return d.fail("the number of memories must be exactly one");
+    if (numMemories > 1)
+        return d.fail("the number of memories must be at most one");
 
-    if (!DecodeMemoryLimits(d, env))
-        return false;
+    for (uint32_t i = 0; i < numMemories; ++i) {
+        if (!DecodeMemoryLimits(d, env))
+            return false;
+    }
 
     if (!d.finishSection(sectionStart, sectionSize, "memory"))
         return false;
@@ -1534,9 +1538,6 @@ DecodeDataSection(Decoder& d, ModuleEnvironment* env)
     if (sectionStart == Decoder::NotStarted)
         return true;
 
-    if (!env->usesMemory())
-        return d.fail("data section requires a memory section");
-
     uint32_t numSegments;
     if (!d.readVarU32(&numSegments))
         return d.fail("failed to read number of data segments");
@@ -1551,6 +1552,9 @@ DecodeDataSection(Decoder& d, ModuleEnvironment* env)
 
         if (linearMemoryIndex != 0)
             return d.fail("linear memory index must currently be 0");
+
+        if (!env->usesMemory())
+            return d.fail("data segment requires a memory section");
 
         DataSegment seg;
         if (!DecodeInitializerExpression(d, env->globals, ValType::I32, &seg.offset))

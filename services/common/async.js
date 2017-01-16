@@ -226,7 +226,7 @@ this.Async = {
 
   promiseSpinningly(promise) {
     let cb = Async.makeSpinningCallback();
-    promise.then(result =>  {
+    promise.then(result => {
       cb(null, result);
     }, err => {
       cb(err || new Error("Promise rejected without explicit error"));

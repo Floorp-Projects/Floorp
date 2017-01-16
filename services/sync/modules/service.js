@@ -303,8 +303,7 @@ Sync11Service.prototype = {
         if (keysChanged.length) {
           // Collection keys only. Reset individual engines.
           this.resetClient(keysChanged);
-        }
-        else {
+        } else {
           // Default key changed: wipe it all.
           this.resetClient();
         }
@@ -543,7 +542,7 @@ Sync11Service.prototype = {
    * Perform the info fetch as part of a login or key fetch, or
    * inside engine sync.
    */
-  _fetchInfo: function (url) {
+  _fetchInfo(url) {
     let infoURL = url || this.infoURL;
 
     this._log.trace("In _fetchInfo: " + infoURL);
@@ -619,22 +618,19 @@ Sync11Service.prototype = {
             if (cryptoResp.success) {
               let keysChanged = this.handleFetchedKeys(syncKeyBundle, cryptoKeys);
               return true;
-            }
-            else if (cryptoResp.status == 404) {
+            } else if (cryptoResp.status == 404) {
               // On failure, ask to generate new keys and upload them.
               // Fall through to the behavior below.
               this._log.warn("Got 404 for crypto/keys, but 'crypto' in info/collections. Regenerating.");
               cryptoKeys = null;
-            }
-            else {
+            } else {
               // Some other problem.
               this.status.login = LOGIN_FAILED_SERVER_ERROR;
               this.errorHandler.checkServerError(cryptoResp);
               this._log.warn("Got status " + cryptoResp.status + " fetching crypto keys.");
               return false;
             }
-          }
-          catch (ex) {
+          } catch (ex) {
             this._log.warn("Got exception \"" + ex + "\" fetching cryptoKeys.");
             // TODO: Um, what exceptions might we get here? Should we re-throw any?
 
@@ -642,16 +638,14 @@ Sync11Service.prototype = {
             if (Utils.isHMACMismatch(ex)) {
               this.status.login = LOGIN_FAILED_INVALID_PASSPHRASE;
               this.status.sync = CREDENTIALS_CHANGED;
-            }
-            else {
+            } else {
               // In the absence of further disambiguation or more precise
               // failure constants, just report failure.
               this.status.login = LOGIN_FAILED;
             }
             return false;
           }
-        }
-        else {
+        } else {
           this._log.info("... 'crypto' is not a reported collection. Generating new keys.");
         }
 
@@ -668,8 +662,7 @@ Sync11Service.prototype = {
 
         // Last-ditch case.
         return false;
-      }
-      else {
+      } else {
         // No update needed: we're good!
         return true;
       }
@@ -888,7 +881,7 @@ Sync11Service.prototype = {
       for (let engine of [this.clientsEngine].concat(this.engineManager.getAll())) {
         try {
           engine.removeClientData();
-        } catch(ex) {
+        } catch (ex) {
           this._log.warn(`Deleting client data for ${engine.name} failed`, ex);
         }
       }
@@ -1162,7 +1155,7 @@ Sync11Service.prototype = {
       this.metaModified = infoResponse.obj.meta;
     }
 
-    let remoteVersion = (meta && meta.payload.storageVersion)?
+    let remoteVersion = (meta && meta.payload.storageVersion) ?
       meta.payload.storageVersion : "";
 
     this._log.debug(["Weave Version:", WEAVE_VERSION, "Local Storage:",
@@ -1202,13 +1195,11 @@ Sync11Service.prototype = {
         this._log.info("Wiped server; incompatible metadata: " + remoteVersion);
 
       return true;
-    }
-    else if (remoteVersion > STORAGE_VERSION) {
+    } else if (remoteVersion > STORAGE_VERSION) {
       this.status.sync = VERSION_OUT_OF_DATE;
       this._log.warn("Upgrade required to access newer storage version.");
       return false;
-    }
-    else if (meta.payload.syncID != this.syncID) {
+    } else if (meta.payload.syncID != this.syncID) {
 
       this._log.info("Sync IDs differ. Local is " + this.syncID + ", remote is " + meta.payload.syncID);
       this.resetClient();
@@ -1234,8 +1225,7 @@ Sync11Service.prototype = {
       }
 
       return true;
-    }
-    else {
+    } else {
       if (!this.upgradeSyncKey(meta.payload.syncID)) {
         this._log.warn("Failed to upgrade sync key. Failing remote setup.");
         return false;
@@ -1295,7 +1285,7 @@ Sync11Service.prototype = {
     let dateStr = Utils.formatTimestamp(new Date());
     this._log.debug("User-Agent: " + Utils.userAgent);
     this._log.info("Starting sync at " + dateStr);
-    this._catch(function () {
+    this._catch(function() {
       // Make sure we're logged in.
       if (this._shouldLogin()) {
         this._log.debug("In sync: should login.");
@@ -1303,8 +1293,7 @@ Sync11Service.prototype = {
           this._log.debug("Not syncing: login returned false.");
           return;
         }
-      }
-      else {
+      } else {
         this._log.trace("In sync: no need to login.");
       }
       return this._lockedSync(engineNamesToSync);
@@ -1366,7 +1355,7 @@ Sync11Service.prototype = {
   /**
    * Upload meta/global, throwing the response on failure.
    */
-  uploadMetaGlobal: function (meta) {
+  uploadMetaGlobal(meta) {
     this._log.debug("Uploading meta/global: " + JSON.stringify(meta));
 
     // It would be good to set the X-If-Unmodified-Since header to `timestamp`
@@ -1388,7 +1377,7 @@ Sync11Service.prototype = {
    *
    * Returns a promise that resolves with the sentinel, or null.
    */
-  getFxAMigrationSentinel: function() {
+  getFxAMigrationSentinel() {
     if (this._shouldLogin()) {
       this._log.debug("In getFxAMigrationSentinel: should login.");
       if (!this.login()) {
@@ -1434,7 +1423,7 @@ Sync11Service.prototype = {
    * Returns a promise that resolves with a boolean which indicates if the
    * sentinel was successfully written.
    */
-  setFxAMigrationSentinel: function(sentinel) {
+  setFxAMigrationSentinel(sentinel) {
     if (this._shouldLogin()) {
       this._log.debug("In setFxAMigrationSentinel: should login.");
       if (!this.login()) {

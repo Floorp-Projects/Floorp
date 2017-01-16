@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="reftest-wait">
   <head>
     <style>
       span {color: red}
@@ -9,7 +9,8 @@
   </head>
 
   <body onload='document.getElementById("one").setAttribute("type", "checkbox");
-                document.getElementById("two").setAttribute("type", "checkbox");'>
+                document.getElementById("two").setAttribute("type", "checkbox");
+                document.documentElement.removeAttribute("class");'>
     <div>
       <input type="text" id="one" checked="checked"/>
       <span>Should be no red </span>

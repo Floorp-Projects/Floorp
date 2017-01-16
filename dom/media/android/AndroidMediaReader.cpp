@@ -25,7 +25,7 @@ typedef mozilla::layers::Image Image;
 typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
 
 AndroidMediaReader::AndroidMediaReader(AbstractMediaDecoder *aDecoder,
-                                       const nsACString& aContentType) :
+                                       const MediaContentType& aContentType) :
   MediaDecoderReader(aDecoder),
   mType(aContentType),
   mPlugin(nullptr),
@@ -330,7 +330,7 @@ AndroidMediaReader::Seek(const SeekTarget& aTarget)
     mVideoSeekTimeUs = aTarget.GetTime().ToMicroseconds();
 
     RefPtr<AndroidMediaReader> self = this;
-    mSeekRequest.Begin(DecodeToFirstVideoData()->Then(OwnerThread(), __func__, [self] (MediaData* v) {
+    DecodeToFirstVideoData()->Then(OwnerThread(), __func__, [self] (MediaData* v) {
       self->mSeekRequest.Complete();
       self->mAudioSeekTimeUs = v->mTime;
       self->mSeekPromise.Resolve(media::TimeUnit::FromMicroseconds(self->mAudioSeekTimeUs), __func__);
@@ -338,7 +338,7 @@ AndroidMediaReader::Seek(const SeekTarget& aTarget)
       self->mSeekRequest.Complete();
       self->mAudioSeekTimeUs = aTarget.GetTime().ToMicroseconds();
       self->mSeekPromise.Resolve(aTarget.GetTime(), __func__);
-    }));
+    })->Track(mSeekRequest);
   } else {
     mAudioSeekTimeUs = mVideoSeekTimeUs = aTarget.GetTime().ToMicroseconds();
     mSeekPromise.Resolve(aTarget.GetTime(), __func__);

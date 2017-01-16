@@ -187,7 +187,7 @@ toolbar:-moz-lwtheme {
 @media (-moz-windows-compositor: 0),
        (-moz-windows-default-theme: 0) {
   /* Please keep the menu text colors in this media block in sync with
-   * devedition.css, minus the :not(:-moz-lwtheme) condition - see Bug 1165718.
+   * compacttheme.css, minus the :not(:-moz-lwtheme) condition - see Bug 1165718.
    */
   #main-window[tabsintitlebar]:not([inFullscreen]) #toolbar-menubar:not(:-moz-lwtheme),
   #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar:not(:-moz-lwtheme) {

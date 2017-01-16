@@ -64,9 +64,6 @@ class FFSetup(object):
         for k, v in self.browser_config['env'].iteritems():
             self.env[k] = str(v)
         self.env['MOZ_CRASHREPORTER_NO_REPORT'] = '1'
-        # for winxp e10s logging:
-        # https://bugzilla.mozilla.org/show_bug.cgi?id=1037445
-        self.env['MOZ_WIN_INHERIT_STD_HANDLES_PRE_VISTA'] = '1'
         if self.browser_config['symbols_path']:
             self.env['MOZ_CRASHREPORTER'] = '1'
         else:

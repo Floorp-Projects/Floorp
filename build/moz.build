@@ -64,8 +64,7 @@ if CONFIG['MOZ_APP_BASENAME']:
     if CONFIG['MOZ_APP_PROFILE']:
         appini_defines['MOZ_APP_PROFILE'] = CONFIG['MOZ_APP_PROFILE']
 
-    for var in ('MOZ_CRASHREPORTER', 'MOZ_PROFILE_MIGRATOR',
-                'MOZ_APP_STATIC_INI'):
+    for var in ('MOZ_CRASHREPORTER', 'MOZ_PROFILE_MIGRATOR'):
         if CONFIG[var]:
             appini_defines[var] = True
 
@@ -80,11 +79,10 @@ if CONFIG['MOZ_APP_BASENAME']:
     if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android' and CONFIG['MOZ_UPDATER']:
         FINAL_TARGET_PP_FILES += ['update-settings.ini']
 
-    if CONFIG['MOZ_APP_STATIC_INI']:
-        GENERATED_FILES += ['application.ini.h']
-        appini = GENERATED_FILES['application.ini.h']
-        appini.script = 'appini_header.py'
-        appini.inputs = ['!application.ini']
+    GENERATED_FILES += ['application.ini.h']
+    appini = GENERATED_FILES['application.ini.h']
+    appini.script = 'appini_header.py'
+    appini.inputs = ['!application.ini']
 
 # NOTE: Keep .gdbinit in the topsrcdir for people who run gdb from the topsrcdir.
 OBJDIR_FILES += ['/.gdbinit']

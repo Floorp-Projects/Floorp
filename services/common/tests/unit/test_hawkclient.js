@@ -156,7 +156,7 @@ add_task(function* test_server_error() {
   try {
     yield client.request("/foo", method, TEST_CREDS);
     do_throw("Expected an error");
-  } catch(err) {
+  } catch (err) {
     do_check_eq(418, err.code);
     do_check_eq("I am a Teapot", err.message);
   }
@@ -179,7 +179,7 @@ add_task(function* test_server_error_json() {
   try {
     yield client.request("/foo", method, TEST_CREDS);
     do_throw("Expected an error");
-  } catch(err) {
+  } catch (err) {
     do_check_eq("Cannot get ye flask.", err.error);
   }
 
@@ -312,7 +312,6 @@ add_task(function* test_retry_request_on_fail() {
       let message = "i love you!!!";
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.bodyOutputStream.write(message, message.length);
-      return;
     }
   });
 
@@ -417,7 +416,7 @@ add_task(function* test_500_no_retry() {
   try {
     yield client.request("/no-shutup", method, credentials);
     do_throw("Expected an error");
-  } catch(err) {
+  } catch (err) {
     do_check_eq(err.code, 500);
   }
 
@@ -461,7 +460,6 @@ add_task(function* test_401_then_500() {
       let message = "Cannot get ye flask.";
       response.setStatusLine(request.httpVersion, 500, "Internal server error");
       response.bodyOutputStream.write(message, message.length);
-      return;
     }
   });
 
@@ -480,7 +478,7 @@ add_task(function* test_401_then_500() {
   // Request will have bad timestamp; client will retry once
   try {
     yield client.request("/maybe", method, credentials);
-  } catch(err) {
+  } catch (err) {
     do_check_eq(err.code, 500);
   }
   do_check_eq(attempts, 2);
@@ -493,7 +491,7 @@ add_task(function* throw_if_not_json_body() {
   try {
     yield client.request("/bogus", "GET", {}, "I am not json");
     do_throw("Expected an error");
-  } catch(err) {
+  } catch (err) {
     do_check_true(!!err.message);
   }
 });
@@ -501,7 +499,7 @@ add_task(function* throw_if_not_json_body() {
 // End of tests.
 // Utility functions follow
 
-function getTimestampDelta(authHeader, now=Date.now()) {
+function getTimestampDelta(authHeader, now = Date.now()) {
   let tsMS = new Date(
       parseInt(/ts="(\d+)"/.exec(authHeader)[1], 10) * SECOND_MS);
   return Math.abs(tsMS - now);

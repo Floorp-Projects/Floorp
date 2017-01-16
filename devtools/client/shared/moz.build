@@ -53,3 +53,9 @@ DevToolsModules(
     'webgl-utils.js',
     'zoom-keys.js',
 )
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools')
+
+with Files('components/**'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Shared Components')

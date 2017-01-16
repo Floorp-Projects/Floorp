@@ -40,7 +40,7 @@ Kernel = EnumString.subclass(
 
 CPU_bitness = {
     'aarch64': 64,
-    'Alpha': 32,
+    'Alpha': 64,
     'arm': 32,
     'hppa': 32,
     'ia64': 64,

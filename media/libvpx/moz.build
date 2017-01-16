@@ -16,27 +16,27 @@ if CONFIG['VPX_USE_YASM']:
 if CONFIG['CPU_ARCH'] == 'x86_64':
     EXPORTS.vpx += files['X64_EXPORTS']
     SOURCES += files['X64_SOURCES']
-    if CONFIG['OS_TARGET'] == 'Linux':
-        ASFLAGS += [ '-I%s/media/libvpx/config/linux/x64/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libvpx/config/linux/x64/' % TOPSRCDIR ]
-    elif CONFIG['OS_TARGET'] == 'WINNT':
+    if CONFIG['OS_TARGET'] == 'WINNT':
         ASFLAGS += [ '-I%s/media/libvpx/config/win/x64/' % TOPSRCDIR ]
         CFLAGS += [ '-I%s/media/libvpx/config/win/x64/' % TOPSRCDIR ]
     elif CONFIG['OS_TARGET'] == 'Darwin':
         ASFLAGS += [ '-I%s/media/libvpx/config/mac/x64/' % TOPSRCDIR ]
         CFLAGS += [ '-I%s/media/libvpx/config/mac/x64/' % TOPSRCDIR ]
+    else: # Android, Linux, BSDs, etc.
+        ASFLAGS += [ '-I%s/media/libvpx/config/linux/x64/' % TOPSRCDIR ]
+        CFLAGS += [ '-I%s/media/libvpx/config/linux/x64/' % TOPSRCDIR ]
 elif CONFIG['CPU_ARCH'] == 'x86':
     EXPORTS.vpx += files['IA32_EXPORTS']
     SOURCES += files['IA32_SOURCES']
-    if CONFIG['OS_TARGET'] == 'Linux' or CONFIG['OS_TARGET'] == 'Android':
-        ASFLAGS += [ '-I%s/media/libvpx/config/linux/ia32/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libvpx/config/linux/ia32/' % TOPSRCDIR ]
-    elif CONFIG['OS_TARGET'] == 'WINNT':
+    if CONFIG['OS_TARGET'] == 'WINNT':
         ASFLAGS += [ '-I%s/media/libvpx/config/win/ia32/' % TOPSRCDIR ]
         CFLAGS += [ '-I%s/media/libvpx/config/win/ia32/' % TOPSRCDIR ]
     elif CONFIG['OS_TARGET'] == 'Darwin':
         ASFLAGS += [ '-I%s/media/libvpx/config/mac/ia32/' % TOPSRCDIR ]
         CFLAGS += [ '-I%s/media/libvpx/config/mac/ia32/' % TOPSRCDIR ]
+    else: # Android, Linux, BSDs, etc.
+        ASFLAGS += [ '-I%s/media/libvpx/config/linux/ia32/' % TOPSRCDIR ]
+        CFLAGS += [ '-I%s/media/libvpx/config/linux/ia32/' % TOPSRCDIR ]
 elif CONFIG['CPU_ARCH'] == 'arm':
     EXPORTS.vpx += files['ARM_EXPORTS']
     ASFLAGS += [ '-I%s/media/libvpx/config/linux/arm/' % TOPSRCDIR ]

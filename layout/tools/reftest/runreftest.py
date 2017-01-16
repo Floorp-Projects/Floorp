@@ -604,11 +604,8 @@ class RefTest(object):
             timeout = None
             signal.signal(signal.SIGINT, lambda sigid, frame: None)
 
-        if mozinfo.info.get('appname') == 'b2g' and mozinfo.info.get('toolkit') != 'gonk':
-            runner_cls = mozrunner.Runner
-        else:
-            runner_cls = mozrunner.runners.get(mozinfo.info.get('appname', 'firefox'),
-                                               mozrunner.Runner)
+        runner_cls = mozrunner.runners.get(mozinfo.info.get('appname', 'firefox'),
+                                           mozrunner.Runner)
         runner = runner_cls(profile=profile,
                             binary=binary,
                             process_class=mozprocess.ProcessHandlerMixin,

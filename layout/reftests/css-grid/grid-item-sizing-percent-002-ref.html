@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <title>Reference: Testing grid item percent sizes</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1330380">
+  <meta charset="utf-8">
+  <style type="text/css">
+body,html { color:black; background:white; font:16px/1 monospace; padding:0; margin:0; }
+* { vertical-align:top; line-height:4px; }
+
+.grid {
+  display: grid;
+  position: relative;
+  float: left;
+  background-color: grey;
+  grid-template-columns: 50px 100px;
+  justify-items: start;
+  align-items: start;
+  clear: both;
+}
+
+.item {
+  background: pink;
+  grid-area: 1 / 1 / 2 / 2;
+  background-clip: content-box;
+  min-width: 0;
+  min-height: 0;
+  z-index: 1;
+}
+.c1 {
+  width: 60px;
+  height: 60%;
+  grid-area: 1 / 1 / 3 / 3;
+}
+.c2 {
+  grid-area: 1 / 1 / 3 / 3;
+}
+.pbox {
+  box-sizing: border-box;
+}
+
+.maxw .item { max-width: 25px; }
+.minw .item { min-width: 25px; }
+.maxw .c1.item { max-width: 75px; }
+.minw .c1.item { min-width: 75px; }
+.maxw .c2.item { max-width: 75px; }
+.minw .c2.item { min-width: 75px; }
+
+.p { padding:3px 5px 10% 10px; }
+.c1.p, .c2.p { padding:3px 5px 10% 30px; }
+.m { margin:3px 5px 10% 5px; }
+.c1.m, .c2.m { margin:3px 5px 10% 15px; }
+.b { border:solid black; }
+
+x { display:inline-block; width:10px; height:4px; background: silver; }
+
+a {
+  grid-area: 1 / 1 / 2 / 2;
+  width:100%; height:100%;
+  background: blue;
+}
+</style>
+</head>
+<body>
+
+<div style="float:left">
+<div class="grid" style="grid-template-rows:calc(4px)"><div class="item"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:calc(7px/.9)"><div class="item pbox p"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(7px/.9)"><div class="item c1 p"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(11px/.9)"><div class="item c1 pbox p"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(7px/.9)"><div class="item c2 pbox p"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:calc(10px)"><div class="item pbox b"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:calc(17px/.9)"><div class="item pbox p b"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(21px/.9)"><div class="item c1 pbox p b"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(13px/.9)"><div class="item c2 pbox p b"><x></x><x></x><x></x></div><a></a></div>
+</div>
+
+<div style="float:left" class="maxw">
+<div class="grid" style="grid-template-rows:calc(8px)"><div class="item"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:calc(15px/.9)"><div class="item pbox p"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(7px/.9)"><div class="item c1 p"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(11px/.9)"><div class="item c1 pbox p"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(7px/.9)"><div class="item c2 pbox p"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:calc(18px)"><div class="item pbox b"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:calc(21px/.9)"><div class="item pbox p b"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(21px/.9)"><div class="item c1 pbox p b"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(13px/.9)"><div class="item c2 pbox p b"><x></x><x></x><x></x></div><a></a></div>
+</div>
+
+<div style="float:left" class="minw">
+<div class="grid" style="grid-template-rows:calc(4px)"><div class="item"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:calc(7px/.9)"><div class="item pbox p"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(7px/.9)"><div class="item c1 p"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(7px/.9)"><div class="item c1 pbox p"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(7px/.9)"><div class="item c2 pbox p"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:calc(10px)"><div class="item pbox b"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:calc(17px/.9)"><div class="item pbox p b"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(13px/.9)"><div class="item c1 pbox p b"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(13px/.9)"><div class="item c2 pbox p b"><x></x><x></x><x></x></div><a></a></div>
+</div>
+
+<div style="float:left">
+<div class="grid" style="grid-template-rows:calc(7px/.9)"><div class="item pbox m"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(7px/.9)"><div class="item c1 pbox m"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(7px/.9)"><div class="item c2 pbox m"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:calc(17.5px)"><div class="item pbox p m"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:calc(30px)"><div class="item pbox p b m"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(20px)"><div class="item c2 pbox p b m"><x></x><x></x><x></x></div><a></a></div>
+</div>
+
+<br clear="all">
+
+<div style="float:left" class="maxw">
+<div class="grid" style="grid-template-rows:calc(11px/.9)"><div class="item pbox m"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(7px/.9)"><div class="item c1 pbox m"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(7px/.9)"><div class="item c2 pbox m"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:calc(22.5px)"><div class="item pbox p m"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:calc(30px)"><div class="item pbox p b m"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(20px)"><div class="item c2 pbox p b m"><x></x><x></x><x></x></div><a></a></div>
+</div>
+
+<div style="float:left" class="minw">
+<div class="grid" style="grid-template-rows:calc(7px/.9)"><div class="item pbox m"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(7px/.9)"><div class="item c1 pbox m"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(7px/.9)"><div class="item c2 pbox m"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:calc(17.5px)"><div class="item pbox p m"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:calc(30px)"><div class="item pbox p b m"><x></x><x></x><x></x></div><a></a></div>
+<div class="grid" style="grid-template-rows:0 calc(20px)"><div class="item c2 pbox p b m"><x></x><x></x><x></x></div><a></a></div>
+</div>
+
+
+</body>
+</html>

@@ -102,6 +102,7 @@ EXPORTS.mozilla += [
     'ServoCSSRuleList.h',
     'ServoDeclarationBlock.h',
     'ServoElementSnapshot.h',
+    'ServoPropPrefList.h',
     'ServoStyleRule.h',
     'ServoStyleSet.h',
     'ServoStyleSheet.h',

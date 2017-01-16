@@ -185,7 +185,7 @@ VideoSink::Start(int64_t aStartTime, const MediaInfo& aInfo)
     RefPtr<GenericPromise> p = mAudioSink->OnEnded(TrackInfo::kVideoTrack);
     if (p) {
       RefPtr<VideoSink> self = this;
-      mVideoSinkEndRequest.Begin(p->Then(mOwnerThread, __func__,
+      p->Then(mOwnerThread, __func__,
         [self] () {
           self->mVideoSinkEndRequest.Complete();
           self->TryUpdateRenderedVideoFrames();
@@ -197,7 +197,8 @@ VideoSink::Start(int64_t aStartTime, const MediaInfo& aInfo)
           self->mVideoSinkEndRequest.Complete();
           self->TryUpdateRenderedVideoFrames();
           self->MaybeResolveEndPromise();
-        }));
+        })
+        ->Track(mVideoSinkEndRequest);
     }
 
     ConnectListener();

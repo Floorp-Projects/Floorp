@@ -12,7 +12,7 @@ function run_test() {
 }
 
 add_task(async function test_startover() {
-  let oldValue = Services.prefs.getBoolPref("services.sync-testing.startOverKeepIdentity", true);
+  let oldValue = Services.prefs.getBoolPref("services.sync-testing.startOverKeepIdentity");
   Services.prefs.setBoolPref("services.sync-testing.startOverKeepIdentity", false);
 
   ensureLegacyIdentityManager();
