@@ -1581,7 +1581,7 @@ nsHttpChannel::ProcessSingleSecurityHeader(uint32_t aType,
         // Process header will now discard the headers itself if the channel
         // wasn't secure (whereas before it had to be checked manually)
         uint32_t failureResult;
-        rv = sss->ProcessHeader(aType, mURI, securityHeader.get(), aSSLStatus,
+        rv = sss->ProcessHeader(aType, mURI, securityHeader, aSSLStatus,
                                 aFlags, nullptr, nullptr, &failureResult);
         if (NS_FAILED(rv)) {
             nsAutoString consoleErrorCategory;

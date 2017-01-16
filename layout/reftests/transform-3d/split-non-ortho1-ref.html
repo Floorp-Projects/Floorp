@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<title>Split non-orthogonal 1 ref</title>
+
+<style>
+.container {
+  margin: 0 0;
+  width: 400px;
+  height: 400px;
+
+  position: absolute;
+  transform-style: preserve-3d;
+}
+
+.shape {
+  margin: 0 0;
+  position: absolute;
+}
+
+.red-square-back {
+  background-color: rgba(255,0,0,1);
+
+  width: 100px;
+  height: 100px;
+
+  top: 50px;
+  left: 50px;
+}
+
+.green-square-back {
+  background-color: rgba(0,255,0,1);
+
+  width: 150px;
+  height: 150px;
+
+  top: 50px;
+  left: 50px;
+
+  transform: rotateZ(45deg);
+}
+
+.red-square-front {
+  background-color: rgba(255,0,0,1);
+
+  width: 50px;
+  height: 50px;
+
+  top: 100px;
+  left: 100px;
+}
+
+.green-square-front {
+  background-color: rgba(0,255,0,1);
+
+  width: 72px;
+  height: 72px;
+
+  top: 63.5px;
+  left: 63.5px;
+
+  transform: rotateZ(45deg);
+}
+
+#canvas {
+  width: 100px
+  height: 100px;
+
+  top: 100px;
+  left: 100px;
+}
+
+</style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="shape red-square-back"></div>
+    <div class="shape green-square-back"></div>
+    <div class="shape red-square-front"></div>
+    <div class="shape green-square-front"></div>
+  </div>
+</body>
+
+</html>
