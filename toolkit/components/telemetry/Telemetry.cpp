@@ -2132,9 +2132,7 @@ TelemetryImpl::CreateTelemetryInstance()
 
   // First, initialize the TelemetryHistogram and TelemetryScalar global states.
   TelemetryHistogram::InitializeGlobalState(useTelemetry, useTelemetry);
-
-  // Only record scalars from the parent process.
-  TelemetryScalar::InitializeGlobalState(XRE_IsParentProcess(), XRE_IsParentProcess());
+  TelemetryScalar::InitializeGlobalState(useTelemetry, useTelemetry);
 
   // Only record events from the parent process.
   TelemetryEvent::InitializeGlobalState(XRE_IsParentProcess(), XRE_IsParentProcess());
@@ -3105,6 +3103,20 @@ AccumulateChildKeyed(GeckoProcessType aProcessType,
                      const nsTArray<KeyedAccumulation>& aAccumulations)
 {
   TelemetryHistogram::AccumulateChildKeyed(aProcessType, aAccumulations);
+}
+
+void
+UpdateChildScalars(GeckoProcessType aProcessType,
+                   const nsTArray<ScalarAction>& aScalarActions)
+{
+  TelemetryScalar::UpdateChildData(aProcessType, aScalarActions);
+}
+
+void
+UpdateChildKeyedScalars(GeckoProcessType aProcessType,
+                        const nsTArray<KeyedScalarAction>& aScalarActions)
+{
+  TelemetryScalar::UpdateChildKeyedData(aProcessType, aScalarActions);
 }
 
 const char*

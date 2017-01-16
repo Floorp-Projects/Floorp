@@ -10,12 +10,16 @@
 
 class nsIRunnable;
 class nsITimer;
+class nsAString;
 class nsCString;
+class nsIVariant;
 
 namespace mozilla {
 namespace Telemetry {
 
 enum ID : uint32_t;
+enum class ScalarID : uint32_t;
+enum class ScalarActionType : uint32_t;
 
 } // Telemetry
 } // mozilla
@@ -26,6 +30,14 @@ namespace TelemetryIPCAccumulator {
 void AccumulateChildHistogram(mozilla::Telemetry::ID aId, uint32_t aSample);
 void AccumulateChildKeyedHistogram(mozilla::Telemetry::ID aId, const nsCString& aKey,
                                    uint32_t aSample);
+
+// Scalar accumulation functions.
+void RecordChildScalarAction(mozilla::Telemetry::ScalarID aId, uint32_t aKind,
+                             mozilla::Telemetry::ScalarActionType aAction, nsIVariant* aValue);
+
+void RecordChildKeyedScalarAction(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
+                                  uint32_t aKind, mozilla::Telemetry::ScalarActionType aAction,
+                                  nsIVariant* aValue);
 
 void IPCTimerFired(nsITimer* aTimer, void* aClosure);
 void DeInitializeGlobalState();

@@ -410,7 +410,7 @@ interface nsITelemetry : nsISupports
   /**
    * Serializes the scalars from the given dataset to a JSON-style object and resets them.
    * The returned structure looks like:
-   *   { "group1.probe": 1, "group1.other_probe": false, ... }
+   *   {"process": {"group1.probe":1,"group1.other_probe":false,...}, ... }.
    *
    * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
    * @param [aClear=false] Whether to clear out the scalars after snapshotting.
@@ -453,7 +453,7 @@ interface nsITelemetry : nsISupports
    * Serializes the keyed scalars from the given dataset to a JSON-style object and
    * resets them.
    * The returned structure looks like:
-   *   { "group1.probe": { "key_1": 2, "key_2": 1, ... }, ... }
+   *   { "process": { "group1.probe": { "key_1": 2, "key_2": 1, ... }, ... }, ... }
    *
    * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
    * @param [aClear=false] Whether to clear out the scalars after snapshotting.

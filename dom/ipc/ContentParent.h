@@ -1082,6 +1082,10 @@ private:
     InfallibleTArray<Accumulation>&& aAccumulations) override;
   virtual mozilla::ipc::IPCResult RecvAccumulateChildKeyedHistogram(
     InfallibleTArray<KeyedAccumulation>&& aAccumulations) override;
+  virtual mozilla::ipc::IPCResult RecvUpdateChildScalars(
+    InfallibleTArray<ScalarAction>&& aScalarActions) override;
+  virtual mozilla::ipc::IPCResult RecvUpdateChildKeyedScalars(
+    InfallibleTArray<KeyedScalarAction>&& aScalarActions) override;
 public:
   void SendGetFilesResponseAndForget(const nsID& aID,
                                      const GetFilesResponseResult& aResult);
