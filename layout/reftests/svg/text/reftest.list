@@ -172,7 +172,7 @@ fuzzy-if(!d2d,14,2) fuzzy-if(azureQuartz,1,6) fuzzy-if(skiaContent,1,200) == dyn
 
 # text and masks
 fuzzy-if(skiaContent&&winWidget,50,224) HTTP(../..)  == mask-applied.svg mask-applied-ref.svg
-fuzzy-if(skiaContent&&winWidget,105,56) HTTP(../..) == mask-content.svg mask-content-ref.svg
+fuzzy-if(skiaContent&&winWidget,105,112) HTTP(../..) == mask-content.svg mask-content-ref.svg
 fuzzy-if(skiaContent&&winWidget,53,112) HTTP(../..) == mask-content-2.svg mask-content-2-ref.svg
 
 # text and clipPaths
