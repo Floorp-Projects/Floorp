@@ -1071,53 +1071,54 @@ CacheIRCompiler::emitGuardIsSymbol()
 }
 
 bool
-CacheIRCompiler::emitGuardIsInt32()
+CacheIRCompiler::emitGuardIsInt32Index()
 {
     ValOperandId inputId = reader.valOperandId();
-    if (allocator.knownType(inputId) == JSVAL_TYPE_INT32)
-        return true;
+    Register output = allocator.defineRegister(masm, reader.int32OperandId());
 
-    ValueOperand input = allocator.useValueRegister(masm, inputId);
-    AutoScratchRegister scratch(allocator, masm);
+    if (allocator.knownType(inputId) == JSVAL_TYPE_INT32) {
+        Register input = allocator.useRegister(masm, Int32OperandId(inputId.id()));
+        masm.move32(input, output);
+        return true;
+    }
 
     FailurePath* failure;
     if (!addFailurePath(&failure))
         return false;
 
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
+
+    Label notInt32, done;
+    masm.branchTestInt32(Assembler::NotEqual, input, &notInt32);
+    masm.unboxInt32(input, output);
+    masm.jump(&done);
+
+    masm.bind(&notInt32);
+
     if (cx_->runtime()->jitSupportsFloatingPoint) {
-        Label done;
-        masm.branchTestInt32(Assembler::Equal, input, &done);
-        {
-            // If the value is a double, try to convert it to int32 in place.
-            // It's fine to modify |input| in this case, as the difference is not
-            // observable.
+        masm.branchTestDouble(Assembler::NotEqual, input, failure->label());
 
-            masm.branchTestDouble(Assembler::NotEqual, input, failure->label());
+        // If we're compiling a Baseline IC, FloatReg0 is always available.
+        Label failurePopReg;
+        if (mode_ != Mode::Baseline)
+            masm.push(FloatReg0);
 
-            // If we're compiling a Baseline IC, FloatReg0 is always available.
-            Label failurePopReg;
-            if (mode_ != Mode::Baseline)
-                masm.push(FloatReg0);
+        masm.unboxDouble(input, FloatReg0);
+        masm.convertDoubleToInt32(FloatReg0, output,
+                                  (mode_ == Mode::Baseline) ? failure->label() : &failurePopReg);
+        if (mode_ != Mode::Baseline) {
+            masm.pop(FloatReg0);
+            masm.jump(&done);
 
-            masm.unboxDouble(input, FloatReg0);
-            masm.convertDoubleToInt32(FloatReg0, scratch,
-                                      (mode_ == Mode::Baseline) ? failure->label() : &failurePopReg);
-            masm.tagValue(JSVAL_TYPE_INT32, scratch, input);
-
-            if (mode_ != Mode::Baseline) {
-                masm.pop(FloatReg0);
-                masm.jump(&done);
-
-                masm.bind(&failurePopReg);
-                masm.pop(FloatReg0);
-                masm.jump(failure->label());
-            }
+            masm.bind(&failurePopReg);
+            masm.pop(FloatReg0);
+            masm.jump(failure->label());
         }
-        masm.bind(&done);
     } else {
-        masm.branchTestInt32(Assembler::NotEqual, input, failure->label());
+        masm.jump(failure->label());
     }
 
+    masm.bind(&done);
     return true;
 }
 

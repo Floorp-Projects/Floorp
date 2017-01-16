@@ -141,7 +141,7 @@ enum class CacheKind : uint8_t
     _(GuardIsObject)                      \
     _(GuardIsString)                      \
     _(GuardIsSymbol)                      \
-    _(GuardIsInt32)                       \
+    _(GuardIsInt32Index)                  \
     _(GuardType)                          \
     _(GuardShape)                         \
     _(GuardGroup)                         \
@@ -417,9 +417,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOpWithOperandId(CacheOp::GuardIsSymbol, val);
         return SymbolOperandId(val.id());
     }
-    Int32OperandId guardIsInt32(ValOperandId val) {
-        writeOpWithOperandId(CacheOp::GuardIsInt32, val);
-        return Int32OperandId(val.id());
+    Int32OperandId guardIsInt32Index(ValOperandId val) {
+        Int32OperandId res(nextOperandId_++);
+        writeOpWithOperandId(CacheOp::GuardIsInt32Index, val);
+        writeOperandId(res);
+        return res;
     }
     void guardType(ValOperandId val, JSValueType type) {
         writeOpWithOperandId(CacheOp::GuardType, val);
