@@ -329,10 +329,9 @@ add_task(function* test_bookmarks() {
   let k = bs.getKeywordForBookmark(kwTestItemId);
   do_check_eq("bar", k);
 
-  // test getURIForKeyword
-  let u = bs.getURIForKeyword("bar");
-  do_check_eq("http://keywordtest.com/", u.spec);
-
+  // test PlacesUtils.keywords.fetch()
+  let u = yield PlacesUtils.keywords.fetch("bar");
+  do_check_eq("http://keywordtest.com/", u.url);
   // test removeFolderChildren
   // 1) add/remove each child type (bookmark, separator, folder)
   tmpFolder = bs.createFolder(testRoot, "removeFolderChildren",
