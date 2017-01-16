@@ -4,9 +4,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'bundle.js',
+    'debugger.css',
+    'debugger.js',
     'panel.js',
     'pretty-print-worker.js',
-    'source-map-worker.js',
-    'styles.css'
+    'source-map-worker.js'
 )
