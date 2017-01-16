@@ -1351,9 +1351,10 @@ nsStyleSet::ResolveStyleFor(Element* aElement,
 }
 
 already_AddRefed<nsStyleContext>
-nsStyleSet::ResolveStyleFor(Element* aElement,
-                            nsStyleContext* aParentContext,
-                            TreeMatchContext& aTreeMatchContext)
+nsStyleSet::ResolveStyleForInternal(Element* aElement,
+                                    nsStyleContext* aParentContext,
+                                    TreeMatchContext& aTreeMatchContext,
+                                    AnimationFlag aAnimationFlag)
 {
   NS_ENSURE_FALSE(mInShutdown, nullptr);
   NS_ASSERTION(aElement, "aElement must not be null");
@@ -1377,7 +1378,7 @@ nsStyleSet::ResolveStyleFor(Element* aElement,
     visitedRuleNode = ruleWalker.CurrentNode();
   }
 
-  uint32_t flags = eDoAnimation;
+  uint32_t flags = (aAnimationFlag == eWithAnimation) ? eDoAnimation : eNoFlags;
   if (nsCSSRuleProcessor::IsLink(aElement)) {
     flags |= eIsLink;
   }
@@ -1392,6 +1393,17 @@ nsStyleSet::ResolveStyleFor(Element* aElement,
   return GetContext(aParentContext, ruleNode, visitedRuleNode,
                     nullptr, CSSPseudoElementType::NotPseudo,
                     aElement, flags);
+}
+
+already_AddRefed<nsStyleContext>
+nsStyleSet::ResolveStyleFor(Element* aElement,
+                            nsStyleContext* aParentContext,
+                            TreeMatchContext& aTreeMatchContext)
+{
+  return ResolveStyleForInternal(aElement,
+                                 aParentContext,
+                                 aTreeMatchContext,
+                                 eWithAnimation);
 }
 
 already_AddRefed<nsStyleContext>
@@ -1748,9 +1760,9 @@ nsStyleSet::ResolveStyleWithReplacement(Element* aElement,
 }
 
 already_AddRefed<nsStyleContext>
-nsStyleSet::ResolveStyleWithoutAnimation(dom::Element* aTarget,
-                                         nsStyleContext* aStyleContext,
-                                         nsRestyleHint aWhichToRemove)
+nsStyleSet::ResolveStyleByRemovingAnimation(dom::Element* aTarget,
+                                            nsStyleContext* aStyleContext,
+                                            nsRestyleHint aWhichToRemove)
 {
 #ifdef DEBUG
   CSSPseudoElementType pseudoType = aStyleContext->GetPseudoType();
@@ -1771,6 +1783,34 @@ nsStyleSet::ResolveStyleWithoutAnimation(dom::Element* aTarget,
     ResolveStyleWithReplacement(aTarget, nullptr, aStyleContext->GetParent(),
                                 aStyleContext, aWhichToRemove,
                                 eSkipStartingAnimations);
+
+  restyleManager->SetSkipAnimationRules(oldSkipAnimationRules);
+
+  return result.forget();
+}
+
+already_AddRefed<nsStyleContext>
+nsStyleSet::ResolveStyleWithoutAnimation(Element* aTarget,
+                                         nsStyleContext* aParentContext)
+{
+  RestyleManager* restyleManager = PresContext()->RestyleManager()->AsGecko();
+
+  TreeMatchContext treeContext(true, nsRuleWalker::eRelevantLinkUnvisited,
+                               aTarget->OwnerDoc());
+  InitStyleScopes(treeContext, aTarget);
+
+  bool oldSkipAnimationRules = restyleManager->SkipAnimationRules();
+  restyleManager->SetSkipAnimationRules(true);
+
+  // Here we can call ResolveStyleForInternal() instead of
+  // ResolveStyleWithReplacement() since we don't need any animation rules
+  // (CSS Animations, Transitions and script animations). That's because
+  // EffectCompositor::GetAnimationRule() skips all of animations rules if
+  // SkipAnimationRules flag is true.
+  RefPtr<nsStyleContext> result = ResolveStyleForInternal(aTarget,
+                                                          aParentContext,
+                                                          treeContext,
+                                                          eWithoutAnimation);
 
   restyleManager->SetSkipAnimationRules(oldSkipAnimationRules);
 
