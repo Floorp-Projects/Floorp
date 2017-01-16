@@ -372,7 +372,7 @@ protected:
   EditorDOMPoint JoinNodesSmart(nsIContent& aNodeLeft,
                                 nsIContent& aNodeRight);
   Element* GetTopEnclosingMailCite(nsINode& aNode);
-  nsresult PopListItem(nsIContent& aListItem, bool* aOutOfList = nullptr);
+  nsresult PopListItem(nsIDOMNode* aListItem, bool* aOutOfList);
   nsresult RemoveListStructure(Element& aList);
   nsresult CacheInlineStyles(nsIDOMNode* aNode);
   nsresult ReapplyCachedStyles();
