@@ -13,13 +13,14 @@
 #include "./vp9_rtcd.h"
 #include "./vpx_dsp_rtcd.h"
 
+#include "vpx_dsp/vpx_dsp_common.h"
 #include "vpx_mem/vpx_mem.h"
+#include "vpx_ports/system_state.h"
 #include "vp9/encoder/vp9_segmentation.h"
 #include "vp9/encoder/vp9_mcomp.h"
 #include "vp9/common/vp9_blockd.h"
 #include "vp9/common/vp9_reconinter.h"
 #include "vp9/common/vp9_reconintra.h"
-#include "vp9/common/vp9_systemdependent.h"
 
 
 static unsigned int do_16x16_motion_iteration(VP9_COMP *cpi,
@@ -29,7 +30,8 @@ static unsigned int do_16x16_motion_iteration(VP9_COMP *cpi,
                                               int mb_col) {
   MACROBLOCK *const x = &cpi->td.mb;
   MACROBLOCKD *const xd = &x->e_mbd;
-  const MV_SPEED_FEATURES *const mv_sf = &cpi->sf.mv;
+  MV_SPEED_FEATURES *const mv_sf = &cpi->sf.mv;
+  const SEARCH_METHODS old_search_method = mv_sf->search_method;
   const vp9_variance_fn_ptr_t v_fn_ptr = cpi->fn_ptr[BLOCK_16X16];
 
   const int tmp_col_min = x->mv_col_min;
@@ -41,23 +43,24 @@ static unsigned int do_16x16_motion_iteration(VP9_COMP *cpi,
 
   // Further step/diamond searches as necessary
   int step_param = mv_sf->reduce_first_step_size;
-  step_param = MIN(step_param, MAX_MVSEARCH_STEPS - 2);
+  step_param = VPXMIN(step_param, MAX_MVSEARCH_STEPS - 2);
 
   vp9_set_mv_search_range(x, ref_mv);
 
   ref_full.col = ref_mv->col >> 3;
   ref_full.row = ref_mv->row >> 3;
 
-  /*cpi->sf.search_method == HEX*/
-  vp9_hex_search(x, &ref_full, step_param, x->errorperbit, 0,
-                 cond_cost_list(cpi, cost_list),
-                 &v_fn_ptr, 0, ref_mv, dst_mv);
+  mv_sf->search_method = HEX;
+  vp9_full_pixel_search(cpi, x, BLOCK_16X16, &ref_full, step_param,
+                        x->errorperbit, cond_cost_list(cpi, cost_list), ref_mv,
+                        dst_mv, 0, 0);
+  mv_sf->search_method = old_search_method;
 
   // Try sub-pixel MC
   // if (bestsme > error_thresh && bestsme < INT_MAX)
   {
-    int distortion;
-    unsigned int sse;
+    uint32_t distortion;
+    uint32_t sse;
     cpi->find_fractional_mv_step(
         x, dst_mv, ref_mv, cpi->common.allow_high_precision_mv, x->errorperbit,
         &v_fn_ptr, 0, mv_sf->subpel_iters_per_step,
@@ -66,8 +69,8 @@ static unsigned int do_16x16_motion_iteration(VP9_COMP *cpi,
         &distortion, &sse, NULL, 0, 0);
   }
 
-  xd->mi[0]->mbmi.mode = NEWMV;
-  xd->mi[0]->mbmi.mv[0].as_mv = *dst_mv;
+  xd->mi[0]->mode = NEWMV;
+  xd->mi[0]->mv[0].as_mv = *dst_mv;
 
   vp9_build_inter_predictors_sby(xd, mb_row, mb_col, BLOCK_16X16);
 
@@ -144,8 +147,8 @@ static int find_best_16x16_intra(VP9_COMP *cpi, PREDICTION_MODE *pbest_mode) {
   for (mode = DC_PRED; mode <= TM_PRED; mode++) {
     unsigned int err;
 
-    xd->mi[0]->mbmi.mode = mode;
-    vp9_predict_intra_block(xd, 0, 2, TX_16X16, mode,
+    xd->mi[0]->mode = mode;
+    vp9_predict_intra_block(xd, 2, TX_16X16, mode,
                             x->plane[0].src.buf, x->plane[0].src.stride,
                             xd->plane[0].dst.buf, xd->plane[0].dst.stride,
                             0, 0, 0);
@@ -240,20 +243,23 @@ static void update_mbgraph_frame_stats(VP9_COMP *cpi,
   int mb_y_offset = 0, arf_y_offset = 0, gld_y_offset = 0;
   MV gld_top_mv = {0, 0};
   MODE_INFO mi_local;
+  MODE_INFO mi_above, mi_left;
 
   vp9_zero(mi_local);
   // Set up limit values for motion vectors to prevent them extending outside
   // the UMV borders.
   x->mv_row_min     = -BORDER_MV_PIXELS_B16;
   x->mv_row_max     = (cm->mb_rows - 1) * 8 + BORDER_MV_PIXELS_B16;
-  xd->up_available  = 0;
+  // Signal to vp9_predict_intra_block() that above is not available
+  xd->above_mi = NULL;
+
   xd->plane[0].dst.stride  = buf->y_stride;
   xd->plane[0].pre[0].stride  = buf->y_stride;
   xd->plane[1].dst.stride = buf->uv_stride;
   xd->mi[0] = &mi_local;
-  mi_local.mbmi.sb_type = BLOCK_16X16;
-  mi_local.mbmi.ref_frame[0] = LAST_FRAME;
-  mi_local.mbmi.ref_frame[1] = NONE;
+  mi_local.sb_type = BLOCK_16X16;
+  mi_local.ref_frame[0] = LAST_FRAME;
+  mi_local.ref_frame[1] = NONE;
 
   for (mb_row = 0; mb_row < cm->mb_rows; mb_row++) {
     MV gld_left_mv = gld_top_mv;
@@ -265,7 +271,8 @@ static void update_mbgraph_frame_stats(VP9_COMP *cpi,
     // the UMV borders.
     x->mv_col_min      = -BORDER_MV_PIXELS_B16;
     x->mv_col_max      = (cm->mb_cols - 1) * 8 + BORDER_MV_PIXELS_B16;
-    xd->left_available = 0;
+    // Signal to vp9_predict_intra_block() that left is not available
+    xd->left_mi = NULL;
 
     for (mb_col = 0; mb_col < cm->mb_cols; mb_col++) {
       MBGRAPH_MB_STATS *mb_stats = &stats->mb_stats[offset + mb_col];
@@ -277,14 +284,19 @@ static void update_mbgraph_frame_stats(VP9_COMP *cpi,
       if (mb_col == 0) {
         gld_top_mv = gld_left_mv;
       }
-      xd->left_available = 1;
+      // Signal to vp9_predict_intra_block() that left is available
+      xd->left_mi = &mi_left;
+
       mb_y_in_offset    += 16;
       gld_y_in_offset   += 16;
       arf_y_in_offset   += 16;
       x->mv_col_min     -= 16;
       x->mv_col_max     -= 16;
     }
-    xd->up_available = 1;
+
+    // Signal to vp9_predict_intra_block() that above is available
+    xd->above_mi = &mi_above;
+
     mb_y_offset     += buf->y_stride * 16;
     gld_y_offset    += golden_ref->y_stride * 16;
     if (alt_ref)
@@ -410,7 +422,7 @@ void vp9_update_mbgraph_stats(VP9_COMP *cpi) {
                                golden_ref, cpi->Source);
   }
 
-  vp9_clear_system_state();
+  vpx_clear_system_state();
 
   separate_arf_mbs(cpi);
 }

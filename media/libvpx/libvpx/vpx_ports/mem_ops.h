@@ -89,7 +89,7 @@ static unsigned MEM_VALUE_T mem_get_be32(const void *vmem) {
   unsigned MEM_VALUE_T  val;
   const MAU_T          *mem = (const MAU_T *)vmem;
 
-  val = mem[0] << 24;
+  val = ((unsigned MEM_VALUE_T)mem[0]) << 24;
   val |= mem[1] << 16;
   val |= mem[2] << 8;
   val |= mem[3];
@@ -125,7 +125,7 @@ static unsigned MEM_VALUE_T mem_get_le32(const void *vmem) {
   unsigned MEM_VALUE_T  val;
   const MAU_T          *mem = (const MAU_T *)vmem;
 
-  val = mem[3] << 24;
+  val = ((unsigned MEM_VALUE_T)mem[3]) << 24;
   val |= mem[2] << 16;
   val |= mem[1] << 8;
   val |= mem[0];
@@ -168,8 +168,8 @@ mem_get_s_generic(le, 32)
 static VPX_INLINE void mem_put_be16(void *vmem, MEM_VALUE_T val) {
   MAU_T *mem = (MAU_T *)vmem;
 
-  mem[0] = (val >> 8) & 0xff;
-  mem[1] = (val >> 0) & 0xff;
+  mem[0] = (MAU_T)((val >> 8) & 0xff);
+  mem[1] = (MAU_T)((val >> 0) & 0xff);
 }
 
 #undef  mem_put_be24
@@ -177,9 +177,9 @@ static VPX_INLINE void mem_put_be16(void *vmem, MEM_VALUE_T val) {
 static VPX_INLINE void mem_put_be24(void *vmem, MEM_VALUE_T val) {
   MAU_T *mem = (MAU_T *)vmem;
 
-  mem[0] = (val >> 16) & 0xff;
-  mem[1] = (val >>  8) & 0xff;
-  mem[2] = (val >>  0) & 0xff;
+  mem[0] = (MAU_T)((val >> 16) & 0xff);
+  mem[1] = (MAU_T)((val >>  8) & 0xff);
+  mem[2] = (MAU_T)((val >>  0) & 0xff);
 }
 
 #undef  mem_put_be32
@@ -187,10 +187,10 @@ static VPX_INLINE void mem_put_be24(void *vmem, MEM_VALUE_T val) {
 static VPX_INLINE void mem_put_be32(void *vmem, MEM_VALUE_T val) {
   MAU_T *mem = (MAU_T *)vmem;
 
-  mem[0] = (val >> 24) & 0xff;
-  mem[1] = (val >> 16) & 0xff;
-  mem[2] = (val >>  8) & 0xff;
-  mem[3] = (val >>  0) & 0xff;
+  mem[0] = (MAU_T)((val >> 24) & 0xff);
+  mem[1] = (MAU_T)((val >> 16) & 0xff);
+  mem[2] = (MAU_T)((val >>  8) & 0xff);
+  mem[3] = (MAU_T)((val >>  0) & 0xff);
 }
 
 #undef  mem_put_le16
@@ -198,8 +198,8 @@ static VPX_INLINE void mem_put_be32(void *vmem, MEM_VALUE_T val) {
 static VPX_INLINE void mem_put_le16(void *vmem, MEM_VALUE_T val) {
   MAU_T *mem = (MAU_T *)vmem;
 
-  mem[0] = (val >>  0) & 0xff;
-  mem[1] = (val >>  8) & 0xff;
+  mem[0] = (MAU_T)((val >> 0) & 0xff);
+  mem[1] = (MAU_T)((val >> 8) & 0xff);
 }
 
 #undef  mem_put_le24
@@ -207,9 +207,9 @@ static VPX_INLINE void mem_put_le16(void *vmem, MEM_VALUE_T val) {
 static VPX_INLINE void mem_put_le24(void *vmem, MEM_VALUE_T val) {
   MAU_T *mem = (MAU_T *)vmem;
 
-  mem[0] = (val >>  0) & 0xff;
-  mem[1] = (val >>  8) & 0xff;
-  mem[2] = (val >> 16) & 0xff;
+  mem[0] = (MAU_T)((val >>  0) & 0xff);
+  mem[1] = (MAU_T)((val >>  8) & 0xff);
+  mem[2] = (MAU_T)((val >> 16) & 0xff);
 }
 
 #undef  mem_put_le32
@@ -217,10 +217,10 @@ static VPX_INLINE void mem_put_le24(void *vmem, MEM_VALUE_T val) {
 static VPX_INLINE void mem_put_le32(void *vmem, MEM_VALUE_T val) {
   MAU_T *mem = (MAU_T *)vmem;
 
-  mem[0] = (val >>  0) & 0xff;
-  mem[1] = (val >>  8) & 0xff;
-  mem[2] = (val >> 16) & 0xff;
-  mem[3] = (val >> 24) & 0xff;
+  mem[0] = (MAU_T)((val >>  0) & 0xff);
+  mem[1] = (MAU_T)((val >>  8) & 0xff);
+  mem[2] = (MAU_T)((val >> 16) & 0xff);
+  mem[3] = (MAU_T)((val >> 24) & 0xff);
 }
 
 #endif  // VPX_PORTS_MEM_OPS_H_

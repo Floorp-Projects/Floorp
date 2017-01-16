@@ -23,7 +23,7 @@ static void fix_framerate(int *num, int *den) {
   // we can guess the framerate using only the timebase in this
   // case. Other files would require reading ahead to guess the
   // timebase, like we do for webm.
-  if (*num < 1000) {
+  if (*den > 0 && *den < 1000000000 && *num > 0 && *num < 1000) {
     // Correct for the factor of 2 applied to the timebase in the encoder.
     if (*num & 1)
       *den *= 2;

@@ -24,6 +24,11 @@ extern "C" {
 // Bits Per MB at different Q (Multiplied by 512)
 #define BPER_MB_NORMBITS    9
 
+#define MIN_GF_INTERVAL     4
+#define MAX_GF_INTERVAL     16
+#define FIXED_GF_INTERVAL   8    // Used in some testing modes only
+#define ONEHALFONLY_RESIZE  0
+
 typedef enum {
   INTER_NORMAL = 0,
   INTER_HIGH = 1,
@@ -39,6 +44,20 @@ typedef enum {
   SCALE_STEP1 = 1,  // First-level down-scaling.
   FRAME_SCALE_STEPS
 } FRAME_SCALE_LEVEL;
+
+typedef enum {
+  NO_RESIZE = 0,
+  DOWN_THREEFOUR = 1,  // From orig to 3/4.
+  DOWN_ONEHALF = 2,    // From orig or 3/4 to 1/2.
+  UP_THREEFOUR = -1,   // From 1/2 to 3/4.
+  UP_ORIG = -2,        // From 1/2 or 3/4 to orig.
+} RESIZE_ACTION;
+
+typedef enum {
+  ORIG = 0,
+  THREE_QUARTER = 1,
+  ONE_HALF = 2
+} RESIZE_STATE;
 
 // Frame dimensions multiplier wrt the native frame size, in 1/16ths,
 // specified for the scale-up case.
@@ -139,6 +158,11 @@ typedef struct {
   int frame_width[FRAME_SCALE_STEPS];
   int frame_height[FRAME_SCALE_STEPS];
   int rf_level_maxq[RATE_FACTOR_LEVELS];
+
+  uint64_t avg_source_sad;
+  int high_source_sad;
+  int count_last_scene_change;
+  int avg_frame_low_motion;
 } RATE_CONTROL;
 
 struct VP9_COMP;
@@ -154,6 +178,12 @@ int vp9_estimate_bits_at_q(FRAME_TYPE frame_kind, int q, int mbs,
 double vp9_convert_qindex_to_q(int qindex, vpx_bit_depth_t bit_depth);
 
 void vp9_rc_init_minq_luts(void);
+
+int vp9_rc_get_default_min_gf_interval(int width, int height, double framerate);
+// Note vp9_rc_get_default_max_gf_interval() requires the min_gf_interval to
+// be passed in to ensure that the max_gf_interval returned is at least as bis
+// as that.
+int vp9_rc_get_default_max_gf_interval(double framerate, int min_frame_rate);
 
 // Generally at the high level, the following flow is expected
 // to be enforced for rate control:
@@ -244,6 +274,12 @@ void vp9_rc_set_gf_interval_range(const struct VP9_COMP *const cpi,
                                   RATE_CONTROL *const rc);
 
 void vp9_set_target_rate(struct VP9_COMP *cpi);
+
+int vp9_resize_one_pass_cbr(struct VP9_COMP *cpi);
+
+void vp9_avg_source_sad(struct VP9_COMP *cpi);
+
+int vp9_encodedframe_overshoot(struct VP9_COMP *cpi, int frame_size, int *q);
 
 #ifdef __cplusplus
 }  // extern "C"

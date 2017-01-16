@@ -251,7 +251,5 @@ const libvpx_test::VP9CodecFactory kVP9;
 #define VP9_INSTANTIATE_TEST_CASE(test, ...)
 #endif  // CONFIG_VP9
 
-
 }  // namespace libvpx_test
-
 #endif  // TEST_CODEC_FACTORY_H_

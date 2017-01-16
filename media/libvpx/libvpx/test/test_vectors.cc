@@ -52,6 +52,31 @@ const char *const kVP8TestVectors[] = {
 const int kNumVP8TestVectors = NELEMENTS(kVP8TestVectors);
 #endif  // CONFIG_VP8_DECODER
 #if CONFIG_VP9_DECODER
+#define RESIZE_TEST_VECTORS "vp90-2-21-resize_inter_320x180_5_1-2.webm", \
+  "vp90-2-21-resize_inter_320x180_5_3-4.webm", \
+  "vp90-2-21-resize_inter_320x180_7_1-2.webm", \
+  "vp90-2-21-resize_inter_320x180_7_3-4.webm", \
+  "vp90-2-21-resize_inter_320x240_5_1-2.webm", \
+  "vp90-2-21-resize_inter_320x240_5_3-4.webm", \
+  "vp90-2-21-resize_inter_320x240_7_1-2.webm", \
+  "vp90-2-21-resize_inter_320x240_7_3-4.webm", \
+  "vp90-2-21-resize_inter_640x360_5_1-2.webm", \
+  "vp90-2-21-resize_inter_640x360_5_3-4.webm", \
+  "vp90-2-21-resize_inter_640x360_7_1-2.webm", \
+  "vp90-2-21-resize_inter_640x360_7_3-4.webm", \
+  "vp90-2-21-resize_inter_640x480_5_1-2.webm", \
+  "vp90-2-21-resize_inter_640x480_5_3-4.webm", \
+  "vp90-2-21-resize_inter_640x480_7_1-2.webm", \
+  "vp90-2-21-resize_inter_640x480_7_3-4.webm", \
+  "vp90-2-21-resize_inter_1280x720_5_1-2.webm", \
+  "vp90-2-21-resize_inter_1280x720_5_3-4.webm", \
+  "vp90-2-21-resize_inter_1280x720_7_1-2.webm", \
+  "vp90-2-21-resize_inter_1280x720_7_3-4.webm", \
+  "vp90-2-21-resize_inter_1920x1080_5_1-2.webm", \
+  "vp90-2-21-resize_inter_1920x1080_5_3-4.webm", \
+  "vp90-2-21-resize_inter_1920x1080_7_1-2.webm", \
+  "vp90-2-21-resize_inter_1920x1080_7_3-4.webm",
+
 const char *const kVP9TestVectors[] = {
   "vp90-2-00-quantizer-00.webm", "vp90-2-00-quantizer-01.webm",
   "vp90-2-00-quantizer-02.webm", "vp90-2-00-quantizer-03.webm",
@@ -120,7 +145,10 @@ const char *const kVP9TestVectors[] = {
   "vp90-2-02-size-66x10.webm", "vp90-2-02-size-66x16.webm",
   "vp90-2-02-size-66x18.webm", "vp90-2-02-size-66x32.webm",
   "vp90-2-02-size-66x34.webm", "vp90-2-02-size-66x64.webm",
-  "vp90-2-02-size-66x66.webm", "vp90-2-03-size-196x196.webm",
+  "vp90-2-02-size-66x66.webm", "vp90-2-02-size-130x132.webm",
+  "vp90-2-02-size-132x130.webm", "vp90-2-02-size-132x132.webm",
+  "vp90-2-02-size-178x180.webm", "vp90-2-02-size-180x178.webm",
+  "vp90-2-02-size-180x180.webm", "vp90-2-03-size-196x196.webm",
   "vp90-2-03-size-196x198.webm", "vp90-2-03-size-196x200.webm",
   "vp90-2-03-size-196x202.webm", "vp90-2-03-size-196x208.webm",
   "vp90-2-03-size-196x210.webm", "vp90-2-03-size-196x224.webm",
@@ -152,7 +180,8 @@ const char *const kVP9TestVectors[] = {
   "vp90-2-03-size-226x198.webm", "vp90-2-03-size-226x200.webm",
   "vp90-2-03-size-226x202.webm", "vp90-2-03-size-226x208.webm",
   "vp90-2-03-size-226x210.webm", "vp90-2-03-size-226x224.webm",
-  "vp90-2-03-size-226x226.webm", "vp90-2-03-deltaq.webm",
+  "vp90-2-03-size-226x226.webm", "vp90-2-03-size-352x288.webm",
+  "vp90-2-03-deltaq.webm",
   "vp90-2-05-resize.ivf", "vp90-2-06-bilinear.webm",
   "vp90-2-07-frame_parallel.webm", "vp90-2-08-tile_1x2_frame_parallel.webm",
   "vp90-2-08-tile_1x2.webm", "vp90-2-08-tile_1x4_frame_parallel.webm",
@@ -182,6 +211,20 @@ const char *const kVP9TestVectors[] = {
   "vp90-2-14-resize-fp-tiles-4-2.webm", "vp90-2-14-resize-fp-tiles-4-8.webm",
   "vp90-2-14-resize-fp-tiles-8-16.webm", "vp90-2-14-resize-fp-tiles-8-1.webm",
   "vp90-2-14-resize-fp-tiles-8-2.webm", "vp90-2-14-resize-fp-tiles-8-4.webm",
+  "vp90-2-14-resize-10frames-fp-tiles-1-2-4-8.webm",
+  "vp90-2-14-resize-10frames-fp-tiles-1-2.webm",
+  "vp90-2-14-resize-10frames-fp-tiles-1-4.webm",
+  "vp90-2-14-resize-10frames-fp-tiles-1-8.webm",
+  "vp90-2-14-resize-10frames-fp-tiles-2-1.webm",
+  "vp90-2-14-resize-10frames-fp-tiles-2-4.webm",
+  "vp90-2-14-resize-10frames-fp-tiles-2-8.webm",
+  "vp90-2-14-resize-10frames-fp-tiles-4-1.webm",
+  "vp90-2-14-resize-10frames-fp-tiles-4-2.webm",
+  "vp90-2-14-resize-10frames-fp-tiles-4-8.webm",
+  "vp90-2-14-resize-10frames-fp-tiles-8-1.webm",
+  "vp90-2-14-resize-10frames-fp-tiles-8-2.webm",
+  "vp90-2-14-resize-10frames-fp-tiles-8-4-2-1.webm",
+  "vp90-2-14-resize-10frames-fp-tiles-8-4.webm",
   "vp90-2-15-segkey.webm", "vp90-2-15-segkey_adpq.webm",
   "vp90-2-16-intra-only.webm", "vp90-2-17-show-existing-frame.webm",
   "vp90-2-18-resize.ivf", "vp90-2-19-skip.webm",
@@ -193,10 +236,16 @@ const char *const kVP9TestVectors[] = {
   "vp93-2-20-10bit-yuv422.webm", "vp93-2-20-12bit-yuv422.webm",
   "vp93-2-20-10bit-yuv440.webm", "vp93-2-20-12bit-yuv440.webm",
   "vp93-2-20-10bit-yuv444.webm", "vp93-2-20-12bit-yuv444.webm",
-#endif  // CONFIG_VP9_HIGHBITDEPTH`
+#endif  // CONFIG_VP9_HIGHBITDEPTH
   "vp90-2-20-big_superframe-01.webm", "vp90-2-20-big_superframe-02.webm",
+  RESIZE_TEST_VECTORS
 };
 const int kNumVP9TestVectors = NELEMENTS(kVP9TestVectors);
+const char *const kVP9TestVectorsResize[] = {
+  RESIZE_TEST_VECTORS
+};
+const int kNumVP9TestVectorsResize = NELEMENTS(kVP9TestVectorsResize);
+#undef RESIZE_TEST_VECTORS
 #endif  // CONFIG_VP9_DECODER
 
 }  // namespace libvpx_test

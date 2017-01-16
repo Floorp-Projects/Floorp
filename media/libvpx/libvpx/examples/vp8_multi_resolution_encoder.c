@@ -29,13 +29,6 @@
 #include <math.h>
 #include <assert.h>
 #include <sys/time.h>
-#if USE_POSIX_MMAP
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <unistd.h>
-#endif
 #include "vpx_ports/vpx_timer.h"
 #include "vpx/vpx_encoder.h"
 #include "vpx/vp8cx.h"
@@ -354,8 +347,7 @@ int main(int argc, char **argv)
     double               psnr_totals[NUM_ENCODERS][4] = {{0,0}};
     int                  psnr_count[NUM_ENCODERS] = {0};
 
-    double               cx_time = 0;
-    struct  timeval      tv1, tv2, difftv;
+    int64_t              cx_time = 0;
 
     /* Set the required target bitrates for each resolution level.
      * If target bitrate for highest-resolution level is set to 0,
@@ -589,6 +581,7 @@ int main(int argc, char **argv)
 
     while(frame_avail || got_data)
     {
+        struct vpx_usec_timer timer;
         vpx_codec_iter_t iter[NUM_ENCODERS]={NULL};
         const vpx_codec_cx_pkt_t *pkt[NUM_ENCODERS];
 
@@ -643,18 +636,18 @@ int main(int argc, char **argv)
             vpx_codec_control(&codec[i], VP8E_SET_TEMPORAL_LAYER_ID, layer_id);
         }
 
-        gettimeofday(&tv1, NULL);
         /* Encode each frame at multi-levels */
         /* Note the flags must be set to 0 in the encode call if they are set
            for each frame with the vpx_codec_control(), as done above. */
+        vpx_usec_timer_start(&timer);
         if(vpx_codec_encode(&codec[0], frame_avail? &raw[0] : NULL,
             frame_cnt, 1, 0, arg_deadline))
         {
             die_codec(&codec[0], "Failed to encode frame");
         }
-        gettimeofday(&tv2, NULL);
-        timersub(&tv2, &tv1, &difftv);
-        cx_time += (double)(difftv.tv_sec * 1000000 + difftv.tv_usec);
+        vpx_usec_timer_mark(&timer);
+        cx_time += vpx_usec_timer_elapsed(&timer);
+
         for (i=NUM_ENCODERS-1; i>=0 ; i--)
         {
             got_data = 0;
@@ -693,8 +686,10 @@ int main(int argc, char **argv)
         frame_cnt++;
     }
     printf("\n");
-    printf("FPS for encoding %d %f %f \n", frame_cnt, (float)cx_time / 1000000,
-           1000000 * (double)frame_cnt / (double)cx_time);
+    printf("Frame cnt and encoding time/FPS stats for encoding: %d %f %f \n",
+            frame_cnt,
+            1000 * (float)cx_time / (double)(frame_cnt * 1000000),
+            1000000 * (double)frame_cnt / (double)cx_time);
 
     fclose(infile);
 

@@ -12,6 +12,8 @@
 #ifndef VP8_COMMON_THREADING_H_
 #define VP8_COMMON_THREADING_H_
 
+#include "./vpx_config.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -19,17 +21,15 @@ extern "C" {
 #if CONFIG_OS_SUPPORT && CONFIG_MULTITHREAD
 
 /* Thread management macros */
-#ifdef _WIN32
+#if defined(_WIN32) && !HAVE_PTHREAD_H
 /* Win32 */
 #include <process.h>
 #include <windows.h>
-#define THREAD_FUNCTION DWORD WINAPI
+#define THREAD_FUNCTION unsigned int __stdcall
 #define THREAD_FUNCTION_RETURN DWORD
 #define THREAD_SPECIFIC_INDEX DWORD
 #define pthread_t HANDLE
 #define pthread_attr_t DWORD
-#define pthread_create(thhandle,attr,thfunc,tharg) (int)((*thhandle=(HANDLE)_beginthreadex(NULL,0,(unsigned int (__stdcall *)(void *))thfunc,tharg,0,NULL))==NULL)
-#define pthread_join(thread, result) ((WaitForSingleObject((thread),INFINITE)!=WAIT_OBJECT_0) || !CloseHandle(thread))
 #define pthread_detach(thread) if(thread!=NULL)CloseHandle(thread)
 #define thread_sleep(nms) Sleep(nms)
 #define pthread_cancel(thread) terminate_thread(thread,0)
@@ -44,14 +44,11 @@ extern "C" {
 #include <os2.h>
 
 #include <stdlib.h>
-#define THREAD_FUNCTION void
-#define THREAD_FUNCTION_RETURN void
+#define THREAD_FUNCTION void *
+#define THREAD_FUNCTION_RETURN void *
 #define THREAD_SPECIFIC_INDEX PULONG
 #define pthread_t TID
 #define pthread_attr_t ULONG
-#define pthread_create(thhandle,attr,thfunc,tharg) \
-    ((int)((*(thhandle)=_beginthread(thfunc,NULL,1024*1024,tharg))==-1))
-#define pthread_join(thread, result) ((int)DosWaitThread(&(thread),0))
 #define pthread_detach(thread) 0
 #define thread_sleep(nms) DosSleep(nms)
 #define pthread_cancel(thread) DosKillThread(thread)
@@ -81,8 +78,8 @@ extern "C" {
 #define ts_key_create(ts_key, destructor) pthread_key_create (&(ts_key), destructor);
 #endif
 
-/* Syncrhronization macros: Win32 and Pthreads */
-#ifdef _WIN32
+/* Synchronization macros: Win32 and Pthreads */
+#if defined(_WIN32) && !HAVE_PTHREAD_H
 #define sem_t HANDLE
 #define pause(voidpara) __asm PAUSE
 #define sem_init(sem, sem_attr1, sem_init_value) (int)((*sem = CreateSemaphore(NULL,0,32768,NULL))==NULL)
@@ -184,6 +181,47 @@ static inline int sem_destroy(sem_t * sem)
 #else
 #define x86_pause_hint()
 #endif
+
+#include "vpx_util/vpx_thread.h"
+
+static INLINE void mutex_lock(pthread_mutex_t *const mutex) {
+    const int kMaxTryLocks = 4000;
+    int locked = 0;
+    int i;
+
+    for (i = 0; i < kMaxTryLocks; ++i) {
+        if (!pthread_mutex_trylock(mutex)) {
+            locked = 1;
+            break;
+        }
+    }
+
+    if (!locked)
+        pthread_mutex_lock(mutex);
+}
+
+static INLINE int protected_read(pthread_mutex_t *const mutex, const int *p) {
+    int ret;
+    mutex_lock(mutex);
+    ret = *p;
+    pthread_mutex_unlock(mutex);
+    return ret;
+}
+
+static INLINE void sync_read(pthread_mutex_t *const mutex, int mb_col,
+                             const int *last_row_current_mb_col,
+                             const int nsync) {
+    while (mb_col > (protected_read(mutex, last_row_current_mb_col) - nsync)) {
+        x86_pause_hint();
+        thread_sleep(0);
+    }
+}
+
+static INLINE void protected_write(pthread_mutex_t *mutex, int *p, int v) {
+    mutex_lock(mutex);
+    *p = v;
+    pthread_mutex_unlock(mutex);
+}
 
 #endif /* CONFIG_OS_SUPPORT && CONFIG_MULTITHREAD */
 

@@ -13,7 +13,7 @@
 #define VP9_ENCODER_VP9_MCOMP_H_
 
 #include "vp9/encoder/vp9_block.h"
-#include "vp9/encoder/vp9_variance.h"
+#include "vpx_dsp/variance.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,16 +31,12 @@ extern "C" {
 // for Block_16x16
 #define BORDER_MV_PIXELS_B16 (16 + VP9_INTERP_EXTEND)
 
-// motion search site
-typedef struct search_site {
-  MV mv;
-  int offset;
-} search_site;
-
 typedef struct search_site_config {
-  search_site ss[8 * MAX_MVSEARCH_STEPS + 1];
-  int ss_count;
+  // motion search sites
+  MV  ss_mv[8 * MAX_MVSEARCH_STEPS];        // Motion vector
+  intptr_t ss_os[8 * MAX_MVSEARCH_STEPS];   // Offset
   int searches_per_step;
+  int total_steps;
 } search_site_config;
 
 void vp9_init_dsmotion_compensation(search_site_config *cfg, int stride);
@@ -72,39 +68,13 @@ int vp9_refining_search_sad(const struct macroblock *x,
                             const struct vp9_variance_vtable *fn_ptr,
                             const struct mv *center_mv);
 
-// Runs sequence of diamond searches in smaller steps for RD.
-int vp9_full_pixel_diamond(const struct VP9_COMP *cpi, MACROBLOCK *x,
-                           MV *mvp_full, int step_param,
-                           int sadpb, int further_steps, int do_refine,
-                           int *cost_list,
-                           const vp9_variance_fn_ptr_t *fn_ptr,
-                           const MV *ref_mv, MV *dst_mv);
-
 // Perform integral projection based motion estimation.
 unsigned int vp9_int_pro_motion_estimation(const struct VP9_COMP *cpi,
                                            MACROBLOCK *x,
                                            BLOCK_SIZE bsize,
                                            int mi_row, int mi_col);
 
-typedef int (integer_mv_pattern_search_fn) (
-    const MACROBLOCK *x,
-    MV *ref_mv,
-    int search_param,
-    int error_per_bit,
-    int do_init_search,
-    int *cost_list,
-    const vp9_variance_fn_ptr_t *vf,
-    int use_mvcost,
-    const MV *center_mv,
-    MV *best_mv);
-
-integer_mv_pattern_search_fn vp9_hex_search;
-integer_mv_pattern_search_fn vp9_bigdia_search;
-integer_mv_pattern_search_fn vp9_square_search;
-integer_mv_pattern_search_fn vp9_fast_hex_search;
-integer_mv_pattern_search_fn vp9_fast_dia_search;
-
-typedef int (fractional_mv_step_fp) (
+typedef uint32_t (fractional_mv_step_fp) (
     const MACROBLOCK *x,
     MV *bestmv, const MV *ref_mv,
     int allow_hp,
@@ -114,7 +84,7 @@ typedef int (fractional_mv_step_fp) (
     int iters_per_step,
     int *cost_list,
     int *mvjcost, int *mvcost[2],
-    int *distortion, unsigned int *sse1,
+    uint32_t *distortion, uint32_t *sse1,
     const uint8_t *second_pred,
     int w, int h);
 
@@ -122,6 +92,7 @@ extern fractional_mv_step_fp vp9_find_best_sub_pixel_tree;
 extern fractional_mv_step_fp vp9_find_best_sub_pixel_tree_pruned;
 extern fractional_mv_step_fp vp9_find_best_sub_pixel_tree_pruned_more;
 extern fractional_mv_step_fp vp9_find_best_sub_pixel_tree_pruned_evenmore;
+extern fractional_mv_step_fp vp9_skip_sub_pixel_tree;
 
 typedef int (*vp9_full_search_fn_t)(const MACROBLOCK *x,
                                     const MV *ref_mv, int sad_per_bit,

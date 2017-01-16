@@ -13,7 +13,7 @@
 #define VP8_ENCODER_MCOMP_H_
 
 #include "block.h"
-#include "vp8/common/variance.h"
+#include "vpx_dsp/variance.h"
 
 #ifdef __cplusplus
 extern "C" {

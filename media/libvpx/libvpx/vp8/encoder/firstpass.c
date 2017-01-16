@@ -16,8 +16,9 @@
 #include "./vpx_scale_rtcd.h"
 #include "block.h"
 #include "onyx_int.h"
-#include "vp8/common/variance.h"
+#include "vpx_dsp/variance.h"
 #include "encodeintra.h"
+#include "vp8/common/common.h"
 #include "vp8/common/setupintrarecon.h"
 #include "vp8/common/systemdependent.h"
 #include "mcomp.h"
@@ -2417,13 +2418,15 @@ void vp8_second_pass(VP8_COMP *cpi)
     int tmp_q;
     int frames_left = (int)(cpi->twopass.total_stats.count - cpi->common.current_video_frame);
 
-    FIRSTPASS_STATS this_frame = {0};
+    FIRSTPASS_STATS this_frame;
     FIRSTPASS_STATS this_frame_copy;
 
     double this_frame_intra_error;
     double this_frame_coded_error;
 
     int overhead_bits;
+
+    vp8_zero(this_frame);
 
     if (!cpi->twopass.stats_in)
     {
@@ -2808,7 +2811,8 @@ static void find_next_key_frame(VP8_COMP *cpi, FIRSTPASS_STATS *this_frame)
              * static scene.
              */
             if ( detect_transition_to_still( cpi, i,
-                                             (cpi->key_frame_frequency-i),
+                                             ((int)(cpi->key_frame_frequency) -
+                                              (int)i),
                                              loop_decay_rate,
                                              decay_accumulator ) )
             {

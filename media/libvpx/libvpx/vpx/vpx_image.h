@@ -28,7 +28,7 @@ extern "C" {
    * types, removing or reassigning enums, adding/removing/rearranging
    * fields to structures
    */
-#define VPX_IMAGE_ABI_VERSION (3) /**<\hideinitializer*/
+#define VPX_IMAGE_ABI_VERSION (4) /**<\hideinitializer*/
 
 
 #define VPX_IMG_FMT_PLANAR     0x100  /**< Image is a planar format. */
@@ -78,10 +78,17 @@ extern "C" {
     VPX_CS_SRGB       = 7   /**< sRGB */
   } vpx_color_space_t; /**< alias for enum vpx_color_space */
 
+  /*!\brief List of supported color range */
+  typedef enum vpx_color_range {
+    VPX_CR_STUDIO_RANGE = 0,    /**< Y [16..235], UV [16..240] */
+    VPX_CR_FULL_RANGE   = 1     /**< YUV/RGB [0..255] */
+  } vpx_color_range_t; /**< alias for enum vpx_color_range */
+
   /**\brief Image Descriptor */
   typedef struct vpx_image {
     vpx_img_fmt_t fmt; /**< Image Format */
     vpx_color_space_t cs; /**< Color Space */
+    vpx_color_range_t range; /**< Color Range */
 
     /* Image storage dimensions */
     unsigned int  w;           /**< Stored image width */
@@ -91,6 +98,10 @@ extern "C" {
     /* Image display dimensions */
     unsigned int  d_w;   /**< Displayed image width */
     unsigned int  d_h;   /**< Displayed image height */
+
+    /* Image intended rendering dimensions */
+    unsigned int  r_w;   /**< Intended rendering image width */
+    unsigned int  r_h;   /**< Intended rendering image height */
 
     /* Chroma subsampling info */
     unsigned int  x_chroma_shift;   /**< subsampling order, X */

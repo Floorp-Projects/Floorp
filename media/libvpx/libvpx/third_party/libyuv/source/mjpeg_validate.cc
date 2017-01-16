@@ -23,7 +23,7 @@ extern "C" {
 #ifdef ENABLE_SCASB
 
 // Multiple of 1.
-__declspec(naked) __declspec(align(16))
+__declspec(naked)
 const uint8* ScanRow_ERMS(const uint8* src, uint32 val, int count) {
   __asm {
     mov        edx, edi

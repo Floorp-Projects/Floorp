@@ -42,7 +42,7 @@ static INLINE const scan_order *get_scan(const MACROBLOCKD *xd, TX_SIZE tx_size,
                                          PLANE_TYPE type, int block_idx) {
   const MODE_INFO *const mi = xd->mi[0];
 
-  if (is_inter_block(&mi->mbmi) || type != PLANE_TYPE_Y || xd->lossless) {
+  if (is_inter_block(mi) || type != PLANE_TYPE_Y || xd->lossless) {
     return &vp9_default_scan_orders[tx_size];
   } else {
     const PREDICTION_MODE mode = get_y_mode(mi, block_idx);

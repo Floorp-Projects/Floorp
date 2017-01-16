@@ -11,8 +11,10 @@
 
 PORTS_SRCS-yes += vpx_ports.mk
 
+PORTS_SRCS-yes += bitops.h
 PORTS_SRCS-yes += mem.h
 PORTS_SRCS-yes += msvc.h
+PORTS_SRCS-yes += system_state.h
 PORTS_SRCS-yes += vpx_timer.h
 
 ifeq ($(ARCH_X86)$(ARCH_X86_64),yes)

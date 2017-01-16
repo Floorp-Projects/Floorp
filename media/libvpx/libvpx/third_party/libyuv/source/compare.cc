@@ -37,7 +37,7 @@ uint32 HashDjb2_C(const uint8* src, int count, uint32 seed);
 #define HAS_HASHDJB2_SSE41
 uint32 HashDjb2_SSE41(const uint8* src, int count, uint32 seed);
 
-#if _MSC_VER >= 1700
+#ifdef VISUALC_HAS_AVX2
 #define HAS_HASHDJB2_AVX2
 uint32 HashDjb2_AVX2(const uint8* src, int count, uint32 seed);
 #endif
@@ -138,8 +138,8 @@ uint32 SumSquareError_NEON(const uint8* src_a, const uint8* src_b, int count);
 #define HAS_SUMSQUAREERROR_SSE2
 uint32 SumSquareError_SSE2(const uint8* src_a, const uint8* src_b, int count);
 #endif
-// Visual C 2012 required for AVX2.
-#if !defined(LIBYUV_DISABLE_X86) && defined(_M_IX86) && _MSC_VER >= 1700
+
+#ifdef VISUALC_HAS_AVX2
 #define HAS_SUMSQUAREERROR_AVX2
 uint32 SumSquareError_AVX2(const uint8* src_a, const uint8* src_b, int count);
 #endif

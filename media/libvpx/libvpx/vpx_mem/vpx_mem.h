@@ -30,7 +30,7 @@ extern "C" {
   void *vpx_realloc(void *memblk, size_t size);
   void vpx_free(void *memblk);
 
-#if CONFIG_VP9 && CONFIG_VP9_HIGHBITDEPTH
+#if CONFIG_VP9_HIGHBITDEPTH
   void *vpx_memset16(void *dest, int val, size_t length);
 #endif
 

@@ -18,8 +18,8 @@
 extern "C" {
 #endif
 
-#define SUM_DIFF_THRESHOLD (16 * 16 * 2)
-#define SUM_DIFF_THRESHOLD_HIGH (600)  // ~(16 * 16 * 1.5)
+#define SUM_DIFF_THRESHOLD 512
+#define SUM_DIFF_THRESHOLD_HIGH 600
 #define MOTION_MAGNITUDE_THRESHOLD (8*3)
 
 #define SUM_DIFF_THRESHOLD_UV (96)   // (8 * 8 * 1.5)
@@ -108,7 +108,8 @@ void vp8_denoiser_denoise_mb(VP8_DENOISER *denoiser,
                              loop_filter_info_n *lfi_n,
                              int mb_row,
                              int mb_col,
-                             int block_index);
+                             int block_index,
+                             int consec_zero_last);
 
 #ifdef __cplusplus
 }  // extern "C"

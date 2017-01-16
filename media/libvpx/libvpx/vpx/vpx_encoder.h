@@ -150,7 +150,7 @@ extern "C" {
   partitions can be decoded even
   though earlier partitions have
   been lost. Note that intra
-  predicition is still done over
+  prediction is still done over
   the partition boundary. */
 
   /*!\brief Encoder output packet variants
