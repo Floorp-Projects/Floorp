@@ -121,7 +121,14 @@ GetScalarsSnapshot(bool aKeyed, JSContext* aCx, JS::MutableHandle<JS::Value> aRe
   ASSERT_EQ(rv, NS_OK) << "Creating a snapshot of the data must not fail.";
   ASSERT_TRUE(scalarsSnapshot.isObject()) << "The snapshot must be an object.";
 
-  aResult.set(scalarsSnapshot);
+  // We currently only support scalars from the parent process in the gtests.
+  JS::RootedValue parentScalars(aCx);
+  JS::RootedObject scalarObj(aCx, &scalarsSnapshot.toObject());
+  // Don't complain if no scalars for the parent process can be found. Just
+  // return an empty object.
+  Unused << JS_GetProperty(aCx, scalarObj, "default", &parentScalars);
+
+  aResult.set(parentScalars);
 }
 
 } // Anonymous namespace.
