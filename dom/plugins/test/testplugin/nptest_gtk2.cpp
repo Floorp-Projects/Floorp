@@ -737,6 +737,19 @@ pluginCrashInNestedLoop(InstanceData* instanceData)
   return true;
 }
 
+bool
+pluginTriggerXError(InstanceData* instanceData)
+{
+  mozilla::NoteIntentionalCrash("plugin");
+  int num_prop_return;
+  // Window parameter is None to generate a fatal error, and this function
+  // should not return.
+  XListProperties(GDK_DISPLAY(), X11None, &num_prop_return);
+
+  // if we get here without crashing, then we'll trigger a test failure
+  return true;
+}
+
 static int
 SleepThenDie(Display* display)
 {
