@@ -3438,6 +3438,12 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
      // make sure to fire the enter and exit_synth events after the
      // eDragExit event, otherwise we'll clean up too early
     GenerateDragDropEnterExit(presContext, aEvent->AsDragEvent());
+    if (ContentChild* child = ContentChild::GetSingleton()) {
+      // SendUpdateDropEffect to prevent nsIDragService from waiting for
+      // response of forwarded dragexit event.
+      child->SendUpdateDropEffect(nsIDragService::DRAGDROP_ACTION_NONE,
+                                  nsIDragService::DRAGDROP_ACTION_NONE);
+    }
     break;
 
   case eKeyUp:
@@ -4413,6 +4419,19 @@ EventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
           FireDragEnterOrExit(sLastDragOverFrame->PresContext(),
                               aDragEvent, eDragExit,
                               targetContent, lastContent, sLastDragOverFrame);
+          nsIContent* target = sLastDragOverFrame ? sLastDragOverFrame.GetFrame()->GetContent() : nullptr;
+          if (IsRemoteTarget(target)) {
+            // Dragging something and moving from web content to chrome only
+            // fires dragexit and dragleave to xul:browser. We have to forward
+            // dragexit to sLastDragOverFrame when its content is a remote
+            // target. We don't forward dragleave since it's generated from
+            // dragexit.
+            WidgetDragEvent remoteEvent(aDragEvent->IsTrusted(), eDragExit,
+                                        aDragEvent->mWidget);
+            remoteEvent.AssignDragEventData(*aDragEvent, true);
+            nsEventStatus remoteStatus = nsEventStatus_eIgnore;
+            HandleCrossProcessEvent(&remoteEvent, &remoteStatus);
+          }
         }
 
         FireDragEnterOrExit(aPresContext, aDragEvent, eDragEnter,
