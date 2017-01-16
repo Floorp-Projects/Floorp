@@ -69,7 +69,6 @@ namespace jit {
     _(GetIntrinsic_Constant)                     \
                                                  \
     _(SetProp_Fallback)                          \
-    _(SetProp_Native)                            \
     _(SetProp_NativeAdd)                         \
     _(SetProp_Unboxed)                           \
     _(SetProp_TypedObject)                       \
