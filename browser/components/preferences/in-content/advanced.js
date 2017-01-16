@@ -65,6 +65,9 @@ var gAdvancedPane = {
                        gAdvancedPane.clearSiteData);
       setEventListener("siteDataSettings", "command",
                        gAdvancedPane.showSiteDataSettings);
+
+      let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "storage-permissions";
+      document.getElementById("siteDataLearnMoreLink").setAttribute("href", url);
     }
 
     setEventListener("layers.acceleration.disabled", "change",
