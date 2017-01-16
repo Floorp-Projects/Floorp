@@ -39,10 +39,7 @@ add_task(function test_set_tabstate_and_duplicate() {
   let key2 = "key2";
   let value2 = "Value " + Math.random();
   let value3 = "Another value: " + Date.now();
-  let state = {
-    entries: [{ url: URL, triggeringPrincipal_base64: triggeringPrincipal}],
-    extData: { key2: value2 }
-  };
+  let state = { entries: [{ url: URL }], extData: { key2: value2 } };
 
   // create a new tab
   let tab = gBrowser.addTab();
