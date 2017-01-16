@@ -22,7 +22,7 @@ function test() {
     let tabState = { entries: [] };
     let max_entries = gPrefService.getIntPref("browser.sessionhistory.max_entries");
     for (let i = 0; i < max_entries; i++)
-      tabState.entries.push({ url: baseURL + i });
+      tabState.entries.push({ url: baseURL + i, triggeringPrincipal_base64: triggeringPrincipal});
 
     promiseTabState(tab, tabState).then(() => {
       return TabStateFlusher.flush(tab.linkedBrowser);

@@ -2,6 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const {Utils} = Cu.import("resource://gre/modules/sessionstore/Utils.jsm", {});
+const SYSTEMPRINCIPAL = Services.scriptSecurityManager.getSystemPrincipal();
+const triggeringPrincipal = Utils.serializePrincipal(SYSTEMPRINCIPAL);
+
 const TAB_STATE_NEEDS_RESTORE = 1;
 const TAB_STATE_RESTORING = 2;
 
