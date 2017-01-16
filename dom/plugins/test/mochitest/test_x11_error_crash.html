@@ -1,0 +1,27 @@
+<head>
+  <title>Plugin terminating on X11 error</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+
+<body>
+  <script class="testbody" type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout(
+    "crashAndGetCrashServiceRecord() polls for async crash recording");
+  setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+  window.frameLoaded = function frameLoaded_toCrash() {
+    SimpleTest.expectChildProcessCrash();
+
+    crashAndGetCrashServiceRecord("triggerXError", function (cm, crash) {
+      var isPluginCrash = crash.isOfType(cm.PROCESS_TYPE_PLUGIN, cm.CRASH_TYPE_CRASH);
+      ok(isPluginCrash, "Record should be a plugin crash");
+      if (!isPluginCrash) {
+        dump("Crash type: " + crash.type + "\n");
+      }
+      SimpleTest.finish();
+    });
+
+  }
+  </script>
+  <iframe id="iframe1" src="crashing_subpage.html" width="600" height="600"></iframe>
