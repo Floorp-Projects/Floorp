@@ -88,6 +88,9 @@ void update_rate_histogram(struct rate_hist *hist,
   if (now < cfg->rc_buf_initial_sz)
     return;
 
+  if (!cfg->rc_target_bitrate)
+    return;
+
   then = now;
 
   /* Sum the size over the past rc_buf_sz ms */

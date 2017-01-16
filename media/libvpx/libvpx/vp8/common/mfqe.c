@@ -20,7 +20,7 @@
 #include "./vp8_rtcd.h"
 #include "./vpx_dsp_rtcd.h"
 #include "vp8/common/postproc.h"
-#include "vp8/common/variance.h"
+#include "vpx_dsp/variance.h"
 #include "vpx_mem/vpx_mem.h"
 #include "vpx_scale/yv12config.h"
 

@@ -60,6 +60,10 @@ y4m_input_non_square_par() {
   echo ""${Y4M_NOSQ_PAR_INPUT}""
 }
 
+y4m_input_720p() {
+  echo ""${Y4M_720P_INPUT}""
+}
+
 # Echo default vpxenc real time encoding params. $1 is the codec, which defaults
 # to vp8 if unspecified.
 vpxenc_rt_params() {
@@ -68,7 +72,7 @@ vpxenc_rt_params() {
     --buf-initial-sz=500
     --buf-optimal-sz=600
     --buf-sz=1000
-    --cpu-used=-5
+    --cpu-used=-6
     --end-usage=cbr
     --error-resilient=1
     --kf-max-dist=90000
@@ -258,6 +262,63 @@ vpxenc_vp9_webm_rt() {
   fi
 }
 
+vpxenc_vp9_webm_rt_multithread_tiled() {
+  if [ "$(vpxenc_can_encode_vp9)" = "yes" ] && \
+     [ "$(webm_io_available)" = "yes" ]; then
+    local readonly output="${VPX_TEST_OUTPUT_DIR}/vp9_rt_multithread_tiled.webm"
+    local readonly tilethread_min=2
+    local readonly tilethread_max=4
+    local readonly num_threads="$(seq ${tilethread_min} ${tilethread_max})"
+    local readonly num_tile_cols="$(seq ${tilethread_min} ${tilethread_max})"
+
+    for threads in ${num_threads}; do
+      for tile_cols in ${num_tile_cols}; do
+        vpxenc $(y4m_input_720p) \
+          $(vpxenc_rt_params vp9) \
+          --threads=${threads} \
+          --tile-columns=${tile_cols} \
+          --output="${output}"
+      done
+    done
+
+    if [ ! -e "${output}" ]; then
+      elog "Output file does not exist."
+      return 1
+    fi
+
+    rm "${output}"
+  fi
+}
+
+vpxenc_vp9_webm_rt_multithread_tiled_frameparallel() {
+  if [ "$(vpxenc_can_encode_vp9)" = "yes" ] && \
+     [ "$(webm_io_available)" = "yes" ]; then
+    local readonly output="${VPX_TEST_OUTPUT_DIR}/vp9_rt_mt_t_fp.webm"
+    local readonly tilethread_min=2
+    local readonly tilethread_max=4
+    local readonly num_threads="$(seq ${tilethread_min} ${tilethread_max})"
+    local readonly num_tile_cols="$(seq ${tilethread_min} ${tilethread_max})"
+
+    for threads in ${num_threads}; do
+      for tile_cols in ${num_tile_cols}; do
+        vpxenc $(y4m_input_720p) \
+          $(vpxenc_rt_params vp9) \
+          --threads=${threads} \
+          --tile-columns=${tile_cols} \
+          --frame-parallel=1 \
+          --output="${output}"
+      done
+    done
+
+    if [ ! -e "${output}" ]; then
+      elog "Output file does not exist."
+      return 1
+    fi
+
+    rm "${output}"
+  fi
+}
+
 vpxenc_vp9_webm_2pass() {
   if [ "$(vpxenc_can_encode_vp9)" = "yes" ] && \
      [ "$(webm_io_available)" = "yes" ]; then
@@ -357,6 +418,8 @@ vpxenc_tests="vpxenc_vp8_ivf
               vpxenc_vp9_ivf
               vpxenc_vp9_webm
               vpxenc_vp9_webm_rt
+              vpxenc_vp9_webm_rt_multithread_tiled
+              vpxenc_vp9_webm_rt_multithread_tiled_frameparallel
               vpxenc_vp9_webm_2pass
               vpxenc_vp9_ivf_lossless
               vpxenc_vp9_ivf_minq0_maxq0

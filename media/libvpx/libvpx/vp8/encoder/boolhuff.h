@@ -65,7 +65,7 @@ static void vp8_encode_bool(BOOL_CODER *br, int bit, int probability)
     int count = br->count;
     unsigned int range = br->range;
     unsigned int lowvalue = br->lowvalue;
-    register unsigned int shift;
+    register int shift;
 
 #ifdef VP8_ENTROPY_STATS
 #if defined(SECTIONBITS_OUTPUT)

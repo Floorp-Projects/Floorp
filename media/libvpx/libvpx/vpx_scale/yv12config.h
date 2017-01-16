@@ -56,6 +56,9 @@ typedef struct yv12_buffer_config {
   int subsampling_y;
   unsigned int bit_depth;
   vpx_color_space_t color_space;
+  vpx_color_range_t color_range;
+  int render_width;
+  int render_height;
 
   int corrupted;
   int flags;
@@ -69,7 +72,7 @@ int vp8_yv12_realloc_frame_buffer(YV12_BUFFER_CONFIG *ybf,
                                   int width, int height, int border);
 int vp8_yv12_de_alloc_frame_buffer(YV12_BUFFER_CONFIG *ybf);
 
-int vp9_alloc_frame_buffer(YV12_BUFFER_CONFIG *ybf,
+int vpx_alloc_frame_buffer(YV12_BUFFER_CONFIG *ybf,
                            int width, int height, int ss_x, int ss_y,
 #if CONFIG_VP9_HIGHBITDEPTH
                            int use_highbitdepth,
@@ -83,7 +86,7 @@ int vp9_alloc_frame_buffer(YV12_BUFFER_CONFIG *ybf,
 // to decode the current frame. If cb is NULL, libvpx will allocate memory
 // internally to decode the current frame. Returns 0 on success. Returns < 0
 // on failure.
-int vp9_realloc_frame_buffer(YV12_BUFFER_CONFIG *ybf,
+int vpx_realloc_frame_buffer(YV12_BUFFER_CONFIG *ybf,
                              int width, int height, int ss_x, int ss_y,
 #if CONFIG_VP9_HIGHBITDEPTH
                              int use_highbitdepth,
@@ -93,7 +96,7 @@ int vp9_realloc_frame_buffer(YV12_BUFFER_CONFIG *ybf,
                              vpx_codec_frame_buffer_t *fb,
                              vpx_get_frame_buffer_cb_fn_t cb,
                              void *cb_priv);
-int vp9_free_frame_buffer(YV12_BUFFER_CONFIG *ybf);
+int vpx_free_frame_buffer(YV12_BUFFER_CONFIG *ybf);
 
 #ifdef __cplusplus
 }

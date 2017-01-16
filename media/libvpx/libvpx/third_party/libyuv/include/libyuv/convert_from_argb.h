@@ -61,12 +61,15 @@ int ARGBToRGB565(const uint8* src_argb, int src_stride_argb,
                  uint8* dst_rgb565, int dst_stride_rgb565,
                  int width, int height);
 
-// Convert ARGB To RGB565 with 8x8 dither matrix (64 bytes).
-// Values in dither matrix from 0 to 255.  128 is best for no dither.
+// Convert ARGB To RGB565 with 4x4 dither matrix (16 bytes).
+// Values in dither matrix from 0 to 7 recommended.
+// The order of the dither matrix is first byte is upper left.
+// TODO(fbarchard): Consider pointer to 2d array for dither4x4.
+// const uint8(*dither)[4][4];
 LIBYUV_API
 int ARGBToRGB565Dither(const uint8* src_argb, int src_stride_argb,
                        uint8* dst_rgb565, int dst_stride_rgb565,
-                       const uint8* dither8x8, int width, int height);
+                       const uint8* dither4x4, int width, int height);
 
 // Convert ARGB To ARGB1555.
 LIBYUV_API
@@ -139,6 +142,12 @@ LIBYUV_API
 int ARGBToI400(const uint8* src_argb, int src_stride_argb,
                uint8* dst_y, int dst_stride_y,
                int width, int height);
+
+// Convert ARGB to G. (Reverse of J400toARGB, which replicates G back to ARGB)
+LIBYUV_API
+int ARGBToG(const uint8* src_argb, int src_stride_argb,
+            uint8* dst_g, int dst_stride_g,
+            int width, int height);
 
 // Convert ARGB To NV12.
 LIBYUV_API

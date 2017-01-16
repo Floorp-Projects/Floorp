@@ -21,13 +21,13 @@
 
 namespace {
 
+#if CONFIG_WEBM_IO
+
 const int kLegacyByteAlignment = 0;
 const int kLegacyYPlaneByteAlignment = 32;
 const int kNumPlanesToCheck = 3;
 const char kVP9TestFile[] = "vp90-2-02-size-lf-1920x1080.webm";
 const char kVP9Md5File[] = "vp90-2-02-size-lf-1920x1080.webm.md5";
-
-#if CONFIG_WEBM_IO
 
 struct ByteAlignmentTestParam {
   int byte_alignment;

@@ -8,8 +8,6 @@
 ;  be found in the AUTHORS file in the root of the source tree.
 ;
 
-%define program_name vpx
-
 %include "third_party/x86inc/x86inc.asm"
 
 SECTION .text
@@ -19,7 +17,7 @@ SECTION .text
 %if %3 == 5
 cglobal sad%1x%2, 4, %3, 5, src, src_stride, ref, ref_stride, n_rows
 %else ; %3 == 7
-cglobal sad%1x%2, 4, %3, 5, src, src_stride, ref, ref_stride, \
+cglobal sad%1x%2, 4, %3, 6, src, src_stride, ref, ref_stride, \
                             src_stride3, ref_stride3, n_rows
 %endif ; %3 == 5/7
 %else ; avg
@@ -27,7 +25,7 @@ cglobal sad%1x%2, 4, %3, 5, src, src_stride, ref, ref_stride, \
 cglobal sad%1x%2_avg, 5, 1 + %3, 5, src, src_stride, ref, ref_stride, \
                                     second_pred, n_rows
 %else ; %3 == 7
-cglobal sad%1x%2_avg, 5, ARCH_X86_64 + %3, 5, src, src_stride, \
+cglobal sad%1x%2_avg, 5, ARCH_X86_64 + %3, 6, src, src_stride, \
                                               ref, ref_stride, \
                                               second_pred, \
                                               src_stride3, ref_stride3
@@ -224,8 +222,8 @@ SAD8XN 16, 1 ; sad8x16_avg_sse2
 SAD8XN  8, 1 ; sad8x8_avg_sse2
 SAD8XN  4, 1 ; sad8x4_avg_sse2
 
-; unsigned int vpx_sad4x{4, 8}_sse(uint8_t *src, int src_stride,
-;                                  uint8_t *ref, int ref_stride);
+; unsigned int vpx_sad4x{4, 8}_sse2(uint8_t *src, int src_stride,
+;                                   uint8_t *ref, int ref_stride);
 %macro SAD4XN 1-2 0
   SAD_FN 4, %1, 7, %2
   mov              n_rowsd, %1/4
@@ -238,31 +236,32 @@ SAD8XN  4, 1 ; sad8x4_avg_sse2
   movd                  m4, [refq+ref_stride3q]
   punpckldq             m1, m2
   punpckldq             m3, m4
+  movlhps               m1, m3
 %if %2 == 1
   pavgb                 m1, [second_predq+mmsize*0]
-  pavgb                 m3, [second_predq+mmsize*1]
-  lea         second_predq, [second_predq+mmsize*2]
+  lea         second_predq, [second_predq+mmsize*1]
 %endif
   movd                  m2, [srcq]
   movd                  m5, [srcq+src_strideq]
   movd                  m4, [srcq+src_strideq*2]
-  movd                  m6, [srcq+src_stride3q]
+  movd                  m3, [srcq+src_stride3q]
   punpckldq             m2, m5
-  punpckldq             m4, m6
+  punpckldq             m4, m3
+  movlhps               m2, m4
   psadbw                m1, m2
-  psadbw                m3, m4
   lea                 refq, [refq+ref_strideq*4]
   paddd                 m0, m1
   lea                 srcq, [srcq+src_strideq*4]
-  paddd                 m0, m3
   dec              n_rowsd
   jg .loop
 
+  movhlps               m1, m0
+  paddd                 m0, m1
   movd                 eax, m0
   RET
 %endmacro
 
-INIT_MMX sse
+INIT_XMM sse2
 SAD4XN  8 ; sad4x8_sse
 SAD4XN  4 ; sad4x4_sse
 SAD4XN  8, 1 ; sad4x8_avg_sse

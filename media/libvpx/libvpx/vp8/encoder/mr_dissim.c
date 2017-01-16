@@ -13,6 +13,7 @@
 #include "vpx_config.h"
 #include "onyx_int.h"
 #include "mr_dissim.h"
+#include "vpx_dsp/vpx_dsp_common.h"
 #include "vpx_mem/vpx_mem.h"
 #include "rdopt.h"
 #include "vp8/common/common.h"
@@ -192,11 +193,13 @@ void vp8_cal_dissimilarity(VP8_COMP *cpi)
                                 }
                             }
 
-                            mmvx = MAX(abs(min_mvx - here->mbmi.mv.as_mv.row),
-                                       abs(max_mvx - here->mbmi.mv.as_mv.row));
-                            mmvy = MAX(abs(min_mvy - here->mbmi.mv.as_mv.col),
-                                       abs(max_mvy - here->mbmi.mv.as_mv.col));
-                            dissim = MAX(mmvx, mmvy);
+                            mmvx = VPXMAX(
+                                abs(min_mvx - here->mbmi.mv.as_mv.row),
+                                abs(max_mvx - here->mbmi.mv.as_mv.row));
+                            mmvy = VPXMAX(
+                                abs(min_mvy - here->mbmi.mv.as_mv.col),
+                                abs(max_mvy - here->mbmi.mv.as_mv.col));
+                            dissim = VPXMAX(mmvx, mmvy);
                         }
                     }
 
