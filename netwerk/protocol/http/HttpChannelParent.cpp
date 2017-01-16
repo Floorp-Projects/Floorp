@@ -8,6 +8,7 @@
 #include "HttpLog.h"
 
 #include "mozilla/ipc/FileDescriptorSetParent.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/HttpChannelParent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
@@ -39,7 +40,9 @@
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDocument.h"
+#include "nsStreamUtils.h"
 #include "nsStringStream.h"
+#include "nsIStorageStream.h"
 #include "nsQueryObject.h"
 #include "nsIURIClassifier.h"
 #include "mozilla/dom/ContentParent.h"

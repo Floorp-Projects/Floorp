@@ -12,6 +12,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIStreamListener.h"
 #include "nsIThreadRetargetableStreamListener.h"
+#include "nsITimer.h"
 
 #include "mozilla/Attributes.h"
 
