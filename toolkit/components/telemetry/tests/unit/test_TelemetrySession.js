@@ -74,12 +74,6 @@ XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function() {
 var gClientID = null;
 var gMonotonicNow = 0;
 
-function generateUUID() {
-  let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
-  // strip {}
-  return str.substring(1, str.length - 1);
-}
-
 function truncateDateToDays(date) {
   return new Date(date.getFullYear(),
                   date.getMonth(),
