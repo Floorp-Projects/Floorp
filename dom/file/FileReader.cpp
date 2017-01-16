@@ -418,6 +418,7 @@ FileReader::ReadFileContent(Blob& aBlob,
     if (!mFileData) {
       NS_WARNING("Preallocation failed for ReadFileData");
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return;
     }
   }
 
