@@ -34,7 +34,6 @@ const AddonsActor = protocol.ActorClassWithSpec(addonsSpec, {
     // with. Provide a flag that the client can use to detect when it
     // gets upgraded to a real actor object.
     return { id: addon.id, actor: false };
-
   }),
 });
 

@@ -26,8 +26,7 @@ var { TabActor } = require("devtools/server/actors/tab");
  *        the prefix used in protocol to create IDs for each actor.
  *        Used as ID identifying this particular TabActor from the parent process.
  */
-function ContentActor(connection, chromeGlobal, prefix)
-{
+function ContentActor(connection, chromeGlobal, prefix) {
   this._chromeGlobal = chromeGlobal;
   this._prefix = prefix;
   TabActor.call(this, connection, chromeGlobal);

@@ -171,7 +171,9 @@ let WorkerActor = protocol.ActorClassWithSpec(workerSpec, {
     let type;
     try {
       type = this._dbg.type;
-    } catch (e) {}
+    } catch (e) {
+      // nothing
+    }
 
     if (type == Ci.nsIWorkerDebugger.TYPE_SERVICE) {
       let worker = this._getServiceWorkerInfo();

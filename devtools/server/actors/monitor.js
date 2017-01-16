@@ -8,8 +8,8 @@ const {Ci, Cc} = require("chrome");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const Services = require("Services");
 
-function MonitorActor(aConnection) {
-  this.conn = aConnection;
+function MonitorActor(connection) {
+  this.conn = connection;
   this._updates = [];
   this._started = false;
 }
@@ -118,9 +118,10 @@ var USSAgent = {
   },
 
   start: function () {
-    USSAgent._mgr = Cc["@mozilla.org/memory-reporter-manager;1"].getService(Ci.nsIMemoryReporterManager);
+    USSAgent._mgr = Cc["@mozilla.org/memory-reporter-manager;1"].getService(
+      Ci.nsIMemoryReporterManager);
     if (!USSAgent._mgr.residentUnique) {
-      throw "Couldn't get USS.";
+      throw new Error("Couldn't get USS.");
     }
     USSAgent.update();
   },
@@ -132,7 +133,8 @@ var USSAgent = {
     }
     USSAgent._packet.time = Date.now();
     USSAgent._packet.value = USSAgent._mgr.residentUnique;
-    Services.obs.notifyObservers(null, "devtools-monitor-update", JSON.stringify(USSAgent._packet));
+    Services.obs.notifyObservers(null, "devtools-monitor-update",
+      JSON.stringify(USSAgent._packet));
     USSAgent._timeout = setTimeout(USSAgent.update, 300);
   },
 

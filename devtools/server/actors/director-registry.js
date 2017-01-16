@@ -21,8 +21,10 @@ const ERR_DIRECTOR_INSTALL_EMPTY = "Trying to install an empty director-script";
 const ERR_DIRECTOR_UNINSTALL_UNKNOWN = "Trying to uninstall an unkown director-script";
 
 const ERR_DIRECTOR_PARENT_UNKNOWN_METHOD = "Unknown parent process method";
-const ERR_DIRECTOR_CHILD_NOTIMPLEMENTED_METHOD = "Unexpected call to notImplemented method";
-const ERR_DIRECTOR_CHILD_MULTIPLE_REPLIES = "Unexpected multiple replies to called parent method";
+const ERR_DIRECTOR_CHILD_NOTIMPLEMENTED_METHOD =
+  "Unexpected call to notImplemented method";
+const ERR_DIRECTOR_CHILD_MULTIPLE_REPLIES =
+  "Unexpected multiple replies to called parent method";
 const ERR_DIRECTOR_CHILD_NO_REPLY = "Unexpected no reply to called parent method";
 
 /**
@@ -148,7 +150,7 @@ exports.setupParentProcess = function setupParentProcess({ mm, prefix }) {
  * The DirectorRegistry Actor is a global actor which manages install/uninstall of
  * director scripts definitions.
  */
-const DirectorRegistryActor = exports.DirectorRegistryActor = protocol.ActorClassWithSpec(directorRegistrySpec, {
+exports.DirectorRegistryActor = protocol.ActorClassWithSpec(directorRegistrySpec, {
   /* init & destroy methods */
   initialize: function (conn, parentActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
@@ -191,7 +193,7 @@ const DirectorRegistryActor = exports.DirectorRegistryActor = protocol.ActorClas
     }
 
     function callParentProcess(method, ...args) {
-      var reply = sendSyncMessage("debug:director-registry-request", {
+      let reply = sendSyncMessage("debug:director-registry-request", {
         method: method,
         args: args
       });

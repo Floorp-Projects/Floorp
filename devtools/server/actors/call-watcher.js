@@ -3,13 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Cc, Ci, Cu, Cr} = require("chrome");
+/* global XPCNativeWrapper */
+
+const {Ci, Cu} = require("chrome");
 const events = require("sdk/event/core");
 const protocol = require("devtools/shared/protocol");
 const {serializeStack, parseStack} = require("toolkit/loader");
 
-const {on, once, off, emit} = events;
-const {method, Arg, Option, RetVal} = protocol;
+const {on, off, emit} = events;
 
 const { functionCallSpec, callWatcherSpec } = require("devtools/shared/specs/call-watcher");
 const { CallWatcherFront } = require("devtools/shared/fronts/call-watcher");
@@ -48,7 +49,11 @@ var FunctionCallActor = protocol.ActorClassWithSpec(functionCallSpec, {
    *        Determines whether or not FunctionCallActor stores a weak reference
    *        to the underlying objects.
    */
-  initialize: function (conn, [window, global, caller, type, name, stack, timestamp, args, result], holdWeak) {
+  initialize: function (
+    conn,
+    [window, global, caller, type, name, stack, timestamp, args, result],
+    holdWeak
+  ) {
     protocol.Actor.prototype.initialize.call(this, conn);
 
     this.details = {
@@ -76,9 +81,8 @@ var FunctionCallActor = protocol.ActorClassWithSpec(functionCallSpec, {
         args: { get: () => weakRefs.args.get() },
         result: { get: () => weakRefs.result.get() },
       });
-    }
-    // Otherwise, hold strong references to the objects.
-    else {
+    } else {
+      // Otherwise, hold strong references to the objects.
       this.details.window = window;
       this.details.caller = caller;
       this.details.args = args;
@@ -226,7 +230,7 @@ var FunctionCallActor = protocol.ActorClassWithSpec(functionCallSpec, {
 /**
  * This actor observes function calls on certain objects or globals.
  */
-var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
+exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
   initialize: function (conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
@@ -255,7 +259,9 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClassWithSpec(ca
    * created, in order to instrument the specified objects and become
    * aware of everything the content does with them.
    */
-  setup: function ({ tracedGlobals, tracedFunctions, startRecording, performReload, holdWeak, storeCalls }) {
+  setup: function ({
+    tracedGlobals, tracedFunctions, startRecording, performReload, holdWeak, storeCalls
+  }) {
     if (this._initialized) {
       return;
     }
@@ -362,23 +368,22 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClassWithSpec(ca
      * Instruments a method, getter or setter on the specified target object to
      * invoke a callback whenever it is called.
      */
-    function overrideSymbol(global, target, name, callback) {
+    function overrideSymbol(global, target, name, subcallback) {
       let propertyDescriptor = Object.getOwnPropertyDescriptor(target, name);
 
       if (propertyDescriptor.get || propertyDescriptor.set) {
-        overrideAccessor(global, target, name, propertyDescriptor, callback);
+        overrideAccessor(global, target, name, propertyDescriptor, subcallback);
         return;
       }
       if (propertyDescriptor.writable && typeof propertyDescriptor.value == "function") {
-        overrideFunction(global, target, name, propertyDescriptor, callback);
-        return;
+        overrideFunction(global, target, name, propertyDescriptor, subcallback);
       }
     }
 
     /**
      * Instruments a function on the specified target object.
      */
-    function overrideFunction(global, target, name, descriptor, callback) {
+    function overrideFunction(global, target, name, descriptor, subcallback) {
       // Invoking .apply on an unxrayed content function doesn't work, because
       // the arguments array is inaccessible to it. Get Xrays back.
       let originalFunc = Cu.unwaiveXrays(target[name]);
@@ -395,7 +400,8 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClassWithSpec(ca
           let type = CallWatcherFront.METHOD_FUNCTION;
           let stack = getStack(name);
           let timestamp = self.tabActor.window.performance.now() - self._timestampEpoch;
-          callback(unwrappedWindow, global, this, type, name, stack, timestamp, args, result);
+          subcallback(unwrappedWindow, global, this, type, name, stack, timestamp,
+            args, result);
         }
         return result;
       }, target, { defineAs: name });
@@ -410,7 +416,7 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClassWithSpec(ca
     /**
      * Instruments a getter or setter on the specified target object.
      */
-    function overrideAccessor(global, target, name, descriptor, callback) {
+    function overrideAccessor(global, target, name, descriptor, subcallback) {
       // Invoking .apply on an unxrayed content function doesn't work, because
       // the arguments array is inaccessible to it. Get Xrays back.
       let originalGetter = Cu.unwaiveXrays(target.__lookupGetter__(name));
@@ -418,26 +424,32 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClassWithSpec(ca
 
       Object.defineProperty(target, name, {
         get: function (...args) {
-          if (!originalGetter) return undefined;
+          if (!originalGetter) {
+            return undefined;
+          }
           let result = Cu.waiveXrays(originalGetter.apply(this, args));
 
           if (self._recording) {
             let type = CallWatcherFront.GETTER_FUNCTION;
             let stack = getStack(name);
             let timestamp = self.tabActor.window.performance.now() - self._timestampEpoch;
-            callback(unwrappedWindow, global, this, type, name, stack, timestamp, args, result);
+            subcallback(unwrappedWindow, global, this, type, name, stack, timestamp,
+              args, result);
           }
           return result;
         },
         set: function (...args) {
-          if (!originalSetter) return;
+          if (!originalSetter) {
+            return;
+          }
           originalSetter.apply(this, args);
 
           if (self._recording) {
             let type = CallWatcherFront.SETTER_FUNCTION;
             let stack = getStack(name);
             let timestamp = self.tabActor.window.performance.now() - self._timestampEpoch;
-            callback(unwrappedWindow, global, this, type, name, stack, timestamp, args, undefined);
+            subcallback(unwrappedWindow, global, this, type, name, stack, timestamp,
+              args, undefined);
           }
         },
         configurable: descriptor.configurable,
@@ -450,12 +462,13 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClassWithSpec(ca
      * a function is called.
      */
     function getStack(caller) {
+      let stack;
       try {
         // Using Components.stack wouldn't be a better idea, since it's
         // much slower because it attempts to retrieve the C++ stack as well.
         throw new Error();
       } catch (e) {
-        var stack = e.stack;
+        stack = e.stack;
       }
 
       // Of course, using a simple regex like /(.*?)@(.*):(\d*):\d*/ would be
@@ -588,7 +601,8 @@ function getBitToEnumValue(type, object, arg) {
   }
 
   // Cache the combined bitmask value
-  return table[arg] = flags.join(" | ") || arg;
+  table[arg] = flags.join(" | ") || arg;
+  return table[arg];
 }
 
 /**
@@ -598,8 +612,9 @@ function getBitToEnumValue(type, object, arg) {
  *
  * We use toolkit/loader's parseStack and serializeStack rather than the
  * parsing done in the local `getStack` function, because it does not expose
- * column number, would have to change the protocol models `call-stack-items` and `call-details`
- * which hurts backwards compatibility, and the local `getStack` is an optimized, hot function.
+ * column number, would have to change the protocol models `call-stack-items`
+ * and `call-details` which hurts backwards compatibility, and the local `getStack`
+ * is an optimized, hot function.
  */
 function createContentError(e, win) {
   let { message, name, stack } = e;
@@ -614,14 +629,15 @@ function createContentError(e, win) {
     error = new constructor(message, name);
     Object.defineProperties(error, {
       code: { value: e.code },
-      columnNumber: { value: 0 }, // columnNumber is always 0 for DOMExceptions?
-      filename: { value: fileName }, // note the lowercase `filename`
+      // columnNumber is always 0 for DOMExceptions?
+      columnNumber: { value: 0 },
+      // note the lowercase `filename`
+      filename: { value: fileName },
       lineNumber: { value: lineNumber },
       result: { value: e.result },
       stack: { value: serializeStack(parsedStack) }
     });
-  }
-  else {
+  } else {
     // Constructing an error here retains all the stack information,
     // and we can add message, fileName and lineNumber via constructor, though
     // need to manually add columnNumber.

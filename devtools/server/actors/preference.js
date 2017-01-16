@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Cc, Ci, Cu, CC} = require("chrome");
+"use strict";
+
+const {Ci} = require("chrome");
 const protocol = require("devtools/shared/protocol");
-const {Arg, method, RetVal} = protocol;
 const Services = require("Services");
 const {preferenceSpec} = require("devtools/shared/specs/preference");
 
@@ -15,7 +16,8 @@ exports.register = function (handle) {
 exports.unregister = function (handle) {
 };
 
-var PreferenceActor = exports.PreferenceActor = protocol.ActorClassWithSpec(preferenceSpec, {
+var PreferenceActor = protocol.ActorClassWithSpec(preferenceSpec, {
+
   typeName: "preference",
 
   getBoolPref: function (name) {
@@ -79,3 +81,5 @@ var PreferenceActor = exports.PreferenceActor = protocol.ActorClassWithSpec(pref
     Services.prefs.savePrefFile(null);
   },
 });
+
+exports.PreferenceActor = PreferenceActor;
