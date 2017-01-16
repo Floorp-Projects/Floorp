@@ -81,7 +81,8 @@ StupidAllocator::init()
             registers[registerCount++].reg = AnyRegister(remainingRegisters.takeAnyGeneral());
 
         while (!remainingRegisters.emptyFloat())
-            registers[registerCount++].reg = AnyRegister(remainingRegisters.takeAnyFloat());
+            registers[registerCount++].reg =
+                AnyRegister(remainingRegisters.takeAnyFloat<RegTypeName::Any>());
 
         MOZ_ASSERT(registerCount <= MAX_REGISTERS);
     }
