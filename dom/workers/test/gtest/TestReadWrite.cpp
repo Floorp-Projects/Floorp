@@ -26,9 +26,8 @@ public:
   {
     nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                        getter_AddRefs(mProfileDir));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
-    }
+    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+    MOZ_DIAGNOSTIC_ASSERT(mProfileDir);
   }
 
   nsresult TestReadData() { return ReadData(); }
