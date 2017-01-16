@@ -840,8 +840,8 @@ protected:
                            nsCOMPtr<nsIDOMNode>* outNode,
                            bool bNoBlockCrossing = false);
 
-  bool IsFirstEditableChild(nsINode* aNode);
-  bool IsLastEditableChild(nsINode* aNode);
+  nsresult IsFirstEditableChild(nsIDOMNode* aNode, bool* aOutIsFirst);
+  nsresult IsLastEditableChild(nsIDOMNode* aNode, bool* aOutIsLast);
   nsIContent* GetFirstEditableChild(nsINode& aNode);
   nsIContent* GetLastEditableChild(nsINode& aNode);
 
