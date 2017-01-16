@@ -20,11 +20,13 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/HttpChannelChild.h"
 
+#include "AltDataOutputStreamChild.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsPrimitives.h"
 #include "nsChannelClassifier.h"
 #include "nsGlobalWindow.h"
 #include "nsStringStream.h"
+#include "nsHttpChannel.h"
 #include "nsHttpHandler.h"
 #include "nsNetUtil.h"
 #include "nsSerializationHelper.h"
@@ -46,12 +48,9 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIEventTarget.h"
+#include "nsRedirectHistoryEntry.h"
 #include "nsStreamUtils.h"
 #include "nsThreadUtils.h"
-
-#ifdef OS_POSIX
-#include "chrome/common/file_descriptor_set_posix.h"
-#endif
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
@@ -62,19 +61,6 @@ using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace net {
-
-namespace {
-
-const uint32_t kMaxFileDescriptorsPerMessage = 250;
-
-#ifdef OS_POSIX
-// Keep this in sync with other platforms.
-static_assert(FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE == 250,
-              "MAX_DESCRIPTORS_PER_MESSAGE mismatch!");
-#endif
-
-} // namespace
-
 
 NS_IMPL_ISUPPORTS(InterceptStreamListener,
                   nsIStreamListener,
