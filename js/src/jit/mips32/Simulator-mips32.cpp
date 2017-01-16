@@ -38,6 +38,12 @@
 #include "jit/mips32/Assembler-mips32.h"
 #include "vm/Runtime.h"
 
+#define I8(v)   static_cast<int8_t>(v)
+#define I16(v)  static_cast<int16_t>(v)
+#define U16(v)  static_cast<uint16_t>(v)
+#define I32(v)  static_cast<int32_t>(v)
+#define U32(v)  static_cast<uint32_t>(v)
+
 namespace js {
 namespace jit {
 
@@ -390,6 +396,7 @@ SimInstruction::instructionType() const
         switch (functionFieldRaw()) {
           case ff_ins:
           case ff_ext:
+          case ff_bshfl:
             return kRegisterType;
           default:
             return kUnsupported;
@@ -2432,6 +2439,16 @@ Simulator::configureTypeRegister(SimInstruction* instr,
             alu_out = (rs_u & (mask << lsb)) >> lsb;
             break;
           }
+          case ff_bshfl: {   // Mips32r2 instruction.
+            if (16 == sa) // seb
+              alu_out = I32(I8(rt));
+            else if (24 == sa) // seh
+              alu_out = I32(I16(rt));
+            else {
+              MOZ_CRASH();
+            }
+            break;
+          }
           default:
             MOZ_CRASH();
         }
@@ -2658,20 +2675,23 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
           case rs_d:
             double dt_value, ds_value;
             ds_value = getFpuRegisterDouble(fs_reg);
-            dt_value = getFpuRegisterDouble(ft_reg);
             cc = instr->fcccValue();
             fcsr_cc = GetFCSRConditionBit(cc);
             switch (instr->functionFieldRaw()) {
               case ff_add_fmt:
+                dt_value = getFpuRegisterDouble(ft_reg);
                 setFpuRegisterDouble(fd_reg, ds_value + dt_value);
                 break;
               case ff_sub_fmt:
+                dt_value = getFpuRegisterDouble(ft_reg);
                 setFpuRegisterDouble(fd_reg, ds_value - dt_value);
                 break;
               case ff_mul_fmt:
+                dt_value = getFpuRegisterDouble(ft_reg);
                 setFpuRegisterDouble(fd_reg, ds_value * dt_value);
                 break;
               case ff_div_fmt:
+                dt_value = getFpuRegisterDouble(ft_reg);
                 setFpuRegisterDouble(fd_reg, ds_value / dt_value);
                 break;
               case ff_abs_fmt:
@@ -2687,26 +2707,33 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
                 setFpuRegisterDouble(fd_reg, sqrt(ds_value));
                 break;
               case ff_c_un_fmt:
+                dt_value = getFpuRegisterDouble(ft_reg);
                 setFCSRBit(fcsr_cc, mozilla::IsNaN(ds_value) || mozilla::IsNaN(dt_value));
                 break;
               case ff_c_eq_fmt:
+                dt_value = getFpuRegisterDouble(ft_reg);
                 setFCSRBit(fcsr_cc, (ds_value == dt_value));
                 break;
               case ff_c_ueq_fmt:
+                dt_value = getFpuRegisterDouble(ft_reg);
                 setFCSRBit(fcsr_cc,
                             (ds_value == dt_value) || (mozilla::IsNaN(ds_value) || mozilla::IsNaN(dt_value)));
                 break;
               case ff_c_olt_fmt:
+                dt_value = getFpuRegisterDouble(ft_reg);
                 setFCSRBit(fcsr_cc, (ds_value < dt_value));
                 break;
               case ff_c_ult_fmt:
+                dt_value = getFpuRegisterDouble(ft_reg);
                 setFCSRBit(fcsr_cc,
                             (ds_value < dt_value) || (mozilla::IsNaN(ds_value) || mozilla::IsNaN(dt_value)));
                 break;
               case ff_c_ole_fmt:
+                dt_value = getFpuRegisterDouble(ft_reg);
                 setFCSRBit(fcsr_cc, (ds_value <= dt_value));
                 break;
               case ff_c_ule_fmt:
+                dt_value = getFpuRegisterDouble(ft_reg);
                 setFCSRBit(fcsr_cc,
                             (ds_value <= dt_value) || (mozilla::IsNaN(ds_value) || mozilla::IsNaN(dt_value)));
                 break;
@@ -2787,6 +2814,21 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
                 break;
               case ff_c_f_fmt:
                 MOZ_CRASH();
+                break;
+              case ff_movf_fmt:
+                if (testFCSRBit(fcsr_cc)) {
+                  setFpuRegisterDouble(fd_reg, getFpuRegisterDouble(fs_reg));
+                }
+                break;
+              case ff_movz_fmt:
+                if (rt == 0) {
+                  setFpuRegisterDouble(fd_reg, getFpuRegisterDouble(fs_reg));
+                }
+                break;
+              case ff_movn_fmt:
+                if (rt != 0) {
+                  setFpuRegisterDouble(fd_reg, getFpuRegisterDouble(fs_reg));
+                }
                 break;
               default:
                 MOZ_CRASH();
@@ -2949,6 +2991,9 @@ Simulator::decodeTypeRegister(SimInstruction* instr)
           case ff_ext:
             // Ext instr leaves result in Rt, rather than Rd.
             setRegister(rt_reg, alu_out);
+            break;
+          case ff_bshfl: 
+            setRegister(rd_reg, alu_out);
             break;
           default:
             MOZ_CRASH();
