@@ -296,7 +296,16 @@ function setEmptyPrefWatchlist() {
     Cu.import("resource://gre/modules/TelemetryEnvironment.jsm").TelemetryEnvironment;
   return TelemetryEnvironment.onInitialized().then(() => {
     TelemetryEnvironment.testWatchPreferences(new Map());
+
   });
+}
+
+// Generate a UUID, used for the ping ID
+function generateUUID() {
+  let str = Cc["@mozilla.org/uuid-generator;1"]
+              .getService(Ci.nsIUUIDGenerator).generateUUID().toString();
+  // strip {}
+  return str.substring(1, str.length - 1);
 }
 
 if (runningInParent) {

@@ -35,7 +35,7 @@ const PREF_UNIFIED = PREF_BRANCH + "unified";
 
 var gClientID = null;
 
-function sendPing(aSendClientId, aSendEnvironment) {
+function sendPing(aSendClientId, aSendEnvironment, aOverridePingId) {
   if (PingServer.started) {
     TelemetrySend.setServer("http://localhost:" + PingServer.port);
   } else {
@@ -45,6 +45,7 @@ function sendPing(aSendClientId, aSendEnvironment) {
   let options = {
     addClientId: aSendClientId,
     addEnvironment: aSendEnvironment,
+    overridePingId: aOverridePingId || null,
   };
   return TelemetryController.submitExternalPing(TEST_PING_TYPE, {}, options);
 }
@@ -284,6 +285,18 @@ add_task(function* test_pingHasEnvironmentAndClientId() {
   Assert.equal(ping.application.buildId, ping.environment.build.buildId);
   // Test that we have the correct clientId.
   Assert.equal(ping.clientId, gClientID, "The correct clientId must be reported.");
+});
+
+add_task(function* test_pingIdCanBeOverridden() {
+  // Send a ping with an overridden id
+  const myPingId = generateUUID();
+  yield sendPing(/* aSendClientId */ false,
+                 /* aSendEnvironment */ false,
+                 myPingId);
+  let ping = yield PingServer.promiseNextPing();
+  checkPingFormat(ping, TEST_PING_TYPE, false, false);
+
+  Assert.equal(ping.id, myPingId, "The ping id must be the one we provided.");
 });
 
 add_task(function* test_archivePings() {
