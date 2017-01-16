@@ -95,6 +95,8 @@ using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/Comp
 using struct mozilla::dom::FlyWebPublishOptions from "mozilla/dom/FlyWebPublishOptionsIPCSerializer.h";
 using mozilla::Telemetry::Accumulation from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::KeyedAccumulation from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::ScalarAction from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::KeyedScalarAction from "mozilla/TelemetryComms.h";
 
 union ChromeRegistryItem
 {
@@ -1150,6 +1152,8 @@ parent:
      */
     async AccumulateChildHistogram(Accumulation[] accumulations);
     async AccumulateChildKeyedHistogram(KeyedAccumulation[] accumulations);
+    async UpdateChildScalars(ScalarAction[] updates);
+    async UpdateChildKeyedScalars(KeyedScalarAction[] updates);
 
     sync GetA11yContentId() returns (uint32_t aContentId);
 

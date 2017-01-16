@@ -95,6 +95,16 @@ function checkKeyedHistogram(h, key, expectedValue) {
   Assert.equal(snapshot[key].sum, expectedValue, `The key ${key} must contain ${expectedValue}.`);
 }
 
+/**
+ * Return the scalars from the parent-process.
+ */
+function getParentProcessScalars(aChannel, aKeyed = false, aClear = false) {
+  const scalars = aKeyed ?
+    Services.telemetry.snapshotKeyedScalars(aChannel, aClear)["default"] :
+    Services.telemetry.snapshotScalars(aChannel, aClear)["default"];
+  return scalars || {};
+}
+
 function checkEvents(events, expectedEvents) {
   if (!Services.telemetry.canRecordExtended) {
     // Currently we only collect the tested events when extended Telemetry is enabled.
