@@ -280,14 +280,18 @@ DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame, ICUpdatedStub* stub, H
     RootedObject obj(cx, &objval.toObject());
     RootedId id(cx);
 
-    switch(stub->kind()) {
+    switch (stub->kind()) {
+      case ICStub::CacheIR_Updated:
+        id = stub->toCacheIR_Updated()->updateStubId();
+        MOZ_ASSERT(id != JSID_EMPTY);
+        AddTypePropertyId(cx, obj, id, value);
+        break;
       case ICStub::SetElem_DenseOrUnboxedArray:
       case ICStub::SetElem_DenseOrUnboxedArrayAdd: {
         id = JSID_VOID;
         AddTypePropertyId(cx, obj, id, value);
         break;
       }
-      case ICStub::SetProp_Native:
       case ICStub::SetProp_NativeAdd:
       case ICStub::SetProp_Unboxed: {
         MOZ_ASSERT(obj->isNative() || obj->is<UnboxedPlainObject>());
@@ -735,23 +739,6 @@ LastPropertyForSetProp(JSObject* obj)
     }
 
     return nullptr;
-}
-
-static bool
-IsCacheableSetPropWriteSlot(JSObject* obj, Shape* oldShape, Shape* propertyShape)
-{
-    // Object shape must not have changed during the property set.
-    if (LastPropertyForSetProp(obj) != oldShape)
-        return false;
-
-    if (!propertyShape->hasSlot() ||
-        !propertyShape->hasDefaultSetter() ||
-        !propertyShape->writable())
-    {
-        return false;
-    }
-
-    return true;
 }
 
 static bool
@@ -1531,7 +1518,7 @@ ICSetElem_DenseOrUnboxedArray::Compiler::generateStubCode(MacroAssembler& masm)
         saveRegs.add(R0);
         saveRegs.addUnchecked(obj);
         saveRegs.add(ICStubReg);
-        emitPostWriteBarrierSlot(masm, obj, R1, scratchReg, saveRegs);
+        BaselineEmitPostWriteBarrierSlot(masm, obj, R1, scratchReg, saveRegs, cx);
 
         masm.Pop(R1);
     }
@@ -1739,7 +1726,7 @@ ICSetElemDenseOrUnboxedArrayAddCompiler::generateStubCode(MacroAssembler& masm)
         saveRegs.add(R0);
         saveRegs.addUnchecked(obj);
         saveRegs.add(ICStubReg);
-        emitPostWriteBarrierSlot(masm, obj, R1, scratchReg, saveRegs);
+        BaselineEmitPostWriteBarrierSlot(masm, obj, R1, scratchReg, saveRegs, cx);
 
         masm.Pop(R1);
     }
@@ -2636,41 +2623,6 @@ TryAttachSetValuePropStub(JSContext* cx, HandleScript script, jsbytecode* pc, IC
         return true;
     }
 
-    if (IsCacheableSetPropWriteSlot(obj, oldShape, shape)) {
-        // For some property writes, such as the initial overwrite of global
-        // properties, TI will not mark the property as having been
-        // overwritten. Don't attach a stub in this case, so that we don't
-        // execute another write to the property without TI seeing that write.
-        EnsureTrackPropertyTypes(cx, obj, id);
-        if (!PropertyHasBeenMarkedNonConstant(obj, id)) {
-            *attached = true;
-            return true;
-        }
-
-        bool isFixedSlot;
-        uint32_t offset;
-        GetFixedOrDynamicSlotOffset(shape, &isFixedSlot, &offset);
-
-        JitSpew(JitSpew_BaselineIC, "  Generating SetProp(NativeObject.PROP) stub");
-        MOZ_ASSERT(LastPropertyForSetProp(obj) == oldShape,
-                   "Should this really be a SetPropWriteSlot?");
-        ICSetProp_Native::Compiler compiler(cx, obj, isFixedSlot, offset);
-        ICSetProp_Native* newStub = compiler.getStub(compiler.getStubSpace(script));
-        if (!newStub)
-            return false;
-        if (!newStub->addUpdateStubForValue(cx, script, obj, id, rhs))
-            return false;
-
-        if (IsPreliminaryObject(obj))
-            newStub->notePreliminaryObject();
-        else
-            StripPreliminaryObjectStubs(cx, stub);
-
-        stub->addNewStub(newStub);
-        *attached = true;
-        return true;
-    }
-
     return true;
 }
 
@@ -2935,6 +2887,30 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
         return false;
     }
 
+    if (!attached &&
+        stub->numOptimizedStubs() < ICSetProp_Fallback::MAX_OPTIMIZED_STUBS &&
+        !JitOptions.disableCacheIR)
+    {
+        RootedValue idVal(cx, StringValue(name));
+        SetPropIRGenerator gen(cx, pc, CacheKind::SetProp, &isTemporarilyUnoptimizable,
+                               lhs, idVal, rhs);
+        if (gen.tryAttachStub()) {
+            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        ICStubEngine::Baseline, frame->script(), stub);
+            if (newStub) {
+                JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
+                attached = true;
+
+                newStub->toCacheIR_Updated()->updateStubId() = gen.updateStubId();
+
+                if (gen.shouldNotePreliminaryObjectStub())
+                    newStub->toCacheIR_Updated()->notePreliminaryObject();
+                else if (gen.shouldUnlinkPreliminaryObjectStubs())
+                    StripPreliminaryObjectStubs(cx, stub);
+            }
+        }
+    }
+
     if (op == JSOP_INITPROP ||
         op == JSOP_INITLOCKEDPROP ||
         op == JSOP_INITHIDDENPROP)
@@ -3107,77 +3083,6 @@ GuardGroupAndShapeMaybeUnboxedExpando(MacroAssembler& masm, JSObject* obj,
     }
 }
 
-bool
-ICSetProp_Native::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
-    Label failure;
-
-    // Guard input is an object.
-    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
-    Register objReg = masm.extractObject(R0, ExtractTemp0);
-
-    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
-    Register scratch = regs.takeAny();
-
-    GuardGroupAndShapeMaybeUnboxedExpando(masm, obj_, objReg, scratch,
-                                          ICSetProp_Native::offsetOfGroup(),
-                                          ICSetProp_Native::offsetOfShape(),
-                                          &failure);
-
-    // Stow both R0 and R1 (object and value).
-    EmitStowICValues(masm, 2);
-
-    // Type update stub expects the value to check in R0.
-    masm.moveValue(R1, R0);
-
-    // Call the type-update stub.
-    if (!callTypeUpdateIC(masm, sizeof(Value)))
-        return false;
-
-    // Unstow R0 and R1 (object and key)
-    EmitUnstowICValues(masm, 2);
-
-    regs.add(R0);
-    regs.takeUnchecked(objReg);
-
-    Register holderReg;
-    if (obj_->is<UnboxedPlainObject>()) {
-        // We are loading off the expando object, so use that for the holder.
-        holderReg = regs.takeAny();
-        masm.loadPtr(Address(objReg, UnboxedPlainObject::offsetOfExpando()), holderReg);
-        if (!isFixedSlot_)
-            masm.loadPtr(Address(holderReg, NativeObject::offsetOfSlots()), holderReg);
-    } else if (isFixedSlot_) {
-        holderReg = objReg;
-    } else {
-        holderReg = regs.takeAny();
-        masm.loadPtr(Address(objReg, NativeObject::offsetOfSlots()), holderReg);
-    }
-
-    // Perform the store.
-    masm.load32(Address(ICStubReg, ICSetProp_Native::offsetOfOffset()), scratch);
-    EmitPreBarrier(masm, BaseIndex(holderReg, scratch, TimesOne), MIRType::Value);
-    masm.storeValue(R1, BaseIndex(holderReg, scratch, TimesOne));
-    if (holderReg != objReg)
-        regs.add(holderReg);
-    if (cx->runtime()->gc.nursery.exists()) {
-        Register scr = regs.takeAny();
-        LiveGeneralRegisterSet saveRegs;
-        saveRegs.add(R1);
-        emitPostWriteBarrierSlot(masm, objReg, R1, scr, saveRegs);
-        regs.add(scr);
-    }
-
-    EmitReturnFromIC(masm);
-
-    // Failure case - jump to next stub
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
-}
-
 ICUpdatedStub*
 ICSetPropNativeAddCompiler::getStub(ICStubSpace* space)
 {
@@ -3323,7 +3228,7 @@ ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler& masm)
         Register scr = regs.takeAny();
         LiveGeneralRegisterSet saveRegs;
         saveRegs.add(R1);
-        emitPostWriteBarrierSlot(masm, objReg, R1, scr, saveRegs);
+        BaselineEmitPostWriteBarrierSlot(masm, objReg, R1, scr, saveRegs, cx);
     }
 
     EmitReturnFromIC(masm);
@@ -3380,7 +3285,7 @@ ICSetProp_Unboxed::Compiler::generateStubCode(MacroAssembler& masm)
         saveRegs.add(R1);
         saveRegs.addUnchecked(object);
         saveRegs.add(ICStubReg);
-        emitPostWriteBarrierSlot(masm, object, R1, scratch, saveRegs);
+        BaselineEmitPostWriteBarrierSlot(masm, object, R1, scratch, saveRegs, cx);
     }
 
     // Compute the address being written to.
@@ -3447,7 +3352,7 @@ ICSetProp_TypedObject::Compiler::generateStubCode(MacroAssembler& masm)
         saveRegs.add(R1);
         saveRegs.addUnchecked(object);
         saveRegs.add(ICStubReg);
-        emitPostWriteBarrierSlot(masm, object, R1, scratch, saveRegs);
+        BaselineEmitPostWriteBarrierSlot(masm, object, R1, scratch, saveRegs, cx);
     }
 
     // Save the rhs on the stack so we can get a second scratch register.
@@ -6681,28 +6586,6 @@ ICInstanceOf_Function::ICInstanceOf_Function(JitCode* stubCode, Shape* shape,
     prototypeObj_(prototypeObj),
     slot_(slot)
 { }
-
-ICSetProp_Native::ICSetProp_Native(JitCode* stubCode, ObjectGroup* group, Shape* shape,
-                                   uint32_t offset)
-  : ICUpdatedStub(SetProp_Native, stubCode),
-    group_(group),
-    shape_(shape),
-    offset_(offset)
-{ }
-
-ICSetProp_Native*
-ICSetProp_Native::Compiler::getStub(ICStubSpace* space)
-{
-    RootedObjectGroup group(cx, JSObject::getGroup(cx, obj_));
-    if (!group)
-        return nullptr;
-
-    RootedShape shape(cx, LastPropertyForSetProp(obj_));
-    ICSetProp_Native* stub = newStub<ICSetProp_Native>(space, getStubCode(), group, shape, offset_);
-    if (!stub || !stub->initUpdatingChain(cx, space))
-        return nullptr;
-    return stub;
-}
 
 ICSetProp_NativeAdd::ICSetProp_NativeAdd(JitCode* stubCode, ObjectGroup* group,
                                          size_t protoChainDepth,
