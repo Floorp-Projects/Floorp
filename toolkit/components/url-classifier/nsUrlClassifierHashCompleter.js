@@ -290,6 +290,8 @@ function HashCompleterRequest(aCompleter, aGethashUrl) {
   // Multiple partial hashes can be associated with the same tables
   // so we use a map here.
   this.tableNames = new Map();
+
+  this.telemetryProvider = "";
 }
 HashCompleterRequest.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIRequestObserver,
@@ -316,6 +318,11 @@ HashCompleterRequest.prototype = {
             'the same gethash URL.');
       }
       this.tableNames.set(aTableName);
+
+      // Assuming all tables with the same gethash URL have the same provider
+      if (this.telemetryProvider == "") {
+        this.telemetryProvider = gUrlUtil.getTelemetryProvider(aTableName);
+      }
     }
   },
 
@@ -376,7 +383,8 @@ HashCompleterRequest.prototype = {
     // channel.
     if (this._channel && this._channel.isPending()) {
       log("cancelling request to " + this.gethashUrl + "\n");
-      Services.telemetry.getHistogramById("URLCLASSIFIER_COMPLETE_TIMEOUT").add(1);
+      Services.telemetry.getKeyedHistogramById("URLCLASSIFIER_COMPLETE_TIMEOUT2").
+        add(this.telemetryProvider, 1);
       this._channel.cancel(Cr.NS_BINDING_ABORTED);
     }
   },
@@ -664,10 +672,10 @@ HashCompleterRequest.prototype = {
     let success = Components.isSuccessCode(aStatusCode);
     log('Received a ' + httpStatus + ' status code from the gethash server (success=' + success + ').');
 
-    let histogram =
-      Services.telemetry.getHistogramById("URLCLASSIFIER_COMPLETE_REMOTE_STATUS");
-    histogram.add(httpStatusToBucket(httpStatus));
-    Services.telemetry.getHistogramById("URLCLASSIFIER_COMPLETE_TIMEOUT").add(0);
+    Services.telemetry.getKeyedHistogramById("URLCLASSIFIER_COMPLETE_REMOTE_STATUS2").
+      add(this.telemetryProvider, httpStatusToBucket(httpStatus));
+    Services.telemetry.getKeyedHistogramById("URLCLASSIFIER_COMPLETE_TIMEOUT2").
+      add(this.telemetryProvider, 0);
 
     // Notify the RequestBackoff once a response is received.
     this._completer.finishRequest(this.gethashUrl, httpStatus);
