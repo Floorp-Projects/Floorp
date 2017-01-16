@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1330796
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 772796</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style> .pre { white-space: pre } </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=772796">Mozilla Bug 1330796</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<div id="editable" contenteditable></div>
+
+<pre id="test">
+
+<script type="application/javascript">
+// We want to test what happens when the user splits a mail cite by clicking
+// at the start, the middle and the end of the cite and hitting the enter key.
+// Mail cites are spans, and since bug 1288911 they are displayed as blocks.
+// The _moz_quote attribute is used to give the cite a blue color via CSS.
+// As an internal attribute, it's not returned from the innerHTML.
+// To the user the tests look like:
+// > mailcite
+// This text is 10 characters long, so we position at 0, 5 and 10.
+// Althought since bug 1288911 those cites are displayed as block,
+// the tests are repeated also for inline display.
+// Each entry of the 'tests' array has the original HTML, the offset to click
+// at and the expected result HTML.
+var tests = [
+  // With style="display: block;".
+  [ "<span _moz_quote=true style=\"display: block;\">&gt; mailcite<br></span>", 0,
+    "x<br><span style=\"display: block;\">&gt; mailcite<br></span>" ],
+  [ "<span _moz_quote=true style=\"display: block;\">&gt; mailcite<br></span>", 5,
+    "<span style=\"display: block;\">&gt; mai<br></span>x<br><span style=\"display: block;\">lcite<br></span>"],
+  [ "<span _moz_quote=true style=\"display: block;\">&gt; mailcite<br></span>", 10,
+    "<span style=\"display: block;\">&gt; mailcite<br></span>x<br>" ],
+  // No <br> at the end to simulate prior deletion to the end of the quote.
+  [ "<span _moz_quote=true style=\"display: block;\">&gt; mailcite</span>", 10,
+    "<span style=\"display: block;\">&gt; mailcite<br></span>x<br>" ],
+
+  // Without style="display: block;".
+  [ "<span _moz_quote=true>&gt; mailcite<br></span>", 0,
+    "x<br><span>&gt; mailcite<br></span>" ],
+  [ "<span _moz_quote=true>&gt; mailcite<br></span>", 5,
+    "<span>&gt; mai</span><br>x<br><span>lcite<br></span>" ],
+  [ "<span _moz_quote=true>&gt; mailcite<br></span>", 10,
+    "<span>&gt; mailcite<br></span>x<br>" ],
+  // No <br> at the end to simulate prior deletion to the end of the quote.
+  [ "<span _moz_quote=true>&gt; mailcite</span>", 10,
+    "<span>&gt; mailcite</span><br>x<br>" ]
+];
+
+/** Test for Bug 1330796 **/
+
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(function() {
+
+  var sel = window.getSelection();
+  var theEdit = document.getElementById("editable");
+  makeMailEditor();
+
+  for (i = 0; i < tests.length; i++) {
+    theEdit.innerHTML = tests[i][0];
+    theEdit.focus();
+    var theText = theEdit.firstChild.firstChild;
+    // Position set at the beginning , middle and end of the text.
+    sel.collapse(theText, tests[i][1]);
+
+    synthesizeKey("KEY_Enter", {});
+    synthesizeKey("x", {});
+    is(theEdit.innerHTML, tests[i][2], "unexpected HTML for test " + i.toString());
+  }
+
+  SimpleTest.finish();
+
+});
+
+function makeMailEditor() {
+  var Ci = SpecialPowers.Ci;
+  var editingSession = SpecialPowers.wrap(window)
+    .QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIWebNavigation)
+    .QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIEditingSession);
+  var editor = editingSession.getEditorForWindow(window);
+  editor.flags |= Ci.nsIPlaintextEditor.eEditorMailMask;
+}
+</script>
+
+</pre>
+</body>
+</html>
