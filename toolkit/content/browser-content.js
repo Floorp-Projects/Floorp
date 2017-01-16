@@ -422,8 +422,8 @@ var Printing = {
   },
 
   get shouldSavePrintSettings() {
-    return Services.prefs.getBoolPref("print.use_global_printsettings", false) &&
-           Services.prefs.getBoolPref("print.save_print_settings", false);
+    return Services.prefs.getBoolPref("print.use_global_printsettings") &&
+           Services.prefs.getBoolPref("print.save_print_settings");
   },
 
   handleEvent(event) {

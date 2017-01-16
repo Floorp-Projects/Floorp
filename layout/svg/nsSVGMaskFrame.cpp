@@ -262,7 +262,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
     gfxMatrix m = mMatrixForChildren;
     if (kid->GetContent()->IsSVGElement()) {
       m = static_cast<nsSVGElement*>(kid->GetContent())->
-            PrependLocalTransformsTo(m);
+            PrependLocalTransformsTo(m, eUserSpaceToParent);
     }
     result = nsSVGUtils::PaintFrameWithEffects(kid, *tmpCtx, m);
     if (result != DrawResult::SUCCESS) {

@@ -6,8 +6,8 @@
 
 const I = require("devtools/client/shared/vendor/immutable");
 const {
-  TOGGLE_REQUEST_FILTER_TYPE,
   ENABLE_REQUEST_FILTER_TYPE_ONLY,
+  TOGGLE_REQUEST_FILTER_TYPE,
   SET_REQUEST_FILTER_TEXT,
 } = require("../constants");
 
@@ -67,12 +67,12 @@ function enableRequestFilterTypeOnly(state, action) {
 
 function filters(state = new Filters(), action) {
   switch (action.type) {
-    case TOGGLE_REQUEST_FILTER_TYPE:
-      return state.set("requestFilterTypes",
-        toggleRequestFilterType(state.requestFilterTypes, action));
     case ENABLE_REQUEST_FILTER_TYPE_ONLY:
       return state.set("requestFilterTypes",
         enableRequestFilterTypeOnly(state.requestFilterTypes, action));
+    case TOGGLE_REQUEST_FILTER_TYPE:
+      return state.set("requestFilterTypes",
+        toggleRequestFilterType(state.requestFilterTypes, action));
     case SET_REQUEST_FILTER_TEXT:
       return state.set("requestFilterText", action.text);
     default:

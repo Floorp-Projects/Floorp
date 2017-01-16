@@ -127,7 +127,7 @@ async function syncAndExpectNodeReassignment(server, firstNotification, between,
 
       // Verify that the client requests a node reassignment.
       // Install a node handler to watch for these requests.
-      installNodeHandler(server, function () {
+      installNodeHandler(server, function() {
         nodeFetched = true;
       });
 
@@ -141,7 +141,7 @@ async function syncAndExpectNodeReassignment(server, firstNotification, between,
 
       // Make absolutely sure that any event listeners are done with their work
       // before we proceed.
-      waitForZeroTimer(function () {
+      waitForZeroTimer(function() {
         _("Second sync nextTick.");
         do_check_true(nodeFetched);
         Service.startOver();
@@ -155,7 +155,7 @@ async function syncAndExpectNodeReassignment(server, firstNotification, between,
 
   // Make sure that it works!
   let request = new RESTRequest(url);
-  request.get(function () {
+  request.get(function() {
     do_check_eq(request.response.status, 401);
     Utils.nextTick(onwards);
   });
@@ -323,7 +323,7 @@ add_task(async function test_loop_avoidance_storage() {
 
     // Verify that the client requests a node reassignment.
     // Install a node handler to watch for these requests.
-    installNodeHandler(server, function () {
+    installNodeHandler(server, function() {
       nodeFetched = true;
     });
 
@@ -368,7 +368,7 @@ add_task(async function test_loop_avoidance_storage() {
 
     // Make absolutely sure that any event listeners are done with their work
     // before we proceed.
-    waitForZeroTimer(function () {
+    waitForZeroTimer(function() {
       _("Third sync nextTick.");
       do_check_false(getReassigned());
       do_check_true(nodeFetched);
@@ -462,7 +462,7 @@ add_task(async function test_loop_avoidance_engine() {
 
     // Verify that the client requests a node reassignment.
     // Install a node handler to watch for these requests.
-    installNodeHandler(server, function () {
+    installNodeHandler(server, function() {
       nodeFetched = true;
     });
 
@@ -508,7 +508,7 @@ add_task(async function test_loop_avoidance_engine() {
 
     // Make absolutely sure that any event listeners are done with their work
     // before we proceed.
-    waitForZeroTimer(function () {
+    waitForZeroTimer(function() {
       _("Third sync nextTick.");
       do_check_false(getReassigned());
       do_check_true(nodeFetched);

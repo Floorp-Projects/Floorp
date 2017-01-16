@@ -62,8 +62,8 @@
 
   <hbox id="addonInstallBox">
     <checkbox id="warnAddonInstall"
-              label="&warnAddonInstall.label;"
-              accesskey="&warnAddonInstall.accesskey;"
+              label="&warnOnAddonInstall.label;"
+              accesskey="&warnOnAddonInstall.accesskey;"
               preference="xpinstall.whitelist.required"
               onsyncfrompreference="return gSecurityPane.readWarnAddonInstall();"/>
     <spacer flex="1"/>
@@ -82,8 +82,8 @@
                 label="&blockDownloads.label;"
                 accesskey="&blockDownloads.accesskey;" />
       <checkbox id="blockUncommonUnwanted"
-                label="&blockUncommonUnwanted.label;"
-                accesskey="&blockUncommonUnwanted.accesskey;" />
+                label="&blockUncommonAndUnwanted.label;"
+                accesskey="&blockUncommonAndUnwanted.accesskey;" />
     </vbox>
   </vbox>
 </groupbox>

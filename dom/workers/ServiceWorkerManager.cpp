@@ -36,6 +36,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/Headers.h"
@@ -246,7 +247,7 @@ ServiceWorkerManager::~ServiceWorkerManager()
 }
 
 void
-ServiceWorkerManager::Init()
+ServiceWorkerManager::Init(ServiceWorkerRegistrar* aRegistrar)
 {
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -256,11 +257,10 @@ ServiceWorkerManager::Init()
   }
 
   if (XRE_IsParentProcess()) {
-    RefPtr<ServiceWorkerRegistrar> swr = ServiceWorkerRegistrar::Get();
-    MOZ_ASSERT(swr);
+    MOZ_DIAGNOSTIC_ASSERT(aRegistrar);
 
     nsTArray<ServiceWorkerRegistrationData> data;
-    swr->GetRegistrations(data);
+    aRegistrar->GetRegistrations(data);
     LoadRegistrations(data);
 
     if (obs) {
@@ -273,6 +273,56 @@ ServiceWorkerManager::Init()
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
+}
+
+void
+ServiceWorkerManager::MaybeStartShutdown()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mShuttingDown) {
+    return;
+  }
+
+  mShuttingDown = true;
+
+  for (auto it1 = mRegistrationInfos.Iter(); !it1.Done(); it1.Next()) {
+    for (auto it2 = it1.UserData()->mUpdateTimers.Iter(); !it2.Done(); it2.Next()) {
+      nsCOMPtr<nsITimer> timer = it2.UserData();
+      timer->Cancel();
+    }
+    it1.UserData()->mUpdateTimers.Clear();
+
+    for (auto it2 = it1.UserData()->mJobQueues.Iter(); !it2.Done(); it2.Next()) {
+      RefPtr<ServiceWorkerJobQueue> queue = it2.UserData();
+      queue->CancelAll();
+    }
+    it1.UserData()->mJobQueues.Clear();
+  }
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+
+    if (XRE_IsParentProcess()) {
+      obs->RemoveObserver(this, PURGE_SESSION_HISTORY);
+      obs->RemoveObserver(this, PURGE_DOMAIN_DATA);
+      obs->RemoveObserver(this, CLEAR_ORIGIN_DATA);
+    }
+  }
+
+  mPendingOperations.Clear();
+
+  if (!mActor) {
+    return;
+  }
+
+  mActor->ManagerShuttingDown();
+
+  RefPtr<TeardownRunnable> runnable = new TeardownRunnable(mActor);
+  nsresult rv = NS_DispatchToMainThread(runnable);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+  mActor = nullptr;
 }
 
 class ServiceWorkerResolveWindowPromiseOnRegisterCallback final : public ServiceWorkerJob::Callback
@@ -628,6 +678,17 @@ ServiceWorkerManager::Register(mozIDOMWindow* aWindow,
 
   AssertIsOnMainThread();
   Telemetry::Accumulate(Telemetry::SERVICE_WORKER_REGISTRATIONS, 1);
+
+  ContentChild* contentChild = ContentChild::GetSingleton();
+  if (contentChild &&
+      contentChild->GetRemoteType().EqualsLiteral(FILE_REMOTE_TYPE)) {
+    nsString message(NS_LITERAL_STRING("ServiceWorker registered by document "
+                                       "embedded in a file:/// URI.  This may "
+                                       "result in unexpected behavior."));
+    ReportToAllClients(cleanedScope, message, EmptyString(),
+                       EmptyString(), 0, 0, nsIScriptError::warningFlag);
+    Telemetry::Accumulate(Telemetry::FILE_EMBEDDED_SERVICEWORKERS, 1);
+  }
 
   promise.forget(aPromise);
   return NS_OK;
@@ -1358,12 +1419,23 @@ ServiceWorkerManager::GetInstance()
   // this can resurrect the ServiceWorkerManager pretty late during shutdown.
   static bool firstTime = true;
   if (firstTime) {
+    RefPtr<ServiceWorkerRegistrar> swr;
+
+    // Don't create the ServiceWorkerManager until the ServiceWorkerRegistrar is
+    // initialized.
+    if (XRE_IsParentProcess()) {
+      swr = ServiceWorkerRegistrar::Get();
+      if (!swr) {
+        return nullptr;
+      }
+    }
+
     firstTime = false;
 
     AssertIsOnMainThread();
 
     gInstance = new ServiceWorkerManager();
-    gInstance->Init();
+    gInstance->Init(swr);
     ClearOnShutdown(&gInstance);
   }
   RefPtr<ServiceWorkerManager> copy = gInstance.get();
@@ -1741,7 +1813,8 @@ ServiceWorkerManager::LoadRegistrations(
 void
 ServiceWorkerManager::ActorFailed()
 {
-  MOZ_CRASH("Failed to create a PBackgroundChild actor!");
+  MOZ_DIAGNOSTIC_ASSERT(!mActor);
+  MaybeStartShutdown();
 }
 
 void
@@ -1751,12 +1824,16 @@ ServiceWorkerManager::ActorCreated(mozilla::ipc::PBackgroundChild* aActor)
   MOZ_ASSERT(!mActor);
 
   if (mShuttingDown) {
-    mPendingOperations.Clear();
+    MOZ_DIAGNOSTIC_ASSERT(mPendingOperations.IsEmpty());
     return;
   }
 
   PServiceWorkerManagerChild* actor =
     aActor->SendPServiceWorkerManagerConstructor();
+  if (!actor) {
+    ActorFailed();
+    return;
+  }
 
   mActor = static_cast<ServiceWorkerManagerChild*>(actor);
 
@@ -1784,7 +1861,10 @@ ServiceWorkerManager::StoreRegistration(
     return;
   }
 
-  MOZ_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  if (!mActor) {
+    return;
+  }
 
   ServiceWorkerRegistrationData data;
   nsresult rv = PopulateRegistrationData(aPrincipal, aRegistration, data);
@@ -3559,43 +3639,7 @@ ServiceWorkerManager::Observe(nsISupports* aSubject,
   }
 
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
-    mShuttingDown = true;
-
-    for (auto it1 = mRegistrationInfos.Iter(); !it1.Done(); it1.Next()) {
-      for (auto it2 = it1.UserData()->mUpdateTimers.Iter(); !it2.Done(); it2.Next()) {
-        nsCOMPtr<nsITimer> timer = it2.UserData();
-        timer->Cancel();
-      }
-      it1.UserData()->mUpdateTimers.Clear();
-
-      for (auto it2 = it1.UserData()->mJobQueues.Iter(); !it2.Done(); it2.Next()) {
-        RefPtr<ServiceWorkerJobQueue> queue = it2.UserData();
-        queue->CancelAll();
-      }
-      it1.UserData()->mJobQueues.Clear();
-    }
-
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-      obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-
-      if (XRE_IsParentProcess()) {
-        obs->RemoveObserver(this, PURGE_SESSION_HISTORY);
-        obs->RemoveObserver(this, PURGE_DOMAIN_DATA);
-        obs->RemoveObserver(this, CLEAR_ORIGIN_DATA);
-      }
-    }
-
-    if (mActor) {
-      mActor->ManagerShuttingDown();
-
-      RefPtr<TeardownRunnable> runnable = new TeardownRunnable(mActor);
-      nsresult rv = NS_DispatchToMainThread(runnable);
-      Unused << NS_WARN_IF(NS_FAILED(rv));
-      mActor = nullptr;
-    } else {
-      mPendingOperations.Clear();
-    }
+    MaybeStartShutdown();
     return NS_OK;
   }
 

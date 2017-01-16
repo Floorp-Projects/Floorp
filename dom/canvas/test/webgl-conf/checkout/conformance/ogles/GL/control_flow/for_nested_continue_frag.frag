@@ -43,15 +43,15 @@ void main (void)
 				continue;
 			else
 				val2 += count2;
-			
+
 		}
-		
+
 
 	  	if(count1 == 2)
             		continue;
-	  	else 
+	  	else
 	    		val1 += count1;
-	
+
 	}
 	float gray;
 	if( (val1 == 8) && (val2 == 32) )

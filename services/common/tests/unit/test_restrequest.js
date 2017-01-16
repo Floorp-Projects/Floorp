@@ -76,7 +76,7 @@ add_test(function test_proxy_auth_redirect() {
   installFakePAC();
 
   let res = new RESTRequest(server.baseURI + "/original");
-  res.get(function (error) {
+  res.get(function(error) {
     do_check_true(pacFetched);
     do_check_true(fetched);
     do_check_true(!error);
@@ -110,7 +110,7 @@ add_test(function test_simple_get() {
   let handler = httpd_handler(200, "OK", "Huzzah!");
   let server = httpd_setup({"/resource": handler});
 
-  let request = new RESTRequest(server.baseURI + "/resource").get(function (error) {
+  let request = new RESTRequest(server.baseURI + "/resource").get(function(error) {
     do_check_eq(error, null);
 
     do_check_eq(this.status, this.COMPLETED);
@@ -134,7 +134,7 @@ add_test(function test_get() {
   let request = new RESTRequest(server.baseURI + "/resource");
   do_check_eq(request.status, request.NOT_SENT);
 
-  request.onProgress = request.onComplete = function () {
+  request.onProgress = request.onComplete = function() {
     do_throw("This function should have been overwritten!");
   };
 
@@ -146,7 +146,7 @@ add_test(function test_get() {
 
     do_check_true(!!(this.channel.loadFlags & Ci.nsIRequest.LOAD_BYPASS_CACHE));
     do_check_true(!!(this.channel.loadFlags & Ci.nsIRequest.INHIBIT_CACHING));
-  };
+  }
 
   function onComplete(error) {
     do_check_eq(error, null);
@@ -158,17 +158,17 @@ add_test(function test_get() {
     do_check_eq(handler.request.method, "GET");
 
     do_check_true(onProgress_called);
-    CommonUtils.nextTick(function () {
+    CommonUtils.nextTick(function() {
       do_check_eq(request.onComplete, null);
       do_check_eq(request.onProgress, null);
       server.stop(run_next_test);
     });
-  };
+  }
 
   do_check_eq(request.get(onComplete, onProgress), request);
   do_check_eq(request.status, request.SENT);
   do_check_eq(request.method, "GET");
-  do_check_throws(function () {
+  do_check_throws(function() {
     request.get();
   });
 });
@@ -315,7 +315,7 @@ function check_posting_data(method) {
   let request = new RESTRequest(server.baseURI + "/resource");
   do_check_eq(request.status, request.NOT_SENT);
 
-  request.onProgress = request.onComplete = function () {
+  request.onProgress = request.onComplete = function() {
     do_throw("This function should have been overwritten!");
   };
 
@@ -324,7 +324,7 @@ function check_posting_data(method) {
     onProgress_called = true;
     do_check_eq(this.status, request.IN_PROGRESS);
     do_check_true(this.response.body.length > 0);
-  };
+  }
 
   function onComplete(error) {
     do_check_eq(error, null);
@@ -339,17 +339,17 @@ function check_posting_data(method) {
     do_check_eq(handler.request.getHeader("Content-Type"), "text/plain");
 
     do_check_true(onProgress_called);
-    CommonUtils.nextTick(function () {
+    CommonUtils.nextTick(function() {
       do_check_eq(request.onComplete, null);
       do_check_eq(request.onProgress, null);
       server.stop(run_next_test);
     });
-  };
+  }
 
   do_check_eq(request[funcName]("Hullo?", onComplete, onProgress), request);
   do_check_eq(request.status, request.SENT);
   do_check_eq(request.method, method);
-  do_check_throws(function () {
+  do_check_throws(function() {
     request[funcName]("Hai!");
   });
 }
@@ -385,7 +385,7 @@ add_test(function test_delete() {
   let request = new RESTRequest(server.baseURI + "/resource");
   do_check_eq(request.status, request.NOT_SENT);
 
-  request.onProgress = request.onComplete = function () {
+  request.onProgress = request.onComplete = function() {
     do_throw("This function should have been overwritten!");
   };
 
@@ -394,7 +394,7 @@ add_test(function test_delete() {
     onProgress_called = true;
     do_check_eq(this.status, request.IN_PROGRESS);
     do_check_true(this.response.body.length > 0);
-  };
+  }
 
   function onComplete(error) {
     do_check_eq(error, null);
@@ -406,17 +406,17 @@ add_test(function test_delete() {
     do_check_eq(handler.request.method, "DELETE");
 
     do_check_true(onProgress_called);
-    CommonUtils.nextTick(function () {
+    CommonUtils.nextTick(function() {
       do_check_eq(request.onComplete, null);
       do_check_eq(request.onProgress, null);
       server.stop(run_next_test);
     });
-  };
+  }
 
   do_check_eq(request.delete(onComplete, onProgress), request);
   do_check_eq(request.status, request.SENT);
   do_check_eq(request.method, "DELETE");
-  do_check_throws(function () {
+  do_check_throws(function() {
     request.delete();
   });
 });
@@ -429,7 +429,7 @@ add_test(function test_get_404() {
   let server = httpd_setup({"/resource": handler});
 
   let request = new RESTRequest(server.baseURI + "/resource");
-  request.get(function (error) {
+  request.get(function(error) {
     do_check_eq(error, null);
 
     do_check_eq(this.status, this.COMPLETED);
@@ -455,7 +455,7 @@ add_test(function test_put_json() {
     number: 42
   };
   let request = new RESTRequest(server.baseURI + "/resource");
-  request.put(sample_data, function (error) {
+  request.put(sample_data, function(error) {
     do_check_eq(error, null);
 
     do_check_eq(this.status, this.COMPLETED);
@@ -485,7 +485,7 @@ add_test(function test_post_json() {
     number: 42
   };
   let request = new RESTRequest(server.baseURI + "/resource");
-  request.post(sample_data, function (error) {
+  request.post(sample_data, function(error) {
     do_check_eq(error, null);
 
     do_check_eq(this.status, this.COMPLETED);
@@ -511,7 +511,7 @@ add_test(function test_post_json() {
 
   let sample_data = "hello";
   let request = new RESTRequest(server.baseURI + "/resource");
-  request.post(sample_data, function (error) {
+  request.post(sample_data, function(error) {
     do_check_eq(error, null);
 
     do_check_eq(this.status, this.COMPLETED);
@@ -536,7 +536,7 @@ add_test(function test_put_override_content_type() {
 
   let request = new RESTRequest(server.baseURI + "/resource");
   request.setHeader("Content-Type", "application/lolcat");
-  request.put("O HAI!!1!", function (error) {
+  request.put("O HAI!!1!", function(error) {
     do_check_eq(error, null);
 
     do_check_eq(this.status, this.COMPLETED);
@@ -561,7 +561,7 @@ add_test(function test_post_override_content_type() {
 
   let request = new RESTRequest(server.baseURI + "/resource");
   request.setHeader("Content-Type", "application/lolcat");
-  request.post("O HAI!!1!", function (error) {
+  request.post("O HAI!!1!", function(error) {
     do_check_eq(error, null);
 
     do_check_eq(this.status, this.COMPLETED);
@@ -589,7 +589,7 @@ add_test(function test_get_no_headers() {
                         "connection", "pragma", "cache-control",
                         "content-length"];
 
-  new RESTRequest(server.baseURI + "/resource").get(function (error) {
+  new RESTRequest(server.baseURI + "/resource").get(function(error) {
     do_check_eq(error, null);
 
     do_check_eq(this.response.status, 200);
@@ -616,7 +616,7 @@ add_test(function test_changing_uri() {
 
   let request = new RESTRequest("http://localhost:1234/the-wrong-resource");
   request.uri = CommonUtils.makeURI(server.baseURI + "/resource");
-  request.get(function (error) {
+  request.get(function(error) {
     do_check_eq(error, null);
     do_check_eq(this.response.status, 200);
     server.stop(run_next_test);
@@ -636,7 +636,7 @@ add_test(function test_request_setHeader() {
   request.setHeader("X-WHAT-is-Weave", "more awesomer");
   request.setHeader("Another-Header", "Hello World");
 
-  request.get(function (error) {
+  request.get(function(error) {
     do_check_eq(error, null);
 
     do_check_eq(this.response.status, 200);
@@ -661,7 +661,7 @@ add_test(function test_response_headers() {
   let server = httpd_setup({"/resource": handler});
   let request = new RESTRequest(server.baseURI + "/resource");
 
-  request.get(function (error) {
+  request.get(function(error) {
     do_check_eq(error, null);
 
     do_check_eq(this.response.status, 200);
@@ -683,7 +683,7 @@ add_test(function test_connection_refused() {
   request.onProgress = function onProgress() {
     do_throw("Shouldn't have called request.onProgress()!");
   };
-  request.get(function (error) {
+  request.get(function(error) {
     do_check_eq(error.result, Cr.NS_ERROR_CONNECTION_REFUSED);
     do_check_eq(error.message, "NS_ERROR_CONNECTION_REFUSED");
     do_check_eq(this.status, this.COMPLETED);
@@ -704,23 +704,23 @@ add_test(function test_abort() {
   let request = new RESTRequest(server.baseURI + "/resource");
 
   // Aborting a request that hasn't been sent yet is pointless and will throw.
-  do_check_throws(function () {
+  do_check_throws(function() {
     request.abort();
   });
 
-  request.onProgress = request.onComplete = function () {
+  request.onProgress = request.onComplete = function() {
     do_throw("Shouldn't have gotten here!");
   };
   request.get();
   request.abort();
 
   // Aborting an already aborted request is pointless and will throw.
-  do_check_throws(function () {
+  do_check_throws(function() {
     request.abort();
   });
 
   do_check_eq(request.status, request.ABORTED);
-  CommonUtils.nextTick(function () {
+  CommonUtils.nextTick(function() {
     server.stop(run_next_test);
   });
 });
@@ -746,7 +746,7 @@ add_test(function test_timeout() {
 
   let request = new RESTRequest(uri + "/resource");
   request.timeout = 0.1; // 100 milliseconds
-  request.get(function (error) {
+  request.get(function(error) {
     do_check_eq(error.result, Cr.NS_ERROR_NET_TIMEOUT);
     do_check_eq(this.status, this.ABORTED);
 
@@ -818,7 +818,7 @@ add_test(function test_new_channel() {
   redirectURL = server2.baseURI + "/resource";
 
   function advance() {
-    server1.stop(function () {
+    server1.stop(function() {
       server2.stop(run_next_test);
     });
   }
@@ -863,7 +863,7 @@ add_test(function test_not_sending_cookie() {
   cookieSer.setCookieString(uri, null, "test=test; path=/;", null);
 
   let res = new RESTRequest(server.baseURI + "/test");
-  res.get(function (error) {
+  res.get(function(error) {
     do_check_null(error);
     do_check_true(this.response.success);
     do_check_eq("COOKIE!", this.response.body);

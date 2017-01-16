@@ -44,7 +44,7 @@ function WebRequestEventManager(context, eventName) {
         tabId: browserData.tabId,
         type: data.type,
         timeStamp: Date.now(),
-        frameId: ExtensionManagement.getFrameId(data.windowId),
+        frameId: data.type == "main_frame" ? 0 : ExtensionManagement.getFrameId(data.windowId),
         parentFrameId: ExtensionManagement.getParentFrameId(data.parentWindowId, data.windowId),
       };
 

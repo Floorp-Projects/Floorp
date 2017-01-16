@@ -145,6 +145,7 @@ namespace layers {
 
 class ImageClient;
 class ImageCompositeNotification;
+class ImageContainer;
 class ImageContainerChild;
 class PImageContainerChild;
 class SharedPlanarYCbCrImage;
@@ -322,6 +323,24 @@ protected:
   virtual RefPtr<PlanarYCbCrImage> CreatePlanarYCbCrImage(
     const gfx::IntSize& aScaleHint,
     BufferRecycleBin *aRecycleBin);
+};
+
+// Used to notify ImageContainer::NotifyComposite()
+class ImageContainerListener final {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ImageContainerListener)
+
+public:
+  explicit ImageContainerListener(ImageContainer* aImageContainer);
+
+  void NotifyComposite(const ImageCompositeNotification& aNotification);
+  void ClearImageContainer();
+private:
+  typedef mozilla::Mutex Mutex;
+
+  ~ImageContainerListener();
+
+  Mutex mLock;
+  ImageContainer* mImageContainer;
 };
  
 /**
@@ -566,6 +585,11 @@ public:
 
   PImageContainerChild* GetPImageContainerChild();
 
+  ImageContainerListener* GetImageContainerListener()
+  {
+    return mNotifyCompositeListener;
+  }
+
   /**
    * Main thread only.
    */
@@ -631,6 +655,8 @@ private:
   // ProducerID for last current image(s), including the frames in
   // mFrameIDsNotYetComposited
   ProducerID mCurrentProducerID;
+
+  RefPtr<ImageContainerListener> mNotifyCompositeListener;
 
   static mozilla::Atomic<uint32_t> sGenerationCounter;
 };

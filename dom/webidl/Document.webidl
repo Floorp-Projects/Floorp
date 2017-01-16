@@ -152,9 +152,6 @@ partial interface Document {
 
   // Gecko extensions?
                 attribute EventHandler onwheel;
-                attribute EventHandler oncopy;
-                attribute EventHandler oncut;
-                attribute EventHandler onpaste;
                 attribute EventHandler onbeforescriptexecute;
                 attribute EventHandler onafterscriptexecute;
 
@@ -445,6 +442,7 @@ partial interface Document {
 
 Document implements XPathEvaluator;
 Document implements GlobalEventHandlers;
+Document implements DocumentAndElementEventHandlers;
 Document implements TouchEventHandlers;
 Document implements ParentNode;
 Document implements OnErrorEventHandlerForNodes;

@@ -67,8 +67,8 @@ IsWhitelistedH264Codec(const nsAString& aCodec)
 
 /* static */
 bool
-MP4Decoder::CanHandleMediaType(const MediaContentType& aType,
-                               DecoderDoctorDiagnostics* aDiagnostics)
+MP4Decoder::IsSupportedType(const MediaContentType& aType,
+                            DecoderDoctorDiagnostics* aDiagnostics)
 {
   if (!IsEnabled()) {
     return false;
@@ -77,29 +77,29 @@ MP4Decoder::CanHandleMediaType(const MediaContentType& aType,
   // Whitelist MP4 types, so they explicitly match what we encounter on
   // the web, as opposed to what we use internally (i.e. what our demuxers
   // etc output).
-  const bool isMP4Audio = aType.GetMIMEType().EqualsASCII("audio/mp4") ||
-                          aType.GetMIMEType().EqualsASCII("audio/x-m4a");
-  const bool isMP4Video =
+  const bool isAudio = aType.Type() == MEDIAMIMETYPE("audio/mp4")
+                       || aType.Type() == MEDIAMIMETYPE("audio/x-m4a");
+  const bool isVideo = aType.Type() == MEDIAMIMETYPE("video/mp4")
+                       || aType.Type() == MEDIAMIMETYPE("video/quicktime")
   // On B2G, treat 3GPP as MP4 when Gonk PDM is available.
 #ifdef MOZ_GONK_MEDIACODEC
-      aType.GetMIMEType().EqualsASCII(VIDEO_3GPP) ||
+                       || aType.Type() == MEDIAMIMETYPE(VIDEO_3GPP)
 #endif
-      aType.GetMIMEType().EqualsASCII("video/mp4") ||
-      aType.GetMIMEType().EqualsASCII("video/quicktime") ||
-      aType.GetMIMEType().EqualsASCII("video/x-m4v");
-  if (!isMP4Audio && !isMP4Video) {
+                       || aType.Type() == MEDIAMIMETYPE("video/x-m4v");
+
+  if (!isAudio && !isVideo) {
     return false;
   }
 
   nsTArray<UniquePtr<TrackInfo>> trackInfos;
-  if (aType.GetCodecs().IsEmpty()) {
+  if (aType.ExtendedType().Codecs().IsEmpty()) {
     // No codecs specified. Assume H.264
-    if (isMP4Audio) {
+    if (isAudio) {
       trackInfos.AppendElement(
         CreateTrackInfoWithMIMETypeAndContentTypeExtraParameters(
           NS_LITERAL_CSTRING("audio/mp4a-latm"), aType));
     } else {
-      MOZ_ASSERT(isMP4Video);
+      MOZ_ASSERT(isVideo);
       trackInfos.AppendElement(
         CreateTrackInfoWithMIMETypeAndContentTypeExtraParameters(
           NS_LITERAL_CSTRING("video/avc"), aType));
@@ -107,11 +107,7 @@ MP4Decoder::CanHandleMediaType(const MediaContentType& aType,
   } else {
     // Verify that all the codecs specified are ones that we expect that
     // we can play.
-    nsTArray<nsString> codecs;
-    if (!ParseCodecsString(aType.GetCodecs(), codecs)) {
-      return false;
-    }
-    for (const nsString& codec : codecs) {
+    for (const auto& codec : aType.ExtendedType().Codecs().Range()) {
       if (IsAACCodecString(codec)) {
         trackInfos.AppendElement(
           CreateTrackInfoWithMIMETypeAndContentTypeExtraParameters(
@@ -138,7 +134,7 @@ MP4Decoder::CanHandleMediaType(const MediaContentType& aType,
       }
       // Note: Only accept H.264 in a video content type, not in an audio
       // content type.
-      if (IsWhitelistedH264Codec(codec) && isMP4Video) {
+      if (IsWhitelistedH264Codec(codec) && isVideo) {
         trackInfos.AppendElement(
           CreateTrackInfoWithMIMETypeAndContentTypeExtraParameters(
             NS_LITERAL_CSTRING("video/avc"), aType));

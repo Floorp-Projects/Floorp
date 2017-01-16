@@ -816,11 +816,13 @@ var getTypedArrayElementsPerPixel = function(gl, format, type) {
  *        where each element is in the range 0 to 255.
  * @param {number} opt_level The level of the texture to fill. Default = 0.
  * @param {number} opt_format The format for the texture.
+ * @param {number} opt_internalFormat The internal format for the texture.
  */
-var fillTexture = function(gl, tex, width, height, color, opt_level, opt_format, opt_type) {
+var fillTexture = function(gl, tex, width, height, color, opt_level, opt_format, opt_type, opt_internalFormat) {
   opt_level = opt_level || 0;
   opt_format = opt_format || gl.RGBA;
   opt_type = opt_type || gl.UNSIGNED_BYTE;
+  opt_internalFormat = opt_internalFormat || opt_format;
   var pack = gl.getParameter(gl.UNPACK_ALIGNMENT);
   var numComponents = color.length;
   var bytesPerComponent = getBytesPerComponent(gl, opt_type);
@@ -839,7 +841,7 @@ var fillTexture = function(gl, tex, width, height, color, opt_level, opt_format,
   }
   gl.bindTexture(gl.TEXTURE_2D, tex);
   gl.texImage2D(
-      gl.TEXTURE_2D, opt_level, opt_format, width, height, 0,
+      gl.TEXTURE_2D, opt_level, opt_internalFormat, width, height, 0,
       opt_format, opt_type, buf);
 };
 
@@ -1160,7 +1162,7 @@ var checkCanvasRectColor = function(gl, x, y, width, height, color, opt_errorRan
  * @param {number} height width of region to check.
  * @param {!Array.<number>} color The color expected. A 4 element array where
  *        each element is in the range 0 to 255.
- * @param {string} opt_msg Message to associate with success. Eg
+ * @param {string} opt_msg Message to associate with success or failure. Eg
  *        ("should be red").
  * @param {number} opt_errorRange Optional. Acceptable error in
  *        color checking. 0 by default.
@@ -1174,7 +1176,12 @@ var checkCanvasRect = function(gl, x, y, width, height, color, opt_msg, opt_erro
           msg = "should be " + color.toString();
         testPassed(msg);
       },
-      testFailed,
+      function(differentMsg) {
+        var msg = opt_msg;
+        if (msg === undefined)
+          msg = "should be " + color.toString();
+        testFailed(msg + "\n" + differentMsg);
+      },
       debug);
 };
 
@@ -1511,7 +1518,7 @@ function create3DContextWithWrapperThatThrowsOnGLError(canvas, opt_attributes, o
  * @param {number|Array.<number>} glErrors The expected gl error or an array of expected errors.
  * @param {string} evalStr The string to evaluate.
  */
-var shouldGenerateGLError = function(gl, glErrors, evalStr) {
+var shouldGenerateGLError = function(gl, glErrors, evalStr, opt_msg) {
   var exception;
   try {
     eval(evalStr);
@@ -1521,7 +1528,10 @@ var shouldGenerateGLError = function(gl, glErrors, evalStr) {
   if (exception) {
     testFailed(evalStr + " threw exception " + exception);
   } else {
-    glErrorShouldBe(gl, glErrors, "after evaluating: " + evalStr);
+    if (!opt_msg) {
+      opt_msg = "after evaluating: " + evalStr;
+    }
+    glErrorShouldBe(gl, glErrors, opt_msg);
   }
 };
 
@@ -2385,11 +2395,11 @@ var makeVideo = function(src, onerror) {
  */
 var insertImage = function(element, caption, img) {
   var div = document.createElement("div");
-  div.appendChild(img);
   var label = document.createElement("div");
   label.appendChild(document.createTextNode(caption));
   div.appendChild(label);
-   element.appendChild(div);
+  div.appendChild(img);
+  element.appendChild(div);
 };
 
 /**
@@ -2922,6 +2932,60 @@ var setupImageForCrossOriginTest = function(img, imgUrl, localUrl, callback) {
   }, false);
 }
 
+/**
+ * Convert sRGB color to linear color.
+ * @param {!Array.<number>} color The color to be converted.
+ *        The array has 4 elements, for example [R, G, B, A].
+ *        where each element is in the range 0 to 255.
+ * @return {!Array.<number>} color The color to be converted.
+ *        The array has 4 elements, for example [R, G, B, A].
+ *        where each element is in the range 0 to 255.
+ */
+var sRGBToLinear = function(color) {
+    return [sRGBChannelToLinear(color[0]),
+            sRGBChannelToLinear(color[1]),
+            sRGBChannelToLinear(color[2]),
+            color[3]]
+}
+
+/**
+ * Convert linear color to sRGB color.
+ * @param {!Array.<number>} color The color to be converted.
+ *        The array has 4 elements, for example [R, G, B, A].
+ *        where each element is in the range 0 to 255.
+ * @return {!Array.<number>} color The color to be converted.
+ *        The array has 4 elements, for example [R, G, B, A].
+ *        where each element is in the range 0 to 255.
+ */
+var linearToSRGB = function(color) {
+    return [linearChannelToSRGB(color[0]),
+            linearChannelToSRGB(color[1]),
+            linearChannelToSRGB(color[2]),
+            color[3]]
+}
+
+function sRGBChannelToLinear(value) {
+    value = value / 255;
+    if (value <= 0.04045)
+        value = value / 12.92;
+    else
+        value = Math.pow((value + 0.055) / 1.055, 2.4);
+    return Math.trunc(value * 255 + 0.5);
+}
+
+function linearChannelToSRGB(value) {
+    value = value / 255;
+    if (value <= 0.0) {
+        value = 0.0;
+    } else if (value < 0.0031308) {
+        value = value * 12.92;
+    } else if (value < 1) {
+        value = Math.pow(value, 0.41666) * 1.055 - 0.055;
+    } else {
+        value = 1.0;
+    }
+    return Math.trunc(value * 255 + 0.5);
+}
 var API = {
   addShaderSource: addShaderSource,
   addShaderSources: addShaderSources,
@@ -3028,6 +3092,10 @@ var API = {
   // fullscreen api
   setupFullscreen: setupFullscreen,
 
+  // sRGB converter api
+  sRGBToLinear: sRGBToLinear,
+  linearToSRGB: linearToSRGB,
+
   getHost: getHost,
   getBaseDomain: getBaseDomain,
   runningOnLocalhost: runningOnLocalhost,
@@ -3045,7 +3113,6 @@ Object.defineProperties(API, {
   simpleVertexShader: { value: simpleVertexShader, writable: false },
   simpleTextureFragmentShader: { value: simpleTextureFragmentShader, writable: false },
   simpleCubeMapTextureFragmentShader: { value: simpleCubeMapTextureFragmentShader, writable: false },
-  simpleTextureVertexShader: { value: simpleTextureVertexShader, writable: false },
   simpleVertexColorFragmentShader: { value: simpleVertexColorFragmentShader, writable: false },
   simpleVertexColorVertexShader: { value: simpleVertexColorVertexShader, writable: false }
 });

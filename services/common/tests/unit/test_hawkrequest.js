@@ -9,13 +9,13 @@ Cu.import("resource://services-common/hawkrequest.js");
 
 // https://github.com/mozilla/fxa-auth-server/wiki/onepw-protocol#wiki-use-session-certificatesign-etc
 var SESSION_KEYS = {
-  sessionToken: h("a0a1a2a3a4a5a6a7 a8a9aaabacadaeaf"+
+  sessionToken: h("a0a1a2a3a4a5a6a7 a8a9aaabacadaeaf" +
                   "b0b1b2b3b4b5b6b7 b8b9babbbcbdbebf"),
 
-  tokenID:      h("c0a29dcf46174973 da1378696e4c82ae"+
+  tokenID:      h("c0a29dcf46174973 da1378696e4c82ae" +
                   "10f723cf4f4d9f75 e39f4ae3851595ab"),
 
-  reqHMACkey:   h("9d8f22998ee7f579 8b887042466b72d5"+
+  reqHMACkey:   h("9d8f22998ee7f579 8b887042466b72d5" +
                   "3e56ab0c094388bf 65831f702d2febc0"),
 };
 
@@ -75,7 +75,6 @@ add_test(function test_intl_accept_language() {
       do_print("Checked " + testCount + " languages. Removing checkLanguagePref as pref observer.");
       Services.prefs.removeObserver("intl.accept_languages", checkLanguagePref);
       run_next_test();
-      return;
     });
   }
 });
@@ -201,7 +200,7 @@ add_test(function test_hawk_language_pref_changed() {
     do_check_eq(languages[0], request._intl.accept_languages);
 
     // Change the language pref ...
-    setLanguage(languages[1]); 
+    setLanguage(languages[1]);
     CommonUtils.nextTick(testRequest);
   }
 

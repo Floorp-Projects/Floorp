@@ -53,7 +53,7 @@ void main (void)
 	sinValues[14] = -0.707107;
 	sinValues[15] = -0.382683;
 	sinValues[16] = 0.0;
-	
+
 	const float M_PI = 3.14159265358979323846;
 	float c = 2.0 * M_PI * color.r;
 
@@ -61,7 +61,7 @@ void main (void)
 	int arr0 = int(floor(arrVal));
 	float weight = arrVal - floor(arrVal);
 	float sin_c = 0.0;
-	
+
 	if (arr0 == 0)
 		sin_c = lerp(sinValues[0], sinValues[1], weight);
 	else if (arr0 == 1)

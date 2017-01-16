@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'cookies-panel.js',
     'editor.js',
     'headers-panel.js',
     'params-panel.js',

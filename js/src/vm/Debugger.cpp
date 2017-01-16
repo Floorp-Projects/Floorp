@@ -6297,8 +6297,12 @@ Debugger::observesFrame(const FrameIter& iter) const
         if (thisVal.isMagic() && thisVal.whyMagic() == JS_IS_CONSTRUCTING)
             return false;
     }
-    if (iter.isWasm())
+    if (iter.isWasm()) {
+        // Skip frame of wasm instances we cannot observe.
+        if (!iter.wasmDebugEnabled())
+            return false;
         return observesWasm(iter.wasmInstance());
+    }
     return observesScript(iter.script());
 }
 

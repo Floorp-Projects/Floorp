@@ -320,6 +320,7 @@ this.TelemetryController = Object.freeze({
 var Impl = {
   _initialized: false,
   _initStarted: false, // Whether we started setting up TelemetryController.
+  _shuttingDown: false, // Whether the browser is shutting down.
   _logger: null,
   _prevValues: {},
   // The previous build ID, if this is the first run with a new build.
@@ -493,6 +494,13 @@ var Impl = {
   submitExternalPing: function send(aType, aPayload, aOptions) {
     this._log.trace("submitExternalPing - type: " + aType + ", aOptions: " + JSON.stringify(aOptions));
 
+    // Reject pings sent after shutdown.
+    if (this._shuttingDown) {
+      const errorMessage = "submitExternalPing - Submission is not allowed after shutdown, discarding ping of type: " + aType;
+      this._log.error(errorMessage);
+      return Promise.reject(new Error(errorMessage));
+    }
+
     // Enforce the type string to only contain sane characters.
     const typeUuid = /^[a-z0-9][a-z0-9-]+[a-z0-9]$/i;
     if (!typeUuid.test(aType)) {
@@ -658,6 +666,7 @@ var Impl = {
    */
   setupTelemetry: function setupTelemetry(testing) {
     this._initStarted = true;
+    this._shuttingDown = false;
     this._testMode = testing;
 
     this._log.trace("setupTelemetry");
@@ -789,6 +798,7 @@ var Impl = {
       // Reset state.
       this._initialized = false;
       this._initStarted = false;
+      this._shuttingDown = true;
     }
   }),
 
@@ -804,6 +814,7 @@ var Impl = {
 
     // This handles 1).
     if (!this._initStarted) {
+      this._shuttingDown = true;
       return Promise.resolve();
     }
 

@@ -115,7 +115,7 @@ function samePixel(array, index, refPixel, row, pixelTag)
     return false;
 }
 
-function runTestIteration(xoffset, yoffset, width, height, packParams, usePixelPackBuffer)
+function runTestIteration(xoffset, yoffset, width, height, packParams, usePixelPackBuffer, packParamsValid)
 {
     if (!("alignment" in packParams))
         packParams.alignment = 4;
@@ -168,15 +168,19 @@ function runTestIteration(xoffset, yoffset, width, height, packParams, usePixelP
         }
         gl.readPixels(xoffset, yoffset, width, height, gl.RGBA, gl.UNSIGNED_BYTE, array);
     }
-    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "readPixels should succeed");
+    if (packParamsValid) {
+        wtu.glErrorShouldBe(gl, gl.NO_ERROR, "readPixels should succeed");
+    } else {
+        wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "Invalid pack params combination");
+        return;
+    }
 
     if (size == 0)
         return;
 
     if (usePixelPackBuffer) {
-        var arrBuffer = new ArrayBuffer(skipSize + size);
-        gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, arrBuffer);
-        array = new Uint8Array(arrBuffer);
+        array = new Uint8Array(skipSize + size);
+        gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, array);
     }
 
     // Check skipped bytes are unchanged.
@@ -262,83 +266,83 @@ function testPackParameters(usePixelPackBuffer)
     debug("");
     var destText = usePixelPackBuffer ? "PIXEL_PACK buffer" : "array buffer";
     debug("Verify that reading pixels to " + destText + " works fine with various pack alignments.");
-    runTestIteration(0, 0, 1, 3, {alignment:1}, usePixelPackBuffer);
-    runTestIteration(0, 0, 1, 3, {alignment:2}, usePixelPackBuffer);
-    runTestIteration(0, 0, 1, 3, {alignment:4}, usePixelPackBuffer);
-    runTestIteration(0, 0, 1, 3, {alignment:8}, usePixelPackBuffer);
-    runTestIteration(0, 0, 2, 3, {alignment:4}, usePixelPackBuffer);
-    runTestIteration(0, 0, 2, 3, {alignment:8}, usePixelPackBuffer);
-    runTestIteration(0, 0, 3, 3, {alignment:4}, usePixelPackBuffer);
-    runTestIteration(0, 0, 3, 3, {alignment:8}, usePixelPackBuffer);
-    runTestIteration(0, 0, 0, 0, {alignment:1}, usePixelPackBuffer);
-    runTestIteration(0, 0, 1, 3, {alignment:4}, usePixelPackBuffer);
-    runTestIteration(0, 0, 1, 3, {alignment:8}, usePixelPackBuffer);
+    runTestIteration(0, 0, 1, 3, {alignment:1}, usePixelPackBuffer, true);
+    runTestIteration(0, 0, 1, 3, {alignment:2}, usePixelPackBuffer, true);
+    runTestIteration(0, 0, 1, 3, {alignment:4}, usePixelPackBuffer, true);
+    runTestIteration(0, 0, 1, 3, {alignment:8}, usePixelPackBuffer, true);
+    runTestIteration(0, 0, 2, 3, {alignment:4}, usePixelPackBuffer, true);
+    runTestIteration(0, 0, 2, 3, {alignment:8}, usePixelPackBuffer, true);
+    runTestIteration(0, 0, 3, 3, {alignment:4}, usePixelPackBuffer, true);
+    runTestIteration(0, 0, 3, 3, {alignment:8}, usePixelPackBuffer, true);
+    runTestIteration(0, 0, 0, 0, {alignment:1}, usePixelPackBuffer, true);
+    runTestIteration(0, 0, 1, 3, {alignment:4}, usePixelPackBuffer, true);
+    runTestIteration(0, 0, 1, 3, {alignment:8}, usePixelPackBuffer, true);
 
     debug("");
-    debug("Verify that reading pixels to " + destText + " works fine with PACK_ROW_LENGTH < width.");
-    runTestIteration(0, 0, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer);
-    runTestIteration(-1, 0, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer);
-    runTestIteration(0, -1, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer);
-    runTestIteration(-1, -1, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer);
-    runTestIteration(-5, 0, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer);
-    runTestIteration(0, -5, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer);
-    runTestIteration(2, 0, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer);
-    runTestIteration(0, 2, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer);
-    runTestIteration(2, 2, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer);
-    runTestIteration(5, 0, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer);
-    runTestIteration(0, 5, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer);
-    runTestIteration(0, 0, 3, 3, {alignment:8, rowLength:1}, usePixelPackBuffer);
+    debug("Verify that reading pixels to " + destText + " is disallowed when PACK_ROW_LENGTH < width.");
+    runTestIteration(0, 0, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer, false);
+    runTestIteration(-1, 0, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer, false);
+    runTestIteration(0, -1, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer, false);
+    runTestIteration(-1, -1, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer, false);
+    runTestIteration(-5, 0, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer, false);
+    runTestIteration(0, -5, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer, false);
+    runTestIteration(2, 0, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer, false);
+    runTestIteration(0, 2, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer, false);
+    runTestIteration(2, 2, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer, false);
+    runTestIteration(5, 0, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer, false);
+    runTestIteration(0, 5, 3, 3, {alignment:8, rowLength:2}, usePixelPackBuffer, false);
+    runTestIteration(0, 0, 3, 3, {alignment:8, rowLength:1}, usePixelPackBuffer, false);
 
     debug("");
     debug("Verify that reading pixels to " + destText + " works fine with PACK_ROW_LENGTH == width.");
-    runTestIteration(0, 0, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer);
-    runTestIteration(-1, 0, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer);
-    runTestIteration(0, -1, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer);
-    runTestIteration(-1, -1, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer);
-    runTestIteration(-5, 0, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer);
-    runTestIteration(0, -5, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer);
-    runTestIteration(2, 0, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer);
-    runTestIteration(0, 2, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer);
-    runTestIteration(2, 2, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer);
-    runTestIteration(5, 0, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer);
-    runTestIteration(0, 5, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer);
+    runTestIteration(0, 0, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer, true);
+    runTestIteration(-1, 0, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer, true);
+    runTestIteration(0, -1, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer, true);
+    runTestIteration(-1, -1, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer, true);
+    runTestIteration(-5, 0, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer, true);
+    runTestIteration(0, -5, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer, true);
+    runTestIteration(2, 0, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer, true);
+    runTestIteration(0, 2, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer, true);
+    runTestIteration(2, 2, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer, true);
+    runTestIteration(5, 0, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer, true);
+    runTestIteration(0, 5, 3, 3, {alignment:8, rowLength:3}, usePixelPackBuffer, true);
 
     debug("");
     debug("Verify that reading pixels to " + destText + " works fine with PACK_ROW_LENGTH > width and with no padding");
-    runTestIteration(0, 0, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer);
-    runTestIteration(-1, 0, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer);
-    runTestIteration(0, -1, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer);
-    runTestIteration(-1, -1, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer);
-    runTestIteration(-5, 0, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer);
-    runTestIteration(0, -5, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer);
-    runTestIteration(2, 0, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer);
-    runTestIteration(0, 2, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer);
-    runTestIteration(2, 2, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer);
-    runTestIteration(5, 0, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer);
-    runTestIteration(0, 5, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer);
+    runTestIteration(0, 0, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer, true);
+    runTestIteration(-1, 0, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer, true);
+    runTestIteration(0, -1, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer, true);
+    runTestIteration(-1, -1, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer, true);
+    runTestIteration(-5, 0, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer, true);
+    runTestIteration(0, -5, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer, true);
+    runTestIteration(2, 0, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer, true);
+    runTestIteration(0, 2, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer, true);
+    runTestIteration(2, 2, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer, true);
+    runTestIteration(5, 0, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer, true);
+    runTestIteration(0, 5, 3, 3, {alignment:8, rowLength:4}, usePixelPackBuffer, true);
 
     debug("");
     debug("Verify that reading pixels to " + destText + " works fine with PACK_ROW_LENGTH > width and with padding");
-    runTestIteration(0, 0, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer);
-    runTestIteration(-1, 0, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer);
-    runTestIteration(0, -1, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer);
-    runTestIteration(-1, -1, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer);
-    runTestIteration(-5, 0, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer);
-    runTestIteration(0, -5, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer);
-    runTestIteration(2, 0, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer);
-    runTestIteration(0, 2, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer);
-    runTestIteration(2, 2, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer);
-    runTestIteration(5, 0, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer);
-    runTestIteration(0, 5, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer);
+    runTestIteration(0, 0, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer, true);
+    runTestIteration(-1, 0, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer, true);
+    runTestIteration(0, -1, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer, true);
+    runTestIteration(-1, -1, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer, true);
+    runTestIteration(-5, 0, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer, true);
+    runTestIteration(0, -5, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer, true);
+    runTestIteration(2, 0, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer, true);
+    runTestIteration(0, 2, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer, true);
+    runTestIteration(2, 2, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer, true);
+    runTestIteration(5, 0, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer, true);
+    runTestIteration(0, 5, 3, 3, {alignment:8, rowLength:5}, usePixelPackBuffer, true);
 
     debug("");
     debug("Verify that reading pixels to " + destText + " works fine with pack skip parameters.");
-    runTestIteration(0, 0, 3, 3, {alignment:8, skipPixels:2}, usePixelPackBuffer);
-    runTestIteration(0, 0, 3, 3, {alignment:8, skipPixels:1, skipRows:3}, usePixelPackBuffer);
-    runTestIteration(0, 0, 3, 3, {alignment:8, skipRows:3}, usePixelPackBuffer);
-    runTestIteration(0, 0, 2, 3, {alignment:8, skipPixels:2}, usePixelPackBuffer);
-    runTestIteration(0, 0, 2, 3, {alignment:8, skipPixels:1, skipRows:3}, usePixelPackBuffer);
-    runTestIteration(0, 0, 2, 3, {alignment:8, skipRows:3}, usePixelPackBuffer);
+    runTestIteration(0, 0, 3, 3, {alignment:8, skipPixels:2}, usePixelPackBuffer, false);
+    runTestIteration(0, 0, 3, 3, {alignment:8, skipPixels:1, skipRows:3}, usePixelPackBuffer, false);
+    runTestIteration(0, 0, 3, 3, {alignment:8, skipRows:3}, usePixelPackBuffer, true);
+    runTestIteration(0, 0, 2, 3, {alignment:8, skipPixels:2}, usePixelPackBuffer, false);
+    runTestIteration(0, 0, 2, 3, {alignment:8, skipPixels:1, skipRows:3}, usePixelPackBuffer, false);
+    runTestIteration(0, 0, 2, 3, {alignment:8, skipRows:3}, usePixelPackBuffer, true);
 }
 
 debug("");

@@ -5,8 +5,8 @@
 "use strict";
 
 const {
-  TOGGLE_REQUEST_FILTER_TYPE,
   ENABLE_REQUEST_FILTER_TYPE_ONLY,
+  TOGGLE_REQUEST_FILTER_TYPE,
   SET_REQUEST_FILTER_TEXT,
 } = require("../constants");
 
@@ -40,7 +40,7 @@ function enableRequestFilterTypeOnly(filter) {
 }
 
 /**
- * Set filter text.
+ * Set filter text in toolbar.
  *
  * @param {string} text - A filter text is going to be set
  */
@@ -52,7 +52,7 @@ function setRequestFilterText(text) {
 }
 
 module.exports = {
-  toggleRequestFilterType,
   enableRequestFilterTypeOnly,
+  toggleRequestFilterType,
   setRequestFilterText,
 };

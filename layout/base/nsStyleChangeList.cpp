@@ -18,6 +18,10 @@ nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChange
 {
   MOZ_ASSERT(aFrame || (aHint & nsChangeHint_ReconstructFrame),
              "must have frame");
+  MOZ_ASSERT(aHint, "No hint to process?");
+  MOZ_ASSERT(!(aHint & nsChangeHint_NeutralChange),
+             "Neutral changes do not need extra processing, "
+             "and should be stripped out");
   MOZ_ASSERT(aContent || !(aHint & nsChangeHint_ReconstructFrame),
              "must have content");
   // XXXbz we should make this take Element instead of nsIContent

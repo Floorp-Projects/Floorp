@@ -9,7 +9,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
 function login_handling(handler) {
-  return function (request, response) {
+  return function(request, response) {
     if (basic_auth_matches(request, "johndoe", "ilovejane") ||
         basic_auth_matches(request, "janedoe", "ilovejohn")) {
       handler(request, response);
@@ -58,9 +58,9 @@ function setup() {
     // is where keys are generated or fetched.
     // TODO: have Jane fetch her keys, not generate them...
     "/1.1/johndoe/storage/crypto/keys": johnU("crypto", new ServerWBO("keys").handler()),
-    "/1.1/johndoe/storage/meta/global": johnU("meta",   new ServerWBO("global").handler()),
+    "/1.1/johndoe/storage/meta/global": johnU("meta", new ServerWBO("global").handler()),
     "/1.1/janedoe/storage/crypto/keys": janeU("crypto", new ServerWBO("keys").handler()),
-    "/1.1/janedoe/storage/meta/global": janeU("meta",   new ServerWBO("global").handler())
+    "/1.1/janedoe/storage/meta/global": janeU("meta", new ServerWBO("global").handler())
   });
 
   Service.serverURL = server.baseURI;

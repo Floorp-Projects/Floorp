@@ -140,6 +140,7 @@ function runTestEnabled() {
     gl.shaderSource(shader, "void main() { gl_FragColor = vec4(gl_FragCoord.x, 0.0, 0.0, 1.0); }");
     gl.compileShader(shader);
     shouldBeTrue("gl.getShaderParameter(shader, gl.COMPILE_STATUS)");
+    shouldThrow("ext.getTranslatedShaderSource(null)");
     translatedSource = ext.getTranslatedShaderSource(shader);
     shouldBeTrue('translatedSource && translatedSource.indexOf("gl_FragCoord") >= 0');
     // change the source but don't compile.

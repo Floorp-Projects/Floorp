@@ -65,6 +65,9 @@ pref("extensions.systemAddon.update.url", "https://aus5.mozilla.org/update/3/Sys
 // See the SCOPE constants in AddonManager.jsm for values to use here.
 pref("extensions.autoDisableScopes", 15);
 
+// Whether or not webextension themes are supported.
+pref("extensions.webextensions.themes.enabled", false);
+
 // Add-on content security policies.
 pref("extensions.webextensions.base-content-security-policy", "script-src 'self' https://* moz-extension: blob: filesystem: 'unsafe-eval' 'unsafe-inline'; object-src 'self' https://* moz-extension: blob: filesystem:;");
 pref("extensions.webextensions.default-content-security-policy", "script-src 'self'; object-src 'self';");
@@ -1130,7 +1133,7 @@ pref("services.sync.sendTabToDevice.enabled", true);
 
 // Developer edition preferences
 #ifdef MOZ_DEV_EDITION
-sticky_pref("lightweightThemes.selectedThemeID", "firefox-devedition@mozilla.org");
+sticky_pref("lightweightThemes.selectedThemeID", "firefox-compact-dark@mozilla.org");
 #else
 sticky_pref("lightweightThemes.selectedThemeID", "");
 #endif
@@ -1425,10 +1428,16 @@ pref("privacy.trackingprotection.introURL", "https://www.mozilla.org/%LOCALE%/fi
 pref("privacy.userContext.enabled", true);
 pref("privacy.userContext.ui.enabled", true);
 pref("privacy.usercontext.about_newtab_segregation.enabled", true);
+
+// 0 disables long press, 1 when clicked, the menu is shown, 2 the menu is shown after X milliseconds.
+pref("privacy.userContext.longPressBehavior", 2);
 #else
 pref("privacy.userContext.enabled", false);
 pref("privacy.userContext.ui.enabled", false);
 pref("privacy.usercontext.about_newtab_segregation.enabled", false);
+
+// 0 disables long press, 1 when clicked, the menu is shown, 2 the menu is shown after X milliseconds.
+pref("privacy.userContext.longPressBehavior", 0);
 #endif
 
 #ifndef RELEASE_OR_BETA

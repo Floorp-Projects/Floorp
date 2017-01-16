@@ -1272,6 +1272,7 @@
  * FIXME: normal html block element cannot fill outer XUL element
  * This workaround should be removed after netmonitor is migrated to react
  */
+#react-cookies-tabpanel-hook,
 #react-headers-tabpanel-hook,
 #react-params-tabpanel-hook,
 #react-preview-tabpanel-hook,
@@ -1286,6 +1287,7 @@
 }
 
 /* For vbox */
+#react-cookies-tabpanel-hook,
 #react-headers-tabpanel-hook,
 #react-params-tabpanel-hook,
 #react-preview-tabpanel-hook,
