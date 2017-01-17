@@ -4569,7 +4569,7 @@ pref("layers.acceleration.disabled", false);
 pref("layers.bench.enabled", false);
 
 #if defined(XP_WIN) && defined(NIGHTLY_BUILD)
-pref("layers.gpu-process.dev.enabled", true);
+pref("layers.gpu-process.enabled", true);
 pref("media.gpu-process-decoder", true);
 #endif
 
