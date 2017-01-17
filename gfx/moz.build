@@ -22,6 +22,7 @@ DIRS += [
     'ipc',
     'vr',
     'config',
+    'webrender_bindings',
 ]
 
 EXPORTS.mozilla.gfx += ['webrender_bindings/src/webrender.h']

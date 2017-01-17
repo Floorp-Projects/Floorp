@@ -198,15 +198,11 @@ EXPORTS.mozilla.layers += [
     'RenderTrace.h',
     'TextureWrapperImage.h',
     'TransactionIdAllocator.h',
-    'wr/RendererOGL.h',
-    'wr/RenderThread.h',
-    'wr/WebRenderAPI.h',
     'wr/WebRenderBridgeChild.h',
     'wr/WebRenderBridgeParent.h',
     'wr/WebRenderCompositorOGL.h',
     'wr/WebRenderLayerManager.h',
     'wr/WebRenderMessageUtils.h',
-    'wr/WebRenderTypes.h',
 ]
 
 if CONFIG['MOZ_X11']:
@@ -378,9 +374,6 @@ UNIFIED_SOURCES += [
     'RotatedBuffer.cpp',
     'ShareableCanvasLayer.cpp',
     'TextureWrapperImage.cpp',
-    'wr/RendererOGL.cpp',
-    'wr/RenderThread.cpp',
-    'wr/WebRenderAPI.cpp',
     'wr/WebRenderBorderLayer.cpp',
     'wr/WebRenderBridgeChild.cpp',
     'wr/WebRenderBridgeParent.cpp',
