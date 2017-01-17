@@ -636,6 +636,10 @@ TabParent::InitRenderFrame()
       uint64_t layersId = renderFrame->GetLayersId();
       AddTabParentToTable(layersId, this);
       Unused << SendPRenderFrameConstructor(renderFrame);
+
+      TextureFactoryIdentifier textureFactoryIdentifier;
+      renderFrame->GetTextureFactoryIdentifier(&textureFactoryIdentifier);
+      Unused << SendInitRendering(textureFactoryIdentifier, layersId, renderFrame);
     }
   } else {
     // Otherwise, the child should have constructed the RenderFrame,
@@ -653,12 +657,6 @@ TabParent::Show(const ScreenIntSize& size, bool aParentIsActive)
     }
 
     MOZ_ASSERT(GetRenderFrame());
-    RenderFrameParent* renderFrame = IsInitedByParent() ? GetRenderFrame() : nullptr;
-    uint64_t layersId = renderFrame ? renderFrame->GetLayersId() : 0;
-    TextureFactoryIdentifier textureFactoryIdentifier;
-    if (renderFrame) {
-      renderFrame->GetTextureFactoryIdentifier(&textureFactoryIdentifier);
-    }
 
     nsCOMPtr<nsISupports> container = mFrameElement->OwnerDoc()->GetContainer();
     nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
@@ -666,8 +664,7 @@ TabParent::Show(const ScreenIntSize& size, bool aParentIsActive)
     baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
     mSizeMode = mainWidget ? mainWidget->SizeMode() : nsSizeMode_Normal;
 
-    Unused << SendShow(size, GetShowInfo(), textureFactoryIdentifier,
-                       layersId, renderFrame, aParentIsActive, mSizeMode);
+    Unused << SendShow(size, GetShowInfo(), aParentIsActive, mSizeMode);
 }
 
 mozilla::ipc::IPCResult
