@@ -13,19 +13,11 @@ Cu.import("resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeImageOptimizer",
   "resource://gre/modules/addons/LightweightThemeImageOptimizer.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
-
 this.LightweightThemeConsumer =
  function LightweightThemeConsumer(aDocument) {
   this._doc = aDocument;
   this._win = aDocument.defaultView;
   this._footerId = aDocument.documentElement.getAttribute("lightweightthemesfooter");
-
-  if (PrivateBrowsingUtils.isWindowPrivate(this._win) &&
-      !PrivateBrowsingUtils.permanentPrivateBrowsing) {
-    return;
-  }
 
   let screen = this._win.screen;
   this._lastScreenWidth = screen.width;
@@ -87,12 +79,9 @@ LightweightThemeConsumer.prototype = {
   },
 
   destroy() {
-    if (!PrivateBrowsingUtils.isWindowPrivate(this._win) ||
-        PrivateBrowsingUtils.permanentPrivateBrowsing) {
-      Services.obs.removeObserver(this, "lightweight-theme-styling-update");
+    Services.obs.removeObserver(this, "lightweight-theme-styling-update");
 
-      this._win.removeEventListener("resize", this);
-    }
+    this._win.removeEventListener("resize", this);
 
     this._win = this._doc = null;
   },
