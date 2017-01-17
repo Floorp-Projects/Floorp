@@ -173,6 +173,11 @@ const statements = {
   "scanAllRecords": `SELECT * FROM collection_data;`,
 
   "clearCollectionMetadata": `DELETE FROM collection_metadata;`,
+
+  "calculateStorage": `
+    SELECT collection_name, SUM(LENGTH(record)) as size, COUNT(record) as num_records
+      FROM collection_data
+        GROUP BY collection_name;`,
 };
 
 const createStatements = [
@@ -377,6 +382,17 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
           return 0;
         }
         return result[0].getResultByName("last_modified");
+      });
+  }
+
+  calculateStorage() {
+    return this._executeStatement(statements.calculateStorage, {})
+      .then(result => {
+        return Array.from(result, row => ({
+          collectionName: row.getResultByName("collection_name"),
+          size: row.getResultByName("size"),
+          numRecords: row.getResultByName("num_records"),
+        }));
       });
   }
 
