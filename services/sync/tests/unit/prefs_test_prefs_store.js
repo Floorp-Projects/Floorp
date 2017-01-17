@@ -1,5 +1,7 @@
 // This is a "preferences" file used by test_prefs_store.js
 
+/* global pref, user_pref */
+
 // The prefs that control what should be synced.
 // Most of these are "default" prefs, so the value itself will not sync.
 pref("services.sync.prefs.sync.testing.int", true);
