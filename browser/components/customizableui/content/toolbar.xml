@@ -197,11 +197,11 @@
             }
           }
           let orderedPlacements = CustomizableUI.getWidgetIdsInArea(this.id);
-          return orderedPlacements.filter((x) => currentWidgets.has(x)).join(',');
+          return orderedPlacements.filter((x) => currentWidgets.has(x)).join(",");
         ]]></getter>
         <setter><![CDATA[
           // Get list of new and old ids:
-          let newVal = (val || '').split(',').filter(x => x);
+          let newVal = (val || "").split(",").filter(x => x);
           let oldIds = CustomizableUI.getWidgetIdsInArea(this.id);
 
           // Get a list of items only in the new list
@@ -225,7 +225,7 @@
               CustomizableUI.addWidgetToArea(newId, this.id, pos);
             }
 
-            let currentIds = this.currentSet.split(',');
+            let currentIds = this.currentSet.split(",");
             let removedIds = currentIds.filter(id => newIds.indexOf(id) == -1 && newVal.indexOf(id) == -1);
             for (let removedId of removedIds) {
               CustomizableUI.removeWidgetFromArea(removedId);
@@ -441,7 +441,7 @@
             }
           }
           CustomizableUI.registerToolbarNode(this, children);
-          let existingMigratedItems = (this.getAttribute("migratedset") || "").split(',');
+          let existingMigratedItems = (this.getAttribute("migratedset") || "").split(",");
           for (let migratedItem of existingMigratedItems.filter((x) => !!x)) {
             this._currentSetMigrated.add(migratedItem);
           }
@@ -572,7 +572,7 @@
       </method>
       <method name="_updateMigratedSet">
         <body><![CDATA[
-          let newMigratedItems = this.getMigratedItems().join(',');
+          let newMigratedItems = this.getMigratedItems().join(",");
           if (this.getAttribute("migratedset") != newMigratedItems) {
             this.setAttribute("migratedset", newMigratedItems);
             this.ownerDocument.persist(this.id, "migratedset");
@@ -589,7 +589,7 @@
           return Array.from(this.children, node => node.id).join(",");
         ]]></getter>
         <setter><![CDATA[
-          let v = val.split(',');
+          let v = val.split(",");
           let newButtons = v.filter(x => x && (!this._whiteListed.has(x) &&
                                                !CustomizableUI.isSpecialWidget(x) &&
                                                !this._currentSetMigrated.has(x)));

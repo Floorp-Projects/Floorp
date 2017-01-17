@@ -409,7 +409,7 @@
         }
 
         // Autoscroll the popup strip if we drag over the scroll buttons.
-        let anonid = event.originalTarget.getAttribute('anonid');
+        let anonid = event.originalTarget.getAttribute("anonid");
         let scrollDir = 0;
         if (anonid == "scrollbutton-up") {
           scrollDir = -1;
@@ -510,7 +510,7 @@
 
     <implementation>
       <constructor><![CDATA[
-        this.style.pointerEvents = 'none';
+        this.style.pointerEvents = "none";
       ]]></constructor>
       <method name="adjustArrowPosition">
         <body><![CDATA[
@@ -612,7 +612,7 @@
       <handler event="popuphidden" phase="target"><![CDATA[
         this.removeAttribute("panelopen");
         if (this.getAttribute("disablepointereventsfortransition") == "true") {
-          this.style.pointerEvents = 'none';
+          this.style.pointerEvents = "none";
         }
         this.removeAttribute("animate");
       ]]></handler>

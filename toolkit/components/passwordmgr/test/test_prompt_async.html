@@ -12,7 +12,7 @@
         SimpleTest.waitForExplicitFinish();
         SimpleTest.requestFlakyTimeout("untriaged");
 
-        const { NetUtil } = SpecialPowers.Cu.import('resource://gre/modules/NetUtil.jsm');
+        const { NetUtil } = SpecialPowers.Cu.import("resource://gre/modules/NetUtil.jsm");
 
         var prefs = Cc["@mozilla.org/preferences-service;1"].
                         getService(Ci.nsIPrefBranch);
@@ -118,7 +118,7 @@
             for (i in logins)
                 pwmgr.removeLogin(logins[i]);
 
-            var authMgr = SpecialPowers.Cc['@mozilla.org/network/http-auth-manager;1']
+            var authMgr = SpecialPowers.Cc["@mozilla.org/network/http-auth-manager;1"]
                                        .getService(Ci.nsIHttpAuthManager);
             authMgr.clearAll();
 

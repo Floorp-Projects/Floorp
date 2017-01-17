@@ -49,8 +49,8 @@ var progressListener = {
       videoExists = videoFile.exists();
       this.folder.remove(true);
       this.file.remove(false);
-      ok(dirExists, 'Directory containing video file should be created');
-      ok(videoExists, 'Video should be persisted with document');
+      ok(dirExists, "Directory containing video file should be created");
+      ok(videoExists, "Video should be persisted with document");
       SimpleTest.finish();
     }
   }
@@ -92,7 +92,7 @@ function persistDocument(aDoc) {
 SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function() {
-    var srcDoc = document.getElementById('source').contentDocument;
+    var srcDoc = document.getElementById("source").contentDocument;
     persistDocument(srcDoc);
 });
 </script>

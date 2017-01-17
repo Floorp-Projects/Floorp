@@ -69,12 +69,12 @@ function getButtonByAttribute(aName, aValue) {
 }
 
 function isMuteButtonMuted() {
-  var muteButton = getButtonByAttribute('anonid', 'muteButton');
-  return muteButton.getAttribute('muted') === 'true';
+  var muteButton = getButtonByAttribute("anonid", "muteButton");
+  return muteButton.getAttribute("muted") === "true";
 }
 
 function isVolumeSliderShowingCorrectVolume(expectedVolume) {
-  var volumeControl = getButtonByAttribute('anonid', 'volumeControl');
+  var volumeControl = getButtonByAttribute("anonid", "volumeControl");
   is(+volumeControl.value, expectedVolume * 100,
      "volume slider should match expected volume");
 }

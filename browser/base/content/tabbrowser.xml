@@ -4586,9 +4586,9 @@
 
             var offset = 1;
             switch (aEvent.charCode) {
-              case '}'.charCodeAt(0):
+              case "}".charCodeAt(0):
                 offset = -1;
-              case '{'.charCodeAt(0):
+              case "{".charCodeAt(0):
                 if (window.getComputedStyle(this, null).direction == "ltr")
                   offset *= -1;
                 this.tabContainer.advanceSelectedTab(offset, true);
@@ -6339,7 +6339,7 @@
          * close many tabs at once.
          */
         let target = event.originalTarget;
-        if (target.classList.contains('tab-close-button')) {
+        if (target.classList.contains("tab-close-button")) {
           // We preemptively set this to allow the closing-multiple-tabs-
           // in-a-row case.
           if (this._blockDblClick) {
@@ -6485,7 +6485,7 @@
         let toDrag = canvas;
         let dragImageOffset = -16;
         if (gMultiProcessBrowser) {
-          var context = canvas.getContext('2d');
+          var context = canvas.getContext("2d");
           context.fillStyle = "white";
           context.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -7156,12 +7156,12 @@
         this._mouseleave();
       ]]></handler>
       <handler event="dragstart" phase="capturing">
-        this.style.MozUserFocus = '';
+        this.style.MozUserFocus = "";
       </handler>
       <handler event="mousedown" phase="capturing">
       <![CDATA[
         if (this.selected) {
-          this.style.MozUserFocus = 'ignore';
+          this.style.MozUserFocus = "ignore";
           this.clientTop; // just using this to flush style updates
         } else if (this.mOverCloseButton ||
                    this._overPlayingIcon) {
@@ -7171,7 +7171,7 @@
       ]]>
       </handler>
       <handler event="mouseup">
-        this.style.MozUserFocus = '';
+        this.style.MozUserFocus = "";
       </handler>
       <handler event="click">
       <![CDATA[

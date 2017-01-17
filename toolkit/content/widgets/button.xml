@@ -29,9 +29,9 @@
             this.boxObject.openMenu(val);
           } else if (val) {
             // Fall back to just setting the attribute
-            this.setAttribute('open', 'true');
+            this.setAttribute("open", "true");
           } else {
-            this.removeAttribute('open');
+            this.removeAttribute("open");
           }
           return val;
         ]]></setter>

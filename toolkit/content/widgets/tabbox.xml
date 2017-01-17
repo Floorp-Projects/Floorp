@@ -410,8 +410,8 @@
 
             if (!alreadySelected) {
               // Fire an onselect event for the tabs element.
-              var event = document.createEvent('Events');
-              event.initEvent('select', true, true);
+              var event = document.createEvent("Events");
+              event.initEvent("select", true, true);
               this.dispatchEvent(event);
             }
           }
@@ -847,14 +847,14 @@
       <handler event="keydown" keycode="VK_LEFT" group="system" preventdefault="true">
       <![CDATA[
         var direction = window.getComputedStyle(this.parentNode, null).direction;
-        this.parentNode.advanceSelectedTab(direction == 'ltr' ? -1 : 1, this.arrowKeysShouldWrap);
+        this.parentNode.advanceSelectedTab(direction == "ltr" ? -1 : 1, this.arrowKeysShouldWrap);
       ]]>
       </handler>
 
       <handler event="keydown" keycode="VK_RIGHT" group="system" preventdefault="true">
       <![CDATA[
         var direction = window.getComputedStyle(this.parentNode, null).direction;
-        this.parentNode.advanceSelectedTab(direction == 'ltr' ? 1 : -1, this.arrowKeysShouldWrap);
+        this.parentNode.advanceSelectedTab(direction == "ltr" ? 1 : -1, this.arrowKeysShouldWrap);
       ]]>
       </handler>
 

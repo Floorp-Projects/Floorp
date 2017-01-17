@@ -22,7 +22,7 @@ let resultEl = document.getElementById("result");
   navigator.mozAddonManager.addEventListener(event, data => {
     let obj = {event, id: data.id, needsRestart: data.needsRestart};
     events.push(JSON.stringify(obj));
-    resultEl.textContent = events.join('\n');
+    resultEl.textContent = events.join("\n");
   });
 });
 </script>
