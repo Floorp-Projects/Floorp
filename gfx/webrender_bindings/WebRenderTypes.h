@@ -33,9 +33,9 @@ static inline WRBorderSide ToWRBorderSide(const LayerCoord width, const gfx::Col
   return bs;
 }
 
-static inline WRLayoutSize ToWRLayoutSize(const LayerSize size)
+static inline WrLayoutSize ToWrLayoutSize(const LayerSize size)
 {
-  WRLayoutSize ls;
+  WrLayoutSize ls;
   ls.width = size.width;
   ls.height = size.height;
   return ls;

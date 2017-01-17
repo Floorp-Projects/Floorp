@@ -101,11 +101,11 @@ struct WRBorderSide {
   }
 };
 
-struct WRLayoutSize {
+struct WrLayoutSize {
   float width;
   float height;
 
-  bool operator==(const WRLayoutSize& aRhs) const {
+  bool operator==(const WrLayoutSize& aRhs) const {
     return width == aRhs.width && height == aRhs.height;
   }
 };
@@ -343,8 +343,8 @@ wr_dp_push_text(WRState* wrState,
 WR_INLINE void
 wr_dp_push_border(WRState* wrState, WrRect bounds, WrRect clip,
                   WRBorderSide top, WRBorderSide right, WRBorderSide bottom, WRBorderSide left,
-                  WRLayoutSize top_left_radius, WRLayoutSize top_right_radius,
-                  WRLayoutSize bottom_left_radius, WRLayoutSize bottom_right_radius)
+                  WrLayoutSize top_left_radius, WrLayoutSize top_right_radius,
+                  WrLayoutSize bottom_left_radius, WrLayoutSize bottom_right_radius)
 WR_FUNC;
 
 WR_INLINE void

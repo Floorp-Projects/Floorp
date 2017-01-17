@@ -42,10 +42,10 @@ WebRenderBorderLayer::RenderLayer()
                    wr::ToWRBorderSide(mWidths[1], mColors[1]),
                    wr::ToWRBorderSide(mWidths[2], mColors[2]),
                    wr::ToWRBorderSide(mWidths[3], mColors[3]),
-                   wr::ToWRLayoutSize(mCorners[0]),
-                   wr::ToWRLayoutSize(mCorners[1]),
-                   wr::ToWRLayoutSize(mCorners[3]),
-                   wr::ToWRLayoutSize(mCorners[2])));
+                   wr::ToWrLayoutSize(mCorners[0]),
+                   wr::ToWrLayoutSize(mCorners[1]),
+                   wr::ToWrLayoutSize(mCorners[3]),
+                   wr::ToWrLayoutSize(mCorners[2])));
   if (gfxPrefs::LayersDump()) printf_stderr("BorderLayer %p using %s as bounds/overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
 
   WRBridge()->AddWebRenderCommand(OpDPPopStackingContext());
