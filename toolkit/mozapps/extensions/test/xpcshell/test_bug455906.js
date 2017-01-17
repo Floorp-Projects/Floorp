@@ -442,11 +442,11 @@ function check_test_pt3() {
     do_check_eq(blocklist.getAddonBlocklistURL(addons[4]), create_blocklistURL(addons[4].id));
 
     // All plugins have the same blockID on the test
-    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[0]), create_blocklistURL('test_bug455906_plugin'));
-    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[1]), create_blocklistURL('test_bug455906_plugin'));
-    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[2]), create_blocklistURL('test_bug455906_plugin'));
-    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[3]), create_blocklistURL('test_bug455906_plugin'));
-    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[4]), create_blocklistURL('test_bug455906_plugin'));
+    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[0]), create_blocklistURL("test_bug455906_plugin"));
+    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[1]), create_blocklistURL("test_bug455906_plugin"));
+    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[2]), create_blocklistURL("test_bug455906_plugin"));
+    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[3]), create_blocklistURL("test_bug455906_plugin"));
+    do_check_eq(blocklist.getPluginBlocklistURL(PLUGINS[4]), create_blocklistURL("test_bug455906_plugin"));
 
     // Shouldn't be changed
     do_check_eq(check_addon_state(addons[5]), "false,false,true");

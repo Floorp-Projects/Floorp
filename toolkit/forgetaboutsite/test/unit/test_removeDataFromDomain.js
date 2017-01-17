@@ -457,8 +457,8 @@ function* test_push_cleared() {
   do_get_profile();
   setPrefs();
   const {PushService, PushServiceWebSocket} = serviceExports;
-  const userAgentID = 'bd744428-f125-436a-b6d0-dd0c9845837f';
-  const channelID = '0ef2ad4a-6c49-41ad-af6e-95d2425276bf';
+  const userAgentID = "bd744428-f125-436a-b6d0-dd0c9845837f";
+  const channelID = "0ef2ad4a-6c49-41ad-af6e-95d2425276bf";
 
   let db = PushServiceWebSocket.newPushDB();
 
@@ -470,7 +470,7 @@ function* test_push_cleared() {
         return new MockWebSocket(uriObj, {
           onHello(request) {
             this.serverSendMsg(JSON.stringify({
-              messageType: 'hello',
+              messageType: "hello",
               status: 200,
               uaid: userAgentID,
             }));
@@ -483,10 +483,10 @@ function* test_push_cleared() {
     do_check_false(yield push_registration_exists(TEST_URL, ps));
     yield db.put({
       channelID,
-      pushEndpoint: 'https://example.org/update/clear-success',
+      pushEndpoint: "https://example.org/update/clear-success",
       scope: TEST_URL,
       version: 1,
-      originAttributes: '',
+      originAttributes: "",
       quota: Infinity,
     });
     do_check_true(yield push_registration_exists(TEST_URL, ps));

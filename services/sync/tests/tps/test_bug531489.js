@@ -41,21 +41,21 @@ var bookmarks_initial = {
  */
 
 // Add three bookmarks with the same url to different locations and sync.
-Phase('phase1', [
+Phase("phase1", [
   [Bookmarks.add, bookmarks_initial],
   [Bookmarks.verify, bookmarks_initial],
   [Sync]
 ]);
 
 // Sync to profile2 and verify that all three bookmarks are present
-Phase('phase2', [
+Phase("phase2", [
   [Sync],
   [Bookmarks.verify, bookmarks_initial]
 ]);
 
 // Sync again to profile1 and verify that all three bookmarks are still
 // present.
-Phase('phase3', [
+Phase("phase3", [
   [Sync],
   [Bookmarks.verify, bookmarks_initial]
 ]);

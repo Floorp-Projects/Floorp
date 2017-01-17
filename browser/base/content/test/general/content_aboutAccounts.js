@@ -52,9 +52,9 @@ addMessageListener("test:check-visibilities", function(message) {
     let elt = content.document.getElementById(id);
     if (elt) {
       let displayStyle = content.window.getComputedStyle(elt).display;
-      if (displayStyle == 'none') {
+      if (displayStyle == "none") {
         result[id] = false;
-      } else if (displayStyle == 'block') {
+      } else if (displayStyle == "block") {
         result[id] = true;
       } else {
         result[id] = "strange: " + displayStyle; // tests should fail!

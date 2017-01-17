@@ -6,12 +6,12 @@
 
 function macWindowMenuDidShow() {
   var windowManagerDS =
-    Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator']
+    Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"]
               .getService(Components.interfaces.nsIWindowDataSource);
   var sep = document.getElementById("sep-window-list");
   // Using double parens to avoid warning
   while ((sep = sep.nextSibling)) {
-    var url = sep.getAttribute('id');
+    var url = sep.getAttribute("id");
     var win = windowManagerDS.getWindowForResource(url);
     if (win.document.documentElement.getAttribute("inwindowmenu") == "false")
       sep.hidden = true;
@@ -29,11 +29,11 @@ function toOpenWindow( aWindow ) {
 
 function ShowWindowFromResource( node ) {
   var windowManagerDS =
-    Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator']
+    Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"]
               .getService(Components.interfaces.nsIWindowDataSource);
 
   var desiredWindow = null;
-  var url = node.getAttribute('id');
+  var url = node.getAttribute("id");
   desiredWindow = windowManagerDS.getWindowForResource( url );
   if (desiredWindow)
     toOpenWindow(desiredWindow);

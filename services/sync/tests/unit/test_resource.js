@@ -69,7 +69,7 @@ function server_upload(metadata, response) {
     body = "Valid data upload via " + metadata.method;
     response.setStatusLine(metadata.httpVersion, 200, "OK");
   } else {
-    body = "Invalid data upload via " + metadata.method + ': ' + input;
+    body = "Invalid data upload via " + metadata.method + ": " + input;
     response.setStatusLine(metadata.httpVersion, 500, "Internal Server Error");
   }
 
@@ -98,28 +98,28 @@ const TIMESTAMP = 1274380461;
 
 function server_timestamp(metadata, response) {
   let body = "Thank you for your request";
-  response.setHeader("X-Weave-Timestamp", '' + TIMESTAMP, false);
+  response.setHeader("X-Weave-Timestamp", "" + TIMESTAMP, false);
   response.setStatusLine(metadata.httpVersion, 200, "OK");
   response.bodyOutputStream.write(body, body.length);
 }
 
 function server_backoff(metadata, response) {
   let body = "Hey, back off!";
-  response.setHeader("X-Weave-Backoff", '600', false);
+  response.setHeader("X-Weave-Backoff", "600", false);
   response.setStatusLine(metadata.httpVersion, 200, "OK");
   response.bodyOutputStream.write(body, body.length);
 }
 
 function server_quota_notice(request, response) {
   let body = "You're approaching quota.";
-  response.setHeader("X-Weave-Quota-Remaining", '1048576', false);
+  response.setHeader("X-Weave-Quota-Remaining", "1048576", false);
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.bodyOutputStream.write(body, body.length);
 }
 
 function server_quota_error(request, response) {
   let body = "14";
-  response.setHeader("X-Weave-Quota-Remaining", '-1024', false);
+  response.setHeader("X-Weave-Quota-Remaining", "-1024", false);
   response.setStatusLine(request.httpVersion, 400, "OK");
   response.bodyOutputStream.write(body, body.length);
 }
@@ -153,7 +153,7 @@ function run_test() {
 
   do_test_pending();
 
-  let logger = Log.repository.getLogger('Test');
+  let logger = Log.repository.getLogger("Test");
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
   let server = httpd_setup({
@@ -341,27 +341,27 @@ function run_test() {
   _("GET: no special request headers");
   let res9 = new Resource(server.baseURI + "/headers");
   content = res9.get();
-  do_check_eq(content, '{}');
+  do_check_eq(content, "{}");
 
   _("PUT: Content-Type defaults to text/plain");
-  content = res9.put('data');
+  content = res9.put("data");
   do_check_eq(content, JSON.stringify({"content-type": "text/plain"}));
 
   _("POST: Content-Type defaults to text/plain");
-  content = res9.post('data');
+  content = res9.post("data");
   do_check_eq(content, JSON.stringify({"content-type": "text/plain"}));
 
   _("setHeader(): setting simple header");
-  res9.setHeader('X-What-Is-Weave', 'awesome');
-  do_check_eq(res9.headers['x-what-is-weave'], 'awesome');
+  res9.setHeader("X-What-Is-Weave", "awesome");
+  do_check_eq(res9.headers["x-what-is-weave"], "awesome");
   content = res9.get();
   do_check_eq(content, JSON.stringify({"x-what-is-weave": "awesome"}));
 
   _("setHeader(): setting multiple headers, overwriting existing header");
-  res9.setHeader('X-WHAT-is-Weave', 'more awesomer');
-  res9.setHeader('X-Another-Header', 'hello world');
-  do_check_eq(res9.headers['x-what-is-weave'], 'more awesomer');
-  do_check_eq(res9.headers['x-another-header'], 'hello world');
+  res9.setHeader("X-WHAT-is-Weave", "more awesomer");
+  res9.setHeader("X-Another-Header", "hello world");
+  do_check_eq(res9.headers["x-what-is-weave"], "more awesomer");
+  do_check_eq(res9.headers["x-another-header"], "hello world");
   content = res9.get();
   do_check_eq(content, JSON.stringify({"x-another-header": "hello world",
                                        "x-what-is-weave": "more awesomer"}));
@@ -372,11 +372,11 @@ function run_test() {
   do_check_eq(content, "{}");
 
   _("PUT/POST: override default Content-Type");
-  res9.setHeader('Content-Type', 'application/foobar');
-  do_check_eq(res9.headers['content-type'], 'application/foobar');
-  content = res9.put('data');
+  res9.setHeader("Content-Type", "application/foobar");
+  do_check_eq(res9.headers["content-type"], "application/foobar");
+  content = res9.put("data");
   do_check_eq(content, JSON.stringify({"content-type": "application/foobar"}));
-  content = res9.post('data');
+  content = res9.post("data");
   do_check_eq(content, JSON.stringify({"content-type": "application/foobar"}));
 
 

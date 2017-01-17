@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyGetter(this, "gCryptoHash", function() {
 XPCOMUtils.defineLazyGetter(this, "gUnicodeConverter", function() {
   let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                     .createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = 'utf8';
+  converter.charset = "utf8";
   return converter;
 });
 

@@ -67,7 +67,7 @@
  *   checkPrefHasUserValue function.
  */
 
-'use strict';
+"use strict";
 
 /* globals TESTS, runTest, finishTest */
 

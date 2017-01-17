@@ -41,7 +41,7 @@ TooltipTextProvider.prototype = {
          tipElement instanceof defView.HTMLTextAreaElement ||
          tipElement instanceof defView.HTMLSelectElement ||
          tipElement instanceof defView.HTMLButtonElement) &&
-        !tipElement.hasAttribute('title') &&
+        !tipElement.hasAttribute("title") &&
         (!tipElement.form || !tipElement.form.noValidate)) {
       // If the element is barred from constraint validation or valid,
       // the validation message will be the empty string.
@@ -52,8 +52,8 @@ TooltipTextProvider.prototype = {
     // the current file selection.
     if (!titleText &&
         tipElement instanceof defView.HTMLInputElement &&
-        tipElement.type == 'file' &&
-        !tipElement.hasAttribute('title')) {
+        tipElement.type == "file" &&
+        !tipElement.hasAttribute("title")) {
       let files = tipElement.files;
 
       try {
@@ -131,7 +131,7 @@ TooltipTextProvider.prototype = {
     return [titleText, XLinkTitleText, SVGTitleText, XULtooltiptextText].some(function(t) {
       if (t && /\S/.test(t)) {
         // Make CRLF and CR render one line break each.
-        textOut.value = t.replace(/\r\n?/g, '\n');
+        textOut.value = t.replace(/\r\n?/g, "\n");
         directionOut.value = direction;
         return true;
       }

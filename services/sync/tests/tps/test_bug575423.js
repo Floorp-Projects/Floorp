@@ -71,14 +71,14 @@ var history2 = [
 /*
  * Test phases
  */
-Phase('phase1', [
+Phase("phase1", [
   [History.add, history1],
   [Sync],
   [History.add, history2],
   [Sync]
 ]);
 
-Phase('phase2', [
+Phase("phase2", [
   [Sync],
   [History.verify, history2]
 ]);

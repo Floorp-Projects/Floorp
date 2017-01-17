@@ -77,21 +77,21 @@ var bookmarks_to_delete = {
  */
 
 // add bookmarks to profile1 and sync
-Phase('phase1', [
+Phase("phase1", [
   [Bookmarks.add, bookmarks_initial],
   [Bookmarks.verify, bookmarks_initial],
   [Sync]
 ]);
 
 // sync to profile2 and verify that the bookmarks are present
-Phase('phase2', [
+Phase("phase2", [
   [Sync],
   [Bookmarks.verify, bookmarks_initial]
 ]);
 
 // delete some bookmarks from profile1, then sync with "wipe-client"
 // set; finally, verify that the deleted bookmarks were restored.
-Phase('phase3', [
+Phase("phase3", [
   [Bookmarks.delete, bookmarks_to_delete],
   [Bookmarks.verifyNot, bookmarks_to_delete],
   [Sync, SYNC_WIPE_CLIENT],
@@ -99,7 +99,7 @@ Phase('phase3', [
 ]);
 
 // sync profile2 again, verify no bookmarks have been deleted
-Phase('phase4', [
+Phase("phase4", [
   [Sync],
   [Bookmarks.verify, bookmarks_initial]
 ]);

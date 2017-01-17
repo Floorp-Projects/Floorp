@@ -185,7 +185,7 @@ add_UITour_task(function* test_heartbeat_stars_show() {
 
   // Validate the returned timestamp.
   let data = yield shownPromise;
-  validateTimestamp('Heartbeat:Offered', data.timestamp);
+  validateTimestamp("Heartbeat:Offered", data.timestamp);
 
   // Close the heartbeat notification.
   let closedPromise = promiseWaitHeartbeatNotification("Heartbeat:NotificationClosed");
@@ -193,7 +193,7 @@ add_UITour_task(function* test_heartbeat_stars_show() {
   cleanUpNotification(flowId);
 
   data = yield closedPromise;
-  validateTimestamp('Heartbeat:NotificationClosed', data.timestamp);
+  validateTimestamp("Heartbeat:NotificationClosed", data.timestamp);
 
   data = yield pingSentPromise;
   info("'Heartbeat:TelemetrySent' notification received");
@@ -226,7 +226,7 @@ add_UITour_task(function* test_heartbeat_take_optional_icon_URL() {
 
   // Validate the returned timestamp.
   let data = yield shownPromise;
-  validateTimestamp('Heartbeat:Offered', data.timestamp);
+  validateTimestamp("Heartbeat:Offered", data.timestamp);
 
   // Check the icon URL
   let notification = getHeartbeatNotification(flowId);
@@ -238,7 +238,7 @@ add_UITour_task(function* test_heartbeat_take_optional_icon_URL() {
   cleanUpNotification(flowId);
 
   data = yield closedPromise;
-  validateTimestamp('Heartbeat:NotificationClosed', data.timestamp);
+  validateTimestamp("Heartbeat:NotificationClosed", data.timestamp);
 
   data = yield pingSentPromise;
   info("'Heartbeat:TelemetrySent' notification received");
@@ -268,7 +268,7 @@ add_UITour_task(function* test_heartbeat_null_engagementURL() {
 
   // Validate the returned timestamp.
   let data = yield shownPromise;
-  validateTimestamp('Heartbeat:Offered', data.timestamp);
+  validateTimestamp("Heartbeat:Offered", data.timestamp);
 
   // Wait an the Voted, Closed and Telemetry Sent events. They are fired together, so
   // wait for them here.
@@ -279,11 +279,11 @@ add_UITour_task(function* test_heartbeat_null_engagementURL() {
   // The UI was just shown. We can simulate a click on a rating element (i.e., "star").
   simulateVote(flowId, 2);
   data = yield votedPromise;
-  validateTimestamp('Heartbeat:Voted', data.timestamp);
+  validateTimestamp("Heartbeat:Voted", data.timestamp);
 
   // Validate the closing timestamp.
   data = yield closedPromise;
-  validateTimestamp('Heartbeat:NotificationClosed', data.timestamp);
+  validateTimestamp("Heartbeat:NotificationClosed", data.timestamp);
   is(gBrowser.tabs.length, originalTabCount, "No engagement tab should be opened.");
 
   // Validate the data we send out.
@@ -317,7 +317,7 @@ add_UITour_task(function* test_heartbeat_invalid_engagement_URL() {
 
   // Validate the returned timestamp.
   let data = yield shownPromise;
-  validateTimestamp('Heartbeat:Offered', data.timestamp);
+  validateTimestamp("Heartbeat:Offered", data.timestamp);
 
   // Wait an the Voted, Closed and Telemetry Sent events. They are fired together, so
   // wait for them here.
@@ -328,11 +328,11 @@ add_UITour_task(function* test_heartbeat_invalid_engagement_URL() {
   // The UI was just shown. We can simulate a click on a rating element (i.e., "star").
   simulateVote(flowId, 2);
   data = yield votedPromise;
-  validateTimestamp('Heartbeat:Voted', data.timestamp);
+  validateTimestamp("Heartbeat:Voted", data.timestamp);
 
   // Validate the closing timestamp.
   data = yield closedPromise;
-  validateTimestamp('Heartbeat:NotificationClosed', data.timestamp);
+  validateTimestamp("Heartbeat:NotificationClosed", data.timestamp);
   is(gBrowser.tabs.length, originalTabCount, "No engagement tab should be opened.");
 
   // Validate the data we send out.
@@ -366,7 +366,7 @@ add_UITour_task(function* test_heartbeat_stars_vote() {
 
   // Validate the returned timestamp.
   let data = yield shownPromise;
-  validateTimestamp('Heartbeat:Offered', data.timestamp);
+  validateTimestamp("Heartbeat:Offered", data.timestamp);
 
   // Wait an the Voted, Closed and Telemetry Sent events. They are fired together, so
   // wait for them here.
@@ -377,12 +377,12 @@ add_UITour_task(function* test_heartbeat_stars_vote() {
   // The UI was just shown. We can simulate a click on a rating element (i.e., "star").
   simulateVote(flowId, expectedScore);
   data = yield votedPromise;
-  validateTimestamp('Heartbeat:Voted', data.timestamp);
+  validateTimestamp("Heartbeat:Voted", data.timestamp);
   is(data.score, expectedScore, "Should report a score of " + expectedScore);
 
   // Validate the closing timestamp and vote.
   data = yield closedPromise;
-  validateTimestamp('Heartbeat:NotificationClosed', data.timestamp);
+  validateTimestamp("Heartbeat:NotificationClosed", data.timestamp);
   is(gBrowser.tabs.length, originalTabCount, "No engagement tab should be opened.");
 
   // Validate the data we send out.
@@ -417,7 +417,7 @@ add_UITour_task(function* test_heartbeat_engagement_tab() {
 
   // Validate the returned timestamp.
   let data = yield shownPromise;
-  validateTimestamp('Heartbeat:Offered', data.timestamp);
+  validateTimestamp("Heartbeat:Offered", data.timestamp);
 
   // Wait an the Voted, Closed and Telemetry Sent events. They are fired together, so
   // wait for them here.
@@ -428,11 +428,11 @@ add_UITour_task(function* test_heartbeat_engagement_tab() {
   // The UI was just shown. We can simulate a click on a rating element (i.e., "star").
   simulateVote(flowId, 1);
   data = yield votedPromise;
-  validateTimestamp('Heartbeat:Voted', data.timestamp);
+  validateTimestamp("Heartbeat:Voted", data.timestamp);
 
   // Validate the closing timestamp, vote and make sure the engagement page was opened.
   data = yield closedPromise;
-  validateTimestamp('Heartbeat:NotificationClosed', data.timestamp);
+  validateTimestamp("Heartbeat:NotificationClosed", data.timestamp);
   is(gBrowser.tabs.length, expectedTabCount, "Engagement URL should open in a new tab.");
   gBrowser.removeCurrentTab();
 
@@ -469,7 +469,7 @@ add_UITour_task(function* test_heartbeat_engagement_button() {
   });
 
   let data = yield shownPromise;
-  validateTimestamp('Heartbeat:Offered', data.timestamp);
+  validateTimestamp("Heartbeat:Offered", data.timestamp);
 
   // Wait an the Engaged, Closed and Telemetry Sent events. They are fired together, so
   // wait for them here.
@@ -486,11 +486,11 @@ add_UITour_task(function* test_heartbeat_engagement_button() {
   engagementButton.doCommand();
 
   data = yield engagedPromise;
-  validateTimestamp('Heartbeat:Engaged', data.timestamp);
+  validateTimestamp("Heartbeat:Engaged", data.timestamp);
 
   // Validate the closing timestamp, vote and make sure the engagement page was opened.
   data = yield closedPromise;
-  validateTimestamp('Heartbeat:NotificationClosed', data.timestamp);
+  validateTimestamp("Heartbeat:NotificationClosed", data.timestamp);
   is(gBrowser.tabs.length, expectedTabCount, "Engagement URL should open in a new tab.");
   gBrowser.removeCurrentTab();
 
@@ -526,7 +526,7 @@ add_UITour_task(function* test_heartbeat_learnmore() {
                             "What is this?", dummyURL);
 
   let data = yield shownPromise;
-  validateTimestamp('Heartbeat:Offered', data.timestamp);
+  validateTimestamp("Heartbeat:Offered", data.timestamp);
 
   // Wait an the LearnMore, Closed and Telemetry Sent events. They are fired together, so
   // wait for them here.
@@ -538,12 +538,12 @@ add_UITour_task(function* test_heartbeat_learnmore() {
   clickLearnMore(flowId);
 
   data = yield learnMorePromise;
-  validateTimestamp('Heartbeat:LearnMore', data.timestamp);
+  validateTimestamp("Heartbeat:LearnMore", data.timestamp);
   cleanUpNotification(flowId);
 
   // The notification was closed.
   data = yield closedPromise;
-  validateTimestamp('Heartbeat:NotificationClosed', data.timestamp);
+  validateTimestamp("Heartbeat:NotificationClosed", data.timestamp);
   is(gBrowser.tabs.length, expectedTabCount, "Learn more URL should open in a new tab.");
   gBrowser.removeCurrentTab();
 
@@ -737,7 +737,7 @@ add_UITour_task(function* test_telemetry_params() {
 
   // The notification was closed.
   let data = yield closedPromise;
-  validateTimestamp('Heartbeat:NotificationClosed', data.timestamp);
+  validateTimestamp("Heartbeat:NotificationClosed", data.timestamp);
 
   // Validate the data we send out.
   data = yield pingPromise;

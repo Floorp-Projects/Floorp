@@ -22,14 +22,14 @@ add_task(function() {
     }
   }
   let currentSet = navbar.currentSet;
-  is(currentSet.split(',').length, nodeIds.length, "Should be just as many nodes as there are.");
-  is(currentSet, nodeIds.join(','), "Current set and node IDs should match.");
+  is(currentSet.split(",").length, nodeIds.length, "Should be just as many nodes as there are.");
+  is(currentSet, nodeIds.join(","), "Current set and node IDs should match.");
 });
 
 // Insert, then remove items
 add_task(function() {
   let currentSet = navbar.currentSet;
-  let newCurrentSet = currentSet.replace('home-button', 'feed-button,sync-button,home-button');
+  let newCurrentSet = currentSet.replace("home-button", "feed-button,sync-button,home-button");
   navbar.currentSet = newCurrentSet;
   is(newCurrentSet, navbar.currentSet, "Current set should match expected current set.");
   let feedBtn = document.getElementById("feed-button");
@@ -54,7 +54,7 @@ add_task(function() {
 // Simultaneous insert/remove:
 add_task(function() {
   let currentSet = navbar.currentSet;
-  let newCurrentSet = currentSet.replace('home-button', 'feed-button');
+  let newCurrentSet = currentSet.replace("home-button", "feed-button");
   navbar.currentSet = newCurrentSet;
   is(newCurrentSet, navbar.currentSet, "Current set should match expected current set.");
   let feedBtn = document.getElementById("feed-button");

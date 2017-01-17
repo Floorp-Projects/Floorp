@@ -34,7 +34,7 @@ function* doTest(parentTabSpec, childTabSpec, testTaskFn, waitForMetaRefresh) {
     yield promiseReloaded;
 
     // Wait for the script in the page to update the contents of the test div.
-    let testDiv = content.document.getElementById('mctestdiv');
+    let testDiv = content.document.getElementById("mctestdiv");
     yield promiseWaitForCondition(
       () => testDiv.innerHTML == "Mixed Content Blocker disabled");
 
@@ -120,7 +120,7 @@ add_task(function* test_same_origin() {
       activeLoaded: true, activeBlocked: false, passiveLoaded: false,
     });
 
-    is(content.document.getElementById('mctestdiv').innerHTML,
+    is(content.document.getElementById("mctestdiv").innerHTML,
        "Mixed Content Blocker disabled", "OK: Executed mixed script");
   });
 });
@@ -141,7 +141,7 @@ add_task(function* test_different_origin() {
       activeLoaded: false, activeBlocked: true, passiveLoaded: false,
     });
 
-    is(content.document.getElementById('mctestdiv').innerHTML,
+    is(content.document.getElementById("mctestdiv").innerHTML,
        "Mixed Content Blocker enabled", "OK: Blocked mixed script");
   });
 });
@@ -162,7 +162,7 @@ add_task(function* test_same_origin_metarefresh_same_origin() {
       activeLoaded: true, activeBlocked: false, passiveLoaded: false,
     });
 
-    is(content.document.getElementById('mctestdiv').innerHTML,
+    is(content.document.getElementById("mctestdiv").innerHTML,
        "Mixed Content Blocker disabled", "OK: Executed mixed script");
   }, true);
 });
@@ -182,7 +182,7 @@ add_task(function* test_same_origin_metarefresh_different_origin() {
       activeLoaded: false, activeBlocked: true, passiveLoaded: false,
     });
 
-    is(content.document.getElementById('mctestdiv').innerHTML,
+    is(content.document.getElementById("mctestdiv").innerHTML,
        "Mixed Content Blocker enabled", "OK: Blocked mixed script");
   }, true);
 });
@@ -202,7 +202,7 @@ add_task(function* test_same_origin_302redirect_same_origin() {
     ok(!gIdentityHandler._identityBox.classList.contains("mixedActiveBlocked"),
        "OK: Mixed Content is NOT being blocked");
 
-    is(content.document.getElementById('mctestdiv').innerHTML,
+    is(content.document.getElementById("mctestdiv").innerHTML,
        "Mixed Content Blocker disabled", "OK: Executed mixed script");
   });
 });
@@ -222,7 +222,7 @@ add_task(function* test_same_origin_302redirect_different_origin() {
       activeLoaded: false, activeBlocked: true, passiveLoaded: false,
     });
 
-    is(content.document.getElementById('mctestdiv').innerHTML,
+    is(content.document.getElementById("mctestdiv").innerHTML,
        "Mixed Content Blocker enabled", "OK: Blocked mixed script");
   });
 });

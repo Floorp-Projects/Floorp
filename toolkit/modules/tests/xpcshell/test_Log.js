@@ -365,11 +365,11 @@ add_task(function* log_message_with_params() {
   // The substitution field is missing from params. Leave the placeholder behind
   // to make the mistake obvious.
   do_check_eq(formatMessage("Missing object is ${missing}", {}),
-              'Missing object is ${missing}');
+              "Missing object is ${missing}");
 
   // Make sure we don't treat the parameter name 'false' as a falsey value.
   do_check_eq(formatMessage("False is ${false}", {false: true}),
-              'False is true');
+              "False is true");
 
   // If an object has a .toJSON method, the formatter uses it.
   let ob = function() {};
@@ -381,17 +381,17 @@ add_task(function* log_message_with_params() {
   ob = function() {};
   ob.toJSON = function() {throw "oh noes JSON"};
   do_check_eq(formatMessage("Fail is ${sub}", {sub: ob}),
-              'Fail is (function () {})');
+              "Fail is (function () {})");
 
   // Fall back to .toString if both .toJSON and .toSource fail.
   ob.toSource = function() {throw "oh noes SOURCE"};
   do_check_eq(formatMessage("Fail is ${sub}", {sub: ob}),
-              'Fail is function () {}');
+              "Fail is function () {}");
 
   // Fall back to '[object]' if .toJSON, .toSource and .toString fail.
   ob.toString = function() {throw "oh noes STRING"};
   do_check_eq(formatMessage("Fail is ${sub}", {sub: ob}),
-              'Fail is [object]');
+              "Fail is [object]");
 
   // If params are passed but there are no substitution in the text
   // we JSON format and append the entire parameters object.
@@ -401,7 +401,7 @@ add_task(function* log_message_with_params() {
   // If we substitute one parameter but not the other,
   // we ignore any params that aren't substituted.
   do_check_eq(formatMessage("Text with partial sub ${a}", {a: "b", c: "d"}),
-              'Text with partial sub b');
+              "Text with partial sub b");
 
   // We don't format internal fields stored in params.
   do_check_eq(formatMessage("Params with _ ${}", {a: "b", _c: "d", _level:20, _message:"froo",
@@ -411,16 +411,16 @@ add_task(function* log_message_with_params() {
   // Don't print an empty params holder if all params are internal.
   do_check_eq(formatMessage("All params internal", {_level:20, _message:"froo",
                                                     _time:123456, _namespace:"here.there"}),
-              'All params internal');
+              "All params internal");
 
   // Format params with null and undefined values.
   do_check_eq(formatMessage("Null ${n} undefined ${u}", {n: null, u: undefined}),
-              'Null null undefined undefined');
+              "Null null undefined undefined");
 
   // Format params with number, bool, and Object/String type.
   do_check_eq(formatMessage("number ${n} boolean ${b} boxed Boolean ${bx} String ${s}",
                             {n: 45, b: false, bx: new Boolean(true), s: new String("whatevs")}),
-              'number 45 boolean false boxed Boolean true String whatevs');
+              "number 45 boolean false boxed Boolean true String whatevs");
 
   /*
    * Check that errors get special formatting if they're formatted directly as
@@ -457,30 +457,30 @@ add_task(function* log_message_with_params() {
   // Test edge cases of bad data to formatter:
   // If 'params' is not an object, format it as a basic type.
   do_check_eq(formatMessage("non-object no subst", 1),
-              'non-object no subst: 1');
+              "non-object no subst: 1");
   do_check_eq(formatMessage("non-object all subst ${}", 2),
-              'non-object all subst 2');
+              "non-object all subst 2");
   do_check_eq(formatMessage("false no subst", false),
-              'false no subst: false');
+              "false no subst: false");
   do_check_eq(formatMessage("null no subst", null),
-              'null no subst: null');
+              "null no subst: null");
   // If 'params' is undefined and there are no substitutions expected,
   // the message should still be output.
   do_check_eq(formatMessage("undefined no subst", undefined),
-              'undefined no subst');
+              "undefined no subst");
   // If 'params' is not an object, no named substitutions can succeed;
   // therefore we leave the placeholder and append the formatted params.
   do_check_eq(formatMessage("non-object named subst ${junk} space", 3),
-              'non-object named subst ${junk} space: 3');
+              "non-object named subst ${junk} space: 3");
   // If there are no params, we leave behind the placeholders in the text.
   do_check_eq(formatMessage("no params ${missing}", undefined),
-              'no params ${missing}');
+              "no params ${missing}");
   // If params doesn't contain any of the tags requested in the text,
   // we leave them all behind and append the formatted params.
   do_check_eq(formatMessage("object missing tag ${missing} space", {mising: "not here"}),
               'object missing tag ${missing} space: {"mising":"not here"}');
   // If we are given null text and no params, the resulting formatted message is empty.
-  do_check_eq(formatMessage(null), '');
+  do_check_eq(formatMessage(null), "");
 });
 
 /*
@@ -533,7 +533,7 @@ add_task(function* test_structured_basic() {
   log.logStructured("action", {_message: "Structured sub ${data}", data: "structure"});
   do_check_eq(appender.messages.length, 2);
   do_print(appender.messages[1]);
-  do_check_true(appender.messages[1].includes('Structured sub structure'));
+  do_check_true(appender.messages[1].includes("Structured sub structure"));
 });
 
 /*

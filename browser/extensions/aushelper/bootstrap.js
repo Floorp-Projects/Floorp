@@ -77,7 +77,7 @@ function startup() {
             hexVal.unshift(c);
           }
           cpuRevMatch = false;
-          if (microCodeVersions.indexOf(parseInt(hexVal.join(''))) != -1) {
+          if (microCodeVersions.indexOf(parseInt(hexVal.join(""))) != -1) {
             cpuRevMatch = true;
           }
           break;

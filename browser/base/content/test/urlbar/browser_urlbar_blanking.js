@@ -18,7 +18,7 @@ add_task(function*() {
   is(gURLBar.value, URI, "The URL bar should match the URI");
   let browserLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   ContentTask.spawn(tab.linkedBrowser, null, function() {
-    content.document.querySelector('a').click();
+    content.document.querySelector("a").click();
   });
   yield browserLoaded;
   ok(gURLBar.value.startsWith("javascript"), "The URL bar should have the JS URI");

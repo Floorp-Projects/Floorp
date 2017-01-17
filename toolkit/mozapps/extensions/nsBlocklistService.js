@@ -1105,7 +1105,7 @@ Blocklist.prototype = {
     }
 
     // Trim helper (spaces, tabs, no-break spaces..)
-    const trim = (s) => (s || '').replace(/(^[\s\uFEFF\xA0]+)|([\s\uFEFF\xA0]+$)/g, "");
+    const trim = (s) => (s || "").replace(/(^[\s\uFEFF\xA0]+)|([\s\uFEFF\xA0]+$)/g, "");
 
     for (let i = 0; i < blocklistElement.childNodes.length; ++i) {
       var matchElement = blocklistElement.childNodes.item(i);

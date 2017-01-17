@@ -18,9 +18,9 @@ const LATE_WRITE_PREFIX = "Telemetry.LateWriteFinal-";
 
 // The names and IDs don't matter, but the format of the IDs does.
 const LOADED_MODULES = {
-  '4759A7E6993548C89CAF716A67EC242D00': 'libtest.so',
-  'F77AF15BB8D6419FA875954B4A3506CA00': 'libxul.so',
-  '1E2F7FB590424E8F93D60BB88D66B8C500': 'libc.so'
+  "4759A7E6993548C89CAF716A67EC242D00": "libtest.so",
+  "F77AF15BB8D6419FA875954B4A3506CA00": "libxul.so",
+  "1E2F7FB590424E8F93D60BB88D66B8C500": "libc.so"
 };
 const N_MODULES = Object.keys(LOADED_MODULES).length;
 

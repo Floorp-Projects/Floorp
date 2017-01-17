@@ -13,8 +13,8 @@ const NUM_CACHED_LOADS = 1;
 let gHits = 0;
 
 let server = new HttpServer();
-server.registerPathHandler('/image.png', imageHandler);
-server.registerPathHandler('/file.html', fileHandler);
+server.registerPathHandler("/image.png", imageHandler);
+server.registerPathHandler("/file.html", fileHandler);
 server.start(-1);
 
 registerCleanupFunction(() => {
@@ -23,12 +23,12 @@ registerCleanupFunction(() => {
   });
 });
 
-let BASE_URI = 'http://localhost:' + server.identity.primaryPort;
-let IMAGE_URI = BASE_URI + '/image.png';
-let FILE_URI = BASE_URI + '/file.html';
+let BASE_URI = "http://localhost:" + server.identity.primaryPort;
+let IMAGE_URI = BASE_URI + "/image.png";
+let FILE_URI = BASE_URI + "/file.html";
 
 function imageHandler(metadata, response) {
-  info('XXX: loading image from server');
+  info("XXX: loading image from server");
   gHits++;
   response.setHeader("Cache-Control", "max-age=10000", false);
   response.setStatusLine(metadata.httpVersion, 200, "OK");
@@ -46,15 +46,15 @@ function fileHandler(metadata, response) {
 
 function doBefore() {
   // reset hit counter
-  info('XXX resetting gHits');
+  info("XXX resetting gHits");
   gHits = 0;
-  info('XXX clearing image cache');
+  info("XXX clearing image cache");
   let imageCache = Cc["@mozilla.org/image/tools;1"]
                       .getService(Ci.imgITools)
                       .getImgCacheForDocument(null);
   imageCache.clearCache(true);
   imageCache.clearCache(false);
-  info('XXX clearning network cache');
+  info("XXX clearning network cache");
   let networkCache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
                         .getService(Ci.nsICacheStorageService);
   networkCache.clear();

@@ -374,14 +374,14 @@ var passwords_after_second_modify = [
  * Test phases
  */
 
-Phase('phase1', [
+Phase("phase1", [
   [Bookmarks.add, bookmarks_initial],
   [Passwords.add, passwords_initial],
   [History.add, history_initial],
   [Sync],
 ]);
 
-Phase('phase2', [
+Phase("phase2", [
   [Sync],
   [Bookmarks.verify, bookmarks_initial],
   [Passwords.verify, passwords_initial],
@@ -396,7 +396,7 @@ Phase('phase2', [
   [Sync],
 ]);
 
-Phase('phase3', [
+Phase("phase3", [
   [Sync],
   [Bookmarks.verify, bookmarks_after_first_modify],
   [Passwords.verify, passwords_after_first_modify],
@@ -412,7 +412,7 @@ Phase('phase3', [
   [Sync],
 ]);
 
-Phase('phase4', [
+Phase("phase4", [
   [Sync],
   [Bookmarks.verify, bookmarks_after_second_modify],
   [Passwords.verify, passwords_after_second_modify],

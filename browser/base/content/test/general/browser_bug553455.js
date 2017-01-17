@@ -13,13 +13,13 @@ const { REQUIRE_SIGNING } = Cu.import("resource://gre/modules/addons/AddonConsta
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 
 var rootDir = getRootDirectory(gTestPath);
-var rootPath = rootDir.split('/');
-var chromeName = rootPath[0] + '//' + rootPath[2];
+var rootPath = rootDir.split("/");
+var chromeName = rootPath[0] + "//" + rootPath[2];
 var croot = chromeName + "/content/browser/toolkit/mozapps/extensions/test/xpinstall/";
 var jar = getJar(croot);
 if (jar) {
   var tmpdir = extractJarToTmp(jar);
-  croot = 'file://' + tmpdir.path + '/';
+  croot = "file://" + tmpdir.path + "/";
 }
 const CHROMEROOT = croot;
 

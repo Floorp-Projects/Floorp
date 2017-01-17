@@ -10,9 +10,9 @@
 var Microformats; // jshint ignore:line
 
 (function(root, factory) {
-    if (typeof define === 'function' && define.amd) {
+    if (typeof define === "function" && define.amd) {
         define([], factory);
-    } else if (typeof exports === 'object') {
+    } else if (typeof exports === "object") {
         module.exports = factory();
     } else {
         root.Microformats = factory();
@@ -22,17 +22,17 @@ var Microformats; // jshint ignore:line
     var modules = {};
 
 
-    modules.version = '1.4.0';
-    modules.livingStandard = '2015-09-25T12:26:04Z';
+    modules.version = "1.4.0";
+    modules.livingStandard = "2015-09-25T12:26:04Z";
 
     /**
      * constructor
      *
      */
     modules.Parser = function() {
-        this.rootPrefix = 'h-';
-        this.propertyPrefixes = ['p-', 'dt-', 'u-', 'e-'];
-        this.excludeTags = ['br', 'hr'];
+        this.rootPrefix = "h-";
+        this.propertyPrefixes = ["p-", "dt-", "u-", "e-"];
+        this.excludeTags = ["br", "hr"];
     };
 
 
@@ -47,17 +47,17 @@ var Microformats; // jshint ignore:line
             this.rootNode = null;
             this.document = null;
             this.options = {
-                'baseUrl': '',
-                'filters': [],
-                'textFormat': 'whitespacetrimmed',
-                'dateFormat': 'auto', // html5 for testing
-                'overlappingVersions': false,
-                'impliedPropertiesByVersion': true,
-                'parseLatLonGeo': false
+                "baseUrl": "",
+                "filters": [],
+                "textFormat": "whitespacetrimmed",
+                "dateFormat": "auto", // html5 for testing
+                "overlappingVersions": false,
+                "impliedPropertiesByVersion": true,
+                "parseLatLonGeo": false
             };
             this.rootID = 0;
             this.errors = [];
-            this.noContentErr = 'No options.node or options.html was provided and no document object could be found.';
+            this.noContentErr = "No options.node or options.html was provided and no document object could be found.";
         },
 
 
@@ -107,7 +107,7 @@ var Microformats; // jshint ignore:line
                 if (this.findRels) {
                     rels = this.findRels(this.rootNode);
                     out.rels = rels.rels;
-                    out['rel-urls'] = rels['rel-urls'];
+                    out["rel-urls"] = rels["rel-urls"];
                 }
 
             }
@@ -157,16 +157,16 @@ var Microformats; // jshint ignore:line
 
             // if we do not have any context create error
             if (!this.rootNode || !this.document) {
-                return {'errors': [this.noContentErr]};
+                return {"errors": [this.noContentErr]};
             }
             items = this.findRootNodes( this.rootNode, true );
             i = items.length;
             while (i--) {
-                classItems = modules.domUtils.getAttributeList(items[i], 'class');
+                classItems = modules.domUtils.getAttributeList(items[i], "class");
                 x = classItems.length;
                 while (x--) {
                     // find v2 names
-                    if (modules.utils.startWith( classItems[x], 'h-' )) {
+                    if (modules.utils.startWith( classItems[x], "h-" )) {
                         this.appendCount(classItems[x], 1, out);
                     }
                     // find v1 names
@@ -280,7 +280,7 @@ var Microformats; // jshint ignore:line
 
             // recursive calls
             if (recursive === undefined) {
-                if (node.parentNode && node.nodeName !== 'HTML') {
+                if (node.parentNode && node.nodeName !== "HTML") {
                     return this.getParentTreeWalk(node.parentNode, options, true);
                 }
                 return this.formatEmpty();
@@ -331,9 +331,9 @@ var Microformats; // jshint ignore:line
 
 
             // find base tag to set baseUrl
-            baseTag = modules.domUtils.querySelector(this.document, 'base');
+            baseTag = modules.domUtils.querySelector(this.document, "base");
             if (baseTag) {
-                href = modules.domUtils.getAttribute(baseTag, 'href');
+                href = modules.domUtils.getAttribute(baseTag, "href");
                 if (href) {
                     this.options.baseUrl = href;
                 }
@@ -384,9 +384,9 @@ var Microformats; // jshint ignore:line
          */
         formatEmpty() {
             return {
-                'items': [],
-                'rels': {},
-                'rel-urls': {}
+                "items": [],
+                "rels": {},
+                "rel-urls": {}
             };
         },
 
@@ -396,7 +396,7 @@ var Microformats; // jshint ignore:line
             if (modules.utils.isString(filters)) {
                 filters = [filters];
             }
-            var newRootNode = modules.domUtils.createNode('div'),
+            var newRootNode = modules.domUtils.createNode("div"),
                 items = this.findRootNodes(rootNode, true),
                 i = 0,
                 x = 0,
@@ -417,7 +417,7 @@ var Microformats; // jshint ignore:line
                     // append matching nodes into newRootNode
                     y = filters.length;
                     while (y--) {
-                        if (modules.domUtils.hasAttributeValue(items[x], 'class', filters[y])) {
+                        if (modules.domUtils.hasAttributeValue(items[x], "class", filters[y])) {
                             var clone = modules.domUtils.clone(items[x]);
                             modules.domUtils.appendChild(newRootNode, clone);
                             break;
@@ -498,9 +498,9 @@ var Microformats; // jshint ignore:line
             // get all elements that have a class attribute
             includeRoot = (includeRoot) ? includeRoot : false;
             if (includeRoot && rootNode.parentNode) {
-                arr = modules.domUtils.getNodesByAttribute(rootNode.parentNode, 'class');
+                arr = modules.domUtils.getNodesByAttribute(rootNode.parentNode, "class");
             } else {
-                arr = modules.domUtils.getNodesByAttribute(rootNode, 'class');
+                arr = modules.domUtils.getNodesByAttribute(rootNode, "class");
             }
 
             // loop elements that have a class attribute
@@ -508,7 +508,7 @@ var Microformats; // jshint ignore:line
             i = arr.length;
             while (x < i) {
 
-                items = modules.domUtils.getAttributeList(arr[x], 'class');
+                items = modules.domUtils.getAttributeList(arr[x], "class");
 
                 // loop classes on an element
                 y = items.length;
@@ -520,7 +520,7 @@ var Microformats; // jshint ignore:line
                     }
 
                     // match v2 root name prefix
-                    if (modules.utils.startWith(items[y], 'h-')) {
+                    if (modules.utils.startWith(items[y], "h-")) {
                         out.push(arr[x]);
                         break;
                     }
@@ -739,9 +739,9 @@ var Microformats; // jshint ignore:line
                         out.children =  [];
                     }
 
-                    if (!context.hasRootID(child, rootID, 'child-root')) {
+                    if (!context.hasRootID(child, rootID, "child-root")) {
                         out.children.push( rootItem );
-                        context.appendRootID(child, rootID, 'child-root');
+                        context.appendRootID(child, rootID, "child-root");
                         context.rootID++;
                     }
 
@@ -778,21 +778,21 @@ var Microformats; // jshint ignore:line
          * @return {String || Object}
          */
         getValue(node, className, uf) {
-            var value = '';
+            var value = "";
 
-            if (modules.utils.startWith(className, 'p-')) {
+            if (modules.utils.startWith(className, "p-")) {
                 value = this.getPValue(node, true);
             }
 
-            if (modules.utils.startWith(className, 'e-')) {
+            if (modules.utils.startWith(className, "e-")) {
                 value = this.getEValue(node);
             }
 
-            if (modules.utils.startWith(className, 'u-')) {
+            if (modules.utils.startWith(className, "u-")) {
                 value = this.getUValue(node, true);
             }
 
-            if (modules.utils.startWith(className, 'dt-')) {
+            if (modules.utils.startWith(className, "dt-")) {
                 value = this.getDTValue(node, className, uf, true);
             }
             return value;
@@ -807,9 +807,9 @@ var Microformats; // jshint ignore:line
          * @return {String}
          */
         getPValue(node, valueParse) {
-            var out = '';
+            var out = "";
             if (valueParse) {
-                out = this.getValueClass(node, 'p');
+                out = this.getValueClass(node, "p");
             }
 
             if (!out && valueParse) {
@@ -817,26 +817,26 @@ var Microformats; // jshint ignore:line
             }
 
             if (!out) {
-                out = modules.domUtils.getAttrValFromTagList(node, ['abbr'], 'title');
+                out = modules.domUtils.getAttrValFromTagList(node, ["abbr"], "title");
             }
 
             if (!out) {
-                out = modules.domUtils.getAttrValFromTagList(node, ['data', 'input'], 'value');
+                out = modules.domUtils.getAttrValFromTagList(node, ["data", "input"], "value");
             }
 
-            if (node.name === 'br' || node.name === 'hr') {
-                out = '';
+            if (node.name === "br" || node.name === "hr") {
+                out = "";
             }
 
             if (!out) {
-                out = modules.domUtils.getAttrValFromTagList(node, ['img', 'area'], 'alt');
+                out = modules.domUtils.getAttrValFromTagList(node, ["img", "area"], "alt");
             }
 
             if (!out) {
                 out = modules.text.parse(this.document, node, this.options.textFormat);
             }
 
-            return (out) ? out : '';
+            return (out) ? out : "";
         },
 
 
@@ -848,10 +848,10 @@ var Microformats; // jshint ignore:line
          */
         getEValue(node) {
 
-            var out = {value: '', html: ''};
+            var out = {value: "", html: ""};
 
-            this.expandURLs(node, 'src', this.options.baseUrl);
-            this.expandURLs(node, 'href', this.options.baseUrl);
+            this.expandURLs(node, "src", this.options.baseUrl);
+            this.expandURLs(node, "href", this.options.baseUrl);
 
             out.value = modules.text.parse(this.document, node, this.options.textFormat);
             out.html = modules.html.parse(node);
@@ -868,9 +868,9 @@ var Microformats; // jshint ignore:line
          * @return {String}
          */
         getUValue(node, valueParse) {
-            var out = '';
+            var out = "";
             if (valueParse) {
-                out = this.getValueClass(node, 'u');
+                out = this.getValueClass(node, "u");
             }
 
             if (!out && valueParse) {
@@ -878,35 +878,35 @@ var Microformats; // jshint ignore:line
             }
 
             if (!out) {
-                out = modules.domUtils.getAttrValFromTagList(node, ['a', 'area'], 'href');
+                out = modules.domUtils.getAttrValFromTagList(node, ["a", "area"], "href");
             }
 
             if (!out) {
-                out = modules.domUtils.getAttrValFromTagList(node, ['img', 'audio', 'video', 'source'], 'src');
+                out = modules.domUtils.getAttrValFromTagList(node, ["img", "audio", "video", "source"], "src");
             }
 
             if (!out) {
-                out = modules.domUtils.getAttrValFromTagList(node, ['object'], 'data');
+                out = modules.domUtils.getAttrValFromTagList(node, ["object"], "data");
             }
 
             // if we have no protocol separator, turn relative url to absolute url
-            if (out && out !== '' && out.indexOf('://') === -1) {
+            if (out && out !== "" && out.indexOf("://") === -1) {
                 out = modules.url.resolve(out, this.options.baseUrl);
             }
 
             if (!out) {
-                out = modules.domUtils.getAttrValFromTagList(node, ['abbr'], 'title');
+                out = modules.domUtils.getAttrValFromTagList(node, ["abbr"], "title");
             }
 
             if (!out) {
-                out = modules.domUtils.getAttrValFromTagList(node, ['data', 'input'], 'value');
+                out = modules.domUtils.getAttrValFromTagList(node, ["data", "input"], "value");
             }
 
             if (!out) {
                 out = modules.text.parse(this.document, node, this.options.textFormat);
             }
 
-            return (out) ? out : '';
+            return (out) ? out : "";
         },
 
 
@@ -920,10 +920,10 @@ var Microformats; // jshint ignore:line
          * @return {String}
          */
         getDTValue(node, className, uf, valueParse) {
-            var out = '';
+            var out = "";
 
             if (valueParse) {
-                out = this.getValueClass(node, 'dt');
+                out = this.getValueClass(node, "dt");
             }
 
             if (!out && valueParse) {
@@ -931,15 +931,15 @@ var Microformats; // jshint ignore:line
             }
 
             if (!out) {
-                out = modules.domUtils.getAttrValFromTagList(node, ['time', 'ins', 'del'], 'datetime');
+                out = modules.domUtils.getAttrValFromTagList(node, ["time", "ins", "del"], "datetime");
             }
 
             if (!out) {
-                out = modules.domUtils.getAttrValFromTagList(node, ['abbr'], 'title');
+                out = modules.domUtils.getAttrValFromTagList(node, ["abbr"], "title");
             }
 
             if (!out) {
-                out = modules.domUtils.getAttrValFromTagList(node, ['data', 'input'], 'value');
+                out = modules.domUtils.getAttrValFromTagList(node, ["data", "input"], "value");
             }
 
             if (!out) {
@@ -963,7 +963,7 @@ var Microformats; // jshint ignore:line
                 }
                 return new modules.ISODate(out).toString( this.options.dateFormat );
             }
-            return '';
+            return "";
         },
 
 
@@ -977,11 +977,11 @@ var Microformats; // jshint ignore:line
         appendRootID(node, id, propertyName) {
             if (this.hasRootID(node, id, propertyName) === false) {
                 var rootids = [];
-                if (modules.domUtils.hasAttribute(node, 'rootids')) {
-                    rootids = modules.domUtils.getAttributeList(node, 'rootids');
+                if (modules.domUtils.hasAttribute(node, "rootids")) {
+                    rootids = modules.domUtils.getAttributeList(node, "rootids");
                 }
-                rootids.push('id' + id + '-' + propertyName);
-                modules.domUtils.setAttribute(node, 'rootids', rootids.join(' '));
+                rootids.push("id" + id + "-" + propertyName);
+                modules.domUtils.setAttribute(node, "rootids", rootids.join(" "));
             }
         },
 
@@ -996,11 +996,11 @@ var Microformats; // jshint ignore:line
          */
         hasRootID(node, id, propertyName) {
             var rootids = [];
-            if (!modules.domUtils.hasAttribute(node, 'rootids')) {
+            if (!modules.domUtils.hasAttribute(node, "rootids")) {
                 return false;
             }
-            rootids = modules.domUtils.getAttributeList(node, 'rootids');
-            return (rootids.indexOf('id' + id + '-' + propertyName) > -1);
+            rootids = modules.domUtils.getAttributeList(node, "rootids");
+            return (rootids.indexOf("id" + id + "-" + propertyName) > -1);
         },
 
 
@@ -1027,16 +1027,16 @@ var Microformats; // jshint ignore:line
             while (x < i) {
                 child = children[x];
                 var value = null;
-                if (modules.domUtils.hasAttributeValue(child, 'class', 'value')) {
+                if (modules.domUtils.hasAttributeValue(child, "class", "value")) {
                     switch (propertyType) {
-                    case 'p':
+                    case "p":
                         value = context.getPValue(child, false);
                         break;
-                    case 'u':
+                    case "u":
                         value = context.getUValue(child, false);
                         break;
-                    case 'dt':
-                        value = context.getDTValue(child, '', null, false);
+                    case "dt":
+                        value = context.getDTValue(child, "", null, false);
                         break;
                     }
                     if (value) {
@@ -1046,13 +1046,13 @@ var Microformats; // jshint ignore:line
                 x++;
             }
             if (out.length > 0) {
-                if (propertyType === 'p') {
-                    return modules.text.parseText( this.document, out.join(' '), this.options.textFormat);
+                if (propertyType === "p") {
+                    return modules.text.parseText( this.document, out.join(" "), this.options.textFormat);
                 }
-                if (propertyType === 'u') {
-                    return out.join('');
+                if (propertyType === "u") {
+                    return out.join("");
                 }
-                if (propertyType === 'dt') {
+                if (propertyType === "dt") {
                     return modules.dates.concatFragments(out, this.options.dateFormat).toString(this.options.dateFormat);
                 }
                 return undefined;
@@ -1074,16 +1074,16 @@ var Microformats; // jshint ignore:line
                 i,
                 x;
 
-            items = modules.domUtils.getNodesByAttributeValue(node, 'class', 'value-title');
+            items = modules.domUtils.getNodesByAttributeValue(node, "class", "value-title");
             x = 0;
             i = items.length;
             while (x < i) {
-                if (modules.domUtils.hasAttribute(items[x], 'title')) {
-                    out.push(modules.domUtils.getAttribute(items[x], 'title'));
+                if (modules.domUtils.hasAttribute(items[x], "title")) {
+                    out.push(modules.domUtils.getAttribute(items[x], "title"));
                 }
                 x++;
             }
-            return out.join('');
+            return out.join("");
         },
 
 
@@ -1112,8 +1112,8 @@ var Microformats; // jshint ignore:line
         getUfClassNames(node, ufNameArr) {
             var context = this,
                 out = {
-                    'root': [],
-                    'properties': []
+                    "root": [],
+                    "properties": []
                 },
                 classNames,
                 key,
@@ -1134,9 +1134,9 @@ var Microformats; // jshint ignore:line
             if (modules.domUtils.hasTagName(node, this.excludeTags) === false) {
 
                 // find classes for node
-                classNames = modules.domUtils.getAttribute(node, 'class');
+                classNames = modules.domUtils.getAttribute(node, "class");
                 if (classNames) {
-                    items = classNames.split(' ');
+                    items = classNames.split(" ");
                     x = 0;
                     i = items.length;
                     while (x < i) {
@@ -1148,14 +1148,14 @@ var Microformats; // jshint ignore:line
                             if (out.root.indexOf(item) === -1) {
                                 out.root.push(item);
                             }
-                            out.typeVersion = 'v2';
+                            out.typeVersion = "v2";
                         }
 
                         // test for property prefix - v2
                         z = context.propertyPrefixes.length;
                         while (z--) {
                             if (modules.utils.startWith(item, context.propertyPrefixes[z])) {
-                                out.properties.push([item, 'v2']);
+                                out.properties.push([item, "v2"]);
                             }
                         }
 
@@ -1167,11 +1167,11 @@ var Microformats; // jshint ignore:line
                                     // if root map has subTree set to true
                                     // test to see if we should create a property or root
                                     if (modules.maps[key].subTree) {
-                                        out.properties.push(['p-' + modules.maps[key].root, 'v1']);
+                                        out.properties.push(["p-" + modules.maps[key].root, "v1"]);
                                     } else {
                                         out.root.push(key);
                                         if (!out.typeVersion) {
-                                            out.typeVersion = 'v1';
+                                            out.typeVersion = "v1";
                                         }
                                     }
                                 }
@@ -1190,7 +1190,7 @@ var Microformats; // jshint ignore:line
                                         if (map.properties.hasOwnProperty(key)) {
 
                                             prop = map.properties[key];
-                                            propName = (prop.map) ? prop.map : 'p-' + key;
+                                            propName = (prop.map) ? prop.map : "p-" + key;
 
                                             if (key === item) {
                                                 if (prop.uf) {
@@ -1203,16 +1203,16 @@ var Microformats; // jshint ignore:line
                                                         // add new root
                                                         if (prop.uf.indexOf(v2Name) > -1 && out.root.indexOf(v2Name) === -1) {
                                                             out.root.push(v2Name);
-                                                            out.typeVersion = 'v1';
+                                                            out.typeVersion = "v1";
                                                         }
                                                         y++;
                                                     }
                                                     // only add property once
                                                     if (out.properties.indexOf(propName) === -1) {
-                                                        out.properties.push([propName, 'v1']);
+                                                        out.properties.push([propName, "v1"]);
                                                     }
                                                 } else if (out.properties.indexOf(propName) === -1) {
-                                                    out.properties.push([propName, 'v1']);
+                                                    out.properties.push([propName, "v1"]);
                                                 }
                                             }
                                         }
@@ -1236,7 +1236,7 @@ var Microformats; // jshint ignore:line
                     ufName = ufNameArr[b];
                     impiedRel = this.findRelImpied(node, ufName);
                     if (impiedRel && out.properties.indexOf(impiedRel) === -1) {
-                        out.properties.push([impiedRel, 'v1']);
+                        out.properties.push([impiedRel, "v1"]);
                     }
                 }
             }
@@ -1385,7 +1385,7 @@ var Microformats; // jshint ignore:line
                 try {
                     // the url parser can blow up if the format is not right
                     attr = modules.domUtils.getAttribute(nodes[i], attrName);
-                    if (attr && attr !== '' && baseUrl !== '' && attr.indexOf('://') === -1) {
+                    if (attr && attr !== "" && baseUrl !== "" && attr.indexOf("://") === -1) {
                         // attr = urlParser.resolve(baseUrl, attr);
                         attr = modules.url.resolve(attr, baseUrl);
                         modules.domUtils.setAttribute(nodes[i], attrName, attr);
@@ -1422,10 +1422,10 @@ var Microformats; // jshint ignore:line
             var arr,
                 i;
 
-            arr = modules.domUtils.getNodesByAttribute(rootNode, 'rootids');
+            arr = modules.domUtils.getNodesByAttribute(rootNode, "rootids");
             i = arr.length;
             while (i--) {
-                modules.domUtils.removeAttribute(arr[i], 'rootids');
+                modules.domUtils.removeAttribute(arr[i], "rootids");
             }
         },
 
@@ -1462,16 +1462,16 @@ var Microformats; // jshint ignore:line
          * @return {Object}
          */
          modules.Parser.prototype.impliedRules = function(node, uf, parentClasses) {
-            var typeVersion = (uf.typeVersion) ? uf.typeVersion : 'v2';
+            var typeVersion = (uf.typeVersion) ? uf.typeVersion : "v2";
 
             // TEMP: override to allow v1 implied properties while spec changes
             if (this.options.impliedPropertiesByVersion === false) {
-                typeVersion = 'v2';
+                typeVersion = "v2";
             }
 
             if (node && uf && uf.properties) {
                 uf = this.impliedBackwardComp( node, uf, parentClasses );
-                if (typeVersion === 'v2') {
+                if (typeVersion === "v2") {
                     uf = this.impliedhFeedTitle( uf );
                     uf = this.impliedName( node, uf );
                     uf = this.impliedPhoto( node, uf );
@@ -1516,7 +1516,7 @@ var Microformats; // jshint ignore:line
                 value;
 
             if (!uf.properties.name) {
-                value = this.getImpliedProperty(node, ['img', 'area', 'abbr'], this.getNameAttr);
+                value = this.getImpliedProperty(node, ["img", "area", "abbr"], this.getNameAttr);
                 var textFormat = this.options.textFormat;
                 // if no value for tags/properties use text
                 if (!value) {
@@ -1524,7 +1524,7 @@ var Microformats; // jshint ignore:line
                 } else {
                     name = [modules.text.parseText(this.document, value, textFormat)];
                 }
-                if (name && name[0] !== '') {
+                if (name && name[0] !== "") {
                     uf.properties.name = name;
                 }
             }
@@ -1552,10 +1552,10 @@ var Microformats; // jshint ignore:line
             */
             var value;
             if (!uf.properties.photo) {
-                value = this.getImpliedProperty(node, ['img', 'object'], this.getPhotoAttr);
+                value = this.getImpliedProperty(node, ["img", "object"], this.getPhotoAttr);
                 if (value) {
                     // relative to absolute URL
-                    if (value && value !== '' && this.options.baseUrl !== '' && value.indexOf('://') === -1) {
+                    if (value && value !== "" && this.options.baseUrl !== "" && value.indexOf("://") === -1) {
                         value = modules.url.resolve(value, this.options.baseUrl);
                     }
                     uf.properties.photo = [modules.utils.trim(value)];
@@ -1582,10 +1582,10 @@ var Microformats; // jshint ignore:line
             */
             var value;
             if (!uf.properties.url) {
-                value = this.getImpliedProperty(node, ['a', 'area'], this.getURLAttr);
+                value = this.getImpliedProperty(node, ["a", "area"], this.getURLAttr);
                 if (value) {
                     // relative to absolute URL
-                    if (value && value !== '' && this.options.baseUrl !== '' && value.indexOf('://') === -1) {
+                    if (value && value !== "" && this.options.baseUrl !== "" && value.indexOf("://") === -1) {
                         value = modules.url.resolve(value, this.options.baseUrl);
                     }
                     uf.properties.url = [modules.utils.trim(value)];
@@ -1661,9 +1661,9 @@ var Microformats; // jshint ignore:line
          * @return {String || null}
          */
         modules.Parser.prototype.getNameAttr = function(node) {
-            var value = modules.domUtils.getAttrValFromTagList(node, ['img', 'area'], 'alt');
+            var value = modules.domUtils.getAttrValFromTagList(node, ["img", "area"], "alt");
             if (!value) {
-                value = modules.domUtils.getAttrValFromTagList(node, ['abbr'], 'title');
+                value = modules.domUtils.getAttrValFromTagList(node, ["abbr"], "title");
             }
             return value;
         };
@@ -1676,9 +1676,9 @@ var Microformats; // jshint ignore:line
          * @return {String || null}
          */
         modules.Parser.prototype.getPhotoAttr = function(node) {
-            var value = modules.domUtils.getAttrValFromTagList(node, ['img'], 'src');
-            if (!value && modules.domUtils.hasAttributeValue(node, 'class', 'include') === false) {
-                value = modules.domUtils.getAttrValFromTagList(node, ['object'], 'data');
+            var value = modules.domUtils.getAttrValFromTagList(node, ["img"], "src");
+            if (!value && modules.domUtils.hasAttributeValue(node, "class", "include") === false) {
+                value = modules.domUtils.getAttrValFromTagList(node, ["object"], "data");
             }
             return value;
         };
@@ -1692,11 +1692,11 @@ var Microformats; // jshint ignore:line
          */
         modules.Parser.prototype.getURLAttr = function(node) {
             var value = null;
-            if (modules.domUtils.hasAttributeValue(node, 'class', 'include') === false) {
+            if (modules.domUtils.hasAttributeValue(node, "class", "include") === false) {
 
-                value = modules.domUtils.getAttrValFromTagList(node, ['a'], 'href');
+                value = modules.domUtils.getAttrValFromTagList(node, ["a"], "href");
                 if (!value) {
-                    value = modules.domUtils.getAttrValFromTagList(node, ['area'], 'href');
+                    value = modules.domUtils.getAttrValFromTagList(node, ["area"], "href");
                 }
 
             }
@@ -1716,14 +1716,14 @@ var Microformats; // jshint ignore:line
             // intersection of implied name and implied value rules
             if (uf.properties.name) {
                 if (uf.value && parentClasses.root.length > 0 && parentClasses.properties.length === 1) {
-                    uf = this.getAltValue(uf, parentClasses.properties[0][0], 'p-name', uf.properties.name[0]);
+                    uf = this.getAltValue(uf, parentClasses.properties[0][0], "p-name", uf.properties.name[0]);
                 }
             }
 
             // intersection of implied URL and implied value rules
             if (uf.properties.url) {
                 if (parentClasses && parentClasses.root.length === 1 && parentClasses.properties.length === 1) {
-                    uf = this.getAltValue(uf, parentClasses.properties[0][0], 'u-url', uf.properties.url[0]);
+                    uf = this.getAltValue(uf, parentClasses.properties[0][0], "u-url", uf.properties.url[0]);
                 }
             }
 
@@ -1750,15 +1750,15 @@ var Microformats; // jshint ignore:line
         modules.Parser.prototype.getAltValue = function(uf, parentPropertyName, propertyName, value) {
             if (uf.value && !uf.altValue) {
                 // first p-name of the h-* child
-                if (modules.utils.startWith(parentPropertyName, 'p-') && propertyName === 'p-name') {
+                if (modules.utils.startWith(parentPropertyName, "p-") && propertyName === "p-name") {
                     uf.altValue = {name: propertyName, value};
                 }
                 // if it's an e-* property element
-                if (modules.utils.startWith(parentPropertyName, 'e-') && modules.utils.startWith(propertyName, 'e-')) {
+                if (modules.utils.startWith(parentPropertyName, "e-") && modules.utils.startWith(propertyName, "e-")) {
                     uf.altValue = {name: propertyName, value};
                 }
                 // if it's an u-* property element
-                if (modules.utils.startWith(parentPropertyName, 'u-') && propertyName === 'u-url') {
+                if (modules.utils.startWith(parentPropertyName, "u-") && propertyName === "u-url") {
                     uf.altValue = {name: propertyName, value};
                 }
             }
@@ -1773,11 +1773,11 @@ var Microformats; // jshint ignore:line
          * @return {Object}
          */
         modules.Parser.prototype.impliedhFeedTitle = function( uf ) {
-            if (uf.type && uf.type.indexOf('h-feed') > -1) {
+            if (uf.type && uf.type.indexOf("h-feed") > -1) {
                 // has no name property
-                if (uf.properties.name === undefined || uf.properties.name[0] === '' ) {
+                if (uf.properties.name === undefined || uf.properties.name[0] === "" ) {
                     // use the text from the title tag
-                    var title = modules.domUtils.querySelector(this.document, 'title');
+                    var title = modules.domUtils.querySelector(this.document, "title");
                     if (title) {
                         uf.properties.name = [modules.domUtils.textContent(title)];
                     }
@@ -1801,7 +1801,7 @@ var Microformats; // jshint ignore:line
                 latitude,
                 valid = true;
 
-            if (uf.type && uf.type.indexOf('h-geo') > -1) {
+            if (uf.type && uf.type.indexOf("h-geo") > -1) {
 
                 // has no latitude or longitude property
                 if (uf.properties.latitude === undefined || uf.properties.longitude === undefined ) {
@@ -1811,11 +1811,11 @@ var Microformats; // jshint ignore:line
 
                     if (geoPair) {
                         // allow for the use of a ';' as in microformats and also ',' as in Geo URL
-                        geoPair = geoPair.replace(';', ',');
+                        geoPair = geoPair.replace(";", ",");
 
                         // has sep char
-                        if (geoPair.indexOf(',') > -1 ) {
-                            parts = geoPair.split(',');
+                        if (geoPair.indexOf(",") > -1 ) {
+                            parts = geoPair.split(",");
 
                             // only correct if we have two or more parts
                             if (parts.length > 1) {
@@ -1857,7 +1857,7 @@ var Microformats; // jshint ignore:line
             // look for pattern in parent classes like "p-geo h-geo"
             // these are structures built from backwards compat parsing of geo
             if (parentClasses.root.length === 1 && parentClasses.properties.length === 1) {
-                if (parentClasses.root[0].replace('h-', '') === this.removePropPrefix(parentClasses.properties[0][0])) {
+                if (parentClasses.root[0].replace("h-", "") === this.removePropPrefix(parentClasses.properties[0][0])) {
 
                     // if microformat has no properties apply the impliedName rule to get value from containing node
                     // this will get value from html such as <abbr class="geo" title="30.267991;-97.739568">Brighton</abbr>
@@ -1885,8 +1885,8 @@ var Microformats; // jshint ignore:line
          * @param  {DOM node} rootNode
          */
         modules.Parser.prototype.addIncludes = function(rootNode) {
-            this.addAttributeIncludes(rootNode, 'itemref');
-            this.addAttributeIncludes(rootNode, 'headers');
+            this.addAttributeIncludes(rootNode, "itemref");
+            this.addAttributeIncludes(rootNode, "headers");
             this.addClassIncludes(rootNode);
         };
 
@@ -1934,12 +1934,12 @@ var Microformats; // jshint ignore:line
                 x = 0,
                 i;
 
-            arr = modules.domUtils.getNodesByAttributeValue(rootNode, 'class', 'include');
+            arr = modules.domUtils.getNodesByAttributeValue(rootNode, "class", "include");
             i = arr.length;
             while (x < i) {
-                id = modules.domUtils.getAttrValFromTagList(arr[x], ['a'], 'href');
+                id = modules.domUtils.getAttrValFromTagList(arr[x], ["a"], "href");
                 if (!id) {
-                    id = modules.domUtils.getAttrValFromTagList(arr[x], ['object'], 'data');
+                    id = modules.domUtils.getAttrValFromTagList(arr[x], ["object"], "data");
                 }
                 this.apppendInclude(arr[x], id);
                 x++;
@@ -1957,7 +1957,7 @@ var Microformats; // jshint ignore:line
             var include,
                 clone;
 
-            id = modules.utils.trim(id.replace('#', ''));
+            id = modules.utils.trim(id.replace("#", ""));
             include = modules.domUtils.getElementById(this.document, id);
             if (include) {
                 clone = modules.domUtils.clone(include);
@@ -1981,10 +1981,10 @@ var Microformats; // jshint ignore:line
             arr = this.findRootNodes(rootNode);
             x = 0;
             i = arr.length;
-            modules.domUtils.setAttribute(rootNode, 'data-include', 'true');
-            modules.domUtils.setAttribute(rootNode, 'style', 'display:none');
+            modules.domUtils.setAttribute(rootNode, "data-include", "true");
+            modules.domUtils.setAttribute(rootNode, "style", "display:none");
             while (x < i) {
-                modules.domUtils.setAttribute(arr[x], 'data-include', 'true');
+                modules.domUtils.setAttribute(arr[x], "data-include", "true");
                 x++;
             }
         };
@@ -2000,7 +2000,7 @@ var Microformats; // jshint ignore:line
                 i;
 
             // remove all the items that were added as includes
-            arr = modules.domUtils.getNodesByAttribute(rootNode, 'data-include');
+            arr = modules.domUtils.getNodesByAttribute(rootNode, "data-include");
             i = arr.length;
             while (i--) {
                 modules.domUtils.removeChild(rootNode, arr[i]);
@@ -2022,9 +2022,9 @@ var Microformats; // jshint ignore:line
          */
         modules.Parser.prototype.findRels = function(rootNode) {
             var out = {
-                    'items': [],
-                    'rels': {},
-                    'rel-urls': {}
+                    "items": [],
+                    "rels": {},
+                    "rel-urls": {}
                 },
                 x,
                 i,
@@ -2036,14 +2036,14 @@ var Microformats; // jshint ignore:line
                 value,
                 arr;
 
-            arr = modules.domUtils.getNodesByAttribute(rootNode, 'rel');
+            arr = modules.domUtils.getNodesByAttribute(rootNode, "rel");
             x = 0;
             i = arr.length;
             while (x < i) {
-                relList = modules.domUtils.getAttribute(arr[x], 'rel');
+                relList = modules.domUtils.getAttribute(arr[x], "rel");
 
                 if (relList) {
-                    items = relList.split(' ');
+                    items = relList.split(" ");
 
 
                     // add rels
@@ -2053,9 +2053,9 @@ var Microformats; // jshint ignore:line
                         item = modules.utils.trim(items[z]);
 
                         // get rel value
-                        value = modules.domUtils.getAttrValFromTagList(arr[x], ['a', 'area'], 'href');
+                        value = modules.domUtils.getAttrValFromTagList(arr[x], ["a", "area"], "href");
                         if (!value) {
-                            value = modules.domUtils.getAttrValFromTagList(arr[x], ['link'], 'href');
+                            value = modules.domUtils.getAttrValFromTagList(arr[x], ["link"], "href");
                         }
 
                         // create the key
@@ -2063,7 +2063,7 @@ var Microformats; // jshint ignore:line
                             out.rels[item] = [];
                         }
 
-                        if (typeof this.options.baseUrl === 'string' && typeof value === 'string') {
+                        if (typeof this.options.baseUrl === "string" && typeof value === "string") {
 
                             var resolved = modules.url.resolve(value, this.options.baseUrl);
                             // do not add duplicate rels - based on resolved URLs
@@ -2076,8 +2076,8 @@ var Microformats; // jshint ignore:line
 
 
                     var url = null;
-                    if (modules.domUtils.hasAttribute(arr[x], 'href')) {
-                        url = modules.domUtils.getAttribute(arr[x], 'href');
+                    if (modules.domUtils.hasAttribute(arr[x], "href")) {
+                        url = modules.domUtils.getAttribute(arr[x], "href");
                         if (url) {
                             url = modules.url.resolve(url, this.options.baseUrl );
                         }
@@ -2088,8 +2088,8 @@ var Microformats; // jshint ignore:line
                     var relUrl = this.getRelProperties(arr[x]);
                     relUrl.rels = items;
                     // do not add duplicate rel-urls - based on resolved URLs
-                    if (url && out['rel-urls'][url] === undefined) {
-                        out['rel-urls'][url] = relUrl;
+                    if (url && out["rel-urls"][url] === undefined) {
+                        out["rel-urls"][url] = relUrl;
                     }
 
 
@@ -2109,19 +2109,19 @@ var Microformats; // jshint ignore:line
         modules.Parser.prototype.getRelProperties = function(node) {
             var obj = {};
 
-            if (modules.domUtils.hasAttribute(node, 'media')) {
-                obj.media = modules.domUtils.getAttribute(node, 'media');
+            if (modules.domUtils.hasAttribute(node, "media")) {
+                obj.media = modules.domUtils.getAttribute(node, "media");
             }
-            if (modules.domUtils.hasAttribute(node, 'type')) {
-                obj.type = modules.domUtils.getAttribute(node, 'type');
+            if (modules.domUtils.hasAttribute(node, "type")) {
+                obj.type = modules.domUtils.getAttribute(node, "type");
             }
-            if (modules.domUtils.hasAttribute(node, 'hreflang')) {
-                obj.hreflang = modules.domUtils.getAttribute(node, 'hreflang');
+            if (modules.domUtils.hasAttribute(node, "hreflang")) {
+                obj.hreflang = modules.domUtils.getAttribute(node, "hreflang");
             }
-            if (modules.domUtils.hasAttribute(node, 'title')) {
-                obj.title = modules.domUtils.getAttribute(node, 'title');
+            if (modules.domUtils.hasAttribute(node, "title")) {
+                obj.title = modules.domUtils.getAttribute(node, "title");
             }
-            if (modules.utils.trim(this.getPValue(node, false)) !== '') {
+            if (modules.utils.trim(this.getPValue(node, false)) !== "") {
                 obj.text = this.getPValue(node, false);
             }
 
@@ -2146,14 +2146,14 @@ var Microformats; // jshint ignore:line
                 for (var key in map.properties) {
                     if (map.properties.hasOwnProperty(key)) {
                         var prop = map.properties[key],
-                            propName = (prop.map) ? prop.map : 'p-' + key,
+                            propName = (prop.map) ? prop.map : "p-" + key,
                             relCount = 0;
 
                         // is property an alt rel=* mapping
-                        if (prop.relAlt && modules.domUtils.hasAttribute(node, 'rel')) {
+                        if (prop.relAlt && modules.domUtils.hasAttribute(node, "rel")) {
                             i = prop.relAlt.length;
                             while (i--) {
-                                if (modules.domUtils.hasAttributeValue(node, 'rel', prop.relAlt[i])) {
+                                if (modules.domUtils.hasAttributeValue(node, "rel", prop.relAlt[i])) {
                                     relCount++;
                                 }
                             }
@@ -2187,7 +2187,7 @@ var Microformats; // jshint ignore:line
          */
         modules.Parser.prototype.countRels = function(node) {
             if (node) {
-                return modules.domUtils.getNodesByAttribute(node, 'rel').length;
+                return modules.domUtils.getNodesByAttribute(node, "rel").length;
             }
             return 0;
         };
@@ -2206,7 +2206,7 @@ var Microformats; // jshint ignore:line
          * @return {Boolean}
          */
         isString( obj ) {
-            return typeof( obj ) === 'string';
+            return typeof( obj ) === "string";
         },
 
         /**
@@ -2227,7 +2227,7 @@ var Microformats; // jshint ignore:line
          * @return {Boolean}
          */
         isArray( obj ) {
-            return obj && !( obj.propertyIsEnumerable( 'length' ) ) && typeof obj === 'object' && typeof obj.length === 'number';
+            return obj && !( obj.propertyIsEnumerable( "length" ) ) && typeof obj === "object" && typeof obj.length === "number";
         },
 
 
@@ -2262,9 +2262,9 @@ var Microformats; // jshint ignore:line
          */
         trim( text ) {
             if (text && this.isString(text)) {
-                return (text.trim()) ? text.trim() : text.replace(/^\s+|\s+$/g, '');
+                return (text.trim()) ? text.trim() : text.replace(/^\s+|\s+$/g, "");
             }
-            return '';
+            return "";
         },
 
 
@@ -2298,7 +2298,7 @@ var Microformats; // jshint ignore:line
                 // turn all whitespace chars at end into spaces
                 while (i--) {
                     if (this.isOnlyWhiteSpace(text[i])) {
-                        text = this.replaceCharAt( text, i, ' ' );
+                        text = this.replaceCharAt( text, i, " " );
                     } else {
                         break;
                     }
@@ -2308,7 +2308,7 @@ var Microformats; // jshint ignore:line
                 i = text.length;
                 while (x < i) {
                     if (this.isOnlyWhiteSpace(text[x])) {
-                        text = this.replaceCharAt( text, i, ' ' );
+                        text = this.replaceCharAt( text, i, " " );
                     } else {
                         break;
                     }
@@ -2337,7 +2337,7 @@ var Microformats; // jshint ignore:line
          * @return {Sring}
          */
         collapseWhiteSpace( text ) {
-            return text.replace(/[\t\n\r ]+/g, ' ');
+            return text.replace(/[\t\n\r ]+/g, " ");
         },
 
 
@@ -2427,7 +2427,7 @@ var Microformats; // jshint ignore:line
             if (options.html) {
                 // var domParser = new DOMParser();
                 var domParser = this.getDOMParser();
-                this.rootNode = domParser.parseFromString( options.html, 'text/html' );
+                this.rootNode = domParser.parseFromString( options.html, "text/html" );
             }
 
 
@@ -2435,7 +2435,7 @@ var Microformats; // jshint ignore:line
             if (this.rootNode !== null) {
                 if (this.rootNode.nodeType === 9) {
                     this.document = this.rootNode;
-                    this.rootNode = modules.domUtils.querySelector(this.rootNode, 'html');
+                    this.rootNode = modules.domUtils.querySelector(this.rootNode, "html");
                 } else {
                     // if it's DOM node get parent DOM Document
                     this.document = modules.domUtils.ownerDocument(this.rootNode);
@@ -2445,7 +2445,7 @@ var Microformats; // jshint ignore:line
 
             // use global document object
             if (!this.rootNode && document) {
-                this.rootNode = modules.domUtils.querySelector(document, 'html');
+                this.rootNode = modules.domUtils.querySelector(document, "html");
                 this.document = document;
             }
 
@@ -2498,7 +2498,7 @@ var Microformats; // jshint ignore:line
             } else if (node.innerText) {
                 return node.innerText;
             }
-            return '';
+            return "";
         },
 
 
@@ -2581,7 +2581,7 @@ var Microformats; // jshint ignore:line
          * @return {DOM Node}
          */
         getElementById(docNode, id) {
-            return docNode.querySelector( '#' + id );
+            return docNode.querySelector( "#" + id );
         },
 
 
@@ -2609,9 +2609,9 @@ var Microformats; // jshint ignore:line
                 attList;
 
             attList = node.getAttribute(attributeName);
-            if (attList && attList !== '') {
-                if (attList.indexOf(' ') > -1) {
-                    out = attList.split(' ');
+            if (attList && attList !== "") {
+                if (attList.indexOf(" ") > -1) {
+                    out = attList.split(" ");
                 } else {
                     out.push(attList);
                 }
@@ -2628,7 +2628,7 @@ var Microformats; // jshint ignore:line
          * @return {NodeList}
          */
         getNodesByAttribute(node, attributeName) {
-            var selector = '[' + attributeName + ']';
+            var selector = "[" + attributeName + "]";
             return node.querySelectorAll(selector);
         },
 
@@ -2673,7 +2673,7 @@ var Microformats; // jshint ignore:line
             while (i--) {
                 if (node.tagName.toLowerCase() === tagNames[i]) {
                     var attrValue = this.getAttribute(node, attributeName);
-                    if (attrValue && attrValue !== '') {
+                    if (attrValue && attrValue !== "") {
                         return attrValue;
                     }
                 }
@@ -2795,7 +2795,7 @@ var Microformats; // jshint ignore:line
          */
         clone(node) {
             var newNode = node.cloneNode(true);
-            newNode.removeAttribute('id');
+            newNode.removeAttribute("id");
             return newNode;
         },
 
@@ -2810,7 +2810,7 @@ var Microformats; // jshint ignore:line
             if (node && node.data) {
                 return node.data;
             }
-            return '';
+            return "";
         },
 
 
@@ -2830,7 +2830,7 @@ var Microformats; // jshint ignore:line
 
                 attrs.push( attr );
             }
-            return attrs.sort( modules.utils.sortObjects( 'indexNum' ) );
+            return attrs.sort( modules.utils.sortObjects( "indexNum" ) );
         },
 
 
@@ -2858,9 +2858,9 @@ var Microformats; // jshint ignore:line
                 newDocument = null;
 
             if ( this.canCloneDocument( document )) {
-                newDocument = document.implementation.createHTMLDocument('');
+                newDocument = document.implementation.createHTMLDocument("");
                 newNode = newDocument.importNode( document.documentElement, true );
-                newDocument.replaceChild(newNode, newDocument.querySelector('html'));
+                newDocument.replaceChild(newNode, newDocument.querySelector("html"));
             }
             return (newNode && newNode.nodeType && newNode.nodeType === 1) ? newDocument : document;
         },
@@ -2985,9 +2985,9 @@ var Microformats; // jshint ignore:line
             this._domParser = modules.domUtils.getDOMParser();
             // do not use a head tag it does not work with IE9
             this._html = '<base id="base" href=""></base><a id="link" href=""></a>';
-            this._nodes = this._domParser.parseFromString( this._html, 'text/html' );
-            this._baseNode =  modules.domUtils.getElementById(this._nodes, 'base');
-            this._linkNode =  modules.domUtils.getElementById(this._nodes, 'link');
+            this._nodes = this._domParser.parseFromString( this._html, "text/html" );
+            this._baseNode =  modules.domUtils.getElementById(this._nodes, "base");
+            this._linkNode =  modules.domUtils.getElementById(this._nodes, "link");
         },
 
 
@@ -3000,13 +3000,13 @@ var Microformats; // jshint ignore:line
          */
         resolve(url, baseUrl) {
             // use modern URL web API where we can
-            if (modules.utils.isString(url) && modules.utils.isString(baseUrl) && url.indexOf('://') === -1) {
+            if (modules.utils.isString(url) && modules.utils.isString(baseUrl) && url.indexOf("://") === -1) {
                 // this try catch is required as IE has an URL object but no constuctor support
                 // http://glennjones.net/articles/the-problem-with-window-url
                 try {
                     var resolved = new URL(url, baseUrl).toString();
                     // deal with early Webkit not throwing an error - for Safari
-                    if (resolved === '[object URL]') {
+                    if (resolved === "[object URL]") {
                         resolved = URI.resolve(baseUrl, url);
                     }
                     return resolved;
@@ -3027,7 +3027,7 @@ var Microformats; // jshint ignore:line
                 if (modules.utils.isString(url)) {
                     return url;
                 }
-                return '';
+                return "";
             }
         },
 
@@ -3045,7 +3045,7 @@ var Microformats; // jshint ignore:line
     modules.ISODate = function( dateString, format ) {
         this.clear();
 
-        this.format = (format) ? format : 'auto'; // auto or W3C or RFC3339 or HTML5
+        this.format = (format) ? format : "auto"; // auto or W3C or RFC3339 or HTML5
         this.setFormatSep();
 
         // optional should be full iso date/time string
@@ -3101,7 +3101,7 @@ var Microformats; // jshint ignore:line
         clearTimeZone() {
             this.tzH = -1;
             this.tzM = -1;
-            this.tzPN = '+';
+            this.tzPN = "+";
             this.z = false;
         },
 
@@ -3112,11 +3112,11 @@ var Microformats; // jshint ignore:line
          */
         setAutoProfileState() {
             this.autoProfile = {
-               sep: 'T',
-               dsep: '-',
-               tsep: ':',
-               tzsep: ':',
-               tzZulu: 'Z'
+               sep: "T",
+               dsep: "-",
+               tsep: ":",
+               tzsep: ":",
+               tzZulu: "Z"
             };
         },
 
@@ -3134,9 +3134,9 @@ var Microformats; // jshint ignore:line
             var parts = [],
                 tzArray = [],
                 position = 0,
-                datePart = '',
-                timePart = '',
-                timeZonePart = '';
+                datePart = "",
+                timePart = "",
+                timeZonePart = "";
 
             if (format) {
                 this.format = format;
@@ -3146,47 +3146,47 @@ var Microformats; // jshint ignore:line
 
             // discover date time separtor for auto profile
             // Set to 'T' by default
-            if (dateString.indexOf('t') > -1) {
-                this.autoProfile.sep = 't';
+            if (dateString.indexOf("t") > -1) {
+                this.autoProfile.sep = "t";
             }
-            if (dateString.indexOf('z') > -1) {
-                this.autoProfile.tzZulu = 'z';
+            if (dateString.indexOf("z") > -1) {
+                this.autoProfile.tzZulu = "z";
             }
-            if (dateString.indexOf('Z') > -1) {
-                this.autoProfile.tzZulu = 'Z';
+            if (dateString.indexOf("Z") > -1) {
+                this.autoProfile.tzZulu = "Z";
             }
-            if (dateString.toUpperCase().indexOf('T') === -1) {
-                this.autoProfile.sep = ' ';
+            if (dateString.toUpperCase().indexOf("T") === -1) {
+                this.autoProfile.sep = " ";
             }
 
 
-            dateString = dateString.toUpperCase().replace(' ', 'T');
+            dateString = dateString.toUpperCase().replace(" ", "T");
 
             // break on 'T' divider or space
-            if (dateString.indexOf('T') > -1) {
-                parts = dateString.split('T');
+            if (dateString.indexOf("T") > -1) {
+                parts = dateString.split("T");
                 datePart = parts[0];
                 timePart = parts[1];
 
                 // zulu UTC
-                if (timePart.indexOf( 'Z' ) > -1) {
+                if (timePart.indexOf( "Z" ) > -1) {
                     this.z = true;
                 }
 
                 // timezone
-                if (timePart.indexOf( '+' ) > -1 || timePart.indexOf( '-' ) > -1) {
-                    tzArray = timePart.split( 'Z' ); // incase of incorrect use of Z
+                if (timePart.indexOf( "+" ) > -1 || timePart.indexOf( "-" ) > -1) {
+                    tzArray = timePart.split( "Z" ); // incase of incorrect use of Z
                     timePart = tzArray[0];
                     timeZonePart = tzArray[1];
 
                     // timezone
-                    if (timePart.indexOf( '+' ) > -1 || timePart.indexOf( '-' ) > -1) {
+                    if (timePart.indexOf( "+" ) > -1 || timePart.indexOf( "-" ) > -1) {
                         position = 0;
 
-                        if (timePart.indexOf( '+' ) > -1) {
-                            position = timePart.indexOf( '+' );
+                        if (timePart.indexOf( "+" ) > -1) {
+                            position = timePart.indexOf( "+" );
                         } else {
-                            position = timePart.indexOf( '-' );
+                            position = timePart.indexOf( "-" );
                         }
 
                         timeZonePart = timePart.substring( position, timePart.length );
@@ -3198,11 +3198,11 @@ var Microformats; // jshint ignore:line
                 datePart = dateString;
             }
 
-            if (datePart !== '') {
+            if (datePart !== "") {
                 this.parseDate( datePart );
-                if (timePart !== '') {
+                if (timePart !== "") {
                     this.parseTime( timePart );
-                    if (timeZonePart !== '') {
+                    if (timeZonePart !== "") {
                         this.parseTimeZone( timeZonePart );
                     }
                 }
@@ -3224,8 +3224,8 @@ var Microformats; // jshint ignore:line
             var parts = [];
 
             // discover timezone separtor for auto profile // default is ':'
-            if (dateString.indexOf('-') === -1) {
-                this.autoProfile.tsep = '';
+            if (dateString.indexOf("-") === -1) {
+                this.autoProfile.tsep = "";
             }
 
             // YYYY-DDD
@@ -3268,8 +3268,8 @@ var Microformats; // jshint ignore:line
             var parts = [];
 
             // discover date separtor for auto profile // default is ':'
-            if (timeString.indexOf(':') === -1) {
-                this.autoProfile.tsep = '';
+            if (timeString.indexOf(":") === -1) {
+                this.autoProfile.tsep = "";
             }
 
             // finds timezone HH:MM:SS and HHMMSS  ie 13:30:45, 133045 and 13:30:45.0135
@@ -3301,15 +3301,15 @@ var Microformats; // jshint ignore:line
             this.clearTimeZone();
             var parts = [];
 
-            if (timeString.toLowerCase() === 'z') {
+            if (timeString.toLowerCase() === "z") {
                 this.z = true;
                 // set case for z
-                this.autoProfile.tzZulu = (timeString === 'z') ? 'z' : 'Z';
+                this.autoProfile.tzZulu = (timeString === "z") ? "z" : "Z";
             } else {
 
                 // discover timezone separtor for auto profile // default is ':'
-                if (timeString.indexOf(':') === -1) {
-                    this.autoProfile.tzsep = '';
+                if (timeString.indexOf(":") === -1) {
+                    this.autoProfile.tzsep = "";
                 }
 
                 // finds timezone +HH:MM and +HHMM  ie +13:30 and +1330
@@ -3326,7 +3326,7 @@ var Microformats; // jshint ignore:line
 
 
             }
-            this.tzZulu = 'z';
+            this.tzZulu = "z";
             return this.toTimeString( format );
         },
 
@@ -3338,7 +3338,7 @@ var Microformats; // jshint ignore:line
          * @return {String}
          */
         toString( format ) {
-            var output = '';
+            var output = "";
 
             if (format) {
                 this.format = format;
@@ -3375,7 +3375,7 @@ var Microformats; // jshint ignore:line
          * @return {String}
          */
         toTimeString( format ) {
-            var out = '';
+            var out = "";
 
             if (format) {
                 this.format = format;
@@ -3391,7 +3391,7 @@ var Microformats; // jshint ignore:line
                         if (this.tS > -1 && this.tS < 61) {
                             out += this.tsep + this.tS;
                             if (this.tD > -1) {
-                                out += '.' + this.tD;
+                                out += "." + this.tD;
                             }
                         }
                     }
@@ -3419,26 +3419,26 @@ var Microformats; // jshint ignore:line
          */
         setFormatSep() {
             switch ( this.format.toLowerCase() ) {
-                case 'rfc3339':
-                    this.sep = 'T';
-                    this.dsep = '';
-                    this.tsep = '';
-                    this.tzsep = '';
-                    this.tzZulu = 'Z';
+                case "rfc3339":
+                    this.sep = "T";
+                    this.dsep = "";
+                    this.tsep = "";
+                    this.tzsep = "";
+                    this.tzZulu = "Z";
                     break;
-                case 'w3c':
-                    this.sep = 'T';
-                    this.dsep = '-';
-                    this.tsep = ':';
-                    this.tzsep = ':';
-                    this.tzZulu = 'Z';
+                case "w3c":
+                    this.sep = "T";
+                    this.dsep = "-";
+                    this.tsep = ":";
+                    this.tzsep = ":";
+                    this.tzZulu = "Z";
                     break;
-                case 'html5':
-                    this.sep = ' ';
-                    this.dsep = '-';
-                    this.tsep = ':';
-                    this.tzsep = ':';
-                    this.tzZulu = 'Z';
+                case "html5":
+                    this.sep = " ";
+                    this.dsep = "-";
+                    this.tsep = ":";
+                    this.tzsep = ":";
+                    this.tzZulu = "Z";
                     break;
                 default:
                     // auto - defined by format of input string
@@ -3505,7 +3505,7 @@ var Microformats; // jshint ignore:line
          */
         hasAM( text ) {
             text = text.toLowerCase();
-            return (text.indexOf('am') > -1 || text.indexOf('a.m.') > -1);
+            return (text.indexOf("am") > -1 || text.indexOf("a.m.") > -1);
         },
 
 
@@ -3517,7 +3517,7 @@ var Microformats; // jshint ignore:line
          */
         hasPM( text ) {
             text = text.toLowerCase();
-            return (text.indexOf('pm') > -1 || text.indexOf('p.m.') > -1);
+            return (text.indexOf("pm") > -1 || text.indexOf("p.m.") > -1);
         },
 
 
@@ -3528,7 +3528,7 @@ var Microformats; // jshint ignore:line
          * @return {String}
          */
         removeAMPM( text ) {
-            return text.replace('pm', '').replace('p.m.', '').replace('am', '').replace('a.m.', '');
+            return text.replace("pm", "").replace("p.m.", "").replace("am", "").replace("a.m.", "");
         },
 
 
@@ -3541,7 +3541,7 @@ var Microformats; // jshint ignore:line
         isDuration( text ) {
             if (modules.utils.isString( text )) {
                 text = text.toLowerCase();
-                if (modules.utils.startWith(text, 'p') ) {
+                if (modules.utils.startWith(text, "p") ) {
                     return true;
                 }
             }
@@ -3561,7 +3561,7 @@ var Microformats; // jshint ignore:line
                 text = text.toLowerCase();
                 text = modules.utils.trim( text );
                 // start with timezone char
-                if ( text.match(':') && ( modules.utils.startWith(text, 'z') || modules.utils.startWith(text, '-') || modules.utils.startWith(text, '+') )) {
+                if ( text.match(":") && ( modules.utils.startWith(text, "z") || modules.utils.startWith(text, "-") || modules.utils.startWith(text, "+") )) {
                     return true;
                 }
                 // has ante meridiem or post meridiem
@@ -3570,7 +3570,7 @@ var Microformats; // jshint ignore:line
                     return true;
                 }
                 // contains time delimiter but not datetime delimiter
-                if ( text.match(':') && !text.match(/t|\s/) ) {
+                if ( text.match(":") && !text.match(/t|\s/) ) {
                     return true;
                 }
 
@@ -3599,12 +3599,12 @@ var Microformats; // jshint ignore:line
             // if the string has a text : or am or pm
             if (modules.utils.isString(out)) {
                 // text = text.toLowerCase();
-                text = text.replace(/[ ]+/g, '');
+                text = text.replace(/[ ]+/g, "");
 
-                if (text.match(':') || this.hasAM(text) || this.hasPM(text)) {
+                if (text.match(":") || this.hasAM(text) || this.hasPM(text)) {
 
-                    if (text.match(':')) {
-                        times = text.split(':');
+                    if (text.match(":")) {
+                        times = text.split(":");
                     } else {
                         // single number text i.e. 5pm
                         times[0] = text;
@@ -3620,12 +3620,12 @@ var Microformats; // jshint ignore:line
 
                     // add leading zero's where needed
                     if (times[0] && times[0].length === 1) {
-                        times[0] = '0' + times[0];
+                        times[0] = "0" + times[0];
                     }
 
                     // rejoin text elements together
                     if (times[0]) {
-                        text = times.join(':');
+                        text = times.join(":");
                     }
                 }
             }
@@ -3673,22 +3673,22 @@ var Microformats; // jshint ignore:line
         concatFragments(arr, format) {
             var out = new modules.ISODate(),
                 i = 0,
-                value = '';
+                value = "";
 
             // if the fragment already contains a full date just return it once
-            if (arr[0].toUpperCase().match('T')) {
+            if (arr[0].toUpperCase().match("T")) {
                 return new modules.ISODate(arr[0], format);
             }
             for (i = 0; i < arr.length; i++) {
                 value = arr[i];
 
                 // date pattern
-                if ( value.charAt(4) === '-' && out.hasFullDate() === false ) {
+                if ( value.charAt(4) === "-" && out.hasFullDate() === false ) {
                     out.parseDate(value);
                 }
 
                 // time pattern
-                if ( (value.indexOf(':') > -1 || modules.utils.isNumber( this.parseAmPmTime(value) )) && out.hasTime() === false ) {
+                if ( (value.indexOf(":") > -1 || modules.utils.isNumber( this.parseAmPmTime(value) )) && out.hasTime() === false ) {
                     // split time and timezone
                     var items = this.splitTimeAndZone(value);
                     value = items[0];
@@ -3704,7 +3704,7 @@ var Microformats; // jshint ignore:line
                 }
 
                 // timezone pattern
-                if (value.charAt(0) === '-' || value.charAt(0) === '+' || value.toUpperCase() === 'Z') {
+                if (value.charAt(0) === "-" || value.charAt(0) === "+" || value.toUpperCase() === "Z") {
                     if ( out.hasTimeZone() === false ) {
                         out.parseTimeZone(value);
                     }
@@ -3723,7 +3723,7 @@ var Microformats; // jshint ignore:line
          */
         splitTimeAndZone( text ) {
            var out = [text],
-               chars = ['-', '+', 'z', 'Z'],
+               chars = ["-", "+", "z", "Z"],
                i = chars.length;
 
             while (i--) {
@@ -3742,17 +3742,17 @@ var Microformats; // jshint ignore:line
     modules.text = {
 
         // normalised or whitespace or whitespacetrimmed
-        textFormat: 'whitespacetrimmed',
+        textFormat: "whitespacetrimmed",
 
         // block level tags, used to add line returns
-        blockLevelTags: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'hr', 'pre', 'table',
-            'address', 'article', 'aside', 'blockquote', 'caption', 'col', 'colgroup', 'dd', 'div',
-            'dt', 'dir', 'fieldset', 'figcaption', 'figure', 'footer', 'form',  'header', 'hgroup', 'hr',
-            'li', 'map', 'menu', 'nav', 'optgroup', 'option', 'section', 'tbody', 'testarea',
-            'tfoot', 'th', 'thead', 'tr', 'td', 'ul', 'ol', 'dl', 'details'],
+        blockLevelTags: ["h1", "h2", "h3", "h4", "h5", "h6", "p", "hr", "pre", "table",
+            "address", "article", "aside", "blockquote", "caption", "col", "colgroup", "dd", "div",
+            "dt", "dir", "fieldset", "figcaption", "figure", "footer", "form",  "header", "hgroup", "hr",
+            "li", "map", "menu", "nav", "optgroup", "option", "section", "tbody", "testarea",
+            "tfoot", "th", "thead", "tr", "td", "ul", "ol", "dl", "details"],
 
         // tags to exclude
-        excludeTags: ['noframe', 'noscript', 'template', 'script', 'style', 'frames', 'frameset'],
+        excludeTags: ["noframe", "noscript", "template", "script", "style", "frames", "frameset"],
 
 
         /**
@@ -3765,12 +3765,12 @@ var Microformats; // jshint ignore:line
         parse(doc, node, textFormat) {
             var out;
             this.textFormat = (textFormat) ? textFormat : this.textFormat;
-            if (this.textFormat === 'normalised') {
+            if (this.textFormat === "normalised") {
                 out = this.walkTreeForText( node );
                 if (out !== undefined) {
                     return this.normalise( doc, out );
                 }
-                return '';
+                return "";
             }
             return this.formatText( doc, modules.domUtils.textContent(node), this.textFormat );
         },
@@ -3785,7 +3785,7 @@ var Microformats; // jshint ignore:line
          * @return {String}
          */
         parseText( doc, text, textFormat ) {
-           var node = modules.domUtils.createNodeWithText( 'div', text );
+           var node = modules.domUtils.createNodeWithText( "div", text );
            return this.parse( doc, node, textFormat );
         },
 
@@ -3800,18 +3800,18 @@ var Microformats; // jshint ignore:line
         formatText( doc, text, textFormat ) {
            this.textFormat = (textFormat) ? textFormat : this.textFormat;
            if (text) {
-              var out = '',
+              var out = "",
                   regex = /(<([^>]+)>)/ig;
 
-              out = text.replace(regex, '');
-              if (this.textFormat === 'whitespacetrimmed') {
+              out = text.replace(regex, "");
+              if (this.textFormat === "whitespacetrimmed") {
                  out = modules.utils.trimWhitespace( out );
               }
 
               // return entities.decode( out, 2 );
               return modules.domUtils.decodeEntities( doc, out );
            }
-           return '';
+           return "";
         },
 
 
@@ -3822,10 +3822,10 @@ var Microformats; // jshint ignore:line
          * @return {String}
          */
         normalise( doc, text ) {
-            text = text.replace( /&nbsp;/g, ' ') ;    // exchanges html entity for space into space char
+            text = text.replace( /&nbsp;/g, " ") ;    // exchanges html entity for space into space char
             text = modules.utils.collapseWhiteSpace( text );     // removes linefeeds, tabs and addtional spaces
             text = modules.domUtils.decodeEntities( doc, text );  // decode HTML entities
-            text = text.replace( '–', '-' );          // correct dash decoding
+            text = text.replace( "–", "-" );          // correct dash decoding
             return modules.utils.trim( text );
         },
 
@@ -3837,7 +3837,7 @@ var Microformats; // jshint ignore:line
          * @return {String}
          */
         walkTreeForText( node ) {
-            var out = '',
+            var out = "",
                 j = 0;
 
             if (node.tagName && this.excludeTags.indexOf( node.tagName.toLowerCase() ) > -1) {
@@ -3861,10 +3861,10 @@ var Microformats; // jshint ignore:line
 
             // if it's a block level tag add an additional space at the end
             if (node.tagName && this.blockLevelTags.indexOf( node.tagName.toLowerCase() ) !== -1) {
-                out += ' ';
+                out += " ";
             }
 
-            return (out === '') ? undefined : out ;
+            return (out === "") ? undefined : out ;
         }
 
     };
@@ -3873,7 +3873,7 @@ var Microformats; // jshint ignore:line
     modules.html = {
 
         // elements which are self-closing
-        selfClosingElt: ['area', 'base', 'br', 'col', 'hr', 'img', 'input', 'link', 'meta', 'param', 'command', 'keygen', 'source'],
+        selfClosingElt: ["area", "base", "br", "col", "hr", "img", "input", "link", "meta", "param", "command", "keygen", "source"],
 
 
         /**
@@ -3883,7 +3883,7 @@ var Microformats; // jshint ignore:line
          * @return {String}
          */
         parse( node ) {
-            var out = '',
+            var out = "",
                 j = 0;
 
             // we do not want the outer container
@@ -3908,7 +3908,7 @@ var Microformats; // jshint ignore:line
          * @return {String}
          */
         walkTreeForHtml( node ) {
-            var out = '',
+            var out = "",
                 j = 0;
 
             // if node is a text node get its text
@@ -3918,19 +3918,19 @@ var Microformats; // jshint ignore:line
 
 
             // exclude text which has been added with include pattern  -
-            if (node.nodeType && node.nodeType === 1 && modules.domUtils.hasAttribute(node, 'data-include') === false) {
+            if (node.nodeType && node.nodeType === 1 && modules.domUtils.hasAttribute(node, "data-include") === false) {
 
                 // begin tag
-                out += '<' + node.tagName.toLowerCase();
+                out += "<" + node.tagName.toLowerCase();
 
                 // add attributes
                 var attrs = modules.domUtils.getOrderedAttributes(node);
                 for (j = 0; j < attrs.length; j++) {
-                    out += ' ' + attrs[j].name + '=' + '"' + attrs[j].value + '"';
+                    out += " " + attrs[j].name + "=" + '"' + attrs[j].value + '"';
                 }
 
                 if (this.selfClosingElt.indexOf(node.tagName.toLowerCase()) === -1) {
-                    out += '>';
+                    out += ">";
                 }
 
                 // get the text of the child nodes
@@ -3946,476 +3946,476 @@ var Microformats; // jshint ignore:line
 
                 // end tag
                 if (this.selfClosingElt.indexOf(node.tagName.toLowerCase()) > -1) {
-                    out += ' />';
+                    out += " />";
                 } else {
-                    out += '</' + node.tagName.toLowerCase() + '>';
+                    out += "</" + node.tagName.toLowerCase() + ">";
                 }
             }
 
-            return (out === '') ? undefined : out;
+            return (out === "") ? undefined : out;
         }
 
 
     };
 
 
-    modules.maps['h-adr'] = {
-        root: 'adr',
-        name: 'h-adr',
+    modules.maps["h-adr"] = {
+        root: "adr",
+        name: "h-adr",
         properties: {
-            'post-office-box': {},
-            'street-address': {},
-            'extended-address': {},
-            'locality': {},
-            'region': {},
-            'postal-code': {},
-            'country-name': {}
+            "post-office-box": {},
+            "street-address": {},
+            "extended-address": {},
+            "locality": {},
+            "region": {},
+            "postal-code": {},
+            "country-name": {}
         }
     };
 
 
-    modules.maps['h-card'] =  {
-        root: 'vcard',
-        name: 'h-card',
+    modules.maps["h-card"] =  {
+        root: "vcard",
+        name: "h-card",
         properties: {
-            'fn': {
-                'map': 'p-name'
+            "fn": {
+                "map": "p-name"
             },
-            'adr': {
-                'map': 'p-adr',
-                'uf': ['h-adr']
+            "adr": {
+                "map": "p-adr",
+                "uf": ["h-adr"]
             },
-            'agent': {
-                'uf': ['h-card']
+            "agent": {
+                "uf": ["h-card"]
             },
-            'bday': {
-                'map': 'dt-bday'
+            "bday": {
+                "map": "dt-bday"
             },
-            'class': {},
-            'category': {
-                'map': 'p-category',
-                'relAlt': ['tag']
+            "class": {},
+            "category": {
+                "map": "p-category",
+                "relAlt": ["tag"]
             },
-            'email': {
-                'map': 'u-email'
+            "email": {
+                "map": "u-email"
             },
-            'geo': {
-                'map': 'p-geo',
-                'uf': ['h-geo']
+            "geo": {
+                "map": "p-geo",
+                "uf": ["h-geo"]
             },
-            'key': {
-                'map': 'u-key'
+            "key": {
+                "map": "u-key"
             },
-            'label': {},
-            'logo': {
-                'map': 'u-logo'
+            "label": {},
+            "logo": {
+                "map": "u-logo"
             },
-            'mailer': {},
-            'honorific-prefix': {},
-            'given-name': {},
-            'additional-name': {},
-            'family-name': {},
-            'honorific-suffix': {},
-            'nickname': {},
-            'note': {}, // could be html i.e. e-note
-            'org': {},
-            'p-organization-name': {},
-            'p-organization-unit': {},
-            'photo': {
-                'map': 'u-photo'
+            "mailer": {},
+            "honorific-prefix": {},
+            "given-name": {},
+            "additional-name": {},
+            "family-name": {},
+            "honorific-suffix": {},
+            "nickname": {},
+            "note": {}, // could be html i.e. e-note
+            "org": {},
+            "p-organization-name": {},
+            "p-organization-unit": {},
+            "photo": {
+                "map": "u-photo"
             },
-            'rev': {
-                'map': 'dt-rev'
+            "rev": {
+                "map": "dt-rev"
             },
-            'role': {},
-            'sequence': {},
-            'sort-string': {},
-            'sound': {
-                'map': 'u-sound'
+            "role": {},
+            "sequence": {},
+            "sort-string": {},
+            "sound": {
+                "map": "u-sound"
             },
-            'title': {
-                'map': 'p-job-title'
+            "title": {
+                "map": "p-job-title"
             },
-            'tel': {},
-            'tz': {},
-            'uid': {
-                'map': 'u-uid'
+            "tel": {},
+            "tz": {},
+            "uid": {
+                "map": "u-uid"
             },
-            'url': {
-                'map': 'u-url'
+            "url": {
+                "map": "u-url"
             }
         }
     };
 
 
-    modules.maps['h-entry'] = {
-        root: 'hentry',
-        name: 'h-entry',
+    modules.maps["h-entry"] = {
+        root: "hentry",
+        name: "h-entry",
         properties: {
-            'entry-title': {
-                'map': 'p-name'
+            "entry-title": {
+                "map": "p-name"
             },
-            'entry-summary': {
-                'map': 'p-summary'
+            "entry-summary": {
+                "map": "p-summary"
             },
-            'entry-content': {
-                'map': 'e-content'
+            "entry-content": {
+                "map": "e-content"
             },
-            'published': {
-                'map': 'dt-published'
+            "published": {
+                "map": "dt-published"
             },
-            'updated': {
-                'map': 'dt-updated'
+            "updated": {
+                "map": "dt-updated"
             },
-            'author': {
-                'uf': ['h-card']
+            "author": {
+                "uf": ["h-card"]
             },
-            'category': {
-                'map': 'p-category',
-                'relAlt': ['tag']
+            "category": {
+                "map": "p-category",
+                "relAlt": ["tag"]
             },
-            'geo': {
-                'map': 'p-geo',
-                'uf': ['h-geo']
+            "geo": {
+                "map": "p-geo",
+                "uf": ["h-geo"]
             },
-            'latitude': {},
-            'longitude': {},
-            'url': {
-                'map': 'u-url',
-                'relAlt': ['bookmark']
+            "latitude": {},
+            "longitude": {},
+            "url": {
+                "map": "u-url",
+                "relAlt": ["bookmark"]
             }
         }
     };
 
 
-    modules.maps['h-event'] = {
-        root: 'vevent',
-        name: 'h-event',
+    modules.maps["h-event"] = {
+        root: "vevent",
+        name: "h-event",
         properties: {
-            'summary': {
-                'map': 'p-name'
+            "summary": {
+                "map": "p-name"
             },
-            'dtstart': {
-                'map': 'dt-start'
+            "dtstart": {
+                "map": "dt-start"
             },
-            'dtend': {
-                'map': 'dt-end'
+            "dtend": {
+                "map": "dt-end"
             },
-            'description': {},
-            'url': {
-                'map': 'u-url'
+            "description": {},
+            "url": {
+                "map": "u-url"
             },
-            'category': {
-                'map': 'p-category',
-                'relAlt': ['tag']
+            "category": {
+                "map": "p-category",
+                "relAlt": ["tag"]
             },
-            'location': {
-                'uf': ['h-card']
+            "location": {
+                "uf": ["h-card"]
             },
-            'geo': {
-                'uf': ['h-geo']
+            "geo": {
+                "uf": ["h-geo"]
             },
-            'latitude': {},
-            'longitude': {},
-            'duration': {
-                'map': 'dt-duration'
+            "latitude": {},
+            "longitude": {},
+            "duration": {
+                "map": "dt-duration"
             },
-            'contact': {
-                'uf': ['h-card']
+            "contact": {
+                "uf": ["h-card"]
             },
-            'organizer': {
-                'uf': ['h-card']},
-            'attendee': {
-                'uf': ['h-card']},
-            'uid': {
-                'map': 'u-uid'
+            "organizer": {
+                "uf": ["h-card"]},
+            "attendee": {
+                "uf": ["h-card"]},
+            "uid": {
+                "map": "u-uid"
             },
-            'attach': {
-                'map': 'u-attach'
+            "attach": {
+                "map": "u-attach"
             },
-            'status': {},
-            'rdate': {},
-            'rrule': {}
+            "status": {},
+            "rdate": {},
+            "rrule": {}
         }
     };
 
 
-    modules.maps['h-feed'] = {
-        root: 'hfeed',
-        name: 'h-feed',
+    modules.maps["h-feed"] = {
+        root: "hfeed",
+        name: "h-feed",
         properties: {
-            'category': {
-                'map': 'p-category',
-                'relAlt': ['tag']
+            "category": {
+                "map": "p-category",
+                "relAlt": ["tag"]
             },
-            'summary': {
-                'map': 'p-summary'
+            "summary": {
+                "map": "p-summary"
             },
-            'author': {
-                'uf': ['h-card']
+            "author": {
+                "uf": ["h-card"]
             },
-            'url': {
-                'map': 'u-url'
+            "url": {
+                "map": "u-url"
             },
-            'photo': {
-                'map': 'u-photo'
+            "photo": {
+                "map": "u-photo"
             },
         }
     };
 
 
-    modules.maps['h-geo'] = {
-        root: 'geo',
-        name: 'h-geo',
+    modules.maps["h-geo"] = {
+        root: "geo",
+        name: "h-geo",
         properties: {
-            'latitude': {},
-            'longitude': {}
+            "latitude": {},
+            "longitude": {}
         }
     };
 
 
-    modules.maps['h-item'] = {
-        root: 'item',
-        name: 'h-item',
+    modules.maps["h-item"] = {
+        root: "item",
+        name: "h-item",
         subTree: false,
         properties: {
-            'fn': {
-                'map': 'p-name'
+            "fn": {
+                "map": "p-name"
             },
-            'url': {
-                'map': 'u-url'
+            "url": {
+                "map": "u-url"
             },
-            'photo': {
-                'map': 'u-photo'
+            "photo": {
+                "map": "u-photo"
             }
         }
     };
 
 
-    modules.maps['h-listing'] = {
-            root: 'hlisting',
-            name: 'h-listing',
+    modules.maps["h-listing"] = {
+            root: "hlisting",
+            name: "h-listing",
             properties: {
-                'version': {},
-                'lister': {
-                    'uf': ['h-card']
+                "version": {},
+                "lister": {
+                    "uf": ["h-card"]
                 },
-                'dtlisted': {
-                    'map': 'dt-listed'
+                "dtlisted": {
+                    "map": "dt-listed"
                 },
-                'dtexpired': {
-                    'map': 'dt-expired'
+                "dtexpired": {
+                    "map": "dt-expired"
                 },
-                'location': {},
-                'price': {},
-                'item': {
-                    'uf': ['h-card', 'a-adr', 'h-geo']
+                "location": {},
+                "price": {},
+                "item": {
+                    "uf": ["h-card", "a-adr", "h-geo"]
                 },
-                'summary': {
-                    'map': 'p-name'
+                "summary": {
+                    "map": "p-name"
                 },
-                'description': {
-                    'map': 'e-description'
+                "description": {
+                    "map": "e-description"
                 },
-                'listing': {}
+                "listing": {}
             }
         };
 
 
-    modules.maps['h-news'] = {
-            root: 'hnews',
-            name: 'h-news',
+    modules.maps["h-news"] = {
+            root: "hnews",
+            name: "h-news",
             properties: {
-                'entry': {
-                    'uf': ['h-entry']
+                "entry": {
+                    "uf": ["h-entry"]
                 },
-                'geo': {
-                    'uf': ['h-geo']
+                "geo": {
+                    "uf": ["h-geo"]
                 },
-                'latitude': {},
-                'longitude': {},
-                'source-org': {
-                    'uf': ['h-card']
+                "latitude": {},
+                "longitude": {},
+                "source-org": {
+                    "uf": ["h-card"]
                 },
-                'dateline': {
-                    'uf': ['h-card']
+                "dateline": {
+                    "uf": ["h-card"]
                 },
-                'item-license': {
-                    'map': 'u-item-license'
+                "item-license": {
+                    "map": "u-item-license"
                 },
-                'principles': {
-                    'map': 'u-principles',
-                    'relAlt': ['principles']
+                "principles": {
+                    "map": "u-principles",
+                    "relAlt": ["principles"]
                 }
             }
         };
 
 
-    modules.maps['h-org'] = {
-        root: 'h-x-org',  // drop this from v1 as it causes issue with fn org hcard pattern
-        name: 'h-org',
+    modules.maps["h-org"] = {
+        root: "h-x-org",  // drop this from v1 as it causes issue with fn org hcard pattern
+        name: "h-org",
         childStructure: true,
         properties: {
-            'organization-name': {},
-            'organization-unit': {}
+            "organization-name": {},
+            "organization-unit": {}
         }
     };
 
 
-    modules.maps['h-product'] = {
-            root: 'hproduct',
-            name: 'h-product',
+    modules.maps["h-product"] = {
+            root: "hproduct",
+            name: "h-product",
             properties: {
-                'brand': {
-                    'uf': ['h-card']
+                "brand": {
+                    "uf": ["h-card"]
                 },
-                'category': {
-                    'map': 'p-category',
-                    'relAlt': ['tag']
+                "category": {
+                    "map": "p-category",
+                    "relAlt": ["tag"]
                 },
-                'price': {},
-                'description': {
-                    'map': 'e-description'
+                "price": {},
+                "description": {
+                    "map": "e-description"
                 },
-                'fn': {
-                    'map': 'p-name'
+                "fn": {
+                    "map": "p-name"
                 },
-                'photo': {
-                    'map': 'u-photo'
+                "photo": {
+                    "map": "u-photo"
                 },
-                'url': {
-                    'map': 'u-url'
+                "url": {
+                    "map": "u-url"
                 },
-                'review': {
-                    'uf': ['h-review', 'h-review-aggregate']
+                "review": {
+                    "uf": ["h-review", "h-review-aggregate"]
                 },
-                'listing': {
-                    'uf': ['h-listing']
+                "listing": {
+                    "uf": ["h-listing"]
                 },
-                'identifier': {
-                    'map': 'u-identifier'
+                "identifier": {
+                    "map": "u-identifier"
                 }
             }
         };
 
 
-    modules.maps['h-recipe'] = {
-            root: 'hrecipe',
-            name: 'h-recipe',
+    modules.maps["h-recipe"] = {
+            root: "hrecipe",
+            name: "h-recipe",
             properties: {
-                'fn': {
-                    'map': 'p-name'
+                "fn": {
+                    "map": "p-name"
                 },
-                'ingredient': {
-                    'map': 'e-ingredient'
+                "ingredient": {
+                    "map": "e-ingredient"
                 },
-                'yield': {},
-                'instructions': {
-                    'map': 'e-instructions'
+                "yield": {},
+                "instructions": {
+                    "map": "e-instructions"
                 },
-                'duration': {
-                    'map': 'dt-duration'
+                "duration": {
+                    "map": "dt-duration"
                 },
-                'photo': {
-                    'map': 'u-photo'
+                "photo": {
+                    "map": "u-photo"
                 },
-                'summary': {},
-                'author': {
-                    'uf': ['h-card']
+                "summary": {},
+                "author": {
+                    "uf": ["h-card"]
                 },
-                'published': {
-                    'map': 'dt-published'
+                "published": {
+                    "map": "dt-published"
                 },
-                'nutrition': {},
-                'category': {
-                    'map': 'p-category',
-                    'relAlt': ['tag']
+                "nutrition": {},
+                "category": {
+                    "map": "p-category",
+                    "relAlt": ["tag"]
                 },
             }
         };
 
 
-    modules.maps['h-resume'] = {
-        root: 'hresume',
-        name: 'h-resume',
+    modules.maps["h-resume"] = {
+        root: "hresume",
+        name: "h-resume",
         properties: {
-            'summary': {},
-            'contact': {
-                'uf': ['h-card']
+            "summary": {},
+            "contact": {
+                "uf": ["h-card"]
             },
-            'education': {
-                'uf': ['h-card', 'h-event']
+            "education": {
+                "uf": ["h-card", "h-event"]
             },
-            'experience': {
-                'uf': ['h-card', 'h-event']
+            "experience": {
+                "uf": ["h-card", "h-event"]
             },
-            'skill': {},
-            'affiliation': {
-                'uf': ['h-card']
+            "skill": {},
+            "affiliation": {
+                "uf": ["h-card"]
             }
         }
     };
 
 
-    modules.maps['h-review-aggregate'] = {
-        root: 'hreview-aggregate',
-        name: 'h-review-aggregate',
+    modules.maps["h-review-aggregate"] = {
+        root: "hreview-aggregate",
+        name: "h-review-aggregate",
         properties: {
-            'summary': {
-                'map': 'p-name'
+            "summary": {
+                "map": "p-name"
             },
-            'item': {
-                'map': 'p-item',
-                'uf': ['h-item', 'h-geo', 'h-adr', 'h-card', 'h-event', 'h-product']
+            "item": {
+                "map": "p-item",
+                "uf": ["h-item", "h-geo", "h-adr", "h-card", "h-event", "h-product"]
             },
-            'rating': {},
-            'average': {},
-            'best': {},
-            'worst': {},
-            'count': {},
-            'votes': {},
-            'category': {
-                'map': 'p-category',
-                'relAlt': ['tag']
+            "rating": {},
+            "average": {},
+            "best": {},
+            "worst": {},
+            "count": {},
+            "votes": {},
+            "category": {
+                "map": "p-category",
+                "relAlt": ["tag"]
             },
-            'url': {
-                'map': 'u-url',
-                'relAlt': ['self', 'bookmark']
+            "url": {
+                "map": "u-url",
+                "relAlt": ["self", "bookmark"]
             }
         }
     };
 
 
-    modules.maps['h-review'] = {
-        root: 'hreview',
-        name: 'h-review',
+    modules.maps["h-review"] = {
+        root: "hreview",
+        name: "h-review",
         properties: {
-            'summary': {
-                'map': 'p-name'
+            "summary": {
+                "map": "p-name"
             },
-            'description': {
-                'map': 'e-description'
+            "description": {
+                "map": "e-description"
             },
-            'item': {
-                'map': 'p-item',
-                'uf': ['h-item', 'h-geo', 'h-adr', 'h-card', 'h-event', 'h-product']
+            "item": {
+                "map": "p-item",
+                "uf": ["h-item", "h-geo", "h-adr", "h-card", "h-event", "h-product"]
             },
-            'reviewer': {
-                'uf': ['h-card']
+            "reviewer": {
+                "uf": ["h-card"]
             },
-            'dtreviewer': {
-                'map': 'dt-reviewer'
+            "dtreviewer": {
+                "map": "dt-reviewer"
             },
-            'rating': {},
-            'best': {},
-            'worst': {},
-            'category': {
-                'map': 'p-category',
-                'relAlt': ['tag']
+            "rating": {},
+            "best": {},
+            "worst": {},
+            "category": {
+                "map": "p-category",
+                "relAlt": ["tag"]
             },
-            'url': {
-                'map': 'u-url',
-                'relAlt': ['self', 'bookmark']
+            "url": {
+                "map": "u-url",
+                "relAlt": ["self", "bookmark"]
             }
         }
     };
@@ -4423,38 +4423,38 @@ var Microformats; // jshint ignore:line
 
     modules.rels = {
         // xfn
-        'friend': [ 'yes', 'external'],
-        'acquaintance': [ 'yes', 'external'],
-        'contact': [ 'yes', 'external'],
-        'met': [ 'yes', 'external'],
-        'co-worker': [ 'yes', 'external'],
-        'colleague': [ 'yes', 'external'],
-        'co-resident': [ 'yes', 'external'],
-        'neighbor': [ 'yes', 'external'],
-        'child': [ 'yes', 'external'],
-        'parent': [ 'yes', 'external'],
-        'sibling': [ 'yes', 'external'],
-        'spouse': [ 'yes', 'external'],
-        'kin': [ 'yes', 'external'],
-        'muse': [ 'yes', 'external'],
-        'crush': [ 'yes', 'external'],
-        'date': [ 'yes', 'external'],
-        'sweetheart': [ 'yes', 'external'],
-        'me': [ 'yes', 'external'],
+        "friend": [ "yes", "external"],
+        "acquaintance": [ "yes", "external"],
+        "contact": [ "yes", "external"],
+        "met": [ "yes", "external"],
+        "co-worker": [ "yes", "external"],
+        "colleague": [ "yes", "external"],
+        "co-resident": [ "yes", "external"],
+        "neighbor": [ "yes", "external"],
+        "child": [ "yes", "external"],
+        "parent": [ "yes", "external"],
+        "sibling": [ "yes", "external"],
+        "spouse": [ "yes", "external"],
+        "kin": [ "yes", "external"],
+        "muse": [ "yes", "external"],
+        "crush": [ "yes", "external"],
+        "date": [ "yes", "external"],
+        "sweetheart": [ "yes", "external"],
+        "me": [ "yes", "external"],
 
         // other rel=*
-        'license': [ 'yes', 'yes'],
-        'nofollow': [ 'no', 'external'],
-        'tag': [ 'no', 'yes'],
-        'self': [ 'no', 'external'],
-        'bookmark': [ 'no', 'external'],
-        'author': [ 'no', 'external'],
-        'home': [ 'no', 'external'],
-        'directory': [ 'no', 'external'],
-        'enclosure': [ 'no', 'external'],
-        'pronunciation': [ 'no', 'external'],
-        'payment': [ 'no', 'external'],
-        'principles': [ 'no', 'external']
+        "license": [ "yes", "yes"],
+        "nofollow": [ "no", "external"],
+        "tag": [ "no", "yes"],
+        "self": [ "no", "external"],
+        "bookmark": [ "no", "external"],
+        "author": [ "no", "external"],
+        "home": [ "no", "external"],
+        "directory": [ "no", "external"],
+        "enclosure": [ "no", "external"],
+        "pronunciation": [ "no", "external"],
+        "payment": [ "no", "external"],
+        "principles": [ "no", "external"]
 
     };
 
@@ -4520,4 +4520,4 @@ try {
     // mozilla jsm support
     Components.utils.importGlobalProperties(["URL"]);
 } catch (e) {}
-this.EXPORTED_SYMBOLS = ['Microformats'];
+this.EXPORTED_SYMBOLS = ["Microformats"];

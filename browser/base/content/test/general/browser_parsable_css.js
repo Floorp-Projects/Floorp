@@ -139,7 +139,7 @@ function getBaseUriForChromeUri(chromeUri) {
 
 function parseManifest(manifestUri) {
   return fetchFile(manifestUri.spec).then(data => {
-    for (let line of data.split('\n')) {
+    for (let line of data.split("\n")) {
       let [type, ...argv] = line.split(/\s+/);
       let component;
       if (type == "content" || type == "skin") {
@@ -261,7 +261,7 @@ add_task(function* checkAllTheCSS() {
   let windowless = Services.appShell.createWindowlessBrowser();
   let iframe = windowless.document.createElementNS("http://www.w3.org/1999/xhtml", "html:iframe");
   windowless.document.documentElement.appendChild(iframe);
-  let iframeLoaded = once(iframe, 'load');
+  let iframeLoaded = once(iframe, "load");
   iframe.contentWindow.location = testFile;
   yield iframeLoaded;
   let doc = iframe.contentWindow.document;
@@ -364,7 +364,7 @@ add_task(function* checkAllTheCSS() {
 
   // Clean up to avoid leaks:
   iframe.remove();
-  doc.head.innerHTML = '';
+  doc.head.innerHTML = "";
   doc = null;
   iframe = null;
   windowless.close();
