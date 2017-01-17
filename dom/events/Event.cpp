@@ -270,16 +270,10 @@ Event::GetType(nsAString& aType)
   return NS_OK;
 }
 
-static EventTarget*
-GetDOMEventTarget(nsIDOMEventTarget* aTarget)
-{
-  return aTarget ? aTarget->GetTargetForDOMEvent() : nullptr;
-}
-
 EventTarget*
 Event::GetTarget() const
 {
-  return GetDOMEventTarget(mEvent->mTarget);
+  return mEvent->GetDOMEventTarget();
 }
 
 NS_IMETHODIMP
@@ -292,7 +286,7 @@ Event::GetTarget(nsIDOMEventTarget** aTarget)
 EventTarget*
 Event::GetCurrentTarget() const
 {
-  return GetDOMEventTarget(mEvent->mCurrentTarget);
+  return mEvent->GetCurrentDOMEventTarget();
 }
 
 NS_IMETHODIMP
@@ -339,11 +333,7 @@ Event::GetExplicitOriginalTarget(nsIDOMEventTarget** aRealEventTarget)
 EventTarget*
 Event::GetOriginalTarget() const
 {
-  if (mEvent->mOriginalTarget) {
-    return GetDOMEventTarget(mEvent->mOriginalTarget);
-  }
-
-  return GetTarget();
+  return mEvent->GetOriginalDOMEventTarget();
 }
 
 NS_IMETHODIMP

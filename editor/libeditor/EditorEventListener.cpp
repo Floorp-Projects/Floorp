@@ -589,7 +589,11 @@ EditorEventListener::KeyPress(nsIDOMKeyEvent* aKeyEvent)
 {
   NS_ENSURE_TRUE(aKeyEvent, NS_OK);
 
-  if (!mEditorBase->IsAcceptableInputEvent(aKeyEvent->AsEvent())) {
+  WidgetKeyboardEvent* keypressEvent =
+    aKeyEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
+  MOZ_ASSERT(keypressEvent,
+             "DOM key event's internal event must be WidgetKeyboardEvent");
+  if (!mEditorBase->IsAcceptableInputEvent(keypressEvent)) {
     return NS_OK;
   }
 
@@ -618,11 +622,7 @@ EditorEventListener::KeyPress(nsIDOMKeyEvent* aKeyEvent)
   }
 
   // Now, ask the native key bindings to handle the event.
-  WidgetKeyboardEvent* keyEvent =
-    aKeyEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
-  MOZ_ASSERT(keyEvent,
-             "DOM key event's internal event must be WidgetKeyboardEvent");
-  nsIWidget* widget = keyEvent->mWidget;
+  nsIWidget* widget = keypressEvent->mWidget;
   // If the event is created by chrome script, the widget is always nullptr.
   if (!widget) {
     nsCOMPtr<nsIPresShell> ps = GetPresShell();
@@ -634,7 +634,7 @@ EditorEventListener::KeyPress(nsIDOMKeyEvent* aKeyEvent)
   nsCOMPtr<nsIDocument> doc = mEditorBase->GetDocument();
   bool handled = widget->ExecuteNativeKeyBinding(
                            nsIWidget::NativeKeyBindingsForRichTextEditor,
-                           *keyEvent, DoCommandCallback, doc);
+                           *keypressEvent, DoCommandCallback, doc);
   if (handled) {
     aKeyEvent->AsEvent()->PreventDefault();
   }
@@ -645,8 +645,10 @@ nsresult
 EditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
 {
   // nothing to do if editor isn't editable or clicked on out of the editor.
+  WidgetMouseEvent* clickEvent =
+    aMouseEvent->AsEvent()->WidgetEventPtr()->AsMouseEvent();
   if (mEditorBase->IsReadonly() || mEditorBase->IsDisabled() ||
-      !mEditorBase->IsAcceptableInputEvent(aMouseEvent->AsEvent())) {
+      !mEditorBase->IsAcceptableInputEvent(clickEvent)) {
     return NS_OK;
   }
 
@@ -781,7 +783,9 @@ EditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
 nsresult
 EditorEventListener::HandleText(nsIDOMEvent* aTextEvent)
 {
-  if (!mEditorBase->IsAcceptableInputEvent(aTextEvent)) {
+  WidgetCompositionEvent* compositionChangeEvent =
+    aTextEvent->WidgetEventPtr()->AsCompositionEvent();
+  if (!mEditorBase->IsAcceptableInputEvent(compositionChangeEvent)) {
     return NS_OK;
   }
 
@@ -792,8 +796,6 @@ EditorEventListener::HandleText(nsIDOMEvent* aTextEvent)
 
   // AsCompositionEvent() should always return non-nullptr.  Anyway, it'll be
   // checked in TextEditor::UpdateIMEComposition().
-  WidgetCompositionEvent* compositionChangeEvent =
-    aTextEvent->WidgetEventPtr()->AsCompositionEvent();
   return mEditorBase->UpdateIMEComposition(compositionChangeEvent);
 }
 
@@ -1035,18 +1037,20 @@ EditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
 nsresult
 EditorEventListener::HandleStartComposition(nsIDOMEvent* aCompositionEvent)
 {
-  if (!mEditorBase->IsAcceptableInputEvent(aCompositionEvent)) {
-    return NS_OK;
-  }
   WidgetCompositionEvent* compositionStart =
     aCompositionEvent->WidgetEventPtr()->AsCompositionEvent();
+  if (!mEditorBase->IsAcceptableInputEvent(compositionStart)) {
+    return NS_OK;
+  }
   return mEditorBase->BeginIMEComposition(compositionStart);
 }
 
 void
 EditorEventListener::HandleEndComposition(nsIDOMEvent* aCompositionEvent)
 {
-  if (!mEditorBase->IsAcceptableInputEvent(aCompositionEvent)) {
+  WidgetCompositionEvent* compositionEnd =
+    aCompositionEvent->WidgetEventPtr()->AsCompositionEvent();
+  if (!mEditorBase->IsAcceptableInputEvent(compositionEnd)) {
     return;
   }
 

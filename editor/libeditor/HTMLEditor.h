@@ -117,7 +117,7 @@ public:
   virtual Element* GetEditorRoot() override;
   virtual already_AddRefed<nsIContent> FindSelectionRoot(
                                          nsINode *aNode) override;
-  virtual bool IsAcceptableInputEvent(nsIDOMEvent* aEvent) override;
+  virtual bool IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) override;
   virtual already_AddRefed<nsIContent> GetInputEventTargetContent() override;
   virtual bool IsEditable(nsINode* aNode) override;
   using EditorBase::IsEditable;
