@@ -7,9 +7,9 @@
 #define GFX_WEBRENDERLAYERMANAGER_H
 
 #include "Layers.h"
-#include "mozilla/gfx/webrender.h"
 #include "mozilla/layers/CompositorController.h"
 #include "mozilla/layers/TransactionIdAllocator.h"
+#include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
 class nsIWidget;
