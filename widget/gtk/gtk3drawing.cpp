@@ -40,6 +40,17 @@ static gint
 moz_gtk_menu_item_paint(WidgetNodeType widget, cairo_t *cr, GdkRectangle* rect,
                         GtkWidgetState* state, GtkTextDirection direction);
 
+// GetStateFlagsFromGtkWidgetState() can be safely used for the specific
+// GtkWidgets that set both prelight and active flags.  For other widgets,
+// either the GtkStateFlags or Gecko's GtkWidgetState need to be carefully
+// adjusted to match GTK behavior.  Although GTK sets insensitive and focus
+// flags in the generic GtkWidget base class, GTK adds prelight and active
+// flags only to widgets that are expected to demonstrate prelight or active
+// states.  This contrasts with HTML where any element may have :active and
+// :hover states, and so Gecko's GtkStateFlags do not necessarily map to GTK
+// flags.  Failure to restrict the flags in the same way as GTK can cause
+// generic CSS selectors from some themes to unintentionally match elements
+// that are not expected to change appearance on hover or mouse-down.
 static GtkStateFlags
 GetStateFlagsFromGtkWidgetState(GtkWidgetState* state)
 {
@@ -874,7 +885,16 @@ moz_gtk_text_view_paint(cairo_t *cr, GdkRectangle* aRect,
                         GtkWidgetState* state,
                         GtkTextDirection direction)
 {
-    GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
+    // GtkTextView and GtkScrolledWindow do not set active and prelight flags.
+    // The use of focus with MOZ_GTK_SCROLLED_WINDOW here is questionable
+    // because a parent widget will not have focus when its child GtkTextView
+    // has focus, but perhaps this may help identify a focused textarea with
+    // some themes as GtkTextView backgrounds do not typically render
+    // differently with focus.
+    GtkStateFlags state_flags =
+        state->disabled ? GTK_STATE_FLAG_INSENSITIVE :
+        state->focused ? GTK_STATE_FLAG_FOCUSED :
+        GTK_STATE_FLAG_NORMAL;
 
     GtkStyleContext* style_frame =
         ClaimStyleContext(MOZ_GTK_SCROLLED_WINDOW, direction, state_flags);
