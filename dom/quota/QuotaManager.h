@@ -147,7 +147,8 @@ public:
                      const nsACString& aGroup,
                      const nsACString& aOrigin,
                      uint64_t aUsageBytes,
-                     int64_t aAccessTime);
+                     int64_t aAccessTime,
+                     bool aPersisted);
 
   void
   DecreaseUsageForOrigin(PersistenceType aPersistenceType,
@@ -460,6 +461,7 @@ private:
                    const nsACString& aGroup,
                    const nsACString& aOrigin,
                    int64_t aAccessTime,
+                   bool aPersisted,
                    nsIFile* aDirectory);
 
   void

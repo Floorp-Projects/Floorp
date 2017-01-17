@@ -487,19 +487,24 @@ class OriginInfo final
 
 public:
   OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
-             uint64_t aUsage, int64_t aAccessTime)
-  : mGroupInfo(aGroupInfo), mOrigin(aOrigin), mUsage(aUsage),
-    mAccessTime(aAccessTime)
-  {
-    MOZ_COUNT_CTOR(OriginInfo);
-  }
+             uint64_t aUsage, int64_t aAccessTime, bool aPersisted);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OriginInfo)
 
   int64_t
-  AccessTime() const
+  LockedAccessTime() const
   {
+    AssertCurrentThreadOwnsQuotaMutex();
+
     return mAccessTime;
+  }
+
+  bool
+  LockedPersisted() const
+  {
+    AssertCurrentThreadOwnsQuotaMutex();
+
+    return mPersisted;
   }
 
 private:
@@ -522,12 +527,16 @@ private:
     mAccessTime = aAccessTime;
   }
 
+  void
+  LockedPersist();
+
   nsDataHashtable<nsStringHashKey, QuotaObject*> mQuotaObjects;
 
   GroupInfo* mGroupInfo;
   const nsCString mOrigin;
   uint64_t mUsage;
   int64_t mAccessTime;
+  bool mPersisted;
 };
 
 class OriginInfoLRUComparator
@@ -536,14 +545,16 @@ public:
   bool
   Equals(const OriginInfo* a, const OriginInfo* b) const
   {
-    return
-      a && b ? a->AccessTime() == b->AccessTime() : !a && !b ? true : false;
+    return a && b ?
+             a->LockedAccessTime() == b->LockedAccessTime() :
+             !a && !b ? true : false;
   }
 
   bool
   LessThan(const OriginInfo* a, const OriginInfo* b) const
   {
-    return a && b ? a->AccessTime() < b->AccessTime() : b ? true : false;
+    return
+      a && b ? a->LockedAccessTime() < b->LockedAccessTime() : b ? true : false;
   }
 };
 
@@ -2717,8 +2728,10 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
       AssertNoUnderflow(quotaManager->mTemporaryStorageUsage, delta);
       quotaManager->mTemporaryStorageUsage -= delta;
 
-      AssertNoUnderflow(groupInfo->mUsage, delta);
-      groupInfo->mUsage -= delta;
+      if (!mOriginInfo->LockedPersisted()) {
+        AssertNoUnderflow(groupInfo->mUsage, delta);
+        groupInfo->mUsage -= delta;
+      }
 
       AssertNoUnderflow(mOriginInfo->mUsage, delta);
       mOriginInfo->mUsage -= delta;
@@ -2742,20 +2755,23 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
   // Temporary storage has no limit for origin usage (there's a group and the
   // global limit though).
 
-  AssertNoOverflow(groupInfo->mUsage, delta);
-  uint64_t newGroupUsage = groupInfo->mUsage + delta;
+  uint64_t newGroupUsage = groupInfo->mUsage;
+  if (!mOriginInfo->LockedPersisted()) {
+    AssertNoOverflow(groupInfo->mUsage, delta);
+    newGroupUsage += delta;
 
-  uint64_t groupUsage = groupInfo->mUsage;
-  if (complementaryGroupInfo) {
-    AssertNoOverflow(groupUsage, complementaryGroupInfo->mUsage);
-    groupUsage += complementaryGroupInfo->mUsage;
-  }
+    uint64_t groupUsage = groupInfo->mUsage;
+    if (complementaryGroupInfo) {
+      AssertNoOverflow(groupUsage, complementaryGroupInfo->mUsage);
+      groupUsage += complementaryGroupInfo->mUsage;
+    }
 
-  // Temporary storage has a hard limit for group usage (20 % of the global
-  // limit).
-  AssertNoOverflow(groupUsage, delta);
-  if (groupUsage + delta > quotaManager->GetGroupLimit()) {
-    return false;
+    // Temporary storage has a hard limit for group usage (20 % of the global
+    // limit).
+    AssertNoOverflow(groupUsage, delta);
+    if (groupUsage + delta > quotaManager->GetGroupLimit()) {
+      return false;
+    }
   }
 
   AssertNoOverflow(quotaManager->mTemporaryStorageUsage, delta);
@@ -2771,6 +2787,8 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
       quotaManager->LockedCollectOriginsForEviction(delta, locks);
 
     if (!sizeToBeFreed) {
+      // XXX prompt for asking to delete persistent origins if there is any
+      // persistent origin.
       return false;
     }
 
@@ -2816,26 +2834,29 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
     AssertNoOverflow(mOriginInfo->mUsage, delta);
     newUsage = mOriginInfo->mUsage + delta;
 
-    AssertNoOverflow(groupInfo->mUsage, delta);
-    newGroupUsage = groupInfo->mUsage + delta;
+    newGroupUsage = groupInfo->mUsage;
+    if (!mOriginInfo->LockedPersisted()) {
+      AssertNoOverflow(groupInfo->mUsage, delta);
+      newGroupUsage += delta;
 
-    groupUsage = groupInfo->mUsage;
-    if (complementaryGroupInfo) {
-      AssertNoOverflow(groupUsage, complementaryGroupInfo->mUsage);
-      groupUsage += complementaryGroupInfo->mUsage;
-    }
+      uint64_t groupUsage = groupInfo->mUsage;
+      if (complementaryGroupInfo) {
+        AssertNoOverflow(groupUsage, complementaryGroupInfo->mUsage);
+        groupUsage += complementaryGroupInfo->mUsage;
+      }
 
-    AssertNoOverflow(groupUsage, delta);
-    if (groupUsage + delta > quotaManager->GetGroupLimit()) {
-      // Unfortunately some other thread increased the group usage in the
-      // meantime and we are not below the group limit anymore.
+      AssertNoOverflow(groupUsage, delta);
+      if (groupUsage + delta > quotaManager->GetGroupLimit()) {
+        // Unfortunately some other thread increased the group usage in the
+        // meantime and we are not below the group limit anymore.
 
-      // However, the origin eviction must be finalized in this case too.
-      MutexAutoUnlock autoUnlock(quotaManager->mQuotaMutex);
+        // However, the origin eviction must be finalized in this case too.
+        MutexAutoUnlock autoUnlock(quotaManager->mQuotaMutex);
 
-      quotaManager->FinalizeOriginEviction(locks);
+        quotaManager->FinalizeOriginEviction(locks);
 
-      return false;
+        return false;
+      }
     }
 
     AssertNoOverflow(quotaManager->mTemporaryStorageUsage, delta);
@@ -2847,7 +2868,9 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
     // Ok, we successfully freed enough space and the operation can continue
     // without throwing the quota error.
     mOriginInfo->mUsage = newUsage;
-    groupInfo->mUsage = newGroupUsage;
+    if (!mOriginInfo->LockedPersisted()) {
+      groupInfo->mUsage = newGroupUsage;
+    }
     quotaManager->mTemporaryStorageUsage = newTemporaryStorageUsage;;
 
     // Some other thread could increase the size in the meantime, but no more
@@ -2865,7 +2888,9 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
   }
 
   mOriginInfo->mUsage = newUsage;
-  groupInfo->mUsage = newGroupUsage;
+  if (!mOriginInfo->LockedPersisted()) {
+    groupInfo->mUsage = newGroupUsage;
+  }
   quotaManager->mTemporaryStorageUsage = newTemporaryStorageUsage;
 
   mSize = aSize;
@@ -3141,6 +3166,10 @@ QuotaManager::CollectOriginsForEviction(
         MOZ_ASSERT(originInfo->mGroupInfo->mPersistenceType !=
                      PERSISTENCE_TYPE_PERSISTENT);
 
+        if (originInfo->LockedPersisted()) {
+          continue;
+        }
+
         OriginScope originScope = OriginScope::FromOrigin(originInfo->mOrigin);
 
         bool match = false;
@@ -3393,7 +3422,8 @@ QuotaManager::InitQuotaForOrigin(PersistenceType aPersistenceType,
                                  const nsACString& aGroup,
                                  const nsACString& aOrigin,
                                  uint64_t aUsageBytes,
-                                 int64_t aAccessTime)
+                                 int64_t aAccessTime,
+                                 bool aPersisted)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
@@ -3414,7 +3444,7 @@ QuotaManager::InitQuotaForOrigin(PersistenceType aPersistenceType,
   }
 
   RefPtr<OriginInfo> originInfo =
-    new OriginInfo(groupInfo, aOrigin, aUsageBytes, aAccessTime);
+    new OriginInfo(groupInfo, aOrigin, aUsageBytes, aAccessTime, aPersisted);
   groupInfo->LockedAddOriginInfo(originInfo);
 }
 
@@ -3883,7 +3913,7 @@ QuotaManager::InitializeRepository(PersistenceType aPersistenceType)
     }
 
     rv = InitializeOrigin(aPersistenceType, group, origin, timestamp,
-                          childDirectory);
+                          /* aPersisted */ false, childDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -3900,6 +3930,7 @@ QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
                                const nsACString& aGroup,
                                const nsACString& aOrigin,
                                int64_t aAccessTime,
+                               bool aPersisted,
                                nsIFile* aDirectory)
 {
   AssertIsOnIOThread();
@@ -3972,7 +4003,7 @@ QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
 
   if (trackQuota) {
     InitQuotaForOrigin(aPersistenceType, aGroup, aOrigin,
-                       usageInfo->TotalUsage(), aAccessTime);
+                       usageInfo->TotalUsage(), aAccessTime, aPersisted);
   }
 
   return NS_OK;
@@ -4857,7 +4888,7 @@ QuotaManager::EnsureOriginIsInitializedInternal(
     }
 
     rv = InitializeOrigin(aPersistenceType, aGroup, aOrigin, timestamp,
-                          directory);
+                          /* aPersisted */ true, directory);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mInitializedOrigins.AppendElement(aOrigin);
@@ -4881,7 +4912,7 @@ QuotaManager::EnsureOriginIsInitializedInternal(
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = InitializeOrigin(aPersistenceType, aGroup, aOrigin, timestamp,
-                          directory);
+                          /* aPersisted */ false, directory);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -5242,6 +5273,9 @@ QuotaManager::CheckTemporaryStorageLimits()
 
           for (uint32_t i = 0; i < originInfos.Length(); i++) {
             OriginInfo* originInfo = originInfos[i];
+            if (originInfo->LockedPersisted()) {
+              continue;
+            }
 
             doomedOriginInfos.AppendElement(originInfo);
             groupUsage -= originInfo->mUsage;
@@ -5281,7 +5315,8 @@ QuotaManager::CheckTemporaryStorageLimits()
       }
 
       for (uint32_t index = originInfos.Length(); index > 0; index--) {
-        if (doomedOriginInfos.Contains(originInfos[index - 1])) {
+        if (doomedOriginInfos.Contains(originInfos[index - 1]) ||
+            originInfos[index - 1]->LockedPersisted()) {
           originInfos.RemoveElementAt(index - 1);
         }
       }
@@ -5303,6 +5338,13 @@ QuotaManager::CheckTemporaryStorageLimits()
 
   for (uint32_t index = 0; index < doomedOriginInfos.Length(); index++) {
     OriginInfo* doomedOriginInfo = doomedOriginInfos[index];
+
+#ifdef DEBUG
+    {
+      MutexAutoLock lock(mQuotaMutex);
+      MOZ_ASSERT(!doomedOriginInfo->LockedPersisted());
+    }
+#endif
 
     DeleteFilesForOrigin(doomedOriginInfo->mGroupInfo->mPersistenceType,
                          doomedOriginInfo->mOrigin);
@@ -5407,6 +5449,18 @@ QuotaManager::GetDirectoryLockTable(PersistenceType aPersistenceType)
  * Local class implementations
  ******************************************************************************/
 
+OriginInfo::OriginInfo(GroupInfo* aGroupInfo, const nsACString& aOrigin,
+                       uint64_t aUsage, int64_t aAccessTime, bool aPersisted)
+  : mGroupInfo(aGroupInfo), mOrigin(aOrigin), mUsage(aUsage),
+    mAccessTime(aAccessTime), mPersisted(aPersisted)
+{
+  MOZ_ASSERT(aGroupInfo);
+  MOZ_ASSERT_IF(aPersisted,
+                aGroupInfo->mPersistenceType == PERSISTENCE_TYPE_DEFAULT);
+
+  MOZ_COUNT_CTOR(OriginInfo);
+}
+
 void
 OriginInfo::LockedDecreaseUsage(int64_t aSize)
 {
@@ -5415,14 +5469,30 @@ OriginInfo::LockedDecreaseUsage(int64_t aSize)
   AssertNoUnderflow(mUsage, aSize);
   mUsage -= aSize;
 
-  AssertNoUnderflow(mGroupInfo->mUsage, aSize);
-  mGroupInfo->mUsage -= aSize;
+  if (!LockedPersisted()) {
+    AssertNoUnderflow(mGroupInfo->mUsage, aSize);
+    mGroupInfo->mUsage -= aSize;
+  }
 
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
   AssertNoUnderflow(quotaManager->mTemporaryStorageUsage, aSize);
   quotaManager->mTemporaryStorageUsage -= aSize;
+}
+
+void
+OriginInfo::LockedPersist()
+{
+  AssertCurrentThreadOwnsQuotaMutex();
+  MOZ_ASSERT(mGroupInfo->mPersistenceType == PERSISTENCE_TYPE_DEFAULT);
+  MOZ_ASSERT(!mPersisted);
+
+  mPersisted = true;
+
+  // Remove Usage from GroupInfo
+  AssertNoUnderflow(mGroupInfo->mUsage, mUsage);
+  mGroupInfo->mUsage -= mUsage;
 }
 
 already_AddRefed<OriginInfo>
@@ -5449,8 +5519,10 @@ GroupInfo::LockedAddOriginInfo(OriginInfo* aOriginInfo)
                "Replacing an existing entry!");
   mOriginInfos.AppendElement(aOriginInfo);
 
-  AssertNoOverflow(mUsage, aOriginInfo->mUsage);
-  mUsage += aOriginInfo->mUsage;
+  if (!aOriginInfo->LockedPersisted()) {
+    AssertNoOverflow(mUsage, aOriginInfo->mUsage);
+    mUsage += aOriginInfo->mUsage;
+  }
 
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
@@ -5466,8 +5538,10 @@ GroupInfo::LockedRemoveOriginInfo(const nsACString& aOrigin)
 
   for (uint32_t index = 0; index < mOriginInfos.Length(); index++) {
     if (mOriginInfos[index]->mOrigin == aOrigin) {
-      AssertNoUnderflow(mUsage, mOriginInfos[index]->mUsage);
-      mUsage -= mOriginInfos[index]->mUsage;
+      if (!mOriginInfos[index]->LockedPersisted()) {
+        AssertNoUnderflow(mUsage, mOriginInfos[index]->mUsage);
+        mUsage -= mOriginInfos[index]->mUsage;
+      }
 
       QuotaManager* quotaManager = QuotaManager::Get();
       MOZ_ASSERT(quotaManager);
@@ -5494,8 +5568,10 @@ GroupInfo::LockedRemoveOriginInfos()
   for (uint32_t index = mOriginInfos.Length(); index > 0; index--) {
     OriginInfo* originInfo = mOriginInfos[index - 1];
 
-    AssertNoUnderflow(mUsage, originInfo->mUsage);
-    mUsage -= originInfo->mUsage;
+    if (!originInfo->LockedPersisted()) {
+      AssertNoUnderflow(mUsage, originInfo->mUsage);
+      mUsage -= originInfo->mUsage;
+    }
 
     AssertNoUnderflow(quotaManager->mTemporaryStorageUsage, originInfo->mUsage);
     quotaManager->mTemporaryStorageUsage -= originInfo->mUsage;
