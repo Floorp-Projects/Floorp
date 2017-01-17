@@ -13,6 +13,7 @@
 </div>
 <pre id="test">
 
+<script src="head.js"></script>
 <script class="testbody" type="text/javascript">
 
 const testTable = "moz-track-digest256";
@@ -71,44 +72,6 @@ function waitForUpdateSuccess(callback) {
   }, 10, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
 }
 
-function addCompletionToServer(list, url) {
-  return new Promise(function(resolve, reject) {
-    var listParam = "list=" + list;
-    var fullhashParam = "fullhash=" + hash(url);
-
-    var xhr = new XMLHttpRequest;
-    xhr.open("PUT", UPDATE_URL + "?" +
-             listParam + "&" +
-             fullhashParam, true);
-    xhr.setRequestHeader("Content-Type", "text/plain");
-    xhr.onreadystatechange = function() {
-      if (this.readyState == this.DONE) {
-        resolve();
-      }
-    };
-    xhr.send();
-  });
-}
-
-function hash(str) {
-  function bytesFromString(str) {
-    var converter =
-      SpecialPowers.Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                       .createInstance(SpecialPowers.Ci.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-    return converter.convertToByteArray(str);
-  }
-
-  var hasher = SpecialPowers.Cc["@mozilla.org/security/hash;1"]
-                               .createInstance(SpecialPowers.Ci.nsICryptoHash);
-
-  var data = bytesFromString(str);
-  hasher.init(hasher.SHA256);
-  hasher.update(data, data.length);
-
-  return hasher.finish(true);
-}
-
 function runTest() {
   /**
    * In this test we try to modify only urlclassifier.*Table preference to see if
@@ -121,7 +84,7 @@ function runTest() {
   // Here we use non-tracking.example.com as a tracked url.
   // Since this table is only used in this bug, so it won't affect other testcases.
   var addCompletePromise =
-    addCompletionToServer(testTable, "bug1281083.example.com/");
+    addCompletionToServer(testTable, "bug1281083.example.com/", UPDATE_URL);
 
   Promise.all([pushPrefPromise, addCompletePromise])
     .then(() => {
@@ -146,4 +109,3 @@ SimpleTest.waitForExplicitFinish();
 <iframe id="testFrame" width="100%" height="100%" onload=""></iframe>
 </body>
 </html>
-
