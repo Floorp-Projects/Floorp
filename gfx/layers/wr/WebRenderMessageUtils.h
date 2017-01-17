@@ -174,10 +174,10 @@ struct ParamTraits<WRLayoutSize>
 };
 
 template<>
-struct ParamTraits<WRRect>
+struct ParamTraits<WrRect>
 {
   static void
-  Write(Message* aMsg, const WRRect& aParam)
+  Write(Message* aMsg, const WrRect& aParam)
   {
     WriteParam(aMsg, aParam.x);
     WriteParam(aMsg, aParam.y);
@@ -186,7 +186,7 @@ struct ParamTraits<WRRect>
   }
 
   static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WRRect* aResult)
+  Read(const Message* aMsg, PickleIterator* aIter, WrRect* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->x)
         && ReadParam(aMsg, aIter, &aResult->y)
