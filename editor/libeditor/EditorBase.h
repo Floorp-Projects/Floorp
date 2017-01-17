@@ -881,12 +881,12 @@ public:
   virtual bool IsActiveInDOMWindow();
 
   /**
-   * Whether the aEvent should be handled by this editor or not.  When this
-   * returns FALSE, The aEvent shouldn't be handled on this editor,
-   * i.e., The aEvent should be handled by another inner editor or ancestor
+   * Whether the aGUIEvent should be handled by this editor or not.  When this
+   * returns false, The aGUIEvent shouldn't be handled on this editor,
+   * i.e., The aGUIEvent should be handled by another inner editor or ancestor
    * elements.
    */
-  virtual bool IsAcceptableInputEvent(nsIDOMEvent* aEvent);
+  virtual bool IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent);
 
   /**
    * FindSelectionRoot() returns a selection root of this editor when aNode

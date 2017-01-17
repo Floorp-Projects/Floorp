@@ -7,6 +7,7 @@
 
 #include "HTMLEditUtils.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Selection.h"
 #include "nsCOMPtr.h"
@@ -71,10 +72,13 @@ HTMLEditorEventListener::MouseUp(nsIDOMMouseEvent* aMouseEvent)
 nsresult
 HTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
 {
+  WidgetMouseEvent* mousedownEvent =
+    aMouseEvent->AsEvent()->WidgetEventPtr()->AsMouseEvent();
+
   HTMLEditor* htmlEditor = GetHTMLEditor();
   // Contenteditable should disregard mousedowns outside it.
   // IsAcceptableInputEvent() checks it for a mouse event.
-  if (!htmlEditor->IsAcceptableInputEvent(aMouseEvent->AsEvent())) {
+  if (!htmlEditor->IsAcceptableInputEvent(mousedownEvent)) {
     // If it's not acceptable mousedown event (including when mousedown event
     // is fired outside of the active editing host), we need to commit
     // composition because it will be change the selection to the clicked

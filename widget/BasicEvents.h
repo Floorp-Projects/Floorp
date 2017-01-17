@@ -410,9 +410,15 @@ public:
   nsString mSpecifiedEventTypeString;
 
   // Event targets, needed by DOM Events
+  // Note that when you need event target for DOM event, you should use
+  // Get*DOMEventTarget() instead of accessing these members directly.
   nsCOMPtr<dom::EventTarget> mTarget;
   nsCOMPtr<dom::EventTarget> mCurrentTarget;
   nsCOMPtr<dom::EventTarget> mOriginalTarget;
+
+  dom::EventTarget* GetDOMEventTarget() const;
+  dom::EventTarget* GetCurrentDOMEventTarget() const;
+  dom::EventTarget* GetOriginalDOMEventTarget() const;
 
   void AssignEventData(const WidgetEvent& aEvent, bool aCopyTargets)
   {
