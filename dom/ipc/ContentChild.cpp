@@ -1545,6 +1545,10 @@ ContentChild::SendPBrowserConstructor(PBrowserChild* aActor,
                                       const bool& aIsForApp,
                                       const bool& aIsForBrowser)
 {
+  if (IsShuttingDown()) {
+    return false;
+  }
+
   return PContentChild::SendPBrowserConstructor(aActor,
                                                 aTabId,
                                                 aContext,
@@ -1563,6 +1567,8 @@ ContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
                                       const bool& aIsForApp,
                                       const bool& aIsForBrowser)
 {
+  MOZ_ASSERT(!IsShuttingDown());
+
   // This runs after AllocPBrowserChild() returns and the IPC machinery for this
   // PBrowserChild has been set up.
 
@@ -1602,6 +1608,10 @@ ContentChild::GetAvailableDictionaries(InfallibleTArray<nsString>& aDictionaries
 PFileDescriptorSetChild*
 ContentChild::SendPFileDescriptorSetConstructor(const FileDescriptor& aFD)
 {
+  if (IsShuttingDown()) {
+    return nullptr;
+  }
+
   return PContentChild::SendPFileDescriptorSetConstructor(aFD);
 }
 
@@ -1653,6 +1663,10 @@ PBlobChild*
 ContentChild::SendPBlobConstructor(PBlobChild* aActor,
                                    const BlobConstructorParams& aParams)
 {
+  if (IsShuttingDown()) {
+    return nullptr;
+  }
+
   return PContentChild::SendPBlobConstructor(aActor, aParams);
 }
 
@@ -1843,6 +1857,10 @@ ContentChild::DeallocPPrintingChild(PPrintingChild* printing)
 PSendStreamChild*
 ContentChild::SendPSendStreamConstructor(PSendStreamChild* aActor)
 {
+  if (IsShuttingDown()) {
+    return nullptr;
+  }
+
   return PContentChild::SendPSendStreamConstructor(aActor);
 }
 
