@@ -189,7 +189,7 @@ struct wrwindowstate;
 #endif
 
 struct WrRenderer;
-struct WRState;
+struct WrState;
 
 WR_INLINE void
 wr_renderer_update(WrRenderer* renderer) WR_FUNC;
@@ -218,7 +218,7 @@ wr_window_new(WRWindowId window_id,
               WrRenderer** out_renderer) WR_FUNC;
 
 WR_INLINE void
-wr_window_remove_pipeline(wrwindowstate* window, WRState* state) WR_FUNC;
+wr_window_remove_pipeline(wrwindowstate* window, WrState* state) WR_FUNC;
 
 WR_INLINE void
 wr_api_delete(WrAPI* api) WR_FUNC;
@@ -243,7 +243,7 @@ WR_INLINE void
 wr_api_set_root_pipeline(WrAPI* api, WRPipelineId pipeline_id) WR_FUNC;
 
 WR_INLINE void
-wr_api_set_root_display_list(WrAPI* api, WRState* state, uint32_t epoch, float w, float h) WR_FUNC;
+wr_api_set_root_display_list(WrAPI* api, WrState* state, uint32_t epoch, float w, float h) WR_FUNC;
 
 WR_INLINE void
 wr_window_init_pipeline_epoch(wrwindowstate* window, WRPipelineId pipeline, uint32_t width, uint32_t height) WR_FUNC;
@@ -261,14 +261,14 @@ wr_init_window(WRPipelineId root_pipeline_id,
                WRExternalImageHandler* handler = nullptr)
 WR_FUNC;
 
-WR_INLINE WRState*
+WR_INLINE WrState*
 wr_state_new(uint32_t width, uint32_t height, WRPipelineId pipeline_id) WR_FUNC;
 
 WR_INLINE void
-wr_state_delete(WRState* state) WR_FUNC;
+wr_state_delete(WrState* state) WR_FUNC;
 
 WR_INLINE void
-wr_destroy(wrwindowstate* wrWindow, WRState* WRState)
+wr_destroy(wrwindowstate* wrWindow, WrState* WrState)
 WR_FUNC;
 
 WR_INLINE WRImageKey
@@ -298,42 +298,42 @@ wr_delete_image(wrwindowstate* wrWindow, WRImageKey key)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_stacking_context(WRState *wrState, WrRect bounds,
+wr_dp_push_stacking_context(WrState *wrState, WrRect bounds,
                             WrRect overflow, const WRImageMask *mask,
                             const float* matrix)
 WR_FUNC;
 
 //XXX: matrix should use a proper type
 WR_INLINE void
-wr_dp_pop_stacking_context(WRState *wrState)
+wr_dp_pop_stacking_context(WrState *wrState)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_begin(WRState* wrState, uint32_t width, uint32_t height)
+wr_dp_begin(WrState* wrState, uint32_t width, uint32_t height)
 WR_FUNC;
 
 WR_INLINE void
-wr_window_dp_begin(wrwindowstate* wrWindow, WRState* wrState, uint32_t width, uint32_t height)
+wr_window_dp_begin(wrwindowstate* wrWindow, WrState* wrState, uint32_t width, uint32_t height)
 WR_FUNC;
 
 WR_INLINE void
-wr_window_dp_end(wrwindowstate* wrWindow, WRState* wrState)
+wr_window_dp_end(wrwindowstate* wrWindow, WrState* wrState)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_end(WRState* builder, WrAPI* api, uint32_t epoch) WR_FUNC;
+wr_dp_end(WrState* builder, WrAPI* api, uint32_t epoch) WR_FUNC;
 
 WR_INLINE void
 wr_composite_window(wrwindowstate* wrWindow)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_rect(WRState* wrState, WrRect bounds, WrRect clip,
+wr_dp_push_rect(WrState* wrState, WrRect bounds, WrRect clip,
                 float r, float g, float b, float a)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_text(WRState* wrState,
+wr_dp_push_text(WrState* wrState,
                 WrRect bounds, WrRect clip,
                 WRColor color,
                 WRFontKey font_Key,
@@ -341,25 +341,25 @@ wr_dp_push_text(WRState* wrState,
                 uint32_t glyph_count, float glyph_size) WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_border(WRState* wrState, WrRect bounds, WrRect clip,
+wr_dp_push_border(WrState* wrState, WrRect bounds, WrRect clip,
                   WRBorderSide top, WRBorderSide right, WRBorderSide bottom, WRBorderSide left,
                   WrLayoutSize top_left_radius, WrLayoutSize top_right_radius,
                   WrLayoutSize bottom_left_radius, WrLayoutSize bottom_right_radius)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_image(WRState* wrState, WrRect bounds, WrRect clip,
+wr_dp_push_image(WrState* wrState, WrRect bounds, WrRect clip,
                  const WRImageMask* mask, WRTextureFilter filter, WRImageKey key)
 WR_FUNC;
 
 // TODO: Remove.
 WR_INLINE void
-wr_window_dp_push_iframe(wrwindowstate* wrWindow, WRState* wrState, WrRect bounds, WrRect clip,
+wr_window_dp_push_iframe(wrwindowstate* wrWindow, WrState* wrState, WrRect bounds, WrRect clip,
                         WRPipelineId layers_id)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_iframe(WRState* wrState, WrRect bounds, WrRect clip, WRPipelineId layers_id) WR_FUNC;
+wr_dp_push_iframe(WrState* wrState, WrRect bounds, WrRect clip, WRPipelineId layers_id) WR_FUNC;
 
 // TODO: Remove.
 // It is the responsibility of the caller to manage the dst_buffer memory
