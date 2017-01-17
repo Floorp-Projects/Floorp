@@ -165,6 +165,12 @@ JSRuntime::createJitRuntime(JSContext* cx)
 
     MOZ_ASSERT(!jitRuntime_);
 
+    if (!CanLikelyAllocateMoreExecutableMemory()) {
+        // Report OOM instead of potentially hitting the MOZ_CRASH below.
+        ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
     jit::JitRuntime* jrt = cx->new_<jit::JitRuntime>(cx->runtime());
     if (!jrt)
         return nullptr;
