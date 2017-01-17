@@ -391,7 +391,29 @@ function* withSignedInUser(user, f) {
       return Promise.resolve(true);
     },
   };
-  let extensionStorageSync = new ExtensionStorageSync(fxaServiceMock);
+
+  let telemetryMock = {
+    _calls: [],
+    _histograms: {},
+    scalarSet(name, value) {
+      this._calls.push({method: "scalarSet", name, value});
+    },
+    keyedScalarSet(name, key, value) {
+      this._calls.push({method: "keyedScalarSet", name, key, value});
+    },
+    getKeyedHistogramById(name) {
+      let self = this;
+      return {
+        add(key, value) {
+          if (!self._histograms[name]) {
+            self._histograms[name] = [];
+          }
+          self._histograms[name].push(value);
+        },
+      };
+    },
+  };
+  let extensionStorageSync = new ExtensionStorageSync(fxaServiceMock, telemetryMock);
   yield* f(extensionStorageSync, fxaServiceMock);
 }
 
