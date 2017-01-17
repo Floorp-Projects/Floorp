@@ -326,8 +326,8 @@
             this.resetHover();
             aCell.setAttribute("hover", "true");
             this.mHoverCell = aCell;
-            var event = document.createEvent('Events');
-            event.initEvent('DOMMenuItemActive', true, true);
+            var event = document.createEvent("Events");
+            event.initEvent("DOMMenuItemActive", true, true);
             aCell.dispatchEvent(event);
           }
         ]]></body>
@@ -401,8 +401,8 @@
 
       <handler event="focus" phase="capturing">
       <![CDATA[
-        if (!mIsPopup && this.getAttribute('focused') != 'true') {
-          this.setAttribute('focused', 'true');
+        if (!mIsPopup && this.getAttribute("focused") != "true") {
+          this.setAttribute("focused", "true");
           document.addEventListener("keydown", this, true);
           if (this.mSelectedCell)
             this.hoverCell(this.mSelectedCell);
@@ -412,9 +412,9 @@
 
       <handler event="blur" phase="capturing">
       <![CDATA[
-        if (!mIsPopup && this.getAttribute('focused') == 'true') {
+        if (!mIsPopup && this.getAttribute("focused") == "true") {
           document.removeEventListener("keydown", this, true);
-          this.removeAttribute('focused');
+          this.removeAttribute("focused");
           this.resetHover();
         }
       ]]>

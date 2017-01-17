@@ -33,7 +33,7 @@ function fillform(doc) {
     for (let i in textboxes) {
         doc.getElementById(textboxes[i]).value += "form state";
     }
-    doc.getElementById('a-checkbox').checked = true;
+    doc.getElementById("a-checkbox").checked = true;
     doc.getElementById("radioa").checked = true;
     doc.getElementById("aselect").selectedIndex = 0;
 }
@@ -49,7 +49,7 @@ function checkform(doc) {
         ok(/form\s+state/m.test(value),
             "Modified textbox " + textboxes[i] + " form state not preserved!");
     }
-    ok(doc.getElementById('a-checkbox').checked,
+    ok(doc.getElementById("a-checkbox").checked,
         "Modified checkbox checked state not preserved!");
     ok(doc.getElementById("radioa").checked,
         "Modified radio checked state not preserved!");
@@ -118,14 +118,14 @@ function persistDocument(aDoc) {
 SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function() {
-    var srcDoc = document.getElementById('source').contentDocument;
+    var srcDoc = document.getElementById("source").contentDocument;
     fillform(srcDoc);
     checkform(srcDoc);
     var serializedString = persistDocument(srcDoc);
 
     // We can't access file:/// URLs directly for security reasons,
     // so we have to parse the serialized content string indirectly
-    var targetDoc = document.getElementById('dest').contentDocument;
+    var targetDoc = document.getElementById("dest").contentDocument;
     targetDoc.write(serializedString);
 
     checkform(targetDoc);

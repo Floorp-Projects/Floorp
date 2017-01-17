@@ -9,7 +9,7 @@
 <script>
 
 // Ignore the '?' and split on |
-[username, password, features, autoClose] = window.location.search.substring(1).split('|');
+[username, password, features, autoClose] = window.location.search.substring(1).split("|");
 
 var url = "subtst_notifications_11_popup.html?" + username + "|" + password;
 var popupWin = window.open(url, "subtst_11", features);

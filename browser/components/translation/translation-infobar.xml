@@ -156,7 +156,7 @@
                 onget="return this._getAnonElt('translationStates').selectedIndex;">
         <setter>
           <![CDATA[
-          let deck = this._getAnonElt('translationStates');
+          let deck = this._getAnonElt("translationStates");
 
           let activeElt = document.activeElement;
           if (activeElt && deck.contains(activeElt))
@@ -224,7 +224,7 @@
             let engineIndex = Object.keys(Translation.supportedEngines)
               .indexOf(Translation.translationEngine);
             if (engineIndex != -1) {
-              this._getAnonElt('translationEngine').selectedIndex = engineIndex;
+              this._getAnonElt("translationEngine").selectedIndex = engineIndex;
             }
 
             const kWelcomePref = "browser.translation.ui.welcomeMessageShown";

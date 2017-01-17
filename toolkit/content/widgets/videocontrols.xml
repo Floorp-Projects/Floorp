@@ -686,8 +686,8 @@
       },
 
       hasSources() {
-        if (this.video.hasAttribute('src') &&
-            this.video.getAttribute('src') !== "") {
+        if (this.video.hasAttribute("src") &&
+            this.video.getAttribute("src") !== "") {
           return true;
         }
         for (var child = this.video.firstChild;
@@ -1316,7 +1316,7 @@
             break;
         }
 
-        if (String.fromCharCode(event.charCode) == ' ') {
+        if (String.fromCharCode(event.charCode) == " ") {
           keystroke += "space";
         }
 
