@@ -46,7 +46,7 @@ public:
   gfx::Rect RelativeToParent(gfx::Rect aRect);
   gfx::Rect TransformedVisibleBoundsRelativeToParent();
 protected:
-  Maybe<WRImageMask> buildMaskLayer();
+  Maybe<WrImageMask> buildMaskLayer();
 
 };
 
@@ -128,7 +128,7 @@ public:
 
   // adds an imagekey to a list of keys that will be discarded on the next
   // transaction or destruction
-  void AddImageKeyForDiscard(WRImageKey);
+  void AddImageKeyForDiscard(WrImageKey);
   void DiscardImages();
 
   WebRenderBridgeChild* WRBridge() const { return mWRChild; }
@@ -146,7 +146,7 @@ private:
 
 private:
   nsIWidget* MOZ_NON_OWNING_REF mWidget;
-  std::vector<WRImageKey> mImageKeys;
+  std::vector<WrImageKey> mImageKeys;
 
   /* PaintedLayer callbacks; valid at the end of a transaciton,
    * while rendering */

@@ -140,8 +140,8 @@ WebRenderImageLayer::RenderLayer()
   Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   Rect overflow(0, 0, relBounds.width, relBounds.height);
   Matrix4x4 transform;// = GetTransform();
-  Maybe<WRImageMask> mask = buildMaskLayer();
-  WRTextureFilter filter = (mSamplingFilter == gfx::SamplingFilter::POINT) ? WRTextureFilter::Point : WRTextureFilter::Linear;
+  Maybe<WrImageMask> mask = buildMaskLayer();
+  WrTextureFilter filter = (mSamplingFilter == gfx::SamplingFilter::POINT) ? WrTextureFilter::Point : WrTextureFilter::Linear;
 
   WRBridge()->AddWebRenderCommand(
     OpDPPushStackingContext(wr::ToWrRect(relBounds), wr::ToWrRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));

@@ -24,7 +24,7 @@ WebRenderContainerLayer::RenderLayer()
   gfx::Matrix4x4 transform;// = GetTransform();
   if (gfxPrefs::LayersDump()) printf_stderr("ContainerLayer %p using %s as bounds, %s as overflow, %s as transform\n", this, Stringify(relBounds).c_str(), Stringify(overflow).c_str(), Stringify(transform).c_str());
 
-  Maybe<WRImageMask> mask = buildMaskLayer();
+  Maybe<WrImageMask> mask = buildMaskLayer();
 
   WRBridge()->AddWebRenderCommand(
     OpDPPushStackingContext(wr::ToWrRect(relBounds), wr::ToWrRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));

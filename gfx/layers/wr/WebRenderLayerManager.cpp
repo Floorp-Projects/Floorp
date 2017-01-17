@@ -93,10 +93,10 @@ WebRenderLayer::TransformedVisibleBoundsRelativeToParent()
   return RelativeToParent(transformed);
 }
 
-Maybe<WRImageMask>
+Maybe<WrImageMask>
 WebRenderLayer::buildMaskLayer() {
-  Maybe<WRImageMask> mask = Nothing();
-  WRImageMask imageMask;
+  Maybe<WrImageMask> mask = Nothing();
+  WrImageMask imageMask;
   Layer* maskLayer = GetLayer()->GetMaskLayer();
 
   if (maskLayer) {
@@ -114,7 +114,7 @@ WebRenderLayer::buildMaskLayer() {
           gfx::IntSize size = surface->GetSize();
           MOZ_RELEASE_ASSERT(surface->GetFormat() == SurfaceFormat::A8, "bad format");
           wr::ByteBuffer buf(size.height * map.GetStride(), map.GetData());
-          WRImageKey maskKey;
+          WrImageKey maskKey;
           WRBridge()->SendAddImage(size.width, size.height, map.GetStride(), A8, buf, &maskKey);
 
           imageMask.image = maskKey;
@@ -370,7 +370,7 @@ WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize)
 }
 
 void
-WebRenderLayerManager::AddImageKeyForDiscard(WRImageKey key)
+WebRenderLayerManager::AddImageKeyForDiscard(WrImageKey key)
 {
   mImageKeys.push_back(key);
 }

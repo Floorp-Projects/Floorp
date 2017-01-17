@@ -36,20 +36,20 @@ struct ParamTraits<mozilla::wr::ByteBuffer>
 };
 
 template<>
-struct ParamTraits<WRImageFormat>
+struct ParamTraits<WrImageFormat>
   : public ContiguousEnumSerializer<
-        WRImageFormat,
-        WRImageFormat::Invalid,
-        WRImageFormat::RGBAF32>
+        WrImageFormat,
+        WrImageFormat::Invalid,
+        WrImageFormat::RGBAF32>
 {
 };
 
 template<>
-struct ParamTraits<WRBorderStyle>
+struct ParamTraits<WrBorderStyle>
   : public ContiguousEnumSerializer<
-        WRBorderStyle,
-        WRBorderStyle::None,
-        WRBorderStyle::Outset>
+        WrBorderStyle,
+        WrBorderStyle::None,
+        WrBorderStyle::Outset>
 {
 };
 
@@ -96,10 +96,10 @@ struct ParamTraits<WRGlyphInstance>
 };
 
 template<>
-struct ParamTraits<WRGlyphArray>
+struct ParamTraits<WrGlyphArray>
 {
   static void
-  Write(Message* aMsg, const WRGlyphArray& aParam)
+  Write(Message* aMsg, const WrGlyphArray& aParam)
   {
     WriteParam(aMsg, aParam.color);
     size_t length = aParam.glyphs.Length();
@@ -112,7 +112,7 @@ struct ParamTraits<WRGlyphArray>
   }
 
   static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WRGlyphArray* aResult)
+  Read(const Message* aMsg, PickleIterator* aIter, WrGlyphArray* aResult)
   {
     if (!ReadParam(aMsg, aIter, &aResult->color)) {
       return false;
@@ -136,10 +136,10 @@ struct ParamTraits<WRGlyphArray>
 };
 
 template<>
-struct ParamTraits<WRBorderSide>
+struct ParamTraits<WrBorderSide>
 {
   static void
-  Write(Message* aMsg, const WRBorderSide& aParam)
+  Write(Message* aMsg, const WrBorderSide& aParam)
   {
     WriteParam(aMsg, aParam.width);
     WriteParam(aMsg, aParam.color);
@@ -147,7 +147,7 @@ struct ParamTraits<WRBorderSide>
   }
 
   static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WRBorderSide* aResult)
+  Read(const Message* aMsg, PickleIterator* aIter, WrBorderSide* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->width)
         && ReadParam(aMsg, aIter, &aResult->color)
@@ -196,10 +196,10 @@ struct ParamTraits<WrRect>
 };
 
 template<>
-struct ParamTraits<WRImageMask>
+struct ParamTraits<WrImageMask>
 {
   static void
-  Write(Message* aMsg, const WRImageMask& aParam)
+  Write(Message* aMsg, const WrImageMask& aParam)
   {
     WriteParam(aMsg, aParam.image);
     WriteParam(aMsg, aParam.rect);
@@ -207,7 +207,7 @@ struct ParamTraits<WRImageMask>
   }
 
   static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WRImageMask* aResult)
+  Read(const Message* aMsg, PickleIterator* aIter, WrImageMask* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->image)
         && ReadParam(aMsg, aIter, &aResult->rect)
@@ -216,11 +216,11 @@ struct ParamTraits<WRImageMask>
 };
 
 template<>
-struct ParamTraits<WRTextureFilter>
+struct ParamTraits<WrTextureFilter>
   : public ContiguousEnumSerializer<
-        WRTextureFilter,
-        WRTextureFilter::Linear,
-        WRTextureFilter::Sentinel>
+        WrTextureFilter,
+        WrTextureFilter::Linear,
+        WrTextureFilter::Sentinel>
 {
 };
 
