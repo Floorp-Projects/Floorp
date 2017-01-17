@@ -20,8 +20,7 @@
 extern "C" {
 #endif
 
-/* TODO(vigneshv): Rename this struct */
-struct EbmlGlobal {
+struct WebmOutputContext {
   int debug;
   FILE *stream;
   int64_t last_pts_ns;
@@ -38,18 +37,18 @@ typedef enum stereo_format {
   STEREO_FORMAT_RIGHT_LEFT = 11
 } stereo_format_t;
 
-void write_webm_file_header(struct EbmlGlobal *glob,
+void write_webm_file_header(struct WebmOutputContext *webm_ctx,
                             const vpx_codec_enc_cfg_t *cfg,
                             const struct vpx_rational *fps,
                             stereo_format_t stereo_fmt,
                             unsigned int fourcc,
                             const struct VpxRational *par);
 
-void write_webm_block(struct EbmlGlobal *glob,
+void write_webm_block(struct WebmOutputContext *webm_ctx,
                       const vpx_codec_enc_cfg_t *cfg,
                       const vpx_codec_cx_pkt_t *pkt);
 
-void write_webm_file_footer(struct EbmlGlobal *glob);
+void write_webm_file_footer(struct WebmOutputContext *webm_ctx);
 
 #ifdef __cplusplus
 }  // extern "C"

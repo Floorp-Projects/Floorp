@@ -10,14 +10,13 @@ const { ChromeDebuggerActor } = require("devtools/server/actors/script");
 const { WebConsoleActor } = require("devtools/server/actors/webconsole");
 const makeDebugger = require("devtools/server/actors/utils/make-debugger");
 const { ActorPool } = require("devtools/server/main");
-const Services = require("Services");
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { TabSources } = require("./utils/TabSources");
 
 loader.lazyRequireGetter(this, "WorkerActorList", "devtools/server/actors/worker-list", true);
 
-function ChildProcessActor(aConnection) {
-  this.conn = aConnection;
+function ChildProcessActor(connection) {
+  this.conn = connection;
   this._contextPool = new ActorPool(this.conn);
   this.conn.addActorPool(this._contextPool);
   this.threadActor = null;

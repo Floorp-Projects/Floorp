@@ -17,7 +17,7 @@ pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy-if(gtkWidget,1,2268)
 pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy-if(skiaContent,2,200) == svg-glyph-paintnone.svg svg-glyph-paintnone-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy-if(skiaContent,2,200) == svg-glyph-cachedopacity.svg svg-glyph-cachedopacity-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy-if(cocoaWidget,255,100) == svg-glyph-objectvalue.svg svg-glyph-objectvalue-ref.svg
-pref(gfx.font_rendering.opentype_svg.enabled,true)    fails == svg-glyph-mask.svg svg-glyph-mask-ref.svg # bug 872483
+pref(gfx.font_rendering.opentype_svg.enabled,true)    skip == svg-glyph-mask.svg svg-glyph-mask-ref.svg # bug 872483
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-paint-server.svg svg-glyph-paint-server-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-transform.svg svg-glyph-transform-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-extents.html svg-glyph-extents-ref.html

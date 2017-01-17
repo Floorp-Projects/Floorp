@@ -1581,7 +1581,7 @@ nsHttpChannel::ProcessSingleSecurityHeader(uint32_t aType,
         // Process header will now discard the headers itself if the channel
         // wasn't secure (whereas before it had to be checked manually)
         uint32_t failureResult;
-        rv = sss->ProcessHeader(aType, mURI, securityHeader.get(), aSSLStatus,
+        rv = sss->ProcessHeader(aType, mURI, securityHeader, aSSLStatus,
                                 aFlags, nullptr, nullptr, &failureResult);
         if (NS_FAILED(rv)) {
             nsAutoString consoleErrorCategory;
@@ -6618,15 +6618,6 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
 
     MOZ_ASSERT(NS_IsMainThread(),
                "OnStopRequest should only be called from the main thread");
-
-    if (!mAuthRetryPending) {
-        // We must not release the upload stream (that may contain POST data)
-        // before we finish any authentication loops happing during lifetime
-        // of this very channel.  Otherwise, we may loose the upload data when
-        // authenticating to e.g. an NTLM authenticated site.
-        LOG(("  dropping upload stream"));
-        mUploadStream = nullptr;
-    }
 
     if (NS_FAILED(status)) {
         ProcessSecurityReport(status);

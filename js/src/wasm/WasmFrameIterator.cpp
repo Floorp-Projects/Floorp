@@ -59,18 +59,20 @@ FrameIterator::FrameIterator()
     codeRange_(nullptr),
     fp_(nullptr),
     pc_(nullptr),
+    unwind_(Unwind::False),
     missingFrameMessage_(false)
 {
     MOZ_ASSERT(done());
 }
 
-FrameIterator::FrameIterator(const WasmActivation& activation)
-  : activation_(&activation),
+FrameIterator::FrameIterator(WasmActivation* activation, Unwind unwind)
+  : activation_(activation),
     code_(nullptr),
     callsite_(nullptr),
     codeRange_(nullptr),
-    fp_(activation.fp()),
+    fp_(activation->fp()),
     pc_(nullptr),
+    unwind_(unwind),
     missingFrameMessage_(false)
 {
     if (fp_) {
@@ -78,7 +80,7 @@ FrameIterator::FrameIterator(const WasmActivation& activation)
         return;
     }
 
-    void* pc = activation.resumePC();
+    void* pc = activation_->resumePC();
     if (!pc) {
         MOZ_ASSERT(done());
         return;
@@ -156,6 +158,9 @@ FrameIterator::settle()
       case CodeRange::FarJumpIsland:
         MOZ_CRASH("Should not encounter an exit during iteration");
     }
+
+    if (unwind_ == Unwind::True)
+        activation_->unwindFP(fp_);
 }
 
 const char*
@@ -229,7 +234,9 @@ FrameIterator::debugEnabled() const
 {
     MOZ_ASSERT(!done() && code_);
     MOZ_ASSERT_IF(!missingFrameMessage_, codeRange_->kind() == CodeRange::Function);
-    return code_->metadata().debugEnabled;
+    // Only non-imported functions can have debug frames.
+    return code_->metadata().debugEnabled &&
+           codeRange_->funcIndex() >= code_->metadata().funcImports.length();
 }
 
 DebugFrame*

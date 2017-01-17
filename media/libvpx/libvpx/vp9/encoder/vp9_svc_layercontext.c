@@ -10,25 +10,61 @@
 
 #include <math.h>
 
+#include "vp9/encoder/vp9_aq_cyclicrefresh.h"
 #include "vp9/encoder/vp9_encoder.h"
 #include "vp9/encoder/vp9_svc_layercontext.h"
 #include "vp9/encoder/vp9_extend.h"
+#include "vpx_dsp/vpx_dsp_common.h"
 
-#define SMALL_FRAME_FB_IDX 7
-#define SMALL_FRAME_WIDTH  16
+#define SMALL_FRAME_WIDTH  32
 #define SMALL_FRAME_HEIGHT 16
 
 void vp9_init_layer_context(VP9_COMP *const cpi) {
   SVC *const svc = &cpi->svc;
   const VP9EncoderConfig *const oxcf = &cpi->oxcf;
-  int sl, tl;
+  int mi_rows = cpi->common.mi_rows;
+  int mi_cols = cpi->common.mi_cols;
+  int sl, tl, i;
   int alt_ref_idx = svc->number_spatial_layers;
 
   svc->spatial_layer_id = 0;
   svc->temporal_layer_id = 0;
+  svc->first_spatial_layer_to_encode = 0;
+  svc->rc_drop_superframe = 0;
+  svc->force_zero_mode_spatial_ref = 0;
+  svc->use_base_mv = 0;
+  svc->current_superframe = 0;
+  for (i = 0; i < REF_FRAMES; ++i)
+    svc->ref_frame_index[i] = -1;
+  for (sl = 0; sl < oxcf->ss_number_layers; ++sl) {
+    cpi->svc.ext_frame_flags[sl] = 0;
+    cpi->svc.ext_lst_fb_idx[sl] = 0;
+    cpi->svc.ext_gld_fb_idx[sl] = 1;
+    cpi->svc.ext_alt_fb_idx[sl] = 2;
+  }
+
+  // For 1 pass cbr: allocate scaled_frame that may be used as an intermediate
+  // buffer for a 2 stage down-sampling: two stages of 1:2 down-sampling for a
+  // target of 1/4x1/4.
+  if (cpi->oxcf.pass == 0 && cpi->oxcf.rc_mode == VPX_CBR) {
+    if (vpx_realloc_frame_buffer(&cpi->svc.scaled_temp,
+                                 cpi->common.width >> 1,
+                                 cpi->common.height >> 1,
+                                 cpi->common.subsampling_x,
+                                 cpi->common.subsampling_y,
+#if CONFIG_VP9_HIGHBITDEPTH
+                                 cpi->common.use_highbitdepth,
+#endif
+                                 VP9_ENC_BORDER_IN_PIXELS,
+                                 cpi->common.byte_alignment,
+                                 NULL, NULL, NULL))
+      vpx_internal_error(&cpi->common.error, VPX_CODEC_MEM_ERROR,
+                         "Failed to allocate scaled_frame for svc ");
+  }
+
 
   if (cpi->oxcf.error_resilient_mode == 0 && cpi->oxcf.pass == 2) {
-    if (vp9_realloc_frame_buffer(&cpi->svc.empty_frame.img,
+    if (vpx_realloc_frame_buffer(&cpi->svc.empty_frame.img,
                                  SMALL_FRAME_WIDTH, SMALL_FRAME_HEIGHT,
                                  cpi->common.subsampling_x,
                                  cpi->common.subsampling_y,
@@ -93,6 +129,31 @@ void vp9_init_layer_context(VP9_COMP *const cpi) {
       lrc->buffer_level = oxcf->starting_buffer_level_ms *
                               lc->target_bandwidth / 1000;
       lrc->bits_off_target = lrc->buffer_level;
+
+      // Initialize the cyclic refresh parameters. If spatial layers are used
+      // (i.e., ss_number_layers > 1), these need to be updated per spatial
+      // layer.
+      // Cyclic refresh is only applied on base temporal layer.
+      if (oxcf->ss_number_layers > 1 &&
+          tl == 0) {
+        size_t last_coded_q_map_size;
+        size_t consec_zero_mv_size;
+        VP9_COMMON *const cm = &cpi->common;
+        lc->sb_index = 0;
+        CHECK_MEM_ERROR(cm, lc->map,
+                        vpx_malloc(mi_rows * mi_cols * sizeof(*lc->map)));
+        memset(lc->map, 0, mi_rows * mi_cols);
+        last_coded_q_map_size = mi_rows * mi_cols *
+                                sizeof(*lc->last_coded_q_map);
+        CHECK_MEM_ERROR(cm, lc->last_coded_q_map,
+                        vpx_malloc(last_coded_q_map_size));
+        assert(MAXQ <= 255);
+        memset(lc->last_coded_q_map, MAXQ, last_coded_q_map_size);
+        consec_zero_mv_size = mi_rows * mi_cols * sizeof(*lc->consec_zero_mv);
+        CHECK_MEM_ERROR(cm, lc->consec_zero_mv,
+                        vpx_malloc(consec_zero_mv_size));
+        memset(lc->consec_zero_mv, 0, consec_zero_mv_size);
+       }
     }
   }
 
@@ -113,8 +174,6 @@ void vp9_update_layer_context_change_config(VP9_COMP *const cpi,
 
   if (svc->temporal_layering_mode != VP9E_TEMPORAL_LAYERING_MODE_NOLAYERING) {
     for (sl = 0; sl < oxcf->ss_number_layers; ++sl) {
-      spatial_layer_target = 0;
-
       for (tl = 0; tl < oxcf->ts_number_layers; ++tl) {
         layer = LAYER_IDS_TO_IDX(sl, tl, oxcf->ts_number_layers);
         svc->layer_context[layer].target_bandwidth =
@@ -141,8 +200,8 @@ void vp9_update_layer_context_change_config(VP9_COMP *const cpi,
         lrc->maximum_buffer_size =
             (int64_t)(rc->maximum_buffer_size * bitrate_alloc);
         lrc->bits_off_target =
-            MIN(lrc->bits_off_target, lrc->maximum_buffer_size);
-        lrc->buffer_level = MIN(lrc->buffer_level, lrc->maximum_buffer_size);
+            VPXMIN(lrc->bits_off_target, lrc->maximum_buffer_size);
+        lrc->buffer_level = VPXMIN(lrc->buffer_level, lrc->maximum_buffer_size);
         lc->framerate = cpi->framerate / oxcf->ts_rate_decimator[tl];
         lrc->avg_frame_bandwidth = (int)(lc->target_bandwidth / lc->framerate);
         lrc->max_frame_bandwidth = rc->max_frame_bandwidth;
@@ -152,7 +211,6 @@ void vp9_update_layer_context_change_config(VP9_COMP *const cpi,
     }
   } else {
     int layer_end;
-    float bitrate_alloc = 1.0;
 
     if (svc->number_temporal_layers > 1 && cpi->oxcf.rc_mode == VPX_CBR) {
       layer_end = svc->number_temporal_layers;
@@ -174,9 +232,9 @@ void vp9_update_layer_context_change_config(VP9_COMP *const cpi,
           (int64_t)(rc->optimal_buffer_level * bitrate_alloc);
       lrc->maximum_buffer_size =
           (int64_t)(rc->maximum_buffer_size * bitrate_alloc);
-      lrc->bits_off_target = MIN(lrc->bits_off_target,
-                                 lrc->maximum_buffer_size);
-      lrc->buffer_level = MIN(lrc->buffer_level, lrc->maximum_buffer_size);
+      lrc->bits_off_target = VPXMIN(lrc->bits_off_target,
+                                    lrc->maximum_buffer_size);
+      lrc->buffer_level = VPXMIN(lrc->buffer_level, lrc->maximum_buffer_size);
       // Update framerate-related quantities.
       if (svc->number_temporal_layers > 1 && cpi->oxcf.rc_mode == VPX_CBR) {
         lc->framerate = cpi->framerate / oxcf->ts_rate_decimator[layer];
@@ -255,9 +313,28 @@ void vp9_restore_layer_context(VP9_COMP *const cpi) {
   cpi->alt_ref_source = lc->alt_ref_source;
   // Reset the frames_since_key and frames_to_key counters to their values
   // before the layer restore. Keep these defined for the stream (not layer).
-  if (cpi->svc.number_temporal_layers > 1) {
+  if (cpi->svc.number_temporal_layers > 1 ||
+      (cpi->svc.number_spatial_layers > 1 && !is_two_pass_svc(cpi))) {
     cpi->rc.frames_since_key = old_frame_since_key;
     cpi->rc.frames_to_key = old_frame_to_key;
+  }
+
+  // For spatial-svc, allow cyclic-refresh to be applied on the spatial layers,
+  // for the base temporal layer.
+  if (cpi->oxcf.aq_mode == CYCLIC_REFRESH_AQ &&
+      cpi->svc.number_spatial_layers > 1 &&
+      cpi->svc.temporal_layer_id == 0) {
+    CYCLIC_REFRESH *const cr = cpi->cyclic_refresh;
+    signed char *temp = cr->map;
+    uint8_t *temp2 = cr->last_coded_q_map;
+    uint8_t *temp3 = cpi->consec_zero_mv;
+    cr->map = lc->map;
+    lc->map = temp;
+    cr->last_coded_q_map = lc->last_coded_q_map;
+    lc->last_coded_q_map = temp2;
+    cpi->consec_zero_mv = lc->consec_zero_mv;
+    lc->consec_zero_mv = temp3;
+    cr->sb_index = lc->sb_index;
   }
 }
 
@@ -269,6 +346,24 @@ void vp9_save_layer_context(VP9_COMP *const cpi) {
   lc->twopass = cpi->twopass;
   lc->target_bandwidth = (int)oxcf->target_bandwidth;
   lc->alt_ref_source = cpi->alt_ref_source;
+
+  // For spatial-svc, allow cyclic-refresh to be applied on the spatial layers,
+  // for the base temporal layer.
+  if (cpi->oxcf.aq_mode == CYCLIC_REFRESH_AQ &&
+      cpi->svc.number_spatial_layers > 1 &&
+      cpi->svc.temporal_layer_id == 0) {
+    CYCLIC_REFRESH *const cr = cpi->cyclic_refresh;
+    signed char *temp = lc->map;
+    uint8_t *temp2 = lc->last_coded_q_map;
+    uint8_t *temp3 = lc->consec_zero_mv;
+    lc->map = cr->map;
+    cr->map = temp;
+    lc->last_coded_q_map = cr->last_coded_q_map;
+    cr->last_coded_q_map = temp2;
+    lc->consec_zero_mv = cpi->consec_zero_mv;
+    cpi->consec_zero_mv = temp3;
+    lc->sb_index = cr->sb_index;
+  }
 }
 
 void vp9_init_second_pass_spatial_svc(VP9_COMP *cpi) {
@@ -293,6 +388,8 @@ void vp9_inc_frame_in_layer(VP9_COMP *const cpi) {
                               cpi->svc.number_temporal_layers];
   ++lc->current_video_frame_in_layer;
   ++lc->frames_from_key_frame;
+  if (cpi->svc.spatial_layer_id == cpi->svc.number_spatial_layers - 1)
+    ++cpi->svc.current_superframe;
 }
 
 int vp9_is_upper_layer_key_frame(const VP9_COMP *const cpi) {
@@ -344,7 +441,9 @@ static void set_flags_and_fb_idx_for_temporal_mode3(VP9_COMP *const cpi) {
       cpi->ref_frame_flags = VP9_LAST_FLAG;
     } else if (cpi->svc.layer_context[temporal_id].is_key_frame) {
       // base layer is a key frame.
-      cpi->ref_frame_flags = VP9_GOLD_FLAG;
+      cpi->ref_frame_flags = VP9_LAST_FLAG;
+      cpi->ext_refresh_last_frame = 0;
+      cpi->ext_refresh_golden_frame = 1;
     } else {
       cpi->ref_frame_flags = VP9_LAST_FLAG | VP9_GOLD_FLAG;
     }
@@ -359,40 +458,52 @@ static void set_flags_and_fb_idx_for_temporal_mode3(VP9_COMP *const cpi) {
   } else {
     if (frame_num_within_temporal_struct == 1) {
       // the first tl2 picture
-      if (!spatial_id) {
+      if (spatial_id == cpi->svc.number_spatial_layers - 1) {  // top layer
+        cpi->ext_refresh_frame_flags_pending = 1;
+        if (!spatial_id)
+          cpi->ref_frame_flags = VP9_LAST_FLAG;
+        else
+          cpi->ref_frame_flags = VP9_LAST_FLAG | VP9_GOLD_FLAG;
+      } else if (!spatial_id) {
         cpi->ext_refresh_frame_flags_pending = 1;
         cpi->ext_refresh_alt_ref_frame = 1;
         cpi->ref_frame_flags = VP9_LAST_FLAG;
       } else if (spatial_id < cpi->svc.number_spatial_layers - 1) {
         cpi->ext_refresh_frame_flags_pending = 1;
         cpi->ext_refresh_alt_ref_frame = 1;
-        cpi->ref_frame_flags = VP9_LAST_FLAG | VP9_GOLD_FLAG;
-      } else {  // Top layer
-        cpi->ext_refresh_frame_flags_pending = 0;
         cpi->ref_frame_flags = VP9_LAST_FLAG | VP9_GOLD_FLAG;
       }
     } else {
       //  The second tl2 picture
-      if (!spatial_id) {
+      if (spatial_id == cpi->svc.number_spatial_layers - 1) {  // top layer
+        cpi->ext_refresh_frame_flags_pending = 1;
+        if (!spatial_id)
+        cpi->ref_frame_flags = VP9_LAST_FLAG;
+        else
+          cpi->ref_frame_flags = VP9_LAST_FLAG | VP9_GOLD_FLAG;
+      } else if (!spatial_id) {
         cpi->ext_refresh_frame_flags_pending = 1;
         cpi->ref_frame_flags = VP9_LAST_FLAG;
-        cpi->ext_refresh_last_frame = 1;
-      } else if (spatial_id < cpi->svc.number_spatial_layers - 1) {
+        cpi->ext_refresh_alt_ref_frame = 1;
+      } else {  // top layer
         cpi->ext_refresh_frame_flags_pending = 1;
         cpi->ref_frame_flags = VP9_LAST_FLAG | VP9_GOLD_FLAG;
-        cpi->ext_refresh_last_frame = 1;
-      } else {  // top layer
-        cpi->ext_refresh_frame_flags_pending = 0;
-        cpi->ref_frame_flags = VP9_LAST_FLAG | VP9_GOLD_FLAG;
+        cpi->ext_refresh_alt_ref_frame = 1;
       }
     }
   }
   if (temporal_id == 0) {
     cpi->lst_fb_idx = spatial_id;
-    if (spatial_id)
+    if (spatial_id) {
+      if (cpi->svc.layer_context[temporal_id].is_key_frame) {
+        cpi->lst_fb_idx = spatial_id - 1;
+        cpi->gld_fb_idx = spatial_id;
+      } else {
       cpi->gld_fb_idx = spatial_id - 1;
-    else
+      }
+    } else {
       cpi->gld_fb_idx = 0;
+    }
     cpi->alt_fb_idx = 0;
   } else if (temporal_id == 1) {
     cpi->lst_fb_idx = spatial_id;
@@ -405,7 +516,7 @@ static void set_flags_and_fb_idx_for_temporal_mode3(VP9_COMP *const cpi) {
   } else {
     cpi->lst_fb_idx = cpi->svc.number_spatial_layers + spatial_id;
     cpi->gld_fb_idx = cpi->svc.number_spatial_layers + spatial_id - 1;
-    cpi->alt_fb_idx = 0;
+    cpi->alt_fb_idx = cpi->svc.number_spatial_layers + spatial_id;
   }
 }
 
@@ -427,7 +538,9 @@ static void set_flags_and_fb_idx_for_temporal_mode2(VP9_COMP *const cpi) {
       cpi->ref_frame_flags = VP9_LAST_FLAG;
     } else if (cpi->svc.layer_context[temporal_id].is_key_frame) {
       // base layer is a key frame.
-      cpi->ref_frame_flags = VP9_GOLD_FLAG;
+      cpi->ref_frame_flags = VP9_LAST_FLAG;
+      cpi->ext_refresh_last_frame = 0;
+      cpi->ext_refresh_golden_frame = 1;
     } else {
       cpi->ref_frame_flags = VP9_LAST_FLAG | VP9_GOLD_FLAG;
     }
@@ -443,10 +556,16 @@ static void set_flags_and_fb_idx_for_temporal_mode2(VP9_COMP *const cpi) {
 
   if (temporal_id == 0) {
     cpi->lst_fb_idx = spatial_id;
-    if (spatial_id)
+    if (spatial_id) {
+      if (cpi->svc.layer_context[temporal_id].is_key_frame) {
+        cpi->lst_fb_idx = spatial_id - 1;
+        cpi->gld_fb_idx = spatial_id;
+      } else {
       cpi->gld_fb_idx = spatial_id - 1;
-    else
+      }
+    } else {
       cpi->gld_fb_idx = 0;
+    }
     cpi->alt_fb_idx = 0;
   } else if (temporal_id == 1) {
     cpi->lst_fb_idx = spatial_id;
@@ -468,20 +587,31 @@ static void set_flags_and_fb_idx_for_temporal_mode_noLayering(
   if (!spatial_id) {
     cpi->ref_frame_flags = VP9_LAST_FLAG;
   } else if (cpi->svc.layer_context[0].is_key_frame) {
-    cpi->ref_frame_flags = VP9_GOLD_FLAG;
+    cpi->ref_frame_flags = VP9_LAST_FLAG;
+    cpi->ext_refresh_last_frame = 0;
+    cpi->ext_refresh_golden_frame = 1;
   } else {
     cpi->ref_frame_flags = VP9_LAST_FLAG | VP9_GOLD_FLAG;
   }
   cpi->lst_fb_idx = spatial_id;
-  if (spatial_id)
+  if (spatial_id) {
+    if (cpi->svc.layer_context[0].is_key_frame) {
+      cpi->lst_fb_idx = spatial_id - 1;
+      cpi->gld_fb_idx = spatial_id;
+    } else {
     cpi->gld_fb_idx = spatial_id - 1;
-  else
+    }
+  } else {
     cpi->gld_fb_idx = 0;
+  }
 }
 
 int vp9_one_pass_cbr_svc_start_layer(VP9_COMP *const cpi) {
   int width = 0, height = 0;
   LAYER_CONTEXT *lc = NULL;
+  if (cpi->svc.number_spatial_layers > 1)
+    cpi->svc.use_base_mv = 1;
+  cpi->svc.force_zero_mode_spatial_ref = 1;
 
   if (cpi->svc.temporal_layering_mode == VP9E_TEMPORAL_LAYERING_MODE_0212) {
     set_flags_and_fb_idx_for_temporal_mode3(cpi);
@@ -493,18 +623,39 @@ int vp9_one_pass_cbr_svc_start_layer(VP9_COMP *const cpi) {
     set_flags_and_fb_idx_for_temporal_mode2(cpi);
   } else if (cpi->svc.temporal_layering_mode ==
       VP9E_TEMPORAL_LAYERING_MODE_BYPASS) {
-    // VP9E_TEMPORAL_LAYERING_MODE_BYPASS :
-    // if the code goes here, it means the encoder will be relying on the
-    // flags from outside for layering.
-    // However, since when spatial+temporal layering is used, the buffer indices
-    // cannot be derived automatically, the bypass mode will only work when the
-    // number of spatial layers equals 1.
-    assert(cpi->svc.number_spatial_layers == 1);
+    // In the BYPASS/flexible mode, the encoder is relying on the application
+    // to specify, for each spatial layer, the flags and buffer indices for the
+    // layering.
+    // Note that the check (cpi->ext_refresh_frame_flags_pending == 0) is
+    // needed to support the case where the frame flags may be passed in via
+    // vpx_codec_encode(), which can be used for the temporal-only svc case.
+    // TODO(marpan): Consider adding an enc_config parameter to better handle
+    // this case.
+    if (cpi->ext_refresh_frame_flags_pending == 0) {
+      int sl;
+      cpi->svc.spatial_layer_id = cpi->svc.spatial_layer_to_encode;
+      sl = cpi->svc.spatial_layer_id;
+      vp9_apply_encoding_flags(cpi, cpi->svc.ext_frame_flags[sl]);
+      cpi->lst_fb_idx = cpi->svc.ext_lst_fb_idx[sl];
+      cpi->gld_fb_idx = cpi->svc.ext_gld_fb_idx[sl];
+      cpi->alt_fb_idx = cpi->svc.ext_alt_fb_idx[sl];
+    }
   }
+
+  if (cpi->svc.spatial_layer_id == cpi->svc.first_spatial_layer_to_encode)
+    cpi->svc.rc_drop_superframe = 0;
 
   lc = &cpi->svc.layer_context[cpi->svc.spatial_layer_id *
                                cpi->svc.number_temporal_layers +
                                cpi->svc.temporal_layer_id];
+
+  // Setting the worst/best_quality via the encoder control: SET_SVC_PARAMETERS,
+  // only for non-BYPASS mode for now.
+  if (cpi->svc.temporal_layering_mode != VP9E_TEMPORAL_LAYERING_MODE_BYPASS) {
+    RATE_CONTROL *const lrc = &lc->rc;
+    lrc->worst_quality = vp9_quantizer_to_qindex(lc->max_q);
+    lrc->best_quality =  vp9_quantizer_to_qindex(lc->min_q);
+  }
 
   get_layer_resolution(cpi->oxcf.width, cpi->oxcf.height,
                        lc->scaling_factor_num, lc->scaling_factor_den,
@@ -517,6 +668,8 @@ int vp9_one_pass_cbr_svc_start_layer(VP9_COMP *const cpi) {
 }
 
 #if CONFIG_SPATIAL_SVC
+#define SMALL_FRAME_FB_IDX 7
+
 int vp9_svc_start_frame(VP9_COMP *const cpi) {
   int width = 0, height = 0;
   LAYER_CONTEXT *lc;
@@ -627,7 +780,8 @@ int vp9_svc_start_frame(VP9_COMP *const cpi) {
   return 0;
 }
 
-#endif
+#undef SMALL_FRAME_FB_IDX
+#endif  // CONFIG_SPATIAL_SVC
 
 struct lookahead_entry *vp9_svc_lookahead_pop(VP9_COMP *const cpi,
                                               struct lookahead_ctx *ctx,
@@ -643,4 +797,46 @@ struct lookahead_entry *vp9_svc_lookahead_pop(VP9_COMP *const cpi,
     }
   }
   return buf;
+}
+
+void vp9_free_svc_cyclic_refresh(VP9_COMP *const cpi) {
+  int sl, tl;
+  SVC *const svc = &cpi->svc;
+  const VP9EncoderConfig *const oxcf = &cpi->oxcf;
+  for (sl = 0; sl < oxcf->ss_number_layers; ++sl) {
+    for (tl = 0; tl < oxcf->ts_number_layers; ++tl) {
+      int layer = LAYER_IDS_TO_IDX(sl, tl, oxcf->ts_number_layers);
+      LAYER_CONTEXT *const lc = &svc->layer_context[layer];
+        if (lc->map)
+          vpx_free(lc->map);
+        if (lc->last_coded_q_map)
+          vpx_free(lc->last_coded_q_map);
+        if (lc->consec_zero_mv)
+          vpx_free(lc->consec_zero_mv);
+    }
+  }
+}
+
+// Reset on key frame: reset counters, references and buffer updates.
+void vp9_svc_reset_key_frame(VP9_COMP *const cpi) {
+  int sl, tl;
+  SVC *const svc = &cpi->svc;
+  LAYER_CONTEXT *lc = NULL;
+  for (sl = 0; sl < svc->number_spatial_layers; ++sl) {
+    for (tl = 0; tl < svc->number_temporal_layers; ++tl) {
+      lc = &cpi->svc.layer_context[sl * svc->number_temporal_layers + tl];
+      lc->current_video_frame_in_layer = 0;
+      lc->frames_from_key_frame = 0;
+    }
+  }
+  if (svc->temporal_layering_mode == VP9E_TEMPORAL_LAYERING_MODE_0212) {
+    set_flags_and_fb_idx_for_temporal_mode3(cpi);
+  } else if (svc->temporal_layering_mode ==
+             VP9E_TEMPORAL_LAYERING_MODE_NOLAYERING) {
+     set_flags_and_fb_idx_for_temporal_mode_noLayering(cpi);
+  } else if (svc->temporal_layering_mode == VP9E_TEMPORAL_LAYERING_MODE_0101) {
+     set_flags_and_fb_idx_for_temporal_mode2(cpi);
+  }
+  vp9_update_temporal_layer_framerate(cpi);
+  vp9_restore_layer_context(cpi);
 }

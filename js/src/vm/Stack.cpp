@@ -545,7 +545,7 @@ FrameIter::settleOnActivation()
         }
 
         if (activation->isWasm()) {
-            data_.wasmFrames_ = wasm::FrameIterator(*data_.activations_->asWasm());
+            data_.wasmFrames_ = wasm::FrameIterator(data_.activations_->asWasm());
 
             if (data_.wasmFrames_.done()) {
                 ++data_.activations_;

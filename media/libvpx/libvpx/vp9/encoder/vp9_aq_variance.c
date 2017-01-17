@@ -11,6 +11,7 @@
 #include <math.h>
 
 #include "vpx_ports/mem.h"
+#include "vpx_ports/system_state.h"
 
 #include "vp9/encoder/vp9_aq_variance.h"
 
@@ -19,7 +20,6 @@
 #include "vp9/encoder/vp9_ratectrl.h"
 #include "vp9/encoder/vp9_rd.h"
 #include "vp9/encoder/vp9_segmentation.h"
-#include "vp9/common/vp9_systemdependent.h"
 
 #define ENERGY_MIN (-4)
 #define ENERGY_MAX (1)
@@ -48,7 +48,7 @@ void vp9_vaq_frame_setup(VP9_COMP *cpi) {
   struct segmentation *seg = &cm->seg;
   int i;
 
-  if (cm->frame_type == KEY_FRAME ||
+  if (frame_is_intra_only(cm) || cm->error_resilient_mode ||
       cpi->refresh_alt_ref_frame ||
       (cpi->refresh_golden_frame && !cpi->rc.is_src_frame_alt_ref)) {
     vp9_enable_segmentation(seg);
@@ -56,7 +56,7 @@ void vp9_vaq_frame_setup(VP9_COMP *cpi) {
 
     seg->abs_delta = SEGMENT_DELTADATA;
 
-    vp9_clear_system_state();
+    vpx_clear_system_state();
 
     for (i = 0; i < MAX_SEGMENTS; ++i) {
       int qindex_delta =
@@ -167,7 +167,7 @@ static unsigned int block_variance(VP9_COMP *cpi, MACROBLOCK *x,
                 vp9_64_zeros, 0, bw, bh, &sse, &avg);
 #endif  // CONFIG_VP9_HIGHBITDEPTH
     var = sse - (((int64_t)avg * avg) / (bw * bh));
-    return (256 * var) / (bw * bh);
+    return (unsigned int)(((uint64_t)256 * var) / (bw * bh));
   } else {
 #if CONFIG_VP9_HIGHBITDEPTH
     if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
@@ -185,13 +185,13 @@ static unsigned int block_variance(VP9_COMP *cpi, MACROBLOCK *x,
                              x->plane[0].src.stride,
                              vp9_64_zeros, 0, &sse);
 #endif  // CONFIG_VP9_HIGHBITDEPTH
-    return (256 * var) >> num_pels_log2_lookup[bs];
+    return (unsigned int)(((uint64_t)256 * var) >> num_pels_log2_lookup[bs]);
   }
 }
 
 double vp9_log_block_var(VP9_COMP *cpi, MACROBLOCK *x, BLOCK_SIZE bs) {
   unsigned int var = block_variance(cpi, x, bs);
-  vp9_clear_system_state();
+  vpx_clear_system_state();
   return log(var + 1.0);
 }
 
@@ -199,7 +199,7 @@ double vp9_log_block_var(VP9_COMP *cpi, MACROBLOCK *x, BLOCK_SIZE bs) {
 int vp9_block_energy(VP9_COMP *cpi, MACROBLOCK *x, BLOCK_SIZE bs) {
   double energy;
   double energy_midpoint;
-  vp9_clear_system_state();
+  vpx_clear_system_state();
   energy_midpoint =
     (cpi->oxcf.pass == 2) ? cpi->twopass.mb_av_energy : DEFAULT_E_MIDPOINT;
   energy = vp9_log_block_var(cpi, x, bs) - energy_midpoint;

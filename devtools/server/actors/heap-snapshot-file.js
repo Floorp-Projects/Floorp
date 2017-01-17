@@ -5,7 +5,6 @@
 "use strict";
 
 const protocol = require("devtools/shared/protocol");
-const { method, Arg } = protocol;
 const Services = require("Services");
 const { Task } = require("devtools/shared/task");
 

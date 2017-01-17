@@ -110,4 +110,9 @@ INSTANTIATE_TEST_CASE_P(SSE2, VP8PostProcessingFilterTest,
     ::testing::Values(vp8_post_proc_down_and_across_mb_row_sse2));
 #endif
 
+#if HAVE_MSA
+INSTANTIATE_TEST_CASE_P(MSA, VP8PostProcessingFilterTest,
+    ::testing::Values(vp8_post_proc_down_and_across_mb_row_msa));
+#endif
+
 }  // namespace

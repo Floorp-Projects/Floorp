@@ -105,11 +105,17 @@ Structure:
       ... other processes ...
       "parent": {
         scalars: {...},
+        keyedScalars: {...},
       },
       "content": {
+        scalars: {...},
+        keyedScalars: {...},
         histograms: {...},
         keyedHistograms: {...},
       },
+      "gpu": {
+        ...
+      }
     }
 
 histograms and keyedHistograms
@@ -118,9 +124,9 @@ This section contains histograms and keyed histograms accumulated on content pro
 
 This format was adopted in Firefox 51 via bug 1218576.
 
-scalars
-~~~~~~~
-This section contains the :doc:`../collection/scalars` that are valid for the current platform. Scalars are not created nor submitted if no data was added to them, and are only reported with subsession pings. Scalar data is only currently reported for the main process. Their type and format is described by the ``Scalars.yaml`` file. Its most recent version is available `here <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Scalars.yaml>`_. The ``info.revision`` field indicates the revision of the file that describes the reported scalars.
+scalars and keyedScalars
+~~~~~~~~~~~~~~~~~~~~~~~~
+This section contains the :doc:`../collection/scalars` that are valid for the current platform. Scalars are only submitted if if data was added to them, and are only reported with subsession pings. The record scalars are described in the `Scalars.yaml <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Scalars.yaml>`_ file. The ``info.revision`` field indicates the revision of the file that describes the reported scalars.
 
 childPayloads
 -------------

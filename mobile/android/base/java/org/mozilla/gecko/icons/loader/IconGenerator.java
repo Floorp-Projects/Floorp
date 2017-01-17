@@ -21,6 +21,7 @@ import android.util.TypedValue;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.icons.IconRequest;
 import org.mozilla.gecko.icons.IconResponse;
+import org.mozilla.gecko.util.StringUtils;
 
 /**
  * This loader will generate an icon in case no icon could be loaded. In order to do so this needs
@@ -41,14 +42,6 @@ public class IconGenerator implements IconLoader {
             0xFF1f386e,
             0xFF7a2f7a,
             0xFFea385e,
-    };
-
-    // List of common prefixes of host names. Those prefixes will be striped before a prepresentative
-    // character for an URL is determined.
-    private static final String[] COMMON_PREFIXES = {
-            "www.",
-            "m.",
-            "mobile.",
     };
 
     private static final int TEXT_SIZE_DP = 12;
@@ -156,12 +149,8 @@ public class IconGenerator implements IconLoader {
             return "?";
         }
 
-        // Strip common prefixes that we do not want to use to determine the representative character
-        for (String prefix : COMMON_PREFIXES) {
-            if (snippet.startsWith(prefix)) {
-                snippet = snippet.substring(prefix.length());
-            }
-        }
+        // Strip common prefixes that we do not want to use to determine the representative characterS
+        snippet = StringUtils.stripCommonSubdomains(snippet);
 
         return snippet;
     }

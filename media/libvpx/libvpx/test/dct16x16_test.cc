@@ -13,12 +13,13 @@
 #include <string.h>
 
 #include "third_party/googletest/src/include/gtest/gtest.h"
+
+#include "./vp9_rtcd.h"
+#include "./vpx_dsp_rtcd.h"
 #include "test/acm_random.h"
 #include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 #include "test/util.h"
-
-#include "./vp9_rtcd.h"
 #include "vp9/common/vp9_entropy.h"
 #include "vp9/common/vp9_scan.h"
 #include "vpx/vpx_codec.h"
@@ -39,30 +40,6 @@ static int round(double x) {
 #endif
 
 const int kNumCoeffs = 256;
-const double PI = 3.1415926535898;
-void reference2_16x16_idct_2d(double *input, double *output) {
-  double x;
-  for (int l = 0; l < 16; ++l) {
-    for (int k = 0; k < 16; ++k) {
-      double s = 0;
-      for (int i = 0; i < 16; ++i) {
-        for (int j = 0; j < 16; ++j) {
-          x = cos(PI * j * (l + 0.5) / 16.0) *
-              cos(PI * i * (k + 0.5) / 16.0) *
-              input[i * 16 + j] / 256;
-          if (i != 0)
-            x *= sqrt(2.0);
-          if (j != 0)
-            x *= sqrt(2.0);
-          s += x;
-        }
-      }
-      output[k*16+l] = s;
-    }
-  }
-}
-
-
 const double C1 = 0.995184726672197;
 const double C2 = 0.98078528040323;
 const double C3 = 0.956940335732209;
@@ -271,12 +248,12 @@ typedef std::tr1::tuple<IdctFunc, IdctFunc, int, vpx_bit_depth_t>
 
 void fdct16x16_ref(const int16_t *in, tran_low_t *out, int stride,
                    int /*tx_type*/) {
-  vp9_fdct16x16_c(in, out, stride);
+  vpx_fdct16x16_c(in, out, stride);
 }
 
 void idct16x16_ref(const tran_low_t *in, uint8_t *dest, int stride,
                    int /*tx_type*/) {
-  vp9_idct16x16_256_add_c(in, dest, stride);
+  vpx_idct16x16_256_add_c(in, dest, stride);
 }
 
 void fht16x16_ref(const int16_t *in, tran_low_t *out, int stride,
@@ -291,20 +268,20 @@ void iht16x16_ref(const tran_low_t *in, uint8_t *dest, int stride,
 
 #if CONFIG_VP9_HIGHBITDEPTH
 void idct16x16_10(const tran_low_t *in, uint8_t *out, int stride) {
-  vp9_highbd_idct16x16_256_add_c(in, out, stride, 10);
+  vpx_highbd_idct16x16_256_add_c(in, out, stride, 10);
 }
 
 void idct16x16_12(const tran_low_t *in, uint8_t *out, int stride) {
-  vp9_highbd_idct16x16_256_add_c(in, out, stride, 12);
+  vpx_highbd_idct16x16_256_add_c(in, out, stride, 12);
 }
 
 void idct16x16_10_ref(const tran_low_t *in, uint8_t *out, int stride,
-                      int tx_type) {
+                      int /*tx_type*/) {
   idct16x16_10(in, out, stride);
 }
 
 void idct16x16_12_ref(const tran_low_t *in, uint8_t *out, int stride,
-                      int tx_type) {
+                      int /*tx_type*/) {
   idct16x16_12(in, out, stride);
 }
 
@@ -316,29 +293,29 @@ void iht16x16_12(const tran_low_t *in, uint8_t *out, int stride, int tx_type) {
   vp9_highbd_iht16x16_256_add_c(in, out, stride, tx_type, 12);
 }
 
+#if HAVE_SSE2
 void idct16x16_10_add_10_c(const tran_low_t *in, uint8_t *out, int stride) {
-  vp9_highbd_idct16x16_10_add_c(in, out, stride, 10);
+  vpx_highbd_idct16x16_10_add_c(in, out, stride, 10);
 }
 
 void idct16x16_10_add_12_c(const tran_low_t *in, uint8_t *out, int stride) {
-  vp9_highbd_idct16x16_10_add_c(in, out, stride, 12);
+  vpx_highbd_idct16x16_10_add_c(in, out, stride, 12);
 }
 
-#if HAVE_SSE2
 void idct16x16_256_add_10_sse2(const tran_low_t *in, uint8_t *out, int stride) {
-  vp9_highbd_idct16x16_256_add_sse2(in, out, stride, 10);
+  vpx_highbd_idct16x16_256_add_sse2(in, out, stride, 10);
 }
 
 void idct16x16_256_add_12_sse2(const tran_low_t *in, uint8_t *out, int stride) {
-  vp9_highbd_idct16x16_256_add_sse2(in, out, stride, 12);
+  vpx_highbd_idct16x16_256_add_sse2(in, out, stride, 12);
 }
 
 void idct16x16_10_add_10_sse2(const tran_low_t *in, uint8_t *out, int stride) {
-  vp9_highbd_idct16x16_10_add_sse2(in, out, stride, 10);
+  vpx_highbd_idct16x16_10_add_sse2(in, out, stride, 10);
 }
 
 void idct16x16_10_add_12_sse2(const tran_low_t *in, uint8_t *out, int stride) {
-  vp9_highbd_idct16x16_10_add_sse2(in, out, stride, 12);
+  vpx_highbd_idct16x16_10_add_sse2(in, out, stride, 12);
 }
 #endif  // HAVE_SSE2
 #endif  // CONFIG_VP9_HIGHBITDEPTH
@@ -396,10 +373,10 @@ class Trans16x16TestBase {
 
       for (int j = 0; j < kNumCoeffs; ++j) {
 #if CONFIG_VP9_HIGHBITDEPTH
-        const uint32_t diff =
+        const int32_t diff =
             bit_depth_ == VPX_BITS_8 ?  dst[j] - src[j] : dst16[j] - src16[j];
 #else
-        const uint32_t diff = dst[j] - src[j];
+        const int32_t diff = dst[j] - src[j];
 #endif
         const uint32_t error = diff * diff;
         if (max_error < error)
@@ -801,7 +778,7 @@ class InvTrans16x16DCT
   virtual void TearDown() { libvpx_test::ClearSystemState(); }
 
  protected:
-  void RunFwdTxfm(int16_t *in, tran_low_t *out, int stride) {}
+  void RunFwdTxfm(int16_t * /*in*/, tran_low_t * /*out*/, int /*stride*/) {}
   void RunInvTxfm(tran_low_t *out, uint8_t *dst, int stride) {
     inv_txfm_(out, dst, stride);
   }
@@ -815,20 +792,81 @@ TEST_P(InvTrans16x16DCT, CompareReference) {
   CompareInvReference(ref_txfm_, thresh_);
 }
 
+class PartialTrans16x16Test
+    : public ::testing::TestWithParam<
+          std::tr1::tuple<FdctFunc, vpx_bit_depth_t> > {
+ public:
+  virtual ~PartialTrans16x16Test() {}
+  virtual void SetUp() {
+    fwd_txfm_ = GET_PARAM(0);
+    bit_depth_ = GET_PARAM(1);
+  }
+
+  virtual void TearDown() { libvpx_test::ClearSystemState(); }
+
+ protected:
+  vpx_bit_depth_t bit_depth_;
+  FdctFunc fwd_txfm_;
+};
+
+TEST_P(PartialTrans16x16Test, Extremes) {
+#if CONFIG_VP9_HIGHBITDEPTH
+  const int16_t maxval =
+      static_cast<int16_t>(clip_pixel_highbd(1 << 30, bit_depth_));
+#else
+  const int16_t maxval = 255;
+#endif
+  const int minval = -maxval;
+  DECLARE_ALIGNED(16, int16_t, input[kNumCoeffs]);
+  DECLARE_ALIGNED(16, tran_low_t, output[kNumCoeffs]);
+
+  for (int i = 0; i < kNumCoeffs; ++i) input[i] = maxval;
+  output[0] = 0;
+  ASM_REGISTER_STATE_CHECK(fwd_txfm_(input, output, 16));
+  EXPECT_EQ((maxval * kNumCoeffs) >> 1, output[0]);
+
+  for (int i = 0; i < kNumCoeffs; ++i) input[i] = minval;
+  output[0] = 0;
+  ASM_REGISTER_STATE_CHECK(fwd_txfm_(input, output, 16));
+  EXPECT_EQ((minval * kNumCoeffs) >> 1, output[0]);
+}
+
+TEST_P(PartialTrans16x16Test, Random) {
+#if CONFIG_VP9_HIGHBITDEPTH
+  const int16_t maxval =
+      static_cast<int16_t>(clip_pixel_highbd(1 << 30, bit_depth_));
+#else
+  const int16_t maxval = 255;
+#endif
+  DECLARE_ALIGNED(16, int16_t, input[kNumCoeffs]);
+  DECLARE_ALIGNED(16, tran_low_t, output[kNumCoeffs]);
+  ACMRandom rnd(ACMRandom::DeterministicSeed());
+
+  int sum = 0;
+  for (int i = 0; i < kNumCoeffs; ++i) {
+    const int val = (i & 1) ? -rnd(maxval + 1) : rnd(maxval + 1);
+    input[i] = val;
+    sum += val;
+  }
+  output[0] = 0;
+  ASM_REGISTER_STATE_CHECK(fwd_txfm_(input, output, 16));
+  EXPECT_EQ(sum >> 1, output[0]);
+}
+
 using std::tr1::make_tuple;
 
 #if CONFIG_VP9_HIGHBITDEPTH
 INSTANTIATE_TEST_CASE_P(
     C, Trans16x16DCT,
     ::testing::Values(
-        make_tuple(&vp9_highbd_fdct16x16_c, &idct16x16_10, 0, VPX_BITS_10),
-        make_tuple(&vp9_highbd_fdct16x16_c, &idct16x16_12, 0, VPX_BITS_12),
-        make_tuple(&vp9_fdct16x16_c, &vp9_idct16x16_256_add_c, 0, VPX_BITS_8)));
+        make_tuple(&vpx_highbd_fdct16x16_c, &idct16x16_10, 0, VPX_BITS_10),
+        make_tuple(&vpx_highbd_fdct16x16_c, &idct16x16_12, 0, VPX_BITS_12),
+        make_tuple(&vpx_fdct16x16_c, &vpx_idct16x16_256_add_c, 0, VPX_BITS_8)));
 #else
 INSTANTIATE_TEST_CASE_P(
     C, Trans16x16DCT,
     ::testing::Values(
-        make_tuple(&vp9_fdct16x16_c, &vp9_idct16x16_256_add_c, 0, VPX_BITS_8)));
+        make_tuple(&vpx_fdct16x16_c, &vpx_idct16x16_256_add_c, 0, VPX_BITS_8)));
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 
 #if CONFIG_VP9_HIGHBITDEPTH
@@ -847,6 +885,11 @@ INSTANTIATE_TEST_CASE_P(
         make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_c, 1, VPX_BITS_8),
         make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_c, 2, VPX_BITS_8),
         make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_c, 3, VPX_BITS_8)));
+INSTANTIATE_TEST_CASE_P(
+    C, PartialTrans16x16Test,
+    ::testing::Values(make_tuple(&vpx_highbd_fdct16x16_1_c, VPX_BITS_8),
+                      make_tuple(&vpx_highbd_fdct16x16_1_c, VPX_BITS_10),
+                      make_tuple(&vpx_highbd_fdct16x16_1_c, VPX_BITS_12)));
 #else
 INSTANTIATE_TEST_CASE_P(
     C, Trans16x16HT,
@@ -855,22 +898,25 @@ INSTANTIATE_TEST_CASE_P(
         make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_c, 1, VPX_BITS_8),
         make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_c, 2, VPX_BITS_8),
         make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_c, 3, VPX_BITS_8)));
+INSTANTIATE_TEST_CASE_P(C, PartialTrans16x16Test,
+                        ::testing::Values(make_tuple(&vpx_fdct16x16_1_c,
+                                                     VPX_BITS_8)));
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 
 #if HAVE_NEON_ASM && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
 INSTANTIATE_TEST_CASE_P(
     NEON, Trans16x16DCT,
     ::testing::Values(
-        make_tuple(&vp9_fdct16x16_c,
-                   &vp9_idct16x16_256_add_neon, 0, VPX_BITS_8)));
+        make_tuple(&vpx_fdct16x16_c,
+                   &vpx_idct16x16_256_add_neon, 0, VPX_BITS_8)));
 #endif
 
 #if HAVE_SSE2 && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
 INSTANTIATE_TEST_CASE_P(
     SSE2, Trans16x16DCT,
     ::testing::Values(
-        make_tuple(&vp9_fdct16x16_sse2,
-                   &vp9_idct16x16_256_add_sse2, 0, VPX_BITS_8)));
+        make_tuple(&vpx_fdct16x16_sse2,
+                   &vpx_idct16x16_256_add_sse2, 0, VPX_BITS_8)));
 INSTANTIATE_TEST_CASE_P(
     SSE2, Trans16x16HT,
     ::testing::Values(
@@ -882,33 +928,28 @@ INSTANTIATE_TEST_CASE_P(
                    VPX_BITS_8),
         make_tuple(&vp9_fht16x16_sse2, &vp9_iht16x16_256_add_sse2, 3,
                    VPX_BITS_8)));
+INSTANTIATE_TEST_CASE_P(SSE2, PartialTrans16x16Test,
+                        ::testing::Values(make_tuple(&vpx_fdct16x16_1_sse2,
+                                                     VPX_BITS_8)));
 #endif  // HAVE_SSE2 && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
 
 #if HAVE_SSE2 && CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
 INSTANTIATE_TEST_CASE_P(
     SSE2, Trans16x16DCT,
     ::testing::Values(
-        make_tuple(&vp9_highbd_fdct16x16_sse2,
+        make_tuple(&vpx_highbd_fdct16x16_sse2,
                    &idct16x16_10, 0, VPX_BITS_10),
-        make_tuple(&vp9_highbd_fdct16x16_c,
+        make_tuple(&vpx_highbd_fdct16x16_c,
                    &idct16x16_256_add_10_sse2, 0, VPX_BITS_10),
-        make_tuple(&vp9_highbd_fdct16x16_sse2,
+        make_tuple(&vpx_highbd_fdct16x16_sse2,
                    &idct16x16_12, 0, VPX_BITS_12),
-        make_tuple(&vp9_highbd_fdct16x16_c,
+        make_tuple(&vpx_highbd_fdct16x16_c,
                    &idct16x16_256_add_12_sse2, 0, VPX_BITS_12),
-        make_tuple(&vp9_fdct16x16_sse2,
-                   &vp9_idct16x16_256_add_c, 0, VPX_BITS_8)));
+        make_tuple(&vpx_fdct16x16_sse2,
+                   &vpx_idct16x16_256_add_c, 0, VPX_BITS_8)));
 INSTANTIATE_TEST_CASE_P(
     SSE2, Trans16x16HT,
     ::testing::Values(
-        make_tuple(&vp9_highbd_fht16x16_sse2, &iht16x16_10, 0, VPX_BITS_10),
-        make_tuple(&vp9_highbd_fht16x16_sse2, &iht16x16_10, 1, VPX_BITS_10),
-        make_tuple(&vp9_highbd_fht16x16_sse2, &iht16x16_10, 2, VPX_BITS_10),
-        make_tuple(&vp9_highbd_fht16x16_sse2, &iht16x16_10, 3, VPX_BITS_10),
-        make_tuple(&vp9_highbd_fht16x16_sse2, &iht16x16_12, 0, VPX_BITS_12),
-        make_tuple(&vp9_highbd_fht16x16_sse2, &iht16x16_12, 1, VPX_BITS_12),
-        make_tuple(&vp9_highbd_fht16x16_sse2, &iht16x16_12, 2, VPX_BITS_12),
-        make_tuple(&vp9_highbd_fht16x16_sse2, &iht16x16_12, 3, VPX_BITS_12),
         make_tuple(&vp9_fht16x16_sse2, &vp9_iht16x16_256_add_c, 0, VPX_BITS_8),
         make_tuple(&vp9_fht16x16_sse2, &vp9_iht16x16_256_add_c, 1, VPX_BITS_8),
         make_tuple(&vp9_fht16x16_sse2, &vp9_iht16x16_256_add_c, 2, VPX_BITS_8),
@@ -927,20 +968,27 @@ INSTANTIATE_TEST_CASE_P(
                    &idct16x16_10_add_12_sse2, 3167, VPX_BITS_12),
         make_tuple(&idct16x16_12,
                    &idct16x16_256_add_12_sse2, 3167, VPX_BITS_12)));
+INSTANTIATE_TEST_CASE_P(SSE2, PartialTrans16x16Test,
+                        ::testing::Values(make_tuple(&vpx_fdct16x16_1_sse2,
+                                                     VPX_BITS_8)));
 #endif  // HAVE_SSE2 && CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
 
 #if HAVE_MSA && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
 INSTANTIATE_TEST_CASE_P(
     MSA, Trans16x16DCT,
     ::testing::Values(
-        make_tuple(&vp9_fdct16x16_c,
-                   &vp9_idct16x16_256_add_msa, 0, VPX_BITS_8)));
+        make_tuple(&vpx_fdct16x16_msa,
+                   &vpx_idct16x16_256_add_msa, 0, VPX_BITS_8)));
 INSTANTIATE_TEST_CASE_P(
     MSA, Trans16x16HT,
     ::testing::Values(
-        make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_msa, 0, VPX_BITS_8),
-        make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_msa, 1, VPX_BITS_8),
-        make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_msa, 2, VPX_BITS_8),
-        make_tuple(&vp9_fht16x16_c, &vp9_iht16x16_256_add_msa, 3, VPX_BITS_8)));
+        make_tuple(&vp9_fht16x16_msa, &vp9_iht16x16_256_add_msa, 0, VPX_BITS_8),
+        make_tuple(&vp9_fht16x16_msa, &vp9_iht16x16_256_add_msa, 1, VPX_BITS_8),
+        make_tuple(&vp9_fht16x16_msa, &vp9_iht16x16_256_add_msa, 2, VPX_BITS_8),
+        make_tuple(&vp9_fht16x16_msa, &vp9_iht16x16_256_add_msa, 3,
+                   VPX_BITS_8)));
+INSTANTIATE_TEST_CASE_P(MSA, PartialTrans16x16Test,
+                        ::testing::Values(make_tuple(&vpx_fdct16x16_1_msa,
+                                                     VPX_BITS_8)));
 #endif  // HAVE_MSA && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
 }  // namespace

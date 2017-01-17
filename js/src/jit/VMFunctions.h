@@ -797,7 +797,7 @@ MOZ_MUST_USE bool
 ThrowRuntimeLexicalError(JSContext* cx, unsigned errorNumber);
 
 MOZ_MUST_USE bool
-ThrowReadOnlyError(JSContext* cx, int32_t index);
+ThrowReadOnlyError(JSContext* cx, HandleObject obj, int32_t index);
 
 MOZ_MUST_USE bool
 BaselineThrowUninitializedThis(JSContext* cx, BaselineFrame* frame);

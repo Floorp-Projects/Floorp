@@ -136,19 +136,19 @@ static INLINE void clamp_mv_ref(MV *mv, const MACROBLOCKD *xd) {
 // on whether the block_size < 8x8 and we have check_sub_blocks set.
 static INLINE int_mv get_sub_block_mv(const MODE_INFO *candidate, int which_mv,
                                       int search_col, int block_idx) {
-  return block_idx >= 0 && candidate->mbmi.sb_type < BLOCK_8X8
+  return block_idx >= 0 && candidate->sb_type < BLOCK_8X8
           ? candidate->bmi[idx_n_column_to_subblock[block_idx][search_col == 0]]
               .as_mv[which_mv]
-          : candidate->mbmi.mv[which_mv];
+          : candidate->mv[which_mv];
 }
 
 
 // Performs mv sign inversion if indicated by the reference frame combination.
-static INLINE int_mv scale_mv(const MB_MODE_INFO *mbmi, int ref,
+static INLINE int_mv scale_mv(const MODE_INFO *mi, int ref,
                               const MV_REFERENCE_FRAME this_ref_frame,
                               const int *ref_sign_bias) {
-  int_mv mv = mbmi->mv[ref];
-  if (ref_sign_bias[mbmi->ref_frame[ref]] != ref_sign_bias[this_ref_frame]) {
+  int_mv mv = mi->mv[ref];
+  if (ref_sign_bias[mi->ref_frame[ref]] != ref_sign_bias[this_ref_frame]) {
     mv.as_mv.row *= -1;
     mv.as_mv.col *= -1;
   }
@@ -157,7 +157,7 @@ static INLINE int_mv scale_mv(const MB_MODE_INFO *mbmi, int ref,
 
 // This macro is used to add a motion vector mv_ref list if it isn't
 // already in the list.  If it's the second motion vector it will also
-// skip all additional processing and jump to done!
+// skip all additional processing and jump to Done!
 #define ADD_MV_REF_LIST(mv, refmv_count, mv_ref_list, Done) \
   do { \
     if (refmv_count) { \
@@ -207,12 +207,21 @@ static INLINE void clamp_mv2(MV *mv, const MACROBLOCKD *xd) {
                xd->mb_to_bottom_edge + RIGHT_BOTTOM_MARGIN);
 }
 
+static INLINE void lower_mv_precision(MV *mv, int allow_hp) {
+  const int use_hp = allow_hp && use_mv_hp(mv);
+  if (!use_hp) {
+    if (mv->row & 1)
+      mv->row += (mv->row > 0 ? -1 : 1);
+    if (mv->col & 1)
+      mv->col += (mv->col > 0 ? -1 : 1);
+  }
+}
+
 typedef void (*find_mv_refs_sync)(void *const data, int mi_row);
 void vp9_find_mv_refs(const VP9_COMMON *cm, const MACROBLOCKD *xd,
-                      const TileInfo *const tile,
                       MODE_INFO *mi, MV_REFERENCE_FRAME ref_frame,
                       int_mv *mv_ref_list, int mi_row, int mi_col,
-                      find_mv_refs_sync sync, void *const data);
+                      uint8_t *mode_context);
 
 // check a list of motion vectors by sad score using a number rows of pixels
 // above and a number cols of pixels in the left to select the one with best
@@ -221,9 +230,9 @@ void vp9_find_best_ref_mvs(MACROBLOCKD *xd, int allow_hp,
                            int_mv *mvlist, int_mv *nearest_mv, int_mv *near_mv);
 
 void vp9_append_sub8x8_mvs_for_idx(VP9_COMMON *cm, MACROBLOCKD *xd,
-                                   const TileInfo *const tile,
                                    int block, int ref, int mi_row, int mi_col,
-                                   int_mv *nearest_mv, int_mv *near_mv);
+                                   int_mv *nearest_mv, int_mv *near_mv,
+                                   uint8_t *mode_context);
 
 #ifdef __cplusplus
 }  // extern "C"

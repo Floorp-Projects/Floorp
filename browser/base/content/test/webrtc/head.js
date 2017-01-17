@@ -1,4 +1,5 @@
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource:///modules/SitePermissions.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");

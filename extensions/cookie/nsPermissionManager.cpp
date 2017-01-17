@@ -2022,6 +2022,19 @@ nsPermissionManager::TestPermissionFromPrincipal(nsIPrincipal* aPrincipal,
 }
 
 NS_IMETHODIMP
+nsPermissionManager::GetPermissionObjectForURI(nsIURI* aURI,
+                                               const char* aType,
+                                               bool aExactHostMatch,
+                                               nsIPermission** aResult)
+{
+  nsCOMPtr<nsIPrincipal> principal;
+  nsresult rv = GetPrincipal(aURI, getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return GetPermissionObject(principal, aType, aExactHostMatch, aResult);
+}
+
+NS_IMETHODIMP
 nsPermissionManager::GetPermissionObject(nsIPrincipal* aPrincipal,
                                          const char* aType,
                                          bool aExactHostMatch,

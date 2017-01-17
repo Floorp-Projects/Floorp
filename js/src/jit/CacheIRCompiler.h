@@ -18,7 +18,7 @@ namespace jit {
     _(GuardIsObject)                      \
     _(GuardIsString)                      \
     _(GuardIsSymbol)                      \
-    _(GuardIsInt32)                       \
+    _(GuardIsInt32Index)                  \
     _(GuardType)                          \
     _(GuardClass)                         \
     _(GuardIsProxy)                       \

@@ -1717,6 +1717,9 @@ class WasmActivation : public Activation
     // Read/written from SIGSEGV handler:
     void setResumePC(void* pc) { resumePC_ = pc; }
     void* resumePC() const { return resumePC_; }
+
+    // Used by wasm::FrameIterator during stack unwinding.
+    void unwindFP(uint8_t* fp) { fp_ = fp; }
 };
 
 // A FrameIter walks over the runtime's stack of JS script activations,

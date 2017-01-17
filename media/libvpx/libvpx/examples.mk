@@ -22,33 +22,44 @@ LIBYUV_SRCS +=  third_party/libyuv/include/libyuv/basic_types.h  \
                 third_party/libyuv/source/planar_functions.cc \
                 third_party/libyuv/source/row_any.cc \
                 third_party/libyuv/source/row_common.cc \
+                third_party/libyuv/source/row_gcc.cc \
                 third_party/libyuv/source/row_mips.cc \
                 third_party/libyuv/source/row_neon.cc \
                 third_party/libyuv/source/row_neon64.cc \
-                third_party/libyuv/source/row_posix.cc \
                 third_party/libyuv/source/row_win.cc \
                 third_party/libyuv/source/scale.cc \
+                third_party/libyuv/source/scale_any.cc \
                 third_party/libyuv/source/scale_common.cc \
+                third_party/libyuv/source/scale_gcc.cc \
                 third_party/libyuv/source/scale_mips.cc \
                 third_party/libyuv/source/scale_neon.cc \
                 third_party/libyuv/source/scale_neon64.cc \
-                third_party/libyuv/source/scale_posix.cc \
                 third_party/libyuv/source/scale_win.cc \
 
-LIBWEBM_MUXER_SRCS += third_party/libwebm/mkvmuxer.cpp \
-                      third_party/libwebm/mkvmuxerutil.cpp \
-                      third_party/libwebm/mkvwriter.cpp \
-                      third_party/libwebm/mkvmuxer.hpp \
-                      third_party/libwebm/mkvmuxertypes.hpp \
-                      third_party/libwebm/mkvmuxerutil.hpp \
-                      third_party/libwebm/mkvparser.hpp \
-                      third_party/libwebm/mkvwriter.hpp \
-                      third_party/libwebm/webmids.hpp
+LIBWEBM_COMMON_SRCS += third_party/libwebm/common/hdr_util.cc \
+                       third_party/libwebm/common/hdr_util.h \
+                       third_party/libwebm/common/webmids.h
 
-LIBWEBM_PARSER_SRCS = third_party/libwebm/mkvparser.cpp \
-                      third_party/libwebm/mkvreader.cpp \
-                      third_party/libwebm/mkvparser.hpp \
-                      third_party/libwebm/mkvreader.hpp
+LIBWEBM_MUXER_SRCS += third_party/libwebm/mkvmuxer/mkvmuxer.cc \
+                      third_party/libwebm/mkvmuxer/mkvmuxerutil.cc \
+                      third_party/libwebm/mkvmuxer/mkvwriter.cc \
+                      third_party/libwebm/mkvmuxer/mkvmuxer.h \
+                      third_party/libwebm/mkvmuxer/mkvmuxertypes.h \
+                      third_party/libwebm/mkvmuxer/mkvmuxerutil.h \
+                      third_party/libwebm/mkvparser/mkvparser.h \
+                      third_party/libwebm/mkvmuxer/mkvwriter.h
+
+LIBWEBM_PARSER_SRCS = third_party/libwebm/mkvparser/mkvparser.cc \
+                      third_party/libwebm/mkvparser/mkvreader.cc \
+                      third_party/libwebm/mkvparser/mkvparser.h \
+                      third_party/libwebm/mkvparser/mkvreader.h
+
+# Add compile flags and include path for libwebm sources.
+ifeq ($(CONFIG_WEBM_IO),yes)
+  CXXFLAGS     += -D__STDC_CONSTANT_MACROS -D__STDC_LIMIT_MACROS
+  INC_PATH-yes += $(SRC_PATH_BARE)/third_party/libwebm
+endif
+
 
 # List of examples to build. UTILS are tools meant for distribution
 # while EXAMPLES demonstrate specific portions of the API.
@@ -67,6 +78,8 @@ ifeq ($(CONFIG_LIBYUV),yes)
   vpxdec.SRCS                 += $(LIBYUV_SRCS)
 endif
 ifeq ($(CONFIG_WEBM_IO),yes)
+  vpxdec.SRCS                 += $(LIBWEBM_COMMON_SRCS)
+  vpxdec.SRCS                 += $(LIBWEBM_MUXER_SRCS)
   vpxdec.SRCS                 += $(LIBWEBM_PARSER_SRCS)
   vpxdec.SRCS                 += webmdec.cc webmdec.h
 endif
@@ -88,7 +101,9 @@ ifeq ($(CONFIG_LIBYUV),yes)
   vpxenc.SRCS                 += $(LIBYUV_SRCS)
 endif
 ifeq ($(CONFIG_WEBM_IO),yes)
+  vpxenc.SRCS                 += $(LIBWEBM_COMMON_SRCS)
   vpxenc.SRCS                 += $(LIBWEBM_MUXER_SRCS)
+  vpxenc.SRCS                 += $(LIBWEBM_PARSER_SRCS)
   vpxenc.SRCS                 += webmenc.cc webmenc.h
 endif
 vpxenc.GUID                  = 548DEC74-7A15-4B2B-AFC3-AA102E7C25C1
@@ -324,8 +339,8 @@ endif
 # the makefiles). We may want to revisit this.
 define vcproj_template
 $(1): $($(1:.$(VCPROJ_SFX)=).SRCS) vpx.$(VCPROJ_SFX)
-	@echo "    [vcproj] $$@"
-	$$(GEN_VCPROJ)\
+	$(if $(quiet),@echo "    [vcproj] $$@")
+	$(qexec)$$(GEN_VCPROJ)\
             --exe\
             --target=$$(TOOLCHAIN)\
             --name=$$(@:.$(VCPROJ_SFX)=)\

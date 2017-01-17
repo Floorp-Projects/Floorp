@@ -45,6 +45,7 @@ int I400ToI400(const uint8* src_y, int src_stride_y,
                uint8* dst_y, int dst_stride_y,
                int width, int height);
 
+#define J400ToJ400 I400ToI400
 
 // Copy I422 to I422.
 #define I422ToI422 I422Copy
@@ -84,6 +85,18 @@ int UYVYToI422(const uint8* src_uyvy, int src_stride_uyvy,
                uint8* dst_v, int dst_stride_v,
                int width, int height);
 
+LIBYUV_API
+int YUY2ToNV12(const uint8* src_yuy2, int src_stride_yuy2,
+               uint8* dst_y, int dst_stride_y,
+               uint8* dst_uv, int dst_stride_uv,
+               int width, int height);
+
+LIBYUV_API
+int UYVYToNV12(const uint8* src_uyvy, int src_stride_uyvy,
+               uint8* dst_y, int dst_stride_y,
+               uint8* dst_uv, int dst_stride_uv,
+               int width, int height);
+
 // Convert I420 to I400. (calls CopyPlane ignoring u/v).
 LIBYUV_API
 int I420ToI400(const uint8* src_y, int src_stride_y,
@@ -93,6 +106,7 @@ int I420ToI400(const uint8* src_y, int src_stride_y,
                int width, int height);
 
 // Alias
+#define J420ToJ400 I420ToI400
 #define I420ToI420Mirror I420Mirror
 
 // I420 mirror.
@@ -387,24 +401,24 @@ int ARGBInterpolate(const uint8* src_argb0, int src_stride_argb0,
                     uint8* dst_argb, int dst_stride_argb,
                     int width, int height, int interpolation);
 
-#if defined(__pnacl__) || defined(__CLR_VER) || defined(COVERAGE_ENABLED) || \
-    defined(TARGET_IPHONE_SIMULATOR)
+#if defined(__pnacl__) || defined(__CLR_VER) || \
+    (defined(__i386__) && !defined(__SSE2__))
 #define LIBYUV_DISABLE_X86
 #endif
+// The following are available on all x86 platforms:
+#if !defined(LIBYUV_DISABLE_X86) && \
+    (defined(_M_IX86) || defined(__x86_64__) || defined(__i386__))
+#define HAS_ARGBAFFINEROW_SSE2
+#endif
 
-// Row functions for copying a pixels from a source with a slope to a row
+// Row function for copying pixels from a source with a slope to a row
 // of destination. Useful for scaling, rotation, mirror, texture mapping.
 LIBYUV_API
 void ARGBAffineRow_C(const uint8* src_argb, int src_argb_stride,
                      uint8* dst_argb, const float* uv_dudv, int width);
-// The following are available on all x86 platforms:
-#if !defined(LIBYUV_DISABLE_X86) && \
-    (defined(_M_IX86) || defined(__x86_64__) || defined(__i386__))
 LIBYUV_API
 void ARGBAffineRow_SSE2(const uint8* src_argb, int src_argb_stride,
                         uint8* dst_argb, const float* uv_dudv, int width);
-#define HAS_ARGBAFFINEROW_SSE2
-#endif  // LIBYUV_DISABLE_X86
 
 // Shuffle ARGB channel order.  e.g. BGRA to ARGB.
 // shuffler is 16 bytes and must be aligned.

@@ -8,6 +8,8 @@
 ;  be found in the AUTHORS file in the root of the source tree.
 ;
 
+%define private_prefix vp9
+
 %include "third_party/x86inc/x86inc.asm"
 
 SECTION .text

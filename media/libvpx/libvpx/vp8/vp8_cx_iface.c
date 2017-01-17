@@ -17,10 +17,12 @@
 #include "vpx/internal/vpx_codec_internal.h"
 #include "vpx_version.h"
 #include "vpx_mem/vpx_mem.h"
+#include "vpx_ports/vpx_once.h"
 #include "vp8/encoder/onyx_int.h"
 #include "vpx/vp8cx.h"
 #include "vp8/encoder/firstpass.h"
 #include "vp8/common/onyx.h"
+#include "vp8/common/common.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -237,7 +239,7 @@ static vpx_codec_err_t validate_config(vpx_codec_alg_priv_t      *ctx,
         RANGE_CHECK_HI(cfg, ts_periodicity, 16);
 
         for (i=1; i<cfg->ts_number_layers; i++)
-            if (cfg->ts_target_bitrate[i] <= cfg->ts_target_bitrate[i-1] && 
+            if (cfg->ts_target_bitrate[i] <= cfg->ts_target_bitrate[i-1] &&
                 cfg->rc_target_bitrate > 0)
                 ERROR("ts_target_bitrate entries are not strictly increasing");
 
@@ -455,7 +457,7 @@ static vpx_codec_err_t vp8e_set_config(vpx_codec_alg_priv_t       *ctx,
             ERROR("Cannot change width or height after initialization");
         if ((ctx->cpi->initial_width && (int)cfg->g_w > ctx->cpi->initial_width) ||
             (ctx->cpi->initial_height && (int)cfg->g_h > ctx->cpi->initial_height))
-            ERROR("Cannot increast width or height larger than their initial values");
+            ERROR("Cannot increase width or height larger than their initial values");
     }
 
     /* Prevent increasing lag_in_frames. This check is stricter than it needs
@@ -693,6 +695,8 @@ static vpx_codec_err_t vp8e_init(vpx_codec_ctx_t *ctx,
         else
             ctx->priv->enc.total_encoders   = 1;
 
+        once(vp8_initialize_enc);
+
         res = validate_config(priv, &priv->cfg, &priv->vp8_cfg, 0);
 
         if (!res)
@@ -757,7 +761,7 @@ static void pick_quickcompress_mode(vpx_codec_alg_priv_t  *ctx,
                                     unsigned long          duration,
                                     unsigned long          deadline)
 {
-    unsigned int new_qc;
+    int new_qc;
 
 #if !(CONFIG_REALTIME_ONLY)
     /* Use best quality mode if no deadline is given. */
@@ -779,10 +783,13 @@ static void pick_quickcompress_mode(vpx_codec_alg_priv_t  *ctx,
     }
 
 #else
+    (void)duration;
     new_qc = MODE_REALTIME;
 #endif
 
-    if (ctx->cfg.g_pass == VPX_RC_FIRST_PASS)
+    if (deadline == VPX_DL_REALTIME)
+        new_qc = MODE_REALTIME;
+    else if (ctx->cfg.g_pass == VPX_RC_FIRST_PASS)
         new_qc = MODE_FIRSTPASS;
     else if (ctx->cfg.g_pass == VPX_RC_LAST_PASS)
         new_qc = (new_qc == MODE_BESTQUALITY)
@@ -879,7 +886,8 @@ static vpx_codec_err_t vp8e_encode(vpx_codec_alg_priv_t  *ctx,
     }
     ctx->control_frame_flags = 0;
 
-    res = set_reference_and_update(ctx, flags);
+    if (!res)
+        res = set_reference_and_update(ctx, flags);
 
     /* Handle fixed keyframe intervals */
     if (ctx->cfg.kf_mode == VPX_KF_AUTO
@@ -1121,7 +1129,8 @@ static vpx_image_t *vp8e_get_preview(vpx_codec_alg_priv_t *ctx)
 {
 
     YV12_BUFFER_CONFIG sd;
-    vp8_ppflags_t flags = {0};
+    vp8_ppflags_t flags;
+    vp8_zero(flags);
 
     if (ctx->preview_ppcfg.post_proc_flag)
     {
@@ -1165,31 +1174,6 @@ static vpx_image_t *vp8e_get_preview(vpx_codec_alg_priv_t *ctx)
     }
     else
         return NULL;
-}
-
-static vpx_codec_err_t vp8e_update_entropy(vpx_codec_alg_priv_t *ctx,
-                                           va_list args)
-{
-    int update = va_arg(args, int);
-    vp8_update_entropy(ctx->cpi, update);
-    return VPX_CODEC_OK;
-
-}
-
-static vpx_codec_err_t vp8e_update_reference(vpx_codec_alg_priv_t *ctx,
-                                             va_list args)
-{
-    int update = va_arg(args, int);
-    vp8_update_reference(ctx->cpi, update);
-    return VPX_CODEC_OK;
-}
-
-static vpx_codec_err_t vp8e_use_reference(vpx_codec_alg_priv_t *ctx,
-                                          va_list args)
-{
-    int reference_flag = va_arg(args, int);
-    vp8_use_as_reference(ctx->cpi, reference_flag);
-    return VPX_CODEC_OK;
 }
 
 static vpx_codec_err_t vp8e_set_frame_flags(vpx_codec_alg_priv_t *ctx,
@@ -1282,9 +1266,6 @@ static vpx_codec_ctrl_fn_map_t vp8e_ctf_maps[] =
     {VP8_SET_REFERENCE,                 vp8e_set_reference},
     {VP8_COPY_REFERENCE,                vp8e_get_reference},
     {VP8_SET_POSTPROC,                  vp8e_set_previewpp},
-    {VP8E_UPD_ENTROPY,                  vp8e_update_entropy},
-    {VP8E_UPD_REFERENCE,                vp8e_update_reference},
-    {VP8E_USE_REFERENCE,                vp8e_use_reference},
     {VP8E_SET_FRAME_FLAGS,              vp8e_set_frame_flags},
     {VP8E_SET_TEMPORAL_LAYER_ID,        vp8e_set_temporal_layer_id},
     {VP8E_SET_ROI_MAP,                  vp8e_set_roi_map},
@@ -1338,8 +1319,8 @@ static vpx_codec_enc_cfg_map_t vp8e_usage_cfg_map[] =
         30,                 /* rc_resize_up_thresold */
 
         VPX_VBR,            /* rc_end_usage */
-        {0},                /* rc_twopass_stats_in */
-        {0},                /* rc_firstpass_mb_stats_in */
+        {NULL, 0},          /* rc_twopass_stats_in */
+        {NULL, 0},          /* rc_firstpass_mb_stats_in */
         256,                /* rc_target_bandwidth */
         4,                  /* rc_min_quantizer */
         63,                 /* rc_max_quantizer */
@@ -1367,6 +1348,8 @@ static vpx_codec_enc_cfg_map_t vp8e_usage_cfg_map[] =
         {0},                /* ts_rate_decimator */
         0,                  /* ts_periodicity */
         {0},                /* ts_layer_id */
+        {0},                /* layer_target_bitrate */
+        0                   /* temporal_layering_mode */
     }},
 };
 

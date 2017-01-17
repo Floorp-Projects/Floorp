@@ -126,7 +126,11 @@ StorageActors.defaults = function (typeName, observationTopics) {
     get hosts() {
       let hosts = new Set();
       for (let {location} of this.storageActor.windows) {
-        hosts.add(this.getHostName(location));
+        let host = this.getHostName(location);
+
+        if (host) {
+          hosts.add(host);
+        }
       }
       return hosts;
     },
@@ -140,13 +144,35 @@ StorageActors.defaults = function (typeName, observationTopics) {
     },
 
     /**
-     * Converts the window.location object into host.
+     * Converts the window.location object into a URL (e.g. http://domain.com).
      */
     getHostName(location) {
-      if (location.protocol === "chrome:") {
-        return location.href;
+      if (!location) {
+        // Debugging a legacy Firefox extension... no hostname available and no
+        // storage possible.
+        return null;
       }
-      return location.hostname || location.href;
+
+      switch (location.protocol) {
+        case "data:":
+          // data: URLs do not support storage of any type.
+          return null;
+        case "about:":
+          // Fallthrough.
+        case "chrome:":
+          // Fallthrough.
+        case "file:":
+          return location.protocol + location.pathname;
+        case "resource:":
+          return location.origin + location.pathname;
+        case "moz-extension:":
+          return location.origin;
+        case "javascript:":
+          return location.href;
+        default:
+          // http: or unknown protocol.
+          return `${location.protocol}//${location.host}`;
+      }
     },
 
     initialize(storageActor) {
@@ -206,7 +232,7 @@ StorageActors.defaults = function (typeName, observationTopics) {
      */
     onWindowReady: Task.async(function* (window) {
       let host = this.getHostName(window.location);
-      if (!this.hostVsStores.has(host)) {
+      if (host && !this.hostVsStores.has(host)) {
         yield this.populateStoresForHost(host, window);
         let data = {};
         data[host] = this.getNamesForHost(host);
@@ -227,7 +253,7 @@ StorageActors.defaults = function (typeName, observationTopics) {
         return;
       }
       let host = this.getHostName(window.location);
-      if (!this.hosts.has(host)) {
+      if (host && !this.hosts.has(host)) {
         this.hostVsStores.delete(host);
         let data = {};
         data[host] = [];
@@ -467,12 +493,16 @@ StorageActors.createActor({
     if (cookie.host == null) {
       return host == null;
     }
+
+    host = trimHttpHttps(host);
+
     if (cookie.host.startsWith(".")) {
       return ("." + host).endsWith(cookie.host);
     }
     if (cookie.host === "") {
       return host.startsWith("file://" + cookie.path);
     }
+
     return cookie.host == host;
   },
 
@@ -714,6 +744,8 @@ var cookieHelpers = {
       host = "";
     }
 
+    host = trimHttpHttps(host);
+
     let cookies = Services.cookies.getCookiesFromHost(host, originAttributes);
     let store = [];
 
@@ -847,6 +879,8 @@ var cookieHelpers = {
       opts.name = split[0];
       opts.path = split[2];
     }
+
+    host = trimHttpHttps(host);
 
     function hostMatches(cookieHost, matchHost) {
       if (cookieHost == null) {
@@ -1054,16 +1088,6 @@ function getObjectForLocalOrSessionStorage(type) {
       }));
     },
 
-    getHostName(location) {
-      if (!location.host) {
-        return location.href;
-      }
-      if (location.protocol === "chrome:") {
-        return location.href;
-      }
-      return location.protocol + "//" + location.host;
-    },
-
     populateStoresForHost(host, window) {
       try {
         this.hostVsStores.set(host, window[type]);
@@ -1075,7 +1099,10 @@ function getObjectForLocalOrSessionStorage(type) {
     populateStoresForHosts() {
       this.hostVsStores = new Map();
       for (let window of this.windows) {
-        this.populateStoresForHost(this.getHostName(window.location), window);
+        let host = this.getHostName(window.location);
+        if (host) {
+          this.populateStoresForHost(host, window);
+        }
       }
     },
 
@@ -1274,16 +1301,6 @@ StorageActors.createActor({
     ];
   }),
 
-  getHostName(location) {
-    if (!location.host) {
-      return location.href;
-    }
-    if (location.protocol === "chrome:") {
-      return location.href;
-    }
-    return location.protocol + "//" + location.host;
-  },
-
   populateStoresForHost: Task.async(function* (host) {
     let storeMap = new Map();
     let caches = yield this.getCachesForHost(host);
@@ -1470,7 +1487,7 @@ function DatabaseMetadata(origin, db, storage) {
       let objectStore =
         transaction.objectStore(transaction.objectStoreNames[i]);
       this._objectStores.push([transaction.objectStoreNames[i],
-                              new ObjectStoreMetadata(objectStore)]);
+                               new ObjectStoreMetadata(objectStore)]);
     }
   }
 }
@@ -1558,16 +1575,6 @@ StorageActors.createActor({
     let principal = win.document.nodePrincipal;
     this.removeDBRecord(host, principal, db, store, id);
   }),
-
-  getHostName(location) {
-    if (!location.host) {
-      return location.href;
-    }
-    if (location.protocol === "chrome:") {
-      return location.href;
-    }
-    return location.protocol + "//" + location.host;
-  },
 
   /**
    * This method is overriden and left blank as for indexedDB, this operation
@@ -1917,7 +1924,7 @@ var indexedDBHelpers = {
   },
 
   removeDB: Task.async(function* (host, principal, dbName) {
-    let result = new promise(resolve => {
+    let result = new Promise(resolve => {
       let {name, storage} = this.splitNameAndStorage(dbName);
       let request =
         indexedDBForStorage.deleteForPrincipal(principal, name,
@@ -1954,7 +1961,7 @@ var indexedDBHelpers = {
     let {name, storage} = this.splitNameAndStorage(dbName);
 
     try {
-      db = yield new promise((resolve, reject) => {
+      db = yield new Promise((resolve, reject) => {
         let request = this.openWithPrincipal(principal, name, storage);
         request.onsuccess = ev => resolve(ev.target.result);
         request.onerror = ev => reject(ev.target.error);
@@ -1963,7 +1970,7 @@ var indexedDBHelpers = {
       let transaction = db.transaction(storeName, "readwrite");
       let store = transaction.objectStore(storeName);
 
-      yield new promise((resolve, reject) => {
+      yield new Promise((resolve, reject) => {
         let request = store.delete(id);
         request.onsuccess = () => resolve();
         request.onerror = ev => reject(ev.target.error);
@@ -1987,7 +1994,7 @@ var indexedDBHelpers = {
     let {name, storage} = this.splitNameAndStorage(dbName);
 
     try {
-      db = yield new promise((resolve, reject) => {
+      db = yield new Promise((resolve, reject) => {
         let request = this.openWithPrincipal(principal, name, storage);
         request.onsuccess = ev => resolve(ev.target.result);
         request.onerror = ev => reject(ev.target.error);
@@ -1996,7 +2003,7 @@ var indexedDBHelpers = {
       let transaction = db.transaction(storeName, "readwrite");
       let store = transaction.objectStore(storeName);
 
-      yield new promise((resolve, reject) => {
+      yield new Promise((resolve, reject) => {
         let request = store.clear();
         request.onsuccess = () => resolve();
         request.onerror = ev => reject(ev.target.error);
@@ -2408,6 +2415,19 @@ exports.setupParentProcessForIndexedDB = function ({ mm, prefix }) {
     onDisconnected: () => setMessageManager(null),
   };
 };
+
+/**
+ * General helpers
+ */
+function trimHttpHttps(url) {
+  if (url.startsWith("http://")) {
+    return url.substr(7);
+  }
+  if (url.startsWith("https://")) {
+    return url.substr(8);
+  }
+  return url;
+}
 
 /**
  * The main Storage Actor.

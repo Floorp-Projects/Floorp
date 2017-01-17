@@ -35,9 +35,7 @@ struct WebAudioDecodeJob final
                     dom::Promise* aPromise,
                     dom::DecodeSuccessCallback* aSuccessCallback = nullptr,
                     dom::DecodeErrorCallback* aFailureCallback = nullptr);
-
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebAudioDecodeJob)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebAudioDecodeJob)
+  ~WebAudioDecodeJob();
 
   enum ErrorCode {
     NoError,
@@ -65,9 +63,6 @@ struct WebAudioDecodeJob final
   RefPtr<dom::DecodeErrorCallback> mFailureCallback; // can be null
   RefPtr<dom::AudioBuffer> mOutput;
   RefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
-
-private:
-  ~WebAudioDecodeJob();
 };
 
 void AsyncDecodeWebAudio(const char* aContentType, uint8_t* aBuffer,

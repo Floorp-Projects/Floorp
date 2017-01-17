@@ -73,6 +73,10 @@ generate_filter() {
                 open_tag File RelativePath="$f"
 
                 if [ "$pat" == "asm" ] && $asm_use_custom_step; then
+                    # Avoid object file name collisions, i.e. vpx_config.c and
+                    # vpx_config.asm produce the same object file without
+                    # this additional suffix.
+                    objf=${objf%.obj}_asm.obj
                     for plat in "${platforms[@]}"; do
                         for cfg in Debug Release; do
                             open_tag FileConfiguration \
@@ -189,7 +193,7 @@ for opt in "$@"; do
 done
 
 # Make one call to fix_path for file_list to improve performance.
-fix_file_list
+fix_file_list file_list
 
 outfile=${outfile:-/dev/stdout}
 guid=${guid:-`generate_uuid`}

@@ -30,7 +30,7 @@ diff --git a/media/libvpx/libvpx/vp8/decoder/threading.c b/media/libvpx/libvpx/v
 index 6801532..a76672f 100644
 --- a/media/libvpx/libvpx/vp8/decoder/threading.c
 +++ b/media/libvpx/libvpx/vp8/decoder/threading.c
-@@ -28,6 +28,9 @@
+@@ -29,6 +29,9 @@
  #if CONFIG_ERROR_CONCEALMENT
  #include "error_concealment.h"
  #endif

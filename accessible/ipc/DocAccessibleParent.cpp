@@ -191,6 +191,10 @@ DocAccessibleParent::RecvHideEvent(const uint64_t& aRootID,
 mozilla::ipc::IPCResult
 DocAccessibleParent::RecvEvent(const uint64_t& aID, const uint32_t& aEventType)
 {
+  if (mShutdown) {
+    return IPC_OK();
+  }
+
   ProxyAccessible* proxy = GetAccessible(aID);
   if (!proxy) {
     NS_ERROR("no proxy for event!");
@@ -219,6 +223,10 @@ DocAccessibleParent::RecvStateChangeEvent(const uint64_t& aID,
                                           const uint64_t& aState,
                                           const bool& aEnabled)
 {
+  if (mShutdown) {
+    return IPC_OK();
+  }
+
   ProxyAccessible* target = GetAccessible(aID);
   if (!target) {
     NS_ERROR("we don't know about the target of a state change event!");
@@ -249,6 +257,10 @@ DocAccessibleParent::RecvStateChangeEvent(const uint64_t& aID,
 mozilla::ipc::IPCResult
 DocAccessibleParent::RecvCaretMoveEvent(const uint64_t& aID, const int32_t& aOffset)
 {
+  if (mShutdown) {
+    return IPC_OK();
+  }
+
   ProxyAccessible* proxy = GetAccessible(aID);
   if (!proxy) {
     NS_ERROR("unknown caret move event target!");
@@ -281,6 +293,10 @@ DocAccessibleParent::RecvTextChangeEvent(const uint64_t& aID,
                                          const bool& aIsInsert,
                                          const bool& aFromUser)
 {
+  if (mShutdown) {
+    return IPC_OK();
+  }
+
   ProxyAccessible* target = GetAccessible(aID);
   if (!target) {
     NS_ERROR("text change event target is unknown!");
@@ -311,6 +327,10 @@ DocAccessibleParent::RecvSelectionEvent(const uint64_t& aID,
                                         const uint64_t& aWidgetID,
                                         const uint32_t& aType)
 {
+  if (mShutdown) {
+    return IPC_OK();
+  }
+
   ProxyAccessible* target = GetAccessible(aID);
   ProxyAccessible* widget = GetAccessible(aWidgetID);
   if (!target || !widget) {
@@ -334,6 +354,10 @@ DocAccessibleParent::RecvSelectionEvent(const uint64_t& aID,
 mozilla::ipc::IPCResult
 DocAccessibleParent::RecvRoleChangedEvent(const uint32_t& aRole)
 {
+  if (mShutdown) {
+    return IPC_OK();
+  }
+
  if (aRole >= roles::LAST_ROLE) {
    NS_ERROR("child sent bad role in RoleChangedEvent");
    return IPC_FAIL_NO_REASON(this);
@@ -435,6 +459,11 @@ DocAccessibleParent::Destroy()
     ProxyDestroyed(iter.Get()->mProxy);
     iter.Remove();
   }
+
+  // The code above should have already completely cleared these, but to be
+  // extra safe make sure they are cleared here.
+  mAccessibles.Clear();
+  mChildDocs.Clear();
 
   DocManager::NotifyOfRemoteDocShutdown(this);
   ProxyDestroyed(this);

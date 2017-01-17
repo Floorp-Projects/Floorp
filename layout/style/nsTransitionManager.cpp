@@ -558,8 +558,8 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
                "for transitions");
     nsStyleSet* styleSet = mPresContext->StyleSet()->AsGecko();
     afterChangeStyle =
-      styleSet->ResolveStyleWithoutAnimation(aElement, newStyleContext,
-                                             eRestyle_CSSTransitions);
+      styleSet->ResolveStyleByRemovingAnimation(aElement, newStyleContext,
+                                                eRestyle_CSSTransitions);
   } else {
     afterChangeStyle = newStyleContext;
   }

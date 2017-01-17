@@ -71,8 +71,7 @@ add_task(function* test_context_menu() {
   searchItem.click();
 
   info("Validate the search metrics.");
-  const scalars =
-    Services.telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+  const scalars = getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true, false);
   checkKeyedScalar(scalars, SCALAR_CONTEXT_MENU, "search", 1);
   Assert.equal(Object.keys(scalars[SCALAR_CONTEXT_MENU]).length, 1,
                "This search must only increment one entry in the scalar.");
@@ -108,8 +107,7 @@ add_task(function* test_about_newtab() {
   yield p;
 
   // Check if the scalars contain the expected values.
-  const scalars =
-    Services.telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+  const scalars = getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true, false);
   checkKeyedScalar(scalars, SCALAR_ABOUT_NEWTAB, "search_enter", 1);
   Assert.equal(Object.keys(scalars[SCALAR_ABOUT_NEWTAB]).length, 1,
                "This search must only increment one entry in the scalar.");

@@ -19,13 +19,13 @@ show_help() {
     cat <<EOF
 Usage: ${self_basename} [options] file1 [file2 ...]
 
-This script generates a Visual Studio 2005 solution file from a list of project
+This script generates a Visual Studio solution file from a list of project
 files.
 
 Options:
     --help                      Print this message
     --out=outfile               Redirect output to a file
-    --ver=version               Version (7,8,9,10,11) of visual studio to generate for
+    --ver=version               Version (7,8,9,10,11,12,14) of visual studio to generate for
     --target=isa-os-cc          Target specifier
 EOF
     exit 1
@@ -255,7 +255,7 @@ for opt in "$@"; do
     ;;
     --ver=*) vs_ver="$optval"
              case $optval in
-             [789]|10|11|12)
+             [789]|10|11|12|14)
              ;;
              *) die Unrecognized Visual Studio Version in $opt
              ;;
@@ -300,12 +300,15 @@ case "${vs_ver:-8}" in
     12) sln_vers="12.00"
        sln_vers_str="Visual Studio 2013"
     ;;
+    14) sln_vers="14.00"
+       sln_vers_str="Visual Studio 2015"
+    ;;
 esac
 case "${vs_ver:-8}" in
     [789])
     sfx=vcproj
     ;;
-    10|11|12)
+    10|11|12|14)
     sfx=vcxproj
     ;;
 esac

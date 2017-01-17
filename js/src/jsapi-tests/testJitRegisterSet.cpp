@@ -35,6 +35,12 @@ CoPrime(size_t a, size_t b)
         }                                                   \
     }
 
+#define BEGIN_All_WALK(RegTotal)                            \
+    static const size_t Total = RegTotal;                   \
+    size_t walk = 1;                                        \
+    size_t start = 0;                                       \
+    size_t index = start;
+
 #define FOR_ALL_REGISTERS(Register, reg)            \
     do {                                            \
         Register reg = Register::FromCode(index);
@@ -136,3 +142,70 @@ BEGIN_TEST(testJitRegisterSet_FPU)
     return true;
 }
 END_TEST(testJitRegisterSet_FPU)
+
+void pullAllFpus(AllocatableFloatRegisterSet& set, uint32_t& max_bits, uint32_t bits) {
+    FloatRegisterSet allocSet(set.bits());
+    FloatRegisterSet available_f32(allocSet.allAllocatable<RegTypeName::Float32>());
+    FloatRegisterSet available_f64(allocSet.allAllocatable<RegTypeName::Float64>());
+    FloatRegisterSet available_v128(allocSet.allAllocatable<RegTypeName::Vector128>());
+    for (FloatRegisterIterator it(available_f32); it.more(); ++it) {
+        FloatRegister tmp = *it;
+        set.take(tmp);
+        pullAllFpus(set, max_bits, bits + 32);
+        set.add(tmp);
+    }
+    for (FloatRegisterIterator it(available_f64); it.more(); ++it) {
+        FloatRegister tmp = *it;
+        set.take(tmp);
+        pullAllFpus(set, max_bits, bits + 64);
+        set.add(tmp);
+    }
+    for (FloatRegisterIterator it(available_v128); it.more(); ++it) {
+        FloatRegister tmp = *it;
+        set.take(tmp);
+        pullAllFpus(set, max_bits, bits + 128);
+        set.add(tmp);
+    }
+    if (bits >= max_bits)
+        max_bits = bits;
+}
+
+BEGIN_TEST(testJitRegisterSet_FPU_Aliases)
+{
+    BEGIN_All_WALK(FloatRegisters::Total);
+    FOR_ALL_REGISTERS(FloatRegister, reg) {
+        AllocatableFloatRegisterSet pool;
+        pool.add(reg);
+
+        uint32_t alias_bits = 0;
+        for (uint32_t i = 0; i < reg.numAlignedAliased(); i++) {
+            FloatRegister alias;
+            reg.alignedAliased(i, &alias);
+
+            if (alias.isSingle()) {
+                if (alias_bits <= 32)
+                    alias_bits = 32;
+            } else if (alias.isDouble()) {
+                if (alias_bits <= 64)
+                    alias_bits = 64;
+            } else if (alias.isSimd128()) {
+                if (alias_bits <= 128)
+                    alias_bits = 128;
+            }
+        }
+
+        uint32_t max_bits = 0;
+        pullAllFpus(pool, max_bits, 0);
+
+        // By adding one register, we expect that we should not be able to pull
+        // more than any of its aligned aliases.  This rule should hold for both
+        // x64 and ARM.
+        CHECK(max_bits <= alias_bits);
+
+        // We added one register, we expect to be able to pull it back.
+        CHECK(max_bits > 0);
+    } END_FOR_ALL_REGISTERS;
+
+    return true;
+}
+END_TEST(testJitRegisterSet_FPU_Aliases)

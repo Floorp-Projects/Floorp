@@ -356,15 +356,100 @@ BasicCompositor::SupportsEffect(EffectTypes aEffect)
   return aEffect != EffectTypes::YCBCR && aEffect != EffectTypes::COMPONENT_ALPHA;
 }
 
+bool
+BasicCompositor::SupportsLayerGeometry() const
+{
+  return gfxPrefs::BasicLayerGeometry();
+}
+
+static RefPtr<gfx::Path>
+BuildPathFromPolygon(const RefPtr<DrawTarget>& aDT,
+                     const gfx::Polygon& aPolygon)
+{
+  RefPtr<PathBuilder> pathBuilder = aDT->CreatePathBuilder();
+  const nsTArray<Point4D>& points = aPolygon.GetPoints();
+
+  pathBuilder->MoveTo(points[0].As2DPoint());
+
+  for (size_t i = 1; i < points.Length(); ++i) {
+    pathBuilder->LineTo(points[i].As2DPoint());
+  }
+
+  pathBuilder->Close();
+  return pathBuilder->Finish();
+}
+
 static void
-DrawSurfaceWithTextureCoords(DrawTarget *aDest,
+DrawSurface(gfx::DrawTarget* aDest,
+            const gfx::Rect& aDestRect,
+            const gfx::Rect& /* aClipRect */,
+            const gfx::Color& aColor,
+            const gfx::DrawOptions& aOptions,
+            gfx::SourceSurface* aMask,
+            const gfx::Matrix* aMaskTransform)
+{
+  FillRectWithMask(aDest, aDestRect, aColor,
+                   aOptions, aMask, aMaskTransform);
+}
+
+static void
+DrawSurface(gfx::DrawTarget* aDest,
+            const gfx::Polygon& aPolygon,
+            const gfx::Rect& aClipRect,
+            const gfx::Color& aColor,
+            const gfx::DrawOptions& aOptions,
+            gfx::SourceSurface* aMask,
+            const gfx::Matrix* aMaskTransform)
+{
+  RefPtr<Path> path = BuildPathFromPolygon(aDest, aPolygon);
+  FillPathWithMask(aDest, path, aClipRect, aColor,
+                   aOptions, aMask, aMaskTransform);
+}
+
+static void
+DrawTextureSurface(gfx::DrawTarget* aDest,
+                   const gfx::Rect& aDestRect,
+                   const gfx::Rect& /* aClipRect */,
+                   gfx::SourceSurface* aSource,
+                   gfx::SamplingFilter aSamplingFilter,
+                   const gfx::DrawOptions& aOptions,
+                   ExtendMode aExtendMode,
+                   gfx::SourceSurface* aMask,
+                   const gfx::Matrix* aMaskTransform,
+                   const Matrix* aSurfaceTransform)
+{
+  FillRectWithMask(aDest, aDestRect, aSource, aSamplingFilter, aOptions,
+                   aExtendMode, aMask, aMaskTransform, aSurfaceTransform);
+}
+
+static void
+DrawTextureSurface(gfx::DrawTarget* aDest,
+                   const gfx::Polygon& aPolygon,
+                   const gfx::Rect& aClipRect,
+                   gfx::SourceSurface* aSource,
+                   gfx::SamplingFilter aSamplingFilter,
+                   const gfx::DrawOptions& aOptions,
+                   ExtendMode aExtendMode,
+                   gfx::SourceSurface* aMask,
+                   const gfx::Matrix* aMaskTransform,
+                   const Matrix* aSurfaceTransform)
+{
+  RefPtr<Path> path = BuildPathFromPolygon(aDest, aPolygon);
+  FillPathWithMask(aDest, path, aClipRect, aSource, aSamplingFilter, aOptions,
+                   aExtendMode, aMask, aMaskTransform, aSurfaceTransform);
+}
+
+template<typename Geometry>
+static void
+DrawSurfaceWithTextureCoords(gfx::DrawTarget* aDest,
+                             const Geometry& aGeometry,
                              const gfx::Rect& aDestRect,
-                             SourceSurface *aSource,
+                             gfx::SourceSurface* aSource,
                              const gfx::Rect& aTextureCoords,
                              gfx::SamplingFilter aSamplingFilter,
-                             const DrawOptions& aOptions,
-                             SourceSurface *aMask,
-                             const Matrix* aMaskTransform)
+                             const gfx::DrawOptions& aOptions,
+                             gfx::SourceSurface* aMask,
+                             const gfx::Matrix* aMaskTransform)
 {
   if (!aSource) {
     gfxWarning() << "DrawSurfaceWithTextureCoords problem " << gfx::hexa(aSource) << " and " << gfx::hexa(aMask);
@@ -392,8 +477,8 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
   gfx::Rect unitRect(0, 0, 1, 1);
   ExtendMode mode = unitRect.Contains(aTextureCoords) ? ExtendMode::CLAMP : ExtendMode::REPEAT;
 
-  FillRectWithMask(aDest, aDestRect, aSource, aSamplingFilter, aOptions,
-                   mode, aMask, aMaskTransform, &matrix);
+  DrawTextureSurface(aDest, aGeometry, aDestRect, aSource, aSamplingFilter,
+                     aOptions, mode, aMask, aMaskTransform, &matrix);
 }
 
 static void
@@ -553,6 +638,35 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
                           const gfx::Matrix4x4& aTransform,
                           const gfx::Rect& aVisibleRect)
 {
+  DrawGeometry(aRect, aRect, aClipRect, aEffectChain,
+               aOpacity, aTransform, aVisibleRect, true);
+}
+
+void
+BasicCompositor::DrawPolygon(const gfx::Polygon& aPolygon,
+                             const gfx::Rect& aRect,
+                             const gfx::IntRect& aClipRect,
+                             const EffectChain& aEffectChain,
+                             gfx::Float aOpacity,
+                             const gfx::Matrix4x4& aTransform,
+                             const gfx::Rect& aVisibleRect)
+{
+  DrawGeometry(aPolygon, aRect, aClipRect, aEffectChain,
+               aOpacity, aTransform, aVisibleRect, false);
+}
+
+
+template<typename Geometry>
+void
+BasicCompositor::DrawGeometry(const Geometry& aGeometry,
+                              const gfx::Rect& aRect,
+                              const gfx::IntRect& aClipRect,
+                              const EffectChain& aEffectChain,
+                              gfx::Float aOpacity,
+                              const gfx::Matrix4x4& aTransform,
+                              const gfx::Rect& aVisibleRect,
+                              const bool aEnableAA)
+{
   RefPtr<DrawTarget> buffer = mRenderTarget->mDrawTarget;
 
   // For 2D drawing, |dest| and |buffer| are the same surface. For 3D drawing,
@@ -613,6 +727,11 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
     blendMode = static_cast<EffectBlendMode*>(effect)->mBlendMode;
   }
 
+  const AntialiasMode aaMode =
+    aEnableAA ? AntialiasMode::DEFAULT : AntialiasMode::NONE;
+
+  DrawOptions drawOptions(aOpacity, blendMode, aaMode);
+
   switch (aEffectChain.mPrimaryEffect->mType) {
     case EffectTypes::SOLID_COLOR: {
       EffectSolidColor* effectSolidColor =
@@ -623,8 +742,8 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
         dest->PushClipRect(aRect);
       }
 
-      FillRectWithMask(dest, aRect, effectSolidColor->mColor,
-                       DrawOptions(aOpacity, blendMode), sourceMask, &maskTransform);
+      DrawSurface(dest, aGeometry, aRect, effectSolidColor->mColor,
+                  drawOptions, sourceMask, &maskTransform);
 
       if (unboundedOp) {
         dest->PopClip();
@@ -654,11 +773,11 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
                               dest, buffer)) {
           // we succeeded in scaling
         } else {
-          DrawSurfaceWithTextureCoords(dest, aRect,
+          DrawSurfaceWithTextureCoords(dest, aGeometry, aRect,
                                        source->GetSurface(dest),
                                        texturedEffect->mTextureCoords,
                                        texturedEffect->mSamplingFilter,
-                                       DrawOptions(aOpacity, blendMode),
+                                       drawOptions,
                                        sourceMask, &maskTransform);
         }
       } else if (source) {
@@ -670,11 +789,11 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
           // This might be better with a cache, eventually.
           RefPtr<DataSourceSurface> premultData = gfxUtils::CreatePremultipliedDataSurface(srcData);
 
-          DrawSurfaceWithTextureCoords(dest, aRect,
+          DrawSurfaceWithTextureCoords(dest, aGeometry, aRect,
                                        premultData,
                                        texturedEffect->mTextureCoords,
                                        texturedEffect->mSamplingFilter,
-                                       DrawOptions(aOpacity, blendMode),
+                                       drawOptions,
                                        sourceMask, &maskTransform);
         }
       } else {
@@ -694,11 +813,11 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
         = static_cast<BasicCompositingRenderTarget*>(effectRenderTarget->mRenderTarget.get());
       RefPtr<SourceSurface> sourceSurf = surface->mDrawTarget->Snapshot();
 
-      DrawSurfaceWithTextureCoords(dest, aRect,
+      DrawSurfaceWithTextureCoords(dest, aGeometry, aRect,
                                    sourceSurf,
                                    effectRenderTarget->mTextureCoords,
                                    effectRenderTarget->mSamplingFilter,
-                                   DrawOptions(aOpacity, blendMode),
+                                   drawOptions,
                                    sourceMask, &maskTransform);
       break;
     }

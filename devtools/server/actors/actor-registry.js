@@ -5,11 +5,7 @@
 "use strict";
 
 const protocol = require("devtools/shared/protocol");
-const { method, custom, Arg, Option, RetVal } = protocol;
 
-const { Cu, CC, components } = require("chrome");
-const Services = require("Services");
-const { DebuggerServer } = require("devtools/server/main");
 const { registerActor, unregisterActor } = require("devtools/server/actors/utils/actor-registry-utils");
 const { actorActorSpec, actorRegistrySpec } = require("devtools/shared/specs/actor-registry");
 

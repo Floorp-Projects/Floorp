@@ -163,6 +163,11 @@ TypedArrayObject::finalize(FreeOp* fop, JSObject* obj)
     MOZ_ASSERT(!IsInsideNursery(obj));
     TypedArrayObject* curObj = &obj->as<TypedArrayObject>();
 
+    // Template objects or discarded objects (which didn't have enough room
+    // for inner elements). Don't have anything to free.
+    if (!curObj->elementsRaw())
+        return;
+
     curObj->assertZeroLengthArrayData();
 
     // Typed arrays with a buffer object do not need to be free'd

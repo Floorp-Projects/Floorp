@@ -16,7 +16,7 @@
 
 const testCases = [
   {
-    location: ["cookies", "sectest1.example.org"],
+    location: ["cookies", "https://sectest1.example.org"],
     sidebarHidden: true
   },
   {

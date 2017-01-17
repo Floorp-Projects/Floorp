@@ -11,6 +11,10 @@
 #ifndef VP9_ENCODER_VP9_ETHREAD_H_
 #define VP9_ENCODER_VP9_ETHREAD_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct VP9_COMP;
 struct ThreadData;
 
@@ -21,5 +25,9 @@ typedef struct EncWorkerData {
 } EncWorkerData;
 
 void vp9_encode_tiles_mt(struct VP9_COMP *cpi);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif  // VP9_ENCODER_VP9_ETHREAD_H_
