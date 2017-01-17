@@ -335,10 +335,10 @@ DisplayListBuilder::PushBorder(const WrRect& aBounds,
                                const WRBorderSide& aRight,
                                const WRBorderSide& aBottom,
                                const WRBorderSide& aLeft,
-                               const WRLayoutSize& aTopLeftRadius,
-                               const WRLayoutSize& aTopRightRadius,
-                               const WRLayoutSize& aBottomLeftRadius,
-                               const WRLayoutSize& aBottomRightRadius)
+                               const WrLayoutSize& aTopLeftRadius,
+                               const WrLayoutSize& aTopRightRadius,
+                               const WrLayoutSize& aBottomLeftRadius,
+                               const WrLayoutSize& aBottomRightRadius)
 {
   wr_dp_push_border(mWRState, aBounds, aClip,
                     aTop, aRight, aBottom, aLeft,
