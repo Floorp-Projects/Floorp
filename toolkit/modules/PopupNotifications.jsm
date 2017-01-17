@@ -620,16 +620,18 @@ PopupNotifications.prototype = {
   /**
    * Dismisses the notification without removing it.
    */
-  _dismiss: function PopupNotifications_dismiss(telemetryReason) {
+  _dismiss: function PopupNotifications_dismiss(event, telemetryReason) {
     if (telemetryReason) {
       this.nextDismissReason = telemetryReason;
     }
 
     // An explicitly dismissed persistent notification effectively becomes
     // non-persistent.
-    if (this.panel.firstChild &&
-        telemetryReason == TELEMETRY_STAT_DISMISSAL_CLOSE_BUTTON) {
-      this.panel.firstChild.notification.options.persistent = false;
+    if (event && telemetryReason == TELEMETRY_STAT_DISMISSAL_CLOSE_BUTTON) {
+      let notificationEl = getNotificationFromElement(event.target);
+      if (notificationEl) {
+        notificationEl.notification.options.persistent = false;
+      }
     }
 
     let browser = this.panel.firstChild &&
@@ -712,7 +714,7 @@ PopupNotifications.prototype = {
       popupnotification.setAttribute("label", n.message);
       popupnotification.setAttribute("id", popupnotificationID);
       popupnotification.setAttribute("popupid", n.id);
-      popupnotification.setAttribute("closebuttoncommand", `PopupNotifications._dismiss(${TELEMETRY_STAT_DISMISSAL_CLOSE_BUTTON});`);
+      popupnotification.setAttribute("closebuttoncommand", `PopupNotifications._dismiss(event, ${TELEMETRY_STAT_DISMISSAL_CLOSE_BUTTON});`);
       if (n.mainAction) {
         popupnotification.setAttribute("buttonlabel", n.mainAction.label);
         popupnotification.setAttribute("buttonaccesskey", n.mainAction.accessKey);
