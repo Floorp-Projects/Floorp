@@ -14,24 +14,34 @@
 namespace mozilla {
 namespace dom {
 
-/* static */ void
+/* static */ nsresult
 DocGroup::GetKey(nsIPrincipal* aPrincipal, nsACString& aKey)
 {
   aKey.Truncate();
   nsCOMPtr<nsIURI> uri;
   nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  if (NS_FAILED(rv)) {
+    return NS_OK;   // aKey is the empty string
+  }
+
   // GetBaseDomain works fine if |uri| is null, but it outputs a warning
   // which ends up cluttering the logs.
-  if (NS_SUCCEEDED(rv) && uri) {
-    nsCOMPtr<nsIEffectiveTLDService> tldService =
-      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
-    if (tldService) {
-      rv = tldService->GetBaseDomain(uri, 0, aKey);
-      if (NS_FAILED(rv)) {
-        aKey.Truncate();
-      }
-    }
+  if (!uri) {
+    return NS_OK;   // aKey is the empty string
   }
+
+  nsCOMPtr<nsIEffectiveTLDService> tldService =
+    do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  if (!tldService) {
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = tldService->GetBaseDomain(uri, 0, aKey);
+  if (NS_FAILED(rv)) {
+    aKey.Truncate();
+  }
+
+  return NS_OK;   // aKey may be the empty string
 }
 
 void
