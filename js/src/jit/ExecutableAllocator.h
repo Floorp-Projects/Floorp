@@ -353,6 +353,15 @@ SubAllocatedExecutableBytes(size_t bytes);
 extern void
 AssertAllocatedExecutableBytesIsZero();
 
+// Returns true if we can allocate a few more MB of executable code without
+// hitting our code limit. This function can be used to stop compiling things
+// that are optional (like Baseline and Ion code) when we're about to reach the
+// limit, so we are less likely to OOM or crash. Note that the limit is
+// per-process, so other threads can also allocate code after we call this
+// function.
+extern bool
+CanLikelyAllocateMoreExecutableMemory();
+
 } // namespace jit
 } // namespace js
 
