@@ -17,7 +17,7 @@ include protocol PTexture;
 
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 using WRImageFormat from "mozilla/gfx/webrender.h";
-using mozilla::gfx::ByteBuffer from "mozilla/layers/WebRenderTypes.h";
+using mozilla::gfx::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
 
 namespace mozilla {
 namespace layers {

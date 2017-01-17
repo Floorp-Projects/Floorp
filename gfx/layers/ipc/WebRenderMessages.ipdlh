@@ -17,9 +17,9 @@ using WRTextureFilter from "mozilla/gfx/webrender.h";
 using WRLayoutSize from "mozilla/gfx/webrender.h";
 using WRRect from "mozilla/gfx/webrender.h";
 using WRGlyphArray from "mozilla/gfx/webrender.h";
-using MaybeImageMask from "mozilla/layers/WebRenderTypes.h";
+using MaybeImageMask from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
-using mozilla::gfx::ByteBuffer from "mozilla/layers/WebRenderTypes.h";
+using mozilla::gfx::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::LayerIntRegion from "Units.h";
 
 namespace mozilla {

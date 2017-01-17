@@ -9,7 +9,7 @@
 #include "chrome/common/ipc_message_utils.h"
 
 #include "mozilla/gfx/webrender.h"
-#include "mozilla/layers/WebRenderTypes.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 
 namespace IPC {
 

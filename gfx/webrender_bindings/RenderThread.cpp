@@ -5,7 +5,7 @@
 
 #include "RenderThread.h"
 #include "nsThreadUtils.h"
-#include "mozilla/layers/RendererOGL.h"
+#include "mozilla/webrender/RendererOGL.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/StaticPtr.h"
 

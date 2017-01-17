@@ -9,7 +9,7 @@
 #include "Layers.h"
 #include "mozilla/layers/ContentClient.h"
 #include "WebRenderLayerManager.h"
-#include "mozilla/layers/WebRenderTypes.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 
 namespace mozilla {
 namespace layers {

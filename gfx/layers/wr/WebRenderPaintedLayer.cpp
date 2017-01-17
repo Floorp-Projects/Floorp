@@ -8,7 +8,7 @@
 #include "LayersLogging.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
-#include "mozilla/layers/WebRenderTypes.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 #include "gfxUtils.h"
 
 namespace mozilla {

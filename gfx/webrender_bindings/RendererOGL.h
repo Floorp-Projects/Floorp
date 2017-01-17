@@ -7,8 +7,8 @@
 #ifndef MOZILLA_LAYERS_RENDEREROGL_H
 #define MOZILLA_LAYERS_RENDEREROGL_H
 
-#include "mozilla/layers/RenderThread.h"
-#include "mozilla/layers/WebRenderTypes.h"
+#include "mozilla/webrender/RenderThread.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/gfx/webrender.h"
 
 namespace mozilla {

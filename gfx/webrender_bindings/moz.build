@@ -7,8 +7,7 @@
 with Files('**'):
     BUG_COMPONENT = ('Core', 'Graphics: WebRender')
 
-# TODO: mozilla.webrender
-EXPORTS.mozilla.layers += [
+EXPORTS.mozilla.webrender += [
     'RendererOGL.h',
     'RenderThread.h',
     'WebRenderAPI.h',
