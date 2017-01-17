@@ -4,6 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
+/* global importScripts, workerHelper, self, prettyFast */
+
 /**
  * This file is meant to be loaded as a ChromeWorker. It accepts messages which
  * have data of the form:
@@ -43,8 +47,7 @@ workerHelper.createTask(self, "pretty-print", ({ url, indent, source }) => {
       code: prettified.code,
       mappings: prettified.map._mappings
     };
-  }
-  catch (e) {
+  } catch (e) {
     return new Error(e.message + "\n" + e.stack);
   }
 });

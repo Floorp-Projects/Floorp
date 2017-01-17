@@ -71,8 +71,7 @@ add_task(function* test_abouthome_simpleQuery() {
   yield p;
 
   // Check if the scalars contain the expected values.
-  const scalars =
-    Services.telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+  const scalars = getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true, false);
   checkKeyedScalar(scalars, SCALAR_ABOUT_HOME, "search_enter", 1);
   Assert.equal(Object.keys(scalars[SCALAR_ABOUT_HOME]).length, 1,
                "This search must only increment one entry in the scalar.");

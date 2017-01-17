@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<title>Split non-orthogonal 1</title>
+
+<style>
+.container {
+  margin: 0 0;
+  width: 400px;
+  height: 400px;
+
+  position: absolute;
+  transform-style: preserve-3d;
+}
+
+.shape {
+  margin: 0 0;
+  position: absolute;
+}
+
+.first {
+  background-color: rgba(255,0,0,1);
+
+  width: 100px;
+  height: 100px;
+
+  top: 50px;
+  left: 50px;
+}
+
+.second {
+  background-color: rgba(0,255,0,1);
+
+  width: 150px;
+  height: 150px;
+
+  top: 50px;
+  left: 50px;
+
+  transform: rotateZ(45deg) rotateY(0.1deg);
+}
+</style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="shape second"></div>
+    <div class="shape first"></div>
+  </div>
+</body>
+</html>

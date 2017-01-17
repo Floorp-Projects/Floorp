@@ -40,6 +40,7 @@ typedef struct {
   int output_rc_stat;  // for outputting rc stats
   int speed;  // speed setting for codec
   int threads;
+  int aqmode;  // turns on aq-mode=3 (cyclic_refresh): 0=off, 1=on.
   // private storage for vpx_svc_encode
   void *internal;
 } SvcContext;

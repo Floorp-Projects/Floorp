@@ -163,7 +163,7 @@ void vp8_pack_tokens(vp8_writer *w, const TOKENEXTRA *p, int xcount)
 {
     const TOKENEXTRA *stop = p + xcount;
     unsigned int split;
-    unsigned int shift;
+    int shift;
     int count = w->count;
     unsigned int range = w->range;
     unsigned int lowvalue = w->lowvalue;
@@ -407,6 +407,7 @@ static void pack_tokens_into_partitions(VP8_COMP *cpi, unsigned char *cx_data,
 }
 
 
+#if CONFIG_MULTITHREAD
 static void pack_mb_row_tokens(VP8_COMP *cpi, vp8_writer *w)
 {
     int mb_row;
@@ -421,6 +422,7 @@ static void pack_mb_row_tokens(VP8_COMP *cpi, vp8_writer *w)
     }
 
 }
+#endif  // CONFIG_MULTITHREAD
 
 static void write_mv_ref
 (
@@ -1675,7 +1677,7 @@ void vp8_pack_bitstream(VP8_COMP *cpi, unsigned char *dest, unsigned char * dest
         if (cpi->b_multi_threaded)
             pack_mb_row_tokens(cpi, &cpi->bc[1]);
         else
-#endif
+#endif  // CONFIG_MULTITHREAD
             vp8_pack_tokens(&cpi->bc[1], cpi->tok, cpi->tok_count);
 
         vp8_stop_encode(&cpi->bc[1]);

@@ -12,4 +12,8 @@ failures, various options for running the tests, and XML test report
 generation.
 
 Local Modifications:
-Removed unused declarations of kPathSeparatorString to have warning free build.
+- Removed unused declarations of kPathSeparatorString to have warning
+  free build.
+- Added GTEST_ATTRIBUTE_UNUSED_ to test registering dummies in TEST_P
+  and INSTANTIATE_TEST_CASE_P to remove warnings about unused variables
+  under GCC 5.

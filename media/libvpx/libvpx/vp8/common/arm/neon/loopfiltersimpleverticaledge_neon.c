@@ -94,7 +94,8 @@ static INLINE void write_2x8(unsigned char *dst, int pitch,
 
 #ifdef VPX_INCOMPATIBLE_GCC
 static INLINE
-uint8x8x4_t read_4x8(unsigned char *src, int pitch, uint8x8x4_t x) {
+uint8x8x4_t read_4x8(unsigned char *src, int pitch) {
+    uint8x8x4_t x;
     const uint8x8_t a = vld1_u8(src);
     const uint8x8_t b = vld1_u8(src + pitch * 1);
     const uint8x8_t c = vld1_u8(src + pitch * 2);
@@ -152,7 +153,9 @@ uint8x8x4_t read_4x8(unsigned char *src, int pitch, uint8x8x4_t x) {
 }
 #else
 static INLINE
-uint8x8x4_t read_4x8(unsigned char *src, int pitch, uint8x8x4_t x) {
+uint8x8x4_t read_4x8(unsigned char *src, int pitch) {
+    uint8x8x4_t x;
+    x.val[0] = x.val[1] = x.val[2] = x.val[3] = vdup_n_u8(0);
     x = vld4_lane_u8(src, x, 0);
     src += pitch;
     x = vld4_lane_u8(src, x, 1);
@@ -190,9 +193,9 @@ static INLINE void vp8_loop_filter_simple_vertical_edge_neon(
     qblimit = vdupq_n_u8(*blimit);
 
     src1 = s - 2;
-    d0u8x4 = read_4x8(src1, p, d0u8x4);
+    d0u8x4 = read_4x8(src1, p);
     src1 += p * 8;
-    d1u8x4 = read_4x8(src1, p, d1u8x4);
+    d1u8x4 = read_4x8(src1, p);
 
     q3u8 = vcombine_u8(d0u8x4.val[0], d1u8x4.val[0]);  // d6 d10
     q4u8 = vcombine_u8(d0u8x4.val[2], d1u8x4.val[2]);  // d8 d12

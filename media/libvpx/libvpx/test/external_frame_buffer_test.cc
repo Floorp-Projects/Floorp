@@ -24,7 +24,6 @@
 namespace {
 
 const int kVideoNameParam = 1;
-const char kVP9TestFile[] = "vp90-2-02-size-lf-1920x1080.webm";
 
 struct ExternalFrameBuffer {
   uint8_t *data;
@@ -155,6 +154,8 @@ class ExternalFrameBufferList {
   ExternalFrameBuffer *ext_fb_list_;
 };
 
+#if CONFIG_WEBM_IO
+
 // Callback used by libvpx to request the application to return a frame
 // buffer of at least |min_size| in bytes.
 int get_vp9_frame_buffer(void *user_priv, size_t min_size,
@@ -196,6 +197,8 @@ int do_not_release_vp9_frame_buffer(void *user_priv,
   (void)fb;
   return 0;
 }
+
+#endif  // CONFIG_WEBM_IO
 
 // Class for testing passing in external frame buffers to libvpx.
 class ExternalFrameBufferMD5Test
@@ -278,6 +281,8 @@ class ExternalFrameBufferMD5Test
 };
 
 #if CONFIG_WEBM_IO
+const char kVP9TestFile[] = "vp90-2-02-size-lf-1920x1080.webm";
+
 // Class for testing passing in external frame buffers to libvpx.
 class ExternalFrameBufferTest : public ::testing::Test {
  protected:

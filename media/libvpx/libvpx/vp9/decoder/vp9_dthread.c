@@ -17,7 +17,7 @@
 // #define DEBUG_THREAD
 
 // TODO(hkuang): Clean up all the #ifdef in this file.
-void vp9_frameworker_lock_stats(VP9Worker *const worker) {
+void vp9_frameworker_lock_stats(VPxWorker *const worker) {
 #if CONFIG_MULTITHREAD
   FrameWorkerData *const worker_data = worker->data1;
   pthread_mutex_lock(&worker_data->stats_mutex);
@@ -26,7 +26,7 @@ void vp9_frameworker_lock_stats(VP9Worker *const worker) {
 #endif
 }
 
-void vp9_frameworker_unlock_stats(VP9Worker *const worker) {
+void vp9_frameworker_unlock_stats(VPxWorker *const worker) {
 #if CONFIG_MULTITHREAD
   FrameWorkerData *const worker_data = worker->data1;
   pthread_mutex_unlock(&worker_data->stats_mutex);
@@ -35,7 +35,7 @@ void vp9_frameworker_unlock_stats(VP9Worker *const worker) {
 #endif
 }
 
-void vp9_frameworker_signal_stats(VP9Worker *const worker) {
+void vp9_frameworker_signal_stats(VPxWorker *const worker) {
 #if CONFIG_MULTITHREAD
   FrameWorkerData *const worker_data = worker->data1;
 
@@ -59,7 +59,7 @@ void vp9_frameworker_signal_stats(VP9Worker *const worker) {
 #endif
 
 // TODO(hkuang): Remove worker parameter as it is only used in debug code.
-void vp9_frameworker_wait(VP9Worker *const worker, RefCntBuffer *const ref_buf,
+void vp9_frameworker_wait(VPxWorker *const worker, RefCntBuffer *const ref_buf,
                           int row) {
 #if CONFIG_MULTITHREAD
   if (!ref_buf)
@@ -74,7 +74,7 @@ void vp9_frameworker_wait(VP9Worker *const worker, RefCntBuffer *const ref_buf,
   {
     // Find the worker thread that owns the reference frame. If the reference
     // frame has been fully decoded, it may not have owner.
-    VP9Worker *const ref_worker = ref_buf->frame_worker_owner;
+    VPxWorker *const ref_worker = ref_buf->frame_worker_owner;
     FrameWorkerData *const ref_worker_data =
         (FrameWorkerData *)ref_worker->data1;
     const VP9Decoder *const pbi = ref_worker_data->pbi;
@@ -114,7 +114,7 @@ void vp9_frameworker_wait(VP9Worker *const worker, RefCntBuffer *const ref_buf,
 
 void vp9_frameworker_broadcast(RefCntBuffer *const buf, int row) {
 #if CONFIG_MULTITHREAD
-  VP9Worker *worker = buf->frame_worker_owner;
+  VPxWorker *worker = buf->frame_worker_owner;
 
 #ifdef DEBUG_THREAD
   {
@@ -134,8 +134,8 @@ void vp9_frameworker_broadcast(RefCntBuffer *const buf, int row) {
 #endif  // CONFIG_MULTITHREAD
 }
 
-void vp9_frameworker_copy_context(VP9Worker *const dst_worker,
-                                  VP9Worker *const src_worker) {
+void vp9_frameworker_copy_context(VPxWorker *const dst_worker,
+                                  VPxWorker *const src_worker) {
 #if CONFIG_MULTITHREAD
   FrameWorkerData *const src_worker_data = (FrameWorkerData *)src_worker->data1;
   FrameWorkerData *const dst_worker_data = (FrameWorkerData *)dst_worker->data1;

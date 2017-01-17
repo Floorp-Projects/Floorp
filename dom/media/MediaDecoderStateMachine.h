@@ -488,8 +488,6 @@ private:
   // the decoder, state machine, and main threads.
   MediaQueue<MediaData> mVideoQueue;
 
-  State mState = DECODER_STATE_DECODING_METADATA;
-
   UniquePtr<StateObject> mStateObj;
 
   media::TimeUnit Duration() const { MOZ_ASSERT(OnTaskQueue()); return mDuration.Ref().ref(); }

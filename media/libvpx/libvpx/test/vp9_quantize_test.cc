@@ -14,12 +14,12 @@
 
 #include "third_party/googletest/src/include/gtest/gtest.h"
 
+#include "./vpx_config.h"
+#include "./vpx_dsp_rtcd.h"
 #include "test/acm_random.h"
 #include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 #include "test/util.h"
-#include "./vpx_config.h"
-#include "./vp9_rtcd.h"
 #include "vp9/common/vp9_entropy.h"
 #include "vp9/common/vp9_scan.h"
 #include "vpx/vpx_codec.h"
@@ -331,21 +331,21 @@ using std::tr1::make_tuple;
 INSTANTIATE_TEST_CASE_P(
     SSE2, VP9QuantizeTest,
     ::testing::Values(
-        make_tuple(&vp9_highbd_quantize_b_sse2,
-                   &vp9_highbd_quantize_b_c, VPX_BITS_8),
-        make_tuple(&vp9_highbd_quantize_b_sse2,
-                   &vp9_highbd_quantize_b_c, VPX_BITS_10),
-        make_tuple(&vp9_highbd_quantize_b_sse2,
-                   &vp9_highbd_quantize_b_c, VPX_BITS_12)));
+        make_tuple(&vpx_highbd_quantize_b_sse2,
+                   &vpx_highbd_quantize_b_c, VPX_BITS_8),
+        make_tuple(&vpx_highbd_quantize_b_sse2,
+                   &vpx_highbd_quantize_b_c, VPX_BITS_10),
+        make_tuple(&vpx_highbd_quantize_b_sse2,
+                   &vpx_highbd_quantize_b_c, VPX_BITS_12)));
 INSTANTIATE_TEST_CASE_P(
     SSE2, VP9Quantize32Test,
     ::testing::Values(
-        make_tuple(&vp9_highbd_quantize_b_32x32_sse2,
-                   &vp9_highbd_quantize_b_32x32_c, VPX_BITS_8),
-        make_tuple(&vp9_highbd_quantize_b_32x32_sse2,
-                   &vp9_highbd_quantize_b_32x32_c, VPX_BITS_10),
-        make_tuple(&vp9_highbd_quantize_b_32x32_sse2,
-                   &vp9_highbd_quantize_b_32x32_c, VPX_BITS_12)));
+        make_tuple(&vpx_highbd_quantize_b_32x32_sse2,
+                   &vpx_highbd_quantize_b_32x32_c, VPX_BITS_8),
+        make_tuple(&vpx_highbd_quantize_b_32x32_sse2,
+                   &vpx_highbd_quantize_b_32x32_c, VPX_BITS_10),
+        make_tuple(&vpx_highbd_quantize_b_32x32_sse2,
+                   &vpx_highbd_quantize_b_32x32_c, VPX_BITS_12)));
 #endif  // HAVE_SSE2
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 }  // namespace

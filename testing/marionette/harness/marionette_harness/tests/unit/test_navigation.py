@@ -108,14 +108,17 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
         self.assertTrue(self.marionette.execute_script(
             "return window.document.getElementById('someDiv') == undefined"))
 
-    @skip("Disabled due to Bug 977899")
-    def test_navigate_frame(self):
-        self.marionette.navigate(self.marionette.absolute_url("test_iframe.html"))
-        self.marionette.switch_to_frame(0)
-        self.marionette.navigate(self.marionette.absolute_url("empty.html"))
-        self.assertTrue('empty.html' in self.marionette.get_url())
-        self.marionette.switch_to_frame()
-        self.assertTrue('test_iframe.html' in self.marionette.get_url())
+    def test_navigate_in_child_frame_changes_to_top(self):
+        frame_html = self.marionette.absolute_url("frameset.html")
+
+        self.marionette.navigate(frame_html)
+        frame = self.marionette.find_element(By.NAME, "third")
+        self.marionette.switch_to_frame(frame)
+        self.assertRaises(errors.NoSuchElementException,
+                          self.marionette.find_element, By.NAME, "third")
+
+        self.marionette.navigate(frame_html)
+        self.marionette.find_element(By.NAME, "third")
 
     @skip_if_mobile("Bug 1323755 - Socket timeout")
     def test_invalid_protocol(self):

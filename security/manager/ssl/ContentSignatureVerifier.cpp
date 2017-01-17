@@ -18,6 +18,7 @@
 #include "nsISupportsPriority.h"
 #include "nsIURI.h"
 #include "nsNSSComponent.h"
+#include "nsPromiseFlatString.h"
 #include "nsSecurityHeaderParser.h"
 #include "nsStreamUtils.h"
 #include "nsWhitespaceTokenizer.h"
@@ -433,7 +434,8 @@ ContentSignatureVerifier::ParseContentSignatureHeader(
   NS_NAMED_LITERAL_CSTRING(signature_var, "p384ecdsa");
   NS_NAMED_LITERAL_CSTRING(certChainURL_var, "x5u");
 
-  nsSecurityHeaderParser parser(aContentSignatureHeader.BeginReading());
+  const nsCString& flatHeader = PromiseFlatCString(aContentSignatureHeader);
+  nsSecurityHeaderParser parser(flatHeader);
   nsresult rv = parser.Parse();
   if (NS_FAILED(rv)) {
     CSVerifier_LOG(("CSVerifier: could not parse ContentSignature header\n"));

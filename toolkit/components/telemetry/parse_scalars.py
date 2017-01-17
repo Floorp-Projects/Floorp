@@ -14,6 +14,16 @@ SCALAR_TYPES_MAP = {
     'boolean': 'nsITelemetry::SCALAR_BOOLEAN'
 }
 
+# This is a list of flags that determine which process the scalar is allowed
+# to record from.
+KNOWN_PROCESS_FLAGS = {
+    'all': 'RecordedProcessType::All',
+    'all_childs': 'RecordedProcessType::AllChilds',
+    'main': 'RecordedProcessType::Main',
+    'content': 'RecordedProcessType::Content',
+    'gpu': 'RecordedProcessType::Gpu',
+}
+
 class ScalarType:
     """A class for representing a scalar definition."""
 
@@ -87,13 +97,15 @@ class ScalarType:
         OPTIONAL_FIELDS = {
             'cpp_guard': basestring,
             'release_channel_collection': basestring,
-            'keyed': bool
+            'keyed': bool,
+            'record_in_processes': list,
         }
 
         # The types for the data within the fields that hold lists.
         LIST_FIELDS_CONTENT = {
             'bug_numbers': int,
-            'notification_emails': basestring
+            'notification_emails': basestring,
+            'record_in_processes': basestring,
         }
 
         # Concatenate the required and optional field definitions.
@@ -153,6 +165,12 @@ class ScalarType:
         if cpp_guard and re.match(r'\W', cpp_guard):
             raise ValueError(self._name + ' - invalid cpp_guard: ' + cpp_guard)
 
+        # Validate record_in_processes.
+        record_in_processes = definition.get('record_in_processes', [])
+        for proc in record_in_processes:
+            if proc not in KNOWN_PROCESS_FLAGS.keys():
+                raise ValueError(self._name + ' - unknown value in record_in_processes: ' + proc)
+
     @property
     def name(self):
         """Get the scalar name"""
@@ -207,6 +225,16 @@ class ScalarType:
     def notification_emails(self):
         """Get the list of notification emails"""
         return self._definition['notification_emails']
+
+    @property
+    def record_in_processes(self):
+        """Get the non-empty list of processes to record data in"""
+        return self._definition.get('record_in_processes', ['main'])
+
+    @property
+    def record_in_processes_enum(self):
+        """Get the non-empty list of flags representing the processes to record data in"""
+        return [KNOWN_PROCESS_FLAGS.get(p) for p in self.record_in_processes]
 
     @property
     def dataset(self):

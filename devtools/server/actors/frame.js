@@ -72,7 +72,7 @@ let FrameActor = ActorClassWithSpec(frameSpec, {
       threadActor.objectGrip);
     form.arguments = this._args();
     if (this.frame.script) {
-      var generatedLocation = this.threadActor.sources.getFrameLocation(this.frame);
+      let generatedLocation = this.threadActor.sources.getFrameLocation(this.frame);
       form.where = {
         source: generatedLocation.generatedSourceActor.form(),
         line: generatedLocation.generatedLine,

@@ -25,9 +25,12 @@
 #include <assert.h>
 
 #include "vp8/common/quant_common.h"
+#include "vp8/common/reconintra.h"
+#include "./vpx_dsp_rtcd.h"
 #include "./vpx_scale_rtcd.h"
 #include "vpx_scale/vpx_scale.h"
 #include "vp8/common/systemdependent.h"
+#include "vpx_ports/vpx_once.h"
 #include "vpx_ports/vpx_timer.h"
 #include "detokenize.h"
 #if CONFIG_ERROR_CONCEALMENT
@@ -41,6 +44,17 @@ extern void vp8_init_loop_filter(VP8_COMMON *cm);
 extern void vp8cx_init_de_quantizer(VP8D_COMP *pbi);
 static int get_free_fb (VP8_COMMON *cm);
 static void ref_cnt_fb (int *buf, int *idx, int new_idx);
+
+static void initialize_dec(void) {
+    static volatile int init_done = 0;
+
+    if (!init_done)
+    {
+        vpx_dsp_rtcd();
+        vp8_init_intra_predictors();
+        init_done = 1;
+    }
+}
 
 static void remove_decompressor(VP8D_COMP *pbi)
 {
@@ -104,6 +118,8 @@ static struct VP8D_COMP * create_decompressor(VP8D_CONFIG *oxcf)
     pbi->independent_partitions = 0;
 
     vp8_setup_block_dptrs(&pbi->mb);
+
+    once(initialize_dec);
 
     return pbi;
 }

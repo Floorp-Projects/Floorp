@@ -17,7 +17,7 @@ const {Actor, ActorClassWithSpec} = require("devtools/shared/protocol");
 const events = require("sdk/event/core");
 const {eventLoopLagSpec} = require("devtools/shared/specs/eventlooplag");
 
-var EventLoopLagActor = exports.EventLoopLagActor = ActorClassWithSpec(eventLoopLagSpec, {
+exports.EventLoopLagActor = ActorClassWithSpec(eventLoopLagSpec, {
   _observerAdded: false,
 
   /**

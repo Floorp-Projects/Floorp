@@ -154,6 +154,20 @@ GPUChild::RecvAccumulateChildKeyedHistogram(InfallibleTArray<KeyedAccumulation>&
 }
 
 mozilla::ipc::IPCResult
+GPUChild::RecvUpdateChildScalars(InfallibleTArray<ScalarAction>&& aScalarActions)
+{
+  Telemetry::UpdateChildScalars(GeckoProcessType_GPU, aScalarActions);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+GPUChild::RecvUpdateChildKeyedScalars(InfallibleTArray<KeyedScalarAction>&& aScalarActions)
+{
+  Telemetry::UpdateChildKeyedScalars(GeckoProcessType_GPU, aScalarActions);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 GPUChild::RecvNotifyDeviceReset()
 {
   mHost->mListener->OnProcessDeviceReset(mHost);

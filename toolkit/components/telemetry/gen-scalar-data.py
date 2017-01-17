@@ -40,11 +40,12 @@ def write_scalar_info(scalar, output, name_index, expiration_index):
     if cpp_guard:
         print("#if defined(%s)" % cpp_guard, file=output)
 
-    print("  {{ {}, {}, {}, {}, {} }},"\
+    print("  {{ {}, {}, {}, {}, {}, {} }},"\
           .format(scalar.nsITelemetry_kind,
                   name_index,
                   expiration_index,
                   scalar.dataset,
+                  " | ".join(scalar.record_in_processes_enum),
                   "true" if scalar.keyed else "false"),
           file=output)
 

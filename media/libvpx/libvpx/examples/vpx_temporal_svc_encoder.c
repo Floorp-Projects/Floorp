@@ -41,7 +41,7 @@ enum denoiserState {
   kDenoiserOnAdaptive
 };
 
-static int mode_to_num_layers[12] = {1, 2, 2, 3, 3, 3, 3, 5, 2, 3, 3, 3};
+static int mode_to_num_layers[13] = {1, 2, 2, 3, 3, 3, 3, 5, 2, 3, 3, 3, 3};
 
 // For rate control encoding stats.
 struct RateControlMetrics {
@@ -432,7 +432,32 @@ static void set_temporal_layer_pattern(int layering_mode,
       layer_flags[7] = layer_flags[3];
       break;
     }
-    case 11:
+    case 11: {
+      // 3-layers structure with one reference frame.
+      // This works same as temporal_layering_mode 3.
+      // This was added to compare with vp9_spatial_svc_encoder.
+
+      // 3-layers, 4-frame period.
+      int ids[4] = {0, 2, 1, 2};
+      cfg->ts_periodicity = 4;
+      *flag_periodicity = 4;
+      cfg->ts_number_layers = 3;
+      cfg->ts_rate_decimator[0] = 4;
+      cfg->ts_rate_decimator[1] = 2;
+      cfg->ts_rate_decimator[2] = 1;
+      memcpy(cfg->ts_layer_id, ids, sizeof(ids));
+      // 0=L, 1=GF, 2=ARF, Intra-layer prediction disabled.
+      layer_flags[0] = VP8_EFLAG_NO_REF_GF | VP8_EFLAG_NO_REF_ARF |
+          VP8_EFLAG_NO_UPD_GF | VP8_EFLAG_NO_UPD_ARF;
+      layer_flags[2] = VP8_EFLAG_NO_REF_GF | VP8_EFLAG_NO_REF_ARF |
+          VP8_EFLAG_NO_UPD_ARF | VP8_EFLAG_NO_UPD_LAST;
+      layer_flags[1] = VP8_EFLAG_NO_REF_GF | VP8_EFLAG_NO_REF_ARF |
+          VP8_EFLAG_NO_UPD_LAST | VP8_EFLAG_NO_UPD_GF;
+      layer_flags[3] = VP8_EFLAG_NO_REF_LAST | VP8_EFLAG_NO_REF_ARF |
+          VP8_EFLAG_NO_UPD_LAST | VP8_EFLAG_NO_UPD_GF;
+      break;
+    }
+    case 12:
     default: {
       // 3-layers structure as in case 10, but no sync/refresh points for
       // layer 1 and 2.
@@ -530,7 +555,7 @@ int main(int argc, char **argv) {
   }
 
   layering_mode = strtol(argv[10], NULL, 0);
-  if (layering_mode < 0 || layering_mode > 12) {
+  if (layering_mode < 0 || layering_mode > 13) {
     die("Invalid layering mode (0..12) %s", argv[10]);
   }
 
@@ -608,7 +633,6 @@ int main(int argc, char **argv) {
   // Real time parameters.
   cfg.rc_dropframe_thresh = strtol(argv[9], NULL, 0);
   cfg.rc_end_usage = VPX_CBR;
-  cfg.rc_resize_allowed = 0;
   cfg.rc_min_quantizer = 2;
   cfg.rc_max_quantizer = 56;
   if (strncmp(encoder->name, "vp9", 3) == 0)
@@ -618,6 +642,9 @@ int main(int argc, char **argv) {
   cfg.rc_buf_initial_sz = 500;
   cfg.rc_buf_optimal_sz = 600;
   cfg.rc_buf_sz = 1000;
+
+  // Disable dynamic resizing by default.
+  cfg.rc_resize_allowed = 0;
 
   // Use 1 thread as default.
   cfg.g_threads = 1;
@@ -682,14 +709,15 @@ int main(int argc, char **argv) {
   if (strncmp(encoder->name, "vp8", 3) == 0) {
     vpx_codec_control(&codec, VP8E_SET_CPUUSED, -speed);
     vpx_codec_control(&codec, VP8E_SET_NOISE_SENSITIVITY, kDenoiserOff);
-    vpx_codec_control(&codec, VP8E_SET_STATIC_THRESHOLD, 0);
+    vpx_codec_control(&codec, VP8E_SET_STATIC_THRESHOLD, 1);
   } else if (strncmp(encoder->name, "vp9", 3) == 0) {
     vpx_svc_extra_cfg_t svc_params;
     vpx_codec_control(&codec, VP8E_SET_CPUUSED, speed);
     vpx_codec_control(&codec, VP9E_SET_AQ_MODE, 3);
     vpx_codec_control(&codec, VP9E_SET_FRAME_PERIODIC_BOOST, 0);
-    vpx_codec_control(&codec, VP9E_SET_NOISE_SENSITIVITY, 0);
-    vpx_codec_control(&codec, VP8E_SET_STATIC_THRESHOLD, 0);
+    vpx_codec_control(&codec, VP9E_SET_NOISE_SENSITIVITY, kDenoiserOff);
+    vpx_codec_control(&codec, VP8E_SET_STATIC_THRESHOLD, 1);
+    vpx_codec_control(&codec, VP9E_SET_TUNE_CONTENT, 0);
     vpx_codec_control(&codec, VP9E_SET_TILE_COLUMNS, (cfg.g_threads >> 1));
     if (vpx_codec_control(&codec, VP9E_SET_SVC, layering_mode > 0 ? 1: 0))
       die_codec(&codec, "Failed to set SVC");

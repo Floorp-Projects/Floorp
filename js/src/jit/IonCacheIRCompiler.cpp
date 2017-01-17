@@ -933,7 +933,9 @@ IonIC::attachCacheIRStub(JSContext* cx, const CacheIRWriter& writer, CacheKind k
     AutoAssertNoPendingException aanpe(cx);
     JS::AutoCheckCannotGC nogc;
 
-    if (writer.failed())
+    // Do nothing if the IR generator failed or triggered a GC that invalidated
+    // the script.
+    if (writer.failed() || !outerScript->hasIonScript())
         return false;
 
     JitContext jctx(cx, nullptr);

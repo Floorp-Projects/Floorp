@@ -12,7 +12,7 @@
 #include "vp8/common/onyxc_int.h"
 #include "onyx_int.h"
 #include "vp8/common/systemdependent.h"
-#include "quantize.h"
+#include "vp8/encoder/quantize.h"
 #include "vp8/common/alloccommon.h"
 #include "mcomp.h"
 #include "firstpass.h"

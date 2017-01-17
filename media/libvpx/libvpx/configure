@@ -35,6 +35,9 @@ Advanced options:
   ${toggle_debug_libs}            in/exclude debug version of libraries
   ${toggle_static_msvcrt}         use static MSVCRT (VS builds only)
   ${toggle_vp9_highbitdepth}      use VP9 high bit depth (10/12) profiles
+  ${toggle_better_hw_compatibility}
+                                  enable encoder to produce streams with better
+                                  hardware decoder compatibility
   ${toggle_vp8}                   VP8 codec support
   ${toggle_vp9}                   VP9 codec support
   ${toggle_internal_stats}        output of encoder internal stats for debug, if supported (encoders)
@@ -94,11 +97,11 @@ EOF
 
 # all_platforms is a list of all supported target platforms. Maintain
 # alphabetically by architecture, generic-gnu last.
-all_platforms="${all_platforms} armv6-darwin-gcc"
+all_platforms="${all_platforms} arm64-darwin-gcc"
+all_platforms="${all_platforms} arm64-linux-gcc"
 all_platforms="${all_platforms} armv6-linux-rvct"
 all_platforms="${all_platforms} armv6-linux-gcc"
 all_platforms="${all_platforms} armv6-none-rvct"
-all_platforms="${all_platforms} arm64-darwin-gcc"
 all_platforms="${all_platforms} armv7-android-gcc"   #neon Cortex-A8
 all_platforms="${all_platforms} armv7-darwin-gcc"    #neon Cortex-A8
 all_platforms="${all_platforms} armv7-linux-rvct"    #neon Cortex-A8
@@ -106,7 +109,9 @@ all_platforms="${all_platforms} armv7-linux-gcc"     #neon Cortex-A8
 all_platforms="${all_platforms} armv7-none-rvct"     #neon Cortex-A8
 all_platforms="${all_platforms} armv7-win32-vs11"
 all_platforms="${all_platforms} armv7-win32-vs12"
+all_platforms="${all_platforms} armv7-win32-vs14"
 all_platforms="${all_platforms} armv7s-darwin-gcc"
+all_platforms="${all_platforms} armv8-linux-gcc"
 all_platforms="${all_platforms} mips32-linux-gcc"
 all_platforms="${all_platforms} mips64-linux-gcc"
 all_platforms="${all_platforms} sparc-solaris-gcc"
@@ -120,6 +125,7 @@ all_platforms="${all_platforms} x86-darwin11-gcc"
 all_platforms="${all_platforms} x86-darwin12-gcc"
 all_platforms="${all_platforms} x86-darwin13-gcc"
 all_platforms="${all_platforms} x86-darwin14-gcc"
+all_platforms="${all_platforms} x86-darwin15-gcc"
 all_platforms="${all_platforms} x86-iphonesimulator-gcc"
 all_platforms="${all_platforms} x86-linux-gcc"
 all_platforms="${all_platforms} x86-linux-icc"
@@ -132,12 +138,15 @@ all_platforms="${all_platforms} x86-win32-vs9"
 all_platforms="${all_platforms} x86-win32-vs10"
 all_platforms="${all_platforms} x86-win32-vs11"
 all_platforms="${all_platforms} x86-win32-vs12"
+all_platforms="${all_platforms} x86-win32-vs14"
+all_platforms="${all_platforms} x86_64-android-gcc"
 all_platforms="${all_platforms} x86_64-darwin9-gcc"
 all_platforms="${all_platforms} x86_64-darwin10-gcc"
 all_platforms="${all_platforms} x86_64-darwin11-gcc"
 all_platforms="${all_platforms} x86_64-darwin12-gcc"
 all_platforms="${all_platforms} x86_64-darwin13-gcc"
 all_platforms="${all_platforms} x86_64-darwin14-gcc"
+all_platforms="${all_platforms} x86_64-darwin15-gcc"
 all_platforms="${all_platforms} x86_64-iphonesimulator-gcc"
 all_platforms="${all_platforms} x86_64-linux-gcc"
 all_platforms="${all_platforms} x86_64-linux-icc"
@@ -148,6 +157,7 @@ all_platforms="${all_platforms} x86_64-win64-vs9"
 all_platforms="${all_platforms} x86_64-win64-vs10"
 all_platforms="${all_platforms} x86_64-win64-vs11"
 all_platforms="${all_platforms} x86_64-win64-vs12"
+all_platforms="${all_platforms} x86_64-win64-vs14"
 all_platforms="${all_platforms} generic-gnu"
 
 # all_targets is a list of all targets that can be configured
@@ -185,8 +195,8 @@ if [ ${doxy_major:-0} -ge 1 ]; then
 fi
 
 # disable codecs when their source directory does not exist
-[ -d "${source_path}/vp8" ] || disable_feature vp8
-[ -d "${source_path}/vp9" ] || disable_feature vp9
+[ -d "${source_path}/vp8" ] || disable_codec vp8
+[ -d "${source_path}/vp9" ] || disable_codec vp9
 
 # install everything except the sources, by default. sources will have
 # to be enabled when doing dist builds, since that's no longer a common
@@ -220,6 +230,16 @@ ARCH_LIST="
     x86
     x86_64
 "
+ARCH_EXT_LIST_X86="
+    mmx
+    sse
+    sse2
+    sse3
+    ssse3
+    sse4_1
+    avx
+    avx2
+"
 ARCH_EXT_LIST="
     edsp
     media
@@ -231,27 +251,19 @@ ARCH_EXT_LIST="
     msa
     mips64
 
-    mmx
-    sse
-    sse2
-    sse3
-    ssse3
-    sse4_1
-    avx
-    avx2
+    ${ARCH_EXT_LIST_X86}
 "
 HAVE_LIST="
     ${ARCH_EXT_LIST}
     vpx_ports
-    stdint_h
     pthread_h
-    sys_mman_h
     unistd_h
 "
 EXPERIMENT_LIST="
     spatial_svc
     fp_mb_stats
     emulate_hardware
+    misc_fixes
 "
 CONFIG_LIST="
     dependency_tracking
@@ -304,6 +316,7 @@ CONFIG_LIST="
     vp9_temporal_denoising
     coefficient_range_checking
     vp9_highbitdepth
+    better_hw_compatibility
     experimental
     size_limit
     ${EXPERIMENT_LIST}
@@ -362,6 +375,7 @@ CMDLINE_SELECT="
     temporal_denoising
     vp9_temporal_denoising
     coefficient_range_checking
+    better_hw_compatibility
     vp9_highbitdepth
     experimental
 "
@@ -370,15 +384,19 @@ process_cmdline() {
     for opt do
         optval="${opt#*=}"
         case "$opt" in
-        --disable-codecs) for c in ${CODECS}; do disable_feature $c; done ;;
+        --disable-codecs)
+          for c in ${CODEC_FAMILIES}; do disable_codec $c; done
+          ;;
         --enable-?*|--disable-?*)
         eval `echo "$opt" | sed 's/--/action=/;s/-/ option=/;s/-/_/g'`
-        if echo "${EXPERIMENT_LIST}" | grep "^ *$option\$" >/dev/null; then
+        if is_in ${option} ${EXPERIMENT_LIST}; then
             if enabled experimental; then
                 ${action}_feature $option
             else
                 log_echo "Ignoring $opt -- not in experimental mode."
             fi
+        elif is_in ${option} "${CODECS} ${CODEC_FAMILIES}"; then
+            ${action}_codec ${option}
         else
             process_common_cmdline $opt
         fi
@@ -391,14 +409,6 @@ process_cmdline() {
 
 post_process_cmdline() {
     c=""
-
-    # If the codec family is disabled, disable all components of that family.
-    # If the codec family is enabled, enable all components of that family.
-    log_echo "Configuring selected codecs"
-    for c in ${CODECS}; do
-        disabled ${c%%_*} && disable_feature ${c}
-        enabled ${c%%_*} && enable_feature ${c}
-    done
 
     # Enable all detected codecs, if they haven't been disabled
     for c in ${CODECS}; do soft_enable $c; done
@@ -494,13 +504,18 @@ process_detect() {
         # Can only build shared libs on a subset of platforms. Doing this check
         # here rather than at option parse time because the target auto-detect
         # magic happens after the command line has been parsed.
-        if ! enabled linux && ! enabled os2; then
+        case "${tgt_os}" in
+        linux|os2|darwin*|iphonesimulator*)
+            # Supported platforms
+            ;;
+        *)
             if enabled gnu; then
                 echo "--enable-shared is only supported on ELF; assuming this is OK"
             else
-                die "--enable-shared only supported on ELF and OS/2 for now"
+                die "--enable-shared only supported on ELF, OS/2, and Darwin for now"
             fi
-        fi
+            ;;
+        esac
     fi
     if [ -z "$CC" ] || enabled external_build; then
         echo "Bypassing toolchain for environment detection."
@@ -527,16 +542,12 @@ process_detect() {
             # Specialize windows and POSIX environments.
             case $toolchain in
                 *-win*-*)
-                    case $header-$toolchain in
-                        stdint*-gcc) true;;
-                        *) false;;
-                    esac && enable_feature $var
-                    ;;
+                    # Don't check for any headers in Windows builds.
+                    false
+                ;;
                 *)
                     case $header in
-                        stdint.h) true;;
                         pthread.h) true;;
-                        sys/mman.h) true;;
                         unistd.h) true;;
                         *) false;;
                     esac && enable_feature $var
@@ -552,9 +563,7 @@ process_detect() {
 int main(void) {return 0;}
 EOF
     # check system headers
-    check_header stdint.h
     check_header pthread.h
-    check_header sys/mman.h
     check_header unistd.h # for sysconf(3) and friends.
 
     check_header vpx/vpx_integer.h -I${source_path} && enable_feature vpx_ports
@@ -585,7 +594,11 @@ process_toolchain() {
           ;;
           *) check_add_cflags -Wunused-but-set-variable ;;
         esac
-        enabled extra_warnings || check_add_cflags -Wno-unused-function
+        if enabled mips || [ -z "${INLINE}" ]; then
+          enabled extra_warnings || check_add_cflags -Wno-unused-function
+        else
+          check_add_cflags -Wunused-function
+        fi
     fi
 
     if enabled icc; then
@@ -638,7 +651,7 @@ process_toolchain() {
                  VCPROJ_SFX=vcproj
                  gen_vcproj_cmd=${source_path}/build/make/gen_msvs_proj.sh
                  ;;
-             10|11|12)
+             10|11|12|14)
                  VCPROJ_SFX=vcxproj
                  gen_vcproj_cmd=${source_path}/build/make/gen_msvs_vcxproj.sh
                  enabled werror && gen_vcproj_cmd="${gen_vcproj_cmd} --enable-werror"
@@ -704,6 +717,16 @@ EOF
     esac
     # libwebm needs to be linked with C++ standard library
     enabled webm_io && LD=${CXX}
+
+    # append any user defined extra cflags
+    if [ -n "${extra_cflags}" ] ; then
+        check_add_cflags ${extra_cflags} || \
+        die "Requested extra CFLAGS '${extra_cflags}' not supported by compiler"
+    fi
+    if [ -n "${extra_cxxflags}" ]; then
+        check_add_cxxflags ${extra_cxxflags} || \
+        die "Requested extra CXXFLAGS '${extra_cxxflags}' not supported by compiler"
+    fi
 }
 
 

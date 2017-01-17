@@ -10,6 +10,9 @@ const UNFILTERED_URI_COUNT = "browser.engagement.unfiltered_uri_count";
 
 const TELEMETRY_SUBSESSION_TOPIC = "internal-telemetry-after-subsession-split";
 
+// Reset internal URI counter in case URIs were opened by other tests.
+Services.obs.notifyObservers(null, TELEMETRY_SUBSESSION_TOPIC, "");
+
 /**
  * Waits for the web progress listener associated with this tab to fire an
  * onLocationChange for a non-error page.
@@ -61,8 +64,7 @@ let checkScalar = (scalars, scalarName, value, msg) => {
  * Get a snapshot of the scalars and check them against the provided values.
  */
 let checkScalars = (countsObject) => {
-  const scalars =
-    Services.telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+  const scalars = getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
 
   // Check the expected values. Scalars that are never set must not be reported.
   checkScalar(scalars, MAX_CONCURRENT_TABS, countsObject.maxTabs,
@@ -184,8 +186,7 @@ add_task(function* test_URIAndDomainCounts() {
 
   let checkCounts = (countsObject) => {
     // Get a snapshot of the scalars and then clear them.
-    const scalars =
-      Services.telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+    const scalars = getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
     checkScalar(scalars, TOTAL_URI_COUNT, countsObject.totalURIs,
                 "The URI scalar must contain the expected value.");
     checkScalar(scalars, UNIQUE_DOMAINS_COUNT, countsObject.domainCount,

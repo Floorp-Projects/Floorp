@@ -16,37 +16,10 @@
 #include "vpx/vpx_integer.h"
 
 #include "vp9/common/vp9_blockd.h"
-#include "vp9/common/vp9_filter.h"
 #include "vp9/common/vp9_reconinter.h"
 #include "vp9/common/vp9_reconintra.h"
 
-void inter_predictor(const uint8_t *src, int src_stride,
-                            uint8_t *dst, int dst_stride,
-                            const int subpel_x,
-                            const int subpel_y,
-                            const struct scale_factors *sf,
-                            int w, int h, int ref,
-                            const InterpKernel *kernel,
-                            int xs, int ys) {
-  sf->predict[subpel_x != 0][subpel_y != 0][ref](
-      src, src_stride, dst, dst_stride,
-      kernel[subpel_x], xs, kernel[subpel_y], ys, w, h);
-}
-
 #if CONFIG_VP9_HIGHBITDEPTH
-void high_inter_predictor(const uint8_t *src, int src_stride,
-                                 uint8_t *dst, int dst_stride,
-                                 const int subpel_x,
-                                 const int subpel_y,
-                                 const struct scale_factors *sf,
-                                 int w, int h, int ref,
-                                 const InterpKernel *kernel,
-                                 int xs, int ys, int bd) {
-  sf->highbd_predict[subpel_x != 0][subpel_y != 0][ref](
-      src, src_stride, dst, dst_stride,
-      kernel[subpel_x], xs, kernel[subpel_y], ys, w, h, bd);
-}
-
 void vp9_highbd_build_inter_predictor(const uint8_t *src, int src_stride,
                                       uint8_t *dst, int dst_stride,
                                       const MV *src_mv,
@@ -64,8 +37,9 @@ void vp9_highbd_build_inter_predictor(const uint8_t *src, int src_stride,
 
   src += (mv.row >> SUBPEL_BITS) * src_stride + (mv.col >> SUBPEL_BITS);
 
-  high_inter_predictor(src, src_stride, dst, dst_stride, subpel_x, subpel_y,
-                       sf, w, h, ref, kernel, sf->x_step_q4, sf->y_step_q4, bd);
+  highbd_inter_predictor(src, src_stride, dst, dst_stride, subpel_x, subpel_y,
+                         sf, w, h, ref, kernel, sf->x_step_q4, sf->y_step_q4,
+                         bd);
 }
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 
@@ -167,14 +141,14 @@ MV average_split_mvs(const struct macroblockd_plane *pd,
   return res;
 }
 
-void build_inter_predictors(MACROBLOCKD *xd, int plane, int block,
+static void build_inter_predictors(MACROBLOCKD *xd, int plane, int block,
                                    int bw, int bh,
                                    int x, int y, int w, int h,
                                    int mi_x, int mi_y) {
   struct macroblockd_plane *const pd = &xd->plane[plane];
   const MODE_INFO *mi = xd->mi[0];
-  const int is_compound = has_second_ref(&mi->mbmi);
-  const InterpKernel *kernel = vp9_get_interp_kernel(mi->mbmi.interp_filter);
+  const int is_compound = has_second_ref(mi);
+  const InterpKernel *kernel = vp9_filter_kernels[mi->interp_filter];
   int ref;
 
   for (ref = 0; ref < 1 + is_compound; ++ref) {
@@ -182,9 +156,9 @@ void build_inter_predictors(MACROBLOCKD *xd, int plane, int block,
     struct buf_2d *const pre_buf = &pd->pre[ref];
     struct buf_2d *const dst_buf = &pd->dst;
     uint8_t *const dst = dst_buf->buf + dst_buf->stride * y + x;
-    const MV mv = mi->mbmi.sb_type < BLOCK_8X8
+    const MV mv = mi->sb_type < BLOCK_8X8
                ? average_split_mvs(pd, mi, ref, block)
-               : mi->mbmi.mv[ref].as_mv;
+               : mi->mv[ref].as_mv;
 
     // TODO(jkoleszar): This clamping is done in the incorrect place for the
     // scaling case. It needs to be done on the scaled MV, not the pre-scaling
@@ -201,7 +175,25 @@ void build_inter_predictors(MACROBLOCKD *xd, int plane, int block,
     const int is_scaled = vp9_is_scaled(sf);
 
     if (is_scaled) {
-      pre = pre_buf->buf + scaled_buffer_offset(x, y, pre_buf->stride, sf);
+      // Co-ordinate of containing block to pixel precision.
+      const int x_start = (-xd->mb_to_left_edge >> (3 + pd->subsampling_x));
+      const int y_start = (-xd->mb_to_top_edge >> (3 + pd->subsampling_y));
+#if CONFIG_BETTER_HW_COMPATIBILITY
+      assert(xd->mi[0]->sb_type != BLOCK_4X8 &&
+             xd->mi[0]->sb_type != BLOCK_8X4);
+      assert(mv_q4.row == mv.row * (1 << (1 - pd->subsampling_y)) &&
+             mv_q4.col == mv.col * (1 << (1 - pd->subsampling_x)));
+#endif
+      if (plane == 0)
+        pre_buf->buf = xd->block_refs[ref]->buf->y_buffer;
+      else if (plane == 1)
+        pre_buf->buf = xd->block_refs[ref]->buf->u_buffer;
+      else
+        pre_buf->buf = xd->block_refs[ref]->buf->v_buffer;
+
+      pre_buf->buf += scaled_buffer_offset(x_start + x, y_start + y,
+                                           pre_buf->stride, sf);
+      pre = pre_buf->buf;
       scaled_mv = vp9_scale_mv(&mv_q4, mi_x + x, mi_y + y, sf);
       xs = sf->x_step_q4;
       ys = sf->y_step_q4;
@@ -218,9 +210,9 @@ void build_inter_predictors(MACROBLOCKD *xd, int plane, int block,
 
 #if CONFIG_VP9_HIGHBITDEPTH
     if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
-      high_inter_predictor(pre, pre_buf->stride, dst, dst_buf->stride,
-                           subpel_x, subpel_y, sf, w, h, ref, kernel, xs, ys,
-                           xd->bd);
+      highbd_inter_predictor(pre, pre_buf->stride, dst, dst_buf->stride,
+                             subpel_x, subpel_y, sf, w, h, ref, kernel, xs, ys,
+                             xd->bd);
     } else {
       inter_predictor(pre, pre_buf->stride, dst, dst_buf->stride,
                       subpel_x, subpel_y, sf, w, h, ref, kernel, xs, ys);
@@ -246,7 +238,7 @@ static void build_inter_predictors_for_planes(MACROBLOCKD *xd, BLOCK_SIZE bsize,
     const int bw = 4 * num_4x4_w;
     const int bh = 4 * num_4x4_h;
 
-    if (xd->mi[0]->mbmi.sb_type < BLOCK_8X8) {
+    if (xd->mi[0]->sb_type < BLOCK_8X8) {
       int i = 0, x, y;
       assert(bsize == BLOCK_8X8);
       for (y = 0; y < num_4x4_h; ++y)

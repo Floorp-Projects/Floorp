@@ -1,6 +1,6 @@
 Name: libyuv
 URL: http://code.google.com/p/libyuv/
-Version: 1305
+Version: 1456
 License: BSD
 License File: LICENSE
 
@@ -13,4 +13,3 @@ which down-samples the original input video (f.g. 1280x720) a number of times
 in order to encode multiple resolution bit streams.
 
 Local Modifications:
-cherry pick r1311 'disable nv12 avx2 for vs9/10 that dont support avx2 instructions.'

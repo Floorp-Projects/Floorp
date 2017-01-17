@@ -11,13 +11,13 @@
 #include <string.h>
 
 #include "third_party/googletest/src/include/gtest/gtest.h"
+
+#include "./vpx_config.h"
+#include "./vp8_rtcd.h"
 #include "test/acm_random.h"
 #include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 #include "test/util.h"
-
-#include "./vpx_config.h"
-#include "./vp8_rtcd.h"
 #include "vp8/common/blockd.h"
 #include "vp8/common/onyx.h"
 #include "vp8/encoder/block.h"
@@ -192,4 +192,12 @@ INSTANTIATE_TEST_CASE_P(NEON, QuantizeTest,
                         ::testing::Values(make_tuple(&vp8_fast_quantize_b_neon,
                                                      &vp8_fast_quantize_b_c)));
 #endif  // HAVE_NEON
+
+#if HAVE_MSA
+INSTANTIATE_TEST_CASE_P(
+    MSA, QuantizeTest,
+    ::testing::Values(
+        make_tuple(&vp8_fast_quantize_b_msa, &vp8_fast_quantize_b_c),
+        make_tuple(&vp8_regular_quantize_b_msa, &vp8_regular_quantize_b_c)));
+#endif  // HAVE_MSA
 }  // namespace

@@ -20,8 +20,8 @@
 
 /* Return the buffer at the given absolute index and increment the index */
 static struct lookahead_entry *pop(struct lookahead_ctx *ctx,
-                                   unsigned int *idx) {
-  unsigned int index = *idx;
+                                   int *idx) {
+  int index = *idx;
   struct lookahead_entry *buf = ctx->buf + index;
 
   assert(index < ctx->max_sz);
@@ -35,10 +35,10 @@ static struct lookahead_entry *pop(struct lookahead_ctx *ctx,
 void vp9_lookahead_destroy(struct lookahead_ctx *ctx) {
   if (ctx) {
     if (ctx->buf) {
-      unsigned int i;
+      int i;
 
       for (i = 0; i < ctx->max_sz; i++)
-        vp9_free_frame_buffer(&ctx->buf[i].img);
+        vpx_free_frame_buffer(&ctx->buf[i].img);
       free(ctx->buf);
     }
     free(ctx);
@@ -72,7 +72,7 @@ struct lookahead_ctx *vp9_lookahead_init(unsigned int width,
     if (!ctx->buf)
       goto bail;
     for (i = 0; i < depth; i++)
-      if (vp9_alloc_frame_buffer(&ctx->buf[i].img,
+      if (vpx_alloc_frame_buffer(&ctx->buf[i].img,
                                  width, height, subsampling_x, subsampling_y,
 #if CONFIG_VP9_HIGHBITDEPTH
                                  use_highbitdepth,
@@ -89,7 +89,7 @@ struct lookahead_ctx *vp9_lookahead_init(unsigned int width,
 
 #define USE_PARTIAL_COPY 0
 
-int vp9_lookahead_push(struct lookahead_ctx *ctx, YV12_BUFFER_CONFIG   *src,
+int vp9_lookahead_push(struct lookahead_ctx *ctx, YV12_BUFFER_CONFIG *src,
                        int64_t ts_start, int64_t ts_end,
 #if CONFIG_VP9_HIGHBITDEPTH
                        int use_highbitdepth,
@@ -172,7 +172,7 @@ int vp9_lookahead_push(struct lookahead_ctx *ctx, YV12_BUFFER_CONFIG   *src,
     if (larger_dimensions) {
       YV12_BUFFER_CONFIG new_img;
       memset(&new_img, 0, sizeof(new_img));
-      if (vp9_alloc_frame_buffer(&new_img,
+      if (vpx_alloc_frame_buffer(&new_img,
                                  width, height, subsampling_x, subsampling_y,
 #if CONFIG_VP9_HIGHBITDEPTH
                                  use_highbitdepth,
@@ -180,7 +180,7 @@ int vp9_lookahead_push(struct lookahead_ctx *ctx, YV12_BUFFER_CONFIG   *src,
                                  VP9_ENC_BORDER_IN_PIXELS,
                                  0))
           return 1;
-      vp9_free_frame_buffer(&buf->img);
+      vpx_free_frame_buffer(&buf->img);
       buf->img = new_img;
     } else if (new_dimensions) {
       buf->img.y_crop_width = src->y_crop_width;
@@ -221,9 +221,9 @@ struct lookahead_entry *vp9_lookahead_peek(struct lookahead_ctx *ctx,
 
   if (index >= 0) {
     // Forward peek
-    if (index < (int)ctx->sz) {
+    if (index < ctx->sz) {
       index += ctx->read_idx;
-      if (index >= (int)ctx->max_sz)
+      if (index >= ctx->max_sz)
         index -= ctx->max_sz;
       buf = ctx->buf + index;
     }

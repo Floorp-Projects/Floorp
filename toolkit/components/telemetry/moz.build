@@ -49,6 +49,7 @@ SOURCES += [
     'TelemetryCommon.cpp',
     'TelemetryEvent.cpp',
     'TelemetryHistogram.cpp',
+    'TelemetryIPCAccumulator.cpp',
     'TelemetryScalar.cpp',
     'WebrtcTelemetry.cpp',
 ]

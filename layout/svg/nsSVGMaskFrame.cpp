@@ -235,8 +235,9 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(MaskParams& aParams)
   }
 
   RefPtr<DrawTarget> maskDT =
-    Factory::CreateDrawTarget(BackendType::CAIRO, maskSurfaceSize,
-                              SurfaceFormat::B8G8R8A8);
+    gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
+      maskSurfaceSize, SurfaceFormat::B8G8R8A8);
+
   if (!maskDT || !maskDT->IsValid()) {
     return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<SourceSurface>());
   }

@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+/* global Debugger */
+
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const { createValueGrip } = require("devtools/server/actors/object");
 const { environmentSpec } = require("devtools/shared/specs/environment");
@@ -90,10 +92,11 @@ let EnvironmentActor = ActorClassWithSpec(environmentSpec, {
       this.obj.setVariable(name, value);
     } catch (e) {
       if (e instanceof Debugger.DebuggeeWouldRun) {
-        throw {
+        const errorObject = {
           error: "threadWouldRun",
           message: "Assigning a value would cause the debuggee to run"
         };
+        throw errorObject;
       } else {
         throw e;
       }
