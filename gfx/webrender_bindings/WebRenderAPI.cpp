@@ -255,8 +255,12 @@ WebRenderAPI::SetProfilerEnabled(bool aEnabled)
 void
 WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent>&& aEvent)
 {
+#ifdef MOZ_ENABLE_WEBRENDER
+  // ifdef this out so that calling this function from a destructor does
+  // not break windows builds...
   auto event = reinterpret_cast<uintptr_t>(aEvent.release());
   wr_api_send_external_event(mWrApi, event);
+#endif
 }
 
 DisplayListBuilder::DisplayListBuilder(const LayerIntSize& aSize, PipelineId aId)
