@@ -56,6 +56,36 @@ IsSpaceOrTabOrSegmentBreak(char16_t aCh)
   return IsSpaceOrTab(aCh) || IsSegmentBreak(aCh);
 }
 
+template<typename CharT>
+/* static */ bool
+nsTextFrameUtils::IsSkippableCharacterForTransformText(CharT aChar)
+{
+  return aChar == ' ' ||
+         aChar == '\t' ||
+         aChar == '\n' ||
+         aChar == CH_SHY ||
+         (aChar > 0xFF && IsBidiControl(aChar));
+}
+
+#ifdef DEBUG
+template<typename CharT>
+static void AssertSkippedExpectedChars(const CharT* aText,
+                                       const gfxSkipChars& aSkipChars,
+                                       int32_t aSkipCharsOffset)
+{
+  gfxSkipCharsIterator it(aSkipChars);
+  it.AdvanceOriginal(aSkipCharsOffset);
+  while (it.GetOriginalOffset() < it.GetOriginalEnd()) {
+    CharT ch = aText[it.GetOriginalOffset() - aSkipCharsOffset];
+    MOZ_ASSERT(!it.IsOriginalCharSkipped() ||
+               nsTextFrameUtils::IsSkippableCharacterForTransformText(ch),
+               "skipped unexpected character; need to update "
+               "IsSkippableCharacterForTransformText?");
+    it.AdvanceOriginal(1);
+  }
+}
+#endif
+
 template<class CharT>
 static CharT*
 TransformWhiteSpaces(const CharT* aText, uint32_t aLength,
@@ -183,6 +213,9 @@ nsTextFrameUtils::TransformText(const CharT* aText, uint32_t aLength,
 {
   uint32_t flags = 0;
   CharT* outputStart = aOutput;
+#ifdef DEBUG
+  int32_t skipCharsOffset = aSkipChars->GetOriginalCharCount();
+#endif
 
   bool lastCharArabic = false;
   if (aCompression == COMPRESS_NONE ||
@@ -303,12 +336,18 @@ nsTextFrameUtils::TransformText(const CharT* aText, uint32_t aLength,
     flags |= TEXT_WAS_TRANSFORMED;
   }
   *aAnalysisFlags = flags;
+
+#ifdef DEBUG
+  AssertSkippedExpectedChars(aText, *aSkipChars, skipCharsOffset);
+#endif
   return aOutput;
 }
+
 /*
- * NOTE: This template is part of public API of nsTextFrameUtils, while
- * its function body is not available in the header. It may stop working
- * (fail to resolve symbol in link time) once its callsites are moved to a
+ * NOTE: The TransformText and IsSkippableCharacterForTransformText template
+ * functions are part of the public API of nsTextFrameUtils, while
+ * their function bodies are not available in the header. They may stop working
+ * (fail to resolve symbol in link time) once their callsites are moved to a
  * different translation unit (e.g. a different unified source file).
  * Explicit instantiating this function template with `uint8_t` and `char16_t`
  * could prevent us from the potential risk.
@@ -327,6 +366,10 @@ nsTextFrameUtils::TransformText(const char16_t* aText, uint32_t aLength,
                                 uint8_t* aIncomingFlags,
                                 gfxSkipChars* aSkipChars,
                                 uint32_t* aAnalysisFlags);
+template bool
+nsTextFrameUtils::IsSkippableCharacterForTransformText(uint8_t aChar);
+template bool
+nsTextFrameUtils::IsSkippableCharacterForTransformText(char16_t aChar);
 
 uint32_t
 nsTextFrameUtils::ComputeApproximateLengthWithWhitespaceCompression(

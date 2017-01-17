@@ -121,6 +121,16 @@ public:
                               gfxSkipChars* aSkipChars,
                               uint32_t* aAnalysisFlags);
 
+  /**
+   * Returns whether aChar is a character that nsTextFrameUtils::TransformText
+   * might mark as skipped.  This is used by
+   * SVGTextContentElement::GetNumberOfChars to know whether reflowing frames,
+   * so that we have the results of TransformText, is required, or whether we
+   * can use a fast path instead.
+   */
+  template<class CharT>
+  static bool IsSkippableCharacterForTransformText(CharT aChar);
+
   static void
   AppendLineBreakOffset(nsTArray<uint32_t>* aArray, uint32_t aOffset)
   {
