@@ -15,7 +15,7 @@ using WRColor from "mozilla/webrender/webrender_ffi.h";
 using WRImageKey from "mozilla/webrender/webrender_ffi.h";
 using WRTextureFilter from "mozilla/webrender/webrender_ffi.h";
 using WRLayoutSize from "mozilla/webrender/webrender_ffi.h";
-using WRRect from "mozilla/webrender/webrender_ffi.h";
+using WrRect from "mozilla/webrender/webrender_ffi.h";
 using WRGlyphArray from "mozilla/webrender/webrender_ffi.h";
 using MaybeImageMask from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
@@ -26,8 +26,8 @@ namespace mozilla {
 namespace layers {
 
 struct OpDPPushStackingContext {
-  WRRect bounds;
-  WRRect overflow;
+  WrRect bounds;
+  WrRect overflow;
   MaybeImageMask mask;
   Matrix4x4 matrix;
   uint64_t scrollid;
@@ -36,8 +36,8 @@ struct OpDPPushStackingContext {
 struct OpDPPopStackingContext { };
 
 struct OpDPPushRect {
-  WRRect bounds;
-  WRRect clip;
+  WrRect bounds;
+  WrRect clip;
   float r;
   float g;
   float b;
@@ -45,8 +45,8 @@ struct OpDPPushRect {
 };
 
 struct OpDPPushBorder {
-  WRRect bounds;
-  WRRect clip;
+  WrRect bounds;
+  WrRect clip;
   WRBorderSide top;
   WRBorderSide right;
   WRBorderSide bottom;
@@ -58,8 +58,8 @@ struct OpDPPushBorder {
 };
 
 struct OpDPPushImage {
-  WRRect bounds;
-  WRRect clip;
+  WrRect bounds;
+  WrRect clip;
   MaybeImageMask mask;
   WRTextureFilter filter;
   WRImageKey key;
@@ -67,22 +67,22 @@ struct OpDPPushImage {
 
 struct OpDPPushExternalImageId {
   LayerIntRegion validBufferRegion;
-  WRRect bounds;
-  WRRect clip;
+  WrRect bounds;
+  WrRect clip;
   MaybeImageMask mask;
   WRTextureFilter filter;
   uint64_t externalImageId;
 };
 
 struct OpDPPushIframe {
-  WRRect bounds;
-  WRRect clip;
+  WrRect bounds;
+  WrRect clip;
   uint64_t layersid;
 };
 
 struct OpDPPushText {
-  WRRect bounds;
-  WRRect clip;
+  WrRect bounds;
+  WrRect clip;
   WRGlyphArray[] glyph_array;
   uint32_t font_index;
   float glyph_size;

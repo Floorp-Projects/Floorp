@@ -42,9 +42,9 @@ static inline WRLayoutSize ToWRLayoutSize(const LayerSize size)
 }
 
 template<class T>
-static inline WRRect ToWRRect(const gfx::RectTyped<T>& rect)
+static inline WrRect ToWrRect(const gfx::RectTyped<T>& rect)
 {
-  WRRect r;
+  WrRect r;
   r.x = rect.x;
   r.y = rect.y;
   r.width = rect.width;
@@ -53,9 +53,9 @@ static inline WRRect ToWRRect(const gfx::RectTyped<T>& rect)
 }
 
 template<class T>
-static inline WRRect ToWRRect(const gfx::IntRectTyped<T>& rect)
+static inline WrRect ToWrRect(const gfx::IntRectTyped<T>& rect)
 {
-  return ToWRRect(IntRectToRect(rect));
+  return ToWrRect(IntRectToRect(rect));
 }
 
 struct ByteBuffer

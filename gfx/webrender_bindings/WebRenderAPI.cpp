@@ -286,8 +286,8 @@ DisplayListBuilder::End(WebRenderAPI& aApi, Epoch aEpoch)
 }
 
 void
-DisplayListBuilder::PushStackingContext(const WRRect& aBounds,
-                                        const WRRect& aOverflow,
+DisplayListBuilder::PushStackingContext(const WrRect& aBounds,
+                                        const WrRect& aOverflow,
                                         const WRImageMask* aMask,
                                         const gfx::Matrix4x4& aTransform)
 {
@@ -302,8 +302,8 @@ DisplayListBuilder::PopStackingContext()
 }
 
 void
-DisplayListBuilder::PushRect(const WRRect& aBounds,
-                             const WRRect& aClip,
+DisplayListBuilder::PushRect(const WrRect& aBounds,
+                             const WrRect& aClip,
                              const gfx::Color& aColor)
 {
   wr_dp_push_rect(mWRState, aBounds, aClip,
@@ -311,8 +311,8 @@ DisplayListBuilder::PushRect(const WRRect& aBounds,
 }
 
 void
-DisplayListBuilder::PushImage(const WRRect& aBounds,
-                              const WRRect& aClip,
+DisplayListBuilder::PushImage(const WrRect& aBounds,
+                              const WrRect& aClip,
                               const WRImageMask* aMask,
                               const WRTextureFilter aFilter,
                               WRImageKey aImage)
@@ -321,16 +321,16 @@ DisplayListBuilder::PushImage(const WRRect& aBounds,
 }
 
 void
-DisplayListBuilder::PushIFrame(const WRRect& aBounds,
-                               const WRRect& aClip,
+DisplayListBuilder::PushIFrame(const WrRect& aBounds,
+                               const WrRect& aClip,
                                PipelineId aPipeline)
 {
   wr_dp_push_iframe(mWRState, aBounds, aClip, aPipeline.mHandle);
 }
 
 void
-DisplayListBuilder::PushBorder(const WRRect& aBounds,
-                               const WRRect& aClip,
+DisplayListBuilder::PushBorder(const WrRect& aBounds,
+                               const WrRect& aClip,
                                const WRBorderSide& aTop,
                                const WRBorderSide& aRight,
                                const WRBorderSide& aBottom,
@@ -347,8 +347,8 @@ DisplayListBuilder::PushBorder(const WRRect& aBounds,
 }
 
 void
-DisplayListBuilder::PushText(const WRRect& aBounds,
-                             const WRRect& aClip,
+DisplayListBuilder::PushText(const WrRect& aBounds,
+                             const WrRect& aClip,
                              const gfx::Color& aColor,
                              wr::FontKey aFontKey,
                              Range<const WRGlyphInstance> aGlyphBuffer,

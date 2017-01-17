@@ -144,8 +144,8 @@ WebRenderImageLayer::RenderLayer()
   WRTextureFilter filter = (mSamplingFilter == gfx::SamplingFilter::POINT) ? WRTextureFilter::Point : WRTextureFilter::Linear;
 
   WRBridge()->AddWebRenderCommand(
-    OpDPPushStackingContext(wr::ToWRRect(relBounds), wr::ToWRRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
-  WRBridge()->AddWebRenderCommand(OpDPPushExternalImageId(LayerIntRegion(), wr::ToWRRect(rect), wr::ToWRRect(clip), Nothing(), filter, mExternalImageId));
+    OpDPPushStackingContext(wr::ToWrRect(relBounds), wr::ToWrRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
+  WRBridge()->AddWebRenderCommand(OpDPPushExternalImageId(LayerIntRegion(), wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), filter, mExternalImageId));
   WRBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 
   if (gfxPrefs::LayersDump()) printf_stderr("ImageLayer %p using %s as bounds/overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());

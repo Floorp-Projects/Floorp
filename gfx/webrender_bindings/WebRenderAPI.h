@@ -98,29 +98,29 @@ public:
 
   void End(WebRenderAPI& aApi, wr::Epoch aEpoch);
 
-  void PushStackingContext(const WRRect& aBounds, // TODO: We should work with strongly typed rects
-                           const WRRect& aOverflow,
+  void PushStackingContext(const WrRect& aBounds, // TODO: We should work with strongly typed rects
+                           const WrRect& aOverflow,
                            const WRImageMask* aMask, // TODO: needs a wrapper.
                            const gfx::Matrix4x4& aTransform);
 
   void PopStackingContext();
 
-  void PushRect(const WRRect& aBounds,
-                const WRRect& aClip,
+  void PushRect(const WrRect& aBounds,
+                const WrRect& aClip,
                 const gfx::Color& aColor);
 
-  void PushImage(const WRRect& aBounds,
-                 const WRRect& aClip,
+  void PushImage(const WrRect& aBounds,
+                 const WrRect& aClip,
                  const WRImageMask* aMask,
                  const WRTextureFilter aFilter,
                  WRImageKey aImage);
 
-  void PushIFrame(const WRRect& aBounds,
-                  const WRRect& aClip,
+  void PushIFrame(const WrRect& aBounds,
+                  const WrRect& aClip,
                   wr::PipelineId aPipeline);
 
-  void PushBorder(const WRRect& bounds,
-                  const WRRect& clip,
+  void PushBorder(const WrRect& bounds,
+                  const WrRect& clip,
                   const WRBorderSide& top,
                   const WRBorderSide& right,
                   const WRBorderSide& bottom,
@@ -130,8 +130,8 @@ public:
                   const WRLayoutSize& bottom_left_radius,
                   const WRLayoutSize& bottom_right_radius);
 
-  void PushText(const WRRect& aBounds,
-                const WRRect& aClip,
+  void PushText(const WrRect& aBounds,
+                const WrRect& aClip,
                 const gfx::Color& aColor,
                 wr::FontKey aFontKey,
                 Range<const WRGlyphInstance> aGlyphBuffer,
