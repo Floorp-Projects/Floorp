@@ -763,6 +763,22 @@ this.SyncEngine = function SyncEngine(name, service) {
 
   this.loadToFetch();
   this.loadPreviousFailed();
+  // The set of records needing a weak reupload.
+  // The difference between this and a "normal" reupload is that these records
+  // are only tracked in memory, and if the reupload attempt fails (shutdown,
+  // 412, etc), we abort uploading the "weak" set.
+  //
+  // The rationale here is for the cases where we receive a record from the
+  // server that we know is wrong in some (small) way. For example, the
+  // dateAdded field on bookmarks -- maybe we have a better date, or the server
+  // record is entirely missing the date, etc.
+  //
+  // In these cases, we fix our local copy of the record, and mark it for
+  // weak reupload. A normal ("strong") reupload is problematic here because
+  // in the case of a conflict from the server, there's a window where our
+  // record would be marked as modified more recently than a change that occurs
+  // on another device change, and we lose data from the user.
+  this._needWeakReupload = new Set();
 }
 
 // Enumeration to define approaches to handling bad records.
@@ -1008,6 +1024,7 @@ SyncEngine.prototype = {
 
     // Keep track of what to delete at the end of sync
     this._delete = {};
+    this._needWeakReupload.clear();
   },
 
   /**
@@ -1551,15 +1568,15 @@ SyncEngine.prototype = {
   _uploadOutgoing() {
     this._log.trace("Uploading local changes to server.");
 
+    // collection we'll upload
+    let up = new Collection(this.engineURL, null, this.service);
     let modifiedIDs = this._modified.ids();
+    let counts = { failed: 0, sent: 0 };
     if (modifiedIDs.length) {
       this._log.trace("Preparing " + modifiedIDs.length +
                       " outgoing records");
 
-      let counts = { sent: modifiedIDs.length, failed: 0 };
-
-      // collection we'll upload
-      let up = new Collection(this.engineURL, null, this.service);
+      counts.sent = modifiedIDs.length;
 
       let failed = [];
       let successful = [];
@@ -1625,6 +1642,7 @@ SyncEngine.prototype = {
             throw ex;
           }
         }
+        this._needWeakReupload.delete(id);
         if (ok) {
           let { enqueued, error } = postQueue.enqueue(out);
           if (!enqueued) {
@@ -1639,8 +1657,68 @@ SyncEngine.prototype = {
         this._store._sleep(0);
       }
       postQueue.flush(true);
+    }
+
+    if (this._needWeakReupload.size) {
+      try {
+        const { sent, failed } = this._weakReupload(up);
+        counts.sent += sent;
+        counts.failed += failed;
+      } catch (e) {
+        if (Async.isShutdownException(e)) {
+          throw e;
+        }
+        this._log.warn("Weak reupload failed", e);
+      }
+    }
+    if (counts.sent || counts.failed) {
       Observers.notify("weave:engine:sync:uploaded", counts, this.name);
     }
+  },
+
+  _weakReupload(collection) {
+    const counts = { sent: 0, failed: 0 };
+    let pendingSent = 0;
+    let postQueue = collection.newPostQueue(this._log, this.lastSync, (resp, batchOngoing = false) => {
+      if (!resp.success) {
+        this._needWeakReupload.clear();
+        this._log.warn("Uploading records (weak) failed: " + resp);
+        resp.failureCode = resp.status == 412 ? ENGINE_BATCH_INTERRUPTED : ENGINE_UPLOAD_FAIL;
+        throw resp;
+      }
+      if (!batchOngoing) {
+        counts.sent += pendingSent;
+        pendingSent = 0;
+      }
+    });
+
+    let pendingWeakReupload = this.buildWeakReuploadMap(this._needWeakReupload);
+    for (let [id, encodedRecord] of pendingWeakReupload) {
+      try {
+        this._log.trace("Outgoing (weak)", encodedRecord);
+        encodedRecord.encrypt(this.service.collectionKeys.keyForCollection(this.name));
+      } catch (ex) {
+        if (Async.isShutdownException(ex)) {
+          throw ex;
+        }
+        this._log.warn(`Failed to encrypt record "${id}" during weak reupload`, ex);
+        ++counts.failed;
+        continue;
+      }
+      // Note that general errors (network error, 412, etc.) will throw here.
+      // `enqueued` is only false if the specific item failed to enqueue, but
+      // other items should be/are fine. For example, enqueued will be false if
+      // it is larger than the max post or WBO size.
+      let { enqueued } = postQueue.enqueue(encodedRecord);
+      if (!enqueued) {
+        ++counts.failed;
+      } else {
+        ++pendingSent;
+      }
+      this._store._sleep(0);
+    }
+    postQueue.flush(true);
+    return counts;
   },
 
   _onRecordsWritten(succeeded, failed) {
@@ -1678,6 +1756,7 @@ SyncEngine.prototype = {
   },
 
   _syncCleanup() {
+    this._needWeakReupload.clear();
     if (!this._modified) {
       return;
     }
@@ -1814,6 +1893,27 @@ SyncEngine.prototype = {
       this._tracker.addChangedID(id, change);
     }
   },
+
+  /**
+   * Returns a map of (id, unencrypted record) that will be used to perform
+   * the weak reupload. Subclasses may override this to filter out items we
+   * shouldn't upload as part of a weak reupload (items that have changed,
+   * for example).
+   */
+  buildWeakReuploadMap(idSet) {
+    let result = new Map();
+    for (let id of idSet) {
+      try {
+        result.set(id, this._createRecord(id));
+      } catch (ex) {
+        if (Async.isShutdownException(ex)) {
+          throw ex;
+        }
+        this._log.warn("createRecord failed during weak reupload", ex);
+      }
+    }
+    return result;
+  }
 };
 
 /**

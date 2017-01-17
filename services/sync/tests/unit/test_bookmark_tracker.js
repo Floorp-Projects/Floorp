@@ -42,6 +42,7 @@ async function resetTracker() {
 
 async function cleanup() {
   engine.lastSync = 0;
+  engine._needWeakReupload.clear()
   store.wipe();
   await resetTracker();
   await stopTracking();
