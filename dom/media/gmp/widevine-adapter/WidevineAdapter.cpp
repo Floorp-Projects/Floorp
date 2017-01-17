@@ -89,7 +89,7 @@ WidevineAdapter::GMPGetAPI(const char* aAPIName,
                            uint32_t aDecryptorId)
 {
   Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p",
-      aAPIName, aHostAPI, aPluginAPI, this, aDecryptorId);
+      aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this);
   if (!strcmp(aAPIName, GMP_API_DECRYPTOR)) {
     if (WidevineDecryptor::GetInstance(aDecryptorId)) {
       // We only support one CDM instance per PGMPDecryptor. Fail!
@@ -100,7 +100,7 @@ WidevineAdapter::GMPGetAPI(const char* aAPIName,
       PR_FindFunctionSymbol(mLib, "CreateCdmInstance"));
     if (!create) {
       Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p FAILED to find CreateCdmInstance",
-        aAPIName, aHostAPI, aPluginAPI, this, aDecryptorId);
+        aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this);
       return GMPGenericErr;
     }
 
@@ -114,7 +114,7 @@ WidevineAdapter::GMPGetAPI(const char* aAPIName,
              decryptor));
     if (!cdm) {
       Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p FAILED to create cdm",
-          aAPIName, aHostAPI, aPluginAPI, this, aDecryptorId);
+          aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this);
       return GMPGenericErr;
     }
     Log("cdm: 0x%x", cdm);
@@ -126,7 +126,7 @@ WidevineAdapter::GMPGetAPI(const char* aAPIName,
     RefPtr<CDMWrapper> wrapper = WidevineDecryptor::GetInstance(aDecryptorId);
     if (!wrapper) {
       Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p No cdm for video decoder",
-          aAPIName, aHostAPI, aPluginAPI, thiss, aDecryptorId);
+          aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this);
       return GMPGenericErr;
     }
     *aPluginAPI = new WidevineVideoDecoder(static_cast<GMPVideoHost*>(aHostAPI),
