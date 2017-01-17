@@ -196,9 +196,6 @@ private:
   // Obtained from the manager during initialization (Init method).
   RefPtr<StorageUsage> mUsage;
 
-  // Timer that holds this cache alive for a while after it has been preloaded.
-  nsCOMPtr<nsITimer> mKeepAliveTimer;
-
   // Principal the cache has been initially created for, this is used only for
   // sessionStorage access checks since sessionStorage objects are strictly
   // scoped by a principal. localStorage objects on the other hand are scoped
