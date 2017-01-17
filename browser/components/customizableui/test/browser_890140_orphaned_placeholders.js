@@ -21,8 +21,8 @@ add_task(function*() {
   }
 
   // This test relies on an exact number of widgets being in the panel.
-  // Remove the sync-button to satisfy that. (bug 1229236)
-  CustomizableUI.removeWidgetFromArea("sync-button");
+  // Remove the buttons to satisfy that. (bug 1229236)
+  removeNonOriginalButtons();
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
   let placements = getAreaWidgetIds(CustomizableUI.AREA_PANEL);
 
@@ -37,7 +37,7 @@ add_task(function*() {
     CustomizableUI.addWidgetToArea("developer-button", CustomizableUI.AREA_NAVBAR, 2);
   }
 
-  CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_PANEL);
+  restoreNonOriginalButtons();
   ok(CustomizableUI.inDefaultState, "Should be in default state again.");
 });
 
@@ -50,8 +50,8 @@ add_task(function*() {
   }
 
   // This test relies on an exact number of widgets being in the panel.
-  // Remove the sync-button to satisfy that. (bug 1229236)
-  CustomizableUI.removeWidgetFromArea("sync-button");
+  // Remove the button to satisfy that. (bug 1229236)
+  removeNonOriginalButtons()
 
   let btn = document.getElementById("open-file-button");
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
@@ -81,7 +81,7 @@ add_task(function*() {
     CustomizableUI.addWidgetToArea("developer-button", CustomizableUI.AREA_NAVBAR, 2);
   }
 
-  CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_PANEL);
+  restoreNonOriginalButtons();
   ok(CustomizableUI.inDefaultState, "Should be in default state again.");
 });
 
@@ -93,8 +93,8 @@ add_task(function*() {
     CustomizableUI.addWidgetToArea("developer-button", CustomizableUI.AREA_PANEL);
   }
   // This test relies on an exact number of widgets being in the panel.
-  // Remove the sync-button to satisfy that. (bug 1229236)
-  CustomizableUI.removeWidgetFromArea("sync-button");
+  // Remove the buttons to satisfy that. (bug 1229236)
+  removeNonOriginalButtons();
 
   let btn = document.getElementById("add-ons-button");
   let btn2 = document.getElementById("developer-button");
@@ -123,7 +123,7 @@ add_task(function*() {
     CustomizableUI.addWidgetToArea("developer-button", CustomizableUI.AREA_NAVBAR, 2);
   }
 
-  CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_PANEL);
+  restoreNonOriginalButtons();
   ok(CustomizableUI.inDefaultState, "Should be in default state again.");
 });
 
@@ -136,8 +136,8 @@ add_task(function*() {
   }
 
   // This test relies on an exact number of widgets being in the panel.
-  // Remove the sync-button to satisfy that. (bug 1229236)
-  CustomizableUI.removeWidgetFromArea("sync-button");
+  // Remove the buttons to satisfy that. (bug 1229236)
+  removeNonOriginalButtons();
 
   let btn = document.getElementById("edit-controls");
   let btn2 = document.getElementById("developer-button");
@@ -167,7 +167,7 @@ add_task(function*() {
     CustomizableUI.addWidgetToArea("developer-button", CustomizableUI.AREA_NAVBAR, 2);
   }
 
-  CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_PANEL);
+  restoreNonOriginalButtons();
   ok(CustomizableUI.inDefaultState, "Should be in default state again.");
 });
 
@@ -186,8 +186,8 @@ add_task(function*() {
   ok(CustomizableUI.inDefaultState, "Should be in default state.");
 
   // This test relies on an exact number of widgets being in the panel.
-  // Remove the sync-button to satisfy that. (bug 1229236)
-  CustomizableUI.removeWidgetFromArea("sync-button");
+  // Remove the buttons to satisfy that. (bug 1229236)
+  removeNonOriginalButtons();
 
   is(getVisiblePlaceholderCount(panel), numPlaceholders, "Should have " + numPlaceholders + " visible placeholders before exiting");
 
@@ -195,7 +195,7 @@ add_task(function*() {
   yield startCustomizing();
   is(getVisiblePlaceholderCount(panel), numPlaceholders, "Should have " + numPlaceholders + " visible placeholders after re-entering");
 
-  CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_PANEL);
+  restoreNonOriginalButtons();
   ok(CustomizableUI.inDefaultState, "Should still be in default state.");
 });
 
