@@ -353,12 +353,18 @@ struct AssertionConditionType
 #  define MOZ_VALIDATE_ASSERT_CONDITION_TYPE(x)
 #endif
 
+#if defined(DEBUG) || defined(MOZ_ASAN)
+#  define MOZ_REPORT_ASSERTION_FAILURE(...) MOZ_ReportAssertionFailure(__VA_ARGS__)
+#else
+#  define MOZ_REPORT_ASSERTION_FAILURE(...) do { /* nothing */ } while (0)
+#endif
+
 /* First the single-argument form. */
 #define MOZ_ASSERT_HELPER1(expr) \
   do { \
     MOZ_VALIDATE_ASSERT_CONDITION_TYPE(expr); \
     if (MOZ_UNLIKELY(!MOZ_CHECK_ASSERT_ASSIGNMENT(expr))) { \
-      MOZ_ReportAssertionFailure(#expr, __FILE__, __LINE__); \
+      MOZ_REPORT_ASSERTION_FAILURE(#expr, __FILE__, __LINE__); \
       MOZ_CRASH_ANNOTATE("MOZ_RELEASE_ASSERT(" #expr ")"); \
       MOZ_REALLY_CRASH(); \
     } \
@@ -368,7 +374,7 @@ struct AssertionConditionType
   do { \
     MOZ_VALIDATE_ASSERT_CONDITION_TYPE(expr); \
     if (MOZ_UNLIKELY(!MOZ_CHECK_ASSERT_ASSIGNMENT(expr))) { \
-      MOZ_ReportAssertionFailure(#expr " (" explain ")", __FILE__, __LINE__); \
+      MOZ_REPORT_ASSERTION_FAILURE(#expr " (" explain ")", __FILE__, __LINE__); \
       MOZ_CRASH_ANNOTATE("MOZ_RELEASE_ASSERT(" #expr ") (" explain ")"); \
       MOZ_REALLY_CRASH(); \
     } \
