@@ -246,60 +246,6 @@ StorageCache::Preload()
 
 namespace {
 
-// This class is passed to timer as a tick observer.  It refers the cache
-// and keeps it alive for a time.
-class StorageCacheHolder : public nsITimerCallback
-{
-  virtual ~StorageCacheHolder() {}
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD
-  Notify(nsITimer* aTimer) override
-  {
-    mCache = nullptr;
-    return NS_OK;
-  }
-
-  RefPtr<StorageCache> mCache;
-
-public:
-  explicit StorageCacheHolder(StorageCache* aCache) : mCache(aCache) {}
-};
-
-NS_IMPL_ISUPPORTS(StorageCacheHolder, nsITimerCallback)
-
-} // namespace
-
-void
-StorageCache::KeepAlive()
-{
-  // Missing reference back to the manager means the cache is not responsible
-  // for its lifetime.  Used for keeping sessionStorage live forever.
-  if (!mManager) {
-    return;
-  }
-
-  if (!NS_IsMainThread()) {
-    // Timer and the holder must be initialized on the main thread.
-    NS_DispatchToMainThread(NewRunnableMethod(this, &StorageCache::KeepAlive));
-    return;
-  }
-
-  nsCOMPtr<nsITimer> timer = do_CreateInstance("@mozilla.org/timer;1");
-  if (!timer) {
-    return;
-  }
-
-  RefPtr<StorageCacheHolder> holder = new StorageCacheHolder(this);
-  timer->InitWithCallback(holder, DOM_STORAGE_CACHE_KEEP_ALIVE_TIME_MS,
-                          nsITimer::TYPE_ONE_SHOT);
-
-  mKeepAliveTimer.swap(timer);
-}
-
-namespace {
-
 // The AutoTimer provided by telemetry headers is only using static,
 // i.e. compile time known ID, but here we know the ID only at run time.
 // Hence a new class.
@@ -667,9 +613,6 @@ StorageCache::LoadItem(const nsAString& aKey, const nsString& aValue)
 void
 StorageCache::LoadDone(nsresult aRv)
 {
-  // Keep the preloaded cache alive for a time
-  KeepAlive();
-
   MonitorAutoLock monitor(mMonitor);
   mLoadResult = aRv;
   mLoaded = true;
