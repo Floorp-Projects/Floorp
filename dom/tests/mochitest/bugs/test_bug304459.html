@@ -35,7 +35,7 @@ function receiveMessage(evt)
 
 SimpleTest.waitForExplicitFinish();
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 
 var frame = document.getElementById("frame");
 frame.onload = iframeLoaded;

@@ -33,7 +33,7 @@
     function initCF() {
       setTimeout(function() { document.adoptNode(tCF0); }, 0);
     }
-    document.addEventListener("DOMContentLoaded", initCF, false);
+    document.addEventListener("DOMContentLoaded", initCF);
 
     function cleanupAndFinish() {
       imgLoadingContent.removeObserver(gObserver);
@@ -43,7 +43,7 @@
       setTimeout("cleanupAndFinish();", 30000);
     }
     window.addEventListener("load", function() {
-      SpecialPowers.pushPrefEnv({"set":[["min_discard_timeout_ms", 1]]}, loadhandler)}, false);
+      SpecialPowers.pushPrefEnv({"set":[["min_discard_timeout_ms", 1]]}, loadhandler)});
   </script>
 </body>
 </html>

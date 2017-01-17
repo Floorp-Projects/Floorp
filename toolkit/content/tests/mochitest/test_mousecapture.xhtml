@@ -66,7 +66,7 @@ function selectionScrollCheck() {
     if (count++ < 6)
       return;
 
-    otherWindow.removeEventListener("scroll", selectionScrollDone, false);
+    otherWindow.removeEventListener("scroll", selectionScrollDone);
 
     var selectedText = otherWindow.getSelection().toString().replace(/\r/g, "");
     is(selectedText, "One\n\nTwo", "text is selected");
@@ -103,7 +103,7 @@ function selectionScrollCheck() {
     disableNonTestMouseEvents(true);
     synthesizeMouse(element, 2, 2, { type: "mousedown" }, otherWindow);
     synthesizeMouse(element, 100, otherWindow.innerHeight + 20, { type: "mousemove" }, otherWindow);
-    otherWindow.addEventListener("scroll", selectionScrollDone, false);
+    otherWindow.addEventListener("scroll", selectionScrollDone);
   });
 }
 
@@ -216,7 +216,7 @@ function runCaptureTest(element, callback) {
     is(event.originalTarget, expectedTarget,
        expectedTarget.id + " target for point " + event.clientX + "," + event.clientY);
   }
-  win.addEventListener("mousemove", mouseMoved, false);
+  win.addEventListener("mousemove", mouseMoved);
 
   expectedTarget = element;
 
@@ -262,7 +262,7 @@ function runCaptureTest(element, callback) {
   if (callback)
     callback(0);
 
-  win.removeEventListener("mousemove", mouseMoved, false);
+  win.removeEventListener("mousemove", mouseMoved);
 }
 
 SimpleTest.waitForFocus(runTests);

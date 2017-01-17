@@ -46,7 +46,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420863
         {
         }
       };
-      td3Node.addEventListener("click", gClickHandler, false);
+      td3Node.addEventListener("click", gClickHandler);
 
       // check actions
       var actionsArray = [
@@ -64,7 +64,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=420863
           checkOnClickEvent: function check(aEvent)
           {
             // unregister click event handler
-            this.ID.removeEventListener("click", gClickHandler, false);
+            this.ID.removeEventListener("click", gClickHandler);
 
             // check actions
             is(getAccessible(this.ID).actionCount, 0,

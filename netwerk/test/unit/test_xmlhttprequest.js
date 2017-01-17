@@ -42,7 +42,7 @@ function run_test()
   async.addEventListener("readystatechange", function(event) {
     if (checkResults(async))
       httpserver.stop(do_test_finished);
-  }, false);
+  });
   async.send(null);
   do_test_pending();
 }

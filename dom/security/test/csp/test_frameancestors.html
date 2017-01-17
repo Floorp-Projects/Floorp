@@ -135,7 +135,7 @@ var checkTestResults = function() {
   SimpleTest.finish();
 }
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 
 function receiveMessage(event) {
   if (event.data.call && event.data.call == 'frameLoaded')

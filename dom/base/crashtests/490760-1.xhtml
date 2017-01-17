@@ -7,13 +7,13 @@ function boom()
 {
   var q = document.getElementsByTagName("style")[0];
   
-  window.addEventListener("DOMNodeRemoved", f, false);
+  window.addEventListener("DOMNodeRemoved", f);
   q.innerHTML = "<span><\/span>";
-  window.removeEventListener("DOMNodeRemoved", f, false);
+  window.removeEventListener("DOMNodeRemoved", f);
 
   function f()
   {
-    window.removeEventListener("DOMNodeRemoved", f, false);
+    window.removeEventListener("DOMNodeRemoved", f);
     q.removeChild(q.childNodes[1]);
   }
 }

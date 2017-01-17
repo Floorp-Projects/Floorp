@@ -8,7 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=563487
   <script>
     var exception = null;
     try {
-      window.removeEventListener("foo", function() {}, false);
+      window.removeEventListener("foo", function() {});
     } catch (e) {
       exception = e;
     }

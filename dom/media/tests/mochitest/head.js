@@ -510,10 +510,10 @@ var listenUntil = (target, eventName, onFire) => {
                                                         function callback(event) {
     var result = onFire(event);
     if (result) {
-      target.removeEventListener(eventName, callback, false);
+      target.removeEventListener(eventName, callback);
       resolve(result);
     }
-  }, false));
+  }));
 };
 
 /* Test that a function throws the right error */

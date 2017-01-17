@@ -10,22 +10,19 @@ function registerPopupEventHandler(eventName, callback) {
     if (event.target != PopupNotifications.panel)
       return;
     PopupNotifications.panel.removeEventListener(eventName,
-                                                 gActiveListeners[eventName],
-                                                 false);
+                                                 gActiveListeners[eventName]);
     delete gActiveListeners[eventName];
 
     callback.call(PopupNotifications.panel);
   }
   PopupNotifications.panel.addEventListener(eventName,
-                                            gActiveListeners[eventName],
-                                            false);
+                                            gActiveListeners[eventName]);
 }
 
 function unregisterPopupEventHandler(eventName)
 {
   PopupNotifications.panel.removeEventListener(eventName,
-                                               gActiveListeners[eventName],
-                                               false);
+                                               gActiveListeners[eventName]);
   delete gActiveListeners[eventName];
 }
 
@@ -33,8 +30,7 @@ function unregisterAllPopupEventHandlers()
 {
   for (let eventName in gActiveListeners) {
     PopupNotifications.panel.removeEventListener(eventName,
-                                                 gActiveListeners[eventName],
-                                                 false);
+                                                 gActiveListeners[eventName]);
   }
   gActiveListeners = {};
 }

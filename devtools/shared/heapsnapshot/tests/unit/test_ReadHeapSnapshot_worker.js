@@ -32,9 +32,9 @@ function waitForDone(w) {
 
     w.addEventListener("message", function listener(e) {
       if (e.data.type === "done") {
-        w.removeEventListener("message", listener, false);
+        w.removeEventListener("message", listener);
         resolve();
       }
-    }, false);
+    });
   });
 }

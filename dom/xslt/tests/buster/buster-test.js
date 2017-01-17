@@ -165,10 +165,10 @@ runItem.prototype =
             }
         }
         this.mSourceDoc = document.implementation.createDocument('', '', null);
-        this.mSourceDoc.addEventListener("load",this.onload(1),false);
+        this.mSourceDoc.addEventListener("load",this.onload(1));
         this.mSourceDoc.load(xalan_fl+".xml");
         this.mStyleDoc = document.implementation.createDocument('', '', null);
-        this.mStyleDoc.addEventListener("load",this.styleLoaded(),false);
+        this.mStyleDoc.addEventListener("load",this.styleLoaded());
         this.mStyleDoc.load(xalan_fl+".xsl");
     },
 

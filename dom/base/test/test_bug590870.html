@@ -15,7 +15,7 @@
 <script class="testbody" type="application/javascript;version=1.8">
 
 SimpleTest.waitForExplicitFinish();
-window.addEventListener("message", function(e) { gen.next(e.data) }, false);
+window.addEventListener("message", function(e) { gen.next(e.data) });
 
 var gen = runTest();
 

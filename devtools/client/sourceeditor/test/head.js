@@ -51,7 +51,7 @@ function setup(cb, additionalOpts = {}) {
   }
 
   win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad, false);
+    win.removeEventListener("load", onLoad);
 
     waitForFocus(function () {
       let box = win.document.querySelector("box");
@@ -67,7 +67,7 @@ function setup(cb, additionalOpts = {}) {
           cb(editor, win);
         }, err => ok(false, err.message));
     }, win);
-  }, false);
+  });
 
   return def.promise;
 }

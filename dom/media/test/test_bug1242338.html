@@ -29,8 +29,8 @@ function startTest(test, token) {
 
   function finish() {
     video.finished = true;
-    video.removeEventListener("loadedmetadata", onLoadedmetadata, false);
-    video.removeEventListener("ended", onEnded, false);
+    video.removeEventListener("loadedmetadata", onLoadedmetadata);
+    video.removeEventListener("ended", onEnded);
     removeNodeAndSource(video);
     manager.finished(video.token);
   }
@@ -52,8 +52,8 @@ function startTest(test, token) {
     finish();
   }
 
-  video.addEventListener("loadedmetadata", onLoadedmetadata, false);
-  video.addEventListener("ended", onEnded, false);
+  video.addEventListener("loadedmetadata", onLoadedmetadata);
+  video.addEventListener("ended", onEnded);
 
   document.body.appendChild(video);
 }

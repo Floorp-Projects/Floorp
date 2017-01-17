@@ -38,7 +38,7 @@ Tests of DOM Worker terminate feature
 
       var exception = false;
       try {
-        worker.addEventListener("message", messageListener, false);
+        worker.addEventListener("message", messageListener);
       }
       catch (e) {
         exception = true;
@@ -47,7 +47,7 @@ Tests of DOM Worker terminate feature
 
       exception = false;
       try {
-        worker.removeEventListener("message", messageListener, false);
+        worker.removeEventListener("message", messageListener);
       }
       catch (e) {
         exception = true;

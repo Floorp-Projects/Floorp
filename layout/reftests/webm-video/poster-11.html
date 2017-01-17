@@ -10,13 +10,13 @@ function runTest() {
   };  
   
   var addPoster = function() {
-    v.removeEventListener('loadeddata', addPoster, false);
+    v.removeEventListener('loadeddata', addPoster);
     v.poster = "blue140x100.png";
-    v.addEventListener('loadeddata', endTest, false);
+    v.addEventListener('loadeddata', endTest);
     v.load();
   };
   
-  v.addEventListener('loadeddata', addPoster, false);
+  v.addEventListener('loadeddata', addPoster);
   v.id = 'v';
   v.src = "black140x100.webm";
   v.preload = "auto";

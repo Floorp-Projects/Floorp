@@ -80,15 +80,15 @@ define(function (require, exports, module) {
 
     componentDidMount: function () {
       let node = findDOMNode(this);
-      node.addEventListener("keydown", this.onKeyDown, false);
+      node.addEventListener("keydown", this.onKeyDown);
 
       // Register overflow listeners to manage visibility
       // of all-tabs-menu. This menu is displayed when there
       // is not enough h-space to render all tabs.
       // It allows the user to select a tab even if it's hidden.
       if (this.props.showAllTabsMenu) {
-        node.addEventListener("overflow", this.onOverflow, false);
-        node.addEventListener("underflow", this.onUnderflow, false);
+        node.addEventListener("overflow", this.onOverflow);
+        node.addEventListener("underflow", this.onUnderflow);
       }
 
       let index = this.state.tabActive;
@@ -113,11 +113,11 @@ define(function (require, exports, module) {
 
     componentWillUnmount: function () {
       let node = findDOMNode(this);
-      node.removeEventListener("keydown", this.onKeyDown, false);
+      node.removeEventListener("keydown", this.onKeyDown);
 
       if (this.props.showAllTabsMenu) {
-        node.removeEventListener("overflow", this.onOverflow, false);
-        node.removeEventListener("underflow", this.onUnderflow, false);
+        node.removeEventListener("overflow", this.onOverflow);
+        node.removeEventListener("underflow", this.onUnderflow);
       }
     },
 

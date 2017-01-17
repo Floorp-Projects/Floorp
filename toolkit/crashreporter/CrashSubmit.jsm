@@ -326,7 +326,7 @@ Submitter.prototype = {
           }
         });
       }
-    }, false);
+    });
 
     let p = Promise.resolve();
     let id = this.id;

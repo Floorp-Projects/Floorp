@@ -34,7 +34,7 @@ function testTab(prefix, callback) {
     function() {
       dst.focus();
       var inputReceived = false;
-      dst.addEventListener("input", function() { inputReceived = true; }, false);
+      dst.addEventListener("input", function() { inputReceived = true; });
       synthesizeKey("v", {accelKey: true});
       ok(inputReceived, "An input event should be raised");
       is(dst.value, prefix + src.value, "The value should be pasted verbatim");

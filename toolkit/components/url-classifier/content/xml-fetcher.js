@@ -77,7 +77,7 @@ PROT_XMLFetcher.prototype = {
     var self = this;
     this._request.addEventListener("readystatechange", function() {
       self.readyStateChange(self);
-    }, false);
+    });
 
     this._request.send(null);
   },

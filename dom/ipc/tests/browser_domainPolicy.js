@@ -71,7 +71,7 @@ function* test_domainPolicy() {
         ifr.removeEventListener('load', onload);
         deferred.resolve();
       }
-      ifr.addEventListener('load', onload, false);
+      ifr.addEventListener('load', onload);
       ifr.setAttribute('src', src);
       return deferred.promise;
     }

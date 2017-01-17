@@ -71,7 +71,7 @@ function checkResults(result) {
   loadNextTest();
 }
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 function receiveMessage(event) {
   checkResults(event.data.result);
 }
@@ -79,7 +79,7 @@ function receiveMessage(event) {
 function loadNextTest() {
   counter++;
   if (counter == tests.length) {
-    window.removeEventListener("message", receiveMessage, false);
+    window.removeEventListener("message", receiveMessage);
     SimpleTest.finish();
     return;
   }

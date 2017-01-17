@@ -63,7 +63,7 @@ window.addEventListener('load', function() {
         });
         SimpleTest.finish();
       }
-    }, false);
+    });
   });
 
   cases.forEach(aCase => aCase.className = 'another' );
@@ -71,7 +71,7 @@ window.addEventListener('load', function() {
   window.setTimeout(() => cases[0].className = '', 500);
   window.setTimeout(() => cases[1].className = cases[2].className = '', 250);
 
-}, false);
+});
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");

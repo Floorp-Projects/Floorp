@@ -16,7 +16,7 @@ function Cell(aGrid, aNode) {
 
   // Register drag-and-drop event handlers.
   ["dragenter", "dragover", "dragexit", "drop"].forEach(function (aType) {
-    this._node.addEventListener(aType, this, false);
+    this._node.addEventListener(aType, this);
   }, this);
 }
 

@@ -126,7 +126,7 @@ function* assertWebRTCIndicatorStatus(expected) {
               win.removeEventListener("unload", listener);
               resolve();
             }
-          }, false);
+          });
         });
       }
     }

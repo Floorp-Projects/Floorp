@@ -980,7 +980,7 @@ function _expectEvent(aExpectedTarget, aExpectedEvent, aTestName)
     _gSeenEvent = true;
   };
 
-  aExpectedTarget.addEventListener(type, eventHandler, false);
+  aExpectedTarget.addEventListener(type, eventHandler);
   return eventHandler;
 }
 
@@ -993,7 +993,7 @@ function _checkExpectedEvent(aExpectedTarget, aExpectedEvent, aEventHandler, aTe
   if (aEventHandler) {
     var expectEvent = (aExpectedEvent.charAt(0) != "!");
     var type = expectEvent ? aExpectedEvent : aExpectedEvent.substring(1);
-    aExpectedTarget.removeEventListener(type, aEventHandler, false);
+    aExpectedTarget.removeEventListener(type, aEventHandler);
     var desc = type + " event";
     if (!expectEvent)
       desc += " not";
@@ -1860,13 +1860,13 @@ function synthesizeDragStart(element, expectedDragData, aWindow, x, y)
     event.preventDefault();
     event.stopPropagation();
   }
-  aWindow.addEventListener("dragstart", trapDrag, false);
+  aWindow.addEventListener("dragstart", trapDrag);
   synthesizeMouse(element, x, y, { type: "mousedown" }, aWindow);
   x += step; y += step;
   synthesizeMouse(element, x, y, { type: "mousemove" }, aWindow);
   x += step; y += step;
   synthesizeMouse(element, x, y, { type: "mousemove" }, aWindow);
-  aWindow.removeEventListener("dragstart", trapDrag, false);
+  aWindow.removeEventListener("dragstart", trapDrag);
   synthesizeMouse(element, x, y, { type: "mouseup" }, aWindow);
   return result;
 }

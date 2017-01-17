@@ -56,11 +56,11 @@ function onFocus() {
 
   // Check if toolbox window got focus.
   let onToolboxFocusAgain = () => {
-    toolbox.win.parent.removeEventListener("focus", onToolboxFocusAgain, false);
+    toolbox.win.parent.removeEventListener("focus", onToolboxFocusAgain);
     ok(true, "Toolbox window is the focused window after calling toolbox.raise()");
     cleanup();
   };
-  toolbox.win.parent.addEventListener("focus", onToolboxFocusAgain, false);
+  toolbox.win.parent.addEventListener("focus", onToolboxFocusAgain);
 
   // Now raise toolbox.
   toolbox.raise();

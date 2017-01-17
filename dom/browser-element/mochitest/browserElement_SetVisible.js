@@ -13,7 +13,7 @@ var iframeScript = function() {
     sendAsyncMessage('test:visibilitychange', {
       hidden: content.document.hidden
     });
-  }, false);
+  });
 }
 
 function runTest() {

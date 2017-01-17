@@ -62,10 +62,10 @@ function wait_for_popup(aCallback) {
   }
 
   gUtilsMenu.addEventListener("popupshown", function() {
-    gUtilsMenu.removeEventListener("popupshown", arguments.callee, false);
+    gUtilsMenu.removeEventListener("popupshown", arguments.callee);
     info("Utilities menu shown");
     aCallback();
-  }, false);
+  });
 }
 
 function wait_for_hide(aCallback) {
@@ -75,10 +75,10 @@ function wait_for_hide(aCallback) {
   }
 
   gUtilsMenu.addEventListener("popuphidden", function() {
-    gUtilsMenu.removeEventListener("popuphidden", arguments.callee, false);
+    gUtilsMenu.removeEventListener("popuphidden", arguments.callee);
     info("Utilities menu hidden");
     aCallback();
-  }, false);
+  });
 }
 
 add_test(function() {

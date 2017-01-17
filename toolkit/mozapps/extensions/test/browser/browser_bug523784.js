@@ -29,10 +29,10 @@ function test() {
 
     let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
     win.addEventListener("load", function() {
-      win.removeEventListener("load", arguments.callee, false);
+      win.removeEventListener("load", arguments.callee);
 
       executeSoon(() => bug523784_test1(win));
-    }, false);
+    });
   };
   Services.ww.registerNotification(windowObserver);
 
@@ -80,7 +80,7 @@ function bug523784_test2(win) {
     Services.ww.unregisterNotification(windowObserver);
     let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
     win.addEventListener("load", function() {
-      win.removeEventListener("load", arguments.callee, false);
+      win.removeEventListener("load", arguments.callee);
 
     executeSoon(function() {
       let moreInfoLink = win.document.getElementById("moreInfo");
@@ -91,7 +91,7 @@ function bug523784_test2(win) {
       cancelButton.doCommand();
       executeSoon(finish);
     })
-    }, false);
+    });
   };
   Services.ww.registerNotification(windowObserver);
 

@@ -43,7 +43,7 @@ function test(trusted, type, removeAddedListener, removeSetListener, allowUntrus
 
   if (allowUntrusted == undefined) {
     // Test .addEventListener with 3 parameters.
-    x1.addEventListener(type, eventHandler, false);
+    x1.addEventListener(type, eventHandler);
   } else {
     // Test .addEventListener with 4 parameters.
     x1.addEventListener(type, eventHandler, false, allowUntrusted);
@@ -55,7 +55,7 @@ function test(trusted, type, removeAddedListener, removeSetListener, allowUntrus
   }
 
   if (removeAddedListener) {
-    x1.removeEventListener(type, eventHandler, false);
+    x1.removeEventListener(type, eventHandler);
     if (trusted || allowUntrusted || allowUntrusted == undefined) {
       --handlerCount;
     }

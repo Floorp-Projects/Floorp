@@ -27,7 +27,7 @@ var tests = [
 var counter = 0;
 var curTest;
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 function receiveMessage(event) {
   is(event.data.result, curTest.expected, "Should be (" + curTest.expected + ") in Test " + counter + "!");
   loadNextTest();

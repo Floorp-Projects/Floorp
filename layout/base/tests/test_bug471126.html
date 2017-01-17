@@ -23,7 +23,7 @@ function test()
 {
   var selection = window.getSelection();
   selection.collapse(document.documentElement, 0);
-  document.documentElement.addEventListener("click", function(){ var foo = window; }, false);
+  document.documentElement.addEventListener("click", function(){ var foo = window; });
 }
 test();
 ok(true, "Shouldn't leak");

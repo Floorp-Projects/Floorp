@@ -236,9 +236,9 @@ function resetBlocklist() {
 function whenNewWindowLoaded(aOptions, aCallback) {
   let win = OpenBrowserWindow(aOptions);
   win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad, false);
+    win.removeEventListener("load", onLoad);
     aCallback(win);
-  }, false);
+  });
 }
 
 function promiseWindowWillBeClosed(win) {

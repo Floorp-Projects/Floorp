@@ -208,24 +208,22 @@ function fireLink(callback) {
     window.location.hash = '';
     window.addEventListener("hashchange",
       function clearHash() {
-        window.removeEventListener("hashchange", clearHash, false);
+        window.removeEventListener("hashchange", clearHash);
         window.setTimeout(fireLinkPart2, 0, callback);
-      },
-      false);
+      });
   }
 }
 
 function fireLinkPart2(callback) {
   window.addEventListener("hashchange",
     function triggerCallback() {
-      window.removeEventListener("hashchange", triggerCallback, false);
+      window.removeEventListener("hashchange", triggerCallback);
       window.setTimeout(callback, 0);
-    },
-    false);
+    });
   window.location.hash = '#anim';
 }
 
-window.addEventListener("load", continueTest, false);
+window.addEventListener("load", continueTest);
 ]]>
 </script>
 </pre>

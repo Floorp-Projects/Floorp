@@ -59,11 +59,11 @@ function workerIO(browser, scriptFile, message) {
     let worker = new content.Worker(args.scriptFile);
     let promise = new content.Promise(function(resolve) {
       let listenFunction = function(event) {
-        worker.removeEventListener("message", listenFunction, false);
+        worker.removeEventListener("message", listenFunction);
         worker.terminate();
         resolve(event.data);
       };
-      worker.addEventListener("message", listenFunction, false);
+      worker.addEventListener("message", listenFunction);
     });
     worker.postMessage(args.message);
     return yield promise;

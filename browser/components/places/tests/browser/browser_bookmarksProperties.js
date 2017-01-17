@@ -294,7 +294,7 @@ gTests.push({
     folderTree.addEventListener("DOMAttrModified", function onDOMAttrModified(event) {
       if (event.attrName != "place")
         return;
-      folderTree.removeEventListener("DOMAttrModified", arguments.callee, false);
+      folderTree.removeEventListener("DOMAttrModified", arguments.callee);
       executeSoon(function() {
         // Create a new folder.
         var newFolderButton = self.window.document.getElementById("editBMPanel_newFolderButton");
@@ -309,7 +309,7 @@ gTests.push({
         self._cleanShutdown = true;
         self.window.document.documentElement.cancelDialog();
       });
-    }, false);
+    });
     foldersExpander.doCommand();
   },
 

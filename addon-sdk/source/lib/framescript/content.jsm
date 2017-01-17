@@ -74,7 +74,7 @@ var frames = new Set();
 this.registerContentFrame = contentFrame => {
   contentFrame.addEventListener("unload", () => {
     unregisterContentFrame(contentFrame);
-  }, false);
+  });
 
   frames.add(contentFrame);
 

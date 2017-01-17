@@ -111,7 +111,7 @@ var gSyncUtils = {
     iframe.collapsed = true;
     document.documentElement.appendChild(iframe);
     iframe.contentWindow.addEventListener("load", function() {
-      iframe.contentWindow.removeEventListener("load", arguments.callee, false);
+      iframe.contentWindow.removeEventListener("load", arguments.callee);
 
       // Insert the Sync Key into the page.
       let el = iframe.contentDocument.getElementById("synckey");
@@ -129,7 +129,7 @@ var gSyncUtils = {
       el.firstChild.nodeValue = privacyURL;
 
       callback(iframe);
-    }, false);
+    });
   },
 
   /**

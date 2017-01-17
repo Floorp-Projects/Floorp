@@ -28,7 +28,7 @@ StackFramesClassicListView.prototype = Heritage.extend(WidgetMethods, {
     dumpn("Initializing the StackFramesClassicListView");
 
     this.widget = new SideMenuWidget(document.getElementById("callstack-list"));
-    this.widget.addEventListener("select", this._onSelect, false);
+    this.widget.addEventListener("select", this._onSelect);
 
     this.emptyText = L10N.getStr("noStackFramesText");
     this.autoFocusOnFirstItem = false;
@@ -44,7 +44,7 @@ StackFramesClassicListView.prototype = Heritage.extend(WidgetMethods, {
   destroy: function () {
     dumpn("Destroying the StackFramesClassicListView");
 
-    this.widget.removeEventListener("select", this._onSelect, false);
+    this.widget.removeEventListener("select", this._onSelect);
   },
 
   /**

@@ -33,7 +33,7 @@ function doTest() {
   d.style.transform = d.style.MozTransform = 'rotate(45deg)';
   document.documentElement.removeAttribute('class');
 }
-window.addEventListener("MozReftestInvalidate", doTest, false);
+window.addEventListener("MozReftestInvalidate", doTest);
 </script>
 <div id="d">test</div>
 <!-- d2 covers up d completely so that we don't get a reftest failure due to a difference
