@@ -36,6 +36,7 @@ class Viewport {
     this.onZoomChanged = null;
     this.onDimensionChanged = null;
     this.onPageChanged = null;
+    this.onPasswordRequest = null;
 
     this._viewportController.addEventListener('scroll', this);
     window.addEventListener('resize', this);
@@ -123,14 +124,14 @@ class Viewport {
   }
 
   _getScrollbarWidth() {
-    var div = document.createElement('div');
+    let div = document.createElement('div');
     div.style.visibility = 'hidden';
     div.style.overflow = 'scroll';
     div.style.width = '50px';
     div.style.height = '50px';
     div.style.position = 'absolute';
     document.body.appendChild(div);
-    var result = div.offsetWidth - div.clientWidth;
+    let result = div.offsetWidth - div.clientWidth;
     div.remove();
     return result;
   }
@@ -468,6 +469,13 @@ class Viewport {
     }
   }
 
+  verifyPassword(password) {
+    this._doAction({
+      type: 'getPasswordComplete',
+      password: password
+    });
+  }
+
   handleEvent(evt) {
     switch(evt.type) {
       case 'resize':
@@ -590,6 +598,9 @@ class Viewport {
         break;
       case 'fullscreenChange':
         this._handleFullscreenChange(message.fullscreen);
+        break;
+      case 'getPassword':
+        this.onPasswordRequest && this.onPasswordRequest();
         break;
     }
   }
