@@ -120,11 +120,17 @@ PlacesItem.prototype = {
   // Converts the record to a Sync bookmark object that can be passed to
   // `PlacesSyncUtils.bookmarks.{insert, update}`.
   toSyncBookmark() {
-    return {
+    let result = {
       kind: this.type,
       syncId: this.id,
       parentSyncId: this.parentid,
     };
+    let dateAdded = PlacesSyncUtils.bookmarks.ratchetTimestampBackwards(
+      this.dateAdded, +this.modified * 1000);
+    if (dateAdded !== undefined) {
+      result.dateAdded = dateAdded;
+    }
+    return result;
   },
 
   // Populates the record from a Sync bookmark object returned from
@@ -132,12 +138,15 @@ PlacesItem.prototype = {
   fromSyncBookmark(item) {
     this.parentid = item.parentSyncId;
     this.parentName = item.parentTitle;
+    if (item.dateAdded) {
+      this.dateAdded = item.dateAdded;
+    }
   },
 };
 
 Utils.deferGetSet(PlacesItem,
                   "cleartext",
-                  ["hasDupe", "parentid", "parentName", "type"]);
+                  ["hasDupe", "parentid", "parentName", "type", "dateAdded"]);
 
 this.Bookmark = function Bookmark(collection, id, type) {
   PlacesItem.call(this, collection, id, type || "bookmark");
@@ -543,6 +552,33 @@ BookmarksEngine.prototype = {
     return record;
   },
 
+  buildWeakReuploadMap(idSet) {
+    // We want to avoid uploading records which have changed, since that could
+    // cause an inconsistent state on the server.
+    //
+    // Strictly speaking, it would be correct to just call getChangedIds() after
+    // building the initial weak reupload map, however this is quite slow, since
+    // we might end up doing createRecord() (which runs at least one, and
+    // sometimes multiple database queries) for a potentially large number of
+    // items.
+    //
+    // Since the call to getChangedIds is relatively cheap, we do it once before
+    // building the weakReuploadMap (which is where the calls to createRecord()
+    // occur) as an optimization, and once after for correctness, to handle the
+    // unlikely case that a record was modified while we were building the map.
+    let initialChanges = Async.promiseSpinningly(PlacesSyncUtils.bookmarks.getChangedIds());
+    for (let changed of initialChanges) {
+      idSet.delete(changed);
+    }
+
+    let map = SyncEngine.prototype.buildWeakReuploadMap.call(this, idSet);
+    let changes = Async.promiseSpinningly(PlacesSyncUtils.bookmarks.getChangedIds());
+    for (let id of changes) {
+      map.delete(id);
+    }
+    return map;
+  },
+
   _findDupe: function _findDupe(item) {
     this._log.trace("Finding dupe for " + item.id +
                     " (already duped: " + item.hasDupe + ").");
@@ -666,6 +702,9 @@ BookmarksStore.prototype = {
     if (item) {
       this._log.debug(`Created ${item.kind} ${item.syncId} under ${
         item.parentSyncId}`, item);
+      if (item.dateAdded != record.dateAdded) {
+        this.engine._needWeakReupload.add(item.syncId);
+      }
     }
   },
 
@@ -680,6 +719,9 @@ BookmarksStore.prototype = {
     if (item) {
       this._log.debug(`Updated ${item.kind} ${item.syncId} under ${
         item.parentSyncId}`, item);
+      if (item.dateAdded != record.dateAdded) {
+        this.engine._needWeakReupload.add(item.syncId);
+      }
     }
   },
 

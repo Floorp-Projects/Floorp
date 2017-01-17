@@ -1742,6 +1742,7 @@ add_task(function* test_fetch() {
       description: "Folder description",
       childSyncIds: [folderBmk.syncId, folderSep.syncId],
       parentTitle: "Bookmarks Menu",
+      dateAdded: item.dateAdded,
       title: "",
     }, "Should include description, children, title, and parent title in folder");
   }
@@ -1750,7 +1751,7 @@ add_task(function* test_fetch() {
   {
     let item = yield PlacesSyncUtils.bookmarks.fetch(bmk.syncId);
     deepEqual(Object.keys(item).sort(), ["syncId", "kind", "parentSyncId",
-      "url", "tags", "description", "loadInSidebar", "parentTitle", "title"].sort(),
+      "url", "tags", "description", "loadInSidebar", "parentTitle", "title", "dateAdded"].sort(),
       "Should include bookmark-specific properties");
     equal(item.syncId, bmk.syncId, "Sync ID should match");
     equal(item.url.href, "https://example.com/", "Should return URL");
@@ -1766,7 +1767,7 @@ add_task(function* test_fetch() {
   {
     let item = yield PlacesSyncUtils.bookmarks.fetch(folderBmk.syncId);
     deepEqual(Object.keys(item).sort(), ["syncId", "kind", "parentSyncId",
-      "url", "keyword", "tags", "loadInSidebar", "parentTitle", "title"].sort(),
+      "url", "keyword", "tags", "loadInSidebar", "parentTitle", "title", "dateAdded"].sort(),
       "Should omit blank bookmark-specific properties");
     strictEqual(item.loadInSidebar, false, "Should not load bookmark in sidebar");
     deepEqual(item.tags, [], "Tags should be empty");
@@ -1785,7 +1786,7 @@ add_task(function* test_fetch() {
   {
     let item = yield PlacesSyncUtils.bookmarks.fetch(tagQuery.syncId);
     deepEqual(Object.keys(item).sort(), ["syncId", "kind", "parentSyncId",
-      "url", "title", "folder", "parentTitle"].sort(),
+      "url", "title", "folder", "parentTitle", "dateAdded"].sort(),
       "Should include query-specific properties");
     equal(item.url.href, `place:type=7&folder=${tagFolderId}`, "Should not rewrite outgoing tag queries");
     equal(item.folder, "taggy", "Should return tag name for tag queries");
@@ -1795,7 +1796,7 @@ add_task(function* test_fetch() {
   {
     let item = yield PlacesSyncUtils.bookmarks.fetch(smartBmk.syncId);
     deepEqual(Object.keys(item).sort(), ["syncId", "kind", "parentSyncId",
-      "url", "title", "query", "parentTitle"].sort(),
+      "url", "title", "query", "parentTitle", "dateAdded"].sort(),
       "Should include smart bookmark-specific properties");
     equal(item.query, "BookmarksToolbar", "Should return query name for smart bookmarks");
   }
@@ -1821,7 +1822,7 @@ add_task(function* test_fetch_livemark() {
     do_print("Fetch livemark");
     let item = yield PlacesSyncUtils.bookmarks.fetch(livemark.guid);
     deepEqual(Object.keys(item).sort(), ["syncId", "kind", "parentSyncId",
-      "description", "feed", "site", "parentTitle", "title"].sort(),
+      "description", "feed", "site", "parentTitle", "title", "dateAdded"].sort(),
       "Should include livemark-specific properties");
     equal(item.description, "Livemark description", "Should return description");
     equal(item.feed.href, site + "/feed/1", "Should return feed URL");

@@ -282,6 +282,8 @@ const SYNC_BOOKMARK_VALIDATORS = Object.freeze({
   keyword: simpleValidateFunc(v => v === null || typeof v == "string"),
   description: simpleValidateFunc(v => v === null || typeof v == "string"),
   loadInSidebar: simpleValidateFunc(v => v === true || v === false),
+  dateAdded: simpleValidateFunc(v => typeof v === "number"
+    && v > PlacesSyncUtils.bookmarks.EARLIEST_BOOKMARK_TIMESTAMP),
   feed: v => v === null ? v : BOOKMARK_VALIDATORS.url(v),
   site: v => v === null ? v : BOOKMARK_VALIDATORS.url(v),
   title: BOOKMARK_VALIDATORS.title,
