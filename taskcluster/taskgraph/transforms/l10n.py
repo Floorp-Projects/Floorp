@@ -68,9 +68,6 @@ l10n_description_schema = Schema({
 
         # Job name to identify as in the taskcluster index
         Required('job-name'): _by_platform(basestring),
-
-        # Type of index
-        Optional('type'): basestring,
     },
     # Description of the localized task
     Required('description'): _by_platform(basestring),
@@ -358,7 +355,6 @@ def make_job_description(config, jobs):
             job_description['index'] = {
                 'product': job['index']['product'],
                 'job-name': job['index']['job-name'],
-                'type': job['index'].get('type', 'generic'),
             }
 
         if job.get('dependencies'):
