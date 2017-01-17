@@ -122,7 +122,8 @@ function decodeRequestPayload(request) {
   let payload = null;
   let decoder = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON)
 
-  if (request.getHeader("content-encoding") == "gzip") {
+  if (request.hasHeader("content-encoding") &&
+      request.getHeader("content-encoding") == "gzip") {
     let observer = {
       buffer: "",
       onStreamComplete(loader, context, status, length, result) {
@@ -298,14 +299,6 @@ function setEmptyPrefWatchlist() {
     TelemetryEnvironment.testWatchPreferences(new Map());
 
   });
-}
-
-// Generate a UUID, used for the ping ID
-function generateUUID() {
-  let str = Cc["@mozilla.org/uuid-generator;1"]
-              .getService(Ci.nsIUUIDGenerator).generateUUID().toString();
-  // strip {}
-  return str.substring(1, str.length - 1);
 }
 
 if (runningInParent) {

@@ -9,6 +9,7 @@
 #include <fstream>
 
 #include <prio.h>
+#include <prproces.h>
 
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/Atomics.h"
@@ -16,6 +17,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Scoped.h"
 #include "mozilla/Unused.h"
 
 #include "base/pickle.h"
@@ -81,6 +83,13 @@
 #include "mozilla/StackWalk.h"
 #include "nsPrintfCString.h"
 #endif // MOZ_GECKO_PROFILER
+
+namespace mozilla {
+  // Scoped auto-close for PRFileDesc file descriptors
+  MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPRFileDesc,
+                                            PRFileDesc,
+                                            PR_Close);
+}
 
 namespace {
 
@@ -2648,6 +2657,94 @@ TelemetryImpl::FlushBatchedChildTelemetry()
 {
   TelemetryIPCAccumulator::IPCTimerFired(nullptr, nullptr);
   return NS_OK;
+}
+
+#ifndef MOZ_WIDGET_ANDROID
+
+static nsresult
+LocatePingSender(nsAString& aPath)
+{
+  nsCOMPtr<nsIFile> xreAppDistDir;
+  nsresult rv = NS_GetSpecialDirectory(XRE_APP_DISTRIBUTION_DIR,
+                                       getter_AddRefs(xreAppDistDir));
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  xreAppDistDir->AppendNative(NS_LITERAL_CSTRING("pingsender" BIN_SUFFIX));
+  xreAppDistDir->GetPath(aPath);
+  return NS_OK;
+}
+
+#endif // MOZ_WIDGET_ANDROID
+
+NS_IMETHODIMP
+TelemetryImpl::RunPingSender(const nsACString& aUrl, const nsACString& aPing)
+{
+#ifdef MOZ_WIDGET_ANDROID
+  Unused << aUrl;
+  Unused << aPing;
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else // Windows, Mac, Linux, etc...
+  // Obtain the path of the pingsender executable
+  nsAutoString path;
+  nsresult rv = LocatePingSender(path);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Create a pipe to send the ping contents to the ping sender
+  ScopedPRFileDesc pipeRead;
+  ScopedPRFileDesc pipeWrite;
+
+  if (PR_CreatePipe(&pipeRead.rwget(), &pipeWrite.rwget()) != PR_SUCCESS) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if ((PR_SetFDInheritable(pipeRead, PR_TRUE) != PR_SUCCESS) ||
+      (PR_SetFDInheritable(pipeWrite, PR_FALSE) != PR_SUCCESS)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRProcessAttr* attr = PR_NewProcessAttr();
+  if (!attr) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Connect the pingsender standard input to the pipe and launch it
+  PR_ProcessAttrSetStdioRedirect(attr, PR_StandardInput, pipeRead);
+
+  UniquePtr<char[]> arg0(ToNewCString(path));
+  UniquePtr<char[]> arg1(ToNewCString(aUrl));
+
+  char* args[] = {
+    arg0.get(),
+    arg1.get(),
+    nullptr,
+  };
+  Unused << NS_WARN_IF(PR_CreateProcessDetached(args[0], args, nullptr, attr));
+  PR_DestroyProcessAttr(attr);
+
+  // Send the ping contents to the ping sender
+  size_t length = aPing.Length();
+  const char* s = aPing.BeginReading();
+
+  while (length > 0) {
+    int result = PR_Write(pipeWrite, s, length);
+
+    if (result <= 0) {
+      return NS_ERROR_FAILURE;
+    }
+
+    s += result;
+    length -= result;
+  }
+
+  return NS_OK;
+#endif
 }
 
 size_t
