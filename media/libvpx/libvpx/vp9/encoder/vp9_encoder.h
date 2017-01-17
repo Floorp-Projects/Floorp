@@ -29,6 +29,7 @@
 #include "vp9/common/vp9_thread_common.h"
 #include "vp9/common/vp9_onyxc_int.h"
 
+#include "vp9/encoder/vp9_alt_ref_aq.h"
 #include "vp9/encoder/vp9_aq_cyclicrefresh.h"
 #include "vp9/encoder/vp9_context_tree.h"
 #include "vp9/encoder/vp9_encodemb.h"
@@ -72,7 +73,6 @@ typedef struct {
   FRAME_CONTEXT fc;
 } CODING_CONTEXT;
 
-
 typedef enum {
   // encode_breakout is disabled.
   ENCODE_BREAKOUT_DISABLED = 0,
@@ -83,10 +83,10 @@ typedef enum {
 } ENCODE_BREAKOUT_TYPE;
 
 typedef enum {
-  NORMAL      = 0,
-  FOURFIVE    = 1,
-  THREEFIVE   = 2,
-  ONETWO      = 3
+  NORMAL = 0,
+  FOURFIVE = 1,
+  THREEFIVE = 2,
+  ONETWO = 3
 } VPX_SCALING;
 
 typedef enum {
@@ -106,7 +106,7 @@ typedef enum {
 } MODE;
 
 typedef enum {
-  FRAMEFLAGS_KEY    = 1 << 0,
+  FRAMEFLAGS_KEY = 1 << 0,
   FRAMEFLAGS_GOLDEN = 1 << 1,
   FRAMEFLAGS_ALTREF = 1 << 2,
 } FRAMETYPE_FLAGS;
@@ -117,6 +117,9 @@ typedef enum {
   COMPLEXITY_AQ = 2,
   CYCLIC_REFRESH_AQ = 3,
   EQUATOR360_AQ = 4,
+  // AQ based on lookahead temporal
+  // variance (only valid for altref frames)
+  LOOKAHEAD_AQ = 5,
   AQ_MODE_COUNT  // This should always be the last member of the enum
 } AQ_MODE;
 
@@ -129,14 +132,14 @@ typedef enum {
 typedef struct VP9EncoderConfig {
   BITSTREAM_PROFILE profile;
   vpx_bit_depth_t bit_depth;     // Codec bit-depth.
-  int width;  // width of data passed to the compressor
-  int height;  // height of data passed to the compressor
+  int width;                     // width of data passed to the compressor
+  int height;                    // height of data passed to the compressor
   unsigned int input_bit_depth;  // Input bit depth.
-  double init_framerate;  // set to passed in framerate
-  int64_t target_bandwidth;  // bandwidth to be used in bits per second
+  double init_framerate;         // set to passed in framerate
+  int64_t target_bandwidth;      // bandwidth to be used in bits per second
 
   int noise_sensitivity;  // pre processing blur: recommendation 0
-  int sharpness;  // sharpening output: recommendation 0:
+  int sharpness;          // sharpening output: recommendation 0:
   int speed;
   // maximum allowed bitrate for any intra frame in % of bitrate target.
   unsigned int rc_max_intra_bitrate_pct;
@@ -179,6 +182,9 @@ typedef struct VP9EncoderConfig {
   int cq_level;
   AQ_MODE aq_mode;  // Adaptive Quantization mode
 
+  // Special handling of Adaptive Quantization for AltRef frames
+  int alt_ref_aq;
+
   // Internal frame size scaling.
   RESIZE_TYPE resize_mode;
   int scaled_frame_width;
@@ -188,7 +194,7 @@ typedef struct VP9EncoderConfig {
   int frame_periodic_boost;
 
   // two pass datarate control
-  int two_pass_vbrbias;        // two pass datarate control tweaks
+  int two_pass_vbrbias;  // two pass datarate control tweaks
   int two_pass_vbrmin_section;
   int two_pass_vbrmax_section;
   // END DATARATE CONTROL OPTIONS
@@ -231,7 +237,7 @@ typedef struct VP9EncoderConfig {
 
   int max_threads;
 
-  int target_level;
+  unsigned int target_level;
 
   vpx_fixed_buf_t two_pass_stats_in;
   struct vpx_codec_pkt_list *output_pkt_list;
@@ -261,14 +267,14 @@ typedef struct TileDataEnc {
   TileInfo tile_info;
   int thresh_freq_fact[BLOCK_SIZES][MAX_MODES];
   int mode_map[BLOCK_SIZES][MAX_MODES];
+  int m_search_count;
+  int ex_search_count;
 } TileDataEnc;
 
 typedef struct RD_COUNTS {
   vp9_coeff_count coef_counts[TX_SIZES][PLANE_TYPES];
   int64_t comp_pred_diff[REFERENCE_MODES];
   int64_t filter_diff[SWITCHABLE_FILTER_CONTEXTS];
-  int m_search_count;
-  int ex_search_count;
 } RD_COUNTS;
 
 typedef struct ThreadData {
@@ -289,17 +295,15 @@ typedef struct ActiveMap {
   unsigned char *map;
 } ActiveMap;
 
-typedef enum {
-  Y,
-  U,
-  V,
-  ALL
-} STAT_TYPE;
+typedef enum { Y, U, V, ALL } STAT_TYPE;
 
 typedef struct IMAGE_STAT {
-  double stat[ALL+1];
+  double stat[ALL + 1];
   double worst;
 } ImageStat;
+
+// Kf noise filtering currently disabled by default in build.
+// #define ENABLE_KF_DENOISE 1
 
 #define CPB_WINDOW_SIZE 4
 #define FRAME_WINDOW_SIZE 128
@@ -330,12 +334,14 @@ typedef struct {
   uint64_t max_luma_sample_rate;
   uint32_t max_luma_picture_size;
   double average_bitrate;  // in kilobits per second
-  double max_cpb_size;  // in kilobits
+  double max_cpb_size;     // in kilobits
   double compression_ratio;
   uint8_t max_col_tiles;
   uint32_t min_altref_distance;
   uint8_t max_ref_frame_buffers;
 } Vp9LevelSpec;
+
+extern const Vp9LevelSpec vp9_level_defs[VP9_LEVELS];
 
 typedef struct {
   int64_t ts;  // timestamp
@@ -364,6 +370,26 @@ typedef struct {
   Vp9LevelSpec level_spec;
 } Vp9LevelInfo;
 
+typedef enum {
+  BITRATE_TOO_LARGE = 0,
+  LUMA_PIC_SIZE_TOO_LARGE = 1,
+  LUMA_SAMPLE_RATE_TOO_LARGE = 2,
+  CPB_TOO_LARGE = 3,
+  COMPRESSION_RATIO_TOO_SMALL = 4,
+  TOO_MANY_COLUMN_TILE = 5,
+  ALTREF_DIST_TOO_SMALL = 6,
+  TOO_MANY_REF_BUFFER = 7,
+  TARGET_LEVEL_FAIL_IDS = 8
+} TARGET_LEVEL_FAIL_ID;
+
+typedef struct {
+  int8_t level_index;
+  uint8_t rc_config_updated;
+  uint8_t fail_flag;
+  int max_frame_size;   // in bits
+  double max_cpb_size;  // in bits
+} LevelConstraint;
+
 typedef struct VP9_COMP {
   QUANTS quants;
   ThreadData td;
@@ -372,8 +398,8 @@ typedef struct VP9_COMP {
   DECLARE_ALIGNED(16, int16_t, uv_dequant[QINDEX_RANGE][8]);
   VP9_COMMON common;
   VP9EncoderConfig oxcf;
-  struct lookahead_ctx    *lookahead;
-  struct lookahead_entry  *alt_ref_source;
+  struct lookahead_ctx *lookahead;
+  struct lookahead_entry *alt_ref_source;
 
   YV12_BUFFER_CONFIG *Source;
   YV12_BUFFER_CONFIG *Last_Source;  // NULL for first frame and alt_ref frames
@@ -381,6 +407,11 @@ typedef struct VP9_COMP {
   YV12_BUFFER_CONFIG scaled_source;
   YV12_BUFFER_CONFIG *unscaled_last_source;
   YV12_BUFFER_CONFIG scaled_last_source;
+#ifdef ENABLE_KF_DENOISE
+  YV12_BUFFER_CONFIG raw_unscaled_source;
+  YV12_BUFFER_CONFIG raw_scaled_source;
+#endif
+  YV12_BUFFER_CONFIG *raw_source_frame;
 
   TileDataEnc *tile_data;
   int allocated_tiles;  // Keep track of memory allocated for tiles.
@@ -431,11 +462,11 @@ typedef struct VP9_COMP {
 
   int interp_filter_selected[MAX_REF_FRAMES][SWITCHABLE];
 
-  struct vpx_codec_pkt_list  *output_pkt_list;
+  struct vpx_codec_pkt_list *output_pkt_list;
 
   MBGRAPH_FRAME_STATS mbgraph_stats[MAX_LAG_BUFFERS];
-  int mbgraph_n_frames;             // number of frames filled in the above
-  int static_mb_pct;                // % forced skip mbs by segmentation
+  int mbgraph_n_frames;  // number of frames filled in the above
+  int static_mb_pct;     // % forced skip mbs by segmentation
   int ref_frame_flags;
 
   SPEED_FEATURES sf;
@@ -475,7 +506,14 @@ typedef struct VP9_COMP {
 
   TWO_PASS twopass;
 
+  // Force recalculation of segment_ids for each mode info
+  uint8_t force_update_segmentation;
+
   YV12_BUFFER_CONFIG alt_ref_buffer;
+
+  // class responsible for adaptive
+  // quantization of altref frames
+  struct ALT_REF_AQ *alt_ref_aq;
 
 #if CONFIG_INTERNAL_STATS
   unsigned int mode_chosen_counts[MAX_MODES];
@@ -492,7 +530,7 @@ typedef struct VP9_COMP {
   double total_blockiness;
   double worst_blockiness;
 
-  int    bytes;
+  int bytes;
   double summed_quality;
   double summed_weights;
   double summedp_quality;
@@ -578,6 +616,8 @@ typedef struct VP9_COMP {
   int64_t vbp_thresholds[4];
   int64_t vbp_threshold_minmax;
   int64_t vbp_threshold_sad;
+  // Threshold used for partition copy
+  int64_t vbp_threshold_copy;
   BLOCK_SIZE vbp_bsize_min;
 
   // Multi-threading
@@ -585,9 +625,16 @@ typedef struct VP9_COMP {
   VPxWorker *workers;
   struct EncWorkerData *tile_thr_data;
   VP9LfSync lf_row_sync;
+  struct VP9BitstreamWorkerData *vp9_bitstream_worker_data;
 
   int keep_level_stats;
   Vp9LevelInfo level_info;
+
+  // Previous Partition Info
+  BLOCK_SIZE *prev_partition;
+  int8_t *prev_segment_id;
+
+  LevelConstraint level_constraint;
 } VP9_COMP;
 
 void vp9_initialize_enc(void);
@@ -598,15 +645,15 @@ void vp9_remove_compressor(VP9_COMP *cpi);
 
 void vp9_change_config(VP9_COMP *cpi, const VP9EncoderConfig *oxcf);
 
-  // receive a frames worth of data. caller can assume that a copy of this
-  // frame is made and not just a copy of the pointer..
-int vp9_receive_raw_frame(VP9_COMP *cpi, unsigned int frame_flags,
+// receive a frames worth of data. caller can assume that a copy of this
+// frame is made and not just a copy of the pointer..
+int vp9_receive_raw_frame(VP9_COMP *cpi, vpx_enc_frame_flags_t frame_flags,
                           YV12_BUFFER_CONFIG *sd, int64_t time_stamp,
                           int64_t end_time_stamp);
 
 int vp9_get_compressed_data(VP9_COMP *cpi, unsigned int *frame_flags,
-                            size_t *size, uint8_t *dest,
-                            int64_t *time_stamp, int64_t *time_end, int flush);
+                            size_t *size, uint8_t *dest, int64_t *time_stamp,
+                            int64_t *time_end, int flush);
 
 int vp9_get_preview_raw_frame(VP9_COMP *cpi, YV12_BUFFER_CONFIG *dest,
                               vp9_ppflags_t *flags);
@@ -627,8 +674,8 @@ int vp9_set_active_map(VP9_COMP *cpi, unsigned char *map, int rows, int cols);
 
 int vp9_get_active_map(VP9_COMP *cpi, unsigned char *map, int rows, int cols);
 
-int vp9_set_internal_size(VP9_COMP *cpi,
-                          VPX_SCALING horiz_mode, VPX_SCALING vert_mode);
+int vp9_set_internal_size(VP9_COMP *cpi, VPX_SCALING horiz_mode,
+                          VPX_SCALING vert_mode);
 
 int vp9_set_size_literal(VP9_COMP *cpi, unsigned int width,
                          unsigned int height);
@@ -638,8 +685,7 @@ void vp9_set_svc(VP9_COMP *cpi, int use_svc);
 int vp9_get_quantizer(struct VP9_COMP *cpi);
 
 static INLINE int frame_is_kf_gf_arf(const VP9_COMP *cpi) {
-  return frame_is_intra_only(&cpi->common) ||
-         cpi->refresh_alt_ref_frame ||
+  return frame_is_intra_only(&cpi->common) || cpi->refresh_alt_ref_frame ||
          (cpi->refresh_golden_frame && !cpi->rc.is_src_frame_alt_ref);
 }
 
@@ -665,8 +711,8 @@ static INLINE YV12_BUFFER_CONFIG *get_ref_frame_buffer(
     VP9_COMP *cpi, MV_REFERENCE_FRAME ref_frame) {
   VP9_COMMON *const cm = &cpi->common;
   const int buf_idx = get_ref_frame_buf_idx(cpi, ref_frame);
-  return
-      buf_idx != INVALID_IDX ? &cm->buffer_pool->frame_bufs[buf_idx].buf : NULL;
+  return buf_idx != INVALID_IDX ? &cm->buffer_pool->frame_bufs[buf_idx].buf
+                                : NULL;
 }
 
 static INLINE int get_token_alloc(int mb_rows, int mb_cols) {
@@ -720,7 +766,8 @@ static INLINE int is_one_pass_cbr_svc(const struct VP9_COMP *const cpi) {
 }
 
 static INLINE int is_altref_enabled(const VP9_COMP *const cpi) {
-  return cpi->oxcf.mode != REALTIME && cpi->oxcf.lag_in_frames > 0 &&
+  return !(cpi->oxcf.mode == REALTIME && cpi->oxcf.rc_mode == VPX_CBR) &&
+         cpi->oxcf.lag_in_frames > 0 &&
          (cpi->oxcf.enable_auto_arf &&
           (!is_two_pass_svc(cpi) ||
            cpi->oxcf.ss_enable_auto_arf[cpi->svc.spatial_layer_id]));
@@ -729,10 +776,10 @@ static INLINE int is_altref_enabled(const VP9_COMP *const cpi) {
 static INLINE void set_ref_ptrs(VP9_COMMON *cm, MACROBLOCKD *xd,
                                 MV_REFERENCE_FRAME ref0,
                                 MV_REFERENCE_FRAME ref1) {
-  xd->block_refs[0] = &cm->frame_refs[ref0 >= LAST_FRAME ? ref0 - LAST_FRAME
-                                                         : 0];
-  xd->block_refs[1] = &cm->frame_refs[ref1 >= LAST_FRAME ? ref1 - LAST_FRAME
-                                                         : 0];
+  xd->block_refs[0] =
+      &cm->frame_refs[ref0 >= LAST_FRAME ? ref0 - LAST_FRAME : 0];
+  xd->block_refs[1] =
+      &cm->frame_refs[ref1 >= LAST_FRAME ? ref1 - LAST_FRAME : 0];
 }
 
 static INLINE int get_chessboard_index(const int frame_index) {
@@ -741,6 +788,14 @@ static INLINE int get_chessboard_index(const int frame_index) {
 
 static INLINE int *cond_cost_list(const struct VP9_COMP *cpi, int *cost_list) {
   return cpi->sf.mv.subpel_search_method != SUBPEL_TREE ? cost_list : NULL;
+}
+
+static INLINE int get_level_index(VP9_LEVEL level) {
+  int i;
+  for (i = 0; i < VP9_LEVELS; ++i) {
+    if (level == vp9_level_defs[i].level) return i;
+  }
+  return -1;
 }
 
 VP9_LEVEL vp9_get_level(const Vp9LevelSpec *const level_spec);

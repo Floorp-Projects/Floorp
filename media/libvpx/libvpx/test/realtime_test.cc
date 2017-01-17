@@ -23,8 +23,7 @@ class RealtimeTest
     : public ::libvpx_test::EncoderTest,
       public ::libvpx_test::CodecTestWithParam<libvpx_test::TestMode> {
  protected:
-  RealtimeTest()
-      : EncoderTest(GET_PARAM(0)), frame_packets_(0) {}
+  RealtimeTest() : EncoderTest(GET_PARAM(0)), frame_packets_(0) {}
   virtual ~RealtimeTest() {}
 
   virtual void SetUp() {

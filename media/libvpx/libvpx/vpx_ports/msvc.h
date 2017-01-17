@@ -14,9 +14,9 @@
 
 #include "./vpx_config.h"
 
-# if _MSC_VER < 1900  // VS2015 provides snprintf
-#  define snprintf _snprintf
-# endif  // _MSC_VER < 1900
+#if _MSC_VER < 1900  // VS2015 provides snprintf
+#define snprintf _snprintf
+#endif  // _MSC_VER < 1900
 
 #if _MSC_VER < 1800  // VS2013 provides round
 #include <math.h>

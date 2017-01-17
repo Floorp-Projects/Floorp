@@ -19,16 +19,13 @@ namespace {
 const int kMaxErrorFrames = 12;
 const int kMaxDroppableFrames = 12;
 
-class ErrorResilienceTestLarge : public ::libvpx_test::EncoderTest,
-    public ::libvpx_test::CodecTestWith2Params<libvpx_test::TestMode, bool> {
+class ErrorResilienceTestLarge
+    : public ::libvpx_test::EncoderTest,
+      public ::libvpx_test::CodecTestWith2Params<libvpx_test::TestMode, bool> {
  protected:
   ErrorResilienceTestLarge()
-      : EncoderTest(GET_PARAM(0)),
-        svc_support_(GET_PARAM(2)),
-        psnr_(0.0),
-        nframes_(0),
-        mismatch_psnr_(0.0),
-        mismatch_nframes_(0),
+      : EncoderTest(GET_PARAM(0)), svc_support_(GET_PARAM(2)), psnr_(0.0),
+        nframes_(0), mismatch_psnr_(0.0), mismatch_nframes_(0),
         encoding_mode_(GET_PARAM(1)) {
     Reset();
   }
@@ -66,81 +63,69 @@ class ErrorResilienceTestLarge : public ::libvpx_test::EncoderTest,
   // LAST is updated on base/layer 0, GOLDEN  updated on layer 1.
   // Non-zero pattern_switch parameter means pattern will switch to
   // not using LAST for frame_num >= pattern_switch.
-  int SetFrameFlags(int frame_num,
-                    int num_temp_layers,
-                    int pattern_switch) {
+  int SetFrameFlags(int frame_num, int num_temp_layers, int pattern_switch) {
     int frame_flags = 0;
     if (num_temp_layers == 2) {
-        if (frame_num % 2 == 0) {
-          if (frame_num < pattern_switch || pattern_switch == 0) {
-            // Layer 0: predict from LAST and ARF, update LAST.
-            frame_flags = VP8_EFLAG_NO_REF_GF |
-                          VP8_EFLAG_NO_UPD_GF |
-                          VP8_EFLAG_NO_UPD_ARF;
-          } else {
-            // Layer 0: predict from GF and ARF, update GF.
-            frame_flags = VP8_EFLAG_NO_REF_LAST |
-                          VP8_EFLAG_NO_UPD_LAST |
-                          VP8_EFLAG_NO_UPD_ARF;
-          }
+      if (frame_num % 2 == 0) {
+        if (frame_num < pattern_switch || pattern_switch == 0) {
+          // Layer 0: predict from LAST and ARF, update LAST.
+          frame_flags =
+              VP8_EFLAG_NO_REF_GF | VP8_EFLAG_NO_UPD_GF | VP8_EFLAG_NO_UPD_ARF;
         } else {
-          if (frame_num < pattern_switch || pattern_switch == 0) {
-            // Layer 1: predict from L, GF, and ARF, update GF.
-            frame_flags = VP8_EFLAG_NO_UPD_ARF |
-                          VP8_EFLAG_NO_UPD_LAST;
-          } else {
-            // Layer 1: predict from GF and ARF, update GF.
-            frame_flags = VP8_EFLAG_NO_REF_LAST |
-                          VP8_EFLAG_NO_UPD_LAST |
-                          VP8_EFLAG_NO_UPD_ARF;
-          }
+          // Layer 0: predict from GF and ARF, update GF.
+          frame_flags = VP8_EFLAG_NO_REF_LAST | VP8_EFLAG_NO_UPD_LAST |
+                        VP8_EFLAG_NO_UPD_ARF;
         }
+      } else {
+        if (frame_num < pattern_switch || pattern_switch == 0) {
+          // Layer 1: predict from L, GF, and ARF, update GF.
+          frame_flags = VP8_EFLAG_NO_UPD_ARF | VP8_EFLAG_NO_UPD_LAST;
+        } else {
+          // Layer 1: predict from GF and ARF, update GF.
+          frame_flags = VP8_EFLAG_NO_REF_LAST | VP8_EFLAG_NO_UPD_LAST |
+                        VP8_EFLAG_NO_UPD_ARF;
+        }
+      }
     }
     return frame_flags;
   }
 
-  virtual void PreEncodeFrameHook(libvpx_test::VideoSource *video,
-                                  ::libvpx_test::Encoder * /*encoder*/) {
-    frame_flags_ &= ~(VP8_EFLAG_NO_UPD_LAST |
-                      VP8_EFLAG_NO_UPD_GF |
-                      VP8_EFLAG_NO_UPD_ARF);
+  virtual void PreEncodeFrameHook(libvpx_test::VideoSource *video) {
+    frame_flags_ &=
+        ~(VP8_EFLAG_NO_UPD_LAST | VP8_EFLAG_NO_UPD_GF | VP8_EFLAG_NO_UPD_ARF);
     // For temporal layer case.
     if (cfg_.ts_number_layers > 1) {
-      frame_flags_ = SetFrameFlags(video->frame(),
-                                   cfg_.ts_number_layers,
-                                   pattern_switch_);
+      frame_flags_ =
+          SetFrameFlags(video->frame(), cfg_.ts_number_layers, pattern_switch_);
       for (unsigned int i = 0; i < droppable_nframes_; ++i) {
         if (droppable_frames_[i] == video->frame()) {
-          std::cout << "Encoding droppable frame: "
-                    << droppable_frames_[i] << "\n";
+          std::cout << "Encoding droppable frame: " << droppable_frames_[i]
+                    << "\n";
         }
       }
     } else {
-       if (droppable_nframes_ > 0 &&
-         (cfg_.g_pass == VPX_RC_LAST_PASS || cfg_.g_pass == VPX_RC_ONE_PASS)) {
-         for (unsigned int i = 0; i < droppable_nframes_; ++i) {
-           if (droppable_frames_[i] == video->frame()) {
-             std::cout << "Encoding droppable frame: "
-                       << droppable_frames_[i] << "\n";
-             frame_flags_ |= (VP8_EFLAG_NO_UPD_LAST |
-                              VP8_EFLAG_NO_UPD_GF |
-                              VP8_EFLAG_NO_UPD_ARF);
-             return;
-           }
-         }
-       }
+      if (droppable_nframes_ > 0 &&
+          (cfg_.g_pass == VPX_RC_LAST_PASS || cfg_.g_pass == VPX_RC_ONE_PASS)) {
+        for (unsigned int i = 0; i < droppable_nframes_; ++i) {
+          if (droppable_frames_[i] == video->frame()) {
+            std::cout << "Encoding droppable frame: " << droppable_frames_[i]
+                      << "\n";
+            frame_flags_ |= (VP8_EFLAG_NO_UPD_LAST | VP8_EFLAG_NO_UPD_GF |
+                             VP8_EFLAG_NO_UPD_ARF);
+            return;
+          }
+        }
+      }
     }
   }
 
   double GetAveragePsnr() const {
-    if (nframes_)
-      return psnr_ / nframes_;
+    if (nframes_) return psnr_ / nframes_;
     return 0.0;
   }
 
   double GetAverageMismatchPsnr() const {
-    if (mismatch_nframes_)
-      return mismatch_psnr_ / mismatch_nframes_;
+    if (mismatch_nframes_) return mismatch_psnr_ / mismatch_nframes_;
     return 0.0;
   }
 
@@ -158,8 +143,7 @@ class ErrorResilienceTestLarge : public ::libvpx_test::EncoderTest,
     return 1;
   }
 
-  virtual void MismatchHook(const vpx_image_t *img1,
-                            const vpx_image_t *img2) {
+  virtual void MismatchHook(const vpx_image_t *img1, const vpx_image_t *img2) {
     double mismatch_psnr = compute_psnr(img1, img2);
     mismatch_psnr_ += mismatch_psnr;
     ++mismatch_nframes_;
@@ -167,32 +151,32 @@ class ErrorResilienceTestLarge : public ::libvpx_test::EncoderTest,
   }
 
   void SetErrorFrames(int num, unsigned int *list) {
-    if (num > kMaxErrorFrames)
+    if (num > kMaxErrorFrames) {
       num = kMaxErrorFrames;
-    else if (num < 0)
+    } else if (num < 0) {
       num = 0;
+    }
     error_nframes_ = num;
-    for (unsigned int i = 0; i < error_nframes_; ++i)
+    for (unsigned int i = 0; i < error_nframes_; ++i) {
       error_frames_[i] = list[i];
+    }
   }
 
   void SetDroppableFrames(int num, unsigned int *list) {
-    if (num > kMaxDroppableFrames)
+    if (num > kMaxDroppableFrames) {
       num = kMaxDroppableFrames;
-    else if (num < 0)
+    } else if (num < 0) {
       num = 0;
+    }
     droppable_nframes_ = num;
-    for (unsigned int i = 0; i < droppable_nframes_; ++i)
+    for (unsigned int i = 0; i < droppable_nframes_; ++i) {
       droppable_frames_[i] = list[i];
+    }
   }
 
-  unsigned int GetMismatchFrames() {
-    return mismatch_nframes_;
-  }
+  unsigned int GetMismatchFrames() { return mismatch_nframes_; }
 
-  void SetPatternSwitch(int frame_switch) {
-     pattern_switch_ = frame_switch;
-   }
+  void SetPatternSwitch(int frame_switch) { pattern_switch_ = frame_switch; }
 
   bool svc_support_;
 
@@ -265,15 +249,14 @@ TEST_P(ErrorResilienceTestLarge, DropFramesWithoutRecovery) {
   // In addition to isolated loss/drop, add a long consecutive series
   // (of size 9) of dropped frames.
   unsigned int num_droppable_frames = 11;
-  unsigned int droppable_frame_list[] = {5, 16, 22, 23, 24, 25, 26, 27, 28,
-                                         29, 30};
+  unsigned int droppable_frame_list[] = { 5,  16, 22, 23, 24, 25,
+                                          26, 27, 28, 29, 30 };
   SetDroppableFrames(num_droppable_frames, droppable_frame_list);
   SetErrorFrames(num_droppable_frames, droppable_frame_list);
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
   // Test that no mismatches have been found
-  std::cout << "             Mismatch frames: "
-            << GetMismatchFrames() << "\n";
-  EXPECT_EQ(GetMismatchFrames(), (unsigned int) 0);
+  std::cout << "             Mismatch frames: " << GetMismatchFrames() << "\n";
+  EXPECT_EQ(GetMismatchFrames(), (unsigned int)0);
 
   // Reset previously set of error/droppable frames.
   Reset();
@@ -306,8 +289,7 @@ TEST_P(ErrorResilienceTestLarge, DropFramesWithoutRecovery) {
 // layer, so successful decoding is expected.
 TEST_P(ErrorResilienceTestLarge, 2LayersDropEnhancement) {
   // This test doesn't run if SVC is not supported.
-  if (!svc_support_)
-    return;
+  if (!svc_support_) return;
 
   const vpx_rational timebase = { 33333333, 1000000000 };
   cfg_.g_timebase = timebase;
@@ -337,14 +319,13 @@ TEST_P(ErrorResilienceTestLarge, 2LayersDropEnhancement) {
   // The odd frames are the enhancement layer for 2 layer pattern, so set
   // those frames as droppable. Drop the last 7 frames.
   unsigned int num_droppable_frames = 7;
-  unsigned int droppable_frame_list[] = {27, 29, 31, 33, 35, 37, 39};
+  unsigned int droppable_frame_list[] = { 27, 29, 31, 33, 35, 37, 39 };
   SetDroppableFrames(num_droppable_frames, droppable_frame_list);
   SetErrorFrames(num_droppable_frames, droppable_frame_list);
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
   // Test that no mismatches have been found
-  std::cout << "             Mismatch frames: "
-            << GetMismatchFrames() << "\n";
-  EXPECT_EQ(GetMismatchFrames(), (unsigned int) 0);
+  std::cout << "             Mismatch frames: " << GetMismatchFrames() << "\n";
+  EXPECT_EQ(GetMismatchFrames(), (unsigned int)0);
 
   // Reset previously set of error/droppable frames.
   Reset();
@@ -355,8 +336,7 @@ TEST_P(ErrorResilienceTestLarge, 2LayersDropEnhancement) {
 // sequence, the LAST ref is not used anymore.
 TEST_P(ErrorResilienceTestLarge, 2LayersNoRefLast) {
   // This test doesn't run if SVC is not supported.
-  if (!svc_support_)
-    return;
+  if (!svc_support_) return;
 
   const vpx_rational timebase = { 33333333, 1000000000 };
   cfg_.g_timebase = timebase;
@@ -385,20 +365,19 @@ TEST_P(ErrorResilienceTestLarge, 2LayersNoRefLast) {
 
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
   // Test that no mismatches have been found
-  std::cout << "             Mismatch frames: "
-            << GetMismatchFrames() << "\n";
-  EXPECT_EQ(GetMismatchFrames(), (unsigned int) 0);
+  std::cout << "             Mismatch frames: " << GetMismatchFrames() << "\n";
+  EXPECT_EQ(GetMismatchFrames(), (unsigned int)0);
 
   // Reset previously set of error/droppable frames.
   Reset();
 }
 
-class ErrorResilienceTestLargeCodecControls : public ::libvpx_test::EncoderTest,
-    public ::libvpx_test::CodecTestWithParam<libvpx_test::TestMode> {
+class ErrorResilienceTestLargeCodecControls
+    : public ::libvpx_test::EncoderTest,
+      public ::libvpx_test::CodecTestWithParam<libvpx_test::TestMode> {
  protected:
   ErrorResilienceTestLargeCodecControls()
-      : EncoderTest(GET_PARAM(0)),
-        encoding_mode_(GET_PARAM(1)) {
+      : EncoderTest(GET_PARAM(0)), encoding_mode_(GET_PARAM(1)) {
     Reset();
   }
 
@@ -437,8 +416,8 @@ class ErrorResilienceTestLargeCodecControls : public ::libvpx_test::EncoderTest,
     if (num_temp_layers == 2) {
       if (frame_num % 2 == 0) {
         // Layer 0: predict from L and ARF, update L.
-        frame_flags = VP8_EFLAG_NO_REF_GF | VP8_EFLAG_NO_UPD_GF |
-                      VP8_EFLAG_NO_UPD_ARF;
+        frame_flags =
+            VP8_EFLAG_NO_REF_GF | VP8_EFLAG_NO_UPD_GF | VP8_EFLAG_NO_UPD_ARF;
       } else {
         // Layer 1: predict from L, G and ARF, and update G.
         frame_flags = VP8_EFLAG_NO_UPD_ARF | VP8_EFLAG_NO_UPD_LAST |
@@ -451,9 +430,9 @@ class ErrorResilienceTestLargeCodecControls : public ::libvpx_test::EncoderTest,
                       VP8_EFLAG_NO_REF_GF | VP8_EFLAG_NO_REF_ARF;
       } else if ((frame_num - 2) % 4 == 0) {
         // Layer 1: predict from L, G,  update G.
-        frame_flags = VP8_EFLAG_NO_UPD_ARF | VP8_EFLAG_NO_UPD_LAST |
-                      VP8_EFLAG_NO_REF_ARF;
-      }  else if ((frame_num - 1) % 2 == 0) {
+        frame_flags =
+            VP8_EFLAG_NO_UPD_ARF | VP8_EFLAG_NO_UPD_LAST | VP8_EFLAG_NO_REF_ARF;
+      } else if ((frame_num - 1) % 2 == 0) {
         // Layer 2: predict from L, G, ARF; update ARG.
         frame_flags = VP8_EFLAG_NO_UPD_GF | VP8_EFLAG_NO_UPD_LAST;
       }
@@ -467,7 +446,7 @@ class ErrorResilienceTestLargeCodecControls : public ::libvpx_test::EncoderTest,
       if (frame_num % 2 == 0) {
         layer_id = 0;
       } else {
-         layer_id = 1;
+        layer_id = 1;
       }
     } else if (num_temp_layers == 3) {
       if (frame_num % 4 == 0) {
@@ -484,16 +463,16 @@ class ErrorResilienceTestLargeCodecControls : public ::libvpx_test::EncoderTest,
   virtual void PreEncodeFrameHook(libvpx_test::VideoSource *video,
                                   libvpx_test::Encoder *encoder) {
     if (cfg_.ts_number_layers > 1) {
-        int layer_id = SetLayerId(video->frame(), cfg_.ts_number_layers);
-        int frame_flags = SetFrameFlags(video->frame(), cfg_.ts_number_layers);
-        if (video->frame() > 0) {
-          encoder->Control(VP8E_SET_TEMPORAL_LAYER_ID, layer_id);
-          encoder->Control(VP8E_SET_FRAME_FLAGS, frame_flags);
-        }
-       const vpx_rational_t tb = video->timebase();
-       timebase_ = static_cast<double>(tb.num) / tb.den;
-       duration_ = 0;
-       return;
+      int layer_id = SetLayerId(video->frame(), cfg_.ts_number_layers);
+      int frame_flags = SetFrameFlags(video->frame(), cfg_.ts_number_layers);
+      if (video->frame() > 0) {
+        encoder->Control(VP8E_SET_TEMPORAL_LAYER_ID, layer_id);
+        encoder->Control(VP8E_SET_FRAME_FLAGS, frame_flags);
+      }
+      const vpx_rational_t tb = video->timebase();
+      timebase_ = static_cast<double>(tb.num) / tb.den;
+      duration_ = 0;
+      return;
     }
   }
 
@@ -519,26 +498,28 @@ class ErrorResilienceTestLargeCodecControls : public ::libvpx_test::EncoderTest,
 
   virtual void EndPassHook(void) {
     duration_ = (last_pts_ + 1) * timebase_;
-    if (cfg_.ts_number_layers  > 1) {
+    if (cfg_.ts_number_layers > 1) {
       for (int layer = 0; layer < static_cast<int>(cfg_.ts_number_layers);
-          ++layer) {
+           ++layer) {
         if (bits_total_[layer]) {
           // Effective file datarate:
-          effective_datarate_[layer] = (bits_total_[layer] / 1000.0) / duration_;
+          effective_datarate_[layer] =
+              (bits_total_[layer] / 1000.0) / duration_;
         }
       }
     }
   }
 
   double effective_datarate_[3];
-   private:
-    libvpx_test::TestMode encoding_mode_;
-    vpx_codec_pts_t last_pts_;
-    double timebase_;
-    int64_t bits_total_[3];
-    double duration_;
-    int tot_frame_number_;
-  };
+
+ private:
+  libvpx_test::TestMode encoding_mode_;
+  vpx_codec_pts_t last_pts_;
+  double timebase_;
+  int64_t bits_total_[3];
+  double duration_;
+  int tot_frame_number_;
+};
 
 // Check two codec controls used for:
 // (1) for setting temporal layer id, and (2) for settings encoder flags.
@@ -582,10 +563,12 @@ TEST_P(ErrorResilienceTestLargeCodecControls, CodecControl3TemporalLayers) {
     for (int j = 0; j < static_cast<int>(cfg_.ts_number_layers); ++j) {
       ASSERT_GE(effective_datarate_[j], cfg_.ts_target_bitrate[j] * 0.75)
           << " The datarate for the file is lower than target by too much, "
-              "for layer: " << j;
+             "for layer: "
+          << j;
       ASSERT_LE(effective_datarate_[j], cfg_.ts_target_bitrate[j] * 1.25)
           << " The datarate for the file is greater than target by too much, "
-              "for layer: " << j;
+             "for layer: "
+          << j;
     }
   }
 }

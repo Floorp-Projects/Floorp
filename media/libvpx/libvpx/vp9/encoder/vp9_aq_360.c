@@ -22,8 +22,8 @@
 #include "vp9/encoder/vp9_rd.h"
 #include "vp9/encoder/vp9_segmentation.h"
 
-static const double rate_ratio[MAX_SEGMENTS] =
-  {1.0, 0.75, 0.6, 0.5, 0.4, 0.3, 0.25};
+static const double rate_ratio[MAX_SEGMENTS] = { 1.0, 0.75, 0.6, 0.5,
+                                                 0.4, 0.3,  0.25 };
 
 // Sets segment id 0 for the equatorial region, 1 for temperate region
 // and 2 for the polar regions
@@ -41,7 +41,8 @@ void vp9_360aq_frame_setup(VP9_COMP *cpi) {
   struct segmentation *seg = &cm->seg;
   int i;
 
-  if (frame_is_intra_only(cm) || cm->error_resilient_mode) {
+  if (frame_is_intra_only(cm) || cpi->force_update_segmentation ||
+      cm->error_resilient_mode) {
     vp9_enable_segmentation(seg);
     vp9_clearall_segfeatures(seg);
 

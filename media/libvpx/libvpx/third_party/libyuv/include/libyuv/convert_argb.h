@@ -12,10 +12,8 @@
 #define INCLUDE_LIBYUV_CONVERT_ARGB_H_
 
 #include "libyuv/basic_types.h"
-// TODO(fbarchard): Remove the following headers includes
-#include "libyuv/convert_from.h"
-#include "libyuv/planar_functions.h"
-#include "libyuv/rotate.h"
+
+#include "libyuv/rotate.h"  // For enum RotationMode.
 
 // TODO(fbarchard): This set of functions should exactly match convert.h
 // TODO(fbarchard): Add tests. Create random content of right size and convert
@@ -44,6 +42,14 @@ int I420ToARGB(const uint8* src_y, int src_stride_y,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height);
 
+// Duplicate prototype for function in convert_from.h for remoting.
+LIBYUV_API
+int I420ToABGR(const uint8* src_y, int src_stride_y,
+               const uint8* src_u, int src_stride_u,
+               const uint8* src_v, int src_stride_v,
+               uint8* dst_argb, int dst_stride_argb,
+               int width, int height);
+
 // Convert I422 to ARGB.
 LIBYUV_API
 int I422ToARGB(const uint8* src_y, int src_stride_y,
@@ -60,6 +66,22 @@ int I444ToARGB(const uint8* src_y, int src_stride_y,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height);
 
+// Convert J444 to ARGB.
+LIBYUV_API
+int J444ToARGB(const uint8* src_y, int src_stride_y,
+               const uint8* src_u, int src_stride_u,
+               const uint8* src_v, int src_stride_v,
+               uint8* dst_argb, int dst_stride_argb,
+               int width, int height);
+
+// Convert I444 to ABGR.
+LIBYUV_API
+int I444ToABGR(const uint8* src_y, int src_stride_y,
+               const uint8* src_u, int src_stride_u,
+               const uint8* src_v, int src_stride_v,
+               uint8* dst_abgr, int dst_stride_abgr,
+               int width, int height);
+
 // Convert I411 to ARGB.
 LIBYUV_API
 int I411ToARGB(const uint8* src_y, int src_stride_y,
@@ -67,6 +89,24 @@ int I411ToARGB(const uint8* src_y, int src_stride_y,
                const uint8* src_v, int src_stride_v,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height);
+
+// Convert I420 with Alpha to preattenuated ARGB.
+LIBYUV_API
+int I420AlphaToARGB(const uint8* src_y, int src_stride_y,
+                    const uint8* src_u, int src_stride_u,
+                    const uint8* src_v, int src_stride_v,
+                    const uint8* src_a, int src_stride_a,
+                    uint8* dst_argb, int dst_stride_argb,
+                    int width, int height, int attenuate);
+
+// Convert I420 with Alpha to preattenuated ABGR.
+LIBYUV_API
+int I420AlphaToABGR(const uint8* src_y, int src_stride_y,
+                    const uint8* src_u, int src_stride_u,
+                    const uint8* src_v, int src_stride_v,
+                    const uint8* src_a, int src_stride_a,
+                    uint8* dst_abgr, int dst_stride_abgr,
+                    int width, int height, int attenuate);
 
 // Convert I400 (grey) to ARGB.  Reverse of ARGBToI400.
 LIBYUV_API
@@ -129,6 +169,54 @@ int J422ToARGB(const uint8* src_y, int src_stride_y,
                const uint8* src_u, int src_stride_u,
                const uint8* src_v, int src_stride_v,
                uint8* dst_argb, int dst_stride_argb,
+               int width, int height);
+
+// Convert J420 to ABGR.
+LIBYUV_API
+int J420ToABGR(const uint8* src_y, int src_stride_y,
+               const uint8* src_u, int src_stride_u,
+               const uint8* src_v, int src_stride_v,
+               uint8* dst_abgr, int dst_stride_abgr,
+               int width, int height);
+
+// Convert J422 to ABGR.
+LIBYUV_API
+int J422ToABGR(const uint8* src_y, int src_stride_y,
+               const uint8* src_u, int src_stride_u,
+               const uint8* src_v, int src_stride_v,
+               uint8* dst_abgr, int dst_stride_abgr,
+               int width, int height);
+
+// Convert H420 to ARGB.
+LIBYUV_API
+int H420ToARGB(const uint8* src_y, int src_stride_y,
+               const uint8* src_u, int src_stride_u,
+               const uint8* src_v, int src_stride_v,
+               uint8* dst_argb, int dst_stride_argb,
+               int width, int height);
+
+// Convert H422 to ARGB.
+LIBYUV_API
+int H422ToARGB(const uint8* src_y, int src_stride_y,
+               const uint8* src_u, int src_stride_u,
+               const uint8* src_v, int src_stride_v,
+               uint8* dst_argb, int dst_stride_argb,
+               int width, int height);
+
+// Convert H420 to ABGR.
+LIBYUV_API
+int H420ToABGR(const uint8* src_y, int src_stride_y,
+               const uint8* src_u, int src_stride_u,
+               const uint8* src_v, int src_stride_v,
+               uint8* dst_abgr, int dst_stride_abgr,
+               int width, int height);
+
+// Convert H422 to ABGR.
+LIBYUV_API
+int H422ToABGR(const uint8* src_y, int src_stride_y,
+               const uint8* src_u, int src_stride_u,
+               const uint8* src_v, int src_stride_v,
+               uint8* dst_abgr, int dst_stride_abgr,
                int width, int height);
 
 // BGRA little endian (argb in memory) to ARGB.

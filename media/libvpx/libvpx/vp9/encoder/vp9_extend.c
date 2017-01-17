@@ -16,8 +16,7 @@
 #include "vp9/encoder/vp9_extend.h"
 
 static void copy_and_extend_plane(const uint8_t *src, int src_pitch,
-                                  uint8_t *dst, int dst_pitch,
-                                  int w, int h,
+                                  uint8_t *dst, int dst_pitch, int w, int h,
                                   int extend_top, int extend_left,
                                   int extend_bottom, int extend_right) {
   int i, linesize;
@@ -43,7 +42,7 @@ static void copy_and_extend_plane(const uint8_t *src, int src_pitch,
   src_ptr1 = dst - extend_left;
   src_ptr2 = dst + dst_pitch * (h - 1) - extend_left;
   dst_ptr1 = dst + dst_pitch * (-extend_top) - extend_left;
-  dst_ptr2 = dst + dst_pitch * (h) - extend_left;
+  dst_ptr2 = dst + dst_pitch * (h)-extend_left;
   linesize = extend_left + extend_right + w;
 
   for (i = 0; i < extend_top; i++) {
@@ -59,9 +58,8 @@ static void copy_and_extend_plane(const uint8_t *src, int src_pitch,
 
 #if CONFIG_VP9_HIGHBITDEPTH
 static void highbd_copy_and_extend_plane(const uint8_t *src8, int src_pitch,
-                                         uint8_t *dst8, int dst_pitch,
-                                         int w, int h,
-                                         int extend_top, int extend_left,
+                                         uint8_t *dst8, int dst_pitch, int w,
+                                         int h, int extend_top, int extend_left,
                                          int extend_bottom, int extend_right) {
   int i, linesize;
   uint16_t *src = CONVERT_TO_SHORTPTR(src8);
@@ -88,7 +86,7 @@ static void highbd_copy_and_extend_plane(const uint8_t *src8, int src_pitch,
   src_ptr1 = dst - extend_left;
   src_ptr2 = dst + dst_pitch * (h - 1) - extend_left;
   dst_ptr1 = dst + dst_pitch * (-extend_top) - extend_left;
-  dst_ptr2 = dst + dst_pitch * (h) - extend_left;
+  dst_ptr2 = dst + dst_pitch * (h)-extend_left;
   linesize = extend_left + extend_right + w;
 
   for (i = 0; i < extend_top; i++) {
@@ -127,51 +125,46 @@ void vp9_copy_and_extend_frame(const YV12_BUFFER_CONFIG *src,
 
 #if CONFIG_VP9_HIGHBITDEPTH
   if (src->flags & YV12_FLAG_HIGHBITDEPTH) {
-    highbd_copy_and_extend_plane(src->y_buffer, src->y_stride,
-                                 dst->y_buffer, dst->y_stride,
-                                 src->y_crop_width, src->y_crop_height,
-                                 et_y, el_y, eb_y, er_y);
+    highbd_copy_and_extend_plane(src->y_buffer, src->y_stride, dst->y_buffer,
+                                 dst->y_stride, src->y_crop_width,
+                                 src->y_crop_height, et_y, el_y, eb_y, er_y);
 
-    highbd_copy_and_extend_plane(src->u_buffer, src->uv_stride,
-                                 dst->u_buffer, dst->uv_stride,
-                                 src->uv_crop_width, src->uv_crop_height,
-                                 et_uv, el_uv, eb_uv, er_uv);
+    highbd_copy_and_extend_plane(
+        src->u_buffer, src->uv_stride, dst->u_buffer, dst->uv_stride,
+        src->uv_crop_width, src->uv_crop_height, et_uv, el_uv, eb_uv, er_uv);
 
-    highbd_copy_and_extend_plane(src->v_buffer, src->uv_stride,
-                                 dst->v_buffer, dst->uv_stride,
-                                 src->uv_crop_width, src->uv_crop_height,
-                                 et_uv, el_uv, eb_uv, er_uv);
+    highbd_copy_and_extend_plane(
+        src->v_buffer, src->uv_stride, dst->v_buffer, dst->uv_stride,
+        src->uv_crop_width, src->uv_crop_height, et_uv, el_uv, eb_uv, er_uv);
     return;
   }
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 
-  copy_and_extend_plane(src->y_buffer, src->y_stride,
-                        dst->y_buffer, dst->y_stride,
-                        src->y_crop_width, src->y_crop_height,
+  copy_and_extend_plane(src->y_buffer, src->y_stride, dst->y_buffer,
+                        dst->y_stride, src->y_crop_width, src->y_crop_height,
                         et_y, el_y, eb_y, er_y);
 
-  copy_and_extend_plane(src->u_buffer, src->uv_stride,
-                        dst->u_buffer, dst->uv_stride,
-                        src->uv_crop_width, src->uv_crop_height,
+  copy_and_extend_plane(src->u_buffer, src->uv_stride, dst->u_buffer,
+                        dst->uv_stride, src->uv_crop_width, src->uv_crop_height,
                         et_uv, el_uv, eb_uv, er_uv);
 
-  copy_and_extend_plane(src->v_buffer, src->uv_stride,
-                        dst->v_buffer, dst->uv_stride,
-                        src->uv_crop_width, src->uv_crop_height,
+  copy_and_extend_plane(src->v_buffer, src->uv_stride, dst->v_buffer,
+                        dst->uv_stride, src->uv_crop_width, src->uv_crop_height,
                         et_uv, el_uv, eb_uv, er_uv);
 }
 
 void vp9_copy_and_extend_frame_with_rect(const YV12_BUFFER_CONFIG *src,
-                                         YV12_BUFFER_CONFIG *dst,
-                                         int srcy, int srcx,
-                                         int srch, int srcw) {
+                                         YV12_BUFFER_CONFIG *dst, int srcy,
+                                         int srcx, int srch, int srcw) {
   // If the side is not touching the bounder then don't extend.
   const int et_y = srcy ? 0 : dst->border;
   const int el_y = srcx ? 0 : dst->border;
-  const int eb_y = srcy + srch != src->y_height ? 0 :
-                      dst->border + dst->y_height - src->y_height;
-  const int er_y = srcx + srcw != src->y_width ? 0 :
-                      dst->border + dst->y_width - src->y_width;
+  const int eb_y = srcy + srch != src->y_height
+                       ? 0
+                       : dst->border + dst->y_height - src->y_height;
+  const int er_y = srcx + srcw != src->y_width
+                       ? 0
+                       : dst->border + dst->y_width - src->y_width;
   const int src_y_offset = srcy * src->y_stride + srcx;
   const int dst_y_offset = srcy * dst->y_stride + srcx;
 
@@ -185,17 +178,14 @@ void vp9_copy_and_extend_frame_with_rect(const YV12_BUFFER_CONFIG *src,
   const int srcw_uv = ROUND_POWER_OF_TWO(srcw, 1);
 
   copy_and_extend_plane(src->y_buffer + src_y_offset, src->y_stride,
-                        dst->y_buffer + dst_y_offset, dst->y_stride,
-                        srcw, srch,
+                        dst->y_buffer + dst_y_offset, dst->y_stride, srcw, srch,
                         et_y, el_y, eb_y, er_y);
 
   copy_and_extend_plane(src->u_buffer + src_uv_offset, src->uv_stride,
-                        dst->u_buffer + dst_uv_offset, dst->uv_stride,
-                        srcw_uv, srch_uv,
-                        et_uv, el_uv, eb_uv, er_uv);
+                        dst->u_buffer + dst_uv_offset, dst->uv_stride, srcw_uv,
+                        srch_uv, et_uv, el_uv, eb_uv, er_uv);
 
   copy_and_extend_plane(src->v_buffer + src_uv_offset, src->uv_stride,
-                        dst->v_buffer + dst_uv_offset, dst->uv_stride,
-                        srcw_uv, srch_uv,
-                        et_uv, el_uv, eb_uv, er_uv);
+                        dst->v_buffer + dst_uv_offset, dst->uv_stride, srcw_uv,
+                        srch_uv, et_uv, el_uv, eb_uv, er_uv);
 }

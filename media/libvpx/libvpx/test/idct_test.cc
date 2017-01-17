@@ -43,11 +43,12 @@ class IDCTTest : public ::testing::TestWithParam<IdctFunc> {
 TEST_P(IDCTTest, TestGuardBlocks) {
   int i;
 
-  for (i = 0; i < 256; i++)
+  for (i = 0; i < 256; i++) {
     if ((i & 0xF) < 4 && i < 64)
       EXPECT_EQ(0, output[i]) << i;
     else
       EXPECT_EQ(255, output[i]);
+  }
 }
 
 TEST_P(IDCTTest, TestAllZeros) {
@@ -55,11 +56,12 @@ TEST_P(IDCTTest, TestAllZeros) {
 
   ASM_REGISTER_STATE_CHECK(UUT(input, output, 16, output, 16));
 
-  for (i = 0; i < 256; i++)
+  for (i = 0; i < 256; i++) {
     if ((i & 0xF) < 4 && i < 64)
       EXPECT_EQ(0, output[i]) << "i==" << i;
     else
       EXPECT_EQ(255, output[i]) << "i==" << i;
+  }
 }
 
 TEST_P(IDCTTest, TestAllOnes) {
@@ -68,11 +70,12 @@ TEST_P(IDCTTest, TestAllOnes) {
   input[0] = 4;
   ASM_REGISTER_STATE_CHECK(UUT(input, output, 16, output, 16));
 
-  for (i = 0; i < 256; i++)
+  for (i = 0; i < 256; i++) {
     if ((i & 0xF) < 4 && i < 64)
       EXPECT_EQ(1, output[i]) << "i==" << i;
     else
       EXPECT_EQ(255, output[i]) << "i==" << i;
+  }
 }
 
 TEST_P(IDCTTest, TestAddOne) {
@@ -82,11 +85,12 @@ TEST_P(IDCTTest, TestAddOne) {
   input[0] = 4;
   ASM_REGISTER_STATE_CHECK(UUT(input, predict, 16, output, 16));
 
-  for (i = 0; i < 256; i++)
+  for (i = 0; i < 256; i++) {
     if ((i & 0xF) < 4 && i < 64)
       EXPECT_EQ(i + 1, output[i]) << "i==" << i;
     else
       EXPECT_EQ(255, output[i]) << "i==" << i;
+  }
 }
 
 TEST_P(IDCTTest, TestWithData) {
@@ -96,7 +100,7 @@ TEST_P(IDCTTest, TestWithData) {
 
   ASM_REGISTER_STATE_CHECK(UUT(input, output, 16, output, 16));
 
-  for (i = 0; i < 256; i++)
+  for (i = 0; i < 256; i++) {
     if ((i & 0xF) > 3 || i > 63)
       EXPECT_EQ(255, output[i]) << "i==" << i;
     else if (i == 0)
@@ -107,9 +111,14 @@ TEST_P(IDCTTest, TestWithData) {
       EXPECT_EQ(3, output[i]) << "i==" << i;
     else
       EXPECT_EQ(0, output[i]) << "i==" << i;
+  }
 }
 
 INSTANTIATE_TEST_CASE_P(C, IDCTTest, ::testing::Values(vp8_short_idct4x4llm_c));
+#if HAVE_NEON
+INSTANTIATE_TEST_CASE_P(NEON, IDCTTest,
+                        ::testing::Values(vp8_short_idct4x4llm_neon));
+#endif
 #if HAVE_MMX
 INSTANTIATE_TEST_CASE_P(MMX, IDCTTest,
                         ::testing::Values(vp8_short_idct4x4llm_mmx));

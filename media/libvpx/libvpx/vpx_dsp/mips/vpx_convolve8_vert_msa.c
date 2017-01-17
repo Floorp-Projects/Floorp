@@ -222,11 +222,11 @@ static void common_vt_8t_16w_mult_msa(const uint8_t *src, int32_t src_stride,
     LD_SB7(src_tmp, src_stride, src0, src1, src2, src3, src4, src5, src6);
     XORI_B7_128_SB(src0, src1, src2, src3, src4, src5, src6);
     src_tmp += (7 * src_stride);
-    ILVR_B4_SB(src1, src0, src3, src2, src5, src4, src2, src1, src10_r,
-               src32_r, src54_r, src21_r);
+    ILVR_B4_SB(src1, src0, src3, src2, src5, src4, src2, src1, src10_r, src32_r,
+               src54_r, src21_r);
     ILVR_B2_SB(src4, src3, src6, src5, src43_r, src65_r);
-    ILVL_B4_SB(src1, src0, src3, src2, src5, src4, src2, src1, src10_l,
-               src32_l, src54_l, src21_l);
+    ILVL_B4_SB(src1, src0, src3, src2, src5, src4, src2, src1, src10_l, src32_l,
+               src54_l, src21_l);
     ILVL_B2_SB(src4, src3, src6, src5, src43_l, src65_l);
 
     for (loop_cnt = (height >> 2); loop_cnt--;) {
@@ -344,8 +344,8 @@ static void common_vt_2t_4x8_msa(const uint8_t *src, int32_t src_stride,
              src32_r, src43_r);
   ILVR_B4_SB(src5, src4, src6, src5, src7, src6, src8, src7, src54_r, src65_r,
              src76_r, src87_r);
-  ILVR_D4_SB(src21_r, src10_r, src43_r, src32_r, src65_r, src54_r,
-             src87_r, src76_r, src2110, src4332, src6554, src8776);
+  ILVR_D4_SB(src21_r, src10_r, src43_r, src32_r, src65_r, src54_r, src87_r,
+             src76_r, src2110, src4332, src6554, src8776);
   DOTP_UB4_UH(src2110, src4332, src6554, src8776, filt0, filt0, filt0, filt0,
               tmp0, tmp1, tmp2, tmp3);
   SRARI_H4_UH(tmp0, tmp1, tmp2, tmp3, FILTER_BITS);
@@ -407,10 +407,10 @@ static void common_vt_2t_8x8mult_msa(const uint8_t *src, int32_t src_stride,
     LD_UB8(src, src_stride, src1, src2, src3, src4, src5, src6, src7, src8);
     src += (8 * src_stride);
 
-    ILVR_B4_UB(src1, src0, src2, src1, src3, src2, src4, src3, vec0, vec1,
-               vec2, vec3);
-    ILVR_B4_UB(src5, src4, src6, src5, src7, src6, src8, src7, vec4, vec5,
-               vec6, vec7);
+    ILVR_B4_UB(src1, src0, src2, src1, src3, src2, src4, src3, vec0, vec1, vec2,
+               vec3);
+    ILVR_B4_UB(src5, src4, src6, src5, src7, src6, src8, src7, vec4, vec5, vec6,
+               vec7);
     DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt0, filt0, filt0, filt0, tmp0, tmp1,
                 tmp2, tmp3);
     SRARI_H4_UH(tmp0, tmp1, tmp2, tmp3, FILTER_BITS);
@@ -629,8 +629,8 @@ static void common_vt_2t_64w_msa(const uint8_t *src, int32_t src_stride,
 void vpx_convolve8_vert_msa(const uint8_t *src, ptrdiff_t src_stride,
                             uint8_t *dst, ptrdiff_t dst_stride,
                             const int16_t *filter_x, int x_step_q4,
-                            const int16_t *filter_y, int y_step_q4,
-                            int w, int h) {
+                            const int16_t *filter_y, int y_step_q4, int w,
+                            int h) {
   int8_t cnt, filt_ver[8];
 
   assert(y_step_q4 == 16);
@@ -643,67 +643,55 @@ void vpx_convolve8_vert_msa(const uint8_t *src, ptrdiff_t src_stride,
   if (((const int32_t *)filter_y)[0] == 0) {
     switch (w) {
       case 4:
-        common_vt_2t_4w_msa(src, (int32_t)src_stride,
-                            dst, (int32_t)dst_stride,
+        common_vt_2t_4w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                             &filt_ver[3], h);
         break;
       case 8:
-        common_vt_2t_8w_msa(src, (int32_t)src_stride,
-                            dst, (int32_t)dst_stride,
+        common_vt_2t_8w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                             &filt_ver[3], h);
         break;
       case 16:
-        common_vt_2t_16w_msa(src, (int32_t)src_stride,
-                             dst, (int32_t)dst_stride,
+        common_vt_2t_16w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                              &filt_ver[3], h);
         break;
       case 32:
-        common_vt_2t_32w_msa(src, (int32_t)src_stride,
-                             dst, (int32_t)dst_stride,
+        common_vt_2t_32w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                              &filt_ver[3], h);
         break;
       case 64:
-        common_vt_2t_64w_msa(src, (int32_t)src_stride,
-                             dst, (int32_t)dst_stride,
+        common_vt_2t_64w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                              &filt_ver[3], h);
         break;
       default:
-        vpx_convolve8_vert_c(src, src_stride, dst, dst_stride,
-                             filter_x, x_step_q4, filter_y, y_step_q4,
-                             w, h);
+        vpx_convolve8_vert_c(src, src_stride, dst, dst_stride, filter_x,
+                             x_step_q4, filter_y, y_step_q4, w, h);
         break;
     }
   } else {
     switch (w) {
       case 4:
-        common_vt_8t_4w_msa(src, (int32_t)src_stride,
-                            dst, (int32_t)dst_stride,
+        common_vt_8t_4w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                             filt_ver, h);
         break;
       case 8:
-        common_vt_8t_8w_msa(src, (int32_t)src_stride,
-                            dst, (int32_t)dst_stride,
+        common_vt_8t_8w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                             filt_ver, h);
         break;
       case 16:
-        common_vt_8t_16w_msa(src, (int32_t)src_stride,
-                             dst, (int32_t)dst_stride,
+        common_vt_8t_16w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                              filt_ver, h);
         break;
       case 32:
-        common_vt_8t_32w_msa(src, (int32_t)src_stride,
-                             dst, (int32_t)dst_stride,
+        common_vt_8t_32w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                              filt_ver, h);
         break;
       case 64:
-        common_vt_8t_64w_msa(src, (int32_t)src_stride,
-                             dst, (int32_t)dst_stride,
+        common_vt_8t_64w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                              filt_ver, h);
         break;
       default:
-        vpx_convolve8_vert_c(src, src_stride, dst, dst_stride,
-                             filter_x, x_step_q4, filter_y, y_step_q4,
-                             w, h);
+        vpx_convolve8_vert_c(src, src_stride, dst, dst_stride, filter_x,
+                             x_step_q4, filter_y, y_step_q4, w, h);
         break;
     }
   }

@@ -6612,9 +6612,11 @@ GTEST_DEFINE_string_(
 
 namespace internal {
 
+# if !GTEST_OS_WINDOWS
 // Valid only for fast death tests. Indicates the code is running in the
 // child process of a fast style death test.
 static bool g_in_fast_death_test_child = false;
+# endif  // !GTEST_OS_WINDOWS
 
 // Returns a Boolean value indicating whether the caller is currently
 // executing in the context of the death test child process.  Tools such as

@@ -82,7 +82,7 @@ generate_filter() {
                        | sed -e "s,$src_path_bare,," \
                              -e 's/^[\./]\+//g' -e 's,[:/ ],_,g')
 
-                if ([ "$pat" == "asm" ] || [ "$pat" == "s" ]) && $asm_use_custom_step; then
+                if ([ "$pat" == "asm" ] || [ "$pat" == "s" ] || [ "$pat" == "S" ]) && $asm_use_custom_step; then
                     # Avoid object file name collisions, i.e. vpx_config.c and
                     # vpx_config.asm produce the same object file without
                     # this additional suffix.
@@ -203,7 +203,7 @@ for opt in "$@"; do
             # The paths in file_list are fixed outside of the loop.
             file_list[${#file_list[@]}]="$opt"
             case "$opt" in
-                 *.asm|*.s) uses_asm=true
+                 *.asm|*.[Ss]) uses_asm=true
                  ;;
             esac
         ;;
@@ -452,7 +452,7 @@ generate_vcxproj() {
     done
 
     open_tag ItemGroup
-    generate_filter "Source Files"   "c;cc;cpp;def;odl;idl;hpj;bat;asm;asmx;s"
+    generate_filter "Source Files"   "c;cc;cpp;def;odl;idl;hpj;bat;asm;asmx;s;S"
     close_tag ItemGroup
     open_tag ItemGroup
     generate_filter "Header Files"   "h;hm;inl;inc;xsd"

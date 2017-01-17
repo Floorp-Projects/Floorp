@@ -30,8 +30,7 @@ int stats_open_file(stats_io_t *stats, const char *fpf, int pass) {
 
     stats->file = fopen(fpf, "rb");
 
-    if (stats->file == NULL)
-      fatal("First-pass stats file does not exist!");
+    if (stats->file == NULL) fatal("First-pass stats file does not exist!");
 
     if (fseek(stats->file, 0, SEEK_END))
       fatal("First-pass stats file must be seekable!");
@@ -76,18 +75,17 @@ void stats_close(stats_io_t *stats, int last_pass) {
     fclose(stats->file);
     stats->file = NULL;
   } else {
-    if (stats->pass == last_pass)
-      free(stats->buf.buf);
+    if (stats->pass == last_pass) free(stats->buf.buf);
   }
 }
 
 void stats_write(stats_io_t *stats, const void *pkt, size_t len) {
   if (stats->file) {
-    (void) fwrite(pkt, 1, len, stats->file);
+    (void)fwrite(pkt, 1, len, stats->file);
   } else {
     if (stats->buf.sz + len > stats->buf_alloc_sz) {
-      size_t  new_sz = stats->buf_alloc_sz + 64 * 1024;
-      char   *new_ptr = realloc(stats->buf.buf, new_sz);
+      size_t new_sz = stats->buf_alloc_sz + 64 * 1024;
+      char *new_ptr = realloc(stats->buf.buf, new_sz);
 
       if (new_ptr) {
         stats->buf_ptr = new_ptr + (stats->buf_ptr - (char *)stats->buf.buf);
@@ -104,6 +102,4 @@ void stats_write(stats_io_t *stats, const void *pkt, size_t len) {
   }
 }
 
-vpx_fixed_buf_t stats_get(stats_io_t *stats) {
-  return stats->buf;
-}
+vpx_fixed_buf_t stats_get(stats_io_t *stats) { return stats->buf; }

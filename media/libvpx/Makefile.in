@@ -10,9 +10,12 @@ ifdef VPX_AS_CONVERSION
 # The ARM asm is written in ARM RVCT syntax, but we actually build it with
 # gas using GNU syntax. Add some rules to perform the conversion.
 
-GENERATED_DIRS += $(dir $(ASFILES))
+# Previously used $(dir $(ASFILES)) to figure out which directories to generate.
+# However, .S (as opposed to .s) files are not added to ASFILES. There is only
+# one directory with arm assembly currently so enumerate it manually.
+GENERATED_DIRS += libvpx/vpx_dsp/arm
 
-%.asm.s: %.asm $(ASM_OFFSETS)
+%.asm.S: %.asm $(ASM_OFFSETS)
 	$(VPX_AS_CONVERSION) < $< > $@
 
 endif
