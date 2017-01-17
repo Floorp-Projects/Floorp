@@ -28,7 +28,7 @@ bool is_in_compositor_thread()
 
 bool is_in_render_thread()
 {
-  return mozilla::layers::RenderThread::IsInRenderThread();
+  return mozilla::wr::RenderThread::IsInRenderThread();
 }
 
 void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname)
@@ -113,7 +113,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
 WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
                                              const uint64_t& aPipelineId,
                                              widget::CompositorWidget* aWidget,
-                                             RefPtr<WebRenderAPI>&& aApi)
+                                             RefPtr<wr::WebRenderAPI>&& aApi)
   : mCompositorBridge(aCompositorBridge)
   , mPipelineId(aPipelineId)
   , mWidget(aWidget)
@@ -146,7 +146,7 @@ WebRenderBridgeParent::RecvCreate(const uint32_t& aWidth,
   }
   MOZ_ASSERT(mWRWindowState);
   mGLContext->MakeCurrent();
-  mBuilder.emplace(LayerIntSize(aWidth, aHeight), gfx::PipelineId(mPipelineId));
+  mBuilder.emplace(LayerIntSize(aWidth, aHeight), wr::PipelineId(mPipelineId));
   wr_window_init_pipeline_epoch(mWRWindowState, mPipelineId, aWidth, aHeight);
   return IPC_OK();
 }
@@ -284,7 +284,7 @@ void
 WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderCommand>& aCommands)
 {
   MOZ_ASSERT(mBuilder.isSome());
-  DisplayListBuilder& builder = mBuilder.ref();
+  wr::DisplayListBuilder& builder = mBuilder.ref();
   // XXX remove it when external image key is used.
   std::vector<WRImageKey> keysToDelete;
 
@@ -386,9 +386,9 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
           const nsTArray<WRGlyphInstance>& glyphs = glyph_array[i].glyphs;
 
           // TODO: We are leaking the key
-          auto fontKey = FontKey(wr_window_add_raw_font(mWRWindowState,
-                                                        op.font_buffer().mData,
-                                                        op.font_buffer_length()));
+          auto fontKey = wr::FontKey(wr_window_add_raw_font(mWRWindowState,
+                                                            op.font_buffer().mData,
+                                                            op.font_buffer_length()));
 
           builder.PushText(op.bounds(),
                            op.clip(),

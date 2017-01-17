@@ -34,18 +34,18 @@ WebRenderBorderLayer::RenderLayer()
   Rect overflow(0, 0, relBounds.width, relBounds.height);
   Matrix4x4 transform;// = GetTransform();
   WRBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(overflow), Nothing(), transform, FrameMetrics::NULL_SCROLL_ID));
+      OpDPPushStackingContext(wr::ToWRRect(relBounds), wr::ToWRRect(overflow), Nothing(), transform, FrameMetrics::NULL_SCROLL_ID));
 
   WRBridge()->AddWebRenderCommand(
-    OpDPPushBorder(ToWRRect(rect), ToWRRect(clip),
-                   ToWRBorderSide(mWidths[0], mColors[0]),
-                   ToWRBorderSide(mWidths[1], mColors[1]),
-                   ToWRBorderSide(mWidths[2], mColors[2]),
-                   ToWRBorderSide(mWidths[3], mColors[3]),
-                   ToWRLayoutSize(mCorners[0]),
-                   ToWRLayoutSize(mCorners[1]),
-                   ToWRLayoutSize(mCorners[3]),
-                   ToWRLayoutSize(mCorners[2])));
+    OpDPPushBorder(wr::ToWRRect(rect), wr::ToWRRect(clip),
+                   wr::ToWRBorderSide(mWidths[0], mColors[0]),
+                   wr::ToWRBorderSide(mWidths[1], mColors[1]),
+                   wr::ToWRBorderSide(mWidths[2], mColors[2]),
+                   wr::ToWRBorderSide(mWidths[3], mColors[3]),
+                   wr::ToWRLayoutSize(mCorners[0]),
+                   wr::ToWRLayoutSize(mCorners[1]),
+                   wr::ToWRLayoutSize(mCorners[3]),
+                   wr::ToWRLayoutSize(mCorners[2])));
   if (gfxPrefs::LayersDump()) printf_stderr("BorderLayer %p using %s as bounds/overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
 
   WRBridge()->AddWebRenderCommand(OpDPPopStackingContext());

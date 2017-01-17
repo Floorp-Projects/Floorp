@@ -27,7 +27,7 @@ WebRenderContainerLayer::RenderLayer()
   Maybe<WRImageMask> mask = buildMaskLayer();
 
   WRBridge()->AddWebRenderCommand(
-    OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
+    OpDPPushStackingContext(wr::ToWRRect(relBounds), wr::ToWRRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
   for (LayerPolygon& child : children) {
     if (child.layer->IsBackfaceHidden()) {
       continue;
@@ -46,7 +46,7 @@ WebRenderRefLayer::RenderLayer()
   gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   gfx::Matrix4x4 transform;// = GetTransform();
   if (gfxPrefs::LayersDump()) printf_stderr("RefLayer %p (%" PRIu64 ") using %s as bounds/overflow, %s as transform\n", this, mId, Stringify(relBounds).c_str(), Stringify(transform).c_str());
-  WRBridge()->AddWebRenderCommand(OpDPPushIframe(ToWRRect(relBounds), ToWRRect(relBounds), mId));
+  WRBridge()->AddWebRenderCommand(OpDPPushIframe(wr::ToWRRect(relBounds), wr::ToWRRect(relBounds), mId));
 }
 
 } // namespace layers

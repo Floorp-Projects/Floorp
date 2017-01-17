@@ -36,9 +36,9 @@ WebRenderColorLayer::RenderLayer()
   Maybe<WRImageMask> mask = buildMaskLayer();
 
   WRBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
+      OpDPPushStackingContext(wr::ToWRRect(relBounds), wr::ToWRRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
   WRBridge()->AddWebRenderCommand(
-    OpDPPushRect(ToWRRect(rect), ToWRRect(clip), mColor.r, mColor.g, mColor.b, mColor.a));
+    OpDPPushRect(wr::ToWRRect(rect), wr::ToWRRect(clip), mColor.r, mColor.g, mColor.b, mColor.a));
 
   if (gfxPrefs::LayersDump()) printf_stderr("ColorLayer %p using %s as bounds, %s as overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(overflow).c_str(), Stringify(transform).c_str());
   WRBridge()->AddWebRenderCommand(OpDPPopStackingContext());
