@@ -9,7 +9,7 @@
 
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderTypes.h"
-#include "mozilla/gfx/webrender.h"
+#include "mozilla/webrender/webrender_ffi.h"
 
 namespace mozilla {
 

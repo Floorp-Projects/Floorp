@@ -9,7 +9,7 @@
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Range.h"
-#include "mozilla/gfx/webrender.h"
+#include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "Units.h"
 

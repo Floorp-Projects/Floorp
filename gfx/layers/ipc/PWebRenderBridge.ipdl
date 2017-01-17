@@ -16,7 +16,7 @@ include protocol PCompositorBridge;
 include protocol PTexture;
 
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
-using WRImageFormat from "mozilla/gfx/webrender.h";
+using WRImageFormat from "mozilla/webrender/webrender_ffi.h";
 using mozilla::gfx::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
 
 namespace mozilla {
