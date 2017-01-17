@@ -151,6 +151,7 @@ loader.lazyGetter(this, "eventListenerService", function () {
 
 loader.lazyRequireGetter(this, "CssLogic", "devtools/server/css-logic", true);
 loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
+loader.lazyRequireGetter(this, "getCssPath", "devtools/shared/inspector/css-logic", true);
 
 /**
  * We only send nodeValue up to a certain size by default.  This stuff
@@ -643,6 +644,18 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       return "";
     }
     return findCssSelector(this.rawNode);
+  },
+
+  /**
+   * Get the full CSS path for this node.
+   *
+   * @return {String} A CSS selector with a part for the node and each of its ancestors.
+   */
+  getCssPath: function () {
+    if (Cu.isDeadWrapper(this.rawNode)) {
+      return "";
+    }
+    return getCssPath(this.rawNode);
   },
 
   /**
