@@ -215,7 +215,7 @@ WebRenderBridgeParent::RecvDeleteImage(const WrImageKey& aImageKey)
     return IPC_OK();
   }
   MOZ_ASSERT(mWRWindowState);
-  mKeysToDelete.push_back(aImageKey);
+  mKeysToDelete.push_back(wr::ImageKey(aImageKey));
   return IPC_OK();
 }
 
@@ -286,7 +286,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
   MOZ_ASSERT(mBuilder.isSome());
   wr::DisplayListBuilder& builder = mBuilder.ref();
   // XXX remove it when external image key is used.
-  std::vector<WrImageKey> keysToDelete;
+  std::vector<wr::ImageKey> keysToDelete;
 
   for (InfallibleTArray<WebRenderCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
     const WebRenderCommand& cmd = aCommands[i];
@@ -318,7 +318,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
       case WebRenderCommand::TOpDPPushImage: {
         const OpDPPushImage& op = cmd.get_OpDPPushImage();
         builder.PushImage(op.bounds(), op.clip(),
-                          op.mask().ptrOr(nullptr), op.filter(), op.key());
+                          op.mask().ptrOr(nullptr), op.filter(), wr::ImageKey(op.key()));
         break;
       }
       case WebRenderCommand::TOpDPPushExternalImageId: {
@@ -359,7 +359,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         if (!dSurf->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
           break;
         }
-        WrImageKey key = wr_add_image(mWRWindowState, validRect.width, validRect.height, map.mStride, RGBA8, map.mData, validRect.height * map.mStride);
+        wr::ImageKey key(wr_add_image(mWRWindowState, validRect.width, validRect.height, map.mStride, RGBA8, map.mData, validRect.height * map.mStride));
         builder.PushImage(op.bounds(), op.clip(), op.mask().ptrOr(nullptr), op.filter(), key);
         keysToDelete.push_back(key);
         dSurf->Unmap();
@@ -605,8 +605,8 @@ WebRenderBridgeParent::~WebRenderBridgeParent()
 void
 WebRenderBridgeParent::DeleteOldImages()
 {
-  for (WrImageKey key : mKeysToDelete) {
-    wr_delete_image(mWRWindowState, key);
+  for (wr::ImageKey key : mKeysToDelete) {
+    wr_delete_image(mWRWindowState, key.mHandle);
   }
   mKeysToDelete.clear();
 }
