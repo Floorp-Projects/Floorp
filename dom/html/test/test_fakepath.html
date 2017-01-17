@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Fakepath in HTMLInputElement</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<input id="file" type="file"></input>
+<input id="file_wd" type="file" webkitdirectory></input>
+<script type="application/javascript;version=1.7">
+
+var url = SimpleTest.getTestFileURL("script_fakepath.js");
+script = SpecialPowers.loadChromeScript(url);
+
+function onOpened(message) {
+  var e = document.getElementById("file");
+  SpecialPowers.wrap(e).mozSetDndFilesAndDirectories(message.data);
+  ok(e.value, "C:\\fakepath\\prefs.js");
+
+  e = document.getElementById("file_wd");
+  SpecialPowers.wrap(e).mozSetDndFilesAndDirectories(message.data);
+  ok(e.value, "C:\\fakepath\\prefs.js");
+
+  SimpleTest.finish();
+}
+
+function run() {
+  script.addMessageListener("file.opened", onOpened);
+  script.sendAsyncMessage("file.open");
+}
+
+SpecialPowers.pushPrefEnv({"set": [["dom.input.dirpicker", true],
+                                   ["dom.webkitBlink.dirPicker.enabled", true]]}, run);
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>
