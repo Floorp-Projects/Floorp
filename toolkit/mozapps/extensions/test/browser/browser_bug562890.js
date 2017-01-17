@@ -63,11 +63,11 @@ function test() {
           if (win.location != addonPrefsURI)
             return;
 
-          win.removeEventListener("load", TEST_ww_onLoad, false);
+          win.removeEventListener("load", TEST_ww_onLoad);
           is(win.location, addonPrefsURI,
              "The correct addon pref window should have opened");
           win.close();
-        }, false);
+        });
       }
     });
 

@@ -59,7 +59,7 @@ function setup() {
                                             receiverListener);
         teardown();
       }
-    }, false);
+    });
 
     var promise = new Promise(function(aResolve, aReject) {
       document.body.appendChild(receiverIframe);

@@ -4,7 +4,7 @@
 <script>
 
     function f(event) {
-        document.removeEventListener("DOMAttrModified", f, false);
+        document.removeEventListener("DOMAttrModified", f);
 
         // dumpln(event.attrChange); /* 2 (MutationEvent.ADDITION) */
         // dumpln(event.attrName); /* "curpos" */
@@ -18,7 +18,7 @@
 
     var svgUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
     document.removeChild(document.documentElement);
-    document.addEventListener("DOMAttrModified", f, false);
+    document.addEventListener("DOMAttrModified", f);
     document.appendChild(svgUse);
 
 </script>

@@ -1427,7 +1427,7 @@ function appendProcessAboutMemoryElements(aP, aN, aProcess, aTrees,
       document.documentElement.scrollTop =
         document.querySelector(event.target.href).offsetTop;
       event.preventDefault();
-    }, false);
+    });
 
     // This gives nice spacing when we copy and paste.
     appendElementWithText(aP, "span", "", "\n");

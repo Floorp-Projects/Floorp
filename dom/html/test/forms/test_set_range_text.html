@@ -85,11 +85,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
         } else if (numOfSelectCalls > expectedNumOfSelectCalls) {
           ok(false, "Too many select events were fired");
         }
-      }, false);
+      });
 
       elem.addEventListener("input", function (aEvent) {
         ok(false, "input event should NOT be fired for " + + aEvent.target.id);
-      }, false);
+      });
 
       var test = " setRange(replacement), shrink";
       elem.value = "0123456789ABCDEF";

@@ -93,11 +93,11 @@ add_task(function* test_simple() {
               break;
 
             case "finish":
-              window.removeEventListener("message", rcv, false);
+              window.removeEventListener("message", rcv);
               browser.test.sendMessage("content-script-finished");
               break;
           }
-        }, false);
+        });
         window.postMessage("test", "*");
       }})(${runTests})`,
     },

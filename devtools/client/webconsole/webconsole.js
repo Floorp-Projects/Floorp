@@ -780,8 +780,8 @@ WebConsoleFrame.prototype = {
                              Ci.nsITimer.TYPE_ONE_SHOT);
     };
 
-    this.filterBox.addEventListener("command", onChange, false);
-    this.filterBox.addEventListener("input", onChange, false);
+    this.filterBox.addEventListener("command", onChange);
+    this.filterBox.addEventListener("input", onChange);
   },
 
   /**
@@ -801,13 +801,13 @@ WebConsoleFrame.prototype = {
     Array.forEach(categories, function (button) {
       button.addEventListener("contextmenu", () => {
         button.open = true;
-      }, false);
-      button.addEventListener("click", this._toggleFilter, false);
+      });
+      button.addEventListener("click", this._toggleFilter);
 
       let someChecked = false;
       let severities = button.querySelectorAll("menuitem[prefKey]");
       Array.forEach(severities, function (menuItem) {
-        menuItem.addEventListener("command", this._toggleFilter, false);
+        menuItem.addEventListener("command", this._toggleFilter);
 
         let prefKey = menuItem.getAttribute("prefKey");
         let checked = this.filterPrefs[prefKey];
@@ -2661,7 +2661,7 @@ WebConsoleFrame.prototype = {
       this._mousedown = true;
       this._startX = event.clientX;
       this._startY = event.clientY;
-    }, false);
+    });
 
     node.addEventListener("click", (event) => {
       let mousedown = this._mousedown;
@@ -2686,7 +2686,7 @@ WebConsoleFrame.prototype = {
       this._startX = this._startY = undefined;
 
       callback.call(this, event);
-    }, false);
+    });
   },
 
   /**

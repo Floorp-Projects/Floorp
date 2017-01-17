@@ -28,7 +28,7 @@ function runTests() {
     target0.addEventListener(elem, (event) => {
       ok(false, "receiving event " + event.type);
       receivedPointerEvents = true;
-    }, false);
+    });
   });
 
   target0.addEventListener("mouseenter", () => {

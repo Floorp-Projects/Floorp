@@ -177,10 +177,10 @@ function onAlertLoad() {
         if (event.animationName == "alert-animation" ||
             event.animationName == "alert-clicked-animation" ||
             event.animationName == "alert-closing-animation") {
-          alertBox.removeEventListener("animationend", hideAlert, false);
+          alertBox.removeEventListener("animationend", hideAlert);
           window.close();
         }
-      }, false);
+      });
       alertBox.setAttribute("animate", true);
     }
   }

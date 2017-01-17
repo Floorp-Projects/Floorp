@@ -29,7 +29,7 @@ SimpleTest.waitForFocus(function() {
 
   sel[0].addEventListener('focus', function() {
     s = sel[0];
-    s.removeEventListener('focus', arguments.callee, false);
+    s.removeEventListener('focus', arguments.callee);
     synthesizeKey('VK_DOWN', {});
     is(s.selectedIndex,0, s.id + ": initial DOWN selects first option");
     synthesizeKey('VK_DOWN', {ctrlKey: true});
@@ -71,10 +71,10 @@ SimpleTest.waitForFocus(function() {
     ok(s[4].selected,s.id + ": 5th option is still selected");
     ok(!s[5].selected,s.id + ": 6th option is still unselected");
     setTimeout(function(){sel[1].focus()},0);
-  }, false);
+  });
   sel[1].addEventListener('focus', function() {
     s = sel[1];
-    s.removeEventListener('focus', arguments.callee, false);
+    s.removeEventListener('focus', arguments.callee);
     synthesizeKey('VK_DOWN', {});
     is(s.selectedIndex,0, s.id + ": initial DOWN selects first option");
     synthesizeKey('VK_DOWN', {ctrlKey: true});
@@ -89,11 +89,11 @@ SimpleTest.waitForFocus(function() {
     synthesizeKey(' ', {ctrlKey: true, shiftKey: true});
     is(s.selectedIndex,3, s.id + ": 4th option is still selected");
     setTimeout(function(){sel[2].focus()},0);
-  }, false);
+  });
   sel[2].addEventListener('focus', function() {
     if (navigator.platform.indexOf("Mac") == -1) {
       s = sel[2];
-      s.removeEventListener('focus', arguments.callee, false);
+      s.removeEventListener('focus', arguments.callee);
       synthesizeKey('VK_DOWN', {});
       is(s.selectedIndex,1, s.id + ": initial DOWN selects 2nd option");
       synthesizeKey('VK_DOWN', {ctrlKey: true});
@@ -110,7 +110,7 @@ SimpleTest.waitForFocus(function() {
       todo(false, "Make this test work on OSX");
     }
     setTimeout(function(){SimpleTest.finish()},0);
-  }, false);
+  });
   sel[0].focus();
 });
 

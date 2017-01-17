@@ -11,7 +11,7 @@ function testCancel() {
       xhr.abort();
     else if (xhr.readyState == 4)
       document.documentElement.className = "";
-  }, false);
+  });
 
   xhr.open("GET", "552651.xml", true);
   xhr.send();

@@ -93,7 +93,7 @@ function run_test()
 
     // elementFromPoint can't be used for iframe
     var iframe = document.getElementById("thirteen");
-    iframe.parentNode.addEventListener('mousedown', handleIFrameClick, false);
+    iframe.parentNode.addEventListener('mousedown', handleIFrameClick);
     var bounds = iframe.getBoundingClientRect();
     var x = bounds.left + bounds.width/2;
     var y = bounds.top + bounds.height/2;

@@ -15,12 +15,12 @@ function test() {
 
     let tabShown = false;
     let tabShowCallback = () => tabShown = true;
-    tab.addEventListener("TabShow", tabShowCallback, false);
+    tab.addEventListener("TabShow", tabShowCallback);
 
     let tabState = ss.getTabState(tab);
     ss.setTabState(tab, tabState);
 
-    tab.removeEventListener("TabShow", tabShowCallback, false);
+    tab.removeEventListener("TabShow", tabShowCallback);
     ok(tab.hidden && !tabShown, "tab remains hidden");
 
     finish();

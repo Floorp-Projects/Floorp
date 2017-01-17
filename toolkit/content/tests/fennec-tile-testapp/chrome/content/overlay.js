@@ -12,4 +12,4 @@ var tile = {
   },
 
 };
-window.addEventListener("load", function(e) { tile.onLoad(e); }, false);
+window.addEventListener("load", function(e) { tile.onLoad(e); });

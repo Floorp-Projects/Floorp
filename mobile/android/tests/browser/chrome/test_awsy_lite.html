@@ -51,9 +51,9 @@
     onOpenWindow: function(aWindow) {
         var win = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
         win.addEventListener("UIReady", function listener(aEvent) {
-            win.removeEventListener("UIReady", listener, false);
+            win.removeEventListener("UIReady", listener);
             attachTo(win);
-        }, false);
+        });
     },
 
     onCloseWindow: function(aWindow) {

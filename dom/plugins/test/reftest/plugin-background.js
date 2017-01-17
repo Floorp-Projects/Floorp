@@ -23,10 +23,10 @@ function deltaInBounds(dx,dy, dw,dh) {
 
 var initialFrame;
 function start() {
-    window.removeEventListener("MozReftestInvalidate", start, false);
+    window.removeEventListener("MozReftestInvalidate", start);
 
-    window.addEventListener("MozAfterPaint", step, false);
-    window.addEventListener("MozPaintWaitFinished", step, false);
+    window.addEventListener("MozAfterPaint", step);
+    window.addEventListener("MozPaintWaitFinished", step);
 
     initialFrame = window.mozPaintCount;
     plugin = document.getElementById("plugin");
@@ -39,8 +39,8 @@ var which = "move"; // or "grow"
 var dx = 1, dy = 1, dw = 1, dh = 1;
 function step() {
     if (++steps >= NUM_STEPS) {
-        window.removeEventListener("MozAfterPaint", step, false);
-        window.removeEventListener("MozPaintWaitFinished", step, false);
+        window.removeEventListener("MozAfterPaint", step);
+        window.removeEventListener("MozPaintWaitFinished", step);
         return finish();
     }
 
@@ -72,4 +72,4 @@ function finish() {
     document.documentElement.removeAttribute("class");
 }
 
-window.addEventListener("MozReftestInvalidate", start, false);
+window.addEventListener("MozReftestInvalidate", start);

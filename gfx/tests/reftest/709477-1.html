@@ -32,7 +32,7 @@
 
 function doPaint()
 {
-  window.addEventListener("MozAfterPaint", doScroll, false);
+  window.addEventListener("MozAfterPaint", doScroll);
   var cover = document.getElementById("cover");
   cover.style.background = "transparent";
   var mod = document.getElementById("mod");
@@ -41,8 +41,8 @@ function doPaint()
 
 function doScroll()
 {
-  window.removeEventListener("MozAfterPaint", doScroll, false);
-  window.addEventListener("MozAfterPaint", endTest, false);
+  window.removeEventListener("MozAfterPaint", doScroll);
+  window.addEventListener("MozAfterPaint", endTest);
   scrollTo(0,1);
 }
 
@@ -51,7 +51,7 @@ function endTest()
   document.documentElement.removeAttribute("class");
 }
 
-document.addEventListener("MozReftestInvalidate", doPaint, false);
+document.addEventListener("MozReftestInvalidate", doPaint);
   </script>
 </head>
 <body>

@@ -46,7 +46,7 @@ function expectInitialContent(e) {
 
   // Set up listener for second load.
   removeEventListener("load", expectInitialContent, false);
-  frameElement.addEventListener("load", expectFullContent, false);
+  frameElement.addEventListener("load", expectFullContent);
 
   // Reload.
   frameElement.src="partial_content.sjs";

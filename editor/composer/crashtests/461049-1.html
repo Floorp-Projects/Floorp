@@ -5,7 +5,7 @@
 
 function uu()
 {
-  document.removeEventListener("DOMSubtreeModified", uu, false);
+  document.removeEventListener("DOMSubtreeModified", uu);
   document.execCommand("undo", false, null);
 }
 
@@ -13,7 +13,7 @@ function boom()
 {
   document.execCommand("selectAll", false, null);
   document.execCommand("strikethrough", false, null);
-  document.addEventListener("DOMSubtreeModified", uu, false);
+  document.addEventListener("DOMSubtreeModified", uu);
   document.execCommand("undo", false, null);
 }
 

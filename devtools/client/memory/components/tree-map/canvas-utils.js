@@ -125,10 +125,10 @@ function handleResizes(canvases, debounceRate) {
     ? debounce(resize, debounceRate)
     : resize;
 
-  window.addEventListener("resize", debouncedResize, false);
+  window.addEventListener("resize", debouncedResize);
   resize();
 
   return function removeResizeHandlers() {
-    window.removeEventListener("resize", debouncedResize, false);
+    window.removeEventListener("resize", debouncedResize);
   };
 }

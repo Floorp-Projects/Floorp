@@ -347,4 +347,4 @@ window.getGroupMessageManager("browsers").addMessageListener("EMEVideo:ContentMe
 window.addEventListener("unload", function() {
   window.getGroupMessageManager("browsers").removeMessageListener("EMEVideo:ContentMediaKeysRequest", gEMEHandler);
   window.getGroupMessageManager("browsers").removeMessageListener("DecoderDoctor:Notification", gDecoderDoctorHandler);
-}, false);
+});

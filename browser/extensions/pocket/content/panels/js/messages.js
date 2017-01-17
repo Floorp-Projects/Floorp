@@ -28,7 +28,7 @@ var pktPanelMessaging = (function() {
 			// TODO: Figure out why e.target.parentNode is null
 			// e.target.parentNode.removeChild(e.target);
 
-		}, false);
+		});
 
 	}
 

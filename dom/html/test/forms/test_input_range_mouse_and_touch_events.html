@@ -149,10 +149,10 @@ function test(synthesizeFunc, clickOrTap, startName, moveName, endName) {
     e.preventDefault();
   }
   elem.value = QUARTER_OF_RANGE;
-  elem.addEventListener(startName, preventDefault, false);
+  elem.addEventListener(startName, preventDefault);
   synthesizeFunc(elem, midX, midY, {});
   is(elem.value, QUARTER_OF_RANGE, "Test that preventDefault() works");
-  elem.removeEventListener(startName, preventDefault, false);
+  elem.removeEventListener(startName, preventDefault);
 
   // Test that changing the input type in the middle of a drag cancels the drag:
   elem.value = QUARTER_OF_RANGE;

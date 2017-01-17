@@ -44,7 +44,7 @@ SimpleTest.waitForFocus(function() {
       },
       function() {
         t.addEventListener("input", function() {
-          t.removeEventListener("input", arguments.callee, false);
+          t.removeEventListener("input", arguments.callee);
 
           setTimeout(function() { // Avoid the assertion in bug 649797
             is(t.value, "[aaa\nbbb]", "The value of the textarea should be correct");
@@ -63,7 +63,7 @@ SimpleTest.waitForFocus(function() {
 
             SimpleTest.finish();
           }, 0);
-        }, false);
+        });
         synthesizeKey("VK_RIGHT", {});
         synthesizeKey("V", {accelKey: true});
       },

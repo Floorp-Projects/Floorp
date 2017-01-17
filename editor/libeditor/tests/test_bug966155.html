@@ -23,7 +23,7 @@ addLoadEvent(function() {
   win.addEventListener("load", function onLoad() {
     win.removeEventListener("load", onLoad);
     runTest(win);
-  }, false);
+  });
 });
 
 function runTest(win) {

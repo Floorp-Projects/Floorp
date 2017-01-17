@@ -23,7 +23,7 @@ div {
 <div id="parent"><p>color animation on visible element in invisible parent element</p></div>
 <script>
 
-document.getElementById("parent").addEventListener("animationend", AnimationEndListener, false);
+document.getElementById("parent").addEventListener("animationend", AnimationEndListener);
 
 function AnimationEndListener(event) {
   setTimeout(RemoveReftestWait, 0);

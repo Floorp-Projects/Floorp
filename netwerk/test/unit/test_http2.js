@@ -386,8 +386,7 @@ function test_http2_xhr() {
   var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
             .createInstance(Ci.nsIXMLHttpRequest);
   req.open("GET", "https://localhost:" + serverPort + "/", true);
-  req.addEventListener("readystatechange", function (evt) { checkXhr(req); },
-                       false);
+  req.addEventListener("readystatechange", function (evt) { checkXhr(req); });
   req.send(null);
 }
 

@@ -8,7 +8,7 @@ try { test2 = document.createElementNS("http://www.w3.org/1999/xhtml", "tbody");
 try { docElement.appendChild(test2); } catch(e) {}
 setTimeout("CFcrash()", 192);
 }
-document.addEventListener("DOMContentLoaded", initCF, false);
+document.addEventListener("DOMContentLoaded", initCF);
 function CFcrash() {
 try { test1.style.display = "table-column" } catch(e) {}
 setTimeout('try { var x = new XSLTProcessor(); x.transformToDocument(test1); } catch(e) {}', 205);

@@ -43,7 +43,7 @@ addEventListener("DOMContentLoaded", function() {
                                       }
                                   }
                                   event.preventDefault();
-                              }, false)
+                              })
     });
 
     find_all('.screenshot a').forEach(function(elem) {
@@ -51,7 +51,7 @@ addEventListener("DOMContentLoaded", function() {
                               function(event) {
                                   window.open(find('img', elem).getAttribute('src'));
                                   event.preventDefault();
-                              }, false)
+                              })
     });
 
     find_all('.sortable').forEach(function(elem) {
@@ -61,7 +61,7 @@ addEventListener("DOMContentLoaded", function() {
                                   var colIndex = toArray(elem.parentNode.childNodes).indexOf(elem);
                                   var key = elem.classList.contains('numeric') ? key_num : key_alpha;
                                   sort_table(elem, key(colIndex));
-                              }, false)
+                              })
     });
 
 });

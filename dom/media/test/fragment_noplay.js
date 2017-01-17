@@ -10,5 +10,5 @@ function onLoadedMetadata() {
   finish();
 }
 
-v.addEventListener("loadedmetadata", onLoadedMetadata, false);
+v.addEventListener("loadedmetadata", onLoadedMetadata);
 }

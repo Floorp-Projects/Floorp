@@ -30,7 +30,7 @@ function messageListener(event) {
     case "stop":
       self.postMessage('no-op');
       postMessage("stopped");
-      self.removeEventListener("message", messageListener, false);
+      self.removeEventListener("message", messageListener);
       break;
     default:
       throw 'Bad message: ' + event.data;

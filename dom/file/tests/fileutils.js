@@ -60,8 +60,7 @@ function testFile(file, contents, test) {
   };
   xhr.addEventListener("load",
                        getXHRLoadHandler(contents, contents.length,
-                                         "XMLHttpRequest send of " + test),
-                       false);
+                                         "XMLHttpRequest send of " + test));
   xhr.overrideMimeType('text/plain; charset=x-user-defined');
   xhr.send(file);
   expectedTestCount++;

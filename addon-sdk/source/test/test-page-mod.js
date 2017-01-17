@@ -422,7 +422,7 @@ exports.testCommunication2 = function*(assert) {
           msg: 'onload',
           AUQLUE: document.documentElement.getAttribute('AUQLUE')
         });
-      }, false);
+      });
 
       self.on("message", function(msg) {
         if (msg == "get window.test") {
@@ -1028,7 +1028,7 @@ exports.testAttachToTabsOnly = function(assert, done) {
       onReady: function () {
         let element = this.element;
         element.addEventListener('DOMContentLoaded', function onload() {
-          element.removeEventListener('DOMContentLoaded', onload, false);
+          element.removeEventListener('DOMContentLoaded', onload);
           hiddenFrames.remove(hiddenFrame);
 
           if (!xulApp.is("Fennec")) {
@@ -1037,7 +1037,7 @@ exports.testAttachToTabsOnly = function(assert, done) {
           else {
             openBrowserIframe();
           }
-        }, false);
+        });
         element.setAttribute('src', 'data:text/html;charset=utf-8,foo');
       }
     }));
@@ -1047,10 +1047,10 @@ exports.testAttachToTabsOnly = function(assert, done) {
     assert.pass('Open toplevel window');
     let win = open('data:text/html;charset=utf-8,bar');
     win.addEventListener('DOMContentLoaded', function onload() {
-      win.removeEventListener('DOMContentLoaded', onload, false);
+      win.removeEventListener('DOMContentLoaded', onload);
       win.close();
       openBrowserIframe();
-    }, false);
+    });
   }
 
   function openBrowserIframe() {
@@ -1061,10 +1061,10 @@ exports.testAttachToTabsOnly = function(assert, done) {
     iframe.setAttribute('type', 'content');
     iframe.setAttribute('src', 'data:text/html;charset=utf-8,foobar');
     iframe.addEventListener('DOMContentLoaded', function onload() {
-      iframe.removeEventListener('DOMContentLoaded', onload, false);
+      iframe.removeEventListener('DOMContentLoaded', onload);
       iframe.parentNode.removeChild(iframe);
       openTabWithIframes();
-    }, false);
+    });
     document.documentElement.appendChild(iframe);
   }
 
@@ -1586,7 +1586,7 @@ exports.testEvents = function*(assert) {
   let content = "<script>\n new " + function DocumentScope() {
     window.addEventListener("ContentScriptEvent", function () {
       window.document.body.setAttribute("receivedEvent", "ok");
-    }, false);
+    });
   } + "\n</script>";
   let url = "data:text/html;charset=utf-8," + encodeURIComponent(content);
 

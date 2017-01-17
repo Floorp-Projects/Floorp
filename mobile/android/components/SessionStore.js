@@ -201,8 +201,8 @@ SessionStore.prototype = {
         let window = aSubject;
         window.addEventListener("load", function() {
           self.onWindowOpen(window);
-          window.removeEventListener("load", arguments.callee, false);
-        }, false);
+          window.removeEventListener("load", arguments.callee);
+        });
         break;
       }
       case "domwindowclosed": // catch closed windows

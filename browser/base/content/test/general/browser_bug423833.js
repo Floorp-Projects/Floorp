@@ -73,8 +73,8 @@ function test2Setup() {
 
   gBrowser.tabContainer.addEventListener("TabOpen", function(event) {
     test2tab = event.target;
-    gBrowser.tabContainer.removeEventListener("TabOpen", arguments.callee, false);
-  }, false);
+    gBrowser.tabContainer.removeEventListener("TabOpen", arguments.callee);
+  });
   contextMenu.openFrameInTab();
   ok(test2tab, "openFrameInTab() opened a tab");
 

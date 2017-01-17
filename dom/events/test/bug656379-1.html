@@ -91,7 +91,7 @@ function executeTests() {
 }
 
 function* tests() {
-  window.addEventListener("MozAfterPaint", paintListener, false);
+  window.addEventListener("MozAfterPaint", paintListener);
   normalButtonCanvas = takeSnapshot();
   // Press the button.
   sendMouseEvent("mousemove", button);
@@ -140,7 +140,7 @@ function* tests() {
   yield undefined;
   compareSnapshots_(normalButtonCanvas, currentSnapshot, true, "Removing the label should have unpressed the button.");
   sendMouseEvent("mouseup", label);
-  window.removeEventListener("MozAfterPaint", paintListener, false);
+  window.removeEventListener("MozAfterPaint", paintListener);
   window.opener.finishTests();
  }
 

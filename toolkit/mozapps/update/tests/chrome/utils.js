@@ -191,7 +191,7 @@ const gWindowObserver = {
     }
 
     win.addEventListener("load", function WO_observe_onLoad() {
-      win.removeEventListener("load", WO_observe_onLoad, false);
+      win.removeEventListener("load", WO_observe_onLoad);
       // Ignore windows other than the update UI window.
       if (win.location != URI_UPDATE_PROMPT_DIALOG) {
         debugDump("load event for window not being tested - location: " +
@@ -211,8 +211,8 @@ const gWindowObserver = {
 
       gWin = win;
       gDocElem = gWin.document.documentElement;
-      gDocElem.addEventListener("pageshow", onPageShowDefault, false);
-    }, false);
+      gDocElem.addEventListener("pageshow", onPageShowDefault);
+    });
   }
 };
 
@@ -301,7 +301,7 @@ function finishTestDefault() {
 
   Services.ww.unregisterNotification(gWindowObserver);
   if (gDocElem) {
-    gDocElem.removeEventListener("pageshow", onPageShowDefault, false);
+    gDocElem.removeEventListener("pageshow", onPageShowDefault);
   }
 
   finishTestRestoreUpdaterBackup();

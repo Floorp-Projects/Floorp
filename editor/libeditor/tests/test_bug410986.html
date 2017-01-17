@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=410986
 var gPasteEvents = 0;
 document.getElementById("editor").addEventListener("paste", function() {
   ++gPasteEvents;
-}, false);
+});
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {

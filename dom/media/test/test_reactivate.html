@@ -48,7 +48,7 @@ function loadedAll(elementList) {
   }
   elementList.forEach(function(element) {
     events.forEach(function(evt) {
-      element.addEventListener(evt, logEvent, false);
+      element.addEventListener(evt, logEvent);
     });
   });
 

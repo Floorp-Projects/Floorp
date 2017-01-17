@@ -399,7 +399,7 @@ var BrowserApp = {
       WindowEventDispatcher.sendRequest({
         type: window.fullScreen ? "ToggleChrome:Hide" : "ToggleChrome:Show"
       });
-    }, false);
+    });
 
     window.addEventListener("fullscreenchange", (e) => {
       // This event gets fired on the document and its entire ancestor chain
@@ -419,7 +419,7 @@ var BrowserApp = {
         this.fullscreenTransitionTab = null;
         this._handleTabSelected(tab);
       }
-    }, false);
+    });
 
     NativeWindow.init();
     FormAssistant.init();
@@ -510,7 +510,7 @@ var BrowserApp = {
     GlobalEventDispatcher.sendRequest({ type: "Gecko:Ready" });
 
     this.deck.addEventListener("DOMContentLoaded", function BrowserApp_delayedStartup() {
-      BrowserApp.deck.removeEventListener("DOMContentLoaded", BrowserApp_delayedStartup, false);
+      BrowserApp.deck.removeEventListener("DOMContentLoaded", BrowserApp_delayedStartup);
 
       InitLater(() => Cu.import("resource://gre/modules/NotificationDB.jsm"));
 
@@ -540,7 +540,7 @@ var BrowserApp = {
       InitLater(() => Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager));
       InitLater(() => LoginManagerParent.init(), window, "LoginManagerParent");
 
-    }, false);
+    });
 
     // Pass caret StateChanged events to ActionBarHandler.
     window.addEventListener("mozcaretstatechanged", e => {
@@ -1540,7 +1540,7 @@ var BrowserApp = {
     };
 
     let paintDone = function() {
-      window.removeEventListener("MozAfterPaint", paintDone, false);
+      window.removeEventListener("MozAfterPaint", paintDone);
       if (dwu.flushApzRepaints()) {
         Services.obs.addObserver(apzFlushDone, "apz-repaints-flushed", false);
       } else {
@@ -1551,21 +1551,21 @@ var BrowserApp = {
     let gotResizeWindow = false;
     let resizeWindow = function(e) {
       gotResizeWindow = true;
-      aBrowser.contentWindow.removeEventListener("resize", resizeWindow, false);
+      aBrowser.contentWindow.removeEventListener("resize", resizeWindow);
       if (dwu.isMozAfterPaintPending) {
-        window.addEventListener("MozAfterPaint", paintDone, false);
+        window.addEventListener("MozAfterPaint", paintDone);
       } else {
         paintDone();
       }
     }
 
-    aBrowser.contentWindow.addEventListener("resize", resizeWindow, false);
+    aBrowser.contentWindow.addEventListener("resize", resizeWindow);
 
     // The "resize" event sometimes fails to fire, so set a timer to catch that case
     // and unregister the event listener. See Bug 1253469
     setTimeout(function(e) {
     if (!gotResizeWindow) {
-        aBrowser.contentWindow.removeEventListener("resize", resizeWindow, false);
+        aBrowser.contentWindow.removeEventListener("resize", resizeWindow);
         dwu.zoomToFocusedInput();
       }
     }, 500);
@@ -2297,7 +2297,7 @@ var NativeWindow = {
     init: function() {
       // Accessing "NativeWindow.contextmenus" initializes context menus if needed.
       BrowserApp.deck.addEventListener(
-          "contextmenu", (e) => NativeWindow.contextmenus.show(e), false);
+          "contextmenu", (e) => NativeWindow.contextmenus.show(e));
     },
 
     add: function() {
@@ -3115,7 +3115,7 @@ var LightWeightThemeWebInstaller = {
 
     this._previewWindow = event.target.ownerDocument.defaultView;
     this._previewWindow.addEventListener("pagehide", this, true);
-    BrowserApp.deck.addEventListener("TabSelect", this, false);
+    BrowserApp.deck.addEventListener("TabSelect", this);
     this._manager.previewTheme(data);
   },
 
@@ -3126,7 +3126,7 @@ var LightWeightThemeWebInstaller = {
 
     this._previewWindow.removeEventListener("pagehide", this, true);
     this._previewWindow = null;
-    BrowserApp.deck.removeEventListener("TabSelect", this, false);
+    BrowserApp.deck.removeEventListener("TabSelect", this);
 
     this._manager.resetPreview();
   },
@@ -3518,7 +3518,7 @@ Tab.prototype = {
     this.browser.addEventListener("DOMInputPasswordAdded", this, true);
     this.browser.addEventListener("DOMLinkAdded", this, true);
     this.browser.addEventListener("DOMLinkChanged", this, true);
-    this.browser.addEventListener("DOMMetaAdded", this, false);
+    this.browser.addEventListener("DOMMetaAdded", this);
     this.browser.addEventListener("DOMTitleChanged", this, true);
     this.browser.addEventListener("DOMAudioPlaybackStarted", this, true);
     this.browser.addEventListener("DOMAudioPlaybackStopped", this, true);
@@ -3633,7 +3633,7 @@ Tab.prototype = {
     this.browser.removeEventListener("DOMInputPasswordAdded", this, true);
     this.browser.removeEventListener("DOMLinkAdded", this, true);
     this.browser.removeEventListener("DOMLinkChanged", this, true);
-    this.browser.removeEventListener("DOMMetaAdded", this, false);
+    this.browser.removeEventListener("DOMMetaAdded", this);
     this.browser.removeEventListener("DOMTitleChanged", this, true);
     this.browser.removeEventListener("DOMAudioPlaybackStarted", this, true);
     this.browser.removeEventListener("DOMAudioPlaybackStopped", this, true);
@@ -4521,7 +4521,7 @@ var BrowserEventHandler = {
 
     BrowserApp.deck.addEventListener("touchend", this, true);
 
-    BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
+    BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport);
     BrowserApp.deck.addEventListener("MozMouseHittest", this, true);
     BrowserApp.deck.addEventListener("OpenMediaWithExternalApp", this, true);
 
@@ -4827,8 +4827,8 @@ var FormAssistant = {
     BrowserApp.deck.addEventListener("focus", this, true);
     BrowserApp.deck.addEventListener("blur", this, true);
     BrowserApp.deck.addEventListener("click", this, true);
-    BrowserApp.deck.addEventListener("input", this, false);
-    BrowserApp.deck.addEventListener("pageshow", this, false);
+    BrowserApp.deck.addEventListener("input", this);
+    BrowserApp.deck.addEventListener("pageshow", this);
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -6772,8 +6772,8 @@ var Tabs = {
     let network = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
     this.useCache = !network.isLinkUp;
 
-    BrowserApp.deck.addEventListener("pageshow", this, false);
-    BrowserApp.deck.addEventListener("TabOpen", this, false);
+    BrowserApp.deck.addEventListener("pageshow", this);
+    BrowserApp.deck.addEventListener("TabOpen", this);
   },
 
   observe: function(aSubject, aTopic, aData) {

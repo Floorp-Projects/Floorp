@@ -46,8 +46,8 @@ VariableBubbleView.prototype = {
 
     this._toolbox = DebuggerController._toolbox;
     this._editorContainer = document.getElementById("editor");
-    this._editorContainer.addEventListener("mousemove", this._onMouseMove, false);
-    this._editorContainer.addEventListener("mouseout", this._onMouseOut, false);
+    this._editorContainer.addEventListener("mousemove", this._onMouseMove);
+    this._editorContainer.addEventListener("mouseout", this._onMouseOut);
 
     this._tooltip = new Tooltip(document, {
       closeOnEvents: [{
@@ -73,8 +73,8 @@ VariableBubbleView.prototype = {
     dumpn("Destroying the VariableBubbleView");
 
     this._tooltip.panel.removeEventListener("popuphiding", this._onPopupHiding);
-    this._editorContainer.removeEventListener("mousemove", this._onMouseMove, false);
-    this._editorContainer.removeEventListener("mouseout", this._onMouseOut, false);
+    this._editorContainer.removeEventListener("mousemove", this._onMouseMove);
+    this._editorContainer.removeEventListener("mouseout", this._onMouseOut);
   },
 
   /**

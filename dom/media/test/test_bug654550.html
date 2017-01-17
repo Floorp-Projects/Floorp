@@ -42,7 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=654550
 
   function ontimeupdate_statsEnabled(event) {
     var v = event.target;
-    v.removeEventListener('timeupdate', ontimeupdate_statsEnabled, false);
+    v.removeEventListener('timeupdate', ontimeupdate_statsEnabled);
     checkStats(v, true);
     SpecialPowers.popPrefEnv(
       function() {
@@ -52,7 +52,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=654550
 
   function ontimeupdate_statsDisabled(event) {
     var v = event.target;
-    v.removeEventListener('timeupdate', ontimeupdate_statsDisabled, false);
+    v.removeEventListener('timeupdate', ontimeupdate_statsDisabled);
     checkStats(v, false);
     removeNodeAndSource(v);
     manager.finished(v.token);

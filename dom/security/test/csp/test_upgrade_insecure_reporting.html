@@ -25,7 +25,7 @@ function finishTest() {
   if (--expectedResults > 0) {
     return;
   }
-  window.removeEventListener("message", receiveMessage, false);
+  window.removeEventListener("message", receiveMessage);
   SimpleTest.finish();
 }
 
@@ -54,7 +54,7 @@ function runTest() {
 
 // a postMessage handler that is used by sandboxed iframes without
 // 'allow-same-origin' to bubble up results back to this main page.
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 function receiveMessage(event) {
   // (3) make sure the image was correctly loaded
   is(event.data.result, "img-ok", "upgraded insecure image load from http -> https");

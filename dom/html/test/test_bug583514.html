@@ -28,12 +28,12 @@ var input = document.getElementsByTagName('input')[0];
 div.addEventListener('click', function() {
   ok(gExpectDivClick, "click event received on div and expected status was: " +
                        gExpectDivClick);
-}, false);
+});
 
 input.addEventListener('click', function() {
   ok(gExpectInputClick, "click event received on input and expected status was: " +
                         gExpectInputClick);
-}, false);
+});
 
 SimpleTest.waitForExplicitFinish();
 
@@ -42,7 +42,7 @@ SimpleTest.waitForFocus(function() {
 
   body.addEventListener('click', function(aEvent) {
     if (aEvent.target == input) {
-      body.removeEventListener('click', arguments.callee, false);
+      body.removeEventListener('click', arguments.callee);
     }
 
     ok(true, "click event received on body");
@@ -59,7 +59,7 @@ SimpleTest.waitForFocus(function() {
         input.click();
       }
     });
-  }, false);
+  });
 
   gExpectDivClick = true;
   div.click();

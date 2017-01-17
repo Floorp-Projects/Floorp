@@ -142,7 +142,7 @@ function testCapturing() {
     }
 
     gBrowser.addEventListener("mousedown", capturingHandler, true);
-    gBrowser.addEventListener("mousedown", nonCapturingHandler, false);
+    gBrowser.addEventListener("mousedown", nonCapturingHandler);
 
     const url = baseURL + "browser_addonShims_testpage.html";
     let tab = gBrowser.addTab(url);
@@ -162,7 +162,7 @@ function testCapturing() {
       is(nonCapturingCount, 1, "bubbling handler fired");
 
       gBrowser.removeEventListener("mousedown", capturingHandler, true);
-      gBrowser.removeEventListener("mousedown", nonCapturingHandler, false);
+      gBrowser.removeEventListener("mousedown", nonCapturingHandler);
 
       removeTab(tab, resolve);
     });

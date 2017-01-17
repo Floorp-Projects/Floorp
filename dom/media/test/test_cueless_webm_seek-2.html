@@ -76,9 +76,9 @@ function testWebM2(e) {
     manager.finished(v._token);
   }
 
-  v.addEventListener("ended", playbackEnded, false);
-  v.addEventListener("seeking", seekStarted, false);
-  v.addEventListener("seeked", seekEnded, false);
+  v.addEventListener("ended", playbackEnded);
+  v.addEventListener("seeking", seekStarted);
+  v.addEventListener("seeked", seekEnded);
 
   startTest();
 }
@@ -101,7 +101,7 @@ function fetch(url, fetched_callback) {
     }
   };
 
-  xhr.addEventListener("load", loaded, false);
+  xhr.addEventListener("load", loaded);
   xhr.send();
 }
 
@@ -110,7 +110,7 @@ function startTest(test, token) {
     var v = document.createElement('video');
     v._token = token;
     v.src = uri;
-    v.addEventListener("loadeddata", testWebM2, false);
+    v.addEventListener("loadeddata", testWebM2);
     document.body.appendChild(v);
   }
   manager.started(token);

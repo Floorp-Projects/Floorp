@@ -369,7 +369,7 @@ var SimpleServiceDiscovery = {
 
         this.addService(aService);
       }
-    }).bind(this), false);
+    }).bind(this));
 
     xhr.send(null);
   },

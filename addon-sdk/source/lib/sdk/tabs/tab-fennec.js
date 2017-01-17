@@ -36,11 +36,11 @@ const Tab = Class({
 
     // TabReady
     let onReady = tabInternals.onReady = onTabReady.bind(this);
-    tab.browser.addEventListener(EVENTS.ready.dom, onReady, false);
+    tab.browser.addEventListener(EVENTS.ready.dom, onReady);
 
     // TabPageShow
     let onPageShow = tabInternals.onPageShow = onTabPageShow.bind(this);
-    tab.browser.addEventListener(EVENTS.pageshow.dom, onPageShow, false);
+    tab.browser.addEventListener(EVENTS.pageshow.dom, onPageShow);
 
     // TabLoad
     let onLoad = tabInternals.onLoad = onTabLoad.bind(this);
@@ -48,7 +48,7 @@ const Tab = Class({
 
     // TabClose
     let onClose = tabInternals.onClose = onTabClose.bind(this);
-    window.BrowserApp.deck.addEventListener(EVENTS.close.dom, onClose, false);
+    window.BrowserApp.deck.addEventListener(EVENTS.close.dom, onClose);
 
     unload(cleanupTab.bind(null, this));
   },
@@ -191,14 +191,14 @@ function cleanupTab(tab) {
     return;
 
   if (tabInternals.tab.browser) {
-    tabInternals.tab.browser.removeEventListener(EVENTS.ready.dom, tabInternals.onReady, false);
-    tabInternals.tab.browser.removeEventListener(EVENTS.pageshow.dom, tabInternals.onPageShow, false);
+    tabInternals.tab.browser.removeEventListener(EVENTS.ready.dom, tabInternals.onReady);
+    tabInternals.tab.browser.removeEventListener(EVENTS.pageshow.dom, tabInternals.onPageShow);
     tabInternals.tab.browser.removeEventListener(EVENTS.load.dom, tabInternals.onLoad, true);
   }
   tabInternals.onReady = null;
   tabInternals.onPageShow = null;
   tabInternals.onLoad = null;
-  tabInternals.window.BrowserApp.deck.removeEventListener(EVENTS.close.dom, tabInternals.onClose, false);
+  tabInternals.window.BrowserApp.deck.removeEventListener(EVENTS.close.dom, tabInternals.onClose);
   tabInternals.onClose = null;
   rawTabNS(tabInternals.tab).tab = null;
   tabInternals.tab = null;

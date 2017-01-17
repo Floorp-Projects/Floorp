@@ -20,6 +20,7 @@ namespace mozilla {
 namespace dom {
 
 class URLSearchParams;
+class USVStringSequenceSequenceOrUSVString;
 
 class URLSearchParamsObserver : public nsISupports
 {
@@ -42,14 +43,6 @@ public:
   {
     DeleteAll();
   }
-
-  explicit URLParams(const URLParams& aOther)
-    : mParams(aOther.mParams)
-  {}
-
-  URLParams(const URLParams&& aOther)
-    : mParams(Move(aOther.mParams))
-  {}
 
   class ForEachIterator
   {
@@ -144,9 +137,6 @@ public:
   explicit URLSearchParams(nsISupports* aParent,
                            URLSearchParamsObserver* aObserver=nullptr);
 
-  URLSearchParams(nsISupports* aParent,
-                  const URLSearchParams& aOther);
-
   // WebIDL methods
   nsISupports* GetParentObject() const
   {
@@ -157,11 +147,8 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<URLSearchParams>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aInit,
-              ErrorResult& aRv);
-
-  static already_AddRefed<URLSearchParams>
-  Constructor(const GlobalObject& aGlobal, URLSearchParams& aInit,
+  Constructor(const GlobalObject& aGlobal,
+              const USVStringSequenceSequenceOrUSVString& aInit,
               ErrorResult& aRv);
 
   void ParseInput(const nsACString& aInput);
