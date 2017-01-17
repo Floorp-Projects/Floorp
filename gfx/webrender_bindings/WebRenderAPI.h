@@ -100,7 +100,7 @@ public:
 
   void PushStackingContext(const WrRect& aBounds, // TODO: We should work with strongly typed rects
                            const WrRect& aOverflow,
-                           const WRImageMask* aMask, // TODO: needs a wrapper.
+                           const WrImageMask* aMask, // TODO: needs a wrapper.
                            const gfx::Matrix4x4& aTransform);
 
   void PopStackingContext();
@@ -111,9 +111,9 @@ public:
 
   void PushImage(const WrRect& aBounds,
                  const WrRect& aClip,
-                 const WRImageMask* aMask,
-                 const WRTextureFilter aFilter,
-                 WRImageKey aImage);
+                 const WrImageMask* aMask,
+                 const WrTextureFilter aFilter,
+                 WrImageKey aImage);
 
   void PushIFrame(const WrRect& aBounds,
                   const WrRect& aClip,
@@ -121,10 +121,10 @@ public:
 
   void PushBorder(const WrRect& bounds,
                   const WrRect& clip,
-                  const WRBorderSide& top,
-                  const WRBorderSide& right,
-                  const WRBorderSide& bottom,
-                  const WRBorderSide& left,
+                  const WrBorderSide& top,
+                  const WrBorderSide& right,
+                  const WrBorderSide& bottom,
+                  const WrBorderSide& left,
                   const WrLayoutSize& top_left_radius,
                   const WrLayoutSize& top_right_radius,
                   const WrLayoutSize& bottom_left_radius,

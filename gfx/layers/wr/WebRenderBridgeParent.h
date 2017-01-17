@@ -65,15 +65,15 @@ public:
   mozilla::ipc::IPCResult RecvAddImage(const uint32_t& aWidth,
                                        const uint32_t& aHeight,
                                        const uint32_t& aStride,
-                                       const WRImageFormat& aFormat,
+                                       const WrImageFormat& aFormat,
                                        const ByteBuffer& aBuffer,
-                                       WRImageKey* aOutImageKey) override;
-  mozilla::ipc::IPCResult RecvUpdateImage(const WRImageKey& aImageKey,
+                                       WrImageKey* aOutImageKey) override;
+  mozilla::ipc::IPCResult RecvUpdateImage(const WrImageKey& aImageKey,
                                           const uint32_t& aWidth,
                                           const uint32_t& aHeight,
-                                          const WRImageFormat& aFormat,
+                                          const WrImageFormat& aFormat,
                                           const ByteBuffer& aBuffer) override;
-  mozilla::ipc::IPCResult RecvDeleteImage(const WRImageKey& aImageKey) override;
+  mozilla::ipc::IPCResult RecvDeleteImage(const WrImageKey& aImageKey) override;
   mozilla::ipc::IPCResult RecvDPBegin(const uint32_t& aWidth,
                                       const uint32_t& aHeight,
                                       bool* aOutSuccess) override;
@@ -146,7 +146,7 @@ private:
   RefPtr<wr::WebRenderAPI> mApi;
   RefPtr<layers::Compositor> mCompositor;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
-  std::vector<WRImageKey> mKeysToDelete;
+  std::vector<WrImageKey> mKeysToDelete;
   nsDataHashtable<nsUint64HashKey, RefPtr<CompositableHost>> mExternalImageIds;
 
   // These fields keep track of the latest layer observer epoch values in the child and the

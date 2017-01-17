@@ -137,7 +137,7 @@ WebRenderPaintedLayer::RenderLayer()
   }
 
 
-  Maybe<WRImageMask> mask = buildMaskLayer();
+  Maybe<WrImageMask> mask = buildMaskLayer();
 
   if (gfxPrefs::LayersDump()) printf_stderr("PaintedLayer %p using rect:%s clip:%s\n", this, Stringify(rect).c_str(), Stringify(clip).c_str());
 
@@ -151,7 +151,7 @@ WebRenderPaintedLayer::RenderLayer()
   ContentClientRemoteBuffer* contentClientRemote = static_cast<ContentClientRemoteBuffer*>(mContentClient.get());
   visibleRegion.MoveBy(-contentClientRemote->BufferRect().x, -contentClientRemote->BufferRect().y);
 
-  WRBridge()->AddWebRenderCommand(OpDPPushExternalImageId(visibleRegion, wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), WRTextureFilter::Linear, mExternalImageId));
+  WRBridge()->AddWebRenderCommand(OpDPPushExternalImageId(visibleRegion, wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), WrTextureFilter::Linear, mExternalImageId));
   if (gfxPrefs::LayersDump()) printf_stderr("PaintedLayer %p using %s as bounds/overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
   WRBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 }

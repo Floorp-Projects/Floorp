@@ -49,7 +49,7 @@ WebRenderTextLayer::RenderLayer()
     mFont->GetFontFileData(&DWriteFontFileData, this);
     wr::ByteBuffer fontBuffer(mFontDataLength, mFontData);
 
-    nsTArray<WRGlyphArray> wr_glyphs;
+    nsTArray<WrGlyphArray> wr_glyphs;
     wr_glyphs.SetLength(mGlyphs.Length());
 
     for (size_t i = 0; i < mGlyphs.Length(); i++) {
