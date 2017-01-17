@@ -1417,12 +1417,12 @@ nsWindow::CreateScrollSnapshot()
   }
 
   HDC windowDC = ::GetDC(mWnd);
-  auto releaseDC = MakeScopeExit([&] {
-    ::ReleaseDC(mWnd, windowDC);
-  });
   if (!windowDC) {
     return GetFallbackScrollSnapshot(clip);
   }
+  auto releaseDC = MakeScopeExit([&] {
+    ::ReleaseDC(mWnd, windowDC);
+  });
 
   gfx::IntSize snapshotSize(mBounds.width, mBounds.height);
   ScrollSnapshot* snapshot;
