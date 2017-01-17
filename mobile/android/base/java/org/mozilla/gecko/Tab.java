@@ -60,6 +60,7 @@ public class Tab {
     private Future<IconResponse> mRunningIconRequest;
 
     private boolean mHasFeeds;
+    private boolean mHasManifest;
     private boolean mHasOpenSearch;
     private final SiteIdentity mSiteIdentity;
     private SiteLogins mSiteLogins;
@@ -300,6 +301,10 @@ public class Tab {
         return mHasFeeds;
     }
 
+    public boolean hasManifest() {
+        return mHasManifest;
+    }
+
     public boolean hasOpenSearch() {
         return mHasOpenSearch;
     }
@@ -477,6 +482,10 @@ public class Tab {
         mHasFeeds = hasFeeds;
     }
 
+    public void setHasManifest(boolean hasManifest) {
+        mHasManifest = hasManifest;
+    }
+
     public void setHasOpenSearch(boolean hasOpenSearch) {
         mHasOpenSearch = hasOpenSearch;
     }
@@ -638,6 +647,7 @@ public class Tab {
         mBaseDomain = message.optString("baseDomain");
 
         setHasFeeds(false);
+        setHasManifest(false);
         setHasOpenSearch(false);
         mSiteIdentity.reset();
         setSiteLogins(null);
