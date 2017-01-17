@@ -22,9 +22,6 @@
 extern "C" {
 #endif
 
-#define MIN(x, y) (((x) < (y)) ? (x) : (y))
-#define MAX(x, y) (((x) > (y)) ? (x) : (y))
-
 /* Only need this for fixed-size arrays, for structs just assign. */
 
 #define vp8_copy( Dest, Src) { \

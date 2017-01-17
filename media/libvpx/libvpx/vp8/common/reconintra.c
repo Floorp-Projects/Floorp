@@ -9,272 +9,109 @@
  */
 
 
-#include "vpx_config.h"
-#include "vp8_rtcd.h"
+#include "./vpx_config.h"
+#include "./vpx_dsp_rtcd.h"
+#include "./vp8_rtcd.h"
 #include "vpx_mem/vpx_mem.h"
+#include "vpx_ports/vpx_once.h"
 #include "blockd.h"
+#include "vp8/common/reconintra.h"
+#include "vp8/common/reconintra4x4.h"
 
-void vp8_build_intra_predictors_mby_s_c(MACROBLOCKD *x,
-                                          unsigned char * yabove_row,
-                                          unsigned char * yleft,
-                                          int left_stride,
-                                          unsigned char * ypred_ptr,
-                                          int y_stride)
+enum {
+    SIZE_16,
+    SIZE_8,
+    NUM_SIZES,
+};
+
+typedef void (*intra_pred_fn)(uint8_t *dst, ptrdiff_t stride,
+                              const uint8_t *above, const uint8_t *left);
+
+static intra_pred_fn pred[4][NUM_SIZES];
+static intra_pred_fn dc_pred[2][2][NUM_SIZES];
+
+static void vp8_init_intra_predictors_internal(void)
 {
-    unsigned char yleft_col[16];
-    unsigned char ytop_left = yabove_row[-1];
-    int r, c, i;
+#define INIT_SIZE(sz) \
+    pred[V_PRED][SIZE_##sz] = vpx_v_predictor_##sz##x##sz; \
+    pred[H_PRED][SIZE_##sz] = vpx_h_predictor_##sz##x##sz; \
+    pred[TM_PRED][SIZE_##sz] = vpx_tm_predictor_##sz##x##sz; \
+ \
+    dc_pred[0][0][SIZE_##sz] = vpx_dc_128_predictor_##sz##x##sz; \
+    dc_pred[0][1][SIZE_##sz] = vpx_dc_top_predictor_##sz##x##sz; \
+    dc_pred[1][0][SIZE_##sz] = vpx_dc_left_predictor_##sz##x##sz; \
+    dc_pred[1][1][SIZE_##sz] = vpx_dc_predictor_##sz##x##sz
+
+    INIT_SIZE(16);
+    INIT_SIZE(8);
+    vp8_init_intra4x4_predictors_internal();
+}
+
+void vp8_build_intra_predictors_mby_s(MACROBLOCKD *x,
+                                      unsigned char * yabove_row,
+                                      unsigned char * yleft,
+                                      int left_stride,
+                                      unsigned char * ypred_ptr,
+                                      int y_stride)
+{
+    MB_PREDICTION_MODE mode = x->mode_info_context->mbmi.mode;
+    DECLARE_ALIGNED(16, uint8_t, yleft_col[16]);
+    int i;
+    intra_pred_fn fn;
 
     for (i = 0; i < 16; i++)
     {
         yleft_col[i] = yleft[i* left_stride];
     }
 
-    /* for Y */
-    switch (x->mode_info_context->mbmi.mode)
+    if (mode == DC_PRED)
     {
-    case DC_PRED:
+        fn = dc_pred[x->left_available][x->up_available][SIZE_16];
+    }
+    else
     {
-        int expected_dc;
-        int shift;
-        int average = 0;
-
-
-        if (x->up_available || x->left_available)
-        {
-            if (x->up_available)
-            {
-                for (i = 0; i < 16; i++)
-                {
-                    average += yabove_row[i];
-                }
-            }
-
-            if (x->left_available)
-            {
-
-                for (i = 0; i < 16; i++)
-                {
-                    average += yleft_col[i];
-                }
-
-            }
-
-
-
-            shift = 3 + x->up_available + x->left_available;
-            expected_dc = (average + (1 << (shift - 1))) >> shift;
-        }
-        else
-        {
-            expected_dc = 128;
-        }
-
-        /*memset(ypred_ptr, expected_dc, 256);*/
-        for (r = 0; r < 16; r++)
-        {
-            memset(ypred_ptr, expected_dc, 16);
-            ypred_ptr += y_stride;
-        }
+        fn = pred[mode][SIZE_16];
     }
-    break;
-    case V_PRED:
-    {
 
-        for (r = 0; r < 16; r++)
-        {
-
-            ((int *)ypred_ptr)[0] = ((int *)yabove_row)[0];
-            ((int *)ypred_ptr)[1] = ((int *)yabove_row)[1];
-            ((int *)ypred_ptr)[2] = ((int *)yabove_row)[2];
-            ((int *)ypred_ptr)[3] = ((int *)yabove_row)[3];
-            ypred_ptr += y_stride;
-        }
-    }
-    break;
-    case H_PRED:
-    {
-
-        for (r = 0; r < 16; r++)
-        {
-
-            memset(ypred_ptr, yleft_col[r], 16);
-            ypred_ptr += y_stride;
-        }
-
-    }
-    break;
-    case TM_PRED:
-    {
-
-        for (r = 0; r < 16; r++)
-        {
-            for (c = 0; c < 16; c++)
-            {
-                int pred =  yleft_col[r] + yabove_row[ c] - ytop_left;
-
-                if (pred < 0)
-                    pred = 0;
-
-                if (pred > 255)
-                    pred = 255;
-
-                ypred_ptr[c] = pred;
-            }
-
-            ypred_ptr += y_stride;
-        }
-
-    }
-    break;
-    case B_PRED:
-    case NEARESTMV:
-    case NEARMV:
-    case ZEROMV:
-    case NEWMV:
-    case SPLITMV:
-    case MB_MODE_COUNT:
-        break;
-    }
+    fn(ypred_ptr, y_stride, yabove_row, yleft_col);
 }
 
-void vp8_build_intra_predictors_mbuv_s_c(MACROBLOCKD *x,
-                                         unsigned char * uabove_row,
-                                         unsigned char * vabove_row,
-                                         unsigned char * uleft,
-                                         unsigned char * vleft,
-                                         int left_stride,
-                                         unsigned char * upred_ptr,
-                                         unsigned char * vpred_ptr,
-                                         int pred_stride)
+void vp8_build_intra_predictors_mbuv_s(MACROBLOCKD *x,
+                                       unsigned char * uabove_row,
+                                       unsigned char * vabove_row,
+                                       unsigned char * uleft,
+                                       unsigned char * vleft,
+                                       int left_stride,
+                                       unsigned char * upred_ptr,
+                                       unsigned char * vpred_ptr,
+                                       int pred_stride)
 {
+    MB_PREDICTION_MODE uvmode = x->mode_info_context->mbmi.uv_mode;
     unsigned char uleft_col[8];
-    unsigned char utop_left = uabove_row[-1];
     unsigned char vleft_col[8];
-    unsigned char vtop_left = vabove_row[-1];
-
-    int i, j;
+    int i;
+    intra_pred_fn fn;
 
     for (i = 0; i < 8; i++)
     {
-        uleft_col[i] = uleft [i* left_stride];
-        vleft_col[i] = vleft [i* left_stride];
+        uleft_col[i] = uleft[i * left_stride];
+        vleft_col[i] = vleft[i * left_stride];
     }
 
-    switch (x->mode_info_context->mbmi.uv_mode)
+    if (uvmode == DC_PRED)
     {
-    case DC_PRED:
+        fn = dc_pred[x->left_available][x->up_available][SIZE_8];
+    }
+    else
     {
-        int expected_udc;
-        int expected_vdc;
-        int shift;
-        int Uaverage = 0;
-        int Vaverage = 0;
-
-        if (x->up_available)
-        {
-            for (i = 0; i < 8; i++)
-            {
-                Uaverage += uabove_row[i];
-                Vaverage += vabove_row[i];
-            }
-        }
-
-        if (x->left_available)
-        {
-            for (i = 0; i < 8; i++)
-            {
-                Uaverage += uleft_col[i];
-                Vaverage += vleft_col[i];
-            }
-        }
-
-        if (!x->up_available && !x->left_available)
-        {
-            expected_udc = 128;
-            expected_vdc = 128;
-        }
-        else
-        {
-            shift = 2 + x->up_available + x->left_available;
-            expected_udc = (Uaverage + (1 << (shift - 1))) >> shift;
-            expected_vdc = (Vaverage + (1 << (shift - 1))) >> shift;
-        }
-
-
-        /*memset(upred_ptr,expected_udc,64);*/
-        /*memset(vpred_ptr,expected_vdc,64);*/
-        for (i = 0; i < 8; i++)
-        {
-            memset(upred_ptr, expected_udc, 8);
-            memset(vpred_ptr, expected_vdc, 8);
-            upred_ptr += pred_stride;
-            vpred_ptr += pred_stride;
-        }
-    }
-    break;
-    case V_PRED:
-    {
-        for (i = 0; i < 8; i++)
-        {
-            memcpy(upred_ptr, uabove_row, 8);
-            memcpy(vpred_ptr, vabove_row, 8);
-            upred_ptr += pred_stride;
-            vpred_ptr += pred_stride;
-        }
-
-    }
-    break;
-    case H_PRED:
-    {
-        for (i = 0; i < 8; i++)
-        {
-            memset(upred_ptr, uleft_col[i], 8);
-            memset(vpred_ptr, vleft_col[i], 8);
-            upred_ptr += pred_stride;
-            vpred_ptr += pred_stride;
-        }
+        fn = pred[uvmode][SIZE_8];
     }
 
-    break;
-    case TM_PRED:
-    {
-        for (i = 0; i < 8; i++)
-        {
-            for (j = 0; j < 8; j++)
-            {
-                int predu = uleft_col[i] + uabove_row[j] - utop_left;
-                int predv = vleft_col[i] + vabove_row[j] - vtop_left;
+    fn(upred_ptr, pred_stride, uabove_row, uleft_col);
+    fn(vpred_ptr, pred_stride, vabove_row, vleft_col);
+}
 
-                if (predu < 0)
-                    predu = 0;
-
-                if (predu > 255)
-                    predu = 255;
-
-                if (predv < 0)
-                    predv = 0;
-
-                if (predv > 255)
-                    predv = 255;
-
-                upred_ptr[j] = predu;
-                vpred_ptr[j] = predv;
-            }
-
-            upred_ptr += pred_stride;
-            vpred_ptr += pred_stride;
-        }
-
-    }
-    break;
-    case B_PRED:
-    case NEARESTMV:
-    case NEARMV:
-    case ZEROMV:
-    case NEWMV:
-    case SPLITMV:
-    case MB_MODE_COUNT:
-        break;
-    }
+void vp8_init_intra_predictors(void)
+{
+    once(vp8_init_intra_predictors_internal);
 }

@@ -10,13 +10,13 @@
 
 #include "vp9/encoder/vp9_treewriter.h"
 
-static void tree2tok(struct vp9_token *tokens, const vp9_tree_index *tree,
+static void tree2tok(struct vp9_token *tokens, const vpx_tree_index *tree,
                      int i, int v, int l) {
   v += v;
   ++l;
 
   do {
-    const vp9_tree_index j = tree[i++];
+    const vpx_tree_index j = tree[i++];
     if (j <= 0) {
       tokens[-j].value = v;
       tokens[-j].len = l;
@@ -27,11 +27,11 @@ static void tree2tok(struct vp9_token *tokens, const vp9_tree_index *tree,
 }
 
 void vp9_tokens_from_tree(struct vp9_token *tokens,
-                          const vp9_tree_index *tree) {
+                          const vpx_tree_index *tree) {
   tree2tok(tokens, tree, 0, 0, 0);
 }
 
-static unsigned int convert_distribution(unsigned int i, vp9_tree tree,
+static unsigned int convert_distribution(unsigned int i, vpx_tree tree,
                                          unsigned int branch_ct[][2],
                                          const unsigned int num_events[]) {
   unsigned int left, right;
@@ -51,7 +51,7 @@ static unsigned int convert_distribution(unsigned int i, vp9_tree tree,
   return left + right;
 }
 
-void vp9_tree_probs_from_distribution(vp9_tree tree,
+void vp9_tree_probs_from_distribution(vpx_tree tree,
                                       unsigned int branch_ct[/* n-1 */][2],
                                       const unsigned int num_events[/* n */]) {
   convert_distribution(0, tree, branch_ct, num_events);

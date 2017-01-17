@@ -13,18 +13,17 @@
 #include <limits.h>
 #include <stdio.h>
 
+#include "third_party/googletest/src/include/gtest/gtest.h"
+
 #include "./vpx_config.h"
 #include "./vpx_dsp_rtcd.h"
-#include "vpx_mem/vpx_mem.h"
-#include "vpx_ports/mem.h"
-
 #include "test/acm_random.h"
 #include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 #include "test/util.h"
-#include "third_party/googletest/src/include/gtest/gtest.h"
 #include "vpx/vpx_codec.h"
-
+#include "vpx_mem/vpx_mem.h"
+#include "vpx_ports/mem.h"
 
 typedef unsigned int (*SadMxNFunc)(const uint8_t *src_ptr,
                                    int src_stride,
@@ -485,260 +484,176 @@ using std::tr1::make_tuple;
 
 //------------------------------------------------------------------------------
 // C functions
-const SadMxNFunc sad64x64_c = vpx_sad64x64_c;
-const SadMxNFunc sad64x32_c = vpx_sad64x32_c;
-const SadMxNFunc sad32x64_c = vpx_sad32x64_c;
-const SadMxNFunc sad32x32_c = vpx_sad32x32_c;
-const SadMxNFunc sad32x16_c = vpx_sad32x16_c;
-const SadMxNFunc sad16x32_c = vpx_sad16x32_c;
-const SadMxNFunc sad16x16_c = vpx_sad16x16_c;
-const SadMxNFunc sad16x8_c = vpx_sad16x8_c;
-const SadMxNFunc sad8x16_c = vpx_sad8x16_c;
-const SadMxNFunc sad8x8_c = vpx_sad8x8_c;
-const SadMxNFunc sad8x4_c = vpx_sad8x4_c;
-const SadMxNFunc sad4x8_c = vpx_sad4x8_c;
-const SadMxNFunc sad4x4_c = vpx_sad4x4_c;
-#if CONFIG_VP9_HIGHBITDEPTH
-const SadMxNFunc highbd_sad64x64_c = vpx_highbd_sad64x64_c;
-const SadMxNFunc highbd_sad64x32_c = vpx_highbd_sad64x32_c;
-const SadMxNFunc highbd_sad32x64_c = vpx_highbd_sad32x64_c;
-const SadMxNFunc highbd_sad32x32_c = vpx_highbd_sad32x32_c;
-const SadMxNFunc highbd_sad32x16_c = vpx_highbd_sad32x16_c;
-const SadMxNFunc highbd_sad16x32_c = vpx_highbd_sad16x32_c;
-const SadMxNFunc highbd_sad16x16_c = vpx_highbd_sad16x16_c;
-const SadMxNFunc highbd_sad16x8_c = vpx_highbd_sad16x8_c;
-const SadMxNFunc highbd_sad8x16_c = vpx_highbd_sad8x16_c;
-const SadMxNFunc highbd_sad8x8_c = vpx_highbd_sad8x8_c;
-const SadMxNFunc highbd_sad8x4_c = vpx_highbd_sad8x4_c;
-const SadMxNFunc highbd_sad4x8_c = vpx_highbd_sad4x8_c;
-const SadMxNFunc highbd_sad4x4_c = vpx_highbd_sad4x4_c;
-#endif  // CONFIG_VP9_HIGHBITDEPTH
 const SadMxNParam c_tests[] = {
-  make_tuple(64, 64, sad64x64_c, -1),
-  make_tuple(64, 32, sad64x32_c, -1),
-  make_tuple(32, 64, sad32x64_c, -1),
-  make_tuple(32, 32, sad32x32_c, -1),
-  make_tuple(32, 16, sad32x16_c, -1),
-  make_tuple(16, 32, sad16x32_c, -1),
-  make_tuple(16, 16, sad16x16_c, -1),
-  make_tuple(16, 8, sad16x8_c, -1),
-  make_tuple(8, 16, sad8x16_c, -1),
-  make_tuple(8, 8, sad8x8_c, -1),
-  make_tuple(8, 4, sad8x4_c, -1),
-  make_tuple(4, 8, sad4x8_c, -1),
-  make_tuple(4, 4, sad4x4_c, -1),
+  make_tuple(64, 64, &vpx_sad64x64_c, -1),
+  make_tuple(64, 32, &vpx_sad64x32_c, -1),
+  make_tuple(32, 64, &vpx_sad32x64_c, -1),
+  make_tuple(32, 32, &vpx_sad32x32_c, -1),
+  make_tuple(32, 16, &vpx_sad32x16_c, -1),
+  make_tuple(16, 32, &vpx_sad16x32_c, -1),
+  make_tuple(16, 16, &vpx_sad16x16_c, -1),
+  make_tuple(16, 8, &vpx_sad16x8_c, -1),
+  make_tuple(8, 16, &vpx_sad8x16_c, -1),
+  make_tuple(8, 8, &vpx_sad8x8_c, -1),
+  make_tuple(8, 4, &vpx_sad8x4_c, -1),
+  make_tuple(4, 8, &vpx_sad4x8_c, -1),
+  make_tuple(4, 4, &vpx_sad4x4_c, -1),
 #if CONFIG_VP9_HIGHBITDEPTH
-  make_tuple(64, 64, highbd_sad64x64_c, 8),
-  make_tuple(64, 32, highbd_sad64x32_c, 8),
-  make_tuple(32, 64, highbd_sad32x64_c, 8),
-  make_tuple(32, 32, highbd_sad32x32_c, 8),
-  make_tuple(32, 16, highbd_sad32x16_c, 8),
-  make_tuple(16, 32, highbd_sad16x32_c, 8),
-  make_tuple(16, 16, highbd_sad16x16_c, 8),
-  make_tuple(16, 8, highbd_sad16x8_c, 8),
-  make_tuple(8, 16, highbd_sad8x16_c, 8),
-  make_tuple(8, 8, highbd_sad8x8_c, 8),
-  make_tuple(8, 4, highbd_sad8x4_c, 8),
-  make_tuple(4, 8, highbd_sad4x8_c, 8),
-  make_tuple(4, 4, highbd_sad4x4_c, 8),
-  make_tuple(64, 64, highbd_sad64x64_c, 10),
-  make_tuple(64, 32, highbd_sad64x32_c, 10),
-  make_tuple(32, 64, highbd_sad32x64_c, 10),
-  make_tuple(32, 32, highbd_sad32x32_c, 10),
-  make_tuple(32, 16, highbd_sad32x16_c, 10),
-  make_tuple(16, 32, highbd_sad16x32_c, 10),
-  make_tuple(16, 16, highbd_sad16x16_c, 10),
-  make_tuple(16, 8, highbd_sad16x8_c, 10),
-  make_tuple(8, 16, highbd_sad8x16_c, 10),
-  make_tuple(8, 8, highbd_sad8x8_c, 10),
-  make_tuple(8, 4, highbd_sad8x4_c, 10),
-  make_tuple(4, 8, highbd_sad4x8_c, 10),
-  make_tuple(4, 4, highbd_sad4x4_c, 10),
-  make_tuple(64, 64, highbd_sad64x64_c, 12),
-  make_tuple(64, 32, highbd_sad64x32_c, 12),
-  make_tuple(32, 64, highbd_sad32x64_c, 12),
-  make_tuple(32, 32, highbd_sad32x32_c, 12),
-  make_tuple(32, 16, highbd_sad32x16_c, 12),
-  make_tuple(16, 32, highbd_sad16x32_c, 12),
-  make_tuple(16, 16, highbd_sad16x16_c, 12),
-  make_tuple(16, 8, highbd_sad16x8_c, 12),
-  make_tuple(8, 16, highbd_sad8x16_c, 12),
-  make_tuple(8, 8, highbd_sad8x8_c, 12),
-  make_tuple(8, 4, highbd_sad8x4_c, 12),
-  make_tuple(4, 8, highbd_sad4x8_c, 12),
-  make_tuple(4, 4, highbd_sad4x4_c, 12),
+  make_tuple(64, 64, &vpx_highbd_sad64x64_c, 8),
+  make_tuple(64, 32, &vpx_highbd_sad64x32_c, 8),
+  make_tuple(32, 64, &vpx_highbd_sad32x64_c, 8),
+  make_tuple(32, 32, &vpx_highbd_sad32x32_c, 8),
+  make_tuple(32, 16, &vpx_highbd_sad32x16_c, 8),
+  make_tuple(16, 32, &vpx_highbd_sad16x32_c, 8),
+  make_tuple(16, 16, &vpx_highbd_sad16x16_c, 8),
+  make_tuple(16, 8, &vpx_highbd_sad16x8_c, 8),
+  make_tuple(8, 16, &vpx_highbd_sad8x16_c, 8),
+  make_tuple(8, 8, &vpx_highbd_sad8x8_c, 8),
+  make_tuple(8, 4, &vpx_highbd_sad8x4_c, 8),
+  make_tuple(4, 8, &vpx_highbd_sad4x8_c, 8),
+  make_tuple(4, 4, &vpx_highbd_sad4x4_c, 8),
+  make_tuple(64, 64, &vpx_highbd_sad64x64_c, 10),
+  make_tuple(64, 32, &vpx_highbd_sad64x32_c, 10),
+  make_tuple(32, 64, &vpx_highbd_sad32x64_c, 10),
+  make_tuple(32, 32, &vpx_highbd_sad32x32_c, 10),
+  make_tuple(32, 16, &vpx_highbd_sad32x16_c, 10),
+  make_tuple(16, 32, &vpx_highbd_sad16x32_c, 10),
+  make_tuple(16, 16, &vpx_highbd_sad16x16_c, 10),
+  make_tuple(16, 8, &vpx_highbd_sad16x8_c, 10),
+  make_tuple(8, 16, &vpx_highbd_sad8x16_c, 10),
+  make_tuple(8, 8, &vpx_highbd_sad8x8_c, 10),
+  make_tuple(8, 4, &vpx_highbd_sad8x4_c, 10),
+  make_tuple(4, 8, &vpx_highbd_sad4x8_c, 10),
+  make_tuple(4, 4, &vpx_highbd_sad4x4_c, 10),
+  make_tuple(64, 64, &vpx_highbd_sad64x64_c, 12),
+  make_tuple(64, 32, &vpx_highbd_sad64x32_c, 12),
+  make_tuple(32, 64, &vpx_highbd_sad32x64_c, 12),
+  make_tuple(32, 32, &vpx_highbd_sad32x32_c, 12),
+  make_tuple(32, 16, &vpx_highbd_sad32x16_c, 12),
+  make_tuple(16, 32, &vpx_highbd_sad16x32_c, 12),
+  make_tuple(16, 16, &vpx_highbd_sad16x16_c, 12),
+  make_tuple(16, 8, &vpx_highbd_sad16x8_c, 12),
+  make_tuple(8, 16, &vpx_highbd_sad8x16_c, 12),
+  make_tuple(8, 8, &vpx_highbd_sad8x8_c, 12),
+  make_tuple(8, 4, &vpx_highbd_sad8x4_c, 12),
+  make_tuple(4, 8, &vpx_highbd_sad4x8_c, 12),
+  make_tuple(4, 4, &vpx_highbd_sad4x4_c, 12),
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 };
 INSTANTIATE_TEST_CASE_P(C, SADTest, ::testing::ValuesIn(c_tests));
 
-const SadMxNAvgFunc sad64x64_avg_c = vpx_sad64x64_avg_c;
-const SadMxNAvgFunc sad64x32_avg_c = vpx_sad64x32_avg_c;
-const SadMxNAvgFunc sad32x64_avg_c = vpx_sad32x64_avg_c;
-const SadMxNAvgFunc sad32x32_avg_c = vpx_sad32x32_avg_c;
-const SadMxNAvgFunc sad32x16_avg_c = vpx_sad32x16_avg_c;
-const SadMxNAvgFunc sad16x32_avg_c = vpx_sad16x32_avg_c;
-const SadMxNAvgFunc sad16x16_avg_c = vpx_sad16x16_avg_c;
-const SadMxNAvgFunc sad16x8_avg_c = vpx_sad16x8_avg_c;
-const SadMxNAvgFunc sad8x16_avg_c = vpx_sad8x16_avg_c;
-const SadMxNAvgFunc sad8x8_avg_c = vpx_sad8x8_avg_c;
-const SadMxNAvgFunc sad8x4_avg_c = vpx_sad8x4_avg_c;
-const SadMxNAvgFunc sad4x8_avg_c = vpx_sad4x8_avg_c;
-const SadMxNAvgFunc sad4x4_avg_c = vpx_sad4x4_avg_c;
-#if CONFIG_VP9_HIGHBITDEPTH
-const SadMxNAvgFunc highbd_sad64x64_avg_c = vpx_highbd_sad64x64_avg_c;
-const SadMxNAvgFunc highbd_sad64x32_avg_c = vpx_highbd_sad64x32_avg_c;
-const SadMxNAvgFunc highbd_sad32x64_avg_c = vpx_highbd_sad32x64_avg_c;
-const SadMxNAvgFunc highbd_sad32x32_avg_c = vpx_highbd_sad32x32_avg_c;
-const SadMxNAvgFunc highbd_sad32x16_avg_c = vpx_highbd_sad32x16_avg_c;
-const SadMxNAvgFunc highbd_sad16x32_avg_c = vpx_highbd_sad16x32_avg_c;
-const SadMxNAvgFunc highbd_sad16x16_avg_c = vpx_highbd_sad16x16_avg_c;
-const SadMxNAvgFunc highbd_sad16x8_avg_c = vpx_highbd_sad16x8_avg_c;
-const SadMxNAvgFunc highbd_sad8x16_avg_c = vpx_highbd_sad8x16_avg_c;
-const SadMxNAvgFunc highbd_sad8x8_avg_c = vpx_highbd_sad8x8_avg_c;
-const SadMxNAvgFunc highbd_sad8x4_avg_c = vpx_highbd_sad8x4_avg_c;
-const SadMxNAvgFunc highbd_sad4x8_avg_c = vpx_highbd_sad4x8_avg_c;
-const SadMxNAvgFunc highbd_sad4x4_avg_c = vpx_highbd_sad4x4_avg_c;
-#endif  // CONFIG_VP9_HIGHBITDEPTH
 const SadMxNAvgParam avg_c_tests[] = {
-  make_tuple(64, 64, sad64x64_avg_c, -1),
-  make_tuple(64, 32, sad64x32_avg_c, -1),
-  make_tuple(32, 64, sad32x64_avg_c, -1),
-  make_tuple(32, 32, sad32x32_avg_c, -1),
-  make_tuple(32, 16, sad32x16_avg_c, -1),
-  make_tuple(16, 32, sad16x32_avg_c, -1),
-  make_tuple(16, 16, sad16x16_avg_c, -1),
-  make_tuple(16, 8, sad16x8_avg_c, -1),
-  make_tuple(8, 16, sad8x16_avg_c, -1),
-  make_tuple(8, 8, sad8x8_avg_c, -1),
-  make_tuple(8, 4, sad8x4_avg_c, -1),
-  make_tuple(4, 8, sad4x8_avg_c, -1),
-  make_tuple(4, 4, sad4x4_avg_c, -1),
+  make_tuple(64, 64, &vpx_sad64x64_avg_c, -1),
+  make_tuple(64, 32, &vpx_sad64x32_avg_c, -1),
+  make_tuple(32, 64, &vpx_sad32x64_avg_c, -1),
+  make_tuple(32, 32, &vpx_sad32x32_avg_c, -1),
+  make_tuple(32, 16, &vpx_sad32x16_avg_c, -1),
+  make_tuple(16, 32, &vpx_sad16x32_avg_c, -1),
+  make_tuple(16, 16, &vpx_sad16x16_avg_c, -1),
+  make_tuple(16, 8, &vpx_sad16x8_avg_c, -1),
+  make_tuple(8, 16, &vpx_sad8x16_avg_c, -1),
+  make_tuple(8, 8, &vpx_sad8x8_avg_c, -1),
+  make_tuple(8, 4, &vpx_sad8x4_avg_c, -1),
+  make_tuple(4, 8, &vpx_sad4x8_avg_c, -1),
+  make_tuple(4, 4, &vpx_sad4x4_avg_c, -1),
 #if CONFIG_VP9_HIGHBITDEPTH
-  make_tuple(64, 64, highbd_sad64x64_avg_c, 8),
-  make_tuple(64, 32, highbd_sad64x32_avg_c, 8),
-  make_tuple(32, 64, highbd_sad32x64_avg_c, 8),
-  make_tuple(32, 32, highbd_sad32x32_avg_c, 8),
-  make_tuple(32, 16, highbd_sad32x16_avg_c, 8),
-  make_tuple(16, 32, highbd_sad16x32_avg_c, 8),
-  make_tuple(16, 16, highbd_sad16x16_avg_c, 8),
-  make_tuple(16, 8, highbd_sad16x8_avg_c, 8),
-  make_tuple(8, 16, highbd_sad8x16_avg_c, 8),
-  make_tuple(8, 8, highbd_sad8x8_avg_c, 8),
-  make_tuple(8, 4, highbd_sad8x4_avg_c, 8),
-  make_tuple(4, 8, highbd_sad4x8_avg_c, 8),
-  make_tuple(4, 4, highbd_sad4x4_avg_c, 8),
-  make_tuple(64, 64, highbd_sad64x64_avg_c, 10),
-  make_tuple(64, 32, highbd_sad64x32_avg_c, 10),
-  make_tuple(32, 64, highbd_sad32x64_avg_c, 10),
-  make_tuple(32, 32, highbd_sad32x32_avg_c, 10),
-  make_tuple(32, 16, highbd_sad32x16_avg_c, 10),
-  make_tuple(16, 32, highbd_sad16x32_avg_c, 10),
-  make_tuple(16, 16, highbd_sad16x16_avg_c, 10),
-  make_tuple(16, 8, highbd_sad16x8_avg_c, 10),
-  make_tuple(8, 16, highbd_sad8x16_avg_c, 10),
-  make_tuple(8, 8, highbd_sad8x8_avg_c, 10),
-  make_tuple(8, 4, highbd_sad8x4_avg_c, 10),
-  make_tuple(4, 8, highbd_sad4x8_avg_c, 10),
-  make_tuple(4, 4, highbd_sad4x4_avg_c, 10),
-  make_tuple(64, 64, highbd_sad64x64_avg_c, 12),
-  make_tuple(64, 32, highbd_sad64x32_avg_c, 12),
-  make_tuple(32, 64, highbd_sad32x64_avg_c, 12),
-  make_tuple(32, 32, highbd_sad32x32_avg_c, 12),
-  make_tuple(32, 16, highbd_sad32x16_avg_c, 12),
-  make_tuple(16, 32, highbd_sad16x32_avg_c, 12),
-  make_tuple(16, 16, highbd_sad16x16_avg_c, 12),
-  make_tuple(16, 8, highbd_sad16x8_avg_c, 12),
-  make_tuple(8, 16, highbd_sad8x16_avg_c, 12),
-  make_tuple(8, 8, highbd_sad8x8_avg_c, 12),
-  make_tuple(8, 4, highbd_sad8x4_avg_c, 12),
-  make_tuple(4, 8, highbd_sad4x8_avg_c, 12),
-  make_tuple(4, 4, highbd_sad4x4_avg_c, 12),
+  make_tuple(64, 64, &vpx_highbd_sad64x64_avg_c, 8),
+  make_tuple(64, 32, &vpx_highbd_sad64x32_avg_c, 8),
+  make_tuple(32, 64, &vpx_highbd_sad32x64_avg_c, 8),
+  make_tuple(32, 32, &vpx_highbd_sad32x32_avg_c, 8),
+  make_tuple(32, 16, &vpx_highbd_sad32x16_avg_c, 8),
+  make_tuple(16, 32, &vpx_highbd_sad16x32_avg_c, 8),
+  make_tuple(16, 16, &vpx_highbd_sad16x16_avg_c, 8),
+  make_tuple(16, 8, &vpx_highbd_sad16x8_avg_c, 8),
+  make_tuple(8, 16, &vpx_highbd_sad8x16_avg_c, 8),
+  make_tuple(8, 8, &vpx_highbd_sad8x8_avg_c, 8),
+  make_tuple(8, 4, &vpx_highbd_sad8x4_avg_c, 8),
+  make_tuple(4, 8, &vpx_highbd_sad4x8_avg_c, 8),
+  make_tuple(4, 4, &vpx_highbd_sad4x4_avg_c, 8),
+  make_tuple(64, 64, &vpx_highbd_sad64x64_avg_c, 10),
+  make_tuple(64, 32, &vpx_highbd_sad64x32_avg_c, 10),
+  make_tuple(32, 64, &vpx_highbd_sad32x64_avg_c, 10),
+  make_tuple(32, 32, &vpx_highbd_sad32x32_avg_c, 10),
+  make_tuple(32, 16, &vpx_highbd_sad32x16_avg_c, 10),
+  make_tuple(16, 32, &vpx_highbd_sad16x32_avg_c, 10),
+  make_tuple(16, 16, &vpx_highbd_sad16x16_avg_c, 10),
+  make_tuple(16, 8, &vpx_highbd_sad16x8_avg_c, 10),
+  make_tuple(8, 16, &vpx_highbd_sad8x16_avg_c, 10),
+  make_tuple(8, 8, &vpx_highbd_sad8x8_avg_c, 10),
+  make_tuple(8, 4, &vpx_highbd_sad8x4_avg_c, 10),
+  make_tuple(4, 8, &vpx_highbd_sad4x8_avg_c, 10),
+  make_tuple(4, 4, &vpx_highbd_sad4x4_avg_c, 10),
+  make_tuple(64, 64, &vpx_highbd_sad64x64_avg_c, 12),
+  make_tuple(64, 32, &vpx_highbd_sad64x32_avg_c, 12),
+  make_tuple(32, 64, &vpx_highbd_sad32x64_avg_c, 12),
+  make_tuple(32, 32, &vpx_highbd_sad32x32_avg_c, 12),
+  make_tuple(32, 16, &vpx_highbd_sad32x16_avg_c, 12),
+  make_tuple(16, 32, &vpx_highbd_sad16x32_avg_c, 12),
+  make_tuple(16, 16, &vpx_highbd_sad16x16_avg_c, 12),
+  make_tuple(16, 8, &vpx_highbd_sad16x8_avg_c, 12),
+  make_tuple(8, 16, &vpx_highbd_sad8x16_avg_c, 12),
+  make_tuple(8, 8, &vpx_highbd_sad8x8_avg_c, 12),
+  make_tuple(8, 4, &vpx_highbd_sad8x4_avg_c, 12),
+  make_tuple(4, 8, &vpx_highbd_sad4x8_avg_c, 12),
+  make_tuple(4, 4, &vpx_highbd_sad4x4_avg_c, 12),
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 };
 INSTANTIATE_TEST_CASE_P(C, SADavgTest, ::testing::ValuesIn(avg_c_tests));
 
-const SadMxNx4Func sad64x64x4d_c = vpx_sad64x64x4d_c;
-const SadMxNx4Func sad64x32x4d_c = vpx_sad64x32x4d_c;
-const SadMxNx4Func sad32x64x4d_c = vpx_sad32x64x4d_c;
-const SadMxNx4Func sad32x32x4d_c = vpx_sad32x32x4d_c;
-const SadMxNx4Func sad32x16x4d_c = vpx_sad32x16x4d_c;
-const SadMxNx4Func sad16x32x4d_c = vpx_sad16x32x4d_c;
-const SadMxNx4Func sad16x16x4d_c = vpx_sad16x16x4d_c;
-const SadMxNx4Func sad16x8x4d_c = vpx_sad16x8x4d_c;
-const SadMxNx4Func sad8x16x4d_c = vpx_sad8x16x4d_c;
-const SadMxNx4Func sad8x8x4d_c = vpx_sad8x8x4d_c;
-const SadMxNx4Func sad8x4x4d_c = vpx_sad8x4x4d_c;
-const SadMxNx4Func sad4x8x4d_c = vpx_sad4x8x4d_c;
-const SadMxNx4Func sad4x4x4d_c = vpx_sad4x4x4d_c;
-#if CONFIG_VP9_HIGHBITDEPTH
-const SadMxNx4Func highbd_sad64x64x4d_c = vpx_highbd_sad64x64x4d_c;
-const SadMxNx4Func highbd_sad64x32x4d_c = vpx_highbd_sad64x32x4d_c;
-const SadMxNx4Func highbd_sad32x64x4d_c = vpx_highbd_sad32x64x4d_c;
-const SadMxNx4Func highbd_sad32x32x4d_c = vpx_highbd_sad32x32x4d_c;
-const SadMxNx4Func highbd_sad32x16x4d_c = vpx_highbd_sad32x16x4d_c;
-const SadMxNx4Func highbd_sad16x32x4d_c = vpx_highbd_sad16x32x4d_c;
-const SadMxNx4Func highbd_sad16x16x4d_c = vpx_highbd_sad16x16x4d_c;
-const SadMxNx4Func highbd_sad16x8x4d_c = vpx_highbd_sad16x8x4d_c;
-const SadMxNx4Func highbd_sad8x16x4d_c = vpx_highbd_sad8x16x4d_c;
-const SadMxNx4Func highbd_sad8x8x4d_c = vpx_highbd_sad8x8x4d_c;
-const SadMxNx4Func highbd_sad8x4x4d_c = vpx_highbd_sad8x4x4d_c;
-const SadMxNx4Func highbd_sad4x8x4d_c = vpx_highbd_sad4x8x4d_c;
-const SadMxNx4Func highbd_sad4x4x4d_c = vpx_highbd_sad4x4x4d_c;
-#endif  // CONFIG_VP9_HIGHBITDEPTH
 const SadMxNx4Param x4d_c_tests[] = {
-  make_tuple(64, 64, sad64x64x4d_c, -1),
-  make_tuple(64, 32, sad64x32x4d_c, -1),
-  make_tuple(32, 64, sad32x64x4d_c, -1),
-  make_tuple(32, 32, sad32x32x4d_c, -1),
-  make_tuple(32, 16, sad32x16x4d_c, -1),
-  make_tuple(16, 32, sad16x32x4d_c, -1),
-  make_tuple(16, 16, sad16x16x4d_c, -1),
-  make_tuple(16, 8, sad16x8x4d_c, -1),
-  make_tuple(8, 16, sad8x16x4d_c, -1),
-  make_tuple(8, 8, sad8x8x4d_c, -1),
-  make_tuple(8, 4, sad8x4x4d_c, -1),
-  make_tuple(4, 8, sad4x8x4d_c, -1),
-  make_tuple(4, 4, sad4x4x4d_c, -1),
+  make_tuple(64, 64, &vpx_sad64x64x4d_c, -1),
+  make_tuple(64, 32, &vpx_sad64x32x4d_c, -1),
+  make_tuple(32, 64, &vpx_sad32x64x4d_c, -1),
+  make_tuple(32, 32, &vpx_sad32x32x4d_c, -1),
+  make_tuple(32, 16, &vpx_sad32x16x4d_c, -1),
+  make_tuple(16, 32, &vpx_sad16x32x4d_c, -1),
+  make_tuple(16, 16, &vpx_sad16x16x4d_c, -1),
+  make_tuple(16, 8, &vpx_sad16x8x4d_c, -1),
+  make_tuple(8, 16, &vpx_sad8x16x4d_c, -1),
+  make_tuple(8, 8, &vpx_sad8x8x4d_c, -1),
+  make_tuple(8, 4, &vpx_sad8x4x4d_c, -1),
+  make_tuple(4, 8, &vpx_sad4x8x4d_c, -1),
+  make_tuple(4, 4, &vpx_sad4x4x4d_c, -1),
 #if CONFIG_VP9_HIGHBITDEPTH
-  make_tuple(64, 64, highbd_sad64x64x4d_c, 8),
-  make_tuple(64, 32, highbd_sad64x32x4d_c, 8),
-  make_tuple(32, 64, highbd_sad32x64x4d_c, 8),
-  make_tuple(32, 32, highbd_sad32x32x4d_c, 8),
-  make_tuple(32, 16, highbd_sad32x16x4d_c, 8),
-  make_tuple(16, 32, highbd_sad16x32x4d_c, 8),
-  make_tuple(16, 16, highbd_sad16x16x4d_c, 8),
-  make_tuple(16, 8, highbd_sad16x8x4d_c, 8),
-  make_tuple(8, 16, highbd_sad8x16x4d_c, 8),
-  make_tuple(8, 8, highbd_sad8x8x4d_c, 8),
-  make_tuple(8, 4, highbd_sad8x4x4d_c, 8),
-  make_tuple(4, 8, highbd_sad4x8x4d_c, 8),
-  make_tuple(4, 4, highbd_sad4x4x4d_c, 8),
-  make_tuple(64, 64, highbd_sad64x64x4d_c, 10),
-  make_tuple(64, 32, highbd_sad64x32x4d_c, 10),
-  make_tuple(32, 64, highbd_sad32x64x4d_c, 10),
-  make_tuple(32, 32, highbd_sad32x32x4d_c, 10),
-  make_tuple(32, 16, highbd_sad32x16x4d_c, 10),
-  make_tuple(16, 32, highbd_sad16x32x4d_c, 10),
-  make_tuple(16, 16, highbd_sad16x16x4d_c, 10),
-  make_tuple(16, 8, highbd_sad16x8x4d_c, 10),
-  make_tuple(8, 16, highbd_sad8x16x4d_c, 10),
-  make_tuple(8, 8, highbd_sad8x8x4d_c, 10),
-  make_tuple(8, 4, highbd_sad8x4x4d_c, 10),
-  make_tuple(4, 8, highbd_sad4x8x4d_c, 10),
-  make_tuple(4, 4, highbd_sad4x4x4d_c, 10),
-  make_tuple(64, 64, highbd_sad64x64x4d_c, 12),
-  make_tuple(64, 32, highbd_sad64x32x4d_c, 12),
-  make_tuple(32, 64, highbd_sad32x64x4d_c, 12),
-  make_tuple(32, 32, highbd_sad32x32x4d_c, 12),
-  make_tuple(32, 16, highbd_sad32x16x4d_c, 12),
-  make_tuple(16, 32, highbd_sad16x32x4d_c, 12),
-  make_tuple(16, 16, highbd_sad16x16x4d_c, 12),
-  make_tuple(16, 8, highbd_sad16x8x4d_c, 12),
-  make_tuple(8, 16, highbd_sad8x16x4d_c, 12),
-  make_tuple(8, 8, highbd_sad8x8x4d_c, 12),
-  make_tuple(8, 4, highbd_sad8x4x4d_c, 12),
-  make_tuple(4, 8, highbd_sad4x8x4d_c, 12),
-  make_tuple(4, 4, highbd_sad4x4x4d_c, 12),
+  make_tuple(64, 64, &vpx_highbd_sad64x64x4d_c, 8),
+  make_tuple(64, 32, &vpx_highbd_sad64x32x4d_c, 8),
+  make_tuple(32, 64, &vpx_highbd_sad32x64x4d_c, 8),
+  make_tuple(32, 32, &vpx_highbd_sad32x32x4d_c, 8),
+  make_tuple(32, 16, &vpx_highbd_sad32x16x4d_c, 8),
+  make_tuple(16, 32, &vpx_highbd_sad16x32x4d_c, 8),
+  make_tuple(16, 16, &vpx_highbd_sad16x16x4d_c, 8),
+  make_tuple(16, 8, &vpx_highbd_sad16x8x4d_c, 8),
+  make_tuple(8, 16, &vpx_highbd_sad8x16x4d_c, 8),
+  make_tuple(8, 8, &vpx_highbd_sad8x8x4d_c, 8),
+  make_tuple(8, 4, &vpx_highbd_sad8x4x4d_c, 8),
+  make_tuple(4, 8, &vpx_highbd_sad4x8x4d_c, 8),
+  make_tuple(4, 4, &vpx_highbd_sad4x4x4d_c, 8),
+  make_tuple(64, 64, &vpx_highbd_sad64x64x4d_c, 10),
+  make_tuple(64, 32, &vpx_highbd_sad64x32x4d_c, 10),
+  make_tuple(32, 64, &vpx_highbd_sad32x64x4d_c, 10),
+  make_tuple(32, 32, &vpx_highbd_sad32x32x4d_c, 10),
+  make_tuple(32, 16, &vpx_highbd_sad32x16x4d_c, 10),
+  make_tuple(16, 32, &vpx_highbd_sad16x32x4d_c, 10),
+  make_tuple(16, 16, &vpx_highbd_sad16x16x4d_c, 10),
+  make_tuple(16, 8, &vpx_highbd_sad16x8x4d_c, 10),
+  make_tuple(8, 16, &vpx_highbd_sad8x16x4d_c, 10),
+  make_tuple(8, 8, &vpx_highbd_sad8x8x4d_c, 10),
+  make_tuple(8, 4, &vpx_highbd_sad8x4x4d_c, 10),
+  make_tuple(4, 8, &vpx_highbd_sad4x8x4d_c, 10),
+  make_tuple(4, 4, &vpx_highbd_sad4x4x4d_c, 10),
+  make_tuple(64, 64, &vpx_highbd_sad64x64x4d_c, 12),
+  make_tuple(64, 32, &vpx_highbd_sad64x32x4d_c, 12),
+  make_tuple(32, 64, &vpx_highbd_sad32x64x4d_c, 12),
+  make_tuple(32, 32, &vpx_highbd_sad32x32x4d_c, 12),
+  make_tuple(32, 16, &vpx_highbd_sad32x16x4d_c, 12),
+  make_tuple(16, 32, &vpx_highbd_sad16x32x4d_c, 12),
+  make_tuple(16, 16, &vpx_highbd_sad16x16x4d_c, 12),
+  make_tuple(16, 8, &vpx_highbd_sad16x8x4d_c, 12),
+  make_tuple(8, 16, &vpx_highbd_sad8x16x4d_c, 12),
+  make_tuple(8, 8, &vpx_highbd_sad8x8x4d_c, 12),
+  make_tuple(8, 4, &vpx_highbd_sad8x4x4d_c, 12),
+  make_tuple(4, 8, &vpx_highbd_sad4x8x4d_c, 12),
+  make_tuple(4, 4, &vpx_highbd_sad4x4x4d_c, 12),
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 };
 INSTANTIATE_TEST_CASE_P(C, SADx4Test, ::testing::ValuesIn(x4d_c_tests));
@@ -746,318 +661,194 @@ INSTANTIATE_TEST_CASE_P(C, SADx4Test, ::testing::ValuesIn(x4d_c_tests));
 //------------------------------------------------------------------------------
 // ARM functions
 #if HAVE_MEDIA
-const SadMxNFunc sad16x16_media = vpx_sad16x16_media;
 const SadMxNParam media_tests[] = {
-  make_tuple(16, 16, sad16x16_media, -1),
+  make_tuple(16, 16, &vpx_sad16x16_media, -1),
 };
 INSTANTIATE_TEST_CASE_P(MEDIA, SADTest, ::testing::ValuesIn(media_tests));
 #endif  // HAVE_MEDIA
 
 #if HAVE_NEON
-const SadMxNFunc sad64x64_neon = vpx_sad64x64_neon;
-const SadMxNFunc sad32x32_neon = vpx_sad32x32_neon;
-const SadMxNFunc sad16x16_neon = vpx_sad16x16_neon;
-const SadMxNFunc sad16x8_neon = vpx_sad16x8_neon;
-const SadMxNFunc sad8x16_neon = vpx_sad8x16_neon;
-const SadMxNFunc sad8x8_neon = vpx_sad8x8_neon;
-const SadMxNFunc sad4x4_neon = vpx_sad4x4_neon;
-
 const SadMxNParam neon_tests[] = {
-  make_tuple(64, 64, sad64x64_neon, -1),
-  make_tuple(32, 32, sad32x32_neon, -1),
-  make_tuple(16, 16, sad16x16_neon, -1),
-  make_tuple(16, 8, sad16x8_neon, -1),
-  make_tuple(8, 16, sad8x16_neon, -1),
-  make_tuple(8, 8, sad8x8_neon, -1),
-  make_tuple(4, 4, sad4x4_neon, -1),
+  make_tuple(64, 64, &vpx_sad64x64_neon, -1),
+  make_tuple(32, 32, &vpx_sad32x32_neon, -1),
+  make_tuple(16, 16, &vpx_sad16x16_neon, -1),
+  make_tuple(16, 8, &vpx_sad16x8_neon, -1),
+  make_tuple(8, 16, &vpx_sad8x16_neon, -1),
+  make_tuple(8, 8, &vpx_sad8x8_neon, -1),
+  make_tuple(4, 4, &vpx_sad4x4_neon, -1),
 };
 INSTANTIATE_TEST_CASE_P(NEON, SADTest, ::testing::ValuesIn(neon_tests));
 
-const SadMxNx4Func sad64x64x4d_neon = vpx_sad64x64x4d_neon;
-const SadMxNx4Func sad32x32x4d_neon = vpx_sad32x32x4d_neon;
-const SadMxNx4Func sad16x16x4d_neon = vpx_sad16x16x4d_neon;
 const SadMxNx4Param x4d_neon_tests[] = {
-  make_tuple(64, 64, sad64x64x4d_neon, -1),
-  make_tuple(32, 32, sad32x32x4d_neon, -1),
-  make_tuple(16, 16, sad16x16x4d_neon, -1),
+  make_tuple(64, 64, &vpx_sad64x64x4d_neon, -1),
+  make_tuple(32, 32, &vpx_sad32x32x4d_neon, -1),
+  make_tuple(16, 16, &vpx_sad16x16x4d_neon, -1),
 };
 INSTANTIATE_TEST_CASE_P(NEON, SADx4Test, ::testing::ValuesIn(x4d_neon_tests));
 #endif  // HAVE_NEON
 
 //------------------------------------------------------------------------------
 // x86 functions
-#if HAVE_MMX
-const SadMxNFunc sad16x16_mmx = vpx_sad16x16_mmx;
-const SadMxNFunc sad16x8_mmx = vpx_sad16x8_mmx;
-const SadMxNFunc sad8x16_mmx = vpx_sad8x16_mmx;
-const SadMxNFunc sad8x8_mmx = vpx_sad8x8_mmx;
-const SadMxNFunc sad4x4_mmx = vpx_sad4x4_mmx;
-const SadMxNParam mmx_tests[] = {
-  make_tuple(16, 16, sad16x16_mmx, -1),
-  make_tuple(16, 8, sad16x8_mmx, -1),
-  make_tuple(8, 16, sad8x16_mmx, -1),
-  make_tuple(8, 8, sad8x8_mmx, -1),
-  make_tuple(4, 4, sad4x4_mmx, -1),
-};
-INSTANTIATE_TEST_CASE_P(MMX, SADTest, ::testing::ValuesIn(mmx_tests));
-#endif  // HAVE_MMX
-
-#if HAVE_SSE
-#if CONFIG_USE_X86INC
-const SadMxNFunc sad4x8_sse = vpx_sad4x8_sse;
-const SadMxNFunc sad4x4_sse = vpx_sad4x4_sse;
-const SadMxNParam sse_tests[] = {
-  make_tuple(4, 8, sad4x8_sse, -1),
-  make_tuple(4, 4, sad4x4_sse, -1),
-};
-INSTANTIATE_TEST_CASE_P(SSE, SADTest, ::testing::ValuesIn(sse_tests));
-
-const SadMxNAvgFunc sad4x8_avg_sse = vpx_sad4x8_avg_sse;
-const SadMxNAvgFunc sad4x4_avg_sse = vpx_sad4x4_avg_sse;
-const SadMxNAvgParam avg_sse_tests[] = {
-  make_tuple(4, 8, sad4x8_avg_sse, -1),
-  make_tuple(4, 4, sad4x4_avg_sse, -1),
-};
-INSTANTIATE_TEST_CASE_P(SSE, SADavgTest, ::testing::ValuesIn(avg_sse_tests));
-
-const SadMxNx4Func sad4x8x4d_sse = vpx_sad4x8x4d_sse;
-const SadMxNx4Func sad4x4x4d_sse = vpx_sad4x4x4d_sse;
-const SadMxNx4Param x4d_sse_tests[] = {
-  make_tuple(4, 8, sad4x8x4d_sse, -1),
-  make_tuple(4, 4, sad4x4x4d_sse, -1),
-};
-INSTANTIATE_TEST_CASE_P(SSE, SADx4Test, ::testing::ValuesIn(x4d_sse_tests));
-#endif  // CONFIG_USE_X86INC
-#endif  // HAVE_SSE
-
 #if HAVE_SSE2
 #if CONFIG_USE_X86INC
-const SadMxNFunc sad64x64_sse2 = vpx_sad64x64_sse2;
-const SadMxNFunc sad64x32_sse2 = vpx_sad64x32_sse2;
-const SadMxNFunc sad32x64_sse2 = vpx_sad32x64_sse2;
-const SadMxNFunc sad32x32_sse2 = vpx_sad32x32_sse2;
-const SadMxNFunc sad32x16_sse2 = vpx_sad32x16_sse2;
-const SadMxNFunc sad16x32_sse2 = vpx_sad16x32_sse2;
-const SadMxNFunc sad16x16_sse2 = vpx_sad16x16_sse2;
-const SadMxNFunc sad16x8_sse2 = vpx_sad16x8_sse2;
-const SadMxNFunc sad8x16_sse2 = vpx_sad8x16_sse2;
-const SadMxNFunc sad8x8_sse2 = vpx_sad8x8_sse2;
-const SadMxNFunc sad8x4_sse2 = vpx_sad8x4_sse2;
-#if CONFIG_VP9_HIGHBITDEPTH
-const SadMxNFunc highbd_sad64x64_sse2 = vpx_highbd_sad64x64_sse2;
-const SadMxNFunc highbd_sad64x32_sse2 = vpx_highbd_sad64x32_sse2;
-const SadMxNFunc highbd_sad32x64_sse2 = vpx_highbd_sad32x64_sse2;
-const SadMxNFunc highbd_sad32x32_sse2 = vpx_highbd_sad32x32_sse2;
-const SadMxNFunc highbd_sad32x16_sse2 = vpx_highbd_sad32x16_sse2;
-const SadMxNFunc highbd_sad16x32_sse2 = vpx_highbd_sad16x32_sse2;
-const SadMxNFunc highbd_sad16x16_sse2 = vpx_highbd_sad16x16_sse2;
-const SadMxNFunc highbd_sad16x8_sse2 = vpx_highbd_sad16x8_sse2;
-const SadMxNFunc highbd_sad8x16_sse2 = vpx_highbd_sad8x16_sse2;
-const SadMxNFunc highbd_sad8x8_sse2 = vpx_highbd_sad8x8_sse2;
-const SadMxNFunc highbd_sad8x4_sse2 = vpx_highbd_sad8x4_sse2;
-#endif  // CONFIG_VP9_HIGHBITDEPTH
 const SadMxNParam sse2_tests[] = {
-  make_tuple(64, 64, sad64x64_sse2, -1),
-  make_tuple(64, 32, sad64x32_sse2, -1),
-  make_tuple(32, 64, sad32x64_sse2, -1),
-  make_tuple(32, 32, sad32x32_sse2, -1),
-  make_tuple(32, 16, sad32x16_sse2, -1),
-  make_tuple(16, 32, sad16x32_sse2, -1),
-  make_tuple(16, 16, sad16x16_sse2, -1),
-  make_tuple(16, 8, sad16x8_sse2, -1),
-  make_tuple(8, 16, sad8x16_sse2, -1),
-  make_tuple(8, 8, sad8x8_sse2, -1),
-  make_tuple(8, 4, sad8x4_sse2, -1),
+  make_tuple(64, 64, &vpx_sad64x64_sse2, -1),
+  make_tuple(64, 32, &vpx_sad64x32_sse2, -1),
+  make_tuple(32, 64, &vpx_sad32x64_sse2, -1),
+  make_tuple(32, 32, &vpx_sad32x32_sse2, -1),
+  make_tuple(32, 16, &vpx_sad32x16_sse2, -1),
+  make_tuple(16, 32, &vpx_sad16x32_sse2, -1),
+  make_tuple(16, 16, &vpx_sad16x16_sse2, -1),
+  make_tuple(16, 8, &vpx_sad16x8_sse2, -1),
+  make_tuple(8, 16, &vpx_sad8x16_sse2, -1),
+  make_tuple(8, 8, &vpx_sad8x8_sse2, -1),
+  make_tuple(8, 4, &vpx_sad8x4_sse2, -1),
+  make_tuple(4, 8, &vpx_sad4x8_sse2, -1),
+  make_tuple(4, 4, &vpx_sad4x4_sse2, -1),
 #if CONFIG_VP9_HIGHBITDEPTH
-  make_tuple(64, 64, highbd_sad64x64_sse2, 8),
-  make_tuple(64, 32, highbd_sad64x32_sse2, 8),
-  make_tuple(32, 64, highbd_sad32x64_sse2, 8),
-  make_tuple(32, 32, highbd_sad32x32_sse2, 8),
-  make_tuple(32, 16, highbd_sad32x16_sse2, 8),
-  make_tuple(16, 32, highbd_sad16x32_sse2, 8),
-  make_tuple(16, 16, highbd_sad16x16_sse2, 8),
-  make_tuple(16, 8, highbd_sad16x8_sse2, 8),
-  make_tuple(8, 16, highbd_sad8x16_sse2, 8),
-  make_tuple(8, 8, highbd_sad8x8_sse2, 8),
-  make_tuple(8, 4, highbd_sad8x4_sse2, 8),
-  make_tuple(64, 64, highbd_sad64x64_sse2, 10),
-  make_tuple(64, 32, highbd_sad64x32_sse2, 10),
-  make_tuple(32, 64, highbd_sad32x64_sse2, 10),
-  make_tuple(32, 32, highbd_sad32x32_sse2, 10),
-  make_tuple(32, 16, highbd_sad32x16_sse2, 10),
-  make_tuple(16, 32, highbd_sad16x32_sse2, 10),
-  make_tuple(16, 16, highbd_sad16x16_sse2, 10),
-  make_tuple(16, 8, highbd_sad16x8_sse2, 10),
-  make_tuple(8, 16, highbd_sad8x16_sse2, 10),
-  make_tuple(8, 8, highbd_sad8x8_sse2, 10),
-  make_tuple(8, 4, highbd_sad8x4_sse2, 10),
-  make_tuple(64, 64, highbd_sad64x64_sse2, 12),
-  make_tuple(64, 32, highbd_sad64x32_sse2, 12),
-  make_tuple(32, 64, highbd_sad32x64_sse2, 12),
-  make_tuple(32, 32, highbd_sad32x32_sse2, 12),
-  make_tuple(32, 16, highbd_sad32x16_sse2, 12),
-  make_tuple(16, 32, highbd_sad16x32_sse2, 12),
-  make_tuple(16, 16, highbd_sad16x16_sse2, 12),
-  make_tuple(16, 8, highbd_sad16x8_sse2, 12),
-  make_tuple(8, 16, highbd_sad8x16_sse2, 12),
-  make_tuple(8, 8, highbd_sad8x8_sse2, 12),
-  make_tuple(8, 4, highbd_sad8x4_sse2, 12),
+  make_tuple(64, 64, &vpx_highbd_sad64x64_sse2, 8),
+  make_tuple(64, 32, &vpx_highbd_sad64x32_sse2, 8),
+  make_tuple(32, 64, &vpx_highbd_sad32x64_sse2, 8),
+  make_tuple(32, 32, &vpx_highbd_sad32x32_sse2, 8),
+  make_tuple(32, 16, &vpx_highbd_sad32x16_sse2, 8),
+  make_tuple(16, 32, &vpx_highbd_sad16x32_sse2, 8),
+  make_tuple(16, 16, &vpx_highbd_sad16x16_sse2, 8),
+  make_tuple(16, 8, &vpx_highbd_sad16x8_sse2, 8),
+  make_tuple(8, 16, &vpx_highbd_sad8x16_sse2, 8),
+  make_tuple(8, 8, &vpx_highbd_sad8x8_sse2, 8),
+  make_tuple(8, 4, &vpx_highbd_sad8x4_sse2, 8),
+  make_tuple(64, 64, &vpx_highbd_sad64x64_sse2, 10),
+  make_tuple(64, 32, &vpx_highbd_sad64x32_sse2, 10),
+  make_tuple(32, 64, &vpx_highbd_sad32x64_sse2, 10),
+  make_tuple(32, 32, &vpx_highbd_sad32x32_sse2, 10),
+  make_tuple(32, 16, &vpx_highbd_sad32x16_sse2, 10),
+  make_tuple(16, 32, &vpx_highbd_sad16x32_sse2, 10),
+  make_tuple(16, 16, &vpx_highbd_sad16x16_sse2, 10),
+  make_tuple(16, 8, &vpx_highbd_sad16x8_sse2, 10),
+  make_tuple(8, 16, &vpx_highbd_sad8x16_sse2, 10),
+  make_tuple(8, 8, &vpx_highbd_sad8x8_sse2, 10),
+  make_tuple(8, 4, &vpx_highbd_sad8x4_sse2, 10),
+  make_tuple(64, 64, &vpx_highbd_sad64x64_sse2, 12),
+  make_tuple(64, 32, &vpx_highbd_sad64x32_sse2, 12),
+  make_tuple(32, 64, &vpx_highbd_sad32x64_sse2, 12),
+  make_tuple(32, 32, &vpx_highbd_sad32x32_sse2, 12),
+  make_tuple(32, 16, &vpx_highbd_sad32x16_sse2, 12),
+  make_tuple(16, 32, &vpx_highbd_sad16x32_sse2, 12),
+  make_tuple(16, 16, &vpx_highbd_sad16x16_sse2, 12),
+  make_tuple(16, 8, &vpx_highbd_sad16x8_sse2, 12),
+  make_tuple(8, 16, &vpx_highbd_sad8x16_sse2, 12),
+  make_tuple(8, 8, &vpx_highbd_sad8x8_sse2, 12),
+  make_tuple(8, 4, &vpx_highbd_sad8x4_sse2, 12),
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 };
 INSTANTIATE_TEST_CASE_P(SSE2, SADTest, ::testing::ValuesIn(sse2_tests));
 
-const SadMxNAvgFunc sad64x64_avg_sse2 = vpx_sad64x64_avg_sse2;
-const SadMxNAvgFunc sad64x32_avg_sse2 = vpx_sad64x32_avg_sse2;
-const SadMxNAvgFunc sad32x64_avg_sse2 = vpx_sad32x64_avg_sse2;
-const SadMxNAvgFunc sad32x32_avg_sse2 = vpx_sad32x32_avg_sse2;
-const SadMxNAvgFunc sad32x16_avg_sse2 = vpx_sad32x16_avg_sse2;
-const SadMxNAvgFunc sad16x32_avg_sse2 = vpx_sad16x32_avg_sse2;
-const SadMxNAvgFunc sad16x16_avg_sse2 = vpx_sad16x16_avg_sse2;
-const SadMxNAvgFunc sad16x8_avg_sse2 = vpx_sad16x8_avg_sse2;
-const SadMxNAvgFunc sad8x16_avg_sse2 = vpx_sad8x16_avg_sse2;
-const SadMxNAvgFunc sad8x8_avg_sse2 = vpx_sad8x8_avg_sse2;
-const SadMxNAvgFunc sad8x4_avg_sse2 = vpx_sad8x4_avg_sse2;
-#if CONFIG_VP9_HIGHBITDEPTH
-const SadMxNAvgFunc highbd_sad64x64_avg_sse2 = vpx_highbd_sad64x64_avg_sse2;
-const SadMxNAvgFunc highbd_sad64x32_avg_sse2 = vpx_highbd_sad64x32_avg_sse2;
-const SadMxNAvgFunc highbd_sad32x64_avg_sse2 = vpx_highbd_sad32x64_avg_sse2;
-const SadMxNAvgFunc highbd_sad32x32_avg_sse2 = vpx_highbd_sad32x32_avg_sse2;
-const SadMxNAvgFunc highbd_sad32x16_avg_sse2 = vpx_highbd_sad32x16_avg_sse2;
-const SadMxNAvgFunc highbd_sad16x32_avg_sse2 = vpx_highbd_sad16x32_avg_sse2;
-const SadMxNAvgFunc highbd_sad16x16_avg_sse2 = vpx_highbd_sad16x16_avg_sse2;
-const SadMxNAvgFunc highbd_sad16x8_avg_sse2 = vpx_highbd_sad16x8_avg_sse2;
-const SadMxNAvgFunc highbd_sad8x16_avg_sse2 = vpx_highbd_sad8x16_avg_sse2;
-const SadMxNAvgFunc highbd_sad8x8_avg_sse2 = vpx_highbd_sad8x8_avg_sse2;
-const SadMxNAvgFunc highbd_sad8x4_avg_sse2 = vpx_highbd_sad8x4_avg_sse2;
-#endif  // CONFIG_VP9_HIGHBITDEPTH
 const SadMxNAvgParam avg_sse2_tests[] = {
-  make_tuple(64, 64, sad64x64_avg_sse2, -1),
-  make_tuple(64, 32, sad64x32_avg_sse2, -1),
-  make_tuple(32, 64, sad32x64_avg_sse2, -1),
-  make_tuple(32, 32, sad32x32_avg_sse2, -1),
-  make_tuple(32, 16, sad32x16_avg_sse2, -1),
-  make_tuple(16, 32, sad16x32_avg_sse2, -1),
-  make_tuple(16, 16, sad16x16_avg_sse2, -1),
-  make_tuple(16, 8, sad16x8_avg_sse2, -1),
-  make_tuple(8, 16, sad8x16_avg_sse2, -1),
-  make_tuple(8, 8, sad8x8_avg_sse2, -1),
-  make_tuple(8, 4, sad8x4_avg_sse2, -1),
+  make_tuple(64, 64, &vpx_sad64x64_avg_sse2, -1),
+  make_tuple(64, 32, &vpx_sad64x32_avg_sse2, -1),
+  make_tuple(32, 64, &vpx_sad32x64_avg_sse2, -1),
+  make_tuple(32, 32, &vpx_sad32x32_avg_sse2, -1),
+  make_tuple(32, 16, &vpx_sad32x16_avg_sse2, -1),
+  make_tuple(16, 32, &vpx_sad16x32_avg_sse2, -1),
+  make_tuple(16, 16, &vpx_sad16x16_avg_sse2, -1),
+  make_tuple(16, 8, &vpx_sad16x8_avg_sse2, -1),
+  make_tuple(8, 16, &vpx_sad8x16_avg_sse2, -1),
+  make_tuple(8, 8, &vpx_sad8x8_avg_sse2, -1),
+  make_tuple(8, 4, &vpx_sad8x4_avg_sse2, -1),
+  make_tuple(4, 8, &vpx_sad4x8_avg_sse2, -1),
+  make_tuple(4, 4, &vpx_sad4x4_avg_sse2, -1),
 #if CONFIG_VP9_HIGHBITDEPTH
-  make_tuple(64, 64, highbd_sad64x64_avg_sse2, 8),
-  make_tuple(64, 32, highbd_sad64x32_avg_sse2, 8),
-  make_tuple(32, 64, highbd_sad32x64_avg_sse2, 8),
-  make_tuple(32, 32, highbd_sad32x32_avg_sse2, 8),
-  make_tuple(32, 16, highbd_sad32x16_avg_sse2, 8),
-  make_tuple(16, 32, highbd_sad16x32_avg_sse2, 8),
-  make_tuple(16, 16, highbd_sad16x16_avg_sse2, 8),
-  make_tuple(16, 8, highbd_sad16x8_avg_sse2, 8),
-  make_tuple(8, 16, highbd_sad8x16_avg_sse2, 8),
-  make_tuple(8, 8, highbd_sad8x8_avg_sse2, 8),
-  make_tuple(8, 4, highbd_sad8x4_avg_sse2, 8),
-  make_tuple(64, 64, highbd_sad64x64_avg_sse2, 10),
-  make_tuple(64, 32, highbd_sad64x32_avg_sse2, 10),
-  make_tuple(32, 64, highbd_sad32x64_avg_sse2, 10),
-  make_tuple(32, 32, highbd_sad32x32_avg_sse2, 10),
-  make_tuple(32, 16, highbd_sad32x16_avg_sse2, 10),
-  make_tuple(16, 32, highbd_sad16x32_avg_sse2, 10),
-  make_tuple(16, 16, highbd_sad16x16_avg_sse2, 10),
-  make_tuple(16, 8, highbd_sad16x8_avg_sse2, 10),
-  make_tuple(8, 16, highbd_sad8x16_avg_sse2, 10),
-  make_tuple(8, 8, highbd_sad8x8_avg_sse2, 10),
-  make_tuple(8, 4, highbd_sad8x4_avg_sse2, 10),
-  make_tuple(64, 64, highbd_sad64x64_avg_sse2, 12),
-  make_tuple(64, 32, highbd_sad64x32_avg_sse2, 12),
-  make_tuple(32, 64, highbd_sad32x64_avg_sse2, 12),
-  make_tuple(32, 32, highbd_sad32x32_avg_sse2, 12),
-  make_tuple(32, 16, highbd_sad32x16_avg_sse2, 12),
-  make_tuple(16, 32, highbd_sad16x32_avg_sse2, 12),
-  make_tuple(16, 16, highbd_sad16x16_avg_sse2, 12),
-  make_tuple(16, 8, highbd_sad16x8_avg_sse2, 12),
-  make_tuple(8, 16, highbd_sad8x16_avg_sse2, 12),
-  make_tuple(8, 8, highbd_sad8x8_avg_sse2, 12),
-  make_tuple(8, 4, highbd_sad8x4_avg_sse2, 12),
+  make_tuple(64, 64, &vpx_highbd_sad64x64_avg_sse2, 8),
+  make_tuple(64, 32, &vpx_highbd_sad64x32_avg_sse2, 8),
+  make_tuple(32, 64, &vpx_highbd_sad32x64_avg_sse2, 8),
+  make_tuple(32, 32, &vpx_highbd_sad32x32_avg_sse2, 8),
+  make_tuple(32, 16, &vpx_highbd_sad32x16_avg_sse2, 8),
+  make_tuple(16, 32, &vpx_highbd_sad16x32_avg_sse2, 8),
+  make_tuple(16, 16, &vpx_highbd_sad16x16_avg_sse2, 8),
+  make_tuple(16, 8, &vpx_highbd_sad16x8_avg_sse2, 8),
+  make_tuple(8, 16, &vpx_highbd_sad8x16_avg_sse2, 8),
+  make_tuple(8, 8, &vpx_highbd_sad8x8_avg_sse2, 8),
+  make_tuple(8, 4, &vpx_highbd_sad8x4_avg_sse2, 8),
+  make_tuple(64, 64, &vpx_highbd_sad64x64_avg_sse2, 10),
+  make_tuple(64, 32, &vpx_highbd_sad64x32_avg_sse2, 10),
+  make_tuple(32, 64, &vpx_highbd_sad32x64_avg_sse2, 10),
+  make_tuple(32, 32, &vpx_highbd_sad32x32_avg_sse2, 10),
+  make_tuple(32, 16, &vpx_highbd_sad32x16_avg_sse2, 10),
+  make_tuple(16, 32, &vpx_highbd_sad16x32_avg_sse2, 10),
+  make_tuple(16, 16, &vpx_highbd_sad16x16_avg_sse2, 10),
+  make_tuple(16, 8, &vpx_highbd_sad16x8_avg_sse2, 10),
+  make_tuple(8, 16, &vpx_highbd_sad8x16_avg_sse2, 10),
+  make_tuple(8, 8, &vpx_highbd_sad8x8_avg_sse2, 10),
+  make_tuple(8, 4, &vpx_highbd_sad8x4_avg_sse2, 10),
+  make_tuple(64, 64, &vpx_highbd_sad64x64_avg_sse2, 12),
+  make_tuple(64, 32, &vpx_highbd_sad64x32_avg_sse2, 12),
+  make_tuple(32, 64, &vpx_highbd_sad32x64_avg_sse2, 12),
+  make_tuple(32, 32, &vpx_highbd_sad32x32_avg_sse2, 12),
+  make_tuple(32, 16, &vpx_highbd_sad32x16_avg_sse2, 12),
+  make_tuple(16, 32, &vpx_highbd_sad16x32_avg_sse2, 12),
+  make_tuple(16, 16, &vpx_highbd_sad16x16_avg_sse2, 12),
+  make_tuple(16, 8, &vpx_highbd_sad16x8_avg_sse2, 12),
+  make_tuple(8, 16, &vpx_highbd_sad8x16_avg_sse2, 12),
+  make_tuple(8, 8, &vpx_highbd_sad8x8_avg_sse2, 12),
+  make_tuple(8, 4, &vpx_highbd_sad8x4_avg_sse2, 12),
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 };
 INSTANTIATE_TEST_CASE_P(SSE2, SADavgTest, ::testing::ValuesIn(avg_sse2_tests));
 
-const SadMxNx4Func sad64x64x4d_sse2 = vpx_sad64x64x4d_sse2;
-const SadMxNx4Func sad64x32x4d_sse2 = vpx_sad64x32x4d_sse2;
-const SadMxNx4Func sad32x64x4d_sse2 = vpx_sad32x64x4d_sse2;
-const SadMxNx4Func sad32x32x4d_sse2 = vpx_sad32x32x4d_sse2;
-const SadMxNx4Func sad32x16x4d_sse2 = vpx_sad32x16x4d_sse2;
-const SadMxNx4Func sad16x32x4d_sse2 = vpx_sad16x32x4d_sse2;
-const SadMxNx4Func sad16x16x4d_sse2 = vpx_sad16x16x4d_sse2;
-const SadMxNx4Func sad16x8x4d_sse2 = vpx_sad16x8x4d_sse2;
-const SadMxNx4Func sad8x16x4d_sse2 = vpx_sad8x16x4d_sse2;
-const SadMxNx4Func sad8x8x4d_sse2 = vpx_sad8x8x4d_sse2;
-const SadMxNx4Func sad8x4x4d_sse2 = vpx_sad8x4x4d_sse2;
-#if CONFIG_VP9_HIGHBITDEPTH
-const SadMxNx4Func highbd_sad64x64x4d_sse2 = vpx_highbd_sad64x64x4d_sse2;
-const SadMxNx4Func highbd_sad64x32x4d_sse2 = vpx_highbd_sad64x32x4d_sse2;
-const SadMxNx4Func highbd_sad32x64x4d_sse2 = vpx_highbd_sad32x64x4d_sse2;
-const SadMxNx4Func highbd_sad32x32x4d_sse2 = vpx_highbd_sad32x32x4d_sse2;
-const SadMxNx4Func highbd_sad32x16x4d_sse2 = vpx_highbd_sad32x16x4d_sse2;
-const SadMxNx4Func highbd_sad16x32x4d_sse2 = vpx_highbd_sad16x32x4d_sse2;
-const SadMxNx4Func highbd_sad16x16x4d_sse2 = vpx_highbd_sad16x16x4d_sse2;
-const SadMxNx4Func highbd_sad16x8x4d_sse2 = vpx_highbd_sad16x8x4d_sse2;
-const SadMxNx4Func highbd_sad8x16x4d_sse2 = vpx_highbd_sad8x16x4d_sse2;
-const SadMxNx4Func highbd_sad8x8x4d_sse2 = vpx_highbd_sad8x8x4d_sse2;
-const SadMxNx4Func highbd_sad8x4x4d_sse2 = vpx_highbd_sad8x4x4d_sse2;
-const SadMxNx4Func highbd_sad4x8x4d_sse2 = vpx_highbd_sad4x8x4d_sse2;
-const SadMxNx4Func highbd_sad4x4x4d_sse2 = vpx_highbd_sad4x4x4d_sse2;
-#endif  // CONFIG_VP9_HIGHBITDEPTH
 const SadMxNx4Param x4d_sse2_tests[] = {
-  make_tuple(64, 64, sad64x64x4d_sse2, -1),
-  make_tuple(64, 32, sad64x32x4d_sse2, -1),
-  make_tuple(32, 64, sad32x64x4d_sse2, -1),
-  make_tuple(32, 32, sad32x32x4d_sse2, -1),
-  make_tuple(32, 16, sad32x16x4d_sse2, -1),
-  make_tuple(16, 32, sad16x32x4d_sse2, -1),
-  make_tuple(16, 16, sad16x16x4d_sse2, -1),
-  make_tuple(16, 8, sad16x8x4d_sse2, -1),
-  make_tuple(8, 16, sad8x16x4d_sse2, -1),
-  make_tuple(8, 8, sad8x8x4d_sse2, -1),
-  make_tuple(8, 4, sad8x4x4d_sse2, -1),
+  make_tuple(64, 64, &vpx_sad64x64x4d_sse2, -1),
+  make_tuple(64, 32, &vpx_sad64x32x4d_sse2, -1),
+  make_tuple(32, 64, &vpx_sad32x64x4d_sse2, -1),
+  make_tuple(32, 32, &vpx_sad32x32x4d_sse2, -1),
+  make_tuple(32, 16, &vpx_sad32x16x4d_sse2, -1),
+  make_tuple(16, 32, &vpx_sad16x32x4d_sse2, -1),
+  make_tuple(16, 16, &vpx_sad16x16x4d_sse2, -1),
+  make_tuple(16, 8, &vpx_sad16x8x4d_sse2, -1),
+  make_tuple(8, 16, &vpx_sad8x16x4d_sse2, -1),
+  make_tuple(8, 8, &vpx_sad8x8x4d_sse2, -1),
+  make_tuple(8, 4, &vpx_sad8x4x4d_sse2, -1),
+  make_tuple(4, 8, &vpx_sad4x8x4d_sse2, -1),
+  make_tuple(4, 4, &vpx_sad4x4x4d_sse2, -1),
 #if CONFIG_VP9_HIGHBITDEPTH
-  make_tuple(64, 64, highbd_sad64x64x4d_sse2, 8),
-  make_tuple(64, 32, highbd_sad64x32x4d_sse2, 8),
-  make_tuple(32, 64, highbd_sad32x64x4d_sse2, 8),
-  make_tuple(32, 32, highbd_sad32x32x4d_sse2, 8),
-  make_tuple(32, 16, highbd_sad32x16x4d_sse2, 8),
-  make_tuple(16, 32, highbd_sad16x32x4d_sse2, 8),
-  make_tuple(16, 16, highbd_sad16x16x4d_sse2, 8),
-  make_tuple(16, 8, highbd_sad16x8x4d_sse2, 8),
-  make_tuple(8, 16, highbd_sad8x16x4d_sse2, 8),
-  make_tuple(8, 8, highbd_sad8x8x4d_sse2, 8),
-  make_tuple(8, 4, highbd_sad8x4x4d_sse2, 8),
-  make_tuple(4, 8, highbd_sad4x8x4d_sse2, 8),
-  make_tuple(4, 4, highbd_sad4x4x4d_sse2, 8),
-  make_tuple(64, 64, highbd_sad64x64x4d_sse2, 10),
-  make_tuple(64, 32, highbd_sad64x32x4d_sse2, 10),
-  make_tuple(32, 64, highbd_sad32x64x4d_sse2, 10),
-  make_tuple(32, 32, highbd_sad32x32x4d_sse2, 10),
-  make_tuple(32, 16, highbd_sad32x16x4d_sse2, 10),
-  make_tuple(16, 32, highbd_sad16x32x4d_sse2, 10),
-  make_tuple(16, 16, highbd_sad16x16x4d_sse2, 10),
-  make_tuple(16, 8, highbd_sad16x8x4d_sse2, 10),
-  make_tuple(8, 16, highbd_sad8x16x4d_sse2, 10),
-  make_tuple(8, 8, highbd_sad8x8x4d_sse2, 10),
-  make_tuple(8, 4, highbd_sad8x4x4d_sse2, 10),
-  make_tuple(4, 8, highbd_sad4x8x4d_sse2, 10),
-  make_tuple(4, 4, highbd_sad4x4x4d_sse2, 10),
-  make_tuple(64, 64, highbd_sad64x64x4d_sse2, 12),
-  make_tuple(64, 32, highbd_sad64x32x4d_sse2, 12),
-  make_tuple(32, 64, highbd_sad32x64x4d_sse2, 12),
-  make_tuple(32, 32, highbd_sad32x32x4d_sse2, 12),
-  make_tuple(32, 16, highbd_sad32x16x4d_sse2, 12),
-  make_tuple(16, 32, highbd_sad16x32x4d_sse2, 12),
-  make_tuple(16, 16, highbd_sad16x16x4d_sse2, 12),
-  make_tuple(16, 8, highbd_sad16x8x4d_sse2, 12),
-  make_tuple(8, 16, highbd_sad8x16x4d_sse2, 12),
-  make_tuple(8, 8, highbd_sad8x8x4d_sse2, 12),
-  make_tuple(8, 4, highbd_sad8x4x4d_sse2, 12),
-  make_tuple(4, 8, highbd_sad4x8x4d_sse2, 12),
-  make_tuple(4, 4, highbd_sad4x4x4d_sse2, 12),
+  make_tuple(64, 64, &vpx_highbd_sad64x64x4d_sse2, 8),
+  make_tuple(64, 32, &vpx_highbd_sad64x32x4d_sse2, 8),
+  make_tuple(32, 64, &vpx_highbd_sad32x64x4d_sse2, 8),
+  make_tuple(32, 32, &vpx_highbd_sad32x32x4d_sse2, 8),
+  make_tuple(32, 16, &vpx_highbd_sad32x16x4d_sse2, 8),
+  make_tuple(16, 32, &vpx_highbd_sad16x32x4d_sse2, 8),
+  make_tuple(16, 16, &vpx_highbd_sad16x16x4d_sse2, 8),
+  make_tuple(16, 8, &vpx_highbd_sad16x8x4d_sse2, 8),
+  make_tuple(8, 16, &vpx_highbd_sad8x16x4d_sse2, 8),
+  make_tuple(8, 8, &vpx_highbd_sad8x8x4d_sse2, 8),
+  make_tuple(8, 4, &vpx_highbd_sad8x4x4d_sse2, 8),
+  make_tuple(4, 8, &vpx_highbd_sad4x8x4d_sse2, 8),
+  make_tuple(4, 4, &vpx_highbd_sad4x4x4d_sse2, 8),
+  make_tuple(64, 64, &vpx_highbd_sad64x64x4d_sse2, 10),
+  make_tuple(64, 32, &vpx_highbd_sad64x32x4d_sse2, 10),
+  make_tuple(32, 64, &vpx_highbd_sad32x64x4d_sse2, 10),
+  make_tuple(32, 32, &vpx_highbd_sad32x32x4d_sse2, 10),
+  make_tuple(32, 16, &vpx_highbd_sad32x16x4d_sse2, 10),
+  make_tuple(16, 32, &vpx_highbd_sad16x32x4d_sse2, 10),
+  make_tuple(16, 16, &vpx_highbd_sad16x16x4d_sse2, 10),
+  make_tuple(16, 8, &vpx_highbd_sad16x8x4d_sse2, 10),
+  make_tuple(8, 16, &vpx_highbd_sad8x16x4d_sse2, 10),
+  make_tuple(8, 8, &vpx_highbd_sad8x8x4d_sse2, 10),
+  make_tuple(8, 4, &vpx_highbd_sad8x4x4d_sse2, 10),
+  make_tuple(4, 8, &vpx_highbd_sad4x8x4d_sse2, 10),
+  make_tuple(4, 4, &vpx_highbd_sad4x4x4d_sse2, 10),
+  make_tuple(64, 64, &vpx_highbd_sad64x64x4d_sse2, 12),
+  make_tuple(64, 32, &vpx_highbd_sad64x32x4d_sse2, 12),
+  make_tuple(32, 64, &vpx_highbd_sad32x64x4d_sse2, 12),
+  make_tuple(32, 32, &vpx_highbd_sad32x32x4d_sse2, 12),
+  make_tuple(32, 16, &vpx_highbd_sad32x16x4d_sse2, 12),
+  make_tuple(16, 32, &vpx_highbd_sad16x32x4d_sse2, 12),
+  make_tuple(16, 16, &vpx_highbd_sad16x16x4d_sse2, 12),
+  make_tuple(16, 8, &vpx_highbd_sad16x8x4d_sse2, 12),
+  make_tuple(8, 16, &vpx_highbd_sad8x16x4d_sse2, 12),
+  make_tuple(8, 8, &vpx_highbd_sad8x8x4d_sse2, 12),
+  make_tuple(8, 4, &vpx_highbd_sad8x4x4d_sse2, 12),
+  make_tuple(4, 8, &vpx_highbd_sad4x8x4d_sse2, 12),
+  make_tuple(4, 4, &vpx_highbd_sad4x4x4d_sse2, 12),
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 };
 INSTANTIATE_TEST_CASE_P(SSE2, SADx4Test, ::testing::ValuesIn(x4d_sse2_tests));
@@ -1077,41 +868,84 @@ INSTANTIATE_TEST_CASE_P(SSE2, SADx4Test, ::testing::ValuesIn(x4d_sse2_tests));
 #endif  // HAVE_SSE4_1
 
 #if HAVE_AVX2
-const SadMxNFunc sad64x64_avx2 = vpx_sad64x64_avx2;
-const SadMxNFunc sad64x32_avx2 = vpx_sad64x32_avx2;
-const SadMxNFunc sad32x64_avx2 = vpx_sad32x64_avx2;
-const SadMxNFunc sad32x32_avx2 = vpx_sad32x32_avx2;
-const SadMxNFunc sad32x16_avx2 = vpx_sad32x16_avx2;
 const SadMxNParam avx2_tests[] = {
-  make_tuple(64, 64, sad64x64_avx2, -1),
-  make_tuple(64, 32, sad64x32_avx2, -1),
-  make_tuple(32, 64, sad32x64_avx2, -1),
-  make_tuple(32, 32, sad32x32_avx2, -1),
-  make_tuple(32, 16, sad32x16_avx2, -1),
+  make_tuple(64, 64, &vpx_sad64x64_avx2, -1),
+  make_tuple(64, 32, &vpx_sad64x32_avx2, -1),
+  make_tuple(32, 64, &vpx_sad32x64_avx2, -1),
+  make_tuple(32, 32, &vpx_sad32x32_avx2, -1),
+  make_tuple(32, 16, &vpx_sad32x16_avx2, -1),
 };
 INSTANTIATE_TEST_CASE_P(AVX2, SADTest, ::testing::ValuesIn(avx2_tests));
 
-const SadMxNAvgFunc sad64x64_avg_avx2 = vpx_sad64x64_avg_avx2;
-const SadMxNAvgFunc sad64x32_avg_avx2 = vpx_sad64x32_avg_avx2;
-const SadMxNAvgFunc sad32x64_avg_avx2 = vpx_sad32x64_avg_avx2;
-const SadMxNAvgFunc sad32x32_avg_avx2 = vpx_sad32x32_avg_avx2;
-const SadMxNAvgFunc sad32x16_avg_avx2 = vpx_sad32x16_avg_avx2;
 const SadMxNAvgParam avg_avx2_tests[] = {
-  make_tuple(64, 64, sad64x64_avg_avx2, -1),
-  make_tuple(64, 32, sad64x32_avg_avx2, -1),
-  make_tuple(32, 64, sad32x64_avg_avx2, -1),
-  make_tuple(32, 32, sad32x32_avg_avx2, -1),
-  make_tuple(32, 16, sad32x16_avg_avx2, -1),
+  make_tuple(64, 64, &vpx_sad64x64_avg_avx2, -1),
+  make_tuple(64, 32, &vpx_sad64x32_avg_avx2, -1),
+  make_tuple(32, 64, &vpx_sad32x64_avg_avx2, -1),
+  make_tuple(32, 32, &vpx_sad32x32_avg_avx2, -1),
+  make_tuple(32, 16, &vpx_sad32x16_avg_avx2, -1),
 };
 INSTANTIATE_TEST_CASE_P(AVX2, SADavgTest, ::testing::ValuesIn(avg_avx2_tests));
 
-const SadMxNx4Func sad64x64x4d_avx2 = vpx_sad64x64x4d_avx2;
-const SadMxNx4Func sad32x32x4d_avx2 = vpx_sad32x32x4d_avx2;
 const SadMxNx4Param x4d_avx2_tests[] = {
-  make_tuple(64, 64, sad64x64x4d_avx2, -1),
-  make_tuple(32, 32, sad32x32x4d_avx2, -1),
+  make_tuple(64, 64, &vpx_sad64x64x4d_avx2, -1),
+  make_tuple(32, 32, &vpx_sad32x32x4d_avx2, -1),
 };
 INSTANTIATE_TEST_CASE_P(AVX2, SADx4Test, ::testing::ValuesIn(x4d_avx2_tests));
 #endif  // HAVE_AVX2
+
+//------------------------------------------------------------------------------
+// MIPS functions
+#if HAVE_MSA
+const SadMxNParam msa_tests[] = {
+  make_tuple(64, 64, &vpx_sad64x64_msa, -1),
+  make_tuple(64, 32, &vpx_sad64x32_msa, -1),
+  make_tuple(32, 64, &vpx_sad32x64_msa, -1),
+  make_tuple(32, 32, &vpx_sad32x32_msa, -1),
+  make_tuple(32, 16, &vpx_sad32x16_msa, -1),
+  make_tuple(16, 32, &vpx_sad16x32_msa, -1),
+  make_tuple(16, 16, &vpx_sad16x16_msa, -1),
+  make_tuple(16, 8, &vpx_sad16x8_msa, -1),
+  make_tuple(8, 16, &vpx_sad8x16_msa, -1),
+  make_tuple(8, 8, &vpx_sad8x8_msa, -1),
+  make_tuple(8, 4, &vpx_sad8x4_msa, -1),
+  make_tuple(4, 8, &vpx_sad4x8_msa, -1),
+  make_tuple(4, 4, &vpx_sad4x4_msa, -1),
+};
+INSTANTIATE_TEST_CASE_P(MSA, SADTest, ::testing::ValuesIn(msa_tests));
+
+const SadMxNAvgParam avg_msa_tests[] = {
+  make_tuple(64, 64, &vpx_sad64x64_avg_msa, -1),
+  make_tuple(64, 32, &vpx_sad64x32_avg_msa, -1),
+  make_tuple(32, 64, &vpx_sad32x64_avg_msa, -1),
+  make_tuple(32, 32, &vpx_sad32x32_avg_msa, -1),
+  make_tuple(32, 16, &vpx_sad32x16_avg_msa, -1),
+  make_tuple(16, 32, &vpx_sad16x32_avg_msa, -1),
+  make_tuple(16, 16, &vpx_sad16x16_avg_msa, -1),
+  make_tuple(16, 8, &vpx_sad16x8_avg_msa, -1),
+  make_tuple(8, 16, &vpx_sad8x16_avg_msa, -1),
+  make_tuple(8, 8, &vpx_sad8x8_avg_msa, -1),
+  make_tuple(8, 4, &vpx_sad8x4_avg_msa, -1),
+  make_tuple(4, 8, &vpx_sad4x8_avg_msa, -1),
+  make_tuple(4, 4, &vpx_sad4x4_avg_msa, -1),
+};
+INSTANTIATE_TEST_CASE_P(MSA, SADavgTest, ::testing::ValuesIn(avg_msa_tests));
+
+const SadMxNx4Param x4d_msa_tests[] = {
+  make_tuple(64, 64, &vpx_sad64x64x4d_msa, -1),
+  make_tuple(64, 32, &vpx_sad64x32x4d_msa, -1),
+  make_tuple(32, 64, &vpx_sad32x64x4d_msa, -1),
+  make_tuple(32, 32, &vpx_sad32x32x4d_msa, -1),
+  make_tuple(32, 16, &vpx_sad32x16x4d_msa, -1),
+  make_tuple(16, 32, &vpx_sad16x32x4d_msa, -1),
+  make_tuple(16, 16, &vpx_sad16x16x4d_msa, -1),
+  make_tuple(16, 8, &vpx_sad16x8x4d_msa, -1),
+  make_tuple(8, 16, &vpx_sad8x16x4d_msa, -1),
+  make_tuple(8, 8, &vpx_sad8x8x4d_msa, -1),
+  make_tuple(8, 4, &vpx_sad8x4x4d_msa, -1),
+  make_tuple(4, 8, &vpx_sad4x8x4d_msa, -1),
+  make_tuple(4, 4, &vpx_sad4x4x4d_msa, -1),
+};
+INSTANTIATE_TEST_CASE_P(MSA, SADx4Test, ::testing::ValuesIn(x4d_msa_tests));
+#endif  // HAVE_MSA
 
 }  // namespace

@@ -25,10 +25,12 @@
 #include "../tools_common.h"
 #include "../video_writer.h"
 
+#include "../vpx_ports/vpx_timer.h"
 #include "vpx/svc_context.h"
 #include "vpx/vp8cx.h"
 #include "vpx/vpx_encoder.h"
 #include "../vpxstats.h"
+#include "vp9/encoder/vp9_encoder.h"
 #define OUTPUT_RC_STATS 1
 
 static const arg_def_t skip_frames_arg =
@@ -79,6 +81,8 @@ static const arg_def_t rc_end_usage_arg =
     ARG_DEF(NULL, "rc-end-usage", 1, "0 - 3: VBR, CBR, CQ, Q");
 static const arg_def_t speed_arg =
     ARG_DEF("sp", "speed", 1, "speed configuration");
+static const arg_def_t aqmode_arg =
+    ARG_DEF("aq", "aqmode", 1, "aq-mode off/on");
 
 #if CONFIG_VP9_HIGHBITDEPTH
 static const struct arg_enum_list bitdepth_enum[] = {
@@ -100,7 +104,7 @@ static const arg_def_t *svc_args[] = {
   &kf_dist_arg,       &scale_factors_arg, &passes_arg,      &pass_arg,
   &fpf_name_arg,      &min_q_arg,         &max_q_arg,       &min_bitrate_arg,
   &max_bitrate_arg,   &temporal_layers_arg, &temporal_layering_mode_arg,
-  &lag_in_frame_arg,  &threads_arg,
+  &lag_in_frame_arg,  &threads_arg,       &aqmode_arg,
 #if OUTPUT_RC_STATS
   &output_rc_stats_arg,
 #endif
@@ -220,6 +224,8 @@ static void parse_command_line(int argc, const char **argv_,
 #endif
     } else if (arg_match(&arg, &speed_arg, argi)) {
       svc_ctx->speed = arg_parse_uint(&arg);
+    } else if (arg_match(&arg, &aqmode_arg, argi)) {
+      svc_ctx->aqmode = arg_parse_uint(&arg);
     } else if (arg_match(&arg, &threads_arg, argi)) {
       svc_ctx->threads = arg_parse_uint(&arg);
     } else if (arg_match(&arg, &temporal_layering_mode_arg, argi)) {
@@ -403,7 +409,10 @@ static void set_rate_control_stats(struct RateControlStats *rc,
     for (tl = 0; tl < cfg->ts_number_layers; ++tl) {
       const int layer = sl * cfg->ts_number_layers + tl;
       const int tlayer0 = sl * cfg->ts_number_layers;
-      rc->layer_framerate[layer] =
+      if (cfg->ts_number_layers == 1)
+        rc->layer_framerate[layer] = framerate;
+      else
+        rc->layer_framerate[layer] =
           framerate / cfg->ts_rate_decimator[tl];
       if (tl > 0) {
         rc->layer_pfb[layer] = 1000.0 *
@@ -539,6 +548,59 @@ vpx_codec_err_t parse_superframe_index(const uint8_t *data,
 }
 #endif
 
+// Example pattern for spatial layers and 2 temporal layers used in the
+// bypass/flexible mode. The pattern corresponds to the pattern
+// VP9E_TEMPORAL_LAYERING_MODE_0101 (temporal_layering_mode == 2) used in
+// non-flexible mode.
+void set_frame_flags_bypass_mode(int sl, int tl, int num_spatial_layers,
+                                 int is_key_frame,
+                                 vpx_svc_ref_frame_config_t *ref_frame_config) {
+  for (sl = 0; sl < num_spatial_layers; ++sl) {
+    if (!tl) {
+      if (!sl) {
+        ref_frame_config->frame_flags[sl] = VP8_EFLAG_NO_REF_GF |
+                                            VP8_EFLAG_NO_REF_ARF |
+                                            VP8_EFLAG_NO_UPD_GF |
+                                            VP8_EFLAG_NO_UPD_ARF;
+      } else {
+        if (is_key_frame) {
+          ref_frame_config->frame_flags[sl] = VP8_EFLAG_NO_REF_LAST |
+                                              VP8_EFLAG_NO_REF_ARF |
+                                              VP8_EFLAG_NO_UPD_GF |
+                                              VP8_EFLAG_NO_UPD_ARF;
+        } else {
+        ref_frame_config->frame_flags[sl] = VP8_EFLAG_NO_REF_ARF |
+                                            VP8_EFLAG_NO_UPD_GF |
+                                            VP8_EFLAG_NO_UPD_ARF;
+        }
+      }
+    } else if (tl == 1) {
+      if (!sl) {
+        ref_frame_config->frame_flags[sl] = VP8_EFLAG_NO_REF_GF |
+                                            VP8_EFLAG_NO_REF_ARF |
+                                            VP8_EFLAG_NO_UPD_LAST |
+                                            VP8_EFLAG_NO_UPD_GF;
+      } else {
+        ref_frame_config->frame_flags[sl] = VP8_EFLAG_NO_REF_ARF |
+                                            VP8_EFLAG_NO_UPD_LAST |
+                                            VP8_EFLAG_NO_UPD_GF;
+      }
+    }
+    if (tl == 0) {
+      ref_frame_config->lst_fb_idx[sl] = sl;
+      if (sl)
+        ref_frame_config->gld_fb_idx[sl] = sl - 1;
+      else
+        ref_frame_config->gld_fb_idx[sl] = 0;
+      ref_frame_config->alt_fb_idx[sl] = 0;
+    } else if (tl == 1) {
+      ref_frame_config->lst_fb_idx[sl] = sl;
+      ref_frame_config->gld_fb_idx[sl] = num_spatial_layers + sl - 1;
+      ref_frame_config->alt_fb_idx[sl] = num_spatial_layers + sl;
+    }
+  }
+}
+
 int main(int argc, const char **argv) {
   AppInput app_input = {0};
   VpxVideoWriter *writer = NULL;
@@ -559,11 +621,14 @@ int main(int argc, const char **argv) {
   VpxVideoWriter *outfile[VPX_TS_MAX_LAYERS] = {NULL};
   struct RateControlStats rc;
   vpx_svc_layer_id_t layer_id;
+  vpx_svc_ref_frame_config_t ref_frame_config;
   int sl, tl;
   double sum_bitrate = 0.0;
   double sum_bitrate2 = 0.0;
   double framerate  = 30.0;
 #endif
+  struct vpx_usec_timer timer;
+  int64_t cx_time = 0;
   memset(&svc_ctx, 0, sizeof(svc_ctx));
   svc_ctx.log_print = 1;
   exec_name = argv[0];
@@ -630,7 +695,11 @@ int main(int argc, const char **argv) {
 
   if (svc_ctx.speed != -1)
     vpx_codec_control(&codec, VP8E_SET_CPUUSED, svc_ctx.speed);
-  vpx_codec_control(&codec, VP9E_SET_TILE_COLUMNS, 0);
+  if (svc_ctx.threads)
+    vpx_codec_control(&codec, VP9E_SET_TILE_COLUMNS, (svc_ctx.threads >> 1));
+  if (svc_ctx.speed >= 5 && svc_ctx.aqmode == 1)
+    vpx_codec_control(&codec, VP9E_SET_AQ_MODE, 3);
+
 
   // Encode frames
   while (!end_of_stream) {
@@ -642,11 +711,46 @@ int main(int argc, const char **argv) {
       end_of_stream = 1;
     }
 
+    // For BYPASS/FLEXIBLE mode, set the frame flags (reference and updates)
+    // and the buffer indices for each spatial layer of the current
+    // (super)frame to be encoded. The temporal layer_id for the current frame
+    // also needs to be set.
+    // TODO(marpan): Should rename the "VP9E_TEMPORAL_LAYERING_MODE_BYPASS"
+    // mode to "VP9E_LAYERING_MODE_BYPASS".
+    if (svc_ctx.temporal_layering_mode == VP9E_TEMPORAL_LAYERING_MODE_BYPASS) {
+      layer_id.spatial_layer_id = 0;
+      // Example for 2 temporal layers.
+      if (frame_cnt % 2 == 0)
+        layer_id.temporal_layer_id = 0;
+      else
+        layer_id.temporal_layer_id = 1;
+      // Note that we only set the temporal layer_id, since we are calling
+      // the encode for the whole superframe. The encoder will internally loop
+      // over all the spatial layers for the current superframe.
+      vpx_codec_control(&codec, VP9E_SET_SVC_LAYER_ID, &layer_id);
+      set_frame_flags_bypass_mode(sl, layer_id.temporal_layer_id,
+                                  svc_ctx.spatial_layers,
+                                  frame_cnt == 0,
+                                  &ref_frame_config);
+      vpx_codec_control(&codec, VP9E_SET_SVC_REF_FRAME_CONFIG,
+                        &ref_frame_config);
+      // Keep track of input frames, to account for frame drops in rate control
+      // stats/metrics.
+      for (sl = 0; sl < enc_cfg.ss_number_layers; ++sl) {
+        ++rc.layer_input_frames[sl * enc_cfg.ts_number_layers +
+                                layer_id.temporal_layer_id];
+      }
+    }
+
+    vpx_usec_timer_start(&timer);
     res = vpx_svc_encode(&svc_ctx, &codec, (end_of_stream ? NULL : &raw),
                          pts, frame_duration, svc_ctx.speed >= 5 ?
                          VPX_DL_REALTIME : VPX_DL_GOOD_QUALITY);
+    vpx_usec_timer_mark(&timer);
+    cx_time += vpx_usec_timer_elapsed(&timer);
 
     printf("%s", vpx_svc_get_message(&svc_ctx));
+    fflush(stdout);
     if (res != VPX_CODEC_OK) {
       die_codec(&codec, "Failed to encode frame");
     }
@@ -654,6 +758,7 @@ int main(int argc, const char **argv) {
     while ((cx_pkt = vpx_codec_get_cx_data(&codec, &iter)) != NULL) {
       switch (cx_pkt->kind) {
         case VPX_CODEC_CX_FRAME_PKT: {
+          SvcInternal_t *const si = (SvcInternal_t *)svc_ctx.internal;
           if (cx_pkt->data.frame.sz > 0) {
 #if OUTPUT_RC_STATS
             uint32_t sizes[8];
@@ -669,9 +774,16 @@ int main(int argc, const char **argv) {
               vpx_codec_control(&codec, VP9E_GET_SVC_LAYER_ID, &layer_id);
               parse_superframe_index(cx_pkt->data.frame.buf,
                                      cx_pkt->data.frame.sz, sizes, &count);
-              for (sl = 0; sl < enc_cfg.ss_number_layers; ++sl) {
-                ++rc.layer_input_frames[sl * enc_cfg.ts_number_layers +
-                                        layer_id.temporal_layer_id];
+              // Note computing input_layer_frames here won't account for frame
+              // drops in rate control stats.
+              // TODO(marpan): Fix this for non-bypass mode so we can get stats
+              // for dropped frames.
+              if (svc_ctx.temporal_layering_mode !=
+                  VP9E_TEMPORAL_LAYERING_MODE_BYPASS) {
+                for (sl = 0; sl < enc_cfg.ss_number_layers; ++sl) {
+                  ++rc.layer_input_frames[sl * enc_cfg.ts_number_layers +
+                                         layer_id.temporal_layer_id];
+                }
               }
               for (tl = layer_id.temporal_layer_id;
                   tl < enc_cfg.ts_number_layers; ++tl) {
@@ -742,6 +854,8 @@ int main(int argc, const char **argv) {
           printf("SVC frame: %d, kf: %d, size: %d, pts: %d\n", frames_received,
                  !!(cx_pkt->data.frame.flags & VPX_FRAME_IS_KEY),
                  (int)cx_pkt->data.frame.sz, (int)cx_pkt->data.frame.pts);
+          if (enc_cfg.ss_number_layers == 1 && enc_cfg.ts_number_layers == 1)
+            si->bytes_sum[0] += (int)cx_pkt->data.frame.sz;
           ++frames_received;
           break;
         }
@@ -762,6 +876,16 @@ int main(int argc, const char **argv) {
       pts += frame_duration;
     }
   }
+
+  // Compensate for the extra frame count for the bypass mode.
+  if (svc_ctx.temporal_layering_mode == VP9E_TEMPORAL_LAYERING_MODE_BYPASS) {
+    for (sl = 0; sl < enc_cfg.ss_number_layers; ++sl) {
+      const int layer = sl * enc_cfg.ts_number_layers +
+          layer_id.temporal_layer_id;
+      --rc.layer_input_frames[layer];
+    }
+  }
+
   printf("Processed %d frames\n", frame_cnt);
   fclose(infile);
 #if OUTPUT_RC_STATS
@@ -783,6 +907,10 @@ int main(int argc, const char **argv) {
     }
   }
 #endif
+  printf("Frame cnt and encoding time/FPS stats for encoding: %d %f %f \n",
+         frame_cnt,
+         1000 * (float)cx_time / (double)(frame_cnt * 1000000),
+         1000000 * (double)frame_cnt / (double)cx_time);
   vpx_img_free(&raw);
   // display average size, psnr
   printf("%s", vpx_svc_dump_statistics(&svc_ctx));

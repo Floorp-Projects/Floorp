@@ -68,20 +68,20 @@ int I411ToARGB(const uint8* src_y, int src_stride_y,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height);
 
-// Convert I400 (grey) to ARGB.
+// Convert I400 (grey) to ARGB.  Reverse of ARGBToI400.
 LIBYUV_API
 int I400ToARGB(const uint8* src_y, int src_stride_y,
                uint8* dst_argb, int dst_stride_argb,
                int width, int height);
 
-// Alias.
-#define YToARGB I400ToARGB_Reference
-
-// Convert I400 to ARGB. Reverse of ARGBToI400.
+// Convert J400 (jpeg grey) to ARGB.
 LIBYUV_API
-int I400ToARGB_Reference(const uint8* src_y, int src_stride_y,
-                         uint8* dst_argb, int dst_stride_argb,
-                         int width, int height);
+int J400ToARGB(const uint8* src_y, int src_stride_y,
+               uint8* dst_argb, int dst_stride_argb,
+               int width, int height);
+
+// Alias.
+#define YToARGB I400ToARGB
 
 // Convert NV12 to ARGB.
 LIBYUV_API

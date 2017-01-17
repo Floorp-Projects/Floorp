@@ -9,6 +9,7 @@
  */
 #ifndef TEST_Y4M_VIDEO_SOURCE_H_
 #define TEST_Y4M_VIDEO_SOURCE_H_
+#include <algorithm>
 #include <string>
 
 #include "test/video_source.h"
@@ -89,6 +90,18 @@ class Y4mVideoSource : public VideoSource {
     ASSERT_TRUE(input_file_ != NULL);
     // Read a frame from input_file.
     y4m_input_fetch_frame(&y4m_, input_file_, img_.get());
+  }
+
+  // Swap buffers with another y4m source. This allows reading a new frame
+  // while keeping the old frame around. A whole Y4mSource is required and
+  // not just a vpx_image_t because of how the y4m reader manipulates
+  // vpx_image_t internals,
+  void SwapBuffers(Y4mVideoSource *other) {
+    std::swap(other->y4m_.dst_buf, y4m_.dst_buf);
+    vpx_image_t *tmp;
+    tmp = other->img_.release();
+    other->img_.reset(img_.release());
+    img_.reset(tmp);
   }
 
  protected:

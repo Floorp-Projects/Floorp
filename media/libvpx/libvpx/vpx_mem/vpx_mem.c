@@ -9,8 +9,6 @@
  */
 
 
-#define __VPX_MEM_C__
-
 #include "vpx_mem.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -91,13 +89,12 @@ void vpx_free(void *memblk) {
   }
 }
 
-#if CONFIG_VP9 && CONFIG_VP9_HIGHBITDEPTH
+#if CONFIG_VP9_HIGHBITDEPTH
 void *vpx_memset16(void *dest, int val, size_t length) {
-  int i;
-  void *orig = dest;
-  uint16_t *dest16 = dest;
+  size_t i;
+  uint16_t *dest16 = (uint16_t *)dest;
   for (i = 0; i < length; i++)
     *dest16++ = val;
-  return orig;
+  return dest;
 }
-#endif  // CONFIG_VP9 && CONFIG_VP9_HIGHBITDEPTH
+#endif  // CONFIG_VP9_HIGHBITDEPTH

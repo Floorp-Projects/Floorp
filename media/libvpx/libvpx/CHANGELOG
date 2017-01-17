@@ -1,7 +1,49 @@
-xxxx-yy-zz v1.4.0 "Changes for next release"
-  vpxenc is changed to use VP9 by default.
-  Encoder controls added for 1 pass SVC.
-  Decoder control to toggle on/off loopfilter.
+2016-07-20 v1.6.0 "Khaki Campbell Duck"
+  This release improves upon the VP9 encoder and speeds up the encoding and
+  decoding processes.
+
+  - Upgrading:
+    This release is ABI incompatible with 1.5.0 due to a new 'color_range' enum
+    in vpx_image and some minor changes to the VP8_COMP structure.
+
+    The default key frame interval for VP9 has changed from 128 to 9999.
+
+  - Enhancement:
+    A core focus has been performance for low end Intel processors. SSSE3
+    instructions such as 'pshufb' have been avoided and instructions have been
+    reordered to better accommodate the more constrained pipelines.
+
+    As a result, devices based on Celeron processors have seen substantial
+    decoding improvements. From Indian Runner Duck to Javan Whistling Duck,
+    decoding speed improved between 10 and 30%. Between Javan Whistling Duck
+    and Khaki Campbell Duck, it improved another 10 to 15%.
+
+    While Celeron benefited most, Core-i5 also improved 5% and 10% between the
+    respective releases.
+
+    Realtime performance for WebRTC for both speed and quality has received a
+    lot of attention.
+
+  - Bug Fixes:
+    A number of fuzzing issues, found variously by Mozilla, Chromium and others,
+    have been fixed and we strongly recommend updating.
+
+2015-11-09 v1.5.0 "Javan Whistling Duck"
+  This release improves upon the VP9 encoder and speeds up the encoding and
+  decoding processes.
+
+  - Upgrading:
+    This release is ABI incompatible with 1.4.0. It drops deprecated VP8
+    controls and adds a variety of VP9 controls for testing.
+
+    The vpxenc utility now prefers VP9 by default.
+
+  - Enhancements:
+    Faster VP9 encoding and decoding
+    Smaller library size by combining functions used by VP8 and VP9
+
+  - Bug Fixes:
+    A variety of fuzzing issues
 
 2015-04-03 v1.4.0 "Indian Runner Duck"
   This release includes significant improvements to the VP9 codec.

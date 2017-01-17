@@ -8,10 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
-#include <string.h>
 #include <limits.h>
 #include <stdio.h>
+#include <string.h>
+
+#include "third_party/googletest/src/include/gtest/gtest.h"
 
 #include "./vpx_config.h"
 #if CONFIG_VP9_ENCODER
@@ -22,12 +23,11 @@
 #include "test/clear_system_state.h"
 #include "test/register_state_check.h"
 #include "test/util.h"
-#include "third_party/googletest/src/include/gtest/gtest.h"
-#include "vp9/encoder/vp9_ssim.h"
+#include "vpx_dsp/ssim.h"
 #include "vpx_mem/vpx_mem.h"
 
 extern "C"
-double vp9_get_ssim_metrics(uint8_t *img1, int img1_pitch,
+double vpx_get_ssim_metrics(uint8_t *img1, int img1_pitch,
                             uint8_t *img2, int img2_pitch,
                             int width, int height,
                             Ssimv *sv2, Metrics *m,
@@ -65,7 +65,7 @@ class ConsistencyTestBase : public ::testing::Test {
     vpx_free(reference_data_[1]);
     reference_data_[1] = NULL;
 
-    delete ssim_array_;
+    delete[] ssim_array_;
   }
 
   virtual void TearDown() {
@@ -144,7 +144,7 @@ class ConsistencyVP9Test
   double CheckConsistency(int frame) {
     EXPECT_LT(frame, 2)<< "Frame to check has to be less than 2.";
     return
-        vp9_get_ssim_metrics(source_data_[frame], source_stride_,
+        vpx_get_ssim_metrics(source_data_[frame], source_stride_,
                              reference_data_[frame], reference_stride_,
                              width_, height_, ssim_array_, &metrics_, 1);
   }

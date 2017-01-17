@@ -10,11 +10,10 @@
 
 #include "third_party/googletest/src/include/gtest/gtest.h"
 
-#include "test/clear_system_state.h"
-#include "test/register_state_check.h"
-
 #include "./vpx_config.h"
 #include "./vpx_scale_rtcd.h"
+#include "test/clear_system_state.h"
+#include "test/register_state_check.h"
 #include "vpx_mem/vpx_mem.h"
 #include "vpx_scale/yv12config.h"
 

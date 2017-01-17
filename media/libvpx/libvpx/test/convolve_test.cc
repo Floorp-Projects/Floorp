@@ -9,16 +9,20 @@
  */
 
 #include <string.h>
-#include "test/acm_random.h"
-#include "test/clear_system_state.h"
-#include "test/register_state_check.h"
-#include "test/util.h"
+
 #include "third_party/googletest/src/include/gtest/gtest.h"
 
 #include "./vpx_config.h"
 #include "./vp9_rtcd.h"
+#include "./vpx_dsp_rtcd.h"
+#include "test/acm_random.h"
+#include "test/clear_system_state.h"
+#include "test/register_state_check.h"
+#include "test/util.h"
 #include "vp9/common/vp9_common.h"
 #include "vp9/common/vp9_filter.h"
+#include "vpx_dsp/vpx_dsp_common.h"
+#include "vpx_dsp/vpx_filter.h"
 #include "vpx_mem/vpx_mem.h"
 #include "vpx_ports/mem.h"
 
@@ -37,9 +41,14 @@ struct ConvolveFunctions {
                     ConvolveFunc h8, ConvolveFunc h8_avg,
                     ConvolveFunc v8, ConvolveFunc v8_avg,
                     ConvolveFunc hv8, ConvolveFunc hv8_avg,
+                    ConvolveFunc sh8, ConvolveFunc sh8_avg,
+                    ConvolveFunc sv8, ConvolveFunc sv8_avg,
+                    ConvolveFunc shv8, ConvolveFunc shv8_avg,
                     int bd)
       : copy_(copy), avg_(avg), h8_(h8), v8_(v8), hv8_(hv8), h8_avg_(h8_avg),
-        v8_avg_(v8_avg), hv8_avg_(hv8_avg), use_highbd_(bd) {}
+        v8_avg_(v8_avg), hv8_avg_(hv8_avg), sh8_(sh8), sv8_(sv8), shv8_(shv8),
+        sh8_avg_(sh8_avg), sv8_avg_(sv8_avg), shv8_avg_(shv8_avg),
+        use_highbd_(bd) {}
 
   ConvolveFunc copy_;
   ConvolveFunc avg_;
@@ -49,10 +58,31 @@ struct ConvolveFunctions {
   ConvolveFunc h8_avg_;
   ConvolveFunc v8_avg_;
   ConvolveFunc hv8_avg_;
+  ConvolveFunc sh8_;        // scaled horiz
+  ConvolveFunc sv8_;        // scaled vert
+  ConvolveFunc shv8_;       // scaled horiz/vert
+  ConvolveFunc sh8_avg_;    // scaled avg horiz
+  ConvolveFunc sv8_avg_;    // scaled avg vert
+  ConvolveFunc shv8_avg_;   // scaled avg horiz/vert
   int use_highbd_;  // 0 if high bitdepth not used, else the actual bit depth.
 };
 
 typedef std::tr1::tuple<int, int, const ConvolveFunctions *> ConvolveParam;
+
+#define ALL_SIZES(convolve_fn) \
+    make_tuple(4, 4, &convolve_fn),     \
+    make_tuple(8, 4, &convolve_fn),     \
+    make_tuple(4, 8, &convolve_fn),     \
+    make_tuple(8, 8, &convolve_fn),     \
+    make_tuple(16, 8, &convolve_fn),    \
+    make_tuple(8, 16, &convolve_fn),    \
+    make_tuple(16, 16, &convolve_fn),   \
+    make_tuple(32, 16, &convolve_fn),   \
+    make_tuple(16, 32, &convolve_fn),   \
+    make_tuple(32, 32, &convolve_fn),   \
+    make_tuple(64, 32, &convolve_fn),   \
+    make_tuple(32, 64, &convolve_fn),   \
+    make_tuple(64, 64, &convolve_fn)
 
 // Reference 8-tap subpixel filter, slightly modified to fit into this test.
 #define VP9_FILTER_WEIGHT 128
@@ -88,7 +118,8 @@ void filter_block2d_8_c(const uint8_t *src_ptr,
   // and filter_max_width          = 16
   //
   uint8_t intermediate_buffer[71 * kMaxDimension];
-  const int intermediate_next_stride = 1 - intermediate_height * output_width;
+  const int intermediate_next_stride =
+      1 - static_cast<int>(intermediate_height * output_width);
 
   // Horizontal pass (src -> transposed intermediate).
   uint8_t *output_ptr = intermediate_buffer;
@@ -200,7 +231,8 @@ void highbd_filter_block2d_8_c(const uint16_t *src_ptr,
    * and filter_max_width = 16
    */
   uint16_t intermediate_buffer[71 * kMaxDimension];
-  const int intermediate_next_stride = 1 - intermediate_height * output_width;
+  const int intermediate_next_stride =
+      1 - static_cast<int>(intermediate_height * output_width);
 
   // Horizontal pass (src -> transposed intermediate).
   {
@@ -264,8 +296,7 @@ void highbd_block2d_average_c(uint16_t *src,
                               uint16_t *output_ptr,
                               unsigned int output_stride,
                               unsigned int output_width,
-                              unsigned int output_height,
-                              int bd) {
+                              unsigned int output_height) {
   unsigned int i, j;
   for (i = 0; i < output_height; ++i) {
     for (j = 0; j < output_width; ++j) {
@@ -291,7 +322,7 @@ void highbd_filter_average_block2d_8_c(const uint16_t *src_ptr,
   highbd_filter_block2d_8_c(src_ptr, src_stride, HFilter, VFilter, tmp, 64,
                             output_width, output_height, bd);
   highbd_block2d_average_c(tmp, 64, dst_ptr, dst_stride,
-                           output_width, output_height, bd);
+                           output_width, output_height);
 }
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 
@@ -593,8 +624,8 @@ TEST_P(ConvolveTest, CopyHoriz) {
   DECLARE_ALIGNED(256, const int16_t, filter8[8]) = {0, 0, 0, 128, 0, 0, 0, 0};
 
   ASM_REGISTER_STATE_CHECK(
-      UUT_->h8_(in, kInputStride, out, kOutputStride, filter8, 16, filter8, 16,
-                Width(), Height()));
+      UUT_->sh8_(in, kInputStride, out, kOutputStride, filter8, 16, filter8, 16,
+                 Width(), Height()));
 
   CheckGuardBlocks();
 
@@ -611,8 +642,8 @@ TEST_P(ConvolveTest, CopyVert) {
   DECLARE_ALIGNED(256, const int16_t, filter8[8]) = {0, 0, 0, 128, 0, 0, 0, 0};
 
   ASM_REGISTER_STATE_CHECK(
-      UUT_->v8_(in, kInputStride, out, kOutputStride, filter8, 16, filter8, 16,
-                Width(), Height()));
+      UUT_->sv8_(in, kInputStride, out, kOutputStride, filter8, 16, filter8, 16,
+                 Width(), Height()));
 
   CheckGuardBlocks();
 
@@ -629,8 +660,8 @@ TEST_P(ConvolveTest, Copy2D) {
   DECLARE_ALIGNED(256, const int16_t, filter8[8]) = {0, 0, 0, 128, 0, 0, 0, 0};
 
   ASM_REGISTER_STATE_CHECK(
-      UUT_->hv8_(in, kInputStride, out, kOutputStride, filter8, 16, filter8, 16,
-                 Width(), Height()));
+      UUT_->shv8_(in, kInputStride, out, kOutputStride, filter8, 16, filter8,
+                  16, Width(), Height()));
 
   CheckGuardBlocks();
 
@@ -647,7 +678,7 @@ const int kNumFilters = 16;
 TEST(ConvolveTest, FiltersWontSaturateWhenAddedPairwise) {
   for (int filter_bank = 0; filter_bank < kNumFilterBanks; ++filter_bank) {
     const InterpKernel *filters =
-        vp9_get_interp_kernel(static_cast<INTERP_FILTER>(filter_bank));
+        vp9_filter_kernels[static_cast<INTERP_FILTER>(filter_bank)];
     for (int i = 0; i < kNumFilters; i++) {
       const int p0 = filters[i][0] + filters[i][1];
       const int p1 = filters[i][2] + filters[i][3];
@@ -685,9 +716,7 @@ TEST_P(ConvolveTest, MatchesReferenceSubpixelFilter) {
 
   for (int filter_bank = 0; filter_bank < kNumFilterBanks; ++filter_bank) {
     const InterpKernel *filters =
-        vp9_get_interp_kernel(static_cast<INTERP_FILTER>(filter_bank));
-    const InterpKernel *const eighttap_smooth =
-        vp9_get_interp_kernel(EIGHTTAP_SMOOTH);
+        vp9_filter_kernels[static_cast<INTERP_FILTER>(filter_bank)];
 
     for (int filter_x = 0; filter_x < kNumFilters; ++filter_x) {
       for (int filter_y = 0; filter_y < kNumFilters; ++filter_y) {
@@ -696,7 +725,7 @@ TEST_P(ConvolveTest, MatchesReferenceSubpixelFilter) {
                                    ref, kOutputStride,
                                    Width(), Height());
 
-        if (filters == eighttap_smooth || (filter_x && filter_y))
+        if (filter_x && filter_y)
           ASM_REGISTER_STATE_CHECK(
               UUT_->hv8_(in, kInputStride, out, kOutputStride,
                          filters[filter_x], 16, filters[filter_y], 16,
@@ -706,11 +735,16 @@ TEST_P(ConvolveTest, MatchesReferenceSubpixelFilter) {
               UUT_->v8_(in, kInputStride, out, kOutputStride,
                         kInvalidFilter, 16, filters[filter_y], 16,
                         Width(), Height()));
-        else
+        else if (filter_x)
           ASM_REGISTER_STATE_CHECK(
               UUT_->h8_(in, kInputStride, out, kOutputStride,
                         filters[filter_x], 16, kInvalidFilter, 16,
                         Width(), Height()));
+        else
+          ASM_REGISTER_STATE_CHECK(
+              UUT_->copy_(in, kInputStride, out, kOutputStride,
+                          kInvalidFilter, 0, kInvalidFilter, 0,
+                          Width(), Height()));
 
         CheckGuardBlocks();
 
@@ -764,9 +798,7 @@ TEST_P(ConvolveTest, MatchesReferenceAveragingSubpixelFilter) {
 
   for (int filter_bank = 0; filter_bank < kNumFilterBanks; ++filter_bank) {
     const InterpKernel *filters =
-        vp9_get_interp_kernel(static_cast<INTERP_FILTER>(filter_bank));
-    const InterpKernel *const eighttap_smooth =
-        vp9_get_interp_kernel(EIGHTTAP_SMOOTH);
+        vp9_filter_kernels[static_cast<INTERP_FILTER>(filter_bank)];
 
     for (int filter_x = 0; filter_x < kNumFilters; ++filter_x) {
       for (int filter_y = 0; filter_y < kNumFilters; ++filter_y) {
@@ -775,7 +807,7 @@ TEST_P(ConvolveTest, MatchesReferenceAveragingSubpixelFilter) {
                                            ref, kOutputStride,
                                            Width(), Height());
 
-        if (filters == eighttap_smooth || (filter_x && filter_y))
+        if (filter_x && filter_y)
           ASM_REGISTER_STATE_CHECK(
               UUT_->hv8_avg_(in, kInputStride, out, kOutputStride,
                              filters[filter_x], 16, filters[filter_y], 16,
@@ -783,13 +815,18 @@ TEST_P(ConvolveTest, MatchesReferenceAveragingSubpixelFilter) {
         else if (filter_y)
           ASM_REGISTER_STATE_CHECK(
               UUT_->v8_avg_(in, kInputStride, out, kOutputStride,
-                            filters[filter_x], 16, filters[filter_y], 16,
+                            kInvalidFilter, 16, filters[filter_y], 16,
+                            Width(), Height()));
+        else if (filter_x)
+          ASM_REGISTER_STATE_CHECK(
+              UUT_->h8_avg_(in, kInputStride, out, kOutputStride,
+                            filters[filter_x], 16, kInvalidFilter, 16,
                             Width(), Height()));
         else
           ASM_REGISTER_STATE_CHECK(
-              UUT_->h8_avg_(in, kInputStride, out, kOutputStride,
-                            filters[filter_x], 16, filters[filter_y], 16,
-                            Width(), Height()));
+              UUT_->avg_(in, kInputStride, out, kOutputStride,
+                          kInvalidFilter, 0, kInvalidFilter, 0,
+                          Width(), Height()));
 
         CheckGuardBlocks();
 
@@ -863,16 +900,14 @@ TEST_P(ConvolveTest, FilterExtremes) {
 
       for (int filter_bank = 0; filter_bank < kNumFilterBanks; ++filter_bank) {
         const InterpKernel *filters =
-            vp9_get_interp_kernel(static_cast<INTERP_FILTER>(filter_bank));
-        const InterpKernel *const eighttap_smooth =
-            vp9_get_interp_kernel(EIGHTTAP_SMOOTH);
+            vp9_filter_kernels[static_cast<INTERP_FILTER>(filter_bank)];
         for (int filter_x = 0; filter_x < kNumFilters; ++filter_x) {
           for (int filter_y = 0; filter_y < kNumFilters; ++filter_y) {
             wrapper_filter_block2d_8_c(in, kInputStride,
                                        filters[filter_x], filters[filter_y],
                                        ref, kOutputStride,
                                        Width(), Height());
-            if (filters == eighttap_smooth || (filter_x && filter_y))
+            if (filter_x && filter_y)
               ASM_REGISTER_STATE_CHECK(
                   UUT_->hv8_(in, kInputStride, out, kOutputStride,
                              filters[filter_x], 16, filters[filter_y], 16,
@@ -882,11 +917,16 @@ TEST_P(ConvolveTest, FilterExtremes) {
                   UUT_->v8_(in, kInputStride, out, kOutputStride,
                             kInvalidFilter, 16, filters[filter_y], 16,
                             Width(), Height()));
-            else
+            else if (filter_x)
               ASM_REGISTER_STATE_CHECK(
                   UUT_->h8_(in, kInputStride, out, kOutputStride,
                             filters[filter_x], 16, kInvalidFilter, 16,
                             Width(), Height()));
+            else
+              ASM_REGISTER_STATE_CHECK(
+                  UUT_->copy_(in, kInputStride, out, kOutputStride,
+                              kInvalidFilter, 0, kInvalidFilter, 0,
+                              Width(), Height()));
 
             for (int y = 0; y < Height(); ++y)
               for (int x = 0; x < Width(); ++x)
@@ -902,132 +942,22 @@ TEST_P(ConvolveTest, FilterExtremes) {
   }
 }
 
-DECLARE_ALIGNED(256, const int16_t, kChangeFilters[16][8]) = {
-    { 0,   0,   0,   0,   0,   0,   0, 128},
-    { 0,   0,   0,   0,   0,   0, 128},
-    { 0,   0,   0,   0,   0, 128},
-    { 0,   0,   0,   0, 128},
-    { 0,   0,   0, 128},
-    { 0,   0, 128},
-    { 0, 128},
-    { 128},
-    { 0,   0,   0,   0,   0,   0,   0, 128},
-    { 0,   0,   0,   0,   0,   0, 128},
-    { 0,   0,   0,   0,   0, 128},
-    { 0,   0,   0,   0, 128},
-    { 0,   0,   0, 128},
-    { 0,   0, 128},
-    { 0, 128},
-    { 128}
-};
-
-/* This test exercises the horizontal and vertical filter functions. */
-TEST_P(ConvolveTest, ChangeFilterWorks) {
-  uint8_t* const in = input();
-  uint8_t* const out = output();
-
-  /* Assume that the first input sample is at the 8/16th position. */
-  const int kInitialSubPelOffset = 8;
-
-  /* Filters are 8-tap, so the first filter tap will be applied to the pixel
-   * at position -3 with respect to the current filtering position. Since
-   * kInitialSubPelOffset is set to 8, we first select sub-pixel filter 8,
-   * which is non-zero only in the last tap. So, applying the filter at the
-   * current input position will result in an output equal to the pixel at
-   * offset +4 (-3 + 7) with respect to the current filtering position.
-   */
-  const int kPixelSelected = 4;
-
-  /* Assume that each output pixel requires us to step on by 17/16th pixels in
-   * the input.
-   */
-  const int kInputPixelStep = 17;
-
-  /* The filters are setup in such a way that the expected output produces
-   * sets of 8 identical output samples. As the filter position moves to the
-   * next 1/16th pixel position the only active (=128) filter tap moves one
-   * position to the left, resulting in the same input pixel being replicated
-   * in to the output for 8 consecutive samples. After each set of 8 positions
-   * the filters select a different input pixel. kFilterPeriodAdjust below
-   * computes which input pixel is written to the output for a specified
-   * x or y position.
-   */
-
-  /* Test the horizontal filter. */
-  ASM_REGISTER_STATE_CHECK(
-      UUT_->h8_(in, kInputStride, out, kOutputStride,
-                kChangeFilters[kInitialSubPelOffset],
-                kInputPixelStep, NULL, 0, Width(), Height()));
-
-  for (int x = 0; x < Width(); ++x) {
-    const int kFilterPeriodAdjust = (x >> 3) << 3;
-    const int ref_x =
-        kPixelSelected + ((kInitialSubPelOffset
-            + kFilterPeriodAdjust * kInputPixelStep)
-                          >> SUBPEL_BITS);
-    ASSERT_EQ(lookup(in, ref_x), lookup(out, x))
-        << "x == " << x << "width = " << Width();
-  }
-
-  /* Test the vertical filter. */
-  ASM_REGISTER_STATE_CHECK(
-      UUT_->v8_(in, kInputStride, out, kOutputStride,
-                NULL, 0, kChangeFilters[kInitialSubPelOffset],
-                kInputPixelStep, Width(), Height()));
-
-  for (int y = 0; y < Height(); ++y) {
-    const int kFilterPeriodAdjust = (y >> 3) << 3;
-    const int ref_y =
-        kPixelSelected + ((kInitialSubPelOffset
-            + kFilterPeriodAdjust * kInputPixelStep)
-                          >> SUBPEL_BITS);
-    ASSERT_EQ(lookup(in, ref_y * kInputStride), lookup(out, y * kInputStride))
-        << "y == " << y;
-  }
-
-  /* Test the horizontal and vertical filters in combination. */
-  ASM_REGISTER_STATE_CHECK(
-      UUT_->hv8_(in, kInputStride, out, kOutputStride,
-                 kChangeFilters[kInitialSubPelOffset], kInputPixelStep,
-                 kChangeFilters[kInitialSubPelOffset], kInputPixelStep,
-                 Width(), Height()));
-
-  for (int y = 0; y < Height(); ++y) {
-    const int kFilterPeriodAdjustY = (y >> 3) << 3;
-    const int ref_y =
-        kPixelSelected + ((kInitialSubPelOffset
-            + kFilterPeriodAdjustY * kInputPixelStep)
-                          >> SUBPEL_BITS);
-    for (int x = 0; x < Width(); ++x) {
-      const int kFilterPeriodAdjustX = (x >> 3) << 3;
-      const int ref_x =
-          kPixelSelected + ((kInitialSubPelOffset
-              + kFilterPeriodAdjustX * kInputPixelStep)
-                            >> SUBPEL_BITS);
-
-      ASSERT_EQ(lookup(in, ref_y * kInputStride + ref_x),
-                lookup(out, y * kOutputStride + x))
-          << "x == " << x << ", y == " << y;
-    }
-  }
-}
-
 /* This test exercises that enough rows and columns are filtered with every
    possible initial fractional positions and scaling steps. */
 TEST_P(ConvolveTest, CheckScalingFiltering) {
   uint8_t* const in = input();
   uint8_t* const out = output();
-  const InterpKernel *const eighttap = vp9_get_interp_kernel(EIGHTTAP);
+  const InterpKernel *const eighttap = vp9_filter_kernels[EIGHTTAP];
 
   SetConstantInput(127);
 
   for (int frac = 0; frac < 16; ++frac) {
     for (int step = 1; step <= 32; ++step) {
       /* Test the horizontal and vertical filters in combination. */
-      ASM_REGISTER_STATE_CHECK(UUT_->hv8_(in, kInputStride, out, kOutputStride,
-                                          eighttap[frac], step,
-                                          eighttap[frac], step,
-                                          Width(), Height()));
+      ASM_REGISTER_STATE_CHECK(UUT_->shv8_(in, kInputStride, out, kOutputStride,
+                                           eighttap[frac], step,
+                                           eighttap[frac], step,
+                                           Width(), Height()));
 
       CheckGuardBlocks();
 
@@ -1046,795 +976,263 @@ TEST_P(ConvolveTest, CheckScalingFiltering) {
 using std::tr1::make_tuple;
 
 #if CONFIG_VP9_HIGHBITDEPTH
+#define WRAP(func, bd) \
+void wrap_ ## func ## _ ## bd(const uint8_t *src, ptrdiff_t src_stride, \
+                              uint8_t *dst, ptrdiff_t dst_stride, \
+                              const int16_t *filter_x, \
+                              int filter_x_stride, \
+                              const int16_t *filter_y, \
+                              int filter_y_stride, \
+                              int w, int h) { \
+  vpx_highbd_ ## func(src, src_stride, dst, dst_stride, filter_x, \
+                      filter_x_stride, filter_y, filter_y_stride, \
+                      w, h, bd); \
+}
 #if HAVE_SSE2 && ARCH_X86_64
-void wrap_convolve8_horiz_sse2_8(const uint8_t *src, ptrdiff_t src_stride,
-                                 uint8_t *dst, ptrdiff_t dst_stride,
-                                 const int16_t *filter_x,
-                                 int filter_x_stride,
-                                 const int16_t *filter_y,
-                                 int filter_y_stride,
-                                 int w, int h) {
-  vp9_highbd_convolve8_horiz_sse2(src, src_stride, dst, dst_stride, filter_x,
-                                  filter_x_stride, filter_y, filter_y_stride,
-                                  w, h, 8);
-}
-
-void wrap_convolve8_avg_horiz_sse2_8(const uint8_t *src, ptrdiff_t src_stride,
-                                     uint8_t *dst, ptrdiff_t dst_stride,
-                                     const int16_t *filter_x,
-                                     int filter_x_stride,
-                                     const int16_t *filter_y,
-                                     int filter_y_stride,
-                                     int w, int h) {
-  vp9_highbd_convolve8_avg_horiz_sse2(src, src_stride, dst, dst_stride,
-                                      filter_x, filter_x_stride,
-                                      filter_y, filter_y_stride, w, h, 8);
-}
-
-void wrap_convolve8_vert_sse2_8(const uint8_t *src, ptrdiff_t src_stride,
-                                uint8_t *dst, ptrdiff_t dst_stride,
-                                const int16_t *filter_x,
-                                int filter_x_stride,
-                                const int16_t *filter_y,
-                                int filter_y_stride,
-                                int w, int h) {
-  vp9_highbd_convolve8_vert_sse2(src, src_stride, dst, dst_stride,
-                                 filter_x, filter_x_stride,
-                                 filter_y, filter_y_stride, w, h, 8);
-}
-
-void wrap_convolve8_avg_vert_sse2_8(const uint8_t *src, ptrdiff_t src_stride,
-                                    uint8_t *dst, ptrdiff_t dst_stride,
-                                    const int16_t *filter_x,
-                                    int filter_x_stride,
-                                    const int16_t *filter_y,
-                                    int filter_y_stride,
-                                    int w, int h) {
-  vp9_highbd_convolve8_avg_vert_sse2(src, src_stride, dst, dst_stride,
-                                     filter_x, filter_x_stride,
-                                     filter_y, filter_y_stride, w, h, 8);
-}
-
-void wrap_convolve8_sse2_8(const uint8_t *src, ptrdiff_t src_stride,
-                           uint8_t *dst, ptrdiff_t dst_stride,
-                           const int16_t *filter_x,
-                           int filter_x_stride,
-                           const int16_t *filter_y,
-                           int filter_y_stride,
-                           int w, int h) {
-  vp9_highbd_convolve8_sse2(src, src_stride, dst, dst_stride,
-                            filter_x, filter_x_stride,
-                            filter_y, filter_y_stride, w, h, 8);
-}
-
-void wrap_convolve8_avg_sse2_8(const uint8_t *src, ptrdiff_t src_stride,
-                               uint8_t *dst, ptrdiff_t dst_stride,
-                               const int16_t *filter_x,
-                               int filter_x_stride,
-                               const int16_t *filter_y,
-                               int filter_y_stride,
-                               int w, int h) {
-  vp9_highbd_convolve8_avg_sse2(src, src_stride, dst, dst_stride,
-                                filter_x, filter_x_stride,
-                                filter_y, filter_y_stride, w, h, 8);
-}
-
-void wrap_convolve8_horiz_sse2_10(const uint8_t *src, ptrdiff_t src_stride,
-                                  uint8_t *dst, ptrdiff_t dst_stride,
-                                  const int16_t *filter_x,
-                                  int filter_x_stride,
-                                  const int16_t *filter_y,
-                                  int filter_y_stride,
-                                  int w, int h) {
-  vp9_highbd_convolve8_horiz_sse2(src, src_stride, dst, dst_stride,
-                                  filter_x, filter_x_stride,
-                                  filter_y, filter_y_stride, w, h, 10);
-}
-
-void wrap_convolve8_avg_horiz_sse2_10(const uint8_t *src, ptrdiff_t src_stride,
-                                      uint8_t *dst, ptrdiff_t dst_stride,
-                                      const int16_t *filter_x,
-                                      int filter_x_stride,
-                                      const int16_t *filter_y,
-                                      int filter_y_stride,
-                                      int w, int h) {
-  vp9_highbd_convolve8_avg_horiz_sse2(src, src_stride, dst, dst_stride,
-                                      filter_x, filter_x_stride,
-                                      filter_y, filter_y_stride, w, h, 10);
-}
-
-void wrap_convolve8_vert_sse2_10(const uint8_t *src, ptrdiff_t src_stride,
-                                 uint8_t *dst, ptrdiff_t dst_stride,
-                                 const int16_t *filter_x,
-                                 int filter_x_stride,
-                                 const int16_t *filter_y,
-                                 int filter_y_stride,
-                                 int w, int h) {
-  vp9_highbd_convolve8_vert_sse2(src, src_stride, dst, dst_stride,
-                                 filter_x, filter_x_stride,
-                                 filter_y, filter_y_stride, w, h, 10);
-}
-
-void wrap_convolve8_avg_vert_sse2_10(const uint8_t *src, ptrdiff_t src_stride,
-                                     uint8_t *dst, ptrdiff_t dst_stride,
-                                     const int16_t *filter_x,
-                                     int filter_x_stride,
-                                     const int16_t *filter_y,
-                                     int filter_y_stride,
-                                     int w, int h) {
-  vp9_highbd_convolve8_avg_vert_sse2(src, src_stride, dst, dst_stride,
-                                     filter_x, filter_x_stride,
-                                     filter_y, filter_y_stride, w, h, 10);
-}
-
-void wrap_convolve8_sse2_10(const uint8_t *src, ptrdiff_t src_stride,
-                            uint8_t *dst, ptrdiff_t dst_stride,
-                            const int16_t *filter_x,
-                            int filter_x_stride,
-                            const int16_t *filter_y,
-                            int filter_y_stride,
-                            int w, int h) {
-  vp9_highbd_convolve8_sse2(src, src_stride, dst, dst_stride,
-                            filter_x, filter_x_stride,
-                            filter_y, filter_y_stride, w, h, 10);
-}
-
-void wrap_convolve8_avg_sse2_10(const uint8_t *src, ptrdiff_t src_stride,
-                                uint8_t *dst, ptrdiff_t dst_stride,
-                                const int16_t *filter_x,
-                                int filter_x_stride,
-                                const int16_t *filter_y,
-                                int filter_y_stride,
-                                int w, int h) {
-  vp9_highbd_convolve8_avg_sse2(src, src_stride, dst, dst_stride,
-                                filter_x, filter_x_stride,
-                                filter_y, filter_y_stride, w, h, 10);
-}
-
-void wrap_convolve8_horiz_sse2_12(const uint8_t *src, ptrdiff_t src_stride,
-                                  uint8_t *dst, ptrdiff_t dst_stride,
-                                  const int16_t *filter_x,
-                                  int filter_x_stride,
-                                  const int16_t *filter_y,
-                                  int filter_y_stride,
-                                  int w, int h) {
-  vp9_highbd_convolve8_horiz_sse2(src, src_stride, dst, dst_stride,
-                                  filter_x, filter_x_stride,
-                                  filter_y, filter_y_stride, w, h, 12);
-}
-
-void wrap_convolve8_avg_horiz_sse2_12(const uint8_t *src, ptrdiff_t src_stride,
-                                      uint8_t *dst, ptrdiff_t dst_stride,
-                                      const int16_t *filter_x,
-                                      int filter_x_stride,
-                                      const int16_t *filter_y,
-                                      int filter_y_stride,
-                                      int w, int h) {
-  vp9_highbd_convolve8_avg_horiz_sse2(src, src_stride, dst, dst_stride,
-                                      filter_x, filter_x_stride,
-                                      filter_y, filter_y_stride, w, h, 12);
-}
-
-void wrap_convolve8_vert_sse2_12(const uint8_t *src, ptrdiff_t src_stride,
-                                 uint8_t *dst, ptrdiff_t dst_stride,
-                                 const int16_t *filter_x,
-                                 int filter_x_stride,
-                                 const int16_t *filter_y,
-                                 int filter_y_stride,
-                                 int w, int h) {
-  vp9_highbd_convolve8_vert_sse2(src, src_stride, dst, dst_stride,
-                                 filter_x, filter_x_stride,
-                                 filter_y, filter_y_stride, w, h, 12);
-}
-
-void wrap_convolve8_avg_vert_sse2_12(const uint8_t *src, ptrdiff_t src_stride,
-                                     uint8_t *dst, ptrdiff_t dst_stride,
-                                     const int16_t *filter_x,
-                                     int filter_x_stride,
-                                     const int16_t *filter_y,
-                                     int filter_y_stride,
-                                     int w, int h) {
-  vp9_highbd_convolve8_avg_vert_sse2(src, src_stride, dst, dst_stride,
-                                     filter_x, filter_x_stride,
-                                     filter_y, filter_y_stride, w, h, 12);
-}
-
-void wrap_convolve8_sse2_12(const uint8_t *src, ptrdiff_t src_stride,
-                            uint8_t *dst, ptrdiff_t dst_stride,
-                            const int16_t *filter_x,
-                            int filter_x_stride,
-                            const int16_t *filter_y,
-                            int filter_y_stride,
-                            int w, int h) {
-  vp9_highbd_convolve8_sse2(src, src_stride, dst, dst_stride,
-                            filter_x, filter_x_stride,
-                            filter_y, filter_y_stride, w, h, 12);
-}
-
-void wrap_convolve8_avg_sse2_12(const uint8_t *src, ptrdiff_t src_stride,
-                                uint8_t *dst, ptrdiff_t dst_stride,
-                                const int16_t *filter_x,
-                                int filter_x_stride,
-                                const int16_t *filter_y,
-                                int filter_y_stride,
-                                int w, int h) {
-  vp9_highbd_convolve8_avg_sse2(src, src_stride, dst, dst_stride,
-                                filter_x, filter_x_stride,
-                                filter_y, filter_y_stride, w, h, 12);
-}
+#if CONFIG_USE_X86INC
+WRAP(convolve_copy_sse2, 8)
+WRAP(convolve_avg_sse2, 8)
+WRAP(convolve_copy_sse2, 10)
+WRAP(convolve_avg_sse2, 10)
+WRAP(convolve_copy_sse2, 12)
+WRAP(convolve_avg_sse2, 12)
+#endif  // CONFIG_USE_X86INC
+WRAP(convolve8_horiz_sse2, 8)
+WRAP(convolve8_avg_horiz_sse2, 8)
+WRAP(convolve8_vert_sse2, 8)
+WRAP(convolve8_avg_vert_sse2, 8)
+WRAP(convolve8_sse2, 8)
+WRAP(convolve8_avg_sse2, 8)
+WRAP(convolve8_horiz_sse2, 10)
+WRAP(convolve8_avg_horiz_sse2, 10)
+WRAP(convolve8_vert_sse2, 10)
+WRAP(convolve8_avg_vert_sse2, 10)
+WRAP(convolve8_sse2, 10)
+WRAP(convolve8_avg_sse2, 10)
+WRAP(convolve8_horiz_sse2, 12)
+WRAP(convolve8_avg_horiz_sse2, 12)
+WRAP(convolve8_vert_sse2, 12)
+WRAP(convolve8_avg_vert_sse2, 12)
+WRAP(convolve8_sse2, 12)
+WRAP(convolve8_avg_sse2, 12)
 #endif  // HAVE_SSE2 && ARCH_X86_64
 
-void wrap_convolve_copy_c_8(const uint8_t *src, ptrdiff_t src_stride,
-                            uint8_t *dst, ptrdiff_t dst_stride,
-                            const int16_t *filter_x,
-                            int filter_x_stride,
-                            const int16_t *filter_y,
-                            int filter_y_stride,
-                            int w, int h) {
-  vp9_highbd_convolve_copy_c(src, src_stride, dst, dst_stride,
-                             filter_x, filter_x_stride,
-                             filter_y, filter_y_stride, w, h, 8);
-}
-
-void wrap_convolve_avg_c_8(const uint8_t *src, ptrdiff_t src_stride,
-                           uint8_t *dst, ptrdiff_t dst_stride,
-                           const int16_t *filter_x,
-                           int filter_x_stride,
-                           const int16_t *filter_y,
-                           int filter_y_stride,
-                           int w, int h) {
-  vp9_highbd_convolve_avg_c(src, src_stride, dst, dst_stride,
-                            filter_x, filter_x_stride,
-                            filter_y, filter_y_stride, w, h, 8);
-}
-
-void wrap_convolve8_horiz_c_8(const uint8_t *src, ptrdiff_t src_stride,
-                              uint8_t *dst, ptrdiff_t dst_stride,
-                              const int16_t *filter_x,
-                              int filter_x_stride,
-                              const int16_t *filter_y,
-                              int filter_y_stride,
-                              int w, int h) {
-  vp9_highbd_convolve8_horiz_c(src, src_stride, dst, dst_stride,
-                               filter_x, filter_x_stride,
-                               filter_y, filter_y_stride, w, h, 8);
-}
-
-void wrap_convolve8_avg_horiz_c_8(const uint8_t *src, ptrdiff_t src_stride,
-                                  uint8_t *dst, ptrdiff_t dst_stride,
-                                  const int16_t *filter_x,
-                                  int filter_x_stride,
-                                  const int16_t *filter_y,
-                                  int filter_y_stride,
-                                  int w, int h) {
-  vp9_highbd_convolve8_avg_horiz_c(src, src_stride, dst, dst_stride,
-                                   filter_x, filter_x_stride,
-                                   filter_y, filter_y_stride, w, h, 8);
-}
-
-void wrap_convolve8_vert_c_8(const uint8_t *src, ptrdiff_t src_stride,
-                             uint8_t *dst, ptrdiff_t dst_stride,
-                             const int16_t *filter_x,
-                             int filter_x_stride,
-                             const int16_t *filter_y,
-                             int filter_y_stride,
-                             int w, int h) {
-  vp9_highbd_convolve8_vert_c(src, src_stride, dst, dst_stride,
-                              filter_x, filter_x_stride,
-                              filter_y, filter_y_stride, w, h, 8);
-}
-
-void wrap_convolve8_avg_vert_c_8(const uint8_t *src, ptrdiff_t src_stride,
-                                 uint8_t *dst, ptrdiff_t dst_stride,
-                                 const int16_t *filter_x,
-                                 int filter_x_stride,
-                                 const int16_t *filter_y,
-                                 int filter_y_stride,
-                                 int w, int h) {
-  vp9_highbd_convolve8_avg_vert_c(src, src_stride, dst, dst_stride,
-                                  filter_x, filter_x_stride,
-                                  filter_y, filter_y_stride, w, h, 8);
-}
-
-void wrap_convolve8_c_8(const uint8_t *src, ptrdiff_t src_stride,
-                        uint8_t *dst, ptrdiff_t dst_stride,
-                        const int16_t *filter_x,
-                        int filter_x_stride,
-                        const int16_t *filter_y,
-                        int filter_y_stride,
-                        int w, int h) {
-  vp9_highbd_convolve8_c(src, src_stride, dst, dst_stride,
-                         filter_x, filter_x_stride,
-                         filter_y, filter_y_stride, w, h, 8);
-}
-
-void wrap_convolve8_avg_c_8(const uint8_t *src, ptrdiff_t src_stride,
-                            uint8_t *dst, ptrdiff_t dst_stride,
-                            const int16_t *filter_x,
-                            int filter_x_stride,
-                            const int16_t *filter_y,
-                            int filter_y_stride,
-                            int w, int h) {
-  vp9_highbd_convolve8_avg_c(src, src_stride, dst, dst_stride,
-                             filter_x, filter_x_stride,
-                             filter_y, filter_y_stride, w, h, 8);
-}
-
-void wrap_convolve_copy_c_10(const uint8_t *src, ptrdiff_t src_stride,
-                             uint8_t *dst, ptrdiff_t dst_stride,
-                             const int16_t *filter_x,
-                             int filter_x_stride,
-                             const int16_t *filter_y,
-                             int filter_y_stride,
-                             int w, int h) {
-  vp9_highbd_convolve_copy_c(src, src_stride, dst, dst_stride,
-                             filter_x, filter_x_stride,
-                             filter_y, filter_y_stride, w, h, 10);
-}
-
-void wrap_convolve_avg_c_10(const uint8_t *src, ptrdiff_t src_stride,
-                            uint8_t *dst, ptrdiff_t dst_stride,
-                            const int16_t *filter_x,
-                            int filter_x_stride,
-                            const int16_t *filter_y,
-                            int filter_y_stride,
-                            int w, int h) {
-  vp9_highbd_convolve_avg_c(src, src_stride, dst, dst_stride,
-                            filter_x, filter_x_stride,
-                            filter_y, filter_y_stride, w, h, 10);
-}
-
-void wrap_convolve8_horiz_c_10(const uint8_t *src, ptrdiff_t src_stride,
-                               uint8_t *dst, ptrdiff_t dst_stride,
-                               const int16_t *filter_x,
-                               int filter_x_stride,
-                               const int16_t *filter_y,
-                               int filter_y_stride,
-                               int w, int h) {
-  vp9_highbd_convolve8_horiz_c(src, src_stride, dst, dst_stride,
-                               filter_x, filter_x_stride,
-                               filter_y, filter_y_stride, w, h, 10);
-}
-
-void wrap_convolve8_avg_horiz_c_10(const uint8_t *src, ptrdiff_t src_stride,
-                                   uint8_t *dst, ptrdiff_t dst_stride,
-                                   const int16_t *filter_x,
-                                   int filter_x_stride,
-                                   const int16_t *filter_y,
-                                   int filter_y_stride,
-                                   int w, int h) {
-  vp9_highbd_convolve8_avg_horiz_c(src, src_stride, dst, dst_stride,
-                                   filter_x, filter_x_stride,
-                                   filter_y, filter_y_stride, w, h, 10);
-}
-
-void wrap_convolve8_vert_c_10(const uint8_t *src, ptrdiff_t src_stride,
-                              uint8_t *dst, ptrdiff_t dst_stride,
-                              const int16_t *filter_x,
-                              int filter_x_stride,
-                              const int16_t *filter_y,
-                              int filter_y_stride,
-                              int w, int h) {
-  vp9_highbd_convolve8_vert_c(src, src_stride, dst, dst_stride,
-                              filter_x, filter_x_stride,
-                              filter_y, filter_y_stride, w, h, 10);
-}
-
-void wrap_convolve8_avg_vert_c_10(const uint8_t *src, ptrdiff_t src_stride,
-                                  uint8_t *dst, ptrdiff_t dst_stride,
-                                  const int16_t *filter_x,
-                                  int filter_x_stride,
-                                  const int16_t *filter_y,
-                                  int filter_y_stride,
-                                  int w, int h) {
-  vp9_highbd_convolve8_avg_vert_c(src, src_stride, dst, dst_stride,
-                                  filter_x, filter_x_stride,
-                                  filter_y, filter_y_stride, w, h, 10);
-}
-
-void wrap_convolve8_c_10(const uint8_t *src, ptrdiff_t src_stride,
-                         uint8_t *dst, ptrdiff_t dst_stride,
-                         const int16_t *filter_x,
-                         int filter_x_stride,
-                         const int16_t *filter_y,
-                         int filter_y_stride,
-                         int w, int h) {
-  vp9_highbd_convolve8_c(src, src_stride, dst, dst_stride,
-                         filter_x, filter_x_stride,
-                         filter_y, filter_y_stride, w, h, 10);
-}
-
-void wrap_convolve8_avg_c_10(const uint8_t *src, ptrdiff_t src_stride,
-                             uint8_t *dst, ptrdiff_t dst_stride,
-                             const int16_t *filter_x,
-                             int filter_x_stride,
-                             const int16_t *filter_y,
-                             int filter_y_stride,
-                             int w, int h) {
-  vp9_highbd_convolve8_avg_c(src, src_stride, dst, dst_stride,
-                             filter_x, filter_x_stride,
-                             filter_y, filter_y_stride, w, h, 10);
-}
-
-void wrap_convolve_copy_c_12(const uint8_t *src, ptrdiff_t src_stride,
-                             uint8_t *dst, ptrdiff_t dst_stride,
-                             const int16_t *filter_x,
-                             int filter_x_stride,
-                             const int16_t *filter_y,
-                             int filter_y_stride,
-                             int w, int h) {
-  vp9_highbd_convolve_copy_c(src, src_stride, dst, dst_stride,
-                             filter_x, filter_x_stride,
-                             filter_y, filter_y_stride, w, h, 12);
-}
-
-void wrap_convolve_avg_c_12(const uint8_t *src, ptrdiff_t src_stride,
-                            uint8_t *dst, ptrdiff_t dst_stride,
-                            const int16_t *filter_x,
-                            int filter_x_stride,
-                            const int16_t *filter_y,
-                            int filter_y_stride,
-                            int w, int h) {
-  vp9_highbd_convolve_avg_c(src, src_stride, dst, dst_stride,
-                            filter_x, filter_x_stride,
-                            filter_y, filter_y_stride, w, h, 12);
-}
-
-void wrap_convolve8_horiz_c_12(const uint8_t *src, ptrdiff_t src_stride,
-                               uint8_t *dst, ptrdiff_t dst_stride,
-                               const int16_t *filter_x,
-                               int filter_x_stride,
-                               const int16_t *filter_y,
-                               int filter_y_stride,
-                               int w, int h) {
-  vp9_highbd_convolve8_horiz_c(src, src_stride, dst, dst_stride,
-                               filter_x, filter_x_stride,
-                               filter_y, filter_y_stride, w, h, 12);
-}
-
-void wrap_convolve8_avg_horiz_c_12(const uint8_t *src, ptrdiff_t src_stride,
-                                   uint8_t *dst, ptrdiff_t dst_stride,
-                                   const int16_t *filter_x,
-                                   int filter_x_stride,
-                                   const int16_t *filter_y,
-                                   int filter_y_stride,
-                                   int w, int h) {
-  vp9_highbd_convolve8_avg_horiz_c(src, src_stride, dst, dst_stride,
-                                   filter_x, filter_x_stride,
-                                   filter_y, filter_y_stride, w, h, 12);
-}
-
-void wrap_convolve8_vert_c_12(const uint8_t *src, ptrdiff_t src_stride,
-                              uint8_t *dst, ptrdiff_t dst_stride,
-                              const int16_t *filter_x,
-                              int filter_x_stride,
-                              const int16_t *filter_y,
-                              int filter_y_stride,
-                              int w, int h) {
-  vp9_highbd_convolve8_vert_c(src, src_stride, dst, dst_stride,
-                              filter_x, filter_x_stride,
-                              filter_y, filter_y_stride, w, h, 12);
-}
-
-void wrap_convolve8_avg_vert_c_12(const uint8_t *src, ptrdiff_t src_stride,
-                                  uint8_t *dst, ptrdiff_t dst_stride,
-                                  const int16_t *filter_x,
-                                  int filter_x_stride,
-                                  const int16_t *filter_y,
-                                  int filter_y_stride,
-                                  int w, int h) {
-  vp9_highbd_convolve8_avg_vert_c(src, src_stride, dst, dst_stride,
-                                  filter_x, filter_x_stride,
-                                  filter_y, filter_y_stride, w, h, 12);
-}
-
-void wrap_convolve8_c_12(const uint8_t *src, ptrdiff_t src_stride,
-                         uint8_t *dst, ptrdiff_t dst_stride,
-                         const int16_t *filter_x,
-                         int filter_x_stride,
-                         const int16_t *filter_y,
-                         int filter_y_stride,
-                         int w, int h) {
-  vp9_highbd_convolve8_c(src, src_stride, dst, dst_stride,
-                         filter_x, filter_x_stride,
-                         filter_y, filter_y_stride, w, h, 12);
-}
-
-void wrap_convolve8_avg_c_12(const uint8_t *src, ptrdiff_t src_stride,
-                             uint8_t *dst, ptrdiff_t dst_stride,
-                             const int16_t *filter_x,
-                             int filter_x_stride,
-                             const int16_t *filter_y,
-                             int filter_y_stride,
-                             int w, int h) {
-  vp9_highbd_convolve8_avg_c(src, src_stride, dst, dst_stride,
-                             filter_x, filter_x_stride,
-                             filter_y, filter_y_stride, w, h, 12);
-}
+WRAP(convolve_copy_c, 8)
+WRAP(convolve_avg_c, 8)
+WRAP(convolve8_horiz_c, 8)
+WRAP(convolve8_avg_horiz_c, 8)
+WRAP(convolve8_vert_c, 8)
+WRAP(convolve8_avg_vert_c, 8)
+WRAP(convolve8_c, 8)
+WRAP(convolve8_avg_c, 8)
+WRAP(convolve_copy_c, 10)
+WRAP(convolve_avg_c, 10)
+WRAP(convolve8_horiz_c, 10)
+WRAP(convolve8_avg_horiz_c, 10)
+WRAP(convolve8_vert_c, 10)
+WRAP(convolve8_avg_vert_c, 10)
+WRAP(convolve8_c, 10)
+WRAP(convolve8_avg_c, 10)
+WRAP(convolve_copy_c, 12)
+WRAP(convolve_avg_c, 12)
+WRAP(convolve8_horiz_c, 12)
+WRAP(convolve8_avg_horiz_c, 12)
+WRAP(convolve8_vert_c, 12)
+WRAP(convolve8_avg_vert_c, 12)
+WRAP(convolve8_c, 12)
+WRAP(convolve8_avg_c, 12)
+#undef WRAP
 
 const ConvolveFunctions convolve8_c(
     wrap_convolve_copy_c_8, wrap_convolve_avg_c_8,
     wrap_convolve8_horiz_c_8, wrap_convolve8_avg_horiz_c_8,
     wrap_convolve8_vert_c_8, wrap_convolve8_avg_vert_c_8,
+    wrap_convolve8_c_8, wrap_convolve8_avg_c_8,
+    wrap_convolve8_horiz_c_8, wrap_convolve8_avg_horiz_c_8,
+    wrap_convolve8_vert_c_8, wrap_convolve8_avg_vert_c_8,
     wrap_convolve8_c_8, wrap_convolve8_avg_c_8, 8);
-INSTANTIATE_TEST_CASE_P(C_8, ConvolveTest, ::testing::Values(
-    make_tuple(4, 4, &convolve8_c),
-    make_tuple(8, 4, &convolve8_c),
-    make_tuple(4, 8, &convolve8_c),
-    make_tuple(8, 8, &convolve8_c),
-    make_tuple(16, 8, &convolve8_c),
-    make_tuple(8, 16, &convolve8_c),
-    make_tuple(16, 16, &convolve8_c),
-    make_tuple(32, 16, &convolve8_c),
-    make_tuple(16, 32, &convolve8_c),
-    make_tuple(32, 32, &convolve8_c),
-    make_tuple(64, 32, &convolve8_c),
-    make_tuple(32, 64, &convolve8_c),
-    make_tuple(64, 64, &convolve8_c)));
 const ConvolveFunctions convolve10_c(
     wrap_convolve_copy_c_10, wrap_convolve_avg_c_10,
     wrap_convolve8_horiz_c_10, wrap_convolve8_avg_horiz_c_10,
     wrap_convolve8_vert_c_10, wrap_convolve8_avg_vert_c_10,
+    wrap_convolve8_c_10, wrap_convolve8_avg_c_10,
+    wrap_convolve8_horiz_c_10, wrap_convolve8_avg_horiz_c_10,
+    wrap_convolve8_vert_c_10, wrap_convolve8_avg_vert_c_10,
     wrap_convolve8_c_10, wrap_convolve8_avg_c_10, 10);
-INSTANTIATE_TEST_CASE_P(C_10, ConvolveTest, ::testing::Values(
-    make_tuple(4, 4, &convolve10_c),
-    make_tuple(8, 4, &convolve10_c),
-    make_tuple(4, 8, &convolve10_c),
-    make_tuple(8, 8, &convolve10_c),
-    make_tuple(16, 8, &convolve10_c),
-    make_tuple(8, 16, &convolve10_c),
-    make_tuple(16, 16, &convolve10_c),
-    make_tuple(32, 16, &convolve10_c),
-    make_tuple(16, 32, &convolve10_c),
-    make_tuple(32, 32, &convolve10_c),
-    make_tuple(64, 32, &convolve10_c),
-    make_tuple(32, 64, &convolve10_c),
-    make_tuple(64, 64, &convolve10_c)));
 const ConvolveFunctions convolve12_c(
     wrap_convolve_copy_c_12, wrap_convolve_avg_c_12,
     wrap_convolve8_horiz_c_12, wrap_convolve8_avg_horiz_c_12,
     wrap_convolve8_vert_c_12, wrap_convolve8_avg_vert_c_12,
+    wrap_convolve8_c_12, wrap_convolve8_avg_c_12,
+    wrap_convolve8_horiz_c_12, wrap_convolve8_avg_horiz_c_12,
+    wrap_convolve8_vert_c_12, wrap_convolve8_avg_vert_c_12,
     wrap_convolve8_c_12, wrap_convolve8_avg_c_12, 12);
-INSTANTIATE_TEST_CASE_P(C_12, ConvolveTest, ::testing::Values(
-    make_tuple(4, 4, &convolve12_c),
-    make_tuple(8, 4, &convolve12_c),
-    make_tuple(4, 8, &convolve12_c),
-    make_tuple(8, 8, &convolve12_c),
-    make_tuple(16, 8, &convolve12_c),
-    make_tuple(8, 16, &convolve12_c),
-    make_tuple(16, 16, &convolve12_c),
-    make_tuple(32, 16, &convolve12_c),
-    make_tuple(16, 32, &convolve12_c),
-    make_tuple(32, 32, &convolve12_c),
-    make_tuple(64, 32, &convolve12_c),
-    make_tuple(32, 64, &convolve12_c),
-    make_tuple(64, 64, &convolve12_c)));
+const ConvolveParam kArrayConvolve_c[] = {
+    ALL_SIZES(convolve8_c),
+    ALL_SIZES(convolve10_c),
+    ALL_SIZES(convolve12_c)
+};
 
 #else
-
 const ConvolveFunctions convolve8_c(
-    vp9_convolve_copy_c, vp9_convolve_avg_c,
-    vp9_convolve8_horiz_c, vp9_convolve8_avg_horiz_c,
-    vp9_convolve8_vert_c, vp9_convolve8_avg_vert_c,
-    vp9_convolve8_c, vp9_convolve8_avg_c, 0);
-
-INSTANTIATE_TEST_CASE_P(C, ConvolveTest, ::testing::Values(
-    make_tuple(4, 4, &convolve8_c),
-    make_tuple(8, 4, &convolve8_c),
-    make_tuple(4, 8, &convolve8_c),
-    make_tuple(8, 8, &convolve8_c),
-    make_tuple(16, 8, &convolve8_c),
-    make_tuple(8, 16, &convolve8_c),
-    make_tuple(16, 16, &convolve8_c),
-    make_tuple(32, 16, &convolve8_c),
-    make_tuple(16, 32, &convolve8_c),
-    make_tuple(32, 32, &convolve8_c),
-    make_tuple(64, 32, &convolve8_c),
-    make_tuple(32, 64, &convolve8_c),
-    make_tuple(64, 64, &convolve8_c)));
+    vpx_convolve_copy_c, vpx_convolve_avg_c,
+    vpx_convolve8_horiz_c, vpx_convolve8_avg_horiz_c,
+    vpx_convolve8_vert_c, vpx_convolve8_avg_vert_c,
+    vpx_convolve8_c, vpx_convolve8_avg_c,
+    vpx_scaled_horiz_c, vpx_scaled_avg_horiz_c,
+    vpx_scaled_vert_c, vpx_scaled_avg_vert_c,
+    vpx_scaled_2d_c, vpx_scaled_avg_2d_c, 0);
+const ConvolveParam kArrayConvolve_c[] = { ALL_SIZES(convolve8_c) };
 #endif
+INSTANTIATE_TEST_CASE_P(C, ConvolveTest,
+                        ::testing::ValuesIn(kArrayConvolve_c));
 
 #if HAVE_SSE2 && ARCH_X86_64
 #if CONFIG_VP9_HIGHBITDEPTH
 const ConvolveFunctions convolve8_sse2(
+#if CONFIG_USE_X86INC
+    wrap_convolve_copy_sse2_8, wrap_convolve_avg_sse2_8,
+#else
     wrap_convolve_copy_c_8, wrap_convolve_avg_c_8,
+#endif  // CONFIG_USE_X86INC
+    wrap_convolve8_horiz_sse2_8, wrap_convolve8_avg_horiz_sse2_8,
+    wrap_convolve8_vert_sse2_8, wrap_convolve8_avg_vert_sse2_8,
+    wrap_convolve8_sse2_8, wrap_convolve8_avg_sse2_8,
     wrap_convolve8_horiz_sse2_8, wrap_convolve8_avg_horiz_sse2_8,
     wrap_convolve8_vert_sse2_8, wrap_convolve8_avg_vert_sse2_8,
     wrap_convolve8_sse2_8, wrap_convolve8_avg_sse2_8, 8);
 const ConvolveFunctions convolve10_sse2(
+#if CONFIG_USE_X86INC
+    wrap_convolve_copy_sse2_10, wrap_convolve_avg_sse2_10,
+#else
     wrap_convolve_copy_c_10, wrap_convolve_avg_c_10,
+#endif  // CONFIG_USE_X86INC
+    wrap_convolve8_horiz_sse2_10, wrap_convolve8_avg_horiz_sse2_10,
+    wrap_convolve8_vert_sse2_10, wrap_convolve8_avg_vert_sse2_10,
+    wrap_convolve8_sse2_10, wrap_convolve8_avg_sse2_10,
     wrap_convolve8_horiz_sse2_10, wrap_convolve8_avg_horiz_sse2_10,
     wrap_convolve8_vert_sse2_10, wrap_convolve8_avg_vert_sse2_10,
     wrap_convolve8_sse2_10, wrap_convolve8_avg_sse2_10, 10);
 const ConvolveFunctions convolve12_sse2(
+#if CONFIG_USE_X86INC
+    wrap_convolve_copy_sse2_12, wrap_convolve_avg_sse2_12,
+#else
     wrap_convolve_copy_c_12, wrap_convolve_avg_c_12,
+#endif  // CONFIG_USE_X86INC
+    wrap_convolve8_horiz_sse2_12, wrap_convolve8_avg_horiz_sse2_12,
+    wrap_convolve8_vert_sse2_12, wrap_convolve8_avg_vert_sse2_12,
+    wrap_convolve8_sse2_12, wrap_convolve8_avg_sse2_12,
     wrap_convolve8_horiz_sse2_12, wrap_convolve8_avg_horiz_sse2_12,
     wrap_convolve8_vert_sse2_12, wrap_convolve8_avg_vert_sse2_12,
     wrap_convolve8_sse2_12, wrap_convolve8_avg_sse2_12, 12);
-INSTANTIATE_TEST_CASE_P(SSE2, ConvolveTest, ::testing::Values(
-    make_tuple(4, 4, &convolve8_sse2),
-    make_tuple(8, 4, &convolve8_sse2),
-    make_tuple(4, 8, &convolve8_sse2),
-    make_tuple(8, 8, &convolve8_sse2),
-    make_tuple(16, 8, &convolve8_sse2),
-    make_tuple(8, 16, &convolve8_sse2),
-    make_tuple(16, 16, &convolve8_sse2),
-    make_tuple(32, 16, &convolve8_sse2),
-    make_tuple(16, 32, &convolve8_sse2),
-    make_tuple(32, 32, &convolve8_sse2),
-    make_tuple(64, 32, &convolve8_sse2),
-    make_tuple(32, 64, &convolve8_sse2),
-    make_tuple(64, 64, &convolve8_sse2),
-    make_tuple(4, 4, &convolve10_sse2),
-    make_tuple(8, 4, &convolve10_sse2),
-    make_tuple(4, 8, &convolve10_sse2),
-    make_tuple(8, 8, &convolve10_sse2),
-    make_tuple(16, 8, &convolve10_sse2),
-    make_tuple(8, 16, &convolve10_sse2),
-    make_tuple(16, 16, &convolve10_sse2),
-    make_tuple(32, 16, &convolve10_sse2),
-    make_tuple(16, 32, &convolve10_sse2),
-    make_tuple(32, 32, &convolve10_sse2),
-    make_tuple(64, 32, &convolve10_sse2),
-    make_tuple(32, 64, &convolve10_sse2),
-    make_tuple(64, 64, &convolve10_sse2),
-    make_tuple(4, 4, &convolve12_sse2),
-    make_tuple(8, 4, &convolve12_sse2),
-    make_tuple(4, 8, &convolve12_sse2),
-    make_tuple(8, 8, &convolve12_sse2),
-    make_tuple(16, 8, &convolve12_sse2),
-    make_tuple(8, 16, &convolve12_sse2),
-    make_tuple(16, 16, &convolve12_sse2),
-    make_tuple(32, 16, &convolve12_sse2),
-    make_tuple(16, 32, &convolve12_sse2),
-    make_tuple(32, 32, &convolve12_sse2),
-    make_tuple(64, 32, &convolve12_sse2),
-    make_tuple(32, 64, &convolve12_sse2),
-    make_tuple(64, 64, &convolve12_sse2)));
+const ConvolveParam kArrayConvolve_sse2[] = {
+    ALL_SIZES(convolve8_sse2),
+    ALL_SIZES(convolve10_sse2),
+    ALL_SIZES(convolve12_sse2)
+};
 #else
 const ConvolveFunctions convolve8_sse2(
-    vp9_convolve_copy_sse2, vp9_convolve_avg_sse2,
-    vp9_convolve8_horiz_sse2, vp9_convolve8_avg_horiz_sse2,
-    vp9_convolve8_vert_sse2, vp9_convolve8_avg_vert_sse2,
-    vp9_convolve8_sse2, vp9_convolve8_avg_sse2, 0);
+#if CONFIG_USE_X86INC
+    vpx_convolve_copy_sse2, vpx_convolve_avg_sse2,
+#else
+    vpx_convolve_copy_c, vpx_convolve_avg_c,
+#endif  // CONFIG_USE_X86INC
+    vpx_convolve8_horiz_sse2, vpx_convolve8_avg_horiz_sse2,
+    vpx_convolve8_vert_sse2, vpx_convolve8_avg_vert_sse2,
+    vpx_convolve8_sse2, vpx_convolve8_avg_sse2,
+    vpx_scaled_horiz_c, vpx_scaled_avg_horiz_c,
+    vpx_scaled_vert_c, vpx_scaled_avg_vert_c,
+    vpx_scaled_2d_c, vpx_scaled_avg_2d_c, 0);
 
-INSTANTIATE_TEST_CASE_P(SSE2, ConvolveTest, ::testing::Values(
-    make_tuple(4, 4, &convolve8_sse2),
-    make_tuple(8, 4, &convolve8_sse2),
-    make_tuple(4, 8, &convolve8_sse2),
-    make_tuple(8, 8, &convolve8_sse2),
-    make_tuple(16, 8, &convolve8_sse2),
-    make_tuple(8, 16, &convolve8_sse2),
-    make_tuple(16, 16, &convolve8_sse2),
-    make_tuple(32, 16, &convolve8_sse2),
-    make_tuple(16, 32, &convolve8_sse2),
-    make_tuple(32, 32, &convolve8_sse2),
-    make_tuple(64, 32, &convolve8_sse2),
-    make_tuple(32, 64, &convolve8_sse2),
-    make_tuple(64, 64, &convolve8_sse2)));
+const ConvolveParam kArrayConvolve_sse2[] = { ALL_SIZES(convolve8_sse2) };
 #endif  // CONFIG_VP9_HIGHBITDEPTH
+INSTANTIATE_TEST_CASE_P(SSE2, ConvolveTest,
+                        ::testing::ValuesIn(kArrayConvolve_sse2));
 #endif
 
 #if HAVE_SSSE3
 const ConvolveFunctions convolve8_ssse3(
-    vp9_convolve_copy_c, vp9_convolve_avg_c,
-    vp9_convolve8_horiz_ssse3, vp9_convolve8_avg_horiz_ssse3,
-    vp9_convolve8_vert_ssse3, vp9_convolve8_avg_vert_ssse3,
-    vp9_convolve8_ssse3, vp9_convolve8_avg_ssse3, 0);
+    vpx_convolve_copy_c, vpx_convolve_avg_c,
+    vpx_convolve8_horiz_ssse3, vpx_convolve8_avg_horiz_ssse3,
+    vpx_convolve8_vert_ssse3, vpx_convolve8_avg_vert_ssse3,
+    vpx_convolve8_ssse3, vpx_convolve8_avg_ssse3,
+    vpx_scaled_horiz_c, vpx_scaled_avg_horiz_c,
+    vpx_scaled_vert_c, vpx_scaled_avg_vert_c,
+    vpx_scaled_2d_ssse3, vpx_scaled_avg_2d_c, 0);
 
-INSTANTIATE_TEST_CASE_P(SSSE3, ConvolveTest, ::testing::Values(
-    make_tuple(4, 4, &convolve8_ssse3),
-    make_tuple(8, 4, &convolve8_ssse3),
-    make_tuple(4, 8, &convolve8_ssse3),
-    make_tuple(8, 8, &convolve8_ssse3),
-    make_tuple(16, 8, &convolve8_ssse3),
-    make_tuple(8, 16, &convolve8_ssse3),
-    make_tuple(16, 16, &convolve8_ssse3),
-    make_tuple(32, 16, &convolve8_ssse3),
-    make_tuple(16, 32, &convolve8_ssse3),
-    make_tuple(32, 32, &convolve8_ssse3),
-    make_tuple(64, 32, &convolve8_ssse3),
-    make_tuple(32, 64, &convolve8_ssse3),
-    make_tuple(64, 64, &convolve8_ssse3)));
+const ConvolveParam kArrayConvolve8_ssse3[] = { ALL_SIZES(convolve8_ssse3) };
+INSTANTIATE_TEST_CASE_P(SSSE3, ConvolveTest,
+                        ::testing::ValuesIn(kArrayConvolve8_ssse3));
 #endif
 
 #if HAVE_AVX2 && HAVE_SSSE3
 const ConvolveFunctions convolve8_avx2(
-    vp9_convolve_copy_c, vp9_convolve_avg_c,
-    vp9_convolve8_horiz_avx2, vp9_convolve8_avg_horiz_ssse3,
-    vp9_convolve8_vert_avx2, vp9_convolve8_avg_vert_ssse3,
-    vp9_convolve8_avx2, vp9_convolve8_avg_ssse3, 0);
+    vpx_convolve_copy_c, vpx_convolve_avg_c,
+    vpx_convolve8_horiz_avx2, vpx_convolve8_avg_horiz_ssse3,
+    vpx_convolve8_vert_avx2, vpx_convolve8_avg_vert_ssse3,
+    vpx_convolve8_avx2, vpx_convolve8_avg_ssse3,
+    vpx_scaled_horiz_c, vpx_scaled_avg_horiz_c,
+    vpx_scaled_vert_c, vpx_scaled_avg_vert_c,
+    vpx_scaled_2d_c, vpx_scaled_avg_2d_c, 0);
 
-INSTANTIATE_TEST_CASE_P(AVX2, ConvolveTest, ::testing::Values(
-    make_tuple(4, 4, &convolve8_avx2),
-    make_tuple(8, 4, &convolve8_avx2),
-    make_tuple(4, 8, &convolve8_avx2),
-    make_tuple(8, 8, &convolve8_avx2),
-    make_tuple(8, 16, &convolve8_avx2),
-    make_tuple(16, 8, &convolve8_avx2),
-    make_tuple(16, 16, &convolve8_avx2),
-    make_tuple(32, 16, &convolve8_avx2),
-    make_tuple(16, 32, &convolve8_avx2),
-    make_tuple(32, 32, &convolve8_avx2),
-    make_tuple(64, 32, &convolve8_avx2),
-    make_tuple(32, 64, &convolve8_avx2),
-    make_tuple(64, 64, &convolve8_avx2)));
+const ConvolveParam kArrayConvolve8_avx2[] = { ALL_SIZES(convolve8_avx2) };
+INSTANTIATE_TEST_CASE_P(AVX2, ConvolveTest,
+                        ::testing::ValuesIn(kArrayConvolve8_avx2));
 #endif  // HAVE_AVX2 && HAVE_SSSE3
 
 #if HAVE_NEON
 #if HAVE_NEON_ASM
 const ConvolveFunctions convolve8_neon(
-    vp9_convolve_copy_neon, vp9_convolve_avg_neon,
-    vp9_convolve8_horiz_neon, vp9_convolve8_avg_horiz_neon,
-    vp9_convolve8_vert_neon, vp9_convolve8_avg_vert_neon,
-    vp9_convolve8_neon, vp9_convolve8_avg_neon, 0);
+    vpx_convolve_copy_neon, vpx_convolve_avg_neon,
+    vpx_convolve8_horiz_neon, vpx_convolve8_avg_horiz_neon,
+    vpx_convolve8_vert_neon, vpx_convolve8_avg_vert_neon,
+    vpx_convolve8_neon, vpx_convolve8_avg_neon,
+    vpx_scaled_horiz_c, vpx_scaled_avg_horiz_c,
+    vpx_scaled_vert_c, vpx_scaled_avg_vert_c,
+    vpx_scaled_2d_c, vpx_scaled_avg_2d_c, 0);
 #else  // HAVE_NEON
 const ConvolveFunctions convolve8_neon(
-    vp9_convolve_copy_neon, vp9_convolve_avg_neon,
-    vp9_convolve8_horiz_neon, vp9_convolve8_avg_horiz_neon,
-    vp9_convolve8_vert_neon, vp9_convolve8_avg_vert_neon,
-    vp9_convolve8_neon, vp9_convolve8_avg_neon, 0);
+    vpx_convolve_copy_neon, vpx_convolve_avg_neon,
+    vpx_convolve8_horiz_neon, vpx_convolve8_avg_horiz_neon,
+    vpx_convolve8_vert_neon, vpx_convolve8_avg_vert_neon,
+    vpx_convolve8_neon, vpx_convolve8_avg_neon,
+    vpx_scaled_horiz_c, vpx_scaled_avg_horiz_c,
+    vpx_scaled_vert_c, vpx_scaled_avg_vert_c,
+    vpx_scaled_2d_c, vpx_scaled_avg_2d_c, 0);
 #endif  // HAVE_NEON_ASM
 
-INSTANTIATE_TEST_CASE_P(NEON, ConvolveTest, ::testing::Values(
-    make_tuple(4, 4, &convolve8_neon),
-    make_tuple(8, 4, &convolve8_neon),
-    make_tuple(4, 8, &convolve8_neon),
-    make_tuple(8, 8, &convolve8_neon),
-    make_tuple(16, 8, &convolve8_neon),
-    make_tuple(8, 16, &convolve8_neon),
-    make_tuple(16, 16, &convolve8_neon),
-    make_tuple(32, 16, &convolve8_neon),
-    make_tuple(16, 32, &convolve8_neon),
-    make_tuple(32, 32, &convolve8_neon),
-    make_tuple(64, 32, &convolve8_neon),
-    make_tuple(32, 64, &convolve8_neon),
-    make_tuple(64, 64, &convolve8_neon)));
+const ConvolveParam kArrayConvolve8_neon[] = { ALL_SIZES(convolve8_neon) };
+INSTANTIATE_TEST_CASE_P(NEON, ConvolveTest,
+                        ::testing::ValuesIn(kArrayConvolve8_neon));
 #endif  // HAVE_NEON
 
 #if HAVE_DSPR2
 const ConvolveFunctions convolve8_dspr2(
-    vp9_convolve_copy_dspr2, vp9_convolve_avg_dspr2,
-    vp9_convolve8_horiz_dspr2, vp9_convolve8_avg_horiz_dspr2,
-    vp9_convolve8_vert_dspr2, vp9_convolve8_avg_vert_dspr2,
-    vp9_convolve8_dspr2, vp9_convolve8_avg_dspr2, 0);
+    vpx_convolve_copy_dspr2, vpx_convolve_avg_dspr2,
+    vpx_convolve8_horiz_dspr2, vpx_convolve8_avg_horiz_dspr2,
+    vpx_convolve8_vert_dspr2, vpx_convolve8_avg_vert_dspr2,
+    vpx_convolve8_dspr2, vpx_convolve8_avg_dspr2,
+    vpx_scaled_horiz_c, vpx_scaled_avg_horiz_c,
+    vpx_scaled_vert_c, vpx_scaled_avg_vert_c,
+    vpx_scaled_2d_c, vpx_scaled_avg_2d_c, 0);
 
-INSTANTIATE_TEST_CASE_P(DSPR2, ConvolveTest, ::testing::Values(
-    make_tuple(4, 4, &convolve8_dspr2),
-    make_tuple(8, 4, &convolve8_dspr2),
-    make_tuple(4, 8, &convolve8_dspr2),
-    make_tuple(8, 8, &convolve8_dspr2),
-    make_tuple(16, 8, &convolve8_dspr2),
-    make_tuple(8, 16, &convolve8_dspr2),
-    make_tuple(16, 16, &convolve8_dspr2),
-    make_tuple(32, 16, &convolve8_dspr2),
-    make_tuple(16, 32, &convolve8_dspr2),
-    make_tuple(32, 32, &convolve8_dspr2),
-    make_tuple(64, 32, &convolve8_dspr2),
-    make_tuple(32, 64, &convolve8_dspr2),
-    make_tuple(64, 64, &convolve8_dspr2)));
-#endif
+const ConvolveParam kArrayConvolve8_dspr2[] = { ALL_SIZES(convolve8_dspr2) };
+INSTANTIATE_TEST_CASE_P(DSPR2, ConvolveTest,
+                        ::testing::ValuesIn(kArrayConvolve8_dspr2));
+#endif  // HAVE_DSPR2
 
 #if HAVE_MSA
 const ConvolveFunctions convolve8_msa(
-    vp9_convolve_copy_msa, vp9_convolve_avg_msa,
-    vp9_convolve8_horiz_msa, vp9_convolve8_avg_horiz_msa,
-    vp9_convolve8_vert_msa, vp9_convolve8_avg_vert_msa,
-    vp9_convolve8_msa, vp9_convolve8_avg_msa, 0);
+    vpx_convolve_copy_msa, vpx_convolve_avg_msa,
+    vpx_convolve8_horiz_msa, vpx_convolve8_avg_horiz_msa,
+    vpx_convolve8_vert_msa, vpx_convolve8_avg_vert_msa,
+    vpx_convolve8_msa, vpx_convolve8_avg_msa,
+    vpx_scaled_horiz_c, vpx_scaled_avg_horiz_c,
+    vpx_scaled_vert_c, vpx_scaled_avg_vert_c,
+    vpx_scaled_2d_c, vpx_scaled_avg_2d_c, 0);
 
-INSTANTIATE_TEST_CASE_P(MSA, ConvolveTest, ::testing::Values(
-    make_tuple(4, 4, &convolve8_msa),
-    make_tuple(8, 4, &convolve8_msa),
-    make_tuple(4, 8, &convolve8_msa),
-    make_tuple(8, 8, &convolve8_msa),
-    make_tuple(16, 8, &convolve8_msa),
-    make_tuple(8, 16, &convolve8_msa),
-    make_tuple(16, 16, &convolve8_msa),
-    make_tuple(32, 16, &convolve8_msa),
-    make_tuple(16, 32, &convolve8_msa),
-    make_tuple(32, 32, &convolve8_msa),
-    make_tuple(64, 32, &convolve8_msa),
-    make_tuple(32, 64, &convolve8_msa),
-    make_tuple(64, 64, &convolve8_msa)));
+const ConvolveParam kArrayConvolve8_msa[] = { ALL_SIZES(convolve8_msa) };
+INSTANTIATE_TEST_CASE_P(MSA, ConvolveTest,
+                        ::testing::ValuesIn(kArrayConvolve8_msa));
 #endif  // HAVE_MSA
 }  // namespace

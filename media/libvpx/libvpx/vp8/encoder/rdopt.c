@@ -24,12 +24,13 @@
 #include "pickinter.h"
 #include "vp8/common/entropymode.h"
 #include "vp8/common/reconinter.h"
+#include "vp8/common/reconintra.h"
 #include "vp8/common/reconintra4x4.h"
 #include "vp8/common/findnearmv.h"
 #include "vp8/common/quant_common.h"
 #include "encodemb.h"
-#include "quantize.h"
-#include "vp8/common/variance.h"
+#include "vp8/encoder/quantize.h"
+#include "vpx_dsp/variance.h"
 #include "mcomp.h"
 #include "rdopt.h"
 #include "vpx_mem/vpx_mem.h"
@@ -500,9 +501,9 @@ int VP8_UVSSE(MACROBLOCK *x)
 
     if ((mv_row | mv_col) & 7)
     {
-        vp8_sub_pixel_variance8x8(uptr, pre_stride,
+        vpx_sub_pixel_variance8x8(uptr, pre_stride,
             mv_col & 7, mv_row & 7, upred_ptr, uv_stride, &sse2);
-        vp8_sub_pixel_variance8x8(vptr, pre_stride,
+        vpx_sub_pixel_variance8x8(vptr, pre_stride,
             mv_col & 7, mv_row & 7, vpred_ptr, uv_stride, &sse1);
         sse2 += sse1;
     }
@@ -1898,7 +1899,8 @@ static int calculate_final_rd_costs(int this_rd,
                     int prob_skip_cost;
 
                     prob_skip_cost = vp8_cost_bit(cpi->prob_skip_false, 1);
-                    prob_skip_cost -= vp8_cost_bit(cpi->prob_skip_false, 0);
+                    prob_skip_cost -=
+                        (int)vp8_cost_bit(cpi->prob_skip_false, 0);
                     rd->rate2 += prob_skip_cost;
                     *other_cost += prob_skip_cost;
                 }
@@ -2529,7 +2531,7 @@ void vp8_rd_pick_inter_mode(VP8_COMP *cpi, MACROBLOCK *x, int recon_yoffset,
         vp8_denoiser_denoise_mb(&cpi->denoiser, x, best_sse, zero_mv_sse,
                                 recon_yoffset, recon_uvoffset,
                                 &cpi->common.lf_info, mb_row, mb_col,
-                                block_index);
+                                block_index, 0);
 
         /* Reevaluate ZEROMV after denoising. */
         if (best_mode.mbmode.ref_frame == INTRA_FRAME &&
