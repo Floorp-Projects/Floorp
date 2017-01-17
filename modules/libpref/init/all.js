@@ -4568,7 +4568,7 @@ pref("layers.acceleration.disabled", false);
 // and output the result to stderr.
 pref("layers.bench.enabled", false);
 
-#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
+#if defined(XP_WIN)
 pref("layers.gpu-process.enabled", true);
 pref("media.gpu-process-decoder", true);
 #endif
