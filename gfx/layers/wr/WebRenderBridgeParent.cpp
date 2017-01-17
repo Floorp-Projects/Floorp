@@ -179,9 +179,9 @@ mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvAddImage(const uint32_t& aWidth,
                                     const uint32_t& aHeight,
                                     const uint32_t& aStride,
-                                    const WRImageFormat& aFormat,
+                                    const WrImageFormat& aFormat,
                                     const ByteBuffer& aBuffer,
-                                    WRImageKey* aOutImageKey)
+                                    WrImageKey* aOutImageKey)
 {
   if (mDestroyed) {
     return IPC_OK();
@@ -193,10 +193,10 @@ WebRenderBridgeParent::RecvAddImage(const uint32_t& aWidth,
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvUpdateImage(const WRImageKey& aImageKey,
+WebRenderBridgeParent::RecvUpdateImage(const WrImageKey& aImageKey,
                                        const uint32_t& aWidth,
                                        const uint32_t& aHeight,
-                                       const WRImageFormat& aFormat,
+                                       const WrImageFormat& aFormat,
                                        const ByteBuffer& aBuffer)
 {
   if (mDestroyed) {
@@ -209,7 +209,7 @@ WebRenderBridgeParent::RecvUpdateImage(const WRImageKey& aImageKey,
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDeleteImage(const WRImageKey& aImageKey)
+WebRenderBridgeParent::RecvDeleteImage(const WrImageKey& aImageKey)
 {
   if (mDestroyed) {
     return IPC_OK();
@@ -286,7 +286,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
   MOZ_ASSERT(mBuilder.isSome());
   wr::DisplayListBuilder& builder = mBuilder.ref();
   // XXX remove it when external image key is used.
-  std::vector<WRImageKey> keysToDelete;
+  std::vector<WrImageKey> keysToDelete;
 
   for (InfallibleTArray<WebRenderCommand>::index_type i = 0; i < aCommands.Length(); ++i) {
     const WebRenderCommand& cmd = aCommands[i];
@@ -359,7 +359,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         if (!dSurf->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
           break;
         }
-        WRImageKey key = wr_add_image(mWRWindowState, validRect.width, validRect.height, map.mStride, RGBA8, map.mData, validRect.height * map.mStride);
+        WrImageKey key = wr_add_image(mWRWindowState, validRect.width, validRect.height, map.mStride, RGBA8, map.mData, validRect.height * map.mStride);
         builder.PushImage(op.bounds(), op.clip(), op.mask().ptrOr(nullptr), op.filter(), key);
         keysToDelete.push_back(key);
         dSurf->Unmap();
@@ -380,7 +380,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
       }
       case WebRenderCommand::TOpDPPushText: {
         const OpDPPushText& op = cmd.get_OpDPPushText();
-        const nsTArray<WRGlyphArray>& glyph_array = op.glyph_array();
+        const nsTArray<WrGlyphArray>& glyph_array = op.glyph_array();
 
         for (size_t i = 0; i < glyph_array.Length(); i++) {
           const nsTArray<WRGlyphInstance>& glyphs = glyph_array[i].glyphs;
@@ -605,7 +605,7 @@ WebRenderBridgeParent::~WebRenderBridgeParent()
 void
 WebRenderBridgeParent::DeleteOldImages()
 {
-  for (WRImageKey key : mKeysToDelete) {
+  for (WrImageKey key : mKeysToDelete) {
     wr_delete_image(mWRWindowState, key);
   }
   mKeysToDelete.clear();

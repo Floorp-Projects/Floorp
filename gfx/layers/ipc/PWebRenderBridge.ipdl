@@ -16,7 +16,7 @@ include protocol PCompositorBridge;
 include protocol PTexture;
 
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
-using WRImageFormat from "mozilla/webrender/webrender_ffi.h";
+using WrImageFormat from "mozilla/webrender/webrender_ffi.h";
 using mozilla::wr::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
 
 namespace mozilla {
@@ -32,11 +32,11 @@ parent:
 
   sync Create(uint32_t aWidth, uint32_t aHeight);
   sync AddImage(uint32_t aWidth, uint32_t aHeight, uint32_t aStride,
-                WRImageFormat aFormat, ByteBuffer aBytes)
-    returns (WRImageKey aOutImageKey);
-  sync UpdateImage(WRImageKey aImageKey, uint32_t aWidth, uint32_t aHeight,
-                   WRImageFormat aFormat, ByteBuffer aBytes);
-  sync DeleteImage(WRImageKey aImageKey);
+                WrImageFormat aFormat, ByteBuffer aBytes)
+    returns (WrImageKey aOutImageKey);
+  sync UpdateImage(WrImageKey aImageKey, uint32_t aWidth, uint32_t aHeight,
+                   WrImageFormat aFormat, ByteBuffer aBytes);
+  sync DeleteImage(WrImageKey aImageKey);
   sync DPBegin(uint32_t aWidth, uint32_t aHeight)
     returns (bool aOutSuccess);
   async DPEnd(WebRenderCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId);

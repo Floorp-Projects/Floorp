@@ -10,12 +10,12 @@ include LayersMessages;
 include protocol PCompositable;
 include protocol PTexture;
 
-using WRBorderSide from "mozilla/webrender/webrender_ffi.h";
-using WRImageKey from "mozilla/webrender/webrender_ffi.h";
-using WRTextureFilter from "mozilla/webrender/webrender_ffi.h";
+using WrBorderSide from "mozilla/webrender/webrender_ffi.h";
+using WrImageKey from "mozilla/webrender/webrender_ffi.h";
+using WrTextureFilter from "mozilla/webrender/webrender_ffi.h";
 using WrLayoutSize from "mozilla/webrender/webrender_ffi.h";
 using WrRect from "mozilla/webrender/webrender_ffi.h";
-using WRGlyphArray from "mozilla/webrender/webrender_ffi.h";
+using WrGlyphArray from "mozilla/webrender/webrender_ffi.h";
 using MaybeImageMask from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
 using mozilla::wr::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
@@ -46,10 +46,10 @@ struct OpDPPushRect {
 struct OpDPPushBorder {
   WrRect bounds;
   WrRect clip;
-  WRBorderSide top;
-  WRBorderSide right;
-  WRBorderSide bottom;
-  WRBorderSide left;
+  WrBorderSide top;
+  WrBorderSide right;
+  WrBorderSide bottom;
+  WrBorderSide left;
   WrLayoutSize top_left_radius;
   WrLayoutSize top_right_radius;
   WrLayoutSize bottom_left_radius;
@@ -60,8 +60,8 @@ struct OpDPPushImage {
   WrRect bounds;
   WrRect clip;
   MaybeImageMask mask;
-  WRTextureFilter filter;
-  WRImageKey key;
+  WrTextureFilter filter;
+  WrImageKey key;
 };
 
 struct OpDPPushExternalImageId {
@@ -69,7 +69,7 @@ struct OpDPPushExternalImageId {
   WrRect bounds;
   WrRect clip;
   MaybeImageMask mask;
-  WRTextureFilter filter;
+  WrTextureFilter filter;
   uint64_t externalImageId;
 };
 
@@ -82,7 +82,7 @@ struct OpDPPushIframe {
 struct OpDPPushText {
   WrRect bounds;
   WrRect clip;
-  WRGlyphArray[] glyph_array;
+  WrGlyphArray[] glyph_array;
   uint32_t font_index;
   float glyph_size;
   ByteBuffer font_buffer;

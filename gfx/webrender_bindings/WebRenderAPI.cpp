@@ -13,24 +13,24 @@
 namespace mozilla {
 namespace wr {
 
-inline Maybe<WRImageFormat>
-SurfaceFormatToWRImageFormat(gfx::SurfaceFormat aFormat) {
+inline Maybe<WrImageFormat>
+SurfaceFormatToWrImageFormat(gfx::SurfaceFormat aFormat) {
   // TODO: fix the formats (RGB/BGR permutations, etc.)
   switch (aFormat) {
     case gfx::SurfaceFormat::R8G8B8A8:
     case gfx::SurfaceFormat::B8G8R8A8:
     case gfx::SurfaceFormat::A8R8G8B8:
-      return Some(WRImageFormat::RGBA8);
+      return Some(WrImageFormat::RGBA8);
     case gfx::SurfaceFormat::B8G8R8X8:
     case gfx::SurfaceFormat::R8G8B8X8:
     case gfx::SurfaceFormat::X8R8G8B8:
     case gfx::SurfaceFormat::R8G8B8:
     case gfx::SurfaceFormat::B8G8R8:
-      return Some(WRImageFormat::RGB8);
+      return Some(WrImageFormat::RGB8);
     case gfx::SurfaceFormat::A8:
-      return Some(WRImageFormat::A8);
+      return Some(WrImageFormat::A8);
     case gfx::SurfaceFormat::UNKNOWN:
-      return Some(WRImageFormat::Invalid);
+      return Some(WrImageFormat::Invalid);
     default:
       return Nothing();
   }
@@ -186,7 +186,7 @@ WebRenderAPI::AddImageBuffer(gfx::IntSize aSize,
                              gfx::SurfaceFormat aFormat,
                              Range<uint8_t> aBytes)
 {
-  auto format = SurfaceFormatToWRImageFormat(aFormat).value();
+  auto format = SurfaceFormatToWrImageFormat(aFormat).value();
   return ImageKey(wr_api_add_image(mWRApi,
                                        aSize.width, aSize.height,
                                        aStride, format,
@@ -198,7 +198,7 @@ WebRenderAPI::AddExternalImageHandle(gfx::IntSize aSize,
                                      gfx::SurfaceFormat aFormat,
                                      uint64_t aHandle)
 {
-  auto format = SurfaceFormatToWRImageFormat(aFormat).value();
+  auto format = SurfaceFormatToWrImageFormat(aFormat).value();
   return ImageKey(wr_api_add_external_image_texture(mWRApi,
                                                          aSize.width, aSize.height, format,
                                                          aHandle));
@@ -210,7 +210,7 @@ WebRenderAPI::UpdateImageBuffer(ImageKey aKey,
                                 gfx::SurfaceFormat aFormat,
                                 Range<uint8_t> aBytes)
 {
-  auto format = SurfaceFormatToWRImageFormat(aFormat).value();
+  auto format = SurfaceFormatToWrImageFormat(aFormat).value();
   wr_api_update_image(mWRApi,
                       aKey.mHandle,
                       aSize.width, aSize.height, format,
@@ -288,7 +288,7 @@ DisplayListBuilder::End(WebRenderAPI& aApi, Epoch aEpoch)
 void
 DisplayListBuilder::PushStackingContext(const WrRect& aBounds,
                                         const WrRect& aOverflow,
-                                        const WRImageMask* aMask,
+                                        const WrImageMask* aMask,
                                         const gfx::Matrix4x4& aTransform)
 {
   wr_dp_push_stacking_context(mWrState, aBounds, aOverflow, aMask,
@@ -313,9 +313,9 @@ DisplayListBuilder::PushRect(const WrRect& aBounds,
 void
 DisplayListBuilder::PushImage(const WrRect& aBounds,
                               const WrRect& aClip,
-                              const WRImageMask* aMask,
-                              const WRTextureFilter aFilter,
-                              WRImageKey aImage)
+                              const WrImageMask* aMask,
+                              const WrTextureFilter aFilter,
+                              WrImageKey aImage)
 {
   wr_dp_push_image(mWrState, aBounds, aClip, aMask, aFilter, aImage);
 }
@@ -331,10 +331,10 @@ DisplayListBuilder::PushIFrame(const WrRect& aBounds,
 void
 DisplayListBuilder::PushBorder(const WrRect& aBounds,
                                const WrRect& aClip,
-                               const WRBorderSide& aTop,
-                               const WRBorderSide& aRight,
-                               const WRBorderSide& aBottom,
-                               const WRBorderSide& aLeft,
+                               const WrBorderSide& aTop,
+                               const WrBorderSide& aRight,
+                               const WrBorderSide& aBottom,
+                               const WrBorderSide& aLeft,
                                const WrLayoutSize& aTopLeftRadius,
                                const WrLayoutSize& aTopRightRadius,
                                const WrLayoutSize& aBottomLeftRadius,

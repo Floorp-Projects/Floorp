@@ -38,10 +38,10 @@ WebRenderBorderLayer::RenderLayer()
 
   WRBridge()->AddWebRenderCommand(
     OpDPPushBorder(wr::ToWrRect(rect), wr::ToWrRect(clip),
-                   wr::ToWRBorderSide(mWidths[0], mColors[0]),
-                   wr::ToWRBorderSide(mWidths[1], mColors[1]),
-                   wr::ToWRBorderSide(mWidths[2], mColors[2]),
-                   wr::ToWRBorderSide(mWidths[3], mColors[3]),
+                   wr::ToWrBorderSide(mWidths[0], mColors[0]),
+                   wr::ToWrBorderSide(mWidths[1], mColors[1]),
+                   wr::ToWrBorderSide(mWidths[2], mColors[2]),
+                   wr::ToWrBorderSide(mWidths[3], mColors[3]),
                    wr::ToWrLayoutSize(mCorners[0]),
                    wr::ToWrLayoutSize(mCorners[1]),
                    wr::ToWrLayoutSize(mCorners[3]),

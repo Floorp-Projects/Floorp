@@ -9,7 +9,7 @@
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/Maybe.h"
 
-typedef mozilla::Maybe<WRImageMask> MaybeImageMask;
+typedef mozilla::Maybe<WrImageMask> MaybeImageMask;
 
 namespace mozilla {
 namespace wr {
@@ -24,12 +24,12 @@ static inline WrColor ToWrColor(const gfx::Color& color)
   return c;
 }
 
-static inline WRBorderSide ToWRBorderSide(const LayerCoord width, const gfx::Color& color)
+static inline WrBorderSide ToWrBorderSide(const LayerCoord width, const gfx::Color& color)
 {
-  WRBorderSide bs;
+  WrBorderSide bs;
   bs.width = width;
   bs.color = ToWrColor(color);
-  bs.style = WRBorderStyle::Solid;
+  bs.style = WrBorderStyle::Solid;
   return bs;
 }
 
@@ -103,44 +103,44 @@ struct ByteBuffer
 };
 
 struct WindowId {
-  explicit WindowId(WRWindowId aHandle) : mHandle(aHandle) {}
+  explicit WindowId(WrWindowId aHandle) : mHandle(aHandle) {}
   bool operator<(const WindowId& aOther) const { return mHandle < aOther.mHandle; }
   bool operator==(const WindowId& aOther) const { return mHandle == aOther.mHandle; }
 
-  WRWindowId mHandle;
+  WrWindowId mHandle;
 };
 
 struct PipelineId {
-  explicit PipelineId(WRPipelineId aHandle) : mHandle(aHandle) {}
+  explicit PipelineId(WrPipelineId aHandle) : mHandle(aHandle) {}
   bool operator<(const PipelineId& aOther) const { return mHandle < aOther.mHandle; }
   bool operator==(const PipelineId& aOther) const { return mHandle == aOther.mHandle; }
 
-  WRPipelineId mHandle;
+  WrPipelineId mHandle;
 };
 
 // TODO: We need to merge this with the notion of transaction id.
 struct Epoch {
-  explicit Epoch(WREpoch aHandle) : mHandle(aHandle) {}
+  explicit Epoch(WrEpoch aHandle) : mHandle(aHandle) {}
   bool operator<(const Epoch& aOther) const { return mHandle < aOther.mHandle; }
   bool operator==(const Epoch& aOther) const { return mHandle == aOther.mHandle; }
 
-  WREpoch mHandle;
+  WrEpoch mHandle;
 };
 
 struct FontKey {
-  explicit FontKey(WRFontKey aHandle) : mHandle(aHandle) {}
+  explicit FontKey(WrFontKey aHandle) : mHandle(aHandle) {}
   bool operator<(const FontKey& aOther) const { return mHandle < aOther.mHandle; }
   bool operator==(const FontKey& aOther) const { return mHandle == aOther.mHandle; }
 
-  WRFontKey mHandle;
+  WrFontKey mHandle;
 };
 
 struct ImageKey {
-  explicit ImageKey(WRImageKey aHandle) : mHandle(aHandle) {}
+  explicit ImageKey(WrImageKey aHandle) : mHandle(aHandle) {}
   bool operator<(const ImageKey& aOther) const { return mHandle < aOther.mHandle; }
   bool operator==(const ImageKey& aOther) const { return mHandle == aOther.mHandle; }
 
-  WRImageKey mHandle;
+  WrImageKey mHandle;
 };
 
 
