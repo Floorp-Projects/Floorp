@@ -84,7 +84,7 @@ protected:
   friend class DisplayListBuilder;
 };
 
-/// This is a simple C++ wrapper around WRState defined in the rust bindings.
+/// This is a simple C++ wrapper around WrState defined in the rust bindings.
 /// We may want to turn this into a direct wrapper on top of WebRenderFrameBuilder
 /// instead, so the interface may change a bit.
 class DisplayListBuilder {
@@ -138,9 +138,9 @@ public:
                 float aGlyphSize);
 
   // Try to avoid using this when possible.
-  WRState* Raw() { return mWRState; }
+  WrState* Raw() { return mWrState; }
 protected:
-  WRState* mWRState;
+  WrState* mWrState;
 
   friend class WebRenderAPI;
 };
