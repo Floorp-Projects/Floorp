@@ -37,6 +37,12 @@ const nodeSpec = generateActorSpec({
         value: RetVal("string")
       }
     },
+    getCssPath: {
+      request: {},
+      response: {
+        value: RetVal("string")
+      }
+    },
     scrollIntoView: {
       request: {},
       response: {}
