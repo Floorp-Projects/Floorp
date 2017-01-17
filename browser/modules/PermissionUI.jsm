@@ -65,6 +65,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SitePermissions",
+  "resource:///modules/SitePermissions.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
@@ -214,17 +216,10 @@ this.PermissionPromptPrototype = {
    *    The label that will be displayed for this choice.
    *  accessKey (string):
    *    The access key character that will be used for this choice.
-   *  action (Ci.nsIPermissionManager action, optional)
-   *    The nsIPermissionManager action that will be associated with
-   *    this choice. For example, Ci.nsIPermissionManager.DENY_ACTION.
+   *  action (SitePermissions state)
+   *    The action that will be associated with this choice.
+   *    This should be either SitePermissions.ALLOW or SitePermissions.BLOCK.
    *
-   *    If omitted, the nsIPermissionManager will not be written to
-   *    when this choice is chosen.
-   *  expireType (Ci.nsIPermissionManager expiration policy, optional)
-   *    The nsIPermissionManager expiration policy that will be associated
-   *    with this choice. For example, Ci.nsIPermissionManager.EXPIRE_SESSION.
-   *
-   *    If action is not set, expireType will be ignored.
    *  callback (function, optional)
    *    A callback function that will fire if the user makes this choice, with
    *    a single parameter, state. State is an Object that contains the property
@@ -271,16 +266,16 @@ this.PermissionPromptPrototype = {
       // If we're reading and setting permissions, then we need
       // to check to see if we already have a permission setting
       // for this particular principal.
-      let result =
-        Services.perms.testExactPermissionFromPrincipal(this.principal,
-                                                        this.permissionKey);
+      let {state} = SitePermissions.get(requestingURI,
+                                        this.permissionKey,
+                                        this.browser);
 
-      if (result == Ci.nsIPermissionManager.DENY_ACTION) {
+      if (state == SitePermissions.BLOCK) {
         this.cancel();
         return;
       }
 
-      if (result == Ci.nsIPermissionManager.ALLOW_ACTION) {
+      if (state == SitePermissions.ALLOW) {
         this.allow();
         return;
       }
@@ -289,14 +284,6 @@ this.PermissionPromptPrototype = {
     // Transform the PermissionPrompt actions into PopupNotification actions.
     let popupNotificationActions = [];
     for (let promptAction of this.promptActions) {
-      // Don't offer action in PB mode if the action remembers permission
-      // for more than a session.
-      if (PrivateBrowsingUtils.isWindowPrivate(chromeWin) &&
-          promptAction.expireType != Ci.nsIPermissionManager.EXPIRE_SESSION &&
-          promptAction.action) {
-        continue;
-      }
-
       let action = {
         label: promptAction.label,
         accessKey: promptAction.accessKey,
@@ -306,17 +293,31 @@ this.PermissionPromptPrototype = {
           }
 
           if (this.permissionKey) {
-            // Remember permissions.
-            if (state && state.checkboxChecked && promptAction.action) {
-              Services.perms.addFromPrincipal(this.principal,
-                                              this.permissionKey,
-                                              promptAction.action,
-                                              promptAction.expireType);
+
+            // Permanently store permission.
+            if (state && state.checkboxChecked) {
+              let scope = SitePermissions.SCOPE_PERSISTENT;
+              // Only remember permission for session if in PB mode.
+              if (PrivateBrowsingUtils.isBrowserPrivate(this.browser)) {
+                scope = SitePermissions.SCOPE_SESSION;
+              }
+              SitePermissions.set(this.principal.URI,
+                                  this.permissionKey,
+                                  promptAction.action,
+                                  scope);
+            } else if (promptAction.action == SitePermissions.BLOCK) {
+              // Temporarily store BLOCK permissions only.
+              // SitePermissions does not consider subframes when storing temporary
+              // permissions on a tab, thus storing ALLOW could be exploited.
+              SitePermissions.set(this.principal.URI,
+                                  this.permissionKey,
+                                  promptAction.action,
+                                  SitePermissions.SCOPE_TEMPORARY,
+                                  this.browser);
             }
 
-            // Grant permission if action is null or ALLOW_ACTION.
-            if (!promptAction.action ||
-                promptAction.action == Ci.nsIPermissionManager.ALLOW_ACTION) {
+            // Grant permission if action is ALLOW.
+            if (promptAction.action == SitePermissions.ALLOW) {
               this.allow();
             } else {
               this.cancel();
@@ -479,8 +480,7 @@ GeolocationPermissionPrompt.prototype = {
       label: gBrowserBundle.GetStringFromName("geolocation.allowLocation"),
       accessKey:
         gBrowserBundle.GetStringFromName("geolocation.allowLocation.accesskey"),
-      action: null,
-      expireType: null,
+      action: SitePermissions.ALLOW,
       callback(state) {
         if (state && state.checkboxChecked) {
           secHistogram.add(ALWAYS_SHARE);
@@ -492,10 +492,7 @@ GeolocationPermissionPrompt.prototype = {
       label: gBrowserBundle.GetStringFromName("geolocation.dontAllowLocation"),
       accessKey:
         gBrowserBundle.GetStringFromName("geolocation.dontAllowLocation.accesskey"),
-      action: Ci.nsIPermissionManager.DENY_ACTION,
-      expireType: PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal) ?
-                  Ci.nsIPermissionManager.EXPIRE_SESSION :
-                  null,
+      action: SitePermissions.BLOCK,
       callback(state) {
         if (state && state.checkboxChecked) {
           secHistogram.add(NEVER_SHARE);
@@ -579,19 +576,13 @@ DesktopNotificationPermissionPrompt.prototype = {
         label: gBrowserBundle.GetStringFromName("webNotifications.allow"),
         accessKey:
           gBrowserBundle.GetStringFromName("webNotifications.allow.accesskey"),
-        action: Ci.nsIPermissionManager.ALLOW_ACTION,
-        expireType: PrivateBrowsingUtils.isBrowserPrivate(this.browser) ?
-                    Ci.nsIPermissionManager.EXPIRE_SESSION :
-                    null,
+        action: SitePermissions.ALLOW,
       },
       {
         label: gBrowserBundle.GetStringFromName("webNotifications.dontAllow"),
         accessKey:
           gBrowserBundle.GetStringFromName("webNotifications.dontAllow.accesskey"),
-        action: Ci.nsIPermissionManager.DENY_ACTION,
-        expireType: PrivateBrowsingUtils.isBrowserPrivate(this.browser) ?
-                    Ci.nsIPermissionManager.EXPIRE_SESSION :
-                    null,
+        action: SitePermissions.BLOCK,
       },
     ];
   },

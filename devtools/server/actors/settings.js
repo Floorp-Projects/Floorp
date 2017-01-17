@@ -38,7 +38,9 @@ function getDefaultSettings() {
 
   try {
     defaultSettings = JSON.parse(rawstr);
-  } catch (e) { }
+  } catch (e) {
+    // ignore
+  }
   stream.close();
 }
 
@@ -115,7 +117,7 @@ var SettingsActor = exports.SettingsActor = protocol.ActorClassWithSpec(settings
     let req = lock.get("*");
 
     req.onsuccess = function () {
-      for (var name in req.result) {
+      for (let name in req.result) {
         settings[name] = {
           value: req.result[name],
           hasUserValue: self._hasUserSetting(name, req.result[name])

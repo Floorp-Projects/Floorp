@@ -5,7 +5,6 @@
 
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { actorBridgeWithSpec } = require("devtools/server/actors/common");
-const { on, once, off, emit } = require("sdk/event/core");
 const { Framerate } = require("devtools/server/performance/framerate");
 const { framerateSpec } = require("devtools/shared/specs/framerate");
 
@@ -15,7 +14,7 @@ const { framerateSpec } = require("devtools/shared/specs/framerate");
  *
  * @see devtools/server/performance/framerate.js for documentation.
  */
-var FramerateActor = exports.FramerateActor = ActorClassWithSpec(framerateSpec, {
+exports.FramerateActor = ActorClassWithSpec(framerateSpec, {
   initialize: function (conn, tabActor) {
     Actor.prototype.initialize.call(this, conn);
     this.bridge = new Framerate(tabActor);

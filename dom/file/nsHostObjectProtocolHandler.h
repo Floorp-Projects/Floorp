@@ -97,12 +97,6 @@ public:
   NS_IMETHOD GetScheme(nsACString &result) override;
 };
 
-class nsMediaSourceProtocolHandler : public nsHostObjectProtocolHandler
-{
-public:
-  NS_IMETHOD GetScheme(nsACString &result) override;
-};
-
 class nsFontTableProtocolHandler : public nsHostObjectProtocolHandler
 {
 public:

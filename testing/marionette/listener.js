@@ -951,6 +951,10 @@ function get(msg) {
   let start = new Date().getTime();
   let {pageTimeout, url, command_id} = msg.json;
 
+  // We need to move to the top frame before navigating
+  sendSyncMessage("Marionette:switchedToFrame", {frameValue: null});
+  curContainer.frame = content;
+
   let docShell = curContainer.frame
       .document
       .defaultView
@@ -1068,12 +1072,6 @@ function get(msg) {
       sendError(new TimeoutError("Error loading page, timed out (onDOMContentLoaded)"), command_id);
     };
     navTimer.initWithCallback(onTimeout, pageTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
-  }
-
-  // in Firefox we need to move to the top frame before navigating
-  if (!isB2G) {
-    sendSyncMessage("Marionette:switchedToFrame", {frameValue: null});
-    curContainer.frame = content;
   }
 
   if (loadEventExpected) {

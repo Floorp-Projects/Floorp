@@ -96,6 +96,7 @@ add_task(function* () {
 
           let store = stores.find(store => store.id === tab.cookieStoreId);
           browser.test.assertTrue(!!store, "We have a store for this tab.");
+          browser.test.assertTrue(store.tabIds.includes(tab.id), "tabIds includes this tab.");
 
           await browser.tabs.remove(tab.id);
 

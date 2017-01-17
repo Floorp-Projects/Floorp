@@ -16,7 +16,7 @@
 #include "vpx/vpx_integer.h"
 
 // Unconstrained Node Tree
-const vp9_tree_index vp9_coef_con_tree[TREE_SIZE(ENTROPY_TOKENS)] = {
+const vpx_tree_index vp9_coef_con_tree[TREE_SIZE(ENTROPY_TOKENS)] = {
   2, 6,                                // 0 = LOW_VAL
   -TWO_TOKEN, 4,                       // 1 = TWO
   -THREE_TOKEN, -FOUR_TOKEN,           // 2 = THREE
@@ -27,30 +27,16 @@ const vp9_tree_index vp9_coef_con_tree[TREE_SIZE(ENTROPY_TOKENS)] = {
   -CATEGORY5_TOKEN, -CATEGORY6_TOKEN   // 7 = CAT_FIVE
 };
 
-const vp9_prob vp9_cat1_prob[] = { 159 };
-const vp9_prob vp9_cat2_prob[] = { 165, 145 };
-const vp9_prob vp9_cat3_prob[] = { 173, 148, 140 };
-const vp9_prob vp9_cat4_prob[] = { 176, 155, 140, 135 };
-const vp9_prob vp9_cat5_prob[] = { 180, 157, 141, 134, 130 };
-const vp9_prob vp9_cat6_prob[] = {
+const vpx_prob vp9_cat1_prob[] = { 159 };
+const vpx_prob vp9_cat2_prob[] = { 165, 145 };
+const vpx_prob vp9_cat3_prob[] = { 173, 148, 140 };
+const vpx_prob vp9_cat4_prob[] = { 176, 155, 140, 135 };
+const vpx_prob vp9_cat5_prob[] = { 180, 157, 141, 134, 130 };
+const vpx_prob vp9_cat6_prob[] = {
     254, 254, 254, 252, 249, 243, 230, 196, 177, 153, 140, 133, 130, 129
 };
 #if CONFIG_VP9_HIGHBITDEPTH
-const vp9_prob vp9_cat1_prob_high10[] = { 159 };
-const vp9_prob vp9_cat2_prob_high10[] = { 165, 145 };
-const vp9_prob vp9_cat3_prob_high10[] = { 173, 148, 140 };
-const vp9_prob vp9_cat4_prob_high10[] = { 176, 155, 140, 135 };
-const vp9_prob vp9_cat5_prob_high10[] = { 180, 157, 141, 134, 130 };
-const vp9_prob vp9_cat6_prob_high10[] = {
-    255, 255, 254, 254, 254, 252, 249, 243,
-    230, 196, 177, 153, 140, 133, 130, 129
-};
-const vp9_prob vp9_cat1_prob_high12[] = { 159 };
-const vp9_prob vp9_cat2_prob_high12[] = { 165, 145 };
-const vp9_prob vp9_cat3_prob_high12[] = { 173, 148, 140 };
-const vp9_prob vp9_cat4_prob_high12[] = { 176, 155, 140, 135 };
-const vp9_prob vp9_cat5_prob_high12[] = { 180, 157, 141, 134, 130 };
-const vp9_prob vp9_cat6_prob_high12[] = {
+const vpx_prob vp9_cat6_prob_high12[] = {
     255, 255, 255, 255, 254, 254, 254, 252, 249,
     243, 230, 196, 177, 153, 140, 133, 130, 129
 };
@@ -133,12 +119,6 @@ const uint8_t vp9_pt_energy_class[ENTROPY_TOKENS] = {
   0, 1, 2, 3, 3, 4, 4, 5, 5, 5, 5, 5
 };
 
-const vp9_tree_index vp9_coefmodel_tree[TREE_SIZE(UNCONSTRAINED_NODES + 1)] = {
-  -EOB_MODEL_TOKEN, 2,
-  -ZERO_TOKEN, 4,
-  -ONE_TOKEN, -TWO_TOKEN,
-};
-
 // Model obtained from a 2-sided zero-centerd distribuition derived
 // from a Pareto distribution. The cdf of the distribution is:
 // cdf(x) = 0.5 + 0.5 * sgn(x) * [1 - {alpha/(alpha + |x|)} ^ beta]
@@ -153,7 +133,7 @@ const vp9_tree_index vp9_coefmodel_tree[TREE_SIZE(UNCONSTRAINED_NODES + 1)] = {
 // by averaging :
 // vp9_pareto8_full[l][node] = (vp9_pareto8_full[l-1][node] +
 //                              vp9_pareto8_full[l+1][node] ) >> 1;
-const vp9_prob vp9_pareto8_full[COEFF_PROB_MODELS][MODEL_NODES] = {
+const vpx_prob vp9_pareto8_full[COEFF_PROB_MODELS][MODEL_NODES] = {
   {  3,  86, 128,   6,  86,  23,  88,  29},
   {  6,  86, 128,  11,  87,  42,  91,  52},
   {  9,  86, 129,  17,  88,  61,  94,  76},
@@ -408,7 +388,6 @@ const vp9_prob vp9_pareto8_full[COEFF_PROB_MODELS][MODEL_NODES] = {
   {255, 239, 241, 255, 235, 255, 252, 254},
   {255, 241, 243, 255, 236, 255, 252, 254},
   {255, 243, 245, 255, 237, 255, 252, 254},
-  {255, 246, 247, 255, 239, 255, 253, 255},
   {255, 246, 247, 255, 239, 255, 253, 255},
 };
 
@@ -748,14 +727,14 @@ static const vp9_coeff_probs_model default_coef_probs_32x32[PLANE_TYPES] = {
   }
 };
 
-static void extend_to_full_distribution(vp9_prob *probs, vp9_prob p) {
-  memcpy(probs, vp9_pareto8_full[p = 0 ? 0 : p - 1],
-         MODEL_NODES * sizeof(vp9_prob));
+static void extend_to_full_distribution(vpx_prob *probs, vpx_prob p) {
+  assert(p != 0);
+  memcpy(probs, vp9_pareto8_full[p - 1], MODEL_NODES * sizeof(vpx_prob));
 }
 
-void vp9_model_to_full_probs(const vp9_prob *model, vp9_prob *full) {
+void vp9_model_to_full_probs(const vpx_prob *model, vpx_prob *full) {
   if (full != model)
-    memcpy(full, model, sizeof(vp9_prob) * UNCONSTRAINED_NODES);
+    memcpy(full, model, sizeof(vpx_prob) * UNCONSTRAINED_NODES);
   extend_to_full_distribution(&full[UNCONSTRAINED_NODES], model[PIVOT_NODE]);
 }
 

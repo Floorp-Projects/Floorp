@@ -26,17 +26,17 @@ static void alloc_mode_context(VP9_COMMON *cm, int num_4x4_blk,
   ctx->num_4x4_blk = num_blk;
 
   CHECK_MEM_ERROR(cm, ctx->zcoeff_blk,
-                  vpx_calloc(num_4x4_blk, sizeof(uint8_t)));
+                  vpx_calloc(num_blk, sizeof(uint8_t)));
   for (i = 0; i < MAX_MB_PLANE; ++i) {
     for (k = 0; k < 3; ++k) {
       CHECK_MEM_ERROR(cm, ctx->coeff[i][k],
-                      vpx_memalign(16, num_pix * sizeof(*ctx->coeff[i][k])));
+                      vpx_memalign(32, num_pix * sizeof(*ctx->coeff[i][k])));
       CHECK_MEM_ERROR(cm, ctx->qcoeff[i][k],
-                      vpx_memalign(16, num_pix * sizeof(*ctx->qcoeff[i][k])));
+                      vpx_memalign(32, num_pix * sizeof(*ctx->qcoeff[i][k])));
       CHECK_MEM_ERROR(cm, ctx->dqcoeff[i][k],
-                      vpx_memalign(16, num_pix * sizeof(*ctx->dqcoeff[i][k])));
+                      vpx_memalign(32, num_pix * sizeof(*ctx->dqcoeff[i][k])));
       CHECK_MEM_ERROR(cm, ctx->eobs[i][k],
-                      vpx_memalign(16, num_pix * sizeof(*ctx->eobs[i][k])));
+                      vpx_memalign(32, num_blk * sizeof(*ctx->eobs[i][k])));
       ctx->coeff_pbuf[i][k]   = ctx->coeff[i][k];
       ctx->qcoeff_pbuf[i][k]  = ctx->qcoeff[i][k];
       ctx->dqcoeff_pbuf[i][k] = ctx->dqcoeff[i][k];
@@ -69,10 +69,13 @@ static void alloc_tree_contexts(VP9_COMMON *cm, PC_TREE *tree,
   alloc_mode_context(cm, num_4x4_blk/2, &tree->horizontal[0]);
   alloc_mode_context(cm, num_4x4_blk/2, &tree->vertical[0]);
 
-  /* TODO(Jbb): for 4x8 and 8x4 these allocated values are not used.
-   * Figure out a better way to do this. */
-  alloc_mode_context(cm, num_4x4_blk/2, &tree->horizontal[1]);
-  alloc_mode_context(cm, num_4x4_blk/2, &tree->vertical[1]);
+  if (num_4x4_blk > 4) {
+    alloc_mode_context(cm, num_4x4_blk/2, &tree->horizontal[1]);
+    alloc_mode_context(cm, num_4x4_blk/2, &tree->vertical[1]);
+  } else {
+    memset(&tree->horizontal[1], 0, sizeof(tree->horizontal[1]));
+    memset(&tree->vertical[1], 0, sizeof(tree->vertical[1]));
+  }
 }
 
 static void free_tree_contexts(PC_TREE *tree) {

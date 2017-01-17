@@ -10,10 +10,11 @@
 
 #include "./vpx_config.h"
 #include "./vp8_rtcd.h"
-#include "test/clear_system_state.h"
-#include "test/register_state_check.h"
+
 #include "third_party/googletest/src/include/gtest/gtest.h"
 
+#include "test/clear_system_state.h"
+#include "test/register_state_check.h"
 #include "vpx/vpx_integer.h"
 
 typedef void (*IdctFunc)(int16_t *input, unsigned char *pred_ptr,
@@ -112,5 +113,9 @@ INSTANTIATE_TEST_CASE_P(C, IDCTTest, ::testing::Values(vp8_short_idct4x4llm_c));
 #if HAVE_MMX
 INSTANTIATE_TEST_CASE_P(MMX, IDCTTest,
                         ::testing::Values(vp8_short_idct4x4llm_mmx));
+#endif
+#if HAVE_MSA
+INSTANTIATE_TEST_CASE_P(MSA, IDCTTest,
+                        ::testing::Values(vp8_short_idct4x4llm_msa));
 #endif
 }

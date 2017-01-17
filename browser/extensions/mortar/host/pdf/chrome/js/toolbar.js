@@ -194,6 +194,10 @@ class Toolbar {
       case 'zoomOut':
         this._zoomOut();
         break;
+      case 'download':
+      case 'secondaryDownload':
+        this._viewport.save();
+        break;
       case 'pageRotateCw':
         this._viewport.rotateClockwise();
         break;

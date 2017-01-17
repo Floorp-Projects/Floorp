@@ -3,26 +3,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Cc, Ci, Cu, Cr} = require("chrome");
+/* global XPCNativeWrapper */
 
-const Services = require("Services");
+const { Cu } = require("chrome");
 
 const events = require("sdk/event/core");
-const promise = require("promise");
 const { on: systemOn, off: systemOff } = require("sdk/system/events");
 const protocol = require("devtools/shared/protocol");
 const { CallWatcherActor } = require("devtools/server/actors/call-watcher");
-const { CallWatcherFront } = require("devtools/shared/fronts/call-watcher");
 const { createValueGrip } = require("devtools/server/actors/object");
 const AutomationTimeline = require("./utils/automation-timeline");
-const { on, once, off, emit } = events;
-const { types, method, Arg, Option, RetVal, preEvent } = protocol;
+const { on, off, emit } = events;
 const {
   audionodeSpec,
-  webAudioSpec,
-  AUTOMATION_METHODS,
-  NODE_CREATION_METHODS,
-  NODE_ROUTING_METHODS,
+  webAudioSpec
 } = require("devtools/shared/specs/webaudio");
 const { WebAudioFront } = require("devtools/shared/fronts/webaudio");
 const AUDIO_NODE_DEFINITION = require("devtools/server/actors/utils/audionodes.json");
@@ -45,7 +39,8 @@ var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClassWithSpec(audion
     }
 
     return {
-      actor: this.actorID, // actorID is set when this is added to a pool
+      // actorID is set when this is added to a pool
+      actor: this.actorID,
       type: this.type,
       source: this.source,
       bypassable: this.bypassable,
@@ -117,9 +112,9 @@ var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClassWithSpec(audion
 
   /**
    * Takes a boolean, either enabling or disabling the "passThrough" option
-   * on an AudioNode. If a node is bypassed, an effects processing node (like gain, biquad),
-   * will allow the audio stream to pass through the node, unaffected. Returns
-   * the bypass state of the node.
+   * on an AudioNode. If a node is bypassed, an effects processing node (like gain,
+   * biquad), will allow the audio stream to pass through the node, unaffected.
+   * Returns the bypass state of the node.
    *
    * @param Boolean enable
    *        Whether the bypass value should be set on or off.
@@ -129,7 +124,7 @@ var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClassWithSpec(audion
     let node = this.node.get();
 
     if (node === null) {
-      return;
+      return undefined;
     }
 
     if (this.bypassable) {
@@ -159,8 +154,7 @@ var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClassWithSpec(audion
       if (isAudioParam(node, param)) {
         node[param].value = value;
         this.automation[param].setValue(value);
-      }
-      else {
+      } else {
         node[param] = value;
       }
       return undefined;
@@ -239,6 +233,7 @@ var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClassWithSpec(audion
     } catch (e) {
       return constructError(e);
     }
+    return undefined;
   },
 
   /**
@@ -262,6 +257,7 @@ var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClassWithSpec(audion
     } catch (e) {
       return constructError(e);
     }
+    return undefined;
   },
 
   /**
@@ -281,6 +277,7 @@ var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClassWithSpec(audion
     } catch (e) {
       return constructError(e);
     }
+    return undefined;
   },
 
   getAutomationData: function (paramName) {
@@ -289,16 +286,15 @@ var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClassWithSpec(audion
       return null;
     }
 
-    let events = timeline.events;
     let values = [];
     let i = 0;
 
     if (!timeline.events.length) {
-      return { events, values };
+      return { events: timeline.events, values };
     }
 
-    let firstEvent = events[0];
-    let lastEvent = events[timeline.events.length - 1];
+    let firstEvent = timeline.events[0];
+    let lastEvent = timeline.events[timeline.events.length - 1];
     // `setValueCurveAtTime` will have a duration value -- other
     // events will have duration of `0`.
     let timeDelta = (lastEvent.time + lastEvent.duration) - firstEvent.time;
@@ -322,7 +318,7 @@ var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClassWithSpec(audion
       }
     }
 
-    return { events, values };
+    return { events: timeline.events, values };
   },
 
   /**
@@ -378,6 +374,7 @@ var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClassWithSpec(audion
     } catch (e) {
       return constructError(e);
     }
+    return undefined;
   },
 
   /**
@@ -404,7 +401,7 @@ var AudioNodeActor = exports.AudioNodeActor = protocol.ActorClassWithSpec(audion
  * high-level methods. After instantiating this actor, you'll need to set it
  * up by calling setup().
  */
-var WebAudioActor = exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
+exports.WebAudioActor = protocol.ActorClassWithSpec(webAudioSpec, {
   initialize: function (conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
@@ -487,11 +484,9 @@ var WebAudioActor = exports.WebAudioActor = protocol.ActorClassWithSpec(webAudio
     // hook into the `connect` and `disconnect` methods
     if (WebAudioFront.NODE_ROUTING_METHODS.has(name)) {
       this._handleRoutingCall(functionCall);
-    }
-    else if (WebAudioFront.NODE_CREATION_METHODS.has(name)) {
+    } else if (WebAudioFront.NODE_CREATION_METHODS.has(name)) {
       this._handleCreationCall(functionCall);
-    }
-    else if (ENABLE_AUTOMATION && WebAudioFront.AUTOMATION_METHODS.has(name)) {
+    } else if (ENABLE_AUTOMATION && WebAudioFront.AUTOMATION_METHODS.has(name)) {
       this._handleAutomationCall(functionCall);
     }
   },
@@ -500,18 +495,16 @@ var WebAudioActor = exports.WebAudioActor = protocol.ActorClassWithSpec(webAudio
     let { caller, args, name } = functionCall.details;
     let source = caller;
     let dest = args[0];
-    let isAudioParam = dest ? getConstructorName(dest) === "AudioParam" : false;
+    let isAudioPar = dest ? getConstructorName(dest) === "AudioParam" : false;
 
     // audionode.connect(param)
-    if (name === "connect" && isAudioParam) {
+    if (name === "connect" && isAudioPar) {
       this._onConnectParam(source, dest);
-    }
-    // audionode.connect(node)
-    else if (name === "connect") {
+    } else if (name === "connect") {
+      // audionode.connect(node)
       this._onConnectNode(source, dest);
-    }
-    // audionode.disconnect()
-    else if (name === "disconnect") {
+    } else if (name === "disconnect") {
+      // audionode.disconnect()
       this._onDisconnectNode(source);
     }
   },
@@ -827,7 +820,8 @@ function createObjectGrip(value) {
  */
 function sanitizeAutomationArgs(args) {
   return args.reduce((newArgs, el) => {
-    newArgs.push(typeof el === "object" && getConstructorName(el) === "Float32Array" ? castToArray(el) : el);
+    let isArray = typeof el === "object" && getConstructorName(el) === "Float32Array";
+    newArgs.push(isArray ? castToArray(el) : el);
     return newArgs;
   }, []);
 }

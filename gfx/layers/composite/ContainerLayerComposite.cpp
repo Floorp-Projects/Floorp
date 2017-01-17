@@ -429,9 +429,9 @@ RenderLayers(ContainerT* aContainer, LayerManagerComposite* aManager,
       // should only occur transiently.
       EffectChain effectChain(layer);
       effectChain.mPrimaryEffect = new EffectSolidColor(color);
-      aManager->GetCompositor()->DrawQuad(gfx::Rect(layer->GetLayerBounds()), clipRect,
-                                          effectChain, layer->GetEffectiveOpacity(),
-                                          layer->GetEffectiveTransform());
+      aManager->GetCompositor()->DrawGeometry(gfx::Rect(layer->GetLayerBounds()), clipRect,
+                                              effectChain, layer->GetEffectiveOpacity(),
+                                              layer->GetEffectiveTransform(), Nothing());
     }
 
     if (layerToRender->HasLayerBeenComposited()) {

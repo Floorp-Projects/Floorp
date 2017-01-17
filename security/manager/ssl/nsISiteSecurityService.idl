@@ -60,8 +60,8 @@ interface nsISiteSecurityService : nsISupports
      *
      * @param aType the type of security header in question.
      * @param aSourceURI the URI of the resource with the HTTP header.
-     * @param aSSLStatus the SSLStatus of the current channel
      * @param aHeader the HTTP response header specifying security data.
+     * @param aSSLStatus the SSLStatus of the current channel.
      * @param aFlags  options for this request as defined in nsISocketProvider:
      *                  NO_PERMANENT_STORAGE
      * @param aMaxAge the parsed max-age directive of the header.
@@ -75,7 +75,7 @@ interface nsISiteSecurityService : nsISupports
      */
     void processHeader(in uint32_t aType,
                        in nsIURI aSourceURI,
-                       in string aHeader,
+                       in ACString aHeader,
                        in nsISSLStatus aSSLStatus,
                        in uint32_t aFlags,
                        [optional] out unsigned long long aMaxAge,
@@ -88,7 +88,7 @@ interface nsISiteSecurityService : nsISupports
      */
     void unsafeProcessHeader(in uint32_t aType,
                              in nsIURI aSourceURI,
-                             in string aHeader,
+                             in ACString aHeader,
                              in uint32_t aFlags,
                              [optional] out unsigned long long aMaxAge,
                              [optional] out boolean aIncludeSubdomains,
@@ -119,7 +119,7 @@ interface nsISiteSecurityService : nsISupports
      *                  the host is HSTS, false otherwise.
      */
     boolean isSecureHost(in uint32_t aType,
-                         in string aHost,
+                         in ACString aHost,
                          in uint32_t aFlags,
                          [optional] out boolean aCached);
 
@@ -159,14 +159,14 @@ interface nsISiteSecurityService : nsISupports
      * aIncludeSubdomains will be true. Pins returned are only for non-built-in
      * pin entries.
      *
-     * @param aHostname the hosname (punycode) to be queried about
-     * @param the time at which the pins should be valid. This is in
+     * @param aHostname the hostname (punycode) to be queried about
+     * @param evalTime the time at which the pins should be valid. This is in
               mozilla::pkix::Time which uses internally seconds since 0 AD.
      * @param aPinArray the set of sha256-hashed key pins for the given domain
      * @param aIncludeSubdomains true if the pins apply to subdomains of the
      *        given domain
      */
-    [noscript] boolean getKeyPinsForHostname(in string aHostname,
+    [noscript] boolean getKeyPinsForHostname(in ACString aHostname,
                                              in mozillaPkixTime evalTime,
                                              out nsCStringTArrayRef aPinArray,
                                              out boolean aIncludeSubdomains);
@@ -184,7 +184,7 @@ interface nsISiteSecurityService : nsISupports
      * @param aIsPreload are these key pins for a preload entry? (false by
      *        default)
      */
-     boolean setKeyPins(in string aHost, in boolean aIncludeSubdomains,
+     boolean setKeyPins(in ACString aHost, in boolean aIncludeSubdomains,
                         in int64_t aExpires, in unsigned long aPinCount,
                         [array, size_is(aPinCount)] in string aSha256Pins,
                         [optional] in boolean aIsPreload);
@@ -199,7 +199,7 @@ interface nsISiteSecurityService : nsISupports
      * @param aIncludeSubdomains whether this entry also applies to subdomains
      * @param aExpires the time this entry should expire (millis since epoch)
      */
-     boolean setHSTSPreload(in string aHost, in boolean aIncludesSubdomains,
+     boolean setHSTSPreload(in ACString aHost, in boolean aIncludesSubdomains,
                             in int64_t aExpires);
 
     /**

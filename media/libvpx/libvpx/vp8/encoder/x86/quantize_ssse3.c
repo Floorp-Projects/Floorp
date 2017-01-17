@@ -17,7 +17,7 @@
 #include <intrin.h>
 #pragma intrinsic(_BitScanReverse)
 static int bsr(int mask) {
-  int eob;
+  unsigned long eob;
   _BitScanReverse(&eob, mask);
   eob++;
   if (mask == 0)

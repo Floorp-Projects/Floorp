@@ -17,8 +17,8 @@
 extern "C" {
 #endif
 
-static void intra_prediction_down_copy(MACROBLOCKD *xd,
-                                             unsigned char *above_right_src)
+static INLINE void intra_prediction_down_copy(MACROBLOCKD *xd,
+                                              unsigned char *above_right_src)
 {
     int dst_stride = xd->dst.y_stride;
     unsigned char *above_right_dst = xd->dst.y_buffer - dst_stride + 16;
@@ -32,6 +32,14 @@ static void intra_prediction_down_copy(MACROBLOCKD *xd,
     *dst_ptr1 = *src_ptr;
     *dst_ptr2 = *src_ptr;
 }
+
+void vp8_intra4x4_predict(unsigned char *Above,
+                          unsigned char *yleft, int left_stride,
+                          B_PREDICTION_MODE b_mode,
+                          unsigned char *dst, int dst_stride,
+                          unsigned char top_left);
+
+void vp8_init_intra4x4_predictors_internal(void);
 
 #ifdef __cplusplus
 }  // extern "C"

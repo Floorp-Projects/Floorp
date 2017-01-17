@@ -50,7 +50,10 @@ CODEC_SRCS-yes += $(addprefix vpx_ports/,$(call enabled,PORTS_SRCS))
 include $(SRC_PATH_BARE)/vpx_dsp/vpx_dsp.mk
 CODEC_SRCS-yes += $(addprefix vpx_dsp/,$(call enabled,DSP_SRCS))
 
-ifneq ($(CONFIG_VP8_ENCODER)$(CONFIG_VP8_DECODER),)
+include $(SRC_PATH_BARE)/vpx_util/vpx_util.mk
+CODEC_SRCS-yes += $(addprefix vpx_util/,$(call enabled,UTIL_SRCS))
+
+ifeq ($(CONFIG_VP8),yes)
   VP8_PREFIX=vp8/
   include $(SRC_PATH_BARE)/$(VP8_PREFIX)vp8_common.mk
 endif
@@ -73,7 +76,7 @@ ifeq ($(CONFIG_VP8_DECODER),yes)
   CODEC_DOC_SECTIONS += vp8 vp8_decoder
 endif
 
-ifneq ($(CONFIG_VP9_ENCODER)$(CONFIG_VP9_DECODER),)
+ifeq ($(CONFIG_VP9),yes)
   VP9_PREFIX=vp9/
   include $(SRC_PATH_BARE)/$(VP9_PREFIX)vp9_common.mk
 endif
@@ -146,6 +149,9 @@ INSTALL-SRCS-$(CONFIG_CODEC_SRCS) += third_party/x86inc/x86inc.asm
 endif
 CODEC_EXPORTS-yes += vpx/exports_com
 CODEC_EXPORTS-$(CONFIG_ENCODERS) += vpx/exports_enc
+ifeq ($(CONFIG_SPATIAL_SVC),yes)
+CODEC_EXPORTS-$(CONFIG_ENCODERS) += vpx/exports_spatial_svc
+endif
 CODEC_EXPORTS-$(CONFIG_DECODERS) += vpx/exports_dec
 
 INSTALL-LIBS-yes += include/vpx/vpx_codec.h
@@ -223,7 +229,7 @@ OBJS-yes += $(LIBVPX_OBJS)
 LIBS-$(if yes,$(CONFIG_STATIC)) += $(BUILD_PFX)libvpx.a $(BUILD_PFX)libvpx_g.a
 $(BUILD_PFX)libvpx_g.a: $(LIBVPX_OBJS)
 
-SO_VERSION_MAJOR := 2
+SO_VERSION_MAJOR := 4
 SO_VERSION_MINOR := 0
 SO_VERSION_PATCH := 0
 ifeq ($(filter darwin%,$(TGT_OS)),$(TGT_OS))
@@ -232,6 +238,12 @@ SHARED_LIB_SUF          := .dylib
 EXPORT_FILE             := libvpx.syms
 LIBVPX_SO_SYMLINKS      := $(addprefix $(LIBSUBDIR)/, \
                              libvpx.dylib  )
+else
+ifeq ($(filter iphonesimulator%,$(TGT_OS)),$(TGT_OS))
+LIBVPX_SO               := libvpx.$(SO_VERSION_MAJOR).dylib
+SHARED_LIB_SUF          := .dylib
+EXPORT_FILE             := libvpx.syms
+LIBVPX_SO_SYMLINKS      := $(addprefix $(LIBSUBDIR)/, libvpx.dylib)
 else
 ifeq ($(filter os2%,$(TGT_OS)),$(TGT_OS))
 LIBVPX_SO               := libvpx$(SO_VERSION_MAJOR).dll
@@ -246,6 +258,7 @@ EXPORT_FILE             := libvpx.ver
 LIBVPX_SO_SYMLINKS      := $(addprefix $(LIBSUBDIR)/, \
                              libvpx.so libvpx.so.$(SO_VERSION_MAJOR) \
                              libvpx.so.$(SO_VERSION_MAJOR).$(SO_VERSION_MINOR))
+endif
 endif
 endif
 
@@ -357,6 +370,12 @@ $(filter %$(ASM).o,$(OBJS-yes)): $(BUILD_PFX)vpx_config.asm
 $(shell $(SRC_PATH_BARE)/build/make/version.sh "$(SRC_PATH_BARE)" $(BUILD_PFX)vpx_version.h)
 CLEAN-OBJS += $(BUILD_PFX)vpx_version.h
 
+#
+# Add include path for libwebm sources.
+#
+ifeq ($(CONFIG_WEBM_IO),yes)
+  CXXFLAGS += -I$(SRC_PATH_BARE)/third_party/libwebm
+endif
 
 ##
 ## libvpx test directives
@@ -373,6 +392,7 @@ libvpx_test_data_url=http://downloads.webmproject.org/test_data/libvpx/$(1)
 
 TEST_INTRA_PRED_SPEED_BIN=./test_intra_pred_speed$(EXE_SFX)
 TEST_INTRA_PRED_SPEED_SRCS=$(addprefix test/,$(call enabled,TEST_INTRA_PRED_SPEED_SRCS))
+TEST_INTRA_PRED_SPEED_OBJS := $(sort $(call objs,$(TEST_INTRA_PRED_SPEED_SRCS)))
 
 libvpx_test_srcs.txt:
 	@echo "    [CREATE] $@"
@@ -391,12 +411,10 @@ testdata:: $(LIBVPX_TEST_DATA)
           if [ -n "$${sha1sum}" ]; then\
             set -e;\
             echo "Checking test data:";\
-            if [ -n "$(LIBVPX_TEST_DATA)" ]; then\
-                for f in $(call enabled,LIBVPX_TEST_DATA); do\
-                    grep $$f $(SRC_PATH_BARE)/test/test-data.sha1 |\
-                        (cd $(LIBVPX_TEST_DATA_PATH); $${sha1sum} -c);\
-                done; \
-            fi; \
+            for f in $(call enabled,LIBVPX_TEST_DATA); do\
+                grep $$f $(SRC_PATH_BARE)/test/test-data.sha1 |\
+                    (cd $(LIBVPX_TEST_DATA_PATH); $${sha1sum} -c);\
+            done; \
         else\
             echo "Skipping test data integrity check, sha1sum not found.";\
         fi
@@ -433,6 +451,7 @@ test_libvpx.$(VCPROJ_SFX): $(LIBVPX_TEST_SRCS) vpx.$(VCPROJ_SFX) gtest.$(VCPROJ_
             $(if $(CONFIG_STATIC_MSVCRT),--static-crt) \
             --out=$@ $(INTERNAL_CFLAGS) $(CFLAGS) \
             -I. -I"$(SRC_PATH_BARE)/third_party/googletest/src/include" \
+            $(if $(CONFIG_WEBM_IO),-I"$(SRC_PATH_BARE)/third_party/libwebm") \
             -L. -l$(CODEC_LIB) -l$(GTEST_LIB) $^
 
 PROJECTS-$(CONFIG_MSVS) += test_libvpx.$(VCPROJ_SFX)
@@ -486,7 +505,6 @@ $(eval $(call linkerxx_template,$(LIBVPX_TEST_BIN), \
               $(LIBVPX_TEST_OBJS) \
               -L. -lvpx -lgtest $(extralibs) -lm))
 
-TEST_INTRA_PRED_SPEED_OBJS := $(sort $(call objs,$(TEST_INTRA_PRED_SPEED_SRCS)))
 ifneq ($(strip $(TEST_INTRA_PRED_SPEED_OBJS)),)
 $(TEST_INTRA_PRED_SPEED_OBJS) $(TEST_INTRA_PRED_SPEED_OBJS:.o=.d): CXXFLAGS += $(GTEST_INCLUDES)
 OBJS-yes += $(TEST_INTRA_PRED_SPEED_OBJS)
@@ -508,11 +526,13 @@ INSTALL-SRCS-$(CONFIG_CODEC_SRCS) += $(TEST_INTRA_PRED_SPEED_SRCS)
 
 define test_shard_template
 test:: test_shard.$(1)
-test_shard.$(1): $(LIBVPX_TEST_BIN) testdata
+test-no-data-check:: test_shard_ndc.$(1)
+test_shard.$(1) test_shard_ndc.$(1): $(LIBVPX_TEST_BIN)
 	@set -e; \
 	 export GTEST_SHARD_INDEX=$(1); \
 	 export GTEST_TOTAL_SHARDS=$(2); \
 	 $(LIBVPX_TEST_BIN)
+test_shard.$(1): testdata
 .PHONY: test_shard.$(1)
 endef
 
@@ -557,15 +577,16 @@ ifeq ($(CONFIG_MSVS),yes)
 # TODO(tomfinegan): Support running the debug versions of tools?
 TEST_BIN_PATH := $(addsuffix /$(TGT_OS:win64=x64)/Release, $(TEST_BIN_PATH))
 endif
-utiltest: testdata
+utiltest utiltest-no-data-check:
 	$(qexec)$(SRC_PATH_BARE)/test/vpxdec.sh \
 		--test-data-path $(LIBVPX_TEST_DATA_PATH) \
 		--bin-path $(TEST_BIN_PATH)
 	$(qexec)$(SRC_PATH_BARE)/test/vpxenc.sh \
 		--test-data-path $(LIBVPX_TEST_DATA_PATH) \
 		--bin-path $(TEST_BIN_PATH)
+utiltest: testdata
 else
-utiltest:
+utiltest utiltest-no-data-check:
 	@echo Unit tests must be enabled to make the utiltest target.
 endif
 
@@ -583,11 +604,12 @@ ifeq ($(CONFIG_MSVS),yes)
 # TODO(tomfinegan): Support running the debug versions of tools?
 EXAMPLES_BIN_PATH := $(TGT_OS:win64=x64)/Release
 endif
-exampletest: examples testdata
+exampletest exampletest-no-data-check: examples
 	$(qexec)$(SRC_PATH_BARE)/test/examples.sh \
 		--test-data-path $(LIBVPX_TEST_DATA_PATH) \
 		--bin-path $(EXAMPLES_BIN_PATH)
+exampletest: testdata
 else
-exampletest:
+exampletest exampletest-no-data-check:
 	@echo Unit tests must be enabled to make the exampletest target.
 endif

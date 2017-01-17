@@ -13,6 +13,7 @@
 
 #include "./vpx_config.h"
 #include "vpx/internal/vpx_codec_internal.h"
+#include "vpx_util/vpx_thread.h"
 #include "./vp9_rtcd.h"
 #include "vp9/common/vp9_alloccommon.h"
 #include "vp9/common/vp9_loopfilter.h"
@@ -21,7 +22,6 @@
 #include "vp9/common/vp9_entropymode.h"
 #include "vp9/common/vp9_frame_buffers.h"
 #include "vp9/common/vp9_quant_common.h"
-#include "vp9/common/vp9_thread.h"
 #include "vp9/common/vp9_tile_common.h"
 
 #if CONFIG_VP9_POSTPROC
@@ -80,7 +80,7 @@ typedef struct {
 
   // frame_worker_owner indicates which FrameWorker owns this buffer. NULL means
   // that no FrameWorker owns, or is decoding, this buffer.
-  VP9Worker *frame_worker_owner;
+  VPxWorker *frame_worker_owner;
 
   // row and col indicate which position frame has been decoded to in real
   // pixel unit. They are reset to -1 when decoding begins and set to INT_MAX
@@ -112,10 +112,11 @@ typedef struct BufferPool {
 typedef struct VP9Common {
   struct vpx_internal_error_info  error;
   vpx_color_space_t color_space;
+  vpx_color_range_t color_range;
   int width;
   int height;
-  int display_width;
-  int display_height;
+  int render_width;
+  int render_height;
   int last_width;
   int last_height;
 
@@ -162,7 +163,8 @@ typedef struct VP9Common {
   int show_existing_frame;
 
   // Flag signaling that the frame is encoded using only INTRA modes.
-  int intra_only;
+  uint8_t intra_only;
+  uint8_t last_intra_only;
 
   int allow_high_precision_mv;
 
@@ -335,36 +337,45 @@ static INLINE int mi_cols_aligned_to_sb(int n_mis) {
   return ALIGN_POWER_OF_TWO(n_mis, MI_BLOCK_SIZE_LOG2);
 }
 
-static INLINE void init_macroblockd(VP9_COMMON *cm, MACROBLOCKD *xd) {
+static INLINE int frame_is_intra_only(const VP9_COMMON *const cm) {
+  return cm->frame_type == KEY_FRAME || cm->intra_only;
+}
+
+static INLINE void set_partition_probs(const VP9_COMMON *const cm,
+                                       MACROBLOCKD *const xd) {
+  xd->partition_probs =
+      frame_is_intra_only(cm) ?
+          &vp9_kf_partition_probs[0] :
+          (const vpx_prob (*)[PARTITION_TYPES - 1])cm->fc->partition_prob;
+}
+
+static INLINE void vp9_init_macroblockd(VP9_COMMON *cm, MACROBLOCKD *xd,
+                                        tran_low_t *dqcoeff) {
   int i;
 
   for (i = 0; i < MAX_MB_PLANE; ++i) {
-    xd->plane[i].dqcoeff = xd->dqcoeff;
+    xd->plane[i].dqcoeff = dqcoeff;
     xd->above_context[i] = cm->above_context +
         i * sizeof(*cm->above_context) * 2 * mi_cols_aligned_to_sb(cm->mi_cols);
 
-    if (xd->plane[i].plane_type == PLANE_TYPE_Y) {
+    if (get_plane_type(i) == PLANE_TYPE_Y) {
       memcpy(xd->plane[i].seg_dequant, cm->y_dequant, sizeof(cm->y_dequant));
     } else {
       memcpy(xd->plane[i].seg_dequant, cm->uv_dequant, sizeof(cm->uv_dequant));
     }
     xd->fc = cm->fc;
-    xd->frame_parallel_decoding_mode = cm->frame_parallel_decoding_mode;
   }
 
   xd->above_seg_context = cm->above_seg_context;
   xd->mi_stride = cm->mi_stride;
   xd->error_info = &cm->error;
+
+  set_partition_probs(cm, xd);
 }
 
-static INLINE int frame_is_intra_only(const VP9_COMMON *const cm) {
-  return cm->frame_type == KEY_FRAME || cm->intra_only;
-}
-
-static INLINE const vp9_prob* get_partition_probs(const VP9_COMMON *cm,
+static INLINE const vpx_prob* get_partition_probs(const MACROBLOCKD *xd,
                                                   int ctx) {
-  return frame_is_intra_only(cm) ? vp9_kf_partition_probs[ctx]
-                                 : cm->fc->partition_prob[ctx];
+  return xd->partition_probs[ctx];
 }
 
 static INLINE void set_skip_context(MACROBLOCKD *xd, int mi_row, int mi_col) {
@@ -393,25 +404,8 @@ static INLINE void set_mi_row_col(MACROBLOCKD *xd, const TileInfo *const tile,
   xd->mb_to_right_edge  = ((mi_cols - bw - mi_col) * MI_SIZE) * 8;
 
   // Are edges available for intra prediction?
-  xd->up_available    = (mi_row != 0);
-  xd->left_available  = (mi_col > tile->mi_col_start);
-  if (xd->up_available) {
-    xd->above_mi = xd->mi[-xd->mi_stride];
-    // above_mi may be NULL in VP9 encoder's first pass.
-    xd->above_mbmi = xd->above_mi ? &xd->above_mi->mbmi : NULL;
-  } else {
-    xd->above_mi = NULL;
-    xd->above_mbmi = NULL;
-  }
-
-  if (xd->left_available) {
-    xd->left_mi = xd->mi[-1];
-    // left_mi may be NULL in VP9 encoder's first pass.
-    xd->left_mbmi = xd->left_mi ? &xd->left_mi->mbmi : NULL;
-  } else {
-    xd->left_mi = NULL;
-    xd->left_mbmi = NULL;
-  }
+  xd->above_mi = (mi_row != 0) ? xd->mi[-xd->mi_stride] : NULL;
+  xd->left_mi  = (mi_col > tile->mi_col_start) ? xd->mi[-1] : NULL;
 }
 
 static INLINE void update_partition_context(MACROBLOCKD *xd,

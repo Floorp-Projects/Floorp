@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* global assert */
+
 "use strict";
 
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
@@ -111,7 +113,9 @@ let BreakpointActor = ActorClassWithSpec(breakpointSpec, {
           } else if (completion.toString) {
             message = completion.toString();
           }
-        } catch (ex) {}
+        } catch (ex) {
+          // ignore
+        }
         return {
           result: true,
           message: message
@@ -119,12 +123,11 @@ let BreakpointActor = ActorClassWithSpec(breakpointSpec, {
       } else if (completion.yield) {
         assert(false, "Shouldn't ever get yield completions from an eval");
       } else {
-        return { result: completion.return ? true : false };
+        return { result: !!completion.return };
       }
-    } else {
-      // The evaluation was killed (possibly by the slow script dialog)
-      return { result: undefined };
     }
+    // The evaluation was killed (possibly by the slow script dialog)
+    return { result: undefined };
   },
 
   /**

@@ -477,3 +477,7 @@ function waitUntilMetaDataSaved(expectedState, expectedChecksum, callback) {
 }
 
 cleanUp();
+
+do_register_cleanup(function() {
+  cleanUp();
+});

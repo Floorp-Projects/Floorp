@@ -7,6 +7,13 @@ const STRING_SCALAR = "telemetry.test.string_kind";
 const BOOLEAN_SCALAR = "telemetry.test.boolean_kind";
 const KEYED_UINT_SCALAR = "telemetry.test.keyed_unsigned_int";
 
+function getParentProcessScalars(aChannel, aKeyed = false, aClear = false) {
+  const scalars = aKeyed ?
+    Telemetry.snapshotKeyedScalars(aChannel, aClear)["default"] :
+    Telemetry.snapshotScalars(aChannel, aClear)["default"];
+  return scalars || {};
+}
+
 add_task(function* test_serializationFormat() {
   Telemetry.clearScalars();
 
@@ -18,9 +25,9 @@ add_task(function* test_serializationFormat() {
   Telemetry.scalarSet(BOOLEAN_SCALAR, true);
   Telemetry.keyedScalarSet(KEYED_UINT_SCALAR, "first_key", 1234);
 
-  // Get a snapshot of the scalars.
+  // Get a snapshot of the scalars for the main process (internally called "default").
   const scalars =
-    Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+    getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
 
   // Check that they are serialized to the correct format.
   Assert.equal(typeof(scalars[UINT_SCALAR]), "number",
@@ -55,7 +62,7 @@ add_task(function* test_keyedSerializationFormat() {
 
   // Get a snapshot of the scalars.
   const keyedScalars =
-    Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+    getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
 
   Assert.ok(!(UINT_SCALAR in keyedScalars),
             UINT_SCALAR + " must not be serialized with the keyed scalars.");
@@ -103,13 +110,12 @@ add_task(function* test_nonexistingScalar() {
                 "Setting the maximum of a non keyed existing scalar must throw.");
 
   // Get a snapshot of the scalars.
-  const scalars =
-    Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+  const scalars = getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
 
   Assert.ok(!(NON_EXISTING_SCALAR in scalars), "The non existing scalar must not be persisted.");
 
   const keyedScalars =
-    Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+    getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
 
   Assert.ok(!(NON_EXISTING_SCALAR in keyedScalars),
             "The non existing keyed scalar must not be persisted.");
@@ -137,9 +143,9 @@ add_task(function* test_expiredScalar() {
 
   // Get a snapshot of the scalars.
   const scalars =
-    Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+    getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
   const keyedScalars =
-    Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+    getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
 
   Assert.ok(!(EXPIRED_SCALAR in scalars), "The expired scalar must not be persisted.");
   Assert.equal(scalars[UNEXPIRED_SCALAR], expectedValue,
@@ -151,7 +157,7 @@ add_task(function* test_expiredScalar() {
 add_task(function* test_unsignedIntScalar() {
   let checkScalar = (expectedValue) => {
     const scalars =
-      Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+      getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
     Assert.equal(scalars[UINT_SCALAR], expectedValue,
                  UINT_SCALAR + " must contain the expected value.");
   };
@@ -209,7 +215,7 @@ add_task(function* test_unsignedIntScalar() {
 add_task(function* test_stringScalar() {
   let checkExpectedString = (expectedString) => {
     const scalars =
-      Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+      getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
     Assert.equal(scalars[STRING_SCALAR], expectedString,
                  STRING_SCALAR + " must contain the expected string value.");
   };
@@ -250,7 +256,7 @@ add_task(function* test_stringScalar() {
 add_task(function* test_booleanScalar() {
   let checkExpectedBool = (expectedBoolean) => {
     const scalars =
-      Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+      getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
     Assert.equal(scalars[BOOLEAN_SCALAR], expectedBoolean,
                  BOOLEAN_SCALAR + " must contain the expected boolean value.");
   };
@@ -299,14 +305,14 @@ add_task(function* test_scalarRecording() {
 
   let checkValue = (scalarName, expectedValue) => {
     const scalars =
-      Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+      getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
     Assert.equal(scalars[scalarName], expectedValue,
                  scalarName + " must contain the expected value.");
   };
 
   let checkNotSerialized = (scalarName) => {
     const scalars =
-      Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+      getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
     Assert.ok(!(scalarName in scalars), scalarName + " was not recorded.");
   };
 
@@ -342,14 +348,14 @@ add_task(function* test_keyedScalarRecording() {
 
   let checkValue = (scalarName, expectedValue) => {
     const scalars =
-      Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+      getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
     Assert.equal(scalars[scalarName][testKey], expectedValue,
                  scalarName + " must contain the expected value.");
   };
 
   let checkNotSerialized = (scalarName) => {
     const scalars =
-      Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+      getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
     Assert.ok(!(scalarName in scalars), scalarName + " was not recorded.");
   };
 
@@ -389,9 +395,9 @@ add_task(function* test_subsession() {
 
   // Get a snapshot and reset the subsession. The value we set must be there.
   let scalars =
-    Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+    getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false, true);
   let keyedScalars =
-    Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+    getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true, true);
 
   Assert.equal(scalars[UINT_SCALAR], 3785,
                UINT_SCALAR + " must contain the expected value.");
@@ -405,9 +411,9 @@ add_task(function* test_subsession() {
   // Get a new snapshot and reset the subsession again. Since no new value
   // was set, the scalars should not be reported.
   scalars =
-    Telemetry.snapshotScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+    getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false, true);
   keyedScalars =
-    Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+    getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true, true);
 
   Assert.ok(!(UINT_SCALAR in scalars), UINT_SCALAR + " must be empty and not reported.");
   Assert.ok(!(STRING_SCALAR in scalars), STRING_SCALAR + " must be empty and not reported.");
@@ -437,7 +443,7 @@ add_task(function* test_keyed_uint() {
   // Get a snapshot of the scalars and make sure the keys contain
   // the correct values.
   const keyedScalars =
-    Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+    getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
 
   for (let k = 0; k < 3; k++) {
     const keyName = KEYS[k];
@@ -467,7 +473,7 @@ add_task(function* test_keyed_boolean() {
   // Get a snapshot of the scalars and make sure the keys contain
   // the correct values.
   let keyedScalars =
-    Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+    getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
   Assert.equal(keyedScalars[KEYED_BOOLEAN_TYPE][first_key], true,
                "The key must contain the expected value.");
   Assert.equal(keyedScalars[KEYED_BOOLEAN_TYPE][second_key], false,
@@ -478,7 +484,7 @@ add_task(function* test_keyed_boolean() {
   Telemetry.keyedScalarSet(KEYED_BOOLEAN_TYPE, second_key, true);
 
   keyedScalars =
-    Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+    getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
   Assert.equal(keyedScalars[KEYED_BOOLEAN_TYPE][first_key], false,
                "The key must contain the expected value.");
   Assert.equal(keyedScalars[KEYED_BOOLEAN_TYPE][second_key], true,
@@ -515,7 +521,7 @@ add_task(function* test_keyed_keys_length() {
 
   // Make sure the key with the right length contains the expected value.
   let keyedScalars =
-    Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+    getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
   Assert.equal(Object.keys(keyedScalars[KEYED_UINT_SCALAR]).length, 1,
                "The keyed scalar must contain exactly 1 key.");
   Assert.ok(NORMAL_KEY in keyedScalars[KEYED_UINT_SCALAR],
@@ -557,7 +563,7 @@ add_task(function* test_keyed_max_keys() {
   // Make sure all the keys except the last one are available and have the correct
   // values.
   let keyedScalars =
-    Telemetry.snapshotKeyedScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN);
+    getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
 
   // Check that the keyed scalar only contain the first 100 keys.
   const reportedKeysSet = new Set(Object.keys(keyedScalars[KEYED_UINT_SCALAR]));

@@ -50,8 +50,8 @@ static mozilla::LazyLogModule sSHParserLog("nsSecurityHeaderParser");
 
 #define SHPARSERLOG(args) MOZ_LOG(sSHParserLog, mozilla::LogLevel::Debug, args)
 
-nsSecurityHeaderParser::nsSecurityHeaderParser(const char *aHeader)
-  : mCursor(aHeader)
+nsSecurityHeaderParser::nsSecurityHeaderParser(const nsCString& aHeader)
+  : mCursor(aHeader.get())
   , mError(false)
 {
 }

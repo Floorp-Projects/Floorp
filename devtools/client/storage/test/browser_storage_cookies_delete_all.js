@@ -44,7 +44,7 @@ add_task(function* () {
   info("test state before delete");
   yield checkState([
     [
-      ["cookies", "test1.example.org"], [
+      ["cookies", "http://test1.example.org"], [
         getCookieId("c1", "test1.example.org", "/browser"),
         getCookieId("c3", "test1.example.org", "/"),
         getCookieId("cs2", ".example.org", "/"),
@@ -52,7 +52,7 @@ add_task(function* () {
       ]
     ],
     [
-      ["cookies", "sectest1.example.org"], [
+      ["cookies", "https://sectest1.example.org"], [
         getCookieId("cs2", ".example.org", "/"),
         getCookieId("sc1", "sectest1.example.org",
                     "/browser/devtools/client/storage/test/"),
@@ -64,20 +64,20 @@ add_task(function* () {
   info("delete all from domain");
   // delete only cookies that match the host exactly
   let id = getCookieId("c1", "test1.example.org", "/browser");
-  yield performDelete(["cookies", "test1.example.org"], id, false);
+  yield performDelete(["cookies", "http://test1.example.org"], id, false);
 
   info("test state after delete all from domain");
   yield checkState([
     // Domain cookies (.example.org) must not be deleted.
     [
-      ["cookies", "test1.example.org"],
+      ["cookies", "http://test1.example.org"],
       [
         getCookieId("cs2", ".example.org", "/"),
         getCookieId("uc1", ".example.org", "/")
       ]
     ],
     [
-      ["cookies", "sectest1.example.org"],
+      ["cookies", "https://sectest1.example.org"],
       [
         getCookieId("cs2", ".example.org", "/"),
         getCookieId("uc1", ".example.org", "/"),
@@ -90,14 +90,14 @@ add_task(function* () {
   info("delete all");
   // delete all cookies for host, including domain cookies
   id = getCookieId("uc1", ".example.org", "/");
-  yield performDelete(["cookies", "sectest1.example.org"], id, true);
+  yield performDelete(["cookies", "http://sectest1.example.org"], id, true);
 
   info("test state after delete all");
   yield checkState([
     // Domain cookies (.example.org) are deleted too, so deleting in sectest1
     // also removes stuff from test1.
-    [["cookies", "test1.example.org"], []],
-    [["cookies", "sectest1.example.org"], []],
+    [["cookies", "http://test1.example.org"], []],
+    [["cookies", "https://sectest1.example.org"], []],
   ]);
 
   yield finishTests();

@@ -17,6 +17,8 @@ using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
 using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
 using mozilla::Telemetry::Accumulation from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::KeyedAccumulation from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::ScalarAction from "mozilla/TelemetryComms.h";
+using mozilla::Telemetry::KeyedScalarAction from "mozilla/TelemetryComms.h";
 
 namespace mozilla {
 namespace gfx {
@@ -101,6 +103,8 @@ child:
   // Messages for reporting telemetry to the UI process.
   async AccumulateChildHistogram(Accumulation[] accumulations);
   async AccumulateChildKeyedHistogram(KeyedAccumulation[] accumulations);
+  async UpdateChildScalars(ScalarAction[] actions);
+  async UpdateChildKeyedScalars(KeyedScalarAction[] actions);
 
   async NotifyDeviceReset();
 };

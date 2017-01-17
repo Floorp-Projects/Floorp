@@ -171,7 +171,7 @@ unsigned int vpx_variance4x4_sse2(const unsigned char *src, int src_stride,
                                   unsigned int *sse) {
   int sum;
   get4x4var_sse2(src, src_stride, ref, ref_stride, sse, &sum);
-  return *sse - (((unsigned int)sum * sum) >> 4);
+  return *sse - ((sum * sum) >> 4);
 }
 
 unsigned int vpx_variance8x4_sse2(const uint8_t *src, int src_stride,
@@ -180,7 +180,7 @@ unsigned int vpx_variance8x4_sse2(const uint8_t *src, int src_stride,
   int sum;
   variance_sse2(src, src_stride, ref, ref_stride, 8, 4,
                 sse, &sum, get4x4var_sse2, 4);
-  return *sse - (((unsigned int)sum * sum) >> 5);
+  return *sse - ((sum * sum) >> 5);
 }
 
 unsigned int vpx_variance4x8_sse2(const uint8_t *src, int src_stride,
@@ -189,7 +189,7 @@ unsigned int vpx_variance4x8_sse2(const uint8_t *src, int src_stride,
   int sum;
   variance_sse2(src, src_stride, ref, ref_stride, 4, 8,
                 sse, &sum, get4x4var_sse2, 4);
-  return *sse - (((unsigned int)sum * sum) >> 5);
+  return *sse - ((sum * sum) >> 5);
 }
 
 unsigned int vpx_variance8x8_sse2(const unsigned char *src, int src_stride,
@@ -197,7 +197,7 @@ unsigned int vpx_variance8x8_sse2(const unsigned char *src, int src_stride,
                                   unsigned int *sse) {
   int sum;
   vpx_get8x8var_sse2(src, src_stride, ref, ref_stride, sse, &sum);
-  return *sse - (((unsigned int)sum * sum) >> 6);
+  return *sse - ((sum * sum) >> 6);
 }
 
 unsigned int vpx_variance16x8_sse2(const unsigned char *src, int src_stride,
@@ -206,7 +206,7 @@ unsigned int vpx_variance16x8_sse2(const unsigned char *src, int src_stride,
   int sum;
   variance_sse2(src, src_stride, ref, ref_stride, 16, 8,
                 sse, &sum, vpx_get8x8var_sse2, 8);
-  return *sse - (((unsigned int)sum * sum) >> 7);
+  return *sse - ((sum * sum) >> 7);
 }
 
 unsigned int vpx_variance8x16_sse2(const unsigned char *src, int src_stride,
@@ -215,7 +215,7 @@ unsigned int vpx_variance8x16_sse2(const unsigned char *src, int src_stride,
   int sum;
   variance_sse2(src, src_stride, ref, ref_stride, 8, 16,
                 sse, &sum, vpx_get8x8var_sse2, 8);
-  return *sse - (((unsigned int)sum * sum) >> 7);
+  return *sse - ((sum * sum) >> 7);
 }
 
 unsigned int vpx_variance16x16_sse2(const unsigned char *src, int src_stride,
@@ -223,7 +223,7 @@ unsigned int vpx_variance16x16_sse2(const unsigned char *src, int src_stride,
                                     unsigned int *sse) {
   int sum;
   vpx_get16x16var_sse2(src, src_stride, ref, ref_stride, sse, &sum);
-  return *sse - (((unsigned int)sum * sum) >> 8);
+  return *sse - (((uint32_t)((int64_t)sum * sum)) >> 8);
 }
 
 unsigned int vpx_variance32x32_sse2(const uint8_t *src, int src_stride,
@@ -307,3 +307,171 @@ unsigned int vpx_mse16x16_sse2(const uint8_t *src, int src_stride,
   vpx_variance16x16_sse2(src, src_stride, ref, ref_stride, sse);
   return *sse;
 }
+
+#if CONFIG_USE_X86INC
+// The 2 unused parameters are place holders for PIC enabled build.
+// These definitions are for functions defined in subpel_variance.asm
+#define DECL(w, opt) \
+  int vpx_sub_pixel_variance##w##xh_##opt(const uint8_t *src, \
+                                          ptrdiff_t src_stride, \
+                                          int x_offset, int y_offset, \
+                                          const uint8_t *dst, \
+                                          ptrdiff_t dst_stride, \
+                                          int height, unsigned int *sse, \
+                                          void *unused0, void *unused)
+#define DECLS(opt1, opt2) \
+  DECL(4, opt1); \
+  DECL(8, opt1); \
+  DECL(16, opt1)
+
+DECLS(sse2, sse2);
+DECLS(ssse3, ssse3);
+#undef DECLS
+#undef DECL
+
+#define FN(w, h, wf, wlog2, hlog2, opt, cast_prod, cast) \
+unsigned int vpx_sub_pixel_variance##w##x##h##_##opt(const uint8_t *src, \
+                                                     int src_stride, \
+                                                     int x_offset, \
+                                                     int y_offset, \
+                                                     const uint8_t *dst, \
+                                                     int dst_stride, \
+                                                     unsigned int *sse_ptr) { \
+  unsigned int sse; \
+  int se = vpx_sub_pixel_variance##wf##xh_##opt(src, src_stride, x_offset, \
+                                                y_offset, dst, dst_stride, \
+                                                h, &sse, NULL, NULL); \
+  if (w > wf) { \
+    unsigned int sse2; \
+    int se2 = vpx_sub_pixel_variance##wf##xh_##opt(src + 16, src_stride, \
+                                                   x_offset, y_offset, \
+                                                   dst + 16, dst_stride, \
+                                                   h, &sse2, NULL, NULL); \
+    se += se2; \
+    sse += sse2; \
+    if (w > wf * 2) { \
+      se2 = vpx_sub_pixel_variance##wf##xh_##opt(src + 32, src_stride, \
+                                                 x_offset, y_offset, \
+                                                 dst + 32, dst_stride, \
+                                                 h, &sse2, NULL, NULL); \
+      se += se2; \
+      sse += sse2; \
+      se2 = vpx_sub_pixel_variance##wf##xh_##opt(src + 48, src_stride, \
+                                                 x_offset, y_offset, \
+                                                 dst + 48, dst_stride, \
+                                                 h, &sse2, NULL, NULL); \
+      se += se2; \
+      sse += sse2; \
+    } \
+  } \
+  *sse_ptr = sse; \
+  return sse - (cast_prod (cast se * se) >> (wlog2 + hlog2)); \
+}
+
+#define FNS(opt1, opt2) \
+FN(64, 64, 16, 6, 6, opt1, (int64_t), (int64_t)); \
+FN(64, 32, 16, 6, 5, opt1, (int64_t), (int64_t)); \
+FN(32, 64, 16, 5, 6, opt1, (int64_t), (int64_t)); \
+FN(32, 32, 16, 5, 5, opt1, (int64_t), (int64_t)); \
+FN(32, 16, 16, 5, 4, opt1, (int64_t), (int64_t)); \
+FN(16, 32, 16, 4, 5, opt1, (int64_t), (int64_t)); \
+FN(16, 16, 16, 4, 4, opt1, (uint32_t), (int64_t)); \
+FN(16,  8, 16, 4, 3, opt1, (int32_t), (int32_t)); \
+FN(8,  16,  8, 3, 4, opt1, (int32_t), (int32_t)); \
+FN(8,   8,  8, 3, 3, opt1, (int32_t), (int32_t)); \
+FN(8,   4,  8, 3, 2, opt1, (int32_t), (int32_t)); \
+FN(4,   8,  4, 2, 3, opt1, (int32_t), (int32_t)); \
+FN(4,   4,  4, 2, 2, opt1, (int32_t), (int32_t))
+
+FNS(sse2, sse2);
+FNS(ssse3, ssse3);
+
+#undef FNS
+#undef FN
+
+// The 2 unused parameters are place holders for PIC enabled build.
+#define DECL(w, opt) \
+int vpx_sub_pixel_avg_variance##w##xh_##opt(const uint8_t *src, \
+                                            ptrdiff_t src_stride, \
+                                            int x_offset, int y_offset, \
+                                            const uint8_t *dst, \
+                                            ptrdiff_t dst_stride, \
+                                            const uint8_t *sec, \
+                                            ptrdiff_t sec_stride, \
+                                            int height, unsigned int *sse, \
+                                            void *unused0, void *unused)
+#define DECLS(opt1, opt2) \
+DECL(4, opt1); \
+DECL(8, opt1); \
+DECL(16, opt1)
+
+DECLS(sse2, sse2);
+DECLS(ssse3, ssse3);
+#undef DECL
+#undef DECLS
+
+#define FN(w, h, wf, wlog2, hlog2, opt, cast_prod, cast) \
+unsigned int vpx_sub_pixel_avg_variance##w##x##h##_##opt(const uint8_t *src, \
+                                                         int src_stride, \
+                                                         int x_offset, \
+                                                         int y_offset, \
+                                                         const uint8_t *dst, \
+                                                         int dst_stride, \
+                                                         unsigned int *sseptr, \
+                                                         const uint8_t *sec) { \
+  unsigned int sse; \
+  int se = vpx_sub_pixel_avg_variance##wf##xh_##opt(src, src_stride, x_offset, \
+                                                    y_offset, dst, dst_stride, \
+                                                    sec, w, h, &sse, NULL, \
+                                                    NULL); \
+  if (w > wf) { \
+    unsigned int sse2; \
+    int se2 = vpx_sub_pixel_avg_variance##wf##xh_##opt(src + 16, src_stride, \
+                                                       x_offset, y_offset, \
+                                                       dst + 16, dst_stride, \
+                                                       sec + 16, w, h, &sse2, \
+                                                       NULL, NULL); \
+    se += se2; \
+    sse += sse2; \
+    if (w > wf * 2) { \
+      se2 = vpx_sub_pixel_avg_variance##wf##xh_##opt(src + 32, src_stride, \
+                                                     x_offset, y_offset, \
+                                                     dst + 32, dst_stride, \
+                                                     sec + 32, w, h, &sse2, \
+                                                     NULL, NULL); \
+      se += se2; \
+      sse += sse2; \
+      se2 = vpx_sub_pixel_avg_variance##wf##xh_##opt(src + 48, src_stride, \
+                                                     x_offset, y_offset, \
+                                                     dst + 48, dst_stride, \
+                                                     sec + 48, w, h, &sse2, \
+                                                     NULL, NULL); \
+      se += se2; \
+      sse += sse2; \
+    } \
+  } \
+  *sseptr = sse; \
+  return sse - (cast_prod (cast se * se) >> (wlog2 + hlog2)); \
+}
+
+#define FNS(opt1, opt2) \
+FN(64, 64, 16, 6, 6, opt1, (int64_t), (int64_t)); \
+FN(64, 32, 16, 6, 5, opt1, (int64_t), (int64_t)); \
+FN(32, 64, 16, 5, 6, opt1, (int64_t), (int64_t)); \
+FN(32, 32, 16, 5, 5, opt1, (int64_t), (int64_t)); \
+FN(32, 16, 16, 5, 4, opt1, (int64_t), (int64_t)); \
+FN(16, 32, 16, 4, 5, opt1, (int64_t), (int64_t)); \
+FN(16, 16, 16, 4, 4, opt1, (uint32_t), (int64_t)); \
+FN(16,  8, 16, 4, 3, opt1, (uint32_t), (int32_t)); \
+FN(8,  16,  8, 3, 4, opt1, (uint32_t), (int32_t)); \
+FN(8,   8,  8, 3, 3, opt1, (uint32_t), (int32_t)); \
+FN(8,   4,  8, 3, 2, opt1, (uint32_t), (int32_t)); \
+FN(4,   8,  4, 2, 3, opt1, (uint32_t), (int32_t)); \
+FN(4,   4,  4, 2, 2, opt1, (uint32_t), (int32_t))
+
+FNS(sse2, sse);
+FNS(ssse3, ssse3);
+
+#undef FNS
+#undef FN
+#endif  // CONFIG_USE_X86INC

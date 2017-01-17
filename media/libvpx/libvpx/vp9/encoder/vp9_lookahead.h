@@ -36,10 +36,10 @@ struct lookahead_entry {
 #define MAX_PRE_FRAMES 1
 
 struct lookahead_ctx {
-  unsigned int max_sz;         /* Absolute size of the queue */
-  unsigned int sz;             /* Number of buffers currently in the queue */
-  unsigned int read_idx;       /* Read index */
-  unsigned int write_idx;      /* Write index */
+  int max_sz;                  /* Absolute size of the queue */
+  int sz;                      /* Number of buffers currently in the queue */
+  int read_idx;                /* Read index */
+  int write_idx;               /* Write index */
   struct lookahead_entry *buf; /* Buffer list */
 };
 

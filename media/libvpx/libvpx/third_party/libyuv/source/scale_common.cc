@@ -621,39 +621,31 @@ void ScaleRowDown38_2_Box_16_C(const uint16* src_ptr, ptrdiff_t src_stride,
   }
 }
 
-void ScaleAddRows_C(const uint8* src_ptr, ptrdiff_t src_stride,
-                    uint16* dst_ptr, int src_width, int src_height) {
+void ScaleAddRow_C(const uint8* src_ptr, uint16* dst_ptr, int src_width) {
   int x;
   assert(src_width > 0);
-  assert(src_height > 0);
-  for (x = 0; x < src_width; ++x) {
-    const uint8* s = src_ptr + x;
-    unsigned int sum = 0u;
-    int y;
-    for (y = 0; y < src_height; ++y) {
-      sum += s[0];
-      s += src_stride;
-    }
-    // TODO(fbarchard): Consider limitting height to 256 to avoid overflow.
-    dst_ptr[x] = sum < 65535u ? sum : 65535u;
+  for (x = 0; x < src_width - 1; x += 2) {
+    dst_ptr[0] += src_ptr[0];
+    dst_ptr[1] += src_ptr[1];
+    src_ptr += 2;
+    dst_ptr += 2;
+  }
+  if (src_width & 1) {
+    dst_ptr[0] += src_ptr[0];
   }
 }
 
-void ScaleAddRows_16_C(const uint16* src_ptr, ptrdiff_t src_stride,
-                       uint32* dst_ptr, int src_width, int src_height) {
+void ScaleAddRow_16_C(const uint16* src_ptr, uint32* dst_ptr, int src_width) {
   int x;
   assert(src_width > 0);
-  assert(src_height > 0);
-  for (x = 0; x < src_width; ++x) {
-    const uint16* s = src_ptr + x;
-    unsigned int sum = 0u;
-    int y;
-    for (y = 0; y < src_height; ++y) {
-      sum += s[0];
-      s += src_stride;
-    }
-    // No risk of overflow here now
-    dst_ptr[x] = sum;
+  for (x = 0; x < src_width - 1; x += 2) {
+    dst_ptr[0] += src_ptr[0];
+    dst_ptr[1] += src_ptr[1];
+    src_ptr += 2;
+    dst_ptr += 2;
+  }
+  if (src_width & 1) {
+    dst_ptr[0] += src_ptr[0];
   }
 }
 
@@ -1028,10 +1020,6 @@ enum FilterMode ScaleFilterReduce(int src_width, int src_height,
   if (filtering == kFilterBox) {
     // If scaling both axis to 0.5 or larger, switch from Box to Bilinear.
     if (dst_width * 2 >= src_width && dst_height * 2 >= src_height) {
-      filtering = kFilterBilinear;
-    }
-    // If scaling to larger, switch from Box to Bilinear.
-    if (dst_width >= src_width || dst_height >= src_height) {
       filtering = kFilterBilinear;
     }
   }

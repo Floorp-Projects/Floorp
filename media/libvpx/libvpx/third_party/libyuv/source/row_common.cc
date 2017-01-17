@@ -199,28 +199,36 @@ void ARGBToRGB565Row_C(const uint8* src_argb, uint8* dst_rgb, int width) {
   }
 }
 
+// dither4 is a row of 4 values from 4x4 dither matrix.
+// The 4x4 matrix contains values to increase RGB.  When converting to
+// fewer bits (565) this provides an ordered dither.
+// The order in the 4x4 matrix in first byte is upper left.
+// The 4 values are passed as an int, then referenced as an array, so
+// endian will not affect order of the original matrix.  But the dither4
+// will containing the first pixel in the lower byte for little endian
+// or the upper byte for big endian.
 void ARGBToRGB565DitherRow_C(const uint8* src_argb, uint8* dst_rgb,
-                             const uint8* dither8x8, int width) {
+                             const uint32 dither4, int width) {
   int x;
   for (x = 0; x < width - 1; x += 2) {
-    int dither0 = dither8x8[x & 7] - 128;
-    int dither1 = dither8x8[(x & 7) + 1] - 128;
-    uint8 b0 = Clamp(src_argb[0] + dither0) >> 3;
-    uint8 g0 = Clamp(src_argb[1] + dither0) >> 2;
-    uint8 r0 = Clamp(src_argb[2] + dither0) >> 3;
-    uint8 b1 = Clamp(src_argb[4] + dither1) >> 3;
-    uint8 g1 = Clamp(src_argb[5] + dither1) >> 2;
-    uint8 r1 = Clamp(src_argb[6] + dither1) >> 3;
+    int dither0 = ((const unsigned char*)(&dither4))[x & 3];
+    int dither1 = ((const unsigned char*)(&dither4))[(x + 1) & 3];
+    uint8 b0 = clamp255(src_argb[0] + dither0) >> 3;
+    uint8 g0 = clamp255(src_argb[1] + dither0) >> 2;
+    uint8 r0 = clamp255(src_argb[2] + dither0) >> 3;
+    uint8 b1 = clamp255(src_argb[4] + dither1) >> 3;
+    uint8 g1 = clamp255(src_argb[5] + dither1) >> 2;
+    uint8 r1 = clamp255(src_argb[6] + dither1) >> 3;
     WRITEWORD(dst_rgb, b0 | (g0 << 5) | (r0 << 11) |
               (b1 << 16) | (g1 << 21) | (r1 << 27));
     dst_rgb += 4;
     src_argb += 8;
   }
   if (width & 1) {
-    int dither0 = dither8x8[(width - 1) & 7] - 128;
-    uint8 b0 = Clamp(src_argb[0] + dither0) >> 3;
-    uint8 g0 = Clamp(src_argb[1] + dither0) >> 2;
-    uint8 r0 = Clamp(src_argb[2] + dither0) >> 3;
+    int dither0 = ((const unsigned char*)(&dither4))[(width - 1) & 3];
+    uint8 b0 = clamp255(src_argb[0] + dither0) >> 3;
+    uint8 g0 = clamp255(src_argb[1] + dither0) >> 2;
+    uint8 r0 = clamp255(src_argb[2] + dither0) >> 3;
     *(uint16*)(dst_rgb) = b0 | (g0 << 5) | (r0 << 11);
   }
 }
@@ -974,7 +982,7 @@ void SobelXYRow_C(const uint8* src_sobelx, const uint8* src_sobely,
   }
 }
 
-void I400ToARGBRow_C(const uint8* src_y, uint8* dst_argb, int width) {
+void J400ToARGBRow_C(const uint8* src_y, uint8* dst_argb, int width) {
   // Copy a Y to RGB.
   int x;
   for (x = 0; x < width; ++x) {
@@ -986,38 +994,42 @@ void I400ToARGBRow_C(const uint8* src_y, uint8* dst_argb, int width) {
   }
 }
 
-// YUV to RGB conversion constants.
+// BT.601 YUV to RGB reference
+//  R = (Y - 16) * 1.164              - V * -1.596
+//  G = (Y - 16) * 1.164 - U *  0.391 - V *  0.813
+//  B = (Y - 16) * 1.164 - U * -2.018
+
 // Y contribution to R,G,B.  Scale and bias.
 // TODO(fbarchard): Consider moving constants into a common header.
 #define YG 18997 /* round(1.164 * 64 * 256 * 256 / 257) */
-#define YGB 1160 /* 1.164 * 64 * 16 - adjusted for even error distribution */
+#define YGB -1160 /* 1.164 * 64 * -16 + 64 / 2 */
 
 // U and V contributions to R,G,B.
-#define UB -128 /* -min(128, round(2.018 * 64)) */
-#define UG 25 /* -round(-0.391 * 64) */
-#define VG 52 /* -round(-0.813 * 64) */
-#define VR -102 /* -round(1.596 * 64) */
+#define UB -128 /* max(-128, round(-2.018 * 64)) */
+#define UG 25 /* round(0.391 * 64) */
+#define VG 52 /* round(0.813 * 64) */
+#define VR -102 /* round(-1.596 * 64) */
 
 // Bias values to subtract 16 from Y and 128 from U and V.
-#define BB (UB * 128            - YGB)
-#define BG (UG * 128 + VG * 128 - YGB)
-#define BR            (VR * 128 - YGB)
+#define BB (UB * 128 + YGB)
+#define BG (UG * 128 + VG * 128 + YGB)
+#define BR (VR * 128 + YGB)
 
 // C reference code that mimics the YUV assembly.
 static __inline void YuvPixel(uint8 y, uint8 u, uint8 v,
                               uint8* b, uint8* g, uint8* r) {
   uint32 y1 = (uint32)(y * 0x0101 * YG) >> 16;
-  *b = Clamp((int32)(BB - (         u * UB) + y1) >> 6);
-  *g = Clamp((int32)(BG - (v * VG + u * UG) + y1) >> 6);
-  *r = Clamp((int32)(BR - (v * VR         ) + y1) >> 6);
+  *b = Clamp((int32)(-(u * UB) + y1 + BB) >> 6);
+  *g = Clamp((int32)(-(v * VG + u * UG) + y1 + BG) >> 6);
+  *r = Clamp((int32)(-(v * VR)+ y1 + BR) >> 6);
 }
 
 // C reference code that mimics the YUV assembly.
 static __inline void YPixel(uint8 y, uint8* b, uint8* g, uint8* r) {
   uint32 y1 = (uint32)(y * 0x0101 * YG) >> 16;
-  *b = Clamp((int32)(y1 - YGB) >> 6);
-  *g = Clamp((int32)(y1 - YGB) >> 6);
-  *r = Clamp((int32)(y1 - YGB) >> 6);
+  *b = Clamp((int32)(y1 + YGB) >> 6);
+  *g = Clamp((int32)(y1 + YGB) >> 6);
+  *r = Clamp((int32)(y1 + YGB) >> 6);
 }
 
 #undef YG
@@ -1029,6 +1041,46 @@ static __inline void YPixel(uint8 y, uint8* b, uint8* g, uint8* r) {
 #undef BB
 #undef BG
 #undef BR
+
+// JPEG YUV to RGB reference
+// *  R = Y                - V * -1.40200
+// *  G = Y - U *  0.34414 - V *  0.71414
+// *  B = Y - U * -1.77200
+
+// Y contribution to R,G,B.  Scale and bias.
+// TODO(fbarchard): Consider moving constants into a common header.
+#define YGJ 16320 /* round(1.000 * 64 * 256 * 256 / 257) */
+#define YGBJ 32  /* 64 / 2 */
+
+// U and V contributions to R,G,B.
+#define UBJ -113 /* round(-1.77200 * 64) */
+#define UGJ 22 /* round(0.34414 * 64) */
+#define VGJ 46 /* round(0.71414  * 64) */
+#define VRJ -90 /* round(-1.40200 * 64) */
+
+// Bias values to subtract 16 from Y and 128 from U and V.
+#define BBJ (UBJ * 128 + YGBJ)
+#define BGJ (UGJ * 128 + VGJ * 128 + YGBJ)
+#define BRJ (VRJ * 128 + YGBJ)
+
+// C reference code that mimics the YUV assembly.
+static __inline void YuvJPixel(uint8 y, uint8 u, uint8 v,
+                               uint8* b, uint8* g, uint8* r) {
+  uint32 y1 = (uint32)(y * 0x0101 * YGJ) >> 16;
+  *b = Clamp((int32)(-(u * UBJ) + y1 + BBJ) >> 6);
+  *g = Clamp((int32)(-(v * VGJ + u * UGJ) + y1 + BGJ) >> 6);
+  *r = Clamp((int32)(-(v * VRJ) + y1 + BRJ) >> 6);
+}
+
+#undef YGJ
+#undef YGBJ
+#undef UBJ
+#undef UGJ
+#undef VGJ
+#undef VRJ
+#undef BBJ
+#undef BGJ
+#undef BRJ
 
 #if !defined(LIBYUV_DISABLE_NEON) && \
     (defined(__ARM_NEON__) || defined(__aarch64__) || defined(LIBYUV_NEON))
@@ -1100,34 +1152,6 @@ void I422ToARGBRow_C(const uint8* src_y,
              rgb_buf + 0, rgb_buf + 1, rgb_buf + 2);
     rgb_buf[3] = 255;
   }
-}
-
-// C reference code that mimics the YUV assembly.
-// *  R = Y                + 1.40200 * Cr
-// *  G = Y - 0.34414 * Cb - 0.71414 * Cr
-// *  B = Y + 1.77200 * Cb
-
-#define YGJ 64 /* (int8)round(1.000 * 64) */
-
-#define UBJ 113 /* (int8)round(1.772 * 64) */
-#define UGJ -22 /* (int8)round(-0.34414 * 64) */
-#define URJ 0
-
-#define VBJ 0
-#define VGJ -46 /* (int8)round(-0.71414 * 64) */
-#define VRJ 90 /* (int8)round(1.402 * 64) */
-
-// Bias
-#define BBJ (UBJ * 128 + VBJ * 128)
-#define BGJ (UGJ * 128 + VGJ * 128)
-#define BRJ (URJ * 128 + VRJ * 128)
-
-static __inline void YuvJPixel(uint8 y, uint8 u, uint8 v,
-                              uint8* b, uint8* g, uint8* r) {
-  uint32 y1 = (uint32)(y * YGJ);
-  *b = Clamp((int32)(u * UBJ + v * VBJ + y1 - BBJ) >> 6);
-  *g = Clamp((int32)(u * UGJ + v * VGJ + y1 - BGJ) >> 6);
-  *r = Clamp((int32)(u * URJ + v * VRJ + y1 - BRJ) >> 6);
 }
 
 void J422ToARGBRow_C(const uint8* src_y,
@@ -1354,23 +1378,23 @@ void I411ToARGBRow_C(const uint8* src_y,
 }
 
 void NV12ToARGBRow_C(const uint8* src_y,
-                     const uint8* usrc_v,
+                     const uint8* src_uv,
                      uint8* rgb_buf,
                      int width) {
   int x;
   for (x = 0; x < width - 1; x += 2) {
-    YuvPixel(src_y[0], usrc_v[0], usrc_v[1],
+    YuvPixel(src_y[0], src_uv[0], src_uv[1],
              rgb_buf + 0, rgb_buf + 1, rgb_buf + 2);
     rgb_buf[3] = 255;
-    YuvPixel(src_y[1], usrc_v[0], usrc_v[1],
+    YuvPixel(src_y[1], src_uv[0], src_uv[1],
              rgb_buf + 4, rgb_buf + 5, rgb_buf + 6);
     rgb_buf[7] = 255;
     src_y += 2;
-    usrc_v += 2;
+    src_uv += 2;
     rgb_buf += 8;  // Advance 2 pixels.
   }
   if (width & 1) {
-    YuvPixel(src_y[0], usrc_v[0], usrc_v[1],
+    YuvPixel(src_y[0], src_uv[0], src_uv[1],
              rgb_buf + 0, rgb_buf + 1, rgb_buf + 2);
     rgb_buf[3] = 255;
   }
@@ -1402,7 +1426,7 @@ void NV21ToARGBRow_C(const uint8* src_y,
 }
 
 void NV12ToRGB565Row_C(const uint8* src_y,
-                       const uint8* usrc_v,
+                       const uint8* src_uv,
                        uint8* dst_rgb565,
                        int width) {
   uint8 b0;
@@ -1413,8 +1437,8 @@ void NV12ToRGB565Row_C(const uint8* src_y,
   uint8 r1;
   int x;
   for (x = 0; x < width - 1; x += 2) {
-    YuvPixel(src_y[0], usrc_v[0], usrc_v[1], &b0, &g0, &r0);
-    YuvPixel(src_y[1], usrc_v[0], usrc_v[1], &b1, &g1, &r1);
+    YuvPixel(src_y[0], src_uv[0], src_uv[1], &b0, &g0, &r0);
+    YuvPixel(src_y[1], src_uv[0], src_uv[1], &b1, &g1, &r1);
     b0 = b0 >> 3;
     g0 = g0 >> 2;
     r0 = r0 >> 3;
@@ -1424,11 +1448,11 @@ void NV12ToRGB565Row_C(const uint8* src_y,
     *(uint32*)(dst_rgb565) = b0 | (g0 << 5) | (r0 << 11) |
         (b1 << 16) | (g1 << 21) | (r1 << 27);
     src_y += 2;
-    usrc_v += 2;
+    src_uv += 2;
     dst_rgb565 += 4;  // Advance 2 pixels.
   }
   if (width & 1) {
-    YuvPixel(src_y[0], usrc_v[0], usrc_v[1], &b0, &g0, &r0);
+    YuvPixel(src_y[0], src_uv[0], src_uv[1], &b0, &g0, &r0);
     b0 = b0 >> 3;
     g0 = g0 >> 2;
     r0 = r0 >> 3;
@@ -1588,7 +1612,7 @@ void I422ToRGBARow_C(const uint8* src_y,
   }
 }
 
-void YToARGBRow_C(const uint8* src_y, uint8* rgb_buf, int width) {
+void I400ToARGBRow_C(const uint8* src_y, uint8* rgb_buf, int width) {
   int x;
   for (x = 0; x < width - 1; x += 2) {
     YPixel(src_y[0], rgb_buf + 0, rgb_buf + 1, rgb_buf + 2);
@@ -2062,22 +2086,6 @@ void InterpolateRow_16_C(uint16* dst_ptr, const uint16* src_ptr,
   }
 }
 
-// Select G channel from ARGB.  e.g.  GGGGGGGG
-void ARGBToBayerGGRow_C(const uint8* src_argb,
-                        uint8* dst_bayer, uint32 selector, int pix) {
-  // Copy a row of G.
-  int x;
-  for (x = 0; x < pix - 1; x += 2) {
-    dst_bayer[0] = src_argb[1];
-    dst_bayer[1] = src_argb[5];
-    src_argb += 8;
-    dst_bayer += 2;
-  }
-  if (pix & 1) {
-    dst_bayer[0] = src_argb[1];
-  }
-}
-
 // Use first 4 shuffler values to reorder ARGB channels.
 void ARGBShuffleRow_C(const uint8* src_argb, uint8* dst_argb,
                       const uint8* shuffler, int pix) {
@@ -2120,7 +2128,7 @@ void I422ToYUY2Row_C(const uint8* src_y,
   if (width & 1) {
     dst_frame[0] = src_y[0];
     dst_frame[1] = src_u[0];
-    dst_frame[2] = src_y[0];  // duplicate last y
+    dst_frame[2] = 0;
     dst_frame[3] = src_v[0];
   }
 }
@@ -2144,14 +2152,15 @@ void I422ToUYVYRow_C(const uint8* src_y,
     dst_frame[0] = src_u[0];
     dst_frame[1] = src_y[0];
     dst_frame[2] = src_v[0];
-    dst_frame[3] = src_y[0];  // duplicate last y
+    dst_frame[3] = 0;
   }
 }
 
 // Maximum temporary width for wrappers to process at a time, in pixels.
 #define MAXTWIDTH 2048
 
-#if !defined(_MSC_VER) && defined(HAS_I422TORGB565ROW_SSSE3)
+#if !(defined(_MSC_VER) && !defined(__clang__)) && \
+    defined(HAS_I422TORGB565ROW_SSSE3)
 // row_win.cc has asm version, but GCC uses 2 step wrapper.
 void I422ToRGB565Row_SSSE3(const uint8* src_y,
                            const uint8* src_u,
@@ -2341,6 +2350,50 @@ void I422ToARGB4444Row_AVX2(const uint8* src_y,
     src_u += twidth / 2;
     src_v += twidth / 2;
     dst_argb4444 += twidth * 2;
+    width -= twidth;
+  }
+}
+#endif
+
+#if defined(HAS_I422TORGB24ROW_AVX2)
+void I422ToRGB24Row_AVX2(const uint8* src_y,
+                            const uint8* src_u,
+                            const uint8* src_v,
+                            uint8* dst_rgb24,
+                            int width) {
+  // Row buffer for intermediate ARGB pixels.
+  SIMD_ALIGNED32(uint8 row[MAXTWIDTH * 4]);
+  while (width > 0) {
+    int twidth = width > MAXTWIDTH ? MAXTWIDTH : width;
+    I422ToARGBRow_AVX2(src_y, src_u, src_v, row, twidth);
+    // TODO(fbarchard): ARGBToRGB24Row_AVX2
+    ARGBToRGB24Row_SSSE3(row, dst_rgb24, twidth);
+    src_y += twidth;
+    src_u += twidth / 2;
+    src_v += twidth / 2;
+    dst_rgb24 += twidth * 3;
+    width -= twidth;
+  }
+}
+#endif
+
+#if defined(HAS_I422TORAWROW_AVX2)
+void I422ToRAWRow_AVX2(const uint8* src_y,
+                            const uint8* src_u,
+                            const uint8* src_v,
+                            uint8* dst_raw,
+                            int width) {
+  // Row buffer for intermediate ARGB pixels.
+  SIMD_ALIGNED32(uint8 row[MAXTWIDTH * 4]);
+  while (width > 0) {
+    int twidth = width > MAXTWIDTH ? MAXTWIDTH : width;
+    I422ToARGBRow_AVX2(src_y, src_u, src_v, row, twidth);
+    // TODO(fbarchard): ARGBToRAWRow_AVX2
+    ARGBToRAWRow_SSSE3(row, dst_raw, twidth);
+    src_y += twidth;
+    src_u += twidth / 2;
+    src_v += twidth / 2;
+    dst_raw += twidth * 3;
     width -= twidth;
   }
 }

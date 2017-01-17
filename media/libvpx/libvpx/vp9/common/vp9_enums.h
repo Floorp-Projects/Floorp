@@ -12,6 +12,7 @@
 #define VP9_COMMON_VP9_ENUMS_H_
 
 #include "./vpx_config.h"
+#include "vpx/vpx_integer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,23 +41,22 @@ typedef enum BITSTREAM_PROFILE {
   MAX_PROFILES
 } BITSTREAM_PROFILE;
 
-typedef enum BLOCK_SIZE {
-  BLOCK_4X4,
-  BLOCK_4X8,
-  BLOCK_8X4,
-  BLOCK_8X8,
-  BLOCK_8X16,
-  BLOCK_16X8,
-  BLOCK_16X16,
-  BLOCK_16X32,
-  BLOCK_32X16,
-  BLOCK_32X32,
-  BLOCK_32X64,
-  BLOCK_64X32,
-  BLOCK_64X64,
-  BLOCK_SIZES,
-  BLOCK_INVALID = BLOCK_SIZES
-} BLOCK_SIZE;
+#define BLOCK_4X4     0
+#define BLOCK_4X8     1
+#define BLOCK_8X4     2
+#define BLOCK_8X8     3
+#define BLOCK_8X16    4
+#define BLOCK_16X8    5
+#define BLOCK_16X16   6
+#define BLOCK_16X32   7
+#define BLOCK_32X16   8
+#define BLOCK_32X32   9
+#define BLOCK_32X64  10
+#define BLOCK_64X32  11
+#define BLOCK_64X64  12
+#define BLOCK_SIZES  13
+#define BLOCK_INVALID BLOCK_SIZES
+typedef uint8_t BLOCK_SIZE;
 
 typedef enum PARTITION_TYPE {
   PARTITION_NONE,
@@ -72,13 +72,12 @@ typedef char PARTITION_CONTEXT;
 #define PARTITION_CONTEXTS (4 * PARTITION_PLOFFSET)
 
 // block transform size
-typedef enum {
-  TX_4X4 = 0,                      // 4x4 transform
-  TX_8X8 = 1,                      // 8x8 transform
-  TX_16X16 = 2,                    // 16x16 transform
-  TX_32X32 = 3,                    // 32x32 transform
-  TX_SIZES
-} TX_SIZE;
+typedef uint8_t TX_SIZE;
+#define TX_4X4   ((TX_SIZE)0)   // 4x4 transform
+#define TX_8X8   ((TX_SIZE)1)   // 8x8 transform
+#define TX_16X16 ((TX_SIZE)2)   // 16x16 transform
+#define TX_32X32 ((TX_SIZE)3)   // 32x32 transform
+#define TX_SIZES ((TX_SIZE)4)
 
 // frame transform mode
 typedef enum {
@@ -110,23 +109,22 @@ typedef enum {
   PLANE_TYPES
 } PLANE_TYPE;
 
-typedef enum {
-  DC_PRED,         // Average of above and left pixels
-  V_PRED,          // Vertical
-  H_PRED,          // Horizontal
-  D45_PRED,        // Directional 45  deg = round(arctan(1/1) * 180/pi)
-  D135_PRED,       // Directional 135 deg = 180 - 45
-  D117_PRED,       // Directional 117 deg = 180 - 63
-  D153_PRED,       // Directional 153 deg = 180 - 27
-  D207_PRED,       // Directional 207 deg = 180 + 27
-  D63_PRED,        // Directional 63  deg = round(arctan(2/1) * 180/pi)
-  TM_PRED,         // True-motion
-  NEARESTMV,
-  NEARMV,
-  ZEROMV,
-  NEWMV,
-  MB_MODE_COUNT
-} PREDICTION_MODE;
+#define DC_PRED    0       // Average of above and left pixels
+#define V_PRED     1       // Vertical
+#define H_PRED     2       // Horizontal
+#define D45_PRED   3       // Directional 45  deg = round(arctan(1/1) * 180/pi)
+#define D135_PRED  4       // Directional 135 deg = 180 - 45
+#define D117_PRED  5       // Directional 117 deg = 180 - 63
+#define D153_PRED  6       // Directional 153 deg = 180 - 27
+#define D207_PRED  7       // Directional 207 deg = 180 + 27
+#define D63_PRED   8       // Directional 63  deg = round(arctan(2/1) * 180/pi)
+#define TM_PRED    9       // True-motion
+#define NEARESTMV 10
+#define NEARMV    11
+#define ZEROMV    12
+#define NEWMV     13
+#define MB_MODE_COUNT 14
+typedef uint8_t PREDICTION_MODE;
 
 #define INTRA_MODES (TM_PRED + 1)
 

@@ -14,8 +14,9 @@
 
 #include "./vpx_config.h"
 
+#include "vpx_dsp/prob.h"
+
 #include "vp9/common/vp9_mv.h"
-#include "vp9/common/vp9_prob.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,7 +27,14 @@ struct VP9Common;
 void vp9_init_mv_probs(struct VP9Common *cm);
 
 void vp9_adapt_mv_probs(struct VP9Common *cm, int usehp);
-int vp9_use_mv_hp(const MV *ref);
+
+// Integer pel reference mv threshold for use of high-precision 1/8 mv
+#define COMPANDED_MVREF_THRESH 8
+
+static INLINE int use_mv_hp(const MV *ref) {
+  return (abs(ref->row) >> 3) < COMPANDED_MVREF_THRESH &&
+         (abs(ref->col) >> 3) < COMPANDED_MVREF_THRESH;
+}
 
 #define MV_UPDATE_PROB 252
 
@@ -76,24 +84,24 @@ typedef enum {
 #define MV_UPP   ((1 << MV_IN_USE_BITS) - 1)
 #define MV_LOW   (-(1 << MV_IN_USE_BITS))
 
-extern const vp9_tree_index vp9_mv_joint_tree[];
-extern const vp9_tree_index vp9_mv_class_tree[];
-extern const vp9_tree_index vp9_mv_class0_tree[];
-extern const vp9_tree_index vp9_mv_fp_tree[];
+extern const vpx_tree_index vp9_mv_joint_tree[];
+extern const vpx_tree_index vp9_mv_class_tree[];
+extern const vpx_tree_index vp9_mv_class0_tree[];
+extern const vpx_tree_index vp9_mv_fp_tree[];
 
 typedef struct {
-  vp9_prob sign;
-  vp9_prob classes[MV_CLASSES - 1];
-  vp9_prob class0[CLASS0_SIZE - 1];
-  vp9_prob bits[MV_OFFSET_BITS];
-  vp9_prob class0_fp[CLASS0_SIZE][MV_FP_SIZE - 1];
-  vp9_prob fp[MV_FP_SIZE - 1];
-  vp9_prob class0_hp;
-  vp9_prob hp;
+  vpx_prob sign;
+  vpx_prob classes[MV_CLASSES - 1];
+  vpx_prob class0[CLASS0_SIZE - 1];
+  vpx_prob bits[MV_OFFSET_BITS];
+  vpx_prob class0_fp[CLASS0_SIZE][MV_FP_SIZE - 1];
+  vpx_prob fp[MV_FP_SIZE - 1];
+  vpx_prob class0_hp;
+  vpx_prob hp;
 } nmv_component;
 
 typedef struct {
-  vp9_prob joints[MV_JOINTS - 1];
+  vpx_prob joints[MV_JOINTS - 1];
   nmv_component comps[2];
 } nmv_context;
 
@@ -106,8 +114,6 @@ static INLINE MV_JOINT_TYPE vp9_get_mv_joint(const MV *mv) {
 }
 
 MV_CLASS_TYPE vp9_get_mv_class(int z, int *offset);
-int vp9_get_mv_mag(MV_CLASS_TYPE c, int offset);
-
 
 typedef struct {
   unsigned int sign[2];

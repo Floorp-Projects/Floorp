@@ -38,6 +38,14 @@ union MaybeTransform {
   void_t;
 };
 
+/**
+ * The PLayerTransaction protocol manages the layer tree for a single "browser".
+ * The "browser" can be a top-level browser window, in which case the PLayer-
+ * TransactionChild exists in the UI process. The "browser" can also be a content
+ * tab, in which case the PLayerTransactionChild exists in the content process.
+ * In either case, the PLayerTransactionParent exists in the GPU process (if
+ * there is one) or the UI process otherwise.
+ */
 sync protocol PLayerTransaction {
   manager PCompositorBridge;
   manages PCompositable;

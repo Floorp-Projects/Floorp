@@ -10,13 +10,14 @@
 
 #include <string>
 
+#include "third_party/googletest/src/include/gtest/gtest.h"
+
 #include "./vpx_config.h"
 #include "test/codec_factory.h"
-#include "test/encode_test_driver.h"
 #include "test/decode_test_driver.h"
+#include "test/encode_test_driver.h"
 #include "test/register_state_check.h"
 #include "test/video_source.h"
-#include "third_party/googletest/src/include/gtest/gtest.h"
 
 namespace libvpx_test {
 void Encoder::InitEncoder(VideoSource *video) {
@@ -185,6 +186,7 @@ void EncoderTest::RunLoop(VideoSource *video) {
 
     video->Begin();
     encoder->InitEncoder(video);
+    ASSERT_FALSE(::testing::Test::HasFatalFailure());
 
     unsigned long dec_init_flags = 0;  // NOLINT
     // Use fragment decoder if encoder outputs partitions.

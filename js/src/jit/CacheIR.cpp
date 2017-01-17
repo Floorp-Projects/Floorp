@@ -1003,7 +1003,7 @@ GetPropIRGenerator::tryAttachStringChar(ValOperandId valId, ValOperandId indexId
     }
 
     StringOperandId strId = writer.guardIsString(valId);
-    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
+    Int32OperandId int32IndexId = writer.guardIsInt32Index(indexId);
     writer.loadStringCharResult(strId, int32IndexId);
     writer.returnFromIC();
     return true;
@@ -1045,7 +1045,7 @@ GetPropIRGenerator::tryAttachMagicArgument(ValOperandId valId, ValOperandId inde
     writer.guardMagicValue(valId, JS_OPTIMIZED_ARGUMENTS);
     writer.guardFrameHasNoArgumentsObject();
 
-    Int32OperandId int32IndexId = writer.guardIsInt32(indexId);
+    Int32OperandId int32IndexId = writer.guardIsInt32Index(indexId);
     writer.loadFrameArgumentResult(int32IndexId);
     writer.typeMonitorResult();
     return true;
@@ -1506,7 +1506,7 @@ IRGenerator::maybeGuardInt32Index(const Value& index, ValOperandId indexId,
             return false;
 
         *int32Index = uint32_t(indexSigned);
-        *int32IndexId = writer.guardIsInt32(indexId);
+        *int32IndexId = writer.guardIsInt32Index(indexId);
         return true;
     }
 

@@ -435,7 +435,11 @@ nsImageBoxFrame::PaintImage(nsRenderingContext& aRenderingContext,
 void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
                               nsRenderingContext* aCtx)
 {
-  uint32_t flags = imgIContainer::FLAG_NONE;
+  // Even though we call StartDecoding when we get a new image we pass
+  // FLAG_SYNC_DECODE_IF_FAST here for the case where the size we draw at is not
+  // the intrinsic size of the image and we aren't likely to implement predictive
+  // decoding at the correct size for this class like nsImageFrame has.
+  uint32_t flags = imgIContainer::FLAG_SYNC_DECODE_IF_FAST;
   if (aBuilder->ShouldSyncDecodeImages())
     flags |= imgIContainer::FLAG_SYNC_DECODE;
   if (aBuilder->IsPaintingToWindow())

@@ -82,7 +82,7 @@ exports.register = register;
 /**
  * The HighlighterActor class
  */
-var HighlighterActor = exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
+exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
   initialize: function (inspector, autohide) {
     protocol.Actor.prototype.initialize.call(this, null);
 
@@ -255,7 +255,8 @@ var HighlighterActor = exports.HighlighterActor = protocol.ActorClassWithSpec(hi
       // If shift is pressed, this is only a preview click, send the event to
       // the client, but don't stop picking.
       if (event.shiftKey) {
-        events.emit(this._walker, "picker-node-previewed", this._findAndAttachElement(event));
+        events.emit(this._walker, "picker-node-previewed",
+          this._findAndAttachElement(event));
         return;
       }
 
@@ -351,8 +352,8 @@ var HighlighterActor = exports.HighlighterActor = protocol.ActorClassWithSpec(hi
             (!IS_OSX && event.ctrlKey && event.shiftKey)) {
             this.cancelPick();
             events.emit(this._walker, "picker-node-canceled");
-            return;
           }
+          return;
         default: return;
       }
 
@@ -370,7 +371,7 @@ var HighlighterActor = exports.HighlighterActor = protocol.ActorClassWithSpec(hi
   /**
    * This pick method also focuses the highlighter's target window.
    */
-  pickAndFocus: function() {
+  pickAndFocus: function () {
     // Go ahead and pass on the results to help future-proof this method.
     let pickResults = this.pick();
     this._highlighterEnv.window.focus();
@@ -429,7 +430,7 @@ var HighlighterActor = exports.HighlighterActor = protocol.ActorClassWithSpec(hi
  * A generic highlighter actor class that instantiate a highlighter given its
  * type name and allows to show/hide it.
  */
-var CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSpec, {
+exports.CustomHighlighterActor = protocol.ActorClassWithSpec(customHighlighterSpec, {
   /**
    * Create a highlighter instance given its typename
    * The typename must be one of HIGHLIGHTER_CLASSES and the class must
