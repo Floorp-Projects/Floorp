@@ -246,6 +246,9 @@ WR_INLINE void
 wr_api_set_root_display_list(WrAPI* api, WrState* state, uint32_t epoch, float w, float h) WR_FUNC;
 
 WR_INLINE void
+wr_api_send_external_event(WrAPI* api, uintptr_t evt) WR_FUNC;
+
+WR_INLINE void
 wr_window_init_pipeline_epoch(WrWindowState* window, WrPipelineId pipeline, uint32_t width, uint32_t height) WR_FUNC;
 
 WR_INLINE WrFontKey
