@@ -355,7 +355,7 @@ DisplayListBuilder::PushText(const WrRect& aBounds,
                              float aGlyphSize)
 {
   wr_dp_push_text(mWrState, aBounds, aClip,
-                  ToWRColor(aColor),
+                  ToWrColor(aColor),
                   aFontKey.mHandle,
                   &aGlyphBuffer[0], aGlyphBuffer.length(),
                   aGlyphSize);

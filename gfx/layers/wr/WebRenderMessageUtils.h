@@ -54,10 +54,10 @@ struct ParamTraits<WRBorderStyle>
 };
 
 template<>
-struct ParamTraits<WRColor>
+struct ParamTraits<WrColor>
 {
   static void
-  Write(Message* aMsg, const WRColor& aParam)
+  Write(Message* aMsg, const WrColor& aParam)
   {
     WriteParam(aMsg, aParam.r);
     WriteParam(aMsg, aParam.g);
@@ -66,7 +66,7 @@ struct ParamTraits<WRColor>
   }
 
   static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WRColor* aResult)
+  Read(const Message* aMsg, PickleIterator* aIter, WrColor* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->r)
         && ReadParam(aMsg, aIter, &aResult->g)

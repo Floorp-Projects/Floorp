@@ -29,13 +29,13 @@ typedef uint64_t WRFontKey;
 typedef uint64_t WRPipelineId;
 typedef uint32_t WREpoch;
 
-struct WRColor {
+struct WrColor {
   float r;
   float g;
   float b;
   float a;
 
-  bool operator==(const WRColor& aRhs) const {
+  bool operator==(const WrColor& aRhs) const {
     return r == aRhs.r && g == aRhs.g &&
            b == aRhs.b && a == aRhs.a;
   }
@@ -92,7 +92,7 @@ enum WRBorderStyle {
 
 struct WRBorderSide {
   float width;
-  WRColor color;
+  WrColor color;
   WRBorderStyle style;
 
   bool operator==(const WRBorderSide& aRhs) const {
@@ -335,7 +335,7 @@ WR_FUNC;
 WR_INLINE void
 wr_dp_push_text(WrState* wrState,
                 WrRect bounds, WrRect clip,
-                WRColor color,
+                WrColor color,
                 WRFontKey font_Key,
                 const WRGlyphInstance* glyphs,
                 uint32_t glyph_count, float glyph_size) WR_FUNC;
