@@ -23,7 +23,6 @@
 #include "nsTraceRefcnt.h"
 #endif
 
-#if defined(MOZ_HAS_MOZGLUE) || defined(MOZILLA_INTERNAL_API)
 /*
  * The crash reason set by MOZ_CRASH_ANNOTATE is consumed by the crash reporter
  * if present. It is declared here (and defined in Assertions.cpp) to make it
@@ -34,6 +33,7 @@ MOZ_BEGIN_EXTERN_C
 extern MFBT_DATA const char* gMozCrashReason;
 MOZ_END_EXTERN_C
 
+#if !defined(DEBUG) && (defined(MOZ_HAS_MOZGLUE) || defined(MOZILLA_INTERNAL_API))
 static inline void
 AnnotateMozCrashReason(const char* reason)
 {
