@@ -26,9 +26,12 @@ namespace widget {
 class CompositorWidget;
 }
 
+namespace wr {
+class WebRenderAPI;
+}
+
 namespace layers {
 
-class WebRenderAPI;
 class CompositableHost;
 class Compositor;
 class CompositorBridgeParentBase;
@@ -42,7 +45,7 @@ public:
   WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
                         const uint64_t& aPipelineId,
                         widget::CompositorWidget* aWidget,
-                        RefPtr<WebRenderAPI>&& aApi);
+                        RefPtr<wr::WebRenderAPI>&& aApi);
 
   WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
                         const uint64_t& aPipelineId,
@@ -137,10 +140,10 @@ private:
   CompositorBridgeParentBase* MOZ_NON_OWNING_REF mCompositorBridge;
   uint64_t mPipelineId;
   RefPtr<widget::CompositorWidget> mWidget;
-  Maybe<DisplayListBuilder> mBuilder;
+  Maybe<wr::DisplayListBuilder> mBuilder;
   RefPtr<gl::GLContext> mGLContext;
   wrwindowstate* mWRWindowState;
-  RefPtr<WebRenderAPI> mApi;
+  RefPtr<wr::WebRenderAPI> mApi;
   RefPtr<layers::Compositor> mCompositor;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   std::vector<WRImageKey> mKeysToDelete;

@@ -113,12 +113,12 @@ WebRenderLayer::buildMaskLayer() {
           DataSourceSurface::ScopedMap map(dataSurface, DataSourceSurface::MapType::READ);
           gfx::IntSize size = surface->GetSize();
           MOZ_RELEASE_ASSERT(surface->GetFormat() == SurfaceFormat::A8, "bad format");
-          gfx::ByteBuffer buf(size.height * map.GetStride(), map.GetData());
+          wr::ByteBuffer buf(size.height * map.GetStride(), map.GetData());
           WRImageKey maskKey;
           WRBridge()->SendAddImage(size.width, size.height, map.GetStride(), A8, buf, &maskKey);
 
           imageMask.image = maskKey;
-          imageMask.rect = ToWRRect(Rect(0, 0, size.width, size.height));
+          imageMask.rect = wr::ToWRRect(Rect(0, 0, size.width, size.height));
           imageMask.repeat = false;
           WRManager()->AddImageKeyForDiscard(maskKey);
           mask = Some(imageMask);
@@ -158,7 +158,7 @@ WRScrollFrameStackingContextGenerator::WRScrollFrameStackingContextGenerator(
     }
 
     mLayer->WRBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(ToWRRect(bounds), ToWRRect(overflow), Nothing(), identity, fm.GetScrollId()));
+      OpDPPushStackingContext(wr::ToWRRect(bounds), wr::ToWRRect(overflow), Nothing(), identity, fm.GetScrollId()));
   }
 }
 

@@ -13,14 +13,14 @@
 #include "base/task.h"
 
 namespace mozilla {
-namespace layers {
+namespace wr {
 
 RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
                          RefPtr<gl::GLContext>&& aGL,
                          RefPtr<widget::CompositorWidget>&& aWidget,
-                         gfx::WindowId aWindowId,
+                         wr::WindowId aWindowId,
                          WrRenderer* aWrRenderer,
-                         CompositorBridgeParentBase* aBridge)
+                         layers::CompositorBridgeParentBase* aBridge)
 : mThread(aThread)
 , mGL(aGL)
 , mWidget(aWidget)
@@ -55,7 +55,7 @@ RendererOGL::Update()
 }
 
 static void
-NotifyDidRender(CompositorBridgeParentBase* aBridge, uint64_t aTransactionId, TimeStamp aStart, TimeStamp aEnd)
+NotifyDidRender(layers::CompositorBridgeParentBase* aBridge, uint64_t aTransactionId, TimeStamp aStart, TimeStamp aEnd)
 {
 
 }
@@ -97,7 +97,7 @@ RendererOGL::Render(uint64_t aTransactionId)
 
   TimeStamp end = TimeStamp::Now();
 
-  CompositorThreadHolder::Loop()->PostTask(NewRunnableFunction(
+  layers::CompositorThreadHolder::Loop()->PostTask(NewRunnableFunction(
     &NotifyDidRender,
     mBridge, aTransactionId, start, end
   ));

@@ -47,7 +47,7 @@ WebRenderTextLayer::RenderLayer()
 
     MOZ_ASSERT(mFont->GetType() == FontType::DWRITE);
     mFont->GetFontFileData(&DWriteFontFileData, this);
-    gfx::ByteBuffer fontBuffer(mFontDataLength, mFontData);
+    wr::ByteBuffer fontBuffer(mFontDataLength, mFontData);
 
     nsTArray<WRGlyphArray> wr_glyphs;
     wr_glyphs.SetLength(mGlyphs.Length());
@@ -68,8 +68,8 @@ WebRenderTextLayer::RenderLayer()
     }
 
     WRBridge()->AddWebRenderCommand(OpDPPushText(
-        ToWRRect(rect),
-        ToWRRect(clip),
+        wr::ToWRRect(rect),
+        wr::ToWRRect(clip),
         wr_glyphs,
         mIndex,
         mGlyphSize,
