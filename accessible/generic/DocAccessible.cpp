@@ -1470,8 +1470,8 @@ DocAccessible::DoInitialUpdate()
         SetIPCDoc(ipcDoc);
 
 #if defined(XP_WIN)
-        IAccessibleHolder holder(CreateHolderFromAccessible(docAcc));
-        int32_t childID = AccessibleWrap::GetChildIDFor(docAcc);
+        IAccessibleHolder holder(CreateHolderFromAccessible(this));
+        int32_t childID = AccessibleWrap::GetChildIDFor(this);
 #else
         int32_t holder = 0, childID = 0;
 #endif
