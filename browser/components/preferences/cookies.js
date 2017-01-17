@@ -216,8 +216,8 @@ var gCookiesWindow = {
       var cacheIndex = Math.min(this._cacheValid, aIndex);
       if (cacheIndex > 0) {
         var cacheItem = this._cacheItems[cacheIndex];
-        start = cacheItem['start'];
-        count = hostIndex = cacheItem['count'];
+        start = cacheItem["start"];
+        count = hostIndex = cacheItem["count"];
       }
 
       for (let i = start; i < gCookiesWindow._hostOrder.length; ++i) { // var host in gCookiesWindow._hosts) {
@@ -227,7 +227,7 @@ var gCookiesWindow = {
           return currHost;
         hostIndex = count;
 
-        var cacheEntry = { 'start' : i, 'count' : count };
+        var cacheEntry = { "start" : i, "count" : count };
         var cacheStart = count;
 
         if (currHost.open) {
@@ -502,8 +502,8 @@ var gCookiesWindow = {
       const locale = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                      .getService(Components.interfaces.nsIXULChromeRegistry)
                      .getSelectedLocale("global", true);
-      const dtOptions = { year: 'numeric', month: 'long', day: 'numeric',
-                          hour: 'numeric', minute: 'numeric', second: 'numeric' };
+      const dtOptions = { year: "numeric", month: "long", day: "numeric",
+                          hour: "numeric", minute: "numeric", second: "numeric" };
       return date.toLocaleString(locale, dtOptions);
     }
     return this._bundle.getString("expireAtEndOfSession");

@@ -69,7 +69,7 @@ function server_upload(metadata, response) {
     body = "Valid data upload via " + metadata.method;
     response.setStatusLine(metadata.httpVersion, 200, "OK");
   } else {
-    body = "Invalid data upload via " + metadata.method + ': ' + input;
+    body = "Invalid data upload via " + metadata.method + ": " + input;
     response.setStatusLine(metadata.httpVersion, 500, "Internal Server Error");
   }
 
@@ -98,28 +98,28 @@ const TIMESTAMP = 1274380461;
 
 function server_timestamp(metadata, response) {
   let body = "Thank you for your request";
-  response.setHeader("X-Weave-Timestamp", '' + TIMESTAMP, false);
+  response.setHeader("X-Weave-Timestamp", "" + TIMESTAMP, false);
   response.setStatusLine(metadata.httpVersion, 200, "OK");
   response.bodyOutputStream.write(body, body.length);
 }
 
 function server_backoff(metadata, response) {
   let body = "Hey, back off!";
-  response.setHeader("X-Weave-Backoff", '600', false);
+  response.setHeader("X-Weave-Backoff", "600", false);
   response.setStatusLine(metadata.httpVersion, 200, "OK");
   response.bodyOutputStream.write(body, body.length);
 }
 
 function server_quota_notice(request, response) {
   let body = "You're approaching quota.";
-  response.setHeader("X-Weave-Quota-Remaining", '1048576', false);
+  response.setHeader("X-Weave-Quota-Remaining", "1048576", false);
   response.setStatusLine(request.httpVersion, 200, "OK");
   response.bodyOutputStream.write(body, body.length);
 }
 
 function server_quota_error(request, response) {
   let body = "14";
-  response.setHeader("X-Weave-Quota-Remaining", '-1024', false);
+  response.setHeader("X-Weave-Quota-Remaining", "-1024", false);
   response.setStatusLine(request.httpVersion, 400, "OK");
   response.bodyOutputStream.write(body, body.length);
 }
@@ -153,7 +153,7 @@ Observers.add("weave:service:quota:remaining",
               function(subject) { quotaValue = subject; });
 
 function run_test() {
-  logger = Log.repository.getLogger('Test');
+  logger = Log.repository.getLogger("Test");
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
   Svc.Prefs.set("network.numRetries", 1); // speed up test
@@ -493,7 +493,7 @@ add_test(function test_get_no_headers() {
   let res_headers = new AsyncResource(server.baseURI + "/headers");
   res_headers.get(function(error, content) {
     do_check_eq(error, null);
-    do_check_eq(content, '{}');
+    do_check_eq(content, "{}");
     run_next_test();
   });
 });
@@ -501,7 +501,7 @@ add_test(function test_get_no_headers() {
 add_test(function test_put_default_content_type() {
   _("PUT: Content-Type defaults to text/plain");
   let res_headers = new AsyncResource(server.baseURI + "/headers");
-  res_headers.put('data', function(error, content) {
+  res_headers.put("data", function(error, content) {
     do_check_eq(error, null);
     do_check_eq(content, JSON.stringify({"content-type": "text/plain"}));
     run_next_test();
@@ -511,7 +511,7 @@ add_test(function test_put_default_content_type() {
 add_test(function test_post_default_content_type() {
   _("POST: Content-Type defaults to text/plain");
   let res_headers = new AsyncResource(server.baseURI + "/headers");
-  res_headers.post('data', function(error, content) {
+  res_headers.post("data", function(error, content) {
     do_check_eq(error, null);
     do_check_eq(content, JSON.stringify({"content-type": "text/plain"}));
     run_next_test();
@@ -521,8 +521,8 @@ add_test(function test_post_default_content_type() {
 add_test(function test_setHeader() {
   _("setHeader(): setting simple header");
   let res_headers = new AsyncResource(server.baseURI + "/headers");
-  res_headers.setHeader('X-What-Is-Weave', 'awesome');
-  do_check_eq(res_headers.headers['x-what-is-weave'], 'awesome');
+  res_headers.setHeader("X-What-Is-Weave", "awesome");
+  do_check_eq(res_headers.headers["x-what-is-weave"], "awesome");
   res_headers.get(function(error, content) {
     do_check_eq(error, null);
     do_check_eq(content, JSON.stringify({"x-what-is-weave": "awesome"}));
@@ -533,10 +533,10 @@ add_test(function test_setHeader() {
 add_test(function test_setHeader_overwrite() {
   _("setHeader(): setting multiple headers, overwriting existing header");
   let res_headers = new AsyncResource(server.baseURI + "/headers");
-  res_headers.setHeader('X-WHAT-is-Weave', 'more awesomer');
-  res_headers.setHeader('X-Another-Header', 'hello world');
-  do_check_eq(res_headers.headers['x-what-is-weave'], 'more awesomer');
-  do_check_eq(res_headers.headers['x-another-header'], 'hello world');
+  res_headers.setHeader("X-WHAT-is-Weave", "more awesomer");
+  res_headers.setHeader("X-Another-Header", "hello world");
+  do_check_eq(res_headers.headers["x-what-is-weave"], "more awesomer");
+  do_check_eq(res_headers.headers["x-another-header"], "hello world");
   res_headers.get(function(error, content) {
     do_check_eq(error, null);
     do_check_eq(content, JSON.stringify({"x-another-header": "hello world",
@@ -560,9 +560,9 @@ add_test(function test_headers_object() {
 add_test(function test_put_override_content_type() {
   _("PUT: override default Content-Type");
   let res_headers = new AsyncResource(server.baseURI + "/headers");
-  res_headers.setHeader('Content-Type', 'application/foobar');
-  do_check_eq(res_headers.headers['content-type'], 'application/foobar');
-  res_headers.put('data', function(error, content) {
+  res_headers.setHeader("Content-Type", "application/foobar");
+  do_check_eq(res_headers.headers["content-type"], "application/foobar");
+  res_headers.put("data", function(error, content) {
     do_check_eq(error, null);
     do_check_eq(content, JSON.stringify({"content-type": "application/foobar"}));
     run_next_test();
@@ -572,8 +572,8 @@ add_test(function test_put_override_content_type() {
 add_test(function test_post_override_content_type() {
   _("POST: override default Content-Type");
   let res_headers = new AsyncResource(server.baseURI + "/headers");
-  res_headers.setHeader('Content-Type', 'application/foobar');
-  res_headers.post('data', function(error, content) {
+  res_headers.setHeader("Content-Type", "application/foobar");
+  res_headers.post("data", function(error, content) {
     do_check_eq(error, null);
     do_check_eq(content, JSON.stringify({"content-type": "application/foobar"}));
     run_next_test();

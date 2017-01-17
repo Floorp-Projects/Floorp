@@ -34,7 +34,7 @@ function paste(input, cb) {
 }
 
 function testNext() {
-  gURLBar.value = '';
+  gURLBar.value = "";
   if (!pairs.length) {
     finish();
     return;

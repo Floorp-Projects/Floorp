@@ -28,7 +28,7 @@ function shared_setup() {
   engine.lastSync = 123; // Needs to be non-zero so that tracker is queried.
   engine._store.items = {flying: "LNER Class A3 4472",
                          scotsman: "Flying Scotsman"};
-  engine._tracker.addChangedID('scotsman', 0);
+  engine._tracker.addChangedID("scotsman", 0);
   do_check_eq(1, Service.engineManager.getEnabled().length);
 
   let engines = {rotary:  {version: engine.version,

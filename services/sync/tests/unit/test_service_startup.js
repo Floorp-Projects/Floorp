@@ -31,7 +31,7 @@ function run_test() {
   _("Engines are registered.");
   let engines = Service.engineManager.getAll();
   do_check_true(Utils.deepEquals(engines.map(engine => engine.name),
-                                 ['tabs', 'bookmarks', 'forms', 'history']));
+                                 ["tabs", "bookmarks", "forms", "history"]));
 
   _("Observers are notified of startup");
   do_test_pending();

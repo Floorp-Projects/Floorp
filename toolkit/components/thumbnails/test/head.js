@@ -306,30 +306,30 @@ function bgAddPageThumbObserver(url) {
 function bgAddCrashObserver() {
   let crashed = false;
   Services.obs.addObserver(function crashObserver(subject, topic, data) {
-    is(topic, 'ipc:content-shutdown', 'Received correct observer topic.');
+    is(topic, "ipc:content-shutdown", "Received correct observer topic.");
     ok(subject instanceof Components.interfaces.nsIPropertyBag2,
-       'Subject implements nsIPropertyBag2.');
+       "Subject implements nsIPropertyBag2.");
     // we might see this called as the process terminates due to previous tests.
     // We are only looking for "abnormal" exits...
     if (!subject.hasKey("abnormal")) {
       info("This is a normal termination and isn't the one we are looking for...");
       return;
     }
-    Services.obs.removeObserver(crashObserver, 'ipc:content-shutdown');
+    Services.obs.removeObserver(crashObserver, "ipc:content-shutdown");
     crashed = true;
 
     var dumpID;
-    if ('nsICrashReporter' in Components.interfaces) {
-      dumpID = subject.getPropertyAsAString('dumpID');
+    if ("nsICrashReporter" in Components.interfaces) {
+      dumpID = subject.getPropertyAsAString("dumpID");
       ok(dumpID, "dumpID is present and not an empty string");
     }
 
     if (dumpID) {
       var minidumpDirectory = getMinidumpDirectory();
-      removeFile(minidumpDirectory, dumpID + '.dmp');
-      removeFile(minidumpDirectory, dumpID + '.extra');
+      removeFile(minidumpDirectory, dumpID + ".dmp");
+      removeFile(minidumpDirectory, dumpID + ".extra");
     }
-  }, 'ipc:content-shutdown', false);
+  }, "ipc:content-shutdown", false);
   return {
     get crashed() {
       return crashed;
@@ -346,7 +346,7 @@ function bgInjectCrashContentScript() {
 }
 
 function getMinidumpDirectory() {
-  var dir = Services.dirsvc.get('ProfD', Components.interfaces.nsIFile);
+  var dir = Services.dirsvc.get("ProfD", Components.interfaces.nsIFile);
   dir.append("minidumps");
   return dir;
 }

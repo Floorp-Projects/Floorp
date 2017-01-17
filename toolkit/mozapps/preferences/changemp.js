@@ -49,7 +49,7 @@ function process() {
       }
 
       // Select first password field
-      document.getElementById('pw1').focus();
+      document.getElementById("pw1").focus();
     } else {
       // Select old password field
       oldpwbox.setAttribute("hidden", "false");
@@ -156,7 +156,7 @@ function setPasswordStrength() {
 // non-alpha-numeric chars
 // upper and lower case characters
 
-  var pw = document.getElementById('pw1').value;
+  var pw = document.getElementById("pw1").value;
 
 // length of the password
   var pwlength = (pw.length);
@@ -194,13 +194,13 @@ function setPasswordStrength() {
     pwstrength = 100;
   }
 
-  var mymeter = document.getElementById('pwmeter');
+  var mymeter = document.getElementById("pwmeter");
   mymeter.value = pwstrength;
 }
 
 function checkPasswords() {
-  var pw1 = document.getElementById('pw1').value;
-  var pw2 = document.getElementById('pw2').value;
+  var pw1 = document.getElementById("pw1").value;
+  var pw2 = document.getElementById("pw2").value;
   var ok = document.documentElement.getButton("accept");
 
   var oldpwbox = document.getElementById("oldpw");

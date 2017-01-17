@@ -10,8 +10,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AboutHomeUtils",
   "resource:///modules/AboutHome.jsm");
 
 var snippet =
-'     <script>' +
-'       var manifest = {' +
+"     <script>" +
+"       var manifest = {" +
 '         "name": "Demo Social Service",' +
 '         "origin": "https://example.com",' +
 '         "iconURL": "chrome://branding/content/icon16.png",' +
@@ -19,21 +19,21 @@ var snippet =
 '         "icon64URL": "chrome://branding/content/icon64.png",' +
 '         "shareURL": "https://example.com/browser/browser/base/content/test/social/social_share.html",' +
 '         "postActivationURL": "https://example.com/browser/browser/base/content/test/social/social_postActivation.html",' +
-'       };' +
-'       function activateProvider(node) {' +
+"       };" +
+"       function activateProvider(node) {" +
 '         node.setAttribute("data-service", JSON.stringify(manifest));' +
 '         var event = new CustomEvent("ActivateSocialFeature");' +
-'         node.dispatchEvent(event);' +
-'       }' +
-'     </script>' +
+"         node.dispatchEvent(event);" +
+"       }" +
+"     </script>" +
 '     <div id="activationSnippet" onclick="activateProvider(this)">' +
 '     <img src="chrome://branding/content/icon32.png"></img>' +
-'     </div>';
+"     </div>";
 
 // enable one-click activation
 var snippet2 =
-'     <script>' +
-'       var manifest = {' +
+"     <script>" +
+"       var manifest = {" +
 '         "name": "Demo Social Service",' +
 '         "origin": "https://example.com",' +
 '         "iconURL": "chrome://branding/content/icon16.png",' +
@@ -42,16 +42,16 @@ var snippet2 =
 '         "shareURL": "https://example.com/browser/browser/base/content/test/social/social_share.html",' +
 '         "postActivationURL": "https://example.com/browser/browser/base/content/test/social/social_postActivation.html",' +
 '         "oneclick": true' +
-'       };' +
-'       function activateProvider(node) {' +
+"       };" +
+"       function activateProvider(node) {" +
 '         node.setAttribute("data-service", JSON.stringify(manifest));' +
 '         var event = new CustomEvent("ActivateSocialFeature");' +
-'         node.dispatchEvent(event);' +
-'       }' +
-'     </script>' +
+"         node.dispatchEvent(event);" +
+"       }" +
+"     </script>" +
 '     <div id="activationSnippet" onclick="activateProvider(this)">' +
 '     <img src="chrome://branding/content/icon32.png"></img>' +
-'     </div>';
+"     </div>";
 
 var gTests = [
 

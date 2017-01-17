@@ -539,11 +539,11 @@ PluginContent.prototype = {
 
       case "PluginInstantiated":
         let key = this._getPluginInfo(plugin).pluginTag.niceName;
-        Services.telemetry.getKeyedHistogramById('PLUGIN_ACTIVATION_COUNT').add(key);
+        Services.telemetry.getKeyedHistogramById("PLUGIN_ACTIVATION_COUNT").add(key);
         shouldShowNotification = true;
         let pluginRect = plugin.getBoundingClientRect();
         if (pluginRect.width <= 5 && pluginRect.height <= 5) {
-          Services.telemetry.getHistogramById('PLUGIN_TINY_CONTENT').add(1);
+          Services.telemetry.getHistogramById("PLUGIN_TINY_CONTENT").add(1);
         }
         break;
     }
@@ -602,25 +602,25 @@ PluginContent.prototype = {
       this.flashPluginStats.instancesCount++;
 
       let pluginRect = plugin.getBoundingClientRect();
-      Services.telemetry.getHistogramById('FLASH_PLUGIN_WIDTH')
+      Services.telemetry.getHistogramById("FLASH_PLUGIN_WIDTH")
                        .add(pluginRect.width);
-      Services.telemetry.getHistogramById('FLASH_PLUGIN_HEIGHT')
+      Services.telemetry.getHistogramById("FLASH_PLUGIN_HEIGHT")
                        .add(pluginRect.height);
-      Services.telemetry.getHistogramById('FLASH_PLUGIN_AREA')
+      Services.telemetry.getHistogramById("FLASH_PLUGIN_AREA")
                        .add(pluginRect.width * pluginRect.height);
 
       let state = this._getPluginInfo(plugin).fallbackType;
       if (state === null) {
         state = Ci.nsIObjectLoadingContent.PLUGIN_UNSUPPORTED;
       }
-      Services.telemetry.getHistogramById('FLASH_PLUGIN_STATES')
+      Services.telemetry.getHistogramById("FLASH_PLUGIN_STATES")
                        .add(state);
     }
   },
 
   _finishRecordingFlashPluginTelemetry() {
     if (this.flashPluginStats) {
-      Services.telemetry.getHistogramById('FLASH_PLUGIN_INSTANCES_ON_PAGE')
+      Services.telemetry.getHistogramById("FLASH_PLUGIN_INSTANCES_ON_PAGE")
                         .add(this.flashPluginStats.instancesCount);
     delete this.flashPluginStats;
     }
@@ -737,8 +737,8 @@ PluginContent.prototype = {
     let overlay = this.getPluginUI(plugin, "main");
     // Have to check that the target is not the link to update the plugin
     if (!(event.originalTarget instanceof contentWindow.HTMLAnchorElement) &&
-        (event.originalTarget.getAttribute('anonid') != 'closeIcon') &&
-        !overlay.hasAttribute('dismissed') &&
+        (event.originalTarget.getAttribute("anonid") != "closeIcon") &&
+        !overlay.hasAttribute("dismissed") &&
         event.button == 0 &&
         event.isTrusted) {
       this._showClickToPlayNotification(plugin, true);
@@ -992,7 +992,7 @@ PluginContent.prototype = {
      *  The full screen DOM element contained within the iframe (could be inner iframe), or the original iframe if no inner DOM element is found.
      **/
     let getTrueFullScreenElement = fullScreenIframe => {
-      if (typeof fullScreenIframe.contentDocument !== 'undefined' && fullScreenIframe.contentDocument.mozFullScreenElement) {
+      if (typeof fullScreenIframe.contentDocument !== "undefined" && fullScreenIframe.contentDocument.mozFullScreenElement) {
         return getTrueFullScreenElement(fullScreenIframe.contentDocument.mozFullScreenElement);
       }
       return fullScreenIframe;

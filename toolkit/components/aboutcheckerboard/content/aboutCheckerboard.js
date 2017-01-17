@@ -9,29 +9,29 @@ var service;
 var reports;
 
 function onLoad() {
-  trace = document.getElementById('trace');
+  trace = document.getElementById("trace");
   service = new CheckerboardReportService();
   updateEnabled();
   reports = service.getReports();
   for (var i = 0; i < reports.length; i++) {
     let text = "Severity " + reports[i].severity + " at " + new Date(reports[i].timestamp).toString();
-    let link = document.createElement('a');
-    link.href = 'javascript:showReport(' + i + ')';
+    let link = document.createElement("a");
+    link.href = "javascript:showReport(" + i + ")";
     link.textContent = text;
-    let bullet = document.createElement('li');
+    let bullet = document.createElement("li");
     bullet.appendChild(link);
     document.getElementById(reports[i].reason).appendChild(bullet);
   }
 }
 
 function updateEnabled() {
-  let enabled = document.getElementById('enabled');
+  let enabled = document.getElementById("enabled");
   if (service.isRecordingEnabled()) {
-    enabled.textContent = 'enabled';
-    enabled.style.color = 'green';
+    enabled.textContent = "enabled";
+    enabled.style.color = "green";
   } else {
-    enabled.textContent = 'disabled';
-    enabled.style.color = 'red';
+    enabled.textContent = "disabled";
+    enabled.style.color = "red";
   }
 }
 
@@ -142,7 +142,7 @@ function loadData() {
                 rect.height = parseFloat(tokens[j++]);
                 rect.dataText = trace.value.substring(charPos, charPos + lines[i].length);
 
-                if (!getFlag('excludePageFromZoom') || color != 'brown') {
+                if (!getFlag("excludePageFromZoom") || color != "brown") {
                     if (typeof minX == "undefined") {
                         minX = rect.x;
                         minY = rect.y;
@@ -177,12 +177,12 @@ function renderFrame() {
         return false;
     }
 
-    var canvas = document.getElementById('canvas');
+    var canvas = document.getElementById("canvas");
     if (!canvas.getContext) {
         log("No canvas context");
     }
 
-    var context = canvas.getContext('2d');
+    var context = canvas.getContext("2d");
 
     // midpoint of the bounding box
     var midX = (minX + maxX) / 2.0;
@@ -213,19 +213,19 @@ function renderFrame() {
     }
 
     // clear canvas
-    context.fillStyle = 'white';
+    context.fillStyle = "white";
     context.fillRect(0, 0, canvas.width, canvas.height);
-    var activeData = '';
+    var activeData = "";
     // draw rects
     for (var i in renderData[frame].rects) {
         drawRect(i, renderData[frame].rects[i]);
         activeData += "\n" + renderData[frame].rects[i].dataText;
     }
     // draw timestamp and frame counter
-    context.fillStyle = 'black';
+    context.fillStyle = "black";
     context.fillText((frame + 1) + "/" + renderData.length + ": " + renderData[frame].timestamp, 5, 15);
 
-    document.getElementById('active').textContent = activeData;
+    document.getElementById("active").textContent = activeData;
 
     return true;
 }

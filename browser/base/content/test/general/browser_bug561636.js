@@ -1,14 +1,14 @@
-var gInvalidFormPopup = document.getElementById('invalid-form-popup');
+var gInvalidFormPopup = document.getElementById("invalid-form-popup");
 ok(gInvalidFormPopup,
    "The browser should have a popup to show when a form is invalid");
 
 function checkPopupShow() {
-  ok(gInvalidFormPopup.state == 'showing' || gInvalidFormPopup.state == 'open',
+  ok(gInvalidFormPopup.state == "showing" || gInvalidFormPopup.state == "open",
      "[Test " + testId + "] The invalid form popup should be shown");
 }
 
 function checkPopupHide() {
-  ok(gInvalidFormPopup.state != 'showing' && gInvalidFormPopup.state != 'open',
+  ok(gInvalidFormPopup.state != "showing" && gInvalidFormPopup.state != "open",
      "[Test " + testId + "] The invalid form popup should not be shown");
 }
 
@@ -51,24 +51,24 @@ function* openNewTab(uri, background) {
 
 function* clickChildElement(browser) {
   yield ContentTask.spawn(browser, {}, function* () {
-    content.document.getElementById('s').click();
+    content.document.getElementById("s").click();
   });
 }
 
 function* blurChildElement(browser) {
   yield ContentTask.spawn(browser, {}, function* () {
-    content.document.getElementById('i').blur();
+    content.document.getElementById("i").blur();
   });
 }
 
 function* checkChildFocus(browser, message) {
   yield ContentTask.spawn(browser, [message, testId], function* (args) {
     let [msg, id] = args;
-    var focused = content.document.activeElement == content.document.getElementById('i');
+    var focused = content.document.activeElement == content.document.getElementById("i");
 
     var validMsg = true;
     if (msg) {
-      validMsg = (msg == content.document.getElementById('i').validationMessage);
+      validMsg = (msg == content.document.getElementById("i").validationMessage);
     }
 
     Assert.equal(focused, true, "Test " + id + " First invalid element should be focused");
@@ -285,7 +285,7 @@ add_task(function* () {
     Services.obs.addObserver(gObserver, "invalidformsubmit", false);
 
     executeSoon(function() {
-      browser.contentDocument.getElementById('s').click();
+      browser.contentDocument.getElementById("s").click();
     });
   });
 
@@ -330,8 +330,8 @@ add_task(function* () {
   checkPopupShow();
   yield checkChildFocus(browser, gInvalidFormPopup.firstChild.textContent);
 
-  let inputPromise = promiseWaitForEvent(gBrowser.contentDocument.getElementById('i'), "input");
-  EventUtils.synthesizeKey('f', {});
+  let inputPromise = promiseWaitForEvent(gBrowser.contentDocument.getElementById("i"), "input");
+  EventUtils.synthesizeKey("f", {});
   yield inputPromise;
 
   // Now, the element suffers from another error, the message should have

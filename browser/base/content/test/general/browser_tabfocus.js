@@ -330,7 +330,7 @@ add_task(function*() {
       window.removeEventListener("pageshow", navigationOccured, true);
       resolve();
     }, true);
-    document.getElementById('Browser:Back').doCommand();
+    document.getElementById("Browser:Back").doCommand();
   });
 
   is(window.document.activeElement, gURLBar.inputField, "urlbar still focused after navigating back");

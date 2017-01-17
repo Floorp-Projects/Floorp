@@ -22,7 +22,7 @@ function* wait_for_tab_playing_event(tab, expectPlaying) {
 }
 
 function check_audio_suspended(suspendedType) {
-  var autoPlay = content.document.getElementById('autoplay');
+  var autoPlay = content.document.getElementById("autoplay");
   if (!autoPlay) {
     ok(false, "Can't get the audio element!");
   }

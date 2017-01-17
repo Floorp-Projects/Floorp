@@ -49,7 +49,7 @@ add_task(function* test_onepw_setup_credentials() {
   do_check_eq(b2h(quickStretchedPW), quickStretchedActual);
 
   // obtain hkdf info
-  let authKeyInfo = Credentials.keyWord('authPW');
+  let authKeyInfo = Credentials.keyWord("authPW");
   do_check_eq(b2h(authKeyInfo), "6964656e746974792e6d6f7a696c6c612e636f6d2f7069636c2f76312f617574685057");
 
   // derive auth password
@@ -60,7 +60,7 @@ add_task(function* test_onepw_setup_credentials() {
   do_check_eq(b2h(authPW), "4b8dec7f48e7852658163601ff766124c312f9392af6c3d4e1a247eb439be342");
 
   // derive unwrap key
-  let unwrapKeyInfo = Credentials.keyWord('unwrapBkey');
+  let unwrapKeyInfo = Credentials.keyWord("unwrapBkey");
   let unwrapKey = hkdf(quickStretchedPW, hkdfSalt, unwrapKeyInfo, hkdfLen);
 
   do_check_eq(b2h(unwrapKey), "8ff58975be391338e4ec5d7138b5ed7b65c7d1bfd1f3a4f93e05aa47d5b72be9");

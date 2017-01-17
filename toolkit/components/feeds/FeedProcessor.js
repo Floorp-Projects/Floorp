@@ -794,7 +794,7 @@ function rssAuthor(s, author) {
     }
   } else {
     author.name = chars;
-    if (chars.indexOf('@'))
+    if (chars.indexOf("@"))
       author.email = chars;
   }
   return author;

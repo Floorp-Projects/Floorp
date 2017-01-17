@@ -103,7 +103,7 @@ add_task(function* test_plainQuery() {
                "This search must only increment one entry in the scalar.");
 
   // Make sure SEARCH_COUNTS contains identical values.
-  checkKeyedHistogram(search_hist, 'other-MozSearch.searchbar', 1);
+  checkKeyedHistogram(search_hist, "other-MozSearch.searchbar", 1);
 
   // Also check events.
   let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
@@ -137,7 +137,7 @@ add_task(function* test_oneOff() {
                "This search must only increment one entry in the scalar.");
 
   // Make sure SEARCH_COUNTS contains identical values.
-  checkKeyedHistogram(search_hist, 'other-MozSearch2.searchbar', 1);
+  checkKeyedHistogram(search_hist, "other-MozSearch2.searchbar", 1);
 
   // Also check events.
   let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
@@ -182,8 +182,8 @@ add_task(function* test_suggestion() {
                "This search must only increment one entry in the scalar.");
 
   // Make sure SEARCH_COUNTS contains identical values.
-  let searchEngineId = 'other-' + suggestionEngine.name;
-  checkKeyedHistogram(search_hist, searchEngineId + '.searchbar', 1);
+  let searchEngineId = "other-" + suggestionEngine.name;
+  checkKeyedHistogram(search_hist, searchEngineId + ".searchbar", 1);
 
   // Also check events.
   let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);

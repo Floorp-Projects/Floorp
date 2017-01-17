@@ -54,7 +54,7 @@ add_task(function*() {
   // after the parent has been updated by yielding until the child
   // has finished running a ContentTask for us.
   yield ContentTask.spawn(browser, {}, function*() {
-    dump('\nJust wasting some time.\n');
+    dump("\nJust wasting some time.\n");
   });
 
   gPageStyleMenu.fillPopup(menupopup);

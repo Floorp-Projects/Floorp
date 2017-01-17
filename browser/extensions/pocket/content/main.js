@@ -86,7 +86,7 @@ var pktUI = (function() {
         }
 
         // clear the panel
-        getPanelFrame().setAttribute('src', 'about:blank');
+        getPanelFrame().setAttribute("src", "about:blank");
     }
 
 
@@ -119,9 +119,9 @@ var pktUI = (function() {
      */
     function showSignUp() {
         // AB test: Direct logged-out users to tab vs panel
-        if (pktApi.getSignupPanelTabTestVariant() == 'v2') {
+        if (pktApi.getSignupPanelTabTestVariant() == "v2") {
             let site = Services.prefs.getCharPref("extensions.pocket.site");
-            openTabWithUrl('https://' + site + '/firefox_learnmore?s=ffi&t=autoredirect&tv=page_learnmore&src=ff_ext', true);
+            openTabWithUrl("https://" + site + "/firefox_learnmore?s=ffi&t=autoredirect&tv=page_learnmore&src=ff_ext", true);
 
             // force the panel closed before it opens
             getPanel().hidePopup();
@@ -131,16 +131,16 @@ var pktUI = (function() {
 
         // Control: Show panel as normal
         getFirefoxAccountSignedInUser(function(userdata) {
-            var fxasignedin = (typeof userdata == 'object' && userdata !== null) ? '1' : '0';
+            var fxasignedin = (typeof userdata == "object" && userdata !== null) ? "1" : "0";
             var startheight = 490;
             var inOverflowMenu = isInOverflowMenu();
-            var controlvariant = pktApi.getSignupPanelTabTestVariant() == 'control';
+            var controlvariant = pktApi.getSignupPanelTabTestVariant() == "control";
 
             if (inOverflowMenu) {
                 startheight = overflowMenuHeight;
             } else {
                 startheight = 460;
-                if (fxasignedin == '1') {
+                if (fxasignedin == "1") {
                     startheight = 406;
                 }
             }
@@ -149,9 +149,9 @@ var pktUI = (function() {
             }
             var variant;
             if (inOverflowMenu) {
-                variant = 'overflow';
+                variant = "overflow";
             } else {
-                variant = 'storyboard_lm';
+                variant = "storyboard_lm";
             }
 
             showPanel("about:pocket-signup?pockethost="
@@ -160,9 +160,9 @@ var pktUI = (function() {
                 + fxasignedin
                 + "&variant="
                 + variant
-                + '&controlvariant='
+                + "&controlvariant="
                 + controlvariant
-                + '&inoverflowmenu='
+                + "&inoverflowmenu="
                 + inOverflowMenu
                 + "&locale="
                 + getUILocale(), {
@@ -181,11 +181,11 @@ var pktUI = (function() {
     function saveAndShowConfirmation(url, title) {
 
         // Validate input parameter
-        if (typeof url !== 'undefined' && url.startsWith("about:reader?url=")) {
+        if (typeof url !== "undefined" && url.startsWith("about:reader?url=")) {
             url = ReaderMode.getOriginalUrl(url);
         }
 
-        var isValidURL = (typeof url !== 'undefined' && (url.startsWith("http") || url.startsWith('https')));
+        var isValidURL = (typeof url !== "undefined" && (url.startsWith("http") || url.startsWith("https")));
 
         var inOverflowMenu = isInOverflowMenu();
         var startheight = pktApi.isPremiumUser() && isValidURL ? savePanelHeights.expanded : savePanelHeights.collapsed;
@@ -193,15 +193,15 @@ var pktUI = (function() {
             startheight = overflowMenuHeight;
         }
 
-        var panelId = showPanel("about:pocket-saved?pockethost=" + Services.prefs.getCharPref("extensions.pocket.site") + "&premiumStatus=" + (pktApi.isPremiumUser() ? '1' : '0') + '&inoverflowmenu=' + inOverflowMenu + "&locale=" + getUILocale(), {
+        var panelId = showPanel("about:pocket-saved?pockethost=" + Services.prefs.getCharPref("extensions.pocket.site") + "&premiumStatus=" + (pktApi.isPremiumUser() ? "1" : "0") + "&inoverflowmenu=" + inOverflowMenu + "&locale=" + getUILocale(), {
             onShow() {
-                var saveLinkMessageId = 'saveLink';
+                var saveLinkMessageId = "saveLink";
 
                 // Send error message for invalid url
                 if (!isValidURL) {
                     // TODO: Pass key for localized error in error object
                     let error = {
-                        message: 'Only links can be saved',
+                        message: "Only links can be saved",
                         localizedKey: "onlylinkssaved"
                     };
                     pktUIMessaging.sendErrorMessageToPanel(panelId, saveLinkMessageId, error);
@@ -212,7 +212,7 @@ var pktUI = (function() {
                 if (!navigator.onLine) {
                     // TODO: Pass key for localized error in error object
                     let error = {
-                        message: 'You must be connected to the Internet in order to save to Pocket. Please connect to the Internet and try again.'
+                        message: "You must be connected to the Internet in order to save to Pocket. Please connect to the Internet and try again."
                     };
                     pktUIMessaging.sendErrorMessageToPanel(panelId, saveLinkMessageId, error);
                     return;
@@ -277,7 +277,7 @@ var pktUI = (function() {
         registerEventMessages();
 
         // Load the iframe
-        iframe.setAttribute('src', url);
+        iframe.setAttribute("src", url);
 
         // Uncomment to leave panel open -- for debugging
         // panel.setAttribute('noautohide', true);
@@ -335,7 +335,7 @@ var pktUI = (function() {
         var iframe = getPanelFrame();
 
         // Only register the messages once
-        var didInitAttributeKey = 'did_init';
+        var didInitAttributeKey = "did_init";
         var didInitMessageListener = iframe.getAttribute(didInitAttributeKey);
         if (typeof didInitMessageListener !== "undefined" && didInitMessageListener == 1) {
             return;
@@ -537,11 +537,11 @@ var pktUI = (function() {
     }
 
     function getPanelFrame() {
-        var frame = document.getElementById('pocket-panel-iframe');
+        var frame = document.getElementById("pocket-panel-iframe");
         if (!frame) {
             var frameParent = document.getElementById("PanelUI-pocketView").firstChild;
             frame = document.createElement("iframe");
-            frame.id = 'pocket-panel-iframe';
+            frame.id = "pocket-panel-iframe";
             frame.setAttribute("type", "content");
             frameParent.appendChild(frame);
         }
@@ -599,7 +599,7 @@ var pktUIMessaging = (function() {
      * Prefix message id for message listening
      */
     function prefixedMessageId(messageId) {
-        return 'PKT_' + messageId;
+        return "PKT_" + messageId;
     }
 
     /**
@@ -639,7 +639,7 @@ var pktUIMessaging = (function() {
         var documentElement = doc.documentElement;
 
         // Send message to panel
-        var panelMessageId = prefixedMessageId(panelId + '_' + messageId);
+        var panelMessageId = prefixedMessageId(panelId + "_" + messageId);
 
         var AnswerEvt = doc.createElement("PKTMessage");
         AnswerEvt.setAttribute("payload", JSON.stringify([payload]));

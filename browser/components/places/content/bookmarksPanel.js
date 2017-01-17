@@ -9,7 +9,7 @@ function init() {
 }
 
 function searchBookmarks(aSearchString) {
-  var tree = document.getElementById('bookmarks-view');
+  var tree = document.getElementById("bookmarks-view");
   if (!aSearchString)
     tree.place = tree.place;
   else

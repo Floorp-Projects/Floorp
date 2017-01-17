@@ -202,6 +202,10 @@ module.exports = {
     // Require object-literal shorthand with ES6 method syntax
     "object-shorthand": ["error", "always", { "avoidQuotes": true }],
 
+    // Require double-quotes everywhere, except where quotes are escaped
+    // or template literals are used.
+    "quotes": ["error", "double", { "avoidEscape": true, "allowTemplateLiterals": true }],
+
     // No spacing inside rest or spread expressions
     "rest-spread-spacing": "error",
 

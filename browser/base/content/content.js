@@ -264,11 +264,11 @@ var AboutNetAndCertErrorListener = {
   init(chromeGlobal) {
     addMessageListener("CertErrorDetails", this);
     addMessageListener("Browser:CaptivePortalFreed", this);
-    chromeGlobal.addEventListener('AboutNetErrorLoad', this, false, true);
-    chromeGlobal.addEventListener('AboutNetErrorOpenCaptivePortal', this, false, true);
-    chromeGlobal.addEventListener('AboutNetErrorSetAutomatic', this, false, true);
-    chromeGlobal.addEventListener('AboutNetErrorOverride', this, false, true);
-    chromeGlobal.addEventListener('AboutNetErrorResetPreferences', this, false, true);
+    chromeGlobal.addEventListener("AboutNetErrorLoad", this, false, true);
+    chromeGlobal.addEventListener("AboutNetErrorOpenCaptivePortal", this, false, true);
+    chromeGlobal.addEventListener("AboutNetErrorSetAutomatic", this, false, true);
+    chromeGlobal.addEventListener("AboutNetErrorOverride", this, false, true);
+    chromeGlobal.addEventListener("AboutNetErrorResetPreferences", this, false, true);
   },
 
   get isAboutNetError() {
@@ -547,11 +547,11 @@ var ClickEventHandler = {
   },
 
   onAboutBlocked(targetElement, ownerDoc) {
-    var reason = 'phishing';
+    var reason = "phishing";
     if (/e=malwareBlocked/.test(ownerDoc.documentURI)) {
-      reason = 'malware';
+      reason = "malware";
     } else if (/e=unwantedBlocked/.test(ownerDoc.documentURI)) {
-      reason = 'unwanted';
+      reason = "unwanted";
     }
     sendAsyncMessage("Browser:SiteBlockedError", {
       location: ownerDoc.location.href,

@@ -52,10 +52,10 @@ function MixedTest1A() {
   gIdentityHandler.disableMixedContentProtection();
 }
 function MixedTest1B() {
-  waitForCondition(() => content.document.getElementById('p1').innerHTML == "hello", MixedTest1C, "Waited too long for mixed script to run in Test 1");
+  waitForCondition(() => content.document.getElementById("p1").innerHTML == "hello", MixedTest1C, "Waited too long for mixed script to run in Test 1");
 }
 function MixedTest1C() {
-  ok(content.document.getElementById('p1').innerHTML == "hello", "Mixed script didn't load in Test 1");
+  ok(content.document.getElementById("p1").innerHTML == "hello", "Mixed script didn't load in Test 1");
   gTestBrowser.removeEventListener("load", MixedTest1B, true);
   MixedTest2();
 }
@@ -89,14 +89,14 @@ function MixedTest3A() {
   gIdentityHandler.disableMixedContentProtection();
 }
 function MixedTest3B() {
-  waitForCondition(() => content.document.getElementById('p1').innerHTML == "hello", MixedTest3C, "Waited too long for mixed script to run in Test 3");
+  waitForCondition(() => content.document.getElementById("p1").innerHTML == "hello", MixedTest3C, "Waited too long for mixed script to run in Test 3");
 }
 function MixedTest3C() {
-  waitForCondition(() => content.document.getElementById('p2').innerHTML == "bye", MixedTest3D, "Waited too long for mixed image to load in Test 3");
+  waitForCondition(() => content.document.getElementById("p2").innerHTML == "bye", MixedTest3D, "Waited too long for mixed image to load in Test 3");
 }
 function MixedTest3D() {
-  ok(content.document.getElementById('p1').innerHTML == "hello", "Mixed script didn't load in Test 3");
-  ok(content.document.getElementById('p2').innerHTML == "bye", "Mixed image didn't load in Test 3");
+  ok(content.document.getElementById("p1").innerHTML == "hello", "Mixed script didn't load in Test 3");
+  ok(content.document.getElementById("p2").innerHTML == "bye", "Mixed image didn't load in Test 3");
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: true, activeBlocked: false, passiveLoaded: true});
   MixedTest4();
 }
@@ -125,10 +125,10 @@ function MixedTest4C() {
 
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 
-  waitForCondition(() => content.document.getElementById('p1').innerHTML == "", MixedTest4D, "Mixed script loaded in test 4 after location change!");
+  waitForCondition(() => content.document.getElementById("p1").innerHTML == "", MixedTest4D, "Mixed script loaded in test 4 after location change!");
 }
 function MixedTest4D() {
-  ok(content.document.getElementById('p1').innerHTML == "", "p1.innerHTML changed; mixed script loaded after location change in Test 4");
+  ok(content.document.getElementById("p1").innerHTML == "", "p1.innerHTML changed; mixed script loaded after location change in Test 4");
   MixedTest5();
 }
 
@@ -149,10 +149,10 @@ function MixedTest5A() {
   gIdentityHandler.disableMixedContentProtection();
 }
 function MixedTest5B() {
-  waitForCondition(() => content.document.getElementById('p1').innerHTML == "hello", MixedTest5C, "Waited too long for mixed script to run in Test 5");
+  waitForCondition(() => content.document.getElementById("p1").innerHTML == "hello", MixedTest5C, "Waited too long for mixed script to run in Test 5");
 }
 function MixedTest5C() {
-  ok(content.document.getElementById('p1').innerHTML == "hello", "Mixed script didn't load in Test 5");
+  ok(content.document.getElementById("p1").innerHTML == "hello", "Mixed script didn't load in Test 5");
   MixedTest6();
 }
 
@@ -182,14 +182,14 @@ function MixedTest6C() {
   gTestBrowser.removeEventListener("load", MixedTest6C, true);
   waitForCondition(function() {
     try {
-      return content.document.getElementById('f1').contentDocument.getElementById('p1').innerHTML == "hello";
+      return content.document.getElementById("f1").contentDocument.getElementById("p1").innerHTML == "hello";
     } catch (e) {
       return false;
     }
   }, MixedTest6D, "Waited too long for mixed script to run in Test 6");
 }
 function MixedTest6D() {
-  ok(content.document.getElementById('f1').contentDocument.getElementById('p1').innerHTML == "hello", "Mixed script didn't load in Test 6");
+  ok(content.document.getElementById("f1").contentDocument.getElementById("p1").innerHTML == "hello", "Mixed script didn't load in Test 6");
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: true, activeBlocked: false, passiveLoaded: false});
   MixedTestsCompleted();
 }

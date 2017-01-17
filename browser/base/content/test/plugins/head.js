@@ -224,7 +224,7 @@ function clearAllPluginPermissions() {
   let perms = Services.perms.enumerator;
   while (perms.hasMoreElements()) {
     let perm = perms.getNext();
-    if (perm.type.startsWith('plugin')) {
+    if (perm.type.startsWith("plugin")) {
       info("removing permission:" + perm.principal.origin + " " + perm.type + "\n");
       Services.perms.removePermission(perm);
     }
@@ -388,9 +388,9 @@ function promiseForNotificationShown(notification) {
 function promiseUpdatePluginBindings(browser) {
   return ContentTask.spawn(browser, {}, function* () {
     let doc = content.document;
-    let elems = doc.getElementsByTagName('embed');
+    let elems = doc.getElementsByTagName("embed");
     if (!elems || elems.length < 1) {
-      elems = doc.getElementsByTagName('object');
+      elems = doc.getElementsByTagName("object");
     }
     if (elems && elems.length > 0) {
       elems[0].clientTop;

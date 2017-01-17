@@ -608,7 +608,7 @@ var AddonTestUtils = {
       rdf += escaped`  <Description about="urn:mozilla:extension:${addon}"><em:updates><Seq>\n`;
 
       for (let versionData of data[addon]) {
-        rdf += '    <li><Description>\n';
+        rdf += "    <li><Description>\n";
         rdf += this._writeProps(versionData, ["version", "multiprocessCompatible"],
                                 `      `);
         for (let app of versionData.targetApplications || []) {
@@ -617,9 +617,9 @@ var AddonTestUtils = {
                                   `        `);
           rdf += "      </Description></em:targetApplication>\n";
         }
-        rdf += '    </Description></li>\n';
+        rdf += "    </Description></li>\n";
       }
-      rdf += '  </Seq></em:updates></Description>\n';
+      rdf += "  </Seq></em:updates></Description>\n";
     }
     rdf += "</RDF>\n";
 

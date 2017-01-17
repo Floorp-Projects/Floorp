@@ -11,7 +11,7 @@
 
 add_task(function* test_content_and_chrome_selection() {
   let testPage =
-    'data:text/html,' +
+    "data:text/html," +
     '<textarea id="textarea">Write something here</textarea>';
   let DOMWindowUtils = EventUtils._getDOMWindowUtils(window);
   let selectedText;
@@ -40,10 +40,10 @@ add_task(function* test_content_and_chrome_selection() {
 
 add_task(function* test_active_selection_switches_properly() {
   let testPage1 =
-    'data:text/html,' +
+    "data:text/html," +
     '<textarea id="textarea">Write something here</textarea>';
   let testPage2 =
-    'data:text/html,' +
+    "data:text/html," +
     '<textarea id="textarea">Nothing available</textarea>';
   let DOMWindowUtils = EventUtils._getDOMWindowUtils(window);
   let selectedText;

@@ -366,7 +366,7 @@ var gViewSourceUtils = {
                     .getService(Components.interfaces.nsIPrefBranch)
                     .getComplexValue("view_source.editor.path",
                                      Components.interfaces.nsIFile);
-      let editor = Components.classes['@mozilla.org/process/util;1']
+      let editor = Components.classes["@mozilla.org/process/util;1"]
                              .createInstance(Components.interfaces.nsIProcess);
       editor.init(viewSourceAppPath);
 
