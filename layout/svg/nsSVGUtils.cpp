@@ -1126,8 +1126,7 @@ nsSVGUtils::GetBBox(nsIFrame *aFrame, uint32_t aFlags)
     }
 
     gfxMatrix matrix;
-    if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame ||
-        aFrame->GetType() == nsGkAtoms::svgUseFrame) {
+    if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
       // The spec says getBBox "Returns the tight bounding box in *current user
       // space*". So we should really be doing this for all elements, but that
       // needs investigation to check that we won't break too much content.
@@ -1219,8 +1218,7 @@ nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(nsIFrame *aFrame)
 
   // For foreignObject frames, nsSVGUtils::GetBBox applies their local
   // transform, so we need to do the same here.
-  if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame ||
-      aFrame->GetType() == nsGkAtoms::svgUseFrame) {
+  if (aFrame->GetType() == nsGkAtoms::svgForeignObjectFrame) {
     gfxMatrix transform = static_cast<nsSVGElement*>(aFrame->GetContent())->
         PrependLocalTransformsTo(gfxMatrix(), eChildToUserSpace);
     NS_ASSERTION(!transform.HasNonTranslation(), "we're relying on this being an offset-only transform");
