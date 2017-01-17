@@ -364,34 +364,35 @@ GeckoMediaPluginServiceParent::GetContentParent(
     return GetGMPContentParentPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
-  typedef MozPromiseHolder<GetGMPContentParentPromise> PromiseHolder;
-  PromiseHolder* rawHolder = new PromiseHolder();
-  RefPtr<GeckoMediaPluginServiceParent> self(this);
-  RefPtr<GetGMPContentParentPromise> promise = rawHolder->Ensure(__func__);
-  nsCString nodeIdString(aNodeIdString);
-  nsTArray<nsCString> tags(aTags);
-  nsCString api(aAPI);
-  RefPtr<GMPCrashHelper> helper(aHelper);
-  EnsureInitialized()->Then(
-    thread,
-    __func__,
-    [self, tags, api, nodeIdString, helper, rawHolder]() -> void {
-      UniquePtr<PromiseHolder> holder(rawHolder);
-      RefPtr<GMPParent> gmp = self->SelectPluginForAPI(nodeIdString, api, tags);
-      LOGD(("%s: %p returning %p for api %s", __FUNCTION__, (void *)self, (void *)gmp, api.get()));
-      if (!gmp) {
-        NS_WARNING("GeckoMediaPluginServiceParent::GetContentParentFrom failed");
-        holder->Reject(NS_ERROR_FAILURE, __func__);
-        return;
-      }
-      self->ConnectCrashHelper(gmp->GetPluginId(), helper);
-      gmp->GetGMPContentParent(Move(holder));
-    },
-    [rawHolder]() -> void {
-      UniquePtr<PromiseHolder> holder(rawHolder);
+  auto holder = MakeUnique<MozPromiseHolder<GetGMPContentParentPromise>>();
+  RefPtr<GetGMPContentParentPromise> promise = holder->Ensure(__func__);
+  EnsureInitialized()->Then(thread, __func__, [
+    self = RefPtr<GeckoMediaPluginServiceParent>(this),
+    nodeIdString = nsCString(aNodeIdString),
+    api = nsCString(aAPI),
+    tags = nsTArray<nsCString>(aTags),
+    helper = RefPtr<GMPCrashHelper>(aHelper),
+    holder = Move(holder)
+  ](const GenericPromise::ResolveOrRejectValue& aValue) mutable -> void {
+    if (aValue.IsReject()) {
       NS_WARNING("GMPService::EnsureInitialized failed.");
       holder->Reject(NS_ERROR_FAILURE, __func__);
-    });
+      return;
+    }
+    RefPtr<GMPParent> gmp = self->SelectPluginForAPI(nodeIdString, api, tags);
+    LOGD(("%s: %p returning %p for api %s",
+          __FUNCTION__,
+          self.get(),
+          gmp.get(),
+          api.get()));
+    if (!gmp) {
+      NS_WARNING("GeckoMediaPluginServiceParent::GetContentParentFrom failed");
+      holder->Reject(NS_ERROR_FAILURE, __func__);
+      return;
+    }
+    self->ConnectCrashHelper(gmp->GetPluginId(), helper);
+    gmp->GetGMPContentParent(Move(holder));
+  });
 
   return promise;
 }
