@@ -1024,6 +1024,17 @@ pref("security.sandbox.content.tempDirSuffix", "");
 #endif
 #endif
 
+#if defined(MOZ_SANDBOX)
+#if defined(XP_MACOSX)
+// This pref determines if messages relevant to sandbox violations are
+// logged.
+// At present, this setting refers only to mac sandbox messages sent to
+// the system console but the setting will be used on other platforms
+// in the future.
+pref("security.sandbox.logging.enabled", true);
+#endif
+#endif
+
 // This pref governs whether we attempt to work around problems caused by
 // plugins using OS calls to manipulate the cursor while running out-of-
 // process.  These workarounds all involve intercepting (hooking) certain
