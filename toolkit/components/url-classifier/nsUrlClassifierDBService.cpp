@@ -1012,10 +1012,9 @@ nsUrlClassifierLookupCallback::LookupComplete(nsTArray<LookupResult>* results)
         }
       } else {
         // For tables with no hash completer, a complete hash match is
-        // good enough, we'll consider it fresh, even if it hasn't been updated
-        // in 45 minutes.
+        // good enough, we'll consider it is valid.
         if (result.Complete()) {
-          result.mFresh = true;
+          result.mConfirmed = true;
           LOG(("Skipping completion in a table without a valid completer (%s).",
                result.mTableName.get()));
         } else {
