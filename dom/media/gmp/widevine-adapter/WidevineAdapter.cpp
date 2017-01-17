@@ -7,6 +7,7 @@
 #include "content_decryption_module.h"
 #include "VideoUtils.h"
 #include "WidevineDecryptor.h"
+#include "WidevineDummyDecoder.h"
 #include "WidevineUtils.h"
 #include "WidevineVideoDecoder.h"
 #include "gmp-api/gmp-entrypoints.h"
@@ -124,13 +125,19 @@ WidevineAdapter::GMPGetAPI(const char* aAPIName,
 
   } else if (!strcmp(aAPIName, GMP_API_VIDEO_DECODER)) {
     RefPtr<CDMWrapper> wrapper = WidevineDecryptor::GetInstance(aDecryptorId);
+
+    // There is a possible race condition, where the decryptor will be destroyed
+    // before we are able to create the video decoder, so we create a dummy
+    // decoder to avoid crashing.
     if (!wrapper) {
-      Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p No cdm for video decoder",
+      Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p No cdm for video decoder. Using a DummyDecoder",
           aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this);
-      return GMPGenericErr;
+
+      *aPluginAPI = new WidevineDummyDecoder();
+    } else {
+      *aPluginAPI = new WidevineVideoDecoder(static_cast<GMPVideoHost*>(aHostAPI),
+                                             wrapper);
     }
-    *aPluginAPI = new WidevineVideoDecoder(static_cast<GMPVideoHost*>(aHostAPI),
-                                           wrapper);
   }
   return *aPluginAPI ? GMPNoErr : GMPNotImplementedErr;
 }
