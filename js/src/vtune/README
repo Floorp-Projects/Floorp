@@ -1,10 +1,11 @@
-VTune files imported from VTune Amplifier XE 2013 Rev 11.
+VTune files imported from VTune Amplifier XE 2017 Rev 1.0.486011.
 
 To update these files, copy the following from a VTune install directory:
-    sdk/src/ittnotify/ittnotify_config.h
-    sdk/src/ittnotify/ittnotify_types.h
-    sdk/src/ittnotify/jitprofiling.c
+    sdk/src/ittnotify/*
+
+    include/ittnotify.h
     include/jitprofiling.h
+    include/legacy/ittnotify.h
 
 If the license has changed, update the "VTune License" section of
     toolkit/content/license.html
