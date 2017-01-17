@@ -7,6 +7,7 @@
 #include "vm/UnboxedObject-inl.h"
 
 #include "jit/BaselineIC.h"
+#include "jit/ExecutableAllocator.h"
 #include "jit/JitCommon.h"
 #include "jit/Linker.h"
 
@@ -706,7 +707,8 @@ UnboxedPlainObject::createWithProperties(ExclusiveContext* cx, HandleObjectGroup
     if (cx->isJSContext() &&
         !group->unknownProperties() &&
         !layout.constructorCode() &&
-        cx->asJSContext()->runtime()->jitSupportsFloatingPoint)
+        cx->asJSContext()->runtime()->jitSupportsFloatingPoint &&
+        jit::CanLikelyAllocateMoreExecutableMemory())
     {
         if (!UnboxedLayout::makeConstructorCode(cx->asJSContext(), group))
             return nullptr;
