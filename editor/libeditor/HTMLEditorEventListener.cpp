@@ -120,7 +120,7 @@ HTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
 
   if (isContextClick || (buttonNumber == 0 && clickCount == 2)) {
-    RefPtr<Selection> selection = mEditorBase->GetSelection();
+    RefPtr<Selection> selection = htmlEditor->GetSelection();
     NS_ENSURE_TRUE(selection, NS_OK);
 
     // Get location of mouse within target node

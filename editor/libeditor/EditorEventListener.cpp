@@ -361,9 +361,6 @@ EditorEventListener::DetachedFromEditorOrDefaultPrevented(
 NS_IMETHODIMP
 EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIEditor> kungFuDeathGrip = mEditorBase;
-  Unused << kungFuDeathGrip; // mEditorBase is not referred to in this function
-
   // Let's handle each event with the message of the internal event of the
   // coming event.  If the DOM event was created with improper interface,
   // e.g., keydown event is created with |new MouseEvent("keydown", {});|,
@@ -557,12 +554,13 @@ EditorEventListener::KeyUp(nsIDOMKeyEvent* aKeyEvent)
   }
 
   // XXX Why doesn't this method check if it's consumed?
+  RefPtr<EditorBase> editorBase(mEditorBase);
   uint32_t keyCode = 0;
   aKeyEvent->GetKeyCode(&keyCode);
   if ((keyCode == nsIDOMKeyEvent::DOM_VK_SHIFT ||
        keyCode == nsIDOMKeyEvent::DOM_VK_CONTROL) &&
-      mShouldSwitchTextDirection && mEditorBase->IsPlaintextEditor()) {
-    mEditorBase->SwitchTextDirectionTo(mSwitchToRTL ?
+      mShouldSwitchTextDirection && editorBase->IsPlaintextEditor()) {
+    editorBase->SwitchTextDirectionTo(mSwitchToRTL ?
       nsIPlaintextEditor::eEditorRightToLeft :
       nsIPlaintextEditor::eEditorLeftToRight);
     mShouldSwitchTextDirection = false;
@@ -605,16 +603,17 @@ EditorEventListener::KeyPress(nsIDOMKeyEvent* aKeyEvent)
     return NS_OK;
   }
 
+  RefPtr<EditorBase> editorBase(mEditorBase);
   WidgetKeyboardEvent* keypressEvent =
     aKeyEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
   MOZ_ASSERT(keypressEvent,
              "DOM key event's internal event must be WidgetKeyboardEvent");
-  if (!mEditorBase->IsAcceptableInputEvent(keypressEvent) ||
+  if (!editorBase->IsAcceptableInputEvent(keypressEvent) ||
       DetachedFromEditorOrDefaultPrevented(keypressEvent)) {
     return NS_OK;
   }
 
-  nsresult rv = mEditorBase->HandleKeyPressEvent(aKeyEvent);
+  nsresult rv = editorBase->HandleKeyPressEvent(aKeyEvent);
   NS_ENSURE_SUCCESS(rv, rv);
   if (DetachedFromEditorOrDefaultPrevented(keypressEvent)) {
     return NS_OK;
@@ -634,7 +633,7 @@ EditorEventListener::KeyPress(nsIDOMKeyEvent* aKeyEvent)
     NS_ENSURE_TRUE(widget, NS_OK);
   }
 
-  nsCOMPtr<nsIDocument> doc = mEditorBase->GetDocument();
+  nsCOMPtr<nsIDocument> doc = editorBase->GetDocument();
   bool handled = widget->ExecuteNativeKeyBinding(
                            nsIWidget::NativeKeyBindingsForRichTextEditor,
                            *keypressEvent, DoCommandCallback, doc);
@@ -651,10 +650,11 @@ EditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
     return NS_OK;
   }
   // nothing to do if editor isn't editable or clicked on out of the editor.
+  RefPtr<EditorBase> editorBase(mEditorBase);
   WidgetMouseEvent* clickEvent =
     aMouseEvent->AsEvent()->WidgetEventPtr()->AsMouseEvent();
-  if (mEditorBase->IsReadonly() || mEditorBase->IsDisabled() ||
-      !mEditorBase->IsAcceptableInputEvent(clickEvent)) {
+  if (editorBase->IsReadonly() || editorBase->IsDisabled() ||
+      !editorBase->IsAcceptableInputEvent(clickEvent)) {
     return NS_OK;
   }
 
@@ -678,7 +678,7 @@ EditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
 
   // If we got a mouse down inside the editing area, we should force the
   // IME to commit before we change the cursor position
-  mEditorBase->ForceCompositionEnd();
+  editorBase->ForceCompositionEnd();
   if (DetachedFromEditor()) {
     return NS_OK;
   }
@@ -713,7 +713,8 @@ EditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
     return NS_ERROR_NULL_POINTER;
   }
 
-  RefPtr<Selection> selection = mEditorBase->GetSelection();
+  RefPtr<EditorBase> editorBase(mEditorBase);
+  RefPtr<Selection> selection = editorBase->GetSelection();
   if (selection) {
     selection->Collapse(parent, offset);
   }
@@ -725,7 +726,7 @@ EditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
 
   nsCOMPtr<nsIEditorMailSupport> mailEditor;
   if (ctrlKey) {
-    mailEditor = do_QueryObject(mEditorBase);
+    mailEditor = do_QueryObject(editorBase);
   }
 
   nsresult rv;
@@ -743,7 +744,7 @@ EditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
   if (mailEditor) {
     mailEditor->PasteAsQuotation(clipboard);
   } else {
-    mEditorBase->Paste(clipboard);
+    editorBase->Paste(clipboard);
   }
 
   // Prevent the event from propagating up to be possibly handled
@@ -782,7 +783,8 @@ EditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
   if (DetachedFromEditor()) {
     return NS_OK;
   }
-  mEditorBase->ForceCompositionEnd();
+  RefPtr<EditorBase> editorBase(mEditorBase);
+  editorBase->ForceCompositionEnd();
   return NS_OK;
 }
 
@@ -792,17 +794,18 @@ EditorEventListener::HandleChangeComposition(
 {
   MOZ_ASSERT(!aCompositionChangeEvent->DefaultPrevented(),
              "eCompositionChange event shouldn't be cancelable");
+  RefPtr<EditorBase> editorBase(mEditorBase);
   if (DetachedFromEditor() ||
-      !mEditorBase->IsAcceptableInputEvent(aCompositionChangeEvent)) {
+      !editorBase->IsAcceptableInputEvent(aCompositionChangeEvent)) {
     return NS_OK;
   }
 
   // if we are readonly or disabled, then do nothing.
-  if (mEditorBase->IsReadonly() || mEditorBase->IsDisabled()) {
+  if (editorBase->IsReadonly() || editorBase->IsDisabled()) {
     return NS_OK;
   }
 
-  return mEditorBase->UpdateIMEComposition(aCompositionChangeEvent);
+  return editorBase->UpdateIMEComposition(aCompositionChangeEvent);
 }
 
 /**
@@ -931,7 +934,8 @@ EditorEventListener::Drop(nsIDOMDragEvent* aDragEvent)
 
   if (!dropParent->IsEditable() || !CanDrop(aDragEvent)) {
     // was it because we're read-only?
-    if ((mEditorBase->IsReadonly() || mEditorBase->IsDisabled()) &&
+    RefPtr<EditorBase> editorBase(mEditorBase);
+    if ((editorBase->IsReadonly() || editorBase->IsDisabled()) &&
         !IsFileControlTextBox()) {
       // it was decided to "eat" the event as this is the "least surprise"
       // since someone else handling it might be unintentional and the
@@ -944,7 +948,8 @@ EditorEventListener::Drop(nsIDOMDragEvent* aDragEvent)
 
   aDragEvent->AsEvent()->StopPropagation();
   aDragEvent->AsEvent()->PreventDefault();
-  return mEditorBase->InsertFromDrop(aDragEvent->AsEvent());
+  RefPtr<EditorBase> editorBase(mEditorBase);
+  return editorBase->InsertFromDrop(aDragEvent->AsEvent());
 }
 
 bool
@@ -954,7 +959,8 @@ EditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
                 aEvent->AsEvent()->WidgetEventPtr()));
 
   // if the target doc is read-only, we can't drop
-  if (mEditorBase->IsReadonly() || mEditorBase->IsDisabled()) {
+  RefPtr<EditorBase> editorBase(mEditorBase);
+  if (editorBase->IsReadonly() || editorBase->IsDisabled()) {
     return false;
   }
 
@@ -970,7 +976,7 @@ EditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
   // can be dropped as well.
   if (!types.Contains(NS_LITERAL_STRING(kTextMime)) &&
       !types.Contains(NS_LITERAL_STRING(kMozTextInternal)) &&
-      (mEditorBase->IsPlaintextEditor() ||
+      (editorBase->IsPlaintextEditor() ||
        (!types.Contains(NS_LITERAL_STRING(kHTMLMime)) &&
         !types.Contains(NS_LITERAL_STRING(kFileMime))))) {
     return false;
@@ -988,7 +994,7 @@ EditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
   // There is a source node, so compare the source documents and this document.
   // Disallow drops on the same document.
 
-  nsCOMPtr<nsIDOMDocument> domdoc = mEditorBase->GetDOMDocument();
+  nsCOMPtr<nsIDOMDocument> domdoc = editorBase->GetDOMDocument();
   NS_ENSURE_TRUE(domdoc, false);
 
   nsCOMPtr<nsIDOMDocument> sourceDoc;
@@ -1008,7 +1014,7 @@ EditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
     return true;
   }
 
-  RefPtr<Selection> selection = mEditorBase->GetSelection();
+  RefPtr<Selection> selection = editorBase->GetSelection();
   if (!selection) {
     return false;
   }
@@ -1053,28 +1059,30 @@ nsresult
 EditorEventListener::HandleStartComposition(
                        WidgetCompositionEvent* aCompositionStartEvent)
 {
+  RefPtr<EditorBase> editorBase(mEditorBase);
   if (DetachedFromEditor() ||
-      !mEditorBase->IsAcceptableInputEvent(aCompositionStartEvent)) {
+      !editorBase->IsAcceptableInputEvent(aCompositionStartEvent)) {
     return NS_OK;
   }
   // Although, "compositionstart" should be cancelable, but currently,
   // eCompositionStart event coming from widget is not cancelable.
   MOZ_ASSERT(!aCompositionStartEvent->DefaultPrevented(),
              "eCompositionStart shouldn't be cancelable");
-  return mEditorBase->BeginIMEComposition(aCompositionStartEvent);
+  return editorBase->BeginIMEComposition(aCompositionStartEvent);
 }
 
 void
 EditorEventListener::HandleEndComposition(
                        WidgetCompositionEvent* aCompositionEndEvent)
 {
+  RefPtr<EditorBase> editorBase(mEditorBase);
   if (DetachedFromEditor() ||
-      !mEditorBase->IsAcceptableInputEvent(aCompositionEndEvent)) {
+      !editorBase->IsAcceptableInputEvent(aCompositionEndEvent)) {
     return;
   }
   MOZ_ASSERT(!aCompositionEndEvent->DefaultPrevented(),
              "eCompositionEnd shouldn't be cancelable");
-  mEditorBase->EndIMEComposition();
+  editorBase->EndIMEComposition();
 }
 
 nsresult
@@ -1091,13 +1099,14 @@ EditorEventListener::Focus(WidgetEvent* aFocusEvent)
                        "eFocus event shouldn't be cancelable");
 
   // Don't turn on selection and caret when the editor is disabled.
-  if (mEditorBase->IsDisabled()) {
+  RefPtr<EditorBase> editorBase(mEditorBase);
+  if (editorBase->IsDisabled()) {
     return NS_OK;
   }
 
   // Spell check a textarea the first time that it is focused.
   SpellCheckIfNeeded();
-  if (!mEditorBase) {
+  if (!editorBase) {
     // In e10s, this can cause us to flush notifications, which can destroy
     // the node we're about to focus.
     return NS_OK;
@@ -1121,7 +1130,7 @@ EditorEventListener::Focus(WidgetEvent* aFocusEvent)
     // contenteditable editor.  So, the editableRoot value is invalid for
     // the plain text editor, and it will be set to the wrong limiter of
     // the selection.  However, fortunately, actual bugs are not found yet.
-    nsCOMPtr<nsIContent> editableRoot = mEditorBase->FindSelectionRoot(node);
+    nsCOMPtr<nsIContent> editableRoot = editorBase->FindSelectionRoot(node);
 
     // make sure that the element is really focused in case an earlier
     // listener in the chain changed the focus.
@@ -1151,16 +1160,16 @@ EditorEventListener::Focus(WidgetEvent* aFocusEvent)
     }
   }
 
-  mEditorBase->OnFocus(target);
+  editorBase->OnFocus(target);
   if (DetachedFromEditorOrDefaultPrevented(aFocusEvent)) {
     return NS_OK;
   }
 
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_OK);
-  nsCOMPtr<nsIContent> focusedContent = mEditorBase->GetFocusedContentForIME();
+  nsCOMPtr<nsIContent> focusedContent = editorBase->GetFocusedContentForIME();
   IMEStateManager::OnFocusInEditor(ps->GetPresContext(), focusedContent,
-                                   mEditorBase);
+                                   editorBase);
 
   return NS_OK;
 }
@@ -1186,7 +1195,8 @@ EditorEventListener::Blur(WidgetEvent* aBlurEvent)
   nsCOMPtr<nsIDOMElement> element;
   fm->GetFocusedElement(getter_AddRefs(element));
   if (!element) {
-    mEditorBase->FinalizeSelection();
+    RefPtr<EditorBase> editorBase(mEditorBase);
+    editorBase->FinalizeSelection();
   }
   return NS_OK;
 }
@@ -1198,11 +1208,12 @@ EditorEventListener::SpellCheckIfNeeded()
 
   // If the spell check skip flag is still enabled from creation time,
   // disable it because focused editors are allowed to spell check.
+  RefPtr<EditorBase> editorBase(mEditorBase);
   uint32_t currentFlags = 0;
-  mEditorBase->GetFlags(&currentFlags);
+  editorBase->GetFlags(&currentFlags);
   if(currentFlags & nsIPlaintextEditor::eEditorSkipSpellCheck) {
     currentFlags ^= nsIPlaintextEditor::eEditorSkipSpellCheck;
-    mEditorBase->SetFlags(currentFlags);
+    editorBase->SetFlags(currentFlags);
   }
 }
 
@@ -1211,7 +1222,8 @@ EditorEventListener::IsFileControlTextBox()
 {
   MOZ_ASSERT(!DetachedFromEditor());
 
-  Element* root = mEditorBase->GetRoot();
+  RefPtr<EditorBase> editorBase(mEditorBase);
+  Element* root = editorBase->GetRoot();
   if (!root || !root->ChromeOnlyAccess()) {
     return false;
   }
@@ -1243,13 +1255,14 @@ EditorEventListener::ShouldHandleNativeKeyBindings(nsIDOMKeyEvent* aKeyEvent)
     return false;
   }
 
+  RefPtr<EditorBase> editorBase(mEditorBase);
   nsCOMPtr<nsIHTMLEditor> htmlEditor =
-    do_QueryInterface(static_cast<nsIEditor*>(mEditorBase));
+    do_QueryInterface(static_cast<nsIEditor*>(editorBase));
   if (!htmlEditor) {
     return false;
   }
 
-  nsCOMPtr<nsIDocument> doc = mEditorBase->GetDocument();
+  nsCOMPtr<nsIDocument> doc = editorBase->GetDocument();
   if (doc->HasFlag(NODE_IS_EDITABLE)) {
     // Don't need to perform any checks in designMode documents.
     return true;
