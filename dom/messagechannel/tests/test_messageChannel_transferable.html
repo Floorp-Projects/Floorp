@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
     var a = new MessageChannel();
     ok(a, "MessageChannel created");
 
-    window.addEventListener('message', receiveMessage, false);
+    window.addEventListener('message', receiveMessage);
     function receiveMessage(evt) {
       if (evt.data.status == 'READY') {
         a.port1.postMessage({ab: ab, cb: ab}, [ab]);
@@ -34,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
     ok(div, "Parent exists");
 
     var ifr = document.createElement("iframe");
-    ifr.addEventListener("load", iframeLoaded, false);
+    ifr.addEventListener("load", iframeLoaded);
     ifr.setAttribute('src', "iframe_messageChannel_post.html");
     div.appendChild(ifr);
 
@@ -42,7 +42,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
       ifr.contentWindow.postMessage({ port: a.port2 }, '*', [a.port2]);
     }
 
-    a.port1.addEventListener('message', receivePortMessage, false);
+    a.port1.addEventListener('message', receivePortMessage);
     function receivePortMessage(evt) {
       is(evt.data.ab.byteLength, size, "The size is: " + size + " == " + ab.byteLength);
       window.removeEventListener('message', receiveMessage);
@@ -58,7 +58,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
   }
 
   function port_test() {
-    window.addEventListener('message', receiveMessage, false);
+    window.addEventListener('message', receiveMessage);
     function receiveMessage(evt) {
       ok(evt.data.type == 'OK', evt.data.msg);
     }
@@ -70,7 +70,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
     ok(div, "Parent exists");
 
     var ifr = document.createElement("iframe");
-    ifr.addEventListener("load", iframeLoaded, false);
+    ifr.addEventListener("load", iframeLoaded);
     ifr.setAttribute('src', "iframe_messageChannel_transferable.html");
     div.appendChild(ifr);
 

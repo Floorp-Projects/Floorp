@@ -39,7 +39,7 @@ function startTest(test, token) {
       is(v.error.code, v.error.MEDIA_ERR_DECODE,
          "decoder should reject " + test.name);
     }
-    v.removeEventListener('error', onerror, false);
+    v.removeEventListener('error', onerror);
     manager.finished(token);
   });
 

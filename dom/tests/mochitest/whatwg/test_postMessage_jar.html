@@ -32,7 +32,7 @@ function receiveMessage(evt)
   SimpleTest.finish();
 }
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 
 addLoadEvent(function() {
   SpecialPowers.pushPrefEnv({"set": [["network.jar.block-remote-files", false]]}, function() {

@@ -46,7 +46,7 @@ function onended(event) {
   v.removeEventListener("ended", onended);
   if (v._finished)
     return;
-  v.addEventListener("seeked", onseeked, false);
+  v.addEventListener("seeked", onseeked);
   v.currentTime = 0;
 }
 
@@ -58,8 +58,8 @@ function startTest(test, token) {
   v.src = test.name;
   v._played = false;
   v._finished = false;
-  v.addEventListener("loadedmetadata", onloaded, false);
-  v.addEventListener("ended", onended, false);
+  v.addEventListener("loadedmetadata", onloaded);
+  v.addEventListener("ended", onended);
 
   document.body.appendChild(v);
 }

@@ -38,7 +38,7 @@ function testCancelInPhase4() {
       xhr2.addEventListener("load", function() {
         is(xhr2.responseText, "0", "Received fresh value for second request");
         SimpleTest.finish();
-      }, false);
+      });
 
       xhr2.open("GET", url);
       xhr2.setRequestHeader("X-Request", "1", false);
@@ -48,7 +48,7 @@ function testCancelInPhase4() {
         is(xhr2.status, "200", "Exception!");
       }
     });
-  }, false);
+  });
 
   xhr.open("GET", url, true);
   xhr.setRequestHeader("X-Request", "0", false);

@@ -147,7 +147,7 @@ var SinglePanelManager = {
     // Can't pass an arrow function as the event handler because we need to be
     // able to call |removeEventListener| later.
     view.addEventListener("popuphidden", SinglePanelManager.onVisiblePanelHidden, true);
-    view.addEventListener("popupshown", SinglePanelManager.onVisiblePanelShown, false);
+    view.addEventListener("popupshown", SinglePanelManager.onVisiblePanelShown);
     SinglePanelManager.enqueuedPanel = null;
     SinglePanelManager.enqueuedPanelCallback = null;
     SinglePanelManager.visiblePanel = Cu.getWeakReference(panel);
@@ -170,7 +170,7 @@ var SinglePanelManager = {
     }
     SinglePanelManager.visiblePanel = null;
     view.removeEventListener("popuphidden", SinglePanelManager.onVisiblePanelHidden, true);
-    view.removeEventListener("popupshown", SinglePanelManager.onVisiblePanelShown, false);
+    view.removeEventListener("popupshown", SinglePanelManager.onVisiblePanelShown);
     let nextPanel = getPanelFromWeakRef(SinglePanelManager.enqueuedPanel);
     let nextPanelCallback = SinglePanelManager.enqueuedPanelCallback;
     if (nextPanel) {

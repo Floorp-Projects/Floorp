@@ -1160,7 +1160,7 @@ PluginContent.prototype = {
       // Remove the notification when the page is reloaded.
       doc.defaultView.top.addEventListener("unload", event => {
         this.hideNotificationBar("plugin-crashed");
-      }, false);
+      });
     }
   },
 
@@ -1202,6 +1202,6 @@ PluginContent.prototype = {
     // Remove the notification when the page is reloaded.
     doc.defaultView.top.addEventListener("unload", event => {
       this.hideNotificationBar("plugin-crashed");
-    }, false);
+    });
   },
 };

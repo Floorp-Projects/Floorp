@@ -67,7 +67,7 @@ var gSyncPane = {
     this._showLoadPage(xps);
 
     let onUnload = function() {
-      window.removeEventListener("unload", onUnload, false);
+      window.removeEventListener("unload", onUnload);
       try {
         Services.obs.removeObserver(onReady, "weave:service:ready");
       } catch (e) {}
@@ -75,12 +75,12 @@ var gSyncPane = {
 
     let onReady = function() {
       Services.obs.removeObserver(onReady, "weave:service:ready");
-      window.removeEventListener("unload", onUnload, false);
+      window.removeEventListener("unload", onUnload);
       this._init();
     }.bind(this);
 
     Services.obs.addObserver(onReady, "weave:service:ready", false);
-    window.addEventListener("unload", onUnload, false);
+    window.addEventListener("unload", onUnload);
 
     xps.ensureLoaded();
   },
@@ -129,7 +129,7 @@ var gSyncPane = {
       topics.forEach(function(topic) {
         Weave.Svc.Obs.remove(topic, this.updateWeavePrefs, this);
       }, gSyncPane);
-    }, false);
+    });
 
     XPCOMUtils.defineLazyGetter(this, '_stringBundle', () => {
       return Services.strings.createBundle("chrome://browser/locale/preferences/preferences.properties");

@@ -145,7 +145,7 @@
 
 
   testCases.push(() => Promise.all(videoElems.map(video => new Promise(resolve => {
-    video.addEventListener("loadedmetadata", resolve, false);
+    video.addEventListener("loadedmetadata", resolve);
     video.src = "seek_with_sound.ogg";
   }))));
 
@@ -170,7 +170,7 @@
     SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, start);
   }
 
-  window.addEventListener("load", loadevent, false);
+  window.addEventListener("load", loadevent);
 </script>
 </pre>
 </body>

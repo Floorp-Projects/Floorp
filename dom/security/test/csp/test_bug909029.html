@@ -121,9 +121,9 @@ function checkInlineWithNone() {
 }
 
 document.getElementById('testframe1').src = 'file_bug909029_star.html';
-document.getElementById('testframe1').addEventListener('load', checkInlineWithStar, false);
+document.getElementById('testframe1').addEventListener('load', checkInlineWithStar);
 document.getElementById('testframe2').src = 'file_bug909029_none.html';
-document.getElementById('testframe2').addEventListener('load', checkInlineWithNone, false);
+document.getElementById('testframe2').addEventListener('load', checkInlineWithNone);
     </script>
   </body>
 </html>

@@ -62,6 +62,6 @@ function doTest() {
   document.querySelector("#aboutToScroll").scrollTop = 50 - document.querySelector("#aboutToScroll").scrollTop;
   document.documentElement.removeAttribute("class");
 }
-document.addEventListener("MozReftestInvalidate", doTest, false);
+document.addEventListener("MozReftestInvalidate", doTest);
 
 </script>

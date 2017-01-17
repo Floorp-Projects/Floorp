@@ -576,7 +576,7 @@ VariablesViewController.prototype = {
     // Some variables are likely to contain a very large number of properties.
     // It's a good idea to be prepared in case of an expansion.
     if (aTarget.shouldPrefetch) {
-      aTarget.addEventListener("mouseover", aTarget.onexpand, false);
+      aTarget.addEventListener("mouseover", aTarget.onexpand);
     }
 
     // Register all the actors that this controller now depends on.

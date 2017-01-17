@@ -40,7 +40,7 @@ var gMainPane = {
 
     // set up the "use current page" label-changing listener
     this._updateUseCurrentButton();
-    window.addEventListener("focus", this._updateUseCurrentButton.bind(this), false);
+    window.addEventListener("focus", this._updateUseCurrentButton.bind(this));
 
     this.updateBrowserStartupLastSession();
 

@@ -7,7 +7,7 @@
     window.parent.postMessage({type: what ? 'OK' : 'KO', msg: msg }, '*');
   }
 
-  window.addEventListener('message', receiveMessage, false);
+  window.addEventListener('message', receiveMessage);
   function receiveMessage(evt) {
     if (evt.data.type == 'PORT') {
       var port = evt.data.port;

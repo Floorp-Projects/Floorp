@@ -521,11 +521,11 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     win.addEventListener("unload", this);
 
     let tabContainer = win.gBrowser.tabContainer;
-    tabContainer.addEventListener("TabSelect", this, false);
-    tabContainer.addEventListener("TabOpen", this, false);
-    tabContainer.addEventListener("TabClose", this, false);
-    tabContainer.addEventListener("TabPinned", this, false);
-    tabContainer.addEventListener("TabUnpinned", this, false);
+    tabContainer.addEventListener("TabSelect", this);
+    tabContainer.addEventListener("TabOpen", this);
+    tabContainer.addEventListener("TabClose", this);
+    tabContainer.addEventListener("TabPinned", this);
+    tabContainer.addEventListener("TabUnpinned", this);
   },
 
   /**
@@ -737,11 +737,11 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     }
 
     let tabContainer = win.gBrowser.tabContainer;
-    tabContainer.removeEventListener("TabSelect", this, false);
-    tabContainer.removeEventListener("TabOpen", this, false);
-    tabContainer.removeEventListener("TabClose", this, false);
-    tabContainer.removeEventListener("TabPinned", this, false);
-    tabContainer.removeEventListener("TabUnpinned", this, false);
+    tabContainer.removeEventListener("TabSelect", this);
+    tabContainer.removeEventListener("TabOpen", this);
+    tabContainer.removeEventListener("TabClose", this);
+    tabContainer.removeEventListener("TabPinned", this);
+    tabContainer.removeEventListener("TabUnpinned", this);
   },
 
   handleEvent: function (event) {

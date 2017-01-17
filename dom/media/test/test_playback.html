@@ -47,7 +47,7 @@ function startTest(test, token) {
 
   var finish = function() {
     v.finished = true;
-    v.removeEventListener("timeupdate", timeUpdate, false);
+    v.removeEventListener("timeupdate", timeUpdate);
     removeNodeAndSource(v);
     manager.finished(v.token);
   }
@@ -89,13 +89,13 @@ function startTest(test, token) {
     v.prevTime = v.currentTime;
   }}(test, v);
 
-  v.addEventListener("load", noLoad, false);
-  v.addEventListener("loadedmetadata", check, false);
-  v.addEventListener("timeupdate", timeUpdate, false);
+  v.addEventListener("load", noLoad);
+  v.addEventListener("loadedmetadata", check);
+  v.addEventListener("timeupdate", timeUpdate);
 
   // We should get "ended" and "suspend" events for every resource
-  v.addEventListener("ended", checkEnded, false);
-  v.addEventListener("suspend", checkSuspended, false);
+  v.addEventListener("ended", checkEnded);
+  v.addEventListener("suspend", checkSuspended);
 
   document.body.appendChild(v);
   v.play();
@@ -110,7 +110,7 @@ function startTest(test, token) {
       Log(e.target.token, "got " + e.type);
     }
     events.forEach(function(e) {
-      v.addEventListener(e, logEvent, false);
+      v.addEventListener(e, logEvent);
     });
   }
 }

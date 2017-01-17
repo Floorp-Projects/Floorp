@@ -922,7 +922,7 @@
           if (this._mousedown) {
             this._stopScroll();
             this._mousedown = true;
-            document.addEventListener("mouseup", this, false);
+            document.addEventListener("mouseup", this);
             document.addEventListener("blur", this, true);
           }
         ]]></body>
@@ -942,7 +942,7 @@
           if (aEvent.type == "mouseup" ||
               aEvent.type == "blur" && aEvent.target == document) {
             this._mousedown = false;
-            document.removeEventListener("mouseup", this, false);
+            document.removeEventListener("mouseup", this);
             document.removeEventListener("blur", this, true);
           }
         ]]></body>

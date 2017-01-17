@@ -50,7 +50,7 @@ function run_test() {
       do_check_eq(request.status, 200);
       server.stop(do_test_finished);
     }
-  }, false);
+  });
   request.send();
   try {
     request.setRequestHeader("X-Unwanted-Header", "present");

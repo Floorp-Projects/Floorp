@@ -41,15 +41,15 @@ function test() {
   function waitForTabOpen() {
     return new Promise(resolve => {
       gBrowser.tabContainer.addEventListener("TabOpen", function onOpen(e) {
-        gBrowser.tabContainer.removeEventListener("TabOpen", onOpen, false);
+        gBrowser.tabContainer.removeEventListener("TabOpen", onOpen);
         ok(true, "A new tab loaded");
 
         gBrowser.addEventListener("DOMContentLoaded", function onTabLoad(e) {
-          gBrowser.removeEventListener("DOMContentLoaded", onTabLoad, false);
+          gBrowser.removeEventListener("DOMContentLoaded", onTabLoad);
           // Pass along the new tab's URI.
           resolve(gBrowser.currentURI.spec);
-        }, false);
-      }, false);
+        });
+      });
     });
   }
 

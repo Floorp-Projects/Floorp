@@ -102,13 +102,13 @@ add_task(function* test_contentscript() {
       let BrowserApp = chromeWin.BrowserApp;
 
       let tabCloseListener = (event) => {
-        BrowserApp.deck.removeEventListener("TabClose", tabCloseListener, false);
+        BrowserApp.deck.removeEventListener("TabClose", tabCloseListener);
         let browser = event.target;
         let url = browser.currentURI.spec;
         resolve(url);
       };
 
-      BrowserApp.deck.addEventListener("TabClose", tabCloseListener, false);
+      BrowserApp.deck.addEventListener("TabClose", tabCloseListener);
     });
   };
 

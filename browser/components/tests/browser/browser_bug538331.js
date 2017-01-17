@@ -168,9 +168,9 @@ var gWindowCatcher = {
     let win = subject.QueryInterface(Ci.nsIDOMWindow);
     info("window catcher caught window opening: " + win.document.documentURI);
     win.addEventListener("load", function() {
-      win.removeEventListener("load", arguments.callee, false);
+      win.removeEventListener("load", arguments.callee);
       gWindowCatcher.windowLoad(win);
-    }, false);
+    });
   }
 };
 

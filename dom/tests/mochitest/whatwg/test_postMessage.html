@@ -157,8 +157,8 @@ function start()
   window.postMessage("post-to-self", "http://mochi.test:8888");
 }
 
-window.addEventListener("load", start, false);
-window.addEventListener("message", messageReceiver, false);
+window.addEventListener("load", start);
+window.addEventListener("message", messageReceiver);
 
 </script>
 </pre>

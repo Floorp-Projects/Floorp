@@ -935,7 +935,7 @@ PropertyView.prototype = {
     this.onMatchedToggle = this.onMatchedToggle.bind(this);
     this.element = doc.createElementNS(HTML_NS, "div");
     this.element.setAttribute("class", this.propertyHeaderClassName);
-    this.element.addEventListener("dblclick", this.onMatchedToggle, false);
+    this.element.addEventListener("dblclick", this.onMatchedToggle);
 
     // Make it keyboard navigable
     this.element.setAttribute("tabindex", "0");
@@ -959,7 +959,7 @@ PropertyView.prototype = {
     // Build the twisty expand/collapse
     this.matchedExpander = doc.createElementNS(HTML_NS, "div");
     this.matchedExpander.className = "expander theme-twisty";
-    this.matchedExpander.addEventListener("click", this.onMatchedToggle, false);
+    this.matchedExpander.addEventListener("click", this.onMatchedToggle);
     nameContainer.appendChild(this.matchedExpander);
 
     // Build the style name element
@@ -974,7 +974,7 @@ PropertyView.prototype = {
     this.nameNode.textContent = this.nameNode.title = this.name;
     // Make it hand over the focus to the container
     this.onFocus = () => this.element.focus();
-    this.nameNode.addEventListener("click", this.onFocus, false);
+    this.nameNode.addEventListener("click", this.onFocus);
     nameContainer.appendChild(this.nameNode);
 
     let valueContainer = doc.createElementNS(HTML_NS, "div");
@@ -989,7 +989,7 @@ PropertyView.prototype = {
     this.valueNode.setAttribute("tabindex", "");
     this.valueNode.setAttribute("dir", "ltr");
     // Make it hand over the focus to the container
-    this.valueNode.addEventListener("click", this.onFocus, false);
+    this.valueNode.addEventListener("click", this.onFocus);
     valueContainer.appendChild(this.valueNode);
 
     return this.element;
@@ -1100,7 +1100,7 @@ PropertyView.prototype = {
         tabindex: "0",
         textContent: selector.source
       });
-      link.addEventListener("click", selector.openStyleEditor, false);
+      link.addEventListener("click", selector.openStyleEditor);
       let shortcuts = new KeyShortcuts({
         window: this.tree.styleWindow,
         target: link
@@ -1185,18 +1185,17 @@ PropertyView.prototype = {
    * Destroy this property view, removing event listeners
    */
   destroy: function () {
-    this.element.removeEventListener("dblclick", this.onMatchedToggle, false);
+    this.element.removeEventListener("dblclick", this.onMatchedToggle);
     this.shortcuts.destroy();
     this.element = null;
 
-    this.matchedExpander.removeEventListener("click", this.onMatchedToggle,
-                                             false);
+    this.matchedExpander.removeEventListener("click", this.onMatchedToggle);
     this.matchedExpander = null;
 
-    this.nameNode.removeEventListener("click", this.onFocus, false);
+    this.nameNode.removeEventListener("click", this.onFocus);
     this.nameNode = null;
 
-    this.valueNode.removeEventListener("click", this.onFocus, false);
+    this.valueNode.removeEventListener("click", this.onFocus);
     this.valueNode = null;
   }
 };

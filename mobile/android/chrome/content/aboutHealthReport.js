@@ -34,7 +34,7 @@ var sharedPrefs = SharedPreferences.forApp();
 var healthReportWrapper = {
   init: function () {
     let iframe = document.getElementById("remote-report");
-    iframe.addEventListener("load", healthReportWrapper.initRemotePage, false);
+    iframe.addEventListener("load", healthReportWrapper.initRemotePage);
     let report = this._getReportURI();
     iframe.src = report.spec;
     console.log("AboutHealthReport: loading content from " + report.spec);
@@ -165,8 +165,7 @@ var healthReportWrapper = {
   initRemotePage: function () {
     let iframe = document.getElementById("remote-report").contentDocument;
     iframe.addEventListener("RemoteHealthReportCommand",
-                            function onCommand(e) {healthReportWrapper.handleRemoteCommand(e);},
-                            false);
+                            function onCommand(e) {healthReportWrapper.handleRemoteCommand(e);});
     healthReportWrapper.injectData("begin", null);
   },
 
@@ -191,5 +190,5 @@ var healthReportWrapper = {
   },
 };
 
-window.addEventListener("load", healthReportWrapper.init.bind(healthReportWrapper), false);
-window.addEventListener("unload", healthReportWrapper.uninit.bind(healthReportWrapper), false);
+window.addEventListener("load", healthReportWrapper.init.bind(healthReportWrapper));
+window.addEventListener("unload", healthReportWrapper.uninit.bind(healthReportWrapper));

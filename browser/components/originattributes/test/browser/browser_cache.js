@@ -181,8 +181,8 @@ function* doTest(aBrowser) {
       };
 
       // Add the event listeners before everything in case we lose events.
-      audioTrack.addEventListener("load", trackListener, false);
-      audio.addEventListener("canplaythrough", audioListener, false);
+      audioTrack.addEventListener("load", trackListener);
+      audio.addEventListener("canplaythrough", audioListener);
 
       // Assign attributes for the audio element.
       audioSource.setAttribute("src", audioURL + URLSuffix);
@@ -205,7 +205,7 @@ function* doTest(aBrowser) {
       };
 
       // Add the event listener before everything in case we lose the event.
-      video.addEventListener("canplaythrough", listener, false);
+      video.addEventListener("canplaythrough", listener);
 
       // Assign attributes for the video element.
       video.setAttribute("src", videoURL + URLSuffix);

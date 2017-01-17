@@ -21,8 +21,8 @@ function do_ended(e) {
   var v = e.target;
   ok(!v._finished, "Only one ended event for " + v._name);
   v._finished = true;
-  v.removeEventListener("ended", do_ended, false);
-  v.removeEventListener("progress", do_progress, false);
+  v.removeEventListener("ended", do_ended);
+  v.removeEventListener("progress", do_progress);
   removeNodeAndSource(v);
   manager.finished(v.token);
 }
@@ -36,8 +36,8 @@ function startTest(test, token) {
   v.autoplay = true;
   v._name = test.name;
   v._finished = false;
-  v.addEventListener("ended", do_ended, false);
-  v.addEventListener("progress", do_progress, false);
+  v.addEventListener("ended", do_ended);
+  v.addEventListener("progress", do_progress);
   document.body.appendChild(v);
 }
 

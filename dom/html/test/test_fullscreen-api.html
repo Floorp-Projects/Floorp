@@ -71,11 +71,11 @@ function runNextTest() {
     // This ensures that we're essentially back on the primary "desktop" on
     // OS X Lion before we run the test.
     testWindow.addEventListener("load", function onload() {
-      testWindow.removeEventListener("load", onload, false);
+      testWindow.removeEventListener("load", onload);
       SimpleTest.waitForFocus(function() {
         SimpleTest.waitForFocus(testWindow.begin, testWindow);
       });
-    }, false);
+    });
     gTestIndex++;
   } else {
     SimpleTest.finish();

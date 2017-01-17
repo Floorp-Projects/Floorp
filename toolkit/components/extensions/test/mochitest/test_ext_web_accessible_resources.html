@@ -199,8 +199,8 @@ add_task(function* test_web_accessible_resources_csp() {
   function content() {
     window.addEventListener("message", function rcv(event) {
       browser.runtime.sendMessage("script-ran");
-      window.removeEventListener("message", rcv, false);
-    }, false);
+      window.removeEventListener("message", rcv);
+    });
 
     testImageLoading(browser.extension.getURL("image.png"), "loaded");
 

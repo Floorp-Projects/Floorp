@@ -403,7 +403,7 @@
         <body><![CDATA[
           // history dropmarker pushed state
           function cleanup(popup) {
-            popup.removeEventListener("popupshowing", onShow, false);
+            popup.removeEventListener("popupshowing", onShow);
           }
           function onShow(event) {
             var popup = event.target, input = popup.input;
@@ -411,11 +411,11 @@
             input.setAttribute("open", "true");
             function onHide() {
               input.removeAttribute("open");
-              popup.removeEventListener("popuphiding", onHide, false);
+              popup.removeEventListener("popuphiding", onHide);
             }
-            popup.addEventListener("popuphiding", onHide, false);
+            popup.addEventListener("popuphiding", onHide);
           }
-          this.popup.addEventListener("popupshowing", onShow, false);
+          this.popup.addEventListener("popupshowing", onShow);
           setTimeout(cleanup, 1000, this.popup);
 
           // Store our "normal" maxRows on the popup, so that it can reset the

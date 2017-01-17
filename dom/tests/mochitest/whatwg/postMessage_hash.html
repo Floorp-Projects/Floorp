@@ -22,7 +22,7 @@ function receiveMessage(evt)
   window.parent.postMessage(response, "http://mochi.test:8888");
 }
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
   </script>
 </head>
 <body>

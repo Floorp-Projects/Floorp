@@ -32,10 +32,10 @@ input.addEventListener("input", function() {
     });
   } else if (testNum == 1) {
     ok(!input.validity.valid, "input should not be valid");
-    input.removeEventListener("input", arguments.callee, false);
+    input.removeEventListener("input", arguments.callee);
     SimpleTest.finish();
   }
-}, false);
+});
 
 SimpleTest.waitForExplicitFinish();
 

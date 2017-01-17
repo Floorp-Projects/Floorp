@@ -12,5 +12,5 @@ window.addEventListener("message", function(event) {
   if (event.data == "report") {
     event.source.postMessage(recordedOrientations, "*");
   }
-}, false);
+});
 </script>

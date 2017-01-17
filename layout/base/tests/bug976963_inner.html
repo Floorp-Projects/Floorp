@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=976963
                               "gotpointercapture",  "lostpointercapture"];
 
     function on_event(object, event, callback) {
-      object.addEventListener(event, callback, false);
+      object.addEventListener(event, callback);
     }
     function ok(check, msg) {
       parent.ok(check, msg);

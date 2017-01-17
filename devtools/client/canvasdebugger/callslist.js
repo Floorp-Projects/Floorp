@@ -29,24 +29,24 @@ var CallsListView = Heritage.extend(WidgetMethods, {
     this._onStackFileClick = this._onStackFileClick.bind(this);
     this._onThumbnailClick = this._onThumbnailClick.bind(this);
 
-    this.widget.addEventListener("select", this._onSelect, false);
-    this._slider.addEventListener("mousedown", this._onSlideMouseDown, false);
-    this._slider.addEventListener("mouseup", this._onSlideMouseUp, false);
-    this._slider.addEventListener("change", this._onSlide, false);
-    this._searchbox.addEventListener("input", this._onSearch, false);
-    this._filmstrip.addEventListener("wheel", this._onScroll, false);
+    this.widget.addEventListener("select", this._onSelect);
+    this._slider.addEventListener("mousedown", this._onSlideMouseDown);
+    this._slider.addEventListener("mouseup", this._onSlideMouseUp);
+    this._slider.addEventListener("change", this._onSlide);
+    this._searchbox.addEventListener("input", this._onSearch);
+    this._filmstrip.addEventListener("wheel", this._onScroll);
   },
 
   /**
    * Destruction function, called when the tool is closed.
    */
   destroy: function () {
-    this.widget.removeEventListener("select", this._onSelect, false);
-    this._slider.removeEventListener("mousedown", this._onSlideMouseDown, false);
-    this._slider.removeEventListener("mouseup", this._onSlideMouseUp, false);
-    this._slider.removeEventListener("change", this._onSlide, false);
-    this._searchbox.removeEventListener("input", this._onSearch, false);
-    this._filmstrip.removeEventListener("wheel", this._onScroll, false);
+    this.widget.removeEventListener("select", this._onSelect);
+    this._slider.removeEventListener("mousedown", this._onSlideMouseDown);
+    this._slider.removeEventListener("mouseup", this._onSlideMouseUp);
+    this._slider.removeEventListener("change", this._onSlide);
+    this._searchbox.removeEventListener("input", this._onSearch);
+    this._filmstrip.removeEventListener("wheel", this._onScroll);
   },
 
   /**

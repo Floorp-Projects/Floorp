@@ -169,7 +169,7 @@ function createEntry(aTagName, aIsWindowsFragment, aIndex, aClosedTab,
   }
 
   if (!aIsWindowsFragment) {
-    element.addEventListener("click", RecentlyClosedTabsAndWindowsMenuUtils._undoCloseMiddleClick, false);
+    element.addEventListener("click", RecentlyClosedTabsAndWindowsMenuUtils._undoCloseMiddleClick);
   }
   if (aIndex == 0) {
     element.setAttribute("key", "key_undoClose" + (aIsWindowsFragment? "Window" : "Tab"));

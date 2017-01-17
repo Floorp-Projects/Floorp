@@ -25,7 +25,7 @@
     info("Open iframe, wait for it to do its IndexedDB stuff.");
 
     let iframe = document.getElementById("iframe1");
-    window.addEventListener("message", grabEventAndContinueHandler, false);
+    window.addEventListener("message", grabEventAndContinueHandler);
     // Put it in a different origin to be safe
     iframe.src = //"http://example.org" +
                  window.location.pathname.replace(

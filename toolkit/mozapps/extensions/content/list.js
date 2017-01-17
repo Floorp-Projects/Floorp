@@ -74,7 +74,7 @@ function init() {
       accept.label = extensionsBundle.getString("softBlockedInstallAcceptLabel");
       accept.accessKey = extensionsBundle.getString("softBlockedInstallAcceptKey");
       de.getButton("cancel").focus();
-      document.addEventListener("dialogaccept", allowInstall, false);
+      document.addEventListener("dialogaccept", allowInstall);
     } else {
       params.title = extensionsBundle.getString("blocklistedInstallTitle2");
       params.message1 = extensionsBundle.getFormattedString("blocklistedInstallMsg2",

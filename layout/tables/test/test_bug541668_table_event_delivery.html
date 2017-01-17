@@ -36,8 +36,7 @@ function run_test()
 
   var got_mousemove = false;
   target.addEventListener("mousemove",
-                          function(event) { got_mousemove = true },
-                          false);
+                          function(event) { got_mousemove = true });
   synthesizeMouse(target, 150, 150, { type: "mousemove" });
   is(got_mousemove, true, "should get mousemove on block");
   SimpleTest.finish();

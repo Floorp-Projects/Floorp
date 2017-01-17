@@ -314,14 +314,6 @@ URLSearchParams::URLSearchParams(nsISupports* aParent,
 {
 }
 
-URLSearchParams::URLSearchParams(nsISupports* aParent,
-                                 const URLSearchParams& aOther)
-  : mParams(new URLParams(*aOther.mParams.get()))
-  , mParent(aParent)
-  , mObserver(nullptr)
-{
-}
-
 URLSearchParams::~URLSearchParams()
 {
   DeleteAll();
@@ -335,30 +327,33 @@ URLSearchParams::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 
 /* static */ already_AddRefed<URLSearchParams>
 URLSearchParams::Constructor(const GlobalObject& aGlobal,
-                             const nsAString& aInit,
+                             const USVStringSequenceSequenceOrUSVString& aInit,
                              ErrorResult& aRv)
 {
   RefPtr<URLSearchParams> sp =
     new URLSearchParams(aGlobal.GetAsSupports(), nullptr);
 
-  NS_ConvertUTF16toUTF8 input(aInit);
-
-  if (StringBeginsWith(input, NS_LITERAL_CSTRING("?"))) {
-    sp->ParseInput(Substring(input, 1, input.Length() - 1));
+  if (aInit.IsUSVString()) {
+    NS_ConvertUTF16toUTF8 input(aInit.GetAsUSVString());
+    if (StringBeginsWith(input, NS_LITERAL_CSTRING("?"))) {
+      sp->ParseInput(Substring(input, 1, input.Length() - 1));
+    } else {
+      sp->ParseInput(input);
+    }
+  } else if (aInit.IsUSVStringSequenceSequence()) {
+    const Sequence<Sequence<nsString>>& list =
+      aInit.GetAsUSVStringSequenceSequence();
+    for (uint32_t i = 0; i < list.Length(); ++i) {
+      const Sequence<nsString>& item = list[i];
+      if (item.Length() != 2) {
+        aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+        return nullptr;
+      }
+      sp->Append(item[0], item[1]);
+    }
   } else {
-    sp->ParseInput(input);
+    MOZ_CRASH("This should not happen.");
   }
-
-  return sp.forget();
-}
-
-/* static */ already_AddRefed<URLSearchParams>
-URLSearchParams::Constructor(const GlobalObject& aGlobal,
-                             URLSearchParams& aInit,
-                             ErrorResult& aRv)
-{
-  RefPtr<URLSearchParams> sp =
-    new URLSearchParams(aGlobal.GetAsSupports(), aInit);
 
   return sp.forget();
 }

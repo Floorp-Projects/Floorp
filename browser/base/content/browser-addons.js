@@ -666,14 +666,14 @@ var LightWeightThemeWebInstaller = {
       return;
 
     this._resetPreview();
-    gBrowser.tabContainer.addEventListener("TabSelect", this, false);
+    gBrowser.tabContainer.addEventListener("TabSelect", this);
     this._manager.previewTheme(data);
   },
 
   _resetPreview(baseURI) {
     if (baseURI && !this._isAllowed(baseURI))
       return;
-    gBrowser.tabContainer.removeEventListener("TabSelect", this, false);
+    gBrowser.tabContainer.removeEventListener("TabSelect", this);
     this._manager.resetPreview();
   },
 

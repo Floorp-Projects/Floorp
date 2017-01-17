@@ -539,7 +539,7 @@ let BrowserUsageTelemetry = {
     }
 
     let onLoad = () => {
-      win.removeEventListener("load", onLoad, false);
+      win.removeEventListener("load", onLoad);
 
       // Ignore non browser windows.
       if (win.document.documentElement.getAttribute("windowtype") != "navigator:browser") {
@@ -556,6 +556,6 @@ let BrowserUsageTelemetry = {
       // Account for that.
       this._onTabOpen(counts.tabCount);
     };
-    win.addEventListener("load", onLoad, false);
+    win.addEventListener("load", onLoad);
   },
 };
