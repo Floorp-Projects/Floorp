@@ -13,10 +13,8 @@
 #include "./vp9_rtcd.h"
 #include "vpx/vpx_integer.h"
 
-int64_t vp9_block_error_avx2(const int16_t *coeff,
-                             const int16_t *dqcoeff,
-                             intptr_t block_size,
-                             int64_t *ssz) {
+int64_t vp9_block_error_avx2(const int16_t *coeff, const int16_t *dqcoeff,
+                             intptr_t block_size, int64_t *ssz) {
   __m256i sse_reg, ssz_reg, coeff_reg, dqcoeff_reg;
   __m256i exp_dqcoeff_lo, exp_dqcoeff_hi, exp_coeff_lo, exp_coeff_hi;
   __m256i sse_reg_64hi, ssz_reg_64hi;
@@ -29,7 +27,7 @@ int64_t vp9_block_error_avx2(const int16_t *coeff,
   sse_reg = _mm256_set1_epi16(0);
   ssz_reg = _mm256_set1_epi16(0);
 
-  for (i = 0 ; i < block_size ; i+= 16) {
+  for (i = 0; i < block_size; i += 16) {
     // load 32 bytes from coeff and dqcoeff
     coeff_reg = _mm256_loadu_si256((const __m256i *)(coeff + i));
     dqcoeff_reg = _mm256_loadu_si256((const __m256i *)(dqcoeff + i));
@@ -66,8 +64,8 @@ int64_t vp9_block_error_avx2(const int16_t *coeff,
                              _mm256_extractf128_si256(ssz_reg, 1));
 
   // store the results
-  _mm_storel_epi64((__m128i*)(&sse), sse_reg128);
+  _mm_storel_epi64((__m128i *)(&sse), sse_reg128);
 
-  _mm_storel_epi64((__m128i*)(ssz), ssz_reg128);
+  _mm_storel_epi64((__m128i *)(ssz), ssz_reg128);
   return sse;
 }

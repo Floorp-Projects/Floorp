@@ -11,10 +11,5 @@
 #define RTCD_C
 #include "./vpx_dsp_rtcd.h"
 #include "vpx_ports/vpx_once.h"
-#ifdef _MSC_VER
-#include <intrin.h>
-#endif
 
-void vpx_dsp_rtcd() {
-  once(setup_rtcd_internal);
-}
+void vpx_dsp_rtcd() { once(setup_rtcd_internal); }

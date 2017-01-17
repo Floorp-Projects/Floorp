@@ -24,22 +24,21 @@ extern "C" {
 
 #if HAVE_DSPR2
 /* inputs & outputs are quad-byte vectors */
-static INLINE void filter_dspr2(uint32_t mask, uint32_t hev,
-                                uint32_t *ps1, uint32_t *ps0,
-                                uint32_t *qs0, uint32_t *qs1) {
-  int32_t   vpx_filter_l, vpx_filter_r;
-  int32_t   Filter1_l, Filter1_r, Filter2_l, Filter2_r;
-  int32_t   subr_r, subr_l;
-  uint32_t  t1, t2, HWM, t3;
-  uint32_t  hev_l, hev_r, mask_l, mask_r, invhev_l, invhev_r;
-  int32_t   vps1, vps0, vqs0, vqs1;
-  int32_t   vps1_l, vps1_r, vps0_l, vps0_r, vqs0_l, vqs0_r, vqs1_l, vqs1_r;
-  uint32_t  N128;
+static INLINE void filter_dspr2(uint32_t mask, uint32_t hev, uint32_t *ps1,
+                                uint32_t *ps0, uint32_t *qs0, uint32_t *qs1) {
+  int32_t vpx_filter_l, vpx_filter_r;
+  int32_t Filter1_l, Filter1_r, Filter2_l, Filter2_r;
+  int32_t subr_r, subr_l;
+  uint32_t t1, t2, HWM, t3;
+  uint32_t hev_l, hev_r, mask_l, mask_r, invhev_l, invhev_r;
+  int32_t vps1, vps0, vqs0, vqs1;
+  int32_t vps1_l, vps1_r, vps0_l, vps0_r, vqs0_l, vqs0_r, vqs1_l, vqs1_r;
+  uint32_t N128;
 
   N128 = 0x80808080;
-  t1  = 0x03000300;
-  t2  = 0x04000400;
-  t3  = 0x01000100;
+  t1 = 0x03000300;
+  t2 = 0x04000400;
+  t3 = 0x01000100;
   HWM = 0xFF00FF00;
 
   vps0 = (*ps0) ^ N128;
@@ -72,7 +71,7 @@ static INLINE void filter_dspr2(uint32_t mask, uint32_t hev,
   hev_r = hev << 8;
   hev_r = hev_r & HWM;
 
-  __asm__ __volatile__ (
+  __asm__ __volatile__(
       /* vpx_filter = vp8_signed_char_clamp(ps1 - qs1); */
       "subq_s.ph    %[vpx_filter_l], %[vps1_l],       %[vqs1_l]       \n\t"
       "subq_s.ph    %[vpx_filter_r], %[vps1_r],       %[vqs1_r]       \n\t"
@@ -99,20 +98,17 @@ static INLINE void filter_dspr2(uint32_t mask, uint32_t hev,
       "and          %[vpx_filter_l], %[vpx_filter_l], %[mask_l]       \n\t"
       "and          %[vpx_filter_r], %[vpx_filter_r], %[mask_r]       \n\t"
 
-      : [vpx_filter_l] "=&r" (vpx_filter_l),
-        [vpx_filter_r] "=&r" (vpx_filter_r),
-        [subr_l] "=&r" (subr_l), [subr_r] "=&r" (subr_r),
-        [invhev_l] "=&r" (invhev_l), [invhev_r] "=&r" (invhev_r)
-      : [vps0_l] "r" (vps0_l), [vps0_r] "r" (vps0_r), [vps1_l] "r" (vps1_l),
-        [vps1_r] "r" (vps1_r), [vqs0_l] "r" (vqs0_l), [vqs0_r] "r" (vqs0_r),
-        [vqs1_l] "r" (vqs1_l), [vqs1_r] "r" (vqs1_r),
-        [mask_l] "r" (mask_l), [mask_r] "r" (mask_r),
-        [hev_l] "r" (hev_l), [hev_r] "r" (hev_r),
-        [HWM] "r" (HWM)
-  );
+      : [vpx_filter_l] "=&r"(vpx_filter_l), [vpx_filter_r] "=&r"(vpx_filter_r),
+        [subr_l] "=&r"(subr_l), [subr_r] "=&r"(subr_r),
+        [invhev_l] "=&r"(invhev_l), [invhev_r] "=&r"(invhev_r)
+      : [vps0_l] "r"(vps0_l), [vps0_r] "r"(vps0_r), [vps1_l] "r"(vps1_l),
+        [vps1_r] "r"(vps1_r), [vqs0_l] "r"(vqs0_l), [vqs0_r] "r"(vqs0_r),
+        [vqs1_l] "r"(vqs1_l), [vqs1_r] "r"(vqs1_r), [mask_l] "r"(mask_l),
+        [mask_r] "r"(mask_r), [hev_l] "r"(hev_l), [hev_r] "r"(hev_r),
+        [HWM] "r"(HWM));
 
   /* save bottom 3 bits so that we round one side +4 and the other +3 */
-  __asm__ __volatile__ (
+  __asm__ __volatile__(
       /* Filter2 = vp8_signed_char_clamp(vpx_filter + 3) >>= 3; */
       "addq_s.ph    %[Filter1_l],    %[vpx_filter_l], %[t2]           \n\t"
       "addq_s.ph    %[Filter1_r],    %[vpx_filter_r], %[t2]           \n\t"
@@ -137,15 +133,14 @@ static INLINE void filter_dspr2(uint32_t mask, uint32_t hev,
       "subq_s.ph    %[vqs0_l],       %[vqs0_l],       %[Filter1_l]    \n\t"
       "subq_s.ph    %[vqs0_r],       %[vqs0_r],       %[Filter1_r]    \n\t"
 
-      : [Filter1_l] "=&r" (Filter1_l), [Filter1_r] "=&r" (Filter1_r),
-        [Filter2_l] "=&r" (Filter2_l), [Filter2_r] "=&r" (Filter2_r),
-        [vps0_l] "+r" (vps0_l), [vps0_r] "+r" (vps0_r),
-        [vqs0_l] "+r" (vqs0_l), [vqs0_r] "+r" (vqs0_r)
-      : [t1] "r" (t1), [t2] "r" (t2), [HWM] "r" (HWM),
-        [vpx_filter_l] "r" (vpx_filter_l), [vpx_filter_r] "r" (vpx_filter_r)
-  );
+      : [Filter1_l] "=&r"(Filter1_l), [Filter1_r] "=&r"(Filter1_r),
+        [Filter2_l] "=&r"(Filter2_l), [Filter2_r] "=&r"(Filter2_r),
+        [vps0_l] "+r"(vps0_l), [vps0_r] "+r"(vps0_r), [vqs0_l] "+r"(vqs0_l),
+        [vqs0_r] "+r"(vqs0_r)
+      : [t1] "r"(t1), [t2] "r"(t2), [HWM] "r"(HWM),
+        [vpx_filter_l] "r"(vpx_filter_l), [vpx_filter_r] "r"(vpx_filter_r));
 
-  __asm__ __volatile__ (
+  __asm__ __volatile__(
       /* (vpx_filter += 1) >>= 1 */
       "addqh.ph    %[Filter1_l],    %[Filter1_l],     %[t3]           \n\t"
       "addqh.ph    %[Filter1_r],    %[Filter1_r],     %[t3]           \n\t"
@@ -162,11 +157,10 @@ static INLINE void filter_dspr2(uint32_t mask, uint32_t hev,
       "subq_s.ph    %[vqs1_l],       %[vqs1_l],       %[Filter1_l]    \n\t"
       "subq_s.ph    %[vqs1_r],       %[vqs1_r],       %[Filter1_r]    \n\t"
 
-      : [Filter1_l] "+r" (Filter1_l), [Filter1_r] "+r" (Filter1_r),
-        [vps1_l] "+r" (vps1_l), [vps1_r] "+r" (vps1_r),
-        [vqs1_l] "+r" (vqs1_l), [vqs1_r] "+r" (vqs1_r)
-      : [t3] "r" (t3), [invhev_l] "r" (invhev_l), [invhev_r] "r" (invhev_r)
-  );
+      : [Filter1_l] "+r"(Filter1_l), [Filter1_r] "+r"(Filter1_r),
+        [vps1_l] "+r"(vps1_l), [vps1_r] "+r"(vps1_r), [vqs1_l] "+r"(vqs1_l),
+        [vqs1_r] "+r"(vqs1_r)
+      : [t3] "r"(t3), [invhev_l] "r"(invhev_l), [invhev_r] "r"(invhev_r));
 
   /* Create quad-bytes from halfword pairs */
   vqs0_l = vqs0_l & HWM;
@@ -174,16 +168,15 @@ static INLINE void filter_dspr2(uint32_t mask, uint32_t hev,
   vps0_l = vps0_l & HWM;
   vps1_l = vps1_l & HWM;
 
-  __asm__ __volatile__ (
+  __asm__ __volatile__(
       "shrl.ph      %[vqs0_r],       %[vqs0_r],       8   \n\t"
       "shrl.ph      %[vps0_r],       %[vps0_r],       8   \n\t"
       "shrl.ph      %[vqs1_r],       %[vqs1_r],       8   \n\t"
       "shrl.ph      %[vps1_r],       %[vps1_r],       8   \n\t"
 
-      : [vps1_r] "+r" (vps1_r), [vqs1_r] "+r" (vqs1_r),
-        [vps0_r] "+r" (vps0_r), [vqs0_r] "+r" (vqs0_r)
-      :
-  );
+      : [vps1_r] "+r"(vps1_r), [vqs1_r] "+r"(vqs1_r), [vps0_r] "+r"(vps0_r),
+        [vqs0_r] "+r"(vqs0_r)
+      :);
 
   vqs0 = vqs0_l | vqs0_r;
   vqs1 = vqs1_l | vqs1_r;
@@ -196,24 +189,23 @@ static INLINE void filter_dspr2(uint32_t mask, uint32_t hev,
   *qs1 = vqs1 ^ N128;
 }
 
-static INLINE void filter1_dspr2(uint32_t mask, uint32_t hev,
-                                 uint32_t ps1, uint32_t ps0,
-                                 uint32_t qs0, uint32_t qs1,
+static INLINE void filter1_dspr2(uint32_t mask, uint32_t hev, uint32_t ps1,
+                                 uint32_t ps0, uint32_t qs0, uint32_t qs1,
                                  uint32_t *p1_f0, uint32_t *p0_f0,
                                  uint32_t *q0_f0, uint32_t *q1_f0) {
-  int32_t   vpx_filter_l, vpx_filter_r;
-  int32_t   Filter1_l, Filter1_r, Filter2_l, Filter2_r;
-  int32_t   subr_r, subr_l;
-  uint32_t  t1, t2, HWM, t3;
-  uint32_t  hev_l, hev_r, mask_l, mask_r, invhev_l, invhev_r;
-  int32_t   vps1, vps0, vqs0, vqs1;
-  int32_t   vps1_l, vps1_r, vps0_l, vps0_r, vqs0_l, vqs0_r, vqs1_l, vqs1_r;
-  uint32_t  N128;
+  int32_t vpx_filter_l, vpx_filter_r;
+  int32_t Filter1_l, Filter1_r, Filter2_l, Filter2_r;
+  int32_t subr_r, subr_l;
+  uint32_t t1, t2, HWM, t3;
+  uint32_t hev_l, hev_r, mask_l, mask_r, invhev_l, invhev_r;
+  int32_t vps1, vps0, vqs0, vqs1;
+  int32_t vps1_l, vps1_r, vps0_l, vps0_r, vqs0_l, vqs0_r, vqs1_l, vqs1_r;
+  uint32_t N128;
 
   N128 = 0x80808080;
-  t1  = 0x03000300;
-  t2  = 0x04000400;
-  t3  = 0x01000100;
+  t1 = 0x03000300;
+  t2 = 0x04000400;
+  t3 = 0x01000100;
   HWM = 0xFF00FF00;
 
   vps0 = (ps0) ^ N128;
@@ -246,7 +238,7 @@ static INLINE void filter1_dspr2(uint32_t mask, uint32_t hev,
   hev_r = hev << 8;
   hev_r = hev_r & HWM;
 
-  __asm__ __volatile__ (
+  __asm__ __volatile__(
       /* vpx_filter = vp8_signed_char_clamp(ps1 - qs1); */
       "subq_s.ph    %[vpx_filter_l], %[vps1_l],       %[vqs1_l]       \n\t"
       "subq_s.ph    %[vpx_filter_r], %[vps1_r],       %[vqs1_r]       \n\t"
@@ -273,19 +265,17 @@ static INLINE void filter1_dspr2(uint32_t mask, uint32_t hev,
       "and          %[vpx_filter_l], %[vpx_filter_l], %[mask_l]       \n\t"
       "and          %[vpx_filter_r], %[vpx_filter_r], %[mask_r]       \n\t"
 
-      : [vpx_filter_l] "=&r" (vpx_filter_l),
-        [vpx_filter_r] "=&r" (vpx_filter_r),
-        [subr_l] "=&r" (subr_l), [subr_r] "=&r" (subr_r),
-        [invhev_l] "=&r" (invhev_l), [invhev_r] "=&r" (invhev_r)
-      : [vps0_l] "r" (vps0_l), [vps0_r] "r" (vps0_r), [vps1_l] "r" (vps1_l),
-        [vps1_r] "r" (vps1_r), [vqs0_l] "r" (vqs0_l), [vqs0_r] "r" (vqs0_r),
-        [vqs1_l] "r" (vqs1_l), [vqs1_r] "r" (vqs1_r),
-        [mask_l] "r" (mask_l), [mask_r] "r" (mask_r),
-        [hev_l] "r" (hev_l), [hev_r] "r" (hev_r), [HWM] "r" (HWM)
-  );
+      : [vpx_filter_l] "=&r"(vpx_filter_l), [vpx_filter_r] "=&r"(vpx_filter_r),
+        [subr_l] "=&r"(subr_l), [subr_r] "=&r"(subr_r),
+        [invhev_l] "=&r"(invhev_l), [invhev_r] "=&r"(invhev_r)
+      : [vps0_l] "r"(vps0_l), [vps0_r] "r"(vps0_r), [vps1_l] "r"(vps1_l),
+        [vps1_r] "r"(vps1_r), [vqs0_l] "r"(vqs0_l), [vqs0_r] "r"(vqs0_r),
+        [vqs1_l] "r"(vqs1_l), [vqs1_r] "r"(vqs1_r), [mask_l] "r"(mask_l),
+        [mask_r] "r"(mask_r), [hev_l] "r"(hev_l), [hev_r] "r"(hev_r),
+        [HWM] "r"(HWM));
 
   /* save bottom 3 bits so that we round one side +4 and the other +3 */
-  __asm__ __volatile__ (
+  __asm__ __volatile__(
       /* Filter2 = vp8_signed_char_clamp(vpx_filter + 3) >>= 3; */
       "addq_s.ph    %[Filter1_l],    %[vpx_filter_l], %[t2]           \n\t"
       "addq_s.ph    %[Filter1_r],    %[vpx_filter_r], %[t2]           \n\t"
@@ -310,15 +300,14 @@ static INLINE void filter1_dspr2(uint32_t mask, uint32_t hev,
       "subq_s.ph    %[vqs0_l],       %[vqs0_l],       %[Filter1_l]    \n\t"
       "subq_s.ph    %[vqs0_r],       %[vqs0_r],       %[Filter1_r]    \n\t"
 
-      : [Filter1_l] "=&r" (Filter1_l), [Filter1_r] "=&r" (Filter1_r),
-        [Filter2_l] "=&r" (Filter2_l), [Filter2_r] "=&r" (Filter2_r),
-        [vps0_l] "+r" (vps0_l), [vps0_r] "+r" (vps0_r),
-        [vqs0_l] "+r" (vqs0_l), [vqs0_r] "+r" (vqs0_r)
-      : [t1] "r" (t1), [t2] "r" (t2), [HWM] "r" (HWM),
-        [vpx_filter_l] "r" (vpx_filter_l), [vpx_filter_r] "r" (vpx_filter_r)
-  );
+      : [Filter1_l] "=&r"(Filter1_l), [Filter1_r] "=&r"(Filter1_r),
+        [Filter2_l] "=&r"(Filter2_l), [Filter2_r] "=&r"(Filter2_r),
+        [vps0_l] "+r"(vps0_l), [vps0_r] "+r"(vps0_r), [vqs0_l] "+r"(vqs0_l),
+        [vqs0_r] "+r"(vqs0_r)
+      : [t1] "r"(t1), [t2] "r"(t2), [HWM] "r"(HWM),
+        [vpx_filter_l] "r"(vpx_filter_l), [vpx_filter_r] "r"(vpx_filter_r));
 
-  __asm__ __volatile__ (
+  __asm__ __volatile__(
       /* (vpx_filter += 1) >>= 1 */
       "addqh.ph    %[Filter1_l],    %[Filter1_l],     %[t3]           \n\t"
       "addqh.ph    %[Filter1_r],    %[Filter1_r],     %[t3]           \n\t"
@@ -335,11 +324,10 @@ static INLINE void filter1_dspr2(uint32_t mask, uint32_t hev,
       "subq_s.ph    %[vqs1_l],       %[vqs1_l],       %[Filter1_l]    \n\t"
       "subq_s.ph    %[vqs1_r],       %[vqs1_r],       %[Filter1_r]    \n\t"
 
-      : [Filter1_l] "+r" (Filter1_l), [Filter1_r] "+r" (Filter1_r),
-        [vps1_l] "+r" (vps1_l), [vps1_r] "+r" (vps1_r),
-        [vqs1_l] "+r" (vqs1_l), [vqs1_r] "+r" (vqs1_r)
-      : [t3] "r" (t3), [invhev_l] "r" (invhev_l), [invhev_r] "r" (invhev_r)
-  );
+      : [Filter1_l] "+r"(Filter1_l), [Filter1_r] "+r"(Filter1_r),
+        [vps1_l] "+r"(vps1_l), [vps1_r] "+r"(vps1_r), [vqs1_l] "+r"(vqs1_l),
+        [vqs1_r] "+r"(vqs1_r)
+      : [t3] "r"(t3), [invhev_l] "r"(invhev_l), [invhev_r] "r"(invhev_r));
 
   /* Create quad-bytes from halfword pairs */
   vqs0_l = vqs0_l & HWM;
@@ -347,16 +335,15 @@ static INLINE void filter1_dspr2(uint32_t mask, uint32_t hev,
   vps0_l = vps0_l & HWM;
   vps1_l = vps1_l & HWM;
 
-  __asm__ __volatile__ (
+  __asm__ __volatile__(
       "shrl.ph      %[vqs0_r],       %[vqs0_r],       8   \n\t"
       "shrl.ph      %[vps0_r],       %[vps0_r],       8   \n\t"
       "shrl.ph      %[vqs1_r],       %[vqs1_r],       8   \n\t"
       "shrl.ph      %[vps1_r],       %[vps1_r],       8   \n\t"
 
-      : [vps1_r] "+r" (vps1_r), [vqs1_r] "+r" (vqs1_r),
-        [vps0_r] "+r" (vps0_r), [vqs0_r] "+r" (vqs0_r)
-      :
-  );
+      : [vps1_r] "+r"(vps1_r), [vqs1_r] "+r"(vqs1_r), [vps0_r] "+r"(vps0_r),
+        [vqs0_r] "+r"(vqs0_r)
+      :);
 
   vqs0 = vqs0_l | vqs0_r;
   vqs1 = vqs1_l | vqs1_r;
@@ -369,18 +356,17 @@ static INLINE void filter1_dspr2(uint32_t mask, uint32_t hev,
   *q1_f0 = vqs1 ^ N128;
 }
 
-static INLINE void mbfilter_dspr2(uint32_t *op3, uint32_t *op2,
-                                  uint32_t *op1, uint32_t *op0,
-                                  uint32_t *oq0, uint32_t *oq1,
+static INLINE void mbfilter_dspr2(uint32_t *op3, uint32_t *op2, uint32_t *op1,
+                                  uint32_t *op0, uint32_t *oq0, uint32_t *oq1,
                                   uint32_t *oq2, uint32_t *oq3) {
   /* use a 7 tap filter [1, 1, 1, 2, 1, 1, 1] for flat line */
   const uint32_t p3 = *op3, p2 = *op2, p1 = *op1, p0 = *op0;
   const uint32_t q0 = *oq0, q1 = *oq1, q2 = *oq2, q3 = *oq3;
-  uint32_t       res_op2, res_op1, res_op0;
-  uint32_t       res_oq0, res_oq1, res_oq2;
-  uint32_t       tmp;
-  uint32_t       add_p210_q012;
-  uint32_t       u32Four = 0x00040004;
+  uint32_t res_op2, res_op1, res_op0;
+  uint32_t res_oq0, res_oq1, res_oq2;
+  uint32_t tmp;
+  uint32_t add_p210_q012;
+  uint32_t u32Four = 0x00040004;
 
   /* *op2 = ROUND_POWER_OF_TWO(p3 + p3 + p3 + p2 + p2 + p1 + p0 + q0, 3)  1 */
   /* *op1 = ROUND_POWER_OF_TWO(p3 + p3 + p2 + p1 + p1 + p0 + q0 + q1, 3)  2 */
@@ -389,7 +375,7 @@ static INLINE void mbfilter_dspr2(uint32_t *op3, uint32_t *op2,
   /* *oq1 = ROUND_POWER_OF_TWO(p1 + p0 + q0 + q1 + q1 + q2 + q3 + q3, 3)  5 */
   /* *oq2 = ROUND_POWER_OF_TWO(p0 + q0 + q1 + q2 + q2 + q3 + q3 + q3, 3)  6 */
 
-  __asm__ __volatile__ (
+  __asm__ __volatile__(
       "addu.ph    %[add_p210_q012],  %[p2],             %[p1]            \n\t"
       "addu.ph    %[add_p210_q012],  %[add_p210_q012],  %[p0]            \n\t"
       "addu.ph    %[add_p210_q012],  %[add_p210_q012],  %[q0]            \n\t"
@@ -428,15 +414,12 @@ static INLINE void mbfilter_dspr2(uint32_t *op3, uint32_t *op2,
       "shrl.ph    %[res_op0],        %[res_op0],        3                \n\t"
       "shrl.ph    %[res_oq2],        %[res_oq2],        3                \n\t"
 
-      : [add_p210_q012] "=&r" (add_p210_q012),
-        [tmp] "=&r" (tmp), [res_op2] "=&r" (res_op2),
-        [res_op1] "=&r" (res_op1), [res_op0] "=&r" (res_op0),
-        [res_oq0] "=&r" (res_oq0), [res_oq1] "=&r" (res_oq1),
-        [res_oq2] "=&r" (res_oq2)
-      : [p0] "r" (p0), [q0] "r" (q0), [p1] "r" (p1), [q1] "r" (q1),
-        [p2] "r" (p2), [q2] "r" (q2), [p3] "r" (p3), [q3] "r" (q3),
-        [u32Four] "r" (u32Four)
-  );
+      : [add_p210_q012] "=&r"(add_p210_q012), [tmp] "=&r"(tmp),
+        [res_op2] "=&r"(res_op2), [res_op1] "=&r"(res_op1),
+        [res_op0] "=&r"(res_op0), [res_oq0] "=&r"(res_oq0),
+        [res_oq1] "=&r"(res_oq1), [res_oq2] "=&r"(res_oq2)
+      : [p0] "r"(p0), [q0] "r"(q0), [p1] "r"(p1), [q1] "r"(q1), [p2] "r"(p2),
+        [q2] "r"(q2), [p3] "r"(p3), [q3] "r"(q3), [u32Four] "r"(u32Four));
 
   *op2 = res_op2;
   *op1 = res_op1;
@@ -446,20 +429,18 @@ static INLINE void mbfilter_dspr2(uint32_t *op3, uint32_t *op2,
   *oq2 = res_oq2;
 }
 
-static INLINE void mbfilter1_dspr2(uint32_t p3, uint32_t p2,
-                                   uint32_t p1, uint32_t p0,
-                                   uint32_t q0, uint32_t q1,
-                                   uint32_t q2, uint32_t q3,
-                                   uint32_t *op2_f1,
+static INLINE void mbfilter1_dspr2(uint32_t p3, uint32_t p2, uint32_t p1,
+                                   uint32_t p0, uint32_t q0, uint32_t q1,
+                                   uint32_t q2, uint32_t q3, uint32_t *op2_f1,
                                    uint32_t *op1_f1, uint32_t *op0_f1,
                                    uint32_t *oq0_f1, uint32_t *oq1_f1,
                                    uint32_t *oq2_f1) {
   /* use a 7 tap filter [1, 1, 1, 2, 1, 1, 1] for flat line */
-  uint32_t  res_op2, res_op1, res_op0;
-  uint32_t  res_oq0, res_oq1, res_oq2;
-  uint32_t  tmp;
-  uint32_t  add_p210_q012;
-  uint32_t  u32Four = 0x00040004;
+  uint32_t res_op2, res_op1, res_op0;
+  uint32_t res_oq0, res_oq1, res_oq2;
+  uint32_t tmp;
+  uint32_t add_p210_q012;
+  uint32_t u32Four = 0x00040004;
 
   /* *op2 = ROUND_POWER_OF_TWO(p3 + p3 + p3 + p2 + p2 + p1 + p0 + q0, 3)   1 */
   /* *op1 = ROUND_POWER_OF_TWO(p3 + p3 + p2 + p1 + p1 + p0 + q0 + q1, 3)   2 */
@@ -468,7 +449,7 @@ static INLINE void mbfilter1_dspr2(uint32_t p3, uint32_t p2,
   /* *oq1 = ROUND_POWER_OF_TWO(p1 + p0 + q0 + q1 + q1 + q2 + q3 + q3, 3)   5 */
   /* *oq2 = ROUND_POWER_OF_TWO(p0 + q0 + q1 + q2 + q2 + q3 + q3 + q3, 3)   6 */
 
-  __asm__ __volatile__ (
+  __asm__ __volatile__(
       "addu.ph    %[add_p210_q012],  %[p2],             %[p1]             \n\t"
       "addu.ph    %[add_p210_q012],  %[add_p210_q012],  %[p0]             \n\t"
       "addu.ph    %[add_p210_q012],  %[add_p210_q012],  %[q0]             \n\t"
@@ -507,14 +488,12 @@ static INLINE void mbfilter1_dspr2(uint32_t p3, uint32_t p2,
       "shrl.ph    %[res_op0],        %[res_op0],        3                 \n\t"
       "shrl.ph    %[res_oq2],        %[res_oq2],        3                 \n\t"
 
-      : [add_p210_q012] "=&r" (add_p210_q012), [tmp] "=&r" (tmp),
-        [res_op2] "=&r" (res_op2), [res_op1] "=&r" (res_op1),
-        [res_op0] "=&r" (res_op0), [res_oq0] "=&r" (res_oq0),
-        [res_oq1] "=&r" (res_oq1), [res_oq2] "=&r" (res_oq2)
-      : [p0] "r" (p0), [q0] "r" (q0), [p1] "r" (p1), [q1] "r" (q1),
-        [p2] "r" (p2), [q2] "r" (q2), [p3] "r" (p3), [q3] "r" (q3),
-        [u32Four] "r" (u32Four)
-  );
+      : [add_p210_q012] "=&r"(add_p210_q012), [tmp] "=&r"(tmp),
+        [res_op2] "=&r"(res_op2), [res_op1] "=&r"(res_op1),
+        [res_op0] "=&r"(res_op0), [res_oq0] "=&r"(res_oq0),
+        [res_oq1] "=&r"(res_oq1), [res_oq2] "=&r"(res_oq2)
+      : [p0] "r"(p0), [q0] "r"(q0), [p1] "r"(p1), [q1] "r"(q1), [p2] "r"(p2),
+        [q2] "r"(q2), [p3] "r"(p3), [q3] "r"(q3), [u32Four] "r"(u32Four));
 
   *op2_f1 = res_op2;
   *op1_f1 = res_op1;
@@ -524,25 +503,22 @@ static INLINE void mbfilter1_dspr2(uint32_t p3, uint32_t p2,
   *oq2_f1 = res_oq2;
 }
 
-static INLINE void wide_mbfilter_dspr2(uint32_t *op7, uint32_t *op6,
-                                       uint32_t *op5, uint32_t *op4,
-                                       uint32_t *op3, uint32_t *op2,
-                                       uint32_t *op1, uint32_t *op0,
-                                       uint32_t *oq0, uint32_t *oq1,
-                                       uint32_t *oq2, uint32_t *oq3,
-                                       uint32_t *oq4, uint32_t *oq5,
-                                       uint32_t *oq6, uint32_t *oq7) {
+static INLINE void wide_mbfilter_dspr2(
+    uint32_t *op7, uint32_t *op6, uint32_t *op5, uint32_t *op4, uint32_t *op3,
+    uint32_t *op2, uint32_t *op1, uint32_t *op0, uint32_t *oq0, uint32_t *oq1,
+    uint32_t *oq2, uint32_t *oq3, uint32_t *oq4, uint32_t *oq5, uint32_t *oq6,
+    uint32_t *oq7) {
   const uint32_t p7 = *op7, p6 = *op6, p5 = *op5, p4 = *op4;
   const uint32_t p3 = *op3, p2 = *op2, p1 = *op1, p0 = *op0;
   const uint32_t q0 = *oq0, q1 = *oq1, q2 = *oq2, q3 = *oq3;
   const uint32_t q4 = *oq4, q5 = *oq5, q6 = *oq6, q7 = *oq7;
-  uint32_t       res_op6, res_op5, res_op4, res_op3, res_op2, res_op1, res_op0;
-  uint32_t       res_oq0, res_oq1, res_oq2, res_oq3, res_oq4, res_oq5, res_oq6;
-  uint32_t       tmp;
-  uint32_t       add_p6toq6;
-  uint32_t       u32Eight = 0x00080008;
+  uint32_t res_op6, res_op5, res_op4, res_op3, res_op2, res_op1, res_op0;
+  uint32_t res_oq0, res_oq1, res_oq2, res_oq3, res_oq4, res_oq5, res_oq6;
+  uint32_t tmp;
+  uint32_t add_p6toq6;
+  uint32_t u32Eight = 0x00080008;
 
-  __asm__ __volatile__ (
+  __asm__ __volatile__(
       /* addition of p6,p5,p4,p3,p2,p1,p0,q0,q1,q2,q3,q4,q5,q6
          which is used most of the time */
       "addu.ph      %[add_p6toq6],     %[p6],              %[p5]         \n\t"
@@ -560,15 +536,13 @@ static INLINE void wide_mbfilter_dspr2(uint32_t *op7, uint32_t *op6,
       "addu.ph      %[add_p6toq6],     %[add_p6toq6],      %[q6]         \n\t"
       "addu.ph      %[add_p6toq6],     %[add_p6toq6],      %[u32Eight]   \n\t"
 
-      : [add_p6toq6] "=&r" (add_p6toq6)
-      : [p6] "r" (p6), [p5] "r" (p5), [p4] "r" (p4),
-        [p3] "r" (p3), [p2] "r" (p2), [p1] "r" (p1), [p0] "r" (p0),
-        [q0] "r" (q0), [q1] "r" (q1), [q2] "r" (q2), [q3] "r" (q3),
-        [q4] "r" (q4), [q5] "r" (q5), [q6] "r" (q6),
-        [u32Eight] "r" (u32Eight)
-  );
+      : [add_p6toq6] "=&r"(add_p6toq6)
+      : [p6] "r"(p6), [p5] "r"(p5), [p4] "r"(p4), [p3] "r"(p3), [p2] "r"(p2),
+        [p1] "r"(p1), [p0] "r"(p0), [q0] "r"(q0), [q1] "r"(q1), [q2] "r"(q2),
+        [q3] "r"(q3), [q4] "r"(q4), [q5] "r"(q5), [q6] "r"(q6),
+        [u32Eight] "r"(u32Eight));
 
-  __asm__ __volatile__ (
+  __asm__ __volatile__(
       /* *op6 = ROUND_POWER_OF_TWO(p7 * 7 + p6 * 2 + p5 + p4 +
                                    p3 + p2 + p1 + p0 + q0, 4) */
       "shll.ph       %[tmp],            %[p7],            3               \n\t"
@@ -643,16 +617,14 @@ static INLINE void wide_mbfilter_dspr2(uint32_t *op7, uint32_t *op6,
       "addu.ph       %[res_op0],        %[res_op0],       %[add_p6toq6]   \n\t"
       "shrl.ph       %[res_op0],        %[res_op0],       4               \n\t"
 
-      : [res_op6] "=&r" (res_op6), [res_op5] "=&r" (res_op5),
-        [res_op4] "=&r" (res_op4), [res_op3] "=&r" (res_op3),
-        [res_op2] "=&r" (res_op2), [res_op1] "=&r" (res_op1),
-        [res_op0] "=&r" (res_op0), [tmp] "=&r" (tmp)
-      : [p7] "r" (p7), [p6] "r" (p6), [p5] "r" (p5), [p4] "r" (p4),
-        [p3] "r" (p3), [p2] "r" (p2), [p1] "r" (p1), [p0] "r" (p0),
-        [q2] "r" (q2), [q1] "r" (q1),
-        [q3] "r" (q3), [q4] "r" (q4), [q5] "r" (q5), [q6] "r" (q6),
-        [add_p6toq6] "r" (add_p6toq6)
-  );
+      : [res_op6] "=&r"(res_op6), [res_op5] "=&r"(res_op5),
+        [res_op4] "=&r"(res_op4), [res_op3] "=&r"(res_op3),
+        [res_op2] "=&r"(res_op2), [res_op1] "=&r"(res_op1),
+        [res_op0] "=&r"(res_op0), [tmp] "=&r"(tmp)
+      : [p7] "r"(p7), [p6] "r"(p6), [p5] "r"(p5), [p4] "r"(p4), [p3] "r"(p3),
+        [p2] "r"(p2), [p1] "r"(p1), [p0] "r"(p0), [q2] "r"(q2), [q1] "r"(q1),
+        [q3] "r"(q3), [q4] "r"(q4), [q5] "r"(q5), [q6] "r"(q6),
+        [add_p6toq6] "r"(add_p6toq6));
 
   *op6 = res_op6;
   *op5 = res_op5;
@@ -662,7 +634,7 @@ static INLINE void wide_mbfilter_dspr2(uint32_t *op7, uint32_t *op6,
   *op1 = res_op1;
   *op0 = res_op0;
 
-  __asm__ __volatile__ (
+  __asm__ __volatile__(
       /* *oq0 = ROUND_POWER_OF_TWO(p6 + p5 + p4 + p3 + p2 + p1 + p0 + q0 * 2 +
                                    q1 + q2 + q3 + q4 + q5 + q6 + q7, 4); */
       "addu.ph       %[res_oq0],        %[q7],            %[q0]           \n\t"
@@ -737,16 +709,14 @@ static INLINE void wide_mbfilter_dspr2(uint32_t *op7, uint32_t *op6,
       "subu.ph       %[res_oq6],        %[res_oq6],       %[p6]           \n\t"
       "shrl.ph       %[res_oq6],        %[res_oq6],       4               \n\t"
 
-      : [res_oq6] "=&r" (res_oq6), [res_oq5] "=&r" (res_oq5),
-        [res_oq4] "=&r" (res_oq4), [res_oq3] "=&r" (res_oq3),
-        [res_oq2] "=&r" (res_oq2), [res_oq1] "=&r" (res_oq1),
-        [res_oq0] "=&r" (res_oq0), [tmp] "=&r" (tmp)
-      : [q7] "r" (q7), [q6] "r" (q6), [q5] "r" (q5), [q4] "r" (q4),
-        [q3] "r" (q3), [q2] "r" (q2), [q1] "r" (q1), [q0] "r" (q0),
-        [p1] "r" (p1), [p2] "r" (p2),
-        [p3] "r" (p3), [p4] "r" (p4), [p5] "r" (p5), [p6] "r" (p6),
-        [add_p6toq6] "r" (add_p6toq6)
-  );
+      : [res_oq6] "=&r"(res_oq6), [res_oq5] "=&r"(res_oq5),
+        [res_oq4] "=&r"(res_oq4), [res_oq3] "=&r"(res_oq3),
+        [res_oq2] "=&r"(res_oq2), [res_oq1] "=&r"(res_oq1),
+        [res_oq0] "=&r"(res_oq0), [tmp] "=&r"(tmp)
+      : [q7] "r"(q7), [q6] "r"(q6), [q5] "r"(q5), [q4] "r"(q4), [q3] "r"(q3),
+        [q2] "r"(q2), [q1] "r"(q1), [q0] "r"(q0), [p1] "r"(p1), [p2] "r"(p2),
+        [p3] "r"(p3), [p4] "r"(p4), [p5] "r"(p5), [p6] "r"(p6),
+        [add_p6toq6] "r"(add_p6toq6));
 
   *oq0 = res_oq0;
   *oq1 = res_oq1;

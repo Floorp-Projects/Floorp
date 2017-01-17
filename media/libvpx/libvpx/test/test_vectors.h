@@ -23,6 +23,8 @@ extern const char *const kVP8TestVectors[];
 #if CONFIG_VP9_DECODER
 extern const int kNumVP9TestVectors;
 extern const char *const kVP9TestVectors[];
+extern const int kNumVP9TestVectorsSvc;
+extern const char *const kVP9TestVectorsSvc[];
 extern const int kNumVP9TestVectorsResize;
 extern const char *const kVP9TestVectorsResize[];
 #endif  // CONFIG_VP9_DECODER

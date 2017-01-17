@@ -68,12 +68,10 @@ int main(int argc, char **argv) {
 
   exec_name = argv[0];
 
-  if (argc != 3)
-    die("Invalid number of arguments.");
+  if (argc != 3) die("Invalid number of arguments.");
 
   reader = vpx_video_reader_open(argv[1]);
-  if (!reader)
-    die("Failed to open %s for reading.", argv[1]);
+  if (!reader) die("Failed to open %s for reading.", argv[1]);
 
   if (!(outfile = fopen(argv[2], "wb")))
     die("Failed to open %s for writing", argv[2]);
@@ -81,8 +79,7 @@ int main(int argc, char **argv) {
   info = vpx_video_reader_get_info(reader);
 
   decoder = get_vpx_decoder_by_fourcc(info->codec_fourcc);
-  if (!decoder)
-    die("Unknown input codec.");
+  if (!decoder) die("Unknown input codec.");
 
   printf("Using %s\n", vpx_codec_iface_name(decoder->codec_interface()));
 
@@ -91,26 +88,25 @@ int main(int argc, char **argv) {
   if (res == VPX_CODEC_INCAPABLE)
     die_codec(&codec, "Postproc not supported by this decoder.");
 
-  if (res)
-    die_codec(&codec, "Failed to initialize decoder.");
+  if (res) die_codec(&codec, "Failed to initialize decoder.");
 
   while (vpx_video_reader_read_frame(reader)) {
     vpx_codec_iter_t iter = NULL;
     vpx_image_t *img = NULL;
     size_t frame_size = 0;
-    const unsigned char *frame = vpx_video_reader_get_frame(reader,
-                                                            &frame_size);
+    const unsigned char *frame =
+        vpx_video_reader_get_frame(reader, &frame_size);
 
     ++frame_cnt;
 
     if (frame_cnt % 30 == 1) {
-      vp8_postproc_cfg_t pp = {0, 0, 0};
+      vp8_postproc_cfg_t pp = { 0, 0, 0 };
 
-    if (vpx_codec_control(&codec, VP8_SET_POSTPROC, &pp))
-      die_codec(&codec, "Failed to turn off postproc.");
+      if (vpx_codec_control(&codec, VP8_SET_POSTPROC, &pp))
+        die_codec(&codec, "Failed to turn off postproc.");
     } else if (frame_cnt % 30 == 16) {
-      vp8_postproc_cfg_t pp = {VP8_DEBLOCK | VP8_DEMACROBLOCK | VP8_MFQE,
-                               4, 0};
+      vp8_postproc_cfg_t pp = { VP8_DEBLOCK | VP8_DEMACROBLOCK | VP8_MFQE, 4,
+                                0 };
       if (vpx_codec_control(&codec, VP8_SET_POSTPROC, &pp))
         die_codec(&codec, "Failed to turn on postproc.");
     };
@@ -125,8 +121,7 @@ int main(int argc, char **argv) {
   }
 
   printf("Processed %d frames.\n", frame_cnt);
-  if (vpx_codec_destroy(&codec))
-    die_codec(&codec, "Failed to destroy codec");
+  if (vpx_codec_destroy(&codec)) die_codec(&codec, "Failed to destroy codec");
 
   printf("Play: ffplay -f rawvideo -pix_fmt yuv420p -s %dx%d %s\n",
          info->frame_width, info->frame_height, argv[2]);

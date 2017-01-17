@@ -25,19 +25,11 @@
 #include "vpx/vpx_codec.h"
 #include "vpx/vpx_integer.h"
 #include "vpx_ports/mem.h"
+#include "vpx_ports/msvc.h"  // for round()
 
 using libvpx_test::ACMRandom;
 
 namespace {
-
-#ifdef _MSC_VER
-static int round(double x) {
-  if (x < 0)
-    return static_cast<int>(ceil(x - 0.5));
-  else
-    return static_cast<int>(floor(x + 0.5));
-}
-#endif
 
 const int kNumCoeffs = 256;
 const double C1 = 0.995184726672197;
@@ -62,16 +54,16 @@ void butterfly_16x16_dct_1d(double input[16], double output[16]) {
   double temp1, temp2;
 
   // step 1
-  step[ 0] = input[0] + input[15];
-  step[ 1] = input[1] + input[14];
-  step[ 2] = input[2] + input[13];
-  step[ 3] = input[3] + input[12];
-  step[ 4] = input[4] + input[11];
-  step[ 5] = input[5] + input[10];
-  step[ 6] = input[6] + input[ 9];
-  step[ 7] = input[7] + input[ 8];
-  step[ 8] = input[7] - input[ 8];
-  step[ 9] = input[6] - input[ 9];
+  step[0] = input[0] + input[15];
+  step[1] = input[1] + input[14];
+  step[2] = input[2] + input[13];
+  step[3] = input[3] + input[12];
+  step[4] = input[4] + input[11];
+  step[5] = input[5] + input[10];
+  step[6] = input[6] + input[9];
+  step[7] = input[7] + input[8];
+  step[8] = input[7] - input[8];
+  step[9] = input[6] - input[9];
   step[10] = input[5] - input[10];
   step[11] = input[4] - input[11];
   step[12] = input[3] - input[12];
@@ -89,13 +81,13 @@ void butterfly_16x16_dct_1d(double input[16], double output[16]) {
   output[6] = step[1] - step[6];
   output[7] = step[0] - step[7];
 
-  temp1 = step[ 8] * C7;
+  temp1 = step[8] * C7;
   temp2 = step[15] * C9;
-  output[ 8] = temp1 + temp2;
+  output[8] = temp1 + temp2;
 
-  temp1 = step[ 9] * C11;
+  temp1 = step[9] * C11;
   temp2 = step[14] * C5;
-  output[ 9] = temp1 - temp2;
+  output[9] = temp1 - temp2;
 
   temp1 = step[10] * C3;
   temp2 = step[13] * C13;
@@ -113,40 +105,40 @@ void butterfly_16x16_dct_1d(double input[16], double output[16]) {
   temp2 = step[13] * C3;
   output[13] = temp2 - temp1;
 
-  temp1 = step[ 9] * C5;
+  temp1 = step[9] * C5;
   temp2 = step[14] * C11;
   output[14] = temp2 + temp1;
 
-  temp1 = step[ 8] * C9;
+  temp1 = step[8] * C9;
   temp2 = step[15] * C7;
   output[15] = temp2 - temp1;
 
   // step 3
-  step[ 0] = output[0] + output[3];
-  step[ 1] = output[1] + output[2];
-  step[ 2] = output[1] - output[2];
-  step[ 3] = output[0] - output[3];
+  step[0] = output[0] + output[3];
+  step[1] = output[1] + output[2];
+  step[2] = output[1] - output[2];
+  step[3] = output[0] - output[3];
 
   temp1 = output[4] * C14;
   temp2 = output[7] * C2;
-  step[ 4] = temp1 + temp2;
+  step[4] = temp1 + temp2;
 
   temp1 = output[5] * C10;
   temp2 = output[6] * C6;
-  step[ 5] = temp1 + temp2;
+  step[5] = temp1 + temp2;
 
   temp1 = output[5] * C6;
   temp2 = output[6] * C10;
-  step[ 6] = temp2 - temp1;
+  step[6] = temp2 - temp1;
 
   temp1 = output[4] * C2;
   temp2 = output[7] * C14;
-  step[ 7] = temp2 - temp1;
+  step[7] = temp2 - temp1;
 
-  step[ 8] = output[ 8] + output[11];
-  step[ 9] = output[ 9] + output[10];
-  step[10] = output[ 9] - output[10];
-  step[11] = output[ 8] - output[11];
+  step[8] = output[8] + output[11];
+  step[9] = output[9] + output[10];
+  step[10] = output[9] - output[10];
+  step[11] = output[8] - output[11];
 
   step[12] = output[12] + output[15];
   step[13] = output[13] + output[14];
@@ -154,25 +146,25 @@ void butterfly_16x16_dct_1d(double input[16], double output[16]) {
   step[15] = output[12] - output[15];
 
   // step 4
-  output[ 0] = (step[ 0] + step[ 1]);
-  output[ 8] = (step[ 0] - step[ 1]);
+  output[0] = (step[0] + step[1]);
+  output[8] = (step[0] - step[1]);
 
   temp1 = step[2] * C12;
   temp2 = step[3] * C4;
   temp1 = temp1 + temp2;
-  output[ 4] = 2*(temp1 * C8);
+  output[4] = 2 * (temp1 * C8);
 
   temp1 = step[2] * C4;
   temp2 = step[3] * C12;
   temp1 = temp2 - temp1;
   output[12] = 2 * (temp1 * C8);
 
-  output[ 2] = 2 * ((step[4] + step[ 5]) * C8);
-  output[14] = 2 * ((step[7] - step[ 6]) * C8);
+  output[2] = 2 * ((step[4] + step[5]) * C8);
+  output[14] = 2 * ((step[7] - step[6]) * C8);
 
   temp1 = step[4] - step[5];
   temp2 = step[6] + step[7];
-  output[ 6] = (temp1 + temp2);
+  output[6] = (temp1 + temp2);
   output[10] = (temp1 - temp2);
 
   intermediate[8] = step[8] + step[14];
@@ -188,18 +180,18 @@ void butterfly_16x16_dct_1d(double input[16], double output[16]) {
   temp1 = temp2 + temp1;
   output[13] = 2 * (temp1 * C8);
 
-  output[ 9] = 2 * ((step[10] + step[11]) * C8);
+  output[9] = 2 * ((step[10] + step[11]) * C8);
 
   intermediate[11] = step[10] - step[11];
   intermediate[12] = step[12] + step[13];
   intermediate[13] = step[12] - step[13];
-  intermediate[14] = step[ 8] - step[14];
-  intermediate[15] = step[ 9] - step[15];
+  intermediate[14] = step[8] - step[14];
+  intermediate[15] = step[9] - step[15];
 
   output[15] = (intermediate[11] + intermediate[12]);
-  output[ 1] = -(intermediate[11] - intermediate[12]);
+  output[1] = -(intermediate[11] - intermediate[12]);
 
-  output[ 7] = 2 * (intermediate[13] * C8);
+  output[7] = 2 * (intermediate[13] * C8);
 
   temp1 = intermediate[14] * C12;
   temp2 = intermediate[15] * C4;
@@ -209,28 +201,24 @@ void butterfly_16x16_dct_1d(double input[16], double output[16]) {
   temp1 = intermediate[14] * C4;
   temp2 = intermediate[15] * C12;
   temp1 = temp2 + temp1;
-  output[ 5] = 2 * (temp1 * C8);
+  output[5] = 2 * (temp1 * C8);
 }
 
 void reference_16x16_dct_2d(int16_t input[256], double output[256]) {
   // First transform columns
   for (int i = 0; i < 16; ++i) {
     double temp_in[16], temp_out[16];
-    for (int j = 0; j < 16; ++j)
-      temp_in[j] = input[j * 16 + i];
+    for (int j = 0; j < 16; ++j) temp_in[j] = input[j * 16 + i];
     butterfly_16x16_dct_1d(temp_in, temp_out);
-    for (int j = 0; j < 16; ++j)
-      output[j * 16 + i] = temp_out[j];
+    for (int j = 0; j < 16; ++j) output[j * 16 + i] = temp_out[j];
   }
   // Then transform rows
   for (int i = 0; i < 16; ++i) {
     double temp_in[16], temp_out[16];
-    for (int j = 0; j < 16; ++j)
-      temp_in[j] = output[j + i * 16];
+    for (int j = 0; j < 16; ++j) temp_in[j] = output[j + i * 16];
     butterfly_16x16_dct_1d(temp_in, temp_out);
     // Scale by some magic number
-    for (int j = 0; j < 16; ++j)
-      output[j + i * 16] = temp_out[j]/2;
+    for (int j = 0; j < 16; ++j) output[j + i * 16] = temp_out[j] / 2;
   }
 }
 
@@ -256,8 +244,7 @@ void idct16x16_ref(const tran_low_t *in, uint8_t *dest, int stride,
   vpx_idct16x16_256_add_c(in, dest, stride);
 }
 
-void fht16x16_ref(const int16_t *in, tran_low_t *out, int stride,
-                  int tx_type) {
+void fht16x16_ref(const int16_t *in, tran_low_t *out, int stride, int tx_type) {
   vp9_fht16x16_c(in, out, stride, tx_type);
 }
 
@@ -359,11 +346,10 @@ class Trans16x16TestBase {
         }
       }
 
-      ASM_REGISTER_STATE_CHECK(RunFwdTxfm(test_input_block,
-                                          test_temp_block, pitch_));
+      ASM_REGISTER_STATE_CHECK(
+          RunFwdTxfm(test_input_block, test_temp_block, pitch_));
       if (bit_depth_ == VPX_BITS_8) {
-        ASM_REGISTER_STATE_CHECK(
-            RunInvTxfm(test_temp_block, dst, pitch_));
+        ASM_REGISTER_STATE_CHECK(RunInvTxfm(test_temp_block, dst, pitch_));
 #if CONFIG_VP9_HIGHBITDEPTH
       } else {
         ASM_REGISTER_STATE_CHECK(
@@ -374,18 +360,17 @@ class Trans16x16TestBase {
       for (int j = 0; j < kNumCoeffs; ++j) {
 #if CONFIG_VP9_HIGHBITDEPTH
         const int32_t diff =
-            bit_depth_ == VPX_BITS_8 ?  dst[j] - src[j] : dst16[j] - src16[j];
+            bit_depth_ == VPX_BITS_8 ? dst[j] - src[j] : dst16[j] - src16[j];
 #else
         const int32_t diff = dst[j] - src[j];
 #endif
         const uint32_t error = diff * diff;
-        if (max_error < error)
-          max_error = error;
+        if (max_error < error) max_error = error;
         total_error += error;
       }
     }
 
-    EXPECT_GE(1u  << 2 * (bit_depth_ - 8), max_error)
+    EXPECT_GE(1u << 2 * (bit_depth_ - 8), max_error)
         << "Error: 16x16 FHT/IHT has an individual round trip error > 1";
 
     EXPECT_GE(count_test_block << 2 * (bit_depth_ - 8), total_error)
@@ -401,8 +386,9 @@ class Trans16x16TestBase {
 
     for (int i = 0; i < count_test_block; ++i) {
       // Initialize a test block with input range [-mask_, mask_].
-      for (int j = 0; j < kNumCoeffs; ++j)
+      for (int j = 0; j < kNumCoeffs; ++j) {
         input_block[j] = (rnd.Rand16() & mask_) - (rnd.Rand16() & mask_);
+      }
 
       fwd_txfm_ref(input_block, output_ref_block, pitch_, tx_type_);
       ASM_REGISTER_STATE_CHECK(RunFwdTxfm(input_block, output_block, pitch_));
@@ -426,16 +412,14 @@ class Trans16x16TestBase {
         input_extreme_block[j] = rnd.Rand8() % 2 ? mask_ : -mask_;
       }
       if (i == 0) {
-        for (int j = 0; j < kNumCoeffs; ++j)
-          input_extreme_block[j] = mask_;
+        for (int j = 0; j < kNumCoeffs; ++j) input_extreme_block[j] = mask_;
       } else if (i == 1) {
-        for (int j = 0; j < kNumCoeffs; ++j)
-          input_extreme_block[j] = -mask_;
+        for (int j = 0; j < kNumCoeffs; ++j) input_extreme_block[j] = -mask_;
       }
 
       fwd_txfm_ref(input_extreme_block, output_ref_block, pitch_, tx_type_);
-      ASM_REGISTER_STATE_CHECK(RunFwdTxfm(input_extreme_block,
-                                          output_block, pitch_));
+      ASM_REGISTER_STATE_CHECK(
+          RunFwdTxfm(input_extreme_block, output_block, pitch_));
 
       // The minimum quant value is 4.
       for (int j = 0; j < kNumCoeffs; ++j) {
@@ -464,12 +448,12 @@ class Trans16x16TestBase {
       for (int j = 0; j < kNumCoeffs; ++j) {
         input_extreme_block[j] = rnd.Rand8() % 2 ? mask_ : -mask_;
       }
-      if (i == 0)
-        for (int j = 0; j < kNumCoeffs; ++j)
-          input_extreme_block[j] = mask_;
-      if (i == 1)
-        for (int j = 0; j < kNumCoeffs; ++j)
-          input_extreme_block[j] = -mask_;
+      if (i == 0) {
+        for (int j = 0; j < kNumCoeffs; ++j) input_extreme_block[j] = mask_;
+      }
+      if (i == 1) {
+        for (int j = 0; j < kNumCoeffs; ++j) input_extreme_block[j] = -mask_;
+      }
 
       fwd_txfm_ref(input_extreme_block, output_ref_block, pitch_, tx_type_);
 
@@ -483,8 +467,9 @@ class Trans16x16TestBase {
 
       // quantization with maximum allowed step sizes
       output_ref_block[0] = (output_ref_block[0] / dc_thred) * dc_thred;
-      for (int j = 1; j < kNumCoeffs; ++j)
+      for (int j = 1; j < kNumCoeffs; ++j) {
         output_ref_block[j] = (output_ref_block[j] / ac_thred) * ac_thred;
+      }
       if (bit_depth_ == VPX_BITS_8) {
         inv_txfm_ref(output_ref_block, ref, pitch_, tx_type_);
         ASM_REGISTER_STATE_CHECK(RunInvTxfm(output_ref_block, dst, pitch_));
@@ -492,17 +477,15 @@ class Trans16x16TestBase {
       } else {
         inv_txfm_ref(output_ref_block, CONVERT_TO_BYTEPTR(ref16), pitch_,
                      tx_type_);
-        ASM_REGISTER_STATE_CHECK(RunInvTxfm(output_ref_block,
-                                            CONVERT_TO_BYTEPTR(dst16), pitch_));
+        ASM_REGISTER_STATE_CHECK(
+            RunInvTxfm(output_ref_block, CONVERT_TO_BYTEPTR(dst16), pitch_));
 #endif
       }
       if (bit_depth_ == VPX_BITS_8) {
-        for (int j = 0; j < kNumCoeffs; ++j)
-          EXPECT_EQ(ref[j], dst[j]);
+        for (int j = 0; j < kNumCoeffs; ++j) EXPECT_EQ(ref[j], dst[j]);
 #if CONFIG_VP9_HIGHBITDEPTH
       } else {
-        for (int j = 0; j < kNumCoeffs; ++j)
-          EXPECT_EQ(ref16[j], dst16[j]);
+        for (int j = 0; j < kNumCoeffs; ++j) EXPECT_EQ(ref16[j], dst16[j]);
 #endif
       }
     }
@@ -539,15 +522,16 @@ class Trans16x16TestBase {
       }
 
       reference_16x16_dct_2d(in, out_r);
-      for (int j = 0; j < kNumCoeffs; ++j)
+      for (int j = 0; j < kNumCoeffs; ++j) {
         coeff[j] = static_cast<tran_low_t>(round(out_r[j]));
+      }
 
       if (bit_depth_ == VPX_BITS_8) {
         ASM_REGISTER_STATE_CHECK(RunInvTxfm(coeff, dst, 16));
 #if CONFIG_VP9_HIGHBITDEPTH
       } else {
-        ASM_REGISTER_STATE_CHECK(RunInvTxfm(coeff, CONVERT_TO_BYTEPTR(dst16),
-                                            16));
+        ASM_REGISTER_STATE_CHECK(
+            RunInvTxfm(coeff, CONVERT_TO_BYTEPTR(dst16), 16));
 #endif  // CONFIG_VP9_HIGHBITDEPTH
       }
 
@@ -559,9 +543,8 @@ class Trans16x16TestBase {
         const uint32_t diff = dst[j] - src[j];
 #endif  // CONFIG_VP9_HIGHBITDEPTH
         const uint32_t error = diff * diff;
-        EXPECT_GE(1u, error)
-            << "Error: 16x16 IDCT has error " << error
-            << " at index " << j;
+        EXPECT_GE(1u, error) << "Error: 16x16 IDCT has error " << error
+                             << " at index " << j;
       }
     }
   }
@@ -603,8 +586,8 @@ class Trans16x16TestBase {
       } else {
 #if CONFIG_VP9_HIGHBITDEPTH
         ref_txfm(coeff, CONVERT_TO_BYTEPTR(ref16), pitch_);
-        ASM_REGISTER_STATE_CHECK(RunInvTxfm(coeff, CONVERT_TO_BYTEPTR(dst16),
-                                 pitch_));
+        ASM_REGISTER_STATE_CHECK(
+            RunInvTxfm(coeff, CONVERT_TO_BYTEPTR(dst16), pitch_));
 #endif  // CONFIG_VP9_HIGHBITDEPTH
       }
 
@@ -616,9 +599,8 @@ class Trans16x16TestBase {
         const uint32_t diff = dst[j] - ref[j];
 #endif  // CONFIG_VP9_HIGHBITDEPTH
         const uint32_t error = diff * diff;
-        EXPECT_EQ(0u, error)
-            << "Error: 16x16 IDCT Comparison has error " << error
-            << " at index " << j;
+        EXPECT_EQ(0u, error) << "Error: 16x16 IDCT Comparison has error "
+                             << error << " at index " << j;
       }
     }
   }
@@ -631,32 +613,25 @@ class Trans16x16TestBase {
   IhtFunc inv_txfm_ref;
 };
 
-class Trans16x16DCT
-    : public Trans16x16TestBase,
-      public ::testing::TestWithParam<Dct16x16Param> {
+class Trans16x16DCT : public Trans16x16TestBase,
+                      public ::testing::TestWithParam<Dct16x16Param> {
  public:
   virtual ~Trans16x16DCT() {}
 
   virtual void SetUp() {
     fwd_txfm_ = GET_PARAM(0);
     inv_txfm_ = GET_PARAM(1);
-    tx_type_  = GET_PARAM(2);
+    tx_type_ = GET_PARAM(2);
     bit_depth_ = GET_PARAM(3);
-    pitch_    = 16;
+    pitch_ = 16;
     fwd_txfm_ref = fdct16x16_ref;
     inv_txfm_ref = idct16x16_ref;
     mask_ = (1 << bit_depth_) - 1;
 #if CONFIG_VP9_HIGHBITDEPTH
     switch (bit_depth_) {
-      case VPX_BITS_10:
-        inv_txfm_ref = idct16x16_10_ref;
-        break;
-      case VPX_BITS_12:
-        inv_txfm_ref = idct16x16_12_ref;
-        break;
-      default:
-        inv_txfm_ref = idct16x16_ref;
-        break;
+      case VPX_BITS_10: inv_txfm_ref = idct16x16_10_ref; break;
+      case VPX_BITS_12: inv_txfm_ref = idct16x16_12_ref; break;
+      default: inv_txfm_ref = idct16x16_ref; break;
     }
 #else
     inv_txfm_ref = idct16x16_ref;
@@ -676,17 +651,11 @@ class Trans16x16DCT
   IdctFunc inv_txfm_;
 };
 
-TEST_P(Trans16x16DCT, AccuracyCheck) {
-  RunAccuracyCheck();
-}
+TEST_P(Trans16x16DCT, AccuracyCheck) { RunAccuracyCheck(); }
 
-TEST_P(Trans16x16DCT, CoeffCheck) {
-  RunCoeffCheck();
-}
+TEST_P(Trans16x16DCT, CoeffCheck) { RunCoeffCheck(); }
 
-TEST_P(Trans16x16DCT, MemCheck) {
-  RunMemCheck();
-}
+TEST_P(Trans16x16DCT, MemCheck) { RunMemCheck(); }
 
 TEST_P(Trans16x16DCT, QuantCheck) {
   // Use maximally allowed quantization step sizes for DC and AC
@@ -694,36 +663,27 @@ TEST_P(Trans16x16DCT, QuantCheck) {
   RunQuantCheck(1336, 1828);
 }
 
-TEST_P(Trans16x16DCT, InvAccuracyCheck) {
-  RunInvAccuracyCheck();
-}
+TEST_P(Trans16x16DCT, InvAccuracyCheck) { RunInvAccuracyCheck(); }
 
-class Trans16x16HT
-    : public Trans16x16TestBase,
-      public ::testing::TestWithParam<Ht16x16Param> {
+class Trans16x16HT : public Trans16x16TestBase,
+                     public ::testing::TestWithParam<Ht16x16Param> {
  public:
   virtual ~Trans16x16HT() {}
 
   virtual void SetUp() {
     fwd_txfm_ = GET_PARAM(0);
     inv_txfm_ = GET_PARAM(1);
-    tx_type_  = GET_PARAM(2);
+    tx_type_ = GET_PARAM(2);
     bit_depth_ = GET_PARAM(3);
-    pitch_    = 16;
+    pitch_ = 16;
     fwd_txfm_ref = fht16x16_ref;
     inv_txfm_ref = iht16x16_ref;
     mask_ = (1 << bit_depth_) - 1;
 #if CONFIG_VP9_HIGHBITDEPTH
     switch (bit_depth_) {
-      case VPX_BITS_10:
-        inv_txfm_ref = iht16x16_10;
-        break;
-      case VPX_BITS_12:
-        inv_txfm_ref = iht16x16_12;
-        break;
-      default:
-        inv_txfm_ref = iht16x16_ref;
-        break;
+      case VPX_BITS_10: inv_txfm_ref = iht16x16_10; break;
+      case VPX_BITS_12: inv_txfm_ref = iht16x16_12; break;
+      default: inv_txfm_ref = iht16x16_ref; break;
     }
 #else
     inv_txfm_ref = iht16x16_ref;
@@ -743,17 +703,11 @@ class Trans16x16HT
   IhtFunc inv_txfm_;
 };
 
-TEST_P(Trans16x16HT, AccuracyCheck) {
-  RunAccuracyCheck();
-}
+TEST_P(Trans16x16HT, AccuracyCheck) { RunAccuracyCheck(); }
 
-TEST_P(Trans16x16HT, CoeffCheck) {
-  RunCoeffCheck();
-}
+TEST_P(Trans16x16HT, CoeffCheck) { RunCoeffCheck(); }
 
-TEST_P(Trans16x16HT, MemCheck) {
-  RunMemCheck();
-}
+TEST_P(Trans16x16HT, MemCheck) { RunMemCheck(); }
 
 TEST_P(Trans16x16HT, QuantCheck) {
   // The encoder skips any non-DC intra prediction modes,
@@ -761,9 +715,8 @@ TEST_P(Trans16x16HT, QuantCheck) {
   RunQuantCheck(429, 729);
 }
 
-class InvTrans16x16DCT
-    : public Trans16x16TestBase,
-      public ::testing::TestWithParam<Idct16x16Param> {
+class InvTrans16x16DCT : public Trans16x16TestBase,
+                         public ::testing::TestWithParam<Idct16x16Param> {
  public:
   virtual ~InvTrans16x16DCT() {}
 
@@ -774,7 +727,7 @@ class InvTrans16x16DCT
     bit_depth_ = GET_PARAM(3);
     pitch_ = 16;
     mask_ = (1 << bit_depth_) - 1;
-}
+  }
   virtual void TearDown() { libvpx_test::ClearSystemState(); }
 
  protected:
@@ -792,9 +745,8 @@ TEST_P(InvTrans16x16DCT, CompareReference) {
   CompareInvReference(ref_txfm_, thresh_);
 }
 
-class PartialTrans16x16Test
-    : public ::testing::TestWithParam<
-          std::tr1::tuple<FdctFunc, vpx_bit_depth_t> > {
+class PartialTrans16x16Test : public ::testing::TestWithParam<
+                                  std::tr1::tuple<FdctFunc, vpx_bit_depth_t> > {
  public:
   virtual ~PartialTrans16x16Test() {}
   virtual void SetUp() {
@@ -863,10 +815,10 @@ INSTANTIATE_TEST_CASE_P(
         make_tuple(&vpx_highbd_fdct16x16_c, &idct16x16_12, 0, VPX_BITS_12),
         make_tuple(&vpx_fdct16x16_c, &vpx_idct16x16_256_add_c, 0, VPX_BITS_8)));
 #else
-INSTANTIATE_TEST_CASE_P(
-    C, Trans16x16DCT,
-    ::testing::Values(
-        make_tuple(&vpx_fdct16x16_c, &vpx_idct16x16_256_add_c, 0, VPX_BITS_8)));
+INSTANTIATE_TEST_CASE_P(C, Trans16x16DCT,
+                        ::testing::Values(make_tuple(&vpx_fdct16x16_c,
+                                                     &vpx_idct16x16_256_add_c,
+                                                     0, VPX_BITS_8)));
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 
 #if CONFIG_VP9_HIGHBITDEPTH
@@ -903,31 +855,28 @@ INSTANTIATE_TEST_CASE_P(C, PartialTrans16x16Test,
                                                      VPX_BITS_8)));
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 
-#if HAVE_NEON_ASM && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
+#if HAVE_NEON && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
 INSTANTIATE_TEST_CASE_P(
     NEON, Trans16x16DCT,
-    ::testing::Values(
-        make_tuple(&vpx_fdct16x16_c,
-                   &vpx_idct16x16_256_add_neon, 0, VPX_BITS_8)));
+    ::testing::Values(make_tuple(&vpx_fdct16x16_c, &vpx_idct16x16_256_add_neon,
+                                 0, VPX_BITS_8)));
 #endif
 
 #if HAVE_SSE2 && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
 INSTANTIATE_TEST_CASE_P(
     SSE2, Trans16x16DCT,
-    ::testing::Values(
-        make_tuple(&vpx_fdct16x16_sse2,
-                   &vpx_idct16x16_256_add_sse2, 0, VPX_BITS_8)));
+    ::testing::Values(make_tuple(&vpx_fdct16x16_sse2,
+                                 &vpx_idct16x16_256_add_sse2, 0, VPX_BITS_8)));
 INSTANTIATE_TEST_CASE_P(
     SSE2, Trans16x16HT,
-    ::testing::Values(
-        make_tuple(&vp9_fht16x16_sse2, &vp9_iht16x16_256_add_sse2, 0,
-                   VPX_BITS_8),
-        make_tuple(&vp9_fht16x16_sse2, &vp9_iht16x16_256_add_sse2, 1,
-                   VPX_BITS_8),
-        make_tuple(&vp9_fht16x16_sse2, &vp9_iht16x16_256_add_sse2, 2,
-                   VPX_BITS_8),
-        make_tuple(&vp9_fht16x16_sse2, &vp9_iht16x16_256_add_sse2, 3,
-                   VPX_BITS_8)));
+    ::testing::Values(make_tuple(&vp9_fht16x16_sse2, &vp9_iht16x16_256_add_sse2,
+                                 0, VPX_BITS_8),
+                      make_tuple(&vp9_fht16x16_sse2, &vp9_iht16x16_256_add_sse2,
+                                 1, VPX_BITS_8),
+                      make_tuple(&vp9_fht16x16_sse2, &vp9_iht16x16_256_add_sse2,
+                                 2, VPX_BITS_8),
+                      make_tuple(&vp9_fht16x16_sse2, &vp9_iht16x16_256_add_sse2,
+                                 3, VPX_BITS_8)));
 INSTANTIATE_TEST_CASE_P(SSE2, PartialTrans16x16Test,
                         ::testing::Values(make_tuple(&vpx_fdct16x16_1_sse2,
                                                      VPX_BITS_8)));
@@ -937,16 +886,14 @@ INSTANTIATE_TEST_CASE_P(SSE2, PartialTrans16x16Test,
 INSTANTIATE_TEST_CASE_P(
     SSE2, Trans16x16DCT,
     ::testing::Values(
-        make_tuple(&vpx_highbd_fdct16x16_sse2,
-                   &idct16x16_10, 0, VPX_BITS_10),
-        make_tuple(&vpx_highbd_fdct16x16_c,
-                   &idct16x16_256_add_10_sse2, 0, VPX_BITS_10),
-        make_tuple(&vpx_highbd_fdct16x16_sse2,
-                   &idct16x16_12, 0, VPX_BITS_12),
-        make_tuple(&vpx_highbd_fdct16x16_c,
-                   &idct16x16_256_add_12_sse2, 0, VPX_BITS_12),
-        make_tuple(&vpx_fdct16x16_sse2,
-                   &vpx_idct16x16_256_add_c, 0, VPX_BITS_8)));
+        make_tuple(&vpx_highbd_fdct16x16_sse2, &idct16x16_10, 0, VPX_BITS_10),
+        make_tuple(&vpx_highbd_fdct16x16_c, &idct16x16_256_add_10_sse2, 0,
+                   VPX_BITS_10),
+        make_tuple(&vpx_highbd_fdct16x16_sse2, &idct16x16_12, 0, VPX_BITS_12),
+        make_tuple(&vpx_highbd_fdct16x16_c, &idct16x16_256_add_12_sse2, 0,
+                   VPX_BITS_12),
+        make_tuple(&vpx_fdct16x16_sse2, &vpx_idct16x16_256_add_c, 0,
+                   VPX_BITS_8)));
 INSTANTIATE_TEST_CASE_P(
     SSE2, Trans16x16HT,
     ::testing::Values(
@@ -959,26 +906,24 @@ INSTANTIATE_TEST_CASE_P(
 // that to test both branches.
 INSTANTIATE_TEST_CASE_P(
     SSE2, InvTrans16x16DCT,
-    ::testing::Values(
-        make_tuple(&idct16x16_10_add_10_c,
-                   &idct16x16_10_add_10_sse2, 3167, VPX_BITS_10),
-        make_tuple(&idct16x16_10,
-                   &idct16x16_256_add_10_sse2, 3167, VPX_BITS_10),
-        make_tuple(&idct16x16_10_add_12_c,
-                   &idct16x16_10_add_12_sse2, 3167, VPX_BITS_12),
-        make_tuple(&idct16x16_12,
-                   &idct16x16_256_add_12_sse2, 3167, VPX_BITS_12)));
+    ::testing::Values(make_tuple(&idct16x16_10_add_10_c,
+                                 &idct16x16_10_add_10_sse2, 3167, VPX_BITS_10),
+                      make_tuple(&idct16x16_10, &idct16x16_256_add_10_sse2,
+                                 3167, VPX_BITS_10),
+                      make_tuple(&idct16x16_10_add_12_c,
+                                 &idct16x16_10_add_12_sse2, 3167, VPX_BITS_12),
+                      make_tuple(&idct16x16_12, &idct16x16_256_add_12_sse2,
+                                 3167, VPX_BITS_12)));
 INSTANTIATE_TEST_CASE_P(SSE2, PartialTrans16x16Test,
                         ::testing::Values(make_tuple(&vpx_fdct16x16_1_sse2,
                                                      VPX_BITS_8)));
 #endif  // HAVE_SSE2 && CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
 
 #if HAVE_MSA && !CONFIG_VP9_HIGHBITDEPTH && !CONFIG_EMULATE_HARDWARE
-INSTANTIATE_TEST_CASE_P(
-    MSA, Trans16x16DCT,
-    ::testing::Values(
-        make_tuple(&vpx_fdct16x16_msa,
-                   &vpx_idct16x16_256_add_msa, 0, VPX_BITS_8)));
+INSTANTIATE_TEST_CASE_P(MSA, Trans16x16DCT,
+                        ::testing::Values(make_tuple(&vpx_fdct16x16_msa,
+                                                     &vpx_idct16x16_256_add_msa,
+                                                     0, VPX_BITS_8)));
 INSTANTIATE_TEST_CASE_P(
     MSA, Trans16x16HT,
     ::testing::Values(

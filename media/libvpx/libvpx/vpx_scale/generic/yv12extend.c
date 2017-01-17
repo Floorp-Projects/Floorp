@@ -19,9 +19,8 @@
 #include "vp9/common/vp9_common.h"
 #endif
 
-static void extend_plane(uint8_t *const src, int src_stride,
-                         int width, int height,
-                         int extend_top, int extend_left,
+static void extend_plane(uint8_t *const src, int src_stride, int width,
+                         int height, int extend_top, int extend_left,
                          int extend_bottom, int extend_right) {
   int i;
   const int linesize = extend_left + extend_right + width;
@@ -61,9 +60,8 @@ static void extend_plane(uint8_t *const src, int src_stride,
 }
 
 #if CONFIG_VP9_HIGHBITDEPTH
-static void extend_plane_high(uint8_t *const src8, int src_stride,
-                              int width, int height,
-                              int extend_top, int extend_left,
+static void extend_plane_high(uint8_t *const src8, int src_stride, int width,
+                              int height, int extend_top, int extend_left,
                               int extend_bottom, int extend_right) {
   int i;
   const int linesize = extend_left + extend_right + width;
@@ -115,44 +113,35 @@ void vp8_yv12_extend_frame_borders_c(YV12_BUFFER_CONFIG *ybf) {
 
 #if CONFIG_VP9_HIGHBITDEPTH
   if (ybf->flags & YV12_FLAG_HIGHBITDEPTH) {
-    extend_plane_high(
-        ybf->y_buffer, ybf->y_stride,
-        ybf->y_crop_width, ybf->y_crop_height,
-        ybf->border, ybf->border,
-        ybf->border + ybf->y_height - ybf->y_crop_height,
-        ybf->border + ybf->y_width - ybf->y_crop_width);
+    extend_plane_high(ybf->y_buffer, ybf->y_stride, ybf->y_crop_width,
+                      ybf->y_crop_height, ybf->border, ybf->border,
+                      ybf->border + ybf->y_height - ybf->y_crop_height,
+                      ybf->border + ybf->y_width - ybf->y_crop_width);
 
-    extend_plane_high(
-        ybf->u_buffer, ybf->uv_stride,
-        ybf->uv_crop_width, ybf->uv_crop_height,
-        uv_border, uv_border,
-        uv_border + ybf->uv_height - ybf->uv_crop_height,
-        uv_border + ybf->uv_width - ybf->uv_crop_width);
+    extend_plane_high(ybf->u_buffer, ybf->uv_stride, ybf->uv_crop_width,
+                      ybf->uv_crop_height, uv_border, uv_border,
+                      uv_border + ybf->uv_height - ybf->uv_crop_height,
+                      uv_border + ybf->uv_width - ybf->uv_crop_width);
 
-    extend_plane_high(
-        ybf->v_buffer, ybf->uv_stride,
-        ybf->uv_crop_width, ybf->uv_crop_height,
-        uv_border, uv_border,
-        uv_border + ybf->uv_height - ybf->uv_crop_height,
-        uv_border + ybf->uv_width - ybf->uv_crop_width);
+    extend_plane_high(ybf->v_buffer, ybf->uv_stride, ybf->uv_crop_width,
+                      ybf->uv_crop_height, uv_border, uv_border,
+                      uv_border + ybf->uv_height - ybf->uv_crop_height,
+                      uv_border + ybf->uv_width - ybf->uv_crop_width);
     return;
   }
 #endif
-  extend_plane(ybf->y_buffer, ybf->y_stride,
-               ybf->y_crop_width, ybf->y_crop_height,
-               ybf->border, ybf->border,
+  extend_plane(ybf->y_buffer, ybf->y_stride, ybf->y_crop_width,
+               ybf->y_crop_height, ybf->border, ybf->border,
                ybf->border + ybf->y_height - ybf->y_crop_height,
                ybf->border + ybf->y_width - ybf->y_crop_width);
 
-  extend_plane(ybf->u_buffer, ybf->uv_stride,
-               ybf->uv_crop_width, ybf->uv_crop_height,
-               uv_border, uv_border,
+  extend_plane(ybf->u_buffer, ybf->uv_stride, ybf->uv_crop_width,
+               ybf->uv_crop_height, uv_border, uv_border,
                uv_border + ybf->uv_height - ybf->uv_crop_height,
                uv_border + ybf->uv_width - ybf->uv_crop_width);
 
-  extend_plane(ybf->v_buffer, ybf->uv_stride,
-               ybf->uv_crop_width, ybf->uv_crop_height,
-               uv_border, uv_border,
+  extend_plane(ybf->v_buffer, ybf->uv_stride, ybf->uv_crop_width,
+               ybf->uv_crop_height, uv_border, uv_border,
                uv_border + ybf->uv_height - ybf->uv_crop_height,
                uv_border + ybf->uv_width - ybf->uv_crop_width);
 }
@@ -175,29 +164,25 @@ static void extend_frame(YV12_BUFFER_CONFIG *const ybf, int ext_size) {
 
 #if CONFIG_VP9_HIGHBITDEPTH
   if (ybf->flags & YV12_FLAG_HIGHBITDEPTH) {
-    extend_plane_high(ybf->y_buffer, ybf->y_stride,
-                      ybf->y_crop_width, ybf->y_crop_height,
-                      ext_size, ext_size,
+    extend_plane_high(ybf->y_buffer, ybf->y_stride, ybf->y_crop_width,
+                      ybf->y_crop_height, ext_size, ext_size,
                       ext_size + ybf->y_height - ybf->y_crop_height,
                       ext_size + ybf->y_width - ybf->y_crop_width);
-    extend_plane_high(ybf->u_buffer, ybf->uv_stride,
-                      c_w, c_h, c_et, c_el, c_eb, c_er);
-    extend_plane_high(ybf->v_buffer, ybf->uv_stride,
-                      c_w, c_h, c_et, c_el, c_eb, c_er);
+    extend_plane_high(ybf->u_buffer, ybf->uv_stride, c_w, c_h, c_et, c_el, c_eb,
+                      c_er);
+    extend_plane_high(ybf->v_buffer, ybf->uv_stride, c_w, c_h, c_et, c_el, c_eb,
+                      c_er);
     return;
   }
 #endif
-  extend_plane(ybf->y_buffer, ybf->y_stride,
-               ybf->y_crop_width, ybf->y_crop_height,
-               ext_size, ext_size,
+  extend_plane(ybf->y_buffer, ybf->y_stride, ybf->y_crop_width,
+               ybf->y_crop_height, ext_size, ext_size,
                ext_size + ybf->y_height - ybf->y_crop_height,
                ext_size + ybf->y_width - ybf->y_crop_width);
 
-  extend_plane(ybf->u_buffer, ybf->uv_stride,
-               c_w, c_h, c_et, c_el, c_eb, c_er);
+  extend_plane(ybf->u_buffer, ybf->uv_stride, c_w, c_h, c_et, c_el, c_eb, c_er);
 
-  extend_plane(ybf->v_buffer, ybf->uv_stride,
-               c_w, c_h, c_et, c_el, c_eb, c_er);
+  extend_plane(ybf->v_buffer, ybf->uv_stride, c_w, c_h, c_et, c_el, c_eb, c_er);
 }
 
 void vpx_extend_frame_borders_c(YV12_BUFFER_CONFIG *ybf) {
@@ -205,8 +190,9 @@ void vpx_extend_frame_borders_c(YV12_BUFFER_CONFIG *ybf) {
 }
 
 void vpx_extend_frame_inner_borders_c(YV12_BUFFER_CONFIG *ybf) {
-  const int inner_bw = (ybf->border > VP9INNERBORDERINPIXELS) ?
-                       VP9INNERBORDERINPIXELS : ybf->border;
+  const int inner_bw = (ybf->border > VP9INNERBORDERINPIXELS)
+                           ? VP9INNERBORDERINPIXELS
+                           : ybf->border;
   extend_frame(ybf, inner_bw);
 }
 

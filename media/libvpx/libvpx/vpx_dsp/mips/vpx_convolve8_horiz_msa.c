@@ -325,7 +325,7 @@ static void common_hz_2t_4x4_msa(const uint8_t *src, int32_t src_stride,
 
   /* rearranging filter */
   filt = LD_UH(filter);
-  filt0 = (v16u8) __msa_splati_h((v8i16) filt, 0);
+  filt0 = (v16u8)__msa_splati_h((v8i16)filt, 0);
 
   LD_SB4(src, src_stride, src0, src1, src2, src3);
   VSHF_B2_UB(src0, src1, src2, src3, mask, mask, vec0, vec1);
@@ -347,7 +347,7 @@ static void common_hz_2t_4x8_msa(const uint8_t *src, int32_t src_stride,
 
   /* rearranging filter */
   filt = LD_UH(filter);
-  filt0 = (v16u8) __msa_splati_h((v8i16) filt, 0);
+  filt0 = (v16u8)__msa_splati_h((v8i16)filt, 0);
 
   LD_SB8(src, src_stride, src0, src1, src2, src3, src4, src5, src6, src7);
   VSHF_B2_UB(src0, src1, src2, src3, mask, mask, vec0, vec1);
@@ -355,8 +355,8 @@ static void common_hz_2t_4x8_msa(const uint8_t *src, int32_t src_stride,
   DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt0, filt0, filt0, filt0, vec4, vec5,
               vec6, vec7);
   SRARI_H4_UH(vec4, vec5, vec6, vec7, FILTER_BITS);
-  PCKEV_B4_SB(vec4, vec4, vec5, vec5, vec6, vec6, vec7, vec7, res0, res1,
-              res2, res3);
+  PCKEV_B4_SB(vec4, vec4, vec5, vec5, vec6, vec6, vec7, vec7, res0, res1, res2,
+              res3);
   ST4x4_UB(res0, res1, 0, 1, 0, 1, dst, dst_stride);
   dst += (4 * dst_stride);
   ST4x4_UB(res2, res3, 0, 1, 0, 1, dst, dst_stride);
@@ -383,7 +383,7 @@ static void common_hz_2t_8x4_msa(const uint8_t *src, int32_t src_stride,
 
   /* rearranging filter */
   filt = LD_UH(filter);
-  filt0 = (v16u8) __msa_splati_h((v8i16) filt, 0);
+  filt0 = (v16u8)__msa_splati_h((v8i16)filt, 0);
 
   LD_SB4(src, src_stride, src0, src1, src2, src3);
   VSHF_B2_UH(src0, src0, src1, src1, mask, mask, vec0, vec1);
@@ -406,7 +406,7 @@ static void common_hz_2t_8x8mult_msa(const uint8_t *src, int32_t src_stride,
 
   /* rearranging filter */
   filt = LD_UH(filter);
-  filt0 = (v16u8) __msa_splati_h((v8i16) filt, 0);
+  filt0 = (v16u8)__msa_splati_h((v8i16)filt, 0);
 
   LD_SB4(src, src_stride, src0, src1, src2, src3);
   src += (4 * src_stride);
@@ -482,7 +482,7 @@ static void common_hz_2t_16w_msa(const uint8_t *src, int32_t src_stride,
 
   /* rearranging filter */
   filt = LD_UH(filter);
-  filt0 = (v16u8) __msa_splati_h((v8i16) filt, 0);
+  filt0 = (v16u8)__msa_splati_h((v8i16)filt, 0);
 
   LD_SB4(src, src_stride, src0, src2, src4, src6);
   LD_SB4(src + 8, src_stride, src1, src3, src5, src7);
@@ -545,7 +545,7 @@ static void common_hz_2t_32w_msa(const uint8_t *src, int32_t src_stride,
 
   /* rearranging filter */
   filt = LD_UH(filter);
-  filt0 = (v16u8) __msa_splati_h((v8i16) filt, 0);
+  filt0 = (v16u8)__msa_splati_h((v8i16)filt, 0);
 
   for (loop_cnt = height >> 1; loop_cnt--;) {
     src0 = LD_SB(src);
@@ -590,7 +590,7 @@ static void common_hz_2t_64w_msa(const uint8_t *src, int32_t src_stride,
 
   /* rearranging filter */
   filt = LD_UH(filter);
-  filt0 = (v16u8) __msa_splati_h((v8i16) filt, 0);
+  filt0 = (v16u8)__msa_splati_h((v8i16)filt, 0);
 
   for (loop_cnt = height; loop_cnt--;) {
     src0 = LD_SB(src);
@@ -622,8 +622,8 @@ static void common_hz_2t_64w_msa(const uint8_t *src, int32_t src_stride,
 void vpx_convolve8_horiz_msa(const uint8_t *src, ptrdiff_t src_stride,
                              uint8_t *dst, ptrdiff_t dst_stride,
                              const int16_t *filter_x, int x_step_q4,
-                             const int16_t *filter_y, int y_step_q4,
-                             int w, int h) {
+                             const int16_t *filter_y, int y_step_q4, int w,
+                             int h) {
   int8_t cnt, filt_hor[8];
 
   assert(x_step_q4 == 16);
@@ -636,67 +636,55 @@ void vpx_convolve8_horiz_msa(const uint8_t *src, ptrdiff_t src_stride,
   if (((const int32_t *)filter_x)[0] == 0) {
     switch (w) {
       case 4:
-        common_hz_2t_4w_msa(src, (int32_t)src_stride,
-                            dst, (int32_t)dst_stride,
+        common_hz_2t_4w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                             &filt_hor[3], h);
         break;
       case 8:
-        common_hz_2t_8w_msa(src, (int32_t)src_stride,
-                            dst, (int32_t)dst_stride,
+        common_hz_2t_8w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                             &filt_hor[3], h);
         break;
       case 16:
-        common_hz_2t_16w_msa(src, (int32_t)src_stride,
-                             dst, (int32_t)dst_stride,
+        common_hz_2t_16w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                              &filt_hor[3], h);
         break;
       case 32:
-        common_hz_2t_32w_msa(src, (int32_t)src_stride,
-                             dst, (int32_t)dst_stride,
+        common_hz_2t_32w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                              &filt_hor[3], h);
         break;
       case 64:
-        common_hz_2t_64w_msa(src, (int32_t)src_stride,
-                             dst, (int32_t)dst_stride,
+        common_hz_2t_64w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                              &filt_hor[3], h);
         break;
       default:
-        vpx_convolve8_horiz_c(src, src_stride, dst, dst_stride,
-                              filter_x, x_step_q4, filter_y, y_step_q4,
-                              w, h);
+        vpx_convolve8_horiz_c(src, src_stride, dst, dst_stride, filter_x,
+                              x_step_q4, filter_y, y_step_q4, w, h);
         break;
     }
   } else {
     switch (w) {
       case 4:
-        common_hz_8t_4w_msa(src, (int32_t)src_stride,
-                            dst, (int32_t)dst_stride,
+        common_hz_8t_4w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                             filt_hor, h);
         break;
       case 8:
-        common_hz_8t_8w_msa(src, (int32_t)src_stride,
-                            dst, (int32_t)dst_stride,
+        common_hz_8t_8w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                             filt_hor, h);
         break;
       case 16:
-        common_hz_8t_16w_msa(src, (int32_t)src_stride,
-                             dst, (int32_t)dst_stride,
+        common_hz_8t_16w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                              filt_hor, h);
         break;
       case 32:
-        common_hz_8t_32w_msa(src, (int32_t)src_stride,
-                             dst, (int32_t)dst_stride,
+        common_hz_8t_32w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                              filt_hor, h);
         break;
       case 64:
-        common_hz_8t_64w_msa(src, (int32_t)src_stride,
-                             dst, (int32_t)dst_stride,
+        common_hz_8t_64w_msa(src, (int32_t)src_stride, dst, (int32_t)dst_stride,
                              filt_hor, h);
         break;
       default:
-        vpx_convolve8_horiz_c(src, src_stride, dst, dst_stride,
-                              filter_x, x_step_q4, filter_y, y_step_q4,
-                              w, h);
+        vpx_convolve8_horiz_c(src, src_stride, dst, dst_stride, filter_x,
+                              x_step_q4, filter_y, y_step_q4, w, h);
         break;
     }
   }

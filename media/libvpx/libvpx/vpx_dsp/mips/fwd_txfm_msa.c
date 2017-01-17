@@ -18,24 +18,24 @@ void fdct8x16_1d_column(const int16_t *input, int16_t *tmp_ptr,
   v8i16 stp21, stp22, stp23, stp24, stp25, stp26, stp30;
   v8i16 stp31, stp32, stp33, stp34, stp35, stp36, stp37;
   v8i16 vec0, vec1, vec2, vec3, vec4, vec5, cnst0, cnst1, cnst4, cnst5;
-  v8i16 coeff = { cospi_16_64, -cospi_16_64, cospi_8_64, cospi_24_64,
-                 -cospi_8_64, -cospi_24_64, cospi_12_64, cospi_20_64 };
-  v8i16 coeff1 = { cospi_2_64, cospi_30_64, cospi_14_64, cospi_18_64,
-                   cospi_10_64, cospi_22_64, cospi_6_64, cospi_26_64 };
-  v8i16 coeff2 = { -cospi_2_64, -cospi_10_64, -cospi_18_64, -cospi_26_64,
-                   0, 0, 0, 0 };
+  v8i16 coeff = { cospi_16_64, -cospi_16_64, cospi_8_64,  cospi_24_64,
+                  -cospi_8_64, -cospi_24_64, cospi_12_64, cospi_20_64 };
+  v8i16 coeff1 = { cospi_2_64,  cospi_30_64, cospi_14_64, cospi_18_64,
+                   cospi_10_64, cospi_22_64, cospi_6_64,  cospi_26_64 };
+  v8i16 coeff2 = {
+    -cospi_2_64, -cospi_10_64, -cospi_18_64, -cospi_26_64, 0, 0, 0, 0
+  };
 
-  LD_SH16(input, src_stride,
-          in0, in1, in2, in3, in4, in5, in6, in7,
-          in8, in9, in10, in11, in12, in13, in14, in15);
+  LD_SH16(input, src_stride, in0, in1, in2, in3, in4, in5, in6, in7, in8, in9,
+          in10, in11, in12, in13, in14, in15);
   SLLI_4V(in0, in1, in2, in3, 2);
   SLLI_4V(in4, in5, in6, in7, 2);
   SLLI_4V(in8, in9, in10, in11, 2);
   SLLI_4V(in12, in13, in14, in15, 2);
   ADD4(in0, in15, in1, in14, in2, in13, in3, in12, tmp0, tmp1, tmp2, tmp3);
   ADD4(in4, in11, in5, in10, in6, in9, in7, in8, tmp4, tmp5, tmp6, tmp7);
-  FDCT8x16_EVEN(tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7,
-                tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7);
+  FDCT8x16_EVEN(tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp0, tmp1,
+                tmp2, tmp3, tmp4, tmp5, tmp6, tmp7);
   ST_SH8(tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp_ptr, 32);
   SUB4(in0, in15, in1, in14, in2, in13, in3, in12, in15, in14, in13, in12);
   SUB4(in4, in11, in5, in10, in6, in9, in7, in8, in11, in10, in9, in8);
@@ -137,10 +137,10 @@ void fdct16x8_1d_row(int16_t *input, int16_t *output) {
 
   LD_SH8(input, 16, in0, in1, in2, in3, in4, in5, in6, in7);
   LD_SH8((input + 8), 16, in8, in9, in10, in11, in12, in13, in14, in15);
-  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7,
-                     in0, in1, in2, in3, in4, in5, in6, in7);
-  TRANSPOSE8x8_SH_SH(in8, in9, in10, in11, in12, in13, in14, in15,
-                     in8, in9, in10, in11, in12, in13, in14, in15);
+  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7, in0, in1, in2, in3,
+                     in4, in5, in6, in7);
+  TRANSPOSE8x8_SH_SH(in8, in9, in10, in11, in12, in13, in14, in15, in8, in9,
+                     in10, in11, in12, in13, in14, in15);
   ADD4(in0, 1, in1, 1, in2, 1, in3, 1, in0, in1, in2, in3);
   ADD4(in4, 1, in5, 1, in6, 1, in7, 1, in4, in5, in6, in7);
   ADD4(in8, 1, in9, 1, in10, 1, in11, 1, in8, in9, in10, in11);
@@ -150,19 +150,19 @@ void fdct16x8_1d_row(int16_t *input, int16_t *output) {
   SRA_4V(in8, in9, in10, in11, 2);
   SRA_4V(in12, in13, in14, in15, 2);
   BUTTERFLY_16(in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11,
-               in12, in13, in14, in15, tmp0, tmp1, tmp2, tmp3, tmp4, tmp5,
-               tmp6, tmp7, in8, in9, in10, in11, in12, in13, in14, in15);
+               in12, in13, in14, in15, tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6,
+               tmp7, in8, in9, in10, in11, in12, in13, in14, in15);
   ST_SH8(in8, in9, in10, in11, in12, in13, in14, in15, input, 16);
-  FDCT8x16_EVEN(tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7,
-                tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7);
+  FDCT8x16_EVEN(tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp0, tmp1,
+                tmp2, tmp3, tmp4, tmp5, tmp6, tmp7);
   LD_SH8(input, 16, in8, in9, in10, in11, in12, in13, in14, in15);
-  FDCT8x16_ODD(in8, in9, in10, in11, in12, in13, in14, in15,
-                   in0, in1, in2, in3, in4, in5, in6, in7);
-  TRANSPOSE8x8_SH_SH(tmp0, in0, tmp1, in1, tmp2, in2, tmp3, in3,
-                     tmp0, in0, tmp1, in1, tmp2, in2, tmp3, in3);
+  FDCT8x16_ODD(in8, in9, in10, in11, in12, in13, in14, in15, in0, in1, in2, in3,
+               in4, in5, in6, in7);
+  TRANSPOSE8x8_SH_SH(tmp0, in0, tmp1, in1, tmp2, in2, tmp3, in3, tmp0, in0,
+                     tmp1, in1, tmp2, in2, tmp3, in3);
   ST_SH8(tmp0, in0, tmp1, in1, tmp2, in2, tmp3, in3, output, 16);
-  TRANSPOSE8x8_SH_SH(tmp4, in4, tmp5, in5, tmp6, in6, tmp7, in7,
-                     tmp4, in4, tmp5, in5, tmp6, in6, tmp7, in7);
+  TRANSPOSE8x8_SH_SH(tmp4, in4, tmp5, in5, tmp6, in6, tmp7, in7, tmp4, in4,
+                     tmp5, in5, tmp6, in6, tmp7, in7);
   ST_SH8(tmp4, in4, tmp5, in5, tmp6, in6, tmp7, in7, output + 8, 16);
 }
 
@@ -203,14 +203,14 @@ void vpx_fdct8x8_msa(const int16_t *input, int16_t *output,
   LD_SH8(input, src_stride, in0, in1, in2, in3, in4, in5, in6, in7);
   SLLI_4V(in0, in1, in2, in3, 2);
   SLLI_4V(in4, in5, in6, in7, 2);
-  VP9_FDCT8(in0, in1, in2, in3, in4, in5, in6, in7,
-            in0, in1, in2, in3, in4, in5, in6, in7);
-  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7,
-                     in0, in1, in2, in3, in4, in5, in6, in7);
-  VP9_FDCT8(in0, in1, in2, in3, in4, in5, in6, in7,
-            in0, in1, in2, in3, in4, in5, in6, in7);
-  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7,
-                     in0, in1, in2, in3, in4, in5, in6, in7);
+  VP9_FDCT8(in0, in1, in2, in3, in4, in5, in6, in7, in0, in1, in2, in3, in4,
+            in5, in6, in7);
+  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7, in0, in1, in2, in3,
+                     in4, in5, in6, in7);
+  VP9_FDCT8(in0, in1, in2, in3, in4, in5, in6, in7, in0, in1, in2, in3, in4,
+            in5, in6, in7);
+  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7, in0, in1, in2, in3,
+                     in4, in5, in6, in7);
   SRLI_AVE_S_4V_H(in0, in1, in2, in3, in4, in5, in6, in7);
   ST_SH8(in0, in1, in2, in3, in4, in5, in6, in7, output, 8);
 }

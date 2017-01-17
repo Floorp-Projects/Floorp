@@ -27,7 +27,7 @@ TEST(EncodeAPI, InvalidParams) {
     &vpx_codec_vp9_cx_algo,
 #endif
   };
-  uint8_t buf[1] = {0};
+  uint8_t buf[1] = { 0 };
   vpx_image_t img;
   vpx_codec_ctx_t enc;
   vpx_codec_enc_cfg_t cfg;

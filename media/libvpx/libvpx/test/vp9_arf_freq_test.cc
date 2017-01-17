@@ -22,8 +22,8 @@ namespace {
 const unsigned int kFrames = 100;
 const int kBitrate = 500;
 
-#define ARF_NOT_SEEN               1000001
-#define ARF_SEEN_ONCE              1000000
+#define ARF_NOT_SEEN 1000001
+#define ARF_SEEN_ONCE 1000000
 
 typedef struct {
   const char *filename;
@@ -44,24 +44,20 @@ typedef struct {
 
 const TestVideoParam kTestVectors[] = {
   // artificially increase framerate to trigger default check
-  {"hantro_collage_w352h288.yuv", 352, 288, 5000, 1,
-    8, VPX_IMG_FMT_I420, VPX_BITS_8, 0},
-  {"hantro_collage_w352h288.yuv", 352, 288, 30, 1,
-    8, VPX_IMG_FMT_I420, VPX_BITS_8, 0},
-  {"rush_hour_444.y4m", 352, 288, 30, 1,
-    8, VPX_IMG_FMT_I444, VPX_BITS_8, 1},
+  { "hantro_collage_w352h288.yuv", 352, 288, 5000, 1, 8, VPX_IMG_FMT_I420,
+    VPX_BITS_8, 0 },
+  { "hantro_collage_w352h288.yuv", 352, 288, 30, 1, 8, VPX_IMG_FMT_I420,
+    VPX_BITS_8, 0 },
+  { "rush_hour_444.y4m", 352, 288, 30, 1, 8, VPX_IMG_FMT_I444, VPX_BITS_8, 1 },
 #if CONFIG_VP9_HIGHBITDEPTH
-  // Add list of profile 2/3 test videos here ...
+// Add list of profile 2/3 test videos here ...
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 };
 
 const TestEncodeParam kEncodeVectors[] = {
-  {::libvpx_test::kOnePassGood, 2},
-  {::libvpx_test::kOnePassGood, 5},
-  {::libvpx_test::kTwoPassGood, 1},
-  {::libvpx_test::kTwoPassGood, 2},
-  {::libvpx_test::kTwoPassGood, 5},
-  {::libvpx_test::kRealTime, 5},
+  { ::libvpx_test::kOnePassGood, 2 }, { ::libvpx_test::kOnePassGood, 5 },
+  { ::libvpx_test::kTwoPassGood, 1 }, { ::libvpx_test::kTwoPassGood, 2 },
+  { ::libvpx_test::kTwoPassGood, 5 }, { ::libvpx_test::kRealTime, 5 },
 };
 
 const int kMinArfVectors[] = {
@@ -72,23 +68,21 @@ const int kMinArfVectors[] = {
 
 int is_extension_y4m(const char *filename) {
   const char *dot = strrchr(filename, '.');
-  if (!dot || dot == filename)
+  if (!dot || dot == filename) {
     return 0;
-  else
+  } else {
     return !strcmp(dot, ".y4m");
+  }
 }
 
 class ArfFreqTest
     : public ::libvpx_test::EncoderTest,
-      public ::libvpx_test::CodecTestWith3Params<TestVideoParam, \
+      public ::libvpx_test::CodecTestWith3Params<TestVideoParam,
                                                  TestEncodeParam, int> {
  protected:
   ArfFreqTest()
-      : EncoderTest(GET_PARAM(0)),
-        test_video_param_(GET_PARAM(1)),
-        test_encode_param_(GET_PARAM(2)),
-        min_arf_requested_(GET_PARAM(3)) {
-  }
+      : EncoderTest(GET_PARAM(0)), test_video_param_(GET_PARAM(1)),
+        test_encode_param_(GET_PARAM(2)), min_arf_requested_(GET_PARAM(3)) {}
 
   virtual ~ArfFreqTest() {}
 
@@ -114,17 +108,16 @@ class ArfFreqTest
   }
 
   int GetNumFramesInPkt(const vpx_codec_cx_pkt_t *pkt) {
-    const uint8_t *buffer = reinterpret_cast<uint8_t*>(pkt->data.frame.buf);
+    const uint8_t *buffer = reinterpret_cast<uint8_t *>(pkt->data.frame.buf);
     const uint8_t marker = buffer[pkt->data.frame.sz - 1];
     const int mag = ((marker >> 3) & 3) + 1;
     int frames = (marker & 0x7) + 1;
-    const unsigned int index_sz = 2 + mag  * frames;
+    const unsigned int index_sz = 2 + mag * frames;
     // Check for superframe or not.
     // Assume superframe has only one visible frame, the rest being
     // invisible. If superframe index is not found, then there is only
     // one frame.
-    if (!((marker & 0xe0) == 0xc0 &&
-          pkt->data.frame.sz >= index_sz &&
+    if (!((marker & 0xe0) == 0xc0 && pkt->data.frame.sz >= index_sz &&
           buffer[pkt->data.frame.sz - index_sz] == marker)) {
       frames = 1;
     }
@@ -132,8 +125,7 @@ class ArfFreqTest
   }
 
   virtual void FramePktHook(const vpx_codec_cx_pkt_t *pkt) {
-    if (pkt->kind != VPX_CODEC_CX_FRAME_PKT)
-      return;
+    if (pkt->kind != VPX_CODEC_CX_FRAME_PKT) return;
     const int frames = GetNumFramesInPkt(pkt);
     if (frames == 1) {
       run_of_visible_frames_++;
@@ -167,18 +159,17 @@ class ArfFreqTest
     }
   }
 
-  int GetMinVisibleRun() const {
-    return min_run_;
-  }
+  int GetMinVisibleRun() const { return min_run_; }
 
   int GetMinArfDistanceRequested() const {
-    if (min_arf_requested_)
+    if (min_arf_requested_) {
       return min_arf_requested_;
-    else
+    } else {
       return vp9_rc_get_default_min_gf_interval(
           test_video_param_.width, test_video_param_.height,
           (double)test_video_param_.framerate_num /
-          test_video_param_.framerate_den);
+              test_video_param_.framerate_den);
+    }
   }
 
   TestVideoParam test_video_param_;
@@ -197,36 +188,30 @@ TEST_P(ArfFreqTest, MinArfFreqTest) {
   cfg_.g_input_bit_depth = test_video_param_.input_bit_depth;
   cfg_.g_bit_depth = test_video_param_.bit_depth;
   init_flags_ = VPX_CODEC_USE_PSNR;
-  if (cfg_.g_bit_depth > 8)
-    init_flags_ |= VPX_CODEC_USE_HIGHBITDEPTH;
+  if (cfg_.g_bit_depth > 8) init_flags_ |= VPX_CODEC_USE_HIGHBITDEPTH;
 
-  libvpx_test::VideoSource *video;
+  testing::internal::scoped_ptr<libvpx_test::VideoSource> video;
   if (is_extension_y4m(test_video_param_.filename)) {
-    video = new libvpx_test::Y4mVideoSource(test_video_param_.filename,
-                                            0, kFrames);
+    video.reset(new libvpx_test::Y4mVideoSource(test_video_param_.filename, 0,
+                                                kFrames));
   } else {
-    video = new libvpx_test::YUVVideoSource(test_video_param_.filename,
-                                            test_video_param_.fmt,
-                                            test_video_param_.width,
-                                            test_video_param_.height,
-                                            test_video_param_.framerate_num,
-                                            test_video_param_.framerate_den,
-                                            0, kFrames);
+    video.reset(new libvpx_test::YUVVideoSource(
+        test_video_param_.filename, test_video_param_.fmt,
+        test_video_param_.width, test_video_param_.height,
+        test_video_param_.framerate_num, test_video_param_.framerate_den, 0,
+        kFrames));
   }
 
-  ASSERT_NO_FATAL_FAILURE(RunLoop(video));
+  ASSERT_NO_FATAL_FAILURE(RunLoop(video.get()));
   const int min_run = GetMinVisibleRun();
   const int min_arf_dist_requested = GetMinArfDistanceRequested();
   if (min_run != ARF_NOT_SEEN && min_run != ARF_SEEN_ONCE) {
     const int min_arf_dist = min_run + 1;
     EXPECT_GE(min_arf_dist, min_arf_dist_requested);
   }
-  delete(video);
 }
 
-VP9_INSTANTIATE_TEST_CASE(
-    ArfFreqTest,
-    ::testing::ValuesIn(kTestVectors),
-    ::testing::ValuesIn(kEncodeVectors),
-    ::testing::ValuesIn(kMinArfVectors));
+VP9_INSTANTIATE_TEST_CASE(ArfFreqTest, ::testing::ValuesIn(kTestVectors),
+                          ::testing::ValuesIn(kEncodeVectors),
+                          ::testing::ValuesIn(kMinArfVectors));
 }  // namespace

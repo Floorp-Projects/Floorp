@@ -24,14 +24,12 @@ const int kCQLevelStep = 8;
 const unsigned int kCQTargetBitrate = 2000;
 
 class CQTest : public ::libvpx_test::EncoderTest,
-    public ::libvpx_test::CodecTestWithParam<int> {
+               public ::libvpx_test::CodecTestWithParam<int> {
  public:
   // maps the cqlevel to the bitrate produced.
   typedef std::map<int, uint32_t> BitrateMap;
 
-  static void SetUpTestCase() {
-    bitrates_.clear();
-  }
+  static void SetUpTestCase() { bitrates_.clear(); }
 
   static void TearDownTestCase() {
     ASSERT_TRUE(!HasFailure())
@@ -128,7 +126,6 @@ TEST_P(CQTest, LinearPSNRIsHigherForCQLevel) {
   EXPECT_GE(cq_psnr_lin, vbr_psnr_lin);
 }
 
-VP8_INSTANTIATE_TEST_CASE(CQTest,
-                          ::testing::Range(kCQLevelMin, kCQLevelMax,
-                                           kCQLevelStep));
+VP8_INSTANTIATE_TEST_CASE(CQTest, ::testing::Range(kCQLevelMin, kCQLevelMax,
+                                                   kCQLevelStep));
 }  // namespace

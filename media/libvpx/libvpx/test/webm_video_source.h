@@ -25,30 +25,23 @@ namespace libvpx_test {
 class WebMVideoSource : public CompressedVideoSource {
  public:
   explicit WebMVideoSource(const std::string &file_name)
-      : file_name_(file_name),
-        vpx_ctx_(new VpxInputContext()),
-        webm_ctx_(new WebmInputContext()),
-        buf_(NULL),
-        buf_sz_(0),
-        frame_(0),
-        end_of_file_(false) {
-  }
+      : file_name_(file_name), vpx_ctx_(new VpxInputContext()),
+        webm_ctx_(new WebmInputContext()), buf_(NULL), buf_sz_(0), frame_(0),
+        end_of_file_(false) {}
 
   virtual ~WebMVideoSource() {
-    if (vpx_ctx_->file != NULL)
-      fclose(vpx_ctx_->file);
+    if (vpx_ctx_->file != NULL) fclose(vpx_ctx_->file);
     webm_free(webm_ctx_);
     delete vpx_ctx_;
     delete webm_ctx_;
   }
 
-  virtual void Init() {
-  }
+  virtual void Init() {}
 
   virtual void Begin() {
     vpx_ctx_->file = OpenTestDataFile(file_name_);
     ASSERT_TRUE(vpx_ctx_->file != NULL) << "Input file open failed. Filename: "
-        << file_name_;
+                                        << file_name_;
 
     ASSERT_EQ(file_is_webm(webm_ctx_, vpx_ctx_), 1) << "file is not WebM";
 
@@ -81,9 +74,7 @@ class WebMVideoSource : public CompressedVideoSource {
     } while (!webm_ctx_->is_key_frame && !end_of_file_);
   }
 
-  virtual const uint8_t *cxdata() const {
-    return end_of_file_ ? NULL : buf_;
-  }
+  virtual const uint8_t *cxdata() const { return end_of_file_ ? NULL : buf_; }
   virtual size_t frame_size() const { return buf_sz_; }
   virtual unsigned int frame_number() const { return frame_; }
 

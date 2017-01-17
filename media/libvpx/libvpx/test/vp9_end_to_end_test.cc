@@ -18,21 +18,17 @@
 
 namespace {
 
-const unsigned int kWidth  = 160;
+const unsigned int kWidth = 160;
 const unsigned int kHeight = 90;
 const unsigned int kFramerate = 50;
 const unsigned int kFrames = 10;
 const int kBitrate = 500;
 // List of psnr thresholds for speed settings 0-7 and 5 encoding modes
 const double kPsnrThreshold[][5] = {
-  { 36.0, 37.0, 37.0, 37.0, 37.0 },
-  { 35.0, 36.0, 36.0, 36.0, 36.0 },
-  { 34.0, 35.0, 35.0, 35.0, 35.0 },
-  { 33.0, 34.0, 34.0, 34.0, 34.0 },
-  { 32.0, 33.0, 33.0, 33.0, 33.0 },
-  { 31.0, 32.0, 32.0, 32.0, 32.0 },
-  { 30.0, 31.0, 31.0, 31.0, 31.0 },
-  { 29.0, 30.0, 30.0, 30.0, 30.0 },
+  { 36.0, 37.0, 37.0, 37.0, 37.0 }, { 35.0, 36.0, 36.0, 36.0, 36.0 },
+  { 34.0, 35.0, 35.0, 35.0, 35.0 }, { 33.0, 34.0, 34.0, 34.0, 34.0 },
+  { 32.0, 33.0, 33.0, 33.0, 33.0 }, { 31.0, 32.0, 32.0, 32.0, 32.0 },
+  { 30.0, 31.0, 31.0, 31.0, 31.0 }, { 29.0, 30.0, 30.0, 30.0, 30.0 },
 };
 
 typedef struct {
@@ -44,53 +40,49 @@ typedef struct {
 } TestVideoParam;
 
 const TestVideoParam kTestVectors[] = {
-  {"park_joy_90p_8_420.y4m", 8, VPX_IMG_FMT_I420, VPX_BITS_8, 0},
-  {"park_joy_90p_8_422.y4m", 8, VPX_IMG_FMT_I422, VPX_BITS_8, 1},
-  {"park_joy_90p_8_444.y4m", 8, VPX_IMG_FMT_I444, VPX_BITS_8, 1},
-  {"park_joy_90p_8_440.yuv", 8, VPX_IMG_FMT_I440, VPX_BITS_8, 1},
+  { "park_joy_90p_8_420.y4m", 8, VPX_IMG_FMT_I420, VPX_BITS_8, 0 },
+  { "park_joy_90p_8_422.y4m", 8, VPX_IMG_FMT_I422, VPX_BITS_8, 1 },
+  { "park_joy_90p_8_444.y4m", 8, VPX_IMG_FMT_I444, VPX_BITS_8, 1 },
+  { "park_joy_90p_8_440.yuv", 8, VPX_IMG_FMT_I440, VPX_BITS_8, 1 },
 #if CONFIG_VP9_HIGHBITDEPTH
-  {"park_joy_90p_10_420.y4m", 10, VPX_IMG_FMT_I42016, VPX_BITS_10, 2},
-  {"park_joy_90p_10_422.y4m", 10, VPX_IMG_FMT_I42216, VPX_BITS_10, 3},
-  {"park_joy_90p_10_444.y4m", 10, VPX_IMG_FMT_I44416, VPX_BITS_10, 3},
-  {"park_joy_90p_10_440.yuv", 10, VPX_IMG_FMT_I44016, VPX_BITS_10, 3},
-  {"park_joy_90p_12_420.y4m", 12, VPX_IMG_FMT_I42016, VPX_BITS_12, 2},
-  {"park_joy_90p_12_422.y4m", 12, VPX_IMG_FMT_I42216, VPX_BITS_12, 3},
-  {"park_joy_90p_12_444.y4m", 12, VPX_IMG_FMT_I44416, VPX_BITS_12, 3},
-  {"park_joy_90p_12_440.yuv", 12, VPX_IMG_FMT_I44016, VPX_BITS_12, 3},
+  { "park_joy_90p_10_420.y4m", 10, VPX_IMG_FMT_I42016, VPX_BITS_10, 2 },
+  { "park_joy_90p_10_422.y4m", 10, VPX_IMG_FMT_I42216, VPX_BITS_10, 3 },
+  { "park_joy_90p_10_444.y4m", 10, VPX_IMG_FMT_I44416, VPX_BITS_10, 3 },
+  { "park_joy_90p_10_440.yuv", 10, VPX_IMG_FMT_I44016, VPX_BITS_10, 3 },
+  { "park_joy_90p_12_420.y4m", 12, VPX_IMG_FMT_I42016, VPX_BITS_12, 2 },
+  { "park_joy_90p_12_422.y4m", 12, VPX_IMG_FMT_I42216, VPX_BITS_12, 3 },
+  { "park_joy_90p_12_444.y4m", 12, VPX_IMG_FMT_I44416, VPX_BITS_12, 3 },
+  { "park_joy_90p_12_440.yuv", 12, VPX_IMG_FMT_I44016, VPX_BITS_12, 3 },
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 };
 
 // Encoding modes tested
 const libvpx_test::TestMode kEncodingModeVectors[] = {
-  ::libvpx_test::kTwoPassGood,
-  ::libvpx_test::kOnePassGood,
+  ::libvpx_test::kTwoPassGood, ::libvpx_test::kOnePassGood,
   ::libvpx_test::kRealTime,
 };
 
 // Speed settings tested
-const int kCpuUsedVectors[] = {1, 2, 3, 5, 6};
+const int kCpuUsedVectors[] = { 1, 2, 3, 5, 6 };
 
 int is_extension_y4m(const char *filename) {
   const char *dot = strrchr(filename, '.');
-  if (!dot || dot == filename)
+  if (!dot || dot == filename) {
     return 0;
-  else
+  } else {
     return !strcmp(dot, ".y4m");
+  }
 }
 
 class EndToEndTestLarge
     : public ::libvpx_test::EncoderTest,
-      public ::libvpx_test::CodecTestWith3Params<libvpx_test::TestMode, \
+      public ::libvpx_test::CodecTestWith3Params<libvpx_test::TestMode,
                                                  TestVideoParam, int> {
  protected:
   EndToEndTestLarge()
-      : EncoderTest(GET_PARAM(0)),
-        test_video_param_(GET_PARAM(2)),
-        cpu_used_(GET_PARAM(3)),
-        psnr_(0.0),
-        nframes_(0),
-        encoding_mode_(GET_PARAM(1)) {
-  }
+      : EncoderTest(GET_PARAM(0)), test_video_param_(GET_PARAM(2)),
+        cpu_used_(GET_PARAM(3)), psnr_(0.0), nframes_(0),
+        encoding_mode_(GET_PARAM(1)) {}
 
   virtual ~EndToEndTestLarge() {}
 
@@ -136,8 +128,7 @@ class EndToEndTestLarge
   }
 
   double GetAveragePsnr() const {
-    if (nframes_)
-      return psnr_ / nframes_;
+    if (nframes_) return psnr_ / nframes_;
     return 0.0;
   }
 
@@ -161,29 +152,26 @@ TEST_P(EndToEndTestLarge, EndtoEndPSNRTest) {
   cfg_.g_input_bit_depth = test_video_param_.input_bit_depth;
   cfg_.g_bit_depth = test_video_param_.bit_depth;
   init_flags_ = VPX_CODEC_USE_PSNR;
-  if (cfg_.g_bit_depth > 8)
-    init_flags_ |= VPX_CODEC_USE_HIGHBITDEPTH;
+  if (cfg_.g_bit_depth > 8) init_flags_ |= VPX_CODEC_USE_HIGHBITDEPTH;
 
-  libvpx_test::VideoSource *video;
+  testing::internal::scoped_ptr<libvpx_test::VideoSource> video;
   if (is_extension_y4m(test_video_param_.filename)) {
-    video = new libvpx_test::Y4mVideoSource(test_video_param_.filename,
-                                            0, kFrames);
+    video.reset(new libvpx_test::Y4mVideoSource(test_video_param_.filename, 0,
+                                                kFrames));
   } else {
-    video = new libvpx_test::YUVVideoSource(test_video_param_.filename,
-                                            test_video_param_.fmt,
-                                            kWidth, kHeight,
-                                            kFramerate, 1, 0, kFrames);
+    video.reset(new libvpx_test::YUVVideoSource(
+        test_video_param_.filename, test_video_param_.fmt, kWidth, kHeight,
+        kFramerate, 1, 0, kFrames));
   }
+  ASSERT_TRUE(video.get() != NULL);
 
-  ASSERT_NO_FATAL_FAILURE(RunLoop(video));
+  ASSERT_NO_FATAL_FAILURE(RunLoop(video.get()));
   const double psnr = GetAveragePsnr();
   EXPECT_GT(psnr, GetPsnrThreshold());
-  delete(video);
 }
 
-VP9_INSTANTIATE_TEST_CASE(
-    EndToEndTestLarge,
-    ::testing::ValuesIn(kEncodingModeVectors),
-    ::testing::ValuesIn(kTestVectors),
-    ::testing::ValuesIn(kCpuUsedVectors));
+VP9_INSTANTIATE_TEST_CASE(EndToEndTestLarge,
+                          ::testing::ValuesIn(kEncodingModeVectors),
+                          ::testing::ValuesIn(kTestVectors),
+                          ::testing::ValuesIn(kCpuUsedVectors));
 }  // namespace

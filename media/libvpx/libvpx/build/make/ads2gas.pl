@@ -138,14 +138,6 @@ while (<STDIN>)
     s/DCD(.*)/.long $1/;
     s/DCB(.*)/.byte $1/;
 
-    # RN to .req
-    if (s/RN\s+([Rr]\d+|lr)/.req $1/)
-    {
-        print;
-        print "$comment_sub$comment\n" if defined $comment;
-        next;
-    }
-
     # Make function visible to linker, and make additional symbol with
     # prepended underscore
     s/EXPORT\s+\|([\$\w]*)\|/.global $1 \n\t.type $1, function/;
