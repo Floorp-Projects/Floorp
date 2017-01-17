@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/* import-globals-from head_appinfo.js */
+/* import-globals-from ../../../common/tests/unit/head_helpers.js */
+
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://testing-common/services/common/utils.js");
 Cu.import("resource://testing-common/PlacesTestUtils.jsm");
@@ -471,5 +474,3 @@ function promiseNextTick() {
 Utils.getDefaultDeviceName = function() {
   return "Test device name";
 };
-
-
