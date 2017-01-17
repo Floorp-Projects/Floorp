@@ -75,8 +75,8 @@ SimpleTest.waitForFocus(function() {
     // Position set at the beginning , middle and end of the text.
     sel.collapse(theText, tests[i][1]);
 
-    synthesizeKey("KEY_Enter", {});
-    synthesizeKey("x", {});
+    synthesizeKey("KEY_Enter", { code: "Enter" });
+    synthesizeKey("x", { code: "KeyX" });
     is(theEdit.innerHTML, tests[i][2], "unexpected HTML for test " + i.toString());
   }
 
