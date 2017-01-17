@@ -32,35 +32,64 @@
 /* This code MUST NOT use any non-inlined internal Mozilla APIs, as it will be
    compiled into DLLs that COM may load into non-Mozilla processes! */
 
-namespace {
+extern "C" {
 
 // This function is defined in generated code for proxy DLLs but is not declared
-// in rpcproxy.h, so we need this typedef.
-typedef void (RPC_ENTRY *GetProxyDllInfoFnPtr)(const ProxyFileInfo*** aInfo,
-                                               const CLSID** aId);
+// in rpcproxy.h, so we need this declaration.
+void RPC_ENTRY GetProxyDllInfo(const ProxyFileInfo*** aInfo, const CLSID** aId);
 
-} // anonymous namespace
+#if defined(_MSC_VER)
+extern IMAGE_DOS_HEADER __ImageBase;
+#endif
+
+}
 
 namespace mozilla {
 namespace mscom {
+
+static HMODULE
+GetContainingModule()
+{
+  HMODULE thisModule = nullptr;
+#if defined(_MSC_VER)
+  thisModule = reinterpret_cast<HMODULE>(&__ImageBase);
+#else
+  if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+                         GET_MODULE_HANDLE_EX_UNCHANGED_REFCOUNT,
+                         reinterpret_cast<LPCTSTR>(&GetContainingModule),
+                         &thisModule)) {
+    return nullptr;
+  }
+#endif
+  return thisModule;
+}
+
+static bool
+GetContainingLibPath(wchar_t* aBuffer, size_t aBufferLen)
+{
+  HMODULE thisModule = GetContainingModule();
+  if (!thisModule) {
+    return false;
+  }
+
+  DWORD fileNameResult = GetModuleFileName(thisModule, aBuffer, aBufferLen);
+  if (!fileNameResult || (fileNameResult == aBufferLen &&
+        ::GetLastError() == ERROR_INSUFFICIENT_BUFFER)) {
+    return false;
+  }
+
+  return true;
+}
 
 static bool
 BuildLibPath(RegistrationFlags aFlags, wchar_t* aBuffer, size_t aBufferLen,
              const wchar_t* aLeafName)
 {
   if (aFlags == RegistrationFlags::eUseBinDirectory) {
-    HMODULE thisModule = nullptr;
-    if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-                           GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-                           reinterpret_cast<LPCTSTR>(&RegisterProxy),
-                           &thisModule)) {
+    if (!GetContainingLibPath(aBuffer, aBufferLen)) {
       return false;
     }
-    DWORD fileNameResult = GetModuleFileName(thisModule, aBuffer, aBufferLen);
-    if (!fileNameResult || (fileNameResult == aBufferLen &&
-          ::GetLastError() == ERROR_INSUFFICIENT_BUFFER)) {
-      return false;
-    }
+
     if (!PathRemoveFileSpec(aBuffer)) {
       return false;
     }
@@ -77,6 +106,74 @@ BuildLibPath(RegistrationFlags aFlags, wchar_t* aBuffer, size_t aBufferLen,
     return false;
   }
   return true;
+}
+
+static bool
+RegisterPSClsids(const ProxyFileInfo** aProxyInfo, const CLSID* aProxyClsid)
+{
+  while (*aProxyInfo) {
+    const ProxyFileInfo& curInfo = **aProxyInfo;
+    for (unsigned short idx = 0, size = curInfo.TableSize; idx < size; ++idx) {
+      HRESULT hr = CoRegisterPSClsid(*(curInfo.pStubVtblList[idx]->header.piid),
+                                     *aProxyClsid);
+      if (FAILED(hr)) {
+        return false;
+      }
+    }
+    ++aProxyInfo;
+  }
+
+  return true;
+}
+
+UniquePtr<RegisteredProxy>
+RegisterProxy()
+{
+  const ProxyFileInfo** proxyInfo = nullptr;
+  const CLSID* proxyClsid = nullptr;
+  GetProxyDllInfo(&proxyInfo, &proxyClsid);
+  if (!proxyInfo || !proxyClsid) {
+    return nullptr;
+  }
+
+  IUnknown* classObject = nullptr;
+  HRESULT hr = DllGetClassObject(*proxyClsid, IID_IUnknown, (void**)&classObject);
+  if (FAILED(hr)) {
+    return nullptr;
+  }
+
+  DWORD regCookie;
+  hr = CoRegisterClassObject(*proxyClsid, classObject, CLSCTX_INPROC_SERVER,
+                             REGCLS_MULTIPLEUSE, &regCookie);
+  if (FAILED(hr)) {
+    classObject->lpVtbl->Release(classObject);
+    return nullptr;
+  }
+
+  wchar_t modulePathBuf[MAX_PATH + 1] = {0};
+  if (!GetContainingLibPath(modulePathBuf, ArrayLength(modulePathBuf))) {
+    CoRevokeClassObject(regCookie);
+    classObject->lpVtbl->Release(classObject);
+    return nullptr;
+  }
+
+  ITypeLib* typeLib = nullptr;
+  hr = LoadTypeLibEx(modulePathBuf, REGKIND_NONE, &typeLib);
+  MOZ_ASSERT(SUCCEEDED(hr));
+  if (FAILED(hr)) {
+    CoRevokeClassObject(regCookie);
+    classObject->lpVtbl->Release(classObject);
+    return nullptr;
+  }
+
+  // RegisteredProxy takes ownership of classObject and typeLib references
+  auto result(MakeUnique<RegisteredProxy>(classObject, regCookie, typeLib));
+
+  if (!RegisterPSClsids(proxyInfo, proxyClsid)) {
+    return nullptr;
+  }
+
+  return result;
 }
 
 UniquePtr<RegisteredProxy>
@@ -100,7 +197,7 @@ RegisterProxy(const wchar_t* aLeafName, RegistrationFlags aFlags)
     return nullptr;
   }
 
-  auto GetProxyDllInfoFn = reinterpret_cast<GetProxyDllInfoFnPtr>(
+  auto GetProxyDllInfoFn = reinterpret_cast<decltype(&GetProxyDllInfo)>(
       GetProcAddress(proxyDll, "GetProxyDllInfo"));
   if (!GetProxyDllInfoFn) {
     return nullptr;
@@ -144,16 +241,8 @@ RegisterProxy(const wchar_t* aLeafName, RegistrationFlags aFlags)
   auto result(MakeUnique<RegisteredProxy>(reinterpret_cast<uintptr_t>(proxyDll.disown()),
                                           classObject, regCookie, typeLib));
 
-  while (*proxyInfo) {
-    const ProxyFileInfo& curInfo = **proxyInfo;
-    for (unsigned short i = 0, e = curInfo.TableSize; i < e; ++i) {
-      hr = CoRegisterPSClsid(*(curInfo.pStubVtblList[i]->header.piid),
-                             *proxyClsid);
-      if (FAILED(hr)) {
-        return nullptr;
-      }
-    }
-    ++proxyInfo;
+  if (!RegisterPSClsids(proxyInfo, proxyClsid)) {
+    return nullptr;
   }
 
   return result;
@@ -182,6 +271,19 @@ RegisterTypelib(const wchar_t* aLeafName, RegistrationFlags aFlags)
 RegisteredProxy::RegisteredProxy(uintptr_t aModule, IUnknown* aClassObject,
                                  uint32_t aRegCookie, ITypeLib* aTypeLib)
   : mModule(aModule)
+  , mClassObject(aClassObject)
+  , mRegCookie(aRegCookie)
+  , mTypeLib(aTypeLib)
+  , mIsRegisteredInMTA(IsCurrentThreadMTA())
+{
+  MOZ_ASSERT(aClassObject);
+  MOZ_ASSERT(aTypeLib);
+  AddToRegistry(this);
+}
+
+RegisteredProxy::RegisteredProxy(IUnknown* aClassObject, uint32_t aRegCookie,
+                                 ITypeLib* aTypeLib)
+  : mModule(0)
   , mClassObject(aClassObject)
   , mRegCookie(aRegCookie)
   , mTypeLib(aTypeLib)
