@@ -18,7 +18,7 @@
 #include "mozilla/webrender/WebRenderTypes.h"
 
 namespace mozilla {
-namespace layers {
+namespace wr {
 
 class RendererOGL;
 class RenderThread;
@@ -31,7 +31,7 @@ class RendererEvent
 {
 public:
   virtual ~RendererEvent() {}
-  virtual void Run(RenderThread& aRenderThread, gfx::WindowId aWindow) = 0;
+  virtual void Run(RenderThread& aRenderThread, wr::WindowId aWindow) = 0;
 };
 
 /// The render thread is where WebRender issues all of its GPU work, and as much
@@ -73,27 +73,27 @@ public:
   static bool IsInRenderThread();
 
   /// Can only be called from the render thread.
-  void AddRenderer(gfx::WindowId aWindowId, UniquePtr<RendererOGL> aRenderer);
+  void AddRenderer(wr::WindowId aWindowId, UniquePtr<RendererOGL> aRenderer);
 
   /// Can only be called from the render thread.
-  void RemoveRenderer(gfx::WindowId aWindowId);
+  void RemoveRenderer(wr::WindowId aWindowId);
 
   /// Can only be called from the render thread.
-  RendererOGL* GetRenderer(gfx::WindowId aWindowId);
+  RendererOGL* GetRenderer(wr::WindowId aWindowId);
 
   // RenderNotifier implementation
 
   /// Automatically forwarded to the render thread.
-  void NewFrameReady(gfx::WindowId aWindowId);
+  void NewFrameReady(wr::WindowId aWindowId);
 
   /// Automatically forwarded to the render thread.
-  void NewScrollFrameReady(gfx::WindowId aWindowId, bool aCompositeNeeded);
+  void NewScrollFrameReady(wr::WindowId aWindowId, bool aCompositeNeeded);
 
   /// Automatically forwarded to the render thread.
-  void PipelineSizeChanged(gfx::WindowId aWindowId, uint64_t aPipelineId, float aWidth, float aHeight);
+  void PipelineSizeChanged(wr::WindowId aWindowId, uint64_t aPipelineId, float aWidth, float aHeight);
 
   /// Automatically forwarded to the render thread.
-  void RunEvent(gfx::WindowId aWindowId, UniquePtr<RendererEvent> aCallBack);
+  void RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aCallBack);
 
 private:
   explicit RenderThread(base::Thread* aThread);
@@ -101,11 +101,11 @@ private:
   ~RenderThread();
 
   /// Can only be called from the render thread.
-  void UpdateAndRender(gfx::WindowId aWindowId);
+  void UpdateAndRender(wr::WindowId aWindowId);
 
   base::Thread* const mThread;
 
-  std::map<gfx::WindowId, UniquePtr<RendererOGL>> mRenderers;
+  std::map<wr::WindowId, UniquePtr<RendererOGL>> mRenderers;
 };
 
 } // namespace

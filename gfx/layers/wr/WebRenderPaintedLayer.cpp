@@ -146,12 +146,12 @@ WebRenderPaintedLayer::RenderLayer()
   Matrix4x4 transform;// = GetTransform();
 
   WRBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
+      OpDPPushStackingContext(wr::ToWRRect(relBounds), wr::ToWRRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
 
   ContentClientRemoteBuffer* contentClientRemote = static_cast<ContentClientRemoteBuffer*>(mContentClient.get());
   visibleRegion.MoveBy(-contentClientRemote->BufferRect().x, -contentClientRemote->BufferRect().y);
 
-  WRBridge()->AddWebRenderCommand(OpDPPushExternalImageId(visibleRegion, ToWRRect(rect), ToWRRect(clip), Nothing(), WRTextureFilter::Linear, mExternalImageId));
+  WRBridge()->AddWebRenderCommand(OpDPPushExternalImageId(visibleRegion, wr::ToWRRect(rect), wr::ToWRRect(clip), Nothing(), WRTextureFilter::Linear, mExternalImageId));
   if (gfxPrefs::LayersDump()) printf_stderr("PaintedLayer %p using %s as bounds/overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
   WRBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 }

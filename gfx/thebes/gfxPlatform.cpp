@@ -941,7 +941,7 @@ gfxPlatform::InitLayersIPC()
     if (XRE_IsParentProcess())
     {
         if (gfxPrefs::WebRenderEnabled()) {
-            RenderThread::Start();
+            wr::RenderThread::Start();
         }
         layers::CompositorThreadHolder::Start();
     }
@@ -970,7 +970,7 @@ gfxPlatform::ShutdownLayersIPC()
         // This has to happen after shutting down the child protocols.
         layers::CompositorThreadHolder::Shutdown();
         if (gfxPrefs::WebRenderEnabled()) {
-            RenderThread::ShutDown();
+            wr::RenderThread::ShutDown();
         }
     } else {
       // TODO: There are other kind of processes and we should make sure gfx

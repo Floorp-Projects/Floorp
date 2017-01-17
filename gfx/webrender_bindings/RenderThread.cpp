@@ -10,7 +10,7 @@
 #include "mozilla/StaticPtr.h"
 
 namespace mozilla {
-namespace layers {
+namespace wr {
 
 static StaticRefPtr<RenderThread> sRenderThread;
 
@@ -25,7 +25,7 @@ RenderThread::~RenderThread()
   delete mThread;
 }
 
-// statuc
+// static
 RenderThread*
 RenderThread::Get()
 {
@@ -79,21 +79,21 @@ RenderThread::IsInRenderThread()
 }
 
 void
-RenderThread::AddRenderer(gfx::WindowId aWindowId, UniquePtr<RendererOGL> aRenderer)
+RenderThread::AddRenderer(wr::WindowId aWindowId, UniquePtr<RendererOGL> aRenderer)
 {
   MOZ_ASSERT(IsInRenderThread());
   mRenderers[aWindowId] = Move(aRenderer);
 }
 
 void
-RenderThread::RemoveRenderer(gfx::WindowId aWindowId)
+RenderThread::RemoveRenderer(wr::WindowId aWindowId)
 {
   MOZ_ASSERT(IsInRenderThread());
   mRenderers.erase(aWindowId);
 }
 
 RendererOGL*
-RenderThread::GetRenderer(gfx::WindowId aWindowId)
+RenderThread::GetRenderer(wr::WindowId aWindowId)
 {
   MOZ_ASSERT(IsInRenderThread());
 
@@ -108,10 +108,10 @@ RenderThread::GetRenderer(gfx::WindowId aWindowId)
 }
 
 void
-RenderThread::NewFrameReady(gfx::WindowId aWindowId)
+RenderThread::NewFrameReady(wr::WindowId aWindowId)
 {
   if (!IsInRenderThread()) {
-    Loop()->PostTask(NewRunnableMethod<gfx::WindowId>(
+    Loop()->PostTask(NewRunnableMethod<wr::WindowId>(
       this, &RenderThread::NewFrameReady, aWindowId
     ));
     return;
@@ -121,10 +121,10 @@ RenderThread::NewFrameReady(gfx::WindowId aWindowId)
 }
 
 void
-RenderThread::NewScrollFrameReady(gfx::WindowId aWindowId, bool aCompositeNeeded)
+RenderThread::NewScrollFrameReady(wr::WindowId aWindowId, bool aCompositeNeeded)
 {
   if (!IsInRenderThread()) {
-    Loop()->PostTask(NewRunnableMethod<gfx::WindowId, bool>(
+    Loop()->PostTask(NewRunnableMethod<wr::WindowId, bool>(
       this, &RenderThread::NewScrollFrameReady, aWindowId, aCompositeNeeded
     ));
     return;
@@ -134,10 +134,10 @@ RenderThread::NewScrollFrameReady(gfx::WindowId aWindowId, bool aCompositeNeeded
 }
 
 void
-RenderThread::PipelineSizeChanged(gfx::WindowId aWindowId, uint64_t aPipelineId, float aWidth, float aHeight)
+RenderThread::PipelineSizeChanged(wr::WindowId aWindowId, uint64_t aPipelineId, float aWidth, float aHeight)
 {
   if (!IsInRenderThread()) {
-    Loop()->PostTask(NewRunnableMethod<gfx::WindowId, uint64_t, float, float>(
+    Loop()->PostTask(NewRunnableMethod<wr::WindowId, uint64_t, float, float>(
       this, &RenderThread::PipelineSizeChanged,
       aWindowId, aPipelineId, aWidth, aHeight
     ));
@@ -148,10 +148,10 @@ RenderThread::PipelineSizeChanged(gfx::WindowId aWindowId, uint64_t aPipelineId,
 }
 
 void
-RenderThread::RunEvent(gfx::WindowId aWindowId, UniquePtr<RendererEvent> aEvent)
+RenderThread::RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aEvent)
 {
   if (!IsInRenderThread()) {
-    Loop()->PostTask(NewRunnableMethod<gfx::WindowId, UniquePtr<RendererEvent>&&>(
+    Loop()->PostTask(NewRunnableMethod<wr::WindowId, UniquePtr<RendererEvent>&&>(
       this, &RenderThread::RunEvent,
       aWindowId, Move(aEvent)
     ));
@@ -164,7 +164,7 @@ RenderThread::RunEvent(gfx::WindowId aWindowId, UniquePtr<RendererEvent> aEvent)
 
 
 void
-RenderThread::UpdateAndRender(gfx::WindowId aWindowId)
+RenderThread::UpdateAndRender(wr::WindowId aWindowId)
 {
   MOZ_ASSERT(IsInRenderThread());
 
@@ -193,13 +193,13 @@ extern "C" {
 
 void wr_notifier_new_frame_ready(uint64_t aWindowId)
 {
-  mozilla::layers::RenderThread::Get()->NewFrameReady(mozilla::gfx::WindowId(aWindowId));
+  mozilla::wr::RenderThread::Get()->NewFrameReady(mozilla::wr::WindowId(aWindowId));
 }
 
 void wr_notifier_new_scroll_frame_ready(uint64_t aWindowId, bool aCompositeNeeded)
 {
-  mozilla::layers::RenderThread::Get()->NewScrollFrameReady(mozilla::gfx::WindowId(aWindowId),
-                                                            aCompositeNeeded);
+  mozilla::wr::RenderThread::Get()->NewScrollFrameReady(mozilla::wr::WindowId(aWindowId),
+                                                        aCompositeNeeded);
 }
 
 void wr_notifier_pipeline_size_changed(uint64_t aWindowId,
@@ -207,16 +207,16 @@ void wr_notifier_pipeline_size_changed(uint64_t aWindowId,
                                        float aWidth,
                                        float aHeight)
 {
-  mozilla::layers::RenderThread::Get()->PipelineSizeChanged(mozilla::gfx::WindowId(aWindowId),
-                                                            aPipelineId, aWidth, aHeight);
+  mozilla::wr::RenderThread::Get()->PipelineSizeChanged(mozilla::wr::WindowId(aWindowId),
+                                                        aPipelineId, aWidth, aHeight);
 }
 
 void wr_notifier_external_event(uint64_t aWindowId, size_t aRawEvent)
 {
-  mozilla::UniquePtr<mozilla::layers::RendererEvent> evt(
-    reinterpret_cast<mozilla::layers::RendererEvent*>(aRawEvent));
-  mozilla::layers::RenderThread::Get()->RunEvent(mozilla::gfx::WindowId(aWindowId),
-                                                 mozilla::Move(evt));
+  mozilla::UniquePtr<mozilla::wr::RendererEvent> evt(
+    reinterpret_cast<mozilla::wr::RendererEvent*>(aRawEvent));
+  mozilla::wr::RenderThread::Get()->RunEvent(mozilla::wr::WindowId(aWindowId),
+                                             mozilla::Move(evt));
 }
 
 } // extern C

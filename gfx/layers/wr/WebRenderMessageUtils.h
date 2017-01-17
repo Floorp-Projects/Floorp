@@ -14,9 +14,9 @@
 namespace IPC {
 
 template<>
-struct ParamTraits<mozilla::gfx::ByteBuffer>
+struct ParamTraits<mozilla::wr::ByteBuffer>
 {
-  typedef mozilla::gfx::ByteBuffer paramType;
+  typedef mozilla::wr::ByteBuffer paramType;
 
   static void
   Write(Message* aMsg, const paramType& aParam)

@@ -11,7 +11,7 @@
 #include "mozilla/layers/SynchronousTask.h"
 
 namespace mozilla {
-namespace layers {
+namespace wr {
 
 inline Maybe<WRImageFormat>
 SurfaceFormatToWRImageFormat(gfx::SurfaceFormat aFormat) {
@@ -39,9 +39,9 @@ SurfaceFormatToWRImageFormat(gfx::SurfaceFormat aFormat) {
 class NewRenderer : public RendererEvent
 {
 public:
-  NewRenderer(WrAPI** aApi, CompositorBridgeParentBase* aBridge,
+  NewRenderer(WrAPI** aApi, layers::CompositorBridgeParentBase* aBridge,
               RefPtr<widget::CompositorWidget>&& aWidget,
-              SynchronousTask* aTask,
+              layers::SynchronousTask* aTask,
               bool aEnableProfiler)
   : mWRApi(aApi)
   , mBridge(aBridge)
@@ -57,9 +57,9 @@ public:
     MOZ_COUNT_DTOR(NewRenderer);
   }
 
-  virtual void Run(RenderThread& aRenderThread, gfx::WindowId aWindowId) override
+  virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override
   {
-    AutoCompleteTask complete(mTask);
+    layers::AutoCompleteTask complete(mTask);
 
     RefPtr<gl::GLContext> gl = gl::GLContextProvider::CreateForCompositorWidget(mCompositorWidget, true);
     if (!gl || !gl->MakeCurrent()) {
@@ -84,16 +84,16 @@ public:
   }
 
   WrAPI** mWRApi;
-  CompositorBridgeParentBase* mBridge;
+  layers::CompositorBridgeParentBase* mBridge;
   RefPtr<widget::CompositorWidget> mCompositorWidget;
-  SynchronousTask* mTask;
+  layers::SynchronousTask* mTask;
   bool mEnableProfiler;
 };
 
 class RemoveRenderer : public RendererEvent
 {
 public:
-  explicit RemoveRenderer(SynchronousTask* aTask)
+  explicit RemoveRenderer(layers::SynchronousTask* aTask)
   : mTask(aTask)
   {
     MOZ_COUNT_CTOR(RemoveRenderer);
@@ -104,34 +104,34 @@ public:
     MOZ_COUNT_DTOR(RemoveRenderer);
   }
 
-  virtual void Run(RenderThread& aRenderThread, gfx::WindowId aWindowId) override
+  virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override
   {
     aRenderThread.RemoveRenderer(aWindowId);
-    AutoCompleteTask complete(mTask);
+    layers::AutoCompleteTask complete(mTask);
   }
 
-  SynchronousTask* mTask;
+  layers::SynchronousTask* mTask;
 };
 
 
 //static
 already_AddRefed<WebRenderAPI>
 WebRenderAPI::Create(bool aEnableProfiler,
-                     CompositorBridgeParentBase* aBridge,
+                     layers::CompositorBridgeParentBase* aBridge,
                      RefPtr<widget::CompositorWidget>&& aWidget)
 {
   MOZ_ASSERT(aBridge);
   MOZ_ASSERT(aWidget);
 
   static uint64_t sNextId = 1;
-  gfx::WindowId id(sNextId++);
+  WindowId id(sNextId++);
 
   WrAPI* wrApi = nullptr;
 
   // Dispatch a synchronous task because the WrApi object needs to be created
   // on the render thread. If need be we could delay waiting on this task until
   // the next time we need to access the WrApi object.
-  SynchronousTask task("Create Renderer");
+  layers::SynchronousTask task("Create Renderer");
   auto event = MakeUnique<NewRenderer>(&wrApi, aBridge, Move(aWidget), &task, aEnableProfiler);
   RenderThread::Get()->RunEvent(id, Move(event));
 
@@ -155,7 +155,7 @@ WebRenderAPI::~WebRenderAPI()
   wr_api_delete(mWRApi);
 #endif
 
-  SynchronousTask task("Destroy WebRenderAPI");
+  layers::SynchronousTask task("Destroy WebRenderAPI");
   auto event = MakeUnique<RemoveRenderer>(&task);
   // TODO use the WebRender API instead of scheduling on this message loop directly.
   // this needs PR #688
@@ -165,7 +165,7 @@ WebRenderAPI::~WebRenderAPI()
 
 void
 WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
-                                 gfx::Epoch aEpoch,
+                                 Epoch aEpoch,
                                  LayerSize aViewportSize,
                                  DisplayListBuilder& aBuilder)
 {
@@ -175,37 +175,37 @@ WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
 }
 
 void
-WebRenderAPI::SetRootPipeline(gfx::PipelineId aPipeline)
+WebRenderAPI::SetRootPipeline(PipelineId aPipeline)
 {
   wr_api_set_root_pipeline(mWRApi, aPipeline.mHandle);
 }
 
-gfx::ImageKey
+ImageKey
 WebRenderAPI::AddImageBuffer(gfx::IntSize aSize,
                              uint32_t aStride,
                              gfx::SurfaceFormat aFormat,
                              Range<uint8_t> aBytes)
 {
   auto format = SurfaceFormatToWRImageFormat(aFormat).value();
-  return gfx::ImageKey(wr_api_add_image(mWRApi,
-                                        aSize.width, aSize.height,
-                                        aStride, format,
-                                        &aBytes[0], aBytes.length()));
+  return ImageKey(wr_api_add_image(mWRApi,
+                                       aSize.width, aSize.height,
+                                       aStride, format,
+                                       &aBytes[0], aBytes.length()));
 }
 
-gfx::ImageKey
+ImageKey
 WebRenderAPI::AddExternalImageHandle(gfx::IntSize aSize,
                                      gfx::SurfaceFormat aFormat,
                                      uint64_t aHandle)
 {
   auto format = SurfaceFormatToWRImageFormat(aFormat).value();
-  return gfx::ImageKey(wr_api_add_external_image_texture(mWRApi,
+  return ImageKey(wr_api_add_external_image_texture(mWRApi,
                                                          aSize.width, aSize.height, format,
                                                          aHandle));
 }
 
 void
-WebRenderAPI::UpdateImageBuffer(gfx::ImageKey aKey,
+WebRenderAPI::UpdateImageBuffer(ImageKey aKey,
                                 gfx::IntSize aSize,
                                 gfx::SurfaceFormat aFormat,
                                 Range<uint8_t> aBytes)
@@ -218,19 +218,19 @@ WebRenderAPI::UpdateImageBuffer(gfx::ImageKey aKey,
 }
 
 void
-WebRenderAPI::DeleteImage(gfx::ImageKey aKey)
+WebRenderAPI::DeleteImage(ImageKey aKey)
 {
   wr_api_delete_image(mWRApi, aKey.mHandle);
 }
 
-gfx::FontKey
+wr::FontKey
 WebRenderAPI::AddRawFont(Range<uint8_t> aBytes)
 {
-  return gfx::FontKey(wr_api_add_raw_font(mWRApi, &aBytes[0], aBytes.length()));
+  return wr::FontKey(wr_api_add_raw_font(mWRApi, &aBytes[0], aBytes.length()));
 }
 
 void
-WebRenderAPI::DeleteFont(gfx::FontKey aKey)
+WebRenderAPI::DeleteFont(wr::FontKey aKey)
 {
   printf("XXX - WebRender does not seem to implement deleting a font! Leaking it...\n");
 }
@@ -241,7 +241,7 @@ public:
   explicit EnableProfiler(bool aEnabled) : mEnabled(aEnabled) { MOZ_COUNT_CTOR(EnableProfiler); }
   ~EnableProfiler()  { MOZ_COUNT_DTOR(EnableProfiler); }
 
-  virtual void Run(RenderThread& aRenderThread, gfx::WindowId aWindowId) override
+  virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override
   {
     auto renderer = aRenderThread.GetRenderer(aWindowId);
     if (renderer) {
@@ -259,7 +259,7 @@ WebRenderAPI::SetProfilerEnabled(bool aEnabled)
   RenderThread::Get()->RunEvent(mId, Move(event));
 }
 
-DisplayListBuilder::DisplayListBuilder(const LayerIntSize& aSize, gfx::PipelineId aId)
+DisplayListBuilder::DisplayListBuilder(const LayerIntSize& aSize, PipelineId aId)
 {
   MOZ_COUNT_CTOR(DisplayListBuilder);
   mWRState = wr_state_new(aSize.width, aSize.height, aId.mHandle);
@@ -280,7 +280,7 @@ DisplayListBuilder::Begin(const LayerIntSize& aSize)
 }
 
 void
-DisplayListBuilder::End(WebRenderAPI& aApi, gfx::Epoch aEpoch)
+DisplayListBuilder::End(WebRenderAPI& aApi, Epoch aEpoch)
 {
   wr_dp_end(mWRState, aApi.mWRApi, aEpoch.mHandle);
 }
@@ -323,7 +323,7 @@ DisplayListBuilder::PushImage(const WRRect& aBounds,
 void
 DisplayListBuilder::PushIFrame(const WRRect& aBounds,
                                const WRRect& aClip,
-                               gfx::PipelineId aPipeline)
+                               PipelineId aPipeline)
 {
   wr_dp_push_iframe(mWRState, aBounds, aClip, aPipeline.mHandle);
 }
@@ -350,7 +350,7 @@ void
 DisplayListBuilder::PushText(const WRRect& aBounds,
                              const WRRect& aClip,
                              const gfx::Color& aColor,
-                             gfx::FontKey aFontKey,
+                             wr::FontKey aFontKey,
                              Range<const WRGlyphInstance> aGlyphBuffer,
                              float aGlyphSize)
 {

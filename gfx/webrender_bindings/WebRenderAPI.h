@@ -20,9 +20,12 @@ class CompositorWidget;
 }
 
 namespace layers {
+class CompositorBridgeParentBase;
+}
+
+namespace wr {
 
 class DisplayListBuilder;
-class CompositorBridgeParentBase;
 class RendererOGL;
 class NewRenderer;
 
@@ -32,42 +35,42 @@ NS_INLINE_DECL_REFCOUNTING(WebRenderAPI);
 public:
   /// Compositor thread only.
   static already_AddRefed<WebRenderAPI> Create(bool aEnableProfiler,
-                                               CompositorBridgeParentBase* aBridge,
+                                               layers::CompositorBridgeParentBase* aBridge,
                                                RefPtr<widget::CompositorWidget>&& aWidget);
 
-  gfx::WindowId GetId() const { return mId; }
+  wr::WindowId GetId() const { return mId; }
 
   void SetRootDisplayList(gfx::Color aBgColor,
-                          gfx::Epoch aEpoch,
+                          wr::Epoch aEpoch,
                           LayerSize aViewportSize,
                           DisplayListBuilder& aBuilder);
 
-  void SetRootPipeline(gfx::PipelineId aPipeline);
+  void SetRootPipeline(wr::PipelineId aPipeline);
 
-  gfx::ImageKey AddImageBuffer(gfx::IntSize aSize,
-                               uint32_t aStride,
-                               gfx::SurfaceFormat aFormat,
-                               Range<uint8_t> aBytes);
+  wr::ImageKey AddImageBuffer(gfx::IntSize aSize,
+                              uint32_t aStride,
+                              gfx::SurfaceFormat aFormat,
+                              Range<uint8_t> aBytes);
 
-  gfx::ImageKey AddExternalImageHandle(gfx::IntSize aSize,
-                                       gfx::SurfaceFormat aFormat,
-                                       uint64_t aHandle);
+  wr::ImageKey AddExternalImageHandle(gfx::IntSize aSize,
+                                      gfx::SurfaceFormat aFormat,
+                                      uint64_t aHandle);
 
-  void UpdateImageBuffer(gfx::ImageKey aKey,
+  void UpdateImageBuffer(wr::ImageKey aKey,
                          gfx::IntSize aSize,
                          gfx::SurfaceFormat aFormat,
                          Range<uint8_t> aBytes);
 
-  void DeleteImage(gfx::ImageKey aKey);
+  void DeleteImage(wr::ImageKey aKey);
 
-  gfx::FontKey AddRawFont(Range<uint8_t> aBytes);
+  wr::FontKey AddRawFont(Range<uint8_t> aBytes);
 
-  void DeleteFont(gfx::FontKey aKey);
+  void DeleteFont(wr::FontKey aKey);
 
   void SetProfilerEnabled(bool aEnabled);
 
 protected:
-  WebRenderAPI(WrAPI* aRawApi, gfx::WindowId aId)
+  WebRenderAPI(WrAPI* aRawApi, wr::WindowId aId)
   : mWRApi(aRawApi)
   , mId(aId)
   {}
@@ -75,7 +78,7 @@ protected:
   ~WebRenderAPI();
 
   WrAPI* mWRApi;
-  gfx::WindowId mId;
+  wr::WindowId mId;
 
   friend class NewRenderer;
   friend class DisplayListBuilder;
@@ -86,14 +89,14 @@ protected:
 /// instead, so the interface may change a bit.
 class DisplayListBuilder {
 public:
-  DisplayListBuilder(const LayerIntSize& aSize, gfx::PipelineId aId);
+  DisplayListBuilder(const LayerIntSize& aSize, wr::PipelineId aId);
   DisplayListBuilder(DisplayListBuilder&&) = default;
 
   ~DisplayListBuilder();
 
   void Begin(const LayerIntSize& aSize);
 
-  void End(WebRenderAPI& aApi, gfx::Epoch aEpoch);
+  void End(WebRenderAPI& aApi, wr::Epoch aEpoch);
 
   void PushStackingContext(const WRRect& aBounds, // TODO: We should work with strongly typed rects
                            const WRRect& aOverflow,
@@ -114,7 +117,7 @@ public:
 
   void PushIFrame(const WRRect& aBounds,
                   const WRRect& aClip,
-                  gfx::PipelineId aPipeline);
+                  wr::PipelineId aPipeline);
 
   void PushBorder(const WRRect& bounds,
                   const WRRect& clip,
@@ -130,7 +133,7 @@ public:
   void PushText(const WRRect& aBounds,
                 const WRRect& aClip,
                 const gfx::Color& aColor,
-                gfx::FontKey aFontKey,
+                wr::FontKey aFontKey,
                 Range<const WRGlyphInstance> aGlyphBuffer,
                 float aGlyphSize);
 

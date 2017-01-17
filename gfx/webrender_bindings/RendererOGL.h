@@ -26,8 +26,10 @@ class CompositorWidget;
 }
 
 namespace layers {
-
 class CompositorBridgeParentBase;
+}
+
+namespace wr {
 
 /// Owns the WebRender renderer and GL context.
 ///
@@ -56,17 +58,17 @@ public:
   RendererOGL(RefPtr<RenderThread>&& aThread,
               RefPtr<gl::GLContext>&& aGL,
               RefPtr<widget::CompositorWidget>&&,
-              gfx::WindowId aWindowId,
+              wr::WindowId aWindowId,
               WrRenderer* aWrRenderer,
-              CompositorBridgeParentBase* aBridge);
+              layers::CompositorBridgeParentBase* aBridge);
 protected:
 
   RefPtr<RenderThread> mThread;
   RefPtr<gl::GLContext> mGL;
   RefPtr<widget::CompositorWidget> mWidget;
   WrRenderer* mWrRenderer;
-  CompositorBridgeParentBase* mBridge;
-  gfx::WindowId mWindowId;
+  layers::CompositorBridgeParentBase* mBridge;
+  wr::WindowId mWindowId;
 };
 
 }
