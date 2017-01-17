@@ -68,7 +68,7 @@ void vp9_frameworker_copy_context(VPxWorker *const dst_worker,
                                   VPxWorker *const src_worker);
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // VP9_DECODER_VP9_DTHREAD_H_

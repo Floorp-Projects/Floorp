@@ -9,42 +9,37 @@
  */
 
 #include <arm_neon.h>
+#include <assert.h>
 
+#include "./vpx_dsp_rtcd.h"
 #include "vpx_dsp/inv_txfm.h"
-#include "vpx_ports/mem.h"
 
-void vpx_idct4x4_1_add_neon(
-        int16_t *input,
-        uint8_t *dest,
-        int dest_stride) {
-    uint8x8_t d6u8;
-    uint32x2_t d2u32 = vdup_n_u32(0);
-    uint16x8_t q8u16;
-    int16x8_t q0s16;
-    uint8_t *d1, *d2;
-    int16_t i, a1, cospi_16_64 = 11585;
-    int16_t out = dct_const_round_shift(input[0] * cospi_16_64);
-    out = dct_const_round_shift(out * cospi_16_64);
-    a1 = ROUND_POWER_OF_TWO(out, 4);
+static INLINE void idct4x4_1_add_kernel(uint8_t **dest, const int stride,
+                                        const int16x8_t res,
+                                        uint32x2_t *const d) {
+  uint16x8_t a;
+  uint8x8_t b;
+  *d = vld1_lane_u32((const uint32_t *)*dest, *d, 0);
+  *d = vld1_lane_u32((const uint32_t *)(*dest + stride), *d, 1);
+  a = vaddw_u8(vreinterpretq_u16_s16(res), vreinterpret_u8_u32(*d));
+  b = vqmovun_s16(vreinterpretq_s16_u16(a));
+  vst1_lane_u32((uint32_t *)*dest, vreinterpret_u32_u8(b), 0);
+  *dest += stride;
+  vst1_lane_u32((uint32_t *)*dest, vreinterpret_u32_u8(b), 1);
+  *dest += stride;
+}
 
-    q0s16 = vdupq_n_s16(a1);
+void vpx_idct4x4_1_add_neon(const tran_low_t *input, uint8_t *dest,
+                            int stride) {
+  const int16_t out0 = WRAPLOW(dct_const_round_shift(input[0] * cospi_16_64));
+  const int16_t out1 = WRAPLOW(dct_const_round_shift(out0 * cospi_16_64));
+  const int16_t a1 = ROUND_POWER_OF_TWO(out1, 4);
+  const int16x8_t dc = vdupq_n_s16(a1);
+  uint32x2_t d = vdup_n_u32(0);
 
-    // dc_only_idct_add
-    d1 = d2 = dest;
-    for (i = 0; i < 2; i++) {
-        d2u32 = vld1_lane_u32((const uint32_t *)d1, d2u32, 0);
-        d1 += dest_stride;
-        d2u32 = vld1_lane_u32((const uint32_t *)d1, d2u32, 1);
-        d1 += dest_stride;
+  assert(!((intptr_t)dest % sizeof(uint32_t)));
+  assert(!(stride % sizeof(uint32_t)));
 
-        q8u16 = vaddw_u8(vreinterpretq_u16_s16(q0s16),
-                         vreinterpret_u8_u32(d2u32));
-        d6u8 = vqmovun_s16(vreinterpretq_s16_u16(q8u16));
-
-        vst1_lane_u32((uint32_t *)d2, vreinterpret_u32_u8(d6u8), 0);
-        d2 += dest_stride;
-        vst1_lane_u32((uint32_t *)d2, vreinterpret_u32_u8(d6u8), 1);
-        d2 += dest_stride;
-    }
-    return;
+  idct4x4_1_add_kernel(&dest, stride, dc, &d);
+  idct4x4_1_add_kernel(&dest, stride, dc, &d);
 }

@@ -26,10 +26,7 @@ const double kUsecsInSec = 1000000.0;
 struct EncodePerfTestVideo {
   EncodePerfTestVideo(const char *name_, uint32_t width_, uint32_t height_,
                       uint32_t bitrate_, int frames_)
-      : name(name_),
-        width(width_),
-        height(height_),
-        bitrate(bitrate_),
+      : name(name_), width(width_), height(height_), bitrate(bitrate_),
         frames(frames_) {}
   const char *name;
   uint32_t width;
@@ -45,8 +42,8 @@ const EncodePerfTestVideo kVP9EncodePerfTestVectors[] = {
   EncodePerfTestVideo("macmarcostationary_640_480_30.yuv", 640, 480, 200, 718),
   EncodePerfTestVideo("niklas_640_480_30.yuv", 640, 480, 200, 471),
   EncodePerfTestVideo("tacomanarrows_640_480_30.yuv", 640, 480, 200, 300),
-  EncodePerfTestVideo("tacomasmallcameramovement_640_480_30.yuv",
-                      640, 480, 200, 300),
+  EncodePerfTestVideo("tacomasmallcameramovement_640_480_30.yuv", 640, 480, 200,
+                      300),
   EncodePerfTestVideo("thaloundeskmtg_640_480_30.yuv", 640, 480, 200, 300),
   EncodePerfTestVideo("niklas_1280_720_30.yuv", 1280, 720, 600, 470),
 };
@@ -61,12 +58,8 @@ class VP9EncodePerfTest
       public ::libvpx_test::CodecTestWithParam<libvpx_test::TestMode> {
  protected:
   VP9EncodePerfTest()
-      : EncoderTest(GET_PARAM(0)),
-        min_psnr_(kMaxPsnr),
-        nframes_(0),
-        encoding_mode_(GET_PARAM(1)),
-        speed_(0),
-        threads_(1) {}
+      : EncoderTest(GET_PARAM(0)), min_psnr_(kMaxPsnr), nframes_(0),
+        encoding_mode_(GET_PARAM(1)), speed_(0), threads_(1) {}
 
   virtual ~VP9EncodePerfTest() {}
 
@@ -107,24 +100,18 @@ class VP9EncodePerfTest
 
   virtual void PSNRPktHook(const vpx_codec_cx_pkt_t *pkt) {
     if (pkt->data.psnr.psnr[0] < min_psnr_) {
-      min_psnr_= pkt->data.psnr.psnr[0];
+      min_psnr_ = pkt->data.psnr.psnr[0];
     }
   }
 
   // for performance reasons don't decode
-  virtual bool DoDecode() { return 0; }
+  virtual bool DoDecode() const { return false; }
 
-  double min_psnr() const {
-    return min_psnr_;
-  }
+  double min_psnr() const { return min_psnr_; }
 
-  void set_speed(unsigned int speed) {
-    speed_ = speed;
-  }
+  void set_speed(unsigned int speed) { speed_ = speed; }
 
-  void set_threads(unsigned int threads) {
-    threads_ = threads;
-  }
+  void set_threads(unsigned int threads) { threads_ = threads; }
 
  private:
   double min_psnr_;
@@ -139,11 +126,12 @@ TEST_P(VP9EncodePerfTest, PerfTest) {
     for (size_t j = 0; j < NELEMENTS(kEncodePerfTestSpeeds); ++j) {
       for (size_t k = 0; k < NELEMENTS(kEncodePerfTestThreads); ++k) {
         if (kVP9EncodePerfTestVectors[i].width < 512 &&
-            kEncodePerfTestThreads[k] > 1)
+            kEncodePerfTestThreads[k] > 1) {
           continue;
-        else if (kVP9EncodePerfTestVectors[i].width < 1024 &&
-                 kEncodePerfTestThreads[k] > 2)
+        } else if (kVP9EncodePerfTestVectors[i].width < 1024 &&
+                   kEncodePerfTestThreads[k] > 2) {
           continue;
+        }
 
         set_threads(kEncodePerfTestThreads[k]);
         SetUp();
@@ -157,10 +145,8 @@ TEST_P(VP9EncodePerfTest, PerfTest) {
         const unsigned frames = kVP9EncodePerfTestVectors[i].frames;
         const char *video_name = kVP9EncodePerfTestVectors[i].name;
         libvpx_test::I420VideoSource video(
-            video_name,
-            kVP9EncodePerfTestVectors[i].width,
-            kVP9EncodePerfTestVectors[i].height,
-            timebase.den, timebase.num, 0,
+            video_name, kVP9EncodePerfTestVectors[i].width,
+            kVP9EncodePerfTestVectors[i].height, timebase.den, timebase.num, 0,
             kVP9EncodePerfTestVectors[i].frames);
         set_speed(kEncodePerfTestSpeeds[j]);
 
@@ -197,6 +183,6 @@ TEST_P(VP9EncodePerfTest, PerfTest) {
   }
 }
 
-VP9_INSTANTIATE_TEST_CASE(
-    VP9EncodePerfTest, ::testing::Values(::libvpx_test::kRealTime));
+VP9_INSTANTIATE_TEST_CASE(VP9EncodePerfTest,
+                          ::testing::Values(::libvpx_test::kRealTime));
 }  // namespace

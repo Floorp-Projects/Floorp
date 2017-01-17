@@ -24,14 +24,10 @@ const char kVp9Md5File[] = "vp90-2-08-tile_1x8_frame_parallel.webm.md5";
 // Class for testing shutting off the loop filter.
 class SkipLoopFilterTest {
  public:
-  SkipLoopFilterTest()
-      : video_(NULL),
-        decoder_(NULL),
-        md5_file_(NULL) {}
+  SkipLoopFilterTest() : video_(NULL), decoder_(NULL), md5_file_(NULL) {}
 
   ~SkipLoopFilterTest() {
-    if (md5_file_ != NULL)
-      fclose(md5_file_);
+    if (md5_file_ != NULL) fclose(md5_file_);
     delete decoder_;
     delete video_;
   }
@@ -46,8 +42,7 @@ class SkipLoopFilterTest {
     video_->Begin();
 
     vpx_codec_dec_cfg_t cfg = vpx_codec_dec_cfg_t();
-    if (num_threads > 0)
-      cfg.threads = num_threads;
+    if (num_threads > 0) cfg.threads = num_threads;
     decoder_ = new libvpx_test::VP9Decoder(cfg, 0);
     ASSERT_TRUE(decoder_ != NULL);
 
@@ -73,8 +68,7 @@ class SkipLoopFilterTest {
     for (; video_->cxdata() != NULL; video_->Next()) {
       const vpx_codec_err_t res =
           decoder_->DecodeFrame(video_->cxdata(), video_->frame_size());
-      if (res != VPX_CODEC_OK)
-        return res;
+      if (res != VPX_CODEC_OK) return res;
       ReadMd5();
     }
     return VPX_CODEC_OK;
@@ -92,7 +86,7 @@ class SkipLoopFilterTest {
   void OpenMd5File(const std::string &md5_file_name) {
     md5_file_ = libvpx_test::OpenTestDataFile(md5_file_name);
     ASSERT_TRUE(md5_file_ != NULL) << "MD5 file open failed. Filename: "
-        << md5_file_name;
+                                   << md5_file_name;
   }
 
   // Reads the next line of the MD5 file.

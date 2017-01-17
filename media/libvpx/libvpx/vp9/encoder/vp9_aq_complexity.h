@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 #ifndef VP9_ENCODER_VP9_AQ_COMPLEXITY_H_
 #define VP9_ENCODER_VP9_AQ_COMPLEXITY_H_
 
@@ -23,8 +22,8 @@ struct macroblock;
 
 // Select a segment for the current Block.
 void vp9_caq_select_segment(struct VP9_COMP *cpi, struct macroblock *,
-                            BLOCK_SIZE bs,
-                            int mi_row, int mi_col, int projected_rate);
+                            BLOCK_SIZE bs, int mi_row, int mi_col,
+                            int projected_rate);
 
 // This function sets up a set of segments with delta Q values around
 // the baseline frame quantizer.

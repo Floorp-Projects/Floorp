@@ -159,8 +159,8 @@ static void fadst16_transpose_postproc_msa(int16_t *input, int16_t *out) {
 
   /* load input data */
   LD_SH8(input, 16, l0, l1, l2, l3, l4, l5, l6, l7);
-  TRANSPOSE8x8_SH_SH(l0, l1, l2, l3, l4, l5, l6, l7,
-                     r0, r1, r2, r3, r4, r5, r6, r7);
+  TRANSPOSE8x8_SH_SH(l0, l1, l2, l3, l4, l5, l6, l7, r0, r1, r2, r3, r4, r5, r6,
+                     r7);
   FDCT_POSTPROC_2V_NEG_H(r0, r1);
   FDCT_POSTPROC_2V_NEG_H(r2, r3);
   FDCT_POSTPROC_2V_NEG_H(r4, r5);
@@ -169,8 +169,8 @@ static void fadst16_transpose_postproc_msa(int16_t *input, int16_t *out) {
   out += 64;
 
   LD_SH8(input + 8, 16, l8, l9, l10, l11, l12, l13, l14, l15);
-  TRANSPOSE8x8_SH_SH(l8, l9, l10, l11, l12, l13, l14, l15,
-                     r8, r9, r10, r11, r12, r13, r14, r15);
+  TRANSPOSE8x8_SH_SH(l8, l9, l10, l11, l12, l13, l14, l15, r8, r9, r10, r11,
+                     r12, r13, r14, r15);
   FDCT_POSTPROC_2V_NEG_H(r8, r9);
   FDCT_POSTPROC_2V_NEG_H(r10, r11);
   FDCT_POSTPROC_2V_NEG_H(r12, r13);
@@ -181,8 +181,8 @@ static void fadst16_transpose_postproc_msa(int16_t *input, int16_t *out) {
   /* load input data */
   input += 128;
   LD_SH8(input, 16, l0, l1, l2, l3, l4, l5, l6, l7);
-  TRANSPOSE8x8_SH_SH(l0, l1, l2, l3, l4, l5, l6, l7,
-                     r0, r1, r2, r3, r4, r5, r6, r7);
+  TRANSPOSE8x8_SH_SH(l0, l1, l2, l3, l4, l5, l6, l7, r0, r1, r2, r3, r4, r5, r6,
+                     r7);
   FDCT_POSTPROC_2V_NEG_H(r0, r1);
   FDCT_POSTPROC_2V_NEG_H(r2, r3);
   FDCT_POSTPROC_2V_NEG_H(r4, r5);
@@ -191,8 +191,8 @@ static void fadst16_transpose_postproc_msa(int16_t *input, int16_t *out) {
   out += 64;
 
   LD_SH8(input + 8, 16, l8, l9, l10, l11, l12, l13, l14, l15);
-  TRANSPOSE8x8_SH_SH(l8, l9, l10, l11, l12, l13, l14, l15,
-                     r8, r9, r10, r11, r12, r13, r14, r15);
+  TRANSPOSE8x8_SH_SH(l8, l9, l10, l11, l12, l13, l14, l15, r8, r9, r10, r11,
+                     r12, r13, r14, r15);
   FDCT_POSTPROC_2V_NEG_H(r8, r9);
   FDCT_POSTPROC_2V_NEG_H(r10, r11);
   FDCT_POSTPROC_2V_NEG_H(r12, r13);
@@ -339,24 +339,24 @@ static void fadst16_transpose_msa(int16_t *input, int16_t *out) {
   v8i16 l0, l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13, l14, l15;
 
   /* load input data */
-  LD_SH16(input, 8, l0, l8, l1, l9, l2, l10, l3, l11,
-          l4, l12, l5, l13, l6, l14, l7, l15);
-  TRANSPOSE8x8_SH_SH(l0, l1, l2, l3, l4, l5, l6, l7,
-                     r0, r1, r2, r3, r4, r5, r6, r7);
-  TRANSPOSE8x8_SH_SH(l8, l9, l10, l11, l12, l13, l14, l15,
-                     r8, r9, r10, r11, r12, r13, r14, r15);
+  LD_SH16(input, 8, l0, l8, l1, l9, l2, l10, l3, l11, l4, l12, l5, l13, l6, l14,
+          l7, l15);
+  TRANSPOSE8x8_SH_SH(l0, l1, l2, l3, l4, l5, l6, l7, r0, r1, r2, r3, r4, r5, r6,
+                     r7);
+  TRANSPOSE8x8_SH_SH(l8, l9, l10, l11, l12, l13, l14, l15, r8, r9, r10, r11,
+                     r12, r13, r14, r15);
   ST_SH8(r0, r8, r1, r9, r2, r10, r3, r11, out, 8);
   ST_SH8(r4, r12, r5, r13, r6, r14, r7, r15, (out + 64), 8);
   out += 16 * 8;
 
   /* load input data */
   input += 128;
-  LD_SH16(input, 8, l0, l8, l1, l9, l2, l10, l3, l11,
-          l4, l12, l5, l13, l6, l14, l7, l15);
-  TRANSPOSE8x8_SH_SH(l0, l1, l2, l3, l4, l5, l6, l7,
-                     r0, r1, r2, r3, r4, r5, r6, r7);
-  TRANSPOSE8x8_SH_SH(l8, l9, l10, l11, l12, l13, l14, l15,
-                     r8, r9, r10, r11, r12, r13, r14, r15);
+  LD_SH16(input, 8, l0, l8, l1, l9, l2, l10, l3, l11, l4, l12, l5, l13, l6, l14,
+          l7, l15);
+  TRANSPOSE8x8_SH_SH(l0, l1, l2, l3, l4, l5, l6, l7, r0, r1, r2, r3, r4, r5, r6,
+                     r7);
+  TRANSPOSE8x8_SH_SH(l8, l9, l10, l11, l12, l13, l14, l15, r8, r9, r10, r11,
+                     r12, r13, r14, r15);
   ST_SH8(r0, r8, r1, r9, r2, r10, r3, r11, out, 8);
   ST_SH8(r4, r12, r5, r13, r6, r14, r7, r15, (out + 64), 8);
 }
@@ -371,10 +371,10 @@ static void postproc_fdct16x8_1d_row(int16_t *intermediate, int16_t *output) {
   LD_SH8(temp, 16, in0, in1, in2, in3, in4, in5, in6, in7);
   temp = intermediate + 8;
   LD_SH8(temp, 16, in8, in9, in10, in11, in12, in13, in14, in15);
-  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7,
-                     in0, in1, in2, in3, in4, in5, in6, in7);
-  TRANSPOSE8x8_SH_SH(in8, in9, in10, in11, in12, in13, in14, in15,
-                     in8, in9, in10, in11, in12, in13, in14, in15);
+  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7, in0, in1, in2, in3,
+                     in4, in5, in6, in7);
+  TRANSPOSE8x8_SH_SH(in8, in9, in10, in11, in12, in13, in14, in15, in8, in9,
+                     in10, in11, in12, in13, in14, in15);
   FDCT_POSTPROC_2V_NEG_H(in0, in1);
   FDCT_POSTPROC_2V_NEG_H(in2, in3);
   FDCT_POSTPROC_2V_NEG_H(in4, in5);
@@ -383,29 +383,28 @@ static void postproc_fdct16x8_1d_row(int16_t *intermediate, int16_t *output) {
   FDCT_POSTPROC_2V_NEG_H(in10, in11);
   FDCT_POSTPROC_2V_NEG_H(in12, in13);
   FDCT_POSTPROC_2V_NEG_H(in14, in15);
-  BUTTERFLY_16(in0, in1, in2, in3, in4, in5, in6, in7,
-               in8, in9, in10, in11, in12, in13, in14, in15,
-               tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7,
-               in8, in9, in10, in11, in12, in13, in14, in15);
+  BUTTERFLY_16(in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11,
+               in12, in13, in14, in15, tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6,
+               tmp7, in8, in9, in10, in11, in12, in13, in14, in15);
   temp = intermediate;
   ST_SH8(in8, in9, in10, in11, in12, in13, in14, in15, temp, 16);
-  FDCT8x16_EVEN(tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7,
-                tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7);
+  FDCT8x16_EVEN(tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp0, tmp1,
+                tmp2, tmp3, tmp4, tmp5, tmp6, tmp7);
   temp = intermediate;
   LD_SH8(temp, 16, in8, in9, in10, in11, in12, in13, in14, in15);
-  FDCT8x16_ODD(in8, in9, in10, in11, in12, in13, in14, in15,
-               in0, in1, in2, in3, in4, in5, in6, in7);
-  TRANSPOSE8x8_SH_SH(tmp0, in0, tmp1, in1, tmp2, in2, tmp3, in3,
-                     tmp0, in0, tmp1, in1, tmp2, in2, tmp3, in3);
+  FDCT8x16_ODD(in8, in9, in10, in11, in12, in13, in14, in15, in0, in1, in2, in3,
+               in4, in5, in6, in7);
+  TRANSPOSE8x8_SH_SH(tmp0, in0, tmp1, in1, tmp2, in2, tmp3, in3, tmp0, in0,
+                     tmp1, in1, tmp2, in2, tmp3, in3);
   ST_SH8(tmp0, in0, tmp1, in1, tmp2, in2, tmp3, in3, out, 16);
-  TRANSPOSE8x8_SH_SH(tmp4, in4, tmp5, in5, tmp6, in6, tmp7, in7,
-                     tmp4, in4, tmp5, in5, tmp6, in6, tmp7, in7);
+  TRANSPOSE8x8_SH_SH(tmp4, in4, tmp5, in5, tmp6, in6, tmp7, in7, tmp4, in4,
+                     tmp5, in5, tmp6, in6, tmp7, in7);
   out = output + 8;
   ST_SH8(tmp4, in4, tmp5, in5, tmp6, in6, tmp7, in7, out, 16);
 }
 
-void vp9_fht16x16_msa(const int16_t *input, int16_t *output,
-                      int32_t stride, int32_t tx_type) {
+void vp9_fht16x16_msa(const int16_t *input, int16_t *output, int32_t stride,
+                      int32_t tx_type) {
   DECLARE_ALIGNED(32, int16_t, tmp[256]);
   DECLARE_ALIGNED(32, int16_t, trans_buf[256]);
   DECLARE_ALIGNED(32, int16_t, tmp_buf[128]);
@@ -413,35 +412,31 @@ void vp9_fht16x16_msa(const int16_t *input, int16_t *output,
   int16_t *ptmpbuf = &tmp_buf[0];
   int16_t *trans = &trans_buf[0];
   const int32_t const_arr[29 * 4] = {
-    52707308, 52707308, 52707308, 52707308,
-    -1072430300, -1072430300, -1072430300, -1072430300,
-    795618043, 795618043, 795618043, 795618043,
-    -721080468, -721080468, -721080468, -721080468,
-    459094491, 459094491, 459094491, 459094491,
-    -970646691, -970646691, -970646691, -970646691,
-    1010963856, 1010963856, 1010963856, 1010963856,
-    -361743294, -361743294, -361743294, -361743294,
-    209469125, 209469125, 209469125, 209469125,
-    -1053094788, -1053094788, -1053094788, -1053094788,
-    1053160324, 1053160324, 1053160324, 1053160324,
-    639644520, 639644520, 639644520, 639644520,
-    -862444000, -862444000, -862444000, -862444000,
-    1062144356, 1062144356, 1062144356, 1062144356,
-    -157532337, -157532337, -157532337, -157532337,
-    260914709, 260914709, 260914709, 260914709,
-    -1041559667, -1041559667, -1041559667, -1041559667,
-    920985831, 920985831, 920985831, 920985831,
-    -551995675, -551995675, -551995675, -551995675,
-    596522295, 596522295, 596522295, 596522295,
-    892853362, 892853362, 892853362, 892853362,
-    -892787826, -892787826, -892787826, -892787826,
-    410925857, 410925857, 410925857, 410925857,
-    -992012162, -992012162, -992012162, -992012162,
-    992077698, 992077698, 992077698, 992077698,
-    759246145, 759246145, 759246145, 759246145,
-    -759180609, -759180609, -759180609, -759180609,
-    -759222975, -759222975, -759222975, -759222975,
-    759288511, 759288511, 759288511, 759288511 };
+    52707308,    52707308,    52707308,    52707308,    -1072430300,
+    -1072430300, -1072430300, -1072430300, 795618043,   795618043,
+    795618043,   795618043,   -721080468,  -721080468,  -721080468,
+    -721080468,  459094491,   459094491,   459094491,   459094491,
+    -970646691,  -970646691,  -970646691,  -970646691,  1010963856,
+    1010963856,  1010963856,  1010963856,  -361743294,  -361743294,
+    -361743294,  -361743294,  209469125,   209469125,   209469125,
+    209469125,   -1053094788, -1053094788, -1053094788, -1053094788,
+    1053160324,  1053160324,  1053160324,  1053160324,  639644520,
+    639644520,   639644520,   639644520,   -862444000,  -862444000,
+    -862444000,  -862444000,  1062144356,  1062144356,  1062144356,
+    1062144356,  -157532337,  -157532337,  -157532337,  -157532337,
+    260914709,   260914709,   260914709,   260914709,   -1041559667,
+    -1041559667, -1041559667, -1041559667, 920985831,   920985831,
+    920985831,   920985831,   -551995675,  -551995675,  -551995675,
+    -551995675,  596522295,   596522295,   596522295,   596522295,
+    892853362,   892853362,   892853362,   892853362,   -892787826,
+    -892787826,  -892787826,  -892787826,  410925857,   410925857,
+    410925857,   410925857,   -992012162,  -992012162,  -992012162,
+    -992012162,  992077698,   992077698,   992077698,   992077698,
+    759246145,   759246145,   759246145,   759246145,   -759180609,
+    -759180609,  -759180609,  -759180609,  -759222975,  -759222975,
+    -759222975,  -759222975,  759288511,   759288511,   759288511,
+    759288511
+  };
 
   switch (tx_type) {
     case DCT_DCT:
@@ -500,8 +495,6 @@ void vp9_fht16x16_msa(const int16_t *input, int16_t *output,
 
       fadst16_transpose_msa(tmp, output);
       break;
-    default:
-      assert(0);
-      break;
+    default: assert(0); break;
   }
 }

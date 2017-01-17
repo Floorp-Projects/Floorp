@@ -33,10 +33,8 @@ class SvcTest : public ::testing::Test {
   static const uint32_t kHeight = 288;
 
   SvcTest()
-      : codec_iface_(0),
-        test_file_name_("hantro_collage_w352h288.yuv"),
-        codec_initialized_(false),
-        decoder_(0) {
+      : codec_iface_(0), test_file_name_("hantro_collage_w352h288.yuv"),
+        codec_initialized_(false), decoder_(0) {
     memset(&svc_, 0, sizeof(svc_));
     memset(&codec_, 0, sizeof(codec_));
     memset(&codec_enc_, 0, sizeof(codec_enc_));
@@ -70,7 +68,7 @@ class SvcTest : public ::testing::Test {
 
   virtual void TearDown() {
     ReleaseEncoder();
-    delete(decoder_);
+    delete (decoder_);
   }
 
   void InitializeEncoder() {
@@ -97,7 +95,7 @@ class SvcTest : public ::testing::Test {
       if (cx_pkt->kind == VPX_CODEC_STATS_PKT) {
         EXPECT_GT(cx_pkt->data.twopass_stats.sz, 0U);
         ASSERT_TRUE(cx_pkt->data.twopass_stats.buf != NULL);
-        stats_buf->append(static_cast<char*>(cx_pkt->data.twopass_stats.buf),
+        stats_buf->append(static_cast<char *>(cx_pkt->data.twopass_stats.buf),
                           cx_pkt->data.twopass_stats.sz);
       }
     }
@@ -113,10 +111,9 @@ class SvcTest : public ::testing::Test {
     codec_enc_.g_pass = VPX_RC_FIRST_PASS;
     InitializeEncoder();
 
-    libvpx_test::I420VideoSource video(test_file_name_,
-                                       codec_enc_.g_w, codec_enc_.g_h,
-                                       codec_enc_.g_timebase.den,
-                                       codec_enc_.g_timebase.num, 0, 30);
+    libvpx_test::I420VideoSource video(
+        test_file_name_, codec_enc_.g_w, codec_enc_.g_h,
+        codec_enc_.g_timebase.den, codec_enc_.g_timebase.num, 0, 30);
     video.Begin();
 
     for (int i = 0; i < n; ++i) {
@@ -128,8 +125,8 @@ class SvcTest : public ::testing::Test {
     }
 
     // Flush encoder and test EOS packet.
-    res = vpx_svc_encode(&svc_, &codec_, NULL, video.pts(),
-                         video.duration(), VPX_DL_GOOD_QUALITY);
+    res = vpx_svc_encode(&svc_, &codec_, NULL, video.pts(), video.duration(),
+                         VPX_DL_GOOD_QUALITY);
     ASSERT_EQ(VPX_CODEC_OK, res);
     GetStatsData(stats_buf);
 
@@ -163,8 +160,8 @@ class SvcTest : public ::testing::Test {
     }
   }
 
-  void Pass2EncodeNFrames(std::string *const stats_buf,
-                          const int n, const int layers,
+  void Pass2EncodeNFrames(std::string *const stats_buf, const int n,
+                          const int layers,
                           struct vpx_fixed_buf *const outputs) {
     vpx_codec_err_t res;
     size_t frame_received = 0;
@@ -182,10 +179,9 @@ class SvcTest : public ::testing::Test {
     }
     InitializeEncoder();
 
-    libvpx_test::I420VideoSource video(test_file_name_,
-                                       codec_enc_.g_w, codec_enc_.g_h,
-                                       codec_enc_.g_timebase.den,
-                                       codec_enc_.g_timebase.num, 0, 30);
+    libvpx_test::I420VideoSource video(
+        test_file_name_, codec_enc_.g_w, codec_enc_.g_h,
+        codec_enc_.g_timebase.den, codec_enc_.g_timebase.num, 0, 30);
     video.Begin();
 
     for (int i = 0; i < n; ++i) {
@@ -197,8 +193,8 @@ class SvcTest : public ::testing::Test {
     }
 
     // Flush encoder.
-    res = vpx_svc_encode(&svc_, &codec_, NULL, 0,
-                         video.duration(), VPX_DL_GOOD_QUALITY);
+    res = vpx_svc_encode(&svc_, &codec_, NULL, 0, video.duration(),
+                         VPX_DL_GOOD_QUALITY);
     EXPECT_EQ(VPX_CODEC_OK, res);
     StoreFrames(n, outputs, &frame_received);
 
@@ -217,9 +213,8 @@ class SvcTest : public ::testing::Test {
     for (int i = 0; i < n; ++i) {
       ASSERT_TRUE(inputs[i].buf != NULL);
       ASSERT_GT(inputs[i].sz, 0U);
-      const vpx_codec_err_t res_dec =
-          decoder_->DecodeFrame(static_cast<const uint8_t *>(inputs[i].buf),
-                                inputs[i].sz);
+      const vpx_codec_err_t res_dec = decoder_->DecodeFrame(
+          static_cast<const uint8_t *>(inputs[i].buf), inputs[i].sz);
       ASSERT_EQ(VPX_CODEC_OK, res_dec) << decoder_->DecodeError();
       ++decoded_frames;
 
@@ -240,17 +235,16 @@ class SvcTest : public ::testing::Test {
     ASSERT_GT(remained_spatial_layers, 0);
 
     for (int i = 0; i < num_super_frames; ++i) {
-      uint32_t frame_sizes[8] = {0};
+      uint32_t frame_sizes[8] = { 0 };
       int frame_count = 0;
       int frames_found = 0;
       int frame;
       ASSERT_TRUE(inputs[i].buf != NULL);
       ASSERT_GT(inputs[i].sz, 0U);
 
-      vpx_codec_err_t res =
-          vp9_parse_superframe_index(static_cast<const uint8_t*>(inputs[i].buf),
-                                     inputs[i].sz, frame_sizes, &frame_count,
-                                     NULL, NULL);
+      vpx_codec_err_t res = vp9_parse_superframe_index(
+          static_cast<const uint8_t *>(inputs[i].buf), inputs[i].sz,
+          frame_sizes, &frame_count, NULL, NULL);
       ASSERT_EQ(VPX_CODEC_OK, res);
 
       if (frame_count == 0) {
@@ -258,28 +252,27 @@ class SvcTest : public ::testing::Test {
         ASSERT_EQ(1, remained_spatial_layers);
       } else {
         // Found a super frame.
-        uint8_t *frame_data = static_cast<uint8_t*>(inputs[i].buf);
+        uint8_t *frame_data = static_cast<uint8_t *>(inputs[i].buf);
         uint8_t *frame_start = frame_data;
         for (frame = 0; frame < frame_count; ++frame) {
           // Looking for a visible frame.
           if (frame_data[0] & 0x02) {
             ++frames_found;
-            if (frames_found == remained_spatial_layers)
-              break;
+            if (frames_found == remained_spatial_layers) break;
           }
           frame_data += frame_sizes[frame];
         }
-        ASSERT_LT(frame, frame_count) << "Couldn't find a visible frame. "
+        ASSERT_LT(frame, frame_count)
+            << "Couldn't find a visible frame. "
             << "remained_spatial_layers: " << remained_spatial_layers
             << "    super_frame: " << i;
-        if (frame == frame_count - 1)
-          continue;
+        if (frame == frame_count - 1) continue;
 
         frame_data += frame_sizes[frame];
 
         // We need to add one more frame for multiple frame contexts.
         uint8_t marker =
-            static_cast<const uint8_t*>(inputs[i].buf)[inputs[i].sz - 1];
+            static_cast<const uint8_t *>(inputs[i].buf)[inputs[i].sz - 1];
         const uint32_t mag = ((marker >> 3) & 0x3) + 1;
         const size_t index_sz = 2 + mag * frame_count;
         const size_t new_index_sz = 2 + mag * (frame + 1);
@@ -445,7 +438,7 @@ TEST_F(SvcTest, SetAutoAltRefOption) {
 // Test that decoder can handle an SVC frame as the first frame in a sequence.
 TEST_F(SvcTest, OnePassEncodeOneFrame) {
   codec_enc_.g_pass = VPX_RC_ONE_PASS;
-  vpx_fixed_buf output = {0};
+  vpx_fixed_buf output = vpx_fixed_buf();
   Pass2EncodeNFrames(NULL, 1, 2, &output);
   DecodeNFrames(&output, 1);
   FreeBitstreamBuffers(&output, 1);
@@ -539,8 +532,7 @@ TEST_F(SvcTest, TwoPassEncode2SNRLayers) {
 
   // Second pass encode
   codec_enc_.g_pass = VPX_RC_LAST_PASS;
-  vpx_svc_set_options(&svc_,
-                      "auto-alt-refs=1,1 scale-factors=1/1,1/1");
+  vpx_svc_set_options(&svc_, "auto-alt-refs=1,1 scale-factors=1/1,1/1");
   vpx_fixed_buf outputs[20];
   memset(&outputs[0], 0, sizeof(outputs));
   Pass2EncodeNFrames(&stats_buf, 20, 2, &outputs[0]);
@@ -556,8 +548,7 @@ TEST_F(SvcTest, TwoPassEncode3SNRLayersDecode321Layers) {
 
   // Second pass encode
   codec_enc_.g_pass = VPX_RC_LAST_PASS;
-  vpx_svc_set_options(&svc_,
-                      "auto-alt-refs=1,1,1 scale-factors=1/1,1/1,1/1");
+  vpx_svc_set_options(&svc_, "auto-alt-refs=1,1,1 scale-factors=1/1,1/1,1/1");
   vpx_fixed_buf outputs[20];
   memset(&outputs[0], 0, sizeof(outputs));
   Pass2EncodeNFrames(&stats_buf, 20, 3, &outputs[0]);
@@ -572,8 +563,7 @@ TEST_F(SvcTest, TwoPassEncode3SNRLayersDecode321Layers) {
 
 TEST_F(SvcTest, SetMultipleFrameContextsOption) {
   svc_.spatial_layers = 5;
-  vpx_codec_err_t res =
-      vpx_svc_set_options(&svc_, "multi-frame-contexts=1");
+  vpx_codec_err_t res = vpx_svc_set_options(&svc_, "multi-frame-contexts=1");
   EXPECT_EQ(VPX_CODEC_OK, res);
   res = vpx_svc_init(&svc_, &codec_, vpx_codec_vp9_cx(), &codec_enc_);
   EXPECT_EQ(VPX_CODEC_INVALID_PARAM, res);
@@ -626,7 +616,8 @@ TEST_F(SvcTest, TwoPassEncode2SNRLayersWithMultipleFrameContexts) {
   // Second pass encode
   codec_enc_.g_pass = VPX_RC_LAST_PASS;
   codec_enc_.g_error_resilient = 0;
-  vpx_svc_set_options(&svc_, "auto-alt-refs=1,1 scale-factors=1/1,1/1 "
+  vpx_svc_set_options(&svc_,
+                      "auto-alt-refs=1,1 scale-factors=1/1,1/1 "
                       "multi-frame-contexts=1");
   vpx_fixed_buf outputs[10];
   memset(&outputs[0], 0, sizeof(outputs));
@@ -645,7 +636,8 @@ TEST_F(SvcTest,
   // Second pass encode
   codec_enc_.g_pass = VPX_RC_LAST_PASS;
   codec_enc_.g_error_resilient = 0;
-  vpx_svc_set_options(&svc_, "auto-alt-refs=1,1,1 scale-factors=1/1,1/1,1/1 "
+  vpx_svc_set_options(&svc_,
+                      "auto-alt-refs=1,1,1 scale-factors=1/1,1/1,1/1 "
                       "multi-frame-contexts=1");
   vpx_fixed_buf outputs[10];
   memset(&outputs[0], 0, sizeof(outputs));
@@ -689,7 +681,8 @@ TEST_F(SvcTest, TwoPassEncode2TemporalLayersWithMultipleFrameContexts) {
   codec_enc_.g_pass = VPX_RC_LAST_PASS;
   svc_.temporal_layers = 2;
   codec_enc_.g_error_resilient = 0;
-  vpx_svc_set_options(&svc_, "auto-alt-refs=1 scale-factors=1/1 "
+  vpx_svc_set_options(&svc_,
+                      "auto-alt-refs=1 scale-factors=1/1 "
                       "multi-frame-contexts=1");
   vpx_fixed_buf outputs[10];
   memset(&outputs[0], 0, sizeof(outputs));
@@ -714,8 +707,7 @@ TEST_F(SvcTest, TwoPassEncode2TemporalLayersDecodeBaseLayer) {
   Pass2EncodeNFrames(&stats_buf, 10, 1, &outputs[0]);
 
   vpx_fixed_buf base_layer[5];
-  for (int i = 0; i < 5; ++i)
-    base_layer[i] = outputs[i * 2];
+  for (int i = 0; i < 5; ++i) base_layer[i] = outputs[i * 2];
 
   DecodeNFrames(&base_layer[0], 5);
   FreeBitstreamBuffers(&outputs[0], 10);
@@ -733,15 +725,15 @@ TEST_F(SvcTest,
   codec_enc_.g_pass = VPX_RC_LAST_PASS;
   svc_.temporal_layers = 2;
   codec_enc_.g_error_resilient = 0;
-  vpx_svc_set_options(&svc_, "auto-alt-refs=1 scale-factors=1/1 "
+  vpx_svc_set_options(&svc_,
+                      "auto-alt-refs=1 scale-factors=1/1 "
                       "multi-frame-contexts=1");
   vpx_fixed_buf outputs[10];
   memset(&outputs[0], 0, sizeof(outputs));
   Pass2EncodeNFrames(&stats_buf, 10, 1, &outputs[0]);
 
   vpx_fixed_buf base_layer[5];
-  for (int i = 0; i < 5; ++i)
-    base_layer[i] = outputs[i * 2];
+  for (int i = 0; i < 5; ++i) base_layer[i] = outputs[i * 2];
 
   DecodeNFrames(&base_layer[0], 5);
   FreeBitstreamBuffers(&outputs[0], 10);
@@ -769,8 +761,7 @@ TEST_F(SvcTest, TwoPassEncode2TemporalLayersWithTiles) {
   FreeBitstreamBuffers(&outputs[0], 10);
 }
 
-TEST_F(SvcTest,
-       TwoPassEncode2TemporalLayersWithMultipleFrameContextsAndTiles) {
+TEST_F(SvcTest, TwoPassEncode2TemporalLayersWithMultipleFrameContextsAndTiles) {
   // First pass encode
   std::string stats_buf;
   vpx_svc_set_options(&svc_, "scale-factors=1/1");
@@ -785,7 +776,8 @@ TEST_F(SvcTest,
   codec_enc_.g_h = 144;
   tile_columns_ = 1;
   tile_rows_ = 1;
-  vpx_svc_set_options(&svc_, "auto-alt-refs=1 scale-factors=1/1 "
+  vpx_svc_set_options(&svc_,
+                      "auto-alt-refs=1 scale-factors=1/1 "
                       "multi-frame-contexts=1");
   vpx_fixed_buf outputs[10];
   memset(&outputs[0], 0, sizeof(outputs));

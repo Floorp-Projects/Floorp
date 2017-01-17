@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 #ifndef VP9_DECODER_VP9_DSUBEXP_H_
 #define VP9_DECODER_VP9_DSUBEXP_H_
 
@@ -18,7 +17,7 @@
 extern "C" {
 #endif
 
-void vp9_diff_update_prob(vpx_reader *r, vpx_prob* p);
+void vp9_diff_update_prob(vpx_reader *r, vpx_prob *p);
 
 #ifdef __cplusplus
 }  // extern "C"

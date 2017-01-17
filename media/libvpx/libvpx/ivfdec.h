@@ -18,11 +18,11 @@ extern "C" {
 
 int file_is_ivf(struct VpxInputContext *input);
 
-int ivf_read_frame(FILE *infile, uint8_t **buffer,
-                   size_t *bytes_read, size_t *buffer_size);
+int ivf_read_frame(FILE *infile, uint8_t **buffer, size_t *bytes_read,
+                   size_t *buffer_size);
 
 #ifdef __cplusplus
-}  /* extern "C" */
+} /* extern "C" */
 #endif
 
 #endif  // IVFDEC_H_

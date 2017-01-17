@@ -14,29 +14,23 @@
 #include "vpx_dsp/variance.h"
 
 static const uint8_t bilinear_filters_msa[8][2] = {
-  { 128,   0, },
-  { 112,  16, },
-  {  96,  32, },
-  {  80,  48, },
-  {  64,  64, },
-  {  48,  80, },
-  {  32,  96, },
-  {  16, 112, },
+  { 128, 0 }, { 112, 16 }, { 96, 32 }, { 80, 48 },
+  { 64, 64 }, { 48, 80 },  { 32, 96 }, { 16, 112 },
 };
 
-#define CALC_MSE_AVG_B(src, ref, var, sub) {                       \
-  v16u8 src_l0_m, src_l1_m;                                        \
-  v8i16 res_l0_m, res_l1_m;                                        \
-                                                                   \
-  ILVRL_B2_UB(src, ref, src_l0_m, src_l1_m);                       \
-  HSUB_UB2_SH(src_l0_m, src_l1_m, res_l0_m, res_l1_m);             \
-  DPADD_SH2_SW(res_l0_m, res_l1_m, res_l0_m, res_l1_m, var, var);  \
-                                                                   \
-  sub += res_l0_m + res_l1_m;                                      \
-}
+#define CALC_MSE_AVG_B(src, ref, var, sub)                          \
+  {                                                                 \
+    v16u8 src_l0_m, src_l1_m;                                       \
+    v8i16 res_l0_m, res_l1_m;                                       \
+                                                                    \
+    ILVRL_B2_UB(src, ref, src_l0_m, src_l1_m);                      \
+    HSUB_UB2_SH(src_l0_m, src_l1_m, res_l0_m, res_l1_m);            \
+    DPADD_SH2_SW(res_l0_m, res_l1_m, res_l0_m, res_l1_m, var, var); \
+                                                                    \
+    sub += res_l0_m + res_l1_m;                                     \
+  }
 
-#define VARIANCE_WxH(sse, diff, shift) \
-  sse - (((uint32_t)diff * diff) >> shift)
+#define VARIANCE_WxH(sse, diff, shift) sse - (((uint32_t)diff * diff) >> shift)
 
 #define VARIANCE_LARGE_WxH(sse, diff, shift) \
   sse - (((int64_t)diff * diff) >> shift)
@@ -45,8 +39,7 @@ static uint32_t avg_sse_diff_4width_msa(const uint8_t *src_ptr,
                                         int32_t src_stride,
                                         const uint8_t *ref_ptr,
                                         int32_t ref_stride,
-                                        const uint8_t *sec_pred,
-                                        int32_t height,
+                                        const uint8_t *sec_pred, int32_t height,
                                         int32_t *diff) {
   int32_t ht_cnt;
   uint32_t src0, src1, src2, src3;
@@ -81,8 +74,7 @@ static uint32_t avg_sse_diff_8width_msa(const uint8_t *src_ptr,
                                         int32_t src_stride,
                                         const uint8_t *ref_ptr,
                                         int32_t ref_stride,
-                                        const uint8_t *sec_pred,
-                                        int32_t height,
+                                        const uint8_t *sec_pred, int32_t height,
                                         int32_t *diff) {
   int32_t ht_cnt;
   v16u8 src0, src1, src2, src3;
@@ -99,8 +91,8 @@ static uint32_t avg_sse_diff_8width_msa(const uint8_t *src_ptr,
     LD_UB4(ref_ptr, ref_stride, ref0, ref1, ref2, ref3);
     ref_ptr += (4 * ref_stride);
 
-    PCKEV_D4_UB(src1, src0, src3, src2, ref1, ref0, ref3, ref2,
-                src0, src1, ref0, ref1);
+    PCKEV_D4_UB(src1, src0, src3, src2, ref1, ref0, ref3, ref2, src0, src1,
+                ref0, ref1);
     AVER_UB2_UB(src0, pred0, src1, pred1, src0, src1);
     CALC_MSE_AVG_B(src0, ref0, var, avg);
     CALC_MSE_AVG_B(src1, ref1, var, avg);
@@ -117,8 +109,7 @@ static uint32_t avg_sse_diff_16width_msa(const uint8_t *src_ptr,
                                          const uint8_t *ref_ptr,
                                          int32_t ref_stride,
                                          const uint8_t *sec_pred,
-                                         int32_t height,
-                                         int32_t *diff) {
+                                         int32_t height, int32_t *diff) {
   int32_t ht_cnt;
   v16u8 src, ref, pred;
   v8i16 avg = { 0 };
@@ -173,8 +164,7 @@ static uint32_t avg_sse_diff_32width_msa(const uint8_t *src_ptr,
                                          const uint8_t *ref_ptr,
                                          int32_t ref_stride,
                                          const uint8_t *sec_pred,
-                                         int32_t height,
-                                         int32_t *diff) {
+                                         int32_t height, int32_t *diff) {
   int32_t ht_cnt;
   v16u8 src0, src1, ref0, ref1, pred0, pred1;
   v8i16 avg = { 0 };
@@ -232,8 +222,7 @@ static uint32_t avg_sse_diff_32x64_msa(const uint8_t *src_ptr,
                                        int32_t src_stride,
                                        const uint8_t *ref_ptr,
                                        int32_t ref_stride,
-                                       const uint8_t *sec_pred,
-                                       int32_t *diff) {
+                                       const uint8_t *sec_pred, int32_t *diff) {
   int32_t ht_cnt;
   v16u8 src0, src1, ref0, ref1, pred0, pred1;
   v8i16 avg0 = { 0 };
@@ -293,8 +282,7 @@ static uint32_t avg_sse_diff_64x32_msa(const uint8_t *src_ptr,
                                        int32_t src_stride,
                                        const uint8_t *ref_ptr,
                                        int32_t ref_stride,
-                                       const uint8_t *sec_pred,
-                                       int32_t *diff) {
+                                       const uint8_t *sec_pred, int32_t *diff) {
   int32_t ht_cnt;
   v16u8 src0, src1, src2, src3;
   v16u8 ref0, ref1, ref2, ref3;
@@ -310,8 +298,8 @@ static uint32_t avg_sse_diff_64x32_msa(const uint8_t *src_ptr,
     src_ptr += src_stride;
     LD_UB4(ref_ptr, 16, ref0, ref1, ref2, ref3);
     ref_ptr += ref_stride;
-    AVER_UB4_UB(src0, pred0, src1, pred1, src2, pred2, src3, pred3,
-                src0, src1, src2, src3);
+    AVER_UB4_UB(src0, pred0, src1, pred1, src2, pred2, src3, pred3, src0, src1,
+                src2, src3);
     CALC_MSE_AVG_B(src0, ref0, var, avg0);
     CALC_MSE_AVG_B(src2, ref2, var, avg0);
     CALC_MSE_AVG_B(src1, ref1, var, avg1);
@@ -323,8 +311,8 @@ static uint32_t avg_sse_diff_64x32_msa(const uint8_t *src_ptr,
     src_ptr += src_stride;
     LD_UB4(ref_ptr, 16, ref0, ref1, ref2, ref3);
     ref_ptr += ref_stride;
-    AVER_UB4_UB(src0, pred0, src1, pred1, src2, pred2, src3, pred3,
-                src0, src1, src2, src3);
+    AVER_UB4_UB(src0, pred0, src1, pred1, src2, pred2, src3, pred3, src0, src1,
+                src2, src3);
     CALC_MSE_AVG_B(src0, ref0, var, avg0);
     CALC_MSE_AVG_B(src2, ref2, var, avg0);
     CALC_MSE_AVG_B(src1, ref1, var, avg1);
@@ -343,8 +331,7 @@ static uint32_t avg_sse_diff_64x64_msa(const uint8_t *src_ptr,
                                        int32_t src_stride,
                                        const uint8_t *ref_ptr,
                                        int32_t ref_stride,
-                                       const uint8_t *sec_pred,
-                                       int32_t *diff) {
+                                       const uint8_t *sec_pred, int32_t *diff) {
   int32_t ht_cnt;
   v16u8 src0, src1, src2, src3;
   v16u8 ref0, ref1, ref2, ref3;
@@ -362,8 +349,8 @@ static uint32_t avg_sse_diff_64x64_msa(const uint8_t *src_ptr,
     src_ptr += src_stride;
     LD_UB4(ref_ptr, 16, ref0, ref1, ref2, ref3);
     ref_ptr += ref_stride;
-    AVER_UB4_UB(src0, pred0, src1, pred1, src2, pred2, src3, pred3,
-                src0, src1, src2, src3);
+    AVER_UB4_UB(src0, pred0, src1, pred1, src2, pred2, src3, pred3, src0, src1,
+                src2, src3);
     CALC_MSE_AVG_B(src0, ref0, var, avg0);
     CALC_MSE_AVG_B(src1, ref1, var, avg1);
     CALC_MSE_AVG_B(src2, ref2, var, avg2);
@@ -375,8 +362,8 @@ static uint32_t avg_sse_diff_64x64_msa(const uint8_t *src_ptr,
     src_ptr += src_stride;
     LD_UB4(ref_ptr, 16, ref0, ref1, ref2, ref3);
     ref_ptr += ref_stride;
-    AVER_UB4_UB(src0, pred0, src1, pred1, src2, pred2, src3, pred3,
-                src0, src1, src2, src3);
+    AVER_UB4_UB(src0, pred0, src1, pred1, src2, pred2, src3, pred3, src0, src1,
+                src2, src3);
     CALC_MSE_AVG_B(src0, ref0, var, avg0);
     CALC_MSE_AVG_B(src1, ref1, var, avg1);
     CALC_MSE_AVG_B(src2, ref2, var, avg2);
@@ -392,13 +379,9 @@ static uint32_t avg_sse_diff_64x64_msa(const uint8_t *src_ptr,
   return HADD_SW_S32(var);
 }
 
-static uint32_t sub_pixel_sse_diff_4width_h_msa(const uint8_t *src,
-                                                int32_t src_stride,
-                                                const uint8_t *dst,
-                                                int32_t dst_stride,
-                                                const uint8_t *filter,
-                                                int32_t height,
-                                                int32_t *diff) {
+static uint32_t sub_pixel_sse_diff_4width_h_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *filter, int32_t height, int32_t *diff) {
   int16_t filtval;
   uint32_t loop_cnt;
   uint32_t ref0, ref1, ref2, ref3;
@@ -420,11 +403,11 @@ static uint32_t sub_pixel_sse_diff_4width_h_msa(const uint8_t *src,
     INSERT_W4_UB(ref0, ref1, ref2, ref3, ref);
     VSHF_B2_UH(src0, src0, src1, src1, mask, mask, vec0, vec1);
     VSHF_B2_UH(src2, src2, src3, src3, mask, mask, vec2, vec3);
-    DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt0, filt0, filt0, filt0,
-                vec0, vec1, vec2, vec3);
+    DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt0, filt0, filt0, filt0, vec0, vec1,
+                vec2, vec3);
     SRARI_H4_UH(vec0, vec1, vec2, vec3, FILTER_BITS);
-    PCKEV_B4_SB(vec0, vec0, vec1, vec1, vec2, vec2, vec3, vec3,
-                src0, src1, src2, src3);
+    PCKEV_B4_SB(vec0, vec0, vec1, vec1, vec2, vec2, vec3, vec3, src0, src1,
+                src2, src3);
     ILVEV_W2_SB(src0, src1, src2, src3, src0, src2);
     src0 = (v16i8)__msa_ilvev_d((v2i64)src2, (v2i64)src0);
     CALC_MSE_AVG_B(src0, ref, var, avg);
@@ -436,13 +419,9 @@ static uint32_t sub_pixel_sse_diff_4width_h_msa(const uint8_t *src,
   return HADD_SW_S32(var);
 }
 
-static uint32_t sub_pixel_sse_diff_8width_h_msa(const uint8_t *src,
-                                                int32_t src_stride,
-                                                const uint8_t *dst,
-                                                int32_t dst_stride,
-                                                const uint8_t *filter,
-                                                int32_t height,
-                                                int32_t *diff) {
+static uint32_t sub_pixel_sse_diff_8width_h_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *filter, int32_t height, int32_t *diff) {
   int16_t filtval;
   uint32_t loop_cnt;
   v16u8 filt0, out, ref0, ref1, ref2, ref3;
@@ -464,11 +443,11 @@ static uint32_t sub_pixel_sse_diff_8width_h_msa(const uint8_t *src,
     PCKEV_D2_UB(ref1, ref0, ref3, ref2, ref0, ref1);
     VSHF_B2_UH(src0, src0, src1, src1, mask, mask, vec0, vec1);
     VSHF_B2_UH(src2, src2, src3, src3, mask, mask, vec2, vec3);
-    DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt0, filt0, filt0, filt0,
-                vec0, vec1, vec2, vec3);
+    DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt0, filt0, filt0, filt0, vec0, vec1,
+                vec2, vec3);
     SRARI_H4_UH(vec0, vec1, vec2, vec3, FILTER_BITS);
-    PCKEV_B4_SB(vec0, vec0, vec1, vec1, vec2, vec2, vec3, vec3,
-                src0, src1, src2, src3);
+    PCKEV_B4_SB(vec0, vec0, vec1, vec1, vec2, vec2, vec3, vec3, src0, src1,
+                src2, src3);
     out = (v16u8)__msa_ilvev_d((v2i64)src1, (v2i64)src0);
     CALC_MSE_AVG_B(out, ref0, var, avg);
     out = (v16u8)__msa_ilvev_d((v2i64)src3, (v2i64)src2);
@@ -481,13 +460,9 @@ static uint32_t sub_pixel_sse_diff_8width_h_msa(const uint8_t *src,
   return HADD_SW_S32(var);
 }
 
-static uint32_t sub_pixel_sse_diff_16width_h_msa(const uint8_t *src,
-                                                 int32_t src_stride,
-                                                 const uint8_t *dst,
-                                                 int32_t dst_stride,
-                                                 const uint8_t *filter,
-                                                 int32_t height,
-                                                 int32_t *diff) {
+static uint32_t sub_pixel_sse_diff_16width_h_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *filter, int32_t height, int32_t *diff) {
   int16_t filtval;
   uint32_t loop_cnt;
   v16i8 src0, src1, src2, src3, src4, src5, src6, src7;
@@ -512,14 +487,14 @@ static uint32_t sub_pixel_sse_diff_16width_h_msa(const uint8_t *src,
     VSHF_B2_UH(src2, src2, src3, src3, mask, mask, vec2, vec3);
     VSHF_B2_UH(src4, src4, src5, src5, mask, mask, vec4, vec5);
     VSHF_B2_UH(src6, src6, src7, src7, mask, mask, vec6, vec7);
-    DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt0, filt0, filt0, filt0,
-                out0, out1, out2, out3);
-    DOTP_UB4_UH(vec4, vec5, vec6, vec7, filt0, filt0, filt0, filt0,
-                out4, out5, out6, out7);
+    DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt0, filt0, filt0, filt0, out0, out1,
+                out2, out3);
+    DOTP_UB4_UH(vec4, vec5, vec6, vec7, filt0, filt0, filt0, filt0, out4, out5,
+                out6, out7);
     SRARI_H4_UH(out0, out1, out2, out3, FILTER_BITS);
     SRARI_H4_UH(out4, out5, out6, out7, FILTER_BITS);
-    PCKEV_B4_SB(out1, out0, out3, out2, out5, out4, out7, out6,
-                src0, src1, src2, src3);
+    PCKEV_B4_SB(out1, out0, out3, out2, out5, out4, out7, out6, src0, src1,
+                src2, src3);
     CALC_MSE_AVG_B(src0, dst0, var, avg);
     CALC_MSE_AVG_B(src1, dst1, var, avg);
     CALC_MSE_AVG_B(src2, dst2, var, avg);
@@ -532,13 +507,9 @@ static uint32_t sub_pixel_sse_diff_16width_h_msa(const uint8_t *src,
   return HADD_SW_S32(var);
 }
 
-static uint32_t sub_pixel_sse_diff_32width_h_msa(const uint8_t *src,
-                                                 int32_t src_stride,
-                                                 const uint8_t *dst,
-                                                 int32_t dst_stride,
-                                                 const uint8_t *filter,
-                                                 int32_t height,
-                                                 int32_t *diff) {
+static uint32_t sub_pixel_sse_diff_32width_h_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *filter, int32_t height, int32_t *diff) {
   uint32_t loop_cnt, sse = 0;
   int32_t diff0[2];
 
@@ -554,13 +525,9 @@ static uint32_t sub_pixel_sse_diff_32width_h_msa(const uint8_t *src,
   return sse;
 }
 
-static uint32_t sub_pixel_sse_diff_64width_h_msa(const uint8_t *src,
-                                                 int32_t src_stride,
-                                                 const uint8_t *dst,
-                                                 int32_t dst_stride,
-                                                 const uint8_t *filter,
-                                                 int32_t height,
-                                                 int32_t *diff) {
+static uint32_t sub_pixel_sse_diff_64width_h_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *filter, int32_t height, int32_t *diff) {
   uint32_t loop_cnt, sse = 0;
   int32_t diff0[4];
 
@@ -576,13 +543,9 @@ static uint32_t sub_pixel_sse_diff_64width_h_msa(const uint8_t *src,
   return sse;
 }
 
-static uint32_t sub_pixel_sse_diff_4width_v_msa(const uint8_t *src,
-                                                int32_t src_stride,
-                                                const uint8_t *dst,
-                                                int32_t dst_stride,
-                                                const uint8_t *filter,
-                                                int32_t height,
-                                                int32_t *diff) {
+static uint32_t sub_pixel_sse_diff_4width_v_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *filter, int32_t height, int32_t *diff) {
   int16_t filtval;
   uint32_t loop_cnt;
   uint32_t ref0, ref1, ref2, ref3;
@@ -608,8 +571,8 @@ static uint32_t sub_pixel_sse_diff_4width_v_msa(const uint8_t *src,
     dst += (4 * dst_stride);
 
     INSERT_W4_UB(ref0, ref1, ref2, ref3, ref);
-    ILVR_B4_UB(src1, src0, src2, src1, src3, src2, src4, src3,
-               src10_r, src21_r, src32_r, src43_r);
+    ILVR_B4_UB(src1, src0, src2, src1, src3, src2, src4, src3, src10_r, src21_r,
+               src32_r, src43_r);
     ILVR_D2_UB(src21_r, src10_r, src43_r, src32_r, src2110, src4332);
     DOTP_UB2_UH(src2110, src4332, filt0, filt0, tmp0, tmp1);
     SRARI_H2_UH(tmp0, tmp1, FILTER_BITS);
@@ -624,13 +587,9 @@ static uint32_t sub_pixel_sse_diff_4width_v_msa(const uint8_t *src,
   return HADD_SW_S32(var);
 }
 
-static uint32_t sub_pixel_sse_diff_8width_v_msa(const uint8_t *src,
-                                                int32_t src_stride,
-                                                const uint8_t *dst,
-                                                int32_t dst_stride,
-                                                const uint8_t *filter,
-                                                int32_t height,
-                                                int32_t *diff) {
+static uint32_t sub_pixel_sse_diff_8width_v_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *filter, int32_t height, int32_t *diff) {
   int16_t filtval;
   uint32_t loop_cnt;
   v16u8 src0, src1, src2, src3, src4;
@@ -654,10 +613,10 @@ static uint32_t sub_pixel_sse_diff_8width_v_msa(const uint8_t *src,
     dst += (4 * dst_stride);
 
     PCKEV_D2_UB(ref1, ref0, ref3, ref2, ref0, ref1);
-    ILVR_B4_UH(src1, src0, src2, src1, src3, src2, src4, src3,
-               vec0, vec1, vec2, vec3);
-    DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt0, filt0, filt0, filt0,
-                tmp0, tmp1, tmp2, tmp3);
+    ILVR_B4_UH(src1, src0, src2, src1, src3, src2, src4, src3, vec0, vec1, vec2,
+               vec3);
+    DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt0, filt0, filt0, filt0, tmp0, tmp1,
+                tmp2, tmp3);
     SRARI_H4_UH(tmp0, tmp1, tmp2, tmp3, FILTER_BITS);
     PCKEV_B2_UB(tmp1, tmp0, tmp3, tmp2, src0, src1);
     CALC_MSE_AVG_B(src0, ref0, var, avg);
@@ -671,13 +630,9 @@ static uint32_t sub_pixel_sse_diff_8width_v_msa(const uint8_t *src,
   return HADD_SW_S32(var);
 }
 
-static uint32_t sub_pixel_sse_diff_16width_v_msa(const uint8_t *src,
-                                                 int32_t src_stride,
-                                                 const uint8_t *dst,
-                                                 int32_t dst_stride,
-                                                 const uint8_t *filter,
-                                                 int32_t height,
-                                                 int32_t *diff) {
+static uint32_t sub_pixel_sse_diff_16width_v_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *filter, int32_t height, int32_t *diff) {
   int16_t filtval;
   uint32_t loop_cnt;
   v16u8 ref0, ref1, ref2, ref3;
@@ -734,13 +689,9 @@ static uint32_t sub_pixel_sse_diff_16width_v_msa(const uint8_t *src,
   return HADD_SW_S32(var);
 }
 
-static uint32_t sub_pixel_sse_diff_32width_v_msa(const uint8_t *src,
-                                                 int32_t src_stride,
-                                                 const uint8_t *dst,
-                                                 int32_t dst_stride,
-                                                 const uint8_t *filter,
-                                                 int32_t height,
-                                                 int32_t *diff) {
+static uint32_t sub_pixel_sse_diff_32width_v_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *filter, int32_t height, int32_t *diff) {
   uint32_t loop_cnt, sse = 0;
   int32_t diff0[2];
 
@@ -756,13 +707,9 @@ static uint32_t sub_pixel_sse_diff_32width_v_msa(const uint8_t *src,
   return sse;
 }
 
-static uint32_t sub_pixel_sse_diff_64width_v_msa(const uint8_t *src,
-                                                 int32_t src_stride,
-                                                 const uint8_t *dst,
-                                                 int32_t dst_stride,
-                                                 const uint8_t *filter,
-                                                 int32_t height,
-                                                 int32_t *diff) {
+static uint32_t sub_pixel_sse_diff_64width_v_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *filter, int32_t height, int32_t *diff) {
   uint32_t loop_cnt, sse = 0;
   int32_t diff0[4];
 
@@ -778,14 +725,10 @@ static uint32_t sub_pixel_sse_diff_64width_v_msa(const uint8_t *src,
   return sse;
 }
 
-static uint32_t sub_pixel_sse_diff_4width_hv_msa(const uint8_t *src,
-                                                 int32_t src_stride,
-                                                 const uint8_t *dst,
-                                                 int32_t dst_stride,
-                                                 const uint8_t *filter_horiz,
-                                                 const uint8_t *filter_vert,
-                                                 int32_t height,
-                                                 int32_t *diff) {
+static uint32_t sub_pixel_sse_diff_4width_hv_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *filter_horiz, const uint8_t *filter_vert,
+    int32_t height, int32_t *diff) {
   int16_t filtval;
   uint32_t loop_cnt;
   uint32_t ref0, ref1, ref2, ref3;
@@ -831,14 +774,10 @@ static uint32_t sub_pixel_sse_diff_4width_hv_msa(const uint8_t *src,
   return HADD_SW_S32(var);
 }
 
-static uint32_t sub_pixel_sse_diff_8width_hv_msa(const uint8_t *src,
-                                                 int32_t src_stride,
-                                                 const uint8_t *dst,
-                                                 int32_t dst_stride,
-                                                 const uint8_t *filter_horiz,
-                                                 const uint8_t *filter_vert,
-                                                 int32_t height,
-                                                 int32_t *diff) {
+static uint32_t sub_pixel_sse_diff_8width_hv_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *filter_horiz, const uint8_t *filter_vert,
+    int32_t height, int32_t *diff) {
   int16_t filtval;
   uint32_t loop_cnt;
   v16u8 ref0, ref1, ref2, ref3;
@@ -892,14 +831,10 @@ static uint32_t sub_pixel_sse_diff_8width_hv_msa(const uint8_t *src,
   return HADD_SW_S32(var);
 }
 
-static uint32_t sub_pixel_sse_diff_16width_hv_msa(const uint8_t *src,
-                                                  int32_t src_stride,
-                                                  const uint8_t *dst,
-                                                  int32_t dst_stride,
-                                                  const uint8_t *filter_horiz,
-                                                  const uint8_t *filter_vert,
-                                                  int32_t height,
-                                                  int32_t *diff) {
+static uint32_t sub_pixel_sse_diff_16width_hv_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *filter_horiz, const uint8_t *filter_vert,
+    int32_t height, int32_t *diff) {
   int16_t filtval;
   uint32_t loop_cnt;
   v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
@@ -969,14 +904,10 @@ static uint32_t sub_pixel_sse_diff_16width_hv_msa(const uint8_t *src,
   return HADD_SW_S32(var);
 }
 
-static uint32_t sub_pixel_sse_diff_32width_hv_msa(const uint8_t *src,
-                                                  int32_t src_stride,
-                                                  const uint8_t *dst,
-                                                  int32_t dst_stride,
-                                                  const uint8_t *filter_horiz,
-                                                  const uint8_t *filter_vert,
-                                                  int32_t height,
-                                                  int32_t *diff) {
+static uint32_t sub_pixel_sse_diff_32width_hv_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *filter_horiz, const uint8_t *filter_vert,
+    int32_t height, int32_t *diff) {
   uint32_t loop_cnt, sse = 0;
   int32_t diff0[2];
 
@@ -993,14 +924,10 @@ static uint32_t sub_pixel_sse_diff_32width_hv_msa(const uint8_t *src,
   return sse;
 }
 
-static uint32_t sub_pixel_sse_diff_64width_hv_msa(const uint8_t *src,
-                                                  int32_t src_stride,
-                                                  const uint8_t *dst,
-                                                  int32_t dst_stride,
-                                                  const uint8_t *filter_horiz,
-                                                  const uint8_t *filter_vert,
-                                                  int32_t height,
-                                                  int32_t *diff) {
+static uint32_t sub_pixel_sse_diff_64width_hv_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *filter_horiz, const uint8_t *filter_vert,
+    int32_t height, int32_t *diff) {
   uint32_t loop_cnt, sse = 0;
   int32_t diff0[4];
 
@@ -1017,14 +944,10 @@ static uint32_t sub_pixel_sse_diff_64width_hv_msa(const uint8_t *src,
   return sse;
 }
 
-static uint32_t sub_pixel_avg_sse_diff_4width_h_msa(const uint8_t *src,
-                                                    int32_t src_stride,
-                                                    const uint8_t *dst,
-                                                    int32_t dst_stride,
-                                                    const uint8_t *sec_pred,
-                                                    const uint8_t *filter,
-                                                    int32_t height,
-                                                    int32_t *diff) {
+static uint32_t sub_pixel_avg_sse_diff_4width_h_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *sec_pred, const uint8_t *filter,
+    int32_t height, int32_t *diff) {
   int16_t filtval;
   uint32_t loop_cnt;
   uint32_t ref0, ref1, ref2, ref3;
@@ -1049,11 +972,11 @@ static uint32_t sub_pixel_avg_sse_diff_4width_h_msa(const uint8_t *src,
     INSERT_W4_UB(ref0, ref1, ref2, ref3, ref);
     VSHF_B2_UH(src0, src0, src1, src1, mask, mask, vec0, vec1);
     VSHF_B2_UH(src2, src2, src3, src3, mask, mask, vec2, vec3);
-    DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt0, filt0, filt0, filt0,
-                vec0, vec1, vec2, vec3);
+    DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt0, filt0, filt0, filt0, vec0, vec1,
+                vec2, vec3);
     SRARI_H4_UH(vec0, vec1, vec2, vec3, FILTER_BITS);
-    PCKEV_B4_SB(vec0, vec0, vec1, vec1, vec2, vec2, vec3, vec3,
-                src0, src1, src2, src3);
+    PCKEV_B4_SB(vec0, vec0, vec1, vec1, vec2, vec2, vec3, vec3, src0, src1,
+                src2, src3);
     ILVEV_W2_SB(src0, src1, src2, src3, src0, src2);
     out = (v16u8)__msa_ilvev_d((v2i64)src2, (v2i64)src0);
     out = __msa_aver_u_b(out, pred);
@@ -1066,14 +989,10 @@ static uint32_t sub_pixel_avg_sse_diff_4width_h_msa(const uint8_t *src,
   return HADD_SW_S32(var);
 }
 
-static uint32_t sub_pixel_avg_sse_diff_8width_h_msa(const uint8_t *src,
-                                                    int32_t src_stride,
-                                                    const uint8_t *dst,
-                                                    int32_t dst_stride,
-                                                    const uint8_t *sec_pred,
-                                                    const uint8_t *filter,
-                                                    int32_t height,
-                                                    int32_t *diff) {
+static uint32_t sub_pixel_avg_sse_diff_8width_h_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *sec_pred, const uint8_t *filter,
+    int32_t height, int32_t *diff) {
   int16_t filtval;
   uint32_t loop_cnt;
   v16u8 out, pred, filt0;
@@ -1096,11 +1015,11 @@ static uint32_t sub_pixel_avg_sse_diff_8width_h_msa(const uint8_t *src,
     PCKEV_D2_UB(ref1, ref0, ref3, ref2, ref0, ref1);
     VSHF_B2_UH(src0, src0, src1, src1, mask, mask, vec0, vec1);
     VSHF_B2_UH(src2, src2, src3, src3, mask, mask, vec2, vec3);
-    DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt0, filt0, filt0, filt0,
-                vec0, vec1, vec2, vec3);
+    DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt0, filt0, filt0, filt0, vec0, vec1,
+                vec2, vec3);
     SRARI_H4_UH(vec0, vec1, vec2, vec3, FILTER_BITS);
-    PCKEV_B4_SB(vec0, vec0, vec1, vec1, vec2, vec2, vec3, vec3,
-                src0, src1, src2, src3);
+    PCKEV_B4_SB(vec0, vec0, vec1, vec1, vec2, vec2, vec3, vec3, src0, src1,
+                src2, src3);
     out = (v16u8)__msa_ilvev_d((v2i64)src1, (v2i64)src0);
 
     pred = LD_UB(sec_pred);
@@ -1120,15 +1039,10 @@ static uint32_t sub_pixel_avg_sse_diff_8width_h_msa(const uint8_t *src,
   return HADD_SW_S32(var);
 }
 
-static uint32_t subpel_avg_ssediff_16w_h_msa(const uint8_t *src,
-                                             int32_t src_stride,
-                                             const uint8_t *dst,
-                                             int32_t dst_stride,
-                                             const uint8_t *sec_pred,
-                                             const uint8_t *filter,
-                                             int32_t height,
-                                             int32_t *diff,
-                                             int32_t width) {
+static uint32_t subpel_avg_ssediff_16w_h_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *sec_pred, const uint8_t *filter,
+    int32_t height, int32_t *diff, int32_t width) {
   int16_t filtval;
   uint32_t loop_cnt;
   v16i8 src0, src1, src2, src3, src4, src5, src6, src7;
@@ -1157,16 +1071,16 @@ static uint32_t subpel_avg_ssediff_16w_h_msa(const uint8_t *src,
     VSHF_B2_UH(src2, src2, src3, src3, mask, mask, vec2, vec3);
     VSHF_B2_UH(src4, src4, src5, src5, mask, mask, vec4, vec5);
     VSHF_B2_UH(src6, src6, src7, src7, mask, mask, vec6, vec7);
-    DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt0, filt0, filt0, filt0,
-                out0, out1, out2, out3);
-    DOTP_UB4_UH(vec4, vec5, vec6, vec7, filt0, filt0, filt0, filt0,
-                out4, out5, out6, out7);
+    DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt0, filt0, filt0, filt0, out0, out1,
+                out2, out3);
+    DOTP_UB4_UH(vec4, vec5, vec6, vec7, filt0, filt0, filt0, filt0, out4, out5,
+                out6, out7);
     SRARI_H4_UH(out0, out1, out2, out3, FILTER_BITS);
     SRARI_H4_UH(out4, out5, out6, out7, FILTER_BITS);
-    PCKEV_B4_UB(out1, out0, out3, out2, out5, out4, out7, out6,
-                tmp0, tmp1, tmp2, tmp3);
-    AVER_UB4_UB(tmp0, pred0, tmp1, pred1, tmp2, pred2, tmp3, pred3,
-                tmp0, tmp1, tmp2, tmp3);
+    PCKEV_B4_UB(out1, out0, out3, out2, out5, out4, out7, out6, tmp0, tmp1,
+                tmp2, tmp3);
+    AVER_UB4_UB(tmp0, pred0, tmp1, pred1, tmp2, pred2, tmp3, pred3, tmp0, tmp1,
+                tmp2, tmp3);
 
     CALC_MSE_AVG_B(tmp0, dst0, var, avg);
     CALC_MSE_AVG_B(tmp1, dst1, var, avg);
@@ -1180,33 +1094,25 @@ static uint32_t subpel_avg_ssediff_16w_h_msa(const uint8_t *src,
   return HADD_SW_S32(var);
 }
 
-static uint32_t sub_pixel_avg_sse_diff_16width_h_msa(const uint8_t *src,
-                                                     int32_t src_stride,
-                                                     const uint8_t *dst,
-                                                     int32_t dst_stride,
-                                                     const uint8_t *sec_pred,
-                                                     const uint8_t *filter,
-                                                     int32_t height,
-                                                     int32_t *diff) {
+static uint32_t sub_pixel_avg_sse_diff_16width_h_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *sec_pred, const uint8_t *filter,
+    int32_t height, int32_t *diff) {
   return subpel_avg_ssediff_16w_h_msa(src, src_stride, dst, dst_stride,
                                       sec_pred, filter, height, diff, 16);
 }
 
-static uint32_t sub_pixel_avg_sse_diff_32width_h_msa(const uint8_t *src,
-                                                     int32_t src_stride,
-                                                     const uint8_t *dst,
-                                                     int32_t dst_stride,
-                                                     const uint8_t *sec_pred,
-                                                     const uint8_t *filter,
-                                                     int32_t height,
-                                                     int32_t *diff) {
+static uint32_t sub_pixel_avg_sse_diff_32width_h_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *sec_pred, const uint8_t *filter,
+    int32_t height, int32_t *diff) {
   uint32_t loop_cnt, sse = 0;
   int32_t diff0[2];
 
   for (loop_cnt = 0; loop_cnt < 2; ++loop_cnt) {
-    sse += subpel_avg_ssediff_16w_h_msa(src, src_stride, dst, dst_stride,
-                                        sec_pred, filter, height,
-                                        &diff0[loop_cnt], 32);
+    sse +=
+        subpel_avg_ssediff_16w_h_msa(src, src_stride, dst, dst_stride, sec_pred,
+                                     filter, height, &diff0[loop_cnt], 32);
     src += 16;
     dst += 16;
     sec_pred += 16;
@@ -1217,21 +1123,17 @@ static uint32_t sub_pixel_avg_sse_diff_32width_h_msa(const uint8_t *src,
   return sse;
 }
 
-static uint32_t sub_pixel_avg_sse_diff_64width_h_msa(const uint8_t *src,
-                                                     int32_t src_stride,
-                                                     const uint8_t *dst,
-                                                     int32_t dst_stride,
-                                                     const uint8_t *sec_pred,
-                                                     const uint8_t *filter,
-                                                     int32_t height,
-                                                     int32_t *diff) {
+static uint32_t sub_pixel_avg_sse_diff_64width_h_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *sec_pred, const uint8_t *filter,
+    int32_t height, int32_t *diff) {
   uint32_t loop_cnt, sse = 0;
   int32_t diff0[4];
 
   for (loop_cnt = 0; loop_cnt < 4; ++loop_cnt) {
-    sse += subpel_avg_ssediff_16w_h_msa(src, src_stride, dst, dst_stride,
-                                        sec_pred, filter, height,
-                                        &diff0[loop_cnt], 64);
+    sse +=
+        subpel_avg_ssediff_16w_h_msa(src, src_stride, dst, dst_stride, sec_pred,
+                                     filter, height, &diff0[loop_cnt], 64);
     src += 16;
     dst += 16;
     sec_pred += 16;
@@ -1242,14 +1144,10 @@ static uint32_t sub_pixel_avg_sse_diff_64width_h_msa(const uint8_t *src,
   return sse;
 }
 
-static uint32_t sub_pixel_avg_sse_diff_4width_v_msa(const uint8_t *src,
-                                                    int32_t src_stride,
-                                                    const uint8_t *dst,
-                                                    int32_t dst_stride,
-                                                    const uint8_t *sec_pred,
-                                                    const uint8_t *filter,
-                                                    int32_t height,
-                                                    int32_t *diff) {
+static uint32_t sub_pixel_avg_sse_diff_4width_v_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *sec_pred, const uint8_t *filter,
+    int32_t height, int32_t *diff) {
   int16_t filtval;
   uint32_t loop_cnt;
   uint32_t ref0, ref1, ref2, ref3;
@@ -1276,8 +1174,8 @@ static uint32_t sub_pixel_avg_sse_diff_4width_v_msa(const uint8_t *src,
     dst += (4 * dst_stride);
 
     INSERT_W4_UB(ref0, ref1, ref2, ref3, ref);
-    ILVR_B4_UB(src1, src0, src2, src1, src3, src2, src4, src3,
-               src10_r, src21_r, src32_r, src43_r);
+    ILVR_B4_UB(src1, src0, src2, src1, src3, src2, src4, src3, src10_r, src21_r,
+               src32_r, src43_r);
     ILVR_D2_UB(src21_r, src10_r, src43_r, src32_r, src2110, src4332);
     DOTP_UB2_UH(src2110, src4332, filt0, filt0, tmp0, tmp1);
     SRARI_H2_UH(tmp0, tmp1, FILTER_BITS);
@@ -1294,14 +1192,10 @@ static uint32_t sub_pixel_avg_sse_diff_4width_v_msa(const uint8_t *src,
   return HADD_SW_S32(var);
 }
 
-static uint32_t sub_pixel_avg_sse_diff_8width_v_msa(const uint8_t *src,
-                                                    int32_t src_stride,
-                                                    const uint8_t *dst,
-                                                    int32_t dst_stride,
-                                                    const uint8_t *sec_pred,
-                                                    const uint8_t *filter,
-                                                    int32_t height,
-                                                    int32_t *diff) {
+static uint32_t sub_pixel_avg_sse_diff_8width_v_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *sec_pred, const uint8_t *filter,
+    int32_t height, int32_t *diff) {
   int16_t filtval;
   uint32_t loop_cnt;
   v16u8 src0, src1, src2, src3, src4;
@@ -1326,10 +1220,10 @@ static uint32_t sub_pixel_avg_sse_diff_8width_v_msa(const uint8_t *src,
     LD_UB4(dst, dst_stride, ref0, ref1, ref2, ref3);
     dst += (4 * dst_stride);
     PCKEV_D2_UB(ref1, ref0, ref3, ref2, ref0, ref1);
-    ILVR_B4_UH(src1, src0, src2, src1, src3, src2, src4, src3,
-               vec0, vec1, vec2, vec3);
-    DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt0, filt0, filt0, filt0,
-                tmp0, tmp1, tmp2, tmp3);
+    ILVR_B4_UH(src1, src0, src2, src1, src3, src2, src4, src3, vec0, vec1, vec2,
+               vec3);
+    DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt0, filt0, filt0, filt0, tmp0, tmp1,
+                tmp2, tmp3);
     SRARI_H4_UH(tmp0, tmp1, tmp2, tmp3, FILTER_BITS);
     PCKEV_B2_UB(tmp1, tmp0, tmp3, tmp2, src0, src1);
     AVER_UB2_UB(src0, pred0, src1, pred1, src0, src1);
@@ -1345,15 +1239,10 @@ static uint32_t sub_pixel_avg_sse_diff_8width_v_msa(const uint8_t *src,
   return HADD_SW_S32(var);
 }
 
-static uint32_t subpel_avg_ssediff_16w_v_msa(const uint8_t *src,
-                                             int32_t src_stride,
-                                             const uint8_t *dst,
-                                             int32_t dst_stride,
-                                             const uint8_t *sec_pred,
-                                             const uint8_t *filter,
-                                             int32_t height,
-                                             int32_t *diff,
-                                             int32_t width) {
+static uint32_t subpel_avg_ssediff_16w_v_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *sec_pred, const uint8_t *filter,
+    int32_t height, int32_t *diff, int32_t width) {
   int16_t filtval;
   uint32_t loop_cnt;
   v16u8 ref0, ref1, ref2, ref3;
@@ -1401,8 +1290,8 @@ static uint32_t subpel_avg_ssediff_16w_v_msa(const uint8_t *src,
     LD_UB4(dst, dst_stride, ref0, ref1, ref2, ref3);
     dst += (4 * dst_stride);
 
-    AVER_UB4_UB(out0, pred0, out1, pred1, out2, pred2, out3, pred3,
-                out0, out1, out2, out3);
+    AVER_UB4_UB(out0, pred0, out1, pred1, out2, pred2, out3, pred3, out0, out1,
+                out2, out3);
 
     CALC_MSE_AVG_B(out0, ref0, var, avg);
     CALC_MSE_AVG_B(out1, ref1, var, avg);
@@ -1416,33 +1305,25 @@ static uint32_t subpel_avg_ssediff_16w_v_msa(const uint8_t *src,
   return HADD_SW_S32(var);
 }
 
-static uint32_t sub_pixel_avg_sse_diff_16width_v_msa(const uint8_t *src,
-                                                     int32_t src_stride,
-                                                     const uint8_t *dst,
-                                                     int32_t dst_stride,
-                                                     const uint8_t *sec_pred,
-                                                     const uint8_t *filter,
-                                                     int32_t height,
-                                                     int32_t *diff) {
+static uint32_t sub_pixel_avg_sse_diff_16width_v_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *sec_pred, const uint8_t *filter,
+    int32_t height, int32_t *diff) {
   return subpel_avg_ssediff_16w_v_msa(src, src_stride, dst, dst_stride,
                                       sec_pred, filter, height, diff, 16);
 }
 
-static uint32_t sub_pixel_avg_sse_diff_32width_v_msa(const uint8_t *src,
-                                                     int32_t src_stride,
-                                                     const uint8_t *dst,
-                                                     int32_t dst_stride,
-                                                     const uint8_t *sec_pred,
-                                                     const uint8_t *filter,
-                                                     int32_t height,
-                                                     int32_t *diff) {
+static uint32_t sub_pixel_avg_sse_diff_32width_v_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *sec_pred, const uint8_t *filter,
+    int32_t height, int32_t *diff) {
   uint32_t loop_cnt, sse = 0;
   int32_t diff0[2];
 
   for (loop_cnt = 0; loop_cnt < 2; ++loop_cnt) {
-    sse += subpel_avg_ssediff_16w_v_msa(src, src_stride, dst, dst_stride,
-                                        sec_pred, filter, height,
-                                        &diff0[loop_cnt], 32);
+    sse +=
+        subpel_avg_ssediff_16w_v_msa(src, src_stride, dst, dst_stride, sec_pred,
+                                     filter, height, &diff0[loop_cnt], 32);
     src += 16;
     dst += 16;
     sec_pred += 16;
@@ -1453,21 +1334,17 @@ static uint32_t sub_pixel_avg_sse_diff_32width_v_msa(const uint8_t *src,
   return sse;
 }
 
-static uint32_t sub_pixel_avg_sse_diff_64width_v_msa(const uint8_t *src,
-                                                     int32_t src_stride,
-                                                     const uint8_t *dst,
-                                                     int32_t dst_stride,
-                                                     const uint8_t *sec_pred,
-                                                     const uint8_t *filter,
-                                                     int32_t height,
-                                                     int32_t *diff) {
+static uint32_t sub_pixel_avg_sse_diff_64width_v_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *sec_pred, const uint8_t *filter,
+    int32_t height, int32_t *diff) {
   uint32_t loop_cnt, sse = 0;
   int32_t diff0[4];
 
   for (loop_cnt = 0; loop_cnt < 4; ++loop_cnt) {
-    sse += subpel_avg_ssediff_16w_v_msa(src, src_stride, dst, dst_stride,
-                                        sec_pred, filter, height,
-                                        &diff0[loop_cnt], 64);
+    sse +=
+        subpel_avg_ssediff_16w_v_msa(src, src_stride, dst, dst_stride, sec_pred,
+                                     filter, height, &diff0[loop_cnt], 64);
     src += 16;
     dst += 16;
     sec_pred += 16;
@@ -1479,11 +1356,9 @@ static uint32_t sub_pixel_avg_sse_diff_64width_v_msa(const uint8_t *src,
 }
 
 static uint32_t sub_pixel_avg_sse_diff_4width_hv_msa(
-  const uint8_t *src, int32_t src_stride,
-  const uint8_t *dst, int32_t dst_stride,
-  const uint8_t *sec_pred,
-  const uint8_t *filter_horiz, const uint8_t *filter_vert,
-  int32_t height, int32_t *diff) {
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *sec_pred, const uint8_t *filter_horiz,
+    const uint8_t *filter_vert, int32_t height, int32_t *diff) {
   int16_t filtval;
   uint32_t loop_cnt;
   uint32_t ref0, ref1, ref2, ref3;
@@ -1532,11 +1407,9 @@ static uint32_t sub_pixel_avg_sse_diff_4width_hv_msa(
 }
 
 static uint32_t sub_pixel_avg_sse_diff_8width_hv_msa(
-  const uint8_t *src, int32_t src_stride,
-  const uint8_t *dst, int32_t dst_stride,
-  const uint8_t *sec_pred,
-  const uint8_t *filter_horiz, const uint8_t *filter_vert,
-  int32_t height, int32_t *diff) {
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *sec_pred, const uint8_t *filter_horiz,
+    const uint8_t *filter_vert, int32_t height, int32_t *diff) {
   int16_t filtval;
   uint32_t loop_cnt;
   v16u8 ref0, ref1, ref2, ref3;
@@ -1598,16 +1471,10 @@ static uint32_t sub_pixel_avg_sse_diff_8width_hv_msa(
   return HADD_SW_S32(var);
 }
 
-static uint32_t subpel_avg_ssediff_16w_hv_msa(const uint8_t *src,
-                                              int32_t src_stride,
-                                              const uint8_t *dst,
-                                              int32_t dst_stride,
-                                              const uint8_t *sec_pred,
-                                              const uint8_t *filter_horiz,
-                                              const uint8_t *filter_vert,
-                                              int32_t height,
-                                              int32_t *diff,
-                                              int32_t width) {
+static uint32_t subpel_avg_ssediff_16w_hv_msa(
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *sec_pred, const uint8_t *filter_horiz,
+    const uint8_t *filter_vert, int32_t height, int32_t *diff, int32_t width) {
   int16_t filtval;
   uint32_t loop_cnt;
   v16u8 src0, src1, src2, src3, src4, src5, src6, src7;
@@ -1669,8 +1536,8 @@ static uint32_t subpel_avg_ssediff_16w_hv_msa(const uint8_t *src,
     LD_UB4(dst, dst_stride, ref0, ref1, ref2, ref3);
     dst += (4 * dst_stride);
 
-    AVER_UB4_UB(out0, pred0, out1, pred1, out2, pred2, out3, pred3,
-                out0, out1, out2, out3);
+    AVER_UB4_UB(out0, pred0, out1, pred1, out2, pred2, out3, pred3, out0, out1,
+                out2, out3);
 
     CALC_MSE_AVG_B(out0, ref0, var, avg);
     CALC_MSE_AVG_B(out1, ref1, var, avg);
@@ -1685,22 +1552,18 @@ static uint32_t subpel_avg_ssediff_16w_hv_msa(const uint8_t *src,
 }
 
 static uint32_t sub_pixel_avg_sse_diff_16width_hv_msa(
-  const uint8_t *src, int32_t src_stride,
-  const uint8_t *dst, int32_t dst_stride,
-  const uint8_t *sec_pred,
-  const uint8_t *filter_horiz, const uint8_t *filter_vert,
-  int32_t height, int32_t *diff) {
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *sec_pred, const uint8_t *filter_horiz,
+    const uint8_t *filter_vert, int32_t height, int32_t *diff) {
   return subpel_avg_ssediff_16w_hv_msa(src, src_stride, dst, dst_stride,
                                        sec_pred, filter_horiz, filter_vert,
                                        height, diff, 16);
 }
 
 static uint32_t sub_pixel_avg_sse_diff_32width_hv_msa(
-  const uint8_t *src, int32_t src_stride,
-  const uint8_t *dst, int32_t dst_stride,
-  const uint8_t *sec_pred,
-  const uint8_t *filter_horiz, const uint8_t *filter_vert,
-  int32_t height, int32_t *diff) {
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *sec_pred, const uint8_t *filter_horiz,
+    const uint8_t *filter_vert, int32_t height, int32_t *diff) {
   uint32_t loop_cnt, sse = 0;
   int32_t diff0[2];
 
@@ -1719,11 +1582,9 @@ static uint32_t sub_pixel_avg_sse_diff_32width_hv_msa(
 }
 
 static uint32_t sub_pixel_avg_sse_diff_64width_hv_msa(
-  const uint8_t *src, int32_t src_stride,
-  const uint8_t *dst, int32_t dst_stride,
-  const uint8_t *sec_pred,
-  const uint8_t *filter_horiz, const uint8_t *filter_vert,
-  int32_t height, int32_t *diff) {
+    const uint8_t *src, int32_t src_stride, const uint8_t *dst,
+    int32_t dst_stride, const uint8_t *sec_pred, const uint8_t *filter_horiz,
+    const uint8_t *filter_vert, int32_t height, int32_t *diff) {
   uint32_t loop_cnt, sse = 0;
   int32_t diff0[4];
 
@@ -1756,47 +1617,40 @@ static uint32_t sub_pixel_avg_sse_diff_64width_hv_msa(
 #define VARIANCE_64Wx32H(sse, diff) VARIANCE_LARGE_WxH(sse, diff, 11);
 #define VARIANCE_64Wx64H(sse, diff) VARIANCE_LARGE_WxH(sse, diff, 12);
 
-#define VPX_SUB_PIXEL_VARIANCE_WDXHT_MSA(wd, ht)                         \
-uint32_t vpx_sub_pixel_variance##wd##x##ht##_msa(const uint8_t *src,     \
-                                                 int32_t src_stride,     \
-                                                 int32_t xoffset,        \
-                                                 int32_t yoffset,        \
-                                                 const uint8_t *ref,     \
-                                                 int32_t ref_stride,     \
-                                                 uint32_t *sse) {        \
-  int32_t diff;                                                          \
-  uint32_t var;                                                          \
-  const uint8_t *h_filter = bilinear_filters_msa[xoffset];               \
-  const uint8_t *v_filter = bilinear_filters_msa[yoffset];               \
-                                                                         \
-  if (yoffset) {                                                         \
-    if (xoffset) {                                                       \
-      *sse = sub_pixel_sse_diff_##wd##width_hv_msa(src, src_stride,      \
-                                                   ref, ref_stride,      \
-                                                   h_filter, v_filter,   \
-                                                   ht, &diff);           \
-    } else {                                                             \
-      *sse = sub_pixel_sse_diff_##wd##width_v_msa(src, src_stride,       \
-                                                  ref, ref_stride,       \
-                                                  v_filter, ht, &diff);  \
-    }                                                                    \
-                                                                         \
-    var = VARIANCE_##wd##Wx##ht##H(*sse, diff);                          \
-  } else {                                                               \
-    if (xoffset) {                                                       \
-      *sse = sub_pixel_sse_diff_##wd##width_h_msa(src, src_stride,       \
-                                                  ref, ref_stride,       \
-                                                  h_filter, ht, &diff);  \
-                                                                         \
-      var = VARIANCE_##wd##Wx##ht##H(*sse, diff);                        \
-    } else {                                                             \
-      var = vpx_variance##wd##x##ht##_msa(src, src_stride,               \
-                                          ref, ref_stride, sse);         \
-    }                                                                    \
-  }                                                                      \
-                                                                         \
-  return var;                                                            \
-}
+#define VPX_SUB_PIXEL_VARIANCE_WDXHT_MSA(wd, ht)                              \
+  uint32_t vpx_sub_pixel_variance##wd##x##ht##_msa(                           \
+      const uint8_t *src, int32_t src_stride, int32_t xoffset,                \
+      int32_t yoffset, const uint8_t *ref, int32_t ref_stride,                \
+      uint32_t *sse) {                                                        \
+    int32_t diff;                                                             \
+    uint32_t var;                                                             \
+    const uint8_t *h_filter = bilinear_filters_msa[xoffset];                  \
+    const uint8_t *v_filter = bilinear_filters_msa[yoffset];                  \
+                                                                              \
+    if (yoffset) {                                                            \
+      if (xoffset) {                                                          \
+        *sse = sub_pixel_sse_diff_##wd##width_hv_msa(                         \
+            src, src_stride, ref, ref_stride, h_filter, v_filter, ht, &diff); \
+      } else {                                                                \
+        *sse = sub_pixel_sse_diff_##wd##width_v_msa(                          \
+            src, src_stride, ref, ref_stride, v_filter, ht, &diff);           \
+      }                                                                       \
+                                                                              \
+      var = VARIANCE_##wd##Wx##ht##H(*sse, diff);                             \
+    } else {                                                                  \
+      if (xoffset) {                                                          \
+        *sse = sub_pixel_sse_diff_##wd##width_h_msa(                          \
+            src, src_stride, ref, ref_stride, h_filter, ht, &diff);           \
+                                                                              \
+        var = VARIANCE_##wd##Wx##ht##H(*sse, diff);                           \
+      } else {                                                                \
+        var = vpx_variance##wd##x##ht##_msa(src, src_stride, ref, ref_stride, \
+                                            sse);                             \
+      }                                                                       \
+    }                                                                         \
+                                                                              \
+    return var;                                                               \
+  }
 
 VPX_SUB_PIXEL_VARIANCE_WDXHT_MSA(4, 4);
 VPX_SUB_PIXEL_VARIANCE_WDXHT_MSA(4, 8);
@@ -1817,42 +1671,37 @@ VPX_SUB_PIXEL_VARIANCE_WDXHT_MSA(64, 32);
 VPX_SUB_PIXEL_VARIANCE_WDXHT_MSA(64, 64);
 
 #define VPX_SUB_PIXEL_AVG_VARIANCE_WDXHT_MSA(wd, ht)                          \
-uint32_t vpx_sub_pixel_avg_variance##wd##x##ht##_msa(                         \
-  const uint8_t *src_ptr, int32_t src_stride,                                 \
-  int32_t xoffset, int32_t yoffset,                                           \
-  const uint8_t *ref_ptr, int32_t ref_stride,                                 \
-  uint32_t *sse, const uint8_t *sec_pred) {                                   \
-  int32_t diff;                                                               \
-  const uint8_t *h_filter = bilinear_filters_msa[xoffset];                    \
-  const uint8_t *v_filter = bilinear_filters_msa[yoffset];                    \
+  uint32_t vpx_sub_pixel_avg_variance##wd##x##ht##_msa(                       \
+      const uint8_t *src_ptr, int32_t src_stride, int32_t xoffset,            \
+      int32_t yoffset, const uint8_t *ref_ptr, int32_t ref_stride,            \
+      uint32_t *sse, const uint8_t *sec_pred) {                               \
+    int32_t diff;                                                             \
+    const uint8_t *h_filter = bilinear_filters_msa[xoffset];                  \
+    const uint8_t *v_filter = bilinear_filters_msa[yoffset];                  \
                                                                               \
-  if (yoffset) {                                                              \
-    if (xoffset) {                                                            \
-      *sse = sub_pixel_avg_sse_diff_##wd##width_hv_msa(src_ptr, src_stride,   \
-                                                       ref_ptr, ref_stride,   \
-                                                       sec_pred, h_filter,    \
-                                                       v_filter, ht, &diff);  \
+    if (yoffset) {                                                            \
+      if (xoffset) {                                                          \
+        *sse = sub_pixel_avg_sse_diff_##wd##width_hv_msa(                     \
+            src_ptr, src_stride, ref_ptr, ref_stride, sec_pred, h_filter,     \
+            v_filter, ht, &diff);                                             \
+      } else {                                                                \
+        *sse = sub_pixel_avg_sse_diff_##wd##width_v_msa(                      \
+            src_ptr, src_stride, ref_ptr, ref_stride, sec_pred, v_filter, ht, \
+            &diff);                                                           \
+      }                                                                       \
     } else {                                                                  \
-      *sse = sub_pixel_avg_sse_diff_##wd##width_v_msa(src_ptr, src_stride,    \
-                                                      ref_ptr, ref_stride,    \
-                                                      sec_pred, v_filter,     \
-                                                      ht, &diff);             \
+      if (xoffset) {                                                          \
+        *sse = sub_pixel_avg_sse_diff_##wd##width_h_msa(                      \
+            src_ptr, src_stride, ref_ptr, ref_stride, sec_pred, h_filter, ht, \
+            &diff);                                                           \
+      } else {                                                                \
+        *sse = avg_sse_diff_##wd##width_msa(src_ptr, src_stride, ref_ptr,     \
+                                            ref_stride, sec_pred, ht, &diff); \
+      }                                                                       \
     }                                                                         \
-  } else {                                                                    \
-    if (xoffset) {                                                            \
-      *sse = sub_pixel_avg_sse_diff_##wd##width_h_msa(src_ptr, src_stride,    \
-                                                      ref_ptr, ref_stride,    \
-                                                      sec_pred, h_filter,     \
-                                                      ht, &diff);             \
-    } else {                                                                  \
-      *sse = avg_sse_diff_##wd##width_msa(src_ptr, src_stride,                \
-                                          ref_ptr, ref_stride,                \
-                                          sec_pred, ht, &diff);               \
-    }                                                                         \
-  }                                                                           \
                                                                               \
-  return VARIANCE_##wd##Wx##ht##H(*sse, diff);                                \
-}
+    return VARIANCE_##wd##Wx##ht##H(*sse, diff);                              \
+  }
 
 VPX_SUB_PIXEL_AVG_VARIANCE_WDXHT_MSA(4, 4);
 VPX_SUB_PIXEL_AVG_VARIANCE_WDXHT_MSA(4, 8);
@@ -1870,11 +1719,9 @@ VPX_SUB_PIXEL_AVG_VARIANCE_WDXHT_MSA(32, 32);
 
 uint32_t vpx_sub_pixel_avg_variance32x64_msa(const uint8_t *src_ptr,
                                              int32_t src_stride,
-                                             int32_t xoffset,
-                                             int32_t yoffset,
+                                             int32_t xoffset, int32_t yoffset,
                                              const uint8_t *ref_ptr,
-                                             int32_t ref_stride,
-                                             uint32_t *sse,
+                                             int32_t ref_stride, uint32_t *sse,
                                              const uint8_t *sec_pred) {
   int32_t diff;
   const uint8_t *h_filter = bilinear_filters_msa[xoffset];
@@ -1882,22 +1729,19 @@ uint32_t vpx_sub_pixel_avg_variance32x64_msa(const uint8_t *src_ptr,
 
   if (yoffset) {
     if (xoffset) {
-      *sse = sub_pixel_avg_sse_diff_32width_hv_msa(src_ptr, src_stride,
-                                                   ref_ptr, ref_stride,
-                                                   sec_pred, h_filter,
-                                                   v_filter, 64, &diff);
+      *sse = sub_pixel_avg_sse_diff_32width_hv_msa(
+          src_ptr, src_stride, ref_ptr, ref_stride, sec_pred, h_filter,
+          v_filter, 64, &diff);
     } else {
-      *sse = sub_pixel_avg_sse_diff_32width_v_msa(src_ptr, src_stride,
-                                                  ref_ptr, ref_stride,
-                                                  sec_pred, v_filter,
-                                                  64, &diff);
+      *sse = sub_pixel_avg_sse_diff_32width_v_msa(src_ptr, src_stride, ref_ptr,
+                                                  ref_stride, sec_pred,
+                                                  v_filter, 64, &diff);
     }
   } else {
     if (xoffset) {
-      *sse = sub_pixel_avg_sse_diff_32width_h_msa(src_ptr, src_stride,
-                                                  ref_ptr, ref_stride,
-                                                  sec_pred, h_filter,
-                                                  64, &diff);
+      *sse = sub_pixel_avg_sse_diff_32width_h_msa(src_ptr, src_stride, ref_ptr,
+                                                  ref_stride, sec_pred,
+                                                  h_filter, 64, &diff);
     } else {
       *sse = avg_sse_diff_32x64_msa(src_ptr, src_stride, ref_ptr, ref_stride,
                                     sec_pred, &diff);
@@ -1907,46 +1751,38 @@ uint32_t vpx_sub_pixel_avg_variance32x64_msa(const uint8_t *src_ptr,
   return VARIANCE_32Wx64H(*sse, diff);
 }
 
-#define VPX_SUB_PIXEL_AVG_VARIANCE64XHEIGHT_MSA(ht)                          \
-uint32_t vpx_sub_pixel_avg_variance64x##ht##_msa(const uint8_t *src_ptr,     \
-                                                 int32_t src_stride,         \
-                                                 int32_t xoffset,            \
-                                                 int32_t yoffset,            \
-                                                 const uint8_t *ref_ptr,     \
-                                                 int32_t ref_stride,         \
-                                                 uint32_t *sse,              \
-                                                 const uint8_t *sec_pred) {  \
-  int32_t diff;                                                              \
-  const uint8_t *h_filter = bilinear_filters_msa[xoffset];                   \
-  const uint8_t *v_filter = bilinear_filters_msa[yoffset];                   \
-                                                                             \
-  if (yoffset) {                                                             \
-    if (xoffset) {                                                           \
-      *sse = sub_pixel_avg_sse_diff_64width_hv_msa(src_ptr, src_stride,      \
-                                                   ref_ptr, ref_stride,      \
-                                                   sec_pred, h_filter,       \
-                                                   v_filter, ht, &diff);     \
-    } else {                                                                 \
-      *sse = sub_pixel_avg_sse_diff_64width_v_msa(src_ptr, src_stride,       \
-                                                  ref_ptr, ref_stride,       \
-                                                  sec_pred, v_filter,        \
-                                                  ht, &diff);                \
-    }                                                                        \
-  } else {                                                                   \
-    if (xoffset) {                                                           \
-      *sse = sub_pixel_avg_sse_diff_64width_h_msa(src_ptr, src_stride,       \
-                                                  ref_ptr, ref_stride,       \
-                                                  sec_pred, h_filter,        \
-                                                  ht, &diff);                \
-    } else {                                                                 \
-      *sse = avg_sse_diff_64x##ht##_msa(src_ptr, src_stride,                 \
-                                        ref_ptr, ref_stride,                 \
-                                        sec_pred, &diff);                    \
-    }                                                                        \
-  }                                                                          \
-                                                                             \
-  return VARIANCE_64Wx##ht##H(*sse, diff);                                   \
-}
+#define VPX_SUB_PIXEL_AVG_VARIANCE64XHEIGHT_MSA(ht)                           \
+  uint32_t vpx_sub_pixel_avg_variance64x##ht##_msa(                           \
+      const uint8_t *src_ptr, int32_t src_stride, int32_t xoffset,            \
+      int32_t yoffset, const uint8_t *ref_ptr, int32_t ref_stride,            \
+      uint32_t *sse, const uint8_t *sec_pred) {                               \
+    int32_t diff;                                                             \
+    const uint8_t *h_filter = bilinear_filters_msa[xoffset];                  \
+    const uint8_t *v_filter = bilinear_filters_msa[yoffset];                  \
+                                                                              \
+    if (yoffset) {                                                            \
+      if (xoffset) {                                                          \
+        *sse = sub_pixel_avg_sse_diff_64width_hv_msa(                         \
+            src_ptr, src_stride, ref_ptr, ref_stride, sec_pred, h_filter,     \
+            v_filter, ht, &diff);                                             \
+      } else {                                                                \
+        *sse = sub_pixel_avg_sse_diff_64width_v_msa(                          \
+            src_ptr, src_stride, ref_ptr, ref_stride, sec_pred, v_filter, ht, \
+            &diff);                                                           \
+      }                                                                       \
+    } else {                                                                  \
+      if (xoffset) {                                                          \
+        *sse = sub_pixel_avg_sse_diff_64width_h_msa(                          \
+            src_ptr, src_stride, ref_ptr, ref_stride, sec_pred, h_filter, ht, \
+            &diff);                                                           \
+      } else {                                                                \
+        *sse = avg_sse_diff_64x##ht##_msa(src_ptr, src_stride, ref_ptr,       \
+                                          ref_stride, sec_pred, &diff);       \
+      }                                                                       \
+    }                                                                         \
+                                                                              \
+    return VARIANCE_64Wx##ht##H(*sse, diff);                                  \
+  }
 
 VPX_SUB_PIXEL_AVG_VARIANCE64XHEIGHT_MSA(32);
 VPX_SUB_PIXEL_AVG_VARIANCE64XHEIGHT_MSA(64);

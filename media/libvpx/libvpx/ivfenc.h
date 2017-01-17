@@ -19,17 +19,15 @@ struct vpx_codec_cx_pkt;
 extern "C" {
 #endif
 
-void ivf_write_file_header(FILE *outfile,
-                           const struct vpx_codec_enc_cfg *cfg,
-                           uint32_t fourcc,
-                           int frame_cnt);
+void ivf_write_file_header(FILE *outfile, const struct vpx_codec_enc_cfg *cfg,
+                           uint32_t fourcc, int frame_cnt);
 
 void ivf_write_frame_header(FILE *outfile, int64_t pts, size_t frame_size);
 
 void ivf_write_frame_size(FILE *outfile, size_t frame_size);
 
 #ifdef __cplusplus
-}  /* extern "C" */
+} /* extern "C" */
 #endif
 
 #endif  // IVFENC_H_
