@@ -128,35 +128,52 @@ this.RecipeRunner = {
    * @promise Resolves when the action has executed
    */
   executeRecipe: Task.async(function* (recipe, extraContext) {
-    const sandboxManager = new SandboxManager();
-    const {sandbox} = sandboxManager;
-
     const action = yield NormandyApi.fetchAction(recipe.action);
     const response = yield fetch(action.implementation_url);
 
     const actionScript = yield response.text();
-    const prepScript = `
-      var pendingAction = null;
+    yield this.executeAction(recipe, extraContext, actionScript);
+  }),
 
-      function registerAction(name, Action) {
-        let a = new Action(sandboxedDriver, sandboxedRecipe);
-        pendingAction = a.execute()
-          .catch(err => sandboxedDriver.log(err, 'error'));
+  /**
+   * Execute an action in a sandbox for a specific recipe.
+   * @param  {Object} recipe A recipe to execute
+   * @param  {Object} extraContext Extra data about the user, see NormandyDriver
+   * @param  {String} actionScript The JavaScript for the action to execute.
+   * @promise Resolves or rejects when the action has executed or failed.
+   */
+  executeAction(recipe, extraContext, actionScript) {
+    return new Promise((resolve, reject) => {
+      const sandboxManager = new SandboxManager();
+      const {sandbox} = sandboxManager;
+      const prepScript = `
+        function registerAction(name, Action) {
+          let a = new Action(sandboxedDriver, sandboxedRecipe);
+          a.execute()
+            .then(actionFinished)
+            .catch(err => sandboxedDriver.log(err, 'error'));
+        };
+
+        window.registerAction = registerAction;
+        window.setTimeout = sandboxedDriver.setTimeout;
+        window.clearTimeout = sandboxedDriver.clearTimeout;
+      `;
+
+      const driver = new NormandyDriver(sandboxManager, extraContext);
+      sandbox.sandboxedDriver = Cu.cloneInto(driver, sandbox, {cloneFunctions: true});
+      sandbox.sandboxedRecipe = Cu.cloneInto(recipe, sandbox);
+      sandbox.actionFinished = result => {
+        sandboxManager.removeHold("recipeExecution");
+        resolve(result);
+      };
+      sandbox.actionFailed = err => {
+        sandboxManager.removeHold("recipeExecution");
+        reject(err);
       };
 
-      window.registerAction = registerAction;
-      window.setTimeout = sandboxedDriver.setTimeout;
-      window.clearTimeout = sandboxedDriver.clearTimeout;
-    `;
-
-    const driver = new NormandyDriver(sandboxManager, extraContext);
-    sandbox.sandboxedDriver = Cu.cloneInto(driver, sandbox, {cloneFunctions: true});
-    sandbox.sandboxedRecipe = Cu.cloneInto(recipe, sandbox);
-
-    Cu.evalInSandbox(prepScript, sandbox);
-    Cu.evalInSandbox(actionScript, sandbox);
-
-    sandboxManager.addHold("recipeExecution");
-    sandbox.pendingAction.then(() => sandboxManager.removeHold("recipeExecution"));
-  }),
+      sandboxManager.addHold("recipeExecution");
+      Cu.evalInSandbox(prepScript, sandbox);
+      Cu.evalInSandbox(actionScript, sandbox);
+    });
+  },
 };
