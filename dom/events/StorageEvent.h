@@ -13,6 +13,8 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/StorageEventBinding.h"
 
+class nsIPrincipal;
+
 namespace mozilla {
 namespace dom {
 
@@ -34,6 +36,7 @@ protected:
   nsString mNewValue;
   nsString mUrl;
   RefPtr<Storage> mStorageArea;
+  nsCOMPtr<nsIPrincipal> mPrincipal;
 
 public:
   virtual StorageEvent* AsStorageEvent();
@@ -78,6 +81,18 @@ public:
   Storage* GetStorageArea() const
   {
     return mStorageArea;
+  }
+
+  // Non WebIDL methods
+  void SetPrincipal(nsIPrincipal* aPrincipal)
+  {
+    MOZ_ASSERT(!mPrincipal);
+    mPrincipal = aPrincipal;
+  }
+
+  nsIPrincipal* GetPrincipal() const
+  {
+    return mPrincipal;
   }
 };
 
