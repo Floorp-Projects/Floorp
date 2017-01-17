@@ -94,6 +94,10 @@ public:
   struct SimulcastEncoding {
     std::string rid;
     EncodingConstraints constraints;
+    bool operator==(const SimulcastEncoding& aOther) const {
+      return rid == aOther.rid &&
+        constraints == aOther.constraints;
+    }
   };
   std::vector<SimulcastEncoding> mSimulcastEncodings;
   std::string mSpropParameterSets;
@@ -102,6 +106,27 @@ public:
   uint8_t mLevel;
   uint8_t mPacketizationMode;
   // TODO: add external negotiated SPS/PPS
+
+  bool operator==(const VideoCodecConfig& aRhs) const {
+    if (mType != aRhs.mType ||
+        mName != aRhs.mName ||
+        mAckFbTypes != aRhs.mAckFbTypes ||
+        mNackFbTypes != aRhs.mNackFbTypes ||
+        mCcmFbTypes != aRhs.mCcmFbTypes ||
+        mRembFbSet != aRhs.mRembFbSet ||
+        mFECFbSet != aRhs.mFECFbSet ||
+        !(mEncodingConstraints == aRhs.mEncodingConstraints) ||
+        !(mSimulcastEncodings == aRhs.mSimulcastEncodings) ||
+        mSpropParameterSets != aRhs.mSpropParameterSets ||
+        mProfile != aRhs.mProfile ||
+        mConstraints != aRhs.mConstraints ||
+        mLevel != aRhs.mLevel ||
+        mPacketizationMode != aRhs.mPacketizationMode) {
+      return false;
+    }
+
+    return true;
+  }
 
   VideoCodecConfig(int type,
                    std::string name,
