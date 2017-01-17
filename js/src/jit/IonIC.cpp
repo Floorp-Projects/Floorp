@@ -42,7 +42,6 @@ IonIC::scratchRegisterForEntryJump()
         return output.hasValue() ? output.valueReg().scratchReg() : output.typedReg().gpr();
       }
       case CacheKind::GetName:
-      case CacheKind::SetProp:
         MOZ_CRASH("Baseline-specific for now");
     }
 

@@ -193,14 +193,9 @@ ICStub::NonCacheIRStubMakesGCCalls(Kind kind)
 bool
 ICStub::makesGCCalls() const
 {
-    switch (kind()) {
-      case CacheIR_Monitored:
+    if (isCacheIR_Monitored())
         return toCacheIR_Monitored()->stubInfo()->makesGCCalls();
-      case CacheIR_Updated:
-        return toCacheIR_Updated()->stubInfo()->makesGCCalls();
-      default:
-        return NonCacheIRStubMakesGCCalls(kind());
-    }
+    return NonCacheIRStubMakesGCCalls(kind());
 }
 
 void
@@ -356,6 +351,12 @@ ICStub::trace(JSTracer* trc)
         TraceEdge(trc, &constantStub->value(), "baseline-getintrinsic-constant-value");
         break;
       }
+      case ICStub::SetProp_Native: {
+        ICSetProp_Native* propStub = toSetProp_Native();
+        TraceEdge(trc, &propStub->shape(), "baseline-setpropnative-stub-shape");
+        TraceEdge(trc, &propStub->group(), "baseline-setpropnative-stub-group");
+        break;
+      }
       case ICStub::SetProp_NativeAdd: {
         ICSetProp_NativeAdd* propStub = toSetProp_NativeAdd();
         TraceEdge(trc, &propStub->group(), "baseline-setpropnativeadd-stub-group");
@@ -424,12 +425,6 @@ ICStub::trace(JSTracer* trc)
       case ICStub::CacheIR_Monitored:
         TraceCacheIRStub(trc, this, toCacheIR_Monitored()->stubInfo());
         break;
-      case ICStub::CacheIR_Updated: {
-        ICCacheIR_Updated* stub = toCacheIR_Updated();
-        TraceEdge(trc, &stub->updateStubId(), "baseline-updated-id");
-        TraceCacheIRStub(trc, this, stub->stubInfo());
-        break;
-      }
       default:
         break;
     }
@@ -736,9 +731,8 @@ ICStubCompiler::PushStubPayload(MacroAssembler& masm, Register scratch)
 }
 
 void
-BaselineEmitPostWriteBarrierSlot(MacroAssembler& masm, Register obj, ValueOperand val,
-                                 Register scratch, LiveGeneralRegisterSet saveRegs,
-                                 JSRuntime* rt)
+ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler& masm, Register obj, ValueOperand val,
+                                         Register scratch, LiveGeneralRegisterSet saveRegs)
 {
     Label skipBarrier;
     masm.branchPtrInNurseryChunk(Assembler::Equal, obj, scratch, &skipBarrier);
@@ -751,7 +745,7 @@ BaselineEmitPostWriteBarrierSlot(MacroAssembler& masm, Register obj, ValueOperan
     saveRegs.set() = GeneralRegisterSet::Intersect(saveRegs.set(), GeneralRegisterSet::Volatile());
     masm.PushRegsInMask(saveRegs);
     masm.setupUnalignedABICall(scratch);
-    masm.movePtr(ImmPtr(rt), scratch);
+    masm.movePtr(ImmPtr(cx->runtime()), scratch);
     masm.passABIArg(scratch);
     masm.passABIArg(obj);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, PostWriteBarrier));
@@ -1981,7 +1975,7 @@ StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub)
     for (ICStubIterator iter = stub->beginChain(); !iter.atEnd(); iter++) {
         if (iter->isCacheIR_Monitored() && iter->toCacheIR_Monitored()->hasPreliminaryObject())
             iter.unlink(cx);
-        else if (iter->isCacheIR_Updated() && iter->toCacheIR_Updated()->hasPreliminaryObject())
+        else if (iter->isSetProp_Native() && iter->toSetProp_Native()->hasPreliminaryObject())
             iter.unlink(cx);
     }
 }

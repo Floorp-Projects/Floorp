@@ -821,18 +821,6 @@ IonCacheIRCompiler::emitLoadEnvironmentDynamicSlotResult()
 }
 
 bool
-IonCacheIRCompiler::emitStoreFixedSlot()
-{
-    MOZ_CRASH("Baseline-specific op");
-}
-
-bool
-IonCacheIRCompiler::emitStoreDynamicSlot()
-{
-    MOZ_CRASH("Baseline-specific op");
-}
-
-bool
 IonCacheIRCompiler::emitLoadTypedObjectResult()
 {
     AutoOutputRegister output(*this);
