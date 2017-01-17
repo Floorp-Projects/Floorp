@@ -14,9 +14,9 @@ typedef mozilla::Maybe<WRImageMask> MaybeImageMask;
 namespace mozilla {
 namespace wr {
 
-static inline WRColor ToWRColor(const gfx::Color& color)
+static inline WrColor ToWrColor(const gfx::Color& color)
 {
-  WRColor c;
+  WrColor c;
   c.r = color.r;
   c.g = color.g;
   c.b = color.b;
@@ -28,7 +28,7 @@ static inline WRBorderSide ToWRBorderSide(const LayerCoord width, const gfx::Col
 {
   WRBorderSide bs;
   bs.width = width;
-  bs.color = ToWRColor(color);
+  bs.color = ToWrColor(color);
   bs.style = WRBorderStyle::Solid;
   return bs;
 }
