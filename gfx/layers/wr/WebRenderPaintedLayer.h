@@ -8,6 +8,7 @@
 
 #include "Layers.h"
 #include "mozilla/layers/ContentClient.h"
+#include "mozilla/layers/WebRenderBridgeChild.h"
 #include "WebRenderLayerManager.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
