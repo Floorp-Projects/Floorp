@@ -140,12 +140,42 @@ onmessage = function() {
     runTest();
   }
 
+  function testCTORs() {
+    var a = new URLSearchParams("a=b");
+    is(a.get("a"), "b", "CTOR with string");
+
+    var b = new URLSearchParams([['a', 'b'], ['c', 'd']]);
+    is(b.get("a"), "b", "CTOR with sequence");
+    is(b.get("c"), "d", "CTOR with sequence");
+
+    ok(new URLSearchParams([]), "CTOR with empty sequence");
+
+    let result;
+    try {
+      result = new URLSearchParams([[1]]);
+    } catch(e) {
+      result = 42;
+    }
+
+    is(result, 42, "CTOR throws if the sequence doesn't contain exactly 2 elements");
+
+    try {
+      result = new URLSearchParams([[1,2,3]]);
+    } catch(e) {
+      result = 43;
+    }
+    is(result, 43, "CTOR throws if the sequence doesn't contain exactly 2 elements");
+
+    runTest();
+  }
+
   var tests = [
     testSimpleURLSearchParams,
     testCopyURLSearchParams,
     testParserURLSearchParams,
     testURL,
     testEncoding,
+    testCTORs,
   ];
 
   function runTest() {
