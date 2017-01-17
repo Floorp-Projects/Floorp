@@ -46,6 +46,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 
@@ -1460,8 +1461,25 @@ DocAccessible::NotifyOfLoading(bool aIsReloading)
 void
 DocAccessible::DoInitialUpdate()
 {
-  if (nsCoreUtils::IsTabDocument(mDocumentNode))
+  if (nsCoreUtils::IsTabDocument(mDocumentNode)) {
     mDocFlags |= eTabDocument;
+    if (IPCAccessibilityActive()) {
+      nsIDocShell* docShell = mDocumentNode->GetDocShell();
+      if (RefPtr<dom::TabChild> tabChild = dom::TabChild::GetFrom(docShell)) {
+        DocAccessibleChild* ipcDoc = new DocAccessibleChild(this);
+        SetIPCDoc(ipcDoc);
+
+#if defined(XP_WIN)
+        IAccessibleHolder holder(CreateHolderFromAccessible(docAcc));
+        int32_t childID = AccessibleWrap::GetChildIDFor(docAcc);
+#else
+        int32_t holder = 0, childID = 0;
+#endif
+        tabChild->SendPDocAccessibleConstructor(ipcDoc, nullptr, 0, childID,
+                                                holder);
+      }
+    }
+  }
 
   mLoadState |= eTreeConstructed;
 
