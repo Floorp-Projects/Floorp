@@ -28,6 +28,7 @@ namespace wr {
 class DisplayListBuilder;
 class RendererOGL;
 class NewRenderer;
+class RendererEvent;
 
 class WebRenderAPI
 {
@@ -68,6 +69,8 @@ public:
   void DeleteFont(wr::FontKey aKey);
 
   void SetProfilerEnabled(bool aEnabled);
+
+  void RunOnRenderThread(UniquePtr<RendererEvent>&& aEvent);
 
 protected:
   WebRenderAPI(WrAPI* aRawApi, wr::WindowId aId)

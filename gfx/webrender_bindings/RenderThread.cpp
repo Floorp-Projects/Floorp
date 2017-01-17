@@ -191,18 +191,18 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId)
 
 extern "C" {
 
-void wr_notifier_new_frame_ready(uint64_t aWindowId)
+void wr_notifier_new_frame_ready(WrWindowId aWindowId)
 {
   mozilla::wr::RenderThread::Get()->NewFrameReady(mozilla::wr::WindowId(aWindowId));
 }
 
-void wr_notifier_new_scroll_frame_ready(uint64_t aWindowId, bool aCompositeNeeded)
+void wr_notifier_new_scroll_frame_ready(WrWindowId aWindowId, bool aCompositeNeeded)
 {
   mozilla::wr::RenderThread::Get()->NewScrollFrameReady(mozilla::wr::WindowId(aWindowId),
                                                         aCompositeNeeded);
 }
 
-void wr_notifier_pipeline_size_changed(uint64_t aWindowId,
+void wr_notifier_pipeline_size_changed(WrWindowId aWindowId,
                                        uint64_t aPipelineId,
                                        float aWidth,
                                        float aHeight)
@@ -211,7 +211,7 @@ void wr_notifier_pipeline_size_changed(uint64_t aWindowId,
                                                         aPipelineId, aWidth, aHeight);
 }
 
-void wr_notifier_external_event(uint64_t aWindowId, size_t aRawEvent)
+void wr_notifier_external_event(WrWindowId aWindowId, size_t aRawEvent)
 {
   mozilla::UniquePtr<mozilla::wr::RendererEvent> evt(
     reinterpret_cast<mozilla::wr::RendererEvent*>(aRawEvent));
