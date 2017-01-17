@@ -6,7 +6,9 @@
 
 EXTRA_JS_MODULES += [
     'ImageObjectProcessor.jsm',
+    'Manifest.jsm',
     'ManifestFinder.jsm',
+    'ManifestIcons.jsm',
     'ManifestObtainer.jsm',
     'ManifestProcessor.jsm',
     'ValueExtractor.jsm',
