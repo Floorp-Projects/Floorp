@@ -5022,13 +5022,6 @@ MacroAssembler::call(wasm::SymbolicAddress imm)
 }
 
 void
-MacroAssembler::call(const Address& addr)
-{
-    loadPtr(addr, CallReg);
-    call(CallReg);
-}
-
-void
 MacroAssembler::call(JitCode* c)
 {
     BufferOffset bo = m_buffer.nextOffset();
