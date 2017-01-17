@@ -1618,8 +1618,7 @@ nsSHistory::LoadURIWithOptions(const char16_t* aURI,
                                uint32_t aReferrerPolicy,
                                nsIInputStream* aPostStream,
                                nsIInputStream* aExtraHeaderStream,
-                               nsIURI* aBaseURI,
-                               nsIPrincipal* aTriggeringPrincipal)
+                               nsIURI* aBaseURI)
 {
   return NS_OK;
 }

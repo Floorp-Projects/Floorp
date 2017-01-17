@@ -204,9 +204,6 @@ ContentRestoreInternal.prototype = {
             : Ci.nsIHttpChannel.REFERRER_POLICY_UNSET);
         let postData = loadArguments.postData ?
                        Utils.makeInputStream(loadArguments.postData) : null;
-        let triggeringPrincipal = loadArguments.triggeringPrincipal
-                                  ? Utils.deserializePrincipal(loadArguments.triggeringPrincipal)
-                                  : null;
 
         if (loadArguments.userContextId) {
           webNavigation.setOriginAttributesBeforeLoading({ userContextId: loadArguments.userContextId });
@@ -214,7 +211,7 @@ ContentRestoreInternal.prototype = {
 
         webNavigation.loadURIWithOptions(loadArguments.uri, loadArguments.flags,
                                          referrer, referrerPolicy, postData,
-                                         null, null, triggeringPrincipal);
+                                         null, null);
       } else if (tabData.userTypedValue && tabData.userTypedClear) {
         // If the user typed a URL into the URL bar and hit enter right before
         // we crashed, we want to start loading that page again. A non-zero
