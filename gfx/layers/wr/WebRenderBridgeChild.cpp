@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace layers {
 
-WebRenderBridgeChild::WebRenderBridgeChild(const uint64_t& aPipelineId)
+WebRenderBridgeChild::WebRenderBridgeChild(const wr::PipelineId& aPipelineId)
   : mIsInTransaction(false)
   , mSyncTransaction(false)
   , mIPCOpen(false)
@@ -51,13 +51,13 @@ WebRenderBridgeChild::AddWebRenderCommand(const WebRenderCommand& aCmd)
 }
 
 bool
-WebRenderBridgeChild::DPBegin(uint32_t aWidth, uint32_t aHeight)
+WebRenderBridgeChild::DPBegin(const gfx::IntSize& aSize)
 {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(!mIsInTransaction);
   bool success = false;
   UpdateFwdTransactionId();
-  this->SendDPBegin(aWidth, aHeight, &success);
+  this->SendDPBegin(aSize, &success);
   if (!success) {
     return false;
   }

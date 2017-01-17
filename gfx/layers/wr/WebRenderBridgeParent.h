@@ -43,39 +43,35 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent
 {
 public:
   WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
-                        const uint64_t& aPipelineId,
+                        const wr::PipelineId& aPipelineId,
                         widget::CompositorWidget* aWidget,
                         RefPtr<wr::WebRenderAPI>&& aApi);
 
   WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
-                        const uint64_t& aPipelineId,
+                        const wr::PipelineId& aPipelineId,
                         widget::CompositorWidget* aWidget,
                         gl::GLContext* aGlContext,
                         WrWindowState* aWrWindowState,
                         layers::Compositor* aCompositor);
-  uint64_t PipelineId() { return mPipelineId; }
+  wr::PipelineId PipelineId() { return mPipelineId; }
   gl::GLContext* GLContext() { return mGLContext.get(); }
   WrWindowState* WindowState() { return mWRWindowState; }
   layers::Compositor* Compositor() { return mCompositor.get(); }
   CompositorVsyncScheduler* CompositorScheduler() { return mCompositorScheduler.get(); }
 
-  mozilla::ipc::IPCResult RecvCreate(const uint32_t& aWidth,
-                                     const uint32_t& aHeight) override;
+  mozilla::ipc::IPCResult RecvCreate(const gfx::IntSize& aSize) override;
   mozilla::ipc::IPCResult RecvShutdown() override;
-  mozilla::ipc::IPCResult RecvAddImage(const uint32_t& aWidth,
-                                       const uint32_t& aHeight,
+  mozilla::ipc::IPCResult RecvAddImage(const gfx::IntSize& aSize,
                                        const uint32_t& aStride,
-                                       const WrImageFormat& aFormat,
+                                       const gfx::SurfaceFormat& aFormat,
                                        const ByteBuffer& aBuffer,
-                                       WrImageKey* aOutImageKey) override;
-  mozilla::ipc::IPCResult RecvUpdateImage(const WrImageKey& aImageKey,
-                                          const uint32_t& aWidth,
-                                          const uint32_t& aHeight,
-                                          const WrImageFormat& aFormat,
+                                       wr::ImageKey* aOutImageKey) override;
+  mozilla::ipc::IPCResult RecvUpdateImage(const wr::ImageKey& aImageKey,
+                                          const gfx::IntSize& aSize,
+                                          const gfx::SurfaceFormat& aFormat,
                                           const ByteBuffer& aBuffer) override;
-  mozilla::ipc::IPCResult RecvDeleteImage(const WrImageKey& aImageKey) override;
-  mozilla::ipc::IPCResult RecvDPBegin(const uint32_t& aWidth,
-                                      const uint32_t& aHeight,
+  mozilla::ipc::IPCResult RecvDeleteImage(const wr::ImageKey& a1) override;
+  mozilla::ipc::IPCResult RecvDPBegin(const gfx::IntSize& aSize,
                                       bool* aOutSuccess) override;
   mozilla::ipc::IPCResult RecvDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
                                     InfallibleTArray<OpDestroy>&& aToDestroy,
@@ -138,7 +134,7 @@ private:
 
 private:
   CompositorBridgeParentBase* MOZ_NON_OWNING_REF mCompositorBridge;
-  uint64_t mPipelineId;
+  wr::PipelineId mPipelineId;
   RefPtr<widget::CompositorWidget> mWidget;
   Maybe<wr::DisplayListBuilder> mBuilder;
   RefPtr<gl::GLContext> mGLContext;

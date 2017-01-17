@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace wr {
 
-inline Maybe<WrImageFormat>
+Maybe<WrImageFormat>
 SurfaceFormatToWrImageFormat(gfx::SurfaceFormat aFormat) {
   switch (aFormat) {
     case gfx::SurfaceFormat::B8G8R8X8:
