@@ -55,7 +55,7 @@ GPUProcessHost::WaitForLaunch()
     return !!mGPUChild;
   }
 
-  int32_t timeoutMs = gfxPrefs::GPUProcessDevTimeoutMs();
+  int32_t timeoutMs = gfxPrefs::GPUProcessTimeoutMs();
 
   // Our caller expects the connection to be finished after we return, so we
   // immediately set up the IPDL actor and fire callbacks. The IO thread will
