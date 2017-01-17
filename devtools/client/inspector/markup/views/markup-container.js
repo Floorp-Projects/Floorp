@@ -66,12 +66,12 @@ MarkupContainer.prototype = {
     this._onKeyDown = this._onKeyDown.bind(this);
 
     // Binding event listeners
-    this.elt.addEventListener("mousedown", this._onMouseDown, false);
+    this.elt.addEventListener("mousedown", this._onMouseDown);
     this.win.addEventListener("mouseup", this._onMouseUp, true);
     this.win.addEventListener("mousemove", this._onMouseMove, true);
-    this.elt.addEventListener("dblclick", this._onToggle, false);
+    this.elt.addEventListener("dblclick", this._onToggle);
     if (this.expander) {
-      this.expander.addEventListener("click", this._onToggle, false);
+      this.expander.addEventListener("click", this._onToggle);
     }
 
     // Marking the node as shown or hidden
@@ -694,8 +694,8 @@ MarkupContainer.prototype = {
    */
   destroy: function () {
     // Remove event listeners
-    this.elt.removeEventListener("mousedown", this._onMouseDown, false);
-    this.elt.removeEventListener("dblclick", this._onToggle, false);
+    this.elt.removeEventListener("mousedown", this._onMouseDown);
+    this.elt.removeEventListener("dblclick", this._onToggle);
     this.tagLine.removeEventListener("keydown", this._onKeyDown, true);
     if (this.win) {
       this.win.removeEventListener("mouseup", this._onMouseUp, true);
@@ -706,7 +706,7 @@ MarkupContainer.prototype = {
     this.htmlElt = null;
 
     if (this.expander) {
-      this.expander.removeEventListener("click", this._onToggle, false);
+      this.expander.removeEventListener("click", this._onToggle);
     }
 
     // Recursively destroy children containers

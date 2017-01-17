@@ -40,12 +40,12 @@ function continueTest() {
 
   let doc = gBrowser.contentDocument;
   doc.styleSheetChangeEventsEnabled = true;
-  doc.addEventListener("StyleSheetAdded", unexpectedContentEvent, false);
-  doc.addEventListener("StyleSheetRemoved", unexpectedContentEvent, false);
-  doc.addEventListener("StyleSheetApplicableStateChanged", unexpectedContentEvent, false);
-  doc.defaultView.addEventListener("StyleSheetAdded", unexpectedContentEvent, false);
-  doc.defaultView.addEventListener("StyleSheetRemoved", unexpectedContentEvent, false);
-  doc.defaultView.addEventListener("StyleSheetApplicableStateChanged", unexpectedContentEvent, false);
+  doc.addEventListener("StyleSheetAdded", unexpectedContentEvent);
+  doc.addEventListener("StyleSheetRemoved", unexpectedContentEvent);
+  doc.addEventListener("StyleSheetApplicableStateChanged", unexpectedContentEvent);
+  doc.defaultView.addEventListener("StyleSheetAdded", unexpectedContentEvent);
+  doc.defaultView.addEventListener("StyleSheetRemoved", unexpectedContentEvent);
+  doc.defaultView.addEventListener("StyleSheetApplicableStateChanged", unexpectedContentEvent);
   let link = doc.createElement('link');
   link.setAttribute('rel', 'stylesheet');
   link.setAttribute('type', 'text/css');
@@ -146,12 +146,12 @@ function styleRuleRemoved(evt) {
 
 function concludeTest() {
   let doc = gBrowser.contentDocument;
-  doc.removeEventListener("StyleSheetAdded", unexpectedContentEvent, false);
-  doc.removeEventListener("StyleSheetRemoved", unexpectedContentEvent, false);
-  doc.removeEventListener("StyleSheetApplicableStateChanged", unexpectedContentEvent, false);
-  doc.defaultView.removeEventListener("StyleSheetAdded", unexpectedContentEvent, false);
-  doc.defaultView.removeEventListener("StyleSheetRemoved", unexpectedContentEvent, false);
-  doc.defaultView.removeEventListener("StyleSheetApplicableStateChanged", unexpectedContentEvent, false);
+  doc.removeEventListener("StyleSheetAdded", unexpectedContentEvent);
+  doc.removeEventListener("StyleSheetRemoved", unexpectedContentEvent);
+  doc.removeEventListener("StyleSheetApplicableStateChanged", unexpectedContentEvent);
+  doc.defaultView.removeEventListener("StyleSheetAdded", unexpectedContentEvent);
+  doc.defaultView.removeEventListener("StyleSheetRemoved", unexpectedContentEvent);
+  doc.defaultView.removeEventListener("StyleSheetApplicableStateChanged", unexpectedContentEvent);
   gBrowser.removeCurrentTab();
   gLinkElement = null;
   gTab = null;

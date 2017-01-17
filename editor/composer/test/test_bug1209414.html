@@ -54,7 +54,7 @@ SimpleTest.waitForFocus(function() {
                     .QueryInterface(Ci.nsIDOMChromeWindow);
     var contextMenu = chromeWin.document.getElementById("contentAreaContextMenu");
     contextMenu.addEventListener("popupshown",
-                                 () => sendAsyncMessage("popupshown"), false);
+                                 () => sendAsyncMessage("popupshown"));
 
     var dir = Components.classes["@mozilla.org/file/directory_service;1"]
                         .getService(Ci.nsIProperties)

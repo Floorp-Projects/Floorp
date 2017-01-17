@@ -105,7 +105,7 @@ var windowObserver = {
     let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
 
     win.addEventListener("load", function onLoad(event) {
-      win.removeEventListener("load", onLoad, false);
+      win.removeEventListener("load", onLoad);
 
       if (win.location == UCT_URI) {
         SimpleTest.executeSoon(function() {
@@ -117,7 +117,7 @@ var windowObserver = {
           }
         });
       }
-    }, false);
+    });
   }
 };
 

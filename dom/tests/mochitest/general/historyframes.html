@@ -27,15 +27,15 @@ var gState = null;
 
 window.addEventListener("popstate", function(aEvent) {
   gState = aEvent.state;
-}, false);
+});
 
 function waitForLoad() {
   function listener() {
-    gFrame.removeEventListener("load", listener, false);
+    gFrame.removeEventListener("load", listener);
     SimpleTest.executeSoon(continue_test);
   }
 
-  gFrame.addEventListener("load", listener, false);
+  gFrame.addEventListener("load", listener);
 }
 
 function loadContent(aURL) {

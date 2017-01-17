@@ -30,13 +30,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=328885
   }
 
   function clickTest() {
-    inputelement.addEventListener("DOMSubtreeModified", mutationListener, false);
-    inputelement.addEventListener("DOMNodeInserted", mutationListener, false);
-    inputelement.addEventListener("DOMNodeRemoved", mutationListener, false);
-    inputelement.addEventListener("DOMNodeRemovedFromDocument", mutationListener, false);
-    inputelement.addEventListener("DOMNodeInsertedIntoDocument", mutationListener, false);
-    inputelement.addEventListener("DOMAttrModified", mutationListener, false);
-    inputelement.addEventListener("DOMCharacterDataModified", mutationListener, false);
+    inputelement.addEventListener("DOMSubtreeModified", mutationListener);
+    inputelement.addEventListener("DOMNodeInserted", mutationListener);
+    inputelement.addEventListener("DOMNodeRemoved", mutationListener);
+    inputelement.addEventListener("DOMNodeRemovedFromDocument", mutationListener);
+    inputelement.addEventListener("DOMNodeInsertedIntoDocument", mutationListener);
+    inputelement.addEventListener("DOMAttrModified", mutationListener);
+    inputelement.addEventListener("DOMCharacterDataModified", mutationListener);
     
     inputelement.addEventListener('click', 
       function(event) {
@@ -97,8 +97,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=328885
             evt.originalTarget.setAttribute("foo", "bar" + mutationCount);
             ok(evt.originalTarget.getAttribute("foo") == "bar" + mutationCount,
                "(17) Couldn't update the attribute?!?");
-          }
-          , false);
+          });
         inputelement.setAttribute("foo", "");
         ok(mutationCount == 14, "(18) Mutation listener should have been called! ["+ mutationCount + "]");
 
@@ -107,12 +106,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=328885
         inputelement.addEventListener("DOMCharacterDataModified",
           function (evt2) {
             evt.originalTarget.textContent =  "bar" + mutationCount;
-          }, false);
+          });
         // This one deletes and inserts a new node, then DOMSubtreeModified.
         inputelement.textContent = "bar";
         ok(mutationCount == 19, "(20) Mutation listener should have been called! ["+ mutationCount + "]");
-      }
-    ,false);
+      });
     synthesizeMouseAtCenter(inputelement, {}, window);
     SimpleTest.finish();
   }

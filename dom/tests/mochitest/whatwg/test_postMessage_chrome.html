@@ -103,11 +103,11 @@ function receiveContent(evt)
 
 function run()
 {
-  window.addEventListener("message", messageReceiver, false);
+  window.addEventListener("message", messageReceiver);
   window.postMessage("post-to-self", "*");
 }
 
-window.addEventListener("load", run, false);
+window.addEventListener("load", run);
 </script>
 </pre>
 </body>

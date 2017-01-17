@@ -325,7 +325,7 @@ GPUProcessManager::OnProcessUnexpectedShutdown(GPUProcessHost* aHost)
 
   DestroyProcess();
 
-  if (mNumProcessAttempts > uint32_t(gfxPrefs::GPUProcessDevMaxRestarts())) {
+  if (mNumProcessAttempts > uint32_t(gfxPrefs::GPUProcessMaxRestarts())) {
     char disableMessage[64];
     SprintfLiteral(disableMessage, "GPU process disabled after %d attempts",
                    mNumProcessAttempts);

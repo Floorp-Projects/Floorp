@@ -58,7 +58,7 @@ if (!t) {
       todo(false, "Error hasn't occurred yet - adding |error| event listener. This shouldn't happen, see bug 608634.");
       documentVideo().addEventListener("error", check);
     }
-  }, false);
+  });
   document.body.appendChild(f);
 }
 

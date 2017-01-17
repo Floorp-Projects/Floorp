@@ -22,7 +22,7 @@ window.onmousedown = function(event) { eventTarget = event.target; };
 // Make sure the target div is "clickable" by adding a click listener on it.
 document.getElementById('t').addEventListener('click', function(e) {
   parent.ok(true, "target was clicked on");
-}, false);
+});
 
 // Helper functions
 
@@ -43,9 +43,9 @@ function testWithAndWithoutBodyListener(aX, aY, aExpectedId, aMsg) {
     parent.ok(true, "body was clicked on");
   };
   testMouseClick(aX, aY, aExpectedId, aMsg + " without listener on body");
-  document.body.addEventListener("click", func, false);
+  document.body.addEventListener("click", func);
   testMouseClick(aX, aY, aExpectedId, aMsg + " with listener on body");
-  document.body.removeEventListener("click", func, false);
+  document.body.removeEventListener("click", func);
 }
 
 // Main tests

@@ -432,9 +432,7 @@ var dataProviders = {
 
             function(e) {
                 creationError = e.statusMessage;
-            },
-
-            false
+            }
         );
 
         let gl = null;

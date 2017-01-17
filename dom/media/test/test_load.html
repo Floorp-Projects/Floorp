@@ -64,13 +64,13 @@ function createMedia(tag) {
   gMedia = document.createElement(tag);
   gMedia.preload = "metadata";
   for (var i=0; i<gEventTypes.length; i++) {
-    gMedia.addEventListener(gEventTypes[i], listener, false);
+    gMedia.addEventListener(gEventTypes[i], listener);
   }
 }
 
 function addSource(src, type) {
   var s = document.createElement("source");
-  s.addEventListener("error", source_error, false);
+  s.addEventListener("error", source_error);
   s.src = src;
   s.type = type;
   gMedia.appendChild(s);
@@ -79,7 +79,7 @@ function addSource(src, type) {
 
 function prependSource(src, type) {
   var s = document.createElement("source");
-  s.addEventListener("error", source_error, false);
+  s.addEventListener("error", source_error);
   s.src = src;
   s.type = type;
   gMedia.insertBefore(s, gMedia.firstChild);
@@ -134,8 +134,7 @@ var gTests = [
           function(e) {
             // Should awaken waiting load, causing successful load.
             addSource(src, type);
-          },
-          false);
+          });
         document.body.appendChild(gMedia);
       },
     expectedEvents: ['loadstart', 'source_error', 'source_error', 'durationchange', 'loadedmetadata', 'loadeddata']
@@ -156,8 +155,7 @@ var gTests = [
               prependSource(src, type);
               prepended = true;
             }
-          },
-          false);
+          });
         document.body.appendChild(gMedia);
       },
     expectedEvents: ['loadstart', 'source_error', 'source_error']
@@ -179,7 +177,7 @@ var gTests = [
 function nextTest() {
   if (gMedia) {
     for (var i=0; i<gEventTypes.length; i++) {
-      gMedia.removeEventListener(gEventTypes[i], listener, false);
+      gMedia.removeEventListener(gEventTypes[i], listener);
     }
     removeNodeAndSource(gMedia);
     gMedia = null;

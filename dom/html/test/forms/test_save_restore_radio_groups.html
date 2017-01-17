@@ -51,18 +51,18 @@ addLoadEvent(function() {
 
   framesElts = document.getElementsByTagName('iframe');
   framesElts[0].addEventListener("load", function() {
-    framesElts[0].removeEventListener("load", arguments.callee, false);
+    framesElts[0].removeEventListener("load", arguments.callee);
     checkRadioGroup(0, [false, false, true]);
 
     framesElts[1].addEventListener("load", function() {
-      framesElts[1].removeEventListener("load", arguments.callee, false);
+      framesElts[1].removeEventListener("load", arguments.callee);
 
       checkRadioGroup(1, [false, true, false]);
       SimpleTest.finish();
-    }, false);
+    });
 
     frames[1].location.reload();
-  }, false);
+  });
 
   frames[0].location.reload();
 });

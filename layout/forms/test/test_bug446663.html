@@ -39,14 +39,14 @@ function test_edit_cmds(id) {
 var inputHappened = false;
 function inputListener() {
   inputHappened = true;
-  $(id).removeEventListener("input", inputListener, false);
+  $(id).removeEventListener("input", inputListener);
 }
 
 var id = 'bug446663_a'
 var elm = document.getElementById(id);
 elm.focus();
 var x = document.body.offsetHeight;
-$(id).addEventListener("input", inputListener, false);
+$(id).addEventListener("input", inputListener);
 sendChar('1');
 is(inputHappened, true, "How come no input?");
 sendChar('3');

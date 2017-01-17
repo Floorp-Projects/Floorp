@@ -11,23 +11,21 @@ function runTest() {
   
   var play = 
     function() {
-      v.removeEventListener('loadeddata', play, false);
+      v.removeEventListener('loadeddata', play);
       v.play();
     }
 
   var addPoster = function() {
-    v.removeEventListener('playing', addPoster,false);
+    v.removeEventListener('playing', addPoster);
     v.poster = "blue140x100.png";
-    v.addEventListener('loadeddata', endTest, false);
+    v.addEventListener('loadeddata', endTest);
     v.load();
   };
 
   v.addEventListener('loadeddata',
-                     play,
-                     false);
+                     play);
   v.addEventListener('playing',
-                     addPoster,
-                     false);
+                     addPoster);
   v.id = 'v';
   v.src = "black140x100.ogv";
   v.preload = "auto";

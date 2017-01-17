@@ -85,7 +85,7 @@ function fetch(url, fetched_callback) {
     }
   };
 
-  xhr.addEventListener("load", loaded, false);
+  xhr.addEventListener("load", loaded);
   xhr.send();
 }
 
@@ -100,7 +100,7 @@ function startTest(test, token) {
     v.src = uri;
     v._name = test.name;
     v._test = test;
-    v.addEventListener("timeupdate", testBuffered, false);
+    v.addEventListener("timeupdate", testBuffered);
     document.body.appendChild(v);
   };
 

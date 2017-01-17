@@ -44,8 +44,8 @@ EventListenersView.prototype = Heritage.extend(WidgetMethods, {
     this._inSourceString = " " + L10N.getStr("eventInSource") + " ";
     this._inNativeCodeString = L10N.getStr("eventNative");
 
-    this.widget.addEventListener("check", this._onCheck, false);
-    this.widget.addEventListener("click", this._onClick, false);
+    this.widget.addEventListener("check", this._onCheck);
+    this.widget.addEventListener("click", this._onClick);
   },
 
   /**
@@ -54,8 +54,8 @@ EventListenersView.prototype = Heritage.extend(WidgetMethods, {
   destroy: function () {
     dumpn("Destroying the EventListenersView");
 
-    this.widget.removeEventListener("check", this._onCheck, false);
-    this.widget.removeEventListener("click", this._onClick, false);
+    this.widget.removeEventListener("check", this._onCheck);
+    this.widget.removeEventListener("click", this._onClick);
   },
 
   renderListeners: function (listeners) {

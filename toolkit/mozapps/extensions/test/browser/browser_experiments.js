@@ -163,7 +163,7 @@ add_task(function* testExperimentLearnMore() {
   let deferred = Promise.defer();
   window.addEventListener("DOMContentLoaded", function onLoad(event) {
     info("Telemetry privacy policy window opened.");
-    window.removeEventListener("DOMContentLoaded", onLoad, false);
+    window.removeEventListener("DOMContentLoaded", onLoad);
 
     let browser = gBrowser.selectedBrowser;
     let expected = Services.prefs.getCharPref("toolkit.telemetry.infoURL");
@@ -173,7 +173,7 @@ add_task(function* testExperimentLearnMore() {
     Services.prefs.clearUserPref("toolkit.telemetry.infoURL");
 
     deferred.resolve();
-  }, false);
+  });
 
   info("Opening telemetry privacy policy.");
   EventUtils.synthesizeMouseAtCenter(btn, {}, gManagerWindow);

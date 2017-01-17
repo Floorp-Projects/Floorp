@@ -61,7 +61,7 @@ function finish(v) {
   clearInterval(v.checkStateInterval);
 
   for (var i=0; i<gEventTypes.length; i++) {
-    v.removeEventListener(gEventTypes[i], listener, false);
+    v.removeEventListener(gEventTypes[i], listener);
   }
   removeNodeAndSource(v);
 
@@ -97,7 +97,7 @@ function createMedia(type, src, token) {
   var tag = getMajorMimeType(type);
   var v = document.createElement(tag);
   for (var i=0; i<gEventTypes.length; i++) {
-    v.addEventListener(gEventTypes[i], listener, false);
+    v.addEventListener(gEventTypes[i], listener);
   }
   v.preload = "metadata";
   v.src = src;

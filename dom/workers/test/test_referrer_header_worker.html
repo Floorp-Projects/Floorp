@@ -27,7 +27,7 @@
       function messageListener(event) {
         eval(event.data);
       }
-      window.addEventListener("message", messageListener, false);
+      window.addEventListener("message", messageListener);
 
       var ifr = document.createElement('iframe');
       ifr.setAttribute('src', 'https://example.com/tests/dom/workers/test/referrer_worker.html');

@@ -105,6 +105,7 @@
 #include "GeometryUtils.h"
 #include "nsIAnimationObserver.h"
 #include "nsChildContentList.h"
+#include "mozilla/dom/NodeBinding.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/dom/AccessibleNode.h"
@@ -243,6 +244,30 @@ nsINode::GetTextEditorRootContent(nsIEditor** aEditor)
     return rootContent;
   }
   return nullptr;
+}
+
+nsINode* nsINode::GetRootNode(const GetRootNodeOptions& aOptions)
+{
+  if (aOptions.mComposed) {
+    if (IsInComposedDoc() && GetComposedDoc()) {
+      return OwnerDoc();
+    }
+
+    nsINode* node = this;
+    ShadowRoot* shadowRootParent = nullptr;
+    while(node) {
+      node = node->SubtreeRoot();
+      shadowRootParent = ShadowRoot::FromNode(node);
+      if (!shadowRootParent) {
+         break;
+      }
+      node = shadowRootParent->GetHost();
+    }
+
+    return node;
+  }
+
+  return SubtreeRoot();
 }
 
 nsINode*

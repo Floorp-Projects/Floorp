@@ -12,7 +12,7 @@ var failureRegExp = new RegExp("^FAILURE");
 
 const framePath = "/tests/dom/tests/mochitest/localstorage/";
 
-window.addEventListener("message", onMessageReceived, false);
+window.addEventListener("message", onMessageReceived);
 
 function onMessageReceived(event)
 {

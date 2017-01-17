@@ -323,8 +323,8 @@ const gClickAndHoldListenersOnElement = {
     // Prevent the menupopup from opening immediately
     aEvent.currentTarget.firstChild.hidden = true;
 
-    aEvent.currentTarget.addEventListener("mouseout", this, false);
-    aEvent.currentTarget.addEventListener("mouseup", this, false);
+    aEvent.currentTarget.addEventListener("mouseout", this);
+    aEvent.currentTarget.addEventListener("mouseup", this);
     this._timers.set(aEvent.currentTarget, setTimeout((b) => this._openMenu(b), 500, aEvent.currentTarget));
   },
 
@@ -368,8 +368,8 @@ const gClickAndHoldListenersOnElement = {
 
   _cancelHold(aButton) {
     clearTimeout(this._timers.get(aButton));
-    aButton.removeEventListener("mouseout", this, false);
-    aButton.removeEventListener("mouseup", this, false);
+    aButton.removeEventListener("mouseout", this);
+    aButton.removeEventListener("mouseup", this);
   },
 
   handleEvent(e) {
@@ -983,7 +983,7 @@ var gBrowserInit = {
   delayedStartupFinished: false,
 
   onLoad() {
-    gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver, false);
+    gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver);
 
     Services.obs.addObserver(gPluginHandler.NPAPIPluginCrashed, "plugin-crashed", false);
 
@@ -1341,8 +1341,8 @@ var gBrowserInit = {
     if (AppConstants.platform != "macosx") {
       updateEditUIVisibility();
       let placesContext = document.getElementById("placesContext");
-      placesContext.addEventListener("popupshowing", updateEditUIVisibility, false);
-      placesContext.addEventListener("popuphiding", updateEditUIVisibility, false);
+      placesContext.addEventListener("popupshowing", updateEditUIVisibility);
+      placesContext.addEventListener("popuphiding", updateEditUIVisibility);
     }
 
     LightWeightThemeWebInstaller.init();
@@ -1366,8 +1366,8 @@ var gBrowserInit = {
 
     gMenuButtonUpdateBadge.init();
 
-    window.addEventListener("mousemove", MousePosTracker, false);
-    window.addEventListener("dragover", MousePosTracker, false);
+    window.addEventListener("mousemove", MousePosTracker);
+    window.addEventListener("dragover", MousePosTracker);
 
     gNavToolbox.addEventListener("customizationstarting", CustomizationHandler);
     gNavToolbox.addEventListener("customizationchange", CustomizationHandler);
@@ -2546,9 +2546,9 @@ function SetPageProxyState(aState, aOptions = {}) {
   // gets called when we switch tabs.
   if (aState == "valid") {
     gLastValidURLStr = gURLBar.value;
-    gURLBar.addEventListener("input", UpdatePageProxyState, false);
+    gURLBar.addEventListener("input", UpdatePageProxyState);
   } else if (aState == "invalid") {
-    gURLBar.removeEventListener("input", UpdatePageProxyState, false);
+    gURLBar.removeEventListener("input", UpdatePageProxyState);
   }
 
   // Only need to call anchorVisibilityChange if the PopupNotifications object
@@ -3875,10 +3875,10 @@ function FillHistoryMenu(aParent) {
       // Only the current page should have the checked attribute, so skip it
       if (!aEvent.target.hasAttribute("checked"))
         XULBrowserWindow.setOverLink(aEvent.target.getAttribute("uri"));
-    }, false);
+    });
     aParent.addEventListener("DOMMenuItemInactive", function() {
       XULBrowserWindow.setOverLink("");
-    }, false);
+    });
 
     aParent.hasStatusListener = true;
   }
@@ -4779,7 +4779,7 @@ var CombinedStopReload = {
     this._initialized = true;
     if (XULBrowserWindow.stopCommand.getAttribute("disabled") != "true")
       reload.setAttribute("displaystop", "true");
-    stop.addEventListener("click", this, false);
+    stop.addEventListener("click", this);
     this.reload = reload;
     this.stop = stop;
   },
@@ -4790,7 +4790,7 @@ var CombinedStopReload = {
 
     this._cancelTransition();
     this._initialized = false;
-    this.stop.removeEventListener("click", this, false);
+    this.stop.removeEventListener("click", this);
     this.reload = null;
     this.stop = null;
   },
@@ -5148,7 +5148,7 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
 
     popup.insertBefore(menuItem, firstMenuItem);
 
-    menuItem.addEventListener("command", onViewToolbarCommand, false);
+    menuItem.addEventListener("command", onViewToolbarCommand);
   }
 
 
@@ -7863,8 +7863,8 @@ var TabContextMenu = {
     this.contextTab.toggleMuteMenuItem = toggleMute;
     this._updateToggleMuteMenuItem(this.contextTab);
 
-    this.contextTab.addEventListener("TabAttrModified", this, false);
-    aPopupMenu.addEventListener("popuphiding", this, false);
+    this.contextTab.addEventListener("TabAttrModified", this);
+    aPopupMenu.addEventListener("popuphiding", this);
 
     gFxAccounts.updateTabContextMenu(aPopupMenu);
   },

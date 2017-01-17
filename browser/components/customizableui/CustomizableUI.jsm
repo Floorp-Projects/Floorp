@@ -1369,9 +1369,9 @@ var CustomizableUIInternal = {
       node.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional");
 
       let commandHandler = this.handleWidgetCommand.bind(this, aWidget, node);
-      node.addEventListener("command", commandHandler, false);
+      node.addEventListener("command", commandHandler);
       let clickHandler = this.handleWidgetClick.bind(this, aWidget, node);
-      node.addEventListener("click", clickHandler, false);
+      node.addEventListener("click", clickHandler);
 
       // If the widget has a view, and has view showing / hiding listeners,
       // hook those up to this widget.
@@ -1387,7 +1387,7 @@ var CustomizableUIInternal = {
           for (let eventName of kSubviewEvents) {
             let handler = "on" + eventName;
             if (typeof aWidget[handler] == "function") {
-              viewNode.addEventListener(eventName, aWidget[handler], false);
+              viewNode.addEventListener(eventName, aWidget[handler]);
             }
           }
 
@@ -2455,7 +2455,7 @@ var CustomizableUIInternal = {
           for (let eventName of kSubviewEvents) {
             let handler = "on" + eventName;
             if (typeof widget[handler] == "function") {
-              viewNode.removeEventListener(eventName, widget[handler], false);
+              viewNode.removeEventListener(eventName, widget[handler]);
             }
           }
         }

@@ -10,12 +10,12 @@
   window.onload = function() {
     document.domain = 'mochi.test';
   };
-  window.addEventListener('message', receiveMessage, false);
+  window.addEventListener('message', receiveMessage);
   function receiveMessage(event) {
     // make sure to get the right start command, otherwise
     // let the parent know and fail the test
     if (event.data.start !== 'startTest') {
-      window.removeEventListener("message", receiveMessage, false);
+      window.removeEventListener("message", receiveMessage);
       window.parent.postMessage({triggeringPrincipalURI: 'false'}, '*');
     }
     // click the link to navigate the subframe

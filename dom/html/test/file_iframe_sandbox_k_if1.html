@@ -18,7 +18,7 @@
   }
 
   // Add message listener to forward messages on to parent
-  window.addEventListener("message", receiveMessage, false);
+  window.addEventListener("message", receiveMessage);
 
   function receiveMessage(event) {
     switch (event.data.type) {

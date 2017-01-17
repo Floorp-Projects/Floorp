@@ -158,7 +158,7 @@ function wire(root, selectorOrElement, descriptor) {
   for (let i = 0; i < matches.length; i++) {
     let element = matches[i];
     forEach(descriptor.events, function (name, handler) {
-      element.addEventListener(name, handler, false);
+      element.addEventListener(name, handler);
     });
     forEach(descriptor.attributes, element.setAttribute);
   }

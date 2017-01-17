@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=912456
     var a = new MessageChannel();
     ok(a, "MessageChannel created");
 
-    window.addEventListener('message', receiveMessage, false);
+    window.addEventListener('message', receiveMessage);
     function receiveMessage(evt) {
       ok(evt.data.port, "Port has been received!");
 
@@ -68,7 +68,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=912456
     var a = new MessageChannel();
     ok(a, "MessageChannel created");
 
-    window.addEventListener('message', receiveMessage, false);
+    window.addEventListener('message', receiveMessage);
     function receiveMessage(evt) {
       ok(evt.data, "Data is 42");
       ok(evt.ports, "Port is received");

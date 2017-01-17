@@ -3264,8 +3264,8 @@ Checker.prototype = {
     this._request.setRequestHeader("Pragma", "no-cache");
 
     var self = this;
-    this._request.addEventListener("error", function(event) { self.onError(event); }, false);
-    this._request.addEventListener("load", function(event) { self.onLoad(event); }, false);
+    this._request.addEventListener("error", function(event) { self.onError(event); });
+    this._request.addEventListener("load", function(event) { self.onLoad(event); });
 
     LOG("Checker:checkForUpdates - sending request to: " + url);
     this._request.send(null);

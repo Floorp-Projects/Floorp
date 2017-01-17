@@ -6,7 +6,7 @@
         document.getElementById('t').setCustomValidity('foo');
         document.documentElement.className='';
       }
-      document.addEventListener("MozReftestInvalidate", doTest, false);
+      document.addEventListener("MozReftestInvalidate", doTest);
     </script>
   </head>
   <!-- Test: if textarea has a custom error, it should not be affected by :valid

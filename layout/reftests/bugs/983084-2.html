@@ -12,9 +12,9 @@
                 el.style.opacity = 0.99;
                 document.addEventListener("transitionend", function() {
                   document.documentElement.removeAttribute("class");
-                }, false);
+                });
             }
-            window.addEventListener("MozReftestInvalidate", showItem, false);
+            window.addEventListener("MozReftestInvalidate", showItem);
         </script>
     </head>
     <body>

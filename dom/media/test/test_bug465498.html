@@ -68,10 +68,10 @@ function initTest(test, token) {
 
   v._seeked = false;
   v._finished = false;
-  v.addEventListener("loadedmetadata", startTest, false);
-  v.addEventListener("ended", playbackEnded, false);
-  v.addEventListener("seeked", seekEnded, false);
-  v.addEventListener("seeking", seeking, false);
+  v.addEventListener("loadedmetadata", startTest);
+  v.addEventListener("ended", playbackEnded);
+  v.addEventListener("seeked", seekEnded);
+  v.addEventListener("seeking", seeking);
   document.body.appendChild(v);
 }
 

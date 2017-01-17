@@ -35,7 +35,7 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
     this._popupset = document.getElementById("debuggerPopupset");
 
     this.widget = new BreadcrumbsWidget(document.getElementById("stackframes"));
-    this.widget.addEventListener("select", this._onSelect, false);
+    this.widget.addEventListener("select", this._onSelect);
     this.widget.addEventListener("scroll", this._onScroll, true);
     this.widget.setAttribute("context", "stackFramesContextMenu");
     window.addEventListener("resize", this._onScroll, true);
@@ -53,7 +53,7 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
   destroy: function () {
     dumpn("Destroying the StackFramesView");
 
-    this.widget.removeEventListener("select", this._onSelect, false);
+    this.widget.removeEventListener("select", this._onSelect);
     this.widget.removeEventListener("scroll", this._onScroll, true);
     window.removeEventListener("resize", this._onScroll, true);
   },
@@ -137,7 +137,7 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
     menuitem.addEventListener("command", () => {
       let stack = this._getStackAsString();
       clipboardHelper.copyString(stack);
-    }, false);
+    });
     menupopup.appendChild(menuitem);
     this._popupset.appendChild(menupopup);
   },

@@ -167,7 +167,7 @@ function makeRequest(uri) {
   function documentLoaded(e) {
       xmlLoad(xmlDoc);
   }
-  xmlDoc.addEventListener("load", documentLoaded, false);
+  xmlDoc.addEventListener("load", documentLoaded);
   xmlDoc.load(uri);
 }
 
