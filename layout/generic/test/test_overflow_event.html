@@ -13,7 +13,7 @@
       if (event.target == document) {
           test_bug981637();
       }
-  }, false);
+  });
 
   /** Test for Bug 981637:  correct overflow event firing in updateOverflow **/
 
@@ -27,7 +27,7 @@
     var innerDiv = outerDiv.firstChild;
     innerDiv.offsetWidth; // flush layout
     is(overflow_fired, false, "correct setup");
-    outerDiv.addEventListener("overflow", overflow_listener, false);
+    outerDiv.addEventListener("overflow", overflow_listener);
     innerDiv.style.transform = "scale(1.2)";
     innerDiv.offsetWidth; // flush layout
     // run finish step after the overflow event fires (off the event loop)

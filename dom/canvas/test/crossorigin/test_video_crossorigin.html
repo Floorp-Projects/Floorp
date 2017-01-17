@@ -151,11 +151,11 @@ function startTest(test, token) {
   v.style.display = "none";
   if (test.nameIntent === test.corsIntent || test.corsIntent === "none" ||
       (test.nameIntent === "use-credentials" && test.corsIntent === "anonymous")) {
-    v.addEventListener("loadeddata", vidDataSuccess, false);
-    v.addEventListener("error", vidLoadFailure, false);
+    v.addEventListener("loadeddata", vidDataSuccess);
+    v.addEventListener("error", vidLoadFailure);
   } else {
-    v.addEventListener("loadeddata", vidLoadFailure, false);
-    v.addEventListener("error", vidErrorSuccess, false);
+    v.addEventListener("loadeddata", vidLoadFailure);
+    v.addEventListener("error", vidErrorSuccess);
   }
   v.src = test.name;
   document.body.appendChild(v);

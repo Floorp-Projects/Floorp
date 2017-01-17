@@ -24,7 +24,7 @@ var gUndoDialog = {
    */
   init: function UndoDialog_init() {
     this._undoContainer = document.getElementById("newtab-undo-container");
-    this._undoContainer.addEventListener("click", this, false);
+    this._undoContainer.addEventListener("click", this);
     this._undoButton = document.getElementById("newtab-undo-button");
     this._undoCloseButton = document.getElementById("newtab-undo-close-button");
     this._undoRestoreButton = document.getElementById("newtab-undo-restore-button");

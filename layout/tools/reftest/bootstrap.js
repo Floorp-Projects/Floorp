@@ -13,7 +13,7 @@ var WindowListener = {
 
     win = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
     win.addEventListener("load", function listener() {
-      win.removeEventListener("load", listener, false);
+      win.removeEventListener("load", listener);
 
       // Load into any existing windows.
       let windows = Services.wm.getEnumerator("navigator:browser");
@@ -28,7 +28,7 @@ var WindowListener = {
         // Add setTimeout here because windows.innerWidth/Height are not set yet.
         win.setTimeout(function() {OnRefTestLoad(win);}, 0);
       });
-    }, false);
+    });
   }
 };
 

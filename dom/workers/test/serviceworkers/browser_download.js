@@ -26,7 +26,7 @@ function windowObserver(win, topic) {
   }
 
   win.addEventListener('load', function onLoadWindow() {
-    win.removeEventListener('load', onLoadWindow, false);
+    win.removeEventListener('load', onLoadWindow);
     if (win.document.documentURI ===
         'chrome://mozapps/content/downloads/unknownContentType.xul') {
       executeSoon(function() {
@@ -35,7 +35,7 @@ function windowObserver(win, topic) {
         win.document.documentElement.acceptDialog();
       });
     }
-  }, false);
+  });
 }
 
 function test() {

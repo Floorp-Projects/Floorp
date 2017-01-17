@@ -15,7 +15,7 @@ window.addEventListener("load", function onLoad() {
   for (let i of inputs) {
     let pref = i.dataset.pref;
     Services.prefs.addObserver(pref, FillForm, false);
-    i.addEventListener("change", SaveForm, false);
+    i.addEventListener("change", SaveForm);
   }
 
   // Buttons
@@ -33,7 +33,7 @@ window.addEventListener("unload", function onUnload() {
   let inputs = document.querySelectorAll("[data-pref]");
   for (let i of inputs) {
     let pref = i.dataset.pref;
-    i.removeEventListener("change", SaveForm, false);
+    i.removeEventListener("change", SaveForm);
     Services.prefs.removeObserver(pref, FillForm);
   }
 }, true);

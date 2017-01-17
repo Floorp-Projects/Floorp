@@ -35,7 +35,7 @@ var testCounter = -1;
 
 function ckeckResult() {
   try {
-    document.getElementById("testframe").removeEventListener('load', ckeckResult, false);
+    document.getElementById("testframe").removeEventListener('load', ckeckResult);
     var testframe = document.getElementById("testframe");
     var divcontent = testframe.contentWindow.document.getElementById('testdiv').innerHTML;
     is(divcontent, curTest.result, "should be 'blocked'!");
@@ -54,7 +54,7 @@ function loadNextTest() {
   }
   curTest = TESTS[testCounter];
   var src = "file_dual_header_testserver.sjs?" + curTest.query;
-  document.getElementById("testframe").addEventListener("load", ckeckResult, false);
+  document.getElementById("testframe").addEventListener("load", ckeckResult);
   document.getElementById("testframe").src = src;
 }
 

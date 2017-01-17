@@ -146,7 +146,7 @@ window.addEventListener("message", function onMessage(evt) {
   if (evt.data === "start") {
     runTest();
   }
-}, false);
+});
 
 window.setTimeout(function() {
   command("ready-to-start");

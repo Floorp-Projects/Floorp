@@ -49,7 +49,7 @@ window.onload = function onLoad() {
       finish();
     }
   } else {
-    window.addEventListener("message", onMessageReceived, false);
+    window.addEventListener("message", onMessageReceived);
 
     let secureTestLocation = loadAsInsecure ? "http://example.com"
                                             : "https://example.com";

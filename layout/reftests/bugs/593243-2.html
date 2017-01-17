@@ -8,18 +8,18 @@
   <title></title>
 <script type="text/javascript">
 function initialPaint() {
-  window.removeEventListener("MozAfterPaint", initialPaint, false);
+  window.removeEventListener("MozAfterPaint", initialPaint);
   setTimeout(type, 0);
 }
 
 function type() {
   var box = document.getElementById("input");
   box.value = "Hello kitty";
-  window.addEventListener("MozAfterPaint", repaint, false);
+  window.addEventListener("MozAfterPaint", repaint);
 }
 
 function repaint() {
-  window.removeEventListener("MozAfterPaint", repaint, false);
+  window.removeEventListener("MozAfterPaint", repaint);
   setTimeout(finish, 0);
 }
 
@@ -27,7 +27,7 @@ function finish() {
   document.documentElement.removeAttribute("class");
 }
 
-window.addEventListener("MozAfterPaint", initialPaint, false);
+window.addEventListener("MozAfterPaint", initialPaint);
 </script>
 </head>
 

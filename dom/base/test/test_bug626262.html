@@ -27,7 +27,7 @@ addLoadEvent(function() {
 
   function a()
   {
-    window.removeEventListener("DOMNodeRemoved", arguments.callee, false);
+    window.removeEventListener("DOMNodeRemoved", arguments.callee);
     document.adoptNode(parent);
   }
 
@@ -36,7 +36,7 @@ addLoadEvent(function() {
 
   var thrown = false;
   try {
-    window.addEventListener("DOMNodeRemoved", a, false);
+    window.addEventListener("DOMNodeRemoved", a);
     parent.appendChild(text);
   }
   catch (e) {

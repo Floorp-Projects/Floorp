@@ -13,6 +13,6 @@ function doTest() {
   document.documentElement.removeAttribute("class");
 }
 
-window.addEventListener("MozReftestInvalidate", doTest, false);
+window.addEventListener("MozReftestInvalidate", doTest);
 setTimeout(doTest, 4000); // fallback for running outside reftest
 </script>

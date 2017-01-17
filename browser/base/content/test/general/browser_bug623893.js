@@ -31,10 +31,10 @@ function duplicate(delta, msg, cb) {
   let tab = gBrowser.selectedTab;
 
   tab.addEventListener("SSTabRestored", function tabRestoredListener() {
-    tab.removeEventListener("SSTabRestored", tabRestoredListener, false);
+    tab.removeEventListener("SSTabRestored", tabRestoredListener);
     is(gBrowser.sessionHistory.index, start + delta, msg);
     executeSoon(cb);
-  }, false);
+  });
 }
 
 function loadAndWait(url, cb) {

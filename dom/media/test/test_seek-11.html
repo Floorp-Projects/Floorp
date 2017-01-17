@@ -62,9 +62,9 @@ function seekEnded() {
   }
 }
 
-v.addEventListener("loadedmetadata", startTest, false);
-v.addEventListener("seeking", startSeeking, false);
-v.addEventListener("seeked", seekEnded, false);
+v.addEventListener("loadedmetadata", startTest);
+v.addEventListener("seeking", startSeeking);
+v.addEventListener("seeked", seekEnded);
 
 }
 

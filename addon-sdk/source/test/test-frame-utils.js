@@ -30,12 +30,12 @@ exports['test fram has js disabled by default'] = function(assert, done) {
            '= "J" + "S"</script>',
     });
     frame.contentWindow.addEventListener('DOMContentLoaded', function ready() {
-      frame.contentWindow.removeEventListener('DOMContentLoaded', ready, false);
+      frame.contentWindow.removeEventListener('DOMContentLoaded', ready);
       assert.ok(!~frame.contentDocument.documentElement.innerHTML.indexOf('JS'),
                 'JS was executed');
 
       close(window).then(done);
-    }, false);
+    });
   });
 };
 
@@ -47,12 +47,12 @@ exports['test frame with js enabled'] = function(assert, done) {
       allowJavascript: true
     });
     frame.contentWindow.addEventListener('DOMContentLoaded', function ready() {
-      frame.contentWindow.removeEventListener('DOMContentLoaded', ready, false);
+      frame.contentWindow.removeEventListener('DOMContentLoaded', ready);
       assert.ok(~frame.contentDocument.documentElement.innerHTML.indexOf('JS'),
                 'JS was executed');
 
       close(window).then(done);
-    }, false);
+    });
   });
 };
 

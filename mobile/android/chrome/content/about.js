@@ -151,4 +151,4 @@ function init() {
 #endif
 }
 
-document.addEventListener("DOMContentLoaded", init, false);
+document.addEventListener("DOMContentLoaded", init);

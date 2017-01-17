@@ -20,7 +20,7 @@ window.addEventListener("storage", function (event) {
   ok(event.storageArea, storage, "The storageArea is correct");
   storage.removeItem("a");
   runTests();
-}, false);
+});
 
 var tests = [ { key: 'localStorage', storage: localStorage },
               { key: 'sessionStorage', storage: sessionStorage } ];

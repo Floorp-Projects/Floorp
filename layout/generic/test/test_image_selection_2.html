@@ -27,10 +27,10 @@ var t1 = document.getElementById("t1");
 function doTest() {
   t1.addEventListener("mousedown", function() {
     t1.className = "chosen";
-  }, false);
+  });
   t1.addEventListener("mouseup", function() {
     ok(selection.isCollapsed, "checking that selection is collapsed");
-  }, false);
+  });
   synthesizeMouse(t1, 10, 10, {});
   SimpleTest.finish();
 }

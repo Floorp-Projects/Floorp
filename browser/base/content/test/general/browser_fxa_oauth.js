@@ -295,13 +295,13 @@ var gTests = [
 function waitForTab(aCallback) {
   let container = gBrowser.tabContainer;
   container.addEventListener("TabOpen", function tabOpener(event) {
-    container.removeEventListener("TabOpen", tabOpener, false);
+    container.removeEventListener("TabOpen", tabOpener);
     gBrowser.addEventListener("load", function listener() {
       gBrowser.removeEventListener("load", listener, true);
       let tab = event.target;
       aCallback(tab);
     }, true);
-  }, false);
+  });
 }
 
 function test() {

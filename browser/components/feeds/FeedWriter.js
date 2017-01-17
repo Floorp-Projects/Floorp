@@ -992,9 +992,9 @@ FeedWriter.prototype = {
 
   close() {
     this._document.getElementById("subscribeButton")
-        .removeEventListener("click", this, false);
+        .removeEventListener("click", this);
     this._document.getElementById("handlersMenuList")
-        .removeEventListener("change", this, false);
+        .removeEventListener("change", this);
     this._document = null;
     this._window = null;
     let prefs = Services.prefs;

@@ -33,19 +33,19 @@ function dumbListener(event) {}
 function dumbListener2(event) {}
 function dumbListener3(event) {}
 
-window.addEventListener("deviceorientation", dumbListener, false);
-window.addEventListener("random_event_name", function() {}, false);
-window.addEventListener("deviceorientation", dumbListener2, false);
+window.addEventListener("deviceorientation", dumbListener);
+window.addEventListener("random_event_name", function() {});
+window.addEventListener("deviceorientation", dumbListener2);
 
 is(hasListeners(), true, "Listeners should have been added");
 
 window.setTimeout(function() {
 
-  window.removeEventListener("deviceorientation", dumbListener, false);
+  window.removeEventListener("deviceorientation", dumbListener);
   is(hasListeners(), true, "Only some listeners should have been removed");
   window.setTimeout(function() {
 
-    window.removeEventListener("deviceorientation", dumbListener2, false);
+    window.removeEventListener("deviceorientation", dumbListener2);
     window.setTimeout(function() {
       is(hasListeners(), false, "Listeners should have been removed");
       testEventHandler();

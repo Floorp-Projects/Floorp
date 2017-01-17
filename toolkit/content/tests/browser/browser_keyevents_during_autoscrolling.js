@@ -67,9 +67,9 @@ add_task(function * () {
 
   yield SimpleTest.promiseFocus(gBrowser.selectedBrowser);
 
-  window.addEventListener("keydown", onKey, false);
-  window.addEventListener("keypress", onKey, false);
-  window.addEventListener("keyup", onKey, false);
+  window.addEventListener("keydown", onKey);
+  window.addEventListener("keypress", onKey);
+  window.addEventListener("keyup", onKey);
 
   // Test whether the key events are handled correctly under normal condition
   expectedKeyEvents = kAllKeyEvents;
@@ -103,9 +103,9 @@ add_task(function * () {
   expectedKeyEvents = kAllKeyEvents;
   sendChar("A");
 
-  window.removeEventListener("keydown", onKey, false);
-  window.removeEventListener("keypress", onKey, false);
-  window.removeEventListener("keyup", onKey, false);
+  window.removeEventListener("keydown", onKey);
+  window.removeEventListener("keypress", onKey);
+  window.removeEventListener("keyup", onKey);
 
   // restore the changed prefs
   if (Services.prefs.prefHasUserValue(kPrefName_AutoScroll))

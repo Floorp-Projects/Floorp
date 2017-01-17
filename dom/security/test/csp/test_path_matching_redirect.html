@@ -54,7 +54,7 @@ var curTest;
 
 function checkResult() {
   try {
-    document.getElementById("testframe").removeEventListener('load', checkResult, false);
+    document.getElementById("testframe").removeEventListener('load', checkResult);
     var testframe = document.getElementById("testframe");
     var divcontent = testframe.contentWindow.document.getElementById('testdiv').innerHTML;
     is(divcontent, curTest.expected, "should be blocked in test " + (counter - 1) + "!");
@@ -77,7 +77,7 @@ function loadNextTest() {
     // append the CSP that should be used to serve the file
     src += "&csp=" + escape(policy);
 
-    document.getElementById("testframe").addEventListener("load", checkResult, false);
+    document.getElementById("testframe").addEventListener("load", checkResult);
     document.getElementById("testframe").src = src;
   }
 }

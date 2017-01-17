@@ -4945,7 +4945,7 @@
           if (this.AppConstants.platform == "macosx") {
             els.addSystemEventListener(document, "keypress", this, false);
           }
-          window.addEventListener("sizemodechange", this, false);
+          window.addEventListener("sizemodechange", this);
 
           var uniqueId = this._generateUniquePanelID();
           this.mPanelContainer.childNodes[0].id = uniqueId;
@@ -5065,7 +5065,7 @@
           if (this.AppConstants.platform == "macosx") {
             els.removeSystemEventListener(document, "keypress", this, false);
           }
-          window.removeEventListener("sizemodechange", this, false);
+          window.removeEventListener("sizemodechange", this);
 
           if (gMultiProcessBrowser) {
             let messageManager = window.getGroupMessageManager("browsers");
@@ -5471,8 +5471,8 @@
           tab.label = this.tabbrowser.mStringBundle.getString("tabs.emptyTabTitle");
           tab.setAttribute("onerror", "this.removeAttribute('image');");
 
-          window.addEventListener("resize", this, false);
-          window.addEventListener("load", this, false);
+          window.addEventListener("resize", this);
+          window.addEventListener("load", this);
 
           try {
             this._tabAnimationLoggingEnabled = Services.prefs.getBoolPref("browser.tabs.animationLogging.enabled");
@@ -5810,8 +5810,8 @@
               }
             }
             this._hasTabTempMaxWidth = true;
-            this.tabbrowser.addEventListener("mousemove", this, false);
-            window.addEventListener("mouseout", this, false);
+            this.tabbrowser.addEventListener("mousemove", this);
+            window.addEventListener("mouseout", this);
           }
         ]]></body>
       </method>
@@ -5822,15 +5822,15 @@
           let spacer = this._closingTabsSpacer;
           spacer.style.width = parseFloat(spacer.style.width) + pixels + "px";
           this.setAttribute("using-closing-tabs-spacer", "true");
-          this.tabbrowser.addEventListener("mousemove", this, false);
-          window.addEventListener("mouseout", this, false);
+          this.tabbrowser.addEventListener("mousemove", this);
+          window.addEventListener("mouseout", this);
         ]]></body>
       </method>
 
       <method name="_unlockTabSizing">
         <body><![CDATA[
-          this.tabbrowser.removeEventListener("mousemove", this, false);
-          window.removeEventListener("mouseout", this, false);
+          this.tabbrowser.removeEventListener("mousemove", this);
+          window.removeEventListener("mouseout", this);
 
           if (this._hasTabTempMaxWidth) {
             this._hasTabTempMaxWidth = false;
@@ -7339,9 +7339,9 @@
           var tabcontainer = gBrowser.tabContainer;
 
           // Listen for changes in the tab bar.
-          tabcontainer.addEventListener("TabAttrModified", this, false);
-          tabcontainer.addEventListener("TabClose", this, false);
-          tabcontainer.mTabstrip.addEventListener("scroll", this, false);
+          tabcontainer.addEventListener("TabAttrModified", this);
+          tabcontainer.addEventListener("TabClose", this);
+          tabcontainer.mTabstrip.addEventListener("scroll", this);
 
           let tabs = gBrowser.visibleTabs;
           for (var i = 0; i < tabs.length; i++) {
@@ -7370,9 +7370,9 @@
           }
         }
         var tabcontainer = gBrowser.tabContainer;
-        tabcontainer.mTabstrip.removeEventListener("scroll", this, false);
-        tabcontainer.removeEventListener("TabAttrModified", this, false);
-        tabcontainer.removeEventListener("TabClose", this, false);
+        tabcontainer.mTabstrip.removeEventListener("scroll", this);
+        tabcontainer.removeEventListener("TabAttrModified", this);
+        tabcontainer.removeEventListener("TabClose", this);
       ]]></handler>
 
       <handler event="DOMMenuItemActive">
@@ -7413,11 +7413,11 @@
 
     <implementation implements="nsIDOMEventListener">
       <constructor><![CDATA[
-        window.addEventListener("resize", this, false);
+        window.addEventListener("resize", this);
       ]]></constructor>
 
       <destructor><![CDATA[
-        window.removeEventListener("resize", this, false);
+        window.removeEventListener("resize", this);
         MousePosTracker.removeListener(this);
       ]]></destructor>
 

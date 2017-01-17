@@ -61,7 +61,7 @@ function Spectrum(parentEl, rgb) {
   `;
 
   this.onElementClick = this.onElementClick.bind(this);
-  this.element.addEventListener("click", this.onElementClick, false);
+  this.element.addEventListener("click", this.onElementClick);
 
   this.parentEl.appendChild(this.element);
 
@@ -178,10 +178,10 @@ Spectrum.draggable = function (element, onmove, onstart, onstop) {
 
         move(e);
 
-        doc.addEventListener("selectstart", prevent, false);
-        doc.addEventListener("dragstart", prevent, false);
-        doc.addEventListener("mousemove", move, false);
-        doc.addEventListener("mouseup", stop, false);
+        doc.addEventListener("selectstart", prevent);
+        doc.addEventListener("dragstart", prevent);
+        doc.addEventListener("mousemove", move);
+        doc.addEventListener("mouseup", stop);
 
         prevent(e);
       }
@@ -190,16 +190,16 @@ Spectrum.draggable = function (element, onmove, onstart, onstop) {
 
   function stop() {
     if (dragging) {
-      doc.removeEventListener("selectstart", prevent, false);
-      doc.removeEventListener("dragstart", prevent, false);
-      doc.removeEventListener("mousemove", move, false);
-      doc.removeEventListener("mouseup", stop, false);
+      doc.removeEventListener("selectstart", prevent);
+      doc.removeEventListener("dragstart", prevent);
+      doc.removeEventListener("mousemove", move);
+      doc.removeEventListener("mouseup", stop);
       onstop.apply(element, arguments);
     }
     dragging = false;
   }
 
-  element.addEventListener("mousedown", start, false);
+  element.addEventListener("mousedown", start);
 };
 
 Spectrum.prototype = {
@@ -323,7 +323,7 @@ Spectrum.prototype = {
   },
 
   destroy: function () {
-    this.element.removeEventListener("click", this.onElementClick, false);
+    this.element.removeEventListener("click", this.onElementClick);
 
     this.parentEl.removeChild(this.element);
 

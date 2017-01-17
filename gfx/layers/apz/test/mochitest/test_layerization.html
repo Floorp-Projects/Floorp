@@ -167,9 +167,9 @@ function* test(testDriver) {
     // by not updating timerId we ensure that this listener resets the timeout
     // at most once.
   };
-  inner3.addEventListener('scroll', timeoutResetter, false);
+  inner3.addEventListener('scroll', timeoutResetter);
   yield; // wait for the setTimeout to elapse
-  inner3.removeEventListener('scroll', timeoutResetter, false);
+  inner3.removeEventListener('scroll', timeoutResetter);
 
   yield waitForAllPaints(asyncWrapper(testDriver));
   ok(!isLayerized('inner3'), "inner3 becomes unlayerized after expiry");

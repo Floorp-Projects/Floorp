@@ -16,13 +16,13 @@ function test() {
   ContentTask.spawn(gBrowser.selectedBrowser, TESTROOT + "installtrigger.html?" + triggers, url => {
     return new Promise(resolve => {
       function page_loaded() {
-        content.removeEventListener("PageLoaded", page_loaded, false);
+        content.removeEventListener("PageLoaded", page_loaded);
         resolve(content.document.getElementById("return").textContent);
       }
 
       function load_listener() {
         removeEventListener("load", load_listener, true);
-        content.addEventListener("InstallTriggered", page_loaded, false);
+        content.addEventListener("InstallTriggered", page_loaded);
       }
 
       addEventListener("load", load_listener, true);

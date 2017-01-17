@@ -27,9 +27,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=502818
   }
 
   Event.prototype.foo = 'bar';
-  window.addEventListener('DOMMouseScroll', listener, false);
-  window.addEventListener('MozMousePixelScroll', listener, false);
-  window.addEventListener('foobar', listener, false);
+  window.addEventListener('DOMMouseScroll', listener);
+  window.addEventListener('MozMousePixelScroll', listener);
+  window.addEventListener('foobar', listener);
 
   var e = document.createEvent("mousescrollevents");
   e.initMouseScrollEvent("DOMMouseScroll", true, true, window,

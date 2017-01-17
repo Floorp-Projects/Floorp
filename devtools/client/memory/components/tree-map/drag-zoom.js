@@ -201,16 +201,16 @@ function setDragHandlers(container, dragZoom, emitChanged, update) {
     update();
   }
 
-  parentEl.addEventListener("mousedown", startDrag, false);
-  parentEl.addEventListener("mouseup", stopDrag, false);
-  parentEl.addEventListener("mouseout", stopDrag, false);
-  parentEl.addEventListener("mousemove", drag, false);
+  parentEl.addEventListener("mousedown", startDrag);
+  parentEl.addEventListener("mouseup", stopDrag);
+  parentEl.addEventListener("mouseout", stopDrag);
+  parentEl.addEventListener("mousemove", drag);
 
   return function removeListeners() {
-    parentEl.removeEventListener("mousedown", startDrag, false);
-    parentEl.removeEventListener("mouseup", stopDrag, false);
-    parentEl.removeEventListener("mouseout", stopDrag, false);
-    parentEl.removeEventListener("mousemove", drag, false);
+    parentEl.removeEventListener("mousedown", startDrag);
+    parentEl.removeEventListener("mouseup", stopDrag);
+    parentEl.removeEventListener("mouseout", stopDrag);
+    parentEl.removeEventListener("mousemove", drag);
   };
 }
 
@@ -267,10 +267,10 @@ function setScrollHandlers(container, dragZoom, emitChanged, update) {
     update();
   }
 
-  container.addEventListener("wheel", handleWheel, false);
+  container.addEventListener("wheel", handleWheel);
 
   return function removeListener() {
-    container.removeEventListener("wheel", handleWheel, false);
+    container.removeEventListener("wheel", handleWheel);
   };
 }
 

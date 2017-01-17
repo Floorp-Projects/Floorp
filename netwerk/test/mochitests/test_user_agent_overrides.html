@@ -43,9 +43,9 @@ function testUAIFrame(host, expected, sameQ, message, testNavQ, navSameQ, navMes
     if (testNavQ) {
       ok(navSameQ == (e.data.nav.indexOf(expected) != -1), navMessage);
     }
-    window.removeEventListener("message", recv, false);
+    window.removeEventListener("message", recv);
     callback();
-  }, false);
+  });
 
 }
 
@@ -99,8 +99,8 @@ function testUA(options, callback) {
           });
         });
       });
-      window.removeEventListener("message", recv, false);
-    }, false);
+      window.removeEventListener("message", recv);
+    });
   })();
 }
 

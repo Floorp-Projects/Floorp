@@ -43,7 +43,7 @@
 
         input.addEventListener("focus", function() {
           div.requestPointerLock();
-        }, false);
+        });
 
         document.addEventListener("pointerlockchange", function (e) {
           if (document.pointerLockElement === div) {
@@ -54,7 +54,7 @@
             });
             document.exitFullscreen();
           }
-        }, false);
+        });
 
         function start() {
           addFullscreenChangeContinuation("enter", function() {

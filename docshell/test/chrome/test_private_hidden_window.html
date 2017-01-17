@@ -52,10 +52,10 @@ function onHiddenPrivateWindowReady() {
 
   var win = mainWindow.OpenBrowserWindow({private: true});
   win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad, false);
+    win.removeEventListener("load", onLoad);
     win.close();
     win = null;
-  }, false);
+  });
 }
 
 function observer(aSubject, aTopic, aData) {

@@ -32,25 +32,25 @@ function receiveMessage(evt)
 
   function afterClose()
   {
-    document.removeEventListener("message", receiveMessage, false);
+    document.removeEventListener("message", receiveMessage);
     evt.source.postMessage("NOT-RECEIVED", "*");
 
     var iframe = document.createElement("iframe");
     iframe.id = "insertedIframe";
     $("holder").appendChild(iframe);
-    iframe.addEventListener("load", iframeLoaded, false);
+    iframe.addEventListener("load", iframeLoaded);
     iframe.src = "postMessage_closed_helper.html?parent";
   }
 
   setTimeout(afterClose, 0);
 }
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 
 function iframeLoaded(evt)
 {
   var iframe = $("insertedIframe");
-  iframe.removeEventListener("load", iframeLoaded, false);
+  iframe.removeEventListener("load", iframeLoaded);
 
   var iframeWindow = iframe.contentWindow;
   $("holder").removeChild($("insertedIframe"));
@@ -71,7 +71,7 @@ function run()
   }
 }
 
-window.addEventListener("load", run, false);
+window.addEventListener("load", run);
 </script>
 </pre>
 </body>

@@ -340,10 +340,10 @@ add_test(function() {
     is_element_hidden(get("detail-pending"), "Pending message should be hidden");
 
     get("detail-screenshot").addEventListener("load", function() {
-      this.removeEventListener("load", arguments.callee, false);
+      this.removeEventListener("load", arguments.callee);
       is(this.hasAttribute("loading"), false, "Screenshot should not have loading attribute");
       run_next_test();
-    }, false);
+    });
   });
 });
 
@@ -423,10 +423,10 @@ add_test(function() {
     is_element_hidden(get("detail-pending"), "Pending message should be hidden");
 
     get("detail-screenshot").addEventListener("load", function() {
-      this.removeEventListener("load", arguments.callee, false);
+      this.removeEventListener("load", arguments.callee);
       is(this.hasAttribute("loading"), false, "Screenshot should not have loading attribute");
       run_next_test();
-    }, false);
+    });
   });
 });
 

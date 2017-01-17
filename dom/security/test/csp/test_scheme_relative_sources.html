@@ -56,7 +56,7 @@ var curTest;
 
 function loadNextTest() {
   if (counter == tests.length) {
-    window.removeEventListener("message", receiveMessage, false);
+    window.removeEventListener("message", receiveMessage);
     SimpleTest.finish();
     return;
   }
@@ -73,7 +73,7 @@ function loadNextTest() {
 
 // using a postMessage handler to report the result back from
 // within the sandboxed iframe without 'allow-same-origin'.
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 
 function receiveMessage(event) {
 

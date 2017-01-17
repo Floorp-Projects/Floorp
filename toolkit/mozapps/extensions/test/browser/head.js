@@ -370,9 +370,9 @@ function wait_for_view_load(aManagerWindow, aCallback, aForceWait, aLongerTimeou
   }
 
   aManagerWindow.document.addEventListener("ViewChanged", function() {
-    aManagerWindow.document.removeEventListener("ViewChanged", arguments.callee, false);
+    aManagerWindow.document.removeEventListener("ViewChanged", arguments.callee);
     log_exceptions(aCallback, aManagerWindow);
-  }, false);
+  });
 }
 
 function wait_for_manager_load(aManagerWindow, aCallback) {
@@ -383,9 +383,9 @@ function wait_for_manager_load(aManagerWindow, aCallback) {
 
   info("Waiting for initialization");
   aManagerWindow.document.addEventListener("Initialized", function() {
-    aManagerWindow.document.removeEventListener("Initialized", arguments.callee, false);
+    aManagerWindow.document.removeEventListener("Initialized", arguments.callee);
     log_exceptions(aCallback, aManagerWindow);
-  }, false);
+  });
 }
 
 function open_manager(aView, aCallback, aLoadCallback, aLongerTimeout) {
@@ -450,12 +450,12 @@ function close_manager(aManagerWindow, aCallback, aLongerTimeout) {
     aManagerWindow.addEventListener("unload", function() {
       try {
         dump("Manager window unload handler\n");
-        this.removeEventListener("unload", arguments.callee, false);
+        this.removeEventListener("unload", arguments.callee);
         resolve();
       } catch (e) {
         reject(e);
       }
-    }, false);
+    });
   });
 
   info("Telling manager window to close");
@@ -482,11 +482,11 @@ function wait_for_window_open(aCallback) {
       let domwindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIDOMWindow);
       domwindow.addEventListener("load", function() {
-        domwindow.removeEventListener("load", arguments.callee, false);
+        domwindow.removeEventListener("load", arguments.callee);
         executeSoon(function() {
           aCallback(domwindow);
         });
-      }, false);
+      });
     },
 
     onCloseWindow(aWindow) {
@@ -571,9 +571,9 @@ function CategoryUtilities(aManagerWindow) {
 
   var self = this;
   this.window.addEventListener("unload", function() {
-    self.window.removeEventListener("unload", arguments.callee, false);
+    self.window.removeEventListener("unload", arguments.callee);
     self.window = null;
-  }, false);
+  });
 }
 
 CategoryUtilities.prototype = {

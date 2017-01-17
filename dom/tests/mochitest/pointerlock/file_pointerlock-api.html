@@ -50,7 +50,7 @@
 
       function mouseMoveHandler(e) {
         info("Got mousemove");
-        document.removeEventListener("mousemove", mouseMoveHandler, false);
+        document.removeEventListener("mousemove", mouseMoveHandler);
 
         hasMovementX = "movementX" in e;
         hasMovementY = "movementY" in e;
@@ -74,7 +74,7 @@
                           { type: "contextmenu", button: 2 },
                           window);
 
-          document.addEventListener("mousemove", mouseMoveHandler, false);
+          document.addEventListener("mousemove", mouseMoveHandler);
           synthesizeMouseAtCenter(div, {type: "mousemove"}, window);
         } else {
           info("Got pointerlockchange for exiting");
@@ -86,7 +86,7 @@
           });
           document.exitFullscreen();
         }
-      }, false);
+      });
 
       function start() {
         div = document.getElementById("div");

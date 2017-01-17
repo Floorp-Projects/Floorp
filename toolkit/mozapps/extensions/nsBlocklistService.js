@@ -609,8 +609,8 @@ Blocklist.prototype = {
     request.setRequestHeader("Cache-Control", "no-cache");
     request.QueryInterface(Components.interfaces.nsIJSXMLHttpRequest);
 
-    request.addEventListener("error", event => this.onXMLError(event), false);
-    request.addEventListener("load", event => this.onXMLLoad(event), false);
+    request.addEventListener("error", event => this.onXMLError(event));
+    request.addEventListener("load", event => this.onXMLLoad(event));
     request.send(null);
 
     // When the blocklist loads we need to compare it to the current copy so
@@ -1484,7 +1484,7 @@ Blocklist.prototype = {
       let blocklistWindow = Services.ww.openWindow(null, URI_BLOCKLIST_DIALOG, "",
                               "chrome,centerscreen,dialog,titlebar", args);
       if (blocklistWindow)
-        blocklistWindow.addEventListener("unload", blocklistUnloadHandler, false);
+        blocklistWindow.addEventListener("unload", blocklistUnloadHandler);
     });
   },
 
