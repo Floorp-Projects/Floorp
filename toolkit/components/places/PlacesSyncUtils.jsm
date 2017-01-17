@@ -80,6 +80,11 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   SYNC_PARENT_ANNO: "sync/parent",
   SYNC_MOBILE_ROOT_ANNO: "mobile/bookmarksRoot",
 
+  // Jan 23, 1993 in milliseconds since 1970. Corresponds roughly to the release
+  // of the original NCSA Mosiac. We can safely assume that any dates before
+  // this time are invalid.
+  EARLIEST_BOOKMARK_TIMESTAMP: Date.UTC(1993, 0, 23),
+
   KINDS: {
     BOOKMARK: "bookmark",
     // Microsummaries were removed from Places in bug 524091. For now, Sync
@@ -110,6 +115,19 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
   syncIdToGuid(syncId) {
     return ROOT_SYNC_ID_TO_GUID[syncId] || syncId;
   },
+
+  /**
+   * Resolves to an array of the syncIDs of bookmarks that have a nonzero change
+   * counter
+   */
+  getChangedIds: Task.async(function* () {
+    let db = yield PlacesUtils.promiseDBConnection();
+    let result = yield db.executeCached(`
+      SELECT guid FROM moz_bookmarks
+      WHERE syncChangeCounter >= 1`);
+    return result.map(row =>
+      BookmarkSyncUtils.guidToSyncId(row.getResultByName("guid")));
+  }),
 
   /**
    * Fetches the sync IDs for a folder's children, ordered by their position
@@ -632,6 +650,8 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
    *  - parentSyncId (all): The sync ID of the item's parent.
    *  - parentTitle (all): The title of the item's parent, used for de-duping.
    *    Omitted for the Places root and parents with empty titles.
+   *  - dateAdded (all): Timestamp in milliseconds, when the bookmark was added
+   *    or created on a remote device if known.
    *  - title ("bookmark", "folder", "livemark", "query"): The item's title.
    *    Omitted if empty.
    *  - url ("bookmark", "query"): The item's URL.
@@ -779,6 +799,19 @@ const BookmarkSyncUtils = PlacesSyncUtils.bookmarks = Object.freeze({
       { syncChangeDelta, type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         url: url.href });
   },
+
+  /**
+   * Returns `undefined` if no sensible timestamp could be found.
+   * Otherwise, returns the earliest sensible timestamp between `existingMillis`
+   * and `serverMillis`.
+   */
+  ratchetTimestampBackwards(existingMillis, serverMillis, lowerBound = BookmarkSyncUtils.EARLIEST_BOOKMARK_TIMESTAMP) {
+    const possible = [+existingMillis, +serverMillis].filter(n => !isNaN(n) && n > lowerBound);
+    if (!possible.length) {
+      return undefined;
+    }
+    return Math.min(...possible);
+  }
 });
 
 XPCOMUtils.defineLazyGetter(this, "BookmarkSyncLog", () => {
@@ -1129,6 +1162,16 @@ var updateSyncBookmark = Task.async(function* (updateInfo) {
       updateInfo.syncId} does not exist`);
   }
 
+  if (updateInfo.hasOwnProperty("dateAdded")) {
+    let newDateAdded = BookmarkSyncUtils.ratchetTimestampBackwards(
+      oldBookmarkItem.dateAdded, updateInfo.dateAdded);
+    if (!newDateAdded || newDateAdded === oldBookmarkItem.dateAdded) {
+      delete updateInfo.dateAdded;
+    } else {
+      updateInfo.dateAdded = newDateAdded;
+    }
+  }
+
   let shouldReinsert = false;
   let oldKind = yield getKindForItem(oldBookmarkItem);
   if (updateInfo.hasOwnProperty("kind") && updateInfo.kind != oldKind) {
@@ -1155,6 +1198,9 @@ var updateSyncBookmark = Task.async(function* (updateInfo) {
   }
 
   if (shouldReinsert) {
+    if (!updateInfo.hasOwnProperty("dateAdded")) {
+      updateInfo.dateAdded = oldBookmarkItem.dateAdded.getTime();
+    }
     let newInfo = validateNewBookmark(updateInfo);
     yield PlacesUtils.bookmarks.remove({
       guid,
@@ -1320,6 +1366,7 @@ function validateNewBookmark(info) {
                                      , BookmarkSyncUtils.KINDS.QUERY ].includes(b.kind) }
     , feed: { validIf: b => b.kind == BookmarkSyncUtils.KINDS.LIVEMARK }
     , site: { validIf: b => b.kind == BookmarkSyncUtils.KINDS.LIVEMARK }
+    , dateAdded: { required: false }
     });
 
   return insertInfo;
@@ -1439,6 +1486,10 @@ var placesBookmarkToSyncBookmark = Task.async(function* (bookmarkItem) {
         item[prop] = bookmarkItem[prop];
         break;
 
+      case "dateAdded":
+        item[prop] = new Date(bookmarkItem[prop]).getTime();
+        break;
+
       // Livemark objects contain additional properties. The feed URL is
       // required; the site URL is optional.
       case "feedURI":
@@ -1475,6 +1526,10 @@ function syncBookmarkToPlacesBookmark(info) {
       // Convert sync IDs to Places GUIDs for roots.
       case "syncId":
         bookmarkInfo.guid = BookmarkSyncUtils.syncIdToGuid(info.syncId);
+        break;
+
+      case "dateAdded":
+        bookmarkInfo.dateAdded = new Date(info.dateAdded);
         break;
 
       case "parentSyncId":
