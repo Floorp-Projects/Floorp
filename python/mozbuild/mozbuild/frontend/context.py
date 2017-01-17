@@ -1584,6 +1584,10 @@ VARIABLES = {
         """List of manifest files defining python unit tests.
         """),
 
+    'CRAMTEST_MANIFESTS': (ManifestparserManifestList, list,
+        """List of manifest files defining cram unit tests.
+        """),
+
 
     # The following variables are used to control the target of installed files.
     'XPI_NAME': (unicode, unicode,
