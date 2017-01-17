@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Cu } = require("chrome");
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { performanceRecordingSpec } = require("devtools/shared/specs/performance-recording");
 
@@ -27,7 +26,8 @@ const PerformanceRecordingActor = ActorClassWithSpec(performanceRecordingSpec, m
     }
 
     let form = {
-      actor: this.actorID,  // actorID is set when this is added to a pool
+      // actorID is set when this is added to a pool
+      actor: this.actorID,
       configuration: this._configuration,
       startingBufferStatus: this._startingBufferStatus,
       console: this._console,

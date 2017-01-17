@@ -167,3 +167,4 @@ skip-if(stylo) load 1319072-1.html # bug 1323733
 HTTP load 1320423-1.html
 asserts-if(stylo,5-9) load 1321357-1.html # bug 1324669
 load 1328535-1.html
+load 1331272.html

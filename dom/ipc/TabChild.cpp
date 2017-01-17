@@ -155,6 +155,7 @@ static const char BEFORE_FIRST_PAINT[] = "before-first-paint";
 
 typedef nsDataHashtable<nsUint64HashKey, TabChild*> TabChildMap;
 static TabChildMap* sTabChildren;
+bool TabChild::sWasFreshProcess = false;
 
 TabChildBase::TabChildBase()
   : mTabChildGlobal(nullptr)
@@ -3068,6 +3069,7 @@ TabChild::RecvThemeChanged(nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache)
 mozilla::ipc::IPCResult
 TabChild::RecvSetFreshProcess()
 {
+  MOZ_ASSERT(!sWasFreshProcess, "Can only be a fresh process once!");
   mIsFreshProcess = true;
   return IPC_OK();
 }

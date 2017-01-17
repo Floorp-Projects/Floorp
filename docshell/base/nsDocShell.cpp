@@ -14758,3 +14758,10 @@ nsDocShell::GetIsOnlyToplevelInTabGroup(bool* aResult)
   *aResult = true;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDocShell::GetInFreshProcess(bool* aResult)
+{
+  *aResult = TabChild::GetWasFreshProcess();
+  return NS_OK;
+}

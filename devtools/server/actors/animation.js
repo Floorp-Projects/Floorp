@@ -27,9 +27,8 @@
 
 const {Cu} = require("chrome");
 const promise = require("promise");
-const {Task} = require("devtools/shared/task");
 const protocol = require("devtools/shared/protocol");
-const {Actor, ActorClassWithSpec} = protocol;
+const {Actor} = protocol;
 const {animationPlayerSpec, animationsSpec} = require("devtools/shared/specs/animation");
 const events = require("sdk/event/core");
 
@@ -474,8 +473,8 @@ exports.AnimationPlayerActor = AnimationPlayerActor;
 /**
  * The Animations actor lists animation players for a given node.
  */
-var AnimationsActor = exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
-  initialize: function(conn, tabActor) {
+exports.AnimationsActor = protocol.ActorClassWithSpec(animationsSpec, {
+  initialize: function (conn, tabActor) {
     Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
 
