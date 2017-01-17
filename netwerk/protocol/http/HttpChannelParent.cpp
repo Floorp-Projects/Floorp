@@ -600,6 +600,11 @@ HttpChannelParent::ConnectChannel(const uint32_t& registrarId, const bool& shoul
   mChannel = static_cast<nsHttpChannel*>(channel.get());
   LOG(("  found channel %p, rv=%08x", mChannel.get(), rv));
 
+  if (NS_FAILED(rv)) {
+    NS_ERROR("Could not find the http channel to connect its IPC parent");
+    return false;
+  }
+
   nsCOMPtr<nsINetworkInterceptController> controller;
   NS_QueryNotificationCallbacks(channel, controller);
   RefPtr<HttpChannelParentListener> parentListener = do_QueryObject(controller);
