@@ -621,6 +621,29 @@ TabParent::LoadURL(nsIURI* aURI)
 }
 
 void
+TabParent::InitRenderFrame()
+{
+  if (IsInitedByParent()) {
+    // If TabParent is initialized by parent side then the RenderFrame must also
+    // be created here. If TabParent is initialized by child side,
+    // child side will create RenderFrame.
+    MOZ_ASSERT(!GetRenderFrame());
+    RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+    if (frameLoader) {
+      bool success;
+      RenderFrameParent* renderFrame = new RenderFrameParent(frameLoader, &success);
+      uint64_t layersId = renderFrame->GetLayersId();
+      AddTabParentToTable(layersId, this);
+      Unused << SendPRenderFrameConstructor(renderFrame);
+    }
+  } else {
+    // Otherwise, the child should have constructed the RenderFrame,
+    // and we should already know about it.
+    MOZ_ASSERT(GetRenderFrame());
+  }
+}
+
+void
 TabParent::Show(const ScreenIntSize& size, bool aParentIsActive)
 {
     mDimensions = size;
@@ -628,27 +651,13 @@ TabParent::Show(const ScreenIntSize& size, bool aParentIsActive)
         return;
     }
 
+    InitRenderFrame();
+
+    RenderFrameParent* renderFrame = IsInitedByParent() ? GetRenderFrame() : nullptr;
+    uint64_t layersId = renderFrame ? renderFrame->GetLayersId() : 0;
     TextureFactoryIdentifier textureFactoryIdentifier;
-    uint64_t layersId = 0;
-    bool success = false;
-    RenderFrameParent* renderFrame = nullptr;
-    if (IsInitedByParent()) {
-        // If TabParent is initialized by parent side then the RenderFrame must also
-        // be created here. If TabParent is initialized by child side,
-        // child side will create RenderFrame.
-        MOZ_ASSERT(!GetRenderFrame());
-        RefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
-        if (frameLoader) {
-          renderFrame = new RenderFrameParent(frameLoader, &success);
-          layersId = renderFrame->GetLayersId();
-          renderFrame->GetTextureFactoryIdentifier(&textureFactoryIdentifier);
-          AddTabParentToTable(layersId, this);
-          Unused << SendPRenderFrameConstructor(renderFrame);
-        }
-    } else {
-      // Otherwise, the child should have constructed the RenderFrame,
-      // and we should already know about it.
-      MOZ_ASSERT(GetRenderFrame());
+    if (renderFrame) {
+      renderFrame->GetTextureFactoryIdentifier(&textureFactoryIdentifier);
     }
 
     nsCOMPtr<nsISupports> container = mFrameElement->OwnerDoc()->GetContainer();
