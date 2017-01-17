@@ -134,7 +134,7 @@ var AnimationsPanel = {
     this.rewindTimelineButtonEl.addEventListener(
       "click", this.onTimelineRewindClicked);
 
-    document.addEventListener("keydown", this.onKeyDown, false);
+    document.addEventListener("keydown", this.onKeyDown);
 
     gToolbox.target.on("navigate", this.onTabNavigated);
 
@@ -161,7 +161,7 @@ var AnimationsPanel = {
     this.rewindTimelineButtonEl.removeEventListener("click",
       this.onTimelineRewindClicked);
 
-    document.removeEventListener("keydown", this.onKeyDown, false);
+    document.removeEventListener("keydown", this.onKeyDown);
 
     gToolbox.target.off("navigate", this.onTabNavigated);
 

@@ -62,7 +62,7 @@ var gSyncUI = {
     // was triggered.
     window.addEventListener("unload", function onUnload() {
       gSyncUI._unloaded = true;
-      window.removeEventListener("unload", onUnload, false);
+      window.removeEventListener("unload", onUnload);
       Services.obs.removeObserver(gSyncUI, "weave:service:ready");
       Services.obs.removeObserver(gSyncUI, "quit-application");
 
@@ -71,7 +71,7 @@ var gSyncUI = {
           Services.obs.removeObserver(gSyncUI, topic);
         });
       }
-    }, false);
+    });
   },
 
   initUI: function SUI_initUI() {

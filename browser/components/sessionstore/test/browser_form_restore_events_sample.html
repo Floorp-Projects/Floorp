@@ -8,13 +8,13 @@ document.addEventListener("input", function(aEvent) {
   var inputEl = aEvent.originalTarget;
   var changedEl = document.getElementById("inputFired");
   changedEl.textContent += " " + inputEl.id;
-}, false);
+});
 
 document.addEventListener("change", function(aEvent) {
   var inputEl = aEvent.originalTarget;
   var changedEl = document.getElementById("changeFired");
   changedEl.textContent += " " + inputEl.id;
-}, false);
+});
 
 </script>
 

@@ -45,7 +45,7 @@ function runTest() {
   ok(div, "Parent exists");
 
   var ifr = document.createElement("iframe");
-  ifr.addEventListener("load", iframeLoaded, false);
+  ifr.addEventListener("load", iframeLoaded);
   ifr.setAttribute('src', "iframe_broadcastchannel.html");
   div.appendChild(ifr);
 

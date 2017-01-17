@@ -1,7 +1,7 @@
 <canvas height=16 id=gl>
 <script>
 // Without the fix, this would trigger an assertion in the debug build
-document.addEventListener("DOMContentLoaded", DifferentSizes, false);
+document.addEventListener("DOMContentLoaded", DifferentSizes);
 function DifferentSizes() {
   gl.getContext("2d");
   gl.removeAttribute('height');

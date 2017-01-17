@@ -23,7 +23,7 @@ document.domain = "example.org".
           SimpleTest.expectAssertions(0, 1);
         }
         SimpleTest.waitForExplicitFinish();
-        window.addEventListener("message", onMessageReceived, false);
+        window.addEventListener("message", onMessageReceived);
 
         var page;
 

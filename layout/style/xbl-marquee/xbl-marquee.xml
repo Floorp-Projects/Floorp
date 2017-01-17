@@ -300,14 +300,14 @@
           }
 
           if (typeof this["_on" + aName] == 'function') {
-            this.removeEventListener(aName, this["_on" + aName], false);
+            this.removeEventListener(aName, this["_on" + aName]);
           }
 
           switch (typeof aValue)
           {
             case "function":
               this["_on" + aName] = aValue;
-              this.addEventListener(aName, this["_on" + aName], false);
+              this.addEventListener(aName, this["_on" + aName]);
             break;
 
             case "string":
@@ -319,7 +319,7 @@
                 catch(e) {
                   return false;
                 }
-                this.addEventListener(aName, this["_on" + aName], false);
+                this.addEventListener(aName, this["_on" + aName]);
               }
               else {
                 this["_on" + aName] = aValue;
@@ -661,7 +661,7 @@
           if (document.readyState == "complete") {
             lambda();
           } else {
-            window.addEventListener("load", lambda, false);
+            window.addEventListener("load", lambda);
           }
         ]]>
       </constructor>

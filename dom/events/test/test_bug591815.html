@@ -37,25 +37,25 @@ function runTest() {
   var preventDefault = function(event) {
     event.preventDefault();
   };
-  wrapper.addEventListener('mousedown', preventDefault, false);
+  wrapper.addEventListener('mousedown', preventDefault);
 
   synthesizeMouse(image, 3, 3, { type: "mousedown"});
   synthesizeMouse(image, 53, 53, { type: "mousemove"});
   synthesizeMouse(image, 53, 53, { type: "mouseup"});
 
-  wrapper.removeEventListener('mousedown', preventDefault, false);
+  wrapper.removeEventListener('mousedown', preventDefault);
 
   var relocateElementAndPreventDefault = function(event) {
     document.body.appendChild(wrapper);
     event.preventDefault();
   }
-  wrapper.addEventListener('mousedown', relocateElementAndPreventDefault, false);
+  wrapper.addEventListener('mousedown', relocateElementAndPreventDefault);
 
   synthesizeMouse(image, 3, 3, { type: "mousedown"});
   synthesizeMouse(image, 53, 53, { type: "mousemove"});
   synthesizeMouse(image, 53, 53, { type: "mouseup"});
 
-  wrapper.removeEventListener('mousedown', relocateElementAndPreventDefault, false);
+  wrapper.removeEventListener('mousedown', relocateElementAndPreventDefault);
 
   ok(true, "passed the test");
   SimpleTest.finish();

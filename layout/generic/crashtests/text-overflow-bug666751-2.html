@@ -1,6 +1,6 @@
 <html class="reftest-wait"><head><script>
 function finish() {
-  window.removeEventListener("MozAfterPaint", finish, false);
+  window.removeEventListener("MozAfterPaint", finish);
   document.documentElement.removeAttribute("class");
 }
 </script>

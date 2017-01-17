@@ -910,7 +910,7 @@ var gApplicationsPane = {
     setEventListener("actionColumn", "click", gApplicationsPane.sort);
 
     // Listen for window unload so we can remove our preference observers.
-    window.addEventListener("unload", this, false);
+    window.addEventListener("unload", this);
 
     // Figure out how we should be sorting the list.  We persist sort settings
     // across sessions, so we can't assume the default sort column/direction.
@@ -946,7 +946,7 @@ var gApplicationsPane = {
   },
 
   destroy() {
-    window.removeEventListener("unload", this, false);
+    window.removeEventListener("unload", this);
     this._prefSvc.removeObserver(PREF_SHOW_PLUGINS_IN_LIST, this);
     this._prefSvc.removeObserver(PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS, this);
     this._prefSvc.removeObserver(PREF_FEED_SELECTED_APP, this);

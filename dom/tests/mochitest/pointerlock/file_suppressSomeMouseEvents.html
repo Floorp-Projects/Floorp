@@ -104,31 +104,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       };
 
       function addEventListeners() {
-        parent.addEventListener("mousemove", parentMoveListener, false);
+        parent.addEventListener("mousemove", parentMoveListener);
 
-        parent.addEventListener("mouseout", parentOutListener, false);
-        parent.addEventListener("mouseleave", parentLeaveListener, false);
-        parent.addEventListener("mouseover", parentOverListener, false);
-        parent.addEventListener("mouseenter", parentEnterListener, false);
+        parent.addEventListener("mouseout", parentOutListener);
+        parent.addEventListener("mouseleave", parentLeaveListener);
+        parent.addEventListener("mouseover", parentOverListener);
+        parent.addEventListener("mouseenter", parentEnterListener);
 
-        child.addEventListener("mouseout", childOutListener, false);
-        child.addEventListener("mouseleave", childLeaveListener, false);
-        child.addEventListener("mouseover", childOverListener, false);
-        child.addEventListener("mouseenter", childEnterListener, false);
+        child.addEventListener("mouseout", childOutListener);
+        child.addEventListener("mouseleave", childLeaveListener);
+        child.addEventListener("mouseover", childOverListener);
+        child.addEventListener("mouseenter", childEnterListener);
       }
 
       function removeEventListeners() {
-        parent.removeEventListener("mousemove", parentMoveListener, false);
+        parent.removeEventListener("mousemove", parentMoveListener);
 
-        parent.removeEventListener("mouseout", parentOutListener, false);
-        parent.removeEventListener("mouseleave", parentLeaveListener, false);
-        parent.removeEventListener("mouseover", parentOverListener, false);
-        parent.removeEventListener("mouseenter", parentEnterListener, false);
+        parent.removeEventListener("mouseout", parentOutListener);
+        parent.removeEventListener("mouseleave", parentLeaveListener);
+        parent.removeEventListener("mouseover", parentOverListener);
+        parent.removeEventListener("mouseenter", parentEnterListener);
 
-        child.removeEventListener("mouseout", childOutListener, false);
-        child.removeEventListener("mouseleave", childLeaveListener, false);
-        child.removeEventListener("mouseover"  , childOverListener, false);
-        child.removeEventListener("mouseenter", childEnterListener, false);
+        child.removeEventListener("mouseout", childOutListener);
+        child.removeEventListener("mouseleave", childLeaveListener);
+        child.removeEventListener("mouseover"  , childOverListener);
+        child.removeEventListener("mouseenter", childEnterListener);
       }
 
       document.addEventListener("pointerlockchange", function (e) {
@@ -143,7 +143,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           });
           document.exitFullscreen();
         }
-      }, false);
+      });
 
       function start() {
         parent = document.getElementById("parent");

@@ -30,7 +30,7 @@ div {
 <script type="text/javascript">
 function setup() {
   var e = document.getElementById("watchme");
-  e.addEventListener("animationend", listener, false);
+  e.addEventListener("animationend", listener);
 }
 function listener() {
   document.documentElement.className = "";

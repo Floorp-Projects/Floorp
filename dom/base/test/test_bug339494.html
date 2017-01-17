@@ -24,16 +24,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=339494
   
   d.setAttribute("hhh", "testvalue");
 
-  document.addEventListener("DOMAttrModified", removeItAgain, false);
+  document.addEventListener("DOMAttrModified", removeItAgain);
   d.removeAttribute("hhh");
-  document.removeEventListener("DOMAttrModified", removeItAgain, false);
+  document.removeEventListener("DOMAttrModified", removeItAgain);
 
   function removeItAgain()
   {
     ok(!d.hasAttribute("hhh"), "Value check 1",
        "There should be no value");
     isnot(d.getAttribute("hhh"), "testvalue", "Value check 2");
-    document.removeEventListener("DOMAttrModified", removeItAgain, false);
+    document.removeEventListener("DOMAttrModified", removeItAgain);
     d.removeAttribute("hhh");
     ok(true, "Reachability", "We shouldn't have crashed");
   }
@@ -42,9 +42,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=339494
   
   s.setAttribute("ggg", "testvalue");
 
-  document.addEventListener("DOMAttrModified", compareVal, false);
+  document.addEventListener("DOMAttrModified", compareVal);
   s.setAttribute("ggg", "othervalue");
-  document.removeEventListener("DOMAttrModified", compareVal, false);
+  document.removeEventListener("DOMAttrModified", compareVal);
 
   function compareVal()
   {

@@ -13,9 +13,9 @@ add_task(function* () {
     }
 
     menuPopup.addEventListener("popuphidden", function onPopupHidden() {
-      menuPopup.removeEventListener("popuphidden", onPopupHidden, false);
+      menuPopup.removeEventListener("popuphidden", onPopupHidden);
       executeSoon(aCallback);
-    }, false);
+    });
 
     executeSoon(function() {
       editMenu.open = false;
@@ -33,9 +33,9 @@ add_task(function* () {
     }
 
     menuPopup.addEventListener("popupshown", function onPopupShown() {
-      menuPopup.removeEventListener("popupshown", onPopupShown, false);
+      menuPopup.removeEventListener("popupshown", onPopupShown);
       executeSoon(aCallback);
-    }, false);
+    });
 
     executeSoon(function() {
       editMenu.open = true;

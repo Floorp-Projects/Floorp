@@ -23,7 +23,7 @@ SimpleTest.requestFlakyTimeout("untriaged");
 // 'allow-same-origin'/other windows to communicate pass/fail back to this main page.
 // it expects to be called with an object like {ok: true/false, desc:
 // <description of the test> which it then forwards to ok()
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 
 var testPassesReceived = 0;
 

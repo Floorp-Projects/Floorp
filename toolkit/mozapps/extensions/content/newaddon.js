@@ -85,7 +85,7 @@ function initialize() {
     if (document.hasFocus()) {
       aAddon.markAsSeen();
     } else {
-      document.addEventListener("focus", () => aAddon.markAsSeen(), false);
+      document.addEventListener("focus", () => aAddon.markAsSeen());
     }
 
     var event = document.createEvent("Events");

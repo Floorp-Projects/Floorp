@@ -35,7 +35,7 @@ function setup() {
 
         teardown();
       }
-    }, false);
+    });
 
     var promise = new Promise(function(aResolve, aReject) {
       document.body.appendChild(iframe);

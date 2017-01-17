@@ -42,14 +42,14 @@ function startTest() {
       is(divGotKeyPress, nbExpectedKeyPress, "div got all keypress events");
       SimpleTest.finish();
     }
-  }, false);
+  });
 
   input.addEventListener('keypress', function() {
     inputGotKeyPress++;
-  }, false);
+  });
 
   input.addEventListener('focus', function() {
-    input.removeEventListener('focus', arguments.callee, false);
+    input.removeEventListener('focus', arguments.callee);
 
     synthesizeKey('VK_UP', {});
     synthesizeKey('VK_LEFT', {});
@@ -59,7 +59,7 @@ function startTest() {
     synthesizeKey('VK_DELETE', {});
     synthesizeKey('VK_ESCAPE', {});
     synthesizeKey('VK_RETURN', {});
-  }, false);
+  });
   input.focus();
 }
 </script>

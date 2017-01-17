@@ -485,7 +485,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
         // OK, we can end the test now.
         removeEventListener("MozAfterPaint", AfterPaintListener, false);
         if (contentRootElement) {
-            contentRootElement.removeEventListener("DOMAttrModified", AttrModifiedListener, false);
+            contentRootElement.removeEventListener("DOMAttrModified", AttrModifiedListener);
         }
         gExplicitPendingPaintsCompleteHook = null;
         gTimeoutHook = null;
@@ -645,7 +645,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
     // If contentRootElement is null then shouldWaitForReftestWaitRemoval will
     // always return false so we don't need a listener anyway
     if (contentRootElement) {
-      contentRootElement.addEventListener("DOMAttrModified", AttrModifiedListener, false);
+      contentRootElement.addEventListener("DOMAttrModified", AttrModifiedListener);
     }
     gExplicitPendingPaintsCompleteHook = ExplicitPaintsCompleteListener;
     gTimeoutHook = RemoveListeners;

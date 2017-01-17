@@ -292,9 +292,9 @@ Site.prototype = {
    */
   _addEventHandlers: function Site_addEventHandlers() {
     // Register drag-and-drop event handlers.
-    this._node.addEventListener("dragstart", this, false);
-    this._node.addEventListener("dragend", this, false);
-    this._node.addEventListener("mouseover", this, false);
+    this._node.addEventListener("dragstart", this);
+    this._node.addEventListener("dragend", this);
+    this._node.addEventListener("mouseover", this);
 
     // Specially treat the sponsored icon & suggested explanation
     // text to prevent regular hover effects
@@ -425,7 +425,7 @@ Site.prototype = {
   handleEvent: function Site_handleEvent(aEvent) {
     switch (aEvent.type) {
       case "mouseover":
-        this._node.removeEventListener("mouseover", this, false);
+        this._node.removeEventListener("mouseover", this);
         this._speculativeConnect();
         break;
       case "dragstart":

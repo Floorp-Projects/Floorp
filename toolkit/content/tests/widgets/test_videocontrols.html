@@ -387,14 +387,14 @@ function runTest(event) {
 
 
 function canplaythroughevent(event) {
-  video.removeEventListener("canplaythrough", canplaythroughevent, false);
+  video.removeEventListener("canplaythrough", canplaythroughevent);
   // Other events expected by the test.
-  video.addEventListener("play", runTest, false);
-  video.addEventListener("pause", runTest, false);
-  video.addEventListener("volumechange", runTest, false);
-  video.addEventListener("seeking", runTest, false);
-  video.addEventListener("seeked", runTest, false);
-  document.addEventListener("mozfullscreenchange", runTest, false);
+  video.addEventListener("play", runTest);
+  video.addEventListener("pause", runTest);
+  video.addEventListener("volumechange", runTest);
+  video.addEventListener("seeking", runTest);
+  video.addEventListener("seeked", runTest);
+  document.addEventListener("mozfullscreenchange", runTest);
   // Begin the test.
   runTest(event);
 }
@@ -402,14 +402,14 @@ function canplaythroughevent(event) {
 function startMediaLoad() {
   // Kick off test once video has loaded, in its canplaythrough event handler.
   video.src = "seek_with_sound.ogg";
-  video.addEventListener("canplaythrough", canplaythroughevent, false);
+  video.addEventListener("canplaythrough", canplaythroughevent);
 }
 
 function loadevent(event) {
   SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, startMediaLoad);
 }
 
-window.addEventListener("load", loadevent, false);
+window.addEventListener("load", loadevent);
 
 SimpleTest.waitForExplicitFinish();
 

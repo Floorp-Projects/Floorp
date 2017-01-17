@@ -27,7 +27,7 @@ function beginTest() {
   // After the click, the load event should be fired.
   ifr.addEventListener('load', function() {
     testDone();
-  }, false);
+  });
 
   // synthesizeMouse adds getBoundingClientRect left and top to the offsets but
   // in that particular case, we don't want that.

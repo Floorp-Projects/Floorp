@@ -67,7 +67,7 @@ document.body.dispatchEvent(ev);
 is(eventCount, 3, "Event listener should have been called on document and window!");
 
 document.removeEventListener("foo", l);
-window.removeEventListener("foo", l, false);
+window.removeEventListener("foo", l);
 ev = document.createEvent("Event");
 ev.initEvent("foo", true, true);
 document.body.dispatchEvent(ev);

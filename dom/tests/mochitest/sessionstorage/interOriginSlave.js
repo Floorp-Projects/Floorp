@@ -3,7 +3,7 @@ function postMsg(message)
   opener.postMessage(message, "http://mochi.test:8888");
 }
 
-window.addEventListener("message", onMessageReceived, false);
+window.addEventListener("message", onMessageReceived);
 
 function onMessageReceived(event)
 {

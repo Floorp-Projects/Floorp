@@ -6,9 +6,9 @@ function doc() {
 
 function setHandlerFunc(aResultFunc) {
   gBrowser.addEventListener("DOMLinkAdded", function(event) {
-    gBrowser.removeEventListener("DOMLinkAdded", arguments.callee, false);
+    gBrowser.removeEventListener("DOMLinkAdded", arguments.callee);
     executeSoon(aResultFunc);
-  }, false);
+  });
 }
 
 function test() {

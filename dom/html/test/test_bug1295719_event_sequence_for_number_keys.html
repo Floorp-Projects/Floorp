@@ -39,17 +39,17 @@ function runTests() {
       // it's blurred. Using waiting_event_sequence as a circular buffer and
       // reset waiting_event_idx when it point to the end of buffer.
       waiting_event_idx = waiting_event_idx == waiting_event_sequence.length - 1 ? 0 : waiting_event_idx + 1;
-    }, false);
+    });
   });
   number.addEventListener("change", (event) => {
     is(keyup_event_of_number, 1, "change event should be fired after blurred");
     ++change_event_of_number;
-  }, false);
+  });
   number.addEventListener("keyup", (event) => {
     is(keyup_event_of_number, 0, "keyup event should be fired once");
     is(change_event_of_number, 0, "keyup event should be fired before change event");
     ++keyup_event_of_number;
-  }, false);
+  });
   number.focus();
   synthesizeKey("5", {type: "keydown"});
   synthesizeKey("5", {type: "keydown"});

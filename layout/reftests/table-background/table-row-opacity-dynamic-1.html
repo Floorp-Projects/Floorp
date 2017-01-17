@@ -31,7 +31,7 @@ td {
 
 var tr = document.getElementsByTagName("tr")[0];
 
-document.addEventListener("MozReftestInvalidate", step1, false);
+document.addEventListener("MozReftestInvalidate", step1);
 
 function step1(event) {
   requestAnimationFrame(step2);

@@ -7,7 +7,7 @@ add_task(function*() {
   var win1 = OpenBrowserWindow({private: true});
   var win1Promise = new win1.Promise(resolve => {
     win1.addEventListener("load", function onLoad() {
-      win1.removeEventListener("load", onLoad, false);
+      win1.removeEventListener("load", onLoad);
       resolve();
     });
   });
@@ -16,7 +16,7 @@ add_task(function*() {
   var win2 = OpenBrowserWindow({private: false});
   var win2Promise = new win2.Promise(resolve => {
     win2.addEventListener("load", function onLoad() {
-      win2.removeEventListener("load", onLoad, false);
+      win2.removeEventListener("load", onLoad);
       resolve();
     });
   });

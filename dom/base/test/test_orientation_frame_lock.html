@@ -33,7 +33,7 @@ async_test(function(t) {
       assert_unreached("Error setting orientation: " + err);
       t.done();
     }));
-  }, false);
+  });
 
   var frame = document.getElementById("frame");
   frame.src = "http://example.com/tests/dom/base/test/file_lock_orientation.html";

@@ -5,7 +5,7 @@ function boom() {
   var iframe = document.getElementById('inner');
   iframe.addEventListener("load", function() {
     document.documentElement.removeAttribute("class");
-  }, false);
+  });
   iframe.src = "data:text/html,";
   dump("Outer onload\n");
 }

@@ -27,7 +27,7 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 
 var p = document.getElementById("display");
-p.addEventListener("transitionend", listener, false);
+p.addEventListener("transitionend", listener);
 var ignored = getComputedStyle(p, "").marginLeft;
 p.style.marginLeft = "150px";
 

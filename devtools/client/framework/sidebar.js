@@ -141,8 +141,8 @@ ToolSidebar.prototype = {
     this._allTabsBtn.appendChild(menuPopup);
 
     // Listening to tabs overflow event to toggle the alltabs button
-    tabs.addEventListener("overflow", this._onTabBoxOverflow, false);
-    tabs.addEventListener("underflow", this._onTabBoxUnderflow, false);
+    tabs.addEventListener("overflow", this._onTabBoxOverflow);
+    tabs.addEventListener("underflow", this._onTabBoxUnderflow);
 
     // Add menuitems to the alltabs menu if there are already tabs in the
     // sidebar
@@ -163,8 +163,8 @@ ToolSidebar.prototype = {
 
     let tabs = this._tabbox.tabs;
 
-    tabs.removeEventListener("overflow", this._onTabBoxOverflow, false);
-    tabs.removeEventListener("underflow", this._onTabBoxUnderflow, false);
+    tabs.removeEventListener("overflow", this._onTabBoxOverflow);
+    tabs.removeEventListener("underflow", this._onTabBoxUnderflow);
 
     // Moving back the tabs as a first child of the tabbox
     this._tabbox.insertBefore(tabs, this._tabbox.tabpanels);
@@ -211,7 +211,7 @@ ToolSidebar.prototype = {
 
     item.addEventListener("click", () => {
       this._tabbox.selectedTab = tab;
-    }, false);
+    });
 
     tab.allTabsMenuItem = item;
 

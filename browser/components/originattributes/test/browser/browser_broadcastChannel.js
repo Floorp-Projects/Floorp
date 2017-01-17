@@ -29,7 +29,7 @@ function* doTest(aBrowser) {
 
         let bc = new content.BroadcastChannel("testBroadcastChannel");
 
-        content.addEventListener("message", listenFunc, false);
+        content.addEventListener("message", listenFunc);
         bc.postMessage(data);
       });
 

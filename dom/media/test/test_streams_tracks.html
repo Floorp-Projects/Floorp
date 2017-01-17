@@ -42,7 +42,7 @@ function startTest(test, token) {
   element.src = test.name;
   element.test = test;
   element.stream = element.mozCaptureStreamUntilEnded();
-  element.addEventListener("ended", onended, false);
+  element.addEventListener("ended", onended);
 
   element.play();
 }

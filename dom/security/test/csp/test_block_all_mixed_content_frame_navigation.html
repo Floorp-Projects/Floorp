@@ -27,11 +27,11 @@
 
 function checkResults(result) {
   is(result, "frame-navigated", "frame should be allowed to be navigated");
-  window.removeEventListener("message", receiveMessage, false);
+  window.removeEventListener("message", receiveMessage);
   SimpleTest.finish();
 }
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 function receiveMessage(event) {
   checkResults(event.data.result);
 }

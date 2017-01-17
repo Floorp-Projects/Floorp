@@ -6,7 +6,7 @@ function initCF() {
 try { test5 = document.createElementNS("http://www.w3.org/2000/svg", "symbol"); } catch(e) {}
 setTimeout("CFcrash()", 231);
 }
-document.addEventListener("DOMContentLoaded", initCF, false);
+document.addEventListener("DOMContentLoaded", initCF);
 function CFcrash() {
 try { if (test1 != docElement) { test1.parentNode.removeChild(test1); test1 = test4; }} catch(e) {}
 try { if (test1 != docElement) { test1.parentNode.removeChild(test1); }} catch(e) {}

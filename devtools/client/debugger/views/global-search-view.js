@@ -491,7 +491,7 @@ SourceResults.prototype = {
     resultsHeader.appendChild(arrow);
     resultsHeader.appendChild(locationNode);
     resultsHeader.appendChild(matchCountNode);
-    resultsHeader.addEventListener("click", aCallbacks.onHeaderClick, false);
+    resultsHeader.addEventListener("click", aCallbacks.onHeaderClick);
 
     let resultsContainer = this._resultsContainer = document.createElement("vbox");
     resultsContainer.className = "dbg-results-container";
@@ -615,7 +615,7 @@ LineResults.prototype = {
 
       if (match) {
         this._entangleMatch(lineChunkNode, lineChunk);
-        lineChunkNode.addEventListener("click", aCallbacks.onMatchClick, false);
+        lineChunkNode.addEventListener("click", aCallbacks.onMatchClick);
         firstMatch = firstMatch || lineChunkNode;
       }
       if (lineLength >= GLOBAL_SEARCH_LINE_MAX_LENGTH) {
@@ -625,7 +625,7 @@ LineResults.prototype = {
     }
 
     this._entangleLine(lineContentsNode, firstMatch);
-    lineContentsNode.addEventListener("click", aCallbacks.onLineClick, false);
+    lineContentsNode.addEventListener("click", aCallbacks.onLineClick);
 
     let searchResult = document.createElement("hbox");
     searchResult.className = "dbg-search-result";

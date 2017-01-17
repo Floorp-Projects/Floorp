@@ -58,7 +58,7 @@ var baselineframe = document.getElementById("baselineframe");
 var testframe = document.getElementById("testframe");
 
 function checkResult() {
-  testframe.removeEventListener('load', checkResult, false);
+  testframe.removeEventListener('load', checkResult);
   try {
     ok(compareSnapshots(snapshotWindow(baselineframe.contentWindow),
                         snapshotWindow(testframe.contentWindow),
@@ -77,19 +77,19 @@ function loadNextTest() {
     return;
   }
   curTest = tests[counter];
-  testframe.addEventListener("load", checkResult, false);
+  testframe.addEventListener("load", checkResult);
   testframe.src = BASE_URI + "file_fontloader.sjs?" + curTest.query;
 }
 
 // once the baselineframe is loaded we can start running tests
 function startTests() {
-  baselineframe.removeEventListener('load', startTests, false);
+  baselineframe.removeEventListener('load', startTests);
   loadNextTest();
 }
 
 // make sure the main page is loaded before we start the test
 function setupTests() {
-  baselineframe.addEventListener("load", startTests, false);
+  baselineframe.addEventListener("load", startTests);
   baselineframe.src = BASE_URI + "file_fontloader.sjs?baseline";
 }
 

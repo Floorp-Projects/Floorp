@@ -52,7 +52,7 @@ function startTest(test, token) {
     URL.revokeObjectURL(vout.src);
     manager.finished(vout.token);
   };
-  vout.addEventListener("ended", checkEnded, false);
+  vout.addEventListener("ended", checkEnded);
 
   document.body.appendChild(vout);
   v.onloadedmetadata = function () {

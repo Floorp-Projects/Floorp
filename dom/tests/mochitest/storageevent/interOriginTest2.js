@@ -11,7 +11,7 @@ var todoRegExp = new RegExp("^TODO");
 
 const framePath = "/tests/dom/tests/mochitest/storageevent/";
 
-window.addEventListener("message", onMessageReceived, false);
+window.addEventListener("message", onMessageReceived);
 
 function onMessageReceived(event)
 {

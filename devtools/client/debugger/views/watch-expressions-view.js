@@ -38,7 +38,7 @@ WatchExpressionsView.prototype = Heritage.extend(WidgetMethods, {
 
     this.widget = new SimpleListWidget(document.getElementById("expressions"));
     this.widget.setAttribute("context", "debuggerWatchExpressionsContextMenu");
-    this.widget.addEventListener("click", this._onClick, false);
+    this.widget.addEventListener("click", this._onClick);
 
     this.headerText = L10N.getStr("addWatchExpressionText");
     this._addCommands();
@@ -50,7 +50,7 @@ WatchExpressionsView.prototype = Heritage.extend(WidgetMethods, {
   destroy: function () {
     dumpn("Destroying the WatchExpressionsView");
 
-    this.widget.removeEventListener("click", this._onClick, false);
+    this.widget.removeEventListener("click", this._onClick);
   },
 
   /**
@@ -194,9 +194,9 @@ WatchExpressionsView.prototype = Heritage.extend(WidgetMethods, {
     let closeNode = document.createElement("toolbarbutton");
     closeNode.className = "plain variables-view-delete";
 
-    closeNode.addEventListener("click", this._onClose, false);
-    inputNode.addEventListener("blur", this._onBlur, false);
-    inputNode.addEventListener("keypress", this._onKeyPress, false);
+    closeNode.addEventListener("click", this._onClose);
+    inputNode.addEventListener("blur", this._onBlur);
+    inputNode.addEventListener("keypress", this._onKeyPress);
 
     container.appendChild(arrowNode);
     container.appendChild(inputNode);

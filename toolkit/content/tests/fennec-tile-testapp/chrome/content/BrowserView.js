@@ -394,11 +394,11 @@ function() {
       let browserChanged = (currentBrowser !== browser);
 
       if (currentBrowser) {
-        currentBrowser.removeEventListener("MozAfterPaint", this.handleMozAfterPaint, false);
+        currentBrowser.removeEventListener("MozAfterPaint", this.handleMozAfterPaint);
 
         // !!! --- RESIZE HACK BEGIN -----
         // change to the real event type and perhaps refactor the handler function name
-        currentBrowser.removeEventListener("FakeMozAfterSizeChange", this.handleMozAfterSizeChange, false);
+        currentBrowser.removeEventListener("FakeMozAfterSizeChange", this.handleMozAfterSizeChange);
         // !!! --- RESIZE HACK END -------
 
         this.discardAllBatchOperations();
@@ -414,11 +414,11 @@ function() {
 
       this.beginBatchOperation();
 
-      browser.addEventListener("MozAfterPaint", this.handleMozAfterPaint, false);
+      browser.addEventListener("MozAfterPaint", this.handleMozAfterPaint);
 
       // !!! --- RESIZE HACK BEGIN -----
       // change to the real event type and perhaps refactor the handler function name
-      browser.addEventListener("FakeMozAfterSizeChange", this.handleMozAfterSizeChange, false);
+      browser.addEventListener("FakeMozAfterSizeChange", this.handleMozAfterSizeChange);
       // !!! --- RESIZE HACK END -------
 
       if (!skipZoom) {
