@@ -41,6 +41,12 @@ typedef enum FT_LcdFilter_
 } FT_LcdFilter;
 #endif
 
+// If compiling with FreeType before 2.5.0
+#ifndef FT_LOAD_COLOR
+#    define FT_LOAD_COLOR ( 1L << 20 )
+#    define FT_PIXEL_MODE_BGRA 7
+#endif
+
 #ifndef SK_CAN_USE_DLOPEN
 #define SK_CAN_USE_DLOPEN 1
 #endif
@@ -396,9 +402,7 @@ SkScalerContext_CairoFT::SkScalerContext_CairoFT(SkTypeface* typeface, const SkS
         loadFlags |= FT_LOAD_VERTICAL_LAYOUT;
     }
 
-#ifdef FT_LOAD_COLOR
     loadFlags |= FT_LOAD_COLOR;
-#endif
 
     fLoadGlyphFlags = loadFlags;
 }
@@ -689,11 +693,9 @@ void SkScalerContext_CairoFT::generateMetrics(SkGlyph* glyph)
         }
         break;
     case FT_GLYPH_FORMAT_BITMAP:
-#ifdef FT_LOAD_COLOR
         if (face->glyph->bitmap.pixel_mode == FT_PIXEL_MODE_BGRA) {
             glyph->fMaskFormat = SkMask::kARGB32_Format;
         }
-#endif
 
         if (isLCD(fRec)) {
             fRec.fMaskFormat = SkMask::kA8_Format;
