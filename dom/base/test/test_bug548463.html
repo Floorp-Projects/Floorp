@@ -33,11 +33,11 @@ function testAdoptFromDOMNodeRemoved(nodeToAppend, nodeRemoved, nodeToAdopt)
   function reparent(event)
   {
     if (event.target == nodeRemoved) {
-      nodeRemoved.removeEventListener("DOMNodeRemoved", arguments.callee, false);
+      nodeRemoved.removeEventListener("DOMNodeRemoved", arguments.callee);
       otherDoc.adoptNode(nodeToAdopt);
     }
   }
-  nodeRemoved.addEventListener("DOMNodeRemoved", reparent, false);
+  nodeRemoved.addEventListener("DOMNodeRemoved", reparent);
 
   var thrown = false;
   try {

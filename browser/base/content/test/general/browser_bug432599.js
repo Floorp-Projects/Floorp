@@ -84,13 +84,13 @@ var removeElement = document.getElementById("editBookmarkPanelRemoveButton");
 function checkBookmarksPanel(invoker, phase) {
   let onPopupShown = function(aEvent) {
     if (aEvent.originalTarget == popupElement) {
-      popupElement.removeEventListener("popupshown", arguments.callee, false);
+      popupElement.removeEventListener("popupshown", arguments.callee);
       checkBookmarksPanel(invoker, phase + 1);
     }
   };
   let onPopupHidden = function(aEvent) {
     if (aEvent.originalTarget == popupElement) {
-      popupElement.removeEventListener("popuphidden", arguments.callee, false);
+      popupElement.removeEventListener("popuphidden", arguments.callee);
       if (phase < 4) {
         checkBookmarksPanel(invoker, phase + 1);
       } else {
@@ -109,15 +109,15 @@ function checkBookmarksPanel(invoker, phase) {
   switch (phase) {
   case 1:
   case 3:
-    popupElement.addEventListener("popupshown", onPopupShown, false);
+    popupElement.addEventListener("popupshown", onPopupShown);
     break;
   case 2:
-    popupElement.addEventListener("popuphidden", onPopupHidden, false);
+    popupElement.addEventListener("popuphidden", onPopupHidden);
     initialValue = titleElement.value;
     initialRemoveHidden = removeElement.hidden;
     break;
   case 4:
-    popupElement.addEventListener("popuphidden", onPopupHidden, false);
+    popupElement.addEventListener("popuphidden", onPopupHidden);
     is(titleElement.value, initialValue, "The bookmark panel's title should be the same");
     is(removeElement.hidden, initialRemoveHidden, "The bookmark panel's visibility should not change");
     break;

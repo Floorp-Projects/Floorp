@@ -164,8 +164,8 @@ function getMdnPage(pageUrl) {
 
   let xhr = new XMLHttpRequest();
 
-  xhr.addEventListener("load", onLoaded, false);
-  xhr.addEventListener("error", onError, false);
+  xhr.addEventListener("load", onLoaded);
+  xhr.addEventListener("error", onError);
 
   xhr.open("GET", pageUrl);
   xhr.responseType = "document";

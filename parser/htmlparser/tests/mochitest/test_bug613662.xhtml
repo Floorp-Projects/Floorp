@@ -109,13 +109,13 @@ function mutationEventListener(evt) {
   is(evt.relatedNode, expected[1], "Unexpected related node");
 }
 
-document.addEventListener("DOMSubtreeModified", mutationEventListener, false);
-document.addEventListener("DOMNodeInserted", mutationEventListener, false);
-document.addEventListener("DOMNodeRemoved", mutationEventListener, false);
-document.addEventListener("DOMNodeRemovedFromDocument", mutationEventListener, false);
-document.addEventListener("DOMNodeInsertedIntoDocument", mutationEventListener, false);
-document.addEventListener("DOMAttrModified", mutationEventListener, false);
-document.addEventListener("DOMCharacterDataModified", mutationEventListener, false);
+document.addEventListener("DOMSubtreeModified", mutationEventListener);
+document.addEventListener("DOMNodeInserted", mutationEventListener);
+document.addEventListener("DOMNodeRemoved", mutationEventListener);
+document.addEventListener("DOMNodeRemovedFromDocument", mutationEventListener);
+document.addEventListener("DOMNodeInsertedIntoDocument", mutationEventListener);
+document.addEventListener("DOMAttrModified", mutationEventListener);
+document.addEventListener("DOMCharacterDataModified", mutationEventListener);
 
 testPositions(content2); // without next sibling
 testPositions(content2); // test again when there's next sibling

@@ -50,7 +50,7 @@ function test_paste(aCurrentTest) {
   var inputListener = {
     test: aCurrentTest,
     handleEvent(event) {
-      element.removeEventListener(event.type, this, false);
+      element.removeEventListener(event.type, this);
 
       is(element.value, this.test.expected, this.test.desc);
 
@@ -59,7 +59,7 @@ function test_paste(aCurrentTest) {
       setTimeout(next_test, 0);
     }
   }
-  element.addEventListener("input", inputListener, false);
+  element.addEventListener("input", inputListener);
 
   // Focus the window.
   window.focus();
@@ -68,13 +68,13 @@ function test_paste(aCurrentTest) {
   // Focus the element and wait for focus event.
   info("About to focus " + element.id);
   element.addEventListener("focus", function() {
-    element.removeEventListener("focus", arguments.callee, false);
+    element.removeEventListener("focus", arguments.callee);
     executeSoon(function() {
       // Pasting is async because the Accel+V codepath ends up going through
       // nsDocumentViewer::FireClipboardEvent.
       info("Pasting into " + element.id);
       EventUtils.synthesizeKey("v", { accelKey: true });
     });
-  }, false);
+  });
   element.focus();
 }

@@ -21,8 +21,8 @@ function onload(event) {
 }
 
 xhr.onload = onload;
-xhr.addEventListener("load", onload, false);
-xhr.removeEventListener("load", onload, false);
+xhr.addEventListener("load", onload);
+xhr.removeEventListener("load", onload);
 if (!xhr.onload) {
   var message = { type: "error",
                   error: "Lost message listener!" };
@@ -51,10 +51,10 @@ function onprogress(event) {
                   total: event.total };
   postMessage(message);
 }
-xhr.addEventListener("progress", onprogress, false);
+xhr.addEventListener("progress", onprogress);
 
-xhr.addEventListener("foopety", function(event) {}, false);
-xhr.removeEventListener("doopety", function(event) {}, false);
+xhr.addEventListener("foopety", function(event) {});
+xhr.removeEventListener("doopety", function(event) {});
 
 xhr.onloadend = function(event) {
   var message = { type: "loadend" };
@@ -63,10 +63,10 @@ xhr.onloadend = function(event) {
 
 var upload = xhr.upload;
 upload.onprogress = function(event) { };
-upload.addEventListener("foo", function(event) { }, false);
-upload.removeEventListener("foo", function(event) { }, false);
-upload.addEventListener("load", function(event) { }, false);
-upload.removeEventListener("foo", function(event) { }, false);
+upload.addEventListener("foo", function(event) { });
+upload.removeEventListener("foo", function(event) { });
+upload.addEventListener("load", function(event) { });
+upload.removeEventListener("foo", function(event) { });
 upload.onload = function(event) {
   var message = { type: "upload.load" };
   postMessage(message);

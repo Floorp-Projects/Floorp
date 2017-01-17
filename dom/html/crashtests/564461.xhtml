@@ -13,8 +13,8 @@ function boom()
 {
   while (document.documentElement.firstChild) document.documentElement.removeChild(document.documentElement.firstChild);
   
-  document.addEventListener("DOMSubtreeModified", function(){}, false);
-  document.addEventListener("DOMNodeInsertedIntoDocument", function(){}, false);
+  document.addEventListener("DOMSubtreeModified", function(){});
+  document.addEventListener("DOMNodeInsertedIntoDocument", function(){});
   document.documentElement.appendChild(document.createElementNS("http://www.w3.org/1999/xhtml", "body"));
   document.body.style.MozBinding = 'url(#editable)';
 }

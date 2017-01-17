@@ -30,7 +30,7 @@ function doTest() {
   var i1 = document.getElementById('i1');
   var i2 = document.getElementById('i2');
   var pre = i1.contentDocument.getElementsByTagName("pre")[0];
-  pre.addEventListener("DOMNodeInserted", handler, false);
+  pre.addEventListener("DOMNodeInserted", handler);
   pre.textContent = pre.textContent + pre.textContent;
   ok(eventCounter == 1, "DOMNodeInserted should have been dispatched");
 

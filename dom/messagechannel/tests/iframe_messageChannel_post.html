@@ -5,11 +5,11 @@
 
   var port;
 
-  window.addEventListener('message', receiveMessage, false);
+  window.addEventListener('message', receiveMessage);
   function receiveMessage(evt) {
     port = evt.data.port;
 
-    port.addEventListener('message', receivePostMessage, false);
+    port.addEventListener('message', receivePostMessage);
     function receivePostMessage(evt) {
       port.postMessage(evt.data);
     }

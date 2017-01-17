@@ -31,7 +31,7 @@ function initTest() {
 function initTestCallback() {
   window.addEventListener("message", function(e) {
     gen.next(e.data);
-  }, false);
+  });
 
   gen = runTest();
   

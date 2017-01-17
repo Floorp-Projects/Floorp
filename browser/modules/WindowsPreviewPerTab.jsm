@@ -145,7 +145,7 @@ function PreviewController(win, tab) {
   this.linkedBrowser = tab.linkedBrowser;
   this.preview = this.win.createTabPreview(this);
 
-  this.tab.addEventListener("TabAttrModified", this, false);
+  this.tab.addEventListener("TabAttrModified", this);
 
   XPCOMUtils.defineLazyGetter(this, "canvasPreview", function() {
     let canvas = PageThumbs.createCanvas();
@@ -159,7 +159,7 @@ PreviewController.prototype = {
                                          Ci.nsIDOMEventListener]),
 
   destroy() {
-    this.tab.removeEventListener("TabAttrModified", this, false);
+    this.tab.removeEventListener("TabAttrModified", this);
 
     // Break cycles, otherwise we end up leaking the window with everything
     // attached to it.
@@ -367,10 +367,10 @@ function TabWindow(win) {
   this.previews = new Map();
 
   for (let i = 0; i < this.tabEvents.length; i++)
-    this.tabbrowser.tabContainer.addEventListener(this.tabEvents[i], this, false);
+    this.tabbrowser.tabContainer.addEventListener(this.tabEvents[i], this);
 
   for (let i = 0; i < this.winEvents.length; i++)
-    this.win.addEventListener(this.winEvents[i], this, false);
+    this.win.addEventListener(this.winEvents[i], this);
 
   this.tabbrowser.addTabsProgressListener(this);
 
@@ -398,10 +398,10 @@ TabWindow.prototype = {
     this.tabbrowser.removeTabsProgressListener(this);
 
     for (let i = 0; i < this.winEvents.length; i++)
-      this.win.removeEventListener(this.winEvents[i], this, false);
+      this.win.removeEventListener(this.winEvents[i], this);
 
     for (let i = 0; i < this.tabEvents.length; i++)
-      this.tabbrowser.tabContainer.removeEventListener(this.tabEvents[i], this, false);
+      this.tabbrowser.tabContainer.removeEventListener(this.tabEvents[i], this);
 
     for (let i = 0; i < tabs.length; i++)
       this.removeTab(tabs[i]);

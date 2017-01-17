@@ -28,8 +28,7 @@ var TESTS = [{
   },
   setup: function(docShell) {
     content.document.body.addEventListener("dog",
-                                           function(e) { console.log("hi"); },
-                                           false);
+                                           function(e) { console.log("hi"); });
     content.document.body.dispatchEvent(new content.Event("dog"));
   },
   check: function(markers) {

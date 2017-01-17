@@ -57,7 +57,7 @@ SimpleTest.waitForFocus(function() {
   function testBackspace(src, callback) {
     ok(true, "Testing " + src);
     iframe.addEventListener("load", function() {
-      iframe.removeEventListener("load", arguments.callee, false);
+      iframe.removeEventListener("load", arguments.callee);
 
       var doc = iframe.contentDocument;
       var win = iframe.contentWindow;
@@ -74,7 +74,7 @@ SimpleTest.waitForFocus(function() {
       ok(compareSnapshots(snapshot, ref, true)[0], "No bogus node should exist in the document");
 
       callback();
-    }, false);
+    });
     iframe.src = src;
   }
 

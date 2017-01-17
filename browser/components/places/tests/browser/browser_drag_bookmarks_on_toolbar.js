@@ -54,22 +54,22 @@ function synthesizeDragWithDirection(aElement, aExpectedDragData, aDirection, aC
     event.preventDefault();
     event.stopPropagation();
 
-    gBookmarksToolbar.removeEventListener("dragstart", arguments.callee, false);
+    gBookmarksToolbar.removeEventListener("dragstart", arguments.callee);
 
     // This is likely to cause a click event, and, in case we are dragging a
     // bookmark, an unwanted page visit.  Prevent the click event.
-    aElement.addEventListener("click", prevent, false);
+    aElement.addEventListener("click", prevent);
     EventUtils.synthesizeMouse(aElement,
                                startingPoint.x + xIncrement * 9,
                                startingPoint.y + yIncrement * 9,
                                { type: "mouseup" });
-    aElement.removeEventListener("click", prevent, false);
+    aElement.removeEventListener("click", prevent);
 
     // Cleanup eventually opened menus.
     if (aElement.localName == "menu" && aElement.open)
       aElement.open = false;
     aCallback()
-  }, false);
+  });
 
   var prevent = function(aEvent) { aEvent.preventDefault(); }
 

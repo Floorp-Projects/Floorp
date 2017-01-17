@@ -12,9 +12,9 @@
       var button = document.getElementsByTagName("button")[0];
 
       button.addEventListener("click", function clicker () {
-        button.removeEventListener("click", clicker, false);
+        button.removeEventListener("click", clicker);
         fooBazBaz.bar();
-      }, false);
+      });
     // --></script>
   </body>
 </html>

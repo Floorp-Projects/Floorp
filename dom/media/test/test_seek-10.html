@@ -43,8 +43,8 @@ function seeking() {
   v.load(); // Cause the existing stream to close.
 }
 
-v.addEventListener("loadeddata", startTest, false);
-v.addEventListener("seeking", seeking, false);
+v.addEventListener("loadeddata", startTest);
+v.addEventListener("seeking", seeking);
 
 }
 

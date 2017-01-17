@@ -13,7 +13,7 @@ input {
 
 document.addEventListener("DOMContentLoaded", function() {
   document.body.style.backgroundImage = "none";
-}, false);
+});
 
 function PostRebuildAllStyleDataEvent() {
   // trigger http://mxr.mozilla.org/mozilla-central/source/layout/base/RestyleManager.cpp?rev=a8b06549f680#1490
@@ -33,7 +33,7 @@ document.addEventListener("MozReftestInvalidate", function() {
   // timeout may make the failure seem intermittent when in fact we would
   // always fail if it was longer.
   setTimeout(reframe, 500);
-}, false);
+});
 
     </script>
   </head>

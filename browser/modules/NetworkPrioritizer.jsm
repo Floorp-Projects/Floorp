@@ -113,10 +113,10 @@ var WindowHelper = {
 
     // Add event listeners
     TAB_EVENTS.forEach(function(event) {
-      aWindow.gBrowser.tabContainer.addEventListener(event, _handleEvent, false);
+      aWindow.gBrowser.tabContainer.addEventListener(event, _handleEvent);
     });
     WINDOW_EVENTS.forEach(function(event) {
-      aWindow.addEventListener(event, _handleEvent, false);
+      aWindow.addEventListener(event, _handleEvent);
     });
 
     // This gets called AFTER activate event, so if this is the focused window
@@ -139,10 +139,10 @@ var WindowHelper = {
 
     // Remove the event listeners
     TAB_EVENTS.forEach(function(event) {
-      aWindow.gBrowser.tabContainer.removeEventListener(event, _handleEvent, false);
+      aWindow.gBrowser.tabContainer.removeEventListener(event, _handleEvent);
     });
     WINDOW_EVENTS.forEach(function(event) {
-      aWindow.removeEventListener(event, _handleEvent, false);
+      aWindow.removeEventListener(event, _handleEvent);
     });
   },
 

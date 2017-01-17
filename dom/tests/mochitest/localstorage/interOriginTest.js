@@ -6,7 +6,7 @@ var slave = null;
 var failureRegExp = new RegExp("^FAILURE");
 const slavePath = "/tests/dom/tests/mochitest/localstorage/";
 
-window.addEventListener("message", onMessageReceived, false);
+window.addEventListener("message", onMessageReceived);
 
 function onMessageReceived(event)
 {

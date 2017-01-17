@@ -48,7 +48,7 @@
     this._verbose = opts.verbose;
     this._name = opts.name;
 
-    this._worker.addEventListener("error", this.onError, false);
+    this._worker.addEventListener("error", this.onError);
   }
   exports.DevToolsWorker = DevToolsWorker;
 

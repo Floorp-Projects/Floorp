@@ -52,25 +52,25 @@ function doTest() {
       var eventName = eventNames[i];
       var listener = prepareListener(eventName, value);
 
-      target.addEventListener(eventName, listener, false);
+      target.addEventListener(eventName, listener);
 
       var newEvent = document.createEvent("MouseEvent");
       newEvent.initNSMouseEvent(eventName, true, true, window, 0, 0, 0, 0, 0,
                                 false, false, false, false, 0, null, 0, value);
       target.dispatchEvent(newEvent);
-      target.removeEventListener(eventName, listener, false);
+      target.removeEventListener(eventName, listener);
     }
 
     // Events created by script that do not initialize the mozInputSource
     // value should have the value MOZ_SOURCE_UNKNOWN
     var listener = prepareListener(eventName, INPUT_SOURCE_UNKNOWN);
-    target.addEventListener(eventName, listener, false);
+    target.addEventListener(eventName, listener);
 
     var newEvent = document.createEvent("MouseEvent");
     newEvent.initMouseEvent(eventName, true, true, window, 0, 0, 0, 0, 0,
                               false, false, false, false, 0, null);
     target.dispatchEvent(newEvent);
-    target.removeEventListener(eventName, listener, false);
+    target.removeEventListener(eventName, listener);
 
   }
 

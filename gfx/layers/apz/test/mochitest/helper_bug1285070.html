@@ -18,7 +18,7 @@
         document.getElementById('div1').addEventListener(eventName, (event) => {
           dump("Received event " + event.type + "\n");
           ++pointerEventsCount[event.type];
-        }, false);
+        });
       });
 
       document.addEventListener("click", (event) => {
@@ -27,7 +27,7 @@
           is(pointerEventsCount[key], 1, "Event " + key + " should be generated once");
         }
         subtestDone();
-      }, false);
+      });
 
       synthesizeNativeTap(document.getElementById('div1'), 100, 100, () => {
         dump("Finished synthesizing tap, waiting for div to be clicked...\n");

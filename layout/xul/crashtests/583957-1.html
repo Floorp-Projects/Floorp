@@ -4,7 +4,7 @@
 
 function boom()
 {
-  window.addEventListener("DOMSubtreeModified", function(){}, false);
+  window.addEventListener("DOMSubtreeModified", function(){});
 
   var m = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
   document.body.appendChild(m);

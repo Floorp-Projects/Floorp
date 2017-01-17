@@ -29,7 +29,7 @@ function startTest(test, token) {
   element.src = test.name;
   element.name = test.name;
   element.hasAudio = elemType == "video" ? test.hasAudio : undefined;
-  element.addEventListener("loadedmetadata", onloadedmetadata, false);
+  element.addEventListener("loadedmetadata", onloadedmetadata);
 
   element.load();
 }

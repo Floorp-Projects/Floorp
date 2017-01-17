@@ -148,7 +148,7 @@ DOMHelpers.prototype = {
                          .QueryInterface(Ci.nsIDocShell);
     let onReady = function (event) {
       if (event.target == window.document) {
-        docShell.chromeEventHandler.removeEventListener("DOMContentLoaded", onReady, false);
+        docShell.chromeEventHandler.removeEventListener("DOMContentLoaded", onReady);
         // If in `callback` the URL of the window is changed and a listener to DOMContentLoaded
         // is attached, the event we just received will be also be caught by the new listener.
         // We want to avoid that so we execute the callback in the next queue.
@@ -160,7 +160,7 @@ DOMHelpers.prototype = {
          window.location.href == targetURL) {
       Services.tm.mainThread.dispatch(callback, 0);
     } else {
-      docShell.chromeEventHandler.addEventListener("DOMContentLoaded", onReady, false);
+      docShell.chromeEventHandler.addEventListener("DOMContentLoaded", onReady);
     }
   }
 };

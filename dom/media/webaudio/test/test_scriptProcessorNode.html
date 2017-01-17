@@ -32,7 +32,7 @@ addLoadEvent(function() {
     buffer = e.outputBuffer;
 
     sourceSP.removeEventListener("audioprocess", arguments.callee);
-  }, false);
+  });
 
   expectException(function() {
     context.createScriptProcessor(1);
