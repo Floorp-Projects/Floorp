@@ -389,8 +389,8 @@ void encode_mb_row(VP8_COMP *cpi,
 #if CONFIG_MULTITHREAD
     const int nsync = cpi->mt_sync_range;
     const int rightmost_col = cm->mb_cols + nsync;
-    volatile const int *last_row_current_mb_col;
-    volatile int *current_mb_col = &cpi->mt_current_mb_col[mb_row];
+    const int *last_row_current_mb_col;
+    int *current_mb_col = &cpi->mt_current_mb_col[mb_row];
 
     if ((cpi->b_multi_threaded != 0) && (mb_row != 0))
         last_row_current_mb_col = &cpi->mt_current_mb_col[mb_row - 1];
@@ -464,17 +464,15 @@ void encode_mb_row(VP8_COMP *cpi,
         vp8_copy_mem16x16(x->src.y_buffer, x->src.y_stride, x->thismb, 16);
 
 #if CONFIG_MULTITHREAD
-        if (cpi->b_multi_threaded != 0)
-        {
-            *current_mb_col = mb_col - 1; /* set previous MB done */
+        if (cpi->b_multi_threaded != 0) {
+            if (((mb_col - 1) % nsync) == 0) {
+                pthread_mutex_t *mutex = &cpi->pmutex[mb_row];
+                protected_write(mutex, current_mb_col, mb_col - 1);
+            }
 
-            if ((mb_col & (nsync - 1)) == 0)
-            {
-                while (mb_col > (*last_row_current_mb_col - nsync))
-                {
-                    x86_pause_hint();
-                    thread_sleep(0);
-                }
+            if (mb_row && !(mb_col & (nsync - 1))) {
+                pthread_mutex_t *mutex = &cpi->pmutex[mb_row-1];
+                sync_read(mutex, mb_col, last_row_current_mb_col, nsync);
             }
         }
 #endif
@@ -619,7 +617,7 @@ void encode_mb_row(VP8_COMP *cpi,
 
 #if CONFIG_MULTITHREAD
     if (cpi->b_multi_threaded != 0)
-        *current_mb_col = rightmost_col;
+        protected_write(&cpi->pmutex[mb_row], current_mb_col, rightmost_col);
 #endif
 
     /* this is to account for the border */
@@ -703,6 +701,7 @@ static void init_encode_frame_mb_context(VP8_COMP *cpi)
     vp8_zero(x->count_mb_ref_frame_usage);
 }
 
+#if CONFIG_MULTITHREAD
 static void sum_coef_counts(MACROBLOCK *x, MACROBLOCK *x_thread)
 {
     int i = 0;
@@ -732,6 +731,7 @@ static void sum_coef_counts(MACROBLOCK *x, MACROBLOCK *x_thread)
     }
     while (++i < BLOCK_TYPES);
 }
+#endif  // CONFIG_MULTITHREAD
 
 void vp8_encode_frame(VP8_COMP *cpi)
 {
@@ -930,7 +930,7 @@ void vp8_encode_frame(VP8_COMP *cpi)
 
         }
         else
-#endif
+#endif  // CONFIG_MULTITHREAD
         {
 
             /* for each macroblock row in image */

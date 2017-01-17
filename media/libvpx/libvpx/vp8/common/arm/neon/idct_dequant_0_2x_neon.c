@@ -18,7 +18,8 @@ void idct_dequant_0_2x_neon(
     unsigned char *dst0;
     int i, a0, a1;
     int16x8x2_t q2Add;
-    int32x2_t d2s32, d4s32;
+    int32x2_t d2s32 = vdup_n_s32(0),
+              d4s32 = vdup_n_s32(0);
     uint8x8_t d2u8, d4u8;
     uint16x8_t q1u16, q2u16;
 

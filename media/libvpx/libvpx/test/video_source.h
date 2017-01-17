@@ -11,6 +11,9 @@
 #define TEST_VIDEO_SOURCE_H_
 
 #if defined(_WIN32)
+#undef NOMINMAX
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
 #include <cstdio>
@@ -48,7 +51,7 @@ static std::string GetDataPath() {
 #undef TO_STRING
 #undef STRINGIFY
 
-static FILE *OpenTestDataFile(const std::string& file_name) {
+inline FILE *OpenTestDataFile(const std::string& file_name) {
   const std::string path_to_source = GetDataPath() + "/" + file_name;
   return fopen(path_to_source.c_str(), "rb");
 }

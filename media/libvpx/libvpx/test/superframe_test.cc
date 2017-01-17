@@ -16,8 +16,12 @@
 
 namespace {
 
+const int kTestMode = 0;
+
+typedef std::tr1::tuple<libvpx_test::TestMode,int> SuperframeTestParam;
+
 class SuperframeTest : public ::libvpx_test::EncoderTest,
-    public ::libvpx_test::CodecTestWithParam<libvpx_test::TestMode> {
+    public ::libvpx_test::CodecTestWithParam<SuperframeTestParam> {
  protected:
   SuperframeTest() : EncoderTest(GET_PARAM(0)), modified_buf_(NULL),
       last_sf_pts_(0) {}
@@ -25,7 +29,9 @@ class SuperframeTest : public ::libvpx_test::EncoderTest,
 
   virtual void SetUp() {
     InitializeConfig();
-    SetMode(GET_PARAM(1));
+    const SuperframeTestParam input = GET_PARAM(1);
+    const libvpx_test::TestMode mode = std::tr1::get<kTestMode>(input);
+    SetMode(mode);
     sf_count_ = 0;
     sf_count_max_ = INT_MAX;
   }
@@ -50,7 +56,7 @@ class SuperframeTest : public ::libvpx_test::EncoderTest,
     const uint8_t marker = buffer[pkt->data.frame.sz - 1];
     const int frames = (marker & 0x7) + 1;
     const int mag = ((marker >> 3) & 3) + 1;
-    const unsigned int index_sz = 2 + mag  * frames;
+    const unsigned int index_sz = 2 + mag * frames;
     if ((marker & 0xe0) == 0xc0 &&
         pkt->data.frame.sz >= index_sz &&
         buffer[pkt->data.frame.sz - index_sz] == marker) {
@@ -92,6 +98,7 @@ TEST_P(SuperframeTest, TestSuperframeIndexIsOptional) {
   EXPECT_EQ(sf_count_, 1);
 }
 
-VP9_INSTANTIATE_TEST_CASE(SuperframeTest, ::testing::Values(
-    ::libvpx_test::kTwoPassGood));
+VP9_INSTANTIATE_TEST_CASE(SuperframeTest, ::testing::Combine(
+    ::testing::Values(::libvpx_test::kTwoPassGood),
+    ::testing::Values(0)));
 }  // namespace

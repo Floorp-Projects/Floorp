@@ -22,6 +22,7 @@
 #include "vpx_mem/vpx_mem.h"
 #include "vp8/common/systemdependent.h"
 #include "encodemv.h"
+#include "vpx_dsp/vpx_dsp_common.h"
 
 
 #define MIN_BPB_FACTOR          0.01
@@ -380,7 +381,8 @@ static void calc_iframe_target_size(VP8_COMP *cpi)
         int initial_boost = 32; /* |3.0 * per_frame_bandwidth| */
         /* Boost depends somewhat on frame rate: only used for 1 layer case. */
         if (cpi->oxcf.number_of_layers == 1) {
-          kf_boost = MAX(initial_boost, (int)(2 * cpi->output_framerate - 16));
+          kf_boost = VPXMAX(initial_boost,
+                            (int)(2 * cpi->output_framerate - 16));
         }
         else {
           /* Initial factor: set target size to: |3.0 * per_frame_bandwidth|. */
@@ -1591,11 +1593,38 @@ int vp8_drop_encodedframe_overshoot(VP8_COMP *cpi, int Q) {
     if (Q < thresh_qp &&
         cpi->projected_frame_size > thresh_rate &&
         pred_err_mb > thresh_pred_err_mb) {
+      double new_correction_factor = cpi->rate_correction_factor;
+      const int target_size = cpi->av_per_frame_bandwidth;
+      int target_bits_per_mb;
       // Drop this frame: advance frame counters, and set force_maxqp flag.
       cpi->common.current_video_frame++;
       cpi->frames_since_key++;
       // Flag to indicate we will force next frame to be encoded at max QP.
       cpi->force_maxqp = 1;
+      // Reset the buffer levels.
+      cpi->buffer_level = cpi->oxcf.optimal_buffer_level;
+      cpi->bits_off_target = cpi->oxcf.optimal_buffer_level;
+      // Compute a new rate correction factor, corresponding to the current
+      // target frame size and max_QP, and adjust the rate correction factor
+      // upwards, if needed.
+      // This is to prevent a bad state where the re-encoded frame at max_QP
+      // undershoots significantly, and then we end up dropping every other
+      // frame because the QP/rate_correction_factor may have been too low
+      // before the drop and then takes too long to come up.
+      if (target_size >= (INT_MAX >> BPER_MB_NORMBITS))
+        target_bits_per_mb =
+            (target_size / cpi->common.MBs) << BPER_MB_NORMBITS;
+      else
+        target_bits_per_mb =
+            (target_size << BPER_MB_NORMBITS) / cpi->common.MBs;
+      // Rate correction factor based on target_size_per_mb and max_QP.
+      new_correction_factor = (double)target_bits_per_mb /
+          (double)vp8_bits_per_mb[INTER_FRAME][cpi->worst_quality];
+      if (new_correction_factor > cpi->rate_correction_factor)
+        cpi->rate_correction_factor =
+            VPXMIN(2.0 * cpi->rate_correction_factor, new_correction_factor);
+      if (cpi->rate_correction_factor > MAX_BPB_FACTOR)
+        cpi->rate_correction_factor = MAX_BPB_FACTOR;
       return 1;
     } else {
       cpi->force_maxqp = 0;

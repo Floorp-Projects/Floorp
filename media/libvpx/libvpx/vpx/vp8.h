@@ -116,19 +116,29 @@ typedef struct vp9_ref_frame {
   vpx_image_t  img; /**< img structure to populate (output) */
 } vp9_ref_frame_t;
 
+/*!\cond */
 /*!\brief vp8 decoder control function parameter type
  *
  * defines the data type for each of VP8 decoder control function requires
  */
 VPX_CTRL_USE_TYPE(VP8_SET_REFERENCE,           vpx_ref_frame_t *)
+#define VPX_CTRL_VP8_SET_REFERENCE
 VPX_CTRL_USE_TYPE(VP8_COPY_REFERENCE,          vpx_ref_frame_t *)
+#define VPX_CTRL_VP8_COPY_REFERENCE
 VPX_CTRL_USE_TYPE(VP8_SET_POSTPROC,            vp8_postproc_cfg_t *)
+#define VPX_CTRL_VP8_SET_POSTPROC
 VPX_CTRL_USE_TYPE(VP8_SET_DBG_COLOR_REF_FRAME, int)
+#define VPX_CTRL_VP8_SET_DBG_COLOR_REF_FRAME
 VPX_CTRL_USE_TYPE(VP8_SET_DBG_COLOR_MB_MODES,  int)
+#define VPX_CTRL_VP8_SET_DBG_COLOR_MB_MODES
 VPX_CTRL_USE_TYPE(VP8_SET_DBG_COLOR_B_MODES,   int)
+#define VPX_CTRL_VP8_SET_DBG_COLOR_B_MODES
 VPX_CTRL_USE_TYPE(VP8_SET_DBG_DISPLAY_MV,      int)
+#define VPX_CTRL_VP8_SET_DBG_DISPLAY_MV
 VPX_CTRL_USE_TYPE(VP9_GET_REFERENCE,           vp9_ref_frame_t *)
+#define VPX_CTRL_VP9_GET_REFERENCE
 
+/*!\endcond */
 /*! @} - end defgroup vp8 */
 
 #ifdef __cplusplus

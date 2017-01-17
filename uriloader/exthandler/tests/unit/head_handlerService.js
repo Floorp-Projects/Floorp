@@ -33,7 +33,7 @@ var HandlerServiceTest = {
 
   //**************************************************************************//
   // nsISupports
-  
+
   interfaces: [Ci.nsIDirectoryServiceProvider, Ci.nsISupports],
 
   QueryInterface: function HandlerServiceTest_QueryInterface(iid) {
@@ -45,7 +45,7 @@ var HandlerServiceTest = {
 
   //**************************************************************************//
   // Initialization & Destruction
-  
+
   init: function HandlerServiceTest_init() {
     // Register ourselves as a directory provider for the datasource file
     // if there isn't one registered already.
@@ -161,3 +161,7 @@ var HandlerServiceTest = {
 };
 
 HandlerServiceTest.init();
+
+do_register_cleanup(function() {
+  HandlerServiceTest.destroy();
+});

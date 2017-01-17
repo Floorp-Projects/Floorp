@@ -11,6 +11,7 @@
 #ifndef VP8_COMMON_SETUPINTRARECON_H_
 #define VP8_COMMON_SETUPINTRARECON_H_
 
+#include "./vpx_config.h"
 #include "vpx_scale/yv12config.h"
 
 #ifdef __cplusplus
@@ -19,12 +20,11 @@ extern "C" {
 extern void vp8_setup_intra_recon(YV12_BUFFER_CONFIG *ybf);
 extern void vp8_setup_intra_recon_top_line(YV12_BUFFER_CONFIG *ybf);
 
-static
-void setup_intra_recon_left(unsigned char *y_buffer,
-                            unsigned char *u_buffer,
-                            unsigned char *v_buffer,
-                            int y_stride,
-                            int uv_stride)
+static INLINE void setup_intra_recon_left(unsigned char *y_buffer,
+                                          unsigned char *u_buffer,
+                                          unsigned char *v_buffer,
+                                          int y_stride,
+                                          int uv_stride)
 {
     int i;
 

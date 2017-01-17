@@ -13,7 +13,7 @@
 #include "./vpx_scale_rtcd.h"
 #include "vp8/common/onyxc_int.h"
 #include "onyx_int.h"
-#include "quantize.h"
+#include "vp8/encoder/quantize.h"
 #include "vpx_mem/vpx_mem.h"
 #include "vpx_scale/vpx_scale.h"
 #include "vp8/common/alloccommon.h"

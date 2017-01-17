@@ -34,13 +34,7 @@ void vp8_estimate_missing_mvs(VP8D_COMP *pbi);
  * (mb_row, mb_col). */
 void vp8_interpolate_motion(MACROBLOCKD *mb,
                             int mb_row, int mb_col,
-                            int mb_rows, int mb_cols,
-                            int mi_stride);
-
-/* Conceal a macroblock with corrupt residual.
- * Copies the prediction signal to the reconstructed image.
- */
-void vp8_conceal_corrupt_mb(MACROBLOCKD *xd);
+                            int mb_rows, int mb_cols);
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -13,9 +13,11 @@ var gElements;
 
 function checkElements(expectedPane) {
   for (let element of gElements) {
-    // preferences elements fail is_element_visible checks because they are never visible.
+    // keyset and preferences elements fail is_element_visible checks because they are never visible.
     // special-case the drmGroup item because its visibility depends on pref + OS version
-    if (element.nodeName == "preferences" || element.id === "drmGroup") {
+    if (element.nodeName == "keyset" ||
+        element.nodeName == "preferences" ||
+        element.id === "drmGroup") {
       continue;
     }
     let attributeValue = element.getAttribute("data-category");

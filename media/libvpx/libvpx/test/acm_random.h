@@ -32,6 +32,12 @@ class ACMRandom {
     return (value >> 15) & 0xffff;
   }
 
+  int16_t Rand9Signed(void) {
+    // Use 9 bits: values between 255 (0x0FF) and -256 (0x100).
+    const uint32_t value = random_.Generate(512);
+    return static_cast<int16_t>(value) - 256;
+  }
+
   uint8_t Rand8(void) {
     const uint32_t value =
         random_.Generate(testing::internal::Random::kMaxRange);

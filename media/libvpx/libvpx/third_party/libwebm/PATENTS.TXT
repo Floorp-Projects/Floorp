@@ -17,7 +17,7 @@ or agree to the institution of patent litigation or any other patent
 enforcement activity against any entity (including a cross-claim or
 counterclaim in a lawsuit) alleging that any of these implementations of WebM
 or any code incorporated within any of these implementations of WebM
-constitutes direct or contributory patent infringement, or inducement of
+constitute direct or contributory patent infringement, or inducement of
 patent infringement, then any patent rights granted to you under this License
 for these implementations of WebM shall terminate as of the date such
 litigation is filed.

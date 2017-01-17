@@ -23,6 +23,7 @@
 #include "vp8/common/entropymode.h"
 #include "vp8/common/quant_common.h"
 #include "vpx_scale/vpx_scale.h"
+#include "vp8/common/reconintra.h"
 #include "vp8/common/setupintrarecon.h"
 
 #include "decodemv.h"
@@ -34,6 +35,7 @@
 #include "vp8/common/threading.h"
 #include "decoderthreading.h"
 #include "dboolhuff.h"
+#include "vpx_dsp/vpx_dsp_common.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -142,8 +144,6 @@ static void decode_macroblock(VP8D_COMP *pbi, MACROBLOCKD *xd,
              */
             pbi->frame_corrupt_residual = 1;
             memset(xd->qcoeff, 0, sizeof(xd->qcoeff));
-            vp8_conceal_corrupt_mb(xd);
-
 
             corruption_detected = 1;
 
@@ -623,8 +623,7 @@ static void decode_mb_rows(VP8D_COMP *pbi)
                      */
                     vp8_interpolate_motion(xd,
                                            mb_row, mb_col,
-                                           pc->mb_rows, pc->mb_cols,
-                                           pc->mode_info_stride);
+                                           pc->mb_rows, pc->mb_cols);
                 }
             }
 #endif
@@ -634,7 +633,7 @@ static void decode_mb_rows(VP8D_COMP *pbi)
             xd->dst.v_buffer = dst_buffer[2] + recon_uvoffset;
 
             if (xd->mode_info_context->mbmi.ref_frame >= LAST_FRAME) {
-              MV_REFERENCE_FRAME ref = xd->mode_info_context->mbmi.ref_frame;
+              const MV_REFERENCE_FRAME ref = xd->mode_info_context->mbmi.ref_frame;
               xd->pre.y_buffer = ref_buffer[ref][0] + recon_yoffset;
               xd->pre.u_buffer = ref_buffer[ref][1] + recon_uvoffset;
               xd->pre.v_buffer = ref_buffer[ref][2] + recon_uvoffset;
@@ -984,7 +983,8 @@ int vp8_decode_frame(VP8D_COMP *pbi)
     VP8_COMMON *const pc = &pbi->common;
     MACROBLOCKD *const xd  = &pbi->mb;
     const unsigned char *data = pbi->fragments.ptrs[0];
-    const unsigned char *data_end =  data + pbi->fragments.sizes[0];
+    const unsigned int data_sz = pbi->fragments.sizes[0];
+    const unsigned char *data_end = data + data_sz;
     ptrdiff_t first_partition_length_in_bytes;
 
     int i, j, k, l;
@@ -1020,7 +1020,7 @@ int vp8_decode_frame(VP8D_COMP *pbi)
         const unsigned char *clear = data;
         if (pbi->decrypt_cb)
         {
-            int n = (int)MIN(sizeof(clear_buffer), data_end - data);
+            int n = (int)VPXMIN(sizeof(clear_buffer), data_sz);
             pbi->decrypt_cb(pbi->decrypt_state, data, clear_buffer, n);
             clear = clear_buffer;
         }

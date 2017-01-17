@@ -18,33 +18,33 @@
 #if CONFIG_WEBM_IO
 #include "test/webm_video_source.h"
 #endif
-#include "vp9/common/vp9_thread.h"
+#include "vpx_util/vpx_thread.h"
 
 namespace {
 
 using std::string;
 
-class VP9WorkerThreadTest : public ::testing::TestWithParam<bool> {
+class VPxWorkerThreadTest : public ::testing::TestWithParam<bool> {
  protected:
-  virtual ~VP9WorkerThreadTest() {}
+  virtual ~VPxWorkerThreadTest() {}
   virtual void SetUp() {
-    vp9_get_worker_interface()->init(&worker_);
+    vpx_get_worker_interface()->init(&worker_);
   }
 
   virtual void TearDown() {
-    vp9_get_worker_interface()->end(&worker_);
+    vpx_get_worker_interface()->end(&worker_);
   }
 
-  void Run(VP9Worker* worker) {
+  void Run(VPxWorker* worker) {
     const bool synchronous = GetParam();
     if (synchronous) {
-      vp9_get_worker_interface()->execute(worker);
+      vpx_get_worker_interface()->execute(worker);
     } else {
-      vp9_get_worker_interface()->launch(worker);
+      vpx_get_worker_interface()->launch(worker);
     }
   }
 
-  VP9Worker worker_;
+  VPxWorker worker_;
 };
 
 int ThreadHook(void* data, void* return_value) {
@@ -53,12 +53,12 @@ int ThreadHook(void* data, void* return_value) {
   return *reinterpret_cast<int*>(return_value);
 }
 
-TEST_P(VP9WorkerThreadTest, HookSuccess) {
+TEST_P(VPxWorkerThreadTest, HookSuccess) {
   // should be a no-op.
-  EXPECT_NE(vp9_get_worker_interface()->sync(&worker_), 0);
+  EXPECT_NE(vpx_get_worker_interface()->sync(&worker_), 0);
 
   for (int i = 0; i < 2; ++i) {
-    EXPECT_NE(vp9_get_worker_interface()->reset(&worker_), 0);
+    EXPECT_NE(vpx_get_worker_interface()->reset(&worker_), 0);
 
     int hook_data = 0;
     int return_value = 1;  // return successfully from the hook
@@ -67,17 +67,17 @@ TEST_P(VP9WorkerThreadTest, HookSuccess) {
     worker_.data2 = &return_value;
 
     Run(&worker_);
-    EXPECT_NE(vp9_get_worker_interface()->sync(&worker_), 0);
+    EXPECT_NE(vpx_get_worker_interface()->sync(&worker_), 0);
     EXPECT_FALSE(worker_.had_error);
     EXPECT_EQ(5, hook_data);
 
     // should be a no-op.
-    EXPECT_NE(vp9_get_worker_interface()->sync(&worker_), 0);
+    EXPECT_NE(vpx_get_worker_interface()->sync(&worker_), 0);
   }
 }
 
-TEST_P(VP9WorkerThreadTest, HookFailure) {
-  EXPECT_NE(vp9_get_worker_interface()->reset(&worker_), 0);
+TEST_P(VPxWorkerThreadTest, HookFailure) {
+  EXPECT_NE(vpx_get_worker_interface()->reset(&worker_), 0);
 
   int hook_data = 0;
   int return_value = 0;  // return failure from the hook
@@ -86,29 +86,29 @@ TEST_P(VP9WorkerThreadTest, HookFailure) {
   worker_.data2 = &return_value;
 
   Run(&worker_);
-  EXPECT_FALSE(vp9_get_worker_interface()->sync(&worker_));
+  EXPECT_FALSE(vpx_get_worker_interface()->sync(&worker_));
   EXPECT_EQ(1, worker_.had_error);
 
   // Ensure _reset() clears the error and _launch() can be called again.
   return_value = 1;
-  EXPECT_NE(vp9_get_worker_interface()->reset(&worker_), 0);
+  EXPECT_NE(vpx_get_worker_interface()->reset(&worker_), 0);
   EXPECT_FALSE(worker_.had_error);
-  vp9_get_worker_interface()->launch(&worker_);
-  EXPECT_NE(vp9_get_worker_interface()->sync(&worker_), 0);
+  vpx_get_worker_interface()->launch(&worker_);
+  EXPECT_NE(vpx_get_worker_interface()->sync(&worker_), 0);
   EXPECT_FALSE(worker_.had_error);
 }
 
-TEST_P(VP9WorkerThreadTest, EndWithoutSync) {
+TEST_P(VPxWorkerThreadTest, EndWithoutSync) {
   // Create a large number of threads to increase the chances of detecting a
   // race. Doing more work in the hook is no guarantee as any race would occur
   // post hook execution in the main thread loop driver.
   static const int kNumWorkers = 64;
-  VP9Worker workers[kNumWorkers];
+  VPxWorker workers[kNumWorkers];
   int hook_data[kNumWorkers];
   int return_value[kNumWorkers];
 
   for (int n = 0; n < kNumWorkers; ++n) {
-    vp9_get_worker_interface()->init(&workers[n]);
+    vpx_get_worker_interface()->init(&workers[n]);
     return_value[n] = 1;  // return successfully from the hook
     workers[n].hook = ThreadHook;
     workers[n].data1 = &hook_data[n];
@@ -117,7 +117,7 @@ TEST_P(VP9WorkerThreadTest, EndWithoutSync) {
 
   for (int i = 0; i < 2; ++i) {
     for (int n = 0; n < kNumWorkers; ++n) {
-      EXPECT_NE(vp9_get_worker_interface()->reset(&workers[n]), 0);
+      EXPECT_NE(vpx_get_worker_interface()->reset(&workers[n]), 0);
       hook_data[n] = 0;
     }
 
@@ -126,16 +126,16 @@ TEST_P(VP9WorkerThreadTest, EndWithoutSync) {
     }
 
     for (int n = kNumWorkers - 1; n >= 0; --n) {
-      vp9_get_worker_interface()->end(&workers[n]);
+      vpx_get_worker_interface()->end(&workers[n]);
     }
   }
 }
 
-TEST(VP9WorkerThreadTest, TestInterfaceAPI) {
-  EXPECT_EQ(0, vp9_set_worker_interface(NULL));
-  EXPECT_TRUE(vp9_get_worker_interface() != NULL);
+TEST(VPxWorkerThreadTest, TestInterfaceAPI) {
+  EXPECT_EQ(0, vpx_set_worker_interface(NULL));
+  EXPECT_TRUE(vpx_get_worker_interface() != NULL);
   for (int i = 0; i < 6; ++i) {
-    VP9WorkerInterface winterface = *vp9_get_worker_interface();
+    VPxWorkerInterface winterface = *vpx_get_worker_interface();
     switch (i) {
       default:
       case 0: winterface.init = NULL; break;
@@ -145,7 +145,7 @@ TEST(VP9WorkerThreadTest, TestInterfaceAPI) {
       case 4: winterface.execute = NULL; break;
       case 5: winterface.end = NULL; break;
     }
-    EXPECT_EQ(0, vp9_set_worker_interface(&winterface));
+    EXPECT_EQ(0, vpx_set_worker_interface(&winterface));
   }
 }
 
@@ -190,7 +190,7 @@ string DecodeFile(const string& filename, int num_threads) {
 void DecodeFiles(const FileList files[]) {
   for (const FileList *iter = files; iter->name != NULL; ++iter) {
     SCOPED_TRACE(iter->name);
-    for (int t = 2; t <= 8; ++t) {
+    for (int t = 1; t <= 8; ++t) {
       EXPECT_EQ(iter->expected_md5, DecodeFile(iter->name, t))
           << "threads = " << t;
     }
@@ -202,21 +202,21 @@ void DecodeFiles(const FileList files[]) {
 // hang.
 namespace impl {
 
-void Init(VP9Worker *const worker) { memset(worker, 0, sizeof(*worker)); }
-int Reset(VP9Worker *const /*worker*/) { return 1; }
-int Sync(VP9Worker *const worker) { return !worker->had_error; }
+void Init(VPxWorker *const worker) { memset(worker, 0, sizeof(*worker)); }
+int Reset(VPxWorker *const /*worker*/) { return 1; }
+int Sync(VPxWorker *const worker) { return !worker->had_error; }
 
-void Execute(VP9Worker *const worker) {
+void Execute(VPxWorker *const worker) {
   worker->had_error |= !worker->hook(worker->data1, worker->data2);
 }
 
-void Launch(VP9Worker *const worker) { Execute(worker); }
-void End(VP9Worker *const /*worker*/) {}
+void Launch(VPxWorker *const worker) { Execute(worker); }
+void End(VPxWorker *const /*worker*/) {}
 
 }  // namespace impl
 
-TEST(VP9WorkerThreadTest, TestSerialInterface) {
-  static const VP9WorkerInterface serial_interface = {
+TEST(VPxWorkerThreadTest, TestSerialInterface) {
+  static const VPxWorkerInterface serial_interface = {
     impl::Init, impl::Reset, impl::Sync, impl::Launch, impl::Execute, impl::End
   };
   // TODO(jzern): Avoid using a file that will use the row-based thread
@@ -225,23 +225,23 @@ TEST(VP9WorkerThreadTest, TestSerialInterface) {
   // progress in the row above before proceeding.
   static const char expected_md5[] = "b35a1b707b28e82be025d960aba039bc";
   static const char filename[] = "vp90-2-03-size-226x226.webm";
-  VP9WorkerInterface default_interface = *vp9_get_worker_interface();
+  VPxWorkerInterface default_interface = *vpx_get_worker_interface();
 
-  EXPECT_NE(vp9_set_worker_interface(&serial_interface), 0);
+  EXPECT_NE(vpx_set_worker_interface(&serial_interface), 0);
   EXPECT_EQ(expected_md5, DecodeFile(filename, 2));
 
   // Reset the interface.
-  EXPECT_NE(vp9_set_worker_interface(&default_interface), 0);
+  EXPECT_NE(vpx_set_worker_interface(&default_interface), 0);
   EXPECT_EQ(expected_md5, DecodeFile(filename, 2));
 }
 
-TEST(VP9DecodeMultiThreadedTest, Decode) {
+TEST(VP9DecodeMultiThreadedTest, NoTilesNonFrameParallel) {
   // no tiles or frame parallel; this exercises loop filter threading.
   EXPECT_EQ("b35a1b707b28e82be025d960aba039bc",
             DecodeFile("vp90-2-03-size-226x226.webm", 2));
 }
 
-TEST(VP9DecodeMultiThreadedTest, Decode2) {
+TEST(VP9DecodeMultiThreadedTest, FrameParallel) {
   static const FileList files[] = {
     { "vp90-2-08-tile_1x2_frame_parallel.webm",
       "68ede6abd66bae0a2edf2eb9232241b6" },
@@ -255,8 +255,7 @@ TEST(VP9DecodeMultiThreadedTest, Decode2) {
   DecodeFiles(files);
 }
 
-// Test tile quantity changes within one file.
-TEST(VP9DecodeMultiThreadedTest, Decode3) {
+TEST(VP9DecodeMultiThreadedTest, FrameParallelResize) {
   static const FileList files[] = {
     { "vp90-2-14-resize-fp-tiles-1-16.webm",
       "0cd5e632c326297e975f38949c31ea94" },
@@ -307,8 +306,21 @@ TEST(VP9DecodeMultiThreadedTest, Decode3) {
 
   DecodeFiles(files);
 }
+
+TEST(VP9DecodeMultiThreadedTest, NonFrameParallel) {
+  static const FileList files[] = {
+    { "vp90-2-08-tile_1x2.webm", "570b4a5d5a70d58b5359671668328a16" },
+    { "vp90-2-08-tile_1x4.webm", "988d86049e884c66909d2d163a09841a" },
+    { "vp90-2-08-tile_1x8.webm", "0941902a52e9092cb010905eab16364c" },
+    { "vp90-2-08-tile-4x1.webm", "06505aade6647c583c8e00a2f582266f" },
+    { "vp90-2-08-tile-4x4.webm", "85c2299892460d76e2c600502d52bfe2" },
+    { NULL, NULL }
+  };
+
+  DecodeFiles(files);
+}
 #endif  // CONFIG_WEBM_IO
 
-INSTANTIATE_TEST_CASE_P(Synchronous, VP9WorkerThreadTest, ::testing::Bool());
+INSTANTIATE_TEST_CASE_P(Synchronous, VPxWorkerThreadTest, ::testing::Bool());
 
 }  // namespace

@@ -26,7 +26,8 @@ class CpuSpeedTest
       : EncoderTest(GET_PARAM(0)),
         encoding_mode_(GET_PARAM(1)),
         set_cpu_used_(GET_PARAM(2)),
-        min_psnr_(kMaxPSNR) {}
+        min_psnr_(kMaxPSNR),
+        tune_content_(VP9E_CONTENT_DEFAULT) {}
   virtual ~CpuSpeedTest() {}
 
   virtual void SetUp() {
@@ -49,6 +50,7 @@ class CpuSpeedTest
                                   ::libvpx_test::Encoder *encoder) {
     if (video->frame() == 1) {
       encoder->Control(VP8E_SET_CPUUSED, set_cpu_used_);
+      encoder->Control(VP9E_SET_TUNE_CONTENT, tune_content_);
       if (encoding_mode_ != ::libvpx_test::kRealTime) {
         encoder->Control(VP8E_SET_ENABLEAUTOALTREF, 1);
         encoder->Control(VP8E_SET_ARNR_MAXFRAMES, 7);
@@ -66,6 +68,7 @@ class CpuSpeedTest
   ::libvpx_test::TestMode encoding_mode_;
   int set_cpu_used_;
   double min_psnr_;
+  int tune_content_;
 };
 
 TEST_P(CpuSpeedTest, TestQ0) {
@@ -74,7 +77,7 @@ TEST_P(CpuSpeedTest, TestQ0) {
   // the encoder to producing lots of big partitions which will likely
   // extend into the border and test the border condition.
   cfg_.rc_2pass_vbr_minsection_pct = 5;
-  cfg_.rc_2pass_vbr_minsection_pct = 2000;
+  cfg_.rc_2pass_vbr_maxsection_pct = 2000;
   cfg_.rc_target_bitrate = 400;
   cfg_.rc_max_quantizer = 0;
   cfg_.rc_min_quantizer = 0;
@@ -92,7 +95,7 @@ TEST_P(CpuSpeedTest, TestScreencastQ0) {
   ::libvpx_test::Y4mVideoSource video("screendata.y4m", 0, 25);
   cfg_.g_timebase = video.timebase();
   cfg_.rc_2pass_vbr_minsection_pct = 5;
-  cfg_.rc_2pass_vbr_minsection_pct = 2000;
+  cfg_.rc_2pass_vbr_maxsection_pct = 2000;
   cfg_.rc_target_bitrate = 400;
   cfg_.rc_max_quantizer = 0;
   cfg_.rc_min_quantizer = 0;
@@ -103,13 +106,28 @@ TEST_P(CpuSpeedTest, TestScreencastQ0) {
   EXPECT_GE(min_psnr_, kMaxPSNR);
 }
 
+TEST_P(CpuSpeedTest, TestTuneScreen) {
+  ::libvpx_test::Y4mVideoSource video("screendata.y4m", 0, 25);
+  cfg_.g_timebase = video.timebase();
+  cfg_.rc_2pass_vbr_minsection_pct = 5;
+  cfg_.rc_2pass_vbr_minsection_pct = 2000;
+  cfg_.rc_target_bitrate = 2000;
+  cfg_.rc_max_quantizer = 63;
+  cfg_.rc_min_quantizer = 0;
+  tune_content_ = VP9E_CONTENT_SCREEN;
+
+  init_flags_ = VPX_CODEC_USE_PSNR;
+
+  ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
+}
+
 TEST_P(CpuSpeedTest, TestEncodeHighBitrate) {
   // Validate that this non multiple of 64 wide clip encodes and decodes
   // without a mismatch when passing in a very low max q.  This pushes
   // the encoder to producing lots of big partitions which will likely
   // extend into the border and test the border condition.
   cfg_.rc_2pass_vbr_minsection_pct = 5;
-  cfg_.rc_2pass_vbr_minsection_pct = 2000;
+  cfg_.rc_2pass_vbr_maxsection_pct = 2000;
   cfg_.rc_target_bitrate = 12000;
   cfg_.rc_max_quantizer = 10;
   cfg_.rc_min_quantizer = 0;
@@ -125,7 +143,7 @@ TEST_P(CpuSpeedTest, TestLowBitrate) {
   // when passing in a very high min q.  This pushes the encoder to producing
   // lots of small partitions which might will test the other condition.
   cfg_.rc_2pass_vbr_minsection_pct = 5;
-  cfg_.rc_2pass_vbr_minsection_pct = 2000;
+  cfg_.rc_2pass_vbr_maxsection_pct = 2000;
   cfg_.rc_target_bitrate = 200;
   cfg_.rc_min_quantizer = 40;
 

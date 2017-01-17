@@ -132,11 +132,11 @@ static void extend_frame(YV12_BUFFER_CONFIG *const ybf, int ext_size) {
                c_w, c_h, c_et, c_el, c_eb, c_er);
 }
 
-void vp9_extend_frame_borders_dspr2(YV12_BUFFER_CONFIG *ybf) {
+void vpx_extend_frame_borders_dspr2(YV12_BUFFER_CONFIG *ybf) {
   extend_frame(ybf, ybf->border);
 }
 
-void vp9_extend_frame_inner_borders_dspr2(YV12_BUFFER_CONFIG *ybf) {
+void vpx_extend_frame_inner_borders_dspr2(YV12_BUFFER_CONFIG *ybf) {
   const int inner_bw = (ybf->border > VP9INNERBORDERINPIXELS) ?
                        VP9INNERBORDERINPIXELS : ybf->border;
   extend_frame(ybf, inner_bw);

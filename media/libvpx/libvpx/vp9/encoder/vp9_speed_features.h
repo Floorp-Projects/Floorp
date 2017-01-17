@@ -188,12 +188,23 @@ typedef struct MV_SPEED_FEATURES {
   // Maximum number of steps in logarithmic subpel search before giving up.
   int subpel_iters_per_step;
 
-  // Control when to stop subpel search
+  // Control when to stop subpel search:
+  // 0: Full subpel search.
+  // 1: Stop at quarter pixel.
+  // 2: Stop at half pixel.
+  // 3: Stop at full pixel.
   int subpel_force_stop;
 
   // This variable sets the step_param used in full pel motion search.
   int fullpel_search_step_param;
 } MV_SPEED_FEATURES;
+
+#define MAX_MESH_STEP 4
+
+typedef struct MESH_PATTERN {
+  int range;
+  int interval;
+} MESH_PATTERN;
 
 typedef struct SPEED_FEATURES {
   MV_SPEED_FEATURES mv;
@@ -267,6 +278,7 @@ typedef struct SPEED_FEATURES {
 
   // Disable testing non square partitions. (eg 16x32)
   int use_square_partition_only;
+  BLOCK_SIZE use_square_only_threshold;
 
   // Sets min and max partition sizes for this 64x64 region based on the
   // same 64x64 in last encoded frame, and the left and above neighbor.
@@ -297,6 +309,18 @@ typedef struct SPEED_FEATURES {
   // This allows us to use motion search at other sizes as a starting
   // point for this motion search and limits the search range around it.
   int adaptive_motion_search;
+
+  // Flag for allowing some use of exhaustive searches;
+  int allow_exhaustive_searches;
+
+  // Threshold for allowing exhaistive motion search.
+  int exhaustive_searches_thresh;
+
+  // Maximum number of exhaustive searches for a frame.
+  int max_exaustive_pct;
+
+  // Pattern to be used for any exhaustive mesh searches.
+  MESH_PATTERN mesh_patterns[MAX_MESH_STEP];
 
   int schedule_mode_search;
 
@@ -415,6 +439,21 @@ typedef struct SPEED_FEATURES {
 
   // Allow skipping partition search for still image frame
   int allow_partition_search_skip;
+
+  // Fast approximation of vp9_model_rd_from_var_lapndz
+  int simple_model_rd_from_var;
+
+  // Skip a number of expensive mode evaluations for blocks with zero source
+  // variance.
+  int short_circuit_flat_blocks;
+
+  // Skip a number of expensive mode evaluations for blocks with very low
+  // temporal variance.
+  // 1: Skip golden non-zeromv and ALL INTRA for bsize >= 32x32.
+  // 2: Skip golden non-zeromv and newmv-last for bsize >= 16x16, skip ALL
+  // INTRA for bsize >= 32x32 and vert/horz INTRA for bsize 16x16, 16x32 and
+  // 32x16.
+  int short_circuit_low_temp_var;
 } SPEED_FEATURES;
 
 struct VP9_COMP;

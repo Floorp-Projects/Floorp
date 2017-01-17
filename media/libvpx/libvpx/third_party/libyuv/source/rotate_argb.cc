@@ -27,24 +27,20 @@ extern "C" {
     (defined(__x86_64__) && !defined(__native_client__)) || defined(__i386__))
 #define HAS_SCALEARGBROWDOWNEVEN_SSE2
 void ScaleARGBRowDownEven_SSE2(const uint8* src_ptr, int src_stride,
-                               int src_stepx,
-                               uint8* dst_ptr, int dst_width);
+                               int src_stepx, uint8* dst_ptr, int dst_width);
 #endif
 #if !defined(LIBYUV_DISABLE_NEON) && !defined(__native_client__) && \
     (defined(__ARM_NEON__) || defined(LIBYUV_NEON) || defined(__aarch64__))
 #define HAS_SCALEARGBROWDOWNEVEN_NEON
 void ScaleARGBRowDownEven_NEON(const uint8* src_ptr, int src_stride,
-                               int src_stepx,
-                               uint8* dst_ptr, int dst_width);
+                               int src_stepx, uint8* dst_ptr, int dst_width);
 #endif
 
 void ScaleARGBRowDownEven_C(const uint8* src_ptr, int,
-                            int src_stepx,
-                            uint8* dst_ptr, int dst_width);
+                            int src_stepx, uint8* dst_ptr, int dst_width);
 
 static void ARGBTranspose(const uint8* src, int src_stride,
-                          uint8* dst, int dst_stride,
-                          int width, int height) {
+                          uint8* dst, int dst_stride, int width, int height) {
   int i;
   int src_pixel_step = src_stride >> 2;
   void (*ScaleARGBRowDownEven)(const uint8* src_ptr, int src_stride,
@@ -68,8 +64,7 @@ static void ARGBTranspose(const uint8* src, int src_stride,
 }
 
 void ARGBRotate90(const uint8* src, int src_stride,
-                  uint8* dst, int dst_stride,
-                  int width, int height) {
+                  uint8* dst, int dst_stride, int width, int height) {
   // Rotate by 90 is a ARGBTranspose with the source read
   // from bottom to top. So set the source pointer to the end
   // of the buffer and flip the sign of the source stride.
@@ -79,8 +74,7 @@ void ARGBRotate90(const uint8* src, int src_stride,
 }
 
 void ARGBRotate270(const uint8* src, int src_stride,
-                    uint8* dst, int dst_stride,
-                    int width, int height) {
+                    uint8* dst, int dst_stride, int width, int height) {
   // Rotate by 270 is a ARGBTranspose with the destination written
   // from bottom to top. So set the destination pointer to the end
   // of the buffer and flip the sign of the destination stride.
@@ -90,8 +84,7 @@ void ARGBRotate270(const uint8* src, int src_stride,
 }
 
 void ARGBRotate180(const uint8* src, int src_stride,
-                   uint8* dst, int dst_stride,
-                   int width, int height) {
+                   uint8* dst, int dst_stride, int width, int height) {
   // Swap first and last row and mirror the content. Uses a temporary row.
   align_buffer_64(row, width * 4);
   const uint8* src_bot = src + src_stride * (height - 1);
@@ -166,8 +159,7 @@ void ARGBRotate180(const uint8* src, int src_stride,
 
 LIBYUV_API
 int ARGBRotate(const uint8* src_argb, int src_stride_argb,
-               uint8* dst_argb, int dst_stride_argb,
-               int width, int height,
+               uint8* dst_argb, int dst_stride_argb, int width, int height,
                enum RotationMode mode) {
   if (!src_argb || width <= 0 || height == 0 || !dst_argb) {
     return -1;

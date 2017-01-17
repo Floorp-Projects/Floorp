@@ -94,8 +94,7 @@ TEST_P(VP9DenoiserTest, BitexactCheck) {
 // Test for all block size.
 INSTANTIATE_TEST_CASE_P(
     SSE2, VP9DenoiserTest,
-    ::testing::Values(BLOCK_4X4, BLOCK_4X8, BLOCK_8X4, BLOCK_8X8,
-                      BLOCK_8X16, BLOCK_16X8, BLOCK_16X16, BLOCK_16X32,
-                      BLOCK_32X16, BLOCK_32X32, BLOCK_32X64, BLOCK_64X32,
-                      BLOCK_64X64));
+    ::testing::Values(BLOCK_8X8, BLOCK_8X16, BLOCK_16X8, BLOCK_16X16,
+                      BLOCK_16X32, BLOCK_32X16, BLOCK_32X32, BLOCK_32X64,
+                      BLOCK_64X32, BLOCK_64X64));
 }  // namespace
