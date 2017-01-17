@@ -181,7 +181,6 @@ mobile/android/modules/HomeProvider.jsm
 services/sync/modules/constants.js
 
 # Third party services
-services/sync/tps/extensions/mozmill/resource/stdlib/json2.js
 services/common/kinto-http-client.js
 services/common/kinto-offline-client.js
 services/sync/tps/extensions/mozmill
