@@ -84,15 +84,15 @@ private:
   mozilla::Monitor mMonitor;
 
 protected:
-  // mData and mDataLoaded are protected by mMonitor.
+  // protected by mMonitor.
+  nsCOMPtr<nsIFile> mProfileDir;
   nsTArray<ServiceWorkerRegistrationData> mData;
   bool mDataLoaded;
 
+  // PBackground thread only
   bool mShuttingDown;
   bool* mShutdownCompleteFlag;
   uint32_t mRunnableCounter;
-
-  nsCOMPtr<nsIFile> mProfileDir;
 };
 
 } // namespace dom
