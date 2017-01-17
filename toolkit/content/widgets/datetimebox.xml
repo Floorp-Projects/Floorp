@@ -551,7 +551,7 @@
           }
 
           this.log("setFieldsFromInputValue: " + value);
-          let [hour, minute, second] = value.split(':');
+          let [hour, minute, second] = value.split(":");
 
           this.setFieldValue(this.mHourField, hour);
           this.setFieldValue(this.mMinuteField, minute);

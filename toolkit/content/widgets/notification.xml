@@ -46,8 +46,8 @@
                 onget="return this.getAttribute('notificationshidden') == 'true';">
         <setter>
           if (val)
-            this.setAttribute('notificationshidden', true);
-          else this.removeAttribute('notificationshidden');
+            this.setAttribute("notificationshidden", true);
+          else this.removeAttribute("notificationshidden");
           return val;
         </setter>
       </property>
@@ -56,7 +56,7 @@
         <getter>
         <![CDATA[
           var closedNotification = this._closedNotification;
-          var notifications = this.getElementsByTagName('notification');
+          var notifications = this.getElementsByTagName("notification");
           return Array.filter(notifications, n => n != closedNotification);
         ]]>
         </getter>

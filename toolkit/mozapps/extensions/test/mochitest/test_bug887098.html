@@ -16,15 +16,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887098
   /* globals $,evalRef */
 
   function loaded() {
-    var iwin = $('ifr').contentWindow;
+    var iwin = $("ifr").contentWindow;
     var href = SpecialPowers.wrap(iwin).location.href;
     if (/file_empty/.test(href)) {
       window.evalRef = iwin.eval;
       window.installTriggerRef = iwin.InstallTrigger; // Force lazy instantiation.
       // about: is privileged, so we need to be privileged to load it.
-      SpecialPowers.wrap(iwin).location.href = 'about:';
+      SpecialPowers.wrap(iwin).location.href = "about:";
     } else {
-      is(href, 'about:', "Successfully navigated to about:");
+      is(href, "about:", "Successfully navigated to about:");
       try {
         evalRef('InstallTrigger.install({URL: "chrome://global/skin/global.css"});');
         ok(false, "Should have thrown when trying to install restricted URI from InstallTrigger");

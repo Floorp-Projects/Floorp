@@ -36,13 +36,13 @@
       <property name="accessKey">
         <getter>
           <![CDATA[
-            return this.labelElement ? this.labelElement.accessKey : this.getAttribute('accesskey');
+            return this.labelElement ? this.labelElement.accessKey : this.getAttribute("accesskey");
           ]]>
         </getter>
         <setter>
           <![CDATA[
             // Always store on the control
-            this.setAttribute('accesskey', val);
+            this.setAttribute("accesskey", val);
             // If there is a label, change the accesskey on the labelElement
             // if it's also set there
             if (this.labelElement) {
@@ -171,8 +171,8 @@
           if (this.selectedIndex == val)
             return val;
           this.setAttribute("selectedIndex", val);
-          var event = document.createEvent('Events');
-          event.initEvent('select', true, true);
+          var event = document.createEvent("Events");
+          event.initEvent("select", true, true);
           this.dispatchEvent(event);
           return val;
         ]]>

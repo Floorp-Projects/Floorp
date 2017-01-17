@@ -23,8 +23,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=676619
             download="javascript.txt" id="link5">Download "javascript.txt"</a></li>
     </ul>
     <script>
-        var li = document.createElement('li');
-        var a = document.createElement('a');
+        var li = document.createElement("li");
+        var a = document.createElement("a");
 
         a.href = window.URL.createObjectURL(new Blob(["just text"]));
         a.download = "test.blob";
@@ -32,7 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=676619
         a.textContent = 'Download "test.blob"';
 
         li.appendChild(a);
-        document.getElementsByTagName('ul')[0].appendChild(li);
+        document.getElementsByTagName("ul")[0].appendChild(li);
 
         window.addEventListener("beforeunload", function(evt) {
             document.getElementById("unload-flag").textContent = "Fail";

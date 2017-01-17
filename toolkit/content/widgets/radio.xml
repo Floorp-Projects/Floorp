@@ -56,7 +56,7 @@
       <property name="disabled">
         <getter>
         <![CDATA[
-          if (this.getAttribute('disabled') == 'true')
+          if (this.getAttribute("disabled") == "true")
             return true;
           var children = this._getRadioChildren();
           for (var i = 0; i < children.length; ++i) {
@@ -69,9 +69,9 @@
         <setter>
         <![CDATA[
           if (val)
-            this.setAttribute('disabled', 'true');
+            this.setAttribute("disabled", "true");
           else
-            this.removeAttribute('disabled');
+            this.removeAttribute("disabled");
           var children = this._getRadioChildren();
           for (var i = 0; i < children.length; ++i) {
             children[i].disabled = val;
@@ -470,7 +470,7 @@
       <property name="selected" readonly="true">
         <getter>
           <![CDATA[
-            return this.hasAttribute('selected');
+            return this.hasAttribute("selected");
           ]]>
         </getter>
       </property>
