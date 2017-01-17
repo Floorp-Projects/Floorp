@@ -790,7 +790,11 @@ EditorEventListener::HandleText(nsIDOMEvent* aTextEvent)
     return NS_OK;
   }
 
-  return mEditorBase->UpdateIMEComposition(aTextEvent);
+  // AsCompositionEvent() should always return non-nullptr.  Anyway, it'll be
+  // checked in TextEditor::UpdateIMEComposition().
+  WidgetCompositionEvent* compositionChangeEvent =
+    aTextEvent->WidgetEventPtr()->AsCompositionEvent();
+  return mEditorBase->UpdateIMEComposition(compositionChangeEvent);
 }
 
 /**
