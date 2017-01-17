@@ -427,10 +427,10 @@ TabChild::TabChild(nsIContentChild* aManager,
 bool
 TabChild::AsyncPanZoomEnabled() const
 {
-  // If we have received the CompositorOptions we can answer definitively. If
-  // not, return a best guess based on gfxPlaform values.
-  return mCompositorOptions ? mCompositorOptions->UseAPZ()
-                            : gfxPlatform::AsyncPanZoomEnabled();
+  // By the time anybody calls this, we must have had InitRenderingState called
+  // already, and so mCompositorOptions should be populated.
+  MOZ_RELEASE_ASSERT(mCompositorOptions);
+  return mCompositorOptions->UseAPZ();
 }
 
 NS_IMETHODIMP
