@@ -237,11 +237,11 @@ fails == grid-fragmentation-dyn4-019.html grid-fragmentation-dyn4-019.html
 fails == grid-fragmentation-dyn5-019.html grid-fragmentation-dyn5-019.html
 fails == grid-fragmentation-dyn1-020.html grid-fragmentation-dyn1-020.html
 fails == grid-fragmentation-dyn2-020.html grid-fragmentation-dyn2-020.html
-fails == grid-fragmentation-dyn1-021.html grid-fragmentation-dyn1-021.html
-fails == grid-fragmentation-dyn2-021.html grid-fragmentation-dyn2-021.html
-fails == grid-fragmentation-dyn3-021.html grid-fragmentation-dyn3-021.html
-fails asserts(1-10) == grid-fragmentation-dyn4-021.html grid-fragmentation-dyn4-021.html
-fails == grid-fragmentation-dyn5-021.html grid-fragmentation-dyn5-021.html
+skip == grid-fragmentation-dyn1-021.html grid-fragmentation-dyn1-021.html
+skip == grid-fragmentation-dyn2-021.html grid-fragmentation-dyn2-021.html
+skip == grid-fragmentation-dyn3-021.html grid-fragmentation-dyn3-021.html
+skip asserts(1-10) == grid-fragmentation-dyn4-021.html grid-fragmentation-dyn4-021.html
+skip == grid-fragmentation-dyn5-021.html grid-fragmentation-dyn5-021.html
 fails == grid-fragmentation-dyn2-022.html grid-fragmentation-dyn2-022.html
 fails == grid-fragmentation-dyn1-023.html grid-fragmentation-dyn1-023.html
 fails == grid-fragmentation-dyn2-023.html grid-fragmentation-dyn2-023.html
