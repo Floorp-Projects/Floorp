@@ -75,13 +75,13 @@ function startTest(test, token) {
     v.playingCount++;
   }}(test, v);
 
-  v.addEventListener("load", noLoad, false);
-  v.addEventListener("loadedmetadata", check, false);
-  v.addEventListener("playing", checkPlaying, false);
+  v.addEventListener("load", noLoad);
+  v.addEventListener("loadedmetadata", check);
+  v.addEventListener("playing", checkPlaying);
 
   // We should get "ended" and "suspend" events for every resource
-  v.addEventListener("ended", checkEnded, false);
-  v.addEventListener("suspend", checkSuspended, false);
+  v.addEventListener("ended", checkEnded);
+  v.addEventListener("suspend", checkSuspended);
 
   document.body.appendChild(v);
   v.play();

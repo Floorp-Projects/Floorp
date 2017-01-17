@@ -104,7 +104,7 @@ this.PropertyListUtils = Object.freeze({
         let onLoadEnd = function() {
           let root = null;
           try {
-            fileReader.removeEventListener("loadend", onLoadEnd, false);
+            fileReader.removeEventListener("loadend", onLoadEnd);
             if (fileReader.readyState != fileReader.DONE)
               throw new Error("Could not read file contents: " + fileReader.error);
 
@@ -113,7 +113,7 @@ this.PropertyListUtils = Object.freeze({
             aCallback(root);
           }
         }.bind(this);
-        fileReader.addEventListener("loadend", onLoadEnd, false);
+        fileReader.addEventListener("loadend", onLoadEnd);
         fileReader.readAsArrayBuffer(file);
       } catch (ex) {
         aCallback(null);

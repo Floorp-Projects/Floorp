@@ -36,7 +36,7 @@ function nextTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-testDiv.addEventListener("DOMAttrModified", attr_modified, false);
+testDiv.addEventListener("DOMAttrModified", attr_modified);
 nextTest();
 
 /* event handler */

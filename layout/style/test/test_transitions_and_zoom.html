@@ -27,7 +27,7 @@ var p = document.getElementById("display");
 var cs = getComputedStyle(p, "");
 cs.marginLeft;
 
-p.addEventListener("transitionend", TransitionEndHandler, false);
+p.addEventListener("transitionend", TransitionEndHandler);
 p.style.marginLeft = "100px";
 cs.marginLeft;
 

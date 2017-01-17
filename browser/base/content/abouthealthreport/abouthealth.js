@@ -17,7 +17,7 @@ const PREF_REPORTING_URL = "datareporting.healthreport.about.reportUrl";
 var healthReportWrapper = {
   init() {
     let iframe = document.getElementById("remote-report");
-    iframe.addEventListener("load", healthReportWrapper.initRemotePage, false);
+    iframe.addEventListener("load", healthReportWrapper.initRemotePage);
     iframe.src = this._getReportURI().spec;
     prefs.observe("uploadEnabled", this.updatePrefState, healthReportWrapper);
   },
@@ -149,8 +149,7 @@ var healthReportWrapper = {
   initRemotePage() {
     let iframe = document.getElementById("remote-report").contentDocument;
     iframe.addEventListener("RemoteHealthReportCommand",
-                            function onCommand(e) { healthReportWrapper.handleRemoteCommand(e); },
-                            false);
+                            function onCommand(e) { healthReportWrapper.handleRemoteCommand(e); });
     healthReportWrapper.updatePrefState();
   },
 

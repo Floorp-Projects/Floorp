@@ -24,7 +24,7 @@ div {
 <div id="target">color animation on visible pseudo element attached to invisible element</div>
 <script>
 
-document.getElementById("target").addEventListener("animationend", AnimationEndListener, false);
+document.getElementById("target").addEventListener("animationend", AnimationEndListener);
 
 function AnimationEndListener(event) {
   setTimeout(RemoveReftestWait, 0);

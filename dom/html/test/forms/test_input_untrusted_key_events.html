@@ -49,9 +49,9 @@ function handleEvent(event) {
   gotEvents[event.type] = true;
 }
 
-input.addEventListener("keydown", handleEvent, false);
-input.addEventListener("keyup", handleEvent, false);
-input.addEventListener("keypress", handleEvent, false);
+input.addEventListener("keydown", handleEvent);
+input.addEventListener("keyup", handleEvent);
+input.addEventListener("keypress", handleEvent);
 
 var previousTest = null;
 

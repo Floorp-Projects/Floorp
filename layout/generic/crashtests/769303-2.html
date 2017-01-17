@@ -9,10 +9,10 @@ body {
 </style>
 <body style="white-space: pre-line;"><script>
 function initCF() {
-document.removeEventListener("DOMContentLoaded", initCF, false);
+document.removeEventListener("DOMContentLoaded", initCF);
 setTimeout("CFcrash()", 0);
 }
-document.addEventListener("DOMContentLoaded", initCF, false);
+document.addEventListener("DOMContentLoaded", initCF);
 function CFcrash() {
 document.adoptNode(test1);
 }

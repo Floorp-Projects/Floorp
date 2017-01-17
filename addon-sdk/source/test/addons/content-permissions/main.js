@@ -22,9 +22,9 @@ exports.testCrossDomainIframe = function(assert, done) {
       self.on("message", function (url) {
         let iframe = document.createElement("iframe");
         iframe.addEventListener("load", function onload() {
-          iframe.removeEventListener("load", onload, false);
+          iframe.removeEventListener("load", onload);
           self.postMessage(iframe.contentWindow.document.body.innerHTML);
-        }, false);
+        });
         iframe.setAttribute("src", url);
         document.documentElement.appendChild(iframe);
       });

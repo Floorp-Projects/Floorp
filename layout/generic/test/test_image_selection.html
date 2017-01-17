@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=599368
 
 SimpleTest.waitForExplicitFinish();
 
-window.addEventListener("load", step1, false);
+window.addEventListener("load", step1);
 
 var gImage;
 var gIframe;
@@ -42,14 +42,14 @@ function step1()
   src.push("blue-32x32.png");
   src = src.join("/");
   gImage.src = src;
-  gImage.addEventListener("load", step2, false);
+  gImage.addEventListener("load", step2);
   doc.body.appendChild(gImage);
 
   doc.designMode = "on";
 }
 
 function step2() {
-  gImage.removeEventListener("load", step2, false);
+  gImage.removeEventListener("load", step2);
 
   gBlueNotSelected = snapshotWindow(gIframe.contentWindow, false);
 
@@ -64,12 +64,12 @@ function step3() {
   src.pop();
   src.push("fuchsia-32x32.png");
   src = src.join("/");
-  gImage.addEventListener("load", step4, false);
+  gImage.addEventListener("load", step4);
   gImage.src = src;
 }
 
 function step4() {
-  gImage.removeEventListener("load", step4, false);
+  gImage.removeEventListener("load", step4);
 
   gFuchsiaSelected = snapshotWindow(gIframe.contentWindow, false);
 

@@ -4,5 +4,5 @@
   if (event.data != 'READY') {
     event.target.postMessage(event.data);
   }
-}, false);
+});
 

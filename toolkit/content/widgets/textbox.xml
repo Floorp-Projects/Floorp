@@ -372,7 +372,7 @@
       <constructor><![CDATA[
         // Ensure the button state is up to date:
         this.searchButton = this.searchButton;
-        this._searchButtonIcon.addEventListener("click", (e) => this._iconClick(e), false);
+        this._searchButtonIcon.addEventListener("click", (e) => this._iconClick(e));
       ]]></constructor>
       <method name="_fireCommand">
         <parameter name="me"/>

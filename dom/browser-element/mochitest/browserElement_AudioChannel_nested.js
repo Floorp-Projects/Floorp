@@ -55,7 +55,7 @@ function runTests() {
   }
 
   iframe.addEventListener('mozbrowserloadend', audio_loadend);
-  iframe.addEventListener('mozbrowsershowmodalprompt', listener, false);
+  iframe.addEventListener('mozbrowsershowmodalprompt', listener);
   document.body.appendChild(iframe);
 
   iframe.src = 'chrome://mochitests/content/chrome/dom/browser-element/mochitest/file_browserElement_AudioChannel_nested.html';

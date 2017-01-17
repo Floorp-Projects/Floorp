@@ -1327,7 +1327,7 @@ function runTestPasswordFieldOnDialog()
       if (topic === "domwindowopened") {
         ok(true, "dialog window is created");
         dialog = subject.QueryInterface(Components.interfaces.nsIDOMWindow);
-        dialog.addEventListener("load", onPasswordDialogLoad, false);
+        dialog.addEventListener("load", onPasswordDialogLoad);
       }
     }
   };
@@ -1349,15 +1349,15 @@ function runTestPasswordFieldOnDialog()
   function onPasswordDialogLoad()
   {
     ok(true, "onPasswordDialogLoad is called");
-    dialog.removeEventListener("load", onPasswordDialogLoad, false);
+    dialog.removeEventListener("load", onPasswordDialogLoad);
     passwordField = dialog.document.getElementById("password1Textbox");
-    passwordField.addEventListener("focus", onPasswordFieldFocus, false);
+    passwordField.addEventListener("focus", onPasswordFieldFocus);
   }
 
   function onPasswordFieldFocus()
   {
     ok(true, "onPasswordFieldFocus is called");
-    passwordField.removeEventListener("focus", onPasswordFieldFocus, false);
+    passwordField.removeEventListener("focus", onPasswordFieldFocus);
     var utils = dialog.
       QueryInterface(Components.interfaces.nsIInterfaceRequestor).
       getInterface(Components.interfaces.nsIDOMWindowUtils);

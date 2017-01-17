@@ -20,5 +20,4 @@ function searchBookmarks(aSearchString) {
 }
 
 window.addEventListener("SidebarFocused",
-                        () => document.getElementById("search-box").focus(),
-                        false);
+                        () => document.getElementById("search-box").focus());

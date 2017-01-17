@@ -7,7 +7,7 @@ root.appendChild(div);
 
 document.addEventListener("DOMNodeRemoved", function() {
   root.appendChild(document.createTextNode("some mutation"));
-}, false);
+});
 
 var range = document.createRange();
 range.setStart(root, 0);

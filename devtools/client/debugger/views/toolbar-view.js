@@ -64,13 +64,13 @@ ToolbarView.prototype = {
     this._stepOutTooltip = L10N.getFormatStr("stepOutTooltip", stepOutKey);
 
     this._instrumentsPaneToggleButton.addEventListener("mousedown",
-      this._onTogglePanesActivated, false);
+      this._onTogglePanesActivated);
     this._instrumentsPaneToggleButton.addEventListener("keydown",
-      this._onTogglePanesPressed, false);
-    this._resumeButton.addEventListener("mousedown", this._onResumePressed, false);
-    this._stepOverButton.addEventListener("mousedown", this._onStepOverPressed, false);
-    this._stepInButton.addEventListener("mousedown", this._onStepInPressed, false);
-    this._stepOutButton.addEventListener("mousedown", this._onStepOutPressed, false);
+      this._onTogglePanesPressed);
+    this._resumeButton.addEventListener("mousedown", this._onResumePressed);
+    this._stepOverButton.addEventListener("mousedown", this._onStepOverPressed);
+    this._stepInButton.addEventListener("mousedown", this._onStepInPressed);
+    this._stepOutButton.addEventListener("mousedown", this._onStepOutPressed);
 
     this._stepOverButton.setAttribute("tooltiptext", this._stepOverTooltip);
     this._stepInButton.setAttribute("tooltiptext", this._stepInTooltip);
@@ -87,13 +87,13 @@ ToolbarView.prototype = {
     dumpn("Destroying the ToolbarView");
 
     this._instrumentsPaneToggleButton.removeEventListener("mousedown",
-      this._onTogglePanesActivated, false);
+      this._onTogglePanesActivated);
     this._instrumentsPaneToggleButton.removeEventListener("keydown",
-      this._onTogglePanesPressed, false);
-    this._resumeButton.removeEventListener("mousedown", this._onResumePressed, false);
-    this._stepOverButton.removeEventListener("mousedown", this._onStepOverPressed, false);
-    this._stepInButton.removeEventListener("mousedown", this._onStepInPressed, false);
-    this._stepOutButton.removeEventListener("mousedown", this._onStepOutPressed, false);
+      this._onTogglePanesPressed);
+    this._resumeButton.removeEventListener("mousedown", this._onResumePressed);
+    this._stepOverButton.removeEventListener("mousedown", this._onStepOverPressed);
+    this._stepInButton.removeEventListener("mousedown", this._onStepInPressed);
+    this._stepOutButton.removeEventListener("mousedown", this._onStepOutPressed);
   },
 
   /**

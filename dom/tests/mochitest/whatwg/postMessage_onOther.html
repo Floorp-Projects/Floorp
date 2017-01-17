@@ -99,8 +99,8 @@
       target.textContent = location.hostname + ":" + (location.port || 80);
     }
 
-    window.addEventListener("message", receiveMessage, false);
-    window.addEventListener("load", setup, false);
+    window.addEventListener("message", receiveMessage);
+    window.addEventListener("load", setup);
   </script>
 </head>
 <body>

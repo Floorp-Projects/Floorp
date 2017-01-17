@@ -79,9 +79,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1080361
       target = document.getElementById("target");
       mediator = document.getElementById("mediator");
       listener = document.getElementById("listener");
-      target.addEventListener("pointerdown",          TargetDownHandler,  false);
-      target.addEventListener("pointerup",            TargetUpHandler,    false);
-      listener.addEventListener("gotpointercapture",  ListenerHandler,    false);
+      target.addEventListener("pointerdown",          TargetDownHandler);
+      target.addEventListener("pointerup",            TargetUpHandler);
+      listener.addEventListener("gotpointercapture",  ListenerHandler);
       var rect = target.getBoundingClientRect();
       synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerdown"});
       synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointermove"});

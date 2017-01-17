@@ -1,7 +1,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-window.addEventListener("load", runTests, false);
+window.addEventListener("load", runTests);
 
 function runTests(event)
 {

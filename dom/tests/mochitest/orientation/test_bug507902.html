@@ -19,8 +19,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=507902
 
 function boom()
 {
-  window.addEventListener("unload", function(){}, false);
-  window.addEventListener("devicemotion", function(){}, false);
+  window.addEventListener("unload", function(){});
+  window.addEventListener("devicemotion", function(){});
   location = "data:text/html,2";
 
   ok(1, "leak will be at the end of mochitests. so pass.");

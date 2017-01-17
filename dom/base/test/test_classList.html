@@ -55,7 +55,7 @@ function checkModification(e, funcName, args, expectedRes, before, after, expect
                    ",before=" + before + ",after=" + after + ")";
 
   gMutationEvents = [];
-  e.addEventListener("DOMAttrModified", onAttrModified, false);
+  e.addEventListener("DOMAttrModified", onAttrModified);
   try {
     var list = e.classList;
     var res = list[funcName].apply(list, args);
@@ -66,7 +66,7 @@ function checkModification(e, funcName, args, expectedRes, before, after, expect
       ok(false, "classList modification threw an exception " + contextMsg);
     is(e.name, expectedException, "wrong exception thrown " + contextMsg);
   }
-  e.removeEventListener("DOMAttrModified", onAttrModified, false);
+  e.removeEventListener("DOMAttrModified", onAttrModified);
   if (expectedRes !== null)
     is(res, expectedRes, "wrong return value from " + funcName +
        " " + contextMsg);

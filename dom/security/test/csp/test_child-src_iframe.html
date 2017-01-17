@@ -85,7 +85,7 @@ function recvMessage(ev) {
   checkFinished();
 }
 
-window.addEventListener('message', recvMessage, false);
+window.addEventListener('message', recvMessage);
 
 function loadNextTest() {
   for (item in tests) {

@@ -105,7 +105,7 @@ var gTimeoutFactor = 10;
 function loadVisitedPage()
 {
   var element = document.createElement("iframe");
-  element.addEventListener("load", visitedPageLoad, false);
+  element.addEventListener("load", visitedPageLoad);
   element.src = "css-visited/visited-page.html";
   document.body.appendChild(element);
   AddFinishDependency();
@@ -144,7 +144,7 @@ function startTest(i)
   function startIframe(url)
   {
     var element = document.createElement("iframe");
-    element.addEventListener("load", handleLoad, false);
+    element.addEventListener("load", handleLoad);
     // smaller than normal reftests, but enough for these
     element.setAttribute("style", "width: 30em; height: 10em");
     element.src = "css-visited/" + url;

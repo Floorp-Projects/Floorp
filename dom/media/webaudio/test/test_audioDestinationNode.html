@@ -16,7 +16,7 @@ var ac = new AudioContext()
 ac.destination.addEventListener("foo", function() {
   ok(true, "Event received!");
   SimpleTest.finish();
-}, false);
+});
 ac.destination.dispatchEvent(new CustomEvent("foo"));
 
 </script>

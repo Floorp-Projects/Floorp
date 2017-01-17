@@ -9,7 +9,7 @@ try { test5.setAttribute("dir", "invalid"); } catch(e) {}
 try { docElement.appendChild(test5); } catch(e) {}
 setTimeout("CFcrash()", 0);
 }
-document.addEventListener("DOMContentLoaded", initCF, false);
+document.addEventListener("DOMContentLoaded", initCF);
 function CFcrash() {
 try { test1.appendChild(test4); } catch(e) {}
 try { document.adoptNode(test2); } catch(e) {}

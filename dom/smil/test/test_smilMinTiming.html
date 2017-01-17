@@ -40,7 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=948245
 
   // Animation doesn't start until onload
   SimpleTest.waitForExplicitFinish();
-  window.addEventListener("load", runTests, false);
+  window.addEventListener("load", runTests);
 
   function runTests() {
     ok($('svg').animationsPaused(), "should be paused by <svg> load handler");

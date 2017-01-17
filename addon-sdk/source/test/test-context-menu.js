@@ -308,7 +308,7 @@ exports.testSelectionContextInNewTab = function (assert, done) {
     link.click();
 
     let tablistener = event => {
-      this.tabBrowser.tabContainer.removeEventListener("TabOpen", tablistener, false);
+      this.tabBrowser.tabContainer.removeEventListener("TabOpen", tablistener);
       let tab = event.target;
       let browser = tab.linkedBrowser;
       this.loadFrameScript(browser);
@@ -331,7 +331,7 @@ exports.testSelectionContextInNewTab = function (assert, done) {
         });
       }, true);
     };
-    this.tabBrowser.tabContainer.addEventListener("TabOpen", tablistener, false);
+    this.tabBrowser.tabContainer.addEventListener("TabOpen", tablistener);
   });
 };
 

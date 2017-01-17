@@ -42,7 +42,7 @@ function whenDelayedStartupFinished(aWindow, aCallback) {
 function testOnWindow(aCallback) {
   var win = mainWindow.OpenBrowserWindow();
   win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad, false);
+    win.removeEventListener("load", onLoad);
     whenDelayedStartupFinished(win, function() {
       win.addEventListener("DOMContentLoaded", function onInnerLoad() {
         if (win.content.location.href != contentPage) {
@@ -52,7 +52,7 @@ function testOnWindow(aCallback) {
         win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
 
         win.content.addEventListener('load', function innerLoad2() {
-          win.content.removeEventListener('load', innerLoad2, false);
+          win.content.removeEventListener('load', innerLoad2);
           SimpleTest.executeSoon(function() { aCallback(win); });
         }, false, true);
       }, true);

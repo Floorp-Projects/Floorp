@@ -119,7 +119,7 @@ function loadTestPage() {
 }
 
 function finishTest() {
-  window.removeEventListener("message", receiveMessage, false);
+  window.removeEventListener("message", receiveMessage);
   SimpleTest.finish();
 }
 
@@ -147,7 +147,7 @@ function checkResults(result) {
 
 // a postMessage handler that is used by sandboxed iframes without
 // 'allow-same-origin' to bubble up results back to this main page.
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 function receiveMessage(event) {
   checkResults(event.data.result);
 }

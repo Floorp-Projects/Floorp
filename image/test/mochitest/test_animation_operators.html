@@ -90,7 +90,7 @@ function startTest(i)
   function startIframe(url)
   {
     var element = document.createElement("iframe");
-    element.addEventListener("load", handleLoad, false);
+    element.addEventListener("load", handleLoad);
     // Smaller than normal reftests, but enough for these.
     element.setAttribute("style", "width: 100px; height: 100px");
     element.setAttribute("frameborder", "0");

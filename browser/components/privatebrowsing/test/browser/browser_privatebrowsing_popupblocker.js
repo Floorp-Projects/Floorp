@@ -16,7 +16,7 @@ add_task(function* test() {
   function testPopupBlockerMenuItem(aExpectedDisabled, aWindow, aCallback) {
 
     aWindow.gBrowser.addEventListener("DOMUpdatePageReport", function() {
-      aWindow.gBrowser.removeEventListener("DOMUpdatePageReport", arguments.callee, false);
+      aWindow.gBrowser.removeEventListener("DOMUpdatePageReport", arguments.callee);
 
       executeSoon(function() {
         let notification = aWindow.gBrowser.getNotificationBox().getNotificationWithValue("popup-blocked");
@@ -26,7 +26,7 @@ add_task(function* test() {
           dump("CMI: in\n");
           aWindow.document.addEventListener("popupshown", function(event) {
             dump("CMI: popupshown\n");
-            aWindow.document.removeEventListener("popupshown", arguments.callee, false);
+            aWindow.document.removeEventListener("popupshown", arguments.callee);
 
             if (aExpectedDisabled)
               is(aWindow.document.getElementById("blockedPopupAllowSite").getAttribute("disabled"), "true",
@@ -36,7 +36,7 @@ add_task(function* test() {
             dump("CMI: calling back\n");
             callback();
             dump("CMI: called back\n");
-          }, false);
+          });
           dump("CMI: out\n");
         }
 
@@ -46,7 +46,7 @@ add_task(function* test() {
         notification.querySelector("button").doCommand();
       });
 
-    }, false);
+    });
 
     aWindow.gBrowser.selectedBrowser.loadURI(testURI);
   }

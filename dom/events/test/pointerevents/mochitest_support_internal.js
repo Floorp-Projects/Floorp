@@ -75,6 +75,6 @@ function addListeners(elem) {
         PASS:   pointerId
       });
 
-    }, false);
+    });
   });
 }

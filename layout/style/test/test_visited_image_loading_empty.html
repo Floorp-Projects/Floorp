@@ -22,7 +22,7 @@ SimpleTest.requestFlakyTimeout("untriaged");
 
 var subdoc, subwin;
 
-window.addEventListener("load", run, false);
+window.addEventListener("load", run);
 
 function run()
 {
@@ -45,7 +45,7 @@ function check_link_styled()
   if (bgcolor == "rgb(128, 0, 128)") {
     // We've done our async :visited processing and restyled accordingly.
     // Make sure that we've actually painted before finishing the test.
-    subwin.addEventListener("MozAfterPaint", paint_listener, false);
+    subwin.addEventListener("MozAfterPaint", paint_listener);
     // do something that forces a paint
     subdoc.body.appendChild(subdoc.createTextNode("new text node"));
   } else {
@@ -55,7 +55,7 @@ function check_link_styled()
 
 function paint_listener(event)
 {
-  subwin.removeEventListener("MozAfterPaint", paint_listener, false);
+  subwin.removeEventListener("MozAfterPaint", paint_listener);
   var s = document.createElement("script");
   s.src = "visited_image_loading.sjs?waitforresult";
   document.body.appendChild(s);

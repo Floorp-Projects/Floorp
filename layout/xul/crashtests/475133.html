@@ -4,14 +4,14 @@
 <script type="text/javascript">
 function x()
 {
-  document.removeEventListener("DOMAttrModified", x, false);
+  document.removeEventListener("DOMAttrModified", x);
   document.removeChild(document.documentElement);
 }
 
 function boom()
 {
   var p = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "progressmeter");
-  document.addEventListener("DOMAttrModified", x, false);
+  document.addEventListener("DOMAttrModified", x);
   document.documentElement.appendChild(p);
 }
 </script>

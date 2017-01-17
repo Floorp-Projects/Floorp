@@ -14,7 +14,7 @@ span {padding: 0 7.2px}
 <script type="text/javascript">
 // see https://bugzilla.mozilla.org/show_bug.cgi?id=237766
 
-window.addEventListener("MozReftestInvalidate", doTest, false);
+window.addEventListener("MozReftestInvalidate", doTest);
 // in order to reproduce this bug on the original build, which 
 // doesn't support MozReftestInvalidate
 setTimeout(doTest, 5000);

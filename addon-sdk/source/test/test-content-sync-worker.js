@@ -752,7 +752,7 @@ exports["test:check worker API with page history"] = WorkerTest(
 
       // Wait for the document to be hidden
       browser.addEventListener("pagehide", function onpagehide() {
-        browser.removeEventListener("pagehide", onpagehide, false);
+        browser.removeEventListener("pagehide", onpagehide);
         // Now any event sent to this worker should throw
 
         assert.throws(
@@ -781,7 +781,7 @@ exports["test:check worker API with page history"] = WorkerTest(
           browser.goForward();
         }, 500);
 
-      }, false);
+      });
     });
 
   }

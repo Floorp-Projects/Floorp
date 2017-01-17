@@ -52,7 +52,7 @@ function openScratchpad(aReadyCallback, aOptions = {})
   }
 
   let onLoad = function () {
-    win.removeEventListener("load", onLoad, false);
+    win.removeEventListener("load", onLoad);
 
     win.Scratchpad.addObserver({
       onReady: function (aScratchpad) {
@@ -68,7 +68,7 @@ function openScratchpad(aReadyCallback, aOptions = {})
   };
 
   if (aReadyCallback) {
-    win.addEventListener("load", onLoad, false);
+    win.addEventListener("load", onLoad);
   }
 
   gScratchpadWindow = win;

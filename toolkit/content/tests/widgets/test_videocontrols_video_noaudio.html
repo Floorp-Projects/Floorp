@@ -52,14 +52,14 @@
 
   function startMediaLoad() {
     video.src = "video.ogg";
-    video.addEventListener("loadedmetadata", loadedmetadata, false);
+    video.addEventListener("loadedmetadata", loadedmetadata);
   }
 
   function loadevent() {
     SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, startMediaLoad);
   }
 
-  window.addEventListener("load", loadevent, false);
+  window.addEventListener("load", loadevent);
 </script>
 </pre>
 </body>

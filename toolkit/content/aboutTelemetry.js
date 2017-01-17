@@ -243,7 +243,7 @@ var Settings = {
           let mainWindow = getMainWindowWithPreferencesPane();
           mainWindow.openAdvancedPreferences("dataChoicesTab");
         }
-      }, false);
+      });
     }
   },
 
@@ -280,12 +280,12 @@ var PingPicker = {
   attachObservers() {
     let elements = document.getElementsByName("choose-ping-source");
     for (let el of elements) {
-      el.addEventListener("change", () => this.onPingSourceChanged(), false);
+      el.addEventListener("change", () => this.onPingSourceChanged());
     }
 
     let displays = document.getElementsByName("choose-ping-display");
     for (let el of displays) {
-      el.addEventListener("change", () => this.onPingDisplayChanged(), false);
+      el.addEventListener("change", () => this.onPingDisplayChanged());
     }
 
     document.getElementById("show-subsession-data").addEventListener("change", () => {
@@ -295,25 +295,25 @@ var PingPicker = {
     document.getElementById("choose-ping-week").addEventListener("change", () => {
       this._renderPingList();
       this._updateArchivedPingData();
-    }, false);
+    });
     document.getElementById("choose-ping-id").addEventListener("change", () => {
       this._updateArchivedPingData()
-    }, false);
+    });
 
     document.getElementById("newer-ping")
-            .addEventListener("click", () => this._movePingIndex(-1), false);
+            .addEventListener("click", () => this._movePingIndex(-1));
     document.getElementById("older-ping")
-            .addEventListener("click", () => this._movePingIndex(1), false);
+            .addEventListener("click", () => this._movePingIndex(1));
     document.getElementById("choose-payload")
-            .addEventListener("change", () => displayPingData(gPingData), false);
+            .addEventListener("change", () => displayPingData(gPingData));
     document.getElementById("scalars-processes")
-            .addEventListener("change", () => displayPingData(gPingData), false);
+            .addEventListener("change", () => displayPingData(gPingData));
     document.getElementById("keyed-scalars-processes")
-            .addEventListener("change", () => displayPingData(gPingData), false);
+            .addEventListener("change", () => displayPingData(gPingData));
     document.getElementById("histograms-processes")
-            .addEventListener("change", () => displayPingData(gPingData), false);
+            .addEventListener("change", () => displayPingData(gPingData));
     document.getElementById("keyed-histograms-processes")
-            .addEventListener("change", () => displayPingData(gPingData), false);
+            .addEventListener("change", () => displayPingData(gPingData));
   },
 
   onPingSourceChanged() {
@@ -593,14 +593,14 @@ var EnvironmentData = {
     let sectionName = document.createElement("h2");
     sectionName.setAttribute("class", "section-name");
     sectionName.appendChild(document.createTextNode(title));
-    sectionName.addEventListener("click", toggleSection, false);
+    sectionName.addEventListener("click", toggleSection);
 
     // Create caption for toggling the subsection visibility.
     let toggleCaption = document.createElement("span");
     toggleCaption.setAttribute("class", "toggle-caption");
     let toggleText = bundle.GetStringFromName("environmentDataSubsectionToggle");
     toggleCaption.appendChild(document.createTextNode(" " + toggleText));
-    toggleCaption.addEventListener("click", toggleSection, false);
+    toggleCaption.addEventListener("click", toggleSection);
 
     // Create caption for empty subsections.
     let emptyCaption = document.createElement("span");
@@ -1803,7 +1803,7 @@ function setupListeners() {
     function unloadHandler(aEvent) {
       window.removeEventListener("unload", unloadHandler);
       Settings.detachObservers();
-  }, false);
+  });
 
   document.getElementById("chrome-hangs-fetch-symbols").addEventListener("click",
     function() {
@@ -1818,7 +1818,7 @@ function setupListeners() {
                                          hangs.stacks,
                                          hangs.durations);
       req.fetchSymbols();
-  }, false);
+  });
 
   document.getElementById("chrome-hangs-hide-symbols").addEventListener("click",
     function() {
@@ -1827,7 +1827,7 @@ function setupListeners() {
       }
 
       ChromeHangs.render(gPingData);
-  }, false);
+  });
 
   document.getElementById("captured-stacks-fetch-symbols").addEventListener("click",
     function() {
@@ -1841,7 +1841,7 @@ function setupListeners() {
                                          capturedStacks.stacks,
                                          null);
       req.fetchSymbols();
-  }, false);
+  });
 
   document.getElementById("captured-stacks-hide-symbols").addEventListener("click",
     function() {
@@ -1850,7 +1850,7 @@ function setupListeners() {
       }
 
       CapturedStacks.render(gPingData);
-  }, false);
+  });
 
   document.getElementById("late-writes-fetch-symbols").addEventListener("click",
     function() {
@@ -1864,7 +1864,7 @@ function setupListeners() {
                                          lateWrites.memoryMap,
                                          lateWrites.stacks);
       req.fetchSymbols();
-  }, false);
+  });
 
   document.getElementById("late-writes-hide-symbols").addEventListener("click",
     function() {
@@ -1873,18 +1873,18 @@ function setupListeners() {
       }
 
       LateWritesSingleton.renderLateWrites(gPingData.payload.lateWrites);
-  }, false);
+  });
 
   // Clicking on the section name will toggle its state
   let sectionHeaders = document.getElementsByClassName("section-name");
   for (let sectionHeader of sectionHeaders) {
-    sectionHeader.addEventListener("click", toggleSection, false);
+    sectionHeader.addEventListener("click", toggleSection);
   }
 
   // Clicking on the "toggle" text will also toggle section's state
   let toggleLinks = document.getElementsByClassName("toggle-caption");
   for (let toggleLink of toggleLinks) {
-    toggleLink.addEventListener("click", toggleSection, false);
+    toggleLink.addEventListener("click", toggleSection);
   }
 }
 
@@ -2180,7 +2180,7 @@ function displayPingData(ping, updatePayloadList = false) {
     }
 
     let filterBox = document.getElementById("histograms-filter");
-    filterBox.addEventListener("input", Histogram.histogramFilterChanged, false);
+    filterBox.addEventListener("input", Histogram.histogramFilterChanged);
     if (filterBox.value.trim() != "") { // on load, no need to filter if empty
       Histogram.filterHistograms(hgramDiv, filterBox.value);
     }
@@ -2240,4 +2240,4 @@ function displayPingData(ping, updatePayloadList = false) {
   setHasData("addon-histograms-section", addonHistogramsRendered);
 }
 
-window.addEventListener("load", onLoad, false);
+window.addEventListener("load", onLoad);
