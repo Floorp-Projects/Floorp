@@ -6,7 +6,7 @@
 #ifndef GFX_WEBRENDERTYPES_H
 #define GFX_WEBRENDERTYPES_H
 
-#include "mozilla/gfx/webrender.h"
+#include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/Maybe.h"
 
 typedef mozilla::Maybe<WRImageMask> MaybeImageMask;

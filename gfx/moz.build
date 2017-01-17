@@ -25,8 +25,6 @@ DIRS += [
     'webrender_bindings',
 ]
 
-EXPORTS.mozilla.gfx += ['webrender_bindings/src/webrender.h']
-
 if CONFIG['MOZ_ENABLE_SKIA']:
     DIRS += ['skia']
 

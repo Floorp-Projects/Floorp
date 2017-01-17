@@ -13,7 +13,7 @@
 #include "base/message_loop.h"
 #include "nsISupportsImpl.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
-#include "mozilla/gfx/webrender.h"
+#include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 
