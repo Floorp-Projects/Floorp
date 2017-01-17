@@ -577,9 +577,6 @@ function _execute_test() {
     coverageCollector.finalize();
   }
 
-  // _TAIL_FILES is dynamically defined by <runxpcshelltests.py>.
-  _load_files(_TAIL_FILES);
-
   // Execute all of our cleanup functions.
   let reportCleanupError = function(ex) {
     let stack, filename;
@@ -1264,7 +1261,6 @@ function do_load_child_test_harness()
         "const _HEAD_JS_PATH=" + uneval(_HEAD_JS_PATH) + "; "
       + "const _HEAD_FILES=" + uneval(_HEAD_FILES) + "; "
       + "const _MOZINFO_JS_PATH=" + uneval(_MOZINFO_JS_PATH) + "; "
-      + "const _TAIL_FILES=" + uneval(_TAIL_FILES) + "; "
       + "const _TEST_NAME=" + uneval(_TEST_NAME) + "; "
       // We'll need more magic to get the debugger working in the child
       + "const _JSDEBUGGER_PORT=0; "
