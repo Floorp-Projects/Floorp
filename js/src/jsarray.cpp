@@ -1895,19 +1895,11 @@ js::array_sort(JSContext* cx, unsigned argc, Value* vp)
          * Non-optimized user supplied comparators perform much better when
          * called from within a self-hosted sorting function.
          */
-        RootedAtom selfHostedSortAtom(cx, Atomize(cx, "ArraySort", 9));
-        RootedPropertyName selfHostedSortName(cx, selfHostedSortAtom->asPropertyName());
-        RootedValue selfHostedSortValue(cx);
+        FixedInvokeArgs<1> args2(cx);
+        args2[0].set(fval);
 
-        if (!GlobalObject::getIntrinsicValue(cx, cx->global(), selfHostedSortName,
-            &selfHostedSortValue)) {
-            return false;
-        }
-
-        MOZ_ASSERT(selfHostedSortValue.isObject());
-        MOZ_ASSERT(selfHostedSortValue.toObject().is<JSFunction>());
-
-        return Call(cx, selfHostedSortValue, args.thisv(), fval, args.rval());
+        RootedValue thisv(cx, ObjectValue(*obj));
+        return CallSelfHostedFunction(cx, cx->names().ArraySort, thisv, args2, args.rval());
     }
 
     uint32_t len;
@@ -1932,15 +1924,6 @@ js::array_sort(JSContext* cx, unsigned argc, Value* vp)
     }
 #endif
 
-    /*
-     * Initialize vec as a root. We will clear elements of vec one by
-     * one while increasing the rooted amount of vec when we know that the
-     * property at the corresponding index exists and its value must be rooted.
-     *
-     * In this way when sorting a huge mostly sparse array we will not
-     * access the tail of vec corresponding to properties that do not
-     * exist, allowing OS to avoiding committing RAM. See bug 330812.
-     */
     size_t n, undefs;
     {
         Rooted<GCVector<Value>> vec(cx, GCVector<Value>(cx));
@@ -1963,7 +1946,6 @@ js::array_sort(JSContext* cx, unsigned argc, Value* vp)
             if (!CheckForInterrupt(cx))
                 return false;
 
-            /* Clear vec[newlen] before including it in the rooted set. */
             bool hole;
             if (!GetElement(cx, obj, i, &hole, &v))
                 return false;
@@ -1977,7 +1959,6 @@ js::array_sort(JSContext* cx, unsigned argc, Value* vp)
             allStrings = allStrings && v.isString();
             allInts = allInts && v.isInt32();
         }
-
 
         /*
          * If the array only contains holes, we're done.  But if it contains
