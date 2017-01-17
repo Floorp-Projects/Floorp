@@ -49,7 +49,7 @@ define(function (require, exports, module) {
    *   getHeaderClass: function(colId);
    *   renderValue: function(object, colId);
    *   renderRow: function(object);
-   *   renderCelL: function(object, colId);
+   *   renderCell: function(object, colId);
    *   renderLabelCell: function(object);
    * }
    */
@@ -78,7 +78,7 @@ define(function (require, exports, module) {
         getHeaderClass: PropTypes.func,
         renderValue: PropTypes.func,
         renderRow: PropTypes.func,
-        renderCelL: PropTypes.func,
+        renderCell: PropTypes.func,
         renderLabelCell: PropTypes.func,
       }),
       // Custom tree row (node) renderer
