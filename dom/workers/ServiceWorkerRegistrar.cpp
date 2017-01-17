@@ -108,6 +108,8 @@ ServiceWorkerRegistrar::GetRegistrations(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aValues.IsEmpty());
 
+  MonitorAutoLock lock(mMonitor);
+
   // If we don't have the profile directory, profile is not started yet (and
   // probably we are in a utest).
   if (!mProfileDir) {
@@ -123,17 +125,13 @@ ServiceWorkerRegistrar::GetRegistrations(
     startTime = TimeStamp::NowLoRes();
   }
 
-  {
-    MonitorAutoLock lock(mMonitor);
-
-    // Waiting for data loaded.
-    mMonitor.AssertCurrentThreadOwns();
-    while (!mDataLoaded) {
-      mMonitor.Wait();
-    }
-
-    aValues.AppendElements(mData);
+  // Waiting for data loaded.
+  mMonitor.AssertCurrentThreadOwns();
+  while (!mDataLoaded) {
+    mMonitor.Wait();
   }
+
+  aValues.AppendElements(mData);
 
   if (firstTime) {
     firstTime = false;
@@ -272,15 +270,22 @@ ServiceWorkerRegistrar::ReadData()
   // We cannot assert about the correct thread because normally this method
   // runs on a IO thread, but in gTests we call it from the main-thread.
 
-  MOZ_ASSERT(mProfileDir);
-
   nsCOMPtr<nsIFile> file;
-  nsresult rv = mProfileDir->Clone(getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+
+  {
+    MonitorAutoLock lock(mMonitor);
+
+    if (!mProfileDir) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsresult rv = mProfileDir->Clone(getter_AddRefs(file));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
-  rv = file->Append(NS_LITERAL_STRING(SERVICEWORKERREGISTRAR_FILE));
+  nsresult rv = file->Append(NS_LITERAL_STRING(SERVICEWORKERREGISTRAR_FILE));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -476,20 +481,23 @@ ServiceWorkerRegistrar::DeleteData()
   // We cannot assert about the correct thread because normally this method
   // runs on a IO thread, but in gTests we call it from the main-thread.
 
-  MOZ_ASSERT(mProfileDir);
+  nsCOMPtr<nsIFile> file;
 
   {
     MonitorAutoLock lock(mMonitor);
     mData.Clear();
+
+    if (!mProfileDir) {
+      return;
+    }
+
+    nsresult rv = mProfileDir->Clone(getter_AddRefs(file));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
   }
 
-  nsCOMPtr<nsIFile> file;
-  nsresult rv = mProfileDir->Clone(getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  rv = file->Append(NS_LITERAL_STRING(SERVICEWORKERREGISTRAR_FILE));
+  nsresult rv = file->Append(NS_LITERAL_STRING(SERVICEWORKERREGISTRAR_FILE));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
@@ -638,15 +646,22 @@ ServiceWorkerRegistrar::WriteData()
   // We cannot assert about the correct thread because normally this method
   // runs on a IO thread, but in gTests we call it from the main-thread.
 
-  MOZ_ASSERT(mProfileDir);
-
   nsCOMPtr<nsIFile> file;
-  nsresult rv = mProfileDir->Clone(getter_AddRefs(file));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+
+  {
+    MonitorAutoLock lock(mMonitor);
+
+    if (!mProfileDir) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsresult rv = mProfileDir->Clone(getter_AddRefs(file));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
-  rv = file->Append(NS_LITERAL_STRING(SERVICEWORKERREGISTRAR_FILE));
+  nsresult rv = file->Append(NS_LITERAL_STRING(SERVICEWORKERREGISTRAR_FILE));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -730,7 +745,9 @@ void
 ServiceWorkerRegistrar::ProfileStarted()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mProfileDir);
+
+  MonitorAutoLock lock(mMonitor);
+  MOZ_DIAGNOSTIC_ASSERT(!mProfileDir);
 
   nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                        getter_AddRefs(mProfileDir));
@@ -754,6 +771,8 @@ void
 ServiceWorkerRegistrar::ProfileStopped()
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  MonitorAutoLock lock(mMonitor);
 
   if (!mProfileDir) {
     nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
