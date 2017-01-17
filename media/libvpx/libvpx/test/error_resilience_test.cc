@@ -20,10 +20,11 @@ const int kMaxErrorFrames = 12;
 const int kMaxDroppableFrames = 12;
 
 class ErrorResilienceTestLarge : public ::libvpx_test::EncoderTest,
-    public ::libvpx_test::CodecTestWithParam<libvpx_test::TestMode> {
+    public ::libvpx_test::CodecTestWith2Params<libvpx_test::TestMode, bool> {
  protected:
   ErrorResilienceTestLarge()
       : EncoderTest(GET_PARAM(0)),
+        svc_support_(GET_PARAM(2)),
         psnr_(0.0),
         nframes_(0),
         mismatch_psnr_(0.0),
@@ -99,7 +100,7 @@ class ErrorResilienceTestLarge : public ::libvpx_test::EncoderTest,
   }
 
   virtual void PreEncodeFrameHook(libvpx_test::VideoSource *video,
-                                  ::libvpx_test::Encoder *encoder) {
+                                  ::libvpx_test::Encoder * /*encoder*/) {
     frame_flags_ &= ~(VP8_EFLAG_NO_UPD_LAST |
                       VP8_EFLAG_NO_UPD_GF |
                       VP8_EFLAG_NO_UPD_ARF);
@@ -192,6 +193,8 @@ class ErrorResilienceTestLarge : public ::libvpx_test::EncoderTest,
   void SetPatternSwitch(int frame_switch) {
      pattern_switch_ = frame_switch;
    }
+
+  bool svc_support_;
 
  private:
   double psnr_;
@@ -302,6 +305,10 @@ TEST_P(ErrorResilienceTestLarge, DropFramesWithoutRecovery) {
 // two layer temporal pattern. The base layer does not predict from the top
 // layer, so successful decoding is expected.
 TEST_P(ErrorResilienceTestLarge, 2LayersDropEnhancement) {
+  // This test doesn't run if SVC is not supported.
+  if (!svc_support_)
+    return;
+
   const vpx_rational timebase = { 33333333, 1000000000 };
   cfg_.g_timebase = timebase;
   cfg_.rc_target_bitrate = 500;
@@ -347,6 +354,10 @@ TEST_P(ErrorResilienceTestLarge, 2LayersDropEnhancement) {
 // for a two layer temporal pattern, where at some point in the
 // sequence, the LAST ref is not used anymore.
 TEST_P(ErrorResilienceTestLarge, 2LayersNoRefLast) {
+  // This test doesn't run if SVC is not supported.
+  if (!svc_support_)
+    return;
+
   const vpx_rational timebase = { 33333333, 1000000000 };
   cfg_.g_timebase = timebase;
   cfg_.rc_target_bitrate = 500;
@@ -579,8 +590,10 @@ TEST_P(ErrorResilienceTestLargeCodecControls, CodecControl3TemporalLayers) {
   }
 }
 
-VP8_INSTANTIATE_TEST_CASE(ErrorResilienceTestLarge, ONE_PASS_TEST_MODES);
+VP8_INSTANTIATE_TEST_CASE(ErrorResilienceTestLarge, ONE_PASS_TEST_MODES,
+                          ::testing::Values(true));
 VP8_INSTANTIATE_TEST_CASE(ErrorResilienceTestLargeCodecControls,
                           ONE_PASS_TEST_MODES);
-VP9_INSTANTIATE_TEST_CASE(ErrorResilienceTestLarge, ONE_PASS_TEST_MODES);
+VP9_INSTANTIATE_TEST_CASE(ErrorResilienceTestLarge, ONE_PASS_TEST_MODES,
+                          ::testing::Values(true));
 }  // namespace

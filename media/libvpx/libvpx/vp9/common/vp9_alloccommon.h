@@ -23,6 +23,7 @@ struct BufferPool;
 
 void vp9_remove_common(struct VP9Common *cm);
 
+int vp9_alloc_loop_filter(struct VP9Common *cm);
 int vp9_alloc_context_buffers(struct VP9Common *cm, int width, int height);
 void vp9_init_context_buffers(struct VP9Common *cm);
 void vp9_free_context_buffers(struct VP9Common *cm);

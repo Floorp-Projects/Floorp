@@ -29,15 +29,6 @@ void vp9_rd_pick_intra_mode_sb(struct VP9_COMP *cpi, struct macroblock *x,
                                struct RD_COST *rd_cost, BLOCK_SIZE bsize,
                                PICK_MODE_CONTEXT *ctx, int64_t best_rd);
 
-unsigned int vp9_get_sby_perpixel_variance(VP9_COMP *cpi,
-                                           const struct buf_2d *ref,
-                                           BLOCK_SIZE bs);
-#if CONFIG_VP9_HIGHBITDEPTH
-unsigned int vp9_high_get_sby_perpixel_variance(VP9_COMP *cpi,
-                                                const struct buf_2d *ref,
-                                                BLOCK_SIZE bs, int bd);
-#endif
-
 void vp9_rd_pick_inter_mode_sb(struct VP9_COMP *cpi,
                                struct TileDataEnc *tile_data,
                                struct macroblock *x,
@@ -54,6 +45,11 @@ void vp9_rd_pick_inter_mode_sb_seg_skip(struct VP9_COMP *cpi,
                                         PICK_MODE_CONTEXT *ctx,
                                         int64_t best_rd_so_far);
 
+int vp9_internal_image_edge(struct VP9_COMP *cpi);
+int vp9_active_h_edge(struct VP9_COMP *cpi, int mi_row, int mi_step);
+int vp9_active_v_edge(struct VP9_COMP *cpi, int mi_col, int mi_step);
+int vp9_active_edge_sb(struct VP9_COMP *cpi, int mi_row, int mi_col);
+
 void vp9_rd_pick_inter_mode_sub8x8(struct VP9_COMP *cpi,
                                    struct TileDataEnc *tile_data,
                                    struct macroblock *x,
@@ -61,6 +57,7 @@ void vp9_rd_pick_inter_mode_sub8x8(struct VP9_COMP *cpi,
                                    struct RD_COST *rd_cost,
                                    BLOCK_SIZE bsize, PICK_MODE_CONTEXT *ctx,
                                    int64_t best_rd_so_far);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif

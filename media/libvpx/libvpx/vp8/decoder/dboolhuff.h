@@ -15,7 +15,7 @@
 #include <stddef.h>
 #include <limits.h>
 
-#include "vpx_config.h"
+#include "./vpx_config.h"
 #include "vpx_ports/mem.h"
 #include "vpx/vp8dx.h"
 #include "vpx/vpx_integer.h"
@@ -83,7 +83,7 @@ static int vp8dx_decode_bool(BOOL_DECODER *br, int probability) {
     }
 
     {
-        register unsigned int shift = vp8_norm[range];
+        register int shift = vp8_norm[range];
         range <<= shift;
         value <<= shift;
         count -= shift;
@@ -95,7 +95,7 @@ static int vp8dx_decode_bool(BOOL_DECODER *br, int probability) {
     return bit;
 }
 
-static int vp8_decode_value(BOOL_DECODER *br, int bits)
+static INLINE int vp8_decode_value(BOOL_DECODER *br, int bits)
 {
     int z = 0;
     int bit;
@@ -108,7 +108,7 @@ static int vp8_decode_value(BOOL_DECODER *br, int bits)
     return z;
 }
 
-static int vp8dx_bool_error(BOOL_DECODER *br)
+static INLINE int vp8dx_bool_error(BOOL_DECODER *br)
 {
     /* Check if we have reached the end of the buffer.
      *

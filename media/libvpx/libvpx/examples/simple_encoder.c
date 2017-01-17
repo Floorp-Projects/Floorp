@@ -109,8 +109,8 @@ static const char *exec_name;
 void usage_exit(void) {
   fprintf(stderr,
           "Usage: %s <codec> <width> <height> <infile> <outfile> "
-              "<keyframe-interval> [<error-resilient>]\nSee comments in "
-              "simple_encoder.c for more information.\n",
+              "<keyframe-interval> <error-resilient> <frames to encode>\n"
+              "See comments in simple_encoder.c for more information.\n",
           exec_name);
   exit(EXIT_FAILURE);
 }
@@ -147,6 +147,7 @@ static int encode_frame(vpx_codec_ctx_t *codec,
   return got_pkts;
 }
 
+// TODO(tomfinegan): Improve command line parsing and add args for bitrate/fps.
 int main(int argc, char **argv) {
   FILE *infile = NULL;
   vpx_codec_ctx_t codec;
@@ -157,12 +158,11 @@ int main(int argc, char **argv) {
   VpxVideoInfo info = {0};
   VpxVideoWriter *writer = NULL;
   const VpxInterface *encoder = NULL;
-  const int fps = 30;        // TODO(dkovalev) add command line argument
-  const int bitrate = 200;   // kbit/s TODO(dkovalev) add command line argument
+  const int fps = 30;
+  const int bitrate = 200;
   int keyframe_interval = 0;
-
-  // TODO(dkovalev): Add some simple command line parsing code to make the
-  // command line more flexible.
+  int max_frames = 0;
+  int frames_encoded = 0;
   const char *codec_arg = NULL;
   const char *width_arg = NULL;
   const char *height_arg = NULL;
@@ -172,7 +172,7 @@ int main(int argc, char **argv) {
 
   exec_name = argv[0];
 
-  if (argc < 7)
+  if (argc != 9)
     die("Invalid number of arguments");
 
   codec_arg = argv[1];
@@ -181,6 +181,7 @@ int main(int argc, char **argv) {
   infile_arg = argv[4];
   outfile_arg = argv[5];
   keyframe_interval_arg = argv[6];
+  max_frames = strtol(argv[8], NULL, 0);
 
   encoder = get_vpx_encoder_by_name(codec_arg);
   if (!encoder)
@@ -219,7 +220,7 @@ int main(int argc, char **argv) {
   cfg.g_timebase.num = info.time_base.numerator;
   cfg.g_timebase.den = info.time_base.denominator;
   cfg.rc_target_bitrate = bitrate;
-  cfg.g_error_resilient = argc > 7 ? strtol(argv[7], NULL, 0) : 0;
+  cfg.g_error_resilient = strtol(argv[7], NULL, 0);
 
   writer = vpx_video_writer_open(outfile_arg, kContainerIVF, &info);
   if (!writer)
@@ -237,6 +238,9 @@ int main(int argc, char **argv) {
     if (keyframe_interval > 0 && frame_count % keyframe_interval == 0)
       flags |= VPX_EFLAG_FORCE_KF;
     encode_frame(&codec, &raw, frame_count++, flags, writer);
+    frames_encoded++;
+    if (max_frames > 0 && frames_encoded >= max_frames)
+      break;
   }
 
   // Flush encoder.

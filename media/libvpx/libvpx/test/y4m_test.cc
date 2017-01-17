@@ -9,12 +9,14 @@
  */
 
 #include <string>
+
+#include "third_party/googletest/src/include/gtest/gtest.h"
+
+#include "./vpx_config.h"
+#include "./y4menc.h"
 #include "test/md5_helper.h"
 #include "test/util.h"
 #include "test/y4m_video_source.h"
-#include "third_party/googletest/src/include/gtest/gtest.h"
-#include "./vpx_config.h"
-#include "./y4menc.h"
 
 namespace {
 

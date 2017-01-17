@@ -14,11 +14,10 @@
 
 #include "third_party/googletest/src/include/gtest/gtest.h"
 
-#include "vp9/decoder/vp9_reader.h"
-#include "vp9/encoder/vp9_writer.h"
-
 #include "test/acm_random.h"
 #include "vpx/vpx_integer.h"
+#include "vpx_dsp/bitreader.h"
+#include "vpx_dsp/bitwriter.h"
 
 using libvpx_test::ACMRandom;
 
@@ -50,9 +49,9 @@ TEST(VP9, TestBitIO) {
         const int random_seed = 6432;
         const int kBufferSize = 10000;
         ACMRandom bit_rnd(random_seed);
-        vp9_writer bw;
+        vpx_writer bw;
         uint8_t bw_buffer[kBufferSize];
-        vp9_start_encode(&bw, bw_buffer);
+        vpx_start_encode(&bw, bw_buffer);
 
         int bit = (bit_method == 0) ? 0 : (bit_method == 1) ? 1 : 0;
         for (int i = 0; i < kBitsToTest; ++i) {
@@ -61,16 +60,16 @@ TEST(VP9, TestBitIO) {
           } else if (bit_method == 3) {
             bit = bit_rnd(2);
           }
-          vp9_write(&bw, bit, static_cast<int>(probas[i]));
+          vpx_write(&bw, bit, static_cast<int>(probas[i]));
         }
 
-        vp9_stop_encode(&bw);
+        vpx_stop_encode(&bw);
 
         // First bit should be zero
         GTEST_ASSERT_EQ(bw_buffer[0] & 0x80, 0);
 
-        vp9_reader br;
-        vp9_reader_init(&br, bw_buffer, kBufferSize, NULL, NULL);
+        vpx_reader br;
+        vpx_reader_init(&br, bw_buffer, kBufferSize, NULL, NULL);
         bit_rnd.Reset(random_seed);
         for (int i = 0; i < kBitsToTest; ++i) {
           if (bit_method == 2) {
@@ -78,7 +77,7 @@ TEST(VP9, TestBitIO) {
           } else if (bit_method == 3) {
             bit = bit_rnd(2);
           }
-          GTEST_ASSERT_EQ(vp9_read(&br, probas[i]), bit)
+          GTEST_ASSERT_EQ(vpx_read(&br, probas[i]), bit)
               << "pos: " << i << " / " << kBitsToTest
               << " bit_method: " << bit_method
               << " method: " << method;

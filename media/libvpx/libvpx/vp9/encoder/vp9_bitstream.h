@@ -18,6 +18,8 @@ extern "C" {
 
 #include "vp9/encoder/vp9_encoder.h"
 
+int vp9_get_refresh_mask(VP9_COMP *cpi);
+
 void vp9_pack_bitstream(VP9_COMP *cpi, uint8_t *dest, size_t *size);
 
 static INLINE int vp9_preserve_existing_gf(VP9_COMP *cpi) {

@@ -18,6 +18,12 @@
 // Must be included before jpeglib.
 #include <setjmp.h>
 #define HAVE_SETJMP
+
+#if defined(_MSC_VER)
+// disable warning 4324: structure was padded due to __declspec(align())
+#pragma warning(disable:4324)
+#endif
+
 #endif
 struct FILE;  // For jpeglib.h.
 

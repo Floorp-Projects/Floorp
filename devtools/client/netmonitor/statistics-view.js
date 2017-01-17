@@ -16,9 +16,10 @@ const { button } = DOM;
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const Actions = require("./actions/index");
 const { Chart } = require("devtools/client/shared/widgets/Chart");
-
-const REQUEST_TIME_DECIMALS = 2;
-const CONTENT_SIZE_DECIMALS = 2;
+const {
+  getSizeWithDecimals,
+  getTimeWithDecimals
+} = require("./utils/format-utils");
 
 // px
 const NETWORK_ANALYSIS_PIE_CHART_DIAMETER = 200;
@@ -114,22 +115,22 @@ StatisticsView.prototype = {
    */
   _commonChartStrings: {
     size: value => {
-      let string = L10N.numberWithDecimals(value / 1024, CONTENT_SIZE_DECIMALS);
+      let string = getSizeWithDecimals(value / 1024);
       return L10N.getFormatStr("charts.sizeKB", string);
     },
     time: value => {
-      let string = L10N.numberWithDecimals(value / 1000, REQUEST_TIME_DECIMALS);
+      let string = getTimeWithDecimals(value / 1000);
       return L10N.getFormatStr("charts.totalS", string);
     }
   },
   _commonChartTotals: {
     size: total => {
-      let string = L10N.numberWithDecimals(total / 1024, CONTENT_SIZE_DECIMALS);
+      let string = getSizeWithDecimals(total / 1024);
       return L10N.getFormatStr("charts.totalSize", string);
     },
     time: total => {
       let seconds = total / 1000;
-      let string = L10N.numberWithDecimals(seconds, REQUEST_TIME_DECIMALS);
+      let string = getTimeWithDecimals(seconds);
       return PluralForm.get(seconds,
         L10N.getStr("charts.totalSeconds")).replace("#1", string);
     },
