@@ -741,7 +741,7 @@ mochitest-media:
     chunks:
         by-test-platform:
             android.*: 3
-            default: 1
+            default: 3
     docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
         by-test-platform:
