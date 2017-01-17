@@ -1487,7 +1487,7 @@ function DatabaseMetadata(origin, db, storage) {
       let objectStore =
         transaction.objectStore(transaction.objectStoreNames[i]);
       this._objectStores.push([transaction.objectStoreNames[i],
-                              new ObjectStoreMetadata(objectStore)]);
+                               new ObjectStoreMetadata(objectStore)]);
     }
   }
 }
@@ -1924,7 +1924,7 @@ var indexedDBHelpers = {
   },
 
   removeDB: Task.async(function* (host, principal, dbName) {
-    let result = new promise(resolve => {
+    let result = new Promise(resolve => {
       let {name, storage} = this.splitNameAndStorage(dbName);
       let request =
         indexedDBForStorage.deleteForPrincipal(principal, name,
@@ -1961,7 +1961,7 @@ var indexedDBHelpers = {
     let {name, storage} = this.splitNameAndStorage(dbName);
 
     try {
-      db = yield new promise((resolve, reject) => {
+      db = yield new Promise((resolve, reject) => {
         let request = this.openWithPrincipal(principal, name, storage);
         request.onsuccess = ev => resolve(ev.target.result);
         request.onerror = ev => reject(ev.target.error);
@@ -1970,7 +1970,7 @@ var indexedDBHelpers = {
       let transaction = db.transaction(storeName, "readwrite");
       let store = transaction.objectStore(storeName);
 
-      yield new promise((resolve, reject) => {
+      yield new Promise((resolve, reject) => {
         let request = store.delete(id);
         request.onsuccess = () => resolve();
         request.onerror = ev => reject(ev.target.error);
@@ -1994,7 +1994,7 @@ var indexedDBHelpers = {
     let {name, storage} = this.splitNameAndStorage(dbName);
 
     try {
-      db = yield new promise((resolve, reject) => {
+      db = yield new Promise((resolve, reject) => {
         let request = this.openWithPrincipal(principal, name, storage);
         request.onsuccess = ev => resolve(ev.target.result);
         request.onerror = ev => reject(ev.target.error);
@@ -2003,7 +2003,7 @@ var indexedDBHelpers = {
       let transaction = db.transaction(storeName, "readwrite");
       let store = transaction.objectStore(storeName);
 
-      yield new promise((resolve, reject) => {
+      yield new Promise((resolve, reject) => {
         let request = store.clear();
         request.onsuccess = () => resolve();
         request.onerror = ev => reject(ev.target.error);

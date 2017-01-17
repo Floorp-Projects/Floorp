@@ -10,7 +10,8 @@
 "use strict";
 
 const baseURL = "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/";
-const params = "?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default";
+const params =
+  "?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default";
 const ErrorDocs = {
   JSMSG_READ_ONLY: "Read-only",
   JSMSG_BAD_ARRAY_LENGTH: "Invalid_array_length",
@@ -71,7 +72,7 @@ const ErrorCategories = {
 
 exports.GetURL = (error) => {
   if (!error) {
-    return;
+    return undefined;
   }
 
   let doc = ErrorDocs[error.errorMessageName];
@@ -83,4 +84,5 @@ exports.GetURL = (error) => {
   if (categoryURL) {
     return categoryURL + params;
   }
+  return undefined;
 };

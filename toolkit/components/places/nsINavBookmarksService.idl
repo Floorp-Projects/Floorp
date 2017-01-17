@@ -669,15 +669,6 @@ interface nsINavBookmarksService : nsISupports
    * @deprecated Use PlacesUtils.keywords.fetch() API instead.
    */
   AString getKeywordForBookmark(in long long aItemId);
-
-  /**
-   * Returns the URI associated with the given keyword. Empty if no such
-   * keyword is found.
-   *
-   * @deprecated Use PlacesUtils.keywords.fetch() API instead.
-   */
-  nsIURI getURIForKeyword(in AString keyword);
-
   /**
    * Adds a bookmark observer. If ownsWeak is false, the bookmark service will
    * keep an owning reference to the observer.  If ownsWeak is true, then

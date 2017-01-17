@@ -11,12 +11,11 @@ const Services = require("Services");
 const { BreakpointActor, setBreakpointAtEntryPoints } = require("devtools/server/actors/breakpoint");
 const { OriginalLocation, GeneratedLocation } = require("devtools/server/actors/common");
 const { createValueGrip } = require("devtools/server/actors/object");
-const { ActorClassWithSpec, Arg, RetVal, method } = require("devtools/shared/protocol");
+const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert, fetch } = DevToolsUtils;
 const { joinURI } = require("devtools/shared/path");
 const promise = require("promise");
-const { defer, resolve, reject, all } = promise;
 const { sourceSpec } = require("devtools/shared/specs/source");
 
 loader.lazyRequireGetter(this, "SourceMapConsumer", "source-map", true);
@@ -44,7 +43,6 @@ function getSourceURL(source, window) {
 
     if (source.displayURL && source.introductionScript &&
        !isEvalSource(source.introductionScript.source)) {
-
       if (source.introductionScript.source.url === "debugger eval code") {
         if (window) {
           // If this is a named eval script created from the console, make it
@@ -52,15 +50,13 @@ function getSourceURL(source, window) {
           // when we care about this.
           return joinURI(window.location.href, source.displayURL);
         }
-      }
-      else {
+      } else {
         return joinURI(source.introductionScript.source.url, source.displayURL);
       }
     }
 
     return source.displayURL;
-  }
-  else if (source.url === "debugger eval code") {
+  } else if (source.url === "debugger eval code") {
     // Treat code evaluated by the console as unnamed eval scripts
     return null;
   }
@@ -74,28 +70,28 @@ exports.getSourceURL = getSourceURL;
  *
  * Of course, this works only for URIs pointing to local resources.
  *
- * @param  aURI
+ * @param  uri
  *         URI to resolve
  * @return
  *         resolved nsIURI
  */
-function resolveURIToLocalPath(aURI) {
+function resolveURIToLocalPath(uri) {
   let resolved;
-  switch (aURI.scheme) {
+  switch (uri.scheme) {
     case "jar":
     case "file":
-      return aURI;
+      return uri;
 
     case "chrome":
-      resolved = Cc["@mozilla.org/chrome/chrome-registry;1"].
-                 getService(Ci.nsIChromeRegistry).convertChromeURL(aURI);
+      resolved = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                  .getService(Ci.nsIChromeRegistry).convertChromeURL(uri);
       return resolveURIToLocalPath(resolved);
 
     case "resource":
-      resolved = Cc["@mozilla.org/network/protocol;1?name=resource"].
-                 getService(Ci.nsIResProtocolHandler).resolveURI(aURI);
-      aURI = Services.io.newURI(resolved);
-      return resolveURIToLocalPath(aURI);
+      resolved = Cc["@mozilla.org/network/protocol;1?name=resource"]
+                  .getService(Ci.nsIResProtocolHandler).resolveURI(uri);
+      uri = Services.io.newURI(resolved);
+      return resolveURIToLocalPath(uri);
 
     default:
       return null;
@@ -182,20 +178,36 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
     return this._isInlineSource;
   },
 
-  get threadActor() { return this._threadActor; },
-  get sources() { return this._threadActor.sources; },
-  get dbg() { return this.threadActor.dbg; },
-  get source() { return this._source; },
-  get generatedSource() { return this._generatedSource; },
-  get breakpointActorMap() { return this.threadActor.breakpointActorMap; },
+  get threadActor() {
+    return this._threadActor;
+  },
+  get sources() {
+    return this._threadActor.sources;
+  },
+  get dbg() {
+    return this.threadActor.dbg;
+  },
+  get source() {
+    return this._source;
+  },
+  get generatedSource() {
+    return this._generatedSource;
+  },
+  get breakpointActorMap() {
+    return this.threadActor.breakpointActorMap;
+  },
   get url() {
     if (this.source) {
       return getSourceURL(this.source, this.threadActor._parent.window);
     }
     return this._originalUrl;
   },
-  get addonID() { return this._addonID; },
-  get addonPath() { return this._addonPath; },
+  get addonID() {
+    return this._addonID;
+  },
+  get addonPath() {
+    return this._addonPath;
+  },
 
   get prettyPrintWorker() {
     return this.threadActor.prettyPrintWorker;
@@ -233,10 +245,10 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
   },
 
   _mapSourceToAddon: function () {
+    let nsuri;
     try {
-      var nsuri = Services.io.newURI(this.url.split(" -> ").pop());
-    }
-    catch (e) {
+      nsuri = Services.io.newURI(this.url.split(" -> ").pop());
+    } catch (e) {
       // We can't do anything with an invalid URI
       return;
     }
@@ -255,8 +267,7 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
     if (localURI instanceof Ci.nsIJARURI) {
       // The path in the add-on is easy for jar: uris
       this._addonPath = localURI.JAREntry;
-    }
-    else if (localURI instanceof Ci.nsIFileURL) {
+    } else if (localURI instanceof Ci.nsIFileURL) {
       // For file: uris walk up to find the last directory that is part of the
       // add-on
       let target = localURI.file;
@@ -310,7 +321,9 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
         c = c.replace(/\n/g, "\\n");
         console.error("\t\t", c);
       });
-    } catch (e) { }
+    } catch (e) {
+      // ignore
+    }
   },
 
   _getSourceText: function () {
@@ -346,53 +359,52 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
            this._contentType === "text/wasm")) {
         return toResolvedContent(this.source.text);
       }
-      else {
-        // Only load the HTML page source from cache (which exists when
-        // there are inline sources). Otherwise, we can't trust the
-        // cache because we are most likely here because we are
-        // fetching the original text for sourcemapped code, and the
-        // page hasn't requested it before (if it has, it was a
-        // previous debugging session).
-        let loadFromCache = this.isInlineSource;
 
-        // Fetch the sources with the same principal as the original document
-        let win = this.threadActor._parent.window;
-        let principal, cacheKey;
-        // On xpcshell, we don't have a window but a Sandbox
-        if (!isWorker && win instanceof Ci.nsIDOMWindow) {
-          let webNav = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIWebNavigation);
-          let channel = webNav.currentDocumentChannel;
-          principal = channel.loadInfo.loadingPrincipal;
+      // Only load the HTML page source from cache (which exists when
+      // there are inline sources). Otherwise, we can't trust the
+      // cache because we are most likely here because we are
+      // fetching the original text for sourcemapped code, and the
+      // page hasn't requested it before (if it has, it was a
+      // previous debugging session).
+      let loadFromCache = this.isInlineSource;
 
-          // Retrieve the cacheKey in order to load POST requests from cache
-          // Note that chrome:// URLs don't support this interface.
-          if (loadFromCache &&
-            webNav.currentDocumentChannel instanceof Ci.nsICacheInfoChannel) {
-            cacheKey = webNav.currentDocumentChannel.cacheKey;
-            assert(
-              cacheKey,
-              "Could not fetch the cacheKey from the related document."
-            );
-          }
+      // Fetch the sources with the same principal as the original document
+      let win = this.threadActor._parent.window;
+      let principal, cacheKey;
+      // On xpcshell, we don't have a window but a Sandbox
+      if (!isWorker && win instanceof Ci.nsIDOMWindow) {
+        let webNav = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIWebNavigation);
+        let channel = webNav.currentDocumentChannel;
+        principal = channel.loadInfo.loadingPrincipal;
+
+        // Retrieve the cacheKey in order to load POST requests from cache
+        // Note that chrome:// URLs don't support this interface.
+        if (loadFromCache &&
+          webNav.currentDocumentChannel instanceof Ci.nsICacheInfoChannel) {
+          cacheKey = webNav.currentDocumentChannel.cacheKey;
+          assert(
+            cacheKey,
+            "Could not fetch the cacheKey from the related document."
+          );
         }
-
-        let sourceFetched = fetch(this.url, {
-          principal,
-          cacheKey,
-          loadFromCache
-        });
-
-        // Record the contentType we just learned during fetching
-        return sourceFetched
-          .then(result => {
-            this._contentType = result.contentType;
-            return result;
-          }, error => {
-            this._reportLoadSourceError(error, map);
-            throw error;
-          });
       }
+
+      let sourceFetched = fetch(this.url, {
+        principal,
+        cacheKey,
+        loadFromCache
+      });
+
+      // Record the contentType we just learned during fetching
+      return sourceFetched
+        .then(result => {
+          this._contentType = result.contentType;
+          return result;
+        }, error => {
+          this._reportLoadSourceError(error, map);
+          throw error;
+        });
     });
   },
 
@@ -456,7 +468,7 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
    * Handler for the "source" packet.
    */
   onSource: function () {
-    return resolve(this._init)
+    return promise.resolve(this._init)
       .then(this._getSourceText)
       .then(({ content, contentType }) => {
         return {
@@ -465,10 +477,10 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
           contentType: contentType
         };
       })
-      .then(null, aError => {
-        reportError(aError, "Got an exception during SA_onSource: ");
+      .then(null, error => {
+        reportError(error, "Got an exception during SA_onSource: ");
         throw new Error("Could not load the source for " + this.url + ".\n" +
-                        DevToolsUtils.safeErrorString(aError));
+                        DevToolsUtils.safeErrorString(error));
       });
   },
 
@@ -498,7 +510,7 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
    * Return a function that sends a request to the pretty print worker, waits on
    * the worker's response, and then returns the pretty printed code.
    *
-   * @param Number aIndent
+   * @param Number indent
    *        The number of spaces to indent by the code by, when we send the
    *        request to the pretty print worker.
    * @returns Function
@@ -506,11 +518,11 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
    *          is resolved with `{ code, mappings }` where `code` is the pretty
    *          printed code, and `mappings` is an array of source mappings.
    */
-  _sendToPrettyPrintWorker: function (aIndent) {
+  _sendToPrettyPrintWorker: function (indent) {
     return ({ content }) => {
       return this.prettyPrintWorker.performTask("pretty-print", {
         url: this.url,
-        indent: aIndent,
+        indent,
         source: content
       });
     };
@@ -576,9 +588,9 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
         sm = SourceMapConsumer.fromSourceMap(prevMap);
       }
 
-      let sources = this.threadActor.sources;
-      sources.clearSourceMapCache(source.sourceMapURL);
-      sources.setSourceMapHard(source, null, sm);
+      let actorSources = this.threadActor.sources;
+      actorSources.clearSourceMapCache(source.sourceMapURL);
+      actorSources.setSourceMapHard(source, null, sm);
     });
   },
 
@@ -588,7 +600,6 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
   disablePrettyPrint: function () {
     let source = this.generatedSource || this.source;
     let sources = this.threadActor.sources;
-    let sm = sources.getSourceMap(source);
 
     sources.clearSourceMapCache(source.sourceMapURL, { hard: true });
 
@@ -641,10 +652,11 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
    */
   setBreakpoint: function (line, column, condition, noSliding) {
     if (this.threadActor.state !== "paused") {
-      throw {
+      let errorObject = {
         error: "wrongState",
         message: "Cannot set breakpoint while debuggee is running."
       };
+      throw errorObject;
     }
 
     let location = new OriginalLocation(this, line, column);
@@ -763,11 +775,11 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
 
         // Find the script that spans the largest amount of code to
         // determine the bounds for sliding.
-        const largestScript = scripts.reduce((largestScript, script) => {
-          if (script.lineCount > largestScript.lineCount) {
+        const largestScript = scripts.reduce((largestScr, script) => {
+          if (script.lineCount > largestScr.lineCount) {
             return script;
           }
-          return largestScript;
+          return largestScr;
         });
         const maxLine = largestScript.startLine + largestScript.lineCount - 1;
 
@@ -805,8 +817,9 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
       }
 
       return promise.resolve(actor);
-    } else {
-      return this.sources.getAllGeneratedLocations(originalLocation).then((generatedLocations) => {
+    }
+    return this.sources.getAllGeneratedLocations(originalLocation)
+      .then((generatedLocations) => {
         this._setBreakpointAtAllGeneratedLocations(
           actor,
           generatedLocations
@@ -814,7 +827,6 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
 
         return actor;
       });
-    }
   },
 
   _setBreakpointAtAllGeneratedLocations: function (actor, generatedLocations) {
