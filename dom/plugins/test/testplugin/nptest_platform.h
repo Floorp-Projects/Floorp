@@ -135,11 +135,6 @@ std::string pluginGetClipboardText(InstanceData* instanceData);
 bool pluginCrashInNestedLoop(InstanceData* instanceData);
 
 /**
- * Generate an X11 protocol error to terminate the plugin process.
- */
-bool pluginTriggerXError(InstanceData* instanceData);
-
-/**
  * Destroy gfx things that might be shared with the parent process
  * when we're run out-of-process.  It's not expected that this
  * function will be called when the test plugin is loaded in-process,
