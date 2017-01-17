@@ -1005,17 +1005,12 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
   MediaConduitErrorCode condError = kMediaConduitNoError;
   std::string payloadName;
 
-  condError = StopReceiving();
-  if (condError != kMediaConduitNoError) {
-    return condError;
-  }
-
   if (codecConfigList.empty()) {
     CSFLogError(logTag, "%s Zero number of codecs to configure", __FUNCTION__);
     return kMediaConduitMalformedArgument;
   }
 
-  webrtc::KeyFrameRequestMethod kf_request_method;
+  webrtc::KeyFrameRequestMethod kf_request_method = webrtc::kKeyFrameReqPliRtcp;
   bool kf_request_enabled = false;
   bool use_nack_basic = false;
   bool use_tmmbr = false;
@@ -1024,9 +1019,7 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
   int ulpfec_payload_type = kNullPayloadType;
   int red_payload_type = kNullPayloadType;
   bool configuredH264 = false;
-  // XXX(pkerr) - can I reuse matching decoders?
-  mRecvStreamConfig.decoders.clear();
-  mRecvStreamConfig.rtp.rtx.clear();
+  nsTArray<UniquePtr<VideoCodecConfig>> recv_codecs;
 
   // Try Applying the codecs in the list
   // we treat as success if at least one codec was applied and reception was
@@ -1060,6 +1053,8 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
 
     // Check for the keyframe request type: PLI is preferred
     // over FIR, and FIR is preferred over none.
+    // XXX (See upstream issue https://bugs.chromium.org/p/webrtc/issues/detail?id=7002):
+    // There is no 'none' option in webrtc.org
     if (codec_config->RtcpFbNackIsSet("pli")) {
       kf_request_enabled = true;
       kf_request_method = webrtc::kKeyFrameReqPliRtcp;
@@ -1068,43 +1063,72 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
       kf_request_method = webrtc::kKeyFrameReqFirRtcp;
     }
 
-    use_nack_basic = codec_config->RtcpFbNackIsSet("");
-    use_tmmbr = codec_config->RtcpFbCcmIsSet("tmmbr");
-    use_remb = codec_config->RtcpFbRembIsSet();
-    use_fec = codec_config->RtcpFbFECIsSet();
+    // What if codec A has Nack and REMB, and codec B has TMMBR, and codec C has none?
+    // In practice, that's not a useful configuration, and VideoReceiveStream::Config can't
+    // represent that, so simply union the (boolean) settings
+    use_nack_basic |= codec_config->RtcpFbNackIsSet("");
+    use_tmmbr |= codec_config->RtcpFbCcmIsSet("tmmbr");
+    use_remb |= codec_config->RtcpFbRembIsSet();
+    use_fec |= codec_config->RtcpFbFECIsSet();
 
-    CopyCodecToDB(codec_config);
+    recv_codecs.AppendElement(new VideoCodecConfig(*codec_config));
   }
 
-  mRecvStreamConfig.rtp.rtcp_mode = webrtc::RtcpMode::kCompound;
-  mRecvStreamConfig.rtp.nack.rtp_history_ms = use_nack_basic ? 1000 : 0;
-  mRecvStreamConfig.rtp.remb = use_remb;
-  mRecvStreamConfig.rtp.tmmbr = use_tmmbr;
+  // Now decide if we need to recreate the receive stream, or can keep it
+  if (!mRecvStream ||
+      CodecsDifferent(recv_codecs, mRecvCodecList) ||
+      mRecvStreamConfig.rtp.nack.rtp_history_ms != (use_nack_basic ? 1000 : 0) ||
+      mRecvStreamConfig.rtp.remb != use_remb ||
+      mRecvStreamConfig.rtp.tmmbr != use_tmmbr ||
+      mRecvStreamConfig.rtp.keyframe_method != kf_request_method ||
+      (use_fec &&
+       mRecvStreamConfig.rtp.fec.ulpfec_payload_type != ulpfec_payload_type ||
+       mRecvStreamConfig.rtp.fec.red_payload_type != red_payload_type)) {
 
-  if (use_fec) {
-    mRecvStreamConfig.rtp.fec.ulpfec_payload_type = ulpfec_payload_type;
-    mRecvStreamConfig.rtp.fec.red_payload_type = red_payload_type;
-    mRecvStreamConfig.rtp.fec.red_rtx_payload_type = -1;
-  }
-
-  // FIXME(jesup) - Bug 1325447 -- SSRCs configured here are a problem.
-  // 0 isn't allowed.  Would be best to ask for a random SSRC from the RTP code.
-  // Would need to call rtp_sender.cc -- GenerateSSRC(), which isn't exposed.  It's called on
-  // collision, or when we decide to send.  it should be called on receiver creation.
-  // Here, we're generating the SSRC value - but this causes ssrc_forced in set in rtp_sender,
-  // which locks us into the SSRC - even a collision won't change it!!!
-  auto ssrc = mRecvStreamConfig.rtp.remote_ssrc;
-  do {
-    SECStatus rv = PK11_GenerateRandom(reinterpret_cast<unsigned char*>(&ssrc), sizeof(ssrc));
-    if (rv != SECSuccess) {
-      return kMediaConduitUnknownError;
+    condError = StopReceiving();
+    if (condError != kMediaConduitNoError) {
+      return condError;
     }
-  } while (ssrc == mRecvStreamConfig.rtp.remote_ssrc);
 
-  //DEBUG(pkerr)  mRecvStreamConfig.rtp.local_ssrc = ssrc;
-  mRecvStreamConfig.rtp.local_ssrc = 1;
+    // If we fail after here things get ugly
+    mRecvStreamConfig.rtp.rtcp_mode = webrtc::RtcpMode::kCompound;
+    mRecvStreamConfig.rtp.nack.rtp_history_ms = use_nack_basic ? 1000 : 0;
+    mRecvStreamConfig.rtp.remb = use_remb;
+    mRecvStreamConfig.rtp.tmmbr = use_tmmbr;
+    mRecvStreamConfig.rtp.keyframe_method = kf_request_method;
 
-  return StartReceiving();
+    if (use_fec) {
+      mRecvStreamConfig.rtp.fec.ulpfec_payload_type = ulpfec_payload_type;
+      mRecvStreamConfig.rtp.fec.red_payload_type = red_payload_type;
+      mRecvStreamConfig.rtp.fec.red_rtx_payload_type = -1;
+    }
+
+    // FIXME(jesup) - Bug 1325447 -- SSRCs configured here are a problem.
+    // 0 isn't allowed.  Would be best to ask for a random SSRC from the RTP code.
+    // Would need to call rtp_sender.cc -- GenerateSSRC(), which isn't exposed.  It's called on
+    // collision, or when we decide to send.  it should be called on receiver creation.
+    // Here, we're generating the SSRC value - but this causes ssrc_forced in set in rtp_sender,
+    // which locks us into the SSRC - even a collision won't change it!!!
+    auto ssrc = mRecvStreamConfig.rtp.remote_ssrc;
+    do {
+      SECStatus rv = PK11_GenerateRandom(reinterpret_cast<unsigned char*>(&ssrc), sizeof(ssrc));
+      if (rv != SECSuccess) {
+        return kMediaConduitUnknownError;
+      }
+    } while (ssrc == mRecvStreamConfig.rtp.remote_ssrc);
+
+    //DEBUG(pkerr)  mRecvStreamConfig.rtp.local_ssrc = ssrc;
+    mRecvStreamConfig.rtp.local_ssrc = 1;
+
+    // XXX Copy over those that are the same and don't rebuild them
+    mRecvCodecList.SwapElements(recv_codecs);
+    recv_codecs.Clear();
+    mRecvStreamConfig.decoders.clear();
+    mRecvStreamConfig.rtp.rtx.clear();
+    // Rebuilds mRecvStream from mRecvStreamConfig
+    DeleteRecvStream();
+    return StartReceiving();
+  }
   return kMediaConduitNoError;
 }
 
@@ -1870,12 +1894,27 @@ WebrtcVideoConduit::RenderFrame(const webrtc::VideoFrame& video_frame,
                               img_handle);
 }
 
-// Copy the codec passed into Conduit's database
+// Compare lists of codecs
 bool
-WebrtcVideoConduit::CopyCodecToDB(const VideoCodecConfig* codecInfo)
+WebrtcVideoConduit::CodecsDifferent(const nsTArray<UniquePtr<VideoCodecConfig>>& a,
+                                    const nsTArray<UniquePtr<VideoCodecConfig>>& b)
 {
-  mRecvCodecList.AppendElement(new VideoCodecConfig(*codecInfo));
-  return true;
+  // return a != b;
+  // would work if UniquePtr<> operator== compared contents!
+  auto len = a.Length();
+  if (len != b.Length()) {
+    return true;
+  }
+
+  // XXX std::equal would work, if we could use it on this - fails for the
+  // same reason as above.  c++14 would let us pass a comparator function.
+  for (uint32_t i = 0; i < len; ++i) {
+    if (!(*a[i] == *b[i])) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**
