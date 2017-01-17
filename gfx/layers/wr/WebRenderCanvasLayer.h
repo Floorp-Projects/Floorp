@@ -31,7 +31,7 @@ public:
 
   virtual CompositableForwarder* GetForwarder() override
   {
-    return Manager()->WRBridge();
+    return Manager()->WrBridge();
   }
 
   virtual void AttachCompositable() override;

@@ -67,7 +67,7 @@ WebRenderTextLayer::RenderLayer()
         }
     }
 
-    WRBridge()->AddWebRenderCommand(OpDPPushText(
+    WrBridge()->AddWebRenderCommand(OpDPPushText(
         wr::ToWrRect(rect),
         wr::ToWrRect(clip),
         wr_glyphs,

@@ -18,7 +18,7 @@ using namespace mozilla::gfx;
 void
 WebRenderBorderLayer::RenderLayer()
 {
-  WRScrollFrameStackingContextGenerator scrollFrames(this);
+  WrScrollFrameStackingContextGenerator scrollFrames(this);
 
   Rect rect = RelativeToVisible(mRect.ToUnknownRect());
   Rect clip;
@@ -33,10 +33,10 @@ WebRenderBorderLayer::RenderLayer()
   Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   Rect overflow(0, 0, relBounds.width, relBounds.height);
   Matrix4x4 transform;// = GetTransform();
-  WRBridge()->AddWebRenderCommand(
+  WrBridge()->AddWebRenderCommand(
       OpDPPushStackingContext(wr::ToWrRect(relBounds), wr::ToWrRect(overflow), Nothing(), transform, FrameMetrics::NULL_SCROLL_ID));
 
-  WRBridge()->AddWebRenderCommand(
+  WrBridge()->AddWebRenderCommand(
     OpDPPushBorder(wr::ToWrRect(rect), wr::ToWrRect(clip),
                    wr::ToWrBorderSide(mWidths[0], mColors[0]),
                    wr::ToWrBorderSide(mWidths[1], mColors[1]),
@@ -48,7 +48,7 @@ WebRenderBorderLayer::RenderLayer()
                    wr::ToWrLayoutSize(mCorners[2])));
   if (gfxPrefs::LayersDump()) printf_stderr("BorderLayer %p using %s as bounds/overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
 
-  WRBridge()->AddWebRenderCommand(OpDPPopStackingContext());
+  WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 }
 
 } // namespace layers

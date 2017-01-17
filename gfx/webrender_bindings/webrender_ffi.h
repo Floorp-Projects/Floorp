@@ -178,7 +178,7 @@ struct WrExternalImageIdHandler {
   ReleaseExternalImageCallback release_func;
 };
 
-struct wrwindowstate;
+struct WrWindowState;
 
 #ifdef MOZ_ENABLE_WEBRENDER
 #  define WR_INLINE
@@ -218,7 +218,7 @@ wr_window_new(WrWindowId window_id,
               WrRenderer** out_renderer) WR_FUNC;
 
 WR_INLINE void
-wr_window_remove_pipeline(wrwindowstate* window, WrState* state) WR_FUNC;
+wr_window_remove_pipeline(WrWindowState* window, WrState* state) WR_FUNC;
 
 WR_INLINE void
 wr_api_delete(WrAPI* api) WR_FUNC;
@@ -246,15 +246,15 @@ WR_INLINE void
 wr_api_set_root_display_list(WrAPI* api, WrState* state, uint32_t epoch, float w, float h) WR_FUNC;
 
 WR_INLINE void
-wr_window_init_pipeline_epoch(wrwindowstate* window, WrPipelineId pipeline, uint32_t width, uint32_t height) WR_FUNC;
+wr_window_init_pipeline_epoch(WrWindowState* window, WrPipelineId pipeline, uint32_t width, uint32_t height) WR_FUNC;
 
 WR_INLINE WrFontKey
 wr_api_add_raw_font(WrAPI* api, uint8_t* font_buffer, size_t buffer_size) WR_FUNC;
 
 WR_INLINE WrFontKey
-wr_window_add_raw_font(wrwindowstate* window, uint8_t* font_buffer, size_t buffer_size) WR_FUNC;
+wr_window_add_raw_font(WrWindowState* window, uint8_t* font_buffer, size_t buffer_size) WR_FUNC;
 
-WR_INLINE wrwindowstate*
+WR_INLINE WrWindowState*
 wr_init_window(WrPipelineId root_pipeline_id,
                void* webrender_bridge_ptr,
                bool enable_profiler,
@@ -268,33 +268,33 @@ WR_INLINE void
 wr_state_delete(WrState* state) WR_FUNC;
 
 WR_INLINE void
-wr_destroy(wrwindowstate* wrWindow, WrState* WrState)
+wr_destroy(WrWindowState* wrWindow, WrState* WrState)
 WR_FUNC;
 
 WR_INLINE WrImageKey
-wr_add_image(wrwindowstate* wrWindow, uint32_t width, uint32_t height,
+wr_add_image(WrWindowState* wrWindow, uint32_t width, uint32_t height,
              uint32_t stride, WrImageFormat format, uint8_t *bytes, size_t size)
 WR_FUNC;
 
 WR_INLINE WrImageKey
-wr_add_external_image_texture(wrwindowstate* wrWindow, uint32_t width, uint32_t height,
+wr_add_external_image_texture(WrWindowState* wrWindow, uint32_t width, uint32_t height,
                               WrImageFormat format, uint64_t external_image_id)
 WR_FUNC;
 
 //TODO(Jerry): handle shmem in WR
 //// WR_INLINE WrImageKey
-//// wr_add_external_image_buffer(wrwindowstate* wrWindow, uint32_t width, uint32_t height,
+//// wr_add_external_image_buffer(WrWindowState* wrWindow, uint32_t width, uint32_t height,
 ////                              uint32_t stride, WrImageFormat format, uint8_t *bytes, size_t size)
 //// WR_FUNC;
 
 WR_INLINE void
-wr_update_image(wrwindowstate* wrWindow, WrImageKey key,
+wr_update_image(WrWindowState* wrWindow, WrImageKey key,
                 uint32_t width, uint32_t height,
                 WrImageFormat format, uint8_t *bytes, size_t size)
 WR_FUNC;
 
 WR_INLINE void
-wr_delete_image(wrwindowstate* wrWindow, WrImageKey key)
+wr_delete_image(WrWindowState* wrWindow, WrImageKey key)
 WR_FUNC;
 
 WR_INLINE void
@@ -313,18 +313,18 @@ wr_dp_begin(WrState* wrState, uint32_t width, uint32_t height)
 WR_FUNC;
 
 WR_INLINE void
-wr_window_dp_begin(wrwindowstate* wrWindow, WrState* wrState, uint32_t width, uint32_t height)
+wr_window_dp_begin(WrWindowState* wrWindow, WrState* wrState, uint32_t width, uint32_t height)
 WR_FUNC;
 
 WR_INLINE void
-wr_window_dp_end(wrwindowstate* wrWindow, WrState* wrState)
+wr_window_dp_end(WrWindowState* wrWindow, WrState* wrState)
 WR_FUNC;
 
 WR_INLINE void
 wr_dp_end(WrState* builder, WrAPI* api, uint32_t epoch) WR_FUNC;
 
 WR_INLINE void
-wr_composite_window(wrwindowstate* wrWindow)
+wr_composite_window(WrWindowState* wrWindow)
 WR_FUNC;
 
 WR_INLINE void
@@ -354,7 +354,7 @@ WR_FUNC;
 
 // TODO: Remove.
 WR_INLINE void
-wr_window_dp_push_iframe(wrwindowstate* wrWindow, WrState* wrState, WrRect bounds, WrRect clip,
+wr_window_dp_push_iframe(WrWindowState* wrWindow, WrState* wrState, WrRect bounds, WrRect clip,
                         WrPipelineId layers_id)
 WR_FUNC;
 
@@ -365,13 +365,13 @@ wr_dp_push_iframe(WrState* wrState, WrRect bounds, WrRect clip, WrPipelineId lay
 // It is the responsibility of the caller to manage the dst_buffer memory
 // and also free it at the proper time.
 WR_INLINE const uint8_t*
-wr_readback_into_buffer(wrwindowstate* wrWindow, uint32_t width, uint32_t height,
+wr_readback_into_buffer(WrWindowState* wrWindow, uint32_t width, uint32_t height,
                         uint8_t* dst_buffer, uint32_t buffer_length)
 WR_FUNC;
 
 // TODO: Remove.
 WR_INLINE void
-wr_profiler_set_enabled(wrwindowstate* wrWindow, bool enabled)
+wr_profiler_set_enabled(WrWindowState* wrWindow, bool enabled)
 WR_FUNC;
 
 #undef WR_FUNC

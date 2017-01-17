@@ -79,7 +79,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
                                              const uint64_t& aPipelineId,
                                              widget::CompositorWidget* aWidget,
                                              gl::GLContext* aGlContext,
-                                             wrwindowstate* aWrWindowState,
+                                             WrWindowState* aWrWindowState,
                                              layers::Compositor* aCompositor)
   : mCompositorBridge(aCompositorBridge)
   , mPipelineId(aPipelineId)
