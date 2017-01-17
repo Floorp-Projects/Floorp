@@ -1584,6 +1584,10 @@ ContentChild::SendPBrowserConstructor(PBrowserChild* aActor,
                                       const ContentParentId& aCpID,
                                       const bool& aIsForBrowser)
 {
+  if (IsShuttingDown()) {
+    return false;
+  }
+
   return PContentChild::SendPBrowserConstructor(aActor,
                                                 aTabId,
                                                 aContext,
@@ -1600,6 +1604,8 @@ ContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
                                       const ContentParentId& aCpID,
                                       const bool& aIsForBrowser)
 {
+  MOZ_ASSERT(!IsShuttingDown());
+
   static bool hasRunOnce = false;
   if (!hasRunOnce) {
     hasRunOnce = true;
@@ -1623,6 +1629,10 @@ ContentChild::GetAvailableDictionaries(InfallibleTArray<nsString>& aDictionaries
 PFileDescriptorSetChild*
 ContentChild::SendPFileDescriptorSetConstructor(const FileDescriptor& aFD)
 {
+  if (IsShuttingDown()) {
+    return nullptr;
+  }
+
   return PContentChild::SendPFileDescriptorSetConstructor(aFD);
 }
 
@@ -1674,6 +1684,10 @@ PBlobChild*
 ContentChild::SendPBlobConstructor(PBlobChild* aActor,
                                    const BlobConstructorParams& aParams)
 {
+  if (IsShuttingDown()) {
+    return nullptr;
+  }
+
   return PContentChild::SendPBlobConstructor(aActor, aParams);
 }
 
@@ -1864,6 +1878,10 @@ ContentChild::DeallocPPrintingChild(PPrintingChild* printing)
 PSendStreamChild*
 ContentChild::SendPSendStreamConstructor(PSendStreamChild* aActor)
 {
+  if (IsShuttingDown()) {
+    return nullptr;
+  }
+
   return PContentChild::SendPSendStreamConstructor(aActor);
 }
 
