@@ -232,6 +232,7 @@ GMPChild::SetMacSandboxInfo(MacSandboxPluginType aPluginType)
 
   MacSandboxInfo info;
   info.type = MacSandboxType_Plugin;
+  info.shouldLog = Preferences::GetBool("security.sandbox.logging.enabled", true);
   info.pluginInfo.type = aPluginType;
   info.pluginInfo.pluginPath.assign(pluginDirectoryPath.get());
   info.pluginInfo.pluginBinaryPath.assign(pluginFilePath.get());
