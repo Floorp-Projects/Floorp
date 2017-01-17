@@ -1392,7 +1392,18 @@ AudioChannelService::AudioChannelWindow::MaybeNotifyMediaBlocked(AudioChannelAge
   }
 
   MOZ_ASSERT(window->IsOuterWindow());
-  if (window->GetMediaSuspend() != nsISuspendedTypes::SUSPENDED_BLOCK) {
+  nsCOMPtr<nsPIDOMWindowInner> inner = window->GetCurrentInnerWindow();
+  if (!inner) {
+    return;
+  }
+
+  nsCOMPtr<nsIDocument> doc = inner->GetExtantDoc();
+  if (!doc) {
+    return;
+  }
+
+  if (window->GetMediaSuspend() != nsISuspendedTypes::SUSPENDED_BLOCK ||
+      !doc->Hidden()) {
     return;
   }
 
