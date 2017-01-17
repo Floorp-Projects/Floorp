@@ -36,6 +36,54 @@ struct ParamTraits<mozilla::wr::ByteBuffer>
 };
 
 template<>
+struct ParamTraits<mozilla::wr::ImageKey>
+{
+  static void
+  Write(Message* aMsg, const mozilla::wr::ImageKey& aParam)
+  {
+    WriteParam(aMsg, aParam.mHandle);
+  }
+
+  static bool
+  Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::ImageKey* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mHandle);
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::wr::FontKey>
+{
+  static void
+  Write(Message* aMsg, const mozilla::wr::FontKey& aParam)
+  {
+    WriteParam(aMsg, aParam.mHandle);
+  }
+
+  static bool
+  Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::FontKey* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mHandle);
+  }
+};
+
+template<>
+struct ParamTraits<mozilla::wr::PipelineId>
+{
+  static void
+  Write(Message* aMsg, const mozilla::wr::PipelineId& aParam)
+  {
+    WriteParam(aMsg, aParam.mHandle);
+  }
+
+  static bool
+  Read(const Message* aMsg, PickleIterator* aIter, mozilla::wr::PipelineId* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->mHandle);
+  }
+};
+
+template<>
 struct ParamTraits<WrImageFormat>
   : public ContiguousEnumSerializer<
         WrImageFormat,

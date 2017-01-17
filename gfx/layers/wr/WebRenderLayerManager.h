@@ -128,7 +128,7 @@ public:
 
   // adds an imagekey to a list of keys that will be discarded on the next
   // transaction or destruction
-  void AddImageKeyForDiscard(WrImageKey);
+  void AddImageKeyForDiscard(wr::ImageKey);
   void DiscardImages();
 
   WebRenderBridgeChild* WrBridge() const { return mWrChild; }
@@ -146,7 +146,7 @@ private:
 
 private:
   nsIWidget* MOZ_NON_OWNING_REF mWidget;
-  std::vector<WrImageKey> mImageKeys;
+  std::vector<wr::ImageKey> mImageKeys;
 
   /* PaintedLayer callbacks; valid at the end of a transaciton,
    * while rendering */

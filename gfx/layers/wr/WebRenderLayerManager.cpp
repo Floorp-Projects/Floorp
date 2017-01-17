@@ -114,10 +114,10 @@ WebRenderLayer::buildMaskLayer() {
           gfx::IntSize size = surface->GetSize();
           MOZ_RELEASE_ASSERT(surface->GetFormat() == SurfaceFormat::A8, "bad format");
           wr::ByteBuffer buf(size.height * map.GetStride(), map.GetData());
-          WrImageKey maskKey;
-          WrBridge()->SendAddImage(size.width, size.height, map.GetStride(), A8, buf, &maskKey);
+          wr::ImageKey maskKey;
+          WrBridge()->SendAddImage(size, map.GetStride(), SurfaceFormat::A8, buf, &maskKey);
 
-          imageMask.image = maskKey;
+          imageMask.image = maskKey.mHandle;
           imageMask.rect = wr::ToWrRect(Rect(0, 0, size.width, size.height));
           imageMask.repeat = false;
           WrManager()->AddImageKeyForDiscard(maskKey);
@@ -199,12 +199,12 @@ WebRenderLayerManager::Initialize(PCompositorBridgeChild* aCBChild,
   MOZ_ASSERT(aTextureFactoryIdentifier);
 
   TextureFactoryIdentifier textureFactoryIdentifier;
-  PWebRenderBridgeChild* bridge = aCBChild->SendPWebRenderBridgeConstructor(aLayersId,
+  PWebRenderBridgeChild* bridge = aCBChild->SendPWebRenderBridgeConstructor(wr::PipelineId(aLayersId),
                                                                             &textureFactoryIdentifier);
   MOZ_ASSERT(bridge);
   mWrChild = static_cast<WebRenderBridgeChild*>(bridge);
   LayoutDeviceIntSize size = mWidget->GetClientSize();
-  WrBridge()->SendCreate(size.width, size.height);
+  WrBridge()->SendCreate(size.ToUnknownSize());
   WrBridge()->IdentifyTextureHost(textureFactoryIdentifier);
   *aTextureFactoryIdentifier = textureFactoryIdentifier;
 }
@@ -289,7 +289,7 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
   mAnimationReadyTime = TimeStamp::Now();
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
-  if (!WrBridge()->DPBegin(size.width, size.height)) {
+  if (!WrBridge()->DPBegin(size.ToUnknownSize())) {
     return;
   }
 
@@ -370,7 +370,7 @@ WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize)
 }
 
 void
-WebRenderLayerManager::AddImageKeyForDiscard(WrImageKey key)
+WebRenderLayerManager::AddImageKeyForDiscard(wr::ImageKey key)
 {
   mImageKeys.push_back(key);
 }
