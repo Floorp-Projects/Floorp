@@ -3657,7 +3657,7 @@ EmitExpr(FunctionCompiler& f)
 bool
 wasm::IonCompileFunction(CompileTask* task, FuncCompileUnit* unit, UniqueChars* error)
 {
-    MOZ_ASSERT(unit->mode() == CompileMode::Ion);
+    MOZ_ASSERT(task->mode() == CompileMode::Ion);
 
     const FuncBytes& func = unit->func();
     const ModuleEnvironment& env = task->env();
