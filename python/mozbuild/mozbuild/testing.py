@@ -340,7 +340,6 @@ class SupportFilesConverter(object):
     """
     def __init__(self):
         self._fields = (('head', set()),
-                        ('tail', set()),
                         ('support-files', set()),
                         ('generated-files', set()))
 
@@ -382,7 +381,7 @@ class SupportFilesConverter(object):
                 elif pattern[0] == '!':
                     info.deferred_installs.add(pattern)
                 # We only support globbing on support-files because
-                # the harness doesn't support * for head and tail.
+                # the harness doesn't support * for head.
                 elif '*' in pattern and field == 'support-files':
                     info.pattern_installs.append((manifest_dir, pattern, out_dir))
                 # "absolute" paths identify files that are to be

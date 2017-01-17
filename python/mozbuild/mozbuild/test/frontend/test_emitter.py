@@ -600,8 +600,6 @@ class TestEmitterBasic(unittest.TestCase):
                     'test_xpcshell.js': True,
                     'head1': False,
                     'head2': False,
-                    'tail1': False,
-                    'tail2': False,
                 },
             },
             'reftest.list': {
