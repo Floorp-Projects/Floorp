@@ -1,6 +1,6 @@
 use fnv::FnvHasher;
 use std::collections::HashMap;
-use std::ffi::{CStr, CString};
+use std::ffi::CString;
 use std::hash::BuildHasherDefault;
 use std::{mem, slice};
 use std::os::raw::{c_void, c_char};
@@ -156,10 +156,7 @@ pub extern fn wr_gl_init(gl_context: *mut c_void) {
     gl::load_with(|symbol| get_proc_address(gl_context, symbol));
     gl::clear_color(0.3, 0.0, 0.0, 1.0);
 
-    let version = unsafe {
-        let data = CStr::from_ptr(gl::GetString(gl::VERSION) as *const _).to_bytes().to_vec();
-        String::from_utf8(data).unwrap()
-    };
+    let version = gl::get_string(gl::VERSION);
 
     println!("WebRender - OpenGL version new {}", version);
 }
@@ -407,10 +404,7 @@ pub extern fn wr_init_window(root_pipeline_id: u64,
     gl::load_with(|symbol| get_proc_address(glcontext_ptr, symbol));
     gl::clear_color(0.3, 0.0, 0.0, 1.0);
 
-    let version = unsafe {
-        let data = CStr::from_ptr(gl::GetString(gl::VERSION) as *const _).to_bytes().to_vec();
-        String::from_utf8(data).unwrap()
-    };
+    let version = gl::get_string(gl::VERSION);
 
     println!("OpenGL version new {}", version);
 
