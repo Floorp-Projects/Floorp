@@ -413,9 +413,9 @@ ExecutableAllocator::poisonCode(JSRuntime* rt, JitPoisonRangeVector& ranges)
 // Limit on the number of bytes of executable memory to prevent JIT spraying
 // attacks.
 #if JS_BITS_PER_WORD == 32
-static const size_t MaxCodeBytesPerProcess = 128 * 1024 * 1024;
+static const size_t MaxCodeBytesPerProcess = 160 * 1024 * 1024;
 #else
-static const size_t MaxCodeBytesPerProcess = 512 * 1024 * 1024;
+static const size_t MaxCodeBytesPerProcess = 640 * 1024 * 1024;
 #endif
 
 static mozilla::Atomic<size_t> allocatedExecutableBytes(0);
@@ -452,4 +452,14 @@ void
 js::jit::AssertAllocatedExecutableBytesIsZero()
 {
     MOZ_ASSERT(allocatedExecutableBytes == 0);
+}
+
+bool
+js::jit::CanLikelyAllocateMoreExecutableMemory()
+{
+    // Use a 16 MB buffer.
+    static const size_t BufferSize = 16 * 1024 * 1024;
+
+    MOZ_ASSERT(allocatedExecutableBytes <= MaxCodeBytesPerProcess);
+    return allocatedExecutableBytes + BufferSize <= MaxCodeBytesPerProcess;
 }
