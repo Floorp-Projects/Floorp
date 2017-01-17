@@ -51,6 +51,9 @@
 #include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
 #include "vm/TraceLogging.h"
+#ifdef MOZ_VTUNE
+# include "vtune/VTuneWrapper.h"
+#endif
 
 #include "jscompartmentinlines.h"
 #include "jsobjinlines.h"
@@ -810,6 +813,10 @@ JitCode::finalize(FreeOp* fop)
     }
 #endif
 
+#ifdef MOZ_VTUNE
+    vtune::UnmarkCode(this);
+#endif
+
     MOZ_ASSERT(pool_);
 
     // With W^X JIT code, reprotecting memory for each JitCode instance is
@@ -828,6 +835,7 @@ JitCode::finalize(FreeOp* fop)
     // memory instead.
     if (!PerfEnabled())
         pool_->release(headerSize_ + bufferSize_, CodeKind(kind_));
+
     pool_ = nullptr;
 }
 
