@@ -18,6 +18,7 @@ SOURCES += [
     'TestKungFuDeathGrip.cpp',
     'TestMultipleAnnotations.cpp',
     'TestMustOverride.cpp',
+    'TestMustReturnFromCaller.cpp',
     'TestMustUse.cpp',
     'TestNANTestingExpr.cpp',
     'TestNANTestingExprC.c',
