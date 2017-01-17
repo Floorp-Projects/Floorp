@@ -546,8 +546,6 @@ def build_balrog_payload(config, task, task_def):
     worker = task['worker']
 
     task_def['payload'] = {
-        # signing cert is unused, but required by balrogworker (Bug 1282187 c#7)
-        'signing_cert': "dep",
         'upstreamArtifacts':  worker['upstream-artifacts']
     }
 
