@@ -136,6 +136,9 @@
    * frame. This does not happen when HTML is in the mix. Only return the toolbox if
    * it matches the proper case of a XUL iframe inside of a XUL document.
    *
+   * In addition to the XUL case, if the panel uses the toolbox's ReactDOM instance,
+   * this patch needs to be applied as well. This is the case for the inspector.
+   *
    * @param {HTMLElement} node - The DOM node inside of an iframe.
    * @return {XULDocument|null} The toolbox.xul document, or null.
    */
@@ -146,8 +149,9 @@
     }
 
     let doc = node.ownerDocument;
+    const inspectorUrl = "chrome://devtools/content/inspector/inspector.xhtml";
 
-    while (doc instanceof XULDocument) {
+    while (doc instanceof XULDocument || doc.location.href === inspectorUrl) {
       const {frameElement} = doc.defaultView;
 
       if (!frameElement) {
