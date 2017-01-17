@@ -16,7 +16,7 @@
 #include "PersistentBufferProvider.h"
 #include "SharedSurface.h"
 #include "SharedSurfaceGL.h"
-#include "mozilla/layers/WebRenderTypes.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 
 namespace mozilla {
 namespace layers {
