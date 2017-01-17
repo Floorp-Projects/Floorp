@@ -118,7 +118,7 @@ WebRenderLayer::buildMaskLayer() {
           WRBridge()->SendAddImage(size.width, size.height, map.GetStride(), A8, buf, &maskKey);
 
           imageMask.image = maskKey;
-          imageMask.rect = wr::ToWRRect(Rect(0, 0, size.width, size.height));
+          imageMask.rect = wr::ToWrRect(Rect(0, 0, size.width, size.height));
           imageMask.repeat = false;
           WRManager()->AddImageKeyForDiscard(maskKey);
           mask = Some(imageMask);
@@ -158,7 +158,7 @@ WRScrollFrameStackingContextGenerator::WRScrollFrameStackingContextGenerator(
     }
 
     mLayer->WRBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(wr::ToWRRect(bounds), wr::ToWRRect(overflow), Nothing(), identity, fm.GetScrollId()));
+      OpDPPushStackingContext(wr::ToWrRect(bounds), wr::ToWrRect(overflow), Nothing(), identity, fm.GetScrollId()));
   }
 }
 
