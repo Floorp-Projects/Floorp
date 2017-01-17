@@ -8,6 +8,7 @@ const { Ci, Cu, Cr } = require("chrome");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const Services = require("Services");
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
+const { Utils } = require("resource://gre/modules/sessionstore/Utils.jsm");
 
 function readInputStreamToString(stream) {
   return NetUtil.readInputStreamToString(stream, stream.available());
@@ -61,11 +62,11 @@ BrowserElementWebNavigation.prototype = {
     // No equivalent in the current BrowserElement API
     this.loadURIWithOptions(uri, flags, referrer,
                             Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
-                            postData, headers, null);
+                            postData, headers, null, null);
   },
 
   loadURIWithOptions(uri, flags, referrer, referrerPolicy, postData, headers,
-                     baseURI) {
+                     baseURI, triggeringPrincipal) {
     // No equivalent in the current BrowserElement API
     this._sendMessage("WebNavigation:LoadURI", {
       uri,
@@ -75,6 +76,9 @@ BrowserElementWebNavigation.prototype = {
       postData: postData ? readInputStreamToString(postData) : null,
       headers: headers ? readInputStreamToString(headers) : null,
       baseURI: baseURI ? baseURI.spec : null,
+      triggeringPrincipal: triggeringPrincipal
+                           ? Utils.serializePrincipal(triggeringPrincipal)
+                           : null,
     });
   },
 
