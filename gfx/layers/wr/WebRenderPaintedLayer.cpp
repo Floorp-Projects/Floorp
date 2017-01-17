@@ -86,7 +86,7 @@ void
 WebRenderPaintedLayer::RenderLayerWithReadback(ReadbackProcessor *aReadback)
 {
   if (!mContentClient) {
-    mContentClient = ContentClient::CreateContentClient(Manager()->WRBridge());
+    mContentClient = ContentClient::CreateContentClient(Manager()->WrBridge());
     if (!mContentClient) {
       return;
     }
@@ -112,7 +112,7 @@ WebRenderPaintedLayer::RenderLayer()
   RenderLayerWithReadback(nullptr);
 
   if (!mExternalImageId) {
-    mExternalImageId = WRBridge()->AllocExternalImageIdForCompositable(mContentClient);
+    mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mContentClient);
     MOZ_ASSERT(mExternalImageId);
   }
 
@@ -123,7 +123,7 @@ WebRenderPaintedLayer::RenderLayer()
       return;
   }
 
-  WRScrollFrameStackingContextGenerator scrollFrames(this);
+  WrScrollFrameStackingContextGenerator scrollFrames(this);
 
   // Since we are creating a stacking context below using the visible region of
   // this layer, we need to make sure the image display item has coordinates
@@ -145,15 +145,15 @@ WebRenderPaintedLayer::RenderLayer()
   Rect overflow(0, 0, relBounds.width, relBounds.height);
   Matrix4x4 transform;// = GetTransform();
 
-  WRBridge()->AddWebRenderCommand(
+  WrBridge()->AddWebRenderCommand(
       OpDPPushStackingContext(wr::ToWrRect(relBounds), wr::ToWrRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
 
   ContentClientRemoteBuffer* contentClientRemote = static_cast<ContentClientRemoteBuffer*>(mContentClient.get());
   visibleRegion.MoveBy(-contentClientRemote->BufferRect().x, -contentClientRemote->BufferRect().y);
 
-  WRBridge()->AddWebRenderCommand(OpDPPushExternalImageId(visibleRegion, wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), WrTextureFilter::Linear, mExternalImageId));
+  WrBridge()->AddWebRenderCommand(OpDPPushExternalImageId(visibleRegion, wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), WrTextureFilter::Linear, mExternalImageId));
   if (gfxPrefs::LayersDump()) printf_stderr("PaintedLayer %p using %s as bounds/overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
-  WRBridge()->AddWebRenderCommand(OpDPPopStackingContext());
+  WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 }
 
 } // namespace layers

@@ -51,11 +51,11 @@ public:
                         const uint64_t& aPipelineId,
                         widget::CompositorWidget* aWidget,
                         gl::GLContext* aGlContext,
-                        wrwindowstate* aWrWindowState,
+                        WrWindowState* aWrWindowState,
                         layers::Compositor* aCompositor);
   uint64_t PipelineId() { return mPipelineId; }
   gl::GLContext* GLContext() { return mGLContext.get(); }
-  wrwindowstate* WindowState() { return mWRWindowState; }
+  WrWindowState* WindowState() { return mWRWindowState; }
   layers::Compositor* Compositor() { return mCompositor.get(); }
   CompositorVsyncScheduler* CompositorScheduler() { return mCompositorScheduler.get(); }
 
@@ -142,7 +142,7 @@ private:
   RefPtr<widget::CompositorWidget> mWidget;
   Maybe<wr::DisplayListBuilder> mBuilder;
   RefPtr<gl::GLContext> mGLContext;
-  wrwindowstate* mWRWindowState;
+  WrWindowState* mWRWindowState;
   RefPtr<wr::WebRenderAPI> mApi;
   RefPtr<layers::Compositor> mCompositor;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;

@@ -15,7 +15,7 @@ namespace layers {
 void
 WebRenderColorLayer::RenderLayer()
 {
-  WRScrollFrameStackingContextGenerator scrollFrames(this);
+  WrScrollFrameStackingContextGenerator scrollFrames(this);
 
   LayerIntRegion visibleRegion = GetVisibleRegion();
   LayerIntRect bounds = visibleRegion.GetBounds();
@@ -35,13 +35,13 @@ WebRenderColorLayer::RenderLayer()
 
   Maybe<WrImageMask> mask = buildMaskLayer();
 
-  WRBridge()->AddWebRenderCommand(
+  WrBridge()->AddWebRenderCommand(
       OpDPPushStackingContext(wr::ToWrRect(relBounds), wr::ToWrRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
-  WRBridge()->AddWebRenderCommand(
+  WrBridge()->AddWebRenderCommand(
     OpDPPushRect(wr::ToWrRect(rect), wr::ToWrRect(clip), mColor.r, mColor.g, mColor.b, mColor.a));
 
   if (gfxPrefs::LayersDump()) printf_stderr("ColorLayer %p using %s as bounds, %s as overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(overflow).c_str(), Stringify(transform).c_str());
-  WRBridge()->AddWebRenderCommand(OpDPPopStackingContext());
+  WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 }
 
 } // namespace layers

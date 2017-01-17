@@ -462,17 +462,17 @@ CompositorBridgeParent::StopAndClearResources()
     mCompositionManager = nullptr;
   }
 
-  if (mWRBridge) {
+  if (mWrBridge) {
     MonitorAutoLock lock(*sIndirectLayerTreesLock);
     ForEachIndirectLayerTree([this] (LayerTreeState* lts, uint64_t) -> void {
-      if (lts->mWRBridge) {
-        lts->mWRBridge->Destroy();
-        lts->mWRBridge = nullptr;
+      if (lts->mWrBridge) {
+        lts->mWrBridge->Destroy();
+        lts->mWrBridge = nullptr;
       }
       lts->mParent = nullptr;
     });
-    mWRBridge->Destroy();
-    mWRBridge = nullptr;
+    mWrBridge->Destroy();
+    mWrBridge = nullptr;
   }
 
   if (mCompositor) {
@@ -1572,7 +1572,7 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& aPipelineId,
   MOZ_RELEASE_ASSERT(false);
 #endif
   MOZ_ASSERT(aPipelineId == mRootLayerTreeID);
-  MOZ_ASSERT(!mWRBridge);
+  MOZ_ASSERT(!mWrBridge);
   MOZ_ASSERT(!mCompositor);
   MOZ_ASSERT(!mCompositorScheduler);
 
@@ -1581,20 +1581,20 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& aPipelineId,
   // MOZ_ASSERT(mWidget);
   // RefPtr<widget::CompositorWidget> widget = mWidget;
   // RefPtr<WebRenderAPI> wr = WebRenderAPI::Create(gfxPrefs::WebRenderProfilerEnabled(), this, Move(widget));
-  // mWRBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, Move(wr));
+  // mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, Move(wr));
 
   RefPtr<gl::GLContext> glc(gl::GLContextProvider::CreateForCompositorWidget(mWidget, true));
   mCompositor = new WebRenderCompositorOGL(this, glc.get());
-  mWRBridge = new WebRenderBridgeParent(this, aPipelineId,
+  mWrBridge = new WebRenderBridgeParent(this, aPipelineId,
         mWidget, glc.get(), nullptr, mCompositor.get());
-  mCompositorScheduler = mWRBridge->CompositorScheduler();
+  mCompositorScheduler = mWrBridge->CompositorScheduler();
   MOZ_ASSERT(mCompositorScheduler);
-  mWRBridge.get()->AddRef(); // IPDL reference
+  mWrBridge.get()->AddRef(); // IPDL reference
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  MOZ_ASSERT(sIndirectLayerTrees[aPipelineId].mWRBridge == nullptr);
-  sIndirectLayerTrees[aPipelineId].mWRBridge = mWRBridge;
+  MOZ_ASSERT(sIndirectLayerTrees[aPipelineId].mWrBridge == nullptr);
+  sIndirectLayerTrees[aPipelineId].mWrBridge = mWrBridge;
   *aTextureFactoryIdentifier = mCompositor->GetTextureFactoryIdentifier();
-  return mWRBridge;
+  return mWrBridge;
 }
 
 bool
@@ -1610,7 +1610,7 @@ CompositorBridgeParent::DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aA
     MonitorAutoLock lock(*sIndirectLayerTreesLock);
     auto it = sIndirectLayerTrees.find(parent->PipelineId());
     if (it != sIndirectLayerTrees.end()) {
-      it->second.mWRBridge = nullptr;
+      it->second.mWrBridge = nullptr;
     }
   }
   parent->Release(); // IPDL reference
@@ -1623,8 +1623,8 @@ CompositorBridgeParent::SetWebRenderProfilerEnabled(bool aEnabled)
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   for (auto it = sIndirectLayerTrees.begin(); it != sIndirectLayerTrees.end(); it++) {
     LayerTreeState* state = &it->second;
-    if (state->mWRBridge) {
-      state->mWRBridge->SetWebRenderProfilerEnabled(aEnabled);
+    if (state->mWrBridge) {
+      state->mWrBridge->SetWebRenderProfilerEnabled(aEnabled);
     }
   }
 }

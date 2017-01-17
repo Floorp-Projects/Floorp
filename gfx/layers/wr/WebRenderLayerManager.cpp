@@ -31,15 +31,15 @@ using namespace gfx;
 namespace layers {
 
 WebRenderLayerManager*
-WebRenderLayer::WRManager()
+WebRenderLayer::WrManager()
 {
   return static_cast<WebRenderLayerManager*>(GetLayer()->Manager());
 }
 
 WebRenderBridgeChild*
-WebRenderLayer::WRBridge()
+WebRenderLayer::WrBridge()
 {
-  return WRManager()->WRBridge();
+  return WrManager()->WrBridge();
 }
 
 Rect
@@ -115,12 +115,12 @@ WebRenderLayer::buildMaskLayer() {
           MOZ_RELEASE_ASSERT(surface->GetFormat() == SurfaceFormat::A8, "bad format");
           wr::ByteBuffer buf(size.height * map.GetStride(), map.GetData());
           WrImageKey maskKey;
-          WRBridge()->SendAddImage(size.width, size.height, map.GetStride(), A8, buf, &maskKey);
+          WrBridge()->SendAddImage(size.width, size.height, map.GetStride(), A8, buf, &maskKey);
 
           imageMask.image = maskKey;
           imageMask.rect = wr::ToWrRect(Rect(0, 0, size.width, size.height));
           imageMask.repeat = false;
-          WRManager()->AddImageKeyForDiscard(maskKey);
+          WrManager()->AddImageKeyForDiscard(maskKey);
           mask = Some(imageMask);
       }
     }
@@ -131,7 +131,7 @@ WebRenderLayer::buildMaskLayer() {
 
 
 
-WRScrollFrameStackingContextGenerator::WRScrollFrameStackingContextGenerator(
+WrScrollFrameStackingContextGenerator::WrScrollFrameStackingContextGenerator(
         WebRenderLayer* aLayer)
   : mLayer(aLayer)
 {
@@ -157,12 +157,12 @@ WRScrollFrameStackingContextGenerator::WRScrollFrameStackingContextGenerator(
         fm.GetScrollId(), Stringify(bounds).c_str(), Stringify(overflow).c_str());
     }
 
-    mLayer->WRBridge()->AddWebRenderCommand(
+    mLayer->WrBridge()->AddWebRenderCommand(
       OpDPPushStackingContext(wr::ToWrRect(bounds), wr::ToWrRect(overflow), Nothing(), identity, fm.GetScrollId()));
   }
 }
 
-WRScrollFrameStackingContextGenerator::~WRScrollFrameStackingContextGenerator()
+WrScrollFrameStackingContextGenerator::~WrScrollFrameStackingContextGenerator()
 {
   Layer* layer = mLayer->GetLayer();
   for (size_t i = 0; i < layer->GetScrollMetadataCount(); i++) {
@@ -171,7 +171,7 @@ WRScrollFrameStackingContextGenerator::~WRScrollFrameStackingContextGenerator()
       continue;
     }
     if (gfxPrefs::LayersDump()) printf_stderr("Popping stacking context id %" PRIu64"\n", fm.GetScrollId());
-    mLayer->WRBridge()->AddWebRenderCommand(OpDPPopStackingContext());
+    mLayer->WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
   }
 }
 
@@ -187,7 +187,7 @@ WebRenderLayerManager::WebRenderLayerManager(nsIWidget* aWidget)
 KnowsCompositor*
 WebRenderLayerManager::AsKnowsCompositor()
 {
-  return mWRChild;
+  return mWrChild;
 }
 
 void
@@ -195,17 +195,17 @@ WebRenderLayerManager::Initialize(PCompositorBridgeChild* aCBChild,
                                   uint64_t aLayersId,
                                   TextureFactoryIdentifier* aTextureFactoryIdentifier)
 {
-  MOZ_ASSERT(mWRChild == nullptr);
+  MOZ_ASSERT(mWrChild == nullptr);
   MOZ_ASSERT(aTextureFactoryIdentifier);
 
   TextureFactoryIdentifier textureFactoryIdentifier;
   PWebRenderBridgeChild* bridge = aCBChild->SendPWebRenderBridgeConstructor(aLayersId,
                                                                             &textureFactoryIdentifier);
   MOZ_ASSERT(bridge);
-  mWRChild = static_cast<WebRenderBridgeChild*>(bridge);
+  mWrChild = static_cast<WebRenderBridgeChild*>(bridge);
   LayoutDeviceIntSize size = mWidget->GetClientSize();
-  WRBridge()->SendCreate(size.width, size.height);
-  WRBridge()->IdentifyTextureHost(textureFactoryIdentifier);
+  WrBridge()->SendCreate(size.width, size.height);
+  WrBridge()->IdentifyTextureHost(textureFactoryIdentifier);
   *aTextureFactoryIdentifier = textureFactoryIdentifier;
 }
 
@@ -218,7 +218,7 @@ WebRenderLayerManager::Destroy()
 
   LayerManager::Destroy();
   DiscardImages();
-  WRBridge()->Destroy();
+  WrBridge()->Destroy();
 
   if (mTransactionIdAllocator) {
     // Make sure to notify the refresh driver just in case it's waiting on a
@@ -249,7 +249,7 @@ WebRenderLayerManager::GetCompositorBridgeChild()
 int32_t
 WebRenderLayerManager::GetMaxTextureSize() const
 {
-  return WRBridge()->GetMaxTextureSize();
+  return WrBridge()->GetMaxTextureSize();
 }
 
 bool
@@ -289,7 +289,7 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
   mAnimationReadyTime = TimeStamp::Now();
 
   LayoutDeviceIntSize size = mWidget->GetClientSize();
-  if (!WRBridge()->DPBegin(size.width, size.height)) {
+  if (!WrBridge()->DPBegin(size.width, size.height)) {
     return;
   }
 
@@ -298,7 +298,7 @@ WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
   bool sync = mTarget != nullptr;
   mLatestTransactionId = mTransactionIdAllocator->GetTransactionId();
 
-  WRBridge()->DPEnd(sync, mLatestTransactionId);
+  WrBridge()->DPEnd(sync, mLatestTransactionId);
 
   MakeSnapshotIfRequired(size);
 
@@ -319,7 +319,7 @@ WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize)
 
   // TODO: fixup for proper surface format.
   RefPtr<TextureClient> texture =
-    TextureClient::CreateForRawBufferAccess(WRBridge(),
+    TextureClient::CreateForRawBufferAccess(WrBridge(),
                                             SurfaceFormat::B8G8R8A8,
                                             aSize.ToUnknownSize(),
                                             BackendType::SKIA,
@@ -328,13 +328,13 @@ WebRenderLayerManager::MakeSnapshotIfRequired(LayoutDeviceIntSize aSize)
     return;
   }
 
-  texture->InitIPDLActor(WRBridge());
+  texture->InitIPDLActor(WrBridge());
   if (!texture->GetIPDLActor()) {
     return;
   }
 
   IntRect bounds = ToOutsideIntRect(mTarget->GetClipExtents());
-  if (!WRBridge()->SendDPGetSnapshot(texture->GetIPDLActor())) {
+  if (!WrBridge()->SendDPGetSnapshot(texture->GetIPDLActor())) {
     return;
   }
 
@@ -379,7 +379,7 @@ void
 WebRenderLayerManager::DiscardImages()
 {
   for (auto key : mImageKeys) {
-      WRBridge()->SendDeleteImage(key);
+      WrBridge()->SendDeleteImage(key);
   }
   mImageKeys.clear();
 }
@@ -393,7 +393,7 @@ WebRenderLayerManager::Hold(Layer* aLayer)
 void
 WebRenderLayerManager::SetLayerObserverEpoch(uint64_t aLayerObserverEpoch)
 {
-  WRBridge()->SendSetLayerObserverEpoch(aLayerObserverEpoch);
+  WrBridge()->SendSetLayerObserverEpoch(aLayerObserverEpoch);
 }
 
 void
@@ -436,7 +436,7 @@ WebRenderLayerManager::ClearLayer(Layer* aLayer)
 void
 WebRenderLayerManager::ClearCachedResources(Layer* aSubtree)
 {
-  WRBridge()->SendClearCachedResources();
+  WrBridge()->SendClearCachedResources();
   if (aSubtree) {
     ClearLayer(aSubtree);
   } else if (mRoot) {
@@ -447,13 +447,13 @@ WebRenderLayerManager::ClearCachedResources(Layer* aSubtree)
 void
 WebRenderLayerManager::UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier)
 {
-  WRBridge()->IdentifyTextureHost(aNewIdentifier);
+  WrBridge()->IdentifyTextureHost(aNewIdentifier);
 }
 
 TextureFactoryIdentifier
 WebRenderLayerManager::GetTextureFactoryIdentifier()
 {
-  return WRBridge()->GetTextureFactoryIdentifier();
+  return WrBridge()->GetTextureFactoryIdentifier();
 }
 
 void

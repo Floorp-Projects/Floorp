@@ -15,7 +15,7 @@ namespace layers {
 void
 WebRenderContainerLayer::RenderLayer()
 {
-  WRScrollFrameStackingContextGenerator scrollFrames(this);
+  WrScrollFrameStackingContextGenerator scrollFrames(this);
 
   nsTArray<LayerPolygon> children = SortChildrenBy3DZOrder(SortMode::WITHOUT_GEOMETRY);
 
@@ -26,7 +26,7 @@ WebRenderContainerLayer::RenderLayer()
 
   Maybe<WrImageMask> mask = buildMaskLayer();
 
-  WRBridge()->AddWebRenderCommand(
+  WrBridge()->AddWebRenderCommand(
     OpDPPushStackingContext(wr::ToWrRect(relBounds), wr::ToWrRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
   for (LayerPolygon& child : children) {
     if (child.layer->IsBackfaceHidden()) {
@@ -34,19 +34,19 @@ WebRenderContainerLayer::RenderLayer()
     }
     ToWebRenderLayer(child.layer)->RenderLayer();
   }
-  WRBridge()->AddWebRenderCommand(
+  WrBridge()->AddWebRenderCommand(
     OpDPPopStackingContext());
 }
 
 void
 WebRenderRefLayer::RenderLayer()
 {
-  WRScrollFrameStackingContextGenerator scrollFrames(this);
+  WrScrollFrameStackingContextGenerator scrollFrames(this);
 
   gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   gfx::Matrix4x4 transform;// = GetTransform();
   if (gfxPrefs::LayersDump()) printf_stderr("RefLayer %p (%" PRIu64 ") using %s as bounds/overflow, %s as transform\n", this, mId, Stringify(relBounds).c_str(), Stringify(transform).c_str());
-  WRBridge()->AddWebRenderCommand(OpDPPushIframe(wr::ToWrRect(relBounds), wr::ToWrRect(relBounds), mId));
+  WrBridge()->AddWebRenderCommand(OpDPPushIframe(wr::ToWrRect(relBounds), wr::ToWrRect(relBounds), mId));
 }
 
 } // namespace layers
