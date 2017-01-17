@@ -14,7 +14,7 @@ using WRBorderSide from "mozilla/webrender/webrender_ffi.h";
 using WRColor from "mozilla/webrender/webrender_ffi.h";
 using WRImageKey from "mozilla/webrender/webrender_ffi.h";
 using WRTextureFilter from "mozilla/webrender/webrender_ffi.h";
-using WRLayoutSize from "mozilla/webrender/webrender_ffi.h";
+using WrLayoutSize from "mozilla/webrender/webrender_ffi.h";
 using WrRect from "mozilla/webrender/webrender_ffi.h";
 using WRGlyphArray from "mozilla/webrender/webrender_ffi.h";
 using MaybeImageMask from "mozilla/webrender/WebRenderTypes.h";
@@ -51,10 +51,10 @@ struct OpDPPushBorder {
   WRBorderSide right;
   WRBorderSide bottom;
   WRBorderSide left;
-  WRLayoutSize top_left_radius;
-  WRLayoutSize top_right_radius;
-  WRLayoutSize bottom_left_radius;
-  WRLayoutSize bottom_right_radius;
+  WrLayoutSize top_left_radius;
+  WrLayoutSize top_right_radius;
+  WrLayoutSize bottom_left_radius;
+  WrLayoutSize bottom_right_radius;
 };
 
 struct OpDPPushImage {

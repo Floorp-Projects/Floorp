@@ -125,10 +125,10 @@ public:
                   const WRBorderSide& right,
                   const WRBorderSide& bottom,
                   const WRBorderSide& left,
-                  const WRLayoutSize& top_left_radius,
-                  const WRLayoutSize& top_right_radius,
-                  const WRLayoutSize& bottom_left_radius,
-                  const WRLayoutSize& bottom_right_radius);
+                  const WrLayoutSize& top_left_radius,
+                  const WrLayoutSize& top_right_radius,
+                  const WrLayoutSize& bottom_left_radius,
+                  const WrLayoutSize& bottom_right_radius);
 
   void PushText(const WrRect& aBounds,
                 const WrRect& aClip,
