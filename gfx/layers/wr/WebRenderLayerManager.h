@@ -37,8 +37,8 @@ public:
     return static_cast<WebRenderLayer*>(aLayer->ImplData());
   }
 
-  WebRenderLayerManager* WRManager();
-  WebRenderBridgeChild* WRBridge();
+  WebRenderLayerManager* WrManager();
+  WebRenderBridgeChild* WrBridge();
 
   gfx::Rect RelativeToVisible(gfx::Rect aRect);
   gfx::Rect RelativeToTransformedVisible(gfx::Rect aRect);
@@ -50,11 +50,11 @@ protected:
 
 };
 
-class MOZ_RAII WRScrollFrameStackingContextGenerator
+class MOZ_RAII WrScrollFrameStackingContextGenerator
 {
 public:
-  explicit WRScrollFrameStackingContextGenerator(WebRenderLayer* aLayer);
-  ~WRScrollFrameStackingContextGenerator();
+  explicit WrScrollFrameStackingContextGenerator(WebRenderLayer* aLayer);
+  ~WrScrollFrameStackingContextGenerator();
 private:
   WebRenderLayer* mLayer;
 };
@@ -131,7 +131,7 @@ public:
   void AddImageKeyForDiscard(WrImageKey);
   void DiscardImages();
 
-  WebRenderBridgeChild* WRBridge() const { return mWRChild; }
+  WebRenderBridgeChild* WrBridge() const { return mWrChild; }
 
   void Hold(Layer* aLayer);
 
@@ -153,7 +153,7 @@ private:
   DrawPaintedLayerCallback mPaintedLayerCallback;
   void *mPaintedLayerCallbackData;
 
-  RefPtr<WebRenderBridgeChild> mWRChild;
+  RefPtr<WebRenderBridgeChild> mWrChild;
 
   RefPtr<TransactionIdAllocator> mTransactionIdAllocator;
   uint64_t mLatestTransactionId;

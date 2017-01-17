@@ -33,7 +33,7 @@ protected:
   {
     MOZ_COUNT_DTOR(WebRenderPaintedLayer);
     if (mExternalImageId) {
-      WRBridge()->DeallocExternalImageId(mExternalImageId);
+      WrBridge()->DeallocExternalImageId(mExternalImageId);
     }
   }
   WebRenderLayerManager* Manager()

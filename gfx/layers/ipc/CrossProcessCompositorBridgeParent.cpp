@@ -212,15 +212,15 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& 
 
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   MOZ_ASSERT(sIndirectLayerTrees.find(aPipelineId) != sIndirectLayerTrees.end());
-  MOZ_ASSERT(sIndirectLayerTrees[aPipelineId].mWRBridge == nullptr);
+  MOZ_ASSERT(sIndirectLayerTrees[aPipelineId].mWrBridge == nullptr);
   CompositorBridgeParent* cbp = sIndirectLayerTrees[aPipelineId].mParent;
-  WebRenderBridgeParent* root = sIndirectLayerTrees[cbp->RootLayerTreeId()].mWRBridge.get();
+  WebRenderBridgeParent* root = sIndirectLayerTrees[cbp->RootLayerTreeId()].mWrBridge.get();
 
   WebRenderBridgeParent* parent = new WebRenderBridgeParent(
     this, aPipelineId, nullptr, root->GLContext(), root->WindowState(), root->Compositor());
   parent->AddRef(); // IPDL reference
   sIndirectLayerTrees[aPipelineId].mCrossProcessParent = this;
-  sIndirectLayerTrees[aPipelineId].mWRBridge = parent;
+  sIndirectLayerTrees[aPipelineId].mWrBridge = parent;
   *aTextureFactoryIdentifier = parent->Compositor()->GetTextureFactoryIdentifier();
   return parent;
 }
@@ -317,7 +317,7 @@ CrossProcessCompositorBridgeParent::DidComposite(
   if (LayerTransactionParent *layerTree = sIndirectLayerTrees[aId].mLayerTree) {
     Unused << SendDidComposite(aId, layerTree->GetPendingTransactionId(), aCompositeStart, aCompositeEnd);
     layerTree->SetPendingTransactionId(0);
-  } else if (WebRenderBridgeParent* wrbridge = sIndirectLayerTrees[aId].mWRBridge) {
+  } else if (WebRenderBridgeParent* wrbridge = sIndirectLayerTrees[aId].mWrBridge) {
     Unused << SendDidComposite(aId, wrbridge->GetPendingTransactionId(), aCompositeStart, aCompositeEnd);
     wrbridge->SetPendingTransactionId(0);
   }

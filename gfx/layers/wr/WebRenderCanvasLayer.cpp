@@ -26,7 +26,7 @@ WebRenderCanvasLayer::~WebRenderCanvasLayer()
   MOZ_COUNT_DTOR(WebRenderCanvasLayer);
 
   if (mExternalImageId) {
-    WRBridge()->DeallocExternalImageId(mExternalImageId);
+    WrBridge()->DeallocExternalImageId(mExternalImageId);
   }
 }
 
@@ -50,7 +50,7 @@ WebRenderCanvasLayer::RenderLayer()
   UpdateCompositableClient();
 
   if (!mExternalImageId) {
-    mExternalImageId = WRBridge()->AllocExternalImageIdForCompositable(mCanvasClient);
+    mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mCanvasClient);
   }
 
   MOZ_ASSERT(mExternalImageId);
@@ -77,10 +77,10 @@ WebRenderCanvasLayer::RenderLayer()
   Maybe<WrImageMask> mask = buildMaskLayer();
   WrTextureFilter filter = (mFlags | TextureFlags::USE_NEAREST_FILTER) ? WrTextureFilter::Point : WrTextureFilter::Linear;
 
-  WRBridge()->AddWebRenderCommand(
+  WrBridge()->AddWebRenderCommand(
       OpDPPushStackingContext(wr::ToWrRect(relBounds), wr::ToWrRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
-  WRBridge()->AddWebRenderCommand(OpDPPushExternalImageId(LayerIntRegion(), wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), filter, mExternalImageId));
-  WRBridge()->AddWebRenderCommand(OpDPPopStackingContext());
+  WrBridge()->AddWebRenderCommand(OpDPPushExternalImageId(LayerIntRegion(), wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), filter, mExternalImageId));
+  WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 
   if (gfxPrefs::LayersDump()) printf_stderr("CanvasLayer %p using %s as bounds/overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
 }
