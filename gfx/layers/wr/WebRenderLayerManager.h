@@ -10,7 +10,7 @@
 #include "mozilla/gfx/webrender.h"
 #include "mozilla/layers/CompositorController.h"
 #include "mozilla/layers/TransactionIdAllocator.h"
-#include "mozilla/layers/WebRenderTypes.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 
 class nsIWidget;
 

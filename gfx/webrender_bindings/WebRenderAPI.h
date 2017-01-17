@@ -10,7 +10,7 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Range.h"
 #include "mozilla/gfx/webrender.h"
-#include "mozilla/layers/WebRenderTypes.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 #include "Units.h"
 
 namespace mozilla {
