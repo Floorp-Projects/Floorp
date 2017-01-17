@@ -7902,7 +7902,7 @@ LiveRegisterSet BaseCompiler::VolatileReturnGPR = volatileReturnGPR();
 } // js
 
 bool
-js::wasm::BaselineCanCompile(const FunctionGenerator* fg)
+js::wasm::BaselineCanCompile()
 {
     // On all platforms we require signals for AsmJS/Wasm.
     // If we made it this far we must have signals.
@@ -7920,12 +7920,6 @@ js::wasm::BaselineCanCompile(const FunctionGenerator* fg)
 #endif
 
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
-    // AsmJS code may use SIMD or atomics, which Baseline doesn't currently
-    // handle. Since we haven't yet validated the function, we don't know
-    // whether it actually uses those features. Assume the worst.
-    if (fg->isAsmJS())
-        return false;
-
     return true;
 #else
     return false;
@@ -7935,7 +7929,7 @@ js::wasm::BaselineCanCompile(const FunctionGenerator* fg)
 bool
 js::wasm::BaselineCompileFunction(CompileTask* task, FuncCompileUnit* unit, UniqueChars *error)
 {
-    MOZ_ASSERT(unit->mode() == CompileMode::Baseline);
+    MOZ_ASSERT(task->mode() == CompileMode::Baseline);
 
     const FuncBytes& func = unit->func();
     uint32_t bodySize = func.bytes().length();
