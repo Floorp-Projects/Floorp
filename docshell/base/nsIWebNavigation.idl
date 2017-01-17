@@ -9,6 +9,7 @@ interface nsIDOMDocument;
 interface nsIInputStream;
 interface nsISHistory;
 interface nsIURI;
+interface nsIPrincipal;
 
 /**
  * The nsIWebNavigation interface defines an interface for navigating the web.
@@ -282,14 +283,20 @@ interface nsIWebNavigation : nsISupports
    *        that at present this argument is only used with view-source aURIs
    *        and cannot be used to resolve aURI.
    *        This parameter is optional and may be null.
+   * @param aTriggeringPrincipal
+   *        The principal that initiated the load of aURI. If omitted docShell
+   *        tries to create a codeBasePrincipal from aReferrer if not null. If
+   *        aReferrer is also null docShell peforms a load using the
+   *        SystemPrincipal as the triggeringPrincipal.
    */
-  void loadURIWithOptions(in wstring        aURI,
-                          in unsigned long  aLoadFlags,
-                          in nsIURI         aReferrer,
-                          in unsigned long  aReferrerPolicy,
-                          in nsIInputStream aPostData,
-                          in nsIInputStream aHeaders,
-                          in nsIURI         aBaseURI);
+  void loadURIWithOptions(in wstring                  aURI,
+                          in unsigned long            aLoadFlags,
+                          in nsIURI                   aReferrer,
+                          in unsigned long            aReferrerPolicy,
+                          in nsIInputStream           aPostData,
+                          in nsIInputStream           aHeaders,
+                          in nsIURI                   aBaseURI,
+                          [optional] in nsIPrincipal  aTriggeringPrincipal);
 
   /**
    * Tells the Object to reload the current page.  There may be cases where the
