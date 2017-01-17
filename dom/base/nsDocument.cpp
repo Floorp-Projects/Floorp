@@ -4205,10 +4205,13 @@ nsDocument::SetStyleSheetApplicableState(StyleSheet* aSheet,
   }
 
   if (!mSSApplicableStateNotificationPending) {
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIRunnable> notification = NewRunnableMethod(this,
       &nsDocument::NotifyStyleSheetApplicableStateChanged);
     mSSApplicableStateNotificationPending =
-      NS_SUCCEEDED(NS_DispatchToCurrentThread(notification));
+      NS_SUCCEEDED(
+        Dispatch("nsDocument::NotifyStyleSheetApplicableStateChanged",
+                 TaskCategory::Other, notification.forget()));
   }
 }
 
@@ -6759,10 +6762,11 @@ nsDocument::NotifyPossibleTitleChange(bool aBoundTitleElement)
   if (mPendingTitleChangeEvent.IsPending())
     return;
 
-  RefPtr<nsRunnableMethod<nsDocument, void, false> > event =
-    NewNonOwningRunnableMethod(this,
-      &nsDocument::DoNotifyPossibleTitleChange);
-  nsresult rv = NS_DispatchToCurrentThread(event);
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  RefPtr<nsRunnableMethod<nsDocument, void, false>> event =
+    NewNonOwningRunnableMethod(this, &nsDocument::DoNotifyPossibleTitleChange);
+  nsresult rv = Dispatch("nsDocument::DoNotifyPossibleTitleChange",
+                         TaskCategory::Other, do_AddRef(event));
   if (NS_SUCCEEDED(rv)) {
     mPendingTitleChangeEvent = event;
   }
@@ -8632,8 +8636,10 @@ private:
 void
 nsDocument::PostUnblockOnloadEvent()
 {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIRunnable> evt = new nsUnblockOnloadEvent(this);
-  nsresult rv = NS_DispatchToCurrentThread(evt);
+  nsresult rv =
+    Dispatch("nsUnblockOnloadEvent", TaskCategory::Other, evt.forget());
   if (NS_SUCCEEDED(rv)) {
     // Stabilize block count so we don't post more events while this one is up
     ++mOnloadBlockCount;
@@ -9563,7 +9569,9 @@ nsDocument::UnsuppressEventHandlingAndFireEvents(nsIDocument::SuppressionType aW
   }
 
   if (aFireEvents) {
-    NS_DispatchToCurrentThread(new nsDelayedEventDispatcher(args.mDocs));
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
+    nsCOMPtr<nsIRunnable> ded = new nsDelayedEventDispatcher(args.mDocs);
+    Dispatch("nsDelayedEventDispatcher", TaskCategory::Other, ded.forget());
   } else {
     FireOrClearDelayedEvents(args.mDocs, false);
   }
@@ -10587,7 +10595,13 @@ private:
 /* static */ void
 nsIDocument::AsyncExitFullscreen(nsIDocument* aDoc)
 {
-  NS_DispatchToCurrentThread(new nsCallExitFullscreen(aDoc));
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIRunnable> exit = new nsCallExitFullscreen(aDoc);
+  if (aDoc) {
+    aDoc->Dispatch("nsCallExitFullscreen", TaskCategory::Other, exit.forget());
+  } else {
+    NS_DispatchToCurrentThread(exit.forget());
+  }
 }
 
 static bool
@@ -10857,8 +10871,9 @@ nsDocument::AsyncRequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
   }
 
   // Request full-screen asynchronously.
-  nsCOMPtr<nsIRunnable> event(new nsCallRequestFullScreen(Move(aRequest)));
-  NS_DispatchToCurrentThread(event);
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIRunnable> event = new nsCallRequestFullScreen(Move(aRequest));
+  Dispatch("nsCallRequestFullScreen", TaskCategory::Other, event.forget());
 }
 
 void
@@ -11732,8 +11747,9 @@ nsDocument::RequestPointerLock(Element* aElement, CallerType aCallerType)
 
   bool userInputOrSystemCaller = EventStateManager::IsHandlingUserInput() ||
                                  aCallerType == CallerType::System;
-  NS_DispatchToMainThread(new PointerLockRequest(aElement,
-                                                 userInputOrSystemCaller));
+  nsCOMPtr<nsIRunnable> request =
+    new PointerLockRequest(aElement, userInputOrSystemCaller);
+  Dispatch("PointerLockRequest", TaskCategory::Other, request.forget());
 }
 
 bool
@@ -12457,9 +12473,11 @@ nsDocument::UpdateIntersectionObservations()
 void
 nsDocument::ScheduleIntersectionObserverNotification()
 {
-  nsCOMPtr<nsIRunnable> notification = NewRunnableMethod(this,
-    &nsDocument::NotifyIntersectionObservers);
-  NS_DispatchToCurrentThread(notification);
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIRunnable> notification =
+    NewRunnableMethod(this, &nsDocument::NotifyIntersectionObservers);
+  Dispatch("nsDocument::IntersectionObserverNotification", TaskCategory::Other,
+           notification.forget());
 }
 
 void
@@ -12741,9 +12759,11 @@ nsIDocument::RebuildUserFontSet()
   // which starts font loads, whose completion causes another style
   // change reflow).
   if (!mPostedFlushUserFontSet) {
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIRunnable> ev =
       NewRunnableMethod(this, &nsIDocument::HandleRebuildUserFontSet);
-    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
+    if (NS_SUCCEEDED(Dispatch("nsIDocument::HandleRebuildUserFontSet",
+                              TaskCategory::Other, ev.forget()))) {
       mPostedFlushUserFontSet = true;
     }
   }
