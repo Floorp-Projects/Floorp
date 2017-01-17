@@ -118,9 +118,31 @@ function isInDevEdition() {
   return AppConstants.MOZ_DEV_EDITION;
 }
 
-function removeDeveloperButtonIfDevEdition(areaPanelPlacements) {
+function isInNightly() {
+  return AppConstants.NIGHTLY_BUILD;
+}
+
+function removeNonReleaseButtons(areaPanelPlacements) {
   if (isInDevEdition()) {
     areaPanelPlacements.splice(areaPanelPlacements.indexOf("developer-button"), 1);
+  }
+
+  if (!isInNightly()) {
+    areaPanelPlacements.splice(areaPanelPlacements.indexOf("webcompat-reporter-button"), 1);
+  }
+}
+
+function removeNonOriginalButtons() {
+  CustomizableUI.removeWidgetFromArea("sync-button");
+  if (isInNightly()) {
+    CustomizableUI.removeWidgetFromArea("webcompat-reporter-button");
+  }
+}
+
+function restoreNonOriginalButtons() {
+  CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_PANEL);
+  if (isInNightly()) {
+    CustomizableUI.addWidgetToArea("webcompat-reporter-button", CustomizableUI.AREA_PANEL);
   }
 }
 
