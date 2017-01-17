@@ -21,6 +21,9 @@ if (AppConstants.ACCESSIBILITY) {
                                     "resource://gre/modules/accessibility/AccessFu.jsm");
 }
 
+XPCOMUtils.defineLazyModuleGetter(this, "Manifest",
+                                  "resource://gre/modules/Manifest.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "SpatialNavigation",
                                   "resource://gre/modules/SpatialNavigation.jsm");
 
@@ -393,6 +396,8 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Fonts:Reload", false);
     Services.obs.addObserver(this, "Vibration:Request", false);
 
+    GlobalEventDispatcher.registerListener(this, "Browser:LoadManifest");
+
     Messaging.addListener(this.getHistory.bind(this), "Session:GetHistory");
 
     window.addEventListener("fullscreen", function() {
@@ -491,6 +496,9 @@ var BrowserApp = {
     // we require the reader mode scripts in content.js right away.
     let mm = window.getGroupMessageManager("browsers");
     mm.loadFrameScript("chrome://browser/content/content.js", true);
+
+    // Listen to manifest messages
+    mm.loadFrameScript("chrome://global/content/manifestMessages.js", true);
 
     // We can't delay registering WebChannel listeners: if the first page is
     // about:accounts, which can happen when starting the Firefox Account flow
@@ -1596,6 +1604,26 @@ var BrowserApp = {
                 .createInstance(Ci.nsIPrefLocalizedString);
     pls.data = value;
     Services.prefs.setComplexValue(pref, Ci.nsIPrefLocalizedString, pls);
+  },
+
+  onEvent: function (event, data, callback) {
+    switch (event) {
+      case "Browser:LoadManifest":
+        const manifest = new Manifest(BrowserApp.selectedBrowser);
+        manifest.install().then(() => {
+          return manifest.icon(data.iconSize);
+        }).then(icon => {
+          GlobalEventDispatcher.sendRequest({
+            type: "Website:AppInstalled",
+            icon: icon,
+            name: manifest.name(),
+            start_url: manifest.data.start_url
+          });
+        }).catch(err => {
+          Cu.reportError("Failed to install " + data.src);
+        });
+        break;
+    }
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -3780,6 +3808,13 @@ Tab.prototype = {
     }
   },
 
+  makeManifestMessage: function() {
+    return {
+      type: "Link:Manifest",
+      tabID: this.id
+    };
+  },
+
   sendOpenSearchMessage: function(eventTarget) {
     let type = eventTarget.type && eventTarget.type.toLowerCase();
     // Replace all starting or trailing spaces or spaces before "*;" globally w/ "".
@@ -3988,6 +4023,10 @@ Tab.prototype = {
           jsonMessage = this.makeFeedMessage(target, type);
         } else if (list.indexOf("[search]") != -1 && aEvent.type == "DOMLinkAdded") {
           this.sendOpenSearchMessage(target);
+        } else if (list.indexOf("[manifest]") != -1 &&
+                   aEvent.type == "DOMLinkAdded" &&
+                   Services.prefs.getBoolPref("manifest.install.enabled")) {
+          jsonMessage = this.makeManifestMessage(target);
         }
         if (!jsonMessage)
          return;

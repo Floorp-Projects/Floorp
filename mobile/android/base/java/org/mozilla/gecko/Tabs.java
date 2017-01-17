@@ -125,6 +125,7 @@ public class Tabs implements BundleEventListener, GeckoEventListener {
             "Link:Touchicon",
             "Link:Feed",
             "Link:OpenSearch",
+            "Link:Manifest",
             "DesktopMode:Changed",
             "Tab:StreamStart",
             "Tab:StreamStop",
@@ -584,6 +585,9 @@ public class Tabs implements BundleEventListener, GeckoEventListener {
             } else if (event.equals("Link:Feed")) {
                 tab.setHasFeeds(true);
                 notifyListeners(tab, TabEvents.LINK_FEED);
+
+            } else if (event.equals("Link:Manifest")) {
+                tab.setHasManifest(true);
             } else if (event.equals("Link:OpenSearch")) {
                 boolean visible = message.getBoolean("visible");
                 tab.setHasOpenSearch(visible);
