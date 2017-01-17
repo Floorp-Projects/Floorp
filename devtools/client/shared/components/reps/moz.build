@@ -42,3 +42,5 @@ DevToolsModules(
     'undefined.js',
     'window.js',
 )
+
+MOCHITEST_CHROME_MANIFESTS += ['test/mochitest/chrome.ini']
