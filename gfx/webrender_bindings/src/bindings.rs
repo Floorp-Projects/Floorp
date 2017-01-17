@@ -10,7 +10,7 @@ use webrender_traits::{PipelineId, ClipRegion};
 use webrender_traits::{Epoch, ColorF, GlyphInstance};
 use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind};
 use webrender_traits::{ExternalImageId, RenderApi, FontKey};
-use webrender_traits::{DeviceUintSize};
+use webrender_traits::{DeviceUintSize, ExternalEvent};
 use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
 use webrender::renderer::{Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
@@ -234,7 +234,6 @@ extern {
     fn wr_notifier_new_frame_ready(window_id: u64);
     fn wr_notifier_new_scroll_frame_ready(window_id: u64, composite_needed: bool);
     fn wr_notifier_pipeline_size_changed(window_id: u64, pipeline: u64, new_width: f32, new_height: f32);
-    // TODO: Waiting for PR #688
     fn wr_notifier_external_event(window_id: u64, raw_event: usize);
 }
 
@@ -262,6 +261,12 @@ impl webrender_traits::RenderNotifier for CppNotifier {
         unsafe {
             let id = pipeline_id_to_u64(pipeline_id);
             wr_notifier_pipeline_size_changed(self.window_id, id, w, h);
+        }
+    }
+
+    fn external_event(&mut self, event: ExternalEvent) {
+        unsafe {
+            wr_notifier_external_event(self.window_id, event.unwrap());
         }
     }
 }
@@ -648,6 +653,14 @@ pub extern fn wr_api_delete_image(api: &mut RenderApi, key: ImageKey) {
     assert!( unsafe { is_in_compositor_thread() });
     api.delete_image(key)
 }
+
+#[no_mangle]
+pub extern fn wr_api_send_external_event(api: &mut RenderApi, evt: usize) {
+    assert!(unsafe { is_in_compositor_thread() });
+
+    api.send_external_event(ExternalEvent::from_raw(evt));
+}
+
 
 #[no_mangle]
 pub extern fn wr_dp_push_rect(state: &mut WrState, rect: WrRect, clip: WrRect, r: f32, g: f32, b: f32, a: f32) {
