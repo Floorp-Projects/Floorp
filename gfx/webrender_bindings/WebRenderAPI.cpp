@@ -15,16 +15,12 @@ namespace wr {
 
 inline Maybe<WrImageFormat>
 SurfaceFormatToWrImageFormat(gfx::SurfaceFormat aFormat) {
-  // TODO: fix the formats (RGB/BGR permutations, etc.)
   switch (aFormat) {
-    case gfx::SurfaceFormat::R8G8B8A8:
-    case gfx::SurfaceFormat::B8G8R8A8:
-    case gfx::SurfaceFormat::A8R8G8B8:
-      return Some(WrImageFormat::RGBA8);
     case gfx::SurfaceFormat::B8G8R8X8:
-    case gfx::SurfaceFormat::R8G8B8X8:
-    case gfx::SurfaceFormat::X8R8G8B8:
-    case gfx::SurfaceFormat::R8G8B8:
+      // TODO: WebRender will have a BGRA + opaque flag for this but does not
+      // have it yet (cf. issue #732).
+    case gfx::SurfaceFormat::B8G8R8A8:
+      return Some(WrImageFormat::RGBA8);
     case gfx::SurfaceFormat::B8G8R8:
       return Some(WrImageFormat::RGB8);
     case gfx::SurfaceFormat::A8:
@@ -43,7 +39,7 @@ public:
               RefPtr<widget::CompositorWidget>&& aWidget,
               layers::SynchronousTask* aTask,
               bool aEnableProfiler)
-  : mWRApi(aApi)
+  : mWrApi(aApi)
   , mBridge(aBridge)
   , mCompositorWidget(Move(aWidget))
   , mTask(aTask)
@@ -69,7 +65,7 @@ public:
     wr_gl_init(&*gl);
 
     WrRenderer* wrRenderer = nullptr;
-    wr_window_new(aWindowId.mHandle, this->mEnableProfiler, mWRApi, &wrRenderer);
+    wr_window_new(aWindowId.mHandle, this->mEnableProfiler, mWrApi, &wrRenderer);
     MOZ_ASSERT(wrRenderer);
 
     RefPtr<RenderThread> thread = &aRenderThread;
@@ -83,7 +79,7 @@ public:
     aRenderThread.AddRenderer(aWindowId, Move(renderer));
   }
 
-  WrAPI** mWRApi;
+  WrAPI** mWrApi;
   layers::CompositorBridgeParentBase* mBridge;
   RefPtr<widget::CompositorWidget> mCompositorWidget;
   layers::SynchronousTask* mTask;
@@ -156,7 +152,7 @@ WebRenderAPI::~WebRenderAPI()
   // in the non-webrender targets.
   // We should be able to remove this #ifdef if/when we remove the
   // MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE annotations in webrender.h
-  wr_api_delete(mWRApi);
+  wr_api_delete(mWrApi);
 #endif
 }
 
@@ -166,7 +162,7 @@ WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
                                  LayerSize aViewportSize,
                                  DisplayListBuilder& aBuilder)
 {
-  wr_api_set_root_display_list(mWRApi, aBuilder.mWrState,
+  wr_api_set_root_display_list(mWrApi, aBuilder.mWrState,
                                aEpoch.mHandle,
                                aViewportSize.width, aViewportSize.height);
 }
@@ -174,7 +170,7 @@ WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
 void
 WebRenderAPI::SetRootPipeline(PipelineId aPipeline)
 {
-  wr_api_set_root_pipeline(mWRApi, aPipeline.mHandle);
+  wr_api_set_root_pipeline(mWrApi, aPipeline.mHandle);
 }
 
 ImageKey
@@ -184,10 +180,10 @@ WebRenderAPI::AddImageBuffer(gfx::IntSize aSize,
                              Range<uint8_t> aBytes)
 {
   auto format = SurfaceFormatToWrImageFormat(aFormat).value();
-  return ImageKey(wr_api_add_image(mWRApi,
-                                       aSize.width, aSize.height,
-                                       aStride, format,
-                                       &aBytes[0], aBytes.length()));
+  return ImageKey(wr_api_add_image(mWrApi,
+                                   aSize.width, aSize.height,
+                                   aStride, format,
+                                   &aBytes[0], aBytes.length()));
 }
 
 ImageKey
@@ -196,9 +192,9 @@ WebRenderAPI::AddExternalImageHandle(gfx::IntSize aSize,
                                      uint64_t aHandle)
 {
   auto format = SurfaceFormatToWrImageFormat(aFormat).value();
-  return ImageKey(wr_api_add_external_image_texture(mWRApi,
-                                                         aSize.width, aSize.height, format,
-                                                         aHandle));
+  return ImageKey(wr_api_add_external_image_texture(mWrApi,
+                                                    aSize.width, aSize.height, format,
+                                                    aHandle));
 }
 
 void
@@ -208,7 +204,7 @@ WebRenderAPI::UpdateImageBuffer(ImageKey aKey,
                                 Range<uint8_t> aBytes)
 {
   auto format = SurfaceFormatToWrImageFormat(aFormat).value();
-  wr_api_update_image(mWRApi,
+  wr_api_update_image(mWrApi,
                       aKey.mHandle,
                       aSize.width, aSize.height, format,
                       &aBytes[0], aBytes.length());
@@ -217,13 +213,13 @@ WebRenderAPI::UpdateImageBuffer(ImageKey aKey,
 void
 WebRenderAPI::DeleteImage(ImageKey aKey)
 {
-  wr_api_delete_image(mWRApi, aKey.mHandle);
+  wr_api_delete_image(mWrApi, aKey.mHandle);
 }
 
 wr::FontKey
 WebRenderAPI::AddRawFont(Range<uint8_t> aBytes)
 {
-  return wr::FontKey(wr_api_add_raw_font(mWRApi, &aBytes[0], aBytes.length()));
+  return wr::FontKey(wr_api_add_raw_font(mWrApi, &aBytes[0], aBytes.length()));
 }
 
 void
@@ -260,7 +256,7 @@ void
 WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent>&& aEvent)
 {
   auto event = reinterpret_cast<uintptr_t>(aEvent.release());
-  wr_api_send_external_event(mWRApi, event);
+  wr_api_send_external_event(mWrApi, event);
 }
 
 DisplayListBuilder::DisplayListBuilder(const LayerIntSize& aSize, PipelineId aId)
@@ -286,7 +282,7 @@ DisplayListBuilder::Begin(const LayerIntSize& aSize)
 void
 DisplayListBuilder::End(WebRenderAPI& aApi, Epoch aEpoch)
 {
-  wr_dp_end(mWrState, aApi.mWRApi, aEpoch.mHandle);
+  wr_dp_end(mWrState, aApi.mWrApi, aEpoch.mHandle);
 }
 
 void
@@ -319,9 +315,9 @@ DisplayListBuilder::PushImage(const WrRect& aBounds,
                               const WrRect& aClip,
                               const WrImageMask* aMask,
                               const WrTextureFilter aFilter,
-                              WrImageKey aImage)
+                              wr::ImageKey aImage)
 {
-  wr_dp_push_image(mWrState, aBounds, aClip, aMask, aFilter, aImage);
+  wr_dp_push_image(mWrState, aBounds, aClip, aMask, aFilter, aImage.mHandle);
 }
 
 void

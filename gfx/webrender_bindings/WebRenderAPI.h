@@ -74,13 +74,13 @@ public:
 
 protected:
   WebRenderAPI(WrAPI* aRawApi, wr::WindowId aId)
-  : mWRApi(aRawApi)
+  : mWrApi(aRawApi)
   , mId(aId)
   {}
 
   ~WebRenderAPI();
 
-  WrAPI* mWRApi;
+  WrAPI* mWrApi;
   wr::WindowId mId;
 
   friend class NewRenderer;
@@ -116,7 +116,7 @@ public:
                  const WrRect& aClip,
                  const WrImageMask* aMask,
                  const WrTextureFilter aFilter,
-                 WrImageKey aImage);
+                 wr::ImageKey aImage);
 
   void PushIFrame(const WrRect& aBounds,
                   const WrRect& aClip,

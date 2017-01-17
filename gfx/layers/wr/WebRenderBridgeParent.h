@@ -146,7 +146,7 @@ private:
   RefPtr<wr::WebRenderAPI> mApi;
   RefPtr<layers::Compositor> mCompositor;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
-  std::vector<WrImageKey> mKeysToDelete;
+  std::vector<wr::ImageKey> mKeysToDelete;
   nsDataHashtable<nsUint64HashKey, RefPtr<CompositableHost>> mExternalImageIds;
 
   // These fields keep track of the latest layer observer epoch values in the child and the
