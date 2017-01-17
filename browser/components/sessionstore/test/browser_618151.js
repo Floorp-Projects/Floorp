@@ -49,11 +49,11 @@ function runNextTest() {
 
 function test_setup() {
   function onSSTabRestored(aEvent) {
-    gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored, false);
+    gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored);
     runNextTest();
   }
 
-  gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored, false);
+  gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored);
   ss.setTabState(gBrowser.tabs[1], JSON.stringify({
     entries: [{ url: "http://example.org" }],
     extData: { foo: "bar" } }));

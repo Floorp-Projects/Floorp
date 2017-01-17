@@ -135,9 +135,9 @@ function waitForNotificationClose() {
   return new Promise(resolve => {
     info("Waiting for notification to close");
     PopupNotifications.panel.addEventListener("popuphidden", function listener() {
-      PopupNotifications.panel.removeEventListener("popuphidden", listener, false);
+      PopupNotifications.panel.removeEventListener("popuphidden", listener);
       resolve();
-    }, false);
+    });
   });
 }
 
@@ -783,12 +783,12 @@ function test_reload() {
     function testFail() {
       ok(false, "Reloading should not have hidden the notification");
     }
-    PopupNotifications.panel.addEventListener("popuphiding", testFail, false);
+    PopupNotifications.panel.addEventListener("popuphiding", testFail);
     let requestedUrl = TESTROOT2 + "enabled.html";
     let loadedPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, requestedUrl);
     gBrowser.loadURI(TESTROOT2 + "enabled.html");
     yield loadedPromise;
-    PopupNotifications.panel.removeEventListener("popuphiding", testFail, false);
+    PopupNotifications.panel.removeEventListener("popuphiding", testFail);
 
     let installs = yield getInstalls();
     is(installs.length, 1, "Should be one pending install");

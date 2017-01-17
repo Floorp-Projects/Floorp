@@ -27,9 +27,9 @@ var rem1 = false;
 var rem2 = false;
 
 span.addEventListener("DOMNodeInserted", function() { ins1 = true; }, true);
-span.addEventListener("DOMNodeInserted", function() { ins2 = true; }, false);
+span.addEventListener("DOMNodeInserted", function() { ins2 = true; });
 span.addEventListener("DOMNodeRemoved", function() { rem1 = true; }, true);
-span.addEventListener("DOMNodeRemoved", function() { rem2 = true; }, false);
+span.addEventListener("DOMNodeRemoved", function() { rem2 = true; });
 
 $("content").appendChild(span);
 $("content").removeChild(span);

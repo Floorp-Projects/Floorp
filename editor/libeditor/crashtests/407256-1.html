@@ -4,11 +4,11 @@
 
 function boom()
 {
-  document.addEventListener("DOMNodeInserted", x, false);
+  document.addEventListener("DOMNodeInserted", x);
     
   function x()
   {
-    document.removeEventListener("DOMNodeInserted", x, false);
+    document.removeEventListener("DOMNodeInserted", x);
     document.execCommand("insertParagraph", false, "");
   }
 

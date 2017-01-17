@@ -279,7 +279,7 @@ this.LightweightThemeManager = {
       var currentTheme = this.currentTheme;
       if (currentTheme && currentTheme.id == theme.id)
         this.currentTheme = newData;
-    }, false);
+    });
 
     req.send(null);
   },

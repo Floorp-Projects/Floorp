@@ -38,12 +38,12 @@ function expectJSAllowed(allowed, testCondition, callback) {
   doc.body.innerHTML = "<iframe></iframe>";
   var innerFrame = doc.querySelector("iframe");
   innerFrame.addEventListener("load", function() {
-    innerFrame.removeEventListener("load", arguments.callee, false);
+    innerFrame.removeEventListener("load", arguments.callee);
 
     var msg = "The inner iframe should" + (allowed ? "" : " not") + " be able to run Javascript";
     is(self_.ICanRunMyJS, allowed, msg);
     callback();
-  }, false);
+  });
   var iframeSrc = "data:text/html,<script>parent.parent.ICanRunMyJS = true;</scr" + "ipt>";
   innerFrame.src = iframeSrc;
 }
@@ -107,12 +107,12 @@ function testDocumentDisabledJS() {
   allowJS(false, innerFrame);
 
   innerFrame.addEventListener("load", function() {
-    innerFrame.removeEventListener("load", arguments.callee, false);
+    innerFrame.removeEventListener("load", arguments.callee);
 
     var msg = "The inner iframe should not be able to run Javascript";
     is(self_.ICanRunMyJS, false, msg);
     SimpleTest.finish();
-  }, false);
+  });
   var iframeSrc = "data:text/html,<script>parent.parent.ICanRunMyJS = true;</scr" + "ipt>";
   innerFrame.src = iframeSrc;
 }

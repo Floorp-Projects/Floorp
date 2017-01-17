@@ -39,12 +39,12 @@ function starttest() {
       var check = false;
       
       /* test send* functions */
-      $("testMouseEvent").addEventListener("click", function() { check=true; }, false);
+      $("testMouseEvent").addEventListener("click", function() { check=true; });
       sendMouseEvent({type:'click'}, "testMouseEvent");
       is(check, true, 'sendMouseEvent should dispatch click event');
       
       check = false;
-      $("testKeyEvent").addEventListener("keypress", function() { check = true; }, false);
+      $("testKeyEvent").addEventListener("keypress", function() { check = true; });
       $("testKeyEvent").focus();
       sendChar("x");
       is($("testKeyEvent").value, "x", "sendChar should work");
@@ -64,7 +64,7 @@ function starttest() {
       /* test synthesizeMouse* */
       //focus trick enables us to run this in iframes
       $("radioTarget1").addEventListener('focus', function (aEvent) {
-        $("radioTarget1").removeEventListener('focus', arguments.callee, false);
+        $("radioTarget1").removeEventListener('focus', arguments.callee);
         synthesizeMouse($("radioTarget1"), 1, 1, {});
         is($("radioTarget1").checked, true, "synthesizeMouse should work")
         $("radioTarget1").checked = false;
@@ -78,9 +78,9 @@ function starttest() {
 
       //focus trick enables us to run this in iframes
       $("textBoxA").addEventListener("focus", function (aEvent) {
-        $("textBoxA").removeEventListener("focus", arguments.callee, false);
+        $("textBoxA").removeEventListener("focus", arguments.callee);
         check = false;
-        $("textBoxA").addEventListener("click", function() { check = true; }, false);
+        $("textBoxA").addEventListener("click", function() { check = true; });
         synthesizeMouseAtCenter($("textBoxA"), {});
         is(check, true, 'synthesizeMouse should dispatch mouse event');
     
@@ -101,7 +101,7 @@ function starttest() {
     
       /* test synthesizeKey* */
       check = false;
-      $("testKeyEvent").addEventListener("keypress", function() { check = true; }, false);
+      $("testKeyEvent").addEventListener("keypress", function() { check = true; });
       $("testKeyEvent").focus();
       synthesizeKey("a", {});
       is($("testKeyEvent").value, "a", "synthesizeKey should work");
@@ -117,17 +117,17 @@ function starttest() {
       /* test synthesizeComposition */
       $("textBoxB").focus();
       check = false;
-      window.addEventListener("compositionstart", function() { check = true; }, false);
+      window.addEventListener("compositionstart", function() { check = true; });
       synthesizeComposition({ type: "compositionstart" });
       is(check, true, 'synthesizeComposition() should dispatch compositionstart');
     
       check = false;
-      window.addEventListener("compositionupdate", function() { check = true; }, false);
+      window.addEventListener("compositionupdate", function() { check = true; });
       synthesizeComposition({ type: "compositionupdate", data: "a" });
       is(check, false, 'synthesizeComposition() should not dispatch compositionupdate without error');
 
       check = false;
-      window.addEventListener("text", function() { check = true; }, false);
+      window.addEventListener("text", function() { check = true; });
       synthesizeCompositionChange(
         { "composition":
           { "string": "a",
@@ -154,7 +154,7 @@ function starttest() {
       );
 
       check = false;
-      window.addEventListener("compositionend", function() { check = true; }, false);
+      window.addEventListener("compositionend", function() { check = true; });
       synthesizeComposition({ type: "compositionend", data: "a" });
       is(check, false, 'synthesizeComposition() should not dispatch compositionend');
 

@@ -23,15 +23,15 @@ var audio = document.createElement("audio");
 
 // Check leaking on TextTrackList objects.
 window.ttl = audio.textTracks;
-ttl.addEventListener("click", function(){}, false);
+ttl.addEventListener("click", function(){});
 
 // Check leaking on VTTCue objects.
 window.ttc = new VTTCue(3, 4, "Test.");
-ttc.addEventListener("click", function() {}, false);
+ttc.addEventListener("click", function() {});
 
 // Check leaking on TextTrack objects.
 audio.addTextTrack("subtitles", "label", "en-CA");
-ttl[0].addEventListener("click", function() {}, false);
+ttl[0].addEventListener("click", function() {});
 
 ok(true); // Need to have at least one assertion for Mochitest to be happy.
 SimpleTest.finish();

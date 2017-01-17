@@ -8,11 +8,11 @@ var de;
 function boom()
 {
   de = document.documentElement;
-  document.addEventListener("DOMNodeRemoved", f, false);
+  document.addEventListener("DOMNodeRemoved", f);
     
   function f()
   {
-    document.removeEventListener("DOMNodeRemoved", f, false);
+    document.removeEventListener("DOMNodeRemoved", f);
     de.appendChild(document.createElement("body"));
   }
     

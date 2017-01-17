@@ -26,9 +26,9 @@ SimpleTest.waitForFocus(function() {
 
   function cancel(e) { e.stopPropagation(); }
   var content = document.getElementById("content");
-  content.addEventListener("mousedown", cancel, false);
-  content.addEventListener("mousemove", cancel, false);
-  content.addEventListener("mouseup", cancel, false);
+  content.addEventListener("mousedown", cancel);
+  content.addEventListener("mousemove", cancel);
+  content.addEventListener("mouseup", cancel);
 
   /**
    * This function is a generic resizer test.

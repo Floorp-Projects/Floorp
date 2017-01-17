@@ -31,21 +31,21 @@ function doElementMatchesSelector(aElement, aSelector)
 var e = document.forms[0].elements[0];
 
 e.addEventListener("invalid", function(event) {
-  e.addEventListener("invalid", arguments.callee, false);
+  e.addEventListener("invalid", arguments.callee);
 
   SimpleTest.executeSoon(function() {
     doElementMatchesSelector(e, ":-moz-ui-invalid");
     SimpleTest.finish();
   });
-}, false);
+});
 
 e.addEventListener("focus", function() {
-  e.removeEventListener("focus", arguments.callee, false);
+  e.removeEventListener("focus", arguments.callee);
 
   SimpleTest.executeSoon(function() {
     synthesizeKey("VK_RETURN", {});
   });
-}, false);
+});
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {

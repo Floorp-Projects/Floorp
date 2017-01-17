@@ -21,11 +21,11 @@ SimpleTest.waitForExplicitFinish();
 
 // a postMessage handler used to bubble up the
 // result from within the iframe.
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 function receiveMessage(event) {
   var result = event.data.result;
   is(result, "blocked-beacon-does-not-throw", "sendBeacon should not throw");
-  window.removeEventListener("message", receiveMessage, false);
+  window.removeEventListener("message", receiveMessage);
   SimpleTest.finish();
 }
 

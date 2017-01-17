@@ -100,8 +100,8 @@
       source.postMessage(response, evt.origin);
     }
 
-    window.addEventListener("load", setup, false);
-    window.addEventListener("message", receiveMessage, false);
+    window.addEventListener("load", setup);
+    window.addEventListener("message", receiveMessage);
   </script>
 </head>
 <body>

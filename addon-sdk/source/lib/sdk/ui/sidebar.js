@@ -92,7 +92,7 @@ const Sidebar = Class({
           }
 
           showSidebar(window, self);
-        }, false);
+        });
 
         function onSidebarLoad() {
           // check if the sidebar is ready
@@ -136,13 +136,13 @@ const Sidebar = Class({
             bar.setAttribute('checked', 'true');
 
             function onWebPanelSidebarReady() {
-              panelBrowser.contentWindow.removeEventListener('DOMContentLoaded', onWebPanelSidebarReady, false);
+              panelBrowser.contentWindow.removeEventListener('DOMContentLoaded', onWebPanelSidebarReady);
               windowNS(window).onWebPanelSidebarReady = null;
 
               emit(self, 'ready', worker);
             }
             windowNS(window).onWebPanelSidebarReady = onWebPanelSidebarReady;
-            panelBrowser.contentWindow.addEventListener('DOMContentLoaded', onWebPanelSidebarReady, false);
+            panelBrowser.contentWindow.addEventListener('DOMContentLoaded', onWebPanelSidebarReady);
 
             function onWebPanelSidebarLoad() {
               panelBrowser.contentWindow.removeEventListener('load', onWebPanelSidebarLoad, true);
@@ -192,7 +192,7 @@ const Sidebar = Class({
         }
 
         if (windowNS(window).onWebPanelSidebarReady) {
-          panelBrowser && panelBrowser.contentWindow.removeEventListener('DOMContentLoaded', windowNS(window).onWebPanelSidebarReady, false);
+          panelBrowser && panelBrowser.contentWindow.removeEventListener('DOMContentLoaded', windowNS(window).onWebPanelSidebarReady);
           windowNS(window).onWebPanelSidebarReady = null;
         }
 

@@ -37,8 +37,8 @@ var second = null;
 function ended(event) {
   s.type = second.type;
   s.src = second.name;
-  v.removeEventListener("ended", ended, false);
-  v.addEventListener("ended", finish, false);
+  v.removeEventListener("ended", ended);
+  v.addEventListener("ended", finish);
   v.load();
 }
 
@@ -61,7 +61,7 @@ if (first && second) {
   s.src = first.name;
   v.appendChild(s);
   v.autoplay = true;
-  v.addEventListener("ended", ended, false);
+  v.addEventListener("ended", ended);
   document.body.appendChild(v);
   SimpleTest.waitForExplicitFinish();
 } else {

@@ -1910,14 +1910,14 @@
         }
         this.Utils.startFadeOut(this.Utils.controlBar);
         if (this.firstShow) {
-          this.videocontrols.addEventListener("transitionend", this, false);
+          this.videocontrols.addEventListener("transitionend", this);
         }
       },
 
       handleEvent(aEvent) {
         if (aEvent.type == "transitionend") {
           this.firstShow = false;
-          this.videocontrols.removeEventListener("transitionend", this, false);
+          this.videocontrols.removeEventListener("transitionend", this);
           return;
         }
 
@@ -1928,7 +1928,7 @@
 
       terminateEventListeners() {
         for (var event of this.videoEvents) {
-          this.Utils.video.removeEventListener(event, this, false);
+          this.Utils.video.removeEventListener(event, this);
         }
       },
 
@@ -1978,19 +1978,19 @@
           } else {
             self.showControls();
           }
-        }, false);
+        });
         this.Utils.scrubber.addEventListener("touchstart", function() {
           self.clearTimer();
-        }, false);
+        });
         this.Utils.scrubber.addEventListener("touchend", function() {
           self.delayHideControls(self.controlsTimeout);
-        }, false);
-        this.Utils.muteButton.addEventListener("click", function() { self.delayHideControls(self.controlsTimeout); }, false);
+        });
+        this.Utils.muteButton.addEventListener("click", function() { self.delayHideControls(self.controlsTimeout); });
 
         this.castingButton = document.getAnonymousElementByAttribute(binding, "anonid", "castingButton");
         this.castingButton.addEventListener("command", function() {
           self.startCasting();
-        }, false);
+        });
 
         this.video.addEventListener("media-videoCasting", function(e) {
           if (!e.isTrusted) {

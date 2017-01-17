@@ -63,7 +63,7 @@ examiner.prototype  = {
 
 function finishTest() {
   window.examiner.remove();
-  window.removeEventListener("message", receiveMessage, false);
+  window.removeEventListener("message", receiveMessage);
   SimpleTest.finish();
 }
 
@@ -88,13 +88,13 @@ var checkResults = function(result) {
 }
 
 // a postMessage handler that is used to bubble up results from the testframe
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 function receiveMessage(event) {
   checkResults(event.data);
 }
 
 function clickit() {
-  document.getElementById("testframe").removeEventListener('load', clickit, false);
+  document.getElementById("testframe").removeEventListener('load', clickit);
   var testframe = document.getElementById('testframe');
   var a = testframe.contentDocument.getElementById('anchortoclick');
   sendMouseEvent({type:'click'}, a, testframe.contentWindow);
@@ -109,7 +109,7 @@ function loadNextTest() {
   src += "&csp=" + escape(curTest.csp);
 
   document.getElementById("testframe").src = src;
-  document.getElementById("testframe").addEventListener("load", clickit, false);
+  document.getElementById("testframe").addEventListener("load", clickit);
 }
 
 // set up the test and go

@@ -41,7 +41,7 @@ function runTest() {
     i.addEventListener("load", function() {
           is(i.contentDocument.title, title, "Doc title incorrect");
           setTimeout(runTest, 0);
-        }, false);
+        });
   }
 
   title = gTests[gTestNum].title;

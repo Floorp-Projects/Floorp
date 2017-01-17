@@ -75,12 +75,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         this._mayTrimURLs = this._prefs.getBoolPref("trimURLs");
         this._cacheUserMadeSearchSuggestionsChoice();
         this.inputField.controllers.insertControllerAt(0, this._copyCutController);
-        this.inputField.addEventListener("paste", this, false);
-        this.inputField.addEventListener("mousedown", this, false);
-        this.inputField.addEventListener("mousemove", this, false);
-        this.inputField.addEventListener("mouseout", this, false);
-        this.inputField.addEventListener("overflow", this, false);
-        this.inputField.addEventListener("underflow", this, false);
+        this.inputField.addEventListener("paste", this);
+        this.inputField.addEventListener("mousedown", this);
+        this.inputField.addEventListener("mousemove", this);
+        this.inputField.addEventListener("mouseout", this);
+        this.inputField.addEventListener("overflow", this);
+        this.inputField.addEventListener("underflow", this);
 
         var textBox = document.getAnonymousElementByAttribute(this,
                                                 "anonid", "textbox-input-box");
@@ -96,7 +96,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             pasteAndGo.removeAttribute("disabled");
           else
             pasteAndGo.setAttribute("disabled", "true");
-        }, false);
+        });
 
         var insertLocation = cxmenu.firstChild;
         while (insertLocation.nextSibling &&
@@ -120,12 +120,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         this._prefs.removeObserver("", this);
         this._prefs = null;
         this.inputField.controllers.removeController(this._copyCutController);
-        this.inputField.removeEventListener("paste", this, false);
-        this.inputField.removeEventListener("mousedown", this, false);
-        this.inputField.removeEventListener("mousemove", this, false);
-        this.inputField.removeEventListener("mouseout", this, false);
-        this.inputField.removeEventListener("overflow", this, false);
-        this.inputField.removeEventListener("underflow", this, false);
+        this.inputField.removeEventListener("paste", this);
+        this.inputField.removeEventListener("mousedown", this);
+        this.inputField.removeEventListener("mousemove", this);
+        this.inputField.removeEventListener("mouseout", this);
+        this.inputField.removeEventListener("overflow", this);
+        this.inputField.removeEventListener("underflow", this);
       ]]></destructor>
 
       <field name="_value">""</field>
@@ -2211,7 +2211,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             link.href = url;
           }
           if (linkHandler) {
-            link.addEventListener("click", linkHandler, false);
+            link.addEventListener("click", linkHandler);
           }
         } else {
           link.hidden = true;

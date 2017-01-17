@@ -27,7 +27,7 @@ var el = document.createElement("div");
 el.addEventListener("foo", 
   function(evt) {
     evt.preventDefault();
-  }, false);
+  });
 el.dispatchEvent(e);
 is(e.defaultPrevented, true, "preventDefault() should have been called!");
 

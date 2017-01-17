@@ -21,7 +21,7 @@ function onMsgRcv(event)
 
 function runTest() {
   if ("showModalDialog" in window) {
-    window.addEventListener("message", onMsgRcv, false);
+    window.addEventListener("message", onMsgRcv);
 
     var result = window.showModalDialog("file_bug504862.html", "my args");
     // NB: We used to clear returnValue on each navigation, but now we do a

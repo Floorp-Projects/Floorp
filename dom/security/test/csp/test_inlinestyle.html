@@ -97,9 +97,9 @@ function checkIfDone() {
 // save this for last so that our listeners are registered.
 // ... this loads the testbed of good and bad requests.
 document.getElementById('cspframe1').src = 'file_inlinestyle_main.html';
-document.getElementById('cspframe1').addEventListener('load', checkStyles, false);
+document.getElementById('cspframe1').addEventListener('load', checkStyles);
 document.getElementById('cspframe2').src = 'file_inlinestyle_main_allowed.html';
-document.getElementById('cspframe2').addEventListener('load', checkStylesAllowed, false);
+document.getElementById('cspframe2').addEventListener('load', checkStylesAllowed);
 
 </script>
 </pre>

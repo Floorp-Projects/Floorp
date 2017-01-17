@@ -33,7 +33,7 @@ runWithMSE(function(ms, el) {
       info("got " + e.type + " event");
     }
     events.forEach(function(e) {
-      el.addEventListener(e, logEvent, false);
+      el.addEventListener(e, logEvent);
     });
 
     ok(true, "Receive a sourceopen event");

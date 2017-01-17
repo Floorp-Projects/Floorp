@@ -36,7 +36,7 @@ function checkTestsDone() {
 
 // document.write(<meta csp ...>) should block resources from being included in the doc
 function checkResultsBlocked() {
-  writemetacspframe.removeEventListener('load', checkResultsBlocked, false);
+  writemetacspframe.removeEventListener('load', checkResultsBlocked);
 
   // stylesheet: default background color within FF is transparent
   var bgcolor = window.getComputedStyle(writemetacspframe.contentDocument.body)
@@ -57,7 +57,7 @@ function checkResultsBlocked() {
 // document.write(<--) to comment out meta csp should allow resources to be loaded
 // after the preload failed
 function checkResultsAllowed() {
-  commentmetacspframe.removeEventListener('load', checkResultsAllowed, false);
+  commentmetacspframe.removeEventListener('load', checkResultsAllowed);
 
   // stylesheet: should be applied; bgcolor should be red
   var bgcolor = window.getComputedStyle(commentmetacspframe.contentDocument.body).getPropertyValue("background-color");
@@ -75,11 +75,11 @@ function checkResultsAllowed() {
 
 // doc.write(meta csp) should should allow preloads but should block actual loads
 writemetacspframe.src = 'file_docwrite_meta.html';
-writemetacspframe.addEventListener('load', checkResultsBlocked, false);
+writemetacspframe.addEventListener('load', checkResultsBlocked);
 
 // commenting out a meta CSP should result in loaded image, script, style
 commentmetacspframe.src = 'file_doccomment_meta.html';
-commentmetacspframe.addEventListener('load', checkResultsAllowed, false);
+commentmetacspframe.addEventListener('load', checkResultsAllowed);
 
 </script>
 </body>

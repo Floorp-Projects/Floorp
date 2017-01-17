@@ -109,13 +109,13 @@ function loadNextTest() {
   // append the CSP that should be used to serve the file
   src += "&csp=" + escape(curTest.policy);
 
-  document.getElementById("testframe").addEventListener("load", test, false);
+  document.getElementById("testframe").addEventListener("load", test);
   document.getElementById("testframe").src = src;
 }
 
 function test() {
   try {
-    document.getElementById("testframe").removeEventListener('load', test, false);
+    document.getElementById("testframe").removeEventListener('load', test);
     var testframe = document.getElementById("testframe");
     var divcontent = testframe.contentWindow.document.getElementById('testdiv').innerHTML;
     is(divcontent, curTest.result, curTest.desc);

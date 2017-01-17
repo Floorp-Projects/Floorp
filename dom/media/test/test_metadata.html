@@ -70,7 +70,7 @@ function startTest(test, token) {
     }
     removeNodeAndSource(a);
     manager.finished(token);
-  }, false);
+  });
 }
 
 manager.runTests(gMetadataTests, startTest);

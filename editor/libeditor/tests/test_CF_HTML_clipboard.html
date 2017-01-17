@@ -121,12 +121,12 @@ function runTest() {
     // designMode
     var iframe = document.getElementById("editor2");
     iframe.addEventListener("load", function() {
-      iframe.removeEventListener("load", arguments.callee, false);
+      iframe.removeEventListener("load", arguments.callee);
       var doc = iframe.contentDocument;
       var win = doc.defaultView;
       setTimeout(function() {
         win.addEventListener("focus", function() {
-          win.removeEventListener("focus", arguments.callee, false);
+          win.removeEventListener("focus", arguments.callee);
           doc.designMode = "on";
           synthesizeKey("v", {accelKey: true}, win);
           isnot(doc.body.textContent.indexOf(test.expected), -1,
@@ -136,10 +136,10 @@ function runTest() {
             SimpleTest.finish();
           else
             runTest();
-        }, false);
+        });
         win.focus();
       }, 0);
-    }, false);
+    });
     iframe.src = "data:text/html,";
   }, SimpleTest.finish);
 }

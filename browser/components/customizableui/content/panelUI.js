@@ -68,7 +68,7 @@ const PanelUI = {
       this.panel.addEventListener(event, this);
     }
 
-    this.helpView.addEventListener("ViewShowing", this._onHelpViewShow, false);
+    this.helpView.addEventListener("ViewShowing", this._onHelpViewShow);
     this._eventListenersAdded = true;
   },
 

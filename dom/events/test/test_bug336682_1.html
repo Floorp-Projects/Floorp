@@ -40,22 +40,19 @@ addLoadEvent(function() {
     document.body.addEventListener(
       event,
       makeHandler("document.body.addEventListener('%1', ..., false)",
-                  event, [1]),
-      false);
+                  event, [1]));
 
     document.addEventListener(
       event,
       makeHandler("document.addEventListener('%1', ..., false)",
-                  event, [2]),
-      false);
+                  event, [2]));
 
     window["bodyOn" + event] = makeBodyHandler(event);
 
     window.addEventListener(
       event,
       makeHandler("window.addEventListener('%1', ..., false)",
-                  event, [3,4]),
-      false);
+                  event, [3,4]));
   }
 
   doTest();

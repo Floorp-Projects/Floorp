@@ -137,7 +137,7 @@ function testResizing(imageData, str) {
                     img.naturalHeight == imageData.size.naturalHeight);
     is(imageData.size.resized, resized, "Server told the truth about resizing");
     runNextTest();
-  }, false);
+  });
   img.src = str;
 }
 

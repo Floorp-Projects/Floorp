@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
     var SimpleTest = window.opener.SimpleTest;
 
     window.onload = function() {
-        window.addEventListener("MozAfterPaint", afterPaint, false);
+        window.addEventListener("MozAfterPaint", afterPaint);
     };
     var utils = SpecialPowers.getDOMWindowUtils(window);
     function afterPaint(e) {
@@ -26,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151663
 
       // Once there are no more paints pending, remove the
       // MozAfterPaint listener and run the test logic.
-      window.removeEventListener("MozAfterPaint", afterPaint, false);
+      window.removeEventListener("MozAfterPaint", afterPaint);
       testBug1151663();
     }
 

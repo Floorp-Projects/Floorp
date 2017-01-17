@@ -157,10 +157,10 @@ function downloadXML(url, allowNonBuiltIn = false, allowedCerts = null) {
       resolve(request.responseXML);
     };
 
-    request.addEventListener("error", fail, false);
-    request.addEventListener("abort", fail, false);
-    request.addEventListener("timeout", fail, false);
-    request.addEventListener("load", success, false);
+    request.addEventListener("error", fail);
+    request.addEventListener("abort", fail);
+    request.addEventListener("timeout", fail);
+    request.addEventListener("load", success);
 
     logger.info("sending request to: " + url);
     request.send(null);

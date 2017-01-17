@@ -27,8 +27,8 @@ function verifyScript(n) {
     is(event.target, curr, "correct afterscript (" + n + ")");
     is(document.currentScript, expectedCurrentScriptInAfterScriptExecute,
        "document.currentScript in afterscriptexecute(" + n + ")");
-    document.removeEventListener("afterscriptexecute", arguments.callee, false);
-  }, false);
+    document.removeEventListener("afterscriptexecute", arguments.callee);
+  });
 }
 document.onbeforescriptexecute = function(event) {
   lastBeforeExecute = event.target;
@@ -37,7 +37,7 @@ document.onbeforescriptexecute = function(event) {
 window.addEventListener("load", function() {
   is(afterCount, 4, "correct number of afterscriptexecute");
   SimpleTest.finish();
-}, false);
+});
 </script>
 </pre>
 <!-- Test parser inserted scripts -->

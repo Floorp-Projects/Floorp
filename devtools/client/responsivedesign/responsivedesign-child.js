@@ -73,7 +73,7 @@ var global = this;
   }
 
   function bindOnResize() {
-    content.addEventListener("resize", onResize, false);
+    content.addEventListener("resize", onResize);
   }
 
   function startOnResize() {
@@ -92,7 +92,7 @@ var global = this;
       return;
     }
     resizeNotifications = false;
-    content.removeEventListener("resize", onResize, false);
+    content.removeEventListener("resize", onResize);
     removeEventListener("DOMWindowCreated", bindOnResize, false);
   }
 

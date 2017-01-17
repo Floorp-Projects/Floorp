@@ -140,9 +140,9 @@
             document.addEventListener("readystatechange", function(event) {
               if (document.readyState != "complete")
                 return;
-              document.removeEventListener("readystatechange", arguments.callee, false);
+              document.removeEventListener("readystatechange", arguments.callee);
               self._init();
-            }, false);
+            });
           }
         ]]>
       </constructor>
@@ -439,21 +439,21 @@
           if (!this.contextMenu)
             return;
 
-          this.contextMenu.addEventListener("popupshown", this, false);
-          this.contextMenu.addEventListener("popuphiding", this, false);
-          this.toolbar.addEventListener("mousemove", this, false);
+          this.contextMenu.addEventListener("popupshown", this);
+          this.contextMenu.addEventListener("popuphiding", this);
+          this.toolbar.addEventListener("mousemove", this);
         },
         handleEvent(event) {
           switch (event.type) {
             case "popupshown":
-              this.toolbar.removeEventListener("mousemove", this, false);
+              this.toolbar.removeEventListener("mousemove", this);
               break;
             case "popuphiding":
             case "mousemove":
               this.toolbar._setInactiveAsync();
-              this.toolbar.removeEventListener("mousemove", this, false);
-              this.contextMenu.removeEventListener("popuphiding", this, false);
-              this.contextMenu.removeEventListener("popupshown", this, false);
+              this.toolbar.removeEventListener("mousemove", this);
+              this.contextMenu.removeEventListener("popuphiding", this);
+              this.contextMenu.removeEventListener("popupshown", this);
               this.contextMenu = null;
               break;
           }

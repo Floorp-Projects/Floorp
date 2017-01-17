@@ -37,10 +37,10 @@ const TEST_FRAME_URL =
 const RESULT =
   "https://example.com/tests/dom/security/test/csp/file_upgrade_insecure_docwrite_iframe.sjs?docwriteframe";
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 function receiveMessage(event) {
   is(event.data.result, RESULT, "doc.write(iframe) of http should be upgraded to https!");
-  window.removeEventListener("message", receiveMessage, false);
+  window.removeEventListener("message", receiveMessage);
   SimpleTest.finish();
 }
 

@@ -30,7 +30,7 @@ function gotPlayEvent(event) {
   if (event.type == 'canplaythrough') {
     // Remove all event listeners to avoid running tests after finishing test case.
     eventList.forEach(function (e) {
-      v.removeEventListener(e, gotPlayEvent, false);
+      v.removeEventListener(e, gotPlayEvent);
     });
     v.pause();
     goToNext(v);
@@ -50,7 +50,7 @@ function initTest(test, token) {
   v._state = 0;
 
   eventList.forEach(function (e) {
-    v.addEventListener(e, gotPlayEvent, false);
+    v.addEventListener(e, gotPlayEvent);
   });
 
   v.src = test.name;
