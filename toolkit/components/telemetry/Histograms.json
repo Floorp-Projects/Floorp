@@ -3605,6 +3605,13 @@
     "n_values": 4,
     "description": "Count the number of 0) successful connections to an ipv4 address, 1) failed connection an ipv4 address, 2) successful connection to an ipv6 address and 3) failed connections to an ipv6 address."
   },
+  "NETWORK_CONNECTION_COUNT": {
+    "alert_emails": ["amarchesini@mozilla.com"],
+    "expires_in_version": "58",
+    "kind": "count",
+    "bug_numbers": [1330255],
+    "description": "Number of the use of navigator.connection."
+  },
   "NETWORK_SESSION_AT_900FD": {
     "expires_in_version": "never",
     "kind": "boolean",

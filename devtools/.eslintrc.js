@@ -30,7 +30,7 @@ module.exports = {
     "uneval": true,
     "URL": true,
     "WebSocket": true,
-    "XMLHttpRequest": true,
+    "XMLHttpRequest": true
   },
   "rules": {
     // These are the rules that have been configured so far to match the

@@ -214,17 +214,20 @@ var SessionSaverInternal = {
       }
     }
 
-    // Clear all cookies on clean shutdown according to user preferences
+    // Clear all cookies and storage on clean shutdown according to user preferences
     if (RunState.isClosing) {
       let expireCookies = Services.prefs.getIntPref("network.cookie.lifetimePolicy") ==
                           Services.cookies.QueryInterface(Ci.nsICookieService).ACCEPT_SESSION;
       let sanitizeCookies = Services.prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown") &&
                             Services.prefs.getBoolPref("privacy.clearOnShutdown.cookies");
       let restart = Services.prefs.getBoolPref("browser.sessionstore.resume_session_once");
-      // Don't clear cookies when restarting
+      // Don't clear when restarting
       if ((expireCookies || sanitizeCookies) && !restart) {
         for (let window of state.windows) {
           delete window.cookies;
+          for (let tab of window.tabs) {
+            delete tab.storage;
+          }
         }
       }
     }

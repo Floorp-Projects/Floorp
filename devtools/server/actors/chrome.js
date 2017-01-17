@@ -27,11 +27,11 @@ const makeDebugger = require("./utils/make-debugger");
  * Global actors are now only the actors that are meant to be global,
  * and are no longer related to any specific scope/document.
  *
- * @param aConnection DebuggerServerConnection
+ * @param connection DebuggerServerConnection
  *        The connection to the client.
  */
-function ChromeActor(aConnection) {
-  TabActor.call(this, aConnection);
+function ChromeActor(connection) {
+  TabActor.call(this, connection);
 
   // This creates a Debugger instance for chrome debugging all globals.
   this.makeDebugger = makeDebugger.bind(null, {
@@ -88,16 +88,16 @@ Object.defineProperty(ChromeActor.prototype, "docShells", {
   }
 });
 
-ChromeActor.prototype.observe = function (aSubject, aTopic, aData) {
-  TabActor.prototype.observe.call(this, aSubject, aTopic, aData);
+ChromeActor.prototype.observe = function (subject, topic, data) {
+  TabActor.prototype.observe.call(this, subject, topic, data);
   if (!this.attached) {
     return;
   }
-  if (aTopic == "chrome-webnavigation-create") {
-    aSubject.QueryInterface(Ci.nsIDocShell);
-    this._onDocShellCreated(aSubject);
-  } else if (aTopic == "chrome-webnavigation-destroy") {
-    this._onDocShellDestroy(aSubject);
+  if (topic == "chrome-webnavigation-create") {
+    subject.QueryInterface(Ci.nsIDocShell);
+    this._onDocShellCreated(subject);
+  } else if (topic == "chrome-webnavigation-destroy") {
+    this._onDocShellDestroy(subject);
   }
 };
 
@@ -113,7 +113,6 @@ ChromeActor.prototype._attach = function () {
   Services.obs.addObserver(this, "chrome-webnavigation-destroy", false);
 
   // Iterate over all top-level windows.
-  let docShells = [];
   let e = Services.ww.getWindowEnumerator();
   while (e.hasMoreElements()) {
     let window = e.getNext();
@@ -125,6 +124,7 @@ ChromeActor.prototype._attach = function () {
     }
     this._progressListener.watch(docShell);
   }
+  return undefined;
 };
 
 ChromeActor.prototype._detach = function () {
@@ -136,7 +136,6 @@ ChromeActor.prototype._detach = function () {
   Services.obs.removeObserver(this, "chrome-webnavigation-destroy");
 
   // Iterate over all top-level windows.
-  let docShells = [];
   let e = Services.ww.getWindowEnumerator();
   while (e.hasMoreElements()) {
     let window = e.getNext();
@@ -150,6 +149,7 @@ ChromeActor.prototype._detach = function () {
   }
 
   TabActor.prototype._detach.call(this);
+  return undefined;
 };
 
 /* ThreadActor hooks. */
@@ -172,7 +172,7 @@ ChromeActor.prototype.preNest = function () {
 /**
  * Prepare to exit a nested event loop by enabling debuggee events.
  */
-ChromeActor.prototype.postNest = function (aNestData) {
+ChromeActor.prototype.postNest = function (nestData) {
   // Enable events in all open windows.
   let e = Services.wm.getEnumerator(null);
   while (e.hasMoreElements()) {

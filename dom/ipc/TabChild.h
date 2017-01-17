@@ -660,14 +660,27 @@ public:
 
   bool TakeIsFreshProcess()
   {
-    bool wasFreshProcess = mIsFreshProcess;
-    mIsFreshProcess = false;
-    return wasFreshProcess;
+    if (mIsFreshProcess) {
+      MOZ_ASSERT(!sWasFreshProcess,
+                 "At most one tabGroup may be a fresh process per process");
+      sWasFreshProcess = true;
+      mIsFreshProcess = false;
+      return true;
+    }
+    return false;
   }
 
   already_AddRefed<nsISHistory> GetRelatedSHistory();
 
   mozilla::dom::TabGroup* TabGroup();
+
+  // Returns `true` if this this process was created to load a docshell in a
+  // "Fresh Process". This value is initialized to `false`, and is set to `true`
+  // in RecvSetFreshProcess.
+  static bool GetWasFreshProcess()
+  {
+    return sWasFreshProcess;
+  }
 
 protected:
   virtual ~TabChild();
@@ -817,6 +830,8 @@ private:
   // The handle associated with the native window that contains this tab
   uintptr_t mNativeWindowHandle;
 #endif // defined(XP_WIN)
+
+  static bool sWasFreshProcess;
 
   DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };

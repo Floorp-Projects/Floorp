@@ -105,6 +105,8 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Event",
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    "EventSource",
+// IMPORTANT: Do not change this list without review from a DOM peer!
     "EventTarget",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "File",
