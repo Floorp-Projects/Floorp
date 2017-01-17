@@ -8345,25 +8345,6 @@ nsHttpChannel::ReportNetVSCacheTelemetry()
         return;
     }
 
-    uint32_t diskStorageSizeK = 0;
-    rv = mCacheEntry->GetDiskStorageSizeInKB(&diskStorageSizeK);
-    if (NS_FAILED(rv)) {
-        return;
-    }
-
-    nsAutoCString contentType;
-    if (mResponseHead && mResponseHead->HasContentType()) {
-        mResponseHead->ContentType(contentType);
-    }
-    bool isImage = StringBeginsWith(contentType, NS_LITERAL_CSTRING("image/"));
-    if (isImage) {
-        Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_ISIMG, onStartDiff);
-        Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_ISIMG, onStopDiff);
-    } else {
-        Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_NOTIMG, onStartDiff);
-        Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_NOTIMG, onStopDiff);
-    }
-
     if (mCacheOpenWithPriority) {
         if (mCacheQueueSizeWhenOpen < 5) {
             Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_QSMALL_HIGHPRI, onStartDiff);
@@ -8388,30 +8369,17 @@ nsHttpChannel::ReportNetVSCacheTelemetry()
         }
     }
 
-    if (diskStorageSizeK < 32) {
-        if (mCacheOpenWithPriority) {
-            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_SMALL_HIGHPRI, onStartDiff);
-            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_SMALL_HIGHPRI, onStopDiff);
-        } else {
-            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_SMALL_NORMALPRI, onStartDiff);
-            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_SMALL_NORMALPRI, onStopDiff);
-        }
-    } else if (diskStorageSizeK < 256) {
-        if (mCacheOpenWithPriority) {
-            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_MED_HIGHPRI, onStartDiff);
-            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_MED_HIGHPRI, onStopDiff);
-        } else {
-            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_MED_NORMALPRI, onStartDiff);
-            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_MED_NORMALPRI, onStopDiff);
-        }
+    uint32_t diskStorageSizeK = 0;
+    rv = mCacheEntry->GetDiskStorageSizeInKB(&diskStorageSizeK);
+    if (NS_FAILED(rv)) {
+        return;
+    }
+
+    // No significant difference was observed between different sizes for |onStartDiff|
+    if (diskStorageSizeK < 256) {
+        Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_SMALL, onStopDiff);
     } else {
-        if (mCacheOpenWithPriority) {
-            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_LARGE_HIGHPRI, onStartDiff);
-            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_LARGE_HIGHPRI, onStopDiff);
-        } else {
-            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTART_LARGE_NORMALPRI, onStartDiff);
-            Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_LARGE_NORMALPRI, onStopDiff);
-        }
+        Telemetry::Accumulate(Telemetry::HTTP_NET_VS_CACHE_ONSTOP_LARGE, onStopDiff);
     }
 }
 
