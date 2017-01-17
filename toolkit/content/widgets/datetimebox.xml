@@ -199,10 +199,24 @@
       </method>
 
       <method name="setFieldsFromPicker">
+        <parameter name="aValue"/>
         <body>
         <![CDATA[
-          // TODO: Bug 1320225 - [DateTimeInput] Integration of input type=date
-          // input box with picker.
+          let year = aValue.year;
+          let month = aValue.month;
+          let day = aValue.day;
+
+          if (!this.isEmpty(year)) {
+            this.setFieldValue(this.mYearField, year);
+          }
+
+          if (!this.isEmpty(month)) {
+            this.setFieldValue(this.mMonthField, month);
+          }
+
+          if (!this.isEmpty(day)) {
+            this.setFieldValue(this.mDayField, day);
+          }
         ]]>
         </body>
       </method>
