@@ -1563,7 +1563,7 @@ CompositorBridgeParent::RecvAdoptChild(const uint64_t& child)
 }
 
 PWebRenderBridgeParent*
-CompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& aPipelineId,
+CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipelineId,
                                                     TextureFactoryIdentifier* aTextureFactoryIdentifier)
 {
 #ifndef MOZ_ENABLE_WEBRENDER
@@ -1571,7 +1571,7 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& aPipelineId,
   // child process invoking this codepath before it's ready
   MOZ_RELEASE_ASSERT(false);
 #endif
-  MOZ_ASSERT(aPipelineId == mRootLayerTreeID);
+  MOZ_ASSERT(aPipelineId.mHandle == mRootLayerTreeID);
   MOZ_ASSERT(!mWrBridge);
   MOZ_ASSERT(!mCompositor);
   MOZ_ASSERT(!mCompositorScheduler);
@@ -1591,8 +1591,9 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& aPipelineId,
   MOZ_ASSERT(mCompositorScheduler);
   mWrBridge.get()->AddRef(); // IPDL reference
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  MOZ_ASSERT(sIndirectLayerTrees[aPipelineId].mWrBridge == nullptr);
-  sIndirectLayerTrees[aPipelineId].mWrBridge = mWrBridge;
+  auto pipelineHandle = aPipelineId.mHandle;
+  MOZ_ASSERT(sIndirectLayerTrees[pipelineHandle].mWrBridge == nullptr);
+  sIndirectLayerTrees[pipelineHandle].mWrBridge = mWrBridge;
   *aTextureFactoryIdentifier = mCompositor->GetTextureFactoryIdentifier();
   return mWrBridge;
 }
@@ -1608,7 +1609,7 @@ CompositorBridgeParent::DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aA
   WebRenderBridgeParent* parent = static_cast<WebRenderBridgeParent*>(aActor);
   {
     MonitorAutoLock lock(*sIndirectLayerTreesLock);
-    auto it = sIndirectLayerTrees.find(parent->PipelineId());
+    auto it = sIndirectLayerTrees.find(parent->PipelineId().mHandle);
     if (it != sIndirectLayerTrees.end()) {
       it->second.mWrBridge = nullptr;
     }

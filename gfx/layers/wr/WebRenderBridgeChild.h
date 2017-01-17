@@ -28,11 +28,11 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderBridgeChild, override)
 
 public:
-  explicit WebRenderBridgeChild(const uint64_t& aPipelineId);
+  explicit WebRenderBridgeChild(const wr::PipelineId& aPipelineId);
 
   void AddWebRenderCommand(const WebRenderCommand& aCmd);
 
-  bool DPBegin(uint32_t aWidth, uint32_t aHeight);
+  bool DPBegin(const  gfx::IntSize& aSize);
   void DPEnd(bool aIsSync, uint64_t aTransactionId);
 
   CompositorBridgeChild* GetCompositorBridgeChild();

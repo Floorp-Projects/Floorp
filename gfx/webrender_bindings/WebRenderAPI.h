@@ -148,6 +148,9 @@ protected:
   friend class WebRenderAPI;
 };
 
+Maybe<WrImageFormat>
+SurfaceFormatToWrImageFormat(gfx::SurfaceFormat aFormat);
+
 } // namespace
 } // namespace
 

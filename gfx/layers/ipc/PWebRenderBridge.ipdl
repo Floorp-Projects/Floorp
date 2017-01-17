@@ -16,8 +16,8 @@ include protocol PCompositorBridge;
 include protocol PTexture;
 
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
-using WrImageFormat from "mozilla/webrender/webrender_ffi.h";
 using mozilla::wr::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
+using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
 
 namespace mozilla {
 namespace layers {
@@ -30,14 +30,14 @@ sync protocol PWebRenderBridge
 parent:
   async PCompositable(TextureInfo aTextureInfo);
 
-  sync Create(uint32_t aWidth, uint32_t aHeight);
-  sync AddImage(uint32_t aWidth, uint32_t aHeight, uint32_t aStride,
-                WrImageFormat aFormat, ByteBuffer aBytes)
-    returns (WrImageKey aOutImageKey);
-  sync UpdateImage(WrImageKey aImageKey, uint32_t aWidth, uint32_t aHeight,
-                   WrImageFormat aFormat, ByteBuffer aBytes);
-  sync DeleteImage(WrImageKey aImageKey);
-  sync DPBegin(uint32_t aWidth, uint32_t aHeight)
+  sync Create(IntSize aSize);
+  sync AddImage(IntSize aSize, uint32_t aStride,
+                SurfaceFormat aFormat, ByteBuffer aBytes)
+    returns (ImageKey aOutImageKey);
+  sync UpdateImage(ImageKey aImageKey, IntSize aSize,
+                   SurfaceFormat aFormat, ByteBuffer aBytes);
+  sync DeleteImage(ImageKey aImageKey);
+  sync DPBegin(IntSize aSize)
     returns (bool aOutSuccess);
   async DPEnd(WebRenderCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId);
   sync DPSyncEnd(WebRenderCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId);

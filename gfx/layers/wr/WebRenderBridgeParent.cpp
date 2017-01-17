@@ -76,7 +76,7 @@ private:
 };
 
 WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
-                                             const uint64_t& aPipelineId,
+                                             const wr::PipelineId& aPipelineId,
                                              widget::CompositorWidget* aWidget,
                                              gl::GLContext* aGlContext,
                                              WrWindowState* aWrWindowState,
@@ -101,7 +101,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
     // i.e. the one created by the CompositorBridgeParent as opposed to the
     // CrossProcessCompositorBridgeParent
     MOZ_ASSERT(mWidget);
-    mWRWindowState = wr_init_window(mPipelineId,
+    mWRWindowState = wr_init_window(mPipelineId.mHandle,
                                     aGlContext,
                                     gfxPrefs::WebRenderProfilerEnabled());
   }
@@ -111,7 +111,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
 }
 
 WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
-                                             const uint64_t& aPipelineId,
+                                             const wr::PipelineId& aPipelineId,
                                              widget::CompositorWidget* aWidget,
                                              RefPtr<wr::WebRenderAPI>&& aApi)
   : mCompositorBridge(aCompositorBridge)
@@ -134,8 +134,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
 
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvCreate(const uint32_t& aWidth,
-                                  const uint32_t& aHeight)
+WebRenderBridgeParent::RecvCreate(const gfx::IntSize& aSize)
 {
   if (mDestroyed) {
     return IPC_OK();
@@ -146,8 +145,8 @@ WebRenderBridgeParent::RecvCreate(const uint32_t& aWidth,
   }
   MOZ_ASSERT(mWRWindowState);
   mGLContext->MakeCurrent();
-  mBuilder.emplace(LayerIntSize(aWidth, aHeight), wr::PipelineId(mPipelineId));
-  wr_window_init_pipeline_epoch(mWRWindowState, mPipelineId, aWidth, aHeight);
+  mBuilder.emplace(LayerIntSize(aSize.width, aSize.height), mPipelineId);
+  wr_window_init_pipeline_epoch(mWRWindowState, mPipelineId.mHandle, aSize.width, aSize.height);
   return IPC_OK();
 }
 
@@ -176,59 +175,59 @@ WebRenderBridgeParent::Destroy()
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvAddImage(const uint32_t& aWidth,
-                                    const uint32_t& aHeight,
+WebRenderBridgeParent::RecvAddImage(const gfx::IntSize& aSize,
                                     const uint32_t& aStride,
-                                    const WrImageFormat& aFormat,
+                                    const gfx::SurfaceFormat& aFormat,
                                     const ByteBuffer& aBuffer,
-                                    WrImageKey* aOutImageKey)
+                                    wr::ImageKey* aOutImageKey)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
   MOZ_ASSERT(mWRWindowState);
-  *aOutImageKey = wr_add_image(mWRWindowState, aWidth, aHeight, aStride, aFormat,
-                               aBuffer.mData, aBuffer.mLength);
+  auto format = wr::SurfaceFormatToWrImageFormat(aFormat).value();
+  *aOutImageKey = wr::ImageKey(wr_add_image(mWRWindowState, aSize.width, aSize.height,
+                                            aStride, format,
+                                            aBuffer.mData, aBuffer.mLength));
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvUpdateImage(const WrImageKey& aImageKey,
-                                       const uint32_t& aWidth,
-                                       const uint32_t& aHeight,
-                                       const WrImageFormat& aFormat,
+WebRenderBridgeParent::RecvUpdateImage(const wr::ImageKey& aImageKey,
+                                       const gfx::IntSize& aSize,
+                                       const gfx::SurfaceFormat& aFormat,
                                        const ByteBuffer& aBuffer)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
   MOZ_ASSERT(mWRWindowState);
-  wr_update_image(mWRWindowState, aImageKey, aWidth, aHeight, aFormat,
+  auto format = wr::SurfaceFormatToWrImageFormat(aFormat).value();
+  wr_update_image(mWRWindowState, aImageKey.mHandle, aSize.width, aSize.height, format,
                   aBuffer.mData, aBuffer.mLength);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDeleteImage(const WrImageKey& aImageKey)
+WebRenderBridgeParent::RecvDeleteImage(const wr::ImageKey& aImageKey)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
   MOZ_ASSERT(mWRWindowState);
-  mKeysToDelete.push_back(wr::ImageKey(aImageKey));
+  mKeysToDelete.push_back(aImageKey);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-WebRenderBridgeParent::RecvDPBegin(const uint32_t& aWidth,
-                                   const uint32_t& aHeight,
+WebRenderBridgeParent::RecvDPBegin(const gfx::IntSize& aSize,
                                    bool* aOutSuccess)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
   MOZ_ASSERT(mBuilder.isSome());
-  wr_window_dp_begin(mWRWindowState, mBuilder.ref().Raw(), aWidth, aHeight);
+  wr_window_dp_begin(mWRWindowState, mBuilder.ref().Raw(), aSize.width, aSize.height);
   *aOutSuccess = true;
   return IPC_OK();
 }
@@ -414,7 +413,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
   }
 
   if (ShouldParentObserveEpoch()) {
-    mCompositorBridge->ObserveLayerUpdate(mPipelineId, GetChildLayerObserverEpoch(), true);
+    mCompositorBridge->ObserveLayerUpdate(mPipelineId.mHandle, GetChildLayerObserverEpoch(), true);
   }
 }
 
@@ -539,7 +538,7 @@ WebRenderBridgeParent::RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverE
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvClearCachedResources()
 {
-  mCompositorBridge->ObserveLayerUpdate(mPipelineId, GetChildLayerObserverEpoch(), false);
+  mCompositorBridge->ObserveLayerUpdate(mPipelineId.mHandle, GetChildLayerObserverEpoch(), false);
   return IPC_OK();
 }
 

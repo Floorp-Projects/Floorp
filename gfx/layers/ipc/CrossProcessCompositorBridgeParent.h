@@ -149,7 +149,7 @@ public:
 
   virtual void UpdatePaintTime(LayerTransactionParent* aLayerTree, const TimeDuration& aPaintTime) override;
 
-  PWebRenderBridgeParent* AllocPWebRenderBridgeParent(const uint64_t& aPipelineId,
+  PWebRenderBridgeParent* AllocPWebRenderBridgeParent(const wr::PipelineId& aPipelineId,
                                                       TextureFactoryIdentifier* aTextureFactoryIdentifier) override;
   bool DeallocPWebRenderBridgeParent(PWebRenderBridgeParent* aActor) override;
 
