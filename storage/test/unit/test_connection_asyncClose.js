@@ -83,7 +83,7 @@ add_task(function* test_asyncClose_on_sync_db() {
 
   // Branch coverage: (!asyncThread && mDBConn)
   yield asyncClose(db);
-  ok(true, 'closed sync connection asynchronously');
+  ok(true, "closed sync connection asynchronously");
 });
 
 /**
@@ -99,10 +99,10 @@ add_task(function* test_asyncClose_failed_open() {
   let openPromise = openAsyncDatabase(getFakeDB());
   yield openPromise.then(
     () => {
-      ok(false, 'we should have failed to open the db; this test is broken!');
+      ok(false, "we should have failed to open the db; this test is broken!");
     },
     () => {
-      ok(true, 'correctly failed to open db; bg asyncClose should happen');
+      ok(true, "correctly failed to open db; bg asyncClose should happen");
     }
   );
   // (NB: we are unable to observe the thread shutdown, but since we never open
@@ -119,7 +119,7 @@ add_task(function* test_asyncClose_does_not_throw_without_callback() {
   let db = yield openAsyncDatabase(getTestDB());
   // Branch coverage: (asyncThread && mDBConn)
   db.asyncClose();
-  ok(true, 'if we shutdown cleanly and do not crash, then we succeeded');
+  ok(true, "if we shutdown cleanly and do not crash, then we succeeded");
 });
 // OBEY SHOUTING UPPER-CASE COMMENTS.
 // ADD TESTS ABOVE THE FORMER TEST, NOT BELOW IT.

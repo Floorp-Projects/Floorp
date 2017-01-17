@@ -611,14 +611,14 @@ Collection.prototype = {
 
     let args = [];
     if (this.older)
-      args.push('older=' + this.older);
+      args.push("older=" + this.older);
     else if (this.newer) {
-      args.push('newer=' + this.newer);
+      args.push("newer=" + this.newer);
     }
     if (this.full)
-      args.push('full=1');
+      args.push("full=1");
     if (this.sort)
-      args.push('sort=' + this.sort);
+      args.push("sort=" + this.sort);
     if (this.ids != null)
       args.push("ids=" + this.ids);
     if (this.limit > 0 && this.limit != Infinity)
@@ -630,7 +630,7 @@ Collection.prototype = {
     if (this._offset)
       args.push("offset=" + encodeURIComponent(this._offset));
 
-    this.uri.query = (args.length > 0) ? '?' + args.join('&') : '';
+    this.uri.query = (args.length > 0) ? "?" + args.join("&") : "";
   },
 
   // get full items

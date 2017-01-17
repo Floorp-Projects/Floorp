@@ -300,23 +300,23 @@ BingRequest.prototype = {
 
       // Prepare the request body.
       let requestString =
-        '<TranslateArrayRequest>' +
-          '<AppId/>' +
-          '<From>' + this.sourceLanguage + '</From>' +
-          '<Options>' +
+        "<TranslateArrayRequest>" +
+          "<AppId/>" +
+          "<From>" + this.sourceLanguage + "</From>" +
+          "<Options>" +
             '<ContentType xmlns="http://schemas.datacontract.org/2004/07/Microsoft.MT.Web.Service.V2">text/html</ContentType>' +
             '<ReservedFlags xmlns="http://schemas.datacontract.org/2004/07/Microsoft.MT.Web.Service.V2" />' +
-          '</Options>' +
+          "</Options>" +
           '<Texts xmlns:s="http://schemas.microsoft.com/2003/10/Serialization/Arrays">';
 
       for (let [, text] of this.translationData) {
-        requestString += '<s:string>' + text + '</s:string>';
+        requestString += "<s:string>" + text + "</s:string>";
         this.characterCount += text.length;
       }
 
-      requestString += '</Texts>' +
-          '<To>' + this.targetLanguage + '</To>' +
-        '</TranslateArrayRequest>';
+      requestString += "</Texts>" +
+          "<To>" + this.targetLanguage + "</To>" +
+        "</TranslateArrayRequest>";
 
       // Set up request options.
       let deferred = Promise.defer();

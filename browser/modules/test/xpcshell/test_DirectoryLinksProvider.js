@@ -31,7 +31,7 @@ const DIRECTORY_LINKS_FILE = "directoryLinks.json";
 const DIRECTORY_FRECENCY = 1000;
 const SUGGESTED_FRECENCY = Infinity;
 const kURLData = {"directory": [{"url":"http://example.com", "title":"LocalSource"}]};
-const kTestURL = 'data:application/json,' + JSON.stringify(kURLData);
+const kTestURL = "data:application/json," + JSON.stringify(kURLData);
 
 // DirectoryLinksProvider preferences
 const kLocalePref = DirectoryLinksProvider._observedPrefs.prefSelectedLocale;
@@ -295,7 +295,7 @@ add_task(function* test_updateSuggestedTile() {
 
   // Initial setup
   let data = {"suggested": [suggestedTile1, suggestedTile2, suggestedTile3], "directory": [someOtherSite]};
-  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  let dataURI = "data:application/json," + JSON.stringify(data);
 
   let testObserver = new TestFirstRun();
   DirectoryLinksProvider.addObserver(testObserver);
@@ -421,7 +421,7 @@ add_task(function* test_updateSuggestedTile() {
 
 add_task(function* test_suggestedLinksMap() {
   let data = {"suggested": [suggestedTile1, suggestedTile2, suggestedTile3, suggestedTile4], "directory": [someOtherSite]};
-  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  let dataURI = "data:application/json," + JSON.stringify(data);
 
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
   let links = yield fetchData();
@@ -475,7 +475,7 @@ add_task(function* test_topSitesWithSuggestedLinks() {
   do_check_eq(DirectoryLinksProvider._topSitesWithSuggestedLinks.size, 0);
 
   let data = {"suggested": [suggestedTile1, suggestedTile2, suggestedTile3], "directory": [someOtherSite]};
-  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  let dataURI = "data:application/json," + JSON.stringify(data);
 
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
   yield fetchData();
@@ -801,7 +801,7 @@ add_task(function* test_DirectoryLinksProvider__prefObserver_url() {
   // tests these 2 things:
   // 1. _linksURL is properly set after the pref change
   // 2. invalid source url is correctly handled
-  let exampleUrl = 'http://localhost:56789/bad';
+  let exampleUrl = "http://localhost:56789/bad";
   yield promiseDirectoryDownloadOnPrefChange(kSourceUrlPref, exampleUrl);
   do_check_eq(DirectoryLinksProvider._linksURL, exampleUrl);
 
@@ -823,7 +823,7 @@ add_task(function* test_DirectoryLinksProvider_getLinks_noDirectoryData() {
   let data = {
     "directory": [],
   };
-  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  let dataURI = "data:application/json," + JSON.stringify(data);
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
 
   let links = yield fetchData();
@@ -837,7 +837,7 @@ add_task(function* test_DirectoryLinksProvider_getLinks_badData() {
       "en-US": [{url: "http://example.com", title: "US"}],
     },
   };
-  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  let dataURI = "data:application/json," + JSON.stringify(data);
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
 
   // Make sure we get nothing for incorrectly formatted data
@@ -970,7 +970,7 @@ add_task(function* test_DirectoryLinksProvider_getAllowedLinks() {
     {url: "data:text/plain,hi"},
     {url: "http/bork:eh"},
   ]};
-  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  let dataURI = "data:application/json," + JSON.stringify(data);
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
 
   let links = yield fetchData();
@@ -991,7 +991,7 @@ add_task(function* test_DirectoryLinksProvider_getAllowedImages() {
     {url: "http://example.com", imageURI: "data:text/plain,hi"},
     {url: "http://example.com", imageURI: "http/bork:eh"},
   ]};
-  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  let dataURI = "data:application/json," + JSON.stringify(data);
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
 
   let links = yield fetchData();
@@ -1010,7 +1010,7 @@ add_task(function* test_DirectoryLinksProvider_getAllowedImages_base() {
     {url: "http://example4.com", enhancedImageURI: "https://mozilla.net"},
     {url: "http://example5.com", imageURI: "data:text/plain,hi"},
   ]};
-  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  let dataURI = "data:application/json," + JSON.stringify(data);
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
 
   // Pretend we're using the default pref to trigger base matching
@@ -1036,7 +1036,7 @@ add_task(function* test_DirectoryLinksProvider_getAllowedEnhancedImages() {
     {url: "http://example.com", enhancedImageURI: "data:text/plain,hi"},
     {url: "http://example.com", enhancedImageURI: "http/bork:eh"},
   ]};
-  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  let dataURI = "data:application/json," + JSON.stringify(data);
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
 
   let links = yield fetchData();
@@ -1053,7 +1053,7 @@ add_task(function* test_DirectoryLinksProvider_getEnhancedLink() {
     {url: "http://example.com", enhancedImageURI: "data:,com1"},
     {url: "http://example.com", enhancedImageURI: "data:,com2"},
   ]};
-  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  let dataURI = "data:application/json," + JSON.stringify(data);
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
 
   let links = yield fetchData();
@@ -1091,7 +1091,7 @@ add_task(function* test_DirectoryLinksProvider_getEnhancedLink() {
   data = {"enhanced": [
     {url: "http://example.com", enhancedImageURI: "data:,fresh"},
   ]};
-  dataURI = 'data:application/json,' + JSON.stringify(data);
+  dataURI = "data:application/json," + JSON.stringify(data);
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
   links = yield fetchData();
   do_check_eq(links.length, 0); // There are no directory links.
@@ -1113,7 +1113,7 @@ add_task(function* test_DirectoryLinksProvider_enhancedURIs() {
       {url: "http://example.net", enhancedImageURI: "data:,net2", title:"DirectoryTitle"}
     ]
   };
-  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  let dataURI = "data:application/json," + JSON.stringify(data);
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
 
   // Wait for links to get loaded
@@ -1187,7 +1187,7 @@ add_task(function* test_timeSensetiveSuggestedTiles() {
   // Initial setup
   let topSites = ["site0.com", "1040.com", "site2.com", "hrblock.com", "site4.com", "freetaxusa.com", "site6.com"];
   let data = {"suggested": [suggestedTile], "directory": [someOtherSite]};
-  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  let dataURI = "data:application/json," + JSON.stringify(data);
 
   let testObserver = new TestTimingRun();
   DirectoryLinksProvider.addObserver(testObserver);
@@ -1258,7 +1258,7 @@ add_task(function* test_timeSensetiveSuggestedTiles() {
   // drop the end time - we should pick up the tile
   suggestedTile.time_limits.end = null;
   data = {"suggested": [suggestedTile], "directory": [someOtherSite]};
-  dataURI = 'data:application/json,' + JSON.stringify(data);
+  dataURI = "data:application/json," + JSON.stringify(data);
 
   // redownload json and getLinks to force time recomputation
   yield promiseDirectoryDownloadOnPrefChange(kSourceUrlPref, dataURI);
@@ -1280,7 +1280,7 @@ add_task(function* test_timeSensetiveSuggestedTiles() {
   suggestedTile.time_limits.end = (new Date(Date.now() + 3000)).toISOString();
 
   data = {"suggested": [suggestedTile], "directory": [someOtherSite]};
-  dataURI = 'data:application/json,' + JSON.stringify(data);
+  dataURI = "data:application/json," + JSON.stringify(data);
 
   // redownload json and call getLinks() to force time recomputation
   yield promiseDirectoryDownloadOnPrefChange(kSourceUrlPref, dataURI);
@@ -1603,7 +1603,7 @@ add_task(function* test_sanitizeExplanation() {
   // Note: this is a basic test to ensure we applied sanitization to the link explanation.
   // Full testing for appropriate sanitization is done in parser/xml/test/unit/test_sanitizer.js.
   let data = {"suggested": [suggestedTile5]};
-  let dataURI = 'data:application/json,' + encodeURIComponent(JSON.stringify(data));
+  let dataURI = "data:application/json," + encodeURIComponent(JSON.stringify(data));
 
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
   yield fetchData();
@@ -1625,7 +1625,7 @@ add_task(function* test_inadjecentSites() {
   // Initial setup
   let topSites = ["1040.com", "site2.com", "hrblock.com", "site4.com", "freetaxusa.com", "site6.com"];
   let data = {"suggested": [suggestedTile], "directory": [someOtherSite]};
-  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  let dataURI = "data:application/json," + JSON.stringify(data);
 
   let testObserver = new TestFirstRun();
   DirectoryLinksProvider.addObserver(testObserver);
@@ -1659,7 +1659,7 @@ add_task(function* test_inadjecentSites() {
       badSiteB64.push(DirectoryLinksProvider._generateHash(site));
     });
     let theList = {"domains": badSiteB64};
-    let uri = 'data:application/json,' + JSON.stringify(theList);
+    let uri = "data:application/json," + JSON.stringify(theList);
     DirectoryLinksProvider._inadjacentSitesUrl = uri;
     return DirectoryLinksProvider._loadInadjacentSites();
   }
@@ -1750,7 +1750,7 @@ add_task(function* test_inadjecentSites() {
   // remove avoidInadjacentSites flag from suggested tile and reload json
   delete suggestedTile.check_inadjacency;
   data = {"suggested": [suggestedTile], "directory": [someOtherSite]};
-  dataURI = 'data:application/json,' + JSON.stringify(data);
+  dataURI = "data:application/json," + JSON.stringify(data);
   yield promiseDirectoryDownloadOnPrefChange(kSourceUrlPref, dataURI);
   yield fetchData();
 
@@ -1795,7 +1795,7 @@ add_task(function* test_blockSuggestedTiles() {
   // Initial setup
   let topSites = ["site0.com", "1040.com", "site2.com", "hrblock.com", "site4.com", "freetaxusa.com", "site6.com"];
   let data = {"suggested": [suggestedTile1, suggestedTile2, suggestedTile3], "directory": [someOtherSite]};
-  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  let dataURI = "data:application/json," + JSON.stringify(data);
 
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
   let links = yield fetchData();

@@ -159,7 +159,7 @@ add_task(function* test_context_menu_password_fill() {
 
         // The only field affected by the password fill
         // should be the target password field itself.
-        let unchangedFields = form.querySelectorAll('input:not(#' + passwordField.id + ')');
+        let unchangedFields = form.querySelectorAll("input:not(#" + passwordField.id + ")");
         yield assertContextMenuFill(form, null, passwordField, unchangedFields, 1);
         Assert.equal(passwordField.value, "password1", "Check upgraded login was actually used");
         contextMenu.hidePopup();
@@ -218,7 +218,7 @@ add_task(function* test_context_menu_username_login_fill() {
           continue;
         }
         // We shouldn't change any field that's not the target username field or the first password field
-        let unchangedFields = form.querySelectorAll('input:not(#' + usernameField.id + '):not(#' + passwordField.id + ')');
+        let unchangedFields = form.querySelectorAll("input:not(#" + usernameField.id + "):not(#" + passwordField.id + ")");
         yield assertContextMenuFill(form, usernameField, passwordField, unchangedFields, 1);
         if (!passwordField.hasAttribute("expectedFail")) {
           Assert.equal(passwordField.value, "password1", "Check upgraded login was actually used");

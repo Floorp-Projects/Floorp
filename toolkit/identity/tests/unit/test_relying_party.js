@@ -23,7 +23,7 @@ function test_watch_loggedin_ready() {
     // set it up so we're supposed to be logged in to TEST_URL
     store.setLoginState(TEST_URL, true, id);
     RelyingParty.watch(mock_doc(id, TEST_URL, function(action, params) {
-      do_check_eq(action, 'ready');
+      do_check_eq(action, "ready");
       do_check_eq(params, undefined);
 
       do_test_finished();
@@ -47,11 +47,11 @@ function test_watch_loggedin_login() {
     // check for first a login() call, then a ready() call
     RelyingParty.watch(mock_doc(null, TEST_URL, call_sequentially(
       function(action, params) {
-        do_check_eq(action, 'login');
+        do_check_eq(action, "login");
         do_check_neq(params, null);
       },
       function(action, params) {
-        do_check_eq(action, 'ready');
+        do_check_eq(action, "ready");
         do_check_null(params);
 
         do_test_finished();
@@ -80,11 +80,11 @@ function test_watch_loggedin_logout() {
       // not for other_id
       RelyingParty.watch(mock_doc(other_id, TEST_URL, call_sequentially(
         function(action, params) {
-          do_check_eq(action, 'login');
+          do_check_eq(action, "login");
           do_check_neq(params, null);
         },
         function(action, params) {
-          do_check_eq(action, 'ready');
+          do_check_eq(action, "ready");
           do_check_null(params);
 
           do_test_finished();
@@ -101,7 +101,7 @@ function test_watch_notloggedin_ready() {
   resetState();
 
   RelyingParty.watch(mock_doc(null, TEST_URL, function(action, params) {
-    do_check_eq(action, 'ready');
+    do_check_eq(action, "ready");
     do_check_eq(params, undefined);
 
     do_test_finished();
@@ -116,14 +116,14 @@ function test_watch_notloggedin_logout() {
 
   RelyingParty.watch(mock_doc(TEST_USER, TEST_URL, call_sequentially(
     function(action, params) {
-      do_check_eq(action, 'logout');
+      do_check_eq(action, "logout");
       do_check_eq(params, undefined);
 
       let store = get_idstore();
       do_check_null(store.getLoginState(TEST_URL));
     },
     function(action, params) {
-      do_check_eq(action, 'ready');
+      do_check_eq(action, "ready");
       do_check_eq(params, undefined);
       do_test_finished();
       run_next_test();
@@ -209,17 +209,17 @@ function test_logout() {
     let doLogout;
     let mockedDoc = mock_doc(id, TEST_URL, call_sequentially(
       function(action, params) {
-        do_check_eq(action, 'ready');
+        do_check_eq(action, "ready");
         do_check_eq(params, undefined);
 
         do_timeout(100, doLogout);
       },
       function(action, params) {
-        do_check_eq(action, 'logout');
+        do_check_eq(action, "logout");
         do_check_eq(params, undefined);
       },
       function(action, params) {
-        do_check_eq(action, 'ready');
+        do_check_eq(action, "ready");
         do_check_eq(params, undefined);
 
         do_test_finished();

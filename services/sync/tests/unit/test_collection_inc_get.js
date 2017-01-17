@@ -24,7 +24,7 @@ function run_test() {
     do_check_eq(rec.payload, "world");
   };
   coll._onProgress.call(stream);
-  do_check_eq(stream._data, '');
+  do_check_eq(stream._data, "");
   do_check_true(called);
   _("\n");
 
@@ -38,7 +38,7 @@ function run_test() {
     do_check_eq(rec.payload.value, 123);
   };
   coll._onProgress.call(stream);
-  do_check_eq(stream._data, '');
+  do_check_eq(stream._data, "");
   do_check_true(called);
   _("\n");
 
@@ -82,7 +82,7 @@ function run_test() {
   coll._onProgress.call(stream);
   do_check_eq(recCount, 3);
   do_check_eq(sum, 111);
-  do_check_eq(stream._data, '');
+  do_check_eq(stream._data, "");
   do_check_true(called);
   _("\n");
 
@@ -119,7 +119,7 @@ function run_test() {
   do_check_eq(recCount, 1);
   do_check_eq(sum, 100);
   _("all data should have been consumed including trailing comma");
-  do_check_eq(stream._data, '');
+  do_check_eq(stream._data, "");
   do_check_true(called);
   _();
 
@@ -166,13 +166,13 @@ function run_test() {
   do_check_eq(recCount, 3);
   do_check_eq(sum, 111);
   _("should have consumed all data");
-  do_check_eq(stream._data, '');
+  do_check_eq(stream._data, "");
   do_check_true(called);
   _();
 
   _("add no extra data");
   called = false;
-  stream._data += '';
+  stream._data += "";
   coll.recordHandler = function(rec) {
     called = true;
     do_throw("shouldn't have gotten a record..");

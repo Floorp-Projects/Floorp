@@ -128,10 +128,10 @@ function eventOccurred(event) {
     var modifiersMask = eventitem[2];
     if (modifiersMask) {
       var m = "";
-      m += event.altKey ? '1' : '0';
-      m += event.ctrlKey ? '1' : '0';
-      m += event.shiftKey ? '1' : '0';
-      m += event.metaKey ? '1' : '0';
+      m += event.altKey ? "1" : "0";
+      m += event.ctrlKey ? "1" : "0";
+      m += event.shiftKey ? "1" : "0";
+      m += event.metaKey ? "1" : "0";
       is(m, modifiersMask, test.testname + " modifiers mask matches");
     }
 

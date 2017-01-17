@@ -364,7 +364,7 @@ TileManager.prototype = {
 
   _idleTileCrawler: function _idleTileCrawler(self) {
     if (!self) self = this;
-    dump('crawl pass.\n');
+    dump("crawl pass.\n");
     let itered = 0, rendered = 0;
 
     let start = Date.now();
@@ -385,13 +385,13 @@ TileManager.prototype = {
       ++itered;
     }
 
-    dump('crawl itered:' + itered + ' rendered:' + rendered + '\n');
+    dump("crawl itered:" + itered + " rendered:" + rendered + "\n");
 
     if (comeAgain) {
       self._idleTileCrawlerTimeout = setTimeout(self._idleTileCrawler, 2000, self);
     } else {
       self.stopLazyCrawl();
-      dump('crawl end\n');
+      dump("crawl end\n");
     }
   }
 
@@ -839,14 +839,14 @@ TileManager.Tile.prototype = {
 
   toString: function toString(more) {
     if (more) {
-      return 'Tile(' + [this.i,
+      return "Tile(" + [this.i,
                         this.j,
                         "dirty=" + this.isDirty(),
-                        "boundRect=" + this.boundRect].join(', ')
-               + ')';
+                        "boundRect=" + this.boundRect].join(", ")
+               + ")";
     }
 
-    return 'Tile(' + this.i + ', ' + this.j + ')';
+    return "Tile(" + this.i + ", " + this.j + ")";
   },
 
   _hold: function hold() { this.free = false; },
@@ -1008,7 +1008,7 @@ TileManager.CrawlIterator.prototype = {
   },
 
   _unstrIndices: function _unstrIndices(str) {
-    return str.split(',');
+    return str.split(",");
   }
 
 };

@@ -27,10 +27,10 @@ var panelProgressListener = {
 
         if (aStateFlags & Ci.nsIWebProgressListener.STATE_START &&
             aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
-            window.parent.document.getElementById('sidebar-throbber').setAttribute("loading", "true");
+            window.parent.document.getElementById("sidebar-throbber").setAttribute("loading", "true");
         } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
                 aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
-            window.parent.document.getElementById('sidebar-throbber').removeAttribute("loading");
+            window.parent.document.getElementById("sidebar-throbber").removeAttribute("loading");
         }
     }
     ,

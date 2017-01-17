@@ -410,7 +410,7 @@ var PlacesOrganizer = {
     const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
                    .getService(Ci.nsIXULChromeRegistry)
                    .getSelectedLocale("global", true);
-    const dtOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+    const dtOptions = { year: "numeric", month: "long", day: "numeric" };
     let dateFormatter = new Intl.DateTimeFormat(locale, dtOptions);
 
     // Remove existing menu items.  Last item is the restoreFromFile item.
@@ -696,7 +696,7 @@ var PlacesOrganizer = {
     var height = bo.height;
 
     var canvas = document.getElementById("itemThumbnail");
-    var ctx = canvas.getContext('2d');
+    var ctx = canvas.getContext("2d");
     var notAvailableText = canvas.getAttribute("notavailabletext");
     ctx.save();
     ctx.fillStyle = "-moz-Dialog";

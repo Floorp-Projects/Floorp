@@ -21,7 +21,7 @@ const gfxFrameScript = {
   handleEvent(aEvent) {
     switch (aEvent.type) {
       case "MozAfterPaint":
-        sendAsyncMessage('gfxSanity:ContentLoaded');
+        sendAsyncMessage("gfxSanity:ContentLoaded");
         removeEventListener("MozAfterPaint", this);
         break;
     }
@@ -46,7 +46,7 @@ const gfxFrameScript = {
       if (this.domUtils.isMozAfterPaintPending) {
         addEventListener("MozAfterPaint", this);
       } else {
-        sendAsyncMessage('gfxSanity:ContentLoaded');
+        sendAsyncMessage("gfxSanity:ContentLoaded");
       }
     }
   },

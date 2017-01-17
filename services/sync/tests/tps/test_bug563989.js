@@ -76,7 +76,7 @@ var bookmarks_to_delete = {
  */
 
 // Add bookmarks to profile1 and sync.
-Phase('phase1', [
+Phase("phase1", [
   [Bookmarks.add, bookmarks_initial],
   [Bookmarks.verify, bookmarks_initial],
   [Sync],
@@ -84,7 +84,7 @@ Phase('phase1', [
 
 // Sync to profile2 and verify that the bookmarks are present.  Delete
 // some bookmarks, and verify that they're not present, but don't sync again.
-Phase('phase2', [
+Phase("phase2", [
   [Sync],
   [Bookmarks.verify, bookmarks_initial],
   [Bookmarks.delete, bookmarks_to_delete],
@@ -94,14 +94,14 @@ Phase('phase2', [
 
 // Using profile1, sync again with wipe-server set to true.  Verify our
 // initial bookmarks are still all present.
-Phase('phase3', [
+Phase("phase3", [
   [Sync, SYNC_WIPE_REMOTE],
   [Bookmarks.verify, bookmarks_initial]
 ]);
 
 // Back in profile2, do a sync and verify that the bookmarks we had
 // deleted earlier are now restored.
-Phase('phase4', [
+Phase("phase4", [
   [Sync],
   [Bookmarks.verify, bookmarks_initial]
 ]);

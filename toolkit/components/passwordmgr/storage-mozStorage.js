@@ -608,7 +608,7 @@ LoginManagerStorage_mozStorage.prototype = {
     };
     let matchData = { };
     for (let field of ["hostname", "formSubmitURL", "httpRealm"])
-      if (loginData[field] != '')
+      if (loginData[field] != "")
         matchData[field] = loginData[field];
     let [logins, ids] = this._searchLogins(matchData);
 
@@ -673,7 +673,7 @@ LoginManagerStorage_mozStorage.prototype = {
   _getIdForLogin(login) {
     let matchData = { };
     for (let field of ["hostname", "formSubmitURL", "httpRealm"])
-      if (login[field] != '')
+      if (login[field] != "")
         matchData[field] = login[field];
     let [logins, ids] = this._searchLogins(matchData);
 
@@ -710,21 +710,21 @@ LoginManagerStorage_mozStorage.prototype = {
 
     if (hostname == null) {
       conditions.push("hostname isnull");
-    } else if (hostname != '') {
+    } else if (hostname != "") {
       conditions.push("hostname = :hostname");
       params["hostname"] = hostname;
     }
 
     if (formSubmitURL == null) {
       conditions.push("formSubmitURL isnull");
-    } else if (formSubmitURL != '') {
+    } else if (formSubmitURL != "") {
       conditions.push("formSubmitURL = :formSubmitURL OR formSubmitURL = ''");
       params["formSubmitURL"] = formSubmitURL;
     }
 
     if (httpRealm == null) {
       conditions.push("httpRealm isnull");
-    } else if (httpRealm != '') {
+    } else if (httpRealm != "") {
       conditions.push("httpRealm = :httpRealm");
       params["httpRealm"] = httpRealm;
     }
@@ -1019,8 +1019,8 @@ LoginManagerStorage_mozStorage.prototype = {
       while (stmt.executeStep()) {
         let params = { id: stmt.row.id };
         // We will tag base64 logins correctly, but no longer support their use.
-        if (stmt.row.encryptedUsername.charAt(0) == '~' ||
-            stmt.row.encryptedPassword.charAt(0) == '~')
+        if (stmt.row.encryptedUsername.charAt(0) == "~" ||
+            stmt.row.encryptedPassword.charAt(0) == "~")
           params.encType = Ci.nsILoginManagerCrypto.ENCTYPE_BASE64;
         else
           params.encType = Ci.nsILoginManagerCrypto.ENCTYPE_SDR;

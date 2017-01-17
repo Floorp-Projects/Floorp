@@ -93,7 +93,7 @@ var ShortcutUtils = {
         key = Keys.GetStringFromName(keyCode.toUpperCase());
       } catch (ex) {
         Cu.reportError("Error finding " + keyCode + ": " + ex);
-        key = keyCode.replace(/^VK_/, '');
+        key = keyCode.replace(/^VK_/, "");
       }
     } else {
       key = aElemKey.getAttribute("key");

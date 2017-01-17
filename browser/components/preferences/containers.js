@@ -105,7 +105,7 @@ let gContainersManager = {
       iconSwatch.setAttribute("label",
         containersBundle.GetStringFromName(`containers.${icon}.label`));
       let iconElement = document.createElement("hbox");
-      iconElement.className = 'userContext-icon';
+      iconElement.className = "userContext-icon";
       iconElement.setAttribute("data-identity-icon", icon);
 
       iconSwatch.appendChild(iconElement);
@@ -134,7 +134,7 @@ let gContainersManager = {
       colorSwatch.setAttribute("label",
         containersBundle.GetStringFromName(`containers.${color}.label`));
       let iconElement = document.createElement("hbox");
-      iconElement.className = 'userContext-icon';
+      iconElement.className = "userContext-icon";
       iconElement.setAttribute("data-identity-icon", "circle");
       iconElement.setAttribute("data-identity-color", color);
 

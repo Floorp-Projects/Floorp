@@ -187,7 +187,7 @@ add_test(function test_CustomContentTypeOnPost() {
     },
     postData: kJsonPostData,
     // Setting a custom Content-Type header.
-    headers: [['Content-Type', "application/json"]]
+    headers: [["Content-Type", "application/json"]]
   }
 
   // Firing the request.
@@ -202,7 +202,7 @@ add_test(function test_OverrideMimeType() {
   do_test_pending();
 
   // Preparing the request parameters.
-  const kMimeType = 'text/xml; charset=UTF-8';
+  const kMimeType = "text/xml; charset=UTF-8";
   let options = {
     onLoad(aResponse, xhr) {
       do_check_eq(aResponse, "Success!");

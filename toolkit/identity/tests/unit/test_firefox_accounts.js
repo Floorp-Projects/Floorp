@@ -46,7 +46,7 @@ function withNobodySignedIn() {
 }
 
 function withSomebodySignedIn() {
-  return FirefoxAccounts.fxAccountsManager.signIn('Pertelote');
+  return FirefoxAccounts.fxAccountsManager.signIn("Pertelote");
 }
 
 function test_overall() {

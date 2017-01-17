@@ -26,7 +26,7 @@ add_task(function* () {
   let fooTag = tagsContainer.getChild(0);
   let tagNode = fooTag;
   tree.selectNode(fooTag);
-  is(tagNode.title, 'tag1', "tagNode title is correct");
+  is(tagNode.title, "tag1", "tagNode title is correct");
 
   ok(tree.controller.isCommandEnabled("placesCmd_show:info"),
      "'placesCmd_show:info' on current selected node is enabled");

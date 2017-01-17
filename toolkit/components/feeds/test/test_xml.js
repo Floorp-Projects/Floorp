@@ -56,7 +56,7 @@ function createTest(data) {
     var uri;
 
     if (data.base == null) {
-      uri = NetUtil.newURI('http://example.org/' + data.path);
+      uri = NetUtil.newURI("http://example.org/" + data.path);
     } else {
       uri = data.base;
     }

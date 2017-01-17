@@ -63,7 +63,7 @@ AddonPolicyService.prototype = {
    */
   getGeneratedBackgroundPageUrl(aAddonId) {
     let cb = this.backgroundPageUrlCallbacks.get(aAddonId);
-    return cb && cb(aAddonId) || '';
+    return cb && cb(aAddonId) || "";
   },
 
   /*

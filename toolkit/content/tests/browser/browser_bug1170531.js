@@ -49,9 +49,9 @@ add_task(function* () {
     browser.focus();
     yield new Promise(resolve => waitForFocus(resolve, window));
     yield new Promise(openMenu);
-    menu_cut_disabled = menuPopup.querySelector("#menu_cut").getAttribute('disabled') == "true";
+    menu_cut_disabled = menuPopup.querySelector("#menu_cut").getAttribute("disabled") == "true";
     is(menu_cut_disabled, false, "menu_cut should be enabled");
-    menu_copy_disabled = menuPopup.querySelector("#menu_copy").getAttribute('disabled') == "true";
+    menu_copy_disabled = menuPopup.querySelector("#menu_copy").getAttribute("disabled") == "true";
     is(menu_copy_disabled, false, "menu_copy should be enabled");
     yield new Promise(closeMenu);
 
@@ -59,9 +59,9 @@ add_task(function* () {
     browser.focus();
     yield new Promise(resolve => waitForFocus(resolve, window));
     yield new Promise(openMenu);
-    menu_cut_disabled = menuPopup.querySelector("#menu_cut").getAttribute('disabled') == "true";
+    menu_cut_disabled = menuPopup.querySelector("#menu_cut").getAttribute("disabled") == "true";
     is(menu_cut_disabled, false, "menu_cut should be enabled");
-    menu_copy_disabled = menuPopup.querySelector("#menu_copy").getAttribute('disabled') == "true";
+    menu_copy_disabled = menuPopup.querySelector("#menu_copy").getAttribute("disabled") == "true";
     is(menu_copy_disabled, false, "menu_copy should be enabled");
     yield new Promise(closeMenu);
 
@@ -69,9 +69,9 @@ add_task(function* () {
     browser.focus();
     yield new Promise(resolve => waitForFocus(resolve, window));
     yield new Promise(openMenu);
-    menu_cut_disabled = menuPopup.querySelector("#menu_cut").getAttribute('disabled') == "true";
+    menu_cut_disabled = menuPopup.querySelector("#menu_cut").getAttribute("disabled") == "true";
     is(menu_cut_disabled, true, "menu_cut should be disabled");
-    menu_copy_disabled = menuPopup.querySelector("#menu_copy").getAttribute('disabled') == "true";
+    menu_copy_disabled = menuPopup.querySelector("#menu_copy").getAttribute("disabled") == "true";
     is(menu_copy_disabled, true, "menu_copy should be disabled");
     yield new Promise(closeMenu);
   });

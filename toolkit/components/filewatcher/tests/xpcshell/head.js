@@ -11,7 +11,7 @@ Cu.import("resource://gre/modules/Promise.jsm", this);
 
 function makeWatcher() {
   let watcher =
-    Cc['@mozilla.org/toolkit/filewatcher/native-file-watcher;1']
+    Cc["@mozilla.org/toolkit/filewatcher/native-file-watcher;1"]
       .getService(Ci.nsINativeFileWatcherService);
   return watcher;
 }

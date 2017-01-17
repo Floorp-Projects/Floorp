@@ -28,7 +28,7 @@ var gSearchPane = {
     this.buildDefaultEngineDropDown();
 
     let addEnginesLink = document.getElementById("addEngines");
-    let searchEnginesURL = Services.wm.getMostRecentWindow('navigator:browser')
+    let searchEnginesURL = Services.wm.getMostRecentWindow("navigator:browser")
                                       .BrowserSearch.searchEnginesURL;
     addEnginesLink.setAttribute("href", searchEnginesURL);
 

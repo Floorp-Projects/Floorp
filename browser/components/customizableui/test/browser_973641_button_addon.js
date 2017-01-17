@@ -13,7 +13,7 @@ add_task(function*() {
   // create mocked addon button on the navigation bar
   let widgetSpec = {
     id: kButton,
-    type: 'button',
+    type: "button",
     onClick() {
       gBrowser.selectedTab = gBrowser.addTab("about:addons");
     }

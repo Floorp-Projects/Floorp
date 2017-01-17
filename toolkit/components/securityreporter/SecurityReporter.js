@@ -5,7 +5,7 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.importGlobalProperties(['fetch']);
+Cu.importGlobalProperties(["fetch"]);
 
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const protocolHandler = Cc["@mozilla.org/network/protocol;1?name=http"]
@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
 function getDERString(cert) {
   var length = {};
   var derArray = cert.getRawDER(length);
-  var derString = '';
+  var derString = "";
   for (var i = 0; i < derArray.length; i++) {
     derString += String.fromCharCode(derArray[i]);
   }
@@ -89,7 +89,7 @@ SecurityReporter.prototype = {
       method: "POST",
       body: JSON.stringify(report),
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json"
       }
     }).then(function(aResponse) {
       if (!aResponse.ok) {

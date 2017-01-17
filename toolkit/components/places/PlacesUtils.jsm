@@ -952,7 +952,7 @@ this.PlacesUtils = {
           let uriString = parts[i];
           // text/uri-list is converted to TYPE_UNICODE but it could contain
           // comments line prepended by #, we should skip them
-          if (uriString.substr(0, 1) == '\x23')
+          if (uriString.substr(0, 1) == "\x23")
             continue;
           // note: this._uri() will throw if uriString is not a valid URI
           if (uriString != "" && this._uri(uriString))

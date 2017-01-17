@@ -14,11 +14,11 @@ var phases = { "phase1": "profile1",
  * Test phases
  */
 
-Phase('phase1', [
-  [RunMozmillTest, 'mozmill_sanity.js'],
+Phase("phase1", [
+  [RunMozmillTest, "mozmill_sanity.js"],
 ]);
 
-Phase('phase2', [
+Phase("phase2", [
   [Sync],
-  [RunMozmillTest, 'mozmill_sanity2.js'],
+  [RunMozmillTest, "mozmill_sanity2.js"],
 ]);

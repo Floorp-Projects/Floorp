@@ -88,7 +88,7 @@ TabCache.prototype = {
     }
 
     for (let tab of tabs) {
-      if (!tab || 'object' !== typeof(tab)) {
+      if (!tab || "object" !== typeof(tab)) {
         continue;
       }
 

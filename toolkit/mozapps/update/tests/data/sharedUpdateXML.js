@@ -123,7 +123,7 @@ function getLocalUpdatesXMLString(aUpdates) {
   }
   return ("<updates xmlns=\"http://www.mozilla.org/2005/app-update\">" +
             aUpdates +
-          "</updates>").replace(/>\s+\n*</g, '><');
+          "</updates>").replace(/>\s+\n*</g, "><");
 }
 
 /**

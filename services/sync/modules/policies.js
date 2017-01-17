@@ -900,7 +900,7 @@ ErrorHandler.prototype = {
       case 200:
       case 404:
       case 513:
-        let xwa = resp.headers['x-weave-alert'];
+        let xwa = resp.headers["x-weave-alert"];
 
         // Only process machine-readable alerts.
         if (!xwa || !xwa.startsWith("{")) {

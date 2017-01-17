@@ -31,7 +31,7 @@ var bookmarks_initial = {
  */
 
 // Add a bookmark folder which has a description, and sync.
-Phase('phase1', [
+Phase("phase1", [
   [Bookmarks.add, bookmarks_initial],
   [Bookmarks.verify, bookmarks_initial],
   [Sync]
@@ -39,7 +39,7 @@ Phase('phase1', [
 
 // Sync to profile2 and verify that the bookmark folder is created, along
 // with its description.
-Phase('phase2', [
+Phase("phase2", [
   [Sync],
   [Bookmarks.verify, bookmarks_initial]
 ]);
