@@ -74,12 +74,13 @@ function selectionScrollCheck() {
     // should have scrolled 20 pixels from the mousemove above and at least 6
     // extra 20-pixel increments from the selection scroll timer. "At least 6"
     // because we waited for 6 scroll events but multiple scrolls could get
-    // coalesced into a single scroll event. Therefore we allow 6-15 scrolls,
-    // which corresponds to a scroll position of 140 to 320. The 15 is chosen
-    // arbitrarily and can be adjusted.
+    // coalesced into a single scroll event, and paints could be delayed when
+    // the window loads when the compositor is busy. As a result, we have no
+    // real guarantees about the upper bound here, and as the upper bound is
+    // not important for what we're testing here, we don't check it.
     var scrollY = otherWindow.scrollY;
+    info(`Scrolled ${scrollY} pixels`);
     ok(scrollY >= 140, "selection scroll position after timer is at least 140");
-    ok(scrollY <= 320, "selection scroll position after timer is not more than 320");
     ok((scrollY % 20) == 0, "selection scroll position after timer is multiple of 20");
 
     synthesizeMouse(element, 4, otherWindow.innerHeight + 25, { type: "mouseup" }, otherWindow);
