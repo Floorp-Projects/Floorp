@@ -9,13 +9,11 @@
 #include <fstream>
 #include <sstream>
 #include "GeckoProfiler.h"
-#ifndef SPS_STANDALONE
 #include "SaveProfileTask.h"
 #include "nsThreadUtils.h"
 #include "prenv.h"
 #include "prtime.h"
 #include "nsXULAppAPI.h"
-#endif
 #include "ProfileEntry.h"
 #include "SyncProfile.h"
 #include "platform.h"
@@ -26,7 +24,6 @@
 // JSON
 #include "ProfileJSONWriter.h"
 
-#ifndef SPS_STANDALONE
 // Meta
 #include "nsXPCOM.h"
 #include "nsXPCOMCID.h"
@@ -43,17 +40,14 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfileGatherer.h"
-#endif
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
   #include "FennecJNIWrappers.h"
 #endif
 
-#ifndef SPS_STANDALONE
 // JS
 #include "jsfriendapi.h"
 #include "js/ProfilingFrameIterator.h"
-#endif
 
 #if defined(MOZ_PROFILING) && (defined(XP_MACOSX) || defined(XP_WIN))
  #define USE_NS_STACKWALK
@@ -74,12 +68,10 @@ typedef ucontext_t tickcontext_t;
  #include "EHABIStackWalk.h"
 #endif
 
-#ifndef SPS_STANDALONE
 #if defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_x86_linux)
 # define USE_LUL_STACKWALK
 # include "lul/LulMain.h"
 # include "lul/platform-linux-lul.h"
-#endif
 #endif
 
 using std::string;
@@ -281,12 +273,10 @@ void GeckoSampler::HandleSaveRequest()
     return;
   mSaveRequested = false;
 
-#ifndef SPS_STANDALONE
   // TODO: Use use the ipc/chromium Tasks here to support processes
   // without XPCOM.
   nsCOMPtr<nsIRunnable> runnable = new SaveProfileTask();
   NS_DispatchToMainThread(runnable);
-#endif
 }
 
 void GeckoSampler::DeleteExpiredMarkers()
@@ -338,7 +328,6 @@ void GeckoSampler::StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter)
   aWriter.IntProperty("debug", 0);
 #endif
 
-#ifndef SPS_STANDALONE
   aWriter.IntProperty("gcpoison", JS::IsGCPoisoning() ? 1 : 0);
 
   bool asyncStacks = Preferences::GetBool("javascript.options.asyncstack");
@@ -388,7 +377,6 @@ void GeckoSampler::StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter)
     if (!NS_FAILED(res))
       aWriter.StringProperty("product", string.Data());
   }
-#endif
 }
 
 void GeckoSampler::ToStreamAsJSON(std::ostream& stream, double aSinceTime)
@@ -397,7 +385,6 @@ void GeckoSampler::ToStreamAsJSON(std::ostream& stream, double aSinceTime)
   StreamJSON(b, aSinceTime);
 }
 
-#ifndef SPS_STANDALONE
 JSObject* GeckoSampler::ToJSObject(JSContext *aCx, double aSinceTime)
 {
   JS::RootedValue val(aCx);
@@ -417,7 +404,6 @@ void GeckoSampler::GetGatherer(nsISupports** aRetVal)
   }
   NS_ADDREF(*aRetVal = mGatherer);
 }
-#endif
 
 UniquePtr<char[]> GeckoSampler::ToJSON(double aSinceTime)
 {
@@ -557,7 +543,6 @@ void GeckoSampler::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
         }
       }
 
-#ifndef SPS_STANDALONE
       if (Sampler::CanNotifyObservers()) {
         // Send a event asking any subprocesses (plugins) to
         // give us their information
@@ -582,7 +567,6 @@ void GeckoSampler::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
         java::GeckoJavaSampler::Unpause();
       }
   #endif
-#endif
 
       SetPaused(false);
     }
@@ -593,7 +577,6 @@ void GeckoSampler::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
 
 void GeckoSampler::FlushOnJSShutdown(JSContext* aContext)
 {
-#ifndef SPS_STANDALONE
   SetPaused(true);
 
   {
@@ -617,18 +600,15 @@ void GeckoSampler::FlushOnJSShutdown(JSContext* aContext)
   }
 
   SetPaused(false);
-#endif
 }
 
 void PseudoStack::flushSamplerOnJSShutdown()
 {
-#ifndef SPS_STANDALONE
   MOZ_ASSERT(mContext);
   GeckoSampler* t = tlsTicker.get();
   if (t) {
     t->FlushOnJSShutdown(mContext);
   }
-#endif
 }
 
 // END SaveProfileTask et al
@@ -673,7 +653,6 @@ void addPseudoEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
     // that will happen to the preceding tag
 
     addDynamicTag(aProfile, 'c', sampleLabel);
-#ifndef SPS_STANDALONE
     if (entry.isJs()) {
       JSScript* script = entry.script();
       if (script) {
@@ -695,7 +674,6 @@ void addPseudoEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
     } else {
       lineno = entry.line();
     }
-#endif
   } else {
     aProfile.addTag(ProfileEntry('c', sampleLabel));
 
@@ -764,7 +742,6 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
     startBufferGen = aProfile.bufferGeneration();
   }
   uint32_t jsCount = 0;
-#ifndef SPS_STANDALONE
   JS::ProfilingFrameIterator::Frame jsFrames[1000];
   // Only walk jit stack if profiling frame iterator is turned on.
   if (pseudoStack->mContext && JS::IsProfilingEnabledForContext(pseudoStack->mContext)) {
@@ -798,7 +775,6 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
       }
     }
   }
-#endif
 
   // Start the sample with a root entry.
   aProfile.addTag(ProfileEntry('s', "(root)"));
@@ -828,7 +804,6 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
       if (pseudoFrame.isCpp())
         lastPseudoCppStackAddr = (uint8_t *) pseudoFrame.stackAddress();
 
-#ifndef SPS_STANDALONE
       // Skip any pseudo-stack JS frames which are marked isOSR
       // Pseudostack frames are marked isOSR when the JS interpreter
       // enters a jit frame on a loop edge (via on-stack-replacement,
@@ -840,16 +815,13 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
           pseudoIndex++;
           continue;
       }
-#endif
 
       MOZ_ASSERT(lastPseudoCppStackAddr);
       pseudoStackAddr = lastPseudoCppStackAddr;
     }
 
-#ifndef SPS_STANDALONE
     if (jsIndex >= 0)
       jsStackAddr = (uint8_t *) jsFrames[jsIndex].stackAddress;
-#endif
 
     if (nativeIndex >= 0)
       nativeStackAddr = (uint8_t *) aNativeStack.sp_array[nativeIndex];
@@ -882,7 +854,6 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
       continue;
     }
 
-#ifndef SPS_STANDALONE
     // Check to see if JS jit stack frame is top-most
     if (jsStackAddr > nativeStackAddr) {
       MOZ_ASSERT(jsIndex >= 0);
@@ -913,7 +884,6 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
       jsIndex--;
       continue;
     }
-#endif
 
     // If we reach here, there must be a native stack entry and it must be the
     // greatest entry.
@@ -927,7 +897,6 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
     }
   }
 
-#ifndef SPS_STANDALONE
   // Update the JS context with the current profile sample buffer generation.
   //
   // Do not do this for synchronous sampling, which create their own
@@ -939,7 +908,6 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
                                                aProfile.bufferGeneration(),
                                                lapCount);
   }
-#endif
 }
 
 #ifdef USE_NS_STACKWALK
@@ -1225,12 +1193,10 @@ void GeckoSampler::InplaceTick(TickSample* sample)
     }
   }
 
-#ifndef SPS_STANDALONE
   if (sample && currThreadProfile.GetThreadResponsiveness()->HasData()) {
     mozilla::TimeDuration delta = currThreadProfile.GetThreadResponsiveness()->GetUnresponsiveDuration(sample->timestamp);
     currThreadProfile.addTag(ProfileEntry('r', delta.ToMilliseconds()));
   }
-#endif
 
   // rssMemory is equal to 0 when we are not recording.
   if (sample && sample->rssMemory != 0) {

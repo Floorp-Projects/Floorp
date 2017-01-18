@@ -46,11 +46,9 @@
 
 #include <stdint.h>
 #include <math.h>
-#ifndef SPS_STANDALONE
 #include "MainThreadUtils.h"
 #include "mozilla/Mutex.h"
 #include "ThreadResponsiveness.h"
-#endif
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"

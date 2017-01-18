@@ -7,11 +7,9 @@
 #include "ProfilerBacktrace.h"
 #include "ProfilerMarkers.h"
 #include "SyncProfile.h"
-#ifndef SPS_STANDALONE
 #include "gfxASurface.h"
 #include "Layers.h"
 #include "mozilla/Sprintf.h"
-#endif
 
 ProfilerMarkerPayload::ProfilerMarkerPayload(UniqueProfilerBacktrace aStack)
   : mStack(mozilla::Move(aStack))
@@ -88,7 +86,6 @@ ProfilerMarkerTracing::StreamPayload(SpliceableJSONWriter& aWriter,
   }
 }
 
-#ifndef SPS_STANDALONE
 GPUMarkerPayload::GPUMarkerPayload(
   const mozilla::TimeStamp& aCpuTimeStart,
   const mozilla::TimeStamp& aCpuTimeEnd,
@@ -228,4 +225,3 @@ VsyncPayload::StreamPayload(SpliceableJSONWriter& aWriter, UniqueStacks& aUnique
   aWriter.DoubleProperty("vsync", profiler_time(mVsyncTimestamp));
   aWriter.StringProperty("category", "VsyncTimestamp");
 }
-#endif

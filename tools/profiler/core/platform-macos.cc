@@ -29,13 +29,11 @@
 #include <errno.h>
 #include <math.h>
 
-#ifndef SPS_STANDALONE
 #include "ThreadResponsiveness.h"
 #include "nsThreadUtils.h"
 
 // Memory profile
 #include "nsMemoryReporterManager.h"
-#endif
 
 #include "platform.h"
 #include "GeckoSampler.h"
@@ -227,9 +225,7 @@ class SamplerThread : public Thread {
             continue;
           }
 
-#ifndef SPS_STANDALONE
           info->Profile()->GetThreadResponsiveness()->Update();
-#endif
 
           ThreadProfile* thread_profile = info->Profile();
 
@@ -262,11 +258,9 @@ class SamplerThread : public Thread {
     sample->ussMemory = 0;
     sample->rssMemory = 0;
 
-#ifndef SPS_STANDALONE
     if (isFirstProfiledThread && Sampler::GetActiveSampler()->ProfileMemory()) {
       sample->rssMemory = nsMemoryReporterManager::ResidentFast();
     }
-#endif
 
     // We're using thread_suspend on OS X because pthread_kill (which is what
     // we're using on Linux) has less consistent performance and causes
