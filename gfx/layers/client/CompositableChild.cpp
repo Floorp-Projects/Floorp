@@ -65,7 +65,6 @@ CompositableChild::ActorDestroy(ActorDestroyReason)
   mCanSend = false;
 
   if (mCompositableClient) {
-    mCompositableClient->mCompositableChild = nullptr;
     mCompositableClient = nullptr;
   }
 }

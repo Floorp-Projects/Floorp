@@ -77,15 +77,15 @@ public:
   virtual mozilla::ipc::IPCResult RecvUpdateNoSwap(EditArray&& aEdits, OpDestroyArray&& aToDestroy,
                                                 const uint64_t& aFwdTransactionId) override;
 
-  PCompositableParent* AllocPCompositableParent(const TextureInfo& aInfo,
-                                                const uint64_t& aID) override;
-  bool DeallocPCompositableParent(PCompositableParent* aActor) override;
-
   virtual PTextureParent* AllocPTextureParent(const SurfaceDescriptor& aSharedData,
                                               const LayersBackend& aLayersBackend,
                                               const TextureFlags& aFlags,
                                               const uint64_t& aSerial) override;
   virtual bool DeallocPTextureParent(PTextureParent* actor) override;
+
+  virtual mozilla::ipc::IPCResult RecvNewCompositable(const CompositableHandle& aHandle,
+                                                      const TextureInfo& aInfo) override;
+  virtual mozilla::ipc::IPCResult RecvReleaseCompositable(const CompositableHandle& aHandle) override;
 
   PMediaSystemResourceManagerParent* AllocPMediaSystemResourceManagerParent() override;
   bool DeallocPMediaSystemResourceManagerParent(PMediaSystemResourceManagerParent* aActor) override;
@@ -123,8 +123,6 @@ public:
 
   virtual bool IPCOpen() const override { return !mClosed; }
 
-  CompositableHost* FindCompositable(const CompositableHandle& aHandle);
-
 protected:
   void OnChannelConnected(int32_t pid) override;
 
@@ -148,33 +146,6 @@ private:
   static MessageLoop* sMainLoop;
 
   RefPtr<CompositorThreadHolder> mCompositorThreadHolder;
-
-  /**
-   * PCompositable and PLayer can, in the case of async textures, be managed by
-   * different top level protocols. In this case they don't share the same
-   * communication channel and we can't send an OpAttachCompositable (PCompositable,
-   * PLayer) message.
-   *
-   * In order to attach a layer and the right compositable if the the compositable
-   * is async, we store references to the async compositables in a CompositableMap
-   * that is accessed only on the compositor thread. During a layer transaction we
-   * send the message OpAttachAsyncCompositable(ID, PLayer), and on the compositor
-   * side we lookup the ID in the map and attach the corresponding compositable to
-   * the layer.
-   *
-   * CompositableMap must be global because the image bridge doesn't have any
-   * reference to whatever we have created with PLayerTransaction. So, the only way to
-   * actually connect these two worlds is to have something global that they can
-   * both query (in the same  thread). The map is not allocated the map on the
-   * stack to avoid the badness of static initialization.
-   *
-   * Also, we have a compositor/PLayerTransaction protocol/etc. per layer manager, and the
-   * ImageBridge is used by all the existing compositors that have a video, so
-   * there isn't an instance or "something" that lives outside the boudaries of a
-   * given layer manager on the compositor thread except the image bridge and the
-   * thread itself.
-   */
-  std::map<uint64_t, CompositableHost*> mCompositables;
 };
 
 } // namespace layers

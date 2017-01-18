@@ -28,38 +28,6 @@ namespace layers {
 
 class Compositor;
 
-/**
- * IPDL actor used by CompositableHost to match with its corresponding
- * CompositableClient on the content side.
- *
- * CompositableParent is owned by the IPDL system. It's deletion is triggered
- * by either the CompositableChild's deletion, or by the IPDL communication
- * going down.
- */
-class CompositableParent : public ParentActor<PCompositableParent>
-{
-public:
-  CompositableParent(CompositableParentManager* aMgr, const TextureInfo& aTextureInfo)
-  {
-    MOZ_COUNT_CTOR(CompositableParent);
-    mHost = CompositableHost::Create(aTextureInfo);
-  }
-
-  ~CompositableParent()
-  {
-    MOZ_COUNT_DTOR(CompositableParent);
-  }
-
-  virtual void Destroy() override
-  {
-    if (mHost) {
-      mHost->Detach(nullptr, CompositableHost::FORCE_DETACH);
-    }
-  }
-
-  RefPtr<CompositableHost> mHost;
-};
-
 CompositableHost::CompositableHost(const TextureInfo& aTextureInfo)
   : mTextureInfo(aTextureInfo)
   , mCompositorID(0)
@@ -77,25 +45,11 @@ CompositableHost::~CompositableHost()
   MOZ_COUNT_DTOR(CompositableHost);
 }
 
-PCompositableParent*
-CompositableHost::CreateIPDLActor(CompositableParentManager* aMgr,
-                                  const TextureInfo& aTextureInfo)
-{
-  return new CompositableParent(aMgr, aTextureInfo);
-}
-
 bool
 CompositableHost::DestroyIPDLActor(PCompositableParent* aActor)
 {
   delete aActor;
   return true;
-}
-
-CompositableHost*
-CompositableHost::FromIPDLActor(PCompositableParent* aActor)
-{
-  MOZ_ASSERT(aActor);
-  return static_cast<CompositableParent*>(aActor)->mHost;
 }
 
 void
@@ -207,12 +161,6 @@ CompositableHost::DumpTextureHost(std::stringstream& aStream, TextureHost* aText
     return;
   }
   aStream << gfxUtils::GetAsDataURI(dSurf).get();
-}
-
-void
-CompositableHost::ReceivedDestroy(PCompositableParent* aActor)
-{
-  static_cast<CompositableParent*>(aActor)->RecvDestroy();
 }
 
 } // namespace layers

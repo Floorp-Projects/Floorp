@@ -10,19 +10,5 @@
 namespace mozilla {
 namespace layers {
 
-void
-CompositableForwarder::Destroy(CompositableChild* aCompositable)
-{
-  AssertInForwarderThread();
-
-  if (!aCompositable->CanSend()) {
-    return;
-  }
-
-  if (!DestroyInTransaction(aCompositable, false)) {
-    aCompositable->SendDestroy();
-  }
-}
-
 } // namespace layers
 } // namespace mozilla

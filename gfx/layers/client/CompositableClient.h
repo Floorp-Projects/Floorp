@@ -114,8 +114,6 @@ public:
 
   bool IsConnected() const;
 
-  PCompositableChild* GetIPDLActor() const;
-
   CompositableForwarder* GetForwarder() const
   {
     return mForwarder;
@@ -130,6 +128,13 @@ public:
    * on the main thread).
    */
   CompositableHandle GetAsyncHandle() const;
+
+  /**
+   * Handle for IPDL communication.
+   */
+  CompositableHandle GetIPCHandle() const {
+    return mHandle;
+  }
 
   /**
    * Tells the Compositor to create a TextureHost for this TextureClient.
@@ -165,7 +170,7 @@ public:
 
   static RefPtr<CompositableClient> FromIPDLActor(PCompositableChild* aActor);
 
-  void InitIPDLActor(PCompositableChild* aActor, const CompositableHandle& aHandle);
+  void InitIPDL(const CompositableHandle& aHandle);
 
   TextureFlags GetTextureFlags() const { return mTextureFlags; }
 
@@ -177,15 +182,14 @@ public:
                                 TextureClient* aTexture,
                                 TextureDumpMode aCompress);
 protected:
-  RefPtr<CompositableChild> mCompositableChild;
   RefPtr<CompositableForwarder> mForwarder;
   // Some layers may want to enforce some flags to all their textures
   // (like disallowing tiling)
   TextureFlags mTextureFlags;
   RefPtr<TextureClientRecycleAllocator> mTextureClientRecycler;
 
-  // Handle for IPDL operations.
-  CompositableHandle mAsyncHandle;
+  CompositableHandle mHandle;
+  bool mIsAsync;
 
   friend class CompositableChild;
 };
