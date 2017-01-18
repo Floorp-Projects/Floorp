@@ -6,7 +6,7 @@
         document.getElementById('t').removeAttribute('disabled');
         document.documentElement.className='';
       }
-      document.addEventListener("MozReftestInvalidate", doTest, false);
+      document.addEventListener("MozReftestInvalidate", doTest);
     </script>
   </head>
   <!-- Test: if textarea is not disabled, it is candidate for constraint validation

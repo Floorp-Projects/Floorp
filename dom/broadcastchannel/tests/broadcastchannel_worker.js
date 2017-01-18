@@ -12,7 +12,7 @@ onmessage = function(evt) {
   bc.addEventListener('message', function(event) {
     bc.postMessage(event.data == "hello world from the window" ? "hello world from the worker" : "KO");
     bc.close();
-  }, false);
+  });
 
   postMessage("READY");
 }

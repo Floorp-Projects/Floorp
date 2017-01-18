@@ -49,7 +49,7 @@ var f = document.createElement("iframe");
 // Assign a resource file with zero length and expect the error event from
 // the video element since decoding metadata will fail.
 f.src = "data:video/webm,";
-f.addEventListener("load", onload, false);
+f.addEventListener("load", onload);
 document.body.appendChild(f);
 
 </script>

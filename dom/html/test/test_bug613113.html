@@ -41,11 +41,11 @@ output.addEventListener("invalid", function() {
       SimpleTest.finish();
     }, 0);
   }
-}, false);
+});
 
 form.addEventListener("submit", function() {
   ok(false, "submit event should not have been send");
-}, false);
+});
 
 output.setCustomValidity("foo");
 

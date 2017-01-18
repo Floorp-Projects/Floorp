@@ -320,7 +320,7 @@ RESTRequest.prototype = {
     // Set request headers.
     let headers = this._headers;
     for (let key in headers) {
-      if (key == 'authorization') {
+      if (key == "authorization") {
         this._log.trace("HTTP Header " + key + ": ***** (suppressed)");
       } else {
         this._log.trace("HTTP Header " + key + ": " + headers[key]);

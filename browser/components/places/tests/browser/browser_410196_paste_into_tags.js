@@ -93,7 +93,7 @@ function focusTag(PlacesOrganizer) {
   let fooTag = tags.getChild(0);
   let tagNode = fooTag;
   PlacesOrganizer._places.selectNode(fooTag);
-  is(tagNode.title, 'foo', "tagNode title is foo");
+  is(tagNode.title, "foo", "tagNode title is foo");
   let ip = PlacesOrganizer._places.insertionPoint;
   ok(ip.isTag, "IP is a tag");
 }

@@ -39,8 +39,8 @@
             if (delta > 3 || p == 0 || p == max) {
               this.setAttribute("value", p);
               // Fire DOM event so that accessible value change events occur
-              var event = document.createEvent('Events');
-              event.initEvent('ValueChange', true, true);
+              var event = document.createEvent("Events");
+              event.initEvent("ValueChange", true, true);
               this.dispatchEvent(event);
             }
           }

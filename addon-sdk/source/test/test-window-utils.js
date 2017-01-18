@@ -42,7 +42,7 @@ exports.testWindowTracker = function(assert, done) {
   assert.pass('window was created');
 
   myWindow.addEventListener("load", function onload() {
-    myWindow.removeEventListener("load", onload, false);
+    myWindow.removeEventListener("load", onload);
     assert.pass("test window has opened");
 
     // test bug 638007 (new is optional), using new
@@ -61,7 +61,7 @@ exports.testWindowTracker = function(assert, done) {
         }
       }
     });
-  }, false);
+  });
 };
 
 exports['test window watcher untracker'] = function(assert, done) {
@@ -148,10 +148,10 @@ exports['test window watcher unregs 4 loading wins'] = function(assert, done) {
       myWindow.addEventListener("unload", function() {
         // once the window unloads test is done
         done();
-      }, false);
+      });
       myWindow.close();
     }, 0);
-  }, false);
+  });
 }
 
 exports['test window watcher without untracker'] = function(assert, done) {
@@ -229,13 +229,13 @@ exports.testWindowIterator = function(assert, done) {
 
   // Then it should be in windowIterator()
   window.addEventListener("load", function onload() {
-    window.addEventListener("load", onload, false);
+    window.addEventListener("load", onload);
     assert.ok(toArray(windowUtils.windowIterator()).indexOf(window) !== -1,
               "window is now in windowIterator()");
 
     // Wait for the window unload before ending test
     close(window).then(done);
-  }, false);
+  });
 };
 
 exports.testIgnoreClosingWindow = function(assert, done) {
@@ -247,7 +247,7 @@ exports.testIgnoreClosingWindow = function(assert, done) {
   assert.equal(windows().length, 2, "Two windows open");
 
   window.addEventListener("load", function onload() {
-    window.addEventListener("load", onload, false);
+    window.addEventListener("load", onload);
 
     assert.equal(windows().length, 2, "Two windows open");
 
@@ -260,7 +260,7 @@ exports.testIgnoreClosingWindow = function(assert, done) {
 
     assert.equal(windows().length, 1, "Only one window open");
     checked = true;
-  }, false);
+  });
 };
 
 require("sdk/test").run(exports);

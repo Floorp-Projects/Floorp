@@ -18,7 +18,7 @@ var shell;
 var shellType;
 var failureRegExp = new RegExp("^FAILURE");
 
-window.addEventListener("message", onMessageReceived, false);
+window.addEventListener("message", onMessageReceived);
 
 function onMessageReceived(event)
 {

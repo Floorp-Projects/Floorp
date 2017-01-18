@@ -41,7 +41,7 @@ var ToggleMixin = {
 
   bindToggle: function () {
     this._onToggle = this._onToggle.bind(this);
-    this.button.addEventListener("mousedown", this._onToggle, false);
+    this.button.addEventListener("mousedown", this._onToggle);
   },
 
   unbindToggle: function () {

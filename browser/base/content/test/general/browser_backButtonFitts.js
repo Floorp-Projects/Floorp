@@ -13,9 +13,9 @@ add_task(function* () {
     // While in the child process, add a listener for the popstate event here. This
     // event will fire when the mouse click happens.
     content.addEventListener("popstate", function onPopState() {
-      content.removeEventListener("popstate", onPopState, false);
+      content.removeEventListener("popstate", onPopState);
       sendAsyncMessage("Test:PopStateOccurred", { location: content.document.location.href });
-    }, false);
+    });
   });
 
   window.maximize();

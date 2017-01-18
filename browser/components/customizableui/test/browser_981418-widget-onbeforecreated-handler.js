@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-const kWidgetId = 'test-981418-widget-onbeforecreated';
+const kWidgetId = "test-981418-widget-onbeforecreated";
 
 // Should be able to add broken view widget
 add_task(function* testAddOnBeforeCreatedWidget() {
@@ -11,14 +11,14 @@ add_task(function* testAddOnBeforeCreatedWidget() {
   let onBeforeCreatedCalled = false;
   let widgetSpec = {
     id: kWidgetId,
-    type: 'view',
-    viewId: kWidgetId + 'idontexistyet',
+    type: "view",
+    viewId: kWidgetId + "idontexistyet",
     onBeforeCreated(doc) {
       let view = doc.createElement("panelview");
-      view.id = kWidgetId + 'idontexistyet';
+      view.id = kWidgetId + "idontexistyet";
       let label = doc.createElement("label");
       label.setAttribute("value", "Hello world");
-      label.className = 'panel-subview-header';
+      label.className = "panel-subview-header";
       view.appendChild(label);
       document.getElementById("PanelUI-multiView").appendChild(view);
       onBeforeCreatedCalled = true;

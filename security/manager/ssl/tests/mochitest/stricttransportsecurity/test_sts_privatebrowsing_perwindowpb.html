@@ -262,7 +262,7 @@
   function nextTest() {
     SimpleTest.executeSoon(tests.length ? tests.shift() : finish);
   }
-  window.addEventListener("load", nextTest, false);
+  window.addEventListener("load", nextTest);
   </script>
 </head>
 

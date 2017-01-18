@@ -5,7 +5,7 @@
 <script type="text/javascript;version=1.8">
 
 function init() {
-  window.addEventListener("message", function process(e) {doTest(e)}, false);
+  window.addEventListener("message", function process(e) {doTest(e)});
   // unless we relinquish the eventloop,
   // tests will run before the chrome event handlers are ready
   setTimeout(doTest, 0);

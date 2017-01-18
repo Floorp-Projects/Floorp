@@ -159,11 +159,11 @@ add_test(function test_getResourceAuthenticator() {
     do_check_true(!!authenticator);
     let req = {uri: CommonUtils.makeURI(
       "https://example.net/somewhere/over/the/rainbow"),
-               method: 'GET'};
-    let output = authenticator(req, 'GET');
-    do_check_true('headers' in output);
-    do_check_true('authorization' in output.headers);
-    do_check_true(output.headers.authorization.startsWith('Hawk'));
+               method: "GET"};
+    let output = authenticator(req, "GET");
+    do_check_true("headers" in output);
+    do_check_true("authorization" in output.headers);
+    do_check_true(output.headers.authorization.startsWith("Hawk"));
     _("Expected internal state after successful call.");
     do_check_eq(browseridManager._token.uid, identityConfig.fxaccount.token.uid);
     run_next_test();
@@ -176,10 +176,10 @@ add_test(function test_getRESTRequestAuthenticator() {
       "https://example.net/somewhere/over/the/rainbow");
     let authenticator = browseridManager.getRESTRequestAuthenticator();
     do_check_true(!!authenticator);
-    let output = authenticator(request, 'GET');
+    let output = authenticator(request, "GET");
     do_check_eq(request.uri, output.uri);
-    do_check_true(output._headers.authorization.startsWith('Hawk'));
-    do_check_true(output._headers.authorization.includes('nonce'));
+    do_check_true(output._headers.authorization.startsWith("Hawk"));
+    do_check_true(output._headers.authorization.includes("nonce"));
     do_check_true(browseridManager.hasValidToken());
     run_next_test();
   }
@@ -197,7 +197,7 @@ add_test(function test_resourceAuthenticatorSkew() {
 
   // mock fxa hawk client skew
   hawkClient.now = function() {
-    dump("mocked client now: " + now + '\n');
+    dump("mocked client now: " + now + "\n");
     return now;
   }
   // Imagine there's already been one fxa request and the hawk client has
@@ -245,10 +245,10 @@ add_test(function test_resourceAuthenticatorSkew() {
 
   let request = new SyncStorageRequest("https://example.net/i/like/pie/");
   let authenticator = browseridManager.getResourceAuthenticator();
-  let output = authenticator(request, 'GET');
+  let output = authenticator(request, "GET");
   dump("output" + JSON.stringify(output));
   let authHeader = output.headers.authorization;
-  do_check_true(authHeader.startsWith('Hawk'));
+  do_check_true(authHeader.startsWith("Hawk"));
 
   // Skew correction is applied in the header and we're within the two-minute
   // window.
@@ -292,10 +292,10 @@ add_test(function test_RESTResourceAuthenticatorSkew() {
 
   let request = new SyncStorageRequest("https://example.net/i/like/pie/");
   let authenticator = browseridManager.getResourceAuthenticator();
-  let output = authenticator(request, 'GET');
+  let output = authenticator(request, "GET");
   dump("output" + JSON.stringify(output));
   let authHeader = output.headers.authorization;
-  do_check_true(authHeader.startsWith('Hawk'));
+  do_check_true(authHeader.startsWith("Hawk"));
 
   // Skew correction is applied in the header and we're within the two-minute
   // window.
@@ -348,8 +348,8 @@ add_test(function test_tokenExpiration() {
     do_check_true(!!authenticator);
     let req = {uri: CommonUtils.makeURI(
       "https://example.net/somewhere/over/the/rainbow"),
-               method: 'GET'};
-    authenticator(req, 'GET');
+               method: "GET"};
+    authenticator(req, "GET");
 
     // Mock the clock.
     _("Forcing the token to expire ...");
@@ -699,7 +699,7 @@ add_task(async function test_getKeysMissing() {
   // try and fetch them.
   delete identityConfig.fxaccount.user.kA;
   delete identityConfig.fxaccount.user.kB;
-  identityConfig.fxaccount.user.keyFetchToken = 'keyFetchToken';
+  identityConfig.fxaccount.user.keyFetchToken = "keyFetchToken";
 
   configureFxAccountIdentity(browseridManager, identityConfig);
 

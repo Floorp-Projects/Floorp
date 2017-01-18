@@ -60,9 +60,9 @@ HighlightersOverlay.prototype = {
 
     let el = view.element;
     el.addEventListener("click", this.onClick, true);
-    el.addEventListener("mousemove", this.onMouseMove, false);
-    el.addEventListener("mouseout", this.onMouseOut, false);
-    el.ownerDocument.defaultView.addEventListener("mouseout", this.onMouseOut, false);
+    el.addEventListener("mousemove", this.onMouseMove);
+    el.addEventListener("mouseout", this.onMouseOut);
+    el.ownerDocument.defaultView.addEventListener("mouseout", this.onMouseOut);
 
     this.inspector.target.on("will-navigate", this.onWillNavigate);
   },
@@ -82,8 +82,8 @@ HighlightersOverlay.prototype = {
 
     let el = view.element;
     el.removeEventListener("click", this.onClick, true);
-    el.removeEventListener("mousemove", this.onMouseMove, false);
-    el.removeEventListener("mouseout", this.onMouseOut, false);
+    el.removeEventListener("mousemove", this.onMouseMove);
+    el.removeEventListener("mouseout", this.onMouseOut);
 
     this.inspector.target.off("will-navigate", this.onWillNavigate);
   },

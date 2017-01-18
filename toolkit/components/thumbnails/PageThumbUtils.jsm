@@ -150,7 +150,7 @@ this.PageThumbUtils = {
    */
   createSnapshotThumbnail(aWindow, aDestCanvas, aArgs) {
     if (Cu.isCrossProcessWrapper(aWindow)) {
-      throw new Error('Do not pass cpows here.');
+      throw new Error("Do not pass cpows here.");
     }
     let fullScale = aArgs ? aArgs.fullScale : false;
     let [contentWidth, contentHeight] = this.getContentSize(aWindow);
@@ -231,7 +231,7 @@ this.PageThumbUtils = {
    */
   determineCropSize(aWindow, aCanvas) {
     if (Cu.isCrossProcessWrapper(aWindow)) {
-      throw new Error('Do not pass cpows here.');
+      throw new Error("Do not pass cpows here.");
     }
     let utils = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIDOMWindowUtils);

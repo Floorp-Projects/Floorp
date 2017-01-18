@@ -13,7 +13,6 @@
 #include "mozilla/hal_sandbox/PHal.h"   // for ScreenConfiguration
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositorBridgeChild.h" // for CompositorBridgeChild
-#include "mozilla/layers/ContentClient.h"
 #include "mozilla/layers/FrameUniformityData.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/LayersMessages.h"  // for EditReply, etc
@@ -35,6 +34,7 @@
 #endif
 #ifdef XP_WIN
 #include "mozilla/gfx/DeviceManagerDx.h"
+#include "gfxDWriteFonts.h"
 #endif
 
 namespace mozilla {
@@ -288,6 +288,14 @@ ClientLayerManager::EndTransactionInternal(DrawPaintedLayerCallback aCallback,
                                            EndTransactionFlags)
 {
   PaintTelemetry::AutoRecord record(PaintTelemetry::Metric::Rasterization);
+
+#ifdef WIN32
+  if (aCallbackData) {
+    // Content processes don't get OnPaint called. So update here whenever we
+    // may do Thebes drawing.
+    gfxDWriteFont::UpdateClearTypeUsage();
+  }
+#endif
 
   PROFILER_LABEL("ClientLayerManager", "EndTransactionInternal",
     js::ProfileEntry::Category::GRAPHICS);
@@ -651,7 +659,8 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   // Skip the synchronization for buffer since we also skip the painting during
   // device-reset status.
   if (!gfxPlatform::GetPlatform()->DidRenderingDeviceReset()) {
-    if (mForwarder->GetSyncObject()) {
+    if (mForwarder->GetSyncObject() &&
+        mForwarder->GetSyncObject()->IsSyncObjectValid()) {
       mForwarder->GetSyncObject()->FinalizeFrame();
     }
   }
@@ -671,35 +680,12 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   }
 
   // forward this transaction's changeset to our LayerManagerComposite
-  bool sent;
-  AutoTArray<EditReply, 10> replies;
-  if (mForwarder->EndTransaction(&replies, mRegionToClear,
-        mLatestTransactionId, aScheduleComposite, mPaintSequenceNumber,
-        mIsRepeatTransaction, transactionStart, &sent)) {
-    for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
-      const EditReply& reply = replies[i];
-
-      switch (reply.type()) {
-      case EditReply::TOpContentBufferSwap: {
-        MOZ_LAYERS_LOG(("[LayersForwarder] DoubleBufferSwap"));
-
-        const OpContentBufferSwap& obs = reply.get_OpContentBufferSwap();
-
-        RefPtr<CompositableClient> compositable =
-          CompositableClient::FromIPDLActor(obs.compositableChild());
-        ContentClientRemote* contentClient =
-          static_cast<ContentClientRemote*>(compositable.get());
-        MOZ_ASSERT(contentClient);
-
-        contentClient->SwapBuffers(obs.frontUpdatedRegion());
-
-        break;
-      }
-      default:
-        MOZ_CRASH("not reached");
-      }
-    }
-
+  bool sent = false;
+  bool ok = mForwarder->EndTransaction(
+    mRegionToClear, mLatestTransactionId, aScheduleComposite,
+    mPaintSequenceNumber, mIsRepeatTransaction, transactionStart,
+    &sent);
+  if (ok) {
     if (sent) {
       mNeedsComposite = false;
     }

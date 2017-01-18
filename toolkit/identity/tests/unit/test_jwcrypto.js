@@ -3,7 +3,7 @@
 
 "use strict"
 
-Cu.import('resource://gre/modules/identity/LogUtils.jsm');
+Cu.import("resource://gre/modules/identity/LogUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "IDService",
                                   "resource://gre/modules/identity/Identity.jsm",
@@ -231,7 +231,7 @@ function test_audience_encoding_bug972582() {
 // Helper function follow
 
 function extractComponents(signedObject) {
-  if (typeof(signedObject) != 'string') {
+  if (typeof(signedObject) != "string") {
     throw new Error("malformed signature " + typeof(signedObject));
   }
 

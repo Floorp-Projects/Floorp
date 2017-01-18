@@ -16,7 +16,7 @@ add_task(function* test_private_temp() {
 
   yield promiseDownloadStopped(download);
 
-  var targetFile = Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsIFile);
+  var targetFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
   targetFile.initWithPath(download.target.path);
 
   // 488 is the decimal value of 0o700.

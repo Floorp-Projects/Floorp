@@ -17,13 +17,15 @@ class nsIDocument;
 namespace mozilla {
 namespace net {
 
-class nsChannelClassifier final : public nsIURIClassifierCallback
+class nsChannelClassifier final : public nsIURIClassifierCallback,
+                                  public nsIObserver
 {
 public:
     explicit nsChannelClassifier(nsIChannel* aChannel);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIURICLASSIFIERCALLBACK
+    NS_DECL_NSIOBSERVER
 
     // Calls nsIURIClassifier.Classify with the principal of the given channel,
     // and cancels the channel on a bad verdict.

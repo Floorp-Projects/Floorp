@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 #ifndef VP8_COMMON_MODECONT_H_
 #define VP8_COMMON_MODECONT_H_
 

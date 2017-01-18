@@ -17,7 +17,7 @@ function init()
   document.documentElement.offsetHeight;
   for (var j = 0; j < 2; ++j) {
     var iframe = document.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
-    iframe.addEventListener("load", mmf, false);
+    iframe.addEventListener("load", mmf);
     document.body.appendChild(iframe);
   }
 }

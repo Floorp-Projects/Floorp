@@ -14,8 +14,6 @@
 #define ARCH_MIPS 0
 #define ARCH_X86 0
 #define ARCH_X86_64 0
-#define HAVE_EDSP 0
-#define HAVE_MEDIA 1
 #define HAVE_NEON 1
 #define HAVE_NEON_ASM 1
 #define HAVE_MIPS32 0
@@ -38,7 +36,6 @@
 #define CONFIG_INSTALL_BINS 1
 #define CONFIG_INSTALL_LIBS 1
 #define CONFIG_INSTALL_SRCS 0
-#define CONFIG_USE_X86INC 0
 #define CONFIG_DEBUG 0
 #define CONFIG_GPROF 0
 #define CONFIG_GCOV 0

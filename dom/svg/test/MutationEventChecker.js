@@ -50,7 +50,7 @@ function MutationEventChecker()
     this.giveUp         = false;
     this.ignore         = false;
 
-    this.element.addEventListener('DOMAttrModified', this._listener, false);
+    this.element.addEventListener('DOMAttrModified', this._listener);
   }
 
   this.expect = function()
@@ -106,7 +106,7 @@ function MutationEventChecker()
       " attribute, but we're still expecting the following events: " +
       this._stillExpecting());
 
-    this.element.removeEventListener('DOMAttrModified', this._listener, false);
+    this.element.removeEventListener('DOMAttrModified', this._listener);
     this.attr = "";
   }
 

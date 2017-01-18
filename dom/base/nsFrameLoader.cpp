@@ -2937,6 +2937,8 @@ nsFrameLoader::TryRemoteBrowser()
   if (!mRemoteBrowser) {
     return false;
   }
+  // Now that mRemoteBrowser is set, we can initialize the RenderFrameParent
+  mRemoteBrowser->InitRenderFrame();
 
   MaybeUpdatePrimaryTabParent(eTabParentChanged);
 

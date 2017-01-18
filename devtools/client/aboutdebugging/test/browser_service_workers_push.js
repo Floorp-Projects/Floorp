@@ -39,7 +39,7 @@ add_task(function* () {
     let win = content.wrappedJSObject;
     win.navigator.serviceWorker.addEventListener("message", function (event) {
       sendAsyncMessage(event.data);
-    }, false);
+    });
   });
 
   // Expect the service worker to claim the test window when activating.

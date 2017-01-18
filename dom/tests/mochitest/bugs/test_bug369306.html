@@ -29,14 +29,14 @@ function focusShouldNotChange(aAction, nextTest)
   SimpleTest.waitForFocus(function () {
     function failHandler() { fail = true; }
 
-    originatingWindow.addEventListener("focus", failHandler, false);
-    w.addEventListener("blur", failHandler, false);
+    originatingWindow.addEventListener("focus", failHandler);
+    w.addEventListener("blur", failHandler);
 
     aAction(w);
 
     SimpleTest.executeSoon(function () {
-      originatingWindow.removeEventListener("focus", failHandler, false);
-      w.removeEventListener("blur", failHandler, false);
+      originatingWindow.removeEventListener("focus", failHandler);
+      w.removeEventListener("blur", failHandler);
 
       ok(!fail, "The focus should not have been changed!");
 
@@ -55,8 +55,8 @@ function focusShouldNotChange2(aURL, nextTest)
   SimpleTest.waitForFocus(function () {
     function failHandler() { fail = true; }
 
-    originatingWindow.addEventListener("focus", failHandler, false);
-    w.addEventListener("blur", failHandler, false);
+    originatingWindow.addEventListener("focus", failHandler);
+    w.addEventListener("blur", failHandler);
 
     /**
      * NOTE: This setTimeout can cause a random green.
@@ -65,8 +65,8 @@ function focusShouldNotChange2(aURL, nextTest)
      * this check green even if it should be orange.
      */
     setTimeout(function () {
-      originatingWindow.removeEventListener("focus", failHandler, false);
-      w.removeEventListener("blur", failHandler, false);
+      originatingWindow.removeEventListener("focus", failHandler);
+      w.removeEventListener("blur", failHandler);
 
       ok(!fail, "The focus should not have been changed with URL=" + aURL);
 

@@ -202,6 +202,10 @@ module.exports = {
     // Require object-literal shorthand with ES6 method syntax
     "object-shorthand": ["error", "always", { "avoidQuotes": true }],
 
+    // Require double-quotes everywhere, except where quotes are escaped
+    // or template literals are used.
+    "quotes": ["error", "double", { "avoidEscape": true, "allowTemplateLiterals": true }],
+
     // No spacing inside rest or spread expressions
     "rest-spread-spacing": "error",
 
@@ -249,7 +253,14 @@ module.exports = {
     "dump": true,
     "KeyEvent": false,
     "openDialog": false,
+    "MenuBoxObject": false,
     "sizeToContent": false,
     "SharedArrayBuffer": false,
+    // Note: StopIteration will likely be removed as part of removing legacy
+    // generators, see bug 968038.
+    "StopIteration": false,
+    // Specific to Firefox
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/uneval
+    "uneval": false
   }
 };

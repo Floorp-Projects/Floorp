@@ -6,17 +6,17 @@
 
 function init()
 {
-  document.addEventListener("DOMNodeRemoved", meep, false);
+  document.addEventListener("DOMNodeRemoved", meep);
   document.body.appendChild(document.getElementById("b"));
 
   function meep()
   {
-    document.removeEventListener("DOMNodeRemoved", meep, false);
+    document.removeEventListener("DOMNodeRemoved", meep);
     document.body.removeChild(document.getElementById("c"));
   }
 }
 
-window.addEventListener("load", init, false);
+window.addEventListener("load", init);
 
 
 </script>

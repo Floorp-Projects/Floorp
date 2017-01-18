@@ -69,15 +69,15 @@ static void common_hv_8ht_8vt_4w_msa(const uint8_t *src, int32_t src_stride,
     XORI_B4_128_SB(src7, src8, src9, src10);
     src += (4 * src_stride);
 
-    hz_out7 = HORIZ_8TAP_FILT(src7, src8, mask0, mask1, mask2, mask3,
-                              filt_hz0, filt_hz1, filt_hz2, filt_hz3);
+    hz_out7 = HORIZ_8TAP_FILT(src7, src8, mask0, mask1, mask2, mask3, filt_hz0,
+                              filt_hz1, filt_hz2, filt_hz3);
     hz_out6 = (v8i16)__msa_sldi_b((v16i8)hz_out7, (v16i8)hz_out5, 8);
     out3 = (v8i16)__msa_ilvev_b((v16i8)hz_out7, (v16i8)hz_out6);
     tmp0 = FILT_8TAP_DPADD_S_H(out0, out1, out2, out3, filt_vt0, filt_vt1,
                                filt_vt2, filt_vt3);
 
-    hz_out9 = HORIZ_8TAP_FILT(src9, src10, mask0, mask1, mask2, mask3,
-                              filt_hz0, filt_hz1, filt_hz2, filt_hz3);
+    hz_out9 = HORIZ_8TAP_FILT(src9, src10, mask0, mask1, mask2, mask3, filt_hz0,
+                              filt_hz1, filt_hz2, filt_hz3);
     hz_out8 = (v8i16)__msa_sldi_b((v16i8)hz_out9, (v16i8)hz_out7, 8);
     out4 = (v8i16)__msa_ilvev_b((v16i8)hz_out9, (v16i8)hz_out8);
     tmp1 = FILT_8TAP_DPADD_S_H(out1, out2, out3, out4, filt_vt0, filt_vt1,
@@ -151,20 +151,20 @@ static void common_hv_8ht_8vt_8w_msa(const uint8_t *src, int32_t src_stride,
 
     XORI_B4_128_SB(src7, src8, src9, src10);
 
-    hz_out7 = HORIZ_8TAP_FILT(src7, src7, mask0, mask1, mask2, mask3,
-                              filt_hz0, filt_hz1, filt_hz2, filt_hz3);
+    hz_out7 = HORIZ_8TAP_FILT(src7, src7, mask0, mask1, mask2, mask3, filt_hz0,
+                              filt_hz1, filt_hz2, filt_hz3);
     out3 = (v8i16)__msa_ilvev_b((v16i8)hz_out7, (v16i8)hz_out6);
     tmp0 = FILT_8TAP_DPADD_S_H(out0, out1, out2, out3, filt_vt0, filt_vt1,
                                filt_vt2, filt_vt3);
 
-    hz_out8 = HORIZ_8TAP_FILT(src8, src8, mask0, mask1, mask2, mask3,
-                              filt_hz0, filt_hz1, filt_hz2, filt_hz3);
+    hz_out8 = HORIZ_8TAP_FILT(src8, src8, mask0, mask1, mask2, mask3, filt_hz0,
+                              filt_hz1, filt_hz2, filt_hz3);
     out7 = (v8i16)__msa_ilvev_b((v16i8)hz_out8, (v16i8)hz_out7);
     tmp1 = FILT_8TAP_DPADD_S_H(out4, out5, out6, out7, filt_vt0, filt_vt1,
                                filt_vt2, filt_vt3);
 
-    hz_out9 = HORIZ_8TAP_FILT(src9, src9, mask0, mask1, mask2, mask3,
-                              filt_hz0, filt_hz1, filt_hz2, filt_hz3);
+    hz_out9 = HORIZ_8TAP_FILT(src9, src9, mask0, mask1, mask2, mask3, filt_hz0,
+                              filt_hz1, filt_hz2, filt_hz3);
     out8 = (v8i16)__msa_ilvev_b((v16i8)hz_out9, (v16i8)hz_out8);
     tmp2 = FILT_8TAP_DPADD_S_H(out1, out2, out3, out8, filt_vt0, filt_vt1,
                                filt_vt2, filt_vt3);
@@ -295,11 +295,11 @@ static void common_hv_2ht_2vt_4x8_msa(const uint8_t *src, int32_t src_stride,
 
   ILVEV_B2_UB(hz_out0, hz_out1, hz_out2, hz_out3, vec0, vec1);
   ILVEV_B2_UB(hz_out4, hz_out5, hz_out6, hz_out7, vec2, vec3);
-  DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt_vt, filt_vt, filt_vt, filt_vt,
-              vec4, vec5, vec6, vec7);
+  DOTP_UB4_UH(vec0, vec1, vec2, vec3, filt_vt, filt_vt, filt_vt, filt_vt, vec4,
+              vec5, vec6, vec7);
   SRARI_H4_UH(vec4, vec5, vec6, vec7, FILTER_BITS);
-  PCKEV_B4_SB(vec4, vec4, vec5, vec5, vec6, vec6, vec7, vec7, res0, res1,
-              res2, res3);
+  PCKEV_B4_SB(vec4, vec4, vec5, vec5, vec6, vec6, vec7, vec7, res0, res1, res2,
+              res3);
   ST4x4_UB(res0, res1, 0, 1, 0, 1, dst, dst_stride);
   dst += (4 * dst_stride);
   ST4x4_UB(res2, res3, 0, 1, 0, 1, dst, dst_stride);
@@ -361,12 +361,10 @@ static void common_hv_2ht_2vt_8x4_msa(const uint8_t *src, int32_t src_stride,
 }
 
 static void common_hv_2ht_2vt_8x8mult_msa(const uint8_t *src,
-                                          int32_t src_stride,
-                                          uint8_t *dst,
+                                          int32_t src_stride, uint8_t *dst,
                                           int32_t dst_stride,
                                           int8_t *filter_horiz,
-                                          int8_t *filter_vert,
-                                          int32_t height) {
+                                          int8_t *filter_vert, int32_t height) {
   uint32_t loop_cnt;
   v16i8 src0, src1, src2, src3, src4, mask, out0, out1;
   v16u8 filt_hz, filt_vt, vec0;
@@ -542,11 +540,10 @@ static void common_hv_2ht_2vt_64w_msa(const uint8_t *src, int32_t src_stride,
   }
 }
 
-void vpx_convolve8_msa(const uint8_t *src, ptrdiff_t src_stride,
-                       uint8_t *dst, ptrdiff_t dst_stride,
-                       const int16_t *filter_x, int32_t x_step_q4,
-                       const int16_t *filter_y, int32_t y_step_q4,
-                       int32_t w, int32_t h) {
+void vpx_convolve8_msa(const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst,
+                       ptrdiff_t dst_stride, const int16_t *filter_x,
+                       int32_t x_step_q4, const int16_t *filter_y,
+                       int32_t y_step_q4, int32_t w, int32_t h) {
   int8_t cnt, filt_hor[8], filt_ver[8];
 
   assert(x_step_q4 == 16);
@@ -563,72 +560,69 @@ void vpx_convolve8_msa(const uint8_t *src, ptrdiff_t src_stride,
       ((const int32_t *)filter_y)[0] == 0) {
     switch (w) {
       case 4:
-        common_hv_2ht_2vt_4w_msa(src, (int32_t)src_stride,
-                                 dst, (int32_t)dst_stride,
-                                 &filt_hor[3], &filt_ver[3], (int32_t)h);
+        common_hv_2ht_2vt_4w_msa(src, (int32_t)src_stride, dst,
+                                 (int32_t)dst_stride, &filt_hor[3],
+                                 &filt_ver[3], (int32_t)h);
         break;
       case 8:
-        common_hv_2ht_2vt_8w_msa(src, (int32_t)src_stride,
-                                 dst, (int32_t)dst_stride,
-                                 &filt_hor[3], &filt_ver[3], (int32_t)h);
+        common_hv_2ht_2vt_8w_msa(src, (int32_t)src_stride, dst,
+                                 (int32_t)dst_stride, &filt_hor[3],
+                                 &filt_ver[3], (int32_t)h);
         break;
       case 16:
-        common_hv_2ht_2vt_16w_msa(src, (int32_t)src_stride,
-                                  dst, (int32_t)dst_stride,
-                                  &filt_hor[3], &filt_ver[3], (int32_t)h);
+        common_hv_2ht_2vt_16w_msa(src, (int32_t)src_stride, dst,
+                                  (int32_t)dst_stride, &filt_hor[3],
+                                  &filt_ver[3], (int32_t)h);
         break;
       case 32:
-        common_hv_2ht_2vt_32w_msa(src, (int32_t)src_stride,
-                                  dst, (int32_t)dst_stride,
-                                  &filt_hor[3], &filt_ver[3], (int32_t)h);
+        common_hv_2ht_2vt_32w_msa(src, (int32_t)src_stride, dst,
+                                  (int32_t)dst_stride, &filt_hor[3],
+                                  &filt_ver[3], (int32_t)h);
         break;
       case 64:
-        common_hv_2ht_2vt_64w_msa(src, (int32_t)src_stride,
-                                  dst, (int32_t)dst_stride,
-                                  &filt_hor[3], &filt_ver[3], (int32_t)h);
+        common_hv_2ht_2vt_64w_msa(src, (int32_t)src_stride, dst,
+                                  (int32_t)dst_stride, &filt_hor[3],
+                                  &filt_ver[3], (int32_t)h);
         break;
       default:
-        vpx_convolve8_c(src, src_stride, dst, dst_stride,
-                        filter_x, x_step_q4, filter_y, y_step_q4,
-                        w, h);
+        vpx_convolve8_c(src, src_stride, dst, dst_stride, filter_x, x_step_q4,
+                        filter_y, y_step_q4, w, h);
         break;
     }
   } else if (((const int32_t *)filter_x)[0] == 0 ||
              ((const int32_t *)filter_y)[0] == 0) {
-    vpx_convolve8_c(src, src_stride, dst, dst_stride,
-                    filter_x, x_step_q4, filter_y, y_step_q4,
-                    w, h);
+    vpx_convolve8_c(src, src_stride, dst, dst_stride, filter_x, x_step_q4,
+                    filter_y, y_step_q4, w, h);
   } else {
     switch (w) {
       case 4:
-        common_hv_8ht_8vt_4w_msa(src, (int32_t)src_stride,
-                                 dst, (int32_t)dst_stride,
-                                 filt_hor, filt_ver, (int32_t)h);
+        common_hv_8ht_8vt_4w_msa(src, (int32_t)src_stride, dst,
+                                 (int32_t)dst_stride, filt_hor, filt_ver,
+                                 (int32_t)h);
         break;
       case 8:
-        common_hv_8ht_8vt_8w_msa(src, (int32_t)src_stride,
-                                 dst, (int32_t)dst_stride,
-                                 filt_hor, filt_ver, (int32_t)h);
+        common_hv_8ht_8vt_8w_msa(src, (int32_t)src_stride, dst,
+                                 (int32_t)dst_stride, filt_hor, filt_ver,
+                                 (int32_t)h);
         break;
       case 16:
-        common_hv_8ht_8vt_16w_msa(src, (int32_t)src_stride,
-                                  dst, (int32_t)dst_stride,
-                                  filt_hor, filt_ver, (int32_t)h);
+        common_hv_8ht_8vt_16w_msa(src, (int32_t)src_stride, dst,
+                                  (int32_t)dst_stride, filt_hor, filt_ver,
+                                  (int32_t)h);
         break;
       case 32:
-        common_hv_8ht_8vt_32w_msa(src, (int32_t)src_stride,
-                                  dst, (int32_t)dst_stride,
-                                  filt_hor, filt_ver, (int32_t)h);
+        common_hv_8ht_8vt_32w_msa(src, (int32_t)src_stride, dst,
+                                  (int32_t)dst_stride, filt_hor, filt_ver,
+                                  (int32_t)h);
         break;
       case 64:
-        common_hv_8ht_8vt_64w_msa(src, (int32_t)src_stride,
-                                  dst, (int32_t)dst_stride,
-                                  filt_hor, filt_ver, (int32_t)h);
+        common_hv_8ht_8vt_64w_msa(src, (int32_t)src_stride, dst,
+                                  (int32_t)dst_stride, filt_hor, filt_ver,
+                                  (int32_t)h);
         break;
       default:
-        vpx_convolve8_c(src, src_stride, dst, dst_stride,
-                        filter_x, x_step_q4, filter_y, y_step_q4,
-                        w, h);
+        vpx_convolve8_c(src, src_stride, dst, dst_stride, filter_x, x_step_q4,
+                        filter_y, y_step_q4, w, h);
         break;
     }
   }

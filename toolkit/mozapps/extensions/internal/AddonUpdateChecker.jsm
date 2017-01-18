@@ -581,9 +581,9 @@ function UpdateParser(aId, aUpdateKey, aUrl, aObserver) {
     this.request.overrideMimeType("text/plain");
     this.request.setRequestHeader("Moz-XPI-Update", "1", true);
     this.request.timeout = TIMEOUT;
-    this.request.addEventListener("load", () => this.onLoad(), false);
-    this.request.addEventListener("error", () => this.onError(), false);
-    this.request.addEventListener("timeout", () => this.onTimeout(), false);
+    this.request.addEventListener("load", () => this.onLoad());
+    this.request.addEventListener("error", () => this.onError());
+    this.request.addEventListener("timeout", () => this.onTimeout());
     this.request.send(null);
   } catch (e) {
     logger.error("Failed to request update manifest", e);

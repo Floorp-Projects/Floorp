@@ -75,12 +75,12 @@ var passwords_after_second_change = [
  * Test phases
  */
 
-Phase('phase1', [
+Phase("phase1", [
   [Passwords.add, passwords_initial],
   [Sync]
 ]);
 
-Phase('phase2', [
+Phase("phase2", [
   [Sync],
   [Passwords.verify, passwords_initial],
   [Passwords.modify, passwords_initial],
@@ -88,7 +88,7 @@ Phase('phase2', [
   [Sync]
 ]);
 
-Phase('phase3', [
+Phase("phase3", [
   [Sync],
   [Windows.add, { private: true }],
   [Passwords.verify, passwords_after_first_change],
@@ -97,7 +97,7 @@ Phase('phase3', [
   [Sync]
 ]);
 
-Phase('phase4', [
+Phase("phase4", [
   [Sync],
   [Passwords.verify, passwords_after_second_change]
 ]);

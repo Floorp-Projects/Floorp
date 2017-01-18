@@ -103,7 +103,7 @@ function await_event(aElement, aEventName) {
       aElement.removeEventListener(aEventName, listener);
       aResolve();
     }
-    aElement.addEventListener(aEventName, listener, false);
+    aElement.addEventListener(aEventName, listener);
   });
 }
 

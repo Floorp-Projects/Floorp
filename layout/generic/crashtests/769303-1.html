@@ -13,13 +13,13 @@ p:not([type=image]) {
 </style>
 <p id=test1><script>
 function initCF() {
-document.removeEventListener("DOMContentLoaded", initCF, false);
+document.removeEventListener("DOMContentLoaded", initCF);
 test2 = test1.cloneNode(false);
 test3 = test2.cloneNode(false);
 document.documentElement.appendChild(test3);
 setTimeout("CFcrash()", 21);
 }
-document.addEventListener("DOMContentLoaded", initCF, false);
+document.addEventListener("DOMContentLoaded", initCF);
 window.onload = initCF;
 
 var gCallCount = 0;

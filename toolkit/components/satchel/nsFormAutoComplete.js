@@ -312,7 +312,7 @@ FormAutoComplete.prototype = {
         }
 
         // don't allow form inputs (aField != null) to get results from search bar history
-        if (aInputName == 'searchbar-history' && aField) {
+        if (aInputName == "searchbar-history" && aField) {
             this.log('autoCompleteSearch for input name "' + aInputName + '" is denied');
             if (aListener) {
                 aListener.onSearchCompletion(emptyResult);
@@ -321,7 +321,7 @@ FormAutoComplete.prototype = {
         }
 
         if (aField && isAutocompleteDisabled(aField)) {
-            this.log('autoCompleteSearch not allowed due to autcomplete=off');
+            this.log("autoCompleteSearch not allowed due to autcomplete=off");
             if (aListener) {
                 aListener.onSearchCompletion(emptyResult);
             }

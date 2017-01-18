@@ -159,7 +159,7 @@ CommonDialog.prototype = {
         let button = this.ui["button" + b];
 
         if (xulDialog)
-            xulDialog.defaultButton = ['accept', 'cancel', 'extra1', 'extra2'][b];
+            xulDialog.defaultButton = ["accept", "cancel", "extra1", "extra2"][b];
         else
             button.setAttribute("default", "true");
 

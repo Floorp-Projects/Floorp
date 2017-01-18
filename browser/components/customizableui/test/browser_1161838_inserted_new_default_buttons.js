@@ -55,7 +55,7 @@ function test() {
   CustomizableUIInternal._placeNewDefaultWidgetsInArea(CustomizableUI.AREA_NAVBAR);
 
   let indexInSavedPlacements = savedPlacements.indexOf(testWidgetNew.id);
-  info("Saved placements: " + savedPlacements.join(', '));
+  info("Saved placements: " + savedPlacements.join(", "));
   isnot(indexInSavedPlacements, -1, "Widget should have been inserted");
   is(indexInSavedPlacements, savedPlacements.indexOf("bookmarks-menu-button") + 1,
      "Widget should be in the right place.");

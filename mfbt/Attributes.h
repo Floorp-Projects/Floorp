@@ -275,6 +275,27 @@
 #endif
 
 /**
+ * MOZ_MAYBE_UNUSED suppresses compiler warnings about functions that are
+ * never called (in this build configuration, at least).
+ *
+ * Place this attribute at the very beginning of a function declaration. For
+ * example, write
+ *
+ *   MOZ_MAYBE_UNUSED int foo();
+ *
+ * or
+ *
+ *   MOZ_MAYBE_UNUSED int foo() { return 42; }
+ */
+#if defined(__GNUC__) || defined(__clang__)
+#  define MOZ_MAYBE_UNUSED __attribute__ ((__unused__))
+#elif defined(_MSC_VER)
+#  define MOZ_MAYBE_UNUSED __pragma(warning(suppress:4505))
+#else
+#  define MOZ_MAYBE_UNUSED
+#endif
+
+/**
  * MOZ_FALLTHROUGH is an annotation to suppress compiler warnings about switch
  * cases that fall through without a break or return statement. MOZ_FALLTHROUGH
  * is only needed on cases that have code.

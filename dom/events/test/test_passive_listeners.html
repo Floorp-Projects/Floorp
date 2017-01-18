@@ -52,14 +52,14 @@ function doTest(description, passiveArg)
   is(e2.defaultPrevented, false, description + ' | default prevented on non-cancelable event');
 
   // Test combining passive-enabled and "traditional" listeners
-  elem.addEventListener('test', listener2, false);
+  elem.addEventListener('test', listener2);
   var e3 = new Event('test', { cancelable: true });
   elem.dispatchEvent(e3);
   is(listenerHitCount, 3, description + ' | hit count with second listener');
   is(e3.defaultPrevented, doPreventDefault, description + ' | default prevented with second listener');
-  elem.removeEventListener('test', listener2, false);
+  elem.removeEventListener('test', listener2);
 
-  elem.removeEventListener('test', listener, false);
+  elem.removeEventListener('test', listener);
 }
 
 function testAddListenerKey(passiveListenerFirst)

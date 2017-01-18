@@ -141,7 +141,7 @@
         if (allowOverride) {
           document.getElementById("overrideWeakCryptoPanel").style.display = "flex";
           var overrideLink = document.getElementById("overrideWeakCrypto");
-          overrideLink.addEventListener("click", () => doOverride(overrideLink), false);
+          overrideLink.addEventListener("click", () => doOverride(overrideLink));
         }
 
         if (!gIsCertError) {
@@ -291,7 +291,7 @@
                     {bubbles: true,
                      detail: changeEvt.target.checked});
                   document.dispatchEvent(event);
-                }, false);
+                });
             }
             const hasPrefStyleError = [
               "interrupted", // This happens with subresources that are above the max tls
@@ -441,7 +441,7 @@
               let debugInfo = document.getElementById("certificateErrorDebugInformation");
               debugInfo.style.display = "block";
               debugInfo.scrollIntoView({block: "start", behavior: "smooth"});
-            }, false);
+            });
           }
         }
 

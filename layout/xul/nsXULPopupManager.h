@@ -663,6 +663,9 @@ public:
   bool HandleKeyboardEventWithKeyCode(nsIDOMKeyEvent* aKeyEvent,
                                       nsMenuChainItem* aTopVisibleMenuItem);
 
+  // Sets mIgnoreKeys of the Top Visible Menu Item
+  nsresult UpdateIgnoreKeys(bool aIgnoreKeys);
+
   nsresult KeyUp(nsIDOMKeyEvent* aKeyEvent);
   nsresult KeyDown(nsIDOMKeyEvent* aKeyEvent);
   nsresult KeyPress(nsIDOMKeyEvent* aKeyEvent);

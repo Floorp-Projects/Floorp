@@ -91,7 +91,7 @@ const setTooltipStackTraceContent = Task.async(function* (tooltip, requestItem) 
       // hide the tooltip immediately, not after delay
       tooltip.hide();
       NetMonitorController.viewSourceInDebugger(filename, lineNumber);
-    }, false);
+    });
 
     el.appendChild(frameEl);
   }

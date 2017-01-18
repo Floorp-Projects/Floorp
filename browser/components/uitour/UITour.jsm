@@ -1596,7 +1596,7 @@ this.UITour = {
         document.defaultView.addEventListener("endmodalstate", function endModalStateHandler() {
           document.defaultView.removeEventListener("endmodalstate", endModalStateHandler);
           tooltip.openPopup(aAnchorEl, alignment);
-        }, false);
+        });
       }
     }
 

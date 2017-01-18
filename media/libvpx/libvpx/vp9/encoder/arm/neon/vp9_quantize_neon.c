@@ -26,8 +26,8 @@ void vp9_quantize_fp_neon(const int16_t *coeff_ptr, intptr_t count,
                           const int16_t *round_ptr, const int16_t *quant_ptr,
                           const int16_t *quant_shift_ptr, int16_t *qcoeff_ptr,
                           int16_t *dqcoeff_ptr, const int16_t *dequant_ptr,
-                          uint16_t *eob_ptr,
-                          const int16_t *scan, const int16_t *iscan) {
+                          uint16_t *eob_ptr, const int16_t *scan,
+                          const int16_t *iscan) {
   // TODO(jingning) Decide the need of these arguments after the
   // quantization process is completed.
   (void)zbin_ptr;
@@ -54,12 +54,12 @@ void vp9_quantize_fp_neon(const int16_t *coeff_ptr, intptr_t count,
       const int16x8_t v_coeff = vld1q_s16(&coeff_ptr[0]);
       const int16x8_t v_coeff_sign = vshrq_n_s16(v_coeff, 15);
       const int16x8_t v_tmp = vabaq_s16(v_round, v_coeff, v_zero);
-      const int32x4_t v_tmp_lo = vmull_s16(vget_low_s16(v_tmp),
-                                           vget_low_s16(v_quant));
-      const int32x4_t v_tmp_hi = vmull_s16(vget_high_s16(v_tmp),
-                                           vget_high_s16(v_quant));
-      const int16x8_t v_tmp2 = vcombine_s16(vshrn_n_s32(v_tmp_lo, 16),
-                                            vshrn_n_s32(v_tmp_hi, 16));
+      const int32x4_t v_tmp_lo =
+          vmull_s16(vget_low_s16(v_tmp), vget_low_s16(v_quant));
+      const int32x4_t v_tmp_hi =
+          vmull_s16(vget_high_s16(v_tmp), vget_high_s16(v_quant));
+      const int16x8_t v_tmp2 =
+          vcombine_s16(vshrn_n_s32(v_tmp_lo, 16), vshrn_n_s32(v_tmp_hi, 16));
       const uint16x8_t v_nz_mask = vceqq_s16(v_tmp2, v_zero);
       const int16x8_t v_iscan_plus1 = vaddq_s16(v_iscan, v_one);
       const int16x8_t v_nz_iscan = vbslq_s16(v_nz_mask, v_zero, v_iscan_plus1);
@@ -79,12 +79,12 @@ void vp9_quantize_fp_neon(const int16_t *coeff_ptr, intptr_t count,
       const int16x8_t v_coeff = vld1q_s16(&coeff_ptr[i]);
       const int16x8_t v_coeff_sign = vshrq_n_s16(v_coeff, 15);
       const int16x8_t v_tmp = vabaq_s16(v_round, v_coeff, v_zero);
-      const int32x4_t v_tmp_lo = vmull_s16(vget_low_s16(v_tmp),
-                                           vget_low_s16(v_quant));
-      const int32x4_t v_tmp_hi = vmull_s16(vget_high_s16(v_tmp),
-                                           vget_high_s16(v_quant));
-      const int16x8_t v_tmp2 = vcombine_s16(vshrn_n_s32(v_tmp_lo, 16),
-                                            vshrn_n_s32(v_tmp_hi, 16));
+      const int32x4_t v_tmp_lo =
+          vmull_s16(vget_low_s16(v_tmp), vget_low_s16(v_quant));
+      const int32x4_t v_tmp_hi =
+          vmull_s16(vget_high_s16(v_tmp), vget_high_s16(v_quant));
+      const int16x8_t v_tmp2 =
+          vcombine_s16(vshrn_n_s32(v_tmp_lo, 16), vshrn_n_s32(v_tmp_hi, 16));
       const uint16x8_t v_nz_mask = vceqq_s16(v_tmp2, v_zero);
       const int16x8_t v_iscan_plus1 = vaddq_s16(v_iscan, v_one);
       const int16x8_t v_nz_iscan = vbslq_s16(v_nz_mask, v_zero, v_iscan_plus1);
@@ -96,9 +96,8 @@ void vp9_quantize_fp_neon(const int16_t *coeff_ptr, intptr_t count,
       vst1q_s16(&dqcoeff_ptr[i], v_dqcoeff);
     }
     {
-      const int16x4_t v_eobmax_3210 =
-          vmax_s16(vget_low_s16(v_eobmax_76543210),
-                   vget_high_s16(v_eobmax_76543210));
+      const int16x4_t v_eobmax_3210 = vmax_s16(
+          vget_low_s16(v_eobmax_76543210), vget_high_s16(v_eobmax_76543210));
       const int64x1_t v_eobmax_xx32 =
           vshr_n_s64(vreinterpret_s64_s16(v_eobmax_3210), 32);
       const int16x4_t v_eobmax_tmp =

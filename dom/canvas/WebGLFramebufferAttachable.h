@@ -19,7 +19,7 @@ public:
     // Track FBO/Attachment combinations
     void MarkAttachment(const WebGLFBAttachPoint& attachment);
     void UnmarkAttachment(const WebGLFBAttachPoint& attachment);
-    void InvalidateStatusOfAttachedFBs() const;
+    void InvalidateStatusOfAttachedFBs(const char* funcName) const;
 };
 
 } // namespace mozilla

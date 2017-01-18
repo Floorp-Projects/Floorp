@@ -32,7 +32,7 @@ var gDataNotificationInfoBar = {
       for (let o of this._OBSERVERS) {
         Services.obs.removeObserver(this, o);
       }
-    }, false);
+    });
 
     for (let o of this._OBSERVERS) {
       Services.obs.addObserver(this, o, true);

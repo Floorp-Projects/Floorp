@@ -85,13 +85,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1162990
       child = document.getElementById("child");
       listener = document.getElementById("listener");
 
-      basket.addEventListener("pointerleave",       basketLeaveHandler,   false);
-      target.addEventListener("pointerdown",        targetDownHandler,    false);
-      target.addEventListener("gotpointercapture",  targetGotHandler,     false);
-      target.addEventListener("lostpointercapture", targetLostHandler,    false);
-      target.addEventListener("pointerleave",       targetLeaveHandler,   false);
-      child.addEventListener("pointerleave",        childLeaveHandler,    false);
-      listener.addEventListener("pointerleave",     listenerLeaveHandler, false);
+      basket.addEventListener("pointerleave",       basketLeaveHandler);
+      target.addEventListener("pointerdown",        targetDownHandler);
+      target.addEventListener("gotpointercapture",  targetGotHandler);
+      target.addEventListener("lostpointercapture", targetLostHandler);
+      target.addEventListener("pointerleave",       targetLeaveHandler);
+      child.addEventListener("pointerleave",        childLeaveHandler);
+      listener.addEventListener("pointerleave",     listenerLeaveHandler);
     }
 
     function executeTest()

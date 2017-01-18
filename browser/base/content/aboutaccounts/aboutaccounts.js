@@ -270,7 +270,7 @@ var wrapper = {
   },
 
   handleRemoteCommand(evt) {
-    log('command: ' + evt.detail.command);
+    log("command: " + evt.detail.command);
     let data = evt.detail.data;
 
     switch (evt.detail.command) {
@@ -420,9 +420,9 @@ function show(id, childId) {
   let allTop = document.querySelectorAll("body > div, iframe");
   for (let elt of allTop) {
     if (elt.getAttribute("id") == id) {
-      elt.style.display = 'block';
+      elt.style.display = "block";
     } else {
-      elt.style.display = 'none';
+      elt.style.display = "none";
     }
   }
   if (childId) {
@@ -430,9 +430,9 @@ function show(id, childId) {
     let allSecond = document.querySelectorAll("#" + id + " > div");
     for (let elt of allSecond) {
       if (elt.getAttribute("id") == childId) {
-        elt.style.display = 'block';
+        elt.style.display = "block";
       } else {
-        elt.style.display = 'none';
+        elt.style.display = "none";
       }
     }
   }
@@ -500,17 +500,17 @@ function getDefaultProfilePath() {
 document.addEventListener("DOMContentLoaded", function onload() {
   document.removeEventListener("DOMContentLoaded", onload, true);
   init();
-  var buttonGetStarted = document.getElementById('buttonGetStarted');
-  buttonGetStarted.addEventListener('click', getStarted);
+  var buttonGetStarted = document.getElementById("buttonGetStarted");
+  buttonGetStarted.addEventListener("click", getStarted);
 
-  var buttonRetry = document.getElementById('buttonRetry');
-  buttonRetry.addEventListener('click', retry);
+  var buttonRetry = document.getElementById("buttonRetry");
+  buttonRetry.addEventListener("click", retry);
 
-  var oldsync = document.getElementById('oldsync');
-  oldsync.addEventListener('click', handleOldSync);
+  var oldsync = document.getElementById("oldsync");
+  oldsync.addEventListener("click", handleOldSync);
 
-  var buttonOpenPrefs = document.getElementById('buttonOpenPrefs')
-  buttonOpenPrefs.addEventListener('click', openPrefs);
+  var buttonOpenPrefs = document.getElementById("buttonOpenPrefs")
+  buttonOpenPrefs.addEventListener("click", openPrefs);
 }, true);
 
 function initObservers() {

@@ -59,7 +59,7 @@
 
       if (!testRunning) {
         testRunning = true;
-        iframe.addEventListener("load", iframeLoaded, false);
+        iframe.addEventListener("load", iframeLoaded);
       }
       SpecialPowers.pushPrefEnv({
         'set': [["network.cookie.cookieBehavior", testData[testIndex].cookieBehavior]]
@@ -89,7 +89,7 @@
 
       SpecialPowers.addPermission("indexedDB", true, document);
 
-      window.addEventListener("message", messageListener, false);
+      window.addEventListener("message", messageListener);
       setiframe();
     }
   </script>

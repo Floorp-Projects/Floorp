@@ -228,8 +228,8 @@ add_test(function test_collections_manager() {
   do_check_keypair_eq(payload.default, wbo.cleartext.default);
   do_check_keypair_eq(payload.collections.bookmarks, wbo.cleartext.collections.bookmarks);
 
-  do_check_true('bookmarks' in collectionKeys._collections);
-  do_check_false('tabs' in collectionKeys._collections);
+  do_check_true("bookmarks" in collectionKeys._collections);
+  do_check_false("tabs" in collectionKeys._collections);
 
   _("Updating contents twice with the same data doesn't proceed.");
   storage_keys.encrypt(keyBundle);

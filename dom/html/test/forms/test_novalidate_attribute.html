@@ -39,24 +39,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=556013
  * be a problem.
  */
 document.forms[0].addEventListener("submit", function(aEvent) {
-  aEvent.target.removeEventListener("submit", arguments.callee, false);
+  aEvent.target.removeEventListener("submit", arguments.callee);
   ok(true, "novalidate has been correctly used for first form");
   document.getElementById('b').click();
-}, false);
+});
 
 document.forms[1].addEventListener("submit", function(aEvent) {
-  aEvent.target.removeEventListener("submit", arguments.callee, false);
+  aEvent.target.removeEventListener("submit", arguments.callee);
   ok(true, "novalidate has been correctly used for second form");
   var c = document.getElementById('c');
   c.focus();
   synthesizeKey("KEY_Enter", { code: "Enter" });
-}, false);
+});
 
 document.forms[2].addEventListener("submit", function(aEvent) {
-  aEvent.target.removeEventListener("submit", arguments.callee, false);
+  aEvent.target.removeEventListener("submit", arguments.callee);
   ok(true, "novalidate has been correctly used for third form");
   SimpleTest.executeSoon(SimpleTest.finish);
-}, false);
+});
 
 /**
  * We have to be sure invalid events are not send too.
@@ -66,13 +66,13 @@ document.forms[2].addEventListener("submit", function(aEvent) {
  */
 function invalidHandling(aEvent)
 {
-  aEvent.target.removeEventListener("invalid", invalidHandling, false);
+  aEvent.target.removeEventListener("invalid", invalidHandling);
   ok(false, "invalid event should not be sent");
 }
 
-document.getElementById('av').addEventListener("invalid", invalidHandling, false);
-document.getElementById('bv').addEventListener("invalid", invalidHandling, false);
-document.getElementById('c').addEventListener("invalid", invalidHandling, false);
+document.getElementById('av').addEventListener("invalid", invalidHandling);
+document.getElementById('bv').addEventListener("invalid", invalidHandling);
+document.getElementById('c').addEventListener("invalid", invalidHandling);
 
 SimpleTest.waitForExplicitFinish();
 

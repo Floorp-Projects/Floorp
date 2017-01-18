@@ -46,7 +46,7 @@ window.addEventListener("load", function () {
   is(SpecialPowers.wrap(document.getElementById("shouldNotLoadMissingType")).displayedType, OBJLC.TYPE_NULL, "Testing object load with typemustmatch and with type, load success even though failure expected");
   is(SpecialPowers.wrap(document.getElementById("shouldLoadMissingData")).displayedType, OBJLC.TYPE_PLUGIN, "Testing object load with typemustmatch and without data, failed expected load");
   SimpleTest.finish();
-}, false);
+});
 
 </script>
 </pre>

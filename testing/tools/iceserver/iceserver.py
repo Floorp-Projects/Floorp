@@ -11,7 +11,9 @@ import passlib.utils # for saslprep
 import copy
 import random
 import operator
+import os
 import platform
+import string
 import time
 from string import Template
 from twisted.internet import reactor, protocol
@@ -716,6 +718,38 @@ def prune_allocations():
             del allocations[key]
             allocation.close()
 
+CERT_FILE = "selfsigned.crt"
+KEY_FILE = "private.key"
+
+def create_self_signed_cert(name):
+    from OpenSSL import crypto
+    if os.path.isfile(CERT_FILE) and os.path.isfile(KEY_FILE):
+        return
+
+    # create a key pair
+    k = crypto.PKey()
+    k.generate_key(crypto.TYPE_RSA, 1024)
+
+    # create a self-signed cert
+    cert = crypto.X509()
+    cert.get_subject().C = "US"
+    cert.get_subject().ST = "TX"
+    cert.get_subject().L = "Dallas"
+    cert.get_subject().O = "Mozilla test iceserver"
+    cert.get_subject().OU = "Mozilla test iceserver"
+    cert.get_subject().CN = name
+    cert.set_serial_number(1000)
+    cert.gmtime_adj_notBefore(0)
+    cert.gmtime_adj_notAfter(10*365*24*60*60)
+    cert.set_issuer(cert.get_subject())
+    cert.set_pubkey(k)
+    cert.sign(k, 'sha1')
+
+    open(CERT_FILE, "wt").write(
+        crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
+    open(KEY_FILE, "wt").write(
+        crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
+
 if __name__ == "__main__":
     random.seed()
 
@@ -740,20 +774,48 @@ if __name__ == "__main__":
     except:
         pass
 
+    try:
+        from twisted.internet import ssl
+        from OpenSSL import SSL
+        create_self_signed_cert(hostname)
+        tls_context_factory = ssl.DefaultOpenSSLContextFactory(KEY_FILE, CERT_FILE, SSL.TLSv1_2_METHOD)
+        reactor.listenSSL(5349, TcpStunHandlerFactory(), tls_context_factory, interface=interface_4)
+
+        try:
+            reactor.listenSSL(5349, TcpStunHandlerFactory(), tls_context_factory, interface=interface_6)
+        except:
+            pass
+
+        f = open(CERT_FILE, 'r');
+        lines = f.readlines();
+        lines.pop(0); # Remove BEGIN CERTIFICATE
+        lines.pop(); # Remove END CERTIFICATE
+        lines = map(string.strip, lines);
+        certbase64 = string.join(lines, '');
+
+        turns_url = ', "turns:' + hostname + '"'
+        cert_prop = ', "cert":"' + certbase64 + '"'
+    except:
+        turns_url = ''
+        cert_prop = ''
+        pass
+
     allocation_pruner = LoopingCall(prune_allocations)
     allocation_pruner.start(1)
 
     template = Template(
 '[\
-{"url":"stun:$hostname"}, \
-{"url":"stun:$hostname?transport=tcp"}, \
-{"username":"$user","credential":"$pwd","url":"turn:$hostname"}, \
-{"username":"$user","credential":"$pwd","url":"turn:$hostname?transport=tcp"}]'
+{"urls":["stun:$hostname", "stun:$hostname?transport=tcp"]}, \
+{"username":"$user","credential":"$pwd","urls": \
+["turn:$hostname", "turn:$hostname?transport=tcp" $turns_url] \
+$cert_prop}]' # Hack to make it easier to override cert checks
 )
 
     print(template.substitute(user=turn_user,
                               pwd=turn_pass,
-                              hostname=hostname))
+                              hostname=hostname,
+                              turns_url=turns_url,
+                              cert_prop=cert_prop))
 
     reactor.run()
 

@@ -10,12 +10,15 @@ var Cr = Components.results;
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/BrowserUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/RemoteAddonsChild.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PageThumbUtils",
   "resource://gre/modules/PageThumbUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "Utils",
+  "resource://gre/modules/sessionstore/Utils.jsm");
 
 if (AppConstants.MOZ_CRASHREPORTER) {
   XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
@@ -269,7 +272,7 @@ var WebNavigation =  {
         this.loadURI(message.data.uri, message.data.flags,
                      message.data.referrer, message.data.referrerPolicy,
                      message.data.postData, message.data.headers,
-                     message.data.baseURI);
+                     message.data.baseURI, message.data.triggeringPrincipal);
         break;
       case "WebNavigation:SetOriginAttributes":
         this.setOriginAttributes(message.data.originAttributes);
@@ -309,7 +312,7 @@ var WebNavigation =  {
     this._wrapURIChangeCall(() => this.webNavigation.gotoIndex(index));
   },
 
-  loadURI(uri, flags, referrer, referrerPolicy, postData, headers, baseURI) {
+  loadURI(uri, flags, referrer, referrerPolicy, postData, headers, baseURI, triggeringPrincipal) {
     if (AppConstants.MOZ_CRASHREPORTER && CrashReporter.enabled) {
       let annotation = uri;
       try {
@@ -329,9 +332,11 @@ var WebNavigation =  {
       headers = makeInputStream(headers);
     if (baseURI)
       baseURI = Services.io.newURI(baseURI);
+    if (triggeringPrincipal)
+      triggeringPrincipal = Utils.deserializePrincipal(triggeringPrincipal)
     this._wrapURIChangeCall(() => {
       return this.webNavigation.loadURIWithOptions(uri, flags, referrer, referrerPolicy,
-                                                   postData, headers, baseURI);
+                                                   postData, headers, baseURI, triggeringPrincipal);
     });
   },
 
@@ -451,11 +456,11 @@ const ZoomManager = {
   },
 
   refreshFullZoom() {
-    return this._refreshZoomValue('fullZoom');
+    return this._refreshZoomValue("fullZoom");
   },
 
   refreshTextZoom() {
-    return this._refreshZoomValue('textZoom');
+    return this._refreshZoomValue("textZoom");
   },
 
   /**

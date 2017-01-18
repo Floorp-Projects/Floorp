@@ -9,7 +9,7 @@ add_task(function* test_menu_with_timeout() {
       ["privacy.userContext.longPressBehavior", 2]
   ]});
 
-  let newTab = document.getElementById('tabbrowser-tabs');
+  let newTab = document.getElementById("tabbrowser-tabs");
   let newTabButton = document.getAnonymousElementByAttribute(newTab, "anonid", "tabs-newtab-button");
   ok(newTabButton, "New tab button exists");
   ok(!newTabButton.hidden, "New tab button is visible");
@@ -30,7 +30,7 @@ add_task(function* test_menu_with_timeout() {
 
     let tab = yield waitForTabPromise;
 
-    is(tab.getAttribute('usercontextid'), i, `New tab has UCI equal ${i}`);
+    is(tab.getAttribute("usercontextid"), i, `New tab has UCI equal ${i}`);
     yield BrowserTestUtils.removeTab(tab);
   }
 });
@@ -41,7 +41,7 @@ add_task(function* test_menu_without_timeout() {
       ["privacy.userContext.longPressBehavior", 1]
   ]});
 
-  let newTab = document.getElementById('tabbrowser-tabs');
+  let newTab = document.getElementById("tabbrowser-tabs");
   let newTabButton = document.getAnonymousElementByAttribute(newTab, "anonid", "tabs-newtab-button");
   ok(newTabButton, "New tab button exists");
   ok(!newTabButton.hidden, "New tab button is visible");
@@ -62,7 +62,7 @@ add_task(function* test_menu_without_timeout() {
 
     let tab = yield waitForTabPromise;
 
-    is(tab.getAttribute('usercontextid'), i, `New tab has UCI equal ${i}`);
+    is(tab.getAttribute("usercontextid"), i, `New tab has UCI equal ${i}`);
     yield BrowserTestUtils.removeTab(tab);
   }
 });
@@ -73,7 +73,7 @@ add_task(function* test_no_menu() {
       ["privacy.userContext.longPressBehavior", 0]
   ]});
 
-  let newTab = document.getElementById('tabbrowser-tabs');
+  let newTab = document.getElementById("tabbrowser-tabs");
   let newTabButton = document.getAnonymousElementByAttribute(newTab, "anonid", "tabs-newtab-button");
   ok(newTabButton, "New tab button exists");
   ok(!newTabButton.hidden, "New tab button is visible");

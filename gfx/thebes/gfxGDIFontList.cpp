@@ -879,15 +879,8 @@ gfxGDIFontList::MakePlatformFont(const nsAString& aFontName,
         gfxWindowsFontType(isCFF ? GFX_FONT_TYPE_PS_OPENTYPE : GFX_FONT_TYPE_TRUETYPE) /*type*/,
         aStyle, w, aStretch, winUserFontData, false);
 
-    if (!fe)
-        return fe;
-
-    fe->mIsDataUserFont = true;
-
-    // Uniscribe doesn't place CFF fonts loaded privately
-    // via AddFontMemResourceEx on XP/Vista
-    if (isCFF && !IsWin7OrLater()) {
-        fe->mForceGDI = true;
+    if (fe) {
+      fe->mIsDataUserFont = true;
     }
 
     return fe;

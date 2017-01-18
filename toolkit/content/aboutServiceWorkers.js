@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+"use strict";
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const bundle = Services.strings.createBundle(
   "chrome://global/locale/aboutServiceWorkers.properties");
@@ -68,34 +68,34 @@ function init() {
 function display(info, pushService) {
   let parent = document.getElementById("serviceworkers");
 
-  let div = document.createElement('div');
+  let div = document.createElement("div");
   parent.appendChild(div);
 
-  let title = document.createElement('h2');
-  let titleStr = bundle.formatStringFromName('title', [info.principal.origin], 1);
+  let title = document.createElement("h2");
+  let titleStr = bundle.formatStringFromName("title", [info.principal.origin], 1);
   title.appendChild(document.createTextNode(titleStr));
   div.appendChild(title);
 
   if (info.principal.appId) {
-    let b2gtitle = document.createElement('h3');
-    let trueFalse = bundle.GetStringFromName(info.principal.isInIsolatedMozBrowserElement ? 'true' : 'false');
+    let b2gtitle = document.createElement("h3");
+    let trueFalse = bundle.GetStringFromName(info.principal.isInIsolatedMozBrowserElement ? "true" : "false");
 
     let b2gtitleStr =
-      bundle.formatStringFromName('b2gtitle', [ brandBundle.getString("brandShortName"),
+      bundle.formatStringFromName("b2gtitle", [ brandBundle.getString("brandShortName"),
                                                 info.principal.appId,
                                                 trueFalse], 2);
     b2gtitle.appendChild(document.createTextNode(b2gtitleStr));
     div.appendChild(b2gtitle);
   }
 
-  let list = document.createElement('ul');
+  let list = document.createElement("ul");
   div.appendChild(list);
 
   function createItem(title, value, makeLink) {
-    let item = document.createElement('li');
+    let item = document.createElement("li");
     list.appendChild(item);
 
-    let bold = document.createElement('strong');
+    let bold = document.createElement("strong");
     bold.appendChild(document.createTextNode(title + " "));
     item.appendChild(bold);
 
@@ -114,16 +114,16 @@ function display(info, pushService) {
     return textNode;
   }
 
-  createItem(bundle.GetStringFromName('scope'), info.scope);
-  createItem(bundle.GetStringFromName('scriptSpec'), info.scriptSpec, true);
+  createItem(bundle.GetStringFromName("scope"), info.scope);
+  createItem(bundle.GetStringFromName("scriptSpec"), info.scriptSpec, true);
   let currentWorkerURL = info.activeWorker ? info.activeWorker.scriptSpec : "";
-  createItem(bundle.GetStringFromName('currentWorkerURL'), currentWorkerURL, true);
+  createItem(bundle.GetStringFromName("currentWorkerURL"), currentWorkerURL, true);
   let activeCacheName = info.activeWorker ? info.activeWorker.cacheName : "";
-  createItem(bundle.GetStringFromName('activeCacheName'), activeCacheName);
+  createItem(bundle.GetStringFromName("activeCacheName"), activeCacheName);
   let waitingCacheName = info.waitingWorker ? info.waitingWorker.cacheName : "";
-  createItem(bundle.GetStringFromName('waitingCacheName'), waitingCacheName);
+  createItem(bundle.GetStringFromName("waitingCacheName"), waitingCacheName);
 
-  let pushItem = createItem(bundle.GetStringFromName('pushEndpoint'), bundle.GetStringFromName('waiting'));
+  let pushItem = createItem(bundle.GetStringFromName("pushEndpoint"), bundle.GetStringFromName("waiting"));
   if (pushService) {
     pushService.getSubscription(info.scope, info.principal, (status, pushRecord) => {
       if (Components.isSuccessCode(status)) {
@@ -135,19 +135,19 @@ function display(info, pushService) {
   }
 
   let updateButton = document.createElement("button");
-  updateButton.appendChild(document.createTextNode(bundle.GetStringFromName('update')));
+  updateButton.appendChild(document.createTextNode(bundle.GetStringFromName("update")));
   updateButton.onclick = function() {
     gSWM.propagateSoftUpdate(info.principal.originAttributes, info.scope);
   };
   div.appendChild(updateButton);
 
   let unregisterButton = document.createElement("button");
-  unregisterButton.appendChild(document.createTextNode(bundle.GetStringFromName('unregister')));
+  unregisterButton.appendChild(document.createTextNode(bundle.GetStringFromName("unregister")));
   div.appendChild(unregisterButton);
 
-  let loadingMessage = document.createElement('span');
-  loadingMessage.appendChild(document.createTextNode(bundle.GetStringFromName('waiting')));
-  loadingMessage.classList.add('inactive');
+  let loadingMessage = document.createElement("span");
+  loadingMessage.appendChild(document.createTextNode(bundle.GetStringFromName("waiting")));
+  loadingMessage.classList.add("inactive");
   div.appendChild(loadingMessage);
 
   unregisterButton.onclick = function() {
@@ -162,17 +162,17 @@ function display(info, pushService) {
       },
 
       unregisterFailed() {
-        alert(bundle.GetStringFromName('unregisterError'));
+        alert(bundle.GetStringFromName("unregisterError"));
       },
 
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIServiceWorkerUnregisterCallback])
     };
 
-    loadingMessage.classList.remove('inactive');
+    loadingMessage.classList.remove("inactive");
     gSWM.propagateUnregister(info.principal, cb, info.scope);
   };
 
-  let sep = document.createElement('hr');
+  let sep = document.createElement("hr");
   div.appendChild(sep);
 
   ++gSWCount;

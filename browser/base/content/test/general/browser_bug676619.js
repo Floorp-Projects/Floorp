@@ -88,7 +88,7 @@ function TabOpenListener(url, opencallback, closecallback) {
   this.opencallback = opencallback;
   this.closecallback = closecallback;
 
-  gBrowser.tabContainer.addEventListener("TabOpen", this, false);
+  gBrowser.tabContainer.addEventListener("TabOpen", this);
 }
 
 TabOpenListener.prototype = {
@@ -100,11 +100,11 @@ TabOpenListener.prototype = {
 
   handleEvent(event) {
     if (event.type == "TabOpen") {
-      gBrowser.tabContainer.removeEventListener("TabOpen", this, false);
+      gBrowser.tabContainer.removeEventListener("TabOpen", this);
       this.tab = event.originalTarget;
       this.browser = this.tab.linkedBrowser;
       BrowserTestUtils.browserLoaded(this.browser, false, this.url).then(() => {
-        this.tab.addEventListener("TabClose", this, false);
+        this.tab.addEventListener("TabClose", this);
         var url = this.browser.currentURI.spec;
         is(url, this.url, "Should have opened the correct tab");
         this.opencallback();
@@ -112,7 +112,7 @@ TabOpenListener.prototype = {
     } else if (event.type == "TabClose") {
       if (event.originalTarget != this.tab)
         return;
-      this.tab.removeEventListener("TabClose", this, false);
+      this.tab.removeEventListener("TabClose", this);
       this.opencallback = null;
       this.tab = null;
       this.browser = null;

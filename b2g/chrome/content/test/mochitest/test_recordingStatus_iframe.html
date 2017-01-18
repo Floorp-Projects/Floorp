@@ -31,7 +31,7 @@ function test() {
         if (event.data === 'start-finished') {
           resolve();
         }
-      }, false);
+      });
 
       gumIframe.onload = function() {
         info('start audio stream in iframe');

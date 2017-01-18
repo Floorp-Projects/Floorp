@@ -40,22 +40,22 @@ function runTest(event) {
   ok(div && div.textContent == "Content!", "Sidebar content loaded");
 
   var link = browser && browser.contentDocument.getElementById("link");
-  sidebar.contentDocument.addEventListener("popupshown", contextMenuOpened, false);
+  sidebar.contentDocument.addEventListener("popupshown", contextMenuOpened);
 
   EventUtils.synthesizeMouseAtCenter(link, { type: "contextmenu", button: 2 }, browser.contentWindow);
 }
 
 function contextMenuOpened() {
   var sidebar = document.getElementById("sidebar");
-  sidebar.contentDocument.removeEventListener("popupshown", contextMenuOpened, false);
+  sidebar.contentDocument.removeEventListener("popupshown", contextMenuOpened);
 
   var copyLinkCommand = sidebar.contentDocument.getElementById("context-copylink");
-  copyLinkCommand.addEventListener("command", copyLinkCommandExecuted, false);
+  copyLinkCommand.addEventListener("command", copyLinkCommandExecuted);
   copyLinkCommand.doCommand();
 }
 
 function copyLinkCommandExecuted(event) {
-  event.target.removeEventListener("command", copyLinkCommandExecuted, false);
+  event.target.removeEventListener("command", copyLinkCommandExecuted);
 
   var sidebar = document.getElementById("sidebar");
   var browser = sidebar.contentDocument.getElementById("web-panels-browser");
@@ -64,13 +64,13 @@ function copyLinkCommandExecuted(event) {
   document.commandDispatcher.getControllerForCommand("cmd_paste").doCommand("cmd_paste");
   is(textbox.value, "http://www.example.com/ctest", "copy link command");
 
-  sidebar.contentDocument.addEventListener("popuphidden", contextMenuClosed, false);
+  sidebar.contentDocument.addEventListener("popuphidden", contextMenuClosed);
   event.target.parentNode.hidePopup();
 }
 
 function contextMenuClosed() {
   var sidebar = document.getElementById("sidebar");
-  sidebar.contentDocument.removeEventListener("popuphidden", contextMenuClosed, false);
+  sidebar.contentDocument.removeEventListener("popuphidden", contextMenuClosed);
 
   SidebarUI.hide();
 

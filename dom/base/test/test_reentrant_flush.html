@@ -40,7 +40,7 @@ addLoadEvent(function() {
 
   var win = ifr.contentWindow;
 
-  win.addEventListener("resize", handleResize, false);
+  win.addEventListener("resize", handleResize);
   SpecialPowers.setFullZoom(win, 2);
 
   is(resizeHandlerRan, false,
@@ -51,7 +51,7 @@ addLoadEvent(function() {
 
   is(resizeHandlerRan, true, "Resize handler should have run");
 
-  win.removeEventListener("resize", handleResize, false);
+  win.removeEventListener("resize", handleResize);
 
   SimpleTest.finish();
 });

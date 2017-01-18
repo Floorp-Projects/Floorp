@@ -6,17 +6,17 @@
 
 var tests = [
     // Common page.
-    ['http://example.com/browser/browser/base/content/test/general/dummy_page.html',
-     'Dummy test page'],
+    ["http://example.com/browser/browser/base/content/test/general/dummy_page.html",
+     "Dummy test page"],
     // Data URI.
-    ['data:text/html;charset=utf-8,<title>test%20data:%20url</title>',
-     'test data: url'],
+    ["data:text/html;charset=utf-8,<title>test%20data:%20url</title>",
+     "test data: url"],
     // about:neterror
-    ['data:application/vnd.mozilla.xul+xml,',
-     'data:application/vnd.mozilla.xul+xml,'],
+    ["data:application/vnd.mozilla.xul+xml,",
+     "data:application/vnd.mozilla.xul+xml,"],
     // about:certerror
-    ['https://untrusted.example.com/somepage.html',
-     'https://untrusted.example.com/somepage.html']
+    ["https://untrusted.example.com/somepage.html",
+     "https://untrusted.example.com/somepage.html"]
 ];
 
 add_task(function* () {
@@ -40,11 +40,11 @@ add_task(function* () {
     // Simulate a network outage with offline mode. (Localhost is still
     // accessible in offline mode, so disable the test proxy as well.)
     BrowserOffline.toggleOfflineStatus();
-    let proxy = Services.prefs.getIntPref('network.proxy.type');
-    Services.prefs.setIntPref('network.proxy.type', 0);
+    let proxy = Services.prefs.getIntPref("network.proxy.type");
+    Services.prefs.setIntPref("network.proxy.type", 0);
     registerCleanupFunction(function() {
         BrowserOffline.toggleOfflineStatus();
-        Services.prefs.setIntPref('network.proxy.type', proxy);
+        Services.prefs.setIntPref("network.proxy.type", proxy);
     });
 
     // LOAD_FLAGS_BYPASS_CACHE isn't good enough. So clear the cache.
@@ -58,7 +58,7 @@ add_task(function* () {
 
     // The offline mode test is only good if the page failed to load.
     yield ContentTask.spawn(browser, null, function() {
-      is(content.document.documentURI.substring(0, 14), 'about:neterror',
+      is(content.document.documentURI.substring(0, 14), "about:neterror",
           "Offline mode successfully simulated network outage.");
     });
     yield checkBookmark(uri, title);

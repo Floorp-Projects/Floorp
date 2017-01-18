@@ -7,7 +7,7 @@
   <script>
 function start()
 {
-    document.removeEventListener("MozReftestInvalidate", start, false);
+    document.removeEventListener("MozReftestInvalidate", start);
 
     var plugin = document.getElementById("plugin");
     var color = "FF000000";
@@ -48,7 +48,7 @@ function start()
 }
 
 // MozReftestInvalidate is delivered after initial painting has settled.
-document.addEventListener("MozReftestInvalidate", start, false);
+document.addEventListener("MozReftestInvalidate", start);
   </script>
 </head>
 <body onLoad="forceLoadPlugin('plugin', true)">

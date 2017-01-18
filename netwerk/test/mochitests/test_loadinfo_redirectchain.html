@@ -162,14 +162,14 @@ function confirmCheckLoadInfoWithInternalRedirects(event) {
   compareChains(loadinfo, EXPECTED_REDIRECT_CHAIN, EXPECTED_REDIRECT_CHAIN_INCLUDING_INTERNAL_REDIRECTS);
 
   // remove the postMessage listener and move on to the next test
-  window.removeEventListener("message", confirmCheckLoadInfoWithInternalRedirects, false);
+  window.removeEventListener("message", confirmCheckLoadInfoWithInternalRedirects);
   checkLoadInfoWithInternalRedirectsAndFallback();
 }
 
 function checkLoadInfoWithInternalRedirects() {
   // load the XHR request into an iframe so we can apply a CSP to the iframe
   // a postMessage returns the result back to the main page.
-  window.addEventListener("message", confirmCheckLoadInfoWithInternalRedirects, false);
+  window.addEventListener("message", confirmCheckLoadInfoWithInternalRedirects);
   document.getElementById("testframe").src =
     "https://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?iframe-redir-https-2";
 }
@@ -192,14 +192,14 @@ function confirmCheckLoadInfoWithInternalRedirectsAndFallback(event) {
   compareChains(loadinfo, EXPECTED_REDIRECT_CHAIN, EXPECTED_REDIRECT_CHAIN_INCLUDING_INTERNAL_REDIRECTS);
 
   // remove the postMessage listener and finish test
-  window.removeEventListener("message", confirmCheckLoadInfoWithInternalRedirectsAndFallback, false);
+  window.removeEventListener("message", confirmCheckLoadInfoWithInternalRedirectsAndFallback);
   SimpleTest.finish();
 }
 
 function checkLoadInfoWithInternalRedirectsAndFallback() {
   // load the XHR request into an iframe so we can apply a CSP to the iframe
   // a postMessage returns the result back to the main page.
-  window.addEventListener("message", confirmCheckLoadInfoWithInternalRedirectsAndFallback, false);
+  window.addEventListener("message", confirmCheckLoadInfoWithInternalRedirectsAndFallback);
   document.getElementById("testframe").src =
     "https://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?iframe-redir-err-2";
 }

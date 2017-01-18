@@ -6,7 +6,7 @@
         document.getElementById('t').removeAttribute('readonly');
         document.documentElement.className='';
       }
-      document.addEventListener("MozReftestInvalidate", doTest, false);
+      document.addEventListener("MozReftestInvalidate", doTest);
     </script>
   </head>
   <!-- Test: if textarea is no longer readonly but its value hasn't been modified,

@@ -22,7 +22,7 @@ void vpx_wb_write_bit(struct vpx_write_bit_buffer *wb, int bit) {
   const int off = (int)wb->bit_offset;
   const int p = off / CHAR_BIT;
   const int q = CHAR_BIT - 1 - off % CHAR_BIT;
-  if (q == CHAR_BIT -1) {
+  if (q == CHAR_BIT - 1) {
     wb->bit_buffer[p] = bit << q;
   } else {
     wb->bit_buffer[p] &= ~(1 << q);
@@ -33,12 +33,11 @@ void vpx_wb_write_bit(struct vpx_write_bit_buffer *wb, int bit) {
 
 void vpx_wb_write_literal(struct vpx_write_bit_buffer *wb, int data, int bits) {
   int bit;
-  for (bit = bits - 1; bit >= 0; bit--)
-    vpx_wb_write_bit(wb, (data >> bit) & 1);
+  for (bit = bits - 1; bit >= 0; bit--) vpx_wb_write_bit(wb, (data >> bit) & 1);
 }
 
-void vpx_wb_write_inv_signed_literal(struct vpx_write_bit_buffer *wb,
-                                     int data, int bits) {
+void vpx_wb_write_inv_signed_literal(struct vpx_write_bit_buffer *wb, int data,
+                                     int bits) {
 #if CONFIG_MISC_FIXES
   vpx_wb_write_literal(wb, data, bits + 1);
 #else

@@ -18,7 +18,7 @@ function run_test() {
 add_task(function* test_null_args_addPath() {
 
   let watcher = makeWatcher();
-  let testPath = 'someInvalidPath';
+  let testPath = "someInvalidPath";
 
   // Define a dummy callback function. In this test no callback is
   // expected to be called.
@@ -51,7 +51,7 @@ add_task(function* test_null_args_addPath() {
 add_task(function* test_null_args_removePath() {
 
   let watcher = makeWatcher();
-  let testPath = 'someInvalidPath';
+  let testPath = "someInvalidPath";
 
   // Define a dummy callback function. In this test no callback is
   // expected to be called.

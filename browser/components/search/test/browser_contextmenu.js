@@ -76,7 +76,7 @@ add_task(function* () {
   info("checkContextMenu");
   var searchItem = contextMenu.getElementsByAttribute("id", "context-searchselect")[0];
   ok(searchItem, "Got search context menu item");
-  is(searchItem.label, 'Search ' + ENGINE_NAME + ' for \u201ctest search\u201d', "Check context menu label");
+  is(searchItem.label, "Search " + ENGINE_NAME + " for \u201ctest search\u201d", "Check context menu label");
   is(searchItem.disabled, false, "Check that search context menu item is enabled");
 
   yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {

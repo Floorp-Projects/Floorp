@@ -1194,6 +1194,9 @@ pref("dom.forms.autocomplete.experimental", false);
 // Enables requestAutocomplete DOM API on forms.
 pref("dom.forms.requestAutocomplete", false);
 
+// Enable search in <select> dropdowns (more than 40 options)
+pref("dom.forms.selectSearch", false);
+
 // Enable Directory API. By default, disabled.
 pref("dom.input.dirpicker", false);
 
@@ -4515,6 +4518,9 @@ pref("webgl.disable-DOM-blit-uploads", false);
 pref("webgl.allow-fb-invalidation", false);
 pref("webgl.webgl2-compat-mode", false);
 
+pref("webgl.max-perf-warnings", 0);
+pref("webgl.max-acceptable-fb-status-invals", 0);
+
 pref("webgl.enable-webgl2", true);
 
 #ifdef RELEASE_OR_BETA
@@ -4573,8 +4579,8 @@ pref("layers.acceleration.disabled", false);
 // and output the result to stderr.
 pref("layers.bench.enabled", false);
 
-#if defined(XP_WIN) && defined(NIGHTLY_BUILD)
-pref("layers.gpu-process.dev.enabled", true);
+#if defined(XP_WIN)
+pref("layers.gpu-process.enabled", true);
 pref("media.gpu-process-decoder", true);
 #endif
 
@@ -5506,13 +5512,6 @@ pref("dom.mozBrowserFramesEnabled", false);
 pref("layout.css.color-adjust.enabled", true);
 
 pref("dom.audiochannel.audioCompeting", false);
-
-// Disable Node.rootNode in release builds.
-#ifdef RELEASE_OR_BETA
-pref("dom.node.rootNode.enabled", false);
-#else
-pref("dom.node.rootNode.enabled", true);
-#endif
 
 // Default media volume
 pref("media.default_volume", "1.0");

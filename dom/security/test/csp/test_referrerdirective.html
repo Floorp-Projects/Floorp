@@ -122,7 +122,7 @@ SpecialPowers.pushPrefEnv({
     },
     function() {
       // each of the iframes we create will call us back when its contents are loaded.
-      window.addEventListener("message", referrerDirectiveTests.onIframeComplete.bind(window), false);
+      window.addEventListener("message", referrerDirectiveTests.onIframeComplete.bind(window));
 
       // one iframe created for each test case
       for (var id in testData) {

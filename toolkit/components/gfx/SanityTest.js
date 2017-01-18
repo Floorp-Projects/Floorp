@@ -7,7 +7,7 @@
 const { utils: Cu, interfaces: Ci, classes: Cc, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import('resource://gre/modules/Preferences.jsm');
+Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -73,7 +73,7 @@ function reportTestReason(val) {
 function annotateCrashReport(value) {
   try {
     // "1" if we're annotating the crash report, "" to remove the annotation.
-    var crashReporter = Cc['@mozilla.org/toolkit/crash-reporter;1'].
+    var crashReporter = Cc["@mozilla.org/toolkit/crash-reporter;1"].
                           getService(Ci.nsICrashReporter);
     crashReporter.annotateCrashReport("GraphicsSanityTest", value ? "1" : "");
   } catch (e) {
@@ -81,7 +81,7 @@ function annotateCrashReport(value) {
 }
 
 function setTimeout(aMs, aCallback) {
-  var timer = Cc['@mozilla.org/timer;1'].
+  var timer = Cc["@mozilla.org/timer;1"].
                 createInstance(Ci.nsITimer);
   timer.initWithCallback(aCallback, aMs, Ci.nsITimer.TYPE_ONE_SHOT);
 }

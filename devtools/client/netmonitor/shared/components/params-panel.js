@@ -92,11 +92,13 @@ function ParamsPanel({
   }
 
   return (
-    PropertiesView({
-      object,
-      filterPlaceHolder: PARAMS_FILTER_TEXT,
-      sectionNames: SECTION_NAMES,
-    })
+    div({ className: "panel-container" },
+      PropertiesView({
+        object,
+        filterPlaceHolder: PARAMS_FILTER_TEXT,
+        sectionNames: SECTION_NAMES,
+      })
+    )
   );
 }
 

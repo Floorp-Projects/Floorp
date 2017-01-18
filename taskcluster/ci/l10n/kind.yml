@@ -37,16 +37,17 @@ job-template:
          default: public
          android-api-15-l10n: internal
    index:
+      type: l10n
       product:
          by-build-platform:
             default: firefox
             android-api-15-l10n: mobile
       job-name:
          by-build-platform:
-            linux-l10n: linux32-l10n-opt
-            linux64-l10n: linux64-l10n-opt
-            macosx64: macosx64-l10n-opt
-            android-api-15-l10n: android-l10n-opt
+            linux-l10n: linux-opt
+            linux64-l10n: linux64-opt
+            macosx64: macosx64-opt
+            android-api-15-l10n: android-api-15-opt
    worker-type:
       by-build-platform:
          default: aws-provisioner-v1/gecko-{level}-b-linux

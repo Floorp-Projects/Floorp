@@ -4,7 +4,7 @@ function postMsg(message)
   parent.postMessage(message, l.protocol + "//" + l.host);
 }
 
-window.addEventListener("message", onMessageReceived, false);
+window.addEventListener("message", onMessageReceived);
 
 function onMessageReceived(event)
 {

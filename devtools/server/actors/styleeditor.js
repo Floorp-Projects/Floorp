@@ -91,11 +91,11 @@ var OldStyleSheetActor = protocol.ActorClassWithSpec(oldStyleSheetSpec, {
     let ownerNode = this.rawSheet.ownerNode;
     if (ownerNode) {
       let onSheetLoaded = (event) => {
-        ownerNode.removeEventListener("load", onSheetLoaded, false);
+        ownerNode.removeEventListener("load", onSheetLoaded);
         this._notifyPropertyChanged("ruleCount");
       };
 
-      ownerNode.addEventListener("load", onSheetLoaded, false);
+      ownerNode.addEventListener("load", onSheetLoaded);
     }
   },
 
@@ -364,7 +364,7 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClassWithSpec(st
       this._onDocumentLoaded();
     }
     else {
-      this.window.addEventListener("load", this._onDocumentLoaded, false);
+      this.window.addEventListener("load", this._onDocumentLoaded);
     }
     return {};
   },
@@ -375,7 +375,7 @@ var StyleEditorActor = exports.StyleEditorActor = protocol.ActorClassWithSpec(st
    */
   _onDocumentLoaded: function (event) {
     if (event) {
-      this.window.removeEventListener("load", this._onDocumentLoaded, false);
+      this.window.removeEventListener("load", this._onDocumentLoaded);
     }
 
     let documents = [this.document];

@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesDBUtils",
 
 window.addEventListener("load", function onload(event) {
   try {
-  window.removeEventListener("load", onload, false);
+  window.removeEventListener("load", onload);
   Troubleshoot.snapshot(function(snapshot) {
     for (let prop in snapshotFormatters)
       snapshotFormatters[prop](snapshot[prop]);
@@ -29,7 +29,7 @@ window.addEventListener("load", function onload(event) {
   } catch (e) {
     Cu.reportError("stack of load error for about:support: " + e + ": " + e.stack);
   }
-}, false);
+});
 
 // Each property in this object corresponds to a property in Troubleshoot.jsm's
 // snapshot data.  Each function is passed its property's corresponding data,
@@ -217,15 +217,15 @@ var snapshotFormatters = {
     let apzInfo = [];
     let formatApzInfo = function(info) {
       let out = [];
-      for (let type of ['Wheel', 'Touch', 'Drag']) {
-        let key = 'Apz' + type + 'Input';
+      for (let type of ["Wheel", "Touch", "Drag"]) {
+        let key = "Apz" + type + "Input";
 
         if (!(key in info))
           continue;
 
         delete info[key];
 
-        let message = localizedMsg([type.toLowerCase() + 'Enabled']);
+        let message = localizedMsg([type.toLowerCase() + "Enabled"]);
         out.push(message);
       }
 

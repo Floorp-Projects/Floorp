@@ -42,7 +42,7 @@ var xmlDoc = document.implementation.createDocument("", "test", null);
 showMessage("createDocument: " + xmlDoc.readyState);
 is(xmlDoc.readyState, "complete", "created document readyState should be 'complete' before being associated with a parser");
 xmlDoc.async=true;
-xmlDoc.addEventListener("load", xmlLoaded, false);
+xmlDoc.addEventListener("load", xmlLoaded);
 xmlDoc.load("347174transformable.xml");
 showMessage("load called: " + xmlDoc.readyState);
 isnot(xmlDoc.readyState, "complete", "created document readyState should not be 'complete' after load called");

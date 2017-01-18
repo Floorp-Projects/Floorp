@@ -30,15 +30,15 @@ if (!isTabModal) {
 var promptDone;
 
 function inittest() {
-  window.addEventListener("message", runtest, false);
+  window.addEventListener("message", runtest);
   window.open("bug619644_inner.html", "619644");
 
   SimpleTest.waitForExplicitFinish();
 }
 
 function runtest(e) {
-  window.removeEventListener("message", runtest, false);
-  window.addEventListener("message", checktest, false);
+  window.removeEventListener("message", runtest);
+  window.addEventListener("message", checktest);
 
   let state = {
       msg         : "Message",

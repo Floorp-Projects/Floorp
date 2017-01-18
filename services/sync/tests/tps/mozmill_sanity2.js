@@ -11,5 +11,5 @@ var testGetNode = function() {
   controller.waitForPageLoad();
 
   var appbox = findElement.ID(controller.tabs.activeTab, "application-box");
-  assert.waitFor(() => appbox.getNode().textContent == 'Firefox', 'correct app name');
+  assert.waitFor(() => appbox.getNode().textContent == "Firefox", "correct app name");
 };

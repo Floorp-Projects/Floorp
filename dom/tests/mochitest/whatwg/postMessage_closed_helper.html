@@ -8,7 +8,7 @@ function receiveMessage(evt)
   evt.source.postMessage("FAIL", "*");
 }
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 
 function setup()
 {
@@ -18,7 +18,7 @@ function setup()
     window.opener.postMessage("message", "http://mochi.test:8888");
 }
 
-window.addEventListener("load", setup, false);
+window.addEventListener("load", setup);
   </script>
 </head>
 <body>

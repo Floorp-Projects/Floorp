@@ -140,26 +140,26 @@ function testSingleTouch(name) {
 
   // test touchstart event fires correctly
   var checkFunction = checkEvent(event);
-  window.addEventListener("touchstart", checkFunction, false);
+  window.addEventListener("touchstart", checkFunction);
   sendTouchEvent(cwu, "touchstart", event, 0);
-  window.removeEventListener("touchstart", checkFunction, false);
+  window.removeEventListener("touchstart", checkFunction);
 
   // test touchmove event fires correctly
   event.touches[0].page.x -= 1;
   event.targetTouches[0].page.x -= 1;
   event.changedTouches[0].page.x -= 1;
   checkFunction = checkEvent(event);
-  window.addEventListener("touchmove", checkFunction, false);
+  window.addEventListener("touchmove", checkFunction);
   sendTouchEvent(cwu, "touchmove", event, 0);
-  window.removeEventListener("touchmove", checkFunction, false);
+  window.removeEventListener("touchmove", checkFunction);
 
   // test touchend event fires correctly
   event.touches = [];
   event.targetTouches = [];
   checkFunction = checkEvent(event);
-  window.addEventListener("touchend", checkFunction, false);
+  window.addEventListener("touchend", checkFunction);
   sendTouchEvent(cwu, "touchend", event, 0);
-  window.removeEventListener("touchend", checkFunction, false);
+  window.removeEventListener("touchend", checkFunction);
 
   nextTest();
 }
@@ -197,20 +197,20 @@ function testSingleTouch2(name) {
 
   // test touchstart event fires correctly
   var checkFunction1 = checkEvent(event1);
-  window.addEventListener("touchstart", checkFunction1, false);
+  window.addEventListener("touchstart", checkFunction1);
   sendTouchEvent(cwu, "touchstart", event1, 0);
-  window.removeEventListener("touchstart", checkFunction1, false);
+  window.removeEventListener("touchstart", checkFunction1);
 
   event1.touches = [];
   event1.targetTouches = [];
   checkFunction1 = checkEvent(event1);
   var checkFunction2 = checkEvent(event2);
 
-  window.addEventListener("touchend", checkFunction1, false);
-  window.addEventListener("touchstart", checkFunction2, false);
+  window.addEventListener("touchend", checkFunction1);
+  window.addEventListener("touchstart", checkFunction2);
   sendTouchEvent(cwu, "touchstart", event2, 0);
-  window.removeEventListener("touchend", checkFunction1, false);
-  window.removeEventListener("touchstart", checkFunction2, false);
+  window.removeEventListener("touchend", checkFunction1);
+  window.removeEventListener("touchstart", checkFunction2);
 
   sendTouchEvent(cwu, "touchstart", event1, 0);
 
@@ -245,24 +245,24 @@ function testMultiTouch(name) {
 
   // test touchstart event fires correctly
   var checkFunction = checkEvent(event);
-  window.addEventListener("touchstart", checkFunction, false);
+  window.addEventListener("touchstart", checkFunction);
   sendTouchEvent(cwu, "touchstart", event, 0);
-  window.removeEventListener("touchstart", checkFunction, false);
+  window.removeEventListener("touchstart", checkFunction);
 
   event.touches.push(touch2);
   event.targetTouches = [touch2];
   event.changedTouches = [touch2];
-  window.addEventListener("touchstart", checkFunction, false);
+  window.addEventListener("touchstart", checkFunction);
   sendTouchEvent(cwu, "touchstart", event, 0);
-  window.removeEventListener("touchstart", checkFunction, false);
+  window.removeEventListener("touchstart", checkFunction);
 
   // test moving one touch point
   event.touches[0].page.x -= 1;
   event.targetTouches = [event.touches[0]];
   event.changedTouches = [event.touches[0]];
-  window.addEventListener("touchmove", checkFunction, false);
+  window.addEventListener("touchmove", checkFunction);
   sendTouchEvent(cwu, "touchmove", event, 0);
-  window.removeEventListener("touchmove", checkFunction, false);
+  window.removeEventListener("touchmove", checkFunction);
 
   // test moving both touch points -- two touchmove events should fire, one on each target
   event.touches[0].page.x -= 1;
@@ -285,10 +285,10 @@ function testMultiTouch(name) {
       ok(false, "Event target is incorrect: " + event.targetTouches[0].target.nodeName + "#" + event.targetTouches[0].target.id);
     touchMoveEvents++;
   };
-  window.addEventListener("touchmove", checkFunction2, false);
+  window.addEventListener("touchmove", checkFunction2);
   sendTouchEvent(cwu, "touchmove", event, 0);
   ok(touchMoveEvents, 2, "Correct number of touchmove events fired");
-  window.removeEventListener("touchmove", checkFunction2, false);
+  window.removeEventListener("touchmove", checkFunction2);
 
   // test removing just one finger
   var expected = new touchEvent({
@@ -303,17 +303,17 @@ function testMultiTouch(name) {
   event.changedTouches = [touch1];
 
   // test removing the other finger
-  window.addEventListener("touchend", checkFunction, false);
+  window.addEventListener("touchend", checkFunction);
   sendTouchEvent(cwu, "touchend", event, 0);
-  window.removeEventListener("touchend", checkFunction, false);
+  window.removeEventListener("touchend", checkFunction);
 
   event.touches = [];
   event.targetTouches = [];
   event.changedTouches = [touch2];
   checkFunction = checkEvent(event);
-  window.addEventListener("touchend", checkFunction, false);
+  window.addEventListener("touchend", checkFunction);
   sendTouchEvent(cwu, "touchend", event, 0);
-  window.removeEventListener("touchend", checkFunction, false);
+  window.removeEventListener("touchend", checkFunction);
 
   nextTest();
 }
@@ -343,7 +343,7 @@ function testTouchChanged() {
     moveEvents++;
   }
 
-  window.addEventListener("touchmove", onMove, false);
+  window.addEventListener("touchmove", onMove);
 
   // the first touchmove should always fire an event
   sendTouchEvent(cwu, "touchmove", event, 0);
@@ -380,7 +380,7 @@ function testTouchChanged() {
   
   is(moveEvents, 7, "Six move events fired");
 
-  window.removeEventListener("touchmove", onMove, false);
+  window.removeEventListener("touchmove", onMove);
   sendTouchEvent(cwu, "touchend", event, 0);
   nextTest();
 }
@@ -432,7 +432,7 @@ function testPreventDefault() {
 
   var dotest = function(aTest) {
     if (aTest.doPrevent) {
-      target.addEventListener(aTest.name, preventFunction, false);
+      target.addEventListener(aTest.name, preventFunction);
     }
 
     if (aTest.name == "touchmove") {
@@ -443,7 +443,7 @@ function testPreventDefault() {
     is(sendTouchEvent(cwu, aTest.name, event, 0), aTest.prevent, "Got correct status");
 
     if (aTest.doPrevent)
-      target.removeEventListener(aTest.name, preventFunction, false);
+      target.removeEventListener(aTest.name, preventFunction);
   }
 
   for (var i = 0; i < tests.length; i++) {
@@ -480,9 +480,9 @@ function testRemovingElement() {
     touchEvents++;
   };
 
-  target.addEventListener("touchstart", removeTarget, false);
-  target.addEventListener("touchmove", checkTarget, false);
-  target.addEventListener("touchend", checkTarget, false);
+  target.addEventListener("touchstart", removeTarget);
+  target.addEventListener("touchmove", checkTarget);
+  target.addEventListener("touchend", checkTarget);
 
   sendTouchEvent(cwu, "touchstart", e, 0);
 
@@ -490,9 +490,9 @@ function testRemovingElement() {
   sendTouchEvent(cwu, "touchmove", e, 0);
   sendTouchEvent(cwu, "touchend", e, 0);
 
-  target.removeEventListener("touchstart", removeTarget, false);
-  target.removeEventListener("touchmove", checkTarget, false);
-  target.removeEventListener("touchend", checkTarget, false);
+  target.removeEventListener("touchstart", removeTarget);
+  target.removeEventListener("touchmove", checkTarget);
+  target.removeEventListener("touchend", checkTarget);
 
   is(touchEvents, 2, "Check target was called twice");
 
@@ -517,9 +517,9 @@ function testNAC() {
 
   // test touchstart event fires correctly
   var checkFunction = checkEvent(event);
-  window.addEventListener("touchstart", checkFunction, false);
+  window.addEventListener("touchstart", checkFunction);
   sendTouchEvent(cwu, "touchstart", event, 0);
-  window.removeEventListener("touchstart", checkFunction, false);
+  window.removeEventListener("touchstart", checkFunction);
 
   sendTouchEvent(cwu, "touchend", event, 0);
 

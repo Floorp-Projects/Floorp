@@ -81,7 +81,7 @@ var curTest;
 var counter = -1;
 
 function finishTest() {
-  window.removeEventListener("message", receiveMessage, false);
+  window.removeEventListener("message", receiveMessage);
   SimpleTest.finish();
 }
 
@@ -113,7 +113,7 @@ function checkResults(result) {
 
 // a postMessage handler used to bubble up the
 // onsuccess/onerror state from within the iframe.
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 function receiveMessage(event) {
   checkResults(event.data.result);
 }

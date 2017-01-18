@@ -147,8 +147,8 @@ RequestsMenuView.prototype = {
 
     this.onResize = this.onResize.bind(this);
     this._splitter = $("#network-inspector-view-splitter");
-    this._splitter.addEventListener("mouseup", this.onResize, false);
-    window.addEventListener("resize", this.onResize, false);
+    this._splitter.addEventListener("mouseup", this.onResize);
+    window.addEventListener("resize", this.onResize);
 
     this.tooltip = new HTMLTooltip(NetMonitorController._toolbox.doc, { type: "arrow" });
 
@@ -164,9 +164,9 @@ RequestsMenuView.prototype = {
   _onConnect() {
     if (NetMonitorController.supportsCustomRequest) {
       $("#custom-request-send-button")
-        .addEventListener("click", this.sendCustomRequestEvent, false);
+        .addEventListener("click", this.sendCustomRequestEvent);
       $("#custom-request-close-button")
-        .addEventListener("click", this.closeCustomRequestEvent, false);
+        .addEventListener("click", this.closeCustomRequestEvent);
     }
   },
 
@@ -181,12 +181,12 @@ RequestsMenuView.prototype = {
     // this.flushRequestsTask.disarm();
 
     $("#custom-request-send-button")
-      .removeEventListener("click", this.sendCustomRequestEvent, false);
+      .removeEventListener("click", this.sendCustomRequestEvent);
     $("#custom-request-close-button")
-      .removeEventListener("click", this.closeCustomRequestEvent, false);
+      .removeEventListener("click", this.closeCustomRequestEvent);
 
-    this._splitter.removeEventListener("mouseup", this.onResize, false);
-    window.removeEventListener("resize", this.onResize, false);
+    this._splitter.removeEventListener("mouseup", this.onResize);
+    window.removeEventListener("resize", this.onResize);
 
     this.tooltip.destroy();
 

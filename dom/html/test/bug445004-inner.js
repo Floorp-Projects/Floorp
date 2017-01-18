@@ -20,4 +20,4 @@ function doIt() {
   doc.write('<img src="example.org.png">');
   doc.close();
 }
-window.addEventListener("message", doIt, false);
+window.addEventListener("message", doIt);

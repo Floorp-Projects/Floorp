@@ -29,7 +29,7 @@ function dumpEvent(event) {
 
 var events = ["timeupdate", "seeking", "seeked", "ended", "playing", "pause"];
 for (var i = 0; i < events.length; ++i) {
-  v.addEventListener(events[i], dumpEvent, false);
+  v.addEventListener(events[i], dumpEvent);
 }
 
 function isWithinEps(a, b, msg) {
@@ -56,8 +56,8 @@ function startTest(test) {
     isGreaterThanOrEqualEps(v.currentTime, test.duration, "checking v.currentTime at second 'ended' event");
     isGreaterThanOrEqualEps(vout.currentTime, (test.duration - seekTime) + test.duration,
                 "checking vout.currentTime after seeking and playing through again");
-    v.removeEventListener("ended", endedAfterSeek, false);
-    v.addEventListener("ended", endedAfterReplay, false);
+    v.removeEventListener("ended", endedAfterSeek);
+    v.addEventListener("ended", endedAfterReplay);
     v.src = test.name + "?1";
     v.play();
   };
@@ -66,13 +66,13 @@ function startTest(test) {
     isGreaterThanOrEqualEps(v.currentTime, seekTime, "Finished seeking");
     isGreaterThanOrEqualEps(vout.currentTime, test.duration,
                 "checking vout.currentTime has not changed after seeking");
-    v.removeEventListener("seeked", seeked, false);
+    v.removeEventListener("seeked", seeked);
     function dontPlayAgain() {
       ok(false, "vout_untilended should not play again");
     }
-    vout_untilended.addEventListener("playing", dontPlayAgain, false);
-    vout_untilended.addEventListener("ended", dontPlayAgain, false);
-    v.addEventListener("ended", endedAfterSeek, false);
+    vout_untilended.addEventListener("playing", dontPlayAgain);
+    vout_untilended.addEventListener("ended", dontPlayAgain);
+    v.addEventListener("ended", endedAfterSeek);
     v.play();
   };
 
@@ -88,22 +88,22 @@ function startTest(test) {
     is(vout.ended, false, "checking vout has not ended");
     is(vout_untilended.ended, true, "checking vout_untilended has actually ended");
 
-    v.removeEventListener("ended", ended, false);
-    vout_untilended.removeEventListener("ended", ended, false);
+    v.removeEventListener("ended", ended);
+    vout_untilended.removeEventListener("ended", ended);
 
     v.pause();
     v.currentTime = seekTime;
-    v.addEventListener("seeked", seeked, false);
+    v.addEventListener("seeked", seeked);
   };
 
-  v.addEventListener("ended", ended, false);
-  vout_untilended.addEventListener("ended", ended, false);
+  v.addEventListener("ended", ended);
+  vout_untilended.addEventListener("ended", ended);
 
   function checkNoEnded() {
     ok(false, "ended event received unexpectedly");
   };
 
-  vout.addEventListener("ended", checkNoEnded, false);
+  vout.addEventListener("ended", checkNoEnded);
 
   v.src = test.name;
   v.name = test.name;

@@ -107,26 +107,26 @@ add_test(function test_prefAttributes() {
   do_check_eq(scheduler.nextSync, Math.floor(TIMESTAMP1 / 1000) * 1000);
 
   _("'syncInterval' defaults to singleDeviceInterval.");
-  do_check_eq(Svc.Prefs.get('syncInterval'), undefined);
+  do_check_eq(Svc.Prefs.get("syncInterval"), undefined);
   do_check_eq(scheduler.syncInterval, scheduler.singleDeviceInterval);
 
   _("'syncInterval' corresponds to a preference setting.");
   scheduler.syncInterval = INTERVAL;
   do_check_eq(scheduler.syncInterval, INTERVAL);
-  do_check_eq(Svc.Prefs.get('syncInterval'), INTERVAL);
+  do_check_eq(Svc.Prefs.get("syncInterval"), INTERVAL);
 
   _("'syncThreshold' corresponds to preference, defaults to SINGLE_USER_THRESHOLD");
-  do_check_eq(Svc.Prefs.get('syncThreshold'), undefined);
+  do_check_eq(Svc.Prefs.get("syncThreshold"), undefined);
   do_check_eq(scheduler.syncThreshold, SINGLE_USER_THRESHOLD);
   scheduler.syncThreshold = THRESHOLD;
   do_check_eq(scheduler.syncThreshold, THRESHOLD);
 
   _("'globalScore' corresponds to preference, defaults to zero.");
-  do_check_eq(Svc.Prefs.get('globalScore'), 0);
+  do_check_eq(Svc.Prefs.get("globalScore"), 0);
   do_check_eq(scheduler.globalScore, 0);
   scheduler.globalScore = SCORE;
   do_check_eq(scheduler.globalScore, SCORE);
-  do_check_eq(Svc.Prefs.get('globalScore'), SCORE);
+  do_check_eq(Svc.Prefs.get("globalScore"), SCORE);
 
   _("Intervals correspond to default preferences.");
   do_check_eq(scheduler.singleDeviceInterval,

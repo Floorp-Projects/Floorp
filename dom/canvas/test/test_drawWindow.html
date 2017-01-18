@@ -10,7 +10,7 @@
   <script type="application/javascript">
 
   SimpleTest.waitForExplicitFinish();
-  window.addEventListener("load", openSourceWindow, false);
+  window.addEventListener("load", openSourceWindow);
 
   var sourceWindow;
 
@@ -21,7 +21,7 @@
 
     sourceWindow = window.open("file_drawWindow_source.html", "",
                                "width=200,height=100");
-    sourceWindow.addEventListener("load", runTests, false);
+    sourceWindow.addEventListener("load", runTests);
   }
 
   function runTests(event) {

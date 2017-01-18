@@ -118,9 +118,9 @@ function load() {
     req.open('GET', gParams.logurl, true);
     req.send();
   }
-  window.addEventListener('keypress', handle_keyboard_shortcut, false);
-  ID("image1").addEventListener('error', image_load_error, false);
-  ID("image2").addEventListener('error', image_load_error, false);
+  window.addEventListener('keypress', handle_keyboard_shortcut);
+  ID("image1").addEventListener('error', image_load_error);
+  ID("image2").addEventListener('error', image_load_error);
 }
 
 function image_load_error(e) {

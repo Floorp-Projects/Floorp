@@ -21,6 +21,9 @@ if (AppConstants.ACCESSIBILITY) {
                                     "resource://gre/modules/accessibility/AccessFu.jsm");
 }
 
+XPCOMUtils.defineLazyModuleGetter(this, "Manifest",
+                                  "resource://gre/modules/Manifest.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "SpatialNavigation",
                                   "resource://gre/modules/SpatialNavigation.jsm");
 
@@ -152,7 +155,7 @@ lazilyLoadedBrowserScripts.forEach(function (aScript) {
 var lazilyLoadedObserverScripts = [
   ["MemoryObserver", ["memory-pressure", "Memory:Dump"], "chrome://browser/content/MemoryObserver.js"],
   ["ConsoleAPI", ["console-api-log-event"], "chrome://browser/content/ConsoleAPI.js"],
-  ["FindHelper", ["FindInPage:Opened", "FindInPage:Closed", "Tab:Selected"], "chrome://browser/content/FindHelper.js"],
+  ["FindHelper", ["FindInPage:Opened", "FindInPage:Closed"], "chrome://browser/content/FindHelper.js"],
   ["PermissionsHelper", ["Permissions:Check", "Permissions:Get", "Permissions:Clear"], "chrome://browser/content/PermissionsHelper.js"],
   ["FeedHandler", ["Feeds:Subscribe"], "chrome://browser/content/FeedHandler.js"],
   ["Feedback", ["Feedback:Show"], "chrome://browser/content/Feedback.js"],
@@ -369,11 +372,15 @@ var BrowserApp = {
 
     Services.androidBridge.browserApp = this;
 
+    GlobalEventDispatcher.registerListener(this, [
+      "Tab:Load",
+      "Tab:Selected",
+      "Tab:Closed",
+      "Browser:LoadManifest",
+    ]);
+
     Services.obs.addObserver(this, "Locale:OS", false);
     Services.obs.addObserver(this, "Locale:Changed", false);
-    Services.obs.addObserver(this, "Tab:Load", false);
-    Services.obs.addObserver(this, "Tab:Selected", false);
-    Services.obs.addObserver(this, "Tab:Closed", false);
     Services.obs.addObserver(this, "Session:Back", false);
     Services.obs.addObserver(this, "Session:Forward", false);
     Services.obs.addObserver(this, "Session:Navigate", false);
@@ -399,7 +406,7 @@ var BrowserApp = {
       WindowEventDispatcher.sendRequest({
         type: window.fullScreen ? "ToggleChrome:Hide" : "ToggleChrome:Show"
       });
-    }, false);
+    });
 
     window.addEventListener("fullscreenchange", (e) => {
       // This event gets fired on the document and its entire ancestor chain
@@ -419,7 +426,7 @@ var BrowserApp = {
         this.fullscreenTransitionTab = null;
         this._handleTabSelected(tab);
       }
-    }, false);
+    });
 
     NativeWindow.init();
     FormAssistant.init();
@@ -492,6 +499,9 @@ var BrowserApp = {
     let mm = window.getGroupMessageManager("browsers");
     mm.loadFrameScript("chrome://browser/content/content.js", true);
 
+    // Listen to manifest messages
+    mm.loadFrameScript("chrome://global/content/manifestMessages.js", true);
+
     // We can't delay registering WebChannel listeners: if the first page is
     // about:accounts, which can happen when starting the Firefox Account flow
     // from the first run experience, or via the Firefox Account Status
@@ -510,7 +520,7 @@ var BrowserApp = {
     GlobalEventDispatcher.sendRequest({ type: "Gecko:Ready" });
 
     this.deck.addEventListener("DOMContentLoaded", function BrowserApp_delayedStartup() {
-      BrowserApp.deck.removeEventListener("DOMContentLoaded", BrowserApp_delayedStartup, false);
+      BrowserApp.deck.removeEventListener("DOMContentLoaded", BrowserApp_delayedStartup);
 
       InitLater(() => Cu.import("resource://gre/modules/NotificationDB.jsm"));
 
@@ -540,7 +550,7 @@ var BrowserApp = {
       InitLater(() => Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager));
       InitLater(() => LoginManagerParent.init(), window, "LoginManagerParent");
 
-    }, false);
+    });
 
     // Pass caret StateChanged events to ActionBarHandler.
     window.addEventListener("mozcaretstatechanged", e => {
@@ -1181,7 +1191,7 @@ var BrowserApp = {
           type: "Content:LoadError",
           tabID: tab.id
         };
-        Messaging.sendRequest(message);
+        GlobalEventDispatcher.sendRequest(message);
         dump("Handled load error: " + e)
       }
     }
@@ -1228,7 +1238,7 @@ var BrowserApp = {
       type: "Tab:Close",
       tabID: aTab.id
     };
-    Messaging.sendRequest(message);
+    GlobalEventDispatcher.sendRequest(message);
   },
 
   // Calling this will update the state in BrowserApp after a tab has been
@@ -1302,7 +1312,7 @@ var BrowserApp = {
       type: "Tab:Select",
       tabID: aTab.id
     };
-    Messaging.sendRequest(message);
+    GlobalEventDispatcher.sendRequest(message);
   },
 
   /**
@@ -1540,7 +1550,7 @@ var BrowserApp = {
     };
 
     let paintDone = function() {
-      window.removeEventListener("MozAfterPaint", paintDone, false);
+      window.removeEventListener("MozAfterPaint", paintDone);
       if (dwu.flushApzRepaints()) {
         Services.obs.addObserver(apzFlushDone, "apz-repaints-flushed", false);
       } else {
@@ -1551,21 +1561,21 @@ var BrowserApp = {
     let gotResizeWindow = false;
     let resizeWindow = function(e) {
       gotResizeWindow = true;
-      aBrowser.contentWindow.removeEventListener("resize", resizeWindow, false);
+      aBrowser.contentWindow.removeEventListener("resize", resizeWindow);
       if (dwu.isMozAfterPaintPending) {
-        window.addEventListener("MozAfterPaint", paintDone, false);
+        window.addEventListener("MozAfterPaint", paintDone);
       } else {
         paintDone();
       }
     }
 
-    aBrowser.contentWindow.addEventListener("resize", resizeWindow, false);
+    aBrowser.contentWindow.addEventListener("resize", resizeWindow);
 
     // The "resize" event sometimes fails to fire, so set a timer to catch that case
     // and unregister the event listener. See Bug 1253469
     setTimeout(function(e) {
     if (!gotResizeWindow) {
-        aBrowser.contentWindow.removeEventListener("resize", resizeWindow, false);
+        aBrowser.contentWindow.removeEventListener("resize", resizeWindow);
         dwu.zoomToFocusedInput();
       }
     }, 500);
@@ -1598,11 +1608,91 @@ var BrowserApp = {
     Services.prefs.setComplexValue(pref, Ci.nsIPrefLocalizedString, pls);
   },
 
+  onEvent: function (event, data, callback) {
+    let browser = this.selectedBrowser;
+
+    switch (event) {
+      case "Browser:LoadManifest": {
+        const manifest = new Manifest(browser);
+        manifest.install().then(() => {
+          return manifest.icon(data.iconSize);
+        }).then(icon => {
+          GlobalEventDispatcher.sendRequest({
+            type: "Website:AppInstalled",
+            icon: icon,
+            name: manifest.name(),
+            start_url: manifest.data.start_url
+          });
+        }).catch(err => {
+          Cu.reportError("Failed to install " + data.src);
+        });
+        break;
+      }
+
+      case "Tab:Load": {
+        let url = data.url;
+        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP
+                  | Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
+
+        // Pass LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL to prevent any loads from
+        // inheriting the currently loaded document's principal.
+        if (data.userEntered) {
+          flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
+        }
+
+        let delayLoad = ("delayLoad" in data) ? data.delayLoad : false;
+        let params = {
+          selected: ("selected" in data) ? data.selected : !delayLoad,
+          parentId: ("parentId" in data) ? data.parentId : -1,
+          flags: flags,
+          tabID: data.tabID,
+          isPrivate: (data.isPrivate === true),
+          pinned: (data.pinned === true),
+          delayLoad: (delayLoad === true),
+          desktopMode: (data.desktopMode === true)
+        };
+
+        params.userRequested = url;
+
+        if (data.engine) {
+          let engine = Services.search.getEngineByName(data.engine);
+          if (engine) {
+            let submission = engine.getSubmission(url);
+            url = submission.uri.spec;
+            params.postData = submission.postData;
+            params.isSearch = true;
+          }
+        }
+
+        if (data.newTab) {
+          this.addTab(url, params);
+        } else {
+          if (data.tabId) {
+            // Use a specific browser instead of the selected browser, if it exists
+            let specificBrowser = this.getTabForId(data.tabId).browser;
+            if (specificBrowser)
+              browser = specificBrowser;
+          }
+          this.loadURI(url, browser, params);
+        }
+        break;
+      }
+
+      case "Tab:Selected":
+        this._handleTabSelected(this.getTabForId(data.id));
+        break;
+
+      case "Tab:Closed": {
+        this._handleTabClosed(this.getTabForId(data.tabId), data.showUndoToast);
+        break;
+      }
+    }
+  },
+
   observe: function(aSubject, aTopic, aData) {
     let browser = this.selectedBrowser;
 
     switch (aTopic) {
-
       case "Session:Back":
         browser.goBack();
         break;
@@ -1684,66 +1774,6 @@ var BrowserApp = {
       case "Session:Stop":
         browser.stop();
         break;
-
-      case "Tab:Load": {
-        let data = JSON.parse(aData);
-        let url = data.url;
-        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP
-                  | Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
-
-        // Pass LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL to prevent any loads from
-        // inheriting the currently loaded document's principal.
-        if (data.userEntered) {
-          flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
-        }
-
-        let delayLoad = ("delayLoad" in data) ? data.delayLoad : false;
-        let params = {
-          selected: ("selected" in data) ? data.selected : !delayLoad,
-          parentId: ("parentId" in data) ? data.parentId : -1,
-          flags: flags,
-          tabID: data.tabID,
-          isPrivate: (data.isPrivate === true),
-          pinned: (data.pinned === true),
-          delayLoad: (delayLoad === true),
-          desktopMode: (data.desktopMode === true)
-        };
-
-        params.userRequested = url;
-
-        if (data.engine) {
-          let engine = Services.search.getEngineByName(data.engine);
-          if (engine) {
-            let submission = engine.getSubmission(url);
-            url = submission.uri.spec;
-            params.postData = submission.postData;
-            params.isSearch = true;
-          }
-        }
-
-        if (data.newTab) {
-          this.addTab(url, params);
-        } else {
-          if (data.tabId) {
-            // Use a specific browser instead of the selected browser, if it exists
-            let specificBrowser = this.getTabForId(data.tabId).browser;
-            if (specificBrowser)
-              browser = specificBrowser;
-          }
-          this.loadURI(url, browser, params);
-        }
-        break;
-      }
-
-      case "Tab:Selected":
-        this._handleTabSelected(this.getTabForId(parseInt(aData)));
-        break;
-
-      case "Tab:Closed": {
-        let data = JSON.parse(aData);
-        this._handleTabClosed(this.getTabForId(data.tabId), data.showUndoToast);
-        break;
-      }
 
       case "keyword-search":
         // This event refers to a search via the URL bar, not a bookmarks
@@ -2297,7 +2327,7 @@ var NativeWindow = {
     init: function() {
       // Accessing "NativeWindow.contextmenus" initializes context menus if needed.
       BrowserApp.deck.addEventListener(
-          "contextmenu", (e) => NativeWindow.contextmenus.show(e), false);
+          "contextmenu", (e) => NativeWindow.contextmenus.show(e));
     },
 
     add: function() {
@@ -3115,7 +3145,7 @@ var LightWeightThemeWebInstaller = {
 
     this._previewWindow = event.target.ownerDocument.defaultView;
     this._previewWindow.addEventListener("pagehide", this, true);
-    BrowserApp.deck.addEventListener("TabSelect", this, false);
+    BrowserApp.deck.addEventListener("TabSelect", this);
     this._manager.previewTheme(data);
   },
 
@@ -3126,7 +3156,7 @@ var LightWeightThemeWebInstaller = {
 
     this._previewWindow.removeEventListener("pagehide", this, true);
     this._previewWindow = null;
-    BrowserApp.deck.removeEventListener("TabSelect", this, false);
+    BrowserApp.deck.removeEventListener("TabSelect", this);
 
     this._manager.resetPreview();
   },
@@ -3518,7 +3548,7 @@ Tab.prototype = {
     this.browser.addEventListener("DOMInputPasswordAdded", this, true);
     this.browser.addEventListener("DOMLinkAdded", this, true);
     this.browser.addEventListener("DOMLinkChanged", this, true);
-    this.browser.addEventListener("DOMMetaAdded", this, false);
+    this.browser.addEventListener("DOMMetaAdded", this);
     this.browser.addEventListener("DOMTitleChanged", this, true);
     this.browser.addEventListener("DOMAudioPlaybackStarted", this, true);
     this.browser.addEventListener("DOMAudioPlaybackStopped", this, true);
@@ -3575,7 +3605,7 @@ Tab.prototype = {
           type: "Content:LoadError",
           tabID: this.id
         };
-        Messaging.sendRequest(message);
+        GlobalEventDispatcher.sendRequest(message);
         dump("Handled load error: " + e);
       }
     }
@@ -3593,7 +3623,7 @@ Tab.prototype = {
     // Set desktop mode for tab and send change to Java
     if (this.desktopMode != aDesktopMode) {
       this.desktopMode = aDesktopMode;
-      Messaging.sendRequest({
+      GlobalEventDispatcher.sendRequest({
         type: "DesktopMode:Changed",
         desktopMode: aDesktopMode,
         tabID: this.id
@@ -3633,7 +3663,7 @@ Tab.prototype = {
     this.browser.removeEventListener("DOMInputPasswordAdded", this, true);
     this.browser.removeEventListener("DOMLinkAdded", this, true);
     this.browser.removeEventListener("DOMLinkChanged", this, true);
-    this.browser.removeEventListener("DOMMetaAdded", this, false);
+    this.browser.removeEventListener("DOMMetaAdded", this);
     this.browser.removeEventListener("DOMTitleChanged", this, true);
     this.browser.removeEventListener("DOMAudioPlaybackStarted", this, true);
     this.browser.removeEventListener("DOMAudioPlaybackStopped", this, true);
@@ -3780,6 +3810,13 @@ Tab.prototype = {
     }
   },
 
+  makeManifestMessage: function() {
+    return {
+      type: "Link:Manifest",
+      tabID: this.id
+    };
+  },
+
   sendOpenSearchMessage: function(eventTarget) {
     let type = eventTarget.type && eventTarget.type.toLowerCase();
     // Replace all starting or trailing spaces or spaces before "*;" globally w/ "".
@@ -3826,7 +3863,7 @@ Tab.prototype = {
           return null;
 
         // Broadcast message that this tab contains search engines that should be visible.
-        Messaging.sendRequest({
+        GlobalEventDispatcher.sendRequest({
           type: "Link:OpenSearch",
           tabID: this.id,
           visible: true
@@ -3838,7 +3875,7 @@ Tab.prototype = {
   setParentId: function(aParentId) {
     let newParentId = (typeof aParentId == "number") ? aParentId : -1;
     this.parentId = newParentId;
-    Messaging.sendRequest({
+    GlobalEventDispatcher.sendRequest({
       type: "Tab:SetParentId",
       tabID: this.id,
       parentID: newParentId
@@ -3988,11 +4025,15 @@ Tab.prototype = {
           jsonMessage = this.makeFeedMessage(target, type);
         } else if (list.indexOf("[search]") != -1 && aEvent.type == "DOMLinkAdded") {
           this.sendOpenSearchMessage(target);
+        } else if (list.indexOf("[manifest]") != -1 &&
+                   aEvent.type == "DOMLinkAdded" &&
+                   Services.prefs.getBoolPref("manifest.install.enabled")) {
+          jsonMessage = this.makeManifestMessage(target);
         }
         if (!jsonMessage)
          return;
 
-        Messaging.sendRequest(jsonMessage);
+        GlobalEventDispatcher.sendRequest(jsonMessage);
         break;
       }
 
@@ -4004,8 +4045,8 @@ Tab.prototype = {
         if (aEvent.originalTarget != this.browser.contentDocument)
           return;
 
-        Messaging.sendRequest({
-          type: "DOMTitleChanged",
+        GlobalEventDispatcher.sendRequest({
+          type: "Content:DOMTitleChanged",
           tabID: this.id,
           title: truncate(aEvent.target.title, MAX_TITLE_LENGTH)
         });
@@ -4033,7 +4074,7 @@ Tab.prototype = {
 
         this.playingAudio = aEvent.type === "DOMAudioPlaybackStarted";
 
-        Messaging.sendRequest({
+        GlobalEventDispatcher.sendRequest({
           type: "Tab:AudioPlayingChange",
           tabID: this.id,
           isAudioPlaying: this.playingAudio
@@ -4049,7 +4090,7 @@ Tab.prototype = {
         if (this.browser.contentWindow == aEvent.target) {
           aEvent.preventDefault();
 
-          Messaging.sendRequest({
+          GlobalEventDispatcher.sendRequest({
             type: "Tab:Close",
             tabID: this.id
           });
@@ -4095,9 +4136,10 @@ Tab.prototype = {
       }
 
       case "DOMServiceWorkerFocusClient": {
-        Messaging.sendRequest({
-          type: "Tab:SelectAndForeground",
-          tabID: this.id
+        GlobalEventDispatcher.sendRequest({
+          type: "Tab:Select",
+          tabID: this.id,
+          foreground: true,
         });
         break;
       }
@@ -4116,7 +4158,7 @@ Tab.prototype = {
           this.userRequested = "";
         }
 
-        Messaging.sendRequest({
+        GlobalEventDispatcher.sendRequest({
           type: "Content:PageShow",
           tabID: this.id,
           userRequested: this.userRequested,
@@ -4199,7 +4241,7 @@ Tab.prototype = {
         restoring: restoring,
         success: success
       };
-      Messaging.sendRequest(message);
+      GlobalEventDispatcher.sendRequest(message);
     }
   },
 
@@ -4311,7 +4353,9 @@ Tab.prototype = {
       canGoForward: webNav.canGoForward,
     };
 
-    Messaging.sendRequest(message);
+    GlobalEventDispatcher.sendRequest(message);
+
+    BrowserEventHandler.closeZoomedView();
 
     if (!sameDocument) {
       // XXX This code assumes that this is the earliest hook we have at which
@@ -4346,7 +4390,7 @@ Tab.prototype = {
       identity: identity
     };
 
-    Messaging.sendRequest(message);
+    GlobalEventDispatcher.sendRequest(message);
   },
 
   onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {
@@ -4484,7 +4528,7 @@ Tab.prototype = {
           status = "resume";
         }
 
-        Messaging.sendRequest({
+        GlobalEventDispatcher.sendRequest({
           type: "Tab:MediaPlaybackChange",
           tabID: this.id,
           status: status
@@ -4521,7 +4565,7 @@ var BrowserEventHandler = {
 
     BrowserApp.deck.addEventListener("touchend", this, true);
 
-    BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
+    BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport);
     BrowserApp.deck.addEventListener("MozMouseHittest", this, true);
     BrowserApp.deck.addEventListener("OpenMediaWithExternalApp", this, true);
 
@@ -4625,12 +4669,12 @@ var BrowserEventHandler = {
             } catch(e) {
               Cu.reportError(e);
             }
-            Messaging.sendRequest({ type: "FormAssist:Hide" });
+            WindowEventDispatcher.sendRequest({ type: "FormAssist:Hide" });
           }
           this._clusterClicked(x, y);
         } else {
           if (this._clickInZoomedView != true) {
-            this._closeZoomedView();
+            this.closeZoomedView(/* animate */ true);
           }
         }
         this._clickInZoomedView = false;
@@ -4644,15 +4688,16 @@ var BrowserEventHandler = {
     }
   },
 
-  _closeZoomedView: function() {
-    Messaging.sendRequest({
-      type: "Gesture:CloseZoomedView"
+  closeZoomedView: function(aAnimate) {
+    WindowEventDispatcher.sendRequest({
+      type: "Gesture:CloseZoomedView",
+      animate: !!aAnimate,
     });
   },
 
   _clusterClicked: function(aX, aY) {
-    Messaging.sendRequest({
-      type: "Gesture:clusteredLinksClicked",
+    WindowEventDispatcher.sendRequest({
+      type: "Gesture:ClusteredLinksClicked",
       clickPosition: {
         x: aX,
         y: aY
@@ -4817,9 +4862,12 @@ var FormAssistant = {
   _invalidSubmit: false,
 
   init: function() {
-    Services.obs.addObserver(this, "FormAssist:AutoComplete", false);
-    Services.obs.addObserver(this, "FormAssist:Hidden", false);
-    Services.obs.addObserver(this, "FormAssist:Remove", false);
+    WindowEventDispatcher.registerListener(this, [
+      "FormAssist:AutoComplete",
+      "FormAssist:Hidden",
+      "FormAssist:Remove",
+    ]);
+
     Services.obs.addObserver(this, "invalidformsubmit", false);
     Services.obs.addObserver(this, "PanZoom:StateChange", false);
 
@@ -4827,8 +4875,54 @@ var FormAssistant = {
     BrowserApp.deck.addEventListener("focus", this, true);
     BrowserApp.deck.addEventListener("blur", this, true);
     BrowserApp.deck.addEventListener("click", this, true);
-    BrowserApp.deck.addEventListener("input", this, false);
-    BrowserApp.deck.addEventListener("pageshow", this, false);
+    BrowserApp.deck.addEventListener("input", this);
+    BrowserApp.deck.addEventListener("pageshow", this);
+  },
+
+  onEvent: function(event, message, callback) {
+    switch (event) {
+      case "FormAssist:AutoComplete":
+        if (!this._currentInputElement)
+          break;
+
+        let editableElement = this._currentInputElement.QueryInterface(Ci.nsIDOMNSEditableElement);
+
+        this._doingAutocomplete = true;
+
+        // If we have an active composition string, commit it before sending
+        // the autocomplete event with the text that will replace it.
+        try {
+          if (editableElement.editor.composing)
+            editableElement.editor.forceCompositionEnd();
+        } catch (e) {}
+
+        editableElement.setUserInput(message.value);
+        this._currentInputValue = message.value;
+
+        let event = this._currentInputElement.ownerDocument.createEvent("Events");
+        event.initEvent("DOMAutoComplete", true, true);
+        this._currentInputElement.dispatchEvent(event);
+
+        this._doingAutocomplete = false;
+
+        break;
+
+      case "FormAssist:Hidden":
+        this._currentInputElement = null;
+        break;
+
+      case "FormAssist:Remove":
+        if (!this._currentInputElement) {
+          break;
+        }
+
+        FormHistory.update({
+          op: "remove",
+          fieldname: this._currentInputElement.name,
+          value: message.value,
+        });
+        break;
+    }
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -4855,47 +4949,6 @@ var FormAssistant = {
           // temporarily hide the form assist popup while we're panning or zooming the page
           this._hideFormAssistPopup();
         }
-        break;
-      case "FormAssist:AutoComplete":
-        if (!this._currentInputElement)
-          break;
-
-        let editableElement = this._currentInputElement.QueryInterface(Ci.nsIDOMNSEditableElement);
-
-        this._doingAutocomplete = true;
-
-        // If we have an active composition string, commit it before sending
-        // the autocomplete event with the text that will replace it.
-        try {
-          if (editableElement.editor.composing)
-            editableElement.editor.forceCompositionEnd();
-        } catch (e) {}
-
-        editableElement.setUserInput(aData);
-        this._currentInputValue = aData;
-
-        let event = this._currentInputElement.ownerDocument.createEvent("Events");
-        event.initEvent("DOMAutoComplete", true, true);
-        this._currentInputElement.dispatchEvent(event);
-
-        this._doingAutocomplete = false;
-
-        break;
-
-      case "FormAssist:Hidden":
-        this._currentInputElement = null;
-        break;
-
-      case "FormAssist:Remove":
-        if (!this._currentInputElement) {
-          break;
-        }
-
-        FormHistory.update({
-          op: "remove",
-          fieldname: this._currentInputElement.name,
-          value: aData
-        });
         break;
     }
   },
@@ -5099,8 +5152,8 @@ var FormAssistant = {
         return;
       }
 
-      Messaging.sendRequest({
-        type:  "FormAssist:AutoComplete",
+      WindowEventDispatcher.sendRequest({
+        type:  "FormAssist:AutoCompleteResult",
         suggestions: suggestions,
         rect: ElementTouchHelper.getBoundingContentRect(aElement),
         isEmpty: isEmpty,
@@ -5135,7 +5188,7 @@ var FormAssistant = {
     if (!this._isValidateable(aElement))
       return false;
 
-    Messaging.sendRequest({
+    WindowEventDispatcher.sendRequest({
       type: "FormAssist:ValidationMessage",
       validationMessage: aElement.validationMessage,
       rect: ElementTouchHelper.getBoundingContentRect(aElement)
@@ -5145,7 +5198,7 @@ var FormAssistant = {
   },
 
   _hideFormAssistPopup: function _hideFormAssistPopup() {
-    Messaging.sendRequest({ type: "FormAssist:Hide" });
+    WindowEventDispatcher.sendRequest({ type: "FormAssist:Hide" });
   },
 
   _isDisabledElement : function(aElement) {
@@ -6117,7 +6170,7 @@ var SearchEngines = {
           visible: false
         };
 
-        Messaging.sendRequest(newEngineMessage);
+        GlobalEventDispatcher.sendRequest(newEngineMessage);
       }
     }).bind(this));
   },
@@ -6772,8 +6825,8 @@ var Tabs = {
     let network = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
     this.useCache = !network.isLinkUp;
 
-    BrowserApp.deck.addEventListener("pageshow", this, false);
-    BrowserApp.deck.addEventListener("TabOpen", this, false);
+    BrowserApp.deck.addEventListener("pageshow", this);
+    BrowserApp.deck.addEventListener("TabOpen", this);
   },
 
   observe: function(aSubject, aTopic, aData) {

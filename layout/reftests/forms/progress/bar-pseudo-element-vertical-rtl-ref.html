@@ -4,13 +4,13 @@
   <style>
     .progress-element { margin: 10px; }
     body > div:nth-child(1) > .progress-bar { position: relative; top: 4px; left: 4px;
-                                              height: -moz-calc(100% - 8px); }
+                                              height: calc(100% - 8px); }
     body > div:nth-child(2) > .progress-bar { }
     body > div:nth-child(3) > .progress-bar { position: relative; top: 4px; left: 4px;
-                                              height: -moz-calc(100% - 8px); }
-    body > div:nth-child(4) > .progress-bar { position: relative; top: 10px; height: -moz-calc(100% - 10px); }
+                                              height: calc(100% - 8px); }
+    body > div:nth-child(4) > .progress-bar { position: relative; top: 10px; height: calc(100% - 10px); }
     body > div:nth-child(5) > .progress-bar { }
-    body > div:nth-child(6) > .progress-bar { height: -moz-calc(100% - 10px); }
+    body > div:nth-child(6) > .progress-bar { height: calc(100% - 10px); }
     body > div:nth-child(7) > .progress-bar { position: relative; left: 10px; }
     body > div:nth-child(8) > .progress-bar { }
     body > div:nth-child(9) > .progress-bar { }
@@ -18,9 +18,9 @@
     body > div:nth-child(11) > .progress-bar { }
     /* 12 - 15 should have 100% width, no need to specify. */
     body > div:nth-of-type(16) > .progress-bar { position: relative; top: 64px;
-                                                 left: -moz-calc(100% + 128px + 32px );
-                                                 height: -moz-calc(100% - 32px);
-                                                 width: -moz-calc(100% + 128px - 1em); }
+                                                 left: calc(100% + 128px + 32px );
+                                                 height: calc(100% - 32px);
+                                                 width: calc(100% + 128px - 1em); }
   </style>
   <body dir='rtl'>
     <div class="progress-element vertical">

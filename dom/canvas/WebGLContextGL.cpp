@@ -348,16 +348,17 @@ WebGLContext::DeleteFramebuffer(WebGLFramebuffer* fbuf)
 void
 WebGLContext::DeleteRenderbuffer(WebGLRenderbuffer* rbuf)
 {
-    if (!ValidateDeleteObject("deleteRenderbuffer", rbuf))
+    const char funcName[] = "deleteRenderbuffer";
+    if (!ValidateDeleteObject(funcName, rbuf))
         return;
 
     if (mBoundDrawFramebuffer)
-        mBoundDrawFramebuffer->DetachRenderbuffer(rbuf);
+        mBoundDrawFramebuffer->DetachRenderbuffer(funcName, rbuf);
 
     if (mBoundReadFramebuffer)
-        mBoundReadFramebuffer->DetachRenderbuffer(rbuf);
+        mBoundReadFramebuffer->DetachRenderbuffer(funcName, rbuf);
 
-    rbuf->InvalidateStatusOfAttachedFBs();
+    rbuf->InvalidateStatusOfAttachedFBs(funcName);
 
     if (mBoundRenderbuffer == rbuf)
         BindRenderbuffer(LOCAL_GL_RENDERBUFFER, nullptr);
@@ -368,14 +369,15 @@ WebGLContext::DeleteRenderbuffer(WebGLRenderbuffer* rbuf)
 void
 WebGLContext::DeleteTexture(WebGLTexture* tex)
 {
-    if (!ValidateDeleteObject("deleteTexture", tex))
+    const char funcName[] = "deleteTexture";
+    if (!ValidateDeleteObject(funcName, tex))
         return;
 
     if (mBoundDrawFramebuffer)
-        mBoundDrawFramebuffer->DetachTexture(tex);
+        mBoundDrawFramebuffer->DetachTexture(funcName, tex);
 
     if (mBoundReadFramebuffer)
-        mBoundReadFramebuffer->DetachTexture(tex);
+        mBoundReadFramebuffer->DetachTexture(funcName, tex);
 
     GLuint activeTexture = mActiveTexture;
     for (int32_t i = 0; i < mGLMaxTextureUnits; i++) {

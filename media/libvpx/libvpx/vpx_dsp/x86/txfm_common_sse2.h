@@ -14,15 +14,15 @@
 #include <emmintrin.h>
 #include "vpx/vpx_integer.h"
 
-#define pair_set_epi16(a, b) \
+#define pair_set_epi16(a, b)                                            \
   _mm_set_epi16((int16_t)(b), (int16_t)(a), (int16_t)(b), (int16_t)(a), \
                 (int16_t)(b), (int16_t)(a), (int16_t)(b), (int16_t)(a))
 
-#define dual_set_epi16(a, b) \
+#define dual_set_epi16(a, b)                                            \
   _mm_set_epi16((int16_t)(b), (int16_t)(b), (int16_t)(b), (int16_t)(b), \
                 (int16_t)(a), (int16_t)(a), (int16_t)(a), (int16_t)(a))
 
-#define octa_set_epi16(a, b, c, d, e, f, g, h) \
+#define octa_set_epi16(a, b, c, d, e, f, g, h)                           \
   _mm_setr_epi16((int16_t)(a), (int16_t)(b), (int16_t)(c), (int16_t)(d), \
                  (int16_t)(e), (int16_t)(f), (int16_t)(g), (int16_t)(h))
 

@@ -23,13 +23,13 @@ function remove(q1) { q1.parentNode.removeChild(q1); }
 
 function testSelectedIndex()
 {
-  document.addEventListener("DOMNodeRemoved", foo, false);
+  document.addEventListener("DOMNodeRemoved", foo);
   remove(document.getElementById("B"));
-  document.removeEventListener("DOMNodeRemoved", foo, false);
+  document.removeEventListener("DOMNodeRemoved", foo);
 
   function foo()
   {
-    document.removeEventListener("DOMNodeRemoved", foo, false);
+    document.removeEventListener("DOMNodeRemoved", foo);
     remove(document.getElementById("A"));
   }
   var selectElement = document.getElementsByTagName("select")[0];

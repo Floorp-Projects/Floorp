@@ -66,7 +66,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
 
     input.addEventListener("input", function (aEvent) {
       ok(true, "input event should have been dispatched on file input.");
-    }, false);
+    });
 
     input.click();
     setTimeout(testUserInput2, 0);
@@ -159,10 +159,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=851780
         function preventDefault(e) {
           e.preventDefault();
         }
-        input.addEventListener("click", preventDefault, false);
+        input.addEventListener("click", preventDefault);
         input.click();
         is(NonTextInput[i], 1, "input event shouldn't be dispatched if click event is cancelled");
-        input.removeEventListener("click", preventDefault, false);
+        input.removeEventListener("click", preventDefault);
       }
     }
 

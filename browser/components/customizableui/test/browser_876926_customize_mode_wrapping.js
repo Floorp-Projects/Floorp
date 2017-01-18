@@ -55,7 +55,7 @@ function isLast(containerId, defaultPlacements, id) {
 function getLastVisibleNodeInToolbar(containerId, win = window) {
   let container = win.document.getElementById(containerId).customizationTarget;
   let rv = container.lastChild;
-  while (rv && (rv.getAttribute('hidden') == 'true' || (rv.firstChild && rv.firstChild.getAttribute('hidden') == 'true'))) {
+  while (rv && (rv.getAttribute("hidden") == "true" || (rv.firstChild && rv.firstChild.getAttribute("hidden") == "true"))) {
     rv = rv.previousSibling;
   }
   return rv;
@@ -65,7 +65,7 @@ function isLastVisibleInToolbar(containerId, defaultPlacements, id) {
   let newPlacements;
   for (let i = defaultPlacements.length - 1; i >= 0; i--) {
     let el = document.getElementById(defaultPlacements[i]);
-    if (el && el.getAttribute('hidden') != 'true') {
+    if (el && el.getAttribute("hidden") != "true") {
       newPlacements = [...defaultPlacements];
       newPlacements.splice(i + 1, 0, id);
       break;

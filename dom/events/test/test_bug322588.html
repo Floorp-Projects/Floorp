@@ -28,9 +28,9 @@ var result = "";
 var w;
 function pop350d(url) {
   w = window.open();
-  w.addEventListener("unload", function () { result += " unload";}, false);
-  w.addEventListener("load", function () { result += " load"; setTimeout(done, 1000);}, false);
-  w.addEventListener("blur", function () { result += " blur";}, false);
+  w.addEventListener("unload", function () { result += " unload";});
+  w.addEventListener("load", function () { result += " load"; setTimeout(done, 1000);});
+  w.addEventListener("blur", function () { result += " blur";});
   w.location = url;
 }
 

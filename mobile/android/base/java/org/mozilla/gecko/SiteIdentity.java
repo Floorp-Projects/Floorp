@@ -5,7 +5,9 @@
 
 package org.mozilla.gecko;
 
-import org.json.JSONObject;
+import org.mozilla.gecko.util.GeckoBundle;
+
+import java.util.Locale;
 
 import android.text.TextUtils;
 
@@ -27,101 +29,26 @@ public class SiteIdentity {
     // The order of the items here relate to image levels in
     // site_security_level.xml
     public enum SecurityMode {
-        UNKNOWN("unknown"),
-        IDENTIFIED("identified"),
-        VERIFIED("verified"),
-        CHROMEUI("chromeUI");
-
-        private final String mId;
-
-        private SecurityMode(String id) {
-            mId = id;
-        }
-
-        public static SecurityMode fromString(String id) {
-            if (id == null) {
-                throw new IllegalArgumentException("Can't convert null String to SiteIdentity");
-            }
-
-            for (SecurityMode mode : SecurityMode.values()) {
-                if (TextUtils.equals(mode.mId, id)) {
-                    return mode;
-                }
-            }
-
-            throw new IllegalArgumentException("Could not convert String id to SiteIdentity");
-        }
-
-        @Override
-        public String toString() {
-            return mId;
-        }
+        UNKNOWN,
+        IDENTIFIED,
+        VERIFIED,
+        CHROMEUI
     }
 
     // The order of the items here relate to image levels in
     // site_security_level.xml
     public enum MixedMode {
-        UNKNOWN("unknown"),
-        MIXED_CONTENT_BLOCKED("blocked"),
-        MIXED_CONTENT_LOADED("loaded");
-
-        private final String mId;
-
-        private MixedMode(String id) {
-            mId = id;
-        }
-
-        public static MixedMode fromString(String id) {
-            if (id == null) {
-                throw new IllegalArgumentException("Can't convert null String to MixedMode");
-            }
-
-            for (MixedMode mode : MixedMode.values()) {
-                if (TextUtils.equals(mode.mId, id.toLowerCase())) {
-                    return mode;
-                }
-            }
-
-            throw new IllegalArgumentException("Could not convert String id to MixedMode");
-        }
-
-        @Override
-        public String toString() {
-            return mId;
-        }
+        UNKNOWN,
+        BLOCKED,
+        LOADED
     }
 
     // The order of the items here relate to image levels in
     // site_security_level.xml
     public enum TrackingMode {
-        UNKNOWN("unknown"),
-        TRACKING_CONTENT_BLOCKED("tracking_content_blocked"),
-        TRACKING_CONTENT_LOADED("tracking_content_loaded");
-
-        private final String mId;
-
-        private TrackingMode(String id) {
-            mId = id;
-        }
-
-        public static TrackingMode fromString(String id) {
-            if (id == null) {
-                throw new IllegalArgumentException("Can't convert null String to TrackingMode");
-            }
-
-            for (TrackingMode mode : TrackingMode.values()) {
-                if (TextUtils.equals(mode.mId, id.toLowerCase())) {
-                    return mode;
-                }
-            }
-
-            throw new IllegalArgumentException("Could not convert String id to TrackingMode");
-        }
-
-        @Override
-        public String toString() {
-            return mId;
-        }
+        UNKNOWN,
+        TRACKING_CONTENT_BLOCKED,
+        TRACKING_CONTENT_LOADED
     }
 
     public SiteIdentity() {
@@ -145,59 +72,50 @@ public class SiteIdentity {
         mMixedModeActive = MixedMode.UNKNOWN;
         mMixedModeDisplay = MixedMode.UNKNOWN;
         mTrackingMode = TrackingMode.UNKNOWN;
-        mSecurityException = false;
     }
 
-    void update(JSONObject identityData) {
-        if (identityData == null) {
+    private <T extends Enum<T>> T getEnumValue(Class<T> enumType, String value, T def) {
+        if (value == null) {
+            return def;
+        }
+        try {
+            return Enum.valueOf(enumType, value.toUpperCase(Locale.US));
+        } catch (final IllegalArgumentException e) {
+            return def;
+        }
+    }
+
+    /* package */ void update(final GeckoBundle identityData) {
+        if (identityData == null || !identityData.containsKey("mode")) {
             reset();
             return;
         }
 
-        try {
-            JSONObject mode = identityData.getJSONObject("mode");
+        final GeckoBundle mode = identityData.getBundle("mode");
 
-            try {
-                mMixedModeDisplay = MixedMode.fromString(mode.getString("mixed_display"));
-            } catch (Exception e) {
-                mMixedModeDisplay = MixedMode.UNKNOWN;
-            }
+        mMixedModeDisplay = getEnumValue(
+                MixedMode.class, mode.getString("mixed_display"), MixedMode.UNKNOWN);
+        mMixedModeActive = getEnumValue(
+                MixedMode.class, mode.getString("mixed_active"), MixedMode.UNKNOWN);
+        mTrackingMode = getEnumValue(
+                TrackingMode.class, mode.getString("tracking"), TrackingMode.UNKNOWN);
 
-            try {
-                mMixedModeActive = MixedMode.fromString(mode.getString("mixed_active"));
-            } catch (Exception e) {
-                mMixedModeActive = MixedMode.UNKNOWN;
-            }
-
-            try {
-                mTrackingMode = TrackingMode.fromString(mode.getString("tracking"));
-            } catch (Exception e) {
-                mTrackingMode = TrackingMode.UNKNOWN;
-            }
-
-            try {
-                mSecurityMode = SecurityMode.fromString(mode.getString("identity"));
-            } catch (Exception e) {
-                resetIdentity();
-                return;
-            }
-
-            try {
-                mOrigin = identityData.getString("origin");
-                mHost = identityData.optString("host", null);
-                mOwner = identityData.optString("owner", null);
-                mSupplemental = identityData.optString("supplemental", null);
-                mCountry = identityData.optString("country", null);
-                mVerifier = identityData.optString("verifier", null);
-                mSecure = identityData.optBoolean("secure", false);
-                mSecurityException = identityData.optBoolean("securityException", false);
-
-            } catch (Exception e) {
-                resetIdentity();
-            }
-        } catch (Exception e) {
-            reset();
+        if (!mode.containsKey("identity") || !identityData.containsKey("origin")) {
+            resetIdentity();
+            return;
         }
+
+        mSecurityMode = getEnumValue(
+                SecurityMode.class, mode.getString("identity"), SecurityMode.UNKNOWN);
+
+        mOrigin = identityData.getString("origin");
+        mHost = identityData.getString("host");
+        mOwner = identityData.getString("owner");
+        mSupplemental = identityData.getString("supplemental");
+        mCountry = identityData.getString("country");
+        mVerifier = identityData.getString("verifier");
+        mSecure = identityData.getBoolean("secure");
+        mSecurityException = identityData.getBoolean("securityException");
     }
 
     public SecurityMode getSecurityMode() {

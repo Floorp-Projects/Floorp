@@ -43,10 +43,10 @@ function poke(description) {
 function loadEvent(window, callback)
 {
   var fn = function() {
-    window.removeEventListener("load", fn, false);
+    window.removeEventListener("load", fn);
     callback();
   };
-  window.addEventListener("load", fn, false);
+  window.addEventListener("load", fn);
 }
 
 function loadTestTarget(callback)

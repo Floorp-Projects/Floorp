@@ -11,12 +11,9 @@
 #include "./vp9_rtcd.h"
 #include "vpx_dsp/mips/macros_msa.h"
 
-static void temporal_filter_apply_8size_msa(uint8_t *frm1_ptr,
-                                            uint32_t stride,
-                                            uint8_t *frm2_ptr,
-                                            int32_t filt_sth,
-                                            int32_t filt_wgt,
-                                            uint32_t *acc,
+static void temporal_filter_apply_8size_msa(uint8_t *frm1_ptr, uint32_t stride,
+                                            uint8_t *frm2_ptr, int32_t filt_sth,
+                                            int32_t filt_wgt, uint32_t *acc,
                                             uint16_t *cnt) {
   uint32_t row;
   uint64_t f0, f1, f2, f3;
@@ -54,10 +51,10 @@ static void temporal_filter_apply_8size_msa(uint8_t *frm1_ptr,
     HSUB_UB2_SH(frm_r, frm_l, diff0, diff1);
     UNPCK_SH_SW(diff0, diff0_r, diff0_l);
     UNPCK_SH_SW(diff1, diff1_r, diff1_l);
-    MUL4(diff0_r, diff0_r, diff0_l, diff0_l, diff1_r, diff1_r, diff1_l,
-         diff1_l, mod0_w, mod1_w, mod2_w, mod3_w);
-    MUL4(mod0_w, cnst3, mod1_w, cnst3, mod2_w, cnst3, mod3_w, cnst3,
+    MUL4(diff0_r, diff0_r, diff0_l, diff0_l, diff1_r, diff1_r, diff1_l, diff1_l,
          mod0_w, mod1_w, mod2_w, mod3_w);
+    MUL4(mod0_w, cnst3, mod1_w, cnst3, mod2_w, cnst3, mod3_w, cnst3, mod0_w,
+         mod1_w, mod2_w, mod3_w);
     SRAR_W4_SW(mod0_w, mod1_w, mod2_w, mod3_w, strength);
 
     diff0_r = (mod0_w < cnst16);
@@ -65,8 +62,8 @@ static void temporal_filter_apply_8size_msa(uint8_t *frm1_ptr,
     diff1_r = (mod2_w < cnst16);
     diff1_l = (mod3_w < cnst16);
 
-    SUB4(cnst16, mod0_w, cnst16, mod1_w, cnst16, mod2_w, cnst16, mod3_w,
-         mod0_w, mod1_w, mod2_w, mod3_w);
+    SUB4(cnst16, mod0_w, cnst16, mod1_w, cnst16, mod2_w, cnst16, mod3_w, mod0_w,
+         mod1_w, mod2_w, mod3_w);
 
     mod0_w = diff0_r & mod0_w;
     mod1_w = diff0_l & mod1_w;
@@ -85,8 +82,8 @@ static void temporal_filter_apply_8size_msa(uint8_t *frm1_ptr,
     UNPCK_SH_SW(frm2_l, frm2_lr, frm2_ll);
     MUL4(mod0_w, frm2_rr, mod1_w, frm2_rl, mod2_w, frm2_lr, mod3_w, frm2_ll,
          mod0_w, mod1_w, mod2_w, mod3_w);
-    ADD4(mod0_w, acc0, mod1_w, acc1, mod2_w, acc2, mod3_w, acc3,
-         mod0_w, mod1_w, mod2_w, mod3_w);
+    ADD4(mod0_w, acc0, mod1_w, acc1, mod2_w, acc2, mod3_w, acc3, mod0_w, mod1_w,
+         mod2_w, mod3_w);
 
     ST_SW2(mod0_w, mod1_w, acc, 4);
     acc += 8;
@@ -101,10 +98,10 @@ static void temporal_filter_apply_8size_msa(uint8_t *frm1_ptr,
     HSUB_UB2_SH(frm_r, frm_l, diff0, diff1);
     UNPCK_SH_SW(diff0, diff0_r, diff0_l);
     UNPCK_SH_SW(diff1, diff1_r, diff1_l);
-    MUL4(diff0_r, diff0_r, diff0_l, diff0_l, diff1_r, diff1_r, diff1_l,
-         diff1_l, mod0_w, mod1_w, mod2_w, mod3_w);
-    MUL4(mod0_w, cnst3, mod1_w, cnst3, mod2_w, cnst3, mod3_w, cnst3,
+    MUL4(diff0_r, diff0_r, diff0_l, diff0_l, diff1_r, diff1_r, diff1_l, diff1_l,
          mod0_w, mod1_w, mod2_w, mod3_w);
+    MUL4(mod0_w, cnst3, mod1_w, cnst3, mod2_w, cnst3, mod3_w, cnst3, mod0_w,
+         mod1_w, mod2_w, mod3_w);
     SRAR_W4_SW(mod0_w, mod1_w, mod2_w, mod3_w, strength);
 
     diff0_r = (mod0_w < cnst16);
@@ -112,8 +109,8 @@ static void temporal_filter_apply_8size_msa(uint8_t *frm1_ptr,
     diff1_r = (mod2_w < cnst16);
     diff1_l = (mod3_w < cnst16);
 
-    SUB4(cnst16, mod0_w, cnst16, mod1_w, cnst16, mod2_w, cnst16, mod3_w,
-         mod0_w, mod1_w, mod2_w, mod3_w);
+    SUB4(cnst16, mod0_w, cnst16, mod1_w, cnst16, mod2_w, cnst16, mod3_w, mod0_w,
+         mod1_w, mod2_w, mod3_w);
 
     mod0_w = diff0_r & mod0_w;
     mod1_w = diff0_l & mod1_w;
@@ -131,8 +128,8 @@ static void temporal_filter_apply_8size_msa(uint8_t *frm1_ptr,
     UNPCK_SH_SW(frm2_l, frm2_lr, frm2_ll);
     MUL4(mod0_w, frm2_rr, mod1_w, frm2_rl, mod2_w, frm2_lr, mod3_w, frm2_ll,
          mod0_w, mod1_w, mod2_w, mod3_w);
-    ADD4(mod0_w, acc0, mod1_w, acc1, mod2_w, acc2, mod3_w, acc3,
-         mod0_w, mod1_w, mod2_w, mod3_w);
+    ADD4(mod0_w, acc0, mod1_w, acc1, mod2_w, acc2, mod3_w, acc3, mod0_w, mod1_w,
+         mod2_w, mod3_w);
 
     ST_SW2(mod0_w, mod1_w, acc, 4);
     acc += 8;
@@ -141,13 +138,10 @@ static void temporal_filter_apply_8size_msa(uint8_t *frm1_ptr,
   }
 }
 
-static void temporal_filter_apply_16size_msa(uint8_t *frm1_ptr,
-                                             uint32_t stride,
+static void temporal_filter_apply_16size_msa(uint8_t *frm1_ptr, uint32_t stride,
                                              uint8_t *frm2_ptr,
-                                             int32_t filt_sth,
-                                             int32_t filt_wgt,
-                                             uint32_t *acc,
-                                             uint16_t *cnt) {
+                                             int32_t filt_sth, int32_t filt_wgt,
+                                             uint32_t *acc, uint16_t *cnt) {
   uint32_t row;
   v16i8 frm1, frm2, frm3, frm4;
   v16u8 frm_r, frm_l;
@@ -183,8 +177,8 @@ static void temporal_filter_apply_16size_msa(uint8_t *frm1_ptr,
     UNPCK_SH_SW(diff1, diff1_r, diff1_l);
     MUL4(diff0_r, diff0_r, diff0_l, diff0_l, diff1_r, diff1_r, diff1_l, diff1_l,
          mod0_w, mod1_w, mod2_w, mod3_w);
-    MUL4(mod0_w, cnst3, mod1_w, cnst3, mod2_w, cnst3, mod3_w, cnst3,
-         mod0_w, mod1_w, mod2_w, mod3_w);
+    MUL4(mod0_w, cnst3, mod1_w, cnst3, mod2_w, cnst3, mod3_w, cnst3, mod0_w,
+         mod1_w, mod2_w, mod3_w);
     SRAR_W4_SW(mod0_w, mod1_w, mod2_w, mod3_w, strength);
 
     diff0_r = (mod0_w < cnst16);
@@ -192,8 +186,8 @@ static void temporal_filter_apply_16size_msa(uint8_t *frm1_ptr,
     diff1_r = (mod2_w < cnst16);
     diff1_l = (mod3_w < cnst16);
 
-    SUB4(cnst16, mod0_w, cnst16, mod1_w, cnst16, mod2_w, cnst16, mod3_w,
-         mod0_w, mod1_w, mod2_w, mod3_w);
+    SUB4(cnst16, mod0_w, cnst16, mod1_w, cnst16, mod2_w, cnst16, mod3_w, mod0_w,
+         mod1_w, mod2_w, mod3_w);
 
     mod0_w = diff0_r & mod0_w;
     mod1_w = diff0_l & mod1_w;
@@ -212,8 +206,8 @@ static void temporal_filter_apply_16size_msa(uint8_t *frm1_ptr,
     UNPCK_SH_SW(frm2_l, frm2_lr, frm2_ll);
     MUL4(mod0_w, frm2_rr, mod1_w, frm2_rl, mod2_w, frm2_lr, mod3_w, frm2_ll,
          mod0_w, mod1_w, mod2_w, mod3_w);
-    ADD4(mod0_w, acc0, mod1_w, acc1, mod2_w, acc2, mod3_w, acc3,
-         mod0_w, mod1_w, mod2_w, mod3_w);
+    ADD4(mod0_w, acc0, mod1_w, acc1, mod2_w, acc2, mod3_w, acc3, mod0_w, mod1_w,
+         mod2_w, mod3_w);
 
     ST_SW2(mod0_w, mod1_w, acc, 4);
     acc += 8;
@@ -230,8 +224,8 @@ static void temporal_filter_apply_16size_msa(uint8_t *frm1_ptr,
     UNPCK_SH_SW(diff1, diff1_r, diff1_l);
     MUL4(diff0_r, diff0_r, diff0_l, diff0_l, diff1_r, diff1_r, diff1_l, diff1_l,
          mod0_w, mod1_w, mod2_w, mod3_w);
-    MUL4(mod0_w, cnst3, mod1_w, cnst3, mod2_w, cnst3, mod3_w, cnst3,
-         mod0_w, mod1_w, mod2_w, mod3_w);
+    MUL4(mod0_w, cnst3, mod1_w, cnst3, mod2_w, cnst3, mod3_w, cnst3, mod0_w,
+         mod1_w, mod2_w, mod3_w);
     SRAR_W4_SW(mod0_w, mod1_w, mod2_w, mod3_w, strength);
 
     diff0_r = (mod0_w < cnst16);
@@ -239,8 +233,8 @@ static void temporal_filter_apply_16size_msa(uint8_t *frm1_ptr,
     diff1_r = (mod2_w < cnst16);
     diff1_l = (mod3_w < cnst16);
 
-    SUB4(cnst16, mod0_w, cnst16, mod1_w, cnst16, mod2_w, cnst16, mod3_w,
-         mod0_w, mod1_w, mod2_w, mod3_w);
+    SUB4(cnst16, mod0_w, cnst16, mod1_w, cnst16, mod2_w, cnst16, mod3_w, mod0_w,
+         mod1_w, mod2_w, mod3_w);
 
     mod0_w = diff0_r & mod0_w;
     mod1_w = diff0_l & mod1_w;
@@ -259,8 +253,8 @@ static void temporal_filter_apply_16size_msa(uint8_t *frm1_ptr,
     UNPCK_SH_SW(frm2_l, frm2_lr, frm2_ll);
     MUL4(mod0_w, frm2_rr, mod1_w, frm2_rl, mod2_w, frm2_lr, mod3_w, frm2_ll,
          mod0_w, mod1_w, mod2_w, mod3_w);
-    ADD4(mod0_w, acc0, mod1_w, acc1, mod2_w, acc2, mod3_w, acc3,
-         mod0_w, mod1_w, mod2_w, mod3_w);
+    ADD4(mod0_w, acc0, mod1_w, acc1, mod2_w, acc2, mod3_w, acc3, mod0_w, mod1_w,
+         mod2_w, mod3_w);
     ST_SW2(mod0_w, mod1_w, acc, 4);
     acc += 8;
     ST_SW2(mod2_w, mod3_w, acc, 4);
@@ -277,11 +271,11 @@ void vp9_temporal_filter_apply_msa(uint8_t *frame1_ptr, uint32_t stride,
                                    int32_t filt_wgt, uint32_t *accu,
                                    uint16_t *cnt) {
   if (8 == (blk_w * blk_h)) {
-    temporal_filter_apply_8size_msa(frame1_ptr, stride, frame2_ptr,
-                                    strength, filt_wgt, accu, cnt);
+    temporal_filter_apply_8size_msa(frame1_ptr, stride, frame2_ptr, strength,
+                                    filt_wgt, accu, cnt);
   } else if (16 == (blk_w * blk_h)) {
-    temporal_filter_apply_16size_msa(frame1_ptr, stride, frame2_ptr,
-                                     strength, filt_wgt, accu, cnt);
+    temporal_filter_apply_16size_msa(frame1_ptr, stride, frame2_ptr, strength,
+                                     filt_wgt, accu, cnt);
   } else {
     vp9_temporal_filter_apply_c(frame1_ptr, stride, frame2_ptr, blk_w, blk_h,
                                 strength, filt_wgt, accu, cnt);

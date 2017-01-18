@@ -15,7 +15,7 @@ async_test(function(t) {
   window.addEventListener("message", function(event) {
     t.step(function() { assert_array_equals(event.data, [alternateOrientation, originalOrientation]); });
     t.done();
-  }, false);
+  });
 
   var frame = document.getElementById("frame");
   frame.src = "file_record_orientation.html";

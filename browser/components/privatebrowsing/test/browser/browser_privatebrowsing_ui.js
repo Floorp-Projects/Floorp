@@ -44,7 +44,7 @@ function test() {
           Services.obs.removeObserver(observer, "domwindowopened");
           windowsToClose.push(aSubject);
           aCallback(aSubject);
-      }, false);
+      });
     }, "domwindowopened", false);
 
     cmd = aWindow.document.getElementById("Tools:PrivateBrowsing");

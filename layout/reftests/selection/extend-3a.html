@@ -27,8 +27,8 @@ function doTest() {
   sel.extend(t, 8);
   document.documentElement.removeAttribute('class');
 }
-window.addEventListener("load", loaded, false);
-document.addEventListener("MozReftestInvalidate", doTest, false);
+window.addEventListener("load", loaded);
+document.addEventListener("MozReftestInvalidate", doTest);
 </script>
 </body>
 </html>

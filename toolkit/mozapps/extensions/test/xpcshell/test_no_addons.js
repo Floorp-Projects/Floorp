@@ -63,7 +63,7 @@ add_task(function* first_run() {
 // Now do something that causes a DB load, and re-check
 function* trigger_db_load() {
   let addonDefer = Promise.defer();
-  AddonManager.getAddonsByTypes(['extension'], addonDefer.resolve);
+  AddonManager.getAddonsByTypes(["extension"], addonDefer.resolve);
   let addonList = yield addonDefer.promise;
 
   do_check_eq(addonList.length, 0);

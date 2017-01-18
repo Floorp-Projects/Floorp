@@ -140,7 +140,7 @@ var gTests = [
 
           // It should have passed in the expected non-matching state value.
           let queryString = gBrowser.currentURI.spec.split("?")[1];
-          Assert.ok(queryString.indexOf('state=different-state') >= 0);
+          Assert.ok(queryString.indexOf("state=different-state") >= 0);
 
           tabOpened = true;
         });
@@ -177,8 +177,8 @@ var gTests = [
           Assert.ok("Tab successfully opened");
 
           // It should have asked for keys.
-          let queryString = gBrowser.currentURI.spec.split('?')[1];
-          Assert.ok(queryString.indexOf('keys=true') >= 0);
+          let queryString = gBrowser.currentURI.spec.split("?")[1];
+          Assert.ok(queryString.indexOf("keys=true") >= 0);
 
           tabOpened = true;
         });
@@ -219,8 +219,8 @@ var gTests = [
           Assert.ok("Tab successfully opened");
 
           // It should not have asked for keys.
-          let queryString = gBrowser.currentURI.spec.split('?')[1];
-          Assert.ok(queryString.indexOf('keys=true') == -1);
+          let queryString = gBrowser.currentURI.spec.split("?")[1];
+          Assert.ok(queryString.indexOf("keys=true") == -1);
 
           tabOpened = true;
         });
@@ -260,8 +260,8 @@ var gTests = [
           Assert.ok("Tab successfully opened");
 
           // It should have asked for keys.
-          let queryString = gBrowser.currentURI.spec.split('?')[1];
-          Assert.ok(queryString.indexOf('keys=true') >= 0);
+          let queryString = gBrowser.currentURI.spec.split("?")[1];
+          Assert.ok(queryString.indexOf("keys=true") >= 0);
 
           tabOpened = true;
         });
@@ -295,13 +295,13 @@ var gTests = [
 function waitForTab(aCallback) {
   let container = gBrowser.tabContainer;
   container.addEventListener("TabOpen", function tabOpener(event) {
-    container.removeEventListener("TabOpen", tabOpener, false);
+    container.removeEventListener("TabOpen", tabOpener);
     gBrowser.addEventListener("load", function listener() {
       gBrowser.removeEventListener("load", listener, true);
       let tab = event.target;
       aCallback(tab);
     }, true);
-  }, false);
+  });
 }
 
 function test() {

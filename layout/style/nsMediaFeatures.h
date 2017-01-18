@@ -31,7 +31,7 @@ struct nsMediaFeature
   enum ValueType {
     // All value types allow eCSSUnit_Null to indicate that no value
     // was given (in addition to the types listed below).
-    eLength,     // values are such that nsCSSValue::IsLengthUnit() is true
+    eLength,     // values are eCSSUnit_Pixel
     eInteger,    // values are eCSSUnit_Integer
     eFloat,      // values are eCSSUnit_Number
     eBoolInteger,// values are eCSSUnit_Integer (0, -0, or 1 only)

@@ -25,11 +25,11 @@ function checkAnimationState() {
   info("waiting for the tab to close asynchronously");
   tab.addEventListener("transitionend", function(event) {
     if (event.propertyName == "max-width") {
-      tab.removeEventListener("transitionend", arguments.callee, false);
+      tab.removeEventListener("transitionend", arguments.callee);
       executeSoon(function() {
         ok(!tab.parentNode, "tab removed asynchronously");
         finish();
       });
     }
-  }, false);
+  });
 }

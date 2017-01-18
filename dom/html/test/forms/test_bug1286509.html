@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1286509
         ++eventCounts[eventName];
         is(expectedEventSequence[expectedEventIdx], e.type, "Events sequence should be keydown, change, keyup");
         expectedEventIdx = (expectedEventIdx + 1) % 3;
-      }, false);
+      });
     });
     synthesizeKey("VK_UP", {});
     synthesizeKey("VK_DOWN", {});

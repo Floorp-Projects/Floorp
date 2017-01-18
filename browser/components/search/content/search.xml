@@ -581,7 +581,7 @@
             pasteAndSearch.removeAttribute("disabled");
           else
             pasteAndSearch.setAttribute("disabled", "true");
-        }, false);
+        });
 
         var element, label, akey;
 

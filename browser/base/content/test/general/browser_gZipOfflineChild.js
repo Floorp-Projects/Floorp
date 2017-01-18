@@ -74,6 +74,6 @@ function test() {
   BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
     let window = gBrowser.selectedBrowser.contentWindow;
 
-    window.addEventListener("message", handleMessageEvents, false);
+    window.addEventListener("message", handleMessageEvents);
   });
 }

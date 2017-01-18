@@ -23,7 +23,7 @@ function storeSVGPropertyAsExpando(localName, prop)
 {
     var elem = document.createElementNS("http://www.w3.org/2000/svg", localName);
 
-    elem.addEventListener("click", function(){}, false);
+    elem.addEventListener("click", function(){});
 
     var propVal = elem[prop];
     Object.prototype.toSource[prop + "_expando"] = propVal;
@@ -72,7 +72,7 @@ var elem2 = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 elem1.appendChild(elem2);
 document.getElementById("content").appendChild(elem1);
 
-elem2.addEventListener("click", function(){}, false);
+elem2.addEventListener("click", function(){});
 
 Object.prototype.toSource.expando = elem1;
 

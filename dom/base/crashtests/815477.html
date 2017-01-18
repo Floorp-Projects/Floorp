@@ -6,7 +6,7 @@
 <p id=test4>
 <script>
 var docElement = document.body;
-document.addEventListener("DOMContentLoaded", CFcrash, false);
+document.addEventListener("DOMContentLoaded", CFcrash);
 function CFcrash() {
 setTimeout('try { test5.appendChild(test4); } catch(e) {}', 50);
 try { test4.parentNode.removeChild(test4); test4 = test1; } catch(e) {}

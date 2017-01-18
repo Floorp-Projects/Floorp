@@ -62,8 +62,7 @@ void vp9_frameworker_signal_stats(VPxWorker *const worker) {
 void vp9_frameworker_wait(VPxWorker *const worker, RefCntBuffer *const ref_buf,
                           int row) {
 #if CONFIG_MULTITHREAD
-  if (!ref_buf)
-    return;
+  if (!ref_buf) return;
 
 #ifndef BUILDING_WITH_TSAN
   // The following line of code will get harmless tsan error but it is the key
@@ -147,11 +146,12 @@ void vp9_frameworker_copy_context(VPxWorker *const dst_worker,
   vp9_frameworker_lock_stats(src_worker);
   while (!src_worker_data->frame_context_ready) {
     pthread_cond_wait(&src_worker_data->stats_cond,
-        &src_worker_data->stats_mutex);
+                      &src_worker_data->stats_mutex);
   }
 
-  dst_cm->last_frame_seg_map = src_cm->seg.enabled ?
-      src_cm->current_frame_seg_map : src_cm->last_frame_seg_map;
+  dst_cm->last_frame_seg_map = src_cm->seg.enabled
+                                   ? src_cm->current_frame_seg_map
+                                   : src_cm->last_frame_seg_map;
   dst_worker_data->pbi->need_resync = src_worker_data->pbi->need_resync;
   vp9_frameworker_unlock_stats(src_worker);
 
@@ -159,17 +159,18 @@ void vp9_frameworker_copy_context(VPxWorker *const dst_worker,
 #if CONFIG_VP9_HIGHBITDEPTH
   dst_cm->use_highbitdepth = src_cm->use_highbitdepth;
 #endif
-  dst_cm->prev_frame = src_cm->show_existing_frame ?
-                       src_cm->prev_frame : src_cm->cur_frame;
-  dst_cm->last_width = !src_cm->show_existing_frame ?
-                       src_cm->width : src_cm->last_width;
-  dst_cm->last_height = !src_cm->show_existing_frame ?
-                        src_cm->height : src_cm->last_height;
+  dst_cm->prev_frame =
+      src_cm->show_existing_frame ? src_cm->prev_frame : src_cm->cur_frame;
+  dst_cm->last_width =
+      !src_cm->show_existing_frame ? src_cm->width : src_cm->last_width;
+  dst_cm->last_height =
+      !src_cm->show_existing_frame ? src_cm->height : src_cm->last_height;
   dst_cm->subsampling_x = src_cm->subsampling_x;
   dst_cm->subsampling_y = src_cm->subsampling_y;
   dst_cm->frame_type = src_cm->frame_type;
-  dst_cm->last_show_frame = !src_cm->show_existing_frame ?
-                            src_cm->show_frame : src_cm->last_show_frame;
+  dst_cm->last_show_frame = !src_cm->show_existing_frame
+                                ? src_cm->show_frame
+                                : src_cm->last_show_frame;
   for (i = 0; i < REF_FRAMES; ++i)
     dst_cm->ref_frame_map[i] = src_cm->next_ref_frame_map[i];
 
@@ -183,7 +184,7 @@ void vp9_frameworker_copy_context(VPxWorker *const dst_worker,
   memcpy(dst_cm->frame_contexts, src_cm->frame_contexts,
          FRAME_CONTEXTS * sizeof(dst_cm->frame_contexts[0]));
 #else
-  (void) dst_worker;
-  (void) src_worker;
+  (void)dst_worker;
+  (void)src_worker;
 #endif  // CONFIG_MULTITHREAD
 }

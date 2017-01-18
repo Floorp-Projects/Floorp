@@ -21,7 +21,7 @@ function setupTest(uri, cookies, loads) {
   gExpectedLoads = loads;
 
   // Listen for MessageEvents.
-  window.addEventListener("message", messageReceiver, false);
+  window.addEventListener("message", messageReceiver);
 
   prefSet.then(() => {
     // load a window which contains an iframe; each will attempt to set
@@ -41,7 +41,7 @@ function messageReceiver(evt) {
   is(evt.data, "message", "message data received from popup");
   if (evt.data != "message") {
     gPopup.close();
-    window.removeEventListener("message", messageReceiver, false);
+    window.removeEventListener("message", messageReceiver);
 
     finishTest();
     return;
@@ -50,7 +50,7 @@ function messageReceiver(evt) {
   // only run the test when all our children are done loading & setting cookies
   if (++gLoads == gExpectedLoads) {
     gPopup.close();
-    window.removeEventListener("message", messageReceiver, false);
+    window.removeEventListener("message", messageReceiver);
 
     runTest();
   }

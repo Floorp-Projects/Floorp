@@ -38369,7 +38369,7 @@ var Debugger =
 	    if (!isFirefox()) {
 	      this.editor.codeMirror.on("gutterContextMenu", (cm, line, eventName, event) => this.onGutterContextMenu(event));
 	    } else {
-	      this.editor.codeMirror.getWrapperElement().addEventListener("contextmenu", event => this.onGutterContextMenu(event), false);
+	      this.editor.codeMirror.getWrapperElement().addEventListener("contextmenu", event => this.onGutterContextMenu(event));
 	    }
 	
 	    resizeBreakpointGutter(this.editor.codeMirror);

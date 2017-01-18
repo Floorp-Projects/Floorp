@@ -53,10 +53,10 @@ var moveEvent = { type: "mousemove", clickCount: "0" };
 
 function setResize(str) {
   var handler = function() {
-    iframe.contentWindow.removeEventListener("resize", arguments.callee, false);
+    iframe.contentWindow.removeEventListener("resize", arguments.callee);
     setTimeout(str, 100);
   };
-  iframe.contentWindow.addEventListener("resize", handler, false);
+  iframe.contentWindow.addEventListener("resize", handler);
 }
 
 function step1() {

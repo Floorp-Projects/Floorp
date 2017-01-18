@@ -53,8 +53,8 @@ const BASE_URL = "bug733553-informant.sjs?";
 
 function initializeOnload() {
   var firstimg = document.createElement('img');
-  firstimg.addEventListener("load", imageLoad, false);
-  firstimg.addEventListener("error", imageLoad, false);
+  firstimg.addEventListener("load", imageLoad);
+  firstimg.addEventListener("error", imageLoad);
   firstimg.alt = "";
   firstimg.src = "bug733553.sjs";
   document.getElementById('content').appendChild(firstimg);
@@ -77,8 +77,8 @@ function imageLoad(aEvent) {
   readyForNext();
   if (testParts.length == testIndex) {
     var firstimg = document.getElementsByTagName('img')[0];
-    firstimg.removeEventListener("load", imageLoad, false);
-    firstimg.removeEventListener("error", imageLoad, false);
+    firstimg.removeEventListener("load", imageLoad);
+    firstimg.removeEventListener("error", imageLoad);
     SimpleTest.finish();
   }
 }

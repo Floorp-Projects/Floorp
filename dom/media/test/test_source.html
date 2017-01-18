@@ -55,8 +55,8 @@ function loaded(e) {
   }
 }
 
-v1.addEventListener('loadeddata', loaded, false);
-a1.addEventListener('loadeddata', loaded, false);
+v1.addEventListener('loadeddata', loaded);
+a1.addEventListener('loadeddata', loaded);
 
 var videoSource = newSource(/^video/);
 if (videoSource) {

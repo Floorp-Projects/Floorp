@@ -42,10 +42,10 @@ var form = document.forms[0];
 form.addEventListener("submit", function() {
   ok(gEnd, gEnd ? "expected submit" : "non expected submit");
   if (++gSubmitReceived >= gExpectedSubmits) {
-    form.removeEventListener("submit", arguments.callee, false);
+    form.removeEventListener("submit", arguments.callee);
     SimpleTest.finish();
   }
-}, false);
+});
 
 var inputs = [
   document.getElementById('a'),

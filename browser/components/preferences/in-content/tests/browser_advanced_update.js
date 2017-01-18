@@ -5,7 +5,7 @@
 
 const { classes: Cc, interfaces: Ci, manager: Cm, utils: Cu, results: Cr } = Components;
 
-Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
@@ -88,8 +88,8 @@ function formatInstallDate(sec) {
   const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
                  .getService(Ci.nsIXULChromeRegistry)
                  .getSelectedLocale("global", true);
-  const dtOptions = { year: 'numeric', month: 'long', day: 'numeric',
-                      hour: 'numeric', minute: 'numeric', second: 'numeric' };
+  const dtOptions = { year: "numeric", month: "long", day: "numeric",
+                      hour: "numeric", minute: "numeric", second: "numeric" };
   return date.toLocaleString(locale, dtOptions);
 }
 

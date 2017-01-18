@@ -83,7 +83,7 @@ function messageReceiver(evt)
      "uh-oh, we (" + count + ") didn't get the right postMessage!");
 }
 
-window.addEventListener("message", messageReceiver, false);
+window.addEventListener("message", messageReceiver);
 
 function run()
 {
@@ -96,7 +96,7 @@ function run()
   });
 }
 
-window.addEventListener("load", run, false);
+window.addEventListener("load", run);
 </script>
 </pre>
 </body>

@@ -140,8 +140,8 @@ var gPage = {
 
 #ifdef XP_MACOSX
     // Workaround to prevent a delay on MacOSX due to a slow drop animation.
-    document.addEventListener("dragover", this, false);
-    document.addEventListener("drop", this, false);
+    document.addEventListener("dragover", this);
+    document.addEventListener("drop", this);
 #endif
   },
 

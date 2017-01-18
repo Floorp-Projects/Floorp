@@ -232,7 +232,7 @@ function validateSearchData(aData, aDataType) {
   }
 }
 
-function makeQueryPredicates(aQueryData, delimiter = ' AND ') {
+function makeQueryPredicates(aQueryData, delimiter = " AND ") {
   return Object.keys(aQueryData).map(function(field) {
     if (field == "firstUsedStart") {
       return "firstUsed >= :" + field;
@@ -308,7 +308,7 @@ function makeRemoveStatement(aSearchData, aBindingArrays) {
 
 function makeUpdateStatement(aGuid, aNewData, aBindingArrays) {
   let query = "UPDATE moz_formhistory SET ";
-  let queryTerms = makeQueryPredicates(aNewData, ', ');
+  let queryTerms = makeQueryPredicates(aNewData, ", ");
 
   if (!queryTerms) {
     throw Components.Exception("Update query must define fields to modify.",

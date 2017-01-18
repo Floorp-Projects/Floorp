@@ -136,11 +136,11 @@
         <getter><![CDATA[
           // For security reasons delay searches on pasted values.
           if (this._valueIsPasted) {
-            let t = parseInt(this.getAttribute('pastetimeout'));
+            let t = parseInt(this.getAttribute("pastetimeout"));
             return isNaN(t) ? 1000 : t;
           }
 
-          let t = parseInt(this.getAttribute('timeout'));
+          let t = parseInt(this.getAttribute("timeout"));
           return isNaN(t) ? 50 : t;
         ]]></getter>
       </property>
@@ -330,8 +330,8 @@
             this.formatValue();
 
           this.mIgnoreInput = false;
-          var event = document.createEvent('Events');
-          event.initEvent('ValueChange', true, true);
+          var event = document.createEvent("Events");
+          event.initEvent("ValueChange", true, true);
           this.inputField.dispatchEvent(event);
           return val;
         ]]></setter>
@@ -403,7 +403,7 @@
         <body><![CDATA[
           // history dropmarker pushed state
           function cleanup(popup) {
-            popup.removeEventListener("popupshowing", onShow, false);
+            popup.removeEventListener("popupshowing", onShow);
           }
           function onShow(event) {
             var popup = event.target, input = popup.input;
@@ -411,11 +411,11 @@
             input.setAttribute("open", "true");
             function onHide() {
               input.removeAttribute("open");
-              popup.removeEventListener("popuphiding", onHide, false);
+              popup.removeEventListener("popuphiding", onHide);
             }
-            popup.addEventListener("popuphiding", onHide, false);
+            popup.addEventListener("popuphiding", onHide);
           }
-          this.popup.addEventListener("popupshowing", onShow, false);
+          this.popup.addEventListener("popupshowing", onShow);
           setTimeout(cleanup, 1000, this.popup);
 
           // Store our "normal" maxRows on the popup, so that it can reset the
@@ -785,7 +785,7 @@
             this.tree.treeBoxObject.ensureRowIsVisible(val < 0 ? 0 : val);
           // Fire select event on xul:tree so that accessibility API
           // support layer can fire appropriate accessibility events.
-          var event = document.createEvent('Events');
+          var event = document.createEvent("Events");
           event.initEvent("select", true, true);
           this.tree.dispatchEvent(event);
           return val;

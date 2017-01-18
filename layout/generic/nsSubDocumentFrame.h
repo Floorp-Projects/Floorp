@@ -26,14 +26,14 @@ public:
 
 #ifdef DEBUG_FRAME_DUMP
   void List(FILE* out = stderr, const char* aPrefix = "", uint32_t aFlags = 0) const override;
-  virtual nsresult GetFrameName(nsAString& aResult) const override;
+  nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
   NS_DECL_QUERYFRAME
 
-  virtual nsIAtom* GetType() const override;
+  nsIAtom* GetType() const override;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override
+  bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsAtomicContainerFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced |
@@ -41,19 +41,19 @@ public:
         nsIFrame::eReplacedContainsBlock));
   }
 
-  virtual void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) override;
+  void Init(nsIContent*       aContent,
+            nsContainerFrame* aParent,
+            nsIFrame*         aPrevInFlow) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
+  void DestroyFrom(nsIFrame* aDestructRoot) override;
 
-  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
-  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
+  nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
 
-  virtual mozilla::IntrinsicSize GetIntrinsicSize() override;
-  virtual nsSize  GetIntrinsicRatio() override;
+  mozilla::IntrinsicSize GetIntrinsicSize() override;
+  nsSize  GetIntrinsicRatio() override;
 
-  virtual mozilla::LogicalSize
+  mozilla::LogicalSize
   ComputeAutoSize(nsRenderingContext*         aRenderingContext,
                   mozilla::WritingMode        aWritingMode,
                   const mozilla::LogicalSize& aCBSize,
@@ -63,7 +63,7 @@ public:
                   const mozilla::LogicalSize& aPadding,
                   ComputeSizeFlags            aFlags) override;
 
-  virtual mozilla::LogicalSize
+  mozilla::LogicalSize
   ComputeSize(nsRenderingContext*         aRenderingContext,
               mozilla::WritingMode        aWritingMode,
               const mozilla::LogicalSize& aCBSize,
@@ -73,27 +73,27 @@ public:
               const mozilla::LogicalSize& aPadding,
               ComputeSizeFlags            aFlags) override;
 
-  virtual void Reflow(nsPresContext*           aPresContext,
-                      ReflowOutput&     aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus&          aStatus) override;
+  void Reflow(nsPresContext*     aPresContext,
+              ReflowOutput&      aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus&    aStatus) override;
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                        const nsRect&           aDirtyRect,
+                        const nsDisplayListSet& aLists) override;
 
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID,
-                                    nsIAtom* aAttribute,
-                                    int32_t aModType) override;
+  nsresult AttributeChanged(int32_t aNameSpaceID,
+                            nsIAtom* aAttribute,
+                            int32_t aModType) override;
 
   // if the content is "visibility:hidden", then just hide the view
   // and all our contents. We don't extend "visibility:hidden" to
   // the child content ourselves, since it belongs to a different
   // document and CSS doesn't inherit in there.
-  virtual bool SupportsVisibilityHidden() override { return false; }
+  bool SupportsVisibilityHidden() override { return false; }
 
 #ifdef ACCESSIBILITY
-  virtual mozilla::a11y::AccType AccessibleType() override;
+  mozilla::a11y::AccType AccessibleType() override;
 #endif
 
   nsresult GetDocShell(nsIDocShell **aDocShell);
@@ -108,8 +108,8 @@ public:
   mozilla::ScreenIntSize GetSubdocumentSize();
 
   // nsIReflowCallback
-  virtual bool ReflowFinished() override;
-  virtual void ReflowCallbackCanceled() override;
+  bool ReflowFinished() override;
+  void ReflowCallbackCanceled() override;
 
   bool ShouldClipSubdocument()
   {

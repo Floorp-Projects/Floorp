@@ -6,7 +6,10 @@
 
 #include "../contentproc/plugin-container.cpp"
 
+#include "mozilla/Bootstrap.h"
 #include "mozilla/WindowsDllBlocklist.h"
+
+using namespace mozilla;
 
 int
 main(int argc, char *argv[])
@@ -15,5 +18,10 @@ main(int argc, char *argv[])
   DllBlocklist_Initialize();
 #endif
 
-  return content_process_main(argc, argv);
+  Bootstrap::UniquePtr bootstrap;
+  XRE_GetBootstrap(bootstrap);
+  if (!bootstrap) {
+    return 2;
+  }
+  return content_process_main(bootstrap.get(), argc, argv);
 }

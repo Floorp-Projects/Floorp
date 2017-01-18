@@ -40,7 +40,7 @@ function setupTest(uri, domain, cookies, loads, headers) {
   });
 
   // Listen for MessageEvents.
-  window.addEventListener("message", messageReceiver, false);
+  window.addEventListener("message", messageReceiver);
 
   Promise.all([ prefSet, scriptReady ]).then(() => {
     // load a window which contains an iframe; each will attempt to set
@@ -73,7 +73,7 @@ function messageReceiver(evt)
   if (evt.data != "f_lf_i msg data img" && evt.data != "f_lf_i msg data page") {
     info("got this message but don't know what it is " + evt.data);
     gPopup.close();
-    window.removeEventListener("message", messageReceiver, false);
+    window.removeEventListener("message", messageReceiver);
 
     finishTest();
     return;
@@ -82,7 +82,7 @@ function messageReceiver(evt)
   // only run the test when all our children are done loading & setting cookies
   if (++gLoads == gExpectedLoads) {
     gPopup.close();
-    window.removeEventListener("message", messageReceiver, false);
+    window.removeEventListener("message", messageReceiver);
 
     runTest();
   }

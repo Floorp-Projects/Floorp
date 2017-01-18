@@ -56,9 +56,9 @@ this.SideMenuWidget = function SideMenuWidget(aNode, aOptions = {}) {
   this._list.setAttribute("with-item-checkboxes", this._showItemCheckboxes);
   this._list.setAttribute("with-group-checkboxes", this._showGroupCheckboxes);
   this._list.setAttribute("tabindex", "0");
-  this._list.addEventListener("contextmenu", e => this._showContextMenu(e), false);
-  this._list.addEventListener("keypress", e => this.emit("keyPress", e), false);
-  this._list.addEventListener("mousedown", e => this.emit("mousePress", e), false);
+  this._list.addEventListener("contextmenu", e => this._showContextMenu(e));
+  this._list.addEventListener("keypress", e => this.emit("keyPress", e));
+  this._list.addEventListener("mousedown", e => this.emit("mousePress", e));
   this._parent.appendChild(this._list);
 
   // Menu items can optionally be grouped.
@@ -709,7 +709,7 @@ function makeCheckbox(aParentNode, aOptions) {
   // Stop the toggling of the checkbox from selecting the list item.
   checkbox.addEventListener("mousedown", e => {
     e.stopPropagation();
-  }, false);
+  });
 
   // Emit an event from the checkbox when it is toggled. Don't listen for the
   // "command" event! It won't fire for programmatic changes. XUL!!
@@ -718,7 +718,7 @@ function makeCheckbox(aParentNode, aOptions) {
       description: aOptions.description || "item",
       checked: checkbox.checked
     });
-  }, false);
+  });
 
   aParentNode.appendChild(checkbox);
   return checkbox;

@@ -43,44 +43,36 @@ void FDCT4x4_2D(const int16_t *input, tran_low_t *output, int stride) {
   // These are the coefficients used for the multiplies.
   // In the comments, pN means cos(N pi /64) and mN is -cos(N pi /64),
   // where cospi_N_64 = cos(N pi /64)
-  const __m128i k__cospi_A = octa_set_epi16(cospi_16_64, cospi_16_64,
-                                            cospi_16_64, cospi_16_64,
-                                            cospi_16_64, -cospi_16_64,
-                                            cospi_16_64, -cospi_16_64);
-  const __m128i k__cospi_B = octa_set_epi16(cospi_16_64, -cospi_16_64,
-                                            cospi_16_64, -cospi_16_64,
-                                            cospi_16_64, cospi_16_64,
-                                            cospi_16_64, cospi_16_64);
-  const __m128i k__cospi_C = octa_set_epi16(cospi_8_64, cospi_24_64,
-                                            cospi_8_64, cospi_24_64,
-                                            cospi_24_64, -cospi_8_64,
-                                            cospi_24_64, -cospi_8_64);
-  const __m128i k__cospi_D = octa_set_epi16(cospi_24_64, -cospi_8_64,
-                                            cospi_24_64, -cospi_8_64,
-                                            cospi_8_64, cospi_24_64,
-                                            cospi_8_64, cospi_24_64);
-  const __m128i k__cospi_E = octa_set_epi16(cospi_16_64, cospi_16_64,
-                                            cospi_16_64, cospi_16_64,
-                                            cospi_16_64, cospi_16_64,
-                                            cospi_16_64, cospi_16_64);
-  const __m128i k__cospi_F = octa_set_epi16(cospi_16_64, -cospi_16_64,
-                                            cospi_16_64, -cospi_16_64,
-                                            cospi_16_64, -cospi_16_64,
-                                            cospi_16_64, -cospi_16_64);
-  const __m128i k__cospi_G = octa_set_epi16(cospi_8_64, cospi_24_64,
-                                            cospi_8_64, cospi_24_64,
-                                            -cospi_8_64, -cospi_24_64,
-                                            -cospi_8_64, -cospi_24_64);
-  const __m128i k__cospi_H = octa_set_epi16(cospi_24_64, -cospi_8_64,
-                                            cospi_24_64, -cospi_8_64,
-                                            -cospi_24_64, cospi_8_64,
-                                            -cospi_24_64, cospi_8_64);
+  const __m128i k__cospi_A =
+      octa_set_epi16(cospi_16_64, cospi_16_64, cospi_16_64, cospi_16_64,
+                     cospi_16_64, -cospi_16_64, cospi_16_64, -cospi_16_64);
+  const __m128i k__cospi_B =
+      octa_set_epi16(cospi_16_64, -cospi_16_64, cospi_16_64, -cospi_16_64,
+                     cospi_16_64, cospi_16_64, cospi_16_64, cospi_16_64);
+  const __m128i k__cospi_C =
+      octa_set_epi16(cospi_8_64, cospi_24_64, cospi_8_64, cospi_24_64,
+                     cospi_24_64, -cospi_8_64, cospi_24_64, -cospi_8_64);
+  const __m128i k__cospi_D =
+      octa_set_epi16(cospi_24_64, -cospi_8_64, cospi_24_64, -cospi_8_64,
+                     cospi_8_64, cospi_24_64, cospi_8_64, cospi_24_64);
+  const __m128i k__cospi_E =
+      octa_set_epi16(cospi_16_64, cospi_16_64, cospi_16_64, cospi_16_64,
+                     cospi_16_64, cospi_16_64, cospi_16_64, cospi_16_64);
+  const __m128i k__cospi_F =
+      octa_set_epi16(cospi_16_64, -cospi_16_64, cospi_16_64, -cospi_16_64,
+                     cospi_16_64, -cospi_16_64, cospi_16_64, -cospi_16_64);
+  const __m128i k__cospi_G =
+      octa_set_epi16(cospi_8_64, cospi_24_64, cospi_8_64, cospi_24_64,
+                     -cospi_8_64, -cospi_24_64, -cospi_8_64, -cospi_24_64);
+  const __m128i k__cospi_H =
+      octa_set_epi16(cospi_24_64, -cospi_8_64, cospi_24_64, -cospi_8_64,
+                     -cospi_24_64, cospi_8_64, -cospi_24_64, cospi_8_64);
 
   const __m128i k__DCT_CONST_ROUNDING = _mm_set1_epi32(DCT_CONST_ROUNDING);
   // This second rounding constant saves doing some extra adds at the end
-  const __m128i k__DCT_CONST_ROUNDING2 = _mm_set1_epi32(DCT_CONST_ROUNDING
-                                               +(DCT_CONST_ROUNDING << 1));
-  const int DCT_CONST_BITS2 =  DCT_CONST_BITS + 2;
+  const __m128i k__DCT_CONST_ROUNDING2 =
+      _mm_set1_epi32(DCT_CONST_ROUNDING + (DCT_CONST_ROUNDING << 1));
+  const int DCT_CONST_BITS2 = DCT_CONST_BITS + 2;
   const __m128i k__nonzero_bias_a = _mm_setr_epi16(0, 1, 1, 1, 1, 1, 1, 1);
   const __m128i k__nonzero_bias_b = _mm_setr_epi16(1, 0, 0, 0, 0, 0, 0, 0);
   __m128i in0, in1;
@@ -90,14 +82,14 @@ void FDCT4x4_2D(const int16_t *input, tran_low_t *output, int stride) {
 #endif
 
   // Load inputs.
-  in0  = _mm_loadl_epi64((const __m128i *)(input +  0 * stride));
-  in1  = _mm_loadl_epi64((const __m128i *)(input +  1 * stride));
-  in1  = _mm_unpacklo_epi64(in1, _mm_loadl_epi64((const __m128i *)
-                                                 (input +  2 * stride)));
-  in0  = _mm_unpacklo_epi64(in0, _mm_loadl_epi64((const __m128i *)
-                                                 (input +  3 * stride)));
-  // in0 = [i0 i1 i2 i3 iC iD iE iF]
-  // in1 = [i4 i5 i6 i7 i8 i9 iA iB]
+  in0 = _mm_loadl_epi64((const __m128i *)(input + 0 * stride));
+  in1 = _mm_loadl_epi64((const __m128i *)(input + 1 * stride));
+  in1 = _mm_unpacklo_epi64(
+      in1, _mm_loadl_epi64((const __m128i *)(input + 2 * stride)));
+  in0 = _mm_unpacklo_epi64(
+      in0, _mm_loadl_epi64((const __m128i *)(input + 3 * stride)));
+// in0 = [i0 i1 i2 i3 iC iD iE iF]
+// in1 = [i4 i5 i6 i7 i8 i9 iA iB]
 #if DCT_HIGH_BIT_DEPTH
   // Check inputs small enough to use optimised code
   cmp0 = _mm_xor_si128(_mm_cmpgt_epi16(in0, _mm_set1_epi16(0x3ff)),
@@ -194,8 +186,8 @@ void FDCT4x4_2D(const int16_t *input, tran_low_t *output, int stride) {
 
     const __m128i t0 = ADD_EPI16(in0, in1);
     const __m128i t1 = SUB_EPI16(in0, in1);
-    // t0 = [c0 c1 c8 c9  c4  c5  cC  cD]
-    // t1 = [c3 c2 cB cA -c7 -c6 -cF -cE]
+// t0 = [c0 c1 c8 c9  c4  c5  cC  cD]
+// t1 = [c3 c2 cB cA -c7 -c6 -cF -cE]
 #if DCT_HIGH_BIT_DEPTH
     overflow = check_epi16_overflow_x2(&t0, &t1);
     if (overflow) {
@@ -263,7 +255,6 @@ void FDCT4x4_2D(const int16_t *input, tran_low_t *output, int stride) {
   storeu_output(&in1, output + 2 * 4);
 }
 
-
 void FDCT8x8_2D(const int16_t *input, tran_low_t *output, int stride) {
   int pass;
   // Constants
@@ -283,14 +274,14 @@ void FDCT8x8_2D(const int16_t *input, tran_low_t *output, int stride) {
   int overflow;
 #endif
   // Load input
-  __m128i in0  = _mm_load_si128((const __m128i *)(input + 0 * stride));
-  __m128i in1  = _mm_load_si128((const __m128i *)(input + 1 * stride));
-  __m128i in2  = _mm_load_si128((const __m128i *)(input + 2 * stride));
-  __m128i in3  = _mm_load_si128((const __m128i *)(input + 3 * stride));
-  __m128i in4  = _mm_load_si128((const __m128i *)(input + 4 * stride));
-  __m128i in5  = _mm_load_si128((const __m128i *)(input + 5 * stride));
-  __m128i in6  = _mm_load_si128((const __m128i *)(input + 6 * stride));
-  __m128i in7  = _mm_load_si128((const __m128i *)(input + 7 * stride));
+  __m128i in0 = _mm_load_si128((const __m128i *)(input + 0 * stride));
+  __m128i in1 = _mm_load_si128((const __m128i *)(input + 1 * stride));
+  __m128i in2 = _mm_load_si128((const __m128i *)(input + 2 * stride));
+  __m128i in3 = _mm_load_si128((const __m128i *)(input + 3 * stride));
+  __m128i in4 = _mm_load_si128((const __m128i *)(input + 4 * stride));
+  __m128i in5 = _mm_load_si128((const __m128i *)(input + 5 * stride));
+  __m128i in6 = _mm_load_si128((const __m128i *)(input + 6 * stride));
+  __m128i in7 = _mm_load_si128((const __m128i *)(input + 7 * stride));
   // Pre-condition input (shift by two)
   in0 = _mm_slli_epi16(in0, 2);
   in1 = _mm_slli_epi16(in1, 2);
@@ -319,8 +310,8 @@ void FDCT8x8_2D(const int16_t *input, tran_low_t *output, int stride) {
     const __m128i q7 = SUB_EPI16(in0, in7);
 #if DCT_HIGH_BIT_DEPTH
     if (pass == 1) {
-      overflow = check_epi16_overflow_x8(&q0, &q1, &q2, &q3,
-                                         &q4, &q5, &q6, &q7);
+      overflow =
+          check_epi16_overflow_x8(&q0, &q1, &q2, &q3, &q4, &q5, &q6, &q7);
       if (overflow) {
         vpx_highbd_fdct8x8_c(input, output, stride);
         return;
@@ -630,22 +621,22 @@ void FDCT16x16_2D(const int16_t *input, tran_low_t *output, int stride) {
       __m128i res08, res09, res10, res11, res12, res13, res14, res15;
       // Load and pre-condition input.
       if (0 == pass) {
-        in00  = _mm_load_si128((const __m128i *)(in +  0 * stride));
-        in01  = _mm_load_si128((const __m128i *)(in +  1 * stride));
-        in02  = _mm_load_si128((const __m128i *)(in +  2 * stride));
-        in03  = _mm_load_si128((const __m128i *)(in +  3 * stride));
-        in04  = _mm_load_si128((const __m128i *)(in +  4 * stride));
-        in05  = _mm_load_si128((const __m128i *)(in +  5 * stride));
-        in06  = _mm_load_si128((const __m128i *)(in +  6 * stride));
-        in07  = _mm_load_si128((const __m128i *)(in +  7 * stride));
-        in08  = _mm_load_si128((const __m128i *)(in +  8 * stride));
-        in09  = _mm_load_si128((const __m128i *)(in +  9 * stride));
-        in10  = _mm_load_si128((const __m128i *)(in + 10 * stride));
-        in11  = _mm_load_si128((const __m128i *)(in + 11 * stride));
-        in12  = _mm_load_si128((const __m128i *)(in + 12 * stride));
-        in13  = _mm_load_si128((const __m128i *)(in + 13 * stride));
-        in14  = _mm_load_si128((const __m128i *)(in + 14 * stride));
-        in15  = _mm_load_si128((const __m128i *)(in + 15 * stride));
+        in00 = _mm_load_si128((const __m128i *)(in + 0 * stride));
+        in01 = _mm_load_si128((const __m128i *)(in + 1 * stride));
+        in02 = _mm_load_si128((const __m128i *)(in + 2 * stride));
+        in03 = _mm_load_si128((const __m128i *)(in + 3 * stride));
+        in04 = _mm_load_si128((const __m128i *)(in + 4 * stride));
+        in05 = _mm_load_si128((const __m128i *)(in + 5 * stride));
+        in06 = _mm_load_si128((const __m128i *)(in + 6 * stride));
+        in07 = _mm_load_si128((const __m128i *)(in + 7 * stride));
+        in08 = _mm_load_si128((const __m128i *)(in + 8 * stride));
+        in09 = _mm_load_si128((const __m128i *)(in + 9 * stride));
+        in10 = _mm_load_si128((const __m128i *)(in + 10 * stride));
+        in11 = _mm_load_si128((const __m128i *)(in + 11 * stride));
+        in12 = _mm_load_si128((const __m128i *)(in + 12 * stride));
+        in13 = _mm_load_si128((const __m128i *)(in + 13 * stride));
+        in14 = _mm_load_si128((const __m128i *)(in + 14 * stride));
+        in15 = _mm_load_si128((const __m128i *)(in + 15 * stride));
         // x = x << 2
         in00 = _mm_slli_epi16(in00, 2);
         in01 = _mm_slli_epi16(in01, 2);
@@ -664,22 +655,22 @@ void FDCT16x16_2D(const int16_t *input, tran_low_t *output, int stride) {
         in14 = _mm_slli_epi16(in14, 2);
         in15 = _mm_slli_epi16(in15, 2);
       } else {
-        in00  = _mm_load_si128((const __m128i *)(in +  0 * 16));
-        in01  = _mm_load_si128((const __m128i *)(in +  1 * 16));
-        in02  = _mm_load_si128((const __m128i *)(in +  2 * 16));
-        in03  = _mm_load_si128((const __m128i *)(in +  3 * 16));
-        in04  = _mm_load_si128((const __m128i *)(in +  4 * 16));
-        in05  = _mm_load_si128((const __m128i *)(in +  5 * 16));
-        in06  = _mm_load_si128((const __m128i *)(in +  6 * 16));
-        in07  = _mm_load_si128((const __m128i *)(in +  7 * 16));
-        in08  = _mm_load_si128((const __m128i *)(in +  8 * 16));
-        in09  = _mm_load_si128((const __m128i *)(in +  9 * 16));
-        in10  = _mm_load_si128((const __m128i *)(in + 10 * 16));
-        in11  = _mm_load_si128((const __m128i *)(in + 11 * 16));
-        in12  = _mm_load_si128((const __m128i *)(in + 12 * 16));
-        in13  = _mm_load_si128((const __m128i *)(in + 13 * 16));
-        in14  = _mm_load_si128((const __m128i *)(in + 14 * 16));
-        in15  = _mm_load_si128((const __m128i *)(in + 15 * 16));
+        in00 = _mm_load_si128((const __m128i *)(in + 0 * 16));
+        in01 = _mm_load_si128((const __m128i *)(in + 1 * 16));
+        in02 = _mm_load_si128((const __m128i *)(in + 2 * 16));
+        in03 = _mm_load_si128((const __m128i *)(in + 3 * 16));
+        in04 = _mm_load_si128((const __m128i *)(in + 4 * 16));
+        in05 = _mm_load_si128((const __m128i *)(in + 5 * 16));
+        in06 = _mm_load_si128((const __m128i *)(in + 6 * 16));
+        in07 = _mm_load_si128((const __m128i *)(in + 7 * 16));
+        in08 = _mm_load_si128((const __m128i *)(in + 8 * 16));
+        in09 = _mm_load_si128((const __m128i *)(in + 9 * 16));
+        in10 = _mm_load_si128((const __m128i *)(in + 10 * 16));
+        in11 = _mm_load_si128((const __m128i *)(in + 11 * 16));
+        in12 = _mm_load_si128((const __m128i *)(in + 12 * 16));
+        in13 = _mm_load_si128((const __m128i *)(in + 13 * 16));
+        in14 = _mm_load_si128((const __m128i *)(in + 14 * 16));
+        in15 = _mm_load_si128((const __m128i *)(in + 15 * 16));
         // x = (x + 1) >> 2
         in00 = _mm_add_epi16(in00, kOne);
         in01 = _mm_add_epi16(in01, kOne);
@@ -745,10 +736,9 @@ void FDCT16x16_2D(const int16_t *input, tran_low_t *output, int stride) {
         step1_6 = SUB_EPI16(in01, in14);
         step1_7 = SUB_EPI16(in00, in15);
 #if DCT_HIGH_BIT_DEPTH
-        overflow = check_epi16_overflow_x8(&step1_0, &step1_1,
-                                           &step1_2, &step1_3,
-                                           &step1_4, &step1_5,
-                                           &step1_6, &step1_7);
+        overflow =
+            check_epi16_overflow_x8(&step1_0, &step1_1, &step1_2, &step1_3,
+                                    &step1_4, &step1_5, &step1_6, &step1_7);
         if (overflow) {
           vpx_highbd_fdct16x16_c(input, output, stride);
           return;
@@ -767,8 +757,8 @@ void FDCT16x16_2D(const int16_t *input, tran_low_t *output, int stride) {
         const __m128i q6 = SUB_EPI16(input1, input6);
         const __m128i q7 = SUB_EPI16(input0, input7);
 #if DCT_HIGH_BIT_DEPTH
-        overflow = check_epi16_overflow_x8(&q0, &q1, &q2, &q3,
-                                           &q4, &q5, &q6, &q7);
+        overflow =
+            check_epi16_overflow_x8(&q0, &q1, &q2, &q3, &q4, &q5, &q6, &q7);
         if (overflow) {
           vpx_highbd_fdct16x16_c(input, output, stride);
           return;
@@ -818,12 +808,12 @@ void FDCT16x16_2D(const int16_t *input, tran_low_t *output, int stride) {
           // into 32 bits.
           const __m128i d0 = _mm_unpacklo_epi16(q6, q5);
           const __m128i d1 = _mm_unpackhi_epi16(q6, q5);
-          const __m128i r0 = mult_round_shift(&d0, &d1, &k__cospi_p16_m16,
-                                              &k__DCT_CONST_ROUNDING,
-                                              DCT_CONST_BITS);
-          const __m128i r1 = mult_round_shift(&d0, &d1, &k__cospi_p16_p16,
-                                              &k__DCT_CONST_ROUNDING,
-                                              DCT_CONST_BITS);
+          const __m128i r0 =
+              mult_round_shift(&d0, &d1, &k__cospi_p16_m16,
+                               &k__DCT_CONST_ROUNDING, DCT_CONST_BITS);
+          const __m128i r1 =
+              mult_round_shift(&d0, &d1, &k__cospi_p16_p16,
+                               &k__DCT_CONST_ROUNDING, DCT_CONST_BITS);
 #if DCT_HIGH_BIT_DEPTH
           overflow = check_epi16_overflow_x2(&r0, &r1);
           if (overflow) {
@@ -860,8 +850,8 @@ void FDCT16x16_2D(const int16_t *input, tran_low_t *output, int stride) {
               res06 = mult_round_shift(&t2, &t3, &k__cospi_m20_p12,
                                        &k__DCT_CONST_ROUNDING, DCT_CONST_BITS);
 #if DCT_HIGH_BIT_DEPTH
-              overflow = check_epi16_overflow_x4(&res02, &res14,
-                                                 &res10, &res06);
+              overflow =
+                  check_epi16_overflow_x4(&res02, &res14, &res10, &res06);
               if (overflow) {
                 vpx_highbd_fdct16x16_c(input, output, stride);
                 return;
@@ -888,8 +878,8 @@ void FDCT16x16_2D(const int16_t *input, tran_low_t *output, int stride) {
           step2_4 = mult_round_shift(&t2, &t3, &k__cospi_p16_p16,
                                      &k__DCT_CONST_ROUNDING, DCT_CONST_BITS);
 #if DCT_HIGH_BIT_DEPTH
-          overflow = check_epi16_overflow_x4(&step2_2, &step2_3, &step2_5,
-                                             &step2_4);
+          overflow =
+              check_epi16_overflow_x4(&step2_2, &step2_3, &step2_5, &step2_4);
           if (overflow) {
             vpx_highbd_fdct16x16_c(input, output, stride);
             return;
@@ -907,10 +897,9 @@ void FDCT16x16_2D(const int16_t *input, tran_low_t *output, int stride) {
           step3_6 = ADD_EPI16(step1_6, step2_5);
           step3_7 = ADD_EPI16(step1_7, step2_4);
 #if DCT_HIGH_BIT_DEPTH
-          overflow = check_epi16_overflow_x8(&step3_0, &step3_1,
-                                             &step3_2, &step3_3,
-                                             &step3_4, &step3_5,
-                                             &step3_6, &step3_7);
+          overflow =
+              check_epi16_overflow_x8(&step3_0, &step3_1, &step3_2, &step3_3,
+                                      &step3_4, &step3_5, &step3_6, &step3_7);
           if (overflow) {
             vpx_highbd_fdct16x16_c(input, output, stride);
             return;
@@ -932,8 +921,8 @@ void FDCT16x16_2D(const int16_t *input, tran_low_t *output, int stride) {
           step2_5 = mult_round_shift(&t2, &t3, &k__cospi_p08_m24,
                                      &k__DCT_CONST_ROUNDING, DCT_CONST_BITS);
 #if DCT_HIGH_BIT_DEPTH
-          overflow = check_epi16_overflow_x4(&step2_1, &step2_2, &step2_6,
-                                             &step2_5);
+          overflow =
+              check_epi16_overflow_x4(&step2_1, &step2_2, &step2_6, &step2_5);
           if (overflow) {
             vpx_highbd_fdct16x16_c(input, output, stride);
             return;
@@ -951,10 +940,9 @@ void FDCT16x16_2D(const int16_t *input, tran_low_t *output, int stride) {
           step1_6 = SUB_EPI16(step3_7, step2_6);
           step1_7 = ADD_EPI16(step3_7, step2_6);
 #if DCT_HIGH_BIT_DEPTH
-          overflow = check_epi16_overflow_x8(&step1_0, &step1_1,
-                                             &step1_2, &step1_3,
-                                             &step1_4, &step1_5,
-                                             &step1_6, &step1_7);
+          overflow =
+              check_epi16_overflow_x8(&step1_0, &step1_1, &step1_2, &step1_3,
+                                      &step1_4, &step1_5, &step1_6, &step1_7);
           if (overflow) {
             vpx_highbd_fdct16x16_c(input, output, stride);
             return;
@@ -1006,16 +994,14 @@ void FDCT16x16_2D(const int16_t *input, tran_low_t *output, int stride) {
         }
       }
       // Transpose the results, do it as two 8x8 transposes.
-      transpose_and_output8x8(&res00, &res01, &res02, &res03,
-                              &res04, &res05, &res06, &res07,
-                              pass, out0, out1);
-      transpose_and_output8x8(&res08, &res09, &res10, &res11,
-                              &res12, &res13, &res14, &res15,
-                              pass, out0 + 8, out1 + 8);
+      transpose_and_output8x8(&res00, &res01, &res02, &res03, &res04, &res05,
+                              &res06, &res07, pass, out0, out1);
+      transpose_and_output8x8(&res08, &res09, &res10, &res11, &res12, &res13,
+                              &res14, &res15, pass, out0 + 8, out1 + 8);
       if (pass == 0) {
-        out0 += 8*16;
+        out0 += 8 * 16;
       } else {
-        out1 += 8*16;
+        out1 += 8 * 16;
       }
     }
     // Setup in/out for next pass.

@@ -29,7 +29,7 @@ struct EncodePerfTestVideo {
 };
 
 const EncodePerfTestVideo kVP9EncodePerfTestVectors[] = {
-  {"niklas_1280_720_30.y4m", 1280, 720, 600, 10},
+  { "niklas_1280_720_30.y4m", 1280, 720, 600, 10 },
 };
 
 struct EncodeParameters {
@@ -45,10 +45,10 @@ struct EncodeParameters {
 };
 
 const EncodeParameters kVP9EncodeParameterSet[] = {
-  {0, 0, 0, 1, 0, VPX_CR_STUDIO_RANGE, VPX_CS_BT_601, { 0, 0 }},
-  {0, 0, 0, 0, 0, VPX_CR_FULL_RANGE, VPX_CS_BT_709, { 0, 0 }},
-  {0, 0, 1, 0, 0, VPX_CR_FULL_RANGE, VPX_CS_BT_2020, { 0, 0 }},
-  {0, 2, 0, 0, 1, VPX_CR_STUDIO_RANGE, VPX_CS_UNKNOWN, { 640, 480 }},
+  { 0, 0, 0, 1, 0, VPX_CR_STUDIO_RANGE, VPX_CS_BT_601, { 0, 0 } },
+  { 0, 0, 0, 0, 0, VPX_CR_FULL_RANGE, VPX_CS_BT_709, { 0, 0 } },
+  { 0, 0, 1, 0, 0, VPX_CR_FULL_RANGE, VPX_CS_BT_2020, { 0, 0 } },
+  { 0, 2, 0, 0, 1, VPX_CR_STUDIO_RANGE, VPX_CS_UNKNOWN, { 640, 480 } },
   // TODO(JBB): Test profiles (requires more work).
 };
 
@@ -87,8 +87,9 @@ class VpxEncoderParmsGetToDecoder
       encoder->Control(VP8E_SET_ARNR_MAXFRAMES, 7);
       encoder->Control(VP8E_SET_ARNR_STRENGTH, 5);
       encoder->Control(VP8E_SET_ARNR_TYPE, 3);
-      if (encode_parms.render_size[0] > 0 && encode_parms.render_size[1] > 0)
+      if (encode_parms.render_size[0] > 0 && encode_parms.render_size[1] > 0) {
         encoder->Control(VP9E_SET_RENDER_SIZE, encode_parms.render_size);
+      }
     }
   }
 
@@ -139,12 +140,11 @@ class VpxEncoderParmsGetToDecoder
 TEST_P(VpxEncoderParmsGetToDecoder, BitstreamParms) {
   init_flags_ = VPX_CODEC_USE_PSNR;
 
-  libvpx_test::VideoSource *const video =
-      new libvpx_test::Y4mVideoSource(test_video_.name, 0, test_video_.frames);
-  ASSERT_TRUE(video != NULL);
+  testing::internal::scoped_ptr<libvpx_test::VideoSource> video(
+      new libvpx_test::Y4mVideoSource(test_video_.name, 0, test_video_.frames));
+  ASSERT_TRUE(video.get() != NULL);
 
-  ASSERT_NO_FATAL_FAILURE(RunLoop(video));
-  delete video;
+  ASSERT_NO_FATAL_FAILURE(RunLoop(video.get()));
 }
 
 VP9_INSTANTIATE_TEST_CASE(VpxEncoderParmsGetToDecoder,

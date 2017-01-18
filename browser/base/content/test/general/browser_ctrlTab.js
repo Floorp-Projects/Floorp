@@ -88,9 +88,9 @@ add_task(function* () {
     let detectKeyEvent = function(event) {
       eventConsumed = event.defaultPrevented;
     };
-    document.addEventListener("keypress", detectKeyEvent, false);
+    document.addEventListener("keypress", detectKeyEvent);
     yield pressCtrlTab();
-    document.removeEventListener("keypress", detectKeyEvent, false);
+    document.removeEventListener("keypress", detectKeyEvent);
     ok(eventConsumed, "Ctrl+Tab consumed by the tabbed browser if one tab is open");
     is(focusedWindow, document.commandDispatcher.focusedWindow,
        "Ctrl+Tab doesn't change focus if one tab is open");

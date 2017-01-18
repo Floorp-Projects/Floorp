@@ -62,11 +62,11 @@ add_test(function() {
   }
 
   gAvailableCategory.addEventListener("CategoryBadgeUpdated", function() {
-    gAvailableCategory.removeEventListener("CategoryBadgeUpdated", arguments.callee, false);
+    gAvailableCategory.removeEventListener("CategoryBadgeUpdated", arguments.callee);
     is(gCategoryUtilities.isVisible(gAvailableCategory), true, "Available Updates category should now be visible");
     is(gAvailableCategory.badgeCount, 1, "Badge for Available Updates should now be 1");
     maybeRunNext();
-  }, false);
+  });
 
   gCategoryUtilities.openType("extension", function() {
     gProvider.createInstalls([{
@@ -121,7 +121,7 @@ add_test(function() {
 
     info("Opening release notes");
     item.addEventListener("RelNotesToggle", function() {
-      item.removeEventListener("RelNotesToggle", arguments.callee, false);
+      item.removeEventListener("RelNotesToggle", arguments.callee);
       info("Release notes now open");
 
       is_element_hidden(item._relNotesLoading, "Release notes loading message should be hidden");
@@ -130,14 +130,14 @@ add_test(function() {
 
       info("Closing release notes");
       item.addEventListener("RelNotesToggle", function() {
-        item.removeEventListener("RelNotesToggle", arguments.callee, false);
+        item.removeEventListener("RelNotesToggle", arguments.callee);
         info("Release notes now closed");
         info("Setting Release notes URI to something that should load");
         gProvider.installs[0].releaseNotesURI = Services.io.newURI(TESTROOT + "releaseNotes.xhtml")
 
         info("Re-opening release notes");
         item.addEventListener("RelNotesToggle", function() {
-          item.removeEventListener("RelNotesToggle", arguments.callee, false);
+          item.removeEventListener("RelNotesToggle", arguments.callee);
           info("Release notes now open");
 
           is_element_hidden(item._relNotesLoading, "Release notes loading message should be hidden");
@@ -145,14 +145,14 @@ add_test(function() {
           isnot(item._relNotes.childElementCount, 0, "Release notes should have been inserted into container");
           run_next_test();
 
-        }, false);
+        });
         EventUtils.synthesizeMouseAtCenter(item._relNotesToggle, { }, gManagerWindow);
         is_element_visible(item._relNotesLoading, "Release notes loading message should be visible");
 
-      }, false);
+      });
       EventUtils.synthesizeMouseAtCenter(item._relNotesToggle, { }, gManagerWindow);
 
-    }, false);
+    });
     EventUtils.synthesizeMouseAtCenter(item._relNotesToggle, { }, gManagerWindow);
     is_element_visible(item._relNotesLoading, "Release notes loading message should be visible");
   });
@@ -164,12 +164,12 @@ add_test(function() {
   var installCompleted = false;
 
   gAvailableCategory.addEventListener("CategoryBadgeUpdated", function() {
-    gAvailableCategory.removeEventListener("CategoryBadgeUpdated", arguments.callee, false);
+    gAvailableCategory.removeEventListener("CategoryBadgeUpdated", arguments.callee);
     if (installCompleted)
       run_next_test();
     else
       badgeUpdated = true;
-  }, false);
+  });
 
   var list = gManagerWindow.document.getElementById("updates-list");
   var item = list.firstChild;
@@ -221,21 +221,21 @@ add_test(function() {
 
 add_test(function() {
   gAvailableCategory.addEventListener("CategoryBadgeUpdated", function() {
-    gAvailableCategory.removeEventListener("CategoryBadgeUpdated", arguments.callee, false);
+    gAvailableCategory.removeEventListener("CategoryBadgeUpdated", arguments.callee);
     is(gCategoryUtilities.isVisible(gAvailableCategory), true, "Available Updates category should now be visible");
     is(gAvailableCategory.badgeCount, 1, "Badge for Available Updates should now be 1");
 
     gAvailableCategory.addEventListener("CategoryBadgeUpdated", function() {
-      gAvailableCategory.removeEventListener("CategoryBadgeUpdated", arguments.callee, false);
+      gAvailableCategory.removeEventListener("CategoryBadgeUpdated", arguments.callee);
       is(gCategoryUtilities.isVisible(gAvailableCategory), false, "Available Updates category should now be hidden");
 
       run_next_test();
-    }, false);
+    });
 
     AddonManager.getAddonByID("addon2@tests.mozilla.org", function(aAddon) {
       aAddon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_ENABLE;
     });
-  }, false);
+  });
 
   gProvider.createInstalls([{
     name: "manually updating addon (new and even more improved!)",

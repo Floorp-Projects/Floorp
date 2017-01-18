@@ -27,6 +27,7 @@ class CompositableForwarder;
 class CompositableChild;
 class PCompositableChild;
 class TextureClientRecycleAllocator;
+class ContentClientRemote;
 
 /**
  * CompositableClient manages the texture-specific logic for composite layers,
@@ -113,8 +114,6 @@ public:
 
   bool IsConnected() const;
 
-  PCompositableChild* GetIPDLActor() const;
-
   CompositableForwarder* GetForwarder() const
   {
     return mForwarder;
@@ -125,10 +124,17 @@ public:
    * layer. It is not used if the compositable is used with the regular shadow
    * layer forwarder.
    *
-   * If this returns zero, it means the compositable is not async (it is used
+   * If this returns empty, it means the compositable is not async (it is used
    * on the main thread).
    */
-  uint64_t GetAsyncID() const;
+  CompositableHandle GetAsyncHandle() const;
+
+  /**
+   * Handle for IPDL communication.
+   */
+  CompositableHandle GetIPCHandle() const {
+    return mHandle;
+  }
 
   /**
    * Tells the Compositor to create a TextureHost for this TextureClient.
@@ -160,9 +166,9 @@ public:
    */
   virtual void RemoveTexture(TextureClient* aTexture);
 
-  static RefPtr<CompositableClient> FromIPDLActor(PCompositableChild* aActor);
+  virtual ContentClientRemote* AsContentClientRemote() { return nullptr; }
 
-  void InitIPDLActor(PCompositableChild* aActor, uint64_t aAsyncID = 0);
+  void InitIPDL(const CompositableHandle& aHandle);
 
   TextureFlags GetTextureFlags() const { return mTextureFlags; }
 
@@ -174,14 +180,14 @@ public:
                                 TextureClient* aTexture,
                                 TextureDumpMode aCompress);
 protected:
-  RefPtr<CompositableChild> mCompositableChild;
   RefPtr<CompositableForwarder> mForwarder;
   // Some layers may want to enforce some flags to all their textures
   // (like disallowing tiling)
   TextureFlags mTextureFlags;
   RefPtr<TextureClientRecycleAllocator> mTextureClientRecycler;
 
-  uint64_t mAsyncID;
+  CompositableHandle mHandle;
+  bool mIsAsync;
 
   friend class CompositableChild;
 };

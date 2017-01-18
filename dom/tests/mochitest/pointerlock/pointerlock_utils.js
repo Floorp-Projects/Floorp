@@ -103,18 +103,18 @@ function addFullscreenChangeContinuation(type, callback, inDoc) {
     requestAnimationFrame(() => setTimeout(() => callback(event), 0), 0);
   }
   function onFullscreenChange(event) {
-    doc.removeEventListener("fullscreenchange", onFullscreenChange, false);
+    doc.removeEventListener("fullscreenchange", onFullscreenChange);
     if (checkCondition()) {
       invokeCallback(event);
       return;
     }
     function onResize() {
       if (checkCondition()) {
-        topWin.removeEventListener("resize", onResize, false);
+        topWin.removeEventListener("resize", onResize);
         invokeCallback(event);
       }
     }
-    topWin.addEventListener("resize", onResize, false);
+    topWin.addEventListener("resize", onResize);
   }
-  doc.addEventListener("fullscreenchange", onFullscreenChange, false);
+  doc.addEventListener("fullscreenchange", onFullscreenChange);
 }

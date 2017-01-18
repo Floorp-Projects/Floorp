@@ -4,7 +4,7 @@
 <script>
 function runTest() {
   var v = document.createElement('video');
-  v.addEventListener('loadeddata', function(){setTimeout(function(){document.documentElement.className = '';}, 0);}, false);
+  v.addEventListener('loadeddata', function(){setTimeout(function(){document.documentElement.className = '';}, 0);});
   v.id = 'v';
   v.src = "black140x100.ogv";
   v.poster = "blue250x200.png";

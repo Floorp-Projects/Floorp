@@ -27,7 +27,7 @@ function runTests() {
   ok(div, "Parent exists");
 
   var ifr = document.createElement("iframe");
-  ifr.addEventListener("load", iframeLoaded, false);
+  ifr.addEventListener("load", iframeLoaded);
   ifr.setAttribute('src', "imagebitmap_structuredclone_iframe.html");
   div.appendChild(ifr);
 

@@ -176,10 +176,10 @@ exports.testSideBarIsShowingInNewWindows = function*(assert) {
       end();
     }
     else {
-      sb.addEventListener('DOMWindowCreated', end, false);
+      sb.addEventListener('DOMWindowCreated', end);
     }
     function end () {
-      sb.removeEventListener('DOMWindowCreated', end, false);
+      sb.removeEventListener('DOMWindowCreated', end);
       resolve();
     }
   })
@@ -1096,9 +1096,9 @@ exports.testSidebarLeakCheckDestroyAfterAttach = function*(assert) {
   yield new Promise(resolve => {
     let panelBrowser = window.document.getElementById('sidebar').contentDocument.getElementById('web-panels-browser');
     panelBrowser.contentWindow.addEventListener('unload', function onUnload() {
-      panelBrowser.contentWindow.removeEventListener('unload', onUnload, false);
+      panelBrowser.contentWindow.removeEventListener('unload', onUnload);
       resolve();
-    }, false);
+    });
     sidebar.destroy();
   });
 
@@ -1138,9 +1138,9 @@ exports.testSidebarLeakCheckUnloadAfterAttach = function*(assert) {
   let panelBrowser = window.document.getElementById('sidebar').contentDocument.getElementById('web-panels-browser');
   yield new Promise(resolve => {
     panelBrowser.contentWindow.addEventListener('unload', function onUnload() {
-      panelBrowser.contentWindow.removeEventListener('unload', onUnload, false);
+      panelBrowser.contentWindow.removeEventListener('unload', onUnload);
       resolve();
-    }, false);
+    });
     loader.unload();
   });
 

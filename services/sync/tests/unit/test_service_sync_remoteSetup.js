@@ -16,7 +16,7 @@ function run_test() {
 
   let guidSvc = new FakeGUIDService();
   let clients = new ServerCollection();
-  let meta_global = new ServerWBO('global');
+  let meta_global = new ServerWBO("global");
 
   let collectionsHelper = track_collections_helper();
   let upd = collectionsHelper.with_updated_collection;

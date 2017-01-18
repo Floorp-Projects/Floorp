@@ -1042,7 +1042,7 @@ BookmarkExporter.prototype = {
   },
 
   _writeAttribute(aName, aValue) {
-    this._write(' ' + aName + '="' + aValue + '"');
+    this._write(" " + aName + '="' + aValue + '"');
   },
 
   _writeLine(aText) {

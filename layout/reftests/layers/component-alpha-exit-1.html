@@ -5,12 +5,12 @@
 document.addEventListener("MozReftestInvalidate", function scrollOnePixelDown () {
   var scrollbox = document.getElementById("scrollbox");
   window.addEventListener("MozAfterPaint", function scrollDownAllTheWay() {
-    window.removeEventListener("MozAfterPaint", arguments.callee, false);
+    window.removeEventListener("MozAfterPaint", arguments.callee);
     scrollbox.scrollTop = 1000;
     document.documentElement.className = "";
-  }, false);
+  });
   scrollbox.scrollTop = 1; // activate scroll layer
-}, false);
+});
 </script>
 <style>
 #scrollbox {

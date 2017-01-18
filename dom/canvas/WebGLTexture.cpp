@@ -33,12 +33,12 @@ Mutable(const T& x)
 }
 
 void
-WebGLTexture::ImageInfo::Clear()
+WebGLTexture::ImageInfo::Clear(const char* funcName)
 {
     if (!IsDefined())
         return;
 
-    OnRespecify();
+    OnRespecify(funcName);
 
     Mutable(mFormat) = LOCAL_GL_NONE;
     Mutable(mWidth) = 0;
@@ -48,8 +48,8 @@ WebGLTexture::ImageInfo::Clear()
     MOZ_ASSERT(!IsDefined());
 }
 
-WebGLTexture::ImageInfo&
-WebGLTexture::ImageInfo::operator =(const ImageInfo& a)
+void
+WebGLTexture::ImageInfo::Set(const char* funcName, const ImageInfo& a)
 {
     MOZ_ASSERT(a.IsDefined());
 
@@ -62,9 +62,7 @@ WebGLTexture::ImageInfo::operator =(const ImageInfo& a)
 
     // But *don't* transfer mAttachPoints!
     MOZ_ASSERT(a.mAttachPoints.empty());
-    OnRespecify();
-
-    return *this;
+    OnRespecify(funcName);
 }
 
 bool
@@ -91,10 +89,10 @@ WebGLTexture::ImageInfo::RemoveAttachPoint(WebGLFBAttachPoint* attachPoint)
 }
 
 void
-WebGLTexture::ImageInfo::OnRespecify() const
+WebGLTexture::ImageInfo::OnRespecify(const char* funcName) const
 {
     for (auto cur : mAttachPoints) {
-        cur->OnBackingStoreRespecified();
+        cur->OnBackingStoreRespecified(funcName);
     }
 }
 
@@ -149,8 +147,9 @@ WebGLTexture::WebGLTexture(WebGLContext* webgl, GLuint tex)
 void
 WebGLTexture::Delete()
 {
+    const char funcName[] = "WebGLTexture::Delete";
     for (auto& cur : mImageInfoArr) {
-        cur.Clear();
+        cur.Clear(funcName);
     }
 
     mContext->MakeContextCurrent();
@@ -173,18 +172,20 @@ WebGLTexture::MemoryUsage() const
 }
 
 void
-WebGLTexture::SetImageInfo(ImageInfo* target, const ImageInfo& newInfo)
+WebGLTexture::SetImageInfo(const char* funcName, ImageInfo* target,
+                           const ImageInfo& newInfo)
 {
-    *target = newInfo;
+    target->Set(funcName, newInfo);
 
     InvalidateResolveCache();
 }
 
 void
-WebGLTexture::SetImageInfosAtLevel(uint32_t level, const ImageInfo& newInfo)
+WebGLTexture::SetImageInfosAtLevel(const char* funcName, uint32_t level,
+                                   const ImageInfo& newInfo)
 {
     for (uint8_t i = 0; i < mFaceCount; i++) {
-        ImageInfoAtFace(i, level) = newInfo;
+        ImageInfoAtFace(i, level).Set(funcName, newInfo);
     }
 
     InvalidateResolveCache();
@@ -773,7 +774,8 @@ WebGLTexture::ClampLevelBaseAndMax()
 }
 
 void
-WebGLTexture::PopulateMipChain(uint32_t firstLevel, uint32_t lastLevel)
+WebGLTexture::PopulateMipChain(const char* funcName, uint32_t firstLevel,
+                               uint32_t lastLevel)
 {
     const ImageInfo& baseImageInfo = ImageInfoAtFace(0, firstLevel);
     MOZ_ASSERT(baseImageInfo.IsDefined());
@@ -804,7 +806,7 @@ WebGLTexture::PopulateMipChain(uint32_t firstLevel, uint32_t lastLevel)
         const ImageInfo cur(baseImageInfo.mFormat, refWidth, refHeight, refDepth,
                             baseImageInfo.IsDataInitialized());
 
-        SetImageInfosAtLevel(level, cur);
+        SetImageInfosAtLevel(funcName, level, cur);
     }
 }
 
@@ -854,6 +856,7 @@ WebGLTexture::BindTexture(TexTarget texTarget)
 void
 WebGLTexture::GenerateMipmap(TexTarget texTarget)
 {
+    const char funcName[] = "generateMipmap";
     // GLES 3.0.4 p160:
     // "Mipmap generation replaces texel array levels level base + 1 through q with arrays
     //  derived from the level base array, regardless of their previous contents. All
@@ -861,33 +864,35 @@ WebGLTexture::GenerateMipmap(TexTarget texTarget)
     //  computation."
     const ImageInfo& baseImageInfo = BaseImageInfo();
     if (!baseImageInfo.IsDefined()) {
-        mContext->ErrorInvalidOperation("generateMipmap: The base level of the texture is"
-                                        " not defined.");
+        mContext->ErrorInvalidOperation("%s: The base level of the texture is not"
+                                        " defined.",
+                                        funcName);
         return;
     }
 
     if (IsCubeMap() && !IsCubeComplete()) {
-      mContext->ErrorInvalidOperation("generateMipmap: Cube maps must be \"cube"
-                                      " complete\".");
+      mContext->ErrorInvalidOperation("%s: Cube maps must be \"cube complete\".",
+                                      funcName);
       return;
     }
 
     if (!mContext->IsWebGL2() && !baseImageInfo.IsPowerOfTwo()) {
-        mContext->ErrorInvalidOperation("generateMipmap: The base level of the texture"
-                                        " does not have power-of-two dimensions.");
+        mContext->ErrorInvalidOperation("%s: The base level of the texture does not have"
+                                        " power-of-two dimensions.",
+                                        funcName);
         return;
     }
 
     auto format = baseImageInfo.mFormat->format;
     if (format->compression) {
-        mContext->ErrorInvalidOperation("generateMipmap: Texture data at base level is"
-                                        " compressed.");
+        mContext->ErrorInvalidOperation("%s: Texture data at base level is compressed.",
+                                        funcName);
         return;
     }
 
     if (format->d) {
-        mContext->ErrorInvalidOperation("generateMipmap: Depth textures are not"
-                                        " supported.");
+        mContext->ErrorInvalidOperation("%s: Depth textures are not supported.",
+                                        funcName);
         return;
     }
 
@@ -910,9 +915,10 @@ WebGLTexture::GenerateMipmap(TexTarget texTarget)
     }
 
     if (!canGenerateMipmap) {
-        mContext->ErrorInvalidOperation("generateMipmap: Texture at base level is not unsized"
+        mContext->ErrorInvalidOperation("%s: Texture at base level is not unsized"
                                         " internal format or is not"
-                                        " color-renderable or texture-filterable.");
+                                        " color-renderable or texture-filterable.",
+                                        funcName);
         return;
     }
 
@@ -940,7 +946,7 @@ WebGLTexture::GenerateMipmap(TexTarget texTarget)
     // Note that we don't use MaxEffectiveMipmapLevel() here, since that returns
     // mBaseMipmapLevel if the min filter doesn't require mipmaps.
     const uint32_t maxLevel = mBaseMipmapLevel + baseImageInfo.PossibleMipmapLevels() - 1;
-    PopulateMipChain(mBaseMipmapLevel, maxLevel);
+    PopulateMipChain(funcName, mBaseMipmapLevel, maxLevel);
 }
 
 JS::Value

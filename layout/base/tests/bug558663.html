@@ -22,7 +22,7 @@ var compareSnapshots = parent.compareSnapshots;
 var snapshotWindow = parent.snapshotWindow;
 var synthesizeMouse = parent.synthesizeMouse;
 
-window.addEventListener("load", runTest, false);
+window.addEventListener("load", runTest);
 
 function checkSnapshots(s1, s2, shouldBeEqual, testName) {
   var res = compareSnapshots(s1, s2, shouldBeEqual);

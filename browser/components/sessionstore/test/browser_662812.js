@@ -5,13 +5,13 @@ function test() {
   waitForExplicitFinish();
 
   window.addEventListener("SSWindowStateBusy", function onBusy() {
-    window.removeEventListener("SSWindowStateBusy", onBusy, false);
+    window.removeEventListener("SSWindowStateBusy", onBusy);
 
     let state = JSON.parse(ss.getWindowState(window));
     ok(state.windows[0].busy, "window is busy");
 
     window.addEventListener("SSWindowStateReady", function onReady() {
-      window.removeEventListener("SSWindowStateReady", onReady, false);
+      window.removeEventListener("SSWindowStateReady", onReady);
 
       let state = JSON.parse(ss.getWindowState(window));
       ok(!state.windows[0].busy, "window is not busy");
@@ -20,8 +20,8 @@ function test() {
         gBrowser.removeTab(gBrowser.tabs[1]);
         finish();
       });
-    }, false);
-  }, false);
+    });
+  });
 
   // create a new tab
   let tab = gBrowser.addTab("about:mozilla");

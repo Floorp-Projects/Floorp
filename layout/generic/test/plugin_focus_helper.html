@@ -105,8 +105,8 @@ function handleEvent(event) {
 var elems = ["input", "p1", "p2"];
 for (var i = 0; i < elems.length; ++i) {
   var e = document.getElementById(elems[i]);
-  e.addEventListener("focus", handleEvent, false);
-  e.addEventListener("blur", handleEvent, false);
+  e.addEventListener("focus", handleEvent);
+  e.addEventListener("blur", handleEvent);
 }
 
 function doTest() {

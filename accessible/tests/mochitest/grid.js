@@ -64,8 +64,8 @@ function grid(aTableIdentifier)
 
   this.initGrid = function initGrid()
   {
-    this.table.addEventListener("keypress", this, false);
-    this.table.addEventListener("click", this, false);
+    this.table.addEventListener("keypress", this);
+    this.table.addEventListener("click", this);
   }
 
   this.handleEvent = function handleEvent(aEvent)

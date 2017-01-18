@@ -5,9 +5,9 @@
 // First, parse and save the incoming arguments ("?storage=name&context=key")
 // Note: window.location.search doesn't work with nsSimpleURIs used for about:* addresses.
 var search = window.location.href.match(/^.*\?(.*)$/);
-var searchParams = new URLSearchParams(search ? search[1] : '');
-var storage = searchParams.get('storage');
-var cacheContext = searchParams.get('context');
+var searchParams = new URLSearchParams(search ? search[1] : "");
+var storage = searchParams.get("storage");
+var cacheContext = searchParams.get("context");
 
 // The context is in a format as used by the HTTP cache v2 back end
 if (cacheContext)
@@ -19,25 +19,25 @@ if (appId)
 function $(id) { return document.getElementById(id) || {}; }
 
 // Initialize the context UI controls at the start according what we got in the "context=" argument
-addEventListener('DOMContentLoaded', function() {
-  $('anon').checked = !!isAnon;
-  $('inbrowser').checked = !!isInBrowser;
-  $('appid').value = appId || '';
-  $('priv').checked = !!isPrivate;
+addEventListener("DOMContentLoaded", function() {
+  $("anon").checked = !!isAnon;
+  $("inbrowser").checked = !!isInBrowser;
+  $("appid").value = appId || "";
+  $("priv").checked = !!isPrivate;
 }, false);
 
 // When user presses the [Update] button, we build a new context key according the UI control
 // values and navigate to a new about:cache?storage=<name>&context=<key> URL.
 function navigate() {
-  context = '';
-  if ($('anon').checked)
-    context += 'a,';
-  if ($('inbrowser').checked)
-    context += 'b,';
-  if ($('appid').value)
-    context += 'i' + $('appid').value + ',';
-  if ($('priv').checked)
-    context += 'p,';
+  context = "";
+  if ($("anon").checked)
+    context += "a,";
+  if ($("inbrowser").checked)
+    context += "b,";
+  if ($("appid").value)
+    context += "i" + $("appid").value + ",";
+  if ($("priv").checked)
+    context += "p,";
 
-  window.location.href = 'about:cache?storage=' + storage + '&context=' + context;
+  window.location.href = "about:cache?storage=" + storage + "&context=" + context;
 }

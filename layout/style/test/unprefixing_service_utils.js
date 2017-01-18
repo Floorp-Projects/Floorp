@@ -83,5 +83,5 @@ function registerPostMessageListener(aTestCompleteCallback) {
     }
   };
 
-  window.addEventListener("message", receiveMessage, false);
+  window.addEventListener("message", receiveMessage);
 }

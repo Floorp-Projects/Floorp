@@ -65,14 +65,14 @@ Client.defaultSendOOB = ({ authResult, oob }) => {
       let win = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDOMWindow);
       win.addEventListener("load", function listener() {
-        win.removeEventListener("load", listener, false);
+        win.removeEventListener("load", listener);
         if (win.document.documentElement.getAttribute("id") != "commonDialog") {
           return;
         }
         // Found the window
         promptWindow = win;
         Services.wm.removeListener(windowListener);
-      }, false);
+      });
     },
     onCloseWindow() {},
     onWindowTitleChange() {}

@@ -19,7 +19,7 @@ SimpleTest.requestFlakyTimeout("untriaged");
 
 // A postMessage handler that is used by sandboxed iframes without
 // 'allow-same-origin' to communicate pass/fail back to this main page.
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 
 function receiveMessage(event) {
   switch (event.data.type) {

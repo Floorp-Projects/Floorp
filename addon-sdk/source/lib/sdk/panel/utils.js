@@ -331,7 +331,7 @@ function make(document, options) {
   for (let event of ["popupshowing", "popuphiding", "popupshown", "popuphidden"])
     panel.addEventListener(event, onPanelStateChange);
 
-  panel.addEventListener("click", onPanelClick, false);
+  panel.addEventListener("click", onPanelClick);
 
   // Panel content document can be either in panel `viewFrame` or in
   // a `backgroundFrame` depending on panel state. Listeners are set

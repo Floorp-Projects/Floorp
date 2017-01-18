@@ -52,9 +52,9 @@ window.location = "data:application/vnd.mozilla.xul+xml;charset=utf-8,<window/>"
 // used by add-on runner to defer add-on loading until window is ready.
 var { promise, resolve } = defer();
 eventTarget.addEventListener("DOMContentLoaded", function handler(event) {
-  eventTarget.removeEventListener("DOMContentLoaded", handler, false);
+  eventTarget.removeEventListener("DOMContentLoaded", handler);
   resolve();
-}, false);
+});
 
 exports.ready = promise;
 exports.window = window;

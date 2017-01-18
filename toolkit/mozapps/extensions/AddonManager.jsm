@@ -23,7 +23,7 @@ if ("@mozilla.org/xre/app-info;1" in Cc) {
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
-const MOZ_COMPATIBILITY_NIGHTLY = !['aurora', 'beta', 'release', 'esr'].includes(AppConstants.MOZ_UPDATE_CHANNEL);
+const MOZ_COMPATIBILITY_NIGHTLY = !["aurora", "beta", "release", "esr"].includes(AppConstants.MOZ_UPDATE_CHANNEL);
 
 const PREF_BLOCKLIST_PINGCOUNTVERSION = "extensions.blocklist.pingCountVersion";
 const PREF_DEFAULT_PROVIDERS_ENABLED  = "extensions.defaultProviders.enabled";
@@ -754,7 +754,7 @@ var AddonManagerInternal = {
 
     logger.debug(`Starting provider: ${providerName(aProvider)}`);
     callProvider(aProvider, "startup", null, aAppChanged, aOldAppVersion, aOldPlatformVersion);
-    if ('shutdown' in aProvider) {
+    if ("shutdown" in aProvider) {
       let name = providerName(aProvider);
       let AMProviderShutdown = () => {
         // If the provider has been unregistered, it will have been removed from

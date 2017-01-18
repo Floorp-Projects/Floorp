@@ -32,14 +32,14 @@ function receiveMessage(evt)
   SimpleTest.finish();
 }
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 
 function run()
 {
   window.postMessage("generate-event", "http://mochi.test:8888");
 }
 
-window.addEventListener("load", run, false);
+window.addEventListener("load", run);
 </script>
 </pre>
 </body>

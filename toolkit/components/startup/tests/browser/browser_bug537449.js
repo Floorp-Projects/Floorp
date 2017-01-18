@@ -29,7 +29,7 @@ function test() {
       btnStay.click();
     });
 
-    let appStartup = Cc['@mozilla.org/toolkit/app-startup;1'].
+    let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].
                        getService(Ci.nsIAppStartup);
     appStartup.quit(Ci.nsIAppStartup.eAttemptQuit);
     ok(seenDialog, "Should have seen a prompt dialog");

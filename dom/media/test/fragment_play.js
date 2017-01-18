@@ -59,9 +59,9 @@ function onEnded() {
   finish();
 }
 
-v.addEventListener("ended", onEnded, false);
-v.addEventListener("loadedmetadata", onLoadedMetadata, false);
-v.addEventListener("seeked", onSeeked, false);
-v.addEventListener("pause", onPause, false);
-v.addEventListener("timeupdate", onTimeUpdate, false);
+v.addEventListener("ended", onEnded);
+v.addEventListener("loadedmetadata", onLoadedMetadata);
+v.addEventListener("seeked", onSeeked);
+v.addEventListener("pause", onPause);
+v.addEventListener("timeupdate", onTimeUpdate);
 }

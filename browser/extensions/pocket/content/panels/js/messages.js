@@ -13,11 +13,11 @@ var pktPanelMessaging = (function() {
  }
 
  function prefixedMessageId(messageId) {
-   return 'PKT_' + messageId;
+   return "PKT_" + messageId;
  }
 
  function panelPrefixedMessageId(panelId, messageId) {
-   return prefixedMessageId(panelId + '_' + messageId);
+   return prefixedMessageId(panelId + "_" + messageId);
  }
 
  function addMessageListener(panelId, messageId, callback) {
@@ -28,7 +28,7 @@ var pktPanelMessaging = (function() {
 			// TODO: Figure out why e.target.parentNode is null
 			// e.target.parentNode.removeChild(e.target);
 
-		}, false);
+		});
 
 	}
 

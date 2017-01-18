@@ -63,6 +63,7 @@ typedef struct nr_ice_stun_server_ {
   } u;
   int id;
   int transport;
+  int tls; /* Whether to use TLS or not */
 } nr_ice_stun_server;
 
 typedef struct nr_ice_turn_server_ {

@@ -1162,7 +1162,7 @@ ContentPrefService.prototype = {
       } else {
         for (let i = aOldVersion; i < aNewVersion; i++) {
           let migrationName = "_dbMigrate" + i + "To" + (i + 1);
-          if (typeof this[migrationName] != 'function') {
+          if (typeof this[migrationName] != "function") {
             throw ("no migrator function from version " + aOldVersion + " to version " + aNewVersion);
           }
           this[migrationName](aDBConnection);

@@ -28,7 +28,7 @@ var SnapshotsListView = Heritage.extend(WidgetMethods, {
 
     window.on(EVENTS.SNAPSHOT_RECORDING_FINISHED, this._enableRecordButton);
     this.emptyText = L10N.getStr("noSnapshotsText");
-    this.widget.addEventListener("select", this._onSelect, false);
+    this.widget.addEventListener("select", this._onSelect);
   },
 
   /**
@@ -37,7 +37,7 @@ var SnapshotsListView = Heritage.extend(WidgetMethods, {
   destroy: function () {
     clearNamedTimeout("canvas-actor-recording");
     window.off(EVENTS.SNAPSHOT_RECORDING_FINISHED, this._enableRecordButton);
-    this.widget.removeEventListener("select", this._onSelect, false);
+    this.widget.removeEventListener("select", this._onSelect);
   },
 
   /**
@@ -67,7 +67,7 @@ var SnapshotsListView = Heritage.extend(WidgetMethods, {
 
     let save = document.createElement("label");
     save.className = "plain snapshot-item-save";
-    save.addEventListener("click", this._onSaveButtonClick, false);
+    save.addEventListener("click", this._onSaveButtonClick);
 
     let spacer = document.createElement("spacer");
     spacer.setAttribute("flex", "1");

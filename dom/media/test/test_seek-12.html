@@ -46,9 +46,9 @@ function seekEnded() {
   finish();
 }
 
-v.addEventListener("loadedmetadata", startTest, false);
-v.addEventListener("seeking", seekStarted, false);
-v.addEventListener("seeked", seekEnded, false);
+v.addEventListener("loadedmetadata", startTest);
+v.addEventListener("seeking", seekStarted);
+v.addEventListener("seeked", seekEnded);
 }
 
 manager.runTests(createTestArray(), startTest);

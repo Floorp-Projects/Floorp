@@ -26,7 +26,7 @@ WorkersView.prototype = Heritage.extend(WidgetMethods, {
       showArrows: true,
     });
     this.emptyText = L10N.getStr("noWorkersText");
-    this.widget.addEventListener("select", this._onWorkerSelect, false);
+    this.widget.addEventListener("select", this._onWorkerSelect);
   },
 
   addWorker: function (workerForm) {

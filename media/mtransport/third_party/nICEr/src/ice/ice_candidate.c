@@ -666,6 +666,14 @@ static int nr_ice_candidate_resolved_cb(void *cb_arg, nr_transport_addr *addr)
     if(r=nr_transport_addr_copy(&cand->stun_server_addr,addr))
       ABORT(r);
 
+    if (cand->stun_server->tls) {
+      /* Copy over the DNS name; needed for TLS. There is already a null at the
+       * end of the buffer, leave it there. */
+      strncpy(cand->stun_server_addr.tls_host,
+              cand->stun_server->u.dnsname.host,
+              sizeof(cand->stun_server_addr.tls_host) - 1);
+    }
+
     if (cand->tcp_type == TCP_TYPE_PASSIVE || cand->tcp_type == TCP_TYPE_SO){
       if (r=nr_socket_multi_tcp_stun_server_connect(cand->osock, addr))
         ABORT(r);

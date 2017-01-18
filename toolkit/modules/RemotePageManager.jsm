@@ -282,7 +282,7 @@ function ChromeMessagePort(browser, portID) {
   this.publicPort = publicMessagePort(this);
 
   this.swapBrowsers = this.swapBrowsers.bind(this);
-  this._browser.addEventListener("SwapDocShells", this.swapBrowsers, false);
+  this._browser.addEventListener("SwapDocShells", this.swapBrowsers);
 }
 
 ChromeMessagePort.prototype = Object.create(MessagePort.prototype);
@@ -301,12 +301,12 @@ ChromeMessagePort.prototype.swapBrowsers = function({ detail: newBrowser }) {
   if (this._browser.permanentKey != this._permanentKey)
     return;
 
-  this._browser.removeEventListener("SwapDocShells", this.swapBrowsers, false);
+  this._browser.removeEventListener("SwapDocShells", this.swapBrowsers);
 
   this._browser = newBrowser;
   this.swapMessageManager(newBrowser.messageManager);
 
-  this._browser.addEventListener("SwapDocShells", this.swapBrowsers, false);
+  this._browser.addEventListener("SwapDocShells", this.swapBrowsers);
 }
 
 // Called when a message manager has been disconnected indicating that the
@@ -344,7 +344,7 @@ ChromeMessagePort.prototype.message = function({ data: messagedata }) {
 ChromeMessagePort.prototype.destroy = function() {
   try {
     this._browser.removeEventListener(
-        "SwapDocShells", this.swapBrowsers, false);
+        "SwapDocShells", this.swapBrowsers);
   } catch (e) {
     // It's possible the browser instance is already dead so we can just ignore
     // this error.
@@ -379,9 +379,9 @@ function ChildMessagePort(contentFrame, window) {
   // Send a message for load events
   let loadListener = () => {
     this.sendAsyncMessage("RemotePage:Load");
-    window.removeEventListener("load", loadListener, false);
+    window.removeEventListener("load", loadListener);
   };
-  window.addEventListener("load", loadListener, false);
+  window.addEventListener("load", loadListener);
 
   // Destroy the port when the window is unloaded
   window.addEventListener("unload", () => {
@@ -392,7 +392,7 @@ function ChildMessagePort(contentFrame, window) {
       // destroyed
     }
     this.destroy();
-  }, false);
+  });
 
   // Tell the main process to set up its side of the message pipe.
   this.messageManager.sendAsyncMessage("RemotePage:InitPort", {

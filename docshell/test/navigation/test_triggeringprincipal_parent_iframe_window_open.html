@@ -35,7 +35,7 @@ const LOADING_PRINCIPAL_URI = TRIGGERING_PRINCIPAL_URI;
 var testframe = document.getElementById("testframe");
 
 function checkResults() {
-  testframe.removeEventListener('load', checkResults, false);
+  testframe.removeEventListener('load', checkResults);
 
   var channel = SpecialPowers.wrap(testframe.contentDocument).docShell.currentDocumentChannel;
   var triggeringPrincipal = channel.loadInfo.triggeringPrincipal.URI.asciiSpec;
@@ -54,15 +54,15 @@ function checkResults() {
 }
 
 function performNavigation() {
-  testframe.removeEventListener('load', performNavigation, false);
-  testframe.addEventListener('load', checkResults, false);
+  testframe.removeEventListener('load', performNavigation);
+  testframe.addEventListener('load', checkResults);
   win = window.open("file_triggeringprincipal_parent_iframe_window_open_nav.html", "testframe");
 }
 
 // start the test
 SimpleTest.waitForExplicitFinish();
 
-testframe.addEventListener('load', performNavigation, false);
+testframe.addEventListener('load', performNavigation);
 
 </script>
 </pre>

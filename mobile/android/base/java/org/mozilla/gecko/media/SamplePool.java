@@ -13,46 +13,52 @@ import java.util.ArrayList;
 import java.util.List;
 
 final class SamplePool {
-    private final class Impl {
+    private static final class Impl {
         private final String mName;
         private int mNextId = 0;
         private int mDefaultBufferSize = 4096;
         private final List<Sample> mRecycledSamples = new ArrayList<>();
+        private final boolean mBufferless;
 
-        private Impl(String name) {
+        private Impl(String name, boolean bufferless) {
             mName = name;
+            mBufferless = bufferless;
         }
 
         private void setDefaultBufferSize(int size) {
+            if (mBufferless) {
+                throw new IllegalStateException("Setting buffer size of a bufferless pool is not allowed");
+            }
             mDefaultBufferSize = size;
         }
 
-        private synchronized Sample allocate(int size)  {
-            Sample sample;
+        private synchronized Sample obtain(int size)  {
             if (!mRecycledSamples.isEmpty()) {
-                sample = mRecycledSamples.remove(0);
-                sample.info.set(0, 0, 0, 0);
-            } else {
-                SharedMemory shm = null;
-                try {
-                    shm = new SharedMemory(mNextId++, Math.max(size, mDefaultBufferSize));
-                } catch (NoSuchMethodException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                if (shm != null) {
-                    sample = Sample.create(shm);
-                } else {
-                    sample = Sample.create();
-                }
+                return mRecycledSamples.remove(0);
             }
 
-            return sample;
+            if (mBufferless) {
+                return Sample.create();
+            } else {
+                return allocateSharedMemorySample(size);
+            }
+        }
+
+        private Sample allocateSharedMemorySample(int size) {
+            SharedMemory shm = null;
+            try {
+                shm = new SharedMemory(mNextId++, Math.max(size, mDefaultBufferSize));
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return shm != null ? Sample.create(shm) : Sample.create();
         }
 
         private synchronized void recycle(Sample recycled) {
-            if (recycled.buffer.capacity() >= mDefaultBufferSize) {
+            if (mBufferless || recycled.buffer.capacity() >= mDefaultBufferSize) {
                 mRecycledSamples.add(recycled);
             } else {
                 recycled.dispose();
@@ -76,9 +82,10 @@ final class SamplePool {
     private final Impl mInputs;
     private final Impl mOutputs;
 
-    /* package */ SamplePool(String name) {
-        mInputs = new Impl(name + " input buffer pool");
-        mOutputs = new Impl(name + " output buffer pool");
+    /* package */ SamplePool(String name, boolean renderToSurface) {
+        mInputs = new Impl(name + " input sample pool", false);
+        // Buffers are useless when rendering to surface.
+        mOutputs = new Impl(name + " output sample pool", renderToSurface);
     }
 
     /* package */ void setInputBufferSize(int size) {
@@ -90,11 +97,13 @@ final class SamplePool {
     }
 
     /* package */ Sample obtainInput(int size) {
-        return mInputs.allocate(size);
+        Sample input = mInputs.obtain(size);
+        input.info.set(0, 0, 0, 0);
+        return input;
     }
 
     /* package */ Sample obtainOutput(MediaCodec.BufferInfo info) {
-        Sample output = mOutputs.allocate(info.size);
+        Sample output = mOutputs.obtain(info.size);
         output.info.set(0, info.size, info.presentationTimeUs, info.flags);
         return output;
     }

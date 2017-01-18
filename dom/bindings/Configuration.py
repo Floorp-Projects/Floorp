@@ -568,17 +568,29 @@ class Descriptor(DescriptorProvider):
         return self.isGlobal() and self.supportsNamedProperties()
 
     def getExtendedAttributes(self, member, getter=False, setter=False):
-        def ensureValidThrowsExtendedAttribute(attr):
+        def ensureValidBoolExtendedAttribute(attr, name):
             if (attr is not None and attr is not True):
-                raise TypeError("Unknown value for 'Throws': " + attr[0])
+                raise TypeError("Unknown value for '%s': %s" % (name, attr[0]))
+
+        def ensureValidThrowsExtendedAttribute(attr):
+            ensureValidBoolExtendedAttribute(attr, "Throws")
+
+        def ensureValidCanOOMExtendedAttribute(attr):
+            ensureValidBoolExtendedAttribute(attr, "CanOOM")
 
         def maybeAppendInfallibleToAttrs(attrs, throws):
             ensureValidThrowsExtendedAttribute(throws)
             if throws is None:
                 attrs.append("infallible")
 
+        def maybeAppendCanOOMToAttrs(attrs, canOOM):
+            ensureValidCanOOMExtendedAttribute(canOOM)
+            if canOOM is not None:
+                attrs.append("canOOM")
+
         name = member.identifier.name
         throws = self.interface.isJSImplemented() or member.getExtendedAttribute("Throws")
+        canOOM = member.getExtendedAttribute("CanOOM")
         if member.isMethod():
             # JSObject-returning [NewObject] methods must be fallible,
             # since they have to (fallibly) allocate the new JSObject.
@@ -587,6 +599,7 @@ class Descriptor(DescriptorProvider):
                 throws = True
             attrs = self.extendedAttributes['all'].get(name, [])
             maybeAppendInfallibleToAttrs(attrs, throws)
+            maybeAppendCanOOMToAttrs(attrs, canOOM)
             return attrs
 
         assert member.isAttr()
@@ -597,6 +610,10 @@ class Descriptor(DescriptorProvider):
             throwsAttr = "GetterThrows" if getter else "SetterThrows"
             throws = member.getExtendedAttribute(throwsAttr)
         maybeAppendInfallibleToAttrs(attrs, throws)
+        if canOOM is None:
+            canOOMAttr = "GetterCanOOM" if getter else "SetterCanOOM"
+            canOOM = member.getExtendedAttribute(canOOMAttr)
+        maybeAppendCanOOMToAttrs(attrs, canOOM)
         return attrs
 
     def supportsIndexedProperties(self):

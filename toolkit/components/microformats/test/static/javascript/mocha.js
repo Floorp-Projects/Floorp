@@ -2936,7 +2936,7 @@ function text(el, str) {
 
 function on(el, event, fn) {
   if (el.addEventListener) {
-    el.addEventListener(event, fn, false);
+    el.addEventListener(event, fn);
   } else {
     el.attachEvent('on' + event, fn);
   }

@@ -52,7 +52,7 @@ function promiseTabLoadEvent(tab, url) {
 }
 
 function waitForCondition(condition, nextTest, errorMsg, retryTimes) {
-  retryTimes = typeof retryTimes !== 'undefined' ? retryTimes : 30;
+  retryTimes = typeof retryTimes !== "undefined" ? retryTimes : 30;
   var tries = 0;
   var interval = setInterval(function() {
     if (tries >= retryTimes) {

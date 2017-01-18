@@ -91,11 +91,11 @@ function checkInvalidEvent()
     invalidEventForInvalidElement = true;
     ok(e.cancelable, "invalid event should be cancelable");
     ok(!e.bubbles, "invalid event should not bubble");
-  }, false);
+  });
 
   i2.addEventListener("invalid", function (e) {
     invalidEventForValidElement = true;
-  }, false);
+  });
 
   f.checkValidity();
 

@@ -25,7 +25,7 @@ const TOTAL_TESTS = 3;
 var test_counter = 0;
 
 // a postMessage handler to communicate the results back to the parent.
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 
 function receiveMessage(event)
 {

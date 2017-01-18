@@ -27,10 +27,10 @@ var fakeServerUrl = "http://localhost:" + fakeServer.port;
 const logsdir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
 
 const PROLONGED_ERROR_DURATION =
-  (Svc.Prefs.get('errorhandler.networkFailureReportTimeout') * 2) * 1000;
+  (Svc.Prefs.get("errorhandler.networkFailureReportTimeout") * 2) * 1000;
 
 const NON_PROLONGED_ERROR_DURATION =
-  (Svc.Prefs.get('errorhandler.networkFailureReportTimeout') / 2) * 1000;
+  (Svc.Prefs.get("errorhandler.networkFailureReportTimeout") / 2) * 1000;
 
 Service.engineManager.clear();
 

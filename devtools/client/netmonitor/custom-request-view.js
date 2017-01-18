@@ -29,7 +29,7 @@ CustomRequestView.prototype = {
 
     this.updateCustomRequestEvent = getKeyWithEvent(this.onUpdate.bind(this));
     $("#custom-pane").addEventListener("input",
-      this.updateCustomRequestEvent, false);
+      this.updateCustomRequestEvent);
   },
 
   /**
@@ -39,7 +39,7 @@ CustomRequestView.prototype = {
     dumpn("Destroying the CustomRequestView");
 
     $("#custom-pane").removeEventListener("input",
-      this.updateCustomRequestEvent, false);
+      this.updateCustomRequestEvent);
   },
 
   /**

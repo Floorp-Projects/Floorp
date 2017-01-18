@@ -50,14 +50,14 @@ function testWebM3(e) {
 
   function timeupdate() {
     gotTimeupdate = true;
-    v.removeEventListener("timeupdate", timeupdate, false);
+    v.removeEventListener("timeupdate", timeupdate);
   }
 
   function seekStarted() {
     if (completed)
       return;
 
-    v.addEventListener("timeupdate", timeupdate, false);
+    v.addEventListener("timeupdate", timeupdate);
     startPassed = true;
   }
 
@@ -73,8 +73,8 @@ function testWebM3(e) {
     manager.finished(v._token);
   }
 
-  v.addEventListener("seeking", seekStarted, false);
-  v.addEventListener("seeked", seekEnded, false);
+  v.addEventListener("seeking", seekStarted);
+  v.addEventListener("seeked", seekEnded);
 
   startTest()
 }
@@ -97,7 +97,7 @@ function fetch(url, fetched_callback) {
     }
   };
 
-  xhr.addEventListener("load", loaded, false);
+  xhr.addEventListener("load", loaded);
   xhr.send();
 }
 
@@ -106,7 +106,7 @@ function startTest(test, token) {
     var v = document.createElement('video');
     v._token = token;
     v.src = uri;
-    v.addEventListener("loadeddata", testWebM3, false);
+    v.addEventListener("loadeddata", testWebM3);
     document.body.appendChild(v);
   }
   manager.started(token);

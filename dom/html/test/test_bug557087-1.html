@@ -97,9 +97,9 @@ function checkClickEvent(aFieldset)
   aFieldset.disabled = true;
 
   aFieldset.addEventListener("click", function(aEvent) {
-    aEvent.target.removeEventListener("click", arguments.callee, false);
+    aEvent.target.removeEventListener("click", arguments.callee);
     clickHandled = true;
-  }, false);
+  });
 
   sendMouseEvent({type:'click'}, aFieldset);
   SimpleTest.executeSoon(function() {

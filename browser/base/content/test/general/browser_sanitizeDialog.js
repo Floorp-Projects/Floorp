@@ -786,7 +786,7 @@ WindowHelper.prototype = {
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
 
       win.addEventListener("load", function onload(event) {
-        win.removeEventListener("load", onload, false);
+        win.removeEventListener("load", onload);
 
         if (win.name !== "SanitizeDialog")
           return;
@@ -794,11 +794,11 @@ WindowHelper.prototype = {
         wh.win = win;
         loaded = true;
         executeSoon(() => wh.onload());
-      }, false);
+      });
 
       win.addEventListener("unload", function onunload(event) {
         if (win.name !== "SanitizeDialog") {
-          win.removeEventListener("unload", onunload, false);
+          win.removeEventListener("unload", onunload);
           return;
         }
 
@@ -806,7 +806,7 @@ WindowHelper.prototype = {
         if (!loaded)
           return;
 
-        win.removeEventListener("unload", onunload, false);
+        win.removeEventListener("unload", onunload);
         wh.win = win;
 
         // Some exceptions that reach here don't reach the test harness, but
@@ -818,7 +818,7 @@ WindowHelper.prototype = {
           yield PlacesTestUtils.promiseAsyncUpdates();
           wh._resolveClosed();
         });
-      }, false);
+      });
     }
     Services.ww.registerNotification(windowObserver);
     Services.ww.openWindow(null,

@@ -31,10 +31,10 @@ addLoadEvent(function() {
   var src = document.getElementById("source");
   ed.addEventListener("DOMSubtreeModified", function() {
     src.textContent = ed.innerHTML;
-  }, false);
+  });
   src.addEventListener("DOMSubtreeModified", function() {
     ed.innerHTML = ed.textContent;
-  }, false);
+  });
 
   // Simulate pressing Enter twice
   ed.focus();

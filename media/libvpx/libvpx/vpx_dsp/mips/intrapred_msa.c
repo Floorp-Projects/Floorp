@@ -11,10 +11,11 @@
 #include "./vpx_dsp_rtcd.h"
 #include "vpx_dsp/mips/macros_msa.h"
 
-#define IPRED_SUBS_UH2_UH(in0, in1, out0, out1) {  \
-  out0 = __msa_subs_u_h(out0, in0);                \
-  out1 = __msa_subs_u_h(out1, in1);                \
-}
+#define IPRED_SUBS_UH2_UH(in0, in1, out0, out1) \
+  {                                             \
+    out0 = __msa_subs_u_h(out0, in0);           \
+    out1 = __msa_subs_u_h(out1, in1);           \
+  }
 
 static void intra_predict_vert_4x4_msa(const uint8_t *src, uint8_t *dst,
                                        int32_t dst_stride) {
@@ -150,8 +151,8 @@ static void intra_predict_horiz_32x32_msa(const uint8_t *src, uint8_t *dst,
 }
 
 static void intra_predict_dc_4x4_msa(const uint8_t *src_top,
-                                     const uint8_t *src_left,
-                                     uint8_t *dst, int32_t dst_stride) {
+                                     const uint8_t *src_left, uint8_t *dst,
+                                     int32_t dst_stride) {
   uint32_t val0, val1;
   v16i8 store, src = { 0 };
   v8u16 sum_h;
@@ -199,8 +200,8 @@ static void intra_predict_128dc_4x4_msa(uint8_t *dst, int32_t dst_stride) {
 }
 
 static void intra_predict_dc_8x8_msa(const uint8_t *src_top,
-                                     const uint8_t *src_left,
-                                     uint8_t *dst, int32_t dst_stride) {
+                                     const uint8_t *src_left, uint8_t *dst,
+                                     int32_t dst_stride) {
   uint64_t val0, val1;
   v16i8 store;
   v16u8 src = { 0 };
@@ -260,8 +261,8 @@ static void intra_predict_128dc_8x8_msa(uint8_t *dst, int32_t dst_stride) {
 }
 
 static void intra_predict_dc_16x16_msa(const uint8_t *src_top,
-                                       const uint8_t *src_left,
-                                       uint8_t *dst, int32_t dst_stride) {
+                                       const uint8_t *src_left, uint8_t *dst,
+                                       int32_t dst_stride) {
   v16u8 top, left, out;
   v8u16 sum_h, sum_top, sum_left;
   v4u32 sum_w;
@@ -313,8 +314,8 @@ static void intra_predict_128dc_16x16_msa(uint8_t *dst, int32_t dst_stride) {
 }
 
 static void intra_predict_dc_32x32_msa(const uint8_t *src_top,
-                                       const uint8_t *src_left,
-                                       uint8_t *dst, int32_t dst_stride) {
+                                       const uint8_t *src_left, uint8_t *dst,
+                                       int32_t dst_stride) {
   uint32_t row;
   v16u8 top0, top1, left0, left1, out;
   v8u16 sum_h, sum_top0, sum_top1, sum_left0, sum_left1;
@@ -381,8 +382,8 @@ static void intra_predict_128dc_32x32_msa(uint8_t *dst, int32_t dst_stride) {
 }
 
 static void intra_predict_tm_4x4_msa(const uint8_t *src_top_ptr,
-                                     const uint8_t *src_left,
-                                     uint8_t *dst, int32_t dst_stride) {
+                                     const uint8_t *src_left, uint8_t *dst,
+                                     int32_t dst_stride) {
   uint32_t val;
   uint8_t top_left = src_top_ptr[-1];
   v16i8 src_left0, src_left1, src_left2, src_left3, tmp0, tmp1, src_top = { 0 };
@@ -409,8 +410,8 @@ static void intra_predict_tm_4x4_msa(const uint8_t *src_top_ptr,
 }
 
 static void intra_predict_tm_8x8_msa(const uint8_t *src_top_ptr,
-                                     const uint8_t *src_left,
-                                     uint8_t *dst, int32_t dst_stride) {
+                                     const uint8_t *src_left, uint8_t *dst,
+                                     int32_t dst_stride) {
   uint64_t val;
   uint8_t top_left = src_top_ptr[-1];
   uint32_t loop_cnt;
@@ -442,8 +443,8 @@ static void intra_predict_tm_8x8_msa(const uint8_t *src_top_ptr,
 }
 
 static void intra_predict_tm_16x16_msa(const uint8_t *src_top_ptr,
-                                       const uint8_t *src_left,
-                                       uint8_t *dst, int32_t dst_stride) {
+                                       const uint8_t *src_left, uint8_t *dst,
+                                       int32_t dst_stride) {
   uint8_t top_left = src_top_ptr[-1];
   uint32_t loop_cnt;
   v16i8 src_top, src_left0, src_left1, src_left2, src_left3;
@@ -491,8 +492,8 @@ static void intra_predict_tm_16x16_msa(const uint8_t *src_top_ptr,
 }
 
 static void intra_predict_tm_32x32_msa(const uint8_t *src_top,
-                                       const uint8_t *src_left,
-                                       uint8_t *dst, int32_t dst_stride) {
+                                       const uint8_t *src_left, uint8_t *dst,
+                                       int32_t dst_stride) {
   uint8_t top_left = src_top[-1];
   uint32_t loop_cnt;
   v16i8 src_top0, src_top1, src_left0, src_left1, src_left2, src_left3;

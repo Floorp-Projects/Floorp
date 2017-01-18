@@ -51,7 +51,7 @@ function startTest(test, token) {
   v._finished = false;
   v.autoplay = true;
   v.style.display = "none";
-  v.addEventListener("loadeddata", loadeddata, false);
+  v.addEventListener("loadeddata", loadeddata);
   document.body.appendChild(v);
 }
 

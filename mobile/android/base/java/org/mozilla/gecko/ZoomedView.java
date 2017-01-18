@@ -13,11 +13,10 @@ import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.gfx.PointUtils;
 import org.mozilla.gecko.mozglue.DirectBufferAllocator;
 import org.mozilla.gecko.PrefsHelper;
-import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -51,7 +50,7 @@ import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
 
 public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarListener,
-        LayerView.ZoomedViewListener, GeckoEventListener {
+        LayerView.ZoomedViewListener, BundleEventListener {
     private static final String LOGTAG = "Gecko" + ZoomedView.class.getSimpleName();
 
     private static final float[] ZOOM_FACTORS_LIST = {2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 1.5f};
@@ -240,15 +239,28 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
             }
         };
         touchListener = new ZoomedViewTouchListener();
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
-                "Gesture:clusteredLinksClicked",
-                "Window:Resize",
-                "Content:LocationChange",
+    }
+
+    @Override // View
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
+        GeckoApp.getEventDispatcher().registerUiThreadListener(this,
+                "FormAssist:AutoCompleteResult",
+                "FormAssist:Hide",
                 "Gesture:CloseZoomedView",
-                "Browser:ZoomToPageWidth",
-                "Browser:ZoomToRect",
-                "FormAssist:AutoComplete",
-                "FormAssist:Hide");
+                "Gesture:ClusteredLinksClicked");
+    }
+
+    @Override // View
+    public void onDetachedFromWindow() {
+        GeckoApp.getEventDispatcher().unregisterUiThreadListener(this,
+                "FormAssist:AutoCompleteResult",
+                "FormAssist:Hide",
+                "Gesture:CloseZoomedView",
+                "Gesture:ClusteredLinksClicked");
+
+        super.onDetachedFromWindow();
     }
 
     void destroy() {
@@ -257,15 +269,6 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
             prefObserver = null;
         }
         ThreadUtils.removeCallbacksFromUiThread(requestRenderRunnable);
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
-                "Gesture:clusteredLinksClicked",
-                "Window:Resize",
-                "Content:LocationChange",
-                "Gesture:CloseZoomedView",
-                "Browser:ZoomToPageWidth",
-                "Browser:ZoomToRect",
-                "FormAssist:AutoComplete",
-                "FormAssist:Hide");
     }
 
     // This method (onFinishInflate) is called only when the zoomed view class is used inside
@@ -621,41 +624,29 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
         changeZoomFactorButton.setText("- " + getResources().getString(R.string.percent, percentageValue) + " +");
     }
 
-    @Override
-    public void handleMessage(final String event, final JSONObject message) {
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (event.equals("Gesture:clusteredLinksClicked")) {
-                        final JSONObject clickPosition = message.getJSONObject("clickPosition");
-                        int left = clickPosition.getInt("x");
-                        int top = clickPosition.getInt("y");
-                        // Start to display inside the zoomedView
-                        LayerView geckoAppLayerView = GeckoAppShell.getLayerView();
-                        if (geckoAppLayerView != null) {
-                            startZoomDisplay(geckoAppLayerView, left, top);
-                        }
-                    } else if (event.equals("Window:Resize")) {
-                        ImmutableViewportMetrics metrics = layerView.getViewportMetrics();
-                        refreshZoomedViewSize(metrics);
-                    } else if (event.equals("Content:LocationChange")) {
-                        stopZoomDisplay(false);
-                    } else if (event.equals("Gesture:CloseZoomedView") ||
-                            event.equals("Browser:ZoomToPageWidth") ||
-                            event.equals("Browser:ZoomToRect")) {
-                        stopZoomDisplay(true);
-                    } else if (event.equals("FormAssist:AutoComplete")) {
-                        isBlockedFromAppearing = true;
-                        stopZoomDisplay(true);
-                    } else if (event.equals("FormAssist:Hide")) {
-                        isBlockedFromAppearing = false;
-                    }
-                } catch (JSONException e) {
-                    Log.e(LOGTAG, "JSON exception", e);
-                }
+    @Override // BundleEventListener
+    public void handleMessage(final String event, final GeckoBundle message,
+                              final EventCallback callback) {
+        if ("Gesture:CloseZoomedView".equals(event)) {
+            stopZoomDisplay(message.getBoolean("animate"));
+
+        } else if ("Gesture:ClusteredLinksClicked".equals(event)) {
+            final GeckoBundle clickPosition = message.getBundle("clickPosition");
+            final int left = clickPosition.getInt("x");
+            final int top = clickPosition.getInt("y");
+            // Start to display inside the zoomedView
+            final LayerView geckoAppLayerView = GeckoAppShell.getLayerView();
+            if (geckoAppLayerView != null) {
+                startZoomDisplay(geckoAppLayerView, left, top);
             }
-        });
+
+        } else if ("FormAssist:AutoCompleteResult".equals(event)) {
+            isBlockedFromAppearing = true;
+            stopZoomDisplay(true);
+
+        } else if ("FormAssist:Hide".equals(event)) {
+            isBlockedFromAppearing = false;
+        }
     }
 
     private void moveUsingGeckoPosition(int leftFromGecko, int topFromGecko) {

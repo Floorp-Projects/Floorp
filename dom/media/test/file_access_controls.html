@@ -90,8 +90,8 @@ function eventHandler(event) {
 
 function createVideo() {
   var v = document.createElement('video');
-  v.addEventListener('loadeddata', eventHandler, false);
-  v.addEventListener('error', eventHandler, false);
+  v.addEventListener('loadeddata', eventHandler);
+  v.addEventListener('error', eventHandler);
   v.crossOrigin = 'anonymous';
   return v;
 }

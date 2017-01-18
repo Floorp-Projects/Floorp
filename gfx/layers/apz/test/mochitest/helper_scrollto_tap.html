@@ -38,7 +38,7 @@ function startTest() {
 }
 
 function clickButton() {
-  document.addEventListener('click', clicked, false);
+  document.addEventListener('click', clicked);
 
   synthesizeNativeTap(document.getElementById('b'), 5, 5, function() {
     dump("Finished synthesizing tap, waiting for button to be clicked...\n");

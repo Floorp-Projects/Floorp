@@ -29,8 +29,8 @@ var BrowserWindows = {
     let mainWindow = wm.getMostRecentWindow("navigator:browser");
     let win = mainWindow.OpenBrowserWindow({private: aPrivate});
     win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad, false);
+      win.removeEventListener("load", onLoad);
       fn.call(win);
-    }, false);
+    });
   }
 };

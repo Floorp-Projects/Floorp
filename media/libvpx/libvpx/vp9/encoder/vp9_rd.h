@@ -23,23 +23,23 @@
 extern "C" {
 #endif
 
-#define RDDIV_BITS          7
-#define RD_EPB_SHIFT        6
+#define RDDIV_BITS 7
+#define RD_EPB_SHIFT 6
 
 #define RDCOST(RM, DM, R, D) \
   (ROUND_POWER_OF_TWO(((int64_t)R) * (RM), VP9_PROB_COST_SHIFT) + (D << DM))
-#define QIDX_SKIP_THRESH     115
+#define QIDX_SKIP_THRESH 115
 
-#define MV_COST_WEIGHT      108
-#define MV_COST_WEIGHT_SUB  120
+#define MV_COST_WEIGHT 108
+#define MV_COST_WEIGHT_SUB 120
 
 #define INVALID_MV 0x80008000
 
 #define MAX_MODES 30
-#define MAX_REFS  6
+#define MAX_REFS 6
 
 #define RD_THRESH_MAX_FACT 64
-#define RD_THRESH_INC      1
+#define RD_THRESH_INC 1
 
 // This enumerator type needs to be kept aligned with the mode order in
 // const MODE_DEFINITION vp9_mode_order[MAX_MODES] used in the rd code.
@@ -135,17 +135,16 @@ void vp9_initialize_rd_consts(struct VP9_COMP *cpi);
 void vp9_initialize_me_consts(struct VP9_COMP *cpi, MACROBLOCK *x, int qindex);
 
 void vp9_model_rd_from_var_lapndz(unsigned int var, unsigned int n,
-                                  unsigned int qstep, int *rate,
-                                  int64_t *dist);
+                                  unsigned int qstep, int *rate, int64_t *dist);
 
 int vp9_get_switchable_rate(const struct VP9_COMP *cpi,
                             const MACROBLOCKD *const xd);
 
-int vp9_raster_block_offset(BLOCK_SIZE plane_bsize,
-                            int raster_block, int stride);
+int vp9_raster_block_offset(BLOCK_SIZE plane_bsize, int raster_block,
+                            int stride);
 
-int16_t* vp9_raster_block_offset_int16(BLOCK_SIZE plane_bsize,
-                                       int raster_block, int16_t *base);
+int16_t *vp9_raster_block_offset_int16(BLOCK_SIZE plane_bsize, int raster_block,
+                                       int16_t *base);
 
 YV12_BUFFER_CONFIG *vp9_get_scaled_ref_frame(const struct VP9_COMP *cpi,
                                              int ref_frame);
@@ -161,12 +160,12 @@ void vp9_set_rd_speed_thresholds(struct VP9_COMP *cpi);
 
 void vp9_set_rd_speed_thresholds_sub8x8(struct VP9_COMP *cpi);
 
-void vp9_update_rd_thresh_fact(int (*fact)[MAX_MODES], int rd_thresh,
-                               int bsize, int best_mode_index);
+void vp9_update_rd_thresh_fact(int (*fact)[MAX_MODES], int rd_thresh, int bsize,
+                               int best_mode_index);
 
 static INLINE int rd_less_than_thresh(int64_t best_rd, int thresh,
                                       int thresh_fact) {
-    return best_rd < ((int64_t)thresh * thresh_fact >> 5) || thresh == INT_MAX;
+  return best_rd < ((int64_t)thresh * thresh_fact >> 5) || thresh == INT_MAX;
 }
 
 static INLINE void set_error_per_bit(MACROBLOCK *x, int rdmult) {
@@ -174,14 +173,12 @@ static INLINE void set_error_per_bit(MACROBLOCK *x, int rdmult) {
   x->errorperbit += (x->errorperbit == 0);
 }
 
-void vp9_mv_pred(struct VP9_COMP *cpi, MACROBLOCK *x,
-                 uint8_t *ref_y_buffer, int ref_y_stride,
-                 int ref_frame, BLOCK_SIZE block_size);
+void vp9_mv_pred(struct VP9_COMP *cpi, MACROBLOCK *x, uint8_t *ref_y_buffer,
+                 int ref_y_stride, int ref_frame, BLOCK_SIZE block_size);
 
 void vp9_setup_pred_block(const MACROBLOCKD *xd,
                           struct buf_2d dst[MAX_MB_PLANE],
-                          const YV12_BUFFER_CONFIG *src,
-                          int mi_row, int mi_col,
+                          const YV12_BUFFER_CONFIG *src, int mi_row, int mi_col,
                           const struct scale_factors *scale,
                           const struct scale_factors *scale_uv);
 

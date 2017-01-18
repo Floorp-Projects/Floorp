@@ -28,15 +28,15 @@ var gSearchPane = {
     this.buildDefaultEngineDropDown();
 
     let addEnginesLink = document.getElementById("addEngines");
-    let searchEnginesURL = Services.wm.getMostRecentWindow('navigator:browser')
+    let searchEnginesURL = Services.wm.getMostRecentWindow("navigator:browser")
                                       .BrowserSearch.searchEnginesURL;
     addEnginesLink.setAttribute("href", searchEnginesURL);
 
-    window.addEventListener("click", this, false);
-    window.addEventListener("command", this, false);
-    window.addEventListener("dragstart", this, false);
-    window.addEventListener("keypress", this, false);
-    window.addEventListener("select", this, false);
+    window.addEventListener("click", this);
+    window.addEventListener("command", this);
+    window.addEventListener("dragstart", this);
+    window.addEventListener("keypress", this);
+    window.addEventListener("select", this);
     window.addEventListener("blur", this, true);
 
     Services.obs.addObserver(this, "browser-search-engine-modified", false);

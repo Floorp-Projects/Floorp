@@ -27,8 +27,8 @@ add_task(function* testInitUninit() {
 
   ViewMock.returns(view);
 
-  sinon.spy(view, 'render');
-  sinon.spy(view, 'destroy');
+  sinon.spy(view, "render");
+  sinon.spy(view, "destroy");
 
   sinon.spy(store, "on");
   sinon.stub(store, "getData");

@@ -33,7 +33,7 @@ function createHTMLDoc() {
 
 function test(d) {
   var t = d.getElementById("testtarget");
-  d.addEventListener("DOMNodeInserted", function(e) { ++testCount; }, false);
+  d.addEventListener("DOMNodeInserted", function(e) { ++testCount; });
   t.innerHTML = "_";
 }
 

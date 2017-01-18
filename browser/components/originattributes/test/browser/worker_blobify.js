@@ -8,4 +8,4 @@ self.addEventListener("message", function(message) {
   } catch (e) {
     postMessage({ error: e.message });
   }
-}, false);
+});

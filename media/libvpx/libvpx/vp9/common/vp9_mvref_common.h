@@ -18,8 +18,8 @@ extern "C" {
 #endif
 
 #define LEFT_TOP_MARGIN ((VP9_ENC_BORDER_IN_PIXELS - VP9_INTERP_EXTEND) << 3)
-#define RIGHT_BOTTOM_MARGIN ((VP9_ENC_BORDER_IN_PIXELS -\
-                                VP9_INTERP_EXTEND) << 3)
+#define RIGHT_BOTTOM_MARGIN \
+  ((VP9_ENC_BORDER_IN_PIXELS - VP9_INTERP_EXTEND) << 3)
 
 #define MVREF_NEIGHBOURS 8
 
@@ -65,61 +65,149 @@ static const int mode_2_counter[MB_MODE_COUNT] = {
 // 2. However the actual count can never be greater than 2 so the highest
 // counter we need is 18. 9 is an invalid counter that's never used.
 static const int counter_to_context[19] = {
-  BOTH_PREDICTED,  // 0
-  NEW_PLUS_NON_INTRA,  // 1
-  BOTH_NEW,  // 2
-  ZERO_PLUS_PREDICTED,  // 3
-  NEW_PLUS_NON_INTRA,  // 4
-  INVALID_CASE,  // 5
-  BOTH_ZERO,  // 6
-  INVALID_CASE,  // 7
-  INVALID_CASE,  // 8
+  BOTH_PREDICTED,        // 0
+  NEW_PLUS_NON_INTRA,    // 1
+  BOTH_NEW,              // 2
+  ZERO_PLUS_PREDICTED,   // 3
+  NEW_PLUS_NON_INTRA,    // 4
+  INVALID_CASE,          // 5
+  BOTH_ZERO,             // 6
+  INVALID_CASE,          // 7
+  INVALID_CASE,          // 8
   INTRA_PLUS_NON_INTRA,  // 9
   INTRA_PLUS_NON_INTRA,  // 10
-  INVALID_CASE,  // 11
+  INVALID_CASE,          // 11
   INTRA_PLUS_NON_INTRA,  // 12
-  INVALID_CASE,  // 13
-  INVALID_CASE,  // 14
-  INVALID_CASE,  // 15
-  INVALID_CASE,  // 16
-  INVALID_CASE,  // 17
-  BOTH_INTRA  // 18
+  INVALID_CASE,          // 13
+  INVALID_CASE,          // 14
+  INVALID_CASE,          // 15
+  INVALID_CASE,          // 16
+  INVALID_CASE,          // 17
+  BOTH_INTRA             // 18
 };
 
 static const POSITION mv_ref_blocks[BLOCK_SIZES][MVREF_NEIGHBOURS] = {
   // 4X4
-  {{-1, 0}, {0, -1}, {-1, -1}, {-2, 0}, {0, -2}, {-2, -1}, {-1, -2}, {-2, -2}},
+  { { -1, 0 },
+    { 0, -1 },
+    { -1, -1 },
+    { -2, 0 },
+    { 0, -2 },
+    { -2, -1 },
+    { -1, -2 },
+    { -2, -2 } },
   // 4X8
-  {{-1, 0}, {0, -1}, {-1, -1}, {-2, 0}, {0, -2}, {-2, -1}, {-1, -2}, {-2, -2}},
+  { { -1, 0 },
+    { 0, -1 },
+    { -1, -1 },
+    { -2, 0 },
+    { 0, -2 },
+    { -2, -1 },
+    { -1, -2 },
+    { -2, -2 } },
   // 8X4
-  {{-1, 0}, {0, -1}, {-1, -1}, {-2, 0}, {0, -2}, {-2, -1}, {-1, -2}, {-2, -2}},
+  { { -1, 0 },
+    { 0, -1 },
+    { -1, -1 },
+    { -2, 0 },
+    { 0, -2 },
+    { -2, -1 },
+    { -1, -2 },
+    { -2, -2 } },
   // 8X8
-  {{-1, 0}, {0, -1}, {-1, -1}, {-2, 0}, {0, -2}, {-2, -1}, {-1, -2}, {-2, -2}},
+  { { -1, 0 },
+    { 0, -1 },
+    { -1, -1 },
+    { -2, 0 },
+    { 0, -2 },
+    { -2, -1 },
+    { -1, -2 },
+    { -2, -2 } },
   // 8X16
-  {{0, -1}, {-1, 0}, {1, -1}, {-1, -1}, {0, -2}, {-2, 0}, {-2, -1}, {-1, -2}},
+  { { 0, -1 },
+    { -1, 0 },
+    { 1, -1 },
+    { -1, -1 },
+    { 0, -2 },
+    { -2, 0 },
+    { -2, -1 },
+    { -1, -2 } },
   // 16X8
-  {{-1, 0}, {0, -1}, {-1, 1}, {-1, -1}, {-2, 0}, {0, -2}, {-1, -2}, {-2, -1}},
+  { { -1, 0 },
+    { 0, -1 },
+    { -1, 1 },
+    { -1, -1 },
+    { -2, 0 },
+    { 0, -2 },
+    { -1, -2 },
+    { -2, -1 } },
   // 16X16
-  {{-1, 0}, {0, -1}, {-1, 1}, {1, -1}, {-1, -1}, {-3, 0}, {0, -3}, {-3, -3}},
+  { { -1, 0 },
+    { 0, -1 },
+    { -1, 1 },
+    { 1, -1 },
+    { -1, -1 },
+    { -3, 0 },
+    { 0, -3 },
+    { -3, -3 } },
   // 16X32
-  {{0, -1}, {-1, 0}, {2, -1}, {-1, -1}, {-1, 1}, {0, -3}, {-3, 0}, {-3, -3}},
+  { { 0, -1 },
+    { -1, 0 },
+    { 2, -1 },
+    { -1, -1 },
+    { -1, 1 },
+    { 0, -3 },
+    { -3, 0 },
+    { -3, -3 } },
   // 32X16
-  {{-1, 0}, {0, -1}, {-1, 2}, {-1, -1}, {1, -1}, {-3, 0}, {0, -3}, {-3, -3}},
+  { { -1, 0 },
+    { 0, -1 },
+    { -1, 2 },
+    { -1, -1 },
+    { 1, -1 },
+    { -3, 0 },
+    { 0, -3 },
+    { -3, -3 } },
   // 32X32
-  {{-1, 1}, {1, -1}, {-1, 2}, {2, -1}, {-1, -1}, {-3, 0}, {0, -3}, {-3, -3}},
+  { { -1, 1 },
+    { 1, -1 },
+    { -1, 2 },
+    { 2, -1 },
+    { -1, -1 },
+    { -3, 0 },
+    { 0, -3 },
+    { -3, -3 } },
   // 32X64
-  {{0, -1}, {-1, 0}, {4, -1}, {-1, 2}, {-1, -1}, {0, -3}, {-3, 0}, {2, -1}},
+  { { 0, -1 },
+    { -1, 0 },
+    { 4, -1 },
+    { -1, 2 },
+    { -1, -1 },
+    { 0, -3 },
+    { -3, 0 },
+    { 2, -1 } },
   // 64X32
-  {{-1, 0}, {0, -1}, {-1, 4}, {2, -1}, {-1, -1}, {-3, 0}, {0, -3}, {-1, 2}},
+  { { -1, 0 },
+    { 0, -1 },
+    { -1, 4 },
+    { 2, -1 },
+    { -1, -1 },
+    { -3, 0 },
+    { 0, -3 },
+    { -1, 2 } },
   // 64X64
-  {{-1, 3}, {3, -1}, {-1, 4}, {4, -1}, {-1, -1}, {-1, 0}, {0, -1}, {-1, 6}}
+  { { -1, 3 },
+    { 3, -1 },
+    { -1, 4 },
+    { 4, -1 },
+    { -1, -1 },
+    { -1, 0 },
+    { 0, -1 },
+    { -1, 6 } }
 };
 
 static const int idx_n_column_to_subblock[4][2] = {
-  {1, 2},
-  {1, 3},
-  {3, 2},
-  {3, 3}
+  { 1, 2 }, { 1, 3 }, { 3, 2 }, { 3, 3 }
 };
 
 // clamp_mv_ref
@@ -127,9 +215,8 @@ static const int idx_n_column_to_subblock[4][2] = {
 
 static INLINE void clamp_mv_ref(MV *mv, const MACROBLOCKD *xd) {
   clamp_mv(mv, xd->mb_to_left_edge - MV_BORDER,
-               xd->mb_to_right_edge + MV_BORDER,
-               xd->mb_to_top_edge - MV_BORDER,
-               xd->mb_to_bottom_edge + MV_BORDER);
+           xd->mb_to_right_edge + MV_BORDER, xd->mb_to_top_edge - MV_BORDER,
+           xd->mb_to_bottom_edge + MV_BORDER);
 }
 
 // This function returns either the appropriate sub block or block's mv
@@ -137,11 +224,11 @@ static INLINE void clamp_mv_ref(MV *mv, const MACROBLOCKD *xd) {
 static INLINE int_mv get_sub_block_mv(const MODE_INFO *candidate, int which_mv,
                                       int search_col, int block_idx) {
   return block_idx >= 0 && candidate->sb_type < BLOCK_8X8
-          ? candidate->bmi[idx_n_column_to_subblock[block_idx][search_col == 0]]
-              .as_mv[which_mv]
-          : candidate->mv[which_mv];
+             ? candidate
+                   ->bmi[idx_n_column_to_subblock[block_idx][search_col == 0]]
+                   .as_mv[which_mv]
+             : candidate->mv[which_mv];
 }
-
 
 // Performs mv sign inversion if indicated by the reference frame combination.
 static INLINE int_mv scale_mv(const MODE_INFO *mi, int ref,
@@ -159,40 +246,37 @@ static INLINE int_mv scale_mv(const MODE_INFO *mi, int ref,
 // already in the list.  If it's the second motion vector it will also
 // skip all additional processing and jump to Done!
 #define ADD_MV_REF_LIST(mv, refmv_count, mv_ref_list, Done) \
-  do { \
-    if (refmv_count) { \
-      if ((mv).as_int != (mv_ref_list)[0].as_int) { \
-        (mv_ref_list)[(refmv_count)] = (mv); \
-        goto Done; \
-      } \
-    } else { \
-      (mv_ref_list)[(refmv_count)++] = (mv); \
-    } \
+  do {                                                      \
+    if (refmv_count) {                                      \
+      if ((mv).as_int != (mv_ref_list)[0].as_int) {         \
+        (mv_ref_list)[(refmv_count)] = (mv);                \
+        goto Done;                                          \
+      }                                                     \
+    } else {                                                \
+      (mv_ref_list)[(refmv_count)++] = (mv);                \
+    }                                                       \
   } while (0)
 
 // If either reference frame is different, not INTRA, and they
 // are different from each other scale and add the mv to our list.
 #define IF_DIFF_REF_FRAME_ADD_MV(mbmi, ref_frame, ref_sign_bias, refmv_count, \
-                                 mv_ref_list, Done) \
-  do { \
-    if (is_inter_block(mbmi)) { \
-      if ((mbmi)->ref_frame[0] != ref_frame) \
-        ADD_MV_REF_LIST(scale_mv((mbmi), 0, ref_frame, ref_sign_bias), \
-                        refmv_count, mv_ref_list, Done); \
-      if (has_second_ref(mbmi) && \
-          (mbmi)->ref_frame[1] != ref_frame && \
-          (mbmi)->mv[1].as_int != (mbmi)->mv[0].as_int) \
-        ADD_MV_REF_LIST(scale_mv((mbmi), 1, ref_frame, ref_sign_bias), \
-                        refmv_count, mv_ref_list, Done); \
-    } \
+                                 mv_ref_list, Done)                           \
+  do {                                                                        \
+    if (is_inter_block(mbmi)) {                                               \
+      if ((mbmi)->ref_frame[0] != ref_frame)                                  \
+        ADD_MV_REF_LIST(scale_mv((mbmi), 0, ref_frame, ref_sign_bias),        \
+                        refmv_count, mv_ref_list, Done);                      \
+      if (has_second_ref(mbmi) && (mbmi)->ref_frame[1] != ref_frame &&        \
+          (mbmi)->mv[1].as_int != (mbmi)->mv[0].as_int)                       \
+        ADD_MV_REF_LIST(scale_mv((mbmi), 1, ref_frame, ref_sign_bias),        \
+                        refmv_count, mv_ref_list, Done);                      \
+    }                                                                         \
   } while (0)
-
 
 // Checks that the given mi_row, mi_col and search point
 // are inside the borders of the tile.
-static INLINE int is_inside(const TileInfo *const tile,
-                            int mi_col, int mi_row, int mi_rows,
-                            const POSITION *mi_pos) {
+static INLINE int is_inside(const TileInfo *const tile, int mi_col, int mi_row,
+                            int mi_rows, const POSITION *mi_pos) {
   return !(mi_row + mi_pos->row < 0 ||
            mi_col + mi_pos->col < tile->mi_col_start ||
            mi_row + mi_pos->row >= mi_rows ||
@@ -202,18 +286,16 @@ static INLINE int is_inside(const TileInfo *const tile,
 // TODO(jingning): this mv clamping function should be block size dependent.
 static INLINE void clamp_mv2(MV *mv, const MACROBLOCKD *xd) {
   clamp_mv(mv, xd->mb_to_left_edge - LEFT_TOP_MARGIN,
-               xd->mb_to_right_edge + RIGHT_BOTTOM_MARGIN,
-               xd->mb_to_top_edge - LEFT_TOP_MARGIN,
-               xd->mb_to_bottom_edge + RIGHT_BOTTOM_MARGIN);
+           xd->mb_to_right_edge + RIGHT_BOTTOM_MARGIN,
+           xd->mb_to_top_edge - LEFT_TOP_MARGIN,
+           xd->mb_to_bottom_edge + RIGHT_BOTTOM_MARGIN);
 }
 
 static INLINE void lower_mv_precision(MV *mv, int allow_hp) {
   const int use_hp = allow_hp && use_mv_hp(mv);
   if (!use_hp) {
-    if (mv->row & 1)
-      mv->row += (mv->row > 0 ? -1 : 1);
-    if (mv->col & 1)
-      mv->col += (mv->col > 0 ? -1 : 1);
+    if (mv->row & 1) mv->row += (mv->row > 0 ? -1 : 1);
+    if (mv->col & 1) mv->col += (mv->col > 0 ? -1 : 1);
   }
 }
 
@@ -226,11 +308,11 @@ void vp9_find_mv_refs(const VP9_COMMON *cm, const MACROBLOCKD *xd,
 // check a list of motion vectors by sad score using a number rows of pixels
 // above and a number cols of pixels in the left to select the one with best
 // score to use as ref motion vector
-void vp9_find_best_ref_mvs(MACROBLOCKD *xd, int allow_hp,
-                           int_mv *mvlist, int_mv *nearest_mv, int_mv *near_mv);
+void vp9_find_best_ref_mvs(MACROBLOCKD *xd, int allow_hp, int_mv *mvlist,
+                           int_mv *nearest_mv, int_mv *near_mv);
 
-void vp9_append_sub8x8_mvs_for_idx(VP9_COMMON *cm, MACROBLOCKD *xd,
-                                   int block, int ref, int mi_row, int mi_col,
+void vp9_append_sub8x8_mvs_for_idx(VP9_COMMON *cm, MACROBLOCKD *xd, int block,
+                                   int ref, int mi_row, int mi_col,
                                    int_mv *nearest_mv, int_mv *near_mv,
                                    uint8_t *mode_context);
 

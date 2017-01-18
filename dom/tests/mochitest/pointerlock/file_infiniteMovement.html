@@ -50,8 +50,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
 
         var firstMoveListener = function (e) {
           info("Got first mousemove");
-          div.removeEventListener("mousemove", firstMoveListener, false);
-          div.addEventListener("mousemove", secondMoveListener, false);
+          div.removeEventListener("mousemove", firstMoveListener);
+          div.addEventListener("mousemove", secondMoveListener);
 
           synthesizeMouse(div,(divCenterWidth/2) * 3,
             (divCenterHeight/2) * 3, {
@@ -64,7 +64,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           totalMovementX = divCenterWidth + ((divCenterWidth / 2) * 3);
           totalMovementY = divCenterHeight + ((divCenterHeight / 2) * 3);
 
-          div.removeEventListener("mousemove", secondMoveListener, false);
+          div.removeEventListener("mousemove", secondMoveListener);
           addFullscreenChangeContinuation("exit", function() {
             info("Got fullscreenchange for exiting");
             runTests();
@@ -76,7 +76,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         document.addEventListener("pointerlockchange", function (e) {
           if (document.pointerLockElement === div) {
             info("Got pointerlockchange for entering");
-            div.addEventListener("mousemove", firstMoveListener, false);
+            div.addEventListener("mousemove", firstMoveListener);
 
             divCenterWidth = Math.round(div.getBoundingClientRect().width / 2);
             divCenterHeight = Math.round(div.getBoundingClientRect().height / 2);
@@ -87,7 +87,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           } else {
             info("Got pointerlockchange for exiting");
           }
-        }, false);
+        });
 
         function start() {
           info("Requesting fullscreen on parent");

@@ -27,7 +27,7 @@ var gHandled = 0;
 
 function clickShouldNotHappenHandler(aEvent)
 {
-  aEvent.target.removeEventListener("click", clickShouldNotHappenHandler, false);
+  aEvent.target.removeEventListener("click", clickShouldNotHappenHandler);
   ok(false, "click event should be prevented! (test1)");
   if (++gHandled >= elementsWithClick.length) {
     test2();
@@ -36,7 +36,7 @@ function clickShouldNotHappenHandler(aEvent)
 
 function clickShouldNotHappenHandler2(aEvent)
 {
-  aEvent.target.removeEventListener("click", clickShouldNotHappenHandler3, false);
+  aEvent.target.removeEventListener("click", clickShouldNotHappenHandler3);
   ok(false, "click event should be prevented! (test2)");
   if (++gHandled >= elementsWithClick.length) {
     test3();
@@ -45,7 +45,7 @@ function clickShouldNotHappenHandler2(aEvent)
 
 function clickShouldNotHappenHandler5(aEvent)
 {
-  aEvent.target.removeEventListener("click", clickShouldNotHappenHandler5, false);
+  aEvent.target.removeEventListener("click", clickShouldNotHappenHandler5);
   ok(false, "click event should be prevented! (test5)");
   if (++gHandled >= elementsWithClick.length) {
     test6();
@@ -54,7 +54,7 @@ function clickShouldNotHappenHandler5(aEvent)
 
 function clickShouldNotHappenHandler7(aEvent)
 {
-  aEvent.target.removeEventListener("click", clickShouldNotHappenHandler7, false);
+  aEvent.target.removeEventListener("click", clickShouldNotHappenHandler7);
   ok(false, "click event should be prevented! (test7)");
   if (++gHandled >= elementsWithClick.length) {
     test8();
@@ -63,7 +63,7 @@ function clickShouldNotHappenHandler7(aEvent)
 
 function clickShouldHappenHandler(aEvent)
 {
-  aEvent.target.removeEventListener("click", clickShouldHappenHandler, false);
+  aEvent.target.removeEventListener("click", clickShouldHappenHandler);
   ok(true, "click event has been correctly received (test1)");
   if (++gHandled >= elementsWithClick.length) {
     test2();
@@ -72,7 +72,7 @@ function clickShouldHappenHandler(aEvent)
 
 function clickShouldHappenHandler2(aEvent)
 {
-  aEvent.target.removeEventListener("click", clickShouldHappenHandler2, false);
+  aEvent.target.removeEventListener("click", clickShouldHappenHandler2);
   ok(true, "click event has been correctly received (test2)");
   if (++gHandled >= elementsWithClick.length) {
     test3();
@@ -81,7 +81,7 @@ function clickShouldHappenHandler2(aEvent)
 
 function clickShouldHappenHandler3(aEvent)
 {
-  aEvent.target.removeEventListener("click", clickShouldHappenHandler3, false);
+  aEvent.target.removeEventListener("click", clickShouldHappenHandler3);
   ok(true, "click event has been correctly received (test3)");
   if (++gHandled >= (elementsWithClick.length +
                      elementsPreventingClick.length)) {
@@ -91,7 +91,7 @@ function clickShouldHappenHandler3(aEvent)
 
 function clickShouldHappenHandler4(aEvent)
 {
-  aEvent.target.removeEventListener("click", clickShouldHappenHandler4, false);
+  aEvent.target.removeEventListener("click", clickShouldHappenHandler4);
   ok(true, "click event has been correctly received (test4)");
   if (++gHandled >= (elementsWithClick.length +
                      elementsPreventingClick.length)) {
@@ -101,7 +101,7 @@ function clickShouldHappenHandler4(aEvent)
 
 function clickShouldHappenHandler5(aEvent)
 {
-  aEvent.target.removeEventListener("click", clickShouldHappenHandler5, false);
+  aEvent.target.removeEventListener("click", clickShouldHappenHandler5);
   ok(true, "click event has been correctly received (test5)");
   if (++gHandled >= elementsWithClick.length) {
     test6();
@@ -110,7 +110,7 @@ function clickShouldHappenHandler5(aEvent)
 
 function clickShouldHappenHandler6(aEvent)
 {
-  aEvent.target.removeEventListener("click", clickShouldHappenHandler6, false);
+  aEvent.target.removeEventListener("click", clickShouldHappenHandler6);
   ok(true, "click event has been correctly received (test6)");
   if (++gHandled >= (elementsWithClick.length +
                      elementsPreventingClick.length)) {
@@ -120,7 +120,7 @@ function clickShouldHappenHandler6(aEvent)
 
 function clickShouldHappenHandler7(aEvent)
 {
-  aEvent.target.removeEventListener("click", clickShouldHappenHandler7, false);
+  aEvent.target.removeEventListener("click", clickShouldHappenHandler7);
   ok(true, "click event has been correctly received (test5)");
   if (++gHandled >= elementsWithClick.length) {
     test8();
@@ -129,7 +129,7 @@ function clickShouldHappenHandler7(aEvent)
 
 function clickShouldHappenHandler8(aEvent)
 {
-  aEvent.target.removeEventListener("click", clickShouldHappenHandler8, false);
+  aEvent.target.removeEventListener("click", clickShouldHappenHandler8);
   ok(true, "click event has been correctly received (test8)");
   if (++gHandled >= (elementsWithClick.length +
                      elementsPreventingClick.length)) {
@@ -165,7 +165,7 @@ function test1()
   for (var name of elementsPreventingClick) {
     var element = document.createElement(name);
     fieldset2.appendChild(element);
-    element.addEventListener("click", clickShouldNotHappenHandler, false);
+    element.addEventListener("click", clickShouldNotHappenHandler);
     sendMouseEvent({type:'click'}, element);
   }
 
@@ -173,7 +173,7 @@ function test1()
   for (var name of elementsWithClick) {
     var element = document.createElement(name);
     fieldset2.appendChild(element);
-    element.addEventListener("click", clickShouldHappenHandler, false);
+    element.addEventListener("click", clickShouldHappenHandler);
     sendMouseEvent({type:'click'}, element);
   }
 }
@@ -188,7 +188,7 @@ function test2()
   for (var name of elementsPreventingClick) {
     var element = document.createElement(name);
     fieldset2.appendChild(element);
-    element.addEventListener("click", clickShouldNotHappenHandler2, false);
+    element.addEventListener("click", clickShouldNotHappenHandler2);
     sendMouseEvent({type:'click'}, element);
   }
 
@@ -196,7 +196,7 @@ function test2()
   for (var name of elementsWithClick) {
     var element = document.createElement(name);
     fieldset2.appendChild(element);
-    element.addEventListener("click", clickShouldHappenHandler2, false);
+    element.addEventListener("click", clickShouldHappenHandler2);
     sendMouseEvent({type:'click'}, element);
   }
 }
@@ -211,7 +211,7 @@ function test3()
   for (var name of elementsPreventingClick) {
     var element = document.createElement(name);
     fieldset2.appendChild(element);
-    element.addEventListener("click", clickShouldHappenHandler3, false);
+    element.addEventListener("click", clickShouldHappenHandler3);
     sendMouseEvent({type:'click'}, element);
   }
 
@@ -219,7 +219,7 @@ function test3()
   for (var name of elementsWithClick) {
     var element = document.createElement(name);
     fieldset2.appendChild(element);
-    element.addEventListener("click", clickShouldHappenHandler3, false);
+    element.addEventListener("click", clickShouldHappenHandler3);
     sendMouseEvent({type:'click'}, element);
   }
 }
@@ -236,7 +236,7 @@ function test4()
   for (var name of elementsPreventingClick) {
     var element = document.createElement(name);
     legendA.appendChild(element);
-    element.addEventListener("click", clickShouldHappenHandler4, false);
+    element.addEventListener("click", clickShouldHappenHandler4);
     sendMouseEvent({type:'click'}, element);
   }
 
@@ -244,7 +244,7 @@ function test4()
   for (var name of elementsWithClick) {
     var element = document.createElement(name);
     legendA.appendChild(element);
-    element.addEventListener("click", clickShouldHappenHandler4, false);
+    element.addEventListener("click", clickShouldHappenHandler4);
     sendMouseEvent({type:'click'}, element);
   }
 }
@@ -258,7 +258,7 @@ function test5()
   for (var name of elementsPreventingClick) {
     var element = document.createElement(name);
     legendA.appendChild(element);
-    element.addEventListener("click", clickShouldNotHappenHandler5, false);
+    element.addEventListener("click", clickShouldNotHappenHandler5);
     sendMouseEvent({type:'click'}, element);
   }
 
@@ -266,7 +266,7 @@ function test5()
   for (var name of elementsWithClick) {
     var element = document.createElement(name);
     legendA.appendChild(element);
-    element.addEventListener("click", clickShouldHappenHandler5, false);
+    element.addEventListener("click", clickShouldHappenHandler5);
     sendMouseEvent({type:'click'}, element);
   }
 }
@@ -285,7 +285,7 @@ function test6()
   for (var name of elementsPreventingClick) {
     var element = document.createElement(name);
     fieldset2.appendChild(element);
-    element.addEventListener("click", clickShouldHappenHandler6, false);
+    element.addEventListener("click", clickShouldHappenHandler6);
     sendMouseEvent({type:'click'}, element);
   }
 
@@ -293,7 +293,7 @@ function test6()
   for (var name of elementsWithClick) {
     var element = document.createElement(name);
     fieldset2.appendChild(element);
-    element.addEventListener("click", clickShouldHappenHandler6, false);
+    element.addEventListener("click", clickShouldHappenHandler6);
     sendMouseEvent({type:'click'}, element);
   }
 }
@@ -311,7 +311,7 @@ function test7()
   for (var name of elementsPreventingClick) {
     var element = document.createElement(name);
     legendA.appendChild(element);
-    element.addEventListener("click", clickShouldNotHappenHandler7, false);
+    element.addEventListener("click", clickShouldNotHappenHandler7);
     sendMouseEvent({type:'click'}, element);
   }
 
@@ -319,7 +319,7 @@ function test7()
   for (var name of elementsWithClick) {
     var element = document.createElement(name);
     legendA.appendChild(element);
-    element.addEventListener("click", clickShouldHappenHandler7, false);
+    element.addEventListener("click", clickShouldHappenHandler7);
     sendMouseEvent({type:'click'}, element);
   }
 }
@@ -338,7 +338,7 @@ function test8()
   for (var name of elementsPreventingClick) {
     var element = document.createElement(name);
     legendB.appendChild(element);
-    element.addEventListener("click", clickShouldHappenHandler8, false);
+    element.addEventListener("click", clickShouldHappenHandler8);
     sendMouseEvent({type:'click'}, element);
   }
 
@@ -346,7 +346,7 @@ function test8()
   for (var name of elementsWithClick) {
     var element = document.createElement(name);
     legendB.appendChild(element);
-    element.addEventListener("click", clickShouldHappenHandler8, false);
+    element.addEventListener("click", clickShouldHappenHandler8);
     sendMouseEvent({type:'click'}, element);
   }
 }

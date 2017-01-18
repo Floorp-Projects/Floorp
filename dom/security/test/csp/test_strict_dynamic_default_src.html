@@ -94,14 +94,14 @@ function loadNextTest() {
   // append the CSP that should be used to serve the file
   src += "&csp=" + escape(curTest.policy);
 
-  document.getElementById("testframe").addEventListener("load", checkResults, false);
+  document.getElementById("testframe").addEventListener("load", checkResults);
   document.getElementById("testframe").src = src;
 }
 
 function checkResults() {
   try {
     var testframe = document.getElementById("testframe");
-    testframe.removeEventListener('load', checkResults, false);
+    testframe.removeEventListener('load', checkResults);
 
     // check if script loaded
     var divcontent = testframe.contentWindow.document.getElementById('testdiv').innerHTML;

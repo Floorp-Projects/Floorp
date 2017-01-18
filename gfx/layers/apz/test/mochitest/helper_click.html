@@ -10,7 +10,7 @@
   <script type="application/javascript">
 
 function* clickButton(testDriver) {
-  document.addEventListener('click', clicked, false);
+  document.addEventListener('click', clicked);
 
   if (getQueryArgs()['dtc']) {
     // force a dispatch-to-content region on the document

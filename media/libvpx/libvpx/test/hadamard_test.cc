@@ -80,8 +80,8 @@ void reference_hadamard16x16(const int16_t *a, int a_stride, int16_t *b) {
     const int16_t b3 = (a2 - a3) >> 1;
 
     /* Store a 16 bit value. */
-    b[  0] = b0 + b2;
-    b[ 64] = b1 + b3;
+    b[0] = b0 + b2;
+    b[64] = b1 + b3;
     b[128] = b0 - b2;
     b[192] = b1 - b3;
 
@@ -152,10 +152,10 @@ INSTANTIATE_TEST_CASE_P(SSE2, Hadamard8x8Test,
                         ::testing::Values(&vpx_hadamard_8x8_sse2));
 #endif  // HAVE_SSE2
 
-#if HAVE_SSSE3 && CONFIG_USE_X86INC && ARCH_X86_64
+#if HAVE_SSSE3 && ARCH_X86_64
 INSTANTIATE_TEST_CASE_P(SSSE3, Hadamard8x8Test,
                         ::testing::Values(&vpx_hadamard_8x8_ssse3));
-#endif  // HAVE_SSSE3 && CONFIG_USE_X86INC && ARCH_X86_64
+#endif  // HAVE_SSSE3 && ARCH_X86_64
 
 #if HAVE_NEON
 INSTANTIATE_TEST_CASE_P(NEON, Hadamard8x8Test,

@@ -318,9 +318,9 @@ TestRunner.prototype = {
         }
         else {
           win.addEventListener("DOMContentLoaded", function onLoad() {
-            win.removeEventListener("DOMContentLoaded", onLoad, false);
+            win.removeEventListener("DOMContentLoaded", onLoad);
             resolve();
-          }, false);
+          });
         }
       });
     });

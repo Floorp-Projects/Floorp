@@ -104,7 +104,7 @@ IDService.prototype = {
     // store the caller structure and notify the UI observers
     this._rpFlows[aRpCaller.id] = aRpCaller;
 
-    log("flows:", Object.keys(this._rpFlows).join(', '));
+    log("flows:", Object.keys(this._rpFlows).join(", "));
 
     let options = makeMessageObject(aRpCaller);
     log("sending identity-controller-watch:", options);

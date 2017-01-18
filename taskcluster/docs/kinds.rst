@@ -159,3 +159,32 @@ Template <yaml-templates>`.
 
 android-stuff
 --------------
+
+balrog
+------
+
+Balrog is the Mozilla Update Server. Jobs of this kind are submitting information
+which assists in telling Firefox that an update is available for the related job.
+
+balrog-l10n
+-----------
+
+Balrog is the Mozilla Update Server. Jobs of this kind are submitting information
+which assists in telling Firefox that an update is available for the localized
+job involved.
+
+beetmover
+---------
+
+Beetmover, takes specific artifacts, "Beets", and pushes them to a location outside
+of Taskcluster's task artifacts, (archive.mozilla.org as one place) and in the
+process determines the final location and a "pretty" name (versioned product name)
+
+beetmover-l10n
+--------------
+
+Beetmover L10n, takes specific artifacts, "Beets", and pushes them to a location outside
+of Taskcluster's task artifacts, (archive.mozilla.org as one place) and in the
+process determines the final location and a "pretty" name (versioned product name)
+This separate kind uses logic specific to localized artifacts, such as including
+the language in the final artifact names.

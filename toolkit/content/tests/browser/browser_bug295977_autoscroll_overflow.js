@@ -27,30 +27,30 @@ add_task(function* () {
       <div id="h" style="width: 100px; height: 100px; overflow: -moz-hidden-unscrollable;"><div style="width: 200px; height: 200px;"></div></div>\
       <iframe id="iframe" style="display: none;"></iframe>\
       </body></html>'},
-    {elem: 'a', expected: expectScrollNone},
-    {elem: 'b', expected: expectScrollBoth},
-    {elem: 'c', expected: expectScrollHori},
-    {elem: 'd', expected: expectScrollVert},
-    {elem: 'e', expected: expectScrollVert},
-    {elem: 'f', expected: expectScrollNone},
-    {elem: 'g', expected: expectScrollBoth},
-    {elem: 'h', expected: expectScrollNone},
+    {elem: "a", expected: expectScrollNone},
+    {elem: "b", expected: expectScrollBoth},
+    {elem: "c", expected: expectScrollHori},
+    {elem: "d", expected: expectScrollVert},
+    {elem: "e", expected: expectScrollVert},
+    {elem: "f", expected: expectScrollNone},
+    {elem: "g", expected: expectScrollBoth},
+    {elem: "h", expected: expectScrollNone},
     {dataUri: 'data:text/html,<html><head><meta charset="utf-8"></head><body id="i" style="overflow-y: scroll"><div style="height: 2000px"></div>\
       <iframe id="iframe" style="display: none;"></iframe>\
       </body></html>'},
-    {elem: 'i', expected: expectScrollVert}, // bug 695121
+    {elem: "i", expected: expectScrollVert}, // bug 695121
     {dataUri: 'data:text/html,<html><head><meta charset="utf-8"></head><style>html, body { width: 100%; height: 100%; overflow-x: hidden; overflow-y: scroll; }</style>\
       <body id="j"><div style="height: 2000px"></div>\
       <iframe id="iframe" style="display: none;"></iframe>\
       </body></html>'},
-    {elem: 'j', expected: expectScrollVert},  // bug 914251
+    {elem: "j", expected: expectScrollVert},  // bug 914251
     {dataUri: 'data:text/html,<html><head><meta charset="utf-8">\
 <style>\
 body > div {scroll-behavior: smooth;width: 300px;height: 300px;overflow: scroll;}\
 body > div > div {width: 1000px;height: 1000px;}\
 </style>\
 </head><body><div id="t"><div></div></div></body></html>'},
-    {elem: 't', expected: expectScrollBoth}, // bug 1308775
+    {elem: "t", expected: expectScrollBoth}, // bug 1308775
     {dataUri: 'data:text/html,<html><head><meta charset="utf-8"></head><body>\
 <div id="k" style="height: 150px;  width: 200px; overflow: scroll; border: 1px solid black;">\
 <iframe style="height: 200px; width: 300px;"></iframe>\
@@ -61,10 +61,10 @@ body > div > div {width: 1000px;height: 1000px;}\
 <iframe id="m"></iframe>\
 <div style="height: 200%; border: 5px dashed black;">filler to make document overflow: scroll;</div>\
 </body></html>'},
-    {elem: 'k', expected: expectScrollBoth},
-    {elem: 'k', expected: expectScrollNone, testwindow: true},
-    {elem: 'l', expected: expectScrollNone},
-    {elem: 'm', expected: expectScrollVert, testwindow: true},
+    {elem: "k", expected: expectScrollBoth},
+    {elem: "k", expected: expectScrollNone, testwindow: true},
+    {elem: "l", expected: expectScrollNone},
+    {elem: "m", expected: expectScrollVert, testwindow: true},
     {dataUri: 'data:text/html,<html><head><meta charset="utf-8"></head><body>\
 <img width="100" height="100" alt="image map" usemap="%23planetmap">\
 <map name="planetmap">\
@@ -75,17 +75,17 @@ body > div > div {width: 1000px;height: 1000px;}\
 <textarea id="q" style="width: 100px; height: 100px; vertical-align: top;"></textarea>\
 <div style="height: 200%; border: 1px solid black;"></div>\
 </body></html>'},
-    {elem: 'n', expected: expectScrollNone, testwindow: true},
-    {elem: 'o', expected: expectScrollNone, testwindow: true},
-    {elem: 'p', expected: expectScrollVert, testwindow: true, middlemousepastepref: false},
-    {elem: 'q', expected: expectScrollVert, testwindow: true, middlemousepastepref: false},
+    {elem: "n", expected: expectScrollNone, testwindow: true},
+    {elem: "o", expected: expectScrollNone, testwindow: true},
+    {elem: "p", expected: expectScrollVert, testwindow: true, middlemousepastepref: false},
+    {elem: "q", expected: expectScrollVert, testwindow: true, middlemousepastepref: false},
     {dataUri: 'data:text/html,<html><head><meta charset="utf-8"></head><body>\
 <input id="r" style="width: 100px; height: 100px; vertical-align: top;">\
 <textarea id="s" style="width: 100px; height: 100px; vertical-align: top;"></textarea>\
 <div style="height: 200%; border: 1px solid black;"></div>\
 </body></html>'},
-    {elem: 'r', expected: expectScrollNone, testwindow: true, middlemousepastepref: true},
-    {elem: 's', expected: expectScrollNone, testwindow: true, middlemousepastepref: true}
+    {elem: "r", expected: expectScrollNone, testwindow: true, middlemousepastepref: true},
+    {elem: "s", expected: expectScrollNone, testwindow: true, middlemousepastepref: true}
   ];
 
   for (let test of allTests) {
@@ -173,25 +173,25 @@ body > div > div {width: 1000px;height: 1000px;}\
                 (!args.scrollVert && content.scrollY == 0))) {
             msg += "Failed: ";
           }
-          msg += 'Window for ' + args.elemid + ' should' + (args.scrollVert ? '' : ' not') + ' have scrolled vertically\n';
+          msg += "Window for " + args.elemid + " should" + (args.scrollVert ? "" : " not") + " have scrolled vertically\n";
 
           if (!((args.scrollHori && content.scrollX > 0) ||
                 (!args.scrollHori && content.scrollX == 0))) {
             msg += "Failed: ";
           }
-          msg += ' Window for ' + args.elemid + ' should' + (args.scrollHori ? '' : ' not') + ' have scrolled horizontally\n';
+          msg += " Window for " + args.elemid + " should" + (args.scrollHori ? "" : " not") + " have scrolled horizontally\n";
         } else {
           let elem = content.document.getElementById(args.elemid);
           if (!((args.scrollVert && elem.scrollTop > 0) ||
                 (!args.scrollVert && elem.scrollTop == 0))) {
             msg += "Failed: ";
           }
-          msg += ' ' + args.elemid + ' should' + (args.scrollVert ? '' : ' not') + ' have scrolled vertically\n';
+          msg += " " + args.elemid + " should" + (args.scrollVert ? "" : " not") + " have scrolled vertically\n";
           if (!((args.scrollHori && elem.scrollLeft > 0) ||
                 (!args.scrollHori && elem.scrollLeft == 0))) {
             msg += "Failed: ";
           }
-          msg += args.elemid + ' should' + (args.scrollHori ? '' : ' not') + ' have scrolled horizontally';
+          msg += args.elemid + " should" + (args.scrollHori ? "" : " not") + " have scrolled horizontally";
         }
 
         Assert.ok(msg.indexOf("Failed") == -1, msg);
