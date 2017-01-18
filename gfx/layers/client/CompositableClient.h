@@ -125,10 +125,10 @@ public:
    * layer. It is not used if the compositable is used with the regular shadow
    * layer forwarder.
    *
-   * If this returns zero, it means the compositable is not async (it is used
+   * If this returns empty, it means the compositable is not async (it is used
    * on the main thread).
    */
-  uint64_t GetAsyncID() const;
+  CompositableHandle GetAsyncHandle() const;
 
   /**
    * Tells the Compositor to create a TextureHost for this TextureClient.
@@ -162,7 +162,7 @@ public:
 
   static RefPtr<CompositableClient> FromIPDLActor(PCompositableChild* aActor);
 
-  void InitIPDLActor(PCompositableChild* aActor, uint64_t aAsyncID = 0);
+  void InitIPDLActor(PCompositableChild* aActor, const CompositableHandle& aHandle);
 
   TextureFlags GetTextureFlags() const { return mTextureFlags; }
 
@@ -181,7 +181,8 @@ protected:
   TextureFlags mTextureFlags;
   RefPtr<TextureClientRecycleAllocator> mTextureClientRecycler;
 
-  uint64_t mAsyncID;
+  // Handle for IPDL operations.
+  CompositableHandle mAsyncHandle;
 
   friend class CompositableChild;
 };

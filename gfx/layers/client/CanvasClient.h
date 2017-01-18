@@ -184,7 +184,6 @@ public:
   CanvasClientBridge(CompositableForwarder* aLayerForwarder,
                      TextureFlags aFlags)
     : CanvasClient(aLayerForwarder, aFlags)
-    , mAsyncID(0)
     , mLayer(nullptr)
   {
   }
@@ -206,7 +205,7 @@ public:
   }
 
 protected:
-  uint64_t mAsyncID;
+  CompositableHandle mAsyncHandle;
   ShadowableLayer* mLayer;
 };
 
