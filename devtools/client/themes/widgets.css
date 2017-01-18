@@ -428,6 +428,7 @@ widgets.css is overwritten. */
 .theme-firebug .breadcrumbs-widget-container .scrollbutton-down {
   padding: 0;
   box-shadow: none;
+  outline: 1px solid var(--theme-splitter-color);
 }
 
 .theme-firebug .breadcrumbs-widget-container .scrollbutton-up:hover,
@@ -439,14 +440,6 @@ widgets.css is overwritten. */
 .theme-firebug .breadcrumbs-widget-container .scrollbutton-up:active,
 .theme-firebug .breadcrumbs-widget-container .scrollbutton-down:active {
   background: none !important;
-}
-
-.theme-firebug .breadcrumbs-widget-container .scrollbutton-up > .toolbarbutton-icon {
-  background-image: url(chrome://global/skin/arrow/arrow-lft-sharp.gif);
-}
-
-.theme-firebug .breadcrumbs-widget-container .scrollbutton-down > .toolbarbutton-icon {
-  background-image: url(chrome://global/skin/arrow/arrow-lft-sharp.gif);
 }
 
 .theme-firebug .breadcrumbs-widget-container .scrollbutton-up:not([disabled]):active:hover > .toolbarbutton-icon,
@@ -1364,17 +1357,27 @@ widgets.css is overwritten. */
   background-color: #AAC3DC !important;
 }
 
+:root[platform="linux"].theme-firebug .devtools-toolbar.table-widget-column-header[sorted] {
+  background-color: #FAC8AF !important;
+  color: inherit !important;
+}
+
 .theme-firebug .devtools-toolbar.table-widget-column-header:hover:active {
   background-image: linear-gradient(rgba(0, 0, 0, 0.1),
                                     transparent);
 }
 
 .theme-firebug .devtools-toolbar.table-widget-column-header[sorted=descending]:not(:active) {
-  background-image: url(chrome://devtools/skin/images/firebug/arrow-down.svg);
+  background-image: url(chrome://devtools/skin/images/firebug/arrow-down.svg) !important;
 }
 
 .theme-firebug .devtools-toolbar.table-widget-column-header[sorted=ascending]:not(:active) {
-  background-image: url(chrome://devtools/skin/images/firebug/arrow-up.svg);
+  background-image: url(chrome://devtools/skin/images/firebug/arrow-up.svg) !important;
+}
+
+.theme-firebug .devtools-toolbar.table-widget-column-header[sorted]:not(:active) {
+  background-position: right !important;
+  background-repeat: no-repeat !important;
 }
 
 /* Cells */

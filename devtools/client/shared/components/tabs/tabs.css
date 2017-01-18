@@ -7,6 +7,7 @@
 
 .tabs {
   height: 100%;
+  background: var(--theme-body-background);
 }
 
 .tabs .tabs-menu {
@@ -46,21 +47,14 @@
   width: 15px;
   height: 100%;
   border-inline-start: 1px solid var(--theme-splitter-color);
-  background: url("chrome://devtools/skin/images/dropmarker.svg");
+  background: var(--theme-tab-toolbar-background);
+  background-image: url("chrome://devtools/skin/images/dropmarker.svg");
   background-repeat: no-repeat;
   background-position: center;
-  background-color: var(--theme-tab-toolbar-background);
 }
 
-/* Light Theme */
-
-.theme-dark .tabs,
-.theme-light .tabs {
-  background: var(--theme-body-background);
-}
-
-.theme-dark .tabs .tabs-navigation,
-.theme-light .tabs .tabs-navigation {
+.tabs .tabs-navigation,
+.tabs .tabs-navigation {
   position: relative;
   border-bottom: 1px solid var(--theme-splitter-color);
   background: var(--theme-tab-toolbar-background);
@@ -74,6 +68,7 @@
   border-width: 0;
   border-inline-start-width: 1px;
   border-color: var(--theme-splitter-color);
+  color: var(--theme-content-color1);
 }
 
 .theme-dark .tabs .tabs-menu-item:last-child,
@@ -83,7 +78,7 @@
 
 .theme-dark .tabs .tabs-menu-item a,
 .theme-light .tabs .tabs-menu-item a {
-  color: var(--theme-content-color1);
+  color: inherit;
   padding: 3px 15px;
 }
 
@@ -100,34 +95,28 @@
 .theme-dark .tabs .tabs-menu-item.is-active,
 .theme-light .tabs .tabs-menu-item.is-active {
   background-color: var(--theme-selection-background);
-}
-
-.theme-dark .tabs .tabs-menu-item.is-active a,
-.theme-light .tabs .tabs-menu-item.is-active a {
   color: var(--theme-selection-color);
 }
 
 /* Dark Theme */
 
-.theme-dark .tabs .tabs-menu-item a {
+.theme-dark .tabs .tabs-menu-item {
   color: var(--theme-body-color-alt);
 }
 
-.theme-dark .tabs .tabs-menu-item:hover:not(.is-active) a {
+.theme-dark .tabs .tabs-menu-item:hover:not(.is-active) {
   color: #CED3D9;
 }
 
-.theme-dark .tabs .tabs-menu-item:hover:active a {
+.theme-dark .tabs .tabs-menu-item:hover:active {
   color: var(--theme-selection-color);
 }
 
 /* Firebug Theme */
 
 .theme-firebug .tabs .tabs-navigation {
-  background-image: linear-gradient(rgba(253, 253, 253, 0.2), rgba(253, 253, 253, 0));
   padding-top: 3px;
   padding-left: 3px;
-  border-bottom: 1px solid rgb(170, 188, 207);
 }
 
 .theme-firebug .tabs .tabs-menu {
@@ -152,14 +141,14 @@
 }
 
 .theme-firebug .tabs .tabs-menu-item:hover:not(.is-active) a {
-  border: 1px solid #C8C8C8;
+  border: 1px solid var(--theme-splitter-color);
   border-bottom: 1px solid transparent;
   background-color: transparent;
 }
 
 .theme-firebug .tabs .tabs-menu-item.is-active a {
-  background-color: rgb(247, 251, 254);
-  border: 1px solid rgb(170, 188, 207);
+  background-color: var(--theme-toolbar-tab-selected-background);
+  border: 1px solid var(--theme-splitter-color);
   border-bottom-color: transparent;
   color: var(--theme-body-color);
 }
