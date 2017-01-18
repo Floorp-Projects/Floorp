@@ -5692,8 +5692,10 @@ BaseCompiler::emitEnd()
     LabelKind kind;
     ExprType type;
     Nothing unused_value;
+
     if (!iter_.readEnd(&kind, &type, &unused_value))
         return false;
+    iter_.popEnd();
 
     switch (kind) {
       case LabelKind::Block: endBlock(type); break;
