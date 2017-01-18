@@ -375,7 +375,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
-      "-moz-calc",
       "calc",
       "currentColor",
       "dashed",
@@ -453,7 +452,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -539,7 +537,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
-      "-moz-calc",
       "calc",
       "currentColor",
       "dashed",
@@ -617,7 +614,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -784,7 +780,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -805,7 +800,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
-      "-moz-calc",
       "calc",
       "currentColor",
       "dashed",
@@ -883,7 +877,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -902,7 +895,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -921,7 +913,6 @@ exports.CSS_PROPERTIES = {
       7
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -1033,7 +1024,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -1051,7 +1041,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -1163,7 +1152,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -1180,7 +1168,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -1241,7 +1228,6 @@ exports.CSS_PROPERTIES = {
       7
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -2052,7 +2038,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "-moz-available",
-      "-moz-calc",
       "-moz-fit-content",
       "-moz-max-content",
       "-moz-min-content",
@@ -2074,7 +2059,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "-moz-available",
-      "-moz-calc",
       "-moz-fit-content",
       "-moz-max-content",
       "-moz-min-content",
@@ -2499,7 +2483,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
-      "-moz-calc",
       "calc",
       "currentColor",
       "hsl",
@@ -2545,7 +2528,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -3118,7 +3100,6 @@ exports.CSS_PROPERTIES = {
       "-moz-available",
       "-moz-block-height",
       "-moz-box",
-      "-moz-calc",
       "-moz-center",
       "-moz-crisp-edges",
       "-moz-deck",
@@ -4015,7 +3996,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -4054,7 +4034,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
-      "-moz-calc",
       "-moz-element",
       "-moz-image-rect",
       "-moz-linear-gradient",
@@ -4104,7 +4083,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
-      "-moz-calc",
       "calc",
       "currentColor",
       "dashed",
@@ -4182,7 +4160,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -4205,7 +4182,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
-      "-moz-calc",
       "calc",
       "currentColor",
       "dashed",
@@ -4283,7 +4259,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -4306,7 +4281,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
-      "-moz-calc",
       "calc",
       "currentColor",
       "dashed",
@@ -4414,7 +4388,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -4596,7 +4569,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
-      "-moz-calc",
       "calc",
       "currentColor",
       "dashed",
@@ -4674,7 +4646,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -4697,7 +4668,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
-      "-moz-calc",
       "calc",
       "currentColor",
       "dashed",
@@ -4775,7 +4745,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -4798,7 +4767,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
-      "-moz-calc",
       "calc",
       "currentColor",
       "dashed",
@@ -4876,7 +4844,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -4917,7 +4884,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
-      "-moz-calc",
       "calc",
       "currentColor",
       "dashed",
@@ -4995,7 +4961,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -5057,7 +5022,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
-      "-moz-calc",
       "calc",
       "currentColor",
       "dashed",
@@ -5165,7 +5129,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -5187,7 +5150,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -5207,7 +5169,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -5459,7 +5420,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -5480,7 +5440,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
-      "-moz-calc",
       "calc",
       "currentColor",
       "dashed",
@@ -5558,7 +5517,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -5577,7 +5535,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -5596,7 +5553,6 @@ exports.CSS_PROPERTIES = {
       7
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -5832,7 +5788,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "-moz-available",
-      "-moz-calc",
       "-moz-fit-content",
       "-moz-max-content",
       "-moz-min-content",
@@ -5854,7 +5809,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "-moz-available",
-      "-moz-calc",
       "-moz-fit-content",
       "-moz-max-content",
       "-moz-min-content",
@@ -6025,7 +5979,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "-moz-block-height",
-      "-moz-calc",
       "all-petite-caps",
       "all-small-caps",
       "auto",
@@ -6124,7 +6077,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -6342,7 +6294,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -6447,7 +6398,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -6479,7 +6429,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -6525,7 +6474,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -6616,7 +6564,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "-moz-available",
-      "-moz-calc",
       "-moz-fit-content",
       "-moz-max-content",
       "-moz-min-content",
@@ -6700,7 +6647,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "-moz-available",
-      "-moz-calc",
       "-moz-fit-content",
       "-moz-max-content",
       "-moz-min-content",
@@ -6813,7 +6759,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -6830,7 +6775,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -6871,7 +6815,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "-moz-block-height",
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -6954,7 +6897,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -6972,7 +6914,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -6990,7 +6931,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -7008,7 +6948,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -7026,7 +6965,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -7044,7 +6982,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -7062,7 +6999,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -7080,7 +7016,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -7098,7 +7033,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -7429,7 +7363,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -7448,7 +7381,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "-moz-available",
-      "-moz-calc",
       "-moz-fit-content",
       "-moz-max-content",
       "-moz-min-content",
@@ -7470,7 +7402,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "-moz-available",
-      "-moz-calc",
       "-moz-fit-content",
       "-moz-max-content",
       "-moz-min-content",
@@ -7492,7 +7423,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "-moz-available",
-      "-moz-calc",
       "-moz-fit-content",
       "-moz-max-content",
       "-moz-min-content",
@@ -7513,7 +7443,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -7532,7 +7461,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "-moz-available",
-      "-moz-calc",
       "-moz-fit-content",
       "-moz-max-content",
       "-moz-min-content",
@@ -7554,7 +7482,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "-moz-available",
-      "-moz-calc",
       "-moz-fit-content",
       "-moz-max-content",
       "-moz-min-content",
@@ -7576,7 +7503,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "-moz-available",
-      "-moz-calc",
       "-moz-fit-content",
       "-moz-max-content",
       "-moz-min-content",
@@ -7657,7 +7583,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -7675,7 +7600,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -7693,7 +7617,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -7711,7 +7634,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -7760,7 +7682,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "COLOR",
-      "-moz-calc",
       "auto",
       "calc",
       "currentColor",
@@ -7816,7 +7737,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -7854,7 +7774,6 @@ exports.CSS_PROPERTIES = {
       6
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -7943,7 +7862,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -7960,7 +7878,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -7977,7 +7894,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -7994,7 +7910,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -8011,7 +7926,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -8028,7 +7942,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -8045,7 +7958,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -8062,7 +7974,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -8079,7 +7990,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -8334,7 +8244,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -8896,7 +8805,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
@@ -8989,7 +8897,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "auto",
       "calc",
       "inherit",
@@ -9209,7 +9116,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "-moz-middle-with-baseline",
       "baseline",
       "bottom",
@@ -9269,7 +9175,6 @@ exports.CSS_PROPERTIES = {
     ],
     "values": [
       "-moz-available",
-      "-moz-calc",
       "-moz-fit-content",
       "-moz-max-content",
       "-moz-min-content",
@@ -9317,7 +9222,6 @@ exports.CSS_PROPERTIES = {
       8
     ],
     "values": [
-      "-moz-calc",
       "calc",
       "inherit",
       "initial",
