@@ -525,10 +525,6 @@ void mozilla_sampler_init(void* stackTop)
   mozilla::tasktracer::InitTaskTracer();
 #endif
 
-#ifdef SPS_STANDALONE
-  mozilla::TimeStamp::Startup();
-#endif
-
   LOG("BEGIN mozilla_sampler_init");
   if (!tlsPseudoStack.init() || !tlsTicker.init() || !tlsStackTop.init()) {
     LOG("Failed to init.");
@@ -619,10 +615,6 @@ void mozilla_sampler_shutdown()
   set_stderr_callback(nullptr);
 
   Sampler::Shutdown();
-
-#ifdef SPS_STANDALONE
-  mozilla::TimeStamp::Shutdown();
-#endif
 
   PseudoStack *stack = tlsPseudoStack.get();
   stack->deref();
