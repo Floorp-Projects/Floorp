@@ -11,7 +11,7 @@ function run_test() {
   do_check_eq(Status.service, STATUS_OK);
   do_check_eq(Status.sync, SYNC_SUCCEEDED);
   do_check_eq(Status.login, LOGIN_SUCCEEDED);
-  if (Status.engines.length) {
+  for (let name in Status.engines) {
     do_throw("Status.engines should be empty.");
   }
   do_check_eq(Status.partial, false);
@@ -73,7 +73,7 @@ function run_test() {
 
   do_check_eq(Status.service, STATUS_OK);
   do_check_eq(Status.sync, SYNC_SUCCEEDED);
-  if (Status.engines.length) {
+  for (name in Status.engines) {
     do_throw("Status.engines should be empty.");
   }
 

@@ -586,6 +586,7 @@ add_task(function* test_signCertificate() {
 });
 
 add_task(function* test_accountExists() {
+  let sessionMessage = JSON.stringify({sessionToken: FAKE_SESSION_TOKEN});
   let existsMessage = JSON.stringify({error: "wrong password", code: 400, errno: 103});
   let doesntExistMessage = JSON.stringify({error: "no such account", code: 400, errno: 102});
   let emptyMessage = "{}";
@@ -618,6 +619,7 @@ add_task(function* test_accountExists() {
 
         default:
           throw new Error("Unexpected login from " + jsonBody.email);
+          break;
       }
     },
   });

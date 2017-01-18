@@ -432,6 +432,7 @@ var TPS = {
     this.shouldValidatePasswords = true;
     try {
       for (let password of passwords) {
+        let password_id = -1;
         Logger.logInfo("executing action " + action.toUpperCase() +
                       " on password " + JSON.stringify(password));
         let passwordOb = new Password(password);
@@ -821,7 +822,7 @@ var TPS = {
       let ajv = new ns.Ajv({ async: "co*" });
       this.pingValidator = ajv.compile(schema);
     } catch (e) {
-      this.DumpError(`Failed to load ping schema and AJV relative to "${testFile}".`, e);
+      this.DumpError(`Failed to load ping schema and AJV relative to "${testFile}".`, e);
     }
   },
 

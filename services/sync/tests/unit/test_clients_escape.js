@@ -11,6 +11,10 @@ add_task(async function test_clients_escape() {
   _("Set up test fixtures.");
 
   await configureIdentity();
+  let baseUri = "http://fakebase/1.1/foo/storage/";
+  let pubUri = baseUri + "keys/pubkey";
+  let privUri = baseUri + "keys/privkey";
+
   let keyBundle = Service.identity.syncKeyBundle;
 
   let engine = Service.clientsEngine;

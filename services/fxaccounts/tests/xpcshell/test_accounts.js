@@ -1004,7 +1004,7 @@ add_task(function* test_sign_out_without_device() {
   delete credentials.deviceId;
   yield fxa.internal.setSignedInUser(credentials);
 
-  yield fxa.internal.getUserAccountData();
+  const user = yield fxa.internal.getUserAccountData();
 
   const spy = {
     signOut: { count: 0, args: [] },
