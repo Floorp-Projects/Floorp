@@ -428,10 +428,16 @@ typedef MutableHandle<ModuleEnvironmentObject*> MutableHandleModuleEnvironmentOb
 
 class WasmFunctionCallObject : public EnvironmentObject
 {
+    // Currently WasmFunctionCallObjects do not use their scopes in a
+    // meaningful way. However, it is an invariant of DebugEnvironments that
+    // environments kept in those maps have live scopes, thus this strong
+    // reference.
+    static const uint32_t SCOPE_SLOT = 1;
+
   public:
     static const Class class_;
 
-    static const uint32_t RESERVED_SLOTS = 1;
+    static const uint32_t RESERVED_SLOTS = 2;
 
     static WasmFunctionCallObject* createHollowForDebug(JSContext* cx,
                                                         WasmFunctionScope* scope);
