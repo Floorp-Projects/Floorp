@@ -124,7 +124,6 @@ void ThreadProfile::StreamSamplesAndMarkers(SpliceableJSONWriter& aWriter, doubl
       schema.WriteField("rss");
       schema.WriteField("uss");
       schema.WriteField("frameNumber");
-      schema.WriteField("power");
     }
 
     aWriter.StartArrayProperty("data");
