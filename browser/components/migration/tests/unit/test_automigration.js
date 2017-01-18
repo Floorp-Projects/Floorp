@@ -610,3 +610,7 @@ add_task(function* checkUndoVisitsState() {
   yield PlacesTestUtils.clearHistory();
 });
 
+add_task(function* checkHistoryRemovalCompletion() {
+  yield AutoMigrate._removeSomeVisits([{url: "http://www.example.com/", limit: -1}]);
+  ok(true, "Removing visits should complete even if removing some visits failed.");
+});
