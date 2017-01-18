@@ -347,11 +347,7 @@ uint32_t UniqueStacks::FrameKey::Hash() const
 {
   uint32_t hash = 0;
   if (!mLocation.IsEmpty()) {
-#ifdef SPS_STANDALONE
-    hash = mozilla::HashString(mLocation.c_str());
-#else
     hash = mozilla::HashString(mLocation.get());
-#endif
   }
   if (mLine.isSome()) {
     hash = mozilla::AddToHash(hash, *mLine);
@@ -389,22 +385,6 @@ UniqueStacks::UniqueStacks(JSContext* aContext)
   mStackTableWriter.StartBareList();
 }
 
-#ifdef SPS_STANDALONE
-uint32_t UniqueStacks::GetOrAddStackIndex(const StackKey& aStack)
-{
-  uint32_t index;
-  auto it = mStackToIndexMap.find(aStack);
-
-  if (it != mStackToIndexMap.end()) {
-    return it->second;
-  }
-
-  index = mStackToIndexMap.size();
-  mStackToIndexMap[aStack] = index;
-  StreamStack(aStack);
-  return index;
-}
-#else
 uint32_t UniqueStacks::GetOrAddStackIndex(const StackKey& aStack)
 {
   uint32_t index;
@@ -418,26 +398,7 @@ uint32_t UniqueStacks::GetOrAddStackIndex(const StackKey& aStack)
   StreamStack(aStack);
   return index;
 }
-#endif
 
-#ifdef SPS_STANDALONE
-uint32_t UniqueStacks::GetOrAddFrameIndex(const OnStackFrameKey& aFrame)
-{
-  uint32_t index;
-  auto it = mFrameToIndexMap.find(aFrame);
-  if (it != mFrameToIndexMap.end()) {
-    MOZ_ASSERT(it->second < mFrameCount);
-    return it->second;
-  }
-
-  // A manual count is used instead of mFrameToIndexMap.Count() due to
-  // forwarding of canonical JIT frames above.
-  index = mFrameCount++;
-  mFrameToIndexMap[aFrame] = index;
-  StreamFrame(aFrame);
-  return index;
-}
-#else
 uint32_t UniqueStacks::GetOrAddFrameIndex(const OnStackFrameKey& aFrame)
 {
   uint32_t index;
@@ -464,7 +425,6 @@ uint32_t UniqueStacks::GetOrAddFrameIndex(const OnStackFrameKey& aFrame)
   StreamFrame(aFrame);
   return index;
 }
-#endif
 
 uint32_t UniqueStacks::LookupJITFrameDepth(void* aAddr)
 {
@@ -523,11 +483,7 @@ void UniqueStacks::StreamFrame(const OnStackFrameKey& aFrame)
   AutoArraySchemaWriter writer(mFrameTableWriter, mUniqueStrings);
 
   if (!aFrame.mJITFrameHandle) {
-#ifdef SPS_STANDALONE
-    writer.StringElement(LOCATION, aFrame.mLocation.c_str());
-#else
     writer.StringElement(LOCATION, aFrame.mLocation.get());
-#endif
     if (aFrame.mLine.isSome()) {
       writer.IntElement(LINE, *aFrame.mLine);
     }

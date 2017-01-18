@@ -142,13 +142,9 @@ class UniqueStacks
 {
 public:
   struct FrameKey {
-#ifdef SPS_STANDALONE
-    std::string mLocation;
-#else
     // This cannot be a std::string, as it is not memmove compatible, which
     // is used by nsHashTable
     nsCString mLocation;
-#endif
     mozilla::Maybe<unsigned> mLine;
     mozilla::Maybe<unsigned> mCategory;
     mozilla::Maybe<void*> mJITAddress;
@@ -289,14 +285,7 @@ private:
 
   SpliceableChunkedJSONWriter mStackTableWriter;
 
-  // This sucks but this is really performance critical, nsDataHashtable is way faster
-  // than map/unordered_map but nsDataHashtable is tied to xpcom so we ifdef
-  // until we can find a better solution.
-#ifdef SPS_STANDALONE
-  std::map<StackKey, uint32_t> mStackToIndexMap;
-#else
   nsDataHashtable<nsGenericHashKey<StackKey>, uint32_t> mStackToIndexMap;
-#endif
 };
 
 //
