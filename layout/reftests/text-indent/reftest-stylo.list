@@ -6,15 +6,15 @@
 
 # == text-indent-single-line-100.html text-indent-single-line-100.html
 # == text-indent-single-line-100.html text-indent-single-line-100.html
-fails == text-indent-single-line-0.html text-indent-single-line-0.html
-fails == text-indent-single-line-percent.html text-indent-single-line-percent.html
+== text-indent-single-line-0.html text-indent-single-line-0.html
+== text-indent-single-line-percent.html text-indent-single-line-percent.html
 # == text-indent-single-line-indent-inline.html text-indent-single-line-indent-inline.html
 # == text-indent-single-line-indent-inline.html text-indent-single-line-indent-inline.html
 # == text-indent-multiple-line.html text-indent-multiple-line.html
 # == text-indent-multiple-line.html text-indent-multiple-line.html
 # == text-indent-multiple-line.html text-indent-multiple-line.html
-fails == text-indent-intrinsic-pref.html text-indent-intrinsic-pref.html
-fails == text-indent-intrinsic-min.html text-indent-intrinsic-min.html
-fails == text-indent-negative-intrinsic-pref.html text-indent-negative-intrinsic-pref.html
-fails == text-indent-negative-intrinsic-min.html text-indent-negative-intrinsic-min.html
-fails == text-indent-parent-dynamic.html text-indent-parent-dynamic.html
+== text-indent-intrinsic-pref.html text-indent-intrinsic-pref.html
+== text-indent-intrinsic-min.html text-indent-intrinsic-min.html
+== text-indent-negative-intrinsic-pref.html text-indent-negative-intrinsic-pref.html
+== text-indent-negative-intrinsic-min.html text-indent-negative-intrinsic-min.html
+== text-indent-parent-dynamic.html text-indent-parent-dynamic.html

@@ -53,30 +53,6 @@ select {
   display: none !important;
 }
 
-#viewerContainer.pdfPresentationMode:fullscreen {
-  top: 0px;
-  border-top: 2px solid transparent;
-  background-color: #000;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  cursor: none;
-  -moz-user-select: none;
-}
-
-.pdfPresentationMode:fullscreen a:not(.internalLink) {
-  display: none;
-}
-
-.pdfPresentationMode:fullscreen .textLayer > div {
-  cursor: none;
-}
-
-.pdfPresentationMode.pdfPresentationModeControls > *,
-.pdfPresentationMode.pdfPresentationModeControls .textLayer > div {
-  cursor: default;
-}
-
 /* outer/inner center provides horizontal center */
 .outerCenter {
   pointer-events: none;
@@ -178,7 +154,7 @@ html[dir='rtl'] #sidebarContent {
 #viewerContainer {
   overflow: hidden;
   position: absolute;
-  top: var(--toolbar-height);
+  top: calc(var(--toolbar-height) + 2px);
   right: 0;
   bottom: 0;
   left: 0;
@@ -191,10 +167,32 @@ html[dir='rtl'] #viewerContainer {
   box-shadow: inset -1px 0 0 hsla(0,0%,100%,.05);
 }
 
+#viewerContainer.pdfPresentationMode {
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #000;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: none;
+  -moz-user-select: none;
+  z-index: 99999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdfPresentationMode #fullscreenWrapper {
+  position: relative;
+  overflow: hidden;
+}
+
 #canvasContainer, #viewportController {
   position: absolute;
   left: 0;
-  top: 2px;
+  top: 0;
   right: 0;
   bottom: 0;
   outline: none;
@@ -210,6 +208,10 @@ html[dir='rtl'] #viewerContainer {
 
 #viewportController {
   overflow: auto;
+}
+
+.pdfPresentationMode #viewportController {
+  overflow: hidden;
 }
 
 #sizer {

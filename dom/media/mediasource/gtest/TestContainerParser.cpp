@@ -13,7 +13,7 @@
 using namespace mozilla;
 
 TEST(ContainerParser, MIMETypes) {
-  const char* content_types[] = {
+  const char* containerTypes[] = {
     "video/webm",
     "audio/webm",
     "video/mp4",
@@ -21,9 +21,10 @@ TEST(ContainerParser, MIMETypes) {
     "audio/aac"
   };
   nsAutoPtr<ContainerParser> parser;
-  for (size_t i = 0; i < ArrayLength(content_types); ++i) {
-    nsAutoCString content_type(content_types[i]);
-    parser = ContainerParser::CreateForMIMEType(content_type);
+  for (size_t i = 0; i < ArrayLength(containerTypes); ++i) {
+    Maybe<MediaContainerType> containerType = MakeMediaContainerType(containerTypes[i]);
+    ASSERT_TRUE(containerType.isSome());
+    parser = ContainerParser::CreateForMIMEType(*containerType);
     ASSERT_NE(parser, nullptr);
   }
 }
@@ -39,7 +40,8 @@ already_AddRefed<MediaByteBuffer> make_adts_header()
 
 TEST(ContainerParser, ADTSHeader) {
   nsAutoPtr<ContainerParser> parser;
-  parser = ContainerParser::CreateForMIMEType(NS_LITERAL_CSTRING("audio/aac"));
+  parser = ContainerParser::CreateForMIMEType(MediaContainerType(
+                                                MEDIAMIMETYPE("audio/aac")));
   ASSERT_NE(parser, nullptr);
 
   // Audio data should have no gaps.
@@ -101,7 +103,8 @@ TEST(ContainerParser, ADTSHeader) {
 
 TEST(ContainerParser, ADTSBlankMedia) {
   nsAutoPtr<ContainerParser> parser;
-  parser = ContainerParser::CreateForMIMEType(NS_LITERAL_CSTRING("audio/aac"));
+  parser = ContainerParser::CreateForMIMEType(MediaContainerType(
+                                                MEDIAMIMETYPE("audio/aac")));
   ASSERT_NE(parser, nullptr);
 
   // Audio data should have no gaps.

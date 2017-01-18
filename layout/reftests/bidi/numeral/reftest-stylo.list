@@ -24,66 +24,66 @@ fails pref(bidi.numeral,1) == arabic-5.html arabic-5.html
 fails pref(bidi.numeral,2) == arabic-5.html arabic-5.html
 fails pref(bidi.numeral,3) == arabic-5.html arabic-5.html
 fails pref(bidi.numeral,4) == arabic-5.html arabic-5.html
-fails pref(bidi.numeral,0) == bug441782-1.html bug441782-1.html
-fails pref(bidi.numeral,1) == bug441782-1.html bug441782-1.html
-fails pref(bidi.numeral,2) == bug441782-1.html bug441782-1.html
-fails pref(bidi.numeral,3) == bug441782-1.html bug441782-1.html
-fails pref(bidi.numeral,4) == bug441782-1.html bug441782-1.html
-fails pref(bidi.numeral,0) == bug441782-2.html bug441782-2.html
-fails pref(bidi.numeral,1) == bug441782-2.html bug441782-2.html
-fails pref(bidi.numeral,2) == bug441782-2.html bug441782-2.html
-fails pref(bidi.numeral,3) == bug441782-2.html bug441782-2.html
-fails pref(bidi.numeral,4) == bug441782-2.html bug441782-2.html
+pref(bidi.numeral,0) == bug441782-1.html bug441782-1.html
+pref(bidi.numeral,1) == bug441782-1.html bug441782-1.html
+pref(bidi.numeral,2) == bug441782-1.html bug441782-1.html
+pref(bidi.numeral,3) == bug441782-1.html bug441782-1.html
+pref(bidi.numeral,4) == bug441782-1.html bug441782-1.html
+pref(bidi.numeral,0) == bug441782-2.html bug441782-2.html
+pref(bidi.numeral,1) == bug441782-2.html bug441782-2.html
+pref(bidi.numeral,2) == bug441782-2.html bug441782-2.html
+pref(bidi.numeral,3) == bug441782-2.html bug441782-2.html
+pref(bidi.numeral,4) == bug441782-2.html bug441782-2.html
 # pref(bidi.numeral,0) == bug441782-3.html bug441782-3.html
 # == bug441782-3.html bug441782-3.html
 # == bug441782-3.html bug441782-3.html
 # == bug441782-3.html bug441782-3.html
 # pref(bidi.numeral,4) == bug441782-3.html bug441782-3.html
-fails pref(bidi.numeral,0) == bug441782-4.html bug441782-4.html
-fails pref(bidi.numeral,1) == bug441782-4.html bug441782-4.html
-fails pref(bidi.numeral,2) == bug441782-4.html bug441782-4.html
-fails pref(bidi.numeral,3) == bug441782-4.html bug441782-4.html
-fails pref(bidi.numeral,4) == bug441782-4.html bug441782-4.html
-fails pref(bidi.numeral,0) == bug441782-5.html bug441782-5.html
-fails pref(bidi.numeral,1) == bug441782-5.html bug441782-5.html
-fails pref(bidi.numeral,2) == bug441782-5.html bug441782-5.html
-fails pref(bidi.numeral,3) == bug441782-5.html bug441782-5.html
-fails pref(bidi.numeral,4) == bug441782-5.html bug441782-5.html
-fails pref(bidi.numeral,0) == bug467672-1.html bug467672-1.html
-fails pref(bidi.numeral,1) == bug467672-1.html bug467672-1.html
-fails pref(bidi.numeral,2) == bug467672-1.html bug467672-1.html
-fails pref(bidi.numeral,3) == bug467672-1.html bug467672-1.html
-fails pref(bidi.numeral,4) == bug467672-1.html bug467672-1.html
-fails pref(bidi.numeral,5) == bug467672-1.html bug467672-1.html
-fails pref(bidi.numeral,6) == bug467672-1.html bug467672-1.html
-fails pref(bidi.numeral,0) == bug467672-2.html bug467672-2.html
-fails pref(bidi.numeral,1) == bug467672-2.html bug467672-2.html
-fails pref(bidi.numeral,2) == bug467672-2.html bug467672-2.html
-fails pref(bidi.numeral,3) == bug467672-2.html bug467672-2.html
-fails pref(bidi.numeral,4) == bug467672-2.html bug467672-2.html
-fails pref(bidi.numeral,5) == bug467672-2.html bug467672-2.html
-fails pref(bidi.numeral,6) == bug467672-2.html bug467672-2.html
-fails pref(bidi.numeral,0) == bug467672-3.html bug467672-3.html
-fails pref(bidi.numeral,1) == bug467672-3.html bug467672-3.html
-fails pref(bidi.numeral,2) == bug467672-3.html bug467672-3.html
-fails pref(bidi.numeral,3) == bug467672-3.html bug467672-3.html
-fails pref(bidi.numeral,4) == bug467672-3.html bug467672-3.html
-fails pref(bidi.numeral,5) == bug467672-3.html bug467672-3.html
-fails pref(bidi.numeral,6) == bug467672-3.html bug467672-3.html
-fails pref(bidi.numeral,0) == bug467672-4.html bug467672-4.html
-fails pref(bidi.numeral,1) == bug467672-4.html bug467672-4.html
-fails pref(bidi.numeral,2) == bug467672-4.html bug467672-4.html
-fails pref(bidi.numeral,3) == bug467672-4.html bug467672-4.html
-fails pref(bidi.numeral,4) == bug467672-4.html bug467672-4.html
-fails pref(bidi.numeral,5) == bug467672-4.html bug467672-4.html
-fails pref(bidi.numeral,6) == bug467672-4.html bug467672-4.html
-fails pref(bidi.numeral,0) == bug467672-5.html bug467672-5.html
-fails pref(bidi.numeral,1) == bug467672-5.html bug467672-5.html
-fails pref(bidi.numeral,2) == bug467672-5.html bug467672-5.html
-fails pref(bidi.numeral,3) == bug467672-5.html bug467672-5.html
-fails pref(bidi.numeral,4) == bug467672-5.html bug467672-5.html
-fails pref(bidi.numeral,5) == bug467672-5.html bug467672-5.html
-fails pref(bidi.numeral,6) == bug467672-5.html bug467672-5.html
+pref(bidi.numeral,0) == bug441782-4.html bug441782-4.html
+pref(bidi.numeral,1) == bug441782-4.html bug441782-4.html
+pref(bidi.numeral,2) == bug441782-4.html bug441782-4.html
+pref(bidi.numeral,3) == bug441782-4.html bug441782-4.html
+pref(bidi.numeral,4) == bug441782-4.html bug441782-4.html
+pref(bidi.numeral,0) == bug441782-5.html bug441782-5.html
+pref(bidi.numeral,1) == bug441782-5.html bug441782-5.html
+pref(bidi.numeral,2) == bug441782-5.html bug441782-5.html
+pref(bidi.numeral,3) == bug441782-5.html bug441782-5.html
+pref(bidi.numeral,4) == bug441782-5.html bug441782-5.html
+pref(bidi.numeral,0) == bug467672-1.html bug467672-1.html
+pref(bidi.numeral,1) == bug467672-1.html bug467672-1.html
+pref(bidi.numeral,2) == bug467672-1.html bug467672-1.html
+pref(bidi.numeral,3) == bug467672-1.html bug467672-1.html
+pref(bidi.numeral,4) == bug467672-1.html bug467672-1.html
+pref(bidi.numeral,5) == bug467672-1.html bug467672-1.html
+pref(bidi.numeral,6) == bug467672-1.html bug467672-1.html
+pref(bidi.numeral,0) == bug467672-2.html bug467672-2.html
+pref(bidi.numeral,1) == bug467672-2.html bug467672-2.html
+pref(bidi.numeral,2) == bug467672-2.html bug467672-2.html
+pref(bidi.numeral,3) == bug467672-2.html bug467672-2.html
+pref(bidi.numeral,4) == bug467672-2.html bug467672-2.html
+pref(bidi.numeral,5) == bug467672-2.html bug467672-2.html
+pref(bidi.numeral,6) == bug467672-2.html bug467672-2.html
+pref(bidi.numeral,0) == bug467672-3.html bug467672-3.html
+pref(bidi.numeral,1) == bug467672-3.html bug467672-3.html
+pref(bidi.numeral,2) == bug467672-3.html bug467672-3.html
+pref(bidi.numeral,3) == bug467672-3.html bug467672-3.html
+pref(bidi.numeral,4) == bug467672-3.html bug467672-3.html
+pref(bidi.numeral,5) == bug467672-3.html bug467672-3.html
+pref(bidi.numeral,6) == bug467672-3.html bug467672-3.html
+pref(bidi.numeral,0) == bug467672-4.html bug467672-4.html
+pref(bidi.numeral,1) == bug467672-4.html bug467672-4.html
+pref(bidi.numeral,2) == bug467672-4.html bug467672-4.html
+pref(bidi.numeral,3) == bug467672-4.html bug467672-4.html
+pref(bidi.numeral,4) == bug467672-4.html bug467672-4.html
+pref(bidi.numeral,5) == bug467672-4.html bug467672-4.html
+pref(bidi.numeral,6) == bug467672-4.html bug467672-4.html
+pref(bidi.numeral,0) == bug467672-5.html bug467672-5.html
+pref(bidi.numeral,1) == bug467672-5.html bug467672-5.html
+pref(bidi.numeral,2) == bug467672-5.html bug467672-5.html
+pref(bidi.numeral,3) == bug467672-5.html bug467672-5.html
+pref(bidi.numeral,4) == bug467672-5.html bug467672-5.html
+pref(bidi.numeral,5) == bug467672-5.html bug467672-5.html
+pref(bidi.numeral,6) == bug467672-5.html bug467672-5.html
 fails pref(bidi.numeral,0) == persian-1.html persian-1.html
 fails pref(bidi.numeral,1) == persian-1.html persian-1.html
 fails pref(bidi.numeral,2) == persian-1.html persian-1.html
