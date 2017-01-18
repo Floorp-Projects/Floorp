@@ -440,7 +440,7 @@ class WasmFunctionCallObject : public EnvironmentObject
     static const uint32_t RESERVED_SLOTS = 2;
 
     static WasmFunctionCallObject* createHollowForDebug(JSContext* cx,
-                                                        WasmFunctionScope* scope);
+                                                        Handle<WasmFunctionScope*> scope);
 };
 
 class LexicalEnvironmentObject : public EnvironmentObject
