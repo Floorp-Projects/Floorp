@@ -92,6 +92,9 @@ task_description_schema = Schema({
         # the names to use for this job in the TaskCluster index
         'job-name': basestring,
 
+        # Type of gecko v2 index to use
+        'type': Any('generic', 'nightly', 'l10n'),
+
         # The rank that the task will receive in the TaskCluster
         # index.  A newly completed task supercedes the currently
         # indexed task iff it has a higher rank.  If unspecified,
@@ -374,6 +377,19 @@ V2_ROUTE_TEMPLATES = [
     "index.gecko.v2.{project}.revision.{head_rev}.{product}.{job-name}",
 ]
 
+V2_NIGHTLY_TEMPLATES = [
+    "index.gecko.v2.{project}.nightly.latest.{product}.{job-name}",
+    "index.gecko.v2.{project}.nightly.{build_date}.revision.{head_rev}.{product}.{job-name}",
+    "index.gecko.v2.{project}.nightly.{build_date}.latest.{product}.{job-name}",
+    "index.gecko.v2.{project}.nightly.revision.{head_rev}.{product}.{job-name}",
+]
+
+V2_L10N_TEMPLATES = [
+    "index.gecko.v2.{project}.revision.{head_rev}.{product}-l10n.{job-name}.{locale}",
+    "index.gecko.v2.{project}.pushdate.{build_date_long}.{product}-l10n.{job-name}.{locale}",
+    "index.gecko.v2.{project}.latest.{product}-l10n.{job-name}.{locale}",
+]
+
 # the roots of the treeherder routes, keyed by treeherder environment
 TREEHERDER_ROUTE_ROOTS = {
     'production': 'tc-treeherder',
@@ -389,6 +405,16 @@ payload_builders = {}
 def payload_builder(name):
     def wrap(func):
         payload_builders[name] = func
+        return func
+    return wrap
+
+# define a collection of index builders, depending on the type implementation
+index_builders = {}
+
+
+def index_builder(name):
+    def wrap(func):
+        index_builders[name] = func
         return func
     return wrap
 
@@ -594,28 +620,94 @@ def validate(config, tasks):
             "In task {!r}:".format(task.get('label', '?no-label?')))
 
 
+@index_builder('generic')
+def add_generic_index_routes(config, task):
+    index = task.get('index')
+    routes = task.setdefault('routes', [])
+
+    job_name = index['job-name']
+    if job_name not in JOB_NAME_WHITELIST:
+        raise Exception(JOB_NAME_WHITELIST_ERROR.format(job_name))
+
+    subs = config.params.copy()
+    subs['job-name'] = job_name
+    subs['build_date_long'] = time.strftime("%Y.%m.%d.%Y%m%d%H%M%S",
+                                            time.gmtime(config.params['build_date']))
+    subs['product'] = index['product']
+
+    for tpl in V2_ROUTE_TEMPLATES:
+        routes.append(tpl.format(**subs))
+
+    return task
+
+
+@index_builder('nightly')
+def add_nightly_index_routes(config, task):
+    index = task.get('index')
+    routes = task.setdefault('routes', [])
+
+    job_name = index['job-name']
+    if job_name not in JOB_NAME_WHITELIST:
+        raise Exception(JOB_NAME_WHITELIST_ERROR.format(job_name))
+
+    subs = config.params.copy()
+    subs['job-name'] = job_name
+    subs['build_date_long'] = time.strftime("%Y.%m.%d.%Y%m%d%H%M%S",
+                                            time.gmtime(config.params['build_date']))
+    subs['build_date'] = time.strftime("%Y.%m.%d",
+                                       time.gmtime(config.params['build_date']))
+    subs['product'] = index['product']
+
+    for tpl in V2_NIGHTLY_TEMPLATES:
+        routes.append(tpl.format(**subs))
+
+    return task
+
+
+@index_builder('l10n')
+def add_l10n_index_routes(config, task):
+    index = task.get('index')
+    routes = task.setdefault('routes', [])
+
+    job_name = index['job-name']
+    if job_name not in JOB_NAME_WHITELIST:
+        raise Exception(JOB_NAME_WHITELIST_ERROR.format(job_name))
+
+    subs = config.params.copy()
+    subs['job-name'] = job_name
+    subs['build_date_long'] = time.strftime("%Y.%m.%d.%Y%m%d%H%M%S",
+                                            time.gmtime(config.params['build_date']))
+    subs['product'] = index['product']
+
+    locales = task['attributes'].get('chunk_locales',
+                                     task['attributes'].get('all_locales'))
+
+    if not locales:
+        raise Exception("Error: Unable to use l10n index for tasks without locales")
+
+    # If there are too many locales, we can't write a route for all of them
+    # See Bug 1323792
+    if len(locales) > 18:  # 18 * 3 = 54, max routes = 64
+        return task
+
+    for locale in locales:
+        for tpl in V2_L10N_TEMPLATES:
+            routes.append(tpl.format(locale=locale, **subs))
+
+    return task
+
+
 @transforms.add
 def add_index_routes(config, tasks):
     for task in tasks:
         index = task.get('index')
-        routes = task.setdefault('routes', [])
 
         if not index:
             yield task
             continue
 
-        job_name = index['job-name']
-        if job_name not in JOB_NAME_WHITELIST:
-            raise Exception(JOB_NAME_WHITELIST_ERROR.format(job_name))
-
-        subs = config.params.copy()
-        subs['job-name'] = job_name
-        subs['build_date_long'] = time.strftime("%Y.%m.%d.%Y%m%d%H%M%S",
-                                                time.gmtime(config.params['build_date']))
-        subs['product'] = index['product']
-
-        for tpl in V2_ROUTE_TEMPLATES:
-            routes.append(tpl.format(**subs))
+        index_type = index.get('type', 'generic')
+        task = index_builders[index_type](config, task)
 
         # The default behavior is to rank tasks according to their tier
         extra_index = task.setdefault('extra', {}).setdefault('index', {})
@@ -736,19 +828,28 @@ def check_v2_routes():
     with open("testing/mozharness/configs/routes.json", "rb") as f:
         routes_json = json.load(f)
 
-    # we only deal with the 'routes' key here
-    routes = routes_json['routes']
+    for key in ('routes', 'nightly', 'l10n'):
+        if key == 'routes':
+            tc_template = V2_ROUTE_TEMPLATES
+        elif key == 'nightly':
+            tc_template = V2_NIGHTLY_TEMPLATES
+        elif key == 'l10n':
+            tc_template = V2_L10N_TEMPLATES
 
-    # we use different variables than mozharness
-    for mh, tg in [
-            ('{index}', 'index'),
-            ('{build_product}', '{product}'),
-            ('{build_name}-{build_type}', '{job-name}'),
-            ('{year}.{month}.{day}.{pushdate}', '{build_date_long}')]:
-        routes = [r.replace(mh, tg) for r in routes]
+        routes = routes_json[key]
 
-    if sorted(routes) != sorted(V2_ROUTE_TEMPLATES):
-        raise Exception("V2_ROUTE_TEMPLATES does not match Mozharness's routes.json: "
-                        "%s vs %s" % (V2_ROUTE_TEMPLATES, routes))
+        # we use different variables than mozharness
+        for mh, tg in [
+                ('{index}', 'index'),
+                ('{build_product}', '{product}'),
+                ('{build_name}-{build_type}', '{job-name}'),
+                ('{year}.{month}.{day}.{pushdate}', '{build_date_long}'),
+                ('{year}.{month}.{day}', '{build_date}')]:
+            routes = [r.replace(mh, tg) for r in routes]
+
+        if sorted(routes) != sorted(tc_template):
+            raise Exception("V2 TEMPLATES do not match Mozharness's routes.json: "
+                            "(tc):%s vs (mh):%s" % (tc_template, routes))
+
 
 check_v2_routes()

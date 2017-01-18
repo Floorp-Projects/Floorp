@@ -1633,12 +1633,10 @@ XMLHttpRequestWorker::ReleaseProxy(ReleaseType aType)
         new SyncTeardownRunnable(mWorkerPrivate, mProxy);
       mProxy = nullptr;
 
-      ErrorResult forAssertionsOnly;
+      IgnoredErrorResult forAssertionsOnly;
       // This runnable _must_ be executed.
-      runnable->Dispatch(Killing, forAssertionsOnly);
-      if (forAssertionsOnly.Failed()) {
-        NS_ERROR("Failed to dispatch teardown runnable!");
-      }
+      runnable->Dispatch(Dead, forAssertionsOnly);
+      MOZ_DIAGNOSTIC_ASSERT(!forAssertionsOnly.Failed());
     }
   }
 }

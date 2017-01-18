@@ -692,8 +692,7 @@ ReadDirectoryInternal(JSStructuredCloneReader* aReader,
   }
 
   nsCOMPtr<nsIFile> file;
-  nsresult rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(path), true,
-                                      getter_AddRefs(file));
+  nsresult rv = NS_NewLocalFile(path, true, getter_AddRefs(file));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }

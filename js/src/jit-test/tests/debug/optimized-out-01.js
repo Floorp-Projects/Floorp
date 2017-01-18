@@ -3,6 +3,9 @@
 // Unfortunately these tests are brittle. They depend on opaque JIT heuristics
 // kicking in.
 
+// Use gczeal 0 to keep CGC from invalidating Ion code and causing test failures.
+gczeal(0);
+
 load(libdir + "jitopts.js");
 
 if (!jitTogglesMatch(Opts_Ion2NoOffthreadCompilation))
