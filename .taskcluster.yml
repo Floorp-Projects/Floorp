@@ -13,8 +13,14 @@ scopes:
   - docker-worker:*
   - scheduler:*
 
-# Available mustache parameters (see the mozilla-taskcluster source):
+# This file undergoes substitution to create tasks.  For on-push tasks, that
+# substitution is done by mozilla-taskcluster.  For cron tasks, that substitution
+# is done by `taskcluster/taskgraph/cron/decision.py`.  If you change any of the
+# template parameters, please do so in all three places!
 #
+# Available template parameters:
+#
+# - now:            current time
 # - owner:          push user (email address)
 # - source:         URL of this YAML file
 # - url:            repository URL
@@ -29,6 +35,7 @@ scopes:
 # and functions:
 # - as_slugid:      convert a label into a slugId
 # - from_now:       generate a timestamp at a fixed offset from now
+# - shellquote:     quote the contents for injection into shell
 
 # The resulting tasks' taskGroupId will be equal to the taskId of the first
 # task listed here, which should be the decision task.  This gives other tools
@@ -42,7 +49,7 @@ tasks:
       deadline: '{{#from_now}}1 day{{/from_now}}'
       expires: '{{#from_now}}365 day{{/from_now}}'
       metadata:
-        owner: mozilla-taskcluster-maintenance@mozilla.com
+        owner: {{owner}}
         source: {{{source}}}
         name: "Gecko Decision Task"
         description: |
