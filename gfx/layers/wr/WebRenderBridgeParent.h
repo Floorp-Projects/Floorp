@@ -56,6 +56,7 @@ public:
   wr::PipelineId PipelineId() { return mPipelineId; }
   gl::GLContext* GLContext() { return mGLContext.get(); }
   WrWindowState* WindowState() { return mWRWindowState; }
+  wr::WebRenderAPI* GetWebRenderAPI() { return mApi; }
   layers::Compositor* Compositor() { return mCompositor.get(); }
   CompositorVsyncScheduler* CompositorScheduler() { return mCompositorScheduler.get(); }
 

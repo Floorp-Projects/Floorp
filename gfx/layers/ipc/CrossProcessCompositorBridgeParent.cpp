@@ -217,12 +217,19 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
   CompositorBridgeParent* cbp = sIndirectLayerTrees[pipelineHandle].mParent;
   WebRenderBridgeParent* root = sIndirectLayerTrees[cbp->RootLayerTreeId()].mWrBridge.get();
 
-  WebRenderBridgeParent* parent = new WebRenderBridgeParent(
-    this, aPipelineId, nullptr, root->GLContext(), root->WindowState(), root->Compositor());
+  WebRenderBridgeParent* parent = nullptr;
+  if (MOZ_USE_RENDER_THREAD) {
+    RefPtr<wr::WebRenderAPI> api = root->GetWebRenderAPI();
+    parent = new WebRenderBridgeParent(this, aPipelineId, nullptr, Move(api));
+  } else {
+    parent = new WebRenderBridgeParent(this, aPipelineId, nullptr, root->GLContext(),
+                                       root->WindowState(), root->Compositor());
+  }
+
   parent->AddRef(); // IPDL reference
   sIndirectLayerTrees[pipelineHandle].mCrossProcessParent = this;
   sIndirectLayerTrees[pipelineHandle].mWrBridge = parent;
-  *aTextureFactoryIdentifier = parent->Compositor()->GetTextureFactoryIdentifier();
+  *aTextureFactoryIdentifier = parent->GetTextureFactoryIdentifier();
   return parent;
 }
 
