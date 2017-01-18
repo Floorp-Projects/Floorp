@@ -26,7 +26,6 @@ import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
-import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.accounts.Account;
@@ -43,7 +42,7 @@ import android.provider.Browser;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
-public class Tabs implements BundleEventListener, GeckoEventListener {
+public class Tabs implements BundleEventListener {
     private static final String LOGTAG = "GeckoTabs";
 
     // mOrder and mTabs are always of the same cardinality, and contain the same values.
@@ -108,34 +107,28 @@ public class Tabs implements BundleEventListener, GeckoEventListener {
 
     private Tabs() {
         EventDispatcher.getInstance().registerUiThreadListener(this,
-            "Tab:Added",
-            null);
-
-        EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
-            "Tab:Close",
-            "Tab:Select",
-            "Tab:SelectAndForeground",
             "Content:LocationChange",
             "Content:SecurityChange",
             "Content:StateChange",
             "Content:LoadError",
             "Content:PageShow",
-            "DOMTitleChanged",
-            "Link:Favicon",
-            "Link:Touchicon",
-            "Link:Feed",
-            "Link:OpenSearch",
-            "Link:Manifest",
+            "Content:DOMTitleChanged",
             "DesktopMode:Changed",
-            "Tab:StreamStart",
-            "Tab:StreamStop",
+            "Link:Favicon",
+            "Link:Feed",
+            "Link:Manifest",
+            "Link:OpenSearch",
+            "Link:Touchicon",
+            "Tab:Added",
             "Tab:AudioPlayingChange",
+            "Tab:Close",
             "Tab:MediaPlaybackChange",
+            "Tab:RecordingChange",
+            "Tab:Select",
             "Tab:SetParentId",
             null);
 
         mPrivateClearColor = Color.RED;
-
     }
 
     public synchronized void attachToContext(Context context, LayerView layerView) {
@@ -485,11 +478,12 @@ public class Tabs implements BundleEventListener, GeckoEventListener {
     @Override // BundleEventListener
     public synchronized void handleMessage(final String event, final GeckoBundle message,
                                            final EventCallback callback) {
+        // All other events handled below should contain a tabID property
+        final int id = message.getInt("tabID", -1);
+        Tab tab = getTab(id);
+
         // "Tab:Added" is a special case because tab will be null if the tab was just added
         if ("Tab:Added".equals(event)) {
-            int id = message.getInt("tabID");
-            Tab tab = getTab(id);
-
             String url = message.getString("uri");
 
             if (message.getBoolean("cancelEditMode")) {
@@ -521,103 +515,105 @@ public class Tabs implements BundleEventListener, GeckoEventListener {
             if (message.getBoolean("desktopMode"))
                 tab.setDesktopMode(true);
         }
-    }
 
-    // GeckoEventListener implementation
-    @Override
-    public synchronized void handleMessage(String event, JSONObject message) {
-        Log.d(LOGTAG, "handleMessage: " + event);
-        try {
-            // All other events handled below should contain a tabID property
-            int id = message.getInt("tabID");
-            Tab tab = getTab(id);
+        // Tab was already closed; abort
+        if (tab == null) {
+            return;
+        }
 
-            // Tab was already closed; abort
-            if (tab == null)
-                return;
+        if ("Tab:Close".equals(event)) {
+            closeTab(tab);
 
-            if (event.equals("Tab:Close")) {
-                closeTab(tab);
-            } else if (event.equals("Tab:Select")) {
-                selectTab(tab.getId());
-            } else if (event.equals("Tab:SelectAndForeground")) {
+        } else if ("Tab:Select".equals(event)) {
+            if (message.getBoolean("foreground", false)) {
                 GeckoAppShell.launchOrBringToFront();
-                selectTab(tab.getId());
-            } else if (event.equals("Content:LocationChange")) {
-                tab.handleLocationChange(message);
-            } else if (event.equals("Content:SecurityChange")) {
-                tab.updateIdentityData(message.getJSONObject("identity"));
-                notifyListeners(tab, TabEvents.SECURITY_CHANGE);
-            } else if (event.equals("Content:StateChange")) {
-                int state = message.getInt("state");
-                if ((state & GeckoAppShell.WPL_STATE_IS_NETWORK) != 0) {
-                    if ((state & GeckoAppShell.WPL_STATE_START) != 0) {
-                        boolean restoring = message.getBoolean("restoring");
-                        tab.handleDocumentStart(restoring, message.getString("uri"));
-                        notifyListeners(tab, Tabs.TabEvents.START);
-                    } else if ((state & GeckoAppShell.WPL_STATE_STOP) != 0) {
-                        tab.handleDocumentStop(message.getBoolean("success"));
-                        notifyListeners(tab, Tabs.TabEvents.STOP);
-                    }
-                }
-            } else if (event.equals("Content:LoadError")) {
-                tab.handleContentLoaded();
-                notifyListeners(tab, Tabs.TabEvents.LOAD_ERROR);
-            } else if (event.equals("Content:PageShow")) {
-                tab.setLoadedFromCache(message.getBoolean("fromCache"));
-                tab.updateUserRequested(message.getString("userRequested"));
-                notifyListeners(tab, TabEvents.PAGE_SHOW);
-            } else if (event.equals("DOMTitleChanged")) {
-                tab.updateTitle(message.getString("title"));
-            } else if (event.equals("Link:Favicon")) {
-                // Add the favicon to the set of available icons for this tab.
+            }
+            selectTab(tab.getId());
 
-                tab.addFavicon(message.getString("href"), message.getInt("size"), message.getString("mime"));
+        } else if ("Content:LocationChange".equals(event)) {
+            tab.handleLocationChange(message);
 
-                // Load the favicon. If the tab is still loading, we actually do the load once the
-                // page has loaded, in an attempt to prevent the favicon load from having a
-                // detrimental effect on page load time.
-                if (tab.getState() != Tab.STATE_LOADING) {
-                    tab.loadFavicon();
-                }
-            } else if (event.equals("Link:Touchicon")) {
-                tab.addTouchicon(message.getString("href"), message.getInt("size"), message.getString("mime"));
-            } else if (event.equals("Link:Feed")) {
-                tab.setHasFeeds(true);
-                notifyListeners(tab, TabEvents.LINK_FEED);
+        } else if ("Content:SecurityChange".equals(event)) {
+            tab.updateIdentityData(message.getBundle("identity"));
+            notifyListeners(tab, TabEvents.SECURITY_CHANGE);
 
-            } else if (event.equals("Link:Manifest")) {
-                tab.setHasManifest(true);
-            } else if (event.equals("Link:OpenSearch")) {
-                boolean visible = message.getBoolean("visible");
-                tab.setHasOpenSearch(visible);
-            } else if (event.equals("DesktopMode:Changed")) {
-                tab.setDesktopMode(message.getBoolean("desktopMode"));
-                notifyListeners(tab, TabEvents.DESKTOP_MODE_CHANGE);
-            } else if (event.equals("Tab:StreamStart")) {
-                tab.setRecording(true);
-                notifyListeners(tab, TabEvents.RECORDING_CHANGE);
-            } else if (event.equals("Tab:StreamStop")) {
-                tab.setRecording(false);
-                notifyListeners(tab, TabEvents.RECORDING_CHANGE);
-            } else if (event.equals("Tab:AudioPlayingChange")) {
-                tab.setIsAudioPlaying(message.getBoolean("isAudioPlaying"));
-                notifyListeners(tab, TabEvents.AUDIO_PLAYING_CHANGE);
-            } else if (event.equals("Tab:MediaPlaybackChange")) {
-                final String status = message.getString("status");
-                if (status.equals("resume")) {
-                    notifyListeners(tab, TabEvents.MEDIA_PLAYING_RESUME);
-                } else {
-                    tab.setIsMediaPlaying(status.equals("start"));
-                    notifyListeners(tab, TabEvents.MEDIA_PLAYING_CHANGE);
-                }
-            } else if (event.equals("Tab:SetParentId")) {
-                int newParentId = message.getInt("parentID");
-                tab.setParentId(newParentId);
+        } else if ("Content:StateChange".equals(event)) {
+            final int state = message.getInt("state");
+            if ((state & GeckoAppShell.WPL_STATE_IS_NETWORK) == 0) {
+                return;
+            }
+            if ((state & GeckoAppShell.WPL_STATE_START) != 0) {
+                final boolean restoring = message.getBoolean("restoring");
+                tab.handleDocumentStart(restoring, message.getString("uri"));
+                notifyListeners(tab, Tabs.TabEvents.START);
+            } else if ((state & GeckoAppShell.WPL_STATE_STOP) != 0) {
+                tab.handleDocumentStop(message.getBoolean("success"));
+                notifyListeners(tab, Tabs.TabEvents.STOP);
             }
 
-        } catch (Exception e) {
-            Log.w(LOGTAG, "handleMessage threw for " + event, e);
+        } else if ("Content:LoadError".equals(event)) {
+            tab.handleContentLoaded();
+            notifyListeners(tab, Tabs.TabEvents.LOAD_ERROR);
+
+        } else if ("Content:PageShow".equals(event)) {
+            tab.setLoadedFromCache(message.getBoolean("fromCache"));
+            tab.updateUserRequested(message.getString("userRequested"));
+            notifyListeners(tab, TabEvents.PAGE_SHOW);
+
+        } else if ("Content:DOMTitleChanged".equals(event)) {
+            tab.updateTitle(message.getString("title"));
+
+        } else if ("Link:Favicon".equals(event)) {
+            // Add the favicon to the set of available icons for this tab.
+            tab.addFavicon(message.getString("href"),
+                           message.getInt("size"),
+                           message.getString("mime"));
+
+            // Load the favicon. If the tab is still loading, we actually do the load once the
+            // page has loaded, in an attempt to prevent the favicon load from having a
+            // detrimental effect on page load time.
+            if (tab.getState() != Tab.STATE_LOADING) {
+                tab.loadFavicon();
+            }
+
+        } else if ("Link:Touchicon".equals(event)) {
+            tab.addTouchicon(message.getString("href"),
+                             message.getInt("size"),
+                             message.getString("mime"));
+
+        } else if ("Link:Feed".equals(event)) {
+            tab.setHasFeeds(true);
+            notifyListeners(tab, TabEvents.LINK_FEED);
+
+        } else if ("Link:OpenSearch".equals(event)) {
+            tab.setHasOpenSearch(message.getBoolean("visible"));
+
+        } else if ("Link:Manifest".equals(event)) {
+            tab.setHasManifest(true);
+
+        } else if ("DesktopMode:Changed".equals(event)) {
+            tab.setDesktopMode(message.getBoolean("desktopMode"));
+            notifyListeners(tab, TabEvents.DESKTOP_MODE_CHANGE);
+
+        } else if ("Tab:RecordingChange".equals(event)) {
+            tab.setRecording(message.getBoolean("recording"));
+            notifyListeners(tab, TabEvents.RECORDING_CHANGE);
+
+        } else if ("Tab:AudioPlayingChange".equals(event)) {
+            tab.setIsAudioPlaying(message.getBoolean("isAudioPlaying"));
+            notifyListeners(tab, TabEvents.AUDIO_PLAYING_CHANGE);
+
+        } else if ("Tab:MediaPlaybackChange".equals(event)) {
+            final String status = message.getString("status");
+            if (status.equals("resume")) {
+                notifyListeners(tab, TabEvents.MEDIA_PLAYING_RESUME);
+            } else {
+                tab.setIsMediaPlaying(status.equals("start"));
+                notifyListeners(tab, TabEvents.MEDIA_PLAYING_CHANGE);
+            }
+
+        } else if ("Tab:SetParentId".equals(event)) {
+            tab.setParentId(message.getInt("parentID", -1));
         }
     }
 
@@ -687,7 +683,7 @@ public class Tabs implements BundleEventListener, GeckoEventListener {
             throw new IllegalArgumentException("onTabChanged:" + msg + " must specify a tab.");
         }
 
-        ThreadUtils.postToUiThread(new Runnable() {
+        final Runnable notifier = new Runnable() {
             @Override
             public void run() {
                 onTabChanged(tab, msg, data);
@@ -701,10 +697,16 @@ public class Tabs implements BundleEventListener, GeckoEventListener {
                     items.next().onTabChanged(tab, msg, data);
                 }
             }
-        });
+        };
+
+        if (ThreadUtils.isOnUiThread()) {
+            notifier.run();
+        } else {
+            ThreadUtils.postToUiThread(notifier);
+        }
     }
 
-    private void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+    /* package */ void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
         switch (msg) {
             // We want the tab record to have an accurate favicon, so queue
             // the persisting of tabs when it changes.
