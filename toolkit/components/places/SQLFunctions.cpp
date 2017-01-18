@@ -549,7 +549,8 @@ namespace places {
           "/* do not warn (bug 659740 - SQLite may ignore index if few visits exist) */"
           "SELECT "
             "ROUND((strftime('%s','now','localtime','utc') - v.visit_date/1000000)/86400), "
-            "IFNULL(origin.visit_type, v.visit_type), "
+            "origin.visit_type, "
+            "v.visit_type, "
             "target.id NOTNULL "
           "FROM moz_historyvisits v "
           "LEFT JOIN moz_historyvisits origin ON origin.id = v.from_visit "
@@ -573,9 +574,21 @@ namespace places {
            numSampledVisits < maxVisits &&
            NS_SUCCEEDED(getVisits->ExecuteStep(&hasResult)) && hasResult;
            numSampledVisits++) {
+
         int32_t visitType;
-        rv = getVisits->GetInt32(1, &visitType);
+        bool isNull = false;
+        rv = getVisits->GetIsNull(1, &isNull);
         NS_ENSURE_SUCCESS(rv, rv);
+
+        if (isRedirect == eIsRedirect || isNull) {
+          // Use the main visit_type.
+          rv = getVisits->GetInt32(2, &visitType);
+          NS_ENSURE_SUCCESS(rv, rv);
+        } else {
+          // This is a redirect target, so use the origin visit_type.
+          rv = getVisits->GetInt32(1, &visitType);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
 
         RedirectState visitIsRedirect = isRedirect;
 
@@ -584,7 +597,7 @@ namespace places {
         // value from the database.
         if (visitIsRedirect == eRedirectUnknown || numSampledVisits >= 1) {
           int32_t redirect;
-          rv = getVisits->GetInt32(2, &redirect);
+          rv = getVisits->GetInt32(3, &redirect);
           NS_ENSURE_SUCCESS(rv, rv);
           visitIsRedirect = !!redirect ? eIsRedirect : eIsNotRedirect;
         }
