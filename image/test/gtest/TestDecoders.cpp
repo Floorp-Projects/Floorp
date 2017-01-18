@@ -64,7 +64,7 @@ CheckDecoderState(const ImageTestCase& aTestCase, Decoder* aDecoder)
   RefPtr<SourceSurface> surface = currentFrame->GetSourceSurface();
 
   // Verify that the resulting surfaces matches our expectations.
-  EXPECT_EQ(SurfaceType::DATA, surface->GetType());
+  EXPECT_TRUE(surface->IsDataSourceSurface());
   EXPECT_TRUE(surface->GetFormat() == SurfaceFormat::B8G8R8X8 ||
               surface->GetFormat() == SurfaceFormat::B8G8R8A8);
   EXPECT_EQ(aTestCase.mOutputSize, surface->GetSize());
