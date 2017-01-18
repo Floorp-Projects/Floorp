@@ -9,6 +9,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 
+import java.util.TreeSet;
+
 @RunWith(TestRunner.class)
 public class TestIconDescriptorComparator {
     private static final String TEST_ICON_URL_1 = "http://www.mozilla.org/favicon.ico";
@@ -114,5 +116,37 @@ public class TestIconDescriptorComparator {
 
         Assert.assertNotEquals(0, comparator.compare(descriptor1, descriptor2));
         Assert.assertNotEquals(0, comparator.compare(descriptor2, descriptor1));
+    }
+
+    @Test
+    public void testWithSameObject() {
+        final IconDescriptor descriptor = IconDescriptor.createTouchicon(TEST_ICON_URL_1, TEST_SIZE, TEST_MIME_TYPE);
+
+        final IconDescriptorComparator comparator = new IconDescriptorComparator();
+        Assert.assertEquals(0, comparator.compare(descriptor, descriptor));
+    }
+
+    /**
+     * This test reconstructs the scenario from bug 1331808. A comparator implementation that does
+     * not return a consistent order can break the implementation of remove() of the TreeSet class.
+     */
+    @Test
+    public void testBug1331808() {
+        TreeSet<IconDescriptor> set = new TreeSet<>(new IconDescriptorComparator());
+
+        set.add(IconDescriptor.createFavicon("http://example.org/new-logo32.jpg", 0, ""));
+        set.add(IconDescriptor.createTouchicon("http://example.org/new-logo57.jpg", 0, ""));
+        set.add(IconDescriptor.createTouchicon("http://example.org/new-logo76.jpg", 76, ""));
+        set.add(IconDescriptor.createTouchicon("http://example.org/new-logo120.jpg", 120, ""));
+        set.add(IconDescriptor.createTouchicon("http://example.org/new-logo152.jpg", 114, ""));
+        set.add(IconDescriptor.createFavicon("http://example.org/02.png", 32, ""));
+        set.add(IconDescriptor.createFavicon("http://example.org/01.png", 192, ""));
+        set.add(IconDescriptor.createTouchicon("http://example.org/03.png", 0, ""));
+
+        for (int i = 8; i > 0; i--) {
+            Assert.assertEquals("items in set before deleting: " + i, i, set.size());
+            Assert.assertTrue("item removed successfully: " + i, set.remove(set.first()));
+            Assert.assertEquals("items in set after deleting: " + i, i - 1, set.size());
+        }
     }
 }
