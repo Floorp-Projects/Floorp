@@ -8,14 +8,12 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
-import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.SwipeDismissListViewTouchListener;
 import org.mozilla.gecko.widget.SwipeDismissListViewTouchListener.OnDismissCallback;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -41,7 +39,7 @@ import android.widget.TextView;
 import java.util.Arrays;
 import java.util.Collection;
 
-public class FormAssistPopup extends RelativeLayout implements GeckoEventListener {
+public class FormAssistPopup extends RelativeLayout implements BundleEventListener {
     private final Context mContext;
     private final Animation mAnimation;
 
@@ -96,8 +94,8 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
 
-        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
-            "FormAssist:AutoComplete",
+        GeckoApp.getEventDispatcher().registerUiThreadListener(this,
+            "FormAssist:AutoCompleteResult",
             "FormAssist:ValidationMessage",
             "FormAssist:Hide");
     }
@@ -107,62 +105,34 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
 
     @Override
     public void onDetachedFromWindow() {
-        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
-            "FormAssist:AutoComplete",
+        GeckoApp.getEventDispatcher().unregisterUiThreadListener(this,
+            "FormAssist:AutoCompleteResult",
             "FormAssist:ValidationMessage",
             "FormAssist:Hide");
 
         super.onDetachedFromWindow();
     }
 
-    @Override
-    public void handleMessage(String event, JSONObject message) {
-        try {
-            if (event.equals("FormAssist:AutoComplete")) {
-                handleAutoCompleteMessage(message);
-            } else if (event.equals("FormAssist:ValidationMessage")) {
-                handleValidationMessage(message);
-            } else if (event.equals("FormAssist:Hide")) {
-                handleHideMessage(message);
-            }
-        } catch (Exception e) {
-            Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
+    @Override // BundleEventListener
+    public void handleMessage(final String event, final GeckoBundle message,
+                              final EventCallback callback) {
+        if ("FormAssist:AutoCompleteResult".equals(event)) {
+            showAutoCompleteSuggestions(message.getBundleArray("suggestions"),
+                                        message.getBundle("rect"),
+                                        message.getBoolean("isEmpty"));
+
+        } else if ("FormAssist:ValidationMessage".equals(event)) {
+            showValidationMessage(message.getString("validationMessage"),
+                                  message.getBundle("rect"));
+
+        } else if ("FormAssist:Hide".equals(event)) {
+            hide();
         }
     }
 
-    private void handleAutoCompleteMessage(JSONObject message) throws JSONException  {
-        final JSONArray suggestions = message.getJSONArray("suggestions");
-        final JSONObject rect = message.getJSONObject("rect");
-        final boolean isEmpty = message.getBoolean("isEmpty");
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                showAutoCompleteSuggestions(suggestions, rect, isEmpty);
-            }
-        });
-    }
-
-    private void handleValidationMessage(JSONObject message) throws JSONException {
-        final String validationMessage = message.getString("validationMessage");
-        final JSONObject rect = message.getJSONObject("rect");
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                showValidationMessage(validationMessage, rect);
-            }
-        });
-    }
-
-    private void handleHideMessage(JSONObject message) {
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                hide();
-            }
-        });
-    }
-
-    private void showAutoCompleteSuggestions(JSONArray suggestions, JSONObject rect, boolean isEmpty) {
+    private void showAutoCompleteSuggestions(final GeckoBundle[] suggestions,
+                                             final GeckoBundle rect,
+                                             final boolean isEmpty) {
         final String inputMethod = InputMethods.getCurrentInputMethod(mContext);
         if (!isEmpty && sInputMethodBlocklist.contains(inputMethod)) {
             // Don't display the form auto-complete popup after the user starts typing
@@ -180,9 +150,10 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
                 public void onItemClick(AdapterView<?> parentView, View view, int position, long id) {
                     // Use the value stored with the autocomplete view, not the label text,
                     // since they can be different.
-                    TextView textView = (TextView) view;
-                    String value = (String) textView.getTag();
-                    broadcastGeckoEvent("FormAssist:AutoComplete", value);
+                    final TextView textView = (TextView) view;
+                    final GeckoBundle message = new GeckoBundle(1);
+                    message.putString("value", (String) textView.getTag());
+                    GeckoApp.getEventDispatcher().dispatch("FormAssist:AutoComplete", message);
                     hide();
                 }
             });
@@ -199,7 +170,9 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
                     Pair<String, String> item = adapter.getItem(position);
 
                     // Remove the item from form history.
-                    broadcastGeckoEvent("FormAssist:Remove", item.second);
+                    final GeckoBundle message = new GeckoBundle(1);
+                    message.putString("value", item.second);
+                    GeckoApp.getEventDispatcher().dispatch("FormAssist:Remove", message);
 
                     // Update the list
                     adapter.remove(item);
@@ -228,7 +201,8 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
         }
     }
 
-    private void showValidationMessage(String validationMessage, JSONObject rect) {
+    private void showValidationMessage(final String validationMessage,
+                                       final GeckoBundle rect) {
         if (mValidationMessage == null) {
             LayoutInflater inflater = LayoutInflater.from(mContext);
             mValidationMessage = (RelativeLayout) inflater.inflate(R.layout.validation_message, null);
@@ -258,18 +232,12 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
         }
     }
 
-    private boolean setGeckoPositionData(JSONObject rect, boolean isAutoComplete) {
-        try {
-            mX = rect.getDouble("x");
-            mY = rect.getDouble("y");
-            mW = rect.getDouble("w");
-            mH = rect.getDouble("h");
-        } catch (JSONException e) {
-            // Bail if we can't get the correct dimensions for the popup.
-            Log.e(LOGTAG, "Error getting FormAssistPopup dimensions", e);
-            return false;
-        }
-
+    private boolean setGeckoPositionData(final GeckoBundle rect,
+                                         final boolean isAutoComplete) {
+        mX = rect.getDouble("x");
+        mY = rect.getDouble("y");
+        mW = rect.getDouble("w");
+        mH = rect.getDouble("h");
         mPopupType = (isAutoComplete ?
                       PopupType.AUTOCOMPLETE : PopupType.VALIDATIONMESSAGE);
         return true;
@@ -394,7 +362,7 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
     public void hide() {
         if (isShown()) {
             setVisibility(GONE);
-            broadcastGeckoEvent("FormAssist:Hidden", null);
+            GeckoApp.getEventDispatcher().dispatch("FormAssist:Hidden", null);
         }
     }
 
@@ -419,10 +387,6 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
         });
     }
 
-    private static void broadcastGeckoEvent(String eventName, String eventData) {
-        GeckoAppShell.notifyObservers(eventName, eventData);
-    }
-
     private class AutoCompleteListAdapter extends ArrayAdapter<Pair<String, String>> {
         private final LayoutInflater mInflater;
         private final int mTextViewResourceId;
@@ -436,16 +400,12 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
 
         // This method takes an array of autocomplete suggestions with label/value properties
         // and adds label/value Pair objects to the array that backs the adapter.
-        public void populateSuggestionsList(JSONArray suggestions) {
-            try {
-                for (int i = 0; i < suggestions.length(); i++) {
-                    JSONObject suggestion = suggestions.getJSONObject(i);
-                    String label = suggestion.getString("label");
-                    String value = suggestion.getString("value");
-                    add(new Pair<String, String>(label, value));
-                }
-            } catch (JSONException e) {
-                Log.e(LOGTAG, "JSONException", e);
+        public void populateSuggestionsList(final GeckoBundle[] suggestions) {
+            for (int i = 0; i < suggestions.length; i++) {
+                final GeckoBundle suggestion = suggestions[i];
+                final String label = suggestion.getString("label");
+                final String value = suggestion.getString("value");
+                add(new Pair<String, String>(label, value));
             }
         }
 

@@ -1098,11 +1098,17 @@ TabChild::ActorDestroy(ActorDestroyReason why)
   DestroyWindow();
 
   if (mTabChildGlobal) {
-    // The messageManager relays messages via the TabChild which
-    // no longer exists.
-    static_cast<nsFrameMessageManager*>
-      (mTabChildGlobal->mMessageManager.get())->Disconnect();
-    mTabChildGlobal->mMessageManager = nullptr;
+    // We should have a message manager if the global is alive, but it
+    // seems sometimes we don't.  Assert in aurora/nightly, but don't
+    // crash in release builds.
+    MOZ_DIAGNOSTIC_ASSERT(mTabChildGlobal->mMessageManager);
+    if (mTabChildGlobal->mMessageManager) {
+      // The messageManager relays messages via the TabChild which
+      // no longer exists.
+      static_cast<nsFrameMessageManager*>
+        (mTabChildGlobal->mMessageManager.get())->Disconnect();
+      mTabChildGlobal->mMessageManager = nullptr;
+    }
   }
 
   CompositorBridgeChild* compositorChild = static_cast<CompositorBridgeChild*>(CompositorBridgeChild::Get());
@@ -2104,16 +2110,26 @@ TabChild::RecvAsyncMessage(const nsString& aMessage,
                            const IPC::Principal& aPrincipal,
                            const ClonedMessageData& aData)
 {
-  if (mTabChildGlobal) {
-    nsCOMPtr<nsIXPConnectJSObjectHolder> kungFuDeathGrip(GetGlobal());
-    StructuredCloneData data;
-    UnpackClonedMessageDataForChild(aData, data);
-    RefPtr<nsFrameMessageManager> mm =
-      static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
-    CrossProcessCpowHolder cpows(Manager(), aCpows);
-    mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal), nullptr,
-                       aMessage, false, &data, &cpows, aPrincipal, nullptr);
+  if (!mTabChildGlobal) {
+    return IPC_OK();
   }
+
+  // We should have a message manager if the global is alive, but it
+  // seems sometimes we don't.  Assert in aurora/nightly, but don't
+  // crash in release builds.
+  MOZ_DIAGNOSTIC_ASSERT(mTabChildGlobal->mMessageManager);
+  if (!mTabChildGlobal->mMessageManager) {
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIXPConnectJSObjectHolder> kungFuDeathGrip(GetGlobal());
+  StructuredCloneData data;
+  UnpackClonedMessageDataForChild(aData, data);
+  RefPtr<nsFrameMessageManager> mm =
+    static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
+  CrossProcessCpowHolder cpows(Manager(), aCpows);
+  mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal), nullptr,
+                     aMessage, false, &data, &cpows, aPrincipal, nullptr);
   return IPC_OK();
 }
 
@@ -2503,7 +2519,6 @@ TabChild::InitTabChildGlobal()
     NS_ENSURE_TRUE(chromeHandler, false);
 
     RefPtr<TabChildGlobal> scope = new TabChildGlobal(this);
-    mTabChildGlobal = scope;
 
     nsISupports* scopeSupports = NS_ISUPPORTS_CAST(EventTarget*, scope);
 
@@ -2515,6 +2530,8 @@ TabChild::InitTabChildGlobal()
     nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(chromeHandler);
     NS_ENSURE_TRUE(root, false);
     root->SetParentTarget(scope);
+
+    mTabChildGlobal = scope.forget();;
   }
 
   if (!mTriedBrowserInit) {

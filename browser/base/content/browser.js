@@ -872,6 +872,12 @@ function _loadURIWithFlags(browser, uri, params) {
                                                referrer, referrerPolicy,
                                                postData, null, null);
     } else {
+      // Check if the current browser is allowed to unload.
+      let {permitUnload, timedOut} = browser.permitUnload();
+      if (!timedOut && !permitUnload) {
+        return;
+      }
+
       if (postData) {
         postData = NetUtil.readInputStreamToString(postData, postData.available());
       }
@@ -4360,7 +4366,7 @@ var XULBrowserWindow = {
   },
 
   // Check whether this URI should load in the current process
-  shouldLoadURI(aDocShell, aURI, aReferrer) {
+  shouldLoadURI(aDocShell, aURI, aReferrer, aTriggeringPrincipal) {
     if (!gMultiProcessBrowser)
       return true;
 
@@ -4374,7 +4380,7 @@ var XULBrowserWindow = {
       return true;
 
     if (!E10SUtils.shouldLoadURI(aDocShell, aURI, aReferrer)) {
-      E10SUtils.redirectLoad(aDocShell, aURI, aReferrer);
+      E10SUtils.redirectLoad(aDocShell, aURI, aReferrer, aTriggeringPrincipal, false);
       return false;
     }
 

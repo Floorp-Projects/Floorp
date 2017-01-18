@@ -87,8 +87,8 @@ struct DefaultJitOptions
     uint32_t branchPruningBlockSpanFactor;
     uint32_t branchPruningEffectfulInstFactor;
     uint32_t branchPruningThreshold;
-    uint32_t wasmBatchThreshold;
-    uint32_t wasmBatchIonScaleFactor;
+    uint32_t wasmBatchIonThreshold;
+    uint32_t wasmBatchBaselineThreshold;
     mozilla::Maybe<uint32_t> forcedDefaultIonWarmUpThreshold;
     mozilla::Maybe<uint32_t> forcedDefaultIonSmallFunctionWarmUpThreshold;
     mozilla::Maybe<IonRegisterAllocator> forcedRegisterAllocator;

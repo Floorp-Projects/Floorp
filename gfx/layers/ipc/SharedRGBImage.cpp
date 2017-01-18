@@ -63,8 +63,7 @@ SharedRGBImage::~SharedRGBImage()
 {
   MOZ_COUNT_DTOR(SharedRGBImage);
 
-  if (mCompositable->GetAsyncID() != 0 &&
-      !InImageBridgeChildThread()) {
+  if (mCompositable->GetAsyncHandle() && !InImageBridgeChildThread()) {
     ADDREF_MANUALLY(mTextureClient);
     ImageBridgeChild::DispatchReleaseTextureClient(mTextureClient);
     mTextureClient = nullptr;

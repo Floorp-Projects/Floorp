@@ -222,6 +222,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     keepAtoms_(0),
     trustedPrincipals_(nullptr),
     beingDestroyed_(false),
+    allowContentJS_(true),
     atoms_(nullptr),
     atomsCompartment_(nullptr),
     staticStrings(nullptr),

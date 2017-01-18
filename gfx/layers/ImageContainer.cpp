@@ -136,7 +136,7 @@ ImageContainer::EnsureImageClient(bool aCreate)
   if (imageBridge) {
     mImageClient = imageBridge->CreateImageClient(CompositableType::IMAGE, this);
     if (mImageClient) {
-      mAsyncContainerID = mImageClient->GetAsyncID();
+      mAsyncContainerHandle = mImageClient->GetAsyncHandle();
       mNotifyCompositeListener = new ImageContainerListener(this);
     }
   }
@@ -153,22 +153,20 @@ ImageContainer::ImageContainer(Mode flag)
 {
   if (flag == ASYNCHRONOUS) {
     EnsureImageClient(true);
-  } else {
-    mAsyncContainerID = sInvalidAsyncContainerId;
   }
 }
 
-ImageContainer::ImageContainer(uint64_t aAsyncContainerID)
+ImageContainer::ImageContainer(const CompositableHandle& aHandle)
   : mReentrantMonitor("ImageContainer.mReentrantMonitor"),
   mGenerationCounter(++sGenerationCounter),
   mPaintCount(0),
   mDroppedImageCount(0),
   mImageFactory(nullptr),
   mRecycleBin(nullptr),
-  mAsyncContainerID(aAsyncContainerID),
+  mAsyncContainerHandle(aHandle),
   mCurrentProducerID(-1)
 {
-  MOZ_ASSERT(mAsyncContainerID != sInvalidAsyncContainerId);
+  MOZ_ASSERT(mAsyncContainerHandle);
 }
 
 ImageContainer::~ImageContainer()
@@ -176,9 +174,9 @@ ImageContainer::~ImageContainer()
   if (mNotifyCompositeListener) {
     mNotifyCompositeListener->ClearImageContainer();
   }
-  if (mAsyncContainerID) {
+  if (mAsyncContainerHandle) {
     if (RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton()) {
-      imageBridge->ForgetImageContainer(mAsyncContainerID);
+      imageBridge->ForgetImageContainer(mAsyncContainerHandle);
     }
   }
 }
@@ -344,14 +342,14 @@ ImageContainer::SetCurrentImagesInTransaction(const nsTArray<NonOwningImage>& aI
 
 bool ImageContainer::IsAsync() const
 {
-  return mAsyncContainerID != sInvalidAsyncContainerId;
+  return !!mAsyncContainerHandle;
 }
 
-uint64_t ImageContainer::GetAsyncContainerID()
+CompositableHandle ImageContainer::GetAsyncContainerHandle()
 {
   NS_ASSERTION(IsAsync(),"Shared image ID is only relevant to async ImageContainers");
   EnsureImageClient(false);
-  return mAsyncContainerID;
+  return mAsyncContainerHandle;
 }
 
 bool

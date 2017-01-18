@@ -224,7 +224,7 @@ WebGLRenderbuffer::RenderbufferStorage(const char* funcName, uint32_t samples,
     mHeight = height;
     mImageDataStatus = WebGLImageDataStatus::UninitializedImageData;
 
-    InvalidateStatusOfAttachedFBs();
+    InvalidateStatusOfAttachedFBs(funcName);
 }
 
 void

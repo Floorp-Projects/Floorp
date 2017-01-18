@@ -23,11 +23,11 @@ pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtkWidget) == t
 == filter-userspace-offset.svg?offsetContainer=innerSVG&filter=matrix-boundingBox filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=foreignObject&filter=matrix-boundingBox filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=rect&filter=flood-userSpace-at100 filter-userspace-offset.svg
-== filter-userspace-offset.svg?offsetContainer=use&filter=flood-userSpace-at100 filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=use&filter=flood-userSpace-atZero filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=innerSVG&filter=flood-userSpace-atZero filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=foreignObject&filter=flood-userSpace-at100 filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-userSpace-at100 filter-userspace-offset.svg
-== filter-userspace-offset.svg?offsetContainer=use&filter=matrix-userSpace-at100 filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=use&filter=matrix-userSpace-atZero filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=innerSVG&filter=matrix-userSpace-atZero filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=foreignObject&filter=matrix-userSpace-at100 filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=rect&mask=boundingBox filter-userspace-offset.svg
@@ -35,7 +35,7 @@ pref(layout.animated-image-layers.enabled,true) skip-if(Android||gtkWidget) == t
 == filter-userspace-offset.svg?offsetContainer=innerSVG&mask=boundingBox filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=foreignObject&mask=boundingBox filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=rect&mask=userSpace-at100 filter-userspace-offset.svg
-== filter-userspace-offset.svg?offsetContainer=use&mask=userSpace-at100 filter-userspace-offset.svg
+== filter-userspace-offset.svg?offsetContainer=use&mask=userSpace-atZero filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=innerSVG&mask=userSpace-atZero filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=foreignObject&mask=userSpace-at100 filter-userspace-offset.svg
 == filter-userspace-offset.svg?offsetContainer=rect&filter=matrix-fillPaint-boundingBox filter-userspace-offset.svg

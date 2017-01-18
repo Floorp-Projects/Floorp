@@ -13,7 +13,8 @@ public class testSessionOOMSave extends SessionTest {
     private final static int SESSION_TIMEOUT = 25000;
 
     public void testSessionOOMSave() {
-        Actions.EventExpecter pageShowExpecter = mActions.expectGeckoEvent("Content:PageShow");
+        final Actions.EventExpecter pageShowExpecter =
+                mActions.expectGlobalEvent(Actions.EventType.UI, "Content:PageShow");
         pageShowExpecter.blockForEvent();
         pageShowExpecter.unregisterListener();
 

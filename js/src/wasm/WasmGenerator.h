@@ -101,19 +101,16 @@ enum class CompileMode
 class FuncCompileUnit
 {
     UniqueFuncBytes func_;
-    CompileMode mode_;
     FuncOffsets offsets_;
     DebugOnly<bool> finished_;
 
   public:
-    FuncCompileUnit(UniqueFuncBytes func, CompileMode mode)
+    explicit FuncCompileUnit(UniqueFuncBytes func)
       : func_(Move(func)),
-        mode_(mode),
         finished_(false)
     {}
 
     const FuncBytes& func() const { return *func_; }
-    CompileMode mode() const { return mode_; }
     FuncOffsets offsets() const { MOZ_ASSERT(finished_); return offsets_; }
 
     void finish(FuncOffsets offsets) {
@@ -140,6 +137,7 @@ typedef Vector<FuncCompileUnit, 8, SystemAllocPolicy> FuncCompileUnitVector;
 class CompileTask
 {
     const ModuleEnvironment&   env_;
+    CompileMode                mode_;
     LifoAlloc                  lifo_;
     Maybe<jit::TempAllocator>  alloc_;
     Maybe<jit::MacroAssembler> masm_;
@@ -156,8 +154,9 @@ class CompileTask
     }
 
   public:
-    CompileTask(const ModuleEnvironment& env, size_t defaultChunkSize)
+    CompileTask(const ModuleEnvironment& env, CompileMode mode, size_t defaultChunkSize)
       : env_(env),
+        mode_(mode),
         lifo_(defaultChunkSize)
     {
         init();
@@ -176,6 +175,9 @@ class CompileTask
     }
     FuncCompileUnitVector& units() {
         return units_;
+    }
+    CompileMode mode() const {
+        return mode_;
     }
     bool debugEnabled() const {
         return debugEnabled_;
@@ -213,8 +215,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     typedef EnumeratedArray<Trap, Trap::Limit, ProfilingOffsets> TrapExitOffsetArray;
 
     // Constant parameters
-    bool                            alwaysBaseline_;
-    bool                            debugEnabled_;
+    CompileMode                     compileMode_;
     UniqueChars*                    error_;
 
     // Data that is moved into the result of finish()
@@ -268,7 +269,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool launchBatchCompile();
 
     MOZ_MUST_USE bool initAsmJS(Metadata* asmJSMetadata);
-    MOZ_MUST_USE bool initWasm();
+    MOZ_MUST_USE bool initWasm(const CompileArgs& args);
 
   public:
     explicit ModuleGenerator(UniqueChars* error);
