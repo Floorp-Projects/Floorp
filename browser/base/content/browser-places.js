@@ -150,6 +150,7 @@ var StarUI = {
           if (this._closePanelQuickForTesting) {
             delay /= 10;
           }
+          clearTimeout(this._autoCloseTimer);
           this._autoCloseTimer = setTimeout(() => {
             this.panel.hidePopup();
           }, delay);
