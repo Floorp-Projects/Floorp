@@ -644,6 +644,12 @@ AudioContext::Shutdown()
     RefPtr<Promise> ignored = Close(dummy);
   }
 
+  for (auto p : mPromiseGripArray) {
+    p->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
+
+  mPromiseGripArray.Clear();
+
   // Release references to active nodes.
   // Active AudioNodes don't unregister in destructors, at which point the
   // Node is already unregistered.
@@ -789,9 +795,15 @@ AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState)
 
   if (aPromise) {
     Promise* promise = reinterpret_cast<Promise*>(aPromise);
-    promise->MaybeResolveWithUndefined();
-    DebugOnly<bool> rv = mPromiseGripArray.RemoveElement(promise);
-    MOZ_ASSERT(rv, "Promise wasn't in the grip array?");
+    // It is possible for the promise to have been removed from
+    // mPromiseGripArray if the cycle collector has severed our connections. DO
+    // NOT dereference the promise pointer in that case since it may point to
+    // already freed memory.
+    if (mPromiseGripArray.Contains(promise)) {
+      promise->MaybeResolveWithUndefined();
+      DebugOnly<bool> rv = mPromiseGripArray.RemoveElement(promise);
+      MOZ_DIAGNOSTIC_ASSERT(rv, "Promise wasn't in the grip array?");
+    }
   }
 
   if (mAudioContextState != aNewState) {
