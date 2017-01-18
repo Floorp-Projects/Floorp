@@ -2517,7 +2517,6 @@ TabChild::InitTabChildGlobal()
     NS_ENSURE_TRUE(chromeHandler, false);
 
     RefPtr<TabChildGlobal> scope = new TabChildGlobal(this);
-    mTabChildGlobal = scope;
 
     nsISupports* scopeSupports = NS_ISUPPORTS_CAST(EventTarget*, scope);
 
@@ -2529,6 +2528,8 @@ TabChild::InitTabChildGlobal()
     nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(chromeHandler);
     NS_ENSURE_TRUE(root, false);
     root->SetParentTarget(scope);
+
+    mTabChildGlobal = scope.forget();;
   }
 
   if (!mTriedBrowserInit) {
