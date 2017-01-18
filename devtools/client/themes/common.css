@@ -403,7 +403,7 @@ checkbox:-moz-focusring {
 .theme-firebug .devtools-button.checked,
 .theme-firebug .devtools-toolbarbutton:not([label])[checked=true],
 .theme-firebug .devtools-toolbarbutton:not([label])[open=true] {
-  background: var(--toolbarbutton-checked-background);
+  background-color: #C8D8E7;
 }
 
 /* Icon-and-text buttons */
@@ -493,8 +493,8 @@ checkbox:-moz-focusring {
  */
 .menu-filter-button {
   -moz-appearance: none;
-  background: var(--toolbarbutton-background);
-  border: var(--toolbarbutton-border);
+  background: rgba(128,128,128,0.1);
+  border: none;
   border-radius: 2px;
   min-width: 0;
   padding: 0 5px;
@@ -503,8 +503,7 @@ checkbox:-moz-focusring {
 }
 
 .menu-filter-button:hover {
-  background: var(--toolbarbutton-hover-background);
-  border: var(--toolbarbutton-hover-border);
+  background: rgba(128,128,128,0.2);
 }
 
 .menu-filter-button:hover:active {
@@ -512,9 +511,8 @@ checkbox:-moz-focusring {
 }
 
 .menu-filter-button:not(:active).checked {
-  background: var(--toolbarbutton-checked-background);
-  border: var(--toolbarbutton-checked-border);
-  color: var(--toolbarbutton-checked-color);
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
 }
 
 /* Text input */
