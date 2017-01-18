@@ -124,7 +124,10 @@ public class TabHistoryFragment extends Fragment implements OnItemClickListener,
         dismissed = false;
         transaction.add(containerViewId, this, tag);
         transaction.addToBackStack(tag);
-        backStackId = transaction.commit();
+        // Populating the tab history requires a gecko call (which can be slow) - therefore the app
+        // state by the time we try to show this fragment is unknown, and we could be in the
+        // middle of shutting down:
+        backStackId = transaction.commitAllowingStateLoss();
     }
 
     // Pop the fragment from backstack if it exists.
