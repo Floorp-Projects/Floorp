@@ -396,14 +396,14 @@ ImageBridgeChild::Connect(CompositableClient* aCompositable,
   if (!child) {
     return;
   }
-  aCompositable->InitIPDLActor(child, id);
+  aCompositable->InitIPDLActor(child, CompositableHandle(id));
 }
 
 void
-ImageBridgeChild::ForgetImageContainer(uint64_t aAsyncContainerID)
+ImageBridgeChild::ForgetImageContainer(const CompositableHandle& aHandle)
 {
   MutexAutoLock lock(mContainerMapLock);
-  mImageContainers.Remove(aAsyncContainerID);
+  mImageContainers.Remove(aHandle.Value());
 }
 
 PCompositableChild*
