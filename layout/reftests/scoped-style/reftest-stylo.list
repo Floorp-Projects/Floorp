@@ -12,9 +12,9 @@ fails == scoped-style-010.html scoped-style-010.html
 fails == scoped-style-011.html scoped-style-011.html
 fails == scoped-style-012.html scoped-style-012.html
 fails == scoped-style-013.html scoped-style-013.html
-fails == scoped-style-014.html scoped-style-014.html
+== scoped-style-014.html scoped-style-014.html
 fails == scoped-style-015.html scoped-style-015.html
-fails == scoped-style-016.html scoped-style-016.html
+== scoped-style-016.html scoped-style-016.html
 fails == scoped-style-017.html scoped-style-017.html
 fails == scoped-style-018.html scoped-style-018.html
 == scoped-style-019.svg scoped-style-019.svg
@@ -55,4 +55,4 @@ fails == scoped-style-keyframes.html scoped-style-keyframes.html
 fails == scoped-style-supports.html scoped-style-supports.html
 fails pref(layout.css.scope-pseudo.enabled,true) == scoped-style-pseudo-001.html scoped-style-pseudo-001.html
 fails pref(layout.css.scope-pseudo.enabled,true) == scoped-style-pseudo-002.html scoped-style-pseudo-002.html
-fails pref(layout.css.scope-pseudo.enabled,true) == scoped-style-pseudo-003.html scoped-style-pseudo-003.html
+pref(layout.css.scope-pseudo.enabled,true) == scoped-style-pseudo-003.html scoped-style-pseudo-003.html

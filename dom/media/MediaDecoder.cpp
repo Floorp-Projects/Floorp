@@ -837,11 +837,8 @@ MediaDecoder::EnsureTelemetryReported()
     codecs.AppendElement(mInfo->mVideo.GetAsVideoInfo()->mMimeType);
   }
   if (codecs.IsEmpty()) {
-    if (mResource->GetContentType().IsEmpty()) {
-      NS_WARNING("Somehow the resource's content type is empty");
-      return;
-    }
-    codecs.AppendElement(nsPrintfCString("resource; %s", mResource->GetContentType().get()));
+    codecs.AppendElement(nsPrintfCString("resource; %s",
+                                         mResource->GetContentType().OriginalString().Data()));
   }
   for (const nsCString& codec : codecs) {
     DECODER_LOG("Telemetry MEDIA_CODEC_USED= '%s'", codec.get());

@@ -7,7 +7,7 @@
 #include "DirectShowDecoder.h"
 #include "DirectShowReader.h"
 #include "DirectShowUtils.h"
-#include "MediaContentType.h"
+#include "MediaContainerType.h"
 #include "MediaDecoderStateMachine.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/WindowsVersion.h"
@@ -21,7 +21,7 @@ MediaDecoderStateMachine* DirectShowDecoder::CreateStateMachine()
 
 /* static */
 bool
-DirectShowDecoder::GetSupportedCodecs(const MediaContentType& aType,
+DirectShowDecoder::GetSupportedCodecs(const MediaContainerType& aType,
                                       MediaCodecs* aOutCodecs)
 {
   if (!IsEnabled()) {

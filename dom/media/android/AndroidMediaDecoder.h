@@ -8,15 +8,15 @@
 
 #include "MediaDecoder.h"
 #include "AndroidMediaDecoder.h"
-#include "MediaContentType.h"
+#include "MediaContainerType.h"
 
 namespace mozilla {
 
 class AndroidMediaDecoder : public MediaDecoder
 {
-  MediaContentType mType;
+  MediaContainerType mType;
 public:
-  AndroidMediaDecoder(MediaDecoderOwner* aOwner, const MediaContentType& aType);
+  AndroidMediaDecoder(MediaDecoderOwner* aOwner, const MediaContainerType& aType);
 
   MediaDecoder* Clone(MediaDecoderOwner* aOwner) override {
     return new AndroidMediaDecoder(aOwner, mType);

@@ -7,11 +7,11 @@ fails == dynamic-button-01a.html dynamic-button-01a.html
 fails == dynamic-button-01b.html dynamic-button-01b.html
 fails == dynamic-fieldset-01a.html dynamic-fieldset-01a.html
 fails == dynamic-fieldset-01b.html dynamic-fieldset-01b.html
-fails == dynamic-restyle-01.html dynamic-restyle-01.html
-fails == dynamic-table-cell-01a.html dynamic-table-cell-01a.html
-fails == dynamic-table-cell-01b.html dynamic-table-cell-01b.html
+== dynamic-restyle-01.html dynamic-restyle-01.html
+== dynamic-table-cell-01a.html dynamic-table-cell-01a.html
+== dynamic-table-cell-01b.html dynamic-table-cell-01b.html
 fails == floated-01.html floated-01.html
-fails == images-01.html images-01.html
+== images-01.html images-01.html
 fails == positioned-01.html positioned-01.html
 fuzzy-if(OSX==1010,1,10) == quotes-001.xml quotes-001.xml
 fails == table-ignoring-whitespace-01.html table-ignoring-whitespace-01.html
