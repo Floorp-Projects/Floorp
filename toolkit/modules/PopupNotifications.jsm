@@ -1198,6 +1198,11 @@ PopupNotifications.prototype = {
     this.panel.removeAttribute("noautofocus");
 
     this._reshowNotifications(anchor);
+
+    // If the user re-selects the current notification, focus it.
+    if (anchor == this._currentAnchorElement && this.panel.firstChild) {
+      this.panel.firstChild.button.focus();
+    }
   },
 
   _reshowNotifications: function PopupNotifications_reshowNotifications(anchor, browser) {
