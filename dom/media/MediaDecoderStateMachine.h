@@ -239,6 +239,8 @@ private:
   static const char* ToStr(NextFrameStatus aStatus);
   const char* ToStateStr();
 
+  nsCString GetDebugInfo();
+
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.
   bool OnTaskQueue() const;

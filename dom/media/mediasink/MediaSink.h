@@ -119,9 +119,9 @@ public:
   // Must be called after playback stopped.
   virtual void Shutdown() {}
 
-  // Dump debugging information to the logs.
+  // Return a string containing debugging information.
   // Can be called in any phase.
-  virtual void DumpDebugInfo() {}
+  virtual nsCString GetDebugInfo() { return nsCString(); }
 
 protected:
   virtual ~MediaSink() {}

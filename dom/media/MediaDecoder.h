@@ -544,6 +544,8 @@ protected:
   static const int DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED = 250000;
 
 private:
+  nsCString GetDebugInfo();
+
   // Called when the metadata from the media file has been loaded by the
   // state machine. Call on the main thread only.
   void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
