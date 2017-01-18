@@ -148,7 +148,7 @@ load 705996-2.html
 load 707622-1.html
 load 710098-1.html
 load 711864-1.html
-asserts-if(gtkWidget&&browserIsRemote,5) asserts-if(stylo,1-3) load 759249-1.html # Bug 1195474 # bug 1324704
+asserts-if(gtkWidget&&browserIsRemote,5) asserts-if(stylo,1-6) load 759249-1.html # Bug 1195474 # bug 1324704
 load 759249-2.html
 load 814713.html
 load 1027611-1.html
