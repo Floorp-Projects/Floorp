@@ -797,6 +797,10 @@ interface TestJSImplInterface {
   [Throws] attribute boolean throwingAttr;
   [GetterThrows] attribute boolean throwingGetterAttr;
   [SetterThrows] attribute boolean throwingSetterAttr;
+  [CanOOM] void canOOMMethod();
+  [CanOOM] attribute boolean canOOMAttr;
+  [GetterCanOOM] attribute boolean canOOMGetterAttr;
+  [SetterCanOOM] attribute boolean canOOMSetterAttr;
   // NeedsSubjectPrincipal not supported on JS-implemented things for
   // now, because we always pass in the caller principal anyway.
   //  [NeedsSubjectPrincipal] void needsSubjectPrincipalMethod();

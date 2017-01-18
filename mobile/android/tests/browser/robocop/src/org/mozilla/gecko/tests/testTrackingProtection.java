@@ -9,39 +9,30 @@ import static org.mozilla.gecko.tests.helpers.AssertionHelper.fFail;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-public class testTrackingProtection extends JavascriptTest implements GeckoEventListener {
+public class testTrackingProtection extends JavascriptTest implements BundleEventListener {
     private String mLastTracking;
 
     public testTrackingProtection() {
         super("testTrackingProtection.js");
     }
 
-    @Override
-    public void handleMessage(String event, final JSONObject message) {
-        if (event.equals("Content:SecurityChange")) {
-            try {
-                JSONObject identity = message.getJSONObject("identity");
-                JSONObject mode = identity.getJSONObject("mode");
-                mLastTracking = mode.getString("tracking");
-                mAsserter.dumpLog("Security change (tracking): " + mLastTracking);
-            } catch (Exception e) {
-                fFail("Can't extract tracking state from JSON");
-            }
-        }
+    @Override // BundleEventListener
+    public void handleMessage(final String event, final GeckoBundle message,
+                              final EventCallback callback) {
+        if ("Content:SecurityChange".equals(event)) {
+            final GeckoBundle identity = message.getBundle("identity");
+            final GeckoBundle mode = identity.getBundle("mode");
+            mLastTracking = mode.getString("tracking");
+            mAsserter.dumpLog("Security change (tracking): " + mLastTracking);
 
-        if (event.equals("Test:Expected")) {
-            try {
-                String expected = message.getString("expected");
-                mAsserter.is(mLastTracking, expected, "Tracking matched expectation");
-                mAsserter.dumpLog("Testing (tracking): " + mLastTracking + " = " + expected);
-            } catch (Exception e) {
-                fFail("Can't extract expected state from JSON");
-            }
+        } else if ("Test:Expected".equals(event)) {
+            final String expected = message.getString("expected");
+            mAsserter.is(mLastTracking, expected, "Tracking matched expectation");
+            mAsserter.dumpLog("Testing (tracking): " + mLastTracking + " = " + expected);
         }
     }
 
@@ -49,17 +40,17 @@ public class testTrackingProtection extends JavascriptTest implements GeckoEvent
     public void setUp() throws Exception {
         super.setUp();
 
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
-                                                                  "Content:SecurityChange",
-                                                                  "Test:Expected");
+        EventDispatcher.getInstance().registerUiThreadListener(this,
+                                                               "Content:SecurityChange",
+                                                               "Test:Expected");
     }
 
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
 
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
-                                                                    "Content:SecurityChange",
-                                                                    "Test:Expected");
+        EventDispatcher.getInstance().unregisterUiThreadListener(this,
+                                                                 "Content:SecurityChange",
+                                                                 "Test:Expected");
     }
 }

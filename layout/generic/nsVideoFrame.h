@@ -44,21 +44,21 @@ public:
   NS_DECL_QUERYFRAME_TARGET(nsVideoFrame)
   NS_DECL_FRAMEARENA_HELPERS
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                        const nsRect&           aDirtyRect,
+                        const nsDisplayListSet& aLists) override;
 
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID,
-                                    nsIAtom* aAttribute,
-                                    int32_t aModType) override;
+  nsresult AttributeChanged(int32_t aNameSpaceID,
+                            nsIAtom* aAttribute,
+                            int32_t aModType) override;
 
   void OnVisibilityChange(Visibility aNewVisibility,
                           Maybe<OnNonvisible> aNonvisibleAction = Nothing()) override;
 
   /* get the size of the video's display */
   nsSize GetVideoIntrinsicSize(nsRenderingContext *aRenderingContext);
-  virtual nsSize GetIntrinsicRatio() override;
-  virtual mozilla::LogicalSize
+  nsSize GetIntrinsicRatio() override;
+  mozilla::LogicalSize
   ComputeSize(nsRenderingContext *aRenderingContext,
               mozilla::WritingMode aWritingMode,
               const mozilla::LogicalSize& aCBSize,
@@ -67,31 +67,31 @@ public:
               const mozilla::LogicalSize& aBorder,
               const mozilla::LogicalSize& aPadding,
               ComputeSizeFlags aFlags) override;
-  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
-  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
-  virtual bool IsLeaf() const override;
+  nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
+  void DestroyFrom(nsIFrame* aDestructRoot) override;
+  bool IsLeaf() const override;
 
-  virtual void Reflow(nsPresContext*           aPresContext,
-                      ReflowOutput&     aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus&          aStatus) override;
+  void Reflow(nsPresContext*     aPresContext,
+              ReflowOutput&      aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus&    aStatus) override;
 
 #ifdef ACCESSIBILITY
-  virtual mozilla::a11y::AccType AccessibleType() override;
+  mozilla::a11y::AccType AccessibleType() override;
 #endif
 
-  virtual nsIAtom* GetType() const override;
+  nsIAtom* GetType() const override;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const override
+  bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsSplittableFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedSizing));
   }
   
-  virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
-  virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
-                                        uint32_t aFilters) override;
+  nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
+  void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
+                                uint32_t aFilters) override;
 
   nsIContent* GetPosterImage() { return mPosterImage; }
 
@@ -104,7 +104,7 @@ public:
   nsIContent *GetVideoControls() { return mVideoControls; }
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override;
+  nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
   already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,

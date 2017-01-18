@@ -4,11 +4,10 @@
 
 package org.mozilla.gecko.tests;
 
-import org.json.JSONObject;
-import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.tests.components.AppMenuComponent;
 import org.mozilla.gecko.tests.helpers.GeckoHelper;
 import org.mozilla.gecko.tests.helpers.NavigationHelper;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import com.robotium.solo.Solo;
 
@@ -45,21 +44,16 @@ public class testAppMenuPathways extends UITest {
         mAppMenu.assertMenuItemIsDisabledAndVisible(AppMenuComponent.PageMenuItem.SAVE_AS_PDF);
 
         // Generate a mock Content:LocationChange message with video mime-type for the current tab (tabId = 0).
-        final JSONObject message = new JSONObject();
-        try {
-            message.put("contentType", "video/webm");
-            message.put("baseDomain", "webmfiles.org");
-            message.put("type", "Content:LocationChange");
-            message.put("sameDocument", false);
-            message.put("userRequested", "");
-            message.put("uri", getAbsoluteIpUrl("/big-buck-bunny_trailer.webm"));
-            message.put("tabID", 0);
-        } catch (Exception ex) {
-            mAsserter.ok(false, "exception in testSaveAsPDFPathway", ex.toString());
-        }
+        final GeckoBundle message = new GeckoBundle();
+        message.putString("contentType", "video/webm");
+        message.putString("baseDomain", "webmfiles.org");
+        message.putBoolean("sameDocument", false);
+        message.putString("userRequested", "");
+        message.putString("uri", getAbsoluteIpUrl("/big-buck-bunny_trailer.webm"));
+        message.putInt("tabID", 0);
 
         // Mock video playback with the generated message and Content:LocationChange event.
-        Tabs.getInstance().handleMessage("Content:LocationChange", message);
+        getActions().sendGlobalEvent("Content:LocationChange", message);
 
         // Save as pdf menu is disabled while playing video.
         mAppMenu.assertMenuItemIsDisabledAndVisible(AppMenuComponent.PageMenuItem.SAVE_AS_PDF);

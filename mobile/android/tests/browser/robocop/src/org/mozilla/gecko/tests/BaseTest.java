@@ -12,9 +12,6 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.Element;
 import org.mozilla.gecko.GeckoAppShell;
@@ -24,6 +21,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.RobocopUtils;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import android.content.ContentValues;
 import android.content.res.AssetManager;
@@ -579,25 +577,22 @@ abstract class BaseTest extends BaseRobocopTest {
             }
         }, MAX_WAIT_MS);
         mAsserter.ok(success, "waiting for add tab view", "add tab view available");
-        final Actions.RepeatedEventExpecter pageShowExpecter = mActions.expectGeckoEvent("Content:PageShow");
+        final Actions.RepeatedEventExpecter pageShowExpecter =
+                mActions.expectGlobalEvent(Actions.EventType.UI, "Content:PageShow");
         mSolo.clickOnView(mSolo.getView(R.id.add_tab));
         waitForAnimationsToFinish();
 
         // Wait until we get a PageShow event for a new tab ID
         for(;;) {
-            try {
-                JSONObject data = new JSONObject(pageShowExpecter.blockForEventData());
-                int tabID = data.getInt("tabID");
-                if (tabID == 0) {
-                    mAsserter.dumpLog("addTab ignoring PageShow for tab 0");
-                    continue;
-                }
-                if (!mKnownTabIDs.contains(tabID)) {
-                    mKnownTabIDs.add(tabID);
-                    break;
-                }
-            } catch(JSONException e) {
-                mAsserter.ok(false, "Exception in addTab", getStackTraceString(e));
+            final GeckoBundle data = pageShowExpecter.blockForBundle();
+            final int tabID = data.getInt("tabID");
+            if (tabID == 0) {
+                mAsserter.dumpLog("addTab ignoring PageShow for tab 0");
+                continue;
+            }
+            if (!mKnownTabIDs.contains(tabID)) {
+                mKnownTabIDs.add(tabID);
+                break;
             }
         }
         pageShowExpecter.unregisterListener();
@@ -763,7 +758,8 @@ abstract class BaseTest extends BaseRobocopTest {
         }
 
         public void back() {
-            Actions.EventExpecter pageShowExpecter = mActions.expectGeckoEvent("Content:PageShow");
+            final Actions.EventExpecter pageShowExpecter =
+                    mActions.expectGlobalEvent(Actions.EventType.UI, "Content:PageShow");
 
             if (devType.equals("tablet")) {
                 Element backBtn = mDriver.findElement(getActivity(), R.id.back);
@@ -777,7 +773,8 @@ abstract class BaseTest extends BaseRobocopTest {
         }
 
         public void forward() {
-            Actions.EventExpecter pageShowExpecter = mActions.expectGeckoEvent("Content:PageShow");
+            final Actions.EventExpecter pageShowExpecter =
+                    mActions.expectGlobalEvent(Actions.EventType.UI, "Content:PageShow");
 
             if (devType.equals("tablet")) {
                 mSolo.waitForView(R.id.forward);

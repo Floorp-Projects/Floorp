@@ -19,16 +19,20 @@ var FindHelper = {
         break;
       }
 
+      case "FindInPage:Closed":
+        this._uninit();
+        this._findClosed();
+        break;
+    }
+  },
+
+  onEvent: function(event, message, callback) {
+    switch (event) {
       case "Tab:Selected": {
         // Allow for page switching.
         this._uninit();
         break;
       }
-
-      case "FindInPage:Closed":
-        this._uninit();
-        this._findClosed();
-        break;
     }
   },
 
@@ -68,6 +72,10 @@ var FindHelper = {
     this._finder.addResultListener(this);
     this._initialViewport = JSON.stringify(this._targetTab.getViewport());
     this._viewportChanged = false;
+
+    GlobalEventDispatcher.registerListener(this, [
+      "Tab:Selected",
+    ]);
   },
 
   /**
@@ -86,6 +94,10 @@ var FindHelper = {
     this._targetTab = null;
     this._initialViewport = null;
     this._viewportChanged = false;
+
+    GlobalEventDispatcher.unregisterListener(this, [
+      "Tab:Selected",
+    ]);
   },
 
   /**

@@ -1118,7 +1118,8 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
     case NS_THEME_MENULIST: {
       nsIContent* content = aFrame->GetContent();
       bool isHTML = content && content->IsHTMLElement();
-      bool useDropBorder = isHTML || IsMenuListEditable(aFrame);
+      bool isChrome = aFrame->GetContent()->IsInChromeDocument();
+      bool useDropBorder = isHTML || (isChrome && IsMenuListEditable(aFrame));
       EventStates eventState = GetContentState(aFrame, aWidgetType);
 
       /* On Vista/Win7, we use CBP_DROPBORDER instead of DROPFRAME for HTML
@@ -1179,7 +1180,8 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
       else
         isOpen = IsOpenButton(aFrame);
 
-      if (isHTML || IsMenuListEditable(aFrame)) {
+      bool isChrome = aFrame->GetContent()->IsInChromeDocument();
+      if (isHTML || (isChrome && IsMenuListEditable(aFrame))) {
         if (isOpen) {
           /* Hover is propagated, but we need to know whether we're hovering
            * just the combobox frame, not the dropdown frame. But, we can't get

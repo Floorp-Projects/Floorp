@@ -7,7 +7,6 @@
 
 include LayersSurfaces;
 include LayersMessages;
-include protocol PCompositable;
 include protocol PCompositorBridge;
 include protocol PRenderFrame;
 include protocol PTexture;
@@ -21,6 +20,7 @@ using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using struct mozilla::layers::ScrollableLayerGuid from "FrameMetrics.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayerHandle from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 
 /**
  * The layers protocol is spoken between thread contexts that manage
@@ -48,11 +48,8 @@ union MaybeTransform {
  */
 sync protocol PLayerTransaction {
   manager PCompositorBridge;
-  manages PCompositable;
 
 parent:
-  async PCompositable(TextureInfo aTextureInfo);
-
   // The isFirstPaint flag can be used to indicate that this is the first update
   // for a particular document.
   sync Update(TransactionInfo txn) returns (EditReply[] reply);
@@ -65,8 +62,12 @@ parent:
 
   async SetLayerObserverEpoch(uint64_t layerObserverEpoch);
 
-  // Release a layer that is no longer in use.
+  // Create a new Compositable.
+  async NewCompositable(CompositableHandle handle, TextureInfo info);
+
+  // Release an object that is no longer in use.
   async ReleaseLayer(LayerHandle layer);
+  async ReleaseCompositable(CompositableHandle compositable);
 
   // Testing APIs
 

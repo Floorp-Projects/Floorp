@@ -21,6 +21,7 @@
     macro(ArrayBufferSpecies, ArrayBufferSpecies, "ArrayBufferSpecies") \
     macro(ArrayIterator, ArrayIterator, "Array Iterator") \
     macro(ArrayIteratorNext, ArrayIteratorNext, "ArrayIteratorNext") \
+    macro(ArraySort, ArraySort, "ArraySort") \
     macro(ArraySpecies, ArraySpecies, "ArraySpecies") \
     macro(ArraySpeciesCreate, ArraySpeciesCreate, "ArraySpeciesCreate") \
     macro(ArrayToLocaleString, ArrayToLocaleString, "ArrayToLocaleString") \

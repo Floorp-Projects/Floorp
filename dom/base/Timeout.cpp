@@ -18,6 +18,7 @@ Timeout::Timeout()
   : mCleared(false),
     mRunning(false),
     mIsInterval(false),
+    mIsTracking(false),
     mReason(Reason::eTimeoutOrInterval),
     mTimeoutId(0),
     mInterval(0),

@@ -521,34 +521,6 @@ DocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
     docAcc->FireDelayedEvent(nsIAccessibleEvent::EVENT_REORDER,
                              ApplicationAcc());
 
-    if (IPCAccessibilityActive()) {
-      nsIDocShell* docShell = aDocument->GetDocShell();
-      if (docShell) {
-        nsCOMPtr<nsITabChild> tabChild = docShell->GetTabChild();
-
-        // XXX We may need to handle the case that we don't have a tab child
-        // differently.  It may be that this will cause us to fail to notify
-        // the parent process about important accessible documents.
-        if (tabChild) {
-          DocAccessibleChild* ipcDoc = new DocAccessibleChild(docAcc);
-          docAcc->SetIPCDoc(ipcDoc);
-
-#if defined(XP_WIN)
-          IAccessibleHolder holder(CreateHolderFromAccessible(docAcc));
-#endif
-
-          static_cast<TabChild*>(tabChild.get())->
-            SendPDocAccessibleConstructor(ipcDoc, nullptr, 0,
-#if defined(XP_WIN)
-                                          AccessibleWrap::GetChildIDFor(docAcc),
-                                          holder
-#else
-                                          0, 0
-#endif
-                                          );
-        }
-      }
-    }
   } else {
     parentDocAcc->BindChildDocument(docAcc);
   }
