@@ -802,7 +802,7 @@ AudioContext::OnStateChanged(void* aPromise, AudioContextState aNewState)
     if (mPromiseGripArray.Contains(promise)) {
       promise->MaybeResolveWithUndefined();
       DebugOnly<bool> rv = mPromiseGripArray.RemoveElement(promise);
-      MOZ_DIAGNOSTIC_ASSERT(rv, "Promise wasn't in the grip array?");
+      MOZ_ASSERT(rv, "Promise wasn't in the grip array?");
     }
   }
 
