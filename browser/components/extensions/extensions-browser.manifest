@@ -5,6 +5,7 @@ category webextension-scripts browsingData chrome://browser/content/ext-browsing
 category webextension-scripts commands chrome://browser/content/ext-commands.js
 category webextension-scripts contextMenus chrome://browser/content/ext-contextMenus.js
 category webextension-scripts desktop-runtime chrome://browser/content/ext-desktop-runtime.js
+category webextension-scripts devtools chrome://browser/content/ext-devtools.js
 category webextension-scripts history chrome://browser/content/ext-history.js
 category webextension-scripts omnibox chrome://browser/content/ext-omnibox.js
 category webextension-scripts pageAction chrome://browser/content/ext-pageAction.js
@@ -26,6 +27,7 @@ category webextension-schemas browsing_data chrome://browser/content/schemas/bro
 category webextension-schemas commands chrome://browser/content/schemas/commands.json
 category webextension-schemas context_menus chrome://browser/content/schemas/context_menus.json
 category webextension-schemas context_menus_internal chrome://browser/content/schemas/context_menus_internal.json
+category webextension-schemas devtools chrome://browser/content/schemas/devtools.json
 category webextension-schemas history chrome://browser/content/schemas/history.json
 category webextension-schemas omnibox chrome://browser/content/schemas/omnibox.json
 category webextension-schemas page_action chrome://browser/content/schemas/page_action.json

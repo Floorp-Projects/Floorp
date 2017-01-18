@@ -18,6 +18,7 @@ browser.jar:
     content/browser/ext-commands.js
     content/browser/ext-contextMenus.js
     content/browser/ext-desktop-runtime.js
+    content/browser/ext-devtools.js
     content/browser/ext-history.js
     content/browser/ext-omnibox.js
     content/browser/ext-pageAction.js

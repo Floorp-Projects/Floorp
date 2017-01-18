@@ -1,0 +1,16 @@
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "WebExtensionManifest",
+        "properties": {
+          "devtools_page": {
+            "$ref": "ExtensionURL",
+            "optional": true
+          }
+        }
+      }
+    ]
+  }
+]
