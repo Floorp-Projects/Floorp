@@ -10,6 +10,13 @@ import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.robolectric.RuntimeEnvironment;
 
+import java.util.TreeSet;
+
+import static org.hamcrest.Matchers.any;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+
 @RunWith(TestRunner.class)
 public class TestIconRequest {
     private static final String TEST_PAGE_URL = "http://www.mozilla.org";
@@ -52,5 +59,23 @@ public class TestIconRequest {
 
         Assert.assertEquals(0, request.getIconCount());
         Assert.assertFalse(request.hasIconDescriptors());
+    }
+
+    /**
+     * If removing an icon from the internal set failed then we want to throw an exception.
+     */
+    @Test(expected = IllegalStateException.class)
+    public void testMoveToNextIconThrowsException() {
+        final IconRequest request = Icons.with(RuntimeEnvironment.application)
+                .pageUrl(TEST_PAGE_URL)
+                .build();
+
+        //noinspection unchecked - Creating a mock of a generic type
+        request.icons = (TreeSet<IconDescriptor>) mock(TreeSet.class);
+
+        //noinspection SuspiciousMethodCalls
+        doReturn(false).when(request.icons).remove(anyObject());
+
+        request.moveToNextIcon();
     }
 }
