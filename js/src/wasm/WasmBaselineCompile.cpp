@@ -364,6 +364,14 @@ class BaseCompiler
         uint32_t offs() const { MOZ_ASSERT(offs_ != UINT32_MAX); return offs_; }
     };
 
+    // Bit set used for simple bounds check elimination.  Capping this at 64
+    // locals makes sense; even 32 locals would probably be OK in practice.
+    //
+    // For more information about BCE, see the block comment above
+    // popMemoryAccess(), below.
+
+    typedef uint64_t BCESet;
+
     // Control node, representing labels and stack heights at join points.
 
     struct Control
@@ -371,6 +379,8 @@ class BaseCompiler
         Control()
             : framePushed(UINT32_MAX),
               stackSize(UINT32_MAX),
+              bceSafeOnEntry(0),
+              bceSafeOnExit(~BCESet(0)),
               deadOnArrival(false),
               deadThenBranch(false)
         {}
@@ -379,6 +389,8 @@ class BaseCompiler
         NonAssertingLabel otherLabel;   // Used for the "else" branch of if-then-else
         uint32_t framePushed;           // From masm
         uint32_t stackSize;             // Value stack height
+        BCESet bceSafeOnEntry;          // Bounds check info flowing into the item
+        BCESet bceSafeOnExit;           // Bounds check info flowing out of the item
         bool deadOnArrival;             // deadCode_ was set on entry to the region
         bool deadThenBranch;            // deadCode_ was set on exit from "then"
     };
@@ -469,6 +481,7 @@ class BaseCompiler
     int32_t                     maxFramePushed_; // Max value of masm.framePushed() observed
     bool                        deadCode_;       // Flag indicating we should decode & discard the opcode
     bool                        debugEnabled_;
+    BCESet                      bceSafe_;        // Locals that have been bounds checked and not updated since
     ValTypeVector               SigI64I64_;
     ValTypeVector               SigD_;
     ValTypeVector               SigF_;
@@ -1717,6 +1730,14 @@ class BaseCompiler
         return true;
     }
 
+    MOZ_MUST_USE bool peekLocalI32(uint32_t* local) {
+        Stk& v = stk_.back();
+        if (v.kind() != Stk::LocalI32)
+            return false;
+        *local = v.slot();
+        return true;
+    }
+
     // TODO / OPTIMIZE (Bug 1316818): At the moment we use ReturnReg
     // for JoinReg.  It is possible other choices would lead to better
     // register allocation, as ReturnReg is often first in the
@@ -2019,6 +2040,7 @@ class BaseCompiler
         item.framePushed = masm.framePushed();
         item.stackSize = stk_.length();
         item.deadOnArrival = deadCode_;
+        item.bceSafeOnEntry = bceSafe_;
     }
 
     Control& controlItem() {
@@ -3186,6 +3208,24 @@ class BaseCompiler
     //////////////////////////////////////////////////////////////////////
     //
     // Heap access.
+
+    void bceCheckLocal(MemoryAccessDesc* access, uint32_t local, bool* omitBoundsCheck) {
+        if (local >= sizeof(BCESet)*8)
+            return;
+
+        if ((bceSafe_ & (BCESet(1) << local)) && access->offset() < wasm::OffsetGuardLimit)
+            *omitBoundsCheck = true;
+
+        // The local becomes safe even if the offset is beyond the guard limit.
+        bceSafe_ |= (BCESet(1) << local);
+    }
+
+    void bceLocalIsUpdated(uint32_t local) {
+        if (local >= sizeof(BCESet)*8)
+            return;
+
+        bceSafe_ &= ~(BCESet(1) << local);
+    }
 
     void checkOffset(MemoryAccessDesc* access, RegI32 ptr) {
         if (access->offset() >= OffsetGuardLimit) {
@@ -5094,8 +5134,10 @@ BaseCompiler::endBlock(ExprType type)
 
     // Save the value.
     AnyReg r;
-    if (!deadCode_)
+    if (!deadCode_) {
         r = popJoinRegUnlessVoid(type);
+        block.bceSafeOnExit &= bceSafe_;
+    }
 
     // Leave the block.
     popStackOnBlockExit(block.framePushed);
@@ -5110,6 +5152,8 @@ BaseCompiler::endBlock(ExprType type)
             r = captureJoinRegUnlessVoid(type);
         deadCode_ = false;
     }
+
+    bceSafe_ = block.bceSafeOnExit;
 
     // Retain the value stored in joinReg by all paths, if there are any.
     if (!deadCode_)
@@ -5126,6 +5170,7 @@ BaseCompiler::emitLoop()
         sync();                    // Simplifies branching out from block
 
     initControl(controlItem());
+    bceSafe_ = 0;
 
     if (!deadCode_) {
         masm.bind(&controlItem(0).label);
@@ -5141,11 +5186,17 @@ BaseCompiler::endLoop(ExprType type)
     Control& block = controlItem();
 
     AnyReg r;
-    if (!deadCode_)
+    if (!deadCode_) {
         r = popJoinRegUnlessVoid(type);
+        // block.bceSafeOnExit need not be updated because it won't be used for
+        // the fallthrough path.
+    }
 
     popStackOnBlockExit(block.framePushed);
     popValueStackTo(block.stackSize);
+
+    // bceSafe_ stays the same along the fallthrough path because branches to
+    // loops branch to the top.
 
     // Retain the value stored in joinReg by all paths.
     if (!deadCode_)
@@ -5203,7 +5254,12 @@ BaseCompiler::endIfThen()
     if (ifThen.label.used())
         masm.bind(&ifThen.label);
 
+    if (!deadCode_)
+        ifThen.bceSafeOnExit &= bceSafe_;
+
     deadCode_ = ifThen.deadOnArrival;
+
+    bceSafe_ = ifThen.bceSafeOnExit & ifThen.bceSafeOnEntry;
 }
 
 bool
@@ -5238,10 +5294,13 @@ BaseCompiler::emitElse()
 
     // Reset to the "else" branch.
 
-    if (!deadCode_)
+    if (!deadCode_) {
         freeJoinRegUnlessVoid(r);
+        ifThenElse.bceSafeOnExit &= bceSafe_;
+    }
 
     deadCode_ = ifThenElse.deadOnArrival;
+    bceSafe_ = ifThenElse.bceSafeOnEntry;
 
     return true;
 }
@@ -5259,8 +5318,10 @@ BaseCompiler::endIfThenElse(ExprType type)
 
     AnyReg r;
 
-    if (!deadCode_)
+    if (!deadCode_) {
         r = popJoinRegUnlessVoid(type);
+        ifThenElse.bceSafeOnExit &= bceSafe_;
+    }
 
     popStackOnBlockExit(ifThenElse.framePushed);
     popValueStackTo(ifThenElse.stackSize);
@@ -5278,6 +5339,8 @@ BaseCompiler::endIfThenElse(ExprType type)
             r = captureJoinRegUnlessVoid(type);
         deadCode_ = false;
     }
+
+    bceSafe_ = ifThenElse.bceSafeOnExit;
 
     if (!deadCode_)
         pushJoinRegUnlessVoid(r);
@@ -5319,6 +5382,7 @@ BaseCompiler::emitBr()
         return true;
 
     Control& target = controlItem(relativeDepth);
+    target.bceSafeOnExit &= bceSafe_;
 
     // Save any value in the designated join register, where the
     // normal block exit code will also leave it.
@@ -5353,6 +5417,7 @@ BaseCompiler::emitBrIf()
     }
 
     Control& target = controlItem(relativeDepth);
+    target.bceSafeOnExit &= bceSafe_;
 
     BranchState b(&target.label, target.framePushed, InvertBranch(false), type);
     emitBranchSetup(&b);
@@ -5408,6 +5473,7 @@ BaseCompiler::emitBrTable()
     // This is the out-of-range stub.  rc is dead here but we don't need it.
 
     popStackBeforeBranch(controlItem(defaultDepth).framePushed);
+    controlItem(defaultDepth).bceSafeOnExit &= bceSafe_;
     masm.jump(&controlItem(defaultDepth).label);
 
     // Emit stubs.  rc is dead in all of these but we don't need it.
@@ -5423,6 +5489,7 @@ BaseCompiler::emitBrTable()
         masm.bind(&stubs.back());
         uint32_t k = depths[i];
         popStackBeforeBranch(controlItem(k).framePushed);
+        controlItem(k).bceSafeOnExit &= bceSafe_;
         masm.jump(&controlItem(k).label);
     }
 
@@ -5891,6 +5958,7 @@ BaseCompiler::emitSetOrTeeLocal(uint32_t slot)
     if (deadCode_)
         return true;
 
+    bceLocalIsUpdated(slot);
     switch (locals_[slot]) {
       case ValType::I32: {
         RegI32 rv = popI32();
@@ -6069,8 +6137,58 @@ BaseCompiler::emitSetGlobal()
     return true;
 }
 
-// See EffectiveAddressAnalysis::analyzeAsmJSHeapAccess() for comparable Ion code.
+// Bounds check elimination.
 //
+// We perform BCE on two kinds of address expressions: on constant heap pointers
+// that are known to be in the heap or will be handled by the out-of-bounds trap
+// handler; and on local variables that have been checked in dominating code
+// without being updated since.
+//
+// For an access through a constant heap pointer + an offset we can eliminate
+// the bounds check if the sum of the address and offset is below the sum of the
+// minimum memory length and the offset guard length.
+//
+// For an access through a local variable + an offset we can eliminate the
+// bounds check if the local variable has already been checked and has not been
+// updated since, and the offset is less than the guard limit.
+//
+// To track locals for which we can eliminate checks we use a bit vector
+// bceSafe_ that has a bit set for those locals whose bounds have been checked
+// and which have not subsequently been set.  Initially this vector is zero.
+//
+// In straight-line code a bit is set when we perform a bounds check on an
+// access via the local and is reset when the variable is updated.
+//
+// In control flow, the bit vector is manipulated as follows.  Each ControlItem
+// has a value bceSafeOnEntry, which is the value of bceSafe_ on entry to the
+// item, and a value bceSafeOnExit, which is initially ~0.  On a branch (br,
+// brIf, brTable), we always AND the branch target's bceSafeOnExit with the
+// value of bceSafe_ at the branch point.  On exiting an item by falling out of
+// it, provided we're not in dead code, we AND the current value of bceSafe_
+// into the item's bceSafeOnExit.  Additional processing depends on the item
+// type:
+//
+//  - After a block, set bceSafe_ to the block's bceSafeOnExit.
+//
+//  - On loop entry, after pushing the ControlItem, set bceSafe_ to zero; the
+//    back edges would otherwise require us to iterate to a fixedpoint.
+//
+//  - After a loop, the bceSafe_ is left unchanged, because only fallthrough
+//    control flow will reach that point and the bceSafe_ value represents the
+//    correct state of the fallthrough path.
+//
+//  - Set bceSafe_ to the ControlItem's bceSafeOnEntry at both the 'then' branch
+//    and the 'else' branch.
+//
+//  - After an if-then-else, set bceSafe_ to the if-then-else's bceSafeOnExit.
+//
+//  - After an if-then, set bceSafe_ to the if-then's bceSafeOnExit AND'ed with
+//    the if-then's bceSafeOnEntry.
+//
+// Finally, when the debugger allows locals to be mutated we must disable BCE
+// for references via a local, by returning immediately from bceCheckLocal if
+// debugEnabled_ is true.
+
 // TODO / OPTIMIZE (bug 1329576): There are opportunities to generate better
 // code by not moving a constant address with a zero offset into a register.
 
@@ -6083,10 +6201,6 @@ BaseCompiler::popMemoryAccess(MemoryAccessDesc* access, bool* omitBoundsCheck)
     int32_t addrTmp;
     if (popConstI32(addrTmp)) {
         uint32_t addr = addrTmp;
-
-        // We can eliminate the bounds check if the sum of the constant address
-        // and the known offset are below the sum of the minimum memory length
-        // and the offset guard length.
 
         uint64_t ea = uint64_t(addr) + uint64_t(access->offset());
         uint64_t limit = uint64_t(env_.minMemoryLength) + uint64_t(wasm::OffsetGuardLimit);
@@ -6105,6 +6219,10 @@ BaseCompiler::popMemoryAccess(MemoryAccessDesc* access, bool* omitBoundsCheck)
         loadConstI32(r, int32_t(addr));
         return r;
     }
+
+    uint32_t local;
+    if (peekLocalI32(&local))
+        bceCheckLocal(access, local, omitBoundsCheck);
 
     return popI32();
 }
@@ -7171,6 +7289,7 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
       maxFramePushed_(0),
       deadCode_(false),
       debugEnabled_(debugEnabled),
+      bceSafe_(0),
       prologueTrapOffset_(trapOffset()),
       stackAddOffset_(0),
       latentOp_(LatentOp::None),
