@@ -30,7 +30,6 @@ android-x86/opt:
     treeherder:
         platform: android-4-2-x86/opt
         symbol: tc(B)
-        tier: 1
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         implementation: docker-worker
@@ -58,7 +57,6 @@ android-x86-nightly/opt:
     treeherder:
         platform: android-4-2-x86/opt
         symbol: tc(N)
-        tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         implementation: docker-worker
@@ -85,7 +83,6 @@ android-api-15/opt:
     treeherder:
         platform: android-4-0-armv7-api15/opt
         symbol: tc(B)
-        tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         implementation: docker-worker
@@ -113,7 +110,6 @@ android-api-15-nightly/opt:
     treeherder:
         platform: android-4-0-armv7-api15/opt
         symbol: tc(N)
-        tier: 2
     worker-type: aws-provisioner-v1/gecko-{level}-b-android
     worker:
         implementation: docker-worker
