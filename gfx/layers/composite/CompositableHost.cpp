@@ -17,7 +17,6 @@
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "gfxPlatform.h"                // for gfxPlatform
-#include "mozilla/layers/PCompositableParent.h"
 #include "IPDLActor.h"
 
 namespace mozilla {
@@ -43,13 +42,6 @@ CompositableHost::CompositableHost(const TextureInfo& aTextureInfo)
 CompositableHost::~CompositableHost()
 {
   MOZ_COUNT_DTOR(CompositableHost);
-}
-
-bool
-CompositableHost::DestroyIPDLActor(PCompositableParent* aActor)
-{
-  delete aActor;
-  return true;
 }
 
 void
