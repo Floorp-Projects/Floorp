@@ -8,7 +8,8 @@
 
 define(function (require, exports, module) {
   const { createClass, PropTypes } = require("devtools/client/shared/vendor/react");
-  const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
+
+  const { createFactories } = require("devtools/client/shared/components/reps/load-reps");
   const { JsonPanel } = createFactories(require("./json-panel"));
   const { TextPanel } = createFactories(require("./text-panel"));
   const { HeadersPanel } = createFactories(require("./headers-panel"));

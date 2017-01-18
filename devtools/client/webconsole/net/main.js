@@ -26,7 +26,7 @@ const L10N = new LocalizationHelper("devtools/client/locales/netmonitor.properti
 var styleSheets = [
   "resource://devtools/client/jsonview/css/toolbar.css",
   "resource://devtools/client/shared/components/tree/tree-view.css",
-  "resource://devtools/client/shared/components/reps/reps.css",
+  "resource://devtools/client/shared/components/reps.css",
   "resource://devtools/client/webconsole/net/net-request.css",
   "resource://devtools/client/webconsole/net/components/size-limit.css",
   "resource://devtools/client/webconsole/net/components/net-info-body.css",
