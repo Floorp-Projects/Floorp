@@ -819,7 +819,7 @@ ShadowLayerForwarder::Connect(CompositableClient* aCompositable,
   if (!actor) {
     return;
   }
-  aCompositable->InitIPDLActor(actor);
+  aCompositable->InitIPDLActor(actor, CompositableHandle());
 }
 
 void ShadowLayerForwarder::Attach(CompositableClient* aCompositable,
@@ -830,12 +830,12 @@ void ShadowLayerForwarder::Attach(CompositableClient* aCompositable,
   mTxn->AddEdit(OpAttachCompositable(Shadow(aLayer), nullptr, aCompositable->GetIPDLActor()));
 }
 
-void ShadowLayerForwarder::AttachAsyncCompositable(uint64_t aCompositableID,
+void ShadowLayerForwarder::AttachAsyncCompositable(const CompositableHandle& aHandle,
                                                    ShadowableLayer* aLayer)
 {
   MOZ_ASSERT(aLayer);
-  MOZ_ASSERT(aCompositableID != 0); // zero is always an invalid compositable id.
-  mTxn->AddEdit(OpAttachAsyncCompositable(Shadow(aLayer), aCompositableID));
+  MOZ_ASSERT(aHandle);
+  mTxn->AddEdit(OpAttachAsyncCompositable(Shadow(aLayer), aHandle.Value()));
 }
 
 void ShadowLayerForwarder::SetShadowManager(PLayerTransactionChild* aShadowManager)

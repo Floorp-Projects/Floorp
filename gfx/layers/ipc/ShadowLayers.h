@@ -182,7 +182,7 @@ public:
    * the compositable or it's IPDL actor here, so we use an ID instead, that
    * is matched on the compositor side.
    */
-  void AttachAsyncCompositable(uint64_t aCompositableID,
+  void AttachAsyncCompositable(const CompositableHandle& aHandle,
                                ShadowableLayer* aLayer);
 
   /**
