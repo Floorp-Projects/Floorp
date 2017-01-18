@@ -1471,6 +1471,21 @@ HTMLMediaElement::GetMozDebugReaderData(nsAString& aString)
   }
 }
 
+already_AddRefed<Promise>
+HTMLMediaElement::MozRequestDebugInfo(ErrorResult& aRv)
+{
+  RefPtr<Promise> promise = CreateDOMPromise(aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  // TODO: collect data from MDSM which must be done off the main thread.
+  nsAutoString result;
+  GetMozDebugReaderData(result);
+  promise->MaybeResolve(result);
+  return promise.forget();
+}
+
 void
 HTMLMediaElement::MozDumpDebugInfo()
 {
