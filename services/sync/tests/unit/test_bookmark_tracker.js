@@ -1050,7 +1050,7 @@ add_task(async function test_onItemMoved() {
     // Moving within the folder will just track the folder.
     PlacesUtils.bookmarks.moveItem(
       tb_id, PlacesUtils.bookmarks.bookmarksMenuFolder, 0);
-    await verifyTrackedItems(['menu']);
+    await verifyTrackedItems(["menu"]);
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
     await resetTracker();
     await PlacesTestUtils.markBookmarksAsSynced();
@@ -1059,7 +1059,7 @@ add_task(async function test_onItemMoved() {
     // folder, the new folder and the bookmark.
     PlacesUtils.bookmarks.moveItem(fx_id, PlacesUtils.bookmarks.toolbarFolder,
                                    PlacesUtils.bookmarks.DEFAULT_INDEX);
-    await verifyTrackedItems(['menu', 'toolbar', fx_guid]);
+    await verifyTrackedItems(["menu", "toolbar", fx_guid]);
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
 
   } finally {
@@ -1095,7 +1095,7 @@ add_task(async function test_async_onItemMoved_update() {
       parentGuid: PlacesUtils.bookmarks.menuGuid,
       index: 0,
     });
-    await verifyTrackedItems(['menu']);
+    await verifyTrackedItems(["menu"]);
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
     await resetTracker();
 
@@ -1105,7 +1105,7 @@ add_task(async function test_async_onItemMoved_update() {
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
       index: PlacesUtils.bookmarks.DEFAULT_INDEX,
     });
-    await verifyTrackedItems(['menu', 'toolbar', tbBmk.guid]);
+    await verifyTrackedItems(["menu", "toolbar", tbBmk.guid]);
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
@@ -1320,7 +1320,7 @@ add_task(async function test_treeMoved() {
     PlacesUtils.bookmarks.moveItem(
       folder2_id, PlacesUtils.bookmarks.bookmarksMenuFolder, 0);
     // the menu and both folders should be tracked, the children should not be.
-    await verifyTrackedItems(['menu', folder1_guid, folder2_guid]);
+    await verifyTrackedItems(["menu", folder1_guid, folder2_guid]);
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");
@@ -1350,7 +1350,7 @@ add_task(async function test_onItemDeleted() {
     // Delete the last item - the item and parent should be tracked.
     PlacesUtils.bookmarks.removeItem(tb_id);
 
-    await verifyTrackedItems(['menu', tb_guid]);
+    await verifyTrackedItems(["menu", tb_guid]);
     do_check_eq(tracker.score, SCORE_INCREMENT_XLARGE);
   } finally {
     _("Clean up.");

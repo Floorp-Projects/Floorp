@@ -224,8 +224,8 @@ function testOnWindow(aIsPrivate, aCallback) {
         }
         win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
 
-        win.content.addEventListener('load', function innerLoad2() {
-          win.content.removeEventListener('load', innerLoad2);
+        win.content.addEventListener("load", function innerLoad2() {
+          win.content.removeEventListener("load", innerLoad2);
           testWindows.push(win);
           SimpleTest.executeSoon(function() { aCallback(win); });
         }, false, true);

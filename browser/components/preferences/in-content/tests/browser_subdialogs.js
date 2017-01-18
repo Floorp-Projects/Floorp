@@ -252,7 +252,7 @@ add_task(function* wrapped_text_in_dialog_should_have_expected_scrollHeight() {
 add_task(function* dialog_too_tall_should_get_reduced_in_height() {
   yield open_subdialog_and_test_generic_start_state(tab.linkedBrowser, function domcontentloadedFn() {
     let frame = content.window.gSubDialog._frame;
-    frame.contentDocument.documentElement.style.height = '100000px';
+    frame.contentDocument.documentElement.style.height = "100000px";
   });
 
   yield ContentTask.spawn(tab.linkedBrowser, null, function*() {

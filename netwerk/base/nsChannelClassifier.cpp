@@ -60,7 +60,8 @@ static bool sIsInited = false;
 #define LOG_ENABLED() MOZ_LOG_TEST(gChannelClassifierLog, LogLevel::Debug)
 
 NS_IMPL_ISUPPORTS(nsChannelClassifier,
-                  nsIURIClassifierCallback)
+                  nsIURIClassifierCallback,
+                  nsIObserver)
 
 nsChannelClassifier::nsChannelClassifier(nsIChannel *aChannel)
   : mIsAllowListed(false),
@@ -411,6 +412,12 @@ nsChannelClassifier::StartInternal()
         return NS_ERROR_FAILURE;
     }
 
+    // Add an observer for shutdown
+    nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+    if (!observerService)
+      return NS_ERROR_FAILURE;
+
+    observerService->AddObserver(this, "profile-change-net-teardown", false);
     return NS_OK;
 }
 
@@ -762,6 +769,26 @@ nsChannelClassifier::OnClassifyComplete(nsresult aErrorCode)
     mChannel = nullptr;
 
     return NS_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIObserver implementation
+NS_IMETHODIMP
+nsChannelClassifier::Observe(nsISupports *aSubject, const char *aTopic,
+                             const char16_t *aData)
+{
+  if (!strcmp(aTopic, "profile-change-net-teardown")) {
+    // If we aren't getting a callback for any reason, make sure
+    // we resume the channel.
+
+    if (mChannel && mSuspendedChannel) {
+      mSuspendedChannel = false;
+      mChannel->Cancel(NS_ERROR_ABORT);
+      mChannel->Resume();
+    }
+  }
+
+  return NS_OK;
 }
 
 } // namespace net

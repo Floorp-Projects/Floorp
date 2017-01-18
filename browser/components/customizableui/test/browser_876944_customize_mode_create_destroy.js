@@ -10,7 +10,7 @@ const kTestWidget2 = "test-customize-mode-create-destroy2";
 // Creating and destroying a widget should correctly wrap/unwrap stuff
 add_task(function* testWrapUnwrap() {
   yield startCustomizing();
-  CustomizableUI.createWidget({id: kTestWidget1, label: 'Pretty label', tooltiptext: 'Pretty tooltip'});
+  CustomizableUI.createWidget({id: kTestWidget1, label: "Pretty label", tooltiptext: "Pretty tooltip"});
   let elem = document.getElementById(kTestWidget1);
   let wrapper = document.getElementById("wrapper-" + kTestWidget1);
   ok(elem, "There should be an item");
@@ -32,7 +32,7 @@ add_task(function* testPanelPlaceholders() {
   // change when the default placements change.
   let expectedPlaceholders = 1 + (isInDevEdition() ? 1 : 0);
   is(panel.querySelectorAll(".panel-customization-placeholder").length, expectedPlaceholders, "The number of placeholders should be correct.");
-  CustomizableUI.createWidget({id: kTestWidget2, label: 'Pretty label', tooltiptext: 'Pretty tooltip', defaultArea: CustomizableUI.AREA_PANEL});
+  CustomizableUI.createWidget({id: kTestWidget2, label: "Pretty label", tooltiptext: "Pretty tooltip", defaultArea: CustomizableUI.AREA_PANEL});
   let elem = document.getElementById(kTestWidget2);
   let wrapper = document.getElementById("wrapper-" + kTestWidget2);
   ok(elem, "There should be an item");

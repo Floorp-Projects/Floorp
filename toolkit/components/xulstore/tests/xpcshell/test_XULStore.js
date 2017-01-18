@@ -63,11 +63,11 @@ function checkArrays(a, b) {
 }
 
 function checkOldStore() {
-  checkArrays(['addon-bar', 'main-window', 'sidebar-title'], getIDs(browserURI));
-  checkArrays(['collapsed'], getAttributes(browserURI, 'addon-bar'));
-  checkArrays(['height', 'screenX', 'screenY', 'sizemode', 'width'],
-              getAttributes(browserURI, 'main-window'));
-  checkArrays(['value'], getAttributes(browserURI, 'sidebar-title'));
+  checkArrays(["addon-bar", "main-window", "sidebar-title"], getIDs(browserURI));
+  checkArrays(["collapsed"], getAttributes(browserURI, "addon-bar"));
+  checkArrays(["height", "screenX", "screenY", "sizemode", "width"],
+              getAttributes(browserURI, "main-window"));
+  checkArrays(["value"], getAttributes(browserURI, "sidebar-title"));
 
   checkValue(browserURI, "addon-bar", "collapsed", "true");
   checkValue(browserURI, "main-window", "width", "994");
@@ -77,9 +77,9 @@ function checkOldStore() {
   checkValue(browserURI, "main-window", "sizemode", "normal");
   checkValue(browserURI, "sidebar-title", "value", "");
 
-  checkArrays(['lockCol', 'prefCol'], getIDs(aboutURI));
-  checkArrays(['ordinal'], getAttributes(aboutURI, 'lockCol'));
-  checkArrays(['ordinal', 'sortDirection'], getAttributes(aboutURI, 'prefCol'));
+  checkArrays(["lockCol", "prefCol"], getIDs(aboutURI));
+  checkArrays(["ordinal"], getAttributes(aboutURI, "lockCol"));
+  checkArrays(["ordinal", "sortDirection"], getAttributes(aboutURI, "prefCol"));
 
   checkValue(aboutURI, "prefCol", "ordinal", "1");
   checkValue(aboutURI, "prefCol", "sortDirection", "ascending");
@@ -134,21 +134,21 @@ add_task(function* testSetValue() {
   XULStore.setValue(browserURI, "side-bar", "width", "1000");
   checkValue(browserURI, "side-bar", "width", "1000");
   checkArrays(["addon-bar", "main-window", "side-bar", "sidebar-title"], getIDs(browserURI));
-  checkArrays(["width"], getAttributes(browserURI, 'side-bar'));
+  checkArrays(["width"], getAttributes(browserURI, "side-bar"));
 
   // Modify existing property
   checkValue(browserURI, "side-bar", "width", "1000");
   XULStore.setValue(browserURI, "side-bar", "width", "1024");
   checkValue(browserURI, "side-bar", "width", "1024");
   checkArrays(["addon-bar", "main-window", "side-bar", "sidebar-title"], getIDs(browserURI));
-  checkArrays(["width"], getAttributes(browserURI, 'side-bar'));
+  checkArrays(["width"], getAttributes(browserURI, "side-bar"));
 
   // Add another attribute
   checkValue(browserURI, "side-bar", "height", "");
   XULStore.setValue(browserURI, "side-bar", "height", "1000");
   checkValue(browserURI, "side-bar", "height", "1000");
   checkArrays(["addon-bar", "main-window", "side-bar", "sidebar-title"], getIDs(browserURI));
-  checkArrays(["width", "height"], getAttributes(browserURI, 'side-bar'));
+  checkArrays(["width", "height"], getAttributes(browserURI, "side-bar"));
 });
 
 add_task(function* testRemoveValue() {
@@ -158,7 +158,7 @@ add_task(function* testRemoveValue() {
   checkValue(browserURI, "side-bar", "width", "");
   checkValueExists(browserURI, "side-bar", "width", false);
   checkArrays(["addon-bar", "main-window", "side-bar", "sidebar-title"], getIDs(browserURI));
-  checkArrays(["height"], getAttributes(browserURI, 'side-bar'));
+  checkArrays(["height"], getAttributes(browserURI, "side-bar"));
 
   // Remove second attribute
   checkValue(browserURI, "side-bar", "height", "1000");

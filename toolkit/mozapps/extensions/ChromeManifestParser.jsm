@@ -48,7 +48,7 @@ this.ChromeManifestParser = {
   parseSync(aURI) {
     function parseLine(aLine) {
       let line = aLine.trim();
-      if (line.length == 0 || line.charAt(0) == '#')
+      if (line.length == 0 || line.charAt(0) == "#")
         return;
       let tokens = line.split(/\s+/);
       let type = tokens.shift();

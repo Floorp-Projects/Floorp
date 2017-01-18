@@ -8,7 +8,7 @@ const { classes: Cc, Constructor: CC, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.importGlobalProperties(['fetch']);
+Cu.importGlobalProperties(["fetch"]);
 const BlocklistClients = Cu.import("resource://services-common/blocklist-clients.js", {});
 
 const PREF_SETTINGS_SERVER              = "services.settings.server";

@@ -35,7 +35,7 @@ add_task(function* test_queryMultipleFolders() {
   let maxResults = 20;
   let queryString = "place:" + folderIds.map((id) => {
     return "folder=" + id;
-  }).join('&') + "&sort=5&maxResults=" + maxResults;
+  }).join("&") + "&sort=5&maxResults=" + maxResults;
   PlacesUtils.history.queryStringToQueries(queryString, query, {}, options);
   let rootNode = PlacesUtils.history.executeQuery(query.value[0], options.value).root;
   rootNode.containerOpen = true;

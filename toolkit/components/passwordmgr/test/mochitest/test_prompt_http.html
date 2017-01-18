@@ -222,7 +222,7 @@ add_task(function* test_iframe() {
     Services.logins.removeLogin(tmpLogin);
 
     // Clear cached auth from this subtest, and avoid leaking due to bug 459620.
-    var authMgr = Cc['@mozilla.org/network/http-auth-manager;1'].
+    var authMgr = Cc["@mozilla.org/network/http-auth-manager;1"].
                   getService(Ci.nsIHttpAuthManager);
     authMgr.clearAll();
   });

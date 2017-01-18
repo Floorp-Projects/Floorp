@@ -969,7 +969,7 @@ LoginManagerPrompter.prototype = {
       callback: () => {
         histogram.add(PROMPT_ADD_OR_UPDATE);
         if (histogramName == "PWMGR_PROMPT_REMEMBER_ACTION") {
-          Services.obs.notifyObservers(null, 'LoginStats:NewSavedPassword', null);
+          Services.obs.notifyObservers(null, "LoginStats:NewSavedPassword", null);
         }
         readDataFromUI();
         persistData();

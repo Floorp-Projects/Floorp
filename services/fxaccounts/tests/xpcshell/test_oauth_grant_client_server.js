@@ -31,7 +31,7 @@ function destroy(request, response) {
   ok(activeTokens.delete(token));
   print("after destroy have", activeTokens.size, "tokens left.")
   response.setStatusLine("1.1", 200, "OK");
-  response.write('{}');
+  response.write("{}");
 }
 
 function startServer() {
@@ -54,7 +54,7 @@ add_task(function* getAndRevokeToken() {
   let server = startServer();
   let clientOptions = {
     serverURL: "http://localhost:" + server.identity.primaryPort + "/v1",
-    client_id: 'abc123',
+    client_id: "abc123",
   }
 
   let client = new FxAccountsOAuthGrantClient(clientOptions);

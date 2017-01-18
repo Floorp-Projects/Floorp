@@ -38,14 +38,14 @@ add_task(function* () {
 
   yield ContentTask.spawn(gTestBrowser, {}, function* () {
     let doc = content.document;
-    let p = doc.createElement('embed');
+    let p = doc.createElement("embed");
 
-    p.setAttribute('id', 'test');
-    p.setAttribute('type', 'application/x-test');
+    p.setAttribute("id", "test");
+    p.setAttribute("type", "application/x-test");
     p.style.left = "0";
     p.style.bottom = "200px";
 
-    doc.getElementById('container').appendChild(p);
+    doc.getElementById("container").appendChild(p);
   });
 
   // Work around for delayed PluginBindingAttached
@@ -67,14 +67,14 @@ add_task(function* () {
 
   yield ContentTask.spawn(gTestBrowser, {}, function* () {
     let doc = content.document;
-    let p = doc.createElement('embed');
+    let p = doc.createElement("embed");
 
-    p.setAttribute('id', 'test');
-    p.setAttribute('type', 'application/x-test');
+    p.setAttribute("id", "test");
+    p.setAttribute("type", "application/x-test");
     p.style.left = "0";
     p.style.bottom = "-410px";
 
-    doc.getElementById('container').appendChild(p);
+    doc.getElementById("container").appendChild(p);
   });
 
   // Work around for delayed PluginBindingAttached
@@ -96,14 +96,14 @@ add_task(function* () {
 
   yield ContentTask.spawn(gTestBrowser, {}, function* () {
     let doc = content.document;
-    let p = doc.createElement('embed');
+    let p = doc.createElement("embed");
 
-    p.setAttribute('id', 'test');
-    p.setAttribute('type', 'application/x-test');
+    p.setAttribute("id", "test");
+    p.setAttribute("type", "application/x-test");
     p.style.left = "-600px";
     p.style.bottom = "0";
 
-    doc.getElementById('container').appendChild(p);
+    doc.getElementById("container").appendChild(p);
   });
 
   // Work around for delayed PluginBindingAttached

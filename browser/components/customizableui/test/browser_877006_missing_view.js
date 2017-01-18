@@ -6,11 +6,11 @@
 
 // Should be able to add broken view widget
 add_task(function testAddbrokenViewWidget() {
-  const kWidgetId = 'test-877006-broken-widget';
+  const kWidgetId = "test-877006-broken-widget";
   let widgetSpec = {
     id: kWidgetId,
-    type: 'view',
-    viewId: 'idontexist',
+    type: "view",
+    viewId: "idontexist",
     /* Empty handler so we try to attach it maybe? */
     onViewShowing() {
     }

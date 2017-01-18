@@ -34,7 +34,7 @@ this.FxAccountsStorageManager = function(options = {}) {
   this.plainStorage = new JSONStorage(this.options);
   // On b2g we have no loginManager for secure storage, and tests may want
   // to pretend secure storage isn't available.
-  let useSecure = 'useSecure' in options ? options.useSecure : haveLoginManager;
+  let useSecure = "useSecure" in options ? options.useSecure : haveLoginManager;
   if (useSecure) {
     this.secureStorage = new LoginManagerStorage();
   } else {
@@ -150,7 +150,7 @@ this.FxAccountsStorageManager.prototype = {
     // We know we are initialized - this means our .cachedPlain is accurate
     // and doesn't need to be read (it was read if necessary by initialize).
     // So if there's no uid, there's no user signed in.
-    if (!('uid' in this.cachedPlain)) {
+    if (!("uid" in this.cachedPlain)) {
       return null;
     }
     let result = {};
@@ -205,12 +205,12 @@ this.FxAccountsStorageManager.prototype = {
   // a different user, nor to set the user as signed-out.
   updateAccountData: Task.async(function* (newFields) {
     yield this._promiseInitialized;
-    if (!('uid' in this.cachedPlain)) {
+    if (!("uid" in this.cachedPlain)) {
       // If this storage instance shows no logged in user, then you can't
       // update fields.
       throw new Error("No user is logged in");
     }
-    if (!newFields || 'uid' in newFields || 'email' in newFields) {
+    if (!newFields || "uid" in newFields || "email" in newFields) {
       // Once we support
       // user changing email address this may need to change, but it's not
       // clear how we would be told of such a change anyway...

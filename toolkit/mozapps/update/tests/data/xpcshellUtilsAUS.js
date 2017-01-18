@@ -28,7 +28,7 @@
  * possible to fix some or all of these in the test itself.
  */
 
-'use strict';
+"use strict";
 /* eslint-disable no-undef */
 
 const { classes: Cc, interfaces: Ci, manager: Cm, results: Cr,

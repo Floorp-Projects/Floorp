@@ -1903,6 +1903,33 @@ function createHTML(options) {
 var iceServerWebsocket;
 var iceServersArray = [];
 
+var addTurnsSelfsignedCerts = () => {
+  var gUrl = SimpleTest.getTestFileURL('addTurnsSelfsignedCert.js');
+  var gScript = SpecialPowers.loadChromeScript(gUrl);
+  var certs = [];
+  // If the ICE server is running TURNS, and includes a "cert" attribute in
+  // its JSON, we set up an override that will forgive things like
+  // self-signed for it.
+  iceServersArray.forEach(iceServer => {
+    if (iceServer.hasOwnProperty("cert")) {
+      iceServer.urls.forEach(url => {
+        if (url.startsWith("turns:")) {
+          // Assumes no port or params!
+          certs.push({"cert": iceServer.cert, "hostname": url.substr(6)});
+        }
+      });
+    }
+  });
+
+  return new Promise((resolve, reject) => {
+    gScript.addMessageListener('certs-added', () => {
+      resolve();
+    });
+
+    gScript.sendAsyncMessage('add-turns-certs', certs);
+  });
+};
+
 var setupIceServerConfig = useIceServer => {
   // We disable ICE support for HTTP proxy when using a TURN server, because
   // mochitest uses a fake HTTP proxy to serve content, which will eat our STUN
@@ -1942,7 +1969,8 @@ var setupIceServerConfig = useIceServer => {
 
   return enableHttpProxy(false)
     .then(spawnIceServer)
-    .then(iceServersStr => { iceServersArray = JSON.parse(iceServersStr); });
+    .then(iceServersStr => { iceServersArray = JSON.parse(iceServersStr); })
+    .then(addTurnsSelfsignedCerts);
 };
 
 function runNetworkTest(testFunction, fixtureOptions) {

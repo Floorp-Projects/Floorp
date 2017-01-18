@@ -15,8 +15,8 @@ function run_test() {
                    },
                    function(mdump, extra) {
                      do_check_eq(extra.TestKey, "TestValue");
-                     do_check_true('StartupTime' in extra);
-                     do_check_true('ProcessType' in extra);
+                     do_check_true("StartupTime" in extra);
+                     do_check_true("ProcessType" in extra);
                      do_check_neq(extra.Notes.indexOf("!!!foo!!!"), -1);
                    });
 }

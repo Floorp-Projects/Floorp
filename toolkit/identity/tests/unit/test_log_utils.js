@@ -2,8 +2,8 @@
 "use strict";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import('resource://gre/modules/Services.jsm');
-Cu.import('resource://gre/modules/identity/LogUtils.jsm');
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/identity/LogUtils.jsm");
 
 function toggle_debug() {
   do_test_pending();
@@ -24,12 +24,12 @@ function toggle_debug() {
     },
 
     init() {
-      Services.prefs.addObserver('toolkit.identity.debug', this, false);
+      Services.prefs.addObserver("toolkit.identity.debug", this, false);
     }
   };
 
   new Wrapper();
-  Services.prefs.setBoolPref('toolkit.identity.debug', true);
+  Services.prefs.setBoolPref("toolkit.identity.debug", true);
 }
 
 // test that things don't break

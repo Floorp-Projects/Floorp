@@ -93,9 +93,9 @@ add_test(function test_hawk_authenticated_request() {
   let localTime = then + clockSkew;
 
   // Set the accept-languages pref to the Nepalese dialect of Zulu.
-  let acceptLanguage = Cc['@mozilla.org/supports-string;1'].createInstance(Ci.nsISupportsString);
-  acceptLanguage.data = 'zu-NP'; // omit trailing ';', which our HTTP libs snip
-  Services.prefs.setComplexValue('intl.accept_languages', Ci.nsISupportsString, acceptLanguage);
+  let acceptLanguage = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+  acceptLanguage.data = "zu-NP"; // omit trailing ';', which our HTTP libs snip
+  Services.prefs.setComplexValue("intl.accept_languages", Ci.nsISupportsString, acceptLanguage);
 
   let credentials = {
     id: "eyJleHBpcmVzIjogMTM2NTAxMDg5OC4x",

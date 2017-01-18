@@ -86,7 +86,7 @@ add_task(function* test_sidebar() {
   // Reset BrowserUITelemetry's world.
   BUIT._countableEvents = {};
 
-  yield SidebarUI.show('viewTabsSidebar');
+  yield SidebarUI.show("viewTabsSidebar");
 
   let syncedTabsDeckComponent = SidebarUI.browser.contentWindow.syncedTabsDeckComponent;
 

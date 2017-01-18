@@ -75,7 +75,7 @@ var SocialServiceInternal = {
       }
     }
     let originUri = Services.io.newURI(origin);
-    return originUri.hostPort.replace('.', '-');
+    return originUri.hostPort.replace(".", "-");
   },
   orderedProviders(aCallback) {
     if (SocialServiceInternal.providerArray.length < 2) {
@@ -158,7 +158,7 @@ function getOriginActivationType(origin) {
     return "internal";
   }
 
-  let directories = Services.prefs.getCharPref("social.directories").split(',');
+  let directories = Services.prefs.getCharPref("social.directories").split(",");
   if (directories.indexOf(origin) >= 0)
     return "directory";
 
@@ -497,12 +497,12 @@ this.SocialService = {
   },
 
   _manifestFromData(type, data, installOrigin) {
-    let featureURLs = ['shareURL'];
-    let resolveURLs = featureURLs.concat(['postActivationURL']);
+    let featureURLs = ["shareURL"];
+    let resolveURLs = featureURLs.concat(["postActivationURL"]);
 
-    if (type == 'directory' || type == 'internal') {
+    if (type == "directory" || type == "internal") {
       // directory provided manifests must have origin in manifest, use that
-      if (!data['origin']) {
+      if (!data["origin"]) {
         Cu.reportError("SocialService.manifestFromData directory service provided manifest without origin.");
         return null;
       }
@@ -519,7 +519,7 @@ this.SocialService = {
       Cu.reportError("SocialService.manifestFromData manifest missing required urls.");
       return null;
     }
-    if (!data['name'] || !data['iconURL']) {
+    if (!data["name"] || !data["iconURL"]) {
       Cu.reportError("SocialService.manifestFromData manifest missing name or iconURL.");
       return null;
     }

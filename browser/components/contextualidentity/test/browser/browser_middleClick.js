@@ -17,7 +17,7 @@ add_task(function* () {
   yield ContentTask.spawn(browser, URI,
     function(uri) {
       let anchor = content.document.createElement("a");
-      anchor.setAttribute('id', 'clickMe');
+      anchor.setAttribute("id", "clickMe");
       anchor.setAttribute("href", uri);
       anchor.appendChild(content.document.createTextNode("click me!"));
       content.document.body.appendChild(anchor);

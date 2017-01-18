@@ -1,9 +1,9 @@
 "use strict";
 
-var gInvalidFormPopup = document.getElementById('invalid-form-popup');
+var gInvalidFormPopup = document.getElementById("invalid-form-popup");
 
 function checkPopupHide() {
-  ok(gInvalidFormPopup.state != 'showing' && gInvalidFormPopup.state != 'open',
+  ok(gInvalidFormPopup.state != "showing" && gInvalidFormPopup.state != "open",
      "[Test " + testId + "] The invalid form popup should not be shown");
 }
 
@@ -23,7 +23,7 @@ add_task(function* () {
 
   incrementTest();
   let testPage =
-    'data:text/html,' +
+    "data:text/html," +
     '<form target="t"><input type="url"  placeholder="url" value="http://" style="display: none;"><input id="s" type="button" value="check"></form>';
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, testPage);
   yield BrowserTestUtils.synthesizeMouse("#s", 0, 0, {}, gBrowser.selectedBrowser);
@@ -38,7 +38,7 @@ add_task(function* () {
 add_task(function* () {
   incrementTest();
   let testPage =
-    'data:text/html,' +
+    "data:text/html," +
     '<form target="t"><input type="url"  placeholder="url" value="http://" style="visibility: hidden;"><input id="s" type="button" value="check"></form>';
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, testPage);
   yield BrowserTestUtils.synthesizeMouse("#s", 0, 0, {}, gBrowser.selectedBrowser);

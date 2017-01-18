@@ -9,8 +9,8 @@ function run_test() {
   for (var i = 0; i < tests.length; i++) {
     // Generate two wrappers of each test function that invoke the original test with an
     // appropriate privacy context.
-    var pub = eval('var f = function* ' + tests[i].name + '() { yield tests[' + i + ']({ usePrivateBrowsing: false }); }; f');
-    var priv = eval('var f = function* ' + tests[i].name + '_private() { yield tests[' + i + ']({ usePrivateBrowsing: true }); }; f');
+    var pub = eval("var f = function* " + tests[i].name + "() { yield tests[" + i + "]({ usePrivateBrowsing: false }); }; f");
+    var priv = eval("var f = function* " + tests[i].name + "_private() { yield tests[" + i + "]({ usePrivateBrowsing: true }); }; f");
     allTests.push(pub);
     allTests.push(priv);
   }

@@ -2,9 +2,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-'use strict';
+"use strict";
 
-const kInterfaceName = 'wifi';
+const kInterfaceName = "wifi";
 
 var server;
 var step = 0;
@@ -18,10 +18,10 @@ function xhr_handler(metadata, response) {
 
 function fakeUIResponse() {
   Services.obs.addObserver(function observe(subject, topic, data) {
-    if (topic === 'captive-portal-login') {
-      do_throw('should not receive captive-portal-login event');
+    if (topic === "captive-portal-login") {
+      do_throw("should not receive captive-portal-login event");
     }
-  }, 'captive-portal-login', false);
+  }, "captive-portal-login", false);
 }
 
 function test_portal_not_found() {

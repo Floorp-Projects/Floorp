@@ -140,7 +140,7 @@
             if (params && typeof(params) == "object") {
               aFlags = params.flags;
               aReferrerURI = params.referrerURI;
-              if ('referrerPolicy' in params) {
+              if ("referrerPolicy" in params) {
                 aReferrerPolicy = params.referrerPolicy;
               }
               aCharset = params.charset;
@@ -566,7 +566,7 @@
       </property>
 
       <field name="mPrefs" readonly="true">
-        Components.classes['@mozilla.org/preferences-service;1']
+        Components.classes["@mozilla.org/preferences-service;1"]
                   .getService(Components.interfaces.nsIPrefBranch);
       </field>
 
@@ -1521,11 +1521,11 @@
                                           .getService(Components.interfaces.nsIPromptService);
 
             var buttonPressed = promptService.confirmEx(window,
-              this.mStrBundle.GetStringFromName('browsewithcaret.checkWindowTitle'),
-              this.mStrBundle.GetStringFromName('browsewithcaret.checkLabel'),
+              this.mStrBundle.GetStringFromName("browsewithcaret.checkWindowTitle"),
+              this.mStrBundle.GetStringFromName("browsewithcaret.checkLabel"),
               // Make "No" the default:
               promptService.STD_YES_NO_BUTTONS | promptService.BUTTON_POS_1_DEFAULT,
-              null, null, null, this.mStrBundle.GetStringFromName('browsewithcaret.checkMsg'),
+              null, null, null, this.mStrBundle.GetStringFromName("browsewithcaret.checkMsg"),
               checkValue);
             if (buttonPressed != 0) {
               if (checkValue.value) {

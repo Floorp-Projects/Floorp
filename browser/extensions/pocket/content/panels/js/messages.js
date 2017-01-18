@@ -13,11 +13,11 @@ var pktPanelMessaging = (function() {
  }
 
  function prefixedMessageId(messageId) {
-   return 'PKT_' + messageId;
+   return "PKT_" + messageId;
  }
 
  function panelPrefixedMessageId(panelId, messageId) {
-   return prefixedMessageId(panelId + '_' + messageId);
+   return prefixedMessageId(panelId + "_" + messageId);
  }
 
  function addMessageListener(panelId, messageId, callback) {

@@ -374,7 +374,7 @@ function readFileBytes(aFile) {
       throw "Nothing read from input stream!";
     }
   }
-  data.join('');
+  data.join("");
   fis.close();
   return data.toString();
 }

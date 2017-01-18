@@ -42,7 +42,7 @@ function install_ended(install, addon) {
 
 function finish_test(count) {
   is(count, 0, "No add-ons should have been installed");
-  var authMgr = Components.classes['@mozilla.org/network/http-auth-manager;1']
+  var authMgr = Components.classes["@mozilla.org/network/http-auth-manager;1"]
                           .getService(Components.interfaces.nsIHttpAuthManager);
   authMgr.clearAll();
 

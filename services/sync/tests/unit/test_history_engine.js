@@ -43,7 +43,7 @@ add_task(async function test_processIncoming_mobile_history_batched() {
   // 10 minutes old.
   let visitType = Ci.nsINavHistoryService.TRANSITION_LINK;
   for (var i = 0; i < 234; i++) {
-    let id = 'record-no' + ("00" + i).slice(-3);
+    let id = "record-no" + ("00" + i).slice(-3);
     let modified = Date.now() / 1000 - 60 * (i + 10);
     let payload = encryptPayload({
       id,

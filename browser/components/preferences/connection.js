@@ -179,9 +179,9 @@ var gConnectionsDialog = {
     var noProxiesPref = document.getElementById("network.proxy.no_proxies_on");
     // replace substrings of ; and \n with commas if they're neither immediately
     // preceded nor followed by a valid separator character
-    noProxiesPref.value = noProxiesPref.value.replace(/([^, \n;])[;\n]+(?![,\n;])/g, '$1,');
+    noProxiesPref.value = noProxiesPref.value.replace(/([^, \n;])[;\n]+(?![,\n;])/g, "$1,");
     // replace any remaining ; and \n since some may follow commas, etc.
-    noProxiesPref.value = noProxiesPref.value.replace(/[;\n]/g, '');
+    noProxiesPref.value = noProxiesPref.value.replace(/[;\n]/g, "");
   },
 
   readHTTPProxyServer() {

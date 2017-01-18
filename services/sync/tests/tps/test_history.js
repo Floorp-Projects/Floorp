@@ -151,12 +151,12 @@ var history_not = [
  * Sync, see bug 446517.
  */
 
-Phase('phase1', [
+Phase("phase1", [
   [History.add, history1],
   [Sync],
 ]);
 
-Phase('phase2', [
+Phase("phase2", [
   [Sync],
   [History.verify, history1],
   [History.delete, history_to_delete],

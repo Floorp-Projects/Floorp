@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+"use strict";
 
 const TEST_URL_PATH = "/browser/browser/components/originattributes/test/browser/";
 
@@ -73,7 +73,7 @@ function* openTabInFirstParty(aURL, aFirstPartyDomain,
                               aFrameSetting = DEFAULT_FRAME_SETTING) {
 
   // If the first party domain ends with '/', we remove it.
-  if (aFirstPartyDomain.endsWith('/')) {
+  if (aFirstPartyDomain.endsWith("/")) {
     aFirstPartyDomain = aFirstPartyDomain.slice(0, -1);
   }
 
@@ -117,11 +117,11 @@ function* openTabInFirstParty(aURL, aFirstPartyDomain,
 
       if (type === typeFrame) {
         // Add a frameset which carries the frame element.
-        let frameSet = document.createElement('frameset');
+        let frameSet = document.createElement("frameset");
         frameSet.cols = "50%,50%";
 
-        let frame = document.createElement('frame');
-        let dummyFrame = document.createElement('frame');
+        let frame = document.createElement("frame");
+        let dummyFrame = document.createElement("frame");
 
         frameSet.appendChild(frame);
         frameSet.appendChild(dummyFrame);
@@ -131,7 +131,7 @@ function* openTabInFirstParty(aURL, aFirstPartyDomain,
         frameElement = frame;
       } else if (type === typeIFrame) {
         // Add an iframe.
-        let iframe = document.createElement('iframe');
+        let iframe = document.createElement("iframe");
         document.body.appendChild(iframe);
 
         frameElement = iframe;

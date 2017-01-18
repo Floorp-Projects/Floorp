@@ -319,11 +319,11 @@ add_task(function* test_replaceFaviconDataFromDataURL_beforeRegularAssign() {
 /* toBase64 copied from image/test/unit/test_encoder_png.js */
 
 /* Convert data (an array of integers) to a Base64 string. */
-const toBase64Table = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
-    '0123456789+/';
-const base64Pad = '=';
+const toBase64Table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" +
+    "0123456789+/";
+const base64Pad = "=";
 function toBase64(data) {
-  let result = '';
+  let result = "";
   let length = data.length;
   let i;
   // Convert every three bytes to 4 ascii characters.

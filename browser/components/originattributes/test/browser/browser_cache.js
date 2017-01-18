@@ -152,10 +152,10 @@ function* doTest(aBrowser) {
     let URLSuffix = "?r=" + arg.randomSuffix;
 
     // Create the audio and video elements.
-    let audio = content.document.createElement('audio');
-    let video = content.document.createElement('video');
-    let audioSource = content.document.createElement('source');
-    let audioTrack = content.document.createElement('track');
+    let audio = content.document.createElement("audio");
+    let video = content.document.createElement("video");
+    let audioSource = content.document.createElement("source");
+    let audioTrack = content.document.createElement("track");
 
     // Append the audio and track element into the body, and wait until they're finished.
     yield new Promise(resolve => {

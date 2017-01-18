@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=450048
 <p id="display">This is the text to search i<b>n&shy;t</b>o</p>
 <p id="quotes">"straight" and &ldquo;curly&rdquo; and &lsquo;didn't&rsquo; and 'doesn&rsquo;t'</p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -144,19 +144,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=450048
   rf.caseSensitive = false;
   rf.findBackwards = false;
 
-  function find(node, searchValue) {
+  function find(node, value) {
     var range = document.createRange();
     range.setStart(node, 0);
     range.setEnd(node, node.childNodes.length);
-    return rf.Find(searchValue, range, range, range);
+    return rf.Find(value, range, range, range);
   }
 
-  function assertFound(node, searchValue) {
-    ok(find(node, searchValue), "\"" + searchValue + "\" not found");
+  function assertFound(node, value) {
+    ok(find(node, value), "\"" + value + "\" not found");
   }
 
-  function assertNotFound(node, searchValue) {
-    ok(!find(node, searchValue), "\"" + searchValue + "\" found");
+  function assertNotFound(node, value) {
+    ok(!find(node, value), "\"" + value + "\" found");
   }
 
   var quotes = document.getElementById("quotes");

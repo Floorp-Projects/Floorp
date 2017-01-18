@@ -53,10 +53,10 @@ add_task(function* test_first_create_and_add() {
     db,
     stmts,
     function(aResultSet) {
-      ok(false, 'we only did inserts so we should not have gotten results!');
+      ok(false, "we only did inserts so we should not have gotten results!");
     });
   equal(Ci.mozIStorageStatementCallback.REASON_FINISHED, execResult,
-        'execution should have finished successfully.');
+        "execution should have finished successfully.");
 
   // Check that the result is in the table
   let stmt = db.createStatement(
@@ -141,10 +141,10 @@ add_task(function* test_last_multiple_bindings_on_statements() {
     db,
     stmts,
     function(aResultSet) {
-      ok(false, 'we only did inserts so we should not have gotten results!');
+      ok(false, "we only did inserts so we should not have gotten results!");
     });
   equal(Ci.mozIStorageStatementCallback.REASON_FINISHED, execResult,
-        'execution should have finished successfully.');
+        "execution should have finished successfully.");
 
   // Check to make sure we added all of our rows.
   try {

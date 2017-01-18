@@ -15,7 +15,7 @@ function test_overall() {
 function test_mock_doc() {
   do_test_pending();
   let mockedDoc = mock_doc(null, TEST_URL, function(action, params) {
-    do_check_eq(action, 'coffee');
+    do_check_eq(action, "coffee");
     do_test_finished();
     run_next_test();
   });
@@ -46,12 +46,12 @@ function test_select_identity() {
     let mockedDoc = mock_doc(null, TEST_URL, call_sequentially(
       function(action, params) {
         // ready emitted from first watch() call
-        do_check_eq(action, 'ready');
+        do_check_eq(action, "ready");
         do_check_null(params);
       },
       // first the login call
       function(action, params) {
-        do_check_eq(action, 'login');
+        do_check_eq(action, "login");
         do_check_neq(params, null);
 
         // XXX - check that the assertion is for the right email
@@ -60,7 +60,7 @@ function test_select_identity() {
       },
       // then the ready call
       function(action, params) {
-        do_check_eq(action, 'ready');
+        do_check_eq(action, "ready");
         do_check_null(params);
 
         // we should have gotten the assertion already
@@ -87,16 +87,16 @@ function test_select_identity() {
 }
 
 function test_parse_good_email() {
-  var parsed = IDService.parseEmail('prime-minister@jed.gov');
-  do_check_eq(parsed.username, 'prime-minister');
-  do_check_eq(parsed.domain, 'jed.gov');
+  var parsed = IDService.parseEmail("prime-minister@jed.gov");
+  do_check_eq(parsed.username, "prime-minister");
+  do_check_eq(parsed.domain, "jed.gov");
   run_next_test();
 }
 
 function test_parse_bogus_emails() {
-  do_check_eq(null, IDService.parseEmail('@evil.org'));
-  do_check_eq(null, IDService.parseEmail('foo@bar@baz.com'));
-  do_check_eq(null, IDService.parseEmail('you@wellsfargo.com/accounts/transfer?to=dolske&amt=all'));
+  do_check_eq(null, IDService.parseEmail("@evil.org"));
+  do_check_eq(null, IDService.parseEmail("foo@bar@baz.com"));
+  do_check_eq(null, IDService.parseEmail("you@wellsfargo.com/accounts/transfer?to=dolske&amt=all"));
   run_next_test();
 }
 
