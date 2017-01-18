@@ -4664,7 +4664,7 @@ var BrowserEventHandler = {
             } catch(e) {
               Cu.reportError(e);
             }
-            Messaging.sendRequest({ type: "FormAssist:Hide" });
+            WindowEventDispatcher.sendRequest({ type: "FormAssist:Hide" });
           }
           this._clusterClicked(x, y);
         } else {
@@ -4856,9 +4856,12 @@ var FormAssistant = {
   _invalidSubmit: false,
 
   init: function() {
-    Services.obs.addObserver(this, "FormAssist:AutoComplete", false);
-    Services.obs.addObserver(this, "FormAssist:Hidden", false);
-    Services.obs.addObserver(this, "FormAssist:Remove", false);
+    WindowEventDispatcher.registerListener(this, [
+      "FormAssist:AutoComplete",
+      "FormAssist:Hidden",
+      "FormAssist:Remove",
+    ]);
+
     Services.obs.addObserver(this, "invalidformsubmit", false);
     Services.obs.addObserver(this, "PanZoom:StateChange", false);
 
@@ -4868,6 +4871,52 @@ var FormAssistant = {
     BrowserApp.deck.addEventListener("click", this, true);
     BrowserApp.deck.addEventListener("input", this);
     BrowserApp.deck.addEventListener("pageshow", this);
+  },
+
+  onEvent: function(event, message, callback) {
+    switch (event) {
+      case "FormAssist:AutoComplete":
+        if (!this._currentInputElement)
+          break;
+
+        let editableElement = this._currentInputElement.QueryInterface(Ci.nsIDOMNSEditableElement);
+
+        this._doingAutocomplete = true;
+
+        // If we have an active composition string, commit it before sending
+        // the autocomplete event with the text that will replace it.
+        try {
+          if (editableElement.editor.composing)
+            editableElement.editor.forceCompositionEnd();
+        } catch (e) {}
+
+        editableElement.setUserInput(message.value);
+        this._currentInputValue = message.value;
+
+        let event = this._currentInputElement.ownerDocument.createEvent("Events");
+        event.initEvent("DOMAutoComplete", true, true);
+        this._currentInputElement.dispatchEvent(event);
+
+        this._doingAutocomplete = false;
+
+        break;
+
+      case "FormAssist:Hidden":
+        this._currentInputElement = null;
+        break;
+
+      case "FormAssist:Remove":
+        if (!this._currentInputElement) {
+          break;
+        }
+
+        FormHistory.update({
+          op: "remove",
+          fieldname: this._currentInputElement.name,
+          value: message.value,
+        });
+        break;
+    }
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -4894,47 +4943,6 @@ var FormAssistant = {
           // temporarily hide the form assist popup while we're panning or zooming the page
           this._hideFormAssistPopup();
         }
-        break;
-      case "FormAssist:AutoComplete":
-        if (!this._currentInputElement)
-          break;
-
-        let editableElement = this._currentInputElement.QueryInterface(Ci.nsIDOMNSEditableElement);
-
-        this._doingAutocomplete = true;
-
-        // If we have an active composition string, commit it before sending
-        // the autocomplete event with the text that will replace it.
-        try {
-          if (editableElement.editor.composing)
-            editableElement.editor.forceCompositionEnd();
-        } catch (e) {}
-
-        editableElement.setUserInput(aData);
-        this._currentInputValue = aData;
-
-        let event = this._currentInputElement.ownerDocument.createEvent("Events");
-        event.initEvent("DOMAutoComplete", true, true);
-        this._currentInputElement.dispatchEvent(event);
-
-        this._doingAutocomplete = false;
-
-        break;
-
-      case "FormAssist:Hidden":
-        this._currentInputElement = null;
-        break;
-
-      case "FormAssist:Remove":
-        if (!this._currentInputElement) {
-          break;
-        }
-
-        FormHistory.update({
-          op: "remove",
-          fieldname: this._currentInputElement.name,
-          value: aData
-        });
         break;
     }
   },
@@ -5138,8 +5146,8 @@ var FormAssistant = {
         return;
       }
 
-      Messaging.sendRequest({
-        type:  "FormAssist:AutoComplete",
+      WindowEventDispatcher.sendRequest({
+        type:  "FormAssist:AutoCompleteResult",
         suggestions: suggestions,
         rect: ElementTouchHelper.getBoundingContentRect(aElement),
         isEmpty: isEmpty,
@@ -5174,7 +5182,7 @@ var FormAssistant = {
     if (!this._isValidateable(aElement))
       return false;
 
-    Messaging.sendRequest({
+    WindowEventDispatcher.sendRequest({
       type: "FormAssist:ValidationMessage",
       validationMessage: aElement.validationMessage,
       rect: ElementTouchHelper.getBoundingContentRect(aElement)
@@ -5184,7 +5192,7 @@ var FormAssistant = {
   },
 
   _hideFormAssistPopup: function _hideFormAssistPopup() {
-    Messaging.sendRequest({ type: "FormAssist:Hide" });
+    WindowEventDispatcher.sendRequest({ type: "FormAssist:Hide" });
   },
 
   _isDisabledElement : function(aElement) {
