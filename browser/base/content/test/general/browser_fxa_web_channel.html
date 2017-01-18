@@ -55,10 +55,10 @@
           data: {
             authAt: Date.now(),
             email: "testuser@testuser.com",
-            keyFetchToken: 'key_fetch_token',
-            sessionToken: 'session_token',
-            uid: 'uid',
-            unwrapBKey: 'unwrap_b_key',
+            keyFetchToken: "key_fetch_token",
+            sessionToken: "session_token",
+            uid: "uid",
+            unwrapBKey: "unwrap_b_key",
             verified: true,
           },
           messageId: 1,
@@ -76,7 +76,7 @@
       // listening for events and do the appropriate checks.
       var event = new window.CustomEvent("WebChannelMessageToChrome", {
         detail: JSON.stringify({
-          id: 'fxaccounts_webchannel_response_echo',
+          id: "fxaccounts_webchannel_response_echo",
           message: e.detail.message,
         })
       });
@@ -107,7 +107,7 @@
         message: {
           command: "fxaccounts:logout",
           data: {
-            uid: 'uid'
+            uid: "uid"
           },
           messageId: 3,
         },
@@ -124,7 +124,7 @@
         message: {
           command: "fxaccounts:delete",
           data: {
-            uid: 'uid'
+            uid: "uid"
           },
           messageId: 4,
         },

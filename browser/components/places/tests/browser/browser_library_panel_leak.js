@@ -29,7 +29,7 @@ function test() {
     isnot(organizer.gEditItemOverlay.itemId, -1, "Editing a bookmark");
 
     // Select History in the left pane.
-    organizer.PlacesOrganizer.selectLeftPaneQuery('History');
+    organizer.PlacesOrganizer.selectLeftPaneQuery("History");
     // Select the first history entry.
     let selection = contentTree.view.selection;
     selection.clearSelection();

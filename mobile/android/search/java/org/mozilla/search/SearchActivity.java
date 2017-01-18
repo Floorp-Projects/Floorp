@@ -4,6 +4,7 @@
 
 package org.mozilla.search;
 
+import android.app.SearchManager;
 import android.support.annotation.NonNull;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.Locales;
@@ -12,6 +13,7 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.gecko.distribution.Distribution;
+import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.search.SearchEngine;
 import org.mozilla.gecko.search.SearchEngineManager;
 import org.mozilla.gecko.search.SearchEngineManager.SearchEngineCallback;
@@ -24,6 +26,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -47,7 +50,8 @@ public class SearchActivity extends Locales.LocaleAwareFragmentActivity
 
     private static final String KEY_SEARCH_STATE = "search_state";
     private static final String KEY_EDIT_STATE = "edit_state";
-    private static final String KEY_QUERY = "query";
+    private static final String KEY_QUERY = SearchManager.QUERY;
+    private static final String KEY_INCOMING_QUERY = "incoming_query";
 
     static enum SearchState {
         PRESEARCH,
@@ -174,22 +178,56 @@ public class SearchActivity extends Locales.LocaleAwareFragmentActivity
         cardPaddingX = getResources().getDimensionPixelSize(R.dimen.search_row_padding);
         cardPaddingY = getResources().getDimensionPixelSize(R.dimen.search_row_padding);
 
-        if (savedInstanceState != null) {
+        final String query;
+
+        final String incomingQuery = extractQuery(getIntent());
+        final String previousInstanceQuery = extractQuery(savedInstanceState);
+        final String previousIncomingQuery = savedInstanceState == null ? null : savedInstanceState.getString(KEY_INCOMING_QUERY);
+
+        if (savedInstanceState != null && (TextUtils.isEmpty(incomingQuery) || incomingQuery.equals(previousIncomingQuery))) {
             setSearchState(SearchState.valueOf(savedInstanceState.getString(KEY_SEARCH_STATE)));
             setEditState(EditState.valueOf(savedInstanceState.getString(KEY_EDIT_STATE)));
+            query = previousInstanceQuery;
+        } else {
+            query = incomingQuery;
+            if (!TextUtils.isEmpty(query)) {
+                setSearchState(SearchState.POSTSEARCH);
+            }
+        }
 
-            final String query = savedInstanceState.getString(KEY_QUERY);
+        if (!TextUtils.isEmpty(query)) {
             searchBar.setText(query);
-
             // If we're in the postsearch state, we need to re-do the query.
             if (searchState == SearchState.POSTSEARCH) {
-                startSearch(query);
+                onSearch(query);
             }
         } else {
             // If there isn't a state to restore, the activity will start in the presearch state,
             // and we should enter editing mode to bring up the keyboard.
             setEditState(EditState.EDITING);
         }
+    }
+
+    @Nullable
+    private String extractQuery(Intent intent) {
+        return extractQuery(intent == null ? null : new SafeIntent(intent).getExtras());
+    }
+
+    @Nullable
+    private String extractQuery(Bundle bundle) {
+        if (bundle == null) {
+            return null;
+        }
+
+        String queryString = (String) bundle.getCharSequence("android.intent.extra.PROCESS_TEXT_READONLY");;
+        if (TextUtils.isEmpty(queryString)) {
+            queryString = (String) bundle.getCharSequence("android.intent.extra.PROCESS_TEXT");
+        }
+        if (TextUtils.isEmpty(queryString)) {
+            queryString = bundle.getString(KEY_QUERY);
+        }
+
+        return queryString;
     }
 
     @Override
@@ -225,16 +263,24 @@ public class SearchActivity extends Locales.LocaleAwareFragmentActivity
         // Reset the activity in the presearch state if it was launched from a new intent.
         setSearchState(SearchState.PRESEARCH);
 
-        // Enter editing mode and reset the query. We must reset the query after entering
-        // edit mode in order for the suggestions to update.
-        setEditState(EditState.EDITING);
-        searchBar.setText("");
+        final String queryString = extractQuery(intent);
+        if(!TextUtils.isEmpty(queryString)) {
+            setSearchState(SearchState.POSTSEARCH);
+            searchBar.setText(queryString);
+            onSearch(queryString);
+        } else {
+            // Enter editing mode and reset the query. We must reset the query after entering
+            // edit mode in order for the suggestions to update.
+            setEditState(EditState.EDITING);
+            searchBar.setText("");
+        }
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
+        outState.putString(KEY_INCOMING_QUERY, extractQuery(getIntent()));
         outState.putString(KEY_SEARCH_STATE, searchState.toString());
         outState.putString(KEY_EDIT_STATE, editState.toString());
         outState.putString(KEY_QUERY, searchBar.getText());

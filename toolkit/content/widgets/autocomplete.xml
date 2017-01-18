@@ -136,11 +136,11 @@
         <getter><![CDATA[
           // For security reasons delay searches on pasted values.
           if (this._valueIsPasted) {
-            let t = parseInt(this.getAttribute('pastetimeout'));
+            let t = parseInt(this.getAttribute("pastetimeout"));
             return isNaN(t) ? 1000 : t;
           }
 
-          let t = parseInt(this.getAttribute('timeout'));
+          let t = parseInt(this.getAttribute("timeout"));
           return isNaN(t) ? 50 : t;
         ]]></getter>
       </property>
@@ -330,8 +330,8 @@
             this.formatValue();
 
           this.mIgnoreInput = false;
-          var event = document.createEvent('Events');
-          event.initEvent('ValueChange', true, true);
+          var event = document.createEvent("Events");
+          event.initEvent("ValueChange", true, true);
           this.inputField.dispatchEvent(event);
           return val;
         ]]></setter>
@@ -785,7 +785,7 @@
             this.tree.treeBoxObject.ensureRowIsVisible(val < 0 ? 0 : val);
           // Fire select event on xul:tree so that accessibility API
           // support layer can fire appropriate accessibility events.
-          var event = document.createEvent('Events');
+          var event = document.createEvent("Events");
           event.initEvent("select", true, true);
           this.tree.dispatchEvent(event);
           return val;

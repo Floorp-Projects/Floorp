@@ -109,6 +109,7 @@ MOZ_MTLOG_MODULE("mtransport")
 
 const char kNrIceTransportUdp[] = "udp";
 const char kNrIceTransportTcp[] = "tcp";
+const char kNrIceTransportTls[] = "tls";
 
 static bool initialized = false;
 
@@ -211,6 +212,9 @@ nsresult NrIceStunServer::ToNicerStunStruct(nr_ice_stun_server *server) const {
     server->transport = IPPROTO_UDP;
   } else if (transport_ == kNrIceTransportTcp) {
     server->transport = IPPROTO_TCP;
+  } else if (transport_ == kNrIceTransportTls) {
+    server->transport = IPPROTO_TCP;
+    server->tls = 1;
   } else {
     MOZ_MTLOG(ML_ERROR, "Unsupported STUN server transport: " << transport_);
     return NS_ERROR_FAILURE;
@@ -587,6 +591,7 @@ NrIceCtx::Initialize(const std::string& ufrag,
   nsCString mapping_type;
   nsCString filtering_type;
   bool block_udp = false;
+  bool block_tcp = false;
 
   nsresult rv;
   nsCOMPtr<nsIPrefService> pref_service =
@@ -605,6 +610,9 @@ NrIceCtx::Initialize(const std::string& ufrag,
       rv = pref_branch->GetBoolPref(
           "media.peerconnection.nat_simulator.block_udp",
           &block_udp);
+      rv = pref_branch->GetBoolPref(
+          "media.peerconnection.nat_simulator.block_tcp",
+          &block_tcp);
     }
   }
 
@@ -615,6 +623,7 @@ NrIceCtx::Initialize(const std::string& ufrag,
     test_nat->filtering_type_ = TestNat::ToNatBehavior(filtering_type.get());
     test_nat->mapping_type_ = TestNat::ToNatBehavior(mapping_type.get());
     test_nat->block_udp_ = block_udp;
+    test_nat->block_tcp_ = block_tcp;
     test_nat->enabled_ = true;
     SetNat(test_nat);
   }

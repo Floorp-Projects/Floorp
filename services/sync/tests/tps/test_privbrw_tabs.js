@@ -62,26 +62,26 @@ var tabs3 = [
  * Test phases
  */
 
-Phase('phase1', [
+Phase("phase1", [
   [Tabs.add, tabs1],
   [Sync]
 ]);
 
-Phase('phase2', [
+Phase("phase2", [
   [Sync],
   [Tabs.verify, tabs1],
   [Tabs.add, tabs2],
   [Sync]
 ]);
 
-Phase('phase3', [
+Phase("phase3", [
   [Sync],
   [Windows.add, { private: true }],
   [Tabs.add, tabs3],
   [Sync]
 ]);
 
-Phase('phase4', [
+Phase("phase4", [
   [Sync],
   [Tabs.verifyNot, tabs3]
 ]);

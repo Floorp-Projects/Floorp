@@ -46,10 +46,10 @@ function continueTest() {
   doc.defaultView.addEventListener("StyleSheetAdded", unexpectedContentEvent);
   doc.defaultView.addEventListener("StyleSheetRemoved", unexpectedContentEvent);
   doc.defaultView.addEventListener("StyleSheetApplicableStateChanged", unexpectedContentEvent);
-  let link = doc.createElement('link');
-  link.setAttribute('rel', 'stylesheet');
-  link.setAttribute('type', 'text/css');
-  link.setAttribute('href', gTestRoot + gStyleSheet);
+  let link = doc.createElement("link");
+  link.setAttribute("rel", "stylesheet");
+  link.setAttribute("type", "text/css");
+  link.setAttribute("href", gTestRoot + gStyleSheet);
   gLinkElement = link;
 
   gBrowser.addEventListener("StyleSheetAdded", dynamicStylesheetAdded, true);

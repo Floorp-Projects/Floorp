@@ -70,7 +70,7 @@ function test_complete_authentication_flow() {
     // events have occurred.
     let mockedDoc = mock_doc(id, TEST_URL, call_sequentially(
       function(action, params) {
-        do_check_eq(action, 'ready');
+        do_check_eq(action, "ready");
         do_check_eq(params, undefined);
 
         // if notification already received by observer, test is done

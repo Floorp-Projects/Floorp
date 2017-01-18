@@ -1168,7 +1168,7 @@
             const locale = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                            .getService(Components.interfaces.nsIXULChromeRegistry)
                            .getSelectedLocale("global", true);
-            const dtOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+            const dtOptions = { year: "numeric", month: "long", day: "numeric" };
             return aDate.toLocaleDateString(locale, dtOptions);
           }
 
@@ -1332,7 +1332,7 @@
               ["ask_to_activate", "enable", "disable"].some(perm => this.hasPermission(perm));
             this._stateMenulist.disabled = !hasActivatePermission;
             this._stateMenulist.hidden = false;
-            this._stateMenulist.classList.add('no-auto-hide');
+            this._stateMenulist.classList.add("no-auto-hide");
           } else {
             this._stateMenulist.hidden = true;
 
@@ -1750,8 +1750,8 @@
           this._lastClickTarget = event.originalTarget;
           break;
         case 2:
-          if (event.originalTarget.localName != 'button' &&
-              !event.originalTarget.classList.contains('text-link') &&
+          if (event.originalTarget.localName != "button" &&
+              !event.originalTarget.classList.contains("text-link") &&
               event.originalTarget == this._lastClickTarget) {
             this.showInDetailView();
           }

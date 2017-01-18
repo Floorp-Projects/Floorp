@@ -16,11 +16,11 @@ const Ci = Components.interfaces;
 this.parseKeyValuePairsFromLines = function(lines) {
   let data = {};
   for (let line of lines) {
-    if (line == '')
+    if (line == "")
       continue;
 
     // can't just .split() because the value might contain = characters
-    let eq = line.indexOf('=');
+    let eq = line.indexOf("=");
     if (eq != -1) {
       let [key, value] = [line.substring(0, eq),
                           line.substring(eq + 1)];
@@ -32,7 +32,7 @@ this.parseKeyValuePairsFromLines = function(lines) {
 }
 
 this.parseKeyValuePairs = function parseKeyValuePairs(text) {
-  let lines = text.split('\n');
+  let lines = text.split("\n");
   return parseKeyValuePairsFromLines(lines);
 };
 
@@ -44,7 +44,7 @@ this.parseKeyValuePairsFromFile = function parseKeyValuePairsFromFile(file) {
            createInstance(Ci.nsIConverterInputStream);
   is.init(fstream, "UTF-8", 1024, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
   let str = {};
-  let contents = '';
+  let contents = "";
   while (is.readString(4096, str) != 0) {
     contents += str.value;
   }

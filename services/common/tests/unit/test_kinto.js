@@ -299,7 +299,7 @@ add_task(function* test_kinto_sync() {
                              sampled.status.statusText);
       // send the headers
       for (let headerLine of sampled.sampleHeaders) {
-        let headerElements = headerLine.split(':');
+        let headerElements = headerLine.split(":");
         response.setHeader(headerElements[0], headerElements[1].trimLeft());
       }
       response.setHeader("Date", (new Date()).toUTCString());

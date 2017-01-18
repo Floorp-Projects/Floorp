@@ -50,12 +50,12 @@ var gTests = [
 
       let promiseLogin = new Promise((resolve, reject) => {
         let login = (accountData) => {
-          Assert.equal(typeof accountData.authAt, 'number');
-          Assert.equal(accountData.email, 'testuser@testuser.com');
-          Assert.equal(accountData.keyFetchToken, 'key_fetch_token');
-          Assert.equal(accountData.sessionToken, 'session_token');
-          Assert.equal(accountData.uid, 'uid');
-          Assert.equal(accountData.unwrapBKey, 'unwrap_b_key');
+          Assert.equal(typeof accountData.authAt, "number");
+          Assert.equal(accountData.email, "testuser@testuser.com");
+          Assert.equal(accountData.keyFetchToken, "key_fetch_token");
+          Assert.equal(accountData.sessionToken, "session_token");
+          Assert.equal(accountData.uid, "uid");
+          Assert.equal(accountData.unwrapBKey, "unwrap_b_key");
           Assert.equal(accountData.verified, true);
 
           client.tearDown();
@@ -90,9 +90,9 @@ var gTests = [
         // responses sent to content are echoed back over the
         // `fxaccounts_webchannel_response_echo` channel. Ensure the
         // fxaccounts:can_link_account message is responded to.
-        let echoWebChannel = new WebChannel('fxaccounts_webchannel_response_echo', webChannelOrigin);
+        let echoWebChannel = new WebChannel("fxaccounts_webchannel_response_echo", webChannelOrigin);
         echoWebChannel.listen((webChannelId, message, target) => {
-          Assert.equal(message.command, 'fxaccounts:can_link_account');
+          Assert.equal(message.command, "fxaccounts:can_link_account");
           Assert.equal(message.messageId, 2);
           Assert.equal(message.data.ok, true);
 
@@ -107,7 +107,7 @@ var gTests = [
           channel_id: TEST_CHANNEL_ID,
           helpers: {
             shouldAllowRelink(acctName) {
-              return acctName === 'testuser@testuser.com';
+              return acctName === "testuser@testuser.com";
             }
           }
         });
@@ -126,7 +126,7 @@ var gTests = [
     *run() {
       let promiseLogout = new Promise((resolve, reject) => {
         let logout = (uid) => {
-          Assert.equal(uid, 'uid');
+          Assert.equal(uid, "uid");
 
           client.tearDown();
           resolve();
@@ -154,7 +154,7 @@ var gTests = [
     *run() {
       let promiseDelete = new Promise((resolve, reject) => {
         let logout = (uid) => {
-          Assert.equal(uid, 'uid');
+          Assert.equal(uid, "uid");
 
           client.tearDown();
           resolve();

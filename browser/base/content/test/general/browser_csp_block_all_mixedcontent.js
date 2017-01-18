@@ -49,7 +49,7 @@ function test() {
   waitForExplicitFinish();
 
   SpecialPowers.pushPrefEnv(
-    { 'set': [["security.mixed_content.block_active_content", true]] },
+    { "set": [["security.mixed_content.block_active_content", true]] },
     function() { runTests(); }
   );
 }

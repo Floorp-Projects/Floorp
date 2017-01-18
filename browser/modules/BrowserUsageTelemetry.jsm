@@ -372,7 +372,7 @@ let BrowserUsageTelemetry = {
         // calling |recordSearch| twice from two different
         // code paths because they want to record the search
         // in SEARCH_COUNTS.
-        if (['urlbar', 'searchbar'].includes(source)) {
+        if (["urlbar", "searchbar"].includes(source)) {
           Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS").add(countId);
           return;
         }

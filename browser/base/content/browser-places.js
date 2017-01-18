@@ -1697,7 +1697,7 @@ var BookmarkingUI = {
       clearTimeout(this._notificationTimeout);
     }
 
-    if (this.notifier.style.transform == '') {
+    if (this.notifier.style.transform == "") {
       // Get all the relevant nodes and computed style objects
       let dropmarker = document.getAnonymousElementByAttribute(this.button, "anonid", "dropmarker");
       let dropmarkerIcon = document.getAnonymousElementByAttribute(dropmarker, "class", "dropmarker-icon");
@@ -1742,8 +1742,8 @@ var BookmarkingUI = {
       this.dropmarkerNotifier.removeAttribute("notification");
       this.button.removeAttribute("notification");
 
-      this.dropmarkerNotifier.style.transform = '';
-      this.notifier.style.transform = '';
+      this.dropmarkerNotifier.style.transform = "";
+      this.notifier.style.transform = "";
     }, 1000);
   },
 

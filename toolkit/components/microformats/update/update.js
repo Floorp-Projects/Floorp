@@ -18,51 +18,51 @@
 	*/
 
 // configuration
-var deployDir = '../'
+var deployDir = "../"
 	exportedSymbol = 'try {\n    // mozilla jsm support\n    Components.utils.importGlobalProperties(["URL"]);\n} catch(e) {}\nthis.EXPORTED_SYMBOLS = [\'Microformats\'];';
 
 
 
-var path			= require('path'),
-	request 		= require('request'),
-	fs 				= require('fs-extra'),
-	download 		= require('download-github-repo');
+var path			= require("path"),
+	request 		= require("request"),
+	fs 				= require("fs-extra"),
+	download 		= require("download-github-repo");
 
 
-var repo = 'glennjones/microformat-shiv',
-	tempDir = path.resolve(__dirname, 'temp-repo'),
+var repo = "glennjones/microformat-shiv",
+	tempDir = path.resolve(__dirname, "temp-repo"),
 	deployDirResolved = path.resolve(__dirname, deployDir),
 	pathList = [
-		['/modern/microformat-shiv-modern.js', '/microformat-shiv.js'],
-		['/lib', '/test/lib'],
-		['/test/interface-tests', '/test/interface-tests'],
-		['/test/module-tests', '/test/module-tests'],
-		['/test/standards-tests', '/test/standards-tests'],
-		['/test/static', '/test/static']
+		["/modern/microformat-shiv-modern.js", "/microformat-shiv.js"],
+		["/lib", "/test/lib"],
+		["/test/interface-tests", "/test/interface-tests"],
+		["/test/module-tests", "/test/module-tests"],
+		["/test/standards-tests", "/test/standards-tests"],
+		["/test/static", "/test/static"]
 		];
 
 
 
 getLastBuildState( repo, function( err, buildState) {
 	if (buildState) {
-		console.log('last build state:', buildState);
+		console.log("last build state:", buildState);
 
-		if (buildState === 'passed') {
+		if (buildState === "passed") {
 
-			console.log('downloading git repo', repo);
+			console.log("downloading git repo", repo);
 			getLastCommitDate( repo, function( err, date) {
 				if (date) {
-					console.log( 'last commit:', new Date(date).toString() );
+					console.log( "last commit:", new Date(date).toString() );
 				}
 			});
 			updateFromRepo();
 
 		} else {
-			console.log('not updating because of build state is failing please contact Glenn Jones glennjones@gmail.com');
+			console.log("not updating because of build state is failing please contact Glenn Jones glennjones@gmail.com");
 		}
 
 	} else {
-		console.log('could not get build state from travis-ci:', err);
+		console.log("could not get build state from travis-ci:", err);
 	}
 });
 
@@ -83,13 +83,13 @@ function updateFromRepo() {
 			fs.removeSync(tempDir);
 
 			// changes files for firefox
-			replaceInFile('/test/module-tests/index.html', /..\/..\/lib\//g, '../lib/' );
-			addExportedSymbol( '/microformat-shiv.js' );
+			replaceInFile("/test/module-tests/index.html", /..\/..\/lib\//g, "../lib/" );
+			addExportedSymbol( "/microformat-shiv.js" );
 
-			console.log('microformat-shiv is now uptodate to v' + version);
+			console.log("microformat-shiv is now uptodate to v" + version);
 
 		} else {
-			console.log('error getting repo', err);
+			console.log("error getting repo", err);
 		}
 
 	});
@@ -104,7 +104,7 @@ function updateFromRepo() {
  */
 function removeCurrentFiles( pathList, deployDirResolved ) {
 	pathList.forEach( function( path ) {
-		console.log('removed:', deployDirResolved + path[1]);
+		console.log("removed:", deployDirResolved + path[1]);
 		fs.removeSync(deployDirResolved + path[1]);
 	});
 }
@@ -118,7 +118,7 @@ function removeCurrentFiles( pathList, deployDirResolved ) {
  */
 function addNewFiles( pathList, deployDirResolved ) {
 	pathList.forEach( function( path ) {
-		console.log('added:', deployDirResolved + path[1]);
+		console.log("added:", deployDirResolved + path[1]);
 		fs.copySync(tempDir + path[0], deployDirResolved + path[1]);
 	});
 
@@ -131,14 +131,14 @@ function addNewFiles( pathList, deployDirResolved ) {
  * @return {String}
  */
 function getRepoVersion() {
-	var pack = fs.readFileSync(path.resolve(tempDir, 'package.json'), {encoding: 'utf8'});
+	var pack = fs.readFileSync(path.resolve(tempDir, "package.json"), {encoding: "utf8"});
 	if (pack) {
 		pack = JSON.parse(pack)
 		if (pack && pack.version) {
 			return pack.version;
 		}
 	}
-	return '';
+	return "";
 }
 
 
@@ -151,9 +151,9 @@ function getRepoVersion() {
 function getLastCommitDate( repo, callback ) {
 
 	var options = {
-	  url: 'https://api.github.com/repos/' + repo + '/commits?per_page=1',
+	  url: "https://api.github.com/repos/" + repo + "/commits?per_page=1",
 	  headers: {
-	    'User-Agent': 'request'
+	    "User-Agent": "request"
 	  }
 	};
 
@@ -167,7 +167,7 @@ function getLastCommitDate( repo, callback ) {
 	    callback(null, date);
 	  } else {
 		  console.log(error, response, body);
-		  callback('fail to get last commit date', null);
+		  callback("fail to get last commit date", null);
 	  }
 	});
 }
@@ -182,10 +182,10 @@ function getLastCommitDate( repo, callback ) {
 function getLastBuildState( repo, callback ) {
 
 	var options = {
-	  url: 'https://api.travis-ci.org/repos/' + repo,
+	  url: "https://api.travis-ci.org/repos/" + repo,
 	  headers: {
-	    'User-Agent': 'request',
-		'Accept': 'application/vnd.travis-ci.2+json'
+	    "User-Agent": "request",
+		"Accept": "application/vnd.travis-ci.2+json"
 	  }
 	};
 
@@ -199,7 +199,7 @@ function getLastBuildState( repo, callback ) {
 	    callback(null, buildState);
 	  } else {
 		  console.log(error, response, body);
-		  callback('fail to get last build state', null);
+		  callback("fail to get last build state", null);
 	  }
 	});
 }
@@ -212,9 +212,9 @@ function getLastBuildState( repo, callback ) {
  * @param  {String} content
  */
 function addExportedSymbol( path ) {
-	if (path === '/microformat-shiv.js') {
-		fs.appendFileSync(deployDirResolved + '/microformat-shiv.js', '\r\n' + exportedSymbol + '\r\n');
-		console.log('appended exported symbol to microformat-shiv.js');
+	if (path === "/microformat-shiv.js") {
+		fs.appendFileSync(deployDirResolved + "/microformat-shiv.js", "\r\n" + exportedSymbol + "\r\n");
+		console.log("appended exported symbol to microformat-shiv.js");
 	}
 }
 
@@ -230,9 +230,9 @@ function replaceInFile( path, findStr, replaceStr ) {
 		if (fileStr) {
 			fileStr = fileStr.replace(findStr, replaceStr)
 			writeFile(deployDirResolved + path, fileStr);
-			console.log('replaced ' + findStr + ' with ' + replaceStr + ' in ' + path);
+			console.log("replaced " + findStr + " with " + replaceStr + " in " + path);
 		} else {
-			console.log('error replaced strings in ' + path);
+			console.log("error replaced strings in " + path);
 		}
 	})
 }
@@ -245,11 +245,11 @@ function replaceInFile( path, findStr, replaceStr ) {
  * @param  {String} content
  */
 function writeFile(path, content) {
-	fs.writeFile(path, content, 'utf8', function(err) {
+	fs.writeFile(path, content, "utf8", function(err) {
 		if (err) {
 			console.log(err);
 		} else {
-			console.log('The file: ' + path + ' was saved');
+			console.log("The file: " + path + " was saved");
 		}
 	});
 }
@@ -262,5 +262,5 @@ function writeFile(path, content) {
  * @param  {Function} callback
  */
 function readFile(path, callback) {
-	fs.readFile(path, 'utf8', callback);
+	fs.readFile(path, "utf8", callback);
 }

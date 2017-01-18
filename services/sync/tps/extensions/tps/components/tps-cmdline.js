@@ -7,7 +7,7 @@ const CI = Components.interfaces;
 
 const TPS_ID                         = "tps@mozilla.org";
 const TPS_CMDLINE_CONTRACTID         = "@mozilla.org/commandlinehandler/general-startup;1?type=tps";
-const TPS_CMDLINE_CLSID              = Components.ID('{4e5bd3f0-41d3-11df-9879-0800200c9a66}');
+const TPS_CMDLINE_CLSID              = Components.ID("{4e5bd3f0-41d3-11df-9879-0800200c9a66}");
 const CATMAN_CONTRACTID              = "@mozilla.org/categorymanager;1";
 const nsISupports                    = Components.interfaces.nsISupports;
 

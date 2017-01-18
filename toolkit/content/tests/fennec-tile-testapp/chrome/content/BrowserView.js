@@ -7,7 +7,7 @@ var Ci = Components.interfaces;
 
 // --- REMOVE ---
 var noop = function() {};
-var endl = '\n';
+var endl = "\n";
 // --------------
 
 function BrowserView(container, visibleRect) {
@@ -136,13 +136,13 @@ function() {
     let zoomLevel = pageZoomLevel(visibleRect, browserW, browserH);
     let viewportRect = (new wsRect(0, 0, browserW, browserH)).scale(zoomLevel, zoomLevel);
 
-    dump('--- initing browser to ---' + endl);
+    dump("--- initing browser to ---" + endl);
     browser.__BrowserView__vps = new BrowserView.BrowserViewportState(viewportRect,
                                                                       visibleRect.x,
                                                                       visibleRect.y,
                                                                       zoomLevel);
     dump(browser.__BrowserView__vps.toString() + endl);
-    dump('--------------------------' + endl);
+    dump("--------------------------" + endl);
   }
 
   function getViewportStateFromBrowser(browser) {
@@ -182,8 +182,8 @@ function() {
   // }
 
   function resizeContainerToViewport(container, viewportRect) {
-    container.style.width  = viewportRect.width + 'px';
-    container.style.height = viewportRect.height + 'px';
+    container.style.width  = viewportRect.width + "px";
+    container.style.height = viewportRect.height + "px";
   }
 
   // !!! --- RESIZE HACK BEGIN -----
@@ -673,12 +673,12 @@ BrowserView.BrowserViewportState.prototype = {
   },
 
   toString: function toString() {
-    let props = ['\tviewportRect=' + this.viewportRect.toString(),
-                 '\tvisibleX=' + this.visibleX,
-                 '\tvisibleY=' + this.visibleY,
-                 '\tzoomLevel=' + this.zoomLevel];
+    let props = ["\tviewportRect=" + this.viewportRect.toString(),
+                 "\tvisibleX=" + this.visibleX,
+                 "\tvisibleY=" + this.visibleY,
+                 "\tzoomLevel=" + this.zoomLevel];
 
-    return '[BrowserViewportState] {\n' + props.join(',\n') + '\n}';
+    return "[BrowserViewportState] {\n" + props.join(",\n") + "\n}";
   }
 
 };

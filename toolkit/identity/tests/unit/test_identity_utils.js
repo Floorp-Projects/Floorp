@@ -2,8 +2,8 @@
 "use strict";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import('resource://gre/modules/Services.jsm');
-Cu.import('resource://gre/modules/identity/IdentityUtils.jsm');
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/identity/IdentityUtils.jsm");
 
 function test_check_deprecated() {
   let options = {

@@ -23,7 +23,7 @@
     <implementation implements="nsIDOMXULLabeledControlElement">
       <property name="label" onget="return this.getAttribute('label');">
         <setter>
-          this.setAttribute('label', val);
+          this.setAttribute("label", val);
           var elt = document.getAnonymousElementByAttribute(this, "class", "fileFieldLabel");
           return (elt.value = val);
         </setter>

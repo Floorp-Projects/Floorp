@@ -83,11 +83,11 @@ function populateReportList() {
     const locale = Cc["@mozilla.org/chrome/chrome-registry;1"]
                    .getService(Ci.nsIXULChromeRegistry)
                    .getSelectedLocale("global", true);
-    dateFormatter = new Intl.DateTimeFormat(locale, { year: '2-digit',
-                                                      month: 'numeric',
-                                                      day: 'numeric' });
-    timeFormatter = new Intl.DateTimeFormat(locale, { hour: 'numeric',
-                                                      minute: 'numeric' });
+    dateFormatter = new Intl.DateTimeFormat(locale, { year: "2-digit",
+                                                      month: "numeric",
+                                                      day: "numeric" });
+    timeFormatter = new Intl.DateTimeFormat(locale, { hour: "numeric",
+                                                      minute: "numeric" });
   } catch (e) {
     // XXX Fallback to be removed once bug 1215247 is complete
     // and the Intl API is available on all platforms.

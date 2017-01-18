@@ -30,14 +30,14 @@
         <parameter name="aValue"/>
         <body>
         <![CDATA[
-          var change = (aValue != (this.getAttribute('checked') == 'true'));
+          var change = (aValue != (this.getAttribute("checked") == "true"));
           if (aValue)
-            this.setAttribute('checked', 'true');
+            this.setAttribute("checked", "true");
           else
-            this.removeAttribute('checked');
+            this.removeAttribute("checked");
           if (change) {
-            var event = document.createEvent('Events');
-            event.initEvent('CheckboxStateChange', true, true);
+            var event = document.createEvent("Events");
+            event.initEvent("CheckboxStateChange", true, true);
             this.dispatchEvent(event);
           }
           return aValue;

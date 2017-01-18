@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+"use strict";
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-this.EXPORTED_SYMBOLS = ['ContentPrefInstance'];
+this.EXPORTED_SYMBOLS = ["ContentPrefInstance"];
 
 // This is a wrapper for nsIContentPrefService that alleviates the need to pass
 // an nsILoadContext argument to every method. Pass the context to the constructor

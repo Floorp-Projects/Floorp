@@ -1,5 +1,5 @@
 Cu.import("resource://services-crypto/WeaveCrypto.js");
-Cu.importGlobalProperties(['crypto']);
+Cu.importGlobalProperties(["crypto"]);
 
 var cryptoSvc = new WeaveCrypto();
 

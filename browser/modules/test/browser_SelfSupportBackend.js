@@ -34,10 +34,10 @@ function sendSessionRestoredNotification() {
  * @returns {Object} The browser element or null on failure.
  */
 function findSelfSupportBrowser(aURL) {
-  let frames = Services.appShell.hiddenDOMWindow.document.querySelectorAll('iframe');
+  let frames = Services.appShell.hiddenDOMWindow.document.querySelectorAll("iframe");
   for (let frame of frames) {
     try {
-      let browser = frame.contentDocument.getElementById("win").querySelectorAll('browser')[0];
+      let browser = frame.contentDocument.getElementById("win").querySelectorAll("browser")[0];
       let url = browser.getAttribute("src");
       if (url == aURL) {
         return browser;

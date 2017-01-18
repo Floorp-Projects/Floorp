@@ -774,7 +774,7 @@ this.AddonRepository = {
 
     let params = {
       API_VERSION,
-      IDS : ids.map(encodeURIComponent).join(',')
+      IDS : ids.map(encodeURIComponent).join(",")
     };
 
     let pref = PREF_GETADDONS_BYIDS;

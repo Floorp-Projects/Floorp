@@ -11,7 +11,7 @@ add_task(function*() {
     let navbar = document.getElementById("nav-bar");
     let separatorSelector = "toolbarseparator[id^=customizableui-special-separator]";
     ok(!navbar.querySelector(separatorSelector), "Shouldn't be a separator in the navbar");
-    CustomizableUI.addWidgetToArea('separator', 'nav-bar');
+    CustomizableUI.addWidgetToArea("separator", "nav-bar");
     yield startCustomizing();
     let separator = navbar.querySelector(separatorSelector);
     ok(separator, "There should be a separator in the navbar now.");

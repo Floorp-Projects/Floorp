@@ -10,6 +10,7 @@ var Cr = Components.results;
 function loadUtilsScript() {
   var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                getService(Ci.mozIJSSubScriptLoader);
+  /* import-globals-from ../../contentAreaUtils.js */
   loader.loadSubScript("chrome://global/content/contentAreaUtils.js");
 }
 

@@ -58,7 +58,7 @@ Addon.prototype = {
     AddonManager.getAddonByID(this.id, cb);
     let addon = Async.waitForSyncCallback(cb);
 
-    Logger.AssertTrue(!!addon, 'could not find addon ' + this.id + ' to uninstall');
+    Logger.AssertTrue(!!addon, "could not find addon " + this.id + " to uninstall");
 
     cb = Async.makeSpinningCallback();
     AddonUtils.uninstallAddon(addon, cb);

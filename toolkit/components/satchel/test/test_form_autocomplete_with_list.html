@@ -326,7 +326,7 @@ function runTest() {
       // Removing the second element while on the first then going down and
       // push enter. Value should be one from the third suggesion.
       doKey("down");
-      var datalist = document.getElementById('suggest');
+      var datalist = document.getElementById("suggest");
       var toRemove = datalist.children[1]
       datalist.removeChild(toRemove);
 
@@ -348,7 +348,7 @@ function runTest() {
       // Adding an attribute after the first one while on the first then going
       // down and push enter. Value should be the on from the new suggestion.
       doKey("down");
-      datalist = document.getElementById('suggest');
+      datalist = document.getElementById("suggest");
       var added = new Option("Foo");
       datalist.insertBefore(added, datalist.children[1]);
       waitForMenuChange(4);
@@ -361,7 +361,7 @@ function runTest() {
       checkForm("Foo");
 
       // Remove the element.
-      datalist = document.getElementById('suggest');
+      datalist = document.getElementById("suggest");
       datalist.removeChild(datalist.children[1]);
       waitForMenuChange(0);
       break;
@@ -369,7 +369,7 @@ function runTest() {
     case 203:
       // Change the first element value attribute.
       restoreForm();
-      datalist = document.getElementById('suggest');
+      datalist = document.getElementById("suggest");
       prevValue = datalist.children[0].value;
       datalist.children[0].value = "foo";
       expectPopup();
@@ -380,7 +380,7 @@ function runTest() {
       doKey("return");
       checkForm("foo");
 
-      datalist = document.getElementById('suggest');
+      datalist = document.getElementById("suggest");
       datalist.children[0].value = prevValue;
       waitForMenuChange(0);
       break;
@@ -388,9 +388,9 @@ function runTest() {
     case 205:
       // Change the textContent to update the value attribute.
       restoreForm();
-      datalist = document.getElementById('suggest');
-      prevValue = datalist.children[0].getAttribute('value');
-      datalist.children[0].removeAttribute('value');
+      datalist = document.getElementById("suggest");
+      prevValue = datalist.children[0].getAttribute("value");
+      datalist.children[0].removeAttribute("value");
       datalist.children[0].textContent = "foobar";
       expectPopup();
       break;
@@ -400,8 +400,8 @@ function runTest() {
       doKey("return");
       checkForm("foobar");
 
-      datalist = document.getElementById('suggest');
-      datalist.children[0].setAttribute('value', prevValue);
+      datalist = document.getElementById("suggest");
+      datalist.children[0].setAttribute("value", prevValue);
       testNum = 299;
       waitForMenuChange(0);
       break;
@@ -442,7 +442,7 @@ function runTest() {
 
     case 304:
       // Filter is disabled with mozNoFilter.
-      input.setAttribute('mozNoFilter', 'true');
+      input.setAttribute("mozNoFilter", "true");
       synthesizeKey("f", {});
       waitForMenuChange(3); // no change
       break;
@@ -452,7 +452,7 @@ function runTest() {
       doKey("down");
       doKey("return");
       checkForm("Google");
-      input.removeAttribute('mozNoFilter');
+      input.removeAttribute("mozNoFilter");
       testNum = 399;
       expectPopup();
       restoreForm();

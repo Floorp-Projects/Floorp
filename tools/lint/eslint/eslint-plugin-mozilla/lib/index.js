@@ -18,9 +18,10 @@ module.exports = {
   },
   rules: {
     "balanced-listeners": require("../lib/rules/balanced-listeners"),
+    "import-browserjs-globals": require("../lib/rules/import-browserjs-globals"),
     "import-globals": require("../lib/rules/import-globals"),
     "import-headjs-globals": require("../lib/rules/import-headjs-globals"),
-    "import-browserjs-globals": require("../lib/rules/import-browserjs-globals"),
+    "import-test-globals": require("../lib/rules/import-test-globals"),
     "mark-test-function-used": require("../lib/rules/mark-test-function-used"),
     "no-aArgs": require("../lib/rules/no-aArgs"),
     "no-cpows-in-tests": require("../lib/rules/no-cpows-in-tests"),
@@ -33,9 +34,10 @@ module.exports = {
   },
   rulesConfig: {
     "balanced-listeners": 0,
+    "import-browserjs-globals": 0,
     "import-globals": 0,
     "import-headjs-globals": 0,
-    "import-browserjs-globals": 0,
+    "import-test-globals": 0,
     "mark-test-function-used": 0,
     "no-aArgs": 0,
     "no-cpows-in-tests": 0,

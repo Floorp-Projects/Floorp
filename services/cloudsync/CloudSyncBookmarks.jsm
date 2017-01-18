@@ -555,7 +555,7 @@ var RootFolder = function(rootId, rootName) {
       }
 
       for (let item of items) {
-        if (!item || 'object' !== typeof(item)) {
+        if (!item || "object" !== typeof(item)) {
           continue;
         }
 
@@ -681,7 +681,7 @@ var RootFolder = function(rootId, rootName) {
   let handleItemChanged = function(id, property, isAnnotation, newValue, lastModified, type, parent, guid, parentGuid) {
     let deferred = Promise.defer();
 
-    eventSource.emit('change', guid);
+    eventSource.emit("change", guid);
     deferred.resolve();
 
     return deferred.promise;
@@ -691,7 +691,7 @@ var RootFolder = function(rootId, rootName) {
     let deferred = Promise.defer();
 
     function complete() {
-      eventSource.emit('move', guid);
+      eventSource.emit("move", guid);
       deferred.resolve();
     }
 

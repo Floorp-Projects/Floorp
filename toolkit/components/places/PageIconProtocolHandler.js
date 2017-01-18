@@ -6,8 +6,8 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-Cu.import('resource://gre/modules/Services.jsm');
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
@@ -75,7 +75,7 @@ PageIconProtocolHandler.prototype = {
       pipe.init(true, true, 0, Ci.nsIFaviconService.MAX_FAVICON_BUFFER_SIZE);
 
       // Create our channel.
-      let channel = Cc['@mozilla.org/network/input-stream-channel;1']
+      let channel = Cc["@mozilla.org/network/input-stream-channel;1"]
                       .createInstance(Ci.nsIInputStreamChannel);
       channel.QueryInterface(Ci.nsIChannel);
       channel.setURI(uri);

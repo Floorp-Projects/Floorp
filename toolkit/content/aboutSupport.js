@@ -217,15 +217,15 @@ var snapshotFormatters = {
     let apzInfo = [];
     let formatApzInfo = function(info) {
       let out = [];
-      for (let type of ['Wheel', 'Touch', 'Drag']) {
-        let key = 'Apz' + type + 'Input';
+      for (let type of ["Wheel", "Touch", "Drag"]) {
+        let key = "Apz" + type + "Input";
 
         if (!(key in info))
           continue;
 
         delete info[key];
 
-        let message = localizedMsg([type.toLowerCase() + 'Enabled']);
+        let message = localizedMsg([type.toLowerCase() + "Enabled"]);
         out.push(message);
       }
 

@@ -57,6 +57,6 @@ add_task(async function test_ignore_missing_uri() {
 });
 
 function run_test() {
-  initTestLogging('Trace');
+  initTestLogging("Trace");
   run_next_test();
 }

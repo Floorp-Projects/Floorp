@@ -62,15 +62,15 @@
       <property name="wrapAround">
         <getter>
         <![CDATA[
-          return (this.getAttribute('wraparound') == 'true')
+          return (this.getAttribute("wraparound") == "true")
         ]]>
         </getter>
         <setter>
         <![CDATA[
           if (val)
-            this.setAttribute('wraparound', 'true');
+            this.setAttribute("wraparound", "true");
           else
-            this.removeAttribute('wraparound');
+            this.removeAttribute("wraparound");
           this._enableDisableButtons();
           return val;
         ]]>

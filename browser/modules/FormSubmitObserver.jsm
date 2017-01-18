@@ -201,13 +201,13 @@ FormSubmitObserver.prototype =
     // and where the content begin for the other elements.
     let offset = 0;
 
-    if (aElement.tagName == 'INPUT' &&
-        (aElement.type == 'radio' || aElement.type == 'checkbox')) {
+    if (aElement.tagName == "INPUT" &&
+        (aElement.type == "radio" || aElement.type == "checkbox")) {
       panelData.position = "bottomcenter topleft";
     } else {
       let win = aElement.ownerGlobal;
       let style = win.getComputedStyle(aElement, null);
-      if (style.direction == 'rtl') {
+      if (style.direction == "rtl") {
         offset = parseInt(style.paddingRight) + parseInt(style.borderRightWidth);
       } else {
         offset = parseInt(style.paddingLeft) + parseInt(style.borderLeftWidth);

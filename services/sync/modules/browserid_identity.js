@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "BulkKeyBundle",
 XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
                                   "resource://gre/modules/FxAccounts.jsm");
 
-XPCOMUtils.defineLazyGetter(this, 'log', function() {
+XPCOMUtils.defineLazyGetter(this, "log", function() {
   let log = Log.repository.getLogger("Sync.BrowserIDManager");
   log.level = Log.Level[Svc.Prefs.get("log.logger.identity")] || Log.Level.Error;
   return log;

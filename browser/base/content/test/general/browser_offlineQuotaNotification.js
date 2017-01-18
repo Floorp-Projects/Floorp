@@ -62,7 +62,7 @@ function test() {
     });
     gotCached.then(function() {
       // We got cached - now we should have provoked the quota warning.
-      let notification = PopupNotifications.getNotification('offline-app-usage');
+      let notification = PopupNotifications.getNotification("offline-app-usage");
       ok(notification, "have offline-app-usage notification");
       // select the default action - this should cause the preferences
       // tab to open - which we track via an "Initialized" event.

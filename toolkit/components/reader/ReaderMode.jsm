@@ -159,7 +159,7 @@ this.ReaderMode = {
     if (outerHash) {
       try {
         let uriObj = Services.io.newURI(originalUrl);
-        uriObj = Services.io.newURI('#' + outerHash, null, uriObj);
+        uriObj = Services.io.newURI("#" + outerHash, null, uriObj);
         originalUrl = uriObj.spec;
       } catch (ex) {}
     }

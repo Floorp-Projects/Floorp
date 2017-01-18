@@ -78,7 +78,7 @@ function* testClean() {
 }
 
 add_task(function* testSyncedTabsSidebarList() {
-  yield SidebarUI.show('viewTabsSidebar');
+  yield SidebarUI.show("viewTabsSidebar");
 
   Assert.equal(SidebarUI.currentID, "viewTabsSidebar", "Sidebar should have SyncedTabs loaded");
 
@@ -134,7 +134,7 @@ add_task(function* testSyncedTabsSidebarList() {
 add_task(testClean);
 
 add_task(function* testSyncedTabsSidebarFilteredList() {
-  yield SidebarUI.show('viewTabsSidebar');
+  yield SidebarUI.show("viewTabsSidebar");
   let syncedTabsDeckComponent = window.SidebarUI.browser.contentWindow.syncedTabsDeckComponent;
   let SyncedTabs = window.SidebarUI.browser.contentWindow.SyncedTabs;
 
@@ -195,7 +195,7 @@ add_task(testClean);
 add_task(function* testSyncedTabsSidebarStatus() {
   let accountExists = false;
 
-  yield SidebarUI.show('viewTabsSidebar');
+  yield SidebarUI.show("viewTabsSidebar");
   let syncedTabsDeckComponent = window.SidebarUI.browser.contentWindow.syncedTabsDeckComponent;
   let SyncedTabs = window.SidebarUI.browser.contentWindow.SyncedTabs;
 
@@ -256,7 +256,7 @@ add_task(function* testSyncedTabsSidebarStatus() {
 add_task(testClean);
 
 add_task(function* testSyncedTabsSidebarContextMenu() {
-  yield SidebarUI.show('viewTabsSidebar');
+  yield SidebarUI.show("viewTabsSidebar");
   let syncedTabsDeckComponent = window.SidebarUI.browser.contentWindow.syncedTabsDeckComponent;
   let SyncedTabs = window.SidebarUI.browser.contentWindow.SyncedTabs;
 

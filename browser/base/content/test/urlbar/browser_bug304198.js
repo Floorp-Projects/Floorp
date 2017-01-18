@@ -30,15 +30,15 @@ add_task(function* () {
 
   function* cycleTabs() {
     yield BrowserTestUtils.switchTab(gBrowser, fullURLTab);
-    is(gURLBar.textValue, testURL, 'gURLBar.textValue should be testURL after switching back to fullURLTab');
+    is(gURLBar.textValue, testURL, "gURLBar.textValue should be testURL after switching back to fullURLTab");
 
     yield BrowserTestUtils.switchTab(gBrowser, partialURLTab);
-    is(gURLBar.textValue, testPartialURL, 'gURLBar.textValue should be testPartialURL after switching back to partialURLTab');
+    is(gURLBar.textValue, testPartialURL, "gURLBar.textValue should be testPartialURL after switching back to partialURLTab");
     yield BrowserTestUtils.switchTab(gBrowser, deletedURLTab);
-    is(gURLBar.textValue, '', 'gURLBar.textValue should be "" after switching back to deletedURLTab');
+    is(gURLBar.textValue, "", 'gURLBar.textValue should be "" after switching back to deletedURLTab');
 
     yield BrowserTestUtils.switchTab(gBrowser, fullURLTab);
-    is(gURLBar.textValue, testURL, 'gURLBar.textValue should be testURL after switching back to fullURLTab');
+    is(gURLBar.textValue, testURL, "gURLBar.textValue should be testURL after switching back to fullURLTab");
   }
 
   function urlbarBackspace() {
@@ -55,7 +55,7 @@ add_task(function* () {
 
   function* prepareDeletedURLTab() {
     yield BrowserTestUtils.switchTab(gBrowser, deletedURLTab);
-    is(gURLBar.textValue, testURL, 'gURLBar.textValue should be testURL after initial switch to deletedURLTab');
+    is(gURLBar.textValue, testURL, "gURLBar.textValue should be testURL after initial switch to deletedURLTab");
 
     // simulate the user removing the whole url from the location bar
     gPrefService.setBoolPref("browser.urlbar.clickSelectsAll", true);
@@ -69,12 +69,12 @@ add_task(function* () {
 
   function* prepareFullURLTab() {
     yield BrowserTestUtils.switchTab(gBrowser, fullURLTab);
-    is(gURLBar.textValue, testURL, 'gURLBar.textValue should be testURL after initial switch to fullURLTab');
+    is(gURLBar.textValue, testURL, "gURLBar.textValue should be testURL after initial switch to fullURLTab");
   }
 
   function* preparePartialURLTab() {
     yield BrowserTestUtils.switchTab(gBrowser, partialURLTab);
-    is(gURLBar.textValue, testURL, 'gURLBar.textValue should be testURL after initial switch to partialURLTab');
+    is(gURLBar.textValue, testURL, "gURLBar.textValue should be testURL after initial switch to partialURLTab");
 
     // simulate the user removing part of the url from the location bar
     gPrefService.setBoolPref("browser.urlbar.clickSelectsAll", false);
