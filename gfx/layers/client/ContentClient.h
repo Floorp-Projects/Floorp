@@ -119,6 +119,10 @@ public:
   virtual void Updated(const nsIntRegion& aRegionToDraw,
                        const nsIntRegion& aVisibleRegion,
                        bool aDidSelfCopy) = 0;
+
+  ContentClientRemote* AsContentClientRemote() override {
+    return this;
+  }
 };
 
 // thin wrapper around RotatedContentBuffer, for on-mtc
