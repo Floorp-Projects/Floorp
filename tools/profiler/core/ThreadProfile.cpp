@@ -13,9 +13,7 @@ ThreadProfile::ThreadProfile(ThreadInfo* aInfo, ProfileBuffer* aBuffer)
   , mIsMainThread(aInfo->IsMainThread())
   , mPlatformData(aInfo->GetPlatformData())
   , mStackTop(aInfo->StackTop())
-#ifndef SPS_STANDALONE
   , mRespInfo(this)
-#endif
 #ifdef XP_LINUX
   , mRssMemory(0)
   , mUssMemory(0)
@@ -47,11 +45,7 @@ void ThreadProfile::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
 {
   // mUniqueStacks may already be emplaced from FlushSamplesAndMarkers.
   if (!mUniqueStacks.isSome()) {
-#ifndef SPS_STANDALONE
     mUniqueStacks.emplace(mPseudoStack->mContext);
-#else
-    mUniqueStacks.emplace(nullptr);
-#endif
   }
 
   aWriter.Start(SpliceableJSONWriter::SingleLineStyle);
@@ -107,9 +101,7 @@ void ThreadProfile::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
 void ThreadProfile::StreamSamplesAndMarkers(SpliceableJSONWriter& aWriter, double aSinceTime,
                                             UniqueStacks& aUniqueStacks)
 {
-#ifndef SPS_STANDALONE
   aWriter.StringProperty("processType", XRE_ChildProcessTypeToString(XRE_GetProcessType()));
-#endif
 
   aWriter.StringProperty("name", Name());
   aWriter.IntProperty("tid", static_cast<int>(mThreadId));
@@ -137,12 +129,7 @@ void ThreadProfile::StreamSamplesAndMarkers(SpliceableJSONWriter& aWriter, doubl
         mSavedStreamedSamples.reset();
       }
       mBuffer->StreamSamplesToJSON(aWriter, mThreadId, aSinceTime,
-#ifndef SPS_STANDALONE
-                                   mPseudoStack->mContext,
-#else
-                                   nullptr,
-#endif
-                                   aUniqueStacks);
+                                   mPseudoStack->mContext, aUniqueStacks);
     }
     aWriter.EndArray();
   }
@@ -184,23 +171,14 @@ void ThreadProfile::FlushSamplesAndMarkers()
   //
   // Note that the UniqueStacks instance is persisted so that the frame-index
   // mapping is stable across JS shutdown.
-#ifndef SPS_STANDALONE
   mUniqueStacks.emplace(mPseudoStack->mContext);
-#else
-  mUniqueStacks.emplace(nullptr);
-#endif
 
   {
     SpliceableChunkedJSONWriter b;
     b.StartBareList();
     {
       mBuffer->StreamSamplesToJSON(b, mThreadId, /* aSinceTime = */ 0,
-#ifndef SPS_STANDALONE
-                                   mPseudoStack->mContext,
-#else
-                                   nullptr,
-#endif
-                                   *mUniqueStacks);
+                                   mPseudoStack->mContext, *mUniqueStacks);
     }
     b.EndBareList();
     mSavedStreamedSamples = b.WriteFunc()->CopyData();

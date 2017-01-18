@@ -15,19 +15,13 @@
 #include "mozilla/RefPtr.h"
 #include <string>
 #include <map>
-#ifndef SPS_STANDALONE
 #include "js/ProfilingFrameIterator.h"
 #include "js/TrackedOptimizationInfo.h"
 #include "nsHashKeys.h"
 #include "nsDataHashtable.h"
-#endif
 #include "mozilla/Maybe.h"
 #include "mozilla/Vector.h"
-#ifndef SPS_STANDALONE
 #include "gtest/MozGtestFriend.h"
-#else
-#define FRIEND_TEST(a, b) // TODO Support standalone gtest
-#endif
 #include "mozilla/HashFunctions.h"
 #include "mozilla/UniquePtr.h"
 
@@ -197,19 +191,14 @@ public:
   struct MOZ_STACK_CLASS OnStackFrameKey : public FrameKey {
     explicit OnStackFrameKey(const char* aLocation)
       : FrameKey(aLocation)
-#ifndef SPS_STANDALONE
       , mJITFrameHandle(nullptr)
-#endif
     { }
 
     OnStackFrameKey(const OnStackFrameKey& aToCopy)
       : FrameKey(aToCopy)
-#ifndef SPS_STANDALONE
       , mJITFrameHandle(aToCopy.mJITFrameHandle)
-#endif
     { }
 
-#ifndef SPS_STANDALONE
     const JS::ForEachProfiledFrameOp::FrameHandle* mJITFrameHandle;
 
     OnStackFrameKey(void* aJITAddress, unsigned aJITDepth)
@@ -222,7 +211,6 @@ public:
       : FrameKey(aJITAddress, aJITDepth)
       , mJITFrameHandle(&aJITFrameHandle)
     { }
-#endif
   };
 
   struct StackKey {
