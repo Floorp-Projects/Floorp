@@ -173,10 +173,67 @@ zone_destroy(malloc_zone_t *zone)
   MOZ_CRASH();
 }
 
+static unsigned
+zone_batch_malloc(malloc_zone_t *zone, size_t size, void **results,
+    unsigned num_requested)
+{
+  unsigned i;
+
+  for (i = 0; i < num_requested; i++) {
+    results[i] = malloc_impl(size);
+    if (!results[i])
+      break;
+  }
+
+  return i;
+}
+
+static void
+zone_batch_free(malloc_zone_t *zone, void **to_be_freed,
+    unsigned num_to_be_freed)
+{
+  unsigned i;
+
+  for (i = 0; i < num_to_be_freed; i++) {
+    zone_free(zone, to_be_freed[i]);
+    to_be_freed[i] = NULL;
+  }
+}
+
+static size_t
+zone_pressure_relief(malloc_zone_t *zone, size_t goal)
+{
+  return 0;
+}
+
 static size_t
 zone_good_size(malloc_zone_t *zone, size_t size)
 {
   return malloc_good_size_impl(size);
+}
+
+static kern_return_t
+zone_enumerator(task_t task, void *data, unsigned type_mask,
+    vm_address_t zone_address, memory_reader_t reader,
+    vm_range_recorder_t recorder)
+{
+  return KERN_SUCCESS;
+}
+
+static boolean_t
+zone_check(malloc_zone_t *zone)
+{
+  return true;
+}
+
+static void
+zone_print(malloc_zone_t *zone, boolean_t verbose)
+{
+}
+
+static void
+zone_log(malloc_zone_t *zone, void *address)
+{
 }
 
 #ifdef MOZ_JEMALLOC
@@ -223,6 +280,31 @@ zone_force_unlock(malloc_zone_t *zone)
 }
 
 #endif
+
+static void
+zone_statistics(malloc_zone_t *zone, malloc_statistics_t *stats)
+{
+  /* We make no effort to actually fill the values */
+  stats->blocks_in_use = 0;
+  stats->size_in_use = 0;
+  stats->max_size_in_use = 0;
+  stats->size_allocated = 0;
+}
+
+static boolean_t
+zone_locked(malloc_zone_t *zone)
+{
+  /* Pretend no lock is being held */
+  return false;
+}
+
+static void
+zone_reinit_lock(malloc_zone_t *zone)
+{
+  /* As of OSX 10.12, this function is only used when force_unlock would
+   * be used if the zone version were < 9. So just use force_unlock. */
+  zone_force_unlock(zone);
+}
 
 static malloc_zone_t zone;
 static struct malloc_introspection_t zone_introspect;
@@ -274,22 +356,22 @@ register_zone(void)
 #else
   zone.zone_name = "jemalloc_zone";
 #endif
-  zone.batch_malloc = NULL;
-  zone.batch_free = NULL;
+  zone.batch_malloc = zone_batch_malloc;
+  zone.batch_free = zone_batch_free;
   zone.introspect = &zone_introspect;
-  zone.version = 8;
+  zone.version = 9;
   zone.memalign = zone_memalign;
   zone.free_definite_size = zone_free_definite_size;
-  zone.pressure_relief = NULL;
-  zone_introspect.enumerator = NULL;
+  zone.pressure_relief = zone_pressure_relief;
+  zone_introspect.enumerator = zone_enumerator;
   zone_introspect.good_size = zone_good_size;
-  zone_introspect.check = NULL;
-  zone_introspect.print = NULL;
-  zone_introspect.log = NULL;
+  zone_introspect.check = zone_check;
+  zone_introspect.print = zone_print;
+  zone_introspect.log = zone_log;
   zone_introspect.force_lock = zone_force_lock;
   zone_introspect.force_unlock = zone_force_unlock;
-  zone_introspect.statistics = NULL;
-  zone_introspect.zone_locked = NULL;
+  zone_introspect.statistics = zone_statistics;
+  zone_introspect.zone_locked = zone_locked;
   zone_introspect.enable_discharge_checking = NULL;
   zone_introspect.disable_discharge_checking = NULL;
   zone_introspect.discharge = NULL;
@@ -298,6 +380,7 @@ register_zone(void)
 #else
   zone_introspect.enumerate_unavailable_without_blocks = NULL;
 #endif
+  zone_introspect.reinit_lock = zone_reinit_lock;
 
   /*
    * The default purgeable zone is created lazily by OSX's libc.  It uses
