@@ -610,3 +610,8 @@ add_task(function* checkUndoVisitsState() {
                "1 unrelated.org visits should have persisted as it's not involved in the import.");
   yield PlacesTestUtils.clearHistory();
 });
+
+add_task(function* checkHistoryRemovalCompletion() {
+  yield AutoMigrate._removeSomeVisits([{url: "http://www.example.com/", limit: -1}]);
+  ok(true, "Removing visits should complete even if removing some visits failed.");
+});
