@@ -145,9 +145,6 @@ browser.jar:
   skin/classic/browser/sync-horizontalbar-win7.png
   skin/classic/browser/sync-horizontalbar-win7@2x.png
   skin/classic/browser/sync-mobileIcon.svg  (../shared/sync-mobileIcon.svg)
-  skin/classic/browser/syncSetup.css
-  skin/classic/browser/syncCommon.css
-  skin/classic/browser/syncQuota.css
   skin/classic/browser/syncProgress-horizontalbar.png
   skin/classic/browser/syncProgress-horizontalbar@2x.png
   skin/classic/browser/syncProgress-horizontalbar-win7.png
