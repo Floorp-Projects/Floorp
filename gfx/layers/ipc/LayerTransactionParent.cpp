@@ -94,6 +94,7 @@ void
 LayerTransactionParent::Destroy()
 {
   mDestroyed = true;
+  mCompositables.clear();
 }
 
 mozilla::ipc::IPCResult
