@@ -1589,16 +1589,20 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
   MOZ_ASSERT(!mCompositorScheduler);
 
 
-  // TODO(nical) Coming soon...
-  // MOZ_ASSERT(mWidget);
-  // RefPtr<widget::CompositorWidget> widget = mWidget;
-  // RefPtr<WebRenderAPI> wr = WebRenderAPI::Create(gfxPrefs::WebRenderProfilerEnabled(), this, Move(widget));
-  // mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, Move(wr));
+  MOZ_ASSERT(mWidget);
+  if (MOZ_USE_RENDER_THREAD) {
+    RefPtr<widget::CompositorWidget> widget = mWidget;
+    RefPtr<wr::WebRenderAPI> api = wr::WebRenderAPI::Create(gfxPrefs::WebRenderProfilerEnabled(), this, Move(widget));
+    MOZ_ASSERT(api); // TODO have a fallback
+    api->SetRootPipeline(aPipelineId);
+    mWrBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, Move(api));
+  } else {
+    RefPtr<gl::GLContext> glc(gl::GLContextProvider::CreateForCompositorWidget(mWidget, true));
+    mCompositor = new WebRenderCompositorOGL(this, glc.get());
+    mWrBridge = new WebRenderBridgeParent(this, aPipelineId,
+          mWidget, glc.get(), nullptr, mCompositor.get());
+  }
 
-  RefPtr<gl::GLContext> glc(gl::GLContextProvider::CreateForCompositorWidget(mWidget, true));
-  mCompositor = new WebRenderCompositorOGL(this, glc.get());
-  mWrBridge = new WebRenderBridgeParent(this, aPipelineId,
-        mWidget, glc.get(), nullptr, mCompositor.get());
   mCompositorScheduler = mWrBridge->CompositorScheduler();
   MOZ_ASSERT(mCompositorScheduler);
   mWrBridge.get()->AddRef(); // IPDL reference
@@ -1606,7 +1610,7 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::PipelineId& aPipel
   auto pipelineHandle = aPipelineId.mHandle;
   MOZ_ASSERT(sIndirectLayerTrees[pipelineHandle].mWrBridge == nullptr);
   sIndirectLayerTrees[pipelineHandle].mWrBridge = mWrBridge;
-  *aTextureFactoryIdentifier = mCompositor->GetTextureFactoryIdentifier();
+  *aTextureFactoryIdentifier = mWrBridge->GetTextureFactoryIdentifier();
   return mWrBridge;
 }
 

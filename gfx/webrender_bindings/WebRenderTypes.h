@@ -9,6 +9,20 @@
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/Maybe.h"
 
+// The infrastructure and plumbing to use the render thread is not entirely in
+// place yet. In order to land code and work in parallel we have to maintain
+// the two code paths. Hopefully we'll be able to remove this very soon.
+// Note that if you are adding code to the non-MOZ_USE_RENDER_THREAD branches
+// it is very likely that you are adding work to someone else and thus making
+// him very sad.
+//
+// The MOZ_USE_RENDER_THREAD are disabled by default because they are not in a
+// state where tests can pass. As soon as we can pass the test we'll just remove
+// the non-MOZ_USE_RENDER_THREAD code.
+// In the mean time, if you are working on making the render thread work, change
+// define below to true instead of false.
+#define MOZ_USE_RENDER_THREAD false
+
 typedef mozilla::Maybe<WrImageMask> MaybeImageMask;
 
 namespace mozilla {
@@ -91,6 +105,10 @@ struct ByteBuffer
       free(mData);
     }
   }
+
+  const Range<uint8_t> AsSlice() const { return Range<uint8_t>(mData, mLength); }
+
+  Range<uint8_t> AsSlice() { return Range<uint8_t>(mData, mLength); }
 
   bool operator==(const ByteBuffer& other) const {
     return mLength == other.mLength &&
