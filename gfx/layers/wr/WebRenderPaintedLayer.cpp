@@ -69,7 +69,6 @@ WebRenderPaintedLayer::PaintThebes()
     Mutated();
 
     ContentClientRemote* contentClientRemote = static_cast<ContentClientRemote*>(mContentClient.get());
-    MOZ_ASSERT(contentClientRemote->GetIPDLActor());
 
     // Hold(this) ensures this layer is kept alive through the current transaction
     // The ContentClient assumes this layer is kept alive (e.g., in CreateBuffer),
