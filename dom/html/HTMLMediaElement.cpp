@@ -7206,7 +7206,7 @@ HTMLMediaElement::AsyncResolvePendingPlayPromises()
     = new nsResolveOrRejectPendingPlayPromisesRunner(this,
                                                      TakePendingPlayPromises());
 
-  OwnerDoc()->Dispatch("HTMLMediaElement::AsyncResolvePendingPlayPromises",
+  OwnerDoc()->Dispatch("nsResolveOrRejectPendingPlayPromisesRunner",
                        TaskCategory::Other,
                        event.forget());
 }
@@ -7223,7 +7223,7 @@ HTMLMediaElement::AsyncRejectPendingPlayPromises(nsresult aError)
                                                      TakePendingPlayPromises(),
                                                      aError);
 
-  OwnerDoc()->Dispatch("HTMLMediaElement::AsyncRejectPendingPlayPromises",
+  OwnerDoc()->Dispatch("nsResolveOrRejectPendingPlayPromisesRunner",
                        TaskCategory::Other,
                        event.forget());
 }
