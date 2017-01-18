@@ -1300,7 +1300,7 @@ BacktrackingAllocator::processBundle(MIRGenerator* mir, LiveBundle* bundle)
 
             // If that didn't work, but we have one or more non-fixed bundles
             // known to be conflicting, maybe we can evict them and try again.
-            if (attempt < MAX_ATTEMPTS &&
+            if ((attempt < MAX_ATTEMPTS || minimalBundle(bundle)) &&
                 !fixed &&
                 !conflicting.empty() &&
                 maximumSpillWeight(conflicting) < computeSpillWeight(bundle))
