@@ -12,8 +12,10 @@ const {
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
-const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
-const { MODE } = require("devtools/client/shared/components/reps/constants");
+
+const { REPS, MODE } = require("devtools/client/shared/components/reps/load-reps");
+const Rep = createFactory(REPS.Rep);
+
 const { FILTER_SEARCH_DELAY } = require("../../constants");
 
 // Components
@@ -21,7 +23,6 @@ const Editor = createFactory(require("devtools/client/netmonitor/shared/componen
 const SearchBox = createFactory(require("devtools/client/shared/components/search-box"));
 const TreeView = createFactory(require("devtools/client/shared/components/tree/tree-view"));
 const TreeRow = createFactory(require("devtools/client/shared/components/tree/tree-row"));
-const { Rep } = createFactories(require("devtools/client/shared/components/reps/rep"));
 
 const { div, tr, td } = DOM;
 const AUTO_EXPAND_MAX_LEVEL = 7;
