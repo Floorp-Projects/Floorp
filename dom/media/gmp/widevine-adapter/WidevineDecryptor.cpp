@@ -33,13 +33,13 @@ WidevineDecryptor::GetInstance(uint32_t aInstanceId)
 WidevineDecryptor::WidevineDecryptor()
   : mCallback(nullptr)
 {
-  Log("WidevineDecryptor created this=%p", this);
+  Log("WidevineDecryptor created this=%p, instanceId=%u", this, mInstanceId);
   AddRef(); // Released in DecryptingComplete().
 }
 
 WidevineDecryptor::~WidevineDecryptor()
 {
-  Log("WidevineDecryptor destroyed this=%p", this);
+  Log("WidevineDecryptor destroyed this=%p, instanceId=%u", this, mInstanceId);
 }
 
 void
@@ -224,7 +224,7 @@ WidevineDecryptor::Decrypt(GMPBuffer* aBuffer,
 void
 WidevineDecryptor::DecryptingComplete()
 {
-  Log("WidevineDecryptor::DecryptingComplete() this=%p", this);
+  Log("WidevineDecryptor::DecryptingComplete() this=%p, instanceId=%u", this, mInstanceId);
   // Drop our references to the CDMWrapper. When any other references
   // held elsewhere are dropped (for example references held by a
   // WidevineVideoDecoder, or a runnable), the CDMWrapper destroys
@@ -313,6 +313,17 @@ WidevineDecryptor::OnResolveNewSessionPromise(uint32_t aPromiseId,
     Log("Decryptor::OnResolveNewSessionPromise(aPromiseId=0x%d) FAIL; !mCallback", aPromiseId);
     return;
   }
+
+  // This is laid out in the API. If we fail to load a session we should
+  // call OnResolveNewSessionPromise with nullptr as the sessionId.
+  // We can safely assume this means that we have failed to load a session
+  // as the other methods specify calling 'OnRejectPromise' when they fail.
+  if (!aSessionId) {
+    Log("Decryptor::OnResolveNewSessionPromise(aPromiseId=0x%d) Failed to load session", aPromiseId);
+    mCallback->ResolveLoadSessionPromise(aPromiseId, false);
+    return;
+  }
+
   Log("Decryptor::OnResolveNewSessionPromise(aPromiseId=0x%d)", aPromiseId);
   auto iter = mPromiseIdToNewSessionTokens.find(aPromiseId);
   if (iter == mPromiseIdToNewSessionTokens.end()) {

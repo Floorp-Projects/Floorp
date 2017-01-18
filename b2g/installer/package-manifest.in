@@ -802,7 +802,7 @@ bin/libfreebl_32int64_3.so
 
 ; media
 @RESPATH@/gmp-clearkey/0.1/@DLL_PREFIX@clearkey@DLL_SUFFIX@
-@RESPATH@/gmp-clearkey/0.1/clearkey.info
+@RESPATH@/gmp-clearkey/0.1/manifest.json
 
 #ifdef PKG_LOCALE_MANIFEST
 #include @PKG_LOCALE_MANIFEST@

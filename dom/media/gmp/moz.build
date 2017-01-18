@@ -64,6 +64,7 @@ EXPORTS += [
     'GMPVideoHost.h',
     'GMPVideoi420FrameImpl.h',
     'GMPVideoPlaneImpl.h',
+    'widevine-adapter/content_decryption_module.h',
 ]
 
 # We link GMPLoader into xul on Android and Linux as its code does not
@@ -108,7 +109,7 @@ UNIFIED_SOURCES += [
     'GMPVideoEncoderParent.cpp',
     'GMPVideoHost.cpp',
     'GMPVideoi420FrameImpl.cpp',
-    'GMPVideoPlaneImpl.cpp',
+    'GMPVideoPlaneImpl.cpp'
 ]
 
 DIRS += [
