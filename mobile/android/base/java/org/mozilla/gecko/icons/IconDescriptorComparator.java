@@ -16,7 +16,7 @@ import java.util.Comparator;
  */
 /* package-private */ class IconDescriptorComparator implements Comparator<IconDescriptor> {
     @Override
-    public int compare(IconDescriptor lhs, IconDescriptor rhs) {
+    public int compare(final IconDescriptor lhs, final IconDescriptor rhs) {
         if (lhs.getUrl().equals(rhs.getUrl())) {
             // Two descriptors pointing to the same URL are always referencing the same icon. So treat
             // them as equal.
@@ -43,8 +43,10 @@ import java.util.Comparator;
             return lhsContainer ? -1 : 1;
         }
 
-        // There's no way to know which icon might be better. Just pick rhs.
-        return 1;
+        // There's no way to know which icon might be better. However we need to pick a consistent
+        // one to avoid breaking the TreeSet implementation (See Bug 1331808). Therefore we are
+        // picking one by just comparing the URLs.
+        return lhs.getUrl().compareTo(rhs.getUrl());
     }
 
     private int compareType(IconDescriptor lhs, IconDescriptor rhs) {
