@@ -493,8 +493,6 @@ this.Utils = {
    *     take a presentable passphrase and reduce it to a normalized
    *     representation for storage. normalizePassphrase can safely be called
    *     on normalized input.
-   * * normalizeAccount:
-   *     take user input for account/username, cleaning up appropriately.
    */
 
   isPassphrase(s) {
@@ -562,10 +560,6 @@ this.Utils = {
 
     // Something else -- just return.
     return pp;
-  },
-
-  normalizeAccount: function normalizeAccount(acc) {
-    return acc.trim();
   },
 
   /**
