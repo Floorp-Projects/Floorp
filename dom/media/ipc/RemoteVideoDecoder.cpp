@@ -164,7 +164,7 @@ RemoteDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
   if (!MediaPrefs::PDMUseGPUDecoder() ||
       !aParams.mKnowsCompositor ||
       aParams.mKnowsCompositor->GetTextureFactoryIdentifier().mParentProcessType != GeckoProcessType_GPU) {
-    return nullptr;
+    return mWrapped->CreateVideoDecoder(aParams);
   }
 
   MediaDataDecoderCallback* callback = aParams.mCallback;
