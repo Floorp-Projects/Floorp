@@ -495,6 +495,24 @@ public:
    */
   virtual already_AddRefed<DataSourceSurface> GetDataSurface() override;
 
+  /**
+   * Add the size of the underlying data buffer to the aggregate.
+   */
+  virtual void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                                      size_t& aHeapSizeOut,
+                                      size_t& aNonHeapSizeOut) const
+  {
+  }
+
+  /**
+   * Returns whether or not the data was allocated on the heap. This should
+   * be used to determine if the memory needs to be cleared to 0.
+   */
+  virtual bool OnHeap() const
+  {
+    return true;
+  }
+
 protected:
   bool mIsMapped;
 };
