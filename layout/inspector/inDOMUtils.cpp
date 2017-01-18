@@ -651,7 +651,6 @@ static void GetOtherValuesForProperty(const uint32_t aParserVariant,
   }
   if (aParserVariant & VARIANT_CALC) {
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("calc"));
-    InsertNoDuplicates(aArray, NS_LITERAL_STRING("-moz-calc"));
   }
   if (aParserVariant & VARIANT_URL) {
     InsertNoDuplicates(aArray, NS_LITERAL_STRING("url"));
