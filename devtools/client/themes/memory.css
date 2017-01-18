@@ -97,6 +97,8 @@ html, body, #app, #memory-tool {
 
 .devtools-toolbar > label {
   margin-inline-end: 5px;
+  display: flex;
+  align-items: center;
 }
 
 #select-view {
