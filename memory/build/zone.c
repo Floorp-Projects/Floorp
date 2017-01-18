@@ -183,7 +183,10 @@ static malloc_zone_t *get_default_zone()
 }
 
 
-__attribute__((constructor)) void
+#ifdef MOZ_REPLACE_MALLOC
+__attribute__((constructor))
+#endif
+void
 register_zone(void)
 {
   malloc_zone_t *default_zone = get_default_zone();
@@ -195,7 +198,11 @@ register_zone(void)
   zone.free = (void *)zone_free;
   zone.realloc = (void *)zone_realloc;
   zone.destroy = (void *)zone_destroy;
+#ifdef MOZ_REPLACE_MALLOC
   zone.zone_name = "replace_malloc_zone";
+#else
+  zone.zone_name = "jemalloc_zone";
+#endif
   zone.batch_malloc = NULL;
   zone.batch_free = NULL;
   zone.introspect = &zone_introspect;
