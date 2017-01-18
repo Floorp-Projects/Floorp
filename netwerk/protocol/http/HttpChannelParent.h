@@ -175,7 +175,6 @@ protected:
   virtual mozilla::ipc::IPCResult RecvDivertComplete() override;
   virtual mozilla::ipc::IPCResult RecvRemoveCorsPreflightCacheEntry(const URIParams& uri,
                                                                     const mozilla::ipc::PrincipalInfo& requestingPrincipal) override;
-  virtual mozilla::ipc::IPCResult RecvApplyConversion(const bool& applyConversion)  override;
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   // Supporting function for ADivertableParentChannel.
@@ -260,26 +259,6 @@ private:
   bool mSuspendAfterSynthesizeResponse;
   // Set if this channel will synthesize its response.
   bool mWillSynthesizeResponse;
-
-  // Whether we need to apply a data conversion or not is decided during
-  // a OnStartRequest call on the last channel listener. This is perform on the
-  // child and conversion is perform on the child process as well.
-  // If the http channel has a TracableChannel listener we need to perform
-  // the data conversion, if needed, on the parent, but still the decision
-  // whether to perform the conversion or not is made during OnStartRequest on
-  // the child process. Using a parameter in SendOnStartRequest we will request
-  // from the child to send us the final decision (Send/RecvApplyConversion
-  // with parameter aApply true or false). The mChannel will be suspended until
-  // the responce is received.
-  // If the channel gets canceled we will just set the ApplyConversion to
-  // false and resume mChannel.
-  //
-  // If DivertToParent is performed, the OnStartRequest call on the last
-  // channel listener is performed on the parent and the child process does not
-  // need to send Send/RecvApplyConversion. ApplyContentConversions will be
-  // called after the OnStartRequest has been called (This is in the
-  // StartDiversion function on the parent).
-  bool mWaitingForApplyConversionResponse;
 
   dom::TabId mNestedFrameId;
 
