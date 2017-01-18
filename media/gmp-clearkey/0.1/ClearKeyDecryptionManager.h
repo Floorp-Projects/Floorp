@@ -17,32 +17,43 @@
 #ifndef __ClearKeyDecryptionManager_h__
 #define __ClearKeyDecryptionManager_h__
 
-#include <map>
-
 #include "ClearKeyUtils.h"
+// This include is required in order for content_decryption_module to work
+// on Unix systems.
+#include "stddef.h"
+#include "content_decryption_module.h"
 #include "RefCounted.h"
+
+#include <map>
 
 class ClearKeyDecryptor;
 
-class CryptoMetaData {
+class CryptoMetaData
+{
 public:
   CryptoMetaData() {}
 
-  explicit CryptoMetaData(const GMPEncryptedBufferMetadata* aCrypto)
+  explicit CryptoMetaData(const cdm::InputBuffer* aInputBuffer)
   {
-    Init(aCrypto);
+    Init(aInputBuffer);
   }
 
-  void Init(const GMPEncryptedBufferMetadata* aCrypto)
+  void Init(const cdm::InputBuffer* aInputBuffer)
   {
-    if (!aCrypto) {
+    if (!aInputBuffer) {
       assert(!IsValid());
       return;
     }
-    Assign(mKeyId, aCrypto->KeyId(), aCrypto->KeyIdSize());
-    Assign(mIV, aCrypto->IV(), aCrypto->IVSize());
-    Assign(mClearBytes, aCrypto->ClearBytes(), aCrypto->NumSubsamples());
-    Assign(mCipherBytes, aCrypto->CipherBytes(), aCrypto->NumSubsamples());
+
+    Assign(mKeyId, aInputBuffer->key_id, aInputBuffer->key_id_size);
+    Assign(mIV, aInputBuffer->iv, aInputBuffer->iv_size);
+
+    for (uint32_t i = 0; i < aInputBuffer->num_subsamples; ++i) {
+      const cdm::SubsampleEntry& subsample = aInputBuffer->subsamples[i];
+
+      mCipherBytes.push_back(subsample.cipher_bytes);
+      mClearBytes.push_back(subsample.clear_bytes);
+    }
   }
 
   bool IsValid() const {
@@ -59,7 +70,7 @@ public:
 
   std::vector<uint8_t> mKeyId;
   std::vector<uint8_t> mIV;
-  std::vector<uint16_t> mClearBytes;
+  std::vector<uint32_t> mClearBytes;
   std::vector<uint32_t> mCipherBytes;
 };
 
@@ -85,12 +96,10 @@ public:
   void ReleaseKeyId(KeyId aKeyId);
 
   // Decrypts buffer *in place*.
-  GMPErr Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
-                 const CryptoMetaData& aMetadata);
-  GMPErr Decrypt(std::vector<uint8_t>& aBuffer,
-                 const CryptoMetaData& aMetadata);
-
-  void Shutdown();
+  cdm::Status Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
+                      const CryptoMetaData& aMetadata);
+  cdm::Status Decrypt(std::vector<uint8_t>& aBuffer,
+                      const CryptoMetaData& aMetadata);
 
 private:
   bool IsExpectingKeyForKeyId(const KeyId& aKeyId) const;

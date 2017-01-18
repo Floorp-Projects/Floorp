@@ -273,8 +273,8 @@ function runTests() {
   cwu.sendMouseEvent("mousemove", 4, 4, 0, 0, 0, false, 0, 0);
 
   d1.onpointermove = function(e) {
-    is(e.buttons, 1, "Buttons must be 1 on pointer generated from touch event");
-    is(e.button, 0, "Button must be 0 on pointer generated from touch eventd");
+    is(e.buttons, 1, "Buttons must be 1 on pointermove generated from touch event");
+    is(e.button, -1, "Button must be -1 on pointermove generated from touch event");
     is(e.pointerType, "touch", "Pointer type must be touch");
   };
   sendTouchEvent(cwu, "touchmove", getTouchEventForTarget(d1, cwu, 2), 0);

@@ -169,7 +169,10 @@ nsPrincipal::GetOriginInternal(nsACString& aOrigin)
   nsCOMPtr<nsIURIWithPrincipal> uriWithPrincipal = do_QueryInterface(origin);
   if (uriWithPrincipal) {
     nsCOMPtr<nsIPrincipal> uriPrincipal;
-    if (uriWithPrincipal) {
+    rv = uriWithPrincipal->GetPrincipal(getter_AddRefs(uriPrincipal));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (uriPrincipal) {
       return uriPrincipal->GetOriginNoSuffix(aOrigin);
     }
   }

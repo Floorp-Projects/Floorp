@@ -120,12 +120,14 @@ void
 WebrtcVideoConduit::SendStreamStatistics::Update(
   const webrtc::VideoSendStream::Stats& aStats)
 {
-  CSFLogVerbose(logTag, "SendStreamStatistics::Update %s", __FUNCTION__);
   StreamStatistics::Update(aStats.encode_frame_rate, aStats.media_bitrate_bps);
   if (!aStats.substreams.empty()) {
     const webrtc::FrameCounts& fc =
       aStats.substreams.begin()->second.frame_counts;
-    mDroppedFrames = mSentFrames - fc.key_frames + fc.delta_frames;
+    CSFLogVerbose(logTag, "%s: framerate: %u, bitrate: %u, dropped frames delta: %u",
+                  __FUNCTION__, aStats.encode_frame_rate, aStats.media_bitrate_bps,
+                  (mSentFrames - (fc.key_frames + fc.delta_frames)) - mDroppedFrames);
+    mDroppedFrames = mSentFrames - (fc.key_frames + fc.delta_frames);
   } else {
     CSFLogVerbose(logTag, "%s aStats.substreams is empty", __FUNCTION__);
   }
