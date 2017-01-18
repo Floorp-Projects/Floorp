@@ -159,34 +159,34 @@ public:
   const nsFrameList& GetChildList(ChildListID aListID) const override;
   void GetChildLists(nsTArray<ChildList>* aLists) const override;
 
-  nsresult  HandleEvent(nsPresContext* aPresContext, 
+  nsresult HandleEvent(nsPresContext* aPresContext, 
                                 mozilla::WidgetGUIEvent* aEvent,
                                 nsEventStatus* aEventStatus) override;
-  nsresult  GetContentForEvent(mozilla::WidgetEvent* aEvent,
+  nsresult GetContentForEvent(mozilla::WidgetEvent* aEvent,
                                        nsIContent** aContent) override;
-  nsresult  GetCursor(const nsPoint&    aPoint,
+  nsresult GetCursor(const nsPoint&    aPoint,
                               nsIFrame::Cursor& aCursor) override;
 
-  nsresult  GetPointFromOffset(int32_t  inOffset,
+  nsresult GetPointFromOffset(int32_t  inOffset,
                                        nsPoint* outPoint) override;
-  nsresult  GetCharacterRectsInRange(int32_t aInOffset,
+  nsresult GetCharacterRectsInRange(int32_t aInOffset,
                                              int32_t aLength,
                                              nsTArray<nsRect>& aOutRect) override;
 
-  nsresult  GetChildFrameContainingOffset(int32_t    inContentOffset,
+  nsresult GetChildFrameContainingOffset(int32_t    inContentOffset,
                                                   bool       inHint,
                                                   int32_t*   outFrameContentOffset,
                                                   nsIFrame** outChildFrame) override;
 
-  static nsresult  GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
+  static nsresult GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
                                         nsPeekOffsetStruct *aPos, 
                                         nsIFrame *aBlockFrame, 
                                         int32_t aLineStart, 
                                         int8_t aOutSideLimit
                                         );
 
-  nsresult  CharacterDataChanged(CharacterDataChangeInfo* aInfo) override;
-  nsresult  AttributeChanged(int32_t         aNameSpaceID,
+  nsresult CharacterDataChanged(CharacterDataChangeInfo* aInfo) override;
+  nsresult AttributeChanged(int32_t         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      int32_t         aModType) override;
   nsSplittableType GetSplittableType() const override;
@@ -200,7 +200,7 @@ public:
   void SetNextInFlow(nsIFrame*) override;
   nsIAtom* GetType() const override;
 
-  nsresult  GetSelectionController(nsPresContext *aPresContext, nsISelectionController **aSelCon) override;
+  nsresult GetSelectionController(nsPresContext *aPresContext, nsISelectionController **aSelCon) override;
 
   FrameSearchResult PeekOffsetNoAmount(bool aForward, int32_t* aOffset) override;
   FrameSearchResult PeekOffsetCharacter(bool aForward, int32_t* aOffset,
@@ -220,9 +220,9 @@ public:
                                      bool aPunctAfter, bool aWhitespaceAfter,
                                      bool aIsKeyboardSelect);
 
-  nsresult  CheckVisibility(nsPresContext* aContext, int32_t aStartIndex, int32_t aEndIndex, bool aRecurse, bool *aFinished, bool *_retval) override;
+  nsresult CheckVisibility(nsPresContext* aContext, int32_t aStartIndex, int32_t aEndIndex, bool aRecurse, bool *aFinished, bool *_retval) override;
 
-  nsresult  GetOffsets(int32_t &aStart, int32_t &aEnd) const override;
+  nsresult GetOffsets(int32_t &aStart, int32_t &aEnd) const override;
   void ChildIsDirty(nsIFrame* aChild) override;
 
 #ifdef ACCESSIBILITY
@@ -501,18 +501,18 @@ public:
                                           const char* aType);
   static void* DisplayIntrinsicSizeEnter(nsIFrame* aFrame,
                                          const char* aType);
-  static void  DisplayReflowExit(nsPresContext*      aPresContext,
+  static void DisplayReflowExit(nsPresContext*      aPresContext,
                                  nsIFrame*            aFrame,
                                  ReflowOutput& aMetrics,
                                  uint32_t             aStatus,
                                  void*                aFrameTreeNode);
-  static void  DisplayLayoutExit(nsIFrame* aFrame,
+  static void DisplayLayoutExit(nsIFrame* aFrame,
                                  void* aFrameTreeNode);
-  static void  DisplayIntrinsicISizeExit(nsIFrame* aFrame,
+  static void DisplayIntrinsicISizeExit(nsIFrame* aFrame,
                                          const char* aType,
                                          nscoord aResult,
                                          void* aFrameTreeNode);
-  static void  DisplayIntrinsicSizeExit(nsIFrame* aFrame,
+  static void DisplayIntrinsicSizeExit(nsIFrame* aFrame,
                                         const char* aType,
                                         nsSize aResult,
                                         void* aFrameTreeNode);
@@ -707,7 +707,7 @@ public:
    * Get a printable from of the name of the frame type.
    * XXX This should be eliminated and we use GetType() instead...
    */
-  nsresult  GetFrameName(nsAString& aResult) const override;
+  nsresult GetFrameName(nsAString& aResult) const override;
   nsresult MakeFrameName(const nsAString& aKind, nsAString& aResult) const;
   // Helper function to return the index in parent of the frame's content
   // object. Returns -1 on error or if the frame doesn't have a content object
@@ -720,7 +720,7 @@ public:
    * Return the state bits that are relevant to regression tests (that
    * is, those bits which indicate a real difference when they differ
    */
-  nsFrameState  GetDebugStateBits() const override;
+  nsFrameState GetDebugStateBits() const override;
   /**
    * Called to dump out regression data that describes the layout
    * of the frame and its children, and so on. The format of the
@@ -729,7 +729,7 @@ public:
    * the caveat that some base types are defined.
    * For more information, see XXX.
    */
-  nsresult  DumpRegressionData(nsPresContext* aPresContext,
+  nsresult DumpRegressionData(nsPresContext* aPresContext,
                                        FILE* out, int32_t aIndent) override;
 
   /**
