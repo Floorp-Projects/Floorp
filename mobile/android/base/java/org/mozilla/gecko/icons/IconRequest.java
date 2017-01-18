@@ -164,7 +164,12 @@ public class IconRequest {
      * hasIconDescriptors() should be called before requesting the next icon.
      */
     /* package-private */ void moveToNextIcon() {
-        icons.remove(getBestIcon());
+        if (!icons.remove(getBestIcon())) {
+            // Calling this method when there's no next icon is an error (use hasIconDescriptors()).
+            // Theoretically this method can fail even if there's a next icon (like it did in bug 1331808).
+            // In this case crashing to see and fix the issue is desired.
+            throw new IllegalStateException("Moving to next icon failed. Could not remove first icon from set.");
+        }
     }
 
     /**
