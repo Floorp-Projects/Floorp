@@ -295,18 +295,17 @@ ImageBridgeChild::ShutdownStep2(SynchronousTask* aTask)
 
   MOZ_ASSERT(InImageBridgeChildThread(),
              "Should be in ImageBridgeChild thread.");
-
-  if (!mCalledClose) {
-    Close();
-    mCalledClose = true;
-  }
+  Close();
 }
 
 void
 ImageBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   mCanSend = false;
-  mCalledClose = true;
+  {
+    MutexAutoLock lock(mContainerMapLock);
+    mImageContainers.Clear();
+  }
 }
 
 void
@@ -338,7 +337,7 @@ ImageBridgeChild::CreateCanvasClientSync(SynchronousTask* aTask,
 
 ImageBridgeChild::ImageBridgeChild()
   : mCanSend(false)
-  , mCalledClose(false)
+  , mDestroyed(false)
   , mFwdTransactionId(0)
   , mContainerMapLock("ImageBridgeChild.mContainerMapLock")
 {
@@ -736,6 +735,8 @@ ImageBridgeChild::WillShutdown()
 
     task.Wait();
   }
+
+  mDestroyed = true;
 }
 
 void
@@ -998,6 +999,12 @@ ImageBridgeChild::DeallocShmem(ipc::Shmem& aShmem)
     return PImageBridgeChild::DeallocShmem(aShmem);
   }
 
+  // If we can't post a task, then we definitely cannot send, so there's
+  // no reason to queue up this send.
+  if (!CanPostTask()) {
+    return false;
+  }
+
   SynchronousTask task("AllocatorProxy Dealloc");
   bool result = false;
 
@@ -1150,10 +1157,32 @@ bool ImageBridgeChild::IsSameProcess() const
   return OtherPid() == base::GetCurrentProcId();
 }
 
+bool
+ImageBridgeChild::CanPostTask() const
+{
+  // During shutdown, the cycle collector may free objects that are holding a
+  // reference to ImageBridgeChild. Since this happens on the main thread,
+  // ImageBridgeChild will attempt to post a task to the ImageBridge thread.
+  // However the thread manager has already been shut down, so the task cannot
+  // post.
+  //
+  // It's okay if this races. We only care about the shutdown case where
+  // everything's happening on the main thread. Even if it races outside of
+  // shutdown, it's still harmless to post the task, since the task must
+  // check CanSend().
+  return !mDestroyed;
+}
+
 void
 ImageBridgeChild::ReleaseCompositable(const CompositableHandle& aHandle)
 {
   if (!InImageBridgeChildThread()) {
+    // If we can't post a task, then we definitely cannot send, so there's
+    // no reason to queue up this send.
+    if (!CanPostTask()) {
+      return;
+    }
+
     RefPtr<Runnable> runnable = WrapRunnable(
       RefPtr<ImageBridgeChild>(this),
       &ImageBridgeChild::ReleaseCompositable,
