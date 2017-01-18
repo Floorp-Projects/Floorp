@@ -22,6 +22,7 @@
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient, etc
 #include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/ContentClient.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/LayersMessages.h"  // for Edit, etc
@@ -559,8 +560,7 @@ ShadowLayerForwarder::SendPaintTime(uint64_t aId, TimeDuration aPaintTime)
 }
 
 bool
-ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
-                                     const nsIntRegion& aRegionToClear,
+ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
                                      uint64_t aId,
                                      bool aScheduleComposite,
                                      uint32_t aPaintSequenceNumber,
@@ -733,13 +733,16 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
   }
 
   profiler_tracing("Paint", "Rasterize", TRACING_INTERVAL_END);
+
+  AutoTArray<EditReply, 10> replies;
   if (mTxn->mSwapRequired) {
     MOZ_LAYERS_LOG(("[LayersForwarder] sending transaction..."));
     RenderTraceScope rendertrace3("Forward Transaction", "000093");
-    if (!mShadowManager->SendUpdate(info, aReplies)) {
+    if (!mShadowManager->SendUpdate(info, &replies)) {
       MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
       return false;
     }
+    ProcessReplies(replies);
   } else {
     // If we don't require a swap we can call SendUpdateNoSwap which
     // assumes that aReplies is empty (DEBUG assertion)
@@ -756,6 +759,30 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
   mPaintSyncId = 0;
   MOZ_LAYERS_LOG(("[LayersForwarder] ... done"));
   return true;
+}
+
+void
+ShadowLayerForwarder::ProcessReplies(const nsTArray<EditReply>& aReplies)
+{
+  for (const auto& reply : aReplies) {
+    switch (reply.type()) {
+    case EditReply::TOpContentBufferSwap: {
+      MOZ_LAYERS_LOG(("[LayersForwarder] DoubleBufferSwap"));
+
+      const OpContentBufferSwap& obs = reply.get_OpContentBufferSwap();
+
+      RefPtr<CompositableClient> compositable =
+        CompositableClient::FromIPDLActor(obs.compositableChild());
+      ContentClientRemote* contentClient = compositable->AsContentClientRemote();
+      MOZ_ASSERT(contentClient);
+
+      contentClient->SwapBuffers(obs.frontUpdatedRegion());
+      break;
+    }
+    default:
+      MOZ_CRASH("not reached");
+    }
+  }
 }
 
 void
