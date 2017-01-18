@@ -77,6 +77,8 @@ ClearKeySessionManager::CreateSession(uint32_t aPromiseId,
                                       uint32_t aInitDataSize,
                                       SessionType aSessionType)
 {
+  CK_LOGD("ClearKeySessionManager::CreateSession type:%u", aInitDataType);
+
   // Copy the init data so it is correctly captured by the lambda
   vector<uint8_t> initData(aInitData, aInitData + aInitDataSize);
 
@@ -93,10 +95,9 @@ ClearKeySessionManager::CreateSession(uint32_t aPromiseId,
 
   // If we haven't loaded, don't do this yet
   if (MaybeDeferTillInitialized(deferrer)) {
+    CK_LOGD("Deferring CreateSession");
     return;
   }
-
-  CK_LOGD("ClearKeySessionManager::CreateSession type:%s", aInitDataType);
 
   CK_LOGARRAY("ClearKeySessionManager::CreateSession initdata: ",
               aInitData,
@@ -105,7 +106,7 @@ ClearKeySessionManager::CreateSession(uint32_t aPromiseId,
   // If 'DecryptingComplete' has been called mHost will be null so we can't
   // won't be able to resolve our promise
   if (!mHost) {
-    CK_LOGD("ClearKeySessionManager::CreateSession: mHost is nullptr")
+    CK_LOGD("ClearKeySessionManager::CreateSession: mHost is nullptr");
     return;
   }
 
@@ -186,6 +187,8 @@ ClearKeySessionManager::LoadSession(uint32_t aPromiseId,
                                     const char* aSessionId,
                                     uint32_t aSessionIdLength)
 {
+  CK_LOGD("ClearKeySessionManager::LoadSession");
+
   // Copy the sessionId into a string so the lambda captures it properly.
   string sessionId(aSessionId, aSessionId + aSessionIdLength);
 
@@ -199,10 +202,9 @@ ClearKeySessionManager::LoadSession(uint32_t aPromiseId,
   };
 
   if (MaybeDeferTillInitialized(deferrer)) {
+    CK_LOGD("Deferring LoadSession");
     return;
   }
-
-  CK_LOGD("ClearKeySessionManager::LoadSession");
 
   // If the SessionManager has been shutdown mHost will be null and we won't
   // be able to resolve the promise.
@@ -315,6 +317,8 @@ ClearKeySessionManager::UpdateSession(uint32_t aPromiseId,
                                       const uint8_t* aResponse,
                                       uint32_t aResponseSize)
 {
+  CK_LOGD("ClearKeySessionManager::UpdateSession");
+
   // Copy the method arguments so we can capture them in the lambda
   string sessionId(aSessionId, aSessionId + aSessionIdLength);
   vector<uint8_t> response(aResponse, aResponse + aResponseSize);
@@ -334,6 +338,7 @@ ClearKeySessionManager::UpdateSession(uint32_t aPromiseId,
 
   // If we haven't fully loaded, defer calling this method
   if (MaybeDeferTillInitialized(deferrer)) {
+    CK_LOGD("Deferring LoadSession");
     return;
   }
 
@@ -343,7 +348,6 @@ ClearKeySessionManager::UpdateSession(uint32_t aPromiseId,
     return;
   }
 
-  CK_LOGD("ClearKeySessionManager::UpdateSession");
   CK_LOGD("Updating session: %s", sessionId.c_str());
 
   auto itr = mSessions.find(sessionId);
@@ -469,6 +473,8 @@ ClearKeySessionManager::CloseSession(uint32_t aPromiseId,
                                      const char* aSessionId,
                                      uint32_t aSessionIdLength)
 {
+  CK_LOGD("ClearKeySessionManager::CloseSession");
+
   // Copy the sessionId into a string so we capture it properly.
   string sessionId(aSessionId, aSessionId + aSessionIdLength);
   // Hold a reference to the session manager, so it doesn't get deleted
@@ -482,10 +488,9 @@ ClearKeySessionManager::CloseSession(uint32_t aPromiseId,
 
   // If we haven't loaded, call this method later.
   if (MaybeDeferTillInitialized(deferrer)) {
+    CK_LOGD("Deferring CloseSession");
     return;
   }
-
-  CK_LOGD("ClearKeySessionManager::CloseSession");
 
   // If DecryptingComplete has been called mHost will be null and we won't
   // be able to resolve our promise.
@@ -526,6 +531,8 @@ ClearKeySessionManager::RemoveSession(uint32_t aPromiseId,
                                       const char* aSessionId,
                                       uint32_t aSessionIdLength)
 {
+  CK_LOGD("ClearKeySessionManager::RemoveSession");
+
   // Copy the sessionId into a string so it can be captured for the lambda.
   string sessionId(aSessionId, aSessionId + aSessionIdLength);
 
@@ -540,6 +547,7 @@ ClearKeySessionManager::RemoveSession(uint32_t aPromiseId,
 
   // If we haven't fully loaded, defer calling this method.
   if (MaybeDeferTillInitialized(deferrer)) {
+    CK_LOGD("Deferring RemoveSession");
     return;
   }
 
@@ -549,7 +557,6 @@ ClearKeySessionManager::RemoveSession(uint32_t aPromiseId,
     return;
   }
 
-  CK_LOGD("ClearKeySessionManager::RemoveSession");
   auto itr = mSessions.find(sessionId);
   if (itr == mSessions.end()) {
     CK_LOGW("ClearKey CDM couldn't remove non-existent session.");
