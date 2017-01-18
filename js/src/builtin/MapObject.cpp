@@ -79,14 +79,8 @@ HashValue(const Value& v, const mozilla::HashCodeScrambler& hcs)
 
     if (v.isString())
         return v.toString()->asAtom().hash();
-    if (v.isSymbol()) {
-        Symbol* sym = v.toSymbol();
-        if (sym->isWellKnownSymbol())
-            return HashNumber(sym->code());
-        if (sym->code() == SymbolCode::InSymbolRegistry)
-            return sym->description()->hash();
-        return hcs.scramble(v.asRawBits());
-    }
+    if (v.isSymbol())
+        return v.toSymbol()->hash();
     if (v.isObject())
         return hcs.scramble(v.asRawBits());
 
