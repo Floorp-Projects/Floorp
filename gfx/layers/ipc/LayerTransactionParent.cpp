@@ -599,7 +599,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo,
       if (!imageBridge) {
         return IPC_FAIL_NO_REASON(this);
       }
-      CompositableHost* host = imageBridge->FindCompositable(op.containerID());
+      CompositableHost* host = imageBridge->FindCompositable(op.compositable());
       if (!host) {
         NS_ERROR("CompositableHost not found in the map");
         return IPC_FAIL_NO_REASON(this);

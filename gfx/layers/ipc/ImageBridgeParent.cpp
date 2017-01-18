@@ -247,7 +247,7 @@ ImageBridgeParent::AllocPCompositableParent(const TextureInfo& aInfo, const uint
 
   CompositableHost* host = CompositableHost::FromIPDLActor(actor);
 
-  host->SetAsyncRef(AsyncCompositableRef(OtherPid(), aID));
+  host->SetAsyncRef(AsyncCompositableRef(OtherPid(), CompositableHandle(aID)));
   mCompositables[aID] = host;
 
   return actor;
@@ -257,7 +257,7 @@ bool ImageBridgeParent::DeallocPCompositableParent(PCompositableParent* aActor)
 {
   if (CompositableHost* host = CompositableHost::FromIPDLActor(aActor)) {
     const AsyncCompositableRef& ref = host->GetAsyncRef();
-    mCompositables.erase(ref.mAsyncId);
+    mCompositables.erase(ref.mHandle.Value());
   }
   return CompositableHost::DestroyIPDLActor(aActor);
 }
@@ -324,7 +324,7 @@ ImageBridgeParent::NotifyImageComposites(nsTArray<ImageCompositeNotificationInfo
     AutoTArray<ImageCompositeNotification,1> notifications;
     notifications.AppendElement(aNotifications[i].mNotification);
     uint32_t end = i + 1;
-    MOZ_ASSERT(aNotifications[i].mNotification.asyncCompositableID());
+    MOZ_ASSERT(aNotifications[i].mNotification.compositable());
     ProcessId pid = aNotifications[i].mImageBridgeProcessId;
     while (end < aNotifications.Length() &&
            aNotifications[end].mImageBridgeProcessId == pid) {
@@ -439,9 +439,9 @@ ImageBridgeParent::NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransaction
 }
 
 CompositableHost*
-ImageBridgeParent::FindCompositable(uint64_t aId)
+ImageBridgeParent::FindCompositable(const CompositableHandle& aHandle)
 {
-  auto iter = mCompositables.find(aId);
+  auto iter = mCompositables.find(aHandle.Value());
   if (iter == mCompositables.end()) {
     return nullptr;
   }
