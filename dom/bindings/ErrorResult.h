@@ -102,6 +102,7 @@ struct StringArrayAppender
 } // namespace dom
 
 class ErrorResult;
+class OOMReporter;
 
 namespace binding_danger {
 
@@ -162,6 +163,7 @@ public:
   }
 
   operator ErrorResult&();
+  operator OOMReporter&();
 
   void Throw(nsresult rv) {
     MOZ_ASSERT(NS_FAILED(rv), "Please don't try throwing success");
@@ -536,6 +538,82 @@ class IgnoredErrorResult :
     public binding_danger::TErrorResult<binding_danger::JustSuppressCleanupPolicy>
 {
 };
+
+namespace dom {
+namespace binding_detail {
+class FastErrorResult :
+    public mozilla::binding_danger::TErrorResult<
+      mozilla::binding_danger::JustAssertCleanupPolicy>
+{
+};
+} // namespace binding_detail
+} // namespace dom
+
+// This part is a bit annoying.  We want an OOMReporter class that has the
+// following properties:
+//
+// 1) Can be cast to from any ErrorResult-like type.
+// 2) Has a fast destructor (because we want to use it from bindings).
+// 3) Won't be randomly instantiated by non-binding code (because the fast
+//    destructor is not so safe.
+// 4) Doesn't look ugly on the callee side (e.g. isn't in the binding_detail or
+//    binding_danger namespace).
+//
+// We do this by having two classes: The class callees should use, which has the
+// things we want and a private constructor, and a friend subclass in the
+// binding_danger namespace that can be used to construct it.
+namespace binding_danger {
+class OOMReporterInstantiator;
+} // namespace binding_danger
+
+class OOMReporter : private dom::binding_detail::FastErrorResult
+{
+public:
+  void ReportOOM()
+  {
+    Throw(NS_ERROR_OUT_OF_MEMORY);
+  }
+
+private:
+  // OOMReporterInstantiator is a friend so it can call our constructor and
+  // MaybeSetPendingException.
+  friend class binding_danger::OOMReporterInstantiator;
+
+  // TErrorResult is a friend so its |operator OOMReporter&()| can work.
+  template<typename CleanupPolicy>
+  friend class binding_danger::TErrorResult;
+
+  OOMReporter()
+    : dom::binding_detail::FastErrorResult()
+  {
+  }
+};
+
+namespace binding_danger {
+class OOMReporterInstantiator : public OOMReporter
+{
+public:
+  OOMReporterInstantiator()
+    : OOMReporter()
+  {
+  }
+
+  // We want to be able to call MaybeSetPendingException from codegen.  The one
+  // on OOMReporter is not callable directly, because it comes from a private
+  // superclass.  But we're a friend, so _we_ can call it.
+  bool MaybeSetPendingException(JSContext* cx)
+  {
+    return OOMReporter::MaybeSetPendingException(cx);
+  }
+};
+} // namespace binding_danger
+
+template<typename CleanupPolicy>
+binding_danger::TErrorResult<CleanupPolicy>::operator OOMReporter&()
+{
+  return *static_cast<OOMReporter*>(
+     reinterpret_cast<TErrorResult<JustAssertCleanupPolicy>*>(this));
+}
 
 /******************************************************************************
  ** Macros for checking results
