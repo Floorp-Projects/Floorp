@@ -199,6 +199,8 @@ VideoTrackEncoder::Init(const VideoSegment& aSegment)
     return;
   }
 
+  mLastChunk.mDuration = 0;
+
   mInitCounter++;
   TRACK_LOG(LogLevel::Debug, ("Init the video encoder %d times", mInitCounter));
   VideoSegment::ConstChunkIterator iter(aSegment);
@@ -279,34 +281,73 @@ VideoTrackEncoder::AppendVideoSegment(const VideoSegment& aSegment)
 
   // Append all video segments from MediaStreamGraph, including null an
   // non-null frames.
-  VideoSegment::ChunkIterator iter(const_cast<VideoSegment&>(aSegment));
-  while (!iter.IsEnded()) {
+  VideoSegment::ConstChunkIterator iter(aSegment);
+  for (; !iter.IsEnded(); iter.Next()) {
     VideoChunk chunk = *iter;
-    mLastFrameDuration += chunk.GetDuration();
-    // Send only the unique video frames for encoding.
-    // Or if we got the same video chunks more than 1 seconds,
-    // force to send into encoder.
-    if ((mLastFrame != chunk.mFrame) ||
-        (mLastFrameDuration >= mTrackRate)) {
-      RefPtr<layers::Image> image = chunk.mFrame.GetImage();
 
-      // Because we may get chunks with a null image (due to input blocking),
-      // accumulate duration and give it to the next frame that arrives.
-      // Canonically incorrect - the duration should go to the previous frame
-      // - but that would require delaying until the next frame arrives.
-      // Best would be to do like OMXEncoder and pass an effective timestamp
-      // in with each frame.
-      if (image) {
-        mRawSegment.AppendFrame(image.forget(),
-                                mLastFrameDuration,
-                                chunk.mFrame.GetIntrinsicSize(),
-                                PRINCIPAL_HANDLE_NONE,
-                                chunk.mFrame.GetForceBlack());
-        mLastFrameDuration = 0;
+    if (mLastChunk.mTimeStamp.IsNull()) {
+      if (chunk.IsNull()) {
+        // The start of this track is frameless. We need to track the time
+        // it takes to get the first frame.
+        mLastChunk.mDuration += chunk.mDuration;
+        continue;
+      }
+
+      // This is the first real chunk in the track. Use its timestamp as the
+      // starting point for this track.
+      MOZ_ASSERT(!chunk.mTimeStamp.IsNull());
+      const StreamTime nullDuration = mLastChunk.mDuration;
+      mLastChunk = chunk;
+
+      // Adapt to the time before the first frame. This extends the first frame
+      // from [start, end] to [0, end], but it'll do for now.
+      mLastChunk.mTimeStamp -=
+        TimeDuration::FromMicroseconds(
+          RateConvertTicksRoundUp(PR_USEC_PER_SEC, mTrackRate, nullDuration));
+    }
+
+    MOZ_ASSERT(!mLastChunk.IsNull());
+    if (mLastChunk.CanCombineWithFollowing(chunk) || chunk.IsNull()) {
+      // This is the same frame as before (or null). We extend the last chunk
+      // with its duration.
+      mLastChunk.mDuration += chunk.mDuration;
+
+      if (mLastChunk.mDuration < mTrackRate) {
+        continue;
+      }
+
+      // If we have gotten dupes for over a second, we force send one
+      // to the encoder to make sure there is some output.
+      chunk.mTimeStamp = mLastChunk.mTimeStamp + TimeDuration::FromSeconds(1);
+
+      if (chunk.IsNull()) {
+        // Ensure that we don't pass null to the encoder by making mLastChunk
+        // null later on.
+        chunk.mFrame = mLastChunk.mFrame;
       }
     }
-    mLastFrame.TakeFrom(&chunk.mFrame);
-    iter.Next();
+
+    TimeDuration diff = chunk.mTimeStamp - mLastChunk.mTimeStamp;
+    if (diff <= TimeDuration::FromSeconds(0)) {
+      // The timestamp from mLastChunk is newer than from chunk.
+      // This means the durations reported from MediaStreamGraph for mLastChunk
+      // were larger than the timestamp diff - and durations were used to
+      // trigger the 1-second frame above. This could happen due to drift or
+      // underruns in the graph.
+      chunk.mTimeStamp = mLastChunk.mTimeStamp;
+    } else {
+      RefPtr<layers::Image> lastImage = mLastChunk.mFrame.GetImage();
+      mRawSegment.AppendFrame(lastImage.forget(),
+                              RateConvertTicksRoundUp(
+                                  mTrackRate, PR_USEC_PER_SEC,
+                                  diff.ToMicroseconds()),
+                              mLastChunk.mFrame.GetIntrinsicSize(),
+                              PRINCIPAL_HANDLE_NONE,
+                              mLastChunk.mFrame.GetForceBlack(),
+                              mLastChunk.mTimeStamp);
+    }
+
+    mLastChunk = chunk;
   }
 
   if (mRawSegment.GetDuration() > 0) {
