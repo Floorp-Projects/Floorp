@@ -46,8 +46,6 @@ const OBSERVER_TOPICS = [
   fxAccountsCommon.ON_ACCOUNT_STATE_CHANGE_NOTIFICATION,
 ];
 
-const PREF_SYNC_SHOW_CUSTOMIZATION = "services.sync-setup.ui.showCustomizationDialog";
-
 function deriveKeyBundle(kB) {
   let out = CryptoUtils.hkdf(kB, undefined,
                              "identity.mozilla.com/picl/v1/oldsync", 2 * 32);
@@ -101,14 +99,6 @@ this.BrowserIDManager.prototype = {
   // it takes some time to fetch a sync key bundle, so until this flag is set,
   // we don't consider the lack of a keybundle as a failure state.
   _shouldHaveSyncKeyBundle: false,
-
-  get needsCustomization() {
-    try {
-      return Services.prefs.getBoolPref(PREF_SYNC_SHOW_CUSTOMIZATION);
-    } catch (e) {
-      return false;
-    }
-  },
 
   hashedUID() {
     if (!this._hashedUID) {
@@ -173,19 +163,6 @@ this.BrowserIDManager.prototype = {
     this._signedInUser = null;
   },
 
-  offerSyncOptions() {
-    // If the user chose to "Customize sync options" when signing
-    // up with Firefox Accounts, ask them to choose what to sync.
-    const url = "chrome://browser/content/sync/customize.xul";
-    const features = "centerscreen,chrome,modal,dialog,resizable=no";
-    let win = Services.wm.getMostRecentWindow("navigator:browser");
-
-    let data = {accepted: false};
-    win.openDialog(url, "_blank", features, data);
-
-    return data;
-  },
-
   initializeWithCurrentIdentity(isInitialSync = false) {
     // While this function returns a promise that resolves once we've started
     // the auth process, that process is complete when
@@ -222,20 +199,8 @@ this.BrowserIDManager.prototype = {
       this._log.info("Waiting for user to be verified.");
       this._fxaService.whenVerified(accountData).then(accountData => {
         this._updateSignedInUser(accountData);
-        this._log.info("Starting fetch for key bundle.");
-        if (this.needsCustomization) {
-          let data = this.offerSyncOptions();
-          if (data.accepted) {
-            Services.prefs.clearUserPref(PREF_SYNC_SHOW_CUSTOMIZATION);
 
-            // Mark any non-selected engines as declined.
-            Weave.Service.engineManager.declineDisabled();
-          } else {
-            // Log out if the user canceled the dialog.
-            return this._fxaService.signOut();
-          }
-        }
-      }).then(() => {
+        this._log.info("Starting fetch for key bundle.");
         return this._fetchTokenForUser();
       }).then(token => {
         this._token = token;
