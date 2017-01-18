@@ -11,20 +11,20 @@
 # BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
 # "Header incorrectly indicates that the bitmap is several GB in size."
 # [We accept it. So does Chromium.]
-fails == badbitssize.bmp badbitssize.bmp
+== badbitssize.bmp badbitssize.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
 # BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
 # "Density (pixels per meter) suggests the image is much larger in one
 # dimension than the other."
 # [We accept them. So does Chromium.]
-fails == baddens1.bmp baddens1.bmp
-fails == baddens2.bmp baddens2.bmp
+== baddens1.bmp baddens1.bmp
+== baddens2.bmp baddens2.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
 # "Header incorrectly indicates that the file is several GB in size."
 # [We accept it. So does Chromium.]
-fails == badfilesize.bmp badfilesize.bmp
+== badfilesize.bmp badfilesize.bmp
 
 # BMP: <no "BMP:" output is produced for files with bad header sizes>
 # "Header size is 66 bytes, which is not a valid size for any known BMP
@@ -42,7 +42,7 @@ fails == badfilesize.bmp badfilesize.bmp
 # BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
 # "The 'planes' setting, which is required to be 1, is not 1."
 # [We accept it. So does Chromium.]
-fails == badplanes.bmp badplanes.bmp
+== badplanes.bmp badplanes.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=8, compression=1, colors=253
 # "An invalid RLE-compressed image that tries to cause buffer overruns."
@@ -50,7 +50,7 @@ fails == badplanes.bmp badplanes.bmp
 # Chromium accepts it, drawing the valid first part and leaving the rest
 # transparent. Using black for the invalid part is arguably better because it
 # makes the image edges more obvious.]
-fails == badrle.bmp badrle.bmp
+== badrle.bmp badrle.bmp
 
 # BMP: bihsize=40, -127 x 64, bpp=1, compression=0, colors=2
 # "The image claims to be a negative number of pixels in width."
@@ -61,7 +61,7 @@ fails == badrle.bmp badrle.bmp
 # "Many of the palette indices used in the image are not present in the
 # palette."
 # [We accept it and use black for the missing colors. So does Chromium.]
-fails == pal8badindex.bmp pal8badindex.bmp
+== pal8badindex.bmp pal8badindex.bmp
 
 # BMP: bihsize=40, 3000000 x 2000000, bpp=24, compression=0, colors=0
 # "An image with a very large reported width and height."
@@ -73,7 +73,7 @@ fails == pal8badindex.bmp pal8badindex.bmp
 # allowed."
 # [We accept it. Chromium rejects it. Accepting seems better given that we can
 # decode it perfectly well.]
-fails == rletopdown.bmp rletopdown.bmp
+== rletopdown.bmp rletopdown.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
 # "A file that has been truncated in the middle of the bitmap."
@@ -81,5 +81,5 @@ fails == rletopdown.bmp rletopdown.bmp
 # Chromium draws the part that is present and leaves the rest transparent.
 # Using black for the invalid part is arguably better because it makes the
 # image edges more obvious.]
-fails == shortfile.bmp shortfile.bmp
+== shortfile.bmp shortfile.bmp
 

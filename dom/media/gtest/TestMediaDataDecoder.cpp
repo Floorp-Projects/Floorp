@@ -7,7 +7,7 @@
 #include "Benchmark.h"
 #include "MockMediaResource.h"
 #include "DecoderTraits.h"
-#include "MediaContentType.h"
+#include "MediaContainerType.h"
 #include "MP4Decoder.h"
 #include "MP4Demuxer.h"
 #include "WebMDecoder.h"
@@ -46,12 +46,12 @@ private:
 TEST(MediaDataDecoder, H264)
 {
   if (!DecoderTraits::IsMP4SupportedType(
-         MediaContentType(MEDIAMIMETYPE("video/mp4")),
+         MediaContainerType(MEDIAMIMETYPE("video/mp4")),
          /* DecoderDoctorDiagnostics* */ nullptr)) {
     EXPECT_TRUE(true);
   } else {
     RefPtr<MediaResource> resource =
-      new MockMediaResource("gizmo.mp4", NS_LITERAL_CSTRING("video/mp4"));
+      new MockMediaResource("gizmo.mp4", MediaContainerType(MEDIAMIMETYPE("video/mp4")));
     nsresult rv = resource->Open(nullptr);
     EXPECT_TRUE(NS_SUCCEEDED(rv));
 
@@ -62,11 +62,11 @@ TEST(MediaDataDecoder, H264)
 
 TEST(MediaDataDecoder, VP9)
 {
-  if (!WebMDecoder::IsSupportedType(MediaContentType(MEDIAMIMETYPE("video/webm")))) {
+  if (!WebMDecoder::IsSupportedType(MediaContainerType(MEDIAMIMETYPE("video/webm")))) {
     EXPECT_TRUE(true);
   } else {
     RefPtr<MediaResource> resource =
-      new MockMediaResource("vp9cake.webm", NS_LITERAL_CSTRING("video/webm"));
+      new MockMediaResource("vp9cake.webm", MediaContainerType(MEDIAMIMETYPE("video/webm")));
     nsresult rv = resource->Open(nullptr);
     EXPECT_TRUE(NS_SUCCEEDED(rv));
 

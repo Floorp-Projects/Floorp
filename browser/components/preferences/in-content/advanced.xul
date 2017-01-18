@@ -331,7 +331,9 @@
         <caption><label>&siteData.label;</label></caption>
 
         <hbox align="center">
-          <label id="totalSiteDataSize" flex="1"></label>
+          <label id="totalSiteDataSize"></label>
+          <label id="siteDataLearnMoreLink" class="learnMore text-link" value="&siteDataLearnMoreLink.label;"></label>
+          <spacer flex="1" />
           <button id="clearSiteDataButton" icon="clear"
                   label="&clearSiteData.label;" accesskey="&clearSiteData.accesskey;"/>
         </hbox>

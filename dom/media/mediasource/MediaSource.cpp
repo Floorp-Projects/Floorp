@@ -10,7 +10,7 @@
 #include "DecoderTraits.h"
 #include "Benchmark.h"
 #include "DecoderDoctorDiagnostics.h"
-#include "MediaContentType.h"
+#include "MediaContainerType.h"
 #include "MediaResult.h"
 #include "MediaSourceUtils.h"
 #include "SourceBuffer.h"
@@ -72,7 +72,7 @@ static bool
 IsWebMForced(DecoderDoctorDiagnostics* aDiagnostics)
 {
   bool mp4supported =
-    DecoderTraits::IsMP4SupportedType(MediaContentType(MEDIAMIMETYPE("video/mp4")),
+    DecoderTraits::IsMP4SupportedType(MediaContainerType(MEDIAMIMETYPE("video/mp4")),
                                       aDiagnostics);
   bool hwsupported = gfx::gfxVars::CanUseHardwareVideoDecoding();
 #ifdef MOZ_WIDGET_ANDROID
@@ -93,19 +93,19 @@ MediaSource::IsTypeSupported(const nsAString& aType, DecoderDoctorDiagnostics* a
     return NS_ERROR_DOM_TYPE_ERR;
   }
 
-  Maybe<MediaContentType> contentType = MakeMediaContentType(aType);
-  if (!contentType) {
+  Maybe<MediaContainerType> containerType = MakeMediaContainerType(aType);
+  if (!containerType) {
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
-  if (DecoderTraits::CanHandleContentType(*contentType, aDiagnostics)
+  if (DecoderTraits::CanHandleContainerType(*containerType, aDiagnostics)
       == CANPLAY_NO) {
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
   // Now we know that this media type could be played.
   // MediaSource imposes extra restrictions, and some prefs.
-  const MediaMIMEType& mimeType = contentType->Type();
+  const MediaMIMEType& mimeType = containerType->Type();
   if (mimeType == MEDIAMIMETYPE("video/mp4") ||
       mimeType == MEDIAMIMETYPE("audio/mp4")) {
     if (!Preferences::GetBool("media.mediasource.mp4.enabled", false)) {
@@ -238,13 +238,12 @@ MediaSource::AddSourceBuffer(const nsAString& aType, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
-  Maybe<MediaContentType> contentType = MakeMediaContentType(aType);
-  if (!contentType) {
+  Maybe<MediaContainerType> containerType = MakeMediaContainerType(aType);
+  if (!containerType) {
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
   }
-  const nsACString& mimeType = contentType->Type().AsString();
-  RefPtr<SourceBuffer> sourceBuffer = new SourceBuffer(this, mimeType);
+  RefPtr<SourceBuffer> sourceBuffer = new SourceBuffer(this, *containerType);
   if (!sourceBuffer) {
     aRv.Throw(NS_ERROR_FAILURE); // XXX need a better error here
     return nullptr;

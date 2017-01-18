@@ -2,30 +2,30 @@
 # various tests involving dynamic insertion using the DOM
 
 # append a single element
-fails == appendsingle.html appendsingle.html
+== appendsingle.html appendsingle.html
 
 # append several elements
 # == appendmultiple.html appendmultiple.html
 
 # insert a single element
-fails == insertsingle.html insertsingle.html
+== insertsingle.html insertsingle.html
 
 # insert several elements
 # == insertmultiple.html insertmultiple.html
 
 # insert multiple nodes to a parent and one of its children
-fails == inserttoparentandchild-1.html inserttoparentandchild-1.html
-fails == inserttoparentandchild-2.html inserttoparentandchild-2.html
+== inserttoparentandchild-1.html inserttoparentandchild-1.html
+== inserttoparentandchild-2.html inserttoparentandchild-2.html
 
 # insert a parent with child and then insert more children to the parent
-fails == insertparentandchild.html insertparentandchild.html
+== insertparentandchild.html insertparentandchild.html
 
 # insert nodes to two different parents
-fails == inserttwoparents.html inserttwoparents.html
+== inserttwoparents.html inserttwoparents.html
 
 # multiple content inserts and appends
 # multiple range inserts
-fails == insertmultiplemultiple-1.html insertmultiplemultiple-1.html
+== insertmultiplemultiple-1.html insertmultiplemultiple-1.html
 # a range insert and an append
 # == insertmultiplemultiple-2.html insertmultiplemultiple-2.html
 # multiple range inserts and an append
@@ -46,9 +46,9 @@ fails == multipleinsertionpoints-insertmultiple.xhtml multipleinsertionpoints-in
 
 # test appending some nodes whose frame construction should be done lazily
 # followed by appending a node that might not be done lazily
-fails == multipleappendwithxul.xhtml multipleappendwithxul.xhtml
+== multipleappendwithxul.xhtml multipleappendwithxul.xhtml
 fails == multipleappendwithinput.xhtml multipleappendwithinput.xhtml
-fails == multipleappendwitheditable.xhtml multipleappendwitheditable.xhtml
+== multipleappendwitheditable.xhtml multipleappendwitheditable.xhtml
 
 fails == xbl-children-1.xhtml xbl-children-1.xhtml
 == xbl-children-2.xhtml xbl-children-2.xhtml

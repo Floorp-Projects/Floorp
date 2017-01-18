@@ -5,6 +5,6 @@
 default-preferences pref(layout.css.filters.enabled,true)
 
 # Some platforms render this complex filter chain a little differently, and that's ok.
-fails == long-chain.html long-chain.html
+== long-chain.html long-chain.html
 fails == moz-element.html moz-element.html
-fails == same-filter.html same-filter.html
+== same-filter.html same-filter.html
