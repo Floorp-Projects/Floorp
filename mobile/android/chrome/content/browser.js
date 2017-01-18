@@ -4352,6 +4352,8 @@ Tab.prototype = {
 
     Messaging.sendRequest(message);
 
+    BrowserEventHandler.closeZoomedView();
+
     if (!sameDocument) {
       // XXX This code assumes that this is the earliest hook we have at which
       // browser.contentDocument is changed to the new document we're loading
@@ -4669,7 +4671,7 @@ var BrowserEventHandler = {
           this._clusterClicked(x, y);
         } else {
           if (this._clickInZoomedView != true) {
-            this._closeZoomedView();
+            this.closeZoomedView(/* animate */ true);
           }
         }
         this._clickInZoomedView = false;
@@ -4683,15 +4685,16 @@ var BrowserEventHandler = {
     }
   },
 
-  _closeZoomedView: function() {
-    Messaging.sendRequest({
-      type: "Gesture:CloseZoomedView"
+  closeZoomedView: function(aAnimate) {
+    WindowEventDispatcher.sendRequest({
+      type: "Gesture:CloseZoomedView",
+      animate: !!aAnimate,
     });
   },
 
   _clusterClicked: function(aX, aY) {
-    Messaging.sendRequest({
-      type: "Gesture:clusteredLinksClicked",
+    WindowEventDispatcher.sendRequest({
+      type: "Gesture:ClusteredLinksClicked",
       clickPosition: {
         x: aX,
         y: aY
