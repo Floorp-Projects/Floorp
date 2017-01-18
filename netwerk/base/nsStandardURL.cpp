@@ -1550,11 +1550,6 @@ nsStandardURL::SetSpec(const nsACString &input)
         rv = BuildNormalizedSpec(spec);
     }
 
-    // Make sure that a URLTYPE_AUTHORITY has a non-empty hostname.
-    if (mURLType == URLTYPE_AUTHORITY && mHost.mLen == -1) {
-        rv = NS_ERROR_MALFORMED_URI;
-    }
-
     if (NS_FAILED(rv)) {
         Clear();
         // If parsing the spec has failed, restore the old URL
@@ -3183,26 +3178,20 @@ nsStandardURL::SetFile(nsIFile *file)
     rv = net_GetURLSpecFromFile(file, url);
     if (NS_FAILED(rv)) return rv;
 
-    uint32_t oldURLType = mURLType;
-    uint32_t oldDefaultPort = mDefaultPort;
-    rv = Init(nsIStandardURL::URLTYPE_NO_AUTHORITY, -1, url, nullptr, nullptr);
+    SetSpec(url);
 
-    if (NS_FAILED(rv)) {
-        // Restore the old url type and default port if the call to Init fails.
-        mURLType = oldURLType;
-        mDefaultPort = oldDefaultPort;
-        return rv;
-    }
+    rv = Init(mURLType, mDefaultPort, url, nullptr, nullptr);
 
     // must clone |file| since its value is not guaranteed to remain constant
-    InvalidateCache();
-    if (NS_FAILED(file->Clone(getter_AddRefs(mFile)))) {
-        NS_WARNING("nsIFile::Clone failed");
-        // failure to clone is not fatal (GetFile will generate mFile)
-        mFile = nullptr;
+    if (NS_SUCCEEDED(rv)) {
+        InvalidateCache();
+        if (NS_FAILED(file->Clone(getter_AddRefs(mFile)))) {
+            NS_WARNING("nsIFile::Clone failed");
+            // failure to clone is not fatal (GetFile will generate mFile)
+            mFile = nullptr;
+        }
     }
-
-    return NS_OK;
+    return rv;
 }
 
 //----------------------------------------------------------------------------
