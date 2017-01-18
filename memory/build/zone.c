@@ -5,7 +5,7 @@
 #include "mozmemory_wrap.h"
 
 #include <stdlib.h>
-#include <malloc/malloc.h>
+#include <mach/mach_types.h>
 #include "mozilla/Assertions.h"
 
 /*
@@ -23,6 +23,79 @@
 #include "malloc_decls.h"
 
 /*
+ * Definitions of the following structs in malloc/malloc.h might be too old
+ * for the built binary to run on newer versions of OSX. So use the newest
+ * possible version of those structs.
+ */
+typedef struct _malloc_zone_t {
+  void *reserved1;
+  void *reserved2;
+  size_t (*size)(struct _malloc_zone_t *, const void *);
+  void *(*malloc)(struct _malloc_zone_t *, size_t);
+  void *(*calloc)(struct _malloc_zone_t *, size_t, size_t);
+  void *(*valloc)(struct _malloc_zone_t *, size_t);
+  void (*free)(struct _malloc_zone_t *, void *);
+  void *(*realloc)(struct _malloc_zone_t *, void *, size_t);
+  void (*destroy)(struct _malloc_zone_t *);
+  const char *zone_name;
+  unsigned (*batch_malloc)(struct _malloc_zone_t *, size_t, void **, unsigned);
+  void (*batch_free)(struct _malloc_zone_t *, void **, unsigned);
+  struct malloc_introspection_t *introspect;
+  unsigned version;
+  void *(*memalign)(struct _malloc_zone_t *, size_t, size_t);
+  void (*free_definite_size)(struct _malloc_zone_t *, void *, size_t);
+  size_t (*pressure_relief)(struct _malloc_zone_t *, size_t);
+} malloc_zone_t;
+
+typedef struct {
+  vm_address_t address;
+  vm_size_t size;
+} vm_range_t;
+
+typedef struct malloc_statistics_t {
+  unsigned blocks_in_use;
+  size_t size_in_use;
+  size_t max_size_in_use;
+  size_t size_allocated;
+} malloc_statistics_t;
+
+typedef kern_return_t memory_reader_t(task_t, vm_address_t, vm_size_t, void **);
+
+typedef void vm_range_recorder_t(task_t, void *, unsigned type, vm_range_t *, unsigned);
+
+typedef struct malloc_introspection_t {
+  kern_return_t (*enumerator)(task_t, void *, unsigned, vm_address_t, memory_reader_t, vm_range_recorder_t);
+  size_t (*good_size)(malloc_zone_t *, size_t);
+  boolean_t (*check)(malloc_zone_t *);
+  void (*print)(malloc_zone_t *, boolean_t);
+  void (*log)(malloc_zone_t *, void *);
+  void (*force_lock)(malloc_zone_t *);
+  void (*force_unlock)(malloc_zone_t *);
+  void (*statistics)(malloc_zone_t *, malloc_statistics_t *);
+  boolean_t (*zone_locked)(malloc_zone_t *);
+  boolean_t (*enable_discharge_checking)(malloc_zone_t *);
+  boolean_t (*disable_discharge_checking)(malloc_zone_t *);
+  void (*discharge)(malloc_zone_t *, void *);
+#ifdef __BLOCKS__
+  void (*enumerate_discharged_pointers)(malloc_zone_t *, void (^)(void *, void *));
+#else
+  void *enumerate_unavailable_without_blocks;
+#endif
+  void (*reinit_lock)(malloc_zone_t *);
+} malloc_introspection_t;
+
+extern kern_return_t malloc_get_all_zones(task_t, memory_reader_t, vm_address_t **, unsigned *);
+
+extern malloc_zone_t *malloc_default_zone(void);
+
+extern void malloc_zone_register(malloc_zone_t *zone);
+
+extern void malloc_zone_unregister(malloc_zone_t *zone);
+
+extern malloc_zone_t *malloc_default_purgeable_zone(void);
+
+
+/*
  * The following is a OSX zone allocator implementation.
  * /!\ WARNING. It assumes the underlying malloc implementation's
  * malloc_usable_size returns 0 when the given pointer is not owned by
@@ -31,7 +104,7 @@
  */
 
 static size_t
-zone_size(malloc_zone_t *zone, void *ptr)
+zone_size(malloc_zone_t *zone, const void *ptr)
 {
   return malloc_usable_size_impl(ptr);
 }
@@ -93,7 +166,7 @@ zone_valloc(malloc_zone_t *zone, size_t size)
   return valloc_impl(size);
 }
 
-static void *
+static void
 zone_destroy(malloc_zone_t *zone)
 {
   /* This function should never be called. */
@@ -129,8 +202,6 @@ zone_force_unlock(malloc_zone_t *zone)
 }
 
 #else
-
-#define JEMALLOC_ZONE_VERSION 6
 
 extern void _malloc_prefork(void);
 extern void _malloc_postfork(void);
@@ -191,13 +262,13 @@ register_zone(void)
 {
   malloc_zone_t *default_zone = get_default_zone();
 
-  zone.size = (void *)zone_size;
-  zone.malloc = (void *)zone_malloc;
-  zone.calloc = (void *)zone_calloc;
-  zone.valloc = (void *)zone_valloc;
-  zone.free = (void *)zone_free;
-  zone.realloc = (void *)zone_realloc;
-  zone.destroy = (void *)zone_destroy;
+  zone.size = zone_size;
+  zone.malloc = zone_malloc;
+  zone.calloc = zone_calloc;
+  zone.valloc = zone_valloc;
+  zone.free = zone_free;
+  zone.realloc = zone_realloc;
+  zone.destroy = zone_destroy;
 #ifdef MOZ_REPLACE_MALLOC
   zone.zone_name = "replace_malloc_zone";
 #else
@@ -206,22 +277,19 @@ register_zone(void)
   zone.batch_malloc = NULL;
   zone.batch_free = NULL;
   zone.introspect = &zone_introspect;
-  zone.version = JEMALLOC_ZONE_VERSION;
+  zone.version = 8;
   zone.memalign = zone_memalign;
   zone.free_definite_size = zone_free_definite_size;
-#if (JEMALLOC_ZONE_VERSION >= 8)
   zone.pressure_relief = NULL;
-#endif
   zone_introspect.enumerator = NULL;
-  zone_introspect.good_size = (void *)zone_good_size;
+  zone_introspect.good_size = zone_good_size;
   zone_introspect.check = NULL;
   zone_introspect.print = NULL;
   zone_introspect.log = NULL;
-  zone_introspect.force_lock = (void *)zone_force_lock;
-  zone_introspect.force_unlock = (void *)zone_force_unlock;
+  zone_introspect.force_lock = zone_force_lock;
+  zone_introspect.force_unlock = zone_force_unlock;
   zone_introspect.statistics = NULL;
   zone_introspect.zone_locked = NULL;
-#if (JEMALLOC_ZONE_VERSION >= 7)
   zone_introspect.enable_discharge_checking = NULL;
   zone_introspect.disable_discharge_checking = NULL;
   zone_introspect.discharge = NULL;
@@ -229,7 +297,6 @@ register_zone(void)
   zone_introspect.enumerate_discharged_pointers = NULL;
 #else
   zone_introspect.enumerate_unavailable_without_blocks = NULL;
-#endif
 #endif
 
   /*
