@@ -242,6 +242,42 @@ class MachCommands(MachCommandBase):
             traceback.print_exc()
             sys.exit(1)
 
+    @SubCommand('taskgraph', 'cron',
+                description="Run the cron task")
+    @CommandArgument('--base-repository',
+                     required=True,
+                     help='URL for "base" repository to clone')
+    @CommandArgument('--head-repository',
+                     required=True,
+                     help='URL for "head" repository to fetch')
+    @CommandArgument('--head-ref',
+                     required=True,
+                     help='Reference to fetch in head-repository (usually "default")')
+    @CommandArgument('--project',
+                     required=True,
+                     help='Project to use for creating tasks. Example: --project=mozilla-central')
+    @CommandArgument('--level',
+                     required=True,
+                     help='SCM level of this repository')
+    @CommandArgument('--force-run',
+                     required=False,
+                     help='If given, force this cronjob to run regardless of time, '
+                     'and run no others')
+    @CommandArgument('--no-create',
+                     required=False,
+                     action='store_true',
+                     help='Do not actually create tasks')
+    def taskgraph_cron(self, **options):
+        """Run the cron task; this task creates zero or more decision tasks.  It is run
+        from the hooks service on a regular basis."""
+        import taskgraph.cron
+        try:
+            self.setup_logging()
+            return taskgraph.cron.taskgraph_cron(options)
+        except Exception:
+            traceback.print_exc()
+            sys.exit(1)
+
     def setup_logging(self, quiet=False, verbose=True):
         """
         Set up Python logging for all loggers, sending results to stderr (so
