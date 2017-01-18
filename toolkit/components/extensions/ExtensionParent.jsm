@@ -16,6 +16,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 this.EXPORTED_SYMBOLS = ["ExtensionParent"];
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
@@ -30,6 +31,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NativeApp",
                                   "resource://gre/modules/NativeMessaging.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+                                  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
                                   "resource://gre/modules/Schemas.jsm");
 
@@ -46,11 +49,18 @@ var {
   SpreadArgs,
   defineLazyGetter,
   findPathInObject,
+  promiseDocumentLoaded,
+  promiseEvent,
+  promiseObserved,
 } = ExtensionUtils;
 
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
 const CATEGORY_EXTENSION_SCHEMAS = "webextension-schemas";
 const CATEGORY_EXTENSION_SCRIPTS = "webextension-scripts";
+
+const XUL_URL = "data:application/vnd.mozilla.xul+xml;charset=utf-8," + encodeURI(
+  `<?xml version="1.0"?>
+  <window id="documentElement"/>`);
 
 let schemaURLs = new Set();
 
@@ -577,9 +587,211 @@ ParentAPIManager = {
 
 ParentAPIManager.init();
 
+/**
+ * This is a base class used by the ext-backgroundPage and ext-devtools API implementations
+ * to inherits the shared boilerplate code needed to create a parent document for the hidden
+ * extension pages (e.g. the background page, the devtools page) in the BackgroundPage and
+ * DevToolsPage classes.
+ *
+ * @param {Extension} extension
+ *   the Extension which owns the hidden extension page created (used to decide
+ *   if the hidden extension page parent doc is going to be a windowlessBrowser or
+ *   a visible XUL window)
+ * @param {string} viewType
+ *  the viewType of the WebExtension page that is going to be loaded
+ *  in the created browser element (e.g. "background" or "devtools_page").
+ *
+ */
+class HiddenExtensionPage {
+  constructor(extension, viewType) {
+    if (!extension || !viewType) {
+      throw new Error("extension and viewType parameters are mandatory");
+    }
+    this.extension = extension;
+    this.viewType = viewType;
+    this.parentWindow = null;
+    this.windowlessBrowser = null;
+    this.browser = null;
+  }
+
+  /**
+   * Destroy the created parent document.
+   */
+  shutdown() {
+    if (this.unloaded) {
+      throw new Error("Unable to shutdown an unloaded HiddenExtensionPage instance");
+    }
+
+    this.unloaded = true;
+
+    if (this.browser) {
+      this.browser.remove();
+      this.browser = null;
+    }
+
+    // Navigate away from the background page to invalidate any
+    // setTimeouts or other callbacks.
+    if (this.webNav) {
+      this.webNav.loadURI("about:blank", 0, null, null, null);
+      this.webNav = null;
+    }
+
+    if (this.parentWindow) {
+      this.parentWindow.close();
+      this.parentWindow = null;
+    }
+
+    if (this.windowlessBrowser) {
+      this.windowlessBrowser.loadURI("about:blank", 0, null, null, null);
+      this.windowlessBrowser.close();
+      this.windowlessBrowser = null;
+    }
+  }
+
+  /**
+   * Creates the browser XUL element that will contain the WebExtension Page.
+   *
+   * @returns {Promise<XULElement>}
+   *   a Promise which resolves to the newly created browser XUL element.
+   */
+  createBrowserElement() {
+    if (this.browser) {
+      throw new Error("createBrowserElement called twice");
+    }
+
+    let waitForParentDocument;
+    if (this.extension.remote) {
+      waitForParentDocument = this.createWindowedBrowser();
+    } else {
+      waitForParentDocument = this.createWindowlessBrowser();
+    }
+
+    return waitForParentDocument.then(chromeDoc => {
+      const browser = this.browser = chromeDoc.createElement("browser");
+      browser.setAttribute("type", "content");
+      browser.setAttribute("disableglobalhistory", "true");
+      browser.setAttribute("webextension-view-type", this.viewType);
+
+      let awaitFrameLoader = Promise.resolve();
+
+      if (this.extension.remote) {
+        browser.setAttribute("remote", "true");
+        browser.setAttribute("remoteType", E10SUtils.EXTENSION_REMOTE_TYPE);
+        awaitFrameLoader = promiseEvent(browser, "XULFrameLoaderCreated");
+      }
+
+      chromeDoc.documentElement.appendChild(browser);
+      return awaitFrameLoader.then(() => browser);
+    });
+  }
+
+  /**
+   * Private helper that create a XULDocument in a windowless browser.
+   *
+   * An hidden extension page (e.g. a background page or devtools page) is usually
+   * loaded into a windowless browser, with no on-screen representation or graphical
+   * display abilities.
+   *
+   * This currently does not support remote browsers, and therefore cannot
+   * be used with out-of-process extensions.
+   *
+   * @returns {Promise<XULDocument>}
+   *   a promise which resolves to the newly created XULDocument.
+   */
+  createWindowlessBrowser() {
+    return Task.spawn(function* () {
+      // The invisible page is currently wrapped in a XUL window to fix an issue
+      // with using the canvas API from a background page (See Bug 1274775).
+      let windowlessBrowser = Services.appShell.createWindowlessBrowser(true);
+      this.windowlessBrowser = windowlessBrowser;
+
+      // The windowless browser is a thin wrapper around a docShell that keeps
+      // its related resources alive. It implements nsIWebNavigation and
+      // forwards its methods to the underlying docShell, but cannot act as a
+      // docShell itself. Calling `getInterface(nsIDocShell)` gives us the
+      // underlying docShell, and `QueryInterface(nsIWebNavigation)` gives us
+      // access to the webNav methods that are already available on the
+      // windowless browser, but contrary to appearances, they are not the same
+      // object.
+      let chromeShell = windowlessBrowser.QueryInterface(Ci.nsIInterfaceRequestor)
+                                         .getInterface(Ci.nsIDocShell)
+                                         .QueryInterface(Ci.nsIWebNavigation);
+
+      yield this.initParentWindow(chromeShell);
+
+      return promiseDocumentLoaded(windowlessBrowser.document);
+    }.bind(this));
+  }
+
+  /**
+   * Private helper that create a XULDocument in a visible dialog window.
+   *
+   * Using this helper, the extension page is loaded into a visible dialog window.
+   * Only to be used for debugging, and in temporary, test-only use for
+   * out-of-process extensions.
+   *
+   * @returns {Promise<XULDocument>}
+   *   a promise which resolves to the newly created XULDocument.
+   */
+  createWindowedBrowser() {
+    return Task.spawn(function* () {
+      let window = Services.ww.openWindow(null, "about:blank", "_blank",
+                                          "chrome,alwaysLowered,dialog", null);
+
+      this.parentWindow = window;
+
+      let chromeShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIDocShell)
+                              .QueryInterface(Ci.nsIWebNavigation);
+
+
+      yield this.initParentWindow(chromeShell);
+
+      window.minimize();
+
+      return promiseDocumentLoaded(window.document);
+    }.bind(this));
+  }
+
+  /**
+   * Private helper that initialize the created parent document.
+   *
+   * @param {nsIDocShell} chromeShell
+   *   the docShell related to initialize.
+   *
+   * @returns {Promise<nsIXULDocument>}
+   *   the initialized parent chrome document.
+   */
+  initParentWindow(chromeShell) {
+    if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
+      let attrs = chromeShell.getOriginAttributes();
+      attrs.privateBrowsingId = 1;
+      chromeShell.setOriginAttributes(attrs);
+    }
+
+    let system = Services.scriptSecurityManager.getSystemPrincipal();
+    chromeShell.createAboutBlankContentViewer(system);
+    chromeShell.useGlobalHistory = false;
+    chromeShell.loadURI(XUL_URL, 0, null, null, null);
+
+    return promiseObserved("chrome-document-global-created",
+                           win => win.document == chromeShell.document);
+  }
+}
+
+function promiseExtensionViewLoaded(browser) {
+  return new Promise(resolve => {
+    browser.messageManager.addMessageListener("Extension:ExtensionViewLoaded", function onLoad() {
+      browser.messageManager.removeMessageListener("Extension:ExtensionViewLoaded", onLoad);
+      resolve();
+    });
+  });
+}
 
 const ExtensionParent = {
   GlobalManager,
+  HiddenExtensionPage,
   ParentAPIManager,
   apiManager,
+  promiseExtensionViewLoaded,
 };
