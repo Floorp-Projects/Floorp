@@ -99,11 +99,8 @@ body {
 /******************************************************************************/
 /* Search box */
 .devtools-searchbox {
-  float: right;
-}
-
-.devtools-searchbox:dir(rtl) {
-  float: left;
+  margin-inline-start: auto; /* Align to the right */
+  flex: none; /* Don't flex */
 }
 
 /******************************************************************************/
