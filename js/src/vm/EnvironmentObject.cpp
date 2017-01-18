@@ -654,6 +654,7 @@ WasmFunctionCallObject::createHollowForDebug(JSContext* cx, WasmFunctionScope* s
 
     Rooted<WasmFunctionCallObject*> callobj(cx, &obj->as<WasmFunctionCallObject>());
     callobj->initEnclosingEnvironment(&cx->global()->lexicalEnvironment());
+    callobj->initReservedSlot(SCOPE_SLOT, PrivateGCThingValue(scope));
 
     return callobj;
 }
