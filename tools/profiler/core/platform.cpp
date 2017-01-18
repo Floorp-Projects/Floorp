@@ -607,19 +607,6 @@ void mozilla_sampler_shutdown()
 #endif
 }
 
-void mozilla_sampler_save()
-{
-  GeckoSampler *t = tlsTicker.get();
-  if (!t) {
-    return;
-  }
-
-  t->RequestSave();
-  // We're on the main thread already so we don't
-  // have to wait to handle the save request.
-  t->HandleSaveRequest();
-}
-
 mozilla::UniquePtr<char[]> mozilla_sampler_get_profile(double aSinceTime)
 {
   GeckoSampler *t = tlsTicker.get();
