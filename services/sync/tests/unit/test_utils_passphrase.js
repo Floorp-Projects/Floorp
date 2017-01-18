@@ -66,8 +66,4 @@ function run_test() {
               "a-bcde-abcde-abcde-abcde");
   do_check_eq(Utils.normalizePassphrase(" abcde-abcde-abcde-abcde "),
               "abcdeabcdeabcdeabcde");
-
-  _("Normalizing username.");
-  do_check_eq(Utils.normalizeAccount("   QA1234+boo@mozilla.com	"), "QA1234+boo@mozilla.com");
-  do_check_eq(Utils.normalizeAccount("QA1234+boo@mozilla.com"), "QA1234+boo@mozilla.com");
 }

@@ -212,11 +212,11 @@ add_task(function* testActions() {
   };
   let chromeWindowMock = {
     gSyncUI: {
-      openSetup() {}
+      openPrefs() {}
     }
   };
   sinon.spy(windowMock, "openUILink");
-  sinon.spy(chromeWindowMock.gSyncUI, "openSetup");
+  sinon.spy(chromeWindowMock.gSyncUI, "openPrefs");
 
   let getChromeWindowMock = sinon.stub();
   getChromeWindowMock.returns(chromeWindowMock);
@@ -236,5 +236,5 @@ add_task(function* testActions() {
 
   component.openSyncPrefs();
   Assert.ok(getChromeWindowMock.calledWith(windowMock));
-  Assert.ok(chromeWindowMock.gSyncUI.openSetup.called);
+  Assert.ok(chromeWindowMock.gSyncUI.openPrefs.called);
 });
