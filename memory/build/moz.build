@@ -39,6 +39,11 @@ if CONFIG['MOZ_REPLACE_MALLOC']:
         'replace_malloc.c',
     ]
 
+    if CONFIG['OS_TARGET'] == 'Darwin':
+        SOURCES += [
+            'zone.c',
+        ]
+
 Library('memory')
 
 if CONFIG['MOZ_GLUE_IN_PROGRAM']:
