@@ -19,8 +19,8 @@ mozilla::LogModule* GetSourceBufferResourceLog()
   return sLogModule;
 }
 
-#define SBR_DEBUG(arg, ...) MOZ_LOG(GetSourceBufferResourceLog(), mozilla::LogLevel::Debug, ("SourceBufferResource(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
-#define SBR_DEBUGV(arg, ...) MOZ_LOG(GetSourceBufferResourceLog(), mozilla::LogLevel::Verbose, ("SourceBufferResource(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
+#define SBR_DEBUG(arg, ...) MOZ_LOG(GetSourceBufferResourceLog(), mozilla::LogLevel::Debug, ("SourceBufferResource(%p:%s)::%s: " arg, this, mType.OriginalString().Data(), __func__, ##__VA_ARGS__))
+#define SBR_DEBUGV(arg, ...) MOZ_LOG(GetSourceBufferResourceLog(), mozilla::LogLevel::Verbose, ("SourceBufferResource(%p:%s)::%s: " arg, this, mType.OriginalString().Data(), __func__, ##__VA_ARGS__))
 
 namespace mozilla {
 
@@ -168,7 +168,7 @@ SourceBufferResource::~SourceBufferResource()
   SBR_DEBUG("");
 }
 
-SourceBufferResource::SourceBufferResource(const nsACString& aType)
+SourceBufferResource::SourceBufferResource(const MediaContainerType& aType)
   : mType(aType)
   , mMonitor("mozilla::SourceBufferResource::mMonitor")
   , mOffset(0)

@@ -36,17 +36,18 @@ job-template:
       by-build-platform:
          default: public
          android-api-15-nightly: internal
-#   index:
-#      product:
-#         by-build-platform:
-#            default: firefox
-#            android-api-15-nightly: mobile
-#      job-name:
-#         by-build-platform:
-#            linux-nightly: linux32-nightly-l10n-opt
-#            linux64-nightly: linux64-nightly-l10n-opt
-#            macosx64-nightly: macosx64-nightly-l10n-opt
-#            android-api-15-nightly: android-nightly-l10n-opt
+   index:
+      type: l10n
+      product:
+         by-build-platform:
+            default: firefox
+            android-api-15-nightly: mobile
+      job-name:
+         by-build-platform:
+            linux-nightly: linux-opt
+            linux64-nightly: linux64-opt
+            macosx64-nightly: macosx64-opt
+            android-api-15-nightly: android-api-15-opt
    worker-type:
       by-build-platform:
          default: aws-provisioner-v1/gecko-{level}-b-linux
@@ -55,6 +56,8 @@ job-template:
       symbol: tc-L10n(N)
       tier:
          by-build-platform:
+            linux.*: 1
+            android.*: 1
             default: 2
       platform:
          by-build-platform:

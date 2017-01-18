@@ -43,7 +43,7 @@ fails HTTP(..) == font-features-turkish-override-4.html font-features-turkish-ov
 fails HTTP(..) == font-features-turkish-override-5.html font-features-turkish-override-5.html
 
 # check that last value wins if a feature is repeated
-fails HTTP(..) == font-features-order-1.html font-features-order-1.html
+# HTTP(..) == font-features-order-1.html font-features-order-1.html
 fails HTTP(..) == font-features-order-2.html font-features-order-2.html
 
 # check priority of feature settings vs. font-variant subproperty
@@ -79,7 +79,7 @@ fails HTTP(..) == font-kerning-3.html font-kerning-3.html
 fails HTTP(..) == font-kerning-table-none.html font-kerning-table-none.html
 
 # sanity check for kerning - with no spaces, kerning should occur
-fails HTTP(..) == kerning-sanity-check-kern.html kerning-sanity-check-kern.html
+HTTP(..) == kerning-sanity-check-kern.html kerning-sanity-check-kern.html
 fails HTTP(..) == kerning-sanity-check-nokern.html kerning-sanity-check-nokern.html
 
 # OpenType features should work across inter-word spaces

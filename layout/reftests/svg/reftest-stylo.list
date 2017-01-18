@@ -180,10 +180,10 @@ fuzzy-if(skiaContent,1,800000) == filters-and-group-opacity-01.svg filters-and-g
 == foreignObject-start-hidden-01.svg foreignObject-start-hidden-01.svg
 == foreignObject-start-hidden-02.svg foreignObject-start-hidden-02.svg
 == foreignObject-style-change-01.svg foreignObject-style-change-01.svg
-fails == foreignObject-dynamic-abspos-01.html foreignObject-dynamic-abspos-01.html
-fails == foreignObject-fixedpos-01.html foreignObject-fixedpos-01.html
+== foreignObject-dynamic-abspos-01.html foreignObject-dynamic-abspos-01.html
+== foreignObject-fixedpos-01.html foreignObject-fixedpos-01.html
 == foreignObject-fixedpos-02.html foreignObject-fixedpos-02.html
-fails == foreignObject-dynamic-fixedpos-01.html foreignObject-dynamic-fixedpos-01.html
+== foreignObject-dynamic-fixedpos-01.html foreignObject-dynamic-fixedpos-01.html
 == foreignObject-vertical-01.svg foreignObject-vertical-01.svg
 == g-transform-01.svg g-transform-01.svg
 == getElementById-a-element-01.svg getElementById-a-element-01.svg
@@ -433,7 +433,7 @@ pref(layout.css.mix-blend-mode.enabled,true) == blend-normal.svg blend-normal.sv
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-saturation.svg blend-saturation.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-screen.svg blend-screen.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-soft-light.svg blend-soft-light.svg
-fails == blend-difference-stacking.html blend-difference-stacking.html
+# == blend-difference-stacking.html blend-difference-stacking.html
 
 # test case for Fragment URLs
 # https://drafts.csswg.org/css-values/#local-urls

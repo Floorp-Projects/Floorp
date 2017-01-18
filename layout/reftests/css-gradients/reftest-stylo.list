@@ -152,4 +152,4 @@ fails == repeating-radial-onestopposition-1c.html repeating-radial-onestoppositi
 fuzzy(1,800000) == large-gradient-3.html large-gradient-3.html
 == large-gradient-4.html large-gradient-4.html
 fuzzy(2,800000) == large-gradient-5.html large-gradient-5.html
-fails == 1224761-1.html 1224761-1.html
+== 1224761-1.html 1224761-1.html

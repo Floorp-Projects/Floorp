@@ -18,7 +18,7 @@
 #include "DecoderTraits.h"
 #include "AudioContext.h"
 #include "AudioBuffer.h"
-#include "MediaContentType.h"
+#include "MediaContainerType.h"
 #include "nsContentUtils.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptError.h"
@@ -78,10 +78,10 @@ enum class PhaseEnum : int
 class MediaDecodeTask final : public Runnable
 {
 public:
-  MediaDecodeTask(const MediaContentType& aContentType, uint8_t* aBuffer,
+  MediaDecodeTask(const MediaContainerType& aContainerType, uint8_t* aBuffer,
                   uint32_t aLength,
                   WebAudioDecodeJob& aDecodeJob)
-    : mContentType(aContentType)
+    : mContainerType(aContainerType)
     , mBuffer(aBuffer)
     , mLength(aLength)
     , mDecodeJob(aDecodeJob)
@@ -132,7 +132,7 @@ private:
   }
 
 private:
-  MediaContentType mContentType;
+  MediaContainerType mContainerType;
   uint8_t* mBuffer;
   uint32_t mLength;
   WebAudioDecodeJob& mDecodeJob;
@@ -195,7 +195,7 @@ MediaDecodeTask::CreateReader()
 
   RefPtr<BufferMediaResource> resource =
     new BufferMediaResource(static_cast<uint8_t*> (mBuffer),
-                            mLength, principal, mContentType.Type().AsString());
+                            mLength, principal, mContainerType);
 
   MOZ_ASSERT(!mBufferDecoder);
   mBufferDecoder = new BufferDecoder(resource,
@@ -204,7 +204,7 @@ MediaDecodeTask::CreateReader()
   // If you change this list to add support for new decoders, please consider
   // updating HTMLMediaElement::CreateDecoder as well.
 
-  mDecoderReader = DecoderTraits::CreateReader(mContentType, mBufferDecoder);
+  mDecoderReader = DecoderTraits::CreateReader(mContainerType, mBufferDecoder);
 
   if (!mDecoderReader) {
     return false;
@@ -276,7 +276,7 @@ MediaDecodeTask::OnMetadataRead(MetadataHolder* aMetadata)
     codec = nsPrintfCString("webaudio; %s", mMediaInfo.mAudio.GetAsAudioInfo()->mMimeType.get());
   } else {
     codec = nsPrintfCString("webaudio;resource; %s",
-                            mContentType.Type().AsString().Data());
+                            mContainerType.Type().AsString().Data());
   }
 
   nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([codec]() -> void {
@@ -482,12 +482,12 @@ void
 AsyncDecodeWebAudio(const char* aContentType, uint8_t* aBuffer,
                     uint32_t aLength, WebAudioDecodeJob& aDecodeJob)
 {
-  Maybe<MediaContentType> contentType = MakeMediaContentType(aContentType);
+  Maybe<MediaContainerType> containerType = MakeMediaContainerType(aContentType);
   // Do not attempt to decode the media if we were not successful at sniffing
-  // the content type.
+  // the container type.
   if (!*aContentType ||
       strcmp(aContentType, APPLICATION_OCTET_STREAM) == 0 ||
-      !contentType) {
+      !containerType) {
     nsCOMPtr<nsIRunnable> event =
       new ReportResultTask(aDecodeJob,
                            &WebAudioDecodeJob::OnFailure,
@@ -498,7 +498,7 @@ AsyncDecodeWebAudio(const char* aContentType, uint8_t* aBuffer,
   }
 
   RefPtr<MediaDecodeTask> task =
-    new MediaDecodeTask(*contentType, aBuffer, aLength, aDecodeJob);
+    new MediaDecodeTask(*containerType, aBuffer, aLength, aDecodeJob);
   if (!task->CreateReader()) {
     nsCOMPtr<nsIRunnable> event =
       new ReportResultTask(aDecodeJob,

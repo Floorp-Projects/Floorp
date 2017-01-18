@@ -2726,21 +2726,18 @@ void
 MediaFormatReader::SetBlankDecode(TrackType aTrack, bool aIsBlankDecode)
 {
   MOZ_ASSERT(OnTaskQueue());
+
   auto& decoder = GetDecoderData(aTrack);
-
-  LOG("%s, decoder.mIsBlankDecode = %d => aIsBlankDecode = %d",
-      TrackTypeToStr(aTrack), decoder.mIsBlankDecode, aIsBlankDecode);
-
   if (decoder.mIsBlankDecode == aIsBlankDecode) {
     return;
   }
 
+  LOG("%s, decoder.mIsBlankDecode = %d => aIsBlankDecode = %d",
+      TrackTypeToStr(aTrack), decoder.mIsBlankDecode, aIsBlankDecode);
+
   decoder.mIsBlankDecode = aIsBlankDecode;
   decoder.Flush();
   decoder.ShutdownDecoder();
-  ScheduleUpdate(TrackInfo::kVideoTrack);
-
-  return;
 }
 
 void

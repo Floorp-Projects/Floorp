@@ -2,7 +2,7 @@
 # Colormangement
 
 # test for bug 489133, test for bug 460520
-fails == invalid-chrm.png invalid-chrm.png
-fails == invalid-whitepoint.png invalid-whitepoint.png
+== invalid-chrm.png invalid-chrm.png
+== invalid-whitepoint.png invalid-whitepoint.png
 # test for bug 488955
 == trc-type.html trc-type.html

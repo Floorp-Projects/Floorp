@@ -8,7 +8,9 @@
 
 define(function (require, exports, module) {
   const { DOM: dom, createFactory, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
-  const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
+
+  const { createFactories } = require("devtools/client/shared/components/reps/load-reps");
+
   const { Headers } = createFactories(require("./headers"));
   const { Toolbar, ToolbarButton } = createFactories(require("./reps/toolbar"));
 

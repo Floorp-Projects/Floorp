@@ -26,6 +26,12 @@ const COPY_ITEMS_TEST_DATA = [
     text: "body > div:nth-child(1) > p:nth-child(2)",
   },
   {
+    desc: "copy css path",
+    id: "node-menu-copycsspath",
+    selector: "[data-id=\"copy\"]",
+    text: "html body div p",
+  },
+  {
     desc: "copy image data uri",
     id: "node-menu-copyimagedatauri",
     selector: "#copyimage",

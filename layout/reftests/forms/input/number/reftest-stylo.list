@@ -10,7 +10,7 @@ skip-if(!Android) == number-same-as-text-unthemed.html number-same-as-text-unthe
 
 # should look the same as type=text, except for the spin box
 # == number-similar-to-text-unthemed.html number-similar-to-text-unthemed.html
-# fails # == number-similar-to-text-unthemed-rtl.html number-similar-to-text-unthemed-rtl.html
+# == number-similar-to-text-unthemed-rtl.html number-similar-to-text-unthemed-rtl.html
 # == number-similar-to-text-unthemed-vertical-lr.html number-similar-to-text-unthemed-vertical-lr.html
 # == number-similar-to-text-unthemed-vertical-rl.html number-similar-to-text-unthemed-vertical-rl.html
 

@@ -75,7 +75,6 @@ function test_collection_operations() {
   add_task(function* test_kinto_get_non_existant() {
     let sqliteHandle = yield do_get_kinto_connection();
     let adapter = do_get_kinto_adapter(sqliteHandle);
-    yield adapter.open();
     // Kinto expects adapters to either:
     let newRecord = yield adapter.get("missing-test-id");
     // resolve with an undefined record
@@ -201,7 +200,6 @@ function test_collection_operations() {
   add_task(function* test_import_updates_lastModified() {
     let sqliteHandle = yield do_get_kinto_connection();
     let adapter = do_get_kinto_adapter(sqliteHandle);
-    yield adapter.open();
     yield adapter.loadDump([
       {id: 1, foo: "bar", last_modified: 1457896541},
       {id: 2, foo: "baz", last_modified: 1458796542},
