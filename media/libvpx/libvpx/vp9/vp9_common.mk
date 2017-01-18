@@ -13,7 +13,7 @@ VP9_COMMON_SRCS-yes += vp9_iface_common.h
 VP9_COMMON_SRCS-yes += common/vp9_ppflags.h
 VP9_COMMON_SRCS-yes += common/vp9_alloccommon.c
 VP9_COMMON_SRCS-yes += common/vp9_blockd.c
-VP9_COMMON_SRCS-yes += common/vp9_debugmodes.c
+# VP9_COMMON_SRCS-yes += common/vp9_debugmodes.c
 VP9_COMMON_SRCS-yes += common/vp9_entropy.c
 VP9_COMMON_SRCS-yes += common/vp9_entropymode.c
 VP9_COMMON_SRCS-yes += common/vp9_entropymv.c
@@ -45,7 +45,6 @@ VP9_COMMON_SRCS-yes += common/vp9_scale.h
 VP9_COMMON_SRCS-yes += common/vp9_scale.c
 VP9_COMMON_SRCS-yes += common/vp9_seg_common.h
 VP9_COMMON_SRCS-yes += common/vp9_seg_common.c
-VP9_COMMON_SRCS-yes += common/vp9_textblit.h
 VP9_COMMON_SRCS-yes += common/vp9_tile_common.h
 VP9_COMMON_SRCS-yes += common/vp9_tile_common.c
 VP9_COMMON_SRCS-yes += common/vp9_loopfilter.c
@@ -55,7 +54,6 @@ VP9_COMMON_SRCS-yes += common/vp9_mvref_common.h
 VP9_COMMON_SRCS-yes += common/vp9_quant_common.c
 VP9_COMMON_SRCS-yes += common/vp9_reconinter.c
 VP9_COMMON_SRCS-yes += common/vp9_reconintra.c
-VP9_COMMON_SRCS-$(CONFIG_POSTPROC_VISUALIZER) += common/vp9_textblit.c
 VP9_COMMON_SRCS-yes += common/vp9_common_data.c
 VP9_COMMON_SRCS-yes += common/vp9_common_data.h
 VP9_COMMON_SRCS-yes += common/vp9_scan.c
@@ -67,7 +65,6 @@ VP9_COMMON_SRCS-$(CONFIG_VP9_POSTPROC) += common/vp9_mfqe.h
 VP9_COMMON_SRCS-$(CONFIG_VP9_POSTPROC) += common/vp9_mfqe.c
 ifeq ($(CONFIG_VP9_POSTPROC),yes)
 VP9_COMMON_SRCS-$(HAVE_SSE2) += common/x86/vp9_mfqe_sse2.asm
-VP9_COMMON_SRCS-$(HAVE_SSE2) += common/x86/vp9_postproc_sse2.asm
 endif
 
 ifneq ($(CONFIG_VP9_HIGHBITDEPTH),yes)

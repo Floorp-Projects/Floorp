@@ -17,3 +17,5 @@ Local Modifications:
 - Added GTEST_ATTRIBUTE_UNUSED_ to test registering dummies in TEST_P
   and INSTANTIATE_TEST_CASE_P to remove warnings about unused variables
   under GCC 5.
+- Only define g_in_fast_death_test_child for non-Windows builds; quiets an
+  unused variable warning.

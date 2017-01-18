@@ -8,7 +8,6 @@ include protocol PGMPService;
 include protocol PGMPVideoDecoder;
 include protocol PGMPVideoEncoder;
 include protocol PGMPDecryptor;
-include protocol PGMPAudioDecoder;
 
 namespace mozilla {
 namespace gmp {
@@ -17,13 +16,11 @@ intr protocol PGMPContent
 {
   bridges PGMPService, PGMP;
 
-  manages PGMPAudioDecoder;
   manages PGMPDecryptor;
   manages PGMPVideoDecoder;
   manages PGMPVideoEncoder;
 
 child:
-  async PGMPAudioDecoder();
   async PGMPDecryptor();
   async PGMPVideoDecoder(uint32_t aDecryptorId);
   async PGMPVideoEncoder();

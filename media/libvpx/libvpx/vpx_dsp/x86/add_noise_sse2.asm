@@ -11,29 +11,32 @@
 
 %include "vpx_ports/x86_abi_support.asm"
 
-;void vpx_plane_add_noise_sse2(unsigned char *start, unsigned char *noise,
-;                              unsigned char blackclamp[16],
-;                              unsigned char whiteclamp[16],
-;                              unsigned char bothclamp[16],
-;                              unsigned int width, unsigned int height,
-;                              int pitch)
+;void vpx_plane_add_noise_sse2(uint8_t *start, const int8_t *noise,
+;                              int blackclamp, int whiteclamp,
+;                              int width, int height, int pitch)
 global sym(vpx_plane_add_noise_sse2) PRIVATE
 sym(vpx_plane_add_noise_sse2):
     push        rbp
     mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 8
+    SHADOW_ARGS_TO_STACK 7
     GET_GOT     rbx
     push        rsi
     push        rdi
-    ; end prolog
 
-    ; get the clamps in registers
-    mov     rdx, arg(2) ; blackclamp
-    movdqu  xmm3, [rdx]
-    mov     rdx, arg(3) ; whiteclamp
-    movdqu  xmm4, [rdx]
-    mov     rdx, arg(4) ; bothclamp
-    movdqu  xmm5, [rdx]
+    mov         rdx, 0x01010101
+    mov         rax, arg(2)
+    mul         rdx
+    movd        xmm3, rax
+    pshufd      xmm3, xmm3, 0  ; xmm3 is 16 copies of char in blackclamp
+
+    mov         rdx, 0x01010101
+    mov         rax, arg(3)
+    mul         rdx
+    movd        xmm4, rax
+    pshufd      xmm4, xmm4, 0  ; xmm4 is 16 copies of char in whiteclamp
+
+    movdqu      xmm5, xmm3     ; both clamp = black clamp + white clamp
+    paddusb     xmm5, xmm4
 
 .addnoise_loop:
     call sym(LIBVPX_RAND) WRT_PLT
@@ -42,9 +45,9 @@ sym(vpx_plane_add_noise_sse2):
     add     rcx, rax
 
     mov     rdi, rcx
-    movsxd  rcx, dword arg(5) ;[Width]
+    movsxd  rcx, dword arg(4) ;[Width]
     mov     rsi, arg(0) ;Pos
-    xor         rax,rax
+    xor     rax, rax
 
 .addnoise_nextset:
       movdqu      xmm1,[rsi+rax]         ; get the source
@@ -62,9 +65,9 @@ sym(vpx_plane_add_noise_sse2):
       cmp         rax, rcx
       jl          .addnoise_nextset
 
-    movsxd  rax, dword arg(7) ; Pitch
+    movsxd  rax, dword arg(6) ; Pitch
     add     arg(0), rax ; Start += Pitch
-    sub     dword arg(6), 1   ; Height -= 1
+    sub     dword arg(5), 1   ; Height -= 1
     jg      .addnoise_loop
 
     ; begin epilog

@@ -9,7 +9,9 @@
 ;
 
     EXPORT  |vpx_lpf_horizontal_8_neon|
+    EXPORT  |vpx_lpf_horizontal_8_dual_neon|
     EXPORT  |vpx_lpf_vertical_8_neon|
+    EXPORT  |vpx_lpf_vertical_8_dual_neon|
     ARM
 
     AREA ||.text||, CODE, READONLY, ALIGN=2
@@ -63,6 +65,38 @@
     pop         {r4-r5, pc}
 
     ENDP        ; |vpx_lpf_horizontal_8_neon|
+
+;void vpx_lpf_horizontal_8_dual_neon(uint8_t *s,
+;                                    int p,
+;                                    const uint8_t *blimit0,
+;                                    const uint8_t *limit0,
+;                                    const uint8_t *thresh0,
+;                                    const uint8_t *blimit1,
+;                                    const uint8_t *limit1,
+;                                    const uint8_t *thresh1)
+; r0      uint8_t *s,
+; r1      int p, /* pitch */
+; r2      const uint8_t *blimit0,
+; r3      const uint8_t *limit0,
+; sp      const uint8_t *thresh0,
+; sp + 4  const uint8_t *blimit1,
+; sp + 8  const uint8_t *limit1,
+; sp + 12 const uint8_t *thresh1,
+|vpx_lpf_horizontal_8_dual_neon| PROC
+    push        {r0-r1, lr}
+    ldr         lr, [sp, #12]
+    push        {lr}                       ; thresh0
+    bl          vpx_lpf_horizontal_8_neon
+
+    ldr         r2, [sp, #20]              ; blimit1
+    ldr         r3, [sp, #24]              ; limit1
+    ldr         lr, [sp, #28]
+    str         lr, [sp, #16]              ; thresh1
+    add         sp, #4
+    pop         {r0-r1, lr}
+    add         r0, #8                     ; s + 8
+    b           vpx_lpf_horizontal_8_neon
+    ENDP        ; |vpx_lpf_horizontal_8_dual_neon|
 
 ; void vpx_lpf_vertical_8_neon(uint8_t *s,
 ;                              int pitch,
@@ -138,6 +172,38 @@
 
     pop         {r4-r5, pc}
     ENDP        ; |vpx_lpf_vertical_8_neon|
+
+;void vpx_lpf_vertical_8_dual_neon(uint8_t *s,
+;                                  int pitch,
+;                                  const uint8_t *blimit0,
+;                                  const uint8_t *limit0,
+;                                  const uint8_t *thresh0,
+;                                  const uint8_t *blimit1,
+;                                  const uint8_t *limit1,
+;                                  const uint8_t *thresh1)
+; r0      uint8_t *s,
+; r1      int pitch
+; r2      const uint8_t *blimit0,
+; r3      const uint8_t *limit0,
+; sp      const uint8_t *thresh0,
+; sp + 4  const uint8_t *blimit1,
+; sp + 8  const uint8_t *limit1,
+; sp + 12 const uint8_t *thresh1,
+|vpx_lpf_vertical_8_dual_neon| PROC
+    push        {r0-r1, lr}
+    ldr         lr, [sp, #12]
+    push        {lr}                       ; thresh0
+    bl          vpx_lpf_vertical_8_neon
+
+    ldr         r2, [sp, #20]              ; blimit1
+    ldr         r3, [sp, #24]              ; limit1
+    ldr         lr, [sp, #28]
+    str         lr, [sp, #16]              ; thresh1
+    add         sp, #4
+    pop         {r0-r1, lr}
+    add         r0, r1, lsl #3             ; s + 8 * pitch
+    b           vpx_lpf_vertical_8_neon
+    ENDP        ; |vpx_lpf_vertical_8_dual_neon|
 
 ; void vpx_mbloop_filter_neon();
 ; This is a helper function for the loopfilters. The invidual functions do the

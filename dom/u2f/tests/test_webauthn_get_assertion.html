@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <title>Tests for GetAssertion for W3C Web Authentication</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
+  <script type="text/javascript" src="pkijs/common.js"></script>
+  <script type="text/javascript" src="pkijs/asn1.js"></script>
+  <script type="text/javascript" src="pkijs/x509_schema.js"></script>
+  <script type="text/javascript" src="pkijs/x509_simpl.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<h1>Tests for GetAssertion for W3C Web Authentication</h1>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1309284">Mozilla Bug 1309284</a>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+
+// Execute the full-scope test
+SimpleTest.waitForExplicitFinish();
+
+function arrivingHereIsBad(aResult) {
+  ok(false, "Bad result! Received a: " + aResult);
+  return Promise.resolve();
+}
+
+function expectNotAllowedError(aResult) {
+  ok(aResult.toString().startsWith("NotAllowedError"), "Expecting a NotAllowedError");
+  return Promise.resolve();
+}
+
+function expectTypeError(aResult) {
+  ok(aResult.toString().startsWith("TypeError"), "Expecting a TypeError");
+  return Promise.resolve();
+}
+
+SpecialPowers.pushPrefEnv({"set": [["security.webauth.w3c", true],
+                                   ["security.webauth.u2f_enable_softtoken", true],
+                                   ["security.webauth.u2f_enable_usbtoken", false]]},
+function() {
+  isnot(navigator.authentication, undefined, "WebAuthn API endpoint must exist");
+  isnot(navigator.authentication.makeCredential, undefined, "WebAuthn makeCredential API endpoint must exist");
+  isnot(navigator.authentication.getAssertion, undefined, "WebAuthn getAssertion API endpoint must exist");
+
+  let authn = navigator.authentication;
+
+  let gAssertionChallenge = new Uint8Array(16);
+  window.crypto.getRandomValues(gAssertionChallenge);
+
+  let invalidCred = { type: "Magic", id: base64ToBytes("AAA=") };
+  let unknownCred = { type: "ScopedCred", id: base64ToBytes("AAA=") };
+
+  Promise.all([
+    // Test basic good call, but without giving a credential so expect failures
+    // this is OK by the standard, but not supported by U2F-backed authenticators
+    // like the soft token in use here.
+    authn.getAssertion(gAssertionChallenge)
+    .then(arrivingHereIsBad)
+    .catch(expectNotAllowedError),
+
+    // Test with an unexpected option
+    authn.getAssertion(gAssertionChallenge, { unknownValue: "hi" })
+    .then(arrivingHereIsBad)
+    .catch(expectNotAllowedError),
+
+    // Test with an invalid credential
+    authn.getAssertion(gAssertionChallenge, { allowList: [invalidCred] })
+    .then(arrivingHereIsBad)
+    .catch(expectTypeError),
+
+    // Test with an unknown credential
+    authn.getAssertion(gAssertionChallenge, { allowList: [unknownCred] })
+    .then(arrivingHereIsBad)
+    .catch(expectNotAllowedError),
+
+    // Test with an unexpected option and an invalid credential
+    authn.getAssertion(gAssertionChallenge, { unknownValue: "hi" })
+    .then(arrivingHereIsBad)
+    .catch(expectNotAllowedError)
+  ])
+  .then(function(){
+    SimpleTest.finish();
+  });
+});
+
+</script>
+
+</body>
+</html>

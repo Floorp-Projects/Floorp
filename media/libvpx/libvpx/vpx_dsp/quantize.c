@@ -12,8 +12,7 @@
 #include "vpx_dsp/quantize.h"
 #include "vpx_mem/vpx_mem.h"
 
-void vpx_quantize_dc(const tran_low_t *coeff_ptr,
-                     int n_coeffs, int skip_block,
+void vpx_quantize_dc(const tran_low_t *coeff_ptr, int n_coeffs, int skip_block,
                      const int16_t *round_ptr, const int16_t quant,
                      tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
                      const int16_t dequant_ptr, uint16_t *eob_ptr) {
@@ -29,20 +28,19 @@ void vpx_quantize_dc(const tran_low_t *coeff_ptr,
   if (!skip_block) {
     tmp = clamp(abs_coeff + round_ptr[rc != 0], INT16_MIN, INT16_MAX);
     tmp = (tmp * quant) >> 16;
-    qcoeff_ptr[rc]  = (tmp ^ coeff_sign) - coeff_sign;
+    qcoeff_ptr[rc] = (tmp ^ coeff_sign) - coeff_sign;
     dqcoeff_ptr[rc] = qcoeff_ptr[rc] * dequant_ptr;
-    if (tmp)
-      eob = 0;
+    if (tmp) eob = 0;
   }
   *eob_ptr = eob + 1;
 }
 
 #if CONFIG_VP9_HIGHBITDEPTH
-void vpx_highbd_quantize_dc(const tran_low_t *coeff_ptr,
-                            int n_coeffs, int skip_block,
-                            const int16_t *round_ptr, const int16_t quant,
-                            tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
-                            const int16_t dequant_ptr, uint16_t *eob_ptr) {
+void vpx_highbd_quantize_dc(const tran_low_t *coeff_ptr, int n_coeffs,
+                            int skip_block, const int16_t *round_ptr,
+                            const int16_t quant, tran_low_t *qcoeff_ptr,
+                            tran_low_t *dqcoeff_ptr, const int16_t dequant_ptr,
+                            uint16_t *eob_ptr) {
   int eob = -1;
 
   memset(qcoeff_ptr, 0, n_coeffs * sizeof(*qcoeff_ptr));
@@ -56,8 +54,7 @@ void vpx_highbd_quantize_dc(const tran_low_t *coeff_ptr,
     const int abs_qcoeff = (int)((tmp * quant) >> 16);
     qcoeff_ptr[0] = (tran_low_t)((abs_qcoeff ^ coeff_sign) - coeff_sign);
     dqcoeff_ptr[0] = qcoeff_ptr[0] * dequant_ptr;
-    if (abs_qcoeff)
-      eob = 0;
+    if (abs_qcoeff) eob = 0;
   }
   *eob_ptr = eob + 1;
 }
@@ -81,19 +78,16 @@ void vpx_quantize_dc_32x32(const tran_low_t *coeff_ptr, int skip_block,
     tmp = clamp(abs_coeff + ROUND_POWER_OF_TWO(round_ptr[rc != 0], 1),
                 INT16_MIN, INT16_MAX);
     tmp = (tmp * quant) >> 15;
-    qcoeff_ptr[rc]  = (tmp ^ coeff_sign) - coeff_sign;
+    qcoeff_ptr[rc] = (tmp ^ coeff_sign) - coeff_sign;
     dqcoeff_ptr[rc] = qcoeff_ptr[rc] * dequant_ptr / 2;
-    if (tmp)
-      eob = 0;
+    if (tmp) eob = 0;
   }
   *eob_ptr = eob + 1;
 }
 
 #if CONFIG_VP9_HIGHBITDEPTH
-void vpx_highbd_quantize_dc_32x32(const tran_low_t *coeff_ptr,
-                                  int skip_block,
-                                  const int16_t *round_ptr,
-                                  const int16_t quant,
+void vpx_highbd_quantize_dc_32x32(const tran_low_t *coeff_ptr, int skip_block,
+                                  const int16_t *round_ptr, const int16_t quant,
                                   tran_low_t *qcoeff_ptr,
                                   tran_low_t *dqcoeff_ptr,
                                   const int16_t dequant_ptr,
@@ -112,24 +106,22 @@ void vpx_highbd_quantize_dc_32x32(const tran_low_t *coeff_ptr,
     const int abs_qcoeff = (int)((tmp * quant) >> 15);
     qcoeff_ptr[0] = (tran_low_t)((abs_qcoeff ^ coeff_sign) - coeff_sign);
     dqcoeff_ptr[0] = qcoeff_ptr[0] * dequant_ptr / 2;
-    if (abs_qcoeff)
-      eob = 0;
+    if (abs_qcoeff) eob = 0;
   }
   *eob_ptr = eob + 1;
 }
 #endif
 
 void vpx_quantize_b_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
-                      int skip_block,
-                      const int16_t *zbin_ptr, const int16_t *round_ptr,
-                      const int16_t *quant_ptr, const int16_t *quant_shift_ptr,
-                      tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
-                      const int16_t *dequant_ptr,
-                      uint16_t *eob_ptr,
-                      const int16_t *scan, const int16_t *iscan) {
+                      int skip_block, const int16_t *zbin_ptr,
+                      const int16_t *round_ptr, const int16_t *quant_ptr,
+                      const int16_t *quant_shift_ptr, tran_low_t *qcoeff_ptr,
+                      tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr,
+                      uint16_t *eob_ptr, const int16_t *scan,
+                      const int16_t *iscan) {
   int i, non_zero_count = (int)n_coeffs, eob = -1;
-  const int zbins[2] = {zbin_ptr[0], zbin_ptr[1]};
-  const int nzbins[2] = {zbins[0] * -1, zbins[1] * -1};
+  const int zbins[2] = { zbin_ptr[0], zbin_ptr[1] };
+  const int nzbins[2] = { zbins[0] * -1, zbins[1] * -1 };
   (void)iscan;
 
   memset(qcoeff_ptr, 0, n_coeffs * sizeof(*qcoeff_ptr));
@@ -158,12 +150,12 @@ void vpx_quantize_b_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
       if (abs_coeff >= zbins[rc != 0]) {
         int tmp = clamp(abs_coeff + round_ptr[rc != 0], INT16_MIN, INT16_MAX);
         tmp = ((((tmp * quant_ptr[rc != 0]) >> 16) + tmp) *
-                  quant_shift_ptr[rc != 0]) >> 16;  // quantization
-        qcoeff_ptr[rc]  = (tmp ^ coeff_sign) - coeff_sign;
+               quant_shift_ptr[rc != 0]) >>
+              16;  // quantization
+        qcoeff_ptr[rc] = (tmp ^ coeff_sign) - coeff_sign;
         dqcoeff_ptr[rc] = qcoeff_ptr[rc] * dequant_ptr[rc != 0];
 
-        if (tmp)
-          eob = i;
+        if (tmp) eob = i;
       }
     }
   }
@@ -176,12 +168,11 @@ void vpx_highbd_quantize_b_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
                              const int16_t *round_ptr, const int16_t *quant_ptr,
                              const int16_t *quant_shift_ptr,
                              tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
-                             const int16_t *dequant_ptr,
-                             uint16_t *eob_ptr, const int16_t *scan,
-                             const int16_t *iscan) {
+                             const int16_t *dequant_ptr, uint16_t *eob_ptr,
+                             const int16_t *scan, const int16_t *iscan) {
   int i, non_zero_count = (int)n_coeffs, eob = -1;
-  const int zbins[2] = {zbin_ptr[0], zbin_ptr[1]};
-  const int nzbins[2] = {zbins[0] * -1, zbins[1] * -1};
+  const int zbins[2] = { zbin_ptr[0], zbin_ptr[1] };
+  const int nzbins[2] = { zbins[0] * -1, zbins[1] * -1 };
   (void)iscan;
 
   memset(qcoeff_ptr, 0, n_coeffs * sizeof(*qcoeff_ptr));
@@ -214,8 +205,7 @@ void vpx_highbd_quantize_b_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
             (uint32_t)((tmp2 * quant_shift_ptr[rc != 0]) >> 16);
         qcoeff_ptr[rc] = (tran_low_t)((abs_qcoeff ^ coeff_sign) - coeff_sign);
         dqcoeff_ptr[rc] = qcoeff_ptr[rc] * dequant_ptr[rc != 0];
-        if (abs_qcoeff)
-          eob = i;
+        if (abs_qcoeff) eob = i;
       }
     }
   }
@@ -224,17 +214,15 @@ void vpx_highbd_quantize_b_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
 #endif
 
 void vpx_quantize_b_32x32_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
-                            int skip_block,
-                            const int16_t *zbin_ptr, const int16_t *round_ptr,
-                            const int16_t *quant_ptr,
+                            int skip_block, const int16_t *zbin_ptr,
+                            const int16_t *round_ptr, const int16_t *quant_ptr,
                             const int16_t *quant_shift_ptr,
                             tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr,
-                            const int16_t *dequant_ptr,
-                            uint16_t *eob_ptr,
+                            const int16_t *dequant_ptr, uint16_t *eob_ptr,
                             const int16_t *scan, const int16_t *iscan) {
-  const int zbins[2] = {ROUND_POWER_OF_TWO(zbin_ptr[0], 1),
-                        ROUND_POWER_OF_TWO(zbin_ptr[1], 1)};
-  const int nzbins[2] = {zbins[0] * -1, zbins[1] * -1};
+  const int zbins[2] = { ROUND_POWER_OF_TWO(zbin_ptr[0], 1),
+                         ROUND_POWER_OF_TWO(zbin_ptr[1], 1) };
+  const int nzbins[2] = { zbins[0] * -1, zbins[1] * -1 };
 
   int idx = 0;
   int idx_arr[1024];
@@ -267,33 +255,28 @@ void vpx_quantize_b_32x32_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs,
       abs_coeff += ROUND_POWER_OF_TWO(round_ptr[rc != 0], 1);
       abs_coeff = clamp(abs_coeff, INT16_MIN, INT16_MAX);
       tmp = ((((abs_coeff * quant_ptr[rc != 0]) >> 16) + abs_coeff) *
-               quant_shift_ptr[rc != 0]) >> 15;
+             quant_shift_ptr[rc != 0]) >>
+            15;
 
       qcoeff_ptr[rc] = (tmp ^ coeff_sign) - coeff_sign;
       dqcoeff_ptr[rc] = qcoeff_ptr[rc] * dequant_ptr[rc != 0] / 2;
 
-      if (tmp)
-        eob = idx_arr[i];
+      if (tmp) eob = idx_arr[i];
     }
   }
   *eob_ptr = eob + 1;
 }
 
 #if CONFIG_VP9_HIGHBITDEPTH
-void vpx_highbd_quantize_b_32x32_c(const tran_low_t *coeff_ptr,
-                                   intptr_t n_coeffs, int skip_block,
-                                   const int16_t *zbin_ptr,
-                                   const int16_t *round_ptr,
-                                   const int16_t *quant_ptr,
-                                   const int16_t *quant_shift_ptr,
-                                   tran_low_t *qcoeff_ptr,
-                                   tran_low_t *dqcoeff_ptr,
-                                   const int16_t *dequant_ptr,
-                                   uint16_t *eob_ptr,
-                                   const int16_t *scan, const int16_t *iscan) {
-  const int zbins[2] = {ROUND_POWER_OF_TWO(zbin_ptr[0], 1),
-                        ROUND_POWER_OF_TWO(zbin_ptr[1], 1)};
-  const int nzbins[2] = {zbins[0] * -1, zbins[1] * -1};
+void vpx_highbd_quantize_b_32x32_c(
+    const tran_low_t *coeff_ptr, intptr_t n_coeffs, int skip_block,
+    const int16_t *zbin_ptr, const int16_t *round_ptr, const int16_t *quant_ptr,
+    const int16_t *quant_shift_ptr, tran_low_t *qcoeff_ptr,
+    tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr,
+    const int16_t *scan, const int16_t *iscan) {
+  const int zbins[2] = { ROUND_POWER_OF_TWO(zbin_ptr[0], 1),
+                         ROUND_POWER_OF_TWO(zbin_ptr[1], 1) };
+  const int nzbins[2] = { zbins[0] * -1, zbins[1] * -1 };
 
   int idx = 0;
   int idx_arr[1024];
@@ -322,15 +305,14 @@ void vpx_highbd_quantize_b_32x32_c(const tran_low_t *coeff_ptr,
       const int coeff = coeff_ptr[rc];
       const int coeff_sign = (coeff >> 31);
       const int abs_coeff = (coeff ^ coeff_sign) - coeff_sign;
-      const int64_t tmp1 = abs_coeff
-                         + ROUND_POWER_OF_TWO(round_ptr[rc != 0], 1);
+      const int64_t tmp1 =
+          abs_coeff + ROUND_POWER_OF_TWO(round_ptr[rc != 0], 1);
       const int64_t tmp2 = ((tmp1 * quant_ptr[rc != 0]) >> 16) + tmp1;
       const uint32_t abs_qcoeff =
           (uint32_t)((tmp2 * quant_shift_ptr[rc != 0]) >> 15);
       qcoeff_ptr[rc] = (tran_low_t)((abs_qcoeff ^ coeff_sign) - coeff_sign);
       dqcoeff_ptr[rc] = qcoeff_ptr[rc] * dequant_ptr[rc != 0] / 2;
-      if (abs_qcoeff)
-        eob = idx_arr[i];
+      if (abs_qcoeff) eob = idx_arr[i];
     }
   }
   *eob_ptr = eob + 1;

@@ -42,8 +42,8 @@ void vpx_iwht4x4_16_add_msa(const int16_t *input, uint8_t *dst,
   in0_r -= in3_r;
   in2_r += in1_r;
 
-  PCKEV_H4_SH(in0_r, in0_r, in1_r, in1_r, in2_r, in2_r, in3_r, in3_r,
-              in0, in1, in2, in3);
+  PCKEV_H4_SH(in0_r, in0_r, in1_r, in1_r, in2_r, in2_r, in3_r, in3_r, in0, in1,
+              in2, in3);
   ADDBLK_ST4x4_UB(in0, in3, in1, in2, dst, dst_stride);
 }
 

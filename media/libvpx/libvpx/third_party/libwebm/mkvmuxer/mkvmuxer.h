@@ -64,6 +64,12 @@ class IMkvWriter {
   LIBWEBM_DISALLOW_COPY_AND_ASSIGN(IMkvWriter);
 };
 
+// Writes out the EBML header for a WebM file, but allows caller to specify
+// DocType. This function must be called before any other libwebm writing
+// functions are called.
+bool WriteEbmlHeader(IMkvWriter* writer, uint64_t doc_type_version,
+                     const char* const doc_type);
+
 // Writes out the EBML header for a WebM file. This function must be called
 // before any other libwebm writing functions are called.
 bool WriteEbmlHeader(IMkvWriter* writer, uint64_t doc_type_version);
@@ -348,26 +354,42 @@ class ContentEncoding {
 
 ///////////////////////////////////////////////////////////////
 // Colour element.
-struct PrimaryChromaticity {
-  PrimaryChromaticity(float x_val, float y_val) : x(x_val), y(y_val) {}
-  PrimaryChromaticity() : x(0), y(0) {}
+class PrimaryChromaticity {
+ public:
+  static const float kChromaticityMin;
+  static const float kChromaticityMax;
+
+  PrimaryChromaticity(float x_val, float y_val) : x_(x_val), y_(y_val) {}
+  PrimaryChromaticity() : x_(0), y_(0) {}
   ~PrimaryChromaticity() {}
-  uint64_t PrimaryChromaticityPayloadSize(libwebm::MkvId x_id,
-                                          libwebm::MkvId y_id) const;
+
+  // Returns sum of |x_id| and |y_id| element id sizes and payload sizes.
+  uint64_t PrimaryChromaticitySize(libwebm::MkvId x_id,
+                                   libwebm::MkvId y_id) const;
+  bool Valid() const;
   bool Write(IMkvWriter* writer, libwebm::MkvId x_id,
              libwebm::MkvId y_id) const;
 
-  float x;
-  float y;
+  float x() const { return x_; }
+  void set_x(float new_x) { x_ = new_x; }
+  float y() const { return y_; }
+  void set_y(float new_y) { y_ = new_y; }
+
+ private:
+  float x_;
+  float y_;
 };
 
 class MasteringMetadata {
  public:
   static const float kValueNotPresent;
+  static const float kMinLuminance;
+  static const float kMinLuminanceMax;
+  static const float kMaxLuminanceMax;
 
   MasteringMetadata()
-      : luminance_max(kValueNotPresent),
-        luminance_min(kValueNotPresent),
+      : luminance_max_(kValueNotPresent),
+        luminance_min_(kValueNotPresent),
         r_(NULL),
         g_(NULL),
         b_(NULL),
@@ -381,6 +403,7 @@ class MasteringMetadata {
 
   // Returns total size of the MasteringMetadata element.
   uint64_t MasteringMetadataSize() const;
+  bool Valid() const;
   bool Write(IMkvWriter* writer) const;
 
   // Copies non-null chromaticity.
@@ -393,13 +416,21 @@ class MasteringMetadata {
   const PrimaryChromaticity* b() const { return b_; }
   const PrimaryChromaticity* white_point() const { return white_point_; }
 
-  float luminance_max;
-  float luminance_min;
+  float luminance_max() const { return luminance_max_; }
+  void set_luminance_max(float luminance_max) {
+    luminance_max_ = luminance_max;
+  }
+  float luminance_min() const { return luminance_min_; }
+  void set_luminance_min(float luminance_min) {
+    luminance_min_ = luminance_min;
+  }
 
  private:
   // Returns size of MasteringMetadata child elements.
   uint64_t PayloadSize() const;
 
+  float luminance_max_;
+  float luminance_min_;
   PrimaryChromaticity* r_;
   PrimaryChromaticity* g_;
   PrimaryChromaticity* b_;
@@ -408,26 +439,90 @@ class MasteringMetadata {
 
 class Colour {
  public:
+  enum MatrixCoefficients {
+    kGbr = 0,
+    kBt709 = 1,
+    kUnspecifiedMc = 2,
+    kReserved = 3,
+    kFcc = 4,
+    kBt470bg = 5,
+    kSmpte170MMc = 6,
+    kSmpte240MMc = 7,
+    kYcocg = 8,
+    kBt2020NonConstantLuminance = 9,
+    kBt2020ConstantLuminance = 10,
+  };
+  enum ChromaSitingHorz {
+    kUnspecifiedCsh = 0,
+    kLeftCollocated = 1,
+    kHalfCsh = 2,
+  };
+  enum ChromaSitingVert {
+    kUnspecifiedCsv = 0,
+    kTopCollocated = 1,
+    kHalfCsv = 2,
+  };
+  enum Range {
+    kUnspecifiedCr = 0,
+    kBroadcastRange = 1,
+    kFullRange = 2,
+    kMcTcDefined = 3,  // Defined by MatrixCoefficients/TransferCharacteristics.
+  };
+  enum TransferCharacteristics {
+    kIturBt709Tc = 1,
+    kUnspecifiedTc = 2,
+    kReservedTc = 3,
+    kGamma22Curve = 4,
+    kGamma28Curve = 5,
+    kSmpte170MTc = 6,
+    kSmpte240MTc = 7,
+    kLinear = 8,
+    kLog = 9,
+    kLogSqrt = 10,
+    kIec6196624 = 11,
+    kIturBt1361ExtendedColourGamut = 12,
+    kIec6196621 = 13,
+    kIturBt202010bit = 14,
+    kIturBt202012bit = 15,
+    kSmpteSt2084 = 16,
+    kSmpteSt4281Tc = 17,
+    kAribStdB67Hlg = 18,
+  };
+  enum Primaries {
+    kReservedP0 = 0,
+    kIturBt709P = 1,
+    kUnspecifiedP = 2,
+    kReservedP3 = 3,
+    kIturBt470M = 4,
+    kIturBt470Bg = 5,
+    kSmpte170MP = 6,
+    kSmpte240MP = 7,
+    kFilm = 8,
+    kIturBt2020 = 9,
+    kSmpteSt4281P = 10,
+    kJedecP22Phosphors = 22,
+  };
   static const uint64_t kValueNotPresent;
   Colour()
-      : matrix_coefficients(kValueNotPresent),
-        bits_per_channel(kValueNotPresent),
-        chroma_subsampling_horz(kValueNotPresent),
-        chroma_subsampling_vert(kValueNotPresent),
-        cb_subsampling_horz(kValueNotPresent),
-        cb_subsampling_vert(kValueNotPresent),
-        chroma_siting_horz(kValueNotPresent),
-        chroma_siting_vert(kValueNotPresent),
-        range(kValueNotPresent),
-        transfer_characteristics(kValueNotPresent),
-        primaries(kValueNotPresent),
-        max_cll(kValueNotPresent),
-        max_fall(kValueNotPresent),
+      : matrix_coefficients_(kValueNotPresent),
+        bits_per_channel_(kValueNotPresent),
+        chroma_subsampling_horz_(kValueNotPresent),
+        chroma_subsampling_vert_(kValueNotPresent),
+        cb_subsampling_horz_(kValueNotPresent),
+        cb_subsampling_vert_(kValueNotPresent),
+        chroma_siting_horz_(kValueNotPresent),
+        chroma_siting_vert_(kValueNotPresent),
+        range_(kValueNotPresent),
+        transfer_characteristics_(kValueNotPresent),
+        primaries_(kValueNotPresent),
+        max_cll_(kValueNotPresent),
+        max_fall_(kValueNotPresent),
         mastering_metadata_(NULL) {}
   ~Colour() { delete mastering_metadata_; }
 
   // Returns total size of the Colour element.
   uint64_t ColourSize() const;
+  bool Valid() const;
   bool Write(IMkvWriter* writer) const;
 
   // Deep copies |mastering_metadata|.
@@ -437,25 +532,122 @@ class Colour {
     return mastering_metadata_;
   }
 
-  uint64_t matrix_coefficients;
-  uint64_t bits_per_channel;
-  uint64_t chroma_subsampling_horz;
-  uint64_t chroma_subsampling_vert;
-  uint64_t cb_subsampling_horz;
-  uint64_t cb_subsampling_vert;
-  uint64_t chroma_siting_horz;
-  uint64_t chroma_siting_vert;
-  uint64_t range;
-  uint64_t transfer_characteristics;
-  uint64_t primaries;
-  uint64_t max_cll;
-  uint64_t max_fall;
+  uint64_t matrix_coefficients() const { return matrix_coefficients_; }
+  void set_matrix_coefficients(uint64_t matrix_coefficients) {
+    matrix_coefficients_ = matrix_coefficients;
+  }
+  uint64_t bits_per_channel() const { return bits_per_channel_; }
+  void set_bits_per_channel(uint64_t bits_per_channel) {
+    bits_per_channel_ = bits_per_channel;
+  }
+  uint64_t chroma_subsampling_horz() const { return chroma_subsampling_horz_; }
+  void set_chroma_subsampling_horz(uint64_t chroma_subsampling_horz) {
+    chroma_subsampling_horz_ = chroma_subsampling_horz;
+  }
+  uint64_t chroma_subsampling_vert() const { return chroma_subsampling_vert_; }
+  void set_chroma_subsampling_vert(uint64_t chroma_subsampling_vert) {
+    chroma_subsampling_vert_ = chroma_subsampling_vert;
+  }
+  uint64_t cb_subsampling_horz() const { return cb_subsampling_horz_; }
+  void set_cb_subsampling_horz(uint64_t cb_subsampling_horz) {
+    cb_subsampling_horz_ = cb_subsampling_horz;
+  }
+  uint64_t cb_subsampling_vert() const { return cb_subsampling_vert_; }
+  void set_cb_subsampling_vert(uint64_t cb_subsampling_vert) {
+    cb_subsampling_vert_ = cb_subsampling_vert;
+  }
+  uint64_t chroma_siting_horz() const { return chroma_siting_horz_; }
+  void set_chroma_siting_horz(uint64_t chroma_siting_horz) {
+    chroma_siting_horz_ = chroma_siting_horz;
+  }
+  uint64_t chroma_siting_vert() const { return chroma_siting_vert_; }
+  void set_chroma_siting_vert(uint64_t chroma_siting_vert) {
+    chroma_siting_vert_ = chroma_siting_vert;
+  }
+  uint64_t range() const { return range_; }
+  void set_range(uint64_t range) { range_ = range; }
+  uint64_t transfer_characteristics() const {
+    return transfer_characteristics_;
+  }
+  void set_transfer_characteristics(uint64_t transfer_characteristics) {
+    transfer_characteristics_ = transfer_characteristics;
+  }
+  uint64_t primaries() const { return primaries_; }
+  void set_primaries(uint64_t primaries) { primaries_ = primaries; }
+  uint64_t max_cll() const { return max_cll_; }
+  void set_max_cll(uint64_t max_cll) { max_cll_ = max_cll; }
+  uint64_t max_fall() const { return max_fall_; }
+  void set_max_fall(uint64_t max_fall) { max_fall_ = max_fall; }
 
  private:
   // Returns size of Colour child elements.
   uint64_t PayloadSize() const;
 
+  uint64_t matrix_coefficients_;
+  uint64_t bits_per_channel_;
+  uint64_t chroma_subsampling_horz_;
+  uint64_t chroma_subsampling_vert_;
+  uint64_t cb_subsampling_horz_;
+  uint64_t cb_subsampling_vert_;
+  uint64_t chroma_siting_horz_;
+  uint64_t chroma_siting_vert_;
+  uint64_t range_;
+  uint64_t transfer_characteristics_;
+  uint64_t primaries_;
+  uint64_t max_cll_;
+  uint64_t max_fall_;
+
   MasteringMetadata* mastering_metadata_;
+};
+
+///////////////////////////////////////////////////////////////
+// Projection element.
+class Projection {
+ public:
+  enum ProjectionType {
+    kTypeNotPresent = -1,
+    kRectangular = 0,
+    kEquirectangular = 1,
+    kCubeMap = 2,
+    kMesh = 3,
+  };
+  static const uint64_t kValueNotPresent;
+  Projection()
+      : type_(kRectangular),
+        pose_yaw_(0.0),
+        pose_pitch_(0.0),
+        pose_roll_(0.0),
+        private_data_(NULL),
+        private_data_length_(0) {}
+  ~Projection() { delete[] private_data_; }
+
+  uint64_t ProjectionSize() const;
+  bool Write(IMkvWriter* writer) const;
+
+  bool SetProjectionPrivate(const uint8_t* private_data,
+                            uint64_t private_data_length);
+
+  ProjectionType type() const { return type_; }
+  void set_type(ProjectionType type) { type_ = type; }
+  float pose_yaw() const { return pose_yaw_; }
+  void set_pose_yaw(float pose_yaw) { pose_yaw_ = pose_yaw; }
+  float pose_pitch() const { return pose_pitch_; }
+  void set_pose_pitch(float pose_pitch) { pose_pitch_ = pose_pitch; }
+  float pose_roll() const { return pose_roll_; }
+  void set_pose_roll(float pose_roll) { pose_roll_ = pose_roll; }
+  uint8_t* private_data() const { return private_data_; }
+  uint64_t private_data_length() const { return private_data_length_; }
+
+ private:
+  // Returns size of VideoProjection child elements.
+  uint64_t PayloadSize() const;
+
+  ProjectionType type_;
+  float pose_yaw_;
+  float pose_pitch_;
+  float pose_roll_;
+  uint8_t* private_data_;
+  uint64_t private_data_length_;
 };
 
 ///////////////////////////////////////////////////////////////
@@ -581,6 +773,10 @@ class VideoTrack : public Track {
   uint64_t display_height() const { return display_height_; }
   void set_display_width(uint64_t width) { display_width_ = width; }
   uint64_t display_width() const { return display_width_; }
+  void set_pixel_height(uint64_t height) { pixel_height_ = height; }
+  uint64_t pixel_height() const { return pixel_height_; }
+  void set_pixel_width(uint64_t width) { pixel_width_ = width; }
+  uint64_t pixel_width() const { return pixel_width_; }
 
   void set_crop_left(uint64_t crop_left) { crop_left_ = crop_left; }
   uint64_t crop_left() const { return crop_left_; }
@@ -605,6 +801,11 @@ class VideoTrack : public Track {
   // Deep copies |colour|.
   bool SetColour(const Colour& colour);
 
+  Projection* projection() { return projection_; }
+
+  // Deep copies |projection|.
+  bool SetProjection(const Projection& projection);
+
  private:
   // Returns the size in bytes of the Video element.
   uint64_t VideoPayloadSize() const;
@@ -612,6 +813,8 @@ class VideoTrack : public Track {
   // Video track element names.
   uint64_t display_height_;
   uint64_t display_width_;
+  uint64_t pixel_height_;
+  uint64_t pixel_width_;
   uint64_t crop_left_;
   uint64_t crop_right_;
   uint64_t crop_top_;
@@ -623,6 +826,7 @@ class VideoTrack : public Track {
   uint64_t width_;
 
   Colour* colour_;
+  Projection* projection_;
 
   LIBWEBM_DISALLOW_COPY_AND_ASSIGN(VideoTrack);
 };
@@ -670,6 +874,10 @@ class Tracks {
   static const char kVp8CodecId[];
   static const char kVp9CodecId[];
   static const char kVp10CodecId[];
+  static const char kWebVttCaptionsId[];
+  static const char kWebVttDescriptionsId[];
+  static const char kWebVttMetadataId[];
+  static const char kWebVttSubtitlesId[];
 
   Tracks();
   ~Tracks();
@@ -1294,8 +1502,8 @@ class Segment {
     kBeforeClusters = 0x1  // Position Cues before Clusters
   };
 
-  const static uint32_t kDefaultDocTypeVersion = 2;
-  const static uint64_t kDefaultMaxClusterDuration = 30000000000ULL;
+  static const uint32_t kDefaultDocTypeVersion = 4;
+  static const uint64_t kDefaultMaxClusterDuration = 30000000000ULL;
 
   Segment();
   ~Segment();
@@ -1481,7 +1689,16 @@ class Segment {
   Mode mode() const { return mode_; }
   CuesPosition cues_position() const { return cues_position_; }
   bool output_cues() const { return output_cues_; }
+  void set_estimate_file_duration(bool estimate_duration) {
+    estimate_file_duration_ = estimate_duration;
+  }
+  bool estimate_file_duration() const { return estimate_file_duration_; }
   const SegmentInfo* segment_info() const { return &segment_info_; }
+  void set_duration(double duration) { duration_ = duration; }
+  double duration() const { return duration_; }
+
+  // Returns true when codec IDs are valid for WebM.
+  bool DocTypeIsWebm() const;
 
  private:
   // Checks if header information has been output and initialized. If not it
@@ -1637,6 +1854,9 @@ class Segment {
   // Last timestamp in nanoseconds by track number added to a cluster.
   uint64_t last_track_timestamp_[kMaxTrackNumber];
 
+  // Number of frames written per track.
+  uint64_t track_frames_written_[kMaxTrackNumber];
+
   // Maximum time in nanoseconds for a cluster duration. This variable is a
   // guideline and some clusters may have a longer duration. Default is 30
   // seconds.
@@ -1665,6 +1885,9 @@ class Segment {
   // Flag whether or not to write the Cluster Timecode using exactly 8 bytes.
   bool fixed_size_cluster_timecode_;
 
+  // Flag whether or not to estimate the file duration.
+  bool estimate_file_duration_;
+
   // The size of the EBML header, used to validate the header if
   // WriteEbmlHeader() is called more than once.
   int32_t ebml_header_size_;
@@ -1681,6 +1904,9 @@ class Segment {
   // differs from |doc_type_version_written_|.
   uint32_t doc_type_version_;
   uint32_t doc_type_version_written_;
+
+  // If |duration_| is > 0, then explicitly set the duration of the segment.
+  double duration_;
 
   // Pointer to the writer objects. Not owned by this class.
   IMkvWriter* writer_cluster_;

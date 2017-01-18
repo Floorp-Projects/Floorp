@@ -19,9 +19,8 @@
 extern "C" {
 #endif
 
-void vp9_read_mode_info(VP9Decoder *const pbi, MACROBLOCKD *xd,
-                        int mi_row, int mi_col, vpx_reader *r,
-                        int x_mis, int y_mis);
+void vp9_read_mode_info(TileWorkerData *twd, VP9Decoder *const pbi, int mi_row,
+                        int mi_col, int x_mis, int y_mis);
 
 #ifdef __cplusplus
 }  // extern "C"

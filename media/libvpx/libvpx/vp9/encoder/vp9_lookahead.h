@@ -12,11 +12,11 @@
 #define VP9_ENCODER_VP9_LOOKAHEAD_H_
 
 #include "vpx_scale/yv12config.h"
+#include "vpx/vpx_encoder.h"
 #include "vpx/vpx_integer.h"
 
 #if CONFIG_SPATIAL_SVC
 #include "vpx/vp8cx.h"
-#include "vpx/vpx_encoder.h"
 #endif
 
 #ifdef __cplusplus
@@ -26,10 +26,10 @@ extern "C" {
 #define MAX_LAG_BUFFERS 25
 
 struct lookahead_entry {
-  YV12_BUFFER_CONFIG  img;
-  int64_t             ts_start;
-  int64_t             ts_end;
-  unsigned int        flags;
+  YV12_BUFFER_CONFIG img;
+  int64_t ts_start;
+  int64_t ts_end;
+  vpx_enc_frame_flags_t flags;
 };
 
 // The max of past frames we want to keep in the queue.
@@ -57,11 +57,9 @@ struct lookahead_ctx *vp9_lookahead_init(unsigned int width,
 #endif
                                          unsigned int depth);
 
-
 /**\brief Destroys the lookahead stage
  */
 void vp9_lookahead_destroy(struct lookahead_ctx *ctx);
-
 
 /**\brief Enqueue a source buffer
  *
@@ -83,8 +81,7 @@ int vp9_lookahead_push(struct lookahead_ctx *ctx, YV12_BUFFER_CONFIG *src,
 #if CONFIG_VP9_HIGHBITDEPTH
                        int use_highbitdepth,
 #endif
-                       unsigned int flags);
-
+                       vpx_enc_frame_flags_t flags);
 
 /**\brief Get the next source buffer to encode
  *
@@ -96,9 +93,7 @@ int vp9_lookahead_push(struct lookahead_ctx *ctx, YV12_BUFFER_CONFIG *src,
  * \retval NULL, if drain set and queue is empty
  * \retval NULL, if drain not set and queue not of the configured depth
  */
-struct lookahead_entry *vp9_lookahead_pop(struct lookahead_ctx *ctx,
-                                          int drain);
-
+struct lookahead_entry *vp9_lookahead_pop(struct lookahead_ctx *ctx, int drain);
 
 /**\brief Get a future source buffer to encode
  *
@@ -109,7 +104,6 @@ struct lookahead_entry *vp9_lookahead_pop(struct lookahead_ctx *ctx,
  */
 struct lookahead_entry *vp9_lookahead_peek(struct lookahead_ctx *ctx,
                                            int index);
-
 
 /**\brief Get the number of frames currently in the lookahead queue
  *

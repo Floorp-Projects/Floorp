@@ -23,7 +23,6 @@
 #include "nsIConsoleService.h"
 #include "mozilla/Unused.h"
 #include "GMPDecryptorParent.h"
-#include "GMPAudioDecoderParent.h"
 #include "nsComponentManagerUtils.h"
 #include "runnable_utils.h"
 #include "VideoUtils.h"
@@ -172,70 +171,6 @@ CloneAndAppend(nsIFile* aFile, const nsAString& aDir)
   return f.forget();
 }
 
-static void
-MoveAndOverwrite(nsIFile* aOldParentDir,
-                 nsIFile* aNewParentDir,
-                 const nsAString& aSubDir)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIFile> srcDir(CloneAndAppend(aOldParentDir, aSubDir));
-  if (NS_WARN_IF(!srcDir)) {
-    return;
-  }
-
-  if (!FileExists(srcDir)) {
-    // No sub-directory to be migrated.
-    return;
-  }
-
-  // Ensure destination parent directory exists.
-  rv = aNewParentDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
-  if (rv != NS_ERROR_FILE_ALREADY_EXISTS && NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  nsCOMPtr<nsIFile> dstDir(CloneAndAppend(aNewParentDir, aSubDir));
-  if (FileExists(dstDir)) {
-    // We must have migrated before already, and then ran an old version
-    // of Gecko again which created storage at the old location. Overwrite
-    // the previously migrated storage.
-    rv = dstDir->Remove(true);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      // MoveTo will fail.
-      return;
-    }
-  }
-
-  rv = srcDir->MoveTo(aNewParentDir, EmptyString());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-}
-
-static void
-MigratePreGecko42StorageDir(nsIFile* aOldStorageDir,
-                            nsIFile* aNewStorageDir)
-{
-  MoveAndOverwrite(aOldStorageDir, aNewStorageDir, NS_LITERAL_STRING("id"));
-  MoveAndOverwrite(aOldStorageDir, aNewStorageDir, NS_LITERAL_STRING("storage"));
-}
-
-static void
-MigratePreGecko45StorageDir(nsIFile* aStorageDirBase)
-{
-  nsCOMPtr<nsIFile> adobeStorageDir(CloneAndAppend(aStorageDirBase, NS_LITERAL_STRING("gmp-eme-adobe")));
-  if (NS_WARN_IF(!adobeStorageDir)) {
-    return;
-  }
-
-  // The base storage dir in pre-45 contained "id" and "storage" subdirs.
-  // We assume all storage in the base storage dir that aren't known to GMP
-  // storage are records for the Adobe GMP.
-  MoveAndOverwrite(aStorageDirBase, adobeStorageDir, NS_LITERAL_STRING("id"));
-  MoveAndOverwrite(aStorageDirBase, adobeStorageDir, NS_LITERAL_STRING("storage"));
-}
-
 static nsresult
 GMPPlatformString(nsAString& aOutPlatform)
 {
@@ -321,19 +256,6 @@ GeckoMediaPluginServiceParent::InitStorage()
   if (NS_WARN_IF(NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS)) {
     return rv;
   }
-
-  // Prior to 42, GMP storage was stored in $profileDir/gmp/. After 42, it's
-  // stored in $profileDir/gmp/$platform/. So we must migrate any old records
-  // from the old location to the new location, for forwards compatibility.
-  MigratePreGecko42StorageDir(gmpDirWithoutPlatform, mStorageBaseDir);
-
-  // Prior to 45, GMP storage was not separated by plugin. In 45 and after,
-  // it's stored in $profile/gmp/$platform/$gmpName. So we must migrate old
-  // records from the old location to the new location, for forwards
-  // compatibility. We assume all directories in the base storage dir that
-  // aren't known to GMP storage are records for the Adobe GMP, since it
-  // was first.
-  MigratePreGecko45StorageDir(mStorageBaseDir);
 
   return GeckoMediaPluginService::Init();
 }

@@ -14,14 +14,14 @@
     mov         rdx, arg(5)                 ;filter ptr
     mov         rsi, arg(0)                 ;src_ptr
     mov         rdi, arg(2)                 ;output_ptr
-    mov         rcx, 0x0400040
+    mov         ecx, 0x01000100
 
     movdqa      xmm3, [rdx]                 ;load filters
     psrldq      xmm3, 6
     packsswb    xmm3, xmm3
     pshuflw     xmm3, xmm3, 0b              ;k3_k4
 
-    movq        xmm2, rcx                   ;rounding
+    movd        xmm2, ecx                   ;rounding_shift
     pshufd      xmm2, xmm2, 0
 
     movsxd      rax, DWORD PTR arg(1)       ;pixels_per_line
@@ -33,8 +33,7 @@
     punpcklbw   xmm0, xmm1
     pmaddubsw   xmm0, xmm3
 
-    paddsw      xmm0, xmm2                  ;rounding
-    psraw       xmm0, 7                     ;shift
+    pmulhrsw    xmm0, xmm2                  ;rounding(+64)+shift(>>7)
     packuswb    xmm0, xmm0                  ;pack to byte
 
 %if %1
@@ -51,7 +50,7 @@
     mov         rdx, arg(5)                 ;filter ptr
     mov         rsi, arg(0)                 ;src_ptr
     mov         rdi, arg(2)                 ;output_ptr
-    mov         rcx, 0x0400040
+    mov         ecx, 0x01000100
 
     movdqa      xmm7, [rdx]                 ;load filters
     psrldq      xmm7, 6
@@ -59,7 +58,7 @@
     pshuflw     xmm7, xmm7, 0b              ;k3_k4
     punpcklwd   xmm7, xmm7
 
-    movq        xmm6, rcx                   ;rounding
+    movd        xmm6, ecx                   ;rounding_shift
     pshufd      xmm6, xmm6, 0
 
     movsxd      rax, DWORD PTR arg(1)       ;pixels_per_line
@@ -71,8 +70,7 @@
     punpcklbw   xmm0, xmm1
     pmaddubsw   xmm0, xmm7
 
-    paddsw      xmm0, xmm6                  ;rounding
-    psraw       xmm0, 7                     ;shift
+    pmulhrsw    xmm0, xmm6                  ;rounding(+64)+shift(>>7)
     packuswb    xmm0, xmm0                  ;pack back to byte
 
 %if %1
@@ -92,10 +90,8 @@
     pmaddubsw   xmm0, xmm7
     pmaddubsw   xmm2, xmm7
 
-    paddsw      xmm0, xmm6                  ;rounding
-    paddsw      xmm2, xmm6
-    psraw       xmm0, 7                     ;shift
-    psraw       xmm2, 7
+    pmulhrsw    xmm0, xmm6                  ;rounding(+64)+shift(>>7)
+    pmulhrsw    xmm2, xmm6
     packuswb    xmm0, xmm2                  ;pack back to byte
 
 %if %1

@@ -8,11 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#if defined(_MSC_VER) && _MSC_VER <= 1500
-// Need to include math.h before calling tmmintrin.h/intrin.h
-// in certain versions of MSVS.
-#include <math.h>
-#endif
 #include <tmmintrin.h>  // SSSE3
 
 #include "./vp9_rtcd.h"
@@ -24,23 +19,22 @@ extern void vp9_scale_and_extend_frame_c(const YV12_BUFFER_CONFIG *src,
                                          YV12_BUFFER_CONFIG *dst);
 
 static void downsample_2_to_1_ssse3(const uint8_t *src, ptrdiff_t src_stride,
-                                    uint8_t *dst, ptrdiff_t dst_stride,
-                                    int w, int h) {
+                                    uint8_t *dst, ptrdiff_t dst_stride, int w,
+                                    int h) {
   const __m128i mask = _mm_set1_epi16(0x00FF);
   const int max_width = w & ~15;
   int y;
   for (y = 0; y < h; ++y) {
     int x;
     for (x = 0; x < max_width; x += 16) {
-      const __m128i a = _mm_loadu_si128((const __m128i *)(src + x * 2 +  0));
+      const __m128i a = _mm_loadu_si128((const __m128i *)(src + x * 2 + 0));
       const __m128i b = _mm_loadu_si128((const __m128i *)(src + x * 2 + 16));
       const __m128i a_and = _mm_and_si128(a, mask);
       const __m128i b_and = _mm_and_si128(b, mask);
       const __m128i c = _mm_packus_epi16(a_and, b_and);
       _mm_storeu_si128((__m128i *)(dst + x), c);
     }
-    for (; x < w; ++x)
-      dst[x] = src[x * 2];
+    for (; x < w; ++x) dst[x] = src[x * 2];
     src += src_stride * 2;
     dst += dst_stride;
   }
@@ -52,9 +46,8 @@ static INLINE __m128i filter(const __m128i *const a, const __m128i *const b,
                              const __m128i *const g, const __m128i *const h) {
   const __m128i coeffs_ab =
       _mm_set_epi8(6, -1, 6, -1, 6, -1, 6, -1, 6, -1, 6, -1, 6, -1, 6, -1);
-  const __m128i coeffs_cd =
-      _mm_set_epi8(78, -19, 78, -19, 78, -19, 78, -19, 78, -19, 78, -19,
-                   78, -19, 78, -19);
+  const __m128i coeffs_cd = _mm_set_epi8(78, -19, 78, -19, 78, -19, 78, -19, 78,
+                                         -19, 78, -19, 78, -19, 78, -19);
   const __m128i const64_x16 = _mm_set1_epi16(64);
   const __m128i ab = _mm_unpacklo_epi8(*a, *b);
   const __m128i cd = _mm_unpacklo_epi8(*c, *d);
@@ -93,8 +86,8 @@ static void eight_tap_row_ssse3(const uint8_t *src, uint8_t *dst, int w) {
 }
 
 static void upsample_1_to_2_ssse3(const uint8_t *src, ptrdiff_t src_stride,
-                                  uint8_t *dst, ptrdiff_t dst_stride,
-                                  int dst_w, int dst_h) {
+                                  uint8_t *dst, ptrdiff_t dst_stride, int dst_w,
+                                  int dst_h) {
   dst_w /= 2;
   dst_h /= 2;
   {
@@ -121,7 +114,7 @@ static void upsample_1_to_2_ssse3(const uint8_t *src, ptrdiff_t src_stride,
       int x;
       eight_tap_row_ssse3(src + src_stride * 4 - 3, tmp7, dst_w);
       for (x = 0; x < max_width; x += 8) {
-        const __m128i A = _mm_loadl_epi64((const __m128i *)(src  + x));
+        const __m128i A = _mm_loadl_epi64((const __m128i *)(src + x));
         const __m128i B = _mm_loadl_epi64((const __m128i *)(tmp3 + x));
         const __m128i AB = _mm_unpacklo_epi8(A, B);
         __m128i C, D, CD;
@@ -184,23 +177,23 @@ void vp9_scale_and_extend_frame_ssse3(const YV12_BUFFER_CONFIG *src,
   const int dst_uv_h = dst_h / 2;
 
   if (dst_w * 2 == src_w && dst_h * 2 == src_h) {
-    downsample_2_to_1_ssse3(src->y_buffer, src->y_stride,
-                            dst->y_buffer, dst->y_stride, dst_w, dst_h);
-    downsample_2_to_1_ssse3(src->u_buffer, src->uv_stride,
-                            dst->u_buffer, dst->uv_stride, dst_uv_w, dst_uv_h);
-    downsample_2_to_1_ssse3(src->v_buffer, src->uv_stride,
-                            dst->v_buffer, dst->uv_stride, dst_uv_w, dst_uv_h);
+    downsample_2_to_1_ssse3(src->y_buffer, src->y_stride, dst->y_buffer,
+                            dst->y_stride, dst_w, dst_h);
+    downsample_2_to_1_ssse3(src->u_buffer, src->uv_stride, dst->u_buffer,
+                            dst->uv_stride, dst_uv_w, dst_uv_h);
+    downsample_2_to_1_ssse3(src->v_buffer, src->uv_stride, dst->v_buffer,
+                            dst->uv_stride, dst_uv_w, dst_uv_h);
     vpx_extend_frame_borders(dst);
   } else if (dst_w == src_w * 2 && dst_h == src_h * 2) {
     // The upsample() supports widths up to 1920 * 2.  If greater, fall back
     // to vp9_scale_and_extend_frame_c().
-    if (dst_w/2 <= 1920) {
-      upsample_1_to_2_ssse3(src->y_buffer, src->y_stride,
-                            dst->y_buffer, dst->y_stride, dst_w, dst_h);
-      upsample_1_to_2_ssse3(src->u_buffer, src->uv_stride,
-                            dst->u_buffer, dst->uv_stride, dst_uv_w, dst_uv_h);
-      upsample_1_to_2_ssse3(src->v_buffer, src->uv_stride,
-                            dst->v_buffer, dst->uv_stride, dst_uv_w, dst_uv_h);
+    if (dst_w / 2 <= 1920) {
+      upsample_1_to_2_ssse3(src->y_buffer, src->y_stride, dst->y_buffer,
+                            dst->y_stride, dst_w, dst_h);
+      upsample_1_to_2_ssse3(src->u_buffer, src->uv_stride, dst->u_buffer,
+                            dst->uv_stride, dst_uv_w, dst_uv_h);
+      upsample_1_to_2_ssse3(src->v_buffer, src->uv_stride, dst->v_buffer,
+                            dst->uv_stride, dst_uv_w, dst_uv_h);
       vpx_extend_frame_borders(dst);
     } else {
       vp9_scale_and_extend_frame_c(src, dst);

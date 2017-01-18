@@ -35,7 +35,7 @@ typedef struct {
   int is_key_frame;
   int frames_from_key_frame;
   FRAME_TYPE last_frame_type;
-  struct lookahead_entry  *alt_ref_source;
+  struct lookahead_entry *alt_ref_source;
   int alt_ref_idx;
   int gold_ref_idx;
   int has_alt_frame;
@@ -46,6 +46,7 @@ typedef struct {
   signed char *map;
   uint8_t *last_coded_q_map;
   uint8_t *consec_zero_mv;
+  uint8_t speed;
 } LAYER_CONTEXT;
 
 typedef struct {
@@ -59,11 +60,7 @@ typedef struct {
   int rc_drop_superframe;
 
   // Workaround for multiple frame contexts
-  enum {
-    ENCODED = 0,
-    ENCODING,
-    NEED_TO_ENCODE
-  }encode_empty_frame_state;
+  enum { ENCODED = 0, ENCODING, NEED_TO_ENCODE } encode_empty_frame_state;
   struct lookahead_entry empty_frame;
   int encode_intra_empty_frame;
 
@@ -72,6 +69,8 @@ typedef struct {
   YV12_BUFFER_CONFIG scaled_frames[MAX_LAG_BUFFERS];
   // Temp buffer used for 2-stage down-sampling, for real-time mode.
   YV12_BUFFER_CONFIG scaled_temp;
+  int scaled_one_half;
+  int scaled_temp_is_alloc;
 
   // Layer context used for rate control in one pass temporal CBR mode or
   // two pass spatial mode.

@@ -53,11 +53,13 @@ function CookiesPanel({
   }
 
   return (
-    PropertiesView({
-      object,
-      filterPlaceHolder: COOKIES_FILTER_TEXT,
-      sectionNames: SECTION_NAMES,
-    })
+    div({ className: "panel-container" },
+      PropertiesView({
+        object,
+        filterPlaceHolder: COOKIES_FILTER_TEXT,
+        sectionNames: SECTION_NAMES,
+      })
+    )
   );
 }
 
