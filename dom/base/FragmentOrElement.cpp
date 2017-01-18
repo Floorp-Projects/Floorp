@@ -1161,10 +1161,10 @@ FragmentOrElement::RemoveChildAt(uint32_t aIndex, bool aNotify)
 
 void
 FragmentOrElement::GetTextContentInternal(nsAString& aTextContent,
-                                          ErrorResult& aError)
+                                          OOMReporter& aError)
 {
   if (!nsContentUtils::GetNodeTextContent(this, true, aTextContent, fallible)) {
-    aError.Throw(NS_ERROR_OUT_OF_MEMORY);
+    aError.ReportOOM();
   }
 }
 
