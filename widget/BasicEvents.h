@@ -132,6 +132,10 @@ public:
   // Similar to mComposed. Set it to true to allow events cross the boundary
   // between native non-anonymous content and native anonymouse content
   bool mComposedInNativeAnonymousContent : 1;
+  // True if the event is suppressed or delayed. This is used when parent side
+  // process the key event after content side, parent side may drop the key
+  // event if it was suppressed or delayed in content side.
+  bool mIsSuppressedOrDelayed : 1;
 
   // If the event is being handled in target phase, returns true.
   inline bool InTargetPhase() const
