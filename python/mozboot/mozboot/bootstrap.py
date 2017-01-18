@@ -55,8 +55,7 @@ But don't worry! You can always switch configurations later.
 You can learn more about Artifact mode builds at
 https://developer.mozilla.org/en-US/docs/Artifact_builds.
 
-Your choice:
-'''
+Your choice: '''
 
 APPLICATIONS_LIST=[
     ('Firefox for Desktop Artifact Mode', 'browser_artifact_mode'),
@@ -90,8 +89,7 @@ Would you like to create this directory?
   1. Yes
   2. No
 
-Your choice:
-'''
+Your choice: '''
 
 FINISHED = '''
 Your system should be ready to build %s!
@@ -122,7 +120,7 @@ optimally configured?
   1. Yes
   2. No
 
-Please enter your reply: '''.lstrip()
+Please enter your reply: '''
 
 CLONE_MERCURIAL = '''
 If you would like to clone the canonical Mercurial repository, please
