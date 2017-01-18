@@ -808,7 +808,6 @@ pref("gfx.ycbcr.accurate-conversion", false);
 
 #ifdef MOZ_ENABLE_WEBRENDER
 pref("gfx.webrender.enabled", true);
-pref("layers.advanced.border-layers", false);
 #endif
 
 pref("accessibility.browsewithcaret", false);
@@ -4661,6 +4660,8 @@ pref("layers.bufferrotation.enabled", true);
 
 pref("layers.componentalpha.enabled", true);
 pref("layers.draw-mask-debug", false);
+
+pref("layers.advanced.border-layers", false);
 
 pref("gfx.content.always-paint", false);
 
