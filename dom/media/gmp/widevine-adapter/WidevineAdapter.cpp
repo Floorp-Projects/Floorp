@@ -7,6 +7,7 @@
 #include "content_decryption_module.h"
 #include "VideoUtils.h"
 #include "WidevineDecryptor.h"
+#include "WidevineDummyDecoder.h"
 #include "WidevineUtils.h"
 #include "WidevineVideoDecoder.h"
 #include "gmp-api/gmp-entrypoints.h"
@@ -89,7 +90,7 @@ WidevineAdapter::GMPGetAPI(const char* aAPIName,
                            uint32_t aDecryptorId)
 {
   Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p",
-      aAPIName, aHostAPI, aPluginAPI, this, aDecryptorId);
+      aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this);
   if (!strcmp(aAPIName, GMP_API_DECRYPTOR)) {
     if (WidevineDecryptor::GetInstance(aDecryptorId)) {
       // We only support one CDM instance per PGMPDecryptor. Fail!
@@ -100,7 +101,7 @@ WidevineAdapter::GMPGetAPI(const char* aAPIName,
       PR_FindFunctionSymbol(mLib, "CreateCdmInstance"));
     if (!create) {
       Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p FAILED to find CreateCdmInstance",
-        aAPIName, aHostAPI, aPluginAPI, this, aDecryptorId);
+        aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this);
       return GMPGenericErr;
     }
 
@@ -114,7 +115,7 @@ WidevineAdapter::GMPGetAPI(const char* aAPIName,
              decryptor));
     if (!cdm) {
       Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p FAILED to create cdm",
-          aAPIName, aHostAPI, aPluginAPI, this, aDecryptorId);
+          aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this);
       return GMPGenericErr;
     }
     Log("cdm: 0x%x", cdm);
@@ -124,13 +125,19 @@ WidevineAdapter::GMPGetAPI(const char* aAPIName,
 
   } else if (!strcmp(aAPIName, GMP_API_VIDEO_DECODER)) {
     RefPtr<CDMWrapper> wrapper = WidevineDecryptor::GetInstance(aDecryptorId);
+
+    // There is a possible race condition, where the decryptor will be destroyed
+    // before we are able to create the video decoder, so we create a dummy
+    // decoder to avoid crashing.
     if (!wrapper) {
-      Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p No cdm for video decoder",
-          aAPIName, aHostAPI, aPluginAPI, thiss, aDecryptorId);
-      return GMPGenericErr;
+      Log("WidevineAdapter::GMPGetAPI(%s, 0x%p, 0x%p, %u) this=0x%p No cdm for video decoder. Using a DummyDecoder",
+          aAPIName, aHostAPI, aPluginAPI, aDecryptorId, this);
+
+      *aPluginAPI = new WidevineDummyDecoder();
+    } else {
+      *aPluginAPI = new WidevineVideoDecoder(static_cast<GMPVideoHost*>(aHostAPI),
+                                             wrapper);
     }
-    *aPluginAPI = new WidevineVideoDecoder(static_cast<GMPVideoHost*>(aHostAPI),
-                                           wrapper);
   }
   return *aPluginAPI ? GMPNoErr : GMPNotImplementedErr;
 }

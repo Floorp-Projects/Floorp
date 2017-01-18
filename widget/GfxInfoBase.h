@@ -16,6 +16,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/dom/PContentParent.h"
 #include "nsCOMPtr.h"
 #include "nsIGfxInfo.h"
 #include "nsIGfxInfoDebug.h"
@@ -77,6 +78,7 @@ public:
   static void RemoveCollector(GfxInfoCollectorBase* collector);
 
   static nsTArray<GfxDriverInfo>* mDriverInfo;
+  static nsTArray<mozilla::dom::GfxInfoFeatureStatus>* mFeatureStatus;
   static bool mDriverInfoObserverInitialized;
   static bool mShutdownOccurred;
 
@@ -92,6 +94,9 @@ public:
   virtual nsresult FindMonitors(JSContext* cx, JS::HandleObject array) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
+
+  static void SetFeatureStatus(
+      const nsTArray<mozilla::dom::GfxInfoFeatureStatus>& aFS);
 
 protected:
 

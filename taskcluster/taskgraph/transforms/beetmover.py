@@ -184,7 +184,7 @@ def make_task_description(config, jobs):
             'treeherder', {}).get('machine', {}).get('platform', '')
         treeherder.setdefault('platform',
                               "{}/opt".format(dep_th_platform))
-        treeherder.setdefault('tier', 2)
+        treeherder.setdefault('tier', 1)
         treeherder.setdefault('kind', 'build')
 
         label = job.get('label', "beetmover-{}".format(dep_job.label))

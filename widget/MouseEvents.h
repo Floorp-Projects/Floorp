@@ -121,6 +121,7 @@ public:
 
   enum buttonType
   {
+    eNoButton     = -1,
     eLeftButton   = 0,
     eMiddleButton = 1,
     eRightButton  = 2

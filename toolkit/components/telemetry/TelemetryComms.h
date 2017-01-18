@@ -138,7 +138,7 @@ ParamTraits<mozilla::Telemetry::ScalarAction>
         }
       case nsITelemetry::SCALAR_STRING:
         {
-          nsString val;
+          nsAutoString val;
           nsresult rv = aParam.mData->GetAsAString(val);
           if (NS_FAILED(rv)) {
             MOZ_ASSERT(false, "Conversion failed.");
@@ -189,7 +189,7 @@ ParamTraits<mozilla::Telemetry::ScalarAction>
         }
       case nsITelemetry::SCALAR_STRING:
         {
-          nsString data;
+          nsAutoString data;
           // De-serialize the data.
           if (!ReadParam(aMsg, aIter, &data) ||
               NS_FAILED(outVar->SetAsAString(data))) {
