@@ -119,6 +119,8 @@ public:
 
   void DidComposite(uint64_t aTransactionId, TimeStamp aStart, TimeStamp aEnd);
 
+  TextureFactoryIdentifier GetTextureFactoryIdentifier();
+
 private:
   virtual ~WebRenderBridgeParent();
 

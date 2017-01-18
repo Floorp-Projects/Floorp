@@ -72,16 +72,20 @@ public:
 
   void RunOnRenderThread(UniquePtr<RendererEvent>&& aEvent);
 
+  GLint GetMaxTextureSize() const { return mMaxTextureSize; }
+
 protected:
-  WebRenderAPI(WrAPI* aRawApi, wr::WindowId aId)
+  WebRenderAPI(WrAPI* aRawApi, wr::WindowId aId, GLint aMaxTextureSize)
   : mWrApi(aRawApi)
   , mId(aId)
+  , mMaxTextureSize(aMaxTextureSize)
   {}
 
   ~WebRenderAPI();
 
   WrAPI* mWrApi;
   wr::WindowId mId;
+  GLint mMaxTextureSize;
 
   friend class NewRenderer;
   friend class DisplayListBuilder;
