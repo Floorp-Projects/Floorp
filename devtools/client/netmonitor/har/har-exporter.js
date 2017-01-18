@@ -59,8 +59,8 @@ const HarExporter = {
    *   This represents great disk-space optimization.
    *
    * - defaultFileName {String}: Default name of the target HAR file.
-   *   The default file name supports formatters, see:
-   *   https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleFormat
+   *   The default file name supports the format specifier %date to output the
+   *   current date/time.
    *
    * - defaultLogDir {String}: Default log directory for automated logs.
    *
