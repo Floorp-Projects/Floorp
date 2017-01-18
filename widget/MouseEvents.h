@@ -49,7 +49,6 @@ public:
   uint32_t twist;
   float tangentialPressure;
   bool convertToPointer;
-  bool retargetedByPointerCapture;
 
   WidgetPointerHelper()
     : pointerId(0)
@@ -58,7 +57,6 @@ public:
     , twist(0)
     , tangentialPressure(0)
     , convertToPointer(true)
-    , retargetedByPointerCapture(false)
   {
   }
 
@@ -70,7 +68,6 @@ public:
     , twist(aTwist)
     , tangentialPressure(aTangentialPressure)
     , convertToPointer(true)
-    , retargetedByPointerCapture(false)
   {
   }
 
@@ -82,7 +79,6 @@ public:
     twist = aEvent.twist;
     tangentialPressure = aEvent.tangentialPressure;
     convertToPointer = aEvent.convertToPointer;
-    retargetedByPointerCapture = aEvent.retargetedByPointerCapture;
   }
 };
 
