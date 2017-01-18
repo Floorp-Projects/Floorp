@@ -616,7 +616,7 @@ Sync11Service.prototype = {
             let cryptoResp = cryptoKeys.fetch(this.resource(this.cryptoKeysURL)).response;
 
             if (cryptoResp.success) {
-              this.handleFetchedKeys(syncKeyBundle, cryptoKeys);
+              let keysChanged = this.handleFetchedKeys(syncKeyBundle, cryptoKeys);
               return true;
             } else if (cryptoResp.status == 404) {
               // On failure, ask to generate new keys and upload them.
@@ -662,9 +662,11 @@ Sync11Service.prototype = {
 
         // Last-ditch case.
         return false;
+      } else {
+        // No update needed: we're good!
+        return true;
       }
-      // No update needed: we're good!
-      return true;
+
     } catch (ex) {
       // This means no keys are present, or there's a network error.
       this._log.debug("Failed to fetch and verify keys", ex);
@@ -1090,6 +1092,8 @@ Sync11Service.prototype = {
   // Stuff we need to do after login, before we can really do
   // anything (e.g. key setup).
   _remoteSetup: function _remoteSetup(infoResponse) {
+    let reset = false;
+
     if (!this._fetchServerConfiguration()) {
       return false;
     }
@@ -1221,18 +1225,19 @@ Sync11Service.prototype = {
       }
 
       return true;
-    }
-    if (!this.upgradeSyncKey(meta.payload.syncID)) {
-      this._log.warn("Failed to upgrade sync key. Failing remote setup.");
-      return false;
-    }
+    } else {
+      if (!this.upgradeSyncKey(meta.payload.syncID)) {
+        this._log.warn("Failed to upgrade sync key. Failing remote setup.");
+        return false;
+      }
 
-    if (!this.verifyAndFetchSymmetricKeys(infoResponse)) {
-      this._log.warn("Failed to fetch symmetric keys. Failing remote setup.");
-      return false;
-    }
+      if (!this.verifyAndFetchSymmetricKeys(infoResponse)) {
+        this._log.warn("Failed to fetch symmetric keys. Failing remote setup.");
+        return false;
+      }
 
-    return true;
+      return true;
+    }
   },
 
   /**
@@ -1312,7 +1317,7 @@ Sync11Service.prototype = {
       synchronizer.sync(engineNamesToSync);
       // wait() throws if the first argument is truthy, which is exactly what
       // we want.
-      cb.wait();
+      let result = cb.wait();
 
       histogram = Services.telemetry.getHistogramById("WEAVE_COMPLETE_SUCCESS_COUNT");
       histogram.add(1);
@@ -1500,7 +1505,7 @@ Sync11Service.prototype = {
     this.upgradeSyncKey(this.syncID);
 
     // Wipe the server.
-    this.wipeServer();
+    let wipeTimestamp = this.wipeServer();
 
     // Upload a new meta/global record.
     let meta = new WBORecord("meta", "global");
@@ -1516,6 +1521,8 @@ Sync11Service.prototype = {
     this.uploadMetaGlobal(meta);
 
     // Wipe everything we know about except meta because we just uploaded it
+    let engines = [this.clientsEngine].concat(this.engineManager.getAll());
+    let collections = engines.map(engine => engine.name);
     // TODO: there's a bug here. We should be calling resetClient, no?
 
     // Generate, upload, and download new keys. Do this last so we don't wipe
@@ -1595,8 +1602,9 @@ Sync11Service.prototype = {
       this.resetService();
 
       engines = [this.clientsEngine].concat(this.engineManager.getAll());
-    } else {
-      // Convert the array of names into engines
+    }
+    // Convert the array of names into engines
+    else {
       engines = this.engineManager.get(engines);
     }
 
@@ -1631,8 +1639,9 @@ Sync11Service.prototype = {
         engines.forEach(function(e) {
             this.clientsEngine.sendCommand("wipeEngine", [e]);
           }, this);
-      } else {
-        // Tell the remote machines to wipe themselves.
+      }
+      // Tell the remote machines to wipe themselves.
+      else {
         this.clientsEngine.sendCommand("wipeAll", []);
       }
 
@@ -1671,8 +1680,9 @@ Sync11Service.prototype = {
         this.resetService();
 
         engines = [this.clientsEngine].concat(this.engineManager.getAll());
-      } else {
-        // Convert the array of names into engines
+      }
+      // Convert the array of names into engines
+      else {
         engines = this.engineManager.get(engines);
       }
 

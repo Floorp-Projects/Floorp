@@ -32,6 +32,8 @@ FakeCollection.prototype = {
 };
 
 async function setUpTestFixtures(server) {
+  let cryptoService = new FakeCryptoService();
+
   Service.serverURL = server.baseURI + "/";
   Service.clusterURL = server.baseURI + "/";
 

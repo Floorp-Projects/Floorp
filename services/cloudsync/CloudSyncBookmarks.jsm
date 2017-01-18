@@ -144,6 +144,7 @@ var Bookmarks = function() {
 
   let getRootFolder = function(name) {
     let ROOT_FOLDER_ANNO = "cloudsync/rootFolder/" + name;
+    let ROOT_SHORTCUT_ANNO = "cloudsync/rootShortcut/" + name;
     let deferred = Promise.defer();
 
     function checkRootFolder(folderIds) {
@@ -170,6 +171,7 @@ var Bookmarks = function() {
     let ROOT_SHORTCUT_ANNO = "cloudsync/rootShortcut/" + name;
 
     let deferred = Promise.defer();
+    let placesRootId = PlacesUtils.placesRootId;
 
     function getRootShortcutId() {
       return PlacesWrapper.getLocalIdsWithAnnotation(ROOT_SHORTCUT_ANNO);

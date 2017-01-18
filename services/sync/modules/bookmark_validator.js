@@ -324,6 +324,7 @@ class BookmarkValidator {
     let deletedRecords = [];
 
     let folders = [];
+    let problems = [];
 
     let problemData = new BookmarkProblemData();
 
@@ -618,6 +619,8 @@ class BookmarkValidator {
     let problemData = inspectionInfo.problemData;
 
     this._validateClient(problemData, clientRecords);
+
+    let matches = [];
 
     let allRecords = new Map();
     let serverDeletedLookup = new Set(inspectionInfo.deletedRecords.map(r => r.id));

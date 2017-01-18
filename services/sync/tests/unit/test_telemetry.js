@@ -160,10 +160,15 @@ add_task(async function test_uploading() {
 
   let parent = PlacesUtils.toolbarFolderId;
   let uri = Utils.makeURI("http://getfirefox.com/");
+  let title = "Get Firefox";
 
   let bmk_id = PlacesUtils.bookmarks.insertBookmark(parent, uri,
     PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
 
+  let guid = store.GUIDForId(bmk_id);
+  let record = store.createRecord(guid);
+
+  let collection = server.user("foo").collection("bookmarks");
   try {
     let ping = await sync_engine_and_validate_telem(engine, false);
     ok(!!ping);
@@ -333,6 +338,7 @@ add_task(async function test_generic_engine_fail() {
   Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
+  let store  = engine._store;
   let server = serverForUsers({"foo": "password"}, {
     meta: {global: {engines: {steam: {version: engine.version,
                                       syncID: engine.syncID}}}},
@@ -361,6 +367,7 @@ add_task(async function test_engine_fail_ioerror() {
   Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
+  let store  = engine._store;
   let server = serverForUsers({"foo": "password"}, {
     meta: {global: {engines: {steam: {version: engine.version,
                                       syncID: engine.syncID}}}},
@@ -398,6 +405,7 @@ add_task(async function test_initial_sync_engines() {
   Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
+  let store  = engine._store;
   let engines = {};
   // These are the only ones who actually have things to sync at startup.
   let engineNames = ["clients", "bookmarks", "prefs", "tabs"];
@@ -436,6 +444,7 @@ add_task(async function test_nserror() {
   Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
+  let store  = engine._store;
   let server = serverForUsers({"foo": "password"}, {
     meta: {global: {engines: {steam: {version: engine.version,
                                       syncID: engine.syncID}}}},
@@ -511,6 +520,7 @@ add_task(async function test_no_foreign_engines_in_error_ping() {
   Service.engineManager.register(BogusEngine);
   let engine = Service.engineManager.get("bogus");
   engine.enabled = true;
+  let store  = engine._store;
   let server = serverForUsers({"foo": "password"}, {
     meta: {global: {engines: {bogus: {version: engine.version, syncID: engine.syncID}}}},
     steam: {}
@@ -531,6 +541,7 @@ add_task(async function test_sql_error() {
   Service.engineManager.register(SteamEngine);
   let engine = Service.engineManager.get("steam");
   engine.enabled = true;
+  let store  = engine._store;
   let server = serverForUsers({"foo": "password"}, {
     meta: {global: {engines: {steam: {version: engine.version,
                                       syncID: engine.syncID}}}},
@@ -558,6 +569,7 @@ add_task(async function test_no_foreign_engines_in_success_ping() {
   Service.engineManager.register(BogusEngine);
   let engine = Service.engineManager.get("bogus");
   engine.enabled = true;
+  let store  = engine._store;
   let server = serverForUsers({"foo": "password"}, {
     meta: {global: {engines: {bogus: {version: engine.version, syncID: engine.syncID}}}},
     steam: {}

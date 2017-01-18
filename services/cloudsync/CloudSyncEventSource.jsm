@@ -54,7 +54,7 @@ EventSource.prototype = {
     CommonUtils.nextTick(
       function() {
         for (let listener of this.listeners.get(type)) {
-          listener(arg);
+          listener.call(undefined, arg);
         }
       },
       this

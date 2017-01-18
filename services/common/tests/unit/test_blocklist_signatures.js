@@ -143,6 +143,7 @@ add_task(function* test_check_signatures() {
 
     for (let key of Object.keys(responses)) {
       const keyParts = key.split(":");
+      const method = keyParts[0];
       const valueParts = keyParts[1].split("?");
       const path = valueParts[0];
 
