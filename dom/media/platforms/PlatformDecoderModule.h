@@ -29,6 +29,10 @@ namespace layers {
 class ImageContainer;
 } // namespace layers
 
+namespace dom {
+class RemoteDecoderModule;
+}
+
 class MediaDataDecoder;
 class MediaDataDecoderCallback;
 class TaskQueue;
@@ -145,6 +149,7 @@ protected:
 
   friend class H264Converter;
   friend class PDMFactory;
+  friend class dom::RemoteDecoderModule;
 
   // Creates a Video decoder. The layers backend is passed in so that
   // decoders can determine whether hardware accelerated decoding can be used.
