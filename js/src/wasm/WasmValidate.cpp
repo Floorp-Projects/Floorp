@@ -424,6 +424,7 @@ DecodeFunctionBodyExprs(FunctionDecoder& f)
           case uint16_t(Op::End):
             if (!f.iter().readEnd(nullptr, nullptr, nullptr))
                 return false;
+            f.iter().popEnd();
             if (f.iter().controlStackEmpty())
                 return true;
             break;
