@@ -63,7 +63,7 @@ function clean() {
   errorHandler.didReportProlongedError = false;
 }
 
-add_identity_test(this, async function test_401_logout() {
+add_task(async function test_401_logout() {
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
@@ -106,7 +106,7 @@ add_identity_test(this, async function test_401_logout() {
   await deferred.promise;
 });
 
-add_identity_test(this, async function test_credentials_changed_logout() {
+add_task(async function test_credentials_changed_logout() {
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
 
@@ -132,7 +132,7 @@ add_identity_test(this, async function test_credentials_changed_logout() {
   await promiseStopServer(server);
 });
 
-add_identity_test(this, function test_no_lastSync_pref() {
+add_task(function test_no_lastSync_pref() {
   // Test reported error.
   Status.resetSync();
   errorHandler.dontIgnoreErrors = true;
@@ -147,7 +147,7 @@ add_identity_test(this, function test_no_lastSync_pref() {
 
 });
 
-add_identity_test(this, function test_shouldReportError() {
+add_task(function test_shouldReportError() {
   Status.login = MASTER_PASSWORD_LOCKED;
   do_check_false(errorHandler.shouldReportError());
 
@@ -320,7 +320,7 @@ add_identity_test(this, function test_shouldReportError() {
   do_check_false(errorHandler.didReportProlongedError);
 });
 
-add_identity_test(this, async function test_shouldReportError_master_password() {
+add_task(async function test_shouldReportError_master_password() {
   _("Test error ignored due to locked master password");
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
@@ -345,7 +345,7 @@ add_identity_test(this, async function test_shouldReportError_master_password() 
 
 // Test that even if we don't have a cluster URL, a login failure due to
 // authentication errors is always reported.
-add_identity_test(this, function test_shouldReportLoginFailureWithNoCluster() {
+add_task(function test_shouldReportLoginFailureWithNoCluster() {
   // Ensure no clusterURL - any error not specific to login should not be reported.
   Service.serverURL  = "";
   Service.clusterURL = "";
@@ -379,7 +379,7 @@ add_task(async function test_login_syncAndReportErrors_non_network_error() {
   await promiseStopServer(server);
 });
 
-add_identity_test(this, async function test_sync_syncAndReportErrors_non_network_error() {
+add_task(async function test_sync_syncAndReportErrors_non_network_error() {
   // Test non-network errors are reported
   // when calling syncAndReportErrors
   let server = EHTestsCommon.sync_httpd_setup();
@@ -428,7 +428,7 @@ add_task(async function test_login_syncAndReportErrors_prolonged_non_network_err
   await promiseStopServer(server);
 });
 
-add_identity_test(this, async function test_sync_syncAndReportErrors_prolonged_non_network_error() {
+add_task(async function test_sync_syncAndReportErrors_prolonged_non_network_error() {
   // Test prolonged, non-network errors are
   // reported when calling syncAndReportErrors.
   let server = EHTestsCommon.sync_httpd_setup();
@@ -459,7 +459,7 @@ add_identity_test(this, async function test_sync_syncAndReportErrors_prolonged_n
   await promiseStopServer(server);
 });
 
-add_identity_test(this, async function test_login_syncAndReportErrors_network_error() {
+add_task(async function test_login_syncAndReportErrors_network_error() {
   // Test network errors are reported when calling syncAndReportErrors.
   await configureIdentity({username: "broken.wipe"});
   Service.serverURL  = fakeServerUrl;
@@ -494,7 +494,7 @@ add_test(function test_sync_syncAndReportErrors_network_error() {
   errorHandler.syncAndReportErrors();
 });
 
-add_identity_test(this, async function test_login_syncAndReportErrors_prolonged_network_error() {
+add_task(async function test_login_syncAndReportErrors_prolonged_network_error() {
   // Test prolonged, network errors are reported
   // when calling syncAndReportErrors.
   await configureIdentity({username: "johndoe"});
@@ -577,7 +577,7 @@ add_task(async function test_sync_prolonged_non_network_error() {
   await promiseStopServer(server);
 });
 
-add_identity_test(this, async function test_login_prolonged_network_error() {
+add_task(async function test_login_prolonged_network_error() {
   // Test prolonged, network errors are reported
   await configureIdentity({username: "johndoe"});
   Service.serverURL  = fakeServerUrl;
@@ -654,7 +654,7 @@ add_task(async function test_sync_non_network_error() {
   await promiseStopServer(server);
 });
 
-add_identity_test(this, async function test_login_network_error() {
+add_task(async function test_login_network_error() {
   await configureIdentity({username: "johndoe"});
   Service.serverURL  = fakeServerUrl;
   Service.clusterURL = fakeServerUrl;
@@ -690,7 +690,7 @@ add_test(function test_sync_network_error() {
   Service.sync();
 });
 
-add_identity_test(this, async function test_sync_server_maintenance_error() {
+add_task(async function test_sync_server_maintenance_error() {
   // Test server maintenance errors are not reported.
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
@@ -724,7 +724,7 @@ add_identity_test(this, async function test_sync_server_maintenance_error() {
   await promiseStopServer(server);
 });
 
-add_identity_test(this, async function test_info_collections_login_server_maintenance_error() {
+add_task(async function test_info_collections_login_server_maintenance_error() {
   // Test info/collections server maintenance errors are not reported.
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
@@ -762,7 +762,7 @@ add_identity_test(this, async function test_info_collections_login_server_mainte
   await promiseStopServer(server);
 });
 
-add_identity_test(this, async function test_meta_global_login_server_maintenance_error() {
+add_task(async function test_meta_global_login_server_maintenance_error() {
   // Test meta/global server maintenance errors are not reported.
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);

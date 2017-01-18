@@ -69,7 +69,7 @@ async function cleanAndGo(engine, server) {
 // Avoid addon manager complaining about not being initialized
 Service.engineManager.unregister("addons");
 
-add_identity_test(this, async function test_basic() {
+add_task(async function test_basic() {
   let helper = track_collections_helper();
   let upd = helper.with_updated_collection;
 
@@ -461,7 +461,7 @@ add_task(async function test_nserror() {
   }
 });
 
-add_identity_test(this, async function test_discarding() {
+add_task(async function test_discarding() {
   let helper = track_collections_helper();
   let upd = helper.with_updated_collection;
   let telem = get_sync_test_telemetry();
