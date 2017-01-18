@@ -831,17 +831,6 @@ Sync11Service.prototype = {
 
     this.identity.deleteSyncCredentials();
 
-    // If necessary, reset the identity manager, then re-initialize it so the
-    // FxA manager is used.  This is configurable via a pref - mainly for tests.
-    let keepIdentity = false;
-    try {
-      keepIdentity = Services.prefs.getBoolPref("services.sync-testing.startOverKeepIdentity");
-    } catch (_) { /* no such pref */ }
-    if (keepIdentity) {
-      Svc.Obs.notify("weave:service:start-over:finish");
-      return;
-    }
-
     try {
       this.identity.finalize();
       // an observer so the FxA migration code can take some action before
