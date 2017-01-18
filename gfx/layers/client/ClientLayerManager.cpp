@@ -13,7 +13,6 @@
 #include "mozilla/hal_sandbox/PHal.h"   // for ScreenConfiguration
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositorBridgeChild.h" // for CompositorBridgeChild
-#include "mozilla/layers/ContentClient.h"
 #include "mozilla/layers/FrameUniformityData.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/LayersMessages.h"  // for EditReply, etc
@@ -681,35 +680,12 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   }
 
   // forward this transaction's changeset to our LayerManagerComposite
-  bool sent;
-  AutoTArray<EditReply, 10> replies;
-  if (mForwarder->EndTransaction(&replies, mRegionToClear,
-        mLatestTransactionId, aScheduleComposite, mPaintSequenceNumber,
-        mIsRepeatTransaction, transactionStart, &sent)) {
-    for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
-      const EditReply& reply = replies[i];
-
-      switch (reply.type()) {
-      case EditReply::TOpContentBufferSwap: {
-        MOZ_LAYERS_LOG(("[LayersForwarder] DoubleBufferSwap"));
-
-        const OpContentBufferSwap& obs = reply.get_OpContentBufferSwap();
-
-        RefPtr<CompositableClient> compositable =
-          CompositableClient::FromIPDLActor(obs.compositableChild());
-        ContentClientRemote* contentClient =
-          static_cast<ContentClientRemote*>(compositable.get());
-        MOZ_ASSERT(contentClient);
-
-        contentClient->SwapBuffers(obs.frontUpdatedRegion());
-
-        break;
-      }
-      default:
-        MOZ_CRASH("not reached");
-      }
-    }
-
+  bool sent = false;
+  bool ok = mForwarder->EndTransaction(
+    mRegionToClear, mLatestTransactionId, aScheduleComposite,
+    mPaintSequenceNumber, mIsRepeatTransaction, transactionStart,
+    &sent);
+  if (ok) {
     if (sent) {
       mNeedsComposite = false;
     }
