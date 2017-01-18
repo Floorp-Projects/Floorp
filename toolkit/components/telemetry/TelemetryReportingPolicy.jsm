@@ -433,11 +433,13 @@ var TelemetryReportingPolicyImpl = {
 
     // We'll consider the user notified once the privacy policy has been loaded
     // in a background tab even if that tab hasn't been selected.
+    let tab;
     let progressListener = {};
     progressListener.onStateChange =
       (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) => {
         if (aWebProgress.isTopLevel &&
-            aBrowser == tab.linkedBrowser &&
+            tab &&
+            tab.linkedBrowser == aBrowser &&
             aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
             aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
           let uri = aBrowser.documentURI;
@@ -459,7 +461,7 @@ var TelemetryReportingPolicyImpl = {
     win.addEventListener("unload", removeListeners);
     win.gBrowser.addTabsProgressListener(progressListener);
 
-    let tab = win.gBrowser.loadOneTab(firstRunPolicyURL, { inBackground: true });
+    tab = win.gBrowser.loadOneTab(firstRunPolicyURL, { inBackground: true });
 
     return true;
   },
