@@ -529,6 +529,16 @@ MacroAssembler::call(wasm::SymbolicAddress imm)
 }
 
 void
+MacroAssembler::call(const Address& addr)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    syncStackPtr();
+    loadPtr(addr, scratch);
+    call(scratch);
+}
+
+void
 MacroAssembler::call(JitCode* c)
 {
     vixl::UseScratchRegisterScope temps(this);
