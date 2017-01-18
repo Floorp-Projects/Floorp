@@ -80,6 +80,7 @@ public abstract class ActivityStreamContextMenu
         final MenuItem bookmarkItem = getItemByID(R.id.bookmark);
         if (Boolean.TRUE.equals(item.isBookmarked())) {
             bookmarkItem.setTitle(R.string.bookmark_remove);
+            bookmarkItem.setIcon(R.drawable.as_bookmark_filled);
         }
 
         final MenuItem pinItem = getItemByID(R.id.pin);
@@ -109,6 +110,7 @@ public abstract class ActivityStreamContextMenu
                 protected void onPostExecute(Boolean hasBookmark) {
                     if (hasBookmark) {
                         bookmarkItem.setTitle(R.string.bookmark_remove);
+                        bookmarkItem.setIcon(R.drawable.as_bookmark_filled);
                     }
 
                     item.updateBookmarked(hasBookmark);
