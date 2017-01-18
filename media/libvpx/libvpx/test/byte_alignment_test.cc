@@ -36,29 +36,26 @@ struct ByteAlignmentTestParam {
 };
 
 const ByteAlignmentTestParam kBaTestParams[] = {
-  {kLegacyByteAlignment, VPX_CODEC_OK, true},
-  {32, VPX_CODEC_OK, true},
-  {64, VPX_CODEC_OK, true},
-  {128, VPX_CODEC_OK, true},
-  {256, VPX_CODEC_OK, true},
-  {512, VPX_CODEC_OK, true},
-  {1024, VPX_CODEC_OK, true},
-  {1, VPX_CODEC_INVALID_PARAM, false},
-  {-2, VPX_CODEC_INVALID_PARAM, false},
-  {4, VPX_CODEC_INVALID_PARAM, false},
-  {16, VPX_CODEC_INVALID_PARAM, false},
-  {255, VPX_CODEC_INVALID_PARAM, false},
-  {2048, VPX_CODEC_INVALID_PARAM, false},
+  { kLegacyByteAlignment, VPX_CODEC_OK, true },
+  { 32, VPX_CODEC_OK, true },
+  { 64, VPX_CODEC_OK, true },
+  { 128, VPX_CODEC_OK, true },
+  { 256, VPX_CODEC_OK, true },
+  { 512, VPX_CODEC_OK, true },
+  { 1024, VPX_CODEC_OK, true },
+  { 1, VPX_CODEC_INVALID_PARAM, false },
+  { -2, VPX_CODEC_INVALID_PARAM, false },
+  { 4, VPX_CODEC_INVALID_PARAM, false },
+  { 16, VPX_CODEC_INVALID_PARAM, false },
+  { 255, VPX_CODEC_INVALID_PARAM, false },
+  { 2048, VPX_CODEC_INVALID_PARAM, false },
 };
 
 // Class for testing byte alignment of reference buffers.
 class ByteAlignmentTest
     : public ::testing::TestWithParam<ByteAlignmentTestParam> {
  protected:
-  ByteAlignmentTest()
-      : video_(NULL),
-        decoder_(NULL),
-        md5_file_(NULL) {}
+  ByteAlignmentTest() : video_(NULL), decoder_(NULL), md5_file_(NULL) {}
 
   virtual void SetUp() {
     video_ = new libvpx_test::WebMVideoSource(kVP9TestFile);
@@ -74,8 +71,7 @@ class ByteAlignmentTest
   }
 
   virtual void TearDown() {
-    if (md5_file_ != NULL)
-      fclose(md5_file_);
+    if (md5_file_ != NULL) fclose(md5_file_);
 
     delete decoder_;
     delete video_;
@@ -89,8 +85,7 @@ class ByteAlignmentTest
     const vpx_codec_err_t res =
         decoder_->DecodeFrame(video_->cxdata(), video_->frame_size());
     CheckDecodedFrames(byte_alignment_to_check);
-    if (res == VPX_CODEC_OK)
-      video_->Next();
+    if (res == VPX_CODEC_OK) video_->Next();
     return res;
   }
 
@@ -98,8 +93,7 @@ class ByteAlignmentTest
     for (; video_->cxdata() != NULL; video_->Next()) {
       const vpx_codec_err_t res =
           decoder_->DecodeFrame(video_->cxdata(), video_->frame_size());
-      if (res != VPX_CODEC_OK)
-        return res;
+      if (res != VPX_CODEC_OK) return res;
       CheckDecodedFrames(byte_alignment_to_check);
     }
     return VPX_CODEC_OK;
@@ -135,7 +129,7 @@ class ByteAlignmentTest
   void OpenMd5File(const std::string &md5_file_name_) {
     md5_file_ = libvpx_test::OpenTestDataFile(md5_file_name_);
     ASSERT_TRUE(md5_file_ != NULL) << "MD5 file open failed. Filename: "
-        << md5_file_name_;
+                                   << md5_file_name_;
   }
 
   void CheckMd5(const vpx_image_t &img) {
@@ -163,8 +157,8 @@ class ByteAlignmentTest
 
 TEST_F(ByteAlignmentTest, SwitchByteAlignment) {
   const int num_elements = 14;
-  const int byte_alignments[] = { 0, 32, 64, 128, 256, 512, 1024,
-                                  0, 1024, 32, 512, 64, 256, 128 };
+  const int byte_alignments[] = { 0, 32,   64, 128, 256, 512, 1024,
+                                  0, 1024, 32, 512, 64,  256, 128 };
 
   for (int i = 0; i < num_elements; ++i) {
     SetByteAlignment(byte_alignments[i], VPX_CODEC_OK);

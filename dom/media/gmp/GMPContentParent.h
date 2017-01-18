@@ -13,7 +13,6 @@
 namespace mozilla {
 namespace gmp {
 
-class GMPAudioDecoderParent;
 class GMPDecryptorParent;
 class GMPParent;
 class GMPVideoDecoderParent;
@@ -36,9 +35,6 @@ public:
 
   nsresult GetGMPDecryptor(GMPDecryptorParent** aGMPKS);
   void DecryptorDestroyed(GMPDecryptorParent* aSession);
-
-  nsresult GetGMPAudioDecoder(GMPAudioDecoderParent** aGMPAD);
-  void AudioDecoderDestroyed(GMPAudioDecoderParent* aDecoder);
 
   nsIThread* GMPThread();
 
@@ -96,9 +92,6 @@ private:
   PGMPDecryptorParent* AllocPGMPDecryptorParent() override;
   bool DeallocPGMPDecryptorParent(PGMPDecryptorParent* aActor) override;
 
-  PGMPAudioDecoderParent* AllocPGMPAudioDecoderParent() override;
-  bool DeallocPGMPAudioDecoderParent(PGMPAudioDecoderParent* aActor) override;
-
   void CloseIfUnused();
   // Needed because NewRunnableMethod tried to use the class that the method
   // lives on to store the receiver, but PGMPContentParent isn't refcounted.
@@ -110,7 +103,6 @@ private:
   nsTArray<RefPtr<GMPVideoDecoderParent>> mVideoDecoders;
   nsTArray<RefPtr<GMPVideoEncoderParent>> mVideoEncoders;
   nsTArray<RefPtr<GMPDecryptorParent>> mDecryptors;
-  nsTArray<RefPtr<GMPAudioDecoderParent>> mAudioDecoders;
   nsCOMPtr<nsIThread> mGMPThread;
   RefPtr<GMPParent> mParent;
   nsCString mDisplayName;

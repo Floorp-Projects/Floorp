@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 #ifndef VP8_COMMON_SWAPYV12BUFFER_H_
 #define VP8_COMMON_SWAPYV12BUFFER_H_
 
@@ -18,7 +17,8 @@
 extern "C" {
 #endif
 
-void vp8_swap_yv12_buffer(YV12_BUFFER_CONFIG *new_frame, YV12_BUFFER_CONFIG *last_frame);
+void vp8_swap_yv12_buffer(YV12_BUFFER_CONFIG *new_frame,
+                          YV12_BUFFER_CONFIG *last_frame);
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -3032,24 +3032,12 @@ protected:
   // container for per-context fonts (downloadable, SVG, etc.)
   RefPtr<mozilla::dom::FontFaceSet> mFontFaceSet;
 
-  // Compatibility mode
-  nsCompatibility mCompatMode;
-
-  // Our readyState
-  ReadyState mReadyState;
-
-  // Whether this document has (or will have, once we have a pres shell) a
-  // Gecko- or Servo-backed style system.
-  mozilla::StyleBackendType mStyleBackendType;
-
-#ifdef MOZILLA_INTERNAL_API
-  // Our visibility state
-  mozilla::dom::VisibilityState mVisibilityState;
-  static_assert(sizeof(mozilla::dom::VisibilityState) == sizeof(uint8_t),
-                "Error size of mVisibilityState and mDummy");
-#else
-  uint8_t mDummy;
-#endif
+  // XXXheycam rust-bindgen currently doesn't generate correctly aligned fields
+  // to represent the following bitfields if they are preceded by something
+  // non-pointer aligned, so if adding non-pointer sized fields, please do so
+  // somewhere other than right here.
+  //
+  // https://github.com/servo/rust-bindgen/issues/111
 
   // True if BIDI is enabled.
   bool mBidiEnabled : 1;
@@ -3198,6 +3186,25 @@ protected:
 
   // True is document has ever been in a foreground window.
   bool mEverInForeground : 1;
+
+  // Compatibility mode
+  nsCompatibility mCompatMode;
+
+  // Our readyState
+  ReadyState mReadyState;
+
+  // Whether this document has (or will have, once we have a pres shell) a
+  // Gecko- or Servo-backed style system.
+  mozilla::StyleBackendType mStyleBackendType;
+
+#ifdef MOZILLA_INTERNAL_API
+  // Our visibility state
+  mozilla::dom::VisibilityState mVisibilityState;
+  static_assert(sizeof(mozilla::dom::VisibilityState) == sizeof(uint8_t),
+                "Error size of mVisibilityState and mDummy");
+#else
+  uint8_t mDummy;
+#endif
 
   enum Type {
     eUnknown, // should never be used

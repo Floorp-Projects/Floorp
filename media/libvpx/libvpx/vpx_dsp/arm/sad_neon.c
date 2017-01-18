@@ -14,114 +14,105 @@
 
 #include "vpx/vpx_integer.h"
 
-unsigned int vpx_sad8x16_neon(
-        unsigned char *src_ptr,
-        int src_stride,
-        unsigned char *ref_ptr,
-        int ref_stride) {
-    uint8x8_t d0, d8;
-    uint16x8_t q12;
-    uint32x4_t q1;
-    uint64x2_t q3;
-    uint32x2_t d5;
-    int i;
+unsigned int vpx_sad8x16_neon(unsigned char *src_ptr, int src_stride,
+                              unsigned char *ref_ptr, int ref_stride) {
+  uint8x8_t d0, d8;
+  uint16x8_t q12;
+  uint32x4_t q1;
+  uint64x2_t q3;
+  uint32x2_t d5;
+  int i;
 
+  d0 = vld1_u8(src_ptr);
+  src_ptr += src_stride;
+  d8 = vld1_u8(ref_ptr);
+  ref_ptr += ref_stride;
+  q12 = vabdl_u8(d0, d8);
+
+  for (i = 0; i < 15; i++) {
     d0 = vld1_u8(src_ptr);
     src_ptr += src_stride;
     d8 = vld1_u8(ref_ptr);
     ref_ptr += ref_stride;
-    q12 = vabdl_u8(d0, d8);
+    q12 = vabal_u8(q12, d0, d8);
+  }
 
-    for (i = 0; i < 15; i++) {
-        d0 = vld1_u8(src_ptr);
-        src_ptr += src_stride;
-        d8 = vld1_u8(ref_ptr);
-        ref_ptr += ref_stride;
-        q12 = vabal_u8(q12, d0, d8);
-    }
+  q1 = vpaddlq_u16(q12);
+  q3 = vpaddlq_u32(q1);
+  d5 = vadd_u32(vreinterpret_u32_u64(vget_low_u64(q3)),
+                vreinterpret_u32_u64(vget_high_u64(q3)));
 
-    q1 = vpaddlq_u16(q12);
-    q3 = vpaddlq_u32(q1);
-    d5 = vadd_u32(vreinterpret_u32_u64(vget_low_u64(q3)),
-                  vreinterpret_u32_u64(vget_high_u64(q3)));
-
-    return vget_lane_u32(d5, 0);
+  return vget_lane_u32(d5, 0);
 }
 
-unsigned int vpx_sad4x4_neon(
-        unsigned char *src_ptr,
-        int src_stride,
-        unsigned char *ref_ptr,
-        int ref_stride) {
-    uint8x8_t d0, d8;
-    uint16x8_t q12;
-    uint32x2_t d1;
-    uint64x1_t d3;
-    int i;
+unsigned int vpx_sad4x4_neon(unsigned char *src_ptr, int src_stride,
+                             unsigned char *ref_ptr, int ref_stride) {
+  uint8x8_t d0, d8;
+  uint16x8_t q12;
+  uint32x2_t d1;
+  uint64x1_t d3;
+  int i;
 
+  d0 = vld1_u8(src_ptr);
+  src_ptr += src_stride;
+  d8 = vld1_u8(ref_ptr);
+  ref_ptr += ref_stride;
+  q12 = vabdl_u8(d0, d8);
+
+  for (i = 0; i < 3; i++) {
     d0 = vld1_u8(src_ptr);
     src_ptr += src_stride;
     d8 = vld1_u8(ref_ptr);
     ref_ptr += ref_stride;
-    q12 = vabdl_u8(d0, d8);
+    q12 = vabal_u8(q12, d0, d8);
+  }
 
-    for (i = 0; i < 3; i++) {
-        d0 = vld1_u8(src_ptr);
-        src_ptr += src_stride;
-        d8 = vld1_u8(ref_ptr);
-        ref_ptr += ref_stride;
-        q12 = vabal_u8(q12, d0, d8);
-    }
+  d1 = vpaddl_u16(vget_low_u16(q12));
+  d3 = vpaddl_u32(d1);
 
-    d1 = vpaddl_u16(vget_low_u16(q12));
-    d3 = vpaddl_u32(d1);
-
-    return vget_lane_u32(vreinterpret_u32_u64(d3), 0);
+  return vget_lane_u32(vreinterpret_u32_u64(d3), 0);
 }
 
-unsigned int vpx_sad16x8_neon(
-        unsigned char *src_ptr,
-        int src_stride,
-        unsigned char *ref_ptr,
-        int ref_stride) {
-    uint8x16_t q0, q4;
-    uint16x8_t q12, q13;
-    uint32x4_t q1;
-    uint64x2_t q3;
-    uint32x2_t d5;
-    int i;
+unsigned int vpx_sad16x8_neon(unsigned char *src_ptr, int src_stride,
+                              unsigned char *ref_ptr, int ref_stride) {
+  uint8x16_t q0, q4;
+  uint16x8_t q12, q13;
+  uint32x4_t q1;
+  uint64x2_t q3;
+  uint32x2_t d5;
+  int i;
 
+  q0 = vld1q_u8(src_ptr);
+  src_ptr += src_stride;
+  q4 = vld1q_u8(ref_ptr);
+  ref_ptr += ref_stride;
+  q12 = vabdl_u8(vget_low_u8(q0), vget_low_u8(q4));
+  q13 = vabdl_u8(vget_high_u8(q0), vget_high_u8(q4));
+
+  for (i = 0; i < 7; i++) {
     q0 = vld1q_u8(src_ptr);
     src_ptr += src_stride;
     q4 = vld1q_u8(ref_ptr);
     ref_ptr += ref_stride;
-    q12 = vabdl_u8(vget_low_u8(q0), vget_low_u8(q4));
-    q13 = vabdl_u8(vget_high_u8(q0), vget_high_u8(q4));
+    q12 = vabal_u8(q12, vget_low_u8(q0), vget_low_u8(q4));
+    q13 = vabal_u8(q13, vget_high_u8(q0), vget_high_u8(q4));
+  }
 
-    for (i = 0; i < 7; i++) {
-        q0 = vld1q_u8(src_ptr);
-        src_ptr += src_stride;
-        q4 = vld1q_u8(ref_ptr);
-        ref_ptr += ref_stride;
-        q12 = vabal_u8(q12, vget_low_u8(q0), vget_low_u8(q4));
-        q13 = vabal_u8(q13, vget_high_u8(q0), vget_high_u8(q4));
-    }
+  q12 = vaddq_u16(q12, q13);
+  q1 = vpaddlq_u16(q12);
+  q3 = vpaddlq_u32(q1);
+  d5 = vadd_u32(vreinterpret_u32_u64(vget_low_u64(q3)),
+                vreinterpret_u32_u64(vget_high_u64(q3)));
 
-    q12 = vaddq_u16(q12, q13);
-    q1 = vpaddlq_u16(q12);
-    q3 = vpaddlq_u32(q1);
-    d5 = vadd_u32(vreinterpret_u32_u64(vget_low_u64(q3)),
-                  vreinterpret_u32_u64(vget_high_u64(q3)));
-
-    return vget_lane_u32(d5, 0);
+  return vget_lane_u32(d5, 0);
 }
 
 static INLINE unsigned int horizontal_long_add_16x8(const uint16x8_t vec_lo,
                                                     const uint16x8_t vec_hi) {
-  const uint32x4_t vec_l_lo = vaddl_u16(vget_low_u16(vec_lo),
-                                        vget_high_u16(vec_lo));
-  const uint32x4_t vec_l_hi = vaddl_u16(vget_low_u16(vec_hi),
-                                        vget_high_u16(vec_hi));
+  const uint32x4_t vec_l_lo =
+      vaddl_u16(vget_low_u16(vec_lo), vget_high_u16(vec_lo));
+  const uint32x4_t vec_l_hi =
+      vaddl_u16(vget_low_u16(vec_hi), vget_high_u16(vec_hi));
   const uint32x4_t a = vaddq_u32(vec_l_lo, vec_l_hi);
   const uint64x2_t b = vpaddlq_u32(a);
   const uint32x2_t c = vadd_u32(vreinterpret_u32_u64(vget_low_u64(b)),
@@ -208,10 +199,10 @@ unsigned int vpx_sad16x16_neon(const uint8_t *src, int src_stride,
     const uint8x16_t vec_ref = vld1q_u8(ref);
     src += src_stride;
     ref += ref_stride;
-    vec_accum_lo = vabal_u8(vec_accum_lo, vget_low_u8(vec_src),
-                            vget_low_u8(vec_ref));
-    vec_accum_hi = vabal_u8(vec_accum_hi, vget_high_u8(vec_src),
-                            vget_high_u8(vec_ref));
+    vec_accum_lo =
+        vabal_u8(vec_accum_lo, vget_low_u8(vec_src), vget_low_u8(vec_ref));
+    vec_accum_hi =
+        vabal_u8(vec_accum_hi, vget_high_u8(vec_src), vget_high_u8(vec_ref));
   }
   return horizontal_add_16x8(vaddq_u16(vec_accum_lo, vec_accum_hi));
 }

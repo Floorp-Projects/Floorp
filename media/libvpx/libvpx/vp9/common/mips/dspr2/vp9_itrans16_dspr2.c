@@ -21,27 +21,23 @@
 #include "vpx_ports/mem.h"
 
 #if HAVE_DSPR2
-void vp9_iht16x16_256_add_dspr2(const int16_t *input, uint8_t *dest,
-                                int pitch, int tx_type) {
+void vp9_iht16x16_256_add_dspr2(const int16_t *input, uint8_t *dest, int pitch,
+                                int tx_type) {
   int i, j;
-  DECLARE_ALIGNED(32, int16_t,  out[16 * 16]);
+  DECLARE_ALIGNED(32, int16_t, out[16 * 16]);
   int16_t *outptr = out;
   int16_t temp_out[16];
   uint32_t pos = 45;
 
   /* bit positon for extract from acc */
-  __asm__ __volatile__ (
-    "wrdsp    %[pos],    1    \n\t"
-    :
-    : [pos] "r" (pos)
-  );
+  __asm__ __volatile__("wrdsp    %[pos],    1    \n\t" : : [pos] "r"(pos));
 
   switch (tx_type) {
-    case DCT_DCT:     // DCT in both horizontal and vertical
+    case DCT_DCT:  // DCT in both horizontal and vertical
       idct16_rows_dspr2(input, outptr, 16);
       idct16_cols_add_blk_dspr2(out, dest, pitch);
       break;
-    case ADST_DCT:    // ADST in vertical, DCT in horizontal
+    case ADST_DCT:  // ADST in vertical, DCT in horizontal
       idct16_rows_dspr2(input, outptr, 16);
 
       outptr = out;
@@ -50,13 +46,12 @@ void vp9_iht16x16_256_add_dspr2(const int16_t *input, uint8_t *dest,
         iadst16_dspr2(outptr, temp_out);
 
         for (j = 0; j < 16; ++j)
-          dest[j * pitch + i] =
-                    clip_pixel(ROUND_POWER_OF_TWO(temp_out[j], 6)
-                                      + dest[j * pitch + i]);
+          dest[j * pitch + i] = clip_pixel(ROUND_POWER_OF_TWO(temp_out[j], 6) +
+                                           dest[j * pitch + i]);
         outptr += 16;
       }
       break;
-    case DCT_ADST:    // DCT in vertical, ADST in horizontal
+    case DCT_ADST:  // DCT in vertical, ADST in horizontal
     {
       int16_t temp_in[16 * 16];
 
@@ -70,13 +65,12 @@ void vp9_iht16x16_256_add_dspr2(const int16_t *input, uint8_t *dest,
       }
 
       for (i = 0; i < 16; ++i)
-        for (j = 0; j < 16; ++j)
-            temp_in[j * 16 + i] = out[i * 16 + j];
+        for (j = 0; j < 16; ++j) temp_in[j * 16 + i] = out[i * 16 + j];
 
       idct16_cols_add_blk_dspr2(temp_in, dest, pitch);
+      break;
     }
-    break;
-    case ADST_ADST:   // ADST in both directions
+    case ADST_ADST:  // ADST in both directions
     {
       int16_t temp_in[16];
 
@@ -90,19 +84,15 @@ void vp9_iht16x16_256_add_dspr2(const int16_t *input, uint8_t *dest,
       }
 
       for (i = 0; i < 16; ++i) {
-        for (j = 0; j < 16; ++j)
-          temp_in[j] = out[j * 16 + i];
+        for (j = 0; j < 16; ++j) temp_in[j] = out[j * 16 + i];
         iadst16_dspr2(temp_in, temp_out);
         for (j = 0; j < 16; ++j)
-          dest[j * pitch + i] =
-                    clip_pixel(ROUND_POWER_OF_TWO(temp_out[j], 6)
-                                      + dest[j * pitch + i]);
+          dest[j * pitch + i] = clip_pixel(ROUND_POWER_OF_TWO(temp_out[j], 6) +
+                                           dest[j * pitch + i]);
       }
-    }
-    break;
-    default:
-      printf("vp9_short_iht16x16_add_dspr2 : Invalid tx_type\n");
       break;
+    }
+    default: printf("vp9_short_iht16x16_add_dspr2 : Invalid tx_type\n"); break;
   }
 }
 #endif  // #if HAVE_DSPR2

@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 #ifndef VP8_ENCODER_MR_DISSIM_H_
 #define VP8_ENCODER_MR_DISSIM_H_
 #include "vpx_config.h"

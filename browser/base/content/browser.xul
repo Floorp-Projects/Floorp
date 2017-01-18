@@ -177,6 +177,7 @@
     <menulist popuponly="true" id="ContentSelectDropdown" hidden="true">
       <menupopup rolluponmousewheel="true"
                  activateontab="true" position="after_start"
+                 level="parent"
 #ifdef XP_WIN
                  consumeoutsideclicks="false" ignorekeys="shortcuts"
 #endif

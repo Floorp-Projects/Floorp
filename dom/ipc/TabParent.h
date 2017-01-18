@@ -368,6 +368,8 @@ public:
 
   void LoadURL(nsIURI* aURI);
 
+  void InitRenderFrame();
+
   // XXX/cjones: it's not clear what we gain by hiding these
   // message-sending functions under a layer of indirection and
   // eating the return values

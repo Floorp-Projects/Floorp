@@ -486,7 +486,7 @@ function testCalcFontSize()
 {
   setupTest();
   gCircleParent.setAttribute("font-size", "10px"); // At first: font-size: 10px
-  var anim = createAnimSetTo("font-size", "-moz-calc(110% + 0.1em)");
+  var anim = createAnimSetTo("font-size", "calc(110% + 0.1em)");
 
   gSvg.setCurrentTime(0);
   var fsize = parseInt(SMILUtil.getComputedStyleSimple(gCircle, "font-size"));

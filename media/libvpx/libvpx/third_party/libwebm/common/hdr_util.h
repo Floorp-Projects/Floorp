@@ -28,6 +28,25 @@ namespace libwebm {
 // TODO(tomfinegan): These should be moved to libwebm_utils once c++11 is
 // required by libwebm.
 
+// Features of the VP9 codec that may be set in the CodecPrivate of a VP9 video
+// stream. A value of kValueNotPresent represents that the value was not set in
+// the CodecPrivate.
+struct Vp9CodecFeatures {
+  static const int kValueNotPresent;
+
+  Vp9CodecFeatures()
+      : profile(kValueNotPresent),
+        level(kValueNotPresent),
+        bit_depth(kValueNotPresent),
+        chroma_subsampling(kValueNotPresent) {}
+  ~Vp9CodecFeatures() {}
+
+  int profile;
+  int level;
+  int bit_depth;
+  int chroma_subsampling;
+};
+
 typedef std::auto_ptr<mkvmuxer::PrimaryChromaticity> PrimaryChromaticityPtr;
 
 bool CopyPrimaryChromaticity(const mkvparser::PrimaryChromaticity& parser_pc,
@@ -43,8 +62,9 @@ bool ColourValuePresent(long long value);
 bool CopyColour(const mkvparser::Colour& parser_colour,
                 mkvmuxer::Colour* muxer_colour);
 
-// Returns VP9 profile upon success or 0 upon failure.
-int ParseVpxCodecPrivate(const uint8_t* private_data, int32_t length);
+// Returns true if |features| is set to one or more valid values.
+bool ParseVpxCodecPrivate(const uint8_t* private_data, int32_t length,
+                          Vp9CodecFeatures* features);
 
 }  // namespace libwebm
 

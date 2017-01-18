@@ -65,10 +65,8 @@ static void filter_by_weight8x8_msa(const uint8_t *src_ptr, int32_t src_stride,
 }
 
 static void filter_by_weight16x16_msa(const uint8_t *src_ptr,
-                                      int32_t src_stride,
-                                      uint8_t *dst_ptr,
-                                      int32_t dst_stride,
-                                      int32_t src_weight) {
+                                      int32_t src_stride, uint8_t *dst_ptr,
+                                      int32_t dst_stride, int32_t src_weight) {
   int32_t dst_weight = (1 << MFQE_PRECISION) - src_weight;
   int32_t row;
   v16i8 src0, src1, src2, src3, dst0, dst1, dst2, dst3;
@@ -125,8 +123,7 @@ static void filter_by_weight16x16_msa(const uint8_t *src_ptr,
 }
 
 void vp9_filter_by_weight8x8_msa(const uint8_t *src, int src_stride,
-                                 uint8_t *dst, int dst_stride,
-                                 int src_weight) {
+                                 uint8_t *dst, int dst_stride, int src_weight) {
   filter_by_weight8x8_msa(src, src_stride, dst, dst_stride, src_weight);
 }
 

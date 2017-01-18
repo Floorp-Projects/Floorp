@@ -88,6 +88,7 @@ void
 VPXDecoder::Shutdown()
 {
   vpx_codec_destroy(&mVPX);
+  vpx_codec_destroy(&mVPXAlpha);
 }
 
 RefPtr<MediaDataDecoder::InitPromise>

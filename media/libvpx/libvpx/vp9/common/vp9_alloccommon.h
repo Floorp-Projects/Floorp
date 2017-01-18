@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 #ifndef VP9_COMMON_VP9_ALLOCCOMMON_H_
 #define VP9_COMMON_VP9_ALLOCCOMMON_H_
 

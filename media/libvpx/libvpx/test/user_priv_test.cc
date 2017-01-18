@@ -34,8 +34,8 @@ using libvpx_test::ACMRandom;
 
 void CheckUserPrivateData(void *user_priv, int *target) {
   // actual pointer value should be the same as expected.
-  EXPECT_EQ(reinterpret_cast<void *>(target), user_priv) <<
-      "user_priv pointer value does not match.";
+  EXPECT_EQ(reinterpret_cast<void *>(target), user_priv)
+      << "user_priv pointer value does not match.";
 }
 
 // Decodes |filename|. Passes in user_priv data when calling DecodeFrame and
