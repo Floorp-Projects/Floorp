@@ -20,7 +20,7 @@
 this.EXPORTED_SYMBOLS = ["Kinto"];
 
 /*
- * Version 6.0.0 - de9dd38
+ * Version 7.1.0 - a6f42f1
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Kinto = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
@@ -118,6 +118,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const DEFAULT_BUCKET_NAME = "default";
 const DEFAULT_REMOTE = "http://localhost:8888/v1";
+const DEFAULT_RETRY = 1;
 
 /**
  * KintoBase class.
@@ -159,6 +160,7 @@ class KintoBase {
    * - `{Object}`       `adapterOptions` Options given to the adapter.
    * - `{String}`       `dbPrefix`       The DB name prefix.
    * - `{Object}`       `headers`        The HTTP headers to use.
+   * - `{Object}`       `retry`          Number of retries when the server fails to process the request (default: `1`)
    * - `{String}`       `requestMode`    The HTTP CORS mode to use.
    * - `{Number}`       `timeout`        The requests timeout in ms (default: `5000`).
    *
@@ -167,14 +169,15 @@ class KintoBase {
   constructor(options = {}) {
     const defaults = {
       bucket: DEFAULT_BUCKET_NAME,
-      remote: DEFAULT_REMOTE
+      remote: DEFAULT_REMOTE,
+      retry: DEFAULT_RETRY
     };
     this._options = _extends({}, defaults, options);
     if (!this._options.adapter) {
       throw new Error("No adapter provided");
     }
 
-    const { remote, events, headers, requestMode, timeout, ApiClass } = this._options;
+    const { remote, events, headers, retry, requestMode, timeout, ApiClass } = this._options;
 
     // public properties
 
@@ -182,7 +185,7 @@ class KintoBase {
      * The kinto HTTP client instance.
      * @type {KintoClient}
      */
-    this.api = new ApiClass(remote, { events, headers, requestMode, timeout });
+    this.api = new ApiClass(remote, { events, headers, retry, requestMode, timeout });
     /**
      * The event emitter instance.
      * @type {EventEmitter}
@@ -195,24 +198,37 @@ class KintoBase {
    * will set collection-level options like e.g. `remoteTransformers`.
    *
    * @param  {String} collName The collection name.
-   * @param  {Object} options  May contain the following fields:
-   *                           remoteTransformers: Array<RemoteTransformer>
+   * @param  {Object} [options={}]                 Extra options or override client's options.
+   * @param  {Object} [options.idSchema]           IdSchema instance (default: UUID)
+   * @param  {Object} [options.remoteTransformers] Array<RemoteTransformer> (default: `[]`])
+   * @param  {Object} [options.hooks]              Array<Hook> (default: `[]`])
    * @return {Collection}
    */
   collection(collName, options = {}) {
     if (!collName) {
       throw new Error("missing collection name");
     }
+    const {
+      bucket,
+      events,
+      adapter,
+      adapterOptions,
+      dbPrefix
+    } = _extends({}, this._options, options);
+    const {
+      idSchema,
+      remoteTransformers,
+      hooks
+    } = options;
 
-    const bucket = this._options.bucket;
     return new _collection2.default(bucket, collName, this.api, {
-      events: this._options.events,
-      adapter: this._options.adapter,
-      adapterOptions: this._options.adapterOptions,
-      dbPrefix: this._options.dbPrefix,
-      idSchema: options.idSchema,
-      remoteTransformers: options.remoteTransformers,
-      hooks: options.hooks
+      events,
+      adapter,
+      adapterOptions,
+      dbPrefix,
+      idSchema,
+      remoteTransformers,
+      hooks
     });
   }
 }
@@ -417,7 +433,7 @@ class IDB extends _base2.default {
       this._db.close(); // indexedDB.close is synchronous
       this._db = null;
     }
-    return super.close();
+    return Promise.resolve();
   }
 
   /**
@@ -746,26 +762,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 class BaseAdapter {
-  /**
-   * Opens a connection to the database.
-   *
-   * @abstract
-   * @return {Promise}
-   */
-  open() {
-    return Promise.resolve();
-  }
-
-  /**
-   * Closes current connection to the database.
-   *
-   * @abstract
-   * @return {Promise}
-   */
-  close() {
-    return Promise.resolve();
-  }
-
   /**
    * Deletes every records present in the database.
    *
@@ -1737,6 +1733,7 @@ class Collection {
         // Since should be ETag (see https://github.com/Kinto/kinto.js/issues/356)
         since: options.lastModified ? `${ options.lastModified }` : undefined,
         headers: options.headers,
+        retry: options.retry,
         filters
       });
       // last_modified is the ETag header value (string).
@@ -1828,7 +1825,12 @@ class Collection {
             batch.updateRecord(published);
           }
         });
-      }, { headers: options.headers, safe, aggregate: true });
+      }, {
+        headers: options.headers,
+        retry: options.retry,
+        safe,
+        aggregate: true
+      });
 
       // Store outgoing errors into sync result object
       syncResultObject.add("errors", synced.errors.map(function (e) {
@@ -1837,7 +1839,9 @@ class Collection {
 
       // Store outgoing conflicts into sync result object
       const conflicts = [];
-      for (let { type, local, remote } of synced.conflicts) {
+      for (let _ref of synced.conflicts) {
+        let { type, local, remote } = _ref;
+
         // Note: we ensure that local data are actually available, as they may
         // be missing in the case of a published deletion.
         const safeLocal = local && local.data || { id: remote.id };
@@ -1930,6 +1934,7 @@ class Collection {
    *
    * Options:
    * - {Object} headers: HTTP headers to attach to outgoing requests.
+   * - {Number} retry: Number of retries when server fails to process the request (default: 1).
    * - {Collection.strategy} strategy: See {@link Collection.strategy}.
    * - {Boolean} ignoreBackoff: Force synchronization even if server is currently
    *   backed off.
@@ -1944,6 +1949,7 @@ class Collection {
   sync(options = {
     strategy: Collection.strategy.MANUAL,
     headers: {},
+    retry: 1,
     ignoreBackoff: false,
     bucket: null,
     collection: null,
@@ -1952,6 +1958,11 @@ class Collection {
     var _this9 = this;
 
     return _asyncToGenerator(function* () {
+      options = _extends({}, options, {
+        bucket: options.bucket || _this9.bucket,
+        collection: options.collection || _this9.name
+      });
+
       const previousRemote = _this9.api.remote;
       if (options.remote) {
         // Note: setting the remote ensures it's valid, throws when invalid.
@@ -1962,7 +1973,7 @@ class Collection {
         return Promise.reject(new Error(`Server is asking clients to back off; retry in ${ seconds }s or use the ignoreBackoff option.`));
       }
 
-      const client = _this9.api.bucket(options.bucket || _this9.bucket).collection(options.collection || _this9.name);
+      const client = _this9.api.bucket(options.bucket).collection(options.collection);
 
       const result = new SyncResultObject();
       try {
@@ -1997,10 +2008,14 @@ class Collection {
           // No conflict occured, persist collection's lastModified value
           _this9._lastModified = yield _this9.db.saveLastModified(result.lastModified);
         }
+      } catch (e) {
+        _this9.events.emit("sync:error", _extends({}, options, { error: e }));
+        throw e;
       } finally {
         // Ensure API default remote is reverted if a custom one's been used
         _this9.api.remote = previousRemote;
       }
+      _this9.events.emit("sync:success", _extends({}, options, { result }));
       return result;
     })();
   }
@@ -2087,7 +2102,9 @@ class CollectionTransaction {
    * been executed successfully.
    */
   emitEvents() {
-    for (let { action, payload } of this._events) {
+    for (let _ref2 of this._events) {
+      let { action, payload } = _ref2;
+
       this.collection.events.emit(action, payload);
     }
     if (this._events.length > 0) {
