@@ -123,7 +123,7 @@ public:
 
   virtual bool IPCOpen() const override { return !mClosed; }
 
-  CompositableHost* FindCompositable(uint64_t aId);
+  CompositableHost* FindCompositable(const CompositableHandle& aHandle);
 
 protected:
   void OnChannelConnected(int32_t pid) override;

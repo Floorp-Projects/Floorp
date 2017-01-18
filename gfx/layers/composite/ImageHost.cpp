@@ -350,7 +350,7 @@ ImageHost::Composite(LayerComposite* aLayer,
         ImageCompositeNotificationInfo info;
         info.mImageBridgeProcessId = mAsyncRef.mProcessId;
         info.mNotification = ImageCompositeNotification(
-          mAsyncRef.mAsyncId,
+          mAsyncRef.mHandle,
           img->mTimeStamp, GetCompositor()->GetCompositionTime(),
           img->mFrameID, img->mProducerID);
         static_cast<LayerManagerComposite*>(aLayer->GetLayerManager())->
