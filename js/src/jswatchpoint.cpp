@@ -11,6 +11,7 @@
 #include "jsfriendapi.h"
 
 #include "gc/Marking.h"
+#include "vm/Shape.h"
 
 #include "jsgcinlines.h"
 
