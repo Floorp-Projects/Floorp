@@ -99,8 +99,6 @@ private:
   StreamControl* mControl;
 
   const nsID mId;
-  nsCOMPtr<nsIInputStream> mStream;
-  nsCOMPtr<nsIInputStream> mSnappyStream;
   nsCOMPtr<nsIThread> mOwningThread;
 
   enum State
@@ -111,6 +109,15 @@ private:
   };
   Atomic<State> mState;
   Atomic<bool> mHasEverBeenRead;
+
+
+  // The wrapped stream objects may not be threadsafe.  We need to be able
+  // to close a stream on our owning thread while an IO thread is simultaneously
+  // reading the same stream.  Therefore, protect all access to these stream
+  // objects with a mutex.
+  Mutex mMutex;
+  nsCOMPtr<nsIInputStream> mStream;
+  nsCOMPtr<nsIInputStream> mSnappyStream;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(cache::ReadStream::Inner, override)
 };
@@ -190,10 +197,12 @@ ReadStream::Inner::Inner(StreamControl* aControl, const nsID& aId,
                          nsIInputStream* aStream)
   : mControl(aControl)
   , mId(aId)
-  , mStream(aStream)
-  , mSnappyStream(new SnappyUncompressInputStream(aStream))
   , mOwningThread(NS_GetCurrentThread())
   , mState(Open)
+  , mHasEverBeenRead(false)
+  , mMutex("dom::cache::ReadStream")
+  , mStream(aStream)
+  , mSnappyStream(new SnappyUncompressInputStream(aStream))
 {
   MOZ_DIAGNOSTIC_ASSERT(mStream);
   MOZ_DIAGNOSTIC_ASSERT(mControl);
@@ -228,7 +237,11 @@ ReadStream::Inner::Serialize(CacheReadStream* aReadStreamOut,
 
   aReadStreamOut->id() = mId;
   mControl->SerializeControl(aReadStreamOut);
-  mControl->SerializeStream(aReadStreamOut, mStream, aStreamCleanupList);
+
+  {
+    MutexAutoLock lock(mMutex);
+    mControl->SerializeStream(aReadStreamOut, mStream, aStreamCleanupList);
+  }
 
   MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut->stream().type() ==
                         IPCStream::TInputStreamParamsWithFds);
@@ -270,7 +283,11 @@ nsresult
 ReadStream::Inner::Close()
 {
   // stream ops can happen on any thread
-  nsresult rv = mStream->Close();
+  nsresult rv = NS_OK;
+  {
+    MutexAutoLock lock(mMutex);
+    rv = mSnappyStream->Close();
+  }
   NoteClosed();
   return rv;
 }
@@ -279,7 +296,11 @@ nsresult
 ReadStream::Inner::Available(uint64_t* aNumAvailableOut)
 {
   // stream ops can happen on any thread
-  nsresult rv = mSnappyStream->Available(aNumAvailableOut);
+  nsresult rv = NS_OK;
+  {
+    MutexAutoLock lock(mMutex);
+    rv = mSnappyStream->Available(aNumAvailableOut);
+  }
 
   if (NS_FAILED(rv)) {
     Close();
@@ -294,7 +315,11 @@ ReadStream::Inner::Read(char* aBuf, uint32_t aCount, uint32_t* aNumReadOut)
   // stream ops can happen on any thread
   MOZ_DIAGNOSTIC_ASSERT(aNumReadOut);
 
-  nsresult rv = mSnappyStream->Read(aBuf, aCount, aNumReadOut);
+  nsresult rv = NS_OK;
+  {
+    MutexAutoLock lock(mMutex);
+    rv = mSnappyStream->Read(aBuf, aCount, aNumReadOut);
+  }
 
   if ((NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK) ||
       *aNumReadOut == 0) {
@@ -317,8 +342,12 @@ ReadStream::Inner::ReadSegments(nsWriteSegmentFun aWriter, void* aClosure,
     mHasEverBeenRead = true;
   }
 
-  nsresult rv = mSnappyStream->ReadSegments(aWriter, aClosure, aCount,
-                                            aNumReadOut);
+
+  nsresult rv = NS_OK;
+  {
+    MutexAutoLock lock(mMutex);
+    rv = mSnappyStream->ReadSegments(aWriter, aClosure, aCount, aNumReadOut);
+  }
 
   if ((NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK &&
                         rv != NS_ERROR_NOT_IMPLEMENTED) || *aNumReadOut == 0) {
@@ -340,6 +369,7 @@ nsresult
 ReadStream::Inner::IsNonBlocking(bool* aNonBlockingOut)
 {
   // stream ops can happen on any thread
+  MutexAutoLock lock(mMutex);
   return mSnappyStream->IsNonBlocking(aNonBlockingOut);
 }
 
