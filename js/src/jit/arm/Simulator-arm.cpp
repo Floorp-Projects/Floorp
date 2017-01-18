@@ -1000,8 +1000,6 @@ AllOnOnePage(uintptr_t start, int size)
 static CachePage*
 GetCachePageLocked(Simulator::ICacheMap& i_cache, void* page)
 {
-    MOZ_ASSERT(Simulator::ICacheCheckingEnabled);
-
     Simulator::ICacheMap::AddPtr p = i_cache.lookupForAdd(page);
     if (p)
         return p->value();
