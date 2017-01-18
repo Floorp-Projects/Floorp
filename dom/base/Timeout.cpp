@@ -66,9 +66,21 @@ TimerCallback(nsITimer*, void* aClosure)
 }
 
 void
-TimerNameCallback(nsITimer* aTimer, void* aClosure, char* aBuf, size_t aLen)
+TimerNameCallback(nsITimer* aTimer, bool aAnonymize, void* aClosure,
+                  char* aBuf, size_t aLen)
 {
   RefPtr<Timeout> timeout = (Timeout*)aClosure;
+
+  // Filename and line-number information is privacy sensitive. If we're
+  // supposed to anonymize the data, don't include it.
+  if (aAnonymize) {
+    if (timeout->mIsInterval) {
+      snprintf(aBuf, aLen, "setInterval");
+    } else {
+      snprintf(aBuf, aLen, "setTimeout");
+    }
+    return;
+  }
 
   const char* filename;
   uint32_t lineNum, column;
