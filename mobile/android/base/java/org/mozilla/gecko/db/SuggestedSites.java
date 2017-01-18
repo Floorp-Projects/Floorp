@@ -43,6 +43,7 @@ import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.util.RawResource;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.preferences.GeckoPreferences;
 
 /**
  * {@code SuggestedSites} provides API to get a list of locale-specific
@@ -68,10 +69,12 @@ public class SuggestedSites {
     private static final String LOGTAG = "GeckoSuggestedSites";
 
     // SharedPreference key for suggested sites that should be hidden.
-    public static final String PREF_SUGGESTED_SITES_HIDDEN = "suggestedSites.hidden";
+    public static final String PREF_SUGGESTED_SITES_HIDDEN = GeckoPreferences.NON_PREF_PREFIX + "suggestedSites.hidden";
+    public static final String PREF_SUGGESTED_SITES_HIDDEN_OLD = "suggestedSites.hidden";
 
     // Locale used to generate the current suggested sites.
-    public static final String PREF_SUGGESTED_SITES_LOCALE = "suggestedSites.locale";
+    public static final String PREF_SUGGESTED_SITES_LOCALE = GeckoPreferences.NON_PREF_PREFIX + "suggestedSites.locale";
+    public static final String PREF_SUGGESTED_SITES_LOCALE_OLD = "suggestedSites.locale";
 
     // File in profile dir with the list of suggested sites.
     private static final String FILENAME = "suggestedsites.json";
@@ -182,7 +185,16 @@ public class SuggestedSites {
     private static boolean isNewLocale(Context context, Locale requestedLocale) {
         final SharedPreferences prefs = GeckoSharedPrefs.forProfile(context);
 
-        String locale = prefs.getString(PREF_SUGGESTED_SITES_LOCALE, null);
+        String locale = prefs.getString(PREF_SUGGESTED_SITES_LOCALE_OLD, null);
+        if (locale != null) {
+          // Migrate the old pref and remove it
+          final Editor editor = prefs.edit();
+          editor.remove(PREF_SUGGESTED_SITES_LOCALE_OLD);
+          editor.putString(PREF_SUGGESTED_SITES_LOCALE, locale);
+          editor.apply();
+        } else {
+          locale = prefs.getString(PREF_SUGGESTED_SITES_LOCALE, null);
+        }
         if (locale == null) {
             // Initialize config with the current locale
             updateSuggestedSitesLocale(context);
@@ -531,8 +543,17 @@ public class SuggestedSites {
         Log.d(LOGTAG, "Loading blacklisted suggested sites from SharedPreferences.");
         final Set<String> blacklist = new HashSet<String>();
 
-        final SharedPreferences preferences = GeckoSharedPrefs.forProfile(context);
-        final String sitesString = preferences.getString(PREF_SUGGESTED_SITES_HIDDEN, null);
+        final SharedPreferences prefs = GeckoSharedPrefs.forProfile(context);
+        String sitesString = prefs.getString(PREF_SUGGESTED_SITES_HIDDEN_OLD, null);
+        if (sitesString != null) {
+          // Migrate the old pref and remove it
+          final Editor editor = prefs.edit();
+          editor.remove(PREF_SUGGESTED_SITES_HIDDEN_OLD);
+          editor.putString(PREF_SUGGESTED_SITES_HIDDEN, sitesString);
+          editor.apply();
+        } else {
+          sitesString = prefs.getString(PREF_SUGGESTED_SITES_HIDDEN, null);
+        }
 
         if (sitesString != null) {
             for (String site : sitesString.trim().split(" ")) {
