@@ -410,7 +410,8 @@ def set_tier(config, tests):
 
         # only override if not set for the test
         if 'tier' not in test or test['tier'] == 'default':
-            if test['test-platform'] in ['linux64/debug',
+            if test['test-platform'] in ['linux32/debug',
+                                         'linux64/debug',
                                          'linux64-asan/opt',
                                          'android-4.3-arm7-api-15/debug',
                                          'android-x86/opt']:
