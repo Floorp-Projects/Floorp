@@ -39,14 +39,14 @@ public class TestIconRequest {
         Assert.assertEquals(2, request.getIconCount());
         Assert.assertTrue(request.hasIconDescriptors());
 
-        Assert.assertEquals(TEST_ICON_URL_1, request.getBestIcon().getUrl());
+        Assert.assertEquals(TEST_ICON_URL_2, request.getBestIcon().getUrl());
 
         request.moveToNextIcon();
 
         Assert.assertEquals(1, request.getIconCount());
         Assert.assertTrue(request.hasIconDescriptors());
 
-        Assert.assertEquals(TEST_ICON_URL_2, request.getBestIcon().getUrl());
+        Assert.assertEquals(TEST_ICON_URL_1, request.getBestIcon().getUrl());
 
         request.moveToNextIcon();
 
