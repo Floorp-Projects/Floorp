@@ -98,9 +98,8 @@ CreateDirectoryTaskChild::SetSuccessRequestResult(const FileSystemResponseValue&
   const FileSystemDirectoryResponse& r =
     aValue.get_FileSystemDirectoryResponse();
 
-  aRv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(r.realPath()), true,
-                              getter_AddRefs(mTargetPath));
-  NS_WARNING_ASSERTION(!aRv.Failed(), "NS_NewNativeLocalFile failed");
+  aRv = NS_NewLocalFile(r.realPath(), true, getter_AddRefs(mTargetPath));
+  NS_WARNING_ASSERTION(!aRv.Failed(), "NS_NewLocalFile failed");
 }
 
 void
@@ -149,8 +148,8 @@ CreateDirectoryTaskParent::Create(FileSystemBase* aFileSystem,
   RefPtr<CreateDirectoryTaskParent> task =
     new CreateDirectoryTaskParent(aFileSystem, aParam, aParent);
 
-  aRv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(aParam.realPath()), true,
-                              getter_AddRefs(task->mTargetPath));
+  aRv = NS_NewLocalFile(aParam.realPath(), true,
+                        getter_AddRefs(task->mTargetPath));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

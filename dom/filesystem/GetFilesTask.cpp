@@ -154,8 +154,8 @@ GetFilesTaskChild::HandlerCallback()
 
   for (unsigned i = 0; i < count; i++) {
     nsCOMPtr<nsIFile> path;
-    NS_ConvertUTF16toUTF8 fullPath(mTargetData[i].mRealPath);
-    nsresult rv = NS_NewNativeLocalFile(fullPath, true, getter_AddRefs(path));
+    nsresult rv = NS_NewLocalFile(mTargetData[i].mRealPath, true,
+                                  getter_AddRefs(path));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mPromise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
       mPromise = nullptr;
@@ -210,8 +210,8 @@ GetFilesTaskParent::Create(FileSystemBase* aFileSystem,
   RefPtr<GetFilesTaskParent> task =
     new GetFilesTaskParent(aFileSystem, aParam, aParent);
 
-  NS_ConvertUTF16toUTF8 path(aParam.realPath());
-  aRv = NS_NewNativeLocalFile(path, true, getter_AddRefs(task->mTargetPath));
+  aRv = NS_NewLocalFile(aParam.realPath(), true,
+                        getter_AddRefs(task->mTargetPath));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
