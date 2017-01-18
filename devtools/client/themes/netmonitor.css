@@ -1101,12 +1101,6 @@
   box-shadow: var(--theme-focus-box-shadow-textbox);
 }
 
-.panel-container {
-  /* FIXME: To avoid the issue which panel exceeds visible range,
-   * we set view heigh - 24px * 2 for toolbox height + tabs height */
-  height: calc(100vh - 48px);
-}
-
 .panel-container,
 .properties-view {
   display: flex;
