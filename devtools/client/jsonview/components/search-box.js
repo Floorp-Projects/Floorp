@@ -43,7 +43,7 @@ define(function (require, exports, module) {
 
     render: function () {
       return (
-        input({className: "searchBox",
+        input({className: "devtools-filterinput",
                placeholder: Locale.$STR("jsonViewer.filterJSON"),
                onChange: this.onSearch})
       );
