@@ -463,7 +463,12 @@ const AutoMigrate = {
         let foundLogin = foundLogins[0];
         foundLogin.QueryInterface(Ci.nsILoginMetaInfo);
         if (foundLogin.timePasswordChanged == login.timePasswordChanged) {
-          Services.logins.removeLogin(foundLogin);
+          try {
+            Services.logins.removeLogin(foundLogin);
+          } catch (ex) {
+            Cu.reportError("Failed to remove a login for " + foundLogins.hostname);
+            Cu.reportError(ex);
+          }
         }
       }
     }
@@ -477,12 +482,21 @@ const AutoMigrate = {
       } catch (ex) {
         continue;
       }
-      yield PlacesUtils.history.removeVisitsByFilter({
+      let visitData = {
         url: urlObj,
         beginDate: PlacesUtils.toDate(urlVisits.first),
         endDate: PlacesUtils.toDate(urlVisits.last),
         limit: urlVisits.visitCount,
-      });
+      };
+      try {
+        yield PlacesUtils.history.removeVisitsByFilter(visitData);
+      } catch(ex) {
+        try {
+          visitData.url = visitData.url.href;
+        } catch (ex) {}
+        Cu.reportError("Failed to remove a visit: " + JSON.stringify(visitData));
+        Cu.reportError(ex);
+      }
     }
   }),
 
