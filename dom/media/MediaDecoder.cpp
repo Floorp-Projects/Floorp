@@ -1728,15 +1728,21 @@ MediaDecoder::NextFrameBufferedStatus()
     : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
 }
 
+nsCString
+MediaDecoder::GetDebugInfo()
+{
+  return nsPrintfCString(
+    "channels=%u rate=%u hasAudio=%d hasVideo=%d mPlayState=%s mdsm=%p",
+    mInfo ? mInfo->mAudio.mChannels : 0, mInfo ? mInfo->mAudio.mRate : 0,
+    mInfo ? mInfo->HasAudio() : 0, mInfo ? mInfo->HasVideo() : 0,
+    PlayStateStr(), GetStateMachine());
+}
+
 void
 MediaDecoder::DumpDebugInfo()
 {
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  DUMP_LOG("metadata: channels=%u rate=%u hasAudio=%d hasVideo=%d, "
-           "state: mPlayState=%s mdsm=%p",
-           mInfo ? mInfo->mAudio.mChannels : 0, mInfo ? mInfo->mAudio.mRate : 0,
-           mInfo ? mInfo->HasAudio() : 0, mInfo ? mInfo->HasVideo() : 0,
-           PlayStateStr(), GetStateMachine());
+  DUMP_LOG("%s", GetDebugInfo().get());
 
   nsAutoCString str;
   GetMozDebugReaderData(str);
