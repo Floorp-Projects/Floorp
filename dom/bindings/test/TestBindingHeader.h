@@ -936,6 +936,13 @@ public:
   void SetThrowingGetterAttr(bool arg);
   bool ThrowingSetterAttr() const;
   void SetThrowingSetterAttr(bool arg, ErrorResult& aRv);
+  void CanOOMMethod(OOMReporter& aRv);
+  bool GetCanOOMAttr(OOMReporter& aRv) const;
+  void SetCanOOMAttr(bool arg, OOMReporter& aRv);
+  bool GetCanOOMGetterAttr(OOMReporter& aRv) const;
+  void SetCanOOMGetterAttr(bool arg);
+  bool CanOOMSetterAttr() const;
+  void SetCanOOMSetterAttr(bool arg, OOMReporter& aRv);
   void NeedsSubjectPrincipalMethod(nsIPrincipal&);
   bool NeedsSubjectPrincipalAttr(nsIPrincipal&);
   void SetNeedsSubjectPrincipalAttr(bool, nsIPrincipal&);
