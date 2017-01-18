@@ -350,7 +350,7 @@
   padding: 2px;
   margin-inline-start: 5px;
   background-color: var(--theme-body-color-alt);
-  color: var(--theme-toolbar-background);
+  color: var(--theme-body-background);
 }
 
 .event-tooltip-attributes {
