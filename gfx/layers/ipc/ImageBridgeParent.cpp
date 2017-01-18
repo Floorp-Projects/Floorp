@@ -104,6 +104,7 @@ ImageBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   // Can't alloc/dealloc shmems from now on.
   mClosed = true;
+  mCompositables.clear();
 
   MessageLoop::current()->PostTask(NewRunnableMethod(this, &ImageBridgeParent::DeferredDestroy));
 

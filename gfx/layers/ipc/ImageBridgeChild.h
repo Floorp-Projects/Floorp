@@ -360,6 +360,7 @@ protected:
   void DeallocPImageBridgeChild() override;
 
   bool CanSend() const;
+  bool CanPostTask() const;
 
   static void ShutdownSingleton();
 
@@ -367,7 +368,7 @@ private:
   CompositableTransaction* mTxn;
 
   bool mCanSend;
-  bool mCalledClose;
+  mozilla::Atomic<bool> mDestroyed;
 
   /**
    * Transaction id of CompositableForwarder.
