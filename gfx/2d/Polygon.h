@@ -184,10 +184,11 @@ public:
       const PolygonTyped<Units> plane({p1, p2}, normal);
 
       ClipPolygonWithPlane(polygon, plane);
-    }
 
-    if (polygon.GetPoints().Length() < 3) {
-      return PolygonTyped<Units>();
+      if (polygon.IsEmpty()) {
+        // The clipping created a polygon with no area.
+        return PolygonTyped<Units>();
+      }
     }
 
     return polygon;
@@ -217,6 +218,12 @@ public:
   {
     MOZ_ASSERT(mPoints.Length() > aIndex);
     return mPoints[aIndex];
+  }
+
+  bool IsEmpty() const
+  {
+    // If the polygon has less than three points, it has no visible area.
+    return mPoints.Length() < 3;
   }
 
   void SplitPolygon(const Point4DType& aNormal,
@@ -270,7 +277,7 @@ public:
   {
     nsTArray<TriangleTyped<Units>> triangles;
 
-    if (mPoints.Length() < 3) {
+    if (IsEmpty()) {
       return triangles;
     }
 
