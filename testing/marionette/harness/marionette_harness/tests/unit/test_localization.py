@@ -3,7 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_driver import By
-from marionette_driver.errors import InvalidArgumentException, NoSuchElementException
+from marionette_driver.errors import (
+    InvalidArgumentException,
+    NoSuchElementException,
+    UnknownException
+)
 from marionette_driver.localization import L10n
 
 from marionette_harness import MarionetteTestCase
@@ -16,26 +20,14 @@ class TestL10n(MarionetteTestCase):
 
         self.l10n = L10n(self.marionette)
 
-    def test_localize_entity_chrome(self):
-        dtds = ['chrome://global/locale/about.dtd',
-                'chrome://browser/locale/baseMenuOverlay.dtd']
+    def test_localize_entity(self):
+        dtds = ['chrome://marionette/content/test_dialog.dtd']
+        value = self.l10n.localize_entity(dtds, 'testDialog.title')
 
-        with self.marionette.using_context('chrome'):
-            value = self.l10n.localize_entity(dtds, 'helpSafeMode.label')
-            element = self.marionette.find_element(By.ID, 'helpSafeMode')
-            self.assertEqual(value, element.get_attribute('label'))
-
-    def test_localize_entity_content(self):
-        dtds = ['chrome://global/locale/about.dtd',
-                'chrome://global/locale/aboutSupport.dtd']
-
-        value = self.l10n.localize_entity(dtds, 'aboutSupport.pageTitle')
-        self.marionette.navigate('about:support')
-        element = self.marionette.find_element(By.TAG_NAME, 'title')
-        self.assertEqual(value, element.text)
+        self.assertEqual(value, 'Test Dialog')
 
     def test_localize_entity_invalid_arguments(self):
-        dtds = ['chrome://global/locale/about.dtd']
+        dtds = ['chrome://marionette/content/test_dialog.dtd']
 
         self.assertRaises(NoSuchElementException,
                           self.l10n.localize_entity, dtds, 'notExistent')
@@ -45,12 +37,10 @@ class TestL10n(MarionetteTestCase):
                           self.l10n.localize_entity, dtds, True)
 
     def test_localize_property(self):
-        properties = ['chrome://global/locale/filepicker.properties',
-                      'chrome://global/locale/findbar.properties']
+        properties = ['chrome://marionette/content/test_dialog.properties']
 
-        # TODO: Find a way to verify the retrieved localized value
-        value = self.l10n.localize_property(properties, 'CaseSensitive')
-        self.assertNotEqual(value, '')
+        value = self.l10n.localize_property(properties, 'testDialog.title')
+        self.assertEqual(value, 'Test Dialog')
 
         self.assertRaises(NoSuchElementException,
                           self.l10n.localize_property, properties, 'notExistent')
