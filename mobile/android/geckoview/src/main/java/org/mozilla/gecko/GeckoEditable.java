@@ -974,7 +974,7 @@ final class GeckoEditable extends JNIObject
         });
     }
 
-    @WrapForJNI(calledFrom = "gecko") @Override
+    @WrapForJNI(calledFrom = "gecko", exceptionMode = "ignore") @Override
     public void onSelectionChange(int start, int end) {
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
@@ -1018,7 +1018,7 @@ final class GeckoEditable extends JNIObject
                TextUtils.regionMatches(mText, start, newText, 0, oldEnd - start);
     }
 
-    @WrapForJNI(calledFrom = "gecko") @Override
+    @WrapForJNI(calledFrom = "gecko", exceptionMode = "ignore") @Override
     public void onTextChange(final CharSequence text, final int start,
                              final int unboundedOldEnd, final int unboundedNewEnd) {
         if (DEBUG) {
