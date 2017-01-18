@@ -32,7 +32,7 @@ function test()
 
   var r = f(0);
 
-  if (typeof(r[0]) != "function")
+  if (typeof(r[0]) != "number")
     actual += "Bad r[0]";
 
   if (typeof(r[1]) != "function")

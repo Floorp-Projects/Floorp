@@ -656,13 +656,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         }
     }
 
-    public void setToolBarButtonsAlpha(float alpha) {
-        ViewHelper.setAlpha(tabsCounter, alpha);
-        if (!HardwareUtils.isTablet()) {
-            ViewHelper.setAlpha(menuIcon, alpha);
-        }
-    }
-
     public void onEditSuggestion(String suggestion) {
         if (!isEditing()) {
             return;

@@ -27,7 +27,7 @@ public class testPrivateBrowsing extends ContentContextMenuTest {
         blockForGeckoReady();
 
         Actions.EventExpecter tabExpecter = mActions.expectGlobalEvent(Actions.EventType.UI, "Tab:Added");
-        Actions.EventExpecter contentExpecter = mActions.expectGeckoEvent("Content:PageShow");
+        Actions.EventExpecter contentExpecter = mActions.expectGlobalEvent(Actions.EventType.UI, "Content:PageShow");
         tabs.loadUrl(bigLinkUrl, Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_PRIVATE);
         tabExpecter.blockForEvent();
         tabExpecter.unregisterListener();
@@ -46,7 +46,7 @@ public class testPrivateBrowsing extends ContentContextMenuTest {
 
         // Open the link in a new private tab and check that it is private
         tabExpecter = mActions.expectGlobalEvent(Actions.EventType.UI, "Tab:Added");
-        contentExpecter = mActions.expectGeckoEvent("Content:PageShow");
+        contentExpecter = mActions.expectGlobalEvent(Actions.EventType.UI, "Content:PageShow");
         mSolo.clickOnText(mStringHelper.CONTEXT_MENU_ITEMS_IN_PRIVATE_TAB[0]);
 
         final GeckoBundle eventData = tabExpecter.blockForBundle();
@@ -58,7 +58,7 @@ public class testPrivateBrowsing extends ContentContextMenuTest {
 
         // Open a normal tab to check later that it was registered in the Firefox Browser History
         tabExpecter = mActions.expectGlobalEvent(Actions.EventType.UI, "Tab:Added");
-        contentExpecter = mActions.expectGeckoEvent("Content:PageShow");
+        contentExpecter = mActions.expectGlobalEvent(Actions.EventType.UI, "Content:PageShow");
         tabs.loadUrl(blank2Url, Tabs.LOADURL_NEW_TAB);
         tabExpecter.blockForEvent();
         tabExpecter.unregisterListener();

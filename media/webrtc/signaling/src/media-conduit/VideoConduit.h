@@ -417,7 +417,8 @@ private:
   //Utility function to dump recv codec database
   void DumpCodecDB() const;
 
-  bool CopyCodecToDB(const VideoCodecConfig* codecInfo);
+  bool CodecsDifferent(const nsTArray<UniquePtr<VideoCodecConfig>>& a,
+                       const nsTArray<UniquePtr<VideoCodecConfig>>& b);
 
   // Video Latency Test averaging filter
   void VideoLatencyUpdate(uint64_t new_sample);

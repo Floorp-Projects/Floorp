@@ -589,16 +589,4 @@ public class DynamicToolbarAnimator {
             return mContinueAnimation;
         }
     }
-
-    class SnapMetrics {
-        public final int viewportWidth;
-        public final int viewportHeight;
-        public final float scrollChangeY;
-
-        SnapMetrics(ImmutableViewportMetrics aMetrics, float aScrollChange) {
-            viewportWidth = aMetrics.viewportRectWidth;
-            viewportHeight = aMetrics.viewportRectHeight;
-            scrollChangeY = aScrollChange;
-        }
-    }
 }

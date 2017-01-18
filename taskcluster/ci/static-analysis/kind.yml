@@ -73,7 +73,7 @@ jobs:
         treeherder:
             platform: windows2012-32/debug
             symbol: tc(S)
-            tier: 2
+            tier: 1
         worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
         worker:
             implementation: generic-worker
@@ -92,7 +92,7 @@ jobs:
         treeherder:
             platform: windows2012-32/opt
             symbol: tc(S)
-            tier: 2
+            tier: 1
         worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
         worker:
             implementation: generic-worker
@@ -111,7 +111,7 @@ jobs:
         treeherder:
             platform: windows2012-64/debug
             symbol: tc(S)
-            tier: 2
+            tier: 1
         worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
         worker:
             implementation: generic-worker
@@ -130,7 +130,7 @@ jobs:
         treeherder:
             platform: windows2012-64/opt
             symbol: tc(S)
-            tier: 2
+            tier: 1
         worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
         worker:
             implementation: generic-worker

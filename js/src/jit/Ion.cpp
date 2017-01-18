@@ -2502,6 +2502,11 @@ Compile(JSContext* cx, HandleScript script, BaselineFrame* osrFrame, jsbytecode*
     if (optimizationLevel == OptimizationLevel::DontCompile)
         return Method_Skipped;
 
+    if (!CanLikelyAllocateMoreExecutableMemory()) {
+        script->resetWarmUpCounter();
+        return Method_Skipped;
+    }
+
     if (script->hasIonScript()) {
         IonScript* scriptIon = script->ionScript();
         if (!scriptIon->method())

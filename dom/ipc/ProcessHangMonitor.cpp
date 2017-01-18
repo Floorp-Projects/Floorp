@@ -316,7 +316,7 @@ HangMonitorChild::InterruptCallback()
   if (forcePaint) {
     RefPtr<TabChild> tabChild = TabChild::FindTabChild(forcePaintTab);
     if (tabChild) {
-      JS::AutoAssertNoGC nogc(mContext);
+      js::AutoAssertNoContentJS nojs(mContext);
       tabChild->ForcePaint(forcePaintEpoch);
     }
   }

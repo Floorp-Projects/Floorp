@@ -22,6 +22,7 @@
 #include "webrtc/transport.h"
 #include "webrtc/video_renderer.h"
 #include "webrtc/voice_engine/include/voe_base.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 
 namespace webrtc {
 
@@ -110,6 +111,9 @@ class VideoReceiveStream : public ReceiveStream {
 
       // See draft-holmer-rmcat-transport-wide-cc-extensions for details.
       bool transport_cc = false;
+
+      // TODO(jesup) - there should be a kKeyFrameReqNone
+      KeyFrameRequestMethod keyframe_method = kKeyFrameReqPliRtcp;
 
       // See NackConfig for description.
       NackConfig nack;

@@ -138,7 +138,7 @@ class JitTest:
         t.valgrind = self.valgrind
         t.tz_pacific = self.tz_pacific
         t.test_also_noasmjs = self.test_also_noasmjs
-        t.test_also_wasm_baseline = self.test_also_noasmjs
+        t.test_also_wasm_baseline = self.test_also_wasm_baseline
         t.test_also = self.test_also
         t.test_join = self.test_join
         t.expect_error = self.expect_error

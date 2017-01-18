@@ -129,7 +129,7 @@ public:
   }
 
 protected:
-  uint64_t mAsyncContainerID;
+  CompositableHandle mAsyncContainerHandle;
 };
 
 } // namespace layers

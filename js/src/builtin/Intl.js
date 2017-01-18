@@ -2267,26 +2267,6 @@ function getDateTimeFormatInternals(obj, methodName) {
     return internalProps;
 }
 
-/**
- * Components of date and time formats and their values.
- *
- * Spec: ECMAScript Internationalization API Specification, 12.1.1.
- */
-var dateTimeComponentValues = {
-    weekday: ["narrow", "short", "long"],
-    era: ["narrow", "short", "long"],
-    year: ["2-digit", "numeric"],
-    month: ["2-digit", "numeric", "narrow", "short", "long"],
-    day: ["2-digit", "numeric"],
-    hour: ["2-digit", "numeric"],
-    minute: ["2-digit", "numeric"],
-    second: ["2-digit", "numeric"],
-    timeZoneName: ["short", "long"]
-};
-
-
-var dateTimeComponents = std_Object_getOwnPropertyNames(dateTimeComponentValues);
-
 
 /**
  * Initializes an object as a DateTimeFormat.
@@ -2379,12 +2359,19 @@ function InitializeDateTimeFormat(dateTimeFormat, locales, options) {
     lazyDateTimeFormatData.formatOpt = formatOpt;
 
     // Step 19.
-    var i, prop;
-    for (i = 0; i < dateTimeComponents.length; i++) {
-        prop = dateTimeComponents[i];
-        var value = GetOption(options, prop, "string", dateTimeComponentValues[prop], undefined);
-        formatOpt[prop] = value;
-    }
+    // 12.1, Table 4: Components of date and time formats.
+    formatOpt.weekday = GetOption(options, "weekday", "string", ["narrow", "short", "long"],
+                                  undefined);
+    formatOpt.era = GetOption(options, "era", "string", ["narrow", "short", "long"], undefined);
+    formatOpt.year = GetOption(options, "year", "string", ["2-digit", "numeric"], undefined);
+    formatOpt.month = GetOption(options, "month", "string",
+                                ["2-digit", "numeric", "narrow", "short", "long"], undefined);
+    formatOpt.day = GetOption(options, "day", "string", ["2-digit", "numeric"], undefined);
+    formatOpt.hour = GetOption(options, "hour", "string", ["2-digit", "numeric"], undefined);
+    formatOpt.minute = GetOption(options, "minute", "string", ["2-digit", "numeric"], undefined);
+    formatOpt.second = GetOption(options, "second", "string", ["2-digit", "numeric"], undefined);
+    formatOpt.timeZoneName = GetOption(options, "timeZoneName", "string", ["short", "long"],
+                                       undefined);
 
     // Steps 20-21 provided by ICU - see comment after this function.
 

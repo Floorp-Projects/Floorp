@@ -44,7 +44,12 @@ public:
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  static void GetKey(nsIPrincipal* aPrincipal, nsACString& aString);
+  // Returns NS_ERROR_FAILURE and sets |aString| to an empty string if the TLD
+  // service isn't available. Returns NS_OK on success, but may still set
+  // |aString| may still be set to an empty string.
+  static MOZ_MUST_USE nsresult
+  GetKey(nsIPrincipal* aPrincipal, nsACString& aString);
+
   bool MatchesKey(const nsACString& aKey)
   {
     return aKey == mKey;

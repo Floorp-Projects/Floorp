@@ -106,21 +106,21 @@ public:
   NS_DECL_QUERYFRAME
 
   // nsIFrame
-  virtual void Init(nsIContent* aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame* aPrevInFlow) override;
-  virtual void SetInitialChildList(ChildListID aListID,
-                                   nsFrameList& aChildList) override;
-  virtual void AppendFrames(ChildListID aListID,
-                            nsFrameList& aFrameList) override;
-  virtual void InsertFrames(ChildListID aListID,
-                            nsIFrame* aPrevFrame,
-                            nsFrameList& aFrameList) override;
-  virtual void RemoveFrame(ChildListID aListID,
-                           nsIFrame* aOldFrame) override;
-  virtual const nsFrameList& GetChildList(ChildListID aListID) const override;
-  virtual void GetChildLists(nsTArray<ChildList>* aLists) const override;
-  virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
+  void Init(nsIContent* aContent,
+            nsContainerFrame* aParent,
+            nsIFrame* aPrevInFlow) override;
+  void SetInitialChildList(ChildListID aListID,
+                           nsFrameList& aChildList) override;
+  void AppendFrames(ChildListID aListID,
+                    nsFrameList& aFrameList) override;
+  void InsertFrames(ChildListID aListID,
+                    nsIFrame* aPrevFrame,
+                    nsFrameList& aFrameList) override;
+  void RemoveFrame(ChildListID aListID,
+                   nsIFrame* aOldFrame) override;
+  const nsFrameList& GetChildList(ChildListID aListID) const override;
+  void GetChildLists(nsTArray<ChildList>* aLists) const override;
+  nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
   bool GetVerticalAlignBaseline(mozilla::WritingMode aWM,
                                 nscoord* aBaseline) const override
   {
@@ -134,36 +134,36 @@ public:
   bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
                                  BaselineSharingGroup aBaselineGroup,
                                  nscoord*             aBaseline) const override;
-  virtual nscoord GetCaretBaseline() const override;
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
-  virtual nsSplittableType GetSplittableType() const override;
-  virtual bool IsFloatContainingBlock() const override;
-  virtual void BuildDisplayList(nsDisplayListBuilder* aBuilder,
-                                const nsRect& aDirtyRect,
-                                const nsDisplayListSet& aLists) override;
-  virtual nsIAtom* GetType() const override;
-  virtual bool IsFrameOfType(uint32_t aFlags) const override
+  nscoord GetCaretBaseline() const override;
+  void DestroyFrom(nsIFrame* aDestructRoot) override;
+  nsSplittableType GetSplittableType() const override;
+  bool IsFloatContainingBlock() const override;
+  void BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                        const nsRect& aDirtyRect,
+                        const nsDisplayListSet& aLists) override;
+  nsIAtom* GetType() const override;
+  bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsContainerFrame::IsFrameOfType(aFlags &
              ~(nsIFrame::eCanContainOverflowContainers |
                nsIFrame::eBlockFrame));
   }
 
-  virtual void InvalidateFrame(uint32_t aDisplayItemKey = 0) override;
-  virtual void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0) override;
+  void InvalidateFrame(uint32_t aDisplayItemKey = 0) override;
+  void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0) override;
 
 #ifdef DEBUG_FRAME_DUMP
   void List(FILE* out = stderr, const char* aPrefix = "", uint32_t aFlags = 0) const override;
-  virtual nsresult GetFrameName(nsAString& aResult) const override;
+  nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
 #ifdef DEBUG
-  virtual nsFrameState GetDebugStateBits() const override;
+  nsFrameState GetDebugStateBits() const override;
   const char* LineReflowStatusToString(LineReflowStatus aLineReflowStatus) const;
 #endif
 
 #ifdef ACCESSIBILITY
-  virtual mozilla::a11y::AccType AccessibleType() override;
+  mozilla::a11y::AccType AccessibleType() override;
 #endif
 
   // Line cursor methods to speed up line searching in which one query
@@ -226,12 +226,12 @@ public:
     nsLineBox* mOrigCursor;
   };
 
-  virtual void ChildIsDirty(nsIFrame* aChild) override;
-  virtual bool IsVisibleInSelection(nsISelection* aSelection) override;
+  void ChildIsDirty(nsIFrame* aChild) override;
+  bool IsVisibleInSelection(nsISelection* aSelection) override;
 
-  virtual bool IsEmpty() override;
-  virtual bool CachedIsEmpty() override;
-  virtual bool IsSelfEmpty() override;
+  bool IsEmpty() override;
+  bool CachedIsEmpty() override;
+  bool IsSelfEmpty() override;
 
   // Given that we have a bullet, does it actually draw something, i.e.,
   // do we have either a 'list-style-type' or 'list-style-image' that is
@@ -272,18 +272,18 @@ public:
     return outside ? outside : GetInsideBullet();
   }
 
-  virtual void MarkIntrinsicISizesDirty() override;
+  void MarkIntrinsicISizesDirty() override;
 private:
   void CheckIntrinsicCacheAgainstShrinkWrapState();
 public:
-  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
-  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
+  nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
 
-  virtual nsRect ComputeTightBounds(DrawTarget* aDrawTarget) const override;
+  nsRect ComputeTightBounds(DrawTarget* aDrawTarget) const override;
 
-  virtual nsresult GetPrefWidthTightBounds(nsRenderingContext* aContext,
-                                           nscoord* aX,
-                                           nscoord* aXMost) override;
+  nsresult GetPrefWidthTightBounds(nsRenderingContext* aContext,
+                                   nscoord* aX,
+                                   nscoord* aXMost) override;
 
   /**
    * Compute the final block size of this frame.
@@ -309,25 +309,25 @@ public:
                          mozilla::LogicalSize& aFinalSize,
                          nscoord aConsumed);
 
-  virtual void Reflow(nsPresContext* aPresContext,
-                      ReflowOutput& aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus& aStatus) override;
+  void Reflow(nsPresContext* aPresContext,
+              ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus& aStatus) override;
 
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID,
-                                    nsIAtom* aAttribute,
-                                    int32_t aModType) override;
+  nsresult AttributeChanged(int32_t aNameSpaceID,
+                            nsIAtom* aAttribute,
+                            int32_t aModType) override;
 
   /**
    * Move any frames on our overflow list to the end of our principal list.
    * @return true if there were any overflow frames
    */
-  virtual bool DrainSelfOverflowList() override;
+  bool DrainSelfOverflowList() override;
 
-  virtual nsresult StealFrame(nsIFrame* aChild) override;
+  nsresult StealFrame(nsIFrame* aChild) override;
 
-  virtual void DeleteNextInFlowChild(nsIFrame* aNextInFlow,
-                                     bool aDeletingEmptyFrames) override;
+  void DeleteNextInFlowChild(nsIFrame* aNextInFlow,
+                             bool aDeletingEmptyFrames) override;
 
   /**
     * This is a special method that allows a child class of nsBlockFrame to

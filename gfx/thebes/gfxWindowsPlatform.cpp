@@ -193,10 +193,6 @@ public:
         HMODULE gdi32Handle;
         PFND3DKMTQS queryD3DKMTStatistics = nullptr;
 
-        // GPU memory reporting is not available before Windows 7
-        if (!IsWin7OrLater())
-            return NS_OK;
-
         if ((gdi32Handle = LoadLibrary(TEXT("gdi32.dll"))))
             queryD3DKMTStatistics = (PFND3DKMTQS)GetProcAddress(gdi32Handle, "D3DKMTQueryStatistics");
 
@@ -401,10 +397,6 @@ gfxWindowsPlatform::CanUseHardwareVideoDecoding()
 bool
 gfxWindowsPlatform::InitDWriteSupport()
 {
-  if (!IsVistaOrLater()) {
-    return false;
-  }
-
   // DWrite is only supported on Windows 7 with the platform update and higher.
   // We check this by seeing if D2D1 support is available.
   if (!Factory::SupportsD2D1()) {
@@ -1382,17 +1374,13 @@ gfxWindowsPlatform::InitializeD3D9Config()
     return;
   }
 
-  if (!IsVistaOrLater()) {
-    d3d9.EnableByDefault();
-  } else {
-    d3d9.SetDefaultFromPref(
-      gfxPrefs::GetLayersAllowD3D9FallbackPrefName(),
-      true,
-      gfxPrefs::GetLayersAllowD3D9FallbackPrefDefault());
+  d3d9.SetDefaultFromPref(
+    gfxPrefs::GetLayersAllowD3D9FallbackPrefName(),
+    true,
+    gfxPrefs::GetLayersAllowD3D9FallbackPrefDefault());
 
-    if (!d3d9.IsEnabled() && gfxPrefs::LayersPreferD3D9()) {
-      d3d9.UserEnable("Direct3D9 enabled via layers.prefer-d3d9");
-    }
+  if (!d3d9.IsEnabled() && gfxPrefs::LayersPreferD3D9()) {
+    d3d9.UserEnable("Direct3D9 enabled via layers.prefer-d3d9");
   }
 
   nsCString message;
@@ -1540,11 +1528,6 @@ gfxWindowsPlatform::InitializeD2DConfig()
                           NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_D3D11_COMP"));
     return;
   }
-  if (!IsVistaOrLater()) {
-    d2d1.DisableByDefault(FeatureStatus::Unavailable, "Direct2D is not available on Windows XP",
-                          NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_XP"));
-    return;
-  }
 
   d2d1.SetDefaultFromPref(
     gfxPrefs::GetDirect2DDisabledPrefName(),
@@ -1636,14 +1619,12 @@ gfxWindowsPlatform::InitGPUProcessSupport()
       "Not using GPU Process since D3D11 is unavailable",
       NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_D3D11"));
   } else if (!IsWin7SP1OrLater()) {
-    // For Windows XP, we simply don't care enough to support this
-    // configuration. On Windows Vista and 7 Pre-SP1, DXGI 1.2 is not
-    // available and remote presentation for D3D11 will not work. Rather
-    // than take a regression and use D3D9, we revert back to in-process
-    // rendering.
+    // On Windows 7 Pre-SP1, DXGI 1.2 is not available and remote presentation
+    // for D3D11 will not work. Rather than take a regression and use D3D9, we
+    // revert back to in-process rendering.
     gpuProc.Disable(
       FeatureStatus::Unavailable,
-      "Windows XP, Vista, and 7 Pre-SP1 cannot use the GPU process",
+      "Windows 7 Pre-SP1 cannot use the GPU process",
       NS_LITERAL_CSTRING("FEATURE_FAILURE_OLD_WINDOWS"));
   } else if (!IsWin8OrLater()) {
     // Windows 7 SP1 can have DXGI 1.2 only via the Platform Update, so we
@@ -1666,10 +1647,6 @@ gfxWindowsPlatform::InitGPUProcessSupport()
 bool
 gfxWindowsPlatform::DwmCompositionEnabled()
 {
-  if (!IsVistaOrLater()) {
-    return false;
-  }
-
   MOZ_ASSERT(WinUtils::dwmIsCompositionEnabledPtr);
   BOOL dwmEnabled = false;
 

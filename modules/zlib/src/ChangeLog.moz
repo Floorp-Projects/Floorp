@@ -63,3 +63,7 @@ Mozilla.org changes:
   (keeping '#include "mozzconf.h"' in zconf.h)
   See bug #866964
   
+- 16 January 2017
+  Sync'ed with 1.2.11 release
+  (keeping '#include "mozzconf.h"' in zconf.h)
+  See bug #1328099

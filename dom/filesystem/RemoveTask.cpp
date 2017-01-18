@@ -162,17 +162,16 @@ RemoveTaskParent::Create(FileSystemBase* aFileSystem,
   RefPtr<RemoveTaskParent> task =
     new RemoveTaskParent(aFileSystem, aParam, aParent);
 
-  NS_ConvertUTF16toUTF8 directoryPath(aParam.directory());
-  aRv = NS_NewNativeLocalFile(directoryPath, true,
-                              getter_AddRefs(task->mDirPath));
+  aRv = NS_NewLocalFile(aParam.directory(), true,
+                        getter_AddRefs(task->mDirPath));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
   task->mRecursive = aParam.recursive();
 
-  NS_ConvertUTF16toUTF8 path(aParam.targetDirectory());
-  aRv = NS_NewNativeLocalFile(path, true, getter_AddRefs(task->mTargetPath));
+  aRv = NS_NewLocalFile(aParam.targetDirectory(), true,
+                        getter_AddRefs(task->mTargetPath));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

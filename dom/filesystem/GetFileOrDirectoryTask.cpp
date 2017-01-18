@@ -100,8 +100,7 @@ GetFileOrDirectoryTaskChild::SetSuccessRequestResult(const FileSystemResponseVal
     case FileSystemResponseValue::TFileSystemFileResponse: {
       FileSystemFileResponse r = aValue;
 
-      NS_ConvertUTF16toUTF8 path(r.realPath());
-      aRv = NS_NewNativeLocalFile(path, true, getter_AddRefs(mTargetPath));
+      aRv = NS_NewLocalFile(r.realPath(), true, getter_AddRefs(mTargetPath));
       if (NS_WARN_IF(aRv.Failed())) {
         return;
       }
@@ -112,8 +111,7 @@ GetFileOrDirectoryTaskChild::SetSuccessRequestResult(const FileSystemResponseVal
     case FileSystemResponseValue::TFileSystemDirectoryResponse: {
       FileSystemDirectoryResponse r = aValue;
 
-      NS_ConvertUTF16toUTF8 path(r.realPath());
-      aRv = NS_NewNativeLocalFile(path, true, getter_AddRefs(mTargetPath));
+      aRv = NS_NewLocalFile(r.realPath(), true, getter_AddRefs(mTargetPath));
       if (NS_WARN_IF(aRv.Failed())) {
         return;
       }
@@ -183,8 +181,8 @@ GetFileOrDirectoryTaskParent::Create(FileSystemBase* aFileSystem,
   RefPtr<GetFileOrDirectoryTaskParent> task =
     new GetFileOrDirectoryTaskParent(aFileSystem, aParam, aParent);
 
-  NS_ConvertUTF16toUTF8 path(aParam.realPath());
-  aRv = NS_NewNativeLocalFile(path, true, getter_AddRefs(task->mTargetPath));
+  aRv = NS_NewLocalFile(aParam.realPath(), true,
+                        getter_AddRefs(task->mTargetPath));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

@@ -17,7 +17,7 @@
   typedef classname Has_NS_DECL_QUERYFRAME_TARGET;
 
 #define NS_DECL_QUERYFRAME                                      \
-  virtual void* QueryFrame(FrameIID id) override;
+  void* QueryFrame(FrameIID id) override;
 
 #define NS_QUERYFRAME_HEAD(class)                               \
   void* class::QueryFrame(FrameIID id) { switch (id) {

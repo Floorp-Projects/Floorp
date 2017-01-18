@@ -1185,9 +1185,9 @@ WebGLTexture::TexStorage(const char* funcName, TexTarget target, GLsizei levels,
     const bool isDataInitialized = false;
     const WebGLTexture::ImageInfo newInfo(dstUsage, width, height, depth,
                                           isDataInitialized);
-    SetImageInfosAtLevel(0, newInfo);
+    SetImageInfosAtLevel(funcName, 0, newInfo);
 
-    PopulateMipChain(0, levels-1);
+    PopulateMipChain(funcName, 0, levels-1);
 
     mImmutable = true;
     mImmutableLevelCount = levels;
@@ -1317,7 +1317,7 @@ WebGLTexture::TexImage(const char* funcName, TexImageTarget target, GLint level,
     ////////////////////////////////////
     // Update our specification data.
 
-    SetImageInfo(imageInfo, newImageInfo);
+    SetImageInfo(funcName, imageInfo, newImageInfo);
 }
 
 void
@@ -1523,7 +1523,7 @@ WebGLTexture::CompressedTexImage(const char* funcName, TexImageTarget target, GL
     const bool isDataInitialized = true;
     const ImageInfo newImageInfo(usage, blob->mWidth, blob->mHeight, blob->mDepth,
                                  isDataInitialized);
-    SetImageInfo(imageInfo, newImageInfo);
+    SetImageInfo(funcName, imageInfo, newImageInfo);
 }
 
 static inline bool
@@ -2170,7 +2170,7 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
 
     const bool isDataInitialized = true;
     const ImageInfo newImageInfo(dstUsage, width, height, depth, isDataInitialized);
-    SetImageInfo(imageInfo, newImageInfo);
+    SetImageInfo(funcName, imageInfo, newImageInfo);
 }
 
 void
