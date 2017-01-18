@@ -66,7 +66,6 @@ public:
 
 MOZ_THREAD_LOCAL(PseudoStack *) tlsPseudoStack;
 MOZ_THREAD_LOCAL(GeckoSampler *) tlsTicker;
-MOZ_THREAD_LOCAL(void *) tlsStackTop;
 // We need to track whether we've been initialized otherwise
 // we end up using tlsStack without initializing it.
 // Because tlsStack is totally opaque to us we can't reuse
@@ -170,8 +169,6 @@ Sampler::RegisterCurrentThread(const char* aName,
     }
   }
 
-  set_tls_stack_top(stackTop);
-
   ThreadInfo* info = new StackOwningThreadInfo(aName, id,
     aIsMainThread, aPseudoStack, stackTop);
 
@@ -189,8 +186,6 @@ Sampler::UnregisterCurrentThread()
 {
   if (!sRegisteredThreadsMutex)
     return;
-
-  tlsStackTop.set(nullptr);
 
   ::MutexAutoLock lock(*sRegisteredThreadsMutex);
 
@@ -452,19 +447,6 @@ void profiler_usage() {
   return;
 }
 
-void set_tls_stack_top(void* stackTop)
-{
-  // Round |stackTop| up to the end of the containing page.  We may
-  // as well do this -- there's no danger of a fault, and we might
-  // get a few more base-of-the-stack frames as a result.  This
-  // assumes that no target has a page size smaller than 4096.
-  uintptr_t stackTopR = (uintptr_t)stackTop;
-  if (stackTop) {
-    stackTopR = (stackTopR & ~(uintptr_t)4095) + (uintptr_t)4095;
-  }
-  tlsStackTop.set((void*)stackTopR);
-}
-
 bool is_main_thread_name(const char* aName) {
   if (!aName) {
     return false;
@@ -526,7 +508,7 @@ void mozilla_sampler_init(void* stackTop)
 #endif
 
   LOG("BEGIN mozilla_sampler_init");
-  if (!tlsPseudoStack.init() || !tlsTicker.init() || !tlsStackTop.init()) {
+  if (!tlsPseudoStack.init() || !tlsTicker.init()) {
     LOG("Failed to init.");
     return;
   }

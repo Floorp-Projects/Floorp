@@ -267,8 +267,6 @@ bool set_profiler_entries(const char*);
 bool set_profiler_scan(const char*);
 bool is_native_unwinding_avail();
 
-void set_tls_stack_top(void* stackTop);
-
 // ----------------------------------------------------------------------------
 // Sampler
 //
