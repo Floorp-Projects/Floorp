@@ -1005,14 +1005,18 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
     DidComposite(start, end);
   }
 
-  // We're not really taking advantage of the stored composite-again-time here.
-  // We might be able to skip the next few composites altogether. However,
-  // that's a bit complex to implement and we'll get most of the advantage
-  // by skipping compositing when we detect there's nothing invalid. This is why
-  // we do "composite until" rather than "composite again at".
-  if (!mCompositor->GetCompositeUntilTime().IsNull() ||
-      mLayerManager->DebugOverlayWantsNextFrame()) {
-    ScheduleComposition();
+  if (mCompositor) {
+    // We're not really taking advantage of the stored composite-again-time here.
+    // We might be able to skip the next few composites altogether. However,
+    // that's a bit complex to implement and we'll get most of the advantage
+    // by skipping compositing when we detect there's nothing invalid. This is why
+    // we do "composite until" rather than "composite again at".
+    if (!mCompositor->GetCompositeUntilTime().IsNull() ||
+        mLayerManager->DebugOverlayWantsNextFrame()) {
+      ScheduleComposition();
+    }
+  } else {
+    // TODO(bug 1328602) Figure out what we should do here with the render thread.
   }
 
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
@@ -1034,7 +1038,12 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
     // Special full-tilt composite mode for performance testing
     ScheduleComposition();
   }
-  mCompositor->SetCompositionTime(TimeStamp());
+
+  if (mCompositor) {
+    mCompositor->SetCompositionTime(TimeStamp());
+  } else {
+    // TODO(bug 1328602) Need an equivalent that works with the rende thread.
+  }
 
   mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::COMPOSITE_TIME, start);
 }
@@ -1294,7 +1303,10 @@ CompositorBridgeParent::RecvGetFrameUniformity(FrameUniformityData* aOutData)
 mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvRequestOverfill()
 {
-  uint32_t overfillRatio = mCompositor->GetFillRatio();
+  uint32_t overfillRatio = 0;
+  if (mCompositor) {
+    overfillRatio = mCompositor->GetFillRatio();
+  }
   Unused << SendOverfill(overfillRatio);
   return IPC_OK();
 }

@@ -36,10 +36,12 @@ class NewRenderer : public RendererEvent
 {
 public:
   NewRenderer(WrAPI** aApi, layers::CompositorBridgeParentBase* aBridge,
+              GLint* aMaxTextureSize,
               RefPtr<widget::CompositorWidget>&& aWidget,
               layers::SynchronousTask* aTask,
               bool aEnableProfiler)
   : mWrApi(aApi)
+  , mMaxTextureSize(aMaxTextureSize)
   , mBridge(aBridge)
   , mCompositorWidget(Move(aWidget))
   , mTask(aTask)
@@ -62,6 +64,8 @@ public:
       return;
     }
 
+    gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, mMaxTextureSize);
+
     wr_gl_init(&*gl);
 
     WrRenderer* wrRenderer = nullptr;
@@ -80,6 +84,7 @@ public:
   }
 
   WrAPI** mWrApi;
+  GLint* mMaxTextureSize;
   layers::CompositorBridgeParentBase* mBridge;
   RefPtr<widget::CompositorWidget> mCompositorWidget;
   layers::SynchronousTask* mTask;
@@ -123,12 +128,14 @@ WebRenderAPI::Create(bool aEnableProfiler,
   WindowId id(sNextId++);
 
   WrAPI* wrApi = nullptr;
+  GLint maxTextureSize = 0;
 
   // Dispatch a synchronous task because the WrApi object needs to be created
   // on the render thread. If need be we could delay waiting on this task until
   // the next time we need to access the WrApi object.
   layers::SynchronousTask task("Create Renderer");
-  auto event = MakeUnique<NewRenderer>(&wrApi, aBridge, Move(aWidget), &task, aEnableProfiler);
+  auto event = MakeUnique<NewRenderer>(&wrApi, aBridge, &maxTextureSize,
+                                       Move(aWidget), &task, aEnableProfiler);
   RenderThread::Get()->RunEvent(id, Move(event));
 
   task.Wait();
@@ -137,7 +144,7 @@ WebRenderAPI::Create(bool aEnableProfiler,
     return nullptr;
   }
 
-  return RefPtr<WebRenderAPI>(new WebRenderAPI(wrApi, id)).forget();
+  return RefPtr<WebRenderAPI>(new WebRenderAPI(wrApi, id, maxTextureSize)).forget();
 }
 
 WebRenderAPI::~WebRenderAPI()
