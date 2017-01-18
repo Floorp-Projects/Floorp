@@ -149,46 +149,45 @@ public:
 
   // nsIFrame
   void Init(nsIContent*       aContent,
-                    nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) override;
+            nsContainerFrame* aParent,
+            nsIFrame*         aPrevInFlow) override;
   void DestroyFrom(nsIFrame* aDestructRoot) override;
   nsStyleContext* GetAdditionalStyleContext(int32_t aIndex) const override;
   void SetAdditionalStyleContext(int32_t aIndex,
-                                         nsStyleContext* aStyleContext) override;
+                                 nsStyleContext* aStyleContext) override;
   nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
   const nsFrameList& GetChildList(ChildListID aListID) const override;
   void GetChildLists(nsTArray<ChildList>* aLists) const override;
 
-  nsresult HandleEvent(nsPresContext* aPresContext, 
-                                mozilla::WidgetGUIEvent* aEvent,
-                                nsEventStatus* aEventStatus) override;
+  nsresult HandleEvent(nsPresContext* aPresContext,
+                       mozilla::WidgetGUIEvent* aEvent,
+                       nsEventStatus* aEventStatus) override;
   nsresult GetContentForEvent(mozilla::WidgetEvent* aEvent,
-                                       nsIContent** aContent) override;
+                              nsIContent** aContent) override;
   nsresult GetCursor(const nsPoint&    aPoint,
-                              nsIFrame::Cursor& aCursor) override;
+                     nsIFrame::Cursor& aCursor) override;
 
   nsresult GetPointFromOffset(int32_t  inOffset,
-                                       nsPoint* outPoint) override;
+                              nsPoint* outPoint) override;
   nsresult GetCharacterRectsInRange(int32_t aInOffset,
-                                             int32_t aLength,
-                                             nsTArray<nsRect>& aOutRect) override;
+                                    int32_t aLength,
+                                    nsTArray<nsRect>& aOutRect) override;
 
   nsresult GetChildFrameContainingOffset(int32_t    inContentOffset,
-                                                  bool       inHint,
-                                                  int32_t*   outFrameContentOffset,
-                                                  nsIFrame** outChildFrame) override;
+                                         bool       inHint,
+                                         int32_t*   outFrameContentOffset,
+                                         nsIFrame** outChildFrame) override;
 
   static nsresult GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
-                                        nsPeekOffsetStruct *aPos, 
-                                        nsIFrame *aBlockFrame, 
-                                        int32_t aLineStart, 
-                                        int8_t aOutSideLimit
-                                        );
+                                                 nsPeekOffsetStruct *aPos, 
+                                                 nsIFrame *aBlockFrame, 
+                                                 int32_t aLineStart, 
+                                                 int8_t aOutSideLimit);
 
   nsresult CharacterDataChanged(CharacterDataChangeInfo* aInfo) override;
-  nsresult AttributeChanged(int32_t         aNameSpaceID,
-                                     nsIAtom*        aAttribute,
-                                     int32_t         aModType) override;
+  nsresult AttributeChanged(int32_t  aNameSpaceID,
+                            nsIAtom* aAttribute,
+                            int32_t aModType) override;
   nsSplittableType GetSplittableType() const override;
   nsIFrame* GetPrevContinuation() const override;
   void SetPrevContinuation(nsIFrame*) override;
@@ -200,13 +199,17 @@ public:
   void SetNextInFlow(nsIFrame*) override;
   nsIAtom* GetType() const override;
 
-  nsresult GetSelectionController(nsPresContext *aPresContext, nsISelectionController **aSelCon) override;
+  nsresult GetSelectionController(nsPresContext *aPresContext,
+                                  nsISelectionController **aSelCon) override;
 
-  FrameSearchResult PeekOffsetNoAmount(bool aForward, int32_t* aOffset) override;
+  FrameSearchResult PeekOffsetNoAmount(bool aForward,
+                                       int32_t* aOffset) override;
   FrameSearchResult PeekOffsetCharacter(bool aForward, int32_t* aOffset,
-                                     bool aRespectClusters = true) override;
-  FrameSearchResult PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
-                                int32_t* aOffset, PeekWordState *aState) override;
+                                        bool aRespectClusters = true) override;
+  FrameSearchResult PeekOffsetWord(bool aForward, bool aWordSelectEatSpace,
+                                   bool aIsKeyboardSelect,
+                                   int32_t* aOffset,
+                                   PeekWordState *aState) override;
   /**
    * Check whether we should break at a boundary between punctuation and
    * non-punctuation. Only call it at a punctuation boundary
@@ -216,11 +219,14 @@ public:
    * @param aWhitespaceAfter true if the next character is whitespace
    */
   bool BreakWordBetweenPunctuation(const PeekWordState* aState,
-                                     bool aForward,
-                                     bool aPunctAfter, bool aWhitespaceAfter,
-                                     bool aIsKeyboardSelect);
+                                   bool aForward,
+                                   bool aPunctAfter, bool aWhitespaceAfter,
+                                   bool aIsKeyboardSelect);
 
-  nsresult CheckVisibility(nsPresContext* aContext, int32_t aStartIndex, int32_t aEndIndex, bool aRecurse, bool *aFinished, bool *_retval) override;
+  nsresult CheckVisibility(nsPresContext* aContext,
+                           int32_t aStartIndex, int32_t aEndIndex,
+                           bool aRecurse, bool *aFinished,
+                           bool *_retval) override;
 
   nsresult GetOffsets(int32_t &aStart, int32_t &aEnd) const override;
   void ChildIsDirty(nsIFrame* aChild) override;
@@ -255,9 +261,9 @@ public:
   nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
   nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
   void AddInlineMinISize(nsRenderingContext *aRenderingContext,
-                                 InlineMinISizeData *aData) override;
+                         InlineMinISizeData *aData) override;
   void AddInlinePrefISize(nsRenderingContext *aRenderingContext,
-                                  InlinePrefISizeData *aData) override;
+                          InlinePrefISizeData *aData) override;
   IntrinsicISizeOffsetData IntrinsicISizeOffsets() override;
   mozilla::IntrinsicSize GetIntrinsicSize() override;
   nsSize GetIntrinsicRatio() override;
@@ -347,29 +353,29 @@ public:
    * Note: if it's only the overflow rect(s) of a frame that need to be
    * updated, then UpdateOverflow should be called instead of Reflow.
    */
-  void Reflow(nsPresContext*           aPresContext,
-                      ReflowOutput&     aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus&          aStatus) override;
-  void DidReflow(nsPresContext*           aPresContext,
-                         const ReflowInput* aReflowInput,
-                         nsDidReflowStatus        aStatus) override;
+  void Reflow(nsPresContext*     aPresContext,
+              ReflowOutput&      aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus&    aStatus) override;
+  void DidReflow(nsPresContext*     aPresContext,
+                 const ReflowInput* aReflowInput,
+                 nsDidReflowStatus  aStatus) override;
 
   /**
    * NOTE: aStatus is assumed to be already-initialized. The reflow statuses of
    * any reflowed absolute children will be merged into aStatus; aside from
    * that, this method won't modify aStatus.
    */
-  void ReflowAbsoluteFrames(nsPresContext*           aPresContext,
-                            ReflowOutput&     aDesiredSize,
+  void ReflowAbsoluteFrames(nsPresContext*     aPresContext,
+                            ReflowOutput&      aDesiredSize,
                             const ReflowInput& aReflowInput,
-                            nsReflowStatus&          aStatus,
-                            bool                     aConstrainBSize = true);
-  void FinishReflowWithAbsoluteFrames(nsPresContext*           aPresContext,
-                                      ReflowOutput&     aDesiredSize,
+                            nsReflowStatus&    aStatus,
+                            bool               aConstrainBSize = true);
+  void FinishReflowWithAbsoluteFrames(nsPresContext*     aPresContext,
+                                      ReflowOutput&      aDesiredSize,
                                       const ReflowInput& aReflowInput,
-                                      nsReflowStatus&          aStatus,
-                                      bool                     aConstrainBSize = true);
+                                      nsReflowStatus&    aStatus,
+                                      bool aConstrainBSize = true);
 
   /*
    * If this frame is dirty, marks all absolutely-positioned children of this
@@ -730,7 +736,7 @@ public:
    * For more information, see XXX.
    */
   nsresult DumpRegressionData(nsPresContext* aPresContext,
-                                       FILE* out, int32_t aIndent) override;
+                              FILE* out, int32_t aIndent) override;
 
   /**
    * See if style tree verification is enabled. To enable style tree
