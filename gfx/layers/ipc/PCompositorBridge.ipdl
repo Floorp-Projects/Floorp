@@ -11,7 +11,6 @@ include PlatformWidgetTypes;
 include protocol PAPZ;
 include protocol PAPZCTreeManager;
 include protocol PBrowser;
-include protocol PCompositable;
 include protocol PCompositorWidget;
 include protocol PLayerTransaction;
 include protocol PTexture;
