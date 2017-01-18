@@ -61,8 +61,6 @@ void mozilla_sampler_frame_number(int frameNumber);
 
 const double* mozilla_sampler_get_responsiveness();
 
-void mozilla_sampler_save();
-
 mozilla::UniquePtr<char[]> mozilla_sampler_get_profile(double aSinceTime);
 
 JSObject *mozilla_sampler_get_profile_data(JSContext* aCx, double aSinceTime);
