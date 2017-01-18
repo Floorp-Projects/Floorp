@@ -39,8 +39,7 @@ int vpx_video_reader_read_frame(VpxVideoReader *reader);
 
 // Returns the pointer to memory buffer with frame data read by last call to
 // vpx_video_reader_read_frame().
-const uint8_t *vpx_video_reader_get_frame(VpxVideoReader *reader,
-                                          size_t *size);
+const uint8_t *vpx_video_reader_get_frame(VpxVideoReader *reader, size_t *size);
 
 // Fills VpxVideoInfo with information from opened video file.
 const VpxVideoInfo *vpx_video_reader_get_info(VpxVideoReader *reader);

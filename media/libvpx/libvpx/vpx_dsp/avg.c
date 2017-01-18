@@ -15,8 +15,9 @@
 unsigned int vpx_avg_8x8_c(const uint8_t *s, int p) {
   int i, j;
   int sum = 0;
-  for (i = 0; i < 8; ++i, s+=p)
-    for (j = 0; j < 8; sum += s[j], ++j) {}
+  for (i = 0; i < 8; ++i, s += p)
+    for (j = 0; j < 8; sum += s[j], ++j) {
+    }
 
   return (sum + 32) >> 6;
 }
@@ -24,8 +25,9 @@ unsigned int vpx_avg_8x8_c(const uint8_t *s, int p) {
 unsigned int vpx_avg_4x4_c(const uint8_t *s, int p) {
   int i, j;
   int sum = 0;
-  for (i = 0; i < 4; ++i, s+=p)
-    for (j = 0; j < 4; sum += s[j], ++j) {}
+  for (i = 0; i < 4; ++i, s += p)
+    for (j = 0; j < 4; sum += s[j], ++j) {
+    }
 
   return (sum + 8) >> 4;
 }
@@ -80,8 +82,8 @@ void vpx_hadamard_8x8_c(const int16_t *src_diff, int src_stride,
   for (idx = 0; idx < 8; ++idx) {
     hadamard_col8(tmp_buf, 8, coeff);  // tmp_buf: 12 bit
                                        // dynamic range [-2040, 2040]
-    coeff += 8;  // coeff: 15 bit
-                 // dynamic range [-16320, 16320]
+    coeff += 8;                        // coeff: 15 bit
+                                       // dynamic range [-16320, 16320]
     ++tmp_buf;
   }
 }
@@ -92,8 +94,8 @@ void vpx_hadamard_16x16_c(const int16_t *src_diff, int src_stride,
   int idx;
   for (idx = 0; idx < 4; ++idx) {
     // src_diff: 9 bit, dynamic range [-255, 255]
-    const int16_t *src_ptr = src_diff + (idx >> 1) * 8 * src_stride
-                                + (idx & 0x01) * 8;
+    const int16_t *src_ptr =
+        src_diff + (idx >> 1) * 8 * src_stride + (idx & 0x01) * 8;
     vpx_hadamard_8x8_c(src_ptr, src_stride, coeff + idx * 64);
   }
 
@@ -109,8 +111,8 @@ void vpx_hadamard_16x16_c(const int16_t *src_diff, int src_stride,
     int16_t b2 = (a2 + a3) >> 1;  // [-16320, 16320]
     int16_t b3 = (a2 - a3) >> 1;
 
-    coeff[0]   = b0 + b2;  // 16 bit, [-32640, 32640]
-    coeff[64]  = b1 + b3;
+    coeff[0] = b0 + b2;  // 16 bit, [-32640, 32640]
+    coeff[64] = b1 + b3;
     coeff[128] = b0 - b2;
     coeff[192] = b1 - b3;
 
@@ -123,8 +125,7 @@ void vpx_hadamard_16x16_c(const int16_t *src_diff, int src_stride,
 int vpx_satd_c(const int16_t *coeff, int length) {
   int i;
   int satd = 0;
-  for (i = 0; i < length; ++i)
-    satd += abs(coeff[i]);
+  for (i = 0; i < length; ++i) satd += abs(coeff[i]);
 
   // satd: 26 bits, dynamic range [-32640 * 1024, 32640 * 1024]
   return satd;
@@ -140,8 +141,7 @@ void vpx_int_pro_row_c(int16_t hbuf[16], const uint8_t *ref,
     int i;
     hbuf[idx] = 0;
     // hbuf[idx]: 14 bit, dynamic range [0, 16320].
-    for (i = 0; i < height; ++i)
-      hbuf[idx] += ref[i * ref_stride];
+    for (i = 0; i < height; ++i) hbuf[idx] += ref[i * ref_stride];
     // hbuf[idx]: 9 bit, dynamic range [0, 510].
     hbuf[idx] /= norm_factor;
     ++ref;
@@ -153,16 +153,14 @@ int16_t vpx_int_pro_col_c(const uint8_t *ref, const int width) {
   int idx;
   int16_t sum = 0;
   // sum: 14 bit, dynamic range [0, 16320]
-  for (idx = 0; idx < width; ++idx)
-    sum += ref[idx];
+  for (idx = 0; idx < width; ++idx) sum += ref[idx];
   return sum;
 }
 
 // ref: [0 - 510]
 // src: [0 - 510]
 // bwl: {2, 3, 4}
-int vpx_vector_var_c(const int16_t *ref, const int16_t *src,
-                     const int bwl) {
+int vpx_vector_var_c(const int16_t *ref, const int16_t *src, const int bwl) {
   int i;
   int width = 4 << bwl;
   int sse = 0, mean = 0, var;
@@ -185,7 +183,7 @@ void vpx_minmax_8x8_c(const uint8_t *s, int p, const uint8_t *d, int dp,
   *max = 0;
   for (i = 0; i < 8; ++i, s += p, d += dp) {
     for (j = 0; j < 8; ++j) {
-      int diff = abs(s[j]-d[j]);
+      int diff = abs(s[j] - d[j]);
       *min = diff < *min ? diff : *min;
       *max = diff > *max ? diff : *max;
     }
@@ -196,9 +194,10 @@ void vpx_minmax_8x8_c(const uint8_t *s, int p, const uint8_t *d, int dp,
 unsigned int vpx_highbd_avg_8x8_c(const uint8_t *s8, int p) {
   int i, j;
   int sum = 0;
-  const uint16_t* s = CONVERT_TO_SHORTPTR(s8);
-  for (i = 0; i < 8; ++i, s+=p)
-    for (j = 0; j < 8; sum += s[j], ++j) {}
+  const uint16_t *s = CONVERT_TO_SHORTPTR(s8);
+  for (i = 0; i < 8; ++i, s += p)
+    for (j = 0; j < 8; sum += s[j], ++j) {
+    }
 
   return (sum + 32) >> 6;
 }
@@ -206,9 +205,10 @@ unsigned int vpx_highbd_avg_8x8_c(const uint8_t *s8, int p) {
 unsigned int vpx_highbd_avg_4x4_c(const uint8_t *s8, int p) {
   int i, j;
   int sum = 0;
-  const uint16_t* s = CONVERT_TO_SHORTPTR(s8);
-  for (i = 0; i < 4; ++i, s+=p)
-    for (j = 0; j < 4; sum += s[j], ++j) {}
+  const uint16_t *s = CONVERT_TO_SHORTPTR(s8);
+  for (i = 0; i < 4; ++i, s += p)
+    for (j = 0; j < 4; sum += s[j], ++j) {
+    }
 
   return (sum + 8) >> 4;
 }
@@ -216,18 +216,16 @@ unsigned int vpx_highbd_avg_4x4_c(const uint8_t *s8, int p) {
 void vpx_highbd_minmax_8x8_c(const uint8_t *s8, int p, const uint8_t *d8,
                              int dp, int *min, int *max) {
   int i, j;
-  const uint16_t* s = CONVERT_TO_SHORTPTR(s8);
-  const uint16_t* d = CONVERT_TO_SHORTPTR(d8);
+  const uint16_t *s = CONVERT_TO_SHORTPTR(s8);
+  const uint16_t *d = CONVERT_TO_SHORTPTR(d8);
   *min = 255;
   *max = 0;
   for (i = 0; i < 8; ++i, s += p, d += dp) {
     for (j = 0; j < 8; ++j) {
-      int diff = abs(s[j]-d[j]);
+      int diff = abs(s[j] - d[j]);
       *min = diff < *min ? diff : *min;
       *max = diff > *max ? diff : *max;
     }
   }
 }
 #endif  // CONFIG_VP9_HIGHBITDEPTH
-
-

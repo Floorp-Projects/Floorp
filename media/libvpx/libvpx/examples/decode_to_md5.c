@@ -65,8 +65,7 @@ static void get_image_md5(const vpx_image_t *img, unsigned char digest[16]) {
 static void print_md5(FILE *stream, unsigned char digest[16]) {
   int i;
 
-  for (i = 0; i < 16; ++i)
-    fprintf(stream, "%02x", digest[i]);
+  for (i = 0; i < 16; ++i) fprintf(stream, "%02x", digest[i]);
 }
 
 static const char *exec_name;
@@ -86,12 +85,10 @@ int main(int argc, char **argv) {
 
   exec_name = argv[0];
 
-  if (argc != 3)
-    die("Invalid number of arguments.");
+  if (argc != 3) die("Invalid number of arguments.");
 
   reader = vpx_video_reader_open(argv[1]);
-  if (!reader)
-    die("Failed to open %s for reading.", argv[1]);
+  if (!reader) die("Failed to open %s for reading.", argv[1]);
 
   if (!(outfile = fopen(argv[2], "wb")))
     die("Failed to open %s for writing.", argv[2]);
@@ -99,8 +96,7 @@ int main(int argc, char **argv) {
   info = vpx_video_reader_get_info(reader);
 
   decoder = get_vpx_decoder_by_fourcc(info->codec_fourcc);
-  if (!decoder)
-    die("Unknown input codec.");
+  if (!decoder) die("Unknown input codec.");
 
   printf("Using %s\n", vpx_codec_iface_name(decoder->codec_interface()));
 
@@ -111,8 +107,8 @@ int main(int argc, char **argv) {
     vpx_codec_iter_t iter = NULL;
     vpx_image_t *img = NULL;
     size_t frame_size = 0;
-    const unsigned char *frame = vpx_video_reader_get_frame(reader,
-                                                            &frame_size);
+    const unsigned char *frame =
+        vpx_video_reader_get_frame(reader, &frame_size);
     if (vpx_codec_decode(&codec, frame, (unsigned int)frame_size, NULL, 0))
       die_codec(&codec, "Failed to decode frame");
 
@@ -121,14 +117,13 @@ int main(int argc, char **argv) {
 
       get_image_md5(img, digest);
       print_md5(outfile, digest);
-      fprintf(outfile, "  img-%dx%d-%04d.i420\n",
-              img->d_w, img->d_h, ++frame_cnt);
+      fprintf(outfile, "  img-%dx%d-%04d.i420\n", img->d_w, img->d_h,
+              ++frame_cnt);
     }
   }
 
   printf("Processed %d frames.\n", frame_cnt);
-  if (vpx_codec_destroy(&codec))
-    die_codec(&codec, "Failed to destroy codec.");
+  if (vpx_codec_destroy(&codec)) die_codec(&codec, "Failed to destroy codec.");
 
   vpx_video_reader_close(reader);
 

@@ -63,9 +63,9 @@ static int blockiness_vertical(const uint8_t *s, int sp, const uint8_t *r,
     s_blockiness += horizontal_filter(s);
     r_blockiness += horizontal_filter(r);
     sum_0 += s[0];
-    sum_sq_0 += s[0]*s[0];
+    sum_sq_0 += s[0] * s[0];
     sum_1 += s[-1];
-    sum_sq_1 += s[-1]*s[-1];
+    sum_sq_1 += s[-1] * s[-1];
   }
   var_0 = variance(sum_0, sum_sq_0, size);
   var_1 = variance(sum_1, sum_sq_1, size);
@@ -113,19 +113,19 @@ static int blockiness_horizontal(const uint8_t *s, int sp, const uint8_t *r,
 // This function returns the blockiness for the entire frame currently by
 // looking at all borders in steps of 4.
 double vp9_get_blockiness(const uint8_t *img1, int img1_pitch,
-                          const uint8_t *img2, int img2_pitch,
-                          int width, int height) {
+                          const uint8_t *img2, int img2_pitch, int width,
+                          int height) {
   double blockiness = 0;
   int i, j;
   vpx_clear_system_state();
-  for (i = 0; i < height; i += 4, img1 += img1_pitch * 4,
-       img2 += img2_pitch * 4) {
+  for (i = 0; i < height;
+       i += 4, img1 += img1_pitch * 4, img2 += img2_pitch * 4) {
     for (j = 0; j < width; j += 4) {
       if (i > 0 && i < height && j > 0 && j < width) {
-        blockiness += blockiness_vertical(img1 + j, img1_pitch,
-                                          img2 + j, img2_pitch, 4);
-        blockiness += blockiness_horizontal(img1 + j, img1_pitch,
-                                            img2 + j, img2_pitch, 4);
+        blockiness +=
+            blockiness_vertical(img1 + j, img1_pitch, img2 + j, img2_pitch, 4);
+        blockiness += blockiness_horizontal(img1 + j, img1_pitch, img2 + j,
+                                            img2_pitch, 4);
       }
     }
   }

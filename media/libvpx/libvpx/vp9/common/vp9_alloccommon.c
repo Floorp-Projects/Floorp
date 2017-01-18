@@ -53,8 +53,7 @@ static int alloc_seg_map(VP9_COMMON *cm, int seg_map_size) {
 
   for (i = 0; i < NUM_PING_PONG_BUFFERS; ++i) {
     cm->seg_map_array[i] = (uint8_t *)vpx_calloc(seg_map_size, 1);
-    if (cm->seg_map_array[i] == NULL)
-      return 1;
+    if (cm->seg_map_array[i] == NULL) return 1;
   }
   cm->seg_map_alloc_size = seg_map_size;
 
@@ -103,6 +102,10 @@ void vp9_free_postproc_buffers(VP9_COMMON *cm) {
 #if CONFIG_VP9_POSTPROC
   vpx_free_frame_buffer(&cm->post_proc_buffer);
   vpx_free_frame_buffer(&cm->post_proc_buffer_int);
+  vpx_free(cm->postproc_state.limits);
+  cm->postproc_state.limits = NULL;
+  vpx_free(cm->postproc_state.generated_noise);
+  cm->postproc_state.generated_noise = NULL;
 #else
   (void)cm;
 #endif
@@ -119,7 +122,6 @@ void vp9_free_context_buffers(VP9_COMMON *cm) {
   cm->lf.lfm = NULL;
 }
 
-
 int vp9_alloc_loop_filter(VP9_COMMON *cm) {
   vpx_free(cm->lf.lfm);
   // Each lfm holds bit masks for all the 8x8 blocks in a 64x64 region.  The
@@ -128,8 +130,7 @@ int vp9_alloc_loop_filter(VP9_COMMON *cm) {
   cm->lf.lfm = (LOOP_FILTER_MASK *)vpx_calloc(
       ((cm->mi_rows + (MI_BLOCK_SIZE - 1)) >> 3) * cm->lf.lfm_stride,
       sizeof(*cm->lf.lfm));
-  if (!cm->lf.lfm)
-    return 1;
+  if (!cm->lf.lfm) return 1;
   return 0;
 }
 
@@ -140,15 +141,13 @@ int vp9_alloc_context_buffers(VP9_COMMON *cm, int width, int height) {
   new_mi_size = cm->mi_stride * calc_mi_size(cm->mi_rows);
   if (cm->mi_alloc_size < new_mi_size) {
     cm->free_mi(cm);
-    if (cm->alloc_mi(cm, new_mi_size))
-      goto fail;
+    if (cm->alloc_mi(cm, new_mi_size)) goto fail;
   }
 
   if (cm->seg_map_alloc_size < cm->mi_rows * cm->mi_cols) {
     // Create the segmentation map structure and set to 0.
     free_seg_map(cm);
-    if (alloc_seg_map(cm, cm->mi_rows * cm->mi_cols))
-      goto fail;
+    if (alloc_seg_map(cm, cm->mi_rows * cm->mi_cols)) goto fail;
   }
 
   if (cm->above_context_alloc_cols < cm->mi_cols) {
@@ -165,12 +164,13 @@ int vp9_alloc_context_buffers(VP9_COMMON *cm, int width, int height) {
     cm->above_context_alloc_cols = cm->mi_cols;
   }
 
-  if (vp9_alloc_loop_filter(cm))
-    goto fail;
+  if (vp9_alloc_loop_filter(cm)) goto fail;
 
   return 0;
 
- fail:
+fail:
+  // clear the mi_* values to force a realloc on resync
+  vp9_set_mb_mi(cm, 0, 0);
   vp9_free_context_buffers(cm);
   return 1;
 }

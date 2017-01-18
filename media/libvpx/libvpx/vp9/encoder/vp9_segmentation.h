@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 #ifndef VP9_ENCODER_VP9_SEGMENTATION_H_
 #define VP9_ENCODER_VP9_SEGMENTATION_H_
 
@@ -22,11 +21,9 @@ extern "C" {
 void vp9_enable_segmentation(struct segmentation *seg);
 void vp9_disable_segmentation(struct segmentation *seg);
 
-void vp9_disable_segfeature(struct segmentation *seg,
-                            int segment_id,
+void vp9_disable_segfeature(struct segmentation *seg, int segment_id,
                             SEG_LVL_FEATURES feature_id);
-void vp9_clear_segdata(struct segmentation *seg,
-                       int segment_id,
+void vp9_clear_segdata(struct segmentation *seg, int segment_id,
                        SEG_LVL_FEATURES feature_id);
 
 // The values given for each segment can be either deltas (from the default

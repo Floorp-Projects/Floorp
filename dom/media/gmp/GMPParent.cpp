@@ -884,12 +884,6 @@ GMPParent::ReadGMPInfoFile(nsIFile* aFile)
       }
     }
 
-    // We support the current GMPDecryptor version, and the previous.
-    // We Adapt the previous to the current in the GMPContentChild.
-    if (cap.mAPIName.EqualsLiteral(GMP_API_DECRYPTOR_BACKWARDS_COMPAT)) {
-      cap.mAPIName.AssignLiteral(GMP_API_DECRYPTOR);
-    }
-
     if (cap.mAPIName.EqualsLiteral(GMP_API_DECRYPTOR)) {
       mCanDecrypt = true;
 
@@ -901,15 +895,6 @@ GMPParent::ReadGMPInfoFile(nsIFile* aFile)
         return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
       }
 #endif
-#ifdef XP_WIN
-      // Adobe GMP doesn't work without SSE2. Check the tags to see if
-      // the decryptor is for the Adobe GMP, and refuse to load it if
-      // SSE2 isn't supported.
-      if (cap.mAPITags.Contains(kEMEKeySystemPrimetime) &&
-          !mozilla::supports_sse2()) {
-        return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-      }
-#endif // XP_WIN
     }
 
     mCapabilities.AppendElement(Move(cap));

@@ -23,12 +23,7 @@
 extern "C" {
 #endif
 
-typedef enum noise_level {
-  kLowLow,
-  kLow,
-  kMedium,
-  kHigh
-} NOISE_LEVEL;
+typedef enum noise_level { kLowLow, kLow, kMedium, kHigh } NOISE_LEVEL;
 
 typedef struct noise_estimate {
   int enabled;
@@ -43,9 +38,7 @@ typedef struct noise_estimate {
 
 struct VP9_COMP;
 
-void vp9_noise_estimate_init(NOISE_ESTIMATE *const ne,
-                             int width,
-                             int height);
+void vp9_noise_estimate_init(NOISE_ESTIMATE *const ne, int width, int height);
 
 NOISE_LEVEL vp9_noise_estimate_extract_level(NOISE_ESTIMATE *const ne);
 

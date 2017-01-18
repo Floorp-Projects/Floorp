@@ -11,7 +11,6 @@
 #ifndef VP8_COMMON_QUANT_COMMON_H_
 #define VP8_COMMON_QUANT_COMMON_H_
 
-
 #include "string.h"
 #include "blockd.h"
 #include "onyxc_int.h"

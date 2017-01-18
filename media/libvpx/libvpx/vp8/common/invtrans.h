@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 #ifndef VP8_COMMON_INVTRANS_H_
 #define VP8_COMMON_INVTRANS_H_
 
@@ -25,43 +24,31 @@
 extern "C" {
 #endif
 
-static void eob_adjust(char *eobs, short *diff)
-{
-    /* eob adjust.... the idct can only skip if both the dc and eob are zero */
-    int js;
-    for(js = 0; js < 16; js++)
-    {
-        if((eobs[js] == 0) && (diff[0] != 0))
-            eobs[js]++;
-        diff+=16;
-    }
+static void eob_adjust(char *eobs, short *diff) {
+  /* eob adjust.... the idct can only skip if both the dc and eob are zero */
+  int js;
+  for (js = 0; js < 16; ++js) {
+    if ((eobs[js] == 0) && (diff[0] != 0)) eobs[js]++;
+    diff += 16;
+  }
 }
 
-static INLINE void vp8_inverse_transform_mby(MACROBLOCKD *xd)
-{
-    short *DQC = xd->dequant_y1;
+static INLINE void vp8_inverse_transform_mby(MACROBLOCKD *xd) {
+  short *DQC = xd->dequant_y1;
 
-    if (xd->mode_info_context->mbmi.mode != SPLITMV)
-    {
-        /* do 2nd order transform on the dc block */
-        if (xd->eobs[24] > 1)
-        {
-            vp8_short_inv_walsh4x4
-                (&xd->block[24].dqcoeff[0], xd->qcoeff);
-        }
-        else
-        {
-            vp8_short_inv_walsh4x4_1
-                (&xd->block[24].dqcoeff[0], xd->qcoeff);
-        }
-        eob_adjust(xd->eobs, xd->qcoeff);
-
-        DQC = xd->dequant_y1_dc;
+  if (xd->mode_info_context->mbmi.mode != SPLITMV) {
+    /* do 2nd order transform on the dc block */
+    if (xd->eobs[24] > 1) {
+      vp8_short_inv_walsh4x4(&xd->block[24].dqcoeff[0], xd->qcoeff);
+    } else {
+      vp8_short_inv_walsh4x4_1(&xd->block[24].dqcoeff[0], xd->qcoeff);
     }
-    vp8_dequant_idct_add_y_block
-                    (xd->qcoeff, DQC,
-                     xd->dst.y_buffer,
-                     xd->dst.y_stride, xd->eobs);
+    eob_adjust(xd->eobs, xd->qcoeff);
+
+    DQC = xd->dequant_y1_dc;
+  }
+  vp8_dequant_idct_add_y_block(xd->qcoeff, DQC, xd->dst.y_buffer,
+                               xd->dst.y_stride, xd->eobs);
 }
 #ifdef __cplusplus
 }  // extern "C"

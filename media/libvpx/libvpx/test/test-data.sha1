@@ -14,6 +14,7 @@ df1a1453feb3c00d7d89746c7003b4163523bff3 *invalid-vp90-03-v3.webm
 4935c62becc68c13642a03db1e6d3e2331c1c612 *invalid-vp90-03-v3.webm.res
 d637297561dd904eb2c97a9015deeb31c4a1e8d2 *invalid-vp90-2-08-tile_1x4_frame_parallel_all_key.webm
 3a204bdbeaa3c6458b77bcebb8366d107267f55d *invalid-vp90-2-08-tile_1x4_frame_parallel_all_key.webm.res
+9aa21d8b2cb9d39abe8a7bb6032dc66955fb4342 *noisy_clip_640_360.y4m
 a432f96ff0a787268e2f94a8092ab161a18d1b06 *park_joy_90p_10_420.y4m
 0b194cc312c3a2e84d156a221b0a5eb615dfddc5 *park_joy_90p_10_422.y4m
 ff0e0a21dc2adc95b8c1b37902713700655ced17 *park_joy_90p_10_444.y4m
@@ -834,3 +835,16 @@ f6856f19236ee46ed462bd0a2e7e72b9c3b9cea6 *vp90-2-21-resize_inter_640x480_5_1-2.w
 7739bfca167b1b43fea72f807f01e097b7cb98d8 *vp90-2-21-resize_inter_640x480_7_1-2.webm.md5
 7291af354b4418917eee00e3a7e366086a0b7a10 *vp90-2-21-resize_inter_640x480_7_3-4.webm
 4a18b09ccb36564193f0215f599d745d95bb558c *vp90-2-21-resize_inter_640x480_7_3-4.webm.md5
+a000d568431d07379dd5a8ec066061c07e560b47 *invalid-vp90-2-00-quantizer-63.ivf.kf_65527x61446.ivf
+1e75aad3433c5c21c194a7b53fc393970f0a8d7f *invalid-vp90-2-00-quantizer-63.ivf.kf_65527x61446.ivf.res
+235182f9a1c5c8841552510dd4288487447bfc40 *invalid-vp80-00-comprehensive-018.ivf.2kf_0x6.ivf
+787f04f0483320d536894282f3358a4f8cac1cf9 *invalid-vp80-00-comprehensive-018.ivf.2kf_0x6.ivf.res
+91d3cefd0deb98f3b0caf3a2d900ec7a7605e53a *invalid-vp90-2-10-show-existing-frame.webm.ivf.s180315_r01-05_b6-.ivf
+1e472baaf5f6113459f0399a38a5a5e68d17799d *invalid-vp90-2-10-show-existing-frame.webm.ivf.s180315_r01-05_b6-.ivf.res
+70057835bf29d14e66699ce5f022df2551fb6b37 *invalid-crbug-629481.webm
+5d9474c0309b7ca09a182d888f73b37a8fe1362c *invalid-crbug-629481.webm.res
+7602e00378161ca36ae93cc6ee12dd30b5ba1e1d *vp90-2-22-svc_1280x720_3.ivf
+02e53e3eefbf25ec0929047fe50876acdeb040bd *vp90-2-22-svc_1280x720_3.ivf.md5
+6fa3d3ac306a3d9ce1d610b78441dc00d2c2d4b9 *tos_vp8.webm
+e402cbbf9e550ae017a1e9f1f73931c1d18474e8 *invalid-crbug-667044.webm
+d3964f9dad9f60363c81b688324d95b4ec7c8038 *invalid-crbug-667044.webm.res

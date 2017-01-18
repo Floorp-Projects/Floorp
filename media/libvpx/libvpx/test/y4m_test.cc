@@ -22,7 +22,7 @@ namespace {
 
 using std::string;
 
-static const unsigned int kWidth  = 160;
+static const unsigned int kWidth = 160;
 static const unsigned int kHeight = 90;
 static const unsigned int kFrames = 10;
 
@@ -34,24 +34,24 @@ struct Y4mTestParam {
 };
 
 const Y4mTestParam kY4mTestVectors[] = {
-  {"park_joy_90p_8_420.y4m", 8, VPX_IMG_FMT_I420,
-    "e5406275b9fc6bb3436c31d4a05c1cab"},
-  {"park_joy_90p_8_422.y4m", 8, VPX_IMG_FMT_I422,
-    "284a47a47133b12884ec3a14e959a0b6"},
-  {"park_joy_90p_8_444.y4m", 8, VPX_IMG_FMT_I444,
-    "90517ff33843d85de712fd4fe60dbed0"},
-  {"park_joy_90p_10_420.y4m", 10, VPX_IMG_FMT_I42016,
-    "63f21f9f717d8b8631bd2288ee87137b"},
-  {"park_joy_90p_10_422.y4m", 10, VPX_IMG_FMT_I42216,
-    "48ab51fb540aed07f7ff5af130c9b605"},
-  {"park_joy_90p_10_444.y4m", 10, VPX_IMG_FMT_I44416,
-    "067bfd75aa85ff9bae91fa3e0edd1e3e"},
-  {"park_joy_90p_12_420.y4m", 12, VPX_IMG_FMT_I42016,
-    "9e6d8f6508c6e55625f6b697bc461cef"},
-  {"park_joy_90p_12_422.y4m", 12, VPX_IMG_FMT_I42216,
-    "b239c6b301c0b835485be349ca83a7e3"},
-  {"park_joy_90p_12_444.y4m", 12, VPX_IMG_FMT_I44416,
-    "5a6481a550821dab6d0192f5c63845e9"},
+  { "park_joy_90p_8_420.y4m", 8, VPX_IMG_FMT_I420,
+    "e5406275b9fc6bb3436c31d4a05c1cab" },
+  { "park_joy_90p_8_422.y4m", 8, VPX_IMG_FMT_I422,
+    "284a47a47133b12884ec3a14e959a0b6" },
+  { "park_joy_90p_8_444.y4m", 8, VPX_IMG_FMT_I444,
+    "90517ff33843d85de712fd4fe60dbed0" },
+  { "park_joy_90p_10_420.y4m", 10, VPX_IMG_FMT_I42016,
+    "63f21f9f717d8b8631bd2288ee87137b" },
+  { "park_joy_90p_10_422.y4m", 10, VPX_IMG_FMT_I42216,
+    "48ab51fb540aed07f7ff5af130c9b605" },
+  { "park_joy_90p_10_444.y4m", 10, VPX_IMG_FMT_I44416,
+    "067bfd75aa85ff9bae91fa3e0edd1e3e" },
+  { "park_joy_90p_12_420.y4m", 12, VPX_IMG_FMT_I42016,
+    "9e6d8f6508c6e55625f6b697bc461cef" },
+  { "park_joy_90p_12_422.y4m", 12, VPX_IMG_FMT_I42216,
+    "b239c6b301c0b835485be349ca83a7e3" },
+  { "park_joy_90p_12_444.y4m", 12, VPX_IMG_FMT_I44416,
+    "5a6481a550821dab6d0192f5c63845e9" },
 };
 
 static void write_image_file(const vpx_image_t *img, FILE *file) {
@@ -60,10 +60,12 @@ static void write_image_file(const vpx_image_t *img, FILE *file) {
     const unsigned char *buf = img->planes[plane];
     const int stride = img->stride[plane];
     const int bytes_per_sample = (img->fmt & VPX_IMG_FMT_HIGHBITDEPTH) ? 2 : 1;
-    const int h = (plane ? (img->d_h + img->y_chroma_shift) >>
-                   img->y_chroma_shift : img->d_h);
-    const int w = (plane ? (img->d_w + img->x_chroma_shift) >>
-                   img->x_chroma_shift : img->d_w);
+    const int h =
+        (plane ? (img->d_h + img->y_chroma_shift) >> img->y_chroma_shift
+               : img->d_h);
+    const int w =
+        (plane ? (img->d_w + img->x_chroma_shift) >> img->x_chroma_shift
+               : img->d_w);
     for (y = 0; y < h; ++y) {
       fwrite(buf, bytes_per_sample, w, file);
       buf += stride;
@@ -71,15 +73,12 @@ static void write_image_file(const vpx_image_t *img, FILE *file) {
   }
 }
 
-class Y4mVideoSourceTest
-    : public ::testing::TestWithParam<Y4mTestParam>,
-      public ::libvpx_test::Y4mVideoSource {
+class Y4mVideoSourceTest : public ::testing::TestWithParam<Y4mTestParam>,
+                           public ::libvpx_test::Y4mVideoSource {
  protected:
   Y4mVideoSourceTest() : Y4mVideoSource("", 0, 0) {}
 
-  virtual ~Y4mVideoSourceTest() {
-    CloseSource();
-  }
+  virtual ~Y4mVideoSourceTest() { CloseSource(); }
 
   virtual void Init(const std::string &file_name, int limit) {
     file_name_ = file_name;
@@ -137,10 +136,9 @@ TEST_P(Y4mVideoSourceTest, SourceTest) {
 INSTANTIATE_TEST_CASE_P(C, Y4mVideoSourceTest,
                         ::testing::ValuesIn(kY4mTestVectors));
 
-class Y4mVideoWriteTest
-    : public Y4mVideoSourceTest {
+class Y4mVideoWriteTest : public Y4mVideoSourceTest {
  protected:
-  Y4mVideoWriteTest() {}
+  Y4mVideoWriteTest() : tmpfile_(NULL) {}
 
   virtual ~Y4mVideoWriteTest() {
     delete tmpfile_;
@@ -158,14 +156,12 @@ class Y4mVideoWriteTest
   // Writes out a y4m file and then reads it back
   void WriteY4mAndReadBack() {
     ASSERT_TRUE(input_file_ != NULL);
-    char buf[Y4M_BUFFER_SIZE] = {0};
-    const struct VpxRational framerate = {y4m_.fps_n, y4m_.fps_d};
+    char buf[Y4M_BUFFER_SIZE] = { 0 };
+    const struct VpxRational framerate = { y4m_.fps_n, y4m_.fps_d };
     tmpfile_ = new libvpx_test::TempOutFile;
     ASSERT_TRUE(tmpfile_->file() != NULL);
-    y4m_write_file_header(buf, sizeof(buf),
-                          kWidth, kHeight,
-                          &framerate, y4m_.vpx_fmt,
-                          y4m_.bit_depth);
+    y4m_write_file_header(buf, sizeof(buf), kWidth, kHeight, &framerate,
+                          y4m_.vpx_fmt, y4m_.bit_depth);
     fputs(buf, tmpfile_->file());
     for (unsigned int i = start_; i < limit_; i++) {
       y4m_write_frame_header(buf, sizeof(buf));

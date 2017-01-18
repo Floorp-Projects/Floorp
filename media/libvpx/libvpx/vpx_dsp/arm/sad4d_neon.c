@@ -16,10 +16,10 @@
 
 static INLINE unsigned int horizontal_long_add_16x8(const uint16x8_t vec_lo,
                                                     const uint16x8_t vec_hi) {
-  const uint32x4_t vec_l_lo = vaddl_u16(vget_low_u16(vec_lo),
-                                        vget_high_u16(vec_lo));
-  const uint32x4_t vec_l_hi = vaddl_u16(vget_low_u16(vec_hi),
-                                        vget_high_u16(vec_hi));
+  const uint32x4_t vec_l_lo =
+      vaddl_u16(vget_low_u16(vec_lo), vget_high_u16(vec_lo));
+  const uint32x4_t vec_l_hi =
+      vaddl_u16(vget_low_u16(vec_hi), vget_high_u16(vec_hi));
   const uint32x4_t a = vaddq_u32(vec_l_lo, vec_l_hi);
   const uint64x2_t b = vpaddlq_u32(a);
   const uint32x2_t c = vadd_u32(vreinterpret_u32_u64(vget_low_u64(b)),
@@ -33,8 +33,7 @@ static INLINE unsigned int horizontal_long_add_16x8(const uint16x8_t vec_lo,
 static void sad_neon_64(const uint8x16_t vec_src_00,
                         const uint8x16_t vec_src_16,
                         const uint8x16_t vec_src_32,
-                        const uint8x16_t vec_src_48,
-                        const uint8_t *ref,
+                        const uint8x16_t vec_src_48, const uint8_t *ref,
                         uint16x8_t *vec_sum_ref_lo,
                         uint16x8_t *vec_sum_ref_hi) {
   const uint8x16_t vec_ref_00 = vld1q_u8(ref);
@@ -63,8 +62,7 @@ static void sad_neon_64(const uint8x16_t vec_src_00,
 // Calculate the absolute difference of 32 bytes from vec_src_00, vec_src_16,
 // and ref. Accumulate partial sums in vec_sum_ref_lo and vec_sum_ref_hi.
 static void sad_neon_32(const uint8x16_t vec_src_00,
-                        const uint8x16_t vec_src_16,
-                        const uint8_t *ref,
+                        const uint8x16_t vec_src_16, const uint8_t *ref,
                         uint16x8_t *vec_sum_ref_lo,
                         uint16x8_t *vec_sum_ref_hi) {
   const uint8x16_t vec_ref_00 = vld1q_u8(ref);
@@ -81,7 +79,7 @@ static void sad_neon_32(const uint8x16_t vec_src_00,
 }
 
 void vpx_sad64x64x4d_neon(const uint8_t *src, int src_stride,
-                          const uint8_t* const ref[4], int ref_stride,
+                          const uint8_t *const ref[4], int ref_stride,
                           uint32_t *res) {
   int i;
   uint16x8_t vec_sum_ref0_lo = vdupq_n_u16(0);
@@ -127,7 +125,7 @@ void vpx_sad64x64x4d_neon(const uint8_t *src, int src_stride,
 }
 
 void vpx_sad32x32x4d_neon(const uint8_t *src, int src_stride,
-                          const uint8_t* const ref[4], int ref_stride,
+                          const uint8_t *const ref[4], int ref_stride,
                           uint32_t *res) {
   int i;
   uint16x8_t vec_sum_ref0_lo = vdupq_n_u16(0);
@@ -148,14 +146,14 @@ void vpx_sad32x32x4d_neon(const uint8_t *src, int src_stride,
     const uint8x16_t vec_src_00 = vld1q_u8(src);
     const uint8x16_t vec_src_16 = vld1q_u8(src + 16);
 
-    sad_neon_32(vec_src_00, vec_src_16, ref0,
-                &vec_sum_ref0_lo, &vec_sum_ref0_hi);
-    sad_neon_32(vec_src_00, vec_src_16, ref1,
-                &vec_sum_ref1_lo, &vec_sum_ref1_hi);
-    sad_neon_32(vec_src_00, vec_src_16, ref2,
-                &vec_sum_ref2_lo, &vec_sum_ref2_hi);
-    sad_neon_32(vec_src_00, vec_src_16, ref3,
-                &vec_sum_ref3_lo, &vec_sum_ref3_hi);
+    sad_neon_32(vec_src_00, vec_src_16, ref0, &vec_sum_ref0_lo,
+                &vec_sum_ref0_hi);
+    sad_neon_32(vec_src_00, vec_src_16, ref1, &vec_sum_ref1_lo,
+                &vec_sum_ref1_hi);
+    sad_neon_32(vec_src_00, vec_src_16, ref2, &vec_sum_ref2_lo,
+                &vec_sum_ref2_hi);
+    sad_neon_32(vec_src_00, vec_src_16, ref3, &vec_sum_ref3_lo,
+                &vec_sum_ref3_hi);
 
     src += src_stride;
     ref0 += ref_stride;
@@ -171,7 +169,7 @@ void vpx_sad32x32x4d_neon(const uint8_t *src, int src_stride,
 }
 
 void vpx_sad16x16x4d_neon(const uint8_t *src, int src_stride,
-                          const uint8_t* const ref[4], int ref_stride,
+                          const uint8_t *const ref[4], int ref_stride,
                           uint32_t *res) {
   int i;
   uint16x8_t vec_sum_ref0_lo = vdupq_n_u16(0);
@@ -195,20 +193,20 @@ void vpx_sad16x16x4d_neon(const uint8_t *src, int src_stride,
     const uint8x16_t vec_ref2 = vld1q_u8(ref2);
     const uint8x16_t vec_ref3 = vld1q_u8(ref3);
 
-    vec_sum_ref0_lo = vabal_u8(vec_sum_ref0_lo, vget_low_u8(vec_src),
-                               vget_low_u8(vec_ref0));
+    vec_sum_ref0_lo =
+        vabal_u8(vec_sum_ref0_lo, vget_low_u8(vec_src), vget_low_u8(vec_ref0));
     vec_sum_ref0_hi = vabal_u8(vec_sum_ref0_hi, vget_high_u8(vec_src),
                                vget_high_u8(vec_ref0));
-    vec_sum_ref1_lo = vabal_u8(vec_sum_ref1_lo, vget_low_u8(vec_src),
-                               vget_low_u8(vec_ref1));
+    vec_sum_ref1_lo =
+        vabal_u8(vec_sum_ref1_lo, vget_low_u8(vec_src), vget_low_u8(vec_ref1));
     vec_sum_ref1_hi = vabal_u8(vec_sum_ref1_hi, vget_high_u8(vec_src),
                                vget_high_u8(vec_ref1));
-    vec_sum_ref2_lo = vabal_u8(vec_sum_ref2_lo, vget_low_u8(vec_src),
-                               vget_low_u8(vec_ref2));
+    vec_sum_ref2_lo =
+        vabal_u8(vec_sum_ref2_lo, vget_low_u8(vec_src), vget_low_u8(vec_ref2));
     vec_sum_ref2_hi = vabal_u8(vec_sum_ref2_hi, vget_high_u8(vec_src),
                                vget_high_u8(vec_ref2));
-    vec_sum_ref3_lo = vabal_u8(vec_sum_ref3_lo, vget_low_u8(vec_src),
-                               vget_low_u8(vec_ref3));
+    vec_sum_ref3_lo =
+        vabal_u8(vec_sum_ref3_lo, vget_low_u8(vec_src), vget_low_u8(vec_ref3));
     vec_sum_ref3_hi = vabal_u8(vec_sum_ref3_hi, vget_high_u8(vec_src),
                                vget_high_u8(vec_ref3));
 

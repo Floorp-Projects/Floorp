@@ -13,9 +13,8 @@
 
 namespace {
 
-class VP8FramgmentsTest
-    : public ::libvpx_test::EncoderTest,
-      public ::testing::Test {
+class VP8FramgmentsTest : public ::libvpx_test::EncoderTest,
+                          public ::testing::Test {
  protected:
   VP8FramgmentsTest() : EncoderTest(&::libvpx_test::kVP8) {}
   virtual ~VP8FramgmentsTest() {}

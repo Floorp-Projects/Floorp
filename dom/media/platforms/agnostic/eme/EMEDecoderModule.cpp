@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "EMEDecoderModule.h"
-#include "EMEAudioDecoder.h"
 #include "EMEVideoDecoder.h"
 #include "MediaDataDecoderProxy.h"
 #include "mozIGeckoMediaPluginService.h"
@@ -100,11 +99,7 @@ public:
       }
     } else {
       MOZ_ASSERT(!mIsShutdown);
-      // The Adobe GMP AAC decoder gets confused if we pass it non-encrypted
-      // samples with valid crypto data. So clear the crypto data, since the
-      // sample should be decrypted now anyway. If we don't do this and we're
-      // using the Adobe GMP for unencrypted decoding of data that is decrypted
-      // by gmp-clearkey, decoding will fail.
+      // The sample is no longer encrypted, so clear its crypto metadata.
       UniquePtr<MediaRawDataWriter> writer(aDecrypted.mSample->CreateWriter());
       writer->mCrypto = CryptoSample();
       mDecoder->Input(aDecrypted.mSample);
@@ -264,16 +259,10 @@ EMEDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
 {
   MOZ_ASSERT(aParams.mConfig.mCrypto.mValid);
 
-  if (SupportsMimeType(aParams.mConfig.mMimeType, nullptr)) {
-    // GMP decodes. Assume that means it can decrypt too.
-    RefPtr<MediaDataDecoderProxy> wrapper =
-      CreateDecoderWrapper(aParams.mCallback, mProxy, aParams.mTaskQueue);
-    auto gmpParams = GMPAudioDecoderParams(aParams).WithCallback(wrapper);
-    wrapper->SetProxyTarget(new EMEAudioDecoder(mProxy, gmpParams));
-    return wrapper.forget();
-  }
-
+  // We don't support using the GMP to decode audio.
+  MOZ_ASSERT(!SupportsMimeType(aParams.mConfig.mMimeType, nullptr));
   MOZ_ASSERT(mPDM);
+
   RefPtr<MediaDataDecoder> decoder(mPDM->CreateDecoder(aParams));
   if (!decoder) {
     return nullptr;

@@ -30,21 +30,17 @@ VpxVideoReader *vpx_video_reader_open(const char *filename) {
   char header[32];
   VpxVideoReader *reader = NULL;
   FILE *const file = fopen(filename, "rb");
-  if (!file)
-    return NULL;  // Can't open file
+  if (!file) return NULL;  // Can't open file
 
-  if (fread(header, 1, 32, file) != 32)
-    return NULL;  // Can't read file header
+  if (fread(header, 1, 32, file) != 32) return NULL;  // Can't read file header
 
   if (memcmp(kIVFSignature, header, 4) != 0)
     return NULL;  // Wrong IVF signature
 
-  if (mem_get_le16(header + 4) != 0)
-    return NULL;  // Wrong IVF version
+  if (mem_get_le16(header + 4) != 0) return NULL;  // Wrong IVF version
 
   reader = calloc(1, sizeof(*reader));
-  if (!reader)
-    return NULL;  // Can't allocate VpxVideoReader
+  if (!reader) return NULL;  // Can't allocate VpxVideoReader
 
   reader->file = file;
   reader->info.codec_fourcc = mem_get_le32(header + 8);
@@ -71,8 +67,7 @@ int vpx_video_reader_read_frame(VpxVideoReader *reader) {
 
 const uint8_t *vpx_video_reader_get_frame(VpxVideoReader *reader,
                                           size_t *size) {
-  if (size)
-    *size = reader->frame_size;
+  if (size) *size = reader->frame_size;
 
   return reader->buffer;
 }
@@ -80,4 +75,3 @@ const uint8_t *vpx_video_reader_get_frame(VpxVideoReader *reader,
 const VpxVideoInfo *vpx_video_reader_get_info(VpxVideoReader *reader) {
   return &reader->info;
 }
-

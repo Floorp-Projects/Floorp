@@ -30,11 +30,13 @@ extern "C" {
 #endif
 
 int64_t vp9_block_error_c(const tran_low_t *coeff, const tran_low_t *dqcoeff, intptr_t block_size, int64_t *ssz);
+int64_t vp9_block_error_sse2(const tran_low_t *coeff, const tran_low_t *dqcoeff, intptr_t block_size, int64_t *ssz);
 int64_t vp9_block_error_avx2(const tran_low_t *coeff, const tran_low_t *dqcoeff, intptr_t block_size, int64_t *ssz);
 RTCD_EXTERN int64_t (*vp9_block_error)(const tran_low_t *coeff, const tran_low_t *dqcoeff, intptr_t block_size, int64_t *ssz);
 
 int64_t vp9_block_error_fp_c(const int16_t *coeff, const int16_t *dqcoeff, int block_size);
-#define vp9_block_error_fp vp9_block_error_fp_c
+int64_t vp9_block_error_fp_sse2(const int16_t *coeff, const int16_t *dqcoeff, int block_size);
+RTCD_EXTERN int64_t (*vp9_block_error_fp)(const int16_t *coeff, const int16_t *dqcoeff, int block_size);
 
 int vp9_diamond_search_sad_c(const struct macroblock *x, const struct search_site_config *cfg,  struct mv *ref_mv, struct mv *best_mv, int search_param, int sad_per_bit, int *num00, const struct vp9_variance_vtable *fn_ptr, const struct mv *center_mv);
 int vp9_diamond_search_sad_avx(const struct macroblock *x, const struct search_site_config *cfg,  struct mv *ref_mv, struct mv *best_mv, int search_param, int sad_per_bit, int *num00, const struct vp9_variance_vtable *fn_ptr, const struct mv *center_mv);
@@ -71,31 +73,20 @@ int vp9_full_search_sadx8(const struct macroblock *x, const struct mv *ref_mv, i
 RTCD_EXTERN int (*vp9_full_search_sad)(const struct macroblock *x, const struct mv *ref_mv, int sad_per_bit, int distance, const struct vp9_variance_vtable *fn_ptr, const struct mv *center_mv, struct mv *best_mv);
 
 void vp9_fwht4x4_c(const int16_t *input, tran_low_t *output, int stride);
-#define vp9_fwht4x4 vp9_fwht4x4_c
+void vp9_fwht4x4_sse2(const int16_t *input, tran_low_t *output, int stride);
+RTCD_EXTERN void (*vp9_fwht4x4)(const int16_t *input, tran_low_t *output, int stride);
 
 void vp9_iht16x16_256_add_c(const tran_low_t *input, uint8_t *output, int pitch, int tx_type);
 void vp9_iht16x16_256_add_sse2(const tran_low_t *input, uint8_t *output, int pitch, int tx_type);
 RTCD_EXTERN void (*vp9_iht16x16_256_add)(const tran_low_t *input, uint8_t *output, int pitch, int tx_type);
 
-void vp9_iht4x4_16_add_c(const tran_low_t *input, uint8_t *dest, int dest_stride, int tx_type);
-void vp9_iht4x4_16_add_sse2(const tran_low_t *input, uint8_t *dest, int dest_stride, int tx_type);
-RTCD_EXTERN void (*vp9_iht4x4_16_add)(const tran_low_t *input, uint8_t *dest, int dest_stride, int tx_type);
+void vp9_iht4x4_16_add_c(const tran_low_t *input, uint8_t *dest, int stride, int tx_type);
+void vp9_iht4x4_16_add_sse2(const tran_low_t *input, uint8_t *dest, int stride, int tx_type);
+RTCD_EXTERN void (*vp9_iht4x4_16_add)(const tran_low_t *input, uint8_t *dest, int stride, int tx_type);
 
-void vp9_iht8x8_64_add_c(const tran_low_t *input, uint8_t *dest, int dest_stride, int tx_type);
-void vp9_iht8x8_64_add_sse2(const tran_low_t *input, uint8_t *dest, int dest_stride, int tx_type);
-RTCD_EXTERN void (*vp9_iht8x8_64_add)(const tran_low_t *input, uint8_t *dest, int dest_stride, int tx_type);
-
-void vp9_mbpost_proc_across_ip_c(uint8_t *src, int pitch, int rows, int cols, int flimit);
-void vp9_mbpost_proc_across_ip_xmm(uint8_t *src, int pitch, int rows, int cols, int flimit);
-RTCD_EXTERN void (*vp9_mbpost_proc_across_ip)(uint8_t *src, int pitch, int rows, int cols, int flimit);
-
-void vp9_mbpost_proc_down_c(uint8_t *dst, int pitch, int rows, int cols, int flimit);
-void vp9_mbpost_proc_down_xmm(uint8_t *dst, int pitch, int rows, int cols, int flimit);
-RTCD_EXTERN void (*vp9_mbpost_proc_down)(uint8_t *dst, int pitch, int rows, int cols, int flimit);
-
-void vp9_post_proc_down_and_across_c(const uint8_t *src_ptr, uint8_t *dst_ptr, int src_pixels_per_line, int dst_pixels_per_line, int rows, int cols, int flimit);
-void vp9_post_proc_down_and_across_xmm(const uint8_t *src_ptr, uint8_t *dst_ptr, int src_pixels_per_line, int dst_pixels_per_line, int rows, int cols, int flimit);
-RTCD_EXTERN void (*vp9_post_proc_down_and_across)(const uint8_t *src_ptr, uint8_t *dst_ptr, int src_pixels_per_line, int dst_pixels_per_line, int rows, int cols, int flimit);
+void vp9_iht8x8_64_add_c(const tran_low_t *input, uint8_t *dest, int stride, int tx_type);
+void vp9_iht8x8_64_add_sse2(const tran_low_t *input, uint8_t *dest, int stride, int tx_type);
+RTCD_EXTERN void (*vp9_iht8x8_64_add)(const tran_low_t *input, uint8_t *dest, int stride, int tx_type);
 
 void vp9_quantize_fp_c(const tran_low_t *coeff_ptr, intptr_t n_coeffs, int skip_block, const int16_t *zbin_ptr, const int16_t *round_ptr, const int16_t *quant_ptr, const int16_t *quant_shift_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
 void vp9_quantize_fp_sse2(const tran_low_t *coeff_ptr, intptr_t n_coeffs, int skip_block, const int16_t *zbin_ptr, const int16_t *round_ptr, const int16_t *quant_ptr, const int16_t *quant_shift_ptr, tran_low_t *qcoeff_ptr, tran_low_t *dqcoeff_ptr, const int16_t *dequant_ptr, uint16_t *eob_ptr, const int16_t *scan, const int16_t *iscan);
@@ -123,7 +114,10 @@ static void setup_rtcd_internal(void)
     (void)flags;
 
     vp9_block_error = vp9_block_error_c;
+    if (flags & HAS_SSE2) vp9_block_error = vp9_block_error_sse2;
     if (flags & HAS_AVX2) vp9_block_error = vp9_block_error_avx2;
+    vp9_block_error_fp = vp9_block_error_fp_c;
+    if (flags & HAS_SSE2) vp9_block_error_fp = vp9_block_error_fp_sse2;
     vp9_diamond_search_sad = vp9_diamond_search_sad_c;
     if (flags & HAS_AVX) vp9_diamond_search_sad = vp9_diamond_search_sad_avx;
     vp9_fdct8x8_quant = vp9_fdct8x8_quant_c;
@@ -142,18 +136,14 @@ static void setup_rtcd_internal(void)
     vp9_full_search_sad = vp9_full_search_sad_c;
     if (flags & HAS_SSE3) vp9_full_search_sad = vp9_full_search_sadx3;
     if (flags & HAS_SSE4_1) vp9_full_search_sad = vp9_full_search_sadx8;
+    vp9_fwht4x4 = vp9_fwht4x4_c;
+    if (flags & HAS_SSE2) vp9_fwht4x4 = vp9_fwht4x4_sse2;
     vp9_iht16x16_256_add = vp9_iht16x16_256_add_c;
     if (flags & HAS_SSE2) vp9_iht16x16_256_add = vp9_iht16x16_256_add_sse2;
     vp9_iht4x4_16_add = vp9_iht4x4_16_add_c;
     if (flags & HAS_SSE2) vp9_iht4x4_16_add = vp9_iht4x4_16_add_sse2;
     vp9_iht8x8_64_add = vp9_iht8x8_64_add_c;
     if (flags & HAS_SSE2) vp9_iht8x8_64_add = vp9_iht8x8_64_add_sse2;
-    vp9_mbpost_proc_across_ip = vp9_mbpost_proc_across_ip_c;
-    if (flags & HAS_SSE2) vp9_mbpost_proc_across_ip = vp9_mbpost_proc_across_ip_xmm;
-    vp9_mbpost_proc_down = vp9_mbpost_proc_down_c;
-    if (flags & HAS_SSE2) vp9_mbpost_proc_down = vp9_mbpost_proc_down_xmm;
-    vp9_post_proc_down_and_across = vp9_post_proc_down_and_across_c;
-    if (flags & HAS_SSE2) vp9_post_proc_down_and_across = vp9_post_proc_down_and_across_xmm;
     vp9_quantize_fp = vp9_quantize_fp_c;
     if (flags & HAS_SSE2) vp9_quantize_fp = vp9_quantize_fp_sse2;
     vp9_scale_and_extend_frame = vp9_scale_and_extend_frame_c;

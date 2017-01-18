@@ -22,7 +22,6 @@
 #include "nsIConsoleService.h"
 #include "mozilla/Unused.h"
 #include "GMPDecryptorParent.h"
-#include "GMPAudioDecoderParent.h"
 #include "nsComponentManagerUtils.h"
 #include "runnable_utils.h"
 #include "VideoUtils.h"
@@ -305,42 +304,6 @@ GeckoMediaPluginService::GetAbstractGMPThread()
 {
   MutexAutoLock lock(mMutex);
   return mAbstractGMPThread;
-}
-
-NS_IMETHODIMP
-GeckoMediaPluginService::GetGMPAudioDecoder(GMPCrashHelper* aHelper,
-                                            nsTArray<nsCString>* aTags,
-                                            const nsACString& aNodeId,
-                                            UniquePtr<GetGMPAudioDecoderCallback>&& aCallback)
-{
-  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
-  NS_ENSURE_ARG(aTags && aTags->Length() > 0);
-  NS_ENSURE_ARG(aCallback);
-
-  if (mShuttingDownOnGMPThread) {
-    return NS_ERROR_FAILURE;
-  }
-
-  GetGMPAudioDecoderCallback* rawCallback = aCallback.release();
-  RefPtr<AbstractThread> thread(GetAbstractGMPThread());
-  RefPtr<GMPCrashHelper> helper(aHelper);
-  GetContentParent(aHelper, aNodeId, NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER), *aTags)
-    ->Then(thread, __func__,
-      [rawCallback, helper](RefPtr<GMPContentParent::CloseBlocker> wrapper) {
-        RefPtr<GMPContentParent> parent = wrapper->mParent;
-        UniquePtr<GetGMPAudioDecoderCallback> callback(rawCallback);
-        GMPAudioDecoderParent* actor = nullptr;
-        if (parent && NS_SUCCEEDED(parent->GetGMPAudioDecoder(&actor))) {
-          actor->SetCrashHelper(helper);
-        }
-        callback->Done(actor);
-      },
-      [rawCallback] {
-        UniquePtr<GetGMPAudioDecoderCallback> callback(rawCallback);
-        callback->Done(nullptr);
-      });
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

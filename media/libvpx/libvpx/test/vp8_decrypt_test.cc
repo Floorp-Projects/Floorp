@@ -21,10 +21,8 @@ namespace {
 // with whatever internal state the decryptor uses. For testing we'll just
 // xor with a constant key, and decrypt_state will point to the start of
 // the original buffer.
-const uint8_t test_key[16] = {
-  0x01, 0x12, 0x23, 0x34, 0x45, 0x56, 0x67, 0x78,
-  0x89, 0x9a, 0xab, 0xbc, 0xcd, 0xde, 0xef, 0xf0
-};
+const uint8_t test_key[16] = { 0x01, 0x12, 0x23, 0x34, 0x45, 0x56, 0x67, 0x78,
+                               0x89, 0x9a, 0xab, 0xbc, 0xcd, 0xde, 0xef, 0xf0 };
 
 void encrypt_buffer(const uint8_t *src, uint8_t *dst, size_t size,
                     ptrdiff_t offset) {
@@ -33,8 +31,8 @@ void encrypt_buffer(const uint8_t *src, uint8_t *dst, size_t size,
   }
 }
 
-void test_decrypt_cb(void *decrypt_state, const uint8_t *input,
-                     uint8_t *output, int count) {
+void test_decrypt_cb(void *decrypt_state, const uint8_t *input, uint8_t *output,
+                     int count) {
   encrypt_buffer(input, output, count,
                  input - reinterpret_cast<uint8_t *>(decrypt_state));
 }

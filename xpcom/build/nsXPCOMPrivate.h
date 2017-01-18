@@ -9,12 +9,7 @@
 
 #include "nscore.h"
 #include "nsXPCOM.h"
-#include "nsXPCOMStrings.h"
 #include "xptcall.h"
-
-class nsStringContainer;
-class nsCStringContainer;
-class nsPurpleBufferEntry;
 
 /**
  * During this shutdown notification all threads which run XPCOM code must
@@ -29,178 +24,6 @@ class nsPurpleBufferEntry;
 #define NS_XPCOM_SHUTDOWN_LOADERS_OBSERVER_ID "xpcom-shutdown-loaders"
 
 // PUBLIC
-typedef nsresult   (*InitFunc)(nsIServiceManager** aResult,
-                               nsIFile* aBinDirectory,
-                               nsIDirectoryServiceProvider* aAppFileLocationProvider);
-typedef nsresult   (*ShutdownFunc)(nsIServiceManager* aServMgr);
-typedef nsresult   (*GetServiceManagerFunc)(nsIServiceManager** aResult);
-typedef nsresult   (*GetComponentManagerFunc)(nsIComponentManager** aResult);
-typedef nsresult   (*GetComponentRegistrarFunc)(nsIComponentRegistrar** aResult);
-typedef nsresult   (*GetMemoryManagerFunc)(nsIMemory** aResult);
-typedef nsresult   (*NewLocalFileFunc)(const nsAString& aPath,
-                                       bool aFollowLinks, nsIFile** aResult);
-typedef nsresult   (*NewNativeLocalFileFunc)(const nsACString& aPath,
-                                             bool aFollowLinks,
-                                             nsIFile** aResult);
-
-typedef nsresult   (*GetDebugFunc)(nsIDebug2** aResult);
-
-typedef nsresult   (*StringContainerInitFunc)(nsStringContainer&);
-typedef nsresult   (*StringContainerInit2Func)(nsStringContainer&,
-                                               const char16_t*,
-                                               uint32_t, uint32_t);
-typedef void       (*StringContainerFinishFunc)(nsStringContainer&);
-typedef uint32_t   (*StringGetDataFunc)(const nsAString&, const char16_t**,
-                                        bool*);
-typedef uint32_t   (*StringGetMutableDataFunc)(nsAString&, uint32_t,
-                                               char16_t**);
-typedef char16_t*  (*StringCloneDataFunc)(const nsAString&);
-typedef nsresult   (*StringSetDataFunc)(nsAString&, const char16_t*, uint32_t);
-typedef nsresult   (*StringSetDataRangeFunc)(nsAString&, uint32_t, uint32_t,
-                                             const char16_t*, uint32_t);
-typedef nsresult   (*StringCopyFunc)(nsAString&, const nsAString&);
-typedef void       (*StringSetIsVoidFunc)(nsAString&, const bool);
-typedef bool       (*StringGetIsVoidFunc)(const nsAString&);
-
-typedef nsresult   (*CStringContainerInitFunc)(nsCStringContainer&);
-typedef nsresult   (*CStringContainerInit2Func)(nsCStringContainer&,
-                                                const char*,
-                                                uint32_t, uint32_t);
-typedef void       (*CStringContainerFinishFunc)(nsCStringContainer&);
-typedef uint32_t   (*CStringGetDataFunc)(const nsACString&, const char**,
-                                         bool*);
-typedef uint32_t   (*CStringGetMutableDataFunc)(nsACString&, uint32_t, char**);
-typedef char*      (*CStringCloneDataFunc)(const nsACString&);
-typedef nsresult   (*CStringSetDataFunc)(nsACString&, const char*, uint32_t);
-typedef nsresult   (*CStringSetDataRangeFunc)(nsACString&, uint32_t, uint32_t,
-                                              const char*, uint32_t);
-typedef nsresult   (*CStringCopyFunc)(nsACString&, const nsACString&);
-typedef void       (*CStringSetIsVoidFunc)(nsACString&, const bool);
-typedef bool       (*CStringGetIsVoidFunc)(const nsACString&);
-
-typedef nsresult   (*CStringToUTF16)(const nsACString&, nsCStringEncoding,
-                                     nsAString&);
-typedef nsresult   (*UTF16ToCString)(const nsAString&, nsCStringEncoding,
-                                     nsACString&);
-
-typedef void*      (*AllocFunc)(size_t aSize);
-typedef void*      (*ReallocFunc)(void* aPtr, size_t aSize);
-typedef void       (*FreeFunc)(void* aPtr);
-
-typedef void       (*DebugBreakFunc)(uint32_t aSeverity,
-                                     const char* aStr, const char* aExpr,
-                                     const char* aFile, int32_t aLine);
-
-typedef void       (*xpcomVoidFunc)();
-typedef void       (*LogAddRefFunc)(void*, nsrefcnt, const char*, uint32_t);
-typedef void       (*LogReleaseFunc)(void*, nsrefcnt, const char*);
-typedef void       (*LogCtorFunc)(void*, const char*, uint32_t);
-typedef void       (*LogCOMPtrFunc)(void*, nsISupports*);
-
-typedef nsresult   (*GetXPTCallStubFunc)(REFNSIID, nsIXPTCProxy*,
-                                         nsISomeInterface**);
-typedef void       (*DestroyXPTCallStubFunc)(nsISomeInterface*);
-typedef nsresult   (*InvokeByIndexFunc)(nsISupports*, uint32_t, uint32_t,
-                                        nsXPTCVariant*);
-typedef bool       (*CycleCollectorFunc)(nsISupports*);
-typedef nsPurpleBufferEntry*
-                   (*CycleCollectorSuspect2Func)(void*,
-                                                 nsCycleCollectionParticipant*);
-typedef bool       (*CycleCollectorForget2Func)(nsPurpleBufferEntry*);
-typedef void       (*CycleCollectorSuspect3Func)(void*,
-                                                 nsCycleCollectionParticipant*,
-                                                 nsCycleCollectingAutoRefCnt*,
-                                                 bool*);
-// PRIVATE AND DEPRECATED
-typedef NS_CALLBACK_(nsresult, XPCOMExitRoutine)(void);
-
-typedef nsresult   (*RegisterXPCOMExitRoutineFunc)(XPCOMExitRoutine aExitRoutine,
-                                                   uint32_t aPriority);
-typedef nsresult   (*UnregisterXPCOMExitRoutineFunc)(XPCOMExitRoutine aExitRoutine);
-
-typedef struct XPCOMFunctions
-{
-  uint32_t version;
-  uint32_t size;
-
-  InitFunc init;
-  ShutdownFunc shutdown;
-  GetServiceManagerFunc getServiceManager;
-  GetComponentManagerFunc getComponentManager;
-  GetComponentRegistrarFunc getComponentRegistrar;
-  GetMemoryManagerFunc getMemoryManager;
-  NewLocalFileFunc newLocalFile;
-  NewNativeLocalFileFunc newNativeLocalFile;
-
-  RegisterXPCOMExitRoutineFunc registerExitRoutine;
-  UnregisterXPCOMExitRoutineFunc unregisterExitRoutine;
-
-  // Added for Mozilla 1.5
-  GetDebugFunc getDebug;
-  void* getTraceRefcnt;
-
-  // Added for Mozilla 1.7
-  StringContainerInitFunc stringContainerInit;
-  StringContainerFinishFunc stringContainerFinish;
-  StringGetDataFunc stringGetData;
-  StringSetDataFunc stringSetData;
-  StringSetDataRangeFunc stringSetDataRange;
-  StringCopyFunc stringCopy;
-  CStringContainerInitFunc cstringContainerInit;
-  CStringContainerFinishFunc cstringContainerFinish;
-  CStringGetDataFunc cstringGetData;
-  CStringSetDataFunc cstringSetData;
-  CStringSetDataRangeFunc cstringSetDataRange;
-  CStringCopyFunc cstringCopy;
-  CStringToUTF16 cstringToUTF16;
-  UTF16ToCString utf16ToCString;
-  StringCloneDataFunc stringCloneData;
-  CStringCloneDataFunc cstringCloneData;
-
-  // Added for Mozilla 1.8
-  AllocFunc allocFunc;
-  ReallocFunc reallocFunc;
-  FreeFunc freeFunc;
-  StringContainerInit2Func stringContainerInit2;
-  CStringContainerInit2Func cstringContainerInit2;
-  StringGetMutableDataFunc stringGetMutableData;
-  CStringGetMutableDataFunc cstringGetMutableData;
-  void* init3; // obsolete
-
-  // Added for Mozilla 1.9
-  DebugBreakFunc debugBreakFunc;
-  xpcomVoidFunc logInitFunc;
-  xpcomVoidFunc logTermFunc;
-  LogAddRefFunc logAddRefFunc;
-  LogReleaseFunc logReleaseFunc;
-  LogCtorFunc logCtorFunc;
-  LogCtorFunc logDtorFunc;
-  LogCOMPtrFunc logCOMPtrAddRefFunc;
-  LogCOMPtrFunc logCOMPtrReleaseFunc;
-  GetXPTCallStubFunc getXPTCallStubFunc;
-  DestroyXPTCallStubFunc destroyXPTCallStubFunc;
-  InvokeByIndexFunc invokeByIndexFunc;
-  CycleCollectorFunc cycleSuspectFunc; // obsolete: use cycleSuspect3Func
-  CycleCollectorFunc cycleForgetFunc; // obsolete
-  StringSetIsVoidFunc stringSetIsVoid;
-  StringGetIsVoidFunc stringGetIsVoid;
-  CStringSetIsVoidFunc cstringSetIsVoid;
-  CStringGetIsVoidFunc cstringGetIsVoid;
-
-  // Added for Mozilla 1.9.1
-  CycleCollectorSuspect2Func cycleSuspect2Func; // obsolete: use cycleSuspect3Func
-  CycleCollectorForget2Func cycleForget2Func; // obsolete
-
-  CycleCollectorSuspect3Func cycleSuspect3Func;
-
-} XPCOMFunctions;
-
-typedef nsresult (*GetFrozenFunctionsFunc)(XPCOMFunctions* aEntryPoints,
-                                           const char* aLibraryPath);
-XPCOM_API(nsresult) NS_GetFrozenFunctions(XPCOMFunctions* aEntryPoints,
-                                          const char* aLibraryPath);
-
-
 namespace mozilla {
 
 /**
@@ -225,10 +48,6 @@ void SetICUMemoryFunctions();
 void LogTerm();
 
 } // namespace mozilla
-
-
-// think hard before changing this
-#define XPCOM_GLUE_VERSION 1
 
 
 /* XPCOM Specific Defines

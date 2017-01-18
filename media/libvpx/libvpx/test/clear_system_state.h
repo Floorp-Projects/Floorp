@@ -12,7 +12,7 @@
 
 #include "./vpx_config.h"
 #if ARCH_X86 || ARCH_X86_64
-# include "vpx_ports/x86.h"
+#include "vpx_ports/x86.h"
 #endif
 
 namespace libvpx_test {

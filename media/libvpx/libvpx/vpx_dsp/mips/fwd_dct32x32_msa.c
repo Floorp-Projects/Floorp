@@ -27,10 +27,10 @@ static void fdct8x32_1d_column_load_butterfly(const int16_t *input,
   SLLI_4V(in4, in5, in6, in7, 2);
   SLLI_4V(in0_1, in1_1, in2_1, in3_1, 2);
   SLLI_4V(in4_1, in5_1, in6_1, in7_1, 2);
-  BUTTERFLY_8(in0, in1, in2, in3, in4, in5, in6, in7,
-              step0, step1, step2, step3, in4, in5, in6, in7);
-  BUTTERFLY_8(in0_1, in1_1, in2_1, in3_1, in4_1, in5_1, in6_1, in7_1,
-              step0_1, step1_1, step2_1, step3_1, in4_1, in5_1, in6_1, in7_1);
+  BUTTERFLY_8(in0, in1, in2, in3, in4, in5, in6, in7, step0, step1, step2,
+              step3, in4, in5, in6, in7);
+  BUTTERFLY_8(in0_1, in1_1, in2_1, in3_1, in4_1, in5_1, in6_1, in7_1, step0_1,
+              step1_1, step2_1, step3_1, in4_1, in5_1, in6_1, in7_1);
   ST_SH4(step0, step1, step2, step3, temp_buff, 8);
   ST_SH4(in4, in5, in6, in7, temp_buff + (28 * 8), 8);
   ST_SH4(step0_1, step1_1, step2_1, step3_1, temp_buff + (4 * 8), 8);
@@ -45,10 +45,10 @@ static void fdct8x32_1d_column_load_butterfly(const int16_t *input,
   SLLI_4V(in4, in5, in6, in7, 2);
   SLLI_4V(in0_1, in1_1, in2_1, in3_1, 2);
   SLLI_4V(in4_1, in5_1, in6_1, in7_1, 2);
-  BUTTERFLY_8(in0, in1, in2, in3, in4, in5, in6, in7,
-              step0, step1, step2, step3, in4, in5, in6, in7);
-  BUTTERFLY_8(in0_1, in1_1, in2_1, in3_1, in4_1, in5_1, in6_1, in7_1,
-              step0_1, step1_1, step2_1, step3_1, in4_1, in5_1, in6_1, in7_1);
+  BUTTERFLY_8(in0, in1, in2, in3, in4, in5, in6, in7, step0, step1, step2,
+              step3, in4, in5, in6, in7);
+  BUTTERFLY_8(in0_1, in1_1, in2_1, in3_1, in4_1, in5_1, in6_1, in7_1, step0_1,
+              step1_1, step2_1, step3_1, in4_1, in5_1, in6_1, in7_1);
   ST_SH4(step0, step1, step2, step3, temp_buff + (8 * 8), 8);
   ST_SH4(in4, in5, in6, in7, temp_buff + (20 * 8), 8);
   ST_SH4(step0_1, step1_1, step2_1, step3_1, temp_buff + (12 * 8), 8);
@@ -64,12 +64,12 @@ static void fdct8x32_1d_column_even_store(int16_t *input, int16_t *temp) {
   /* fdct even */
   LD_SH4(input, 8, in0, in1, in2, in3);
   LD_SH4(input + 96, 8, in12, in13, in14, in15);
-  BUTTERFLY_8(in0, in1, in2, in3, in12, in13, in14, in15,
-              vec0, vec1, vec2, vec3, in12, in13, in14, in15);
+  BUTTERFLY_8(in0, in1, in2, in3, in12, in13, in14, in15, vec0, vec1, vec2,
+              vec3, in12, in13, in14, in15);
   LD_SH4(input + 32, 8, in4, in5, in6, in7);
   LD_SH4(input + 64, 8, in8, in9, in10, in11);
-  BUTTERFLY_8(in4, in5, in6, in7, in8, in9, in10, in11,
-              vec4, vec5, vec6, vec7, in8, in9, in10, in11);
+  BUTTERFLY_8(in4, in5, in6, in7, in8, in9, in10, in11, vec4, vec5, vec6, vec7,
+              in8, in9, in10, in11);
 
   /* Stage 3 */
   ADD4(vec0, vec7, vec1, vec6, vec2, vec5, vec3, vec4, in0, in1, in2, in3);
@@ -258,28 +258,26 @@ static void fdct8x32_1d_row_load_butterfly(int16_t *temp_buff,
 
   LD_SH8(temp_buff, 32, in0, in1, in2, in3, in4, in5, in6, in7);
   LD_SH8(temp_buff + 24, 32, in8, in9, in10, in11, in12, in13, in14, in15);
-  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7,
-                     in0, in1, in2, in3, in4, in5, in6, in7);
-  TRANSPOSE8x8_SH_SH(in8, in9, in10, in11, in12, in13, in14, in15,
-                     in8, in9, in10, in11, in12, in13, in14, in15);
-  BUTTERFLY_16(in0, in1, in2, in3, in4, in5, in6, in7,
-               in8, in9, in10, in11, in12, in13, in14, in15,
-               step0, step1, step2, step3, step4, step5, step6, step7,
-               in8, in9, in10, in11, in12, in13, in14, in15);
+  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7, in0, in1, in2, in3,
+                     in4, in5, in6, in7);
+  TRANSPOSE8x8_SH_SH(in8, in9, in10, in11, in12, in13, in14, in15, in8, in9,
+                     in10, in11, in12, in13, in14, in15);
+  BUTTERFLY_16(in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11,
+               in12, in13, in14, in15, step0, step1, step2, step3, step4, step5,
+               step6, step7, in8, in9, in10, in11, in12, in13, in14, in15);
   ST_SH8(step0, step1, step2, step3, step4, step5, step6, step7, output, 8);
   ST_SH8(in8, in9, in10, in11, in12, in13, in14, in15, (output + 24 * 8), 8);
 
   /* 2nd set */
   LD_SH8(temp_buff + 8, 32, in0, in1, in2, in3, in4, in5, in6, in7);
   LD_SH8(temp_buff + 16, 32, in8, in9, in10, in11, in12, in13, in14, in15);
-  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7,
-                     in0, in1, in2, in3, in4, in5, in6, in7);
-  TRANSPOSE8x8_SH_SH(in8, in9, in10, in11, in12, in13, in14, in15,
-                     in8, in9, in10, in11, in12, in13, in14, in15);
-  BUTTERFLY_16(in0, in1, in2, in3, in4, in5, in6, in7,
-               in8, in9, in10, in11, in12, in13, in14, in15,
-               step0, step1, step2, step3, step4, step5, step6, step7,
-               in8, in9, in10, in11, in12, in13, in14, in15);
+  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7, in0, in1, in2, in3,
+                     in4, in5, in6, in7);
+  TRANSPOSE8x8_SH_SH(in8, in9, in10, in11, in12, in13, in14, in15, in8, in9,
+                     in10, in11, in12, in13, in14, in15);
+  BUTTERFLY_16(in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11,
+               in12, in13, in14, in15, step0, step1, step2, step3, step4, step5,
+               step6, step7, in8, in9, in10, in11, in12, in13, in14, in15);
   ST_SH8(step0, step1, step2, step3, step4, step5, step6, step7,
          (output + 8 * 8), 8);
   ST_SH8(in8, in9, in10, in11, in12, in13, in14, in15, (output + 16 * 8), 8);
@@ -299,10 +297,9 @@ static void fdct8x32_1d_row_even_4x(int16_t *input, int16_t *interm_ptr,
   LD_SH8(input, 8, in0, in1, in2, in3, in4, in5, in6, in7);
   LD_SH8(input + 64, 8, in8, in9, in10, in11, in12, in13, in14, in15);
 
-  BUTTERFLY_16(in0, in1, in2, in3, in4, in5, in6, in7,
-               in8, in9, in10, in11, in12, in13, in14, in15,
-               vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7,
-               in8, in9, in10, in11, in12, in13, in14, in15);
+  BUTTERFLY_16(in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11,
+               in12, in13, in14, in15, vec0, vec1, vec2, vec3, vec4, vec5, vec6,
+               vec7, in8, in9, in10, in11, in12, in13, in14, in15);
   ST_SH8(vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7, interm_ptr, 8);
   ST_SH8(in8, in9, in10, in11, in12, in13, in14, in15, interm_ptr + 64, 8);
 
@@ -315,19 +312,19 @@ static void fdct8x32_1d_row_even_4x(int16_t *input, int16_t *interm_ptr,
   UNPCK_SH_SW(vec5, vec5_l, vec5_r);
   UNPCK_SH_SW(vec6, vec6_l, vec6_r);
   UNPCK_SH_SW(vec7, vec7_l, vec7_r);
-  ADD4(vec0_r, vec7_r, vec1_r, vec6_r, vec2_r, vec5_r, vec3_r, vec4_r,
-       tmp0_w, tmp1_w, tmp2_w, tmp3_w);
+  ADD4(vec0_r, vec7_r, vec1_r, vec6_r, vec2_r, vec5_r, vec3_r, vec4_r, tmp0_w,
+       tmp1_w, tmp2_w, tmp3_w);
   BUTTERFLY_4(tmp0_w, tmp1_w, tmp2_w, tmp3_w, vec4_r, vec6_r, vec7_r, vec5_r);
-  ADD4(vec0_l, vec7_l, vec1_l, vec6_l, vec2_l, vec5_l, vec3_l, vec4_l,
-       vec0_r, vec1_r, vec2_r, vec3_r);
+  ADD4(vec0_l, vec7_l, vec1_l, vec6_l, vec2_l, vec5_l, vec3_l, vec4_l, vec0_r,
+       vec1_r, vec2_r, vec3_r);
 
   tmp3_w = vec0_r + vec3_r;
   vec0_r = vec0_r - vec3_r;
   vec3_r = vec1_r + vec2_r;
   vec1_r = vec1_r - vec2_r;
 
-  DOTP_CONST_PAIR_W(vec4_r, vec6_r, tmp3_w, vec3_r, cospi_16_64,
-                    cospi_16_64, vec4_r, tmp3_w, vec6_r, vec3_r);
+  DOTP_CONST_PAIR_W(vec4_r, vec6_r, tmp3_w, vec3_r, cospi_16_64, cospi_16_64,
+                    vec4_r, tmp3_w, vec6_r, vec3_r);
   FDCT32_POSTPROC_NEG_W(vec4_r);
   FDCT32_POSTPROC_NEG_W(tmp3_w);
   FDCT32_POSTPROC_NEG_W(vec6_r);
@@ -335,8 +332,8 @@ static void fdct8x32_1d_row_even_4x(int16_t *input, int16_t *interm_ptr,
   PCKEV_H2_SH(vec4_r, tmp3_w, vec6_r, vec3_r, vec4, vec5);
   ST_SH2(vec5, vec4, out, 8);
 
-  DOTP_CONST_PAIR_W(vec5_r, vec7_r, vec0_r, vec1_r, cospi_24_64,
-                    cospi_8_64, vec4_r, tmp3_w, vec6_r, vec3_r);
+  DOTP_CONST_PAIR_W(vec5_r, vec7_r, vec0_r, vec1_r, cospi_24_64, cospi_8_64,
+                    vec4_r, tmp3_w, vec6_r, vec3_r);
   FDCT32_POSTPROC_NEG_W(vec4_r);
   FDCT32_POSTPROC_NEG_W(tmp3_w);
   FDCT32_POSTPROC_NEG_W(vec6_r);
@@ -401,10 +398,9 @@ static void fdct8x32_1d_row_even(int16_t *temp, int16_t *out) {
   LD_SH8(temp, 8, in0, in1, in2, in3, in4, in5, in6, in7);
   LD_SH8(temp + 64, 8, in8, in9, in10, in11, in12, in13, in14, in15);
 
-  BUTTERFLY_16(in0, in1, in2, in3, in4, in5, in6, in7,
-               in8, in9, in10, in11, in12, in13, in14, in15,
-               vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7,
-               in8, in9, in10, in11, in12, in13, in14, in15);
+  BUTTERFLY_16(in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11,
+               in12, in13, in14, in15, vec0, vec1, vec2, vec3, vec4, vec5, vec6,
+               vec7, in8, in9, in10, in11, in12, in13, in14, in15);
 
   /* Stage 3 */
   ADD4(vec0, vec7, vec1, vec6, vec2, vec5, vec3, vec4, in0, in1, in2, in3);
@@ -610,8 +606,8 @@ static void fdct8x32_1d_row_transpose_store(int16_t *temp, int16_t *output) {
   in3 = LD_SH(temp + 192);
   in5 = LD_SH(temp + 216);
 
-  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7,
-                     in0, in1, in2, in3, in4, in5, in6, in7);
+  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7, in0, in1, in2, in3,
+                     in4, in5, in6, in7);
 
   /* 2nd set */
   in0_1 = LD_SH(temp + 16);
@@ -637,10 +633,10 @@ static void fdct8x32_1d_row_transpose_store(int16_t *temp, int16_t *output) {
   in6 = LD_SH(temp + 104);
   in7 = LD_SH(temp + 144);
 
-  ST_SH8(in0_1, in1_1, in2_1, in3_1, in4_1, in5_1, in6_1, in7_1,
-         output + 8, 32);
-  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7,
-                     in0, in1, in2, in3, in4, in5, in6, in7);
+  ST_SH8(in0_1, in1_1, in2_1, in3_1, in4_1, in5_1, in6_1, in7_1, output + 8,
+         32);
+  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7, in0, in1, in2, in3,
+                     in4, in5, in6, in7);
   ST_SH8(in0, in1, in2, in3, in4, in5, in6, in7, output + 16, 32);
 
   /* 4th set */
@@ -655,12 +651,11 @@ static void fdct8x32_1d_row_transpose_store(int16_t *temp, int16_t *output) {
 
   TRANSPOSE8x8_SH_SH(in0_1, in1_1, in2_1, in3_1, in4_1, in5_1, in6_1, in7_1,
                      in0_1, in1_1, in2_1, in3_1, in4_1, in5_1, in6_1, in7_1);
-  ST_SH8(in0_1, in1_1, in2_1, in3_1, in4_1, in5_1, in6_1, in7_1,
-         output + 24, 32);
+  ST_SH8(in0_1, in1_1, in2_1, in3_1, in4_1, in5_1, in6_1, in7_1, output + 24,
+         32);
 }
 
-static void fdct32x8_1d_row(int16_t *temp, int16_t *temp_buf,
-                            int16_t *output) {
+static void fdct32x8_1d_row(int16_t *temp, int16_t *temp_buf, int16_t *output) {
   fdct8x32_1d_row_load_butterfly(temp, temp_buf);
   fdct8x32_1d_row_even(temp_buf, temp_buf);
   fdct8x32_1d_row_odd(temp_buf + 128, temp, temp_buf + 128);
@@ -706,10 +701,9 @@ static void fdct8x32_1d_row_even_rd(int16_t *temp, int16_t *out) {
   LD_SH8(temp, 8, in0, in1, in2, in3, in4, in5, in6, in7);
   LD_SH8(temp + 64, 8, in8, in9, in10, in11, in12, in13, in14, in15);
 
-  BUTTERFLY_16(in0, in1, in2, in3, in4, in5, in6, in7,
-               in8, in9, in10, in11, in12, in13, in14, in15,
-               vec0, vec1, vec2, vec3, vec4, vec5, vec6, vec7,
-               in8, in9, in10, in11, in12, in13, in14, in15);
+  BUTTERFLY_16(in0, in1, in2, in3, in4, in5, in6, in7, in8, in9, in10, in11,
+               in12, in13, in14, in15, vec0, vec1, vec2, vec3, vec4, vec5, vec6,
+               vec7, in8, in9, in10, in11, in12, in13, in14, in15);
   FDCT_POSTPROC_2V_NEG_H(vec0, vec1);
   FDCT_POSTPROC_2V_NEG_H(vec2, vec3);
   FDCT_POSTPROC_2V_NEG_H(vec4, vec5);

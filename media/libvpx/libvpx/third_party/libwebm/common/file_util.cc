@@ -14,6 +14,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <ios>
 
@@ -21,13 +22,23 @@ namespace libwebm {
 
 std::string GetTempFileName() {
 #if !defined _MSC_VER && !defined __MINGW32__
-  char temp_file_name_template[] = "libwebm_temp.XXXXXX";
+  std::string temp_file_name_template_str =
+      std::string(std::getenv("TEST_TMPDIR") ? std::getenv("TEST_TMPDIR") :
+                                               ".") +
+      "/libwebm_temp.XXXXXX";
+  char* temp_file_name_template =
+      new char[temp_file_name_template_str.length() + 1];
+  memset(temp_file_name_template, 0, temp_file_name_template_str.length() + 1);
+  temp_file_name_template_str.copy(temp_file_name_template,
+                                   temp_file_name_template_str.length(), 0);
   int fd = mkstemp(temp_file_name_template);
+  std::string temp_file_name =
+      (fd != -1) ? std::string(temp_file_name_template) : std::string();
+  delete[] temp_file_name_template;
   if (fd != -1) {
     close(fd);
-    return std::string(temp_file_name_template);
   }
-  return std::string();
+  return temp_file_name;
 #else
   char tmp_file_name[_MAX_PATH];
   errno_t err = tmpnam_s(tmp_file_name);
