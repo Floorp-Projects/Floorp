@@ -74,7 +74,7 @@ struct OpCreateRefLayer        { LayerHandle layer; };
 
 struct OpAttachCompositable {
   LayerHandle layer;
-  PCompositable compositable;
+  CompositableHandle compositable;
 };
 
 struct OpAttachAsyncCompositable {
@@ -470,7 +470,7 @@ union CompositableOperationDetail {
 };
 
 struct CompositableOperation {
-  PCompositable compositable;
+  CompositableHandle compositable;
   CompositableOperationDetail detail;
 };
 
@@ -508,13 +508,13 @@ union Edit {
 // operations for safety.
 union OpDestroy {
   PTexture;
-  PCompositable;
+  CompositableHandle;
 };
 
 // Replies to operations
 
 struct OpContentBufferSwap {
-  PCompositable compositable;
+  CompositableHandle compositable;
   nsIntRegion frontUpdatedRegion;
 };
 

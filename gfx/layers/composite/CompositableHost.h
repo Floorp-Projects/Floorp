@@ -187,9 +187,6 @@ public:
   }
   bool IsAttached() { return mAttached; }
 
-  static void
-  ReceivedDestroy(PCompositableParent* aActor);
-
   virtual void Dump(std::stringstream& aStream,
                     const char* aPrefix="",
                     bool aDumpHtml=false) { }
@@ -220,13 +217,7 @@ public:
                   ? DIAGNOSTIC_FLASH_COUNTER_MAX : mFlashCounter + 1;
   }
 
-  static PCompositableParent*
-  CreateIPDLActor(CompositableParentManager* mgr,
-                  const TextureInfo& textureInfo);
-
   static bool DestroyIPDLActor(PCompositableParent* actor);
-
-  static CompositableHost* FromIPDLActor(PCompositableParent* actor);
 
   uint64_t GetCompositorID() const { return mCompositorID; }
 

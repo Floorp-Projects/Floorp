@@ -155,7 +155,7 @@ ImageBridgeChild::UseTextures(CompositableClient* aCompositable,
                               const nsTArray<TimedTextureClient>& aTextures)
 {
   MOZ_ASSERT(aCompositable);
-  MOZ_ASSERT(aCompositable->GetIPDLActor());
+  MOZ_ASSERT(aCompositable->GetIPCHandle());
   MOZ_ASSERT(aCompositable->IsConnected());
 
   AutoTArray<TimedTexture,4> textures;
@@ -179,7 +179,7 @@ ImageBridgeChild::UseTextures(CompositableClient* aCompositable,
     // Wait end of usage on host side if TextureFlags::RECYCLE is set
     HoldUntilCompositableRefReleasedIfNecessary(t.mTextureClient);
   }
-  mTxn->AddNoSwapEdit(CompositableOperation(nullptr, aCompositable->GetIPDLActor(),
+  mTxn->AddNoSwapEdit(CompositableOperation(aCompositable->GetIPCHandle(),
                                             OpUseTexture(textures)));
 }
 
@@ -206,8 +206,7 @@ ImageBridgeChild::UseComponentAlphaTextures(CompositableClient* aCompositable,
 
   mTxn->AddNoSwapEdit(
     CompositableOperation(
-      nullptr,
-      aCompositable->GetIPDLActor(),
+      aCompositable->GetIPCHandle(),
       OpUseComponentAlphaTextures(
         nullptr, aTextureOnBlack->GetIPDLActor(),
         nullptr, aTextureOnWhite->GetIPDLActor(),
@@ -272,14 +271,6 @@ ImageBridgeChild::ShutdownStep1(SynchronousTask* aTask)
   MediaSystemResourceManager::Shutdown();
 
   // Force all managed protocols to shut themselves down cleanly
-  InfallibleTArray<PCompositableChild*> compositables;
-  ManagedPCompositableChild(compositables);
-  for (int i = compositables.Length() - 1; i >= 0; --i) {
-    auto compositable = CompositableClient::FromIPDLActor(compositables[i]);
-    if (compositable) {
-      compositable->Destroy();
-    }
-  }
   InfallibleTArray<PTextureChild*> textures;
   ManagedPTextureChild(textures);
   for (int i = textures.Length() - 1; i >= 0; --i) {
@@ -391,12 +382,9 @@ ImageBridgeChild::Connect(CompositableClient* aCompositable,
     mImageContainers.Put(id, aImageContainer);
   }
 
-  PCompositableChild* child =
-    SendPCompositableConstructor(aCompositable->GetTextureInfo(), id);
-  if (!child) {
-    return;
-  }
-  aCompositable->InitIPDLActor(child, CompositableHandle(id));
+  CompositableHandle handle(id);
+  aCompositable->InitIPDL(handle);
+  SendNewCompositable(handle, aCompositable->GetTextureInfo());
 }
 
 void
@@ -404,28 +392,6 @@ ImageBridgeChild::ForgetImageContainer(const CompositableHandle& aHandle)
 {
   MutexAutoLock lock(mContainerMapLock);
   mImageContainers.Remove(aHandle.Value());
-}
-
-PCompositableChild*
-ImageBridgeChild::AllocPCompositableChild(const TextureInfo& aInfo, const uint64_t& aID)
-{
-  MOZ_ASSERT(CanSend());
-  return AsyncCompositableChild::CreateActor(aID);
-}
-
-bool
-ImageBridgeChild::DeallocPCompositableChild(PCompositableChild* aActor)
-{
-  AsyncCompositableChild* actor = static_cast<AsyncCompositableChild*>(aActor);
-  MOZ_ASSERT(actor->GetAsyncID());
-
-  {
-    MutexAutoLock lock(mContainerMapLock);
-    mImageContainers.Remove(actor->GetAsyncID());
-  }
-
-  AsyncCompositableChild::DestroyActor(aActor);
-  return true;
 }
 
 Thread* ImageBridgeChild::GetThread() const
@@ -461,7 +427,6 @@ ImageBridgeChild::DispatchReleaseTextureClient(TextureClient* aClient)
     // However, if we take this branch it means that the ImageBridgeChild
     // has already shut down, along with the TextureChild, which means no
     // message will be sent and it is safe to run this code from any thread.
-    MOZ_ASSERT(aClient->GetIPDLActor() == nullptr);
     RELEASE_MANUALLY(aClient);
     return;
   }
@@ -1154,11 +1119,10 @@ ImageBridgeChild::DestroyInTransaction(PTextureChild* aTexture, bool synchronous
 }
 
 bool
-ImageBridgeChild::DestroyInTransaction(PCompositableChild* aCompositable, bool synchronously)
+ImageBridgeChild::DestroyInTransaction(const CompositableHandle& aHandle)
 {
-  return IBCAddOpDestroy(mTxn, OpDestroy(aCompositable), synchronously);
+  return IBCAddOpDestroy(mTxn, OpDestroy(aHandle), false);
 }
-
 
 void
 ImageBridgeChild::RemoveTextureFromCompositable(CompositableClient* aCompositable,
@@ -1173,7 +1137,7 @@ ImageBridgeChild::RemoveTextureFromCompositable(CompositableClient* aCompositabl
   }
 
   CompositableOperation op(
-    nullptr, aCompositable->GetIPDLActor(),
+    aCompositable->GetIPCHandle(),
     OpRemoveTexture(nullptr, aTexture->GetIPDLActor()));
 
   if (aTexture->GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
@@ -1189,17 +1153,29 @@ bool ImageBridgeChild::IsSameProcess() const
 }
 
 void
-ImageBridgeChild::Destroy(CompositableChild* aCompositable)
+ImageBridgeChild::ReleaseCompositable(const CompositableHandle& aHandle)
 {
   if (!InImageBridgeChildThread()) {
     RefPtr<Runnable> runnable = WrapRunnable(
       RefPtr<ImageBridgeChild>(this),
-      &ImageBridgeChild::Destroy,
-      RefPtr<CompositableChild>(aCompositable));
+      &ImageBridgeChild::ReleaseCompositable,
+      aHandle);
     GetMessageLoop()->PostTask(runnable.forget());
     return;
   }
-  CompositableForwarder::Destroy(aCompositable);
+
+  if (!CanSend()) {
+    return;
+  }
+
+  if (!DestroyInTransaction(aHandle)) {
+    SendReleaseCompositable(aHandle);
+  }
+
+  {
+    MutexAutoLock lock(mContainerMapLock);
+    mImageContainers.Remove(aHandle.Value());
+  }
 }
 
 bool

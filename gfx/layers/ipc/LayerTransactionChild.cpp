@@ -36,21 +36,6 @@ LayerTransactionChild::Destroy()
   SendShutdown();
 }
 
-
-PCompositableChild*
-LayerTransactionChild::AllocPCompositableChild(const TextureInfo& aInfo)
-{
-  MOZ_ASSERT(!mDestroyed);
-  return CompositableChild::CreateActor();
-}
-
-bool
-LayerTransactionChild::DeallocPCompositableChild(PCompositableChild* actor)
-{
-  CompositableChild::DestroyActor(actor);
-  return true;
-}
-
 void
 LayerTransactionChild::ActorDestroy(ActorDestroyReason why)
 {
