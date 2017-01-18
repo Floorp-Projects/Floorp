@@ -11,11 +11,11 @@ include "mozilla/GfxMessageUtils.h";
 include "mozilla/layers/WebRenderMessageUtils.h";
 
 include WebRenderMessages;
-include protocol PCompositable;
 include protocol PCompositorBridge;
 include protocol PTexture;
 
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
+using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::wr::ByteBuffer from "mozilla/webrender/WebRenderTypes.h";
 using mozilla::wr::ImageKey from "mozilla/webrender/WebRenderTypes.h";
 
@@ -25,10 +25,10 @@ namespace layers {
 sync protocol PWebRenderBridge
 {
   manager PCompositorBridge;
-  manages PCompositable;
 
 parent:
-  async PCompositable(TextureInfo aTextureInfo);
+  async NewCompositable(CompositableHandle handle, TextureInfo info);
+  async ReleaseCompositable(CompositableHandle compositable);
 
   sync Create(IntSize aSize);
   sync AddImage(IntSize aSize, uint32_t aStride,
@@ -42,8 +42,8 @@ parent:
   async DPEnd(WebRenderCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId);
   sync DPSyncEnd(WebRenderCommand[] commands, OpDestroy[] toDestroy, uint64_t fwdTransactionId, uint64_t transactionId);
   sync DPGetSnapshot(PTexture texture);
-  async AddExternalImageId(uint64_t aImageId, uint64_t aAsyncContainerId);
-  async AddExternalImageIdForCompositable(uint64_t aImageId, PCompositable aCompositable);
+  async AddExternalImageId(uint64_t aImageId, CompositableHandle aHandle);
+  async AddExternalImageIdForCompositable(uint64_t aImageId, CompositableHandle aHandle);
   async RemoveExternalImageId(uint64_t aImageId);
   async SetLayerObserverEpoch(uint64_t layerObserverEpoch);
   async ClearCachedResources();

@@ -7,7 +7,6 @@
 #include "mozilla/layers/WebRenderBridgeChild.h"
 
 #include "gfxPlatform.h"
-#include "mozilla/layers/CompositableChild.h"
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageDataSerializer.h"
@@ -99,12 +98,12 @@ WebRenderBridgeChild::GetNextExternalImageId()
 }
 
 uint64_t
-WebRenderBridgeChild::AllocExternalImageId(uint64_t aAsyncContainerID)
+WebRenderBridgeChild::AllocExternalImageId(const CompositableHandle& aHandle)
 {
   MOZ_ASSERT(!mDestroyed);
 
   uint64_t imageId = GetNextExternalImageId();
-  SendAddExternalImageId(imageId, aAsyncContainerID);
+  SendAddExternalImageId(imageId, aHandle);
   return imageId;
 }
 
@@ -112,14 +111,10 @@ uint64_t
 WebRenderBridgeChild::AllocExternalImageIdForCompositable(CompositableClient* aCompositable)
 {
   MOZ_ASSERT(!mDestroyed);
-  MOZ_ASSERT(aCompositable->GetIPDLActor());
-
-  if (!aCompositable->GetIPDLActor()) {
-    return 0;
-  }
+  MOZ_ASSERT(aCompositable->IsConnected());
 
   uint64_t imageId = GetNextExternalImageId();
-  SendAddExternalImageIdForCompositable(imageId, aCompositable->GetIPDLActor());
+  SendAddExternalImageIdForCompositable(imageId, aCompositable->GetIPCHandle());
   return imageId;
 }
 
@@ -149,32 +144,20 @@ WebRenderBridgeChild::GetLayersIPCActor()
   return static_cast<LayersIPCActor*>(GetCompositorBridgeChild());
 }
 
-PCompositableChild*
-WebRenderBridgeChild::AllocPCompositableChild(const TextureInfo& aInfo)
-{
-  MOZ_ASSERT(!mDestroyed);
-  return CompositableChild::CreateActor();
-}
-
-bool
-WebRenderBridgeChild::DeallocPCompositableChild(PCompositableChild* aActor)
-{
-  CompositableChild::DestroyActor(aActor);
-  return true;
-}
-
 void
 WebRenderBridgeChild::Connect(CompositableClient* aCompositable,
                               ImageContainer* aImageContainer)
 {
   MOZ_ASSERT(aCompositable);
 
-  PCompositableChild* actor =
-    SendPCompositableConstructor(aCompositable->GetTextureInfo());
-  if (!actor) {
-    return;
-  }
-  aCompositable->InitIPDLActor(actor);
+  static uint64_t sNextID = 1;
+  uint64_t id = sNextID++;
+
+  mCompositables.Put(id, aCompositable);
+
+  CompositableHandle handle(id);
+  aCompositable->InitIPDL(handle);
+  SendNewCompositable(handle, aCompositable->GetTextureInfo());
 }
 
 void
@@ -206,6 +189,15 @@ WebRenderBridgeChild::AddOpDestroy(const OpDestroy& aOp, bool aSynchronously)
   return true;
 }
 
+void
+WebRenderBridgeChild::ReleaseCompositable(const CompositableHandle& aHandle)
+{
+  if (!DestroyInTransaction(aHandle)) {
+    SendReleaseCompositable(aHandle);
+  }
+  mCompositables.Remove(aHandle.Value());
+}
+
 bool
 WebRenderBridgeChild::DestroyInTransaction(PTextureChild* aTexture, bool aSynchronously)
 {
@@ -213,9 +205,9 @@ WebRenderBridgeChild::DestroyInTransaction(PTextureChild* aTexture, bool aSynchr
 }
 
 bool
-WebRenderBridgeChild::DestroyInTransaction(PCompositableChild* aCompositable, bool aSynchronously)
+WebRenderBridgeChild::DestroyInTransaction(const CompositableHandle& aHandle)
 {
-  return AddOpDestroy(OpDestroy(aCompositable), aSynchronously);
+  return AddOpDestroy(OpDestroy(aHandle), false);
 }
 
 void
@@ -233,7 +225,7 @@ WebRenderBridgeChild::RemoveTextureFromCompositable(CompositableClient* aComposi
 
   AddWebRenderCommand(
     CompositableOperation(
-      nullptr, aCompositable->GetIPDLActor(),
+      aCompositable->GetIPCHandle(),
       OpRemoveTexture(nullptr, aTexture->GetIPDLActor())));
   if (aTexture->GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
     MarkSyncTransaction();
@@ -273,7 +265,7 @@ WebRenderBridgeChild::UseTextures(CompositableClient* aCompositable,
     }
     GetCompositorBridgeChild()->HoldUntilCompositableRefReleasedIfNecessary(t.mTextureClient);
   }
-  AddWebRenderCommand(CompositableOperation(nullptr, aCompositable->GetIPDLActor(),
+  AddWebRenderCommand(CompositableOperation(aCompositable->GetIPCHandle(),
                                             OpUseTexture(textures)));
 }
 

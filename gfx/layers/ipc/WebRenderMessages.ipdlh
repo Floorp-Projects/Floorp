@@ -7,7 +7,6 @@
 
 include LayersSurfaces;
 include LayersMessages;
-include protocol PCompositable;
 include protocol PTexture;
 
 using WrBorderSide from "mozilla/webrender/webrender_ffi.h";

@@ -464,7 +464,7 @@ WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture)
 
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvAddExternalImageId(const uint64_t& aImageId,
-                                              const uint64_t& aAsyncContainerId)
+                                              const CompositableHandle& aHandle)
 {
   if (mDestroyed) {
     return IPC_OK();
@@ -475,7 +475,7 @@ WebRenderBridgeParent::RecvAddExternalImageId(const uint64_t& aImageId,
   if (!imageBridge) {
      return IPC_FAIL_NO_REASON(this);
   }
-  CompositableHost* host = imageBridge->FindCompositable(aAsyncContainerId);
+  RefPtr<CompositableHost> host = imageBridge->FindCompositable(aHandle);
   if (!host) {
     NS_ERROR("CompositableHost not found in the map!");
     return IPC_FAIL_NO_REASON(this);
@@ -495,14 +495,14 @@ WebRenderBridgeParent::RecvAddExternalImageId(const uint64_t& aImageId,
 
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvAddExternalImageIdForCompositable(const uint64_t& aImageId,
-                                                             PCompositableParent* aCompositable)
+                                                             const CompositableHandle& aHandle)
 {
   if (mDestroyed) {
     return IPC_OK();
   }
   MOZ_ASSERT(!mExternalImageIds.Get(aImageId).get());
 
-  CompositableHost* host = CompositableHost::FromIPDLActor(aCompositable);
+  RefPtr<CompositableHost> host = FindCompositable(aHandle);
   if (host->GetType() != CompositableType::IMAGE &&
       host->GetType() != CompositableType::CONTENT_SINGLE &&
       host->GetType() != CompositableType::CONTENT_DOUBLE) {
@@ -687,20 +687,21 @@ WebRenderBridgeParent::IsSameProcess() const
   return OtherPid() == base::GetCurrentProcId();
 }
 
-PCompositableParent*
-WebRenderBridgeParent::AllocPCompositableParent(const TextureInfo& aInfo)
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvNewCompositable(const CompositableHandle& aHandle,
+                                           const TextureInfo& aInfo)
 {
-  PCompositableParent* actor = CompositableHost::CreateIPDLActor(this, aInfo);
-  CompositableHost* compositable = CompositableHost::FromIPDLActor(actor);
-  MOZ_ASSERT(compositable);
-  compositable->SetCompositor(mCompositor);
-  return actor;
+  if (!AddCompositable(aHandle, aInfo)) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
-bool
-WebRenderBridgeParent::DeallocPCompositableParent(PCompositableParent* aActor)
+mozilla::ipc::IPCResult
+WebRenderBridgeParent::RecvReleaseCompositable(const CompositableHandle& aHandle)
 {
-  return CompositableHost::DestroyIPDLActor(aActor);
+  ReleaseCompositable(aHandle);
+  return IPC_OK();
 }
 
 void

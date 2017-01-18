@@ -59,6 +59,10 @@ public:
   layers::Compositor* Compositor() { return mCompositor.get(); }
   CompositorVsyncScheduler* CompositorScheduler() { return mCompositorScheduler.get(); }
 
+  mozilla::ipc::IPCResult RecvNewCompositable(const CompositableHandle& aHandle,
+                                              const TextureInfo& aInfo) override;
+  mozilla::ipc::IPCResult RecvReleaseCompositable(const CompositableHandle& aHandle) override;
+
   mozilla::ipc::IPCResult RecvCreate(const gfx::IntSize& aSize) override;
   mozilla::ipc::IPCResult RecvShutdown() override;
   mozilla::ipc::IPCResult RecvAddImage(const gfx::IntSize& aSize,
@@ -84,9 +88,9 @@ public:
   mozilla::ipc::IPCResult RecvDPGetSnapshot(PTextureParent* aTexture) override;
 
   mozilla::ipc::IPCResult RecvAddExternalImageId(const uint64_t& aImageId,
-                                                 const uint64_t& aAsyncContainerId) override;
+                                                 const CompositableHandle& aHandle) override;
   mozilla::ipc::IPCResult RecvAddExternalImageIdForCompositable(const uint64_t& aImageId,
-                                                                PCompositableParent* aCompositable) override;
+                                                                const CompositableHandle& aHandle) override;
   mozilla::ipc::IPCResult RecvRemoveExternalImageId(const uint64_t& aImageId) override;
   mozilla::ipc::IPCResult RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverEpoch) override;
 
@@ -117,9 +121,6 @@ public:
 
 private:
   virtual ~WebRenderBridgeParent();
-
-  virtual PCompositableParent* AllocPCompositableParent(const TextureInfo& aInfo) override;
-  bool DeallocPCompositableParent(PCompositableParent* aActor) override;
 
   void DeleteOldImages();
   void ProcessWebrenderCommands(InfallibleTArray<WebRenderCommand>& commands);
