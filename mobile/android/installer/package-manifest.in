@@ -275,6 +275,8 @@
 @BINPATH@/components/FeedProcessor.js
 @BINPATH@/components/WellKnownOpportunisticUtils.js
 @BINPATH@/components/WellKnownOpportunisticUtils.manifest
+@BINPATH@/components/mozProtocolHandler.js
+@BINPATH@/components/mozProtocolHandler.manifest
 @BINPATH@/components/nsDNSServiceDiscovery.manifest
 @BINPATH@/components/nsDNSServiceDiscovery.js
 @BINPATH@/components/toolkitsearch.manifest
