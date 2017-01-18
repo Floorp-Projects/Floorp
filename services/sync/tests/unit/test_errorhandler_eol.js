@@ -64,7 +64,7 @@ function do_check_hard_eol(eh, start) {
   do_check_true(Status.eol);
 }
 
-add_identity_test(this, async function test_200_hard() {
+add_task(async function test_200_hard() {
   let eh = Service.errorHandler;
   let start = Date.now();
   let server = sync_httpd_setup(handler200("hard-eol"));
@@ -83,7 +83,7 @@ add_identity_test(this, async function test_200_hard() {
   await promiseStopServer(server);
 });
 
-add_identity_test(this, async function test_513_hard() {
+add_task(async function test_513_hard() {
   let eh = Service.errorHandler;
   let start = Date.now();
   let server = sync_httpd_setup(handler513);
@@ -106,7 +106,7 @@ add_identity_test(this, async function test_513_hard() {
   await promiseStopServer(server);
 });
 
-add_identity_test(this, async function test_200_soft() {
+add_task(async function test_200_soft() {
   let eh = Service.errorHandler;
   let start = Date.now();
   let server = sync_httpd_setup(handler200("soft-eol"));
