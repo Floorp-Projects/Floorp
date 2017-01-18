@@ -929,13 +929,15 @@ SyncEngine.prototype = {
       engines[this.name] = engineData;
       metaGlobal.payload.engines = engines;
       metaGlobal.changed = true;
-    } else if (engineData.version > this.version) {
-      // Don't sync this engine if the server has newer data
+    }
+    // Don't sync this engine if the server has newer data
+    else if (engineData.version > this.version) {
       let error = new String("New data: " + [engineData.version, this.version]);
       error.failureCode = VERSION_OUT_OF_DATE;
       throw error;
-    } else if (engineData.syncID != this.syncID) {
-      // Changes to syncID mean we'll need to upload everything
+    }
+    // Changes to syncID mean we'll need to upload everything
+    else if (engineData.syncID != this.syncID) {
       this._log.debug("Engine syncIDs: " + [engineData.syncID, this.syncID]);
       this.syncID = engineData.syncID;
       this._resetClient();

@@ -314,8 +314,9 @@ AddonUtilsInternal.prototype = {
 
             if (param.indexOf("src=") == 0) {
               return "src=sync";
+            } else {
+              return param;
             }
-            return param;
           });
 
           addon.sourceURI.query = params.join("&");

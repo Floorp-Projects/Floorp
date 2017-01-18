@@ -8,6 +8,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
+  let baseuri = "http://fake/uri/";
   let engine = new FormEngine(Service);
   let store = engine._store;
 
@@ -17,7 +18,7 @@ function run_test() {
 
   _("Remove any existing entries");
   store.wipe();
-  if (store.getAllIDs().length) {
+  for (let id in store.getAllIDs()) {
     do_throw("Shouldn't get any ids!");
   }
 
@@ -54,7 +55,7 @@ function run_test() {
 
   _("Remove all entries");
   store.wipe();
-  if (store.getAllIDs().length) {
+  for (let id in store.getAllIDs()) {
     do_throw("Shouldn't get any ids!");
   }
 
@@ -82,7 +83,7 @@ function run_test() {
   store.remove({
     id: "newid"
   });
-  if (store.getAllIDs().length) {
+  for (let id in store.getAllIDs()) {
     do_throw("Shouldn't get any ids!");
   }
 
@@ -90,7 +91,7 @@ function run_test() {
   store.remove({
     id: "newid"
   });
-  if (store.getAllIDs().length) {
+  for (let id in store.getAllIDs()) {
     do_throw("Shouldn't get any ids!");
   }
 
@@ -113,7 +114,7 @@ function run_test() {
   toDelete.id = id;
   toDelete.deleted = true;
   applyEnsureNoFailures([toDelete]);
-  if (store.getAllIDs().length) {
+  for (let id in store.getAllIDs()) {
     do_throw("Shouldn't get any ids!");
   }
 
@@ -126,7 +127,7 @@ function run_test() {
 
   store.wipe();
 
-  if (store.getAllIDs().length) {
+  for (let id in store.getAllIDs()) {
     do_throw("Shouldn't get any ids!");
   }
 
@@ -134,7 +135,7 @@ function run_test() {
   Services.prefs.setBoolPref("browser.formfill.enable", false);
   try {
     // a search
-    if (store.getAllIDs().length) {
+    for (let id in store.getAllIDs()) {
       do_throw("Shouldn't get any ids!");
     }
     // an update.

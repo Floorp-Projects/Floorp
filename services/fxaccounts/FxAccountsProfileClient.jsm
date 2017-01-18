@@ -161,13 +161,14 @@ this.FxAccountsProfileClient.prototype = {
         // "response.success" means status code is 200
         if (request.response.success) {
           return resolve(body);
+        } else {
+          return reject(new FxAccountsProfileClientError({
+            error: body.error || ERROR_UNKNOWN,
+            errno: body.errno || ERRNO_UNKNOWN_ERROR,
+            code: request.response.status,
+            message: body.message || body,
+          }));
         }
-        return reject(new FxAccountsProfileClientError({
-          error: body.error || ERROR_UNKNOWN,
-          errno: body.errno || ERRNO_UNKNOWN_ERROR,
-          code: request.response.status,
-          message: body.message || body,
-        }));
       };
 
       if (method === "GET") {

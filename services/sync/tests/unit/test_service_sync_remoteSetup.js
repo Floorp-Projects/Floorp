@@ -11,8 +11,10 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 
 function run_test() {
   validate_all_future_pings();
+  let logger = Log.repository.rootLogger;
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
+  let guidSvc = new FakeGUIDService();
   let clients = new ServerCollection();
   let meta_global = new ServerWBO("global");
 
@@ -53,6 +55,7 @@ function run_test() {
   }
 
   const GLOBAL_PATH = "/1.1/johndoe/storage/meta/global";
+  const INFO_PATH = "/1.1/johndoe/info/collections";
 
   let handlers = {
     "/1.1/johndoe/storage": storageHandler,
@@ -157,6 +160,7 @@ function run_test() {
     metaColl.delete({});
 
     _("Do an initial sync.");
+    let beforeSync = Date.now() / 1000;
     Service.sync();
 
     _("Checking that remoteSetup returns true.");

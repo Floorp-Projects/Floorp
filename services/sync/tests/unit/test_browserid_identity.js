@@ -473,19 +473,20 @@ add_task(async function test_refreshCertificateOn401() {
         headers: {"content-type": "application/json"},
         body: JSON.stringify({}),
       };
+    } else {
+      didReturn200 = true;
+      return {
+        status: 200,
+        headers: {"content-type": "application/json"},
+        body: JSON.stringify({
+          id:           "id",
+          key:          "key",
+          api_endpoint: "http://example.com/",
+          uid:          "uid",
+          duration:     300,
+        })
+      };
     }
-    didReturn200 = true;
-    return {
-      status: 200,
-      headers: {"content-type": "application/json"},
-      body: JSON.stringify({
-        id:           "id",
-        key:          "key",
-        api_endpoint: "http://example.com/",
-        uid:          "uid",
-        duration:     300,
-      })
-    };
   });
 
   browseridManager._tokenServerClient = mockTSC;
@@ -747,7 +748,7 @@ add_task(async function test_signedInUserMissing() {
   _("BrowserIDManager detects getSignedInUser returning incomplete account data");
 
   let browseridManager = new BrowserIDManager();
-  makeIdentityConfig();
+  let config = makeIdentityConfig();
   // Delete stored keys and the key fetch token.
   delete identityConfig.fxaccount.user.kA;
   delete identityConfig.fxaccount.user.kB;

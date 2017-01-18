@@ -78,7 +78,7 @@ add_task(async function test_tab_engine_skips_incoming_local_record() {
       "/1.1/foo/storage/tabs": collection.handler()
   });
 
-  await SyncTestingInfrastructure(server);
+  let syncTesting = await SyncTestingInfrastructure(server);
   Service.identity.username = "foo";
 
   let meta_global = Service.recordManager.set(engine.metaURL,
@@ -105,7 +105,7 @@ add_task(async function test_tab_engine_skips_incoming_local_record() {
 });
 
 add_test(function test_reconcile() {
-  let [engine, ] = getMocks();
+  let [engine, store] = getMocks();
 
   _("Setup engine for reconciling");
   engine._syncStartup();

@@ -153,6 +153,7 @@ class CollectionValidator {
       }
     }
 
+    let recordPairs = [];
     let seenClient = new Map();
     for (let record of clientItems) {
       let id = record[this.idProp];

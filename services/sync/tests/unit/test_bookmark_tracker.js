@@ -129,7 +129,7 @@ var populateTree = async function populate(parentId, ...items) {
 }
 
 async function insertBookmarksToMigrate() {
-  await PlacesUtils.bookmarks.insert({
+  let mozBmk = await PlacesUtils.bookmarks.insert({
     guid: "0gtWTOgYcoJD",
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     url: "https://mozilla.org",
@@ -144,7 +144,7 @@ async function insertBookmarksToMigrate() {
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     url: "http://getthunderbird.com",
   });
-  await PlacesUtils.bookmarks.insert({
+  let bzBmk = await PlacesUtils.bookmarks.insert({
     guid: "YK5Bdq5MIqL6",
     parentGuid: PlacesUtils.bookmarks.menuGuid,
     url: "https://bugzilla.mozilla.org",
@@ -217,7 +217,7 @@ add_task(async function test_batch_tracking() {
 
   PlacesUtils.bookmarks.runInBatchMode({
     runBatched() {
-      PlacesUtils.bookmarks.createFolder(
+      let folder = PlacesUtils.bookmarks.createFolder(
         PlacesUtils.bookmarks.bookmarksMenuFolder,
         "Test Folder", PlacesUtils.bookmarks.DEFAULT_INDEX);
       // We should be tracking the new folder and its parent (and need to jump
@@ -244,7 +244,7 @@ add_task(async function test_nested_batch_tracking() {
 
       PlacesUtils.bookmarks.runInBatchMode({
         runBatched() {
-          PlacesUtils.bookmarks.createFolder(
+          let folder = PlacesUtils.bookmarks.createFolder(
             PlacesUtils.bookmarks.bookmarksMenuFolder,
             "Test Folder", PlacesUtils.bookmarks.DEFAULT_INDEX);
           // We should be tracking the new folder and its parent (and need to jump
@@ -667,6 +667,7 @@ add_task(async function test_onItemKeywordChanged() {
     let folder = PlacesUtils.bookmarks.createFolder(
       PlacesUtils.bookmarks.bookmarksMenuFolder, "Parent",
       PlacesUtils.bookmarks.DEFAULT_INDEX);
+    let folderGUID = engine._store.GUIDForId(folder);
     _("Track changes to keywords");
     let uri = Utils.makeURI("http://getfirefox.com");
     let b = PlacesUtils.bookmarks.insertBookmark(
@@ -802,6 +803,7 @@ add_task(async function test_onItemAnnoChanged() {
     let folder = PlacesUtils.bookmarks.createFolder(
       PlacesUtils.bookmarks.bookmarksMenuFolder, "Parent",
       PlacesUtils.bookmarks.DEFAULT_INDEX);
+    let folderGUID = engine._store.GUIDForId(folder);
     _("Track changes to annos.");
     let b = PlacesUtils.bookmarks.insertBookmark(
       folder, Utils.makeURI("http://getfirefox.com"),
@@ -1072,7 +1074,7 @@ add_task(async function test_async_onItemMoved_update() {
   try {
     await stopTracking();
 
-    await PlacesUtils.bookmarks.insert({
+    let fxBmk = await PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
       parentGuid: PlacesUtils.bookmarks.menuGuid,
       url: "http://getfirefox.com",
@@ -1299,16 +1301,18 @@ add_task(async function test_treeMoved() {
     let folder2_guid = engine._store.GUIDForId(folder2_id);
 
     // Create a couple of bookmarks in the second folder.
-    PlacesUtils.bookmarks.insertBookmark(
+    let fx_id = PlacesUtils.bookmarks.insertBookmark(
       folder2_id,
       Utils.makeURI("http://getfirefox.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Firefox!");
-    PlacesUtils.bookmarks.insertBookmark(
+    let fx_guid = engine._store.GUIDForId(fx_id);
+    let tb_id = PlacesUtils.bookmarks.insertBookmark(
       folder2_id,
       Utils.makeURI("http://getthunderbird.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Thunderbird!");
+    let tb_guid = engine._store.GUIDForId(tb_id);
 
     await startTracking();
 
@@ -1328,11 +1332,12 @@ add_task(async function test_onItemDeleted() {
   _("Bookmarks deleted via the synchronous API should be tracked");
 
   try {
-    PlacesUtils.bookmarks.insertBookmark(
+    let fx_id = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.bookmarksMenuFolder,
       Utils.makeURI("http://getfirefox.com"),
       PlacesUtils.bookmarks.DEFAULT_INDEX,
       "Get Firefox!");
+    let fx_guid = engine._store.GUIDForId(fx_id);
     let tb_id = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.bookmarksMenuFolder,
       Utils.makeURI("http://getthunderbird.com"),
@@ -1365,7 +1370,7 @@ add_task(async function test_async_onItemDeleted() {
       url: "http://getfirefox.com",
       title: "Get Firefox!",
     });
-    await PlacesUtils.bookmarks.insert({
+    let tbBmk = await PlacesUtils.bookmarks.insert({
       type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
       parentGuid: PlacesUtils.bookmarks.menuGuid,
       url: "http://getthunderbird.com",

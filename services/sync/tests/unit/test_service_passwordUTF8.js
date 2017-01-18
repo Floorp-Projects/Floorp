@@ -56,6 +56,7 @@ function run_test() {
   initTestLogging("Trace");
   let collectionsHelper = track_collections_helper();
   let upd = collectionsHelper.with_updated_collection;
+  let collections = collectionsHelper.collections;
 
   ensureLegacyIdentityManager();
 

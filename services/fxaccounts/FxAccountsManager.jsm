@@ -458,6 +458,8 @@ this.FxAccountsManager = {
       return this._error(ERROR_OFFLINE);
     }
 
+    let deferred = Promise.defer();
+
     if (!aEmail) {
       return this._error(ERROR_INVALID_EMAIL);
     }

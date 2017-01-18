@@ -85,9 +85,9 @@ function run_test() {
   _("Generate an execution error");
   let query = "INSERT INTO moz_formhistory (fieldname, value) VALUES ('one', NULL)";
   let stmt = Svc.Form.DBConnection.createStatement(query);
-  let except;
+  let r11, except;
   try {
-    Async.querySpinningly(stmt);
+    r11 = Async.querySpinningly(stmt);
   } catch (e) {
     except = e;
   }
