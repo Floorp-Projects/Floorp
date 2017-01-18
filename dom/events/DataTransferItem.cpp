@@ -319,8 +319,10 @@ DataTransferItem::GetAsEntry(nsIPrincipal& aSubjectPrincipal,
     }
 
     nsCOMPtr<nsIFile> directoryFile;
-    nsresult rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(fullpath),
-                                        true, getter_AddRefs(directoryFile));
+    // fullPath is already in unicode, we don't have to use
+    // NS_NewNativeLocalFile.
+    nsresult rv = NS_NewLocalFile(fullpath, true,
+                                  getter_AddRefs(directoryFile));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }

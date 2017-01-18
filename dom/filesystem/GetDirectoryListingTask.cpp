@@ -166,8 +166,8 @@ GetDirectoryListingTaskChild::HandlerCallback()
 
   for (unsigned i = 0; i < count; i++) {
     nsCOMPtr<nsIFile> path;
-    NS_ConvertUTF16toUTF8 fullPath(mTargetData[i].mPath);
-    nsresult rv = NS_NewNativeLocalFile(fullPath, true, getter_AddRefs(path));
+    nsresult rv = NS_NewLocalFile(mTargetData[i].mPath, true,
+                                  getter_AddRefs(path));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       mPromise->MaybeReject(rv);
       mPromise = nullptr;
@@ -246,8 +246,8 @@ GetDirectoryListingTaskParent::Create(FileSystemBase* aFileSystem,
   RefPtr<GetDirectoryListingTaskParent> task =
     new GetDirectoryListingTaskParent(aFileSystem, aParam, aParent);
 
-  NS_ConvertUTF16toUTF8 path(aParam.realPath());
-  aRv = NS_NewNativeLocalFile(path, true, getter_AddRefs(task->mTargetPath));
+  aRv = NS_NewLocalFile(aParam.realPath(), true,
+                        getter_AddRefs(task->mTargetPath));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
