@@ -155,7 +155,7 @@ lazilyLoadedBrowserScripts.forEach(function (aScript) {
 var lazilyLoadedObserverScripts = [
   ["MemoryObserver", ["memory-pressure", "Memory:Dump"], "chrome://browser/content/MemoryObserver.js"],
   ["ConsoleAPI", ["console-api-log-event"], "chrome://browser/content/ConsoleAPI.js"],
-  ["FindHelper", ["FindInPage:Opened", "FindInPage:Closed", "Tab:Selected"], "chrome://browser/content/FindHelper.js"],
+  ["FindHelper", ["FindInPage:Opened", "FindInPage:Closed"], "chrome://browser/content/FindHelper.js"],
   ["PermissionsHelper", ["Permissions:Check", "Permissions:Get", "Permissions:Clear"], "chrome://browser/content/PermissionsHelper.js"],
   ["FeedHandler", ["Feeds:Subscribe"], "chrome://browser/content/FeedHandler.js"],
   ["Feedback", ["Feedback:Show"], "chrome://browser/content/Feedback.js"],
@@ -372,11 +372,15 @@ var BrowserApp = {
 
     Services.androidBridge.browserApp = this;
 
+    GlobalEventDispatcher.registerListener(this, [
+      "Tab:Load",
+      "Tab:Selected",
+      "Tab:Closed",
+      "Browser:LoadManifest",
+    ]);
+
     Services.obs.addObserver(this, "Locale:OS", false);
     Services.obs.addObserver(this, "Locale:Changed", false);
-    Services.obs.addObserver(this, "Tab:Load", false);
-    Services.obs.addObserver(this, "Tab:Selected", false);
-    Services.obs.addObserver(this, "Tab:Closed", false);
     Services.obs.addObserver(this, "Session:Back", false);
     Services.obs.addObserver(this, "Session:Forward", false);
     Services.obs.addObserver(this, "Session:Navigate", false);
@@ -395,8 +399,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "keyword-search", false);
     Services.obs.addObserver(this, "Fonts:Reload", false);
     Services.obs.addObserver(this, "Vibration:Request", false);
-
-    GlobalEventDispatcher.registerListener(this, "Browser:LoadManifest");
 
     Messaging.addListener(this.getHistory.bind(this), "Session:GetHistory");
 
@@ -1607,9 +1609,11 @@ var BrowserApp = {
   },
 
   onEvent: function (event, data, callback) {
+    let browser = this.selectedBrowser;
+
     switch (event) {
-      case "Browser:LoadManifest":
-        const manifest = new Manifest(BrowserApp.selectedBrowser);
+      case "Browser:LoadManifest": {
+        const manifest = new Manifest(browser);
         manifest.install().then(() => {
           return manifest.icon(data.iconSize);
         }).then(icon => {
@@ -1623,6 +1627,65 @@ var BrowserApp = {
           Cu.reportError("Failed to install " + data.src);
         });
         break;
+      }
+
+      case "Tab:Load": {
+        let url = data.url;
+        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP
+                  | Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
+
+        // Pass LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL to prevent any loads from
+        // inheriting the currently loaded document's principal.
+        if (data.userEntered) {
+          flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
+        }
+
+        let delayLoad = ("delayLoad" in data) ? data.delayLoad : false;
+        let params = {
+          selected: ("selected" in data) ? data.selected : !delayLoad,
+          parentId: ("parentId" in data) ? data.parentId : -1,
+          flags: flags,
+          tabID: data.tabID,
+          isPrivate: (data.isPrivate === true),
+          pinned: (data.pinned === true),
+          delayLoad: (delayLoad === true),
+          desktopMode: (data.desktopMode === true)
+        };
+
+        params.userRequested = url;
+
+        if (data.engine) {
+          let engine = Services.search.getEngineByName(data.engine);
+          if (engine) {
+            let submission = engine.getSubmission(url);
+            url = submission.uri.spec;
+            params.postData = submission.postData;
+            params.isSearch = true;
+          }
+        }
+
+        if (data.newTab) {
+          this.addTab(url, params);
+        } else {
+          if (data.tabId) {
+            // Use a specific browser instead of the selected browser, if it exists
+            let specificBrowser = this.getTabForId(data.tabId).browser;
+            if (specificBrowser)
+              browser = specificBrowser;
+          }
+          this.loadURI(url, browser, params);
+        }
+        break;
+      }
+
+      case "Tab:Selected":
+        this._handleTabSelected(this.getTabForId(data.id));
+        break;
+
+      case "Tab:Closed": {
+        this._handleTabClosed(this.getTabForId(data.tabId), data.showUndoToast);
+        break;
+      }
     }
   },
 
@@ -1630,7 +1693,6 @@ var BrowserApp = {
     let browser = this.selectedBrowser;
 
     switch (aTopic) {
-
       case "Session:Back":
         browser.goBack();
         break;
@@ -1712,66 +1774,6 @@ var BrowserApp = {
       case "Session:Stop":
         browser.stop();
         break;
-
-      case "Tab:Load": {
-        let data = JSON.parse(aData);
-        let url = data.url;
-        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP
-                  | Ci.nsIWebNavigation.LOAD_FLAGS_FIXUP_SCHEME_TYPOS;
-
-        // Pass LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL to prevent any loads from
-        // inheriting the currently loaded document's principal.
-        if (data.userEntered) {
-          flags |= Ci.nsIWebNavigation.LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
-        }
-
-        let delayLoad = ("delayLoad" in data) ? data.delayLoad : false;
-        let params = {
-          selected: ("selected" in data) ? data.selected : !delayLoad,
-          parentId: ("parentId" in data) ? data.parentId : -1,
-          flags: flags,
-          tabID: data.tabID,
-          isPrivate: (data.isPrivate === true),
-          pinned: (data.pinned === true),
-          delayLoad: (delayLoad === true),
-          desktopMode: (data.desktopMode === true)
-        };
-
-        params.userRequested = url;
-
-        if (data.engine) {
-          let engine = Services.search.getEngineByName(data.engine);
-          if (engine) {
-            let submission = engine.getSubmission(url);
-            url = submission.uri.spec;
-            params.postData = submission.postData;
-            params.isSearch = true;
-          }
-        }
-
-        if (data.newTab) {
-          this.addTab(url, params);
-        } else {
-          if (data.tabId) {
-            // Use a specific browser instead of the selected browser, if it exists
-            let specificBrowser = this.getTabForId(data.tabId).browser;
-            if (specificBrowser)
-              browser = specificBrowser;
-          }
-          this.loadURI(url, browser, params);
-        }
-        break;
-      }
-
-      case "Tab:Selected":
-        this._handleTabSelected(this.getTabForId(parseInt(aData)));
-        break;
-
-      case "Tab:Closed": {
-        let data = JSON.parse(aData);
-        this._handleTabClosed(this.getTabForId(data.tabId), data.showUndoToast);
-        break;
-      }
 
       case "keyword-search":
         // This event refers to a search via the URL bar, not a bookmarks
