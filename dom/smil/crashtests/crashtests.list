@@ -24,7 +24,7 @@ load 572938-4.svg
 load 588287-1.svg
 load 588287-2.svg
 asserts-if(stylo,2) load 590425-1.html # bug 1324669
-asserts-if(stylo,8-11) load 592477-1.xhtml # bug 1324669
+asserts-if(stylo,1-27) load 592477-1.xhtml # bug 1324669
 load 594653-1.svg
 load 596796-1.svg
 load 605345-1.svg
