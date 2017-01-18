@@ -177,20 +177,16 @@
     checkpoint("After tabs [+30s, forced GC]");
     var tabCount = BrowserApp.tabs.length;
     for (var i = 1; i < tabCount; i++) {
-        BrowserApp.closeTab(BrowserApp.tabs[i]);
-    }
-
-    var closeListener = {
-        observe: function(aSubject, aTopic, aData) {
+        BrowserApp.tabs[i].browser.addEventListener("TabClose", () => {
             tabCount--;
             dump("tab count dropped to [" + tabCount + "]");
             if (tabCount == 1) {
-                Services.obs.removeObserver(this, "Tab:Closed", false);
                 setTimeout(tabsClosed, 0);
             }
-        }
-    };
-    Services.obs.addObserver(closeListener, "Tab:Closed", false);
+        }, { once: true });
+
+        BrowserApp.closeTab(BrowserApp.tabs[i]);
+    }
   }
 
   function tabsClosed() {
