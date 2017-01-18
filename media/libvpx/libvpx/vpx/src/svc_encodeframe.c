@@ -33,8 +33,8 @@
 #ifndef MINGW_HAS_SECURE_API
 // proto from /usr/x86_64-w64-mingw32/include/sec_api/string_s.h
 _CRTIMP char *__cdecl strtok_s(char *str, const char *delim, char **context);
-#endif  /* MINGW_HAS_SECURE_API */
-#endif  /* __MINGW32__ */
+#endif /* MINGW_HAS_SECURE_API */
+#endif /* __MINGW32__ */
 
 #ifdef _MSC_VER
 #define strdup _strdup
@@ -47,13 +47,15 @@ _CRTIMP char *__cdecl strtok_s(char *str, const char *delim, char **context);
 
 #define MAX_QUANTIZER 63
 
-static const int DEFAULT_SCALE_FACTORS_NUM[VPX_SS_MAX_LAYERS] = {
-  4, 5, 7, 11, 16
-};
+static const int DEFAULT_SCALE_FACTORS_NUM[VPX_SS_MAX_LAYERS] = { 4, 5, 7, 11,
+                                                                  16 };
 
-static const int DEFAULT_SCALE_FACTORS_DEN[VPX_SS_MAX_LAYERS] = {
-  16, 16, 16, 16, 16
-};
+static const int DEFAULT_SCALE_FACTORS_DEN[VPX_SS_MAX_LAYERS] = { 16, 16, 16,
+                                                                  16, 16 };
+
+static const int DEFAULT_SCALE_FACTORS_NUM_2x[VPX_SS_MAX_LAYERS] = { 1, 2, 4 };
+
+static const int DEFAULT_SCALE_FACTORS_DEN_2x[VPX_SS_MAX_LAYERS] = { 4, 4, 4 };
 
 typedef enum {
   QUANTIZER = 0,
@@ -63,20 +65,17 @@ typedef enum {
   ALL_OPTION_TYPES
 } LAYER_OPTION_TYPE;
 
-static const int option_max_values[ALL_OPTION_TYPES] = {
-  63, INT_MAX, INT_MAX, 1
-};
+static const int option_max_values[ALL_OPTION_TYPES] = { 63, INT_MAX, INT_MAX,
+                                                         1 };
 
-static const int option_min_values[ALL_OPTION_TYPES] = {
-  0, 0, 1, 0
-};
+static const int option_min_values[ALL_OPTION_TYPES] = { 0, 0, 1, 0 };
 
 // One encoded frame
 typedef struct FrameData {
-  void                     *buf;    // compressed data buffer
-  size_t                    size;  // length of compressed data
-  vpx_codec_frame_flags_t   flags;    /**< flags for this frame */
-  struct FrameData         *next;
+  void *buf;                     // compressed data buffer
+  size_t size;                   // length of compressed data
+  vpx_codec_frame_flags_t flags; /**< flags for this frame */
+  struct FrameData *next;
 } FrameData;
 
 static SvcInternal_t *get_svc_internal(SvcContext *svc_ctx) {
@@ -91,8 +90,7 @@ static SvcInternal_t *get_svc_internal(SvcContext *svc_ctx) {
   return (SvcInternal_t *)svc_ctx->internal;
 }
 
-static const SvcInternal_t *get_const_svc_internal(
-    const SvcContext *svc_ctx) {
+static const SvcInternal_t *get_const_svc_internal(const SvcContext *svc_ctx) {
   if (svc_ctx == NULL) return NULL;
   return (const SvcInternal_t *)svc_ctx->internal;
 }
@@ -102,8 +100,8 @@ static void svc_log_reset(SvcContext *svc_ctx) {
   si->message_buffer[0] = '\0';
 }
 
-static int svc_log(SvcContext *svc_ctx, SVC_LOG_LEVEL level,
-                   const char *fmt, ...) {
+static int svc_log(SvcContext *svc_ctx, SVC_LOG_LEVEL level, const char *fmt,
+                   ...) {
   char buf[512];
   int retval = 0;
   va_list ap;
@@ -130,14 +128,11 @@ static int svc_log(SvcContext *svc_ctx, SVC_LOG_LEVEL level,
   return retval;
 }
 
-static vpx_codec_err_t extract_option(LAYER_OPTION_TYPE type,
-                                      char *input,
-                                      int *value0,
-                                      int *value1) {
+static vpx_codec_err_t extract_option(LAYER_OPTION_TYPE type, char *input,
+                                      int *value0, int *value1) {
   if (type == SCALE_FACTOR) {
     *value0 = strtol(input, &input, 10);
-    if (*input++ != '/')
-      return VPX_CODEC_INVALID_PARAM;
+    if (*input++ != '/') return VPX_CODEC_INVALID_PARAM;
     *value1 = strtol(input, &input, 10);
 
     if (*value0 < option_min_values[SCALE_FACTOR] ||
@@ -148,8 +143,7 @@ static vpx_codec_err_t extract_option(LAYER_OPTION_TYPE type,
       return VPX_CODEC_INVALID_PARAM;
   } else {
     *value0 = atoi(input);
-    if (*value0 < option_min_values[type] ||
-        *value0 > option_max_values[type])
+    if (*value0 < option_min_values[type] || *value0 > option_max_values[type])
       return VPX_CODEC_INVALID_PARAM;
   }
   return VPX_CODEC_OK;
@@ -166,6 +160,9 @@ static vpx_codec_err_t parse_layer_options_from_string(SvcContext *svc_ctx,
   char *token;
   const char *delim = ",";
   char *save_ptr;
+  int num_layers = svc_ctx->spatial_layers;
+  if (type == BITRATE)
+    num_layers = svc_ctx->spatial_layers * svc_ctx->temporal_layers;
 
   if (input == NULL || option0 == NULL ||
       (option1 == NULL && type == SCALE_FACTOR))
@@ -173,20 +170,20 @@ static vpx_codec_err_t parse_layer_options_from_string(SvcContext *svc_ctx,
 
   input_string = strdup(input);
   token = strtok_r(input_string, delim, &save_ptr);
-  for (i = 0; i < svc_ctx->spatial_layers; ++i) {
+  for (i = 0; i < num_layers; ++i) {
     if (token != NULL) {
       res = extract_option(type, token, option0 + i, option1 + i);
-      if (res != VPX_CODEC_OK)
-        break;
+      if (res != VPX_CODEC_OK) break;
       token = strtok_r(NULL, delim, &save_ptr);
     } else {
       break;
     }
   }
-  if (res == VPX_CODEC_OK && i != svc_ctx->spatial_layers) {
+  if (res == VPX_CODEC_OK && i != num_layers) {
     svc_log(svc_ctx, SVC_LOG_ERROR,
             "svc: layer params type: %d    %d values required, "
-            "but only %d specified\n", type, svc_ctx->spatial_layers, i);
+            "but only %d specified\n",
+            type, num_layers, i);
     res = VPX_CODEC_INVALID_PARAM;
   }
   free(input_string);
@@ -204,7 +201,7 @@ static vpx_codec_err_t parse_options(SvcContext *svc_ctx, const char *options) {
   char *input_string;
   char *option_name;
   char *option_value;
-  char *input_ptr;
+  char *input_ptr = NULL;
   SvcInternal_t *const si = get_svc_internal(svc_ctx);
   vpx_codec_err_t res = VPX_CODEC_OK;
   int i, alt_ref_enabled = 0;
@@ -233,14 +230,14 @@ static vpx_codec_err_t parse_options(SvcContext *svc_ctx, const char *options) {
                                             si->svc_params.scaling_factor_den);
       if (res != VPX_CODEC_OK) break;
     } else if (strcmp("max-quantizers", option_name) == 0) {
-      res = parse_layer_options_from_string(svc_ctx, QUANTIZER, option_value,
-                                            si->svc_params.max_quantizers,
-                                            NULL);
+      res =
+          parse_layer_options_from_string(svc_ctx, QUANTIZER, option_value,
+                                          si->svc_params.max_quantizers, NULL);
       if (res != VPX_CODEC_OK) break;
     } else if (strcmp("min-quantizers", option_name) == 0) {
-      res = parse_layer_options_from_string(svc_ctx, QUANTIZER, option_value,
-                                            si->svc_params.min_quantizers,
-                                            NULL);
+      res =
+          parse_layer_options_from_string(svc_ctx, QUANTIZER, option_value,
+                                          si->svc_params.min_quantizers, NULL);
       if (res != VPX_CODEC_OK) break;
     } else if (strcmp("auto-alt-refs", option_name) == 0) {
       res = parse_layer_options_from_string(svc_ctx, AUTO_ALT_REF, option_value,
@@ -287,8 +284,7 @@ static vpx_codec_err_t parse_options(SvcContext *svc_ctx, const char *options) {
   return res;
 }
 
-vpx_codec_err_t vpx_svc_set_options(SvcContext *svc_ctx,
-                                    const char *options) {
+vpx_codec_err_t vpx_svc_set_options(SvcContext *svc_ctx, const char *options) {
   SvcInternal_t *const si = get_svc_internal(svc_ctx);
   if (svc_ctx == NULL || options == NULL || si == NULL) {
     return VPX_CODEC_INVALID_PARAM;
@@ -298,44 +294,50 @@ vpx_codec_err_t vpx_svc_set_options(SvcContext *svc_ctx,
   return VPX_CODEC_OK;
 }
 
-void assign_layer_bitrates(const SvcContext *svc_ctx,
-                           vpx_codec_enc_cfg_t *const enc_cfg) {
+vpx_codec_err_t assign_layer_bitrates(const SvcContext *svc_ctx,
+                                      vpx_codec_enc_cfg_t *const enc_cfg) {
   int i;
   const SvcInternal_t *const si = get_const_svc_internal(svc_ctx);
   int sl, tl, spatial_layer_target;
 
   if (svc_ctx->temporal_layering_mode != 0) {
     if (si->bitrates[0] != 0) {
-      enc_cfg->rc_target_bitrate = 0;
+      unsigned int total_bitrate = 0;
       for (sl = 0; sl < svc_ctx->spatial_layers; ++sl) {
-        enc_cfg->ss_target_bitrate[sl*svc_ctx->temporal_layers] = 0;
+        total_bitrate += si->bitrates[sl * svc_ctx->temporal_layers +
+                                      svc_ctx->temporal_layers - 1];
         for (tl = 0; tl < svc_ctx->temporal_layers; ++tl) {
-          enc_cfg->ss_target_bitrate[sl*svc_ctx->temporal_layers]
-              += (unsigned int)si->bitrates[sl * svc_ctx->temporal_layers + tl];
-          enc_cfg->layer_target_bitrate[sl*svc_ctx->temporal_layers + tl]
-              = si->bitrates[sl * svc_ctx->temporal_layers + tl];
+          enc_cfg->ss_target_bitrate[sl * svc_ctx->temporal_layers] +=
+              (unsigned int)si->bitrates[sl * svc_ctx->temporal_layers + tl];
+          enc_cfg->layer_target_bitrate[sl * svc_ctx->temporal_layers + tl] =
+              si->bitrates[sl * svc_ctx->temporal_layers + tl];
+          if (tl > 0 && (si->bitrates[sl * svc_ctx->temporal_layers + tl] <=
+                         si->bitrates[sl * svc_ctx->temporal_layers + tl - 1]))
+            return VPX_CODEC_INVALID_PARAM;
         }
       }
+      if (total_bitrate != enc_cfg->rc_target_bitrate)
+        return VPX_CODEC_INVALID_PARAM;
     } else {
       float total = 0;
-      float alloc_ratio[VPX_MAX_LAYERS] = {0};
+      float alloc_ratio[VPX_MAX_LAYERS] = { 0 };
 
       for (sl = 0; sl < svc_ctx->spatial_layers; ++sl) {
         if (si->svc_params.scaling_factor_den[sl] > 0) {
-          alloc_ratio[sl] = (float)( pow(2, sl) );
+          alloc_ratio[sl] = (float)(pow(2, sl));
           total += alloc_ratio[sl];
         }
       }
 
       for (sl = 0; sl < svc_ctx->spatial_layers; ++sl) {
         enc_cfg->ss_target_bitrate[sl] = spatial_layer_target =
-            (unsigned int)(enc_cfg->rc_target_bitrate *
-                alloc_ratio[sl] / total);
+            (unsigned int)(enc_cfg->rc_target_bitrate * alloc_ratio[sl] /
+                           total);
         if (svc_ctx->temporal_layering_mode == 3) {
           enc_cfg->layer_target_bitrate[sl * svc_ctx->temporal_layers] =
-              (spatial_layer_target*6)/10;  // 60%
+              (spatial_layer_target * 6) / 10;  // 60%
           enc_cfg->layer_target_bitrate[sl * svc_ctx->temporal_layers + 1] =
-              (spatial_layer_target*8)/10;  // 80%
+              (spatial_layer_target * 8) / 10;  // 80%
           enc_cfg->layer_target_bitrate[sl * svc_ctx->temporal_layers + 2] =
               spatial_layer_target;
         } else if (svc_ctx->temporal_layering_mode == 2 ||
@@ -352,14 +354,17 @@ void assign_layer_bitrates(const SvcContext *svc_ctx,
     }
   } else {
     if (si->bitrates[0] != 0) {
-      enc_cfg->rc_target_bitrate = 0;
+      unsigned int total_bitrate = 0;
       for (i = 0; i < svc_ctx->spatial_layers; ++i) {
         enc_cfg->ss_target_bitrate[i] = (unsigned int)si->bitrates[i];
-        enc_cfg->rc_target_bitrate += si->bitrates[i];
+        enc_cfg->layer_target_bitrate[i] = (unsigned int)si->bitrates[i];
+        total_bitrate += si->bitrates[i];
       }
+      if (total_bitrate != enc_cfg->rc_target_bitrate)
+        return VPX_CODEC_INVALID_PARAM;
     } else {
       float total = 0;
-      float alloc_ratio[VPX_MAX_LAYERS] = {0};
+      float alloc_ratio[VPX_MAX_LAYERS] = { 0 };
 
       for (i = 0; i < svc_ctx->spatial_layers; ++i) {
         if (si->svc_params.scaling_factor_den[i] > 0) {
@@ -372,19 +377,21 @@ void assign_layer_bitrates(const SvcContext *svc_ctx,
       }
       for (i = 0; i < VPX_SS_MAX_LAYERS; ++i) {
         if (total > 0) {
-          enc_cfg->layer_target_bitrate[i] = (unsigned int)
-              (enc_cfg->rc_target_bitrate * alloc_ratio[i] / total);
+          enc_cfg->layer_target_bitrate[i] =
+              (unsigned int)(enc_cfg->rc_target_bitrate * alloc_ratio[i] /
+                             total);
         }
       }
     }
   }
+  return VPX_CODEC_OK;
 }
 
 vpx_codec_err_t vpx_svc_init(SvcContext *svc_ctx, vpx_codec_ctx_t *codec_ctx,
                              vpx_codec_iface_t *iface,
                              vpx_codec_enc_cfg_t *enc_cfg) {
   vpx_codec_err_t res;
-  int i, sl , tl;
+  int i, sl, tl;
   SvcInternal_t *const si = get_svc_internal(svc_ctx);
   if (svc_ctx == NULL || codec_ctx == NULL || iface == NULL ||
       enc_cfg == NULL) {
@@ -420,12 +427,26 @@ vpx_codec_err_t vpx_svc_init(SvcContext *svc_ctx, vpx_codec_ctx_t *codec_ctx,
   for (sl = 0; sl < VPX_SS_MAX_LAYERS; ++sl) {
     si->svc_params.scaling_factor_num[sl] = DEFAULT_SCALE_FACTORS_NUM[sl];
     si->svc_params.scaling_factor_den[sl] = DEFAULT_SCALE_FACTORS_DEN[sl];
+    si->svc_params.speed_per_layer[sl] = svc_ctx->speed;
+  }
+  if (enc_cfg->rc_end_usage == VPX_CBR && enc_cfg->g_pass == VPX_RC_ONE_PASS &&
+      svc_ctx->spatial_layers <= 3) {
+    for (sl = 0; sl < svc_ctx->spatial_layers; ++sl) {
+      int sl2 = (svc_ctx->spatial_layers == 2) ? sl + 1 : sl;
+      si->svc_params.scaling_factor_num[sl] = DEFAULT_SCALE_FACTORS_NUM_2x[sl2];
+      si->svc_params.scaling_factor_den[sl] = DEFAULT_SCALE_FACTORS_DEN_2x[sl2];
+    }
   }
   for (tl = 0; tl < svc_ctx->temporal_layers; ++tl) {
     for (sl = 0; sl < svc_ctx->spatial_layers; ++sl) {
       i = sl * svc_ctx->temporal_layers + tl;
       si->svc_params.max_quantizers[i] = MAX_QUANTIZER;
       si->svc_params.min_quantizers[i] = 0;
+      if (enc_cfg->rc_end_usage == VPX_CBR &&
+          enc_cfg->g_pass == VPX_RC_ONE_PASS) {
+        si->svc_params.max_quantizers[i] = 56;
+        si->svc_params.min_quantizers[i] = 2;
+      }
     }
   }
 
@@ -434,25 +455,31 @@ vpx_codec_err_t vpx_svc_init(SvcContext *svc_ctx, vpx_codec_ctx_t *codec_ctx,
   res = parse_options(svc_ctx, si->options);
   if (res != VPX_CODEC_OK) return res;
 
-  if (svc_ctx->spatial_layers < 1)
-    svc_ctx->spatial_layers = 1;
+  if (svc_ctx->spatial_layers < 1) svc_ctx->spatial_layers = 1;
   if (svc_ctx->spatial_layers > VPX_SS_MAX_LAYERS)
     svc_ctx->spatial_layers = VPX_SS_MAX_LAYERS;
 
-  if (svc_ctx->temporal_layers < 1)
-    svc_ctx->temporal_layers = 1;
+  if (svc_ctx->temporal_layers < 1) svc_ctx->temporal_layers = 1;
   if (svc_ctx->temporal_layers > VPX_TS_MAX_LAYERS)
     svc_ctx->temporal_layers = VPX_TS_MAX_LAYERS;
 
   if (svc_ctx->temporal_layers * svc_ctx->spatial_layers > VPX_MAX_LAYERS) {
-      svc_log(svc_ctx, SVC_LOG_ERROR,
-          "spatial layers * temporal layers exceeds the maximum number of "
-          "allowed layers of %d\n",
-          svc_ctx->spatial_layers * svc_ctx->temporal_layers,
-          (int) VPX_MAX_LAYERS);
-      return VPX_CODEC_INVALID_PARAM;
+    svc_log(svc_ctx, SVC_LOG_ERROR,
+            "spatial layers * temporal layers exceeds the maximum number of "
+            "allowed layers of %d\n",
+            svc_ctx->spatial_layers * svc_ctx->temporal_layers,
+            (int)VPX_MAX_LAYERS);
+    return VPX_CODEC_INVALID_PARAM;
   }
-  assign_layer_bitrates(svc_ctx, enc_cfg);
+  res = assign_layer_bitrates(svc_ctx, enc_cfg);
+  if (res != VPX_CODEC_OK) {
+    svc_log(svc_ctx, SVC_LOG_ERROR,
+            "layer bitrates incorrect: \n"
+            "1) spatial layer bitrates should sum up to target \n"
+            "2) temporal layer bitrates should be increasing within \n"
+            "a spatial layer \n");
+    return VPX_CODEC_INVALID_PARAM;
+  }
 
 #if CONFIG_SPATIAL_SVC
   for (i = 0; i < svc_ctx->spatial_layers; ++i)
@@ -462,14 +489,13 @@ vpx_codec_err_t vpx_svc_init(SvcContext *svc_ctx, vpx_codec_ctx_t *codec_ctx,
   if (svc_ctx->temporal_layers > 1) {
     int i;
     for (i = 0; i < svc_ctx->temporal_layers; ++i) {
-      enc_cfg->ts_target_bitrate[i] = enc_cfg->rc_target_bitrate /
-                                      svc_ctx->temporal_layers;
+      enc_cfg->ts_target_bitrate[i] =
+          enc_cfg->rc_target_bitrate / svc_ctx->temporal_layers;
       enc_cfg->ts_rate_decimator[i] = 1 << (svc_ctx->temporal_layers - 1 - i);
     }
   }
 
-  if (svc_ctx->threads)
-    enc_cfg->g_threads = svc_ctx->threads;
+  if (svc_ctx->threads) enc_cfg->g_threads = svc_ctx->threads;
 
   // Modify encoder configuration
   enc_cfg->ss_number_layers = svc_ctx->spatial_layers;
@@ -507,10 +533,8 @@ vpx_codec_err_t vpx_svc_init(SvcContext *svc_ctx, vpx_codec_ctx_t *codec_ctx,
  * Encode a frame into multiple layers
  * Create a superframe containing the individual layers
  */
-vpx_codec_err_t vpx_svc_encode(SvcContext *svc_ctx,
-                               vpx_codec_ctx_t *codec_ctx,
-                               struct vpx_image *rawimg,
-                               vpx_codec_pts_t pts,
+vpx_codec_err_t vpx_svc_encode(SvcContext *svc_ctx, vpx_codec_ctx_t *codec_ctx,
+                               struct vpx_image *rawimg, vpx_codec_pts_t pts,
                                int64_t duration, int deadline) {
   vpx_codec_err_t res;
   vpx_codec_iter_t iter;
@@ -522,8 +546,8 @@ vpx_codec_err_t vpx_svc_encode(SvcContext *svc_ctx,
 
   svc_log_reset(svc_ctx);
 
-  res = vpx_codec_encode(codec_ctx, rawimg, pts, (uint32_t)duration, 0,
-                         deadline);
+  res =
+      vpx_codec_encode(codec_ctx, rawimg, pts, (uint32_t)duration, 0, deadline);
   if (res != VPX_CODEC_OK) {
     return res;
   }
@@ -540,23 +564,20 @@ vpx_codec_err_t vpx_svc_encode(SvcContext *svc_ctx,
           svc_log(svc_ctx, SVC_LOG_DEBUG,
                   "SVC frame: %d, layer: %d, PSNR(Total/Y/U/V): "
                   "%2.3f  %2.3f  %2.3f  %2.3f \n",
-                  si->psnr_pkt_received, i,
-                  cx_pkt->data.layer_psnr[i].psnr[0],
+                  si->psnr_pkt_received, i, cx_pkt->data.layer_psnr[i].psnr[0],
                   cx_pkt->data.layer_psnr[i].psnr[1],
                   cx_pkt->data.layer_psnr[i].psnr[2],
                   cx_pkt->data.layer_psnr[i].psnr[3]);
           svc_log(svc_ctx, SVC_LOG_DEBUG,
                   "SVC frame: %d, layer: %d, SSE(Total/Y/U/V): "
                   "%2.3f  %2.3f  %2.3f  %2.3f \n",
-                  si->psnr_pkt_received, i,
-                  cx_pkt->data.layer_psnr[i].sse[0],
+                  si->psnr_pkt_received, i, cx_pkt->data.layer_psnr[i].sse[0],
                   cx_pkt->data.layer_psnr[i].sse[1],
                   cx_pkt->data.layer_psnr[i].sse[2],
                   cx_pkt->data.layer_psnr[i].sse[3]);
 
           for (j = 0; j < COMPONENTS; ++j) {
-            si->psnr_sum[i][j] +=
-                cx_pkt->data.layer_psnr[i].psnr[j];
+            si->psnr_sum[i][j] += cx_pkt->data.layer_psnr[i].psnr[j];
             si->sse_sum[i][j] += cx_pkt->data.layer_psnr[i].sse[j];
           }
         }
@@ -571,30 +592,25 @@ vpx_codec_err_t vpx_svc_encode(SvcContext *svc_ctx,
       }
 #endif
 #endif
-      case VPX_CODEC_PSNR_PKT:
-      {
+      case VPX_CODEC_PSNR_PKT: {
 #if VPX_ENCODER_ABI_VERSION > (5 + VPX_CODEC_ABI_VERSION)
         int j;
         svc_log(svc_ctx, SVC_LOG_DEBUG,
                 "frame: %d, layer: %d, PSNR(Total/Y/U/V): "
                 "%2.3f  %2.3f  %2.3f  %2.3f \n",
-                si->psnr_pkt_received, 0,
-                cx_pkt->data.layer_psnr[0].psnr[0],
+                si->psnr_pkt_received, 0, cx_pkt->data.layer_psnr[0].psnr[0],
                 cx_pkt->data.layer_psnr[0].psnr[1],
                 cx_pkt->data.layer_psnr[0].psnr[2],
                 cx_pkt->data.layer_psnr[0].psnr[3]);
         for (j = 0; j < COMPONENTS; ++j) {
-          si->psnr_sum[0][j] +=
-              cx_pkt->data.layer_psnr[0].psnr[j];
+          si->psnr_sum[0][j] += cx_pkt->data.layer_psnr[0].psnr[j];
           si->sse_sum[0][j] += cx_pkt->data.layer_psnr[0].sse[j];
         }
 #endif
       }
-      ++si->psnr_pkt_received;
-      break;
-      default: {
+        ++si->psnr_pkt_received;
         break;
-      }
+      default: { break; }
     }
   }
 
@@ -632,7 +648,6 @@ const char *vpx_svc_dump_statistics(SvcContext *svc_ctx) {
 
   svc_log(svc_ctx, SVC_LOG_INFO, "\n");
   for (i = 0; i < svc_ctx->spatial_layers; ++i) {
-
     svc_log(svc_ctx, SVC_LOG_INFO,
             "Layer %d Average PSNR=[%2.3f, %2.3f, %2.3f, %2.3f], Bytes=[%u]\n",
             i, (double)si->psnr_sum[i][0] / number_of_frames,
@@ -683,4 +698,3 @@ void vpx_svc_release(SvcContext *svc_ctx) {
     svc_ctx->internal = NULL;
   }
 }
-

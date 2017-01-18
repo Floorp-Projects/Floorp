@@ -21,15 +21,13 @@ namespace {
 
 const int kMaxPsnr = 100;
 
-class LosslessTest : public ::libvpx_test::EncoderTest,
-    public ::libvpx_test::CodecTestWithParam<libvpx_test::TestMode> {
+class LosslessTest
+    : public ::libvpx_test::EncoderTest,
+      public ::libvpx_test::CodecTestWithParam<libvpx_test::TestMode> {
  protected:
   LosslessTest()
-      : EncoderTest(GET_PARAM(0)),
-        psnr_(kMaxPsnr),
-        nframes_(0),
-        encoding_mode_(GET_PARAM(1)) {
-  }
+      : EncoderTest(GET_PARAM(0)), psnr_(kMaxPsnr), nframes_(0),
+        encoding_mode_(GET_PARAM(1)) {}
 
   virtual ~LosslessTest() {}
 
@@ -55,13 +53,10 @@ class LosslessTest : public ::libvpx_test::EncoderTest,
   }
 
   virtual void PSNRPktHook(const vpx_codec_cx_pkt_t *pkt) {
-    if (pkt->data.psnr.psnr[0] < psnr_)
-      psnr_= pkt->data.psnr.psnr[0];
+    if (pkt->data.psnr.psnr[0] < psnr_) psnr_ = pkt->data.psnr.psnr[0];
   }
 
-  double GetMinPsnr() const {
-      return psnr_;
-  }
+  double GetMinPsnr() const { return psnr_; }
 
  private:
   double psnr_;

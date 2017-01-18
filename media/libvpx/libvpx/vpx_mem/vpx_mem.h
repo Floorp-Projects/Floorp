@@ -8,13 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 #ifndef VPX_MEM_VPX_MEM_H_
 #define VPX_MEM_VPX_MEM_H_
 
 #include "vpx_config.h"
 #if defined(__uClinux__)
-# include <lddk.h>
+#include <lddk.h>
 #endif
 
 #include <stdlib.h>
@@ -24,20 +23,19 @@
 extern "C" {
 #endif
 
-  void *vpx_memalign(size_t align, size_t size);
-  void *vpx_malloc(size_t size);
-  void *vpx_calloc(size_t num, size_t size);
-  void *vpx_realloc(void *memblk, size_t size);
-  void vpx_free(void *memblk);
+void *vpx_memalign(size_t align, size_t size);
+void *vpx_malloc(size_t size);
+void *vpx_calloc(size_t num, size_t size);
+void vpx_free(void *memblk);
 
 #if CONFIG_VP9_HIGHBITDEPTH
-  void *vpx_memset16(void *dest, int val, size_t length);
+void *vpx_memset16(void *dest, int val, size_t length);
 #endif
 
 #include <string.h>
 
 #ifdef VPX_MEM_PLTFRM
-# include VPX_MEM_PLTFRM
+#include VPX_MEM_PLTFRM
 #endif
 
 #if defined(__cplusplus)

@@ -20,19 +20,17 @@
  * Still in the public domain.
  */
 
-#include <string.h>   /* for memcpy() */
+#include <string.h> /* for memcpy() */
 
 #include "md5_utils.h"
 
-static void
-byteSwap(UWORD32 *buf, unsigned words) {
+static void byteSwap(UWORD32 *buf, unsigned words) {
   md5byte *p;
 
   /* Only swap bytes for big endian machines */
   int i = 1;
 
-  if (*(char *)&i == 1)
-    return;
+  if (*(char *)&i == 1) return;
 
   p = (md5byte *)buf;
 
@@ -47,8 +45,7 @@ byteSwap(UWORD32 *buf, unsigned words) {
  * Start MD5 accumulation.  Set bit count to 0 and buffer to mysterious
  * initialization constants.
  */
-void
-MD5Init(struct MD5Context *ctx) {
+void MD5Init(struct MD5Context *ctx) {
   ctx->buf[0] = 0x67452301;
   ctx->buf[1] = 0xefcdab89;
   ctx->buf[2] = 0x98badcfe;
@@ -62,8 +59,7 @@ MD5Init(struct MD5Context *ctx) {
  * Update context to reflect the concatenation of another buffer full
  * of bytes.
  */
-void
-MD5Update(struct MD5Context *ctx, md5byte const *buf, unsigned len) {
+void MD5Update(struct MD5Context *ctx, md5byte const *buf, unsigned len) {
   UWORD32 t;
 
   /* Update byte count */
@@ -71,9 +67,9 @@ MD5Update(struct MD5Context *ctx, md5byte const *buf, unsigned len) {
   t = ctx->bytes[0];
 
   if ((ctx->bytes[0] = t + len) < t)
-    ctx->bytes[1]++;  /* Carry from low to high */
+    ctx->bytes[1]++; /* Carry from low to high */
 
-  t = 64 - (t & 0x3f);  /* Space available in ctx->in (at least 1) */
+  t = 64 - (t & 0x3f); /* Space available in ctx->in (at least 1) */
 
   if (t > len) {
     memcpy((md5byte *)ctx->in + 64 - t, buf, len);
@@ -104,8 +100,7 @@ MD5Update(struct MD5Context *ctx, md5byte const *buf, unsigned len) {
  * Final wrapup - pad to 64-byte boundary with the bit pattern
  * 1 0* (64-bit count of bits processed, MSB-first)
  */
-void
-MD5Final(md5byte digest[16], struct MD5Context *ctx) {
+void MD5Final(md5byte digest[16], struct MD5Context *ctx) {
   int count = ctx->bytes[0] & 0x3f; /* Number of bytes in ctx->in */
   md5byte *p = (md5byte *)ctx->in + count;
 
@@ -115,7 +110,7 @@ MD5Final(md5byte digest[16], struct MD5Context *ctx) {
   /* Bytes of padding needed to make 56 bytes (-8..55) */
   count = 56 - 1 - count;
 
-  if (count < 0) {  /* Padding forces an extra block */
+  if (count < 0) { /* Padding forces an extra block */
     memset(p, 0, count + 8);
     byteSwap(ctx->in, 16);
     MD5Transform(ctx->buf, ctx->in);
@@ -147,8 +142,8 @@ MD5Final(md5byte digest[16], struct MD5Context *ctx) {
 #define F4(x, y, z) (y ^ (x | ~z))
 
 /* This is the central step in the MD5 algorithm. */
-#define MD5STEP(f,w,x,y,z,in,s) \
-  (w += f(x,y,z) + in, w = (w<<s | w>>(32-s)) + x)
+#define MD5STEP(f, w, x, y, z, in, s) \
+  (w += f(x, y, z) + in, w = (w << s | w >> (32 - s)) + x)
 
 #if defined(__clang__) && defined(__has_attribute)
 #if __has_attribute(no_sanitize)
@@ -166,8 +161,8 @@ MD5Final(md5byte digest[16], struct MD5Context *ctx) {
  * reflect the addition of 16 longwords of new data.  MD5Update blocks
  * the data and converts bytes into longwords for this routine.
  */
-VPX_NO_UNSIGNED_OVERFLOW_CHECK void
-MD5Transform(UWORD32 buf[4], UWORD32 const in[16]) {
+VPX_NO_UNSIGNED_OVERFLOW_CHECK void MD5Transform(UWORD32 buf[4],
+                                                 UWORD32 const in[16]) {
   register UWORD32 a, b, c, d;
 
   a = buf[0];

@@ -2227,6 +2227,13 @@ nsMenuPopupFrame::AttributeChanged(int32_t aNameSpaceID,
         }
       }
     }
+  } else if (aAttribute == nsGkAtoms::ignorekeys) {
+    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+    if (pm) {
+      nsAutoString ignorekeys;
+      mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::ignorekeys, ignorekeys);
+      pm->UpdateIgnoreKeys(ignorekeys.EqualsLiteral("true"));
+    }
   }
 
   return rv;

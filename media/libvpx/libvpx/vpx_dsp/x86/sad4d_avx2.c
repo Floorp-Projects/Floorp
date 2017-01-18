@@ -11,10 +11,8 @@
 #include "./vpx_dsp_rtcd.h"
 #include "vpx/vpx_integer.h"
 
-void vpx_sad32x32x4d_avx2(const uint8_t *src,
-                          int src_stride,
-                          const uint8_t *const ref[4],
-                          int ref_stride,
+void vpx_sad32x32x4d_avx2(const uint8_t *src, int src_stride,
+                          const uint8_t *const ref[4], int ref_stride,
                           uint32_t res[4]) {
   __m256i src_reg, ref0_reg, ref1_reg, ref2_reg, ref3_reg;
   __m256i sum_ref0, sum_ref1, sum_ref2, sum_ref3;
@@ -30,7 +28,7 @@ void vpx_sad32x32x4d_avx2(const uint8_t *src,
   sum_ref1 = _mm256_set1_epi16(0);
   sum_ref2 = _mm256_set1_epi16(0);
   sum_ref3 = _mm256_set1_epi16(0);
-  for (i = 0; i < 32 ; i++) {
+  for (i = 0; i < 32; i++) {
     // load src and all refs
     src_reg = _mm256_loadu_si256((const __m256i *)src);
     ref0_reg = _mm256_loadu_si256((const __m256i *)ref0);
@@ -48,11 +46,11 @@ void vpx_sad32x32x4d_avx2(const uint8_t *src,
     sum_ref2 = _mm256_add_epi32(sum_ref2, ref2_reg);
     sum_ref3 = _mm256_add_epi32(sum_ref3, ref3_reg);
 
-    src+= src_stride;
-    ref0+= ref_stride;
-    ref1+= ref_stride;
-    ref2+= ref_stride;
-    ref3+= ref_stride;
+    src += src_stride;
+    ref0 += ref_stride;
+    ref1 += ref_stride;
+    ref2 += ref_stride;
+    ref3 += ref_stride;
   }
   {
     __m128i sum;
@@ -81,10 +79,8 @@ void vpx_sad32x32x4d_avx2(const uint8_t *src,
   }
 }
 
-void vpx_sad64x64x4d_avx2(const uint8_t *src,
-                          int src_stride,
-                          const uint8_t *const ref[4],
-                          int ref_stride,
+void vpx_sad64x64x4d_avx2(const uint8_t *src, int src_stride,
+                          const uint8_t *const ref[4], int ref_stride,
                           uint32_t res[4]) {
   __m256i src_reg, srcnext_reg, ref0_reg, ref0next_reg;
   __m256i ref1_reg, ref1next_reg, ref2_reg, ref2next_reg;
@@ -102,7 +98,7 @@ void vpx_sad64x64x4d_avx2(const uint8_t *src,
   sum_ref1 = _mm256_set1_epi16(0);
   sum_ref2 = _mm256_set1_epi16(0);
   sum_ref3 = _mm256_set1_epi16(0);
-  for (i = 0; i < 64 ; i++) {
+  for (i = 0; i < 64; i++) {
     // load 64 bytes from src and all refs
     src_reg = _mm256_loadu_si256((const __m256i *)src);
     srcnext_reg = _mm256_loadu_si256((const __m256i *)(src + 32));
@@ -133,11 +129,11 @@ void vpx_sad64x64x4d_avx2(const uint8_t *src,
     sum_ref1 = _mm256_add_epi32(sum_ref1, ref1next_reg);
     sum_ref2 = _mm256_add_epi32(sum_ref2, ref2next_reg);
     sum_ref3 = _mm256_add_epi32(sum_ref3, ref3next_reg);
-    src+= src_stride;
-    ref0+= ref_stride;
-    ref1+= ref_stride;
-    ref2+= ref_stride;
-    ref3+= ref_stride;
+    src += src_stride;
+    ref0 += ref_stride;
+    ref1 += ref_stride;
+    ref2 += ref_stride;
+    ref3 += ref_stride;
   }
   {
     __m128i sum;

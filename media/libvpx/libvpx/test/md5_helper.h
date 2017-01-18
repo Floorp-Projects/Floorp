@@ -17,9 +17,7 @@
 namespace libvpx_test {
 class MD5 {
  public:
-  MD5() {
-    MD5Init(&md5_);
-  }
+  MD5() { MD5Init(&md5_); }
 
   void Add(const vpx_image_t *img) {
     for (int plane = 0; plane < 3; ++plane) {
@@ -30,10 +28,13 @@ class MD5 {
       // This works only for chroma_shift of 0 and 1.
       const int bytes_per_sample =
           (img->fmt & VPX_IMG_FMT_HIGHBITDEPTH) ? 2 : 1;
-      const int h = plane ? (img->d_h + img->y_chroma_shift) >>
-                    img->y_chroma_shift : img->d_h;
-      const int w = (plane ? (img->d_w + img->x_chroma_shift) >>
-                     img->x_chroma_shift : img->d_w) * bytes_per_sample;
+      const int h =
+          plane ? (img->d_h + img->y_chroma_shift) >> img->y_chroma_shift
+                : img->d_h;
+      const int w =
+          (plane ? (img->d_w + img->x_chroma_shift) >> img->x_chroma_shift
+                 : img->d_w) *
+          bytes_per_sample;
 
       for (int y = 0; y < h; ++y) {
         MD5Update(&md5_, buf, w);
@@ -56,8 +57,8 @@ class MD5 {
 
     MD5Final(tmp, &ctx_tmp);
     for (int i = 0; i < 16; i++) {
-      res_[i * 2 + 0]  = hex[tmp[i] >> 4];
-      res_[i * 2 + 1]  = hex[tmp[i] & 0xf];
+      res_[i * 2 + 0] = hex[tmp[i] >> 4];
+      res_[i * 2 + 1] = hex[tmp[i] & 0xf];
     }
     res_[32] = 0;
 

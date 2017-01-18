@@ -717,7 +717,6 @@ WrapperOwner::hasInstance(JSContext* cx, HandleObject proxy, MutableHandleValue 
         return false;
 
     ReturnStatus status;
-    JSVariant result;
     if (!SendHasInstance(objId, vVar, &status, bp))
         return ipcfail(cx);
 

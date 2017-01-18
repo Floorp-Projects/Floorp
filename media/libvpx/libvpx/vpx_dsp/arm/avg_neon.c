@@ -198,27 +198,24 @@ int vpx_vector_var_neon(int16_t const *ref, int16_t const *src, const int bwl) {
   }
 }
 
-void vpx_minmax_8x8_neon(const uint8_t *a, int a_stride,
-                         const uint8_t *b, int b_stride,
-                         int *min, int *max) {
+void vpx_minmax_8x8_neon(const uint8_t *a, int a_stride, const uint8_t *b,
+                         int b_stride, int *min, int *max) {
   // Load and concatenate.
-  const uint8x16_t a01 = vcombine_u8(vld1_u8(a),
-                                     vld1_u8(a + a_stride));
-  const uint8x16_t a23 = vcombine_u8(vld1_u8(a + 2 * a_stride),
-                                     vld1_u8(a + 3 * a_stride));
-  const uint8x16_t a45 = vcombine_u8(vld1_u8(a + 4 * a_stride),
-                                     vld1_u8(a + 5 * a_stride));
-  const uint8x16_t a67 = vcombine_u8(vld1_u8(a + 6 * a_stride),
-                                     vld1_u8(a + 7 * a_stride));
+  const uint8x16_t a01 = vcombine_u8(vld1_u8(a), vld1_u8(a + a_stride));
+  const uint8x16_t a23 =
+      vcombine_u8(vld1_u8(a + 2 * a_stride), vld1_u8(a + 3 * a_stride));
+  const uint8x16_t a45 =
+      vcombine_u8(vld1_u8(a + 4 * a_stride), vld1_u8(a + 5 * a_stride));
+  const uint8x16_t a67 =
+      vcombine_u8(vld1_u8(a + 6 * a_stride), vld1_u8(a + 7 * a_stride));
 
-  const uint8x16_t b01 = vcombine_u8(vld1_u8(b),
-                                     vld1_u8(b + b_stride));
-  const uint8x16_t b23 = vcombine_u8(vld1_u8(b + 2 * b_stride),
-                                     vld1_u8(b + 3 * b_stride));
-  const uint8x16_t b45 = vcombine_u8(vld1_u8(b + 4 * b_stride),
-                                     vld1_u8(b + 5 * b_stride));
-  const uint8x16_t b67 = vcombine_u8(vld1_u8(b + 6 * b_stride),
-                                     vld1_u8(b + 7 * b_stride));
+  const uint8x16_t b01 = vcombine_u8(vld1_u8(b), vld1_u8(b + b_stride));
+  const uint8x16_t b23 =
+      vcombine_u8(vld1_u8(b + 2 * b_stride), vld1_u8(b + 3 * b_stride));
+  const uint8x16_t b45 =
+      vcombine_u8(vld1_u8(b + 4 * b_stride), vld1_u8(b + 5 * b_stride));
+  const uint8x16_t b67 =
+      vcombine_u8(vld1_u8(b + 6 * b_stride), vld1_u8(b + 7 * b_stride));
 
   // Absolute difference.
   const uint8x16_t ab01_diff = vabdq_u8(a01, b01);

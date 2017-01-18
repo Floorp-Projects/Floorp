@@ -40,6 +40,7 @@ vpx_tsvc_encoder() {
   local timebase_den="1000"
   local speed="6"
   local frame_drop_thresh="30"
+  local max_threads="4"
 
   shift 2
 
@@ -48,11 +49,14 @@ vpx_tsvc_encoder() {
     return 1
   fi
 
-  eval "${VPX_TEST_PREFIX}" "${encoder}" "${YUV_RAW_INPUT}" "${output_file}" \
-      "${codec}" "${YUV_RAW_INPUT_WIDTH}" "${YUV_RAW_INPUT_HEIGHT}" \
-      "${timebase_num}" "${timebase_den}" "${speed}" "${frame_drop_thresh}" \
-      "$@" \
-      ${devnull}
+  # TODO(tomfinegan): Verify file output for all thread runs.
+  for threads in $(seq $max_threads); do
+    eval "${VPX_TEST_PREFIX}" "${encoder}" "${YUV_RAW_INPUT}" "${output_file}" \
+        "${codec}" "${YUV_RAW_INPUT_WIDTH}" "${YUV_RAW_INPUT_HEIGHT}" \
+        "${timebase_num}" "${timebase_den}" "${speed}" "${frame_drop_thresh}" \
+        "${threads}" "$@" \
+        ${devnull}
+  done
 }
 
 # Confirms that all expected output files exist given the output file name

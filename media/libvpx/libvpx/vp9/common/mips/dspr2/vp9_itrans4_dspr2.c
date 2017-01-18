@@ -21,8 +21,8 @@
 #include "vpx_ports/mem.h"
 
 #if HAVE_DSPR2
-void vp9_iht4x4_16_add_dspr2(const int16_t *input, uint8_t *dest,
-                             int dest_stride, int tx_type) {
+void vp9_iht4x4_16_add_dspr2(const int16_t *input, uint8_t *dest, int stride,
+                             int tx_type) {
   int i, j;
   DECLARE_ALIGNED(32, int16_t, out[4 * 4]);
   int16_t *outptr = out;
@@ -30,16 +30,14 @@ void vp9_iht4x4_16_add_dspr2(const int16_t *input, uint8_t *dest,
   uint32_t pos = 45;
 
   /* bit positon for extract from acc */
-  __asm__ __volatile__ (
-    "wrdsp      %[pos],     1           \n\t"
-    :
-    : [pos] "r" (pos)
-  );
+  __asm__ __volatile__("wrdsp      %[pos],     1           \n\t"
+                       :
+                       : [pos] "r"(pos));
 
   switch (tx_type) {
-    case DCT_DCT:   // DCT in both horizontal and vertical
+    case DCT_DCT:  // DCT in both horizontal and vertical
       vpx_idct4_rows_dspr2(input, outptr);
-      vpx_idct4_columns_add_blk_dspr2(&out[0], dest, dest_stride);
+      vpx_idct4_columns_add_blk_dspr2(&out[0], dest, stride);
       break;
     case ADST_DCT:  // ADST in vertical, DCT in horizontal
       vpx_idct4_rows_dspr2(input, outptr);
@@ -50,9 +48,8 @@ void vp9_iht4x4_16_add_dspr2(const int16_t *input, uint8_t *dest,
         iadst4_dspr2(outptr, temp_out);
 
         for (j = 0; j < 4; ++j)
-          dest[j * dest_stride + i] =
-                    clip_pixel(ROUND_POWER_OF_TWO(temp_out[j], 4)
-                                      + dest[j * dest_stride + i]);
+          dest[j * stride + i] = clip_pixel(ROUND_POWER_OF_TWO(temp_out[j], 4) +
+                                            dest[j * stride + i]);
 
         outptr += 4;
       }
@@ -60,7 +57,7 @@ void vp9_iht4x4_16_add_dspr2(const int16_t *input, uint8_t *dest,
     case DCT_ADST:  // DCT in vertical, ADST in horizontal
       for (i = 0; i < 4; ++i) {
         iadst4_dspr2(input, outptr);
-        input  += 4;
+        input += 4;
         outptr += 4;
       }
 
@@ -69,29 +66,25 @@ void vp9_iht4x4_16_add_dspr2(const int16_t *input, uint8_t *dest,
           temp_in[i * 4 + j] = out[j * 4 + i];
         }
       }
-      vpx_idct4_columns_add_blk_dspr2(&temp_in[0], dest, dest_stride);
+      vpx_idct4_columns_add_blk_dspr2(&temp_in[0], dest, stride);
       break;
     case ADST_ADST:  // ADST in both directions
       for (i = 0; i < 4; ++i) {
         iadst4_dspr2(input, outptr);
-        input  += 4;
+        input += 4;
         outptr += 4;
       }
 
       for (i = 0; i < 4; ++i) {
-        for (j = 0; j < 4; ++j)
-          temp_in[j] = out[j * 4 + i];
+        for (j = 0; j < 4; ++j) temp_in[j] = out[j * 4 + i];
         iadst4_dspr2(temp_in, temp_out);
 
         for (j = 0; j < 4; ++j)
-          dest[j * dest_stride + i] =
-                  clip_pixel(ROUND_POWER_OF_TWO(temp_out[j], 4)
-                                      + dest[j * dest_stride + i]);
+          dest[j * stride + i] = clip_pixel(ROUND_POWER_OF_TWO(temp_out[j], 4) +
+                                            dest[j * stride + i]);
       }
       break;
-    default:
-      printf("vp9_short_iht4x4_add_dspr2 : Invalid tx_type\n");
-      break;
+    default: printf("vp9_short_iht4x4_add_dspr2 : Invalid tx_type\n"); break;
   }
 }
 #endif  // #if HAVE_DSPR2

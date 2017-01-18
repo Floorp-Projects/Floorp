@@ -17,8 +17,9 @@
 
 namespace {
 
-class BordersTest : public ::libvpx_test::EncoderTest,
-    public ::libvpx_test::CodecTestWithParam<libvpx_test::TestMode> {
+class BordersTest
+    : public ::libvpx_test::EncoderTest,
+      public ::libvpx_test::CodecTestWithParam<libvpx_test::TestMode> {
  protected:
   BordersTest() : EncoderTest(GET_PARAM(0)) {}
   virtual ~BordersTest() {}
@@ -78,6 +79,6 @@ TEST_P(BordersTest, TestLowBitrate) {
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
 }
 
-VP9_INSTANTIATE_TEST_CASE(BordersTest, ::testing::Values(
-    ::libvpx_test::kTwoPassGood));
+VP9_INSTANTIATE_TEST_CASE(BordersTest,
+                          ::testing::Values(::libvpx_test::kTwoPassGood));
 }  // namespace

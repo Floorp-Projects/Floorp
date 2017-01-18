@@ -57,7 +57,7 @@ TEST_P(AqSegmentTest, TestNoMisMatchAQ1) {
   aq_mode_ = 1;
 
   ::libvpx_test::I420VideoSource video("hantro_collage_w352h288.yuv", 352, 288,
-                                        30, 1, 0, 100);
+                                       30, 1, 0, 100);
 
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
 }
@@ -77,7 +77,7 @@ TEST_P(AqSegmentTest, TestNoMisMatchAQ2) {
   aq_mode_ = 2;
 
   ::libvpx_test::I420VideoSource video("hantro_collage_w352h288.yuv", 352, 288,
-                                        30, 1, 0, 100);
+                                       30, 1, 0, 100);
 
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
 }
@@ -97,7 +97,7 @@ TEST_P(AqSegmentTest, TestNoMisMatchAQ3) {
   aq_mode_ = 3;
 
   ::libvpx_test::I420VideoSource video("hantro_collage_w352h288.yuv", 352, 288,
-                                        30, 1, 0, 100);
+                                       30, 1, 0, 100);
 
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
 }

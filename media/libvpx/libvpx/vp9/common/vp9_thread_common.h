@@ -47,13 +47,11 @@ void vp9_loop_filter_alloc(VP9LfSync *lf_sync, struct VP9Common *cm, int rows,
 void vp9_loop_filter_dealloc(VP9LfSync *lf_sync);
 
 // Multi-threaded loopfilter that uses the tile threads.
-void vp9_loop_filter_frame_mt(YV12_BUFFER_CONFIG *frame,
-                              struct VP9Common *cm,
+void vp9_loop_filter_frame_mt(YV12_BUFFER_CONFIG *frame, struct VP9Common *cm,
                               struct macroblockd_plane planes[MAX_MB_PLANE],
-                              int frame_filter_level,
-                              int y_only, int partial_frame,
-                              VPxWorker *workers, int num_workers,
-                              VP9LfSync *lf_sync);
+                              int frame_filter_level, int y_only,
+                              int partial_frame, VPxWorker *workers,
+                              int num_workers, VP9LfSync *lf_sync);
 
 void vp9_accumulate_frame_counts(struct FRAME_COUNTS *accum,
                                  const struct FRAME_COUNTS *counts, int is_dec);

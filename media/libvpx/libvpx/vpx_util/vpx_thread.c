@@ -10,11 +10,10 @@
 // Multi-threaded worker
 //
 // Original source:
-//  http://git.chromium.org/webm/libwebp.git
-//  100644 blob 264210ba2807e4da47eb5d18c04cf869d89b9784  src/utils/thread.c
+//  https://chromium.googlesource.com/webm/libwebp
 
 #include <assert.h>
-#include <string.h>   // for memset()
+#include <string.h>  // for memset()
 #include "./vpx_thread.h"
 #include "vpx_mem/vpx_mem.h"
 
@@ -22,8 +21,8 @@
 
 struct VPxWorkerImpl {
   pthread_mutex_t mutex_;
-  pthread_cond_t  condition_;
-  pthread_t       thread_;
+  pthread_cond_t condition_;
+  pthread_t thread_;
 };
 
 //------------------------------------------------------------------------------
@@ -31,29 +30,28 @@ struct VPxWorkerImpl {
 static void execute(VPxWorker *const worker);  // Forward declaration.
 
 static THREADFN thread_loop(void *ptr) {
-  VPxWorker *const worker = (VPxWorker*)ptr;
+  VPxWorker *const worker = (VPxWorker *)ptr;
   int done = 0;
   while (!done) {
     pthread_mutex_lock(&worker->impl_->mutex_);
-    while (worker->status_ == OK) {   // wait in idling mode
+    while (worker->status_ == OK) {  // wait in idling mode
       pthread_cond_wait(&worker->impl_->condition_, &worker->impl_->mutex_);
     }
     if (worker->status_ == WORK) {
       execute(worker);
       worker->status_ = OK;
-    } else if (worker->status_ == NOT_OK) {   // finish the worker
+    } else if (worker->status_ == NOT_OK) {  // finish the worker
       done = 1;
     }
     // signal to the main thread that we're done (for sync())
     pthread_cond_signal(&worker->impl_->condition_);
     pthread_mutex_unlock(&worker->impl_->mutex_);
   }
-  return THREAD_RETURN(NULL);    // Thread is finished
+  return THREAD_RETURN(NULL);  // Thread is finished
 }
 
 // main thread state control
-static void change_state(VPxWorker *const worker,
-                         VPxWorkerStatus new_status) {
+static void change_state(VPxWorker *const worker, VPxWorkerStatus new_status) {
   // No-op when attempting to change state on a thread that didn't come up.
   // Checking status_ without acquiring the lock first would result in a data
   // race.
@@ -96,7 +94,7 @@ static int reset(VPxWorker *const worker) {
   worker->had_error = 0;
   if (worker->status_ < OK) {
 #if CONFIG_MULTITHREAD
-    worker->impl_ = (VPxWorkerImpl*)vpx_calloc(1, sizeof(*worker->impl_));
+    worker->impl_ = (VPxWorkerImpl *)vpx_calloc(1, sizeof(*worker->impl_));
     if (worker->impl_ == NULL) {
       return 0;
     }
@@ -114,7 +112,7 @@ static int reset(VPxWorker *const worker) {
     if (!ok) {
       pthread_mutex_destroy(&worker->impl_->mutex_);
       pthread_cond_destroy(&worker->impl_->condition_);
- Error:
+    Error:
       vpx_free(worker->impl_);
       worker->impl_ = NULL;
       return 0;
@@ -162,15 +160,14 @@ static void end(VPxWorker *const worker) {
 
 //------------------------------------------------------------------------------
 
-static VPxWorkerInterface g_worker_interface = {
-  init, reset, sync, launch, execute, end
-};
+static VPxWorkerInterface g_worker_interface = { init,   reset,   sync,
+                                                 launch, execute, end };
 
-int vpx_set_worker_interface(const VPxWorkerInterface* const winterface) {
-  if (winterface == NULL ||
-      winterface->init == NULL || winterface->reset == NULL ||
-      winterface->sync == NULL || winterface->launch == NULL ||
-      winterface->execute == NULL || winterface->end == NULL) {
+int vpx_set_worker_interface(const VPxWorkerInterface *const winterface) {
+  if (winterface == NULL || winterface->init == NULL ||
+      winterface->reset == NULL || winterface->sync == NULL ||
+      winterface->launch == NULL || winterface->execute == NULL ||
+      winterface->end == NULL) {
     return 0;
   }
   g_worker_interface = *winterface;

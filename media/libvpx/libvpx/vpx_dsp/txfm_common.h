@@ -15,7 +15,7 @@
 
 // Constants and Macros used by all idct/dct functions
 #define DCT_CONST_BITS 14
-#define DCT_CONST_ROUNDING  (1 << (DCT_CONST_BITS - 1))
+#define DCT_CONST_ROUNDING (1 << (DCT_CONST_BITS - 1))
 
 #define UNIT_QUANT_SHIFT 2
 #define UNIT_QUANT_FACTOR (1 << UNIT_QUANT_SHIFT)
@@ -25,15 +25,15 @@
 //    printf("static const int cospi_%d_64 = %.0f;\n", i,
 //           round(16384 * cos(i*M_PI/64)));
 // Note: sin(k*Pi/64) = cos((32-k)*Pi/64)
-static const tran_high_t cospi_1_64  = 16364;
-static const tran_high_t cospi_2_64  = 16305;
-static const tran_high_t cospi_3_64  = 16207;
-static const tran_high_t cospi_4_64  = 16069;
-static const tran_high_t cospi_5_64  = 15893;
-static const tran_high_t cospi_6_64  = 15679;
-static const tran_high_t cospi_7_64  = 15426;
-static const tran_high_t cospi_8_64  = 15137;
-static const tran_high_t cospi_9_64  = 14811;
+static const tran_high_t cospi_1_64 = 16364;
+static const tran_high_t cospi_2_64 = 16305;
+static const tran_high_t cospi_3_64 = 16207;
+static const tran_high_t cospi_4_64 = 16069;
+static const tran_high_t cospi_5_64 = 15893;
+static const tran_high_t cospi_6_64 = 15679;
+static const tran_high_t cospi_7_64 = 15426;
+static const tran_high_t cospi_8_64 = 15137;
+static const tran_high_t cospi_9_64 = 14811;
 static const tran_high_t cospi_10_64 = 14449;
 static const tran_high_t cospi_11_64 = 14053;
 static const tran_high_t cospi_12_64 = 13623;

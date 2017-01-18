@@ -87,7 +87,7 @@ cglobal convolve_%1, 4, 7, 4+AUX_XMM_REGS, src, src_stride, \
   RET
 %endif
 
-.w64
+.w64:
   mov                    r4d, dword hm
 .loop64:
   movu                    m0, [srcq]

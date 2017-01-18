@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 /*!\file
  * \brief Provides the high level interface to wrap encoder algorithms.
  *
@@ -18,17 +17,16 @@
 #include "vpx_config.h"
 #include "vpx/internal/vpx_codec_internal.h"
 
-#define SAVE_STATUS(ctx,var) (ctx?(ctx->err = var):var)
+#define SAVE_STATUS(ctx, var) (ctx ? (ctx->err = var) : var)
 
 static vpx_codec_alg_priv_t *get_alg_priv(vpx_codec_ctx_t *ctx) {
   return (vpx_codec_alg_priv_t *)ctx->priv;
 }
 
-vpx_codec_err_t vpx_codec_enc_init_ver(vpx_codec_ctx_t      *ctx,
-                                       vpx_codec_iface_t    *iface,
+vpx_codec_err_t vpx_codec_enc_init_ver(vpx_codec_ctx_t *ctx,
+                                       vpx_codec_iface_t *iface,
                                        const vpx_codec_enc_cfg_t *cfg,
-                                       vpx_codec_flags_t     flags,
-                                       int                   ver) {
+                                       vpx_codec_flags_t flags, int ver) {
   vpx_codec_err_t res;
 
   if (ver != VPX_ENCODER_ABI_VERSION)
@@ -39,11 +37,10 @@ vpx_codec_err_t vpx_codec_enc_init_ver(vpx_codec_ctx_t      *ctx,
     res = VPX_CODEC_ABI_MISMATCH;
   else if (!(iface->caps & VPX_CODEC_CAP_ENCODER))
     res = VPX_CODEC_INCAPABLE;
-  else if ((flags & VPX_CODEC_USE_PSNR)
-           && !(iface->caps & VPX_CODEC_CAP_PSNR))
+  else if ((flags & VPX_CODEC_USE_PSNR) && !(iface->caps & VPX_CODEC_CAP_PSNR))
     res = VPX_CODEC_INCAPABLE;
-  else if ((flags & VPX_CODEC_USE_OUTPUT_PARTITION)
-           && !(iface->caps & VPX_CODEC_CAP_OUTPUT_PARTITION))
+  else if ((flags & VPX_CODEC_USE_OUTPUT_PARTITION) &&
+           !(iface->caps & VPX_CODEC_CAP_OUTPUT_PARTITION))
     res = VPX_CODEC_INCAPABLE;
   else {
     ctx->iface = iface;
@@ -62,13 +59,9 @@ vpx_codec_err_t vpx_codec_enc_init_ver(vpx_codec_ctx_t      *ctx,
   return SAVE_STATUS(ctx, res);
 }
 
-vpx_codec_err_t vpx_codec_enc_init_multi_ver(vpx_codec_ctx_t      *ctx,
-                                             vpx_codec_iface_t    *iface,
-                                             vpx_codec_enc_cfg_t  *cfg,
-                                             int                   num_enc,
-                                             vpx_codec_flags_t     flags,
-                                             vpx_rational_t       *dsf,
-                                             int                   ver) {
+vpx_codec_err_t vpx_codec_enc_init_multi_ver(
+    vpx_codec_ctx_t *ctx, vpx_codec_iface_t *iface, vpx_codec_enc_cfg_t *cfg,
+    int num_enc, vpx_codec_flags_t flags, vpx_rational_t *dsf, int ver) {
   vpx_codec_err_t res = VPX_CODEC_OK;
 
   if (ver != VPX_ENCODER_ABI_VERSION)
@@ -79,11 +72,10 @@ vpx_codec_err_t vpx_codec_enc_init_multi_ver(vpx_codec_ctx_t      *ctx,
     res = VPX_CODEC_ABI_MISMATCH;
   else if (!(iface->caps & VPX_CODEC_CAP_ENCODER))
     res = VPX_CODEC_INCAPABLE;
-  else if ((flags & VPX_CODEC_USE_PSNR)
-           && !(iface->caps & VPX_CODEC_CAP_PSNR))
+  else if ((flags & VPX_CODEC_USE_PSNR) && !(iface->caps & VPX_CODEC_CAP_PSNR))
     res = VPX_CODEC_INCAPABLE;
-  else if ((flags & VPX_CODEC_USE_OUTPUT_PARTITION)
-           && !(iface->caps & VPX_CODEC_CAP_OUTPUT_PARTITION))
+  else if ((flags & VPX_CODEC_USE_OUTPUT_PARTITION) &&
+           !(iface->caps & VPX_CODEC_CAP_OUTPUT_PARTITION))
     res = VPX_CODEC_INCAPABLE;
   else {
     int i;
@@ -110,8 +102,7 @@ vpx_codec_err_t vpx_codec_enc_init_multi_ver(vpx_codec_ctx_t      *ctx,
          * resolution always use the same frame_type chosen by the
          * lowest-resolution encoder.
          */
-        if (mr_cfg.mr_encoder_id)
-          cfg->kf_mode = VPX_KF_DISABLED;
+        if (mr_cfg.mr_encoder_id) cfg->kf_mode = VPX_KF_DISABLED;
 
         ctx->iface = iface;
         ctx->name = iface->name;
@@ -121,8 +112,7 @@ vpx_codec_err_t vpx_codec_enc_init_multi_ver(vpx_codec_ctx_t      *ctx,
         res = ctx->iface->init(ctx, &mr_cfg);
 
         if (res) {
-          const char *error_detail =
-            ctx->priv ? ctx->priv->err_detail : NULL;
+          const char *error_detail = ctx->priv ? ctx->priv->err_detail : NULL;
           /* Destroy current ctx */
           ctx->err_detail = error_detail;
           vpx_codec_destroy(ctx);
@@ -136,8 +126,7 @@ vpx_codec_err_t vpx_codec_enc_init_multi_ver(vpx_codec_ctx_t      *ctx,
           }
         }
 
-        if (res)
-          break;
+        if (res) break;
 
         ctx++;
         cfg++;
@@ -150,10 +139,9 @@ vpx_codec_err_t vpx_codec_enc_init_multi_ver(vpx_codec_ctx_t      *ctx,
   return SAVE_STATUS(ctx, res);
 }
 
-
-vpx_codec_err_t  vpx_codec_enc_config_default(vpx_codec_iface_t    *iface,
-                                              vpx_codec_enc_cfg_t  *cfg,
-                                              unsigned int          usage) {
+vpx_codec_err_t vpx_codec_enc_config_default(vpx_codec_iface_t *iface,
+                                             vpx_codec_enc_cfg_t *cfg,
+                                             unsigned int usage) {
   vpx_codec_err_t res;
   vpx_codec_enc_cfg_map_t *map;
   int i;
@@ -179,30 +167,28 @@ vpx_codec_err_t  vpx_codec_enc_config_default(vpx_codec_iface_t    *iface,
   return res;
 }
 
-
 #if ARCH_X86 || ARCH_X86_64
 /* On X86, disable the x87 unit's internal 80 bit precision for better
  * consistency with the SSE unit's 64 bit precision.
  */
 #include "vpx_ports/x86.h"
-#define FLOATING_POINT_INIT() do {\
+#define FLOATING_POINT_INIT() \
+  do {                        \
     unsigned short x87_orig_mode = x87_set_double_precision();
-#define FLOATING_POINT_RESTORE() \
-  x87_set_control_word(x87_orig_mode); }while(0)
-
+#define FLOATING_POINT_RESTORE()       \
+  x87_set_control_word(x87_orig_mode); \
+  }                                    \
+  while (0)
 
 #else
 static void FLOATING_POINT_INIT() {}
 static void FLOATING_POINT_RESTORE() {}
 #endif
 
-
-vpx_codec_err_t  vpx_codec_encode(vpx_codec_ctx_t            *ctx,
-                                  const vpx_image_t          *img,
-                                  vpx_codec_pts_t             pts,
-                                  unsigned long               duration,
-                                  vpx_enc_frame_flags_t       flags,
-                                  unsigned long               deadline) {
+vpx_codec_err_t vpx_codec_encode(vpx_codec_ctx_t *ctx, const vpx_image_t *img,
+                                 vpx_codec_pts_t pts, unsigned long duration,
+                                 vpx_enc_frame_flags_t flags,
+                                 unsigned long deadline) {
   vpx_codec_err_t res = VPX_CODEC_OK;
 
   if (!ctx || (img && !duration))
@@ -220,8 +206,8 @@ vpx_codec_err_t  vpx_codec_encode(vpx_codec_ctx_t            *ctx,
     FLOATING_POINT_INIT();
 
     if (num_enc == 1)
-      res = ctx->iface->enc.encode(get_alg_priv(ctx), img, pts,
-                                   duration, flags, deadline);
+      res = ctx->iface->enc.encode(get_alg_priv(ctx), img, pts, duration, flags,
+                                   deadline);
     else {
       /* Multi-resolution encoding:
        * Encode multi-levels in reverse order. For example,
@@ -234,8 +220,8 @@ vpx_codec_err_t  vpx_codec_encode(vpx_codec_ctx_t            *ctx,
       if (img) img += num_enc - 1;
 
       for (i = num_enc - 1; i >= 0; i--) {
-        if ((res = ctx->iface->enc.encode(get_alg_priv(ctx), img, pts,
-                                          duration, flags, deadline)))
+        if ((res = ctx->iface->enc.encode(get_alg_priv(ctx), img, pts, duration,
+                                          flags, deadline)))
           break;
 
         ctx--;
@@ -249,7 +235,6 @@ vpx_codec_err_t  vpx_codec_encode(vpx_codec_ctx_t            *ctx,
 
   return SAVE_STATUS(ctx, res);
 }
-
 
 const vpx_codec_cx_pkt_t *vpx_codec_get_cx_data(vpx_codec_ctx_t *ctx,
                                                 vpx_codec_iter_t *iter) {
@@ -273,18 +258,18 @@ const vpx_codec_cx_pkt_t *vpx_codec_get_cx_data(vpx_codec_ctx_t *ctx,
     vpx_codec_priv_t *const priv = ctx->priv;
     char *const dst_buf = (char *)priv->enc.cx_data_dst_buf.buf;
 
-    if (dst_buf &&
-        pkt->data.raw.buf != dst_buf &&
+    if (dst_buf && pkt->data.raw.buf != dst_buf &&
         pkt->data.raw.sz + priv->enc.cx_data_pad_before +
-            priv->enc.cx_data_pad_after <= priv->enc.cx_data_dst_buf.sz) {
+                priv->enc.cx_data_pad_after <=
+            priv->enc.cx_data_dst_buf.sz) {
       vpx_codec_cx_pkt_t *modified_pkt = &priv->enc.cx_data_pkt;
 
       memcpy(dst_buf + priv->enc.cx_data_pad_before, pkt->data.raw.buf,
              pkt->data.raw.sz);
       *modified_pkt = *pkt;
       modified_pkt->data.raw.buf = dst_buf;
-      modified_pkt->data.raw.sz += priv->enc.cx_data_pad_before +
-                                       priv->enc.cx_data_pad_after;
+      modified_pkt->data.raw.sz +=
+          priv->enc.cx_data_pad_before + priv->enc.cx_data_pad_after;
       pkt = modified_pkt;
     }
 
@@ -297,13 +282,11 @@ const vpx_codec_cx_pkt_t *vpx_codec_get_cx_data(vpx_codec_ctx_t *ctx,
   return pkt;
 }
 
-
-vpx_codec_err_t vpx_codec_set_cx_data_buf(vpx_codec_ctx_t       *ctx,
+vpx_codec_err_t vpx_codec_set_cx_data_buf(vpx_codec_ctx_t *ctx,
                                           const vpx_fixed_buf_t *buf,
-                                          unsigned int           pad_before,
-                                          unsigned int           pad_after) {
-  if (!ctx || !ctx->priv)
-    return VPX_CODEC_INVALID_PARAM;
+                                          unsigned int pad_before,
+                                          unsigned int pad_after) {
+  if (!ctx || !ctx->priv) return VPX_CODEC_INVALID_PARAM;
 
   if (buf) {
     ctx->priv->enc.cx_data_dst_buf = *buf;
@@ -319,8 +302,7 @@ vpx_codec_err_t vpx_codec_set_cx_data_buf(vpx_codec_ctx_t       *ctx,
   return VPX_CODEC_OK;
 }
 
-
-const vpx_image_t *vpx_codec_get_preview_frame(vpx_codec_ctx_t   *ctx) {
+const vpx_image_t *vpx_codec_get_preview_frame(vpx_codec_ctx_t *ctx) {
   vpx_image_t *img = NULL;
 
   if (ctx) {
@@ -337,8 +319,7 @@ const vpx_image_t *vpx_codec_get_preview_frame(vpx_codec_ctx_t   *ctx) {
   return img;
 }
 
-
-vpx_fixed_buf_t *vpx_codec_get_global_headers(vpx_codec_ctx_t   *ctx) {
+vpx_fixed_buf_t *vpx_codec_get_global_headers(vpx_codec_ctx_t *ctx) {
   vpx_fixed_buf_t *buf = NULL;
 
   if (ctx) {
@@ -355,9 +336,8 @@ vpx_fixed_buf_t *vpx_codec_get_global_headers(vpx_codec_ctx_t   *ctx) {
   return buf;
 }
 
-
-vpx_codec_err_t  vpx_codec_enc_config_set(vpx_codec_ctx_t            *ctx,
-                                          const vpx_codec_enc_cfg_t  *cfg) {
+vpx_codec_err_t vpx_codec_enc_config_set(vpx_codec_ctx_t *ctx,
+                                         const vpx_codec_enc_cfg_t *cfg) {
   vpx_codec_err_t res;
 
   if (!ctx || !ctx->iface || !ctx->priv || !cfg)
@@ -370,7 +350,6 @@ vpx_codec_err_t  vpx_codec_enc_config_set(vpx_codec_ctx_t            *ctx,
   return SAVE_STATUS(ctx, res);
 }
 
-
 int vpx_codec_pkt_list_add(struct vpx_codec_pkt_list *list,
                            const struct vpx_codec_cx_pkt *pkt) {
   if (list->cnt < list->max) {
@@ -381,9 +360,8 @@ int vpx_codec_pkt_list_add(struct vpx_codec_pkt_list *list,
   return 1;
 }
 
-
-const vpx_codec_cx_pkt_t *vpx_codec_pkt_list_get(struct vpx_codec_pkt_list *list,
-                                                 vpx_codec_iter_t           *iter) {
+const vpx_codec_cx_pkt_t *vpx_codec_pkt_list_get(
+    struct vpx_codec_pkt_list *list, vpx_codec_iter_t *iter) {
   const vpx_codec_cx_pkt_t *pkt;
 
   if (!(*iter)) {

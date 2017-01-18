@@ -117,7 +117,7 @@ int MkvReader::Read(long long offset, long len, unsigned char* buffer) {
   if (status)
     return -1;  // error
 #else
-  fseek(m_file, offset, SEEK_SET);
+  fseeko(m_file, static_cast<off_t>(offset), SEEK_SET);
 #endif
 
   const size_t size = fread(buffer, 1, len, m_file);

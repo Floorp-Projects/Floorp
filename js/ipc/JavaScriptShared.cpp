@@ -650,16 +650,38 @@ JavaScriptShared::fromObjectOrNullVariant(JSContext* cx, const ObjectOrNullVaria
 CrossProcessCpowHolder::CrossProcessCpowHolder(dom::CPOWManagerGetter* managerGetter,
                                                const InfallibleTArray<CpowEntry>& cpows)
   : js_(nullptr),
-    cpows_(cpows)
+    cpows_(cpows),
+    unwrapped_(false)
 {
     // Only instantiate the CPOW manager if we might need it later.
     if (cpows.Length())
         js_ = managerGetter->GetCPOWManager();
 }
 
+CrossProcessCpowHolder::~CrossProcessCpowHolder()
+{
+    if (cpows_.Length() && !unwrapped_) {
+        // This should only happen if a message manager message
+        // containing CPOWs gets ignored for some reason. We need to
+        // unwrap every incoming CPOW in this process to ensure that
+        // the corresponding part of the CPOW in the other process
+        // will eventually be collected. The scope for this object
+        // doesn't really matter, because it immediately becomes
+        // garbage.
+        AutoJSAPI jsapi;
+        if (!jsapi.Init(xpc::PrivilegedJunkScope()))
+            return;
+        JSContext* cx = jsapi.cx();
+        JS::Rooted<JSObject*> cpows(cx);
+        js_->Unwrap(cx, cpows_, &cpows);
+    }
+}
+
 bool
 CrossProcessCpowHolder::ToObject(JSContext* cx, JS::MutableHandleObject objp)
 {
+    unwrapped_ = true;
+
     if (!cpows_.Length())
         return true;
 

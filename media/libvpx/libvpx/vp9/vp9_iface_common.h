@@ -12,7 +12,7 @@
 
 #include "vpx_ports/mem.h"
 
-static void yuvconfig2image(vpx_image_t *img, const YV12_BUFFER_CONFIG  *yv12,
+static void yuvconfig2image(vpx_image_t *img, const YV12_BUFFER_CONFIG *yv12,
                             void *user_priv) {
   /** vpx_img_wrap() doesn't allow specifying independent strides for
     * the Y, U, and V planes, nor other alignment adjustments that
@@ -61,9 +61,9 @@ static void yuvconfig2image(vpx_image_t *img, const YV12_BUFFER_CONFIG  *yv12,
     // of the image.
     img->fmt = (vpx_img_fmt_t)(img->fmt | VPX_IMG_FMT_HIGHBITDEPTH);
     img->bit_depth = yv12->bit_depth;
-    img->planes[VPX_PLANE_Y] = (uint8_t*)CONVERT_TO_SHORTPTR(yv12->y_buffer);
-    img->planes[VPX_PLANE_U] = (uint8_t*)CONVERT_TO_SHORTPTR(yv12->u_buffer);
-    img->planes[VPX_PLANE_V] = (uint8_t*)CONVERT_TO_SHORTPTR(yv12->v_buffer);
+    img->planes[VPX_PLANE_Y] = (uint8_t *)CONVERT_TO_SHORTPTR(yv12->y_buffer);
+    img->planes[VPX_PLANE_U] = (uint8_t *)CONVERT_TO_SHORTPTR(yv12->u_buffer);
+    img->planes[VPX_PLANE_V] = (uint8_t *)CONVERT_TO_SHORTPTR(yv12->v_buffer);
     img->planes[VPX_PLANE_ALPHA] = NULL;
     img->stride[VPX_PLANE_Y] = 2 * yv12->y_stride;
     img->stride[VPX_PLANE_U] = 2 * yv12->uv_stride;
@@ -84,17 +84,17 @@ static vpx_codec_err_t image2yuvconfig(const vpx_image_t *img,
   yv12->u_buffer = img->planes[VPX_PLANE_U];
   yv12->v_buffer = img->planes[VPX_PLANE_V];
 
-  yv12->y_crop_width  = img->d_w;
+  yv12->y_crop_width = img->d_w;
   yv12->y_crop_height = img->d_h;
-  yv12->render_width  = img->r_w;
+  yv12->render_width = img->r_w;
   yv12->render_height = img->r_h;
-  yv12->y_width  = img->d_w;
+  yv12->y_width = img->d_w;
   yv12->y_height = img->d_h;
 
-  yv12->uv_width = img->x_chroma_shift == 1 ? (1 + yv12->y_width) / 2
-                                            : yv12->y_width;
-  yv12->uv_height = img->y_chroma_shift == 1 ? (1 + yv12->y_height) / 2
-                                             : yv12->y_height;
+  yv12->uv_width =
+      img->x_chroma_shift == 1 ? (1 + yv12->y_width) / 2 : yv12->y_width;
+  yv12->uv_height =
+      img->y_chroma_shift == 1 ? (1 + yv12->y_height) / 2 : yv12->y_height;
   yv12->uv_crop_width = yv12->uv_width;
   yv12->uv_crop_height = yv12->uv_height;
 
@@ -124,13 +124,22 @@ static vpx_codec_err_t image2yuvconfig(const vpx_image_t *img,
   } else {
     yv12->flags = 0;
   }
-  yv12->border  = (yv12->y_stride - img->w) / 2;
+  yv12->border = (yv12->y_stride - img->w) / 2;
 #else
-  yv12->border  = (img->stride[VPX_PLANE_Y] - img->w) / 2;
+  yv12->border = (img->stride[VPX_PLANE_Y] - img->w) / 2;
 #endif  // CONFIG_VP9_HIGHBITDEPTH
   yv12->subsampling_x = img->x_chroma_shift;
   yv12->subsampling_y = img->y_chroma_shift;
   return VPX_CODEC_OK;
 }
 
+static VP9_REFFRAME ref_frame_to_vp9_reframe(vpx_ref_frame_type_t frame) {
+  switch (frame) {
+    case VP8_LAST_FRAME: return VP9_LAST_FLAG;
+    case VP8_GOLD_FRAME: return VP9_GOLD_FLAG;
+    case VP8_ALTR_FRAME: return VP9_ALT_FLAG;
+  }
+  assert(0 && "Invalid Reference Frame");
+  return VP9_LAST_FLAG;
+}
 #endif  // VP9_VP9_IFACE_COMMON_H_

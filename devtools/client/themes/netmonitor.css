@@ -1077,8 +1077,9 @@
   }
 }
 
-/* Overwrite tree-view cell colon and use l10n string instead */
-.treeTable .treeLabelCell::after {
+/* Overwrite tree-view cell colon `:` for security panel and tree section */
+#security-tabpanel .treeTable .treeLabelCell::after,
+.treeTable .tree-section .treeLabelCell::after {
   content: "";
 }
 
@@ -1100,18 +1101,17 @@
   box-shadow: var(--theme-focus-box-shadow-textbox);
 }
 
-.properties-view {
-  /* FIXME: Minus 24px * 2 for toolbox height + panel height
-   * Give a fixed panel container height in order to force tree view scrollable */
+.panel-container {
+  /* FIXME: To avoid the issue which panel exceeds visible range,
+   * we set view heigh - 24px * 2 for toolbox height + tabs height */
   height: calc(100vh - 48px);
-  display: flex;
-  flex-direction: column;
 }
 
-#headers-tabpanel .properties-view {
-  /* FIXME: Minus 24px * 2 + 87.5 for toolbox height + panel height + headers summary
-   * Give a fixed panel container height in order to force tree view scrollable */
-  height: calc(100vh - 135.5px);
+.panel-container,
+.properties-view {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
 
 .properties-view .searchbox-section {
@@ -1140,6 +1140,36 @@
   right: 0;
   bottom: 0;
   left: 0;
+}
+
+/* Apply flex to table tbody in order to fill available vertical space */
+.tree-container .treeTable tbody {
+  display: flex;
+  flex-direction: column;
+  /* Apply flex to table will create an anonymous table element outside of tbody
+   * See also http://stackoverflow.com/a/30851678
+   * Therefore, we set height with this magic number in order to remove the
+   * redundant scrollbar when source editor appears.
+   */
+  height: calc(100% - 3px);
+}
+
+.tree-container .treeTable tr {
+  display: block;
+}
+
+/* Make right td fill available horizontal space */
+.tree-container .treeTable td:last-child {
+  width: 100%;
+}
+
+/* If there is a source editor shows up in the last row of TreeView,
+ * it should occupy the available vertical space.
+ */
+.tree-container .treeTable .editor-row-container,
+.tree-container .treeTable tr:last-child td[colspan="2"] {
+  display: block;
+  height: 100%;
 }
 
 .properties-view .devtools-searchbox,
@@ -1278,25 +1308,17 @@
 #react-preview-tabpanel-hook,
 #react-response-tabpanel-hook,
 #react-security-tabpanel-hook,
-#react-timings-tabpanel-hook,
+#react-timings-tabpanel-hook {
+  display: flex;
+  -moz-box-flex: 1;
+  -moz-box-orient: vertical;
+}
+
 #network-statistics-charts,
 #primed-cache-chart,
 #empty-cache-chart {
   display: -moz-box;
   -moz-box-flex: 1;
-}
-
-/* For vbox */
-#react-cookies-tabpanel-hook,
-#react-headers-tabpanel-hook,
-#react-params-tabpanel-hook,
-#react-preview-tabpanel-hook,
-#react-response-tabpanel-hook,
-#react-security-tabpanel-hook,
-#react-timings-tabpanel-hook,
-#primed-cache-chart,
-#empty-cache-chart {
-  -moz-box-orient: vertical;
 }
 
 #primed-cache-chart,

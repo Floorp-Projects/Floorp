@@ -7852,8 +7852,7 @@ static bool
 IsCSSTokenCalcFunction(const nsCSSToken& aToken)
 {
   return aToken.mType == eCSSToken_Function &&
-         (aToken.mIdent.LowerCaseEqualsLiteral("calc") ||
-          aToken.mIdent.LowerCaseEqualsLiteral("-moz-calc"));
+         aToken.mIdent.LowerCaseEqualsLiteral("calc");
 }
 
 // Assigns to aValue iff it returns CSSParseResult::Ok.
@@ -10664,8 +10663,7 @@ CSSParserImpl::IsLegacyGradientLine(const nsCSSTokenType& aType,
     break;
 
   case eCSSToken_Function:
-    if (aId.LowerCaseEqualsLiteral("calc") ||
-        aId.LowerCaseEqualsLiteral("-moz-calc")) {
+    if (aId.LowerCaseEqualsLiteral("calc")) {
       haveGradientLine = true;
       break;
     }
@@ -12613,8 +12611,7 @@ CSSParserImpl::ParseImageLayersItem(
                tt == eCSSToken_Number ||
                tt == eCSSToken_Percentage ||
                (tt == eCSSToken_Function &&
-                (mToken.mIdent.LowerCaseEqualsLiteral("calc") ||
-                 mToken.mIdent.LowerCaseEqualsLiteral("-moz-calc")))) {
+                mToken.mIdent.LowerCaseEqualsLiteral("calc"))) {
       if (havePositionAndSize)
         return false;
       havePositionAndSize = true;

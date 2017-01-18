@@ -25,9 +25,7 @@ typedef struct {
   } ref[MAX_REF_FRAMES];
 } MBGRAPH_MB_STATS;
 
-typedef struct {
-  MBGRAPH_MB_STATS *mb_stats;
-} MBGRAPH_FRAME_STATS;
+typedef struct { MBGRAPH_MB_STATS *mb_stats; } MBGRAPH_FRAME_STATS;
 
 struct VP9_COMP;
 

@@ -121,7 +121,7 @@ const ResponsePanel = createClass({
       let { width, height } = this.state.imageDimensions;
 
       return (
-        div({ className: "response-image-box devtools-monospace" },
+        div({ className: "panel-container response-image-box devtools-monospace" },
           img({
             className: "response-image",
             src: formDataURI(mimeType, encoding, response),
@@ -167,7 +167,7 @@ const ResponsePanel = createClass({
     }
 
     return (
-      div({},
+      div({ className: "panel-container" },
         error && div({ className: "response-error-header", title: error },
           error
         ),
