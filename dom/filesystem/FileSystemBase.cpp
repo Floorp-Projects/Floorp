@@ -88,8 +88,7 @@ FileSystemBase::GetRealPath(BlobImpl* aFile, nsIFile** aPath) const
     return false;
   }
 
-  rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(filePath),
-                             true, aPath);
+  rv = NS_NewLocalFile(filePath, true, aPath);
   if (NS_WARN_IF(rv.Failed())) {
     rv.SuppressException();
     return false;
@@ -134,8 +133,8 @@ FileSystemBase::GetDOMPath(nsIFile* aFile,
   aRetval.Truncate();
 
   nsCOMPtr<nsIFile> fileSystemPath;
-  aRv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(LocalOrDeviceStorageRootPath()),
-                              true, getter_AddRefs(fileSystemPath));
+  aRv = NS_NewLocalFile(LocalOrDeviceStorageRootPath(),
+                        true, getter_AddRefs(fileSystemPath));
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
