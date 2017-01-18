@@ -43,9 +43,6 @@ this.l10n = {};
  *     The localized string for the requested entity.
  */
 l10n.localizeEntity = function (urls, id) {
-  // Add xhtml11.dtd to prevent missing entity errors with XHTML files
-  urls.push("resource:///res/dtd/xhtml11.dtd");
-
   // Build a string which contains all possible entity locations
   let locations = [];
   urls.forEach((url, index) => {
