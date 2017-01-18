@@ -57,7 +57,7 @@ function run_test() {
   run_next_test();
 }
 
-add_identity_test(this, async function test_successful_sync_adjustSyncInterval() {
+add_task(async function test_successful_sync_adjustSyncInterval() {
   _("Test successful sync calling adjustSyncInterval");
   let syncSuccesses = 0;
   function onSyncFinish() {
@@ -156,7 +156,7 @@ add_identity_test(this, async function test_successful_sync_adjustSyncInterval()
   await promiseStopServer(server);
 });
 
-add_identity_test(this, async function test_unsuccessful_sync_adjustSyncInterval() {
+add_task(async function test_unsuccessful_sync_adjustSyncInterval() {
   _("Test unsuccessful sync calling adjustSyncInterval");
 
   let syncFailures = 0;
@@ -261,7 +261,7 @@ add_identity_test(this, async function test_unsuccessful_sync_adjustSyncInterval
   await promiseStopServer(server);
 });
 
-add_identity_test(this, async function test_back_triggers_sync() {
+add_task(async function test_back_triggers_sync() {
   let server = sync_httpd_setup();
   await setUp(server);
 
@@ -290,7 +290,7 @@ add_identity_test(this, async function test_back_triggers_sync() {
   await promiseStopServer(server);
 });
 
-add_identity_test(this, async function test_adjust_interval_on_sync_error() {
+add_task(async function test_adjust_interval_on_sync_error() {
   let server = sync_httpd_setup();
   await setUp(server);
 
@@ -321,7 +321,7 @@ add_identity_test(this, async function test_adjust_interval_on_sync_error() {
   await promiseStopServer(server);
 });
 
-add_identity_test(this, async function test_bug671378_scenario() {
+add_task(async function test_bug671378_scenario() {
   // Test scenario similar to bug 671378. This bug appeared when a score
   // update occurred that wasn't large enough to trigger a sync so
   // scheduleNextSync() was called without a time interval parameter,

@@ -44,7 +44,7 @@ function run_test() {
   run_next_test();
 }
 
-add_identity_test(this, async function test_wipeServer_list_success() {
+add_task(async function test_wipeServer_list_success() {
   _("Service.wipeServer() deletes collections given as argument.");
 
   let steam_coll = new FakeCollection();
@@ -78,7 +78,7 @@ add_identity_test(this, async function test_wipeServer_list_success() {
   }
 });
 
-add_identity_test(this, async function test_wipeServer_list_503() {
+add_task(async function test_wipeServer_list_503() {
   _("Service.wipeServer() deletes collections given as argument.");
 
   let steam_coll = new FakeCollection();
@@ -119,7 +119,7 @@ add_identity_test(this, async function test_wipeServer_list_503() {
   }
 });
 
-add_identity_test(this, async function test_wipeServer_all_success() {
+add_task(async function test_wipeServer_all_success() {
   _("Service.wipeServer() deletes all the things.");
 
   /**
@@ -149,7 +149,7 @@ add_identity_test(this, async function test_wipeServer_all_success() {
   Svc.Prefs.resetBranch("");
 });
 
-add_identity_test(this, async function test_wipeServer_all_404() {
+add_task(async function test_wipeServer_all_404() {
   _("Service.wipeServer() accepts a 404.");
 
   /**
@@ -181,7 +181,7 @@ add_identity_test(this, async function test_wipeServer_all_404() {
   Svc.Prefs.resetBranch("");
 });
 
-add_identity_test(this, async function test_wipeServer_all_503() {
+add_task(async function test_wipeServer_all_503() {
   _("Service.wipeServer() throws if it encounters a non-200/404 response.");
 
   /**
@@ -213,7 +213,7 @@ add_identity_test(this, async function test_wipeServer_all_503() {
   Svc.Prefs.resetBranch("");
 });
 
-add_identity_test(this, async function test_wipeServer_all_connectionRefused() {
+add_task(async function test_wipeServer_all_connectionRefused() {
   _("Service.wipeServer() throws if it encounters a network problem.");
   let server = httpd_setup({});
   await setUpTestFixtures(server);
