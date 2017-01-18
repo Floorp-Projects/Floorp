@@ -116,6 +116,6 @@ window.addEventListener("DOMContentLoaded", function onInspectorDOMLoaded() {
 
   // Toolbox tries to add a theme classname on the documentElement and should only be
   // required after DOMContentLoaded.
-  const { bootstrap } = require("devtools-local-toolbox");
+  const { bootstrap } = require("devtools-launchpad");
   bootstrap(React, ReactDOM).then(onConnect);
 });
