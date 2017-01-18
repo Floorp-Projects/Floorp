@@ -13,6 +13,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyPreferenceGetter(this, "useRemoteWebExtensions",
                                       "extensions.webextensions.remote", false);
+XPCOMUtils.defineLazyModuleGetter(this, "Utils",
+                                  "resource://gre/modules/sessionstore/Utils.jsm");
 
 function getAboutModule(aURL) {
   // Needs to match NS_GetAboutModuleName
@@ -163,7 +165,7 @@ this.E10SUtils = {
     return this.shouldLoadURIInThisProcess(aURI);
   },
 
-  redirectLoad(aDocShell, aURI, aReferrer, aFreshProcess) {
+  redirectLoad(aDocShell, aURI, aReferrer, aTriggeringPrincipal, aFreshProcess) {
     // Retarget the load to the correct process
     let messageManager = aDocShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                   .getInterface(Ci.nsIContentFrameMessageManager);
@@ -174,6 +176,9 @@ this.E10SUtils = {
         uri: aURI.spec,
         flags: Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
         referrer: aReferrer ? aReferrer.spec : null,
+        triggeringPrincipal: aTriggeringPrincipal
+                             ? Utils.serializePrincipal(aTriggeringPrincipal)
+                             : null,
         reloadInFreshProcess: !!aFreshProcess,
       },
       historyIndex: sessionHistory.requestedIndex,

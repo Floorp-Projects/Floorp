@@ -653,13 +653,14 @@ nsWebBrowser::LoadURIWithOptions(const char16_t* aURI, uint32_t aLoadFlags,
                                  uint32_t aReferrerPolicy,
                                  nsIInputStream* aPostDataStream,
                                  nsIInputStream* aExtraHeaderStream,
-                                 nsIURI* aBaseURI)
+                                 nsIURI* aBaseURI,
+                                 nsIPrincipal* aTriggeringPrincipal)
 {
   NS_ENSURE_STATE(mDocShell);
 
   return mDocShellAsNav->LoadURIWithOptions(
     aURI, aLoadFlags, aReferringURI, aReferrerPolicy, aPostDataStream,
-    aExtraHeaderStream, aBaseURI);
+    aExtraHeaderStream, aBaseURI, aTriggeringPrincipal);
 }
 
 NS_IMETHODIMP
