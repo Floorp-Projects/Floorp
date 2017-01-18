@@ -14,7 +14,7 @@ DIRS += [
 ]
 
 # Only include the following system add-ons if building Aurora or Nightly
-if 'a' in CONFIG['GRE_MILESTONE']:
+if not CONFIG['RELEASE_OR_BETA']:
     DIRS += [
         'flyweb',
         'formautofill',
