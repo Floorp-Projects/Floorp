@@ -9,6 +9,7 @@
 interface nsIDocShell;
 interface nsIInputStream;
 interface nsIRunnable;
+interface nsIPrincipal;
 
 /**
  * nsIWebBrowserChrome3 is an extension to nsIWebBrowserChrome2.
@@ -44,10 +45,13 @@ interface nsIWebBrowserChrome3 : nsIWebBrowserChrome2
    *        The URI being loaded.
    * @param aReferrer
    *        The referrer of the load.
+   * @param aTriggeringPrincipal
+   *        The principal that initiated the load of aURI.
    */
   bool shouldLoadURI(in nsIDocShell    aDocShell,
                      in nsIURI         aURI,
-                     in nsIURI         aReferrer);
+                     in nsIURI         aReferrer,
+                     in nsIPrincipal   aTriggeringPrincipal);
 
   bool shouldLoadURIInThisProcess(in nsIURI aURI);
 
@@ -60,7 +64,8 @@ interface nsIWebBrowserChrome3 : nsIWebBrowserChrome2
    */
   bool reloadInFreshProcess(in nsIDocShell aDocShell,
                             in nsIURI aURI,
-                            in nsIURI aReferrer);
+                            in nsIURI aReferrer,
+                            in nsIPrincipal aTriggeringPrincipal);
 
   /**
    * Tell the browser to start prerendering the given document. This prerendering
