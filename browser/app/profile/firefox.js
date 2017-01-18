@@ -855,7 +855,14 @@ pref("places.frecency.embedVisitBonus", 0);
 pref("places.frecency.framedLinkVisitBonus", 0);
 pref("places.frecency.linkVisitBonus", 100);
 pref("places.frecency.typedVisitBonus", 2000);
+// The bookmarks bonus is always added on top of any other bonus, including
+// the redirect source and the typed ones.
 pref("places.frecency.bookmarkVisitBonus", 75);
+// The redirect source bonus overwrites any transition bonus.
+// 0 would hide these pages, instead we want them low ranked.  Thus we use
+// linkVisitBonus - bookmarkVisitBonus, so that a bookmarked source is in par
+// with a common link.
+pref("places.frecency.redirectSourceVisitBonus", 25);
 pref("places.frecency.downloadVisitBonus", 0);
 pref("places.frecency.permRedirectVisitBonus", 0);
 pref("places.frecency.tempRedirectVisitBonus", 0);

@@ -84,6 +84,7 @@ struct VisitData {
   , referrerVisitId(0)
   , titleChanged(false)
   , shouldUpdateFrecency(true)
+  , redirect(false)
   {
     guid.SetIsVoid(true);
     title.SetIsVoid(true);
@@ -105,6 +106,7 @@ struct VisitData {
   , referrerVisitId(0)
   , titleChanged(false)
   , shouldUpdateFrecency(true)
+  , redirect(false)
   {
     MOZ_ASSERT(aURI);
     if (aURI) {
@@ -162,6 +164,9 @@ struct VisitData {
 
   // Indicates whether frecency should be updated for this visit.
   bool shouldUpdateFrecency;
+
+  // Whether this is a redirect source.
+  bool redirect;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1164,7 +1169,7 @@ private:
       stmt = mHistory->GetStatement(
         "UPDATE moz_places "
         "SET frecency = NOTIFY_FRECENCY("
-          "CALCULATE_FRECENCY(:page_id), "
+          "CALCULATE_FRECENCY(:page_id, :redirect), "
           "url, guid, hidden, last_visit_date"
         ") "
         "WHERE id = :page_id"
@@ -1173,6 +1178,9 @@ private:
       mozStorageStatementScoper scoper(stmt);
 
       rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("page_id"), aPlace.placeId);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("redirect"), aPlace.redirect);
       NS_ENSURE_SUCCESS(rv, rv);
 
       rv = stmt->Execute();
@@ -2441,8 +2449,8 @@ History::VisitURI(nsIURI* aURI,
   }
 
   place.SetTransitionType(transitionType);
-  place.hidden = GetHiddenState(aFlags & IHistory::REDIRECT_SOURCE,
-                                transitionType);
+  place.redirect = aFlags & IHistory::REDIRECT_SOURCE;
+  place.hidden = GetHiddenState(place.redirect, place.transitionType);
 
   // Error pages should never be autocompleted.
   if (aFlags & IHistory::UNRECOVERABLE_ERROR) {
@@ -2573,12 +2581,12 @@ History::SetURITitle(nsIURI* aURI, const nsAString& aTitle)
     URIParams uri;
     SerializeURI(aURI, uri);
 
-    mozilla::dom::ContentChild * cpc = 
+    mozilla::dom::ContentChild * cpc =
       mozilla::dom::ContentChild::GetSingleton();
     NS_ASSERTION(cpc, "Content Protocol is NULL!");
     (void)cpc->SendSetURITitle(uri, PromiseFlatString(aTitle));
     return NS_OK;
-  } 
+  }
 
   nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
 
