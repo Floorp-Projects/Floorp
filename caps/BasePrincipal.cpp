@@ -389,6 +389,24 @@ BasePrincipal::SubsumesConsideringDomain(nsIPrincipal *aOther, bool *aResult)
 }
 
 NS_IMETHODIMP
+BasePrincipal::SubsumesConsideringDomainIgnoringFPD(nsIPrincipal *aOther,
+                                                    bool *aResult)
+{
+  NS_ENSURE_TRUE(aOther, NS_ERROR_INVALID_ARG);
+
+  if (Kind() == eCodebasePrincipal &&
+      !dom::ChromeUtils::IsOriginAttributesEqualIgnoringFPD(
+            OriginAttributesRef(), aOther->OriginAttributesRef())) {
+    *aResult = false;
+    return NS_OK;
+  }
+
+  *aResult = SubsumesInternal(aOther, ConsiderDocumentDomain);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 BasePrincipal::CheckMayLoad(nsIURI* aURI, bool aReport, bool aAllowIfInheritsPrincipal)
 {
   // Check the internal method first, which allows us to quickly approve loads
