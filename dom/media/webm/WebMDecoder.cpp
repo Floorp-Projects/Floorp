@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Preferences.h"
-#include "MediaContentType.h"
+#include "MediaContainerType.h"
 #include "MediaDecoderStateMachine.h"
 #include "WebMDemuxer.h"
 #include "WebMDecoder.h"
@@ -22,18 +22,18 @@ MediaDecoderStateMachine* WebMDecoder::CreateStateMachine()
 
 /* static */
 bool
-WebMDecoder::IsSupportedType(const MediaContentType& aContentType)
+WebMDecoder::IsSupportedType(const MediaContainerType& aContainerType)
 {
   if (!Preferences::GetBool("media.webm.enabled")) {
     return false;
   }
 
-  bool isVideo = aContentType.Type() == MEDIAMIMETYPE("video/webm");
-  if (aContentType.Type() != MEDIAMIMETYPE("audio/webm") && !isVideo) {
+  bool isVideo = aContainerType.Type() == MEDIAMIMETYPE("video/webm");
+  if (aContainerType.Type() != MEDIAMIMETYPE("audio/webm") && !isVideo) {
     return false;
   }
 
-  const MediaCodecs& codecs = aContentType.ExtendedType().Codecs();
+  const MediaCodecs& codecs = aContainerType.ExtendedType().Codecs();
   if (codecs.IsEmpty()) {
     // WebM guarantees that the only codecs it contained are vp8, vp9, opus or vorbis.
     return true;
@@ -44,8 +44,8 @@ WebMDecoder::IsSupportedType(const MediaContentType& aContentType)
     if (codec.EqualsLiteral("opus") || codec.EqualsLiteral("vorbis")) {
       continue;
     }
-    // Note: Only accept VP8/VP9 in a video content type, not in an audio
-    // content type.
+    // Note: Only accept VP8/VP9 in a video container type, not in an audio
+    // container type.
     if (isVideo &&
         (codec.EqualsLiteral("vp8") || codec.EqualsLiteral("vp8.0") ||
          codec.EqualsLiteral("vp9") || codec.EqualsLiteral("vp9.0"))) {

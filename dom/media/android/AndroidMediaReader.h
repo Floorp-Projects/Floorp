@@ -7,7 +7,7 @@
 #define AndroidMediaReader_h_
 
 #include "ImageContainer.h"
-#include "MediaContentType.h"
+#include "MediaContainerType.h"
 #include "MediaDecoderReader.h"
 #include "MediaResource.h"
 #include "mozilla/Attributes.h"
@@ -25,7 +25,7 @@ class ImageContainer;
 
 class AndroidMediaReader : public MediaDecoderReader
 {
-  MediaContentType mType;
+  MediaContainerType mType;
   MPAPI::Decoder *mPlugin;
   bool mHasAudio;
   bool mHasVideo;
@@ -38,7 +38,7 @@ class AndroidMediaReader : public MediaDecoderReader
   MozPromiseRequestHolder<MediaDecoderReader::MediaDataPromise> mSeekRequest;
 public:
   AndroidMediaReader(AbstractMediaDecoder* aDecoder,
-                     const MediaContentType& aContentType);
+                     const MediaContainerType& aContainerType);
 
   nsresult ResetDecode(TrackSet aTracks = TrackSet(TrackInfo::kAudioTrack,
                                                    TrackInfo::kVideoTrack)) override;

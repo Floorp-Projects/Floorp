@@ -6,7 +6,7 @@
 
 #include "FlacDecoder.h"
 #include "FlacDemuxer.h"
-#include "MediaContentType.h"
+#include "MediaContainerType.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaFormatReader.h"
 #include "MediaPrefs.h"
@@ -43,12 +43,12 @@ FlacDecoder::IsEnabled()
 }
 
 /* static */ bool
-FlacDecoder::IsSupportedType(const MediaContentType& aContentType)
+FlacDecoder::IsSupportedType(const MediaContainerType& aContainerType)
 {
   return IsEnabled()
-         && (aContentType.Type() == MEDIAMIMETYPE("audio/flac")
-             || aContentType.Type() == MEDIAMIMETYPE("audio/x-flac")
-             || aContentType.Type() == MEDIAMIMETYPE("application/x-flac"));
+         && (aContainerType.Type() == MEDIAMIMETYPE("audio/flac")
+             || aContainerType.Type() == MEDIAMIMETYPE("audio/x-flac")
+             || aContainerType.Type() == MEDIAMIMETYPE("application/x-flac"));
 }
 
 } // namespace mozilla
