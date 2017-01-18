@@ -48,9 +48,6 @@ ThreadInfo::SetPendingDelete()
 bool
 ThreadInfo::CanInvokeJS() const
 {
-#ifdef SPS_STANDALONE
-  return false;
-#else
   nsIThread* thread = GetThread();
   if (!thread) {
     MOZ_ASSERT(IsMainThread());
@@ -60,5 +57,4 @@ ThreadInfo::CanInvokeJS() const
   mozilla::DebugOnly<nsresult> rv = thread->GetCanInvokeJS(&result);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   return result;
-#endif
 }

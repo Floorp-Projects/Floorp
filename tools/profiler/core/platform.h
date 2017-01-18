@@ -29,11 +29,6 @@
 #ifndef TOOLS_PLATFORM_H_
 #define TOOLS_PLATFORM_H_
 
-#ifdef SPS_STANDALONE
-#define MOZ_COUNT_CTOR(name)
-#define MOZ_COUNT_DTOR(name)
-#endif
-
 #ifdef ANDROID
 #include <android/log.h>
 #else
