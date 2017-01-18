@@ -7,7 +7,6 @@
 #include "platform.h"
 #include "mozilla/HashFunctions.h"
 
-#ifndef SPS_STANDALONE
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 
@@ -15,7 +14,6 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/TrackedOptimizationInfo.h"
-#endif
 
 // Self
 #include "ProfileEntry.h"
@@ -119,7 +117,6 @@ public:
   }
 };
 
-#ifndef SPS_STANDALONE
 class StreamOptimizationTypeInfoOp : public JS::ForEachTrackedOptimizationTypeInfoOp
 {
   JSONWriter& mWriter;
@@ -295,7 +292,6 @@ public:
     mDepth++;
   }
 };
-#endif
 
 uint32_t UniqueJSONStrings::GetOrAddIndex(const char* aStr)
 {
@@ -526,11 +522,7 @@ void UniqueStacks::StreamFrame(const OnStackFrameKey& aFrame)
 
   AutoArraySchemaWriter writer(mFrameTableWriter, mUniqueStrings);
 
-#ifndef SPS_STANDALONE
   if (!aFrame.mJITFrameHandle) {
-#else
-  {
-#endif
 #ifdef SPS_STANDALONE
     writer.StringElement(LOCATION, aFrame.mLocation.c_str());
 #else
@@ -542,9 +534,7 @@ void UniqueStacks::StreamFrame(const OnStackFrameKey& aFrame)
     if (aFrame.mCategory.isSome()) {
       writer.IntElement(CATEGORY, *aFrame.mCategory);
     }
-  }
-#ifndef SPS_STANDALONE
-  else {
+  } else {
     const JS::ForEachProfiledFrameOp::FrameHandle& jitFrame = *aFrame.mJITFrameHandle;
 
     writer.StringElement(LOCATION, jitFrame.label());
@@ -601,7 +591,6 @@ void UniqueStacks::StreamFrame(const OnStackFrameKey& aFrame)
       mFrameTableWriter.EndObject();
     }
   }
-#endif
 }
 
 struct ProfileSample
@@ -757,7 +746,6 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
                 incBy++;
               }
               stack.AppendFrame(frameKey);
-#ifndef SPS_STANDALONE
             } else if (frame.mTagName == 'J') {
               // A JIT frame may expand to multiple frames due to inlining.
               void* pc = frame.mTagPtr;
@@ -772,7 +760,6 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
                   stack.AppendFrame(inlineFrameKey);
                 }
               }
-#endif
             }
             framePos = (framePos + incBy) % mEntrySize;
           }
