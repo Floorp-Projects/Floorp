@@ -133,6 +133,7 @@ class nsCSPParser {
     nsCSPBaseSrc*       keywordSource();
     nsCSPNonceSrc*      nonceSource();
     nsCSPHashSrc*       hashSource();
+    nsCSPHostSrc*       appHost(); // helper function to support app specific hosts
     nsCSPHostSrc*       host();
     bool                hostChar();
     bool                schemeChar();
