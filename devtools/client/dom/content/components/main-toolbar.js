@@ -10,7 +10,7 @@ const React = require("devtools/client/shared/vendor/react");
 const { l10n } = require("../utils");
 
 // Reps
-const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
+const { createFactories } = require("devtools/client/shared/components/reps/load-reps");
 const { Toolbar, ToolbarButton } = createFactories(require("devtools/client/jsonview/components/reps/toolbar"));
 
 // DOM Panel
