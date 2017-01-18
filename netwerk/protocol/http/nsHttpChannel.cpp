@@ -6721,6 +6721,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         // fetch the data from the server, the time includes loading of the old
         // cache entry which would skew the network load time.
         if (request == mTransactionPump && mCacheEntry && !mDidReval &&
+            !mCustomConditionalRequest &&
             !mAsyncOpenTime.IsNull() && !mOnStartRequestTimestamp.IsNull()) {
             nsAutoCString onStartTime;
             onStartTime.AppendInt( (uint64_t) (mOnStartRequestTimestamp - mAsyncOpenTime).ToMilliseconds());
