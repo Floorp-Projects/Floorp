@@ -62,23 +62,21 @@ public:
             nsContainerFrame* aParent,
             nsIFrame*         aPrevInFlow) override;
 
-  virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) override;
+  void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                        const nsRect&           aDirtyRect,
+                        const nsDisplayListSet& aLists) override;
 
-  virtual void Reflow(nsPresContext*           aPresContext,
-                      ReflowOutput&     aDesiredSize,
-                      const ReflowInput& aReflowInput,
-                      nsReflowStatus&          aStatus) override;
+  void Reflow(nsPresContext* aPresContext,
+              ReflowOutput& aDesiredSize,
+              const ReflowInput& aReflowInput,
+              nsReflowStatus& aStatus) override;
 
-  virtual nscoord
-    GetMinISize(nsRenderingContext* aRenderingContext) override;
-  virtual nscoord
-    GetPrefISize(nsRenderingContext* aRenderingContext) override;
+  nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
+  nscoord GetPrefISize(nsRenderingContext* aRenderingContext) override;
 
-  virtual nsIAtom* GetType() const override;
+  nsIAtom* GetType() const override;
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const override;
+  nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
   nscoord GetLogicalBaseline(mozilla::WritingMode aWM) const override;
