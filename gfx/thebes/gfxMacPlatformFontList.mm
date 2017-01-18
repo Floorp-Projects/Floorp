@@ -1064,7 +1064,7 @@ gfxMacPlatformFontList::GlobalFontFallback(const uint32_t aCh,
 
             bool needsBold;  // ignored in the system fallback case
 
-            gfxFontFamily *family = FindFamily(familyNameString);
+            gfxFontFamily *family = FindSystemFontFamily(familyNameString);
             if (family) {
                 fontEntry = family->FindFontForStyle(*aMatchStyle, needsBold);
                 if (fontEntry) {
