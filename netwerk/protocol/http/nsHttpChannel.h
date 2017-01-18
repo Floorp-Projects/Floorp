@@ -178,8 +178,6 @@ public:
     void SetWarningReporter(HttpChannelSecurityWarningReporter* aReporter)
       { mWarningReporter = aReporter; }
 
-    void ApplyContentConversions();
-
 public: /* internal necko use only */
 
     void InternalSetUploadStream(nsIInputStream *uploadStream)
