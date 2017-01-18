@@ -25,9 +25,9 @@
 #
 # "primary" denotes a location which is the canonical location of
 # the server; this location is the one assumed for requests which don't
-# otherwise identify a particular origin (e.g. HTTP/1.0 requests).
+# otherwise identify a particular origin (e.g. HTTP/1.0 requests).  
 #
-# "privileged" denotes a location which should have the ability to request
+# "privileged" denotes a location which should have the ability to request 
 # elevated privileges; the default is no privileges.
 #
 # "nocert" makes sense only for https:// hosts and means there is not
@@ -125,7 +125,6 @@ http://fxfeeds.mozilla.com:80
 # Prevent safebrowsing tests from hitting the network for its-a-trap.html and
 # its-an-attack.html.
 http://www.itisatrap.org:80
-https://www.itisatrap.org:443
 
 #
 # These are subdomains of <ält.example.org>.
