@@ -5,10 +5,8 @@ Cu.import("resource:///modules/AutoMigrate.jsm", scope);
 let oldCanUndo = scope.AutoMigrate.canUndo;
 let oldUndo = scope.AutoMigrate.undo;
 registerCleanupFunction(function() {
-  Cu.reportError("Cleaning up");
   scope.AutoMigrate.canUndo = oldCanUndo;
   scope.AutoMigrate.undo = oldUndo;
-  Cu.reportError("Cleaned up");
 });
 
 const kExpectedNotificationId = "automigration-undo";
