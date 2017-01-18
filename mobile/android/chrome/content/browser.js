@@ -1189,7 +1189,7 @@ var BrowserApp = {
           type: "Content:LoadError",
           tabID: tab.id
         };
-        Messaging.sendRequest(message);
+        GlobalEventDispatcher.sendRequest(message);
         dump("Handled load error: " + e)
       }
     }
@@ -1236,7 +1236,7 @@ var BrowserApp = {
       type: "Tab:Close",
       tabID: aTab.id
     };
-    Messaging.sendRequest(message);
+    GlobalEventDispatcher.sendRequest(message);
   },
 
   // Calling this will update the state in BrowserApp after a tab has been
@@ -1310,7 +1310,7 @@ var BrowserApp = {
       type: "Tab:Select",
       tabID: aTab.id
     };
-    Messaging.sendRequest(message);
+    GlobalEventDispatcher.sendRequest(message);
   },
 
   /**
@@ -3603,7 +3603,7 @@ Tab.prototype = {
           type: "Content:LoadError",
           tabID: this.id
         };
-        Messaging.sendRequest(message);
+        GlobalEventDispatcher.sendRequest(message);
         dump("Handled load error: " + e);
       }
     }
@@ -3621,7 +3621,7 @@ Tab.prototype = {
     // Set desktop mode for tab and send change to Java
     if (this.desktopMode != aDesktopMode) {
       this.desktopMode = aDesktopMode;
-      Messaging.sendRequest({
+      GlobalEventDispatcher.sendRequest({
         type: "DesktopMode:Changed",
         desktopMode: aDesktopMode,
         tabID: this.id
@@ -3861,7 +3861,7 @@ Tab.prototype = {
           return null;
 
         // Broadcast message that this tab contains search engines that should be visible.
-        Messaging.sendRequest({
+        GlobalEventDispatcher.sendRequest({
           type: "Link:OpenSearch",
           tabID: this.id,
           visible: true
@@ -3873,7 +3873,7 @@ Tab.prototype = {
   setParentId: function(aParentId) {
     let newParentId = (typeof aParentId == "number") ? aParentId : -1;
     this.parentId = newParentId;
-    Messaging.sendRequest({
+    GlobalEventDispatcher.sendRequest({
       type: "Tab:SetParentId",
       tabID: this.id,
       parentID: newParentId
@@ -4031,7 +4031,7 @@ Tab.prototype = {
         if (!jsonMessage)
          return;
 
-        Messaging.sendRequest(jsonMessage);
+        GlobalEventDispatcher.sendRequest(jsonMessage);
         break;
       }
 
@@ -4043,8 +4043,8 @@ Tab.prototype = {
         if (aEvent.originalTarget != this.browser.contentDocument)
           return;
 
-        Messaging.sendRequest({
-          type: "DOMTitleChanged",
+        GlobalEventDispatcher.sendRequest({
+          type: "Content:DOMTitleChanged",
           tabID: this.id,
           title: truncate(aEvent.target.title, MAX_TITLE_LENGTH)
         });
@@ -4072,7 +4072,7 @@ Tab.prototype = {
 
         this.playingAudio = aEvent.type === "DOMAudioPlaybackStarted";
 
-        Messaging.sendRequest({
+        GlobalEventDispatcher.sendRequest({
           type: "Tab:AudioPlayingChange",
           tabID: this.id,
           isAudioPlaying: this.playingAudio
@@ -4088,7 +4088,7 @@ Tab.prototype = {
         if (this.browser.contentWindow == aEvent.target) {
           aEvent.preventDefault();
 
-          Messaging.sendRequest({
+          GlobalEventDispatcher.sendRequest({
             type: "Tab:Close",
             tabID: this.id
           });
@@ -4134,9 +4134,10 @@ Tab.prototype = {
       }
 
       case "DOMServiceWorkerFocusClient": {
-        Messaging.sendRequest({
-          type: "Tab:SelectAndForeground",
-          tabID: this.id
+        GlobalEventDispatcher.sendRequest({
+          type: "Tab:Select",
+          tabID: this.id,
+          foreground: true,
         });
         break;
       }
@@ -4155,7 +4156,7 @@ Tab.prototype = {
           this.userRequested = "";
         }
 
-        Messaging.sendRequest({
+        GlobalEventDispatcher.sendRequest({
           type: "Content:PageShow",
           tabID: this.id,
           userRequested: this.userRequested,
@@ -4238,7 +4239,7 @@ Tab.prototype = {
         restoring: restoring,
         success: success
       };
-      Messaging.sendRequest(message);
+      GlobalEventDispatcher.sendRequest(message);
     }
   },
 
@@ -4350,7 +4351,7 @@ Tab.prototype = {
       canGoForward: webNav.canGoForward,
     };
 
-    Messaging.sendRequest(message);
+    GlobalEventDispatcher.sendRequest(message);
 
     BrowserEventHandler.closeZoomedView();
 
@@ -4387,7 +4388,7 @@ Tab.prototype = {
       identity: identity
     };
 
-    Messaging.sendRequest(message);
+    GlobalEventDispatcher.sendRequest(message);
   },
 
   onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {
@@ -4525,7 +4526,7 @@ Tab.prototype = {
           status = "resume";
         }
 
-        Messaging.sendRequest({
+        GlobalEventDispatcher.sendRequest({
           type: "Tab:MediaPlaybackChange",
           tabID: this.id,
           status: status
@@ -6167,7 +6168,7 @@ var SearchEngines = {
           visible: false
         };
 
-        Messaging.sendRequest(newEngineMessage);
+        GlobalEventDispatcher.sendRequest(newEngineMessage);
       }
     }).bind(this));
   },

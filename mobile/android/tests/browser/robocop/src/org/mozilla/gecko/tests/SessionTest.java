@@ -156,7 +156,8 @@ public abstract class SessionTest extends BaseTest {
             }
 
             for (int j = 1; j < pages.length; j++) {
-                Actions.EventExpecter pageShowExpecter = mActions.expectGeckoEvent("Content:PageShow");
+                final Actions.EventExpecter pageShowExpecter =
+                        mActions.expectGlobalEvent(Actions.EventType.UI, "Content:PageShow");
 
                 loadUrl(pages[j].url);
 
