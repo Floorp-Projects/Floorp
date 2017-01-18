@@ -230,8 +230,8 @@ struct ParamTraits<mozilla::WidgetPointerHelper>
     WriteParam(aMsg, aParam.tiltY);
     WriteParam(aMsg, aParam.twist);
     WriteParam(aMsg, aParam.tangentialPressure);
-    // We don't serialize convertToPointer and retargetedByPointerCapture since
-    // they are temporarily variable and should be reset to default.
+    // We don't serialize convertToPointer since it's temporarily variable and
+    // should be reset to default.
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
