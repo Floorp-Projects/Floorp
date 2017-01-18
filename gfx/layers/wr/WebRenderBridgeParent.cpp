@@ -559,6 +559,13 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
     return;
   }
 
+  if (!mCompositor) {
+    MOZ_ASSERT(mApi);
+    // TODO(bug 1328602) With the RenderThread, calling SetRootStackingContext
+    // should trigger the composition on the render thread.
+    return;
+  }
+
   TimeStamp start = TimeStamp::Now();
 
   mCompositor->SetCompositionTime(TimeStamp::Now());
@@ -613,16 +620,26 @@ WebRenderBridgeParent::DeleteOldImages()
 void
 WebRenderBridgeParent::ScheduleComposition()
 {
-  mCompositor->AsWebRenderCompositorOGL()->ScheduleComposition();
+  if (mCompositor) {
+    mCompositor->AsWebRenderCompositorOGL()->ScheduleComposition();
+  } else {
+    MOZ_ASSERT(mApi);
+    // TODO(bug 1328602) should probably send a message to the render
+    // thread and force rendering, although in most cases where this is
+    // called, rendering should be triggered automatically already (maybe
+    // not in the ImageBridge case).
+  }
 }
 
 void
 WebRenderBridgeParent::ClearResources()
 {
   DeleteOldImages();
-  for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
-    uint64_t externalImageId = iter.Key();
-    mCompositor->AsWebRenderCompositorOGL()->RemoveExternalImageId(externalImageId);
+  if (mCompositor) {
+    for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
+      uint64_t externalImageId = iter.Key();
+      mCompositor->AsWebRenderCompositorOGL()->RemoveExternalImageId(externalImageId);
+    }
   }
   mExternalImageIds.Clear();
 
@@ -711,6 +728,20 @@ WebRenderBridgeParent::SetWebRenderProfilerEnabled(bool aEnabled)
     // Only set the flag to "root" WebRenderBridgeParent.
     wr_profiler_set_enabled(mWRWindowState, aEnabled);
   }
+}
+
+TextureFactoryIdentifier
+WebRenderBridgeParent::GetTextureFactoryIdentifier()
+{
+  if (mCompositor) {
+    return mCompositor->GetTextureFactoryIdentifier();
+  }
+
+  MOZ_ASSERT(mApi);
+
+  return TextureFactoryIdentifier(LayersBackend::LAYERS_OPENGL,
+                                  XRE_GetProcessType(),
+                                  mApi->GetMaxTextureSize());
 }
 
 } // namespace layers
