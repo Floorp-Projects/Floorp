@@ -176,9 +176,13 @@ const AutoMigrate = {
     return profiles ? profiles[0] : null;
   },
 
+  _pendingUndoTasks: false,
   canUndo: Task.async(function* () {
     if (this._savingPromise) {
       yield this._savingPromise;
+    }
+    if (this._pendingUndoTasks) {
+      return false;
     }
     let fileExists = false;
     try {
@@ -197,6 +201,8 @@ const AutoMigrate = {
       throw new Error("Can't undo!");
     }
 
+    this._pendingUndoTasks = true;
+    this._removeNotificationBars();
     histogram.add(10);
 
     let readPromise = OS.File.read(kUndoStateFullPath, {
@@ -218,18 +224,11 @@ const AutoMigrate = {
       NewTabUtils.allPages.update();
     }, true);
 
-    this.removeUndoOption(this.UNDO_REMOVED_REASON_UNDO_USED);
+    this._purgeUndoState(this.UNDO_REMOVED_REASON_UNDO_USED);
     histogram.add(30);
   }),
 
-  removeUndoOption(reason) {
-    // We don't wait for the off-main-thread removal to complete. OS.File will
-    // ensure it happens before shutdown.
-    OS.File.remove(kUndoStateFullPath, {ignoreAbsent: true});
-
-    let migrationBrowser = Preferences.get(kAutoMigrateBrowserPref, "unknown");
-    Services.prefs.clearUserPref(kAutoMigrateBrowserPref);
-
+  _removeNotificationBars() {
     let browserWindows = Services.wm.getEnumerator("navigator:browser");
     while (browserWindows.hasMoreElements()) {
       let win = browserWindows.getNext();
@@ -243,6 +242,18 @@ const AutoMigrate = {
         }
       }
     }
+  },
+
+  _purgeUndoState(reason) {
+    // We don't wait for the off-main-thread removal to complete. OS.File will
+    // ensure it happens before shutdown.
+    OS.File.remove(kUndoStateFullPath, {ignoreAbsent: true}).then(() => {
+      this._pendingUndoTasks = false;
+    });
+
+    let migrationBrowser = Preferences.get(kAutoMigrateBrowserPref, "unknown");
+    Services.prefs.clearUserPref(kAutoMigrateBrowserPref);
+
     let histogram =
       Services.telemetry.getKeyedHistogramById("FX_STARTUP_MIGRATION_UNDO_REASON");
     histogram.add(migrationBrowser, reason);
@@ -278,7 +289,8 @@ const AutoMigrate = {
     // in which case we remove the undo prefs (which will cause canUndo() to
     // return false from now on.):
     if (!this.shouldStillShowUndoPrompt()) {
-      this.removeUndoOption(this.UNDO_REMOVED_REASON_OFFER_EXPIRED);
+      this._purgeUndoState(this.UNDO_REMOVED_REASON_OFFER_EXPIRED);
+      this._removeNotificationBars();
       return;
     }
 
@@ -296,7 +308,8 @@ const AutoMigrate = {
         label: MigrationUtils.getLocalizedString("automigration.undo.keep.label"),
         accessKey: MigrationUtils.getLocalizedString("automigration.undo.keep.accesskey"),
         callback: () => {
-          this.removeUndoOption(this.UNDO_REMOVED_REASON_OFFER_REJECTED);
+          this._purgeUndoState(this.UNDO_REMOVED_REASON_OFFER_REJECTED);
+          this._removeNotificationBars();
         },
       },
       {

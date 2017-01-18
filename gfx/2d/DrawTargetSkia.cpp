@@ -734,7 +734,7 @@ DrawTargetSkia::Fill(const Path *aPath,
                     const DrawOptions &aOptions)
 {
   MarkChanged();
-  if (aPath->GetBackendType() != BackendType::SKIA) {
+  if (!aPath || aPath->GetBackendType() != BackendType::SKIA) {
     return;
   }
 
