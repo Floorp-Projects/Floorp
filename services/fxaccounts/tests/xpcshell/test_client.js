@@ -227,7 +227,7 @@ add_task(function* test_signUp() {
               "de6a2648b78284fcb9ffa81ba95803309cfba7af583c01a8a1a63e567234dd28");
 
   // Try to create an account retrieving optional keys.
-  result = yield client.signUp('you@example.org', 'pässwörd', true);
+  result = yield client.signUp("you@example.org", "pässwörd", true);
   do_check_eq("uid", result.uid);
   do_check_eq("sessionToken", result.sessionToken);
   do_check_eq("keyFetchToken", result.keyFetchToken);
@@ -301,21 +301,21 @@ add_task(function* test_signIn() {
 
   // Login without retrieving optional keys
   let client = new FxAccountsClient(server.baseURI);
-  let result = yield client.signIn(unicodeUsername, 'bigsecret');
+  let result = yield client.signIn(unicodeUsername, "bigsecret");
   do_check_eq(FAKE_SESSION_TOKEN, result.sessionToken);
   do_check_eq(result.unwrapBKey,
               "c076ec3f4af123a615157154c6e1d0d6293e514fd7b0221e32d50517ecf002b8");
   do_check_eq(undefined, result.keyFetchToken);
 
   // Login with retrieving optional keys
-  result = yield client.signIn('you@example.com', 'bigsecret', true);
+  result = yield client.signIn("you@example.com", "bigsecret", true);
   do_check_eq(FAKE_SESSION_TOKEN, result.sessionToken);
   do_check_eq(result.unwrapBKey,
               "65970516211062112e955d6420bebe020269d6b6a91ebd288319fc8d0cb49624");
   do_check_eq("keyFetchToken", result.keyFetchToken);
 
   // Retry due to wrong email capitalization
-  result = yield client.signIn('You@example.com', 'bigsecret', true);
+  result = yield client.signIn("You@example.com", "bigsecret", true);
   do_check_eq(FAKE_SESSION_TOKEN, result.sessionToken);
   do_check_eq(result.unwrapBKey,
               "65970516211062112e955d6420bebe020269d6b6a91ebd288319fc8d0cb49624");
@@ -682,7 +682,7 @@ add_task(function* test_registerDevice() {
   do_check_true(result);
   do_check_eq(Object.keys(result).length, 4);
   do_check_eq(result.id, DEVICE_ID);
-  do_check_eq(typeof result.createdAt, 'number');
+  do_check_eq(typeof result.createdAt, "number");
   do_check_true(result.createdAt > 0);
   do_check_eq(result.name, DEVICE_NAME);
   do_check_eq(result.type, DEVICE_TYPE);

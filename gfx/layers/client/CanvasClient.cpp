@@ -55,14 +55,14 @@ CanvasClientBridge::UpdateAsync(AsyncCanvasRenderer* aRenderer)
     return;
   }
 
-  uint64_t asyncID = aRenderer->GetCanvasClientAsyncID();
-  if (asyncID == 0 || mAsyncID == asyncID) {
+  CompositableHandle asyncID = aRenderer->GetCanvasClientAsyncHandle();
+  if (!asyncID || mAsyncHandle == asyncID) {
     return;
   }
 
   static_cast<ShadowLayerForwarder*>(GetForwarder())
     ->AttachAsyncCompositable(asyncID, mLayer);
-  mAsyncID = asyncID;
+  mAsyncHandle = asyncID;
 }
 
 void

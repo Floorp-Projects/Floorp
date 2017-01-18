@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1288228
    * and wait for it to notify again (or we simply finish, if we've completed
    * all of the reloads we planned to do).
    */
-  window.addEventListener("message", reloadIframe, false);
+  window.addEventListener("message", reloadIframe);
 
   function reloadIframe() {
     if (--remainingReloads == 0) {

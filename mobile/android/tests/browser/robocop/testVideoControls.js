@@ -83,23 +83,23 @@ function testLoad() {
 
   // Let's start playing it
   video.play();
-  video.addEventListener("play", testPlay, false);
+  video.addEventListener("play", testPlay);
 }
 
 function testPlay(aEvent) {
-  video.removeEventListener("play", testPlay, false);
+  video.removeEventListener("play", testPlay);
   let playButton = getButtonByAttribute("class", "playButton");
   ok(playButton.hasAttribute("paused") == false, "Play button is not paused");
 
   // Let the video play for 2 seconds, then pause it
   chromeWin.setTimeout(function() {
     video.pause();
-    video.addEventListener("pause", testPause, false);
+    video.addEventListener("pause", testPause);
   }, 2000);
 }
 
 function testPause(aEvent) {
-  video.removeEventListener("pause", testPause, false);
+  video.removeEventListener("pause", testPause);
 
   // If we got here, the play button should be paused
   let playButton = getButtonByAttribute("class", "playButton");

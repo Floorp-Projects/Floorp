@@ -247,6 +247,8 @@ VideoReceiveStream::VideoReceiveStream(
 
   vie_channel_->EnableTMMBR(config.rtp.tmmbr);
 
+  vie_channel_->rtp_rtcp()->SetKeyFrameRequestMethod(config.rtp.keyframe_method);
+
   if (config.rtp.rtcp_xr.receiver_reference_time_report)
     vie_channel_->SetRtcpXrRrtrStatus(true);
 

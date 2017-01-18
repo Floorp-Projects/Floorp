@@ -42,12 +42,12 @@ var tabs_absent = [
  * Test phases
  */
 
-Phase('phase1', [
+Phase("phase1", [
   [Tabs.add, tabs1],
   [Sync]
 ]);
 
-Phase('phase2', [
+Phase("phase2", [
   [Sync],
   [Tabs.verifyNot, tabs_absent]
 ]);

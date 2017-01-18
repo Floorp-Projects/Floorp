@@ -7,7 +7,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
 function makeSteamEngine() {
-  return new SyncEngine('Steam', Service);
+  return new SyncEngine("Steam", Service);
 }
 
 var server = httpd_setup({});

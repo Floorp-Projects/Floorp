@@ -138,7 +138,7 @@ function childFunction() {
 
   content.addEventListener("focus", function() {
     sendAsyncMessage("Test:FocusReceived", { });
-  }, false);
+  });
 
   var windowGotActivate = false;
   var windowGotDeactivate = false;

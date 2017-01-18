@@ -4,8 +4,8 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ['ExtensionStorageEngine', 'EncryptionRemoteTransformer',
-                         'KeyRingEncryptionRemoteTransformer'];
+this.EXPORTED_SYMBOLS = ["ExtensionStorageEngine", "EncryptionRemoteTransformer",
+                         "KeyRingEncryptionRemoteTransformer"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 

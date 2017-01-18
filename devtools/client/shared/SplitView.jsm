@@ -81,7 +81,7 @@ this.SplitView = function SplitView(aRoot)
       }
       return false;
     }
-  }, false);
+  });
 };
 
 SplitView.prototype = {
@@ -212,7 +212,7 @@ SplitView.prototype = {
     aSummary.addEventListener("click", (aEvent) => {
       aEvent.stopPropagation();
       this.activeSummary = aSummary;
-    }, false);
+    });
 
     this._side.appendChild(aDetails);
 

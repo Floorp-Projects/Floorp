@@ -54,10 +54,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1080360
       logger("executeTest");
       target = document.getElementById("target");
       listener = document.getElementById("listener");
-      target.addEventListener("pointerdown",          TargetHandler,    false);
-      listener.addEventListener("gotpointercapture",  ListenerHandler,  false);
-      listener.addEventListener("lostpointercapture", ListenerHandler,  false);
-      document.addEventListener("lostpointercapture", DocumentHandler,  false);
+      target.addEventListener("pointerdown",          TargetHandler);
+      listener.addEventListener("gotpointercapture",  ListenerHandler);
+      listener.addEventListener("lostpointercapture", ListenerHandler);
+      document.addEventListener("lostpointercapture", DocumentHandler);
       var rect = target.getBoundingClientRect();
       synthesizePointer(target, rect.width/2, rect.height/2,  {type: "pointerdown"});
       synthesizePointer(target, rect.width/2, rect.height/2,  {type: "pointermove"});

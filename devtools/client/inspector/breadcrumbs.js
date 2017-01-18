@@ -58,15 +58,15 @@ ArrowScrollBox.prototype = {
     this.onUnderflow = this.onUnderflow.bind(this);
     this.onOverflow = this.onOverflow.bind(this);
 
-    this.inner.addEventListener("scroll", this.onScroll, false);
-    this.startBtn.addEventListener("mousedown", this.onStartBtnClick, false);
-    this.endBtn.addEventListener("mousedown", this.onEndBtnClick, false);
-    this.startBtn.addEventListener("dblclick", this.onStartBtnDblClick, false);
-    this.endBtn.addEventListener("dblclick", this.onEndBtnDblClick, false);
+    this.inner.addEventListener("scroll", this.onScroll);
+    this.startBtn.addEventListener("mousedown", this.onStartBtnClick);
+    this.endBtn.addEventListener("mousedown", this.onEndBtnClick);
+    this.startBtn.addEventListener("dblclick", this.onStartBtnDblClick);
+    this.endBtn.addEventListener("dblclick", this.onEndBtnDblClick);
 
     // Overflow and underflow are moz specific events
-    this.inner.addEventListener("underflow", this.onUnderflow, false);
-    this.inner.addEventListener("overflow", this.onOverflow, false);
+    this.inner.addEventListener("underflow", this.onUnderflow);
+    this.inner.addEventListener("overflow", this.onOverflow);
   },
 
   /**
@@ -102,8 +102,8 @@ ArrowScrollBox.prototype = {
     let window = this.win;
     function cancelHold() {
       window.clearTimeout(timer);
-      container.removeEventListener("mouseout", cancelHold, false);
-      container.removeEventListener("mouseup", handleClick, false);
+      container.removeEventListener("mouseout", cancelHold);
+      container.removeEventListener("mouseup", handleClick);
     }
 
     function repeated() {
@@ -111,8 +111,8 @@ ArrowScrollBox.prototype = {
       timer = window.setTimeout(repeated, SCROLL_REPEAT_MS);
     }
 
-    container.addEventListener("mouseout", cancelHold, false);
-    container.addEventListener("mouseup", handleClick, false);
+    container.addEventListener("mouseout", cancelHold);
+    container.addEventListener("mouseup", handleClick);
     timer = window.setTimeout(repeated, SCROLL_REPEAT_MS);
   },
 
@@ -328,18 +328,18 @@ ArrowScrollBox.prototype = {
    * Remove event handlers and clean up
    */
   destroy: function () {
-    this.inner.removeEventListener("scroll", this.onScroll, false);
+    this.inner.removeEventListener("scroll", this.onScroll);
     this.startBtn.removeEventListener("mousedown",
-                                      this.onStartBtnClick, false);
-    this.endBtn.removeEventListener("mousedown", this.onEndBtnClick, false);
+                                      this.onStartBtnClick);
+    this.endBtn.removeEventListener("mousedown", this.onEndBtnClick);
     this.startBtn.removeEventListener("dblclick",
-                                      this.onStartBtnDblClick, false);
+                                      this.onStartBtnDblClick);
     this.endBtn.removeEventListener("dblclick",
-                                    this.onRightBtnDblClick, false);
+                                    this.onRightBtnDblClick);
 
     // Overflow and underflow are moz specific events
-    this.inner.removeEventListener("underflow", this.onUnderflow, false);
-    this.inner.removeEventListener("overflow", this.onOverflow, false);
+    this.inner.removeEventListener("underflow", this.onUnderflow);
+    this.inner.removeEventListener("overflow", this.onOverflow);
   },
 };
 

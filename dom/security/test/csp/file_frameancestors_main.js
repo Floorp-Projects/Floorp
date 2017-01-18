@@ -62,4 +62,4 @@ function setupFrames() {
   elt.src = base.b + "?externalframe=" + escape('<iframe src="' + innerframeuri + '"></iframe>');
 }
 
-window.addEventListener('load', setupFrames, false);
+window.addEventListener('load', setupFrames);

@@ -213,7 +213,7 @@ function test() {
   ok(PlacesUIUtils, "PlacesUIUtils in context");
 
   // Add tabs listeners.
-  gBrowser.tabContainer.addEventListener("TabOpen", gTabsListener, false);
+  gBrowser.tabContainer.addEventListener("TabOpen", gTabsListener);
   gBrowser.addTabsProgressListener(gTabsListener);
 
   // Temporary disable history, so we won't record pages navigation.
@@ -252,7 +252,7 @@ function runNextTest() {
     gLibrary.close();
 
     // Remove tabs listeners.
-    gBrowser.tabContainer.removeEventListener("TabOpen", gTabsListener, false);
+    gBrowser.tabContainer.removeEventListener("TabOpen", gTabsListener);
     gBrowser.removeTabsProgressListener(gTabsListener);
 
     // Restore history.

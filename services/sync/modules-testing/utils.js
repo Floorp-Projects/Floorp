@@ -154,11 +154,11 @@ this.makeIdentityConfig = function(overrides) {
     // fxaccount specific credentials.
     fxaccount: {
       user: {
-        assertion: 'assertion',
-        email: 'email',
-        kA: 'kA',
-        kB: 'kB',
-        sessionToken: 'sessionToken',
+        assertion: "assertion",
+        email: "email",
+        kA: "kA",
+        kB: "kB",
+        sessionToken: "sessionToken",
         uid: "a".repeat(32),
         verified: true,
       },

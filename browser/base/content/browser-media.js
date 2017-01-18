@@ -16,26 +16,17 @@ var gEMEHandler = {
   },
   ensureEMEEnabled(browser, keySystem) {
     Services.prefs.setBoolPref("media.eme.enabled", true);
-    if (keySystem) {
-      if (keySystem.startsWith("com.adobe") &&
-          Services.prefs.getPrefType("media.gmp-eme-adobe.enabled") &&
-          !Services.prefs.getBoolPref("media.gmp-eme-adobe.enabled")) {
-        Services.prefs.setBoolPref("media.gmp-eme-adobe.enabled", true);
-      } else if (keySystem == "com.widevine.alpha" &&
-                 Services.prefs.getPrefType("media.gmp-widevinecdm.enabled") &&
-                 !Services.prefs.getBoolPref("media.gmp-widevinecdm.enabled")) {
-        Services.prefs.setBoolPref("media.gmp-widevinecdm.enabled", true);
-      }
+    if (keySystem &&
+        keySystem == "com.widevine.alpha" &&
+        Services.prefs.getPrefType("media.gmp-widevinecdm.enabled") &&
+        !Services.prefs.getBoolPref("media.gmp-widevinecdm.enabled")) {
+      Services.prefs.setBoolPref("media.gmp-widevinecdm.enabled", true);
     }
     browser.reload();
   },
   isKeySystemVisible(keySystem) {
     if (!keySystem) {
       return false;
-    }
-    if (keySystem.startsWith("com.adobe") &&
-        Services.prefs.getPrefType("media.gmp-eme-adobe.visible")) {
-      return Services.prefs.getBoolPref("media.gmp-eme-adobe.visible");
     }
     if (keySystem == "com.widevine.alpha" &&
         Services.prefs.getPrefType("media.gmp-widevinecdm.visible")) {
@@ -347,4 +338,4 @@ window.getGroupMessageManager("browsers").addMessageListener("EMEVideo:ContentMe
 window.addEventListener("unload", function() {
   window.getGroupMessageManager("browsers").removeMessageListener("EMEVideo:ContentMediaKeysRequest", gEMEHandler);
   window.getGroupMessageManager("browsers").removeMessageListener("DecoderDoctor:Notification", gDecoderDoctorHandler);
-}, false);
+});

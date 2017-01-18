@@ -89,9 +89,9 @@ function doKeyUnprivileged(key) {
       alwaysval = keycode;
   }
 
-  let dnEvent = document.createEvent('KeyboardEvent');
-  let prEvent = document.createEvent('KeyboardEvent');
-  let upEvent = document.createEvent('KeyboardEvent');
+  let dnEvent = document.createEvent("KeyboardEvent");
+  let prEvent = document.createEvent("KeyboardEvent");
+  let upEvent = document.createEvent("KeyboardEvent");
 
   /* eslint-disable no-multi-spaces */
   dnEvent.initKeyEvent("keydown",  true, true, null, false, false, false, false, alwaysval, 0);
@@ -105,9 +105,9 @@ function doKeyUnprivileged(key) {
 }
 
 function doClickWithMouseEventUnprivileged() {
-  let dnEvent = document.createEvent('MouseEvent');
-  let upEvent = document.createEvent('MouseEvent');
-  let ckEvent = document.createEvent('MouseEvent');
+  let dnEvent = document.createEvent("MouseEvent");
+  let upEvent = document.createEvent("MouseEvent");
+  let ckEvent = document.createEvent("MouseEvent");
 
   /* eslint-disable no-multi-spaces */
   dnEvent.initMouseEvent("mousedown",  true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);

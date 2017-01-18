@@ -2,7 +2,7 @@
 >>>>><script>
 function forceGC() {SpecialPowers.forceGC(); }
 var docElement = document.documentElement;
-document.addEventListener("DOMContentLoaded", CFcrash, false);
+document.addEventListener("DOMContentLoaded", CFcrash);
 function CFcrash() {
 try { test5 = document.createTextNode("/}F9*D		f	e	/e=*:	M[3	b-m#iA&	Kj[	ZA-	RSOh$-@	*xTk8r_	X:du[Ok	4d;bf|xtS	x]sA&"); } catch(e) {}
 setTimeout('document.execCommand("SelectAll");document.execCommand("InsertText", false, "hello");', 200);

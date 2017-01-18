@@ -38,16 +38,16 @@ this.BreadcrumbsWidget = function BreadcrumbsWidget(aNode, aOptions = {}) {
   this._list.setAttribute("orient", "horizontal");
   this._list.setAttribute("clicktoscroll", "true");
   this._list.setAttribute("smoothscroll", !!aOptions.smoothScroll);
-  this._list.addEventListener("keypress", e => this.emit("keyPress", e), false);
-  this._list.addEventListener("mousedown", e => this.emit("mousePress", e), false);
+  this._list.addEventListener("keypress", e => this.emit("keyPress", e));
+  this._list.addEventListener("mousedown", e => this.emit("mousePress", e));
   this._parent.appendChild(this._list);
 
   // By default, hide the arrows. We let the arrowscrollbox show them
   // in case of overflow.
   this._list._scrollButtonUp.collapsed = true;
   this._list._scrollButtonDown.collapsed = true;
-  this._list.addEventListener("underflow", this._onUnderflow.bind(this), false);
-  this._list.addEventListener("overflow", this._onOverflow.bind(this), false);
+  this._list.addEventListener("underflow", this._onUnderflow.bind(this));
+  this._list.addEventListener("overflow", this._onOverflow.bind(this));
 
   // This widget emits events that can be handled in a MenuContainer.
   EventEmitter.decorate(this);

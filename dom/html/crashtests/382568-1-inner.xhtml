@@ -29,7 +29,7 @@ function bounce(n) {
 
 function test_AttrModified() {
   var x = document.getElementById("x");
-  x.addEventListener("DOMAttrModified", onAttrModified, false);
+  x.addEventListener("DOMAttrModified", onAttrModified);
   bounce(x);
 }
 

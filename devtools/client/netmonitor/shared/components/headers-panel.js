@@ -202,7 +202,7 @@ const HeadersPanel = createClass({
     }
 
     return (
-      div({},
+      div({ className: "panel-container" },
         div({ className: "summary" },
           summaryUrl,
           summaryMethod,

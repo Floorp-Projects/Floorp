@@ -16,7 +16,7 @@
           ok(true, "image element prevents default");
           event.preventDefault();
         }
-      }, false);
+      });
 
       window.addEventListener("click", event => {
         ok(true, "expected prevent default = " + noDefault);
@@ -25,9 +25,9 @@
         if (noDefault) {
           window.parent.postMessage("finished", "http://mochi.test:8888");
         }
-      }, false);
+      });
       window.parent.postMessage("started", "http://mochi.test:8888");
-    }, false);
+    });
   </script>
 </head>
 <body>

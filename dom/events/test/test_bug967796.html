@@ -62,10 +62,10 @@ function runTests() {
   iframe.width=50;
   iframe.height=50;
   container.appendChild(iframe);
-  iframe.addEventListener("pointerenter", penter, false);
-  iframe.addEventListener("pointerleave", pleave, false);
-  iframe.addEventListener("pointerout", pout, false);
-  iframe.addEventListener("pointerover", pover, false);
+  iframe.addEventListener("pointerenter", penter);
+  iframe.addEventListener("pointerleave", pleave);
+  iframe.addEventListener("pointerout", pout);
+  iframe.addEventListener("pointerover", pover);
 
   // Make sure ESM thinks pointer is outside the test elements.
   sendPointerEvent("pointermove", outside);

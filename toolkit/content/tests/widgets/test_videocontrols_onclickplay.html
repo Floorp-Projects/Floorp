@@ -23,14 +23,14 @@ var video = document.getElementById("video");
 function startMediaLoad() {
   // Kick off test once video has loaded, in its canplaythrough event handler.
   video.src = "seek_with_sound.ogg";
-  video.addEventListener("canplaythrough", runTest, false);
+  video.addEventListener("canplaythrough", runTest);
 }
 
 function loadevent(event) {
   SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, startMediaLoad);
 }
 
-window.addEventListener("load", loadevent, false);
+window.addEventListener("load", loadevent);
 
 function runTest() {
   video.addEventListener("click", function() {

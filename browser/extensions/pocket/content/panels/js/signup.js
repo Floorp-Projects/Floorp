@@ -9,7 +9,7 @@ var PKT_SIGNUP_OVERLAY = function(options) {
     this.delayedStateSaved = false;
     this.wrapper = null;
     this.variant = window.___PKT__SIGNUP_VARIANT;
-    this.tagline = window.___PKT__SIGNUP_TAGLINE || '';
+    this.tagline = window.___PKT__SIGNUP_TAGLINE || "";
     this.preventCloseTimerCancel = false;
     this.translations = {};
     this.closeValid = true;
@@ -22,11 +22,11 @@ var PKT_SIGNUP_OVERLAY = function(options) {
     this.fxasignedin = false;
     this.dictJSON = {};
     this.initCloseTabEvents = function() {
-        $('.btn,.pkt_ext_learnmore,.alreadyhave > a').click(function(e) {
+        $(".btn,.pkt_ext_learnmore,.alreadyhave > a").click(function(e) {
             e.preventDefault();
             thePKT_SIGNUP.sendMessage("openTabWithUrl",
             {
-                url: $(this).attr('href'),
+                url: $(this).attr("href"),
                 activate: true
             });
             myself.closePopup();
@@ -40,11 +40,11 @@ var PKT_SIGNUP_OVERLAY = function(options) {
             "&": "&amp;",
             "<": "&lt;",
             ">": "&gt;",
-            '"': '&quot;',
-            "'": '&#39;'
+            '"': "&quot;",
+            "'": "&#39;"
         };
-        if (typeof s !== 'string') {
-            return '';
+        if (typeof s !== "string") {
+            return "";
         }
         return String(s).replace(/[&<>"']/g, function(str) {
             return sanitizeMap[str];
@@ -68,7 +68,7 @@ PKT_SIGNUP_OVERLAY.prototype = {
         }
         var fxasignedin = window.location.href.match(/fxasignedin=([\w|\d|\.]*)&?/);
         if (fxasignedin && fxasignedin.length > 1) {
-            this.fxasignedin = (fxasignedin[1] == '1');
+            this.fxasignedin = (fxasignedin[1] == "1");
         }
         var host = window.location.href.match(/pockethost=([\w|\.]*)&?/);
         if (host && host.length > 1) {
@@ -76,7 +76,7 @@ PKT_SIGNUP_OVERLAY.prototype = {
         }
         var inoverflowmenu = window.location.href.match(/inoverflowmenu=([\w|\.]*)&?/);
         if (inoverflowmenu && inoverflowmenu.length > 1) {
-            this.inoverflowmenu = (inoverflowmenu[1] == 'true');
+            this.inoverflowmenu = (inoverflowmenu[1] == "true");
         }
         var locale = window.location.href.match(/locale=([\w|\.]*)&?/);
         if (locale && locale.length > 1) {
@@ -91,27 +91,27 @@ PKT_SIGNUP_OVERLAY.prototype = {
         // set translations
         this.getTranslations();
         this.dictJSON.fxasignedin = this.fxasignedin ? 1 : 0;
-        this.dictJSON.controlvariant = this.controlvariant == 'true' ? 1 : 0;
-        this.dictJSON.variant = (this.variant ? this.variant : 'undefined');
-        this.dictJSON.variant += this.fxasignedin ? '_fxa' : '_nonfxa';
+        this.dictJSON.controlvariant = this.controlvariant == "true" ? 1 : 0;
+        this.dictJSON.variant = (this.variant ? this.variant : "undefined");
+        this.dictJSON.variant += this.fxasignedin ? "_fxa" : "_nonfxa";
         this.dictJSON.pockethost = this.pockethost;
         this.dictJSON.showlearnmore = true;
 
         // extra modifier class for collapsed state
         if (this.inoverflowmenu) {
-            $('body').addClass('pkt_ext_signup_overflow');
+            $("body").addClass("pkt_ext_signup_overflow");
         }
 
         // extra modifier class for language
         if (this.locale) {
-            $('body').addClass('pkt_ext_signup_' + this.locale);
+            $("body").addClass("pkt_ext_signup_" + this.locale);
         }
 
         // Create actual content
-        if (this.variant == 'overflow') {
-            $('body').append(Handlebars.templates.signup_shell(this.dictJSON));
+        if (this.variant == "overflow") {
+            $("body").append(Handlebars.templates.signup_shell(this.dictJSON));
         } else {
-            $('body').append(Handlebars.templates.signupstoryboard_shell(this.dictJSON));
+            $("body").append(Handlebars.templates.signupstoryboard_shell(this.dictJSON));
         }
 
 
@@ -165,8 +165,8 @@ $(function() {
     // send an async message to get string data
     thePKT_SIGNUP.sendMessage("initL10N", {
             tos: [
-                'https://' + pocketHost + '/tos?s=ffi&t=tos&tv=panel_tryit',
-                'https://' + pocketHost + '/privacy?s=ffi&t=privacypolicy&tv=panel_tryit'
+                "https://" + pocketHost + "/tos?s=ffi&t=tos&tv=panel_tryit",
+                "https://" + pocketHost + "/privacy?s=ffi&t=privacypolicy&tv=panel_tryit"
             ]
         }, function(resp) {
         window.pocketStrings = resp.strings;

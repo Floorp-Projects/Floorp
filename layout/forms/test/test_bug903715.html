@@ -52,7 +52,7 @@ function runTests()
     var input = document.getElementById("input-text");
     input.focus();
     input.select();
-  }, false);
+  });
 
   select.focus();
 
@@ -67,11 +67,11 @@ function runTests()
           ok(true, "Test passes if there is no error");
           SimpleTest.finish();
         }, 100);
-      }, false);
+      });
       // Close dropdown.
       synthesizeKey("VK_RETURN", { });
     }, 100);
-  }, false);
+  });
 
   // Open dropdown.
   synthesizeKey("VK_DOWN", { altKey: true });

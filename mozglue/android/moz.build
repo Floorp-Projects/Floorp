@@ -56,3 +56,9 @@ DISABLE_STL_WRAPPING = True
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-error=shadow']
+
+DEFINES['XPCOM_GLUE'] = True
+
+USE_LIBS += [
+    'xpcomglue',
+]

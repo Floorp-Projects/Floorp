@@ -10,8 +10,7 @@
 // Multi-threaded worker
 //
 // Original source:
-//  http://git.chromium.org/webm/libwebp.git
-//  100644 blob 7bd451b124ae3b81596abfbcc823e3cb129d3a38  src/utils/thread.h
+//  https://chromium.googlesource.com/webm/libwebp
 
 #ifndef VPX_THREAD_H_
 #define VPX_THREAD_H_
@@ -29,40 +28,70 @@ extern "C" {
 #if CONFIG_MULTITHREAD
 
 #if defined(_WIN32) && !HAVE_PTHREAD_H
-#include <errno.h>  // NOLINT
+#include <errno.h>    // NOLINT
 #include <process.h>  // NOLINT
 #include <windows.h>  // NOLINT
 typedef HANDLE pthread_t;
 typedef CRITICAL_SECTION pthread_mutex_t;
+
+#if _WIN32_WINNT >= 0x0600  // Windows Vista / Server 2008 or greater
+#define USE_WINDOWS_CONDITION_VARIABLE
+typedef CONDITION_VARIABLE pthread_cond_t;
+#else
 typedef struct {
   HANDLE waiting_sem_;
   HANDLE received_sem_;
   HANDLE signal_event_;
 } pthread_cond_t;
+#endif  // _WIN32_WINNT >= 0x600
+
+#ifndef WINAPI_FAMILY_PARTITION
+#define WINAPI_PARTITION_DESKTOP 1
+#define WINAPI_FAMILY_PARTITION(x) x
+#endif
+
+#if !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+#define USE_CREATE_THREAD
+#endif
 
 //------------------------------------------------------------------------------
 // simplistic pthread emulation layer
 
 // _beginthreadex requires __stdcall
+#if defined(__GNUC__) && \
+    (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 2))
+#define THREADFN __attribute__((force_align_arg_pointer)) unsigned int __stdcall
+#else
 #define THREADFN unsigned int __stdcall
+#endif
 #define THREAD_RETURN(val) (unsigned int)((DWORD_PTR)val)
 
-static INLINE int pthread_create(pthread_t* const thread, const void* attr,
-                                 unsigned int (__stdcall *start)(void*),
-                                 void* arg) {
+#if _WIN32_WINNT >= 0x0501  // Windows XP or greater
+#define WaitForSingleObject(obj, timeout) \
+  WaitForSingleObjectEx(obj, timeout, FALSE /*bAlertable*/)
+#endif
+
+static INLINE int pthread_create(pthread_t *const thread, const void *attr,
+                                 unsigned int(__stdcall *start)(void *),
+                                 void *arg) {
   (void)attr;
-  *thread = (pthread_t)_beginthreadex(NULL,   /* void *security */
-                                      0,      /* unsigned stack_size */
-                                      start,
-                                      arg,
-                                      0,      /* unsigned initflag */
-                                      NULL);  /* unsigned *thrdaddr */
+#ifdef USE_CREATE_THREAD
+  *thread = CreateThread(NULL,          /* lpThreadAttributes */
+                         0,             /* dwStackSize */
+                         start, arg, 0, /* dwStackSize */
+                         NULL);         /* lpThreadId */
+#else
+  *thread = (pthread_t)_beginthreadex(NULL,          /* void *security */
+                                      0,             /* unsigned stack_size */
+                                      start, arg, 0, /* unsigned initflag */
+                                      NULL);         /* unsigned *thrdaddr */
+#endif
   if (*thread == NULL) return 1;
   SetThreadPriority(*thread, THREAD_PRIORITY_ABOVE_NORMAL);
   return 0;
 }
 
-static INLINE int pthread_join(pthread_t thread, void** value_ptr) {
+static INLINE int pthread_join(pthread_t thread, void **value_ptr) {
   (void)value_ptr;
   return (WaitForSingleObject(thread, INFINITE) != WAIT_OBJECT_0 ||
           CloseHandle(thread) == 0);
@@ -70,9 +99,13 @@ static INLINE int pthread_join(pthread_t thread, void** value_ptr) {
 
 // Mutex
 static INLINE int pthread_mutex_init(pthread_mutex_t *const mutex,
-                                     void* mutexattr) {
+                                     void *mutexattr) {
   (void)mutexattr;
+#if _WIN32_WINNT >= 0x0600  // Windows Vista / Server 2008 or greater
+  InitializeCriticalSectionEx(mutex, 0 /*dwSpinCount*/, 0 /*Flags*/);
+#else
   InitializeCriticalSection(mutex);
+#endif
   return 0;
 }
 
@@ -98,29 +131,39 @@ static INLINE int pthread_mutex_destroy(pthread_mutex_t *const mutex) {
 // Condition
 static INLINE int pthread_cond_destroy(pthread_cond_t *const condition) {
   int ok = 1;
+#ifdef USE_WINDOWS_CONDITION_VARIABLE
+  (void)condition;
+#else
   ok &= (CloseHandle(condition->waiting_sem_) != 0);
   ok &= (CloseHandle(condition->received_sem_) != 0);
   ok &= (CloseHandle(condition->signal_event_) != 0);
+#endif
   return !ok;
 }
 
 static INLINE int pthread_cond_init(pthread_cond_t *const condition,
-                                    void* cond_attr) {
+                                    void *cond_attr) {
   (void)cond_attr;
+#ifdef USE_WINDOWS_CONDITION_VARIABLE
+  InitializeConditionVariable(condition);
+#else
   condition->waiting_sem_ = CreateSemaphore(NULL, 0, MAX_DECODE_THREADS, NULL);
   condition->received_sem_ = CreateSemaphore(NULL, 0, MAX_DECODE_THREADS, NULL);
   condition->signal_event_ = CreateEvent(NULL, FALSE, FALSE, NULL);
-  if (condition->waiting_sem_ == NULL ||
-      condition->received_sem_ == NULL ||
+  if (condition->waiting_sem_ == NULL || condition->received_sem_ == NULL ||
       condition->signal_event_ == NULL) {
     pthread_cond_destroy(condition);
     return 1;
   }
+#endif
   return 0;
 }
 
 static INLINE int pthread_cond_signal(pthread_cond_t *const condition) {
   int ok = 1;
+#ifdef USE_WINDOWS_CONDITION_VARIABLE
+  WakeConditionVariable(condition);
+#else
   if (WaitForSingleObject(condition->waiting_sem_, 0) == WAIT_OBJECT_0) {
     // a thread is waiting in pthread_cond_wait: allow it to be notified
     ok = SetEvent(condition->signal_event_);
@@ -129,31 +172,35 @@ static INLINE int pthread_cond_signal(pthread_cond_t *const condition) {
     ok &= (WaitForSingleObject(condition->received_sem_, INFINITE) !=
            WAIT_OBJECT_0);
   }
+#endif
   return !ok;
 }
 
 static INLINE int pthread_cond_wait(pthread_cond_t *const condition,
                                     pthread_mutex_t *const mutex) {
   int ok;
+#ifdef USE_WINDOWS_CONDITION_VARIABLE
+  ok = SleepConditionVariableCS(condition, mutex, INFINITE);
+#else
   // note that there is a consumer available so the signal isn't dropped in
   // pthread_cond_signal
-  if (!ReleaseSemaphore(condition->waiting_sem_, 1, NULL))
-    return 1;
+  if (!ReleaseSemaphore(condition->waiting_sem_, 1, NULL)) return 1;
   // now unlock the mutex so pthread_cond_signal may be issued
   pthread_mutex_unlock(mutex);
   ok = (WaitForSingleObject(condition->signal_event_, INFINITE) ==
         WAIT_OBJECT_0);
   ok &= ReleaseSemaphore(condition->received_sem_, 1, NULL);
   pthread_mutex_lock(mutex);
+#endif
   return !ok;
 }
 #elif defined(__OS2__)
 #define INCL_DOS
-#include <os2.h>    // NOLINT
+#include <os2.h>  // NOLINT
 
-#include <errno.h>  // NOLINT
-#include <stdlib.h> // NOLINT
-#include <sys/builtin.h> // NOLINT
+#include <errno.h>        // NOLINT
+#include <stdlib.h>       // NOLINT
+#include <sys/builtin.h>  // NOLINT
 
 #define pthread_t TID
 #define pthread_mutex_t HMTX
@@ -171,20 +218,19 @@ typedef struct {
 #define THREAD_RETURN(val) (val)
 
 typedef struct {
-  void* (*start_)(void*);
-  void* arg_;
+  void *(*start_)(void *);
+  void *arg_;
 } thread_arg;
 
-static void thread_start(void* arg) {
+static void thread_start(void *arg) {
   thread_arg targ = *(thread_arg *)arg;
   free(arg);
 
   targ.start_(targ.arg_);
 }
 
-static INLINE int pthread_create(pthread_t* const thread, const void* attr,
-                                 void* (*start)(void*),
-                                 void* arg) {
+static INLINE int pthread_create(pthread_t *const thread, const void *attr,
+                                 void *(*start)(void *), void *arg) {
   int tid;
   thread_arg *targ = (thread_arg *)malloc(sizeof(*targ));
   if (targ == NULL) return 1;
@@ -203,14 +249,14 @@ static INLINE int pthread_create(pthread_t* const thread, const void* attr,
   return 0;
 }
 
-static INLINE int pthread_join(pthread_t thread, void** value_ptr) {
+static INLINE int pthread_join(pthread_t thread, void **value_ptr) {
   (void)value_ptr;
   return DosWaitThread(&thread, DCWW_WAIT) != 0;
 }
 
 // Mutex
 static INLINE int pthread_mutex_init(pthread_mutex_t *const mutex,
-                                     void* mutexattr) {
+                                     void *mutexattr) {
   (void)mutexattr;
   return DosCreateMutexSem(NULL, mutex, 0, FALSE) != 0;
 }
@@ -240,12 +286,12 @@ static INLINE int pthread_cond_destroy(pthread_cond_t *const condition) {
 }
 
 static INLINE int pthread_cond_init(pthread_cond_t *const condition,
-                                    void* cond_attr) {
+                                    void *cond_attr) {
   int ok = 1;
   (void)cond_attr;
 
-  ok &= DosCreateEventSem(NULL, &condition->event_sem_, DCE_POSTONE, FALSE)
-          == 0;
+  ok &=
+      DosCreateEventSem(NULL, &condition->event_sem_, DCE_POSTONE, FALSE) == 0;
   ok &= DosCreateEventSem(NULL, &condition->ack_sem_, DCE_POSTONE, FALSE) == 0;
   if (!ok) {
     pthread_cond_destroy(condition);
@@ -270,7 +316,7 @@ static INLINE int pthread_cond_broadcast(pthread_cond_t *const condition) {
   int ok = 1;
 
   while (!__atomic_cmpxchg32(&condition->wait_count_, 0, 0))
-      ok &= pthread_cond_signal(condition) == 0;
+    ok &= pthread_cond_signal(condition) == 0;
 
   return !ok;
 }
@@ -293,24 +339,24 @@ static INLINE int pthread_cond_wait(pthread_cond_t *const condition,
 
   return !ok;
 }
-#else  // _WIN32
-#include <pthread.h> // NOLINT
-# define THREADFN void*
-# define THREAD_RETURN(val) val
+#else                 // _WIN32
+#include <pthread.h>  // NOLINT
+#define THREADFN void *
+#define THREAD_RETURN(val) val
 #endif
 
 #endif  // CONFIG_MULTITHREAD
 
 // State of the worker thread object
 typedef enum {
-  NOT_OK = 0,   // object is unusable
-  OK,           // ready to work
-  WORK          // busy finishing the current task
+  NOT_OK = 0,  // object is unusable
+  OK,          // ready to work
+  WORK         // busy finishing the current task
 } VPxWorkerStatus;
 
 // Function to be called by the worker thread. Takes two opaque pointers as
 // arguments (data1 and data2), and should return false in case of error.
-typedef int (*VPxWorkerHook)(void*, void*);
+typedef int (*VPxWorkerHook)(void *, void *);
 
 // Platform-dependent implementation details for the worker.
 typedef struct VPxWorkerImpl VPxWorkerImpl;
@@ -319,10 +365,10 @@ typedef struct VPxWorkerImpl VPxWorkerImpl;
 typedef struct {
   VPxWorkerImpl *impl_;
   VPxWorkerStatus status_;
-  VPxWorkerHook hook;     // hook to call
-  void *data1;            // first argument passed to 'hook'
-  void *data2;            // second argument passed to 'hook'
-  int had_error;          // return value of the last call to 'hook'
+  VPxWorkerHook hook;  // hook to call
+  void *data1;         // first argument passed to 'hook'
+  void *data2;         // second argument passed to 'hook'
+  int had_error;       // return value of the last call to 'hook'
 } VPxWorker;
 
 // The interface for all thread-worker related functions. All these functions
@@ -363,7 +409,7 @@ const VPxWorkerInterface *vpx_get_worker_interface(void);
 //------------------------------------------------------------------------------
 
 #ifdef __cplusplus
-}    // extern "C"
+}  // extern "C"
 #endif
 
 #endif  // VPX_THREAD_H_

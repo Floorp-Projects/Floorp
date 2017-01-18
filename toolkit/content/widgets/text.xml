@@ -28,13 +28,13 @@
       <property name="accessKey">
         <getter>
           <![CDATA[
-            var accessKey = this.getAttribute('accesskey');
+            var accessKey = this.getAttribute("accesskey");
             return accessKey ? accessKey[0] : null;
           ]]>
         </getter>
         <setter>
           <![CDATA[
-            this.setAttribute('accesskey', val);
+            this.setAttribute("accesskey", val);
             return val;
           ]]>
         </setter>
@@ -44,7 +44,7 @@
         <setter>
           <![CDATA[
             // After this gets set, the label will use the binding #label-control
-            this.setAttribute('control', val);
+            this.setAttribute("control", val);
             return val;
           ]]>
         </setter>
@@ -115,13 +115,13 @@
             var afterLabel = document.getAnonymousElementByAttribute(this, "anonid", "accessKeyParens");
             afterLabel.textContent = "";
 
-            var oldAccessKey = this.getElementsByAttribute('class', 'accesskey').item(0);
+            var oldAccessKey = this.getElementsByAttribute("class", "accesskey").item(0);
             if (oldAccessKey) { // Clear old accesskey
               this.mergeElement(oldAccessKey);
             }
 
             var oldHiddenSpan =
-              this.getElementsByAttribute('class', 'hiddenColon').item(0);
+              this.getElementsByAttribute("class", "hiddenColon").item(0);
             if (oldHiddenSpan) {
               this.mergeElement(oldHiddenSpan);
             }
@@ -235,10 +235,10 @@
             var accessKey = null;
             var labeledEl = this.labeledControlElement;
             if (labeledEl) {
-              accessKey = labeledEl.getAttribute('accesskey');
+              accessKey = labeledEl.getAttribute("accesskey");
             }
             if (!accessKey) {
-              accessKey = this.getAttribute('accesskey');
+              accessKey = this.getAttribute("accesskey");
             }
             return accessKey ? accessKey[0] : null;
           ]]>
@@ -246,12 +246,12 @@
         <setter>
           <![CDATA[
             // If this label already has an accesskey attribute store it here as well
-            if (this.hasAttribute('accesskey')) {
-              this.setAttribute('accesskey', val);
+            if (this.hasAttribute("accesskey")) {
+              this.setAttribute("accesskey", val);
             }
             var control = this.labeledControlElement;
             if (control) {
-              control.setAttribute('accesskey', val);
+              control.setAttribute("accesskey", val);
             }
             this.formatAccessKey(false);
             return val;
@@ -269,7 +269,7 @@
             if (control) {
               control.labelElement = null; // No longer pointed to be this label
             }
-            this.setAttribute('control', val);
+            this.setAttribute("control", val);
             this.formatAccessKey(false);
             return val;
           ]]>

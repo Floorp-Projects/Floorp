@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
  // Update state that depends on preferences.
  prefObserver.observe();
-}, false);
+});
 
 function openPrivateWindow() {
  // Ask chrome to open a private window

@@ -31,7 +31,7 @@ add_task(function* test() {
   }
 
   let container = gBrowser.tabContainer;
-  container.addEventListener("TabOpen", tabAdded, false);
+  container.addEventListener("TabOpen", tabAdded);
 
   gBrowser.addTab("about:blank");
   BrowserSearch.loadSearchFromContext("mozilla");
@@ -44,7 +44,7 @@ add_task(function* test() {
   is(tabs[1], gBrowser.tabs[1], "first search tab opens next to the current tab");
   is(tabs[2], gBrowser.tabs[2], "second search tab opens next to the first search tab");
 
-  container.removeEventListener("TabOpen", tabAdded, false);
+  container.removeEventListener("TabOpen", tabAdded);
   tabs.forEach(gBrowser.removeTab, gBrowser);
 
   // Make sure that the context searches are correctly recorded.

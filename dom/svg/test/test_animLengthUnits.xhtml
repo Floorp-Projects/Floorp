@@ -114,7 +114,7 @@ function checkWhilstFrozen() {
 
 var animate = document.getElementById('animate');
 if (animate && animate.targetElement) {
-  window.addEventListener("load", main, false);
+  window.addEventListener("load", main);
 } else {
   ok(true); // Skip tests but don't report 'todo' either
   SimpleTest.finish();

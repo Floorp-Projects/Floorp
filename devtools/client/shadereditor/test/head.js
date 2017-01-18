@@ -93,10 +93,10 @@ function removeTab(aTab, aWindow) {
   let tabContainer = targetBrowser.tabContainer;
 
   tabContainer.addEventListener("TabClose", function onClose(aEvent) {
-    tabContainer.removeEventListener("TabClose", onClose, false);
+    tabContainer.removeEventListener("TabClose", onClose);
     info("Tab removed and finished closing.");
     deferred.resolve();
-  }, false);
+  });
 
   targetBrowser.removeTab(aTab);
   return deferred.promise;

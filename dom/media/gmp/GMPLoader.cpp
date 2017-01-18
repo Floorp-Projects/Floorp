@@ -24,8 +24,8 @@ namespace gmp {
 
 class GMPLoaderImpl : public GMPLoader {
 public:
-  explicit GMPLoaderImpl(SandboxStarter* aStarter)
-    : mSandboxStarter(aStarter)
+  explicit GMPLoaderImpl(UniquePtr<SandboxStarter> aStarter)
+    : mSandboxStarter(Move(aStarter))
     , mAdapter(nullptr)
   {}
   ~GMPLoaderImpl() override = default;
@@ -49,12 +49,12 @@ public:
 #endif
 
 private:
-  SandboxStarter* mSandboxStarter;
+  UniquePtr<SandboxStarter> mSandboxStarter;
   UniquePtr<GMPAdapter> mAdapter;
 };
 
-UniquePtr<GMPLoader> CreateGMPLoader(SandboxStarter* aStarter) {
-  return MakeUnique<GMPLoaderImpl>(aStarter);
+UniquePtr<GMPLoader> CreateGMPLoader(UniquePtr<SandboxStarter> aStarter) {
+  return MakeUnique<GMPLoaderImpl>(Move(aStarter));
 }
 
 class PassThroughGMPAdapter : public GMPAdapter {

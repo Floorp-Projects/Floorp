@@ -30,10 +30,6 @@ static void accumulate_rd_opt(ThreadData *td, ThreadData *td_t) {
             for (n = 0; n < ENTROPY_TOKENS; n++)
               td->rd_counts.coef_counts[i][j][k][l][m][n] +=
                   td_t->rd_counts.coef_counts[i][j][k][l][m][n];
-
-  // Counts of all motion searches and exhuastive mesh searches.
-  td->rd_counts.m_search_count += td_t->rd_counts.m_search_count;
-  td->rd_counts.ex_search_count += td_t->rd_counts.ex_search_count;
 }
 
 static int enc_worker_hook(EncWorkerData *const thread_data, void *unused) {
@@ -43,10 +39,10 @@ static int enc_worker_hook(EncWorkerData *const thread_data, void *unused) {
   const int tile_rows = 1 << cm->log2_tile_rows;
   int t;
 
-  (void) unused;
+  (void)unused;
 
   for (t = thread_data->start; t < tile_rows * tile_cols;
-      t += cpi->num_workers) {
+       t += cpi->num_workers) {
     int tile_row = t / tile_cols;
     int tile_col = t % tile_cols;
 
@@ -63,8 +59,8 @@ static int get_max_tile_cols(VP9_COMP *cpi) {
   int log2_tile_cols;
 
   vp9_get_tile_n_bits(mi_cols, &min_log2_tile_cols, &max_log2_tile_cols);
-  log2_tile_cols = clamp(cpi->oxcf.tile_columns,
-                   min_log2_tile_cols, max_log2_tile_cols);
+  log2_tile_cols =
+      clamp(cpi->oxcf.tile_columns, min_log2_tile_cols, max_log2_tile_cols);
   return (1 << log2_tile_cols);
 }
 
@@ -92,8 +88,7 @@ void vp9_encode_tiles_mt(VP9_COMP *cpi) {
                     vpx_malloc(allocated_workers * sizeof(*cpi->workers)));
 
     CHECK_MEM_ERROR(cm, cpi->tile_thr_data,
-                    vpx_calloc(allocated_workers,
-                    sizeof(*cpi->tile_thr_data)));
+                    vpx_calloc(allocated_workers, sizeof(*cpi->tile_thr_data)));
 
     for (i = 0; i < allocated_workers; i++) {
       VPxWorker *const worker = &cpi->workers[i];
@@ -140,7 +135,7 @@ void vp9_encode_tiles_mt(VP9_COMP *cpi) {
     worker->hook = (VPxWorkerHook)enc_worker_hook;
     worker->data1 = &cpi->tile_thr_data[i];
     worker->data2 = NULL;
-    thread_data = (EncWorkerData*)worker->data1;
+    thread_data = (EncWorkerData *)worker->data1;
 
     // Before encoding a frame, copy the thread data from cpi.
     if (thread_data->td != &cpi->td) {
@@ -173,7 +168,7 @@ void vp9_encode_tiles_mt(VP9_COMP *cpi) {
   // Encode a frame
   for (i = 0; i < num_workers; i++) {
     VPxWorker *const worker = &cpi->workers[i];
-    EncWorkerData *const thread_data = (EncWorkerData*)worker->data1;
+    EncWorkerData *const thread_data = (EncWorkerData *)worker->data1;
 
     // Set the starting tile for each thread.
     thread_data->start = i;
@@ -192,7 +187,7 @@ void vp9_encode_tiles_mt(VP9_COMP *cpi) {
 
   for (i = 0; i < num_workers; i++) {
     VPxWorker *const worker = &cpi->workers[i];
-    EncWorkerData *const thread_data = (EncWorkerData*)worker->data1;
+    EncWorkerData *const thread_data = (EncWorkerData *)worker->data1;
 
     // Accumulate counters.
     if (i < cpi->num_workers - 1) {

@@ -46,11 +46,11 @@ string DecodeFileWithPause(const string &filename, int num_threads,
   int in_frames = 0;
   int out_frames = 0;
 
-  vpx_codec_dec_cfg_t cfg = {0};
+  vpx_codec_dec_cfg_t cfg = vpx_codec_dec_cfg_t();
   cfg.threads = num_threads;
   vpx_codec_flags_t flags = 0;
   flags |= VPX_CODEC_USE_FRAME_THREADING;
-  libvpx_test::VP9Decoder decoder(cfg, flags, 0);
+  libvpx_test::VP9Decoder decoder(cfg, flags);
 
   libvpx_test::MD5 md5;
   video.Begin();
@@ -74,8 +74,7 @@ string DecodeFileWithPause(const string &filename, int num_threads,
     }
 
     // Flush the decoder at the end of the video.
-    if (!video.cxdata())
-      decoder.DecodeFrame(NULL, 0);
+    if (!video.cxdata()) decoder.DecodeFrame(NULL, 0);
 
     libvpx_test::DxDataIterator dec_iter = decoder.GetDxData();
     const vpx_image_t *img;
@@ -87,8 +86,8 @@ string DecodeFileWithPause(const string &filename, int num_threads,
     }
   } while (video.cxdata() != NULL);
 
-  EXPECT_EQ(in_frames, out_frames) <<
-      "Input frame count does not match output frame count";
+  EXPECT_EQ(in_frames, out_frames)
+      << "Input frame count does not match output frame count";
 
   return string(md5.Get());
 }
@@ -108,12 +107,12 @@ TEST(VP9MultiThreadedFrameParallel, PauseSeekResume) {
   // vp90-2-07-frame_parallel-1.webm is a 40 frame video file with
   // one key frame for every ten frames.
   static const PauseFileList files[] = {
-    { "vp90-2-07-frame_parallel-1.webm",
-      "6ea7c3875d67252e7caf2bc6e75b36b1", 6 },
-    { "vp90-2-07-frame_parallel-1.webm",
-      "4bb634160c7356a8d7d4299b6dc83a45", 12 },
-    { "vp90-2-07-frame_parallel-1.webm",
-      "89772591e6ef461f9fa754f916c78ed8", 26 },
+    { "vp90-2-07-frame_parallel-1.webm", "6ea7c3875d67252e7caf2bc6e75b36b1",
+      6 },
+    { "vp90-2-07-frame_parallel-1.webm", "4bb634160c7356a8d7d4299b6dc83a45",
+      12 },
+    { "vp90-2-07-frame_parallel-1.webm", "89772591e6ef461f9fa754f916c78ed8",
+      26 },
     { NULL, NULL, 0 },
   };
   DecodeFilesWithPause(files);
@@ -137,7 +136,7 @@ string DecodeFile(const string &filename, int num_threads,
   vpx_codec_dec_cfg_t cfg = vpx_codec_dec_cfg_t();
   cfg.threads = num_threads;
   const vpx_codec_flags_t flags = VPX_CODEC_USE_FRAME_THREADING;
-  libvpx_test::VP9Decoder decoder(cfg, flags, 0);
+  libvpx_test::VP9Decoder decoder(cfg, flags);
 
   libvpx_test::MD5 md5;
   video.Begin();
@@ -155,8 +154,7 @@ string DecodeFile(const string &filename, int num_threads,
     video.Next();
 
     // Flush the decoder at the end of the video.
-    if (!video.cxdata())
-      decoder.DecodeFrame(NULL, 0);
+    if (!video.cxdata()) decoder.DecodeFrame(NULL, 0);
 
     libvpx_test::DxDataIterator dec_iter = decoder.GetDxData();
     const vpx_image_t *img;
@@ -168,8 +166,8 @@ string DecodeFile(const string &filename, int num_threads,
     }
   } while (video.cxdata() != NULL);
 
-  EXPECT_EQ(expected_frame_count, out_frames) <<
-      "Input frame count does not match expected output frame count";
+  EXPECT_EQ(expected_frame_count, out_frames)
+      << "Input frame count does not match expected output frame count";
 
   return string(md5.Get());
 }
@@ -209,8 +207,7 @@ TEST(VP9MultiThreadedFrameParallel, InvalidFileTest) {
 TEST(VP9MultiThreadedFrameParallel, ValidFileTest) {
   static const FileList files[] = {
 #if CONFIG_VP9_HIGHBITDEPTH
-    { "vp92-2-20-10bit-yuv420.webm",
-      "a16b99df180c584e8db2ffeda987d293", 10 },
+    { "vp92-2-20-10bit-yuv420.webm", "a16b99df180c584e8db2ffeda987d293", 10 },
 #endif
     { NULL, NULL, 0 },
   };

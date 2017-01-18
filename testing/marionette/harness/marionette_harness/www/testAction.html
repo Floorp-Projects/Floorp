@@ -48,25 +48,25 @@
     };
     //use this function outside of attachListeners when you want to test sendMouseOnlyEvents on a target
     function attachMouseListeners(element) {
-      element.addEventListener("contextmenu", appendText("-contextmenu"), false);
-      element.addEventListener("mousedown", appendText("-mousedown"), false);
-      element.addEventListener("mousemove", appendText("-mousemove"), false);
-      element.addEventListener("mouseup", appendText("-mouseup"), false);
-      element.addEventListener("click", appendText("-click"), false);
+      element.addEventListener("contextmenu", appendText("-contextmenu"));
+      element.addEventListener("mousedown", appendText("-mousedown"));
+      element.addEventListener("mousemove", appendText("-mousemove"));
+      element.addEventListener("mouseup", appendText("-mouseup"));
+      element.addEventListener("click", appendText("-click"));
     };
     function attachListeners(id) {
       var element = document.getElementById(id);
-      element.addEventListener("touchstart", appendText("-touchstart"), false);
-      element.addEventListener("touchmove", appendText("-touchmove"), false);
-      element.addEventListener("touchend", appendText("-touchend"), false);
-      element.addEventListener("touchcancel", appendText("-touchcancel"), false);
+      element.addEventListener("touchstart", appendText("-touchstart"));
+      element.addEventListener("touchmove", appendText("-touchmove"));
+      element.addEventListener("touchend", appendText("-touchend"));
+      element.addEventListener("touchcancel", appendText("-touchcancel"));
       attachMouseListeners(element);
     };
     //for tracking time on an element
     function addTimers(id, timer) {
       var element = document.getElementById(id);
-      element.addEventListener("touchstart", function(evt) { timer = (new Date()).getTime();}, false);
-      element.addEventListener("touchend", function(evt) { timer = (new Date()).getTime() - timer; evt.target.innerHTML += "-" + timer;}, false);
+      element.addEventListener("touchstart", function(evt) { timer = (new Date()).getTime();});
+      element.addEventListener("touchend", function(evt) { timer = (new Date()).getTime() - timer; evt.target.innerHTML += "-" + timer;});
     }
     attachListeners("button1");
     attachListeners("button2");
@@ -84,9 +84,9 @@
       var content = document.createTextNode("delayed");
       newButton.appendChild(content);
       document.body.appendChild(newButton);
-      newButton.addEventListener("mousemove", appendText("-mousemove"), false);
-      newButton.addEventListener("mouseup", appendText("-mouseup"), false);
-      newButton.addEventListener("click", appendText("-click"), false);
+      newButton.addEventListener("mousemove", appendText("-mousemove"));
+      newButton.addEventListener("mouseup", appendText("-mouseup"));
+      newButton.addEventListener("click", appendText("-click"));
     };
     window.setTimeout(createDelayed, 5000);
   </script>

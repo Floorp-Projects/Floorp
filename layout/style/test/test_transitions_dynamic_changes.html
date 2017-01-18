@@ -60,7 +60,7 @@ p.style.transitionDelay = "-1s";
 p.style.transitionProperty = "text-indent";
 var endCount = 0;
 function incrementEndCount(event) { ++endCount; }
-p.addEventListener("transitionend", incrementEndCount, false);
+p.addEventListener("transitionend", incrementEndCount);
 utils.advanceTimeAndRefresh(0);
 p.style.textIndent = "100px";
 is(cs.textIndent, "100px", "value should now be 100px");

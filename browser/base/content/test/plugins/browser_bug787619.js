@@ -61,5 +61,5 @@ add_task(function* () {
   pluginInfo = yield promiseForPluginInfo("plugin");
   ok(pluginInfo.activated, "plugin should be activated");
 
-  is(gWrapperClickCount, 0, 'wrapper should not have received any clicks');
+  is(gWrapperClickCount, 0, "wrapper should not have received any clicks");
 });

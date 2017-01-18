@@ -66,7 +66,10 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
 {
   // Ignore all operations on compositables created on stale compositors. We
   // return true because the child is unable to handle errors.
-  CompositableHost* compositable = CompositableHost::FromIPDLActor(aEdit.compositableParent());
+  RefPtr<CompositableHost> compositable = FindCompositable(aEdit.compositable());
+  if (!compositable) {
+    return false;
+  }
   if (compositable->GetCompositor() && !compositable->GetCompositor()->IsValid()) {
     return true;
   }
@@ -95,7 +98,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         return false;
       }
       replyv.push_back(
-        OpContentBufferSwap(aEdit.compositableParent(), nullptr, frontUpdatedRegion));
+        OpContentBufferSwap(aEdit.compositable(), frontUpdatedRegion));
 
       RenderTraceInvalidateEnd(thebes, "FF00FF");
       break;
@@ -229,15 +232,60 @@ CompositableParentManager::DestroyActor(const OpDestroy& aOp)
       TextureHost::ReceivedDestroy(actor);
       break;
     }
-    case OpDestroy::TPCompositableParent: {
-      auto actor = aOp.get_PCompositableParent();
-      CompositableHost::ReceivedDestroy(actor);
+    case OpDestroy::TCompositableHandle: {
+      ReleaseCompositable(aOp.get_CompositableHandle());
       break;
     }
     default: {
       MOZ_ASSERT(false, "unsupported type");
     }
   }
+}
+
+RefPtr<CompositableHost>
+CompositableParentManager::AddCompositable(const CompositableHandle& aHandle,
+				           const TextureInfo& aInfo)
+{
+  if (mCompositables.find(aHandle.Value()) != mCompositables.end()) {
+    NS_ERROR("Client should not allocate duplicate handles");
+    return nullptr;
+  }
+  if (!aHandle) {
+    NS_ERROR("Client should not allocate 0 as a handle");
+    return nullptr;
+  }
+
+  RefPtr<CompositableHost> host = CompositableHost::Create(aInfo);
+  if (!host) {
+    return nullptr;
+  }
+
+  mCompositables[aHandle.Value()] = host;
+  return host;
+}
+
+RefPtr<CompositableHost>
+CompositableParentManager::FindCompositable(const CompositableHandle& aHandle)
+{
+  auto iter = mCompositables.find(aHandle.Value());
+  if (iter == mCompositables.end()) {
+    return nullptr;
+  }
+  return iter->second;
+}
+
+void
+CompositableParentManager::ReleaseCompositable(const CompositableHandle& aHandle)
+{
+  auto iter = mCompositables.find(aHandle.Value());
+  if (iter == mCompositables.end()) {
+    return;
+  }
+
+  RefPtr<CompositableHost> host = iter->second;
+  mCompositables.erase(iter);
+
+  host->Detach(nullptr, CompositableHost::FORCE_DETACH);
 }
 
 } // namespace layers

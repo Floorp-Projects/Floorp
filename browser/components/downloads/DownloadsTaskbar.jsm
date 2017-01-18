@@ -147,7 +147,7 @@ this.DownloadsTaskbar = {
         // again on the next browser window that is opened.
         this._taskbarProgress = null;
       }
-    }, false);
+    });
   },
 
   //////////////////////////////////////////////////////////////////////////////

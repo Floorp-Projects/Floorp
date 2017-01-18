@@ -38,7 +38,7 @@ function checkDefaultSrcOnly() {
 
   document.getElementById('testframe2').src = 'file_bug888172.sjs?csp=' +
     escape("default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self'");
-  document.getElementById('testframe2').addEventListener('load', checkDefaultSrcWithScriptSrc, false);
+  document.getElementById('testframe2').addEventListener('load', checkDefaultSrcWithScriptSrc);
 }
 
 function checkDefaultSrcWithScriptSrc() {
@@ -50,7 +50,7 @@ function checkDefaultSrcWithScriptSrc() {
 
   document.getElementById('testframe3').src = 'file_bug888172.sjs?csp=' +
     escape("default-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self'");
-  document.getElementById('testframe3').addEventListener('load', checkDefaultSrcWithStyleSrc, false);
+  document.getElementById('testframe3').addEventListener('load', checkDefaultSrcWithStyleSrc);
 }
 
 function checkDefaultSrcWithStyleSrc() {
@@ -66,7 +66,7 @@ function checkDefaultSrcWithStyleSrc() {
 
 document.getElementById('testframe1').src = 'file_bug888172.sjs?csp=' +
   escape("default-src 'self' 'unsafe-inline' 'unsafe-eval'");
-document.getElementById('testframe1').addEventListener('load', checkDefaultSrcOnly, false);
+document.getElementById('testframe1').addEventListener('load', checkDefaultSrcOnly);
 </script>
 </pre>
 </body>

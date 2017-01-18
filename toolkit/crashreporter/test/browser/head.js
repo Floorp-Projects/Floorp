@@ -88,7 +88,7 @@ function add_fake_crashes(crD, count) {
     file.append(fn);
     file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
     file.lastModifiedTime = date;
-    results.push({'id': uuid, 'date': date, 'pending': false});
+    results.push({"id": uuid, "date": date, "pending": false});
 
     date += 60000;
   }
@@ -135,5 +135,5 @@ function addPendingCrashreport(crD, date, extra) {
   dumpfile.lastModifiedTime = date;
   extrafile.lastModifiedTime = date;
   memoryfile.lastModifiedTime = date;
-  return {'id': uuid, 'date': date, 'pending': true, 'extra': extra};
+  return {"id": uuid, "date": date, "pending": true, "extra": extra};
 }

@@ -116,9 +116,9 @@ function test() {
 
   function cleanup() {
     // remove the event listener and clean up before finishing
-    gBrowser.tabContainer.removeEventListener("SSTabRestoring", onSSTabRestoring, false);
+    gBrowser.tabContainer.removeEventListener("SSTabRestoring", onSSTabRestoring);
     gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored, true);
-    gBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen, false);
+    gBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen);
     // Put this in an executeSoon because we still haven't called restoreNextTab
     // in sessionstore for the last tab (we'll call it after this). We end up
     // trying to restore the tab (since we then add a closed tab to the array).
@@ -129,9 +129,9 @@ function test() {
   }
 
   // Add the event listeners
-  gBrowser.tabContainer.addEventListener("SSTabRestoring", onSSTabRestoring, false);
+  gBrowser.tabContainer.addEventListener("SSTabRestoring", onSSTabRestoring);
   gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored, true);
-  gBrowser.tabContainer.addEventListener("TabOpen", onTabOpen, false);
+  gBrowser.tabContainer.addEventListener("TabOpen", onTabOpen);
   // Restore state
   ss.setBrowserState(JSON.stringify(state));
 }

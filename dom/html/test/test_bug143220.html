@@ -53,8 +53,8 @@ function onFileOpened(message) {
   initControl1();
   initControl2();
 
-  is($("i1").value, leafName, "Leaking full value?");
-  is($("i2").value, leafName, "Leaking full value?");
+  is($("i1").value, 'C:\\fakepath\\' + leafName, "Leaking full value?");
+  is($("i2").value, 'C:\\fakepath\\' + leafName, "Leaking full value?");
 
   helper.addMessageListener("file.removed", onFileRemoved);
   helper.sendAsyncMessage("file.remove", null);

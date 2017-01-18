@@ -106,7 +106,7 @@ function runTest1() {
     if (isRectInList(bounds, SpecialPowers.wrap(event).clientRects)) {
       foundExactRect = true;
     }
-    window.removeEventListener("MozAfterPaint", listener, false);
+    window.removeEventListener("MozAfterPaint", listener);
     ++iterations;
     if (iterations < 4) {
       setTimeout(triggerPaint, 100);
@@ -117,7 +117,7 @@ function runTest1() {
   }
 
   function triggerPaint() {
-    window.addEventListener("MozAfterPaint", listener, false);
+    window.addEventListener("MozAfterPaint", listener);
     flash(document, 'd');
     window.opener.ok(true, "trigger test1 paint");
   }
@@ -143,12 +143,12 @@ function runTest2(frameID, containerID) {
   function check() {
     window.opener.is(fired, 1, "Wrong event count (" + frameID + ")");
     window.opener.ok(gotSubdocPrivileged, "Didn't get subdoc invalidation while we were privileged (" + frameID + ")");
-    window.removeEventListener("MozAfterPaint", listener, false);
+    window.removeEventListener("MozAfterPaint", listener);
     runNext();
   }
 
   function triggerPaint() {
-    window.addEventListener("MozAfterPaint", listener, false);
+    window.addEventListener("MozAfterPaint", listener);
     document.body.offsetTop;
     flash(iframe.contentDocument, 'd');
   }

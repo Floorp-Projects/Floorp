@@ -17,12 +17,12 @@ if (is_feature_enabled()) {
     {
         document.documentElement.focus();
         var x = navigator.mozNotification;
-        document.documentElement.addEventListener('', function(){x}, false);
+        document.documentElement.addEventListener('', function(){x});
         ok(true, "load callback called");
         SimpleTest.finish();
     }
 
-    window.addEventListener("load", boom, false);
+    window.addEventListener("load", boom);
 } else {
     ok(true, "Desktop notifications not enabled.");
 }

@@ -31,8 +31,8 @@ function test_seek14(v, seekTime, is, ok, finish) {
     setTimeout(finish, 700);
   }
 
-  v.addEventListener("loadedmetadata", startTest, false);
-  v.addEventListener("ended", playbackEnded, false);
+  v.addEventListener("loadedmetadata", startTest);
+  v.addEventListener("ended", playbackEnded);
 }
 
 manager.runTests(createTestArray(), startTest);

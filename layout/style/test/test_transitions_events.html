@@ -136,7 +136,7 @@ document.documentElement.addEventListener("transitionend",
          "elapsedTime=" + event.elapsedTime +
          " propertyName='" + event.propertyName + "'");
     }
-  }, false);
+  });
 
 $("one").addEventListener("transitionend",
   function(event) {
@@ -151,7 +151,7 @@ $("one").addEventListener("transitionend",
     is(cs("one").getPropertyValue(event.propertyName), "rgb(0, 255, 0)",
        "computed style of " + event.propertyName + " for transitionend on one");
     finished_test();
-  }, false);
+  });
 
 started_test(); // color on #one
 $("one").style.color = "lime";
@@ -174,7 +174,7 @@ $("two").addEventListener("transitionend",
        "computed style for transitionend on two");
     got_two_target = true;
     finished_test();
-  }, false);
+  });
 
 started_test(); // #two
 $("two").className = "bar";

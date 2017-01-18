@@ -36,7 +36,7 @@ function checkAllowed () {
   }
 
   // continue with the next test
-  document.getElementById('xsltframe2').addEventListener('load', checkBlocked, false);
+  document.getElementById('xsltframe2').addEventListener('load', checkBlocked);
   document.getElementById('xsltframe2').src = 'file_bug910139.sjs';
 }
 
@@ -58,7 +58,7 @@ function checkBlocked () {
   SimpleTest.finish();
 }
 
-document.getElementById('xsltframe').addEventListener('load', checkAllowed, false);
+document.getElementById('xsltframe').addEventListener('load', checkAllowed);
 document.getElementById('xsltframe').src = 'file_bug910139.sjs';
 
 </script>

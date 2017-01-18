@@ -71,7 +71,7 @@ XPCOMUtils.defineLazyGetter(this, "log", function() {
 
 // A boolean to indicate if personally identifiable information (or anything
 // else sensitive, such as credentials) should be logged.
-XPCOMUtils.defineLazyGetter(this, 'logPII', function() {
+XPCOMUtils.defineLazyGetter(this, "logPII", function() {
   try {
     return Services.prefs.getBoolPref(PREF_LOG_SENSITIVE_DETAILS);
   } catch (_) {

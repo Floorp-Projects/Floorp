@@ -4,7 +4,7 @@ try { test2 = document.createElementNS("http://www.w3.org/1999/xhtml", "tt"); } 
 try { test2.setAttribute("dir", "auto"); } catch(e) {}
 setTimeout("CFcrash()", 253);
 }
-document.addEventListener("DOMContentLoaded", initCF, false);
+document.addEventListener("DOMContentLoaded", initCF);
 function editFuzz() {
 }
 function CFcrash() {

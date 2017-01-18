@@ -20,18 +20,25 @@ static int32_t              gRunningTimeoutDepth       = 0;
 // The default shortest interval/timeout we permit
 #define DEFAULT_MIN_TIMEOUT_VALUE 4 // 4ms
 #define DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE 1000 // 1000ms
-static int32_t gMinTimeoutValue;
-static int32_t gMinBackgroundTimeoutValue;
+#define DEFAULT_MIN_TRACKING_TIMEOUT_VALUE 4 // 4ms
+#define DEFAULT_MIN_TRACKING_BACKGROUND_TIMEOUT_VALUE 1000 // 1000ms
+static int32_t gMinTimeoutValue = 0;
+static int32_t gMinBackgroundTimeoutValue = 0;
+static int32_t gMinTrackingTimeoutValue = 0;
+static int32_t gMinTrackingBackgroundTimeoutValue = 0;
 int32_t
-TimeoutManager::DOMMinTimeoutValue() const {
+TimeoutManager::DOMMinTimeoutValue(bool aIsTracking) const {
   // First apply any back pressure delay that might be in effect.
   int32_t value = std::max(mBackPressureDelayMS, 0);
   // Don't use the background timeout value when there are audio contexts
   // present, so that background audio can keep running smoothly. (bug 1181073)
   bool isBackground = !mWindow.AsInner()->HasAudioContexts() &&
     mWindow.IsBackgroundInternal();
-  return
-    std::max(isBackground ? gMinBackgroundTimeoutValue : gMinTimeoutValue, value);
+  auto minValue = aIsTracking ? (isBackground ? gMinTrackingBackgroundTimeoutValue
+                                              : gMinTrackingTimeoutValue)
+                              : (isBackground ? gMinBackgroundTimeoutValue
+                                              : gMinTimeoutValue);
+  return std::max(minValue, value);
 }
 
 #define TRACKING_SEPARATE_TIMEOUT_BUCKETING_STRATEGY 0 // Consider all timeouts coming from tracking scripts as tracking
@@ -120,6 +127,12 @@ TimeoutManager::Initialize()
   Preferences::AddIntVarCache(&gMinBackgroundTimeoutValue,
                               "dom.min_background_timeout_value",
                               DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE);
+  Preferences::AddIntVarCache(&gMinTrackingTimeoutValue,
+                              "dom.min_tracking_timeout_value",
+                              DEFAULT_MIN_TRACKING_TIMEOUT_VALUE);
+  Preferences::AddIntVarCache(&gMinTrackingBackgroundTimeoutValue,
+                              "dom.min_tracking_background_timeout_value",
+                              DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE);
   Preferences::AddIntVarCache(&gTimeoutBucketingStrategy,
                               "dom.timeout_bucketing_strategy",
                               TRACKING_SEPARATE_TIMEOUT_BUCKETING_STRATEGY);
@@ -167,6 +180,27 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
   timeout->mScriptHandler = aHandler;
   timeout->mReason = aReason;
 
+  switch (gTimeoutBucketingStrategy) {
+  default:
+  case TRACKING_SEPARATE_TIMEOUT_BUCKETING_STRATEGY: {
+    const char* filename = nullptr;
+    uint32_t dummyLine = 0, dummyColumn = 0;
+    aHandler->GetLocation(&filename, &dummyLine, &dummyColumn);
+    timeout->mIsTracking = doc->IsScriptTracking(nsDependentCString(filename));
+    break;
+  }
+  case ALL_NORMAL_TIMEOUT_BUCKETING_STRATEGY:
+    // timeout->mIsTracking is already false!
+    MOZ_DIAGNOSTIC_ASSERT(!timeout->mIsTracking);
+    break;
+  case ALTERNATE_TIMEOUT_BUCKETING_STRATEGY:
+    timeout->mIsTracking = (mTimeoutIdCounter % 2) == 0;
+    break;
+  case RANDOM_TIMEOUT_BUCKETING_STRATEGY:
+    timeout->mIsTracking = (rand() % 2) == 0;
+    break;
+  }
+
   // Now clamp the actual interval we will use for the timer based on
   uint32_t nestingLevel = sNestingLevel + 1;
   uint32_t realInterval = interval;
@@ -174,7 +208,8 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
       mBackPressureDelayMS > 0 || mWindow.IsBackgroundInternal()) {
     // Don't allow timeouts less than DOMMinTimeoutValue() from
     // now...
-    realInterval = std::max(realInterval, uint32_t(DOMMinTimeoutValue()));
+    realInterval = std::max(realInterval,
+                            uint32_t(DOMMinTimeoutValue(timeout->mIsTracking)));
   }
 
   timeout->mWindow = &mWindow;
@@ -229,30 +264,9 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
     }
   }
 
-  bool isTracking = false;
-  switch (gTimeoutBucketingStrategy) {
-  default:
-  case TRACKING_SEPARATE_TIMEOUT_BUCKETING_STRATEGY: {
-    const char* filename = nullptr;
-    uint32_t dummyLine = 0, dummyColumn = 0;
-    aHandler->GetLocation(&filename, &dummyLine, &dummyColumn);
-    isTracking = doc->IsScriptTracking(nsDependentCString(filename));
-    break;
-  }
-  case ALL_NORMAL_TIMEOUT_BUCKETING_STRATEGY:
-    // isTracking is already false!
-    break;
-  case ALTERNATE_TIMEOUT_BUCKETING_STRATEGY:
-    isTracking = (mTimeoutIdCounter % 2) == 0;
-    break;
-  case RANDOM_TIMEOUT_BUCKETING_STRATEGY:
-    isTracking = (rand() % 2) == 0;
-    break;
-  }
-
   Timeouts::SortBy sort(mWindow.IsFrozen() ? Timeouts::SortBy::TimeRemaining
                                            : Timeouts::SortBy::TimeWhen);
-  if (isTracking) {
+  if (timeout->mIsTracking) {
     mTrackingTimeouts.Insert(timeout, sort);
   } else {
     mNormalTimeouts.Insert(timeout, sort);
@@ -680,8 +694,9 @@ TimeoutManager::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now,
   // Compute time to next timeout for interval timer.
   // Make sure nextInterval is at least DOMMinTimeoutValue().
   TimeDuration nextInterval =
-    TimeDuration::FromMilliseconds(std::max(aTimeout->mInterval,
-                                          uint32_t(DOMMinTimeoutValue())));
+    TimeDuration::FromMilliseconds(
+        std::max(aTimeout->mInterval,
+                 uint32_t(DOMMinTimeoutValue(aTimeout->mIsTracking))));
 
   // If we're running pending timeouts, set the next interval to be
   // relative to "now", and not to when the timeout that was pending
@@ -752,18 +767,17 @@ TimeoutManager::ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS
     return NS_OK;
   }
 
-  auto minTimeout = DOMMinTimeoutValue();
   Timeouts::SortBy sortBy = mWindow.IsFrozen() ? Timeouts::SortBy::TimeRemaining
                                                : Timeouts::SortBy::TimeWhen;
 
   nsCOMPtr<nsIEventTarget> queue = mWindow.EventTargetFor(TaskCategory::Timer);
   nsresult rv = mNormalTimeouts.ResetTimersForThrottleReduction(aPreviousThrottleDelayMS,
-                                                                minTimeout,
+                                                                *this,
                                                                 sortBy,
                                                                 queue);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mTrackingTimeouts.ResetTimersForThrottleReduction(aPreviousThrottleDelayMS,
-                                                         minTimeout,
+                                                         *this,
                                                          sortBy,
                                                          queue);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -773,7 +787,7 @@ TimeoutManager::ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS
 
 nsresult
 TimeoutManager::Timeouts::ResetTimersForThrottleReduction(int32_t aPreviousThrottleDelayMS,
-                                                          int32_t aMinTimeoutValueMS,
+                                                          const TimeoutManager& aTimeoutManager,
                                                           SortBy aSortBy,
                                                           nsIEventTarget* aQueue)
 {
@@ -809,8 +823,10 @@ TimeoutManager::Timeouts::ResetTimersForThrottleReduction(int32_t aPreviousThrot
     // Compute the interval the timer should have had if it had not been set in a
     // background window
     TimeDuration interval =
-      TimeDuration::FromMilliseconds(std::max(timeout->mInterval,
-                                            uint32_t(aMinTimeoutValueMS)));
+      TimeDuration::FromMilliseconds(
+          std::max(timeout->mInterval,
+                   uint32_t(aTimeoutManager.
+                                DOMMinTimeoutValue(timeout->mIsTracking))));
     uint32_t oldIntervalMillisecs = 0;
     timeout->mTimer->GetDelay(&oldIntervalMillisecs);
     TimeDuration oldInterval = TimeDuration::FromMilliseconds(oldIntervalMillisecs);
@@ -1014,7 +1030,7 @@ TimeoutManager::Resume()
     if (aTimeout->When() > now) {
       remaining = static_cast<int32_t>((aTimeout->When() - now).ToMilliseconds());
     }
-    uint32_t delay = std::max(remaining, DOMMinTimeoutValue());
+    uint32_t delay = std::max(remaining, DOMMinTimeoutValue(aTimeout->mIsTracking));
 
     aTimeout->mTimer = do_CreateInstance("@mozilla.org/timer;1");
     if (!aTimeout->mTimer) {

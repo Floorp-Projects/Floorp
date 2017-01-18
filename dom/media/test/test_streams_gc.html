@@ -31,9 +31,9 @@ function doTest() {
       a.addEventListener("ended", function() {
         ok(true, "GC completed OK");
         SimpleTest.finish();
-      }, false);
-    }, false);
-  }, false);
+      });
+    });
+  });
 
   a.currentTime = a.duration;
   setTimeout(forceGC, 0);

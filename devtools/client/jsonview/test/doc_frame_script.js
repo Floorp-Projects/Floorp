@@ -32,7 +32,7 @@ Services.scriptloader.loadSubScript(
  */
 content.addEventListener("JSONViewInitialized", () => {
   sendAsyncMessage("Test:JsonView:JSONViewInitialized");
-}, false);
+});
 
 addMessageListener("Test:JsonView:GetElementCount", function (msg) {
   let {selector} = msg.data;

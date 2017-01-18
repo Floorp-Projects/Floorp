@@ -18,12 +18,6 @@
 # Usage: cat inputfile | perl ads2gas_apple.pl > outputfile
 #
 
-my $chromium = 0;
-
-foreach my $arg (@ARGV) {
-    $chromium = 1 if ($arg eq "-chromium");
-}
-
 print "@ This file was created from a .asm file\n";
 print "@  using the ads2gas_apple.pl script.\n\n";
 print "\t.set WIDE_REFERENCE, 0\n";
@@ -126,18 +120,6 @@ while (<STDIN>)
     s/DCD(.*)/.long $1/;
     s/DCB(.*)/.byte $1/;
 
-    # Build a hash of all the register - alias pairs.
-    if (s/(.*)RN(.*)/$1 .req $2/g)
-    {
-        $register_aliases{trim($1)} = trim($2);
-        next;
-    }
-
-    while (($key, $value) = each(%register_aliases))
-    {
-        s/\b$key\b/$value/g;
-    }
-
     # Make function visible to linker, and make additional symbol with
     # prepended underscore
     s/EXPORT\s+\|([\$\w]*)\|/.globl _$1\n\t.globl $1/;
@@ -217,19 +199,6 @@ while (<STDIN>)
 #   s/\$/\\/g;                  # End macro definition
     s/\bMEND\b/.endm/;              # No need to tell it where to stop assembling
     next if /^\s*END\s*$/;
-
-    # Clang used by Chromium differs slightly from clang in XCode in what it
-    # will accept in the assembly.
-    if ($chromium) {
-        s/qsubaddx/qsax/i;
-        s/qaddsubx/qasx/i;
-        s/ldrneb/ldrbne/i;
-        s/ldrneh/ldrhne/i;
-        s/(vqshrun\.s16 .*, \#)0$/${1}8/i;
-
-        # http://llvm.org/bugs/show_bug.cgi?id=16022
-        s/\.include/#include/;
-    }
 
     print;
 }

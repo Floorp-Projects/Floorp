@@ -80,7 +80,7 @@ addLoadEvent(function() {
     compareBuffers(e.renderedBuffer, buf);
     setOrCompareRenderedBuffer(e.renderedBuffer);
 
-  }, false);
+  });
 
   expectNoException(function() {
     ctx.startRendering().then(function(b) {

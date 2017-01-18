@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=941315
 
   // Animation doesn't start until onload
   SimpleTest.waitForExplicitFinish();
-  window.addEventListener("load", runTests, false);
+  window.addEventListener("load", runTests);
 
   // Make testing getStartTime easier
   SVGAnimationElement.prototype.safeGetStartTime = function() {

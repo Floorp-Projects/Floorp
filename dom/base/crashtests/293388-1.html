@@ -11,13 +11,13 @@ function reallyClear()
 
 function clear()
 {
-  document.body.removeEventListener("DOMNodeRemoved", clear, false);
+  document.body.removeEventListener("DOMNodeRemoved", clear);
   reallyClear();
 }
 
 function init()
 {
-  document.body.addEventListener("DOMNodeRemoved", clear, false);
+  document.body.addEventListener("DOMNodeRemoved", clear);
 }
 
 </script>

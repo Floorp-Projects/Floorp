@@ -29,11 +29,11 @@ function gState() {
 
 function waitForLoad(aCallback) {
   function listener() {
-    gFrame.removeEventListener("load", listener, false);
+    gFrame.removeEventListener("load", listener);
     SimpleTest.executeSoon(aCallback);
   }
 
-  gFrame.addEventListener("load", listener, false);
+  gFrame.addEventListener("load", listener);
 }
 
 function loadContent(aURL, aCallback) {

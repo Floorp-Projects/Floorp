@@ -52,7 +52,7 @@ add_test(function() {
 
   var utilsBtn = gManagerWindow.document.getElementById("header-utils-btn");
   utilsBtn.addEventListener("popupshown", function() {
-    utilsBtn.removeEventListener("popupshown", arguments.callee, false);
+    utilsBtn.removeEventListener("popupshown", arguments.callee);
     wait_for_view_load(gManagerWindow, function() {
       is(gCategoryUtilities.isVisible(recentCat), true, "Recent Updates category should now be visible");
       is(gManagerWindow.document.getElementById("categories").selectedItem.value, "addons://updates/recent", "Recent Updates category should now be selected");
@@ -61,7 +61,7 @@ add_test(function() {
     }, true);
     var menuitem = gManagerWindow.document.getElementById("utils-viewUpdates");
     EventUtils.synthesizeMouse(menuitem, 2, 2, { }, gManagerWindow);
-  }, false);
+  });
   EventUtils.synthesizeMouse(utilsBtn, 2, 2, { }, gManagerWindow);
 });
 

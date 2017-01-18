@@ -2,7 +2,7 @@ add_task(function *() {
   var privWin = OpenBrowserWindow({private: true});
   yield new privWin.Promise(resolve => {
     privWin.addEventListener('load', function onLoad() {
-      privWin.removeEventListener('load', onLoad, false);
+      privWin.removeEventListener('load', onLoad);
       resolve();
     });
   });
@@ -10,7 +10,7 @@ add_task(function *() {
   var pubWin = OpenBrowserWindow({private: false});
   yield new pubWin.Promise(resolve => {
     pubWin.addEventListener('load', function onLoad() {
-      pubWin.removeEventListener('load', onLoad, false);
+      pubWin.removeEventListener('load', onLoad);
       resolve();
     });
   });

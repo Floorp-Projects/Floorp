@@ -95,7 +95,7 @@ function executeTest(test) {
 
   return new Promise(function(resolve, reject) {
     win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad, false);
+      win.removeEventListener("load", onLoad);
       whenDelayedStartupFinished(win, function() {
         win.addEventListener("DOMContentLoaded", function onInnerLoad() {
           if (win.content.location.href != contentPage) {

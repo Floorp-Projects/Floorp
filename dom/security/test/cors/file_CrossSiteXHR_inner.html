@@ -32,18 +32,18 @@ window.addEventListener("message", function(e) {
   for (type of ["load", "abort", "error", "loadstart", "loadend"]) {
     xhr.addEventListener(type, function(e) {
       res.events.push(e.type);
-    }, false);
+    });
   }
   xhr.addEventListener("readystatechange", function(e) {
     res.events.push("rs" + xhr.readyState);
-  }, false);
+  });
   xhr.addEventListener("progress", function(e) {
     res.progressEvents++;
-  }, false);
+  });
   if (req.uploadProgress) {
     xhr.upload.addEventListener(req.uploadProgress, function(e) {
       res.progressEvents++;
-    }, false);
+    });
   }
   xhr.onerror = function(e) {
     res.didFail = true;
@@ -107,7 +107,7 @@ window.addEventListener("message", function(e) {
     post(e, res);
   }
 
-}, false);
+});
 
 function post(e, res) {
   e.source.postMessage(res.toSource(), "http://mochi.test:8888");

@@ -20,10 +20,10 @@ void vpx_idct16_1d_rows_msa(const int16_t *input, int16_t *output) {
   input += 8;
   LD_SH8(input, 16, reg8, reg9, reg10, reg11, reg12, reg13, reg14, reg15);
 
-  TRANSPOSE8x8_SH_SH(reg0, reg1, reg2, reg3, reg4, reg5, reg6, reg7,
-                     reg0, reg1, reg2, reg3, reg4, reg5, reg6, reg7);
-  TRANSPOSE8x8_SH_SH(reg8, reg9, reg10, reg11, reg12, reg13, reg14, reg15,
-                     reg8, reg9, reg10, reg11, reg12, reg13, reg14, reg15);
+  TRANSPOSE8x8_SH_SH(reg0, reg1, reg2, reg3, reg4, reg5, reg6, reg7, reg0, reg1,
+                     reg2, reg3, reg4, reg5, reg6, reg7);
+  TRANSPOSE8x8_SH_SH(reg8, reg9, reg10, reg11, reg12, reg13, reg14, reg15, reg8,
+                     reg9, reg10, reg11, reg12, reg13, reg14, reg15);
   DOTP_CONST_PAIR(reg2, reg14, cospi_28_64, cospi_4_64, reg2, reg14);
   DOTP_CONST_PAIR(reg10, reg6, cospi_12_64, cospi_20_64, reg10, reg6);
   BUTTERFLY_4(reg2, reg14, reg6, reg10, loc0, loc1, reg14, reg2);
@@ -93,13 +93,13 @@ void vpx_idct16_1d_rows_msa(const int16_t *input, int16_t *output) {
   reg3 = tmp7;
 
   /* transpose block */
-  TRANSPOSE8x8_SH_SH(reg0, reg2, reg4, reg6, reg8, reg10, reg12, reg14,
-                     reg0, reg2, reg4, reg6, reg8, reg10, reg12, reg14);
+  TRANSPOSE8x8_SH_SH(reg0, reg2, reg4, reg6, reg8, reg10, reg12, reg14, reg0,
+                     reg2, reg4, reg6, reg8, reg10, reg12, reg14);
   ST_SH8(reg0, reg2, reg4, reg6, reg8, reg10, reg12, reg14, output, 16);
 
   /* transpose block */
-  TRANSPOSE8x8_SH_SH(reg3, reg13, reg11, reg5, reg7, reg9, reg1, reg15,
-                     reg3, reg13, reg11, reg5, reg7, reg9, reg1, reg15);
+  TRANSPOSE8x8_SH_SH(reg3, reg13, reg11, reg5, reg7, reg9, reg1, reg15, reg3,
+                     reg13, reg11, reg5, reg7, reg9, reg1, reg15);
   ST_SH8(reg3, reg13, reg11, reg5, reg7, reg9, reg1, reg15, (output + 8), 16);
 }
 
@@ -233,7 +233,7 @@ void vpx_idct16x16_10_add_msa(const int16_t *input, uint8_t *dst,
   /* short case just considers top 4 rows as valid output */
   out += 4 * 16;
   for (i = 12; i--;) {
-    __asm__ __volatile__ (
+    __asm__ __volatile__(
         "sw     $zero,   0(%[out])     \n\t"
         "sw     $zero,   4(%[out])     \n\t"
         "sw     $zero,   8(%[out])     \n\t"
@@ -244,8 +244,7 @@ void vpx_idct16x16_10_add_msa(const int16_t *input, uint8_t *dst,
         "sw     $zero,  28(%[out])     \n\t"
 
         :
-        : [out] "r" (out)
-    );
+        : [out] "r"(out));
 
     out += 16;
   }
@@ -283,8 +282,8 @@ void vpx_idct16x16_1_add_msa(const int16_t *input, uint8_t *dst,
     ADD4(res4, vec, res5, vec, res6, vec, res7, vec, res4, res5, res6, res7);
     CLIP_SH4_0_255(res0, res1, res2, res3);
     CLIP_SH4_0_255(res4, res5, res6, res7);
-    PCKEV_B4_UB(res4, res0, res5, res1, res6, res2, res7, res3,
-                tmp0, tmp1, tmp2, tmp3);
+    PCKEV_B4_UB(res4, res0, res5, res1, res6, res2, res7, res3, tmp0, tmp1,
+                tmp2, tmp3);
     ST_UB4(tmp0, tmp1, tmp2, tmp3, dst, dst_stride);
     dst += (4 * dst_stride);
   }
@@ -295,29 +294,28 @@ void vpx_iadst16_1d_rows_msa(const int16_t *input, int16_t *output) {
   v8i16 l0, l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13, l14, l15;
 
   /* load input data */
-  LD_SH16(input, 8,
-          l0, l8, l1, l9, l2, l10, l3, l11, l4, l12, l5, l13, l6, l14, l7, l15);
-  TRANSPOSE8x8_SH_SH(l0, l1, l2, l3, l4, l5, l6, l7,
-                     l0, l1, l2, l3, l4, l5, l6, l7);
-  TRANSPOSE8x8_SH_SH(l8, l9, l10, l11, l12, l13, l14, l15,
-                     l8, l9, l10, l11, l12, l13, l14, l15);
+  LD_SH16(input, 8, l0, l8, l1, l9, l2, l10, l3, l11, l4, l12, l5, l13, l6, l14,
+          l7, l15);
+  TRANSPOSE8x8_SH_SH(l0, l1, l2, l3, l4, l5, l6, l7, l0, l1, l2, l3, l4, l5, l6,
+                     l7);
+  TRANSPOSE8x8_SH_SH(l8, l9, l10, l11, l12, l13, l14, l15, l8, l9, l10, l11,
+                     l12, l13, l14, l15);
 
   /* ADST in horizontal */
-  VP9_IADST8x16_1D(l0, l1, l2, l3, l4, l5, l6, l7,
-                   l8, l9, l10, l11, l12, l13, l14, l15,
-                   r0, r1, r2, r3, r4, r5, r6, r7,
-                   r8, r9, r10, r11, r12, r13, r14, r15);
+  VP9_IADST8x16_1D(l0, l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, l11, l12, l13,
+                   l14, l15, r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11,
+                   r12, r13, r14, r15);
 
   l1 = -r8;
   l3 = -r4;
   l13 = -r13;
   l15 = -r1;
 
-  TRANSPOSE8x8_SH_SH(r0, l1, r12, l3, r6, r14, r10, r2,
-                     l0, l1, l2, l3, l4, l5, l6, l7);
+  TRANSPOSE8x8_SH_SH(r0, l1, r12, l3, r6, r14, r10, r2, l0, l1, l2, l3, l4, l5,
+                     l6, l7);
   ST_SH8(l0, l1, l2, l3, l4, l5, l6, l7, output, 16);
-  TRANSPOSE8x8_SH_SH(r3, r11, r15, r7, r5, l13, r9, l15,
-                     l8, l9, l10, l11, l12, l13, l14, l15);
+  TRANSPOSE8x8_SH_SH(r3, r11, r15, r7, r5, l13, r9, l15, l8, l9, l10, l11, l12,
+                     l13, l14, l15);
   ST_SH8(l8, l9, l10, l11, l12, l13, l14, l15, (output + 8), 16);
 }
 

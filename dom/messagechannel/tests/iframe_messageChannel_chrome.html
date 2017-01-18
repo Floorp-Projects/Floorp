@@ -3,7 +3,7 @@
 <body>
   <script type="application/javascript">
 
-window.addEventListener('message', receiveMessage, false);
+window.addEventListener('message', receiveMessage);
 function receiveMessage(evt) {
   evt.data.postMessage("Hello world");
 }

@@ -32,14 +32,14 @@ function receiveMessage(evt)
   SimpleTest.finish();
 }
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 
 function sendMessage(evt)
 {
   window.frames.userPassKid.postMessage("parent-message", "http://example.org");
 }
 
-window.addEventListener("load", sendMessage, false);
+window.addEventListener("load", sendMessage);
 </script>
 </pre>
 </body>

@@ -29,6 +29,16 @@ module.exports = function(context) {
         return;
       }
 
+      if ((callee.property.name === "addEventListener" ||
+           callee.property.name === "removeEventListener") &&
+          node.arguments.length === 3) {
+        let arg = node.arguments[2];
+        if (arg.type === "Literal" && arg.value === false) {
+          context.report(node, callee.property.name +
+                         "'s third parameter can be omitted when it's false.");
+        }
+      }
+
       if ((["getCharPref", "getBoolPref", "getIntPref", "clearUserPref"]
            .indexOf(callee.property.name) != -1) &&
           node.arguments.length > 1) {

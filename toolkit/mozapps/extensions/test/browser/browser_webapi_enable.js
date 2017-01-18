@@ -10,7 +10,7 @@ function* getListenerEvents(browser) {
     return content.document.getElementById("result").textContent;
   });
 
-  return result.split('\n').map(JSON.parse);
+  return result.split("\n").map(JSON.parse);
 }
 
 const ID = "test@tests.mozilla.org";

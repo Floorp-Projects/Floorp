@@ -140,8 +140,7 @@ CreateFileTaskChild::SetSuccessRequestResult(const FileSystemResponseValue& aVal
 
   const FileSystemFileResponse& r = aValue.get_FileSystemFileResponse();
 
-  NS_ConvertUTF16toUTF8 path(r.realPath());
-  aRv = NS_NewNativeLocalFile(path, true, getter_AddRefs(mTargetPath));
+  aRv = NS_NewLocalFile(r.realPath(), true, getter_AddRefs(mTargetPath));
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -194,8 +193,8 @@ CreateFileTaskParent::Create(FileSystemBase* aFileSystem,
   RefPtr<CreateFileTaskParent> task =
     new CreateFileTaskParent(aFileSystem, aParam, aParent);
 
-  NS_ConvertUTF16toUTF8 path(aParam.realPath());
-  aRv = NS_NewNativeLocalFile(path, true, getter_AddRefs(task->mTargetPath));
+  aRv = NS_NewLocalFile(aParam.realPath(), true,
+                        getter_AddRefs(task->mTargetPath));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }

@@ -510,7 +510,7 @@ var Impl = {
       return Promise.reject(new Error("Invalid type string submitted."));
     }
     // Enforce that the payload is an object.
-    if (aPayload === null || typeof aPayload !== 'object' || Array.isArray(aPayload)) {
+    if (aPayload === null || typeof aPayload !== "object" || Array.isArray(aPayload)) {
       this._log.error("submitExternalPing - invalid payload type: " + typeof aPayload);
       let histogram = Telemetry.getHistogramById("TELEMETRY_INVALID_PAYLOAD_SUBMITTED");
       histogram.add(1);

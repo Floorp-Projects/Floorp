@@ -135,7 +135,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
     //Set the first set of settings (true, true) and increment the counter.
     changePrefs(function() {
       // listen for a messages from the mixed content test harness
-      window.addEventListener("message", receiveMessage, false);
+      window.addEventListener("message", receiveMessage);
 
       reloadFrame();
     });

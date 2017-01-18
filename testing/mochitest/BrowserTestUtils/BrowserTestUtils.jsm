@@ -964,7 +964,7 @@ this.BrowserTestUtils = {
     if (shouldShowTabCrashPage) {
       expectedPromises.push(new Promise((resolve, reject) => {
         browser.addEventListener("AboutTabCrashedReady", function onCrash() {
-          browser.removeEventListener("AboutTabCrashedReady", onCrash, false);
+          browser.removeEventListener("AboutTabCrashedReady", onCrash);
           dump("\nabout:tabcrashed loaded and ready\n");
           resolve();
         }, false, true);

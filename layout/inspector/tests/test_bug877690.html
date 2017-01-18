@@ -152,13 +152,13 @@ function do_test() {
       "purple", "rebeccapurple", "red", "rosybrown", "royalblue", "saddlebrown", "salmon", "sandybrown", "seagreen",
       "seashell", "sienna", "silver", "skyblue", "slateblue", "slategray", "slategrey", "snow", "springgreen",
       "steelblue", "tan", "teal", "thistle", "tomato", "transparent", "turquoise", "violet", "wheat", "white",
-      "whitesmoke", "yellow", "yellowgreen", "calc", "-moz-calc", "rgb", "hsl", "rgba", "hsla" ];
+      "whitesmoke", "yellow", "yellowgreen", "calc", "rgb", "hsl", "rgba", "hsla" ];
   ok(testValues(values, expected), "property border-top's values.");
 
   // tests no keywords or colors
   var prop = "padding-bottom";
   var values = getCSSValuesForProperty(prop);
-  var expected = [ "initial", "inherit", "unset", "calc", "-moz-calc" ];
+  var expected = [ "initial", "inherit", "unset", "calc" ];
   ok(testValues(values, expected), "property padding-bottom's values.");
 
   // test proprety
@@ -185,7 +185,7 @@ function do_test() {
   // Test property with "auto"
   var prop = "margin";
   var values = getCSSValuesForProperty(prop);
-  var expected = [ "-moz-calc", "initial", "unset", "auto", "calc", "inherit" ];
+  var expected = [ "initial", "unset", "auto", "calc", "inherit" ];
   ok(testValues(values, expected), "property margin's values.");
 
   // Test property with "normal"
@@ -212,10 +212,10 @@ function do_test() {
     // test passed
   }
 
-  // test border-image propery, for bug 973345
+  // test border-image property, for bug 973345
   var prop = "border-image";
   var values = getCSSValuesForProperty(prop);
-  var expected = [ "-moz-calc", "initial", "unset", "aliceblue",
+  var expected = [ "initial", "unset", "aliceblue",
       "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque", "black", "blanchedalmond", "blue", "blueviolet",
       "brown", "burlywood", "cadetblue", "calc", "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk",
       "crimson", "currentColor", "cyan", "darkblue", "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkgrey", "darkkhaki",

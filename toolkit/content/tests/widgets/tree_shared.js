@@ -25,7 +25,7 @@ function testtag_tree(treeid, treerowinfoid, seltype, columnstype, testid) {
   function preventDefault(event) {
     event.preventDefault();
   }
-  document.addEventListener("keypress", preventDefault, false);
+  document.addEventListener("keypress", preventDefault);
 
   var multiple = (seltype == "multiple");
 
@@ -118,7 +118,7 @@ function testtag_tree(treeid, treerowinfoid, seltype, columnstype, testid) {
 
   testtag_tree_wheel(tree);
 
-  document.removeEventListener("keypress", preventDefault, false);
+  document.removeEventListener("keypress", preventDefault);
 
   SimpleTest.finish();
 }
@@ -339,8 +339,8 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple) {
   // is so that cursor navigation allows quicking skimming over a set of items without
   // actually firing events in-between, improving performance. The select event will only
   // be fired on the row where the cursor stops.
-  window.addEventListener("keydown", keydownListener, false);
-  window.addEventListener("keypress", keypressListener, false);
+  window.addEventListener("keydown", keydownListener);
+  window.addEventListener("keypress", keypressListener);
 
   synthesizeKeyExpectEvent("VK_DOWN", {}, tree, "!select", "key down");
   testtag_tree_TreeSelection_State(tree, testid + "key down", 1, [1], 0);
@@ -607,8 +607,8 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple) {
   // restore the scroll position to the start of the page
   sendKey("HOME");
 
-  window.removeEventListener("keydown", keydownListener, false);
-  window.removeEventListener("keypress", keypressListener, false);
+  window.removeEventListener("keydown", keydownListener);
+  window.removeEventListener("keypress", keypressListener);
   is(keydownFired, multiple ? 63 : 40, "keydown event wasn't fired properly");
   is(keypressFired, multiple ? 2 : 1, "keypress event wasn't fired properly");
 }
@@ -1191,7 +1191,7 @@ function testtag_tree_wheel(aTree) {
   function wheelListener(event) {
     defaultPrevented++;
   }
-  window.addEventListener("wheel", wheelListener, false);
+  window.addEventListener("wheel", wheelListener);
 
   deltaModes.forEach(function(aDeltaMode) {
     var delta = (aDeltaMode == WheelEvent.DOM_DELTA_PIXEL) ? 5.0 : 0.3;
@@ -1205,7 +1205,7 @@ function testtag_tree_wheel(aTree) {
     helper(2, 2 * delta, 1, aDeltaMode);
   });
 
-  window.removeEventListener("wheel", wheelListener, false);
+  window.removeEventListener("wheel", wheelListener);
   is(defaultPrevented, 48, "wheel event default prevented");
 }
 

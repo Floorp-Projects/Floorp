@@ -31,13 +31,13 @@ function test() {
   HUDService;
 
   xhr = new XMLHttpRequest();
-  xhr.addEventListener("load", xhrComplete, false);
+  xhr.addEventListener("load", xhrComplete);
   xhr.open("GET", TEST_URI, true);
   xhr.send(null);
 }
 
 function xhrComplete() {
-  xhr.removeEventListener("load", xhrComplete, false);
+  xhr.removeEventListener("load", xhrComplete);
   window.setTimeout(checkForException, 0);
 }
 

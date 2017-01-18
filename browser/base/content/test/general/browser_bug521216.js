@@ -7,7 +7,7 @@ function test() {
   waitForExplicitFinish();
   tabIndex = gBrowser.tabs.length;
   gBrowser.addTabsProgressListener(progressListener);
-  gBrowser.tabContainer.addEventListener("TabOpen", TabOpen, false);
+  gBrowser.tabContainer.addEventListener("TabOpen", TabOpen);
   gBrowser.addTab("data:text/html,<html><head><link href='about:logo' rel='shortcut icon'>");
 }
 
@@ -22,7 +22,7 @@ function record(aName) {
     executeSoon(function(tab) {
       gBrowser.removeTab(tab);
       gBrowser.removeTabsProgressListener(progressListener);
-      gBrowser.tabContainer.removeEventListener("TabOpen", TabOpen, false);
+      gBrowser.tabContainer.removeEventListener("TabOpen", TabOpen);
       finish();
     }.bind(null, tab));
   }

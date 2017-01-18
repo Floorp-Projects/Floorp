@@ -64,9 +64,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1098139
     {
       logger("executeTest");
       target = document.getElementById("target");
-      target.addEventListener("pointerdown",        DownHandler,   false);
-      target.addEventListener("gotpointercapture",  GotPCHandler,  false);
-      target.addEventListener("lostpointercapture", LostPCHandler, false);
+      target.addEventListener("pointerdown",        DownHandler);
+      target.addEventListener("gotpointercapture",  GotPCHandler);
+      target.addEventListener("lostpointercapture", LostPCHandler);
       var rect = target.getBoundingClientRect();
       synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerdown"});
       synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerup"});

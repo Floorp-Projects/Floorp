@@ -116,7 +116,7 @@ function waitForEvent(aSubject, aEventName, aTimeoutMs, aTarget) {
     aSubject.removeEventListener(aEventName, listener);
     return aEventOrError;
   }
-  aSubject.addEventListener(aEventName, listener, false);
+  aSubject.addEventListener(aEventName, listener);
   return eventDeferred.promise.then(cleanup, cleanup);
 }
 

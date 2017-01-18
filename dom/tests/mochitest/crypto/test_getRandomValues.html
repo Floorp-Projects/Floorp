@@ -64,7 +64,7 @@ function testNsCryptoGetRandomValues(aLength, aType)
 
 function onWindowLoad()
 {
-  window.removeEventListener("load", onWindowLoad, false);
+  window.removeEventListener("load", onWindowLoad);
   var failedWithCorrectError = false;
   try {
     for (var i = 0; i < testData.length; i++) {

@@ -131,7 +131,7 @@ function handleTestEnd() {
     SimpleTest.finish();
   }
 }
-window.addEventListener("message", messageReceiver, false);
+window.addEventListener("message", messageReceiver);
 
 var win = window.open("");
 win.x = 1;

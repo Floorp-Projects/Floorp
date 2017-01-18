@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 #include "entropy.h"
 
 /* *** GENERATED FILE: DO NOT EDIT *** */

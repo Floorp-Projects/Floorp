@@ -66,7 +66,7 @@ function setupDragging(testDriver) {
       SimpleTest.ok(false, "The mousemove at " + e.clientY + " was not stopped by the bar listener, and is a glitchy event!");
       setTimeout(testDriver, 0);
     }
-  }, false);
+  });
 }
 
 function* test(testDriver) {

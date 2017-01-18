@@ -27,12 +27,12 @@ body { padding: 50px }
 
 <script>
 
-document.getElementById("test").addEventListener("animationstart", StartListener, false);
+document.getElementById("test").addEventListener("animationstart", StartListener);
 
 function StartListener(event) {
   var test = document.getElementById("test");
   test.style.animationPlayState = 'running';
-  test.addEventListener("animationiteration", IterationListener, false);
+  test.addEventListener("animationiteration", IterationListener);
 }
 
 function IterationListener(event) {

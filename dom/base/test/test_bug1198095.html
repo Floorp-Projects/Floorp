@@ -59,15 +59,15 @@ function onError2(e) {
 function onFileOpened(blob) {
   firstBlob = blob;
   r = new FileReader();
-  r.addEventListener("loadend", onLoadEnd1, false);
-  r.addEventListener("error", onError1, false);
+  r.addEventListener("loadend", onLoadEnd1);
+  r.addEventListener("error", onError1);
   r.readAsArrayBuffer(firstBlob);
 }
 
 function onFileModified(blob) {
-  r.addEventListener("loadend", onLoadEnd2, false);
+  r.addEventListener("loadend", onLoadEnd2);
   r.removeEventListener('error', onError1);
-  r.addEventListener("error", onError2, false);
+  r.addEventListener("error", onError2);
   r.readAsArrayBuffer(firstBlob);
 }
 

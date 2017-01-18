@@ -48,10 +48,10 @@ var onended = function(event) {
 
   // Remove the event listeners so that they can't run if there are any pending
   // events.
-  v.removeEventListener("seeking", onseeking, false);
-  v.removeEventListener("seeked", onseeked, false);
-  v.removeEventListener("timeupdate", ontimeupdate, false);
-  v.removeEventListener("ended", onended, false);
+  v.removeEventListener("seeking", onseeking);
+  v.removeEventListener("seeked", onseeked);
+  v.removeEventListener("timeupdate", ontimeupdate);
+  v.removeEventListener("ended", onended);
 
   v.src = "";
   if (v.parentNode) {
@@ -74,10 +74,10 @@ function startTest(test, token) {
   
   v.actuallySeeked = false;
   
-  v.addEventListener("seeking", onseeking, false);
-  v.addEventListener("seeked", onseeked, false);
-  v.addEventListener("timeupdate", ontimeupdate, false);
-  v.addEventListener("ended", onended, false);
+  v.addEventListener("seeking", onseeking);
+  v.addEventListener("seeked", onseeked);
+  v.addEventListener("timeupdate", ontimeupdate);
+  v.addEventListener("ended", onended);
 
   document.body.appendChild(v);
 }

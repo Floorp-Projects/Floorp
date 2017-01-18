@@ -40,7 +40,7 @@
         isnot(navigator.platform, nav.platform, "platform should match");
         isnot(navigator.userAgent, nav.userAgent, "userAgent should match");
         SimpleTest.finish();
-      }, false);
+      });
 
       document.getElementById('content').appendChild(ifr);
     }

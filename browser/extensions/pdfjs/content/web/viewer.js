@@ -3273,7 +3273,7 @@ var pdfjsWebLibs;
       } else {
        updateHistoryWithCurrentHash();
       }
-     }, false);
+     });
      function updateHistoryWithCurrentHash() {
       self.previousHash = window.location.hash.slice(1);
       self._pushToHistory({ hash: self.previousHash }, false, true);
@@ -3304,12 +3304,12 @@ var pdfjsWebLibs;
        self._pushToHistory(previousParams, false, replacePrevious);
        self._updatePreviousBookmark();
       }
-      window.removeEventListener('beforeunload', pdfHistoryBeforeUnload, false);
+      window.removeEventListener('beforeunload', pdfHistoryBeforeUnload);
      }
-     window.addEventListener('beforeunload', pdfHistoryBeforeUnload, false);
+     window.addEventListener('beforeunload', pdfHistoryBeforeUnload);
      window.addEventListener('pageshow', function pdfHistoryPageShow(evt) {
-      window.addEventListener('beforeunload', pdfHistoryBeforeUnload, false);
-     }, false);
+      window.addEventListener('beforeunload', pdfHistoryBeforeUnload);
+     });
      self.eventBus.on('presentationmodechanged', function (e) {
       self.isViewerInPresentationMode = e.active;
      });
@@ -7063,9 +7063,9 @@ var pdfjsWebLibs;
         var node = event.target;
         var response = event.detail.response;
         document.documentElement.removeChild(node);
-        document.removeEventListener('pdf.js.response', listener, false);
+        document.removeEventListener('pdf.js.response', listener);
         return callback(response);
-       }, false);
+       });
       }
       document.documentElement.appendChild(request);
       var sender = document.createEvent('CustomEvent');

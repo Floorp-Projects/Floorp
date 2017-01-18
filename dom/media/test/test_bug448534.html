@@ -57,9 +57,9 @@ function startTest(test, token) {
   v.src = test.name;
   v._played = false;
   v._finished = false;
-  v.addEventListener("loadedmetadata", loaded, false);
-  v.addEventListener("play", started, false);
-  v.addEventListener("pause", stopped, false);
+  v.addEventListener("loadedmetadata", loaded);
+  v.addEventListener("play", started);
+  v.addEventListener("pause", stopped);
   document.body.appendChild(v);
 }
 

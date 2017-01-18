@@ -230,7 +230,7 @@ function setupBlank()
 function setupBlank2()
 {
   var aboutBlank2Frame = document.createElementNS(xhtmlns, "iframe");
-  aboutBlank2Frame.addEventListener("load", nextTest, false);
+  aboutBlank2Frame.addEventListener("load", nextTest);
   aboutBlank2Frame.setAttribute("src", "about:blank");
 
   insert(aboutBlank2Frame);
@@ -302,7 +302,7 @@ function testData()
   dataWindow.postMessage("from-opener", "http://mochi.test:8888");
 }
 
-window.addEventListener("message", messageReceiver, false);
+window.addEventListener("message", messageReceiver);
 
 addLoadEvent(setupBlank);
 ]]></script>

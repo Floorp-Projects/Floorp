@@ -208,8 +208,8 @@ var ShadersListView = Heritage.extend(WidgetMethods, {
     this._onProgramMouseOver = this._onProgramMouseOver.bind(this);
     this._onProgramMouseOut = this._onProgramMouseOut.bind(this);
 
-    this.widget.addEventListener("select", this._onProgramSelect, false);
-    this.widget.addEventListener("check", this._onProgramCheck, false);
+    this.widget.addEventListener("select", this._onProgramSelect);
+    this.widget.addEventListener("check", this._onProgramCheck);
     this.widget.addEventListener("mouseover", this._onProgramMouseOver, true);
     this.widget.addEventListener("mouseout", this._onProgramMouseOut, true);
   },
@@ -218,8 +218,8 @@ var ShadersListView = Heritage.extend(WidgetMethods, {
    * Destruction function, called when the tool is closed.
    */
   destroy: function () {
-    this.widget.removeEventListener("select", this._onProgramSelect, false);
-    this.widget.removeEventListener("check", this._onProgramCheck, false);
+    this.widget.removeEventListener("select", this._onProgramSelect);
+    this.widget.removeEventListener("check", this._onProgramCheck);
     this.widget.removeEventListener("mouseover", this._onProgramMouseOver, true);
     this.widget.removeEventListener("mouseout", this._onProgramMouseOut, true);
   },

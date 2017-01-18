@@ -28,12 +28,13 @@ const int num_tests = 10;
 TEST(VP9, TestBitIO) {
   ACMRandom rnd(ACMRandom::DeterministicSeed());
   for (int n = 0; n < num_tests; ++n) {
-    for (int method = 0; method <= 7; ++method) {   // we generate various proba
+    for (int method = 0; method <= 7; ++method) {  // we generate various proba
       const int kBitsToTest = 1000;
       uint8_t probas[kBitsToTest];
 
       for (int i = 0; i < kBitsToTest; ++i) {
         const int parity = i & 1;
+        /* clang-format off */
         probas[i] =
           (method == 0) ? 0 : (method == 1) ? 255 :
           (method == 2) ? 128 :
@@ -44,6 +45,7 @@ TEST(VP9, TestBitIO) {
             (method == 6) ?
             (parity ? rnd(64) : 255 - rnd(64)) :
             (parity ? rnd(32) : 255 - rnd(32));
+        /* clang-format on */
       }
       for (int bit_method = 0; bit_method <= 3; ++bit_method) {
         const int random_seed = 6432;
@@ -79,8 +81,7 @@ TEST(VP9, TestBitIO) {
           }
           GTEST_ASSERT_EQ(vpx_read(&br, probas[i]), bit)
               << "pos: " << i << " / " << kBitsToTest
-              << " bit_method: " << bit_method
-              << " method: " << method;
+              << " bit_method: " << bit_method << " method: " << method;
         }
       }
     }

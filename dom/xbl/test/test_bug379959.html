@@ -49,12 +49,12 @@ function receiveMessage(e) {
   }
 
   if (seenData && seenSameOrigin && seenCrossOrign) {
-    window.removeEventListener("message", receiveMessage, false);
+    window.removeEventListener("message", receiveMessage);
     SimpleTest.finish();
   }
 }
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 
 function runTest() {
   // make sure data: is allowed

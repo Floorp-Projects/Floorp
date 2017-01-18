@@ -45,7 +45,7 @@ function receiveTestResult(evt)
 
 function setup()
 {
-  window.addEventListener("message", receiveTestResult, false);
+  window.addEventListener("message", receiveTestResult);
   window.frames.container.postMessage("start-test",
                                       "http://sub1.test1.example.org");
 }

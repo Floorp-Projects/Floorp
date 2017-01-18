@@ -87,8 +87,8 @@ function recvMsg(evt)
 function setup()
 {
   target = $("target");
-  target.addEventListener("message", recvMsg, false);
-  document.addEventListener("message", recvMsg, false);
+  target.addEventListener("message", recvMsg);
+  document.addEventListener("message", recvMsg);
   var res = sendMsg();
   ok(res === true, "nothing canceled this");
   is(count, 2, "listener not called twice");

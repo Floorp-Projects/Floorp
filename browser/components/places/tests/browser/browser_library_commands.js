@@ -24,7 +24,7 @@ add_task(function* test_date_container() {
   // Select and open the left pane "History" query.
   let PO = library.PlacesOrganizer;
 
-  PO.selectLeftPaneQuery('History');
+  PO.selectLeftPaneQuery("History");
   isnot(PO._places.selectedNode, null, "We correctly selected History");
 
   // Check that both delete and cut commands are disabled, cause this is
@@ -81,7 +81,7 @@ add_task(function* test_query_on_toolbar() {
   // Select and open the left pane "Bookmarks Toolbar" folder.
   let PO = library.PlacesOrganizer;
 
-  PO.selectLeftPaneQuery('BookmarksToolbar');
+  PO.selectLeftPaneQuery("BookmarksToolbar");
   isnot(PO._places.selectedNode, null, "We have a valid selection");
   is(PlacesUtils.getConcreteItemId(PO._places.selectedNode),
      PlacesUtils.toolbarFolderId,
@@ -150,7 +150,7 @@ add_task(function* test_search_contents() {
   // Select and open the left pane "Bookmarks Toolbar" folder.
   let PO = library.PlacesOrganizer;
 
-  PO.selectLeftPaneQuery('BookmarksToolbar');
+  PO.selectLeftPaneQuery("BookmarksToolbar");
   isnot(PO._places.selectedNode, null, "We have a valid selection");
   is(PlacesUtils.getConcreteItemId(PO._places.selectedNode),
      PlacesUtils.toolbarFolderId,
@@ -188,7 +188,7 @@ add_task(function* test_tags() {
   // Select and open the left pane "Bookmarks Toolbar" folder.
   let PO = library.PlacesOrganizer;
 
-  PO.selectLeftPaneQuery('Tags');
+  PO.selectLeftPaneQuery("Tags");
   let tagsNode = PO._places.selectedNode;
   isnot(tagsNode, null, "We have a valid selection");
   let tagsTitle = PlacesUtils.getString("TagsFolderTitle");

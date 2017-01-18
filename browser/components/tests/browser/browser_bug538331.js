@@ -118,7 +118,7 @@ function test() {
 
   // Reset the startup page pref since it may have been set by other tests
   // and we will assume it is default.
-  Services.prefs.clearUserPref('browser.startup.page');
+  Services.prefs.clearUserPref("browser.startup.page");
 
   if (gPrefService.prefHasUserValue(PREF_MSTONE)) {
     gOriginalMStone = gPrefService.getCharPref(PREF_MSTONE);
@@ -168,9 +168,9 @@ var gWindowCatcher = {
     let win = subject.QueryInterface(Ci.nsIDOMWindow);
     info("window catcher caught window opening: " + win.document.documentURI);
     win.addEventListener("load", function() {
-      win.removeEventListener("load", arguments.callee, false);
+      win.removeEventListener("load", arguments.callee);
       gWindowCatcher.windowLoad(win);
-    }, false);
+    });
   }
 };
 

@@ -45,7 +45,7 @@ function runTests() {
 
   input.addEventListener("change", () => {
     ++rangeChange;
-  }, false);
+  });
 
   function runNext() {
     let p = params[testIdx];
@@ -61,7 +61,7 @@ function runTests() {
 
   input.addEventListener("input", () => {
     ok(false, "Wheel event should be no effect to range input element with max < min");
-  }, false);
+  });
 
   runNext();
 }

@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=949488
 
   function frameOk() {
     var ifr = document.createElement("iframe");
-    ifr.addEventListener("load", iframeLoaded, false);
+    ifr.addEventListener("load", iframeLoaded);
     ifr.setAttribute('src', "iframe_postMessage_solidus.html");
 
     var div = document.getElementById("content");
@@ -48,7 +48,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=949488
 
   function frameWrong() {
     var ifr = document.createElement("iframe");
-    ifr.addEventListener("load", iframeLoaded, false);
+    ifr.addEventListener("load", iframeLoaded);
     ifr.setAttribute('src', "http://www.example.com/tests/dom/base/test/iframe_postMessage_solidus.html");
 
     var div = document.getElementById("content");

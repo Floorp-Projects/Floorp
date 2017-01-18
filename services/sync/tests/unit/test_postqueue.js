@@ -41,7 +41,7 @@ add_test(function test_simple() {
   const time = 11111111;
 
   function* responseGenerator() {
-    yield { success: true, status: 200, headers: { 'x-weave-timestamp': time + 100, 'x-last-modified': time + 100 } };
+    yield { success: true, status: 200, headers: { "x-weave-timestamp": time + 100, "x-last-modified": time + 100 } };
   }
 
   let { pq, stats } = makePostQueue(config, time, responseGenerator());
@@ -69,8 +69,8 @@ add_test(function test_max_post_bytes_no_batch() {
 
   const time = 11111111;
   function* responseGenerator() {
-    yield { success: true, status: 200, headers: { 'x-weave-timestamp': time + 100, 'x-last-modified': time + 100 } };
-    yield { success: true, status: 200, headers: { 'x-weave-timestamp': time + 200, 'x-last-modified': time + 200 } };
+    yield { success: true, status: 200, headers: { "x-weave-timestamp": time + 100, "x-last-modified": time + 100 } };
+    yield { success: true, status: 200, headers: { "x-weave-timestamp": time + 200, "x-last-modified": time + 200 } };
   }
 
   let { pq, stats } = makePostQueue(config, time, responseGenerator());
@@ -109,8 +109,8 @@ add_test(function test_max_post_records_no_batch() {
   const time = 11111111;
 
   function* responseGenerator() {
-    yield { success: true, status: 200, headers: { 'x-weave-timestamp': time + 100, 'x-last-modified': time + 100 } };
-    yield { success: true, status: 200, headers: { 'x-weave-timestamp': time + 200, 'x-last-modified': time + 200 } };
+    yield { success: true, status: 200, headers: { "x-weave-timestamp": time + 100, "x-last-modified": time + 100 } };
+    yield { success: true, status: 200, headers: { "x-weave-timestamp": time + 200, "x-last-modified": time + 200 } };
   }
 
   let { pq, stats } = makePostQueue(config, time, responseGenerator());
@@ -150,7 +150,7 @@ add_test(function test_single_batch() {
   const time = 11111111;
   function* responseGenerator() {
     yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { 'x-last-modified': time, 'x-weave-timestamp': time + 100 },
+            headers: { "x-last-modified": time, "x-weave-timestamp": time + 100 },
     };
   }
 
@@ -183,10 +183,10 @@ add_test(function test_max_post_bytes_batch() {
   const time = 11111111;
   function* responseGenerator() {
     yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { 'x-last-modified': time, 'x-weave-timestamp': time + 100 },
+            headers: { "x-last-modified": time, "x-weave-timestamp": time + 100 },
     };
     yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { 'x-last-modified': time + 200, 'x-weave-timestamp': time + 200 },
+            headers: { "x-last-modified": time + 200, "x-weave-timestamp": time + 200 },
    };
   }
 
@@ -201,12 +201,12 @@ add_test(function test_max_post_bytes_batch() {
       nbytes: 43, // 43 for the first post
       commit: false,
       batch: "true",
-      headers: [['x-if-unmodified-since', time]],
+      headers: [["x-if-unmodified-since", time]],
     }, {
       nbytes: 22,
       commit: true,
       batch: 1234,
-      headers: [['x-if-unmodified-since', time]],
+      headers: [["x-if-unmodified-since", time]],
     }
   ]);
 
@@ -228,16 +228,16 @@ add_test(function test_max_post_bytes_batch() {
   const time1 = 22222222;
   function* responseGenerator() {
     yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { 'x-last-modified': time0, 'x-weave-timestamp': time0 + 100 },
+            headers: { "x-last-modified": time0, "x-weave-timestamp": time0 + 100 },
     };
     yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { 'x-last-modified': time1, 'x-weave-timestamp': time1 },
+            headers: { "x-last-modified": time1, "x-weave-timestamp": time1 },
     };
     yield { success: true, status: 202, obj: { batch: 5678 },
-            headers: { 'x-last-modified': time1, 'x-weave-timestamp': time1 + 100 },
+            headers: { "x-last-modified": time1, "x-weave-timestamp": time1 + 100 },
     };
     yield { success: true, status: 202, obj: { batch: 5678 },
-            headers: { 'x-last-modified': time1 + 200, 'x-weave-timestamp': time1 + 200 },
+            headers: { "x-last-modified": time1 + 200, "x-weave-timestamp": time1 + 200 },
     };
   }
 
@@ -258,25 +258,25 @@ add_test(function test_max_post_bytes_batch() {
       nbytes: 43, // 43 for the first post
       commit: false,
       batch: "true",
-      headers: [['x-if-unmodified-since', time0]],
+      headers: [["x-if-unmodified-since", time0]],
     }, {
       // second post of 22 bytes in the first batch, committing it.
       nbytes: 22,
       commit: true,
       batch: 1234,
-      headers: [['x-if-unmodified-since', time0]],
+      headers: [["x-if-unmodified-since", time0]],
     }, {
       // 3rd post of 43 bytes in a new batch, not yet committing it.
       nbytes: 43,
       commit: false,
       batch: "true",
-      headers: [['x-if-unmodified-since', time1]],
+      headers: [["x-if-unmodified-since", time1]],
     }, {
       // 4th post of 22 bytes in second batch, committing it.
       nbytes: 22,
       commit: true,
       batch: 5678,
-      headers: [['x-if-unmodified-since', time1]],
+      headers: [["x-if-unmodified-since", time1]],
     },
   ]);
 
@@ -298,10 +298,10 @@ add_test(function test_max_post_bytes_batch() {
   const time = 11111111;
   function* responseGenerator() {
     yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { 'x-last-modified': time, 'x-weave-timestamp': time + 100 },
+            headers: { "x-last-modified": time, "x-weave-timestamp": time + 100 },
     };
     yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { 'x-last-modified': time + 200, 'x-weave-timestamp': time + 200 },
+            headers: { "x-last-modified": time + 200, "x-weave-timestamp": time + 200 },
    };
   }
 
@@ -316,12 +316,12 @@ add_test(function test_max_post_bytes_batch() {
       nbytes: 43, // 43 for the first post
       commit: false,
       batch: "true",
-      headers: [['x-if-unmodified-since', time]],
+      headers: [["x-if-unmodified-since", time]],
     }, {
       nbytes: 22,
       commit: true,
       batch: 1234,
-      headers: [['x-if-unmodified-since', time]],
+      headers: [["x-if-unmodified-since", time]],
     }
   ]);
 
@@ -342,10 +342,10 @@ add_test(function test_huge_record() {
   const time = 11111111;
   function* responseGenerator() {
     yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { 'x-last-modified': time, 'x-weave-timestamp': time + 100 },
+            headers: { "x-last-modified": time, "x-weave-timestamp": time + 100 },
     };
     yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { 'x-last-modified': time + 200, 'x-weave-timestamp': time + 200 },
+            headers: { "x-last-modified": time + 200, "x-weave-timestamp": time + 200 },
    };
   }
 
@@ -368,12 +368,12 @@ add_test(function test_huge_record() {
       nbytes: 43, // 43 for the first post
       commit: false,
       batch: "true",
-      headers: [['x-if-unmodified-since', time]],
+      headers: [["x-if-unmodified-since", time]],
     }, {
       nbytes: 22,
       commit: true,
       batch: 1234,
-      headers: [['x-if-unmodified-since', time]],
+      headers: [["x-if-unmodified-since", time]],
     }
   ]);
 
@@ -395,16 +395,16 @@ add_test(function test_max_records_batch() {
   const time1 = 22222222;
   function* responseGenerator() {
     yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { 'x-last-modified': time0, 'x-weave-timestamp': time0 + 100 },
+            headers: { "x-last-modified": time0, "x-weave-timestamp": time0 + 100 },
     };
     yield { success: true, status: 202, obj: { batch: 1234 },
-            headers: { 'x-last-modified': time1, 'x-weave-timestamp': time1 },
+            headers: { "x-last-modified": time1, "x-weave-timestamp": time1 },
     };
     yield { success: true, status: 202, obj: { batch: 5678 },
-            headers: { 'x-last-modified': time1, 'x-weave-timestamp': time1 + 100 },
+            headers: { "x-last-modified": time1, "x-weave-timestamp": time1 + 100 },
     };
     yield { success: true, status: 202, obj: { batch: 5678 },
-            headers: { 'x-last-modified': time1 + 200, 'x-weave-timestamp': time1 + 200 },
+            headers: { "x-last-modified": time1 + 200, "x-weave-timestamp": time1 + 200 },
     };
   }
 
@@ -430,22 +430,22 @@ add_test(function test_max_records_batch() {
       nbytes: 64,
       commit: false,
       batch: "true",
-      headers: [['x-if-unmodified-since', time0]],
+      headers: [["x-if-unmodified-since", time0]],
     }, { // 2 records -- end batch1
       nbytes: 43,
       commit: true,
       batch: 1234,
-      headers: [['x-if-unmodified-since', time0]],
+      headers: [["x-if-unmodified-since", time0]],
     }, { // 3 records
       nbytes: 64,
       commit: false,
       batch: "true",
-      headers: [['x-if-unmodified-since', time1]],
+      headers: [["x-if-unmodified-since", time1]],
     }, { // 1 record -- end batch2
       nbytes: 22,
       commit: true,
       batch: 5678,
-      headers: [['x-if-unmodified-since', time1]],
+      headers: [["x-if-unmodified-since", time1]],
     },
   ]);
 

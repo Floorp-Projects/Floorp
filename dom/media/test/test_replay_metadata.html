@@ -54,12 +54,12 @@ function playing(evt) {
 }
 
 function removeNodeAndListener(n) {
-  n.removeEventListener("loadedmetadata", loadedMetaData, false);
-  n.removeEventListener("ended", playbackEnded, false);
-  n.removeEventListener("playing", playing, false);
-  n.removeEventListener("loadeddata", loadedData, false);
-  n.removeEventListener("seeking", seekStarted, false);
-  n.removeEventListener("seeked", seekEnded, false);
+  n.removeEventListener("loadedmetadata", loadedMetaData);
+  n.removeEventListener("ended", playbackEnded);
+  n.removeEventListener("playing", playing);
+  n.removeEventListener("loadeddata", loadedData);
+  n.removeEventListener("seeking", seekStarted);
+  n.removeEventListener("seeked", seekEnded);
   removeNodeAndSource(n);
 }
 
@@ -103,12 +103,12 @@ function startTest(test, token) {
   v._endCount = 0;
   v._test = test;
   v._finished = false;
-  v.addEventListener("loadedmetadata", loadedMetaData, false);
-  v.addEventListener("ended", playbackEnded, false);
-  v.addEventListener("playing", playing, false);
-  v.addEventListener("loadeddata", loadedData, false);
-  v.addEventListener("seeking", seekStarted, false);
-  v.addEventListener("seeked", seekEnded, false);
+  v.addEventListener("loadedmetadata", loadedMetaData);
+  v.addEventListener("ended", playbackEnded);
+  v.addEventListener("playing", playing);
+  v.addEventListener("loadeddata", loadedData);
+  v.addEventListener("seeking", seekStarted);
+  v.addEventListener("seeked", seekEnded);
   document.body.appendChild(v);
 }
 

@@ -20,16 +20,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=667612
 
 xhr = new XMLHttpRequest;
 w = new Worker("empty.js");
-window.addEventListener("load", null, false);
-document.addEventListener("load", null, false);
-document.body.addEventListener("load", null, false);
-xhr.addEventListener("load", null, false);
-w.addEventListener("load", null, false);
-window.addEventListener("load", undefined, false);
-document.addEventListener("load", undefined, false);
-document.body.addEventListener("load", undefined, false);
-xhr.addEventListener("load", undefined, false);
-w.addEventListener("load", undefined, false);
+window.addEventListener("load", null);
+document.addEventListener("load", null);
+document.body.addEventListener("load", null);
+xhr.addEventListener("load", null);
+w.addEventListener("load", null);
+window.addEventListener("load", undefined);
+document.addEventListener("load", undefined);
+document.body.addEventListener("load", undefined);
+xhr.addEventListener("load", undefined);
+w.addEventListener("load", undefined);
 
 ok(true, "didn't throw");
 

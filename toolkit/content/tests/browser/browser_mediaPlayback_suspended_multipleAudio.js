@@ -15,8 +15,8 @@ function wait_for_event(browser, event) {
 }
 
 function check_all_audio_suspended(suspendedType) {
-  var autoPlay = content.document.getElementById('autoplay');
-  var nonAutoPlay = content.document.getElementById('nonautoplay');
+  var autoPlay = content.document.getElementById("autoplay");
+  var nonAutoPlay = content.document.getElementById("nonautoplay");
   if (!autoPlay || !nonAutoPlay) {
     ok(false, "Can't get the audio element!");
   }
@@ -28,7 +28,7 @@ function check_all_audio_suspended(suspendedType) {
 }
 
 function check_autoplay_audio_suspended(suspendedType) {
-  var autoPlay = content.document.getElementById('autoplay');
+  var autoPlay = content.document.getElementById("autoplay");
   if (!autoPlay) {
     ok(false, "Can't get the audio element!");
   }
@@ -38,7 +38,7 @@ function check_autoplay_audio_suspended(suspendedType) {
 }
 
 function check_nonautoplay_audio_suspended(suspendedType) {
-  var nonAutoPlay = content.document.getElementById('nonautoplay');
+  var nonAutoPlay = content.document.getElementById("nonautoplay");
   if (!nonAutoPlay) {
     ok(false, "Can't get the audio element!");
   }
@@ -48,7 +48,7 @@ function check_nonautoplay_audio_suspended(suspendedType) {
 }
 
 function check_autoplay_audio_pause_state(expectedPauseState) {
-  var autoPlay = content.document.getElementById('autoplay');
+  var autoPlay = content.document.getElementById("autoplay");
   if (!autoPlay) {
     ok(false, "Can't get the audio element!");
   }
@@ -73,7 +73,7 @@ function check_autoplay_audio_pause_state(expectedPauseState) {
 }
 
 function play_nonautoplay_audio_should_be_paused() {
-  var nonAutoPlay = content.document.getElementById('nonautoplay');
+  var nonAutoPlay = content.document.getElementById("nonautoplay");
   if (!nonAutoPlay) {
     ok(false, "Can't get the audio element!");
   }
@@ -89,8 +89,8 @@ function play_nonautoplay_audio_should_be_paused() {
 }
 
 function all_audio_onresume() {
-  var autoPlay = content.document.getElementById('autoplay');
-  var nonAutoPlay = content.document.getElementById('nonautoplay');
+  var autoPlay = content.document.getElementById("autoplay");
+  var nonAutoPlay = content.document.getElementById("nonautoplay");
   if (!autoPlay || !nonAutoPlay) {
     ok(false, "Can't get the audio element!");
   }
@@ -100,8 +100,8 @@ function all_audio_onresume() {
 }
 
 function all_audio_onpause() {
-  var autoPlay = content.document.getElementById('autoplay');
-  var nonAutoPlay = content.document.getElementById('nonautoplay');
+  var autoPlay = content.document.getElementById("autoplay");
+  var nonAutoPlay = content.document.getElementById("nonautoplay");
   if (!autoPlay || !nonAutoPlay) {
     ok(false, "Can't get the audio element!");
   }
@@ -111,7 +111,7 @@ function all_audio_onpause() {
 }
 
 function play_nonautoplay_audio_should_play_until_ended() {
-  var nonAutoPlay = content.document.getElementById('nonautoplay');
+  var nonAutoPlay = content.document.getElementById("nonautoplay");
   if (!nonAutoPlay) {
     ok(false, "Can't get the audio element!");
   }
@@ -127,8 +127,8 @@ function play_nonautoplay_audio_should_play_until_ended() {
 }
 
 function no_audio_resumed() {
-  var autoPlay = content.document.getElementById('autoplay');
-  var nonAutoPlay = content.document.getElementById('nonautoplay');
+  var autoPlay = content.document.getElementById("autoplay");
+  var nonAutoPlay = content.document.getElementById("nonautoplay");
   if (!autoPlay || !nonAutoPlay) {
     ok(false, "Can't get the audio element!");
   }
@@ -137,7 +137,7 @@ function no_audio_resumed() {
 }
 
 function play_nonautoplay_audio_should_be_blocked(suspendedType) {
-  var nonAutoPlay = content.document.getElementById('nonautoplay');
+  var nonAutoPlay = content.document.getElementById("nonautoplay");
   if (!nonAutoPlay) {
     ok(false, "Can't get the audio element!");
   }

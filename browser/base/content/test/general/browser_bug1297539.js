@@ -54,7 +54,7 @@ function* cutCurrentSelection(elementQueryString, property, browser) {
 // which is handled by TextEditor::PasteTransferable to paste into the editor.
 add_task(function* test_paste_transferable_plain_text() {
   let testPage =
-    'data:text/html,' +
+    "data:text/html," +
     '<textarea id="textarea">Write something here</textarea>';
 
   yield BrowserTestUtils.withNewTab(testPage, function* (browser) {
@@ -69,7 +69,7 @@ add_task(function* test_paste_transferable_plain_text() {
     DOMWindowUtils.sendContentCommandEvent("pasteTransferable", trans);
 
     yield ContentTask.spawn(browser, null, function* () {
-      let textArea = content.document.querySelector('#textarea');
+      let textArea = content.document.querySelector("#textarea");
       is(textArea.value, "Write something here",
          "Send content command pasteTransferable successful");
     });
@@ -85,7 +85,7 @@ add_task(function* test_paste_transferable_plain_text() {
 // Selection to select the contenteditable contents.
 add_task(function* test_paste_transferable_html() {
   let testPage =
-    'data:text/html,' +
+    "data:text/html," +
     '<div contenteditable="true"><b>Bold Text</b><i>italics</i></div>';
 
   yield BrowserTestUtils.withNewTab(testPage, function* (browser) {
@@ -104,7 +104,7 @@ add_task(function* test_paste_transferable_html() {
     DOMWindowUtils.sendContentCommandEvent("pasteTransferable", trans);
 
     yield ContentTask.spawn(browser, null, function* () {
-      let textArea = content.document.querySelector('div');
+      let textArea = content.document.querySelector("div");
       is(textArea.innerHTML, "<b>Bold Text</b><i>italics</i>",
          "Send content command pasteTransferable successful");
     });

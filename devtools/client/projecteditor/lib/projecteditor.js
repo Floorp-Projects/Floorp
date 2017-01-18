@@ -154,7 +154,7 @@ var ProjectEditor = Class({
     this._buildMenubar();
     this._buildSidebar();
 
-    this.window.addEventListener("unload", this.destroy, false);
+    this.window.addEventListener("unload", this.destroy);
 
     // Editor management
     this.shells = new ShellDeck(this, this.document);
@@ -305,7 +305,7 @@ var ProjectEditor = Class({
 
     // Reset the src for the iframe so if it reused for a new ProjectEditor
     // instance, the load will fire properly.
-    this.window.removeEventListener("unload", this.destroy, false);
+    this.window.removeEventListener("unload", this.destroy);
     this.iframe.setAttribute("src", "about:blank");
 
     this._plugins.forEach(plugin => { plugin.destroy(); });

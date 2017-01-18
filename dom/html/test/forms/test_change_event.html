@@ -87,7 +87,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
       else {
         is(fileInputChange, 1, "change event shouldn't be dispatched on blur for file input element (2)");
       }
-    }, false);
+    });
     input.click();
     // blur the file input, we can't use blur() because of bug 760283
     document.getElementById('input_text').focus();
@@ -176,10 +176,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
         function preventDefault(e) {
           e.preventDefault();
         }
-        input.addEventListener("click", preventDefault, false);
+        input.addEventListener("click", preventDefault);
         input.click();
         is(NonTextInputChange[i], 1, "Change event shouldn't be dispatched if click event is cancelled");
-        input.removeEventListener("click", preventDefault, false);
+        input.removeEventListener("click", preventDefault);
       }
     }
 

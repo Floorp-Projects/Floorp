@@ -59,8 +59,8 @@ setFileInputs();
 
 is(singleFileInput.multiple, false, "single-file input .multiple");
 is(multiFileInput.multiple, true, "multi-file input .multiple");
-is(singleFileInput.value, input1File.name, "single-file input .value");
-is(multiFileInput.value, input2Files[0].name, "multi-file input .value");
+is(singleFileInput.value, 'C:\\fakepath\\' + input1File.name, "single-file input .value");
+is(multiFileInput.value, 'C:\\fakepath\\' + input2Files[0].name, "multi-file input .value");
 is(singleFileInput.files[0].name, input1File.name, "single-file input .files[n].name");
 is(singleFileInput.files[0].size, input1File.body.length, "single-file input .files[n].size");
 is(singleFileInput.files[0].type, input1File.type, "single-file input .files[n].type");

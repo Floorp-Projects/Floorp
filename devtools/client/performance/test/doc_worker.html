@@ -19,7 +19,7 @@
         worker.addEventListener("message", function (e) {
           console.log(e.data);
           console.timeStamp("Done");
-        }, false);
+        });
 
         worker.postMessage("Hello World");
       }

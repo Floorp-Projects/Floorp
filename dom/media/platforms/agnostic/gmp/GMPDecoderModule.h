@@ -46,8 +46,6 @@ public:
   SupportsMimeType(const nsACString& aMimeType,
                    DecoderDoctorDiagnostics* aDiagnostics) const override;
 
-  static const Maybe<nsCString> PreferredGMP(const nsACString& aMimeType);
-
   static bool SupportsMimeType(const nsACString& aMimeType,
                                const Maybe<nsCString>& aGMP);
 };

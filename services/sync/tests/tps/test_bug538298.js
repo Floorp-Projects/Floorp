@@ -63,20 +63,20 @@ var bookmarks_after_move = {
  */
 
 // Add four bookmarks to the toolbar and sync.
-Phase('phase1', [
+Phase("phase1", [
   [Bookmarks.add, bookmarks_initial],
   [Bookmarks.verify, bookmarks_initial],
   [Sync]
 ]);
 
 // Sync to profile2 and verify that all four bookmarks are present.
-Phase('phase2', [
+Phase("phase2", [
   [Sync],
   [Bookmarks.verify, bookmarks_initial]
 ]);
 
 // Change the order of the toolbar bookmarks, and sync.
-Phase('phase3', [
+Phase("phase3", [
   [Sync],
   [Bookmarks.verify, bookmarks_initial],
   [Bookmarks.modify, bookmarks_initial],
@@ -86,7 +86,7 @@ Phase('phase3', [
 
 // Go back to profile2, sync, and verify that the bookmarks are reordered
 // as expected.
-Phase('phase4', [
+Phase("phase4", [
   [Sync],
   [Bookmarks.verify, bookmarks_after_move]
 ]);

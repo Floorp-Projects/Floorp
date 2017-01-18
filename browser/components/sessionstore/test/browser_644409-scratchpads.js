@@ -39,7 +39,7 @@ function windowObserver(aSubject, aTopic, aData) {
   if (aTopic == "domwindowopened") {
     let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
     win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad, false);
+      win.removeEventListener("load", onLoad);
 
       if (win.Scratchpad) {
         win.Scratchpad.addObserver({
@@ -53,7 +53,7 @@ function windowObserver(aSubject, aTopic, aData) {
           },
         });
       }
-    }, false);
+    });
   }
 }
 

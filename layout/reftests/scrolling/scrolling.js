@@ -34,13 +34,13 @@ document.onload = function() {
     window.addEventListener("MozReftestInvalidate", function() {
         document.documentElement.removeAttribute("class");
         doScroll(20);
-        }, false);
+        });
   } else {
     doScroll(1);
     document.documentElement.setAttribute("class", "reftest-wait");
     window.addEventListener("MozReftestInvalidate", function() {
         document.documentElement.removeAttribute("class");
         doScroll(20);
-        }, false);
+        });
   }
 }

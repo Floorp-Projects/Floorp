@@ -167,12 +167,6 @@ class BrowserToolbarTablet extends BrowserToolbarTabletBase {
     }
 
     @Override
-    public void setToolBarButtonsAlpha(float alpha) {
-        // Do nothing.
-    }
-
-
-    @Override
     public void startEditing(final String url, final PropertyAnimator animator) {
         // We already know the forward button state - no need to store it here.
         backButtonWasEnabledOnStartEditing = backButton.isEnabled();

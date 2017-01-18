@@ -55,9 +55,9 @@ function startTest() {
   frameWindow = iframe.contentWindow;
   frameDocument = iframe.contentDocument;
 
-  frameDocument.getElementById("input").addEventListener("click", clickEventHandler, false);
-  frameDocument.getElementById("editor1").addEventListener("click", clickEventHandler, false);
-  frameDocument.getElementById("editor2").addEventListener("click", clickEventHandler, false);
+  frameDocument.getElementById("input").addEventListener("click", clickEventHandler);
+  frameDocument.getElementById("editor1").addEventListener("click", clickEventHandler);
+  frameDocument.getElementById("editor2").addEventListener("click", clickEventHandler);
 
   var text = frameDocument.getElementById("text");
 
@@ -332,9 +332,9 @@ function runContentEditableTests5()
 
 function initForBodyEditableDocumentTests()
 {
-  frameDocument.getElementById("input").removeEventListener("click", clickEventHandler, false);
-  frameDocument.getElementById("editor1").removeEventListener("click", clickEventHandler, false);
-  frameDocument.getElementById("editor2").removeEventListener("click", clickEventHandler, false);
+  frameDocument.getElementById("input").removeEventListener("click", clickEventHandler);
+  frameDocument.getElementById("editor1").removeEventListener("click", clickEventHandler);
+  frameDocument.getElementById("editor2").removeEventListener("click", clickEventHandler);
 
   iframe.onload =
     function (aEvent) { SimpleTest.executeSoon(runBodyEditableDocumentTests1); };

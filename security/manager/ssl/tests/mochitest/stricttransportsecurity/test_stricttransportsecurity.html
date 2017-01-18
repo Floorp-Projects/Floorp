@@ -114,8 +114,8 @@
 
   // listen for calls back from the sts-setting iframe and then
   // the verification frames.
-  window.addEventListener("message", onMessageReceived, false);
-  window.addEventListener("load", () => { startRound("plain"); }, false);
+  window.addEventListener("message", onMessageReceived);
+  window.addEventListener("load", () => { startRound("plain"); });
   </script>
 </head>
 

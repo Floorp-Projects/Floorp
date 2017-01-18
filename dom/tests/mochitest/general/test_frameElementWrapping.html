@@ -36,8 +36,7 @@ function runTest(result, message) {
 }
 
 window.addEventListener("message",
-                        function(event) { runTest.apply(null, event.data.split(',')) },
-                        false);
+                        function(event) { runTest.apply(null, event.data.split(',')) });
 
 </script>
 </pre>

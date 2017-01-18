@@ -19,10 +19,10 @@ SimpleTest.waitForExplicitFinish();
  * within a segment making sure the image is blocked correctly by CSP.
  */
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 function receiveMessage(event) {
   is(event.data, "img-blocked", "image should be blocked");
-  window.removeEventListener("message", receiveMessage, false);
+  window.removeEventListener("message", receiveMessage);
   SimpleTest.finish();
 }
 

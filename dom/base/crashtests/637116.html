@@ -15,7 +15,7 @@ function boom()
   var otherWin = window.open("data:text/html,1", "_blank", "width=200,height=200");
   try { otherWin.history.replaceState(errorProxy, "title", "replaceState.html"); } catch(e) {}
   focused.focus();
-  focused.addEventListener("foo", K(otherWin.applicationCache), false);
+  focused.addEventListener("foo", K(otherWin.applicationCache));
   otherWin.close();
 }
 

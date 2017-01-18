@@ -19,7 +19,7 @@ DummyEngine.prototype.name = "dummy";
 
 function ActualEngine() {}
 ActualEngine.prototype = {__proto__: Engine.prototype,
-                          name: 'actual'};
+                          name: "actual"};
 
 add_test(function test_basics() {
   _("We start out with a clean slate");
@@ -28,11 +28,11 @@ add_test(function test_basics() {
 
   let engines = manager.getAll();
   do_check_eq(engines.length, 0);
-  do_check_eq(manager.get('dummy'), undefined);
+  do_check_eq(manager.get("dummy"), undefined);
 
   _("Register an engine");
   manager.register(DummyEngine);
-  let dummy = manager.get('dummy');
+  let dummy = manager.get("dummy");
   do_check_true(dummy instanceof DummyEngine);
 
   engines = manager.getAll();
@@ -41,12 +41,12 @@ add_test(function test_basics() {
 
   _("Register an already registered engine is ignored");
   manager.register(DummyEngine);
-  do_check_eq(manager.get('dummy'), dummy);
+  do_check_eq(manager.get("dummy"), dummy);
 
   _("Register multiple engines in one go");
   manager.register([PetrolEngine, DieselEngine]);
-  let petrol = manager.get('petrol');
-  let diesel = manager.get('diesel');
+  let petrol = manager.get("petrol");
+  let diesel = manager.get("diesel");
   do_check_true(petrol instanceof PetrolEngine);
   do_check_true(diesel instanceof DieselEngine);
 
@@ -93,8 +93,8 @@ add_test(function test_basics() {
   do_check_array_eq(engines, [petrol, diesel, dummy]);
 
   _("Unregister an engine by name");
-  manager.unregister('dummy');
-  do_check_eq(manager.get('dummy'), undefined);
+  manager.unregister("dummy");
+  do_check_eq(manager.get("dummy"), undefined);
   engines = manager.getAll();
   do_check_eq(engines.length, 2);
   do_check_eq(engines.indexOf(dummy), -1);
@@ -102,12 +102,12 @@ add_test(function test_basics() {
   _("Unregister an engine by value");
   // manager.unregister() checks for instanceof Engine, so let's make one:
   manager.register(ActualEngine);
-  let actual = manager.get('actual');
+  let actual = manager.get("actual");
   do_check_true(actual instanceof ActualEngine);
   do_check_true(actual instanceof Engine);
 
   manager.unregister(actual);
-  do_check_eq(manager.get('actual'), undefined);
+  do_check_eq(manager.get("actual"), undefined);
 
   run_next_test();
 });

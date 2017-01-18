@@ -40,7 +40,7 @@ function startTest(test, token) {
     Log(e.target.token, "got " + e.type + " with currentTime = " + v.currentTime);
   }
   events.forEach(function(e) {
-    v.addEventListener(e, logEvent, false);
+    v.addEventListener(e, logEvent);
   });
 
   once(v, "seeking", function() {

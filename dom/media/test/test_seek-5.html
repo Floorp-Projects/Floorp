@@ -54,10 +54,10 @@ function playbackEnded() {
   finish();
 }
 
-v.addEventListener("ended", playbackEnded, false);
-v.addEventListener("loadedmetadata", startTest, false);
-v.addEventListener("seeking", seekStarted, false);
-v.addEventListener("seeked", seekEnded, false);
+v.addEventListener("ended", playbackEnded);
+v.addEventListener("loadedmetadata", startTest);
+v.addEventListener("seeking", seekStarted);
+v.addEventListener("seeked", seekEnded);
 
 }
 

@@ -618,7 +618,7 @@ var CustomizableUIInternal = {
       }
       let props = {type: CustomizableUI.TYPE_TOOLBAR, legacy: true};
       let defaultsetAttribute = aToolbar.getAttribute("defaultset") || "";
-      props.defaultPlacements = defaultsetAttribute.split(',').filter(s => s);
+      props.defaultPlacements = defaultsetAttribute.split(",").filter(s => s);
       this.registerArea(area, props);
       areaProperties = gAreas.get(area);
     }
@@ -981,7 +981,7 @@ var CustomizableUIInternal = {
       this.notifyListeners("onWidgetAfterDOMChange", widgetNode, null, container, true);
 
       if (isToolbar) {
-        areaNode.setAttribute("currentset", gPlacements.get(aArea).join(','));
+        areaNode.setAttribute("currentset", gPlacements.get(aArea).join(","));
       }
 
       let windowCache = gSingleWrapperCache.get(window);
@@ -1153,7 +1153,7 @@ var CustomizableUIInternal = {
     this.insertWidgetBefore(widgetNode, nextNode, insertionContainer, areaId);
 
     if (gAreas.get(areaId).get("type") == CustomizableUI.TYPE_TOOLBAR) {
-      aAreaNode.setAttribute("currentset", gPlacements.get(areaId).join(','));
+      aAreaNode.setAttribute("currentset", gPlacements.get(areaId).join(","));
     }
   },
 
@@ -1369,9 +1369,9 @@ var CustomizableUIInternal = {
       node.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional");
 
       let commandHandler = this.handleWidgetCommand.bind(this, aWidget, node);
-      node.addEventListener("command", commandHandler, false);
+      node.addEventListener("command", commandHandler);
       let clickHandler = this.handleWidgetClick.bind(this, aWidget, node);
-      node.addEventListener("click", clickHandler, false);
+      node.addEventListener("click", clickHandler);
 
       // If the widget has a view, and has view showing / hiding listeners,
       // hook those up to this widget.
@@ -1387,7 +1387,7 @@ var CustomizableUIInternal = {
           for (let eventName of kSubviewEvents) {
             let handler = "on" + eventName;
             if (typeof aWidget[handler] == "function") {
-              viewNode.addEventListener(eventName, aWidget[handler], false);
+              viewNode.addEventListener(eventName, aWidget[handler]);
             }
           }
 
@@ -2455,7 +2455,7 @@ var CustomizableUIInternal = {
           for (let eventName of kSubviewEvents) {
             let handler = "on" + eventName;
             if (typeof widget[handler] == "function") {
-              viewNode.removeEventListener(eventName, widget[handler], false);
+              viewNode.removeEventListener(eventName, widget[handler]);
             }
           }
         }
@@ -2732,7 +2732,7 @@ var CustomizableUIInternal = {
         // widgets (if any) - use that instead:
         if (props.get("type") == CustomizableUI.TYPE_TOOLBAR) {
           let currentSet = container.currentSet;
-          currentPlacements = currentSet ? currentSet.split(',') : [];
+          currentPlacements = currentSet ? currentSet.split(",") : [];
           currentPlacements = currentPlacements.filter(removableOrDefault);
         } else {
           // Clone the array so we don't modify the actual placements...
@@ -4120,7 +4120,7 @@ OverflowableToolbar.prototype = {
       let doc = this._panel.ownerDocument;
       this._panel.hidden = false;
       let contextMenu = doc.getElementById(this._panel.getAttribute("context"));
-      gELS.addSystemEventListener(contextMenu, 'command', this, true);
+      gELS.addSystemEventListener(contextMenu, "command", this, true);
       let anchor = doc.getAnonymousElementByAttribute(this._chevron, "class", "toolbarbutton-icon");
       this._panel.openPopup(anchor || this._chevron);
       this._chevron.open = true;
@@ -4150,7 +4150,7 @@ OverflowableToolbar.prototype = {
     this._panel.removeEventListener("dragend", this);
     let doc = aEvent.target.ownerDocument;
     let contextMenu = doc.getElementById(this._panel.getAttribute("context"));
-    gELS.removeSystemEventListener(contextMenu, 'command', this, true);
+    gELS.removeSystemEventListener(contextMenu, "command", this, true);
   },
 
   onOverflow(aEvent) {

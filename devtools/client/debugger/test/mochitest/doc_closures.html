@@ -9,7 +9,7 @@
       window.addEventListener("load", function onload() {
         window.removeEventListener("load", onload);
         function clickHandler(event) {
-          button.removeEventListener("click", clickHandler, false);
+          button.removeEventListener("click", clickHandler);
           var PersonFactory = function _pfactory(name) {
               var foo = 10;
               return {
@@ -21,7 +21,7 @@
           debugger;
         }
         var button = document.querySelector("button");
-        button.addEventListener("click", clickHandler, false);
+        button.addEventListener("click", clickHandler);
       });
     </script>
 

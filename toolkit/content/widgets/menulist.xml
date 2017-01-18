@@ -80,12 +80,12 @@
           <![CDATA[
             var popup = this.menupopup;
             if (popup) {
-              var arr = popup.getElementsByAttribute('selected', 'true');
+              var arr = popup.getElementsByAttribute("selected", "true");
 
               var editable = this.editable;
               var value = this.value;
               if (!arr.item(0) && value)
-                arr = popup.getElementsByAttribute(editable ? 'label' : 'value', value);
+                arr = popup.getElementsByAttribute(editable ? "label" : "value", value);
 
               if (arr.item(0))
                 this.selectedItem = arr[0];
@@ -106,13 +106,13 @@
             var arr = null;
             var popup = this.menupopup;
             if (popup)
-              arr = popup.getElementsByAttribute('value', val);
+              arr = popup.getElementsByAttribute("value", val);
 
             if (arr && arr.item(0))
               this.selectedItem = arr[0];
             else {
               this.selectedItem = null;
-              this.setAttribute('value', val);
+              this.setAttribute("value", val);
             }
 
             return val;
@@ -224,14 +224,14 @@
               return val;
 
             if (oldval) {
-              oldval.removeAttribute('selected');
+              oldval.removeAttribute("selected");
               this.mAttributeObserver.disconnect();
             }
 
             this.mSelectedInternal = val;
             let attributeFilter = ["value", "label", "image", "description"];
             if (val) {
-              val.setAttribute('selected', 'true');
+              val.setAttribute("selected", "true");
               for (let attr of attributeFilter) {
                 if (val.hasAttribute(attr)) {
                   this.setAttribute(attr, val.getAttribute(attr));
@@ -423,7 +423,7 @@
           var popup = this.menupopup;
 
           if (popup)
-            arr = popup.getElementsByAttribute('label', this.inputField.value);
+            arr = popup.getElementsByAttribute("label", this.inputField.value);
 
           this.setSelectionInternal(arr ? arr.item(0) : null);
         ]]>
@@ -441,12 +441,12 @@
               return val;
 
             if (this.mSelectedInternal)
-              this.mSelectedInternal.removeAttribute('selected');
+              this.mSelectedInternal.removeAttribute("selected");
 
             this.mSelectedInternal = val;
 
             if (val)
-              val.setAttribute('selected', 'true');
+              val.setAttribute("selected", "true");
 
             // Do NOT change the "value", which is owned by inputField
             return val;
@@ -471,8 +471,8 @@
           // Override menulist's value setter to refer to the inputField's value
           // (Allows using "menulist.value" instead of "menulist.inputField.value")
           this.inputField.value = val;
-          this.setAttribute('value', val);
-          this.setAttribute('label', val);
+          this.setAttribute("value", val);
+          this.setAttribute("label", val);
           this._selectInputFieldValueInList();
           return val;
         ]]>
@@ -501,14 +501,14 @@
             this.setSelectionInternal(val);
             if (val) {
               // Editable menulist uses "label" as its "value"
-              var label = val.getAttribute('label');
+              var label = val.getAttribute("label");
               this.inputField.value = label;
-              this.setAttribute('value', label);
-              this.setAttribute('label', label);
+              this.setAttribute("value", label);
+              this.setAttribute("label", label);
             } else {
               this.inputField.value = "";
-              this.removeAttribute('value');
-              this.removeAttribute('label');
+              this.removeAttribute("value");
+              this.removeAttribute("label");
             }
 
             var event = document.createEvent("Events");
@@ -550,13 +550,13 @@
     <handlers>
       <handler event="focus" phase="capturing">
         <![CDATA[
-          this.setAttribute('focused', 'true');
+          this.setAttribute("focused", "true");
         ]]>
       </handler>
 
       <handler event="blur" phase="capturing">
         <![CDATA[
-          this.removeAttribute('focused');
+          this.removeAttribute("focused");
         ]]>
       </handler>
 

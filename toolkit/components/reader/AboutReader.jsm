@@ -69,15 +69,15 @@ var AboutReader = function(mm, win, articlePromise) {
 
   this._scrollOffset = win.pageYOffset;
 
-  doc.addEventListener("click", this, false);
+  doc.addEventListener("click", this);
 
-  win.addEventListener("pagehide", this, false);
-  win.addEventListener("scroll", this, false);
-  win.addEventListener("resize", this, false);
+  win.addEventListener("pagehide", this);
+  win.addEventListener("scroll", this);
+  win.addEventListener("resize", this);
 
   Services.obs.addObserver(this, "inner-window-destroyed", false);
 
-  doc.addEventListener("visibilitychange", this, false);
+  doc.addEventListener("visibilitychange", this);
 
   this._setupStyleDropdown();
   this._setupButton("close-button", this._onReaderClose.bind(this), "aboutReader.toolbar.close");
@@ -241,9 +241,9 @@ AboutReader.prototype = {
     switch (aEvent.type) {
       case "click":
         let target = aEvent.target;
-        if (target.classList.contains('dropdown-toggle')) {
+        if (target.classList.contains("dropdown-toggle")) {
           this._toggleDropdownClicked(aEvent);
-        } else if (!target.closest('.dropdown-popup')) {
+        } else if (!target.closest(".dropdown-popup")) {
           this._closeDropdowns();
         }
         break;
@@ -257,7 +257,7 @@ AboutReader.prototype = {
         this._updateImageMargins();
         if (this._isToolbarVertical) {
           this._win.setTimeout(() => {
-            for (let dropdown of this._doc.querySelectorAll('.dropdown.open')) {
+            for (let dropdown of this._doc.querySelectorAll(".dropdown.open")) {
               this._updatePopupPosition(dropdown);
             }
           }, 0);
@@ -549,11 +549,11 @@ AboutReader.prototype = {
   // Setup or teardown the ambient light tracking system.
   _enableAmbientLighting(enable) {
     if (enable) {
-      this._win.addEventListener("devicelight", this, false);
+      this._win.addEventListener("devicelight", this);
       this._luxValues = [];
       this._totalLux = 0;
     } else {
-      this._win.removeEventListener("devicelight", this, false);
+      this._win.removeEventListener("devicelight", this);
       delete this._luxValues;
       delete this._totalLux;
     }
@@ -685,11 +685,11 @@ AboutReader.prototype = {
 
     let doc = this._doc;
 
-    let link = doc.createElement('link');
-    link.rel = 'shortcut icon';
+    let link = doc.createElement("link");
+    link.rel = "shortcut icon";
     link.href = faviconUrl;
 
-    doc.getElementsByTagName('head')[0].appendChild(link);
+    doc.getElementsByTagName("head")[0].appendChild(link);
   },
 
   _updateImageMargins() {
@@ -965,7 +965,7 @@ AboutReader.prototype = {
   },
 
   _toggleDropdownClicked(event) {
-    let dropdown = event.target.closest('.dropdown');
+    let dropdown = event.target.closest(".dropdown");
 
     if (!dropdown)
       return;

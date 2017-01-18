@@ -381,7 +381,7 @@ Editor.prototype = {
 
       this.emit("popupOpen", ev, popup);
       popup.openPopupAtScreen(ev.screenX, ev.screenY, true);
-    }, false);
+    });
 
     cm.on("focus", () => this.emit("focus"));
     cm.on("scroll", () => this.emit("scroll"));

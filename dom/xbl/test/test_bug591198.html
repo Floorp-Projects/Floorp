@@ -22,7 +22,7 @@ function* runTest() {
   let iframe = $('iframe');
   window.addEventListener("message", function(e) {
     gen.next(JSON.parse(e.data));
-  }, false);
+  });
   
   iframe.src = "file_bug591198_inner.html";
   let res = (yield);

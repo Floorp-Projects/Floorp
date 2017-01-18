@@ -4,7 +4,7 @@ document.onscroll=function(){alert("Scroll down as soon as you press ok!");}
 function initCF() {
 setTimeout("CFcrash()", 190);
 }
-document.addEventListener("DOMContentLoaded", initCF, false);
+document.addEventListener("DOMContentLoaded", initCF);
 function CFcrash() {
 try { window.scrollByLines(3); } catch(e) {}
 }</script>>

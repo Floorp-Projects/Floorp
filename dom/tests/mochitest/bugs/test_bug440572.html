@@ -23,7 +23,7 @@ function receiveMessage(e)
   messages.push(e.data);
 }
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 
 function runtests()
 {

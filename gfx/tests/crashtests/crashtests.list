@@ -131,5 +131,5 @@ load balinese-letter-spacing.html
 load 1216832-1.html
 load 1225125-1.html
 asserts-if(stylo,2) load 1308394.html # bug 1324669
-load 1317403-1.html
+skip-if(stylo) load 1317403-1.html # bug 1331533
 load 1325159-1.html

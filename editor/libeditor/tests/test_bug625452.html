@@ -23,7 +23,7 @@ SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   var i = document.querySelector("input");
   var inputCount = 0;
-  i.addEventListener("input", function() { inputCount++; }, false);
+  i.addEventListener("input", function() { inputCount++; });
 
   // test cut
   i.focus();

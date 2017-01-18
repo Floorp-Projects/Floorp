@@ -48,7 +48,7 @@
                                       false );
             div.requestPointerLock();
           }
-        }, false);
+        });
 
         document.addEventListener("pointerlockerror", function (e) {
           prefDisabled = true;
@@ -59,7 +59,7 @@
             SimpleTest.finish();
           });
           document.exitFullscreen();
-        }, false);
+        });
 
         function start() {
           addFullscreenChangeContinuation("enter", function() {

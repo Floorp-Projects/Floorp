@@ -34,7 +34,7 @@ function maketest(attach_media, name, type, check_metadata) {
           check_metadata(e);
           removeNodeAndSource(e);
           manager.finished(token);
-        }, false);
+        });
     } else {
       e.addEventListener('error', function onerror(event) {
         is(errorRun, false, "error handler should run once only!");

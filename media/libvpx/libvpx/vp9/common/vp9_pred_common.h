@@ -20,8 +20,8 @@ extern "C" {
 #endif
 
 static INLINE int get_segment_id(const VP9_COMMON *cm,
-                                 const uint8_t *segment_ids,
-                                 BLOCK_SIZE bsize, int mi_row, int mi_col) {
+                                 const uint8_t *segment_ids, BLOCK_SIZE bsize,
+                                 int mi_row, int mi_col) {
   const int mi_offset = mi_row * cm->mi_cols + mi_col;
   const int bw = num_8x8_blocks_wide_lookup[bsize];
   const int bh = num_8x8_blocks_high_lookup[bsize];
@@ -41,8 +41,7 @@ static INLINE int get_segment_id(const VP9_COMMON *cm,
 static INLINE int vp9_get_pred_context_seg_id(const MACROBLOCKD *xd) {
   const MODE_INFO *const above_mi = xd->above_mi;
   const MODE_INFO *const left_mi = xd->left_mi;
-  const int above_sip = (above_mi != NULL) ?
-                        above_mi->seg_id_predicted : 0;
+  const int above_sip = (above_mi != NULL) ? above_mi->seg_id_predicted : 0;
   const int left_sip = (left_mi != NULL) ? left_mi->seg_id_predicted : 0;
 
   return above_sip + left_sip;
@@ -66,7 +65,27 @@ static INLINE vpx_prob vp9_get_skip_prob(const VP9_COMMON *cm,
   return cm->fc->skip_probs[vp9_get_skip_context(xd)];
 }
 
-int vp9_get_pred_context_switchable_interp(const MACROBLOCKD *xd);
+// Returns a context number for the given MB prediction signal
+static INLINE int get_pred_context_switchable_interp(const MACROBLOCKD *xd) {
+  // Note:
+  // The mode info data structure has a one element border above and to the
+  // left of the entries corresponding to real macroblocks.
+  // The prediction flags in these dummy entries are initialized to 0.
+  const MODE_INFO *const left_mi = xd->left_mi;
+  const int left_type = left_mi ? left_mi->interp_filter : SWITCHABLE_FILTERS;
+  const MODE_INFO *const above_mi = xd->above_mi;
+  const int above_type =
+      above_mi ? above_mi->interp_filter : SWITCHABLE_FILTERS;
+
+  if (left_type == above_type)
+    return left_type;
+  else if (left_type == SWITCHABLE_FILTERS)
+    return above_type;
+  else if (above_type == SWITCHABLE_FILTERS)
+    return left_type;
+  else
+    return SWITCHABLE_FILTERS;
+}
 
 // The mode info data structure has a one element border above and to the
 // left of the entries corresponding to real macroblocks.
@@ -136,15 +155,13 @@ static INLINE int get_tx_size_context(const MACROBLOCKD *xd) {
   const MODE_INFO *const left_mi = xd->left_mi;
   const int has_above = !!above_mi;
   const int has_left = !!left_mi;
-  int above_ctx = (has_above && !above_mi->skip) ? (int)above_mi->tx_size
-                                                 : max_tx_size;
-  int left_ctx = (has_left && !left_mi->skip) ? (int)left_mi->tx_size
-                                              : max_tx_size;
-  if (!has_left)
-    left_ctx = above_ctx;
+  int above_ctx =
+      (has_above && !above_mi->skip) ? (int)above_mi->tx_size : max_tx_size;
+  int left_ctx =
+      (has_left && !left_mi->skip) ? (int)left_mi->tx_size : max_tx_size;
+  if (!has_left) left_ctx = above_ctx;
 
-  if (!has_above)
-    above_ctx = left_ctx;
+  if (!has_above) above_ctx = left_ctx;
 
   return (above_ctx + left_ctx) > max_tx_size;
 }
@@ -152,15 +169,10 @@ static INLINE int get_tx_size_context(const MACROBLOCKD *xd) {
 static INLINE const vpx_prob *get_tx_probs(TX_SIZE max_tx_size, int ctx,
                                            const struct tx_probs *tx_probs) {
   switch (max_tx_size) {
-    case TX_8X8:
-      return tx_probs->p8x8[ctx];
-    case TX_16X16:
-      return tx_probs->p16x16[ctx];
-    case TX_32X32:
-      return tx_probs->p32x32[ctx];
-    default:
-      assert(0 && "Invalid max_tx_size.");
-      return NULL;
+    case TX_8X8: return tx_probs->p8x8[ctx];
+    case TX_16X16: return tx_probs->p16x16[ctx];
+    case TX_32X32: return tx_probs->p32x32[ctx];
+    default: assert(0 && "Invalid max_tx_size."); return NULL;
   }
 }
 
@@ -173,15 +185,10 @@ static INLINE const vpx_prob *get_tx_probs2(TX_SIZE max_tx_size,
 static INLINE unsigned int *get_tx_counts(TX_SIZE max_tx_size, int ctx,
                                           struct tx_counts *tx_counts) {
   switch (max_tx_size) {
-    case TX_8X8:
-      return tx_counts->p8x8[ctx];
-    case TX_16X16:
-      return tx_counts->p16x16[ctx];
-    case TX_32X32:
-      return tx_counts->p32x32[ctx];
-    default:
-      assert(0 && "Invalid max_tx_size.");
-      return NULL;
+    case TX_8X8: return tx_counts->p8x8[ctx];
+    case TX_16X16: return tx_counts->p16x16[ctx];
+    case TX_32X32: return tx_counts->p32x32[ctx];
+    default: assert(0 && "Invalid max_tx_size."); return NULL;
   }
 }
 

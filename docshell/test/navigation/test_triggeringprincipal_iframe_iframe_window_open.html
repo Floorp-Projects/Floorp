@@ -49,7 +49,7 @@ const LOADING_PRINCIPAL_URI =
 var frameA = document.getElementById("framea");
 
 function checkResults() {
-  frameA.removeEventListener('load', checkResults, false);
+  frameA.removeEventListener('load', checkResults);
 
   var channel = SpecialPowers.wrap(frameA.contentDocument).docShell.currentDocumentChannel;
   var triggeringPrincipal = channel.loadInfo.triggeringPrincipal.URI.asciiSpec;
@@ -68,8 +68,8 @@ function checkResults() {
 }
 
 function performNavigation() {
-  frameA.removeEventListener('load', performNavigation, false);
-  frameA.addEventListener('load', checkResults, false);
+  frameA.removeEventListener('load', performNavigation);
+  frameA.addEventListener('load', checkResults);
 
   // load Frame B which then navigates Frame A
   var frameB = document.getElementById("frameb");
@@ -79,7 +79,7 @@ function performNavigation() {
 // start the test
 SimpleTest.waitForExplicitFinish();
 
-frameA.addEventListener('load', performNavigation, false);
+frameA.addEventListener('load', performNavigation);
 
 </script>
 </pre>

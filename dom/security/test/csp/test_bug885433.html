@@ -36,7 +36,7 @@ function checkAllowed () {
   ok(color === green, "Inline style should be allowed");
 
   document.getElementById('cspframe2').src = 'file_bug885433_blocks.html';
-  document.getElementById('cspframe2').addEventListener('load', checkBlocked, false);
+  document.getElementById('cspframe2').addEventListener('load', checkBlocked);
 }
 
 function checkBlocked () {
@@ -54,7 +54,7 @@ function checkBlocked () {
 }
 
 document.getElementById('cspframe').src = 'file_bug885433_allows.html';
-document.getElementById('cspframe').addEventListener('load', checkAllowed, false);
+document.getElementById('cspframe').addEventListener('load', checkAllowed);
 </script>
 </pre>
 </body>

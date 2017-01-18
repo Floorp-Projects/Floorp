@@ -167,7 +167,7 @@ function makeRequest(uri) {
   function documentLoaded(e) {
       xmlLoad(xmlDoc);
   }
-  xmlDoc.addEventListener("load", documentLoaded, false);
+  xmlDoc.addEventListener("load", documentLoaded);
   xmlDoc.load(uri);
 }
 
@@ -176,7 +176,7 @@ initLogins();
 
 // clear plain HTTP auth sessions before the test, to allow
 // running them more than once.
-var authMgr = SpecialPowers.Cc['@mozilla.org/network/http-auth-manager;1']
+var authMgr = SpecialPowers.Cc["@mozilla.org/network/http-auth-manager;1"]
                            .getService(SpecialPowers.Ci.nsIHttpAuthManager);
 authMgr.clearAll();
 

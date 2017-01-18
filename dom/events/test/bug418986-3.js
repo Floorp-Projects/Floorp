@@ -53,7 +53,7 @@ var test = function (isContent) {
         // Seems we can't add an event listener in chrome unless we run
         // it in a later task.
         window.setTimeout(function() {
-          div.addEventListener(eventType, event => handleEvent(event, prefVal), false);
+          div.addEventListener(eventType, event => handleEvent(event, prefVal));
           // For some reason, the following synthesizeMouseAtCenter call only seems to run if we
           // wrap it in a window.setTimeout(..., 0).
           window.setTimeout(function () {

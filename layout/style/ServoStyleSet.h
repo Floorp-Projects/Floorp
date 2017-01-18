@@ -161,10 +161,10 @@ public:
 #endif
 
   /**
-   * Recompute our default computed styles.  This will eagerly create a new set
-   * of default computed style structs.
+   * Rebuild the style data. This will force a stylesheet flush, and also
+   * recompute the default computed styles.
    */
-  void RecomputeDefaultComputedStyles();
+  void RebuildData();
 
   /**
    * Resolve style for the given element, and return it as a

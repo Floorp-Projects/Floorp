@@ -549,9 +549,9 @@ ServoStyleSet::AssertTreeIsClean()
 #endif
 
 void
-ServoStyleSet::RecomputeDefaultComputedStyles()
+ServoStyleSet::RebuildData()
 {
-  Servo_StyleSet_RecomputeDefaultStyles(mRawSet.get(), mPresContext);
+  Servo_StyleSet_RebuildData(mRawSet.get());
 }
 
 ServoComputedValuesStrong

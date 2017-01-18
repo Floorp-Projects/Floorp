@@ -32,7 +32,7 @@ function log(...aMessageArgs) {
 }
 
 function defined(item) {
-  return typeof item !== 'undefined';
+  return typeof item !== "undefined";
 }
 
 var checkDeprecated = this.checkDeprecated = function checkDeprecated(aOptions, aField) {
@@ -68,7 +68,7 @@ this.getRandomId = function getRandomId() {
 this.objectCopy = function objectCopy(source, target) {
   let desc;
   Object.getOwnPropertyNames(source).forEach(function(name) {
-    if (name[0] !== '_') {
+    if (name[0] !== "_") {
       desc = Object.getOwnPropertyDescriptor(source, name);
       Object.defineProperty(target, name, desc);
     }
@@ -92,15 +92,15 @@ this.makeMessageObject = function makeMessageObject(aRpCaller) {
     // Duplicate the callerobject, scrubbing out functions and other
     // internal variables (like _mm, the message manager object)
     if (!Object.hasOwnProperty(this, option)
-        && option[0] !== '_'
-        && typeof aRpCaller[option] !== 'function') {
+        && option[0] !== "_"
+        && typeof aRpCaller[option] !== "function") {
       options[option] = aRpCaller[option];
     }
   });
 
   // check validity of message structure
-  if ((typeof options.id === 'undefined') ||
-      (typeof options.origin === 'undefined')) {
+  if ((typeof options.id === "undefined") ||
+      (typeof options.origin === "undefined")) {
     let err = "id and origin required in relying-party message: " + JSON.stringify(options);
     reportError(err);
     throw new Error(err);

@@ -92,9 +92,9 @@ var FormValidationHandler =
     aEvent.originalTarget.removeEventListener("popuphiding", this, true);
     let tabBrowser = aEvent.originalTarget.ownerDocument.getElementById("content");
     tabBrowser.selectedBrowser.removeEventListener("scroll", this, true);
-    tabBrowser.selectedBrowser.removeEventListener("FullZoomChange", this, false);
-    tabBrowser.selectedBrowser.removeEventListener("TextZoomChange", this, false);
-    tabBrowser.selectedBrowser.removeEventListener("ZoomChangeUsingMouseWheel", this, false);
+    tabBrowser.selectedBrowser.removeEventListener("FullZoomChange", this);
+    tabBrowser.selectedBrowser.removeEventListener("TextZoomChange", this);
+    tabBrowser.selectedBrowser.removeEventListener("ZoomChangeUsingMouseWheel", this);
 
     this._panel.hidden = true;
     this._panel = null;
@@ -136,9 +136,9 @@ var FormValidationHandler =
 
       // Hide if the user scrolls the page
       tabBrowser.selectedBrowser.addEventListener("scroll", this, true);
-      tabBrowser.selectedBrowser.addEventListener("FullZoomChange", this, false);
-      tabBrowser.selectedBrowser.addEventListener("TextZoomChange", this, false);
-      tabBrowser.selectedBrowser.addEventListener("ZoomChangeUsingMouseWheel", this, false);
+      tabBrowser.selectedBrowser.addEventListener("FullZoomChange", this);
+      tabBrowser.selectedBrowser.addEventListener("TextZoomChange", this);
+      tabBrowser.selectedBrowser.addEventListener("ZoomChangeUsingMouseWheel", this);
 
       // Open the popup
       this._panel.openPopup(this._anchor, aPanelData.position, 0, 0, false);

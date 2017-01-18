@@ -13,7 +13,7 @@
 var manager = new MediaTestManager;
 
 function finish_test(element) {
-  element.removeEventListener("error", onerror, false);
+  element.removeEventListener("error", onerror);
   removeNodeAndSource(element);
   manager.finished(element.token);
 }

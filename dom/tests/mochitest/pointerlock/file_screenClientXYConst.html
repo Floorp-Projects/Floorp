@@ -72,7 +72,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
 
       function moveLocked(e) {
         info("Got mousemove via moveLocked");
-        div.removeEventListener("mousemove", moveLocked, false);
+        div.removeEventListener("mousemove", moveLocked);
 
         isLocked = !!document.pointerLockElement;
         lockedCoords = {
@@ -93,15 +93,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       document.addEventListener("pointerlockchange", function (e) {
         if (document.pointerLockElement === div) {
           info("Got pointerlockchange for entering");
-          div.removeEventListener("mousemove", moveUnlocked, false);
-          div.addEventListener("mousemove", moveLocked, false);
+          div.removeEventListener("mousemove", moveUnlocked);
+          div.addEventListener("mousemove", moveLocked);
           divRect = div.getBoundingClientRect();
           synthesizeNativeMouseMove(div, (divRect.width / 4) * 3,
                                     (divRect.height / 4) * 3);
         } else {
           info("Got pointerlockchange for exiting");
         }
-      }, false);
+      });
 
       function start() {
         div = document.getElementById("div");
@@ -109,7 +109,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         addFullscreenChangeContinuation("enter", function() {
           info("Got fullscreenchange for entering");
           synthesizeNativeMouseMove(div, 0, 0, () => {
-            div.addEventListener("mousemove", moveUnlocked, false);
+            div.addEventListener("mousemove", moveUnlocked);
             divRect = div.getBoundingClientRect();
             synthesizeNativeMouseMove(div, divRect.width / 2, divRect.height / 2);
           });

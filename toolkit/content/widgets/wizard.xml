@@ -197,14 +197,14 @@
 
         this._initPages();
 
-        window.addEventListener("close", this._closeHandler, false);
+        window.addEventListener("close", this._closeHandler);
 
         // start off on the first page
         this.pageCount = this.wizardPages.length;
         this.advance();
 
         // give focus to the first focusable element in the dialog
-        window.addEventListener("load", this._setInitialFocus, false);
+        window.addEventListener("load", this._setInitialFocus);
       ]]></constructor>
 
       <method name="getPageById">
@@ -376,7 +376,7 @@
         <body><![CDATA[
          var btn = document.getAnonymousElementByAttribute(this._wizardButtons, "dlgtype", aName);
          if (btn) {
-           btn.addEventListener("command", this["_"+aName+"Func"], false);
+           btn.addEventListener("command", this["_"+aName+"Func"]);
            this["_"+aName+"Button"] = btn;
          }
          return btn;

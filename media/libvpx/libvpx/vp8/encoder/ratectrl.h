@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 #ifndef VP8_ENCODER_RATECTRL_H_
 #define VP8_ENCODER_RATECTRL_H_
 
@@ -25,7 +24,9 @@ extern void vp8_setup_key_frame(VP8_COMP *cpi);
 extern void vp8_update_rate_correction_factors(VP8_COMP *cpi, int damp_var);
 extern int vp8_regulate_q(VP8_COMP *cpi, int target_bits_per_frame);
 extern void vp8_adjust_key_frame_context(VP8_COMP *cpi);
-extern void vp8_compute_frame_size_bounds(VP8_COMP *cpi, int *frame_under_shoot_limit, int *frame_over_shoot_limit);
+extern void vp8_compute_frame_size_bounds(VP8_COMP *cpi,
+                                          int *frame_under_shoot_limit,
+                                          int *frame_over_shoot_limit);
 
 /* return of 0 means drop frame */
 extern int vp8_pick_frame_size(VP8_COMP *cpi);

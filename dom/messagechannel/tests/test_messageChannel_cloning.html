@@ -18,7 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
 
   // This test checks if MessagePorts can be shared with iframes
   function test_iframe() {
-    window.addEventListener('message', receiveMessage, false);
+    window.addEventListener('message', receiveMessage);
     function receiveMessage(evt) {
       if (evt.data.status == 'OK') {
         ok(true, evt.data.message);
@@ -40,7 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
     ok(div, "Parent exists");
 
     var ifr = document.createElement("iframe");
-    ifr.addEventListener("load", iframeLoaded, false);
+    ifr.addEventListener("load", iframeLoaded);
     ifr.setAttribute('src', "iframe_messageChannel_cloning.html");
     div.appendChild(ifr);
 

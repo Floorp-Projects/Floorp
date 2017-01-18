@@ -146,7 +146,7 @@ function checkLinkClick(link) {
 
   let deferred = defer();
   info("Check that clicking the link opens a new tab with the correct URI");
-  gBrowser.tabContainer.addEventListener("TabOpen", newTabListener, false);
+  gBrowser.tabContainer.addEventListener("TabOpen", newTabListener);
   info("Click the link to MDN");
   link.click();
   return deferred.promise;

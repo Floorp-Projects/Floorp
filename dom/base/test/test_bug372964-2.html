@@ -24,7 +24,7 @@ var eventCount = 0;
 function runTest() {
   var ifr = document.getElementsByTagName("iframe")[0];
   var xhr = new ifr.contentWindow.XMLHttpRequest();
-  xhr.addEventListener("foo", ifr.contentWindow.listener, false);
+  xhr.addEventListener("foo", ifr.contentWindow.listener);
   var event = ifr.contentDocument.createEvent("Events");
   event.initEvent("foo", true, true);
   xhr.dispatchEvent(event);

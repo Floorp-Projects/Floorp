@@ -104,16 +104,16 @@ function test_setTabState() {
     is(ss.getTabValue(tab, "baz"), "qux");
     is(tab.linkedBrowser.currentURI.spec, "http://example.org/");
 
-    window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy, false);
-    window.removeEventListener("SSWindowStateReady", onSSWindowStateReady, false);
-    gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored, false);
+    window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy);
+    window.removeEventListener("SSWindowStateReady", onSSWindowStateReady);
+    gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored);
 
     runNextTest();
   }
 
-  window.addEventListener("SSWindowStateBusy", onSSWindowStateBusy, false);
-  window.addEventListener("SSWindowStateReady", onSSWindowStateReady, false);
-  gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored, false);
+  window.addEventListener("SSWindowStateBusy", onSSWindowStateBusy);
+  window.addEventListener("SSWindowStateReady", onSSWindowStateReady);
+  gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored);
   ss.setTabState(tab, newTabState);
 }
 
@@ -144,16 +144,16 @@ function test_duplicateTab() {
     is(ss.getTabValue(newTab, "baz"), "qux");
     is(newTab.linkedBrowser.currentURI.spec, "about:rights");
 
-    window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy, false);
-    window.removeEventListener("SSWindowStateReady", onSSWindowStateReady, false);
-    gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored, false);
+    window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy);
+    window.removeEventListener("SSWindowStateReady", onSSWindowStateReady);
+    gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored);
 
     runNextTest();
   }
 
-  window.addEventListener("SSWindowStateBusy", onSSWindowStateBusy, false);
-  window.addEventListener("SSWindowStateReady", onSSWindowStateReady, false);
-  gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored, false);
+  window.addEventListener("SSWindowStateBusy", onSSWindowStateBusy);
+  window.addEventListener("SSWindowStateReady", onSSWindowStateReady);
+  gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored);
 
   newTab = ss.duplicateTab(window, tab);
 }
@@ -184,16 +184,16 @@ function test_undoCloseTab() {
     is(ss.getTabValue(reopenedTab, "baz"), "qux");
     is(reopenedTab.linkedBrowser.currentURI.spec, "about:rights");
 
-    window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy, false);
-    window.removeEventListener("SSWindowStateReady", onSSWindowStateReady, false);
-    gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored, false);
+    window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy);
+    window.removeEventListener("SSWindowStateReady", onSSWindowStateReady);
+    gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored);
 
     runNextTest();
   }
 
-  window.addEventListener("SSWindowStateBusy", onSSWindowStateBusy, false);
-  window.addEventListener("SSWindowStateReady", onSSWindowStateReady, false);
-  gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored, false);
+  window.addEventListener("SSWindowStateBusy", onSSWindowStateBusy);
+  window.addEventListener("SSWindowStateReady", onSSWindowStateReady);
+  gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored);
 
   gBrowser.removeTab(tab);
   reopenedTab = ss.undoCloseTab(window, 0);
@@ -233,16 +233,16 @@ function test_setWindowState() {
     is(gBrowser.tabs[0].linkedBrowser.currentURI.spec, "about:mozilla");
     is(gBrowser.tabs[1].linkedBrowser.currentURI.spec, "http://example.org/");
 
-    window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy, false);
-    window.removeEventListener("SSWindowStateReady", onSSWindowStateReady, false);
-    gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored, false);
+    window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy);
+    window.removeEventListener("SSWindowStateReady", onSSWindowStateReady);
+    gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored);
 
     runNextTest();
   }
 
-  window.addEventListener("SSWindowStateBusy", onSSWindowStateBusy, false);
-  window.addEventListener("SSWindowStateReady", onSSWindowStateReady, false);
-  gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored, false);
+  window.addEventListener("SSWindowStateBusy", onSSWindowStateBusy);
+  window.addEventListener("SSWindowStateReady", onSSWindowStateReady);
+  gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored);
 
   ss.setWindowState(window, JSON.stringify(testState), true);
 }
@@ -261,15 +261,15 @@ function test_setBrowserState() {
     if (aTopic == "domwindowopened") {
       newWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
       newWindow.addEventListener("load", function() {
-        newWindow.removeEventListener("load", arguments.callee, false);
+        newWindow.removeEventListener("load", arguments.callee);
 
         Services.ww.unregisterNotification(windowObserver);
 
         windowEvents[getOuterWindowID(newWindow)] = { busyEventCount: 0, readyEventCount: 0 };
 
-        newWindow.addEventListener("SSWindowStateBusy", onSSWindowStateBusy, false);
-        newWindow.addEventListener("SSWindowStateReady", onSSWindowStateReady, false);
-      }, false);
+        newWindow.addEventListener("SSWindowStateBusy", onSSWindowStateBusy);
+        newWindow.addEventListener("SSWindowStateReady", onSSWindowStateReady);
+      });
     }
   }
 
@@ -281,8 +281,8 @@ function test_setBrowserState() {
     windowEvents[getOuterWindowID(aEvent.originalTarget)].readyEventCount++;
   }
 
-  window.addEventListener("SSWindowStateBusy", onSSWindowStateBusy, false);
-  window.addEventListener("SSWindowStateReady", onSSWindowStateReady, false);
+  window.addEventListener("SSWindowStateBusy", onSSWindowStateBusy);
+  window.addEventListener("SSWindowStateReady", onSSWindowStateReady);
   Services.ww.registerNotification(windowObserver);
 
   waitForBrowserState(lameMultiWindowState, function() {
@@ -297,10 +297,10 @@ function test_setBrowserState() {
     }
     is(checkedWindows, 2,
        "[test_setBrowserState] checked 2 windows");
-    window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy, false);
-    window.removeEventListener("SSWindowStateReady", onSSWindowStateReady, false);
-    newWindow.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy, false);
-    newWindow.removeEventListener("SSWindowStateReady", onSSWindowStateReady, false);
+    window.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy);
+    window.removeEventListener("SSWindowStateReady", onSSWindowStateReady);
+    newWindow.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy);
+    newWindow.removeEventListener("SSWindowStateReady", onSSWindowStateReady);
     runNextTest();
   });
 }
@@ -322,14 +322,14 @@ function test_undoCloseWindow() {
     BrowserTestUtils.closeWindow(newWindow).then(() => {
       // Now give it time to close
       reopenedWindow = ss.undoCloseWindow(0);
-      reopenedWindow.addEventListener("SSWindowStateBusy", onSSWindowStateBusy, false);
-      reopenedWindow.addEventListener("SSWindowStateReady", onSSWindowStateReady, false);
+      reopenedWindow.addEventListener("SSWindowStateBusy", onSSWindowStateBusy);
+      reopenedWindow.addEventListener("SSWindowStateReady", onSSWindowStateReady);
 
       reopenedWindow.addEventListener("load", function() {
-        reopenedWindow.removeEventListener("load", arguments.callee, false);
+        reopenedWindow.removeEventListener("load", arguments.callee);
 
-        reopenedWindow.gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored, false);
-      }, false);
+        reopenedWindow.gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored);
+      });
     });
   });
 
@@ -352,9 +352,9 @@ function test_undoCloseWindow() {
     is(busyEventCount, 1);
     is(readyEventCount, 1);
 
-    reopenedWindow.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy, false);
-    reopenedWindow.removeEventListener("SSWindowStateReady", onSSWindowStateReady, false);
-    reopenedWindow.gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored, false);
+    reopenedWindow.removeEventListener("SSWindowStateBusy", onSSWindowStateBusy);
+    reopenedWindow.removeEventListener("SSWindowStateReady", onSSWindowStateReady);
+    reopenedWindow.gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored);
 
     BrowserTestUtils.closeWindow(reopenedWindow).then(runNextTest);
   }

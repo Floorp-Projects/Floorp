@@ -48,7 +48,7 @@ var prefs = Cc["@mozilla.org/preferences-service;1"]
             .getService(Ci.nsIPrefBranch);
 
 var mozmillInit = {};
-Cu.import('resource://mozmill/driver/mozmill.js', mozmillInit);
+Cu.import("resource://mozmill/driver/mozmill.js", mozmillInit);
 
 XPCOMUtils.defineLazyGetter(this, "fileProtocolHandler", () => {
   let fileHandler = Services.io.getProtocolHandler("file");
@@ -483,13 +483,13 @@ var TPS = {
           addon.uninstall();
           break;
         case ACTION_VERIFY:
-          Logger.AssertTrue(addon.find(state), 'addon ' + addon.id + ' not found');
+          Logger.AssertTrue(addon.find(state), "addon " + addon.id + " not found");
           break;
         case ACTION_VERIFY_NOT:
-          Logger.AssertFalse(addon.find(state), 'addon ' + addon.id + " is present, but it shouldn't be");
+          Logger.AssertFalse(addon.find(state), "addon " + addon.id + " is present, but it shouldn't be");
           break;
         case ACTION_SET_ENABLED:
-          Logger.AssertTrue(addon.setEnabled(state), 'addon ' + addon.id + ' not found');
+          Logger.AssertTrue(addon.setEnabled(state), "addon " + addon.id + " not found");
           break;
         default:
           throw new Error("Unknown action for add-on: " + action);
@@ -508,10 +508,10 @@ var TPS = {
         for (let bookmark of bookmarks[folder]) {
           Logger.clearPotentialError();
           let placesItem;
-          bookmark['location'] = folder;
+          bookmark["location"] = folder;
 
           if (last_item_pos != -1)
-            bookmark['last_item_pos'] = last_item_pos;
+            bookmark["last_item_pos"] = last_item_pos;
           let item_id = -1;
 
           if (action != ACTION_MODIFY && action != ACTION_DELETE)
@@ -571,9 +571,9 @@ var TPS = {
   MozmillEndTestListener: function TPS__MozmillEndTestListener(obj) {
     Logger.logInfo("mozmill endTest: " + JSON.stringify(obj));
     if (obj.failed > 0) {
-      this.DumpError('mozmill test failed, name: ' + obj.name + ', reason: ' + JSON.stringify(obj.fails));
-    } else if ('skipped' in obj && obj.skipped) {
-      this.DumpError('mozmill test failed, name: ' + obj.name + ', reason: ' + obj.skipped_reason);
+      this.DumpError("mozmill test failed, name: " + obj.name + ", reason: " + JSON.stringify(obj.fails));
+    } else if ("skipped" in obj && obj.skipped) {
+      this.DumpError("mozmill test failed, name: " + obj.name + ", reason: " + obj.skipped_reason);
     } else {
       Utils.namedTimer(function() {
         this.FinishAsyncOperation();
@@ -611,7 +611,7 @@ var TPS = {
   ValidateBookmarks() {
 
     let getServerBookmarkState = () => {
-      let bookmarkEngine = Weave.Service.engineManager.get('bookmarks');
+      let bookmarkEngine = Weave.Service.engineManager.get("bookmarks");
       let collection = bookmarkEngine.itemSource();
       let collectionKey = bookmarkEngine.service.collectionKeys.keyForCollection(bookmarkEngine.name);
       collection.full = true;
@@ -861,7 +861,7 @@ var TPS = {
       Logger.logInfo("Firefox version: " + Services.appinfo.version);
       Logger.logInfo("Firefox source revision: " + (AppConstants.SOURCE_REVISION_URL || "unknown"));
       Logger.logInfo("Firefox platform: " + AppConstants.platform);
-      Logger.logInfo('Firefox Accounts enabled: ' + this.fxaccounts_enabled);
+      Logger.logInfo("Firefox Accounts enabled: " + this.fxaccounts_enabled);
 
       // do some sync housekeeping
       if (Weave.Service.isLoggedIn) {
@@ -893,7 +893,7 @@ var TPS = {
    */
   _executeTestPhase: function _executeTestPhase(file, phase, settings) {
     try {
-      this.config = JSON.parse(prefs.getCharPref('tps.config'));
+      this.config = JSON.parse(prefs.getCharPref("tps.config"));
       // parse the test file
       Services.scriptloader.loadSubScript(file, this);
       this._currentPhase = phase;
@@ -1034,7 +1034,7 @@ var TPS = {
   RunMozmillTest: function TPS__RunMozmillTest(testfile) {
     var mozmillfile = Cc["@mozilla.org/file/local;1"]
                       .createInstance(Ci.nsILocalFile);
-    if (hh.oscpu.toLowerCase().indexOf('windows') > -1) {
+    if (hh.oscpu.toLowerCase().indexOf("windows") > -1) {
       let re = /\/(\w)\/(.*)/;
       this.config.testdir = this.config.testdir.replace(re, "$1://$2").replace(/\//g, "\\");
     }
@@ -1043,9 +1043,9 @@ var TPS = {
     Logger.logInfo("Running mozmill test " + mozmillfile.path);
 
     var frame = {};
-    Cu.import('resource://mozmill/modules/frame.js', frame);
-    frame.events.addListener('setTest', this.MozmillSetTestListener.bind(this));
-    frame.events.addListener('endTest', this.MozmillEndTestListener.bind(this));
+    Cu.import("resource://mozmill/modules/frame.js", frame);
+    frame.events.addListener("setTest", this.MozmillSetTestListener.bind(this));
+    frame.events.addListener("endTest", this.MozmillEndTestListener.bind(this));
     this.StartAsyncOperation();
     frame.runTestFile(mozmillfile.path, null);
   },

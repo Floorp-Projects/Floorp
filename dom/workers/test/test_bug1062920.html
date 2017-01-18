@@ -31,7 +31,7 @@
         is(event.data.userAgent, nav.userAgent, "userAgent should match");
         is(event.data.product, nav.product, "product should match");
         runTests();
-      }, false);
+      });
 
       document.getElementById('content').appendChild(ifr);
     };

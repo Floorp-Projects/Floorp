@@ -15,11 +15,13 @@
 
 namespace {
 
-class ConfigTest : public ::libvpx_test::EncoderTest,
-    public ::libvpx_test::CodecTestWithParam<libvpx_test::TestMode> {
+class ConfigTest
+    : public ::libvpx_test::EncoderTest,
+      public ::libvpx_test::CodecTestWithParam<libvpx_test::TestMode> {
  protected:
-  ConfigTest() : EncoderTest(GET_PARAM(0)),
-                 frame_count_in_(0), frame_count_out_(0), frame_count_max_(0) {}
+  ConfigTest()
+      : EncoderTest(GET_PARAM(0)), frame_count_in_(0), frame_count_out_(0),
+        frame_count_max_(0) {}
   virtual ~ConfigTest() {}
 
   virtual void SetUp() {
@@ -32,12 +34,12 @@ class ConfigTest : public ::libvpx_test::EncoderTest,
     frame_count_out_ = 0;
   }
 
-  virtual void PreEncodeFrameHook(libvpx_test::VideoSource* /*video*/) {
+  virtual void PreEncodeFrameHook(libvpx_test::VideoSource * /*video*/) {
     ++frame_count_in_;
     abort_ |= (frame_count_in_ >= frame_count_max_);
   }
 
-  virtual void FramePktHook(const vpx_codec_cx_pkt_t* /*pkt*/) {
+  virtual void FramePktHook(const vpx_codec_cx_pkt_t * /*pkt*/) {
     ++frame_count_out_;
   }
 

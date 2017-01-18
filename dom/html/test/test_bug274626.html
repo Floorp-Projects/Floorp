@@ -77,7 +77,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=274626
 
   for (id of controls) {
     var ctrl = document.getElementById(id);
-    ctrl.addEventListener('mousemove', HandlesMouseMove, false);
+    ctrl.addEventListener('mousemove', HandlesMouseMove);
     ctrl.handlesMouseMove = false;
     var evt = document.createEvent("MouseEvents");
     evt.initMouseEvent("mousemove", true, true, window,

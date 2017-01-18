@@ -48,7 +48,7 @@ function runTests() {
 
   input.addEventListener("change", () => {
     ++rangeChange;
-  }, false);
+  });
 
   function runNext() {
     let p = params[testIdx];
@@ -67,7 +67,7 @@ function runTests() {
   input.addEventListener("input", () => {
     ok(input.value == result,
        "Test-" + testIdx + " receive input event, expect " + result + " get " + input.value);
-  }, false);
+  });
 
   runNext();
 }

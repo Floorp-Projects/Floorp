@@ -19,7 +19,7 @@ function waitForLoginDone() {
       is(e.data, 'LOGINDONE', 'got the right message');
       window.removeEventListener('message', listener);
       resolve();
-    }, false);
+    });
   });
 }
 

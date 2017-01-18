@@ -23,7 +23,7 @@ function do_test()
 {
   var dE = document.documentElement;
 
-  document.addEventListener("DOMNodeRemoved", newScript, false);
+  document.addEventListener("DOMNodeRemoved", newScript);
 
   document.removeChild(dE);
 

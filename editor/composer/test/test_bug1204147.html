@@ -91,7 +91,7 @@ var loadListener = function(evt) {
       // Second time around, the element should default to en-US.
       // Without the fix, the first run sets the content preference to en-GB for the whole site.
       is (currentDictonary, "en-US", "unexpected lang " + currentDictonary + " instead of en-US");
-      content.removeEventListener('load', loadListener, false);
+      content.removeEventListener('load', loadListener);
 
       // Remove the fake en-GB dictionary again, since it's otherwise picked up by later tests.
       script.sendSyncMessage("destroy");
@@ -102,7 +102,7 @@ var loadListener = function(evt) {
   });
 }
 
-content.addEventListener('load', loadListener, false);
+content.addEventListener('load', loadListener);
 
 content.src = 'http://mochi.test:8888/tests/editor/composer/test/bug1204147_subframe.html?firstload=true';
 

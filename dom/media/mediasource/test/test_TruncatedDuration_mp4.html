@@ -25,13 +25,13 @@ function round(n) {
 
 function do_seeking(e) {
   var v = e.target;
-  v.removeEventListener("seeking", do_seeking, false);
+  v.removeEventListener("seeking", do_seeking);
   SimpleTest.finish();
 }
 
 function do_seeked(e) {
   var v = e.target;
-  v.removeEventListener("seeked", do_seeked, false);
+  v.removeEventListener("seeked", do_seeked);
   var duration = round(v.duration / 3);
   is(v._sb.updating, false, "sourcebuffer isn't updating");
   v._sb.remove(duration, Infinity);
@@ -45,13 +45,13 @@ function do_seeked(e) {
     is(v.currentTime, v.duration, "current time was updated");
     is(v._sb.buffered.length, 1, "One buffered range");
     // Truncated mediasource duration will cause the video element to seek.
-    v.addEventListener("seeking", do_seeking, false);
+    v.addEventListener("seeking", do_seeking);
   });
 }
 
 function do_loaded(e) {
   var v = e.target;
-  v.removeEventListener("loadeddata", do_loaded, false);
+  v.removeEventListener("loadeddata", do_loaded);
   // mp4 metadata states 10s when we only have 1.6s worth of video.
   v._sb.remove(v._sb.buffered.end(0), Infinity);
   once(v._sb, "updateend", function() {
@@ -60,7 +60,7 @@ function do_loaded(e) {
     v.currentTime = v.duration / 2;
     is(v.currentTime, v.duration / 2, "current time was updated");
     ok(v.seeking, "seeking is true");
-    v.addEventListener("seeked", do_seeked, false);
+    v.addEventListener("seeked", do_seeked);
   });
 }
 
@@ -72,7 +72,7 @@ runWithMSE(function (ms, v) {
 
     fetchWithXHR("bipbop/bipbop2s.mp4", function (arrayBuffer) {
       sb.appendBuffer(new Uint8Array(arrayBuffer));
-      v.addEventListener("loadeddata", do_loaded, false);
+      v.addEventListener("loadeddata", do_loaded);
     });
   });
 });

@@ -68,9 +68,9 @@ this.EnableDelayHelper = function({enableDialog, disableDialog, focusTarget}) {
 
     this.disableDialog();
 
-    this.focusTarget.addEventListener("blur", this, false);
-    this.focusTarget.addEventListener("focus", this, false);
-    this.focusTarget.document.addEventListener("unload", this, false);
+    this.focusTarget.addEventListener("blur", this);
+    this.focusTarget.addEventListener("focus", this);
+    this.focusTarget.document.addEventListener("unload", this);
 
     this.startOnFocusDelay();
 };
@@ -115,9 +115,9 @@ this.EnableDelayHelper.prototype = {
     },
 
     onUnload() {
-        this.focusTarget.removeEventListener("blur", this, false);
-        this.focusTarget.removeEventListener("focus", this, false);
-        this.focusTarget.document.removeEventListener("unload", this, false);
+        this.focusTarget.removeEventListener("blur", this);
+        this.focusTarget.removeEventListener("focus", this);
+        this.focusTarget.document.removeEventListener("unload", this);
 
         if (this._focusTimer) {
             this._focusTimer.cancel();

@@ -1947,6 +1947,18 @@ public abstract class GeckoApp
 
     @Override
     public void createShortcut(final String title, final String url) {
+
+        final Tab selectedTab = Tabs.getInstance().getSelectedTab();
+
+        if (selectedTab.hasManifest()) {
+            // If a page has associated manifest, lets install it
+            final GeckoBundle message = new GeckoBundle();
+            message.putInt("iconSize", GeckoAppShell.getPreferredIconSize());
+            EventDispatcher.getInstance().dispatch("Browser:LoadManifest", message);
+            return;
+        }
+
+        // Otherwise we try to pick best icon from favicons etc
         Icons.with(this)
                 .pageUrl(url)
                 .skipNetwork()
@@ -1956,12 +1968,12 @@ public abstract class GeckoApp
                 .execute(new IconCallback() {
                     @Override
                     public void onIconResponse(IconResponse response) {
-                        doCreateShortcut(title, url, response.getBitmap());
+                        createShortcut(title, url, response.getBitmap());
                     }
                 });
     }
 
-    private void doCreateShortcut(final String aTitle, final String aURI, final Bitmap aIcon) {
+    public void createShortcut(final String aTitle, final String aURI, final Bitmap aIcon) {
         // The intent to be launched by the shortcut.
         Intent shortcutIntent = new Intent();
         shortcutIntent.setAction(GeckoApp.ACTION_HOMESCREEN_SHORTCUT);

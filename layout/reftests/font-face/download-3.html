@@ -22,8 +22,7 @@
   // Make sure to show our stuff as late as we can, so we only get reflows
   // from onload.  
   window.addEventListener("DOMContentLoaded",
-    function() { document.documentElement.style.display = ""; },
-    false)
+    function() { document.documentElement.style.display = ""; })
   window.addEventListener("load",
     function() {
       var n = document.getElementById("t");
@@ -35,8 +34,7 @@
       d.style.backgroundColor = "green";
       n.parentNode.removeChild(n);
       document.body.appendChild(d);
-    },
-    false);
+    });
 </script>
 </body>
 </html>

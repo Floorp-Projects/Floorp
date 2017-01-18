@@ -31,7 +31,7 @@ function check_full_file_played(element) {
     is(element.played.start(0), 0, element.token + ": start time shall be 0");
     is(element.played.end(0), e.target.duration, element.token + ": end time shall be duration");
     finish_test(e.target);
-  }), false);
+  }));
 }
 
 var tests = [
@@ -69,7 +69,7 @@ var tests = [
     element.addEventListener("loadedmetadata", function() {
       element.currentTime = element.duration / 2;
       element.play();
-    }, false);
+    });
   },
   name: "test3"
 },
@@ -81,7 +81,7 @@ var tests = [
     let onTimeUpdate = function() {
       if (element.currentTime > element.duration / 2) {
         info(element.token + ": currentTime=" + element.currentTime + ", duration=" + element.duration);
-        element.removeEventListener("timeupdate", onTimeUpdate, false);
+        element.removeEventListener("timeupdate", onTimeUpdate);
         element.pause();
         var oldEndRange = element.played.end(0);
         element.currentTime = element.duration / 4;
@@ -90,7 +90,7 @@ var tests = [
         element.play();
       }
     }
-    element.addEventListener("timeupdate", onTimeUpdate, false);
+    element.addEventListener("timeupdate", onTimeUpdate);
     check_full_file_played(element);
     element.play();
   },
@@ -105,7 +105,7 @@ var tests = [
     let onTimeUpdate = function() {
       if (element.currentTime > element.duration / 2) {
         info(element.token + ": currentTime=" + element.currentTime + ", duration=" + element.duration);
-        element.removeEventListener("timeupdate", onTimeUpdate, false);
+        element.removeEventListener("timeupdate", onTimeUpdate);
         element.pause();
         // Remember seek target for later comparison since duration may change
         // during playback.
@@ -116,8 +116,8 @@ var tests = [
     }
 
     element.addEventListener("loadedmetadata", function() {
-      element.addEventListener("timeupdate", onTimeUpdate, false);
-    }, false);
+      element.addEventListener("timeupdate", onTimeUpdate);
+    });
 
 
     element.addEventListener("ended", (function() {
@@ -128,7 +128,7 @@ var tests = [
       }
       is(element.played.start(0), 0, element.token + ": start of first range shall be 0");
       finish_test(element);
-    }), false);
+    }));
 
     element.play();
   },
@@ -159,25 +159,25 @@ var tests = [
 
     function onTimeUpdate_pauseseekrestart() {
       if (element.currentTime > 5 * element.duration / 6) {
-        element.removeEventListener("timeupdate", onTimeUpdate_pauseseekrestart, false);
+        element.removeEventListener("timeupdate", onTimeUpdate_pauseseekrestart);
         pauseseekrestart();
-        element.addEventListener("timeupdate", onTimeUpdate_end, false);
+        element.addEventListener("timeupdate", onTimeUpdate_end);
       }
     }
 
     function onTimeUpdate_end() {
       if (element.currentTime > 3 * element.duration / 6) {
-        element.removeEventListener("timeupdate", onTimeUpdate_end, false);
+        element.removeEventListener("timeupdate", onTimeUpdate_end);
         end();
       }
     }
 
-    element.addEventListener("timeupdate", onTimeUpdate_pauseseekrestart, false);
+    element.addEventListener("timeupdate", onTimeUpdate_pauseseekrestart);
 
     element.addEventListener('loadedmetadata', function() {
       element.currentTime = 4 * element.duration / 6;
       element.play();
-    }, false);
+    });
   },
   name: "test6"
 },
@@ -193,11 +193,11 @@ var tests = [
       if (index == 5) {
         finish_test(element);
       }
-    }, false);
+    });
 
     element.addEventListener('loadedmetadata', function() {
       element.currentTime = element.duration / 5;
-    }, false);
+    });
   },
   name: "test7"
 }
@@ -236,7 +236,7 @@ function startTest(test, token) {
     info(v.token + ": got " + e.type);
   }
   events.forEach(function(e) {
-    element.addEventListener(e, logEvent, false);
+    element.addEventListener(e, logEvent);
   });
 
 }

@@ -137,7 +137,7 @@ if (/Android/.test(navigator.userAgent)) {
   ok(true, "No need to test text selection with the mouse on Android.");
   SimpleTest.finish();
 } else {
-  window.addEventListener("load", runTest, false);
+  window.addEventListener("load", runTest);
 }
 </script>
 </pre>

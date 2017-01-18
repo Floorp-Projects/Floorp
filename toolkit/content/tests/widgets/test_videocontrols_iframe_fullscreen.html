@@ -30,11 +30,11 @@
 
     return () => new Promise(resolve => {
       ifr.srcdoc = `<video id="video" controls preload="auto"></video>`;
-      ifr.addEventListener("load", resolve, false);
+      ifr.addEventListener("load", resolve);
     }).then(() => new Promise(resolve => {
       video = ifr.contentDocument.getElementById("video");
       video.src = "seek_with_sound.ogg";
-      video.addEventListener("loadedmetadata", resolve, false);
+      video.addEventListener("loadedmetadata", resolve);
     })).then(() => new Promise(resolve => {
       const videoControl = domUtils.getChildrenForNode(video, true)[1];
       const controlBar = video.ownerDocument.getAnonymousElementByAttribute(
@@ -57,7 +57,7 @@
   testCases.push(checkIframeFullscreenAvailable(iframe2));
   testCases.push(SimpleTest.finish);
 
-  window.addEventListener("load", load, false);
+  window.addEventListener("load", load);
 </script>
 </pre>
 </body>

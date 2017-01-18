@@ -39,16 +39,16 @@ var gWindowUtils;
 var gPopupWidth = -1, gPopupHeight = -1;
 
 function startPopupTests(tests) {
-  document.addEventListener("popupshowing", eventOccurred, false);
-  document.addEventListener("popupshown", eventOccurred, false);
-  document.addEventListener("popuphiding", eventOccurred, false);
-  document.addEventListener("popuphidden", eventOccurred, false);
-  document.addEventListener("command", eventOccurred, false);
-  document.addEventListener("DOMMenuItemActive", eventOccurred, false);
-  document.addEventListener("DOMMenuItemInactive", eventOccurred, false);
-  document.addEventListener("DOMMenuInactive", eventOccurred, false);
-  document.addEventListener("DOMMenuBarActive", eventOccurred, false);
-  document.addEventListener("DOMMenuBarInactive", eventOccurred, false);
+  document.addEventListener("popupshowing", eventOccurred);
+  document.addEventListener("popupshown", eventOccurred);
+  document.addEventListener("popuphiding", eventOccurred);
+  document.addEventListener("popuphidden", eventOccurred);
+  document.addEventListener("command", eventOccurred);
+  document.addEventListener("DOMMenuItemActive", eventOccurred);
+  document.addEventListener("DOMMenuItemInactive", eventOccurred);
+  document.addEventListener("DOMMenuInactive", eventOccurred);
+  document.addEventListener("DOMMenuBarActive", eventOccurred);
+  document.addEventListener("DOMMenuBarInactive", eventOccurred);
 
   gPopupTests = tests;
   gWindowUtils = SpecialPowers.getDOMWindowUtils(window);
@@ -128,10 +128,10 @@ function eventOccurred(event) {
     var modifiersMask = eventitem[2];
     if (modifiersMask) {
       var m = "";
-      m += event.altKey ? '1' : '0';
-      m += event.ctrlKey ? '1' : '0';
-      m += event.shiftKey ? '1' : '0';
-      m += event.metaKey ? '1' : '0';
+      m += event.altKey ? "1" : "0";
+      m += event.ctrlKey ? "1" : "0";
+      m += event.shiftKey ? "1" : "0";
+      m += event.metaKey ? "1" : "0";
       is(m, modifiersMask, test.testname + " modifiers mask matches");
     }
 

@@ -7,7 +7,7 @@ const {interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource:///modules/AttributionCode.jsm");
-Cu.import('resource://gre/modules/osfile.jsm');
+Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 let validAttrCodes = [

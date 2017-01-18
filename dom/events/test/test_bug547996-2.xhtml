@@ -89,24 +89,24 @@ function testScriptedClicks() {
 }
 
 function setup() {
-  $("inputTarget").addEventListener("click", check, false);
-  $("buttonTarget").addEventListener("click", check, false);
-  $("anchorTarget").addEventListener("click", check, false);
-  $("xulButtonTarget").addEventListener("click", check, false);
-  $("radioTarget1").addEventListener("click", check, false);
-  $("radioTarget2").addEventListener("click", check, false);
-  $("checkboxTarget").addEventListener("click", check, false);
+  $("inputTarget").addEventListener("click", check);
+  $("buttonTarget").addEventListener("click", check);
+  $("anchorTarget").addEventListener("click", check);
+  $("xulButtonTarget").addEventListener("click", check);
+  $("radioTarget1").addEventListener("click", check);
+  $("radioTarget2").addEventListener("click", check);
+  $("checkboxTarget").addEventListener("click", check);
 
 }
 
 function cleanup() {
-  $("inputTarget").removeEventListener("click", check, false);
-  $("buttonTarget").removeEventListener("click", check, false);
-  $("xulButtonTarget").removeEventListener("click", check, false);
-  $("anchorTarget").removeEventListener("click", check, false);
-  $("radioTarget1").removeEventListener("click", check, false);
-  $("radioTarget2").removeEventListener("click", check, false);
-  $("checkboxTarget").removeEventListener("click", check, false);
+  $("inputTarget").removeEventListener("click", check);
+  $("buttonTarget").removeEventListener("click", check);
+  $("xulButtonTarget").removeEventListener("click", check);
+  $("anchorTarget").removeEventListener("click", check);
+  $("radioTarget1").removeEventListener("click", check);
+  $("radioTarget2").removeEventListener("click", check);
+  $("checkboxTarget").removeEventListener("click", check);
 }
 
 SimpleTest.waitForExplicitFinish();

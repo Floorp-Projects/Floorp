@@ -21,7 +21,7 @@ const int kLookAheadMin = 5;
 const int kLookAheadMax = 26;
 
 class AltRefTest : public ::libvpx_test::EncoderTest,
-    public ::libvpx_test::CodecTestWithParam<int> {
+                   public ::libvpx_test::CodecTestWithParam<int> {
  protected:
   AltRefTest() : EncoderTest(GET_PARAM(0)), altref_count_(0) {}
   virtual ~AltRefTest() {}
@@ -31,9 +31,7 @@ class AltRefTest : public ::libvpx_test::EncoderTest,
     SetMode(libvpx_test::kTwoPassGood);
   }
 
-  virtual void BeginPassHook(unsigned int pass) {
-    altref_count_ = 0;
-  }
+  virtual void BeginPassHook(unsigned int /*pass*/) { altref_count_ = 0; }
 
   virtual void PreEncodeFrameHook(libvpx_test::VideoSource *video,
                                   libvpx_test::Encoder *encoder) {
@@ -75,11 +73,8 @@ class AltRefForcedKeyTestLarge
       public ::libvpx_test::CodecTestWith2Params<libvpx_test::TestMode, int> {
  protected:
   AltRefForcedKeyTestLarge()
-      : EncoderTest(GET_PARAM(0)),
-        encoding_mode_(GET_PARAM(1)),
-        cpu_used_(GET_PARAM(2)),
-        forced_kf_frame_num_(1),
-        frame_num_(0) {}
+      : EncoderTest(GET_PARAM(0)), encoding_mode_(GET_PARAM(1)),
+        cpu_used_(GET_PARAM(2)), forced_kf_frame_num_(1), frame_num_(0) {}
   virtual ~AltRefForcedKeyTestLarge() {}
 
   virtual void SetUp() {
@@ -94,8 +89,8 @@ class AltRefForcedKeyTestLarge
     if (video->frame() == 0) {
       encoder->Control(VP8E_SET_CPUUSED, cpu_used_);
       encoder->Control(VP8E_SET_ENABLEAUTOALTREF, 1);
-      // override test default for tile columns if necessary.
 #if CONFIG_VP9_ENCODER
+      // override test default for tile columns if necessary.
       if (GET_PARAM(0) == &libvpx_test::kVP9) {
         encoder->Control(VP9E_SET_TILE_COLUMNS, 6);
       }
@@ -147,13 +142,11 @@ TEST_P(AltRefForcedKeyTestLarge, ForcedFrameIsKey) {
   }
 }
 
-VP8_INSTANTIATE_TEST_CASE(
-    AltRefForcedKeyTestLarge,
-    ::testing::Values(::libvpx_test::kOnePassGood),
-    ::testing::Range(0, 9));
+VP8_INSTANTIATE_TEST_CASE(AltRefForcedKeyTestLarge,
+                          ::testing::Values(::libvpx_test::kOnePassGood),
+                          ::testing::Range(0, 9));
 
-VP9_INSTANTIATE_TEST_CASE(
-    AltRefForcedKeyTestLarge,
-    ::testing::Values(::libvpx_test::kOnePassGood),
-    ::testing::Range(0, 9));
+VP9_INSTANTIATE_TEST_CASE(AltRefForcedKeyTestLarge,
+                          ::testing::Values(::libvpx_test::kOnePassGood),
+                          ::testing::Range(0, 9));
 }  // namespace

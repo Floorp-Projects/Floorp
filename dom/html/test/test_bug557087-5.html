@@ -79,10 +79,10 @@ function runTest()
         });
         break;
       default:
-        iframe.removeEventListener("load", arguments.callee, false);
+        iframe.removeEventListener("load", arguments.callee);
         SimpleTest.executeSoon(SimpleTest.finish);
     }
-  }, false);
+  });
 
   form.submit();
 }

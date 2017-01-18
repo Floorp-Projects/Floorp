@@ -204,7 +204,7 @@ this.UITelemetry = {
       throw new Error("A simple measurement function is already registered for " + aName);
     }
 
-    if (!aFunction || typeof aFunction !== 'function') {
+    if (!aFunction || typeof aFunction !== "function") {
       throw new Error("addSimpleMeasureFunction called with non-function argument.");
     }
 

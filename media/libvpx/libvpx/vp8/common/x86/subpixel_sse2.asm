@@ -181,8 +181,12 @@ sym(vp8_filter_block1d16_h6_sse2):
         movq        xmm3,       MMWORD PTR [rsi - 2]
         movq        xmm1,       MMWORD PTR [rsi + 6]
 
-        movq        xmm2,       MMWORD PTR [rsi +14]
-        pslldq      xmm2,       8
+        ; Load from 11 to avoid reading out of bounds.
+        movq        xmm2,       MMWORD PTR [rsi +11]
+        ; The lower bits are not cleared before 'or'ing with xmm1,
+        ; but that is OK because the values in the overlapping positions
+        ; are already equal to the ones in xmm1.
+        pslldq      xmm2,       5
 
         por         xmm2,       xmm1
         prefetcht2  [rsi+rax-2]

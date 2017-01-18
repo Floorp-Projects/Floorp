@@ -54,12 +54,6 @@ IsClearkeyKeySystem(const nsAString& aKeySystem)
 }
 
 bool
-IsPrimetimeKeySystem(const nsAString& aKeySystem)
-{
-  return !CompareUTF8toUTF16(kEMEKeySystemPrimetime, aKeySystem);
-}
-
-bool
 IsWidevineKeySystem(const nsAString& aKeySystem)
 {
   return !CompareUTF8toUTF16(kEMEKeySystemWidevine, aKeySystem);
@@ -68,9 +62,6 @@ IsWidevineKeySystem(const nsAString& aKeySystem)
 nsString
 KeySystemToGMPName(const nsAString& aKeySystem)
 {
-  if (IsPrimetimeKeySystem(aKeySystem)) {
-    return NS_LITERAL_STRING("gmp-eme-adobe");
-  }
   if (IsClearkeyKeySystem(aKeySystem)) {
     return NS_LITERAL_STRING("gmp-clearkey");
   }
@@ -88,8 +79,6 @@ ToCDMTypeTelemetryEnum(const nsString& aKeySystem)
     return CDMType::eWidevine;
   } else if (IsClearkeyKeySystem(aKeySystem)) {
     return CDMType::eClearKey;
-  } else if (IsPrimetimeKeySystem(aKeySystem)) {
-    return CDMType::ePrimetime;
   }
   return CDMType::eUnknown;
 }

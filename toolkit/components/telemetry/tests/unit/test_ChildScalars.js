@@ -72,11 +72,11 @@ function checkParentScalars(processData) {
   // Now check the keyed scalars.
   Assert.ok(KEYED_BOOL_SCALAR in keyedScalars,
             `${KEYED_BOOL_SCALAR} must be recorded in the parent process.`);
-  Assert.ok('parent-key' in keyedScalars[KEYED_BOOL_SCALAR],
+  Assert.ok("parent-key" in keyedScalars[KEYED_BOOL_SCALAR],
             `${KEYED_BOOL_SCALAR} must be recorded in the parent process.`);
   Assert.equal(Object.keys(keyedScalars[KEYED_BOOL_SCALAR]).length, 1,
             `${KEYED_BOOL_SCALAR} must only contain the expected key in parent process.`);
-  Assert.equal(keyedScalars[KEYED_BOOL_SCALAR]['parent-key'], false,
+  Assert.equal(keyedScalars[KEYED_BOOL_SCALAR]["parent-key"], false,
             `${KEYED_BOOL_SCALAR} must have the correct value (parent process).`);
 }
 
@@ -105,13 +105,13 @@ function checkContentScalars(processData) {
   // Check the keyed scalars.
   Assert.ok(KEYED_BOOL_SCALAR in keyedScalars,
             `${KEYED_BOOL_SCALAR} must be recorded in the content process.`);
-  Assert.ok('content-key' in keyedScalars[KEYED_BOOL_SCALAR],
+  Assert.ok("content-key" in keyedScalars[KEYED_BOOL_SCALAR],
             `${KEYED_BOOL_SCALAR} must be recorded in the content process.`);
-  Assert.ok('content-key2' in keyedScalars[KEYED_BOOL_SCALAR],
+  Assert.ok("content-key2" in keyedScalars[KEYED_BOOL_SCALAR],
             `${KEYED_BOOL_SCALAR} must be recorded in the content process.`);
-  Assert.equal(keyedScalars[KEYED_BOOL_SCALAR]['content-key'], true,
+  Assert.equal(keyedScalars[KEYED_BOOL_SCALAR]["content-key"], true,
             `${KEYED_BOOL_SCALAR} must have the correct value (content process).`);
-  Assert.equal(keyedScalars[KEYED_BOOL_SCALAR]['content-key2'], false,
+  Assert.equal(keyedScalars[KEYED_BOOL_SCALAR]["content-key2"], false,
             `${KEYED_BOOL_SCALAR} must have the correct value (content process).`);
   Assert.equal(Object.keys(keyedScalars[KEYED_BOOL_SCALAR]).length, 2,
             `${KEYED_BOOL_SCALAR} must contain the expected keys in content process.`);

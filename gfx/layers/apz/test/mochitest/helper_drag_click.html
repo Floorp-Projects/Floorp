@@ -10,7 +10,7 @@
   <script type="application/javascript">
 
 function* test(testDriver) {
-  document.addEventListener('click', clicked, false);
+  document.addEventListener('click', clicked);
 
   // Ensure the pointer is inside the window
   yield synthesizeNativeMouseEvent(document.getElementById('b'), 5, 5, nativeMouseMoveEventMsg(), testDriver);

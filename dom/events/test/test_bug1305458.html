@@ -30,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1305458
       let div = document.getElementById("test_div");
       input.addEventListener("change", () => {
         ++change_count;
-      }, false);
+      });
       // mouse hover
       input.focus();
       synthesizeMouse(input, 1, 1, {type: "mousemove"});

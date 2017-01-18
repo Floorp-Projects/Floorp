@@ -23,7 +23,7 @@ var w = window.open("about:blank");
 w.addEventListener("load", function() {
   w.close();
   SimpleTest.finish();
-}, false);
+});
 
 try {
   w.history.pushState(null, "title", "pushState.html");

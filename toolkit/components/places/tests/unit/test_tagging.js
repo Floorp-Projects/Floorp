@@ -162,7 +162,7 @@ function run_test() {
 
     // generate a long tag name. i.e. looooo...oong_tag
     var n = Ci.nsITaggingService.MAX_TAG_LENGTH;
-    var someOos = new Array(n).join('o');
+    var someOos = new Array(n).join("o");
     var longTagName = "l" + someOos + "ng_tag";
 
     tagssvc.tagURI(uri1, ["short_tag", longTagName]);

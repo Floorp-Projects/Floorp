@@ -221,7 +221,7 @@ this.CryptoUtils = {
       I[2] = String.fromCharCode((i >> 8) & 0xff);
       I[3] = String.fromCharCode(i & 0xff);
 
-      U[0] = CryptoUtils.digestBytes(S + I.join(''), h);
+      U[0] = CryptoUtils.digestBytes(S + I.join(""), h);
       for (let j = 1; j < c; j++) {
         U[j] = CryptoUtils.digestBytes(U[j - 1], h);
       }

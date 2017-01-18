@@ -44,7 +44,7 @@ function getMessage(evt) {
     loadEnded();
 }
 
-window.addEventListener("message", getMessage, false);
+window.addEventListener("message", getMessage);
 
 function checkURI(uri, name, type) {
   var host = uri.match(/^http:\/\/([a-z.0-9]*)/)[1];

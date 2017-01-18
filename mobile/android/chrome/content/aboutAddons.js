@@ -32,11 +32,11 @@ var ContextMenus = {
   target: null,
 
   init: function() {
-    document.addEventListener("contextmenu", this, false);
+    document.addEventListener("contextmenu", this);
 
-    document.getElementById("contextmenu-enable").addEventListener("click", ContextMenus.enable.bind(this), false);
-    document.getElementById("contextmenu-disable").addEventListener("click", ContextMenus.disable.bind(this), false);
-    document.getElementById("contextmenu-uninstall").addEventListener("click", ContextMenus.uninstall.bind(this), false);
+    document.getElementById("contextmenu-enable").addEventListener("click", ContextMenus.enable.bind(this));
+    document.getElementById("contextmenu-disable").addEventListener("click", ContextMenus.disable.bind(this));
+    document.getElementById("contextmenu-uninstall").addEventListener("click", ContextMenus.uninstall.bind(this));
 
     // XXX - Hack to fix bug 985867 for now
     document.addEventListener("touchstart", function() { });
@@ -98,7 +98,7 @@ var ContextMenus = {
 }
 
 function init() {
-  window.addEventListener("popstate", onPopState, false);
+  window.addEventListener("popstate", onPopState);
 
   AddonManager.addInstallListener(Addons);
   AddonManager.addAddonListener(Addons);
@@ -291,14 +291,14 @@ var Addons = {
       list.appendChild(browseItem);
     });
 
-    document.getElementById("uninstall-btn").addEventListener("click", Addons.uninstallCurrent.bind(this), false);
-    document.getElementById("cancel-btn").addEventListener("click", Addons.cancelUninstall.bind(this), false);
-    document.getElementById("disable-btn").addEventListener("click", Addons.disable.bind(this), false);
-    document.getElementById("enable-btn").addEventListener("click", Addons.enable.bind(this), false);
+    document.getElementById("uninstall-btn").addEventListener("click", Addons.uninstallCurrent.bind(this));
+    document.getElementById("cancel-btn").addEventListener("click", Addons.cancelUninstall.bind(this));
+    document.getElementById("disable-btn").addEventListener("click", Addons.disable.bind(this));
+    document.getElementById("enable-btn").addEventListener("click", Addons.enable.bind(this));
 
     document.getElementById("unsigned-learn-more").addEventListener("click", function() {
       openLink(Services.urlFormatter.formatURLPref("app.support.baseURL") + "unsigned-addons");
-    }, false);
+    });
   },
 
   _getOpTypeForOperations: function _getOpTypeForOperations(aOperations) {
@@ -605,5 +605,5 @@ var Addons = {
   }
 }
 
-window.addEventListener("load", init, false);
-window.addEventListener("unload", uninit, false);
+window.addEventListener("load", init);
+window.addEventListener("unload", uninit);

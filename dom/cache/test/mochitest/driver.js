@@ -79,7 +79,7 @@ function runTests(testFile, order) {
           } else if (event.data.type == 'status') {
             ok(event.data.status, event.data.context + ": " + event.data.msg);
           }
-        }, false);
+        });
         doc.body.appendChild(s);
       };
       document.body.appendChild(iframe);

@@ -178,7 +178,7 @@ function getServicePack() {
   // This structure is described at:
   // http://msdn.microsoft.com/en-us/library/ms724833%28v=vs.85%29.aspx
   const SZCSDVERSIONLENGTH = 128;
-  const OSVERSIONINFOEXW = new ctypes.StructType('OSVERSIONINFOEXW',
+  const OSVERSIONINFOEXW = new ctypes.StructType("OSVERSIONINFOEXW",
     [
       {dwOSVersionInfoSize: DWORD},
       {dwMajorVersion: DWORD},
@@ -223,7 +223,7 @@ function getProcArchitecture() {
 
   // This structure is described at:
   // http://msdn.microsoft.com/en-us/library/ms724958%28v=vs.85%29.aspx
-  const SYSTEM_INFO = new ctypes.StructType('SYSTEM_INFO',
+  const SYSTEM_INFO = new ctypes.StructType("SYSTEM_INFO",
     [
       {wProcessorArchitecture: WORD},
       {wReserved: WORD},

@@ -7,11 +7,11 @@ window.onload = function () {
   var childDocument = document.getElementsByTagName("iframe")[0].contentDocument;
   childDocument.designMode = "on";
   function onAttrModified(aEvent) {
-    childDocument.removeEventListener("DOMAttrModified", onAttrModified, false);
+    childDocument.removeEventListener("DOMAttrModified", onAttrModified);
     // Remove the editor from document during executing "insertOrderedList".
     document.body.innerHTML = "";
   }
-  childDocument.addEventListener("DOMAttrModified", onAttrModified, false);
+  childDocument.addEventListener("DOMAttrModified", onAttrModified);
   childDocument.execCommand("insertOrderedList", false, "1");
 }
 </script>

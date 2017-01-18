@@ -9,13 +9,13 @@
 
 <script type="application/javascript">
   var loadCount = 0;
-  frames[0].addEventListener("DOMContentLoaded", handleLoad, false);
-  frames[1].addEventListener("DOMContentLoaded", handleLoad, false);
+  frames[0].addEventListener("DOMContentLoaded", handleLoad);
+  frames[1].addEventListener("DOMContentLoaded", handleLoad);
   function handleLoad() {
     if (++loadCount < 2)
       return;
-    frames[0].removeEventListener("DOMContentLoaded", handleLoad, false);
-    frames[1].removeEventListener("DOMContentLoaded", handleLoad, false);
+    frames[0].removeEventListener("DOMContentLoaded", handleLoad);
+    frames[1].removeEventListener("DOMContentLoaded", handleLoad);
     frames[0].document.designMode = "on";
     frames[0].document.__defineGetter__("designMode", function() {
       // inject a cross domain file ...

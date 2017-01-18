@@ -52,7 +52,7 @@ function startTest(test) {
     removeNodeAndSource(v);
     SimpleTest.finish();
   };
-  vout.addEventListener("ended", checkEnded, false);
+  vout.addEventListener("ended", checkEnded);
 
   document.body.appendChild(vout);
 
@@ -66,7 +66,7 @@ function startTest(test) {
   }
 
   v.preload = 'metadata';
-  v.addEventListener('loadedmetadata', onloadedmetadata, false);
+  v.addEventListener('loadedmetadata', onloadedmetadata);
 
   // Log events for debugging.
   var events = ["suspend", "play", "canplay", "canplaythrough", "loadstart", "loadedmetadata",
@@ -76,8 +76,8 @@ function startTest(test) {
     Log(e.target.name, "got " + e.type);
   }
   events.forEach(function(e) {
-    v.addEventListener(e, logEvent, false);
-    vout.addEventListener(e, logEvent, false);
+    v.addEventListener(e, logEvent);
+    vout.addEventListener(e, logEvent);
   });
 
 }

@@ -105,12 +105,12 @@ static void copy_16multx8mult_msa(const uint8_t *src, int32_t src_stride,
     dst_tmp = dst;
 
     for (loop_cnt = (height >> 3); loop_cnt--;) {
-      LD_UB8(src_tmp, src_stride,
-             src0, src1, src2, src3, src4, src5, src6, src7);
+      LD_UB8(src_tmp, src_stride, src0, src1, src2, src3, src4, src5, src6,
+             src7);
       src_tmp += (8 * src_stride);
 
-      ST_UB8(src0, src1, src2, src3, src4, src5, src6, src7,
-             dst_tmp, dst_stride);
+      ST_UB8(src0, src1, src2, src3, src4, src5, src6, src7, dst_tmp,
+             dst_stride);
       dst_tmp += (8 * dst_stride);
     }
 

@@ -718,27 +718,39 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
             self.info("Not a nightly or release build, skipping balrog submission.")
             return
 
-        if not self.config.get("balrog_servers"):
-            self.info("balrog_servers not set; skipping balrog submission.")
-            return
-
         self.checkout_tools()
 
         dirs = self.query_abs_dirs()
         locales = self.query_locales()
-        balrogReady = True
-        for locale in locales:
-            apk_url = self.query_upload_url(locale)
-            if not apk_url:
-                self.add_failure(locale, message="Failed to detect %s url in make upload!" % (locale))
-                balrogReady = False
-                continue
-        if not balrogReady:
-            return self.fatal(message="Not all repacks successful, abort without submitting to balrog")
+        if not self.config.get('taskcluster_nightly'):
+            balrogReady = True
+            for locale in locales:
+                apk_url = self.query_upload_url(locale)
+                if not apk_url:
+                    self.add_failure(locale, message="Failed to detect %s url in make upload!" % (locale))
+                    balrogReady = False
+                    continue
+            if not balrogReady:
+                return self.fatal(message="Not all repacks successful, abort without submitting to balrog")
 
+        env = self.query_upload_env()
         for locale in locales:
             apkfile = self.query_apkfile_path(locale)
-            apk_url = self.query_upload_url(locale)
+            if self.config.get('taskcluster_nightly'):
+                # Taskcluster needs stage_platform
+                self.set_buildbot_property("stage_platform",
+                                           self.config.get("stage_platform"))
+                self.set_buildbot_property("branch", self.config.get("branch"))
+            else:
+                apk_url = self.query_upload_url(locale)
+                self.set_buildbot_property("completeMarUrl", apk_url)
+
+                # The Balrog submitter translates this platform into a build target
+                # via https://github.com/mozilla/build-tools/blob/master/lib/python/release/platforms.py#L23
+                self.set_buildbot_property(
+                    "platform",
+                    self.buildbot_config["properties"]["platform"])
+                #TODO: Is there a better way to get this?
 
             # Set other necessary properties for Balrog submission. None need to
             # be passed back to buildbot, so we won't write them to the properties
@@ -746,26 +758,31 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
             self.set_buildbot_property("locale", locale)
 
             self.set_buildbot_property("appVersion", self.query_version())
-            # The Balrog submitter translates this platform into a build target
-            # via https://github.com/mozilla/build-tools/blob/master/lib/python/release/platforms.py#L23
-            self.set_buildbot_property("platform", self.buildbot_config["properties"]["platform"])
-            #TODO: Is there a better way to get this?
 
             self.set_buildbot_property("appName", "Fennec")
             # TODO: don't hardcode
             self.set_buildbot_property("hashType", "sha512")
             self.set_buildbot_property("completeMarSize", self.query_filesize(apkfile))
             self.set_buildbot_property("completeMarHash", self.query_sha512sum(apkfile))
-            self.set_buildbot_property("completeMarUrl", apk_url)
             self.set_buildbot_property("isOSUpdate", False)
             self.set_buildbot_property("buildid", self.query_buildid())
 
-            if self.query_is_nightly():
-                self.submit_balrog_updates(release_type="nightly")
+            if self.config.get('taskcluster_nightly'):
+                props_path = os.path.join(env["UPLOAD_PATH"], locale,
+                                          'balrog_props.json')
+                self.generate_balrog_props(props_path)
             else:
-                self.submit_balrog_updates(release_type="release")
-        if not self.query_is_nightly():
-            self.submit_balrog_release_pusher(dirs)
+                if not self.config.get("balrog_servers"):
+                    self.info("balrog_servers not set; skipping balrog submission.")
+                    return
+
+                if self.query_is_nightly():
+                    self.submit_balrog_updates(release_type="nightly")
+                else:
+                    self.submit_balrog_updates(release_type="release")
+
+                if not self.query_is_nightly():
+                    self.submit_balrog_release_pusher(dirs)
 
 # main {{{1
 if __name__ == '__main__':

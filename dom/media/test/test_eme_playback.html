@@ -82,7 +82,7 @@ function startTest(test, token)
     {
       onsessioncreated: function(session) {
         sessions.push(session);
-        session.addEventListener("keystatuseschange", KeysChangeFunc(session, test.keys, token), false);
+        session.addEventListener("keystatuseschange", KeysChangeFunc(session, test.keys, token));
 
         session.numKeystatuseschangeEvents = 0;
         session.numOnkeystatuseschangeEvents = 0;

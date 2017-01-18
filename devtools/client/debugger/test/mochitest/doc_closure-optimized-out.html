@@ -9,7 +9,7 @@
       window.addEventListener("load", function onload() {
         window.removeEventListener("load", onload);
         function clickHandler(event) {
-          button.removeEventListener("click", clickHandler, false);
+          button.removeEventListener("click", clickHandler);
           function outer(arg) {
             var upvar = arg * 2;
             // The inner lambda only aliases arg, so the frontend alias analysis decides
@@ -23,7 +23,7 @@
           f();
         }
         var button = document.querySelector("button");
-        button.addEventListener("click", clickHandler, false);
+        button.addEventListener("click", clickHandler);
       });
     </script>
 
