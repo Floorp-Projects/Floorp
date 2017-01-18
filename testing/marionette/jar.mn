@@ -35,6 +35,8 @@ marionette.jar:
 #ifdef ENABLE_TESTS
   content/test.xul (chrome/test.xul)
   content/test2.xul (chrome/test2.xul)
+  content/test_dialog.dtd (chrome/test_dialog.dtd)
+  content/test_dialog.properties (chrome/test_dialog.properties)
   content/test_dialog.xul (chrome/test_dialog.xul)
   content/test_nested_iframe.xul (chrome/test_nested_iframe.xul)
   content/test_anonymous_content.xul (chrome/test_anonymous_content.xul)
