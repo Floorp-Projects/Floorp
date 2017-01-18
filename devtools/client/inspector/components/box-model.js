@@ -12,6 +12,7 @@ const {InplaceEditor, editableItem} =
 const {ReflowFront} = require("devtools/shared/fronts/reflow");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
+const {KeyCodes} = require("devtools/client/shared/keycodes");
 
 const STRINGS_URI = "devtools/client/locales/shared.properties";
 const STRINGS_INSPECTOR = "devtools/shared/locales/styleinspector.properties";
@@ -229,6 +230,44 @@ BoxModelView.prototype = {
     this.onMarkupViewLeave = this.onMarkupViewLeave.bind(this);
     this.onMarkupViewNodeHover = this.onMarkupViewNodeHover.bind(this);
     this.onWillNavigate = this.onWillNavigate.bind(this);
+    this.onKeyDown = this.onKeyDown.bind(this);
+    this.onLevelClick = this.onLevelClick.bind(this);
+    this.setAriaActive = this.setAriaActive.bind(this);
+    this.getEditBoxes = this.getEditBoxes.bind(this);
+    this.makeFocusable = this.makeFocusable.bind(this);
+    this.makeUnfocasable = this.makeUnfocasable.bind(this);
+    this.moveFocus = this.moveFocus.bind(this);
+    this.onFocus = this.onFocus.bind(this);
+
+    this.borderLayout = this.doc.getElementById("boxmodel-borders");
+    this.boxModel = this.doc.getElementById("boxmodel-wrapper");
+    this.marginLayout = this.doc.getElementById("boxmodel-margins");
+    this.paddingLayout = this.doc.getElementById("boxmodel-padding");
+
+    this.layouts = {
+      "margin": new Map([
+        [KeyCodes.DOM_VK_ESCAPE, this.marginLayout],
+        [KeyCodes.DOM_VK_DOWN, this.borderLayout],
+        [KeyCodes.DOM_VK_UP, null],
+        ["click", this.marginLayout]
+      ]),
+      "border": new Map([
+        [KeyCodes.DOM_VK_ESCAPE, this.borderLayout],
+        [KeyCodes.DOM_VK_DOWN, this.paddingLayout],
+        [KeyCodes.DOM_VK_UP, this.marginLayout],
+        ["click", this.borderLayout]
+      ]),
+      "padding": new Map([
+        [KeyCodes.DOM_VK_ESCAPE, this.paddingLayout],
+        [KeyCodes.DOM_VK_DOWN, null],
+        [KeyCodes.DOM_VK_UP, this.borderLayout],
+        ["click", this.paddingLayout]
+      ])
+    };
+
+    this.boxModel.addEventListener("click", this.onLevelClick, true);
+    this.boxModel.addEventListener("focus", this.onFocus, true);
+    this.boxModel.addEventListener("keydown", this.onKeyDown, true);
 
     this.initBoxModelHighlighter();
 
@@ -454,6 +493,10 @@ BoxModelView.prototype = {
     let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
     nodeGeometry.removeEventListener("click", this.onGeometryButtonClick);
 
+    this.boxModel.removeEventListener("click", this.onLevelClick, true);
+    this.boxModel.removeEventListener("focus", this.onFocus, true);
+    this.boxModel.removeEventListener("keydown", this.onKeyDown, true);
+
     this.inspector.off("picker-started", this.onPickerStarted);
 
     // Inspector Panel will destroy `markup` object on "will-navigate" event,
@@ -478,11 +521,192 @@ BoxModelView.prototype = {
     this.sizeLabel = null;
     this.sizeHeadingLabel = null;
 
+    this.marginLayout = null;
+    this.borderLayout = null;
+    this.paddingLayout = null;
+    this.boxModel = null;
+    this.layouts = null;
+
     if (this.reflowFront) {
       this.untrackReflows();
       this.reflowFront.destroy();
       this.reflowFront = null;
     }
+  },
+
+  /**
+   * Set initial box model focus to the margin layout.
+   */
+  onFocus: function () {
+    let activeDescendant = this.boxModel.getAttribute("aria-activedescendant");
+
+    if (!activeDescendant) {
+      let nextLayout = this.marginLayout;
+      this.setAriaActive(nextLayout);
+    }
+  },
+
+  /**
+   * Active aria-level set to current layout.
+   *
+   * @param {Element} nextLayout
+   *        Element of next layout that user has navigated to
+   * @param {Node} target
+   *        Node to be observed
+   */
+  setAriaActive: function (nextLayout, target) {
+    this.boxModel.setAttribute("aria-activedescendant", nextLayout.id);
+    if (target && target._editable) {
+      target.blur();
+    }
+
+    // Clear all
+    this.marginLayout.classList.remove("layout-active-elm");
+    this.borderLayout.classList.remove("layout-active-elm");
+    this.paddingLayout.classList.remove("layout-active-elm");
+
+    // Set the next level's border outline
+    nextLayout.classList.add("layout-active-elm");
+  },
+
+  /**
+   * Update aria-active on mouse click.
+   *
+   * @param {Event} event
+   *         The event triggered by a mouse click on the box model
+   */
+  onLevelClick: function (event) {
+    let {target} = event;
+    let nextLayout = this.layouts[target.getAttribute("data-box")].get("click");
+
+    this.setAriaActive(nextLayout, target);
+  },
+
+  /**
+   * Handle keyboard navigation and focus for box model layouts.
+   *
+   * Updates active layout on arrow key navigation
+   * Focuses next layout's editboxes on enter key
+   * Unfocuses current layout's editboxes when active layout changes
+   * Controls tabbing between editBoxes
+   *
+   * @param {Event} event
+   *         The event triggered by a keypress on the box model
+   */
+  onKeyDown: function (event) {
+    let {target, keyCode} = event;
+    // If focused on editable value or in editing mode
+    let isEditable = target._editable || target.editor;
+    let level = this.boxModel.getAttribute("aria-activedescendant");
+    let editingMode = target.tagName === "input";
+    let nextLayout;
+
+    switch (keyCode) {
+      case KeyCodes.DOM_VK_RETURN:
+        if (!isEditable) {
+          this.makeFocusable(level);
+        }
+        break;
+      case KeyCodes.DOM_VK_DOWN:
+      case KeyCodes.DOM_VK_UP:
+        if (!editingMode) {
+          event.preventDefault();
+          this.makeUnfocasable(level);
+          let datalevel = this.doc.getElementById(level).getAttribute("data-box");
+          nextLayout = this.layouts[datalevel].get(keyCode);
+          this.boxModel.focus();
+        }
+        break;
+      case KeyCodes.DOM_VK_TAB:
+        if (isEditable) {
+          event.preventDefault();
+          this.moveFocus(event, level);
+        }
+        break;
+      case KeyCodes.DOM_VK_ESCAPE:
+        if (isEditable && target._editable) {
+          event.preventDefault();
+          event.stopPropagation();
+          this.makeUnfocasable(level);
+          this.boxModel.focus();
+        }
+        break;
+      default:
+        break;
+    }
+
+    if (nextLayout) {
+      this.setAriaActive(nextLayout, target);
+    }
+  },
+
+  /**
+   * Make previous layout's elements unfocusable.
+   *
+   * @param {String} editLevel
+   *        The previous layout
+   */
+  makeUnfocasable: function (editLevel) {
+    let editBoxes = this.getEditBoxes(editLevel);
+    editBoxes.forEach(editBox => editBox.setAttribute("tabindex", "-1"));
+  },
+
+  /**
+   * Make current layout's elements focusable.
+   *
+   * @param {String} editLevel
+   *        The current layout
+   */
+  makeFocusable: function (editLevel) {
+    let editBoxes = this.getEditBoxes(editLevel);
+    editBoxes.forEach(editBox => editBox.setAttribute("tabindex", "0"));
+    editBoxes[0].focus();
+  },
+
+  /**
+   * Keyboard navigation of edit boxes wraps around on edge
+   * elements ([layout]-top, [layout]-left).
+   *
+   * @param {Node} target
+   *        Node to be observed
+   * @param {Boolean} shiftKey
+   *        Determines if shiftKey was pressed
+   * @param {String} level
+   *        Current active layout
+   */
+  moveFocus: function ({target, shiftKey}, level) {
+    let editBoxes = this.getEditBoxes(level);
+    let editingMode = target.tagName === "input";
+    // target.nextSibling is input field
+    let position = editingMode ? editBoxes.indexOf(target.nextSibling)
+                               : editBoxes.indexOf(target);
+
+    if (position === editBoxes.length - 1 && !shiftKey) {
+      position = 0;
+    } else if (position === 0 && shiftKey) {
+      position = editBoxes.length - 1;
+    } else {
+      shiftKey ? position-- : position++;
+    }
+
+    let editBox = editBoxes[position];
+    editBox.focus();
+
+    if (editingMode) {
+      editBox.click();
+    }
+  },
+
+  /**
+   * Retrieve edit boxes for current layout.
+   *
+   * @param {String} editLevel
+   *        Current active layout
+   * @return Layout's edit boxes
+   */
+  getEditBoxes: function (editLevel) {
+    let dataLevel = this.doc.getElementById(editLevel).getAttribute("data-box");
+    return [...this.doc.querySelectorAll(`[data-box="${dataLevel}"].boxmodel-editable`)];
   },
 
   onSidebarSelect: function (e, sidebar) {
