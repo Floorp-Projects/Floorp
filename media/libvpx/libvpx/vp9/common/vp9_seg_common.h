@@ -17,23 +17,22 @@
 extern "C" {
 #endif
 
-#define SEGMENT_DELTADATA   0
-#define SEGMENT_ABSDATA     1
+#define SEGMENT_DELTADATA 0
+#define SEGMENT_ABSDATA 1
 
-#define MAX_SEGMENTS     8
-#define SEG_TREE_PROBS   (MAX_SEGMENTS-1)
+#define MAX_SEGMENTS 8
+#define SEG_TREE_PROBS (MAX_SEGMENTS - 1)
 
 #define PREDICTION_PROBS 3
 
 // Segment level features.
 typedef enum {
-  SEG_LVL_ALT_Q = 0,               // Use alternate Quantizer ....
-  SEG_LVL_ALT_LF = 1,              // Use alternate loop filter value...
-  SEG_LVL_REF_FRAME = 2,           // Optional Segment reference frame
-  SEG_LVL_SKIP = 3,                // Optional Segment (0,0) + skip mode
-  SEG_LVL_MAX = 4                  // Number of features supported
+  SEG_LVL_ALT_Q = 0,      // Use alternate Quantizer ....
+  SEG_LVL_ALT_LF = 1,     // Use alternate loop filter value...
+  SEG_LVL_REF_FRAME = 2,  // Optional Segment reference frame
+  SEG_LVL_SKIP = 3,       // Optional Segment (0,0) + skip mode
+  SEG_LVL_MAX = 4         // Number of features supported
 } SEG_LVL_FEATURES;
-
 
 struct segmentation {
   uint8_t enabled;
@@ -53,24 +52,20 @@ struct segmentation {
 static INLINE int segfeature_active(const struct segmentation *seg,
                                     int segment_id,
                                     SEG_LVL_FEATURES feature_id) {
-  return seg->enabled &&
-         (seg->feature_mask[segment_id] & (1 << feature_id));
+  return seg->enabled && (seg->feature_mask[segment_id] & (1 << feature_id));
 }
 
 void vp9_clearall_segfeatures(struct segmentation *seg);
 
-void vp9_enable_segfeature(struct segmentation *seg,
-                           int segment_id,
+void vp9_enable_segfeature(struct segmentation *seg, int segment_id,
                            SEG_LVL_FEATURES feature_id);
 
 int vp9_seg_feature_data_max(SEG_LVL_FEATURES feature_id);
 
 int vp9_is_segfeature_signed(SEG_LVL_FEATURES feature_id);
 
-void vp9_set_segdata(struct segmentation *seg,
-                     int segment_id,
-                     SEG_LVL_FEATURES feature_id,
-                     int seg_data);
+void vp9_set_segdata(struct segmentation *seg, int segment_id,
+                     SEG_LVL_FEATURES feature_id, int seg_data);
 
 static INLINE int get_segdata(const struct segmentation *seg, int segment_id,
                               SEG_LVL_FEATURES feature_id) {
@@ -84,4 +79,3 @@ extern const vpx_tree_index vp9_segment_tree[TREE_SIZE(MAX_SEGMENTS)];
 #endif
 
 #endif  // VP9_COMMON_VP9_SEG_COMMON_H_
-

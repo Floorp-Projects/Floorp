@@ -46,7 +46,7 @@ elif CONFIG['CPU_ARCH'] == 'arm':
 
     if CONFIG['VPX_AS_CONVERSION']:
         SOURCES += sorted([
-            "!%s.s" % f if f.endswith('.asm') else f for f in arm_asm_files
+            "!%s.S" % f if f.endswith('.asm') else f for f in arm_asm_files
         ])
     else:
         SOURCES += sorted(arm_asm_files)
@@ -87,6 +87,8 @@ if CONFIG['OS_TARGET'] == 'Android':
         SOURCES += [
             '%%%s/sources/android/cpufeatures/cpu-features.c' % CONFIG['ANDROID_NDK'],
         ]
+
+    ASFLAGS += ['-I%s/libvpx' % OBJDIR]
 
 if CONFIG['CLANG_CL'] or not CONFIG['_MSC_VER']:
     for f in SOURCES:

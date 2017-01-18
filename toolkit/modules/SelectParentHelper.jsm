@@ -10,9 +10,13 @@ this.EXPORTED_SYMBOLS = [
 
 const {utils: Cu} = Components;
 const {AppConstants} = Cu.import("resource://gre/modules/AppConstants.jsm", {});
+const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 // Maximum number of rows to display in the select dropdown.
 const MAX_ROWS = 20;
+
+// Minimum elements required to show select search
+const SEARCH_MINIMUM_ELEMENTS = 40;
 
 var currentBrowser = null;
 var currentMenulist = null;
@@ -155,7 +159,8 @@ this.SelectParentHelper = {
 };
 
 function populateChildren(menulist, options, selectedIndex, zoom,
-                          parentElement = null, isGroupDisabled = false, adjustedTextSize = -1) {
+                          parentElement = null, isGroupDisabled = false,
+                          adjustedTextSize = -1, addSearch = true) {
   let element = menulist.menupopup;
 
   // -1 just means we haven't calculated it yet. When we recurse through this function
@@ -178,6 +183,9 @@ function populateChildren(menulist, options, selectedIndex, zoom,
     item.style.direction = option.textDirection;
     item.style.fontSize = adjustedTextSize;
     item.hidden = option.display == "none" || (parentElement && parentElement.hidden);
+    // Keep track of which options are hidden by page content, so we can avoid showing
+    // them on search input
+    item.hiddenByContent = item.hidden;
     item.setAttribute("tooltiptext", option.tooltip);
 
     element.appendChild(item);
@@ -190,7 +198,7 @@ function populateChildren(menulist, options, selectedIndex, zoom,
 
     if (isOptGroup) {
       populateChildren(menulist, option.children, selectedIndex, zoom,
-                       item, isDisabled, adjustedTextSize);
+                       item, isDisabled, adjustedTextSize, false);
     } else {
       if (option.index == selectedIndex) {
         // We expect the parent element of the popup to be a <xul:menulist> that
@@ -215,4 +223,124 @@ function populateChildren(menulist, options, selectedIndex, zoom,
       }
     }
   }
+
+  // Check if search pref is enabled, if this is the first time iterating through
+  // the dropdown, and if the list is long enough for a search element to be added.
+  if (Services.prefs.getBoolPref("dom.forms.selectSearch") && addSearch
+      && element.childElementCount > SEARCH_MINIMUM_ELEMENTS) {
+
+    // Add a search text field as the first element of the dropdown
+    let searchbox = element.ownerDocument.createElement("textbox");
+    searchbox.setAttribute("type", "search");
+    searchbox.addEventListener("input", onSearchInput);
+    searchbox.addEventListener("focus", onSearchFocus);
+    searchbox.addEventListener("blur", onSearchBlur);
+
+    // Handle special keys for exiting search
+    searchbox.addEventListener("keydown", function(event) {
+      if (event.defaultPrevented) {
+        return;
+      }
+      switch (event.key) {
+        case "Escape":
+          searchbox.parentElement.hidePopup();
+          break;
+        case "ArrowDown":
+        case "Enter":
+        case "Tab":
+          searchbox.blur();
+          if (searchbox.nextSibling.localName == "menuitem" &&
+              !searchbox.nextSibling.hidden) {
+            menulist.menuBoxObject.activeChild = searchbox.nextSibling;
+          } else {
+            var currentOption = searchbox.nextSibling;
+            while (currentOption && (currentOption.localName != "menuitem" ||
+                  currentOption.hidden)) {
+              currentOption = currentOption.nextSibling;
+            }
+            if (currentOption) {
+              menulist.menuBoxObject.activeChild = currentOption;
+            } else {
+              searchbox.focus();
+            }
+          }
+          break;
+        default:
+          return;
+      }
+      event.preventDefault();
+    }, true);
+
+    element.insertBefore(searchbox, element.childNodes[0]);
+  }
+
+}
+
+function onSearchInput() {
+  let searchObj = this;
+
+  // Get input from search field, set to all lower case for comparison
+  let input = searchObj.value.toLowerCase();
+  // Get all items in dropdown (could be options or optgroups)
+  let menupopup = searchObj.parentElement;
+  let menuItems = menupopup.querySelectorAll("menuitem, menucaption");
+
+  // Flag used to detect any group headers with no visible options.
+  // These group headers should be hidden.
+  let allHidden = true;
+  // Keep a reference to the previous group header (menucaption) to go back
+  // and set to hidden if all options within are hidden.
+  let prevCaption = null;
+
+  for (let currentItem of menuItems) {
+    // Make sure we don't show any options that were hidden by page content
+    if (!currentItem.hiddenByContent) {
+      // Get label and tooltip (title) from option and change to
+      // lower case for comparison
+      let itemLabel = currentItem.getAttribute("label").toLowerCase();
+      let itemTooltip = currentItem.getAttribute("title").toLowerCase();
+
+      // If search input is empty, all options should be shown
+      if (!input) {
+        currentItem.hidden = false;
+      } else if (currentItem.localName == "menucaption") {
+        if (prevCaption != null) {
+          prevCaption.hidden = allHidden;
+        }
+        prevCaption = currentItem;
+        allHidden = true;
+      } else {
+        if (!currentItem.classList.contains("contentSelectDropdown-ingroup") &&
+            currentItem.previousSibling.classList.contains("contentSelectDropdown-ingroup")) {
+          if (prevCaption != null) {
+            prevCaption.hidden = allHidden;
+          }
+          prevCaption = null;
+          allHidden = true;
+        }
+        if (itemLabel.includes(input) || itemTooltip.includes(input)) {
+          currentItem.hidden = false;
+          allHidden = false;
+        } else {
+          currentItem.hidden = true;
+        }
+      }
+      if (prevCaption != null) {
+        prevCaption.hidden = allHidden;
+      }
+    }
+  }
+}
+
+function onSearchFocus() {
+  let searchObj = this;
+  let menupopup = searchObj.parentElement;
+  menupopup.parentElement.menuBoxObject.activeChild = null;
+  menupopup.setAttribute("ignorekeys", "true");
+}
+
+function onSearchBlur() {
+  let searchObj = this;
+  let menupopup = searchObj.parentElement;
+  menupopup.setAttribute("ignorekeys", "false");
 }

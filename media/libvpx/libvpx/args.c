@@ -8,12 +8,12 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
 #include "args.h"
 
+#include "vpx/vpx_integer.h"
 #include "vpx_ports/msvc.h"
 
 #if defined(__GNUC__) && __GNUC__
@@ -22,42 +22,36 @@ extern void die(const char *fmt, ...) __attribute__((noreturn));
 extern void die(const char *fmt, ...);
 #endif
 
-
 struct arg arg_init(char **argv) {
   struct arg a;
 
-  a.argv      = argv;
+  a.argv = argv;
   a.argv_step = 1;
-  a.name      = NULL;
-  a.val       = NULL;
-  a.def       = NULL;
+  a.name = NULL;
+  a.val = NULL;
+  a.def = NULL;
   return a;
 }
 
 int arg_match(struct arg *arg_, const struct arg_def *def, char **argv) {
   struct arg arg;
 
-  if (!argv[0] || argv[0][0] != '-')
-    return 0;
+  if (!argv[0] || argv[0][0] != '-') return 0;
 
   arg = arg_init(argv);
 
-  if (def->short_name
-      && strlen(arg.argv[0]) == strlen(def->short_name) + 1
-      && !strcmp(arg.argv[0] + 1, def->short_name)) {
-
+  if (def->short_name && strlen(arg.argv[0]) == strlen(def->short_name) + 1 &&
+      !strcmp(arg.argv[0] + 1, def->short_name)) {
     arg.name = arg.argv[0] + 1;
     arg.val = def->has_val ? arg.argv[1] : NULL;
     arg.argv_step = def->has_val ? 2 : 1;
   } else if (def->long_name) {
     const size_t name_len = strlen(def->long_name);
 
-    if (strlen(arg.argv[0]) >= name_len + 2
-        && arg.argv[0][1] == '-'
-        && !strncmp(arg.argv[0] + 2, def->long_name, name_len)
-        && (arg.argv[0][name_len + 2] == '='
-            || arg.argv[0][name_len + 2] == '\0')) {
-
+    if (strlen(arg.argv[0]) >= name_len + 2 && arg.argv[0][1] == '-' &&
+        !strncmp(arg.argv[0] + 2, def->long_name, name_len) &&
+        (arg.argv[0][name_len + 2] == '=' ||
+         arg.argv[0][name_len + 2] == '\0')) {
       arg.name = arg.argv[0] + 2;
       arg.val = arg.name[name_len] == '=' ? arg.name + name_len + 1 : NULL;
       arg.argv_step = 1;
@@ -70,8 +64,7 @@ int arg_match(struct arg *arg_, const struct arg_def *def, char **argv) {
   if (arg.name && arg.val && !def->has_val)
     die("Error: option %s requires no argument.\n", arg.name);
 
-  if (arg.name
-      && (arg.val || !def->has_val)) {
+  if (arg.name && (arg.val || !def->has_val)) {
     arg.def = def;
     *arg_ = arg;
     return 1;
@@ -80,14 +73,11 @@ int arg_match(struct arg *arg_, const struct arg_def *def, char **argv) {
   return 0;
 }
 
-
 const char *arg_next(struct arg *arg) {
-  if (arg->argv[0])
-    arg->argv += arg->argv_step;
+  if (arg->argv[0]) arg->argv += arg->argv_step;
 
   return *arg->argv;
 }
-
 
 char **argv_dup(int argc, const char **argv) {
   char **new_argv = malloc((argc + 1) * sizeof(*argv));
@@ -97,9 +87,8 @@ char **argv_dup(int argc, const char **argv) {
   return new_argv;
 }
 
-
 void arg_show_usage(FILE *fp, const struct arg_def *const *defs) {
-  char option_text[40] = {0};
+  char option_text[40] = { 0 };
 
   for (; *defs; defs++) {
     const struct arg_def *def = *defs;
@@ -109,15 +98,12 @@ void arg_show_usage(FILE *fp, const struct arg_def *const *defs) {
     if (def->short_name && def->long_name) {
       char *comma = def->has_val ? "," : ",      ";
 
-      snprintf(option_text, 37, "-%s%s%s --%s%6s",
-               def->short_name, short_val, comma,
-               def->long_name, long_val);
+      snprintf(option_text, 37, "-%s%s%s --%s%6s", def->short_name, short_val,
+               comma, def->long_name, long_val);
     } else if (def->short_name)
-      snprintf(option_text, 37, "-%s%s",
-               def->short_name, short_val);
+      snprintf(option_text, 37, "-%s%s", def->short_name, short_val);
     else if (def->long_name)
-      snprintf(option_text, 37, "          --%s%s",
-               def->long_name, long_val);
+      snprintf(option_text, 37, "          --%s%s", def->long_name, long_val);
 
     fprintf(fp, "  %-37s\t%s\n", option_text, def->desc);
 
@@ -127,110 +113,103 @@ void arg_show_usage(FILE *fp, const struct arg_def *const *defs) {
       fprintf(fp, "  %-37s\t  ", "");
 
       for (listptr = def->enums; listptr->name; listptr++)
-        fprintf(fp, "%s%s", listptr->name,
-                listptr[1].name ? ", " : "\n");
+        fprintf(fp, "%s%s", listptr->name, listptr[1].name ? ", " : "\n");
     }
   }
 }
 
-
 unsigned int arg_parse_uint(const struct arg *arg) {
-  long int   rawval;
-  char      *endptr;
+  uint32_t rawval;
+  char *endptr;
 
-  rawval = strtol(arg->val, &endptr, 10);
+  rawval = (uint32_t)strtoul(arg->val, &endptr, 10);
 
   if (arg->val[0] != '\0' && endptr[0] == '\0') {
-    if (rawval >= 0 && rawval <= UINT_MAX)
-      return rawval;
+    if (rawval <= UINT_MAX) return rawval;
 
-    die("Option %s: Value %ld out of range for unsigned int\n",
-        arg->name, rawval);
+    die("Option %s: Value %ld out of range for unsigned int\n", arg->name,
+        rawval);
   }
 
   die("Option %s: Invalid character '%c'\n", arg->name, *endptr);
   return 0;
 }
-
 
 int arg_parse_int(const struct arg *arg) {
-  long int   rawval;
-  char      *endptr;
+  int32_t rawval;
+  char *endptr;
 
-  rawval = strtol(arg->val, &endptr, 10);
+  rawval = (int32_t)strtol(arg->val, &endptr, 10);
 
   if (arg->val[0] != '\0' && endptr[0] == '\0') {
-    if (rawval >= INT_MIN && rawval <= INT_MAX)
-      return rawval;
+    if (rawval >= INT_MIN && rawval <= INT_MAX) return (int)rawval;
 
-    die("Option %s: Value %ld out of range for signed int\n",
-        arg->name, rawval);
+    die("Option %s: Value %ld out of range for signed int\n", arg->name,
+        rawval);
   }
 
   die("Option %s: Invalid character '%c'\n", arg->name, *endptr);
   return 0;
 }
-
 
 struct vpx_rational {
   int num; /**< fraction numerator */
   int den; /**< fraction denominator */
 };
 struct vpx_rational arg_parse_rational(const struct arg *arg) {
-  long int             rawval;
-  char                *endptr;
-  struct vpx_rational  rat;
+  long int rawval;
+  char *endptr;
+  struct vpx_rational rat;
 
   /* parse numerator */
   rawval = strtol(arg->val, &endptr, 10);
 
   if (arg->val[0] != '\0' && endptr[0] == '/') {
     if (rawval >= INT_MIN && rawval <= INT_MAX)
-      rat.num = rawval;
-    else die("Option %s: Value %ld out of range for signed int\n",
-               arg->name, rawval);
-  } else die("Option %s: Expected / at '%c'\n", arg->name, *endptr);
+      rat.num = (int)rawval;
+    else
+      die("Option %s: Value %ld out of range for signed int\n", arg->name,
+          rawval);
+  } else
+    die("Option %s: Expected / at '%c'\n", arg->name, *endptr);
 
   /* parse denominator */
   rawval = strtol(endptr + 1, &endptr, 10);
 
   if (arg->val[0] != '\0' && endptr[0] == '\0') {
     if (rawval >= INT_MIN && rawval <= INT_MAX)
-      rat.den = rawval;
-    else die("Option %s: Value %ld out of range for signed int\n",
-               arg->name, rawval);
-  } else die("Option %s: Invalid character '%c'\n", arg->name, *endptr);
+      rat.den = (int)rawval;
+    else
+      die("Option %s: Value %ld out of range for signed int\n", arg->name,
+          rawval);
+  } else
+    die("Option %s: Invalid character '%c'\n", arg->name, *endptr);
 
   return rat;
 }
 
-
 int arg_parse_enum(const struct arg *arg) {
   const struct arg_enum_list *listptr;
-  long int                    rawval;
-  char                       *endptr;
+  long int rawval;
+  char *endptr;
 
   /* First see if the value can be parsed as a raw value */
   rawval = strtol(arg->val, &endptr, 10);
   if (arg->val[0] != '\0' && endptr[0] == '\0') {
     /* Got a raw value, make sure it's valid */
     for (listptr = arg->def->enums; listptr->name; listptr++)
-      if (listptr->val == rawval)
-        return rawval;
+      if (listptr->val == rawval) return (int)rawval;
   }
 
   /* Next see if it can be parsed as a string */
   for (listptr = arg->def->enums; listptr->name; listptr++)
-    if (!strcmp(arg->val, listptr->name))
-      return listptr->val;
+    if (!strcmp(arg->val, listptr->name)) return listptr->val;
 
   die("Option %s: Invalid value '%s'\n", arg->name, arg->val);
   return 0;
 }
 
-
 int arg_parse_enum_or_int(const struct arg *arg) {
-  if (arg->def->enums)
-    return arg_parse_enum(arg);
+  if (arg->def->enums) return arg_parse_enum(arg);
   return arg_parse_int(arg);
 }

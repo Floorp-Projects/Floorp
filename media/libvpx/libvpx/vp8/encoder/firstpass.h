@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 #ifndef VP8_ENCODER_FIRSTPASS_H_
 #define VP8_ENCODER_FIRSTPASS_H_
 

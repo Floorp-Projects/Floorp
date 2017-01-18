@@ -46,36 +46,36 @@
 #undef MEM_VALUE_T_SZ_BITS
 #define MEM_VALUE_T_SZ_BITS (sizeof(MEM_VALUE_T) << 3)
 
-#undef  mem_ops_wrap_symbol
+#undef mem_ops_wrap_symbol
 #define mem_ops_wrap_symbol(fn) mem_ops_wrap_symbol2(fn, MEM_VALUE_T)
-#undef  mem_ops_wrap_symbol2
-#define mem_ops_wrap_symbol2(fn,typ) mem_ops_wrap_symbol3(fn,typ)
-#undef  mem_ops_wrap_symbol3
-#define mem_ops_wrap_symbol3(fn,typ) fn##_as_##typ
+#undef mem_ops_wrap_symbol2
+#define mem_ops_wrap_symbol2(fn, typ) mem_ops_wrap_symbol3(fn, typ)
+#undef mem_ops_wrap_symbol3
+#define mem_ops_wrap_symbol3(fn, typ) fn##_as_##typ
 
 /*
  * Include aligned access routines
  */
 #define INCLUDED_BY_MEM_OPS_H
 #include "mem_ops_aligned.h"
-#undef  INCLUDED_BY_MEM_OPS_H
+#undef INCLUDED_BY_MEM_OPS_H
 
-#undef  mem_get_be16
+#undef mem_get_be16
 #define mem_get_be16 mem_ops_wrap_symbol(mem_get_be16)
 static unsigned MEM_VALUE_T mem_get_be16(const void *vmem) {
-  unsigned MEM_VALUE_T  val;
-  const MAU_T          *mem = (const MAU_T *)vmem;
+  unsigned MEM_VALUE_T val;
+  const MAU_T *mem = (const MAU_T *)vmem;
 
   val = mem[0] << 8;
   val |= mem[1];
   return val;
 }
 
-#undef  mem_get_be24
+#undef mem_get_be24
 #define mem_get_be24 mem_ops_wrap_symbol(mem_get_be24)
 static unsigned MEM_VALUE_T mem_get_be24(const void *vmem) {
-  unsigned MEM_VALUE_T  val;
-  const MAU_T          *mem = (const MAU_T *)vmem;
+  unsigned MEM_VALUE_T val;
+  const MAU_T *mem = (const MAU_T *)vmem;
 
   val = mem[0] << 16;
   val |= mem[1] << 8;
@@ -83,11 +83,11 @@ static unsigned MEM_VALUE_T mem_get_be24(const void *vmem) {
   return val;
 }
 
-#undef  mem_get_be32
+#undef mem_get_be32
 #define mem_get_be32 mem_ops_wrap_symbol(mem_get_be32)
 static unsigned MEM_VALUE_T mem_get_be32(const void *vmem) {
-  unsigned MEM_VALUE_T  val;
-  const MAU_T          *mem = (const MAU_T *)vmem;
+  unsigned MEM_VALUE_T val;
+  const MAU_T *mem = (const MAU_T *)vmem;
 
   val = ((unsigned MEM_VALUE_T)mem[0]) << 24;
   val |= mem[1] << 16;
@@ -96,22 +96,22 @@ static unsigned MEM_VALUE_T mem_get_be32(const void *vmem) {
   return val;
 }
 
-#undef  mem_get_le16
+#undef mem_get_le16
 #define mem_get_le16 mem_ops_wrap_symbol(mem_get_le16)
 static unsigned MEM_VALUE_T mem_get_le16(const void *vmem) {
-  unsigned MEM_VALUE_T  val;
-  const MAU_T          *mem = (const MAU_T *)vmem;
+  unsigned MEM_VALUE_T val;
+  const MAU_T *mem = (const MAU_T *)vmem;
 
   val = mem[1] << 8;
   val |= mem[0];
   return val;
 }
 
-#undef  mem_get_le24
+#undef mem_get_le24
 #define mem_get_le24 mem_ops_wrap_symbol(mem_get_le24)
 static unsigned MEM_VALUE_T mem_get_le24(const void *vmem) {
-  unsigned MEM_VALUE_T  val;
-  const MAU_T          *mem = (const MAU_T *)vmem;
+  unsigned MEM_VALUE_T val;
+  const MAU_T *mem = (const MAU_T *)vmem;
 
   val = mem[2] << 16;
   val |= mem[1] << 8;
@@ -119,11 +119,11 @@ static unsigned MEM_VALUE_T mem_get_le24(const void *vmem) {
   return val;
 }
 
-#undef  mem_get_le32
+#undef mem_get_le32
 #define mem_get_le32 mem_ops_wrap_symbol(mem_get_le32)
 static unsigned MEM_VALUE_T mem_get_le32(const void *vmem) {
-  unsigned MEM_VALUE_T  val;
-  const MAU_T          *mem = (const MAU_T *)vmem;
+  unsigned MEM_VALUE_T val;
+  const MAU_T *mem = (const MAU_T *)vmem;
 
   val = ((unsigned MEM_VALUE_T)mem[3]) << 24;
   val |= mem[2] << 16;
@@ -132,13 +132,14 @@ static unsigned MEM_VALUE_T mem_get_le32(const void *vmem) {
   return val;
 }
 
-#define mem_get_s_generic(end,sz) \
-  static VPX_INLINE signed MEM_VALUE_T mem_get_s##end##sz(const void *vmem) {\
-    const MAU_T *mem = (const MAU_T*)vmem;\
-    signed MEM_VALUE_T val = mem_get_##end##sz(mem);\
-    return (val << (MEM_VALUE_T_SZ_BITS - sz)) >> (MEM_VALUE_T_SZ_BITS - sz);\
+#define mem_get_s_generic(end, sz)                                            \
+  static VPX_INLINE signed MEM_VALUE_T mem_get_s##end##sz(const void *vmem) { \
+    const MAU_T *mem = (const MAU_T *)vmem;                                   \
+    signed MEM_VALUE_T val = mem_get_##end##sz(mem);                          \
+    return (val << (MEM_VALUE_T_SZ_BITS - sz)) >> (MEM_VALUE_T_SZ_BITS - sz); \
   }
 
+/* clang-format off */
 #undef  mem_get_sbe16
 #define mem_get_sbe16 mem_ops_wrap_symbol(mem_get_sbe16)
 mem_get_s_generic(be, 16)
@@ -222,5 +223,6 @@ static VPX_INLINE void mem_put_le32(void *vmem, MEM_VALUE_T val) {
   mem[2] = (MAU_T)((val >> 16) & 0xff);
   mem[3] = (MAU_T)((val >> 24) & 0xff);
 }
+/* clang-format on */
 
 #endif  // VPX_PORTS_MEM_OPS_H_

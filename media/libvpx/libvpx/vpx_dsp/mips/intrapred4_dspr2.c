@@ -13,9 +13,10 @@
 #if HAVE_DSPR2
 void vpx_h_predictor_4x4_dspr2(uint8_t *dst, ptrdiff_t stride,
                                const uint8_t *above, const uint8_t *left) {
-  int32_t  tmp1, tmp2, tmp3, tmp4;
+  int32_t tmp1, tmp2, tmp3, tmp4;
+  (void)above;
 
-  __asm__ __volatile__ (
+  __asm__ __volatile__(
       "lb         %[tmp1],      (%[left])                    \n\t"
       "lb         %[tmp2],      1(%[left])                   \n\t"
       "lb         %[tmp3],      2(%[left])                   \n\t"
@@ -32,19 +33,18 @@ void vpx_h_predictor_4x4_dspr2(uint8_t *dst, ptrdiff_t stride,
       "add        %[dst],       %[dst],         %[stride]    \n\t"
       "sw         %[tmp4],      (%[dst])                     \n\t"
 
-      : [tmp1] "=&r" (tmp1), [tmp2] "=&r" (tmp2),
-        [tmp3] "=&r" (tmp3), [tmp4] "=&r" (tmp4)
-      : [left] "r" (left), [dst] "r" (dst), [stride] "r" (stride)
-  );
+      : [tmp1] "=&r"(tmp1), [tmp2] "=&r"(tmp2), [tmp3] "=&r"(tmp3),
+        [tmp4] "=&r"(tmp4)
+      : [left] "r"(left), [dst] "r"(dst), [stride] "r"(stride));
 }
 
 void vpx_dc_predictor_4x4_dspr2(uint8_t *dst, ptrdiff_t stride,
                                 const uint8_t *above, const uint8_t *left) {
-  int32_t  expected_dc;
-  int32_t  average;
-  int32_t  tmp, above_c, above_l, above_r, left_c, left_r, left_l;
+  int32_t expected_dc;
+  int32_t average;
+  int32_t tmp, above_c, above_l, above_r, left_c, left_r, left_l;
 
-  __asm__ __volatile__ (
+  __asm__ __volatile__(
       "lw              %[above_c],         (%[above])                    \n\t"
       "lw              %[left_c],          (%[left])                     \n\t"
 
@@ -70,27 +70,26 @@ void vpx_dc_predictor_4x4_dspr2(uint8_t *dst, ptrdiff_t stride,
       "add             %[dst],              %[dst],          %[stride]   \n\t"
       "sw              %[expected_dc],     (%[dst])                      \n\t"
 
-      : [above_c] "=&r" (above_c), [above_l] "=&r" (above_l),
-        [above_r] "=&r" (above_r), [left_c] "=&r" (left_c),
-        [left_l] "=&r" (left_l), [left_r] "=&r" (left_r),
-        [average] "=&r" (average), [tmp] "=&r" (tmp),
-        [expected_dc] "=&r" (expected_dc)
-      : [above] "r" (above), [left] "r" (left),
-        [dst] "r" (dst), [stride] "r" (stride)
-  );
+      : [above_c] "=&r"(above_c), [above_l] "=&r"(above_l),
+        [above_r] "=&r"(above_r), [left_c] "=&r"(left_c),
+        [left_l] "=&r"(left_l), [left_r] "=&r"(left_r),
+        [average] "=&r"(average), [tmp] "=&r"(tmp),
+        [expected_dc] "=&r"(expected_dc)
+      : [above] "r"(above), [left] "r"(left), [dst] "r"(dst),
+        [stride] "r"(stride));
 }
 
 void vpx_tm_predictor_4x4_dspr2(uint8_t *dst, ptrdiff_t stride,
                                 const uint8_t *above, const uint8_t *left) {
-  int32_t  abovel, abover;
-  int32_t  left0, left1, left2, left3;
-  int32_t  res0, res1;
-  int32_t  resl;
-  int32_t  resr;
-  int32_t  top_left;
-  uint8_t  *cm = vpx_ff_cropTbl;
+  int32_t abovel, abover;
+  int32_t left0, left1, left2, left3;
+  int32_t res0, res1;
+  int32_t resl;
+  int32_t resr;
+  int32_t top_left;
+  uint8_t *cm = vpx_ff_cropTbl;
 
-  __asm__ __volatile__ (
+  __asm__ __volatile__(
       "ulw             %[resl],       (%[above])                         \n\t"
 
       "lbu             %[left0],       (%[left])                         \n\t"
@@ -174,7 +173,6 @@ void vpx_tm_predictor_4x4_dspr2(uint8_t *dst, ptrdiff_t stride,
       "sra             %[res0],        %[res0],           16             \n\t"
       "lbux            %[res0],        %[res0](%[cm])                    \n\t"
 
-
       "sra             %[res1],        %[resr],           16             \n\t"
       "lbux            %[res1],        %[res1](%[cm])                    \n\t"
       "sb              %[res0],        (%[dst])                          \n\t"
@@ -182,7 +180,6 @@ void vpx_tm_predictor_4x4_dspr2(uint8_t *dst, ptrdiff_t stride,
       "sll             %[res0],        %[resl],           16             \n\t"
       "sra             %[res0],        %[res0],           16             \n\t"
       "lbux            %[res0],        %[res0](%[cm])                    \n\t"
-
 
       "sb              %[res1],        1(%[dst])                         \n\t"
       "sra             %[res1],        %[resl],           16             \n\t"
@@ -218,12 +215,11 @@ void vpx_tm_predictor_4x4_dspr2(uint8_t *dst, ptrdiff_t stride,
       "sb              %[res0],        2(%[dst])                         \n\t"
       "sb              %[res1],        3(%[dst])                         \n\t"
 
-      : [abovel] "=&r" (abovel), [abover] "=&r" (abover),
-        [left0] "=&r" (left0), [left1] "=&r" (left1), [left2] "=&r" (left2),
-        [res0] "=&r" (res0), [res1] "=&r" (res1), [left3] "=&r" (left3),
-        [resl] "=&r" (resl), [resr] "=&r" (resr), [top_left] "=&r" (top_left)
-      : [above] "r" (above), [left] "r" (left),
-        [dst] "r" (dst), [stride] "r" (stride), [cm] "r" (cm)
-  );
+      : [abovel] "=&r"(abovel), [abover] "=&r"(abover), [left0] "=&r"(left0),
+        [left1] "=&r"(left1), [left2] "=&r"(left2), [res0] "=&r"(res0),
+        [res1] "=&r"(res1), [left3] "=&r"(left3), [resl] "=&r"(resl),
+        [resr] "=&r"(resr), [top_left] "=&r"(top_left)
+      : [above] "r"(above), [left] "r"(left), [dst] "r"(dst),
+        [stride] "r"(stride), [cm] "r"(cm));
 }
 #endif  // #if HAVE_DSPR2

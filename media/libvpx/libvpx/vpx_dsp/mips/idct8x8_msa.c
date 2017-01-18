@@ -18,17 +18,17 @@ void vpx_idct8x8_64_add_msa(const int16_t *input, uint8_t *dst,
   LD_SH8(input, 8, in0, in1, in2, in3, in4, in5, in6, in7);
 
   /* rows transform */
-  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7,
-                     in0, in1, in2, in3, in4, in5, in6, in7);
+  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7, in0, in1, in2, in3,
+                     in4, in5, in6, in7);
   /* 1D idct8x8 */
-  VP9_IDCT8x8_1D(in0, in1, in2, in3, in4, in5, in6, in7,
-                 in0, in1, in2, in3, in4, in5, in6, in7);
+  VP9_IDCT8x8_1D(in0, in1, in2, in3, in4, in5, in6, in7, in0, in1, in2, in3,
+                 in4, in5, in6, in7);
   /* columns transform */
-  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7,
-                     in0, in1, in2, in3, in4, in5, in6, in7);
+  TRANSPOSE8x8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7, in0, in1, in2, in3,
+                     in4, in5, in6, in7);
   /* 1D idct8x8 */
-  VP9_IDCT8x8_1D(in0, in1, in2, in3, in4, in5, in6, in7,
-                 in0, in1, in2, in3, in4, in5, in6, in7);
+  VP9_IDCT8x8_1D(in0, in1, in2, in3, in4, in5, in6, in7, in0, in1, in2, in3,
+                 in4, in5, in6, in7);
   /* final rounding (add 2^4, divide by 2^5) and shift */
   SRARI_H4_SH(in0, in1, in2, in3, 5);
   SRARI_H4_SH(in4, in5, in6, in7, 5);
@@ -82,12 +82,12 @@ void vpx_idct8x8_12_add_msa(const int16_t *input, uint8_t *dst,
   PCKEV_H2_SH(zero, tmp0, zero, tmp1, s2, s3);
 
   /* stage4 */
-  BUTTERFLY_8(m0, m1, m2, m3, s4, s2, s3, s7,
-              in0, in1, in2, in3, in4, in5, in6, in7);
-  TRANSPOSE4X8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7,
-                     in0, in1, in2, in3, in4, in5, in6, in7);
-  VP9_IDCT8x8_1D(in0, in1, in2, in3, in4, in5, in6, in7,
-                 in0, in1, in2, in3, in4, in5, in6, in7);
+  BUTTERFLY_8(m0, m1, m2, m3, s4, s2, s3, s7, in0, in1, in2, in3, in4, in5, in6,
+              in7);
+  TRANSPOSE4X8_SH_SH(in0, in1, in2, in3, in4, in5, in6, in7, in0, in1, in2, in3,
+                     in4, in5, in6, in7);
+  VP9_IDCT8x8_1D(in0, in1, in2, in3, in4, in5, in6, in7, in0, in1, in2, in3,
+                 in4, in5, in6, in7);
 
   /* final rounding (add 2^4, divide by 2^5) and shift */
   SRARI_H4_SH(in0, in1, in2, in3, 5);

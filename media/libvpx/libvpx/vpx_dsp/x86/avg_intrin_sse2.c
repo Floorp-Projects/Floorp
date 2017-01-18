@@ -16,7 +16,7 @@
 void vpx_minmax_8x8_sse2(const uint8_t *s, int p, const uint8_t *d, int dp,
                          int *min, int *max) {
   __m128i u0, s0, d0, diff, maxabsdiff, minabsdiff, negdiff, absdiff0, absdiff;
-  u0  = _mm_setzero_si128();
+  u0 = _mm_setzero_si128();
   // Row 0
   s0 = _mm_unpacklo_epi8(_mm_loadl_epi64((const __m128i *)(s)), u0);
   d0 = _mm_unpacklo_epi8(_mm_loadl_epi64((const __m128i *)(d)), u0);
@@ -94,7 +94,7 @@ void vpx_minmax_8x8_sse2(const uint8_t *s, int p, const uint8_t *d, int dp,
 unsigned int vpx_avg_8x8_sse2(const uint8_t *s, int p) {
   __m128i s0, s1, u0;
   unsigned int avg = 0;
-  u0  = _mm_setzero_si128();
+  u0 = _mm_setzero_si128();
   s0 = _mm_unpacklo_epi8(_mm_loadl_epi64((const __m128i *)(s)), u0);
   s1 = _mm_unpacklo_epi8(_mm_loadl_epi64((const __m128i *)(s + p)), u0);
   s0 = _mm_adds_epu16(s0, s1);
@@ -121,7 +121,7 @@ unsigned int vpx_avg_8x8_sse2(const uint8_t *s, int p) {
 unsigned int vpx_avg_4x4_sse2(const uint8_t *s, int p) {
   __m128i s0, s1, u0;
   unsigned int avg = 0;
-  u0  = _mm_setzero_si128();
+  u0 = _mm_setzero_si128();
   s0 = _mm_unpacklo_epi8(_mm_loadl_epi64((const __m128i *)(s)), u0);
   s1 = _mm_unpacklo_epi8(_mm_loadl_epi64((const __m128i *)(s + p)), u0);
   s0 = _mm_adds_epu16(s0, s1);
@@ -248,8 +248,8 @@ void vpx_hadamard_16x16_sse2(int16_t const *src_diff, int src_stride,
                              int16_t *coeff) {
   int idx;
   for (idx = 0; idx < 4; ++idx) {
-    int16_t const *src_ptr = src_diff + (idx >> 1) * 8 * src_stride
-                                + (idx & 0x01) * 8;
+    int16_t const *src_ptr =
+        src_diff + (idx >> 1) * 8 * src_stride + (idx & 0x01) * 8;
     vpx_hadamard_8x8_sse2(src_ptr, src_stride, coeff + idx * 64);
   }
 
@@ -309,7 +309,7 @@ int vpx_satd_sse2(const int16_t *coeff, int length) {
   return _mm_cvtsi128_si32(accum);
 }
 
-void vpx_int_pro_row_sse2(int16_t *hbuf, uint8_t const*ref,
+void vpx_int_pro_row_sse2(int16_t *hbuf, uint8_t const *ref,
                           const int ref_stride, const int height) {
   int idx;
   __m128i zero = _mm_setzero_si128();
@@ -378,8 +378,7 @@ int16_t vpx_int_pro_col_sse2(uint8_t const *ref, const int width) {
   return _mm_extract_epi16(s0, 0);
 }
 
-int vpx_vector_var_sse2(int16_t const *ref, int16_t const *src,
-                        const int bwl) {
+int vpx_vector_var_sse2(int16_t const *ref, int16_t const *src, const int bwl) {
   int idx;
   int width = 4 << bwl;
   int16_t mean;
@@ -398,23 +397,23 @@ int vpx_vector_var_sse2(int16_t const *ref, int16_t const *src,
     diff = _mm_subs_epi16(v0, v1);
 
     sum = _mm_add_epi16(sum, diff);
-    v0  = _mm_madd_epi16(diff, diff);
+    v0 = _mm_madd_epi16(diff, diff);
     sse = _mm_add_epi32(sse, v0);
 
     ref += 8;
     src += 8;
   }
 
-  v0  = _mm_srli_si128(sum, 8);
+  v0 = _mm_srli_si128(sum, 8);
   sum = _mm_add_epi16(sum, v0);
-  v0  = _mm_srli_epi64(sum, 32);
+  v0 = _mm_srli_epi64(sum, 32);
   sum = _mm_add_epi16(sum, v0);
-  v0  = _mm_srli_epi32(sum, 16);
+  v0 = _mm_srli_epi32(sum, 16);
   sum = _mm_add_epi16(sum, v0);
 
-  v1  = _mm_srli_si128(sse, 8);
+  v1 = _mm_srli_si128(sse, 8);
   sse = _mm_add_epi32(sse, v1);
-  v1  = _mm_srli_epi64(sse, 32);
+  v1 = _mm_srli_epi64(sse, 32);
   sse = _mm_add_epi32(sse, v1);
 
   mean = _mm_extract_epi16(sum, 0);

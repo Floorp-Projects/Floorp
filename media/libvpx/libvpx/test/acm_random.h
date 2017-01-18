@@ -23,9 +23,7 @@ class ACMRandom {
 
   explicit ACMRandom(int seed) : random_(seed) {}
 
-  void Reset(int seed) {
-    random_.Reseed(seed);
-  }
+  void Reset(int seed) { random_.Reseed(seed); }
   uint16_t Rand16(void) {
     const uint32_t value =
         random_.Generate(testing::internal::Random::kMaxRange);
@@ -52,17 +50,11 @@ class ACMRandom {
     return r < 128 ? r << 4 : r >> 4;
   }
 
-  int PseudoUniform(int range) {
-    return random_.Generate(range);
-  }
+  int PseudoUniform(int range) { return random_.Generate(range); }
 
-  int operator()(int n) {
-    return PseudoUniform(n);
-  }
+  int operator()(int n) { return PseudoUniform(n); }
 
-  static int DeterministicSeed(void) {
-    return 0xbaba;
-  }
+  static int DeterministicSeed(void) { return 0xbaba; }
 
  private:
   testing::internal::Random random_;

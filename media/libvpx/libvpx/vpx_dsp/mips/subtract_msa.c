@@ -68,8 +68,8 @@ static void sub_blk_16x16_msa(const uint8_t *src, int32_t src_stride,
     LD_SB8(src, src_stride, src0, src1, src2, src3, src4, src5, src6, src7);
     src += (8 * src_stride);
 
-    LD_SB8(pred, pred_stride,
-           pred0, pred1, pred2, pred3, pred4, pred5, pred6, pred7);
+    LD_SB8(pred, pred_stride, pred0, pred1, pred2, pred3, pred4, pred5, pred6,
+           pred7);
     pred += (8 * pred_stride);
 
     ILVRL_B2_UB(src0, pred0, src_l0, src_l1);
@@ -226,31 +226,31 @@ static void sub_blk_64x64_msa(const uint8_t *src, int32_t src_stride,
   }
 }
 
-void vpx_subtract_block_msa(int32_t rows, int32_t cols,
-                            int16_t *diff_ptr, ptrdiff_t diff_stride,
-                            const uint8_t *src_ptr, ptrdiff_t src_stride,
-                            const uint8_t *pred_ptr, ptrdiff_t pred_stride) {
+void vpx_subtract_block_msa(int32_t rows, int32_t cols, int16_t *diff_ptr,
+                            ptrdiff_t diff_stride, const uint8_t *src_ptr,
+                            ptrdiff_t src_stride, const uint8_t *pred_ptr,
+                            ptrdiff_t pred_stride) {
   if (rows == cols) {
     switch (rows) {
       case 4:
-        sub_blk_4x4_msa(src_ptr, src_stride, pred_ptr, pred_stride,
-                        diff_ptr, diff_stride);
+        sub_blk_4x4_msa(src_ptr, src_stride, pred_ptr, pred_stride, diff_ptr,
+                        diff_stride);
         break;
       case 8:
-        sub_blk_8x8_msa(src_ptr, src_stride, pred_ptr, pred_stride,
-                        diff_ptr, diff_stride);
+        sub_blk_8x8_msa(src_ptr, src_stride, pred_ptr, pred_stride, diff_ptr,
+                        diff_stride);
         break;
       case 16:
-        sub_blk_16x16_msa(src_ptr, src_stride, pred_ptr, pred_stride,
-                          diff_ptr, diff_stride);
+        sub_blk_16x16_msa(src_ptr, src_stride, pred_ptr, pred_stride, diff_ptr,
+                          diff_stride);
         break;
       case 32:
-        sub_blk_32x32_msa(src_ptr, src_stride, pred_ptr, pred_stride,
-                          diff_ptr, diff_stride);
+        sub_blk_32x32_msa(src_ptr, src_stride, pred_ptr, pred_stride, diff_ptr,
+                          diff_stride);
         break;
       case 64:
-        sub_blk_64x64_msa(src_ptr, src_stride, pred_ptr, pred_stride,
-                          diff_ptr, diff_stride);
+        sub_blk_64x64_msa(src_ptr, src_stride, pred_ptr, pred_stride, diff_ptr,
+                          diff_stride);
         break;
       default:
         vpx_subtract_block_c(rows, cols, diff_ptr, diff_stride, src_ptr,

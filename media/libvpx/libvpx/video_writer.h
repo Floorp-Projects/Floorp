@@ -13,9 +13,7 @@
 
 #include "./video_common.h"
 
-typedef enum {
-  kContainerIVF
-} VpxContainer;
+typedef enum { kContainerIVF } VpxContainer;
 
 struct VpxVideoWriterStruct;
 typedef struct VpxVideoWriterStruct VpxVideoWriter;
@@ -36,9 +34,8 @@ VpxVideoWriter *vpx_video_writer_open(const char *filename,
 void vpx_video_writer_close(VpxVideoWriter *writer);
 
 // Writes frame bytes to the file.
-int vpx_video_writer_write_frame(VpxVideoWriter *writer,
-                                 const uint8_t *buffer, size_t size,
-                                 int64_t pts);
+int vpx_video_writer_write_frame(VpxVideoWriter *writer, const uint8_t *buffer,
+                                 size_t size, int64_t pts);
 
 #ifdef __cplusplus
 }  // extern "C"

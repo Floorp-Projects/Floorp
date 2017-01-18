@@ -12,10 +12,13 @@
 #define INCLUDE_LIBYUV_CONVERT_H_
 
 #include "libyuv/basic_types.h"
-// TODO(fbarchard): Remove the following headers includes.
-#include "libyuv/convert_from.h"
-#include "libyuv/planar_functions.h"
-#include "libyuv/rotate.h"
+
+#include "libyuv/rotate.h"  // For enum RotationMode.
+
+// TODO(fbarchard): fix WebRTC source to include following libyuv headers:
+#include "libyuv/convert_argb.h"  // For WebRTC I420ToARGB. b/620
+#include "libyuv/convert_from.h"  // For WebRTC ConvertFromI420. b/620
+#include "libyuv/planar_functions.h"  // For WebRTC I420Rect, CopyPlane. b/618
 
 #ifdef __cplusplus
 namespace libyuv {
@@ -114,6 +117,17 @@ int M420ToI420(const uint8* src_m420, int src_stride_m420,
                uint8* dst_u, int dst_stride_u,
                uint8* dst_v, int dst_stride_v,
                int width, int height);
+
+// Convert Android420 to I420.
+LIBYUV_API
+int Android420ToI420(const uint8* src_y, int src_stride_y,
+                     const uint8* src_u, int src_stride_u,
+                     const uint8* src_v, int src_stride_v,
+                     int pixel_stride_uv,
+                     uint8* dst_y, int dst_stride_y,
+                     uint8* dst_u, int dst_stride_u,
+                     uint8* dst_v, int dst_stride_v,
+                     int width, int height);
 
 // ARGB little endian (bgra in memory) to I420.
 LIBYUV_API

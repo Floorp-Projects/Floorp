@@ -15,19 +15,17 @@
 
     AREA ||.text||, CODE, READONLY, ALIGN=2
 
-;void vpx_idct8x8_1_add_neon(int16_t *input, uint8_t *dest,
-;                                  int dest_stride)
+;void vpx_idct8x8_1_add_neon(int16_t *input, uint8_t *dest, int stride)
 ;
 ; r0  int16_t input
 ; r1  uint8_t *dest
-; r2  int dest_stride)
+; r2  int stride)
 
 |vpx_idct8x8_1_add_neon| PROC
     ldrsh            r0, [r0]
 
-    ; generate cospi_16_64 = 11585
-    mov              r12, #0x2d00
-    add              r12, #0x41
+    ; cospi_16_64 = 11585
+    movw             r12, #0x2d41
 
     ; out = dct_const_round_shift(input[0] * cospi_16_64)
     mul              r0, r0, r12               ; input[0] * cospi_16_64

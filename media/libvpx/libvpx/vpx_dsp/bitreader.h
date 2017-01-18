@@ -45,11 +45,8 @@ typedef struct {
   uint8_t clear_buffer[sizeof(BD_VALUE) + 1];
 } vpx_reader;
 
-int vpx_reader_init(vpx_reader *r,
-                    const uint8_t *buffer,
-                    size_t size,
-                    vpx_decrypt_cb decrypt_cb,
-                    void *decrypt_state);
+int vpx_reader_init(vpx_reader *r, const uint8_t *buffer, size_t size,
+                    vpx_decrypt_cb decrypt_cb, void *decrypt_state);
 
 void vpx_reader_fill(vpx_reader *r);
 
@@ -81,8 +78,7 @@ static INLINE int vpx_read(vpx_reader *r, int prob) {
   unsigned int range;
   unsigned int split = (r->range * prob + (256 - prob)) >> CHAR_BIT;
 
-  if (r->count < 0)
-    vpx_reader_fill(r);
+  if (r->count < 0) vpx_reader_fill(r);
 
   value = r->value;
   count = r->count;
@@ -117,8 +113,7 @@ static INLINE int vpx_read_bit(vpx_reader *r) {
 static INLINE int vpx_read_literal(vpx_reader *r, int bits) {
   int literal = 0, bit;
 
-  for (bit = bits - 1; bit >= 0; bit--)
-    literal |= vpx_read_bit(r) << bit;
+  for (bit = bits - 1; bit >= 0; bit--) literal |= vpx_read_bit(r) << bit;
 
   return literal;
 }
@@ -127,8 +122,7 @@ static INLINE int vpx_read_tree(vpx_reader *r, const vpx_tree_index *tree,
                                 const vpx_prob *probs) {
   vpx_tree_index i = 0;
 
-  while ((i = tree[i + vpx_read(r, probs[i >> 1])]) > 0)
-    continue;
+  while ((i = tree[i + vpx_read(r, probs[i >> 1])]) > 0) continue;
 
   return -i;
 }

@@ -1,3 +1,19 @@
+2017-01-09 v1.6.1 "Long Tailed Duck"
+  This release improves upon the VP9 encoder and speeds up the encoding and
+  decoding processes.
+
+  - Upgrading:
+    This release is ABI compatible with 1.6.0.
+
+  - Enhancements:
+    Faster VP9 encoding and decoding.
+    High bit depth builds now provide similar speed for 8 bit encode and decode
+    for x86 targets. Other platforms and higher bit depth improvements are in
+    progress.
+
+  - Bug Fixes:
+    A variety of fuzzing issues.
+
 2016-07-20 v1.6.0 "Khaki Campbell Duck"
   This release improves upon the VP9 encoder and speeds up the encoding and
   decoding processes.

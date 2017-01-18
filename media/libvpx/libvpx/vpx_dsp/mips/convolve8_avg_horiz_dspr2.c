@@ -18,16 +18,13 @@
 #include "vpx_ports/mem.h"
 
 #if HAVE_DSPR2
-static void convolve_avg_horiz_4_dspr2(const uint8_t *src,
-                                       int32_t src_stride,
-                                       uint8_t *dst,
-                                       int32_t dst_stride,
-                                       const int16_t *filter_x0,
-                                       int32_t h) {
+static void convolve_avg_horiz_4_dspr2(const uint8_t *src, int32_t src_stride,
+                                       uint8_t *dst, int32_t dst_stride,
+                                       const int16_t *filter_x0, int32_t h) {
   int32_t y;
   uint8_t *cm = vpx_ff_cropTbl;
-  int32_t  vector1b, vector2b, vector3b, vector4b;
-  int32_t  Temp1, Temp2, Temp3, Temp4;
+  int32_t vector1b, vector2b, vector3b, vector4b;
+  int32_t Temp1, Temp2, Temp3, Temp4;
   uint32_t vector4a = 64;
   uint32_t tp1, tp2;
   uint32_t p1, p2, p3, p4;
@@ -45,7 +42,7 @@ static void convolve_avg_horiz_4_dspr2(const uint8_t *src,
     prefetch_load(src + src_stride + 32);
     prefetch_store(dst + dst_stride);
 
-    __asm__ __volatile__ (
+    __asm__ __volatile__(
         "ulw              %[tp1],         0(%[src])                      \n\t"
         "ulw              %[tp2],         4(%[src])                      \n\t"
 
@@ -76,13 +73,13 @@ static void convolve_avg_horiz_4_dspr2(const uint8_t *src,
         "dpa.w.ph         $ac2,           %[p1],          %[vector4b]    \n\t"
         "extp             %[Temp3],       $ac2,           31             \n\t"
 
-        "lbu              %[p2],          3(%[dst])                      \n\t"  /* load odd 2 */
+        "lbu              %[p2],          3(%[dst])                      \n\t" /* load odd 2 */
 
         /* odd 1. pixel */
-        "lbux             %[tp1],         %[Temp1](%[cm])                \n\t"  /* even 1 */
+        "lbux             %[tp1],         %[Temp1](%[cm])                \n\t" /* even 1 */
         "mtlo             %[vector4a],    $ac3                           \n\t"
         "mthi             $zero,          $ac3                           \n\t"
-        "lbu              %[Temp1],       1(%[dst])                      \n\t"  /* load odd 1 */
+        "lbu              %[Temp1],       1(%[dst])                      \n\t" /* load odd 1 */
         "preceu.ph.qbr    %[n1],          %[tp2]                         \n\t"
         "preceu.ph.qbl    %[n2],          %[tp2]                         \n\t"
         "preceu.ph.qbr    %[n3],          %[tn2]                         \n\t"
@@ -93,46 +90,44 @@ static void convolve_avg_horiz_4_dspr2(const uint8_t *src,
         "dpa.w.ph         $ac3,           %[n4],          %[vector4b]    \n\t"
         "extp             %[Temp2],       $ac3,           31             \n\t"
 
-        "lbu              %[tn2],         0(%[dst])                      \n\t"  /* load even 1 */
+        "lbu              %[tn2],         0(%[dst])                      \n\t" /* load even 1 */
 
         /* odd 2. pixel */
-        "lbux             %[tp2],         %[Temp3](%[cm])                \n\t"  /* even 2 */
+        "lbux             %[tp2],         %[Temp3](%[cm])                \n\t" /* even 2 */
         "mtlo             %[vector4a],    $ac2                           \n\t"
         "mthi             $zero,          $ac2                           \n\t"
         "preceu.ph.qbr    %[n1],          %[tn1]                         \n\t"
-        "lbux             %[tn1],         %[Temp2](%[cm])                \n\t"  /* odd 1 */
-        "addqh_r.w        %[tn2],         %[tn2],         %[tp1]         \n\t"  /* average even 1 */
+        "lbux             %[tn1],         %[Temp2](%[cm])                \n\t" /* odd 1 */
+        "addqh_r.w        %[tn2],         %[tn2],         %[tp1]         \n\t" /* average even 1 */
         "dpa.w.ph         $ac2,           %[n2],          %[vector1b]    \n\t"
         "dpa.w.ph         $ac2,           %[n3],          %[vector2b]    \n\t"
         "dpa.w.ph         $ac2,           %[n4],          %[vector3b]    \n\t"
         "dpa.w.ph         $ac2,           %[n1],          %[vector4b]    \n\t"
         "extp             %[Temp4],       $ac2,           31             \n\t"
 
-        "lbu              %[tp1],         2(%[dst])                      \n\t"  /* load even 2 */
-        "sb               %[tn2],         0(%[dst])                      \n\t"  /* store even 1 */
+        "lbu              %[tp1],         2(%[dst])                      \n\t" /* load even 2 */
+        "sb               %[tn2],         0(%[dst])                      \n\t" /* store even 1 */
 
         /* clamp */
-        "addqh_r.w        %[Temp1],       %[Temp1],       %[tn1]         \n\t"  /* average odd 1 */
-        "lbux             %[n2],          %[Temp4](%[cm])                \n\t"  /* odd 2 */
-        "sb               %[Temp1],       1(%[dst])                      \n\t"  /* store odd 1 */
+        "addqh_r.w        %[Temp1],       %[Temp1],       %[tn1]         \n\t" /* average odd 1 */
+        "lbux             %[n2],          %[Temp4](%[cm])                \n\t" /* odd 2 */
+        "sb               %[Temp1],       1(%[dst])                      \n\t" /* store odd 1 */
 
-        "addqh_r.w        %[tp1],         %[tp1],         %[tp2]         \n\t"  /* average even 2 */
-        "sb               %[tp1],         2(%[dst])                      \n\t"  /* store even 2 */
+        "addqh_r.w        %[tp1],         %[tp1],         %[tp2]         \n\t" /* average even 2 */
+        "sb               %[tp1],         2(%[dst])                      \n\t" /* store even 2 */
 
-        "addqh_r.w        %[p2],          %[p2],          %[n2]          \n\t"  /* average odd 2 */
-        "sb               %[p2],          3(%[dst])                      \n\t"  /* store odd 2 */
+        "addqh_r.w        %[p2],          %[p2],          %[n2]          \n\t" /* average odd 2 */
+        "sb               %[p2],          3(%[dst])                      \n\t" /* store odd 2 */
 
-        : [tp1] "=&r" (tp1), [tp2] "=&r" (tp2),
-          [tn1] "=&r" (tn1), [tn2] "=&r" (tn2),
-          [p1] "=&r" (p1), [p2] "=&r" (p2), [p3] "=&r" (p3), [p4] "=&r" (p4),
-          [n1] "=&r" (n1), [n2] "=&r" (n2), [n3] "=&r" (n3), [n4] "=&r" (n4),
-          [Temp1] "=&r" (Temp1), [Temp2] "=&r" (Temp2),
-          [Temp3] "=&r" (Temp3), [Temp4] "=&r" (Temp4)
-        : [vector1b] "r" (vector1b), [vector2b] "r" (vector2b),
-          [vector3b] "r" (vector3b), [vector4b] "r" (vector4b),
-          [vector4a] "r" (vector4a),
-          [cm] "r" (cm), [dst] "r" (dst), [src] "r" (src)
-    );
+        : [tp1] "=&r"(tp1), [tp2] "=&r"(tp2), [tn1] "=&r"(tn1),
+          [tn2] "=&r"(tn2), [p1] "=&r"(p1), [p2] "=&r"(p2), [p3] "=&r"(p3),
+          [p4] "=&r"(p4), [n1] "=&r"(n1), [n2] "=&r"(n2), [n3] "=&r"(n3),
+          [n4] "=&r"(n4), [Temp1] "=&r"(Temp1), [Temp2] "=&r"(Temp2),
+          [Temp3] "=&r"(Temp3), [Temp4] "=&r"(Temp4)
+        : [vector1b] "r"(vector1b), [vector2b] "r"(vector2b),
+          [vector3b] "r"(vector3b), [vector4b] "r"(vector4b),
+          [vector4a] "r"(vector4a), [cm] "r"(cm), [dst] "r"(dst),
+          [src] "r"(src));
 
     /* Next row... */
     src += src_stride;
@@ -140,12 +135,9 @@ static void convolve_avg_horiz_4_dspr2(const uint8_t *src,
   }
 }
 
-static void convolve_avg_horiz_8_dspr2(const uint8_t *src,
-                                       int32_t src_stride,
-                                       uint8_t *dst,
-                                       int32_t dst_stride,
-                                       const int16_t *filter_x0,
-                                       int32_t h) {
+static void convolve_avg_horiz_8_dspr2(const uint8_t *src, int32_t src_stride,
+                                       uint8_t *dst, int32_t dst_stride,
+                                       const int16_t *filter_x0, int32_t h) {
   int32_t y;
   uint8_t *cm = vpx_ff_cropTbl;
   uint32_t vector4a = 64;
@@ -167,7 +159,7 @@ static void convolve_avg_horiz_8_dspr2(const uint8_t *src,
     prefetch_load(src + src_stride + 32);
     prefetch_store(dst + dst_stride);
 
-    __asm__ __volatile__ (
+    __asm__ __volatile__(
         "ulw              %[tp1],         0(%[src])                      \n\t"
         "ulw              %[tp2],         4(%[src])                      \n\t"
 
@@ -309,17 +301,15 @@ static void convolve_avg_horiz_8_dspr2(const uint8_t *src,
         "sb               %[tn3],         5(%[dst])                      \n\t"
         "sb               %[tn1],         7(%[dst])                      \n\t"
 
-        : [tp1] "=&r" (tp1), [tp2] "=&r" (tp2),
-          [tn1] "=&r" (tn1), [tn2] "=&r" (tn2), [tn3] "=&r" (tn3),
-          [st0] "=&r" (st0), [st1] "=&r" (st1),
-          [p1] "=&r" (p1), [p2] "=&r" (p2), [p3] "=&r" (p3), [p4] "=&r" (p4),
-          [n1] "=&r" (n1),
-          [Temp1] "=&r" (Temp1), [Temp2] "=&r" (Temp2), [Temp3] "=&r" (Temp3)
-        : [vector1b] "r" (vector1b), [vector2b] "r" (vector2b),
-          [vector3b] "r" (vector3b), [vector4b] "r" (vector4b),
-          [vector4a] "r" (vector4a),
-          [cm] "r" (cm), [dst] "r" (dst), [src] "r" (src)
-    );
+        : [tp1] "=&r"(tp1), [tp2] "=&r"(tp2), [tn1] "=&r"(tn1),
+          [tn2] "=&r"(tn2), [tn3] "=&r"(tn3), [st0] "=&r"(st0),
+          [st1] "=&r"(st1), [p1] "=&r"(p1), [p2] "=&r"(p2), [p3] "=&r"(p3),
+          [p4] "=&r"(p4), [n1] "=&r"(n1), [Temp1] "=&r"(Temp1),
+          [Temp2] "=&r"(Temp2), [Temp3] "=&r"(Temp3)
+        : [vector1b] "r"(vector1b), [vector2b] "r"(vector2b),
+          [vector3b] "r"(vector3b), [vector4b] "r"(vector4b),
+          [vector4a] "r"(vector4a), [cm] "r"(cm), [dst] "r"(dst),
+          [src] "r"(src));
 
     /* Next row... */
     src += src_stride;
@@ -328,11 +318,9 @@ static void convolve_avg_horiz_8_dspr2(const uint8_t *src,
 }
 
 static void convolve_avg_horiz_16_dspr2(const uint8_t *src_ptr,
-                                        int32_t src_stride,
-                                        uint8_t *dst_ptr,
+                                        int32_t src_stride, uint8_t *dst_ptr,
                                         int32_t dst_stride,
-                                        const int16_t *filter_x0,
-                                        int32_t h,
+                                        const int16_t *filter_x0, int32_t h,
                                         int32_t count) {
   int32_t y, c;
   const uint8_t *src;
@@ -360,7 +348,7 @@ static void convolve_avg_horiz_16_dspr2(const uint8_t *src_ptr,
     prefetch_store(dst_ptr + dst_stride);
 
     for (c = 0; c < count; c++) {
-      __asm__ __volatile__ (
+      __asm__ __volatile__(
           "ulw              %[qload1],    0(%[src])                    \n\t"
           "ulw              %[qload2],    4(%[src])                    \n\t"
 
@@ -618,16 +606,15 @@ static void convolve_avg_horiz_16_dspr2(const uint8_t *src_ptr,
           "sb               %[qload3],    13(%[dst])                   \n\t" /* store odd 7 to dst */
           "sb               %[qload1],    15(%[dst])                   \n\t" /* store odd 8 to dst */
 
-          : [qload1] "=&r" (qload1), [qload2] "=&r" (qload2),
-            [st1] "=&r" (st1), [st2] "=&r" (st2), [st3] "=&r" (st3),
-            [p1] "=&r" (p1), [p2] "=&r" (p2), [p3] "=&r" (p3), [p4] "=&r" (p4),
-            [qload3] "=&r" (qload3), [p5] "=&r" (p5),
-            [Temp1] "=&r" (Temp1), [Temp2] "=&r" (Temp2), [Temp3] "=&r" (Temp3)
-          : [filter12] "r" (filter12), [filter34] "r" (filter34),
-            [filter56] "r" (filter56), [filter78] "r" (filter78),
-            [vector_64] "r" (vector_64),
-            [cm] "r" (cm), [dst] "r" (dst), [src] "r" (src)
-      );
+          : [qload1] "=&r"(qload1), [qload2] "=&r"(qload2), [st1] "=&r"(st1),
+            [st2] "=&r"(st2), [st3] "=&r"(st3), [p1] "=&r"(p1), [p2] "=&r"(p2),
+            [p3] "=&r"(p3), [p4] "=&r"(p4), [qload3] "=&r"(qload3),
+            [p5] "=&r"(p5), [Temp1] "=&r"(Temp1), [Temp2] "=&r"(Temp2),
+            [Temp3] "=&r"(Temp3)
+          : [filter12] "r"(filter12), [filter34] "r"(filter34),
+            [filter56] "r"(filter56), [filter78] "r"(filter78),
+            [vector_64] "r"(vector_64), [cm] "r"(cm), [dst] "r"(dst),
+            [src] "r"(src));
 
       src += 16;
       dst += 16;
@@ -640,11 +627,9 @@ static void convolve_avg_horiz_16_dspr2(const uint8_t *src_ptr,
 }
 
 static void convolve_avg_horiz_64_dspr2(const uint8_t *src_ptr,
-                                        int32_t src_stride,
-                                        uint8_t *dst_ptr,
+                                        int32_t src_stride, uint8_t *dst_ptr,
                                         int32_t dst_stride,
-                                        const int16_t *filter_x0,
-                                        int32_t h) {
+                                        const int16_t *filter_x0, int32_t h) {
   int32_t y, c;
   const uint8_t *src;
   uint8_t *dst;
@@ -673,7 +658,7 @@ static void convolve_avg_horiz_64_dspr2(const uint8_t *src_ptr,
     prefetch_store(dst_ptr + dst_stride + 32);
 
     for (c = 0; c < 4; c++) {
-      __asm__ __volatile__ (
+      __asm__ __volatile__(
           "ulw              %[qload1],    0(%[src])                    \n\t"
           "ulw              %[qload2],    4(%[src])                    \n\t"
 
@@ -931,16 +916,15 @@ static void convolve_avg_horiz_64_dspr2(const uint8_t *src_ptr,
           "sb               %[qload3],    13(%[dst])                   \n\t" /* store odd 7 to dst */
           "sb               %[qload1],    15(%[dst])                   \n\t" /* store odd 8 to dst */
 
-          : [qload1] "=&r" (qload1), [qload2] "=&r" (qload2),
-            [st1] "=&r" (st1), [st2] "=&r" (st2), [st3] "=&r" (st3),
-            [p1] "=&r" (p1), [p2] "=&r" (p2), [p3] "=&r" (p3), [p4] "=&r" (p4),
-            [qload3] "=&r" (qload3), [p5] "=&r" (p5),
-            [Temp1] "=&r" (Temp1), [Temp2] "=&r" (Temp2), [Temp3] "=&r" (Temp3)
-          : [filter12] "r" (filter12), [filter34] "r" (filter34),
-            [filter56] "r" (filter56), [filter78] "r" (filter78),
-            [vector_64] "r" (vector_64),
-            [cm] "r" (cm), [dst] "r" (dst), [src] "r" (src)
-      );
+          : [qload1] "=&r"(qload1), [qload2] "=&r"(qload2), [st1] "=&r"(st1),
+            [st2] "=&r"(st2), [st3] "=&r"(st3), [p1] "=&r"(p1), [p2] "=&r"(p2),
+            [p3] "=&r"(p3), [p4] "=&r"(p4), [qload3] "=&r"(qload3),
+            [p5] "=&r"(p5), [Temp1] "=&r"(Temp1), [Temp2] "=&r"(Temp2),
+            [Temp3] "=&r"(Temp3)
+          : [filter12] "r"(filter12), [filter34] "r"(filter34),
+            [filter56] "r"(filter56), [filter78] "r"(filter78),
+            [vector_64] "r"(vector_64), [cm] "r"(cm), [dst] "r"(dst),
+            [src] "r"(src));
 
       src += 16;
       dst += 16;
@@ -961,22 +945,17 @@ void vpx_convolve8_avg_horiz_dspr2(const uint8_t *src, ptrdiff_t src_stride,
   assert(((const int32_t *)filter_x)[1] != 0x800000);
 
   if (((const int32_t *)filter_x)[0] == 0) {
-    vpx_convolve2_avg_horiz_dspr2(src, src_stride,
-                                  dst, dst_stride,
-                                  filter_x, x_step_q4,
-                                  filter_y, y_step_q4,
-                                  w, h);
+    vpx_convolve2_avg_horiz_dspr2(src, src_stride, dst, dst_stride, filter_x,
+                                  x_step_q4, filter_y, y_step_q4, w, h);
   } else {
     uint32_t pos = 38;
 
     src -= 3;
 
     /* bit positon for extract from acc */
-    __asm__ __volatile__ (
-      "wrdsp      %[pos],     1           \n\t"
-      :
-      : [pos] "r" (pos)
-    );
+    __asm__ __volatile__("wrdsp      %[pos],     1           \n\t"
+                         :
+                         : [pos] "r"(pos));
 
     /* prefetch data to cache memory */
     prefetch_load(src);
@@ -985,39 +964,32 @@ void vpx_convolve8_avg_horiz_dspr2(const uint8_t *src, ptrdiff_t src_stride,
 
     switch (w) {
       case 4:
-        convolve_avg_horiz_4_dspr2(src, src_stride,
-                                   dst, dst_stride,
-                                   filter_x, h);
+        convolve_avg_horiz_4_dspr2(src, src_stride, dst, dst_stride, filter_x,
+                                   h);
         break;
       case 8:
-        convolve_avg_horiz_8_dspr2(src, src_stride,
-                                   dst, dst_stride,
-                                   filter_x, h);
+        convolve_avg_horiz_8_dspr2(src, src_stride, dst, dst_stride, filter_x,
+                                   h);
         break;
       case 16:
-        convolve_avg_horiz_16_dspr2(src, src_stride,
-                                    dst, dst_stride,
-                                    filter_x, h, 1);
+        convolve_avg_horiz_16_dspr2(src, src_stride, dst, dst_stride, filter_x,
+                                    h, 1);
         break;
       case 32:
-        convolve_avg_horiz_16_dspr2(src, src_stride,
-                                    dst, dst_stride,
-                                    filter_x, h, 2);
+        convolve_avg_horiz_16_dspr2(src, src_stride, dst, dst_stride, filter_x,
+                                    h, 2);
         break;
       case 64:
         prefetch_load(src + 64);
         prefetch_store(dst + 32);
 
-        convolve_avg_horiz_64_dspr2(src, src_stride,
-                                    dst, dst_stride,
-                                    filter_x, h);
+        convolve_avg_horiz_64_dspr2(src, src_stride, dst, dst_stride, filter_x,
+                                    h);
         break;
       default:
-        vpx_convolve8_avg_horiz_c(src + 3, src_stride,
-                                  dst, dst_stride,
-                                  filter_x, x_step_q4,
-                                  filter_y, y_step_q4,
-                                  w, h);
+        vpx_convolve8_avg_horiz_c(src + 3, src_stride, dst, dst_stride,
+                                  filter_x, x_step_q4, filter_y, y_step_q4, w,
+                                  h);
         break;
     }
   }

@@ -16,7 +16,7 @@
 #include "vp9/encoder/vp9_extend.h"
 #include "vpx_dsp/vpx_dsp_common.h"
 
-#define SMALL_FRAME_WIDTH  32
+#define SMALL_FRAME_WIDTH 32
 #define SMALL_FRAME_HEIGHT 16
 
 void vp9_init_layer_context(VP9_COMP *const cpi) {
@@ -33,9 +33,10 @@ void vp9_init_layer_context(VP9_COMP *const cpi) {
   svc->rc_drop_superframe = 0;
   svc->force_zero_mode_spatial_ref = 0;
   svc->use_base_mv = 0;
+  svc->scaled_temp_is_alloc = 0;
+  svc->scaled_one_half = 0;
   svc->current_superframe = 0;
-  for (i = 0; i < REF_FRAMES; ++i)
-    svc->ref_frame_index[i] = -1;
+  for (i = 0; i < REF_FRAMES; ++i) svc->ref_frame_index[i] = -1;
   for (sl = 0; sl < oxcf->ss_number_layers; ++sl) {
     cpi->svc.ext_frame_flags[sl] = 0;
     cpi->svc.ext_lst_fb_idx[sl] = 0;
@@ -43,37 +44,15 @@ void vp9_init_layer_context(VP9_COMP *const cpi) {
     cpi->svc.ext_alt_fb_idx[sl] = 2;
   }
 
-  // For 1 pass cbr: allocate scaled_frame that may be used as an intermediate
-  // buffer for a 2 stage down-sampling: two stages of 1:2 down-sampling for a
-  // target of 1/4x1/4.
-  if (cpi->oxcf.pass == 0 && cpi->oxcf.rc_mode == VPX_CBR) {
-    if (vpx_realloc_frame_buffer(&cpi->svc.scaled_temp,
-                                 cpi->common.width >> 1,
-                                 cpi->common.height >> 1,
-                                 cpi->common.subsampling_x,
-                                 cpi->common.subsampling_y,
-#if CONFIG_VP9_HIGHBITDEPTH
-                                 cpi->common.use_highbitdepth,
-#endif
-                                 VP9_ENC_BORDER_IN_PIXELS,
-                                 cpi->common.byte_alignment,
-                                 NULL, NULL, NULL))
-      vpx_internal_error(&cpi->common.error, VPX_CODEC_MEM_ERROR,
-                         "Failed to allocate scaled_frame for svc ");
-  }
-
-
   if (cpi->oxcf.error_resilient_mode == 0 && cpi->oxcf.pass == 2) {
-    if (vpx_realloc_frame_buffer(&cpi->svc.empty_frame.img,
-                                 SMALL_FRAME_WIDTH, SMALL_FRAME_HEIGHT,
-                                 cpi->common.subsampling_x,
+    if (vpx_realloc_frame_buffer(&cpi->svc.empty_frame.img, SMALL_FRAME_WIDTH,
+                                 SMALL_FRAME_HEIGHT, cpi->common.subsampling_x,
                                  cpi->common.subsampling_y,
 #if CONFIG_VP9_HIGHBITDEPTH
                                  cpi->common.use_highbitdepth,
 #endif
                                  VP9_ENC_BORDER_IN_PIXELS,
-                                 cpi->common.byte_alignment,
-                                 NULL, NULL, NULL))
+                                 cpi->common.byte_alignment, NULL, NULL, NULL))
       vpx_internal_error(&cpi->common.error, VPX_CODEC_MEM_ERROR,
                          "Failed to allocate empty frame for multiple frame "
                          "contexts");
@@ -115,10 +94,10 @@ void vp9_init_layer_context(VP9_COMP *const cpi) {
         lc->target_bandwidth = oxcf->layer_target_bitrate[layer];
         lrc->last_q[KEY_FRAME] = oxcf->best_allowed_q;
         lrc->last_q[INTER_FRAME] = oxcf->best_allowed_q;
-        lrc->avg_frame_qindex[KEY_FRAME] = (oxcf->worst_allowed_q +
-                                            oxcf->best_allowed_q) / 2;
-        lrc->avg_frame_qindex[INTER_FRAME] = (oxcf->worst_allowed_q +
-                                              oxcf->best_allowed_q) / 2;
+        lrc->avg_frame_qindex[KEY_FRAME] =
+            (oxcf->worst_allowed_q + oxcf->best_allowed_q) / 2;
+        lrc->avg_frame_qindex[INTER_FRAME] =
+            (oxcf->worst_allowed_q + oxcf->best_allowed_q) / 2;
         if (oxcf->ss_enable_auto_arf[sl])
           lc->alt_ref_idx = alt_ref_idx++;
         else
@@ -126,16 +105,15 @@ void vp9_init_layer_context(VP9_COMP *const cpi) {
         lc->gold_ref_idx = INVALID_IDX;
       }
 
-      lrc->buffer_level = oxcf->starting_buffer_level_ms *
-                              lc->target_bandwidth / 1000;
+      lrc->buffer_level =
+          oxcf->starting_buffer_level_ms * lc->target_bandwidth / 1000;
       lrc->bits_off_target = lrc->buffer_level;
 
       // Initialize the cyclic refresh parameters. If spatial layers are used
       // (i.e., ss_number_layers > 1), these need to be updated per spatial
       // layer.
       // Cyclic refresh is only applied on base temporal layer.
-      if (oxcf->ss_number_layers > 1 &&
-          tl == 0) {
+      if (oxcf->ss_number_layers > 1 && tl == 0) {
         size_t last_coded_q_map_size;
         size_t consec_zero_mv_size;
         VP9_COMMON *const cm = &cpi->common;
@@ -143,8 +121,8 @@ void vp9_init_layer_context(VP9_COMP *const cpi) {
         CHECK_MEM_ERROR(cm, lc->map,
                         vpx_malloc(mi_rows * mi_cols * sizeof(*lc->map)));
         memset(lc->map, 0, mi_rows * mi_cols);
-        last_coded_q_map_size = mi_rows * mi_cols *
-                                sizeof(*lc->last_coded_q_map);
+        last_coded_q_map_size =
+            mi_rows * mi_cols * sizeof(*lc->last_coded_q_map);
         CHECK_MEM_ERROR(cm, lc->last_coded_q_map,
                         vpx_malloc(last_coded_q_map_size));
         assert(MAXQ <= 255);
@@ -153,13 +131,13 @@ void vp9_init_layer_context(VP9_COMP *const cpi) {
         CHECK_MEM_ERROR(cm, lc->consec_zero_mv,
                         vpx_malloc(consec_zero_mv_size));
         memset(lc->consec_zero_mv, 0, consec_zero_mv_size);
-       }
+      }
     }
   }
 
   // Still have extra buffer for base layer golden frame
-  if (!(svc->number_temporal_layers > 1 && cpi->oxcf.rc_mode == VPX_CBR)
-      && alt_ref_idx < REF_FRAMES)
+  if (!(svc->number_temporal_layers > 1 && cpi->oxcf.rc_mode == VPX_CBR) &&
+      alt_ref_idx < REF_FRAMES)
     svc->layer_context[0].gold_ref_idx = alt_ref_idx;
 }
 
@@ -180,11 +158,12 @@ void vp9_update_layer_context_change_config(VP9_COMP *const cpi,
             oxcf->layer_target_bitrate[layer];
       }
 
-      layer = LAYER_IDS_TO_IDX(sl, ((oxcf->ts_number_layers - 1) < 0 ?
-          0 : (oxcf->ts_number_layers - 1)), oxcf->ts_number_layers);
-      spatial_layer_target =
-          svc->layer_context[layer].target_bandwidth =
-              oxcf->layer_target_bitrate[layer];
+      layer = LAYER_IDS_TO_IDX(
+          sl,
+          ((oxcf->ts_number_layers - 1) < 0 ? 0 : (oxcf->ts_number_layers - 1)),
+          oxcf->ts_number_layers);
+      spatial_layer_target = svc->layer_context[layer].target_bandwidth =
+          oxcf->layer_target_bitrate[layer];
 
       for (tl = 0; tl < oxcf->ts_number_layers; ++tl) {
         LAYER_CONTEXT *const lc =
@@ -232,8 +211,8 @@ void vp9_update_layer_context_change_config(VP9_COMP *const cpi,
           (int64_t)(rc->optimal_buffer_level * bitrate_alloc);
       lrc->maximum_buffer_size =
           (int64_t)(rc->maximum_buffer_size * bitrate_alloc);
-      lrc->bits_off_target = VPXMIN(lrc->bits_off_target,
-                                    lrc->maximum_buffer_size);
+      lrc->bits_off_target =
+          VPXMIN(lrc->bits_off_target, lrc->maximum_buffer_size);
       lrc->buffer_level = VPXMIN(lrc->buffer_level, lrc->maximum_buffer_size);
       // Update framerate-related quantities.
       if (svc->number_temporal_layers > 1 && cpi->oxcf.rc_mode == VPX_CBR) {
@@ -253,12 +232,12 @@ void vp9_update_layer_context_change_config(VP9_COMP *const cpi,
 static LAYER_CONTEXT *get_layer_context(VP9_COMP *const cpi) {
   if (is_one_pass_cbr_svc(cpi))
     return &cpi->svc.layer_context[cpi->svc.spatial_layer_id *
-        cpi->svc.number_temporal_layers + cpi->svc.temporal_layer_id];
+                                       cpi->svc.number_temporal_layers +
+                                   cpi->svc.temporal_layer_id];
   else
-    return (cpi->svc.number_temporal_layers > 1 &&
-            cpi->oxcf.rc_mode == VPX_CBR) ?
-             &cpi->svc.layer_context[cpi->svc.temporal_layer_id] :
-             &cpi->svc.layer_context[cpi->svc.spatial_layer_id];
+    return (cpi->svc.number_temporal_layers > 1 && cpi->oxcf.rc_mode == VPX_CBR)
+               ? &cpi->svc.layer_context[cpi->svc.temporal_layer_id]
+               : &cpi->svc.layer_context[cpi->svc.spatial_layer_id];
 }
 
 void vp9_update_temporal_layer_framerate(VP9_COMP *const cpi) {
@@ -268,7 +247,7 @@ void vp9_update_temporal_layer_framerate(VP9_COMP *const cpi) {
   RATE_CONTROL *const lrc = &lc->rc;
   // Index into spatial+temporal arrays.
   const int st_idx = svc->spatial_layer_id * svc->number_temporal_layers +
-      svc->temporal_layer_id;
+                     svc->temporal_layer_id;
   const int tl = svc->temporal_layer_id;
 
   lc->framerate = cpi->framerate / oxcf->ts_rate_decimator[tl];
@@ -295,10 +274,11 @@ void vp9_update_spatial_layer_framerate(VP9_COMP *const cpi, double framerate) {
 
   lc->framerate = framerate;
   lrc->avg_frame_bandwidth = (int)(lc->target_bandwidth / lc->framerate);
-  lrc->min_frame_bandwidth = (int)(lrc->avg_frame_bandwidth *
-                                   oxcf->two_pass_vbrmin_section / 100);
+  lrc->min_frame_bandwidth =
+      (int)(lrc->avg_frame_bandwidth * oxcf->two_pass_vbrmin_section / 100);
   lrc->max_frame_bandwidth = (int)(((int64_t)lrc->avg_frame_bandwidth *
-                                   oxcf->two_pass_vbrmax_section) / 100);
+                                    oxcf->two_pass_vbrmax_section) /
+                                   100);
   vp9_rc_set_gf_interval_range(cpi, lrc);
 }
 
@@ -311,6 +291,11 @@ void vp9_restore_layer_context(VP9_COMP *const cpi) {
   cpi->twopass = lc->twopass;
   cpi->oxcf.target_bandwidth = lc->target_bandwidth;
   cpi->alt_ref_source = lc->alt_ref_source;
+  // Check if it is one_pass_cbr_svc mode and lc->speed > 0 (real-time mode
+  // does not use speed = 0).
+  if (is_one_pass_cbr_svc(cpi) && lc->speed > 0) {
+    cpi->oxcf.speed = lc->speed;
+  }
   // Reset the frames_since_key and frames_to_key counters to their values
   // before the layer restore. Keep these defined for the stream (not layer).
   if (cpi->svc.number_temporal_layers > 1 ||
@@ -322,8 +307,7 @@ void vp9_restore_layer_context(VP9_COMP *const cpi) {
   // For spatial-svc, allow cyclic-refresh to be applied on the spatial layers,
   // for the base temporal layer.
   if (cpi->oxcf.aq_mode == CYCLIC_REFRESH_AQ &&
-      cpi->svc.number_spatial_layers > 1 &&
-      cpi->svc.temporal_layer_id == 0) {
+      cpi->svc.number_spatial_layers > 1 && cpi->svc.temporal_layer_id == 0) {
     CYCLIC_REFRESH *const cr = cpi->cyclic_refresh;
     signed char *temp = cr->map;
     uint8_t *temp2 = cr->last_coded_q_map;
@@ -350,8 +334,7 @@ void vp9_save_layer_context(VP9_COMP *const cpi) {
   // For spatial-svc, allow cyclic-refresh to be applied on the spatial layers,
   // for the base temporal layer.
   if (cpi->oxcf.aq_mode == CYCLIC_REFRESH_AQ &&
-      cpi->svc.number_spatial_layers > 1 &&
-      cpi->svc.temporal_layer_id == 0) {
+      cpi->svc.number_spatial_layers > 1 && cpi->svc.temporal_layer_id == 0) {
     CYCLIC_REFRESH *const cr = cpi->cyclic_refresh;
     signed char *temp = lc->map;
     uint8_t *temp2 = lc->last_coded_q_map;
@@ -393,20 +376,20 @@ void vp9_inc_frame_in_layer(VP9_COMP *const cpi) {
 }
 
 int vp9_is_upper_layer_key_frame(const VP9_COMP *const cpi) {
-  return is_two_pass_svc(cpi) &&
-         cpi->svc.spatial_layer_id > 0 &&
-         cpi->svc.layer_context[cpi->svc.spatial_layer_id *
+  return is_two_pass_svc(cpi) && cpi->svc.spatial_layer_id > 0 &&
+         cpi->svc
+             .layer_context[cpi->svc.spatial_layer_id *
                                 cpi->svc.number_temporal_layers +
-                                cpi->svc.temporal_layer_id].is_key_frame;
+                            cpi->svc.temporal_layer_id]
+             .is_key_frame;
 }
 
 static void get_layer_resolution(const int width_org, const int height_org,
-                                 const int num, const int den,
-                                 int *width_out, int *height_out) {
+                                 const int num, const int den, int *width_out,
+                                 int *height_out) {
   int w, h;
 
-  if (width_out == NULL || height_out == NULL || den == 0)
-    return;
+  if (width_out == NULL || height_out == NULL || den == 0) return;
 
   w = width_org * num / den;
   h = height_org * num / den;
@@ -427,11 +410,15 @@ static void set_flags_and_fb_idx_for_temporal_mode3(VP9_COMP *const cpi) {
   int spatial_id, temporal_id;
   spatial_id = cpi->svc.spatial_layer_id = cpi->svc.spatial_layer_to_encode;
   frame_num_within_temporal_struct =
-      cpi->svc.layer_context[cpi->svc.spatial_layer_id *
-      cpi->svc.number_temporal_layers].current_video_frame_in_layer % 4;
+      cpi->svc
+          .layer_context[cpi->svc.spatial_layer_id *
+                         cpi->svc.number_temporal_layers]
+          .current_video_frame_in_layer %
+      4;
   temporal_id = cpi->svc.temporal_layer_id =
-      (frame_num_within_temporal_struct & 1) ? 2 :
-      (frame_num_within_temporal_struct >> 1);
+      (frame_num_within_temporal_struct & 1)
+          ? 2
+          : (frame_num_within_temporal_struct >> 1);
   cpi->ext_refresh_last_frame = cpi->ext_refresh_golden_frame =
       cpi->ext_refresh_alt_ref_frame = 0;
   if (!temporal_id) {
@@ -478,7 +465,7 @@ static void set_flags_and_fb_idx_for_temporal_mode3(VP9_COMP *const cpi) {
       if (spatial_id == cpi->svc.number_spatial_layers - 1) {  // top layer
         cpi->ext_refresh_frame_flags_pending = 1;
         if (!spatial_id)
-        cpi->ref_frame_flags = VP9_LAST_FLAG;
+          cpi->ref_frame_flags = VP9_LAST_FLAG;
         else
           cpi->ref_frame_flags = VP9_LAST_FLAG | VP9_GOLD_FLAG;
       } else if (!spatial_id) {
@@ -499,7 +486,7 @@ static void set_flags_and_fb_idx_for_temporal_mode3(VP9_COMP *const cpi) {
         cpi->lst_fb_idx = spatial_id - 1;
         cpi->gld_fb_idx = spatial_id;
       } else {
-      cpi->gld_fb_idx = spatial_id - 1;
+        cpi->gld_fb_idx = spatial_id - 1;
       }
     } else {
       cpi->gld_fb_idx = 0;
@@ -527,10 +514,13 @@ static void set_flags_and_fb_idx_for_temporal_mode2(VP9_COMP *const cpi) {
   int spatial_id, temporal_id;
   spatial_id = cpi->svc.spatial_layer_id = cpi->svc.spatial_layer_to_encode;
   temporal_id = cpi->svc.temporal_layer_id =
-      cpi->svc.layer_context[cpi->svc.spatial_layer_id *
-      cpi->svc.number_temporal_layers].current_video_frame_in_layer & 1;
+      cpi->svc
+          .layer_context[cpi->svc.spatial_layer_id *
+                         cpi->svc.number_temporal_layers]
+          .current_video_frame_in_layer &
+      1;
   cpi->ext_refresh_last_frame = cpi->ext_refresh_golden_frame =
-                                cpi->ext_refresh_alt_ref_frame = 0;
+      cpi->ext_refresh_alt_ref_frame = 0;
   if (!temporal_id) {
     cpi->ext_refresh_frame_flags_pending = 1;
     cpi->ext_refresh_last_frame = 1;
@@ -561,7 +551,7 @@ static void set_flags_and_fb_idx_for_temporal_mode2(VP9_COMP *const cpi) {
         cpi->lst_fb_idx = spatial_id - 1;
         cpi->gld_fb_idx = spatial_id;
       } else {
-      cpi->gld_fb_idx = spatial_id - 1;
+        cpi->gld_fb_idx = spatial_id - 1;
       }
     } else {
       cpi->gld_fb_idx = 0;
@@ -580,8 +570,8 @@ static void set_flags_and_fb_idx_for_temporal_mode_noLayering(
     VP9_COMP *const cpi) {
   int spatial_id;
   spatial_id = cpi->svc.spatial_layer_id = cpi->svc.spatial_layer_to_encode;
-  cpi->ext_refresh_last_frame =
-      cpi->ext_refresh_golden_frame = cpi->ext_refresh_alt_ref_frame = 0;
+  cpi->ext_refresh_last_frame = cpi->ext_refresh_golden_frame =
+      cpi->ext_refresh_alt_ref_frame = 0;
   cpi->ext_refresh_frame_flags_pending = 1;
   cpi->ext_refresh_last_frame = 1;
   if (!spatial_id) {
@@ -599,7 +589,7 @@ static void set_flags_and_fb_idx_for_temporal_mode_noLayering(
       cpi->lst_fb_idx = spatial_id - 1;
       cpi->gld_fb_idx = spatial_id;
     } else {
-    cpi->gld_fb_idx = spatial_id - 1;
+      cpi->gld_fb_idx = spatial_id - 1;
     }
   } else {
     cpi->gld_fb_idx = 0;
@@ -609,20 +599,19 @@ static void set_flags_and_fb_idx_for_temporal_mode_noLayering(
 int vp9_one_pass_cbr_svc_start_layer(VP9_COMP *const cpi) {
   int width = 0, height = 0;
   LAYER_CONTEXT *lc = NULL;
-  if (cpi->svc.number_spatial_layers > 1)
-    cpi->svc.use_base_mv = 1;
+  if (cpi->svc.number_spatial_layers > 1) cpi->svc.use_base_mv = 1;
   cpi->svc.force_zero_mode_spatial_ref = 1;
 
   if (cpi->svc.temporal_layering_mode == VP9E_TEMPORAL_LAYERING_MODE_0212) {
     set_flags_and_fb_idx_for_temporal_mode3(cpi);
   } else if (cpi->svc.temporal_layering_mode ==
-           VP9E_TEMPORAL_LAYERING_MODE_NOLAYERING) {
+             VP9E_TEMPORAL_LAYERING_MODE_NOLAYERING) {
     set_flags_and_fb_idx_for_temporal_mode_noLayering(cpi);
   } else if (cpi->svc.temporal_layering_mode ==
-           VP9E_TEMPORAL_LAYERING_MODE_0101) {
+             VP9E_TEMPORAL_LAYERING_MODE_0101) {
     set_flags_and_fb_idx_for_temporal_mode2(cpi);
   } else if (cpi->svc.temporal_layering_mode ==
-      VP9E_TEMPORAL_LAYERING_MODE_BYPASS) {
+             VP9E_TEMPORAL_LAYERING_MODE_BYPASS) {
     // In the BYPASS/flexible mode, the encoder is relying on the application
     // to specify, for each spatial layer, the flags and buffer indices for the
     // layering.
@@ -646,7 +635,7 @@ int vp9_one_pass_cbr_svc_start_layer(VP9_COMP *const cpi) {
     cpi->svc.rc_drop_superframe = 0;
 
   lc = &cpi->svc.layer_context[cpi->svc.spatial_layer_id *
-                               cpi->svc.number_temporal_layers +
+                                   cpi->svc.number_temporal_layers +
                                cpi->svc.temporal_layer_id];
 
   // Setting the worst/best_quality via the encoder control: SET_SVC_PARAMETERS,
@@ -654,12 +643,27 @@ int vp9_one_pass_cbr_svc_start_layer(VP9_COMP *const cpi) {
   if (cpi->svc.temporal_layering_mode != VP9E_TEMPORAL_LAYERING_MODE_BYPASS) {
     RATE_CONTROL *const lrc = &lc->rc;
     lrc->worst_quality = vp9_quantizer_to_qindex(lc->max_q);
-    lrc->best_quality =  vp9_quantizer_to_qindex(lc->min_q);
+    lrc->best_quality = vp9_quantizer_to_qindex(lc->min_q);
   }
 
   get_layer_resolution(cpi->oxcf.width, cpi->oxcf.height,
-                       lc->scaling_factor_num, lc->scaling_factor_den,
-                       &width, &height);
+                       lc->scaling_factor_num, lc->scaling_factor_den, &width,
+                       &height);
+
+  // The usage of use_base_mv assumes down-scale of 2x2. For now, turn off use
+  // of base motion vectors if spatial scale factors for any layers are not 2.
+  // TODO(marpan): Fix this to allow for use_base_mv for scale factors != 2.
+  if (cpi->svc.number_spatial_layers > 1) {
+    int sl;
+    for (sl = 0; sl < cpi->svc.number_spatial_layers - 1; ++sl) {
+      lc = &cpi->svc.layer_context[sl * cpi->svc.number_temporal_layers +
+                                   cpi->svc.temporal_layer_id];
+      if (lc->scaling_factor_num != lc->scaling_factor_den >> 1) {
+        cpi->svc.use_base_mv = 0;
+        break;
+      }
+    }
+  }
 
   if (vp9_set_size_literal(cpi, width, height) != 0)
     return VPX_CODEC_INVALID_PARAM;
@@ -690,8 +694,8 @@ int vp9_svc_start_frame(VP9_COMP *const cpi) {
   cpi->lst_fb_idx = cpi->svc.spatial_layer_id;
 
   if (cpi->svc.spatial_layer_id == 0)
-    cpi->gld_fb_idx = (lc->gold_ref_idx >= 0) ?
-                      lc->gold_ref_idx : cpi->lst_fb_idx;
+    cpi->gld_fb_idx =
+        (lc->gold_ref_idx >= 0) ? lc->gold_ref_idx : cpi->lst_fb_idx;
   else
     cpi->gld_fb_idx = cpi->svc.spatial_layer_id - 1;
 
@@ -705,8 +709,7 @@ int vp9_svc_start_frame(VP9_COMP *const cpi) {
   } else {
     if (cpi->oxcf.ss_enable_auto_arf[cpi->svc.spatial_layer_id]) {
       cpi->alt_fb_idx = lc->alt_ref_idx;
-      if (!lc->has_alt_frame)
-        cpi->ref_frame_flags &= (~VP9_ALT_FLAG);
+      if (!lc->has_alt_frame) cpi->ref_frame_flags &= (~VP9_ALT_FLAG);
     } else {
       // Find a proper alt_fb_idx for layers that don't have alt ref frame
       if (cpi->svc.spatial_layer_id == 0) {
@@ -727,8 +730,8 @@ int vp9_svc_start_frame(VP9_COMP *const cpi) {
   }
 
   get_layer_resolution(cpi->oxcf.width, cpi->oxcf.height,
-                       lc->scaling_factor_num, lc->scaling_factor_den,
-                       &width, &height);
+                       lc->scaling_factor_num, lc->scaling_factor_den, &width,
+                       &height);
 
   // Workaround for multiple frame contexts. In some frames we can't use prev_mi
   // since its previous frame could be changed during decoding time. The idea is
@@ -753,11 +756,10 @@ int vp9_svc_start_frame(VP9_COMP *const cpi) {
         cpi->common.show_frame = 0;
         cpi->ref_frame_flags = 0;
         cpi->common.frame_type = INTER_FRAME;
-        cpi->lst_fb_idx =
-            cpi->gld_fb_idx = cpi->alt_fb_idx = SMALL_FRAME_FB_IDX;
+        cpi->lst_fb_idx = cpi->gld_fb_idx = cpi->alt_fb_idx =
+            SMALL_FRAME_FB_IDX;
 
-        if (cpi->svc.encode_intra_empty_frame != 0)
-          cpi->common.intra_only = 1;
+        if (cpi->svc.encode_intra_empty_frame != 0) cpi->common.intra_only = 1;
 
         width = SMALL_FRAME_WIDTH;
         height = SMALL_FRAME_HEIGHT;
@@ -807,12 +809,9 @@ void vp9_free_svc_cyclic_refresh(VP9_COMP *const cpi) {
     for (tl = 0; tl < oxcf->ts_number_layers; ++tl) {
       int layer = LAYER_IDS_TO_IDX(sl, tl, oxcf->ts_number_layers);
       LAYER_CONTEXT *const lc = &svc->layer_context[layer];
-        if (lc->map)
-          vpx_free(lc->map);
-        if (lc->last_coded_q_map)
-          vpx_free(lc->last_coded_q_map);
-        if (lc->consec_zero_mv)
-          vpx_free(lc->consec_zero_mv);
+      if (lc->map) vpx_free(lc->map);
+      if (lc->last_coded_q_map) vpx_free(lc->last_coded_q_map);
+      if (lc->consec_zero_mv) vpx_free(lc->consec_zero_mv);
     }
   }
 }
@@ -833,9 +832,9 @@ void vp9_svc_reset_key_frame(VP9_COMP *const cpi) {
     set_flags_and_fb_idx_for_temporal_mode3(cpi);
   } else if (svc->temporal_layering_mode ==
              VP9E_TEMPORAL_LAYERING_MODE_NOLAYERING) {
-     set_flags_and_fb_idx_for_temporal_mode_noLayering(cpi);
+    set_flags_and_fb_idx_for_temporal_mode_noLayering(cpi);
   } else if (svc->temporal_layering_mode == VP9E_TEMPORAL_LAYERING_MODE_0101) {
-     set_flags_and_fb_idx_for_temporal_mode2(cpi);
+    set_flags_and_fb_idx_for_temporal_mode2(cpi);
   }
   vp9_update_temporal_layer_framerate(cpi);
   vp9_restore_layer_context(cpi);

@@ -29,8 +29,7 @@ static INLINE void mutex_lock(pthread_mutex_t *const mutex) {
     }
   }
 
-  if (!locked)
-    pthread_mutex_lock(mutex);
+  if (!locked) pthread_mutex_lock(mutex);
 }
 #endif  // CONFIG_MULTITHREAD
 
@@ -64,8 +63,7 @@ static INLINE void sync_write(VP9LfSync *const lf_sync, int r, int c,
 
   if (c < sb_cols - 1) {
     cur = c;
-    if (c % nsync)
-      sig = 0;
+    if (c % nsync) sig = 0;
   } else {
     cur = sb_cols + nsync;
   }
@@ -87,12 +85,10 @@ static INLINE void sync_write(VP9LfSync *const lf_sync, int r, int c,
 }
 
 // Implement row loopfiltering for each thread.
-static INLINE
-void thread_loop_filter_rows(const YV12_BUFFER_CONFIG *const frame_buffer,
-                             VP9_COMMON *const cm,
-                             struct macroblockd_plane planes[MAX_MB_PLANE],
-                             int start, int stop, int y_only,
-                             VP9LfSync *const lf_sync) {
+static INLINE void thread_loop_filter_rows(
+    const YV12_BUFFER_CONFIG *const frame_buffer, VP9_COMMON *const cm,
+    struct macroblockd_plane planes[MAX_MB_PLANE], int start, int stop,
+    int y_only, VP9LfSync *const lf_sync) {
   const int num_planes = y_only ? 1 : MAX_MB_PLANE;
   const int sb_cols = mi_cols_aligned_to_sb(cm->mi_cols) >> MI_BLOCK_SIZE_LOG2;
   int mi_row, mi_col;
@@ -152,8 +148,7 @@ static int loop_filter_row_worker(VP9LfSync *const lf_sync,
   return 1;
 }
 
-static void loop_filter_rows_mt(YV12_BUFFER_CONFIG *frame,
-                                VP9_COMMON *cm,
+static void loop_filter_rows_mt(YV12_BUFFER_CONFIG *frame, VP9_COMMON *cm,
                                 struct macroblockd_plane planes[MAX_MB_PLANE],
                                 int start, int stop, int y_only,
                                 VPxWorker *workers, int nworkers,
@@ -212,13 +207,11 @@ static void loop_filter_rows_mt(YV12_BUFFER_CONFIG *frame,
   }
 }
 
-void vp9_loop_filter_frame_mt(YV12_BUFFER_CONFIG *frame,
-                              VP9_COMMON *cm,
+void vp9_loop_filter_frame_mt(YV12_BUFFER_CONFIG *frame, VP9_COMMON *cm,
                               struct macroblockd_plane planes[MAX_MB_PLANE],
-                              int frame_filter_level,
-                              int y_only, int partial_frame,
-                              VPxWorker *workers, int num_workers,
-                              VP9LfSync *lf_sync) {
+                              int frame_filter_level, int y_only,
+                              int partial_frame, VPxWorker *workers,
+                              int num_workers, VP9LfSync *lf_sync) {
   int start_mi_row, end_mi_row, mi_rows_to_filter;
 
   if (!frame_filter_level) return;
@@ -233,8 +226,8 @@ void vp9_loop_filter_frame_mt(YV12_BUFFER_CONFIG *frame,
   end_mi_row = start_mi_row + mi_rows_to_filter;
   vp9_loop_filter_frame_init(cm, frame_filter_level);
 
-  loop_filter_rows_mt(frame, cm, planes, start_mi_row, end_mi_row,
-                      y_only, workers, num_workers, lf_sync);
+  loop_filter_rows_mt(frame, cm, planes, start_mi_row, end_mi_row, y_only,
+                      workers, num_workers, lf_sync);
 }
 
 // Set up nsync by width.
@@ -342,8 +335,7 @@ void vp9_accumulate_frame_counts(FRAME_COUNTS *accum,
               accum->eob_branch[i][j][k][l][m] +=
                   counts->eob_branch[i][j][k][l][m];
               for (n = 0; n < UNCONSTRAINED_NODES + 1; n++)
-                accum->coef[i][j][k][l][m][n] +=
-                    counts->coef[i][j][k][l][m][n];
+                accum->coef[i][j][k][l][m][n] += counts->coef[i][j][k][l][m][n];
             }
   } else {
     for (i = 0; i < TX_SIZES; i++)
@@ -353,11 +345,11 @@ void vp9_accumulate_frame_counts(FRAME_COUNTS *accum,
             for (m = 0; m < COEFF_CONTEXTS; m++)
               accum->eob_branch[i][j][k][l][m] +=
                   counts->eob_branch[i][j][k][l][m];
-                // In the encoder, coef is only updated at frame
-                // level, so not need to accumulate it here.
-                // for (n = 0; n < UNCONSTRAINED_NODES + 1; n++)
-                //   accum->coef[i][j][k][l][m][n] +=
-                //       counts->coef[i][j][k][l][m][n];
+    // In the encoder, coef is only updated at frame
+    // level, so not need to accumulate it here.
+    // for (n = 0; n < UNCONSTRAINED_NODES + 1; n++)
+    //   accum->coef[i][j][k][l][m][n] +=
+    //       counts->coef[i][j][k][l][m][n];
   }
 
   for (i = 0; i < SWITCHABLE_FILTER_CONTEXTS; i++)
@@ -373,17 +365,15 @@ void vp9_accumulate_frame_counts(FRAME_COUNTS *accum,
       accum->intra_inter[i][j] += counts->intra_inter[i][j];
 
   for (i = 0; i < COMP_INTER_CONTEXTS; i++)
-    for (j = 0; j < 2; j++)
-      accum->comp_inter[i][j] += counts->comp_inter[i][j];
+    for (j = 0; j < 2; j++) accum->comp_inter[i][j] += counts->comp_inter[i][j];
 
   for (i = 0; i < REF_CONTEXTS; i++)
     for (j = 0; j < 2; j++)
       for (k = 0; k < 2; k++)
-      accum->single_ref[i][j][k] += counts->single_ref[i][j][k];
+        accum->single_ref[i][j][k] += counts->single_ref[i][j][k];
 
   for (i = 0; i < REF_CONTEXTS; i++)
-    for (j = 0; j < 2; j++)
-      accum->comp_ref[i][j] += counts->comp_ref[i][j];
+    for (j = 0; j < 2; j++) accum->comp_ref[i][j] += counts->comp_ref[i][j];
 
   for (i = 0; i < TX_SIZE_CONTEXTS; i++) {
     for (j = 0; j < TX_SIZES; j++)
@@ -400,11 +390,9 @@ void vp9_accumulate_frame_counts(FRAME_COUNTS *accum,
     accum->tx.tx_totals[i] += counts->tx.tx_totals[i];
 
   for (i = 0; i < SKIP_CONTEXTS; i++)
-    for (j = 0; j < 2; j++)
-      accum->skip[i][j] += counts->skip[i][j];
+    for (j = 0; j < 2; j++) accum->skip[i][j] += counts->skip[i][j];
 
-  for (i = 0; i < MV_JOINTS; i++)
-    accum->mv.joints[i] += counts->mv.joints[i];
+  for (i = 0; i < MV_JOINTS; i++) accum->mv.joints[i] += counts->mv.joints[i];
 
   for (k = 0; k < 2; k++) {
     nmv_component_counts *const comps = &accum->mv.comps[k];
@@ -416,8 +404,7 @@ void vp9_accumulate_frame_counts(FRAME_COUNTS *accum,
       comps->hp[i] += comps_t->hp[i];
     }
 
-    for (i = 0; i < MV_CLASSES; i++)
-      comps->classes[i] += comps_t->classes[i];
+    for (i = 0; i < MV_CLASSES; i++) comps->classes[i] += comps_t->classes[i];
 
     for (i = 0; i < CLASS0_SIZE; i++) {
       comps->class0[i] += comps_t->class0[i];
@@ -426,10 +413,8 @@ void vp9_accumulate_frame_counts(FRAME_COUNTS *accum,
     }
 
     for (i = 0; i < MV_OFFSET_BITS; i++)
-      for (j = 0; j < 2; j++)
-        comps->bits[i][j] += comps_t->bits[i][j];
+      for (j = 0; j < 2; j++) comps->bits[i][j] += comps_t->bits[i][j];
 
-    for (i = 0; i < MV_FP_SIZE; i++)
-      comps->fp[i] += comps_t->fp[i];
+    for (i = 0; i < MV_FP_SIZE; i++) comps->fp[i] += comps_t->fp[i];
   }
 }

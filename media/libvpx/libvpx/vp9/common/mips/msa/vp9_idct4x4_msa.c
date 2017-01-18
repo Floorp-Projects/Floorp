@@ -50,9 +50,7 @@ void vp9_iht4x4_16_add_msa(const int16_t *input, uint8_t *dst,
       TRANSPOSE4x4_SH_SH(in0, in1, in2, in3, in0, in1, in2, in3);
       VP9_IADST4x4(in0, in1, in2, in3, in0, in1, in2, in3);
       break;
-    default:
-      assert(0);
-      break;
+    default: assert(0); break;
   }
 
   /* final rounding (add 2^3, divide by 2^4) and shift */
