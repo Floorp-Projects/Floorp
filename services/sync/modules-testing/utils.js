@@ -15,7 +15,6 @@ this.EXPORTED_SYMBOLS = [
   "waitForZeroTimer",
   "promiseZeroTimer",
   "promiseNamedTimer",
-  "add_identity_test",
   "MockFxaStorageManager",
   "AccountState", // from a module import
   "sumHistogram",
@@ -259,32 +258,6 @@ this.encryptPayload = function encryptPayload(cleartext) {
     IV: "irrelevant",
     hmac: fakeSHA256HMAC(cleartext, CryptoUtils.makeHMACKey("")),
   };
-}
-
-// This helper can be used instead of 'add_test' or 'add_task' to run the
-// specified test function with different identity managers.
-// So far we use this with one, the FxA one, but we keep it in case we change
-// idmanagers again.
-//
-// * The test itself should be passed as 'test' - ie, test code will generally
-//   pass |this|.
-// * The test function is a regular test function - although note that it must
-//   be a generator - async operations should yield them, and run_next_test
-//   mustn't be called.
-this.add_identity_test = function(test, testFunction) {
-  function note(what) {
-    let msg = "running test " + testFunction.name + " with " + what + " identity manager";
-    test.do_print(msg);
-  }
-  let ns = {};
-  Cu.import("resource://services-sync/service.js", ns);
-  test.add_task(async function() {
-    note("FxAccounts");
-    let oldIdentity = Status._authManager;
-    Status.__authManager = ns.Service.identity = new BrowserIDManager();
-    await testFunction();
-    Status.__authManager = ns.Service.identity = oldIdentity;
-  });
 }
 
 this.sumHistogram = function(name, options = {}) {
