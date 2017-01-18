@@ -10,7 +10,6 @@
 #include "GMPTimerChild.h"
 #include "GMPStorageChild.h"
 #include "GMPLoader.h"
-#include "gmp-async-shutdown.h"
 #include "gmp-entrypoints.h"
 #include "prlink.h"
 
@@ -20,7 +19,6 @@ namespace gmp {
 class GMPContentChild;
 
 class GMPChild : public PGMPChild
-               , public GMPAsyncShutdownHost
 {
 public:
   GMPChild();
@@ -36,9 +34,6 @@ public:
   // Main thread only.
   GMPTimerChild* GetGMPTimers();
   GMPStorageChild* GetGMPStorage();
-
-  // GMPAsyncShutdownHost
-  void ShutdownComplete() override;
 
 #if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
   bool SetMacSandboxInfo(MacSandboxPluginType aPluginType);
@@ -70,7 +65,6 @@ private:
   void GMPContentChildActorDestroy(GMPContentChild* aGMPContentChild);
 
   mozilla::ipc::IPCResult RecvCrashPluginNow() override;
-  mozilla::ipc::IPCResult RecvBeginAsyncShutdown() override;
   mozilla::ipc::IPCResult RecvCloseActive() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -80,7 +74,6 @@ private:
 
   nsTArray<UniquePtr<GMPContentChild>> mGMPContentChildren;
 
-  GMPAsyncShutdown* mAsyncShutdown;
   RefPtr<GMPTimerChild> mTimerChild;
   RefPtr<GMPStorageChild> mStorage;
 
