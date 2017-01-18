@@ -28,15 +28,15 @@ fails == input-type-invalid.html input-type-invalid.html
 fails == input-disabled-fieldset-1.html input-disabled-fieldset-1.html
 fails == input-disabled-fieldset-2.html input-disabled-fieldset-2.html
 fails == input-fieldset-legend.html input-fieldset-legend.html
-fails == input-checkbox-valid-changed.html input-checkbox-valid-changed.html
-fails == input-checkbox-valid-default.html input-checkbox-valid-default.html
+== input-checkbox-valid-changed.html input-checkbox-valid-changed.html
+== input-checkbox-valid-default.html input-checkbox-valid-default.html
 fails == input-file-valid-changed.html input-file-valid-changed.html
 fails == input-file-valid-default.html input-file-valid-default.html
-fails == input-radio-required.html input-radio-required.html
-fails == input-radio-customerror.html input-radio-customerror.html
-fails == input-radio-dyn-valid-1.html input-radio-dyn-valid-1.html
-fails == input-radio-dyn-valid-2.html input-radio-dyn-valid-2.html
-fails == input-radio-nogroup-required-valid.html input-radio-nogroup-required-valid.html
-fails == input-radio-nogroup-required-invalid.html input-radio-nogroup-required-invalid.html
+# == input-radio-required.html input-radio-required.html
+# == input-radio-customerror.html input-radio-customerror.html
+# == input-radio-dyn-valid-1.html input-radio-dyn-valid-1.html
+# == input-radio-dyn-valid-2.html input-radio-dyn-valid-2.html
+# == input-radio-nogroup-required-valid.html input-radio-nogroup-required-valid.html
+# == input-radio-nogroup-required-invalid.html input-radio-nogroup-required-invalid.html
 fails == input-novalidate.html input-novalidate.html
 # input type='hidden' shouldn't show

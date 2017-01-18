@@ -95,7 +95,7 @@
 #include "mozilla/Telemetry.h"
 #include "DecoderDoctorDiagnostics.h"
 #include "DecoderTraits.h"
-#include "MediaContentType.h"
+#include "MediaContainerType.h"
 
 #include "ImageContainer.h"
 #include "nsRange.h"
@@ -4473,11 +4473,11 @@ CanPlayStatus
 HTMLMediaElement::GetCanPlay(const nsAString& aType,
                              DecoderDoctorDiagnostics* aDiagnostics)
 {
-  Maybe<MediaContentType> contentType = MakeMediaContentType(aType);
-  if (!contentType) {
+  Maybe<MediaContainerType> containerType = MakeMediaContainerType(aType);
+  if (!containerType) {
     return CANPLAY_NO;
   }
-  return DecoderTraits::CanHandleContentType(*contentType, aDiagnostics);
+  return DecoderTraits::CanHandleContainerType(*containerType, aDiagnostics);
 }
 
 NS_IMETHODIMP

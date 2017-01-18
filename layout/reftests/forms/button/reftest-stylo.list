@@ -35,8 +35,8 @@ fails == disabled-6.html disabled-6.html
 # == width-auto-size-em-ltr.html width-auto-size-em-ltr.html
 # == width-auto-size-ltr.html width-auto-size-ltr.html
 # == width-exact-fit-ltr.html width-exact-fit-ltr.html
-# fails == width-auto-size-em-rtl.html width-auto-size-em-rtl.html
-# fails == width-auto-size-rtl.html width-auto-size-rtl.html
-# fails == width-exact-fit-rtl.html width-exact-fit-rtl.html
+# == width-auto-size-em-rtl.html width-auto-size-em-rtl.html
+# == width-auto-size-rtl.html width-auto-size-rtl.html
+# == width-exact-fit-rtl.html width-exact-fit-rtl.html
 fails == display-grid-flex-columnset.html display-grid-flex-columnset.html
 == 1317351.html 1317351.html

@@ -13,7 +13,7 @@
 
 extern mozilla::LogModule* GetMediaSourceLog();
 
-#define MSE_DEBUG(arg, ...) MOZ_LOG(GetMediaSourceLog(), mozilla::LogLevel::Debug, ("MediaSourceResource(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
+#define MSE_DEBUG(arg, ...) MOZ_LOG(GetMediaSourceLog(), mozilla::LogLevel::Debug, ("MediaSourceResource(%p:%s)::%s: " arg, this, mType.OriginalString().Data(), __func__, ##__VA_ARGS__))
 
 #define UNIMPLEMENTED() MSE_DEBUG("UNIMPLEMENTED FUNCTION at %s:%d", __FILE__, __LINE__)
 
@@ -24,6 +24,8 @@ class MediaSourceResource final : public MediaResource
 public:
   explicit MediaSourceResource(nsIPrincipal* aPrincipal = nullptr)
     : mPrincipal(aPrincipal)
+      // Fake-but-valid MIME type, unused but necessary to implement GetContentType().
+    , mType(MEDIAMIMETYPE("application/x.mediasource"))
     , mMonitor("MediaSourceResource")
     , mEnded(false)
     {}
@@ -62,7 +64,7 @@ public:
   }
 
   bool IsTransportSeekable() override { return true; }
-  const nsCString& GetContentType() const override { return mType; }
+  const MediaContainerType& GetContentType() const override { return mType; }
 
   bool IsLiveStream() override
   {
@@ -85,7 +87,7 @@ private:
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
-    size += mType.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+    size += mType.SizeOfExcludingThis(aMallocSizeOf);
 
     return size;
   }
@@ -96,7 +98,7 @@ private:
   }
 
   RefPtr<nsIPrincipal> mPrincipal;
-  const nsCString mType;
+  const MediaContainerType mType;
   Monitor mMonitor;
   bool mEnded; // protected by mMonitor
 };

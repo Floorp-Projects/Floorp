@@ -15,8 +15,8 @@ fails == test-zoom.html test-zoom.html
 
 # Makes sure that the file: protocol handler and HTTP server both
 # choose HTML vs. XHTML processing based on the file extensions.
-fails == html-vs-xhtml-by-extension.html html-vs-xhtml-by-extension.html
-fails HTTP == html-vs-xhtml-by-extension.html html-vs-xhtml-by-extension.html
+== html-vs-xhtml-by-extension.html html-vs-xhtml-by-extension.html
+HTTP == html-vs-xhtml-by-extension.html html-vs-xhtml-by-extension.html
 
 # make sure red and green colors are not the default and are different from
 # each other
@@ -30,9 +30,9 @@ fails HTTP == html-vs-xhtml-by-extension.html html-vs-xhtml-by-extension.html
 HTTP == blank.html blank.html
 HTTP == about:blank about:blank
 # same for data:
-fails == default.html default.html
+== default.html default.html
 # == data:text/html,<div>Text</div> data:text/html,<div>Text</div>
-fails HTTP == default.html default.html
+HTTP == default.html default.html
 # HTTP == data:text/html,<div>Text</div> data:text/html,<div>Text</div>
 == blank.html blank.html
 HTTP == blank.html blank.html
@@ -45,9 +45,9 @@ fails HTTP(..) == filter-2.xhtml filter-2.xhtml
 == zoom-invalidation.html zoom-invalidation.html
 
 # test that xulRuntime.OS works
-fails == data:text/html,<body>Linux data:text/html,<body>Linux
-fails-if(xulRuntime.OS!="WINNT") == data:text/html,<body>Win data:text/html,<body>Win
-fails-if(xulRuntime.OS!="Darwin") == data:text/html,<body>Mac data:text/html,<body>Mac
+== data:text/html,<body>Linux data:text/html,<body>Linux
+# fails-if(xulRuntime.OS!="WINNT") == data:text/html,<body>Win data:text/html,<body>Win
+# fails-if(xulRuntime.OS!="Darwin") == data:text/html,<body>Mac data:text/html,<body>Mac
 
 # test parsing of asserts() expressions
 asserts(0) load about:blank
@@ -58,7 +58,7 @@ asserts-if(true,0-4) load about:blank
 asserts-if(false,6-8) load about:blank
 
 # test that <div> is display:block
-fails == div.html div.html
+== div.html div.html
 
 # test script keyword
 include scripttests-stylo.list
@@ -81,7 +81,7 @@ include default-preferences-tests-stylo.list
 == page-width-auto.html page-width-auto.html
 # == page-height-2in.html page-height-2in.html
 # == page-height-2in.html page-height-2in.html
-fails == page-height-2.1in.html page-height-2.1in.html
+== page-height-2.1in.html page-height-2.1in.html
 
 # Check that tests that need focus are skipped when it's not available
 needs-focus load needs-focus.html
@@ -119,26 +119,26 @@ fails pref(gfx.downloadable_fonts.enabled,"foo") HTTP(..) == font-download.html 
 # a non-existent pref
 fails pref(not.a.real.pref.name,1) == font-download.html font-download.html
 # an integer pref
-fails pref(font.size.variable.x-western,16) == font-size-16.html font-size-16.html
-fails pref(font.size.variable.x-western,16) == font-size-24.html font-size-24.html
-fails pref(font.size.variable.x-western,24) == font-size-24.html font-size-24.html
-fails pref(font.size.variable.x-western,24) == font-size-16.html font-size-16.html
-fails pref(font.size.variable.x-western,false) == font-size-16.html font-size-16.html
-fails pref(font.size.variable.x-western,"foo") == font-size-16.html font-size-16.html
+#pref(font.size.variable.x-western,16) == font-size-16.html font-size-16.html
+pref(font.size.variable.x-western,16) == font-size-24.html font-size-24.html
+pref(font.size.variable.x-western,24) == font-size-24.html font-size-24.html
+# pref(font.size.variable.x-western,24) == font-size-16.html font-size-16.html
+#pref(font.size.variable.x-western,false) == font-size-16.html font-size-16.html
+#pref(font.size.variable.x-western,"foo") == font-size-16.html font-size-16.html
 # a string pref
-fails pref(font.default.x-western,"serif") == font-serif.html font-serif.html
-fails pref(font.default.x-western,"serif") == font-sans-serif.html font-sans-serif.html
-fails pref(font.default.x-western,"sans-serif") == font-sans-serif.html font-sans-serif.html
-fails pref(font.default.x-western,"sans-serif") == font-serif.html font-serif.html
-fails pref(font.default.x-western,true) == font-serif.html font-serif.html
-fails pref(font.default.x-western,0) == font-serif.html font-serif.html
+# pref(font.default.x-western,"serif") == font-serif.html font-serif.html
+pref(font.default.x-western,"serif") == font-sans-serif.html font-sans-serif.html
+pref(font.default.x-western,"sans-serif") == font-sans-serif.html font-sans-serif.html
+#fails pref(font.default.x-western,"sans-serif") == font-serif.html font-serif.html
+#fails pref(font.default.x-western,true) == font-serif.html font-serif.html
+#fails pref(font.default.x-western,0) == font-serif.html font-serif.html
 # tests for ref-pref, and test-pref
-fails ref-pref(font.size.variable.x-western,16) == font-size-16.html font-size-16.html
-fails ref-pref(font.size.variable.x-western,16) == font-size-24.html font-size-24.html
-fails ref-pref(font.size.variable.x-western,24) == font-size-24.html font-size-24.html
-fails ref-pref(font.size.variable.x-western,24) == font-size-16.html font-size-16.html
-fails ref-pref(font.size.variable.x-western,false) == font-size-16.html font-size-16.html
-fails ref-pref(font.size.variable.x-western,"foo") == font-size-16.html font-size-16.html
+# ref-pref(font.size.variable.x-western,16) == font-size-16.html font-size-16.html
+ref-pref(font.size.variable.x-western,16) == font-size-24.html font-size-24.html
+ref-pref(font.size.variable.x-western,24) == font-size-24.html font-size-24.html
+# ref-pref(font.size.variable.x-western,24) == font-size-16.html font-size-16.html
+# ref-pref(font.size.variable.x-western,false) == font-size-16.html font-size-16.html
+# ref-pref(font.size.variable.x-western,"foo") == font-size-16.html font-size-16.html
 # font-default keeps failing
 # #fails test-pref(font.size.variable.x-western,16) == font-default.html font-default.html
 # #fails test-pref(font.size.variable.x-western,16) == font-default.html font-default.html
@@ -168,8 +168,8 @@ default-preferences pref(layers.low-precision-buffer,false)
 skip-if(!asyncPan||!browserIsRemote) == async-scroll-1b.html async-scroll-1b.html
 default-preferences
 
-fails == async-zoom-1.html async-zoom-1.html
-fails == async-zoom-2.html async-zoom-2.html
+== async-zoom-1.html async-zoom-1.html
+== async-zoom-2.html async-zoom-2.html
 
 # reftest-opaque-layer
 # == reftest-opaque-layer-pass.html reftest-opaque-layer-pass.html

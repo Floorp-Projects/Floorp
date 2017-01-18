@@ -14,4 +14,4 @@ include bmpsuite/reftest-stylo.list
 # fail on 32 bit platforms) and declare the image in error state. If in the
 # future we decide that such bmps (offset past the end of the file) are
 # invalid the test will still pass, but won't be testing much.
-fails == 1240629-1.bmp 1240629-1.bmp
+== 1240629-1.bmp 1240629-1.bmp
