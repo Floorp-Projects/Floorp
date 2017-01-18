@@ -926,7 +926,14 @@ Toolbox.prototype = {
    * @param  {KeyboardEvent} event
    */
   _onTabbarArrowKeypress: function (event) {
-    let { key, target } = event;
+    let { key, target, ctrlKey, shiftKey, altKey, metaKey } = event;
+
+    // If any of the modifier keys are pressed do not attempt navigation as it
+    // might conflict with global shortcuts (Bug 1327972).
+    if (ctrlKey || shiftKey || altKey || metaKey) {
+      return;
+    }
+
     let focusableElms = this.tabbarFocusableElms;
     let curIndex = focusableElms.indexOf(target);
 
