@@ -6,6 +6,6 @@ fails HTTP(..) == baseline-1.html baseline-1.html
 HTTP(..) == centering-1.xul centering-1.xul
 == dynamic-height-1.xul dynamic-height-1.xul
 fails == select.html select.html
-# fails == intrinsic-size.html intrinsic-size.html
+# == intrinsic-size.html intrinsic-size.html
 # == line-height-0.5.html line-height-0.5.html
 # == line-height-1.5.html line-height-1.5.html

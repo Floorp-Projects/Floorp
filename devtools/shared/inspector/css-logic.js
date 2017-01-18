@@ -410,3 +410,53 @@ function findCssSelector(ele) {
   return selector;
 }
 exports.findCssSelector = findCssSelector;
+
+/**
+ * Get the full CSS path for a given element.
+ * @returns a string that can be used as a CSS selector for the element. It might not
+ * match the element uniquely. It does however, represent the full path from the root
+ * node to the element.
+ */
+function getCssPath(ele) {
+  ele = getRootBindingParent(ele);
+  const document = ele.ownerDocument;
+  if (!document || !document.contains(ele)) {
+    throw new Error("getCssPath received element not inside document");
+  }
+
+  const getElementSelector = element => {
+    if (!element.localName) {
+      return "";
+    }
+
+    let label = element.nodeName == element.nodeName.toUpperCase()
+                ? element.localName.toLowerCase()
+                : element.localName;
+
+    if (element.id) {
+      label += "#" + element.id;
+    }
+
+    if (element.classList) {
+      for (let cl of element.classList) {
+        label += "." + cl;
+      }
+    }
+
+    return label;
+  };
+
+  let paths = [];
+
+  while (ele) {
+    if (!ele || ele.nodeType !== Node.ELEMENT_NODE) {
+      break;
+    }
+
+    paths.splice(0, 0, getElementSelector(ele));
+    ele = ele.parentNode;
+  }
+
+  return paths.length ? paths.join(" ") : "";
+}
+exports.getCssPath = getCssPath;

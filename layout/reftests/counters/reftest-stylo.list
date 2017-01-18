@@ -1,7 +1,7 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 fails == counter-name-case-sensitive.html counter-name-case-sensitive.html
 fails == t1202-counter-00-b-test.html t1202-counter-00-b-test.html
-fails == t1202-counter-01-b-test.html t1202-counter-01-b-test.html
+== t1202-counter-01-b-test.html t1202-counter-01-b-test.html
 fails == t1202-counter-02-b-test.html t1202-counter-02-b-test.html
 fails == t1202-counter-03-b-test.html t1202-counter-03-b-test.html
 fails == t1202-counter-04-b-test.html t1202-counter-04-b-test.html
@@ -58,7 +58,7 @@ fails == t120401-scope-04-d-test.html t120401-scope-04-d-test.html
 fails == t120403-content-none-00-c-test.html t120403-content-none-00-c-test.html
 fails == t120403-display-none-00-c-test.html t120403-display-none-00-c-test.html
 fails == t120403-visibility-00-c-test.html t120403-visibility-00-c-test.html
-fails == text-boundaries-subpixel.html text-boundaries-subpixel.html
+== text-boundaries-subpixel.html text-boundaries-subpixel.html
 fails == counter-hebrew-test.html counter-hebrew-test.html
 fails == counters-hebrew-test.html counters-hebrew-test.html
 fails == counter-reset-integer-range.html counter-reset-integer-range.html
@@ -66,8 +66,8 @@ fails == counter-ua-limits-00.html counter-ua-limits-00.html
 fails == counter-ua-limits-01.html counter-ua-limits-01.html
 fails == counter-ua-limits-02.html counter-ua-limits-02.html
 fails == counter-ua-limits-03.html counter-ua-limits-03.html
-fails == counter-ua-limits-list-00.html counter-ua-limits-list-00.html
-fails == counter-ua-limits-list-01.html counter-ua-limits-list-01.html
+== counter-ua-limits-list-00.html counter-ua-limits-list-00.html
+== counter-ua-limits-list-01.html counter-ua-limits-list-01.html
 fails == multiple-thai-counters.html multiple-thai-counters.html
 fails == counter-suffix.html counter-suffix.html
 fails == counter-cjk-decimal.html counter-cjk-decimal.html

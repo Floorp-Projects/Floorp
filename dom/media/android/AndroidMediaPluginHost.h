@@ -13,7 +13,7 @@
 
 namespace mozilla {
 
-class MediaContentType;
+class MediaContainerType;
 class MediaCodecs;
 
 class AndroidMediaPluginHost {
@@ -27,8 +27,8 @@ public:
 
   static void Shutdown();
 
-  bool FindDecoder(const MediaContentType& aMimeType, MediaCodecs* aCodecs);
-  MPAPI::Decoder *CreateDecoder(mozilla::MediaResource *aResource, const MediaContentType& aMimeType);
+  bool FindDecoder(const MediaContainerType& aMimeType, MediaCodecs* aCodecs);
+  MPAPI::Decoder *CreateDecoder(mozilla::MediaResource *aResource, const MediaContainerType& aMimeType);
   void DestroyDecoder(MPAPI::Decoder *aDecoder);
 };
 

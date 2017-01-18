@@ -100,15 +100,21 @@ const PropertiesView = createClass({
   },
 
   renderValueWithRep(props) {
-    // Hide rep summary for sections
-    if (props.member.level === 0) {
+    const { member } = props;
+
+    // Hide strings with following conditions
+    // 1. this row is a togglable section
+    // 2. the `value` object has a `value` property, only happend in Cookies panel
+    // Put 2 here to not dup this method
+    if (member.level === 0 ||
+      (typeof member.value === "object" && member.value.value)) {
       return null;
     }
 
     return Rep(Object.assign(props, {
       // FIXME: A workaround for the issue in StringRep
       // Force StringRep to crop the text everytime
-      member: Object.assign({}, props.member, { open: false }),
+      member: Object.assign({}, member, { open: false }),
       mode: MODE.TINY,
       cropLimit: 60,
     }));
@@ -149,11 +155,11 @@ const PropertiesView = createClass({
 
   render() {
     const {
-      object,
       decorator,
       enableInput,
       expandableStrings,
       filterPlaceHolder,
+      object,
       renderRow,
       renderValue,
       sectionNames,
@@ -191,8 +197,6 @@ const PropertiesView = createClass({
       )
     );
   }
-
 });
 
 module.exports = PropertiesView;
-

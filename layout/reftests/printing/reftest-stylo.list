@@ -3,18 +3,18 @@
 == blank.html blank.html
 
 # Bugs
-fails == 272830-1.html 272830-1.html
-fails == 318022-1.html 318022-1.html
+== 272830-1.html 272830-1.html
+== 318022-1.html 318022-1.html
 fails == 403669-1.html 403669-1.html
-fails == 381497-n.html 381497-n.html
-fails == test-async-print.html test-async-print.html
+== 381497-n.html 381497-n.html
+== test-async-print.html test-async-print.html
 == 129941-1a.html 129941-1a.html
 fails == 129941-1b.html 129941-1b.html
-fails == 609227-1.html 609227-1.html
-fails == 609227-2a.html 609227-2a.html
-fails == 609227-2b.html 609227-2b.html
+== 609227-1.html 609227-1.html
+== 609227-2a.html 609227-2a.html
+== 609227-2b.html 609227-2b.html
 == 577450-1.html 577450-1.html
-fails == 626395-1a.html 626395-1a.html
+== 626395-1a.html 626395-1a.html
 fails == 626395-1b.html 626395-1b.html
 == 626395-2a.html 626395-2a.html
 fails == 626395-2b.html 626395-2b.html

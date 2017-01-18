@@ -16,9 +16,9 @@ fails HTTP(..) == standards-decorations.html standards-decorations.html
 fails HTTP(..) == standards-line-height.html standards-line-height.html
 fails == selection.html selection.html
 fails HTTP(..) == marker-shadow.html marker-shadow.html
-fails == aligned-baseline.html aligned-baseline.html
+== aligned-baseline.html aligned-baseline.html
 fails == clipped-elements.html clipped-elements.html
-fails HTTP(..) == theme-overflow.html theme-overflow.html
+HTTP(..) == theme-overflow.html theme-overflow.html
 fails HTTP(..) == table-cell.html table-cell.html
 fails == two-value-syntax.html two-value-syntax.html
 fails HTTP(..) == single-value.html single-value.html

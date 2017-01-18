@@ -10,21 +10,21 @@ fails == out-of-flow-1d.html out-of-flow-1d.html
 
 # parent style context correct
 fails == parent-style-1.html parent-style-1.html
-fails == parent-style-2.html parent-style-2.html
-fails == parent-style-3.html parent-style-3.html
+== parent-style-2.html parent-style-2.html
+== parent-style-3.html parent-style-3.html
 
 # stress-tests
 skip load stress-1.html
-fails == stress-2.html stress-2.html
+== stress-2.html stress-2.html
 # load stress-3.html
 load stress-4.html
 load stress-5.html
 load stress-6.html
 load stress-7.html
-fails == stress-8.html stress-8.html
-fails == stress-9.html stress-9.html
+== stress-8.html stress-8.html
+== stress-9.html stress-9.html
 load stress-10.html
-fails == stress-11.xhtml stress-11.xhtml
+== stress-11.xhtml stress-11.xhtml
 
 fails == border-not-apply.html border-not-apply.html
 fails == 287088-1.html 287088-1.html

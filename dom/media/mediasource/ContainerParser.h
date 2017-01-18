@@ -8,7 +8,7 @@
 #define MOZILLA_CONTAINERPARSER_H_
 
 #include "mozilla/RefPtr.h"
-#include "nsString.h"
+#include "MediaContainerType.h"
 #include "MediaResource.h"
 #include "MediaResult.h"
 
@@ -19,7 +19,7 @@ class SourceBufferResource;
 
 class ContainerParser {
 public:
-  explicit ContainerParser(const nsACString& aType);
+  explicit ContainerParser(const MediaContainerType& aType);
   virtual ~ContainerParser();
 
   // Return true if aData starts with an initialization segment.
@@ -73,7 +73,7 @@ public:
   // range if not complete.
   MediaByteRange MediaSegmentRange();
 
-  static ContainerParser* CreateForMIMEType(const nsACString& aType);
+  static ContainerParser* CreateForMIMEType(const MediaContainerType& aType);
 
 protected:
   RefPtr<MediaByteBuffer> mInitData;
@@ -82,7 +82,7 @@ protected:
   MediaByteRange mCompleteInitSegmentRange;
   MediaByteRange mCompleteMediaHeaderRange;
   MediaByteRange mCompleteMediaSegmentRange;
-  const nsCString mType;
+  const MediaContainerType mType;
 };
 
 } // namespace mozilla

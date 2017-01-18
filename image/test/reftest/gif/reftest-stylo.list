@@ -7,7 +7,7 @@ fails == in-colormap-trans.gif in-colormap-trans.gif
 fails == out-of-colormap-trans.gif out-of-colormap-trans.gif
 
 # a GIF file that uses the comment extension
-fails == comment.gif comment.gif
+== comment.gif comment.gif
 
 # a GIF file with a background smaller than the size of the canvas
 fails == small-background-size.gif small-background-size.gif
@@ -51,4 +51,4 @@ fails == tile-transform.html tile-transform.html
 # won't be in the text of the contents themselves. --$(boundary)\r\n means
 # "Here is the beginning of a boundary," and --$(boundary)-- means "All done
 # sending you parts.")
-HTTP == webcam.html webcam.html
+fails HTTP == webcam.html webcam.html

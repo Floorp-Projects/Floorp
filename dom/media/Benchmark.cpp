@@ -44,8 +44,9 @@ VP9Benchmark::IsVP9DecodeFast()
     sHasRunTest = true;
 
     RefPtr<WebMDemuxer> demuxer =
-      new WebMDemuxer(new BufferMediaResource(sWebMSample, sizeof(sWebMSample), nullptr,
-                                              NS_LITERAL_CSTRING("video/webm")));
+      new WebMDemuxer(
+        new BufferMediaResource(sWebMSample, sizeof(sWebMSample), nullptr,
+                                MediaContainerType(MEDIAMIMETYPE("video/webm"))));
     RefPtr<Benchmark> estimiser =
       new Benchmark(demuxer,
                     {
