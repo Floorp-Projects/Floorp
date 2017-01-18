@@ -16,10 +16,6 @@ ClearKeyCDM::Initialize(bool aAllowDistinctiveIdentifier,
 {
   mSessionManager->Init(aAllowDistinctiveIdentifier,
                         aAllowPersistentState);
-
-#ifdef ENABLE_WMF
-  mVideoDecoder = new VideoDecoder(mHost);
-#endif
 }
 
 void
@@ -121,6 +117,7 @@ ClearKeyCDM::InitializeVideoDecoder(
   const VideoDecoderConfig& aVideoDecoderConfig)
 {
 #ifdef ENABLE_WMF
+  mVideoDecoder = new VideoDecoder(mHost);
   return mVideoDecoder->InitDecode(aVideoDecoderConfig);
 #else
   return Status::kDecodeError;
@@ -132,7 +129,8 @@ ClearKeyCDM::DeinitializeDecoder(StreamType aDecoderType)
 {
 #ifdef ENABLE_WMF
   if (aDecoderType == StreamType::kStreamTypeVideo) {
-    mVideoDecoder->Reset();
+    mVideoDecoder->DecodingComplete();
+    mVideoDecoder = nullptr;
   }
 #endif
 }
@@ -190,6 +188,9 @@ ClearKeyCDM::Destroy()
 {
   mSessionManager->DecryptingComplete();
 #ifdef ENABLE_WMF
-  mVideoDecoder->DecodingComplete();
+  // If we have called 'DeinitializeDecoder' mVideoDecoder will be null.
+  if (mVideoDecoder) {
+    mVideoDecoder->DecodingComplete();
+  }
 #endif
 }
