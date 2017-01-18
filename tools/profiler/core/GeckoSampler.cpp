@@ -180,15 +180,11 @@ GeckoSampler::GeckoSampler(double aInterval, int aEntrySize,
   : Sampler(aInterval, true, aEntrySize)
   , mBuffer(new ProfileBuffer(aEntrySize))
   , mSaveRequested(false)
-#if defined(XP_WIN)
-  , mIntelPowerGadget(nullptr)
-#endif
 {
   mUseStackWalk = hasFeature(aFeatures, aFeatureCount, "stackwalk");
 
   mProfileJS = hasFeature(aFeatures, aFeatureCount, "js");
   mProfileGPU = hasFeature(aFeatures, aFeatureCount, "gpu");
-  mProfilePower = hasFeature(aFeatures, aFeatureCount, "power");
   // Users sometimes ask to filter by a list of threads but forget to request
   // profiling non main threads. Let's make it implificit if we have a filter
   mProfileThreads = hasFeature(aFeatures, aFeatureCount, "threads") || aFilterCount > 0;
@@ -200,13 +196,6 @@ GeckoSampler::GeckoSampler(double aInterval, int aEntrySize,
   mLayersDump = hasFeature(aFeatures, aFeatureCount, "layersdump");
   mDisplayListDump = hasFeature(aFeatures, aFeatureCount, "displaylistdump");
   mProfileRestyle = hasFeature(aFeatures, aFeatureCount, "restyle");
-
-#if defined(XP_WIN)
-  if (mProfilePower) {
-    mIntelPowerGadget = new IntelPowerGadget();
-    mProfilePower = mIntelPowerGadget->Init();
-  }
-#endif
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
   mProfileJava = mozilla::jni::IsFennec() &&
@@ -274,9 +263,6 @@ GeckoSampler::~GeckoSampler()
       }
     }
   }
-#if defined(XP_WIN)
-  delete mIntelPowerGadget;
-#endif
 
   // Cancel any in-flight async profile gatherering
   // requests
@@ -1255,13 +1241,6 @@ void GeckoSampler::InplaceTick(TickSample* sample)
   if (sample && sample->ussMemory != 0) {
     currThreadProfile.addTag(ProfileEntry('U', static_cast<double>(sample->ussMemory)));
   }
-
-#if defined(XP_WIN)
-  if (mProfilePower) {
-    mIntelPowerGadget->TakeSample();
-    currThreadProfile.addTag(ProfileEntry('p', static_cast<double>(mIntelPowerGadget->GetTotalPackagePowerInWatts())));
-  }
-#endif
 
   if (sLastFrameNumber != sFrameNumber) {
     currThreadProfile.addTag(ProfileEntry('f', sFrameNumber));

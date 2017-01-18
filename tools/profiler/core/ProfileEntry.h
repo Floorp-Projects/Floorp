@@ -340,8 +340,7 @@ private:
 //       "responsiveness": 2,  /* number */
 //       "rss": 3,             /* number */
 //       "uss": 4,             /* number */
-//       "frameNumber": 5,     /* number */
-//       "power": 6            /* number */
+//       "frameNumber": 5      /* number */
 //     },
 //     "data":
 //     [
