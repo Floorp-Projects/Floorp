@@ -7,10 +7,7 @@
   },
   "author": "",
   "dependencies": {
-    "devtools-local-toolbox": "0.0.10",
-    "devtools-modules": "0.0.9",
-    "devtools-sham-modules": "0.0.9",
-    "devtools-config": "0.0.9",
+    "devtools-local-toolbox": "0.0.12",
     "raw-loader": "^0.5.1",
     "json-loader": "^0.5.4"
   }
