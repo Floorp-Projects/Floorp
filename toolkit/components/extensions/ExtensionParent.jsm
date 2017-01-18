@@ -836,10 +836,48 @@ function promiseExtensionViewLoaded(browser) {
   });
 }
 
+/**
+ * This helper is used to subscribe a listener (e.g. in the ext-devtools API implementation)
+ * to be called for every ExtensionProxyContext created for an extension page given
+ * its related extension, viewType and browser element (both the top level context and any context
+ * created for the extension urls running into its iframe descendants).
+ *
+ * @param {object} params.extension
+ *   the Extension on which we are going to listen for the newly created ExtensionProxyContext.
+ * @param {string} params.viewType
+ *  the viewType of the WebExtension page that we are watching (e.g. "background" or "devtools_page").
+ * @param {XULElement} params.browser
+ *  the browser element of the WebExtension page that we are watching.
+ *
+ * @param {Function} onExtensionProxyContextLoaded
+ *  the callback that is called when a new context has been loaded (as `callback(context)`);
+ *
+ * @returns {Function}
+ *   Unsubscribe the listener.
+ */
+function watchExtensionProxyContextLoad({extension, viewType, browser}, onExtensionProxyContextLoaded) {
+  if (typeof onExtensionProxyContextLoaded !== "function") {
+    throw new Error("Missing onExtensionProxyContextLoaded handler");
+  }
+
+  const listener = (event, context) => {
+    if (context.viewType == viewType && context.xulBrowser == browser) {
+      onExtensionProxyContextLoaded(context);
+    }
+  };
+
+  extension.on("extension-proxy-context-load", listener);
+
+  return () => {
+    extension.off("extension-proxy-context-load", listener);
+  };
+}
+
 const ExtensionParent = {
   GlobalManager,
   HiddenExtensionPage,
   ParentAPIManager,
   apiManager,
   promiseExtensionViewLoaded,
+  watchExtensionProxyContextLoad,
 };
