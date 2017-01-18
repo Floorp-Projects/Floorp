@@ -131,7 +131,7 @@ add_task(function* test_check_signatures() {
                             sampled.status.statusText);
       // send the headers
       for (let headerLine of sampled.sampleHeaders) {
-        let headerElements = headerLine.split(':');
+        let headerElements = headerLine.split(":");
         response.setHeader(headerElements[0], headerElements[1].trimLeft());
       }
 
@@ -156,7 +156,7 @@ add_task(function* test_check_signatures() {
   let verifier = Cc["@mozilla.org/security/contentsignatureverifier;1"]
                    .createInstance(Ci.nsIContentSignatureVerifier);
 
-  const emptyData = '[]';
+  const emptyData = "[]";
   const emptySignature = "p384ecdsa=zbugm2FDitsHwk5-IWsas1PpWwY29f0Fg5ZHeqD8fzep7AVl2vfcaHA7LdmCZ28qZLOioGKvco3qT117Q4-HlqFTJM7COHzxGyU2MMJ0ZTnhJrPOC1fP3cVQjU1PTWi9";
   const name = "onecrl.content-signature.mozilla.org";
   ok(verifier.verifyContentSignature(emptyData, emptySignature,

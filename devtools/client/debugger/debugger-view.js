@@ -120,7 +120,7 @@ var DebuggerView = {
     }
     this._hasShutdown = true;
 
-    window.removeEventListener("resize", this._onResize, false);
+    window.removeEventListener("resize", this._onResize);
     this.editor.off("cursorActivity", this.Sources._onEditorCursorActivity);
 
     this.Toolbar.destroy();
@@ -170,7 +170,7 @@ var DebuggerView = {
     this.updateLayoutMode();
 
     this._onResize = this._onResize.bind(this);
-    window.addEventListener("resize", this._onResize, false);
+    window.addEventListener("resize", this._onResize);
   },
 
   /**

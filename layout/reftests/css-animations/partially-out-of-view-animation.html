@@ -22,7 +22,7 @@ div {
 <div id="target"></div>
 <script>
 
-document.getElementById("target").addEventListener("animationend", AnimationEndListener, false);
+document.getElementById("target").addEventListener("animationend", AnimationEndListener);
 
 function AnimationEndListener(event) {
   setTimeout(RemoveReftestWait, 0);

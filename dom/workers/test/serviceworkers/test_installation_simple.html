@@ -160,7 +160,7 @@
     var channel = new MessageChannel();
     frame.addEventListener('load', function() {
       frame.contentWindow.postMessage('your port!', '*', [channel.port2]);
-    }, false);
+    });
 
     channel.port1.onmessage = function() {
       readyPromiseResolved = true;

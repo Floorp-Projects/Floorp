@@ -27,7 +27,7 @@ function onProgress(e) {
 
 function onLoadData() {
   var xhr = new XMLHttpRequest();
-  xhr.addEventListener('progress', onProgress, false);
+  xhr.addEventListener('progress', onProgress);
   xhr.open('GET', url, true);
   xhr.onreadystatechange = function() {
     if (xhr.readyState == 4) {

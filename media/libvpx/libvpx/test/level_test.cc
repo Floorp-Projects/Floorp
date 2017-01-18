@@ -19,12 +19,9 @@ class LevelTest
       public ::libvpx_test::CodecTestWith2Params<libvpx_test::TestMode, int> {
  protected:
   LevelTest()
-     : EncoderTest(GET_PARAM(0)),
-       encoding_mode_(GET_PARAM(1)),
-       cpu_used_(GET_PARAM(2)),
-       min_gf_internal_(24),
-       target_level_(0),
-       level_(0) {}
+      : EncoderTest(GET_PARAM(0)), encoding_mode_(GET_PARAM(1)),
+        cpu_used_(GET_PARAM(2)), min_gf_internal_(24), target_level_(0),
+        level_(0) {}
   virtual ~LevelTest() {}
 
   virtual void SetUp() {
@@ -69,6 +66,36 @@ class LevelTest
   int level_;
 };
 
+TEST_P(LevelTest, TestTargetLevel11) {
+  ASSERT_NE(encoding_mode_, ::libvpx_test::kRealTime);
+  ::libvpx_test::I420VideoSource video("hantro_odd.yuv", 208, 144, 30, 1, 0,
+                                       90);
+  target_level_ = 11;
+  cfg_.rc_target_bitrate = 150;
+  ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
+  ASSERT_EQ(target_level_, level_);
+}
+
+TEST_P(LevelTest, TestTargetLevel20) {
+  ASSERT_NE(encoding_mode_, ::libvpx_test::kRealTime);
+  ::libvpx_test::I420VideoSource video("hantro_collage_w352h288.yuv", 352, 288,
+                                       30, 1, 0, 90);
+  target_level_ = 20;
+  cfg_.rc_target_bitrate = 1200;
+  ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
+  ASSERT_EQ(target_level_, level_);
+}
+
+TEST_P(LevelTest, TestTargetLevel31) {
+  ASSERT_NE(encoding_mode_, ::libvpx_test::kRealTime);
+  ::libvpx_test::I420VideoSource video("niklas_1280_720_30.y4m", 1280, 720, 30,
+                                       1, 0, 60);
+  target_level_ = 31;
+  cfg_.rc_target_bitrate = 8000;
+  ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
+  ASSERT_EQ(target_level_, level_);
+}
+
 // Test for keeping level stats only
 TEST_P(LevelTest, TestTargetLevel0) {
   ::libvpx_test::I420VideoSource video("hantro_odd.yuv", 208, 144, 30, 1, 0,
@@ -97,6 +124,7 @@ TEST_P(LevelTest, TestTargetLevelApi) {
   vpx_codec_ctx_t enc;
   vpx_codec_enc_cfg_t cfg;
   EXPECT_EQ(VPX_CODEC_OK, vpx_codec_enc_config_default(codec, &cfg, 0));
+  cfg.rc_target_bitrate = 100;
   EXPECT_EQ(VPX_CODEC_OK, vpx_codec_enc_init(&enc, codec, &cfg, 0));
   for (int level = 0; level <= 256; ++level) {
     if (level == 10 || level == 11 || level == 20 || level == 21 ||

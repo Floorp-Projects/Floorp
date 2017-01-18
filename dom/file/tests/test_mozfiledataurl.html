@@ -25,7 +25,7 @@ try {
 
 window.addEventListener("message", function(e) {
   gen.next(JSON.parse(e.data));
-}, false);
+});
 
 const innerSameSiteURI = "file_mozfiledataurl_inner.html";
 const innerCrossSiteURI = "http://example.com/tests/dom/file/tests/file_mozfiledataurl_inner.html"

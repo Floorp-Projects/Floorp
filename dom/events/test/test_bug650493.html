@@ -51,7 +51,7 @@ root.addEventListener("DOMNodeInserted", function(e) {
     is(nodes.indexOf(w.currentNode), -1, "already have inserted node (" + w.currentNode + ") when " + testName);
     nodes.push(w.currentNode);
   } while(w.nextNode());
-}, false);
+});
 root.addEventListener("DOMNodeRemoved", function(e) {
   mutateCount++;
   is(e.isTrusted, true, "untrusted mutation event");
@@ -61,7 +61,7 @@ root.addEventListener("DOMNodeRemoved", function(e) {
     ok(index != -1, "missing removed node (" + w.currentNode + ") when " + testName);
     nodes.splice(index, 1);
   } while(w.nextNode());
-}, false);
+});
 
 testName = "text-only innerHTML";
 root.innerHTML = "hello world";
@@ -183,7 +183,7 @@ frag.addEventListener("DOMNodeRemoved", function(e) {
   var index = children.indexOf(e.target);
   ok(index != -1, "unknown child removed from fragment");
   children.splice(index, 1);
-}, false);
+});
 var children = [];
 children.push(document.createTextNode("foo"));
 children.push(document.createTextNode("bar"));

@@ -58,13 +58,13 @@ function startTest(test, token) {
   var s1 = document.createElement("source");
   s1.type = test.type;
   s1.src = "404." + extension[test.type];
-  s1.addEventListener("error", errorHandler, false);
+  s1.addEventListener("error", errorHandler);
   v.appendChild(s1);
   
   var s2 = document.createElement("source");
   s2.type = test.type;
   s2.src = "test_load_candidates.html"; // definitely an invalid media file, regardless of its actual mime type...
-  s2.addEventListener("error", errorHandler, false);
+  s2.addEventListener("error", errorHandler);
   v.appendChild(s2);
     
   var s3 = document.createElement("source");
@@ -72,7 +72,7 @@ function startTest(test, token) {
   s3.src = test.name;
   v.appendChild(s3);
   
-  v.addEventListener("loadeddata", finish, false);
+  v.addEventListener("loadeddata", finish);
   document.body.appendChild(v);
 }
 

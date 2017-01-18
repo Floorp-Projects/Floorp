@@ -21,7 +21,7 @@ SimpleTest.requestFlakyTimeout("This test needs to generate artificial pauses, h
 
 window.addEventListener("message", function(e) {
   gen.next(e.data);
-}, false);
+});
 
 gen = runTest();
 

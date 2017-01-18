@@ -11,8 +11,8 @@ var tabPreviews = {
       return;
     this._selectedTab = gBrowser.selectedTab;
 
-    gBrowser.tabContainer.addEventListener("TabSelect", this, false);
-    gBrowser.tabContainer.addEventListener("SSTabRestored", this, false);
+    gBrowser.tabContainer.addEventListener("TabSelect", this);
+    gBrowser.tabContainer.addEventListener("SSTabRestored", this);
 
     let screenManager = Cc["@mozilla.org/gfx/screenmanager;1"]
                           .getService(Ci.nsIScreenManager);
@@ -100,8 +100,8 @@ var tabPreviewPanelHelper = {
     host.panel.hidden = false;
 
     var handler = this._generateHandler(host);
-    host.panel.addEventListener("popupshown", handler, false);
-    host.panel.addEventListener("popuphiding", handler, false);
+    host.panel.addEventListener("popupshown", handler);
+    host.panel.addEventListener("popuphiding", handler);
 
     host._prevFocus = document.commandDispatcher.focusedElement;
   },
@@ -109,7 +109,7 @@ var tabPreviewPanelHelper = {
     var self = this;
     return function(event) {
       if (event.target == host.panel) {
-        host.panel.removeEventListener(event.type, arguments.callee, false);
+        host.panel.removeEventListener(event.type, arguments.callee);
         self["_" + event.type](host);
       }
     };

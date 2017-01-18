@@ -82,7 +82,7 @@ function createIframe(url,next) {
       }
     });
   }
-  iframe.addEventListener("load", iframeLoadCompleted, false);
+  iframe.addEventListener("load", iframeLoadCompleted);
   window.document.body.appendChild(iframe);
   iframe.focus();
 };

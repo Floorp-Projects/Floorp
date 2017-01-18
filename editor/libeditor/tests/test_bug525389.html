@@ -51,9 +51,9 @@ function runTest() {
     selection.collapseToEnd();
 
     pasteCount = 0;
-    e.addEventListener("paste", pasteFunc, false);
+    e.addEventListener("paste", pasteFunc);
     utils.sendContentCommandEvent("pasteTransferable", trans);
-    e.removeEventListener("paste", pasteFunc, false);
+    e.removeEventListener("paste", pasteFunc);
 
     return e;
   }

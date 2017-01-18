@@ -71,7 +71,7 @@ function* test(testDriver) {
 
   box.addEventListener('touchstart', function(e) {
     ok(false, "This should never be run");
-  }, false);
+  });
   box.addEventListener('wheel', takeSnapshots, { capture: false, passive: true });
 
   // Let the event regions and layerization propagate to the APZ

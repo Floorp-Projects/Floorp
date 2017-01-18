@@ -122,7 +122,10 @@ protected:
   virtual mozilla::ipc::IPCResult RecvUpdateNoSwap(const TransactionInfo& aInfo) override;
 
   virtual mozilla::ipc::IPCResult RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverEpoch) override;
+  virtual mozilla::ipc::IPCResult RecvNewCompositable(const CompositableHandle& aHandle,
+                                                      const TextureInfo& aInfo) override;
   virtual mozilla::ipc::IPCResult RecvReleaseLayer(const LayerHandle& aHandle) override;
+  virtual mozilla::ipc::IPCResult RecvReleaseCompositable(const CompositableHandle& aHandle) override;
 
   virtual mozilla::ipc::IPCResult RecvClearCachedResources() override;
   virtual mozilla::ipc::IPCResult RecvForceComposite() override;
@@ -143,9 +146,6 @@ protected:
   virtual mozilla::ipc::IPCResult RecvRequestProperty(const nsString& aProperty, float* aValue) override;
   virtual mozilla::ipc::IPCResult RecvSetConfirmedTargetAPZC(const uint64_t& aBlockId,
                                                              nsTArray<ScrollableLayerGuid>&& aTargets) override;
-
-  virtual PCompositableParent* AllocPCompositableParent(const TextureInfo& aInfo) override;
-  virtual bool DeallocPCompositableParent(PCompositableParent* actor) override;
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 

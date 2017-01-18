@@ -41,7 +41,7 @@ Tests of DOM Worker Threads (Bug 437152)
         ok(false, "Unexpected message:" + event.data);
         SimpleTest.finish();
     }
-  }, false);
+  });
 
   var gotErrors = false;
   worker.onerror = function(event) {

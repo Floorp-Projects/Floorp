@@ -812,16 +812,16 @@ private:
     }
   }
 
-  void EnterDormant()
-  {
-    SetState<DormantState>();
-  }
-
   void StartDormantTimer()
   {
     if (!mMaster->mMediaSeekable) {
       // Don't enter dormant if the media is not seekable because we need to
       // seek when exiting dormant.
+      return;
+    }
+
+    if (mMaster->mMinimizePreroll) {
+      SetState<DormantState>();
       return;
     }
 
@@ -831,7 +831,7 @@ private:
       return;
     } else if (timeout == 0) {
       // Enter dormant immediately without scheduling a timer.
-      EnterDormant();
+      SetState<DormantState>();
       return;
     }
 
@@ -841,7 +841,7 @@ private:
     mDormantTimer.Ensure(target,
       [this] () {
         mDormantTimer.CompleteRequest();
-        EnterDormant();
+        SetState<DormantState>();
       }, [this] () {
         mDormantTimer.CompleteRequest();
       });

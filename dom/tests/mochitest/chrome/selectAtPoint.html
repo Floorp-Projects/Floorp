@@ -217,12 +217,12 @@
   }
 
   function onPaint() {
-    window.removeEventListener("MozAfterPaint", onPaint, false);
+    window.removeEventListener("MozAfterPaint", onPaint);
     painted = true;
     testReady();
   }
 
-  window.addEventListener("MozAfterPaint", onPaint, false);
+  window.addEventListener("MozAfterPaint", onPaint);
 </script>
 
 <style type="text/css">

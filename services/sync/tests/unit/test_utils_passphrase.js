@@ -7,17 +7,17 @@ function run_test() {
 
   const key = "abcdefghijkmnpqrstuvwxyz23456789";
   _("Passphrase only contains [" + key + "].");
-  do_check_true(pp.split('').every(chr => key.indexOf(chr) != -1));
+  do_check_true(pp.split("").every(chr => key.indexOf(chr) != -1));
 
   _("Hyphenated passphrase has 5 hyphens.");
   let hyphenated = Utils.hyphenatePassphrase(pp);
   _("H: " + hyphenated);
   do_check_eq(hyphenated.length, 31);
-  do_check_eq(hyphenated[1], '-');
-  do_check_eq(hyphenated[7], '-');
-  do_check_eq(hyphenated[13], '-');
-  do_check_eq(hyphenated[19], '-');
-  do_check_eq(hyphenated[25], '-');
+  do_check_eq(hyphenated[1], "-");
+  do_check_eq(hyphenated[7], "-");
+  do_check_eq(hyphenated[13], "-");
+  do_check_eq(hyphenated[19], "-");
+  do_check_eq(hyphenated[25], "-");
   do_check_eq(pp,
       hyphenated.slice(0, 1) + hyphenated.slice(2, 7)
       + hyphenated.slice(8, 13) + hyphenated.slice(14, 19)

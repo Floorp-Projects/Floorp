@@ -20,8 +20,8 @@
 #include "vpx_ports/mem.h"
 
 #if HAVE_DSPR2
-void vp9_iht8x8_64_add_dspr2(const int16_t *input, uint8_t *dest,
-                             int dest_stride, int tx_type) {
+void vp9_iht8x8_64_add_dspr2(const int16_t *input, uint8_t *dest, int stride,
+                             int tx_type) {
   int i, j;
   DECLARE_ALIGNED(32, int16_t, out[8 * 8]);
   int16_t *outptr = out;
@@ -29,30 +29,25 @@ void vp9_iht8x8_64_add_dspr2(const int16_t *input, uint8_t *dest,
   uint32_t pos = 45;
 
   /* bit positon for extract from acc */
-  __asm__ __volatile__ (
-    "wrdsp    %[pos],    1    \n\t"
-    :
-    : [pos] "r" (pos)
-  );
+  __asm__ __volatile__("wrdsp    %[pos],    1    \n\t" : : [pos] "r"(pos));
 
   switch (tx_type) {
-    case DCT_DCT:     // DCT in both horizontal and vertical
+    case DCT_DCT:  // DCT in both horizontal and vertical
       idct8_rows_dspr2(input, outptr, 8);
-      idct8_columns_add_blk_dspr2(&out[0], dest, dest_stride);
+      idct8_columns_add_blk_dspr2(&out[0], dest, stride);
       break;
-    case ADST_DCT:    // ADST in vertical, DCT in horizontal
+    case ADST_DCT:  // ADST in vertical, DCT in horizontal
       idct8_rows_dspr2(input, outptr, 8);
 
       for (i = 0; i < 8; ++i) {
         iadst8_dspr2(&out[i * 8], temp_out);
 
         for (j = 0; j < 8; ++j)
-          dest[j * dest_stride + i] =
-                    clip_pixel(ROUND_POWER_OF_TWO(temp_out[j], 5)
-                                      + dest[j * dest_stride + i]);
+          dest[j * stride + i] = clip_pixel(ROUND_POWER_OF_TWO(temp_out[j], 5) +
+                                            dest[j * stride + i]);
       }
       break;
-    case DCT_ADST:    // DCT in vertical, ADST in horizontal
+    case DCT_ADST:  // DCT in vertical, ADST in horizontal
       for (i = 0; i < 8; ++i) {
         iadst8_dspr2(input, outptr);
         input += 8;
@@ -64,9 +59,9 @@ void vp9_iht8x8_64_add_dspr2(const int16_t *input, uint8_t *dest,
           temp_in[i * 8 + j] = out[j * 8 + i];
         }
       }
-      idct8_columns_add_blk_dspr2(&temp_in[0], dest, dest_stride);
+      idct8_columns_add_blk_dspr2(&temp_in[0], dest, stride);
       break;
-    case ADST_ADST:   // ADST in both directions
+    case ADST_ADST:  // ADST in both directions
       for (i = 0; i < 8; ++i) {
         iadst8_dspr2(input, outptr);
         input += 8;
@@ -74,20 +69,16 @@ void vp9_iht8x8_64_add_dspr2(const int16_t *input, uint8_t *dest,
       }
 
       for (i = 0; i < 8; ++i) {
-        for (j = 0; j < 8; ++j)
-          temp_in[j] = out[j * 8 + i];
+        for (j = 0; j < 8; ++j) temp_in[j] = out[j * 8 + i];
 
         iadst8_dspr2(temp_in, temp_out);
 
         for (j = 0; j < 8; ++j)
-          dest[j * dest_stride + i] =
-                clip_pixel(ROUND_POWER_OF_TWO(temp_out[j], 5)
-                                      + dest[j * dest_stride + i]);
+          dest[j * stride + i] = clip_pixel(ROUND_POWER_OF_TWO(temp_out[j], 5) +
+                                            dest[j * stride + i]);
       }
       break;
-    default:
-      printf("vp9_short_iht8x8_add_dspr2 : Invalid tx_type\n");
-      break;
+    default: printf("vp9_short_iht8x8_add_dspr2 : Invalid tx_type\n"); break;
   }
 }
 #endif  // #if HAVE_DSPR2

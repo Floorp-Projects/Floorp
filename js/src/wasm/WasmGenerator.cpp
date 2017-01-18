@@ -45,8 +45,7 @@ static const unsigned COMPILATION_LIFO_DEFAULT_CHUNK_SIZE = 64 * 1024;
 static const uint32_t BAD_CODE_RANGE = UINT32_MAX;
 
 ModuleGenerator::ModuleGenerator(UniqueChars* error)
-  : alwaysBaseline_(false),
-    debugEnabled_(false),
+  : compileMode_(CompileMode(-1)),
     error_(error),
     numSigs_(0),
     numTables_(0),
@@ -112,6 +111,12 @@ ModuleGenerator::initAsmJS(Metadata* asmJSMetadata)
     metadata_ = asmJSMetadata;
     MOZ_ASSERT(isAsmJS());
 
+    // Enabling debugging requires baseline and baseline is only enabled for
+    // wasm (since the baseline does not currently support Atomics or SIMD).
+
+    metadata_->debugEnabled = false;
+    compileMode_ = CompileMode::Ion;
+
     // For asm.js, the Vectors in ModuleEnvironment are max-sized reservations
     // and will be initialized in a linear order via init* functions as the
     // module is generated.
@@ -124,7 +129,7 @@ ModuleGenerator::initAsmJS(Metadata* asmJSMetadata)
 }
 
 bool
-ModuleGenerator::initWasm()
+ModuleGenerator::initWasm(const CompileArgs& args)
 {
     MOZ_ASSERT(!env_->isAsmJS());
 
@@ -133,6 +138,11 @@ ModuleGenerator::initWasm()
         return false;
 
     MOZ_ASSERT(!isAsmJS());
+
+    metadata_->debugEnabled = args.debugEnabled && BaselineCanCompile();
+    compileMode_ = args.alwaysBaseline || metadata_->debugEnabled
+                   ? CompileMode::Baseline
+                   : CompileMode::Ion;
 
     // For wasm, the Vectors are correctly-sized and already initialized.
 
@@ -202,9 +212,6 @@ ModuleGenerator::init(UniqueModuleEnvironment env, const CompileArgs& args,
 
     linkData_.globalDataLength = AlignBytes(InitialGlobalDataBytes, sizeof(void*));
 
-    alwaysBaseline_ = args.alwaysBaseline;
-    debugEnabled_ = args.debugEnabled;
-
     if (!funcToCodeRange_.appendN(BAD_CODE_RANGE, env_->funcSigs.length()))
         return false;
 
@@ -214,7 +221,7 @@ ModuleGenerator::init(UniqueModuleEnvironment env, const CompileArgs& args,
     if (!exportedFuncs_.init())
         return false;
 
-    if (env_->isAsmJS() ? !initAsmJS(maybeAsmJSMetadata) : !initWasm())
+    if (env_->isAsmJS() ? !initAsmJS(maybeAsmJSMetadata) : !initWasm(args))
         return false;
 
     if (args.scriptedCaller.filename) {
@@ -903,7 +910,7 @@ ModuleGenerator::startFuncDefs()
     if (!tasks_.initCapacity(numTasks))
         return false;
     for (size_t i = 0; i < numTasks; i++)
-        tasks_.infallibleEmplaceBack(*env_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
+        tasks_.infallibleEmplaceBack(*env_, compileMode_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
 
     if (!freeTasks_.reserve(numTasks))
         return false;
@@ -948,7 +955,7 @@ ModuleGenerator::launchBatchCompile()
 {
     MOZ_ASSERT(currentTask_);
 
-    currentTask_->setDebugEnabled(debugEnabled_);
+    currentTask_->setDebugEnabled(metadata_->debugEnabled);
 
     size_t numBatchedFuncs = currentTask_->units().length();
     MOZ_ASSERT(numBatchedFuncs);
@@ -977,30 +984,20 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg)
     MOZ_ASSERT(activeFuncDef_ == fg);
 
     UniqueFuncBytes func = Move(fg->funcBytes_);
-
     func->setFunc(funcIndex, &funcSig(funcIndex));
-
-    CompileMode mode;
-    if ((alwaysBaseline_ || debugEnabled_) && BaselineCanCompile(fg)) {
-      mode = CompileMode::Baseline;
-    } else {
-      mode = CompileMode::Ion;
-      // Ion does not support debugging -- reset debugEnabled_ flags to avoid
-      // turning debugging for wasm::Code.
-      debugEnabled_ = false;
-    }
-
-    CheckedInt<uint32_t> newBatched = func->bytes().length();
-    if (mode == CompileMode::Ion)
-        newBatched *= JitOptions.wasmBatchIonScaleFactor;
-    newBatched += batchedBytecode_;
-
-    if (!currentTask_->units().emplaceBack(Move(func), mode))
+    uint32_t funcBytecodeLength = func->bytes().length();
+    if (!currentTask_->units().emplaceBack(Move(func)))
         return false;
 
-    if (newBatched.isValid() && newBatched.value() < JitOptions.wasmBatchThreshold)
-        batchedBytecode_ = newBatched.value();
-    else if (!launchBatchCompile())
+    uint32_t threshold;
+    switch (compileMode_) {
+      case CompileMode::Baseline: threshold = JitOptions.wasmBatchBaselineThreshold; break;
+      case CompileMode::Ion:      threshold = JitOptions.wasmBatchIonThreshold;      break;
+    }
+
+    batchedBytecode_ += funcBytecodeLength;
+    MOZ_ASSERT(batchedBytecode_ <= MaxModuleBytes);
+    if (batchedBytecode_ > threshold && !launchBatchCompile())
         return false;
 
     fg->m_ = nullptr;
@@ -1189,8 +1186,6 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     if (isAsmJS() && !metadata_->tables.resize(numTables_))
         return nullptr;
 
-    metadata_->debugEnabled = debugEnabled_;
-
     // Assert CodeRanges are sorted.
 #ifdef DEBUG
     uint32_t lastEnd = 0;
@@ -1229,17 +1224,19 @@ wasm::CompileFunction(CompileTask* task, UniqueChars* error)
     TraceLoggerThread* logger = TraceLoggerForCurrentThread();
     AutoTraceLog logCompile(logger, TraceLogger_WasmCompilation);
 
-    for (FuncCompileUnit& unit : task->units()) {
-        switch (unit.mode()) {
-          case CompileMode::Ion:
+    switch (task->mode()) {
+      case CompileMode::Ion:
+        for (FuncCompileUnit& unit : task->units()) {
             if (!IonCompileFunction(task, &unit, error))
                 return false;
-            break;
-          case CompileMode::Baseline:
+        }
+        break;
+      case CompileMode::Baseline:
+        for (FuncCompileUnit& unit : task->units()) {
             if (!BaselineCompileFunction(task, &unit, error))
                 return false;
-            break;
         }
+        break;
     }
 
     return true;

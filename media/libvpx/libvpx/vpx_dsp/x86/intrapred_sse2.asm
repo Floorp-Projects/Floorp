@@ -756,7 +756,7 @@ cglobal tm_predictor_8x8, 4, 4, 5, dst, stride, above, left
   psubw                 m0, m2        ; t1-tl t2-tl ... t8-tl [word]
   movq                  m2, [leftq]
   punpcklbw             m2, m1        ; l1 l2 l3 l4 l5 l6 l7 l8 [word]
-.loop
+.loop:
   pshuflw               m4, m2, 0x0   ; [63:0] l1 l1 l1 l1 [word]
   pshuflw               m3, m2, 0x55  ; [63:0] l2 l2 l2 l2 [word]
   punpcklqdq            m4, m4        ; l1 l1 l1 l1 l1 l1 l1 l1 [word]

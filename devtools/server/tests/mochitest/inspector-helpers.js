@@ -62,7 +62,7 @@ function attachURL(url, callback) {
         client.listTabs(response => {
           for (let tab of response.tabs) {
             if (tab.url === url) {
-              window.removeEventListener("message", loadListener, false);
+              window.removeEventListener("message", loadListener);
               client.attachTab(tab.actor, function (aResponse, aTabClient) {
                 try {
                   callback(null, client, tab, win.document);
@@ -77,7 +77,7 @@ function attachURL(url, callback) {
         });
       });
     }
-  }, false);
+  });
 
   return cleanup;
 }

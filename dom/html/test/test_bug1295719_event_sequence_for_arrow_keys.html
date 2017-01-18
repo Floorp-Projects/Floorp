@@ -40,12 +40,12 @@ function runTests() {
       // waiting_event_sequence as a circular buffer and reset waiting_event_idx
       // when it point to the end of buffer.
       waiting_event_idx = waiting_event_idx == waiting_event_sequence.length -1 ? 0 : waiting_event_idx + 1;
-    }, false);
+    });
     range.addEventListener(eventType, (event) => {
       let waiting_event = waiting_event_sequence[waiting_event_idx];
       is(waiting_event, eventType, "Waiting " + waiting_event + " get " + eventType);
       waiting_event_idx = waiting_event_idx == waiting_event_sequence.length - 1 ? 0 : waiting_event_idx + 1;
-    }, false);
+    });
   });
 
   number.focus();

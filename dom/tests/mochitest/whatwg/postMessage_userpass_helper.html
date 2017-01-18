@@ -24,7 +24,7 @@ function sendMessage(evt)
   window.parent.postMessage(msg, "http://mochi.test:8888");
 }
 
-window.addEventListener("message", sendMessage, false);
+window.addEventListener("message", sendMessage);
   </script>
 </head>
 <body>

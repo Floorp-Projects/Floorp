@@ -50,19 +50,19 @@ var bookmarks_initial_2 = {
   ]
 };
 
-Phase('phase1', [
+Phase("phase1", [
   [Bookmarks.add, bookmarks_initial_1],
   [Sync]
 ]);
 
-Phase('phase2', [
+Phase("phase2", [
   [Sync],
   [Bookmarks.verify, bookmarks_initial_1],
   [Bookmarks.add, bookmarks_initial_2],
   [Sync]
 ]);
 
-Phase('phase3', [
+Phase("phase3", [
   [Sync],
   // XXX [Bookmarks.verify, bookmarks_initial_1],
   [Bookmarks.verify, bookmarks_initial_2]

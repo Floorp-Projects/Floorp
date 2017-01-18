@@ -1772,14 +1772,23 @@ HTMLInputElement::GetValueInternal(nsAString& aValue,
 
   if (aCallerType == CallerType::System) {
     aValue.Assign(mFirstFilePath);
-  } else {
-    // Just return the leaf name
-    if (mFilesOrDirectories.IsEmpty()) {
-      aValue.Truncate();
-    } else {
-      GetDOMFileOrDirectoryName(mFilesOrDirectories[0], aValue);
-    }
+    return;
   }
+
+  if (mFilesOrDirectories.IsEmpty()) {
+    aValue.Truncate();
+    return;
+  }
+
+  nsAutoString file;
+  GetDOMFileOrDirectoryName(mFilesOrDirectories[0], file);
+  if (file.IsEmpty()) {
+    aValue.Truncate();
+    return;
+  }
+
+  aValue.AssignLiteral("C:\\fakepath\\");
+  aValue.Append(file);
 }
 
 void

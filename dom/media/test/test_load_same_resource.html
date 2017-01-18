@@ -23,7 +23,7 @@ function cloneLoaded(event) {
        "Clone " + e.currentSrc + " duration: " + e.duration + " expected: " + e._expectedDuration);
   }
 
-  e.removeEventListener("loadeddata", cloneLoaded, false);
+  e.removeEventListener("loadeddata", cloneLoaded);
   removeNodeAndSource(e);
   manager.finished(e.token);
 }
@@ -42,7 +42,7 @@ function tryClone(event) {
     info(e.token + ": got " + evt.type);
   }
   events.forEach(function(e) {
-    clone.addEventListener(e, logEvent, false);
+    clone.addEventListener(e, logEvent);
   });
 
 
@@ -52,7 +52,7 @@ function tryClone(event) {
     clone._expectedDuration = e._expectedDuration;
   }
 
-  clone.addEventListener("loadeddata", cloneLoaded, false);
+  clone.addEventListener("loadeddata", cloneLoaded);
   clone.onloadstart = function(evt) {
     info("cloned " + evt.target.token + " start loading.");
     evt.target.onloadstart = null;
@@ -65,7 +65,7 @@ function tryClone(event) {
     removeNodeAndSource(e);
   }
 
-  e.removeEventListener("loadeddata", tryClone, false);
+  e.removeEventListener("loadeddata", tryClone);
 }
 
 // This test checks that loading the same URI twice in different elements at the same time
@@ -85,7 +85,7 @@ function initTest(test, token) {
       e._expectedDuration = test.duration;
     }
     ok(true, "Trying to load " + test.name);
-    e.addEventListener("loadeddata", tryClone, false);
+    e.addEventListener("loadeddata", tryClone);
     e.load();
     e.token = token;
     manager.started(token);

@@ -103,8 +103,8 @@ function runTests()
   }
 
   var listbox = document.getElementById("listbox");
-  listbox.addEventListener("keydown", onKeydown, false);
-  listbox.addEventListener("keypress", onKeypress, false);
+  listbox.addEventListener("keydown", onKeydown);
+  listbox.addEventListener("keypress", onKeypress);
   SpecialPowers.addSystemEventListener(listbox, "keydown", onkeydownInSystemEventGroup, false);
 
   listbox.focus();
@@ -176,15 +176,15 @@ function runTests()
     check(false, "'A' key on listbox");
   });
 
-  listbox.removeEventListener("keydown", onKeydown, false);
-  listbox.removeEventListener("keypress", onKeypress, false);
+  listbox.removeEventListener("keydown", onKeydown);
+  listbox.removeEventListener("keypress", onKeypress);
   SpecialPowers.removeSystemEventListener(listbox, "keydown", onkeydownInSystemEventGroup, false);
 
 
 
   var multipleListbox = document.getElementById("multipleListbox");
-  multipleListbox.addEventListener("keydown", onKeydown, false);
-  multipleListbox.addEventListener("keypress", onKeypress, false);
+  multipleListbox.addEventListener("keydown", onKeydown);
+  multipleListbox.addEventListener("keypress", onKeypress);
   SpecialPowers.addSystemEventListener(multipleListbox, "keydown", onkeydownInSystemEventGroup, false);
 
   multipleListbox.focus();
@@ -256,15 +256,15 @@ function runTests()
     check(false, "'A' key on multiple listbox");
   });
 
-  multipleListbox.removeEventListener("keydown", onKeydown, false);
-  multipleListbox.removeEventListener("keypress", onKeypress, false);
+  multipleListbox.removeEventListener("keydown", onKeydown);
+  multipleListbox.removeEventListener("keypress", onKeypress);
   SpecialPowers.removeSystemEventListener(multipleListbox, "keydown", onkeydownInSystemEventGroup, false);
 
 
 
   var combobox = document.getElementById("combobox");
-  combobox.addEventListener("keydown", onKeydown, false);
-  combobox.addEventListener("keypress", onKeypress, false);
+  combobox.addEventListener("keydown", onKeydown);
+  combobox.addEventListener("keypress", onKeypress);
   SpecialPowers.addSystemEventListener(combobox, "keydown", onkeydownInSystemEventGroup, false);
 
   combobox.focus();
@@ -344,8 +344,8 @@ function runTests()
 
   function finish()
   {
-    combobox.removeEventListener("keydown", onKeydown, false);
-    combobox.removeEventListener("keypress", onKeypress, false);
+    combobox.removeEventListener("keydown", onKeydown);
+    combobox.removeEventListener("keypress", onKeypress);
     SpecialPowers.removeSystemEventListener(combobox, "keydown", onkeydownInSystemEventGroup, false);
     SimpleTest.finish();
   }
@@ -474,18 +474,18 @@ function runTests()
 function testOpenDropDown(aTest, aOnOpenDropDown)
 {
   document.addEventListener("popupshowing", function (aEvent) {
-    document.removeEventListener(aEvent.type, arguments.callee, false);
+    document.removeEventListener(aEvent.type, arguments.callee);
     setTimeout(aOnOpenDropDown, 0);
-  }, false);
+  });
   aTest();
 }
 
 function testCloseDropDown(aTest, aOnCloseDropDown)
 {
   document.addEventListener("popuphiding", function (aEvent) {
-    document.removeEventListener(aEvent.type, arguments.callee, false);
+    document.removeEventListener(aEvent.type, arguments.callee);
     setTimeout(aOnCloseDropDown, 0)
-  }, false);
+  });
   aTest();
 }
 

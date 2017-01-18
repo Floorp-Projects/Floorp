@@ -22,7 +22,7 @@ SpecialPowers.pushPrefEnv({"set": [["security.webauth.u2f", true],
                                    ["security.webauth.u2f_enable_usbtoken", false]]},
 function() {
   // listen for messages from the test harness
-  window.addEventListener("message", handleEventMessage, false);
+  window.addEventListener("message", handleEventMessage);
   document.getElementById('testing_frame').src = 'frame_no_token.html';
 });
 

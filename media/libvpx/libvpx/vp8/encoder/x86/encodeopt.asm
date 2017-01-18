@@ -11,9 +11,9 @@
 
 %include "vpx_ports/x86_abi_support.asm"
 
-;int vp8_block_error_xmm(short *coeff_ptr,  short *dcoef_ptr)
-global sym(vp8_block_error_xmm) PRIVATE
-sym(vp8_block_error_xmm):
+;int vp8_block_error_sse2(short *coeff_ptr,  short *dcoef_ptr)
+global sym(vp8_block_error_sse2) PRIVATE
+sym(vp8_block_error_sse2):
     push        rbp
     mov         rbp, rsp
     SHADOW_ARGS_TO_STACK 2
@@ -59,152 +59,9 @@ sym(vp8_block_error_xmm):
     pop         rbp
     ret
 
-;int vp8_block_error_mmx(short *coeff_ptr,  short *dcoef_ptr)
-global sym(vp8_block_error_mmx) PRIVATE
-sym(vp8_block_error_mmx):
-    push        rbp
-    mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 2
-    push rsi
-    push rdi
-    ; end prolog
-
-
-        mov         rsi,        arg(0) ;coeff_ptr
-        pxor        mm7,        mm7
-
-        mov         rdi,        arg(1) ;dcoef_ptr
-        movq        mm3,        [rsi]
-
-        movq        mm4,        [rdi]
-        movq        mm5,        [rsi+8]
-
-        movq        mm6,        [rdi+8]
-        pxor        mm1,        mm1 ; from movd mm1, dc ; dc =0
-
-        movq        mm2,        mm7
-        psubw       mm5,        mm6
-
-        por         mm1,        mm2
-        pmaddwd     mm5,        mm5
-
-        pcmpeqw     mm1,        mm7
-        psubw       mm3,        mm4
-
-        pand        mm1,        mm3
-        pmaddwd     mm1,        mm1
-
-        paddd       mm1,        mm5
-        movq        mm3,        [rsi+16]
-
-        movq        mm4,        [rdi+16]
-        movq        mm5,        [rsi+24]
-
-        movq        mm6,        [rdi+24]
-        psubw       mm5,        mm6
-
-        pmaddwd     mm5,        mm5
-        psubw       mm3,        mm4
-
-        pmaddwd     mm3,        mm3
-        paddd       mm3,        mm5
-
-        paddd       mm1,        mm3
-        movq        mm0,        mm1
-
-        psrlq       mm1,        32
-        paddd       mm0,        mm1
-
-        movq        rax,        mm0
-
-    pop rdi
-    pop rsi
-    ; begin epilog
-    UNSHADOW_ARGS
-    pop         rbp
-    ret
-
-
-;int vp8_mbblock_error_mmx_impl(short *coeff_ptr, short *dcoef_ptr, int dc);
-global sym(vp8_mbblock_error_mmx_impl) PRIVATE
-sym(vp8_mbblock_error_mmx_impl):
-    push        rbp
-    mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 3
-    push rsi
-    push rdi
-    ; end prolog
-
-
-        mov         rsi,        arg(0) ;coeff_ptr
-        pxor        mm7,        mm7
-
-        mov         rdi,        arg(1) ;dcoef_ptr
-        pxor        mm2,        mm2
-
-        movd        mm1,        dword ptr arg(2) ;dc
-        por         mm1,        mm2
-
-        pcmpeqw     mm1,        mm7
-        mov         rcx,        16
-
-.mberror_loop_mmx:
-        movq        mm3,       [rsi]
-        movq        mm4,       [rdi]
-
-        movq        mm5,       [rsi+8]
-        movq        mm6,       [rdi+8]
-
-
-        psubw       mm5,        mm6
-        pmaddwd     mm5,        mm5
-
-        psubw       mm3,        mm4
-        pand        mm3,        mm1
-
-        pmaddwd     mm3,        mm3
-        paddd       mm2,        mm5
-
-        paddd       mm2,        mm3
-        movq        mm3,       [rsi+16]
-
-        movq        mm4,       [rdi+16]
-        movq        mm5,       [rsi+24]
-
-        movq        mm6,       [rdi+24]
-        psubw       mm5,        mm6
-
-        pmaddwd     mm5,        mm5
-        psubw       mm3,        mm4
-
-        pmaddwd     mm3,        mm3
-        paddd       mm2,        mm5
-
-        paddd       mm2,        mm3
-        add         rsi,        32
-
-        add         rdi,        32
-        sub         rcx,        1
-
-        jnz         .mberror_loop_mmx
-
-        movq        mm0,        mm2
-        psrlq       mm2,        32
-
-        paddd       mm0,        mm2
-        movq        rax,        mm0
-
-    pop rdi
-    pop rsi
-    ; begin epilog
-    UNSHADOW_ARGS
-    pop         rbp
-    ret
-
-
-;int vp8_mbblock_error_xmm_impl(short *coeff_ptr, short *dcoef_ptr, int dc);
-global sym(vp8_mbblock_error_xmm_impl) PRIVATE
-sym(vp8_mbblock_error_xmm_impl):
+;int vp8_mbblock_error_sse2_impl(short *coeff_ptr, short *dcoef_ptr, int dc);
+global sym(vp8_mbblock_error_sse2_impl) PRIVATE
+sym(vp8_mbblock_error_sse2_impl):
     push        rbp
     mov         rbp, rsp
     SHADOW_ARGS_TO_STACK 3
@@ -272,66 +129,9 @@ sym(vp8_mbblock_error_xmm_impl):
     ret
 
 
-;int vp8_mbuverror_mmx_impl(short *s_ptr, short *d_ptr);
-global sym(vp8_mbuverror_mmx_impl) PRIVATE
-sym(vp8_mbuverror_mmx_impl):
-    push        rbp
-    mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 2
-    push rsi
-    push rdi
-    ; end prolog
-
-
-        mov             rsi,        arg(0) ;s_ptr
-        mov             rdi,        arg(1) ;d_ptr
-
-        mov             rcx,        16
-        pxor            mm7,        mm7
-
-.mbuverror_loop_mmx:
-
-        movq            mm1,        [rsi]
-        movq            mm2,        [rdi]
-
-        psubw           mm1,        mm2
-        pmaddwd         mm1,        mm1
-
-
-        movq            mm3,        [rsi+8]
-        movq            mm4,        [rdi+8]
-
-        psubw           mm3,        mm4
-        pmaddwd         mm3,        mm3
-
-
-        paddd           mm7,        mm1
-        paddd           mm7,        mm3
-
-
-        add             rsi,        16
-        add             rdi,        16
-
-        dec             rcx
-        jnz             .mbuverror_loop_mmx
-
-        movq            mm0,        mm7
-        psrlq           mm7,        32
-
-        paddd           mm0,        mm7
-        movq            rax,        mm0
-
-    pop rdi
-    pop rsi
-    ; begin epilog
-    UNSHADOW_ARGS
-    pop         rbp
-    ret
-
-
-;int vp8_mbuverror_xmm_impl(short *s_ptr, short *d_ptr);
-global sym(vp8_mbuverror_xmm_impl) PRIVATE
-sym(vp8_mbuverror_xmm_impl):
+;int vp8_mbuverror_sse2_impl(short *s_ptr, short *d_ptr);
+global sym(vp8_mbuverror_sse2_impl) PRIVATE
+sym(vp8_mbuverror_sse2_impl):
     push        rbp
     mov         rbp, rsp
     SHADOW_ARGS_TO_STACK 2

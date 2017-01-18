@@ -72,17 +72,13 @@ module.exports = createClass({
   },
 
   componentDidMount() {
-    document.defaultView.top.addEventListener("mouseup", this._onMouseUp,
-                                              false);
-    document.defaultView.top.addEventListener("mousemove", this._onMouseMove,
-                                              false);
+    document.defaultView.top.addEventListener("mouseup", this._onMouseUp);
+    document.defaultView.top.addEventListener("mousemove", this._onMouseMove);
   },
 
   componentWillUnmount() {
-    document.defaultView.top.removeEventListener("mouseup", this._onMouseUp,
-                                                 false);
-    document.defaultView.top.removeEventListener("mousemove", this._onMouseMove,
-                                                 false);
+    document.defaultView.top.removeEventListener("mouseup", this._onMouseUp);
+    document.defaultView.top.removeEventListener("mousemove", this._onMouseMove);
   },
 
   _onMouseDown(event) {

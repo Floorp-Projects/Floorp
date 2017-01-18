@@ -10,18 +10,18 @@ function boom()
   var dE = document.documentElement;
   var newSpan = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
   
-  document.addEventListener("DOMNodeRemoved", whee, false);
+  document.addEventListener("DOMNodeRemoved", whee);
   document.removeChild(dE);
-  document.removeEventListener("DOMNodeRemoved", whee, false);
+  document.removeEventListener("DOMNodeRemoved", whee);
   
   function whee()
   {
-    document.removeEventListener("DOMNodeRemoved", whee, false);
+    document.removeEventListener("DOMNodeRemoved", whee);
     document.insertBefore(newSpan, dE);
   }
 }
 
-window.addEventListener("load", boom, false);
+window.addEventListener("load", boom);
 
 ]]>
 

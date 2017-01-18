@@ -1316,13 +1316,11 @@ SpecialPowersAPI.prototype = {
   },
   addAutoCompletePopupEventListener: function(window, eventname, listener) {
     this._getAutoCompletePopup(window).addEventListener(eventname,
-                                                        listener,
-                                                        false);
+                                                        listener);
   },
   removeAutoCompletePopupEventListener: function(window, eventname, listener) {
     this._getAutoCompletePopup(window).removeEventListener(eventname,
-                                                           listener,
-                                                           false);
+                                                           listener);
   },
   get formHistory() {
     let tmp = {};

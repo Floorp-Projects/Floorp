@@ -708,11 +708,11 @@ var MenuWrapper = Class({
     this._updateItemVisibilities = this.updateItemVisibilities.bind(this);
     this.contextMenu.addEventListener("popupshowing", this._updateItemVisibilities, true);
     this._updateOverflowState = this.updateOverflowState.bind(this);
-    this.contextMenu.addEventListener("popupshowing", this._updateOverflowState, false);
+    this.contextMenu.addEventListener("popupshowing", this._updateOverflowState);
   },
 
   destroy: function destroy() {
-    this.contextMenu.removeEventListener("popupshowing", this._updateOverflowState, false);
+    this.contextMenu.removeEventListener("popupshowing", this._updateOverflowState);
     this.contextMenu.removeEventListener("popupshowing", this._updateItemVisibilities, true);
 
     if (!this.populated)
@@ -882,7 +882,7 @@ var MenuWrapper = Class({
           return;
 
         itemActivated(item, xulNode);
-      }, false);
+      });
     }
 
     this.insertIntoXUL(item, xulNode, after);

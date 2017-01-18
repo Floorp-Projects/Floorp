@@ -30,8 +30,8 @@ function checkComplete() {
 }
 
 function removeNode(v) {
-  v.removeEventListener("error", loadError, false);
-  v.removeEventListener("loadedmetadata", loadedMetadata, false);
+  v.removeEventListener("error", loadError);
+  v.removeEventListener("loadedmetadata", loadedMetadata);
   v.remove();
   v.src = "";
 }
@@ -69,8 +69,8 @@ for (var i=0; i<gSmallTests.length; ++i) {
   v.preload = "metadata";
   v.autoplay = "true";
   v._complete = false;
-  v.addEventListener("error", loadError, false);
-  v.addEventListener("loadedmetadata", loadedMetadata, false);
+  v.addEventListener("error", loadError);
+  v.addEventListener("loadedmetadata", loadedMetadata);
   v.src = 'referer.sjs?name=' + test.name + '&type=' + test.type;
   document.body.appendChild(v); // Will start load.
   media.push(v);

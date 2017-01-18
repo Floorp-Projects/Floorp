@@ -18,7 +18,7 @@ var workerURL = workerScope + "worker.js";
 function testOnWindow(aIsPrivate, aCallback) {
   var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
   win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad, false);
+    win.removeEventListener("load", onLoad);
     win.addEventListener("DOMContentLoaded", function onInnerLoad() {
       if (win.content.location.href != contentPage) {
         win.gBrowser.loadURI(contentPage);

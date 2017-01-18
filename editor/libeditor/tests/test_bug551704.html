@@ -89,7 +89,7 @@ SimpleTest.waitForFocus(function() {
     is(range.startOffset, 0, "The start offset should be zero");
 
     continueTest();
-  }, false);
+  });
   iframe.src = "data:text/html,foo";
   document.getElementById("content").appendChild(iframe);
 });

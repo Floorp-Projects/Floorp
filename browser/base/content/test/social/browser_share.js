@@ -37,7 +37,7 @@ function test() {
     /* if text is entered into field, onbeforeunload will cause a modal dialog
        unless dialogs have been disabled for the iframe. */
     content.onbeforeunload = function(e) {
-      return 'FAIL.';
+      return "FAIL.";
     };
   }.toString() + ")();";
   let mm = getGroupMessageManager("social");

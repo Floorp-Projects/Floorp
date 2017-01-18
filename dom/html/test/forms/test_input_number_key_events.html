@@ -191,8 +191,8 @@ function test() {
     // Test preventDefault():
     elem.addEventListener("keypress", function(evt) {
       evt.preventDefault();
-      elem.removeEventListener("keypress", arguments.callee, false);
-    }, false);
+      elem.removeEventListener("keypress", arguments.callee);
+    });
     oldVal = elem.value = 0;
     expectedVal = 0;
     synthesizeKey(key, {});

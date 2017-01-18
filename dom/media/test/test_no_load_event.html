@@ -34,9 +34,9 @@ function start() {
 
     v.addEventListener("load", function() {
       gotLoadEvent = true;
-    }, false);
+    });
 
-    v.addEventListener("ended", finished, false);
+    v.addEventListener("ended", finished);
     document.body.appendChild(v);
     v.play();
   }

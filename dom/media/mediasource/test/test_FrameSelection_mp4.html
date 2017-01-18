@@ -32,7 +32,7 @@ runWithMSE(function(ms, v) {
       info("got " + e.type + " event");
     }
     events.forEach(function(e) {
-      v.addEventListener(e, logEvent, false);
+      v.addEventListener(e, logEvent);
     });
 
     sb.addEventListener('error', (e) => { ok(false, "Got Error: " + e); SimpleTest.finish(); });

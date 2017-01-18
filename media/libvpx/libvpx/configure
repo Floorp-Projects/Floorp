@@ -22,6 +22,7 @@ show_help(){
 Advanced options:
   ${toggle_libs}                  libraries
   ${toggle_examples}              examples
+  ${toggle_tools}                 tools
   ${toggle_docs}                  documentation
   ${toggle_unit_tests}            unit tests
   ${toggle_decode_perf_tests}     build decoder perf tests with unit tests
@@ -97,11 +98,9 @@ EOF
 
 # all_platforms is a list of all supported target platforms. Maintain
 # alphabetically by architecture, generic-gnu last.
+all_platforms="${all_platforms} arm64-android-gcc"
 all_platforms="${all_platforms} arm64-darwin-gcc"
 all_platforms="${all_platforms} arm64-linux-gcc"
-all_platforms="${all_platforms} armv6-linux-rvct"
-all_platforms="${all_platforms} armv6-linux-gcc"
-all_platforms="${all_platforms} armv6-none-rvct"
 all_platforms="${all_platforms} armv7-android-gcc"   #neon Cortex-A8
 all_platforms="${all_platforms} armv7-darwin-gcc"    #neon Cortex-A8
 all_platforms="${all_platforms} armv7-linux-rvct"    #neon Cortex-A8
@@ -132,9 +131,6 @@ all_platforms="${all_platforms} x86-linux-icc"
 all_platforms="${all_platforms} x86-os2-gcc"
 all_platforms="${all_platforms} x86-solaris-gcc"
 all_platforms="${all_platforms} x86-win32-gcc"
-all_platforms="${all_platforms} x86-win32-vs7"
-all_platforms="${all_platforms} x86-win32-vs8"
-all_platforms="${all_platforms} x86-win32-vs9"
 all_platforms="${all_platforms} x86-win32-vs10"
 all_platforms="${all_platforms} x86-win32-vs11"
 all_platforms="${all_platforms} x86-win32-vs12"
@@ -152,8 +148,6 @@ all_platforms="${all_platforms} x86_64-linux-gcc"
 all_platforms="${all_platforms} x86_64-linux-icc"
 all_platforms="${all_platforms} x86_64-solaris-gcc"
 all_platforms="${all_platforms} x86_64-win64-gcc"
-all_platforms="${all_platforms} x86_64-win64-vs8"
-all_platforms="${all_platforms} x86_64-win64-vs9"
 all_platforms="${all_platforms} x86_64-win64-vs10"
 all_platforms="${all_platforms} x86_64-win64-vs11"
 all_platforms="${all_platforms} x86_64-win64-vs12"
@@ -162,7 +156,7 @@ all_platforms="${all_platforms} generic-gnu"
 
 # all_targets is a list of all targets that can be configured
 # note that these should be in dependency order for now.
-all_targets="libs examples docs"
+all_targets="libs examples tools docs"
 
 # all targets available are enabled, by default.
 for t in ${all_targets}; do
@@ -241,8 +235,6 @@ ARCH_EXT_LIST_X86="
     avx2
 "
 ARCH_EXT_LIST="
-    edsp
-    media
     neon
     neon_asm
 
@@ -272,7 +264,6 @@ CONFIG_LIST="
     install_bins
     install_libs
     install_srcs
-    use_x86inc
     debug
     gprof
     gcov
@@ -334,7 +325,6 @@ CMDLINE_SELECT="
     gprof
     gcov
     pic
-    use_x86inc
     optimizations
     ccache
     runtime_cpu_detect
@@ -342,6 +332,7 @@ CMDLINE_SELECT="
 
     libs
     examples
+    tools
     docs
     libc
     as
@@ -487,7 +478,7 @@ EOF
     #
     # Write makefiles for all enabled targets
     #
-    for tgt in libs examples docs solution; do
+    for tgt in libs examples tools docs solution; do
         tgt_fn="$tgt-$toolchain.mk"
 
         if enabled $tgt; then
@@ -578,26 +569,29 @@ process_toolchain() {
         check_add_cflags -Wall
         check_add_cflags -Wdeclaration-after-statement
         check_add_cflags -Wdisabled-optimization
+        check_add_cflags -Wfloat-conversion
         check_add_cflags -Wpointer-arith
         check_add_cflags -Wtype-limits
         check_add_cflags -Wcast-qual
         check_add_cflags -Wvla
         check_add_cflags -Wimplicit-function-declaration
         check_add_cflags -Wuninitialized
-        check_add_cflags -Wunused-variable
-        case ${CC} in
-          *clang*)
-              # libvpx and/or clang have issues with aliasing:
-              # https://code.google.com/p/webm/issues/detail?id=603
-              # work around them until they are fixed
-              check_add_cflags -fno-strict-aliasing
-          ;;
-          *) check_add_cflags -Wunused-but-set-variable ;;
-        esac
+        check_add_cflags -Wunused
+        # -Wextra has some tricky cases. Rather than fix them all now, get the
+        # flag for as many files as possible and fix the remaining issues
+        # piecemeal.
+        # https://bugs.chromium.org/p/webm/issues/detail?id=1069
+        check_add_cflags -Wextra
+        # check_add_cflags also adds to cxxflags. gtest does not do well with
+        # -Wundef so add it explicitly to CFLAGS only.
+        check_cflags -Wundef && add_cflags_only -Wundef
         if enabled mips || [ -z "${INLINE}" ]; then
           enabled extra_warnings || check_add_cflags -Wno-unused-function
-        else
-          check_add_cflags -Wunused-function
+        fi
+        if ! enabled vp9_highbitdepth; then
+          # Avoid this warning for third_party C++ sources. Some reorganization
+          # would be needed to apply this only to test/*.cc.
+          check_cflags -Wshorten-64-to-32 && add_cflags_only -Wshorten-64-to-32
         fi
     fi
 
@@ -646,17 +640,9 @@ process_toolchain() {
         vs*) enable_feature msvs
              enable_feature solution
              vs_version=${tgt_cc##vs}
-             case $vs_version in
-             [789])
-                 VCPROJ_SFX=vcproj
-                 gen_vcproj_cmd=${source_path}/build/make/gen_msvs_proj.sh
-                 ;;
-             10|11|12|14)
-                 VCPROJ_SFX=vcxproj
-                 gen_vcproj_cmd=${source_path}/build/make/gen_msvs_vcxproj.sh
-                 enabled werror && gen_vcproj_cmd="${gen_vcproj_cmd} --enable-werror"
-                 ;;
-             esac
+             VCPROJ_SFX=vcxproj
+             gen_vcproj_cmd=${source_path}/build/make/gen_msvs_vcxproj.sh
+             enabled werror && gen_vcproj_cmd="${gen_vcproj_cmd} --enable-werror"
              all_targets="${all_targets} solution"
              INLINE="__forceinline"
         ;;

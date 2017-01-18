@@ -73,20 +73,20 @@
       gTextboxElm = getNode("textbox");
       gTooltipElm = getNode("tooltip");
 
-      gButtonElm.addEventListener("focus", gFocusHandler, false);
-      gButtonElm.addEventListener("blur", gBlurHandler, false);
-      gTextboxElm.addEventListener("focus", gFocusHandler, false);
-      gTextboxElm.addEventListener("blur", gBlurHandler, false);
+      gButtonElm.addEventListener("focus", gFocusHandler);
+      gButtonElm.addEventListener("blur", gBlurHandler);
+      gTextboxElm.addEventListener("focus", gFocusHandler);
+      gTextboxElm.addEventListener("blur", gBlurHandler);
 
       // The aria-describedby is changed on DOM focus. Accessible description
       // should be updated when a11y focus is fired.
       gQueue = new eventQueue(nsIAccessibleEvent.EVENT_FOCUS);
       gQueue.onFinish = function()
       {
-        gButtonElm.removeEventListener("focus", gFocusHandler, false);
-        gButtonElm.removeEventListener("blur", gBlurHandler, false);
-        gTextboxElm.removeEventListener("focus", gFocusHandler, false);
-        gTextboxElm.removeEventListener("blur", gBlurHandler, false);
+        gButtonElm.removeEventListener("focus", gFocusHandler);
+        gButtonElm.removeEventListener("blur", gBlurHandler);
+        gTextboxElm.removeEventListener("focus", gFocusHandler);
+        gTextboxElm.removeEventListener("blur", gBlurHandler);
       }
 
       var descr = "It's a tooltip";

@@ -26,18 +26,18 @@ function runTests() {
   link1.addEventListener("pointerdown", (e) => {
     e.preventDefault();
     is(e.defaultPrevented, true, "defaultPrevented should be true");
-  }, false);
+  });
 
   mouseEvents.forEach((elm, index, arr) => {
     link1.addEventListener(elm, () => {
       ok(false, "Should not receive " + elm + " after preventDefault on pointerdown");
-    }, false);
+    });
   });
 
   link1.addEventListener("click", (e) => {
     e.preventDefault();
     SimpleTest.finish();
-  }, false);
+  });
 
   synthesizeMouseAtCenter(link1, { type: "mousedown",
                                    inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE });

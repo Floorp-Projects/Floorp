@@ -5,6 +5,7 @@
 
 #include "AndroidBridge.h"
 #include "base/message_loop.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
@@ -20,8 +21,7 @@ class AndroidUiThread;
 
 StaticRefPtr<AndroidUiThread> sThread;
 static MessageLoop* sMessageLoop;
-static Monitor* sMessageLoopAccessMonitor;
-static bool sInitialized = false;
+static Atomic<Monitor*> sMessageLoopAccessMonitor;
 
 /*
  * The AndroidUiThread is derived from nsThread so that nsIRunnable objects that get
@@ -120,7 +120,6 @@ public:
   NS_IMETHOD Run() override {
     MOZ_ASSERT(sMessageLoopAccessMonitor);
     MonitorAutoLock lock(*sMessageLoopAccessMonitor);
-
     sThread = new AndroidUiThread();
     sThread->InitCurrentThread();
     sThread->SetObserver(new ThreadObserver());
@@ -169,23 +168,19 @@ namespace mozilla {
 void
 CreateAndroidUiThread()
 {
-  MOZ_ASSERT(!sInitialized);
   MOZ_ASSERT(!sThread);
   MOZ_ASSERT(!sMessageLoopAccessMonitor);
   sMessageLoopAccessMonitor = new Monitor("AndroidUiThreadMessageLoopAccessMonitor");
   RefPtr<CreateOnUiThread> runnable = new CreateOnUiThread;
   AndroidBridge::Bridge()->PostTaskToUiThread(do_AddRef(runnable), 0);
-  sInitialized = true;
 }
 
 void
 DestroyAndroidUiThread()
 {
-  MOZ_ASSERT(sInitialized);
   MOZ_ASSERT(sThread);
   // Insure the Android bridge has not already been deconstructed.
   MOZ_ASSERT(AndroidBridge::Bridge() != nullptr);
-  sInitialized = false;
   RefPtr<DestroyOnUiThread> runnable = new DestroyOnUiThread;
   AndroidBridge::Bridge()->PostTaskToUiThread(do_AddRef(runnable), 0);
   runnable->WaitForDestruction();
@@ -196,16 +191,13 @@ DestroyAndroidUiThread()
 MessageLoop*
 GetAndroidUiThreadMessageLoop()
 {
-  if (!sInitialized) {
+  if (!sMessageLoopAccessMonitor) {
     return nullptr;
   }
 
-  if (!sMessageLoop) {
-    MOZ_ASSERT(sMessageLoopAccessMonitor);
-    MonitorAutoLock lock(*sMessageLoopAccessMonitor);
-    while (!sMessageLoop) {
-      lock.Wait();
-    }
+  MonitorAutoLock lock(*sMessageLoopAccessMonitor);
+  while (!sMessageLoop) {
+    lock.Wait();
   }
 
   return sMessageLoop;
@@ -214,16 +206,13 @@ GetAndroidUiThreadMessageLoop()
 RefPtr<nsThread>
 GetAndroidUiThread()
 {
-  if (!sInitialized) {
+  if (!sMessageLoopAccessMonitor) {
     return nullptr;
   }
 
-  if (!sThread) {
-    MOZ_ASSERT(sMessageLoopAccessMonitor);
-    MonitorAutoLock lock(*sMessageLoopAccessMonitor);
-    while (!sThread) {
-      lock.Wait();
-    }
+  MonitorAutoLock lock(*sMessageLoopAccessMonitor);
+  while (!sThread) {
+    lock.Wait();
   }
 
   return sThread;

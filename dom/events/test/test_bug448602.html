@@ -75,7 +75,7 @@ function runTests() {
      "Should have the right listener object (3)");
 
   root.removeEventListener("foo", l, true);
-  root.removeEventListener("foo", l, false);
+  root.removeEventListener("foo", l);
   infos = els.getListenerInfoFor(root, {});
   is(infos.length, 0, "Element shouldn't have listeners (3)");
 

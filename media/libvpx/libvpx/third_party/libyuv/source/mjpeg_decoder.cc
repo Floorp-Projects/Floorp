@@ -59,10 +59,10 @@ const int MJpegDecoder::kColorSpaceYCCK = JCS_YCCK;
 // Methods that are passed to jpeglib.
 boolean fill_input_buffer(jpeg_decompress_struct* cinfo);
 void init_source(jpeg_decompress_struct* cinfo);
-void skip_input_data(jpeg_decompress_struct* cinfo,
-                     long num_bytes);  // NOLINT
+void skip_input_data(jpeg_decompress_struct* cinfo, long num_bytes);  // NOLINT
 void term_source(jpeg_decompress_struct* cinfo);
 void ErrorHandler(jpeg_common_struct* cinfo);
+void OutputHandler(jpeg_common_struct* cinfo);
 
 MJpegDecoder::MJpegDecoder()
     : has_scanline_padding_(LIBYUV_FALSE),
@@ -78,6 +78,7 @@ MJpegDecoder::MJpegDecoder()
   decompress_struct_->err = jpeg_std_error(&error_mgr_->base);
   // Override standard exit()-based error handler.
   error_mgr_->base.error_exit = &ErrorHandler;
+  error_mgr_->base.output_message = &OutputHandler;
 #endif
   decompress_struct_->client_data = NULL;
   source_mgr_->init_source = &init_source;
@@ -429,8 +430,7 @@ boolean fill_input_buffer(j_decompress_ptr cinfo) {
   return TRUE;
 }
 
-void skip_input_data(j_decompress_ptr cinfo,
-                     long num_bytes) {  // NOLINT
+void skip_input_data(j_decompress_ptr cinfo, long num_bytes) {  // NOLINT
   cinfo->src->next_input_byte += num_bytes;
 }
 
@@ -458,7 +458,12 @@ void ErrorHandler(j_common_ptr cinfo) {
   // and causes it to return (for a second time) with value 1.
   longjmp(mgr->setjmp_buffer, 1);
 }
-#endif
+
+void OutputHandler(j_common_ptr cinfo) {
+  // Suppress fprintf warnings.
+}
+
+#endif  // HAVE_SETJMP
 
 void MJpegDecoder::AllocOutputBuffers(int num_outbufs) {
   if (num_outbufs != num_outbufs_) {

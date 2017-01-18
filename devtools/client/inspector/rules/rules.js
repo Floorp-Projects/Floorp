@@ -986,12 +986,12 @@ CssRuleView.prototype = {
     header.addEventListener("dblclick", () => {
       this._toggleContainerVisibility(twisty, container, isPseudo,
         !this.showPseudoElements);
-    }, false);
+    });
 
     twisty.addEventListener("click", () => {
       this._toggleContainerVisibility(twisty, container, isPseudo,
         !this.showPseudoElements);
-    }, false);
+    });
 
     if (isPseudo) {
       this._toggleContainerVisibility(twisty, container, isPseudo,

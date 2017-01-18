@@ -23,7 +23,7 @@ function scrollOfDeath() {
   // Add a listener for the MozAfterPaint after the scrollTo below.
   // If we don't crash during the scroll, we'll get the
   // MozAfterPaint.
-  window.addEventListener("MozAfterPaint", cleanup, false);
+  window.addEventListener("MozAfterPaint", cleanup);
   window.scrollTo(0, 50);
 }
 
@@ -64,7 +64,7 @@ function runTest() {
   window.setTimeout(scrollOfDeath, 100);
 }
 
-window.addEventListener("MozReftestInvalidate", runTest, false);
+window.addEventListener("MozReftestInvalidate", runTest);
     </script>
   </head>
 

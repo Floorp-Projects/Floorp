@@ -12,9 +12,9 @@ function test() {
 
   newWindow(function (win) {
     win.addEventListener("SSWindowClosing", function onWindowClosing() {
-      win.removeEventListener("SSWindowClosing", onWindowClosing, false);
+      win.removeEventListener("SSWindowClosing", onWindowClosing);
       eventReceived = true;
-    }, false);
+    });
 
     BrowserTestUtils.closeWindow(win).then(() => {
       waitForFocus(finish);
@@ -27,7 +27,7 @@ function newWindow(callback) {
   let win = window.openDialog(getBrowserURL(), "_blank", opts);
 
   win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad, false);
+    win.removeEventListener("load", onLoad);
     executeSoon(() => callback(win));
-  }, false);
+  });
 }

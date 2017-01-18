@@ -116,8 +116,8 @@ function TableWidget(node, options = {}) {
   this.onMousedown = this.onMousedown.bind(this);
   this.onRowRemoved = this.onRowRemoved.bind(this);
 
-  this.document.addEventListener("keydown", this.onKeydown, false);
-  this.document.addEventListener("mousedown", this.onMousedown, false);
+  this.document.addEventListener("keydown", this.onKeydown);
+  this.document.addEventListener("mousedown", this.onMousedown);
 }
 
 TableWidget.prototype = {
@@ -569,8 +569,8 @@ TableWidget.prototype = {
     this.off(EVENTS.ROW_SELECTED, this.bindSelectedRow);
     this.off(EVENTS.ROW_REMOVED, this.onRowRemoved);
 
-    this.document.removeEventListener("keydown", this.onKeydown, false);
-    this.document.removeEventListener("mousedown", this.onMousedown, false);
+    this.document.removeEventListener("keydown", this.onKeydown);
+    this.document.removeEventListener("mousedown", this.onMousedown);
 
     if (this._editableFieldsEngine) {
       this.off(EVENTS.TABLE_CLEARED, this._editableFieldsEngine.cancelEdit);
@@ -1507,7 +1507,7 @@ function Cell(column, item, nextCell) {
       // Make the ID of the clicked cell available as a property on the table.
       // It's then available for the popupshowing or command handler.
       column.table.contextMenuRowId = this.id;
-    }, false);
+    });
   }
 
   this.value = item[column.id];

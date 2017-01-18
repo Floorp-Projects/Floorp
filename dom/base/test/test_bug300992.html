@@ -30,10 +30,10 @@ document.onreadystatechange = function (event) {
 };
 document.addEventListener('readystatechange', function(event) {
   is(document.readyState + '2', states[i++], 'readystatechange event document listener');
-}, false);
+});
 window.addEventListener('readystatechange', function(event) {
   ok(false, 'window listener', 'readystatechange event should not bubble to window');
-}, false);
+});
 addLoadEvent(function() {
   is(i, states.length, 'readystatechange event count');
   SimpleTest.finish();

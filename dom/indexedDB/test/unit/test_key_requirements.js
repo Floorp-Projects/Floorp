@@ -18,7 +18,7 @@ function* testSteps()
   let db = event.target.result;
   db.addEventListener("error", function(event) {
     event.preventDefault();
-  }, false);
+  });
 
   let objectStore = db.createObjectStore("foo", { autoIncrement: true });
 

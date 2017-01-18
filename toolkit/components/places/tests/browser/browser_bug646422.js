@@ -8,7 +8,7 @@
  **/
 
 add_task(function* () {
-  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, 'http://example.com');
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com");
 
   let newTitlePromise = new Promise(resolve => {
     let observer = {
@@ -36,7 +36,7 @@ add_task(function* () {
 
   yield ContentTask.spawn(tab.linkedBrowser, null, function* () {
     let title =  content.document.title;
-    content.history.pushState('', '', 'new_page');
+    content.history.pushState("", "", "new_page");
     Assert.ok(title, "Content window should initially have a title.");
   });
 

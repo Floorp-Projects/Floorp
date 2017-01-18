@@ -52,7 +52,7 @@ var origins =
 
 window.addEventListener("message", function(e) {
   gen.next(e.data);
-}, false);
+});
 
 gen = runTest();
 

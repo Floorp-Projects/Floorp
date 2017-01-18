@@ -13,10 +13,11 @@
 #if HAVE_DSPR2
 void vpx_h_predictor_16x16_dspr2(uint8_t *dst, ptrdiff_t stride,
                                  const uint8_t *above, const uint8_t *left) {
-  int32_t  tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
-  int32_t  tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16;
+  int32_t tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
+  int32_t tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16;
+  (void)above;
 
-  __asm__ __volatile__ (
+  __asm__ __volatile__(
       "lb         %[tmp1],      (%[left])                    \n\t"
       "lb         %[tmp2],      1(%[left])                   \n\t"
       "lb         %[tmp3],      2(%[left])                   \n\t"
@@ -146,26 +147,23 @@ void vpx_h_predictor_16x16_dspr2(uint8_t *dst, ptrdiff_t stride,
       "sw         %[tmp16],     8(%[dst])                    \n\t"
       "sw         %[tmp16],     12(%[dst])                   \n\t"
 
-      : [tmp1] "=&r" (tmp1),   [tmp2] "=&r" (tmp2),
-        [tmp3] "=&r" (tmp3),   [tmp4] "=&r" (tmp4),
-        [tmp5] "=&r" (tmp5),   [tmp7] "=&r" (tmp7),
-        [tmp6] "=&r" (tmp6),   [tmp8] "=&r" (tmp8),
-        [tmp9] "=&r" (tmp9),   [tmp10] "=&r" (tmp10),
-        [tmp11] "=&r" (tmp11), [tmp12] "=&r" (tmp12),
-        [tmp13] "=&r" (tmp13), [tmp14] "=&r" (tmp14),
-        [tmp15] "=&r" (tmp15), [tmp16] "=&r" (tmp16)
-      : [left] "r" (left), [dst] "r" (dst), [stride] "r" (stride)
-  );
+      : [tmp1] "=&r"(tmp1), [tmp2] "=&r"(tmp2), [tmp3] "=&r"(tmp3),
+        [tmp4] "=&r"(tmp4), [tmp5] "=&r"(tmp5), [tmp7] "=&r"(tmp7),
+        [tmp6] "=&r"(tmp6), [tmp8] "=&r"(tmp8), [tmp9] "=&r"(tmp9),
+        [tmp10] "=&r"(tmp10), [tmp11] "=&r"(tmp11), [tmp12] "=&r"(tmp12),
+        [tmp13] "=&r"(tmp13), [tmp14] "=&r"(tmp14), [tmp15] "=&r"(tmp15),
+        [tmp16] "=&r"(tmp16)
+      : [left] "r"(left), [dst] "r"(dst), [stride] "r"(stride));
 }
 
 void vpx_dc_predictor_16x16_dspr2(uint8_t *dst, ptrdiff_t stride,
                                   const uint8_t *above, const uint8_t *left) {
-  int32_t  expected_dc;
-  int32_t  average;
-  int32_t  tmp, above1, above_l1, above_r1, left1, left_r1, left_l1;
-  int32_t  above2, left2;
+  int32_t expected_dc;
+  int32_t average;
+  int32_t tmp, above1, above_l1, above_r1, left1, left_r1, left_l1;
+  int32_t above2, left2;
 
-  __asm__ __volatile__ (
+  __asm__ __volatile__(
       "lw              %[above1],           (%[above])                    \n\t"
       "lw              %[above2],           4(%[above])                   \n\t"
       "lw              %[left1],            (%[left])                     \n\t"
@@ -316,14 +314,12 @@ void vpx_dc_predictor_16x16_dspr2(uint8_t *dst, ptrdiff_t stride,
       "sw              %[expected_dc],      8(%[dst])                     \n\t"
       "sw              %[expected_dc],      12(%[dst])                    \n\t"
 
-      : [left1] "=&r" (left1), [above1] "=&r" (above1),
-        [left_l1] "=&r" (left_l1), [above_l1] "=&r" (above_l1),
-        [left_r1] "=&r" (left_r1), [above_r1] "=&r" (above_r1),
-        [above2] "=&r" (above2), [left2] "=&r" (left2),
-        [average] "=&r" (average), [tmp] "=&r" (tmp),
-        [expected_dc] "=&r" (expected_dc)
-      : [above] "r" (above), [left] "r" (left),
-        [dst] "r" (dst), [stride] "r" (stride)
-  );
+      : [left1] "=&r"(left1), [above1] "=&r"(above1), [left_l1] "=&r"(left_l1),
+        [above_l1] "=&r"(above_l1), [left_r1] "=&r"(left_r1),
+        [above_r1] "=&r"(above_r1), [above2] "=&r"(above2),
+        [left2] "=&r"(left2), [average] "=&r"(average), [tmp] "=&r"(tmp),
+        [expected_dc] "=&r"(expected_dc)
+      : [above] "r"(above), [left] "r"(left), [dst] "r"(dst),
+        [stride] "r"(stride));
 }
 #endif  // #if HAVE_DSPR2

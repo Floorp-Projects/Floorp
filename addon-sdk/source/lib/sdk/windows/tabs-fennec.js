@@ -39,10 +39,10 @@ const Tabs = Class({
     List.prototype.initialize.apply(this, getTabs(window).map(Tab));
 
     // TabOpen event
-    window.BrowserApp.deck.addEventListener(EVENTS.open.dom, onTabOpen, false);
+    window.BrowserApp.deck.addEventListener(EVENTS.open.dom, onTabOpen);
 
     // TabSelect
-    window.BrowserApp.deck.addEventListener(EVENTS.activate.dom, onTabSelect, false);
+    window.BrowserApp.deck.addEventListener(EVENTS.activate.dom, onTabSelect);
   },
   get activeTab() {
     return getTabForRawTab(getSelectedTab(tabsNS(this).window));
@@ -96,8 +96,8 @@ function tabsUnloader(event, window) {
   window = window || (event && event.target);
   if (!(window && window.BrowserApp))
     return;
-  window.BrowserApp.deck.removeEventListener(EVENTS.open.dom, onTabOpen, false);
-  window.BrowserApp.deck.removeEventListener(EVENTS.activate.dom, onTabSelect, false);
+  window.BrowserApp.deck.removeEventListener(EVENTS.open.dom, onTabOpen);
+  window.BrowserApp.deck.removeEventListener(EVENTS.activate.dom, onTabSelect);
 }
 
 // unload handler

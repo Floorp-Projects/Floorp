@@ -90,7 +90,7 @@ function* testDirectorScriptWindowEval(directorManager) {
         if (window.document && window.document.readyState === "complete") {
           onpageloaded();
         } else {
-          window.addEventListener("load", onpageloaded, false);
+          window.addEventListener("load", onpageloaded);
         }
       };
     }).toString() + ")();",

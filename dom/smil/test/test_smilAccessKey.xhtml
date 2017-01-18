@@ -254,7 +254,7 @@ function testPreventDefault()
 
   var circle = document.getElementById('circle');
   var func = function(evt) { evt.preventDefault(); }
-  circle.addEventListener('keypress', func, false);
+  circle.addEventListener('keypress', func);
   circle.dispatchEvent(evt);
 
   try {
@@ -263,7 +263,7 @@ function testPreventDefault()
     ok(false, "preventDefault() cancelled accessKey handling");
   }
 
-  circle.removeEventListener('keypress', func, false);
+  circle.removeEventListener('keypress', func);
   anim.parentNode.removeChild(anim);
 }
 
@@ -354,7 +354,7 @@ function testFauxEvent()
   anim.parentNode.removeChild(anim);
 }
 
-window.addEventListener("load", main, false);
+window.addEventListener("load", main);
 ]]>
 </script>
 </pre>

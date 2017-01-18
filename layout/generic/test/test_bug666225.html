@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=666225
 
 function click() 
 {
-    $("i").addEventListener("mouseup", test, false);
+    $("i").addEventListener("mouseup", test);
     synthesizeMouseAtCenter($("i"), { type: "mousedown" });
     synthesizeMouseAtCenter($("i"), { type: "mouseup" });
 }

@@ -90,8 +90,8 @@ this.VariablesView = function VariablesView(aParentNode, aFlags = {}) {
   // Create an internal scrollbox container.
   this._list = this.document.createElement("scrollbox");
   this._list.setAttribute("orient", "vertical");
-  this._list.addEventListener("keypress", this._onViewKeyPress, false);
-  this._list.addEventListener("keydown", this._onViewKeyDown, false);
+  this._list.addEventListener("keypress", this._onViewKeyPress);
+  this._list.addEventListener("keydown", this._onViewKeyDown);
   this._parent.appendChild(this._list);
 
   for (let name in aFlags) {
@@ -194,10 +194,10 @@ VariablesView.prototype = {
     let currList = this._list = this.document.createElement("scrollbox");
 
     this.window.setTimeout(() => {
-      prevList.removeEventListener("keypress", this._onViewKeyPress, false);
-      prevList.removeEventListener("keydown", this._onViewKeyDown, false);
-      currList.addEventListener("keypress", this._onViewKeyPress, false);
-      currList.addEventListener("keydown", this._onViewKeyDown, false);
+      prevList.removeEventListener("keypress", this._onViewKeyPress);
+      prevList.removeEventListener("keydown", this._onViewKeyDown);
+      currList.addEventListener("keypress", this._onViewKeyPress);
+      currList.addEventListener("keydown", this._onViewKeyDown);
       currList.setAttribute("orient", "vertical");
 
       this._parent.removeChild(prevList);
@@ -458,8 +458,8 @@ VariablesView.prototype = {
     searchbox.setAttribute("placeholder", this._searchboxPlaceholder);
     searchbox.setAttribute("type", "search");
     searchbox.setAttribute("flex", "1");
-    searchbox.addEventListener("command", this._onSearchboxInput, false);
-    searchbox.addEventListener("keypress", this._onSearchboxKeyPress, false);
+    searchbox.addEventListener("command", this._onSearchboxInput);
+    searchbox.addEventListener("keypress", this._onSearchboxKeyPress);
 
     container.appendChild(searchbox);
     ownerNode.insertBefore(container, this._parent);
@@ -475,8 +475,8 @@ VariablesView.prototype = {
       return;
     }
     this._searchboxContainer.remove();
-    this._searchboxNode.removeEventListener("command", this._onSearchboxInput, false);
-    this._searchboxNode.removeEventListener("keypress", this._onSearchboxKeyPress, false);
+    this._searchboxNode.removeEventListener("command", this._onSearchboxInput);
+    this._searchboxNode.removeEventListener("keypress", this._onSearchboxKeyPress);
 
     this._searchboxContainer = null;
     this._searchboxNode = null;
@@ -1842,7 +1842,7 @@ Scope.prototype = {
    * Adds the necessary event listeners for this scope.
    */
   _addEventListeners: function () {
-    this._title.addEventListener("mousedown", this._onClick, false);
+    this._title.addEventListener("mousedown", this._onClick);
   },
 
   /**
@@ -2221,9 +2221,9 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
   remove: function () {
     if (this._linkedToInspector) {
       this.unhighlightDomNode();
-      this._valueLabel.removeEventListener("mouseover", this.highlightDomNode, false);
-      this._valueLabel.removeEventListener("mouseout", this.unhighlightDomNode, false);
-      this._openInspectorNode.removeEventListener("mousedown", this.openNodeInInspector, false);
+      this._valueLabel.removeEventListener("mouseover", this.highlightDomNode);
+      this._valueLabel.removeEventListener("mouseout", this.unhighlightDomNode);
+      this._openInspectorNode.removeEventListener("mousedown", this.openNodeInInspector);
     }
 
     this.ownerView._store.delete(this._nameString);
@@ -2616,21 +2616,21 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
     if (ownerView.eval && this.getter || this.setter) {
       let editNode = this._editNode = this.document.createElement("toolbarbutton");
       editNode.className = "plain variables-view-edit";
-      editNode.addEventListener("mousedown", this._onEdit.bind(this), false);
+      editNode.addEventListener("mousedown", this._onEdit.bind(this));
       this._title.insertBefore(editNode, this._spacer);
     }
 
     if (ownerView.delete) {
       let deleteNode = this._deleteNode = this.document.createElement("toolbarbutton");
       deleteNode.className = "plain variables-view-delete";
-      deleteNode.addEventListener("click", this._onDelete.bind(this), false);
+      deleteNode.addEventListener("click", this._onDelete.bind(this));
       this._title.appendChild(deleteNode);
     }
 
     if (ownerView.new) {
       let addPropertyNode = this._addPropertyNode = this.document.createElement("toolbarbutton");
       addPropertyNode.className = "plain variables-view-add-property";
-      addPropertyNode.addEventListener("mousedown", this._onAddProperty.bind(this), false);
+      addPropertyNode.addEventListener("mousedown", this._onAddProperty.bind(this));
       this._title.appendChild(addPropertyNode);
 
       // Can't add properties to primitive values, hide the node in those cases.
@@ -2682,14 +2682,14 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
    * Prepares all tooltips for this variable.
    */
   _prepareTooltips: function () {
-    this._target.addEventListener("mouseover", this._setTooltips, false);
+    this._target.addEventListener("mouseover", this._setTooltips);
   },
 
   /**
    * Sets all tooltips for this variable.
    */
   _setTooltips: function () {
-    this._target.removeEventListener("mouseover", this._setTooltips, false);
+    this._target.removeEventListener("mouseover", this._setTooltips);
 
     let ownerView = this.ownerView;
     if (ownerView.preventDescriptorModifiers) {
@@ -2761,13 +2761,13 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
     }
 
     // Listen to value mouseover/click events to highlight and jump
-    this._valueLabel.addEventListener("mouseover", this.highlightDomNode, false);
-    this._valueLabel.addEventListener("mouseout", this.unhighlightDomNode, false);
+    this._valueLabel.addEventListener("mouseover", this.highlightDomNode);
+    this._valueLabel.addEventListener("mouseout", this.unhighlightDomNode);
 
     // Add a button to open the node in the inspector
     this._openInspectorNode = this.document.createElement("toolbarbutton");
     this._openInspectorNode.className = "plain variables-view-open-inspector";
-    this._openInspectorNode.addEventListener("mousedown", this.openNodeInInspector, false);
+    this._openInspectorNode.addEventListener("mousedown", this.openNodeInInspector);
     this._title.appendChild(this._openInspectorNode);
 
     this._linkedToInspector = true;
@@ -2905,9 +2905,9 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
    * Adds the necessary event listeners for this variable.
    */
   _addEventListeners: function () {
-    this._name.addEventListener("dblclick", this._activateNameInput, false);
-    this._valueLabel.addEventListener("mousedown", this._activateValueInput, false);
-    this._title.addEventListener("mousedown", this._onClick, false);
+    this._name.addEventListener("dblclick", this._activateNameInput);
+    this._valueLabel.addEventListener("mousedown", this._activateValueInput);
+    this._title.addEventListener("mousedown", this._onClick);
   },
 
   /**

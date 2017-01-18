@@ -28,7 +28,7 @@ function createProxyTest(html, callback) {
       uri: testURI
     });
 
-    element.addEventListener("DOMContentLoaded", onDOMReady, false);
+    element.addEventListener("DOMContentLoaded", onDOMReady);
 
     function onDOMReady() {
       // Reload frame after getting principal from `testURI`
@@ -39,8 +39,7 @@ function createProxyTest(html, callback) {
       }
 
       assert.equal(element.getAttribute("src"), url, "correct URL loaded");
-      element.removeEventListener("DOMContentLoaded", onDOMReady,
-                                                  false);
+      element.removeEventListener("DOMContentLoaded", onDOMReady);
       let xrayWindow = element.contentWindow;
       let rawWindow = xrayWindow.wrappedJSObject;
 
@@ -175,7 +174,7 @@ exports["test postMessage"] = createProxyTest(html, function (helper, assert) {
   // Listen without proxies, to check that it will work in regular case
   // simulate listening from a web document.
   ifWindow.addEventListener("message", function listener(event) {
-    ifWindow.removeEventListener("message", listener, false);
+    ifWindow.removeEventListener("message", listener);
     // As we are in system principal, event is an XrayWrapper
     // xrays use current compartments when calling postMessage method.
     // Whereas js proxies was using postMessage method compartment,
@@ -188,7 +187,7 @@ exports["test postMessage"] = createProxyTest(html, function (helper, assert) {
                      "message data is correct");
 
     helper.done();
-  }, false);
+  });
 
   helper.createWorker(
     'new ' + function ContentScriptScope() {

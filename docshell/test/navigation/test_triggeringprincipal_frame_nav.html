@@ -44,7 +44,7 @@ const LOADINGPRINCIPALURI = BASEURL2 + "file_triggeringprincipal_frame_2.html";
 
 SimpleTest.waitForExplicitFinish();
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 
 function receiveMessage(event) {
   is(event.data.triggeringPrincipalURI, TRIGGERINGPRINCIPALURI,
@@ -54,7 +54,7 @@ function receiveMessage(event) {
   is(event.data.referrerURI, TRIGGERINGPRINCIPALURI,
      "Referrer and TriggeringPrincipal should be identical (Frame 1)");
 
-  window.removeEventListener("message", receiveMessage, false);
+  window.removeEventListener("message", receiveMessage);
   SimpleTest.finish();
 }
 

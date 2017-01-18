@@ -52,6 +52,8 @@ protected:
   {}
 
   SVGTextFrame* GetSVGTextFrame();
+  SVGTextFrame* GetSVGTextFrameForNonLayoutDependentQuery();
+  mozilla::Maybe<int32_t> GetNonLayoutDependentNumberOfChars();
 
   enum { LENGTHADJUST };
   virtual nsSVGEnum* EnumAttributes() = 0;

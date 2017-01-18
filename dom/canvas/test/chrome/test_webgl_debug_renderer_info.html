@@ -86,7 +86,7 @@ function main()
     // will also test that doing so doesn't confuse our chrome-only check.
     checkChromeCase(iframe.contentDocument.createElement("canvas"));
 
-    iframe.contentWindow.addEventListener("message", messageListener, false);
+    iframe.contentWindow.addEventListener("message", messageListener);
     iframe.contentWindow.postMessage({run: true,
                                       canBeUnprivileged: canBeUnprivileged},
                                      "*");

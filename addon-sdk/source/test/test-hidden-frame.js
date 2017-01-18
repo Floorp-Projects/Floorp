@@ -16,14 +16,13 @@ exports["test Frame"] = function(assert, done) {
                        "HiddenFrame loads about:blank by default.");
 
       function onDOMReady() {
-        hiddenFrame.element.removeEventListener("DOMContentLoaded", onDOMReady,
-                                                false);
+        hiddenFrame.element.removeEventListener("DOMContentLoaded", onDOMReady);
         assert.equal(hiddenFrame.element.contentWindow.location, url,
                          "HiddenFrame loads the specified content.");
         done();
       }
 
-      this.element.addEventListener("DOMContentLoaded", onDOMReady, false);
+      this.element.addEventListener("DOMContentLoaded", onDOMReady);
       this.element.setAttribute("src", url);
     }
   }));

@@ -79,7 +79,7 @@ var curTest;
 
 function loadNextTest() {
   if (counter == tests.length) {
-    document.getElementById("testframe").removeEventListener("load", test, false);
+    document.getElementById("testframe").removeEventListener("load", test);
     SimpleTest.finish();
     return;
   }
@@ -94,13 +94,13 @@ function loadNextTest() {
   // append the second CSP that should be used to serve the file
   src += "&csp2=" + escape(curTest.policy2);
 
-  document.getElementById("testframe").addEventListener("load", test, false);
+  document.getElementById("testframe").addEventListener("load", test);
   document.getElementById("testframe").src = src;
 }
 
 function test() {
   try {
-    document.getElementById("testframe").removeEventListener('load', test, false);
+    document.getElementById("testframe").removeEventListener('load', test);
     var testframe = document.getElementById("testframe");
     var divcontent = testframe.contentWindow.document.getElementById('testdiv').innerHTML;
     // sort the characters to make sure the result is in ascending order

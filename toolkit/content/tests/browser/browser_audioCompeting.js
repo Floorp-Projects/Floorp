@@ -16,7 +16,7 @@ function* wait_for_tab_playing_event(tab, expectPlaying) {
 
 function play_audio_from_invisible_tab() {
   return new Promise(resolve => {
-    var autoPlay = content.document.getElementById('autoplay');
+    var autoPlay = content.document.getElementById("autoplay");
     if (!autoPlay) {
       ok(false, "Can't get the audio element!");
     }
@@ -32,7 +32,7 @@ function play_audio_from_invisible_tab() {
 }
 
 function audio_should_keep_playing_even_go_to_background() {
-  var autoPlay = content.document.getElementById('autoplay');
+  var autoPlay = content.document.getElementById("autoplay");
   if (!autoPlay) {
     ok(false, "Can't get the audio element!");
   }
@@ -42,8 +42,8 @@ function audio_should_keep_playing_even_go_to_background() {
 
 function play_non_autoplay_audio() {
   return new Promise(resolve => {
-    var autoPlay = content.document.getElementById('autoplay');
-    var nonAutoPlay = content.document.getElementById('nonautoplay');
+    var autoPlay = content.document.getElementById("autoplay");
+    var nonAutoPlay = content.document.getElementById("nonautoplay");
     if (!autoPlay || !nonAutoPlay) {
       ok(false, "Can't get the audio element!");
     }

@@ -266,7 +266,7 @@ function attachEventListeners(aWindow) {
   if (aWindow.document.readyState === 'complete') {
     onWindowLoaded();
   } else {
-    aWindow.addEventListener("load", onWindowLoaded, false);
+    aWindow.addEventListener("load", onWindowLoaded);
   }
 }
 

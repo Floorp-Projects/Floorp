@@ -62,7 +62,7 @@ var gSyncUI = {
     // was triggered.
     window.addEventListener("unload", function onUnload() {
       gSyncUI._unloaded = true;
-      window.removeEventListener("unload", onUnload, false);
+      window.removeEventListener("unload", onUnload);
       Services.obs.removeObserver(gSyncUI, "weave:service:ready");
       Services.obs.removeObserver(gSyncUI, "quit-application");
 
@@ -71,7 +71,7 @@ var gSyncUI = {
           Services.obs.removeObserver(gSyncUI, topic);
         });
       }
-    }, false);
+    });
   },
 
   initUI: function SUI_initUI() {
@@ -432,9 +432,9 @@ var gSyncUI = {
     })();
     // It may be confusing for the user to see "Last Sync: Monday" when the last sync was a indeed a Monday but 3 weeks ago
     if (date < sixDaysAgo) {
-      dateFormat = {month: 'long', day: 'numeric'};
+      dateFormat = {month: "long", day: "numeric"};
     } else {
-      dateFormat = {weekday: 'long', hour: 'numeric', minute: 'numeric'};
+      dateFormat = {weekday: "long", hour: "numeric", minute: "numeric"};
     }
     let lastSyncDateString = date.toLocaleDateString(undefined, dateFormat);
     return this._stringBundle.formatStringFromName("lastSync2.label", [lastSyncDateString], 1);

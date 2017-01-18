@@ -27,6 +27,6 @@ document.addEventListener("DOMContentLoaded", function() {
       document.body.setAttribute("class", "normal");
       document.getElementById("newPrivateTabLink").addEventListener("click", function() {
         BrowserApp.addTab("about:privatebrowsing", { selected: true, parentId: BrowserApp.selectedTab.id, isPrivate: true });
-      }, false);
+      });
     }
-  }, false);
+  });

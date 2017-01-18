@@ -46,7 +46,7 @@ function checkPseudoClasses(aElement, aValid, aInvalid)
 }
 
 select.addEventListener("focus", function() {
-  select.removeEventListener("focus", arguments.callee, false);
+  select.removeEventListener("focus", arguments.callee);
 
   SimpleTest.executeSoon(function() {
     form.noValidate = false;
@@ -55,10 +55,10 @@ select.addEventListener("focus", function() {
       SimpleTest.finish();
     });
   });
-}, false);
+});
 
 textarea.addEventListener("focus", function() {
-  textarea.removeEventListener("focus", arguments.callee, false);
+  textarea.removeEventListener("focus", arguments.callee);
 
   SimpleTest.executeSoon(function() {
     form.noValidate = false;
@@ -69,13 +69,13 @@ textarea.addEventListener("focus", function() {
       select.focus();
     });
   });
-}, false);
+});
 
 input.addEventListener("invalid", function() {
-  input.removeEventListener("invalid", arguments.callee, false);
+  input.removeEventListener("invalid", arguments.callee);
 
   input.addEventListener("focus", function() {
-    input.removeEventListener("focus", arguments.callee, false);
+    input.removeEventListener("focus", arguments.callee);
 
     SimpleTest.executeSoon(function() {
       form.noValidate = false;
@@ -86,7 +86,7 @@ input.addEventListener("invalid", function() {
         textarea.focus();
       });
     });
-  }, false);
+  });
 
   SimpleTest.executeSoon(function() {
     form.noValidate = true;
@@ -94,15 +94,15 @@ input.addEventListener("invalid", function() {
     input.value = '';
     input.focus();
   });
-}, false);
+});
 
 button.addEventListener("focus", function() {
-  button.removeEventListener("focus", arguments.callee, false);
+  button.removeEventListener("focus", arguments.callee);
 
   SimpleTest.executeSoon(function() {
     synthesizeKey("VK_RETURN", {});
   });
-}, false);
+});
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {

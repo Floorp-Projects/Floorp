@@ -41,8 +41,7 @@ static INLINE tran_high_t dct_const_round_shift(tran_high_t input) {
 }
 
 #if CONFIG_VP9_HIGHBITDEPTH
-static INLINE tran_high_t highbd_check_range(tran_high_t input,
-                                             int bd) {
+static INLINE tran_high_t highbd_check_range(tran_high_t input, int bd) {
 #if CONFIG_COEFFICIENT_RANGE_CHECKING
   // For valid highbitdepth VP9 streams, intermediate stage coefficients will
   // stay within the ranges:
@@ -53,15 +52,10 @@ static INLINE tran_high_t highbd_check_range(tran_high_t input,
   const int32_t int_min = -int_max - 1;
   assert(int_min <= input);
   assert(input <= int_max);
-  (void) int_min;
+  (void)int_min;
 #endif  // CONFIG_COEFFICIENT_RANGE_CHECKING
-  (void) bd;
+  (void)bd;
   return input;
-}
-
-static INLINE tran_high_t highbd_dct_const_round_shift(tran_high_t input) {
-  tran_high_t rv = ROUND_POWER_OF_TWO(input, DCT_CONST_BITS);
-  return (tran_high_t)rv;
 }
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 
@@ -86,15 +80,14 @@ static INLINE tran_high_t highbd_dct_const_round_shift(tran_high_t input) {
 #define WRAPLOW(x) ((((int32_t)check_range(x)) << 16) >> 16)
 #if CONFIG_VP9_HIGHBITDEPTH
 #define HIGHBD_WRAPLOW(x, bd) \
-    ((((int32_t)highbd_check_range((x), bd)) << (24 - bd)) >> (24 - bd))
+  ((((int32_t)highbd_check_range((x), bd)) << (24 - bd)) >> (24 - bd))
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 
-#else   // CONFIG_EMULATE_HARDWARE
+#else  // CONFIG_EMULATE_HARDWARE
 
 #define WRAPLOW(x) ((int32_t)check_range(x))
 #if CONFIG_VP9_HIGHBITDEPTH
-#define HIGHBD_WRAPLOW(x, bd) \
-    ((int32_t)highbd_check_range((x), bd))
+#define HIGHBD_WRAPLOW(x, bd) ((int32_t)highbd_check_range((x), bd))
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 #endif  // CONFIG_EMULATE_HARDWARE
 

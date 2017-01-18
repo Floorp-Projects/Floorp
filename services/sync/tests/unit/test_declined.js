@@ -22,7 +22,7 @@ DummyEngine.prototype.name = "dummy";
 
 function ActualEngine() {}
 ActualEngine.prototype = {__proto__: Engine.prototype,
-                          name: 'actual'};
+                          name: "actual"};
 
 function getEngineManager() {
   let manager = new EngineManager(Service);

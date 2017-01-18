@@ -16,7 +16,7 @@ var asyncXHR = {
     request.open("GET", "http://localhost:4444/test_error_code.xml", true);
 
     var self = this;
-    request.addEventListener("error", function(event) { self.onError(event); }, false);
+    request.addEventListener("error", function(event) { self.onError(event); });
     request.send(null);
   },
   onError: function doAsyncRequest_onError(event) {

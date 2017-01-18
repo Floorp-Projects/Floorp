@@ -122,14 +122,14 @@ var WebcompatReporter = {
 
       if (tabData.data && typeof tabData.data === "string") {
         BrowserApp.deck.addEventListener("DOMContentLoaded", function sendDataToTab(event) {
-          BrowserApp.deck.removeEventListener("DOMContentLoaded", sendDataToTab, false);
+          BrowserApp.deck.removeEventListener("DOMContentLoaded", sendDataToTab);
 
           if (event.target.defaultView.location.origin === WEBCOMPAT_ORIGIN) {
             // Waive Xray vision so event.origin is not chrome://browser on the other side.
             let win = Cu.waiveXrays(event.target.defaultView);
             win.postMessage(tabData.data, WEBCOMPAT_ORIGIN);
           }
-        }, false);
+        });
       }
 
       let isPrivateTab = PrivateBrowsingUtils.isBrowserPrivate(tabData.tab.browser);

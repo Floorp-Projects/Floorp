@@ -22,7 +22,7 @@ function test_overall() {
 function test_mock_doc() {
   do_test_pending();
   let mockedDoc = mock_doc(null, TEST_URL, function(action, params) {
-    do_check_eq(action, 'coffee');
+    do_check_eq(action, "coffee");
     do_test_finished();
     run_next_test();
   });

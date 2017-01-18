@@ -57,7 +57,7 @@
  * been performed by the dialog.
  */
 
-Components.utils.import('resource://gre/modules/XPCOMUtils.jsm');
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
@@ -340,10 +340,10 @@ var BookmarkPropertiesPanel = {
       // Listen on uri fields to enable accept button if input is valid
       if (this._itemType == BOOKMARK_ITEM) {
         this._element("locationField")
-            .addEventListener("input", this, false);
+            .addEventListener("input", this);
         if (this._isAddKeywordDialog) {
           this._element("keywordField")
-              .addEventListener("input", this, false);
+              .addEventListener("input", this);
         }
       }
     }
@@ -425,7 +425,7 @@ var BookmarkPropertiesPanel = {
     // Calling removeEventListener with arguments which do not identify any
     // currently registered EventListener on the EventTarget has no effect.
     this._element("locationField")
-        .removeEventListener("input", this, false);
+        .removeEventListener("input", this);
   },
 
   onDialogAccept() {

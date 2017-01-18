@@ -248,8 +248,8 @@ function run_abstract_class_tests() {
 
   // toString and toSource are called by the web console during inspection,
   // so we don't want them to throw.
-  do_check_eq(typeof ctypes.CType.prototype.toString(), 'string');
-  do_check_eq(typeof ctypes.CType.prototype.toSource(), 'string');
+  do_check_eq(typeof ctypes.CType.prototype.toString(), "string");
+  do_check_eq(typeof ctypes.CType.prototype.toSource(), "string");
 
   // Test that ctypes.CData is an abstract constructor that throws.
   do_check_throws(function() { ctypes.CData(); }, TypeError);
@@ -277,8 +277,8 @@ function run_abstract_class_tests() {
 
   // toString and toSource are called by the web console during inspection,
   // so we don't want them to throw.
-  do_check_eq(ctypes.CData.prototype.toString(), '[CData proto object]');
-  do_check_eq(ctypes.CData.prototype.toSource(), '[CData proto object]');
+  do_check_eq(ctypes.CData.prototype.toString(), "[CData proto object]");
+  do_check_eq(ctypes.CData.prototype.toSource(), "[CData proto object]");
 }
 
 function run_Int64_tests() {
@@ -733,8 +733,8 @@ function run_basic_class_tests(t) {
 
   // toString and toSource are called by the web console during inspection,
   // so we don't want them to throw.
-  do_check_eq(t.prototype.toString(), '[CData proto object]');
-  do_check_eq(t.prototype.toSource(), '[CData proto object]');
+  do_check_eq(t.prototype.toString(), "[CData proto object]");
+  do_check_eq(t.prototype.toSource(), "[CData proto object]");
 
   // Test that an instance 'd' of 't' is a CData.
   let d = t();
@@ -2746,11 +2746,11 @@ function run_cpp_class_tests(library) {
     // for compatibility for Win32 vs Win64
     abi = ctypes.thiscall_abi;
     if (ctypes.size_t.size == 8) {
-      ctor_symbol = '??0TestClass@@QEAA@H@Z';
-      add_symbol = '?Add@TestClass@@QEAAHH@Z';
+      ctor_symbol = "??0TestClass@@QEAA@H@Z";
+      add_symbol = "?Add@TestClass@@QEAAHH@Z";
     } else {
-      ctor_symbol = '??0TestClass@@QAE@H@Z';
-      add_symbol = '?Add@TestClass@@QAEHH@Z';
+      ctor_symbol = "??0TestClass@@QAE@H@Z";
+      add_symbol = "?Add@TestClass@@QAEHH@Z";
     }
   } else {
     abi = ctypes.default_abi;

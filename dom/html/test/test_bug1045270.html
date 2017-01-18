@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
     <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=1045270
@@ -29,7 +29,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1045270
         document.body.style.display = "none";
         document.body.style.display = "";
         document.body.offsetLeft; // flush
-      }, false);
+      });
       synthesizeKey("1", {});
       SimpleTest.executeSoon(function() {
         synthesizeKey("2", {});

@@ -37,17 +37,17 @@ is(event.type, expectedType, "Wrong event type after initEvent!");
 
 var attr = document.createAttribute("attribute");
 expectedTarget = attr;
-attr.addEventListener(expectedType, listener, false);
+attr.addEventListener(expectedType, listener);
 attr.dispatchEvent(event);
 is(eventCount, 1, "Should have fired an event!");
-attr.removeEventListener(expectedType, listener, false);
+attr.removeEventListener(expectedType, listener);
 
 var df = document.createDocumentFragment();
 expectedTarget = df;
-df.addEventListener(expectedType, listener, false);
+df.addEventListener(expectedType, listener);
 df.dispatchEvent(event);
 is(eventCount, 2, "Should have fired an event!");
-df.removeEventListener(expectedType, listener, false);
+df.removeEventListener(expectedType, listener);
 
 </script>
 </pre>

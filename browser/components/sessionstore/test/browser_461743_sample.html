@@ -12,13 +12,13 @@
   var exploitUrl = "javascript:try { document.body.innerHTML = Components.utils.reportError; } catch (ex) { }";
 
   var loadCount = 0;
-  frames[0].addEventListener("DOMContentLoaded", handleLoad, false);
-  frames[1].addEventListener("DOMContentLoaded", handleLoad, false);
+  frames[0].addEventListener("DOMContentLoaded", handleLoad);
+  frames[1].addEventListener("DOMContentLoaded", handleLoad);
   function handleLoad() {
     if (++loadCount < 2)
       return;
-    frames[0].removeEventListener("DOMContentLoaded", handleLoad, false);
-    frames[1].removeEventListener("DOMContentLoaded", handleLoad, false);
+    frames[0].removeEventListener("DOMContentLoaded", handleLoad);
+    frames[1].removeEventListener("DOMContentLoaded", handleLoad);
 
     var flip = 0;
     MutationEvent.prototype.toString = function() {

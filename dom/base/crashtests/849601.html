@@ -17,11 +17,11 @@ function addPointlessMutationListener()
   a.appendChild(document.createTextNode("1"));
 
   function f() {
-    window.removeEventListener("DOMSubtreeModified", f, false);
+    window.removeEventListener("DOMSubtreeModified", f);
     a.insertAdjacentHTML("afterBegin", "<span></span>");
   };
 
-  window.addEventListener("DOMSubtreeModified", f, false);
+  window.addEventListener("DOMSubtreeModified", f);
 }
 
 function boom()

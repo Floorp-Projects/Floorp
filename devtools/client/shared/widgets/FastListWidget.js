@@ -32,9 +32,8 @@ const FastListWidget = module.exports = function FastListWidget(node) {
   this._list.setAttribute("flex", "1");
   this._list.setAttribute("orient", "vertical");
   this._list.setAttribute("tabindex", "0");
-  this._list.addEventListener("keypress", e => this.emit("keyPress", e), false);
-  this._list.addEventListener("mousedown", e => this.emit("mousePress", e),
-                              false);
+  this._list.addEventListener("keypress", e => this.emit("keyPress", e));
+  this._list.addEventListener("mousedown", e => this.emit("mousePress", e));
   this._parent.appendChild(this._list);
 
   this._orderedMenuElementsArray = [];

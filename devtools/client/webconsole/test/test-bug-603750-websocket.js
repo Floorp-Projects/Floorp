@@ -17,4 +17,4 @@ window.addEventListener("load", function () {
     ws2.send("test 2");
     ws2.close();
   };
-}, false);
+});

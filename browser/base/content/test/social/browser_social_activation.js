@@ -241,7 +241,7 @@ var tests = {
     // Create a new tab and load about:addons
     let addonsTab = gBrowser.addTab();
     gBrowser.selectedTab = addonsTab;
-    BrowserOpenAddonsMgr('addons://list/service');
+    BrowserOpenAddonsMgr("addons://list/service");
     gBrowser.selectedBrowser.addEventListener("load", function tabLoad() {
       gBrowser.selectedBrowser.removeEventListener("load", tabLoad, true);
       is(addonsTab.linkedBrowser.currentURI.spec, "about:addons", "about:addons should load into blank tab.");

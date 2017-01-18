@@ -49,12 +49,12 @@ IdentityLogger.prototype = {
     // XXX bug 770418 - args look like flattened array, not list of strings
 
     args.forEach(function(arg) {
-      if (typeof arg === 'string') {
+      if (typeof arg === "string") {
         strings.push(arg);
-      } else if (typeof arg === 'undefined') {
-        strings.push('undefined');
+      } else if (typeof arg === "undefined") {
+        strings.push("undefined");
       } else if (arg === null) {
-        strings.push('null');
+        strings.push("null");
       } else {
         try {
           strings.push(JSON.stringify(arg, null, 2));
@@ -63,7 +63,7 @@ IdentityLogger.prototype = {
         }
       }
     });
-    return 'Identity ' + aPrefix + ': ' + strings.join(' ');
+    return "Identity " + aPrefix + ": " + strings.join(" ");
   },
 
   /**

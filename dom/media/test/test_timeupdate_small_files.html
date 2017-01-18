@@ -38,9 +38,9 @@ function ended(e) {
       // from the document (as the element is specified to behave as if pause() was
       // invoked when it's removed from a document), and we don't want those
       // confusing the test results.
-      v.removeEventListener("ended", ended, false);
+      v.removeEventListener("ended", ended);
       eventsToLog.forEach(function(e) {
-        v.removeEventListener(e, logEvent, false);
+        v.removeEventListener(e, logEvent);
       });
       removeNodeAndSource(v);
       manager.finished(v.token);
@@ -71,10 +71,10 @@ function startTest(test, token) {
   // Keep how many events received for each event type.
   v.counter = {};
   eventsToLog.forEach(function(e) {
-    v.addEventListener(e, logEvent, false);
+    v.addEventListener(e, logEvent);
     v.counter[e] = 0;
   });
-  v.addEventListener("ended", ended, false);
+  v.addEventListener("ended", ended);
   v.counter["ended"] = 0;
   document.body.appendChild(v);
   v.play();

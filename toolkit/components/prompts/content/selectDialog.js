@@ -35,7 +35,7 @@ function dialogOnLoad() {
         if (str == "")
             str = "<>";
         listBox.appendItem(str);
-        listBox.getItemAtIndex(i).addEventListener("dblclick", dialogDoubleClick, false);
+        listBox.getItemAtIndex(i).addEventListener("dblclick", dialogDoubleClick);
     }
     listBox.selectedIndex = 0;
     listBox.focus();

@@ -553,14 +553,14 @@ StyleEditorUI.prototype = {
 
         summary.addEventListener("contextmenu", () => {
           this._contextMenuStyleSheet = createdEditor.styleSheet;
-        }, false);
+        });
 
         summary.addEventListener("focus", function onSummaryFocus(event) {
           if (event.target == summary) {
             // autofocus the stylesheet name
             summary.querySelector(".stylesheet-name").focus();
           }
-        }, false);
+        });
 
         let sidebar = details.querySelector(".stylesheet-sidebar");
         sidebar.setAttribute("width",

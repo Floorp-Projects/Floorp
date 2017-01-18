@@ -17,12 +17,12 @@ add_task(function*() {
       if (aTopic == "domwindowopened") {
         newWindow = aSubject.QueryInterface(Components.interfaces.nsIDOMWindow);
         newWindow.addEventListener("load", function newWindowHandler() {
-          newWindow.removeEventListener("load", newWindowHandler, false);
+          newWindow.removeEventListener("load", newWindowHandler);
           is(newWindow.location.href, "chrome://browser/content/browser.xul",
              "A new browser window was opened");
           ok(!PrivateBrowsingUtils.isWindowPrivate(newWindow), "Window is not private");
           windowWasHandled = true;
-        }, false);
+        });
       }
     }
   }

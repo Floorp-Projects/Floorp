@@ -8,7 +8,6 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
 #ifndef VP8_DECODER_ERROR_CONCEALMENT_H_
 #define VP8_DECODER_ERROR_CONCEALMENT_H_
 
@@ -32,8 +31,7 @@ void vp8_estimate_missing_mvs(VP8D_COMP *pbi);
 
 /* Interpolates all motion vectors for a macroblock mb at position
  * (mb_row, mb_col). */
-void vp8_interpolate_motion(MACROBLOCKD *mb,
-                            int mb_row, int mb_col,
+void vp8_interpolate_motion(MACROBLOCKD *mb, int mb_row, int mb_col,
                             int mb_rows, int mb_cols);
 
 #ifdef __cplusplus

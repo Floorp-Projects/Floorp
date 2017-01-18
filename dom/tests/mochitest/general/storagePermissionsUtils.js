@@ -40,7 +40,7 @@ function runIFrame(url) {
 
       ok(!e.data.match(/^FAILURE/), e.data + " (IFRAME = " + url + ")");
     }
-    window.addEventListener('message', onMessage, false);
+    window.addEventListener('message', onMessage);
 
     document.querySelector('iframe').src = url;
   });

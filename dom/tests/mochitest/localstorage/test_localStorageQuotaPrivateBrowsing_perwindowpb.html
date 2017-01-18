@@ -36,7 +36,7 @@ function startTest() {
     aWindow.content.document.body.appendChild(frame);
     aWindow.content.addEventListener("message", function(aEvent) {
       onMessageReceived(aEvent, aWindow)
-    }, false);
+    });
     slave = aWindow.content.frames[0];
 
     SimpleTest.waitForFocus(() => doNextTest(aWindow), aWindow);

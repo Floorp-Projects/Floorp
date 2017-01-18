@@ -68,12 +68,12 @@ function createTestEventValue(name) {
     }
 
     for (let target of [document, window, testTarget, parent])
-      target.addEventListener(name, check, false);
+      target.addEventListener(name, check);
 
     testTarget.dispatchEvent(event);
 
     for (let target of [document, window, testTarget, parent])
-      target.removeEventListener(name, check, false);
+      target.removeEventListener(name, check);
 
 
     nextTest();
@@ -93,9 +93,9 @@ function testDefaultArg() {
   let event = getDefaultArgEvent("pointerdown");
 
   testTarget.addEventListener("pointerdown", function(ev) {
-    testTarget.removeEventListener("pointerdown", arguments.callee, false);
+    testTarget.removeEventListener("pointerdown", arguments.callee);
     is(ev.pointerId, 0, "Correct default pointerId");
-  }, false);
+  });
   testTarget.dispatchEvent(event);
 
   nextTest();
@@ -116,17 +116,17 @@ function testStopPropagation() {
   }, true); // Capturing phase
 
   // Bubbling phase
-  parent.addEventListener("pointerdown", unreachableListener, false);
+  parent.addEventListener("pointerdown", unreachableListener);
 
   testTarget.addEventListener("pointerdown", function(ev) {
-    testTarget.removeEventListener("pointerdown", arguments.callee, false);
+    testTarget.removeEventListener("pointerdown", arguments.callee);
     is(captured, true, "Event should have been captured");
     ev.stopPropagation();
-  }, false);
+  });
 
   testTarget.dispatchEvent(event);
 
-  parent.removeEventListener("pointerdown", unreachableListener, false);
+  parent.removeEventListener("pointerdown", unreachableListener);
 
   nextTest();
 }
@@ -135,15 +135,15 @@ function testPreventDefault() {
   let event = getDefaultArgEvent("pointerdown");
 
   parent.addEventListener("pointerdown", function(ev) {
-    parent.removeEventListener("pointerdown", arguments.callee, false);
+    parent.removeEventListener("pointerdown", arguments.callee);
     is(ev.defaultPrevented, true, "preventDefault can be called");
     nextTest();
-  }, false);
+  });
 
   testTarget.addEventListener("pointerdown", function(ev) {
-    testTarget.removeEventListener("pointerdown", arguments.callee, false);
+    testTarget.removeEventListener("pointerdown", arguments.callee);
     ev.preventDefault();
-  }, false);
+  });
 
   testTarget.dispatchEvent(event);
 }
@@ -157,15 +157,15 @@ function testBlockPreventDefault() {
   });
 
   parent.addEventListener("pointerdown", function(ev) {
-    parent.removeEventListener("pointerdown", arguments.callee, false);
+    parent.removeEventListener("pointerdown", arguments.callee);
     is(ev.defaultPrevented, false, "aCancelableArg works");
     nextTest();
-  }, false);
+  });
 
   testTarget.addEventListener("pointerdown", function(ev) {
-    testTarget.removeEventListener("pointerdown", arguments.callee, false);
+    testTarget.removeEventListener("pointerdown", arguments.callee);
     ev.preventDefault();
-  }, false);
+  });
 
   testTarget.dispatchEvent(event);
 }
@@ -182,9 +182,9 @@ function testBlockBubbling() {
     button: 0, relatedTarget: null, pointerId: 0
   });
 
-  parent.addEventListener("pointerdown", unreachableListener, false);
+  parent.addEventListener("pointerdown", unreachableListener);
   testTarget.dispatchEvent(event);
-  parent.removeEventListener("pointerdown", unreachableListener, false);
+  parent.removeEventListener("pointerdown", unreachableListener);
 
   nextTest();
 }

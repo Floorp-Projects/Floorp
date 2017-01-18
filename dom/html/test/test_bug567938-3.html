@@ -56,10 +56,10 @@ function runTests()
     if (gCurrentTest < gTestData.length) {
       initializeNextTest();
     } else {
-      aEvent.target.removeEventListener('load', arguments.callee, false);
+      aEvent.target.removeEventListener('load', arguments.callee);
       SimpleTest.finish();
     }
-    }, false);
+    });
 
   initializeNextTest();
 }

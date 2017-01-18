@@ -388,7 +388,7 @@ function FilterPrefs() {
 
   var substring = document.getElementById("textbox").value;
   // Check for "/regex/[i]"
-  if (substring.charAt(0) == '/') {
+  if (substring.charAt(0) == "/") {
     var r = substring.match(/^\/(.*)\/(i?)$/);
     try {
       gFilter = RegExp(r[1], r[2]);
@@ -509,7 +509,7 @@ function updateContextMenu() {
 
 function copyPref() {
   var pref = gPrefView[view.selection.currentIndex];
-  gClipboardHelper.copyString(pref.prefCol + ';' + pref.valueCol);
+  gClipboardHelper.copyString(pref.prefCol + ";" + pref.valueCol);
 }
 
 function copyName() {

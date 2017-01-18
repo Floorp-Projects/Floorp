@@ -43,7 +43,7 @@ add_task(function* () {
     yield OS.File.remove(drsPath);
     yield CommonUtils.writeJSON({clientID: invalidID}, fhrPath);
     clientID = yield ClientID.getClientID();
-    Assert.equal(typeof(clientID), 'string');
+    Assert.equal(typeof(clientID), "string");
     Assert.ok(uuidRegex.test(clientID));
   }
 
@@ -52,7 +52,7 @@ add_task(function* () {
   yield OS.File.remove(drsPath);
   yield OS.File.writeAtomic(fhrPath, "abcd", {encoding: "utf-8", tmpPath: fhrPath + ".tmp"});
   clientID = yield ClientID.getClientID();
-  Assert.equal(typeof(clientID), 'string');
+  Assert.equal(typeof(clientID), "string");
   Assert.ok(uuidRegex.test(clientID));
 
   // We should be guarded against broken DRS data too and fall back to loading
@@ -70,7 +70,7 @@ add_task(function* () {
   yield OS.File.remove(fhrPath);
   yield OS.File.writeAtomic(drsPath, "abcd", {encoding: "utf-8", tmpPath: drsPath + ".tmp"});
   clientID = yield ClientID.getClientID();
-  Assert.equal(typeof(clientID), 'string');
+  Assert.equal(typeof(clientID), "string");
   Assert.ok(uuidRegex.test(clientID));
 
   // If both the FHR and DSR data are broken, we should end up with a new client ID.
@@ -79,7 +79,7 @@ add_task(function* () {
     yield CommonUtils.writeJSON({clientID: invalidID}, fhrPath);
     yield CommonUtils.writeJSON({clientID: invalidID}, drsPath);
     clientID = yield ClientID.getClientID();
-    Assert.equal(typeof(clientID), 'string');
+    Assert.equal(typeof(clientID), "string");
     Assert.ok(uuidRegex.test(clientID));
   }
 

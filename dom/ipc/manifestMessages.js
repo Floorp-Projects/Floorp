@@ -18,6 +18,7 @@ const {
 } = Components;
 Cu.import("resource://gre/modules/ManifestObtainer.jsm");
 Cu.import("resource://gre/modules/ManifestFinder.jsm");
+Cu.import("resource://gre/modules/ManifestIcons.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 const MessageHandler = {
@@ -33,6 +34,10 @@ const MessageHandler = {
     addMessageListener(
       "DOM:Manifest:FireAppInstalledEvent",
       this.fireAppInstalledEvent.bind(this)
+    );
+    addMessageListener(
+      "DOM:WebManifest:fetchIcon",
+      this.fetchIcon.bind(this)
     );
   },
 
@@ -76,7 +81,24 @@ const MessageHandler = {
       content.dispatchEvent(ev);
     }
     sendAsyncMessage("DOM:Manifest:FireAppInstalledEvent", response);
-  }
+  },
+
+  /**
+   * Given a manifest and an expected icon size, ask ManifestIcons
+   * to fetch the appropriate icon and send along result
+   */
+  fetchIcon: Task.async(function* ({data: {id, manifest, iconSize}}) {
+    const response = makeMsgResponse(id);
+    try {
+      response.result =
+        yield ManifestIcons.contentFetchIcon(content, manifest, iconSize);
+      response.success = true;
+    } catch (err) {
+      response.result = serializeError(err);
+    }
+    sendAsyncMessage("DOM:WebManifest:fetchIcon", response);
+  }),
+
 };
 /**
  * Utility function to Serializes an JS Error, so it can be transferred over

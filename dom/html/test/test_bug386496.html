@@ -31,7 +31,7 @@ function testDesignMode() {
 
   frame.contentWindow.addEventListener("beforeunload", function() {
     unloadRequested = true;
-  }, false);
+  });
 
   synthesizeMouseAtCenter(frame.contentDocument.getElementById("a"), {},
                           frame.contentWindow);

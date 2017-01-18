@@ -599,7 +599,7 @@ function _expectEvent(aExpectedTarget, aExpectedEvent, aTestName)
     _gSeenEvent = true;
   };
 
-  aExpectedTarget.addEventListener(type, eventHandler, false);
+  aExpectedTarget.addEventListener(type, eventHandler);
   return eventHandler;
 }
 
@@ -612,7 +612,7 @@ function _checkExpectedEvent(aExpectedTarget, aExpectedEvent, aEventHandler, aTe
   if (aEventHandler) {
     var expectEvent = (aExpectedEvent.charAt(0) != "!");
     var type = expectEvent ? aExpectedEvent : aExpectedEvent.substring(1);
-    aExpectedTarget.removeEventListener(type, aEventHandler, false);
+    aExpectedTarget.removeEventListener(type, aEventHandler);
     var desc = type + " event";
     if (!expectEvent)
       desc += " not";

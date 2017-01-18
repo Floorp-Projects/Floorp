@@ -2,11 +2,11 @@ let Cu = Components.utils;
 let {HttpServer} = Cu.import("resource://testing-common/httpd.js", {});
 
 let server = new HttpServer();
-server.registerPathHandler('/file.html', fileHandler);
+server.registerPathHandler("/file.html", fileHandler);
 server.start(-1);
 
-let BASE_URI = 'http://localhost:' + server.identity.primaryPort;
-let FILE_URI = BASE_URI + '/file.html';
+let BASE_URI = "http://localhost:" + server.identity.primaryPort;
+let FILE_URI = BASE_URI + "/file.html";
 
 let credentialQueue = [];
 

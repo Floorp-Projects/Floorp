@@ -38,7 +38,7 @@ proto.removeEventListener = function(ev, list, capt) {
 var called = false;
 
 var func = function() { called = true; };
-$("display").addEventListener("click", func, false);
+$("display").addEventListener("click", func);
 is(intercepted, true, "Should have interecepted addEventListener call");
 
 sendMouseEvent({type: "click"}, "display");
@@ -47,7 +47,7 @@ is(called, true, "Should have called event listener");
 interecepted = false;
 called = false;
 
-$("display").removeEventListener("click", func, false);
+$("display").removeEventListener("click", func);
 is(intercepted, true, "Should have interecepted removeEventListener call");
 
 sendMouseEvent({type: "click"}, "display");
@@ -61,7 +61,7 @@ HTMLSpanElement.prototype.addEventListener =
     return x.addEventListener(a,b,c);
   }
 try {
-  x.addEventListener("click", function() { called = true; }, false);
+  x.addEventListener("click", function() { called = true; });
 } catch (e) {
   recursion = e.message.match(/recursion/);
 }

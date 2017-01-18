@@ -23,9 +23,8 @@ namespace {
 
 using ::libvpx_test::ACMRandom;
 
-typedef void (*MinMaxFunc)(const uint8_t *a, int a_stride,
-                           const uint8_t *b, int b_stride,
-                           int *min, int *max);
+typedef void (*MinMaxFunc)(const uint8_t *a, int a_stride, const uint8_t *b,
+                           int b_stride, int *min, int *max);
 
 class MinMaxTest : public ::testing::TestWithParam<MinMaxFunc> {
  public:
@@ -39,9 +38,8 @@ class MinMaxTest : public ::testing::TestWithParam<MinMaxFunc> {
   ACMRandom rnd_;
 };
 
-void reference_minmax(const uint8_t *a, int a_stride,
-                      const uint8_t *b, int b_stride,
-                      int *min_ret, int *max_ret) {
+void reference_minmax(const uint8_t *a, int a_stride, const uint8_t *b,
+                      int b_stride, int *min_ret, int *max_ret) {
   int min = 255;
   int max = 0;
   for (int i = 0; i < 8; i++) {
@@ -110,9 +108,9 @@ TEST_P(MinMaxTest, CompareReferenceAndVaryStride) {
       reference_minmax(a, a_stride, b, b_stride, &min_ref, &max_ref);
       ASM_REGISTER_STATE_CHECK(mm_func_(a, a_stride, b, b_stride, &min, &max));
       EXPECT_EQ(max_ref, max) << "when a_stride = " << a_stride
-                              << " and b_stride = " << b_stride;;
+                              << " and b_stride = " << b_stride;
       EXPECT_EQ(min_ref, min) << "when a_stride = " << a_stride
-                              << " and b_stride = " << b_stride;;
+                              << " and b_stride = " << b_stride;
     }
   }
 }

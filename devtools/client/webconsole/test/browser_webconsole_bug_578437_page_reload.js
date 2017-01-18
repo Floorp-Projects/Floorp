@@ -17,15 +17,15 @@ function test() {
     openConsole().then((tab) => {
       browser = tab.browser;
 
-      browser.addEventListener("DOMContentLoaded", testPageReload, false);
+      browser.addEventListener("DOMContentLoaded", testPageReload);
       content.location.reload();
     });
   });
-  browser.addEventListener("DOMContentLoaded", onLoad, false);
+  browser.addEventListener("DOMContentLoaded", onLoad);
 }
 
 function testPageReload() {
-  browser.removeEventListener("DOMContentLoaded", testPageReload, false);
+  browser.removeEventListener("DOMContentLoaded", testPageReload);
 
   let console = browser.contentWindow.wrappedJSObject.console;
 

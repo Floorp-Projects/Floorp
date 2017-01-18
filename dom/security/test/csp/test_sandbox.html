@@ -113,7 +113,7 @@ var testCases = [
 // it expects to be called with an object like:
 //  { ok: true/false,
 //    desc: <description of the test> which it then forwards to ok() }
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 
 function receiveMessage(event) {
   ok_wrapper(event.data.ok, event.data.desc);

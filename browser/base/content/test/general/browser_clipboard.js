@@ -149,7 +149,7 @@ add_task(function*() {
         if (clipboardData.getData("text/html") !== arg.htmlPrefix +
             '<img id="img" tabindex="1" src="http://example.org/browser/browser/base/content/test/general/moz.png">' +
             arg.htmlPostfix) {
-          reject('Clipboard Data did not contain an image, was ' + clipboardData.getData("text/html"));
+          reject("Clipboard Data did not contain an image, was " + clipboardData.getData("text/html"));
         }
         resolve();
       }, true)
@@ -166,7 +166,7 @@ add_task(function*() {
     // The new content should now include an image.
     Assert.equal(main.innerHTML, '<i>Italic</i> <img id="img" tabindex="1" ' +
       'src="http://example.org/browser/browser/base/content/test/general/moz.png">' +
-      'Test <b>Bold</b> After<b></b>', "Paste after copy image");
+      "Test <b>Bold</b> After<b></b>", "Paste after copy image");
   });
 
   gBrowser.removeCurrentTab();

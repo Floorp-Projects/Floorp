@@ -27,6 +27,11 @@ exports.runTest = function(ruleTester) {
       "Services.removeObserver('notification name', {});",
       "Services.io.newURI('http://example.com');",
       "Services.io.newURI('http://example.com', 'utf8');",
+      "elt.addEventListener('click', handler);",
+      "elt.addEventListener('click', handler, true);",
+      "elt.addEventListener('click', handler, {once: true});",
+      "elt.removeEventListener('click', handler);",
+      "elt.removeEventListener('click', handler, true);",
     ],
     invalid: [
       {
@@ -60,6 +65,14 @@ exports.runTest = function(ruleTester) {
       {
         code: "Services.io.newURI('http://example.com', 'utf8', null);",
         errors: callError("newURI's optional parameters passed as null.")
+      },
+      {
+        code: "elt.addEventListener('click', handler, false);",
+        errors: callError("addEventListener's third parameter can be omitted when it's false.")
+      },
+      {
+        code: "elt.removeEventListener('click', handler, false);",
+        errors: callError("removeEventListener's third parameter can be omitted when it's false.")
       }
     ]
   });

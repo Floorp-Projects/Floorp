@@ -9,7 +9,7 @@ function endTest() {
 function waitForInactivity() {
   setTimeout(endTest, 1000);
 }
-document.addEventListener("MozReftestInvalidate", waitForInactivity, false);
+document.addEventListener("MozReftestInvalidate", waitForInactivity);
 </script>
 
 </body>

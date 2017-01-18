@@ -338,11 +338,13 @@ public:
   virtual mozilla::ipc::IPCResult
   RecvShow(const ScreenIntSize& aSize,
            const ShowInfo& aInfo,
-           const TextureFactoryIdentifier& aTextureFactoryIdentifier,
-           const uint64_t& aLayersId,
-           PRenderFrameChild* aRenderFrame,
            const bool& aParentIsActive,
            const nsSizeMode& aSizeMode) override;
+
+  virtual mozilla::ipc::IPCResult
+  RecvInitRendering(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
+                    const uint64_t& aLayersId,
+                    PRenderFrameChild* aRenderFrame) override;
 
   virtual mozilla::ipc::IPCResult
   RecvUpdateDimensions(const CSSRect& aRect,

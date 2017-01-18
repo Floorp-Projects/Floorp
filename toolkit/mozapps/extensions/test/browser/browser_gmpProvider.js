@@ -247,10 +247,10 @@ add_task(function* testInstalledDetails() {
     let contextMenu = doc.getElementById("addonitem-popup");
     let deferred = Promise.defer();
     let listener = () => {
-      contextMenu.removeEventListener("popupshown", listener, false);
+      contextMenu.removeEventListener("popupshown", listener);
       deferred.resolve();
     };
-    contextMenu.addEventListener("popupshown", listener, false);
+    contextMenu.addEventListener("popupshown", listener);
     el = doc.getElementsByClassName("detail-view-container")[0];
     EventUtils.synthesizeMouse(el, 4, 4, { }, gManagerWindow);
     EventUtils.synthesizeMouse(el, 4, 4, { type: "contextmenu", button: 2 }, gManagerWindow);

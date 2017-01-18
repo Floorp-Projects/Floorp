@@ -115,13 +115,13 @@ function MarkupView(inspector, frame, controllerWindow) {
   EventEmitter.decorate(this);
 
   // Listening to various events.
-  this._elt.addEventListener("click", this._onMouseClick, false);
-  this._elt.addEventListener("mousemove", this._onMouseMove, false);
-  this._elt.addEventListener("mouseout", this._onMouseOut, false);
+  this._elt.addEventListener("click", this._onMouseClick);
+  this._elt.addEventListener("mousemove", this._onMouseMove);
+  this._elt.addEventListener("mouseout", this._onMouseOut);
   this._elt.addEventListener("blur", this._onBlur, true);
   this.win.addEventListener("mouseup", this._onMouseUp);
   this.win.addEventListener("copy", this._onCopy);
-  this._frame.addEventListener("focus", this._onFocus, false);
+  this._frame.addEventListener("focus", this._onFocus);
   this.walker.on("mutations", this._mutationObserver);
   this.walker.on("display-change", this._onDisplayChange);
   this.inspector.selection.on("new-node-front", this._onNewSelection);
@@ -1744,13 +1744,13 @@ MarkupView.prototype = {
     this.popup.destroy();
     this.popup = null;
 
-    this._elt.removeEventListener("click", this._onMouseClick, false);
-    this._elt.removeEventListener("mousemove", this._onMouseMove, false);
-    this._elt.removeEventListener("mouseout", this._onMouseOut, false);
+    this._elt.removeEventListener("click", this._onMouseClick);
+    this._elt.removeEventListener("mousemove", this._onMouseMove);
+    this._elt.removeEventListener("mouseout", this._onMouseOut);
     this._elt.removeEventListener("blur", this._onBlur, true);
     this.win.removeEventListener("mouseup", this._onMouseUp);
     this.win.removeEventListener("copy", this._onCopy);
-    this._frame.removeEventListener("focus", this._onFocus, false);
+    this._frame.removeEventListener("focus", this._onFocus);
     this.walker.off("mutations", this._mutationObserver);
     this.walker.off("display-change", this._onDisplayChange);
     this.inspector.selection.off("new-node-front", this._onNewSelection);

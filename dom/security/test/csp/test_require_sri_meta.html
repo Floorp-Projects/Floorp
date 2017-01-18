@@ -45,7 +45,7 @@ const tests = [
 ];
 
 function finishTest() {
-  window.removeEventListener("message", receiveMessage, false);
+  window.removeEventListener("message", receiveMessage);
   SimpleTest.finish();
 }
 
@@ -54,7 +54,7 @@ function checkResults(result) {
   loadNextTest();
 }
 
-window.addEventListener("message", receiveMessage, false);
+window.addEventListener("message", receiveMessage);
 function receiveMessage(event) {
   checkResults(event.data.result);
 }

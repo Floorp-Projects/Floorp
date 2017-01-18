@@ -87,14 +87,14 @@ bool
 IsClearkeyKeySystem(const nsAString& aKeySystem);
 
 bool
-IsPrimetimeKeySystem(const nsAString& aKeySystem);
-
-bool
 IsWidevineKeySystem(const nsAString& aKeySystem);
 
+// Note: Primetime is now unsupported, but we leave it in the enum so
+// that the telemetry enum values are not changed; doing so would break
+// existing telemetry probes.
 enum CDMType {
   eClearKey = 0,
-  ePrimetime = 1,
+  ePrimetime = 1, // Note: Unsupported.
   eWidevine = 2,
   eUnknown = 3
 };

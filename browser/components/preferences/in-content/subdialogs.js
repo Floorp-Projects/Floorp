@@ -34,7 +34,7 @@ var gSubDialog = {
 
   injectXMLStylesheet(aStylesheetURL) {
     let contentStylesheet = this._frame.contentDocument.createProcessingInstruction(
-      'xml-stylesheet',
+      "xml-stylesheet",
       'href="' + aStylesheetURL + '" type="text/css"'
     );
     this._frame.contentDocument.insertBefore(contentStylesheet,
@@ -271,7 +271,7 @@ var gSubDialog = {
       // If the height is bigger than that of the window, we should let the contents scroll:
       frameHeight = maxHeight + "px";
       frameMinHeight = maxHeight + "px";
-      let containers = this._frame.contentDocument.querySelectorAll('.largeDialogContainer');
+      let containers = this._frame.contentDocument.querySelectorAll(".largeDialogContainer");
       for (let container of containers) {
         container.classList.add("doScroll");
       }

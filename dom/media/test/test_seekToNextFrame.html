@@ -49,8 +49,8 @@ function startTest(test, token) {
 
   var finish = function() {
     v.finished = true;
-    v.removeEventListener("loadedmetadata", onLoadedmetadata, false);
-    v.removeEventListener("seeking", onSeeking, false);
+    v.removeEventListener("loadedmetadata", onLoadedmetadata);
+    v.removeEventListener("seeking", onSeeking);
     removeNodeAndSource(v);
     manager.finished(v.token);
   }
@@ -65,9 +65,9 @@ function startTest(test, token) {
     v.seenSeeking = true;
   }}(test, v);
 
-  v.addEventListener("loadedmetadata", onLoadedmetadata, false);
-  v.addEventListener("seeking", onSeeking, false);
-  v.addEventListener("ended", onEnded, false);
+  v.addEventListener("loadedmetadata", onLoadedmetadata);
+  v.addEventListener("seeking", onSeeking);
+  v.addEventListener("ended", onEnded);
 
   document.body.appendChild(v);
 }

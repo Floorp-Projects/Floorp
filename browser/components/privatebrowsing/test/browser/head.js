@@ -23,9 +23,9 @@ function openWindow(aParent, aOptions, a3) {
   let win = aParent.OpenBrowserWindow(aOptions);
 
   win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad, false);
+    win.removeEventListener("load", onLoad);
     resolve(win);
-  }, false);
+  });
 
   return promise;
 }

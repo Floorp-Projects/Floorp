@@ -262,13 +262,13 @@ PopupNotifications.prototype = {
   set iconBox(iconBox) {
     // Remove the listeners on the old iconBox, if needed
     if (this._iconBox) {
-      this._iconBox.removeEventListener("click", this, false);
-      this._iconBox.removeEventListener("keypress", this, false);
+      this._iconBox.removeEventListener("click", this);
+      this._iconBox.removeEventListener("keypress", this);
     }
     this._iconBox = iconBox;
     if (iconBox) {
-      iconBox.addEventListener("click", this, false);
-      iconBox.addEventListener("keypress", this, false);
+      iconBox.addEventListener("click", this);
+      iconBox.addEventListener("keypress", this);
     }
   },
   get iconBox() {

@@ -58,7 +58,7 @@
           this.pickerState = {};
           this.type = undefined;
           this.dateTimePopupFrame.removeEventListener("load", this, true);
-          this.dateTimePopupFrame.contentDocument.removeEventListener("message", this, false);
+          this.dateTimePopupFrame.contentDocument.removeEventListener("message", this);
           this.dateTimePopupFrame.setAttribute("src", "");
         ]]></body>
       </method>
@@ -190,7 +190,7 @@
           switch (aEvent.type) {
             case "load": {
               this.initPicker(this.detail);
-              this.dateTimePopupFrame.contentWindow.addEventListener("message", this, false);
+              this.dateTimePopupFrame.contentWindow.addEventListener("message", this);
               break;
             }
             case "message": {

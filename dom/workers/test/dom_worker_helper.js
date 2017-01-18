@@ -137,10 +137,10 @@ function waitForWindowMessage(window, message) {
       if (event.data !== event.data) {
         return;
       }
-      window.removeEventListener("message", onmessage, false);
+      window.removeEventListener("message", onmessage);
       resolve();
     };
-    window.addEventListener("message", onmessage, false);
+    window.addEventListener("message", onmessage);
   });
 }
 

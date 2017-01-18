@@ -16,6 +16,7 @@
 #include "gc/Zone.h"
 #include "js/CharacterEncoding.h"
 #include "vm/ArrayObject.h"
+#include "vm/Shape.h"
 #include "vm/TaggedProto.h"
 #include "vm/UnboxedObject.h"
 

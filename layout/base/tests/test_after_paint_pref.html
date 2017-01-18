@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=608030
 SimpleTest.waitForExplicitFinish();
 SimpleTest.requestFlakyTimeout("untriaged");
 
-window.addEventListener("load", step0, false);
+window.addEventListener("load", step0);
 
 is(SpecialPowers.getBoolPref("dom.send_after_paint_to_content"), true, "pref defaults to true in mochitest harness");
 
@@ -40,7 +40,7 @@ function step0(event) {
   // Wait until we get the MozAfterPaint following the load event
   // before starting.
   ok(true, "loaded");
-  window.addEventListener("MozAfterPaint", step1, false);
+  window.addEventListener("MozAfterPaint", step1);
 
   // Ensure a MozAfterPaint event is fired
   div.style.backgroundColor = "yellow";
@@ -52,11 +52,11 @@ var div = document.getElementById("display");
 function step1(event)
 {
   ok(true, "step1 reached: " + print_event(event));
-  window.removeEventListener("MozAfterPaint", step1, false);
+  window.removeEventListener("MozAfterPaint", step1);
 
   start = Date.now();
 
-  window.addEventListener("MozAfterPaint", step2, false);
+  window.addEventListener("MozAfterPaint", step2);
 
   div.style.backgroundColor = "blue";
 }
@@ -64,7 +64,7 @@ function step1(event)
 function step2(event)
 {
   ok(true, "step2 reached: " + print_event(event));
-  window.removeEventListener("MozAfterPaint", step2, false);
+  window.removeEventListener("MozAfterPaint", step2);
 
   var end = Date.now();
   var timeout = 3 * Math.max(end - start, 300);
@@ -81,7 +81,7 @@ function step2(event)
 function step3(timeout)
 {
   ok(true, "step3 reached");
-  window.addEventListener("MozAfterPaint", failstep, false);
+  window.addEventListener("MozAfterPaint", failstep);
 
   div.style.backgroundColor = "fuchsia";
 
@@ -99,7 +99,7 @@ function step4()
   ok(true, "step4 reached"); // If we didn't get the failure in failstep,
                              // then we passed.
 
-  window.removeEventListener("MozAfterPaint", failstep, false);
+  window.removeEventListener("MozAfterPaint", failstep);
 
   // Set the pref back in its initial state.
   SpecialPowers.pushPrefEnv({'set': [['dom.send_after_paint_to_content', true]]}, SimpleTest.finish);

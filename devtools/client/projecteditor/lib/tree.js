@@ -61,7 +61,7 @@ var ResourceContainer = Class({
     this.line.addEventListener("contextmenu", (ev) => {
       this.select();
       this.openContextMenu(ev);
-    }, false);
+    });
 
     this.children = doc.createElementNS(HTML_NS, "ul");
     this.children.classList.add("children");
@@ -72,7 +72,7 @@ var ResourceContainer = Class({
       this.select();
       this.toggleExpansion();
       evt.stopPropagation();
-    }, false);
+    });
     this.expander.addEventListener("click", (evt) => {
       this.toggleExpansion();
       this.select();

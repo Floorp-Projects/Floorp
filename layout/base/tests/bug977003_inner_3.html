@@ -60,11 +60,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=977003
       target = document.getElementById("target");
       mediator = document.getElementById("mediator");
       listener = document.getElementById("listener");
-      target.addEventListener("pointerdown",          TargetDownHandler,      false);
-      mediator.addEventListener("gotpointercapture",  MediatorGotPCHandler,   false);
-      mediator.addEventListener("lostpointercapture", MediatorLostPCHandler,  false);
-      listener.addEventListener("gotpointercapture",  ListenerHandler, false);
-      listener.addEventListener("lostpointercapture", ListenerHandler, false);
+      target.addEventListener("pointerdown",          TargetDownHandler);
+      mediator.addEventListener("gotpointercapture",  MediatorGotPCHandler);
+      mediator.addEventListener("lostpointercapture", MediatorLostPCHandler);
+      listener.addEventListener("gotpointercapture",  ListenerHandler);
+      listener.addEventListener("lostpointercapture", ListenerHandler);
       var rect = target.getBoundingClientRect();
       synthesizePointer(target, rect.width/2, rect.height/2, {type: "pointerdown"});
       synthesizePointer(target, rect.width/3, rect.height/3, {type: "pointermove"});

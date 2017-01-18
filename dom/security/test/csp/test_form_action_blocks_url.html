@@ -33,7 +33,7 @@ var testframe = document.getElementById("testframe");
 // event and would trigger the test to fail early.
 function logFormSubmittedError() {
   clearTimeout(timeOutId);
-  testframe.removeEventListener('load', logFormSubmittedError, false);
+  testframe.removeEventListener('load', logFormSubmittedError);
   ok(false, "form submission should be blocked");
   SimpleTest.finish();
 }
@@ -50,12 +50,12 @@ function verifyFormNotSubmitted() {
 function submitForm() {
   // Part 1: The form has loaded in the testframe
   // unregister the current event handler
-  testframe.removeEventListener('load', submitForm, false);
+  testframe.removeEventListener('load', submitForm);
 
   // Part 2: Register a new load event handler. In case the
   // form gets submitted, this load event fires and we can
   // fail the test right away.
-  testframe.addEventListener("load", logFormSubmittedError, false);
+  testframe.addEventListener("load", logFormSubmittedError);
 
   // Part 3: Since blocking the form does not throw any kind of error;
   // Firefox just logs the CSP error to the console we have to register
@@ -68,7 +68,7 @@ function submitForm() {
   submitButton.click();
 }
 
-testframe.addEventListener("load", submitForm, false);
+testframe.addEventListener("load", submitForm);
 testframe.src = "file_form_action_server.sjs?loadframe";
 
 </script>

@@ -30,11 +30,11 @@ function startTest(test, token) {
   v.addEventListener("play", function (e) {
     e.target.playCount += 1;
     ok(e.target.playCount == 1, "Should get exactly one play event.");
-  }, false);
+  });
 
   v.addEventListener("seeking", function (e) {
     e.target.seekingCount += 1;
-  }, false);
+  });
 
   v.addEventListener("seeked", function (e) {
     e.target.seekedCount += 1;
@@ -42,13 +42,13 @@ function startTest(test, token) {
       ok(e.target.seekingCount == 2, "Expect matched pairs of seeking/seeked events.");
       e.target.loop = false;
     }
-  }, false);
+  });
 
   v.addEventListener("ended", function (e) {
     ok(!e.target.loop, "Shouldn't get ended event while looping.");
     removeNodeAndSource(e.target);
     manager.finished(e.target.token);
-  }, false);
+  });
 
   document.body.appendChild(v);
   v.play();

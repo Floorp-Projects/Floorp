@@ -309,8 +309,8 @@ function startListeners() {
 function waitForReady() {
   if (content.document.readyState == 'complete') {
     readyStateTimer.cancel();
-    content.addEventListener("mozbrowsershowmodalprompt", modalHandler, false);
-    content.addEventListener("unload", waitForReady, false);
+    content.addEventListener("mozbrowsershowmodalprompt", modalHandler);
+    content.addEventListener("unload", waitForReady);
   }
   else {
     readyStateTimer.initWithCallback(waitForReady, 100, Ci.nsITimer.TYPE_ONE_SHOT);
@@ -407,7 +407,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:deleteAllCookies", deleteAllCookiesFn);
   removeMessageListenerId("Marionette:deleteCookie", deleteCookieFn);
   if (isB2G) {
-    content.removeEventListener("mozbrowsershowmodalprompt", modalHandler, false);
+    content.removeEventListener("mozbrowsershowmodalprompt", modalHandler);
   }
   seenEls.clear();
   // reset container frame to the top-most frame

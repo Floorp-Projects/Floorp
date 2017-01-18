@@ -77,7 +77,7 @@ function AutocompletePopup(toolboxDoc, options = {}) {
   this._tooltip.setContent(this._list);
 
   this.onClick = this.onClick.bind(this);
-  this._list.addEventListener("click", this.onClick, false);
+  this._list.addEventListener("click", this.onClick);
 
   // Array of raw autocomplete items
   this.items = [];
@@ -192,7 +192,7 @@ AutocompletePopup.prototype = {
       this.hidePopup();
     }
 
-    this._list.removeEventListener("click", this.onClick, false);
+    this._list.removeEventListener("click", this.onClick);
 
     if (this.autoThemeEnabled) {
       this._prefObserver.off("devtools.theme", this._handleThemeChange);

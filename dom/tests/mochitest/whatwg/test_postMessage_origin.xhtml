@@ -483,14 +483,14 @@ function registerMessageListener(func, callback)
       callback();
   }
   
-  window.addEventListener("message", receive, false);
+  window.addEventListener("message", receive);
   
   return receive;
 }
 
 function removeListener(listener)
 {
-  window.removeEventListener("message", listener, false);
+  window.removeEventListener("message", listener);
 }
 
 function oddballTests(callback)
@@ -538,7 +538,7 @@ function run()
   });
 }
 
-window.addEventListener("load", run, false);
+window.addEventListener("load", run);
 ]]></script>
 </pre>
 </body>

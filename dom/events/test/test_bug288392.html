@@ -28,7 +28,7 @@ function subtreeModified(e)
 
 function doTest() {
   var targetNode = document.getElementById("mutationTarget");
-  targetNode.addEventListener("DOMSubtreeModified", subtreeModified, false);
+  targetNode.addEventListener("DOMSubtreeModified", subtreeModified);
 
   subtreeModifiedCount = 0;
   var temp = document.createElement("DIV");
@@ -50,7 +50,7 @@ function doTest() {
   var subtree = document.createElement("div");
   var s = "<e1 attr1='value1'>Something1</e1><e2 attr2='value2'>Something2</e2>";
   subtree.innerHTML = s;
-  subtree.addEventListener("DOMSubtreeModified", subtreeModified, false);
+  subtree.addEventListener("DOMSubtreeModified", subtreeModified);
 
   subtreeModifiedCount = 0;
   subtree.firstChild.firstChild.data = "foo";
@@ -78,9 +78,9 @@ function doTest() {
      "Setting .innerHTML should have dispatched a DOMSubtreeModified event");
 
   subtreeModifiedCount = 0;
-  subtree.removeEventListener("DOMSubtreeModified", subtreeModified, false);
+  subtree.removeEventListener("DOMSubtreeModified", subtreeModified);
   subtree.appendChild(document.createTextNode(""));
-  subtree.addEventListener("DOMSubtreeModified", subtreeModified, false);
+  subtree.addEventListener("DOMSubtreeModified", subtreeModified);
   subtree.normalize();
   is(subtreeModifiedCount, 1,
      "Calling normalize() should have dispatched a DOMSubtreeModified event");

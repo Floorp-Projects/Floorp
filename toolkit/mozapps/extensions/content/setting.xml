@@ -22,7 +22,7 @@
 
         this.addEventListener("keypress", function(event) {
           event.stopPropagation();
-        }, false);
+        });
 
         if (this.usePref)
           Services.prefs.addObserver(this.pref, this._observer, true);
@@ -441,7 +441,7 @@
     <implementation>
       <constructor>
       <![CDATA[
-        this.control.addEventListener("command", this.inputChanged.bind(this), false);
+        this.control.addEventListener("command", this.inputChanged.bind(this));
       ]]>
       </constructor>
 

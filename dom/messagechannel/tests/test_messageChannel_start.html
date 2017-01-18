@@ -57,11 +57,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
 
     a.port1.addEventListener('message', function(evt) {
       ok(false, "This method should not be called");
-    }, false);
+    });
 
     a.port2.addEventListener('message', function(evt) {
       ok(false, "This method should not be called");
-    }, false);
+    });
 
     setTimeout(runTests, 0);
   }
@@ -79,12 +79,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
     a.port1.addEventListener('message', function(evt) {
       ok(true, "This method should be called");
       if (!--events) runTests();
-    }, false);
+    });
 
     a.port2.addEventListener('message', function(evt) {
       ok(true, "This method should be called");
       if (!--events) runTests();
-    }, false);
+    });
 
     a.port1.start();
     a.port2.start();
@@ -103,11 +103,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
     a.port1.addEventListener('message', function(evt) {
       ok(true, "This method should be called");
       if (!--events) runTests();
-    }, false);
+    });
 
     a.port2.addEventListener('message', function(evt) {
       ok(false, "This method should not be called");
-    }, false);
+    });
 
     a.port1.start();
   }
@@ -124,12 +124,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
 
     a.port1.addEventListener('message', function(evt) {
       ok(false, "This method should not be called");
-    }, false);
+    });
 
     a.port2.addEventListener('message', function(evt) {
       ok(true, "This method should be called");
       if (!--events) runTests();
-    }, false);
+    });
 
     a.port2.start();
   }
@@ -170,13 +170,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
     a.port1.addEventListener('message', function(evt) {
       ok(true, "This method should be called");
       if (!--events) runTests();
-    }, false);
+    });
 
     a.port2.start();
     a.port2.addEventListener('message', function(evt) {
       ok(true, "This method should be called");
       if (!--events) runTests();
-    }, false);
+    });
   }
 
   function testOnMessageClone() {

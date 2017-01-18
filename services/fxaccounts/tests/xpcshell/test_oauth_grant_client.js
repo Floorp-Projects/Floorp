@@ -9,7 +9,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 const CLIENT_OPTIONS = {
   serverURL: "http://127.0.0.1:9010/v1",
-  client_id: 'abc123'
+  client_id: "abc123"
 };
 
 const STATUS_SUCCESS = 200;

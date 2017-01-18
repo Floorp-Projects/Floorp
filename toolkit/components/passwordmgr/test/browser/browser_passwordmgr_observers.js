@@ -79,7 +79,7 @@ add_task(function* test() {
     for (let i = 0; i < signonsTree.view.rowCount; i++) {
       order.push(signonsTree.view.getCellText(i, column));
     }
-    return order.join(',');
+    return order.join(",");
   }
 
   function getLoginPassword() {

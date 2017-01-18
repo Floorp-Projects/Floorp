@@ -44,9 +44,9 @@ add_task(function* test_switchtab_override() {
   let onTabSelect = event => {
     deferred.reject(new Error("Should have overridden switch to tab"));
   };
-  gBrowser.tabContainer.addEventListener("TabSelect", onTabSelect, false);
+  gBrowser.tabContainer.addEventListener("TabSelect", onTabSelect);
   registerCleanupFunction(() => {
-    gBrowser.tabContainer.removeEventListener("TabSelect", onTabSelect, false);
+    gBrowser.tabContainer.removeEventListener("TabSelect", onTabSelect);
   });
   // Otherwise it would load the page.
   BrowserTestUtils.browserLoaded(secondTab.linkedBrowser).then(deferred.resolve);

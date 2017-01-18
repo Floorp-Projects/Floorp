@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
       a.port1.postMessage(i);
     }
 
-    window.addEventListener('message', receiveMessage, false);
+    window.addEventListener('message', receiveMessage);
     function receiveMessage(evt) {
 
       // This test sends the port from this window to the iframe and viceversa.
@@ -61,7 +61,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=677638
     ok(div, "Parent exists");
 
     var ifr = document.createElement("iframe");
-    ifr.addEventListener("load", iframeLoaded, false);
+    ifr.addEventListener("load", iframeLoaded);
     ifr.setAttribute('src', "iframe_messageChannel_pingpong.html");
     div.appendChild(ifr);
 

@@ -9,9 +9,6 @@
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 const LOCAL_EME_SOURCES = [{
-  "id": "gmp-eme-adobe",
-  "src": "chrome://global/content/gmp-sources/eme-adobe.json"
-}, {
   "id": "gmp-gmpopenh264",
   "src": "chrome://global/content/gmp-sources/openh264.json"
 }, {
@@ -157,10 +154,10 @@ function downloadXML(url, allowNonBuiltIn = false, allowedCerts = null) {
       resolve(request.responseXML);
     };
 
-    request.addEventListener("error", fail, false);
-    request.addEventListener("abort", fail, false);
-    request.addEventListener("timeout", fail, false);
-    request.addEventListener("load", success, false);
+    request.addEventListener("error", fail);
+    request.addEventListener("abort", fail);
+    request.addEventListener("timeout", fail);
+    request.addEventListener("load", success);
 
     logger.info("sending request to: " + url);
     request.send(null);

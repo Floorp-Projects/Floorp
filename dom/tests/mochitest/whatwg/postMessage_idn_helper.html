@@ -24,7 +24,7 @@
 
       evt.source.postMessage(response, evt.origin);
     }
-    window.addEventListener("message", receiveMessage, false);
+    window.addEventListener("message", receiveMessage);
 
     function setup()
     {
@@ -32,7 +32,7 @@
       target.textContent = location.hostname + ":" + (location.port || 80);
     }
 
-    window.addEventListener("load", setup, false);
+    window.addEventListener("load", setup);
   </script>
 </head>
 <body>

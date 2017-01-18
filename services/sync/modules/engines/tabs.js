@@ -299,9 +299,9 @@ TabTracker.prototype = {
   _registerListenersForWindow(window) {
     this._log.trace("Registering tab listeners in window");
     for (let topic of this._topics) {
-      window.addEventListener(topic, this.onTab, false);
+      window.addEventListener(topic, this.onTab);
     }
-    window.addEventListener("unload", this._unregisterListeners, false);
+    window.addEventListener("unload", this._unregisterListeners);
     // If it's got a tab browser we can listen for things like navigation.
     if (window.gBrowser) {
       window.gBrowser.addProgressListener(this);
@@ -314,9 +314,9 @@ TabTracker.prototype = {
 
   _unregisterListenersForWindow(window) {
     this._log.trace("Removing tab listeners in window");
-    window.removeEventListener("unload", this._unregisterListeners, false);
+    window.removeEventListener("unload", this._unregisterListeners);
     for (let topic of this._topics) {
-      window.removeEventListener(topic, this.onTab, false);
+      window.removeEventListener(topic, this.onTab);
     }
     if (window.gBrowser) {
       window.gBrowser.removeProgressListener(this);
@@ -345,13 +345,13 @@ TabTracker.prototype = {
     switch (topic) {
       case "domwindowopened":
         let onLoad = () => {
-          subject.removeEventListener("load", onLoad, false);
+          subject.removeEventListener("load", onLoad);
           // Only register after the window is done loading to avoid unloads.
           this._registerListenersForWindow(subject);
         };
 
         // Add tab listeners now that a window has opened.
-        subject.addEventListener("load", onLoad, false);
+        subject.addEventListener("load", onLoad);
         break;
     }
   },

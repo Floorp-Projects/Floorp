@@ -74,10 +74,10 @@ xhr.addEventListener("load", function () {
       ok(blob2.type == blob.type, "Blob types are: " + blob2.type + " - " + blob.type);
 
       SimpleTest.finish();
-    }, false);
+    });
     xhrBlob.send();
   }
-}, false);
+});
 xhr.send();
 </script>
 </body>

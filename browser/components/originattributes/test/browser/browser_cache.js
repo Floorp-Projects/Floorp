@@ -152,10 +152,10 @@ function* doTest(aBrowser) {
     let URLSuffix = "?r=" + arg.randomSuffix;
 
     // Create the audio and video elements.
-    let audio = content.document.createElement('audio');
-    let video = content.document.createElement('video');
-    let audioSource = content.document.createElement('source');
-    let audioTrack = content.document.createElement('track');
+    let audio = content.document.createElement("audio");
+    let video = content.document.createElement("video");
+    let audioSource = content.document.createElement("source");
+    let audioTrack = content.document.createElement("track");
 
     // Append the audio and track element into the body, and wait until they're finished.
     yield new Promise(resolve => {
@@ -181,8 +181,8 @@ function* doTest(aBrowser) {
       };
 
       // Add the event listeners before everything in case we lose events.
-      audioTrack.addEventListener("load", trackListener, false);
-      audio.addEventListener("canplaythrough", audioListener, false);
+      audioTrack.addEventListener("load", trackListener);
+      audio.addEventListener("canplaythrough", audioListener);
 
       // Assign attributes for the audio element.
       audioSource.setAttribute("src", audioURL + URLSuffix);
@@ -205,7 +205,7 @@ function* doTest(aBrowser) {
       };
 
       // Add the event listener before everything in case we lose the event.
-      video.addEventListener("canplaythrough", listener, false);
+      video.addEventListener("canplaythrough", listener);
 
       // Assign attributes for the video element.
       video.setAttribute("src", videoURL + URLSuffix);

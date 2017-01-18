@@ -66,6 +66,7 @@ typedef struct nr_transport_addr_ {
   /* A string version.
      56 = 5 ("IP6:[") + 39 (ipv6 address) + 2 ("]:") + 5 (port) + 4 (/UDP) + 1 (null) */
   char as_string[56];
+  char tls_host[256];
 } nr_transport_addr;
 
 typedef struct nr_transport_addr_mask_ {

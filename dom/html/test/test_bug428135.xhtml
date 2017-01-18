@@ -42,11 +42,11 @@ function getAndAddListeners(elname) {
     el = document.getElementById(elname);
   }
   el.addEventListener("submit", testListener, true);
-  el.addEventListener("submit", testListener, false);
+  el.addEventListener("submit", testListener);
   el.addEventListener("reset", testListener, true);
-  el.addEventListener("reset", testListener, false);
+  el.addEventListener("reset", testListener);
   el.addEventListener("fooEvent", testListener, true);
-  el.addEventListener("fooEvent", testListener, false);
+  el.addEventListener("fooEvent", testListener);
   return el;
 }
 

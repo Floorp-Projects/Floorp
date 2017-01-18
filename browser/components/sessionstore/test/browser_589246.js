@@ -161,7 +161,7 @@ function onStateRestored(aSubject, aTopic, aData) {
 
   let newWin = openDialog(location, "_blank", "chrome,all,dialog=no", "http://example.com");
   newWin.addEventListener("load", function(aEvent) {
-    newWin.removeEventListener("load", arguments.callee, false);
+    newWin.removeEventListener("load", arguments.callee);
 
     promiseBrowserLoaded(newWin.gBrowser.selectedBrowser).then(() => {
       // pin this tab
@@ -169,9 +169,9 @@ function onStateRestored(aSubject, aTopic, aData) {
         newWin.gBrowser.pinTab(newWin.gBrowser.selectedTab);
 
       newWin.addEventListener("unload", function () {
-        newWin.removeEventListener("unload", arguments.callee, false);
+        newWin.removeEventListener("unload", arguments.callee);
         onWindowUnloaded();
-      }, false);
+      });
       // Open a new tab as well. On Windows/Linux this will be restored when the
       // new window is opened below (in onWindowUnloaded). On OS X we'll just
       // restore the pinned tabs, leaving the unpinned tab in the closedWindowsData.
@@ -196,7 +196,7 @@ function onStateRestored(aSubject, aTopic, aData) {
         newWin.BrowserTryToCloseWindow();
       }
     });
-  }, false);
+  });
 }
 
 // This will be called before the window is actually closed
@@ -219,7 +219,7 @@ function onWindowUnloaded() {
   // Now we want to open a new window
   let newWin = openDialog(location, "_blank", "chrome,all,dialog=no", "about:mozilla");
   newWin.addEventListener("load", function(aEvent) {
-    newWin.removeEventListener("load", arguments.callee, false);
+    newWin.removeEventListener("load", arguments.callee);
 
     newWin.gBrowser.selectedBrowser.addEventListener("load", function () {
       newWin.gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
@@ -229,7 +229,7 @@ function onWindowUnloaded() {
       afterTestCleanup(newWin);
     }, true);
 
-  }, false);
+  });
 }
 
 function afterTestCleanup(aNewWin) {

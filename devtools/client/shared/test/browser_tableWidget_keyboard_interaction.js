@@ -28,7 +28,7 @@ function test() {
   let win = Services.ww.openWindow(null, TEST_URI, "_blank", TEST_OPT, null);
 
   win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad, false);
+    win.removeEventListener("load", onLoad);
 
     waitForFocus(function () {
       doc = win.document;

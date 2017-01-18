@@ -102,7 +102,7 @@ AsyncResource.prototype = {
     return this._uri;
   },
   set uri(value) {
-    if (typeof value == 'string')
+    if (typeof value == "string")
       this._uri = CommonUtils.makeURI(value);
     else
       this._uri = value;
@@ -164,7 +164,7 @@ AsyncResource.prototype = {
     }
 
     for (let [key, value] of Object.entries(headers)) {
-      if (key == 'authorization')
+      if (key == "authorization")
         this._log.trace("HTTP Header " + key + ": ***** (suppressed)");
       else
         this._log.trace("HTTP Header " + key + ": " + headers[key]);
@@ -192,8 +192,8 @@ AsyncResource.prototype = {
       this._log.debug(action + " Length: " + this._data.length);
       this._log.trace(action + " Body: " + this._data);
 
-      let type = ('content-type' in this._headers) ?
-        this._headers['content-type'] : 'text/plain';
+      let type = ("content-type" in this._headers) ?
+        this._headers["content-type"] : "text/plain";
 
       let stream = Cc["@mozilla.org/io/string-input-stream;1"].
         createInstance(Ci.nsIStringInputStream);
@@ -468,7 +468,7 @@ ChannelListener.prototype = {
 
     this._log.trace("onStartRequest: " + channel.requestMethod + " " +
                     channel.URI.spec);
-    this._data = '';
+    this._data = "";
     this.delayAbort();
   },
 
@@ -497,7 +497,7 @@ ChannelListener.prototype = {
     this._log.trace("Channel for " + channel.requestMethod + " " + uri + ": " +
                     "isSuccessCode(" + status + ")? " + statusSuccess);
 
-    if (this._data == '') {
+    if (this._data == "") {
       this._data = null;
     }
 

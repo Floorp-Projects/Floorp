@@ -33,7 +33,7 @@
     }
 
 
-    window.addEventListener('message', recvMessage, false);
+    window.addEventListener('message', recvMessage);
 
     try {
       // Please note that file_testserver.sjs?foo does not return a response.
@@ -44,8 +44,8 @@
       src += "#" + escape(page_id);
       testframe = document.getElementById('testframe');
 
-      testframe.addEventListener('load', executeTest, false);
-      testframe.addEventListener('error', reportError, false);
+      testframe.addEventListener('load', executeTest);
+      testframe.addEventListener('error', reportError);
 
       testframe.src = src;
     }

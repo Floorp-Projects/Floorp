@@ -50,7 +50,6 @@ UNIFIED_SOURCES += xpcom_gluens_src_cppsrcs
 UNIFIED_SOURCES += xpcom_glue_src_cppsrcs
 
 UNIFIED_SOURCES += [
-    'FrozenFunctions.cpp',
     'IOInterposer.cpp',
     'LateWriteChecks.cpp',
     'MainThreadIOLogger.cpp',

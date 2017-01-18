@@ -14,9 +14,9 @@ var browser;
 
 function setHandlerFunc(handler, test) {
   browser.addEventListener("DOMLinkAdded", function linkAdded(event) {
-    browser.removeEventListener("DOMLinkAdded", linkAdded, false);
+    browser.removeEventListener("DOMLinkAdded", linkAdded);
     Services.tm.mainThread.dispatch(handler.bind(this, test), Ci.nsIThread.DISPATCH_NORMAL);
-  }, false);
+  });
 }
 
 add_test(function setup_browser() {

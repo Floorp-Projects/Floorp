@@ -17,21 +17,20 @@
 #include "vpx/vpx_integer.h"
 
 #if defined(__GNUC__)
-# define LOCAL_GCC_VERSION ((__GNUC__ << 8) | __GNUC_MINOR__)
-# define LOCAL_GCC_PREREQ(maj, min) \
-    (LOCAL_GCC_VERSION >= (((maj) << 8) | (min)))
+#define LOCAL_GCC_VERSION ((__GNUC__ << 8) | __GNUC_MINOR__)
+#define LOCAL_GCC_PREREQ(maj, min) (LOCAL_GCC_VERSION >= (((maj) << 8) | (min)))
 #else
-# define LOCAL_GCC_VERSION 0
-# define LOCAL_GCC_PREREQ(maj, min) 0
+#define LOCAL_GCC_VERSION 0
+#define LOCAL_GCC_PREREQ(maj, min) 0
 #endif
 
 // handle clang compatibility
 #ifndef __has_builtin
-# define __has_builtin(x) 0
+#define __has_builtin(x) 0
 #endif
 
 // some endian fix (e.g.: mips-gcc doesn't define __BIG_ENDIAN__)
-#if !defined(WORDS_BIGENDIAN) && \
+#if !defined(WORDS_BIGENDIAN) &&                   \
     (defined(__BIG_ENDIAN__) || defined(_M_PPC) || \
      (defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)))
 #define WORDS_BIGENDIAN
@@ -80,12 +79,11 @@ static INLINE uint16_t BSwap16(uint16_t x) {
 static INLINE uint32_t BSwap32(uint32_t x) {
 #if defined(VPX_USE_MIPS32_R2)
   uint32_t ret;
-  __asm__ volatile (
-    "wsbh   %[ret], %[x]          \n\t"
-    "rotr   %[ret], %[ret],  16   \n\t"
-    : [ret]"=r"(ret)
-    : [x]"r"(x)
-  );
+  __asm__ volatile(
+      "wsbh   %[ret], %[x]          \n\t"
+      "rotr   %[ret], %[ret],  16   \n\t"
+      : [ret] "=r"(ret)
+      : [x] "r"(x));
   return ret;
 #elif defined(HAVE_BUILTIN_BSWAP32)
   return __builtin_bswap32(x);
@@ -109,10 +107,10 @@ static INLINE uint64_t BSwap64(uint64_t x) {
   return swapped_bytes;
 #elif defined(_MSC_VER)
   return (uint64_t)_byteswap_uint64(x);
-#else  // generic code for swapping 64-bit values (suggested by bdb@)
+#else   // generic code for swapping 64-bit values (suggested by bdb@)
   x = ((x & 0xffffffff00000000ull) >> 32) | ((x & 0x00000000ffffffffull) << 32);
   x = ((x & 0xffff0000ffff0000ull) >> 16) | ((x & 0x0000ffff0000ffffull) << 16);
-  x = ((x & 0xff00ff00ff00ff00ull) >>  8) | ((x & 0x00ff00ff00ff00ffull) <<  8);
+  x = ((x & 0xff00ff00ff00ff00ull) >> 8) | ((x & 0x00ff00ff00ff00ffull) << 8);
   return x;
 #endif  // HAVE_BUILTIN_BSWAP64
 }

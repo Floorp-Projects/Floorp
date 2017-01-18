@@ -75,10 +75,10 @@ http://sub1.test1.example.org/tests/dom/tests/mochitest/whatwg/postMessage_joine
       target.textContent = "Location: " + oldDomain +
                            ", effective domain: " + newDomain;
 
-      window.addEventListener("message", receiveMessage, false);
+      window.addEventListener("message", receiveMessage);
     }
 
-    window.addEventListener("load", setup, false);
+    window.addEventListener("load", setup);
   </script>
 </head>
 <body>

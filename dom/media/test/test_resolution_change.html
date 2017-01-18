@@ -14,7 +14,7 @@ var manager = new MediaTestManager;
 
 function loadedData(e) {
   var v = e.target;
-  v.addEventListener("resize", resize, false);
+  v.addEventListener("resize", resize);
   v.play();
 }
 
@@ -37,8 +37,8 @@ function startTest(test, token) {
   v.src = test.name;
   v.seenResolutionChange = false;
 
-  v.addEventListener("loadeddata", loadedData, false)
-  v.addEventListener("ended", ended, false);
+  v.addEventListener("loadeddata", loadedData)
+  v.addEventListener("ended", ended);
 
   manager.started(token);
   document.body.appendChild(v);

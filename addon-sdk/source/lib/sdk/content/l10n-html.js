@@ -70,8 +70,7 @@ exports.translateElement = translateElement;
 
 function onDocumentReady2Translate(event) {
   let document = event.target;
-  document.removeEventListener("DOMContentLoaded", onDocumentReady2Translate,
-                               false);
+  document.removeEventListener("DOMContentLoaded", onDocumentReady2Translate);
 
   translateElement(document);
 
@@ -108,8 +107,7 @@ function onContentWindow(document) {
     console.exception(e);
   }
   // Wait for DOM tree to be built before applying localization
-  document.addEventListener("DOMContentLoaded", onDocumentReady2Translate,
-                            false);
+  document.addEventListener("DOMContentLoaded", onDocumentReady2Translate);
 }
 
 // Listen to creation of content documents in order to translate them as soon

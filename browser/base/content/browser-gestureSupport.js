@@ -598,11 +598,11 @@ var gHistorySwipeAnimation = {
     // If we don't store any, we handle horizontal swipes without animations.
     if (this._maxSnapshots > 0) {
       this.active = true;
-      gBrowser.addEventListener("pagehide", this, false);
-      gBrowser.addEventListener("pageshow", this, false);
-      gBrowser.addEventListener("popstate", this, false);
-      gBrowser.addEventListener("DOMModalDialogClosed", this, false);
-      gBrowser.tabContainer.addEventListener("TabClose", this, false);
+      gBrowser.addEventListener("pagehide", this);
+      gBrowser.addEventListener("pageshow", this);
+      gBrowser.addEventListener("popstate", this);
+      gBrowser.addEventListener("DOMModalDialogClosed", this);
+      gBrowser.tabContainer.addEventListener("TabClose", this);
     }
   },
 
@@ -610,11 +610,11 @@ var gHistorySwipeAnimation = {
    * Uninitializes the support for history swipe animations.
    */
   uninit: function HSA_uninit() {
-    gBrowser.removeEventListener("pagehide", this, false);
-    gBrowser.removeEventListener("pageshow", this, false);
-    gBrowser.removeEventListener("popstate", this, false);
-    gBrowser.removeEventListener("DOMModalDialogClosed", this, false);
-    gBrowser.tabContainer.removeEventListener("TabClose", this, false);
+    gBrowser.removeEventListener("pagehide", this);
+    gBrowser.removeEventListener("pageshow", this);
+    gBrowser.removeEventListener("popstate", this);
+    gBrowser.removeEventListener("DOMModalDialogClosed", this);
+    gBrowser.tabContainer.removeEventListener("TabClose", this);
 
     this.active = false;
     this.isLTR = false;

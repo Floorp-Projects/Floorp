@@ -677,7 +677,7 @@ Toolbox.prototype = {
                    event.preventDefault();
                  });
 
-    this.doc.addEventListener("keypress", this._splitConsoleOnKeypress, false);
+    this.doc.addEventListener("keypress", this._splitConsoleOnKeypress);
     this.doc.addEventListener("focus", this._onFocus, true);
     this.win.addEventListener("unload", this.destroy);
     this.win.addEventListener("message", this._onBrowserMessage, true);
@@ -686,7 +686,7 @@ Toolbox.prototype = {
   _removeHostListeners: function () {
     // The host iframe's contentDocument may already be gone.
     if (this.doc) {
-      this.doc.removeEventListener("keypress", this._splitConsoleOnKeypress, false);
+      this.doc.removeEventListener("keypress", this._splitConsoleOnKeypress);
       this.doc.removeEventListener("focus", this._onFocus, true);
       this.win.removeEventListener("unload", this.destroy);
       this.win.removeEventListener("message", this._onBrowserMessage, true);

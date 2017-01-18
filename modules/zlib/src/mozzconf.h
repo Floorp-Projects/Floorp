@@ -44,7 +44,6 @@
 #define gzputs MOZ_Z_gzputs
 #define gzgets MOZ_Z_gzgets
 #define gzputc MOZ_Z_gzputc
-#define gzgetc MOZ_Z_gzgetc
 #define gzungetc MOZ_Z_gzungetc
 #define gzflush MOZ_Z_gzflush
 #define gzseek MOZ_Z_gzseek
@@ -125,5 +124,46 @@
 #define _tr_flush_bits MOZ_Z__tr_flush_bits
 #define gzvprintf MOZ_Z_gzvprintf
 #define inflateGetDictionary MOZ_Z_inflateGetDictionary
+
+/* New as of zlib-1.2.11 */
+#define adler32_combine_ MOZ_Z_adler32_combine_
+#define crc32_combine_ MOZ_Z_crc32_combine_
+#define deflate_fast MOZ_Z_deflate_fast
+#define deflate_slow MOZ_Z_deflate_slow
+#define deflateStateCheck MOZ_Z_deflateStateCheck
+#define deflate_stored MOZ_Z_deflate_stored
+#define fill_window MOZ_Z_fill_window
+#define flush_pending MOZ_Z_flush_pending
+#define longest_match MOZ_Z_longest_match
+#define read_buf MOZ_Z_read_buf
+#define slide_hash MOZ_Z_slide_hash
+#define gz_open MOZ_Z_gz_open
+#define gz_reset MOZ_Z_gz_reset
+#define gz_avail MOZ_Z_gz_avail
+#define gz_fetch MOZ_Z_gz_fetch
+#define gz_decomp MOZ_Z_gz_decomp
+#define gz_write MOZ_Z_gz_write
+#define gz_comp MOZ_Z_gz_comp
+#define gz_init MOZ_Z_gz_init
+#define gz_write MOZ_Z_gz_write
+#define gz_zero MOZ_Z_gz_zero
+#define gz_load MOZ_Z_gz_load
+#define gz_look MOZ_Z_gz_look
+#define gz_read MOZ_Z_gz_read
+#define gz_skip MOZ_Z_gz_skip
+#define syncsearch MOZ_Z_syncsearch
+#define updatewindow MOZ_Z_updatewindow
+#define inflateStateCheck MOZ_Z_inflateStateCheck
+#define bi_flush MOZ_Z_bi_flush
+#define bi_windup MOZ_Z_bi_windup
+#define bl_order MOZ_Z_bl_order
+#define build_tree MOZ_Z_build_tree
+#define compress_block MOZ_Z_compress_block
+#define init_block MOZ_Z_init_block
+#define pqdownheap MOZ_Z_pqdownheap
+#define scan_tree MOZ_Z_scan_tree
+#define send_tree MOZ_Z_send_tree
+#define slide_hash MOZ_Z_slide_hash
+#define uncompress2 MOZ_Z_uncompress2
 
 #endif

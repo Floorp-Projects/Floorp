@@ -10,6 +10,10 @@ cppunit:
     suite: cppunittest
     treeherder-symbol: tc(Cpp)
     e10s: false
+    run-on-projects:
+        by-test-platform:
+            windows.*: ['mozilla-central', 'try']
+            default: ['all']
     mozharness:
         by-test-platform:
             android.*:
@@ -90,6 +94,10 @@ external-media-tests:
     e10s: false
     tier: 2
     max-run-time: 5400
+    run-on-projects:
+        by-test-platform:
+            windows.*: ['mozilla-central', 'try']
+            default: ['all']
     mozharness:
         script: firefox_media_tests_taskcluster.py
         config:
@@ -203,6 +211,10 @@ jsreftest:
         by-test-platform:
             android.*: 7200
             default: 3600
+    run-on-projects:
+        by-test-platform:
+            windows.*: ['mozilla-central', 'try']
+            default: ['all']
     mozharness:
         by-test-platform:
             android.*:
@@ -524,6 +536,7 @@ mochitest-devtools-chrome:
         by-test-platform:
             linux64-ccov/opt: []
             linux64-jsdcov/opt: []
+            windows.*: ['mozilla-central', 'try']
             default: ['all']
     e10s:
         by-test-platform:
@@ -608,6 +621,10 @@ mochitest-jetpack:
     loopback-video: true
     e10s: false
     max-run-time: 5400
+    run-on-projects:
+        by-test-platform:
+            windows.*: ['mozilla-central', 'try']
+            default: ['all']
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
@@ -1062,6 +1079,10 @@ web-platform-tests:
     instance-size: xlarge
     docker-image: {"in-tree": "desktop1604-test"}
     checkout: true
+    run-on-projects:
+        by-test-platform:
+            windows.*: ['mozilla-central', 'try']
+            default: ['all']
     mozharness:
         script: web_platform_tests.py
         no-read-buildbot-config: true
@@ -1088,6 +1109,10 @@ web-platform-tests-reftests:
             default: both
     docker-image: {"in-tree": "desktop1604-test"}
     checkout: true
+    run-on-projects:
+        by-test-platform:
+            windows.*: ['mozilla-central', 'try']
+            default: ['all']
     mozharness:
         script: web_platform_tests.py
         no-read-buildbot-config: true

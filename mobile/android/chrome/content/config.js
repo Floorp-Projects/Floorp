@@ -120,7 +120,7 @@ var NewPrefDialog = {
 
     this._prefNameInputElt.focus();
 
-    window.addEventListener("keypress", this.handleKeypress, false);
+    window.addEventListener("keypress", this.handleKeypress);
   },
 
   // When we want to cancel/hide the new pref dialog / un-shield the prefs list
@@ -128,7 +128,7 @@ var NewPrefDialog = {
     this._newPrefsDialog.classList.remove("show");
     this._prefsShield.removeAttribute("shown");
 
-    window.removeEventListener("keypress", this.handleKeypress, false);
+    window.removeEventListener("keypress", this.handleKeypress);
   },
 
   // Watch user key input so we can provide Enter key action, commit input values
@@ -346,13 +346,13 @@ var AboutConfig = {
     // Clear any previous selection
     if (currentSelection) {
       currentSelection.classList.remove("selected");
-      currentSelection.removeEventListener("keypress", this.handleKeypress, false);
+      currentSelection.removeEventListener("keypress", this.handleKeypress);
     }
 
     // Set any current selection
     if (aSelection) {
       aSelection.classList.add("selected");
-      aSelection.addEventListener("keypress", this.handleKeypress, false);
+      aSelection.addEventListener("keypress", this.handleKeypress);
     }
   },
 
@@ -584,16 +584,14 @@ Pref.prototype = {
       this.li.addEventListener("click",
         function(aEvent) {
           AboutConfig.selected = AboutConfig.getLINodeForEvent(aEvent);
-        },
-        false
+        }
       );
 
       // Contextmenu callback to identify selected list item
       this.li.addEventListener("contextmenu",
         function(aEvent) {
           AboutConfig.contextMenuLINode = AboutConfig.getLINodeForEvent(aEvent);
-        },
-        false
+        }
       );
 
       this.li.setAttribute("contextmenu", "prefs-context-menu");

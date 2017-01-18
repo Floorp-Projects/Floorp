@@ -9,4 +9,4 @@ function wrapNode() {
   range.surroundContents(span);
 }
 
-window.addEventListener("load", wrapNode, false);
+window.addEventListener("load", wrapNode);

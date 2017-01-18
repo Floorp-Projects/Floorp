@@ -62,9 +62,9 @@ function nextTest() {
   var el = document.getElementById("initialfocus");
 
   el.addEventListener("focus", function() {
-    el.removeEventListener("focus", arguments.callee, false);
+    el.removeEventListener("focus", arguments.callee);
     setTimeout(nextTest_, 0);
-  }, false);
+  });
   el.focus();
 }
 

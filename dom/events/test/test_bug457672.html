@@ -37,10 +37,10 @@ function startTest() {
   SpecialPowers.pushPrefEnv({"set": [["browser.link.open_newwindow", 3]]}, function() {
     document.getElementsByTagName("a")[0].focus();
     // Note, focus/blur don't bubble
-    window.addEventListener("focus", listener, false);
-    window.addEventListener("blur", listener, false);
+    window.addEventListener("focus", listener);
+    window.addEventListener("blur", listener);
     var subwin = window.open("about:blank", "", "");
-    subwin.addEventListener("focus", function(e) { subwin.close(); }, false);
+    subwin.addEventListener("focus", function(e) { subwin.close(); });
   });
 }
 

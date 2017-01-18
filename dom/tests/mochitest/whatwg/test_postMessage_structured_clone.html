@@ -61,8 +61,8 @@ function receiveMessage(evt) {
   setTimeout(crossOrigin ? runNextCrossOrigin : runNextSameOrigin, 0);
 }
 
-window.addEventListener("message", receiveMessage, false);
-window.addEventListener("load", runNextSameOrigin, false);
+window.addEventListener("message", receiveMessage);
+window.addEventListener("load", runNextSameOrigin);
 
 </script>
 </pre>

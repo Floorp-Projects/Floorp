@@ -41,8 +41,8 @@ function startTest(test, token) {
   v.play();
   is(v.paused, false, v._name + " must not be paused after play");
 
-  v.addEventListener("pause", pause, false);
-  v.addEventListener("ended", ended, false);
+  v.addEventListener("pause", pause);
+  v.addEventListener("ended", ended);
 }
 
 manager.runTests(gPausedAfterEndedTests, startTest);

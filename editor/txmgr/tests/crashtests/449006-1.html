@@ -9,13 +9,13 @@ function boom()
   document.execCommand("delete", false, null);
   document.execCommand("undo", false, null);
 
-  document.addEventListener("DOMCharacterDataModified", f, false);
+  document.addEventListener("DOMCharacterDataModified", f);
   document.execCommand("redo", false, null);
-  document.removeEventListener("DOMCharacterDataModified", f, false);
+  document.removeEventListener("DOMCharacterDataModified", f);
 
   function f()
   {
-    document.removeEventListener("DOMCharacterDataModified", f, false);
+    document.removeEventListener("DOMCharacterDataModified", f);
     document.execCommand("formatBlock", false, "<h3>");
   }
 }

@@ -8,10 +8,10 @@
 add_task(function* injectJSON() {
   let inputStrs = [
     'http://example.com/ ", "url": "bar',
-    'http://example.com/\\',
+    "http://example.com/\\",
     'http://example.com/"',
     'http://example.com/","url":"evil.com',
-    'http://mozilla.org/\\u0020',
+    "http://mozilla.org/\\u0020",
     'http://www.mozilla.org/","url":1e6,"some-key":"foo',
     'http://www.mozilla.org/","url":null,"some-key":"foo',
     'http://www.mozilla.org/","url":["foo","bar"],"some-key":"foo',

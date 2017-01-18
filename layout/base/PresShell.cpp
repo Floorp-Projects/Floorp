@@ -168,6 +168,7 @@
 #include "LayerTreeInvalidation.h"
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/dom/DocumentTimeline.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "nsCanvasFrame.h"
@@ -6238,6 +6239,13 @@ PresShell::Paint(nsView*        aViewToPaint,
 {
   PROFILER_LABEL("PresShell", "Paint",
     js::ProfileEntry::Category::GRAPHICS);
+
+  Maybe<js::AutoAssertNoContentJS> nojs;
+  if (!(aFlags & nsIPresShell::PAINT_COMPOSITE)) {
+    // We need to allow content JS when the flag is set since we may trigger
+    // MozAfterPaint events in content in those cases.
+    nojs.emplace(dom::danger::GetJSContext());
+  }
 
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
   NS_ASSERTION(aViewToPaint, "null view");

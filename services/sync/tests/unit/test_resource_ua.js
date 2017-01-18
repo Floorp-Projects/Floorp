@@ -29,7 +29,7 @@ function uaHandler(f) {
 add_task(async function setup() {
 
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
-  meta_global = new ServerWBO('global');
+  meta_global = new ServerWBO("global");
   server = httpd_setup({
     "/1.1/johndoe/info/collections": uaHandler(collectionsHelper.handler),
     "/1.1/johndoe/storage/meta/global": uaHandler(meta_global.handler()),

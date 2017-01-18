@@ -59,7 +59,7 @@ function setup() {
         receiverIframe.removeEventListener('mozbrowsershowmodalprompt',
                                             receiverListener);
       }
-    }, false);
+    });
 
     var promise = new Promise(function(aResolve, aReject) {
       document.body.appendChild(receiverIframe);

@@ -6,18 +6,18 @@ function boom()
 {
   function x()
   {
-    document.removeEventListener("DOMAttrModified", x, false);
+    document.removeEventListener("DOMAttrModified", x);
     document.execCommand("backcolor", false, "green");
   }
 
   document.getElementById("td").focus();
 
-  document.addEventListener("DOMAttrModified", x, false);
+  document.addEventListener("DOMAttrModified", x);
   try { 
     document.execCommand("subscript", false, null); 
   } catch(e) { 
   }
-  document.removeEventListener("DOMAttrModified", x, false);
+  document.removeEventListener("DOMAttrModified", x);
 }
 
 </script>

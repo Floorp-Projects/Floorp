@@ -104,7 +104,7 @@ function closeToolbarCustomizationUI(aCallback, aBrowserWin) {
 }
 
 function waitForCondition(condition, nextTest, errorMsg, retryTimes) {
-  retryTimes = typeof retryTimes !== 'undefined' ? retryTimes : 30;
+  retryTimes = typeof retryTimes !== "undefined" ? retryTimes : 30;
   var tries = 0;
   var interval = setInterval(function() {
     if (tries >= retryTimes) {
@@ -236,9 +236,9 @@ function resetBlocklist() {
 function whenNewWindowLoaded(aOptions, aCallback) {
   let win = OpenBrowserWindow(aOptions);
   win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad, false);
+    win.removeEventListener("load", onLoad);
     aCallback(win);
-  }, false);
+  });
 }
 
 function promiseWindowWillBeClosed(win) {

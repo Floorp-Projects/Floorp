@@ -28,7 +28,7 @@
       document.addEventListener("pointerlockerror", function (e) {
         ok(true, "pointerlockerror event should fire.");
         SimpleTest.finish();
-      }, false);
+      });
 
       function start() {
         // element not in the DOM, not fullscreen, should fail to lock

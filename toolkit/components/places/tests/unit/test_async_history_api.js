@@ -648,7 +648,7 @@ add_task(function* test_add_visit() {
     // undefined.
     if (visit.transitionType == TRANSITION_EMBED) {
       // Check mozIPlaceInfo properties.
-      do_check_eq(placeInfo.placeId, 0, '//');
+      do_check_eq(placeInfo.placeId, 0, "//");
       do_check_eq(placeInfo.guid, null);
 
       // Check mozIVisitInfo properties.

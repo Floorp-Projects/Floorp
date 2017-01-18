@@ -312,7 +312,7 @@ function checkNotResetableAndFormSubmission(aElement)
   aElement.max = 100.0;
 
   document.getElementsByName('submit_frame')[0].addEventListener("load", function() {
-    document.getElementsByName('submit_frame')[0].removeEventListener("load", arguments.callee, false);
+    document.getElementsByName('submit_frame')[0].removeEventListener("load", arguments.callee);
 
     /**
      * All elements values have been set just before the submission.
@@ -324,7 +324,7 @@ function checkNotResetableAndFormSubmission(aElement)
        "The meter element value should not be submitted");
 
     checkNotResetable();
-  }, false);
+  });
 
   form.submit();
 }

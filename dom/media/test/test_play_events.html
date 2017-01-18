@@ -45,10 +45,10 @@ function initTest(test, token) {
   v._state = 0;
  
   ["play", "canplay", "playing", "canplaythrough"].forEach(function (e) {
-    v.addEventListener(e, gotPlayEvent, false);
+    v.addEventListener(e, gotPlayEvent);
   });
 
-  v.addEventListener("ended", ended, false);
+  v.addEventListener("ended", ended);
 
   v.src = test.name;
   document.body.appendChild(v); // Causes load.

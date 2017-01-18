@@ -21,13 +21,13 @@ function startTest(test, token) {
   v.addEventListener("error", function onerror(e) {
     is(v.error.code, v.error.MEDIA_ERR_DECODE,
        "decoder should reject " + test.name);
-    v.removeEventListener("error", onerror, false);
+    v.removeEventListener("error", onerror);
     manager.finished(token);
   });
 
   v.addEventListener("ended", function onended(e) {
     ok(false, "decoder should have rejected file before playback ended");
-    v.removeEventListener("ended", onended, false);
+    v.removeEventListener("ended", onended);
     manager.finished(token);
   });
 

@@ -56,7 +56,7 @@ function newWindowWithState(state, callback) {
   let win = window.openDialog(getBrowserURL(), "_blank", opts);
 
   win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad, false);
+    win.removeEventListener("load", onLoad);
 
     let tab = win.gBrowser.selectedTab;
 
@@ -70,5 +70,5 @@ function newWindowWithState(state, callback) {
     executeSoon(function () {
       ss.setWindowState(win, JSON.stringify(state), true);
     });
-  }, false);
+  });
 }

@@ -34,10 +34,8 @@ void usage_exit(void) {
 
 static int parse_dim(char *v, int *width, int *height) {
   char *x = strchr(v, 'x');
-  if (x == NULL)
-    x = strchr(v, 'X');
-  if (x == NULL)
-    return 0;
+  if (x == NULL) x = strchr(v, 'X');
+  if (x == NULL) return 0;
   *width = atoi(v);
   *height = atoi(&x[1]);
   if (*width <= 0 || *height <= 0)
@@ -93,30 +91,25 @@ int main(int argc, char *argv[]) {
   else
     frames = INT_MAX;
 
-  printf("Input size:  %dx%d\n",
-         width, height);
-  printf("Target size: %dx%d, Frames: ",
-         target_width, target_height);
+  printf("Input size:  %dx%d\n", width, height);
+  printf("Target size: %dx%d, Frames: ", target_width, target_height);
   if (frames == INT_MAX)
     printf("All\n");
   else
     printf("%d\n", frames);
 
-  inbuf = (uint8_t*)malloc(width * height * 3 / 2);
-  outbuf = (uint8_t*)malloc(target_width * target_height * 3 / 2);
+  inbuf = (uint8_t *)malloc(width * height * 3 / 2);
+  outbuf = (uint8_t *)malloc(target_width * target_height * 3 / 2);
   inbuf_u = inbuf + width * height;
   inbuf_v = inbuf_u + width * height / 4;
   outbuf_u = outbuf + target_width * target_height;
   outbuf_v = outbuf_u + target_width * target_height / 4;
   f = 0;
   while (f < frames) {
-    if (fread(inbuf, width * height * 3 / 2, 1, fpin) != 1)
-      break;
-    vp9_resize_frame420(inbuf, width, inbuf_u, inbuf_v, width / 2,
-                        height, width,
-                        outbuf, target_width, outbuf_u, outbuf_v,
-                        target_width / 2,
-                        target_height, target_width);
+    if (fread(inbuf, width * height * 3 / 2, 1, fpin) != 1) break;
+    vp9_resize_frame420(inbuf, width, inbuf_u, inbuf_v, width / 2, height,
+                        width, outbuf, target_width, outbuf_u, outbuf_v,
+                        target_width / 2, target_height, target_width);
     fwrite(outbuf, target_width * target_height * 3 / 2, 1, fpout);
     f++;
   }

@@ -19,7 +19,7 @@ const CLEANUP_DELAY      = 2000;
 const DELAY_BUFFER       = 500;  // Buffer for timers on different OS platforms.
 
 const PROLONGED_ERROR_DURATION =
-  (Svc.Prefs.get('errorhandler.networkFailureReportTimeout') * 2) * 1000;
+  (Svc.Prefs.get("errorhandler.networkFailureReportTimeout") * 2) * 1000;
 
 var errorHandler = Service.errorHandler;
 
