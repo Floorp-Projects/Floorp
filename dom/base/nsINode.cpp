@@ -410,7 +410,7 @@ nsINode::ChildNodes()
 }
 
 void
-nsINode::GetTextContentInternal(nsAString& aTextContent, ErrorResult& aError)
+nsINode::GetTextContentInternal(nsAString& aTextContent, OOMReporter& aError)
 {
   SetDOMStringToNull(aTextContent);
 }
