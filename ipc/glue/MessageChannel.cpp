@@ -1591,6 +1591,14 @@ MessageChannel::RunMessage(MessageTask& aTask)
 
 NS_IMPL_ISUPPORTS_INHERITED(MessageChannel::MessageTask, CancelableRunnable, nsIRunnablePriority)
 
+MessageChannel::MessageTask::MessageTask(MessageChannel* aChannel, Message&& aMessage)
+  : CancelableRunnable(StringFromIPCMessageType(aMessage.type()))
+  , mChannel(aChannel)
+  , mMessage(Move(aMessage))
+  , mScheduled(false)
+{
+}
+
 nsresult
 MessageChannel::MessageTask::Run()
 {
