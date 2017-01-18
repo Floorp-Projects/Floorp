@@ -7081,7 +7081,8 @@ class CGCallGenerator(CGThing):
         if needsCallerType:
             args.append(CGGeneric(callerTypeGetterForDescriptor(descriptor)))
 
-        if isFallible:
+        canOOM = "canOOM" in extendedAttributes
+        if isFallible or canOOM:
             args.append(CGGeneric("rv"))
         args.extend(CGGeneric(arg) for arg in argsPost)
 
@@ -7147,8 +7148,12 @@ class CGCallGenerator(CGThing):
                     """,
                     getPrincipal=getPrincipal)))
 
-        if isFallible:
-            self.cgRoot.prepend(CGGeneric("binding_detail::FastErrorResult rv;\n"))
+        if isFallible or canOOM:
+            if isFallible:
+                reporterClass = "binding_detail::FastErrorResult"
+            else:
+                reporterClass = "binding_danger::OOMReporterInstantiator"
+            self.cgRoot.prepend(CGGeneric("%s rv;\n" % reporterClass))
             self.cgRoot.append(CGGeneric(dedent(
                 """
                 if (MOZ_UNLIKELY(rv.MaybeSetPendingException(cx))) {
@@ -8931,9 +8936,10 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
         nativeName = MakeNativeName(descriptor.binaryNameFor(name))
         _, resultOutParam, _, _, _ = getRetvalDeclarationForType(attr.type,
                                                                  descriptor)
-        infallible = ('infallible' in
-                      descriptor.getExtendedAttributes(attr, getter=True))
-        if resultOutParam or attr.type.nullable() or not infallible:
+        extendedAttrs = descriptor.getExtendedAttributes(attr, getter=True)
+        canFail = ('infallible' not in extendedAttrs or
+                   'canOOM' in extendedAttrs)
+        if resultOutParam or attr.type.nullable() or canFail:
             nativeName = "Get" + nativeName
         return nativeName
 
@@ -14182,10 +14188,13 @@ class CGNativeMember(ClassMethod):
         # And the caller type, if desired.
         if needsCallerType(self.member):
             args.append(Argument("CallerType", "aCallerType"))
-        # And the ErrorResult
+        # And the ErrorResult or OOMReporter
         if 'infallible' not in self.extendedAttrs:
             # Use aRv so it won't conflict with local vars named "rv"
             args.append(Argument("ErrorResult&", "aRv"))
+        elif 'canOOM' in self.extendedAttrs:
+            args.append(Argument("OOMReporter&", "aRv"))
+
         # The legacycaller thisval
         if self.member.isMethod() and self.member.isLegacycaller():
             # If it has an identifier, we can't deal with it yet
@@ -16868,6 +16877,8 @@ class CGEventGetter(CGNativeMember):
     def getArgs(self, returnType, argList):
         if 'infallible' not in self.extendedAttrs:
             raise TypeError("Event code generator does not support [Throws]!")
+        if 'canOOM' in self.extendedAttrs:
+            raise TypeError("Event code generator does not support [CanOOM]!")
         if not self.member.isAttr():
             raise TypeError("Event code generator does not support methods")
         if self.member.isStatic():
