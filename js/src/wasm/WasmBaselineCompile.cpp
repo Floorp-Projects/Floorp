@@ -123,31 +123,14 @@ namespace wasm {
 using namespace js::jit;
 using JS::GenericNaN;
 
-struct BaseCompilePolicy : OpIterPolicy
-{
-    static const bool Output = true;
-
-    // The baseline compiler tracks values on a stack of its own -- it
-    // needs to scan that stack for spilling -- and thus has no need
-    // for the values maintained by the iterator.
-    //
-    // The baseline compiler tracks control items on a stack of its
-    // own as well.
-    //
-    // TODO / REDUNDANT (Bug 1316814): It would be nice if we could
-    // make use of the iterator's ControlItems and not require our own
-    // stack for that.
-};
-
-typedef OpIter<BaseCompilePolicy> BaseOpIter;
-
-typedef bool IsUnsigned;
-typedef bool IsSigned;
-typedef bool ZeroOnOverflow;
-typedef bool IsKnownNotZero;
 typedef bool HandleNaNSpecially;
-typedef bool PopStack;
 typedef bool InvertBranch;
+typedef bool IsKnownNotZero;
+typedef bool IsSigned;
+typedef bool IsUnsigned;
+typedef bool PopStack;
+typedef bool ZeroOnOverflow;
+
 typedef unsigned ByteSize;
 typedef unsigned BitSize;
 
@@ -411,11 +394,11 @@ class BaseCompiler
 
     struct Control
     {
-        Control(uint32_t framePushed, uint32_t stackSize)
+        Control()
             : label(nullptr),
               otherLabel(nullptr),
-              framePushed(framePushed),
-              stackSize(stackSize),
+              framePushed(0),
+              stackSize(0),
               deadOnArrival(false),
               deadThenBranch(false)
         {}
@@ -427,6 +410,21 @@ class BaseCompiler
         bool deadOnArrival;             // deadCode_ was set on entry to the region
         bool deadThenBranch;            // deadCode_ was set on exit from "then"
     };
+
+    struct BaseCompilePolicy : OpIterPolicy
+    {
+        static const bool Output = true;
+
+        // The baseline compiler tracks values on a stack of its own -- it
+        // needs to scan that stack for spilling -- and thus has no need
+        // for the values maintained by the iterator.
+
+        // The baseline compiler uses the iterator's control stack, attaching
+        // its own control information.
+        typedef Control ControlItem;
+    };
+
+    typedef OpIter<BaseCompilePolicy> BaseOpIter;
 
     // Volatile registers except ReturnReg.
 
@@ -575,7 +573,7 @@ class BaseCompiler
     RegF32 joinRegF32;
     RegF64 joinRegF64;
 
-    // More members: see the stk_ and ctl_ vectors, defined below.
+    // There are more members scattered throughout.
 
   public:
     BaseCompiler(const ModuleEnvironment& env,
@@ -2056,33 +2054,38 @@ class BaseCompiler
     //
     // Control stack
 
-    Vector<Control, 8, SystemAllocPolicy> ctl_;
-
-    MOZ_MUST_USE bool pushControl(UniquePooledLabel* label, UniquePooledLabel* otherLabel = nullptr)
+    void initControl(Control& item, UniquePooledLabel* label, UniquePooledLabel* otherLabel = nullptr)
     {
-        uint32_t framePushed = masm.framePushed();
-        uint32_t stackSize = stk_.length();
-
-        if (!ctl_.emplaceBack(Control(framePushed, stackSize)))
-            return false;
-        ctl_.back().label = label->release();
+        item.framePushed = masm.framePushed();
+        item.stackSize = stk_.length();
+        item.label = label->release();
         if (otherLabel)
-            ctl_.back().otherLabel = otherLabel->release();
-        ctl_.back().deadOnArrival = deadCode_;
-        return true;
+            item.otherLabel = otherLabel->release();
+        item.deadOnArrival = deadCode_;
     }
 
-    void popControl() {
-        Control last = ctl_.popCopy();
-        if (last.label)
-            freeLabel(last.label);
-        if (last.otherLabel)
-            freeLabel(last.otherLabel);
+    void freeControl(Control& item) {
+        if (item.label)
+            freeLabel(item.label);
+        if (item.otherLabel)
+            freeLabel(item.otherLabel);
+    }
+
+    Control& controlItem() {
+        return iter_.controlItem();
     }
 
     Control& controlItem(uint32_t relativeDepth) {
-        return ctl_[ctl_.length() - 1 - relativeDepth];
+        return iter_.controlItem(relativeDepth);
     }
+
+    Control& controlOutermost() {
+        return iter_.controlOutermost();
+    }
+
+    ////////////////////////////////////////////////////////////
+    //
+    // Labels
 
     MOZ_MUST_USE PooledLabel* newLabel() {
         // TODO / INVESTIGATE (Bug 1316819): allocate() is fallible, but we can
@@ -2696,7 +2699,7 @@ class BaseCompiler
 
     void returnCleanup(bool popStack) {
         if (popStack)
-            popStackBeforeBranch(ctl_[0].framePushed);
+            popStackBeforeBranch(controlOutermost().framePushed);
         masm.jump(&returnLabel_);
     }
 
@@ -5466,13 +5469,14 @@ BaseCompiler::emitBlock()
     if (!deadCode_)
         sync();                    // Simplifies branching out from block
 
-    return pushControl(&blockEnd);
+    initControl(controlItem(), &blockEnd);
+    return true;
 }
 
 void
 BaseCompiler::endBlock(ExprType type)
 {
-    Control& block = controlItem(0);
+    Control& block = controlItem();
 
     // Save the value.
     AnyReg r;
@@ -5493,7 +5497,7 @@ BaseCompiler::endBlock(ExprType type)
         deadCode_ = false;
     }
 
-    popControl();
+    freeControl(block);
 
     // Retain the value stored in joinReg by all paths, if there are any.
     if (!deadCode_)
@@ -5513,8 +5517,7 @@ BaseCompiler::emitLoop()
     if (!deadCode_)
         sync();                    // Simplifies branching out from block
 
-    if (!pushControl(&blockCont))
-        return false;
+    initControl(controlItem(), &blockCont);
 
     if (!deadCode_) {
         masm.bind(controlItem(0).label);
@@ -5527,7 +5530,7 @@ BaseCompiler::emitLoop()
 void
 BaseCompiler::endLoop(ExprType type)
 {
-    Control& block = controlItem(0);
+    Control& block = controlItem();
 
     AnyReg r;
     if (!deadCode_)
@@ -5536,7 +5539,7 @@ BaseCompiler::endLoop(ExprType type)
     popStackOnBlockExit(block.framePushed);
     popValueStackTo(block.stackSize);
 
-    popControl();
+    freeControl(block);
 
     // Retain the value stored in joinReg by all paths.
     if (!deadCode_)
@@ -5580,8 +5583,7 @@ BaseCompiler::emitIf()
         resetLatentOp();
     }
 
-    if (!pushControl(&endLabel, &elseLabel))
-        return false;
+    initControl(controlItem(), &endLabel, &elseLabel);
 
     if (!deadCode_)
         emitBranchPerform(&b);
@@ -5592,7 +5594,7 @@ BaseCompiler::emitIf()
 void
 BaseCompiler::endIfThen()
 {
-    Control& ifThen = controlItem(0);
+    Control& ifThen = controlItem();
 
     popStackOnBlockExit(ifThen.framePushed);
     popValueStackTo(ifThen.stackSize);
@@ -5605,7 +5607,7 @@ BaseCompiler::endIfThen()
 
     deadCode_ = ifThen.deadOnArrival;
 
-    popControl();
+    freeControl(ifThen);
 }
 
 bool
@@ -5613,6 +5615,7 @@ BaseCompiler::emitElse()
 {
     ExprType thenType;
     Nothing unused_thenValue;
+
     if (!iter_.readElse(&thenType, &unused_thenValue))
         return false;
 
@@ -5650,7 +5653,7 @@ BaseCompiler::emitElse()
 void
 BaseCompiler::endIfThenElse(ExprType type)
 {
-    Control& ifThenElse = controlItem(0);
+    Control& ifThenElse = controlItem();
 
     // The expression type is not a reliable guide to what we'll find
     // on the stack, we could have (if E (i32.const 1) (unreachable))
@@ -5680,7 +5683,7 @@ BaseCompiler::endIfThenElse(ExprType type)
         deadCode_ = false;
     }
 
-    popControl();
+    freeControl(ifThenElse);
 
     if (!deadCode_)
         pushJoinRegUnlessVoid(r);
@@ -5695,7 +5698,6 @@ BaseCompiler::emitEnd()
 
     if (!iter_.readEnd(&kind, &type, &unused_value))
         return false;
-    iter_.popEnd();
 
     switch (kind) {
       case LabelKind::Block: endBlock(type); break;
@@ -5704,6 +5706,8 @@ BaseCompiler::emitEnd()
       case LabelKind::Then:  endIfThen(); break;
       case LabelKind::Else:  endIfThenElse(type); break;
     }
+
+    iter_.popEnd();
 
     return true;
 }
@@ -7666,14 +7670,6 @@ done:
 bool
 BaseCompiler::emitFunction()
 {
-    // emitBody() will ensure that there is enough memory reserved in the
-    // vector for infallible allocation to succeed within the compiler, but we
-    // need a little headroom for the initial pushControl(), which pushes a
-    // void value onto the value stack.
-
-    if (!stk_.reserve(8))
-        return false;
-
     const Sig& sig = func_.sig();
 
     if (!iter_.readFunctionStart(sig.ret()))
@@ -7685,9 +7681,7 @@ BaseCompiler::emitFunction()
     if (!functionEnd)
         return false;
 
-    // For the function's block; it will be popped by endBlock().
-    if (!pushControl(&functionEnd))
-        return false;
+    initControl(controlItem(), &functionEnd);
 
     if (!emitBody())
         return false;
