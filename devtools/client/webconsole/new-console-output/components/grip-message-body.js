@@ -17,12 +17,13 @@ const {
   createFactory,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
-const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
-const { Rep } = createFactories(require("devtools/client/shared/components/reps/rep"));
-const StringRep = createFactories(require("devtools/client/shared/components/reps/string").StringRep).rep;
+
 const VariablesViewLink = createFactory(require("devtools/client/webconsole/new-console-output/components/variables-view-link"));
-const { Grip } = require("devtools/client/shared/components/reps/grip");
-const { MODE } = require("devtools/client/shared/components/reps/constants");
+
+const { REPS, MODE, createFactories } = require("devtools/client/shared/components/reps/load-reps");
+const Rep = createFactory(REPS.Rep);
+const Grip = REPS.Grip;
+const StringRep = createFactories(REPS.StringRep).rep;
 
 GripMessageBody.displayName = "GripMessageBody";
 

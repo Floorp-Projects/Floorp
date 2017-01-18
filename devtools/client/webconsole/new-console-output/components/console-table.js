@@ -11,8 +11,8 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { ObjectClient } = require("devtools/shared/client/main");
 const actions = require("devtools/client/webconsole/new-console-output/actions/messages");
-const {l10n} = require("devtools/client/webconsole/new-console-output/utils/messages");
-const { MODE } = require("devtools/client/shared/components/reps/constants");
+const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
+const { MODE } = require("devtools/client/shared/components/reps/load-reps");
 const GripMessageBody = createFactory(require("devtools/client/webconsole/new-console-output/components/grip-message-body"));
 
 const TABLE_ROW_MAX_ITEMS = 1000;
