@@ -42,8 +42,6 @@ static const char16_t UNDERLINE    = '_';
 static const char16_t TILDE        = '~';
 static const char16_t WILDCARD     = '*';
 static const char16_t SINGLEQUOTE  = '\'';
-static const char16_t OPEN_CURL    = '{';
-static const char16_t CLOSE_CURL   = '}';
 static const char16_t NUMBER_SIGN  = '#';
 static const char16_t QUESTIONMARK = '?';
 static const char16_t PERCENT_SIGN = '%';
@@ -526,26 +524,6 @@ nsCSPParser::host()
   return new nsCSPHostSrc(mCurValue);
 }
 
-// apps use special hosts; "app://{app-host-is-uid}""
-nsCSPHostSrc*
-nsCSPParser::appHost()
-{
-  CSPPARSERLOG(("nsCSPParser::appHost, mCurToken: %s, mCurValue: %s",
-               NS_ConvertUTF16toUTF8(mCurToken).get(),
-               NS_ConvertUTF16toUTF8(mCurValue).get()));
-
-  while (hostChar()) { /* consume */ }
-
-  // appHosts have to end with "}", otherwise we have to report an error
-  if (!accept(CLOSE_CURL)) {
-    const char16_t* params[] = { mCurToken.get() };
-    logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidSource",
-                             params, ArrayLength(params));
-    return nullptr;
-  }
-  return new nsCSPHostSrc(mCurValue);
-}
-
 // keyword-source = "'self'" / "'unsafe-inline'" / "'unsafe-eval'"
 nsCSPBaseSrc*
 nsCSPParser::keywordSource()
@@ -614,13 +592,6 @@ nsCSPParser::hostSource()
   CSPPARSERLOG(("nsCSPParser::hostSource, mCurToken: %s, mCurValue: %s",
                NS_ConvertUTF16toUTF8(mCurToken).get(),
                NS_ConvertUTF16toUTF8(mCurValue).get()));
-
-  // Special case handling for app specific hosts
-  if (accept(OPEN_CURL)) {
-    // If appHost() returns null, the error was handled in appHost().
-    // appHosts can not have a port, or path, we can return.
-    return appHost();
-  }
 
   nsCSPHostSrc* cspHost = host();
   if (!cspHost) {
