@@ -101,19 +101,18 @@ ControlFlowGraph::init(TempAllocator& alloc, const CFGBlockVector& blocks)
         switch (ins->type()) {
           case CFGControlInstruction::Type_Goto: {
             CFGBlock* successor = &blocks_[ins->getSuccessor(0)->id()];
-            copy = CFGGoto::New(alloc, successor, ins->toGoto()->popAmount());
+            copy = CFGGoto::CopyWithNewTargets(alloc, ins->toGoto(), successor);
             break;
           }
           case CFGControlInstruction::Type_BackEdge: {
             CFGBlock* successor = &blocks_[ins->getSuccessor(0)->id()];
-            copy = CFGBackEdge::New(alloc, successor);
+            copy = CFGBackEdge::CopyWithNewTargets(alloc, ins->toBackEdge(), successor);
             break;
           }
           case CFGControlInstruction::Type_LoopEntry: {
             CFGLoopEntry* old = ins->toLoopEntry();
             CFGBlock* successor = &blocks_[ins->getSuccessor(0)->id()];
-            copy = CFGLoopEntry::New(alloc, successor, old->canOsr(), old->stackPhiCount(),
-                                     old->loopStopPc());
+            copy = CFGLoopEntry::CopyWithNewTargets(alloc, old, successor);
             break;
           }
           case CFGControlInstruction::Type_Throw: {
@@ -124,7 +123,7 @@ ControlFlowGraph::init(TempAllocator& alloc, const CFGBlockVector& blocks)
             CFGTest* old = ins->toTest();
             CFGBlock* trueBranch = &blocks_[old->trueBranch()->id()];
             CFGBlock* falseBranch = &blocks_[old->falseBranch()->id()];
-            copy = CFGTest::New(alloc, trueBranch, falseBranch, old->mustKeepCondition());
+            copy = CFGTest::CopyWithNewTargets(alloc, old, trueBranch, falseBranch);
             break;
           }
           case CFGControlInstruction::Type_Compare: {
@@ -148,7 +147,7 @@ ControlFlowGraph::init(TempAllocator& alloc, const CFGBlockVector& blocks)
             CFGBlock* merge = nullptr;
             if (old->numSuccessors() == 2)
                 merge = &blocks_[old->afterTryCatchBlock()->id()];
-            copy = CFGTry::New(alloc, tryBlock, old->catchStartPc(), merge);
+            copy = CFGTry::CopyWithNewTargets(alloc, old, tryBlock, merge);
             break;
           }
           case CFGControlInstruction::Type_TableSwitch: {
@@ -338,6 +337,7 @@ ControlFlowGenerator::snoopControlFlow(JSOp op)
         return processTry();
 
       case JSOP_OPTIMIZE_SPREADCALL:
+      case JSOP_THROWMSG:
         // Not implemented yet.
         return ControlStatus::Abort;
 

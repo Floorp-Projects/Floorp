@@ -3763,18 +3763,21 @@ ContentParent::RecvRecordingDeviceEvents(const nsString& aRecordingStatus,
 }
 
 mozilla::ipc::IPCResult
-ContentParent::RecvGetGraphicsFeatureStatus(const int32_t& aFeature,
-                                            int32_t* aStatus,
-                                            nsCString* aFailureId,
-                                            bool* aSuccess)
+ContentParent::RecvGetGfxInfoFeatureStatus(nsTArray<mozilla::dom::GfxInfoFeatureStatus>* aFS)
 {
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
   if (!gfxInfo) {
-    *aSuccess = false;
     return IPC_OK();
   }
 
-  *aSuccess = NS_SUCCEEDED(gfxInfo->GetFeatureStatus(aFeature, *aFailureId, aStatus));
+  for (int32_t i = 1; i <= nsIGfxInfo::FEATURE_MAX_VALUE; ++i) {
+    int32_t status = 0;
+    nsAutoCString failureId;
+    gfxInfo->GetFeatureStatus(i, failureId, &status);
+    mozilla::dom::GfxInfoFeatureStatus fs(i, status, failureId);
+    aFS->AppendElement(Move(fs));
+  }
+
   return IPC_OK();
 }
 

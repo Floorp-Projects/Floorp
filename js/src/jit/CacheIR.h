@@ -134,6 +134,7 @@ enum class CacheKind : uint8_t
     GetProp,
     GetElem,
     GetName,
+    SetProp,
 };
 
 #define CACHE_IR_OPS(_)                   \
@@ -167,6 +168,9 @@ enum class CacheKind : uint8_t
     _(LoadDOMExpandoValueGuardGeneration) \
     _(LoadDOMExpandoValueIgnoreGeneration)\
     _(GuardDOMExpandoMissingOrGuardShape) \
+                                          \
+    _(StoreFixedSlot)                     \
+    _(StoreDynamicSlot)                   \
                                           \
     /* The *Result ops load a value into the cache's result register. */ \
     _(LoadFixedSlotResult)                \
@@ -547,6 +551,17 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         return res;
     }
 
+    void storeFixedSlot(ObjOperandId obj, size_t offset, ValOperandId rhs) {
+        writeOpWithOperandId(CacheOp::StoreFixedSlot, obj);
+        addStubField(offset, StubField::Type::RawWord);
+        writeOperandId(rhs);
+    }
+    void storeDynamicSlot(ObjOperandId obj, size_t offset, ValOperandId rhs) {
+        writeOpWithOperandId(CacheOp::StoreDynamicSlot, obj);
+        addStubField(offset, StubField::Type::RawWord);
+        writeOperandId(rhs);
+    }
+
     void loadUndefinedResult() {
         writeOp(CacheOp::LoadUndefinedResult);
     }
@@ -822,6 +837,51 @@ class MOZ_RAII GetNameIRGenerator : public IRGenerator
                        HandleObject env, HandlePropertyName name);
 
     bool tryAttachStub();
+};
+
+// SetPropIRGenerator generates CacheIR for a SetProp IC.
+class MOZ_RAII SetPropIRGenerator : public IRGenerator
+{
+    HandleValue lhsVal_;
+    HandleValue idVal_;
+    HandleValue rhsVal_;
+    bool* isTemporarilyUnoptimizable_;
+
+    enum class PreliminaryObjectAction { None, Unlink, NotePreliminary };
+    PreliminaryObjectAction preliminaryObjectAction_;
+
+    // If Baseline needs an update stub, this contains information to create it.
+    RootedId updateStubId_;
+    bool needUpdateStub_;
+
+    void setUpdateStubInfo(jsid id) {
+        MOZ_ASSERT(!needUpdateStub_);
+        needUpdateStub_ = true;
+        updateStubId_ = id;
+    }
+
+    bool tryAttachNativeSetSlot(HandleObject obj, ObjOperandId objId, HandleId id,
+                                 ValOperandId rhsId);
+    bool tryAttachUnboxedExpandoSetSlot(HandleObject obj, ObjOperandId objId, HandleId id,
+                                        ValOperandId rhsId);
+
+  public:
+    SetPropIRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind,
+                       bool* isTemporarilyUnoptimizable, HandleValue lhsVal, HandleValue idVal,
+                       HandleValue rhsVal);
+
+    bool tryAttachStub();
+
+    bool shouldUnlinkPreliminaryObjectStubs() const {
+        return preliminaryObjectAction_ == PreliminaryObjectAction::Unlink;
+    }
+    bool shouldNotePreliminaryObjectStub() const {
+        return preliminaryObjectAction_ == PreliminaryObjectAction::NotePreliminary;
+    }
+    jsid updateStubId() const {
+        MOZ_ASSERT(needUpdateStub_);
+        return updateStubId_;
+    }
 };
 
 } // namespace jit

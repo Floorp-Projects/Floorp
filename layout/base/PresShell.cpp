@@ -6920,7 +6920,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
     int16_t button = mouseEvent->button;
     switch (mouseEvent->mMessage) {
     case eMouseMove:
-      button = -1;
+      button = WidgetMouseEvent::eNoButton;
       pointerMessage = ePointerMove;
       break;
     case eMouseUp:
@@ -6951,14 +6951,18 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
     PostHandlePointerEventsPreventDefault(&event, aEvent);
   } else if (aEvent->mClass == eTouchEventClass) {
     WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
+    int16_t button = WidgetMouseEvent::eLeftButton;
+    int16_t buttons = WidgetMouseEvent::eLeftButtonFlag;
     // loop over all touches and dispatch pointer events on each touch
     // copy the event
     switch (touchEvent->mMessage) {
     case eTouchMove:
       pointerMessage = ePointerMove;
+      button = WidgetMouseEvent::eNoButton;
       break;
     case eTouchEnd:
       pointerMessage = ePointerUp;
+      buttons = WidgetMouseEvent::eNoButtonFlag;
       break;
     case eTouchStart:
       pointerMessage = ePointerDown;
@@ -6989,9 +6993,8 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
       event.mTime = touchEvent->mTime;
       event.mTimeStamp = touchEvent->mTimeStamp;
       event.mFlags = touchEvent->mFlags;
-      event.button = WidgetMouseEvent::eLeftButton;
-      event.buttons = pointerMessage == ePointerUp ?
-                        0 : WidgetMouseEvent::eLeftButtonFlag;
+      event.button = button;
+      event.buttons = buttons;
       event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
       event.convertToPointer = touch->convertToPointer = false;
       PreHandlePointerEventsPreventDefault(&event, aEvent);
