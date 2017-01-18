@@ -205,7 +205,7 @@ function openLinkIn(url, where, params) {
   var aPostData             = params.postData;
   var aCharset              = params.charset;
   var aReferrerURI          = params.referrerURI;
-  var aReferrerPolicy       = ('referrerPolicy' in params ?
+  var aReferrerPolicy       = ("referrerPolicy" in params ?
       params.referrerPolicy : Ci.nsIHttpChannel.REFERRER_POLICY_UNSET);
   var aRelatedToCurrent     = params.relatedToCurrent;
   var aAllowMixedContent    = params.allowMixedContent;

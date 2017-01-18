@@ -171,7 +171,7 @@ function populateChildren(menulist, options, selectedIndex, zoom,
   }
 
   for (let option of options) {
-    let isOptGroup = (option.tagName == 'OPTGROUP');
+    let isOptGroup = (option.tagName == "OPTGROUP");
     let item = element.ownerDocument.createElement(isOptGroup ? "menucaption" : "menuitem");
 
     item.setAttribute("label", option.textContent);

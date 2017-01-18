@@ -468,7 +468,7 @@ function addNewToolbar() {
 
       if (toolbarName == name.value &&
           toolbar.getAttribute("type") != "menubar" &&
-          toolbar.nodeName == 'toolbar') {
+          toolbar.nodeName == "toolbar") {
         dupeFound = true;
         break;
       }

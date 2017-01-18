@@ -51,15 +51,15 @@ function do_crash(setup, callback, canReturnZero) {
   let process = Components.classes["@mozilla.org/process/util;1"]
                   .createInstance(Components.interfaces.nsIProcess);
   process.init(bin);
-  let args = ['-g', greD.path,
-              '-f', headfile.path];
+  let args = ["-g", greD.path,
+              "-f", headfile.path];
   if (setup) {
     if (typeof(setup) == "function")
       // funky, but convenient
       setup = "(" + setup.toSource() + ")();";
-    args.push('-e', setup);
+    args.push("-e", setup);
   }
-  args.push('-f', tailfile.path);
+  args.push("-f", tailfile.path);
 
   let env = Components.classes["@mozilla.org/process/environment;1"]
                               .getService(Components.interfaces.nsIEnvironment);

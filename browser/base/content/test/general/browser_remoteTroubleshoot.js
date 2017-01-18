@@ -64,7 +64,7 @@ add_task(function*() {
     updateChannel = Cu.import("resource://gre/modules/UpdateUtils.jsm", {}).UpdateUtils.UpdateChannel;
   } catch (ex) {}
   if (!updateChannel) {
-    Assert.ok(!('updateChannel' in got.message.application),
+    Assert.ok(!("updateChannel" in got.message.application),
                 "should not have update channel where not available.");
   } else {
     Assert.equal(got.message.application.updateChannel, updateChannel,

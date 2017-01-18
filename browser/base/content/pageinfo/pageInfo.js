@@ -152,8 +152,8 @@ const COPYCOL_META_CONTENT = 1;
 const COPYCOL_IMAGE = COL_IMAGE_ADDRESS;
 
 // one nsITreeView for each tree in the window
-var gMetaView = new pageInfoTreeView('metatree', COPYCOL_META_CONTENT);
-var gImageView = new pageInfoTreeView('imagetree', COPYCOL_IMAGE);
+var gMetaView = new pageInfoTreeView("metatree", COPYCOL_META_CONTENT);
+var gImageView = new pageInfoTreeView("imagetree", COPYCOL_IMAGE);
 
 gImageView.getCellProperties = function(row, col) {
   var data = gImageView.data[row];
@@ -1005,8 +1005,8 @@ function formatDate(datestr, unknown) {
   const locale = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                  .getService(Components.interfaces.nsIXULChromeRegistry)
                  .getSelectedLocale("global", true);
-  const dtOptions = { year: 'numeric', month: 'long', day: 'numeric',
-                      hour: 'numeric', minute: 'numeric', second: 'numeric' };
+  const dtOptions = { year: "numeric", month: "long", day: "numeric",
+                      hour: "numeric", minute: "numeric", second: "numeric" };
   return date.toLocaleString(locale, dtOptions);
 }
 
@@ -1019,7 +1019,7 @@ function doCopy() {
   if (elem && "treeBoxObject" in elem) {
     var view = elem.view;
     var selection = view.selection;
-    var text = [], tmp = '';
+    var text = [], tmp = "";
     var min = {}, max = {};
 
     var count = selection.getRangeCount();

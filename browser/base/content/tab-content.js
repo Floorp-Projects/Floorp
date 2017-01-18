@@ -105,7 +105,7 @@ addMessageListener("SecondScreen:tab-mirror", function(message) {
 
 var AboutHomeListener = {
   init(chromeGlobal) {
-    chromeGlobal.addEventListener('AboutHomeLoad', this, false, true);
+    chromeGlobal.addEventListener("AboutHomeLoad", this, false, true);
   },
 
   get isAboutHome() {

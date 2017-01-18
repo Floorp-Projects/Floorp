@@ -243,8 +243,8 @@
             if (row == this.currentIndex) {
               // Only fire event when current row is expanded or collapsed
               // because that's all the assistive technology really cares about.
-              var event = document.createEvent('Events');
-              event.initEvent('OpenStateChange', true, true);
+              var event = document.createEvent("Events");
+              event.initEvent("OpenStateChange", true, true);
               this.dispatchEvent(event);
             }
             return true;
@@ -986,7 +986,7 @@
          if (this._editingColumn)
            return;
 
-         if (event.charCode == ' '.charCodeAt(0)) {
+         if (event.charCode == " ".charCodeAt(0)) {
            var c = this.currentIndex;
            if (!this.view.selection.isSelected(c) ||
                (!this.view.selection.single && this._isAccelPressed(event))) {

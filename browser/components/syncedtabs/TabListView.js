@@ -117,7 +117,7 @@ TabListView.prototype = {
       }
 
       client.tabs.forEach((tab, index) => {
-        let tabNode = this._doc.getElementById('tab-' + client.id + '-' + index);
+        let tabNode = this._doc.getElementById("tab-" + client.id + "-" + index);
         this._updateTab(tab, tabNode, index);
       });
     }
@@ -245,7 +245,7 @@ TabListView.prototype = {
    */
   _updateTab(item, itemNode, index) {
     itemNode.setAttribute("title", `${item.title}\n${item.url}`);
-    itemNode.setAttribute("id", "tab-" + item.client + '-' + index);
+    itemNode.setAttribute("id", "tab-" + item.client + "-" + index);
     if (item.selected) {
       itemNode.classList.add("selected");
     } else {
@@ -313,7 +313,7 @@ TabListView.prototype = {
       event.preventDefault();
       this.props.onMoveSelectionUp();
     } else if (event.keyCode == this._window.KeyEvent.DOM_VK_RETURN) {
-      let selectedNode = this.container.querySelector('.item.selected');
+      let selectedNode = this.container.querySelector(".item.selected");
       if (selectedNode.dataset.url) {
         this.onOpenSelected(selectedNode.dataset.url, event);
       } else if (selectedNode) {
@@ -381,7 +381,7 @@ TabListView.prototype = {
   },
 
   _getSelectedTabNode() {
-    let item = this.container.querySelector('.item.selected');
+    let item = this.container.querySelector(".item.selected");
     if (this._isTab(item) && item.dataset.url) {
       return item;
     }
@@ -389,7 +389,7 @@ TabListView.prototype = {
   },
 
   _getSelectedClientNode() {
-    let item = this.container.querySelector('.item.selected');
+    let item = this.container.querySelector(".item.selected");
     if (this._isClient(item)) {
       return item;
     }
@@ -516,7 +516,7 @@ TabListView.prototype = {
   },
 
   adjustContextMenu(menu) {
-    let item = this.container.querySelector('.item.selected');
+    let item = this.container.querySelector(".item.selected");
     let showTabOptions = this._isTab(item);
 
     let el = menu.firstChild;

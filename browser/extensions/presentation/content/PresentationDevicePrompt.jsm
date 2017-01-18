@@ -167,7 +167,7 @@ PresentationPermissionPrompt.prototype = {
   // PRIVATE APIs
   get _domainName() {
     if (this.principal.URI instanceof Ci.nsIFileURL) {
-      return this.principal.URI.path.split('/')[1];
+      return this.principal.URI.path.split("/")[1];
     }
     return this.principal.URI.hostPort;
   },

@@ -2,43 +2,43 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-'use strict';
+"use strict";
 
-const kInterfaceName = 'wifi';
+const kInterfaceName = "wifi";
 
 var server;
 var step = 0;
 var loginFinished = false;
 
 function xhr_handler(metadata, response) {
-  response.setStatusLine(metadata.httpVersion, 200, 'OK');
-  response.setHeader('Cache-Control', 'no-cache', false);
-  response.setHeader('Content-Type', 'text/plain', false);
+  response.setStatusLine(metadata.httpVersion, 200, "OK");
+  response.setHeader("Cache-Control", "no-cache", false);
+  response.setHeader("Content-Type", "text/plain", false);
   if (loginFinished) {
-    response.write('true');
+    response.write("true");
   } else {
-    response.write('false');
+    response.write("false");
   }
 }
 
 function fakeUIResponse() {
   Services.obs.addObserver(function observe(subject, topic, data) {
-    if (topic === 'captive-portal-login') {
-      let xhr = Cc['@mozilla.org/xmlextras/xmlhttprequest;1']
+    if (topic === "captive-portal-login") {
+      let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                   .createInstance(Ci.nsIXMLHttpRequest);
-      xhr.open('GET', gServerURL + kCanonicalSitePath, true);
+      xhr.open("GET", gServerURL + kCanonicalSitePath, true);
       xhr.send();
       loginFinished = true;
       do_check_eq(++step, 2);
     }
-  }, 'captive-portal-login', false);
+  }, "captive-portal-login", false);
 
   Services.obs.addObserver(function observe(subject, topic, data) {
-    if (topic === 'captive-portal-login-success') {
+    if (topic === "captive-portal-login-success") {
       do_check_eq(++step, 4);
       gServer.stop(do_test_finished);
     }
-  }, 'captive-portal-login-success', false);
+  }, "captive-portal-login-success", false);
 }
 
 function test_portal_found() {

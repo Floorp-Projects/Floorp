@@ -38,7 +38,7 @@ add_task(function* test_watch_single_path_file_deletion() {
   yield promiseAddPath(watcher, watchedDir, deferred.resolve, deferred.reject);
 
   // Remove the file we created (should trigger a notification).
-  do_print('Removing ' + tmpFilePath);
+  do_print("Removing " + tmpFilePath);
   yield OS.File.remove(tmpFilePath);
 
   // Wait until the watcher informs us that the file was deleted.

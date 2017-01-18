@@ -159,7 +159,7 @@ BrowserView.prototype = {
     let tileContainer = document.getElementById("tile_container");
     tileContainer.appendChild(canvas);
 
-    dump('++ ' + tile.toString() + endl);
+    dump("++ " + tile.toString() + endl);
   },
 
   removeTile: function removeTile(tile) {
@@ -168,7 +168,7 @@ BrowserView.prototype = {
     let tileContainer = document.getElementById("tile_container");
     tileContainer.removeChild(canvas);
 
-    dump('-- ' + tile.toString() + endl);
+    dump("-- " + tile.toString() + endl);
   },
 
   scrollBy: function scrollBy(dx, dy) {

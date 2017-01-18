@@ -161,13 +161,13 @@ function onCheckboxClick(aPartId) {
 }
 
 function onPluginRadioClick(aEvent) {
-  onRadioClick(aEvent.originalTarget.getAttribute("id").split('#')[0]);
+  onRadioClick(aEvent.originalTarget.getAttribute("id").split("#")[0]);
 }
 
 function onRadioClick(aPartId) {
   var radioGroup = document.getElementById(aPartId + "RadioGroup");
   var id = radioGroup.selectedItem.id;
-  var permission = id.split('#')[1];
+  var permission = id.split("#")[1];
   SitePermissions.set(gPermURI, aPartId, permission);
 }
 

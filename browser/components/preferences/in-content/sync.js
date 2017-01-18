@@ -131,11 +131,11 @@ var gSyncPane = {
       }, gSyncPane);
     });
 
-    XPCOMUtils.defineLazyGetter(this, '_stringBundle', () => {
+    XPCOMUtils.defineLazyGetter(this, "_stringBundle", () => {
       return Services.strings.createBundle("chrome://browser/locale/preferences/preferences.properties");
     });
 
-    XPCOMUtils.defineLazyGetter(this, '_accountsStringBundle', () => {
+    XPCOMUtils.defineLazyGetter(this, "_accountsStringBundle", () => {
       return Services.strings.createBundle("chrome://browser/locale/accounts.properties");
     });
 
@@ -206,7 +206,7 @@ var gSyncPane = {
     });
     setEventListener("noAccountPair", "click", function(aEvent) {
       aEvent.stopPropagation();
-      gSyncPane.openSetup('pair');
+      gSyncPane.openSetup("pair");
     });
     setEventListener("syncChangePassword", "command",
       () => gSyncUtils.changePassword());

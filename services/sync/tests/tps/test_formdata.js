@@ -61,13 +61,13 @@ var formdata_new = [
  * Test phases
  */
 
-Phase('phase1', [
+Phase("phase1", [
   [Formdata.add, formdata1],
   [Formdata.verify, formdata1],
   [Sync]
 ]);
 
-Phase('phase2', [
+Phase("phase2", [
   [Sync],
   [Formdata.verify, formdata1],
 ]);
@@ -77,7 +77,7 @@ Phase('phase2', [
  * tests are disabled below.  See bug 568363.
  */
 
-Phase('phase3', [
+Phase("phase3", [
   [Sync],
   [Formdata.delete, formdata_delete],
 // [Formdata.verifyNot, formdata_delete],
@@ -87,7 +87,7 @@ Phase('phase3', [
   [Sync],
 ]);
 
-Phase('phase4', [
+Phase("phase4", [
   [Sync],
   [Formdata.verify, formdata2],
   [Formdata.verify, formdata_new],

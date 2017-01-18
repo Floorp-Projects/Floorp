@@ -213,7 +213,7 @@ function log(aThing) {
       let i = 0;
       reply += "Set\n";
       for (let value of aThing) {
-        reply += logProperty('' + i, value);
+        reply += logProperty("" + i, value);
         i++;
       }
     } else if (isError(aThing)) {
@@ -251,7 +251,7 @@ function log(aThing) {
 
           root = Object.getPrototypeOf(root);
           if (root != null) {
-            reply += '  - prototype ' + getCtorName(root) + '\n';
+            reply += "  - prototype " + getCtorName(root) + "\n";
           }
         }
       }

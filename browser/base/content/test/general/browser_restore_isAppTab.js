@@ -6,7 +6,7 @@ const {TabStateFlusher} = Cu.import("resource:///modules/sessionstore/TabStateFl
 const DUMMY = "http://example.com/browser/browser/base/content/test/general/dummy_page.html";
 
 function getMinidumpDirectory() {
-  let dir = Services.dirsvc.get('ProfD', Ci.nsIFile);
+  let dir = Services.dirsvc.get("ProfD", Ci.nsIFile);
   dir.append("minidumps");
   return dir;
 }
@@ -15,9 +15,9 @@ function getMinidumpDirectory() {
 // the testrunner thinks things are peachy.
 var CrashObserver = {
   observe(subject, topic, data) {
-    is(topic, 'ipc:content-shutdown', 'Received correct observer topic.');
+    is(topic, "ipc:content-shutdown", "Received correct observer topic.");
     ok(subject instanceof Ci.nsIPropertyBag2,
-       'Subject implements nsIPropertyBag2.');
+       "Subject implements nsIPropertyBag2.");
     // we might see this called as the process terminates due to previous tests.
     // We are only looking for "abnormal" exits...
     if (!subject.hasKey("abnormal")) {
@@ -26,26 +26,26 @@ var CrashObserver = {
     }
 
     let dumpID;
-    if ('nsICrashReporter' in Ci) {
-      dumpID = subject.getPropertyAsAString('dumpID');
+    if ("nsICrashReporter" in Ci) {
+      dumpID = subject.getPropertyAsAString("dumpID");
       ok(dumpID, "dumpID is present and not an empty string");
     }
 
     if (dumpID) {
       let minidumpDirectory = getMinidumpDirectory();
       let file = minidumpDirectory.clone();
-      file.append(dumpID + '.dmp');
+      file.append(dumpID + ".dmp");
       file.remove(true);
       file = minidumpDirectory.clone();
-      file.append(dumpID + '.extra');
+      file.append(dumpID + ".extra");
       file.remove(true);
     }
   }
 }
-Services.obs.addObserver(CrashObserver, 'ipc:content-shutdown', false);
+Services.obs.addObserver(CrashObserver, "ipc:content-shutdown", false);
 
 registerCleanupFunction(() => {
-  Services.obs.removeObserver(CrashObserver, 'ipc:content-shutdown');
+  Services.obs.removeObserver(CrashObserver, "ipc:content-shutdown");
 });
 
 function frameScript() {

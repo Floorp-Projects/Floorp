@@ -164,7 +164,7 @@ var tests = [
 ["checkedState", "uncheckedState"].forEach(function(state) {
   [true, false].forEach(function(checked) {
     tests.push(
-      { id: `checkbox_disableMainAction_${state}_${checked ? 'checked' : 'unchecked'}`,
+      { id: `checkbox_disableMainAction_${state}_${checked ? "checked" : "unchecked"}`,
         run() {
           this.notifyObj = new BasicNotification(this.id);
           this.notifyObj.options.checkbox = {

@@ -25,7 +25,7 @@ function test_well_known_1() {
     do_check_null(aErr);
     do_check_eq(aCallbackObj.domain, hostPort);
     let idpParams = aCallbackObj.idpParams;
-    do_check_eq(idpParams['public-key'].algorithm, "RS");
+    do_check_eq(idpParams["public-key"].algorithm, "RS");
     do_check_eq(idpParams.authentication, "/browserid/sign_in.html");
     do_check_eq(idpParams.provisioning, "/browserid/provision.html");
 

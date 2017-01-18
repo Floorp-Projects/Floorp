@@ -9,8 +9,17 @@
             android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.ASSIST"/>
+                <action android:name="android.intent.action.SEARCH"/>
+                <action android:name="android.intent.action.SEARCH_LONG_PRESS"/>
+                <action android:name="android.intent.action.WEB_SEARCH"/>
+                <action android:name="com.google.android.gms.actions.SEARCH_ACTION"/>
 
                 <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT"/>
+                <data android:mimeType="text/plain"/>
             </intent-filter>
 
             <!-- Pre Lollipop devices display a generic search icon, if none is

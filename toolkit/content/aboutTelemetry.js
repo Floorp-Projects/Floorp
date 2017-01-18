@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+"use strict";
 
 var Ci = Components.interfaces;
 var Cc = Components.classes;
@@ -61,7 +61,7 @@ function isRTL() {
 }
 
 function isArray(arg) {
-  return Object.prototype.toString.call(arg) === '[object Array]';
+  return Object.prototype.toString.call(arg) === "[object Array]";
 }
 
 function isFlatArray(obj) {
@@ -954,14 +954,14 @@ var StackRenderer = {
   },
   renderStacks: function StackRenderer_renderStacks(aPrefix, aStacks,
                                                     aMemoryMap, aRenderHeader) {
-    let div = document.getElementById(aPrefix + '-data');
+    let div = document.getElementById(aPrefix + "-data");
     removeAllChildNodes(div);
 
-    let fetchE = document.getElementById(aPrefix + '-fetch-symbols');
+    let fetchE = document.getElementById(aPrefix + "-fetch-symbols");
     if (fetchE) {
       fetchE.classList.remove("hidden");
     }
-    let hideE = document.getElementById(aPrefix + '-hide-symbols');
+    let hideE = document.getElementById(aPrefix + "-hide-symbols");
     if (hideE) {
       hideE.classList.add("hidden");
     }
@@ -970,7 +970,7 @@ var StackRenderer = {
       return;
     }
 
-    setHasData(aPrefix + '-section', true);
+    setHasData(aPrefix + "-section", true);
 
     this.renderMemoryMap(div, aMemoryMap);
 
@@ -1348,7 +1348,7 @@ var Histogram = {
       barDiv.style.paddingTop = aboveEm + "em";
 
       // Add value label or an nbsp if no value
-      barDiv.appendChild(document.createTextNode(value ? value : '\u00A0'));
+      barDiv.appendChild(document.createTextNode(value ? value : "\u00A0"));
 
       // Create the blue bar
       let bar = document.createElement("div");
@@ -1925,7 +1925,7 @@ var LateWritesSingleton = {
 
     let stacks = lateWrites.stacks;
     let memoryMap = lateWrites.memoryMap;
-    StackRenderer.renderStacks('late-writes', stacks, memoryMap,
+    StackRenderer.renderStacks("late-writes", stacks, memoryMap,
                                LateWritesSingleton.renderHeader);
   }
 };
@@ -1940,7 +1940,7 @@ var LateWritesSingleton = {
 function sortStartupMilestones(aSimpleMeasurements) {
   const telemetryTimestamps = TelemetryTimestamps.get();
   let startupEvents = Services.startup.getStartupInfo();
-  delete startupEvents['process'];
+  delete startupEvents["process"];
 
   function keyIsMilestone(k) {
     return (k in startupEvents) || (k in telemetryTimestamps);

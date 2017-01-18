@@ -7,7 +7,7 @@ const kBlocklistServiceUUID = "{66354bc9-7ed1-4692-ae1d-8da97d6b205e}";
 const kBlocklistServiceContractID = "@mozilla.org/extensions/blocklist;1";
 const kBlocklistServiceFactory = Cm.getClassObject(Cc[kBlocklistServiceContractID], Ci.nsIFactory);
 
-Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /*
  * A lightweight blocklist proxy for the testing purposes.

@@ -13,9 +13,9 @@ var numRecords, timeGroupingSize, now;
 const DEFAULT_EXPIRE_DAYS = 180;
 
 function padLeft(number, length) {
-    var str = number + '';
+    var str = number + "";
     while (str.length < length)
-        str = '0' + str;
+        str = "0" + str;
     return str;
 }
 

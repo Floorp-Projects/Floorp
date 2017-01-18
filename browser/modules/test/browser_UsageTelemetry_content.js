@@ -77,7 +77,7 @@ add_task(function* test_context_menu() {
                "This search must only increment one entry in the scalar.");
 
   // Make sure SEARCH_COUNTS contains identical values.
-  checkKeyedHistogram(search_hist, 'other-MozSearch.contextmenu', 1);
+  checkKeyedHistogram(search_hist, "other-MozSearch.contextmenu", 1);
 
   // Also check events.
   let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
@@ -113,7 +113,7 @@ add_task(function* test_about_newtab() {
                "This search must only increment one entry in the scalar.");
 
   // Make sure SEARCH_COUNTS contains identical values.
-  checkKeyedHistogram(search_hist, 'other-MozSearch.newtab', 1);
+  checkKeyedHistogram(search_hist, "other-MozSearch.newtab", 1);
 
   // Also check events.
   let events = Services.telemetry.snapshotBuiltinEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);

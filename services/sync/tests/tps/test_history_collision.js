@@ -98,17 +98,17 @@ var history_after_delete = [
  * Test phases
  */
 
-Phase('phase1', [
+Phase("phase1", [
   [History.add, history1],
   [Sync]
 ]);
 
-Phase('phase2', [
+Phase("phase2", [
   [History.add, history1],
   [Sync, SYNC_WIPE_REMOTE]
 ]);
 
-Phase('phase3', [
+Phase("phase3", [
   [Sync],
   [History.verify, history1],
   [History.delete, history_to_delete],
@@ -117,7 +117,7 @@ Phase('phase3', [
   [Sync]
 ]);
 
-Phase('phase4', [
+Phase("phase4", [
   [Sync],
   [History.verify, history_after_delete],
   [History.verifyNot, history_not]

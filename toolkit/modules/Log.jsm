@@ -432,7 +432,7 @@ LoggerRepository.prototype = {
   },
 
   _updateParents: function LogRep__updateParents(name) {
-    let pieces = name.split('.');
+    let pieces = name.split(".");
     let cur, parent;
 
     // find the closest parent
@@ -440,7 +440,7 @@ LoggerRepository.prototype = {
     // there in this._loggers
     for (let i = 0; i < pieces.length - 1; i++) {
       if (cur)
-        cur += '.' + pieces[i];
+        cur += "." + pieces[i];
       else
         cur = pieces[i];
       if (cur in this._loggers)
@@ -540,7 +540,7 @@ BasicFormatter.prototype = {
     }
     // Defensive handling of non-object params
     // We could add a special case for NSRESULT values here...
-    let pIsObject = (typeof(params) == 'object' || typeof(params) == 'function');
+    let pIsObject = (typeof(params) == "object" || typeof(params) == "function");
 
     // if we have params, try and find substitutions.
     if (this.parameterFormatter) {
@@ -557,7 +557,7 @@ BasicFormatter.prototype = {
               subDone = true;
               return this.parameterFormatter.format(message.params[sub]);
             }
-            return '${' + sub + '}';
+            return "${" + sub + "}";
           }
           // ${} means use the entire params object.
           subDone = true;
@@ -571,7 +571,7 @@ BasicFormatter.prototype = {
           textParts.push(rest);
         }
       }
-      return textParts.join(': ');
+      return textParts.join(": ");
     }
     return undefined;
   },
@@ -631,7 +631,7 @@ StructuredFormatter.prototype = {
  * Test an object to see if it is a Mozilla JS Error.
  */
 function isError(aObj) {
-  return (aObj && typeof(aObj) == 'object' && "name" in aObj && "message" in aObj &&
+  return (aObj && typeof(aObj) == "object" && "name" in aObj && "message" in aObj &&
           "fileName" in aObj && "lineNumber" in aObj && "stack" in aObj);
 }
 

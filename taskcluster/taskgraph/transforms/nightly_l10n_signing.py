@@ -66,4 +66,9 @@ def make_signing_description(config, jobs):
         job['treeherder'] = {
             'symbol': join_symbol(group, symbol),
         }
+
+        # Announce job status on funsize specific routes, so that it can
+        # start the partial generation for nightlies only.
+        job['use-funsize-route'] = True
+
         yield job
