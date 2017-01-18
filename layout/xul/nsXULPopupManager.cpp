@@ -2623,6 +2623,17 @@ nsXULPopupManager::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 nsresult
+nsXULPopupManager::UpdateIgnoreKeys(bool aIgnoreKeys)
+{
+  nsMenuChainItem* item = GetTopVisibleMenu();
+  if (item) {
+    item->SetIgnoreKeys(aIgnoreKeys ? eIgnoreKeys_True : eIgnoreKeys_Shortcuts);
+  }
+  UpdateKeyboardListeners();
+  return NS_OK;
+}
+
+nsresult
 nsXULPopupManager::KeyUp(nsIDOMKeyEvent* aKeyEvent)
 {
   // don't do anything if a menu isn't open or a menubar isn't active

@@ -59,11 +59,6 @@ public:
                                 const nsACString& aNodeId,
                                 UniquePtr<GetGMPVideoEncoderCallback>&& aCallback)
     override;
-  NS_IMETHOD GetGMPAudioDecoder(GMPCrashHelper* aHelper,
-                                nsTArray<nsCString>* aTags,
-                                const nsACString& aNodeId,
-                                UniquePtr<GetGMPAudioDecoderCallback>&& aCallback)
-    override;
   NS_IMETHOD GetGMPDecryptor(GMPCrashHelper* aHelper,
                              nsTArray<nsCString>* aTags,
                              const nsACString& aNodeId,

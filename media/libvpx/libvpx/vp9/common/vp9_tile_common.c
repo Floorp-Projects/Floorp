@@ -38,20 +38,18 @@ void vp9_tile_init(TileInfo *tile, const VP9_COMMON *cm, int row, int col) {
 
 static int get_min_log2_tile_cols(const int sb64_cols) {
   int min_log2 = 0;
-  while ((MAX_TILE_WIDTH_B64 << min_log2) < sb64_cols)
-    ++min_log2;
+  while ((MAX_TILE_WIDTH_B64 << min_log2) < sb64_cols) ++min_log2;
   return min_log2;
 }
 
 static int get_max_log2_tile_cols(const int sb64_cols) {
   int max_log2 = 1;
-  while ((sb64_cols >> max_log2) >= MIN_TILE_WIDTH_B64)
-    ++max_log2;
+  while ((sb64_cols >> max_log2) >= MIN_TILE_WIDTH_B64) ++max_log2;
   return max_log2 - 1;
 }
 
-void vp9_get_tile_n_bits(int mi_cols,
-                         int *min_log2_tile_cols, int *max_log2_tile_cols) {
+void vp9_get_tile_n_bits(int mi_cols, int *min_log2_tile_cols,
+                         int *max_log2_tile_cols) {
   const int sb64_cols = mi_cols_aligned_to_sb(mi_cols) >> MI_BLOCK_SIZE_LOG2;
   *min_log2_tile_cols = get_min_log2_tile_cols(sb64_cols);
   *max_log2_tile_cols = get_max_log2_tile_cols(sb64_cols);

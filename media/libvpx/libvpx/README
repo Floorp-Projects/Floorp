@@ -1,4 +1,4 @@
-README - 20 July 2016
+README - 9 January 2017
 
 Welcome to the WebM VP8/VP9 Codec SDK!
 
@@ -47,10 +47,9 @@ COMPILING THE APPLICATIONS/LIBRARIES:
   --help output of the configure script. As of this writing, the list of
   available targets is:
 
-    armv6-linux-rvct
-    armv6-linux-gcc
-    armv6-none-rvct
+    arm64-android-gcc
     arm64-darwin-gcc
+    arm64-linux-gcc
     armv7-android-gcc
     armv7-darwin-gcc
     armv7-linux-rvct
@@ -60,6 +59,7 @@ COMPILING THE APPLICATIONS/LIBRARIES:
     armv7-win32-vs12
     armv7-win32-vs14
     armv7s-darwin-gcc
+    armv8-linux-gcc
     mips32-linux-gcc
     mips64-linux-gcc
     sparc-solaris-gcc
@@ -73,15 +73,13 @@ COMPILING THE APPLICATIONS/LIBRARIES:
     x86-darwin12-gcc
     x86-darwin13-gcc
     x86-darwin14-gcc
+    x86-darwin15-gcc
     x86-iphonesimulator-gcc
     x86-linux-gcc
     x86-linux-icc
     x86-os2-gcc
     x86-solaris-gcc
     x86-win32-gcc
-    x86-win32-vs7
-    x86-win32-vs8
-    x86-win32-vs9
     x86-win32-vs10
     x86-win32-vs11
     x86-win32-vs12
@@ -93,13 +91,12 @@ COMPILING THE APPLICATIONS/LIBRARIES:
     x86_64-darwin12-gcc
     x86_64-darwin13-gcc
     x86_64-darwin14-gcc
+    x86_64-darwin15-gcc
     x86_64-iphonesimulator-gcc
     x86_64-linux-gcc
     x86_64-linux-icc
     x86_64-solaris-gcc
     x86_64-win64-gcc
-    x86_64-win64-vs8
-    x86_64-win64-vs9
     x86_64-win64-vs10
     x86_64-win64-vs11
     x86_64-win64-vs12
@@ -132,7 +129,22 @@ VP8/VP9 TEST VECTORS:
   $ ./configure --enable-unit-tests
   $ LIBVPX_TEST_DATA_PATH=../libvpx-test-data make testdata
 
+CODE STYLE:
+  The coding style used by this project is enforced with clang-format using the
+  configuration contained in the .clang-format file in the root of the
+  repository.
+
+  Before pushing changes for review you can format your code with:
+  # Apply clang-format to modified .c, .h and .cc files
+  $ clang-format -i --style=file \
+    $(git diff --name-only --diff-filter=ACMR '*.[hc]' '*.cc')
+
+  Check the .clang-format file for the version used to generate it if there is
+  any difference between your local formatting and the review system.
+
+  See also: http://clang.llvm.org/docs/ClangFormat.html
+
 SUPPORT
   This library is an open source project supported by its community. Please
-  please email webm-discuss@webmproject.org for help.
+  email webm-discuss@webmproject.org for help.
 

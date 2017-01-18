@@ -580,6 +580,15 @@
               return true;
             },
 
+            _isForInitialAboutBlank(aWebProgress, aLocation) {
+              if (!this.mBlank || !aWebProgress.isTopLevel) {
+                return false;
+              }
+
+              let location = aLocation ? aLocation.spec : "";
+              return location == "about:blank";
+            },
+
             onProgressChange(aWebProgress, aRequest,
                              aCurSelfProgress, aMaxSelfProgress,
                              aCurTotalProgress, aMaxTotalProgress) {
@@ -609,8 +618,6 @@
               if (!aRequest)
                 return;
 
-              var oldBlank = this.mBlank;
-
               const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
               const nsIChannel = Components.interfaces.nsIChannel;
               let location, originalLocation;
@@ -619,6 +626,18 @@
                 location = aRequest.URI;
                 originalLocation = aRequest.originalURI;
               } catch (ex) {}
+
+              let ignoreBlank = this._isForInitialAboutBlank(aWebProgress, location);
+              // If we were ignoring some messages about the initial about:blank, and we
+              // got the STATE_STOP for it, we'll want to pay attention to those messages
+              // from here forward. Similarly, if we conclude that this state change
+              // is one that we shouldn't be ignoring, then stop ignoring.
+              if ((ignoreBlank &&
+                   aStateFlags & nsIWebProgressListener.STATE_STOP &&
+                   aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) ||
+                  !ignoreBlank && this.mBlank) {
+                this.mBlank = false;
+              }
 
               if (aStateFlags & nsIWebProgressListener.STATE_START) {
                 this.mRequestCount++;
@@ -706,9 +725,6 @@
                     this.mTabBrowser.useDefaultIcon(this.mTab);
                 }
 
-                if (this.mBlank)
-                  this.mBlank = false;
-
                 // For keyword URIs clear the user typed value since they will be changed into real URIs
                 if (location.scheme == "keyword")
                   this.mBrowser.userTypedValue = null;
@@ -720,7 +736,7 @@
                   this.mTabBrowser.mIsBusy = false;
               }
 
-              if (oldBlank) {
+              if (ignoreBlank) {
                 this._callProgressListeners("onUpdateCurrentBrowser",
                                             [aStateFlags, aStatus, "", 0],
                                             true, false);
@@ -1772,7 +1788,7 @@
             // Create a new tab progress listener for the new browser we just injected,
             // since tab progress listeners have logic for handling the initial about:blank
             // load
-            listener = this.mTabProgressListener(tab, aBrowser, false, false);
+            listener = this.mTabProgressListener(tab, aBrowser, true, false);
             this._tabListeners.set(tab, listener);
             filter.addProgressListener(listener, Ci.nsIWebProgress.NOTIFY_ALL);
 

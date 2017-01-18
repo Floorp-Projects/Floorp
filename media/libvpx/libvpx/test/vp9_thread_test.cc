@@ -27,15 +27,11 @@ using std::string;
 class VPxWorkerThreadTest : public ::testing::TestWithParam<bool> {
  protected:
   virtual ~VPxWorkerThreadTest() {}
-  virtual void SetUp() {
-    vpx_get_worker_interface()->init(&worker_);
-  }
+  virtual void SetUp() { vpx_get_worker_interface()->init(&worker_); }
 
-  virtual void TearDown() {
-    vpx_get_worker_interface()->end(&worker_);
-  }
+  virtual void TearDown() { vpx_get_worker_interface()->end(&worker_); }
 
-  void Run(VPxWorker* worker) {
+  void Run(VPxWorker *worker) {
     const bool synchronous = GetParam();
     if (synchronous) {
       vpx_get_worker_interface()->execute(worker);
@@ -47,10 +43,10 @@ class VPxWorkerThreadTest : public ::testing::TestWithParam<bool> {
   VPxWorker worker_;
 };
 
-int ThreadHook(void* data, void* return_value) {
-  int* const hook_data = reinterpret_cast<int*>(data);
+int ThreadHook(void *data, void *return_value) {
+  int *const hook_data = reinterpret_cast<int *>(data);
   *hook_data = 5;
-  return *reinterpret_cast<int*>(return_value);
+  return *reinterpret_cast<int *>(return_value);
 }
 
 TEST_P(VPxWorkerThreadTest, HookSuccess) {
@@ -159,7 +155,7 @@ struct FileList {
 };
 
 // Decodes |filename| with |num_threads|. Returns the md5 of the decoded frames.
-string DecodeFile(const string& filename, int num_threads) {
+string DecodeFile(const string &filename, int num_threads) {
   libvpx_test::WebMVideoSource video(filename);
   video.Init();
 
@@ -191,8 +187,8 @@ void DecodeFiles(const FileList files[]) {
   for (const FileList *iter = files; iter->name != NULL; ++iter) {
     SCOPED_TRACE(iter->name);
     for (int t = 1; t <= 8; ++t) {
-      EXPECT_EQ(iter->expected_md5, DecodeFile(iter->name, t))
-          << "threads = " << t;
+      EXPECT_EQ(iter->expected_md5, DecodeFile(iter->name, t)) << "threads = "
+                                                               << t;
     }
   }
 }
@@ -242,15 +238,13 @@ TEST(VP9DecodeMultiThreadedTest, NoTilesNonFrameParallel) {
 }
 
 TEST(VP9DecodeMultiThreadedTest, FrameParallel) {
-  static const FileList files[] = {
-    { "vp90-2-08-tile_1x2_frame_parallel.webm",
-      "68ede6abd66bae0a2edf2eb9232241b6" },
-    { "vp90-2-08-tile_1x4_frame_parallel.webm",
-      "368ebc6ebf3a5e478d85b2c3149b2848" },
-    { "vp90-2-08-tile_1x8_frame_parallel.webm",
-      "17e439da2388aff3a0f69cb22579c6c1" },
-    { NULL, NULL }
-  };
+  static const FileList files[] = { { "vp90-2-08-tile_1x2_frame_parallel.webm",
+                                      "68ede6abd66bae0a2edf2eb9232241b6" },
+                                    { "vp90-2-08-tile_1x4_frame_parallel.webm",
+                                      "368ebc6ebf3a5e478d85b2c3149b2848" },
+                                    { "vp90-2-08-tile_1x8_frame_parallel.webm",
+                                      "17e439da2388aff3a0f69cb22579c6c1" },
+                                    { NULL, NULL } };
 
   DecodeFiles(files);
 }

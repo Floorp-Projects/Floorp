@@ -15,16 +15,17 @@
 // to try and find candidate reference vectors.
 static void find_mv_refs_idx(const VP9_COMMON *cm, const MACROBLOCKD *xd,
                              MODE_INFO *mi, MV_REFERENCE_FRAME ref_frame,
-                             int_mv *mv_ref_list,
-                             int block, int mi_row, int mi_col,
-                             uint8_t *mode_context) {
+                             int_mv *mv_ref_list, int block, int mi_row,
+                             int mi_col, uint8_t *mode_context) {
   const int *ref_sign_bias = cm->ref_frame_sign_bias;
   int i, refmv_count = 0;
   const POSITION *const mv_ref_search = mv_ref_blocks[mi->sb_type];
   int different_ref_found = 0;
   int context_counter = 0;
-  const MV_REF *const prev_frame_mvs = cm->use_prev_frame_mvs ?
-      cm->prev_frame->mvs + mi_row * cm->mi_cols + mi_col : NULL;
+  const MV_REF *const prev_frame_mvs =
+      cm->use_prev_frame_mvs
+          ? cm->prev_frame->mvs + mi_row * cm->mi_cols + mi_col
+          : NULL;
   const TileInfo *const tile = &xd->tile;
 
   // Blank the reference vector list
@@ -36,8 +37,8 @@ static void find_mv_refs_idx(const VP9_COMMON *cm, const MACROBLOCKD *xd,
   for (i = 0; i < 2; ++i) {
     const POSITION *const mv_ref = &mv_ref_search[i];
     if (is_inside(tile, mi_col, mi_row, cm->mi_rows, mv_ref)) {
-      const MODE_INFO *const candidate_mi = xd->mi[mv_ref->col + mv_ref->row *
-                                                   xd->mi_stride];
+      const MODE_INFO *const candidate_mi =
+          xd->mi[mv_ref->col + mv_ref->row * xd->mi_stride];
       // Keep counts for entropy encoding.
       context_counter += mode_2_counter[candidate_mi->mode];
       different_ref_found = 1;
@@ -120,7 +121,7 @@ static void find_mv_refs_idx(const VP9_COMMON *cm, const MACROBLOCKD *xd,
     }
   }
 
- Done:
+Done:
 
   mode_context[ref_frame] = counter_to_context[context_counter];
 
@@ -131,16 +132,14 @@ static void find_mv_refs_idx(const VP9_COMMON *cm, const MACROBLOCKD *xd,
 
 void vp9_find_mv_refs(const VP9_COMMON *cm, const MACROBLOCKD *xd,
                       MODE_INFO *mi, MV_REFERENCE_FRAME ref_frame,
-                      int_mv *mv_ref_list,
-                      int mi_row, int mi_col,
+                      int_mv *mv_ref_list, int mi_row, int mi_col,
                       uint8_t *mode_context) {
-  find_mv_refs_idx(cm, xd, mi, ref_frame, mv_ref_list, -1,
-                   mi_row, mi_col, mode_context);
+  find_mv_refs_idx(cm, xd, mi, ref_frame, mv_ref_list, -1, mi_row, mi_col,
+                   mode_context);
 }
 
-void vp9_find_best_ref_mvs(MACROBLOCKD *xd, int allow_hp,
-                           int_mv *mvlist, int_mv *nearest_mv,
-                           int_mv *near_mv) {
+void vp9_find_best_ref_mvs(MACROBLOCKD *xd, int allow_hp, int_mv *mvlist,
+                           int_mv *nearest_mv, int_mv *near_mv) {
   int i;
   // Make sure all the candidates are properly clamped etc
   for (i = 0; i < MAX_MV_REF_CANDIDATES; ++i) {
@@ -151,8 +150,8 @@ void vp9_find_best_ref_mvs(MACROBLOCKD *xd, int allow_hp,
   *near_mv = mvlist[1];
 }
 
-void vp9_append_sub8x8_mvs_for_idx(VP9_COMMON *cm, MACROBLOCKD *xd,
-                                   int block, int ref, int mi_row, int mi_col,
+void vp9_append_sub8x8_mvs_for_idx(VP9_COMMON *cm, MACROBLOCKD *xd, int block,
+                                   int ref, int mi_row, int mi_col,
                                    int_mv *nearest_mv, int_mv *near_mv,
                                    uint8_t *mode_context) {
   int_mv mv_list[MAX_MV_REF_CANDIDATES];
@@ -162,8 +161,8 @@ void vp9_append_sub8x8_mvs_for_idx(VP9_COMMON *cm, MACROBLOCKD *xd,
 
   assert(MAX_MV_REF_CANDIDATES == 2);
 
-  find_mv_refs_idx(cm, xd, mi, mi->ref_frame[ref], mv_list, block,
-                   mi_row, mi_col, mode_context);
+  find_mv_refs_idx(cm, xd, mi, mi->ref_frame[ref], mv_list, block, mi_row,
+                   mi_col, mode_context);
 
   near_mv->as_int = 0;
   switch (block) {
@@ -195,7 +194,6 @@ void vp9_append_sub8x8_mvs_for_idx(VP9_COMMON *cm, MACROBLOCKD *xd,
         }
       break;
     }
-    default:
-      assert(0 && "Invalid block index.");
+    default: assert(0 && "Invalid block index.");
   }
 }

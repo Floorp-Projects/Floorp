@@ -11,28 +11,29 @@
 #include "./vpx_dsp_rtcd.h"
 #include "vpx_dsp/mips/macros_msa.h"
 
-#define CALC_MSE_B(src, ref, var) {                                \
-  v16u8 src_l0_m, src_l1_m;                                        \
-  v8i16 res_l0_m, res_l1_m;                                        \
-                                                                   \
-  ILVRL_B2_UB(src, ref, src_l0_m, src_l1_m);                       \
-  HSUB_UB2_SH(src_l0_m, src_l1_m, res_l0_m, res_l1_m);             \
-  DPADD_SH2_SW(res_l0_m, res_l1_m, res_l0_m, res_l1_m, var, var);  \
-}
+#define CALC_MSE_B(src, ref, var)                                   \
+  {                                                                 \
+    v16u8 src_l0_m, src_l1_m;                                       \
+    v8i16 res_l0_m, res_l1_m;                                       \
+                                                                    \
+    ILVRL_B2_UB(src, ref, src_l0_m, src_l1_m);                      \
+    HSUB_UB2_SH(src_l0_m, src_l1_m, res_l0_m, res_l1_m);            \
+    DPADD_SH2_SW(res_l0_m, res_l1_m, res_l0_m, res_l1_m, var, var); \
+  }
 
-#define CALC_MSE_AVG_B(src, ref, var, sub) {                       \
-  v16u8 src_l0_m, src_l1_m;                                        \
-  v8i16 res_l0_m, res_l1_m;                                        \
-                                                                   \
-  ILVRL_B2_UB(src, ref, src_l0_m, src_l1_m);                       \
-  HSUB_UB2_SH(src_l0_m, src_l1_m, res_l0_m, res_l1_m);             \
-  DPADD_SH2_SW(res_l0_m, res_l1_m, res_l0_m, res_l1_m, var, var);  \
-                                                                   \
-  sub += res_l0_m + res_l1_m;                                      \
-}
+#define CALC_MSE_AVG_B(src, ref, var, sub)                          \
+  {                                                                 \
+    v16u8 src_l0_m, src_l1_m;                                       \
+    v8i16 res_l0_m, res_l1_m;                                       \
+                                                                    \
+    ILVRL_B2_UB(src, ref, src_l0_m, src_l1_m);                      \
+    HSUB_UB2_SH(src_l0_m, src_l1_m, res_l0_m, res_l1_m);            \
+    DPADD_SH2_SW(res_l0_m, res_l1_m, res_l0_m, res_l1_m, var, var); \
+                                                                    \
+    sub += res_l0_m + res_l1_m;                                     \
+  }
 
-#define VARIANCE_WxH(sse, diff, shift) \
-  sse - (((uint32_t)diff * diff) >> shift)
+#define VARIANCE_WxH(sse, diff, shift) sse - (((uint32_t)diff * diff) >> shift)
 
 #define VARIANCE_LARGE_WxH(sse, diff, shift) \
   sse - (((int64_t)diff * diff) >> shift)
@@ -80,8 +81,8 @@ static uint32_t sse_diff_8width_msa(const uint8_t *src_ptr, int32_t src_stride,
     LD_UB4(ref_ptr, ref_stride, ref0, ref1, ref2, ref3);
     ref_ptr += (4 * ref_stride);
 
-    PCKEV_D4_UB(src1, src0, src3, src2, ref1, ref0, ref3, ref2,
-                src0, src1, ref0, ref1);
+    PCKEV_D4_UB(src1, src0, src3, src2, ref1, ref0, ref3, ref2, src0, src1,
+                ref0, ref1);
     CALC_MSE_AVG_B(src0, ref0, var, avg);
     CALC_MSE_AVG_B(src1, ref1, var, avg);
   }
@@ -370,8 +371,8 @@ static uint32_t sse_8width_msa(const uint8_t *src_ptr, int32_t src_stride,
     LD_UB4(ref_ptr, ref_stride, ref0, ref1, ref2, ref3);
     ref_ptr += (4 * ref_stride);
 
-    PCKEV_D4_UB(src1, src0, src3, src2, ref1, ref0, ref3, ref2,
-                src0, src1, ref0, ref1);
+    PCKEV_D4_UB(src1, src0, src3, src2, ref1, ref0, ref3, ref2, src0, src1,
+                ref0, ref1);
     CALC_MSE_B(src0, ref0, var);
     CALC_MSE_B(src1, ref1, var);
   }
@@ -488,27 +489,19 @@ static uint32_t sse_64width_msa(const uint8_t *src_ptr, int32_t src_stride,
 
 uint32_t vpx_get4x4sse_cs_msa(const uint8_t *src_ptr, int32_t src_stride,
                               const uint8_t *ref_ptr, int32_t ref_stride) {
-  uint32_t err = 0;
   uint32_t src0, src1, src2, src3;
   uint32_t ref0, ref1, ref2, ref3;
   v16i8 src = { 0 };
   v16i8 ref = { 0 };
-  v16u8 src_vec0, src_vec1;
-  v8i16 diff0, diff1;
   v4i32 err0 = { 0 };
-  v4i32 err1 = { 0 };
 
   LW4(src_ptr, src_stride, src0, src1, src2, src3);
   LW4(ref_ptr, ref_stride, ref0, ref1, ref2, ref3);
   INSERT_W4_SB(src0, src1, src2, src3, src);
   INSERT_W4_SB(ref0, ref1, ref2, ref3, ref);
-  ILVRL_B2_UB(src, ref, src_vec0, src_vec1);
-  HSUB_UB2_SH(src_vec0, src_vec1, diff0, diff1);
-  DPADD_SH2_SW(diff0, diff1, diff0, diff1, err0, err1);
-  err = HADD_SW_S32(err0);
-  err += HADD_SW_S32(err1);
+  CALC_MSE_B(src, ref, err0);
 
-  return err;
+  return HADD_SW_S32(err0);
 }
 
 #define VARIANCE_4Wx4H(sse, diff) VARIANCE_WxH(sse, diff, 4);
@@ -526,19 +519,17 @@ uint32_t vpx_get4x4sse_cs_msa(const uint8_t *src_ptr, int32_t src_stride,
 #define VARIANCE_64Wx32H(sse, diff) VARIANCE_LARGE_WxH(sse, diff, 11);
 #define VARIANCE_64Wx64H(sse, diff) VARIANCE_LARGE_WxH(sse, diff, 12);
 
-#define VPX_VARIANCE_WDXHT_MSA(wd, ht)                               \
-uint32_t vpx_variance##wd##x##ht##_msa(const uint8_t *src,           \
-                                       int32_t src_stride,           \
-                                       const uint8_t *ref,           \
-                                       int32_t ref_stride,           \
-                                       uint32_t *sse) {              \
-  int32_t diff;                                                      \
-                                                                     \
-  *sse = sse_diff_##wd##width_msa(src, src_stride, ref, ref_stride,  \
-                                  ht, &diff);                        \
-                                                                     \
-  return VARIANCE_##wd##Wx##ht##H(*sse, diff);                       \
-}
+#define VPX_VARIANCE_WDXHT_MSA(wd, ht)                                         \
+  uint32_t vpx_variance##wd##x##ht##_msa(                                      \
+      const uint8_t *src, int32_t src_stride, const uint8_t *ref,              \
+      int32_t ref_stride, uint32_t *sse) {                                     \
+    int32_t diff;                                                              \
+                                                                               \
+    *sse =                                                                     \
+        sse_diff_##wd##width_msa(src, src_stride, ref, ref_stride, ht, &diff); \
+                                                                               \
+    return VARIANCE_##wd##Wx##ht##H(*sse, diff);                               \
+  }
 
 VPX_VARIANCE_WDXHT_MSA(4, 4);
 VPX_VARIANCE_WDXHT_MSA(4, 8);
@@ -585,8 +576,7 @@ uint32_t vpx_variance64x64_msa(const uint8_t *src, int32_t src_stride,
 }
 
 uint32_t vpx_mse8x8_msa(const uint8_t *src, int32_t src_stride,
-                        const uint8_t *ref, int32_t ref_stride,
-                        uint32_t *sse) {
+                        const uint8_t *ref, int32_t ref_stride, uint32_t *sse) {
   *sse = sse_8width_msa(src, src_stride, ref, ref_stride, 8);
 
   return *sse;
@@ -617,17 +607,15 @@ uint32_t vpx_mse16x16_msa(const uint8_t *src, int32_t src_stride,
 }
 
 void vpx_get8x8var_msa(const uint8_t *src, int32_t src_stride,
-                       const uint8_t *ref, int32_t ref_stride,
-                       uint32_t *sse, int32_t *sum) {
+                       const uint8_t *ref, int32_t ref_stride, uint32_t *sse,
+                       int32_t *sum) {
   *sse = sse_diff_8width_msa(src, src_stride, ref, ref_stride, 8, sum);
 }
 
 void vpx_get16x16var_msa(const uint8_t *src, int32_t src_stride,
-                         const uint8_t *ref, int32_t ref_stride,
-                         uint32_t *sse, int32_t *sum) {
+                         const uint8_t *ref, int32_t ref_stride, uint32_t *sse,
+                         int32_t *sum) {
   *sse = sse_diff_16width_msa(src, src_stride, ref, ref_stride, 16, sum);
 }
 
-uint32_t vpx_get_mb_ss_msa(const int16_t *src) {
-  return get_mb_ss_msa(src);
-}
+uint32_t vpx_get_mb_ss_msa(const int16_t *src) { return get_mb_ss_msa(src); }

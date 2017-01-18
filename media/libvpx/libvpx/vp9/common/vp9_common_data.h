@@ -33,6 +33,7 @@ extern const TX_SIZE max_txsize_lookup[BLOCK_SIZES];
 extern const BLOCK_SIZE txsize_to_bsize[TX_SIZES];
 extern const TX_SIZE tx_mode_to_biggest_tx_size[TX_MODES];
 extern const BLOCK_SIZE ss_size_lookup[BLOCK_SIZES][2][2];
+extern const TX_SIZE uv_txsize_lookup[BLOCK_SIZES][TX_SIZES][2][2];
 #if CONFIG_BETTER_HW_COMPATIBILITY && CONFIG_VP9_HIGHBITDEPTH
 extern const uint8_t need_top_left[INTRA_MODES];
 #endif  // CONFIG_BETTER_HW_COMPATIBILITY && CONFIG_VP9_HIGHBITDEPTH

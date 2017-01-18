@@ -1291,6 +1291,8 @@ sym(vp8_bilinear_predict8x8_ssse3):
         movq        xmm7,       XMMWORD PTR [rsp+96]
         punpcklbw   xmm5,       xmm6
 
+        ; Because the source register (xmm0) is always treated as signed by
+        ; pmaddubsw, the constant '128' is treated as '-128'.
         pmaddubsw   xmm1,       xmm0
         pmaddubsw   xmm2,       xmm0
 
@@ -1319,6 +1321,10 @@ sym(vp8_bilinear_predict8x8_ssse3):
         psraw       xmm5,       VP8_FILTER_SHIFT
 
         psraw       xmm6,       VP8_FILTER_SHIFT
+
+        ; Having multiplied everything by '-128' and obtained negative
+        ; numbers, the unsigned saturation truncates those values to 0,
+        ; resulting in incorrect handling of xoffset == 0 && yoffset == 0
         packuswb    xmm1,       xmm1
 
         packuswb    xmm2,       xmm2

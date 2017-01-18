@@ -21,18 +21,10 @@ namespace libvpx_test {
 // so that we can do actual file encodes.
 class Y4mVideoSource : public VideoSource {
  public:
-  Y4mVideoSource(const std::string &file_name,
-                  unsigned int start, int limit)
-      : file_name_(file_name),
-        input_file_(NULL),
-        img_(new vpx_image_t()),
-        start_(start),
-        limit_(limit),
-        frame_(0),
-        framerate_numerator_(0),
-        framerate_denominator_(0),
-        y4m_() {
-  }
+  Y4mVideoSource(const std::string &file_name, unsigned int start, int limit)
+      : file_name_(file_name), input_file_(NULL), img_(new vpx_image_t()),
+        start_(start), limit_(limit), frame_(0), framerate_numerator_(0),
+        framerate_denominator_(0), y4m_() {}
 
   virtual ~Y4mVideoSource() {
     vpx_img_free(img_.get());

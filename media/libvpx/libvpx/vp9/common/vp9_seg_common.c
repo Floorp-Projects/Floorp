@@ -17,8 +17,8 @@
 
 static const int seg_feature_data_signed[SEG_LVL_MAX] = { 1, 1, 0, 0 };
 
-static const int seg_feature_data_max[SEG_LVL_MAX] = {
-  MAXQ, MAX_LOOP_FILTER, 3, 0 };
+static const int seg_feature_data_max[SEG_LVL_MAX] = { MAXQ, MAX_LOOP_FILTER, 3,
+                                                       0 };
 
 // These functions provide access to new segment level features.
 // Eventually these function may be "optimized out" but for the moment,
@@ -56,9 +56,7 @@ void vp9_set_segdata(struct segmentation *seg, int segment_id,
 }
 
 const vpx_tree_index vp9_segment_tree[TREE_SIZE(MAX_SEGMENTS)] = {
-  2,  4,  6,  8, 10, 12,
-  0, -1, -2, -3, -4, -5, -6, -7
+  2, 4, 6, 8, 10, 12, 0, -1, -2, -3, -4, -5, -6, -7
 };
-
 
 // TBD? Functions to read and write segment data with range / validity checking

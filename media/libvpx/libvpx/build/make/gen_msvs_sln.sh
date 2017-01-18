@@ -55,16 +55,11 @@ indent_pop() {
 
 parse_project() {
     local file=$1
-    if [ "$sfx" = "vcproj" ]; then
-        local name=`grep Name "$file" | awk 'BEGIN {FS="\""}{if (NR==1) print $2}'`
-        local guid=`grep ProjectGUID "$file" | awk 'BEGIN {FS="\""}{if (NR==1) print $2}'`
-    else
-        local name=`grep RootNamespace "$file" | sed 's,.*<.*>\(.*\)</.*>.*,\1,'`
-        local guid=`grep ProjectGuid "$file" | sed 's,.*<.*>\(.*\)</.*>.*,\1,'`
-    fi
+    local name=`grep RootNamespace "$file" | sed 's,.*<.*>\(.*\)</.*>.*,\1,'`
+    local guid=`grep ProjectGuid "$file" | sed 's,.*<.*>\(.*\)</.*>.*,\1,'`
 
     # save the project GUID to a varaible, normalizing to the basename of the
-    # vcproj file without the extension
+    # vcxproj file without the extension
     local var
     var=${file##*/}
     var=${var%%.${sfx}}
@@ -72,13 +67,8 @@ parse_project() {
     eval "${var}_name=$name"
     eval "${var}_guid=$guid"
 
-    if [ "$sfx" = "vcproj" ]; then
-        cur_config_list=`grep -A1 '<Configuration' $file |
-            grep Name | cut -d\" -f2`
-    else
-        cur_config_list=`grep -B1 'Label="Configuration"' $file |
-            grep Condition | cut -d\' -f4`
-    fi
+    cur_config_list=`grep -B1 'Label="Configuration"' $file |
+        grep Condition | cut -d\' -f4`
     new_config_list=$(for i in $config_list $cur_config_list; do
         echo $i
     done | sort | uniq)
@@ -103,25 +93,6 @@ process_project() {
     eval "${var}_guid=$guid"
 
     echo "Project(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"$name\", \"$file\", \"$guid\""
-    indent_push
-
-    eval "local deps=\"\${${var}_deps}\""
-    if [ -n "$deps" ] && [ "$sfx" = "vcproj" ]; then
-        echo "${indent}ProjectSection(ProjectDependencies) = postProject"
-        indent_push
-
-        for dep in $deps; do
-            eval "local dep_guid=\${${dep}_guid}"
-            [ -z "${dep_guid}" ] && die "Unknown GUID for $dep (dependency of $var)"
-            echo "${indent}$dep_guid = $dep_guid"
-        done
-
-        indent_pop
-        echo "${indent}EndProjectSection"
-
-    fi
-
-    indent_pop
     echo "EndProject"
 }
 
@@ -191,11 +162,7 @@ process_makefile() {
     IFS=$'\r'$'\n'
     local TAB=$'\t'
     cat <<EOF
-ifeq (\$(CONFIG_VS_VERSION),7)
-MSBUILD_TOOL := devenv.com
-else
 MSBUILD_TOOL := msbuild.exe
-endif
 found_devenv := \$(shell which \$(MSBUILD_TOOL) >/dev/null 2>&1 && echo yes)
 .nodevenv.once:
 ${TAB}@echo "  * \$(MSBUILD_TOOL) not found in path."
@@ -204,7 +171,7 @@ ${TAB}@echo "  * You will have to build all configurations manually using the"
 ${TAB}@echo "  * Visual Studio IDE. To allow make to build them automatically,"
 ${TAB}@echo "  * add the Common7/IDE directory of your Visual Studio"
 ${TAB}@echo "  * installation to your path, eg:"
-${TAB}@echo "  *   C:\Program Files\Microsoft Visual Studio 8\Common7\IDE"
+${TAB}@echo "  *   C:\Program Files\Microsoft Visual Studio 10.0\Common7\IDE"
 ${TAB}@echo "  * "
 ${TAB}@touch \$@
 CLEAN-OBJS += \$(if \$(found_devenv),,.nodevenv.once)
@@ -221,16 +188,9 @@ clean::
 ${TAB}rm -rf "$platform"/"$config"
 .PHONY: $nows_sln_config
 ifneq (\$(found_devenv),)
-  ifeq (\$(CONFIG_VS_VERSION),7)
-$nows_sln_config: $outfile
-${TAB}\$(MSBUILD_TOOL) $outfile -build "$config"
-
-  else
 $nows_sln_config: $outfile
 ${TAB}\$(MSBUILD_TOOL) $outfile -m -t:Build \\
 ${TAB}${TAB}-p:Configuration="$config" -p:Platform="$platform"
-
-  endif
 else
 $nows_sln_config: $outfile .nodevenv.once
 ${TAB}@echo "  * Skipping build of $sln_config (\$(MSBUILD_TOOL) not in path)."
@@ -255,20 +215,9 @@ for opt in "$@"; do
     ;;
     --ver=*) vs_ver="$optval"
              case $optval in
-             [789]|10|11|12|14)
+             10|11|12|14)
              ;;
              *) die Unrecognized Visual Studio Version in $opt
-             ;;
-             esac
-    ;;
-    --ver=*) vs_ver="$optval"
-             case $optval in
-             7) sln_vers="8.00"
-                sln_vers_str="Visual Studio .NET 2003"
-             ;;
-             [89])
-             ;;
-             *) die "Unrecognized Visual Studio Version '$optval' in $opt"
              ;;
              esac
     ;;
@@ -281,16 +230,7 @@ for opt in "$@"; do
 done
 outfile=${outfile:-/dev/stdout}
 mkoutfile=${mkoutfile:-/dev/stdout}
-case "${vs_ver:-8}" in
-    7) sln_vers="8.00"
-       sln_vers_str="Visual Studio .NET 2003"
-    ;;
-    8) sln_vers="9.00"
-       sln_vers_str="Visual Studio 2005"
-    ;;
-    9) sln_vers="10.00"
-       sln_vers_str="Visual Studio 2008"
-    ;;
+case "${vs_ver:-10}" in
     10) sln_vers="11.00"
        sln_vers_str="Visual Studio 2010"
     ;;
@@ -304,14 +244,7 @@ case "${vs_ver:-8}" in
        sln_vers_str="Visual Studio 2015"
     ;;
 esac
-case "${vs_ver:-8}" in
-    [789])
-    sfx=vcproj
-    ;;
-    10|11|12|14)
-    sfx=vcxproj
-    ;;
-esac
+sfx=vcxproj
 
 for f in "${file_list[@]}"; do
     parse_project $f

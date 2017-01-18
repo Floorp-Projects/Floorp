@@ -17,10 +17,10 @@ static void idct32x8_row_transpose_store(const int16_t *input,
   /* 1st & 2nd 8x8 */
   LD_SH8(input, 32, m0, n0, m1, n1, m2, n2, m3, n3);
   LD_SH8((input + 8), 32, m4, n4, m5, n5, m6, n6, m7, n7);
-  TRANSPOSE8x8_SH_SH(m0, n0, m1, n1, m2, n2, m3, n3,
-                     m0, n0, m1, n1, m2, n2, m3, n3);
-  TRANSPOSE8x8_SH_SH(m4, n4, m5, n5, m6, n6, m7, n7,
-                     m4, n4, m5, n5, m6, n6, m7, n7);
+  TRANSPOSE8x8_SH_SH(m0, n0, m1, n1, m2, n2, m3, n3, m0, n0, m1, n1, m2, n2, m3,
+                     n3);
+  TRANSPOSE8x8_SH_SH(m4, n4, m5, n5, m6, n6, m7, n7, m4, n4, m5, n5, m6, n6, m7,
+                     n7);
   ST_SH8(m0, n0, m1, n1, m2, n2, m3, n3, (tmp_buf), 8);
   ST_SH4(m4, n4, m5, n5, (tmp_buf + 8 * 8), 8);
   ST_SH4(m6, n6, m7, n7, (tmp_buf + 12 * 8), 8);
@@ -28,10 +28,10 @@ static void idct32x8_row_transpose_store(const int16_t *input,
   /* 3rd & 4th 8x8 */
   LD_SH8((input + 16), 32, m0, n0, m1, n1, m2, n2, m3, n3);
   LD_SH8((input + 24), 32, m4, n4, m5, n5, m6, n6, m7, n7);
-  TRANSPOSE8x8_SH_SH(m0, n0, m1, n1, m2, n2, m3, n3,
-                     m0, n0, m1, n1, m2, n2, m3, n3);
-  TRANSPOSE8x8_SH_SH(m4, n4, m5, n5, m6, n6, m7, n7,
-                     m4, n4, m5, n5, m6, n6, m7, n7);
+  TRANSPOSE8x8_SH_SH(m0, n0, m1, n1, m2, n2, m3, n3, m0, n0, m1, n1, m2, n2, m3,
+                     n3);
+  TRANSPOSE8x8_SH_SH(m4, n4, m5, n5, m6, n6, m7, n7, m4, n4, m5, n5, m6, n6, m7,
+                     n7);
   ST_SH4(m0, n0, m1, n1, (tmp_buf + 16 * 8), 8);
   ST_SH4(m2, n2, m3, n3, (tmp_buf + 20 * 8), 8);
   ST_SH4(m4, n4, m5, n5, (tmp_buf + 24 * 8), 8);
@@ -186,8 +186,7 @@ static void idct32x8_row_odd_process_store(int16_t *tmp_buf,
   DOTP_CONST_PAIR(reg7, reg0, cospi_3_64, cospi_29_64, reg0, reg7);
 
   /* 4 Stores */
-  SUB4(reg1, reg2, reg6, reg5, reg0, reg3, reg7, reg4,
-       vec0, vec1, vec2, vec3);
+  SUB4(reg1, reg2, reg6, reg5, reg0, reg3, reg7, reg4, vec0, vec1, vec2, vec3);
   DOTP_CONST_PAIR(vec1, vec0, cospi_12_64, cospi_20_64, loc0, loc1);
   DOTP_CONST_PAIR(vec3, vec2, -cospi_20_64, cospi_12_64, loc2, loc3);
 
@@ -198,8 +197,7 @@ static void idct32x8_row_odd_process_store(int16_t *tmp_buf,
   ST_SH2(vec0, vec1, (tmp_odd_buf + 10 * 8), 8);
 
   /* 4 Stores */
-  ADD4(reg1, reg2, reg6, reg5, reg0, reg3, reg7, reg4,
-       vec1, vec2, vec0, vec3);
+  ADD4(reg1, reg2, reg6, reg5, reg0, reg3, reg7, reg4, vec1, vec2, vec0, vec3);
   BUTTERFLY_4(vec0, vec3, vec2, vec1, reg0, reg1, reg3, reg2);
   ST_SH(reg0, (tmp_odd_buf + 13 * 8));
   ST_SH(reg1, (tmp_odd_buf + 14 * 8));
@@ -213,8 +211,7 @@ static void idct32x8_row_odd_process_store(int16_t *tmp_buf,
   LD_SH4(tmp_odd_buf, 8, reg0, reg1, reg2, reg3);
   LD_SH4((tmp_odd_buf + 8 * 8), 8, reg4, reg5, reg6, reg7);
 
-  ADD4(reg0, reg4, reg1, reg5, reg2, reg6, reg3, reg7,
-       loc0, loc1, loc2, loc3);
+  ADD4(reg0, reg4, reg1, reg5, reg2, reg6, reg3, reg7, loc0, loc1, loc2, loc3);
   ST_SH4(loc0, loc1, loc2, loc3, tmp_odd_buf, 8);
 
   SUB2(reg0, reg4, reg1, reg5, vec0, vec1);
@@ -228,8 +225,7 @@ static void idct32x8_row_odd_process_store(int16_t *tmp_buf,
   LD_SH4((tmp_odd_buf + 4 * 8), 8, reg1, reg2, reg0, reg3);
   LD_SH4((tmp_odd_buf + 12 * 8), 8, reg4, reg5, reg6, reg7);
 
-  ADD4(reg0, reg4, reg1, reg5, reg2, reg6, reg3, reg7,
-       loc0, loc1, loc2, loc3);
+  ADD4(reg0, reg4, reg1, reg5, reg2, reg6, reg3, reg7, loc0, loc1, loc2, loc3);
   ST_SH4(loc0, loc1, loc2, loc3, (tmp_odd_buf + 4 * 8), 8);
 
   SUB2(reg0, reg4, reg3, reg7, vec0, vec1);
@@ -242,8 +238,7 @@ static void idct32x8_row_odd_process_store(int16_t *tmp_buf,
 
 static void idct_butterfly_transpose_store(int16_t *tmp_buf,
                                            int16_t *tmp_eve_buf,
-                                           int16_t *tmp_odd_buf,
-                                           int16_t *dst) {
+                                           int16_t *tmp_odd_buf, int16_t *dst) {
   v8i16 vec0, vec1, vec2, vec3, loc0, loc1, loc2, loc3;
   v8i16 m0, m1, m2, m3, m4, m5, m6, m7, n0, n1, n2, n3, n4, n5, n6, n7;
 
@@ -317,26 +312,26 @@ static void idct_butterfly_transpose_store(int16_t *tmp_buf,
 
   /* Transpose : 16 vectors */
   /* 1st & 2nd 8x8 */
-  TRANSPOSE8x8_SH_SH(m0, n0, m1, n1, m2, n2, m3, n3,
-                     m0, n0, m1, n1, m2, n2, m3, n3);
+  TRANSPOSE8x8_SH_SH(m0, n0, m1, n1, m2, n2, m3, n3, m0, n0, m1, n1, m2, n2, m3,
+                     n3);
   ST_SH4(m0, n0, m1, n1, (dst + 0), 32);
   ST_SH4(m2, n2, m3, n3, (dst + 4 * 32), 32);
 
-  TRANSPOSE8x8_SH_SH(m4, n4, m5, n5, m6, n6, m7, n7,
-                     m4, n4, m5, n5, m6, n6, m7, n7);
+  TRANSPOSE8x8_SH_SH(m4, n4, m5, n5, m6, n6, m7, n7, m4, n4, m5, n5, m6, n6, m7,
+                     n7);
   ST_SH4(m4, n4, m5, n5, (dst + 8), 32);
   ST_SH4(m6, n6, m7, n7, (dst + 8 + 4 * 32), 32);
 
   /* 3rd & 4th 8x8 */
   LD_SH8((tmp_buf + 8 * 16), 8, m0, n0, m1, n1, m2, n2, m3, n3);
   LD_SH8((tmp_buf + 12 * 16), 8, m4, n4, m5, n5, m6, n6, m7, n7);
-  TRANSPOSE8x8_SH_SH(m0, n0, m1, n1, m2, n2, m3, n3,
-                     m0, n0, m1, n1, m2, n2, m3, n3);
+  TRANSPOSE8x8_SH_SH(m0, n0, m1, n1, m2, n2, m3, n3, m0, n0, m1, n1, m2, n2, m3,
+                     n3);
   ST_SH4(m0, n0, m1, n1, (dst + 16), 32);
   ST_SH4(m2, n2, m3, n3, (dst + 16 + 4 * 32), 32);
 
-  TRANSPOSE8x8_SH_SH(m4, n4, m5, n5, m6, n6, m7, n7,
-                     m4, n4, m5, n5, m6, n6, m7, n7);
+  TRANSPOSE8x8_SH_SH(m4, n4, m5, n5, m6, n6, m7, n7, m4, n4, m5, n5, m6, n6, m7,
+                     n7);
   ST_SH4(m4, n4, m5, n5, (dst + 24), 32);
   ST_SH4(m6, n6, m7, n7, (dst + 24 + 4 * 32), 32);
 }
@@ -349,8 +344,8 @@ static void idct32x8_1d_rows_msa(const int16_t *input, int16_t *output) {
   idct32x8_row_transpose_store(input, &tmp_buf[0]);
   idct32x8_row_even_process_store(&tmp_buf[0], &tmp_eve_buf[0]);
   idct32x8_row_odd_process_store(&tmp_buf[0], &tmp_odd_buf[0]);
-  idct_butterfly_transpose_store(&tmp_buf[0], &tmp_eve_buf[0],
-                                 &tmp_odd_buf[0], output);
+  idct_butterfly_transpose_store(&tmp_buf[0], &tmp_eve_buf[0], &tmp_odd_buf[0],
+                                 output);
 }
 
 static void idct8x32_column_even_process_store(int16_t *tmp_buf,
@@ -541,8 +536,7 @@ static void idct8x32_column_odd_process_store(int16_t *tmp_buf,
 }
 
 static void idct8x32_column_butterfly_addblk(int16_t *tmp_eve_buf,
-                                             int16_t *tmp_odd_buf,
-                                             uint8_t *dst,
+                                             int16_t *tmp_odd_buf, uint8_t *dst,
                                              int32_t dst_stride) {
   v8i16 vec0, vec1, vec2, vec3, loc0, loc1, loc2, loc3;
   v8i16 m0, m1, m2, m3, m4, m5, m6, m7, n0, n1, n2, n3, n4, n5, n6, n7;
@@ -563,8 +557,8 @@ static void idct8x32_column_butterfly_addblk(int16_t *tmp_eve_buf,
 
   SUB4(loc0, vec3, loc1, vec2, loc2, vec1, loc3, vec0, m6, m2, m4, m0);
   SRARI_H4_SH(m0, m2, m4, m6, 6);
-  VP9_ADDBLK_ST8x4_UB((dst + 19 * dst_stride), (4 * dst_stride),
-                      m0, m2, m4, m6);
+  VP9_ADDBLK_ST8x4_UB((dst + 19 * dst_stride), (4 * dst_stride), m0, m2, m4,
+                      m6);
 
   /* Load 8 & Store 8 */
   vec0 = LD_SH(tmp_odd_buf + 4 * 8);
@@ -578,13 +572,12 @@ static void idct8x32_column_butterfly_addblk(int16_t *tmp_eve_buf,
 
   ADD4(loc0, vec3, loc1, vec2, loc2, vec1, loc3, vec0, m1, m5, m3, m7);
   SRARI_H4_SH(m1, m3, m5, m7, 6);
-  VP9_ADDBLK_ST8x4_UB((dst + 2 * dst_stride), (4 * dst_stride),
-                      m1, m3, m5, m7);
+  VP9_ADDBLK_ST8x4_UB((dst + 2 * dst_stride), (4 * dst_stride), m1, m3, m5, m7);
 
   SUB4(loc0, vec3, loc1, vec2, loc2, vec1, loc3, vec0, m7, m3, m5, m1);
   SRARI_H4_SH(m1, m3, m5, m7, 6);
-  VP9_ADDBLK_ST8x4_UB((dst + 17 * dst_stride), (4 * dst_stride),
-                      m1, m3, m5, m7);
+  VP9_ADDBLK_ST8x4_UB((dst + 17 * dst_stride), (4 * dst_stride), m1, m3, m5,
+                      m7);
 
   /* Load 8 & Store 8 */
   vec0 = LD_SH(tmp_odd_buf + 2 * 8);
@@ -598,13 +591,12 @@ static void idct8x32_column_butterfly_addblk(int16_t *tmp_eve_buf,
 
   ADD4(loc0, vec3, loc1, vec2, loc2, vec1, loc3, vec0, n0, n4, n2, n6);
   SRARI_H4_SH(n0, n2, n4, n6, 6);
-  VP9_ADDBLK_ST8x4_UB((dst + 1 * dst_stride), (4 * dst_stride),
-                      n0, n2, n4, n6);
+  VP9_ADDBLK_ST8x4_UB((dst + 1 * dst_stride), (4 * dst_stride), n0, n2, n4, n6);
 
   SUB4(loc0, vec3, loc1, vec2, loc2, vec1, loc3, vec0, n6, n2, n4, n0);
   SRARI_H4_SH(n0, n2, n4, n6, 6);
-  VP9_ADDBLK_ST8x4_UB((dst + 18 * dst_stride), (4 * dst_stride),
-                      n0, n2, n4, n6);
+  VP9_ADDBLK_ST8x4_UB((dst + 18 * dst_stride), (4 * dst_stride), n0, n2, n4,
+                      n6);
 
   /* Load 8 & Store 8 */
   vec0 = LD_SH(tmp_odd_buf + 5 * 8);
@@ -618,13 +610,12 @@ static void idct8x32_column_butterfly_addblk(int16_t *tmp_eve_buf,
 
   ADD4(loc0, vec3, loc1, vec2, loc2, vec1, loc3, vec0, n1, n5, n3, n7);
   SRARI_H4_SH(n1, n3, n5, n7, 6);
-  VP9_ADDBLK_ST8x4_UB((dst + 3 * dst_stride), (4 * dst_stride),
-                      n1, n3, n5, n7);
+  VP9_ADDBLK_ST8x4_UB((dst + 3 * dst_stride), (4 * dst_stride), n1, n3, n5, n7);
 
   SUB4(loc0, vec3, loc1, vec2, loc2, vec1, loc3, vec0, n7, n3, n5, n1);
   SRARI_H4_SH(n1, n3, n5, n7, 6);
-  VP9_ADDBLK_ST8x4_UB((dst + 16 * dst_stride), (4 * dst_stride),
-                      n1, n3, n5, n7);
+  VP9_ADDBLK_ST8x4_UB((dst + 16 * dst_stride), (4 * dst_stride), n1, n3, n5,
+                      n7);
 }
 
 static void idct8x32_1d_columns_addblk_msa(int16_t *input, uint8_t *dst,
@@ -634,8 +625,8 @@ static void idct8x32_1d_columns_addblk_msa(int16_t *input, uint8_t *dst,
 
   idct8x32_column_even_process_store(input, &tmp_eve_buf[0]);
   idct8x32_column_odd_process_store(input, &tmp_odd_buf[0]);
-  idct8x32_column_butterfly_addblk(&tmp_eve_buf[0], &tmp_odd_buf[0],
-                                   dst, dst_stride);
+  idct8x32_column_butterfly_addblk(&tmp_eve_buf[0], &tmp_odd_buf[0], dst,
+                                   dst_stride);
 }
 
 void vpx_idct32x32_1024_add_msa(const int16_t *input, uint8_t *dst,
@@ -665,7 +656,7 @@ void vpx_idct32x32_34_add_msa(const int16_t *input, uint8_t *dst,
   int16_t *out_ptr = out_arr;
 
   for (i = 32; i--;) {
-    __asm__ __volatile__ (
+    __asm__ __volatile__(
         "sw     $zero,      0(%[out_ptr])     \n\t"
         "sw     $zero,      4(%[out_ptr])     \n\t"
         "sw     $zero,      8(%[out_ptr])     \n\t"
@@ -684,8 +675,7 @@ void vpx_idct32x32_34_add_msa(const int16_t *input, uint8_t *dst,
         "sw     $zero,     60(%[out_ptr])     \n\t"
 
         :
-        : [out_ptr] "r" (out_ptr)
-    );
+        : [out_ptr] "r"(out_ptr));
 
     out_ptr += 32;
   }
@@ -728,8 +718,8 @@ void vpx_idct32x32_1_add_msa(const int16_t *input, uint8_t *dst,
     ADD4(res4, vec, res5, vec, res6, vec, res7, vec, res4, res5, res6, res7);
     CLIP_SH4_0_255(res0, res1, res2, res3);
     CLIP_SH4_0_255(res4, res5, res6, res7);
-    PCKEV_B4_UB(res4, res0, res5, res1, res6, res2, res7, res3,
-                tmp0, tmp1, tmp2, tmp3);
+    PCKEV_B4_UB(res4, res0, res5, res1, res6, res2, res7, res3, tmp0, tmp1,
+                tmp2, tmp3);
 
     ST_UB2(tmp0, tmp1, dst, 16);
     dst += dst_stride;

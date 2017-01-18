@@ -19,39 +19,36 @@
 // TODO(jackychen): Replace this function with SSE2 code. There is
 // one SSE2 implementation in vp8, so will consider how to share it
 // between vp8 and vp9.
-static void filter_by_weight(const uint8_t *src, int src_stride,
-                             uint8_t *dst, int dst_stride,
-                             int block_size, int src_weight) {
+static void filter_by_weight(const uint8_t *src, int src_stride, uint8_t *dst,
+                             int dst_stride, int block_size, int src_weight) {
   const int dst_weight = (1 << MFQE_PRECISION) - src_weight;
   const int rounding_bit = 1 << (MFQE_PRECISION - 1);
   int r, c;
 
   for (r = 0; r < block_size; r++) {
     for (c = 0; c < block_size; c++) {
-      dst[c] = (src[c] * src_weight + dst[c] * dst_weight + rounding_bit)
-               >> MFQE_PRECISION;
+      dst[c] = (src[c] * src_weight + dst[c] * dst_weight + rounding_bit) >>
+               MFQE_PRECISION;
     }
     src += src_stride;
     dst += dst_stride;
   }
 }
 
-void vp9_filter_by_weight8x8_c(const uint8_t *src, int src_stride,
-                               uint8_t *dst, int dst_stride, int src_weight) {
+void vp9_filter_by_weight8x8_c(const uint8_t *src, int src_stride, uint8_t *dst,
+                               int dst_stride, int src_weight) {
   filter_by_weight(src, src_stride, dst, dst_stride, 8, src_weight);
 }
 
 void vp9_filter_by_weight16x16_c(const uint8_t *src, int src_stride,
-                                 uint8_t *dst, int dst_stride,
-                                 int src_weight) {
+                                 uint8_t *dst, int dst_stride, int src_weight) {
   filter_by_weight(src, src_stride, dst, dst_stride, 16, src_weight);
 }
 
 static void filter_by_weight32x32(const uint8_t *src, int src_stride,
                                   uint8_t *dst, int dst_stride, int weight) {
   vp9_filter_by_weight16x16(src, src_stride, dst, dst_stride, weight);
-  vp9_filter_by_weight16x16(src + 16, src_stride, dst + 16, dst_stride,
-                            weight);
+  vp9_filter_by_weight16x16(src + 16, src_stride, dst + 16, dst_stride, weight);
   vp9_filter_by_weight16x16(src + src_stride * 16, src_stride,
                             dst + dst_stride * 16, dst_stride, weight);
   vp9_filter_by_weight16x16(src + src_stride * 16 + 16, src_stride,
@@ -61,8 +58,7 @@ static void filter_by_weight32x32(const uint8_t *src, int src_stride,
 static void filter_by_weight64x64(const uint8_t *src, int src_stride,
                                   uint8_t *dst, int dst_stride, int weight) {
   filter_by_weight32x32(src, src_stride, dst, dst_stride, weight);
-  filter_by_weight32x32(src + 32, src_stride, dst + 32,
-                        dst_stride, weight);
+  filter_by_weight32x32(src + 32, src_stride, dst + 32, dst_stride, weight);
   filter_by_weight32x32(src + src_stride * 32, src_stride,
                         dst + dst_stride * 32, dst_stride, weight);
   filter_by_weight32x32(src + src_stride * 32 + 32, src_stride,
@@ -72,8 +68,7 @@ static void filter_by_weight64x64(const uint8_t *src, int src_stride,
 static void apply_ifactor(const uint8_t *y, int y_stride, uint8_t *yd,
                           int yd_stride, const uint8_t *u, const uint8_t *v,
                           int uv_stride, uint8_t *ud, uint8_t *vd,
-                          int uvd_stride, BLOCK_SIZE block_size,
-                          int weight) {
+                          int uvd_stride, BLOCK_SIZE block_size, int weight) {
   if (block_size == BLOCK_16X16) {
     vp9_filter_by_weight16x16(y, y_stride, yd, yd_stride, weight);
     vp9_filter_by_weight8x8(u, uv_stride, ud, uvd_stride, weight);
@@ -90,8 +85,8 @@ static void apply_ifactor(const uint8_t *y, int y_stride, uint8_t *yd,
 }
 
 // TODO(jackychen): Determine whether replace it with assembly code.
-static void copy_mem8x8(const uint8_t *src, int src_stride,
-                        uint8_t *dst, int dst_stride) {
+static void copy_mem8x8(const uint8_t *src, int src_stride, uint8_t *dst,
+                        int dst_stride) {
   int r;
   for (r = 0; r < 8; r++) {
     memcpy(dst, src, 8);
@@ -100,8 +95,8 @@ static void copy_mem8x8(const uint8_t *src, int src_stride,
   }
 }
 
-static void copy_mem16x16(const uint8_t *src, int src_stride,
-                          uint8_t *dst, int dst_stride) {
+static void copy_mem16x16(const uint8_t *src, int src_stride, uint8_t *dst,
+                          int dst_stride) {
   int r;
   for (r = 0; r < 16; r++) {
     memcpy(dst, src, 16);
@@ -110,22 +105,22 @@ static void copy_mem16x16(const uint8_t *src, int src_stride,
   }
 }
 
-static void copy_mem32x32(const uint8_t *src, int src_stride,
-                          uint8_t *dst, int dst_stride) {
+static void copy_mem32x32(const uint8_t *src, int src_stride, uint8_t *dst,
+                          int dst_stride) {
   copy_mem16x16(src, src_stride, dst, dst_stride);
   copy_mem16x16(src + 16, src_stride, dst + 16, dst_stride);
-  copy_mem16x16(src + src_stride * 16, src_stride,
-                dst + dst_stride * 16, dst_stride);
+  copy_mem16x16(src + src_stride * 16, src_stride, dst + dst_stride * 16,
+                dst_stride);
   copy_mem16x16(src + src_stride * 16 + 16, src_stride,
                 dst + dst_stride * 16 + 16, dst_stride);
 }
 
-static void copy_mem64x64(const uint8_t *src, int src_stride,
-                          uint8_t *dst, int dst_stride) {
+static void copy_mem64x64(const uint8_t *src, int src_stride, uint8_t *dst,
+                          int dst_stride) {
   copy_mem32x32(src, src_stride, dst, dst_stride);
   copy_mem32x32(src + 32, src_stride, dst + 32, dst_stride);
-  copy_mem32x32(src + src_stride * 32, src_stride,
-                dst + src_stride * 32, dst_stride);
+  copy_mem32x32(src + src_stride * 32, src_stride, dst + src_stride * 32,
+                dst_stride);
   copy_mem32x32(src + src_stride * 32 + 32, src_stride,
                 dst + src_stride * 32 + 32, dst_stride);
 }
@@ -195,30 +190,27 @@ static void mfqe_block(BLOCK_SIZE bs, const uint8_t *y, const uint8_t *u,
                   uvd_stride, bs, ifactor);
   } else {
     // Copy the block from current frame (i.e., no mfqe is done).
-    copy_block(y, u, v, y_stride, uv_stride, yd, ud, vd,
-               yd_stride, uvd_stride, bs);
+    copy_block(y, u, v, y_stride, uv_stride, yd, ud, vd, yd_stride, uvd_stride,
+               bs);
   }
 }
 
 static int mfqe_decision(MODE_INFO *mi, BLOCK_SIZE cur_bs) {
   // Check the motion in current block(for inter frame),
   // or check the motion in the correlated block in last frame (for keyframe).
-  const int mv_len_square = mi->mv[0].as_mv.row *
-                            mi->mv[0].as_mv.row +
-                            mi->mv[0].as_mv.col *
-                            mi->mv[0].as_mv.col;
+  const int mv_len_square = mi->mv[0].as_mv.row * mi->mv[0].as_mv.row +
+                            mi->mv[0].as_mv.col * mi->mv[0].as_mv.col;
   const int mv_threshold = 100;
   return mi->mode >= NEARESTMV &&  // Not an intra block
-         cur_bs >= BLOCK_16X16 &&
-         mv_len_square <= mv_threshold;
+         cur_bs >= BLOCK_16X16 && mv_len_square <= mv_threshold;
 }
 
 // Process each partiton in a super block, recursively.
 static void mfqe_partition(VP9_COMMON *cm, MODE_INFO *mi, BLOCK_SIZE bs,
-                           const uint8_t *y, const uint8_t *u,
-                           const uint8_t *v, int y_stride, int uv_stride,
-                           uint8_t *yd, uint8_t *ud, uint8_t *vd,
-                           int yd_stride, int uvd_stride) {
+                           const uint8_t *y, const uint8_t *u, const uint8_t *v,
+                           int y_stride, int uv_stride, uint8_t *yd,
+                           uint8_t *ud, uint8_t *vd, int yd_stride,
+                           int uvd_stride) {
   int mi_offset, y_offset, uv_offset;
   const BLOCK_SIZE cur_bs = mi->sb_type;
   const int qdiff = cm->base_qindex - cm->postproc_state.last_base_qindex;
@@ -255,12 +247,12 @@ static void mfqe_partition(VP9_COMMON *cm, MODE_INFO *mi, BLOCK_SIZE bs,
       }
       if (mfqe_decision(mi, mfqe_bs)) {
         // Do mfqe on the first square partition.
-        mfqe_block(bs_tmp, y, u, v, y_stride, uv_stride,
-                   yd, ud, vd, yd_stride, uvd_stride, qdiff);
+        mfqe_block(bs_tmp, y, u, v, y_stride, uv_stride, yd, ud, vd, yd_stride,
+                   uvd_stride, qdiff);
         // Do mfqe on the second square partition.
-        mfqe_block(bs_tmp, y + y_offset, u + uv_offset, v + uv_offset,
-                   y_stride, uv_stride, yd + y_offset, ud + uv_offset,
-                   vd + uv_offset, yd_stride, uvd_stride, qdiff);
+        mfqe_block(bs_tmp, y + y_offset, u + uv_offset, v + uv_offset, y_stride,
+                   uv_stride, yd + y_offset, ud + uv_offset, vd + uv_offset,
+                   yd_stride, uvd_stride, qdiff);
       }
       if (mfqe_decision(mi + mi_offset * cm->mi_stride, mfqe_bs)) {
         // Do mfqe on the first square partition.
@@ -271,11 +263,11 @@ static void mfqe_partition(VP9_COMMON *cm, MODE_INFO *mi, BLOCK_SIZE bs,
         // Do mfqe on the second square partition.
         mfqe_block(bs_tmp, y + y_offset * y_stride + y_offset,
                    u + uv_offset * uv_stride + uv_offset,
-                   v + uv_offset * uv_stride + uv_offset, y_stride,
-                   uv_stride, yd + y_offset * yd_stride + y_offset,
+                   v + uv_offset * uv_stride + uv_offset, y_stride, uv_stride,
+                   yd + y_offset * yd_stride + y_offset,
                    ud + uv_offset * uvd_stride + uv_offset,
-                   vd + uv_offset * uvd_stride + uv_offset,
-                   yd_stride, uvd_stride, qdiff);
+                   vd + uv_offset * uvd_stride + uv_offset, yd_stride,
+                   uvd_stride, qdiff);
       }
       break;
     case PARTITION_VERT:
@@ -288,8 +280,8 @@ static void mfqe_partition(VP9_COMMON *cm, MODE_INFO *mi, BLOCK_SIZE bs,
       }
       if (mfqe_decision(mi, mfqe_bs)) {
         // Do mfqe on the first square partition.
-        mfqe_block(bs_tmp, y, u, v, y_stride, uv_stride,
-                   yd, ud, vd, yd_stride, uvd_stride, qdiff);
+        mfqe_block(bs_tmp, y, u, v, y_stride, uv_stride, yd, ud, vd, yd_stride,
+                   uvd_stride, qdiff);
         // Do mfqe on the second square partition.
         mfqe_block(bs_tmp, y + y_offset * y_stride, u + uv_offset * uv_stride,
                    v + uv_offset * uv_stride, y_stride, uv_stride,
@@ -298,28 +290,28 @@ static void mfqe_partition(VP9_COMMON *cm, MODE_INFO *mi, BLOCK_SIZE bs,
       }
       if (mfqe_decision(mi + mi_offset, mfqe_bs)) {
         // Do mfqe on the first square partition.
-        mfqe_block(bs_tmp, y + y_offset, u + uv_offset, v + uv_offset,
-                   y_stride, uv_stride, yd + y_offset, ud + uv_offset,
-                   vd + uv_offset, yd_stride, uvd_stride, qdiff);
+        mfqe_block(bs_tmp, y + y_offset, u + uv_offset, v + uv_offset, y_stride,
+                   uv_stride, yd + y_offset, ud + uv_offset, vd + uv_offset,
+                   yd_stride, uvd_stride, qdiff);
         // Do mfqe on the second square partition.
         mfqe_block(bs_tmp, y + y_offset * y_stride + y_offset,
                    u + uv_offset * uv_stride + uv_offset,
-                   v + uv_offset * uv_stride + uv_offset, y_stride,
-                   uv_stride, yd + y_offset * yd_stride + y_offset,
+                   v + uv_offset * uv_stride + uv_offset, y_stride, uv_stride,
+                   yd + y_offset * yd_stride + y_offset,
                    ud + uv_offset * uvd_stride + uv_offset,
-                   vd + uv_offset * uvd_stride + uv_offset,
-                   yd_stride, uvd_stride, qdiff);
+                   vd + uv_offset * uvd_stride + uv_offset, yd_stride,
+                   uvd_stride, qdiff);
       }
       break;
     case PARTITION_NONE:
       if (mfqe_decision(mi, cur_bs)) {
         // Do mfqe on this partition.
-        mfqe_block(cur_bs, y, u, v, y_stride, uv_stride,
-                   yd, ud, vd, yd_stride, uvd_stride, qdiff);
+        mfqe_block(cur_bs, y, u, v, y_stride, uv_stride, yd, ud, vd, yd_stride,
+                   uvd_stride, qdiff);
       } else {
         // Copy the block from current frame(i.e., no mfqe is done).
-        copy_block(y, u, v, y_stride, uv_stride, yd, ud, vd,
-                   yd_stride, uvd_stride, bs);
+        copy_block(y, u, v, y_stride, uv_stride, yd, ud, vd, yd_stride,
+                   uvd_stride, bs);
       }
       break;
     case PARTITION_SPLIT:
@@ -335,17 +327,16 @@ static void mfqe_partition(VP9_COMMON *cm, MODE_INFO *mi, BLOCK_SIZE bs,
                      v + uv_offset * uv_stride, y_stride, uv_stride,
                      yd + y_offset * yd_stride, ud + uv_offset * uvd_stride,
                      vd + uv_offset * uvd_stride, yd_stride, uvd_stride);
-      mfqe_partition(cm, mi + mi_offset * cm->mi_stride + mi_offset,
-                     subsize, y + y_offset * y_stride + y_offset,
+      mfqe_partition(cm, mi + mi_offset * cm->mi_stride + mi_offset, subsize,
+                     y + y_offset * y_stride + y_offset,
                      u + uv_offset * uv_stride + uv_offset,
-                     v + uv_offset * uv_stride + uv_offset, y_stride,
-                     uv_stride, yd + y_offset * yd_stride + y_offset,
+                     v + uv_offset * uv_stride + uv_offset, y_stride, uv_stride,
+                     yd + y_offset * yd_stride + y_offset,
                      ud + uv_offset * uvd_stride + uv_offset,
-                     vd + uv_offset * uvd_stride + uv_offset,
-                     yd_stride, uvd_stride);
+                     vd + uv_offset * uvd_stride + uv_offset, yd_stride,
+                     uvd_stride);
       break;
-    default:
-      assert(0);
+    default: assert(0);
   }
 }
 
@@ -361,8 +352,8 @@ void vp9_mfqe(VP9_COMMON *cm) {
       MODE_INFO *mi;
       MODE_INFO *mi_local = cm->mi + (mi_row * cm->mi_stride + mi_col);
       // Motion Info in last frame.
-      MODE_INFO *mi_prev = cm->postproc_state.prev_mi +
-                           (mi_row * cm->mi_stride + mi_col);
+      MODE_INFO *mi_prev =
+          cm->postproc_state.prev_mi + (mi_row * cm->mi_stride + mi_col);
       const uint32_t y_stride = show->y_stride;
       const uint32_t uv_stride = show->uv_stride;
       const uint32_t yd_stride = dest->y_stride;
@@ -371,17 +362,15 @@ void vp9_mfqe(VP9_COMMON *cm) {
       const uint32_t row_offset_uv = mi_row << 2;
       const uint32_t col_offset_y = mi_col << 3;
       const uint32_t col_offset_uv = mi_col << 2;
-      const uint8_t *y = show->y_buffer + row_offset_y * y_stride +
-                         col_offset_y;
-      const uint8_t *u = show->u_buffer + row_offset_uv * uv_stride +
-                         col_offset_uv;
-      const uint8_t *v = show->v_buffer + row_offset_uv * uv_stride +
-                         col_offset_uv;
+      const uint8_t *y =
+          show->y_buffer + row_offset_y * y_stride + col_offset_y;
+      const uint8_t *u =
+          show->u_buffer + row_offset_uv * uv_stride + col_offset_uv;
+      const uint8_t *v =
+          show->v_buffer + row_offset_uv * uv_stride + col_offset_uv;
       uint8_t *yd = dest->y_buffer + row_offset_y * yd_stride + col_offset_y;
-      uint8_t *ud = dest->u_buffer + row_offset_uv * uvd_stride +
-                    col_offset_uv;
-      uint8_t *vd = dest->v_buffer + row_offset_uv * uvd_stride +
-                    col_offset_uv;
+      uint8_t *ud = dest->u_buffer + row_offset_uv * uvd_stride + col_offset_uv;
+      uint8_t *vd = dest->v_buffer + row_offset_uv * uvd_stride + col_offset_uv;
       if (frame_is_intra_only(cm)) {
         mi = mi_prev;
       } else {

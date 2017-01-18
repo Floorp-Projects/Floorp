@@ -8,39 +8,37 @@ MozReview-Commit-ID: BxDCnJe0mzs
 diff --git a/media/libvpx/libvpx/vp8/vp8_cx_iface.c b/media/libvpx/libvpx/vp8/vp8_cx_iface.c
 --- a/media/libvpx/libvpx/vp8/vp8_cx_iface.c
 +++ b/media/libvpx/libvpx/vp8/vp8_cx_iface.c
-@@ -924,21 +924,30 @@ static vpx_codec_err_t vp8e_encode(vpx_codec_alg_priv_t  *ctx,
-         /* vp8 use 10,000,000 ticks/second as time stamp */
-         dst_time_stamp    = pts * 10000000 * ctx->cfg.g_timebase.num / ctx->cfg.g_timebase.den;
-         dst_end_time_stamp = (pts + duration) * 10000000 * ctx->cfg.g_timebase.num / ctx->cfg.g_timebase.den;
+@@ -855,20 +855,29 @@ static vpx_codec_err_t vp8e_encode(vpx_codec_alg_priv_t *ctx,
+     dst_time_stamp =
+         pts * 10000000 * ctx->cfg.g_timebase.num / ctx->cfg.g_timebase.den;
+     dst_end_time_stamp = (pts + duration) * 10000000 * ctx->cfg.g_timebase.num /
+                          ctx->cfg.g_timebase.den;
+
+     if (img != NULL) {
+       res = image2yuvconfig(img, &sd);
  
-         if (img != NULL)
-         {
-             res = image2yuvconfig(img, &sd);
- 
--            if (vp8_receive_raw_frame(ctx->cpi, ctx->next_frame_flag | lib_flags,
--                                      &sd, dst_time_stamp, dst_end_time_stamp))
--            {
--                VP8_COMP *cpi = (VP8_COMP *)ctx->cpi;
--                res = update_error_state(ctx, &cpi->common.error);
-+            if (sd.y_width != ctx->cfg.g_w || sd.y_height != ctx->cfg.g_h) {
-+                /* from vpx_encoder.h for g_w/g_h:
-+                   "Note that the frames passed as input to the encoder must have this resolution"
-+                */
-+                ctx->base.err_detail = "Invalid input frame resolution";
-+                res = VPX_CODEC_INVALID_PARAM;
-+            } else {
-+
-+                if (vp8_receive_raw_frame(ctx->cpi, ctx->next_frame_flag | lib_flags,
-+                                          &sd, dst_time_stamp, dst_end_time_stamp))
-+                {
-+                    VP8_COMP *cpi = (VP8_COMP *)ctx->cpi;
-+                    res = update_error_state(ctx, &cpi->common.error);
-+                }
-             }
- 
-             /* reset for next frame */
-             ctx->next_frame_flag = 0;
-         }
- 
-         cx_data = ctx->cx_data;
-         cx_data_sz = ctx->cx_data_sz;
+-      if (vp8_receive_raw_frame(ctx->cpi, ctx->next_frame_flag | lib_flags, &sd,
+-                                dst_time_stamp, dst_end_time_stamp)) {
+-        VP8_COMP *cpi = (VP8_COMP *)ctx->cpi;
+-        res = update_error_state(ctx, &cpi->common.error);
++      if (sd.y_width != ctx->cfg.g_w || sd.y_height != ctx->cfg.g_h) {
++        /* from vpx_encoder.h for g_w/g_h:
++           "Note that the frames passed as input to the encoder must have this
++           resolution"
++        */
++        ctx->base.err_detail = "Invalid input frame resolution";
++        res = VPX_CODEC_INVALID_PARAM;
++      } else {
++        if (vp8_receive_raw_frame(ctx->cpi, ctx->next_frame_flag | lib_flags,
++                                  &sd, dst_time_stamp, dst_end_time_stamp)) {
++          VP8_COMP *cpi = (VP8_COMP *)ctx->cpi;
++          res = update_error_state(ctx, &cpi->common.error);
++        }
+       }
+
+       /* reset for next frame */
+       ctx->next_frame_flag = 0;
+     }
+
+     cx_data = ctx->cx_data;
+     cx_data_sz = ctx->cx_data_sz;

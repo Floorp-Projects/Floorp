@@ -16,7 +16,7 @@ VP8_COMMON_SRCS-yes += common/alloccommon.c
 VP8_COMMON_SRCS-yes += common/blockd.c
 VP8_COMMON_SRCS-yes += common/coefupdateprobs.h
 VP8_COMMON_SRCS-yes += common/copy_c.c
-VP8_COMMON_SRCS-yes += common/debugmodes.c
+# VP8_COMMON_SRCS-yes += common/debugmodes.c
 VP8_COMMON_SRCS-yes += common/default_coef_probs.h
 VP8_COMMON_SRCS-yes += common/dequantize.c
 VP8_COMMON_SRCS-yes += common/entropy.c
@@ -68,7 +68,6 @@ VP8_COMMON_SRCS-yes += common/vp8_entropymodedata.h
 
 
 
-VP8_COMMON_SRCS-$(CONFIG_POSTPROC_VISUALIZER) += common/textblit.c
 VP8_COMMON_SRCS-yes += common/treecoder.c
 
 VP8_COMMON_SRCS-$(ARCH_X86)$(ARCH_X86_64) += common/x86/filter_x86.c
@@ -81,8 +80,6 @@ VP8_COMMON_SRCS-$(CONFIG_POSTPROC) += common/postproc.c
 VP8_COMMON_SRCS-$(HAVE_MMX) += common/x86/dequantize_mmx.asm
 VP8_COMMON_SRCS-$(HAVE_MMX) += common/x86/idct_blk_mmx.c
 VP8_COMMON_SRCS-$(HAVE_MMX) += common/x86/idctllm_mmx.asm
-VP8_COMMON_SRCS-$(HAVE_MMX) += common/x86/iwalsh_mmx.asm
-VP8_COMMON_SRCS-$(HAVE_MMX) += common/x86/vp8_loopfilter_mmx.asm
 VP8_COMMON_SRCS-$(HAVE_MMX) += common/x86/recon_mmx.asm
 VP8_COMMON_SRCS-$(HAVE_MMX) += common/x86/subpixel_mmx.asm
 VP8_COMMON_SRCS-$(HAVE_SSE2) += common/x86/copy_sse2.asm
@@ -96,9 +93,7 @@ VP8_COMMON_SRCS-$(HAVE_SSE3) += common/x86/copy_sse3.asm
 VP8_COMMON_SRCS-$(HAVE_SSSE3) += common/x86/subpixel_ssse3.asm
 
 ifeq ($(CONFIG_POSTPROC),yes)
-VP8_COMMON_SRCS-$(HAVE_MMX) += common/x86/postproc_mmx.asm
 VP8_COMMON_SRCS-$(HAVE_SSE2) += common/x86/mfqe_sse2.asm
-VP8_COMMON_SRCS-$(HAVE_SSE2) += common/x86/postproc_sse2.asm
 endif
 
 ifeq ($(ARCH_X86_64),yes)
@@ -123,33 +118,10 @@ VP8_COMMON_SRCS-$(HAVE_MSA) += common/mips/msa/vp8_macros_msa.h
 
 ifeq ($(CONFIG_POSTPROC),yes)
 VP8_COMMON_SRCS-$(HAVE_MSA) += common/mips/msa/mfqe_msa.c
-VP8_COMMON_SRCS-$(HAVE_MSA) += common/mips/msa/postproc_msa.c
 endif
 
-# common (c)
-VP8_COMMON_SRCS-$(ARCH_ARM)  += common/arm/filter_arm.c
-VP8_COMMON_SRCS-$(ARCH_ARM)  += common/arm/loopfilter_arm.c
-VP8_COMMON_SRCS-$(ARCH_ARM)  += common/arm/dequantize_arm.c
-
-# common (media)
-VP8_COMMON_SRCS-$(HAVE_MEDIA)  += common/arm/bilinearfilter_arm.c
-VP8_COMMON_SRCS-$(HAVE_MEDIA)  += common/arm/bilinearfilter_arm.h
-VP8_COMMON_SRCS-$(HAVE_MEDIA)  += common/arm/armv6/bilinearfilter_v6$(ASM)
-VP8_COMMON_SRCS-$(HAVE_MEDIA)  += common/arm/armv6/copymem8x4_v6$(ASM)
-VP8_COMMON_SRCS-$(HAVE_MEDIA)  += common/arm/armv6/copymem8x8_v6$(ASM)
-VP8_COMMON_SRCS-$(HAVE_MEDIA)  += common/arm/armv6/copymem16x16_v6$(ASM)
-VP8_COMMON_SRCS-$(HAVE_MEDIA)  += common/arm/armv6/dc_only_idct_add_v6$(ASM)
-VP8_COMMON_SRCS-$(HAVE_MEDIA)  += common/arm/armv6/iwalsh_v6$(ASM)
-VP8_COMMON_SRCS-$(HAVE_MEDIA)  += common/arm/armv6/filter_v6$(ASM)
-VP8_COMMON_SRCS-$(HAVE_MEDIA)  += common/arm/armv6/idct_v6$(ASM)
-VP8_COMMON_SRCS-$(HAVE_MEDIA)  += common/arm/armv6/loopfilter_v6$(ASM)
-VP8_COMMON_SRCS-$(HAVE_MEDIA)  += common/arm/armv6/simpleloopfilter_v6$(ASM)
-VP8_COMMON_SRCS-$(HAVE_MEDIA)  += common/arm/armv6/sixtappredict8x4_v6$(ASM)
-VP8_COMMON_SRCS-$(HAVE_MEDIA)  += common/arm/armv6/dequant_idct_v6$(ASM)
-VP8_COMMON_SRCS-$(HAVE_MEDIA)  += common/arm/armv6/dequantize_v6$(ASM)
-VP8_COMMON_SRCS-$(HAVE_MEDIA)  += common/arm/armv6/idct_blk_v6.c
-
 # common (neon intrinsics)
+VP8_COMMON_SRCS-$(HAVE_NEON)  += common/arm/loopfilter_arm.c
 VP8_COMMON_SRCS-$(HAVE_NEON)  += common/arm/neon/bilinearpredict_neon.c
 VP8_COMMON_SRCS-$(HAVE_NEON)  += common/arm/neon/copymem_neon.c
 VP8_COMMON_SRCS-$(HAVE_NEON)  += common/arm/neon/dc_only_idct_add_neon.c

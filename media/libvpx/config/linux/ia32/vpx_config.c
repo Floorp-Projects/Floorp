@@ -6,5 +6,5 @@
 /* in the file PATENTS.  All contributing project authors may */
 /* be found in the AUTHORS file in the root of the source tree. */
 #include "vpx/vpx_codec.h"
-static const char* const cfg = "--target=x86-linux-gcc --disable-use-x86inc --enable-external-build --disable-examples --disable-install-docs --disable-unit-tests --enable-multi-res-encoding --size-limit=8192x4608 --enable-pic --enable-error-concealment --enable-postproc --enable-vp9-postproc --as=yasm";
+static const char* const cfg = "--target=x86-linux-gcc --enable-external-build --disable-examples --disable-install-docs --disable-unit-tests --enable-multi-res-encoding --size-limit=8192x4608 --enable-pic --enable-error-concealment --enable-postproc --enable-vp9-postproc --as=yasm";
 const char *vpx_codec_build_config(void) {return cfg;}

@@ -17,6 +17,7 @@
 #endif
 
 #include "libyuv/basic_types.h"
+#include "libyuv/compare_row.h"
 #include "libyuv/cpu_id.h"
 #include "libyuv/row.h"
 #include "libyuv/video_common.h"
@@ -27,29 +28,12 @@ extern "C" {
 #endif
 
 // hash seed of 5381 recommended.
-// Internal C version of HashDjb2 with int sized count for efficiency.
-uint32 HashDjb2_C(const uint8* src, int count, uint32 seed);
-
-// This module is for Visual C x86
-#if !defined(LIBYUV_DISABLE_X86) && \
-    (defined(_M_IX86) || \
-    (defined(__x86_64__) || (defined(__i386__) && !defined(__pic__))))
-#define HAS_HASHDJB2_SSE41
-uint32 HashDjb2_SSE41(const uint8* src, int count, uint32 seed);
-
-#ifdef VISUALC_HAS_AVX2
-#define HAS_HASHDJB2_AVX2
-uint32 HashDjb2_AVX2(const uint8* src, int count, uint32 seed);
-#endif
-
-#endif  // HAS_HASHDJB2_SSE41
-
-// hash seed of 5381 recommended.
 LIBYUV_API
 uint32 HashDjb2(const uint8* src, uint64 count, uint32 seed) {
   const int kBlockSize = 1 << 15;  // 32768;
   int remainder;
-  uint32 (*HashDjb2_SSE)(const uint8* src, int count, uint32 seed) = HashDjb2_C;
+  uint32 (*HashDjb2_SSE)(const uint8* src, int count, uint32 seed) =
+      HashDjb2_C;
 #if defined(HAS_HASHDJB2_SSE41)
   if (TestCpuFlag(kCpuHasSSE41)) {
     HashDjb2_SSE = HashDjb2_SSE41;
@@ -126,23 +110,6 @@ uint32 ARGBDetect(const uint8* argb, int stride_argb, int width, int height) {
   }
   return fourcc;
 }
-
-uint32 SumSquareError_C(const uint8* src_a, const uint8* src_b, int count);
-#if !defined(LIBYUV_DISABLE_NEON) && \
-    (defined(__ARM_NEON__) || defined(LIBYUV_NEON) || defined(__aarch64__))
-#define HAS_SUMSQUAREERROR_NEON
-uint32 SumSquareError_NEON(const uint8* src_a, const uint8* src_b, int count);
-#endif
-#if !defined(LIBYUV_DISABLE_X86) && \
-    (defined(_M_IX86) || defined(__x86_64__) || defined(__i386__))
-#define HAS_SUMSQUAREERROR_SSE2
-uint32 SumSquareError_SSE2(const uint8* src_a, const uint8* src_b, int count);
-#endif
-
-#ifdef VISUALC_HAS_AVX2
-#define HAS_SUMSQUAREERROR_AVX2
-uint32 SumSquareError_AVX2(const uint8* src_a, const uint8* src_b, int count);
-#endif
 
 // TODO(fbarchard): Refactor into row function.
 LIBYUV_API

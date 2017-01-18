@@ -394,6 +394,8 @@ class TreeMetadataEmitter(LoggingMixin):
             ]
         if substs.get('MOZ_WIDGET_TOOLKIT') != 'android':
             extra_allowed.append((substs.get('MOZ_CHILD_PROCESS_NAME'), 'ipc/app'))
+        else:
+            extra_allowed.append(('mozglue_android', 'mozglue/android'))
 
         if key in ALLOWED_XPCOM_GLUE or key in extra_allowed:
             if not use_xpcom:

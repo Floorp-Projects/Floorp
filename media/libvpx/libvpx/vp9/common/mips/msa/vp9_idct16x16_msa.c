@@ -74,8 +74,6 @@ void vp9_iht16x16_256_add_msa(const int16_t *input, uint8_t *dst,
                                           (dst + (i << 3)), dst_stride);
       }
       break;
-    default:
-      assert(0);
-      break;
+    default: assert(0); break;
   }
 }

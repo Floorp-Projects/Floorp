@@ -44,9 +44,9 @@ static void write_ivf_file_header(const vpx_codec_enc_cfg_t *const cfg,
   header[1] = 'K';
   header[2] = 'I';
   header[3] = 'F';
-  mem_put_le16(header + 4,  0);                   /* version */
-  mem_put_le16(header + 6,  32);                  /* headersize */
-  mem_put_le32(header + 8,  0x30395056);          /* fourcc (vp9) */
+  mem_put_le16(header + 4, 0);                    /* version */
+  mem_put_le16(header + 6, 32);                   /* headersize */
+  mem_put_le32(header + 8, 0x30395056);           /* fourcc (vp9) */
   mem_put_le16(header + 12, cfg->g_w);            /* width */
   mem_put_le16(header + 14, cfg->g_h);            /* height */
   mem_put_le32(header + 16, cfg->g_timebase.den); /* rate */
@@ -68,8 +68,7 @@ static void write_ivf_frame_header(const vpx_codec_cx_pkt_t *const pkt,
   char header[12];
   vpx_codec_pts_t pts;
 
-  if (pkt->kind != VPX_CODEC_CX_FRAME_PKT)
-    return;
+  if (pkt->kind != VPX_CODEC_CX_FRAME_PKT) return;
 
   pts = pkt->data.frame.pts;
   mem_put_le32(header, static_cast<unsigned int>(pkt->data.frame.sz));
@@ -92,12 +91,9 @@ struct FrameInfo {
   unsigned int h;
 };
 
-void ScaleForFrameNumber(unsigned int frame,
-                         unsigned int initial_w,
-                         unsigned int initial_h,
-                         unsigned int *w,
-                         unsigned int *h,
-                         int flag_codec) {
+void ScaleForFrameNumber(unsigned int frame, unsigned int initial_w,
+                         unsigned int initial_h, unsigned int *w,
+                         unsigned int *h, int flag_codec) {
   if (frame < 10) {
     *w = initial_w;
     *h = initial_h;
@@ -219,7 +215,7 @@ void ScaleForFrameNumber(unsigned int frame,
     return;
   }
   if (frame < 250) {
-    *w = initial_w  / 2;
+    *w = initial_w / 2;
     *h = initial_h / 2;
     return;
   }
@@ -268,8 +264,9 @@ class ResizingVideoSource : public ::libvpx_test::DummyVideoSource {
   }
 };
 
-class ResizeTest : public ::libvpx_test::EncoderTest,
-  public ::libvpx_test::CodecTestWithParam<libvpx_test::TestMode> {
+class ResizeTest
+    : public ::libvpx_test::EncoderTest,
+      public ::libvpx_test::CodecTestWithParam<libvpx_test::TestMode> {
  protected:
   ResizeTest() : EncoderTest(GET_PARAM(0)) {}
 
@@ -285,7 +282,7 @@ class ResizeTest : public ::libvpx_test::EncoderTest,
     frame_info_list_.push_back(FrameInfo(pts, img.d_w, img.d_h));
   }
 
-  std::vector< FrameInfo > frame_info_list_;
+  std::vector<FrameInfo> frame_info_list_;
 };
 
 TEST_P(ResizeTest, TestExternalResizeWorks) {
@@ -299,12 +296,12 @@ TEST_P(ResizeTest, TestExternalResizeWorks) {
     const unsigned int frame = static_cast<unsigned>(info->pts);
     unsigned int expected_w;
     unsigned int expected_h;
-    ScaleForFrameNumber(frame, kInitialWidth, kInitialHeight,
-                        &expected_w, &expected_h, 0);
-    EXPECT_EQ(expected_w, info->w)
-        << "Frame " << frame << " had unexpected width";
-    EXPECT_EQ(expected_h, info->h)
-        << "Frame " << frame << " had unexpected height";
+    ScaleForFrameNumber(frame, kInitialWidth, kInitialHeight, &expected_w,
+                        &expected_h, 0);
+    EXPECT_EQ(expected_w, info->w) << "Frame " << frame
+                                   << " had unexpected width";
+    EXPECT_EQ(expected_h, info->h) << "Frame " << frame
+                                   << " had unexpected height";
   }
 }
 
@@ -315,10 +312,7 @@ class ResizeInternalTest : public ResizeTest {
  protected:
 #if WRITE_COMPRESSED_STREAM
   ResizeInternalTest()
-      : ResizeTest(),
-        frame0_psnr_(0.0),
-        outfile_(NULL),
-        out_frames_(0) {}
+      : ResizeTest(), frame0_psnr_(0.0), outfile_(NULL), out_frames_(0) {}
 #else
   ResizeInternalTest() : ResizeTest(), frame0_psnr_(0.0) {}
 #endif
@@ -347,30 +341,29 @@ class ResizeInternalTest : public ResizeTest {
     if (change_config_) {
       int new_q = 60;
       if (video->frame() == 0) {
-        struct vpx_scaling_mode mode = {VP8E_ONETWO, VP8E_ONETWO};
+        struct vpx_scaling_mode mode = { VP8E_ONETWO, VP8E_ONETWO };
         encoder->Control(VP8E_SET_SCALEMODE, &mode);
       }
       if (video->frame() == 1) {
-        struct vpx_scaling_mode mode = {VP8E_NORMAL, VP8E_NORMAL};
+        struct vpx_scaling_mode mode = { VP8E_NORMAL, VP8E_NORMAL };
         encoder->Control(VP8E_SET_SCALEMODE, &mode);
         cfg_.rc_min_quantizer = cfg_.rc_max_quantizer = new_q;
         encoder->Config(&cfg_);
       }
     } else {
       if (video->frame() == kStepDownFrame) {
-        struct vpx_scaling_mode mode = {VP8E_FOURFIVE, VP8E_THREEFIVE};
+        struct vpx_scaling_mode mode = { VP8E_FOURFIVE, VP8E_THREEFIVE };
         encoder->Control(VP8E_SET_SCALEMODE, &mode);
       }
       if (video->frame() == kStepUpFrame) {
-        struct vpx_scaling_mode mode = {VP8E_NORMAL, VP8E_NORMAL};
+        struct vpx_scaling_mode mode = { VP8E_NORMAL, VP8E_NORMAL };
         encoder->Control(VP8E_SET_SCALEMODE, &mode);
       }
     }
   }
 
   virtual void PSNRPktHook(const vpx_codec_cx_pkt_t *pkt) {
-    if (!frame0_psnr_)
-      frame0_psnr_ = pkt->data.psnr.psnr[0];
+    if (frame0_psnr_ == 0.) frame0_psnr_ = pkt->data.psnr.psnr[0];
     EXPECT_NEAR(pkt->data.psnr.psnr[0], frame0_psnr_, 2.0);
   }
 
@@ -379,8 +372,7 @@ class ResizeInternalTest : public ResizeTest {
     ++out_frames_;
 
     // Write initial file header if first frame.
-    if (pkt->data.frame.pts == 0)
-      write_ivf_file_header(&cfg_, 0, outfile_);
+    if (pkt->data.frame.pts == 0) write_ivf_file_header(&cfg_, 0, outfile_);
 
     // Write frame header and data.
     write_ivf_frame_header(pkt, outfile_);
@@ -434,8 +426,9 @@ TEST_P(ResizeInternalTest, TestInternalResizeChangeConfig) {
   ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
 }
 
-class ResizeRealtimeTest : public ::libvpx_test::EncoderTest,
-  public ::libvpx_test::CodecTestWith2Params<libvpx_test::TestMode, int> {
+class ResizeRealtimeTest
+    : public ::libvpx_test::EncoderTest,
+      public ::libvpx_test::CodecTestWith2Params<libvpx_test::TestMode, int> {
  protected:
   ResizeRealtimeTest() : EncoderTest(GET_PARAM(0)) {}
   virtual ~ResizeRealtimeTest() {}
@@ -465,16 +458,13 @@ class ResizeRealtimeTest : public ::libvpx_test::EncoderTest,
     frame_info_list_.push_back(FrameInfo(pts, img.d_w, img.d_h));
   }
 
-  virtual void MismatchHook(const vpx_image_t *img1,
-                             const vpx_image_t *img2) {
+  virtual void MismatchHook(const vpx_image_t *img1, const vpx_image_t *img2) {
     double mismatch_psnr = compute_psnr(img1, img2);
     mismatch_psnr_ += mismatch_psnr;
     ++mismatch_nframes_;
   }
 
-  unsigned int GetMismatchFrames() {
-      return mismatch_nframes_;
-  }
+  unsigned int GetMismatchFrames() { return mismatch_nframes_; }
 
   void DefaultConfig() {
     cfg_.rc_buf_initial_sz = 500;
@@ -491,14 +481,14 @@ class ResizeRealtimeTest : public ::libvpx_test::EncoderTest,
     // Enable dropped frames.
     cfg_.rc_dropframe_thresh = 1;
     // Enable error_resilience mode.
-    cfg_.g_error_resilient  = 1;
+    cfg_.g_error_resilient = 1;
     // Enable dynamic resizing.
     cfg_.rc_resize_allowed = 1;
     // Run at low bitrate.
     cfg_.rc_target_bitrate = 200;
   }
 
-  std::vector< FrameInfo > frame_info_list_;
+  std::vector<FrameInfo> frame_info_list_;
   int set_cpu_used_;
   bool change_bitrate_;
   double mismatch_psnr_;
@@ -521,12 +511,12 @@ TEST_P(ResizeRealtimeTest, TestExternalResizeWorks) {
     const unsigned int frame = static_cast<unsigned>(info->pts);
     unsigned int expected_w;
     unsigned int expected_h;
-    ScaleForFrameNumber(frame, kInitialWidth, kInitialHeight,
-                        &expected_w, &expected_h, 1);
-    EXPECT_EQ(expected_w, info->w)
-        << "Frame " << frame << " had unexpected width";
-    EXPECT_EQ(expected_h, info->h)
-        << "Frame " << frame << " had unexpected height";
+    ScaleForFrameNumber(frame, kInitialWidth, kInitialHeight, &expected_w,
+                        &expected_h, 1);
+    EXPECT_EQ(expected_w, info->w) << "Frame " << frame
+                                   << " had unexpected width";
+    EXPECT_EQ(expected_h, info->h) << "Frame " << frame
+                                   << " had unexpected height";
     EXPECT_EQ(static_cast<unsigned int>(0), GetMismatchFrames());
   }
 }
@@ -618,10 +608,8 @@ TEST_P(ResizeRealtimeTest, TestInternalResizeDownUpChangeBitRate) {
 }
 
 vpx_img_fmt_t CspForFrameNumber(int frame) {
-  if (frame < 10)
-    return VPX_IMG_FMT_I420;
-  if (frame < 20)
-    return VPX_IMG_FMT_I444;
+  if (frame < 10) return VPX_IMG_FMT_I420;
+  if (frame < 20) return VPX_IMG_FMT_I444;
   return VPX_IMG_FMT_I420;
 }
 
@@ -629,10 +617,7 @@ class ResizeCspTest : public ResizeTest {
  protected:
 #if WRITE_COMPRESSED_STREAM
   ResizeCspTest()
-      : ResizeTest(),
-        frame0_psnr_(0.0),
-        outfile_(NULL),
-        out_frames_(0) {}
+      : ResizeTest(), frame0_psnr_(0.0), outfile_(NULL), out_frames_(0) {}
 #else
   ResizeCspTest() : ResizeTest(), frame0_psnr_(0.0) {}
 #endif
@@ -671,8 +656,7 @@ class ResizeCspTest : public ResizeTest {
   }
 
   virtual void PSNRPktHook(const vpx_codec_cx_pkt_t *pkt) {
-    if (!frame0_psnr_)
-      frame0_psnr_ = pkt->data.psnr.psnr[0];
+    if (frame0_psnr_ == 0.) frame0_psnr_ = pkt->data.psnr.psnr[0];
     EXPECT_NEAR(pkt->data.psnr.psnr[0], frame0_psnr_, 2.0);
   }
 
@@ -681,8 +665,7 @@ class ResizeCspTest : public ResizeTest {
     ++out_frames_;
 
     // Write initial file header if first frame.
-    if (pkt->data.frame.pts == 0)
-      write_ivf_file_header(&cfg_, 0, outfile_);
+    if (pkt->data.frame.pts == 0) write_ivf_file_header(&cfg_, 0, outfile_);
 
     // Write frame header and data.
     write_ivf_frame_header(pkt, outfile_);

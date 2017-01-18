@@ -25,9 +25,7 @@ typedef void (*CopyFrameFunc)(const YV12_BUFFER_CONFIG *src_ybf,
 
 class VpxScaleBase {
  public:
-  virtual ~VpxScaleBase() {
-    libvpx_test::ClearSystemState();
-  }
+  virtual ~VpxScaleBase() { libvpx_test::ClearSystemState(); }
 
   void ResetImage(int width, int height) {
     width_ = width;
@@ -105,28 +103,22 @@ class VpxScaleBase {
     }
 
     uint8_t *bottom = left + (crop_height * stride);
-    for (int y = 0; y <  bottom_extend; ++y) {
+    for (int y = 0; y < bottom_extend; ++y) {
       memcpy(bottom, left + (crop_height - 1) * stride, extend_width);
       bottom += stride;
     }
   }
 
   void ReferenceExtendBorder() {
-    ExtendPlane(ref_img_.y_buffer,
-                ref_img_.y_crop_width, ref_img_.y_crop_height,
-                ref_img_.y_width, ref_img_.y_height,
-                ref_img_.y_stride,
-                ref_img_.border);
-    ExtendPlane(ref_img_.u_buffer,
-                ref_img_.uv_crop_width, ref_img_.uv_crop_height,
-                ref_img_.uv_width, ref_img_.uv_height,
-                ref_img_.uv_stride,
-                ref_img_.border / 2);
-    ExtendPlane(ref_img_.v_buffer,
-                ref_img_.uv_crop_width, ref_img_.uv_crop_height,
-                ref_img_.uv_width, ref_img_.uv_height,
-                ref_img_.uv_stride,
-                ref_img_.border / 2);
+    ExtendPlane(ref_img_.y_buffer, ref_img_.y_crop_width,
+                ref_img_.y_crop_height, ref_img_.y_width, ref_img_.y_height,
+                ref_img_.y_stride, ref_img_.border);
+    ExtendPlane(ref_img_.u_buffer, ref_img_.uv_crop_width,
+                ref_img_.uv_crop_height, ref_img_.uv_width, ref_img_.uv_height,
+                ref_img_.uv_stride, ref_img_.border / 2);
+    ExtendPlane(ref_img_.v_buffer, ref_img_.uv_crop_width,
+                ref_img_.uv_crop_height, ref_img_.uv_width, ref_img_.uv_height,
+                ref_img_.uv_stride, ref_img_.border / 2);
   }
 
   void ReferenceCopyFrame() {
@@ -172,13 +164,9 @@ class ExtendBorderTest
   virtual ~ExtendBorderTest() {}
 
  protected:
-  virtual void SetUp() {
-    extend_fn_ = GetParam();
-  }
+  virtual void SetUp() { extend_fn_ = GetParam(); }
 
-  void ExtendBorder() {
-    ASM_REGISTER_STATE_CHECK(extend_fn_(&img_));
-  }
+  void ExtendBorder() { ASM_REGISTER_STATE_CHECK(extend_fn_(&img_)); }
 
   void RunTest() {
 #if ARCH_ARM
@@ -187,7 +175,7 @@ class ExtendBorderTest
 #else
     static const int kNumSizesToTest = 7;
 #endif
-    static const int kSizesToTest[] = {1, 15, 33, 145, 512, 1025, 16383};
+    static const int kSizesToTest[] = { 1, 15, 33, 145, 512, 1025, 16383 };
     for (int h = 0; h < kNumSizesToTest; ++h) {
       for (int w = 0; w < kNumSizesToTest; ++w) {
         ResetImage(kSizesToTest[w], kSizesToTest[h]);
@@ -202,23 +190,18 @@ class ExtendBorderTest
   ExtendFrameBorderFunc extend_fn_;
 };
 
-TEST_P(ExtendBorderTest, ExtendBorder) {
-  ASSERT_NO_FATAL_FAILURE(RunTest());
-}
+TEST_P(ExtendBorderTest, ExtendBorder) { ASSERT_NO_FATAL_FAILURE(RunTest()); }
 
 INSTANTIATE_TEST_CASE_P(C, ExtendBorderTest,
                         ::testing::Values(vp8_yv12_extend_frame_borders_c));
 
-class CopyFrameTest
-    : public VpxScaleBase,
-      public ::testing::TestWithParam<CopyFrameFunc> {
+class CopyFrameTest : public VpxScaleBase,
+                      public ::testing::TestWithParam<CopyFrameFunc> {
  public:
   virtual ~CopyFrameTest() {}
 
  protected:
-  virtual void SetUp() {
-    copy_frame_fn_ = GetParam();
-  }
+  virtual void SetUp() { copy_frame_fn_ = GetParam(); }
 
   void CopyFrame() {
     ASM_REGISTER_STATE_CHECK(copy_frame_fn_(&img_, &cpy_img_));
@@ -231,7 +214,7 @@ class CopyFrameTest
 #else
     static const int kNumSizesToTest = 7;
 #endif
-    static const int kSizesToTest[] = {1, 15, 33, 145, 512, 1025, 16383};
+    static const int kSizesToTest[] = { 1, 15, 33, 145, 512, 1025, 16383 };
     for (int h = 0; h < kNumSizesToTest; ++h) {
       for (int w = 0; w < kNumSizesToTest; ++w) {
         ResetImage(kSizesToTest[w], kSizesToTest[h]);
@@ -246,9 +229,7 @@ class CopyFrameTest
   CopyFrameFunc copy_frame_fn_;
 };
 
-TEST_P(CopyFrameTest, CopyFrame) {
-  ASSERT_NO_FATAL_FAILURE(RunTest());
-}
+TEST_P(CopyFrameTest, CopyFrame) { ASSERT_NO_FATAL_FAILURE(RunTest()); }
 
 INSTANTIATE_TEST_CASE_P(C, CopyFrameTest,
                         ::testing::Values(vp8_yv12_copy_frame_c));

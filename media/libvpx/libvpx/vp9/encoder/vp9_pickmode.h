@@ -20,15 +20,12 @@ extern "C" {
 void vp9_pick_intra_mode(VP9_COMP *cpi, MACROBLOCK *x, RD_COST *rd_cost,
                          BLOCK_SIZE bsize, PICK_MODE_CONTEXT *ctx);
 
-void vp9_pick_inter_mode(VP9_COMP *cpi, MACROBLOCK *x,
-                         TileDataEnc *tile_data,
+void vp9_pick_inter_mode(VP9_COMP *cpi, MACROBLOCK *x, TileDataEnc *tile_data,
                          int mi_row, int mi_col, RD_COST *rd_cost,
-                         BLOCK_SIZE bsize,
-                         PICK_MODE_CONTEXT *ctx);
+                         BLOCK_SIZE bsize, PICK_MODE_CONTEXT *ctx);
 
-void vp9_pick_inter_mode_sub8x8(VP9_COMP *cpi, MACROBLOCK *x,
-                                int mi_row, int mi_col, RD_COST *rd_cost,
-                                BLOCK_SIZE bsize,
+void vp9_pick_inter_mode_sub8x8(VP9_COMP *cpi, MACROBLOCK *x, int mi_row,
+                                int mi_col, RD_COST *rd_cost, BLOCK_SIZE bsize,
                                 PICK_MODE_CONTEXT *ctx);
 
 #ifdef __cplusplus

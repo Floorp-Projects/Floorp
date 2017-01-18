@@ -13,10 +13,6 @@ XPIDL_SOURCES += [
 
 EXPORTS += [
     'gmp-api/gmp-async-shutdown.h',
-    'gmp-api/gmp-audio-codec.h',
-    'gmp-api/gmp-audio-decode.h',
-    'gmp-api/gmp-audio-host.h',
-    'gmp-api/gmp-audio-samples.h',
     'gmp-api/gmp-decryption.h',
     'gmp-api/gmp-entrypoints.h',
     'gmp-api/gmp-errors.h',
@@ -30,10 +26,6 @@ EXPORTS += [
     'gmp-api/gmp-video-frame.h',
     'gmp-api/gmp-video-host.h',
     'gmp-api/gmp-video-plane.h',
-    'GMPAudioDecoderChild.h',
-    'GMPAudioDecoderParent.h',
-    'GMPAudioDecoderProxy.h',
-    'GMPAudioHost.h',
     'GMPCallbackBase.h',
     'GMPCDMCallbackProxy.h',
     'GMPCDMProxy.h',
@@ -85,9 +77,6 @@ if CONFIG['OS_ARCH'] == 'Linux':
     ]
 
 UNIFIED_SOURCES += [
-    'GMPAudioDecoderChild.cpp',
-    'GMPAudioDecoderParent.cpp',
-    'GMPAudioHost.cpp',
     'GMPCDMCallbackProxy.cpp',
     'GMPCDMProxy.cpp',
     'GMPChild.cpp',
@@ -130,7 +119,6 @@ DIRS += [
 IPDL_SOURCES += [
   'GMPTypes.ipdlh',
   'PGMP.ipdl',
-  'PGMPAudioDecoder.ipdl',
   'PGMPContent.ipdl',
   'PGMPDecryptor.ipdl',
   'PGMPService.ipdl',

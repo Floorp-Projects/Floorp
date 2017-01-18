@@ -16,10 +16,6 @@ VP8_CX_SRCS-no  += $(VP8_COMMON_SRCS-no)
 VP8_CX_SRCS_REMOVE-yes += $(VP8_COMMON_SRCS_REMOVE-yes)
 VP8_CX_SRCS_REMOVE-no  += $(VP8_COMMON_SRCS_REMOVE-no)
 
-ifeq ($(ARCH_ARM),yes)
-  include $(SRC_PATH_BARE)/$(VP8_PREFIX)vp8cx_arm.mk
-endif
-
 VP8_CX_SRCS-yes += vp8cx.mk
 
 VP8_CX_SRCS-yes += vp8_cx_iface.c
@@ -80,7 +76,6 @@ VP8_CX_SRCS_REMOVE-yes += encoder/firstpass.c
 VP8_CX_SRCS_REMOVE-yes += encoder/temporal_filter.c
 endif
 
-VP8_CX_SRCS-$(HAVE_MMX) += encoder/x86/dct_mmx.asm
 VP8_CX_SRCS-$(HAVE_MMX) += encoder/x86/vp8_enc_stubs_mmx.c
 VP8_CX_SRCS-$(HAVE_SSE2) += encoder/x86/dct_sse2.asm
 VP8_CX_SRCS-$(HAVE_SSE2) += encoder/x86/fwalsh_sse2.asm
@@ -100,6 +95,11 @@ VP8_CX_SRCS-$(ARCH_X86)$(ARCH_X86_64) += encoder/x86/encodeopt.asm
 ifeq ($(CONFIG_REALTIME_ONLY),yes)
 VP8_CX_SRCS_REMOVE-$(HAVE_SSE2) += encoder/x86/temporal_filter_apply_sse2.asm
 endif
+
+VP8_CX_SRCS-$(HAVE_NEON) += encoder/arm/neon/denoising_neon.c
+VP8_CX_SRCS-$(HAVE_NEON) += encoder/arm/neon/fastquantizeb_neon.c
+VP8_CX_SRCS-$(HAVE_NEON) += encoder/arm/neon/shortfdct_neon.c
+VP8_CX_SRCS-$(HAVE_NEON) += encoder/arm/neon/vp8_shortwalsh4x4_neon.c
 
 VP8_CX_SRCS-$(HAVE_MSA) += encoder/mips/msa/dct_msa.c
 VP8_CX_SRCS-$(HAVE_MSA) += encoder/mips/msa/encodeopt_msa.c

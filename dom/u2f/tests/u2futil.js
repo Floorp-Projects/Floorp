@@ -127,6 +127,27 @@ function hexDecode(str) {
   return new Uint8Array(str.match(/../g).map(x => parseInt(x, 16)));
 }
 
+function decodeU2FRegistration(aRegData) {
+  if (aRegData[0] != 0x05) {
+    return Promise.reject("Sentinal byte != 0x05");
+  }
+
+  let keyHandleLength = aRegData[66];
+  let u2fRegObj = {
+    publicKeyBytes: aRegData.slice(1, 66),
+    keyHandleBytes: aRegData.slice(67, 67 + keyHandleLength),
+    attestationBytes: aRegData.slice(67 + keyHandleLength)
+  }
+
+  u2fRegObj.keyHandle = bytesToBase64UrlSafe(u2fRegObj.keyHandleBytes);
+
+  return importPublicKey(u2fRegObj.publicKeyBytes)
+  .then(function(keyObj) {
+    u2fRegObj.publicKey = keyObj;
+    return u2fRegObj;
+  });
+}
+
 function importPublicKey(keyBytes) {
   if (keyBytes[0] != 0x04 || keyBytes.byteLength != 65) {
     throw "Bad public key octet string";
