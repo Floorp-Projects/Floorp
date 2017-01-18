@@ -7,7 +7,7 @@
   },
   "author": "",
   "dependencies": {
-    "devtools-local-toolbox": "0.0.12",
+    "devtools-launchpad": "0.0.24",
     "raw-loader": "^0.5.1",
     "json-loader": "^0.5.4"
   }
