@@ -21,9 +21,6 @@
 
 namespace mozilla {
 
-#undef DUMP_LOG
-#define DUMP_LOG(x, ...) NS_DebugBreak(NS_DEBUG_WARNING, nsPrintfCString(x, ##__VA_ARGS__).get(), nullptr, nullptr, -1)
-
 /*
  * A container class to make it easier to pass the playback info all the
  * way to DecodedStreamGraphListener from DecodedStream.
@@ -130,7 +127,7 @@ public:
   void SetPlaying(bool aPlaying);
   MediaEventSource<int64_t>& OnOutput();
   void Forget();
-  void DumpDebugInfo();
+  nsCString GetDebugInfo();
 
   /* The following group of fields are protected by the decoder's monitor
    * and can be read or written on any thread.
@@ -220,12 +217,12 @@ DecodedStreamData::Forget()
   mListener->Forget();
 }
 
-void
-DecodedStreamData::DumpDebugInfo()
+nsCString
+DecodedStreamData::GetDebugInfo()
 {
-  DUMP_LOG(
-    "DecodedStreamData=%p mPlaying=%d mAudioFramesWritten=%lld"
-    "mNextAudioTime=%lld mNextVideoTime=%lld mHaveSentFinish=%d"
+  return nsPrintfCString(
+    "DecodedStreamData=%p mPlaying=%d mAudioFramesWritten=%lld "
+    "mNextAudioTime=%lld mNextVideoTime=%lld mHaveSentFinish=%d "
     "mHaveSentFinishAudio=%d mHaveSentFinishVideo=%d",
     this, mPlaying, mAudioFramesWritten, mNextAudioTime, mNextVideoTime,
     mHaveSentFinish, mHaveSentFinishAudio, mHaveSentFinishVideo);
@@ -765,16 +762,14 @@ DecodedStream::DisconnectListener()
   mVideoFinishListener.Disconnect();
 }
 
-void
-DecodedStream::DumpDebugInfo()
+nsCString
+DecodedStream::GetDebugInfo()
 {
   AssertOwnerThread();
-  DUMP_LOG(
+  return nsPrintfCString(
     "DecodedStream=%p mStartTime=%lld mLastOutputTime=%lld mPlaying=%d mData=%p",
-    this, mStartTime.valueOr(-1), mLastOutputTime, mPlaying, mData.get());
-  if (mData) {
-    mData->DumpDebugInfo();
-  }
+    this, mStartTime.valueOr(-1), mLastOutputTime, mPlaying, mData.get())
+    + (mData ? nsCString("\n") + mData->GetDebugInfo() : nsCString());
 }
 
 } // namespace mozilla
