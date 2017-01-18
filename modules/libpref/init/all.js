@@ -808,6 +808,7 @@ pref("gfx.ycbcr.accurate-conversion", false);
 
 #ifdef MOZ_ENABLE_WEBRENDER
 pref("gfx.webrender.enabled", true);
+pref("layers.advanced.border-layers", false);
 #endif
 
 pref("accessibility.browsewithcaret", false);
