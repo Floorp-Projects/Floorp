@@ -144,6 +144,7 @@ WebRenderImageLayer::RenderLayer()
   Matrix4x4 transform;// = GetTransform();
   Maybe<WrImageMask> mask = buildMaskLayer();
   WrTextureFilter filter = (mSamplingFilter == gfx::SamplingFilter::POINT) ? WrTextureFilter::Point : WrTextureFilter::Linear;
+  WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
   WrBridge()->AddWebRenderCommand(
     OpDPPushStackingContext(wr::ToWrRect(relBounds),
@@ -151,6 +152,7 @@ WebRenderImageLayer::RenderLayer()
                             mask,
                             GetAnimations(),
                             transform,
+                            mixBlendMode,
                             FrameMetrics::NULL_SCROLL_ID));
   WrBridge()->AddWebRenderCommand(OpDPPushExternalImageId(LayerIntRegion(), wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), filter, mExternalImageId));
   WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());

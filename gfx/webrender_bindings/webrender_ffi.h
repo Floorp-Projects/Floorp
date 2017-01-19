@@ -178,6 +178,27 @@ struct WrExternalImageIdHandler {
   ReleaseExternalImageCallback release_func;
 };
 
+enum class WrMixBlendMode
+{
+    Normal,
+    Multiply,
+    Screen,
+    Overlay,
+    Darken,
+    Lighten,
+    ColorDodge,
+    ColorBurn,
+    HardLight,
+    SoftLight,
+    Difference,
+    Exclusion,
+    Hue,
+    Saturation,
+    Color,
+    Luminosity,
+    Sentinel,
+};
+
 struct WrWindowState;
 
 #ifdef MOZ_ENABLE_WEBRENDER
@@ -303,7 +324,7 @@ WR_FUNC;
 WR_INLINE void
 wr_dp_push_stacking_context(WrState *wrState, WrRect bounds,
                             WrRect overflow, const WrImageMask *mask,
-                            const float* matrix)
+                            const float* matrix, WrMixBlendMode mixBlendMode)
 WR_FUNC;
 
 //XXX: matrix should use a proper type

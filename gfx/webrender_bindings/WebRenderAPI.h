@@ -108,7 +108,8 @@ public:
   void PushStackingContext(const WrRect& aBounds, // TODO: We should work with strongly typed rects
                            const WrRect& aOverflow,
                            const WrImageMask* aMask, // TODO: needs a wrapper.
-                           const gfx::Matrix4x4& aTransform);
+                           const gfx::Matrix4x4& aTransform,
+                           const WrMixBlendMode& aMixBlendMode);
 
   void PopStackingContext();
 
