@@ -58,7 +58,12 @@ pub use winapi::{DWRITE_RENDERING_MODE_DEFAULT,
 pub use winapi::{DWRITE_MEASURING_MODE_NATURAL,
                  DWRITE_MEASURING_MODE_GDI_CLASSIC,
                  DWRITE_MEASURING_MODE_GDI_NATURAL};
+pub use winapi::{DWRITE_FONT_SIMULATIONS_NONE,
+                 DWRITE_FONT_SIMULATIONS_BOLD,
+                 DWRITE_FONT_SIMULATIONS_OBLIQUE};
 pub use winapi::{DWRITE_TEXTURE_ALIASED_1x1, DWRITE_TEXTURE_CLEARTYPE_3x1};
+
+#[macro_use] mod com_helpers;
 
 mod bitmap_render_target; pub use bitmap_render_target::BitmapRenderTarget;
 mod font; pub use font::Font;
@@ -69,6 +74,11 @@ mod font_file; pub use font_file::FontFile;
 mod gdi_interop; pub use gdi_interop::GdiInterop;
 mod rendering_params; pub use rendering_params::RenderingParams;
 mod glyph_run_analysis; pub use glyph_run_analysis::GlyphRunAnalysis;
+
+// This is an internal implementation of FontFileLoader, for our utility
+// functions.  We don't wrap the DWriteFontFileLoader interface and
+// related things.
+mod font_file_loader_impl;
 
 DEFINE_GUID!{UuidOfIDWriteFactory, 0xb859ee5a, 0xd838, 0x4b5b, 0xa2, 0xe8, 0x1a, 0xdc, 0x7d, 0x93, 0xdb, 0x48}
 

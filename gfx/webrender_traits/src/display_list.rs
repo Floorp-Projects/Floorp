@@ -9,7 +9,7 @@ use {AuxiliaryLists, AuxiliaryListsDescriptor, BorderDisplayItem, BorderRadius};
 use {BorderSide, BoxShadowClipMode, BoxShadowDisplayItem, BuiltDisplayList};
 use {BuiltDisplayListDescriptor, ClipRegion, ComplexClipRegion, ColorF};
 use {DisplayItem, DisplayListMode, FilterOp, YuvColorSpace};
-use {FontKey, GlyphInstance, GradientDisplayItem, GradientStop, IframeDisplayItem};
+use {FontKey, GlyphInstance, GradientDisplayItem, RadialGradientDisplayItem, GradientStop, IframeDisplayItem};
 use {ImageDisplayItem, ImageKey, ImageMask, ImageRendering, ItemRange, MixBlendMode, PipelineId};
 use {PushScrollLayerItem, PushStackingContextDisplayItem, RectangleDisplayItem, ScrollLayerId};
 use {ScrollPolicy, ServoScrollRootId, SpecificDisplayItem, StackingContext, TextDisplayItem};
@@ -248,6 +248,31 @@ impl DisplayListBuilder {
 
         let display_item = DisplayItem {
             item: SpecificDisplayItem::Gradient(item),
+            rect: rect,
+            clip: clip,
+        };
+
+        self.list.push(display_item);
+    }
+
+    pub fn push_radial_gradient(&mut self,
+                                rect: LayoutRect,
+                                clip: ClipRegion,
+                                start_center: LayoutPoint,
+                                start_radius: f32,
+                                end_center: LayoutPoint,
+                                end_radius: f32,
+                                stops: Vec<GradientStop>) {
+        let item = RadialGradientDisplayItem {
+            start_center: start_center,
+            start_radius: start_radius,
+            end_center: end_center,
+            end_radius: end_radius,
+            stops: self.auxiliary_lists_builder.add_gradient_stops(&stops),
+        };
+
+        let display_item = DisplayItem {
+            item: SpecificDisplayItem::RadialGradient(item),
             rect: rect,
             clip: clip,
         };

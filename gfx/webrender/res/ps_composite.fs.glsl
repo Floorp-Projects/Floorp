@@ -168,6 +168,9 @@ void main(void) {
     vec4 result = vec4(1.0, 1.0, 0.0, 1.0);
 
     switch (vOp) {
+        case 1:
+            result.rgb = Multiply(Cb.rgb, Cs.rgb);
+            break;
         case 2:
             result.rgb = Screen(Cb.rgb, Cs.rgb);
             break;

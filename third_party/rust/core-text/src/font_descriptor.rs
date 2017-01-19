@@ -42,6 +42,7 @@ pub const kCTFontCondensedTrait: CTFontSymbolicTraits = (1 << 6);
 pub const kCTFontMonoSpaceTrait: CTFontSymbolicTraits = (1 << 10);
 pub const kCTFontVerticalTrait: CTFontSymbolicTraits = (1 << 11);
 pub const kCTFontUIOptimizedTrait: CTFontSymbolicTraits = (1 << 12);
+pub const kCTFontColorGlyphsTrait: CTFontSymbolicTraits = (1 << 13);
 pub const kCTFontClassMaskTrait: CTFontSymbolicTraits = (15 << kCTFontClassMaskShift );
 
 pub trait SymbolicTraitAccessors {

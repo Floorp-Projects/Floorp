@@ -43,7 +43,9 @@ fn main() {
     for entry in read_dir(res_dir).unwrap() {
         let entry = entry.unwrap();
         let path = entry.path();
+
         if entry.file_name().to_str().unwrap().ends_with(".glsl") {
+            println!("cargo:rerun-if-changed={}", path.display());
             glsl_files.push(path.to_owned());
         }
     }
