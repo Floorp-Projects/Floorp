@@ -208,10 +208,6 @@ this.configureIdentity = async function(identityOverrides, server) {
   let ns = {};
   Cu.import("resource://services-sync/service.js", ns);
 
-  if (server) {
-    ns.Service.serverURL = server.baseURI;
-  }
-
   // If a server was specified, ensure FxA has a correct cluster URL available.
   if (server && !config.fxaccount.token.endpoint) {
     let ep = server.baseURI;

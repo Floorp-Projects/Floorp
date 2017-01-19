@@ -10,7 +10,6 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 add_task(async function test_urls() {
   _("URL related Service properties correspond to preference settings.");
   try {
-    do_check_true(!!Service.serverURL); // actual value may change
     do_check_eq(Service.clusterURL, "");
     do_check_false(Service.userBaseURL);
     do_check_eq(Service.infoURL, undefined);
@@ -25,7 +24,6 @@ add_task(async function test_urls() {
     do_check_eq(Service.storageURL, undefined);
     do_check_eq(Service.metaURL, undefined);
 
-    Service.serverURL = "http://weave.server/";
     Service.clusterURL = "http://weave.cluster/1.1/johndoe/";
 
     do_check_eq(Service.userBaseURL, "http://weave.cluster/1.1/johndoe/");
@@ -35,23 +33,6 @@ add_task(async function test_urls() {
                 "http://weave.cluster/1.1/johndoe/storage/");
     do_check_eq(Service.metaURL,
                 "http://weave.cluster/1.1/johndoe/storage/meta/global");
-
-    _("The 'miscURL' attribute can be relative to 'serverURL' or absolute.");
-    Svc.Prefs.set("miscURL", "relative/misc/");
-    do_check_eq(Service.miscAPI,
-                "http://weave.server/relative/misc/1.0/");
-
-    Svc.Prefs.set("miscURL", "http://weave.misc.services/");
-    do_check_eq(Service.miscAPI, "http://weave.misc.services/1.0/");
-
-    do_check_eq(Service.pwResetURL,
-                "http://weave.server/weave-password-reset");
-
-    _("The 'serverURL' attributes updates/resets preferences.");
-
-    Service.serverURL = "http://different.auth.node/";
-    do_check_eq(Svc.Prefs.get("serverURL"), "http://different.auth.node/");
-    do_check_eq(Service.clusterURL, "");
 
   } finally {
     Svc.Prefs.resetBranch("");

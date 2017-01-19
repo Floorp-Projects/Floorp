@@ -87,7 +87,6 @@ add_task(async function test_basic() {
 
   let server = httpd_setup(handlers);
   await configureIdentity({ username: "johndoe" }, server);
-  Service.serverURL = server.baseURI;
 
   await sync_and_validate_telem(true);
 

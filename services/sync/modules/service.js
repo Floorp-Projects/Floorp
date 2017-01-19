@@ -68,24 +68,6 @@ Sync11Service.prototype = {
   // world is ebbedded in the token returned from the token server.
   _clusterURL: null,
 
-  get serverURL() {
-    return Svc.Prefs.get("serverURL");
-  },
-  set serverURL(value) {
-    if (!value.endsWith("/")) {
-      value += "/";
-    }
-
-    // Only do work if it's actually changing
-    if (value == this.serverURL)
-      return;
-
-    Svc.Prefs.set("serverURL", value);
-
-    // A new server most likely uses a different cluster, so clear that.
-    this._clusterURL = null;
-  },
-
   get clusterURL() {
     return this._clusterURL || "";
   },
@@ -95,18 +77,6 @@ Sync11Service.prototype = {
     }
     this._clusterURL = value;
     this._updateCachedURLs();
-  },
-
-  get miscAPI() {
-    // Append to the serverURL if it's a relative fragment
-    let misc = Svc.Prefs.get("miscURL");
-    if (misc.indexOf(":") == -1)
-      misc = this.serverURL + misc;
-    return misc + MISC_API_VERSION + "/";
-  },
-
-  get pwResetURL() {
-    return this.serverURL + "weave-password-reset";
   },
 
   get syncID() {
