@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global content */
+/* eslint-disable no-use-before-define */
 
 /*
  * Form Autofill frame script.
@@ -230,17 +230,16 @@ AutofillProfileAutoCompleteSearch.prototype = {
    */
   startSearch(searchString, searchParam, previousResult, listener) {
     this.forceStop = false;
-    let inputInfo;
+    let info = this.getInputDetails();
 
-    this.getInputInfo().then((info) => {
-      inputInfo = info;
-      return this.getProfiles({info, searchString});
-    }).then((profiles) => {
+    this.getProfiles({info, searchString}).then((profiles) => {
       if (this.forceStop) {
         return;
       }
 
-      let result = new ProfileAutoCompleteResult(searchString, inputInfo, profiles, {});
+      // TODO: Set formInfo for ProfileAutoCompleteResult
+      // let formInfo = this.getFormDetails();
+      let result = new ProfileAutoCompleteResult(searchString, info, profiles, {});
 
       listener.onSearchResult(this, result);
     });
@@ -279,19 +278,25 @@ AutofillProfileAutoCompleteSearch.prototype = {
 
 
   /**
-   * Get the input's information from FormAutofill heuristics.
+   * Get the input's information from FormAutofillContent's cache.
    *
-   * @returns {Promise}
-   *          Promise that resolves when profiles returned from heuristics getInfo API.
+   * @returns {Object}
+   *          Target input's information that cached in FormAutofillContent.
    */
-  getInputInfo() {
-    let input = formFillController.getFocusedInput();
+  getInputDetails() {
+    // TODO: Maybe we'll need to wait for cache ready if detail is empty.
+    return FormAutofillContent.getInputDetails(formFillController.getFocusedInput());
+  },
 
-    // It could be synchronous API since FormAutofillHeuristics.getInfo is still
-    // not in parent process yet.
-    return new Promise((resolve) => {
-      resolve(FormAutofillHeuristics.getInfo(input));
-    });
+  /**
+   * Get the form's information from FormAutofillContent's cache.
+   *
+   * @returns {Array<Object>}
+   *          Array of the inputs' information for the target form.
+   */
+  getFormDetails() {
+    // TODO: Maybe we'll need to wait for cache ready if details is empty.
+    return FormAutofillContent.getFormDetails(formFillController.getFocusedInput());
   },
 };
 
@@ -350,11 +355,69 @@ var FormAutofillContent = {
     }
   },
 
+  /**
+   * Get the input's information from cache which is created after page identified.
+   *
+   * @param {HTMLInputElement} element Focused input which triggered profile searching
+   * @returns {Object|null}
+   *          Return target input's information that cloned from content cache
+   *          (or return null if the information is not found in the cache).
+   */
+  getInputDetails(element) {
+    for (let formDetails of this._formsDetails) {
+      for (let detail of formDetails) {
+        if (element == detail.element) {
+          return this._serializeInfo(detail);
+        }
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Get the form's information from cache which is created after page identified.
+   *
+   * @param {HTMLInputElement} element Focused input which triggered profile searching
+   * @returns {Array<Object>|null}
+   *          Return target form's information that cloned from content cache
+   *          (or return null if the information is not found in the cache).
+   *
+   */
+  getFormDetails(element) {
+    for (let formDetails of this._formsDetails) {
+      if (formDetails.some((detail) => detail.element == element)) {
+        return formDetails.map((detail) => this._serializeInfo(detail));
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Create a clone the information object without element reference.
+   *
+   * @param {Object} detail Profile autofill information for specific input.
+   * @returns {Object}
+   *          Return a copy of cached information object without element reference
+   *          since it's not needed for creating result.
+   */
+  _serializeInfo(detail) {
+    let info = Object.assign({}, detail);
+    delete info.element;
+    return info;
+  },
+
   _identifyAutofillFields(doc) {
     let forms = [];
+    this._formsDetails = [];
 
     // Collects root forms from inputs.
     for (let field of doc.getElementsByTagName("input")) {
+      // We only consider text-like fields for now until we support radio and
+      // checkbox buttons in the future.
+      if (!field.mozIsTextField(true)) {
+        continue;
+      }
+
       let formLike = FormLikeFactory.createFromField(field);
       if (!forms.some(form => form.rootElement === formLike.rootElement)) {
         forms.push(formLike);
@@ -370,6 +433,7 @@ var FormAutofillContent = {
         return;
       }
 
+      this._formsDetails.push(formHandler.fieldDetails);
       formHandler.fieldDetails.forEach(
         detail => this._markAsAutofillField(detail.element));
     });
