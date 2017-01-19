@@ -2316,12 +2316,31 @@ const JSPropertySpec CloneBufferObject::props_[] = {
     JS_PS_END
 };
 
+static mozilla::Maybe<JS::StructuredCloneScope>
+ParseCloneScope(JSContext* cx, HandleString str)
+{
+    mozilla::Maybe<JS::StructuredCloneScope> scope;
+
+    JSAutoByteString scopeStr(cx, str);
+    if (!scopeStr)
+        return scope;
+
+    if (strcmp(scopeStr.ptr(), "SameProcessSameThread") == 0)
+        scope.emplace(JS::StructuredCloneScope::SameProcessSameThread);
+    else if (strcmp(scopeStr.ptr(), "SameProcessDifferentThread") == 0)
+        scope.emplace(JS::StructuredCloneScope::SameProcessDifferentThread);
+    else if (strcmp(scopeStr.ptr(), "DifferentProcess") == 0)
+        scope.emplace(JS::StructuredCloneScope::DifferentProcess);
+
+    return scope;
+}
+
 static bool
 Serialize(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    JSAutoStructuredCloneBuffer clonebuf(JS::StructuredCloneScope::SameProcessSameThread, nullptr, nullptr);
+    mozilla::Maybe<JSAutoStructuredCloneBuffer> clonebuf;
     JS::CloneDataPolicy policy;
 
     if (!args.get(2).isUndefined()) {
@@ -2350,12 +2369,30 @@ Serialize(JSContext* cx, unsigned argc, Value* vp)
                 return false;
             }
         }
+
+        if (!JS_GetProperty(cx, opts, "scope", &v))
+            return false;
+
+        if (!v.isUndefined()) {
+            RootedString str(cx, JS::ToString(cx, v));
+            if (!str)
+                return false;
+            auto scope = ParseCloneScope(cx, str);
+            if (!scope) {
+                JS_ReportErrorASCII(cx, "Invalid structured clone scope");
+                return false;
+            }
+            clonebuf.emplace(*scope, nullptr, nullptr);
+        }
     }
 
-    if (!clonebuf.write(cx, args.get(0), args.get(1), policy))
+    if (!clonebuf)
+        clonebuf.emplace(JS::StructuredCloneScope::SameProcessSameThread, nullptr, nullptr);
+
+    if (!clonebuf->write(cx, args.get(0), args.get(1), policy))
         return false;
 
-    RootedObject obj(cx, CloneBufferObject::Create(cx, &clonebuf));
+    RootedObject obj(cx, CloneBufferObject::Create(cx, clonebuf.ptr()));
     if (!obj)
         return false;
 
@@ -2368,14 +2405,33 @@ Deserialize(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (args.length() != 1 || !args[0].isObject()) {
-        JS_ReportErrorASCII(cx, "deserialize requires a single clonebuffer argument");
+    if (!args.get(0).isObject() || !args[0].toObject().is<CloneBufferObject>()) {
+        JS_ReportErrorASCII(cx, "deserialize requires a clonebuffer argument");
         return false;
     }
 
-    if (!args[0].toObject().is<CloneBufferObject>()) {
-        JS_ReportErrorASCII(cx, "deserialize requires a clonebuffer");
-        return false;
+    JS::StructuredCloneScope scope = JS::StructuredCloneScope::SameProcessSameThread;
+    if (args.get(1).isObject()) {
+        RootedObject opts(cx, &args[1].toObject());
+        if (!opts)
+            return false;
+
+        RootedValue v(cx);
+        if (!JS_GetProperty(cx, opts, "scope", &v))
+            return false;
+
+        if (!v.isUndefined()) {
+            RootedString str(cx, JS::ToString(cx, v));
+            if (!str)
+                return false;
+            auto maybeScope = ParseCloneScope(cx, str);
+            if (!maybeScope) {
+                JS_ReportErrorASCII(cx, "Invalid structured clone scope");
+                return false;
+            }
+
+            scope = *maybeScope;
+        }
     }
 
     Rooted<CloneBufferObject*> obj(cx, &args[0].toObject().as<CloneBufferObject>());
@@ -2394,8 +2450,9 @@ Deserialize(JSContext* cx, unsigned argc, Value* vp)
     RootedValue deserialized(cx);
     if (!JS_ReadStructuredClone(cx, *obj->data(),
                                 JS_STRUCTURED_CLONE_VERSION,
-                                JS::StructuredCloneScope::SameProcessSameThread,
-                                &deserialized, nullptr, nullptr)) {
+                                scope,
+                                &deserialized, nullptr, nullptr))
+    {
         return false;
     }
     args.rval().set(deserialized);
@@ -4415,15 +4472,22 @@ gc::ZealModeHelpText),
     JS_FN_HELP("serialize", Serialize, 1, 0,
 "serialize(data, [transferables, [policy]])",
 "  Serialize 'data' using JS_WriteStructuredClone. Returns a structured\n"
-"  clone buffer object. 'policy' must be an object. The following keys'\n"
-"  string values will be used to determine whether the corresponding types\n"
-"  may be serialized (value 'allow', the default) or not (value 'deny').\n"
-"  If denied types are encountered a TypeError will be thrown during cloning.\n"
-"  Valid keys: 'SharedArrayBuffer'."),
+"  clone buffer object. 'policy' may be an options hash. Valid keys:\n"
+"    'SharedArrayBuffer' - either 'allow' (the default) or 'deny'\n"
+"    to specify whether SharedArrayBuffers may be serialized.\n"
+"\n"
+"    'scope' - SameProcessSameThread, SameProcessDifferentThread, or\n"
+"    DifferentProcess. Determines how some values will be serialized.\n"
+"    Clone buffers may only be deserialized with a compatible scope."),
 
     JS_FN_HELP("deserialize", Deserialize, 1, 0,
-"deserialize(clonebuffer)",
-"  Deserialize data generated by serialize."),
+"deserialize(clonebuffer[, opts])",
+"  Deserialize data generated by serialize. 'opts' is an options hash with one\n"
+"  recognized key 'scope', which limits the clone buffers that are considered\n"
+"  valid. Allowed values: 'SameProcessSameThread', 'SameProcessDifferentThread',\n"
+"  and 'DifferentProcess'. So for example, a DifferentProcess clone buffer\n"
+"  may be deserialized in any scope, but a SameProcessSameThread clone buffer\n"
+"  cannot be deserialized in a DifferentProcess scope."),
 
     JS_FN_HELP("detachArrayBuffer", DetachArrayBuffer, 1, 0,
 "detachArrayBuffer(buffer)",
