@@ -1884,7 +1884,7 @@ nsIFrame::DisplayCaret(nsDisplayListBuilder* aBuilder,
 nscolor
 nsIFrame::GetCaretColorAt(int32_t aOffset)
 {
-  return StyleColor()->CalcComplexColor(StyleUserInterface()->mCaretColor);
+  return nsLayoutUtils::GetColor(this, &nsStyleUserInterface::mCaretColor);
 }
 
 bool
