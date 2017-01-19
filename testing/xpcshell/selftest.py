@@ -301,12 +301,22 @@ function run_test() {
 
   // Cleanup tasks, in reverse order
   do_register_cleanup(function cleanup_checkout() {
-    do_check_eq(checkpoints.join(""), "1234");
+    do_check_eq(checkpoints.join(""), "123456");
     do_print("At this stage, the test has succeeded");
     do_throw("Throwing an error to force displaying the log");
   });
 
   do_register_cleanup(function sync_cleanup_2() {
+    checkpoints.push(6);
+  });
+
+  do_register_cleanup(async function async_cleanup_4() {
+    await undefined;
+    checkpoints.push(5);
+  });
+
+  do_register_cleanup(function* async_cleanup_3() {
+    yield undefined;
     checkpoints.push(4);
   });
 
@@ -1184,13 +1194,12 @@ add_test({
 
     def testAsyncCleanup(self):
         """
-        Check that do_register_cleanup handles nicely cleanup tasks that
-        return a promise
+        Check that do_register_cleanup handles nicely async cleanup tasks
         """
         self.writeFile("test_asyncCleanup.js", ASYNC_CLEANUP)
         self.writeManifest(["test_asyncCleanup.js"])
         self.assertTestResult(False)
-        self.assertInLog("\"1234\" == \"1234\"")
+        self.assertInLog("\"123456\" == \"123456\"")
         self.assertInLog("At this stage, the test has succeeded")
         self.assertInLog("Throwing an error to force displaying the log")
 

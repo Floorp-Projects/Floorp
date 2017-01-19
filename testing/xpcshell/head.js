@@ -23,6 +23,7 @@ _register_modules_protocol_handler();
 
 var _Promise = Components.utils.import("resource://gre/modules/Promise.jsm", {}).Promise;
 var _PromiseTestUtils = Components.utils.import("resource://testing-common/PromiseTestUtils.jsm", {}).PromiseTestUtils;
+var _Task = Components.utils.import("resource://gre/modules/Task.jsm", {}).Task;
 Components.utils.importGlobalProperties(["XMLHttpRequest"]);
 
 // Support a common assertion library, Assert.jsm.
@@ -597,27 +598,22 @@ function _execute_test() {
                       });
   };
 
-  let func;
-  while ((func = _cleanupFunctions.pop())) {
-    let result;
-    try {
-      result = func();
-    } catch (ex) {
-      reportCleanupError(ex);
-      continue;
-    }
-    if (result && typeof result == "object"
-        && "then" in result && typeof result.then == "function") {
-      // This is a promise, wait until it is satisfied before proceeding
-      let complete = false;
-      let promise = result.then(null, reportCleanupError);
-      promise = promise.then(() => complete = true);
-      let thr = Components.classes["@mozilla.org/thread-manager;1"]
-                  .getService().currentThread;
-      while (!complete) {
-        thr.processNextEvent(true);
+  let complete = _cleanupFunctions.length == 0;
+  _Task.spawn(function*() {
+    for (let func of _cleanupFunctions.reverse()) {
+      try {
+        yield func();
+      } catch (ex) {
+        reportCleanupError(ex);
       }
     }
+    _cleanupFunctions = [];
+  }.bind(this)).catch(reportCleanupError)
+               .then(() => complete = true);
+  let thr = Components.classes["@mozilla.org/thread-manager;1"]
+                      .getService().currentThread;
+  while (!complete) {
+    thr.processNextEvent(true);
   }
 
   // Restore idle service to avoid leaks.
@@ -1515,7 +1511,6 @@ function add_task(funcOrProperties, func) {
 add_task.only = _add_only.bind(undefined, add_task);
 add_task.skip = _add_skip.bind(undefined, add_task);
 
-var _Task = Components.utils.import("resource://gre/modules/Task.jsm", {}).Task;
 _Task.Debugging.maintainStack = true;
 
 
