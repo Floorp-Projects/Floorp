@@ -12,6 +12,7 @@
 #include <string.h>
 #include "cubeb/cubeb.h"
 #include "cubeb-internal.h"
+#include "cubeb_mixer.h"
 #include <stdio.h>
 
 #ifdef DISABLE_LIBPULSE_DLOPEN
@@ -20,7 +21,7 @@
 #define WRAP(x) cubeb_##x
 #define LIBPULSE_API_VISIT(X)                   \
   X(pa_channel_map_can_balance)                 \
-  X(pa_channel_map_init_auto)                   \
+  X(pa_channel_map_init)                        \
   X(pa_context_connect)                         \
   X(pa_context_disconnect)                      \
   X(pa_context_drain)                           \
@@ -468,6 +469,113 @@ stream_update_timing_info(cubeb_stream * stm)
   return r;
 }
 
+static pa_channel_position_t
+cubeb_channel_to_pa_channel(cubeb_channel channel)
+{
+  assert(channel != CHANNEL_INVALID);
+
+  // This variable may be used for multiple times, so we should avoid to
+  // allocate it in stack, or it will be created and removed repeatedly.
+  // Use static to allocate this local variable in data space instead of stack.
+  static pa_channel_position_t map[CHANNEL_MAX] = {
+    // PA_CHANNEL_POSITION_INVALID,      // CHANNEL_INVALID
+    PA_CHANNEL_POSITION_MONO,         // CHANNEL_MONO
+    PA_CHANNEL_POSITION_FRONT_LEFT,   // CHANNEL_LEFT
+    PA_CHANNEL_POSITION_FRONT_RIGHT,  // CHANNEL_RIGHT
+    PA_CHANNEL_POSITION_FRONT_CENTER, // CHANNEL_CENTER
+    PA_CHANNEL_POSITION_SIDE_LEFT,    // CHANNEL_LS
+    PA_CHANNEL_POSITION_SIDE_RIGHT,   // CHANNEL_RS
+    PA_CHANNEL_POSITION_REAR_LEFT,    // CHANNEL_RLS
+    PA_CHANNEL_POSITION_REAR_CENTER,  // CHANNEL_RCENTER
+    PA_CHANNEL_POSITION_REAR_RIGHT,   // CHANNEL_RRS
+    PA_CHANNEL_POSITION_LFE           // CHANNEL_LFE
+  };
+
+  return map[channel];
+}
+
+static cubeb_channel
+pa_channel_to_cubeb_channel(pa_channel_position_t channel)
+{
+  assert(channel != PA_CHANNEL_POSITION_INVALID);
+  switch(channel) {
+    case PA_CHANNEL_POSITION_MONO: return CHANNEL_MONO;
+    case PA_CHANNEL_POSITION_FRONT_LEFT: return CHANNEL_LEFT;
+    case PA_CHANNEL_POSITION_FRONT_RIGHT: return CHANNEL_RIGHT;
+    case PA_CHANNEL_POSITION_FRONT_CENTER: return CHANNEL_CENTER;
+    case PA_CHANNEL_POSITION_SIDE_LEFT: return CHANNEL_LS;
+    case PA_CHANNEL_POSITION_SIDE_RIGHT: return CHANNEL_RS;
+    case PA_CHANNEL_POSITION_REAR_LEFT: return CHANNEL_RLS;
+    case PA_CHANNEL_POSITION_REAR_CENTER: return CHANNEL_RCENTER;
+    case PA_CHANNEL_POSITION_REAR_RIGHT: return CHANNEL_RRS;
+    case PA_CHANNEL_POSITION_LFE: return CHANNEL_LFE;
+    default: return CHANNEL_INVALID;
+  }
+}
+
+static void
+layout_to_channel_map(cubeb_channel_layout layout, pa_channel_map * cm)
+{
+  assert(cm && layout != CUBEB_LAYOUT_UNDEFINED);
+
+  WRAP(pa_channel_map_init)(cm);
+  cm->channels = CUBEB_CHANNEL_LAYOUT_MAPS[layout].channels;
+  for (uint8_t i = 0 ; i < cm->channels ; ++i) {
+    cm->map[i] = cubeb_channel_to_pa_channel(CHANNEL_INDEX_TO_ORDER[layout][i]);
+  }
+}
+
+// DUAL_MONO(_LFE) is same as STEREO(_LFE).
+#define MASK_MONO         (1 << CHANNEL_MONO)
+#define MASK_MONO_LFE     (MASK_MONO | (1 << CHANNEL_LFE))
+#define MASK_STEREO       ((1 << CHANNEL_LEFT) | (1 << CHANNEL_RIGHT))
+#define MASK_STEREO_LFE   (MASK_STEREO | (1 << CHANNEL_LFE))
+#define MASK_3F           (MASK_STEREO | (1 << CHANNEL_CENTER))
+#define MASK_3F_LFE       (MASK_3F | (1 << CHANNEL_LFE))
+#define MASK_2F1          (MASK_STEREO | (1 << CHANNEL_RCENTER))
+#define MASK_2F1_LFE      (MASK_2F1 | (1 << CHANNEL_LFE))
+#define MASK_3F1          (MASK_3F | (1 << CHANNEL_RCENTER))
+#define MASK_3F1_LFE      (MASK_3F1 | (1 << CHANNEL_LFE))
+#define MASK_2F2          (MASK_STEREO | (1 << CHANNEL_LS) | (1 << CHANNEL_RS))
+#define MASK_2F2_LFE      (MASK_2F2 | (1 << CHANNEL_LFE))
+#define MASK_3F2          (MASK_2F2 | (1 << CHANNEL_CENTER))
+#define MASK_3F2_LFE      (MASK_3F2 | (1 << CHANNEL_LFE))
+#define MASK_3F3R_LFE     (MASK_3F2_LFE | (1 << CHANNEL_RCENTER))
+#define MASK_3F4_LFE      (MASK_3F2_LFE | (1 << CHANNEL_RLS) | (1 << CHANNEL_RRS))
+
+static cubeb_channel_layout
+channel_map_to_layout(pa_channel_map * cm)
+{
+  uint32_t channel_mask = 0;
+  for (uint8_t i = 0 ; i < cm->channels ; ++i) {
+    cubeb_channel channel = pa_channel_to_cubeb_channel(cm->map[i]);
+    if (channel == CHANNEL_INVALID) {
+      return CUBEB_LAYOUT_UNDEFINED;
+    }
+    channel_mask |= 1 << channel;
+  }
+
+  switch(channel_mask) {
+    case MASK_MONO: return CUBEB_LAYOUT_MONO;
+    case MASK_MONO_LFE: return CUBEB_LAYOUT_MONO_LFE;
+    case MASK_STEREO: return CUBEB_LAYOUT_STEREO;
+    case MASK_STEREO_LFE: return CUBEB_LAYOUT_STEREO_LFE;
+    case MASK_3F: return CUBEB_LAYOUT_3F;
+    case MASK_3F_LFE: return CUBEB_LAYOUT_3F_LFE;
+    case MASK_2F1: return CUBEB_LAYOUT_2F1;
+    case MASK_2F1_LFE: return CUBEB_LAYOUT_2F1_LFE;
+    case MASK_3F1: return CUBEB_LAYOUT_3F1;
+    case MASK_3F1_LFE: return CUBEB_LAYOUT_3F1_LFE;
+    case MASK_2F2: return CUBEB_LAYOUT_2F2;
+    case MASK_2F2_LFE: return CUBEB_LAYOUT_2F2_LFE;
+    case MASK_3F2: return CUBEB_LAYOUT_3F2;
+    case MASK_3F2_LFE: return CUBEB_LAYOUT_3F2_LFE;
+    case MASK_3F3R_LFE: return CUBEB_LAYOUT_3F3R_LFE;
+    case MASK_3F4_LFE: return CUBEB_LAYOUT_3F4_LFE;
+    default: return CUBEB_LAYOUT_UNDEFINED;
+  }
+}
+
 static void pulse_context_destroy(cubeb * ctx);
 static void pulse_destroy(cubeb * ctx);
 
@@ -597,6 +705,23 @@ pulse_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
 }
 
 static int
+pulse_get_preferred_channel_layout(cubeb * ctx, cubeb_channel_layout * layout)
+{
+  assert(ctx && layout);
+  (void)ctx;
+
+  WRAP(pa_threaded_mainloop_lock)(ctx->mainloop);
+  while (!ctx->default_sink_info) {
+    WRAP(pa_threaded_mainloop_wait)(ctx->mainloop);
+  }
+  WRAP(pa_threaded_mainloop_unlock)(ctx->mainloop);
+
+  *layout = channel_map_to_layout(&ctx->default_sink_info->channel_map);
+
+  return CUBEB_OK;
+}
+
+static int
 pulse_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_frames)
 {
   (void)ctx;
@@ -672,7 +797,8 @@ create_pa_stream(cubeb_stream * stm,
                  cubeb_stream_params * stream_params,
                  char const * stream_name)
 {
-  assert(stm && stream_params);
+  assert(stm && stream_params && stream_params->layout != CUBEB_LAYOUT_UNDEFINED &&
+         CUBEB_CHANNEL_LAYOUT_MAPS[stream_params->layout].channels == stream_params->channels);
   *pa_stm = NULL;
   pa_sample_spec ss;
   ss.format = to_pulse_format(stream_params->format);
@@ -681,7 +807,10 @@ create_pa_stream(cubeb_stream * stm,
   ss.rate = stream_params->rate;
   ss.channels = stream_params->channels;
 
-  *pa_stm = WRAP(pa_stream_new)(stm->context->context, stream_name, &ss, NULL);
+  pa_channel_map cm;
+  layout_to_channel_map(stream_params->layout, &cm);
+
+  *pa_stm = WRAP(pa_stream_new)(stm->context->context, stream_name, &ss, &cm);
   return (*pa_stm == NULL) ? CUBEB_ERROR : CUBEB_OK;
 }
 
@@ -1410,6 +1539,7 @@ static struct cubeb_ops const pulse_ops = {
   .get_max_channel_count = pulse_get_max_channel_count,
   .get_min_latency = pulse_get_min_latency,
   .get_preferred_sample_rate = pulse_get_preferred_sample_rate,
+  .get_preferred_channel_layout = pulse_get_preferred_channel_layout,
   .enumerate_devices = pulse_enumerate_devices,
   .destroy = pulse_destroy,
   .stream_init = pulse_stream_init,
