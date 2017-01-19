@@ -1825,16 +1825,16 @@ TabChild::UpdateRepeatedKeyEventEndTime(const WidgetKeyboardEvent& aEvent)
 }
 
 mozilla::ipc::IPCResult
-TabChild::RecvRealKeyEvent(const WidgetKeyboardEvent& event,
+TabChild::RecvRealKeyEvent(const WidgetKeyboardEvent& aEvent,
                            const MaybeNativeKeyBinding& aBindings)
 {
-  if (SkipRepeatedKeyEvent(event)) {
+  if (SkipRepeatedKeyEvent(aEvent)) {
     return IPC_OK();
   }
 
   AutoCacheNativeKeyCommands autoCache(mPuppetWidget);
 
-  if (event.mMessage == eKeyPress) {
+  if (aEvent.mMessage == eKeyPress) {
     // If content code called preventDefault() on a keydown event, then we don't
     // want to process any following keypress events.
     if (mIgnoreKeyPressEvent) {
@@ -1850,7 +1850,7 @@ TabChild::RecvRealKeyEvent(const WidgetKeyboardEvent& event,
     }
   }
 
-  WidgetKeyboardEvent localEvent(event);
+  WidgetKeyboardEvent localEvent(aEvent);
   localEvent.mWidget = mPuppetWidget;
   nsEventStatus status = APZCCallbackHelper::DispatchWidgetEvent(localEvent);
 
@@ -1858,7 +1858,7 @@ TabChild::RecvRealKeyEvent(const WidgetKeyboardEvent& event,
   // some incoming events in case event handling took long time.
   UpdateRepeatedKeyEventEndTime(localEvent);
 
-  if (event.mMessage == eKeyDown) {
+  if (aEvent.mMessage == eKeyDown) {
     mIgnoreKeyPressEvent = status == nsEventStatus_eConsumeNoDefault;
   }
 
@@ -1894,22 +1894,22 @@ TabChild::RecvKeyEvent(const nsString& aType,
 }
 
 mozilla::ipc::IPCResult
-TabChild::RecvCompositionEvent(const WidgetCompositionEvent& event)
+TabChild::RecvCompositionEvent(const WidgetCompositionEvent& aEvent)
 {
-  WidgetCompositionEvent localEvent(event);
+  WidgetCompositionEvent localEvent(aEvent);
   localEvent.mWidget = mPuppetWidget;
   APZCCallbackHelper::DispatchWidgetEvent(localEvent);
-  Unused << SendOnEventNeedingAckHandled(event.mMessage);
+  Unused << SendOnEventNeedingAckHandled(aEvent.mMessage);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
-TabChild::RecvSelectionEvent(const WidgetSelectionEvent& event)
+TabChild::RecvSelectionEvent(const WidgetSelectionEvent& aEvent)
 {
-  WidgetSelectionEvent localEvent(event);
+  WidgetSelectionEvent localEvent(aEvent);
   localEvent.mWidget = mPuppetWidget;
   APZCCallbackHelper::DispatchWidgetEvent(localEvent);
-  Unused << SendOnEventNeedingAckHandled(event.mMessage);
+  Unused << SendOnEventNeedingAckHandled(aEvent.mMessage);
   return IPC_OK();
 }
 
