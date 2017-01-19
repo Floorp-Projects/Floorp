@@ -306,40 +306,40 @@ PuppetWidget::Invalidate(const LayoutDeviceIntRect& aRect)
 }
 
 void
-PuppetWidget::InitEvent(WidgetGUIEvent& event, LayoutDeviceIntPoint* aPoint)
+PuppetWidget::InitEvent(WidgetGUIEvent& aEvent, LayoutDeviceIntPoint* aPoint)
 {
   if (nullptr == aPoint) {
-    event.mRefPoint = LayoutDeviceIntPoint(0, 0);
+    aEvent.mRefPoint = LayoutDeviceIntPoint(0, 0);
   } else {
     // use the point override if provided
-    event.mRefPoint = *aPoint;
+    aEvent.mRefPoint = *aPoint;
   }
-  event.mTime = PR_Now() / 1000;
+  aEvent.mTime = PR_Now() / 1000;
 }
 
 nsresult
-PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
+PuppetWidget::DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus)
 {
 #ifdef DEBUG
-  debug_DumpEvent(stdout, event->mWidget, event, "PuppetWidget", 0);
+  debug_DumpEvent(stdout, aEvent->mWidget, aEvent, "PuppetWidget", 0);
 #endif
 
   MOZ_ASSERT(!mChild || mChild->mWindowType == eWindowType_popup,
              "Unexpected event dispatch!");
 
   AutoCacheNativeKeyCommands autoCache(this);
-  if ((event->mFlags.mIsSynthesizedForTests ||
-       event->mFlags.mIsSuppressedOrDelayed) && !mNativeKeyCommandsValid) {
-    WidgetKeyboardEvent* keyEvent = event->AsKeyboardEvent();
+  if ((aEvent->mFlags.mIsSynthesizedForTests ||
+       aEvent->mFlags.mIsSuppressedOrDelayed) && !mNativeKeyCommandsValid) {
+    WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
     if (keyEvent) {
       mTabChild->RequestNativeKeyBindings(&autoCache, keyEvent);
     }
   }
 
-  if (event->mClass == eCompositionEventClass) {
+  if (aEvent->mClass == eCompositionEventClass) {
     // Store the latest native IME context of parent process's widget or
     // TextEventDispatcher if it's in this process.
-    WidgetCompositionEvent* compositionEvent = event->AsCompositionEvent();
+    WidgetCompositionEvent* compositionEvent = aEvent->AsCompositionEvent();
 #ifdef DEBUG
     if (mNativeIMEContext.IsValid() &&
         mNativeIMEContext != compositionEvent->mNativeIMEContext) {
@@ -357,7 +357,8 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
   aStatus = nsEventStatus_eIgnore;
 
   if (GetCurrentWidgetListener()) {
-    aStatus = GetCurrentWidgetListener()->HandleEvent(event, mUseAttachedEvents);
+    aStatus =
+      GetCurrentWidgetListener()->HandleEvent(aEvent, mUseAttachedEvents);
   }
 
   return NS_OK;
