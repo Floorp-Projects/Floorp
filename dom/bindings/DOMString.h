@@ -22,15 +22,21 @@ namespace dom {
  * A class for representing string return values.  This can be either passed to
  * callees that have an nsString or nsAString out param or passed to a callee
  * that actually knows about this class and can work with it.  Such a callee may
- * call SetStringBuffer or SetOwnedString or SetOwnedAtom on this object, but
- * only if it plans to keep holding a strong ref to the internal stringbuffer!
+ * call SetStringBuffer or SetEphemeralStringBuffer or SetOwnedString or
+ * SetOwnedAtom on this object.  It's only OK to call
+ * SetStringBuffer/SetOwnedString/SetOwnedAtom if the caller of the method in
+ * question plans to keep holding a strong ref to the stringbuffer involved,
+ * whether it's a raw nsStringBuffer, or stored inside the string or atom being
+ * passed.  In the string/atom cases that means the caller must own the string
+ * or atom, and not mutate it (in the string case) for the lifetime of the
+ * DOMString.
  *
  * The proper way to store a value in this class is to either to do nothing
- * (which leaves this as an empty string), to call SetStringBuffer with a
- * non-null stringbuffer, to call SetOwnedString, to call SetOwnedAtom, to call
- * SetNull(), or to call AsAString() and set the value in the resulting
- * nsString.  These options are mutually exclusive! Don't do more than one of
- * them.
+ * (which leaves this as an empty string), to call
+ * SetStringBuffer/SetEphemeralStringBuffer with a non-null stringbuffer, to
+ * call SetOwnedString, to call SetOwnedAtom, to call SetNull(), or to call
+ * AsAString() and set the value in the resulting nsString.  These options are
+ * mutually exclusive! Don't do more than one of them.
  *
  * The proper way to extract a value is to check IsNull().  If not null, then
  * check HasStringBuffer().  If that's true, check for a zero length, and if the
@@ -44,11 +50,16 @@ public:
     : mStringBuffer(nullptr)
     , mLength(0)
     , mIsNull(false)
+    , mStringBufferOwned(false)
   {}
   ~DOMString()
   {
     MOZ_ASSERT(!mString || !mStringBuffer,
                "Shouldn't have both present!");
+    if (mStringBufferOwned) {
+      MOZ_ASSERT(mStringBuffer);
+      mStringBuffer->Release();
+    }
   }
 
   operator nsString&()
@@ -103,6 +114,20 @@ public:
     return mLength;
   }
 
+  // Tell the DOMString to relinquish ownership of its nsStringBuffer to the
+  // caller.  Can only be called if HasStringBuffer().
+  void RelinquishBufferOwnership()
+  {
+    MOZ_ASSERT(HasStringBuffer(), "Don't call this if there is no stringbuffer");
+    if (mStringBufferOwned) {
+      // Just hand that ref over.
+      mStringBufferOwned = false;
+    } else {
+      // Caller should end up holding a ref.
+      mStringBuffer->AddRef();
+    }
+  }
+
   // Initialize the DOMString to a (nsStringBuffer, length) pair.  The length
   // does NOT have to be the full length of the (null-terminated) string in the
   // nsStringBuffer.
@@ -114,6 +139,15 @@ public:
     MOZ_ASSERT(aStringBuffer, "Why are we getting null?");
     mStringBuffer = aStringBuffer;
     mLength = aLength;
+  }
+
+  // Like SetStringBuffer, but holds a reference to the nsStringBuffer.
+  void SetEphemeralStringBuffer(nsStringBuffer* aStringBuffer, uint32_t aLength)
+  {
+    // We rely on SetStringBuffer to ensure our state invariants.
+    SetStringBuffer(aStringBuffer, aLength);
+    aStringBuffer->AddRef();
+    mStringBufferOwned = true;
   }
 
   void SetOwnedString(const nsAString& aString)
@@ -202,6 +236,7 @@ private:
                                  "assertions") mStringBuffer;
   uint32_t mLength;
   bool mIsNull;
+  bool mStringBufferOwned;
 };
 
 } // namespace dom

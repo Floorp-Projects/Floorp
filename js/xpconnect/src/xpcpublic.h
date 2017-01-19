@@ -357,7 +357,7 @@ bool NonVoidStringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
     }
     if (shared) {
         // JS now needs to hold a reference to the buffer
-        buf->AddRef();
+        str.RelinquishBufferOwnership();
     }
     return true;
 }
