@@ -63,6 +63,7 @@ from .data import (
     PreprocessedWebIDLFile,
     Program,
     RustLibrary,
+    HostRustLibrary,
     RustProgram,
     SdkFiles,
     SharedLibrary,
@@ -414,7 +415,7 @@ class TreeMetadataEmitter(LoggingMixin):
                     '%s %s of crate %s refers to a non-existent path' % (description, dep_crate_name, crate_name),
                     context)
 
-    def _rust_library(self, context, libname, static_args):
+    def _rust_library(self, context, libname, static_args, cls=RustLibrary):
         # We need to note any Rust library for linking purposes.
         config, cargo_file = self._parse_cargo_file(context)
         crate_name = config['package']['name']
@@ -466,15 +467,16 @@ class TreeMetadataEmitter(LoggingMixin):
 
         dependencies = set(config.get('dependencies', {}).iterkeys())
 
-        features = context.get('RUST_LIBRARY_FEATURES', [])
+        features = context.get(cls.FEATURES_VAR, [])
         unique_features = set(features)
         if len(features) != len(unique_features):
             raise SandboxValidationError(
                 'features for %s should not contain duplicates: %s' % (libname, features),
                 context)
 
-        return RustLibrary(context, libname, cargo_file, crate_type,
-                           dependencies, features, **static_args)
+        return cls(context, libname, cargo_file, crate_type, dependencies,
+                   features, **static_args)
+
 
     def _handle_linkables(self, context, passthru, generated_files):
         linkables = []
@@ -554,7 +556,12 @@ class TreeMetadataEmitter(LoggingMixin):
             if host_libname == libname:
                 raise SandboxValidationError('LIBRARY_NAME and '
                     'HOST_LIBRARY_NAME must have a different value', context)
-            lib = HostLibrary(context, host_libname)
+
+            is_rust_library = context.get('IS_RUST_LIBRARY')
+            if is_rust_library:
+                lib = self._rust_library(context, host_libname, {}, cls=HostRustLibrary)
+            else:
+                lib = HostLibrary(context, host_libname)
             self._libs[host_libname].append(lib)
             self._linkage.append((context, lib, 'HOST_USE_LIBS'))
             host_linkables.append(lib)
