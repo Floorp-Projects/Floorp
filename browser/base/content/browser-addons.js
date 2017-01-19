@@ -238,6 +238,7 @@ const gXPInstallObserver = {
     switch (aTopic) {
     case "addon-install-disabled": {
       notificationID = "xpinstall-disabled";
+      let secondaryActions = null;
 
       if (gPrefService.prefIsLocked("xpinstall.enabled")) {
         messageString = gNavigatorBundle.getString("xpinstallDisabledMessageLocked");
@@ -252,14 +253,23 @@ const gXPInstallObserver = {
             gPrefService.setBoolPref("xpinstall.enabled", true);
           }
         };
+
+        secondaryActions = [{
+          label: gNavigatorBundle.getString("addonInstall.cancelButton.label"),
+          accessKey: gNavigatorBundle.getString("addonInstall.cancelButton.accesskey"),
+          callback: () => {},
+        }];
       }
 
       PopupNotifications.show(browser, notificationID, messageString, anchorID,
-                              action, null, options);
+                              action, secondaryActions, options);
       break; }
     case "addon-install-origin-blocked": {
       messageString = gNavigatorBundle.getFormattedString("xpinstallPromptMessage",
                         [brandShortName]);
+
+      options.removeOnDismissal = true;
+      options.persistent = false;
 
       let secHistogram = Components.classes["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry).getHistogramById("SECURITY_UI");
       secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_ADDON_ASKING_PREVENTED);
@@ -350,6 +360,9 @@ const gXPInstallObserver = {
 
       break; }
     case "addon-install-failed": {
+      options.removeOnDismissal = true;
+      options.persistent = false;
+
       // TODO This isn't terribly ideal for the multiple failure case
       for (let install of installInfo.installs) {
         let host;
