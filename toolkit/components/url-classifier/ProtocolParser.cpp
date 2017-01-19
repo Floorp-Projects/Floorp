@@ -142,6 +142,9 @@ ProtocolParserV2::AppendStream(const nsACString& aData)
 
   nsresult rv;
   mPending.Append(aData);
+#ifdef MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
+  mRawUpdate.Append(aData);
+#endif
 
   bool done = false;
   while (!done) {
