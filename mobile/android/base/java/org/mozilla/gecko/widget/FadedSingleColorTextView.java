@@ -10,8 +10,11 @@ import android.graphics.Canvas;
 import android.graphics.LinearGradient;
 import android.graphics.Shader;
 import android.support.v4.text.BidiFormatter;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
+
+import org.mozilla.gecko.util.ViewUtil;
 
 /**
  * Fades the end of the text by gecko:fadeWidth amount,
@@ -49,10 +52,14 @@ public class FadedSingleColorTextView extends FadedTextView {
     @Override
     public void setText(CharSequence text, BufferType type) {
         super.setText(text, type);
-        mIsTextDirectionRtl = BidiFormatter.getInstance().isRtl((String) text);
-        if (mIsTextDirectionRtl) {
-            setTextDirection(TEXT_DIRECTION_RTL);
+        final boolean previousTextDirectionRtl = mIsTextDirectionRtl;
+        if (!TextUtils.isEmpty(text)) {
+            mIsTextDirectionRtl = BidiFormatter.getInstance().isRtl((String) text);
         }
+        if (mIsTextDirectionRtl != previousTextDirectionRtl) {
+            mTextGradient = null;
+        }
+        ViewUtil.setTextDirectionRtlCompat(this, mIsTextDirectionRtl);
     }
 
     @Override
