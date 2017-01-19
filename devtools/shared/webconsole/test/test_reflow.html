@@ -16,24 +16,21 @@ SimpleTest.waitForExplicitFinish();
 
 let client;
 
-function generateReflow()
-{
+function generateReflow() {
   top.document.documentElement.style.display = "none";
   top.document.documentElement.getBoundingClientRect();
   top.document.documentElement.style.display = "block";
 }
 
-function startTest()
-{
+function startTest() {
   removeEventListener("load", startTest);
   attachConsoleToTab(["ReflowActivity"], onAttach);
 }
 
-function onAttach(aState, aResponse)
-{
-  client = aState.dbgClient;
+function onAttach(state, response) {
+  client = state.dbgClient;
 
-  onReflowActivity = onReflowActivity.bind(null, aState);
+  onReflowActivity = onReflowActivity.bind(null, state);
   client.addListener("reflowActivity", onReflowActivity);
   generateReflow();
 }
@@ -60,13 +57,12 @@ let expectedEvents = [
 let receivedEvents = [];
 
 
-function onReflowActivity(aState, aType, aPacket)
-{
-  info("packet: " + aPacket.message);
-  receivedEvents.push(aPacket);
+function onReflowActivity(state, type, packet) {
+  info("packet: " + packet.message);
+  receivedEvents.push(packet);
   if (receivedEvents.length == expectedEvents.length) {
     checkEvents();
-    finish(aState);
+    finish(state);
   }
 }
 
@@ -80,9 +76,9 @@ function checkEvents() {
   }
 }
 
-function finish(aState) {
+function finish(state) {
   client.removeListener("reflowActivity", onReflowActivity);
-  closeDebugger(aState, function() {
+  closeDebugger(state, function() {
     SimpleTest.finish();
   });
 }
