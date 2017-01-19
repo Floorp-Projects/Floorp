@@ -58,7 +58,6 @@
 #include "mozilla/GuardObjects.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
-#include "GeckoProfilerTypes.h"
 
 namespace mozilla {
 class TimeStamp;
@@ -79,6 +78,15 @@ enum TracingMetadata {
   TRACING_EVENT_BACKTRACE,
   TRACING_TIMESTAMP
 };
+
+class ProfilerBacktrace;
+
+struct ProfilerBacktraceDestructor
+{
+  void operator()(ProfilerBacktrace*);
+};
+using UniqueProfilerBacktrace =
+  mozilla::UniquePtr<ProfilerBacktrace, ProfilerBacktraceDestructor>;
 
 #if !defined(MOZ_ENABLE_PROFILER_SPS)
 
