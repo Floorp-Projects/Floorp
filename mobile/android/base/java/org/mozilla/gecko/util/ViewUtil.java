@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.gecko.util;
 
+import android.annotation.TargetApi;
 import android.content.res.TypedArray;
 import android.os.Build;
 import android.support.v4.text.TextUtilsCompat;
@@ -11,6 +12,7 @@ import android.support.v4.view.MarginLayoutParamsCompat;
 import android.support.v4.view.ViewCompat;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
@@ -70,6 +72,27 @@ public class ViewUtil {
             default:
                 ViewCompat.setLayoutDirection(view, ViewCompat.LAYOUT_DIRECTION_LTR);
                 break;
+        }
+    }
+
+    /**
+     * RTL compatibility wrapper to force set TextDirection for JB mr1 and above
+     *
+     * @param textView
+     * @param isRtl
+     */
+    public static void setTextDirectionRtlCompat(TextView textView, boolean isRtl) {
+        if (AppConstants.Versions.feature17Plus) {
+            setTextDirectionRtlCompat17(textView, isRtl);
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
+    private static void setTextDirectionRtlCompat17(TextView textView, boolean isRtl) {
+        if (isRtl) {
+            textView.setTextDirection(View.TEXT_DIRECTION_RTL);
+        } else {
+            textView.setTextDirection(View.TEXT_DIRECTION_LTR);
         }
     }
 }
