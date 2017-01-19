@@ -13,7 +13,7 @@
 class FakeDecryptor : public GMPDecryptor {
 public:
 
-  explicit FakeDecryptor(GMPDecryptorHost* aHost);
+  explicit FakeDecryptor();
 
   void Init(GMPDecryptorCallback* aCallback,
             bool aDistinctiveIdentifierRequired,
@@ -87,7 +87,6 @@ private:
   void TestStorage();
 
   GMPDecryptorCallback* mCallback;
-  GMPDecryptorHost* mHost;
 };
 
 #endif
