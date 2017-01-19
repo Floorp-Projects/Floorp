@@ -17,10 +17,10 @@ const {
 } = require("./actions/devices");
 const { changeNetworkThrottling } = require("./actions/network-throttling");
 const { takeScreenshot } = require("./actions/screenshot");
-const { updateTouchSimulationEnabled } = require("./actions/touch-simulation");
+const { changeTouchSimulation } = require("./actions/touch-simulation");
 const {
   changeDevice,
-  changeViewportPixelRatio,
+  changePixelRatio,
   resizeViewport,
   rotateViewport
 } = require("./actions/viewports");
@@ -47,6 +47,16 @@ let App = createClass({
     window.postMessage({ type: "browser-mounted" }, "*");
   },
 
+  onChangeDevice(id, device) {
+    window.postMessage({
+      type: "change-device",
+      device,
+    }, "*");
+    this.props.dispatch(changeDevice(id, device.name));
+    this.props.dispatch(changeTouchSimulation(device.touch));
+    this.props.dispatch(changePixelRatio(id, device.pixelRatio));
+  },
+
   onChangeNetworkThrottling(enabled, profile) {
     window.postMessage({
       type: "change-network-throtting",
@@ -56,23 +66,20 @@ let App = createClass({
     this.props.dispatch(changeNetworkThrottling(enabled, profile));
   },
 
-  onChangeViewportDevice(id, device) {
+  onChangePixelRatio(pixelRatio) {
     window.postMessage({
-      type: "change-viewport-device",
-      device,
-    }, "*");
-    this.props.dispatch(changeDevice(id, device.name));
-    this.props.dispatch(updateTouchSimulationEnabled(device.touch));
-    this.props.dispatch(changeViewportPixelRatio(id, device.pixelRatio));
-  },
-
-  onChangeViewportPixelRatio(pixelRatio) {
-    window.postMessage({
-      type: "change-viewport-pixel-ratio",
+      type: "change-pixel-ratio",
       pixelRatio,
     }, "*");
+    this.props.dispatch(changePixelRatio(0, pixelRatio));
+  },
 
-    this.props.dispatch(changeViewportPixelRatio(0, pixelRatio));
+  onChangeTouchSimulation(enabled) {
+    window.postMessage({
+      type: "change-touch-simulation",
+      enabled,
+    }, "*");
+    this.props.dispatch(changeTouchSimulation(enabled));
   },
 
   onContentResize({ width, height }) {
@@ -111,15 +118,6 @@ let App = createClass({
     this.props.dispatch(updateDeviceModalOpen(isOpen));
   },
 
-  onUpdateTouchSimulation(isEnabled) {
-    window.postMessage({
-      type: "update-touch-simulation",
-      enabled: isEnabled,
-    }, "*");
-
-    this.props.dispatch(updateTouchSimulationEnabled(isEnabled));
-  },
-
   render() {
     let {
       devices,
@@ -133,9 +131,10 @@ let App = createClass({
 
     let {
       onBrowserMounted,
+      onChangeDevice,
       onChangeNetworkThrottling,
-      onChangeViewportDevice,
-      onChangeViewportPixelRatio,
+      onChangePixelRatio,
+      onChangeTouchSimulation,
       onContentResize,
       onDeviceListUpdate,
       onExit,
@@ -144,7 +143,6 @@ let App = createClass({
       onScreenshot,
       onUpdateDeviceDisplayed,
       onUpdateDeviceModalOpen,
-      onUpdateTouchSimulation,
     } = this;
 
     let selectedDevice = "";
@@ -168,10 +166,10 @@ let App = createClass({
         selectedPixelRatio,
         touchSimulation,
         onChangeNetworkThrottling,
-        onChangeViewportPixelRatio,
+        onChangePixelRatio,
+        onChangeTouchSimulation,
         onExit,
         onScreenshot,
-        onUpdateTouchSimulation,
       }),
       Viewports({
         devices,
@@ -179,7 +177,7 @@ let App = createClass({
         screenshot,
         viewports,
         onBrowserMounted,
-        onChangeViewportDevice,
+        onChangeDevice,
         onContentResize,
         onRotateViewport,
         onResizeViewport,

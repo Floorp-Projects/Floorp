@@ -213,7 +213,7 @@ function* testViewportResize(ui, selector, moveBy,
                              expectedViewportSize, expectedHandleMove) {
   let win = ui.toolWindow;
 
-  let changed = once(ui, "viewport-device-changed");
+  let changed = once(ui, "device-changed");
   let resized = waitForViewportResizeTo(ui, ...expectedViewportSize);
   let startRect = dragElementBy(selector, ...moveBy, win);
   yield resized;
@@ -272,7 +272,7 @@ function changeSelectValue({ toolWindow }, selector, value) {
 }
 
 const selectDevice = (ui, value) => Promise.all([
-  once(ui, "viewport-device-changed"),
+  once(ui, "device-changed"),
   changeSelectValue(ui, ".viewport-device-selector", value)
 ]);
 
