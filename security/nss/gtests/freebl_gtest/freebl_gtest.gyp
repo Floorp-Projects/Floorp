@@ -19,8 +19,12 @@
         '<(DEPTH)/lib/freebl/freebl.gyp:<(freebl_name)',
         '<(DEPTH)/gtests/google_test/google_test.gyp:gtest',
       ],
-      'defines': [
-        'CT_VERIF',
+      'conditions': [
+        [ 'ct_verif==1', {
+          'defines': [
+            'CT_VERIF',
+          ],
+        }],
       ],
     }
   ],

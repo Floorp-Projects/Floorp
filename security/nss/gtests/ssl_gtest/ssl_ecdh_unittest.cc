@@ -191,6 +191,58 @@ TEST_P(TlsConnectGenericPre13, P384PriorityFromModelSocket) {
             ssl_sig_rsa_pss_sha256);
 }
 
+class TlsKeyExchangeGroupCapture : public TlsHandshakeFilter {
+ public:
+  TlsKeyExchangeGroupCapture() : group_(ssl_grp_none) {}
+
+  SSLNamedGroup group() const { return group_; }
+
+ protected:
+  virtual PacketFilter::Action FilterHandshake(const HandshakeHeader &header,
+                                               const DataBuffer &input,
+                                               DataBuffer *output) {
+    if (header.handshake_type() != kTlsHandshakeServerKeyExchange) {
+      return KEEP;
+    }
+
+    uint32_t value = 0;
+    EXPECT_TRUE(input.Read(0, 1, &value));
+    EXPECT_EQ(3U, value) << "curve type has to be 3";
+
+    EXPECT_TRUE(input.Read(1, 2, &value));
+    group_ = static_cast<SSLNamedGroup>(value);
+
+    return KEEP;
+  }
+
+ private:
+  SSLNamedGroup group_;
+};
+
+// If we strip the client's supported groups extension, the server should assume
+// P-256 is supported by the client (<= 1.2 only).
+TEST_P(TlsConnectGenericPre13, DropSupportedGroupExtensionP256) {
+  EnsureTlsSetup();
+  client_->SetPacketFilter(new TlsExtensionDropper(ssl_supported_groups_xtn));
+  auto group_capture = new TlsKeyExchangeGroupCapture();
+  server_->SetPacketFilter(group_capture);
+
+  ConnectExpectFail();
+  client_->CheckErrorCode(SSL_ERROR_DECRYPT_ERROR_ALERT);
+  server_->CheckErrorCode(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
+
+  EXPECT_EQ(ssl_grp_ec_secp256r1, group_capture->group());
+}
+
+// Supported groups is mandatory in TLS 1.3.
+TEST_P(TlsConnectTls13, DropSupportedGroupExtension) {
+  EnsureTlsSetup();
+  client_->SetPacketFilter(new TlsExtensionDropper(ssl_supported_groups_xtn));
+  ConnectExpectFail();
+  client_->CheckErrorCode(SSL_ERROR_MISSING_EXTENSION_ALERT);
+  server_->CheckErrorCode(SSL_ERROR_MISSING_SUPPORTED_GROUPS_EXTENSION);
+}
+
 // If we only have a lame group, we fall back to static RSA.
 TEST_P(TlsConnectGenericPre13, UseLameGroup) {
   const std::vector<SSLNamedGroup> groups = {ssl_grp_ec_secp192r1};
