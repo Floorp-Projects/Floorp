@@ -689,6 +689,13 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
     return;
   }
 
+  if (shapeOutside.GetType() == StyleShapeSourceType::URL) {
+    // Bug 1265343: Implement 'shape-image-threshold'. Early return
+    // here because shape-outside with url() value doesn't have a
+    // reference box, and GetReferenceBox() asserts that.
+    return;
+  }
+
   // Initialize <shape-box>'s reference rect.
   LogicalRect rect = aMarginRect;
 
@@ -723,8 +730,6 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
       mShapeInfo = MakeUnique<CircleShapeInfo>(basicShape, aLineLeft, aBlockStart,
                                                rect, aWM, aContainerSize);
     }
-  } else if (shapeOutside.GetType() == StyleShapeSourceType::URL) {
-    // Bug 1265343: Implement 'shape-image-threshold'.
   } else {
     MOZ_ASSERT_UNREACHABLE("Unknown StyleShapeSourceType!");
   }

@@ -557,7 +557,9 @@ MediaSource::DurationChange(double aNewDuration, ErrorResult& aRv)
 void
 MediaSource::GetMozDebugReaderData(nsAString& aString)
 {
-  mDecoder->GetMozDebugReaderData(aString);
+  nsAutoCString result;
+  mDecoder->GetMozDebugReaderData(result);
+  aString = NS_ConvertUTF8toUTF16(result);
 }
 
 nsPIDOMWindowInner*

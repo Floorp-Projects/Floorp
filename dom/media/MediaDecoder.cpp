@@ -1738,10 +1738,10 @@ MediaDecoder::DumpDebugInfo()
            mInfo ? mInfo->HasAudio() : 0, mInfo ? mInfo->HasVideo() : 0,
            PlayStateStr(), GetStateMachine());
 
-  nsString str;
+  nsAutoCString str;
   GetMozDebugReaderData(str);
   if (!str.IsEmpty()) {
-    DUMP_LOG("reader data:\n%s", NS_ConvertUTF16toUTF8(str).get());
+    DUMP_LOG("reader data:\n%s", str.get());
   }
 
   if (GetStateMachine()) {

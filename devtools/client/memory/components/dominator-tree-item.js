@@ -25,6 +25,7 @@ module.exports = createClass({
     item: PropTypes.object.isRequired,
     depth: PropTypes.number.isRequired,
     arrow: PropTypes.object,
+    expanded: PropTypes.bool.isRequired,
     focused: PropTypes.bool.isRequired,
     getPercentSize: PropTypes.func.isRequired,
     onViewSourceInDebugger: PropTypes.func.isRequired,

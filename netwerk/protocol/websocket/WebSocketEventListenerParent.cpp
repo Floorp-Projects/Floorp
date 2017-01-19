@@ -23,7 +23,8 @@ WebSocketEventListenerParent::WebSocketEventListenerParent(uint64_t aInnerWindow
   : mService(WebSocketEventService::GetOrCreate())
   , mInnerWindowID(aInnerWindowID)
 {
-  mService->AddListener(mInnerWindowID, this);
+  DebugOnly<nsresult> rv = mService->AddListener(mInnerWindowID, this);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 WebSocketEventListenerParent::~WebSocketEventListenerParent()
@@ -52,7 +53,8 @@ void
 WebSocketEventListenerParent::UnregisterListener()
 {
   if (mService) {
-    mService->RemoveListener(mInnerWindowID, this);
+    DebugOnly<nsresult> rv = mService->RemoveListener(mInnerWindowID, this);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
     mService = nullptr;
   }
 }

@@ -75,7 +75,7 @@ void passed(const char* msg, ...)
 
 //-----------------------------------------------------------------------------
 
-static class ScopedXPCOM : public nsIDirectoryServiceProvider2
+class ScopedXPCOM : public nsIDirectoryServiceProvider2
 {
   public:
     NS_DECL_ISUPPORTS

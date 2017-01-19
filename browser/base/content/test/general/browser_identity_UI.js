@@ -116,7 +116,8 @@ function nextTest() {
     gTestDesc = "#" + gCurrentTestIndex + " (" + gCurrentTest.name + " without eTLD in identity icon label)";
     if (!gForward)
       gTestDesc += " (second time)";
-    content.location.reload(true);
+    gBrowser.selectedBrowser.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE |
+                                             Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY);
   }
 }
 

@@ -19,6 +19,7 @@
 #include "mozilla/Casting.h"
 #include "mozilla/Move.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
 #include "nsNSSCertificate.h"
 #include "nsServiceManagerUtils.h"
@@ -266,25 +267,25 @@ NSSCertDBTrustDomain::DigestBuf(Input item, DigestAlgorithm digestAlg,
   return DigestBufNSS(item, digestAlg, digestBuf, digestBufLen);
 }
 
-static PRIntervalTime
+static TimeDuration
 OCSPFetchingTypeToTimeoutTime(NSSCertDBTrustDomain::OCSPFetching ocspFetching)
 {
   switch (ocspFetching) {
     case NSSCertDBTrustDomain::FetchOCSPForDVSoftFail:
-      return PR_SecondsToInterval(2);
+      return TimeDuration::FromSeconds(2);
     case NSSCertDBTrustDomain::FetchOCSPForEV:
     case NSSCertDBTrustDomain::FetchOCSPForDVHardFail:
-      return PR_SecondsToInterval(10);
+      return TimeDuration::FromSeconds(10);
     // The rest of these are error cases. Assert in debug builds, but return
     // the default value corresponding to 2 seconds in release builds.
     case NSSCertDBTrustDomain::NeverFetchOCSP:
     case NSSCertDBTrustDomain::LocalOnlyOCSPForEV:
-      PR_NOT_REACHED("we should never see this OCSPFetching type here");
+      MOZ_ASSERT_UNREACHABLE("we should never see this OCSPFetching type here");
       break;
   }
 
-  PR_NOT_REACHED("we're not handling every OCSPFetching type");
-  return PR_SecondsToInterval(2);
+  MOZ_ASSERT_UNREACHABLE("we're not handling every OCSPFetching type");
+  return TimeDuration::FromSeconds(2);
 }
 
 // Copied and modified from CERT_GetOCSPAuthorityInfoAccessLocation and
@@ -986,7 +987,7 @@ NSSCertDBTrustDomain::CheckValidityIsAcceptable(Time notBefore, Time notAfter,
       maxValidityDuration = DURATION_27_MONTHS_PLUS_SLOP;
       break;
     default:
-      PR_NOT_REACHED("We're not handling every ValidityCheckingMode type");
+      MOZ_ASSERT_UNREACHABLE("We're not handling every ValidityCheckingMode type");
   }
 
   if (validityDuration > maxValidityDuration) {

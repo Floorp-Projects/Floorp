@@ -271,4 +271,49 @@ var tests = [
     },
     onHidden(popup) { }
   },
+  // Test that on closebutton click, only the persistent notification
+  // that contained the closebutton loses its persistent status.
+  { id: "Test#10",
+    run() {
+      this.notifyObj1 = new BasicNotification(this.id);
+      this.notifyObj1.id += "_1";
+      this.notifyObj1.anchorID = "geo-notification-icon";
+      this.notifyObj1.options.persistent = true;
+      this.notifyObj1.options.hideClose = false;
+      this.notification1 = showNotification(this.notifyObj1);
+
+      this.notifyObj2 = new BasicNotification(this.id);
+      this.notifyObj2.id += "_2";
+      this.notifyObj2.anchorID = "geo-notification-icon";
+      this.notifyObj2.options.persistent = true;
+      this.notifyObj2.options.hideClose = false;
+      this.notification2 = showNotification(this.notifyObj2);
+
+      this.notifyObj3 = new BasicNotification(this.id);
+      this.notifyObj3.id += "_3";
+      this.notifyObj3.anchorID = "geo-notification-icon";
+      this.notifyObj3.options.persistent = true;
+      this.notifyObj3.options.hideClose = false;
+      this.notification3 = showNotification(this.notifyObj3);
+
+      PopupNotifications._update();
+    },
+    onShown(popup) {
+      let notifications = popup.childNodes;
+      is(notifications.length, 3, "three notifications displayed");
+      EventUtils.synthesizeMouseAtCenter(notifications[1].closebutton, {});
+    },
+    onHidden(popup) {
+      let notifications = popup.childNodes;
+      is(notifications.length, 2, "two notifications displayed");
+
+      ok(this.notification1.options.persistent, "notification 1 is persistent");
+      ok(!this.notification2.options.persistent, "notification 2 is not persistent");
+      ok(this.notification3.options.persistent, "notification 3 is persistent");
+
+      this.notification1.remove();
+      this.notification2.remove();
+      this.notification3.remove();
+    }
+  },
 ];

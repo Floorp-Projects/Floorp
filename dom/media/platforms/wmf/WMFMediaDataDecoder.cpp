@@ -121,6 +121,11 @@ WMFMediaDataDecoder::ProcessDecode(MediaRawData* aSample)
   }
 
   HRESULT hr = mMFTManager->Input(aSample);
+  if (hr == MF_E_NOTACCEPTING) {
+    ProcessOutput();
+    hr = mMFTManager->Input(aSample);
+  }
+
   if (FAILED(hr)) {
     NS_WARNING("MFTManager rejected sample");
     mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,

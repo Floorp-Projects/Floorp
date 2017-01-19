@@ -139,9 +139,7 @@ function writeRootHashes(fos) {
     writeString(fos, FP_POSTAMBLE);
 
     writeString(fos, "\n");
-
-  }
-  catch (e) {
+  } catch (e) {
     dump("ERROR: problem writing output: " + e + "\n");
   }
 }
@@ -193,7 +191,6 @@ function insertTrustAnchorsFromDatabase() {
 
        // Scan to see if this is already in the database.
       if (findTrustAnchorByFingerprint(encodedFingerprint) == ROOT_NOT_ASSIGNED) {
-
         // Let's get a usable name; some old certs do not have CN= filled out
         let label = getLabelForCert(cert);
 
