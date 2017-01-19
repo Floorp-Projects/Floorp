@@ -145,7 +145,12 @@ WebRenderPaintedLayer::RenderLayer()
   Matrix4x4 transform;// = GetTransform();
 
   WrBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(wr::ToWrRect(relBounds), wr::ToWrRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
+      OpDPPushStackingContext(wr::ToWrRect(relBounds),
+                              wr::ToWrRect(overflow),
+                              mask,
+                              GetAnimations(),
+                              transform,
+                              FrameMetrics::NULL_SCROLL_ID));
 
   ContentClientRemoteBuffer* contentClientRemote = static_cast<ContentClientRemoteBuffer*>(mContentClient.get());
   visibleRegion.MoveBy(-contentClientRemote->BufferRect().x, -contentClientRemote->BufferRect().y);

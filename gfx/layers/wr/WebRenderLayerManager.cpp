@@ -158,7 +158,12 @@ WrScrollFrameStackingContextGenerator::WrScrollFrameStackingContextGenerator(
     }
 
     mLayer->WrBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(wr::ToWrRect(bounds), wr::ToWrRect(overflow), Nothing(), identity, fm.GetScrollId()));
+      OpDPPushStackingContext(wr::ToWrRect(bounds),
+                              wr::ToWrRect(overflow),
+                              Nothing(),
+                              layer->GetAnimations(),
+                              identity,
+                              fm.GetScrollId()));
   }
 }
 

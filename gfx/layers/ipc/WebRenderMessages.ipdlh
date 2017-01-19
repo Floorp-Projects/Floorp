@@ -28,6 +28,7 @@ struct OpDPPushStackingContext {
   WrRect bounds;
   WrRect overflow;
   MaybeImageMask mask;
+  Animation[] animations;
   Matrix4x4 matrix;
   uint64_t scrollid;
 };
