@@ -64,8 +64,6 @@ pref("devtools.inspector.showUserAgentStyles", false);
 pref("devtools.inspector.showAllAnonymousContent", false);
 // Enable the MDN docs tooltip
 pref("devtools.inspector.mdnDocsTooltip.enabled", true);
-// Enable the new color widget
-pref("devtools.inspector.colorWidget.enabled", false);
 
 // Enable the Font Inspector
 pref("devtools.fontinspector.enabled", true);
