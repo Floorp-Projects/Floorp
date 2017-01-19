@@ -517,6 +517,12 @@ nsSVGFELightingElement::AddLightingAttributes(FilterPrimitiveDescription aDescri
   Size kernelUnitLength =
     GetKernelUnitLength(aInstance, &mNumberPairAttributes[KERNEL_UNIT_LENGTH]);
 
+  if (kernelUnitLength.width <= 0 || kernelUnitLength.height <= 0) {
+    // According to spec, A negative or zero value is an error. See link below for details.
+    // https://www.w3.org/TR/SVG/filters.html#feSpecularLightingKernelUnitLengthAttribute
+    return FilterPrimitiveDescription(PrimitiveType::Empty);
+  }
+
   FilterPrimitiveDescription& descr = aDescription;
   descr.Attributes().Set(eLightingLight, ComputeLightAttributes(aInstance));
   descr.Attributes().Set(eLightingSurfaceScale, surfaceScale);
