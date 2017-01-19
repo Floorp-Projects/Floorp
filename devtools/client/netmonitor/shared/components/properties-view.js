@@ -55,6 +55,7 @@ const PropertiesView = createClass({
       enableFilter: true,
       expandableStrings: false,
       filterPlaceHolder: "",
+      sectionNames: [],
     };
   },
 
