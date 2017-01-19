@@ -25,6 +25,7 @@ var currentBrowser = null;
 var currentMenulist = null;
 var currentZoom = 1;
 var closedWithEnter = false;
+var selectRect;
 
 this.SelectParentHelper = {
   draggedOverPopup: false,
@@ -42,6 +43,7 @@ this.SelectParentHelper = {
     menulist.hidden = false;
     currentBrowser = browser;
     closedWithEnter = false;
+    selectRect = rect;
     this._registerListeners(browser, menulist.menupopup);
 
     let win = browser.ownerDocument.defaultView;
@@ -97,7 +99,15 @@ this.SelectParentHelper = {
       case "mouseup":
         this.clearScrollTimer();
         currentMenulist.menupopup.removeEventListener("mousemove", this);
-        currentBrowser.messageManager.sendAsyncMessage("Forms:MouseUp", {});
+
+        function inRect(rect, x, y) {
+          return x >= rect.left && x <= rect.left + rect.width && y >= rect.top && y <= rect.top + rect.height;
+        }
+
+        let x = event.screenX, y = event.screenY;
+        let onAnchor = !inRect(currentMenulist.menupopup.getOuterScreenRect(), x, y) &&
+                        inRect(selectRect, x, y) && currentMenulist.menupopup.state == "open";
+        currentBrowser.messageManager.sendAsyncMessage("Forms:MouseUp", { onAnchor });
         break;
 
       case "mouseover":
@@ -110,15 +120,25 @@ this.SelectParentHelper = {
 
       case "mousemove":
         let menupopup = currentMenulist.menupopup;
-        let popupRect = menupopup.getOuterScreenRect();
 
         this.clearScrollTimer();
+
+        // If the user released the mouse before the popup opens, we will
+        // still be capturing, so check that the button is still pressed. If
+        // not, release the capture and do nothing else. This also handles if
+        // the dropdown was opened via the keyboard.
+        if (!(event.buttons & 1)) {
+          currentMenulist.menupopup.removeEventListener("mousemove", this);
+          menupopup.releaseCapture();
+          return;
+        }
 
         // If dragging outside the top or bottom edge of the popup, but within
         // the popup area horizontally, scroll the list in that direction. The
         // draggedOverPopup flag is used to ensure that scrolling does not start
         // until the mouse has moved over the popup first, preventing scrolling
         // while over the dropdown button.
+        let popupRect = menupopup.getOuterScreenRect();
         if (event.screenX >= popupRect.left && event.screenX <= popupRect.right) {
           if (!this.draggedOverPopup) {
             if (event.screenY > popupRect.top && event.screenY < popupRect.bottom) {
