@@ -8,6 +8,7 @@
 
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/gfx/Types.h"
 
 // The infrastructure and plumbing to use the render thread is not entirely in
 // place yet. In order to land code and work in parallel we have to maintain
@@ -27,6 +28,45 @@ typedef mozilla::Maybe<WrImageMask> MaybeImageMask;
 
 namespace mozilla {
 namespace wr {
+
+static inline WrMixBlendMode ToWrMixBlendMode(gfx::CompositionOp compositionOp)
+{
+  switch (compositionOp)
+  {
+      case gfx::CompositionOp::OP_MULTIPLY:
+        return WrMixBlendMode::Multiply;
+      case gfx::CompositionOp::OP_SCREEN:
+        return WrMixBlendMode::Screen;
+      case gfx::CompositionOp::OP_OVERLAY:
+        return WrMixBlendMode::Overlay;
+      case gfx::CompositionOp::OP_DARKEN:
+        return WrMixBlendMode::Darken;
+      case gfx::CompositionOp::OP_LIGHTEN:
+        return WrMixBlendMode::Lighten;
+      case gfx::CompositionOp::OP_COLOR_DODGE:
+        return WrMixBlendMode::ColorDodge;
+      case gfx::CompositionOp::OP_COLOR_BURN:
+        return WrMixBlendMode::ColorBurn;
+      case gfx::CompositionOp::OP_HARD_LIGHT:
+        return WrMixBlendMode::HardLight;
+      case gfx::CompositionOp::OP_SOFT_LIGHT:
+        return WrMixBlendMode::SoftLight;
+      case gfx::CompositionOp::OP_DIFFERENCE:
+        return WrMixBlendMode::Difference;
+      case gfx::CompositionOp::OP_EXCLUSION:
+        return WrMixBlendMode::Exclusion;
+      case gfx::CompositionOp::OP_HUE:
+        return WrMixBlendMode::Hue;
+      case gfx::CompositionOp::OP_SATURATION:
+        return WrMixBlendMode::Saturation;
+      case gfx::CompositionOp::OP_COLOR:
+        return WrMixBlendMode::Color;
+      case gfx::CompositionOp::OP_LUMINOSITY:
+        return WrMixBlendMode::Luminosity;
+      default:
+        return WrMixBlendMode::Normal;
+  }
+}
 
 static inline WrColor ToWrColor(const gfx::Color& color)
 {

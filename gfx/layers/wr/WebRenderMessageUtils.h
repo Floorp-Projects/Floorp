@@ -272,6 +272,15 @@ struct ParamTraits<WrTextureFilter>
 {
 };
 
+template<>
+struct ParamTraits<WrMixBlendMode>
+  : public ContiguousEnumSerializer<
+        WrMixBlendMode,
+        WrMixBlendMode::Normal,
+        WrMixBlendMode::Sentinel>
+{
+};
+
 } // namespace IPC
 
 #endif // GFX_WEBRENDERMESSAGEUTILS_H

@@ -7,6 +7,7 @@
 
 #include <inttypes.h>
 #include "mozilla/layers/WebRenderBridgeChild.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 #include "LayersLogging.h"
 
 namespace mozilla {
@@ -23,6 +24,8 @@ WebRenderContainerLayer::RenderLayer()
   gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
   gfx::Matrix4x4 transform;// = GetTransform();
   if (gfxPrefs::LayersDump()) printf_stderr("ContainerLayer %p using %s as bounds, %s as overflow, %s as transform\n", this, Stringify(relBounds).c_str(), Stringify(overflow).c_str(), Stringify(transform).c_str());
+  WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
+
 
   Maybe<WrImageMask> mask = buildMaskLayer();
 
@@ -32,6 +35,7 @@ WebRenderContainerLayer::RenderLayer()
                             mask,
                             GetLayer()->GetAnimations(),
                             transform,
+                            mixBlendMode,
                             FrameMetrics::NULL_SCROLL_ID));
   for (LayerPolygon& child : children) {
     if (child.layer->IsBackfaceHidden()) {

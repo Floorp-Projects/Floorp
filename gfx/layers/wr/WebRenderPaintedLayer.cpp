@@ -143,6 +143,7 @@ WebRenderPaintedLayer::RenderLayer()
   Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   Rect overflow(0, 0, relBounds.width, relBounds.height);
   Matrix4x4 transform;// = GetTransform();
+  WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
   WrBridge()->AddWebRenderCommand(
       OpDPPushStackingContext(wr::ToWrRect(relBounds),
@@ -150,6 +151,7 @@ WebRenderPaintedLayer::RenderLayer()
                               mask,
                               GetAnimations(),
                               transform,
+                              mixBlendMode,
                               FrameMetrics::NULL_SCROLL_ID));
 
   ContentClientRemoteBuffer* contentClientRemote = static_cast<ContentClientRemoteBuffer*>(mContentClient.get());

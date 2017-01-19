@@ -163,6 +163,7 @@ WrScrollFrameStackingContextGenerator::WrScrollFrameStackingContextGenerator(
                               Nothing(),
                               layer->GetAnimations(),
                               identity,
+                              WrMixBlendMode::Normal,
                               fm.GetScrollId()));
   }
 }

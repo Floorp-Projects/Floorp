@@ -9,6 +9,7 @@
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 
 namespace mozilla {
 namespace layers {
@@ -39,6 +40,7 @@ WebRenderBorderLayer::RenderLayer()
                               Nothing(),
                               GetAnimations(),
                               transform,
+                              WrMixBlendMode::Normal,
                               FrameMetrics::NULL_SCROLL_ID));
 
   WrBridge()->AddWebRenderCommand(

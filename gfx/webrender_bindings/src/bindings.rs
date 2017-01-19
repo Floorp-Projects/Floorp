@@ -8,7 +8,7 @@ use gleam::gl;
 use webrender_traits::{BorderSide, BorderStyle, BorderRadius};
 use webrender_traits::{PipelineId, ClipRegion};
 use webrender_traits::{Epoch, ColorF, GlyphInstance};
-use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind};
+use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind, MixBlendMode};
 use webrender_traits::{ExternalImageId, RenderApi, FontKey};
 use webrender_traits::{DeviceUintSize, ExternalEvent};
 use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
@@ -401,6 +401,53 @@ impl ExternalImageHandler for WrExternalImageHandler {
     }
 }
 
+#[repr(C)]
+pub enum WrMixBlendMode
+{
+    Normal,
+    Multiply,
+    Screen,
+    Overlay,
+    Darken,
+    Lighten,
+    ColorDodge,
+    ColorBurn,
+    HardLight,
+    SoftLight,
+    Difference,
+    Exclusion,
+    Hue,
+    Saturation,
+    Color,
+    Luminosity,
+}
+
+impl WrMixBlendMode
+{
+    pub fn to_mix_blend_mode(self) -> MixBlendMode
+    {
+        match self
+        {
+            WrMixBlendMode::Normal => MixBlendMode::Normal,
+            WrMixBlendMode::Multiply => MixBlendMode::Multiply,
+            WrMixBlendMode::Screen => MixBlendMode::Screen,
+            WrMixBlendMode::Overlay => MixBlendMode::Overlay,
+            WrMixBlendMode::Darken => MixBlendMode::Darken,
+            WrMixBlendMode::Lighten => MixBlendMode::Lighten,
+            WrMixBlendMode::ColorDodge => MixBlendMode::ColorDodge,
+            WrMixBlendMode::ColorBurn => MixBlendMode::ColorBurn,
+            WrMixBlendMode::HardLight => MixBlendMode::HardLight,
+            WrMixBlendMode::SoftLight => MixBlendMode::SoftLight,
+            WrMixBlendMode::Difference => MixBlendMode::Difference,
+            WrMixBlendMode::Exclusion => MixBlendMode::Exclusion,
+            WrMixBlendMode::Hue => MixBlendMode::Hue,
+            WrMixBlendMode::Saturation => MixBlendMode::Saturation,
+            WrMixBlendMode::Color => MixBlendMode::Color,
+            WrMixBlendMode::Luminosity => MixBlendMode::Luminosity,
+        }
+    }
+}
+
 // TODO: Remove.
 #[no_mangle]
 pub extern fn wr_init_window(root_pipeline_id: u64,
@@ -489,14 +536,14 @@ pub extern fn wr_window_dp_begin(window: &mut WrWindowState, state: &mut WrState
 }
 
 #[no_mangle]
-pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, overflow: WrRect, mask: *const WrImageMask, transform: &LayoutTransform)
+pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, overflow: WrRect, mask: *const WrImageMask, transform: &LayoutTransform, mix_blend_mode: WrMixBlendMode)
 {
     assert!( unsafe { is_in_compositor_thread() });
     state.z_index += 1;
 
     let bounds = bounds.to_rect();
     let overflow = overflow.to_rect();
-
+    let mix_blend_mode = mix_blend_mode.to_mix_blend_mode();
     // convert from the C type to the Rust type
     let mask = unsafe { mask.as_ref().map(|&WrImageMask{image, ref rect,repeat}| ImageMask{image: image, rect: rect.to_rect(), repeat: repeat}) };
 
@@ -508,7 +555,7 @@ pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, ov
                                   state.z_index,
                                   transform,
                                   &LayoutTransform::identity(),
-                                  webrender_traits::MixBlendMode::Normal,
+                                  mix_blend_mode,
                                   Vec::new());
 
 }
