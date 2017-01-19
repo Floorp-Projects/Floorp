@@ -1,29 +1,34 @@
 {
-    "llvm_revision": "262557",
-    "stages": "3",
+    "llvm_revision": "290136",
+    "stages": "1",
     "build_libcxx": true,
     "build_type": "Release",
     "assertions": false,
-    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_380/final",
-    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_380/final",
-    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/tags/RELEASE_380/final",
-    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_380/final",
-    "python_path": "/usr/local/bin/python2.7",
-    "cc": "/Users/cltbld/clang/bin/clang",
-    "cxx": "/Users/cltbld/clang/bin/clang++",
+    "osx_cross_compile": true,
+    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_390/final",
+    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_390/final",
+    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/tags/RELEASE_390/final",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_390/final",
+    "libcxxabi_repo": "https://llvm.org/svn/llvm-project/libcxxabi/tags/RELEASE_390/final",
+    "python_path": "/usr/bin/python2.7",
+    "gcc_dir": "/home/worker/workspace/build/src/gcc",
+    "cc": "/home/worker/workspace/build/src/clang/bin/clang",
+    "cxx": "/home/worker/workspace/build/src/clang/bin/clang++",
+    "ar": "/home/worker/workspace/build/src/cctools/bin/x86_64-apple-darwin10-ar",
+    "ranlib": "/home/worker/workspace/build/src/cctools/bin/x86_64-apple-darwin10-ranlib",
+    "ld": "/home/worker/workspace/build/src/clang/bin/clang",
     "patches": {
         "macosx64": [
-          "disable-mac-tsan.patch",
           "llvm-debug-frame.patch",
-          "return-empty-string-non-mangled.patch"
+          "pr28831-r280042.patch"
         ],
         "linux64": [
           "llvm-debug-frame.patch",
-          "return-empty-string-non-mangled.patch"
+          "pr28831-r280042.patch"
         ],
         "linux32": [
           "llvm-debug-frame.patch",
-          "return-empty-string-non-mangled.patch"
+          "pr28831-r280042.patch"
         ]
     }
 }
