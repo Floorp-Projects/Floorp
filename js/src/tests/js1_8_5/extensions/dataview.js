@@ -1649,4 +1649,6 @@ function test(sharedMem) {
 }
 
 test(false);
-test(true);
+
+if (this.SharedArrayBuffer)
+    test(true);
