@@ -1988,6 +1988,7 @@ js::array_sort(JSContext* cx, unsigned argc, Value* vp)
         undefs = 0;
         bool allStrings = true;
         bool allInts = true;
+        bool extraIndexed = ObjectMayHaveExtraIndexedProperties(obj);
         RootedValue v(cx);
         for (uint32_t i = 0; i < len; i++) {
             if (!CheckForInterrupt(cx))
@@ -2048,7 +2049,10 @@ js::array_sort(JSContext* cx, unsigned argc, Value* vp)
             }
         }
 
-        if (!SetArrayElements(cx, obj, 0, uint32_t(n), vec.begin(), ShouldUpdateTypes::DontUpdate))
+        ShouldUpdateTypes updateTypes = !extraIndexed && (allStrings || allInts)
+                                        ? ShouldUpdateTypes::DontUpdate
+                                        : ShouldUpdateTypes::Update;
+        if (!SetArrayElements(cx, obj, 0, uint32_t(n), vec.begin(), updateTypes))
             return false;
     }
 
