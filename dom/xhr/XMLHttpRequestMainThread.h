@@ -57,6 +57,7 @@ namespace dom {
 
 class Blob;
 class BlobSet;
+class DOMString;
 class FormData;
 class URLSearchParams;
 class XMLHttpRequestUpload;
@@ -459,7 +460,7 @@ public:
               ErrorResult& aRv) override;
 
   virtual void
-  GetResponseText(nsAString& aResponseText, ErrorResult& aRv) override;
+  GetResponseText(DOMString& aResponseText, ErrorResult& aRv) override;
 
   void
   GetResponseText(XMLHttpRequestStringSnapshot& aSnapshot,
