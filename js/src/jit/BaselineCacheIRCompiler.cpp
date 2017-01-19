@@ -766,6 +766,45 @@ BaselineCacheIRCompiler::emitStoreDynamicSlot()
 }
 
 bool
+BaselineCacheIRCompiler::emitStoreUnboxedProperty()
+{
+    ObjOperandId objId = reader.objOperandId();
+    JSValueType fieldType = reader.valueType();
+    Address offsetAddr = stubAddress(reader.stubOffset());
+
+    // Allocate the fixed registers first. These need to be fixed for
+    // callTypeUpdateIC.
+    AutoStubFrame stubFrame(*this);
+    AutoScratchRegister scratch(allocator, masm, R1.scratchReg());
+    ValueOperand val = allocator.useFixedValueRegister(masm, reader.valOperandId(), R0);
+
+    Register obj = allocator.useRegister(masm, objId);
+
+    // We only need the type update IC if we are storing an object.
+    if (fieldType == JSVAL_TYPE_OBJECT) {
+        LiveGeneralRegisterSet saveRegs;
+        saveRegs.add(obj);
+        saveRegs.add(val);
+        if (!callTypeUpdateIC(stubFrame, obj, val, scratch, saveRegs))
+            return false;
+    }
+
+    masm.load32(offsetAddr, scratch);
+    BaseIndex fieldAddr(obj, scratch, TimesOne);
+
+    // Note that the storeUnboxedProperty call here is infallible, as the
+    // IR emitter is responsible for guarding on |val|'s type.
+    EmitUnboxedPreBarrierForBaseline(masm, fieldAddr, fieldType);
+    masm.storeUnboxedProperty(fieldAddr, fieldType,
+                              ConstantOrRegister(TypedOrValueRegister(val)),
+                              /* failure = */ nullptr);
+
+    if (UnboxedTypeNeedsPostBarrier(fieldType))
+        BaselineEmitPostWriteBarrierSlot(masm, obj, val, scratch, LiveGeneralRegisterSet(), cx_);
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitTypeMonitorResult()
 {
     allocator.discardStack(masm);
