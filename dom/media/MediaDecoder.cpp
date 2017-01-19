@@ -1755,6 +1755,27 @@ MediaDecoder::DumpDebugInfo()
   }
 }
 
+RefPtr<MediaDecoder::DebugInfoPromise>
+MediaDecoder::RequestDebugInfo()
+{
+  MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
+
+  auto str = GetDebugInfo();
+  if (!GetStateMachine()) {
+    return DebugInfoPromise::CreateAndResolve(str, __func__);
+  }
+
+  return GetStateMachine()->RequestDebugInfo()->Then(
+    AbstractThread::MainThread(), __func__,
+    [str] (const nsACString& aString) {
+      nsCString result = str + nsCString("\n") + aString;
+      return DebugInfoPromise::CreateAndResolve(result, __func__);
+    },
+    [str] () {
+      return DebugInfoPromise::CreateAndResolve(str, __func__);
+    });
+}
+
 void
 MediaDecoder::NotifyAudibleStateChanged()
 {
