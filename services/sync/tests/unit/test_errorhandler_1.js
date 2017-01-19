@@ -153,7 +153,6 @@ add_task(function test_shouldReportError() {
 
   // Give ourselves a clusterURL so that the temporary 401 no-error situation
   // doesn't come into play.
-  Service.serverURL  = fakeServerUrl;
   Service.clusterURL = fakeServerUrl;
 
   // Test dontIgnoreErrors, non-network, non-prolonged, sync error reported
@@ -347,7 +346,6 @@ add_task(async function test_shouldReportError_master_password() {
 // authentication errors is always reported.
 add_task(function test_shouldReportLoginFailureWithNoCluster() {
   // Ensure no clusterURL - any error not specific to login should not be reported.
-  Service.serverURL  = "";
   Service.clusterURL = "";
 
   // Test explicit "login rejected" state.
@@ -462,7 +460,6 @@ add_task(async function test_sync_syncAndReportErrors_prolonged_non_network_erro
 add_task(async function test_login_syncAndReportErrors_network_error() {
   // Test network errors are reported when calling syncAndReportErrors.
   await configureIdentity({username: "broken.wipe"});
-  Service.serverURL  = fakeServerUrl;
   Service.clusterURL = fakeServerUrl;
 
   let promiseObserved = promiseOneObserver("weave:ui:login:error");
@@ -499,7 +496,6 @@ add_task(async function test_login_syncAndReportErrors_prolonged_network_error()
   // when calling syncAndReportErrors.
   await configureIdentity({username: "johndoe"});
 
-  Service.serverURL  = fakeServerUrl;
   Service.clusterURL = fakeServerUrl;
 
   let promiseObserved = promiseOneObserver("weave:ui:login:error");
@@ -580,7 +576,6 @@ add_task(async function test_sync_prolonged_non_network_error() {
 add_task(async function test_login_prolonged_network_error() {
   // Test prolonged, network errors are reported
   await configureIdentity({username: "johndoe"});
-  Service.serverURL  = fakeServerUrl;
   Service.clusterURL = fakeServerUrl;
 
   let promiseObserved = promiseOneObserver("weave:ui:login:error");
@@ -656,7 +651,6 @@ add_task(async function test_sync_non_network_error() {
 
 add_task(async function test_login_network_error() {
   await configureIdentity({username: "johndoe"});
-  Service.serverURL  = fakeServerUrl;
   Service.clusterURL = fakeServerUrl;
 
   let promiseObserved = promiseOneObserver("weave:ui:clear-error");
