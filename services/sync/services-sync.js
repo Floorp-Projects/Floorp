@@ -2,11 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-pref("services.sync.serverURL", "https://auth.services.mozilla.com/");
-pref("services.sync.miscURL", "misc/");
-pref("services.sync.statusURL", "https://services.mozilla.com/status/");
-pref("services.sync.syncKeyHelpURL", "https://services.mozilla.com/help/synckey");
-
 pref("services.sync.lastversion", "firstrun");
 pref("services.sync.sendVersionInfo", true);
 
