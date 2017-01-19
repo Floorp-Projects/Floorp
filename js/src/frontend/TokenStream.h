@@ -80,6 +80,20 @@ struct TokenPos {
 
 enum DecimalPoint { NoDecimal = false, HasDecimal = true };
 
+enum class InvalidEscapeType {
+    // No invalid character escapes.
+    None,
+    // A malformed \x escape.
+    Hexadecimal,
+    // A malformed \u escape.
+    Unicode,
+    // An otherwise well-formed \u escape which represents a
+    // codepoint > 10FFFF.
+    UnicodeOverflow,
+    // An octal escape in a template token.
+    Octal
+};
+
 class TokenStream;
 
 struct Token
@@ -361,6 +375,23 @@ class MOZ_STACK_CLASS TokenStream
     bool hadError() const { return flags.hadError; }
     void clearSawOctalEscape() { flags.sawOctalEscape = false; }
 
+    bool hasInvalidTemplateEscape() const {
+        return invalidTemplateEscapeType != InvalidEscapeType::None;
+    }
+    void clearInvalidTemplateEscape() {
+        invalidTemplateEscapeType = InvalidEscapeType::None;
+    }
+
+    // If there is an invalid escape in a template, report it and return false,
+    // otherwise return true.
+    bool checkForInvalidTemplateEscapeError() {
+        if (invalidTemplateEscapeType == InvalidEscapeType::None)
+            return true;
+
+        reportInvalidEscapeError(invalidTemplateEscapeOffset, invalidTemplateEscapeType);
+        return false;
+    }
+
     // TokenStream-specific error reporters.
     bool reportError(unsigned errorNumber, ...);
     bool reportErrorNoOffset(unsigned errorNumber, ...);
@@ -422,6 +453,33 @@ class MOZ_STACK_CLASS TokenStream
     bool reportStrictModeError(unsigned errorNumber, ...);
     bool strictMode() const { return strictModeGetter && strictModeGetter->strictMode(); }
 
+    void setInvalidTemplateEscape(uint32_t offset, InvalidEscapeType type) {
+        MOZ_ASSERT(type != InvalidEscapeType::None);
+        if (invalidTemplateEscapeType != InvalidEscapeType::None)
+            return;
+        invalidTemplateEscapeOffset = offset;
+        invalidTemplateEscapeType = type;
+    }
+    void reportInvalidEscapeError(uint32_t offset, InvalidEscapeType type) {
+        switch (type) {
+            case InvalidEscapeType::None:
+                MOZ_ASSERT_UNREACHABLE("unexpected InvalidEscapeType");
+                return;
+            case InvalidEscapeType::Hexadecimal:
+                errorAt(offset, JSMSG_MALFORMED_ESCAPE, "hexadecimal");
+                return;
+            case InvalidEscapeType::Unicode:
+                errorAt(offset, JSMSG_MALFORMED_ESCAPE, "Unicode");
+                return;
+            case InvalidEscapeType::UnicodeOverflow:
+                errorAt(offset, JSMSG_UNICODE_OVERFLOW, "escape sequence");
+                return;
+            case InvalidEscapeType::Octal:
+                errorAt(offset, JSMSG_DEPRECATED_OCTAL);
+                return;
+        }
+    }
+
     static JSAtom* atomize(ExclusiveContext* cx, CharBuffer& cb);
     MOZ_MUST_USE bool putIdentInTokenbuf(const char16_t* identStart);
 
@@ -441,6 +499,9 @@ class MOZ_STACK_CLASS TokenStream
 
     bool awaitIsKeyword = false;
     friend class AutoAwaitIsKeyword;
+
+    uint32_t invalidTemplateEscapeOffset = 0;
+    InvalidEscapeType invalidTemplateEscapeType = InvalidEscapeType::None;
 
   public:
     typedef Token::Modifier Modifier;
@@ -955,7 +1016,6 @@ class MOZ_STACK_CLASS TokenStream
 
     MOZ_MUST_USE bool getTokenInternal(TokenKind* ttp, Modifier modifier);
 
-    MOZ_MUST_USE bool matchBracedUnicode(bool* matched, uint32_t* code);
     MOZ_MUST_USE bool getStringOrTemplateToken(int untilChar, Token** tp);
 
     int32_t getChar();
