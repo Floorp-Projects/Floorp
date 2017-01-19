@@ -30,16 +30,21 @@ queue.filter(task => {
     }
   }
 
-  if (task.tests == "bogo") {
-    // No BoGo tests on Windows.
+  if (task.tests == "bogo" || task.tests == "interop") {
+    // No windows
     if (task.platform == "windows2012-64") {
       return false;
     }
 
-    // No BoGo tests on ARM.
+    // No ARM
     if (task.collection == "arm-debug") {
       return false;
     }
+  }
+
+  // Temporarily disable SSL tests on ARM.
+  if (task.tests == "ssl" && task.collection == "arm-debug") {
+    return false;
   }
 
   // GYP builds with -Ddisable_libpkix=1 by default.
@@ -363,7 +368,7 @@ async function scheduleTestBuilds() {
       "/bin/bash",
       "-c",
       "bin/checkout.sh && " +
-      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --test"
+      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --test --ct-verif"
     ],
     artifacts: {
       public: {
@@ -470,6 +475,9 @@ function scheduleTests(task_build, task_cert, test_base) {
   }));
   queue.scheduleTask(merge(no_cert_base, {
     name: "Bogo tests", symbol: "Bogo", tests: "bogo", cycle: "standard"
+  }));
+  queue.scheduleTask(merge(no_cert_base, {
+    name: "Interop tests", symbol: "Interop", tests: "interop", cycle: "standard"
   }));
   queue.scheduleTask(merge(no_cert_base, {
     name: "Chains tests", symbol: "Chains", tests: "chains"
