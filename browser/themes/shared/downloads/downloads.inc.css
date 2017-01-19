@@ -259,21 +259,16 @@ richlistitem[type="download"]:last-child {
   padding: 0;
 }
 
-@itemFinished@[exists]:hover > .downloadMainArea,
-@item@:not([verdict]):hover > .downloadButtonArea {
-  background-color: var(--arrowpanel-dimmed);
-}
-
 @itemFinished@[exists] .downloadMainArea:hover,
 @item@:not([verdict]) > .downloadButtonArea:hover,
 @item@[verdict]:hover {
-  background-color: var(--arrowpanel-dimmed-further);
+  background-color: var(--arrowpanel-dimmed);
 }
 
 @itemFinished@[exists] > .downloadMainArea:hover:active,
 @item@:not([verdict]) > .downloadButtonArea:hover:active,
 @item@[verdict]:hover:active {
-  background-color: var(--arrowpanel-dimmed-even-further);
+  background-color: var(--arrowpanel-dimmed-further);
 }
 
 @item@[showingsubview] {
