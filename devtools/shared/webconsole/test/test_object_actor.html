@@ -16,17 +16,15 @@ SimpleTest.waitForExplicitFinish();
 
 let expectedProps = [];
 
-function startTest()
-{
+function startTest() {
   removeEventListener("load", startTest);
 
   attachConsoleToTab(["ConsoleAPI"], onAttach);
 }
 
-function onAttach(aState, aResponse)
-{
-  onConsoleCall = onConsoleCall.bind(null, aState);
-  aState.dbgClient.addListener("consoleAPICall", onConsoleCall);
+function onAttach(state, response) {
+  onConsoleCall = onConsoleCall.bind(null, state);
+  state.dbgClient.addListener("consoleAPICall", onConsoleCall);
 
   let longString = (new Array(DebuggerServer.LONG_STRING_LENGTH + 3)).join("\u0629");
 
@@ -132,9 +130,8 @@ function onAttach(aState, aResponse)
   };
 }
 
-function onConsoleCall(aState, aType, aPacket)
-{
-  is(aPacket.from, aState.actor, "console API call actor");
+function onConsoleCall(state, aType, aPacket) {
+  is(aPacket.from, state.actor, "console API call actor");
 
   info("checking the console API call packet");
 
@@ -148,26 +145,25 @@ function onConsoleCall(aState, aType, aPacket)
     }],
   });
 
-  aState.dbgClient.removeListener("consoleAPICall", onConsoleCall);
+  state.dbgClient.removeListener("consoleAPICall", onConsoleCall);
 
   info("inspecting object properties");
   let args = aPacket.message.arguments;
-  onProperties = onProperties.bind(null, aState);
+  onProperties = onProperties.bind(null, state);
 
-  let client = new ObjectClient(aState.dbgClient, args[1]);
+  let client = new ObjectClient(state.dbgClient, args[1]);
   client.getPrototypeAndProperties(onProperties);
 }
 
-function onProperties(aState, aResponse)
-{
-  let props = aResponse.ownProperties;
+function onProperties(state, response) {
+  let props = response.ownProperties;
   is(Object.keys(props).length, Object.keys(expectedProps).length,
      "number of enumerable properties");
   checkObject(props, expectedProps);
 
   expectedProps = [];
 
-  closeDebugger(aState, function() {
+  closeDebugger(state, function() {
     SimpleTest.finish();
   });
 }
