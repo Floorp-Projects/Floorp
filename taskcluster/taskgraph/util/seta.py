@@ -11,6 +11,8 @@ headers = {
 
 # It's a list of project name which SETA is useful on
 SETA_PROJECTS = ['mozilla-inbound', 'autoland']
+PROJECT_SCHEDULE_ALL_EVERY = {'mozilla-inbound': 5, 'autoland': 5}
+
 SETA_ENDPOINT = "https://seta.herokuapp.com/data/setadetails/?branch=%s"
 
 
@@ -74,7 +76,11 @@ class SETA(object):
 
         return low_value_tasks
 
-    def is_low_value_task(self, label, project):
+    def is_low_value_task(self, label, project, pushlog_id):
+        schedule_all_every = PROJECT_SCHEDULE_ALL_EVERY.get(project, 5)
+        # on every Nth push, want to run all tasks
+        if int(pushlog_id) % schedule_all_every == 0:
+            return False
         # cache the low value tasks per project to avoid repeated SETA server queries
         if project not in self.low_value_tasks:
             self.low_value_tasks[project] = self.query_low_value_tasks(project)
