@@ -7,7 +7,7 @@
 const {
   ADD_VIEWPORT,
   CHANGE_DEVICE,
-  CHANGE_VIEWPORT_PIXEL_RATIO,
+  CHANGE_PIXEL_RATIO,
   RESIZE_VIEWPORT,
   ROTATE_VIEWPORT
 } = require("./index");
@@ -37,9 +37,9 @@ module.exports = {
   /**
    * Change the viewport pixel ratio.
    */
-  changeViewportPixelRatio(id, pixelRatio = 0) {
+  changePixelRatio(id, pixelRatio = 0) {
     return {
-      type: CHANGE_VIEWPORT_PIXEL_RATIO,
+      type: CHANGE_PIXEL_RATIO,
       id,
       pixelRatio,
     };

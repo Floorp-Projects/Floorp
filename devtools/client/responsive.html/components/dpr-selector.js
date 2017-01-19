@@ -37,7 +37,7 @@ module.exports = createClass({
     displayPixelRatio: Types.pixelRatio.value.isRequired,
     selectedDevice: PropTypes.string.isRequired,
     selectedPixelRatio: PropTypes.shape(Types.pixelRatio).isRequired,
-    onChangeViewportPixelRatio: PropTypes.func.isRequired,
+    onChangePixelRatio: PropTypes.func.isRequired,
   },
 
   mixins: [ addons.PureRenderMixin ],
@@ -55,7 +55,7 @@ module.exports = createClass({
   },
 
   onSelectChange({ target }) {
-    this.props.onChangeViewportPixelRatio(+target.value);
+    this.props.onChangePixelRatio(+target.value);
   },
 
   render() {

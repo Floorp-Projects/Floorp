@@ -5,7 +5,7 @@
 
 // Test changing the viewport pixel ratio.
 
-const { addViewport, changeViewportPixelRatio } =
+const { addViewport, changePixelRatio } =
   require("devtools/client/responsive.html/actions/viewports");
 const NEW_PIXEL_RATIO = 5.5;
 
@@ -14,7 +14,7 @@ add_task(function* () {
   const { getState, dispatch } = store;
 
   dispatch(addViewport());
-  dispatch(changeViewportPixelRatio(0, NEW_PIXEL_RATIO));
+  dispatch(changePixelRatio(0, NEW_PIXEL_RATIO));
 
   let viewport = getState().viewports[0];
   equal(viewport.pixelRatio.value, NEW_PIXEL_RATIO,
