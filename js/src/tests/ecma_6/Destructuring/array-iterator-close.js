@@ -43,6 +43,22 @@ function test() {
     }, "in lhs");
     assertEq(returnCalled, ++returnCalledExpected);
 
+    // throw in lhs ref calls IteratorClose with falsy "done".
+    iterable[Symbol.iterator] = makeIterator({
+        next: function() {
+            // "done" is undefined.
+            return {};
+        },
+        ret: function() {
+            returnCalled++;
+            return {};
+        }
+    });
+    assertThrowsValue(function() {
+        0, [...{}[throwlhs()]] = iterable;
+    }, "in lhs");
+    assertEq(returnCalled, ++returnCalledExpected);
+
     // throw in iter.next doesn't call IteratorClose
     iterable[Symbol.iterator] = makeIterator({
         next: function() {
