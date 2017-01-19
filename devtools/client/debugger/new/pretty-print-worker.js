@@ -5,6 +5,30 @@ var Debugger =
 /******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
+/******/ 		// SingleModulePlugin
+/******/ 		const smpCache = this.smpCache = this.smpCache || {};
+/******/ 		const smpMap = this.smpMap = this.smpMap || new Map();
+/******/ 		function sanitizeString(text) {
+/******/ 		   return text.replace(/__webpack_require__\(\d+\)/g,"");
+/******/ 		}
+/******/ 		function getModuleBody(id) {
+/******/ 		  if (smpCache.hasOwnProperty(id)) {
+/******/ 		    return smpCache[id];
+/******/ 		  }
+/******/
+/******/ 		  const body = sanitizeString(String(modules[id]));
+/******/ 		  smpCache[id] = body;
+/******/ 		  return body;
+/******/ 		}
+/******/ 		if (!installedModules[moduleId]) {
+/******/ 			const body = getModuleBody(moduleId);
+/******/ 			if (smpMap.has(body)) {
+/******/ 				installedModules[moduleId] = installedModules[smpMap.get(body)];
+/******/ 			}
+/******/ 			else {
+/******/ 				smpMap.set(body, moduleId)
+/******/ 			}
+/******/ 		}
 /******/
 /******/ 		// Check if module is in cache
 /******/ 		if(installedModules[moduleId])
@@ -35,7 +59,7 @@ var Debugger =
 /******/ 	__webpack_require__.c = installedModules;
 /******/
 /******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "/public/build";
+/******/ 	__webpack_require__.p = "/assets/build";
 /******/
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(0);
@@ -46,13 +70,34 @@ var Debugger =
 /***/ 0:
 /***/ function(module, exports, __webpack_require__) {
 
-	var prettyFast = __webpack_require__(460);
-	var assert = __webpack_require__(247);
+	module.exports = __webpack_require__(543);
+
+
+/***/ },
+
+/***/ 235:
+/***/ function(module, exports) {
+
+	function assert(condition, message) {
+	  if (!condition) {
+	    throw new Error(`Assertion failure: ${ message }`);
+	  }
+	}
+	
+	module.exports = assert;
+
+/***/ },
+
+/***/ 543:
+/***/ function(module, exports, __webpack_require__) {
+
+	var prettyFast = __webpack_require__(544);
+	var assert = __webpack_require__(235);
 	
 	function prettyPrint(_ref) {
-	  var url = _ref.url;
-	  var indent = _ref.indent;
-	  var source = _ref.source;
+	  var url = _ref.url,
+	      indent = _ref.indent,
+	      source = _ref.source;
 	
 	  try {
 	    var prettified = prettyFast(source, {
@@ -65,7 +110,7 @@ var Debugger =
 	      mappings: prettified.map._mappings
 	    };
 	  } catch (e) {
-	    return new Error(e.message + "\n" + e.stack);
+	    return new Error(`${ e.message }\n${ e.stack }`);
 	  }
 	}
 	
@@ -90,17 +135,16 @@ var Debugger =
 	}
 	
 	self.onmessage = function (msg) {
-	  var _msg$data = msg.data;
-	  var id = _msg$data.id;
-	  var args = _msg$data.args;
+	  var _msg$data = msg.data,
+	      id = _msg$data.id,
+	      args = _msg$data.args;
 	
 	  assert(msg.data.method === "prettyPrint", "Method must be `prettyPrint`");
 	
 	  try {
-	    var _prettyPrint = prettyPrint(args[0]);
-	
-	    var code = _prettyPrint.code;
-	    var mappings = _prettyPrint.mappings;
+	    var _prettyPrint = prettyPrint(args[0]),
+	        code = _prettyPrint.code,
+	        mappings = _prettyPrint.mappings;
 	
 	    self.postMessage({ id, response: {
 	        code, mappings: invertMappings(mappings)
@@ -112,20 +156,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 247:
-/***/ function(module, exports) {
-
-	function assert(condition, message) {
-	  if (!condition) {
-	    throw new Error("Assertion failure: " + message);
-	  }
-	}
-	
-	module.exports = assert;
-
-/***/ },
-
-/***/ 460:
+/***/ 544:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;/* -*- indent-tabs-mode: nil; js-indent-level: 2; fill-column: 80 -*- */
@@ -147,8 +178,8 @@ var Debugger =
 	}(this, function () {
 	  "use strict";
 	
-	  var acorn = this.acorn || __webpack_require__(461);
-	  var sourceMap = this.sourceMap || __webpack_require__(462);
+	  var acorn = this.acorn || __webpack_require__(545);
+	  var sourceMap = this.sourceMap || __webpack_require__(546);
 	  var SourceNode = sourceMap.SourceNode;
 	
 	  // If any of these tokens are seen before a "[" token, we know that "[" token
@@ -1007,7 +1038,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 461:
+/***/ 545:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;// Acorn is a tiny, fast JavaScript parser written in JavaScript.
@@ -3667,7 +3698,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 462:
+/***/ 546:
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -3675,14 +3706,14 @@ var Debugger =
 	 * Licensed under the New BSD license. See LICENSE.txt or:
 	 * http://opensource.org/licenses/BSD-3-Clause
 	 */
-	exports.SourceMapGenerator = __webpack_require__(463).SourceMapGenerator;
-	exports.SourceMapConsumer = __webpack_require__(469).SourceMapConsumer;
-	exports.SourceNode = __webpack_require__(471).SourceNode;
+	exports.SourceMapGenerator = __webpack_require__(547).SourceMapGenerator;
+	exports.SourceMapConsumer = __webpack_require__(553).SourceMapConsumer;
+	exports.SourceNode = __webpack_require__(555).SourceNode;
 
 
 /***/ },
 
-/***/ 463:
+/***/ 547:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -3696,10 +3727,10 @@ var Debugger =
 	}
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	
-	  var base64VLQ = __webpack_require__(464);
-	  var util = __webpack_require__(466);
-	  var ArraySet = __webpack_require__(467).ArraySet;
-	  var MappingList = __webpack_require__(468).MappingList;
+	  var base64VLQ = __webpack_require__(548);
+	  var util = __webpack_require__(550);
+	  var ArraySet = __webpack_require__(551).ArraySet;
+	  var MappingList = __webpack_require__(552).MappingList;
 	
 	  /**
 	   * An instance of the SourceMapGenerator represents a source map which is
@@ -4089,7 +4120,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 464:
+/***/ 548:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4133,7 +4164,7 @@ var Debugger =
 	}
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	
-	  var base64 = __webpack_require__(465);
+	  var base64 = __webpack_require__(549);
 	
 	  // A single base 64 digit can contain 6 bits of data. For the base 64 variable
 	  // length quantities we use in the source map spec, the first bit is the sign,
@@ -4238,7 +4269,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 465:
+/***/ 549:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4287,7 +4318,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 466:
+/***/ 550:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4613,7 +4644,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 467:
+/***/ 551:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4627,7 +4658,7 @@ var Debugger =
 	}
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	
-	  var util = __webpack_require__(466);
+	  var util = __webpack_require__(550);
 	
 	  /**
 	   * A data structure which is a combination of an array and a set. Adding a new
@@ -4717,7 +4748,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 468:
+/***/ 552:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4731,7 +4762,7 @@ var Debugger =
 	}
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	
-	  var util = __webpack_require__(466);
+	  var util = __webpack_require__(550);
 	
 	  /**
 	   * Determine whether mappingB is after mappingA with respect to generated
@@ -4810,7 +4841,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 469:
+/***/ 553:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -4824,10 +4855,10 @@ var Debugger =
 	}
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	
-	  var util = __webpack_require__(466);
-	  var binarySearch = __webpack_require__(470);
-	  var ArraySet = __webpack_require__(467).ArraySet;
-	  var base64VLQ = __webpack_require__(464);
+	  var util = __webpack_require__(550);
+	  var binarySearch = __webpack_require__(554);
+	  var ArraySet = __webpack_require__(551).ArraySet;
+	  var base64VLQ = __webpack_require__(548);
 	
 	  /**
 	   * A SourceMapConsumer instance represents a parsed source map which we can
@@ -5392,7 +5423,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 470:
+/***/ 554:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -5479,7 +5510,7 @@ var Debugger =
 
 /***/ },
 
-/***/ 471:
+/***/ 555:
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* -*- Mode: js; js-indent-level: 2; -*- */
@@ -5493,8 +5524,8 @@ var Debugger =
 	}
 	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require, exports, module) {
 	
-	  var SourceMapGenerator = __webpack_require__(463).SourceMapGenerator;
-	  var util = __webpack_require__(466);
+	  var SourceMapGenerator = __webpack_require__(547).SourceMapGenerator;
+	  var util = __webpack_require__(550);
 	
 	  // Matches a Windows-style `\r\n` newline or a `\n` newline used by all other
 	  // operating systems these days (capturing the result).
