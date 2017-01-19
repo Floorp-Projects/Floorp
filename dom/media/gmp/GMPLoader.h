@@ -103,7 +103,7 @@ public:
 
 // On Desktop, this function resides in plugin-container.
 // On Mobile, this function resides in XUL.
-UniquePtr<GMPLoader> CreateGMPLoader(UniquePtr<SandboxStarter> aStarter);
+UniquePtr<GMPLoader> CreateGMPLoader();
 
 } // namespace gmp
 } // namespace mozilla

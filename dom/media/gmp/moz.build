@@ -66,13 +66,6 @@ EXPORTS += [
     'widevine-adapter/content_decryption_module.h',
 ]
 
-# We link GMPLoader into xul on Android and Linux as its code does not
-# need to be covered by a DRM vendor's voucher.
-if CONFIG['OS_ARCH'] == 'Linux':
-    SOURCES += [
-      'GMPLoader.cpp',
-    ]
-
 UNIFIED_SOURCES += [
     'GMPCDMCallbackProxy.cpp',
     'GMPCDMProxy.cpp',
@@ -84,6 +77,7 @@ UNIFIED_SOURCES += [
     'GMPDecryptorParent.cpp',
     'GMPDiskStorage.cpp',
     'GMPEncryptedBufferDataImpl.cpp',
+    'GMPLoader.cpp',
     'GMPMemoryStorage.cpp',
     'GMPParent.cpp',
     'GMPPlatform.cpp',
@@ -128,6 +122,14 @@ IPDL_SOURCES += [
 DEFINES['GMP_SAFE_SHMEM'] = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+if CONFIG['MOZ_SANDBOX']:
+    # For sandbox includes and the include dependencies those have
+    LOCAL_INCLUDES += [
+        '/security/sandbox/chromium',
+        '/security/sandbox/chromium-shim',
+    ]
+
 
 FINAL_LIBRARY = 'xul'
 # media/mtransport so we work with --disable-webrtc

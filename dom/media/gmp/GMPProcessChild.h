@@ -25,15 +25,8 @@ public:
   bool Init() override;
   void CleanUp() override;
 
-  // Set/get the GMPLoader singleton for this child process.
-  // Note: The GMPLoader is not deleted by this object, the caller of
-  // SetGMPLoader() must manage the GMPLoader's lifecycle.
-  static void SetGMPLoader(GMPLoader* aHost);
-  static GMPLoader* GetGMPLoader();
-
 private:
   GMPChild mPlugin;
-  static GMPLoader* mLoader;
   DISALLOW_COPY_AND_ASSIGN(GMPProcessChild);
 };
 
