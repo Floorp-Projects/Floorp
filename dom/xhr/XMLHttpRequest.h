@@ -18,6 +18,7 @@ namespace mozilla {
 namespace dom {
 
 class Blob;
+class DOMString;
 class FormData;
 class URLSearchParams;
 class XMLHttpRequestUpload;
@@ -138,7 +139,7 @@ public:
               ErrorResult& aRv) = 0;
 
   virtual void
-  GetResponseText(nsAString& aResponseText, ErrorResult& aRv) = 0;
+  GetResponseText(DOMString& aResponseText, ErrorResult& aRv) = 0;
 
   virtual nsIDocument*
   GetResponseXML(ErrorResult& aRv) = 0;
