@@ -8,7 +8,7 @@ const { DOM, PropTypes } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { getSelectedRequest } = require("../../selectors/index");
 
-const { iframe } = DOM;
+const { div, iframe } = DOM;
 
 /*
  * Preview panel component
@@ -17,11 +17,14 @@ const { iframe } = DOM;
 function PreviewPanel({
   srcDoc = "",
 }) {
-  return iframe({
-    id: "response-preview",
-    sandbox: "",
-    srcDoc,
-  });
+  return (
+    div({ className: "panel-container" },
+      iframe({
+        sandbox: "",
+        srcDoc,
+      })
+    )
+  );
 }
 
 PreviewPanel.displayName = "PreviewPanel";
