@@ -65,13 +65,11 @@ public class BufferingMiddlewareRepositorySessionTest {
         MockRecord record1 = new MockRecord("guid2", null, 1, false);
         bufferingSession.store(record1);
         assertEquals(2, bufferStorage.all().size());
-        assertEquals(1, bufferStorage.latestModifiedTimestamp());
 
         // record2 must replace record.
         MockRecord record2 = new MockRecord("guid1", null, 2, false);
         bufferingSession.store(record2);
         assertEquals(2, bufferStorage.all().size());
-        assertEquals(2, bufferStorage.latestModifiedTimestamp());
 
         // Ensure inner session doesn't see incoming records.
         verify(innerRepositorySession, never()).store(record);
@@ -176,28 +174,5 @@ public class BufferingMiddlewareRepositorySessionTest {
         RepositorySessionStoreDelegate delegate = mock(RepositorySessionStoreDelegate.class);
         bufferingSession.setStoreDelegate(delegate);
         verify(innerRepositorySession).setStoreDelegate(delegate);
-    }
-
-    @Test
-    public void getHighWaterMarkTimestamp() throws Exception {
-        // Trivial case, empty buffer.
-        assertEquals(0, bufferingSession.getHighWaterMarkTimestamp());
-
-        MockRecord record = new MockRecord("guid1", null, 1, false);
-        bufferingSession.store(record);
-        assertEquals(1, bufferingSession.getHighWaterMarkTimestamp());
-
-        MockRecord record3 = new MockRecord("guid3", null, 5, false);
-        bufferingSession.store(record3);
-        assertEquals(5, bufferingSession.getHighWaterMarkTimestamp());
-
-        // NB: same guid as above.
-        MockRecord record4 = new MockRecord("guid3", null, -1, false);
-        bufferingSession.store(record4);
-        assertEquals(1, bufferingSession.getHighWaterMarkTimestamp());
-
-        MockRecord record2 = new MockRecord("guid2", null, 13, false);
-        bufferingSession.store(record2);
-        assertEquals(13, bufferingSession.getHighWaterMarkTimestamp());
     }
 }

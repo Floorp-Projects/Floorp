@@ -31,6 +31,8 @@ public class Server15Repository extends Repository {
   protected final String collection;
   protected final InfoCollections infoCollections;
 
+  protected RepositoryStateProvider stateProvider;
+
   private final InfoConfiguration infoConfiguration;
   private final static String DEFAULT_SORT_ORDER = "oldest";
   private final static long DEFAULT_BATCH_LIMIT = 100;
@@ -50,7 +52,8 @@ public class Server15Repository extends Repository {
           @NonNull String storageURL,
           AuthHeaderProvider authHeaderProvider,
           @NonNull InfoCollections infoCollections,
-          @NonNull InfoConfiguration infoConfiguration) throws URISyntaxException {
+          @NonNull InfoConfiguration infoConfiguration,
+          @NonNull RepositoryStateProvider stateProvider) throws URISyntaxException {
     if (collection == null) {
       throw new IllegalArgumentException("collection must not be null");
     }
@@ -66,6 +69,7 @@ public class Server15Repository extends Repository {
     this.authHeaderProvider = authHeaderProvider;
     this.infoCollections = infoCollections;
     this.infoConfiguration = infoConfiguration;
+    this.stateProvider = stateProvider;
   }
 
   @Override
@@ -101,6 +105,10 @@ public class Server15Repository extends Repository {
 
   public boolean getAllowMultipleBatches() {
     return true;
+  }
+
+  public boolean getAllowHighWaterMark() {
+    return false;
   }
 
   /**

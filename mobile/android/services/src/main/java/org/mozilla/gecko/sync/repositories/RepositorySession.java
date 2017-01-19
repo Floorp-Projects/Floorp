@@ -76,11 +76,6 @@ public abstract class RepositorySession {
     return lastSyncTimestamp;
   }
 
-  // Override this in the buffering wrappers.
-  public long getHighWaterMarkTimestamp() {
-    return 0;
-  }
-
   public static long now() {
     return System.currentTimeMillis();
   }

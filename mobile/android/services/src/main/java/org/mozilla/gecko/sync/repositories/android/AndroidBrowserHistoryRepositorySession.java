@@ -191,6 +191,28 @@ public class AndroidBrowserHistoryRepositorySession extends AndroidBrowserReposi
     storeDone(System.currentTimeMillis());
   }
 
+  /**
+   * We need to flush our internal buffer of records in case of any interruptions of record flow
+   * from our "source". Downloader might be maintaining a "high-water-mark" based on the records
+   * it tried to store, so it's pertinent that all of the records that were queued for storage
+   * are eventually persisted.
+   */
+  @Override
+  public void storeIncomplete() {
+    storeWorkQueue.execute(new Runnable() {
+      @Override
+      public void run() {
+        synchronized (recordsBufferMonitor) {
+          try {
+            flushNewRecords();
+          } catch (Exception e) {
+            Logger.warn(LOG_TAG, "Error flushing records to database.", e);
+          }
+        }
+      }
+    });
+  }
+
   @Override
   public void storeDone(final long end) {
     storeWorkQueue.execute(new Runnable() {

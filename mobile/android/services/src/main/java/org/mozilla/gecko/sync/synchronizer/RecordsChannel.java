@@ -6,6 +6,7 @@ package org.mozilla.gecko.sync.synchronizer;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -176,16 +177,7 @@ public class RecordsChannel implements
     this.consumer = new ConcurrentRecordConsumer(this);
     ThreadPool.run(this.consumer);
     waitingForQueueDone = true;
-
-    // Fetch all records that were modified since our previous flow. If our previous flow succeeded,
-    // we will use source's last-sync timestamp. If our previous flow didn't complete, resume it,
-    // starting from sink's high water mark timestamp.
-    // If there was no previous flow (first sync, or data was cleared...), fetch everything.
-    // Resuming a flow is supported for buffered RepositorySessions. We degrade gracefully otherwise.
-    final long highWaterMark = sink.getHighWaterMarkTimestamp();
-    final long lastSync = source.getLastSyncTimestamp();
-    final long sinceTimestamp = Math.max(highWaterMark, lastSync);
-    source.fetchSince(sinceTimestamp, this);
+    source.fetchSince(source.getLastSyncTimestamp(), this);
   }
 
   /**
@@ -215,9 +207,9 @@ public class RecordsChannel implements
     if (ex instanceof ReflowIsNecessaryException) {
       setReflowException((ReflowIsNecessaryException) ex);
     }
+    delegate.onFlowFetchFailed(this, ex);
     // Sink will be informed once consumer finishes.
     this.consumer.halt();
-    delegate.onFlowFetchFailed(this, ex);
   }
 
   @Override
@@ -318,6 +310,7 @@ public class RecordsChannel implements
     // If consumer is still going at it, tell it to stop.
     this.consumer.halt();
 
+    delegate.onFlowStoreFailed(this, ex, null);
     delegate.onFlowCompleted(this, fetchEnd, System.currentTimeMillis());
   }
 
@@ -363,7 +356,8 @@ public class RecordsChannel implements
   }
 
   @Nullable
-  /* package-local */ synchronized ReflowIsNecessaryException getReflowException() {
+  @VisibleForTesting
+  public synchronized ReflowIsNecessaryException getReflowException() {
     return reflowException;
   }
 
