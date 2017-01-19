@@ -29,10 +29,6 @@
   height: 28px;
 }
 
-.tabs .tabs-menu-item a {
-  cursor: default;
-}
-
 /* The tab takes entire horizontal space and individual tabs
   should stretch accordingly. Use flexbox for the behavior.
   Use also `overflow: hidden` so, 'overflow' and 'underflow'

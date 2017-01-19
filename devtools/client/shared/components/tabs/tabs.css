@@ -30,6 +30,10 @@
   white-space: nowrap;
 }
 
+.tabs .tabs-menu-item a {
+  cursor: default;
+}
+
 /* Make sure panel content takes entire vertical space.
   (minus the height of the tab bar) */
 .tabs .panels {

@@ -214,6 +214,7 @@ Converter.prototype = {
     let baseUrl = clientBaseUrl + "jsonview/";
     let themeVarsUrl = clientBaseUrl + "themes/variables.css";
     let commonUrl = clientBaseUrl + "themes/common.css";
+    let toolbarsUrl = clientBaseUrl + "themes/toolbars.css";
 
     let os;
     let platform = Services.appinfo.OS;
@@ -238,6 +239,8 @@ Converter.prototype = {
         themeVarsUrl + "\">" +
       "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
         commonUrl + "\">" +
+      "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
+        toolbarsUrl + "\">" +
       "<link rel=\"stylesheet\" type=\"text/css\" href=\"css/main.css\">" +
       "<script data-main=\"viewer-config\" src=\"lib/require.js\"></script>" +
       "</head><body>" +
