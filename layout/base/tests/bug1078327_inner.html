@@ -24,16 +24,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1078327
     var test_mediator_move = false;
     var test_mediator_out = false;
     var test_listener = false;
+    var test_lost_capture = false;
 
     function TargetHandler(event) {
       logger("Target receive event: " + event.type + ". Mediator.setPointerCapture()");
       mediator.setPointerCapture(event.pointerId);
       test_target = true;
+      test_capture = true;
     }
     function MediatorHandler(event) {
       logger("Mediator receive event: " + event.type);
-      if(event.type == "gotpointercapture")
-        test_capture = true;
       if(!test_capture)
         return;
       if(event.type == "pointermove")
@@ -43,7 +43,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1078327
       if(event.type == "pointerout")
         test_mediator_out++;
       if(event.type == "lostpointercapture")
-        test_capture = false;
+        test_lost_capture = true;
     }
     function ListenerHandler(event) {
       logger("Listener receive event: " + event.type);
@@ -86,7 +86,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1078327
     }
     function finishTest() {
       parent.is(test_target,        true,   "pointerdown event should be received by target");
-      parent.is(test_capture,       false,  "test_capture should be false at the end of the test");
+      parent.is(test_lost_capture,  true,   "mediator should receive lostpointercapture");
       parent.is(test_mediator_over, 1,      "mediator should receive pointerover event only once");
       parent.is(test_mediator_move, 5,      "mediator should receive pointermove event five times");
       parent.is(test_mediator_out,  1,      "mediator should receive pointerout event only once");
