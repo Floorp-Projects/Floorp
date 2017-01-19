@@ -62,8 +62,6 @@ public:
   // the plugin.
   bool Load(const char* aUTF8LibPath,
             uint32_t aLibPathLen,
-            char* aOriginSalt,
-            uint32_t aOriginSaltLen,
             const GMPPlatformAPI* aPlatformAPI,
             GMPAdapter* aAdapter = nullptr);
 
