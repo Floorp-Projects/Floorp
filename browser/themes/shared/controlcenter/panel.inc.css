@@ -103,7 +103,7 @@
 #identity-popup-permissions-content,
 #tracking-protection-content {
   padding: 0.5em 0 1em;
-  /* .identity-popup-headline.host depends on this width */
+  /* .identity-popup-host depends on this width */
   padding-inline-start: calc(2em + 24px);
   padding-inline-end: 1em;
 }
@@ -182,7 +182,7 @@
   font-size: 150%;
 }
 
-.identity-popup-headline.host {
+.identity-popup-host {
   word-wrap: break-word;
   /* 1em + 2em + 24px is #identity-popup-security-content padding
    * 30em is .panel-mainview:not([panelid="PanelUI-popup"]) width */

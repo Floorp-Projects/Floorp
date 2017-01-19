@@ -6682,7 +6682,7 @@ var gIdentityHandler = {
   },
   get _identityPopupContentHosts() {
     delete this._identityPopupContentHosts;
-    let selector = ".identity-popup-headline.host";
+    let selector = ".identity-popup-host";
     return this._identityPopupContentHosts = [
       ...this._identityPopupMultiView._mainView.querySelectorAll(selector),
       ...document.querySelectorAll(selector)
@@ -6690,7 +6690,7 @@ var gIdentityHandler = {
   },
   get _identityPopupContentHostless() {
     delete this._identityPopupContentHostless;
-    let selector = ".identity-popup-headline.hostless";
+    let selector = ".identity-popup-hostless";
     return this._identityPopupContentHostless = [
       ...this._identityPopupMultiView._mainView.querySelectorAll(selector),
       ...document.querySelectorAll(selector)
