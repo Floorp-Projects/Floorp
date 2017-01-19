@@ -5,14 +5,16 @@
 "use strict";
 
 const {
-  UPDATE_TOUCH_SIMULATION_ENABLED,
+  CHANGE_TOUCH_SIMULATION,
 } = require("../actions/index");
 
-const INITIAL_TOUCH_SIMULATION = { enabled: false };
+const INITIAL_TOUCH_SIMULATION = {
+  enabled: false,
+};
 
 let reducers = {
 
-  [UPDATE_TOUCH_SIMULATION_ENABLED](touchSimulation, { enabled }) {
+  [CHANGE_TOUCH_SIMULATION](touchSimulation, { enabled }) {
     return Object.assign({}, touchSimulation, {
       enabled,
     });

@@ -7,14 +7,14 @@
 "use strict";
 
 const {
-  UPDATE_TOUCH_SIMULATION_ENABLED
+  CHANGE_TOUCH_SIMULATION
 } = require("./index");
 
 module.exports = {
 
-  updateTouchSimulationEnabled(enabled = false) {
+  changeTouchSimulation(enabled) {
     return {
-      type: UPDATE_TOUCH_SIMULATION_ENABLED,
+      type: CHANGE_TOUCH_SIMULATION,
       enabled,
     };
   },
