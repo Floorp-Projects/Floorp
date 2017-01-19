@@ -26,9 +26,12 @@ const {CustomizableUI} = Cu.import("resource:///modules/CustomizableUI.jsm", {})
 // use to select our configuration.
 if (gTestPath.includes("test-oop-extensions")) {
   SpecialPowers.pushPrefEnv({set: [
-    ["dom.ipc.processCount", 1],
+    ["dom.ipc.processCount.extension", 1],
     ["extensions.webextensions.remote", true],
   ]});
+  // We don't want to reset this at the end of the test, so that we don't have
+  // to spawn a new extension child process for each test unit.
+  SpecialPowers.setIntPref("dom.ipc.keepProcessesAlive.extension", 1);
 }
 
 // Bug 1239884: Our tests occasionally hit a long GC pause at unpredictable

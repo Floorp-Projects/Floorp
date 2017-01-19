@@ -3017,11 +3017,17 @@ nsXPCComponents_Utils::NukeSandbox(HandleValue obj, JSContext* cx)
     NS_ENSURE_TRUE(obj.isObject(), NS_ERROR_INVALID_ARG);
     JSObject* wrapper = &obj.toObject();
     NS_ENSURE_TRUE(IsWrapper(wrapper), NS_ERROR_INVALID_ARG);
-    JSObject* sb = UncheckedUnwrap(wrapper);
+    RootedObject sb(cx, UncheckedUnwrap(wrapper));
     NS_ENSURE_TRUE(IsSandbox(sb), NS_ERROR_INVALID_ARG);
     NukeCrossCompartmentWrappers(cx, AllCompartments(),
                                  SingleCompartment(GetObjectCompartment(sb)),
                                  NukeWindowReferences);
+
+    // Now mark the compartment as nuked and non-scriptable.
+    auto compartmentPrivate = xpc::CompartmentPrivate::Get(sb);
+    compartmentPrivate->wasNuked = true;
+    compartmentPrivate->scriptability.Block();
+
     return NS_OK;
 }
 

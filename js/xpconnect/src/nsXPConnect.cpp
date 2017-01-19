@@ -833,11 +833,11 @@ nsXPConnect::GetWrappedNativePrototype(JSContext* aJSContext,
     if (!scope)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
-    XPCNativeScriptableCreateInfo sciProto;
-    XPCWrappedNative::GatherProtoScriptableCreateInfo(aClassInfo, sciProto);
+    nsCOMPtr<nsIXPCScriptable> scrProto =
+        XPCWrappedNative::GatherProtoScriptable(aClassInfo);
 
     AutoMarkingWrappedNativeProtoPtr proto(aJSContext);
-    proto = XPCWrappedNativeProto::GetNewOrUsed(scope, aClassInfo, &sciProto);
+    proto = XPCWrappedNativeProto::GetNewOrUsed(scope, aClassInfo, scrProto);
     if (!proto)
         return UnexpectedFailure(NS_ERROR_FAILURE);
 

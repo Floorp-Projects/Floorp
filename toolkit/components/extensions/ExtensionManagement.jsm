@@ -15,6 +15,8 @@ Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
+                                  "resource:///modules/E10SUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionUtils",
                                   "resource://gre/modules/ExtensionUtils.jsm");
 
@@ -305,8 +307,10 @@ function getAPILevelForWindow(window, addonId) {
 
 ExtensionManagement = {
   get isExtensionProcess() {
-    return (this.useRemoteWebExtensions ||
-            Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT);
+    if (this.useRemoteWebExtensions) {
+      return Services.appinfo.remoteType === E10SUtils.EXTENSION_REMOTE_TYPE;
+    }
+    return Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
   },
 
   startupExtension: Service.startupExtension.bind(Service),

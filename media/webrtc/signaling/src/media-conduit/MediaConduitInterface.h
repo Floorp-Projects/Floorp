@@ -245,6 +245,7 @@ public:
   virtual std::vector<unsigned int> GetLocalSSRCs() const = 0;
 
   virtual bool GetRemoteSSRC(unsigned int* ssrc) = 0;
+  virtual bool SetRemoteSSRC(unsigned int ssrc) = 0;
   virtual bool SetLocalCNAME(const char* cname) = 0;
 
   /**

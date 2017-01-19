@@ -151,7 +151,6 @@ class ControlStackEntry
         MOZ_ASSERT(kind_ == LabelKind::Then || kind_ == LabelKind::UnreachableThen);
         reachable_ = reachable;
         kind_ = LabelKind::Else;
-        controlItem_ = ControlItem();
     }
 };
 
@@ -383,8 +382,8 @@ class MOZ_STACK_CLASS OpIter : private Policy
     MOZ_MUST_USE bool checkType(ExprType actual, ExprType expected);
 
     MOZ_MUST_USE bool pushControl(LabelKind kind, ExprType type, bool reachable);
-    MOZ_MUST_USE bool mergeControl(LabelKind* kind, ExprType* type, Value* value);
-    MOZ_MUST_USE bool popControl(LabelKind* kind, ExprType* type, Value* value);
+    MOZ_MUST_USE bool checkControlAtEndOfBlock(LabelKind* kind, ExprType* type, Value* value);
+    MOZ_MUST_USE bool finishControl(LabelKind* kind, ExprType* type, Value* value);
 
     MOZ_MUST_USE bool push(ValType t) {
         if (MOZ_UNLIKELY(!reachable_))
@@ -494,9 +493,16 @@ class MOZ_STACK_CLASS OpIter : private Policy
         return true;
     }
 
-    void enterUnreachableCode() {
+    MOZ_MUST_USE bool enterUnreachableCode() {
+        if (Validate) {
+            uint16_t op = peekOp();
+            if (op != uint16_t(Op::End) && op != uint16_t(Op::Else))
+                return fail("non-fallthrough instruction must be followed by end or else");
+        }
+
         valueStack_.shrinkTo(controlStack_.back().valueStackStart());
         reachable_ = false;
+        return true;
     }
 
     bool checkBrValue(uint32_t relativeDepth, ExprType* type, Value* value);
@@ -543,6 +549,7 @@ class MOZ_STACK_CLASS OpIter : private Policy
     MOZ_MUST_USE bool readIf(Value* condition);
     MOZ_MUST_USE bool readElse(ExprType* thenType, Value* thenValue);
     MOZ_MUST_USE bool readEnd(LabelKind* kind, ExprType* type, Value* value);
+    void popEnd();
     MOZ_MUST_USE bool readBr(uint32_t* relativeDepth, ExprType* type, Value* value);
     MOZ_MUST_USE bool readBrIf(uint32_t* relativeDepth, ExprType* type,
                                Value* value, Value* condition);
@@ -654,6 +661,16 @@ class MOZ_STACK_CLASS OpIter : private Policy
         return controlStack_.back().controlItem();
     }
 
+    // Return a reference to an element in the control stack.
+    ControlItem& controlItem(uint32_t relativeDepth) {
+        return controlStack_[controlStack_.length() - 1 - relativeDepth].controlItem();
+    }
+
+    // Return a reference to the outermost element on the control stack.
+    ControlItem& controlOutermost() {
+        return controlStack_[0].controlItem();
+    }
+
     // Return the signature of the top of the control stack.
     ExprType controlType() {
         return controlStack_.back().type();
@@ -743,7 +760,7 @@ OpIter<Policy>::pushControl(LabelKind kind, ExprType type, bool reachable)
 
 template <typename Policy>
 inline bool
-OpIter<Policy>::mergeControl(LabelKind* kind, ExprType* type, Value* value)
+OpIter<Policy>::checkControlAtEndOfBlock(LabelKind* kind, ExprType* type, Value* value)
 {
     MOZ_ASSERT(!controlStack_.empty());
 
@@ -791,9 +808,9 @@ OpIter<Policy>::mergeControl(LabelKind* kind, ExprType* type, Value* value)
 
 template <typename Policy>
 inline bool
-OpIter<Policy>::popControl(LabelKind* kind, ExprType* type, Value* value)
+OpIter<Policy>::finishControl(LabelKind* kind, ExprType* type, Value* value)
 {
-    if (!mergeControl(kind, type, value))
+    if (!checkControlAtEndOfBlock(kind, type, value))
         return false;
 
     if (*kind == LabelKind::Then) {
@@ -804,11 +821,6 @@ OpIter<Policy>::popControl(LabelKind* kind, ExprType* type, Value* value)
         }
         reachable_ = true;
     }
-
-    controlStack_.popBack();
-
-    if (!reachable_ && !controlStack_.empty())
-        valueStack_.shrinkTo(controlStack_.back().valueStackStart());
 
     return true;
 }
@@ -928,8 +940,7 @@ OpIter<Policy>::readReturn(Value* value)
         }
     }
 
-    enterUnreachableCode();
-    return true;
+    return enterUnreachableCode();
 }
 
 template <typename Policy>
@@ -987,7 +998,7 @@ OpIter<Policy>::readElse(ExprType* thenType, Value* thenValue)
     // Finish up the then arm.
     ExprType type = ExprType::Limit;
     LabelKind kind;
-    if (!mergeControl(&kind, &type, thenValue))
+    if (!checkControlAtEndOfBlock(&kind, &type, thenValue))
         return false;
 
     if (Output)
@@ -1018,7 +1029,7 @@ OpIter<Policy>::readEnd(LabelKind* kind, ExprType* type, Value* value)
 
     LabelKind validateKind = static_cast<LabelKind>(-1);
     ExprType validateType = ExprType::Limit;
-    if (!popControl(&validateKind, &validateType, value))
+    if (!finishControl(&validateKind, &validateType, value))
         return false;
 
     if (Output) {
@@ -1027,6 +1038,18 @@ OpIter<Policy>::readEnd(LabelKind* kind, ExprType* type, Value* value)
     }
 
     return true;
+}
+
+template <typename Policy>
+inline void
+OpIter<Policy>::popEnd()
+{
+    MOZ_ASSERT(Classify(op_) == OpKind::End);
+
+    controlStack_.popBack();
+
+    if (!reachable_ && !controlStack_.empty())
+        valueStack_.shrinkTo(controlStack_.back().valueStackStart());
 }
 
 template <typename Policy>
@@ -1074,8 +1097,7 @@ OpIter<Policy>::readBr(uint32_t* relativeDepth, ExprType* type, Value* value)
     if (Output)
         *relativeDepth = validateRelativeDepth;
 
-    enterUnreachableCode();
-    return true;
+    return enterUnreachableCode();
 }
 
 template <typename Policy>
@@ -1204,8 +1226,7 @@ OpIter<Policy>::readBrTableDefault(ExprType* type, Value* value, uint32_t* depth
 
     MOZ_ASSERT(!reachable_ || *type != ExprType::Limit);
 
-    enterUnreachableCode();
-    return true;
+    return enterUnreachableCode();
 }
 
 template <typename Policy>
@@ -1214,8 +1235,7 @@ OpIter<Policy>::readUnreachable()
 {
     MOZ_ASSERT(Classify(op_) == OpKind::Unreachable);
 
-    enterUnreachableCode();
-    return true;
+    return enterUnreachableCode();
 }
 
 template <typename Policy>

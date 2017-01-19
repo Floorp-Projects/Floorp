@@ -7038,6 +7038,10 @@
           let tabContainer = this.parentNode;
           let visibleTabs = tabContainer.tabbrowser.visibleTabs;
           let tabIndex = visibleTabs.indexOf(this);
+
+          if (this.selected)
+            tabContainer._handleTabSelect();
+
           if (tabIndex == 0) {
             tabContainer._beforeHoveredTab = null;
           } else {

@@ -6,24 +6,12 @@
 /******************************************************************************/
 /* Search Box */
 
-.searchBox {
-  height: 18px;
-  font: message-box;
-  background-color: var(--theme-body-background);
-  background-image: url("chrome://devtools/skin/images/filter.svg#filterinput");
-  background-repeat: no-repeat;
-  background-position: 2px center;
-  border: 1px solid var(--theme-splitter-color);
-  border-radius: 2px;
-  color: var(--theme-content-color1);
-  width: 200px;
-  margin-top: 0;
-  margin-inline-end: 1px;
-  float: right;
-  padding-inline-start: 20px;
+.devtools-filterinput {
+  margin-inline-start: auto; /* Align to the right */
 }
 
-.searchBox:dir(rtl) {
-  float: left;
-  background-position: calc(100% - 2px) center;
+/* JSONView doesn't load dark-theme.css */
+.theme-dark .devtools-filterinput {
+  background-color: rgba(24, 29, 32, 1);
+  color: rgba(184, 200, 217, 1);
 }

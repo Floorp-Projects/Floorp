@@ -16,7 +16,7 @@ function testParamPatternCombinations(makePattSrc, makePattPatt) {
         }
 
         // no upvars, block body
-        assertExpr(makeSrc("{ }", makePatt(blockStmt([]))));
+        assertExpr(makeSrc("{ }"), makePatt(blockStmt([])));
         // upvars, block body
         assertExpr(makeSrc("{ return [x1,x2,x3,x4,x5]; }"),
                    makePatt(blockStmt([returnStmt(arrExpr([ident("x1"), ident("x2"), ident("x3"), ident("x4"), ident("x5")]))])));

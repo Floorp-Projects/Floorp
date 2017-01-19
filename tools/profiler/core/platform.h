@@ -29,11 +29,6 @@
 #ifndef TOOLS_PLATFORM_H_
 #define TOOLS_PLATFORM_H_
 
-#ifdef SPS_STANDALONE
-#define MOZ_COUNT_CTOR(name)
-#define MOZ_COUNT_DTOR(name)
-#endif
-
 #ifdef ANDROID
 #include <android/log.h>
 #else
@@ -46,11 +41,9 @@
 
 #include <stdint.h>
 #include <math.h>
-#ifndef SPS_STANDALONE
 #include "MainThreadUtils.h"
 #include "mozilla/Mutex.h"
 #include "ThreadResponsiveness.h"
-#endif
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -273,8 +266,6 @@ bool set_profiler_interval(const char*);
 bool set_profiler_entries(const char*);
 bool set_profiler_scan(const char*);
 bool is_native_unwinding_avail();
-
-void set_tls_stack_top(void* stackTop);
 
 // ----------------------------------------------------------------------------
 // Sampler

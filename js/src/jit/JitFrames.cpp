@@ -353,11 +353,11 @@ CloseLiveIteratorIon(JSContext* cx, const InlineFrameIterator& frame, JSTryNote*
     RootedObject iterObject(cx, &v.toObject());
 
     if (isDestructuring) {
-        Value v = si.read();
-        MOZ_ASSERT(v.isBoolean());
+        RootedValue doneValue(cx, si.read());
+        bool done = ToBoolean(doneValue);
         // Do not call IteratorClose if the destructuring iterator is already
         // done.
-        if (v.isTrue())
+        if (done)
             return;
     }
 
@@ -654,9 +654,9 @@ ProcessTryNotesBaseline(JSContext* cx, const JitFrameIterator& frame, Environmen
             uint8_t* framePointer;
             uint8_t* stackPointer;
             BaselineFrameAndStackPointersFromTryNote(tn, frame, &framePointer, &stackPointer);
-            Value doneValue(*(reinterpret_cast<Value*>(stackPointer)));
-            MOZ_ASSERT(doneValue.isBoolean());
-            if (doneValue.isFalse()) {
+            RootedValue doneValue(cx, *(reinterpret_cast<Value*>(stackPointer)));
+            bool done = ToBoolean(doneValue);
+            if (!done) {
                 Value iterValue(*(reinterpret_cast<Value*>(stackPointer) + 1));
                 RootedObject iterObject(cx, &iterValue.toObject());
                 if (!IteratorCloseForException(cx, iterObject)) {

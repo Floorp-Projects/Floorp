@@ -12,9 +12,6 @@
 #include "mozilla/Vector.h"
 #include "ThreadProfile.h"
 #include "ThreadInfo.h"
-#ifndef SPS_STANDALONE
-#include "IntelPowerGadget.h"
-#endif
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracer.h"
 #endif
@@ -89,10 +86,8 @@ class GeckoSampler: public Sampler {
   virtual void DeleteExpiredMarkers() override;
 
   void ToStreamAsJSON(std::ostream& stream, double aSinceTime = 0);
-#ifndef SPS_STANDALONE
   virtual JSObject *ToJSObject(JSContext *aCx, double aSinceTime = 0);
   void GetGatherer(nsISupports** aRetVal);
-#endif
   mozilla::UniquePtr<char[]> ToJSON(double aSinceTime = 0);
   virtual void ToJSObjectAsync(double aSinceTime = 0, mozilla::dom::Promise* aPromise = 0);
   void ToFileAsync(const nsACString& aFileName, double aSinceTime = 0);
@@ -102,7 +97,6 @@ class GeckoSampler: public Sampler {
   bool ProfileJS() const { return mProfileJS; }
   bool ProfileJava() const { return mProfileJava; }
   bool ProfileGPU() const { return mProfileGPU; }
-  bool ProfilePower() const { return mProfilePower; }
   bool ProfileThreads() const override { return mProfileThreads; }
   bool InPrivacyMode() const { return mPrivacyMode; }
   bool AddMainThreadIO() const { return mAddMainThreadIO; }
@@ -133,7 +127,6 @@ protected:
   bool mProfileGPU;
   bool mProfileThreads;
   bool mProfileJava;
-  bool mProfilePower;
   bool mLayersDump;
   bool mDisplayListDump;
   bool mProfileRestyle;
@@ -146,9 +139,6 @@ protected:
   bool mAddMainThreadIO;
   bool mProfileMemory;
   bool mTaskTracer;
-#if defined(XP_WIN)
-  IntelPowerGadget* mIntelPowerGadget;
-#endif
 
 private:
   RefPtr<mozilla::ProfileGatherer> mGatherer;

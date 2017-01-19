@@ -324,7 +324,10 @@ static void
 DEBUG_CheckUnwrapSafety(HandleObject obj, const js::Wrapper* handler,
                         JSCompartment* origin, JSCompartment* target)
 {
-    if (AccessCheck::isChrome(target) || xpc::IsUniversalXPConnectEnabled(target)) {
+    if (CompartmentPrivate::Get(origin)->wasNuked || CompartmentPrivate::Get(target)->wasNuked) {
+        // If either compartment has already been nuked, we should have an opaque wrapper.
+        MOZ_ASSERT(handler->hasSecurityPolicy());
+    } else if (AccessCheck::isChrome(target) || xpc::IsUniversalXPConnectEnabled(target)) {
         // If the caller is chrome (or effectively so), unwrap should always be allowed.
         MOZ_ASSERT(!handler->hasSecurityPolicy());
     } else if (CompartmentPrivate::Get(origin)->forcePermissiveCOWs) {
@@ -443,9 +446,21 @@ WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
     // First, handle the special cases.
     //
 
+    // If we've somehow gotten to this point after either the source or target
+    // compartment has been nuked, return an opaque wrapper to prevent further
+    // access.
+    // Ideally, we should return a DeadProxyObject instead of a wrapper in this
+    // case (bug 1322273).
+    if (CompartmentPrivate::Get(origin)->wasNuked ||
+        CompartmentPrivate::Get(target)->wasNuked) {
+        NS_WARNING("Trying to create a wrapper into or out of a nuked compartment");
+
+        wrapper = &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
+    }
+
     // If UniversalXPConnect is enabled, this is just some dumb mochitest. Use
     // a vanilla CCW.
-    if (xpc::IsUniversalXPConnectEnabled(target)) {
+    else if (xpc::IsUniversalXPConnectEnabled(target)) {
         CrashIfNotInAutomation();
         wrapper = &CrossCompartmentWrapper::singleton;
     }
