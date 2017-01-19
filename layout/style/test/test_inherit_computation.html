@@ -22,6 +22,7 @@
 /** Test for computation of CSS 'inherit' on all properties and 'unset' on
     inherited properties **/
 
+var gDisplayTree = document.getElementById("display");
 // elements without a frame
 var gNParent = document.getElementById("nparent");
 var gNChild = document.getElementById("nchild");
@@ -148,6 +149,14 @@ function test_property(property)
         gChildRuleTop.style.removeProperty(prereq);
       }
     }
+
+    // FIXME -moz-binding value makes gElementF and its parent loses
+    // their frame. Force it to get recreated after each property.
+    // See bug 1331903.
+    gDisplayTree.style.display = "none";
+    get_computed_value(getComputedStyle(gFChild, ""), "width");
+    gDisplayTree.style.display = "";
+    get_computed_value(getComputedStyle(gFChild, ""), "width");
   });
 }
 
