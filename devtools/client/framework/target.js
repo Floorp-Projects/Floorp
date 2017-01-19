@@ -143,8 +143,6 @@ function TabTarget(tab) {
   }
 }
 
-exports.TabTarget = TabTarget;
-
 TabTarget.prototype = {
   _webProgressListener: null,
 
