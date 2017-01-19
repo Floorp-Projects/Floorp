@@ -116,6 +116,12 @@ pref("devtools.debugger.ui.panes-visible-on-startup", false);
 pref("devtools.debugger.ui.variables-sorting-enabled", true);
 pref("devtools.debugger.ui.variables-only-enum-visible", false);
 pref("devtools.debugger.ui.variables-searchbox-visible", false);
+pref("devtools.debugger.call-stack-visible", false);
+pref("devtools.debugger.scopes-visible", false);
+pref("devtools.debugger.start-panel-collapsed", false);
+pref("devtools.debugger.end-panel-collapsed", false);
+pref("devtools.debugger.tabs", "[]");
+pref("devtools.debugger.pending-selected-location", "{}");
 
 // Enable the Memory tools
 pref("devtools.memory.enabled", true);
