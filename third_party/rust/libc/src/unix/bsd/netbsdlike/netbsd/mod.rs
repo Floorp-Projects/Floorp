@@ -4,6 +4,7 @@ pub type dev_t = u64;
 pub type blksize_t = ::int32_t;
 pub type fsblkcnt_t = ::uint64_t;
 pub type fsfilcnt_t = ::uint64_t;
+pub type idtype_t = ::c_int;
 
 s! {
     pub struct aiocb {
@@ -582,6 +583,15 @@ pub const LIO_NOWAIT: ::c_int = 0;
 pub const SIGEV_NONE: ::c_int = 0;
 pub const SIGEV_SIGNAL: ::c_int = 1;
 pub const SIGEV_THREAD: ::c_int = 2;
+
+pub const WSTOPPED: ::c_int = 0x00000002; // same as WUNTRACED
+pub const WCONTINUED: ::c_int = 0x00000010;
+pub const WEXITED: ::c_int = 0x000000020;
+pub const WNOWAIT: ::c_int = 0x00010000;
+
+pub const P_ALL: idtype_t = 0;
+pub const P_PID: idtype_t = 1;
+pub const P_PGID: idtype_t = 4;
 
 extern {
     pub fn aio_read(aiocbp: *mut aiocb) -> ::c_int;

@@ -18,7 +18,8 @@ use std::mem;
 use std::path::PathBuf;
 //use std::sync::mpsc::{channel, Sender};
 //use std::thread;
-use webrender_traits::{ColorF, ImageFormat, DeviceIntRect};
+use webrender_traits::{ColorF, ImageFormat};
+use webrender_traits::{DeviceIntPoint, DeviceIntRect, DeviceIntSize};
 
 #[cfg(not(any(target_arch = "arm", target_arch = "aarch64")))]
 const GL_FORMAT_A: gl::GLuint = gl::RED;
@@ -1208,19 +1209,24 @@ impl Device {
     }
 
     pub fn blit_render_target(&mut self,
-                              src_texture_id: TextureId,
-                              src_texture_layer: i32,
+                              src_texture: Option<(TextureId, i32)>,
+                              src_rect: Option<DeviceIntRect>,
                               dest_rect: DeviceIntRect) {
         debug_assert!(self.inside_frame);
 
-        self.bind_read_target(Some((src_texture_id, src_texture_layer)));
+        let src_rect = src_rect.unwrap_or_else(|| {
+            let texture = self.textures.get(&src_texture.unwrap().0).expect("unknown texture id!");
+            DeviceIntRect::new(DeviceIntPoint::zero(),
+                               DeviceIntSize::new(texture.width as gl::GLint,
+                                                  texture.height as gl::GLint))
+        });
 
-        let texture = self.textures.get(&src_texture_id).expect("unknown texture id!");
+        self.bind_read_target(src_texture);
 
-        gl::blit_framebuffer(0,
-                             0,
-                             texture.width as gl::GLint,
-                             texture.height as gl::GLint,
+        gl::blit_framebuffer(src_rect.origin.x,
+                             src_rect.origin.y,
+                             src_rect.origin.x + src_rect.size.width,
+                             src_rect.origin.y + src_rect.size.height,
                              dest_rect.origin.x,
                              dest_rect.origin.y,
                              dest_rect.origin.x + dest_rect.size.width,

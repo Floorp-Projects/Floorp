@@ -16,6 +16,15 @@ impl<T> ComPtr<T> {
         ComPtr { ptr: ptr::null_mut() }
     }
 
+    pub fn from_ptr(ptr: *mut T) -> Self {
+        unsafe {
+            if !ptr.is_null() {
+                (*(ptr as *mut IUnknown)).AddRef();
+            }
+        }
+        ComPtr { ptr: ptr }
+    }
+
     pub fn already_addrefed(ptr: *mut T) -> Self {
         ComPtr { ptr: ptr }
     }
@@ -102,3 +111,5 @@ impl<T> Drop for ComPtr<T> {
         self.release();
     }
 }
+
+unsafe impl<T> Send for ComPtr<T> {}

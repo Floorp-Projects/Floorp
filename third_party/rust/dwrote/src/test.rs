@@ -38,13 +38,33 @@ fn test_get_font_file_bytes() {
                                                           FontStretch::Normal,
                                                           FontStyle::Normal);
     let face = arial_font.create_font_face();
-    println!("face1: {:?}",  unsafe { face.as_ptr1() });
     let files = face.get_files();
     assert!(files.len() > 0);
 
     let bytes = files[0].get_font_file_bytes();
-    println!("Bytes length: {}", bytes.len());
     assert!(bytes.len() > 0);
+}
+
+#[test]
+fn test_create_font_file_from_bytes() {
+    let system_fc = FontCollection::system();
+
+    let arial_family = system_fc.get_font_family_by_name("Arial").unwrap();
+    let arial_font = arial_family.get_first_matching_font(FontWeight::Regular,
+                                                          FontStretch::Normal,
+                                                          FontStyle::Normal);
+    let face = arial_font.create_font_face();
+    let files = face.get_files();
+    assert!(files.len() > 0);
+
+    let bytes = files[0].get_font_file_bytes();
+    assert!(bytes.len() > 0);
+
+    // now go back
+    let new_font = FontFile::new_from_data(&bytes);
+    assert!(new_font.is_some());
+
+    let new_font = new_font.unwrap();
 }
 
 #[test]

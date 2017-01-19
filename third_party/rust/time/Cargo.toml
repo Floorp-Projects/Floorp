@@ -1,7 +1,7 @@
 [package]
 
 name = "time"
-version = "0.1.35"
+version = "0.1.36"
 authors = ["The Rust Project Developers"]
 license = "MIT/Apache-2.0"
 homepage = "https://github.com/rust-lang/time"
@@ -13,9 +13,14 @@ Utilities for working with time-related functions in Rust.
 
 [dependencies]
 libc = "0.2.1"
+rustc-serialize = { version = "0.3", optional = true }
+
+[target.'cfg(target_os = "redox")'.dependencies]
+redox_syscall = "0.1"
+
+[target.'cfg(windows)'.dependencies]
 winapi = "0.2.0"
 kernel32-sys = "0.2.0"
-rustc-serialize = { version = "0.3", optional = true }
 
 [dev-dependencies]
 log = "0.3"

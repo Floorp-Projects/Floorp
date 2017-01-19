@@ -9,6 +9,7 @@ pub type sem_t = _sem;
 
 pub type fsblkcnt_t = ::uint64_t;
 pub type fsfilcnt_t = ::uint64_t;
+pub type idtype_t = ::c_uint;
 
 s! {
     pub struct utmpx {
@@ -315,6 +316,11 @@ pub const CTL_P1003_1B_SEM_NSEMS_MAX: ::c_int = 22;
 pub const CTL_P1003_1B_SEM_VALUE_MAX: ::c_int = 23;
 pub const CTL_P1003_1B_SIGQUEUE_MAX: ::c_int = 24;
 pub const CTL_P1003_1B_TIMER_MAX: ::c_int = 25;
+pub const TIOCGPTN: ::c_uint = 0x4004740f;
+pub const TIOCPTMASTER: ::c_uint = 0x2000741c;
+pub const TIOCSIG: ::c_uint = 0x2004745f;
+pub const TIOCM_DCD: ::c_int = 0x40;
+pub const H4DISC: ::c_int = 0x7;
 
 // The *_MAXID constants never should've been used outside of the
 // FreeBSD base system.  And with the exception of CTL_P1003_1B_MAXID,
@@ -331,6 +337,7 @@ pub const USER_MAXID: ::c_int = 21;
 #[doc(hidden)]
 pub const CTL_P1003_1B_MAXID: ::c_int = 26;
 
+pub const MSG_PEEK: ::c_int = 0x2;
 pub const MSG_NOSIGNAL: ::c_int = 0x20000;
 
 pub const EMPTY: ::c_short = 0;
@@ -355,6 +362,18 @@ pub const LC_ALL_MASK: ::c_int = LC_COLLATE_MASK
                                | LC_MONETARY_MASK
                                | LC_NUMERIC_MASK
                                | LC_TIME_MASK;
+
+pub const WSTOPPED: ::c_int = 2; // same as WUNTRACED
+pub const WCONTINUED: ::c_int = 4;
+pub const WNOWAIT: ::c_int = 8;
+pub const WEXITED: ::c_int = 16;
+pub const WTRAPPED: ::c_int = 32;
+
+// FreeBSD defines a great many more of these, we only expose the
+// standardized ones.
+pub const P_PID: idtype_t = 0;
+pub const P_PGID: idtype_t = 2;
+pub const P_ALL: idtype_t = 7;
 
 extern {
     pub fn __error() -> *mut ::c_int;
@@ -382,6 +401,8 @@ extern {
                             timeout: *mut ::timespec) -> ::ssize_t;
 
     pub fn freelocale(loc: ::locale_t) -> ::c_int;
+    pub fn waitid(idtype: idtype_t, id: ::id_t, infop: *mut ::siginfo_t,
+                  options: ::c_int) -> ::c_int;
 }
 
 cfg_if! {

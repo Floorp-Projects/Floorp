@@ -196,22 +196,13 @@ impl RenderBackend {
                                 AuxiliaryLists::from_data(auxiliary_lists_data,
                                                           auxiliary_lists_descriptor);
 
-                            let frame = profile_counters.total_time.profile(|| {
-                                self.scene.set_root_display_list(pipeline_id,
-                                                                 epoch,
-                                                                 built_display_list,
-                                                                 background_color,
-                                                                 viewport_size,
-                                                                 auxiliary_lists);
-
-                                self.build_scene();
-                                self.render()
-                            });
-
-                            if self.scene.root_pipeline_id.is_some() {
-                                self.publish_frame_and_notify_compositor(frame, &mut profile_counters);
-                                frame_counter += 1;
-                            }
+                            self.scene.set_root_display_list(pipeline_id,
+                                                             epoch,
+                                                             built_display_list,
+                                                             background_color,
+                                                             viewport_size,
+                                                             auxiliary_lists);
+                            self.build_scene();
                         }
                         ApiMsg::SetRootPipeline(pipeline_id) => {
                             self.scene.set_root_pipeline_id(pipeline_id);
@@ -220,14 +211,7 @@ impl RenderBackend {
                                 continue;
                             }
 
-                            let frame = profile_counters.total_time.profile(|| {
-                                self.build_scene();
-                                self.render()
-                            });
-
-                            // the root pipeline is guaranteed to be Some() at this point
-                            self.publish_frame_and_notify_compositor(frame, &mut profile_counters);
-                            frame_counter += 1;
+                            self.build_scene();
                         }
                         ApiMsg::Scroll(delta, cursor, move_phase) => {
                             let frame = profile_counters.total_time.profile(|| {
@@ -515,4 +499,3 @@ impl GLContextDispatcher for WebRenderGLDispatcher {
         dispatcher.as_mut().unwrap().as_mut().unwrap().dispatch(f);
     }
 }
-

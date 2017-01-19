@@ -31,6 +31,7 @@
 #define UV_PIXEL         uint(1)
 
 #define MAX_STOPS_PER_ANGLE_GRADIENT 8
+#define MAX_STOPS_PER_RADIAL_GRADIENT 8
 
 uniform sampler2DArray sCache;
 
@@ -213,6 +214,22 @@ GradientStop fetch_gradient_stop(int index) {
     stop.offset = texelFetchOffset(sData32, uv, 0, ivec2(1, 0));
 
     return stop;
+}
+
+struct RadialGradient {
+    vec4 start_end_center;
+    vec4 start_end_radius;
+};
+
+RadialGradient fetch_radial_gradient(int index) {
+    RadialGradient gradient;
+
+    ivec2 uv = get_fetch_uv_2(index);
+
+    gradient.start_end_center = texelFetchOffset(sData32, uv, 0, ivec2(0, 0));
+    gradient.start_end_radius = texelFetchOffset(sData32, uv, 0, ivec2(1, 0));
+
+    return gradient;
 }
 
 struct Glyph {

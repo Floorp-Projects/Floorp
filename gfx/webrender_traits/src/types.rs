@@ -305,6 +305,14 @@ pub struct GradientStop {
 }
 known_heap_size!(0, GradientStop);
 
+#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
+pub struct RadialGradientDisplayItem {
+    pub start_center: LayoutPoint,
+    pub start_radius: f32,
+    pub end_center: LayoutPoint,
+    pub end_radius: f32,
+    pub stops: ItemRange,
+}
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct PushStackingContextDisplayItem {
@@ -531,6 +539,7 @@ pub enum SpecificDisplayItem {
     Border(BorderDisplayItem),
     BoxShadow(BoxShadowDisplayItem),
     Gradient(GradientDisplayItem),
+    RadialGradient(RadialGradientDisplayItem),
     Iframe(IframeDisplayItem),
     PushStackingContext(PushStackingContextDisplayItem),
     PopStackingContext,

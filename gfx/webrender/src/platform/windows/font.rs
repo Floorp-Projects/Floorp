@@ -18,7 +18,7 @@ lazy_static! {
 }
 
 pub struct FontContext {
-    fonts: HashMap<FontKey, dwrote::Font>,
+    fonts: HashMap<FontKey, dwrote::FontFace>,
 }
 
 pub struct RasterizedGlyph {
@@ -34,14 +34,19 @@ impl FontContext {
         }
     }
 
-    pub fn add_raw_font(&mut self, font_key: &FontKey, _: &[u8]) {
+    pub fn add_raw_font(&mut self, font_key: &FontKey, data: &[u8]) {
         if self.fonts.contains_key(font_key) {
             return
         }
 
-        debug!("DWrite WR backend can't do raw fonts yet, using Arial instead");
-
-        self.add_native_font(font_key, DEFAULT_FONT_DESCRIPTOR.clone());
+        if let Some(font_file) = dwrote::FontFile::new_from_data(data) {
+            let face = font_file.create_face(0, dwrote::DWRITE_FONT_SIMULATIONS_NONE);
+            self.fonts.insert((*font_key).clone(), face);
+        } else {
+            // XXX add_raw_font needs to have a way to return an error
+            debug!("DWrite WR failed to load font from data, using Arial instead");
+            self.add_native_font(font_key, DEFAULT_FONT_DESCRIPTOR.clone());
+        }
     }
 
     pub fn add_native_font(&mut self, font_key: &FontKey, font_handle: dwrote::FontDescriptor) {
@@ -50,8 +55,9 @@ impl FontContext {
         }
 
         let system_fc = dwrote::FontCollection::system();
-        let realized_font = system_fc.get_font_from_descriptor(&font_handle).unwrap();
-        self.fonts.insert((*font_key).clone(), realized_font);
+        let font = system_fc.get_font_from_descriptor(&font_handle).unwrap();
+        let face = font.create_font_face();
+        self.fonts.insert((*font_key).clone(), face);
     }
 
     fn get_glyph_dimensions_and_maybe_rasterize(&self,
@@ -61,8 +67,7 @@ impl FontContext {
                                                 render_mode: Option<FontRenderMode>)
                                                 -> (Option<GlyphDimensions>, Option<RasterizedGlyph>)
     {
-        let font = self.fonts.get(&font_key).unwrap();
-        let face = font.create_font_face();
+        let face = self.fonts.get(&font_key).unwrap();
         let glyph = glyph as u16;
 
         let glyph = glyph as u16;

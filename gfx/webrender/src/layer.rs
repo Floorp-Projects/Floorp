@@ -128,6 +128,7 @@ pub struct ScrollingState {
     pub spring: Spring,
     pub started_bouncing_back: bool,
     pub bouncing_back: bool,
+    pub should_handoff_scroll: bool
 }
 
 impl ScrollingState {
@@ -137,6 +138,7 @@ impl ScrollingState {
             spring: Spring::at(LayerPoint::zero(), STIFFNESS, DAMPING),
             started_bouncing_back: false,
             bouncing_back: false,
+            should_handoff_scroll: false
         }
     }
 }

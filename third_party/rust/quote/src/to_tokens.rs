@@ -49,7 +49,17 @@ impl<T: ToTokens> ToTokens for Option<T> {
 
 impl ToTokens for str {
     fn to_tokens(&self, tokens: &mut Tokens) {
-        tokens.append(&escape_str(self));
+        let mut escaped = "\"".to_string();
+        for ch in self.chars() {
+            match ch {
+                '\0' => escaped.push_str(r"\0"),
+                '\'' => escaped.push_str("'"),
+                _ => escaped.extend(ch.escape_default().map(|c| c as char)),
+            }
+        }
+        escaped.push('"');
+
+        tokens.append(&escaped);
     }
 }
 
@@ -75,21 +85,23 @@ pub struct ByteStr<'a>(pub &'a str);
 
 impl<'a> ToTokens for ByteStr<'a> {
     fn to_tokens(&self, tokens: &mut Tokens) {
-        tokens.append(&format!("b{}", escape_str(self.0)));
-    }
-}
-
-fn escape_str(s: &str) -> String {
-    let mut escaped = "\"".to_string();
-    for ch in s.chars() {
-        match ch {
-            '\0' => escaped.push_str(r"\0"),
-            '\'' => escaped.push_str("'"),
-            _ => escaped.extend(ch.escape_default().map(|c| c as char)),
+        let mut escaped = "b\"".to_string();
+        for b in self.0.bytes() {
+            match b {
+                b'\0' => escaped.push_str(r"\0"),
+                b'\t' => escaped.push_str(r"\t"),
+                b'\n' => escaped.push_str(r"\n"),
+                b'\r' => escaped.push_str(r"\r"),
+                b'"' => escaped.push_str("\\\""),
+                b'\\' => escaped.push_str("\\\\"),
+                b'\x20' ... b'\x7E' => escaped.push(b as char),
+                _ => escaped.push_str(&format!("\\x{:02X}", b)),
+            }
         }
+        escaped.push('"');
+
+        tokens.append(&escaped);
     }
-    escaped.push('"');
-    escaped
 }
 
 macro_rules! impl_to_tokens_display {
@@ -209,26 +221,20 @@ array_impls! {
     30 31 32
 }
 
-// To support Rust 1.11.0.
-// https://github.com/rust-lang/rust/issues/19630
-macro_rules! e {
-    ($e:expr) => { $e };
-}
-
 macro_rules! tuple_impls {
     ($(
         $Tuple:ident {
-            $(($idx:tt) -> $T:ident)+
+            $(($idx:tt) -> $T:ident)*
         }
     )+) => {
         $(
-            impl<$($T: ToTokens),+> ToTokens for ($($T,)+) {
+            impl<$($T: ToTokens),*> ToTokens for ($($T,)*) {
                 fn to_tokens(&self, tokens: &mut Tokens) {
                     tokens.append("(");
                     $(
-                        e!(self.$idx).to_tokens(tokens);
+                        self.$idx.to_tokens(tokens);
                         tokens.append(",");
-                    )+
+                    )*
                     tokens.append(")");
                 }
             }
@@ -237,6 +243,7 @@ macro_rules! tuple_impls {
 }
 
 tuple_impls! {
+    Tuple0 {}
     Tuple1 {
         (0) -> A
     }

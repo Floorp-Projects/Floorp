@@ -366,8 +366,12 @@ void main(void) {
 
     vec2 brightness_mod = vec2(0.7, 1.3);
 
+    // Note: we can't pass-through in the following cases,
+    // because Angle doesn't support it and fails to compile the shaders.
     switch (vBorderStyle) {
         case BORDER_STYLE_DASHED:
+          draw_dashed_or_dotted_border(local_pos, distance_from_mix_line);
+          break;
         case BORDER_STYLE_DOTTED:
           draw_dashed_or_dotted_border(local_pos, distance_from_mix_line);
           break;
@@ -375,8 +379,14 @@ void main(void) {
           draw_double_border(distance_from_mix_line, local_pos);
           break;
         case BORDER_STYLE_OUTSET:
+          draw_solid_border(distance_from_mix_line, local_pos);
+          break;
         case BORDER_STYLE_INSET:
+          draw_solid_border(distance_from_mix_line, local_pos);
+          break;
         case BORDER_STYLE_SOLID:
+          draw_solid_border(distance_from_mix_line, local_pos);
+          break;
         case BORDER_STYLE_NONE:
           draw_solid_border(distance_from_mix_line, local_pos);
           break;
@@ -387,6 +397,7 @@ void main(void) {
           draw_mixed_border(distance_from_mix_line, distance_from_middle, local_pos, brightness_mod.xy);
           break;
         case BORDER_STYLE_HIDDEN:
+          discard;
         default:
           discard;
     }

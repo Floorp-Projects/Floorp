@@ -117,6 +117,7 @@ pub unsafe extern fn wr_api_set_root_display_list(api: &mut RenderApi,
                               epoch,
                               LayoutSize::new(viewport_width, viewport_height),
                               frame_builder.dl_builder);
+    api.generate_frame();
 }
 #[no_mangle]
 pub extern fn wr_window_new(window_id: u64,
@@ -221,6 +222,7 @@ pub extern fn wr_dp_end(state: &mut WrState, api: &mut RenderApi, epoch: u32) {
                               Epoch(epoch),
                               LayoutSize::new(width as f32, height as f32),
                               fb.dl_builder);
+    api.generate_frame();
 }
 
 
@@ -451,6 +453,7 @@ pub extern fn wr_init_window(root_pipeline_id: u64,
 
     let pipeline_id = u64_to_pipeline_id(root_pipeline_id);
     api.set_root_pipeline(pipeline_id);
+    api.generate_frame();
 
     let state = Box::new(WrWindowState {
         renderer: renderer,
@@ -588,6 +591,7 @@ pub extern fn wr_window_dp_end(window: &mut WrWindowState, state: &mut WrState) 
                                          *epoch,
                                          LayoutSize::new(width as f32, height as f32),
                                          fb.dl_builder);
+        window.api.generate_frame();
 
         return;
     }
@@ -622,6 +626,7 @@ pub extern fn wr_delete_image(window: &mut WrWindowState, key: ImageKey) {
 #[no_mangle]
 pub extern fn wr_api_set_root_pipeline(api: &mut RenderApi, pipeline_id: u64) {
     api.set_root_pipeline(u64_to_pipeline_id(pipeline_id));
+    api.generate_frame();
 }
 
 #[no_mangle]
