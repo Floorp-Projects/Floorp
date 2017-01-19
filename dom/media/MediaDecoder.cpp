@@ -1742,17 +1742,29 @@ void
 MediaDecoder::DumpDebugInfo()
 {
   MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-  DUMP_LOG("%s", GetDebugInfo().get());
+  nsCString str = GetDebugInfo();
 
-  nsAutoCString str;
-  GetMozDebugReaderData(str);
-  if (!str.IsEmpty()) {
-    DUMP_LOG("reader data:\n%s", str.get());
+  nsAutoCString readerStr;
+  GetMozDebugReaderData(readerStr);
+  if (!readerStr.IsEmpty()) {
+    str += "\nreader data:\n";
+    str += readerStr;
   }
 
-  if (GetStateMachine()) {
-    GetStateMachine()->DumpDebugInfo();
+  if (!GetStateMachine()) {
+    DUMP_LOG("%s", str.get());
+    return;
   }
+
+  GetStateMachine()->RequestDebugInfo()->Then(
+    AbstractThread::MainThread(), __func__,
+    [this, str] (const nsACString& aString) {
+      DUMP_LOG("%s", str.get());
+      DUMP_LOG("%s", aString.Data());
+    },
+    [this, str] () {
+      DUMP_LOG("%s", str.get());
+    });
 }
 
 RefPtr<MediaDecoder::DebugInfoPromise>
