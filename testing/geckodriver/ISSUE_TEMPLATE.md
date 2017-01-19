@@ -13,4 +13,4 @@ Please provide a description of how to reproduce the problem, including the foll
 
  - [ ] A [trace level log](https://github.com/mozilla/geckodriver#firefox-capabilities) from a geckodriver session that demonstrates the problem using the minimal example file. Note: this is *not* the same as a selenium log.
 
-** If any of the above are missing we will have to unforunately close your issue. We will gladly reopen the issue once all the information requested has been added **
+** If any of the above are missing we will have to unfortunately close your issue. We will gladly reopen the issue once all the information requested has been added **
