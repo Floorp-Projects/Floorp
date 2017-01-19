@@ -49,61 +49,47 @@ public:
   virtual void GMPShutdown() = 0;
 };
 
-// Encapsulates generating the device-bound node id, activating the sandbox,
-// loading the GMP, and passing the node id to the GMP (in that order).
-//
-// In Desktop Gecko, the implementation of this lives in plugin-container,
-// and is passed into XUL code from on startup. The GMP IPC child protocol actor
-// uses this interface to load and retrieve interfaces from the GMPs.
-//
-// In Desktop Gecko the implementation lives in the plugin-container so that
-// it can be covered by DRM vendor's voucher.
-//
-// On Android the GMPLoader implementation lives in libxul (because for the time
-// being GMPLoader relies upon NSPR, which we can't use in plugin-container
-// on Android).
-//
-// There is exactly one GMPLoader per GMP child process, and only one GMP
-// per child process (so the GMPLoader only loads one GMP).
-//
+// Encapsulates activating the sandbox, and loading the GMP.
 // Load() takes an optional GMPAdapter which can be used to adapt non-GMPs
 // to adhere to the GMP API.
 class GMPLoader {
 public:
-  virtual ~GMPLoader() {}
+  GMPLoader();
 
   // Activates the sandbox, then loads the GMP library. If aAdapter is
   // non-null, the lib path is assumed to be a non-GMP, and the adapter
   // is initialized with the lib and the adapter is used to interact with
   // the plugin.
-  virtual bool Load(const char* aUTF8LibPath,
-                    uint32_t aLibPathLen,
-                    char* aOriginSalt,
-                    uint32_t aOriginSaltLen,
-                    const GMPPlatformAPI* aPlatformAPI,
-                    GMPAdapter* aAdapter = nullptr) = 0;
+  bool Load(const char* aUTF8LibPath,
+            uint32_t aLibPathLen,
+            char* aOriginSalt,
+            uint32_t aOriginSaltLen,
+            const GMPPlatformAPI* aPlatformAPI,
+            GMPAdapter* aAdapter = nullptr);
 
   // Retrieves an interface pointer from the GMP.
-  virtual GMPErr GetAPI(const char* aAPIName,
-                        void* aHostAPI,
-                        void** aPluginAPI,
-                        uint32_t aDecryptorId) = 0;
+  GMPErr GetAPI(const char* aAPIName,
+                void* aHostAPI,
+                void** aPluginAPI,
+                uint32_t aDecryptorId);
 
   // Calls the GMPShutdown function exported by the GMP lib, and unloads the
   // plugin library.
-  virtual void Shutdown() = 0;
+  void Shutdown();
 
 #if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
   // On OS X we need to set Mac-specific sandbox info just before we start the
   // sandbox, which we don't yet know when the GMPLoader and SandboxStarter
   // objects are created.
-  virtual void SetSandboxInfo(MacSandboxInfo* aSandboxInfo) = 0;
+  void SetSandboxInfo(MacSandboxInfo* aSandboxInfo);
 #endif
-};
 
-// On Desktop, this function resides in plugin-container.
-// On Mobile, this function resides in XUL.
-UniquePtr<GMPLoader> CreateGMPLoader();
+  bool CanSandbox() const;
+
+private:
+  UniquePtr<SandboxStarter> mSandboxStarter;
+  UniquePtr<GMPAdapter> mAdapter;
+};
 
 } // namespace gmp
 } // namespace mozilla
