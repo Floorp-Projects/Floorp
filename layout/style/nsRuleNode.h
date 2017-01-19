@@ -1085,4 +1085,30 @@ private:
                                   void* aStruct);
 };
 
+/**
+ * We allocate arrays of CSS values with alloca.  (These arrays are a
+ * fixed size per style struct, but we don't want to waste the
+ * allocation and construction/destruction costs of the big structs when
+ * we're handling much smaller ones.)  Since the lifetime of an alloca
+ * allocation is the life of the calling function, the caller must call
+ * alloca.  However, to ensure that constructors and destructors are
+ * balanced, we do the constructor and destructor calling from this RAII
+ * class, AutoCSSValueArray.
+ */
+struct AutoCSSValueArray
+{
+  /**
+   * aStorage must be the result of alloca(aCount * sizeof(nsCSSValue))
+   */
+  AutoCSSValueArray(void* aStorage, size_t aCount);
+
+  ~AutoCSSValueArray();
+
+  nsCSSValue* get() { return mArray; }
+
+private:
+  nsCSSValue *mArray;
+  size_t mCount;
+};
+
 #endif
