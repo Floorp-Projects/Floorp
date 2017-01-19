@@ -1841,7 +1841,7 @@ supplementalData:table(nofallback){
             "islamic-tbla",
         }
     }
-    cldrVersion{"30.0.2"}
+    cldrVersion{"30.0.3"}
     codeMappings{
         {
             "AA",
@@ -26382,8 +26382,7 @@ supplementalData:table(nofallback){
                 populationShareF:int{48600000}
             }
             yue{
-                populationShareF:int{49900000}
-                writingShareF:int{48430000}
+                populationShareF:int{48520000}
             }
             za{
                 officialStatus{"official_regional"}
