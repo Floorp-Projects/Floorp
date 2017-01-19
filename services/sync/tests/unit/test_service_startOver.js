@@ -66,8 +66,7 @@ add_test(function test_removeClientData() {
   Service.startOver();
   do_check_false(engine.removed);
 
-  Service.serverURL = "https://localhost/";
-  Service.clusterURL = Service.serverURL;
+  Service.clusterURL = "https://localhost/";
 
   do_check_false(engine.removed);
   Service.startOver();

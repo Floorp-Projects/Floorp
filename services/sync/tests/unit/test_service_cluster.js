@@ -28,8 +28,6 @@ add_test(function test_findCluster() {
 
     _("_findCluster() throws on network errors (e.g. connection refused).");
     do_check_throws(function() {
-      Service.serverURL = "http://dummy:9000/";
-      Service.identity.account = "johndoe";
       Service._clusterManager._findCluster();
     });
 
