@@ -75,7 +75,7 @@ WebRenderCanvasLayer::RenderLayer()
   gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
   Maybe<WrImageMask> mask = buildMaskLayer();
-  WrTextureFilter filter = (mFlags | TextureFlags::USE_NEAREST_FILTER) ? WrTextureFilter::Point : WrTextureFilter::Linear;
+  WrTextureFilter filter = (mSamplingFilter == gfx::SamplingFilter::POINT) ? WrTextureFilter::Point : WrTextureFilter::Linear;
 
   WrBridge()->AddWebRenderCommand(
       OpDPPushStackingContext(wr::ToWrRect(relBounds),
