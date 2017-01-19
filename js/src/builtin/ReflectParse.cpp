@@ -3044,7 +3044,12 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
             MOZ_ASSERT(pn->pn_pos.encloses(next->pn_pos));
 
             RootedValue expr(cx);
-            expr.setString(next->pn_atom);
+            if (next->isKind(PNK_RAW_UNDEFINED)) {
+                expr.setUndefined();
+            } else {
+                MOZ_ASSERT(next->isKind(PNK_TEMPLATE_STRING));
+                expr.setString(next->pn_atom);
+            }
             cooked.infallibleAppend(expr);
         }
 
@@ -3136,6 +3141,7 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
       case PNK_TRUE:
       case PNK_FALSE:
       case PNK_NULL:
+      case PNK_RAW_UNDEFINED:
         return literal(pn, dst);
 
       case PNK_YIELD_STAR:
@@ -3274,6 +3280,10 @@ ASTSerializer::literal(ParseNode* pn, MutableHandleValue dst)
 
       case PNK_NULL:
         val.setNull();
+        break;
+
+      case PNK_RAW_UNDEFINED:
+        val.setUndefined();
         break;
 
       case PNK_TRUE:

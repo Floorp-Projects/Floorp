@@ -7,6 +7,8 @@ assertStringExpr("`hey\nthere`", literal("hey\nthere"));
 assertExpr("`hey${\"there\"}`", templateLit([lit("hey"), lit("there"), lit("")]));
 assertExpr("`hey${\"there\"}mine`", templateLit([lit("hey"), lit("there"), lit("mine")]));
 assertExpr("`hey${a == 5}mine`", templateLit([lit("hey"), binExpr("==", ident("a"), lit(5)), lit("mine")]));
+assertExpr("func`hey\\x`", taggedTemplate(ident("func"), template(["hey\\x"], [void 0])));
+assertExpr("func`hey${4}\\x`", taggedTemplate(ident("func"), template(["hey","\\x"], ["hey",void 0], lit(4))));
 assertExpr("`hey${`there${\"how\"}`}mine`", templateLit([lit("hey"),
            templateLit([lit("there"), lit("how"), lit("")]), lit("mine")]));
 assertExpr("func`hey`", taggedTemplate(ident("func"), template(["hey"], ["hey"])));

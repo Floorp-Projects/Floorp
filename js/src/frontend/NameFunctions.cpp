@@ -316,7 +316,8 @@ class NameResolver
             return false;
 
         // Next is the callsite object node.  This node only contains
-        // internal strings and an array -- no user-controlled expressions.
+        // internal strings or undefined and an array -- no user-controlled
+        // expressions.
         element = element->pn_next;
 #ifdef DEBUG
         {
@@ -326,7 +327,7 @@ class NameResolver
             for (ParseNode* kid = array->pn_head; kid; kid = kid->pn_next)
                 MOZ_ASSERT(kid->isKind(PNK_TEMPLATE_STRING));
             for (ParseNode* next = array->pn_next; next; next = next->pn_next)
-                MOZ_ASSERT(next->isKind(PNK_TEMPLATE_STRING));
+                MOZ_ASSERT(next->isKind(PNK_TEMPLATE_STRING) || next->isKind(PNK_RAW_UNDEFINED));
         }
 #endif
 
@@ -382,6 +383,7 @@ class NameResolver
           case PNK_TRUE:
           case PNK_FALSE:
           case PNK_NULL:
+          case PNK_RAW_UNDEFINED:
           case PNK_ELISION:
           case PNK_GENERATOR:
           case PNK_NUMBER:
