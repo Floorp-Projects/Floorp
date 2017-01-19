@@ -47,6 +47,7 @@ Cu.import("resource://gre/modules/NotificationDB.jsm");
   ["ContentSearch", "resource:///modules/ContentSearch.jsm"],
   ["Deprecated", "resource://gre/modules/Deprecated.jsm"],
   ["E10SUtils", "resource:///modules/E10SUtils.jsm"],
+  ["ExtensionsUI", "resource:///modules/ExtensionsUI.jsm"],
   ["FormValidationHandler", "resource:///modules/FormValidationHandler.jsm"],
   ["GMPInstallManager", "resource://gre/modules/GMPInstallManager.jsm"],
   ["LightweightThemeManager", "resource://gre/modules/LightweightThemeManager.jsm"],
@@ -1372,6 +1373,8 @@ var gBrowserInit = {
 
     gMenuButtonUpdateBadge.init();
 
+    gExtensionsNotifications.init();
+
     window.addEventListener("mousemove", MousePosTracker);
     window.addEventListener("dragover", MousePosTracker);
 
@@ -1500,6 +1503,8 @@ var gBrowserInit = {
     FullScreen.uninit();
 
     gFxAccounts.uninit();
+
+    gExtensionsNotifications.uninit();
 
     Services.obs.removeObserver(gPluginHandler.NPAPIPluginCrashed, "plugin-crashed");
 
@@ -2576,10 +2581,12 @@ var gMenuButtonBadgeManager = {
   BADGEID_APPUPDATE: "update",
   BADGEID_DOWNLOAD: "download",
   BADGEID_FXA: "fxa",
+  BADGEID_ADDONS: "addons",
 
   fxaBadge: null,
   downloadBadge: null,
   appUpdateBadge: null,
+  addonsBadge: null,
 
   init() {
     PanelUI.panel.addEventListener("popupshowing", this, true);
@@ -2596,7 +2603,7 @@ var gMenuButtonBadgeManager = {
   },
 
   _showBadge() {
-    let badgeToShow = this.downloadBadge || this.appUpdateBadge || this.fxaBadge;
+    let badgeToShow = this.downloadBadge || this.appUpdateBadge || this.fxaBadge || this.addonsBadge;
 
     if (badgeToShow) {
       PanelUI.menuButton.setAttribute("badge-status", badgeToShow);
@@ -2612,6 +2619,8 @@ var gMenuButtonBadgeManager = {
       this.downloadBadge = badgeStatus;
     } else if (badgeId == this.BADGEID_FXA) {
       this.fxaBadge = badgeStatus;
+    } else if (badgeId == this.BADGEID_ADDONS) {
+      this.addonsBadge = badgeStatus;
     } else {
       Cu.reportError("The badge ID '" + badgeId + "' is unknown!");
     }

@@ -16,6 +16,7 @@
       </vbox>
 
       <footer id="PanelUI-footer">
+        <vbox id="PanelUI-footer-addons"></vbox>
         <toolbarbutton id="PanelUI-update-status"
                        oncommand="gMenuButtonUpdateBadge.onMenuPanelCommand(event);"
                        wrap="true"

@@ -469,6 +469,62 @@ const gXPInstallObserver = {
   }
 };
 
+const gExtensionsNotifications = {
+  initialized: false,
+  init() {
+    this.updateAlerts();
+    this.boundUpdate = this.updateAlerts.bind(this);
+    ExtensionsUI.on("change", this.boundUpdate);
+    this.initialized = true;
+  },
+
+  uninit() {
+    // uninit() can race ahead of init() in some cases, if that happens,
+    // we have no handler to remove.
+    if (!this.initialized) {
+      return;
+    }
+    ExtensionsUI.off("change", this.boundUpdate);
+  },
+
+  updateAlerts() {
+    let sideloaded = ExtensionsUI.sideloaded;
+    if (sideloaded.size == 0) {
+      gMenuButtonBadgeManager.removeBadge(gMenuButtonBadgeManager.BADGEID_ADDONS);
+    } else {
+      gMenuButtonBadgeManager.addBadge(gMenuButtonBadgeManager.BADGEID_ADDONS,
+                                       "addon-alert");
+    }
+
+    let container = document.getElementById("PanelUI-footer-addons");
+
+    while (container.firstChild) {
+      container.firstChild.remove();
+    }
+
+    // Strings below to be properly localized in bug 1316996
+    const DEFAULT_EXTENSION_ICON =
+      "chrome://mozapps/skin/extensions/extensionGeneric.svg";
+    let items = 0;
+    for (let addon of sideloaded) {
+      if (++items > 4) {
+        break;
+      }
+      let button = document.createElement("toolbarbutton");
+      button.setAttribute("label", `"${addon.name}" added to Firefox`);
+
+      let icon = addon.iconURL || DEFAULT_EXTENSION_ICON;
+      button.setAttribute("image", icon);
+
+      button.addEventListener("click", evt => {
+        ExtensionsUI.showSideloaded(gBrowser, addon);
+      });
+
+      container.appendChild(button);
+    }
+  },
+};
+
 var LightWeightThemeWebInstaller = {
   init() {
     let mm = window.messageManager;
