@@ -11,7 +11,6 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         'gecko/nsIProfileSaveEvent.idl',
     ]
     EXPORTS += [
-        'public/GeckoProfilerImpl.h',
         'public/ProfilerBacktrace.h',
         'public/ProfilerMarkers.h',
         'public/PseudoStack.h',
