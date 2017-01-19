@@ -16,6 +16,7 @@
     "gcc_dir": "/home/worker/workspace/build/src/gcc",
     "cc": "/home/worker/workspace/build/src/clang/bin/clang",
     "cxx": "/home/worker/workspace/build/src/clang/bin/clang++",
+    "as": "/home/worker/workspace/build/src/clang/bin/clang",
     "ar": "/home/worker/workspace/build/src/cctools/bin/x86_64-apple-darwin10-ar",
     "ranlib": "/home/worker/workspace/build/src/cctools/bin/x86_64-apple-darwin10-ranlib",
     "ld": "/home/worker/workspace/build/src/clang/bin/clang"

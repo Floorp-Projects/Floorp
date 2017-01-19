@@ -11,6 +11,7 @@
     "python_path": "c:/mozilla-build/python/python.exe",
     "cc": "cl.exe",
     "cxx": "cl.exe",
+    "ml": "ml64.exe",
     "patches": {
     }
 }
