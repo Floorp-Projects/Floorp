@@ -81,7 +81,9 @@ public:
 
   // Get the stringbuffer.  This can only be called if HasStringBuffer()
   // returned true and StringBufferLength() is nonzero.  If that's true, it will
-  // never return null.
+  // never return null.  Note that constructing a string from this
+  // nsStringBuffer with length given by StringBufferLength() might give you
+  // something that is not null-terminated.
   nsStringBuffer* StringBuffer() const
   {
     MOZ_ASSERT(!mIsNull, "Caller should have checked IsNull() first");
@@ -101,6 +103,9 @@ public:
     return mLength;
   }
 
+  // Initialize the DOMString to a (nsStringBuffer, length) pair.  The length
+  // does NOT have to be the full length of the (null-terminated) string in the
+  // nsStringBuffer.
   void SetStringBuffer(nsStringBuffer* aStringBuffer, uint32_t aLength)
   {
     MOZ_ASSERT(mString.isNothing(), "We already have a string?");
@@ -168,7 +173,18 @@ public:
       if (StringBufferLength() == 0) {
         aString.Truncate();
       } else {
-        StringBuffer()->ToString(StringBufferLength(), aString);
+        // Don't share the nsStringBuffer with aString if the result would not
+        // be null-terminated.
+        nsStringBuffer* buf = StringBuffer();
+        uint32_t len = StringBufferLength();
+        auto chars = static_cast<char16_t*>(buf->Data());
+        if (chars[len] == '\0') {
+          // Safe to share the buffer.
+          buf->ToString(len, aString);
+        } else {
+          // We need to copy, unfortunately.
+          aString.Assign(chars, len);
+        }
       }
     } else {
       aString = AsAString();
