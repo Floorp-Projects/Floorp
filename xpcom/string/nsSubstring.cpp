@@ -285,7 +285,8 @@ nsStringBuffer::ToString(uint32_t aLen, nsAString& aStr,
   char16_t* data = static_cast<char16_t*>(Data());
 
   nsAStringAccessor* accessor = static_cast<nsAStringAccessor*>(&aStr);
-  NS_ASSERTION(data[aLen] == char16_t(0), "data should be null terminated");
+  MOZ_DIAGNOSTIC_ASSERT(data[aLen] == char16_t(0),
+                        "data should be null terminated");
 
   // preserve class flags
   uint32_t flags = accessor->flags();
@@ -304,7 +305,8 @@ nsStringBuffer::ToString(uint32_t aLen, nsACString& aStr,
   char* data = static_cast<char*>(Data());
 
   nsACStringAccessor* accessor = static_cast<nsACStringAccessor*>(&aStr);
-  NS_ASSERTION(data[aLen] == char(0), "data should be null terminated");
+  MOZ_DIAGNOSTIC_ASSERT(data[aLen] == char(0),
+                        "data should be null terminated");
 
   // preserve class flags
   uint32_t flags = accessor->flags();
