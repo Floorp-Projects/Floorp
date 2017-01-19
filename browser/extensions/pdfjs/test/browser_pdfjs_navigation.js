@@ -143,13 +143,13 @@ const TESTS = [
 
 add_task(function* test() {
   let mimeService = Cc["@mozilla.org/mime;1"].getService(Ci.nsIMIMEService);
-  let handlerInfo = mimeService.getFromTypeAndExtension('application/pdf', 'pdf');
+  let handlerInfo = mimeService.getFromTypeAndExtension("application/pdf", "pdf");
 
   // Make sure pdf.js is the default handler.
-  is(handlerInfo.alwaysAskBeforeHandling, false, 'pdf handler defaults to always-ask is false');
-  is(handlerInfo.preferredAction, Ci.nsIHandlerInfo.handleInternally, 'pdf handler defaults to internal');
+  is(handlerInfo.alwaysAskBeforeHandling, false, "pdf handler defaults to always-ask is false");
+  is(handlerInfo.preferredAction, Ci.nsIHandlerInfo.handleInternally, "pdf handler defaults to internal");
 
-  info('Pref action: ' + handlerInfo.preferredAction);
+  info("Pref action: " + handlerInfo.preferredAction);
 
   yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" },
     function* (newTabBrowser) {
@@ -166,7 +166,7 @@ add_task(function* test() {
       yield Task.spawn(runTests(newTabBrowser));
 
       yield ContentTask.spawn(newTabBrowser, null, function*() {
-        let pageNumber = content.document.querySelector('input#pageNumber');
+        let pageNumber = content.document.querySelector("input#pageNumber");
         Assert.equal(pageNumber.value, pageNumber.max, "Document is left on the last page");
       });
     });
@@ -230,24 +230,24 @@ function* contentSetUp() {
  * @param callback
  */
 function* runTests(browser) {
-  yield ContentTask.spawn(browser, TESTS, function* (TESTS) {
+  yield ContentTask.spawn(browser, TESTS, function* (contentTESTS) {
     let window = content;
     let document = window.document;
 
-    for (let test of TESTS) {
+    for (let test of contentTESTS) {
       let deferred = {};
       deferred.promise = new Promise((resolve, reject) => {
         deferred.resolve = resolve;
         deferred.reject = reject;
       });
 
-      let pageNumber = document.querySelector('input#pageNumber');
+      let pageNumber = document.querySelector("input#pageNumber");
 
       // Add an event-listener to wait for page to change, afterwards resolve the promise
       let timeout = window.setTimeout(() => deferred.reject(), 5000);
-      window.addEventListener('pagechange', function pageChange() {
+      window.addEventListener("pagechange", function pageChange() {
         if (pageNumber.value == test.expectedPage) {
-          window.removeEventListener('pagechange', pageChange);
+          window.removeEventListener("pagechange", pageChange);
           window.clearTimeout(timeout);
           deferred.resolve(+pageNumber.value);
         }
@@ -262,14 +262,14 @@ function* runTests(browser) {
         el.value = test.action.value;
 
       // Dispatch the event for changing the page
+      var ev;
       if (test.action.event == "keydown") {
-        var ev = document.createEvent("KeyboardEvent");
-            ev.initKeyEvent("keydown", true, true, null, false, false, false, false,
-                            test.action.keyCode, 0);
+        ev = document.createEvent("KeyboardEvent");
+        ev.initKeyEvent("keydown", true, true, null, false, false, false, false,
+                        test.action.keyCode, 0);
         el.dispatchEvent(ev);
-      }
-      else {
-        var ev = new Event(test.action.event);
+      } else {
+        ev = new Event(test.action.event);
       }
       el.dispatchEvent(ev);
 
