@@ -6241,11 +6241,17 @@ PresShell::Paint(nsView*        aViewToPaint,
     js::ProfileEntry::Category::GRAPHICS);
 
   Maybe<js::AutoAssertNoContentJS> nojs;
+
+  // On Android, Flash can call into content JS during painting, so we can't
+  // assert there. However, we don't rely on this assertion on Android because
+  // we don't paint while JS is running.
+#if !defined(MOZ_WIDGET_ANDROID)
   if (!(aFlags & nsIPresShell::PAINT_COMPOSITE)) {
     // We need to allow content JS when the flag is set since we may trigger
     // MozAfterPaint events in content in those cases.
     nojs.emplace(dom::danger::GetJSContext());
   }
+#endif
 
   NS_ASSERTION(!mIsDestroying, "painting a destroyed PresShell");
   NS_ASSERTION(aViewToPaint, "null view");
