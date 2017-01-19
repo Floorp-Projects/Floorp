@@ -161,11 +161,6 @@ var gFxAccounts = {
       profileInfoEnabled = Services.prefs.getBoolPref("identity.fxaccounts.profile_image.enabled");
     } catch (e) { }
 
-    // Bail out if FxA is disabled.
-    if (!this.weave.fxAccountsEnabled) {
-      return Promise.resolve();
-    }
-
     this.panelUIFooter.hidden = false;
 
     // Make sure the button is disabled in customization mode.
