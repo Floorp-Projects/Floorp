@@ -300,10 +300,10 @@ MediaDecoder::NotifyOwnerActivityChanged(bool aIsVisible)
 
   RefPtr<LayerManager> layerManager =
     nsContentUtils::LayerManagerForDocument(element->OwnerDoc());
-  NS_ENSURE_TRUE_VOID(layerManager);
-
-  RefPtr<KnowsCompositor> knowsCompositor = layerManager->AsShadowForwarder();
-  mCompositorUpdatedEvent.Notify(knowsCompositor);
+  if (layerManager) {
+    RefPtr<KnowsCompositor> knowsCompositor = layerManager->AsShadowForwarder();
+    mCompositorUpdatedEvent.Notify(knowsCompositor);
+  }
 }
 
 void
