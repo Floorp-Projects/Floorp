@@ -6,12 +6,13 @@
 
 # Temporarily disabled. See bug 1256495.
 #test_certificates = (
-#    'content_signing_root.pem',
 #    'content_signing_int.pem',
+#    'content_signing_onecrl_RSA_ee.pem',
 #    'content_signing_onecrl_ee.pem',
 #    'content_signing_onecrl_no_SAN_ee.pem',
 #    'content_signing_onecrl_wrong_key_ee.pem',
 #    'content_signing_remote_newtab_ee.pem',
+#    'content_signing_root.pem',
 #)
 #
 #for test_certificate in test_certificates:
