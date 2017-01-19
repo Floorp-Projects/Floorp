@@ -290,3 +290,9 @@ PORT_DestroyCheapArena;
 ;+    local:
 ;+       *;
 ;+};
+;+NSSUTIL_3.25 {         # NSS Utilities 3.25 release
+;+    global:
+SEC_ASN1DecoderSetMaximumElementSize;
+;+    local:
+;+       *;
+;+};

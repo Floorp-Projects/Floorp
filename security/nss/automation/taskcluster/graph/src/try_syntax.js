@@ -34,7 +34,7 @@ function parseOptions(opts) {
   // Parse unit tests.
   let aliases = {"gtests": "gtest"};
   let allUnitTests = ["bogo", "crmf", "chains", "cipher", "db", "ec", "fips",
-                      "gtest", "lowhash", "merge", "sdr", "smime", "tools",
+                      "gtest", "interop", "lowhash", "merge", "sdr", "smime", "tools",
                       "ssl", "mpi", "scert", "spki"];
   let unittests = intersect(opts.unittests.split(/\s*,\s*/).map(t => {
     return aliases[t] || t;
