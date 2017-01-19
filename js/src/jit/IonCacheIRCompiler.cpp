@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/DebugOnly.h"
+
 #include "jit/CacheIRCompiler.h"
 #include "jit/IonCaches.h"
 #include "jit/IonIC.h"
@@ -17,6 +19,8 @@
 using namespace js;
 using namespace js::jit;
 
+using mozilla::DebugOnly;
+
 namespace js {
 namespace jit {
 
@@ -26,11 +30,13 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler
   public:
     friend class AutoSaveLiveRegisters;
 
-    IonCacheIRCompiler(JSContext* cx, const CacheIRWriter& writer, IonIC* ic, IonScript* ionScript)
+    IonCacheIRCompiler(JSContext* cx, const CacheIRWriter& writer, IonIC* ic, IonScript* ionScript,
+                       IonICStub* stub)
       : CacheIRCompiler(cx, writer, Mode::Ion),
         writer_(writer),
         ic_(ic),
         ionScript_(ionScript),
+        stub_(stub),
         nextStubField_(0),
 #ifdef DEBUG
         calledPrepareVMCall_(false),
@@ -42,12 +48,15 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler
     }
 
     MOZ_MUST_USE bool init();
-    JitCode* compile(IonICStub* stub);
+    JitCode* compile();
 
   private:
     const CacheIRWriter& writer_;
     IonIC* ic_;
     IonScript* ionScript_;
+
+    // The stub we're generating code for.
+    IonICStub* stub_;
 
     CodeOffsetJump rejoinOffset_;
     Vector<CodeOffset, 4, SystemAllocPolicy> nextCodeOffsets_;
@@ -98,6 +107,14 @@ class MOZ_RAII IonCacheIRCompiler : public CacheIRCompiler
     T rawInt64StubField(uint32_t offset) {
         static_assert(sizeof(T) == sizeof(int64_t), "T musthave int64 size");
         return (T)readStubInt64(offset, StubField::Type::RawInt64);
+    }
+
+    uint64_t* expandoGenerationStubFieldPtr(uint32_t offset) {
+        DebugOnly<uint64_t> generation =
+            readStubInt64(offset, StubField::Type::DOMExpandoGeneration);
+        uint64_t* ptr = reinterpret_cast<uint64_t*>(stub_->stubDataStart() + offset);
+        MOZ_ASSERT(*ptr == generation);
+        return ptr;
     }
 
     void prepareVMCall(MacroAssembler& masm);
@@ -360,7 +377,7 @@ IonCacheIRCompiler::init()
 }
 
 JitCode*
-IonCacheIRCompiler::compile(IonICStub* stub)
+IonCacheIRCompiler::compile()
 {
     masm.setFramePushed(ionScript_->frameSize());
     if (cx_->spsProfiler.enabled())
@@ -412,7 +429,7 @@ IonCacheIRCompiler::compile(IonICStub* stub)
 
     for (CodeOffset offset : nextCodeOffsets_) {
         Assembler::PatchDataWithValueCheck(CodeLocationLabel(newStubCode, offset),
-                                           ImmPtr(stub->nextCodeRawPtr()),
+                                           ImmPtr(stub_->nextCodeRawPtr()),
                                            ImmPtr((void*)-1));
     }
     if (stubJitCodeOffset_) {
@@ -908,17 +925,18 @@ IonCacheIRCompiler::emitLoadDOMExpandoValueGuardGeneration()
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     ExpandoAndGeneration* expandoAndGeneration =
         rawWordStubField<ExpandoAndGeneration*>(reader.stubOffset());
-    uint64_t generation = rawInt64StubField<uint64_t>(reader.stubOffset());
+    uint64_t* generationFieldPtr = expandoGenerationStubFieldPtr(reader.stubOffset());
 
-    AutoScratchRegister scratch(allocator, masm);
+    AutoScratchRegister scratch1(allocator, masm);
+    AutoScratchRegister scratch2(allocator, masm);
     ValueOperand output = allocator.defineValueRegister(masm, reader.valOperandId());
 
     FailurePath* failure;
     if (!addFailurePath(&failure))
         return false;
 
-    masm.loadPtr(Address(obj, ProxyObject::offsetOfValues()), scratch);
-    Address expandoAddr(scratch, ProxyObject::offsetOfExtraSlotInValues(GetDOMProxyExpandoSlot()));
+    masm.loadPtr(Address(obj, ProxyObject::offsetOfValues()), scratch1);
+    Address expandoAddr(scratch1, ProxyObject::offsetOfExtraSlotInValues(GetDOMProxyExpandoSlot()));
 
     // Guard the ExpandoAndGeneration* matches the proxy's ExpandoAndGeneration.
     masm.loadValue(expandoAddr, output);
@@ -927,9 +945,11 @@ IonCacheIRCompiler::emitLoadDOMExpandoValueGuardGeneration()
 
     // Guard expandoAndGeneration->generation matches the expected generation.
     masm.movePtr(ImmPtr(expandoAndGeneration), output.scratchReg());
+    masm.movePtr(ImmPtr(generationFieldPtr), scratch1);
     masm.branch64(Assembler::NotEqual,
                   Address(output.scratchReg(), ExpandoAndGeneration::offsetOfGeneration()),
-                  Imm64(generation),
+                  Address(scratch1, 0),
+                  scratch2,
                   failure->label());
 
     // Load expandoAndGeneration->expando into the output Value register.
@@ -948,11 +968,6 @@ IonIC::attachCacheIRStub(JSContext* cx, const CacheIRWriter& writer, CacheKind k
     // Do nothing if the IR generator failed or triggered a GC that invalidated
     // the script.
     if (writer.failed() || !outerScript->hasIonScript())
-        return false;
-
-    JitContext jctx(cx, nullptr);
-    IonCacheIRCompiler compiler(cx, writer, this, outerScript->ionScript());
-    if (!compiler.init())
         return false;
 
     JitZone* jitZone = cx->zone()->jitZone();
@@ -988,7 +1003,7 @@ IonIC::attachCacheIRStub(JSContext* cx, const CacheIRWriter& writer, CacheKind k
     for (IonICStub* stub = firstStub_; stub; stub = stub->next()) {
         if (stub->stubInfo() != stubInfo)
             continue;
-        if (!writer.stubDataEquals(stub->stubDataStart()))
+        if (!writer.stubDataEqualsMaybeUpdate(stub->stubDataStart()))
             continue;
         return true;
     }
@@ -1006,12 +1021,16 @@ IonIC::attachCacheIRStub(JSContext* cx, const CacheIRWriter& writer, CacheKind k
         return false;
 
     IonICStub* newStub = new(newStubMem) IonICStub(fallbackLabel_.raw(), stubInfo);
+    writer.copyStubData(newStub->stubDataStart());
 
-    JitCode* code = compiler.compile(newStub);
-    if (!code)
+    JitContext jctx(cx, nullptr);
+    IonCacheIRCompiler compiler(cx, writer, this, outerScript->ionScript(), newStub);
+    if (!compiler.init())
         return false;
 
-    writer.copyStubData(newStub->stubDataStart());
+    JitCode* code = compiler.compile();
+    if (!code)
+        return false;
 
     attachStub(newStub, code);
     return true;

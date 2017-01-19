@@ -223,6 +223,7 @@ class StubField
         // These fields take up 64 bits on all platforms.
         RawInt64,
         First64BitType = RawInt64,
+        DOMExpandoGeneration,
         Value,
 
         Limit
@@ -378,7 +379,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         return stubDataSize_;
     }
     void copyStubData(uint8_t* dest) const;
-    bool stubDataEquals(const uint8_t* stubData) const;
+    bool stubDataEqualsMaybeUpdate(uint8_t* stubData) const;
 
     bool operandIsDead(uint32_t operandId, uint32_t currentInstruction) const {
         if (operandId >= operandLastUsed_.length())
@@ -540,7 +541,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         ValOperandId res(nextOperandId_++);
         writeOpWithOperandId(CacheOp::LoadDOMExpandoValueGuardGeneration, obj);
         addStubField(uintptr_t(expandoAndGeneration), StubField::Type::RawWord);
-        addStubField(expandoAndGeneration->generation, StubField::Type::RawInt64);
+        addStubField(expandoAndGeneration->generation, StubField::Type::DOMExpandoGeneration);
         writeOperandId(res);
         return res;
     }

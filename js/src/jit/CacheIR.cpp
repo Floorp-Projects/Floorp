@@ -679,9 +679,11 @@ GetPropIRGenerator::tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId o
     MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
     RootedObject checkObj(cx_, obj->staticPrototype());
+    if (!checkObj)
+        return false;
+
     RootedNativeObject holder(cx_);
     RootedShape shape(cx_);
-
     NativeGetPropCacheability canCache = CanAttachNativeGetProp(cx_, checkObj, id, &holder, &shape,
                                                                 pc_, engine_, canAttachGetter_,
                                                                 isTemporarilyUnoptimizable_);
