@@ -833,9 +833,6 @@ Sync11Service.prototype = {
 
     try {
       this.identity.finalize();
-      // an observer so the FxA migration code can take some action before
-      // the new identity is created.
-      Svc.Obs.notify("weave:service:start-over:init-identity");
       this.status.__authManager = null;
       this.identity = Status._authManager;
       this._clusterManager = this.identity.createClusterManager(this);
@@ -1194,92 +1191,6 @@ Sync11Service.prototype = {
       throw response;
     }
     this.recordManager.set(this.metaURL, meta);
-  },
-
-  /**
-   * Get a migration sentinel for the Firefox Accounts migration.
-   * Returns a JSON blob - it is up to callers of this to make sense of the
-   * data.
-   *
-   * Returns a promise that resolves with the sentinel, or null.
-   */
-  getFxAMigrationSentinel() {
-    if (this._shouldLogin()) {
-      this._log.debug("In getFxAMigrationSentinel: should login.");
-      if (!this.login()) {
-        this._log.debug("Can't get migration sentinel: login returned false.");
-        return Promise.resolve(null);
-      }
-    }
-    if (!this.identity.syncKeyBundle) {
-      this._log.error("Can't get migration sentinel: no syncKeyBundle.");
-      return Promise.resolve(null);
-    }
-    try {
-      let collectionURL = this.storageURL + "meta/fxa_credentials";
-      let cryptoWrapper = this.recordManager.get(collectionURL);
-      if (!cryptoWrapper || !cryptoWrapper.payload) {
-        // nothing to decrypt - .decrypt is noisy in that case, so just bail
-        // now.
-        return Promise.resolve(null);
-      }
-      // If the payload has a sentinel it means we must have put back the
-      // decrypted version last time we were called.
-      if (cryptoWrapper.payload.sentinel) {
-        return Promise.resolve(cryptoWrapper.payload.sentinel);
-      }
-      // If decryption fails it almost certainly means the key is wrong - but
-      // it's not clear if we need to take special action for that case?
-      let payload = cryptoWrapper.decrypt(this.identity.syncKeyBundle);
-      // After decrypting the ciphertext is lost, so we just stash the
-      // decrypted payload back into the wrapper.
-      cryptoWrapper.payload = payload;
-      return Promise.resolve(payload.sentinel);
-    } catch (ex) {
-      this._log.error("Failed to fetch the migration sentinel: ${}", ex);
-      return Promise.resolve(null);
-    }
-  },
-
-  /**
-   * Set a migration sentinel for the Firefox Accounts migration.
-   * Accepts a JSON blob - it is up to callers of this to make sense of the
-   * data.
-   *
-   * Returns a promise that resolves with a boolean which indicates if the
-   * sentinel was successfully written.
-   */
-  setFxAMigrationSentinel(sentinel) {
-    if (this._shouldLogin()) {
-      this._log.debug("In setFxAMigrationSentinel: should login.");
-      if (!this.login()) {
-        this._log.debug("Can't set migration sentinel: login returned false.");
-        return Promise.resolve(false);
-      }
-    }
-    if (!this.identity.syncKeyBundle) {
-      this._log.error("Can't set migration sentinel: no syncKeyBundle.");
-      return Promise.resolve(false);
-    }
-    try {
-      let collectionURL = this.storageURL + "meta/fxa_credentials";
-      let cryptoWrapper = new CryptoWrapper("meta", "fxa_credentials");
-      cryptoWrapper.cleartext.sentinel = sentinel;
-
-      cryptoWrapper.encrypt(this.identity.syncKeyBundle);
-
-      let res = this.resource(collectionURL);
-      let response = res.put(cryptoWrapper.toJSON());
-
-      if (!response.success) {
-        throw response;
-      }
-      this.recordManager.set(collectionURL, cryptoWrapper);
-    } catch (ex) {
-      this._log.error("Failed to set the migration sentinel: ${}", ex);
-      return Promise.resolve(false);
-    }
-    return Promise.resolve(true);
   },
 
   _freshStart: function _freshStart() {
