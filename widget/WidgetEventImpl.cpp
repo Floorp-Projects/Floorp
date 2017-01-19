@@ -314,6 +314,41 @@ WidgetEvent::HasPluginActivationEventMessage() const
  ******************************************************************************/
 
 bool
+WidgetEvent::CanBeSentToRemoteProcess() const
+{
+  // If this event is explicitly marked as shouldn't be sent to remote process,
+  // just return false.
+  if (mFlags.mNoCrossProcessBoundaryForwarding) {
+    return false;
+  }
+
+  if (mClass == eKeyboardEventClass ||
+      mClass == eWheelEventClass) {
+    return true;
+  }
+
+  switch (mMessage) {
+    case eMouseDown:
+    case eMouseUp:
+    case eMouseMove:
+    case eContextMenu:
+    case eMouseEnterIntoWidget:
+    case eMouseExitFromWidget:
+    case eMouseTouchDrag:
+    case eTouchStart:
+    case eTouchMove:
+    case eTouchEnd:
+    case eTouchCancel:
+    case eDragOver:
+    case eDragExit:
+    case eDrop:
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool
 WidgetEvent::IsRetargetedNativeEventDelivererForPlugin() const
 {
   const WidgetPluginEvent* pluginEvent = AsPluginEvent();
