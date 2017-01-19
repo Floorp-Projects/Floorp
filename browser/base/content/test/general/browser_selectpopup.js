@@ -11,7 +11,8 @@ const XHTML_DTD = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www
 
 const PAGECONTENT =
   "<html xmlns='http://www.w3.org/1999/xhtml'>" +
-  "<body onload='gChangeEvents = 0;gInputEvents = 0; document.body.firstChild.focus()'><select oninput='gInputEvents++' onchange='gChangeEvents++'>" +
+  "<body onload='gChangeEvents = 0;gInputEvents = 0; gClickEvents = 0; document.body.firstChild.focus()'>" +
+  "<select oninput='gInputEvents++' onchange='gChangeEvents++' onclick='if (event.target == this) gClickEvents++'>" +
   "  <optgroup label='First Group'>" +
   "    <option value='One'>One</option>" +
   "    <option value='Two'>Two</option>" +
@@ -127,6 +128,12 @@ function getChangeEvents() {
   });
 }
 
+function getClickEvents() {
+  return ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+    return content.wrappedJSObject.gClickEvents;
+  });
+}
+
 function* doSelectTests(contentType, dtd) {
   const pageUrl = "data:" + contentType + "," + escape(dtd + "\n" + PAGECONTENT);
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
@@ -169,6 +176,7 @@ function* doSelectTests(contentType, dtd) {
 
   is((yield getInputEvents()), 0, "Before closed - number of input events");
   is((yield getChangeEvents()), 0, "Before closed - number of change events");
+  is((yield getClickEvents()), 0, "Before closed - number of click events");
 
   EventUtils.synthesizeKey("a", { accelKey: true });
   yield ContentTask.spawn(gBrowser.selectedBrowser, { isWindows }, function(args) {
@@ -189,26 +197,31 @@ function* doSelectTests(contentType, dtd) {
   is(menulist.selectedIndex, 3, "Item 3 still selected");
   is((yield getInputEvents()), 1, "After closed - number of input events");
   is((yield getChangeEvents()), 1, "After closed - number of change events");
+  is((yield getClickEvents()), 0, "After closed - number of click events");
 
   // Opening and closing the popup without changing the value should not fire a change event.
   yield openSelectPopup(selectPopup, "click");
   yield hideSelectPopup(selectPopup, "escape");
   is((yield getInputEvents()), 1, "Open and close with no change - number of input events");
   is((yield getChangeEvents()), 1, "Open and close with no change - number of change events");
+  is((yield getClickEvents()), 1, "Open and close with no change - number of click events");
   EventUtils.synthesizeKey("VK_TAB", { });
   EventUtils.synthesizeKey("VK_TAB", { shiftKey: true });
   is((yield getInputEvents()), 1, "Tab away from select with no change - number of input events");
   is((yield getChangeEvents()), 1, "Tab away from select with no change - number of change events");
+  is((yield getClickEvents()), 1, "Tab away from select with no change - number of click events");
 
   yield openSelectPopup(selectPopup, "click");
   EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
   yield hideSelectPopup(selectPopup, "escape");
   is((yield getInputEvents()), isWindows ? 2 : 1, "Open and close with change - number of input events");
   is((yield getChangeEvents()), isWindows ? 2 : 1, "Open and close with change - number of change events");
+  is((yield getClickEvents()), 2, "Open and close with change - number of click events");
   EventUtils.synthesizeKey("VK_TAB", { });
   EventUtils.synthesizeKey("VK_TAB", { shiftKey: true });
   is((yield getInputEvents()), isWindows ? 2 : 1, "Tab away from select with change - number of input events");
   is((yield getChangeEvents()), isWindows ? 2 : 1, "Tab away from select with change - number of change events");
+  is((yield getClickEvents()), 2, "Tab away from select with change - number of click events");
 
   is(selectPopup.lastChild.previousSibling.label, "Seven", "Spaces collapsed");
   is(selectPopup.lastChild.label, "\xA0\xA0Eight\xA0\xA0", "Non-breaking spaces not collapsed");
