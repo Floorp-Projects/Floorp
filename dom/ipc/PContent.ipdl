@@ -345,6 +345,13 @@ struct GMPCapabilityData
     GMPAPITags[] capabilities;
 };
 
+struct GfxInfoFeatureStatus
+{
+    int32_t feature;
+    int32_t status;
+    nsCString failureId;
+};
+
 /**
  * The PContent protocol is a top-level protocol between the UI process
  * and a content process. There is exactly one PContentParent/PContentChild pair
@@ -934,8 +941,7 @@ parent:
                                 bool isAudio,
                                 bool isVideo);
 
-    sync GetGraphicsFeatureStatus(int32_t aFeature) returns (int32_t aStatus, nsCString aFailureCode,
-                                                             bool aSuccess);
+    sync GetGfxInfoFeatureStatus() returns (GfxInfoFeatureStatus[] features);
 
     // Graphics errors
     async GraphicsError(nsCString aError);

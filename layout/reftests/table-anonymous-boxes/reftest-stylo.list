@@ -1,37 +1,37 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails == 121142-1a.html 121142-1a.html
-fails == 121142-1b.html 121142-1b.html
-fails == 121142-2.html 121142-2.html
+== 121142-1a.html 121142-1a.html
+== 121142-1b.html 121142-1b.html
+== 121142-2.html 121142-2.html
 fails == 156888-1.html 156888-1.html
 fails == 156888-2.html 156888-2.html
 == 162063-1.xhtml 162063-1.xhtml
-fails == 203923-1.html 203923-1.html
-fails == 203923-2.html 203923-2.html
-fails == 208305-1.html 208305-1.html
+== 203923-1.html 203923-1.html
+== 203923-2.html 203923-2.html
+== 208305-1.html 208305-1.html
 # == 208305-2.html 208305-2.html
-fails == 208305-3.html 208305-3.html
+== 208305-3.html 208305-3.html
 # == 208305-4.html 208305-4.html
 # == 277995-1.html 277995-1.html
 fails == 293576-1.html 293576-1.html
-fails == 302113-1.html 302113-1.html
+== 302113-1.html 302113-1.html
 fails == 315146-1.xhtml 315146-1.xhtml
-fails == 325543-1a.html 325543-1a.html
-fails == 325543-1b.html 325543-1b.html
+== 325543-1a.html 325543-1a.html
+== 325543-1b.html 325543-1b.html
 fails == 338735-1.html 338735-1.html
 fails == 339388-1a.html 339388-1a.html
 fails == 339388-1b.html 339388-1b.html
-fails == 363326-1.html 363326-1.html
+== 363326-1.html 363326-1.html
 # == 368932-1.html 368932-1.html
-fails == 371054-1.html 371054-1.html
+== 371054-1.html 371054-1.html
 fails == 372641-1a.xhtml 372641-1a.xhtml
 fails == 372641-1b.xhtml 372641-1b.xhtml
 fails == 372641-1c.xhtml 372641-1c.xhtml
-fails == 372649-1.html 372649-1.html
-fails == 373379-1.html 373379-1.html
+== 372649-1.html 372649-1.html
+== 373379-1.html 373379-1.html
 fails == 394402-1a.html 394402-1a.html
 fails == 394402-1b.html 394402-1b.html
-fails == 398095-1.html 398095-1.html
-fails == 407115-1.html 407115-1.html
+== 398095-1.html 398095-1.html
+== 407115-1.html 407115-1.html
 fails == 443616-1a.xhtml 443616-1a.xhtml
 fails == 443616-1b.html 443616-1b.html
 fails == 448111-1.html 448111-1.html
@@ -59,18 +59,18 @@ fails == cols-test-1.html cols-test-1.html
 fails == cols-test-2.html cols-test-2.html
 fails == cols-test-3.html cols-test-3.html
 fails == dynamic-abs-pos-tbody.html dynamic-abs-pos-tbody.html
-fails == dynamic-removal-1.html dynamic-removal-1.html
-fails == dynamic-removal-2.html dynamic-removal-2.html
-fails == dynamic-removal-3.html dynamic-removal-3.html
+# == dynamic-removal-1.html dynamic-removal-1.html
+# == dynamic-removal-2.html dynamic-removal-2.html
+# == dynamic-removal-3.html dynamic-removal-3.html
 fails == dynamic-removal-4.html dynamic-removal-4.html
 fails == dynamic-removal-5.html dynamic-removal-5.html
 fails == dynamic-removal-6.html dynamic-removal-6.html
 fails == dynamic-removal-7.html dynamic-removal-7.html
 fails == dynamic-removal-8.html dynamic-removal-8.html
-fails == dynamic-removal-9.html dynamic-removal-9.html
-fails == dynamic-removal-10.html dynamic-removal-10.html
-fails == dynamic-removal-11.html dynamic-removal-11.html
-fails == dynamic-removal-12.html dynamic-removal-12.html
+== dynamic-removal-9.html dynamic-removal-9.html
+== dynamic-removal-10.html dynamic-removal-10.html
+== dynamic-removal-11.html dynamic-removal-11.html
+== dynamic-removal-12.html dynamic-removal-12.html
 fails == dynamic-removal-13.html dynamic-removal-13.html
 fails == dynamic-removal-14.html dynamic-removal-14.html
 fails == dynamic-removal-15.html dynamic-removal-15.html
@@ -88,29 +88,29 @@ fails == dynamic-switch-inline-to-cell-3.html dynamic-switch-inline-to-cell-3.ht
 fails == dynamic-switch-inline-to-cell-4.html dynamic-switch-inline-to-cell-4.html
 fails == dynamic-switch-inline-to-cell-5.html dynamic-switch-inline-to-cell-5.html
 fails == white-space-1.html white-space-1.html
-fails == white-space-2.html white-space-2.html
+# == white-space-2.html white-space-2.html
 fails == white-space-3.html white-space-3.html
 fails == white-space-4.html white-space-4.html
 fails == white-space-5.html white-space-5.html
 fails == white-space-6.html white-space-6.html
-fails == white-space-7.html white-space-7.html
-fails == white-space-8.html white-space-8.html
-fails == white-space-9.html white-space-9.html
-fails == white-space-10.html white-space-10.html
-fails == white-space-11.html white-space-11.html
-fails == white-space-12.html white-space-12.html
-fails == white-space-13.html white-space-13.html
-fails == white-space-14.html white-space-14.html
-fails == white-space-15.html white-space-15.html
-fails == white-space-16.html white-space-16.html
-fails == white-space-17.html white-space-17.html
-fails == white-space-18.html white-space-18.html
-fails == white-space-19.html white-space-19.html
-fails == white-space-20.html white-space-20.html
-fails == white-space-21.html white-space-21.html
-fails == white-space-22.html white-space-22.html
-fails == white-space-23.html white-space-23.html
-fails == white-space-24.html white-space-24.html
-fails == white-space-25.html white-space-25.html
-fails == white-space-26.html white-space-26.html
+== white-space-7.html white-space-7.html
+== white-space-8.html white-space-8.html
+== white-space-9.html white-space-9.html
+== white-space-10.html white-space-10.html
+== white-space-11.html white-space-11.html
+== white-space-12.html white-space-12.html
+== white-space-13.html white-space-13.html
+== white-space-14.html white-space-14.html
+== white-space-15.html white-space-15.html
+== white-space-16.html white-space-16.html
+== white-space-17.html white-space-17.html
+== white-space-18.html white-space-18.html
+== white-space-19.html white-space-19.html
+== white-space-20.html white-space-20.html
+== white-space-21.html white-space-21.html
+== white-space-22.html white-space-22.html
+== white-space-23.html white-space-23.html
+== white-space-24.html white-space-24.html
+== white-space-25.html white-space-25.html
+== white-space-26.html white-space-26.html
 fails == white-space-pre-1.html white-space-pre-1.html

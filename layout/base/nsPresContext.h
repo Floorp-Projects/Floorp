@@ -1524,6 +1524,8 @@ public:
    * This needs to be called even when aFrame is a popup, since although
    * windowed plugins aren't allowed in popups, windowless plugins are
    * and ComputePluginGeometryUpdates needs to be called for them.
+   * aBuilder and aList can be null. This indicates that all plugins are
+   * hidden because we're in a background tab.
    */
   void ComputePluginGeometryUpdates(nsIFrame* aFrame,
                                     nsDisplayListBuilder* aBuilder,

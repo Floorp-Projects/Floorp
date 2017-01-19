@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1323700
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1323700</title>
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript;version=1.8">
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+let { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const CssLogic = require("devtools/shared/inspector/css-logic");
+
+var _tests = [];
+function addTest(test) {
+  _tests.push(test);
+}
+
+function runNextTest() {
+  if (_tests.length == 0) {
+    SimpleTest.finish()
+    return;
+  }
+  _tests.shift()();
+}
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+}
+
+addTest(function getCssPathForUnattachedElement() {
+  var unattached = document.createElement("div");
+  unattached.id = "unattached";
+  try {
+    CssLogic.getCssPath(unattached);
+    ok(false, "Unattached node did not throw")
+  } catch(e) {
+    ok(e, "Unattached node throws an exception");
+  }
+
+  var unattachedChild = document.createElement("div");
+  unattached.appendChild(unattachedChild);
+  try {
+    CssLogic.getCssPath(unattachedChild);
+    ok(false, "Unattached child node did not throw")
+  } catch(e) {
+    ok(e, "Unattached child node throws an exception");
+  }
+
+  var unattachedBody = document.createElement("body");
+  try {
+    CssLogic.getCssPath(unattachedBody);
+    ok(false, "Unattached body node did not throw")
+  } catch(e) {
+    ok(e, "Unattached body node throws an exception");
+  }
+
+  runNextTest();
+});
+
+addTest(function cssPathHasOneStepForEachAncestor() {
+  for (let el of [...document.querySelectorAll('*')]) {
+    let splitPath = CssLogic.getCssPath(el).split(" ");
+
+    let expectedNbOfParts = 0;
+    var parent = el.parentNode;
+    while (parent) {
+      expectedNbOfParts ++;
+      parent = parent.parentNode;
+    }
+
+    is(splitPath.length, expectedNbOfParts, "There are enough parts in the full path");
+  }
+
+  runNextTest();
+});
+
+addTest(function getCssPath() {
+  let data = [{
+    selector: "#id",
+    path: "html body div div div.class div#id"
+  }, {
+    selector: "html",
+    path: "html"
+  }, {
+    selector: "body",
+    path: "html body"
+  }, {
+    selector: ".c1.c2.c3",
+    path: "html body span.c1.c2.c3"
+  }, {
+    selector: "#i",
+    path: "html body span#i.c1.c2"
+  }];
+
+  for (let {selector, path} of data) {
+    let node = document.querySelector(selector);
+    is (CssLogic.getCssPath(node), path, `Full css path is correct for ${selector}`);
+  }
+
+  runNextTest();
+});
+  </script>
+</head>
+<body>
+  <div>
+    <div>
+      <div class="class">
+        <div id="id"></div>
+      </div>
+    </div>
+  </div>
+  <span class="c1 c2 c3"></span>
+  <span id="i" class="c1 c2"></span>
+</body>
+</html>

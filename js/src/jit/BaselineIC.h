@@ -1111,69 +1111,6 @@ class ICSetProp_Fallback : public ICFallbackStub
     };
 };
 
-// Optimized SETPROP/SETGNAME/SETNAME stub.
-class ICSetProp_Native : public ICUpdatedStub
-{
-    friend class ICStubSpace;
-
-  protected: // Protected to silence Clang warning.
-    GCPtrObjectGroup group_;
-    GCPtrShape shape_;
-    uint32_t offset_;
-
-    ICSetProp_Native(JitCode* stubCode, ObjectGroup* group, Shape* shape, uint32_t offset);
-
-  public:
-    GCPtrObjectGroup& group() {
-        return group_;
-    }
-    GCPtrShape& shape() {
-        return shape_;
-    }
-    void notePreliminaryObject() {
-        extra_ = 1;
-    }
-    bool hasPreliminaryObject() const {
-        return extra_;
-    }
-    static size_t offsetOfGroup() {
-        return offsetof(ICSetProp_Native, group_);
-    }
-    static size_t offsetOfShape() {
-        return offsetof(ICSetProp_Native, shape_);
-    }
-    static size_t offsetOfOffset() {
-        return offsetof(ICSetProp_Native, offset_);
-    }
-
-    class Compiler : public ICStubCompiler {
-        RootedObject obj_;
-        bool isFixedSlot_;
-        uint32_t offset_;
-
-      protected:
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
-                  (static_cast<int32_t>(isFixedSlot_) << 17) |
-                  (static_cast<int32_t>(obj_->is<UnboxedPlainObject>()) << 18);
-        }
-
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-
-      public:
-        Compiler(JSContext* cx, HandleObject obj, bool isFixedSlot, uint32_t offset)
-          : ICStubCompiler(cx, ICStub::SetProp_Native, Engine::Baseline),
-            obj_(cx, obj),
-            isFixedSlot_(isFixedSlot),
-            offset_(offset)
-        {}
-
-        ICSetProp_Native* getStub(ICStubSpace* space);
-    };
-};
-
-
 template <size_t ProtoChainDepth> class ICSetProp_NativeAddImpl;
 
 class ICSetProp_NativeAdd : public ICUpdatedStub

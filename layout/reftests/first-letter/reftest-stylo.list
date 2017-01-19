@@ -25,32 +25,32 @@ fails == parent-style-1.html parent-style-1.html
 == quote-1f.html quote-1f.html
 fails == dynamic-1.html dynamic-1.html
 # random-if(d2d) == dynamic-2.html dynamic-2.html
-fails == dynamic-3a.html dynamic-3a.html
-fails == dynamic-3b.html dynamic-3b.html
-fails == 23605-1.html 23605-1.html
-fails == 23605-2.html 23605-2.html
-fails == 23605-3.html 23605-3.html
-fails == 23605-4.html 23605-4.html
-fails == 23605-5.html 23605-5.html
-fails == 23605-6.html 23605-6.html
-fails == 229764-1.html 229764-1.html
+== dynamic-3a.html dynamic-3a.html
+== dynamic-3b.html dynamic-3b.html
+== 23605-1.html 23605-1.html
+== 23605-2.html 23605-2.html
+== 23605-3.html 23605-3.html
+== 23605-4.html 23605-4.html
+== 23605-5.html 23605-5.html
+== 23605-6.html 23605-6.html
+== 229764-1.html 229764-1.html
 # == 229764-2.html 229764-2.html
-fails == 329069-1.html 329069-1.html
-fails == 329069-2.html 329069-2.html
+== 329069-1.html 329069-1.html
+== 329069-2.html 329069-2.html
 fails == 329069-3.html 329069-3.html
-fails == 329069-4.html 329069-4.html
-fails HTTP(..) == 329069-5.html 329069-5.html
-fails == 342120-1.xhtml 342120-1.xhtml
+== 329069-4.html 329069-4.html
+HTTP(..) == 329069-5.html 329069-5.html
+== 342120-1.xhtml 342120-1.xhtml
 == 379799-1.html 379799-1.html
-fails == 399941-1.html 399941-1.html
-fails == 399941-2.html 399941-2.html
-fails == 399941-3.html 399941-3.html
-fails == 399941-4.html 399941-4.html
-fails == 399941-5.html 399941-5.html
-fails == 399941-6.html 399941-6.html
-fails == 399941-7.html 399941-7.html
-fails == 399941-8.html 399941-8.html
-fails == 399941-9.html 399941-9.html
+== 399941-1.html 399941-1.html
+== 399941-2.html 399941-2.html
+== 399941-3.html 399941-3.html
+== 399941-4.html 399941-4.html
+== 399941-5.html 399941-5.html
+== 399941-6.html 399941-6.html
+== 399941-7.html 399941-7.html
+== 399941-8.html 399941-8.html
+== 399941-9.html 399941-9.html
 == 429968-1a.html 429968-1a.html
 fails == 429968-1b.html 429968-1b.html
 == 429968-2a.html 429968-2a.html
@@ -59,12 +59,12 @@ fails == 429968-1b.html 429968-1b.html
 == 441418-1.html 441418-1.html
 == 469227-1.html 469227-1.html
 == 484400-1.html 484400-1.html
-fails == 594303-1.html 594303-1.html
-fails == 617869-1.html 617869-1.html
-fails == 723509-1.html 723509-1.html
-fails == 922550-1.html 922550-1.html
+== 594303-1.html 594303-1.html
+== 617869-1.html 617869-1.html
+== 723509-1.html 723509-1.html
+== 922550-1.html 922550-1.html
 == 958249.html 958249.html
-fails == font-text-styles.html font-text-styles.html
+== font-text-styles.html font-text-styles.html
 random-if(gtkWidget) random-if(winWidget&&!d2d) == font-text-styles-floater.html font-text-styles-floater.html
 == inline-height-empty.html inline-height-empty.html
 fails HTTP(..) == indic-clusters-1.html indic-clusters-1.html

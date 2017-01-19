@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DecoderTraits.h"
-#include "MediaContentType.h"
+#include "MediaContainerType.h"
 #include "MediaDecoder.h"
 #include "nsMimeTypes.h"
 #include "mozilla/Preferences.h"
@@ -51,7 +51,7 @@ namespace mozilla
 {
 
 static bool
-IsHttpLiveStreamingType(const MediaContentType& aType)
+IsHttpLiveStreamingType(const MediaContainerType& aType)
 {
   return // For m3u8.
          // https://tools.ietf.org/html/draft-pantos-http-live-streaming-19#section-10
@@ -63,7 +63,7 @@ IsHttpLiveStreamingType(const MediaContentType& aType)
 
 #ifdef MOZ_ANDROID_OMX
 static bool
-IsAndroidMediaType(const MediaContentType& aType)
+IsAndroidMediaType(const MediaContainerType& aType)
 {
   if (!MediaDecoder::IsAndroidMediaPluginEnabled()) {
     return false;
@@ -77,7 +77,7 @@ IsAndroidMediaType(const MediaContentType& aType)
 #endif
 
 /* static */ bool
-DecoderTraits::IsMP4SupportedType(const MediaContentType& aType,
+DecoderTraits::IsMP4SupportedType(const MediaContainerType& aType,
                                   DecoderDoctorDiagnostics* aDiagnostics)
 {
 #ifdef MOZ_FMP4
@@ -89,14 +89,14 @@ DecoderTraits::IsMP4SupportedType(const MediaContentType& aType,
 
 static
 CanPlayStatus
-CanHandleCodecsType(const MediaContentType& aType,
+CanHandleCodecsType(const MediaContainerType& aType,
                     DecoderDoctorDiagnostics* aDiagnostics)
 {
   // We should have been given a codecs string, though it may be empty.
   MOZ_ASSERT(aType.ExtendedType().HaveCodecs());
 
-  // Content type with the the MIME type, no codecs.
-  const MediaContentType mimeType(aType.Type());
+  // Container type with the MIME type, no codecs.
+  const MediaContainerType mimeType(aType.Type());
 
   if (OggDecoder::IsSupportedType(mimeType)) {
     if (OggDecoder::IsSupportedType(aType)) {
@@ -107,7 +107,7 @@ CanHandleCodecsType(const MediaContentType& aType,
       return CANPLAY_NO;
     }
   }
-  if (WaveDecoder::IsSupportedType(MediaContentType(mimeType))) {
+  if (WaveDecoder::IsSupportedType(MediaContainerType(mimeType))) {
     if (WaveDecoder::IsSupportedType(aType)) {
       return CANPLAY_YES;
     } else {
@@ -172,7 +172,7 @@ CanHandleCodecsType(const MediaContentType& aType,
 
 static
 CanPlayStatus
-CanHandleMediaType(const MediaContentType& aType,
+CanHandleMediaType(const MediaContainerType& aType,
                    DecoderDoctorDiagnostics* aDiagnostics)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -188,8 +188,8 @@ CanHandleMediaType(const MediaContentType& aType,
     }
   }
 
-  // Content type with just the MIME type/subtype, no codecs.
-  const MediaContentType mimeType(aType.Type());
+  // Container type with just the MIME type/subtype, no codecs.
+  const MediaContainerType mimeType(aType.Type());
 
   if (OggDecoder::IsSupportedType(mimeType)) {
     return CANPLAY_MAYBE;
@@ -232,22 +232,22 @@ CanHandleMediaType(const MediaContentType& aType,
 
 /* static */
 CanPlayStatus
-DecoderTraits::CanHandleContentType(const MediaContentType& aContentType,
-                                    DecoderDoctorDiagnostics* aDiagnostics)
+DecoderTraits::CanHandleContainerType(const MediaContainerType& aContainerType,
+                                      DecoderDoctorDiagnostics* aDiagnostics)
 {
-  return CanHandleMediaType(aContentType, aDiagnostics);
+  return CanHandleMediaType(aContainerType, aDiagnostics);
 }
 
 /* static */
 bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType,
                                           DecoderDoctorDiagnostics* aDiagnostics)
 {
-  Maybe<MediaContentType> contentType = MakeMediaContentType(aMIMEType);
-  if (!contentType) {
+  Maybe<MediaContainerType> containerType = MakeMediaContainerType(aMIMEType);
+  if (!containerType) {
     return false;
   }
 
-  if (WaveDecoder::IsSupportedType(*contentType)) {
+  if (WaveDecoder::IsSupportedType(*containerType)) {
     // We should not return true for Wave types, since there are some
     // Wave codecs actually in use in the wild that we don't support, and
     // we should allow those to be handled by plugins or helper apps.
@@ -259,21 +259,21 @@ bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType,
   // If an external plugin which can handle quicktime video is available
   // (and not disabled), prefer it over native playback as there several
   // codecs found in the wild that we do not handle.
-  if (contentType->Type() == MEDIAMIMETYPE("video/quicktime")) {
+  if (containerType->Type() == MEDIAMIMETYPE("video/quicktime")) {
     RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
     if (pluginHost &&
-        pluginHost->HavePluginForType(contentType->Type().AsString())) {
+        pluginHost->HavePluginForType(containerType->Type().AsString())) {
       return false;
     }
   }
 
-  return CanHandleMediaType(*contentType, aDiagnostics) != CANPLAY_NO;
+  return CanHandleMediaType(*containerType, aDiagnostics) != CANPLAY_NO;
 }
 
 // Instantiates but does not initialize decoder.
 static
 already_AddRefed<MediaDecoder>
-InstantiateDecoder(const MediaContentType& aType,
+InstantiateDecoder(const MediaContainerType& aType,
                    MediaDecoderOwner* aOwner,
                    DecoderDoctorDiagnostics* aDiagnostics)
 {
@@ -343,7 +343,7 @@ DecoderTraits::CreateDecoder(const nsACString& aType,
                              DecoderDoctorDiagnostics* aDiagnostics)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  Maybe<MediaContentType> type = MakeMediaContentType(aType);
+  Maybe<MediaContainerType> type = MakeMediaContainerType(aType);
   if (!type) {
     return nullptr;
   }
@@ -352,7 +352,7 @@ DecoderTraits::CreateDecoder(const nsACString& aType,
 
 /* static */
 MediaDecoderReader*
-DecoderTraits::CreateReader(const MediaContentType& aType,
+DecoderTraits::CreateReader(const MediaContainerType& aType,
                             AbstractMediaDecoder* aDecoder)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -414,7 +414,7 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
     return false;
   }
 
-  Maybe<MediaContentType> type = MakeMediaContentType(aType);
+  Maybe<MediaContainerType> type = MakeMediaContainerType(aType);
   if (!type) {
     return false;
   }

@@ -2652,7 +2652,7 @@ MediaFormatReader::GetImageContainer()
 }
 
 void
-MediaFormatReader::GetMozDebugReaderData(nsAString& aString)
+MediaFormatReader::GetMozDebugReaderData(nsACString& aString)
 {
   nsAutoCString result;
   const char* audioName = "unavailable";
@@ -2712,7 +2712,7 @@ MediaFormatReader::GetMozDebugReaderData(nsAString& aString)
                               mVideo.mWaitingForData, mVideo.mWaitingForKey,
                               mVideo.mLastStreamSourceID);
   }
-  aString += NS_ConvertUTF8toUTF16(result);
+  aString += result;
 }
 
 void
@@ -2726,21 +2726,18 @@ void
 MediaFormatReader::SetBlankDecode(TrackType aTrack, bool aIsBlankDecode)
 {
   MOZ_ASSERT(OnTaskQueue());
+
   auto& decoder = GetDecoderData(aTrack);
-
-  LOG("%s, decoder.mIsBlankDecode = %d => aIsBlankDecode = %d",
-      TrackTypeToStr(aTrack), decoder.mIsBlankDecode, aIsBlankDecode);
-
   if (decoder.mIsBlankDecode == aIsBlankDecode) {
     return;
   }
 
+  LOG("%s, decoder.mIsBlankDecode = %d => aIsBlankDecode = %d",
+      TrackTypeToStr(aTrack), decoder.mIsBlankDecode, aIsBlankDecode);
+
   decoder.mIsBlankDecode = aIsBlankDecode;
   decoder.Flush();
   decoder.ShutdownDecoder();
-  ScheduleUpdate(TrackInfo::kVideoTrack);
-
-  return;
 }
 
 void

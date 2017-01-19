@@ -300,10 +300,10 @@ MediaDecoder::NotifyOwnerActivityChanged(bool aIsVisible)
 
   RefPtr<LayerManager> layerManager =
     nsContentUtils::LayerManagerForDocument(element->OwnerDoc());
-  NS_ENSURE_TRUE_VOID(layerManager);
-
-  RefPtr<KnowsCompositor> knowsCompositor = layerManager->AsShadowForwarder();
-  mCompositorUpdatedEvent.Notify(knowsCompositor);
+  if (layerManager) {
+    RefPtr<KnowsCompositor> knowsCompositor = layerManager->AsShadowForwarder();
+    mCompositorUpdatedEvent.Notify(knowsCompositor);
+  }
 }
 
 void
@@ -837,11 +837,8 @@ MediaDecoder::EnsureTelemetryReported()
     codecs.AppendElement(mInfo->mVideo.GetAsVideoInfo()->mMimeType);
   }
   if (codecs.IsEmpty()) {
-    if (mResource->GetContentType().IsEmpty()) {
-      NS_WARNING("Somehow the resource's content type is empty");
-      return;
-    }
-    codecs.AppendElement(nsPrintfCString("resource; %s", mResource->GetContentType().get()));
+    codecs.AppendElement(nsPrintfCString("resource; %s",
+                                         mResource->GetContentType().OriginalString().Data()));
   }
   for (const nsCString& codec : codecs) {
     DECODER_LOG("Telemetry MEDIA_CODEC_USED= '%s'", codec.get());
@@ -1741,10 +1738,10 @@ MediaDecoder::DumpDebugInfo()
            mInfo ? mInfo->HasAudio() : 0, mInfo ? mInfo->HasVideo() : 0,
            PlayStateStr(), GetStateMachine());
 
-  nsString str;
+  nsAutoCString str;
   GetMozDebugReaderData(str);
   if (!str.IsEmpty()) {
-    DUMP_LOG("reader data:\n%s", NS_ConvertUTF16toUTF8(str).get());
+    DUMP_LOG("reader data:\n%s", str.get());
   }
 
   if (GetStateMachine()) {

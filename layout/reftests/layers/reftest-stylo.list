@@ -1,6 +1,6 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails == move-to-background-1.html move-to-background-1.html
-fails == component-alpha-exit-1.html component-alpha-exit-1.html
+== move-to-background-1.html move-to-background-1.html
+== component-alpha-exit-1.html component-alpha-exit-1.html
 fails == pull-background-1.html pull-background-1.html
 fails == pull-background-2.html pull-background-2.html
 fails == pull-background-3.html pull-background-3.html

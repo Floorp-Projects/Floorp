@@ -196,6 +196,10 @@ public:
    */
   bool SetLocalSSRCs(const std::vector<unsigned int>& aSSRCs) override;
   std::vector<unsigned int> GetLocalSSRCs() const override;
+  bool SetRemoteSSRC(unsigned int ssrc) override
+  {
+    return false;
+  }
   bool GetRemoteSSRC(unsigned int* ssrc) override;
   bool SetLocalCNAME(const char* cname) override;
   bool GetVideoEncoderStats(double* framerateMean,

@@ -135,7 +135,7 @@
         }
 
         // Inform the test harness that we're done loading the page
-        var event = new CustomEvent("AboutBlockedLoaded");
+        var event = new CustomEvent("AboutBlockedLoaded", {bubbles:true});
         document.dispatchEvent(event);
       }
     ]]></script>

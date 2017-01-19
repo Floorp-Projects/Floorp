@@ -1,5 +1,5 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails == boxshadow-basic.html boxshadow-basic.html
+== boxshadow-basic.html boxshadow-basic.html
 # == boxshadow-blur.html boxshadow-blur.html
 # == boxshadow-blur.html boxshadow-blur.html
 fails random == boxshadow-blur-2.html boxshadow-blur-2.html
@@ -9,16 +9,16 @@ fails random == boxshadow-blur-2.html boxshadow-blur-2.html
 fails == tableboxshadow-basic.html tableboxshadow-basic.html
 fails == tableboxshadow-trshadow.html tableboxshadow-trshadow.html
 fails == tableboxshadow-tdshadow.html tableboxshadow-tdshadow.html
-fails == boxshadow-rounding.html boxshadow-rounding.html
+== boxshadow-rounding.html boxshadow-rounding.html
 fails == boxshadow-button.html boxshadow-button.html
 fails == boxshadow-fileupload.html boxshadow-fileupload.html
 == boxshadow-inner-basic.html boxshadow-inner-basic.html
 random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed.html
-fails == boxshadow-rounded-spread.html boxshadow-rounded-spread.html
+== boxshadow-rounded-spread.html boxshadow-rounded-spread.html
 fuzzy-if(skiaContent,1,50) HTTP(..) == boxshadow-dynamic.xul boxshadow-dynamic.xul
-fails == boxshadow-onecorner.html boxshadow-onecorner.html
-fails == boxshadow-twocorners.html boxshadow-twocorners.html
-fails == boxshadow-threecorners.html boxshadow-threecorners.html
+== boxshadow-onecorner.html boxshadow-onecorner.html
+== boxshadow-twocorners.html boxshadow-twocorners.html
+== boxshadow-threecorners.html boxshadow-threecorners.html
 fuzzy(2,440) == boxshadow-skiprect.html boxshadow-skiprect.html
 == boxshadow-opacity.html boxshadow-opacity.html
 == boxshadow-color-rounding.html boxshadow-color-rounding.html
@@ -35,7 +35,7 @@ fuzzy(12,9445) fuzzy-if(d2d,13,10926) == boxshadow-inset-large-offset.html boxsh
 
 # == overflow-not-scrollable-1.html overflow-not-scrollable-1.html
 # == overflow-not-scrollable-1.html overflow-not-scrollable-1.html
-fails == overflow-not-scrollable-2.html overflow-not-scrollable-2.html
+== overflow-not-scrollable-2.html overflow-not-scrollable-2.html
 fails == 611574-1.html 611574-1.html
 fails == 611574-2.html 611574-2.html
 # == fieldset.html fieldset.html

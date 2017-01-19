@@ -4,6 +4,8 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
                                   "resource:///modules/CustomizableUI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
+                                  "resource:///modules/E10SUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
@@ -233,6 +235,7 @@ class BasePopup {
 
     if (this.extension.remote) {
       browser.setAttribute("remote", "true");
+      browser.setAttribute("remoteType", E10SUtils.EXTENSION_REMOTE_TYPE);
     }
 
     // We only need flex sizing for the sake of the slide-in sub-views of the
@@ -343,6 +346,7 @@ class BasePopup {
 
     this.panel.style.setProperty("--arrowpanel-background", panelBackground);
     this.panel.style.setProperty("--panel-arrow-image-vertical", panelArrow);
+    this.background = background;
   }
 }
 
@@ -471,6 +475,8 @@ class ViewPopup extends BasePopup {
       // Calculate the extra height available on the screen above and below the
       // menu panel. Use that to calculate the how much the sub-view may grow.
       let popupRect = this.panel.getBoundingClientRect();
+
+      this.setBackground(this.background);
 
       let win = this.window;
       let popupBottom = win.mozInnerScreenY + popupRect.bottom;

@@ -440,7 +440,7 @@ function nameToAlias(certName) {
   return "k" + certName + "Fingerprint";
 }
 
-function compareByName (a, b) {
+function compareByName(a, b) {
   return a.name.localeCompare(b.name);
 }
 
@@ -486,7 +486,7 @@ function writeFingerprints(certNameToSKD, certSKDToName, name, hashes) {
 }
 
 function writeEntry(entry) {
-  let printVal = "  { \"" + entry.name + "\",\ ";
+  let printVal = `  { "${entry.name}", `;
   if (entry.include_subdomains) {
     printVal += "true, ";
   } else {

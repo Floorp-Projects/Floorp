@@ -36,6 +36,44 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CallbackObject)
   tmp->DropJSObjects();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIncumbentGlobal)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(CallbackObject)
+  JSObject* callback = tmp->CallbackPreserveColor();
+
+  if (!aRemovingAllowed) {
+    // If our callback has been cleared, we can't be part of a garbage cycle.
+    return !callback;
+  }
+
+  // mCallback is always wrapped for the CallbackObject's incumbent global. In
+  // the case where the real callback is in a different compartment, we have a
+  // cross-compartment wrapper, and it will automatically be cut when its
+  // compartment is nuked. In the case where it is in the same compartment, we
+  // have a reference to the real function. Since that means there are no
+  // wrappers to cut, we need to check whether the compartment is still alive,
+  // and drop the references if it is not.
+
+  if (MOZ_UNLIKELY(!callback)) {
+    return true;
+  }
+  auto pvt = xpc::CompartmentPrivate::Get(callback);
+  if (MOZ_LIKELY(tmp->mIncumbentGlobal && pvt) && MOZ_UNLIKELY(pvt->wasNuked)) {
+    // It's not safe to release our global reference or drop our JS objects at
+    // this point, so defer their finalization until CC is finished.
+    AddForDeferredFinalization(new JSObjectsDropper(tmp));
+    DeferredFinalize(tmp->mIncumbentGlobal.forget().take());
+    return true;
+  }
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(CallbackObject)
+  return !tmp->mCallback;
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
+
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(CallbackObject)
+  return !tmp->mCallback;
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CallbackObject)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIncumbentGlobal)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -100,8 +138,15 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
     webIDLCallerPrincipal = nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller();
   }
 
+  JSObject* wrappedCallback = aCallback->CallbackPreserveColor();
+  if (!wrappedCallback) {
+    aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+      NS_LITERAL_CSTRING("Cannot execute callback from a nuked compartment."));
+    return;
+  }
+
   // First, find the real underlying callback.
-  JSObject* realCallback = js::UncheckedUnwrap(aCallback->CallbackPreserveColor());
+  JSObject* realCallback = js::UncheckedUnwrap(wrappedCallback);
   nsIGlobalObject* globalObject = nullptr;
 
   JSContext* cx;
@@ -164,13 +209,14 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
 
     cx = mAutoEntryScript->cx();
 
-    // Unmark the callable (by invoking Callback() and not the CallbackPreserveColor()
-    // variant), and stick it in a Rooted before it can go gray again.
+    // Unmark the callable (by invoking CallbackOrNull() and not the
+    // CallbackPreserveColor() variant), and stick it in a Rooted before it can
+    // go gray again.
     // Nothing before us in this function can trigger a CC, so it's safe to wait
     // until here it do the unmark. This allows us to construct mRootedCallable
     // with the cx from mAutoEntryScript, avoiding the cost of finding another
     // JSContext. (Rooted<> does not care about requests or compartments.)
-    mRootedCallable.emplace(cx, aCallback->Callback());
+    mRootedCallable.emplace(cx, aCallback->CallbackOrNull());
   }
 
   // JS-implemented WebIDL is always OK to run, since it runs with Chrome
@@ -318,7 +364,7 @@ CallbackObjectHolderBase::ToXPCOMCallback(CallbackObject* aCallback,
   jsapi.Init();
   JSContext* cx = jsapi.cx();
 
-  JS::Rooted<JSObject*> callback(cx, aCallback->Callback());
+  JS::Rooted<JSObject*> callback(cx, aCallback->CallbackOrNull());
 
   JSAutoCompartment ac(cx, callback);
   RefPtr<nsXPCWrappedJS> wrappedJS;

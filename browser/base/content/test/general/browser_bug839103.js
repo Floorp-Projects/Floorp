@@ -1,44 +1,28 @@
 const gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
-const gStyleSheet = "bug839103.css";
 
-var gTab = null;
-var needsInitialApplicableStateEvent = false;
-var needsInitialApplicableStateEventFor = null;
+add_task(function* test() {
+  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" },
+    function* (browser) {
+      yield ContentTask.spawn(browser, gTestRoot, testBody);
+    });
+});
 
-function test() {
-  waitForExplicitFinish();
-  gBrowser.addEventListener("StyleSheetAdded", initialStylesheetAdded, true);
-  gTab = gBrowser.selectedTab = gBrowser.addTab(gTestRoot + "test_bug839103.html");
-  gTab.linkedBrowser.addEventListener("load", tabLoad, true);
-}
+// This function runs entirely in the content process. It doesn't have access
+// any free variables in this file.
+function* testBody(testRoot) {
+  const gStyleSheet = "bug839103.css";
 
-function initialStylesheetAdded(evt) {
-  gBrowser.removeEventListener("StyleSheetAdded", initialStylesheetAdded, true);
-  ok(true, "received initial style sheet event");
-  is(evt.type, "StyleSheetAdded", "evt.type has expected value");
-  is(evt.target, gBrowser.contentDocument, "event targets correct document");
-  ok(evt.stylesheet, "evt.stylesheet is defined");
-  ok(evt.stylesheet.toString().includes("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
-  ok(evt.documentSheet, "style sheet is a document sheet");
-}
+  let loaded = ContentTaskUtils.waitForEvent(this, "load", true);
+  content.location = testRoot + "test_bug839103.html";
 
-function tabLoad(evt) {
-  gTab.linkedBrowser.removeEventListener(evt.type, tabLoad, true);
-  executeSoon(continueTest);
-}
+  yield loaded;
+  function unexpectedContentEvent(event) {
+    ok(false, "Received a " + event.type + " event on content");
+  }
 
-var gLinkElement = null;
-
-function unexpectedContentEvent(evt) {
-  ok(false, "Received a " + evt.type + " event on content");
-}
-
-// We've seen the original stylesheet in the document.
-// Now add a stylesheet on the fly and make sure we see it.
-function continueTest() {
-  info("continuing test");
-
-  let doc = gBrowser.contentDocument;
+  // We've seen the original stylesheet in the document.
+  // Now add a stylesheet on the fly and make sure we see it.
+  let doc = content.document;
   doc.styleSheetChangeEventsEnabled = true;
   doc.addEventListener("StyleSheetAdded", unexpectedContentEvent);
   doc.addEventListener("StyleSheetRemoved", unexpectedContentEvent);
@@ -46,114 +30,91 @@ function continueTest() {
   doc.defaultView.addEventListener("StyleSheetAdded", unexpectedContentEvent);
   doc.defaultView.addEventListener("StyleSheetRemoved", unexpectedContentEvent);
   doc.defaultView.addEventListener("StyleSheetApplicableStateChanged", unexpectedContentEvent);
+
   let link = doc.createElement("link");
   link.setAttribute("rel", "stylesheet");
   link.setAttribute("type", "text/css");
-  link.setAttribute("href", gTestRoot + gStyleSheet);
-  gLinkElement = link;
+  link.setAttribute("href", testRoot + gStyleSheet);
 
-  gBrowser.addEventListener("StyleSheetAdded", dynamicStylesheetAdded, true);
-  gBrowser.addEventListener("StyleSheetApplicableStateChanged", dynamicStylesheetApplicableStateChanged, true);
+  let sheetAdded =
+    ContentTaskUtils.waitForEvent(this, "StyleSheetAdded", true);
+  let stateChanged =
+    ContentTaskUtils.waitForEvent(this, "StyleSheetApplicableStateChanged", true);
   doc.body.appendChild(link);
-}
 
-function dynamicStylesheetAdded(evt) {
-  gBrowser.removeEventListener("StyleSheetAdded", dynamicStylesheetAdded, true);
-  ok(true, "received dynamic style sheet event");
+  let evt = yield sheetAdded;
+  info("received dynamic style sheet event");
   is(evt.type, "StyleSheetAdded", "evt.type has expected value");
-  is(evt.target, gBrowser.contentDocument, "event targets correct document");
+  is(evt.target, doc, "event targets correct document");
   ok(evt.stylesheet, "evt.stylesheet is defined");
   ok(evt.stylesheet.toString().includes("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
   ok(evt.documentSheet, "style sheet is a document sheet");
-}
 
-function dynamicStylesheetApplicableStateChanged(evt) {
-  gBrowser.removeEventListener("StyleSheetApplicableStateChanged", dynamicStylesheetApplicableStateChanged, true);
-  ok(true, "received dynamic style sheet applicable state change event");
+  evt = yield stateChanged;
+  info("received dynamic style sheet applicable state change event");
   is(evt.type, "StyleSheetApplicableStateChanged", "evt.type has expected value");
-  is(evt.target, gBrowser.contentDocument, "event targets correct document");
-  is(evt.stylesheet, gLinkElement.sheet, "evt.stylesheet has the right value");
+  is(evt.target, doc, "event targets correct document");
+  is(evt.stylesheet, link.sheet, "evt.stylesheet has the right value");
   is(evt.applicable, true, "evt.applicable has the right value");
 
-  gBrowser.addEventListener("StyleSheetApplicableStateChanged", dynamicStylesheetApplicableStateChangedToFalse, true);
-  gLinkElement.disabled = true;
-}
+  stateChanged =
+    ContentTaskUtils.waitForEvent(this, "StyleSheetApplicableStateChanged", true);
+  link.disabled = true;
 
-function dynamicStylesheetApplicableStateChangedToFalse(evt) {
-  gBrowser.removeEventListener("StyleSheetApplicableStateChanged", dynamicStylesheetApplicableStateChangedToFalse, true);
+  evt = yield stateChanged;
   is(evt.type, "StyleSheetApplicableStateChanged", "evt.type has expected value");
-  ok(true, "received dynamic style sheet applicable state change event after media=\"\" changed");
-  is(evt.target, gBrowser.contentDocument, "event targets correct document");
-  is(evt.stylesheet, gLinkElement.sheet, "evt.stylesheet has the right value");
+  info("received dynamic style sheet applicable state change event after media=\"\" changed");
+  is(evt.target, doc, "event targets correct document");
+  is(evt.stylesheet, link.sheet, "evt.stylesheet has the right value");
   is(evt.applicable, false, "evt.applicable has the right value");
 
-  gBrowser.addEventListener("StyleSheetRemoved", dynamicStylesheetRemoved, true);
-  gBrowser.contentDocument.body.removeChild(gLinkElement);
-}
+  let sheetRemoved =
+    ContentTaskUtils.waitForEvent(this, "StyleSheetRemoved", true);
+  doc.body.removeChild(link);
 
-function dynamicStylesheetRemoved(evt) {
-  gBrowser.removeEventListener("StyleSheetRemoved", dynamicStylesheetRemoved, true);
-  ok(true, "received dynamic style sheet removal");
+  evt = yield sheetRemoved;
+  info("received dynamic style sheet removal");
   is(evt.type, "StyleSheetRemoved", "evt.type has expected value");
-  is(evt.target, gBrowser.contentDocument, "event targets correct document");
+  is(evt.target, doc, "event targets correct document");
   ok(evt.stylesheet, "evt.stylesheet is defined");
   ok(evt.stylesheet.toString().includes("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
   ok(evt.stylesheet.href.includes(gStyleSheet), "evt.stylesheet is the removed stylesheet");
 
-  gBrowser.addEventListener("StyleRuleAdded", styleRuleAdded, true);
-  gBrowser.contentDocument.querySelector("style").sheet.insertRule("*{color:black}", 0);
-}
+  let ruleAdded =
+    ContentTaskUtils.waitForEvent(this, "StyleRuleAdded", true);
+  doc.querySelector("style").sheet.insertRule("*{color:black}", 0);
 
-function styleRuleAdded(evt) {
-  gBrowser.removeEventListener("StyleRuleAdded", styleRuleAdded, true);
-  ok(true, "received style rule added event");
+  evt = yield ruleAdded;
+  info("received style rule added event");
   is(evt.type, "StyleRuleAdded", "evt.type has expected value");
-  is(evt.target, gBrowser.contentDocument, "event targets correct document");
+  is(evt.target, doc, "event targets correct document");
   ok(evt.stylesheet, "evt.stylesheet is defined");
   ok(evt.stylesheet.toString().includes("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
   ok(evt.rule, "evt.rule is defined");
   is(evt.rule.cssText, "* { color: black; }", "evt.rule.cssText has expected value");
 
-  gBrowser.addEventListener("StyleRuleChanged", styleRuleChanged, true);
+  let ruleChanged =
+    ContentTaskUtils.waitForEvent(this, "StyleRuleChanged", true);
   evt.rule.style.cssText = "color:green";
-}
 
-function styleRuleChanged(evt) {
-  gBrowser.removeEventListener("StyleRuleChanged", styleRuleChanged, true);
+  evt = yield ruleChanged;
   ok(true, "received style rule changed event");
   is(evt.type, "StyleRuleChanged", "evt.type has expected value");
-  is(evt.target, gBrowser.contentDocument, "event targets correct document");
+  is(evt.target, doc, "event targets correct document");
   ok(evt.stylesheet, "evt.stylesheet is defined");
   ok(evt.stylesheet.toString().includes("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
   ok(evt.rule, "evt.rule is defined");
   is(evt.rule.cssText, "* { color: green; }", "evt.rule.cssText has expected value");
 
-  gBrowser.addEventListener("StyleRuleRemoved", styleRuleRemoved, true);
+  let ruleRemoved =
+    ContentTaskUtils.waitForEvent(this, "StyleRuleRemoved", true);
   evt.stylesheet.deleteRule(0);
-}
 
-function styleRuleRemoved(evt) {
-  gBrowser.removeEventListener("StyleRuleRemoved", styleRuleRemoved, true);
-  ok(true, "received style rule removed event");
+  evt = yield ruleRemoved;
+  info("received style rule removed event");
   is(evt.type, "StyleRuleRemoved", "evt.type has expected value");
-  is(evt.target, gBrowser.contentDocument, "event targets correct document");
+  is(evt.target, doc, "event targets correct document");
   ok(evt.stylesheet, "evt.stylesheet is defined");
   ok(evt.stylesheet.toString().includes("CSSStyleSheet"), "evt.stylesheet is a stylesheet");
   ok(evt.rule, "evt.rule is defined");
-
-  executeSoon(concludeTest);
-}
-
-function concludeTest() {
-  let doc = gBrowser.contentDocument;
-  doc.removeEventListener("StyleSheetAdded", unexpectedContentEvent);
-  doc.removeEventListener("StyleSheetRemoved", unexpectedContentEvent);
-  doc.removeEventListener("StyleSheetApplicableStateChanged", unexpectedContentEvent);
-  doc.defaultView.removeEventListener("StyleSheetAdded", unexpectedContentEvent);
-  doc.defaultView.removeEventListener("StyleSheetRemoved", unexpectedContentEvent);
-  doc.defaultView.removeEventListener("StyleSheetApplicableStateChanged", unexpectedContentEvent);
-  gBrowser.removeCurrentTab();
-  gLinkElement = null;
-  gTab = null;
-  finish();
 }

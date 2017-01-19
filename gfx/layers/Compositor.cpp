@@ -280,12 +280,17 @@ Compositor::DrawGeometry(const gfx::Rect& aRect,
     return;
   }
 
-  // Cull invisible polygons.
+  // Cull completely invisible polygons.
   if (aRect.Intersect(aGeometry->BoundingBox()).IsEmpty()) {
     return;
   }
 
   const gfx::Polygon clipped = aGeometry->ClipPolygon(aRect);
+
+  // Cull polygons with no area.
+  if (clipped.IsEmpty()) {
+    return;
+  }
 
   DrawPolygon(clipped, aRect, aClipRect, aEffectChain,
               aOpacity, aTransform, aVisibleRect);

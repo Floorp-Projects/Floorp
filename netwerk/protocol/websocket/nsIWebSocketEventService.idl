@@ -9,21 +9,21 @@
 [scriptable, builtinclass, uuid(6714a6be-2265-4f73-a988-d78a12416037)]
 interface nsIWebSocketFrame : nsISupports
 {
-  readonly attribute DOMHighResTimeStamp timeStamp;
+  [must_use] readonly attribute DOMHighResTimeStamp timeStamp;
 
-  readonly attribute boolean finBit;
+  [must_use] readonly attribute boolean finBit;
 
-  readonly attribute boolean rsvBit1;
-  readonly attribute boolean rsvBit2;
-  readonly attribute boolean rsvBit3;
+  [must_use] readonly attribute boolean rsvBit1;
+  [must_use] readonly attribute boolean rsvBit2;
+  [must_use] readonly attribute boolean rsvBit3;
 
-  readonly attribute unsigned short opCode;
+  [must_use] readonly attribute unsigned short opCode;
 
-  readonly attribute boolean maskBit;
+  [must_use] readonly attribute boolean maskBit;
 
-  readonly attribute unsigned long mask;
+  [must_use] readonly attribute unsigned long mask;
 
-  readonly attribute ACString payload;
+  [must_use] readonly attribute ACString payload;
 
   // Non-Control opCode values:
   const unsigned short OPCODE_CONTINUATION = 0x0;
@@ -39,41 +39,41 @@ interface nsIWebSocketFrame : nsISupports
 [scriptable, uuid(e7c005ab-e694-489b-b741-96db43ffb16f)]
 interface nsIWebSocketEventListener : nsISupports
 {
-  void webSocketCreated(in unsigned long aWebSocketSerialID,
-                        in AString aURI,
-                        in ACString aProtocols);
+  [must_use] void webSocketCreated(in unsigned long aWebSocketSerialID,
+                                   in AString aURI,
+                                   in ACString aProtocols);
 
-  void webSocketOpened(in unsigned long aWebSocketSerialID,
-                       in AString aEffectiveURI,
-                       in ACString aProtocols,
-                       in ACString aExtensions);
+  [must_use] void webSocketOpened(in unsigned long aWebSocketSerialID,
+                                  in AString aEffectiveURI,
+                                  in ACString aProtocols,
+                                  in ACString aExtensions);
 
   const unsigned short TYPE_STRING      = 0x0;
   const unsigned short TYPE_BLOB        = 0x1;
   const unsigned short TYPE_ARRAYBUFFER = 0x2;
 
-  void webSocketMessageAvailable(in unsigned long aWebSocketSerialID,
-                                 in ACString aMessage,
-                                 in unsigned short aType);
+  [must_use] void webSocketMessageAvailable(in unsigned long aWebSocketSerialID,
+                                            in ACString aMessage,
+                                            in unsigned short aType);
 
-  void webSocketClosed(in unsigned long aWebSocketSerialID,
-                       in boolean aWasClean,
-                       in unsigned short aCode,
-                       in AString aReason);
+  [must_use] void webSocketClosed(in unsigned long aWebSocketSerialID,
+                                  in boolean aWasClean,
+                                  in unsigned short aCode,
+                                  in AString aReason);
 
-  void frameReceived(in unsigned long aWebSocketSerialID,
-                     in nsIWebSocketFrame aFrame);
+  [must_use] void frameReceived(in unsigned long aWebSocketSerialID,
+                                in nsIWebSocketFrame aFrame);
 
-  void frameSent(in unsigned long aWebSocketSerialID,
-                 in nsIWebSocketFrame aFrame);
+  [must_use] void frameSent(in unsigned long aWebSocketSerialID,
+                            in nsIWebSocketFrame aFrame);
 };
 
 [scriptable, builtinclass, uuid(b89d1b90-2cf3-4d8f-ac21-5aedfb25c760)]
 interface nsIWebSocketEventService : nsISupports
 {
-  void addListener(in unsigned long long aInnerWindowID,
-                   in nsIWebSocketEventListener aListener);
+  [must_use] void addListener(in unsigned long long aInnerWindowID,
+                              in nsIWebSocketEventListener aListener);
 
-  void removeListener(in unsigned long long aInnerWindowID,
-                      in nsIWebSocketEventListener aListener);
+  [must_use] void removeListener(in unsigned long long aInnerWindowID,
+                                 in nsIWebSocketEventListener aListener);
 };

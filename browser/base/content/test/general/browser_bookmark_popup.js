@@ -196,6 +196,92 @@ add_task(function* panel_shown_for_new_bookmark_keypress_no_autoclose() {
   });
 });
 
+
+add_task(function* panel_shown_for_new_bookmark_compositionstart_no_autoclose() {
+  yield test_bookmarks_popup({
+    isNewBookmark: true,
+    popupShowFn() {
+      bookmarkStar.click();
+    },
+    *popupEditFn() {
+      let compositionStartPromise = BrowserTestUtils.waitForEvent(bookmarkPanel, "compositionstart");
+      EventUtils.synthesizeComposition({ type: "compositionstart" }, window);
+      info("Waiting for compositionstart event");
+      yield compositionStartPromise;
+      info("Got compositionstart event");
+    },
+    shouldAutoClose: false,
+    popupHideFn() {
+      EventUtils.synthesizeComposition({ type: "compositioncommitasis" });
+      bookmarkPanel.hidePopup();
+    },
+    isBookmarkRemoved: false,
+  });
+});
+
+add_task(function* panel_shown_for_new_bookmark_compositionstart_mouseout_no_autoclose() {
+  yield test_bookmarks_popup({
+    isNewBookmark: true,
+    popupShowFn() {
+      bookmarkStar.click();
+    },
+    *popupEditFn() {
+      let mouseMovePromise = BrowserTestUtils.waitForEvent(bookmarkPanel, "mousemove");
+      EventUtils.synthesizeMouseAtCenter(bookmarkPanel, {type: "mousemove"});
+      info("Waiting for mousemove event");
+      yield mouseMovePromise;
+      info("Got mousemove event");
+
+      let compositionStartPromise = BrowserTestUtils.waitForEvent(bookmarkPanel, "compositionstart");
+      EventUtils.synthesizeComposition({ type: "compositionstart" }, window);
+      info("Waiting for compositionstart event");
+      yield compositionStartPromise;
+      info("Got compositionstart event");
+
+      let mouseOutPromise = BrowserTestUtils.waitForEvent(bookmarkPanel, "mouseout");
+      EventUtils.synthesizeMouse(bookmarkPanel, 0, 0, {type: "mouseout"});
+      EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
+      info("Waiting for mouseout event");
+      yield mouseOutPromise;
+      info("Got mouseout event, but shouldn't run autoclose");
+    },
+    shouldAutoClose: false,
+    popupHideFn() {
+      EventUtils.synthesizeComposition({ type: "compositioncommitasis" });
+      bookmarkPanel.hidePopup();
+    },
+    isBookmarkRemoved: false,
+  });
+});
+
+add_task(function* panel_shown_for_new_bookmark_compositionend_mouseout_autoclose() {
+  yield test_bookmarks_popup({
+    isNewBookmark: true,
+    popupShowFn() {
+      bookmarkStar.click();
+    },
+    *popupEditFn() {
+      let mouseMovePromise = BrowserTestUtils.waitForEvent(bookmarkPanel, "mousemove");
+      EventUtils.synthesizeMouseAtCenter(bookmarkPanel, {type: "mousemove"});
+      info("Waiting for mousemove event");
+      yield mouseMovePromise;
+      info("Got mousemove event");
+
+      EventUtils.synthesizeComposition({ type: "compositioncommit", data: "committed text" });
+    },
+    *popupHideFn() {
+      let mouseOutPromise = BrowserTestUtils.waitForEvent(bookmarkPanel, "mouseout");
+      EventUtils.synthesizeMouse(bookmarkPanel, 0, 0, {type: "mouseout"});
+      EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
+      info("Waiting for mouseout event");
+      yield mouseOutPromise;
+      info("Got mouseout event, should autoclose now");
+    },
+    shouldAutoClose: false,
+    isBookmarkRemoved: false,
+  });
+});
+
 add_task(function* contextmenu_new_bookmark_keypress_no_autoclose() {
   yield test_bookmarks_popup({
     isNewBookmark: true,

@@ -1,38 +1,38 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 # == basic-1.html basic-1.html
-fails == pref-width-1a.html pref-width-1a.html
-fails == pref-width-1b.html pref-width-1b.html
-fails == pref-width-1c.html pref-width-1c.html
+== pref-width-1a.html pref-width-1a.html
+== pref-width-1b.html pref-width-1b.html
+== pref-width-1c.html pref-width-1c.html
 fails == min-width-1a.html min-width-1a.html
-== min-width-1b.html min-width-1b.html
+fails == min-width-1b.html min-width-1b.html
 fails == min-width-1c.html min-width-1c.html
 fails == min-width-2.html min-width-2.html
 fails == column-balancing-overflow-000.html column-balancing-overflow-000.html
 fails == column-balancing-overflow-001.html column-balancing-overflow-001.html
 fails == column-balancing-overflow-002.html column-balancing-overflow-002.html
 fails == column-balancing-overflow-003.html column-balancing-overflow-003.html
-fails == column-balancing-overflow-004.html column-balancing-overflow-004.html
-fails == column-balancing-overflow-005.html column-balancing-overflow-005.html
+== column-balancing-overflow-004.html column-balancing-overflow-004.html
+== column-balancing-overflow-005.html column-balancing-overflow-005.html
 fails == column-balancing-000.html column-balancing-000.html
 fails == column-balancing-001.html column-balancing-001.html
 fails == column-balancing-002.html column-balancing-002.html
 fails == column-balancing-003.html column-balancing-003.html
 fails == column-balancing-004.html column-balancing-004.html
-# fails == column-box-alignment-rtl.html column-box-alignment-rtl.html
+# == column-box-alignment-rtl.html column-box-alignment-rtl.html
 fails HTTP(..) == columnfill-balance.html columnfill-balance.html
 fails == columnfill-auto.html columnfill-auto.html
 fails HTTP(..) == columnfill-auto-2.html columnfill-auto-2.html
 fails HTTP(..) == columnfill-auto-3.html columnfill-auto-3.html
 fails == columnrule-basic.html columnrule-basic.html
 fails == columnrule-complex.html columnrule-complex.html
-fails == columnrule-linestyles.html columnrule-linestyles.html
+== columnrule-linestyles.html columnrule-linestyles.html
 # == columnrule-padding.html columnrule-padding.html
 fails == columnfill-overflow.html columnfill-overflow.html
-fails == margin-collapsing-bug616722-1.html margin-collapsing-bug616722-1.html
-fails == margin-collapsing-bug616722-2.html margin-collapsing-bug616722-2.html
+== margin-collapsing-bug616722-1.html margin-collapsing-bug616722-1.html
+== margin-collapsing-bug616722-2.html margin-collapsing-bug616722-2.html
 fails == column-balancing-nested-000.html column-balancing-nested-000.html
 fails == column-balancing-nested-001.html column-balancing-nested-001.html
-fails == columnrule-overflow.html columnrule-overflow.html
+== columnrule-overflow.html columnrule-overflow.html
 fails == columns-table-caption-000.html columns-table-caption-000.html
 fails == positioning-transforms-bug1112501.html positioning-transforms-bug1112501.html
-fails == fieldset-columns-001.html fieldset-columns-001.html
+== fieldset-columns-001.html fieldset-columns-001.html

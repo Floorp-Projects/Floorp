@@ -1375,6 +1375,11 @@ toolbar#nav-bar {
                                    manifest.fmt_filters()))
 
         paths = []
+
+        # When running mochitest locally the manifest is based on topsrcdir,
+        # but when running in automation it is based on the test root.
+        manifest_root = build_obj.topsrcdir if build_obj else self.testRootAbs
+        manifests = set()
         for test in tests:
             if len(tests) == 1 and 'disabled' in test:
                 del test['disabled']
@@ -1388,6 +1393,8 @@ toolbar#nav-bar {
                     'Warning: %s from manifest %s is not a valid test' %
                     (test['name'], test['manifest']))
                 continue
+
+            manifests.add(os.path.relpath(test['manifest'], manifest_root))
 
             testob = {'path': tp}
             if 'disabled' in test:
@@ -1404,16 +1411,22 @@ toolbar#nav-bar {
             return cmp(path1, path2)
 
         paths.sort(path_sort)
-        self._active_tests = paths
         if options.dump_tests:
             options.dump_tests = os.path.expanduser(options.dump_tests)
             assert os.path.exists(os.path.dirname(options.dump_tests))
             with open(options.dump_tests, 'w') as dumpFile:
-                dumpFile.write(json.dumps({'active_tests': self._active_tests}))
+                dumpFile.write(json.dumps({'active_tests': paths}))
 
             self.log.info("Dumping active_tests to %s file." % options.dump_tests)
             sys.exit()
 
+        # Upload a list of test manifests that were executed in this run.
+        if 'MOZ_UPLOAD_DIR' in os.environ:
+            artifact = os.path.join(os.environ['MOZ_UPLOAD_DIR'], 'manifests.list')
+            with open(artifact, 'a') as fh:
+                fh.write('\n'.join(sorted(manifests)))
+
+        self._active_tests = paths
         return self._active_tests
 
     def getTestManifest(self, options):
@@ -1634,9 +1647,11 @@ toolbar#nav-bar {
                 "testing.browserTestHarness.timeout=%d" %
                 options.timeout)
         # browser-chrome tests use a fairly short default timeout of 45 seconds;
-        # this is sometimes too short on asan, where we expect reduced performance.
-        if mozinfo.info["asan"] and options.flavor == 'browser' and options.timeout is None:
-            self.log.info("Increasing default timeout to 90 seconds on ASAN")
+        # this is sometimes too short on asan and debug, where we expect reduced
+        # performance.
+        if (mozinfo.info["asan"] or mozinfo.info["debug"]) and \
+                options.flavor == 'browser' and options.timeout is None:
+            self.log.info("Increasing default timeout to 90 seconds")
             options.extraPrefs.append("testing.browserTestHarness.timeout=90")
 
         options.extraPrefs.append(
@@ -2230,7 +2245,6 @@ toolbar#nav-bar {
 
             info = mozinfo.info
             skip_leak_conditions = [
-                (info['debug'] and options.flavor == 'plain' and d.startswith('toolkit/components/extensions/test/mochitest') and info['os'] == 'mac', 'bug 1326456'),  # noqa
                 (info['debug'] and options.flavor == 'plain' and d == 'toolkit/components/prompts/test' and info['os'] == 'mac', 'bug 1325275'),  # noqa
             ]
 

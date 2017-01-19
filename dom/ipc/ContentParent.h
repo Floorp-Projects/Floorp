@@ -38,6 +38,7 @@
 // These must match the similar ones in E10SUtils.jsm.
 #define DEFAULT_REMOTE_TYPE "web"
 #define FILE_REMOTE_TYPE "file"
+#define EXTENSION_REMOTE_TYPE "extension"
 
 // This must start with the DEFAULT_REMOTE_TYPE above.
 #define LARGE_ALLOCATION_REMOTE_TYPE "webLargeAllocation"
@@ -433,6 +434,8 @@ public:
                                                             const nsString& aPageURL,
                                                             const bool& aIsAudio,
                                                             const bool& aIsVideo) override;
+
+  virtual mozilla::ipc::IPCResult RecvGetGfxInfoFeatureStatus(nsTArray<mozilla::dom::GfxInfoFeatureStatus>* aFS) override;
 
   bool CycleCollectWithLogs(bool aDumpAllTraces,
                             nsICycleCollectorLogSink* aSink,
@@ -991,11 +994,6 @@ private:
                                                           uint64_t* aId) override;
 
   virtual mozilla::ipc::IPCResult RecvDeallocateLayerTreeId(const uint64_t& aId) override;
-
-  virtual mozilla::ipc::IPCResult RecvGetGraphicsFeatureStatus(const int32_t& aFeature,
-                                                               int32_t* aStatus,
-                                                               nsCString* aFailureId,
-                                                               bool* aSuccess) override;
 
   virtual mozilla::ipc::IPCResult RecvGraphicsError(const nsCString& aError) override;
 

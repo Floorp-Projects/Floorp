@@ -223,10 +223,10 @@ fails == svg-border-image-repaint-1.html svg-border-image-repaint-1.html
 == image-orientation-ref.html?270 image-orientation-ref.html?270
 
 # Tests that nonuniform scales work with SVG-as-image.
-fails == nonuniform-scale-2d.html?0.5&1.0 nonuniform-scale-2d.html?0.5&1.0
-fails == nonuniform-scale-2d.html?1.0&0.5 nonuniform-scale-2d.html?1.0&0.5
-fails == nonuniform-scale-3d.html?0.5&1.0&0.5 nonuniform-scale-3d.html?0.5&1.0&0.5
-fails == nonuniform-scale-3d.html?1.0&0.5&0.5 nonuniform-scale-3d.html?1.0&0.5&0.5
+== nonuniform-scale-2d.html?0.5&1.0 nonuniform-scale-2d.html?0.5&1.0
+== nonuniform-scale-2d.html?1.0&0.5 nonuniform-scale-2d.html?1.0&0.5
+== nonuniform-scale-3d.html?0.5&1.0&0.5 nonuniform-scale-3d.html?0.5&1.0&0.5
+== nonuniform-scale-3d.html?1.0&0.5&0.5 nonuniform-scale-3d.html?1.0&0.5&0.5
 
 # Sanity checks that nonuniform scales don't devolve to uniform scales.
 # == nonuniform-scale-2d.html?0.3&1.0 nonuniform-scale-2d.html?0.3&1.0

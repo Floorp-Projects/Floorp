@@ -104,9 +104,6 @@ RuntimeList.prototype = {
       if (AppManager.preferenceFront) {
         devicePrefsCmd.removeAttribute("disabled");
       }
-      if (AppManager.settingsFront) {
-        settingsCmd.removeAttribute("disabled");
-      }
       disconnectCmd.removeAttribute("disabled");
     } else {
       detailsCmd.setAttribute("disabled", "true");

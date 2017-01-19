@@ -148,7 +148,7 @@ public:
 
     {
       PROFILER_LABEL("HTMLCanvasElement", "SetFrame", js::ProfileEntry::Category::OTHER);
-      mOwningElement->SetFrameCapture(copy.forget());
+      mOwningElement->SetFrameCapture(copy.forget(), aTime);
       mOwningElement->MarkContextCleanForFrameCapture();
     }
   }
@@ -1274,7 +1274,8 @@ HTMLCanvasElement::ProcessDestroyedFrameListeners()
 }
 
 void
-HTMLCanvasElement::SetFrameCapture(already_AddRefed<SourceSurface> aSurface)
+HTMLCanvasElement::SetFrameCapture(already_AddRefed<SourceSurface> aSurface,
+                                   const TimeStamp& aTime)
 {
   RefPtr<SourceSurface> surface = aSurface;
   RefPtr<SourceSurfaceImage> image = new SourceSurfaceImage(surface->GetSize(), surface);
@@ -1285,7 +1286,7 @@ HTMLCanvasElement::SetFrameCapture(already_AddRefed<SourceSurface> aSurface)
     }
 
     RefPtr<Image> imageRefCopy = image.get();
-    listener->NewFrame(imageRefCopy.forget());
+    listener->NewFrame(imageRefCopy.forget(), aTime);
   }
 }
 

@@ -4,14 +4,14 @@ fails HTTP(..) == devanagari-1b.html devanagari-1b.html
 fails HTTP(..) == devanagari-2.html devanagari-2.html
 fails HTTP(..) == devanagari-3a.html devanagari-3a.html
 fails HTTP(..) == devanagari-3b.html devanagari-3b.html
-fails HTTP(..) == devanagari-4.html devanagari-4.html
+HTTP(..) == devanagari-4.html devanagari-4.html
 
 fails HTTP(..) == gujarati-1a.html gujarati-1a.html
 fails HTTP(..) == gujarati-1b.html gujarati-1b.html
 fails HTTP(..) == gujarati-2.html gujarati-2.html
 fails HTTP(..) == gujarati-3a.html gujarati-3a.html
 fails HTTP(..) == gujarati-3b.html gujarati-3b.html
-fails HTTP(..) == gujarati-4.html gujarati-4.html
+HTTP(..) == gujarati-4.html gujarati-4.html
 
 fails HTTP(..) == bengali-1a.html bengali-1a.html
 fails HTTP(..) == bengali-1b.html bengali-1b.html
@@ -22,7 +22,7 @@ fails HTTP(..) == bengali-3b.html bengali-3b.html
 fails HTTP(..) == bengali-3c.html bengali-3c.html
 fails HTTP(..) == bengali-3c.html bengali-3c.html
 
-fails == 686225-1-bangla-aat.html 686225-1-bangla-aat.html
-fails == 686225-2-kannada-aat.html 686225-2-kannada-aat.html
+== 686225-1-bangla-aat.html 686225-1-bangla-aat.html
+== 686225-2-kannada-aat.html 686225-2-kannada-aat.html
 
 fails HTTP(..) == balinese-1.html balinese-1.html
