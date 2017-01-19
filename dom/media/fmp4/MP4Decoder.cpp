@@ -252,7 +252,7 @@ MP4Decoder::IsVideoAccelerated(layers::KnowsCompositor* aKnowsCompositor, nsIGlo
   }
 
   decoder->Init()
-    ->Then(aParent->AbstractMainThreadFor(dom::TaskCategory::Other),
+    ->Then(aParent->AbstractMainThreadFor(TaskCategory::Other),
            __func__,
            [promise, decoder, taskQueue] (TrackInfo::TrackType aTrack) {
              nsCString failureReason;

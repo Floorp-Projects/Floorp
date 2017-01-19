@@ -8,6 +8,7 @@
 #define mozilla_dom_Dispatcher_h
 
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/TaskCategory.h"
 #include "nsISupports.h"
 
 class nsIEventTarget;
@@ -16,34 +17,7 @@ class nsIRunnable;
 namespace mozilla {
 class AbstractThread;
 namespace dom {
-
 class TabGroup;
-class DocGroup;
-
-enum class TaskCategory {
-  // User input (clicks, keypresses, etc.)
-  UI,
-
-  // Data from the network
-  Network,
-
-  // setTimeout, setInterval
-  Timer,
-
-  // Runnables posted from a worker to the main thread
-  Worker,
-
-  // requestIdleCallback
-  IdleCallback,
-
-  // Vsync notifications
-  RefreshDriver,
-
-  // Most DOM events (postMessage, media, plugins)
-  Other,
-
-  Count
-};
 
 // This trait should be attached to classes like nsIGlobalObject and nsIDocument
 // that have a DocGroup or TabGroup attached to them. The methods here should
@@ -83,7 +57,7 @@ public:
   // off the main thread.
   virtual AbstractThread* AbstractMainThreadFor(TaskCategory aCategory) = 0;
 
-  // These methods perform a safe cast. They return null if |this| is not of the
+  // This method performs a safe cast. It returns null if |this| is not of the
   // requested type.
   virtual TabGroup* AsTabGroup() { return nullptr; }
 

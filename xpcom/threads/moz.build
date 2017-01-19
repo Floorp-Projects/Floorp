@@ -51,6 +51,7 @@ EXPORTS.mozilla += [
     'StateMirroring.h',
     'StateWatching.h',
     'SyncRunnable.h',
+    'TaskCategory.h',
     'TaskDispatcher.h',
     'TaskQueue.h',
     'ThrottledEventQueue.h',
