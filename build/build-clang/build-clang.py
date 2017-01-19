@@ -200,7 +200,7 @@ def is_windows():
     return platform.system() == "Windows"
 
 
-def build_one_stage(cc, cxx, ld, ar, ranlib,
+def build_one_stage(cc, cxx, asm, ld, ar, ranlib,
                     src_dir, stage_dir, build_libcxx,
                     osx_cross_compile, build_type, assertions,
                     python_path, gcc_dir, libcxx_include_dir):
@@ -225,11 +225,12 @@ def build_one_stage(cc, cxx, ld, ar, ranlib,
     cmake_args = ["-GNinja",
                   "-DCMAKE_C_COMPILER=%s" % slashify_path(cc[0]),
                   "-DCMAKE_CXX_COMPILER=%s" % slashify_path(cxx[0]),
-                  "-DCMAKE_ASM_COMPILER=%s" % slashify_path(cc[0]),
+                  "-DCMAKE_ASM_COMPILER=%s" % slashify_path(asm[0]),
                   "-DCMAKE_LINKER=%s" % slashify_path(ld[0]),
                   "-DCMAKE_AR=%s" % slashify_path(ar),
                   "-DCMAKE_C_FLAGS=%s" % ' '.join(cc[1:]),
                   "-DCMAKE_CXX_FLAGS=%s" % ' '.join(cxx[1:]),
+                  "-DCMAKE_ASM_FLAGS=%s" % ' '.join(asm[1:]),
                   "-DCMAKE_EXE_LINKER_FLAGS=%s" % ' '.join(ld[1:]),
                   "-DCMAKE_SHARED_LINKER_FLAGS=%s" % ' '.join(ld[1:]),
                   "-DCMAKE_BUILD_TYPE=%s" % build_type,
@@ -464,6 +465,7 @@ if __name__ == "__main__":
         raise ValueError("Config file needs to set gcc_dir")
     cc = get_tool(config, "cc")
     cxx = get_tool(config, "cxx")
+    asm = get_tool(config, "ml" if is_windows() else "as")
     ld = get_tool(config, "link" if is_windows() else "ld")
     ar = get_tool(config, "lib" if is_windows() else "ar")
     ranlib = None if is_windows() else get_tool(config, "ranlib")
@@ -525,12 +527,14 @@ if __name__ == "__main__":
         extra_cxxflags = ["-stdlib=libc++"]
         extra_cflags2 = []
         extra_cxxflags2 = ["-stdlib=libc++"]
+        extra_asmflags = []
         extra_ldflags = []
     elif is_linux():
         extra_cflags = ["-static-libgcc"]
         extra_cxxflags = ["-static-libgcc", "-static-libstdc++"]
         extra_cflags2 = ["-fPIC"]
         extra_cxxflags2 = ["-fPIC", "-static-libstdc++"]
+        extra_asmflags = []
         extra_ldflags = []
 
         if os.environ.has_key('LD_LIBRARY_PATH'):
@@ -545,6 +549,7 @@ if __name__ == "__main__":
         # Force things on.
         extra_cflags2 = []
         extra_cxxflags2 = ['-fms-compatibility-version=19.00.24213', '-Xclang', '-std=c++14']
+        extra_asmflags = []
         extra_ldflags = []
 
     if osx_cross_compile:
@@ -565,12 +570,14 @@ if __name__ == "__main__":
         extra_cxxflags += extra_flags
         extra_cflags2 += extra_flags
         extra_cxxflags2 += extra_flags
+        extra_asmflags += extra_flags
         extra_ldflags = ["-Wl,-syslibroot,%s" % os.getenv("CROSS_SYSROOT"),
                          "-Wl,-dead_strip"]
 
     build_one_stage(
         [cc] + extra_cflags,
         [cxx] + extra_cxxflags,
+        [asm] + extra_asmflags,
         [ld] + extra_ldflags,
         ar, ranlib,
         llvm_source_dir, stage1_dir, build_libcxx, osx_cross_compile,
@@ -585,6 +592,8 @@ if __name__ == "__main__":
                 (cc_name, exe_ext)] + extra_cflags2,
             [stage1_inst_dir + "/bin/%s%s" %
                 (cxx_name, exe_ext)] + extra_cxxflags2,
+            [stage1_inst_dir + "/bin/%s%s" %
+                (cc_name, exe_ext)] + extra_asmflags,
             [ld] + extra_ldflags,
             ar, ranlib,
             llvm_source_dir, stage2_dir, build_libcxx, osx_cross_compile,
@@ -598,6 +607,8 @@ if __name__ == "__main__":
                 (cc_name, exe_ext)] + extra_cflags2,
             [stage2_inst_dir + "/bin/%s%s" %
                 (cxx_name, exe_ext)] + extra_cxxflags2,
+            [stage2_inst_dir + "/bin/%s%s" %
+                (cc_name, exe_ext)] + extra_asmflags,
             [ld] + extra_ldflags,
             ar, ranlib,
             llvm_source_dir, stage3_dir, build_libcxx, osx_cross_compile,
