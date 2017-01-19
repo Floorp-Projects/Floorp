@@ -195,8 +195,18 @@ public:
 
   CGContextRef cg;
 private:
+#ifdef USE_SKIA
   static CGContextRef BorrowCGContextFromDrawTarget(DrawTarget *aDT);
   static void ReturnCGContextToDrawTarget(DrawTarget *aDT, CGContextRef cg);
+#else
+  static CGContextRef BorrowCGContextFromDrawTarget(DrawTarget *aDT) {
+    MOZ_CRASH("Not supported without Skia");
+  }
+
+  static void ReturnCGContextToDrawTarget(DrawTarget *aDT, CGContextRef cg) {
+    MOZ_CRASH("not supported without Skia");
+  }
+#endif
   DrawTarget *mDT;
 };
 #endif
