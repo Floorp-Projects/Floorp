@@ -28,38 +28,6 @@
 
 namespace mozilla {
 namespace gmp {
-
-class GMPLoaderImpl : public GMPLoader {
-public:
-  explicit GMPLoaderImpl(UniquePtr<SandboxStarter> aStarter)
-    : mSandboxStarter(Move(aStarter))
-    , mAdapter(nullptr)
-  {}
-  ~GMPLoaderImpl() override = default;
-
-  bool Load(const char* aUTF8LibPath,
-            uint32_t aUTF8LibPathLen,
-            char* aOriginSalt,
-            uint32_t aOriginSaltLen,
-            const GMPPlatformAPI* aPlatformAPI,
-            GMPAdapter* aAdapter) override;
-
-  GMPErr GetAPI(const char* aAPIName,
-                void* aHostAPI,
-                void** aPluginAPI,
-                uint32_t aDecryptorId) override;
-
-  void Shutdown() override;
-
-#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
-  void SetSandboxInfo(MacSandboxInfo* aSandboxInfo) override;
-#endif
-
-private:
-  UniquePtr<SandboxStarter> mSandboxStarter;
-  UniquePtr<GMPAdapter> mAdapter;
-};
-
 class PassThroughGMPAdapter : public GMPAdapter {
 public:
   ~PassThroughGMPAdapter() override {
@@ -116,12 +84,12 @@ private:
 };
 
 bool
-GMPLoaderImpl::Load(const char* aUTF8LibPath,
-                    uint32_t aUTF8LibPathLen,
-                    char* aOriginSalt,
-                    uint32_t aOriginSaltLen,
-                    const GMPPlatformAPI* aPlatformAPI,
-                    GMPAdapter* aAdapter)
+GMPLoader::Load(const char* aUTF8LibPath,
+                uint32_t aUTF8LibPathLen,
+                char* aOriginSalt,
+                uint32_t aOriginSaltLen,
+                const GMPPlatformAPI* aPlatformAPI,
+                GMPAdapter* aAdapter)
 {
   // Start the sandbox now that we've generated the device bound node id.
   // This must happen after the node id is bound to the device id, as
@@ -177,16 +145,16 @@ GMPLoaderImpl::Load(const char* aUTF8LibPath,
 }
 
 GMPErr
-GMPLoaderImpl::GetAPI(const char* aAPIName,
-                      void* aHostAPI,
-                      void** aPluginAPI,
-                      uint32_t aDecryptorId)
+GMPLoader::GetAPI(const char* aAPIName,
+                  void* aHostAPI,
+                  void** aPluginAPI,
+                  uint32_t aDecryptorId)
 {
   return mAdapter->GMPGetAPI(aAPIName, aHostAPI, aPluginAPI, aDecryptorId);
 }
 
 void
-GMPLoaderImpl::Shutdown()
+GMPLoader::Shutdown()
 {
   if (mAdapter) {
     mAdapter->GMPShutdown();
@@ -195,7 +163,7 @@ GMPLoaderImpl::Shutdown()
 
 #if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
 void
-GMPLoaderImpl::SetSandboxInfo(MacSandboxInfo* aSandboxInfo)
+GMPLoader::SetSandboxInfo(MacSandboxInfo* aSandboxInfo)
 {
   if (mSandboxStarter) {
     mSandboxStarter->SetSandboxInfo(aSandboxInfo);
@@ -266,7 +234,6 @@ public:
 } // anonymous namespace
 #endif // XP_LINUX && MOZ_GMP_SANDBOX
 
-
 static UniquePtr<SandboxStarter>
 MakeSandboxStarter()
 {
@@ -281,10 +248,15 @@ MakeSandboxStarter()
 #endif
 }
 
-UniquePtr<GMPLoader>
-CreateGMPLoader()
+GMPLoader::GMPLoader()
+  : mSandboxStarter(MakeSandboxStarter())
 {
-  return MakeUnique<GMPLoaderImpl>(MakeSandboxStarter());
+}
+
+bool
+GMPLoader::CanSandbox() const
+{
+  return !!mSandboxStarter;
 }
 
 } // namespace gmp

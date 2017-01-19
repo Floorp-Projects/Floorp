@@ -349,9 +349,9 @@ GMPChild::AnswerStartPlugin(const nsString& aAdapter)
   auto platformAPI = new GMPPlatformAPI();
   InitPlatformAPI(*platformAPI, this);
 
-  mGMPLoader = CreateGMPLoader();
-  if (!mGMPLoader) {
-    NS_WARNING("Failed to get GMPLoader");
+  mGMPLoader = MakeUnique<GMPLoader>();
+  if (!mGMPLoader->CanSandbox()) {
+    LOGD("%s Can't sandbox GMP, failing", __FUNCTION__);
     delete platformAPI;
     return IPC_FAIL_NO_REASON(this);
   }
