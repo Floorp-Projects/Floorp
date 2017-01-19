@@ -14,7 +14,7 @@ const {
   getSavedCensus
 } = require("../utils");
 const { diffingState } = require("../constants");
-const { snapshot: snapshotModel } = require("../models");
+const { snapshot: snapshotModel, app: appModel } = require("../models");
 
 module.exports = createClass({
   displayName: "SnapshotListItem",
@@ -25,6 +25,7 @@ module.exports = createClass({
     onDelete: PropTypes.func.isRequired,
     item: snapshotModel.isRequired,
     index: PropTypes.number.isRequired,
+    diffing: appModel.diffing,
   },
 
   render() {

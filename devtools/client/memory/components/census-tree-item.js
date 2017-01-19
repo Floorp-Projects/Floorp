@@ -4,13 +4,33 @@
 "use strict";
 
 const { isSavedFrame } = require("devtools/shared/DevToolsUtils");
-const { DOM: dom, createClass, createFactory } = require("devtools/client/shared/vendor/react");
+const {
+  DOM: dom,
+  createClass,
+  createFactory,
+  PropTypes
+} = require("devtools/client/shared/vendor/react");
 const { L10N, formatNumber, formatPercent } = require("../utils");
 const Frame = createFactory(require("devtools/client/shared/components/frame"));
 const { TREE_ROW_HEIGHT } = require("../constants");
+const models = require("../models");
 
 module.exports = createClass({
   displayName: "CensusTreeItem",
+
+  propTypes: {
+    arrow: PropTypes.any,
+    depth: PropTypes.number.isRequired,
+    diffing: models.app.diffing,
+    expanded: PropTypes.bool.isRequired,
+    focused: PropTypes.bool.isRequired,
+    getPercentBytes: PropTypes.func.isRequired,
+    getPercentCount: PropTypes.func.isRequired,
+    inverted: PropTypes.bool,
+    item: PropTypes.object.isRequired,
+    onViewIndividuals: PropTypes.func.isRequired,
+    onViewSourceInDebugger: PropTypes.func.isRequired,
+  },
 
   shouldComponentUpdate(nextProps, nextState) {
     return this.props.item != nextProps.item

@@ -155,6 +155,11 @@
   filter: none;
 }
 
+#PanelUI-menu-button[badge-status="addon-alert"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+  height: 13px;
+  background: transparent url(chrome://browser/skin/addons/addon-badge.svg) no-repeat center;
+}
+
 .panel-subviews {
   padding: 4px;
   background-clip: padding-box;
@@ -561,7 +566,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   top: 25%;
 }
 
-#PanelUI-update-status[update-status]::after {
+#PanelUI-update-status[update-status]::after,
+#PanelUI-footer-addons > toolbarbutton::after {
   content: "";
   width: 14px;
   height: 14px;
@@ -580,6 +586,24 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 #PanelUI-update-status[update-status="failed"]::after {
   background-image: url(chrome://browser/skin/update-badge-failed.svg);
   background-color: #D90000;
+}
+
+#PanelUI-footer-addons > toolbarbutton {
+  background-color: #C7F5FF;
+  display: flex;
+  flex: 1 1 0%;
+  width: calc(@menuPanelWidth@ + 30px);
+  padding-inline-start: 15px;
+  border-inline-start-style: none;
+}
+
+#PanelUI-footer-addons > toolbarbutton > .toolbarbutton-icon {
+  width: 14px;
+  height: 14px;
+}
+
+#PanelUI-footer-addons > toolbarbutton::after {
+  background-image: url(chrome://browser/skin/addons/addon-badge.svg);
 }
 
 #PanelUI-fxa-status {
@@ -616,6 +640,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 #PanelUI-help,
 #PanelUI-fxa-label,
 #PanelUI-fxa-icon,
+#PanelUI-footer-addons > toolbarbutton,
 #PanelUI-customize,
 #PanelUI-quit {
   margin: 0;
@@ -677,6 +702,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 #PanelUI-fxa-label,
+#PanelUI-footer-addons > toolbarbutton,
 #PanelUI-customize {
   flex: 1;
   padding-inline-start: 15px;
@@ -841,6 +867,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 
 #PanelUI-fxa-label,
 #PanelUI-fxa-icon,
+#PanelUI-footer-addons > toolbarbutton,
 #PanelUI-customize,
 #PanelUI-help,
 #PanelUI-quit {

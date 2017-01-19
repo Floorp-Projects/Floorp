@@ -111,8 +111,6 @@ function checkDebuggerPort() {
   if (dbgport) {
     dump('Opening debugger server on ' + dbgport + '\n');
     Services.prefs.setCharPref('devtools.debugger.unix-domain-socket', dbgport);
-    navigator.mozSettings.createLock().set(
-      {'debugger.remote-mode': 'adb-devtools'});
   }
 }
 

@@ -137,45 +137,22 @@ Transport.prototype = {
 /**
  * Manages the local device's name.  The name can be generated in serveral
  * platform-specific ways (see |_generate|).  The aim is for each device on the
- * same local network to have a unique name.  If the Settings API is available,
- * the name is saved there to persist across reboots.
+ * same local network to have a unique name.
  */
 function LocalDevice() {
   this._name = LocalDevice.UNKNOWN;
-  if ("@mozilla.org/settingsService;1" in Cc) {
-    this._settings =
-      Cc["@mozilla.org/settingsService;1"].getService(Ci.nsISettingsService);
-    Services.obs.addObserver(this, "mozsettings-changed", false);
-  }
   // Trigger |_get| to load name eagerly
   this._get();
 }
 
-LocalDevice.SETTING = "devtools.discovery.device";
 LocalDevice.UNKNOWN = "unknown";
 
 LocalDevice.prototype = {
 
   _get: function () {
-    if (!this._settings) {
-      // Without Settings API, just generate a name and stop, since the value
-      // can't be persisted.
-      this._generate();
-      return;
-    }
-    // Initial read of setting value
-    this._settings.createLock().get(LocalDevice.SETTING, {
-      handle: (_, name) => {
-        if (name && name !== LocalDevice.UNKNOWN) {
-          this._name = name;
-          log("Device: " + this._name);
-          return;
-        }
-        // No existing name saved, so generate one.
-        this._generate();
-      },
-      handleError: () => log("Failed to get device name setting")
-    });
+    // Without Settings API, just generate a name and stop, since the value
+    // can't be persisted.
+    this._generate();
   },
 
   /**
@@ -203,39 +180,13 @@ LocalDevice.prototype = {
     }
   },
 
-  /**
-   * Observe any changes that might be made via the Settings app
-   */
-  observe: function (subject, topic, data) {
-    if (topic !== "mozsettings-changed") {
-      return;
-    }
-    if ("wrappedJSObject" in subject) {
-      subject = subject.wrappedJSObject;
-    }
-    if (subject.key !== LocalDevice.SETTING) {
-      return;
-    }
-    this._name = subject.value;
-    log("Device: " + this._name);
-  },
-
   get name() {
     return this._name;
   },
 
   set name(name) {
-    if (!this._settings) {
-      this._name = name;
-      log("Device: " + this._name);
-      return;
-    }
-    // Persist to Settings API
-    // The new value will be seen and stored by the observer above
-    this._settings.createLock().set(LocalDevice.SETTING, name, {
-      handle: () => {},
-      handleError: () => log("Failed to set device name setting")
-    });
+    this._name = name;
+    log("Device: " + this._name);
   }
 
 };

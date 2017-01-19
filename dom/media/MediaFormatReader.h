@@ -76,7 +76,7 @@ public:
 
   // Returns a string describing the state of the decoder data.
   // Used for debugging purposes.
-  void GetMozDebugReaderData(nsAString& aString);
+  void GetMozDebugReaderData(nsACString& aString);
 
   void SetVideoBlankDecode(bool aIsBlankDecode) override;
 

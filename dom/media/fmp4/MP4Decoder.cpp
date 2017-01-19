@@ -282,7 +282,7 @@ MP4Decoder::IsVideoAccelerated(layers::KnowsCompositor* aKnowsCompositor, nsIGlo
 }
 
 void
-MP4Decoder::GetMozDebugReaderData(nsAString& aString)
+MP4Decoder::GetMozDebugReaderData(nsACString& aString)
 {
   if (mReader) {
     mReader->GetMozDebugReaderData(aString);

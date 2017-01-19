@@ -11,6 +11,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/TimeStamp.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIStreamLoader.h"
@@ -103,7 +104,7 @@ public:
                           const char* pathAndQueryString,
                           const char* httpRequestMethod,
                           const OriginAttributes& originAttributes,
-                          const PRIntervalTime timeout,
+                          const mozilla::TimeDuration timeout,
                   /*out*/ nsNSSHttpRequestSession** pRequest);
 
   Result setPostDataFcn(const char* httpData,
@@ -129,7 +130,7 @@ public:
 
   OriginAttributes mOriginAttributes;
 
-  PRIntervalTime mTimeoutInterval;
+  mozilla::TimeDuration mTimeout;
 
   RefPtr<nsHTTPListener> mListener;
 
@@ -163,7 +164,7 @@ public:
                           const char* pathAndQueryString,
                           const char* httpRequestMethod,
                           const OriginAttributes& originAttributes,
-                          const PRIntervalTime timeout,
+                          const mozilla::TimeDuration timeout,
                   /*out*/ nsNSSHttpRequestSession** pRequest)
   {
     return nsNSSHttpRequestSession::createFcn(session, httpProtocolVariant,
