@@ -248,6 +248,9 @@ public class RecordsChannel implements
   public void onStoreCompleted(long storeEnd) {
     Logger.trace(LOG_TAG, "onStoreCompleted. Notifying delegate of onFlowCompleted. " +
                           "Fetch end is " + fetchEnd + ", store end is " + storeEnd);
+    // Source might have used caches used to facilitate flow of records, so now is a good
+    // time to clean up. Particularly pertinent for buffered sources.
+    this.source.performCleanup();
     // TODO: synchronize on consumer callback?
     delegate.onFlowCompleted(this, fetchEnd, storeEnd);
   }
