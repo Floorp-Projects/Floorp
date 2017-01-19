@@ -503,7 +503,7 @@ FOR_EACH_NURSERY_PROFILE_TIME(PRINT_HEADER)
 js::Nursery::printProfileDurations(const ProfileDurations& times)
 {
     for (auto time : times)
-        fprintf(stderr, " %6.0f", time.ToMicroseconds());
+        fprintf(stderr, " %6" PRIi64, static_cast<int64_t>(time.ToMicroseconds()));
     fprintf(stderr, "\n");
 }
 
