@@ -230,7 +230,7 @@ GlobalManager = {
     }
   },
 
-  _onExtensionBrowser(type, browser, additionalData = {}) {
+  _onExtensionBrowser(type, browser) {
     browser.messageManager.loadFrameScript(`data:,
       Components.utils.import("resource://gre/modules/ExtensionContent.jsm");
       ExtensionContent.init(this);
@@ -245,7 +245,7 @@ GlobalManager = {
 
       let {getBrowserInfo} = apiManager.global;
       if (getBrowserInfo) {
-        Object.assign(data, getBrowserInfo(browser), additionalData);
+        Object.assign(data, getBrowserInfo(browser));
       }
 
       browser.messageManager.sendAsyncMessage("Extension:InitExtensionView",
@@ -381,50 +381,6 @@ class ExtensionPageContextParent extends ProxyContextParent {
   }
 }
 
-/**
- * The parent side of proxied API context for devtools extension page, such as a
- * devtools pages and panels running in ExtensionChild.jsm.
- */
-class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
-  set devToolsToolbox(toolbox) {
-    if (this._devToolsToolbox) {
-      throw new Error("Cannot set the context DevTools toolbox twice");
-    }
-
-    this._devToolsToolbox = toolbox;
-
-    return toolbox;
-  }
-
-  get devToolsToolbox() {
-    return this._devToolsToolbox;
-  }
-
-  set devToolsTarget(contextDevToolsTarget) {
-    if (this._devToolsTarget) {
-      throw new Error("Cannot set the context DevTools target twice");
-    }
-
-    this._devToolsTarget = contextDevToolsTarget;
-
-    return contextDevToolsTarget;
-  }
-
-  get devToolsTarget() {
-    return this._devToolsTarget;
-  }
-
-  shutdown() {
-    if (!this._devToolsTarget) {
-      throw new Error("no DevTools target is set during DevTools Context shutdown");
-    }
-
-    this._devToolsTarget.destroy();
-    this._devToolsTarget = null;
-    this._devToolsToolbox = null;
-  }
-}
-
 ParentAPIManager = {
   proxyContexts: new Map(),
 
@@ -494,10 +450,8 @@ ParentAPIManager = {
     }
 
     let context;
-    if (envType == "addon_parent") {
+    if (envType == "addon_parent" || envType == "devtools_parent") {
       context = new ExtensionPageContextParent(envType, extension, data, target);
-    } else if (envType == "devtools_parent") {
-      context = new DevToolsExtensionPageContextParent(envType, extension, data, target);
     } else if (envType == "content_parent") {
       context = new ContentScriptContextParent(envType, extension, data, target, principal);
     } else {
