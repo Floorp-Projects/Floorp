@@ -32,7 +32,6 @@ FakeCollection.prototype = {
 };
 
 async function setUpTestFixtures(server) {
-  Service.serverURL = server.baseURI + "/";
   Service.clusterURL = server.baseURI + "/";
 
   await configureIdentity(identityConfig);
@@ -218,7 +217,6 @@ add_task(async function test_wipeServer_all_connectionRefused() {
   let server = httpd_setup({});
   await setUpTestFixtures(server);
 
-  Service.serverURL = "http://localhost:4352/";
   Service.clusterURL = "http://localhost:4352/";
 
   _("Try deletion.");
