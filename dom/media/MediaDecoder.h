@@ -477,6 +477,9 @@ private:
 
   virtual void DumpDebugInfo();
 
+  using DebugInfoPromise = MozPromise<nsCString, bool, true>;
+  RefPtr<DebugInfoPromise> RequestDebugInfo();
+
 protected:
   virtual ~MediaDecoder();
 
