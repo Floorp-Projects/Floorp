@@ -10,6 +10,15 @@
 #include "gmp-entrypoints.h"
 #include "prlink.h"
 #include "prenv.h"
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+#include "mozilla/sandboxTarget.h"
+#include "mozilla/sandboxing/SandboxInitialization.h"
+#include "mozilla/sandboxing/sandboxLogging.h"
+#endif
+#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+#include "mozilla/Sandbox.h"
+#include "mozilla/SandboxInfo.h"
+#endif
 
 #include <string>
 
@@ -50,10 +59,6 @@ private:
   UniquePtr<SandboxStarter> mSandboxStarter;
   UniquePtr<GMPAdapter> mAdapter;
 };
-
-UniquePtr<GMPLoader> CreateGMPLoader(UniquePtr<SandboxStarter> aStarter) {
-  return MakeUnique<GMPLoaderImpl>(Move(aStarter));
-}
 
 class PassThroughGMPAdapter : public GMPAdapter {
 public:
@@ -197,6 +202,90 @@ GMPLoaderImpl::SetSandboxInfo(MacSandboxInfo* aSandboxInfo)
   }
 }
 #endif
+
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+class WinSandboxStarter : public mozilla::gmp::SandboxStarter
+{
+public:
+  bool Start(const char *aLibPath) override
+  {
+    mozilla::SandboxTarget::Instance()->StartSandbox();
+    return true;
+  }
+};
+#endif
+
+#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
+class MacSandboxStarter : public mozilla::gmp::SandboxStarter
+{
+public:
+  bool Start(const char *aLibPath) override
+  {
+    std::string err;
+    bool rv = mozilla::StartMacSandbox(mInfo, err);
+    if (!rv) {
+      fprintf(stderr, "sandbox_init() failed! Error \"%s\"\n", err.c_str());
+    }
+    return rv;
+  }
+  void SetSandboxInfo(MacSandboxInfo* aSandboxInfo) override
+  {
+    mInfo = *aSandboxInfo;
+  }
+private:
+  MacSandboxInfo mInfo;
+};
+#endif
+
+#if defined (XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+namespace {
+class LinuxSandboxStarter : public mozilla::gmp::SandboxStarter
+{
+private:
+  LinuxSandboxStarter() { }
+  friend mozilla::detail::UniqueSelector<LinuxSandboxStarter>::SingleObject mozilla::MakeUnique<LinuxSandboxStarter>();
+
+public:
+  static UniquePtr<SandboxStarter> Make()
+  {
+    if (mozilla::SandboxInfo::Get().CanSandboxMedia()) {
+      return MakeUnique<LinuxSandboxStarter>();
+    } else {
+      // Sandboxing isn't possible, but the parent has already
+      // checked that this plugin doesn't require it.  (Bug 1074561)
+      return nullptr;
+    }
+    return nullptr;
+  }
+  bool Start(const char *aLibPath) override
+  {
+    mozilla::SetMediaPluginSandbox(aLibPath);
+    return true;
+  }
+};
+} // anonymous namespace
+#endif // XP_LINUX && MOZ_GMP_SANDBOX
+
+
+static UniquePtr<SandboxStarter>
+MakeSandboxStarter()
+{
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+  return mozilla::MakeUnique<WinSandboxStarter>();
+#elif defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
+  return mozilla::MakeUnique<MacSandboxStarter>();
+#elif defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+  return LinuxSandboxStarter::Make();
+#else
+  return nullptr;
+#endif
+}
+
+UniquePtr<GMPLoader>
+CreateGMPLoader()
+{
+  return MakeUnique<GMPLoaderImpl>(MakeSandboxStarter());
+}
+
 } // namespace gmp
 } // namespace mozilla
-
