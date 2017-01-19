@@ -13,7 +13,6 @@ DevToolsModules(
     'BarGraphWidget.js',
     'BreadcrumbsWidget.jsm',
     'Chart.js',
-    'ColorWidget.js',
     'CubicBezierPresets.js',
     'CubicBezierWidget.js',
     'FastListWidget.js',
