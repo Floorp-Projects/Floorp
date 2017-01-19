@@ -29,6 +29,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "mozilla/dom/BoxObject.h"
+#include "mozilla/TextEvents.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -227,11 +228,20 @@ nsXULTooltipListener::HandleEvent(nsIDOMEvent* aEvent)
   nsAutoString type;
   aEvent->GetType(type);
   if (type.EqualsLiteral("DOMMouseScroll") ||
-      type.EqualsLiteral("keydown") ||
       type.EqualsLiteral("mousedown") ||
       type.EqualsLiteral("mouseup") ||
       type.EqualsLiteral("dragstart")) {
     HideTooltip();
+    return NS_OK;
+  }
+
+  if (type.EqualsLiteral("keydown")) {
+    // Hide the tooltip if a non-modifier key is pressed.
+    WidgetKeyboardEvent* keyEvent = aEvent->WidgetEventPtr()->AsKeyboardEvent();
+    if (!keyEvent->IsModifierKeyEvent()) {
+      HideTooltip();
+    }
+
     return NS_OK;
   }
 
@@ -430,8 +440,11 @@ nsXULTooltipListener::ShowTooltip()
                                     this, true);
         doc->AddSystemEventListener(NS_LITERAL_STRING("mouseup"),
                                     this, true);
+#ifndef XP_WIN
+        // On Windows, key events don't close tooltips.
         doc->AddSystemEventListener(NS_LITERAL_STRING("keydown"),
                                     this, true);
+#endif
       }
       mSourceNode = nullptr;
     }
@@ -669,7 +682,9 @@ nsXULTooltipListener::DestroyTooltip()
       doc->RemoveSystemEventListener(NS_LITERAL_STRING("mousedown"), this,
                                      true);
       doc->RemoveSystemEventListener(NS_LITERAL_STRING("mouseup"), this, true);
+#ifndef XP_WIN
       doc->RemoveSystemEventListener(NS_LITERAL_STRING("keydown"), this, true);
+#endif
     }
 
     // remove the popuphidden listener from tooltip
