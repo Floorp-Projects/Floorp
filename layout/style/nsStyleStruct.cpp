@@ -489,8 +489,7 @@ nsStyleBorder::CalcDifference(const nsStyleBorder& aNewData) const
         mBorderImageRepeatV != aNewData.mBorderImageRepeatV ||
         mBorderImageSlice   != aNewData.mBorderImageSlice   ||
         mBorderImageFill    != aNewData.mBorderImageFill    ||
-        mBorderImageWidth   != aNewData.mBorderImageWidth   ||
-        mBorderImageOutset  != aNewData.mBorderImageOutset) {
+        mBorderImageWidth   != aNewData.mBorderImageWidth) {
       return nsChangeHint_RepaintFrame;
     }
   }
@@ -510,6 +509,18 @@ nsStyleBorder::CalcDifference(const nsStyleBorder& aNewData) const
   // need any change processing, since we operate on the computed
   // border values instead.
   if (mBorder != aNewData.mBorder) {
+    return nsChangeHint_NeutralChange;
+  }
+
+  // mBorderImage* fields are checked only when border image was
+  // actualy loaded. But we need to return neutral change even when
+  // they are not actually used.
+  if (mBorderImageSource  != aNewData.mBorderImageSource  ||
+      mBorderImageRepeatH != aNewData.mBorderImageRepeatH ||
+      mBorderImageRepeatV != aNewData.mBorderImageRepeatV ||
+      mBorderImageSlice   != aNewData.mBorderImageSlice   ||
+      mBorderImageFill    != aNewData.mBorderImageFill    ||
+      mBorderImageWidth   != aNewData.mBorderImageWidth) {
     return nsChangeHint_NeutralChange;
   }
 
@@ -4133,6 +4144,10 @@ nsStyleUIReset::CalcDifference(const nsStyleUIReset& aNewData) const
 
   if (mWindowDragging != aNewData.mWindowDragging) {
     return nsChangeHint_SchedulePaint;
+  }
+
+  if (mIMEMode != aNewData.mIMEMode) {
+    return nsChangeHint_NeutralChange;
   }
 
   return nsChangeHint(0);
