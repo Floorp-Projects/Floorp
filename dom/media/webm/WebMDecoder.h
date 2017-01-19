@@ -30,7 +30,7 @@ public:
   // If provided, codecs are checked for support.
   static bool IsSupportedType(const MediaContainerType& aContainerType);
 
-  void GetMozDebugReaderData(nsAString& aString) override;
+  void GetMozDebugReaderData(nsACString& aString) override;
 
 private:
   RefPtr<MediaFormatReader> mReader;

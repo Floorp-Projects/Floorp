@@ -8,7 +8,7 @@
 
 "use strict";
 
-const toolbox = require("../node_modules/devtools-local-toolbox/index");
+const toolbox = require("../node_modules/devtools-launchpad/index");
 const feature = require("devtools-config");
 const envConfig = require("../configs/development.json");
 

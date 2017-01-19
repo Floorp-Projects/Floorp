@@ -193,12 +193,6 @@ user_pref("layout.spammy_warnings.enabled", false);
 user_pref("media.mediasource.mp4.enabled", true);
 user_pref("media.mediasource.webm.enabled", true);
 
-// Enable mozContacts
-user_pref("dom.mozContacts.enabled", true);
-
-// Enable mozSettings
-user_pref("dom.mozSettings.enabled", true);
-
 // Make sure the disk cache doesn't get auto disabled
 user_pref("network.http.bypass-cachelock-threshold", 200000);
 

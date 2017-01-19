@@ -149,10 +149,15 @@
   }
 
   /**
-   * Messages received are in this format:
-   *  (BOOTSTRAP|SECURE|INSECURE) testid
-   * For example: "BOOTSTRAP subdom"
-   *          or: "INSECURE otherdom"
+   * @param {DOMWindow} win
+   *        Test window.
+   * @param {Boolean} isPrivate
+   *        Whether the given window is in private browsing mode.
+   * @param {String} data
+   *        A message that is expected to be in this format:
+   *          (BOOTSTRAP|SECURE|INSECURE) testid
+   *        For example: "BOOTSTRAP subdom"
+   *                 or: "INSECURE otherdom"
    */
   function onMessageReceived(win, isPrivate, data) {
     let result = data.split(/\s+/);

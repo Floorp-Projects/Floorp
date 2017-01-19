@@ -28,11 +28,7 @@ parent:
 
   async PGMPContentChildDestroyed();
 
-  async AsyncShutdownComplete();
-  async AsyncShutdownRequired();
-
 child:
-  async BeginAsyncShutdown();
   async CrashPluginNow();
   intr StartPlugin(nsString adapter);
   async SetNodeId(nsCString nodeId);

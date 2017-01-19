@@ -56,8 +56,7 @@ module.exports = {
     "react/no-direct-mutation-state": "error",
     "react/no-unknown-property": "error",
     "react/prefer-es6-class": ["warn", "never"],
-    // Disabled temporarily until errors are fixed.
-    "react/prop-types": "off",
+    "react/prop-types": "error",
     "react/sort-comp": ["error", {
       order: [
         "lifecycle",

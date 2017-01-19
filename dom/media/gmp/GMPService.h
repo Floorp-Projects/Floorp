@@ -75,8 +75,6 @@ public:
     return GetDecryptingGMPVideoDecoder(aHelper, aTags, aNodeId, Move(aCallback), 0);
   }
 
-  int32_t AsyncShutdownTimeoutMs();
-
   NS_IMETHOD RunPluginCrashCallbacks(uint32_t aPluginId,
                                      const nsACString& aPluginName) override;
 

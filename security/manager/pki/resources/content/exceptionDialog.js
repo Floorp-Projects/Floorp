@@ -134,6 +134,10 @@ function checkCert() {
 /**
  * Build and return a URI, based on the information supplied in the
  * Certificate Location fields
+ *
+ * @returns {nsIURI}
+ *          URI constructed from the information supplied on success, null
+ *          otherwise.
  */
 function getURI() {
   // Use fixup service instead of just ioservice's newURI since it's quite
@@ -361,7 +365,7 @@ function addException() {
 }
 
 /**
- * Returns true if this dialog is in private browsing mode.
+ * @returns {Boolean} Whether this dialog is in private browsing mode.
  */
 function inPrivateBrowsingMode() {
   return PrivateBrowsingUtils.isWindowPrivate(window);
