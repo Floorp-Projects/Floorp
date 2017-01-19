@@ -12,7 +12,6 @@
 #include "CompositableHost.h"           // for CompositableHost
 #include "ContainerLayerComposite.h"    // for ContainerLayerComposite, etc
 #include "FPSCounter.h"                 // for FPSState, FPSCounter
-#include "PaintCounter.h"               // For PaintCounter
 #include "FrameMetrics.h"               // for FrameMetrics
 #include "GeckoProfiler.h"              // for profiler_set_frame_number, etc
 #include "ImageLayerComposite.h"        // for ImageLayerComposite
@@ -69,6 +68,10 @@
 #include "TextRenderer.h"               // for TextRenderer
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "TreeTraversal.h"              // for ForEachNode
+
+#ifdef USE_SKIA
+#include "PaintCounter.h"               // For PaintCounter
+#endif
 
 class gfxContext;
 
@@ -130,6 +133,10 @@ LayerManagerComposite::LayerManagerComposite(Compositor* aCompositor)
 {
   mTextRenderer = new TextRenderer(aCompositor);
   MOZ_ASSERT(aCompositor);
+
+#ifdef USE_SKIA
+  mPaintCounter = nullptr;
+#endif
 }
 
 LayerManagerComposite::~LayerManagerComposite()
@@ -148,8 +155,11 @@ LayerManagerComposite::Destroy()
     }
     mRoot = nullptr;
     mClonedLayerTreeProperties = nullptr;
-    mPaintCounter = nullptr;
     mDestroyed = true;
+
+#ifdef USE_SKIA
+    mPaintCounter = nullptr;
+#endif
   }
 }
 
@@ -563,7 +573,6 @@ LayerManagerComposite::InvalidateDebugOverlay(nsIntRegion& aInvalidRegion, const
   bool drawFps = gfxPrefs::LayersDrawFPS();
   bool drawFrameCounter = gfxPrefs::DrawFrameCounter();
   bool drawFrameColorBars = gfxPrefs::CompositorDrawColorBars();
-  bool drawPaintTimes = gfxPrefs::AlwaysPaint();
 
   if (drawFps || drawFrameCounter) {
     aInvalidRegion.Or(aInvalidRegion, nsIntRect(0, 0, 256, 256));
@@ -571,11 +580,16 @@ LayerManagerComposite::InvalidateDebugOverlay(nsIntRegion& aInvalidRegion, const
   if (drawFrameColorBars) {
     aInvalidRegion.Or(aInvalidRegion, nsIntRect(0, 0, 10, aBounds.height));
   }
+
+#ifdef USE_SKIA
+  bool drawPaintTimes = gfxPrefs::AlwaysPaint();
   if (drawPaintTimes) {
     aInvalidRegion.Or(aInvalidRegion, nsIntRect(PaintCounter::GetPaintRect()));
   }
+#endif
 }
 
+#ifdef USE_SKIA
 void
 LayerManagerComposite::DrawPaintTimes(Compositor* aCompositor)
 {
@@ -586,6 +600,7 @@ LayerManagerComposite::DrawPaintTimes(Compositor* aCompositor)
   TimeDuration compositeTime = TimeStamp::Now() - mRenderStartTime;
   mPaintCounter->Draw(aCompositor, mLastPaintTime, compositeTime);
 }
+#endif
 
 static uint16_t sFrameCount = 0;
 void
@@ -594,7 +609,6 @@ LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds)
   bool drawFps = gfxPrefs::LayersDrawFPS();
   bool drawFrameCounter = gfxPrefs::DrawFrameCounter();
   bool drawFrameColorBars = gfxPrefs::CompositorDrawColorBars();
-  bool drawPaintTimes = gfxPrefs::AlwaysPaint();
 
   TimeStamp now = TimeStamp::Now();
 
@@ -735,9 +749,12 @@ LayerManagerComposite::RenderDebugOverlay(const IntRect& aBounds)
     sFrameCount++;
   }
 
+#ifdef USE_SKIA
+  bool drawPaintTimes = gfxPrefs::AlwaysPaint();
   if (drawPaintTimes) {
     DrawPaintTimes(mCompositor);
   }
+#endif
 }
 
 RefPtr<CompositingRenderTarget>
