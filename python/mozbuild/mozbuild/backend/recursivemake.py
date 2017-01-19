@@ -61,6 +61,7 @@ from ..frontend.data import (
     PerSourceFlag,
     Program,
     RustLibrary,
+    HostRustLibrary,
     RustProgram,
     SharedLibrary,
     SimpleProgram,
@@ -1205,10 +1206,15 @@ class RecursiveMakeBackend(CommonBackend):
             backend_file.write('NO_EXPAND_LIBS := 1\n')
 
     def _process_rust_library(self, libdef, backend_file):
-        backend_file.write_once('RUST_LIBRARY_FILE := %s\n' % libdef.import_name)
+        lib_var = 'RUST_LIBRARY_FILE'
+        feature_var = 'RUST_LIBRARY_FEATURES'
+        if isinstance(libdef, HostRustLibrary):
+            lib_var = 'HOST_RUST_LIBRARY_FILE'
+            feature_var = 'HOST_RUST_LIBRARY_FEATURES'
+        backend_file.write_once('%s := %s\n' % (libdef.LIB_FILE_VAR, libdef.import_name))
         backend_file.write('CARGO_FILE := $(srcdir)/Cargo.toml\n')
         if libdef.features:
-            backend_file.write('RUST_LIBRARY_FEATURES := %s\n' % ' '.join(libdef.features))
+            backend_file.write('%s := %s\n' % (libdef.FEATURES_VAR, ' '.join(libdef.features)))
 
     def _process_host_library(self, libdef, backend_file):
         backend_file.write('HOST_LIBRARY_NAME = %s\n' % libdef.basename)
@@ -1265,7 +1271,7 @@ class RecursiveMakeBackend(CommonBackend):
                     backend_file.write_once('SHARED_LIBS += %s/%s\n'
                                         % (relpath, lib.import_name))
             elif isinstance(obj, (HostLibrary, HostProgram, HostSimpleProgram)):
-                assert isinstance(lib, HostLibrary)
+                assert isinstance(lib, (HostLibrary, HostRustLibrary))
                 backend_file.write_once('HOST_LIBS += %s/%s\n'
                                    % (relpath, lib.import_name))
 

@@ -25,6 +25,7 @@ from mozbuild.frontend.data import (
     GeneratedFile,
     GeneratedSources,
     HostDefines,
+    HostRustLibrary,
     HostRustProgram,
     HostSources,
     IPDLFile,
@@ -1147,6 +1148,17 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertEqual(len(objs), 1)
         self.assertIsInstance(objs[0], HostRustProgram)
         self.assertEqual(objs[0].name, 'some')
+
+    def test_host_rust_libraries(self):
+        '''Test HOST_RUST_LIBRARIES emission.'''
+        reader = self.reader('host-rust-libraries',
+                             extra_substs=dict(RUST_HOST_TARGET='i686-pc-windows-msvc',
+                                               HOST_BIN_SUFFIX='.exe'))
+        objs = self.read_topsrcdir(reader)
+        self.assertEqual(len(objs), 1)
+        self.assertIsInstance(objs[0], HostRustLibrary)
+        self.assertRegexpMatches(objs[0].lib_name, 'host_lib')
+        self.assertRegexpMatches(objs[0].import_name, 'host_lib')
 
     def test_crate_dependency_path_resolution(self):
         '''Test recursive dependencies resolve with the correct paths.'''
