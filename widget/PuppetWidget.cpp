@@ -410,8 +410,9 @@ PuppetWidget::SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
     return NS_ERROR_FAILURE;
   }
   mTabChild->SendSynthesizeNativeKeyEvent(aNativeKeyboardLayout, aNativeKeyCode,
-    aModifierFlags, nsString(aCharacters), nsString(aUnmodifiedCharacters),
-    notifier.SaveObserver());
+                                          aModifierFlags, nsString(aCharacters),
+                                          nsString(aUnmodifiedCharacters),
+                                          notifier.SaveObserver());
   return NS_OK;
 }
 
@@ -426,7 +427,8 @@ PuppetWidget::SynthesizeNativeMouseEvent(mozilla::LayoutDeviceIntPoint aPoint,
     return NS_ERROR_FAILURE;
   }
   mTabChild->SendSynthesizeNativeMouseEvent(aPoint, aNativeMessage,
-    aModifierFlags, notifier.SaveObserver());
+                                            aModifierFlags,
+                                            notifier.SaveObserver());
   return NS_OK;
 }
 
@@ -443,22 +445,25 @@ PuppetWidget::SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint,
 }
 
 nsresult
-PuppetWidget::SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
-                                               uint32_t aNativeMessage,
-                                               double aDeltaX,
-                                               double aDeltaY,
-                                               double aDeltaZ,
-                                               uint32_t aModifierFlags,
-                                               uint32_t aAdditionalFlags,
-                                               nsIObserver* aObserver)
+PuppetWidget::SynthesizeNativeMouseScrollEvent(
+                mozilla::LayoutDeviceIntPoint aPoint,
+                uint32_t aNativeMessage,
+                double aDeltaX,
+                double aDeltaY,
+                double aDeltaZ,
+                uint32_t aModifierFlags,
+                uint32_t aAdditionalFlags,
+                nsIObserver* aObserver)
 {
   AutoObserverNotifier notifier(aObserver, "mousescrollevent");
   if (!mTabChild) {
     return NS_ERROR_FAILURE;
   }
   mTabChild->SendSynthesizeNativeMouseScrollEvent(aPoint, aNativeMessage,
-    aDeltaX, aDeltaY, aDeltaZ, aModifierFlags, aAdditionalFlags,
-    notifier.SaveObserver());
+                                                  aDeltaX, aDeltaY, aDeltaZ,
+                                                  aModifierFlags,
+                                                  aAdditionalFlags,
+                                                  notifier.SaveObserver());
   return NS_OK;
 }
 
@@ -475,8 +480,9 @@ PuppetWidget::SynthesizeNativeTouchPoint(uint32_t aPointerId,
     return NS_ERROR_FAILURE;
   }
   mTabChild->SendSynthesizeNativeTouchPoint(aPointerId, aPointerState,
-    aPoint, aPointerPressure, aPointerOrientation,
-    notifier.SaveObserver());
+                                            aPoint, aPointerPressure,
+                                            aPointerOrientation,
+                                            notifier.SaveObserver());
   return NS_OK;
 }
 
@@ -490,7 +496,7 @@ PuppetWidget::SynthesizeNativeTouchTap(LayoutDeviceIntPoint aPoint,
     return NS_ERROR_FAILURE;
   }
   mTabChild->SendSynthesizeNativeTouchTap(aPoint, aLongTap,
-    notifier.SaveObserver());
+                                          notifier.SaveObserver());
   return NS_OK;
 }
 
@@ -506,8 +512,9 @@ PuppetWidget::ClearNativeTouchSequence(nsIObserver* aObserver)
 }
  
 void
-PuppetWidget::SetConfirmedTargetAPZC(uint64_t aInputBlockId,
-                                     const nsTArray<ScrollableLayerGuid>& aTargets) const
+PuppetWidget::SetConfirmedTargetAPZC(
+                uint64_t aInputBlockId,
+                const nsTArray<ScrollableLayerGuid>& aTargets) const
 {
   if (mTabChild) {
     mTabChild->SetTargetAPZC(aInputBlockId, aTargets);
@@ -531,15 +538,12 @@ PuppetWidget::AsyncPanZoomEnabled() const
 }
 
 bool
-PuppetWidget::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
-                                      const mozilla::WidgetKeyboardEvent& aEvent,
-                                      DoCommandCallback aCallback,
-                                      void* aCallbackData)
+PuppetWidget::ExecuteNativeKeyBinding(
+                NativeKeyBindingsType aType,
+                const mozilla::WidgetKeyboardEvent& aEvent,
+                DoCommandCallback aCallback,
+                void* aCallbackData)
 {
-  // B2G doesn't have native key bindings.
-#ifdef MOZ_WIDGET_GONK
-  return false;
-#else // #ifdef MOZ_WIDGET_GONK
   AutoCacheNativeKeyCommands autoCache(this);
   if (!aEvent.mWidget && !mNativeKeyCommandsValid) {
     MOZ_ASSERT(!aEvent.mFlags.mIsSynthesizedForTests);
@@ -576,7 +580,6 @@ PuppetWidget::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
     aCallback(static_cast<mozilla::Command>((*commands)[i]), aCallbackData);
   }
   return true;
-#endif
 }
 
 LayerManager*
@@ -607,7 +610,6 @@ PuppetWidget::RecreateLayerManager(PLayerTransactionChild* aShadowManager)
 nsresult
 PuppetWidget::RequestIMEToCommitComposition(bool aCancel)
 {
-#ifdef MOZ_CROSS_PROCESS_IME
   if (!mTabChild) {
     return NS_ERROR_FAILURE;
   }
@@ -647,9 +649,6 @@ PuppetWidget::RequestIMEToCommitComposition(bool aCancel)
   DispatchEvent(&compositionCommitEvent, status);
 
   // NOTE: PuppetWidget might be destroyed already.
-
-#endif // #ifdef MOZ_CROSS_PROCESS_IME
-
   return NS_OK;
 }
 
@@ -718,11 +717,6 @@ PuppetWidget::SetInputContext(const InputContext& aContext,
   // can be changed by user but native IME may not notify us of changing the
   // open state on some platforms.
   mInputContext.mIMEState.mOpen = IMEState::OPEN_STATE_NOT_SUPPORTED;
-
-#ifndef MOZ_CROSS_PROCESS_IME
-  return;
-#endif
-
   if (!mTabChild) {
     return;
   }
@@ -739,10 +733,6 @@ PuppetWidget::SetInputContext(const InputContext& aContext,
 InputContext
 PuppetWidget::GetInputContext()
 {
-#ifndef MOZ_CROSS_PROCESS_IME
-  return InputContext();
-#endif
-
   // XXX Currently, we don't support retrieving IME open state from child
   //     process.
 
@@ -778,12 +768,9 @@ PuppetWidget::GetNativeIMEContext()
 nsresult
 PuppetWidget::NotifyIMEOfFocusChange(const IMENotification& aIMENotification)
 {
-#ifndef MOZ_CROSS_PROCESS_IME
-  return NS_OK;
-#endif
-
-  if (!mTabChild)
+  if (!mTabChild) {
     return NS_ERROR_FAILURE;
+  }
 
   bool gotFocus = aIMENotification.mMessage == NOTIFY_IME_OF_FOCUS;
   if (gotFocus) {
@@ -817,11 +804,9 @@ nsresult
 PuppetWidget::NotifyIMEOfCompositionUpdate(
                 const IMENotification& aIMENotification)
 {
-#ifndef MOZ_CROSS_PROCESS_IME
-  return NS_OK;
-#endif
-
-  NS_ENSURE_TRUE(mTabChild, NS_ERROR_FAILURE);
+  if (NS_WARN_IF(!mTabChild)) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (mInputContext.mIMEState.mEnabled != IMEState::PLUGIN &&
       NS_WARN_IF(!mContentCache.CacheSelection(this, &aIMENotification))) {
@@ -834,7 +819,6 @@ PuppetWidget::NotifyIMEOfCompositionUpdate(
 nsIMEUpdatePreference
 PuppetWidget::GetIMEUpdatePreference()
 {
-#ifdef MOZ_CROSS_PROCESS_IME
   // e10s requires IME content cache in in the TabParent for handling query
   // content event only with the parent process.  Therefore, this process
   // needs to receive a lot of information from the focused editor to sent
@@ -849,10 +833,6 @@ PuppetWidget::GetIMEUpdatePreference()
   return nsIMEUpdatePreference(mIMEPreferenceOfParent.mWantUpdates |
                                nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE |
                                nsIMEUpdatePreference::NOTIFY_POSITION_CHANGE );
-#else
-  // B2G doesn't handle IME as widget-level.
-  return nsIMEUpdatePreference();
-#endif
 }
 
 nsresult
@@ -860,13 +840,9 @@ PuppetWidget::NotifyIMEOfTextChange(const IMENotification& aIMENotification)
 {
   MOZ_ASSERT(aIMENotification.mMessage == NOTIFY_IME_OF_TEXT_CHANGE,
              "Passed wrong notification");
-
-#ifndef MOZ_CROSS_PROCESS_IME
-  return NS_OK;
-#endif
-
-  if (!mTabChild)
+  if (!mTabChild) {
     return NS_ERROR_FAILURE;
+  }
 
   // While a plugin has focus, text change notification shouldn't be available.
   if (NS_WARN_IF(mInputContext.mIMEState.mEnabled == IMEState::PLUGIN)) {
@@ -897,13 +873,9 @@ PuppetWidget::NotifyIMEOfSelectionChange(
 {
   MOZ_ASSERT(aIMENotification.mMessage == NOTIFY_IME_OF_SELECTION_CHANGE,
              "Passed wrong notification");
-
-#ifndef MOZ_CROSS_PROCESS_IME
-  return NS_OK;
-#endif
-
-  if (!mTabChild)
+  if (!mTabChild) {
     return NS_ERROR_FAILURE;
+  }
 
   // While a plugin has focus, selection change notification shouldn't be
   // available.
@@ -952,9 +924,6 @@ PuppetWidget::NotifyIMEOfMouseButtonEvent(
 nsresult
 PuppetWidget::NotifyIMEOfPositionChange(const IMENotification& aIMENotification)
 {
-#ifndef MOZ_CROSS_PROCESS_IME
-  return NS_OK;
-#endif
   if (NS_WARN_IF(!mTabChild)) {
     return NS_ERROR_FAILURE;
   }
