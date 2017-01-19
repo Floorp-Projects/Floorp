@@ -41,14 +41,13 @@ ThrowExceptionObject(JSContext* aCx, Exception* aException);
 void
 ThrowExceptionObject(JSContext* aCx, nsIException* aException);
 
-// Create an exception object for the given nsresult and message but don't set
-// it pending on aCx.  If we're throwing a DOMException and aMessage is empty,
-// the default message for the nsresult in question will be used.
+// Create an exception object for the given nsresult and message. If we're
+// throwing a DOMException and aMessage is empty, the default message for the
+// nsresult in question will be used.
 //
 // This never returns null.
 already_AddRefed<Exception>
-CreateException(JSContext* aCx, nsresult aRv,
-                const nsACString& aMessage = EmptyCString());
+CreateException(nsresult aRv, const nsACString& aMessage = EmptyCString());
 
 // aMaxDepth can be used to define a maximal depth for the stack trace. If the
 // value is -1, a default maximal depth will be selected.  Will return null if
