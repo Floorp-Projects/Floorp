@@ -203,7 +203,7 @@ wr_renderer_set_profiler_enabled(WrRenderer* renderer, bool enabled) WR_FUNC;
 WR_INLINE bool
 wr_renderer_current_epoch(WrRenderer* renderer, WrPipelineId pipeline_id, WrEpoch* out_epoch) WR_FUNC;
 
-WR_INLINE bool
+WR_INLINE void
 wr_renderer_delete(WrRenderer* renderer) WR_FUNC;
 
 WR_INLINE void
