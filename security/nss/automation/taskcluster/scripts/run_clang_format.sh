@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
-source $(dirname "$0")/tools.sh
+set -v -e -x
+
+if [ $(id -u) -eq 0 ]; then
+    # Drop privileges by re-running this script.
+    exec su worker $0 "$@"
+fi
 
 # Apply clang-format on the provided folder and verify that this doesn't change any file.
 # If any file differs after formatting, the script eventually exits with 1.
@@ -41,7 +46,6 @@ else
          "$top/gtests/pk11_gtest" \
          "$top/gtests/ssl_gtest" \
          "$top/gtests/util_gtest" \
-         "$top/nss-tool" \
     )
 fi
 

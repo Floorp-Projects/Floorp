@@ -104,10 +104,6 @@
                 '<(DEPTH)/lib/util/util.gyp:nssutil3',
               ],
             }],
-          ]
-        }],
-        [ 'OS=="linux" or OS=="android"', {
-          'conditions': [
             [ 'target_arch=="x64"', {
               'sources': [
                 'arcfour-amd64-gas.s',
@@ -146,7 +142,7 @@
             }],
           ],
         }, {
-          # not Linux or Android
+          # not Linux
           'conditions': [
             [ 'moz_fold_libs==0', {
               'dependencies': [
@@ -233,7 +229,7 @@
             'UNSAFE_FUZZER_MODE',
           ],
         }],
-        [ 'ct_verif==1', {
+        [ 'test_build==1', {
           'defines': [
             'CT_VERIF',
           ],
@@ -378,10 +374,6 @@
               'FREEBL_NO_DEPEND',
             ],
           }],
-        ],
-      }],
-      [ 'OS=="linux" or OS=="android"', {
-        'conditions': [
           [ 'target_arch=="x64"', {
             'defines': [
               'MP_IS_LITTLE_ENDIAN',
@@ -414,7 +406,7 @@
               'SHA_NO_LONG_LONG',
             ],
           }],
-          [ 'target_arch=="arm64" or target_arch=="aarch64"', {
+          [ 'target_arch=="arm64"', {
             'defines': [
               'NSS_USE_64',
             ],

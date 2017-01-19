@@ -4,32 +4,30 @@
 {
   'includes': [
     '../../coreconf/config.gypi',
-    '../common/gtest.gypi',
+    'gtest.gypi',
   ],
   'targets': [
     {
-      'target_name': 'freebl_gtest',
+      'target_name': 'gtests',
       'type': 'executable',
       'sources': [
-        'mpi_unittest.cc',
-        '<(DEPTH)/gtests/common/gtests.cc'
+        'gtests.cc'
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
-        '<(DEPTH)/lib/freebl/freebl.gyp:<(freebl_name)',
+        '<(DEPTH)/lib/nss/nss.gyp:nss3',
+        '<(DEPTH)/lib/util/util.gyp:nssutil3',
+        '<(DEPTH)/lib/smime/smime.gyp:smime3',
         '<(DEPTH)/gtests/google_test/google_test.gyp:gtest',
-      ],
-      'defines': [
-        'CT_VERIF',
-      ],
+        '<(DEPTH)/cmd/lib/lib.gyp:sectool'
+      ]
     }
   ],
   'target_defaults': {
     'include_dirs': [
-      '<(DEPTH)/gtests/google_test/gtest/include',
-      '<(DEPTH)/gtests/common',
-      '<(DEPTH)/lib/freebl/mpi',
-    ]
+      '../../gtests/google_test/gtest/include',
+      '../../gtests/common'
+    ],
   },
   'variables': {
     'module': 'nss'

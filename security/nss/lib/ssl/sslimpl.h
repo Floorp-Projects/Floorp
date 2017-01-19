@@ -370,10 +370,6 @@ struct sslGatherStr {
 
     /* the start of the buffered DTLS record in dtlsPacket */
     unsigned int dtlsPacketOffset;
-
-    /* tracks whether we've seen a v3-type record before and must reject
-     * any further v2-type records. */
-    PRBool rejectV2Records;
 };
 
 /* sslGather.state */
