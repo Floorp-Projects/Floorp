@@ -33,5 +33,6 @@ EXTRA_JS_MODULES += [
 
 # GeckoView-sepcific modules added separately.
 EXTRA_JS_MODULES += [
-    'GeckoViewContent.jsm'
+    'GeckoViewContent.jsm',
+    'GeckoViewNavigation.jsm'
 ]
