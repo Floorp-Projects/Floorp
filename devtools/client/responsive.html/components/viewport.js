@@ -22,20 +22,20 @@ module.exports = createClass({
     swapAfterMount: PropTypes.bool.isRequired,
     viewport: PropTypes.shape(Types.viewport).isRequired,
     onBrowserMounted: PropTypes.func.isRequired,
-    onChangeViewportDevice: PropTypes.func.isRequired,
+    onChangeDevice: PropTypes.func.isRequired,
     onContentResize: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
     onUpdateDeviceModalOpen: PropTypes.func.isRequired,
   },
 
-  onChangeViewportDevice(device) {
+  onChangeDevice(device) {
     let {
       viewport,
-      onChangeViewportDevice,
+      onChangeDevice,
     } = this.props;
 
-    onChangeViewportDevice(viewport.id, device);
+    onChangeDevice(viewport.id, device);
   },
 
   onResizeViewport(width, height) {
@@ -69,7 +69,7 @@ module.exports = createClass({
     } = this.props;
 
     let {
-      onChangeViewportDevice,
+      onChangeDevice,
       onRotateViewport,
       onResizeViewport,
     } = this;
@@ -80,7 +80,7 @@ module.exports = createClass({
       },
       ViewportDimension({
         viewport,
-        onChangeViewportDevice,
+        onChangeDevice,
         onResizeViewport,
       }),
       ResizableViewport({
@@ -90,7 +90,7 @@ module.exports = createClass({
         swapAfterMount,
         viewport,
         onBrowserMounted,
-        onChangeViewportDevice,
+        onChangeDevice,
         onContentResize,
         onResizeViewport,
         onRotateViewport,
