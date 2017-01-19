@@ -772,13 +772,6 @@ CustomElementRegistry::Define(const nsAString& aName,
   // Associate the definition with the custom element.
   nsCOMPtr<nsIAtom> localNameAtom(NS_Atomize(localName));
   LifecycleCallbacks* callbacks = callbacksHolder.forget();
-  CustomElementDefinition* definition =
-    new CustomElementDefinition(nameAtom,
-                                localNameAtom,
-                                constructor,
-                                constructorPrototype,
-                                callbacks,
-                                0 /* TODO dependent on HTML imports. Bug 877072 */);
 
   /**
    * 12. Add definition to this CustomElementRegistry.
@@ -787,6 +780,14 @@ CustomElementRegistry::Define(const nsAString& aName,
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
+
+  CustomElementDefinition* definition =
+    new CustomElementDefinition(nameAtom,
+                                localNameAtom,
+                                constructor,
+                                constructorPrototype,
+                                callbacks,
+                                0 /* TODO dependent on HTML imports. Bug 877072 */);
 
   mCustomDefinitions.Put(nameAtom, definition);
 
