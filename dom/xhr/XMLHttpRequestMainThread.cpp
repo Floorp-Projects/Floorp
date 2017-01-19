@@ -13,6 +13,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/BlobSet.h"
+#include "mozilla/dom/DOMString.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FetchUtil.h"
 #include "mozilla/dom/FormData.h"
@@ -570,12 +571,18 @@ NS_IMETHODIMP
 XMLHttpRequestMainThread::GetResponseText(nsAString& aResponseText)
 {
   ErrorResult rv;
-  GetResponseText(aResponseText, rv);
-  return rv.StealNSResult();
+  DOMString str;
+  GetResponseText(str, rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return rv.StealNSResult();
+  }
+
+  str.ToString(aResponseText);
+  return NS_OK;
 }
 
 void
-XMLHttpRequestMainThread::GetResponseText(nsAString& aResponseText,
+XMLHttpRequestMainThread::GetResponseText(DOMString& aResponseText,
                                           ErrorResult& aRv)
 {
   XMLHttpRequestStringSnapshot snapshot;
@@ -772,8 +779,8 @@ XMLHttpRequestMainThread::GetResponse(JSContext* aCx,
   case XMLHttpRequestResponseType::Text:
   case XMLHttpRequestResponseType::Moz_chunked_text:
   {
-    nsAutoString str;
-    aRv = GetResponseText(str);
+    DOMString str;
+    GetResponseText(str, aRv);
     if (aRv.Failed()) {
       return;
     }
