@@ -172,7 +172,7 @@ nsPageFrame::Reflow(nsPresContext*           aPresContext,
 nsIAtom*
 nsPageFrame::GetType() const
 {
-  return nsGkAtoms::pageFrame; 
+  return nsGkAtoms::pageFrame;
 }
 
 #ifdef DEBUG_FRAME_DUMP
@@ -393,7 +393,9 @@ nsPageFrame::DrawHeaderFooter(nsRenderingContext& aRenderingContext,
     gfx->SetColor(Color(0.f, 0.f, 0.f));
     nsLayoutUtils::DrawString(this, aFontMetrics, &aRenderingContext,
                               str.get(), str.Length(),
-                              nsPoint(x, y + aAscent));
+                              nsPoint(x, y + aAscent),
+                              nullptr,
+                              DrawStringFlags::eForceHorizontal);
     gfx->Restore();
   }
 }
@@ -735,7 +737,7 @@ nsPageBreakFrame::Reflow(nsPresContext*           aPresContext,
 nsIAtom*
 nsPageBreakFrame::GetType() const
 {
-  return nsGkAtoms::pageBreakFrame; 
+  return nsGkAtoms::pageBreakFrame;
 }
 
 #ifdef DEBUG_FRAME_DUMP
