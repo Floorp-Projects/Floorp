@@ -93,17 +93,6 @@ WeaveService.prototype = {
   },
 
   /**
-   * Whether Firefox Accounts is enabled.
-   *
-   * @return bool
-   */
-  // TODO - Remove this getter and all accessors
-  get fxAccountsEnabled() {
-    // Always return true.
-    return true;
-  },
-
-  /**
    * Whether Sync appears to be enabled.
    *
    * This returns true if we have an associated FxA account
