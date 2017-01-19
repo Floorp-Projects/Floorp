@@ -14,6 +14,7 @@
 #include "nsAnimationManager.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
+#include "nsHTMLStyleSheet.h"
 #include "nsIDocumentInlines.h"
 #include "nsPrintfCString.h"
 #include "nsStyleContext.h"
@@ -127,6 +128,8 @@ ServoStyleSet::GetContext(nsIContent* aContent,
   MOZ_ASSERT(aContent->IsElement());
   Element* element = aContent->AsElement();
 
+
+  ResolveMappedAttrDeclarationBlocks();
   RefPtr<ServoComputedValues> computedValues;
   if (aMayCompute == LazyComputeBehavior::Allow) {
     computedValues =
@@ -174,6 +177,21 @@ ServoStyleSet::GetContext(already_AddRefed<ServoComputedValues> aComputedValues,
   }
 
   return result.forget();
+}
+
+void
+ServoStyleSet::ResolveMappedAttrDeclarationBlocks()
+{
+  if (nsHTMLStyleSheet* sheet = mPresContext->Document()->GetAttributeStyleSheet()) {
+    sheet->CalculateMappedServoDeclarations();
+  }
+}
+
+void
+ServoStyleSet::PrepareAndTraverseSubtree(RawGeckoElementBorrowed aRoot,
+                                         mozilla::TraversalRootBehavior aRootBehavior) {
+  ResolveMappedAttrDeclarationBlocks();
+  Servo_TraverseSubtree(aRoot, mRawSet.get(), aRootBehavior);
 }
 
 already_AddRefed<nsStyleContext>
@@ -541,7 +559,7 @@ ServoStyleSet::StyleDocument()
   DocumentStyleRootIterator iter(mPresContext->Document());
   while (Element* root = iter.GetNextStyleRoot()) {
     if (root->ShouldTraverseForServo()) {
-      Servo_TraverseSubtree(root, mRawSet.get(), TraversalRootBehavior::Normal);
+      PrepareAndTraverseSubtree(root, TraversalRootBehavior::Normal);
     }
   }
 }
@@ -550,14 +568,13 @@ void
 ServoStyleSet::StyleNewSubtree(Element* aRoot)
 {
   MOZ_ASSERT(!aRoot->HasServoData());
-  Servo_TraverseSubtree(aRoot, mRawSet.get(), TraversalRootBehavior::Normal);
+  PrepareAndTraverseSubtree(aRoot, TraversalRootBehavior::Normal);
 }
 
 void
 ServoStyleSet::StyleNewChildren(Element* aParent)
 {
-  Servo_TraverseSubtree(aParent, mRawSet.get(),
-                        TraversalRootBehavior::UnstyledChildrenOnly);
+  PrepareAndTraverseSubtree(aParent, TraversalRootBehavior::UnstyledChildrenOnly);
 }
 
 void

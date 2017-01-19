@@ -16,6 +16,7 @@
 #include "nsMappedAttributeElement.h"
 #include "nsIStyleRule.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ServoBindings.h"
 #include "mozilla/MemoryReporting.h"
 
 class nsIAtom;
@@ -70,9 +71,27 @@ public:
   void RemoveAttrAt(uint32_t aPos, nsAttrValue& aValue);
   const nsAttrName* GetExistingAttrNameFromQName(const nsAString& aName) const;
   int32_t IndexOfAttr(nsIAtom* aLocalName) const;
-  
 
-  // nsIStyleRule 
+  // Apply the contained mapper to an empty nsRuleData object
+  // that is able to contain all properties. Set contained servo declaration block
+  // to result of this computation.
+  // aIndexToIdMapping is
+  // a table that maps from an index in the rule data to the corresponding
+  // property ID. aRuleDataSize is the length of the backing storage
+  // of the rule data.
+  void LazilyResolveServoDeclaration(nsRuleData* aRuleData,
+                                     nsCSSPropertyID* aIndexToIdMapping,
+                                     size_t aRuleDataSize);
+
+  // Obtain the contained servo declaration block
+  // May return null if called before the inner block
+  // has been (lazily) resolved
+  const RefPtr<RawServoDeclarationBlock>& GetServoStyle() const
+  {
+    return mServoStyle;
+  }
+
+  // nsIStyleRule
   virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
   virtual bool MightMapInheritedStyleData() override;
   virtual bool GetDiscretelyAnimatedCSSValue(nsCSSPropertyID aProperty,
@@ -115,6 +134,7 @@ private:
 #endif
   nsHTMLStyleSheet* mSheet; //weak
   nsMapRuleToAttributesFunc mRuleMapper;
+  RefPtr<RawServoDeclarationBlock> mServoStyle;
   void* mAttrs[1];
 };
 

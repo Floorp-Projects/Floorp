@@ -68,6 +68,7 @@ typedef nsTArray<const RawServoAnimationValue*> RawServoAnimationValueBorrowedLi
 #define SERVO_ARC_TYPE(name_, type_)         \
   DECL_NULLABLE_BORROWED_REF_TYPE_FOR(type_) \
   DECL_BORROWED_REF_TYPE_FOR(type_)          \
+  DECL_BORROWED_MUT_REF_TYPE_FOR(type_)      \
   struct MOZ_MUST_USE_TYPE type_##Strong     \
   {                                          \
     type_* mPtr;                             \
