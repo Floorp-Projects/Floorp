@@ -224,6 +224,33 @@ class BufferList : private AllocPolicy
     {
       return mData == mDataEnd;
     }
+
+   private:
+
+    // Count the bytes we would need to advance in order to reach aTarget.
+    size_t BytesUntil(const BufferList& aBuffers, const IterImpl& aTarget) const {
+      size_t offset = 0;
+
+      MOZ_ASSERT(aTarget.IsIn(aBuffers));
+
+      char* data = mData;
+      for (uintptr_t segment = mSegment; segment < aTarget.mSegment; segment++) {
+        offset += aBuffers.mSegments[segment].End() - data;
+        data = aBuffers.mSegments[segment].mData;
+      }
+
+      MOZ_RELEASE_ASSERT(IsIn(aBuffers));
+      MOZ_RELEASE_ASSERT(aTarget.mData >= data);
+
+      offset += aTarget.mData - data;
+      return offset;
+    }
+
+    bool IsIn(const BufferList& aBuffers) const {
+      return mSegment < aBuffers.mSegments.length() &&
+             mData >= aBuffers.mSegments[mSegment].mData &&
+             mData < aBuffers.mSegments[mSegment].End();
+    }
   };
 
   // Special convenience method that returns Iter().Data().
@@ -269,6 +296,13 @@ class BufferList : private AllocPolicy
   // are invalidated.
   // This method requires aIter and aSize to be 8-byte aligned.
   BufferList Extract(IterImpl& aIter, size_t aSize, bool* aSuccess);
+
+  // Return the number of bytes from 'start' to 'end', two iterators within
+  // this BufferList.
+  size_t RangeLength(const IterImpl& start, const IterImpl& end) const {
+    MOZ_ASSERT(start.IsIn(*this) && end.IsIn(*this));
+    return start.BytesUntil(*this, end);
+  }
 
 private:
   explicit BufferList(AllocPolicy aAP)
