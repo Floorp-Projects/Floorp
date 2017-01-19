@@ -186,7 +186,8 @@ NS_DestroyXPTCallStub(nsISomeInterface* aStub);
 XPCOM_API(size_t)
 NS_SizeOfIncludingThisXPTCallStub(const nsISomeInterface* aStub, mozilla::MallocSizeOf aMallocSizeOf);
 
-XPCOM_API(nsresult)
+// this is extern "C" because on some platforms it is implemented in assembly
+extern "C" nsresult
 NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
                  uint32_t paramCount, nsXPTCVariant* params);
 

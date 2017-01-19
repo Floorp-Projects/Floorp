@@ -29,7 +29,7 @@ fails == grid-abspos-items-008.html grid-abspos-items-008.html
 fails == grid-abspos-items-009.html grid-abspos-items-009.html
 fails == grid-abspos-items-010.html grid-abspos-items-010.html
 fails == grid-abspos-items-011.html grid-abspos-items-011.html
-fails == grid-abspos-items-012.html grid-abspos-items-012.html
+== grid-abspos-items-012.html grid-abspos-items-012.html
 fails == grid-abspos-items-013.html grid-abspos-items-013.html
 fails == grid-abspos-items-014.html grid-abspos-items-014.html
 fails == grid-abspos-items-015.html grid-abspos-items-015.html
@@ -271,4 +271,4 @@ skip == grid-fragmentation-dyn2-030.html grid-fragmentation-dyn2-030.html
 skip == grid-fragmentation-dyn2-031.html grid-fragmentation-dyn2-031.html
 fails == bug1306106.html bug1306106.html
 fails == grid-percent-intrinsic-sizing-001.html grid-percent-intrinsic-sizing-001.html
-fails == grid-percent-intrinsic-sizing-002.html grid-percent-intrinsic-sizing-002.html
+# == grid-percent-intrinsic-sizing-002.html grid-percent-intrinsic-sizing-002.html

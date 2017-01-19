@@ -61,6 +61,42 @@ CacheRegisterAllocator::useValueRegister(MacroAssembler& masm, ValOperandId op)
     MOZ_CRASH();
 }
 
+ValueOperand
+CacheRegisterAllocator::useFixedValueRegister(MacroAssembler& masm, ValOperandId valId,
+                                              ValueOperand reg)
+{
+    allocateFixedValueRegister(masm, reg);
+
+    OperandLocation& loc = operandLocations_[valId.id()];
+    switch (loc.kind()) {
+      case OperandLocation::ValueReg:
+        masm.moveValue(loc.valueReg(), reg);
+        MOZ_ASSERT(!currentOpRegs_.aliases(loc.valueReg()), "Register shouldn't be in use");
+        availableRegs_.add(loc.valueReg());
+        break;
+      case OperandLocation::ValueStack:
+        popValue(masm, &loc, reg);
+        break;
+      case OperandLocation::Constant:
+        masm.moveValue(loc.constant(), reg);
+        break;
+      case OperandLocation::PayloadReg:
+        masm.tagValue(loc.payloadType(), loc.payloadReg(), reg);
+        MOZ_ASSERT(!currentOpRegs_.has(loc.payloadReg()), "Register shouldn't be in use");
+        availableRegs_.add(loc.payloadReg());
+        break;
+      case OperandLocation::PayloadStack:
+        popPayload(masm, &loc, reg.scratchReg());
+        masm.tagValue(loc.payloadType(), reg.scratchReg(), reg);
+        break;
+      case OperandLocation::Uninitialized:
+        MOZ_CRASH();
+    }
+
+    loc.setValueReg(reg);
+    return reg;
+}
+
 Register
 CacheRegisterAllocator::useRegister(MacroAssembler& masm, TypedOperandId typedId)
 {

@@ -200,8 +200,10 @@ var PrintUtils = {
       // collapse the browser here -- it will be shown in
       // enterPrintPreview; this forces a reflow which fixes display
       // issues in bug 267422.
-      let ppBrowser = this._listener.getPrintPreviewBrowser();
-      ppBrowser.collapsed = true;
+      // We use the print preview browser as the source browser to avoid
+      // re-initializing print preview with a document that might now have changed.
+      this._sourceBrowser = this._listener.getPrintPreviewBrowser();
+      this._sourceBrowser.collapsed = true;
 
       // If the user transits too quickly within preview and we have a pending
       // progress dialog, we will close it before opening a new one.
@@ -522,7 +524,7 @@ var PrintUtils = {
         // the original page. After we have parsed it, content will tell parent
         // that the document is ready for print previewing.
         spMM.sendAsyncMessage("Printing:Preview:ParseDocument", {
-          URL: this._sourceBrowser.currentURI.spec,
+          URL: this._originalURL,
           windowID: this._sourceBrowser.outerWindowID,
         });
 

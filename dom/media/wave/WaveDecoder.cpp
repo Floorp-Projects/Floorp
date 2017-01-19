@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WaveDemuxer.h"
-#include "MediaContentType.h"
+#include "MediaContainerType.h"
 #include "MediaDecoderStateMachine.h"
 #include "WaveDecoder.h"
 #include "MediaFormatReader.h"
@@ -27,19 +27,19 @@ WaveDecoder::CreateStateMachine()
 }
 
 /* static */ bool
-WaveDecoder::IsSupportedType(const MediaContentType& aContentType)
+WaveDecoder::IsSupportedType(const MediaContainerType& aContainerType)
 {
   if (!IsWaveEnabled()) {
     return false;
   }
-  if (aContentType.Type() == MEDIAMIMETYPE("audio/wave")
-      || aContentType.Type() == MEDIAMIMETYPE("audio/x-wav")
-      || aContentType.Type() == MEDIAMIMETYPE("audio/wav")
-      || aContentType.Type() == MEDIAMIMETYPE("audio/x-pn-wav")) {
-    return (aContentType.ExtendedType().Codecs().IsEmpty()
-            || aContentType.ExtendedType().Codecs().AsString().EqualsASCII("1")
-            || aContentType.ExtendedType().Codecs().AsString().EqualsASCII("6")
-            || aContentType.ExtendedType().Codecs().AsString().EqualsASCII("7"));
+  if (aContainerType.Type() == MEDIAMIMETYPE("audio/wave")
+      || aContainerType.Type() == MEDIAMIMETYPE("audio/x-wav")
+      || aContainerType.Type() == MEDIAMIMETYPE("audio/wav")
+      || aContainerType.Type() == MEDIAMIMETYPE("audio/x-pn-wav")) {
+    return (aContainerType.ExtendedType().Codecs().IsEmpty()
+            || aContainerType.ExtendedType().Codecs().AsString().EqualsASCII("1")
+            || aContainerType.ExtendedType().Codecs().AsString().EqualsASCII("6")
+            || aContainerType.ExtendedType().Codecs().AsString().EqualsASCII("7"));
   }
 
   return false;

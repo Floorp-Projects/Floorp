@@ -20,8 +20,8 @@ struct LabelBase
     int32_t offset_ : 31;
     bool bound_   : 1;
 
-    // Disallow assignment.
-    void operator =(const LabelBase& label);
+    void operator =(const LabelBase& label) = delete;
+
   public:
     static const int32_t INVALID_OFFSET = -1;
 

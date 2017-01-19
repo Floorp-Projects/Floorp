@@ -175,23 +175,17 @@
  * Import/Export macros for XPCOM APIs
  */
 
+#define EXPORT_XPCOM_API(type) type
+#define IMPORT_XPCOM_API(type) type
+#define GLUE_XPCOM_API(type) type
+
 #ifdef __cplusplus
 #define NS_EXTERN_C extern "C"
 #else
 #define NS_EXTERN_C
 #endif
 
-#define EXPORT_XPCOM_API(type) NS_EXTERN_C NS_EXPORT type NS_FROZENCALL
-#define IMPORT_XPCOM_API(type) NS_EXTERN_C NS_IMPORT type NS_FROZENCALL
-#define GLUE_XPCOM_API(type) NS_EXTERN_C NS_HIDDEN_(type) NS_FROZENCALL
-
-#ifdef IMPL_LIBXUL
-#define XPCOM_API(type) EXPORT_XPCOM_API(type)
-#elif defined(XPCOM_GLUE)
-#define XPCOM_API(type) GLUE_XPCOM_API(type)
-#else
-#define XPCOM_API(type) IMPORT_XPCOM_API(type)
-#endif
+#define XPCOM_API(type) NS_EXTERN_C type
 
 #ifdef MOZILLA_INTERNAL_API
    /*

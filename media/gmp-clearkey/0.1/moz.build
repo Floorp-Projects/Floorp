@@ -8,11 +8,11 @@ SharedLibrary('clearkey')
 
 FINAL_TARGET = 'dist/bin/gmp-clearkey/0.1'
 
-FINAL_TARGET_PP_FILES += ['clearkey.info.in']
+FINAL_TARGET_PP_FILES += ['manifest.json.in']
 
 UNIFIED_SOURCES += [
-    'ClearKeyAsyncShutdown.cpp',
     'ClearKeyBase64.cpp',
+    'ClearKeyCDM.cpp',
     'ClearKeyDecryptionManager.cpp',
     'ClearKeyPersistence.cpp',
     'ClearKeySession.cpp',
@@ -28,7 +28,6 @@ SOURCES += [
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     UNIFIED_SOURCES += [
-        'AnnexB.cpp',
         'VideoDecoder.cpp',
         'WMFH264Decoder.cpp',
     ]
@@ -43,13 +42,11 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
     DEFINES['ENABLE_WMF'] = True
 
+
+DEFINES['CDM_IMPLEMENTATION'] = True
+
 TEST_DIRS += [
     'gtest',
-]
-
-
-LOCAL_INCLUDES += [
-    '/dom/media/gmp',
 ]
 
 DISABLE_STL_WRAPPING = True

@@ -82,7 +82,7 @@ fails == origin-name-2c.html origin-name-2c.html
 fails == origin-name-3a.html origin-name-3a.html
 fails == origin-name-3b.html origin-name-3b.html
 # Snapping still applies after 90 degree rotations.
-fails == snapping-1.html snapping-1.html
+== snapping-1.html snapping-1.html
 # SVG effects should work on transforms.
 fails == transform-svg-1a.xhtml transform-svg-1a.xhtml
 # == transform-svg-2a.xhtml transform-svg-2a.xhtml
@@ -102,7 +102,7 @@ fails == matrix-7a.html matrix-7a.html
 # ensure matrix 3d does not break us - should do nothing
 == matrix3d-1.html matrix3d-1.html
 # Test that complex transform can be reversed
-fails == stresstest-1.html stresstest-1.html
+== stresstest-1.html stresstest-1.html
 # Test scale transforms
 fails == scalex-1.html scalex-1.html
 fails == scaley-1.html scaley-1.html
@@ -117,7 +117,7 @@ fails == propagate-inherit-boolean.html propagate-inherit-boolean.html
 # Bugs
 fails == 601894-1.html 601894-1.html
 fails == 601894-2.html 601894-2.html
-fails == 830299-1.html 830299-1.html
+== 830299-1.html 830299-1.html
 # Bug 722777
 fails == table-1a.html table-1a.html
 fails == table-1b.html table-1b.html
@@ -125,7 +125,7 @@ fails == table-1c.html table-1c.html
 fails == table-2a.html table-2a.html
 fails == table-2b.html table-2b.html
 # Bug 722463
-fails == inline-1a.html inline-1a.html
+== inline-1a.html inline-1a.html
 pref(svg.transform-box.enabled,true) == transform-box-svg-1a.svg transform-box-svg-1a.svg
 pref(svg.transform-box.enabled,true) == transform-box-svg-1b.svg transform-box-svg-1b.svg
 pref(svg.transform-box.enabled,true) == transform-box-svg-2a.svg transform-box-svg-2a.svg

@@ -105,6 +105,12 @@ GetScriptCode(uint32_t aCh)
   return Script(uscript_getScript(aCh, &err));
 }
 
+inline bool
+HasScript(uint32_t aCh, Script aScript)
+{
+  return uscript_hasScript(aCh, UScriptCode(aScript));
+}
+
 inline uint32_t
 GetScriptTagForCode(Script aScriptCode)
 {
@@ -188,6 +194,16 @@ nsCharType GetBidiCat(uint32_t aCh);
 uint8_t GetLineBreakClass(uint32_t aCh);
 
 Script GetScriptCode(uint32_t aCh);
+
+// We don't support ScriptExtensions.txt data when building without ICU.
+// The most important cases will still be handled in gfxScriptItemizer
+// by checking IsClusterExtender to avoid breaking script runs within
+// a cluster.
+inline bool
+HasScript(uint32_t aCh, Script aScript)
+{
+  return false;
+}
 
 uint32_t GetScriptTagForCode(Script aScriptCode);
 

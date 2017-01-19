@@ -16,9 +16,7 @@
 #include <string>
 #include <stdlib.h>
 #include <stdint.h>
-#ifndef SPS_STANDALONE
 #include <nsID.h>
-#endif
 
 class SharedLibrary {
 public:

@@ -501,12 +501,18 @@ class SyncTelemetryImpl {
   }
 
   submit(record) {
+    if (Services.prefs.prefHasUserValue("identity.sync.tokenserver.uri")) {
+      log.trace(`Not sending telemetry ping for self-hosted Sync user`);
+      return false;
+    }
     // We still call submit() with possibly illegal payloads so that tests can
     // know that the ping was built. We don't end up submitting them, however.
     if (record.syncs.length) {
       log.trace(`submitting ${record.syncs.length} sync record(s) to telemetry`);
       TelemetryController.submitExternalPing("sync", record);
+      return true;
     }
+    return false;
   }
 
 

@@ -29,8 +29,13 @@ const ConsoleOutput = createClass({
     messagesUi: PropTypes.object.isRequired,
     serviceContainer: PropTypes.shape({
       attachRefToHud: PropTypes.func.isRequired,
+      openContextMenu: PropTypes.func.isRequired,
     }),
     autoscroll: PropTypes.bool.isRequired,
+    dispatch: PropTypes.func.isRequired,
+    timestampsVisible: PropTypes.bool,
+    groups: PropTypes.object.isRequired,
+    messagesTableData: PropTypes.object.isRequired,
   },
 
   componentDidMount() {

@@ -20,6 +20,7 @@ DevToolsModules(
     'grip-map.js',
     'grip.js',
     'infinity.js',
+    'load-reps.js',
     'long-string.js',
     'nan.js',
     'null.js',
@@ -33,6 +34,7 @@ DevToolsModules(
     'rep-utils.js',
     'rep.js',
     'reps.css',
+    'reps.js',
     'string.js',
     'stylesheet.js',
     'symbol.js',
@@ -40,3 +42,5 @@ DevToolsModules(
     'undefined.js',
     'window.js',
 )
+
+MOCHITEST_CHROME_MANIFESTS += ['test/mochitest/chrome.ini']

@@ -732,10 +732,10 @@ fails == block-overflow-5c-dyn.html block-overflow-5c-dyn.html
 == inline-block-child-1.html inline-block-child-1.html
 # == inline-block-child-2.html inline-block-child-2.html
 # == inline-block-child-2.html inline-block-child-2.html
-fails == inline-block-child-3.html inline-block-child-3.html
+== inline-block-child-3.html inline-block-child-3.html
 == inline-block-child-1-dyn.html inline-block-child-1-dyn.html
-fails == inline-block-child-2-dyn.html inline-block-child-2-dyn.html
-fails == inline-block-child-3-dyn.html inline-block-child-3-dyn.html
+== inline-block-child-2-dyn.html inline-block-child-2-dyn.html
+== inline-block-child-3-dyn.html inline-block-child-3-dyn.html
 # * absolutely positioned elements
 # "Margins of absolutely positioned boxes do not collapse
 #  (not even with their in-flow children)."
@@ -818,10 +818,10 @@ fails == inline-block-child-3-dyn.html inline-block-child-3-dyn.html
 # In XML and XHTML, the html element is not necessarily the root element of
 # a document. In that case, the margins of the html element collapse
 # like the margins of any other block boxes.
-fails == block-xhtml-root-1a.xhtml block-xhtml-root-1a.xhtml
-fails == block-xhtml-root-1b.xhtml block-xhtml-root-1b.xhtml
-fails == block-xhtml-root-2.xhtml block-xhtml-root-2.xhtml
-fails == block-xhtml-root-3.xhtml block-xhtml-root-3.xhtml
+== block-xhtml-root-1a.xhtml block-xhtml-root-1a.xhtml
+== block-xhtml-root-1b.xhtml block-xhtml-root-1b.xhtml
+== block-xhtml-root-2.xhtml block-xhtml-root-2.xhtml
+== block-xhtml-root-3.xhtml block-xhtml-root-3.xhtml
 # When the html element is the root element of the document, its margins
 # do not collapse.
 == block-xhtml-html-1a.xhtml block-xhtml-html-1a.xhtml
@@ -860,6 +860,6 @@ fails == block-xhtml-root-3.xhtml block-xhtml-root-3.xhtml
 == block-em-length-1.html block-em-length-1.html
 == block-em-length-1-dyn.html block-em-length-1-dyn.html
 # Other tests.
-fails == dynamic-add-text-1.html dynamic-add-text-1.html
+== dynamic-add-text-1.html dynamic-add-text-1.html
 == scrollable-vertical-margin.html scrollable-vertical-margin.html
 == scrollable-horizontal-margin.html scrollable-horizontal-margin.html

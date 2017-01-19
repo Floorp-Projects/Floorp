@@ -1030,30 +1030,53 @@ var { helpers, assert } = (function () {
         }
 
         return convertPromise.then(function (textOutput) {
+          // Test that a regular expression has at least one match in a string.
           var doTest = function (match, against) {
           // Only log the real textContent if the test fails
             if (against.match(match) != null) {
-              assert.ok(true, "html output for '" + name + "' " +
-                            "should match /" + (match.source || match) + "/");
+              assert.ok(true,
+                `html output for '${name}' should match /${match.source || match}/`);
             } else {
-              assert.ok(false, "html output for '" + name + "' " +
-                             "should match /" + (match.source || match) + "/. " +
-                             'Actual textContent: "' + against + '"');
+              assert.ok(false,
+                `html output for '${name}' should match /${match.source || match}/. ` +
+                `Actual textContent: "${against}"`);
+            }
+          };
+
+          // Test that a regular expression has no matches in a string.
+          var doTestNot = function (match, against) {
+          // Only log the real textContent if the test fails
+            if (against.match(match) != null) {
+              assert.ok(false,
+                `html output for '${name}' should not match /` +
+                `${match.source || match}/. Actual textContent: "${against}"`);
+            } else {
+              assert.ok(true,
+              `html output for '${name}' should not match /${match.source || match}/`);
             }
           };
 
           if (typeof expected.output === "string") {
             assert.is(textOutput,
                     expected.output,
-                    "html output for " + name);
-          }
-          else if (Array.isArray(expected.output)) {
+                    `html output for '${name}'`);
+          } else if (Array.isArray(expected.output)) {
             expected.output.forEach(function (match) {
               doTest(match, textOutput);
             });
-          }
-        else {
+          } else {
             doTest(expected.output, textOutput);
+          }
+
+          if (typeof expected.notinoutput === "string") {
+            assert.ok(textOutput.indexOf(expected.notinoutput) === -1,
+              `html output for "${name}" doesn't contain "${expected.notinoutput}"`);
+          } else if (Array.isArray(expected.notinoutput)) {
+            expected.notinoutput.forEach(function (match) {
+              doTestNot(match, textOutput);
+            });
+          } else if (typeof expected.notinoutput !== "undefined") {
+            doTestNot(expected.notinoutput, textOutput);
           }
 
           if (expected.error) {

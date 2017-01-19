@@ -366,6 +366,8 @@ static RefPtr<gfx::Path>
 BuildPathFromPolygon(const RefPtr<DrawTarget>& aDT,
                      const gfx::Polygon& aPolygon)
 {
+  MOZ_ASSERT(!aPolygon.IsEmpty());
+
   RefPtr<PathBuilder> pathBuilder = aDT->CreatePathBuilder();
   const nsTArray<Point4D>& points = aPolygon.GetPoints();
 

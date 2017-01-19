@@ -54,9 +54,9 @@ fuzzy-if(d2d,1,37170) fuzzy-if(skiaContent,1,38000) == border-separate-opacity-t
 fuzzy-if(d2d,1,12390) fuzzy-if(skiaContent,1,13000) == border-separate-opacity-table-row.html border-separate-opacity-table-row.html
 fuzzy-if(d2d||skiaContent,1,95000) == border-separate-opacity-table.html border-separate-opacity-table.html
 # == scrollable-rowgroup-collapse-background.html scrollable-rowgroup-collapse-background.html
-fails == scrollable-rowgroup-collapse-border.html scrollable-rowgroup-collapse-border.html
+== scrollable-rowgroup-collapse-border.html scrollable-rowgroup-collapse-border.html
 # == scrollable-rowgroup-separate-background.html scrollable-rowgroup-separate-background.html
-fails == scrollable-rowgroup-separate-border.html scrollable-rowgroup-separate-border.html
+== scrollable-rowgroup-separate-border.html scrollable-rowgroup-separate-border.html
 == empty-cells-default-1.html empty-cells-default-1.html
 == empty-cells-default-2.html empty-cells-default-2.html
 == table-row-opacity-dynamic-1.html table-row-opacity-dynamic-1.html

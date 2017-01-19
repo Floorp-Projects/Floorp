@@ -39,13 +39,8 @@ function promiseGetAddonByID(id) {
 function checkNotification(panel, url) {
   let icon = panel.getAttribute("icon");
 
-  let uls = panel.firstChild.getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "ul");
-  is(uls.length, 1, "Found the permissions list");
-  let ul = uls[0];
-
-  let headers = panel.firstChild.getElementsByClassName("addon-webext-perm-text");
-  is(headers.length, 1, "Found the header");
-  let header = headers[0];
+  let ul = document.getElementById("addon-webext-perm-list");
+  let header = document.getElementById("addon-webext-perm-intro");
 
   if (url == PERMS_XPI) {
     // The icon should come from the extension, don't bother with the precise

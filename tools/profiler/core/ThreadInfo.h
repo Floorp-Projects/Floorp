@@ -35,13 +35,10 @@ class ThreadInfo {
   virtual void SetPendingDelete();
   bool IsPendingDelete() const { return mPendingDelete; }
 
-#ifndef SPS_STANDALONE
   /**
    * May be null for the main thread if the profiler was started during startup
    */
   nsIThread* GetThread() const { return mThread.get(); }
-
-#endif
 
   bool CanInvokeJS() const;
 
@@ -53,9 +50,7 @@ class ThreadInfo {
   Sampler::UniquePlatformData mPlatformData;
   mozilla::UniquePtr<ThreadProfile> mProfile;
   void* mStackTop;
-#ifndef SPS_STANDALONE
   nsCOMPtr<nsIThread> mThread;
-#endif
   bool mPendingDelete;
 };
 

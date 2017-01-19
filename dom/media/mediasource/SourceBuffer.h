@@ -8,6 +8,7 @@
 #define mozilla_dom_SourceBuffer_h_
 
 #include "mozilla/MozPromise.h"
+#include "MediaContainerType.h"
 #include "MediaSource.h"
 #include "js/RootingAPI.h"
 #include "mozilla/Assertions.h"
@@ -22,7 +23,6 @@
 #include "nsCycleCollectionNoteChild.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"
-#include "nsString.h"
 #include "nscore.h"
 #include "TrackBuffersManager.h"
 #include "SourceBufferTask.h"
@@ -99,7 +99,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SourceBuffer, DOMEventTargetHelper)
 
-  SourceBuffer(MediaSource* aMediaSource, const nsACString& aType);
+  SourceBuffer(MediaSource* aMediaSource, const MediaContainerType& aType);
 
   MediaSource* GetParentObject() const;
 
@@ -177,7 +177,7 @@ private:
 
   MozPromiseRequestHolder<SourceBufferTask::AppendPromise> mPendingAppend;
   MozPromiseRequestHolder<SourceBufferTask::RangeRemovalPromise> mPendingRemoval;
-  const nsCString mType;
+  const MediaContainerType mType;
 
   RefPtr<TimeRanges> mBuffered;
 };

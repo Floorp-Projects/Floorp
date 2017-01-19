@@ -9,7 +9,7 @@ fails == open-summary-not-first-child.html open-summary-not-first-child.html
 # == open-summary-table-cell-style.html open-summary-table-cell-style.html
 fails == no-summary.html no-summary.html
 fails == open-no-summary.html open-no-summary.html
-fails == summary-not-in-details.html summary-not-in-details.html
+== summary-not-in-details.html summary-not-in-details.html
 fails == summary-not-direct-child.html summary-not-direct-child.html
 fails == float-in-summary.html float-in-summary.html
 
@@ -36,36 +36,36 @@ fails == close-nested-details.html close-nested-details.html
 fails == open-nested-details.html open-nested-details.html
 
 # With 'overflow' property
-fails == overflow-hidden-open-details.html overflow-hidden-open-details.html
+== overflow-hidden-open-details.html overflow-hidden-open-details.html
 fails == overflow-auto-open-details.html overflow-auto-open-details.html
 fails == overflow-scroll-details.html overflow-scroll-details.html
 
 # With pagination property
-fails == details-page-break-after-1.html details-page-break-after-1.html
-fails == details-page-break-after-2.html details-page-break-after-2.html
-fails == details-page-break-before-1.html details-page-break-before-1.html
-fails == details-page-break-before-2.html details-page-break-before-2.html
+== details-page-break-after-1.html details-page-break-after-1.html
+== details-page-break-after-2.html details-page-break-after-2.html
+== details-page-break-before-1.html details-page-break-before-1.html
+== details-page-break-before-2.html details-page-break-before-2.html
 
 # With 'float' property
-fails == float-left-and-float-details.html float-left-and-float-details.html
-fails == float-left-and-inflow-details.html float-left-and-inflow-details.html
-fails == float-left-and-float-open-details.html float-left-and-float-open-details.html
-fails == float-left-and-inflow-open-details.html float-left-and-inflow-open-details.html
-fails == float-right-and-float-details.html float-right-and-float-details.html
-fails == float-right-and-inflow-details.html float-right-and-inflow-details.html
-fails == float-right-and-float-open-details.html float-right-and-float-open-details.html
-fails == float-right-and-inflow-open-details.html float-right-and-inflow-open-details.html
-fails == float-open-details-contains-float-left.html float-open-details-contains-float-left.html
-fails == float-open-details-contains-float-right.html float-open-details-contains-float-right.html
+== float-left-and-float-details.html float-left-and-float-details.html
+== float-left-and-inflow-details.html float-left-and-inflow-details.html
+== float-left-and-float-open-details.html float-left-and-float-open-details.html
+== float-left-and-inflow-open-details.html float-left-and-inflow-open-details.html
+== float-right-and-float-details.html float-right-and-float-details.html
+== float-right-and-inflow-details.html float-right-and-inflow-details.html
+== float-right-and-float-open-details.html float-right-and-float-open-details.html
+== float-right-and-inflow-open-details.html float-right-and-inflow-open-details.html
+== float-open-details-contains-float-left.html float-open-details-contains-float-left.html
+== float-open-details-contains-float-right.html float-open-details-contains-float-right.html
 
 # Various properties on details or summary
-fails == details-display-inline.html details-display-inline.html
-fails == details-percentage-height-children.html details-percentage-height-children.html
-fails == details-absolute-children.html details-absolute-children.html
-fails == details-three-columns.html details-three-columns.html
+== details-display-inline.html details-display-inline.html
+== details-percentage-height-children.html details-percentage-height-children.html
+== details-absolute-children.html details-absolute-children.html
+== details-three-columns.html details-three-columns.html
 fails == details-writing-mode.html details-writing-mode.html
 fails == details-in-ol.html details-in-ol.html
-fails == summary-three-columns.html summary-three-columns.html
+== summary-three-columns.html summary-three-columns.html
 fails == details-first-line.html details-first-line.html
 fails == open-details-first-line-1.html open-details-first-line-1.html
 fails == open-details-first-line-2.html open-details-first-line-2.html
@@ -77,12 +77,12 @@ fails == mouse-click-open-single-summary.html mouse-click-open-single-summary.ht
 fails == mouse-click-twice-open-single-summary.html mouse-click-twice-open-single-summary.html
 fails == mouse-click-open-second-summary.html mouse-click-open-second-summary.html
 fails == mouse-click-overflow-hidden-details.html mouse-click-overflow-hidden-details.html
-fails == mouse-click-twice-overflow-hidden-details.html mouse-click-twice-overflow-hidden-details.html
+== mouse-click-twice-overflow-hidden-details.html mouse-click-twice-overflow-hidden-details.html
 fails == mouse-click-overflow-auto-details.html mouse-click-overflow-auto-details.html
 fails == mouse-click-twice-overflow-auto-details.html mouse-click-twice-overflow-auto-details.html
 fails == mouse-click-display-none-details.html mouse-click-display-none-details.html
 fails == mouse-click-change-details-to-display-none.html mouse-click-change-details-to-display-none.html
-fails == mouse-click-change-summary-to-display-none.html mouse-click-change-summary-to-display-none.html
+== mouse-click-change-summary-to-display-none.html mouse-click-change-summary-to-display-none.html
 fails == mouse-click-move-summary-to-different-details.html mouse-click-move-summary-to-different-details.html
 
 # Dispatch mouse click to out-of-flow details or summary

@@ -388,8 +388,12 @@ GMPVideoDecoderParent::RecvDrainComplete()
   msg.AppendLiteral("GMPVideoDecoderParent::RecvDrainComplete() outstanding frames=");
   msg.AppendInt(mFrameCount);
   LogToBrowserConsole(msg);
+
   if (!mCallback) {
-    return IPC_FAIL_NO_REASON(this);
+    // We anticipate shutting down in the middle of a drain in the
+    // `UnblockResetAndDrain` method, which is called when we shutdown, so
+    // everything is sunny.
+    return IPC_OK();
   }
 
   if (!mIsAwaitingDrainComplete) {
@@ -411,7 +415,10 @@ GMPVideoDecoderParent::RecvResetComplete()
   CancelResetCompleteTimeout();
 
   if (!mCallback) {
-    return IPC_FAIL_NO_REASON(this);
+    // We anticipate shutting down in the middle of a reset in the
+    // `UnblockResetAndDrain` method, which is called when we shutdown, so
+    // everything is good if we reach here.
+    return IPC_OK();
   }
 
   if (!mIsAwaitingResetComplete) {

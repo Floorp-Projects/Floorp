@@ -196,6 +196,7 @@
 #include "mozilla/widget/PuppetBidiKeyboard.h"
 #include "mozilla/RemoteSpellCheckEngineChild.h"
 #include "GMPServiceChild.h"
+#include "GfxInfoBase.h"
 #include "gfxPlatform.h"
 #include "nscore.h" // for NS_FREE_PERMANENT_DATA
 #include "VRManagerChild.h"
@@ -610,6 +611,10 @@ ContentChild::Init(MessageLoop* aIOLoop,
 #endif
 
   SetProcessName(NS_LITERAL_STRING("Web Content"), true);
+
+  nsTArray<mozilla::dom::GfxInfoFeatureStatus> featureStatus;
+  SendGetGfxInfoFeatureStatus(&featureStatus);
+  GfxInfoBase::SetFeatureStatus(featureStatus);
 
   return true;
 }
@@ -1436,6 +1441,7 @@ StartMacOSContentSandbox()
   MacSandboxInfo info;
   info.type = MacSandboxType_Content;
   info.level = info.level = sandboxLevel;
+  info.shouldLog = Preferences::GetBool("security.sandbox.logging.enabled", true);
   info.appPath.assign(appPath.get());
   info.appBinaryPath.assign(appBinaryPath.get());
   info.appDir.assign(appDir.get());

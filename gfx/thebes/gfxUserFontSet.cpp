@@ -319,6 +319,19 @@ gfxUserFontEntry::GetFamilyNameAndURIForLogging(nsACString& aFamilyName,
   } else {
     if (mSrcList[mSrcIndex].mURI) {
       mSrcList[mSrcIndex].mURI->GetSpec(aURI);
+      // If the source URI was very long, elide the middle of it.
+      // In principle, the byte-oriented chopping here could leave us
+      // with partial UTF-8 characters at the point where we cut it,
+      // but it really doesn't matter as this is just for logging.
+      const uint32_t kMaxURILengthForLogging = 256;
+      // UTF-8 ellipsis, with spaces to allow additional wrap opportunities
+      // in the resulting log message
+      const char kEllipsis[] = { ' ', '\xE2', '\x80', '\xA6', ' ' };
+      if (aURI.Length() > kMaxURILengthForLogging) {
+        aURI.Replace(kMaxURILengthForLogging / 2,
+                     aURI.Length() - kMaxURILengthForLogging,
+                     kEllipsis, ArrayLength(kEllipsis));
+      }
     } else {
       aURI.AppendLiteral("(invalid URI)");
     }

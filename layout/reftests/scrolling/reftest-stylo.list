@@ -6,7 +6,7 @@ fails == fixed-table-1.html fixed-table-1.html
 fails HTTP == fixed-opacity-1.html fixed-opacity-1.html
 fails HTTP == fixed-opacity-2.html fixed-opacity-2.html
 fails == fixed-text-1.html fixed-text-1.html
-fails HTTP == fixed-text-2.html fixed-text-2.html
+HTTP == fixed-text-2.html fixed-text-2.html
 fails == iframe-border-radius.html iframe-border-radius.html
 == image-1.html image-1.html
 == opacity-mixed-scrolling-1.html opacity-mixed-scrolling-1.html
@@ -24,10 +24,10 @@ skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.s
 fails == scroll-behavior-textarea.html scroll-behavior-textarea.html
 fails HTTP == simple-1.html simple-1.html
 # HTTP == subpixel-1.html#d subpixel-1.html#d
-fails == text-1.html text-1.html
-fails == text-2.html?up text-2.html?up
-fails == transformed-1.html transformed-1.html
-fails HTTP == transformed-1.html?up transformed-1.html?up
+== text-1.html text-1.html
+== text-2.html?up text-2.html?up
+== transformed-1.html transformed-1.html
+HTTP == transformed-1.html?up transformed-1.html?up
 == uncovering-1.html uncovering-1.html
 == uncovering-2.html uncovering-2.html
 fails == less-than-scrollbar-height.html less-than-scrollbar-height.html

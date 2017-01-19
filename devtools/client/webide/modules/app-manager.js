@@ -17,7 +17,6 @@ const {ConnectionManager, Connection} = require("devtools/shared/client/connecti
 const {AppActorFront} = require("devtools/shared/apps/app-actor-front");
 const {getDeviceFront} = require("devtools/shared/fronts/device");
 const {getPreferenceFront} = require("devtools/shared/fronts/preference");
-const {getSettingsFront} = require("devtools/shared/fronts/settings");
 const {Task} = require("devtools/shared/task");
 const {RuntimeScanners, RuntimeTypes} = require("devtools/client/webide/modules/runtimes");
 const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
@@ -567,13 +566,6 @@ var AppManager = exports.AppManager = {
       return null;
     }
     return getPreferenceFront(this.connection.client, this._listTabsResponse);
-  },
-
-  get settingsFront() {
-    if (!this._listTabsResponse) {
-      return null;
-    }
-    return getSettingsFront(this.connection.client, this._listTabsResponse);
   },
 
   disconnectRuntime: function () {

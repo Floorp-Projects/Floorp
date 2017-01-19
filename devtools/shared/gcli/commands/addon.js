@@ -114,6 +114,12 @@ var items = [
     exec: function (args, context) {
       let types = (args.type === "all") ? null : [ args.type ];
       return getAddonsByTypes(types).then(addons => {
+        // Remove all hidden add-ons.
+        addons = addons.filter(addon => {
+          return !addon.hidden;
+        });
+
+        // Change the add-ons array to something we can work with.
         addons = addons.map(function (addon) {
           return {
             name: addon.name,
@@ -122,6 +128,7 @@ var items = [
             pendingOperations: pendingOperations(addon)
           };
         });
+
         return { addons: addons, type: args.type };
       });
     }

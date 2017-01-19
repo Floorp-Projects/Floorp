@@ -268,6 +268,9 @@ function MdnDocsWidget(tooltipContainer) {
   // get the localized string for the link text
   this.elements.linkToMdn.textContent = L10N.getStr("docsTooltip.visitMDN");
 
+  // force using LTR because we use the en-US version of MDN
+  tooltipContainer.setAttribute("dir", "ltr");
+
   // listen for clicks and open in the browser window instead
   let mainWindow = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
   this.elements.linkToMdn.addEventListener("click", (e) => {

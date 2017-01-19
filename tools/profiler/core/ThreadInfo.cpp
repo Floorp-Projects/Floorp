@@ -21,9 +21,7 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId,
   , mPendingDelete(false)
 {
   MOZ_COUNT_CTOR(ThreadInfo);
-#ifndef SPS_STANDALONE
   mThread = NS_GetCurrentThread();
-#endif
 
   // We don't have to guess on mac
 #ifdef XP_MACOSX
@@ -50,9 +48,6 @@ ThreadInfo::SetPendingDelete()
 bool
 ThreadInfo::CanInvokeJS() const
 {
-#ifdef SPS_STANDALONE
-  return false;
-#else
   nsIThread* thread = GetThread();
   if (!thread) {
     MOZ_ASSERT(IsMainThread());
@@ -62,5 +57,4 @@ ThreadInfo::CanInvokeJS() const
   mozilla::DebugOnly<nsresult> rv = thread->GetCanInvokeJS(&result);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   return result;
-#endif
 }
