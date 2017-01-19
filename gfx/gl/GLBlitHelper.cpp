@@ -831,7 +831,7 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
     switch (srcImage->GetFormat()) {
     case ImageFormat::PLANAR_YCBCR:
         type = ConvertPlanarYCbCr;
-        srcOrigin = OriginPos::TopLeft;
+        srcOrigin = OriginPos::BottomLeft;
         break;
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -839,7 +839,6 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
         type = ConvertSurfaceTexture;
         srcOrigin = srcImage->AsSurfaceTextureImage()->GetOriginPos();
         break;
-
     case ImageFormat::EGLIMAGE:
         type = ConvertEGLImage;
         srcOrigin = srcImage->AsEGLImageImage()->GetOriginPos();
