@@ -58,7 +58,7 @@ function TimingsPanel({
     );
   });
 
-  return div({}, timelines);
+  return div({ className: "panel-container" }, timelines);
 }
 
 TimingsPanel.displayName = "TimingsPanel";
