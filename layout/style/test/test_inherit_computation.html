@@ -152,6 +152,10 @@ function test_property(property)
 }
 
 for (var prop in gCSSProperties) {
+  // Skip -moz-binding because it effectively drops the frame.
+  if (prop == "-moz-binding") {
+    continue;
+  }
   var info = gCSSProperties[prop];
   gChildRule3.style.setProperty(prop, info.other_values[0], "");
 }
