@@ -7,8 +7,6 @@ from __future__ import unicode_literals
 import os
 import unittest
 
-from collections import defaultdict
-from buildconfig import topsrcdir
 from mozunit import main
 
 from mozbuild.frontend.context import (
@@ -1234,29 +1232,6 @@ class TestEmitterBasic(unittest.TestCase):
         with self.assertRaisesRegexp(SandboxValidationError,
              'Objdir file specified in SYMBOLS_FILE not in GENERATED_FILES:'):
             self.read_topsrcdir(reader)
-
-    def test_allowed_xpcom_glue(self):
-        """Test that the ALLOWED_XPCOM_GLUE list is still relevant."""
-        from mozbuild.frontend.emitter import ALLOWED_XPCOM_GLUE
-
-        allowed = defaultdict(list)
-        useless = []
-        for name, path in ALLOWED_XPCOM_GLUE:
-            allowed[path].append(name)
-
-        for path, names in allowed.iteritems():
-            if path.startswith(('mailnews/', 'calendar/', 'extensions/purple/purplexpcom')):
-                continue
-            try:
-                content = open(os.path.join(topsrcdir, path, 'moz.build')).read()
-            except:
-                content = ''
-            for name in names:
-                if "'%s'" % name in content or '"%s"' % name in content:
-                    continue
-                useless.append((name, path))
-
-        self.assertEqual(useless, [])
 
 
 if __name__ == '__main__':

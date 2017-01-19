@@ -145,4 +145,36 @@ define(function (require, exports, module) {
 
   // Exports from this module
   exports.Rep = Rep;
+
+  // Export all reps
+  exports.REPS = {
+    ArrayRep,
+    Attribute,
+    CommentNode,
+    DateTime,
+    Document,
+    ElementNode,
+    ErrorRep,
+    Event,
+    Func,
+    Grip,
+    GripArray,
+    GripMap,
+    InfinityRep,
+    LongStringRep,
+    NaNRep,
+    Null,
+    Number,
+    ObjectWithText,
+    ObjectWithURL,
+    PromiseRep,
+    RegExp,
+    Rep,
+    StringRep,
+    StyleSheet,
+    SymbolRep,
+    TextNode,
+    Undefined,
+    Window,
+  };
 });

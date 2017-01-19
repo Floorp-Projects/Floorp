@@ -26,6 +26,7 @@ const ALL_MENU_ITEMS = [
   "node-menu-copyinner",
   "node-menu-copyouter",
   "node-menu-copyuniqueselector",
+  "node-menu-copycsspath",
   "node-menu-copyimagedatauri",
   "node-menu-delete",
   "node-menu-pseudo-hover",

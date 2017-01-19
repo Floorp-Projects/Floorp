@@ -8,7 +8,7 @@
 
 define(function (require, exports, module) {
   const { render } = require("devtools/client/shared/vendor/react-dom");
-  const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
+  const { createFactories } = require("devtools/client/shared/components/reps/load-reps");
   const { MainTabbedArea } = createFactories(require("./components/main-tabbed-area"));
 
   const json = document.getElementById("json");
@@ -109,4 +109,3 @@ define(function (require, exports, module) {
   window.jsonViewInitialized = true;
   window.dispatchEvent(event);
 });
-

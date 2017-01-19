@@ -18,7 +18,7 @@ default-preferences pref(font.size.variable.x-western,24)
 default-preferences test-pref(font.size.variable.x-western,16) ref-pref(font.size.variable.x-western,24)
 # == font-default.html font-default.html
 # == font-default.html font-default.html
-fails == font-size-24.html font-size-24.html
+== font-size-24.html font-size-24.html
 
 # test that default-preferences does not apply to include commands
 #

@@ -105,7 +105,8 @@ public:
    * Interface through which new video frames will be provided while
    * `mFrameCaptureRequested` is `true`.
    */
-  virtual void NewFrame(already_AddRefed<layers::Image> aImage) = 0;
+  virtual void NewFrame(already_AddRefed<layers::Image> aImage,
+                        const TimeStamp& aTime) = 0;
 
 protected:
   virtual ~FrameCaptureListener() {}
@@ -283,7 +284,8 @@ public:
    * Makes a copy of the provided surface and hands it to all
    * FrameCaptureListeners having requested frame capture.
    */
-  void SetFrameCapture(already_AddRefed<gfx::SourceSurface> aSurface);
+  void SetFrameCapture(already_AddRefed<gfx::SourceSurface> aSurface,
+                       const TimeStamp& aTime);
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
                                 nsIAtom* aAttribute,

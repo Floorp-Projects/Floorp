@@ -13,6 +13,7 @@
 #include "AutoTaskQueue.h"
 #include "mozilla/dom/SourceBufferBinding.h"
 
+#include "MediaContainerType.h"
 #include "MediaData.h"
 #include "MediaDataDemuxer.h"
 #include "MediaResult.h"
@@ -21,7 +22,6 @@
 #include "TimeUnits.h"
 #include "nsAutoPtr.h"
 #include "nsProxyRelease.h"
-#include "nsString.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -91,7 +91,7 @@ public:
 
   // Interface for SourceBuffer
   TrackBuffersManager(MediaSourceDecoder* aParentDecoder,
-                      const nsACString& aType);
+                      const MediaContainerType& aType);
 
   // Queue a task to add data to the end of the input buffer and run the MSE
   // Buffer Append Algorithm
@@ -212,7 +212,7 @@ private:
   // Set to true once a new segment is started.
   bool mNewMediaSegmentStarted;
   bool mActiveTrack;
-  nsCString mType;
+  MediaContainerType mType;
 
   // ContainerParser objects and methods.
   // Those are used to parse the incoming input buffer.

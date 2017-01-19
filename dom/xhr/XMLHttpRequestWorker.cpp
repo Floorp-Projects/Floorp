@@ -1633,12 +1633,10 @@ XMLHttpRequestWorker::ReleaseProxy(ReleaseType aType)
         new SyncTeardownRunnable(mWorkerPrivate, mProxy);
       mProxy = nullptr;
 
-      ErrorResult forAssertionsOnly;
+      IgnoredErrorResult forAssertionsOnly;
       // This runnable _must_ be executed.
-      runnable->Dispatch(Killing, forAssertionsOnly);
-      if (forAssertionsOnly.Failed()) {
-        NS_ERROR("Failed to dispatch teardown runnable!");
-      }
+      runnable->Dispatch(Dead, forAssertionsOnly);
+      MOZ_DIAGNOSTIC_ASSERT(!forAssertionsOnly.Failed());
     }
   }
 }
@@ -2428,7 +2426,7 @@ XMLHttpRequestWorker::GetResponse(JSContext* /* unused */,
 }
 
 void
-XMLHttpRequestWorker::GetResponseText(nsAString& aResponseText, ErrorResult& aRv)
+XMLHttpRequestWorker::GetResponseText(DOMString& aResponseText, ErrorResult& aRv)
 {
   aRv = mStateData.mResponseTextResult;
   if (aRv.Failed()) {

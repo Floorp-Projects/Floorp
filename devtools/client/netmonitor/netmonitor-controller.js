@@ -423,10 +423,6 @@ TargetEventsHandler.prototype = {
           // If the log is persistent, just clear all accumulated timing markers.
           gStore.dispatch(Actions.clearTimingMarkers());
         }
-        // Switch to the default network traffic inspector view.
-        if (NetMonitorController.getCurrentActivity() == ACTIVITY_TYPE.NONE) {
-          NetMonitorView.showNetworkInspectorView();
-        }
 
         window.emit(EVENTS.TARGET_WILL_NAVIGATE);
         break;

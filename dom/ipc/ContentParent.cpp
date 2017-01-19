@@ -1608,21 +1608,22 @@ ContentParent::ShouldKeepProcessAlive() const
     return false;
   }
 
-  // Only keep processes for the default remote type alive.
-  if (!mRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE)) {
-    return false;
-  }
-
   auto contentParents = sBrowserContentParents->Get(mRemoteType);
   if (!contentParents) {
     return false;
   }
 
-  // We might want to keep alive some content processes for testing, because of
-  // performance reasons.
+  // We might want to keep alive some content processes alive during test runs,
+  // for performance reasons. This should never be used in production.
   // We don't want to alter behavior if the pref is not set, so default to 0.
-  int32_t processesToKeepAlive =
-    Preferences::GetInt("dom.ipc.keepProcessesAlive", 0);
+  int32_t processesToKeepAlive = 0;
+
+  nsAutoCString keepAlivePref("dom.ipc.keepProcessesAlive.");
+  keepAlivePref.Append(NS_ConvertUTF16toUTF8(mRemoteType));
+  if (NS_FAILED(Preferences::GetInt(keepAlivePref.get(), &processesToKeepAlive))) {
+    return false;
+  }
+
   int32_t numberOfAliveProcesses = contentParents->Length();
 
   return numberOfAliveProcesses <= processesToKeepAlive;
@@ -3763,18 +3764,21 @@ ContentParent::RecvRecordingDeviceEvents(const nsString& aRecordingStatus,
 }
 
 mozilla::ipc::IPCResult
-ContentParent::RecvGetGraphicsFeatureStatus(const int32_t& aFeature,
-                                            int32_t* aStatus,
-                                            nsCString* aFailureId,
-                                            bool* aSuccess)
+ContentParent::RecvGetGfxInfoFeatureStatus(nsTArray<mozilla::dom::GfxInfoFeatureStatus>* aFS)
 {
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
   if (!gfxInfo) {
-    *aSuccess = false;
     return IPC_OK();
   }
 
-  *aSuccess = NS_SUCCEEDED(gfxInfo->GetFeatureStatus(aFeature, *aFailureId, aStatus));
+  for (int32_t i = 1; i <= nsIGfxInfo::FEATURE_MAX_VALUE; ++i) {
+    int32_t status = 0;
+    nsAutoCString failureId;
+    gfxInfo->GetFeatureStatus(i, failureId, &status);
+    mozilla::dom::GfxInfoFeatureStatus fs(i, status, failureId);
+    aFS->AppendElement(Move(fs));
+  }
+
   return IPC_OK();
 }
 

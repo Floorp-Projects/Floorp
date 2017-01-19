@@ -573,36 +573,3 @@ FakeDecryptor::UpdateSession(uint32_t aPromiseId,
     Message("node-id " + sNodeId);
   }
 }
-
-class CompleteShutdownTask : public GMPTask {
-public:
-  explicit CompleteShutdownTask(GMPAsyncShutdownHost* aHost)
-    : mHost(aHost)
-  {
-  }
-  void Run() override {
-    mHost->ShutdownComplete();
-  }
-  void Destroy() override { delete this; }
-  GMPAsyncShutdownHost* mHost;
-};
-
-void
-TestAsyncShutdown::BeginShutdown() {
-  switch (sShutdownMode) {
-    case ShutdownNormal:
-      mHost->ShutdownComplete();
-      break;
-    case ShutdownTimeout:
-      // Don't do anything; wait for timeout, Gecko should kill
-      // the plugin and recover.
-      break;
-    case ShutdownStoreToken:
-      // Store message, then shutdown.
-      WriteRecord("shutdown-token",
-                  sShutdownToken,
-                  new CompleteShutdownTask(mHost),
-                  new SendMessageTask("FAIL writing shutdown-token."));
-      break;
-  }
-}

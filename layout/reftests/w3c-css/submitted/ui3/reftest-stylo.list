@@ -1,11 +1,11 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails == box-sizing-border-box-001.xht box-sizing-border-box-001.xht
-fails == box-sizing-border-box-002.xht box-sizing-border-box-002.xht
-fails == box-sizing-border-box-003.xht box-sizing-border-box-003.xht
-fails == box-sizing-border-box-004.xht box-sizing-border-box-004.xht
-fails == box-sizing-content-box-001.xht box-sizing-content-box-001.xht
-fails == box-sizing-content-box-002.xht box-sizing-content-box-002.xht
-fails == box-sizing-content-box-003.xht box-sizing-content-box-003.xht
-fails == box-sizing-replaced-001.xht box-sizing-replaced-001.xht
-fails == box-sizing-replaced-002.xht box-sizing-replaced-002.xht
-fails == box-sizing-replaced-003.xht box-sizing-replaced-003.xht
+== box-sizing-border-box-001.xht box-sizing-border-box-001.xht
+== box-sizing-border-box-002.xht box-sizing-border-box-002.xht
+== box-sizing-border-box-003.xht box-sizing-border-box-003.xht
+== box-sizing-border-box-004.xht box-sizing-border-box-004.xht
+== box-sizing-content-box-001.xht box-sizing-content-box-001.xht
+== box-sizing-content-box-002.xht box-sizing-content-box-002.xht
+== box-sizing-content-box-003.xht box-sizing-content-box-003.xht
+== box-sizing-replaced-001.xht box-sizing-replaced-001.xht
+== box-sizing-replaced-002.xht box-sizing-replaced-002.xht
+== box-sizing-replaced-003.xht box-sizing-replaced-003.xht

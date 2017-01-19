@@ -24,43 +24,43 @@ public:
     CGFontRef GetCGFontRef() const { return mCGFont; }
 
     /* overrides for the pure virtual methods in gfxFont */
-    virtual uint32_t GetSpaceGlyph() override {
+    uint32_t GetSpaceGlyph() override {
         return mSpaceGlyph;
     }
 
-    virtual bool SetupCairoFont(DrawTarget* aDrawTarget) override;
+    bool SetupCairoFont(DrawTarget* aDrawTarget) override;
 
     /* override Measure to add padding for antialiasing */
-    virtual RunMetrics Measure(const gfxTextRun *aTextRun,
-                               uint32_t aStart, uint32_t aEnd,
-                               BoundingBoxType aBoundingBoxType,
-                               DrawTarget *aDrawTargetForTightBoundingBox,
-                               Spacing *aSpacing,
-                               uint16_t aOrientation) override;
+    RunMetrics Measure(const gfxTextRun *aTextRun,
+                       uint32_t aStart, uint32_t aEnd,
+                       BoundingBoxType aBoundingBoxType,
+                       DrawTarget *aDrawTargetForTightBoundingBox,
+                       Spacing *aSpacing,
+                       uint16_t aOrientation) override;
 
     // We need to provide hinted (non-linear) glyph widths if using a font
     // with embedded color bitmaps (Apple Color Emoji), as Core Text renders
     // the glyphs with non-linear scaling at small pixel sizes.
-    virtual bool ProvidesGlyphWidths() const override {
+    bool ProvidesGlyphWidths() const override {
         return mVariationFont ||
                mFontEntry->HasFontTable(TRUETYPE_TAG('s','b','i','x'));
     }
 
-    virtual int32_t GetGlyphWidth(DrawTarget& aDrawTarget,
-                                  uint16_t aGID) override;
+    int32_t GetGlyphWidth(DrawTarget& aDrawTarget,
+                          uint16_t aGID) override;
 
-    virtual already_AddRefed<mozilla::gfx::ScaledFont>
+    already_AddRefed<mozilla::gfx::ScaledFont>
     GetScaledFont(mozilla::gfx::DrawTarget *aTarget) override;
 
-    virtual already_AddRefed<mozilla::gfx::GlyphRenderingOptions>
+    already_AddRefed<mozilla::gfx::GlyphRenderingOptions>
       GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams = nullptr) override;
 
-    virtual void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                        FontCacheSizes* aSizes) const override;
-    virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                        FontCacheSizes* aSizes) const override;
+    void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                                FontCacheSizes* aSizes) const override;
+    void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                                FontCacheSizes* aSizes) const override;
 
-    virtual FontType GetType() const override { return FONT_TYPE_MAC; }
+    FontType GetType() const override { return FONT_TYPE_MAC; }
 
     // Helper to create a CTFont from a CGFont, with optional font descriptor
     // (for features), and copying any variations that were set on the CGFont.
@@ -71,18 +71,18 @@ public:
                                          CTFontDescriptorRef aFontDesc = nullptr);
 
 protected:
-    virtual const Metrics& GetHorizontalMetrics() override {
+    const Metrics& GetHorizontalMetrics() override {
         return mMetrics;
     }
 
     // override to prefer CoreText shaping with fonts that depend on AAT
-    virtual bool ShapeText(DrawTarget     *aDrawTarget,
-                           const char16_t *aText,
-                           uint32_t        aOffset,
-                           uint32_t        aLength,
-                           Script          aScript,
-                           bool            aVertical,
-                           gfxShapedText  *aShapedText) override;
+    bool ShapeText(DrawTarget     *aDrawTarget,
+                   const char16_t *aText,
+                   uint32_t        aOffset,
+                   uint32_t        aLength,
+                   Script          aScript,
+                   bool            aVertical,
+                   gfxShapedText  *aShapedText) override;
 
     void InitMetrics();
     void InitMetricsFromPlatform();

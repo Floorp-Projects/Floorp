@@ -56,6 +56,8 @@ job-template:
       symbol: tc-L10n(N)
       tier:
          by-build-platform:
+            linux.*: 1
+            android.*: 1
             default: 2
       platform:
          by-build-platform:

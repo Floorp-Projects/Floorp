@@ -186,6 +186,7 @@ HTTP(..) != fallback-mark-stacking-1.html fallback-mark-stacking-1-notref.html
 == 820255.html 820255-ref.html
 HTTP(..) != 1170688.html 1170688-ref.html
 fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1320665-cmap-format-13.html 1320665-cmap-format-13-ref.html # see bug 1320665 comments 8-9
+HTTP(..) == 1331339-script-extensions-shaping-1.html 1331339-script-extensions-shaping-1-ref.html
 
 # ensure emoji chars don't render blank (bug 715798, bug 779042);
 # should at least render hexboxes if there's no font support

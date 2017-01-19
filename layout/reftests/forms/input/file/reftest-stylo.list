@@ -1,6 +1,6 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 # == simple.html simple.html
-# fails == rtl.html rtl.html
+# == rtl.html rtl.html
 # == size.html size.html
 # == background.html background.html
 # == style.html style.html

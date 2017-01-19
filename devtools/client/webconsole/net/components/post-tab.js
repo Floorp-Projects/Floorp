@@ -5,11 +5,10 @@
 
 const React = require("devtools/client/shared/vendor/react");
 
-// Reps
-const { createFactories, parseURLEncodedText } = require("devtools/client/shared/components/reps/rep-utils");
 const TreeView = React.createFactory(require("devtools/client/shared/components/tree/tree-view"));
-const { Rep } = createFactories(require("devtools/client/shared/components/reps/rep"));
-const { MODE } = require("devtools/client/shared/components/reps/constants");
+
+const { REPS, MODE, parseURLEncodedText } = require("devtools/client/shared/components/reps/load-reps");
+const Rep = React.createFactory(REPS.Rep);
 
 // Network
 const NetInfoParams = React.createFactory(require("./net-info-params"));

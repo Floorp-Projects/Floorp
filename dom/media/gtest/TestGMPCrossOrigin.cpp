@@ -1095,92 +1095,6 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
                     NS_LITERAL_CSTRING("retrieve pbdata"));
   }
 
-  void NextAsyncShutdownTimeoutTest(nsIRunnable* aContinuation)
-  {
-    if (mDecryptor) {
-      Update(NS_LITERAL_CSTRING("shutdown-mode timeout"));
-      Shutdown();
-    }
-    nsCOMPtr<nsIThread> thread(GetGMPThread());
-    thread->Dispatch(aContinuation, NS_DISPATCH_NORMAL);
-  }
-
-  void CreateAsyncShutdownTimeoutGMP(const nsAString& aOrigin1,
-                                     const nsAString& aOrigin2,
-                                     void (GMPStorageTest::*aCallback)()) {
-    nsCOMPtr<nsIRunnable> continuation(
-      NewRunnableMethod<nsCOMPtr<nsIRunnable>>(
-        this,
-        &GMPStorageTest::NextAsyncShutdownTimeoutTest,
-        NewRunnableMethod(this, aCallback)));
-
-    CreateDecryptor(GetNodeId(aOrigin1, aOrigin2, false), continuation);
-  }
-
-  void TestAsyncShutdownTimeout() {
-    // Create decryptors that timeout in their async shutdown.
-    // If the gtest hangs on shutdown, test fails!
-    CreateAsyncShutdownTimeoutGMP(NS_LITERAL_STRING("http://example7.com"),
-                                  NS_LITERAL_STRING("http://example8.com"),
-                                  &GMPStorageTest::TestAsyncShutdownTimeout2);
-  };
-
-  void TestAsyncShutdownTimeout2() {
-    CreateAsyncShutdownTimeoutGMP(NS_LITERAL_STRING("http://example9.com"),
-                                  NS_LITERAL_STRING("http://example10.com"),
-                                  &GMPStorageTest::TestAsyncShutdownTimeout3);
-  };
-
-  void TestAsyncShutdownTimeout3() {
-    CreateAsyncShutdownTimeoutGMP(NS_LITERAL_STRING("http://example11.com"),
-                                  NS_LITERAL_STRING("http://example12.com"),
-                                  &GMPStorageTest::SetFinished);
-  };
-
-  void TestAsyncShutdownStorage() {
-    // Instruct the GMP to write a token (the current timestamp, so it's
-    // unique) during async shutdown, then shutdown the plugin, re-create
-    // it, and check that the token was successfully stored.
-    auto t = time(0);
-    nsCString update("shutdown-mode token ");
-    nsCString token;
-    token.AppendInt((int64_t)t);
-    update.Append(token);
-
-    // Wait for a response from the GMP, so we know it's had time to receive
-    // the token.
-    nsCString response("shutdown-token received ");
-    response.Append(token);
-    Expect(response, NewRunnableMethod<nsCString>(this,
-      &GMPStorageTest::TestAsyncShutdownStorage_ReceivedShutdownToken, token));
-
-    // Test that a GMP can write to storage during shutdown, and retrieve
-    // that written data in a subsequent session.
-    CreateDecryptor(NS_LITERAL_STRING("http://example13.com"),
-                    NS_LITERAL_STRING("http://example14.com"),
-                    false,
-                    update);
-  }
-
-  void TestAsyncShutdownStorage_ReceivedShutdownToken(const nsCString& aToken) {
-    ShutdownThen(NewRunnableMethod<nsCString>(this,
-      &GMPStorageTest::TestAsyncShutdownStorage_AsyncShutdownComplete, aToken));
-  }
-
-  void TestAsyncShutdownStorage_AsyncShutdownComplete(const nsCString& aToken) {
-    // Create a new instance of the plugin, retrieve the token written
-    // during shutdown and verify it is correct.
-    nsCString response("retrieved shutdown-token ");
-    response.Append(aToken);
-    Expect(response,
-           NewRunnableMethod(this, &GMPStorageTest::SetFinished));
-
-    CreateDecryptor(NS_LITERAL_STRING("http://example13.com"),
-                    NS_LITERAL_STRING("http://example14.com"),
-                    false,
-                    NS_LITERAL_CSTRING("retrieve-shutdown-token"));
-  }
-
 #if defined(XP_WIN)
   void TestOutputProtection() {
     Shutdown();
@@ -1512,16 +1426,6 @@ TEST(GeckoMediaPlugins, GMPStorageCrossOrigin) {
 TEST(GeckoMediaPlugins, GMPStoragePrivateBrowsing) {
   RefPtr<GMPStorageTest> runner = new GMPStorageTest();
   runner->DoTest(&GMPStorageTest::TestPBStorage);
-}
-
-TEST(GeckoMediaPlugins, GMPStorageAsyncShutdownTimeout) {
-  RefPtr<GMPStorageTest> runner = new GMPStorageTest();
-  runner->DoTest(&GMPStorageTest::TestAsyncShutdownTimeout);
-}
-
-TEST(GeckoMediaPlugins, GMPStorageAsyncShutdownStorage) {
-  RefPtr<GMPStorageTest> runner = new GMPStorageTest();
-  runner->DoTest(&GMPStorageTest::TestAsyncShutdownStorage);
 }
 
 TEST(GeckoMediaPlugins, GMPPluginVoucher) {

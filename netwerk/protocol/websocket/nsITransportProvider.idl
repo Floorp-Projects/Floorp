@@ -27,10 +27,10 @@ interface nsITransportProvider : nsISupports
 {
     // This must not be called in a child process since transport
     // objects are not accessible there. Call getIPCChild instead.
-    void setListener(in nsIHttpUpgradeListener listener);
+    [must_use] void setListener(in nsIHttpUpgradeListener listener);
 
     // This must be implemented by nsITransportProvider objects running
     // in the child process. It must return null when called in the parent
     // process.
-    [noscript] PTransportProviderChild getIPCChild();
+    [noscript, must_use] PTransportProviderChild getIPCChild();
 };

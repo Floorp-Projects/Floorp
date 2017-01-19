@@ -14,16 +14,13 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/UniquePtr.h"
 #include "GeckoProfiler.h"
-#ifndef SPS_STANDALONE
 #include "ProfilerIOInterposeObserver.h"
 #include "mozilla/StaticPtr.h"
-#endif
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Sprintf.h"
 #include "PseudoStack.h"
 #include "GeckoSampler.h"
-#ifndef SPS_STANDALONE
 #include "nsIObserverService.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
@@ -31,7 +28,6 @@
 #include "nsProfilerStartParams.h"
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
-#endif
 #include "ProfilerMarkers.h"
 
 #ifdef MOZ_TASK_TRACER
@@ -46,12 +42,10 @@
 #include "FennecJNINatives.h"
 #endif
 
-#ifndef SPS_STANDALONE
 #if defined(SPS_PLAT_amd64_linux) || defined(SPS_PLAT_x86_linux)
 # define USE_LUL_STACKWALK
 # include "lul/LulMain.h"
 # include "lul/platform-linux-lul.h"
-#endif
 #endif
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
@@ -72,7 +66,6 @@ public:
 
 MOZ_THREAD_LOCAL(PseudoStack *) tlsPseudoStack;
 MOZ_THREAD_LOCAL(GeckoSampler *) tlsTicker;
-MOZ_THREAD_LOCAL(void *) tlsStackTop;
 // We need to track whether we've been initialized otherwise
 // we end up using tlsStack without initializing it.
 // Because tlsStack is totally opaque to us we can't reuse
@@ -112,10 +105,8 @@ mozilla::UniquePtr< ::Mutex> Sampler::sRegisteredThreadsMutex;
 
 GeckoSampler* Sampler::sActiveSampler;
 
-#ifndef SPS_STANDALONE
 static mozilla::StaticAutoPtr<mozilla::ProfilerIOInterposeObserver>
                                                             sInterposeObserver;
-#endif
 
 // The name that identifies the gecko thread for calls to
 // profiler_register_thread.
@@ -178,8 +169,6 @@ Sampler::RegisterCurrentThread(const char* aName,
     }
   }
 
-  set_tls_stack_top(stackTop);
-
   ThreadInfo* info = new StackOwningThreadInfo(aName, id,
     aIsMainThread, aPseudoStack, stackTop);
 
@@ -197,8 +186,6 @@ Sampler::UnregisterCurrentThread()
 {
   if (!sRegisteredThreadsMutex)
     return;
-
-  tlsStackTop.set(nullptr);
 
   ::MutexAutoLock lock(*sRegisteredThreadsMutex);
 
@@ -460,19 +447,6 @@ void profiler_usage() {
   return;
 }
 
-void set_tls_stack_top(void* stackTop)
-{
-  // Round |stackTop| up to the end of the containing page.  We may
-  // as well do this -- there's no danger of a fault, and we might
-  // get a few more base-of-the-stack frames as a result.  This
-  // assumes that no target has a page size smaller than 4096.
-  uintptr_t stackTopR = (uintptr_t)stackTop;
-  if (stackTop) {
-    stackTopR = (stackTopR & ~(uintptr_t)4095) + (uintptr_t)4095;
-  }
-  tlsStackTop.set((void*)stackTopR);
-}
-
 bool is_main_thread_name(const char* aName) {
   if (!aName) {
     return false;
@@ -480,7 +454,6 @@ bool is_main_thread_name(const char* aName) {
   return strcmp(aName, gGeckoThreadName) == 0;
 }
 
-#ifndef SPS_STANDALONE
 #ifdef HAVE_VA_COPY
 #define VARARGS_ASSIGN(foo, bar)        VA_COPY(foo,bar)
 #elif defined(HAVE_VA_LIST_AS_ARRAY)
@@ -519,7 +492,6 @@ mozilla_sampler_log(const char *fmt, va_list args)
     }
   }
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////
 // BEGIN externally visible functions
@@ -535,12 +507,8 @@ void mozilla_sampler_init(void* stackTop)
   mozilla::tasktracer::InitTaskTracer();
 #endif
 
-#ifdef SPS_STANDALONE
-  mozilla::TimeStamp::Startup();
-#endif
-
   LOG("BEGIN mozilla_sampler_init");
-  if (!tlsPseudoStack.init() || !tlsTicker.init() || !tlsStackTop.init()) {
+  if (!tlsPseudoStack.init() || !tlsTicker.init()) {
     LOG("Failed to init.");
     return;
   }
@@ -566,9 +534,7 @@ void mozilla_sampler_init(void* stackTop)
   // platform specific initialization
   OS::Startup();
 
-#ifndef SPS_STANDALONE
   set_stderr_callback(mozilla_sampler_log);
-#endif
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
   if (mozilla::jni::IsFennec()) {
@@ -628,15 +594,9 @@ void mozilla_sampler_shutdown()
 
   profiler_stop();
 
-#ifndef SPS_STANDALONE
   set_stderr_callback(nullptr);
-#endif
 
   Sampler::Shutdown();
-
-#ifdef SPS_STANDALONE
-  mozilla::TimeStamp::Shutdown();
-#endif
 
   PseudoStack *stack = tlsPseudoStack.get();
   stack->deref();
@@ -645,19 +605,6 @@ void mozilla_sampler_shutdown()
 #ifdef MOZ_TASK_TRACER
   mozilla::tasktracer::ShutdownTaskTracer();
 #endif
-}
-
-void mozilla_sampler_save()
-{
-  GeckoSampler *t = tlsTicker.get();
-  if (!t) {
-    return;
-  }
-
-  t->RequestSave();
-  // We're on the main thread already so we don't
-  // have to wait to handle the save request.
-  t->HandleSaveRequest();
 }
 
 mozilla::UniquePtr<char[]> mozilla_sampler_get_profile(double aSinceTime)
@@ -670,7 +617,6 @@ mozilla::UniquePtr<char[]> mozilla_sampler_get_profile(double aSinceTime)
   return t->ToJSON(aSinceTime);
 }
 
-#ifndef SPS_STANDALONE
 JSObject *mozilla_sampler_get_profile_data(JSContext *aCx, double aSinceTime)
 {
   GeckoSampler *t = tlsTicker.get();
@@ -757,8 +703,6 @@ void mozilla_sampler_get_gatherer(nsISupports** aRetVal)
   t->GetGatherer(aRetVal);
 }
 
-#endif
-
 void mozilla_sampler_save_profile_to_file(const char* aFilename)
 {
   GeckoSampler *t = tlsTicker.get();
@@ -817,10 +761,6 @@ const char** mozilla_sampler_get_features()
 #ifdef MOZ_TASK_TRACER
     // Start profiling with feature TaskTracer.
     "tasktracer",
-#endif
-#if defined(XP_WIN)
-    // Add power collection
-    "power",
 #endif
     nullptr
   };
@@ -890,14 +830,12 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
           continue;
         }
         thread_profile->GetPseudoStack()->reinitializeOnResume();
-#ifndef SPS_STANDALONE
         if (t->ProfileJS()) {
           thread_profile->GetPseudoStack()->enableJSSampling();
         }
         if (t->InPrivacyMode()) {
           thread_profile->GetPseudoStack()->mPrivacyMode = true;
         }
-#endif
       }
   }
 
@@ -912,7 +850,6 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
   }
 #endif
 
-#ifndef SPS_STANDALONE
   if (t->AddMainThreadIO()) {
     if (!sInterposeObserver) {
       // Lazily create IO interposer observer
@@ -921,10 +858,8 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
     mozilla::IOInterposer::Register(mozilla::IOInterposeObserver::OpAll,
                                     sInterposeObserver);
   }
-#endif
 
   sIsProfiling = true;
-#ifndef SPS_STANDALONE
   sIsGPUProfiling = t->ProfileGPU();
   sIsLayersDump = t->LayersDump();
   sIsDisplayListDump = t->DisplayListDump();
@@ -951,7 +886,6 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
       os->NotifyObservers(params, "profiler-started", nullptr);
     }
   }
-#endif
 
   LOG("END   mozilla_sampler_start");
 }
@@ -975,7 +909,6 @@ void mozilla_sampler_stop()
   delete t;
   tlsTicker.set(nullptr);
 
-#ifndef SPS_STANDALONE
   if (disableJS) {
     PseudoStack *stack = tlsPseudoStack.get();
     ASSERT(stack != nullptr);
@@ -985,10 +918,8 @@ void mozilla_sampler_stop()
   mozilla::IOInterposer::Unregister(mozilla::IOInterposeObserver::OpAll,
                                     sInterposeObserver);
   sInterposeObserver = nullptr;
-#endif
 
   sIsProfiling = false;
-#ifndef SPS_STANDALONE
   sIsGPUProfiling = false;
   sIsLayersDump = false;
   sIsDisplayListDump = false;
@@ -999,7 +930,6 @@ void mozilla_sampler_stop()
     if (os)
       os->NotifyObservers(nullptr, "profiler-stopped", nullptr);
   }
-#endif
 
   LOG("END   mozilla_sampler_stop");
 }
@@ -1015,26 +945,22 @@ bool mozilla_sampler_is_paused() {
 void mozilla_sampler_pause() {
   if (Sampler::GetActiveSampler()) {
     Sampler::GetActiveSampler()->SetPaused(true);
-#ifndef SPS_STANDALONE
-  if (Sampler::CanNotifyObservers()) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os)
-      os->NotifyObservers(nullptr, "profiler-paused", nullptr);
-  }
-#endif
+    if (Sampler::CanNotifyObservers()) {
+      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+      if (os)
+        os->NotifyObservers(nullptr, "profiler-paused", nullptr);
+    }
   }
 }
 
 void mozilla_sampler_resume() {
   if (Sampler::GetActiveSampler()) {
     Sampler::GetActiveSampler()->SetPaused(false);
-#ifndef SPS_STANDALONE
-  if (Sampler::CanNotifyObservers()) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-    if (os)
-      os->NotifyObservers(nullptr, "profiler-resumed", nullptr);
-  }
-#endif
+    if (Sampler::CanNotifyObservers()) {
+      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+      if (os)
+        os->NotifyObservers(nullptr, "profiler-resumed", nullptr);
+    }
   }
 }
 
@@ -1081,20 +1007,16 @@ void mozilla_sampler_frame_number(int frameNumber)
 void mozilla_sampler_lock()
 {
   profiler_stop();
-#ifndef SPS_STANDALONE
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os)
     os->NotifyObservers(nullptr, "profiler-locked", nullptr);
-#endif
 }
 
 void mozilla_sampler_unlock()
 {
-#ifndef SPS_STANDALONE
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os)
     os->NotifyObservers(nullptr, "profiler-unlocked", nullptr);
-#endif
 }
 
 bool mozilla_sampler_register_thread(const char* aName, void* aGuessStackTop)
@@ -1285,7 +1207,6 @@ void mozilla_sampler_add_marker(const char *aMarker, ProfilerMarkerPayload *aPay
   stack->addMarker(aMarker, payload.release(), delta.ToMilliseconds());
 }
 
-#ifndef SPS_STANDALONE
 #include "mozilla/Mutex.h"
 
 class GeckoMutex : public ::Mutex {
@@ -1313,38 +1234,6 @@ class GeckoMutex : public ::Mutex {
 mozilla::UniquePtr< ::Mutex> OS::CreateMutex(const char* aDesc) {
   return mozilla::MakeUnique<GeckoMutex>(aDesc);
 }
-
-#else
-// Otherwise use c++11 Mutex
-#include <mutex>
-
-class OSXMutex : public ::Mutex {
- public:
-  OSXMutex(const char* aDesc) :
-    mMutex()
-  {}
-
-  virtual ~OSXMutex() {}
-
-  virtual int Lock() {
-    mMutex.lock();
-    return 0;
-  }
-
-  virtual int Unlock() {
-    mMutex.unlock();
-    return 0;
-  }
-
- private:
-  std::mutex mMutex;
-};
-
-mozilla::UniquePtr< ::Mutex> OS::CreateMutex(const char* aDesc) {
-  return mozilla::MakeUnique<GeckoMutex>(aDesc);
-}
-
-#endif
 
 // END externally visible functions
 ////////////////////////////////////////////////////////////////////////

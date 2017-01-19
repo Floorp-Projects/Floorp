@@ -1,32 +1,12 @@
 function test() {
   waitForExplicitFinish();
-  gPrefService.setBoolPref("dom.disable_open_during_load", false);
+  SpecialPowers.pushPrefEnv({ set: [[ "dom.disable_open_during_load", false ]] });
 
-  var browser = gBrowser.selectedBrowser;
-  BrowserTestUtils.browserLoaded(browser).then(() => {
-    if (gPrefService.prefHasUserValue("dom.disable_open_during_load"))
-      gPrefService.clearUserPref("dom.disable_open_during_load");
-
-    findPopup();
-  });
-
-  browser.loadURI(
+  let popupOpened = BrowserTestUtils.waitForNewWindow(true, "about:blank");
+  BrowserTestUtils.openNewForegroundTab(gBrowser,
     "data:text/html,<html><script>popup=open('about:blank','','width=300,height=200')</script>"
   );
-}
-
-function findPopup() {
-  var enumerator = Services.wm.getEnumerator("navigator:browser");
-
-  while (enumerator.hasMoreElements()) {
-    let win = enumerator.getNext();
-    if (win.content.wrappedJSObject == content.wrappedJSObject.popup) {
-      testPopupUI(win);
-      return;
-    }
-  }
-
-  throw "couldn't find the popup";
+  popupOpened.then((win) => testPopupUI(win));
 }
 
 function testPopupUI(win) {
@@ -44,7 +24,7 @@ function testPopupUI(win) {
 
   EventUtils.synthesizeKey("t", { accelKey: true }, win);
   is(win.gBrowser.browsers.length, 1, "Accel+T doesn't open a new tab in the popup");
-  is(gBrowser.browsers.length, 2, "Accel+T opened a new tab in the parent window");
+  is(gBrowser.browsers.length, 3, "Accel+T opened a new tab in the parent window");
   gBrowser.removeCurrentTab();
 
   EventUtils.synthesizeKey("w", { accelKey: true }, win);
@@ -52,7 +32,6 @@ function testPopupUI(win) {
 
   if (!win.closed)
     win.close();
-  gBrowser.addTab();
   gBrowser.removeCurrentTab();
   finish();
 }

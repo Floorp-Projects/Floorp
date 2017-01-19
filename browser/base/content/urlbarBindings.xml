@@ -701,10 +701,23 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         ]]></body>
       </method>
 
-      <method name="_getDroppableLink">
+      <!-- Returns:
+           null if there's a security issue and we should do nothing.
+           a URL object if there is one that we're OK with loading,
+           a text value otherwise.
+           -->
+      <method name="_getDroppableItem">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          let links = browserDragAndDrop.dropLinks(aEvent);
+          let links;
+          try {
+            links = browserDragAndDrop.dropLinks(aEvent);
+          } catch (ex) {
+            // this is possibly a security exception, in which case we should return
+            // null. Always return null because we can't *know* what exception is
+            // being returned.
+            return null;
+          }
           // The URL bar automatically handles inputs with newline characters,
           // so we can get away with treating text/x-moz-url flavours as text/plain.
           if (links.length > 0 && links[0].url) {
@@ -715,24 +728,35 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               aEvent.stopImmediatePropagation();
               return null;
             }
+            let urlObj;
             try {
-              urlSecurityCheck(url,
-                               gBrowser.contentPrincipal,
-                               Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
+              // If this throws, urlSecurityCheck would also throw, as that's what it
+              // does with things that don't pass the IO service's newURI constructor
+              // without fixup. It's conceivable we may want to relax this check in
+              // the future (so e.g. www.foo.com gets fixed up), but not right now.
+              urlObj = new URL(url);
+              // If we succeed, try to pass security checks. If this works, return the
+              // URL object. If the *security checks* fail, return null.
+              try {
+                urlSecurityCheck(url,
+                                 gBrowser.contentPrincipal,
+                                 Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
+                return urlObj;
+              } catch (ex) {
+                return null;
+              }
             } catch (ex) {
-              return null;
+              // We couldn't make a URL out of this. Continue on, and return text below.
             }
-            return url;
           }
-          return null;
+          return aEvent.dataTransfer.getData("text/unicode");
         ]]></body>
       </method>
 
       <method name="onDragOver">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          // We don't need the link here, so we ignore the return value.
-          if (!this._getDroppableLink(aEvent)) {
+          if (!this._getDroppableItem(aEvent)) {
             aEvent.dataTransfer.dropEffect = "none";
           }
         ]]></body>
@@ -741,15 +765,17 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <method name="onDrop">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          let url = this._getDroppableLink(aEvent);
-          if (url) {
-            this.value = url;
+          let droppedItem = this._getDroppableItem(aEvent);
+          if (droppedItem) {
+            this.value = droppedItem instanceof URL ? droppedItem.href : droppedItem;
             SetPageProxyState("invalid");
             this.focus();
-            this.handleCommand();
-            // Force not showing the dropped URI immediately.
-            gBrowser.userTypedValue = null;
-            URLBarSetURI();
+            if (droppedItem instanceof URL) {
+              this.handleCommand();
+              // Force not showing the dropped URI immediately.
+              gBrowser.userTypedValue = null;
+              URLBarSetURI();
+            }
           }
         ]]></body>
       </method>

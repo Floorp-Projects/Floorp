@@ -11,20 +11,20 @@ fails HTTP(..) == blur-opacity.html blur-opacity.html
 == basic.html basic.html
 == basic-negcoord.html basic-negcoord.html
 == basic-opacity.html basic-opacity.html
-fails == blur.html blur.html
+== blur.html blur.html
 # == color-inherit.html color-inherit.html
-fails == color-parserorder.html color-parserorder.html
+== color-parserorder.html color-parserorder.html
 == decorations-multiple-zorder.html decorations-multiple-zorder.html
 == multiple-noblur.html multiple-noblur.html
 == quirks-decor-noblur.html quirks-decor-noblur.html
 == standards-decor-noblur.html standards-decor-noblur.html
 == padding-decoration.html padding-decoration.html
-fails == textindent.html textindent.html
-fails == lineoverflow.html lineoverflow.html
+== textindent.html textindent.html
+== lineoverflow.html lineoverflow.html
 
 # == overflow-not-scrollable-1.html overflow-not-scrollable-1.html
 # == overflow-not-scrollable-1.html overflow-not-scrollable-1.html
-fails == overflow-not-scrollable-2.html overflow-not-scrollable-2.html
+== overflow-not-scrollable-2.html overflow-not-scrollable-2.html
 
 needs-focus == text-shadow-selected-1.html text-shadow-selected-1.html
 == text-shadow-selected-1.html text-shadow-selected-1.html
@@ -32,7 +32,7 @@ needs-focus == text-shadow-selected-2.html text-shadow-selected-2.html
 == text-shadow-selected-2.html text-shadow-selected-2.html
 
 # bug 692744
-fails == text-shadow-on-space-1.html text-shadow-on-space-1.html
+== text-shadow-on-space-1.html text-shadow-on-space-1.html
 
 # bug 721750
 needs-focus == text-shadow-on-selection-1.html text-shadow-on-selection-1.html

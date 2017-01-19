@@ -14,33 +14,77 @@
  * limitations under the License.
  */
 
+#include "ClearKeyUtils.h"
+
 #include <algorithm>
+#include <assert.h>
+#include <stdlib.h>
+#include <cctype>
 #include <ctype.h>
+#include <memory.h>
+#include <sstream>
 #include <stdarg.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <vector>
 
-#include "ClearKeyUtils.h"
-#include "ClearKeyBase64.h"
 #include "ArrayUtils.h"
-#include <assert.h>
-#include <memory.h>
 #include "BigEndian.h"
+#include "ClearKeyBase64.h"
+// This include is required in order for content_decryption_module to work
+// on Unix systems.
+#include "stddef.h"
+#include "content_decryption_module.h"
 #include "openaes/oaes_lib.h"
+#include "psshparser/PsshParser.h"
 
+using namespace cdm;
 using namespace std;
 
 void
 CK_Log(const char* aFmt, ...)
 {
+  FILE* out = stdout;
+
+  if (getenv("CLEARKEY_LOG_FILE")) {
+    out = fopen(getenv("CLEARKEY_LOG_FILE"), "a");
+  }
+
   va_list ap;
 
   va_start(ap, aFmt);
-  vprintf(aFmt, ap);
+  const size_t len = 1024;
+  char buf[len];
+  vsnprintf(buf, len, aFmt, ap);
   va_end(ap);
 
-  printf("\n");
-  fflush(stdout);
+  fprintf(out, "%s\n", buf);
+  fflush(out);
+
+  if (out != stdout) {
+    fclose(out);
+  }
+}
+
+static bool
+PrintableAsString(const uint8_t* aBytes, uint32_t aLength)
+{
+  return all_of(aBytes, aBytes + aLength, [] (uint8_t c) {
+    return isprint(c) == 1;
+  });
+}
+
+void
+CK_LogArray(const char* prepend,
+            const uint8_t* aData,
+            const uint32_t aDataSize)
+{
+  // If the data is valid ascii, use that. Otherwise print the hex
+  string data = PrintableAsString(aData, aDataSize) ?
+                string(aData, aData + aDataSize) :
+                ClearKeyUtils::ToHexString(aData, aDataSize);
+
+  CK_LOGD("%s%s", prepend, data.c_str());
 }
 
 static void
@@ -115,7 +159,9 @@ EncodeBase64Web(vector<uint8_t> aBinary, string& aEncoded)
     // Cast idx to size_t before using it as an array-index,
     // to pacify clang 'Wchar-subscripts' warning:
     size_t idx = static_cast<size_t>(out[i]);
-    assert(idx < MOZ_ARRAY_LENGTH(sAlphabet)); // out of bounds index for 'sAlphabet'
+
+    // out of bounds index for 'sAlphabet'
+    assert(idx < MOZ_ARRAY_LENGTH(sAlphabet));
     out[i] = sAlphabet[idx];
   }
 
@@ -125,7 +171,7 @@ EncodeBase64Web(vector<uint8_t> aBinary, string& aEncoded)
 /* static */ void
 ClearKeyUtils::MakeKeyRequest(const vector<KeyId>& aKeyIDs,
                               string& aOutRequest,
-                              GMPSessionType aSessionType)
+                              SessionType aSessionType)
 {
   assert(aKeyIDs.size() && aOutRequest.empty());
 
@@ -389,7 +435,7 @@ ParseKeys(ParserContext& aCtx, vector<KeyIdPair>& aOutKeys)
 /* static */ bool
 ClearKeyUtils::ParseJWK(const uint8_t* aKeyData, uint32_t aKeyDataSize,
                         vector<KeyIdPair>& aOutKeys,
-                        GMPSessionType aSessionType)
+                        SessionType aSessionType)
 {
   ParserContext ctx;
   ctx.mIter = aKeyData;
@@ -505,15 +551,16 @@ ClearKeyUtils::ParseKeyIdsInitData(const uint8_t* aInitData,
 }
 
 /* static */ const char*
-ClearKeyUtils::SessionTypeToString(GMPSessionType aSessionType)
+ClearKeyUtils::SessionTypeToString(SessionType aSessionType)
 {
   switch (aSessionType) {
-    case kGMPTemporySession: return "temporary";
-    case kGMPPersistentSession: return "persistent-license";
-    default: {
-      assert(false); // Should not reach here.
-      return "invalid";
-    }
+  case SessionType::kTemporary: return "temporary";
+  case SessionType::kPersistentLicense: return "persistent-license";
+  default: {
+    // We don't support any other license types.
+    assert(false);
+    return "invalid";
+  }
   }
 }
 
@@ -533,9 +580,15 @@ ClearKeyUtils::IsValidSessionId(const char* aBuff, uint32_t aLength)
   return true;
 }
 
-GMPMutex* GMPCreateMutex() {
-  GMPMutex* mutex;
-  auto err = GetPlatform()->createmutex(&mutex);
-  assert(mutex);
-  return GMP_FAILED(err) ? nullptr : mutex;
+string
+ClearKeyUtils::ToHexString(const uint8_t * aBytes, uint32_t aLength)
+{
+  stringstream ss;
+  ss << std::showbase << std::uppercase << std::hex;
+  for (uint32_t i = 0; i < aLength; ++i) {
+    ss << std::hex << static_cast<uint32_t>(aBytes[i]);
+    ss << " ";
+  }
+
+  return ss.str();
 }

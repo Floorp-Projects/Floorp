@@ -6,12 +6,12 @@ fails == system-alphabetic.html system-alphabetic.html
 fails == system-numeric.html system-numeric.html
 fails == system-additive.html system-additive.html
 fails == system-extends.html system-extends.html
-fails == system-cyclic-invalid.html system-cyclic-invalid.html
-fails == system-fixed-invalid.html system-fixed-invalid.html
-fails == system-symbolic-invalid.html system-symbolic-invalid.html
-fails == system-alphabetic-invalid.html system-alphabetic-invalid.html
-fails == system-numeric-invalid.html system-numeric-invalid.html
-fails == system-additive-invalid.html system-additive-invalid.html
+== system-cyclic-invalid.html system-cyclic-invalid.html
+== system-fixed-invalid.html system-fixed-invalid.html
+== system-symbolic-invalid.html system-symbolic-invalid.html
+== system-alphabetic-invalid.html system-alphabetic-invalid.html
+== system-numeric-invalid.html system-numeric-invalid.html
+== system-additive-invalid.html system-additive-invalid.html
 fails == system-extends-invalid.html system-extends-invalid.html
 fails == descriptor-negative.html descriptor-negative.html
 fails == descriptor-prefix.html descriptor-prefix.html

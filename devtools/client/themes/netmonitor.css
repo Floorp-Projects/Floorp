@@ -283,6 +283,11 @@
   background-color: #AAC3DC;
 }
 
+:root[platform="linux"].theme-firebug .requests-menu-header-button[data-sorted] {
+  background-color: #FAC8AF !important;
+  color: inherit !important;
+}
+
 .theme-firebug .requests-menu-header:hover:active {
   background-image: linear-gradient(rgba(0, 0, 0, 0.1),
                                     transparent);
@@ -689,7 +694,7 @@
 /* Headers tabpanel */
 
 #headers-tabpanel .summary {
-  background-color: var(--theme-toolbar-background);
+  background: var(--theme-toolbar-background);
 }
 
 /* Response tabpanel */
@@ -1099,12 +1104,6 @@
 .treeTable .textbox-input:focus {
   outline: 0;
   box-shadow: var(--theme-focus-box-shadow-textbox);
-}
-
-.panel-container {
-  /* FIXME: To avoid the issue which panel exceeds visible range,
-   * we set view heigh - 24px * 2 for toolbox height + tabs height */
-  height: calc(100vh - 48px);
 }
 
 .panel-container,

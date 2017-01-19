@@ -641,7 +641,6 @@ H264::DecodeSPSDataSetFromExtraData(const mozilla::MediaByteBuffer* aExtraData,
     // No SPS.
     return false;
   }
-  NS_ASSERTION(numSps <= MAX_SPS_COUNT, "Exceed the maximum SPS counts!");
 
   for (uint32_t idx = 0; idx < numSps; idx++) {
     uint16_t length = reader.ReadU16();
@@ -731,7 +730,6 @@ H264::DecodePPSDataSetFromExtraData(const mozilla::MediaByteBuffer* aExtraData,
     // No PPs.
     return false;
   }
-  NS_ASSERTION(numPps <= MAX_PPS_COUNT, "Exceed the maximum PPS counts!");
 
   for (uint32_t idx = 0; idx < numPps; idx++) {
     uint16_t length = reader.ReadU16();

@@ -41,7 +41,7 @@ using mozilla::CheckedUint32;
 // mozilla::Monitor non-reentrant.
 namespace mozilla {
 
-class MediaContentType;
+class MediaContainerType;
 
 // EME Key System String.
 extern const nsLiteralCString kEMEKeySystemClearkey;
@@ -355,11 +355,11 @@ UniquePtr<TrackInfo>
 CreateTrackInfoWithMIMEType(const nsACString& aCodecMIMEType);
 
 // Try and create a TrackInfo with a given codec MIME type, and optional extra
-// parameters from a content type (its MIME type and codecs are ignored).
+// parameters from a container type (its MIME type and codecs are ignored).
 UniquePtr<TrackInfo>
-CreateTrackInfoWithMIMETypeAndContentTypeExtraParameters(
+CreateTrackInfoWithMIMETypeAndContainerTypeExtraParameters(
   const nsACString& aCodecMIMEType,
-  const MediaContentType& aContentType);
+  const MediaContainerType& aContainerType);
 
 namespace detail {
 

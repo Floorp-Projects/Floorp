@@ -46,6 +46,7 @@ const RequestListHeader = createClass({
     scale: PropTypes.number,
     waterfallWidth: PropTypes.number,
     onHeaderClick: PropTypes.func.isRequired,
+    resizeWaterfall: PropTypes.func.isRequired,
   },
 
   componentDidMount() {
