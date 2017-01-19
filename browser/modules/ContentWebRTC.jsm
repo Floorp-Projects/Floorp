@@ -25,6 +25,7 @@ this.ContentWebRTC = {
 
     this._initialized = true;
     Services.obs.addObserver(handleGUMRequest, "getUserMedia:request", false);
+    Services.obs.addObserver(handleGUMStop, "recording-device-stopped", false);
     Services.obs.addObserver(handlePCRequest, "PeerConnection:request", false);
     Services.obs.addObserver(updateIndicators, "recording-device-events", false);
     Services.obs.addObserver(removeBrowserSpecificIndicator, "recording-window-ended", false);
@@ -35,6 +36,7 @@ this.ContentWebRTC = {
 
   uninit() {
     Services.obs.removeObserver(handleGUMRequest, "getUserMedia:request");
+    Services.obs.removeObserver(handleGUMStop, "recording-device-stopped");
     Services.obs.removeObserver(handlePCRequest, "PeerConnection:request");
     Services.obs.removeObserver(updateIndicators, "recording-device-events");
     Services.obs.removeObserver(removeBrowserSpecificIndicator, "recording-window-ended");
@@ -122,6 +124,19 @@ function handlePCRequest(aSubject, aTopic, aData) {
     secure: isSecure,
   };
   mm.sendAsyncMessage("rtcpeer:Request", request);
+}
+
+function handleGUMStop(aSubject, aTopic, aData) {
+  let contentWindow = Services.wm.getOuterWindowWithId(aSubject.windowID);
+
+  let request = {
+    windowID: aSubject.windowID,
+    rawID: aSubject.rawID,
+    mediaSource: aSubject.mediaSource,
+  };
+
+  let mm = getMessageManagerForWindow(contentWindow);
+  mm.sendAsyncMessage("webrtc:StopRecording", request);
 }
 
 function handleGUMRequest(aSubject, aTopic, aData) {

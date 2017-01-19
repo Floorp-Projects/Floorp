@@ -6,11 +6,20 @@
  * This is an internal IDL file
  */
 
+// for gUM request start (getUserMedia:request) notification,
+// rawID and mediaSource won't be set.
+// for gUM request stop (recording-device-stopped) notification due to page reload,
+// only windowID will be set.
+// for gUM request stop (recording-device-stopped) notification due to track stop,
+// only windowID, rawID and mediaSource will be set
+
 [NoInterfaceObject]
 interface GetUserMediaRequest {
   readonly attribute unsigned long long windowID;
   readonly attribute unsigned long long innerWindowID;
   readonly attribute DOMString callID;
+  readonly attribute DOMString rawID;
+  readonly attribute DOMString mediaSource;
   MediaStreamConstraints getConstraints();
   readonly attribute boolean isSecure;
 };
