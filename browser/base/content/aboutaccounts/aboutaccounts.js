@@ -304,18 +304,6 @@ var wrapper = {
 
 
 // Button onclick handlers
-function handleOldSync() {
-  let chromeWin = window
-    .QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIWebNavigation)
-    .QueryInterface(Ci.nsIDocShellTreeItem)
-    .rootTreeItem
-    .QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIDOMWindow)
-    .QueryInterface(Ci.nsIDOMChromeWindow);
-  let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "old-sync";
-  chromeWin.switchToTabHavingURI(url, true);
-}
 
 function getStarted() {
   show("remote");
@@ -503,10 +491,7 @@ document.addEventListener("DOMContentLoaded", function() {
   var buttonRetry = document.getElementById("buttonRetry");
   buttonRetry.addEventListener("click", retry);
 
-  var oldsync = document.getElementById("oldsync");
-  oldsync.addEventListener("click", handleOldSync);
-
-  var buttonOpenPrefs = document.getElementById("buttonOpenPrefs")
+  var buttonOpenPrefs = document.getElementById("buttonOpenPrefs");
   buttonOpenPrefs.addEventListener("click", openPrefs);
 }, {capture: true, once: true});
 
