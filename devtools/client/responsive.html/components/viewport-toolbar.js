@@ -16,7 +16,7 @@ module.exports = createClass({
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
     selectedDevice: PropTypes.string.isRequired,
-    onChangeViewportDevice: PropTypes.func.isRequired,
+    onChangeDevice: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
     onUpdateDeviceModalOpen: PropTypes.func.isRequired,
@@ -28,7 +28,7 @@ module.exports = createClass({
     let {
       devices,
       selectedDevice,
-      onChangeViewportDevice,
+      onChangeDevice,
       onResizeViewport,
       onRotateViewport,
       onUpdateDeviceModalOpen,
@@ -41,7 +41,7 @@ module.exports = createClass({
       DeviceSelector({
         devices,
         selectedDevice,
-        onChangeViewportDevice,
+        onChangeDevice,
         onResizeViewport,
         onUpdateDeviceModalOpen,
       }),
