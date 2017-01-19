@@ -7,6 +7,7 @@ var StarUI = {
   uri: null,
   _batching: false,
   _isNewBookmark: false,
+  _isComposing: false,
   _autoCloseTimer: 0,
 
   _element(aID) {
@@ -23,6 +24,9 @@ var StarUI = {
     element.addEventListener("keypress", this);
     element.addEventListener("mouseout", this);
     element.addEventListener("mousemove", this);
+    element.addEventListener("compositionstart", this);
+    element.addEventListener("compositionend", this);
+    element.addEventListener("input", this);
     element.addEventListener("popuphidden", this);
     element.addEventListener("popupshown", this);
     return this.panel = element;
@@ -135,6 +139,25 @@ var StarUI = {
             break;
         }
         break;
+      case "compositionstart":
+        if (aEvent.defaultPrevented) {
+          // If the composition was canceled, nothing to do here.
+          break;
+        }
+        // During composition, panel shouldn't be hidden automatically.
+        clearTimeout(this._autoCloseTimer);
+        this._isComposing = true;
+        break;
+      case "compositionend":
+        // After composition is committed, "mouseout" or something can set
+        // auto close timer.
+        this._isComposing = false;
+        break;
+      case "input":
+        // Might be edited some text without keyboard events nor composition
+        // events. Let's cancel auto close in such case.
+        clearTimeout(this._autoCloseTimer);
+        break;
       case "mouseout":
         // Explicit fall-through
       case "popupshown":
@@ -143,7 +166,7 @@ var StarUI = {
           break;
         }
         // auto-close if new and not interacted with
-        if (this._isNewBookmark) {
+        if (this._isNewBookmark && !this._isComposing) {
           // 3500ms matches the timeout that Pocket uses in
           // browser/extensions/pocket/content/panels/js/saved.js
           let delay = 3500;
