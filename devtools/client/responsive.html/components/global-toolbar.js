@@ -24,10 +24,10 @@ module.exports = createClass({
     selectedPixelRatio: PropTypes.shape(Types.pixelRatio).isRequired,
     touchSimulation: PropTypes.shape(Types.touchSimulation).isRequired,
     onChangeNetworkThrottling: PropTypes.func.isRequired,
-    onChangeViewportPixelRatio: PropTypes.func.isRequired,
+    onChangePixelRatio: PropTypes.func.isRequired,
+    onChangeTouchSimulation: PropTypes.func.isRequired,
     onExit: PropTypes.func.isRequired,
     onScreenshot: PropTypes.func.isRequired,
-    onUpdateTouchSimulation: PropTypes.func.isRequired,
   },
 
   mixins: [ addons.PureRenderMixin ],
@@ -42,10 +42,10 @@ module.exports = createClass({
       selectedPixelRatio,
       touchSimulation,
       onChangeNetworkThrottling,
-      onChangeViewportPixelRatio,
+      onChangePixelRatio,
+      onChangeTouchSimulation,
       onExit,
       onScreenshot,
-      onUpdateTouchSimulation
     } = this.props;
 
     let touchButtonClass = "toolbar-button devtools-button";
@@ -73,14 +73,14 @@ module.exports = createClass({
         displayPixelRatio,
         selectedDevice,
         selectedPixelRatio,
-        onChangeViewportPixelRatio,
+        onChangePixelRatio,
       }),
       dom.button({
         id: "global-touch-simulation-button",
         className: touchButtonClass,
         title: (touchSimulation.enabled ?
           getStr("responsive.disableTouch") : getStr("responsive.enableTouch")),
-        onClick: () => onUpdateTouchSimulation(!touchSimulation.enabled),
+        onClick: () => onChangeTouchSimulation(!touchSimulation.enabled),
       }),
       dom.button({
         id: "global-screenshot-button",
