@@ -20,6 +20,7 @@ import org.mozilla.gecko.sync.net.SyncResponse;
 import org.mozilla.gecko.sync.net.SyncStorageCollectionRequest;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
+import org.mozilla.gecko.sync.repositories.RepositoryStateProvider;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 
 import java.io.UnsupportedEncodingException;
@@ -42,7 +43,7 @@ import java.util.concurrent.TimeUnit;
  * we've received so far, and we perform an additional fetch, if we're allowed to do so by our
  * configuration. Batching stops when offset token is no longer present (indicating that we're done).
  *
- * If we are not allowed to perform multiple batches, we consider batching to be succesfully complete
+ * If we are not allowed to perform multiple batches, we consider batching to be successfully completed
  * after fist fetch request succeeds. Similarly, a trivial case of collection having less records than
  * the batch limit will also successfully complete in one fetch.
  *
@@ -61,6 +62,9 @@ public class BatchingDownloader {
     private final Uri baseCollectionUri;
     private final long fetchDeadline;
     private final boolean allowMultipleBatches;
+    private final boolean keepTrackOfHighWaterMark;
+
+    private RepositoryStateProvider stateProvider;
 
     /* package-local */ final AuthHeaderProvider authHeaderProvider;
 
@@ -74,12 +78,16 @@ public class BatchingDownloader {
             Uri baseCollectionUri,
             long fetchDeadline,
             boolean allowMultipleBatches,
+            boolean keepTrackOfHighWaterMark,
+            RepositoryStateProvider stateProvider,
             RepositorySession repositorySession) {
         this.repositorySession = repositorySession;
         this.authHeaderProvider = authHeaderProvider;
         this.baseCollectionUri = baseCollectionUri;
         this.allowMultipleBatches = allowMultipleBatches;
+        this.keepTrackOfHighWaterMark = keepTrackOfHighWaterMark;
         this.fetchDeadline = fetchDeadline;
+        this.stateProvider = stateProvider;
     }
 
     @VisibleForTesting
@@ -130,11 +138,6 @@ public class BatchingDownloader {
         return new SyncStorageCollectionRequest(collectionURI);
     }
 
-    public void fetchSince(RepositorySessionFetchRecordsDelegate fetchRecordsDelegate, long timestamp, long batchLimit, String sortOrder) {
-        this.fetchSince(fetchRecordsDelegate, timestamp, batchLimit, sortOrder, null);
-    }
-
-    @VisibleForTesting
     public void fetchSince(RepositorySessionFetchRecordsDelegate fetchRecordsDelegate, long timestamp, long batchLimit, String sortOrder, String offset) {
         try {
             SyncStorageCollectionRequest request = makeSyncStorageCollectionRequest(timestamp,
@@ -199,6 +202,16 @@ public class BatchingDownloader {
             final long normalizedTimestamp = response.normalizedTimestampForHeader(SyncResponse.X_LAST_MODIFIED);
             Logger.debug(LOG_TAG, "Fetch completed. Timestamp is " + normalizedTimestamp);
 
+            // This isn't great, but shouldn't be too problematic - but do see notes below.
+            // Failing to reset a resume context after we're done with batching means that on next
+            // sync we'll erroneously try to resume downloading. If resume proceeds, we will fetch
+            // from an older timestamp, but offset by the amount of records we've fetched prior.
+            // Since we're diligent about setting a X-I-U-S header, any remote collection changes
+            // will be caught and we'll receive a 412.
+            if (!BatchingDownloaderController.resetResumeContextAndCommit(this.stateProvider)) {
+                Logger.warn(LOG_TAG, "Failed to reset resume context while completing a batch");
+            }
+
             this.workTracker.delayWorkItem(new Runnable() {
                 @Override
                 public void run() {
@@ -207,6 +220,19 @@ public class BatchingDownloader {
                 }
             });
             return;
+        }
+
+        // This is unfortunate, but largely just means that in case we need to resume later on, it
+        // either won't be possible (and we'll fetch w/o resuming), or won't be as efficient (i.e.
+        // we'll download more records than necessary).
+        if (BatchingDownloaderController.isResumeContextSet(this.stateProvider)) {
+            if (!BatchingDownloaderController.updateResumeContextAndCommit(this.stateProvider, offset)) {
+                Logger.warn(LOG_TAG, "Failed to update resume context while processing a batch.");
+            }
+        } else {
+            if (!BatchingDownloaderController.setInitialResumeContextAndCommit(this.stateProvider, offset, newer, sort)) {
+                Logger.warn(LOG_TAG, "Failed to set initial resume context while processing a batch.");
+            }
         }
 
         // We need to make another batching request!
@@ -233,6 +259,9 @@ public class BatchingDownloader {
                     limit, full, sort, ids, offset);
             this.fetchWithParameters(newer, limit, full, sort, ids, newRequest, fetchRecordsDelegate);
         } catch (final URISyntaxException | UnsupportedEncodingException e) {
+            if (!this.stateProvider.commit()) {
+                Logger.warn(LOG_TAG, "Failed to commit repository state while handling request creation error");
+            }
             this.workTracker.delayWorkItem(new Runnable() {
                 @Override
                 public void run() {
@@ -253,6 +282,25 @@ public class BatchingDownloader {
                               @Nullable final SyncStorageCollectionRequest request) {
         this.removeRequestFromPending(request);
         this.abortRequests();
+
+        // Resume context is not discarded if we failed because of reaching our deadline. In this case,
+        // we keep it allowing us to resume our download exactly where we left off.
+        // Discard resume context for all other failures: 412 (concurrent modification), HTTP errors, ...
+        if (!(ex instanceof SyncDeadlineReachedException)) {
+            // Failing to reset context means that we will try to resume once we re-sync current stage.
+            // This won't affect X-I-U-S logic in case of 412 (it's set separately from resume context),
+            // and same notes apply after failing to reset context in onFetchCompleted (see above).
+            if (!BatchingDownloaderController.resetResumeContextAndCommit(stateProvider)) {
+                Logger.warn(LOG_TAG, "Failed to reset resume context while processing a non-deadline exception");
+            }
+        } else {
+            // Failing to commit the context here means that we didn't commit the latest high-water-mark,
+            // and won't be as efficient once we re-sync. That is, we might download more records than necessary.
+            if (!this.stateProvider.commit()) {
+                Logger.warn(LOG_TAG, "Failed to commit resume context while processing a deadline exception");
+            }
+        }
+
         this.workTracker.delayWorkItem(new Runnable() {
             @Override
             public void run() {
@@ -265,8 +313,13 @@ public class BatchingDownloader {
     public void onFetchedRecord(CryptoRecord record,
                                 RepositorySessionFetchRecordsDelegate fetchRecordsDelegate) {
         this.workTracker.incrementOutstanding();
+
         try {
             fetchRecordsDelegate.onFetchedRecord(record);
+            // NB: changes to stateProvider are committed in either onFetchCompleted or handleFetchFailed.
+            if (this.keepTrackOfHighWaterMark) {
+                this.stateProvider.setLong(RepositoryStateProvider.KEY_HIGH_WATER_MARK, record.lastModified);
+            }
         } catch (Exception ex) {
             Logger.warn(LOG_TAG, "Got exception calling onFetchedRecord with WBO.", ex);
             throw new RuntimeException(ex);

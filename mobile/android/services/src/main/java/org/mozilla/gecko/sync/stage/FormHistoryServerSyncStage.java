@@ -10,6 +10,7 @@ import org.mozilla.gecko.sync.CryptoRecord;
 import org.mozilla.gecko.sync.middleware.BufferingMiddlewareRepository;
 import org.mozilla.gecko.sync.middleware.storage.MemoryBufferStorage;
 import org.mozilla.gecko.sync.repositories.ConfigurableServer15Repository;
+import org.mozilla.gecko.sync.repositories.NonPersistentRepositoryStateProvider;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.android.FormHistoryRepositorySession;
@@ -39,6 +40,27 @@ public class FormHistoryServerSyncStage extends ServerSyncStage {
     return VersionConstants.FORMS_ENGINE_VERSION;
   }
 
+  /**
+   * We're downloading records into a non-persistent buffer for safety, so we can't use a H.W.M.
+   * Once this stage is using a persistent buffer, this should change.
+   *
+   * @return HighWaterMark.Disabled
+   */
+  @Override
+  protected HighWaterMark getAllowedToUseHighWaterMark() {
+    return HighWaterMark.Disabled;
+  }
+
+  /**
+   * Full batching is allowed, because we want all of the records.
+   *
+   * @return MultipleBatches.Enabled
+   */
+  @Override
+  protected MultipleBatches getAllowedMultipleBatches() {
+    return MultipleBatches.Enabled;
+  }
+
   @Override
   protected Repository getRemoteRepository() throws URISyntaxException {
     String collection = getCollection();
@@ -51,7 +73,10 @@ public class FormHistoryServerSyncStage extends ServerSyncStage {
             session.config.infoConfiguration,
             FORM_HISTORY_BATCH_LIMIT,
             FORM_HISTORY_SORT,
-            true /* allow multiple batches */);
+            getAllowedMultipleBatches(),
+            getAllowedToUseHighWaterMark(),
+            getRepositoryStateProvider()
+    );
   }
 
   @Override

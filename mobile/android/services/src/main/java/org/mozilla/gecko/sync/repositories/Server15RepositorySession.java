@@ -13,6 +13,7 @@ import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDeleg
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 import org.mozilla.gecko.sync.repositories.downloaders.BatchingDownloader;
+import org.mozilla.gecko.sync.repositories.downloaders.BatchingDownloaderController;
 import org.mozilla.gecko.sync.repositories.uploaders.BatchingUploader;
 
 public class Server15RepositorySession extends RepositorySession {
@@ -25,7 +26,14 @@ public class Server15RepositorySession extends RepositorySession {
   public Server15RepositorySession(Repository repository) {
     super(repository);
     this.serverRepository = (Server15Repository) repository;
-    this.downloader = initializeDownloader(this);
+    this.downloader = new BatchingDownloader(
+            this.serverRepository.authHeaderProvider,
+            Uri.parse(this.serverRepository.collectionURI().toString()),
+            this.serverRepository.getSyncDeadline(),
+            this.serverRepository.getAllowMultipleBatches(),
+            this.serverRepository.getAllowHighWaterMark(),
+            this.serverRepository.stateProvider,
+            this);
   }
 
   @Override
@@ -49,7 +57,9 @@ public class Server15RepositorySession extends RepositorySession {
   @Override
   public void fetchSince(long sinceTimestamp,
                          RepositorySessionFetchRecordsDelegate delegate) {
-    this.downloader.fetchSince(
+    BatchingDownloaderController.resumeFetchSinceIfPossible(
+            this.downloader,
+            this.serverRepository.stateProvider,
             delegate,
             sinceTimestamp,
             serverRepository.getBatchLimit(),
@@ -103,17 +113,32 @@ public class Server15RepositorySession extends RepositorySession {
     uploader.noMoreRecordsToUpload();
   }
 
+  /**
+   * @return Repository's high-water-mark if it's available, its use is allowed by the repository,
+   * repository is set to fetch oldest-first, and it's greater than collection's last-synced timestamp.
+   * Otherwise, returns repository's last-synced timestamp.
+   */
+  @Override
+  public long getLastSyncTimestamp() {
+    if (!serverRepository.getAllowHighWaterMark() || !serverRepository.getSortOrder().equals("oldest")) {
+      return super.getLastSyncTimestamp();
+    }
+
+    final Long highWaterMark = serverRepository.stateProvider.getLong(
+            RepositoryStateProvider.KEY_HIGH_WATER_MARK);
+
+    // After a successful sync we expect that last-synced timestamp for a collection will be greater
+    // than the high-water-mark. High-water-mark is mostly useful in case of resuming a sync,
+    // and if we're resuming we did not bump our last-sync timestamps during the previous sync.
+    if (highWaterMark == null || super.getLastSyncTimestamp() > highWaterMark) {
+      return super.getLastSyncTimestamp();
+    }
+
+    return highWaterMark;
+  }
+
   @Override
   public boolean dataAvailable() {
     return serverRepository.updateNeeded(getLastSyncTimestamp());
-  }
-
-  protected static BatchingDownloader initializeDownloader(final Server15RepositorySession serverRepositorySession) {
-    return new BatchingDownloader(
-            serverRepositorySession.serverRepository.authHeaderProvider,
-            Uri.parse(serverRepositorySession.serverRepository.collectionURI().toString()),
-            serverRepositorySession.serverRepository.getSyncDeadline(),
-            serverRepositorySession.serverRepository.getAllowMultipleBatches(),
-            serverRepositorySession);
   }
 }

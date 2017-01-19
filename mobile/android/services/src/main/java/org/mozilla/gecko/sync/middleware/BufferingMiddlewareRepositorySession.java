@@ -158,11 +158,6 @@ import java.util.concurrent.Executors;
         this.storeDelegate = delegate;
     }
 
-    @Override
-    public long getHighWaterMarkTimestamp() {
-        return bufferStorage.latestModifiedTimestamp();
-    }
-
     private boolean mayProceedToMergeBuffer() {
         // If our buffer storage is not persistent, disallowing merging after buffer has been filled
         // means throwing away records only to re-download them later.
