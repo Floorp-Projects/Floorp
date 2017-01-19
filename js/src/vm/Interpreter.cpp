@@ -1211,8 +1211,9 @@ ProcessTryNotes(JSContext* cx, EnvironmentIter& ei, InterpreterRegs& regs)
             // stack. The iterator object is second from the top.
             MOZ_ASSERT(tn->stackDepth > 1);
             Value* sp = regs.spForStackDepth(tn->stackDepth);
-            MOZ_ASSERT(sp[-1].isBoolean());
-            if (sp[-1].isFalse()) {
+            RootedValue doneValue(cx, sp[-1]);
+            bool done = ToBoolean(doneValue);
+            if (!done) {
                 RootedObject iterObject(cx, &sp[-2].toObject());
                 if (!IteratorCloseForException(cx, iterObject)) {
                     SettleOnTryNote(cx, tn, ei, regs);
