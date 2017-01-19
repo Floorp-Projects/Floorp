@@ -13,7 +13,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1285128
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1285128">Mozilla Bug 1285128</a>
 <p id="display"></p>
-<div id="target0" style="width: 200px; height: 200px; background: green"></div>
+<div id="target0" style="width: 50px; height: 50px; background: green"></div>
+<div id="target1" style="width: 50px; height: 50px; background: red"></div>
 <script type="text/javascript">
 
 /** Test for Bug 1285128 **/
@@ -31,7 +32,7 @@ function runTests() {
     });
   });
 
-  target0.addEventListener("mouseenter", () => {
+  target1.addEventListener("mouseup", () => {
     ok(!receivedPointerEvents, "synthesized mousemove should not trigger any pointer events");
     SimpleTest.finish();
   });
@@ -39,6 +40,8 @@ function runTests() {
   synthesizeMouseAtCenter(target0, { type: "mousemove",
                                      inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE,
                                      isWidgetEventSynthesized: true });
+  synthesizeMouseAtCenter(target1, { type: "mousedown" });
+  synthesizeMouseAtCenter(target1, { type: "mouseup" });
 }
 
 SimpleTest.waitForFocus(() => {
