@@ -76,6 +76,11 @@ public abstract class RepositorySession {
     return lastSyncTimestamp;
   }
 
+  // Override this in the buffering wrappers.
+  public long getHighWaterMarkTimestamp() {
+    return 0;
+  }
+
   public static long now() {
     return System.currentTimeMillis();
   }
@@ -144,6 +149,27 @@ public abstract class RepositorySession {
       }
     };
     storeWorkQueue.execute(command);
+  }
+
+  /**
+   * Indicates that a number of records have been stored, more are still to come but after some time,
+   * and now would be a good time to flush records and perform any other similar operations.
+   */
+  public void storeFlush() {
+  }
+
+  /**
+   * During flow of records, indicates that source failed.
+   *
+   * @param e indicates reason of failure.
+     */
+  public void sourceFailed(Exception e) {
+  }
+
+  /**
+   * Indicates that a flow of records have been completed.
+   */
+  public void performCleanup() {
   }
 
   public abstract void wipe(RepositorySessionWipeDelegate delegate);
