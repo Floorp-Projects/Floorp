@@ -349,7 +349,7 @@ GMPChild::AnswerStartPlugin(const nsString& aAdapter)
   auto platformAPI = new GMPPlatformAPI();
   InitPlatformAPI(*platformAPI, this);
 
-  mGMPLoader = GMPProcessChild::GetGMPLoader();
+  mGMPLoader = CreateGMPLoader();
   if (!mGMPLoader) {
     NS_WARNING("Failed to get GMPLoader");
     delete platformAPI;
