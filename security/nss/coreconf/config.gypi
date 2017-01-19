@@ -52,6 +52,7 @@
           'use_system_zlib%': 1,
           'nspr_libs%': ['-lplds4', '-lplc4', '-lnspr4'],
           'zlib_libs%': ['-lz'],
+          'optimize_flags%': '-O2',
           'dll_prefix': 'lib',
           'conditions': [
             ['OS=="mac"', {
@@ -105,7 +106,6 @@
     'fuzz%': 0,
     'sign_libs%': 1,
     'use_pprof%': 0,
-    'ct_verif%': 0,
     'nss_public_dist_dir%': '<(nss_dist_dir)/public',
     'nss_private_dist_dir%': '<(nss_dist_dir)/private',
   },
@@ -115,8 +115,6 @@
     'variables': {
       'mapfile%': '',
       'test_build%': 0,
-      'debug_optimization_level%': '0',
-      'release_optimization_level%': '2',
     },
     'standalone_static_library': 0,
     'include_dirs': [
@@ -134,11 +132,6 @@
           '-ldl',
           '-lc',
         ],
-      }],
-      [ 'use_asan==1 or use_ubsan!=0 or fuzz==1', {
-        'variables': {
-          'debug_optimization_level%': '1',
-        },
       }],
     ],
     'target_conditions': [
@@ -353,6 +346,12 @@
               '-Wno-unused-function',
             ]
           }],
+          [ 'fuzz==1 or use_asan==1 or use_ubsan!=0', {
+            'cflags': ['-O1'],
+            'xcode_settings': {
+              'GCC_OPTIMIZATION_LEVEL': '1', # -O1
+            }
+          }],
           [ 'use_asan==1', {
             'variables': {
               'asan_flags': '<!(<(python) <(DEPTH)/coreconf/sanitizers.py asan)',
@@ -473,6 +472,7 @@
                     ],
                   },
                 },
+
               }],
               [ 'target_arch=="x64"', {
                 'msvs_configuration_platform': 'x64',
@@ -515,15 +515,14 @@
         ],
         #TODO: DEBUG_$USER
         'defines': ['DEBUG'],
-        'cflags': [ '-O<(debug_optimization_level)' ],
         'xcode_settings': {
           'COPY_PHASE_STRIP': 'NO',
-          'GCC_OPTIMIZATION_LEVEL': '<(debug_optimization_level)',
+          'GCC_OPTIMIZATION_LEVEL': '0',
           'GCC_GENERATE_DEBUGGING_SYMBOLS': 'YES',
         },
         'msvs_settings': {
           'VCCLCompilerTool': {
-            'Optimization': '<(debug_optimization_level)',
+            'Optimization': '0',
             'BasicRuntimeChecks': '3',
             'RuntimeLibrary': '2', # /MD
           },
@@ -538,15 +537,16 @@
       # Common settings for release should go here.
       'Release': {
         'inherit_from': ['Common'],
-        'defines': ['NDEBUG'],
-        'cflags': [ '-O<(release_optimization_level)' ],
+        'defines': [
+          'NDEBUG',
+        ],
         'xcode_settings': {
           'DEAD_CODE_STRIPPING': 'YES',  # -Wl,-dead_strip
-          'GCC_OPTIMIZATION_LEVEL': '<(release_optimization_level)',
+          'GCC_OPTIMIZATION_LEVEL': '2', # -O2
         },
         'msvs_settings': {
           'VCCLCompilerTool': {
-            'Optimization': '<(release_optimization_level)',
+            'Optimization': '2', # /Os
             'RuntimeLibrary': '2', # /MD
           },
           'VCLinkerTool': {

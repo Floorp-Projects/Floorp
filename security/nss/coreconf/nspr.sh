@@ -5,6 +5,7 @@
 # the features or platforms that the regular NSPR build supports.
 
 # variables
+nspr_opt=()
 nspr_cflags=
 nspr_cxxflags=
 nspr_ldflags=
@@ -16,37 +17,37 @@ fi
 
 nspr_sanitizer()
 {
-    local extra=$(python $cwd/coreconf/sanitizers.py "$@")
-    nspr_cflags="$nspr_cflags $extra"
-    nspr_cxxflags="$nspr_cxxflags $extra"
-    nspr_ldflags="$nspr_ldflags $extra"
+    nspr_cflags="$nspr_cflags $(python $cwd/coreconf/sanitizers.py $1 $2)"
+    nspr_cxxflags="$nspr_cxxflags $(python $cwd/coreconf/sanitizers.py $1 $2)"
+    nspr_ldflags="$nspr_ldflags $(python $cwd/coreconf/sanitizers.py $1 $2)"
 }
 
-nspr_build()
+verbose()
 {
-    local nspr_dir="$cwd"/../nspr/$target
-    mkdir -p "$nspr_dir"
+    CFLAGS=$nspr_cflags CXXFLAGS=$nspr_cxxflags LDFLAGS=$nspr_ldflags \
+      CC=$CC CXX=$CCC ../configure "${nspr_opt[@]}" --prefix="$obj_dir"
+    make -C "$cwd/../nspr/$target"
+    make -C "$cwd/../nspr/$target" install
+}
 
-    # These NSPR options are directory-specific, so they don't need to be
-    # included in nspr_opt and changing them doesn't force a rebuild of NSPR.
-    extra_params=(--prefix="$dist_dir"/$target)
-    if [ "$opt_build" = 1 ]; then
-        extra_params+=(--disable-debug --enable-optimize)
+silent()
+{
+    echo "[1/3] configure NSPR ..."
+    CFLAGS=$nspr_cflags CXXFLAGS=$nspr_cxxflags LDFLAGS=$nspr_ldflags \
+      CC=$CC CXX=$CCC ../configure "${nspr_opt[@]}" --prefix="$obj_dir" 1> /dev/null
+    echo "[2/3] make NSPR ..."
+    make -C "$cwd/../nspr/$target" 1> /dev/null
+    echo "[3/3] install NSPR ..."
+    make -C "$cwd/../nspr/$target" install 1> /dev/null
+}
+
+build_nspr()
+{
+    mkdir -p "$cwd/../nspr/$target"
+    cd "$cwd/../nspr/$target"
+    if [ "$1" == 1 ]; then
+        verbose
+    else
+        silent
     fi
-
-    echo "NSPR [1/3] configure ..."
-    pushd "$nspr_dir" >/dev/null
-    CFLAGS="$nspr_cflags" CXXFLAGS="$nspr_cxxflags" \
-          LDFLAGS="$nspr_ldflags" CC="$CC" CXX="$CCC" \
-          run_verbose ../configure "${extra_params[@]}" "$@"
-    popd >/dev/null
-    echo "NSPR [2/3] make ..."
-    run_verbose make -C "$nspr_dir"
-    echo "NSPR [3/3] install ..."
-    run_verbose make -C "$nspr_dir" install
-}
-
-nspr_clean()
-{
-    rm -rf "$cwd"/../nspr/$target
 }

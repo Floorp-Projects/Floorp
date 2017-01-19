@@ -256,10 +256,11 @@ tls13_ClientHandleKeyShareXtn(const sslSocket *ss, TLSExtensionData *xtnData, PR
     PORT_Assert(PR_CLIST_IS_EMPTY(&xtnData->remoteKeyShares));
 
     PORT_Assert(!ss->sec.isServer);
-
-    /* The server must not send this extension when negotiating < TLS 1.3. */
     if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
-        PORT_SetError(SSL_ERROR_EXTENSION_DISALLOWED_FOR_VERSION);
+        /* This can't happen because the extension processing
+         * code filters out TLS 1.3 extensions when not in
+         * TLS 1.3 mode. */
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
 
@@ -690,10 +691,9 @@ tls13_ClientHandlePreSharedKeyXtn(const sslSocket *ss, TLSExtensionData *xtnData
     SSL_TRC(3, ("%d: SSL3[%d]: handle pre_shared_key extension",
                 SSL_GETPID(), ss->fd));
 
-    /* The server must not send this extension when negotiating < TLS 1.3. */
+    /* If we are doing < TLS 1.3, then ignore this. */
     if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
-        PORT_SetError(SSL_ERROR_EXTENSION_DISALLOWED_FOR_VERSION);
-        return SECFailure;
+        return SECSuccess;
     }
 
     rv = ssl3_ExtConsumeHandshakeNumber(ss, &index, 2, &data->data, &data->len);
@@ -816,7 +816,7 @@ tls13_ClientHandleEarlyDataXtn(const sslSocket *ss, TLSExtensionData *xtnData, P
     SSL_TRC(3, ("%d: TLS13[%d]: handle early_data extension",
                 SSL_GETPID(), ss->fd));
 
-    /* The server must not send this extension when negotiating < TLS 1.3. */
+    /* If we are doing < TLS 1.3, then ignore this. */
     if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
         PORT_SetError(SSL_ERROR_EXTENSION_DISALLOWED_FOR_VERSION);
         return SECFailure;
@@ -843,7 +843,7 @@ tls13_ClientHandleTicketEarlyDataInfoXtn(const sslSocket *ss, TLSExtensionData *
     SSL_TRC(3, ("%d: TLS13[%d]: handle early_data_info extension",
                 SSL_GETPID(), ss->fd));
 
-    /* The server must not send this extension when negotiating < TLS 1.3. */
+    /* If we are doing < TLS 1.3, then ignore this. */
     if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
         PORT_SetError(SSL_ERROR_EXTENSION_DISALLOWED_FOR_VERSION);
         return SECFailure;
@@ -1127,10 +1127,9 @@ tls13_HandleShortHeaderXtn(
     SSL_TRC(3, ("%d: TLS13[%d]: handle early_data extension",
                 SSL_GETPID(), ss->fd));
 
-    /* The server must not send this extension when negotiating < TLS 1.3. */
+    /* If we are doing < TLS 1.3, then ignore this. */
     if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
-        PORT_SetError(SSL_ERROR_EXTENSION_DISALLOWED_FOR_VERSION);
-        return SECFailure;
+        return SECSuccess;
     }
 
     /* Presently this is incompatible with 0-RTT. We will fix if
