@@ -402,7 +402,7 @@ private:
   void UpdateLogicalPosition()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(!IsShutdown());
+    MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
     // Per spec, offical position remains stable during pause and seek.
     if (mPlayState == PLAY_STATE_PAUSED || IsSeeking()) {
       return;
@@ -464,7 +464,7 @@ private:
   void UpdateReadyState()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(!IsShutdown());
+    MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
     mOwner->UpdateReadyState();
   }
 
@@ -503,7 +503,7 @@ protected:
 
   void SetExplicitDuration(double aValue)
   {
-    MOZ_ASSERT(!IsShutdown());
+    MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
     mExplicitDuration.Set(Some(aValue));
 
     // We Invoke DurationChanged explicitly, rather than using a watcher, so
