@@ -16,15 +16,15 @@ function TestStreamListener() {
   this.state = "initial";
 }
 TestStreamListener.prototype = {
-  onStartRequest: function() {
+  onStartRequest: function () {
     this.setState("start");
   },
 
-  onStopRequest: function() {
+  onStopRequest: function () {
     this.setState("stop");
   },
 
-  onDataAvailable: function(request, context, inputStream, offset, count) {
+  onDataAvailable: function (request, context, inputStream, offset, count) {
     const sin = Components.classes["@mozilla.org/scriptableinputstream;1"]
           .createInstance(nsIScriptableInputStream);
     sin.init(inputStream);
@@ -32,7 +32,7 @@ TestStreamListener.prototype = {
     this.setState("data");
   },
 
-  setState: function(state) {
+  setState: function (state) {
     this.state = state;
     if (this._deferred) {
       this._deferred.resolve(state);
@@ -40,7 +40,7 @@ TestStreamListener.prototype = {
     }
   },
 
-  onStateChanged: function() {
+  onStateChanged: function () {
     if (!this._deferred) {
       this._deferred = promise.defer();
     }
@@ -54,7 +54,7 @@ function TestChannel() {
   this._throttleQueue = null;
 }
 TestChannel.prototype = {
-  QueryInterface: function() {
+  QueryInterface: function () {
     return this;
   },
 
@@ -67,14 +67,14 @@ TestChannel.prototype = {
     this.state = "throttled";
   },
 
-  setNewListener: function(listener) {
+  setNewListener: function (listener) {
     this.listener = listener;
     this.state = "listener";
     return this.testListener;
   },
 };
 
-add_task(function*() {
+add_task(function* () {
   let throttler = new NetworkThrottleManager({
     latencyMean: 1,
     latencyMax: 1,
@@ -116,10 +116,14 @@ add_task(function*() {
       Cc["@mozilla.org/network/http-activity-distributor;1"]
       .getService(Ci.nsIHttpActivityDistributor);
   let activitySeen = false;
-  listener.addActivityCallback(() => activitySeen = true, null, null, null,
-                               activityDistributor
-                               .ACTIVITY_SUBTYPE_RESPONSE_COMPLETE,
-                               null, TEST_INPUT.length, null);
+  listener.addActivityCallback(
+    () => {
+      activitySeen = true;
+    },
+    null, null, null,
+    activityDistributor.ACTIVITY_SUBTYPE_RESPONSE_COMPLETE,
+    null, TEST_INPUT.length, null
+  );
 
   // onDataAvailable is required to immediately read the data.
   listener.onDataAvailable(null, null, testInputStream, 0, 6);

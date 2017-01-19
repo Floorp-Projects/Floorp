@@ -6,40 +6,45 @@
     <!-- Any copyright is dedicated to the Public Domain.
        - http://creativecommons.org/publicdomain/zero/1.0/ -->
     <script type="text/javascript"><!--
-      var setAllowAllCookies = false;
+      "use strict";
+      let setAllowAllCookies = false;
 
-      function makeXhr(aMethod, aUrl, aRequestBody, aCallback) {
+      function makeXhr(method, url, requestBody, callback) {
         // On the first call, allow all cookies and set cookies, then resume the actual test
-        if (!setAllowAllCookies)
-          SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0]]}, function () {
+        if (!setAllowAllCookies) {
+          SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0]]},
+          function () {
             setAllowAllCookies = true;
             setCookies();
-            makeXhrCallback(aMethod, aUrl, aRequestBody, aCallback);
+            makeXhrCallback(method, url, requestBody, callback);
           });
-        else
-          makeXhrCallback(aMethod, aUrl, aRequestBody, aCallback);
+        } else {
+          makeXhrCallback(method, url, requestBody, callback);
+        }
       }
 
-      function makeXhrCallback(aMethod, aUrl, aRequestBody, aCallback) {
-        var xmlhttp = new XMLHttpRequest();
-        xmlhttp.open(aMethod, aUrl, true);
-        if (aCallback) {
-          xmlhttp.onreadystatechange = function() {
+      function makeXhrCallback(method, url, requestBody, callback) {
+        const xmlhttp = new XMLHttpRequest();
+        xmlhttp.open(method, url, true);
+        if (callback) {
+          xmlhttp.onreadystatechange = function () {
             if (xmlhttp.readyState == 4) {
-              aCallback();
+              callback();
             }
           };
         }
-        xmlhttp.send(aRequestBody);
+        xmlhttp.send(requestBody);
       }
 
-      function testXhrGet(aCallback) {
-        makeXhr('get', 'data.json', null, aCallback);
+      /* exported testXhrGet */
+      function testXhrGet(callback) {
+        makeXhr("get", "data.json", null, callback);
       }
 
-      function testXhrPost(aCallback) {
-        var body = "Hello world! " + (new Array(50)).join("foobaz barr");
-        makeXhr('post', 'data.json', body, aCallback);
+      /* exported testXhrPost */
+      function testXhrPost(callback) {
+        const body = "Hello world! " + (new Array(50)).join("foobaz barr");
+        makeXhr("post", "data.json", body, callback);
       }
 
       function setCookies() {
@@ -47,7 +52,7 @@
         document.cookie = "omgfoo=bug768096";
         document.cookie = "badcookie=bug826798=st3fan";
       }
-    // --></script>
+      </script>
   </head>
   <body>
     <h1>Web Console HTTP Logging Testpage</h1>
