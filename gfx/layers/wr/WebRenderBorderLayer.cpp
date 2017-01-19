@@ -34,7 +34,12 @@ WebRenderBorderLayer::RenderLayer()
   Rect overflow(0, 0, relBounds.width, relBounds.height);
   Matrix4x4 transform;// = GetTransform();
   WrBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(wr::ToWrRect(relBounds), wr::ToWrRect(overflow), Nothing(), transform, FrameMetrics::NULL_SCROLL_ID));
+      OpDPPushStackingContext(wr::ToWrRect(relBounds),
+                              wr::ToWrRect(overflow),
+                              Nothing(),
+                              GetAnimations(),
+                              transform,
+                              FrameMetrics::NULL_SCROLL_ID));
 
   WrBridge()->AddWebRenderCommand(
     OpDPPushBorder(wr::ToWrRect(rect), wr::ToWrRect(clip),

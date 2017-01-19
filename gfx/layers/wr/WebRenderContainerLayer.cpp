@@ -27,7 +27,12 @@ WebRenderContainerLayer::RenderLayer()
   Maybe<WrImageMask> mask = buildMaskLayer();
 
   WrBridge()->AddWebRenderCommand(
-    OpDPPushStackingContext(wr::ToWrRect(relBounds), wr::ToWrRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
+    OpDPPushStackingContext(wr::ToWrRect(relBounds),
+                            wr::ToWrRect(overflow),
+                            mask,
+                            GetLayer()->GetAnimations(),
+                            transform,
+                            FrameMetrics::NULL_SCROLL_ID));
   for (LayerPolygon& child : children) {
     if (child.layer->IsBackfaceHidden()) {
       continue;
