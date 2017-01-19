@@ -300,10 +300,11 @@ void
 DisplayListBuilder::PushStackingContext(const WrRect& aBounds,
                                         const WrRect& aOverflow,
                                         const WrImageMask* aMask,
-                                        const gfx::Matrix4x4& aTransform)
+                                        const gfx::Matrix4x4& aTransform,
+                                        const WrMixBlendMode& aMixBlendMode)
 {
   wr_dp_push_stacking_context(mWrState, aBounds, aOverflow, aMask,
-                              &aTransform.components[0]);
+                              &aTransform.components[0], aMixBlendMode);
 }
 
 void

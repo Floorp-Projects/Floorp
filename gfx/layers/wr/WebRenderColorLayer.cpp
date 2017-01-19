@@ -7,6 +7,7 @@
 
 #include "LayersLogging.h"
 #include "mozilla/webrender/webrender_ffi.h"
+#include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 
 namespace mozilla {
@@ -32,6 +33,7 @@ WebRenderColorLayer::RenderLayer()
   gfx::Matrix4x4 transform;// = GetTransform();
   gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
+  WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
   Maybe<WrImageMask> mask = buildMaskLayer();
 
@@ -41,6 +43,7 @@ WebRenderColorLayer::RenderLayer()
                               mask,
                               GetAnimations(),
                               transform,
+                              mixBlendMode,
                               FrameMetrics::NULL_SCROLL_ID));
   WrBridge()->AddWebRenderCommand(
     OpDPPushRect(wr::ToWrRect(rect), wr::ToWrRect(clip), mColor.r, mColor.g, mColor.b, mColor.a));
