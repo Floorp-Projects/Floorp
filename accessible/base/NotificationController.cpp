@@ -220,6 +220,7 @@ NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent)
     if (prevTextChange && prevHide->Parent() == mutEvent->Parent()) {
       if (prevHide->mNextSibling == target) {
         target->AppendTextTo(prevTextChange->mModifiedText);
+        prevHide->mTextChangeEvent.swap(mutEvent->mTextChangeEvent);
       } else if (prevHide->mPrevSibling == target) {
         nsString temp;
         target->AppendTextTo(temp);
@@ -228,9 +229,8 @@ NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent)
         temp += prevTextChange->mModifiedText;;
         prevTextChange->mModifiedText = temp;
         prevTextChange->mStart -= extraLen;
+        prevHide->mTextChangeEvent.swap(mutEvent->mTextChangeEvent);
       }
-
-      prevHide->mTextChangeEvent.swap(mutEvent->mTextChangeEvent);
     }
   } else if (prevEvent && mutEvent->IsShow() &&
              prevEvent->GetEventType() == nsIAccessibleEvent::EVENT_SHOW) {
@@ -241,15 +241,15 @@ NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent)
       int32_t prevIndex = prevShow->GetAccessible()->IndexInParent();
       if (prevIndex + 1 == index) {
         target->AppendTextTo(prevTextChange->mModifiedText);
+        prevShow->mTextChangeEvent.swap(mutEvent->mTextChangeEvent);
       } else if (index + 1 == prevIndex) {
         nsString temp;
         target->AppendTextTo(temp);
         prevTextChange->mStart -= temp.Length();
         temp += prevTextChange->mModifiedText;
         prevTextChange->mModifiedText = temp;
+        prevShow->mTextChangeEvent.swap(mutEvent->mTextChangeEvent);
       }
-
-      prevShow->mTextChangeEvent.swap(mutEvent->mTextChangeEvent);
     }
   }
 
