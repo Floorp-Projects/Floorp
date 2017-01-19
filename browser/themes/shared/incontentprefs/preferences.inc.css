@@ -248,10 +248,7 @@ treecol {
    active vbox needs */
 #historyPane:not([selectedIndex="1"]) > #historyDontRememberPane,
 #historyPane:not([selectedIndex="2"]) > #historyCustomPane,
-#weavePrefsDeck:not([selectedIndex="1"]) > #hasAccount,
-#weavePrefsDeck:not([selectedIndex="2"]) > #needsUpdate,
-#weavePrefsDeck:not([selectedIndex="3"]) > #noFxaAccount,
-#weavePrefsDeck:not([selectedIndex="4"]) > #hasFxaAccount,
+#weavePrefsDeck:not([selectedIndex="1"]) > #hasFxaAccount,
 #fxaLoginStatus:not([selectedIndex="1"]) > #fxaLoginUnverified,
 #fxaLoginStatus:not([selectedIndex="2"]) > #fxaLoginRejected {
   visibility: collapse;
@@ -266,10 +263,8 @@ description > html|a {
 #weavePrefsDeck > vbox > label,
 #weavePrefsDeck > vbox > groupbox,
 #weavePrefsDeck > vbox > description,
-#weavePrefsDeck > vbox > #pairDevice > label,
-#weavePrefsDeck > #needsUpdate > hbox > #loginError,
 #weavePrefsDeck > #hasFxaAccount > vbox > label,
-#weavePrefsDeck > #hasFxaAccount > hbox:not(#tosPP-normal) > label {
+#weavePrefsDeck > #hasFxaAccount > hbox > label {
   /* no margin-inline-start for elements at the beginning of a line */
   margin-inline-start: 0;
 }
