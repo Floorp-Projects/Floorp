@@ -127,9 +127,15 @@ function test_property(property)
       is(inherit_initial_computed_n, initial_computed_n,
          keyword + " should cause inheritance of initial value for '" +
          property + "'");
-      is(inherit_initial_computed_f, initial_computed_f,
-         keyword + " should cause inheritance of initial value for '" +
-         property + "'");
+      // For width and inline-size, getComputedStyle returns used value
+      // when the element is displayed. Their initial value "auto" makes
+      // the element fill available space of the parent, so it doesn't
+      // make sense to compare it with the value we get before.
+      if (property != "width" && property != "inline-size") {
+        is(inherit_initial_computed_f, initial_computed_f,
+           keyword + " should cause inheritance of initial value for '" +
+           property + "'");
+      }
       gParentRuleTop.style.removeProperty(property);
       gChildRule1.style.removeProperty(property);
       gChildRule2.style.removeProperty(property);
