@@ -32,6 +32,8 @@ pub type pthread_key_t = ::c_uint;
 pub type blksize_t = u32;
 pub type fflags_t = u32;
 pub type nl_item = ::c_int;
+pub type id_t = ::c_int;
+pub type idtype_t = ::c_uint;
 
 pub enum timezone {}
 
@@ -550,6 +552,18 @@ pub const SIGXFSZ: ::c_int = 31;
 pub const WNOHANG: ::c_int = 0x40;
 pub const WUNTRACED: ::c_int = 0x04;
 
+pub const WEXITED: ::c_int = 0x01;
+pub const WTRAPPED: ::c_int = 0x02;
+pub const WSTOPPED: ::c_int = WUNTRACED;
+pub const WCONTINUED: ::c_int = 0x08;
+pub const WNOWAIT: ::c_int = 0x80;
+
+// Solaris defines a great many more of these; we only expose the
+// standardized ones.
+pub const P_PID: idtype_t = 0;
+pub const P_PGID: idtype_t = 2;
+pub const P_ALL: idtype_t = 7;
+
 pub const PROT_NONE: ::c_int = 0;
 pub const PROT_READ: ::c_int = 1;
 pub const PROT_WRITE: ::c_int = 2;
@@ -1056,4 +1070,6 @@ extern {
                          abstime: *const ::timespec) -> ::c_int;
     pub fn pthread_mutex_timedlock(lock: *mut pthread_mutex_t,
                                    abstime: *const ::timespec) -> ::c_int;
+    pub fn waitid(idtype: idtype_t, id: id_t, infop: *mut ::siginfo_t,
+                  options: ::c_int) -> ::c_int;
 }

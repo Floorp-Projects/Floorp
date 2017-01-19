@@ -28,6 +28,8 @@ pub type fsblkcnt_t = i64;
 pub type fsfilcnt_t = i64;
 pub type pthread_attr_t = *mut ::c_void;
 pub type nl_item = ::c_int;
+pub type id_t = i32;
+pub type idtype_t = ::c_uint;
 
 pub enum timezone {}
 
@@ -556,6 +558,7 @@ pub const IPV6_V6ONLY: ::c_int = 30;
 
 pub const SO_DEBUG: ::c_int = 0x00000004;
 
+pub const MSG_PEEK: ::c_int = 0x2;
 pub const MSG_NOSIGNAL: ::c_int = 0x0800;
 
 pub const SHUT_RD: ::c_int = 0;
@@ -670,6 +673,17 @@ pub const SO_PEERCRED: ::c_int = 0x4000000b;
 
 pub const NI_MAXHOST: ::size_t = 1025;
 
+pub const WNOHANG: ::c_int = 0x01;
+pub const WUNTRACED: ::c_int = 0x02;
+pub const WCONTINUED: ::c_int = 0x04;
+pub const WEXITED: ::c_int = 0x08;
+pub const WSTOPPED: ::c_int = 0x10;
+pub const WNOWAIT: ::c_int = 0x20;
+
+pub const P_ALL: idtype_t = 0;
+pub const P_PID: idtype_t = 1;
+pub const P_PGID: idtype_t = 2;
+
 f! {
     pub fn FD_CLR(fd: ::c_int, set: *mut fd_set) -> () {
         let fd = fd as usize;
@@ -742,6 +756,8 @@ extern {
                        flags: ::c_int) -> ::c_int;
     pub fn pthread_mutex_timedlock(lock: *mut pthread_mutex_t,
                                    abstime: *const ::timespec) -> ::c_int;
+    pub fn waitid(idtype: idtype_t, id: id_t, infop: *mut ::siginfo_t,
+                  options: ::c_int) -> ::c_int;
 }
 
 cfg_if! {

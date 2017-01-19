@@ -355,6 +355,10 @@ extern {
     pub fn getloadavg(loadavg: *mut ::c_double, nelem: ::c_int) -> ::c_int;
     pub fn if_nameindex() -> *mut if_nameindex;
     pub fn if_freenameindex(ptr: *mut if_nameindex);
+
+    pub fn getpeereid(socket: ::c_int,
+                      euid: *mut ::uid_t,
+                      egid: *mut ::gid_t) -> ::c_int;
 }
 
 cfg_if! {

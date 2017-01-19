@@ -260,4 +260,3 @@ impl RenderApi {
         (namespace, id)
     }
 }
-

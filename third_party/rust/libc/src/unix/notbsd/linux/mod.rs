@@ -17,6 +17,7 @@ pub type msgqnum_t = ::c_ulong;
 pub type msglen_t = ::c_ulong;
 pub type nfds_t = ::c_ulong;
 pub type nl_item = ::c_int;
+pub type idtype_t = ::c_uint;
 
 pub enum fpos64_t {} // TODO: fill this out with a struct
 

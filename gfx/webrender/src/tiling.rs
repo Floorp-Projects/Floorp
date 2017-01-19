@@ -17,6 +17,7 @@ use prim_store::{ImagePrimitiveCpu, ImagePrimitiveGpu, YuvImagePrimitiveCpu, Yuv
 use prim_store::{PrimitiveKind, PrimitiveIndex, PrimitiveMetadata, TexelRect};
 use prim_store::{CLIP_DATA_GPU_SIZE, DeferredResolve};
 use prim_store::{GradientPrimitiveCpu, GradientPrimitiveGpu, GradientType};
+use prim_store::{RadialGradientPrimitiveCpu, RadialGradientPrimitiveGpu};
 use prim_store::{PrimitiveCacheKey, TextRunPrimitiveGpu, TextRunPrimitiveCpu};
 use prim_store::{PrimitiveStore, GpuBlock16, GpuBlock32, GpuBlock64, GpuBlock128};
 use profiler::FrameProfileCounters;
@@ -82,6 +83,7 @@ impl AlphaBatchHelpers for PrimitiveStore {
             PrimitiveKind::Image => AlphaBatchKind::Image,
             PrimitiveKind::YuvImage => AlphaBatchKind::YuvImage,
             PrimitiveKind::Rectangle => AlphaBatchKind::Rectangle,
+            PrimitiveKind::RadialGradient => AlphaBatchKind::RadialGradient,
             PrimitiveKind::TextRun => {
                 let text_run_cpu = &self.cpu_text_runs[metadata.cpu_prim_index.0];
                 if text_run_cpu.blur_radius.0 == 0 {
@@ -115,7 +117,8 @@ impl AlphaBatchHelpers for PrimitiveStore {
             PrimitiveKind::Border |
             PrimitiveKind::BoxShadow |
             PrimitiveKind::Rectangle |
-            PrimitiveKind::Gradient => [invalid; 3],
+            PrimitiveKind::Gradient |
+            PrimitiveKind::RadialGradient => [invalid; 3],
             PrimitiveKind::Image => {
                 let image_cpu = &self.cpu_images[metadata.cpu_prim_index.0];
                 [image_cpu.color_texture_id, invalid, invalid]
@@ -168,6 +171,7 @@ impl AlphaBatchHelpers for PrimitiveStore {
             PrimitiveKind::Image |
             PrimitiveKind::YuvImage |
             PrimitiveKind::Gradient |
+            PrimitiveKind::RadialGradient |
             PrimitiveKind::BoxShadow => true,
             PrimitiveKind::Border => {
                 let border = &self.cpu_borders[metadata.cpu_prim_index.0];
@@ -192,12 +196,13 @@ impl AlphaBatchHelpers for PrimitiveStore {
         let layer_index = layer_index.0 as i32;
         let global_prim_id = prim_index.0 as i32;
         let prim_address = metadata.gpu_prim_index;
-        let clip_task_key = RenderTaskKey::CacheMask(MaskCacheKey::Primitive(prim_index));
-        let clip_task_index = if metadata.clip_task.is_some() {
-            let cache_task_id = RenderTaskId::Dynamic(clip_task_key);
-            render_tasks.get_task_index(&cache_task_id, child_pass_index)
-        } else {
-            OPAQUE_TASK_INDEX
+        let clip_task_index = match metadata.clip_task {
+            Some(ref clip_task) => {
+                render_tasks.get_task_index(&clip_task.id, child_pass_index)
+            }
+            None => {
+                OPAQUE_TASK_INDEX
+            }
         };
         let task_index = task_index.0 as i32;
         let clip_task_index = clip_task_index.0 as i32;
@@ -300,6 +305,18 @@ impl AlphaBatchHelpers for PrimitiveStore {
                     z_sort_index: z_sort_index,
                 });
             }
+            &mut PrimitiveBatchData::RadialGradient(ref mut data) => {
+                data.push(PrimitiveInstance {
+                    task_index: task_index,
+                    clip_task_index: clip_task_index,
+                    layer_index: layer_index,
+                    global_prim_id: global_prim_id,
+                    prim_address: prim_address,
+                    sub_index: metadata.gpu_data_address.0,
+                    user_data: [ metadata.gpu_data_count, 0 ],
+                    z_sort_index: z_sort_index,
+                });
+            }
             &mut PrimitiveBatchData::CacheImage(ref mut data) => {
                 // Find the render task index for the render task
                 // that this primitive depends on. Pass it to the
@@ -380,8 +397,8 @@ pub struct RenderTaskIndex(usize);
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum MaskCacheKey {
     Primitive(PrimitiveIndex),
+    StackingContext(StackingContextIndex),
 }
-
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum RenderTaskKey {
@@ -1408,6 +1425,7 @@ enum AlphaBatchKind {
     Border,
     AlignedGradient,
     AngleGradient,
+    RadialGradient,
     BoxShadow,
     CacheImage,
 }
@@ -1571,6 +1589,7 @@ pub enum PrimitiveBatchData {
     Borders(Vec<PrimitiveInstance>),
     AlignedGradient(Vec<PrimitiveInstance>),
     AngleGradient(Vec<PrimitiveInstance>),
+    RadialGradient(Vec<PrimitiveInstance>),
     BoxShadow(Vec<PrimitiveInstance>),
     CacheImage(Vec<PrimitiveInstance>),
     Blend(Vec<PrimitiveInstance>),
@@ -1657,6 +1676,7 @@ impl PrimitiveBatch {
             AlphaBatchKind::Border => PrimitiveBatchData::Borders(Vec::new()),
             AlphaBatchKind::AlignedGradient => PrimitiveBatchData::AlignedGradient(Vec::new()),
             AlphaBatchKind::AngleGradient => PrimitiveBatchData::AngleGradient(Vec::new()),
+            AlphaBatchKind::RadialGradient => PrimitiveBatchData::RadialGradient(Vec::new()),
             AlphaBatchKind::BoxShadow => PrimitiveBatchData::BoxShadow(Vec::new()),
             AlphaBatchKind::Blend | AlphaBatchKind::Composite => unreachable!(),
             AlphaBatchKind::CacheImage => PrimitiveBatchData::CacheImage(Vec::new()),
@@ -2274,6 +2294,32 @@ impl FrameBuilder {
                            PrimitiveContainer::Gradient(gradient_cpu, gradient_gpu));
     }
 
+    pub fn add_radial_gradient(&mut self,
+                               rect: LayerRect,
+                               clip_region: &ClipRegion,
+                               start_center: LayerPoint,
+                               start_radius: f32,
+                               end_center: LayerPoint,
+                               end_radius: f32,
+                               stops: ItemRange) {
+        let radial_gradient_cpu = RadialGradientPrimitiveCpu {
+            stops_range: stops,
+            cache_dirty: true,
+        };
+
+        let radial_gradient_gpu = RadialGradientPrimitiveGpu {
+            start_center: start_center,
+            end_center: end_center,
+            start_radius: start_radius,
+            end_radius: end_radius,
+            padding: [0.0, 0.0],
+        };
+
+        self.add_primitive(&rect,
+                           clip_region,
+                           PrimitiveContainer::RadialGradient(radial_gradient_cpu, radial_gradient_gpu));
+    }
+
     pub fn add_text(&mut self,
                     rect: LayerRect,
                     clip_region: &ClipRegion,
@@ -2618,9 +2664,18 @@ impl FrameBuilder {
                                 }
 
                                 // Try to create a mask if we may need to.
-                                if prim_clip_info.is_some() || !clip_info_stack.is_empty() {
+                                if !clip_info_stack.is_empty() {
+                                    // If the primitive doesn't have a specific clip,
+                                    // key the task ID off the stacking context. This means
+                                    // that two primitives which are only clipped by the
+                                    // stacking context stack can share clip masks during
+                                    // render task assignment to targets.
+                                    let mask_key = match prim_clip_info {
+                                        Some(..) => MaskCacheKey::Primitive(prim_index),
+                                        None => MaskCacheKey::StackingContext(*sc_index),
+                                    };
                                     let mask_opt = RenderTask::new_mask(prim_bounding_rect,
-                                                                        MaskCacheKey::Primitive(prim_index),
+                                                                        mask_key,
                                                                         &clip_info_stack,
                                                                         &self.layer_store);
                                     match mask_opt {

@@ -25,6 +25,7 @@ pub type rlim_t = ::c_ulong;
 pub type dev_t = ::c_ulong;
 pub type ino_t = ::c_ulong;
 pub type __CPU_BITTYPE = ::c_ulong;
+pub type idtype_t = ::c_int;
 
 s! {
     pub struct dirent {

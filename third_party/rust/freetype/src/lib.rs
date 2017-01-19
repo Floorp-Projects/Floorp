@@ -20,5 +20,18 @@
 extern crate freetype_sys;
 extern crate libc;
 
+/// A wrapper over FT_Error so we can add convenience methods on it.
+#[repr(C)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct FT_Error(pub ::std::os::raw::c_int);
+
+impl FT_Error {
+    #[inline]
+    pub fn succeeded(&self) -> bool {
+        self.0 == freetype::FT_Err_Ok as ::std::os::raw::c_int
+    }
+}
+
+#[allow(improper_ctypes)] // https://github.com/rust-lang/rust/issues/34798
 pub mod freetype;
 pub mod tt_os2;

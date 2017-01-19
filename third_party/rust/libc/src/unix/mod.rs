@@ -366,6 +366,7 @@ extern {
     pub fn access(path: *const c_char, amode: ::c_int) -> ::c_int;
     pub fn alarm(seconds: ::c_uint) -> ::c_uint;
     pub fn chdir(dir: *const c_char) -> ::c_int;
+    pub fn fchdir(dirfd: ::c_int) -> ::c_int;
     pub fn chown(path: *const c_char, uid: uid_t,
                  gid: gid_t) -> ::c_int;
     #[cfg_attr(all(target_os = "macos", target_arch = "x86"),

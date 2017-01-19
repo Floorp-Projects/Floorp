@@ -352,9 +352,44 @@ impl Frame {
             (_, _, None) => return false,
         };
 
-        let scroll_root_id = match scroll_layer_id.info {
-            ScrollLayerInfo::Scrollable(_, scroll_root_id) => scroll_root_id,
-            ScrollLayerInfo::Fixed => unreachable!("Tried to scroll a fixed position layer."),
+        let non_root_overscroll = if scroll_layer_id != root_scroll_layer_id {
+            // true if the current layer is overscrolling,
+            // and it is not the root scroll layer.
+            let child_layer = self.layers.get(&scroll_layer_id).unwrap();
+            let overscroll_amount = child_layer.overscroll_amount();
+            overscroll_amount.width != 0.0 || overscroll_amount.height != 0.0
+        } else {
+            false
+        };
+
+        let switch_layer = match phase {
+            ScrollEventPhase::Start => {
+                // if this is a new gesture, we do not switch layer,
+                // however we do save the state of non_root_overscroll,
+                // for use in the subsequent Move phase.
+                let mut current_layer = self.layers.get_mut(&scroll_layer_id).unwrap();
+                current_layer.scrolling.should_handoff_scroll = non_root_overscroll;
+                false
+            },
+            ScrollEventPhase::Move(_) => {
+                // Switch layer if movement originated in a new gesture,
+                // from a non root layer in overscroll.
+                let current_layer = self.layers.get_mut(&scroll_layer_id).unwrap();
+                current_layer.scrolling.should_handoff_scroll && non_root_overscroll
+            },
+            ScrollEventPhase::End => {
+                // clean-up when gesture ends.
+                let mut current_layer = self.layers.get_mut(&scroll_layer_id).unwrap();
+                current_layer.scrolling.should_handoff_scroll = false;
+                false
+            },
+        };
+
+        let scroll_root_id = match (switch_layer, scroll_layer_id.info, root_scroll_layer_id.info) {
+            (true, _, ScrollLayerInfo::Scrollable(_, scroll_root_id)) |
+            (true, ScrollLayerInfo::Scrollable(_, scroll_root_id), ScrollLayerInfo::Fixed) |
+            (false, ScrollLayerInfo::Scrollable(_, scroll_root_id), _) => scroll_root_id,
+            (_, ScrollLayerInfo::Fixed, _) => unreachable!("Tried to scroll a fixed position layer."),
         };
 
         let mut scrolled_a_layer = false;
@@ -830,6 +865,15 @@ impl Frame {
                                                  info.start_point,
                                                  info.end_point,
                                                  info.stops);
+                }
+                SpecificDisplayItem::RadialGradient(ref info) => {
+                    context.builder.add_radial_gradient(item.rect,
+                                                        &item.clip,
+                                                        info.start_center,
+                                                        info.start_radius,
+                                                        info.end_center,
+                                                        info.end_radius,
+                                                        info.stops);
                 }
                 SpecificDisplayItem::BoxShadow(ref box_shadow_info) => {
                     context.builder.add_box_shadow(&box_shadow_info.box_bounds,

@@ -2,6 +2,201 @@
 
 pub use self::inner::*;
 
+#[cfg(target_os = "redox")]
+mod inner {
+    use std::fmt;
+    use std::cmp::Ordering;
+    use std::ops::{Add, Sub};
+    use syscall;
+
+    use Duration;
+    use Tm;
+
+    fn time_to_tm(ts: i64, tm: &mut Tm) {
+        let leapyear = |year| -> bool {
+            year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)
+        };
+
+        static _ytab: [[i64; 12]; 2] = [
+            [ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 ],
+            [ 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 ]
+        ];
+
+        let mut year = 1970;
+
+        let dayclock = ts % 86400;
+        let mut dayno = ts / 86400;
+
+        tm.tm_sec = (dayclock % 60) as i32;
+        tm.tm_min = ((dayclock % 3600) / 60) as i32;
+        tm.tm_hour = (dayclock / 3600) as i32;
+        tm.tm_wday = ((dayno + 4) % 7) as i32;
+        loop {
+            let yearsize = if leapyear(year) {
+                366
+            } else {
+                365
+            };
+            if dayno >= yearsize {
+                    dayno -= yearsize;
+                    year += 1;
+            } else {
+                break;
+            }
+        }
+        tm.tm_year = (year - 1900) as i32;
+        tm.tm_yday = dayno as i32;
+        let mut mon = 0;
+        while dayno >= _ytab[if leapyear(year) { 1 } else { 0 }][mon] {
+                dayno -= _ytab[if leapyear(year) { 1 } else { 0 }][mon];
+                mon += 1;
+        }
+        tm.tm_mon = mon as i32;
+        tm.tm_mday = dayno as i32 + 1;
+        tm.tm_isdst = 0;
+    }
+
+    fn tm_to_time(tm: &Tm) -> i64 {
+        let mut y = tm.tm_year as i64 + 1900;
+        let mut m = tm.tm_mon as i64 + 1;
+        if m <= 2 {
+            y -= 1;
+            m += 12;
+        }
+        let d = tm.tm_mday as i64;
+        let h = tm.tm_hour as i64;
+        let mi = tm.tm_min as i64;
+        let s = tm.tm_sec as i64;
+        (365*y + y/4 - y/100 + y/400 + 3*(m+1)/5 + 30*m + d - 719561)
+            * 86400 + 3600 * h + 60 * mi + s
+    }
+
+    pub fn time_to_utc_tm(sec: i64, tm: &mut Tm) {
+        time_to_tm(sec, tm);
+    }
+
+    pub fn time_to_local_tm(sec: i64, tm: &mut Tm) {
+        // FIXME: Add timezone logic
+        time_to_tm(sec, tm);
+    }
+
+    pub fn utc_tm_to_time(tm: &Tm) -> i64 {
+        tm_to_time(tm)
+    }
+
+    pub fn local_tm_to_time(tm: &Tm) -> i64 {
+        // FIXME: Add timezone logic
+        tm_to_time(tm)
+    }
+
+    pub fn get_time() -> (i64, i32) {
+        let mut tv = syscall::TimeSpec { tv_sec: 0, tv_nsec: 0 };
+        syscall::clock_gettime(syscall::CLOCK_REALTIME, &mut tv).unwrap();
+        (tv.tv_sec as i64, tv.tv_nsec as i32)
+    }
+
+    pub fn get_precise_ns() -> u64 {
+        let mut ts = syscall::TimeSpec { tv_sec: 0, tv_nsec: 0 };
+        syscall::clock_gettime(syscall::CLOCK_MONOTONIC, &mut ts).unwrap();
+        (ts.tv_sec as u64) * 1000000000 + (ts.tv_nsec as u64)
+    }
+
+    #[derive(Copy)]
+    pub struct SteadyTime {
+        t: syscall::TimeSpec,
+    }
+
+    impl fmt::Debug for SteadyTime {
+        fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+            write!(fmt, "SteadyTime {{ tv_sec: {:?}, tv_nsec: {:?} }}",
+                   self.t.tv_sec, self.t.tv_nsec)
+        }
+    }
+
+    impl Clone for SteadyTime {
+        fn clone(&self) -> SteadyTime {
+            SteadyTime { t: self.t }
+        }
+    }
+
+    impl SteadyTime {
+        pub fn now() -> SteadyTime {
+            let mut t = SteadyTime {
+                t: syscall::TimeSpec {
+                    tv_sec: 0,
+                    tv_nsec: 0,
+                }
+            };
+            syscall::clock_gettime(syscall::CLOCK_MONOTONIC, &mut t.t).unwrap();
+            t
+        }
+    }
+
+    impl Sub for SteadyTime {
+        type Output = Duration;
+        fn sub(self, other: SteadyTime) -> Duration {
+            if self.t.tv_nsec >= other.t.tv_nsec {
+                Duration::seconds(self.t.tv_sec as i64 - other.t.tv_sec as i64) +
+                    Duration::nanoseconds(self.t.tv_nsec as i64 - other.t.tv_nsec as i64)
+            } else {
+                Duration::seconds(self.t.tv_sec as i64 - 1 - other.t.tv_sec as i64) +
+                    Duration::nanoseconds(self.t.tv_nsec as i64 + ::NSEC_PER_SEC as i64 -
+                                          other.t.tv_nsec as i64)
+            }
+        }
+    }
+
+    impl Sub<Duration> for SteadyTime {
+        type Output = SteadyTime;
+        fn sub(self, other: Duration) -> SteadyTime {
+            self + -other
+        }
+    }
+
+    impl Add<Duration> for SteadyTime {
+        type Output = SteadyTime;
+        fn add(mut self, other: Duration) -> SteadyTime {
+            let seconds = other.num_seconds();
+            let nanoseconds = other - Duration::seconds(seconds);
+            let nanoseconds = nanoseconds.num_nanoseconds().unwrap();
+            self.t.tv_sec += seconds;
+            self.t.tv_nsec += nanoseconds as i32;
+            if self.t.tv_nsec >= ::NSEC_PER_SEC {
+                self.t.tv_nsec -= ::NSEC_PER_SEC;
+                self.t.tv_sec += 1;
+            } else if self.t.tv_nsec < 0 {
+                self.t.tv_sec -= 1;
+                self.t.tv_nsec += ::NSEC_PER_SEC;
+            }
+            self
+        }
+    }
+
+    impl PartialOrd for SteadyTime {
+        fn partial_cmp(&self, other: &SteadyTime) -> Option<Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
+    impl Ord for SteadyTime {
+        fn cmp(&self, other: &SteadyTime) -> Ordering {
+            match self.t.tv_sec.cmp(&other.t.tv_sec) {
+                Ordering::Equal => self.t.tv_nsec.cmp(&other.t.tv_nsec),
+                ord => ord
+            }
+        }
+    }
+
+    impl PartialEq for SteadyTime {
+        fn eq(&self, other: &SteadyTime) -> bool {
+            self.t.tv_sec == other.t.tv_sec &&
+                self.t.tv_nsec == other.t.tv_nsec
+        }
+    }
+
+    impl Eq for SteadyTime {}
+}
+
 #[cfg(unix)]
 mod inner {
     use libc::{self, time_t};
@@ -38,8 +233,6 @@ mod inner {
         rust_tm.tm_isdst = tm.tm_isdst;
         rust_tm.tm_utcoff = utcoff;
     }
-
-    type time64_t = i64;
 
     #[cfg(target_os = "nacl")]
     unsafe fn timegm(tm: *const libc::tm) -> time_t {

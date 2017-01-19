@@ -12,7 +12,7 @@ void main(void) {
 
     vec4 segment_rect;
     switch (int(gradient.kind.x)) {
-        case GRADIENT_HORIZONTAL:
+        case GRADIENT_HORIZONTAL: {
             float x0 = mix(gradient.start_end_point.x,
                            gradient.start_end_point.z,
                            g0.offset.x);
@@ -22,8 +22,8 @@ void main(void) {
             segment_rect.yw = prim.local_rect.yw;
             segment_rect.x = x0;
             segment_rect.z = x1 - x0;
-            break;
-        case GRADIENT_VERTICAL:
+            } break;
+        case GRADIENT_VERTICAL: {
             float y0 = mix(gradient.start_end_point.y,
                            gradient.start_end_point.w,
                            g0.offset.x);
@@ -33,7 +33,7 @@ void main(void) {
             segment_rect.xz = prim.local_rect.xz;
             segment_rect.y = y0;
             segment_rect.w = y1 - y0;
-            break;
+            } break;
     }
 
 #ifdef WR_FEATURE_TRANSFORM

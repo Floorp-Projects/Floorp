@@ -344,6 +344,7 @@ pub const NOTE_TRACK: ::uint32_t = 0x00000001;
 pub const NOTE_TRACKERR: ::uint32_t = 0x00000002;
 pub const NOTE_CHILD: ::uint32_t = 0x00000004;
 
+pub const MSG_PEEK: ::c_int = 0x2;
 pub const MSG_NOSIGNAL: ::c_int = 0x400;
 
 pub const EMPTY: ::c_short = 0;
@@ -368,6 +369,14 @@ pub const LC_ALL_MASK: ::c_int = LC_COLLATE_MASK
                                | LC_MONETARY_MASK
                                | LC_NUMERIC_MASK
                                | LC_TIME_MASK;
+
+pub const TIOCSIG: ::c_uint = 0x2000745f;
+pub const BTUARTDISC: ::c_int = 0x7;
+pub const TIOCDCDTIMESTAMP: ::c_uint = 0x40107458;
+pub const TIOCISPTMASTER: ::c_uint = 0x20007455;
+pub const TIOCMODG: ::c_uint = 0x40047403;
+pub const TIOCMODS: ::c_ulong = 0x80047404;
+pub const TIOCREMOTE: ::c_ulong = 0x80047469;
 
 extern {
     pub fn mprotect(addr: *mut ::c_void, len: ::size_t, prot: ::c_int)
