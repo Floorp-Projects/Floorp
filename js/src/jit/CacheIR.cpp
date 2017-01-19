@@ -1565,6 +1565,8 @@ SetPropIRGenerator::tryAttachStub()
                 return true;
             if (tryAttachUnboxedExpandoSetSlot(obj, objId, id, rhsValId))
                 return true;
+            if (tryAttachUnboxedProperty(obj, objId, id, rhsValId))
+                return true;
         }
         return false;
     }
@@ -1661,5 +1663,39 @@ SetPropIRGenerator::tryAttachUnboxedExpandoSetSlot(HandleObject obj, ObjOperandI
 
     setUpdateStubInfo(id);
     EmitStoreSlotAndReturn(writer, expandoId, expando, propShape, rhsId);
+    return true;
+}
+
+static void
+EmitGuardUnboxedPropertyType(CacheIRWriter& writer, JSValueType propType, ValOperandId valId)
+{
+    if (propType == JSVAL_TYPE_OBJECT) {
+        // Unboxed objects store NullValue as nullptr object.
+        writer.guardIsObjectOrNull(valId);
+    } else {
+        writer.guardType(valId, propType);
+    }
+}
+
+bool
+SetPropIRGenerator::tryAttachUnboxedProperty(HandleObject obj, ObjOperandId objId, HandleId id,
+                                             ValOperandId rhsId)
+{
+    if (!obj->is<UnboxedPlainObject>() || !cx_->runtime()->jitSupportsFloatingPoint)
+        return false;
+
+    const UnboxedLayout::Property* property = obj->as<UnboxedPlainObject>().layout().lookup(id);
+    if (!property)
+        return false;
+
+    writer.guardGroup(objId, obj->group());
+    EmitGuardUnboxedPropertyType(writer, property->type, rhsId);
+    writer.storeUnboxedProperty(objId, property->type,
+                                UnboxedPlainObject::offsetOfData() + property->offset,
+                                rhsId);
+    writer.returnFromIC();
+
+    setUpdateStubInfo(id);
+    preliminaryObjectAction_ = PreliminaryObjectAction::Unlink;
     return true;
 }

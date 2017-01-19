@@ -214,6 +214,42 @@ GetCacheIRReceiverForNativeSetSlot(ICCacheIR_Updated* stub, ReceiverGuard* recei
     return true;
 }
 
+static bool
+GetCacheIRReceiverForUnboxedProperty(ICCacheIR_Updated* stub, ReceiverGuard* receiver)
+{
+    // We match:
+    //
+    //   GuardIsObject 0
+    //   GuardGroup 0
+    //   GuardType 1 type | GuardIsObjectOrNull 1
+    //   StoreUnboxedProperty 0
+
+    *receiver = ReceiverGuard();
+    CacheIRReader reader(stub->stubInfo());
+
+    ObjOperandId objId = ObjOperandId(0);
+    ValOperandId rhsId = ValOperandId(1);
+    if (!reader.matchOp(CacheOp::GuardIsObject, objId))
+        return false;
+
+    if (!reader.matchOp(CacheOp::GuardGroup, objId))
+        return false;
+    ObjectGroup* group = stub->stubInfo()->getStubField<ObjectGroup*>(stub, reader.stubOffset());
+
+    if (reader.matchOp(CacheOp::GuardType, rhsId)) {
+        reader.valueType(); // Skip.
+    } else {
+        if (!reader.matchOp(CacheOp::GuardIsObjectOrNull, rhsId))
+            return false;
+    }
+
+    if (!reader.matchOp(CacheOp::StoreUnboxedProperty))
+        return false;
+
+    *receiver = ReceiverGuard(group, nullptr);
+    return true;
+}
+
 bool
 BaselineInspector::maybeInfoForPropertyOp(jsbytecode* pc, ReceiverVector& receivers,
                                           ObjectGroupVector& convertUnboxedGroups)
@@ -243,12 +279,12 @@ BaselineInspector::maybeInfoForPropertyOp(jsbytecode* pc, ReceiverVector& receiv
                 return true;
             }
         } else if (stub->isCacheIR_Updated()) {
-            if (!GetCacheIRReceiverForNativeSetSlot(stub->toCacheIR_Updated(), &receiver)) {
+            if (!GetCacheIRReceiverForNativeSetSlot(stub->toCacheIR_Updated(), &receiver) &&
+                !GetCacheIRReceiverForUnboxedProperty(stub->toCacheIR_Updated(), &receiver))
+            {
                 receivers.clear();
                 return true;
             }
-        } else if (stub->isSetProp_Unboxed()) {
-            receiver = ReceiverGuard(stub->toSetProp_Unboxed()->group(), nullptr);
         } else {
             receivers.clear();
             return true;
