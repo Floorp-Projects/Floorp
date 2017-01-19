@@ -17,7 +17,6 @@ export LD_LIBRARY_PATH=$HOME_DIR/src/clang/lib
 # these variables are used in build-clang.py
 export CROSS_CCTOOLS_PATH=$HOME_DIR/src/cctools
 export CROSS_SYSROOT=$HOME_DIR/src/MacOSX10.10.sdk
-export LIBCXX_INCLUDE_PATH=$HOME_DIR/src/clang/include/c++/v1
 # cmake doesn't allow us to specify a path to lipo on the command line.
 ln -sf $CROSS_CCTOOLS_PATH/bin/x86_64-apple-darwin10-lipo /usr/bin/lipo
 
