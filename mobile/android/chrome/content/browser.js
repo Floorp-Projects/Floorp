@@ -3733,6 +3733,41 @@ Tab.prototype = {
   },
 
   /**
+   * Unloads the tab from memory to free up resources. The tab will be restored from its session
+   * store data either automatically when it gets selected or after calling unzombify().
+   */
+  zombify: function zombify() {
+    let browser = this.browser;
+    let data = browser.__SS_data;
+    let extra = browser.__SS_extdata;
+
+    // Notify any interested parties (e.g. the session store)
+    // that the original tab object is going to be destroyed
+    let evt = new UIEvent("TabPreZombify", {"bubbles":true, "cancelable":false, "view":window});
+    browser.dispatchEvent(evt);
+
+    // We need this data to correctly create and position the new browser
+    // If this browser is already a zombie, fallback to the session data
+    let currentURL = browser.__SS_restore ? data.entries[0].url : browser.currentURI.spec;
+    let sibling = browser.nextSibling;
+    let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(browser);
+
+    this.destroy();
+    this.create(currentURL, { sibling: sibling, zombifying: true, delayLoad: true, isPrivate: isPrivate });
+
+    // Reattach session store data and flag this browser so it is restored on select
+    browser = this.browser;
+    browser.__SS_data = data;
+    browser.__SS_extdata = extra;
+    browser.__SS_restore = true;
+    browser.setAttribute("pending", "true");
+
+    // Notify the session store to reattach its listeners to the recreated tab object
+    evt = new UIEvent("TabPostZombify", {"bubbles":true, "cancelable":false, "view":window});
+    browser.dispatchEvent(evt);
+  },
+
+  /**
    * Restores the tab and reloads its contents if it is unloaded from memory and set for delay
    * loading ("zombified").
    */
@@ -6933,7 +6968,7 @@ var Tabs = {
     // zombify it.
     if (lruTab) {
       if (Date.now() - lruTab.lastTouchedAt > expireTimeMs) {
-        MemoryObserver.zombify(lruTab);
+        lruTab.zombify();
         return true;
       }
     }
