@@ -13,12 +13,17 @@
 #include "mozilla/AllocPolicy.h"
 #include "mozilla/Printf.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Vector.h"
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if defined(XP_WIN)
+#include <windows.h>
+#endif
 
 /*
  * Note: on some platforms va_list is defined as an array,
@@ -56,6 +61,9 @@ typedef mozilla::Vector<NumArgState, 20, mozilla::MallocAllocPolicy> NumArgState
 #define TYPE_DOUBLE     9
 #define TYPE_INTSTR     10
 #define TYPE_POINTER    11
+#if defined(XP_WIN)
+#define TYPE_WSTRING    12
+#endif
 #define TYPE_UNKNOWN    20
 
 #define FLAG_LEFT       0x1
@@ -446,8 +454,13 @@ BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas)
             nas[cn].type = TYPE_POINTER;
             break;
 
-        case 'C':
         case 'S':
+#if defined(XP_WIN)
+            nas[cn].type = TYPE_WSTRING;
+            break;
+#endif
+            /* Fall through here when not XP_WIN.  */
+        case 'C':
         case 'E':
         case 'G':
             // XXX not supported I suppose
@@ -456,7 +469,17 @@ BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas)
             break;
 
         case 's':
-            nas[cn].type = TYPE_STRING;
+#if defined(XP_WIN)
+            if (nas[cn].type == TYPE_LONG) {
+                nas[cn].type = TYPE_WSTRING;
+                break;
+            }
+#endif
+            if (nas[cn].type == TYPE_INTN) {
+                nas[cn].type = TYPE_STRING;
+            } else {
+                nas[cn].type = TYPE_UNKNOWN;
+            }
             break;
 
         case 'n':
@@ -500,6 +523,9 @@ BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas)
         case TYPE_INTSTR:       (void) va_arg(ap, int*);        break;
         case TYPE_DOUBLE:       (void) va_arg(ap, double);      break;
         case TYPE_POINTER:      (void) va_arg(ap, void*);       break;
+#if defined(XP_WIN)
+        case TYPE_WSTRING:      (void) va_arg(ap, wchar_t*);    break;
+#endif
 
         default: MOZ_CRASH();
         }
@@ -524,6 +550,9 @@ mozilla::PrintfTarget::vprint(const char* fmt, va_list ap)
         const char* s;
         int* ip;
         void* p;
+#if defined(XP_WIN)
+        const wchar_t* ws;
+#endif
     } u;
     const char* fmt0;
     static const char hex[] = "0123456789abcdef";
@@ -782,7 +811,6 @@ mozilla::PrintfTarget::vprint(const char* fmt, va_list ap)
 
 #if 0
           case 'C':
-          case 'S':
           case 'E':
           case 'G':
             // XXX not supported I suppose
@@ -791,9 +819,45 @@ mozilla::PrintfTarget::vprint(const char* fmt, va_list ap)
 #endif
 
           case 's':
-            u.s = va_arg(ap, const char*);
-            if (!cvt_s(u.s, width, prec, flags))
-                return false;
+            if (type == TYPE_INTN) {
+                u.s = va_arg(ap, const char*);
+                if (!cvt_s(u.s, width, prec, flags))
+                    return false;
+                break;
+            } else if (type == TYPE_LONGLONG) {
+                // This should have asserted during BuildArgArray anyway.
+                MOZ_ASSERT(0);
+                break;
+            }
+            MOZ_ASSERT(type == TYPE_LONG);
+            MOZ_FALLTHROUGH;
+          case 'S':
+#if defined(XP_WIN)
+            {
+                u.ws = va_arg(ap, const wchar_t*);
+
+                int rv = WideCharToMultiByte(CP_ACP, 0, u.ws, -1, NULL, 0, NULL, NULL);
+                if (rv == 0 && GetLastError() == ERROR_NO_UNICODE_TRANSLATION) {
+                    if (!cvt_s("<unicode errors in string>", width, prec, flags)) {
+                        return false;
+                    }
+                } else {
+                    if (rv == 0) {
+                        rv = 1;
+                    }
+                    UniqueFreePtr<char[]> buf((char*)malloc(rv));
+                    WideCharToMultiByte(CP_ACP, 0, u.ws, -1, buf.get(), rv, NULL, NULL);
+                    buf[rv - 1] = '\0';
+
+                    if (!cvt_s(buf.get(), width, prec, flags)) {
+                        return false;
+                    }
+                }
+            }
+#else
+            // This should have asserted during BuildArgArray anyway.
+            MOZ_ASSERT(0);
+#endif
             break;
 
           case 'n':
@@ -847,6 +911,7 @@ mozilla::PrintfTarget::print(const char* format, ...)
 #undef TYPE_DOUBLE
 #undef TYPE_INTSTR
 #undef TYPE_POINTER
+#undef TYPE_WSTRING
 #undef TYPE_UNKNOWN
 
 #undef FLAG_LEFT
