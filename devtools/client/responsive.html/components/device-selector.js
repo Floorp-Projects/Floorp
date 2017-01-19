@@ -17,7 +17,7 @@ module.exports = createClass({
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
     selectedDevice: PropTypes.string.isRequired,
-    onChangeViewportDevice: PropTypes.func.isRequired,
+    onChangeDevice: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
     onUpdateDeviceModalOpen: PropTypes.func.isRequired,
   },
@@ -27,7 +27,7 @@ module.exports = createClass({
   onSelectChange({ target }) {
     let {
       devices,
-      onChangeViewportDevice,
+      onChangeDevice,
       onResizeViewport,
       onUpdateDeviceModalOpen,
     } = this.props;
@@ -40,7 +40,7 @@ module.exports = createClass({
       for (let device of devices[type]) {
         if (device.name === target.value) {
           onResizeViewport(device.width, device.height);
-          onChangeViewportDevice(device);
+          onChangeDevice(device);
           return;
         }
       }
