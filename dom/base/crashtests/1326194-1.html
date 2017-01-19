@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="application/javascript">
+
+// Crashes if 'target' doesn't get properly unlinked in nsNodeUtils::LastRelease
+
+function crash() {
+	var target = document.getElementById('target');
+	var io = new IntersectionObserver(function () { }, { });
+	io.observe(target);
+	document.body.removeChild(target);
+}
+
+</script>
+</head>
+<body onload="crash()">
+	<div id="target" style="background: red; width: 50px; height: 50px"></div>
+</body>
+</html>

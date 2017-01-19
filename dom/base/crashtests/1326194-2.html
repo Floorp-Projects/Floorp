@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<script type="application/javascript">
+
+// Crashes if 'target' doesn't get properly unlinked in FragmentOrElement::Unlink
+
+function crash() {
+	var target = document.createElement('div');
+	// By setting a custom prop we create a cycle between JS and C++ that requires the CC to break.
+	target.foo = 'bar';
+	var io = new IntersectionObserver(function () { }, { });
+	io.observe(target);
+}
+
+</script>
+</head>
+<body onload="crash()">
+</body>
+</html>
