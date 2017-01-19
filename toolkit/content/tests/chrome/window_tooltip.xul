@@ -263,8 +263,61 @@ var popupTests = [
        Math.round(buttonrect.top + 4 - parseFloat(popupstyle.marginTop)),
        testname + " position of tooltip above button");
   }
+},
+{
+  testname: "open tooltip for keyclose",
+  events: [ "popupshowing thetooltip", "popupshown thetooltip" ],
+  test: function() {
+    gButton = document.getElementById("withtooltip");
+    gExpectedTriggerNode = gButton;
+    disableNonTestMouse(true);
+    synthesizeMouse(gButton, 2, 2, { type: "mouseover" });
+    synthesizeMouse(gButton, 4, 4, { type: "mousemove" });
+    synthesizeMouse(gButton, 6, 6, { type: "mousemove" });
+    disableNonTestMouse(false);
+  },
+},
+{
+  testname: "close tooltip with modifiers",
+  test: function() {
+    // Press all of the modifiers; the tooltip should remain open on all platforms.
+    synthesizeKey("VK_SHIFT", {});
+    synthesizeKey("VK_CONTROL", {});
+    synthesizeKey("VK_ALT", {});
+    synthesizeKey("VK_META", {});
+  },
+  result: function() {
+    is(document.getElementById("thetooltip").state, "open", "tooltip still open after modifiers pressed")
+  }
+},
+{
+  testname: "close tooltip with key",
+  events: function() {
+    if (navigator.platform.indexOf("Win") > -1) {
+      return [];
+    }
+    else {
+      return [ "popuphiding thetooltip", "popuphidden thetooltip",
+               "DOMMenuInactive thetooltip" ];
+    }
+  },
+  test: function() {
+    synthesizeKey("a", {});
+  },
+  result: function() {
+    let expectedState = (navigator.platform.indexOf("Win") > -1) ? "open" : "closed";
+    is(document.getElementById("thetooltip").state, expectedState, "tooltip closed after key pressed")
+  }
+},
+{
+  testname: "close tooltip with hidePopup again",
+  condition: function() { return navigator.platform.indexOf("Win") > -1; },
+  events: [ "popuphiding thetooltip", "popuphidden thetooltip",
+            "DOMMenuInactive thetooltip" ],
+  test: function() {
+    document.getElementById("thetooltip").hidePopup();
+  },
 }
-
 ];
 
 var waitSteps = 0;
