@@ -117,6 +117,13 @@ enum class RelativeTo {
   ScrollFrame
 };
 
+// Flags to customize the behavior of nsLayoutUtils::DrawString.
+enum class DrawStringFlags {
+  eDefault         = 0x0,
+  eForceHorizontal = 0x1 // Forces the text to be drawn horizontally.
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DrawStringFlags)
+
 /**
  * nsLayoutUtils is a namespace class used for various helper
  * functions that are useful in multiple places in layout.  The goal
@@ -1606,13 +1613,14 @@ public:
                                                  nsFontMetrics& aFontMetrics,
                                                  DrawTarget* aDrawTarget);
 
-  static void DrawString(const nsIFrame*       aFrame,
-                         nsFontMetrics&        aFontMetrics,
-                         nsRenderingContext*   aContext,
-                         const char16_t*      aString,
-                         int32_t               aLength,
-                         nsPoint               aPoint,
-                         nsStyleContext*       aStyleContext = nullptr);
+  static void DrawString(const nsIFrame*     aFrame,
+                         nsFontMetrics&      aFontMetrics,
+                         nsRenderingContext* aContext,
+                         const char16_t*     aString,
+                         int32_t             aLength,
+                         nsPoint             aPoint,
+                         nsStyleContext*     aStyleContext = nullptr,
+                         DrawStringFlags     aFlags = DrawStringFlags::eDefault);
 
   /**
    * Supports only LTR or RTL. Bidi (mixed direction) is not supported.
