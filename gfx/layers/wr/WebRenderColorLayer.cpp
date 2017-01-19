@@ -36,7 +36,12 @@ WebRenderColorLayer::RenderLayer()
   Maybe<WrImageMask> mask = buildMaskLayer();
 
   WrBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(wr::ToWrRect(relBounds), wr::ToWrRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
+      OpDPPushStackingContext(wr::ToWrRect(relBounds),
+                              wr::ToWrRect(overflow),
+                              mask,
+                              GetAnimations(),
+                              transform,
+                              FrameMetrics::NULL_SCROLL_ID));
   WrBridge()->AddWebRenderCommand(
     OpDPPushRect(wr::ToWrRect(rect), wr::ToWrRect(clip), mColor.r, mColor.g, mColor.b, mColor.a));
 

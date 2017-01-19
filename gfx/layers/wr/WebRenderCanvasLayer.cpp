@@ -78,7 +78,12 @@ WebRenderCanvasLayer::RenderLayer()
   WrTextureFilter filter = (mFlags | TextureFlags::USE_NEAREST_FILTER) ? WrTextureFilter::Point : WrTextureFilter::Linear;
 
   WrBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(wr::ToWrRect(relBounds), wr::ToWrRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
+      OpDPPushStackingContext(wr::ToWrRect(relBounds),
+                              wr::ToWrRect(overflow),
+                              mask,
+                              GetAnimations(),
+                              transform,
+                              FrameMetrics::NULL_SCROLL_ID));
   WrBridge()->AddWebRenderCommand(OpDPPushExternalImageId(LayerIntRegion(), wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), filter, mExternalImageId));
   WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 
