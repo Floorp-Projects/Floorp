@@ -809,6 +809,14 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
     }
   }
 
+  // Data documents, or documents from DOMParser shouldn't perform image loading.
+  if (aDocument->IsLoadedAsData()) {
+    SetBlockedRequest(nsIContentPolicy::REJECT_REQUEST);
+    FireEvent(NS_LITERAL_STRING("error"));
+    FireEvent(NS_LITERAL_STRING("loadend"));
+    return NS_OK;
+  }
+
   // URI equality check.
   //
   // We skip the equality check if our current image was blocked, since in that
