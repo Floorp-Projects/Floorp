@@ -1608,21 +1608,22 @@ ContentParent::ShouldKeepProcessAlive() const
     return false;
   }
 
-  // Only keep processes for the default remote type alive.
-  if (!mRemoteType.EqualsLiteral(DEFAULT_REMOTE_TYPE)) {
-    return false;
-  }
-
   auto contentParents = sBrowserContentParents->Get(mRemoteType);
   if (!contentParents) {
     return false;
   }
 
-  // We might want to keep alive some content processes for testing, because of
-  // performance reasons.
+  // We might want to keep alive some content processes alive during test runs,
+  // for performance reasons. This should never be used in production.
   // We don't want to alter behavior if the pref is not set, so default to 0.
-  int32_t processesToKeepAlive =
-    Preferences::GetInt("dom.ipc.keepProcessesAlive", 0);
+  int32_t processesToKeepAlive = 0;
+
+  nsAutoCString keepAlivePref("dom.ipc.keepProcessesAlive.");
+  keepAlivePref.Append(NS_ConvertUTF16toUTF8(mRemoteType));
+  if (NS_FAILED(Preferences::GetInt(keepAlivePref.get(), &processesToKeepAlive))) {
+    return false;
+  }
+
   int32_t numberOfAliveProcesses = contentParents->Length();
 
   return numberOfAliveProcesses <= processesToKeepAlive;

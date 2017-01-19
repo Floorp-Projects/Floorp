@@ -374,22 +374,22 @@ DocAccessibleParent::RecvBindChildDoc(PDocAccessibleParent* aChildDoc, const uin
   // We should always have at least an outer doc accessible in between.
   MOZ_ASSERT(aID);
   if (!aID)
-    return IPC_FAIL_NO_REASON(this);
+    return IPC_FAIL(this, "ID is 0!");
 
   MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
 
   auto childDoc = static_cast<DocAccessibleParent*>(aChildDoc);
   childDoc->Unbind();
-  bool result = AddChildDoc(childDoc, aID, false);
+  ipc::IPCResult result = AddChildDoc(childDoc, aID, false);
   MOZ_ASSERT(result);
   MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
   if (!result) {
-    return IPC_FAIL_NO_REASON(this);
+    return result;
   }
   return IPC_OK();
 }
 
-bool
+ipc::IPCResult
 DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
                                  uint64_t aParentID, bool aCreating)
 {
@@ -397,7 +397,7 @@ DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
   // document it self.
   ProxyEntry* e = mAccessibles.GetEntry(aParentID);
   if (!e)
-    return false;
+    return IPC_FAIL(this, "binding to nonexistant proxy!");
 
   ProxyAccessible* outerDoc = e->mProxy;
   MOZ_ASSERT(outerDoc);
@@ -407,7 +407,7 @@ DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
   // here.
   if (outerDoc->ChildrenCount() > 1 ||
       (outerDoc->ChildrenCount() == 1 && !outerDoc->ChildAt(0)->IsDoc())) {
-    return false;
+    return IPC_FAIL(this, "binding to proxy that can't be a outerDoc!");
   }
 
   aChildDoc->mParent = outerDoc;
@@ -419,7 +419,7 @@ DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
     ProxyCreated(aChildDoc, Interfaces::DOCUMENT | Interfaces::HYPERTEXT);
   }
 
-  return true;
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult

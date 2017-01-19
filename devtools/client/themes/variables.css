@@ -139,15 +139,16 @@
   --theme-sidebar-background: #fcfcfc;
   --theme-contrast-background: #e6b064;
 
-  --theme-tab-toolbar-background: #d8eaf9;
-  --theme-toolbar-background: #f0f1f2;
+  --theme-tab-toolbar-background: rgb(240, 240, 240) linear-gradient(rgba(255, 255, 255, 0.8), transparent);
+  --theme-toolbar-background: rgb(240, 240, 240) linear-gradient(rgba(255, 255, 255, 0.8), transparent);
+  --theme-toolbar-tab-selected-background: rgb(253, 253, 253);
   --theme-selection-background: #3399ff;
   --theme-selection-background-semitransparent: rgba(128,128,128,0.2);
   --theme-selection-color: white;
-  --theme-splitter-color: #aabccf;
+  --theme-splitter-color: #bfbfbf;
   --theme-comment: darkgreen;
 
-  --theme-body-color: #000000;
+  --theme-body-color: #252525;
   --theme-body-color-alt: #585959;
   --theme-content-color1: #292e33;
   --theme-content-color2: #8fa1b2;
@@ -190,6 +191,21 @@
   /* Command line */
   --theme-command-line-image: url(chrome://devtools/skin/images/firebug/commandline-icon.svg);
   --theme-command-line-image-focus: url(chrome://devtools/skin/images/firebug/commandline-icon.svg#focus);
+
+  /* Toolbar buttons */
+  --toolbarbutton-background: transparent linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.2)) no-repeat;
+  --toolbarbutton-hover-background: transparent;
+  --toolbarbutton-checked-background: linear-gradient(rgba(0, 0, 0, 0.1), transparent);
+  --toolbarbutton-checked-color: var(--theme-body-color);
+  --toolbarbutton-hover-border: 1px solid var(--theme-splitter-color);
+  --toolbarbutton-checked-border: var(--toolbarbutton-hover-border);
+}
+
+:root.theme-firebug[platform="win"] {
+  --theme-tab-toolbar-background: #d8eaf9 linear-gradient(rgba(253, 253, 253, 0.2), rgba(253, 253, 253, 0));
+  --theme-toolbar-background: #d8eaf9 linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.2));
+  --theme-toolbar-tab-selected-background: rgb(247, 251, 254);
+  --theme-splitter-color: #aabccf;
 }
 
 :root {
@@ -200,4 +216,13 @@
    * should improve keyboard navigation usability. */
   --theme-focus-outline: 1px dotted var(--theme-focus-outline-color);
   --theme-focus-box-shadow-textbox: 0 0 0 1px var(--theme-textbox-box-shadow);
+
+  --toolbarbutton-background: rgba(128,128,128,0.1);
+  --toolbarbutton-hover-background: rgba(128,128,128,0.2);
+  --toolbarbutton-checked-background: var(--theme-selection-background);
+  --toolbarbutton-checked-color: var(--theme-selection-color);
+
+  --toolbarbutton-border: 1px solid transparent;
+  --toolbarbutton-hover-border: var(--toolbarbutton-border);
+  --toolbarbutton-checked-border: var(--toolbarbutton-border);
 }

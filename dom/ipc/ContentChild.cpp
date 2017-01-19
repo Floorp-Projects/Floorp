@@ -1441,6 +1441,7 @@ StartMacOSContentSandbox()
   MacSandboxInfo info;
   info.type = MacSandboxType_Content;
   info.level = info.level = sandboxLevel;
+  info.shouldLog = Preferences::GetBool("security.sandbox.logging.enabled", true);
   info.appPath.assign(appPath.get());
   info.appBinaryPath.assign(appBinaryPath.get());
   info.appDir.assign(appDir.get());

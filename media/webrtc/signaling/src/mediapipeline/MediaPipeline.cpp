@@ -750,25 +750,24 @@ MediaPipeline::UpdateTransport_s(int level,
 void
 MediaPipeline::SelectSsrc_m(size_t ssrc_index)
 {
-  RUN_ON_THREAD(sts_thread_,
-                WrapRunnable(
-                    this,
-                    &MediaPipeline::SelectSsrc_s,
-                    ssrc_index),
-                NS_DISPATCH_NORMAL);
+  if (ssrc_index < ssrcs_received_.size()) {
+    uint32_t ssrc = ssrcs_received_[ssrc_index];
+    RUN_ON_THREAD(sts_thread_,
+                  WrapRunnable(
+                               this,
+                               &MediaPipeline::SelectSsrc_s,
+                               ssrc),
+                  NS_DISPATCH_NORMAL);
+
+    conduit_->SetRemoteSSRC(ssrc);
+  }
 }
 
 void
-MediaPipeline::SelectSsrc_s(size_t ssrc_index)
+MediaPipeline::SelectSsrc_s(uint32_t ssrc)
 {
   filter_ = new MediaPipelineFilter;
-  if (ssrc_index < ssrcs_received_.size()) {
-    filter_->AddRemoteSSRC(ssrcs_received_[ssrc_index]);
-  } else {
-    MOZ_MTLOG(ML_WARNING, "SelectSsrc called with " << ssrc_index << " but we "
-                          << "have only seen " << ssrcs_received_.size()
-                          << " ssrcs");
-  }
+  filter_->AddRemoteSSRC(ssrc);
 }
 
 void MediaPipeline::StateChange(TransportFlow *flow, TransportLayer::State state) {
@@ -2194,16 +2193,14 @@ public:
   {
 #ifdef MOZILLA_INTERNAL_API
     ReentrantMonitorAutoEnter enter(monitor_);
-#endif // MOZILLA_INTERNAL_API
 
-#if defined(MOZILLA_INTERNAL_API)
     if (buffer) {
       // Create a video frame using |buffer|.
 #ifdef MOZ_WIDGET_GONK
       RefPtr<PlanarYCbCrImage> yuvImage = new GrallocImage();
 #else
       RefPtr<PlanarYCbCrImage> yuvImage = image_container_->CreatePlanarYCbCrImage();
-#endif
+#endif // MOZ_WIDGET_GONK
       uint8_t* frame = const_cast<uint8_t*>(static_cast<const uint8_t*> (buffer));
 
       PlanarYCbCrData yuvData;
