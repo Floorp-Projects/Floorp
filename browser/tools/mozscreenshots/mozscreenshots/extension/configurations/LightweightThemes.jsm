@@ -76,6 +76,17 @@ this.LightweightThemes = {
       verifyConfig: verifyConfigHelper,
     },
 
+    compactLight: {
+      applyConfig: Task.async(() => {
+        LightweightThemeManager.currentTheme = LightweightThemeManager.getUsedTheme("firefox-compact-light@mozilla.org");
+      }),
+    },
+
+    compactDark: {
+      applyConfig: Task.async(() => {
+        LightweightThemeManager.currentTheme = LightweightThemeManager.getUsedTheme("firefox-compact-dark@mozilla.org");
+      }),
+    },
   },
 };
 
