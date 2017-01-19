@@ -729,7 +729,6 @@ class MemoryAccessDesc
     TrapOffset trapOffset() const { return *trapOffset_; }
     bool isAtomic() const { return (barrierBefore_ | barrierAfter_) != jit::MembarNobits; }
     bool isSimd() const { return Scalar::isSimdType(type_); }
-    bool isUnaligned() const { return align() && align() < byteSize(); }
     bool isPlainAsmJS() const { return !hasTrap(); }
 
     void clearOffset() { offset_ = 0; }

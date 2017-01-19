@@ -108,6 +108,8 @@ class ABIArgGenerator
     uint32_t stackBytesConsumedSoFar() const { return stackOffset_; }
 };
 
+bool IsUnaligned(const wasm::MemoryAccessDesc& access);
+
 static constexpr Register ABINonArgReg0 = r4;
 static constexpr Register ABINonArgReg1 = r5;
 static constexpr Register ABINonArgReg2 = r6;
