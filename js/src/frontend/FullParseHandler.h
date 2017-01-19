@@ -183,6 +183,10 @@ class FullParseHandler
         return new_<NullLiteral>(pos);
     }
 
+    ParseNode* newRawUndefinedLiteral(const TokenPos& pos) {
+        return new_<RawUndefinedLiteral>(pos);
+    }
+
     // The Boxer object here is any object that can allocate ObjectBoxes.
     // Specifically, a Boxer has a .newObjectBox(T) method that accepts a
     // Rooted<RegExpObject*> argument and returns an ObjectBox*.
