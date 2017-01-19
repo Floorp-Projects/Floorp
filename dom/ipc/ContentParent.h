@@ -38,6 +38,7 @@
 // These must match the similar ones in E10SUtils.jsm.
 #define DEFAULT_REMOTE_TYPE "web"
 #define FILE_REMOTE_TYPE "file"
+#define EXTENSION_REMOTE_TYPE "extension"
 
 // This must start with the DEFAULT_REMOTE_TYPE above.
 #define LARGE_ALLOCATION_REMOTE_TYPE "webLargeAllocation"

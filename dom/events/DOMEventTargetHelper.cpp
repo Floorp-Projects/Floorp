@@ -321,7 +321,7 @@ DOMEventTargetHelper::GetEventHandler(nsIAtom* aType,
 {
   EventHandlerNonNull* handler = GetEventHandler(aType, EmptyString());
   if (handler) {
-    *aValue = JS::ObjectValue(*handler->Callable());
+    *aValue = JS::ObjectOrNullValue(handler->CallableOrNull());
   } else {
     *aValue = JS::NullValue();
   }

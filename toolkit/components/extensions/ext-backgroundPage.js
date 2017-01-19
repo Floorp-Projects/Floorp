@@ -7,6 +7,8 @@ Cu.import("resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
+                                  "resource:///modules/E10SUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
@@ -57,6 +59,7 @@ class BackgroundPageBase {
       let awaitFrameLoader;
       if (this.extension.remote) {
         browser.setAttribute("remote", "true");
+        browser.setAttribute("remoteType", E10SUtils.EXTENSION_REMOTE_TYPE);
         awaitFrameLoader = promiseEvent(browser, "XULFrameLoaderCreated");
       }
 

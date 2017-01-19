@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset=utf-8>
+<style>
+@font-face {
+  font-family: test;
+  src: url(../fonts/TAMLThiruValluvar-Regular.ttf);
+}
+.test {
+  font-family: test;
+  width: -moz-fit-content;
+}
+.mask {
+  background: green;
+  position: relative;
+  top: -.7em;
+  height: .7em;
+}
+</style>
+</head>
+<body>
+<div class="test">
+<!--
+The Grantha nukta characters U+1133C should NOT disrupt shaping of the base text.
+-->
+&#x0BA4;&#x0BC6;&#x1133c;&#x0BAA;&#x1133c;&#x0BC6;&#x1133c;
+<!--
+We place a box over the bottom of the text to mask the nuktas from reftest comparison.
+-->
+<div class="mask"></div>
+</div>
+</body>
+</html>

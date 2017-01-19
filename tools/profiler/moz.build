@@ -86,7 +86,6 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         ]
     elif CONFIG['OS_TARGET'] == 'WINNT':
         SOURCES += [
-            'core/IntelPowerGadget.cpp',
             'core/platform-win32.cc',
             'core/shared-libraries-win32.cc',
         ]
