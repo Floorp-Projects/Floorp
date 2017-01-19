@@ -1524,6 +1524,12 @@ class InstGS : public Instruction
     { }
 };
 
+inline bool
+IsUnaligned(const wasm::MemoryAccessDesc& access)
+{
+    return access.align() && access.align() < access.byteSize();
+}
+
 } // namespace jit
 } // namespace js
 
