@@ -17,6 +17,7 @@ namespace dom {
 
 class Proxy;
 class SendRunnable;
+class DOMString;
 
 namespace workers {
 class WorkerPrivate;
@@ -246,7 +247,7 @@ public:
               ErrorResult& aRv) override;
 
   virtual void
-  GetResponseText(nsAString& aResponseText, ErrorResult& aRv) override;
+  GetResponseText(DOMString& aResponseText, ErrorResult& aRv) override;
 
   virtual nsIDocument*
   GetResponseXML(ErrorResult& aRv) override
