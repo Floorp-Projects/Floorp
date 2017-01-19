@@ -170,7 +170,8 @@ wasmEvalText('(module (func (if (i32.const 1) (drop (i32.const 0)) (if (i32.cons
 
 wasmFullPass('(module (func (return)) (export "run" 0))', undefined);
 wasmFullPass('(module (func (result i32) (return (i32.const 1))) (export "run" 0))', 1);
-wasmFullPass('(module (func (if (return) (i32.const 0))) (export "run" 0))', undefined);
+wasmFailValidateText('(module (func (if (return) (i32.const 0))) (export "run" 0))', /non-fallthrough instruction must be followed by end or else/);
+wasmFullPass('(module (func (if (block (return)) (i32.const 0))) (export "run" 0))', undefined);
 wasmFailValidateText('(module (func (result i32) (return)) (export "" 0))', /popping value from empty stack/);
 wasmFullPass('(module (func (return (i32.const 1))) (export "run" 0))', undefined);
 wasmFailValidateText('(module (func (result f32) (return (i32.const 1))) (export "" 0))', mismatchError("i32", "f32"));
@@ -204,9 +205,20 @@ wasmFailValidateText(`(module (func (result i32)
       (i32.const 2)
     )
   )
+) (export "" 0))`, /non-fallthrough instruction must be followed by end or else/);
+
+wasmFailValidateText(`(module (func (result i32)
+  (block
+    (if
+      (block i32 (br 1))
+      (i32.const 0)
+      (i32.const 2)
+    )
+  )
 ) (export "" 0))`, mismatchError("void", "i32"));
 
-wasmFullPass(`(module (func (block $out (br_if $out (br 0)))) (export "run" 0))`, undefined);
+wasmFailValidateText(`(module (func (block $out (br_if $out (br 0)))) (export "run" 0))`, /non-fallthrough instruction must be followed by end or else/);
+wasmFullPass(`(module (func (block $out (br_if $out (block i32 (br 1))))) (export "run" 0))`, undefined);
 
 wasmFullPass('(module (func (br 0)) (export "run" 0))', undefined);
 wasmFullPass('(module (func (block (br 0))) (export "run" 0))', undefined);
@@ -218,15 +230,23 @@ wasmFullPass('(module (func (block $l (block (br $l)))) (export "run" 0))', unde
 wasmFullPass('(module (func (block $l (block $m (br $l)))) (export "run" 0))', undefined);
 wasmFullPass('(module (func (block $l (block $m (br $m)))) (export "run" 0))', undefined);
 
-wasmFullPass(`(module (func (result i32)
+wasmFailValidateText(`(module (func (result i32)
   (block
     (br 0)
     (return (i32.const 0))
   )
   (return (i32.const 1))
-) (export "run" 0))`, 1);
+) (export "run" 0))`, /non-fallthrough instruction must be followed by end or else/);
 
 wasmFullPass(`(module (func (result i32)
+  (block
+    (block (br 1))
+    (return (i32.const 0))
+  )
+  (return (i32.const 1))
+) (export "run" 0))`, 1);
+
+wasmFailValidateText(`(module (func (result i32)
   (block
     (block
       (br 0)
@@ -235,12 +255,34 @@ wasmFullPass(`(module (func (result i32)
     (return (i32.const 1))
   )
   (return (i32.const 2))
+) (export "run" 0))`, /non-fallthrough instruction must be followed by end or else/);
+
+wasmFullPass(`(module (func (result i32)
+  (block
+    (block
+      (block (br 1))
+      (return (i32.const 0))
+    )
+    (return (i32.const 1))
+  )
+  (return (i32.const 2))
 ) (export "run" 0))`, 1);
+
+wasmFailValidateText(`(module (func (result i32)
+  (block $outer
+    (block $inner
+      (br $inner)
+      (return (i32.const 0))
+    )
+    (return (i32.const 1))
+  )
+  (return (i32.const 2))
+) (export "run" 0))`, /non-fallthrough instruction must be followed by end or else/);
 
 wasmFullPass(`(module (func (result i32)
   (block $outer
     (block $inner
-      (br $inner)
+      (block (br $inner))
       (return (i32.const 0))
     )
     (return (i32.const 1))
@@ -254,7 +296,7 @@ var imports = {"": {
     notcalled() {notcalled = true},
     called() {called = true}
 }};
-wasmFullPass(`(module
+wasmFailValidateText(`(module
 (import "" "notcalled")
 (import "" "called")
 (func
@@ -263,11 +305,21 @@ wasmFullPass(`(module
     (call 0)
   )
   (call 1)
+) (export "run" 2))`, /non-fallthrough instruction must be followed by end or else/);
+wasmFullPass(`(module
+(import "" "notcalled")
+(import "" "called")
+(func
+  (block
+    (block (return (block (br 2))))
+    (call 0)
+  )
+  (call 1)
 ) (export "run" 2))`, undefined, imports);
 assertEq(notcalled, false);
 assertEq(called, true);
 
-wasmFullPass(`(module (func
+wasmFailValidateText(`(module (func
   (block
     (i32.add
       (i32.const 0)
@@ -275,7 +327,20 @@ wasmFullPass(`(module (func
     )
   )
   (return)
+) (export "run" 0))`, /non-fallthrough instruction must be followed by end or else/);
+
+/* TODO: This triggers a bug in BinaryToAST. */
+/*
+wasmFullPass(`(module (func
+  (block
+    (i32.add
+      (i32.const 0)
+      (block i32 (return (block (br 2))))
+    )
+  )
+  (return)
 ) (export "run" 0))`, undefined);
+*/
 
 wasmFullPass(`(module (func (result i32)
   (block
@@ -316,8 +381,10 @@ wasmFailValidateText('(module (func (result i32) (block f32 (br 0 (f32.const 42)
 wasmFailValidateText(`(module (func (result i32) (param i32) (block (if i32 (get_local 0) (br 0 (i32.const 42))))) (export "" 0))`, /if without else with a result value/);
 wasmFailValidateText(`(module (func (result i32) (param i32) (block i32 (if (get_local 0) (drop (i32.const 42))) (br 0 (f32.const 42)))) (export "" 0))`, mismatchError("f32", "i32"));
 
-wasmFullPass('(module (func (result i32) (br 0 (i32.const 42)) (i32.const 13)) (export "run" 0))', 42);
-wasmFullPass('(module (func (result i32) (block i32 (br 0 (i32.const 42)) (i32.const 13))) (export "run" 0))', 42);
+wasmFailValidateText('(module (func (result i32) (br 0 (i32.const 42)) (i32.const 13)) (export "run" 0))', /non-fallthrough instruction must be followed by end or else/);
+wasmFailValidateText('(module (func (result i32) (block i32 (br 0 (i32.const 42)) (i32.const 13))) (export "run" 0))', /non-fallthrough instruction must be followed by end or else/);
+wasmFullPass('(module (func (result i32) (block (br 1 (i32.const 42))) (i32.const 13)) (export "run" 0))', 42);
+wasmFullPass('(module (func (result i32) (block i32 (block (br 1 (i32.const 42))) (i32.const 13))) (export "run" 0))', 42);
 
 wasmFailValidateText('(module (func) (func (block i32 (br 0 (call 0)) (i32.const 13))) (export "" 0))', /popping value from empty stack/);
 wasmFailValidateText('(module (func) (func (block i32 (br_if 0 (call 0) (i32.const 1)) (i32.const 13))) (export "" 0))', /popping value from empty stack/);
@@ -376,9 +443,12 @@ var f = wasmEvalText(`(module (func (param i32) (result i32) (i32.add (i32.const
 assertEq(f(0), 0);
 assertEq(f(1), 100);
 
-wasmFullPass(`(module (func (result i32) (block i32 (br 0 (return (i32.const 42))) (i32.const 0))) (export "run" 0))`, 42);
-wasmFullPass(`(module (func (result i32) (block i32 (return (br 0 (i32.const 42))))) (export "run" 0))`, 42);
-wasmFullPass(`(module (func (result i32) (block i32 (return (br 0 (i32.const 42))) (i32.const 0))) (export "run" 0))`, 42);
+wasmFailValidateText(`(module (func (result i32) (block i32 (br 0 (return (i32.const 42))) (i32.const 0))) (export "run" 0))`, /non-fallthrough instruction must be followed by end or else/);
+wasmFailValidateText(`(module (func (result i32) (block i32 (return (br 0 (i32.const 42))))) (export "run" 0))`, /non-fallthrough instruction must be followed by end or else/);
+wasmFailValidateText(`(module (func (result i32) (block i32 (return (br 0 (i32.const 42))) (i32.const 0))) (export "run" 0))`, /non-fallthrough instruction must be followed by end or else/);
+wasmFullPass(`(module (func (result i32) (block i32 (block (br 1 (block (return (i32.const 42))))) (i32.const 0))) (export "run" 0))`, 42);
+wasmFullPass(`(module (func (result i32) (block i32 (return (block (br 1 (i32.const 42)))))) (export "run" 0))`, 42);
+wasmFullPass(`(module (func (result i32) (block i32 (block (return (block (br 2 (i32.const 42))))) (i32.const 0))) (export "run" 0))`, 42);
 
 wasmFullPass(`(module (func (result f32) (drop (block i32 (br 0 (i32.const 0)))) (block f32 (br 0 (f32.const 42)))) (export "run" 0))`, 42);
 
@@ -637,26 +707,53 @@ wasmFailValidateText('(module (func (loop (br_table 2 0 (i32.const 0)))))', DEPT
 wasmFailValidateText('(module (func (loop (br_table 0 2 (i32.const 0)))))', DEPTH_OUT_OF_BOUNDS);
 wasmFailValidateText('(module (func (loop (br_table 0 (f32.const 0)))))', mismatchError("f32", "i32"));
 
-wasmFullPass(`(module (func (result i32) (param i32)
+wasmFailValidateText(`(module (func (result i32) (param i32)
   (block $default
    (br_table $default (get_local 0))
    (return (i32.const 0))
   )
   (return (i32.const 1))
-) (export "run" 0))`, 1);
+) (export "run" 0))`, /non-fallthrough instruction must be followed by end or else/);
 
 wasmFullPass(`(module (func (result i32) (param i32)
+  (block $default
+   (block (br_table $default (get_local 0)))
+   (return (i32.const 0))
+  )
+  (return (i32.const 1))
+) (export "run" 0))`, 1);
+
+wasmFailValidateText(`(module (func (result i32) (param i32)
   (block $default
    (br_table $default (return (i32.const 1)))
    (return (i32.const 0))
   )
   (return (i32.const 2))
+) (export "run" 0))`, /non-fallthrough instruction must be followed by end or else/);
+
+wasmFullPass(`(module (func (result i32) (param i32)
+  (block $default
+   (block (br_table $default (block i32 (return (i32.const 1)))))
+   (return (i32.const 0))
+  )
+  (return (i32.const 2))
 ) (export "run" 0))`, 1);
+
+wasmFailValidateText(`(module (func (result i32) (param i32)
+  (block $outer
+   (block $inner
+    (br_table $inner (get_local 0))
+    (return (i32.const 0))
+   )
+   (return (i32.const 1))
+  )
+  (return (i32.const 2))
+) (export "run" 0))`, /non-fallthrough instruction must be followed by end or else/);
 
 wasmFullPass(`(module (func (result i32) (param i32)
   (block $outer
    (block $inner
-    (br_table $inner (get_local 0))
+    (block (br_table $inner (get_local 0)))
     (return (i32.const 0))
    )
    (return (i32.const 1))
@@ -730,7 +827,11 @@ assertEq(f(4), 13);
 
 const UNREACHABLE = /unreachable/;
 assertErrorMessage(wasmEvalText(`(module (func (unreachable)) (export "" 0))`).exports[""], RuntimeError, UNREACHABLE);
-assertErrorMessage(wasmEvalText(`(module (func (if (unreachable) (i32.const 0))) (export "" 0))`).exports[""], RuntimeError, UNREACHABLE);
-assertErrorMessage(wasmEvalText(`(module (func (block (br_if 0 (unreachable)))) (export "" 0))`).exports[""], RuntimeError, UNREACHABLE);
-assertErrorMessage(wasmEvalText(`(module (func (block (br_table 0 (unreachable)))) (export "" 0))`).exports[""], RuntimeError, UNREACHABLE);
-assertErrorMessage(wasmEvalText(`(module (func (result i32) (i32.add (i32.const 0) (unreachable))) (export "" 0))`).exports[""], RuntimeError, UNREACHABLE);
+wasmFailValidateText('(module (func (if (unreachable) (i32.const 0))) (export "" 0))', /non-fallthrough instruction must be followed by end or else/);
+wasmFailValidateText('(module (func (block (br_if 0 (unreachable)))) (export "" 0))', /non-fallthrough instruction must be followed by end or else/);
+wasmFailValidateText('(module (func (block (br_table 0 (unreachable)))) (export "" 0))', /non-fallthrough instruction must be followed by end or else/);
+wasmFailValidateText('(module (func (result i32) (i32.add (i32.const 0) (unreachable))) (export "" 0))', /non-fallthrough instruction must be followed by end or else/);
+assertErrorMessage(wasmEvalText(`(module (func (if (block i32 (unreachable)) (i32.const 0))) (export "" 0))`).exports[""], RuntimeError, UNREACHABLE);
+assertErrorMessage(wasmEvalText(`(module (func (block (br_if 0 (block i32 (unreachable))))) (export "" 0))`).exports[""], RuntimeError, UNREACHABLE);
+assertErrorMessage(wasmEvalText(`(module (func (block (br_table 0 (block i32 (unreachable))))) (export "" 0))`).exports[""], RuntimeError, UNREACHABLE);
+assertErrorMessage(wasmEvalText(`(module (func (result i32) (i32.add (i32.const 0) (block i32 (unreachable)))) (export "" 0))`).exports[""], RuntimeError, UNREACHABLE);

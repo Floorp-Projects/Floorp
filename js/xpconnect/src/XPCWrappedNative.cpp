@@ -164,20 +164,16 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper& nativeHelper,
     MOZ_ASSERT(!nativeHelper.GetWrapperCache() ||
                !nativeHelper.GetWrapperCache()->GetWrapperPreserveColor());
 
-    // Put together the ScriptableCreateInfo...
-    XPCNativeScriptableCreateInfo sciProto;
-    XPCNativeScriptableCreateInfo sciMaybe;
-    const XPCNativeScriptableCreateInfo& sciWrapper =
-        GatherScriptableCreateInfo(identity, nativeHelper.GetClassInfo(),
-                                   sciProto, sciMaybe);
-
-    // ...and then get the nsIXPCScriptable. This will tell us the JSClass of
-    // the object we're going to create.
-    nsCOMPtr<nsIXPCScriptable> scr = sciWrapper.GetCallback();
-    MOZ_ASSERT(scr);
+    // Get the nsIXPCScriptable. This will tell us the JSClass of the object
+    // we're going to create.
+    nsCOMPtr<nsIXPCScriptable> scrProto;
+    nsCOMPtr<nsIXPCScriptable> scrWrapper;
+    GatherScriptable(identity, nativeHelper.GetClassInfo(),
+                     getter_AddRefs(scrProto), getter_AddRefs(scrWrapper));
+    MOZ_ASSERT(scrWrapper);
 
     // Finally, we get to the JSClass.
-    const JSClass* clasp = scr->GetJSClass();
+    const JSClass* clasp = scrWrapper->GetJSClass();
     MOZ_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
 
     // Create the global.
@@ -200,7 +196,8 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper& nativeHelper,
     // Make a proto.
     XPCWrappedNativeProto* proto =
         XPCWrappedNativeProto::GetNewOrUsed(scope,
-                                            nativeHelper.GetClassInfo(), &sciProto,
+                                            nativeHelper.GetClassInfo(),
+                                            scrProto,
                                             /* callPostCreatePrototype = */ false);
     if (!proto)
         return NS_ERROR_FAILURE;
@@ -222,7 +219,7 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper& nativeHelper,
     // are different for globals. We do our setup inline here, instead.
     //
 
-    wrapper->mScriptable = scr;
+    wrapper->mScriptable = scrWrapper;
 
     // Set the JS object to the global we already created.
     wrapper->mFlatJSObject = global;
@@ -330,8 +327,8 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
 
     nsIClassInfo* info = helper.GetClassInfo();
 
-    XPCNativeScriptableCreateInfo sciProto;
-    XPCNativeScriptableCreateInfo sci;
+    nsCOMPtr<nsIXPCScriptable> scrProto;
+    nsCOMPtr<nsIXPCScriptable> scrWrapper;
 
     // Gather scriptable create info if we are wrapping something
     // other than an nsIClassInfo object. We need to not do this for
@@ -340,15 +337,14 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
     // code is obviously intended for the implementation of the class
     // described by the nsIClassInfo, not for the class info object
     // itself.
-    const XPCNativeScriptableCreateInfo& sciWrapper =
-        isClassInfoSingleton ? sci :
-        GatherScriptableCreateInfo(identity, info, sciProto, sci);
+    if (!isClassInfoSingleton)
+        GatherScriptable(identity, info, getter_AddRefs(scrProto),
+                         getter_AddRefs(scrWrapper));
 
     RootedObject parent(cx, Scope->GetGlobalJSObject());
 
     mozilla::Maybe<JSAutoCompartment> ac;
 
-    nsCOMPtr<nsIXPCScriptable> scrWrapper = sciWrapper.GetCallback();
     if (scrWrapper && scrWrapper->WantPreCreate()) {
         RootedObject plannedParent(cx, parent);
         nsresult rv =
@@ -405,7 +401,7 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
     // wrapper is actually created, but before JS code can see it.
 
     if (info && !isClassInfoSingleton) {
-        proto = XPCWrappedNativeProto::GetNewOrUsed(Scope, info, &sciProto);
+        proto = XPCWrappedNativeProto::GetNewOrUsed(Scope, info, scrProto);
         if (!proto)
             return NS_ERROR_FAILURE;
 
@@ -435,7 +431,7 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
     // *seen* this happen.
     AutoMarkingWrappedNativePtr wrapperMarker(cx, wrapper);
 
-    if (!wrapper->Init(&sciWrapper))
+    if (!wrapper->Init(scrWrapper))
         return NS_ERROR_FAILURE;
 
     if (!wrapper->FindTearOff(Interface, false, &rv)) {
@@ -608,107 +604,106 @@ XPCWrappedNative::SetProto(XPCWrappedNativeProto* p)
     mMaybeProto = p;
 }
 
-// This is factored out so that it can be called publicly
+// This is factored out so that it can be called publicly.
 // static
-void
-XPCWrappedNative::GatherProtoScriptableCreateInfo(nsIClassInfo* classInfo,
-                                                  XPCNativeScriptableCreateInfo& sciProto)
+nsIXPCScriptable*
+XPCWrappedNative::GatherProtoScriptable(nsIClassInfo* classInfo)
 {
     MOZ_ASSERT(classInfo, "bad param");
-    MOZ_ASSERT(!sciProto.GetCallback(), "bad param");
 
     nsXPCClassInfo* classInfoHelper = nullptr;
     CallQueryInterface(classInfo, &classInfoHelper);
     if (classInfoHelper) {
         nsCOMPtr<nsIXPCScriptable> helper =
           dont_AddRef(static_cast<nsIXPCScriptable*>(classInfoHelper));
-        sciProto.SetCallback(helper.forget());
-
-        return;
+        return helper;
     }
 
     nsCOMPtr<nsIXPCScriptable> helper;
     nsresult rv = classInfo->GetScriptableHelper(getter_AddRefs(helper));
     if (NS_SUCCEEDED(rv) && helper) {
-        sciProto.SetCallback(helper.forget());
+        return helper;
     }
+
+    return nullptr;
 }
 
 // static
-const XPCNativeScriptableCreateInfo&
-XPCWrappedNative::GatherScriptableCreateInfo(nsISupports* obj,
-                                             nsIClassInfo* classInfo,
-                                             XPCNativeScriptableCreateInfo& sciProto,
-                                             XPCNativeScriptableCreateInfo& sciWrapper)
+void
+XPCWrappedNative::GatherScriptable(nsISupports* aObj,
+                                   nsIClassInfo* aClassInfo,
+                                   nsIXPCScriptable** aScrProto,
+                                   nsIXPCScriptable** aScrWrapper)
 {
-    MOZ_ASSERT(!sciWrapper.GetCallback(), "bad param");
+    MOZ_ASSERT(!*aScrProto, "bad param");
+    MOZ_ASSERT(!*aScrWrapper, "bad param");
+
+    nsCOMPtr<nsIXPCScriptable> scrProto;
+    nsCOMPtr<nsIXPCScriptable> scrWrapper;
 
     // Get the class scriptable helper (if present)
-    if (classInfo) {
-        GatherProtoScriptableCreateInfo(classInfo, sciProto);
+    if (aClassInfo) {
+        scrProto = GatherProtoScriptable(aClassInfo);
 
-        nsCOMPtr<nsIXPCScriptable> scrProto = sciProto.GetCallback();
-        if (scrProto && scrProto->DontAskInstanceForScriptable())
-            return sciProto;
+        if (scrProto && scrProto->DontAskInstanceForScriptable()) {
+            scrWrapper = scrProto;
+            scrProto.forget(aScrProto);
+            scrWrapper.forget(aScrWrapper);
+            return;
+        }
     }
 
     // Do the same for the wrapper specific scriptable
-    nsCOMPtr<nsIXPCScriptable> scrWrapper(do_QueryInterface(obj));
+    scrWrapper = do_QueryInterface(aObj);
     if (scrWrapper) {
         // A whole series of assertions to catch bad uses of scriptable flags on
-        // the siWrapper...
+        // the scrWrapper...
 
         // Can't set WANT_PRECREATE on an instance scriptable without also
         // setting it on the class scriptable.
         MOZ_ASSERT_IF(scrWrapper->WantPreCreate(),
-                      sciProto.GetCallback() &&
-                      sciProto.GetCallback()->WantPreCreate());
+                      scrProto && scrProto->WantPreCreate());
 
         // Can't set DONT_ENUM_QUERY_INTERFACE on an instance scriptable
         // without also setting it on the class scriptable (if present).
-        MOZ_ASSERT_IF(scrWrapper->DontEnumQueryInterface() &&
-                      sciProto.GetCallback(),
-                      sciProto.GetCallback()->DontEnumQueryInterface());
+        MOZ_ASSERT_IF(scrWrapper->DontEnumQueryInterface() && scrProto,
+                      scrProto->DontEnumQueryInterface());
 
         // Can't set DONT_ASK_INSTANCE_FOR_SCRIPTABLE on an instance scriptable
         // without also setting it on the class scriptable.
         MOZ_ASSERT_IF(scrWrapper->DontAskInstanceForScriptable(),
-                      sciProto.GetCallback() &&
-                      sciProto.GetCallback()->DontAskInstanceForScriptable());
+                      scrProto && scrProto->DontAskInstanceForScriptable());
 
         // Can't set CLASSINFO_INTERFACES_ONLY on an instance scriptable
         // without also setting it on the class scriptable (if present).
-        MOZ_ASSERT_IF(scrWrapper->ClassInfoInterfacesOnly() &&
-                      sciProto.GetCallback(),
-                      sciProto.GetCallback()->ClassInfoInterfacesOnly());
+        MOZ_ASSERT_IF(scrWrapper->ClassInfoInterfacesOnly() && scrProto,
+                      scrProto->ClassInfoInterfacesOnly());
 
         // Can't set ALLOW_PROP_MODS_DURING_RESOLVE on an instance scriptable
         // without also setting it on the class scriptable (if present).
-        MOZ_ASSERT_IF(scrWrapper->AllowPropModsDuringResolve() &&
-                      sciProto.GetCallback(),
-                      sciProto.GetCallback()->AllowPropModsDuringResolve());
+        MOZ_ASSERT_IF(scrWrapper->AllowPropModsDuringResolve() && scrProto,
+                      scrProto->AllowPropModsDuringResolve());
 
         // Can't set ALLOW_PROP_MODS_TO_PROTOTYPE on an instance scriptable
         // without also setting it on the class scriptable (if present).
-        MOZ_ASSERT_IF(scrWrapper->AllowPropModsToPrototype() &&
-                      sciProto.GetCallback(),
-                      sciProto.GetCallback()->AllowPropModsToPrototype());
-
-        sciWrapper.SetCallback(scrWrapper.forget());
-        return sciWrapper;
+        MOZ_ASSERT_IF(scrWrapper->AllowPropModsToPrototype() && scrProto,
+                      scrProto->AllowPropModsToPrototype());
+    } else {
+        scrWrapper = scrProto;
     }
 
-    return sciProto;
+    scrProto.forget(aScrProto);
+    scrWrapper.forget(aScrWrapper);
 }
 
 bool
-XPCWrappedNative::Init(const XPCNativeScriptableCreateInfo* sci)
+XPCWrappedNative::Init(nsIXPCScriptable* aScriptable)
 {
     AutoJSContext cx;
 
     // Setup our scriptable...
     MOZ_ASSERT(!mScriptable);
-    mScriptable = sci->GetCallback();
+    mScriptable = aScriptable;
 
     // create our flatJSObject
 

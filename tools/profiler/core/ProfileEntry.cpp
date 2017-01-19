@@ -7,7 +7,6 @@
 #include "platform.h"
 #include "mozilla/HashFunctions.h"
 
-#ifndef SPS_STANDALONE
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 
@@ -15,7 +14,6 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/TrackedOptimizationInfo.h"
-#endif
 
 // Self
 #include "ProfileEntry.h"
@@ -119,7 +117,6 @@ public:
   }
 };
 
-#ifndef SPS_STANDALONE
 class StreamOptimizationTypeInfoOp : public JS::ForEachTrackedOptimizationTypeInfoOp
 {
   JSONWriter& mWriter;
@@ -295,7 +292,6 @@ public:
     mDepth++;
   }
 };
-#endif
 
 uint32_t UniqueJSONStrings::GetOrAddIndex(const char* aStr)
 {
@@ -351,11 +347,7 @@ uint32_t UniqueStacks::FrameKey::Hash() const
 {
   uint32_t hash = 0;
   if (!mLocation.IsEmpty()) {
-#ifdef SPS_STANDALONE
-    hash = mozilla::HashString(mLocation.c_str());
-#else
     hash = mozilla::HashString(mLocation.get());
-#endif
   }
   if (mLine.isSome()) {
     hash = mozilla::AddToHash(hash, *mLine);
@@ -393,22 +385,6 @@ UniqueStacks::UniqueStacks(JSContext* aContext)
   mStackTableWriter.StartBareList();
 }
 
-#ifdef SPS_STANDALONE
-uint32_t UniqueStacks::GetOrAddStackIndex(const StackKey& aStack)
-{
-  uint32_t index;
-  auto it = mStackToIndexMap.find(aStack);
-
-  if (it != mStackToIndexMap.end()) {
-    return it->second;
-  }
-
-  index = mStackToIndexMap.size();
-  mStackToIndexMap[aStack] = index;
-  StreamStack(aStack);
-  return index;
-}
-#else
 uint32_t UniqueStacks::GetOrAddStackIndex(const StackKey& aStack)
 {
   uint32_t index;
@@ -422,26 +398,7 @@ uint32_t UniqueStacks::GetOrAddStackIndex(const StackKey& aStack)
   StreamStack(aStack);
   return index;
 }
-#endif
 
-#ifdef SPS_STANDALONE
-uint32_t UniqueStacks::GetOrAddFrameIndex(const OnStackFrameKey& aFrame)
-{
-  uint32_t index;
-  auto it = mFrameToIndexMap.find(aFrame);
-  if (it != mFrameToIndexMap.end()) {
-    MOZ_ASSERT(it->second < mFrameCount);
-    return it->second;
-  }
-
-  // A manual count is used instead of mFrameToIndexMap.Count() due to
-  // forwarding of canonical JIT frames above.
-  index = mFrameCount++;
-  mFrameToIndexMap[aFrame] = index;
-  StreamFrame(aFrame);
-  return index;
-}
-#else
 uint32_t UniqueStacks::GetOrAddFrameIndex(const OnStackFrameKey& aFrame)
 {
   uint32_t index;
@@ -468,7 +425,6 @@ uint32_t UniqueStacks::GetOrAddFrameIndex(const OnStackFrameKey& aFrame)
   StreamFrame(aFrame);
   return index;
 }
-#endif
 
 uint32_t UniqueStacks::LookupJITFrameDepth(void* aAddr)
 {
@@ -526,25 +482,15 @@ void UniqueStacks::StreamFrame(const OnStackFrameKey& aFrame)
 
   AutoArraySchemaWriter writer(mFrameTableWriter, mUniqueStrings);
 
-#ifndef SPS_STANDALONE
   if (!aFrame.mJITFrameHandle) {
-#else
-  {
-#endif
-#ifdef SPS_STANDALONE
-    writer.StringElement(LOCATION, aFrame.mLocation.c_str());
-#else
     writer.StringElement(LOCATION, aFrame.mLocation.get());
-#endif
     if (aFrame.mLine.isSome()) {
       writer.IntElement(LINE, *aFrame.mLine);
     }
     if (aFrame.mCategory.isSome()) {
       writer.IntElement(CATEGORY, *aFrame.mCategory);
     }
-  }
-#ifndef SPS_STANDALONE
-  else {
+  } else {
     const JS::ForEachProfiledFrameOp::FrameHandle& jitFrame = *aFrame.mJITFrameHandle;
 
     writer.StringElement(LOCATION, jitFrame.label());
@@ -601,7 +547,6 @@ void UniqueStacks::StreamFrame(const OnStackFrameKey& aFrame)
       mFrameTableWriter.EndObject();
     }
   }
-#endif
 }
 
 struct ProfileSample
@@ -612,7 +557,6 @@ struct ProfileSample
   Maybe<double> mRSS;
   Maybe<double> mUSS;
   Maybe<int> mFrameNumber;
-  Maybe<double> mPower;
 };
 
 static void WriteSample(SpliceableJSONWriter& aWriter, ProfileSample& aSample)
@@ -623,8 +567,7 @@ static void WriteSample(SpliceableJSONWriter& aWriter, ProfileSample& aSample)
     RESPONSIVENESS = 2,
     RSS = 3,
     USS = 4,
-    FRAME_NUMBER = 5,
-    POWER = 6
+    FRAME_NUMBER = 5
   };
 
   AutoArraySchemaWriter writer(aWriter);
@@ -649,10 +592,6 @@ static void WriteSample(SpliceableJSONWriter& aWriter, ProfileSample& aSample)
 
   if (aSample.mFrameNumber.isSome()) {
     writer.IntElement(FRAME_NUMBER, *aSample.mFrameNumber);
-  }
-
-  if (aSample.mPower.isSome()) {
-    writer.DoubleElement(POWER, *aSample.mPower);
   }
 }
 
@@ -684,11 +623,6 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
       case 'r':
         if (sample.isSome()) {
           sample->mResponsiveness = Some(entry.mTagDouble);
-        }
-        break;
-      case 'p':
-        if (sample.isSome()) {
-          sample->mPower = Some(entry.mTagDouble);
         }
         break;
       case 'R':
@@ -768,7 +702,6 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
                 incBy++;
               }
               stack.AppendFrame(frameKey);
-#ifndef SPS_STANDALONE
             } else if (frame.mTagName == 'J') {
               // A JIT frame may expand to multiple frames due to inlining.
               void* pc = frame.mTagPtr;
@@ -783,7 +716,6 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThre
                   stack.AppendFrame(inlineFrameKey);
                 }
               }
-#endif
             }
             framePos = (framePos + incBy) % mEntrySize;
           }

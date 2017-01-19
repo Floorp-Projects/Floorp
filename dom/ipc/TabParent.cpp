@@ -916,7 +916,7 @@ TabParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
     }
 
     auto parentDoc = static_cast<a11y::DocAccessibleParent*>(aParentDoc);
-    bool added = parentDoc->AddChildDoc(doc, aParentID);
+    mozilla::ipc::IPCResult added = parentDoc->AddChildDoc(doc, aParentID);
 #ifdef XP_WIN
     MOZ_ASSERT(aDocCOMProxy.IsNull());
     if (added) {
@@ -924,7 +924,7 @@ TabParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
     }
 #endif
     if (!added) {
-      return IPC_FAIL_NO_REASON(this);
+      return added;
     }
     return IPC_OK();
   } else {

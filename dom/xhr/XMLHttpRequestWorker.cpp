@@ -2426,7 +2426,7 @@ XMLHttpRequestWorker::GetResponse(JSContext* /* unused */,
 }
 
 void
-XMLHttpRequestWorker::GetResponseText(nsAString& aResponseText, ErrorResult& aRv)
+XMLHttpRequestWorker::GetResponseText(DOMString& aResponseText, ErrorResult& aRv)
 {
   aRv = mStateData.mResponseTextResult;
   if (aRv.Failed()) {

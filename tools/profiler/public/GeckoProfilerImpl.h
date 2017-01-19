@@ -15,10 +15,8 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/UniquePtr.h"
-#ifndef SPS_STANDALONE
 #include "nscore.h"
 #include "nsISupports.h"
-#endif
 #include "GeckoProfilerFunc.h"
 #include "PseudoStack.h"
 #include "ProfilerBacktrace.h"
@@ -36,7 +34,6 @@ class TimeStamp;
 
 extern MOZ_THREAD_LOCAL(PseudoStack *) tlsPseudoStack;
 extern MOZ_THREAD_LOCAL(GeckoSampler *) tlsTicker;
-extern MOZ_THREAD_LOCAL(void *) tlsStackTop;
 extern bool stack_key_initialized;
 
 #ifndef SAMPLE_FUNCTION_NAME
@@ -135,7 +132,6 @@ mozilla::UniquePtr<char[]> profiler_get_profile(double aSinceTime = 0)
   return mozilla_sampler_get_profile(aSinceTime);
 }
 
-#ifndef SPS_STANDALONE
 static inline
 JSObject* profiler_get_profile_jsobject(JSContext* aCx, double aSinceTime = 0)
 {
@@ -163,8 +159,6 @@ void profiler_get_gatherer(nsISupports** aRetVal)
 {
   mozilla_sampler_get_gatherer(aRetVal);
 }
-
-#endif
 
 static inline
 void profiler_save_profile_to_file(const char* aFilename)
@@ -227,7 +221,6 @@ bool profiler_is_sleeping()
   return mozilla_sampler_is_sleeping();
 }
 
-#ifndef SPS_STANDALONE
 static inline
 void profiler_js_operation_callback()
 {
@@ -238,7 +231,6 @@ void profiler_js_operation_callback()
 
   stack->jsOperationCallback();
 }
-#endif
 
 static inline
 double profiler_time()

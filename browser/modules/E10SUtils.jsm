@@ -34,6 +34,7 @@ const NOT_REMOTE = null;
 // These must match any similar ones in ContentParent.h.
 const WEB_REMOTE_TYPE = "web";
 const FILE_REMOTE_TYPE = "file";
+const EXTENSION_REMOTE_TYPE = "extension";
 const DEFAULT_REMOTE_TYPE = WEB_REMOTE_TYPE;
 
 function validatedWebRemoteType(aPreferredRemoteType) {
@@ -46,6 +47,7 @@ this.E10SUtils = {
   NOT_REMOTE,
   WEB_REMOTE_TYPE,
   FILE_REMOTE_TYPE,
+  EXTENSION_REMOTE_TYPE,
 
   canLoadURIInProcess(aURL, aProcess) {
     let remoteType = aProcess == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT
@@ -133,7 +135,7 @@ this.E10SUtils = {
     }
 
     if (aURL.startsWith("moz-extension:")) {
-      return useRemoteWebExtensions ? WEB_REMOTE_TYPE : NOT_REMOTE;
+      return useRemoteWebExtensions ? EXTENSION_REMOTE_TYPE : NOT_REMOTE;
     }
 
     if (aURL.startsWith("view-source:")) {

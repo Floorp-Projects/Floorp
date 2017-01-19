@@ -102,8 +102,8 @@ public:
    * Called when a document in a content process notifies the main process of a
    * new child document.
    */
-  bool AddChildDoc(DocAccessibleParent* aChildDoc, uint64_t aParentID,
-                   bool aCreating = true);
+  ipc::IPCResult AddChildDoc(DocAccessibleParent* aChildDoc,
+                             uint64_t aParentID, bool aCreating = true);
 
   /*
    * Called when the document in the content process this object represents
