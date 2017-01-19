@@ -27,9 +27,5 @@ public interface BufferStorage {
 
     void clear();
 
-    // For buffers that are filled up oldest-first this is a high water mark, which enables resuming
-    // a sync.
-    long latestModifiedTimestamp();
-
     boolean isPersistent();
 }

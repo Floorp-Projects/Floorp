@@ -20,6 +20,7 @@ import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
+import org.mozilla.gecko.sync.repositories.NonPersistentRepositoryStateProvider;
 import org.mozilla.gecko.sync.repositories.Server15Repository;
 import org.mozilla.gecko.sync.repositories.Server15RepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionStoreDelegate;
@@ -594,7 +595,8 @@ public class BatchingUploaderTest {
                     "http://dummy.url/",
                     null,
                     infoCollections,
-                    infoConfiguration
+                    infoConfiguration,
+                    new NonPersistentRepositoryStateProvider()
             );
         } catch (URISyntaxException e) {
             // Won't throw, and this won't happen.

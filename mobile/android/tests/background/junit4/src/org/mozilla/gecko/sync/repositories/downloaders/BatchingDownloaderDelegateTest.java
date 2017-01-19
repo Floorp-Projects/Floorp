@@ -19,6 +19,7 @@ import org.mozilla.gecko.sync.InfoConfiguration;
 import org.mozilla.gecko.sync.net.SyncResponse;
 import org.mozilla.gecko.sync.net.SyncStorageCollectionRequest;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
+import org.mozilla.gecko.sync.repositories.NonPersistentRepositoryStateProvider;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.Server15RepositorySession;
 import org.mozilla.gecko.sync.repositories.Server15Repository;
@@ -54,6 +55,8 @@ public class BatchingDownloaderDelegateTest {
                     Uri.EMPTY,
                     SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
                     true,
+                    true,
+                    new NonPersistentRepositoryStateProvider(),
                     repositorySession
             );
         }
@@ -116,7 +119,8 @@ public class BatchingDownloaderDelegateTest {
                 DEFAULT_COLLECTION_URL,
                 null,
                 new InfoCollections(),
-                new InfoConfiguration())
+                new InfoConfiguration(),
+                new NonPersistentRepositoryStateProvider())
         );
         mockDownloader = new MockDownloader(repositorySession);
     }
@@ -128,6 +132,8 @@ public class BatchingDownloaderDelegateTest {
                 Uri.EMPTY,
                 SystemClock.elapsedRealtime() + TimeUnit.MINUTES.toMillis(30),
                 true,
+                true,
+                new NonPersistentRepositoryStateProvider(),
                 repositorySession
         );
         RepositorySessionFetchRecordsDelegate delegate = new SimpleSessionFetchRecordsDelegate();

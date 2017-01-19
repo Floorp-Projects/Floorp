@@ -10,7 +10,10 @@ import org.mozilla.gecko.sync.SynchronizerConfiguration;
 import org.mozilla.gecko.sync.middleware.BufferingMiddlewareRepository;
 import org.mozilla.gecko.sync.middleware.storage.MemoryBufferStorage;
 import org.mozilla.gecko.sync.repositories.ConfigurableServer15Repository;
+import org.mozilla.gecko.sync.repositories.NonPersistentRepositoryStateProvider;
+import org.mozilla.gecko.sync.repositories.PersistentRepositoryStateProvider;
 import org.mozilla.gecko.sync.repositories.Repository;
+import org.mozilla.gecko.sync.repositories.RepositoryStateProvider;
 import org.mozilla.gecko.sync.repositories.android.AndroidBrowserHistoryRepository;
 
 import java.io.IOException;
@@ -26,7 +29,7 @@ import java.net.URISyntaxException;
 public class AndroidBrowserRecentHistoryServerSyncStage extends AndroidBrowserHistoryServerSyncStage {
     protected static final String LOG_TAG = "RecentHistoryStage";
 
-    // TODO: Bug 1316110 tracks follow up work to make this stage more efficient.
+    // Bug 1316110 tracks follow up work to generalize this stage and make it more efficient.
     private static final int HISTORY_BATCH_LIMIT = 50;
     // We need a custom configuration bundle name for this stage, because we want to track last-synced
     // timestamp for this stage separately from that of a full history sync stage, yet their collection
@@ -37,6 +40,37 @@ public class AndroidBrowserRecentHistoryServerSyncStage extends AndroidBrowserHi
     @Override
     public String bundlePrefix() {
         return BUNDLE_NAME;
+    }
+
+    /**
+     * We use a non-persistent state provider for this stage, as it's designed to just run once.
+     *
+     * @return Non-persistent repository state provider.
+     */
+    @Override
+    protected RepositoryStateProvider getRepositoryStateProvider() {
+        return new NonPersistentRepositoryStateProvider();
+    }
+
+    /**
+     * Force download to be limited to a single batch.
+     * We just to want fetch a batch-worth of records for this stage.
+     *
+     * @return MultipleBatches.Disabled
+     */
+    @Override
+    protected MultipleBatches getAllowedMultipleBatches() {
+        return MultipleBatches.Disabled;
+    }
+
+    /**
+     * Right now this stage is designed to run just once, when there's no history data available.
+     *
+     * @return HighWaterMark.Disabled
+     */
+    @Override
+    protected HighWaterMark getAllowedToUseHighWaterMark() {
+        return HighWaterMark.Disabled;
     }
 
     @Override
@@ -59,7 +93,9 @@ public class AndroidBrowserRecentHistoryServerSyncStage extends AndroidBrowserHi
                 session.config.infoConfiguration,
                 HISTORY_BATCH_LIMIT,
                 HISTORY_SORT,
-                false /* force single batch only */);
+                getAllowedMultipleBatches(),
+                getAllowedToUseHighWaterMark(),
+                getRepositoryStateProvider());
     }
 
     /**

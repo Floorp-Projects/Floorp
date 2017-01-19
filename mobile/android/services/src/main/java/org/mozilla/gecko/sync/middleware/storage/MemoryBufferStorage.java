@@ -48,23 +48,4 @@ public class MemoryBufferStorage implements BufferStorage {
     public void clear() {
         recordBuffer.clear();
     }
-
-    @Override
-    public long latestModifiedTimestamp() {
-        long lastModified = 0;
-
-        synchronized (recordBuffer) {
-            if (recordBuffer.size() == 0) {
-                return lastModified;
-            }
-
-            for (Record record : recordBuffer.values()) {
-                if (record.lastModified > lastModified) {
-                    lastModified = record.lastModified;
-                }
-            }
-        }
-
-        return lastModified;
-    }
 }
