@@ -14,6 +14,15 @@
 class nsIEventTarget;
 class nsIRunnable;
 
+// This file defines basic functionality for dispatching runnables to various
+// groups: either the SystemGroup or a DocGroup or TabGroup. Ideally all
+// runnables destined for the main thread should be dispatched to a group
+// instead so that we know what kind of web content they'll be
+// touching. Runnables sent to the SystemGroup never touch web
+// content. Runnables sent to a DocGroup can only touch documents belonging to
+// that DocGroup. Runnables sent to a TabGroup can touch any document in any of
+// the tabs belonging to the TabGroup.
+
 namespace mozilla {
 class AbstractThread;
 namespace dom {
