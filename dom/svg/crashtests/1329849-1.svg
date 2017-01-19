@@ -1,0 +1,13 @@
+<svg height='600'
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<filter id='f1'>
+<feSpecularLighting kernelUnitLength='-82'>
+<feSpotLight/>
+</feSpecularLighting>
+</filter>
+<filter id='f2' xlink:href='#f1'></filter>
+<polyline filter='url(#f2)' points='10,59 293,88 18,289'/>
+
+</svg>

@@ -78,6 +78,12 @@ load 1244898-1.xhtml
 load 1250725.html
 load 1267272-1.svg
 load 1282985-1.svg
+load 1329849-1.svg
+load 1329849-2.svg
+load 1329849-3.svg
+load 1329849-4.svg
+load 1329849-5.svg
+load 1329849-6.svg
 # Disabled for now due to it taking a very long time to run - bug 1259356
 #load long-clipPath-reference-chain.svg
 load zero-size-image.svg
