@@ -7,6 +7,7 @@
 #include "XMLHttpRequestString.h"
 #include "mozilla/Mutex.h"
 #include "nsISupportsImpl.h"
+#include "mozilla/dom/DOMString.h"
 
 namespace mozilla {
 namespace dom {
@@ -61,11 +62,24 @@ public:
   }
 
   MOZ_MUST_USE bool
-  GetAsString(nsAString& aString, uint32_t aLength)
+  GetAsString(DOMString& aString, uint32_t aLength)
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(aLength <= mData.Length());
-    return aString.Assign(mData, aLength, mozilla::fallible);
+    nsStringBuffer* buf = nsStringBuffer::FromString(mData);
+    if (buf) {
+      // We have to use SetEphemeralStringBuffer, because once we release our
+      // mutex mData can get mutated from some other thread while the DOMString
+      // is still alive.
+      aString.SetEphemeralStringBuffer(buf, aLength);
+      return true;
+    }
+
+    // We can get here if mData is empty.  In that case it won't have an
+    // nsStringBuffer....
+    MOZ_ASSERT(mData.IsEmpty());
+    return aString.AsAString().Assign(mData.BeginReading(), aLength,
+                                      mozilla::fallible);
   }
 
   void
@@ -187,17 +201,15 @@ XMLHttpRequestStringSnapshot::Set(XMLHttpRequestStringBuffer* aBuffer,
 }
 
 bool
-XMLHttpRequestStringSnapshot::GetAsString(nsAString& aString) const
+XMLHttpRequestStringSnapshot::GetAsString(DOMString& aString) const
 {
   if (mBuffer) {
     MOZ_ASSERT(!mVoid);
     return mBuffer->GetAsString(aString, mLength);
   }
 
-  aString.Truncate();
-
   if (mVoid) {
-    aString.SetIsVoid(true);
+    aString.SetNull();
   }
 
   return true;
