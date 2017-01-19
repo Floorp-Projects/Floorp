@@ -1451,8 +1451,14 @@ static
 #endif
 bool		malloc_init_hard(void);
 
-static void	_malloc_prefork(void);
-static void	_malloc_postfork(void);
+#ifndef MOZ_MEMORY_DARWIN
+static
+#endif
+void	_malloc_prefork(void);
+#ifndef MOZ_MEMORY_DARWIN
+static
+#endif
+void	_malloc_postfork(void);
 
 #ifdef MOZ_MEMORY_DARWIN
 /*
@@ -6885,7 +6891,10 @@ jemalloc_free_dirty_pages_impl(void)
  * is threaded here.
  */
 
-static void
+#ifndef MOZ_MEMORY_DARWIN
+static
+#endif
+void
 _malloc_prefork(void)
 {
 	unsigned i;
@@ -6903,7 +6912,10 @@ _malloc_prefork(void)
 	malloc_mutex_lock(&huge_mtx);
 }
 
-static void
+#ifndef MOZ_MEMORY_DARWIN
+static
+#endif
+void
 _malloc_postfork(void)
 {
 	unsigned i;
