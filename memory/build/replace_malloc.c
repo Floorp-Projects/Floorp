@@ -416,16 +416,23 @@ zone_force_unlock(malloc_zone_t *zone)
 
 #define JEMALLOC_ZONE_VERSION 6
 
-/* Empty implementations are needed, because fork() calls zone->force_(un)lock
- * unconditionally. */
+extern void _malloc_prefork(void);
+extern void _malloc_postfork(void);
+
 static void
 zone_force_lock(malloc_zone_t *zone)
 {
+  /* /!\ This calls into mozjemalloc. It works because we're linked in the
+   * same library. */
+  _malloc_prefork();
 }
 
 static void
 zone_force_unlock(malloc_zone_t *zone)
 {
+  /* /!\ This calls into mozjemalloc. It works because we're linked in the
+   * same library. */
+  _malloc_postfork();
 }
 
 #endif
