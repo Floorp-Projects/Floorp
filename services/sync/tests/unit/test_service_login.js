@@ -59,7 +59,6 @@ function setup() {
     "/1.1/janedoe/storage/meta/global": janeU("meta", new ServerWBO("global").handler())
   });
 
-  Service.serverURL = server.baseURI;
   return server;
 }
 

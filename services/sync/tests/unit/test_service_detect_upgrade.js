@@ -62,7 +62,6 @@ add_task(async function v4_upgrade() {
     Service.status.resetSync();
 
     _("Logging in.");
-    Service.serverURL = server.baseURI;
 
     await configureIdentity({ "username": "johndoe" }, server);
 
@@ -98,7 +97,6 @@ add_task(async function v4_upgrade() {
     _("Syncing afresh...");
     Service.logout();
     Service.collectionKeys.clear();
-    Service.serverURL = server.baseURI;
     meta_global.payload = JSON.stringify({"syncID": "foooooooooooooobbbbbbbbbbbb",
                                           "storageVersion": STORAGE_VERSION});
     collections.meta = Date.now() / 1000;
@@ -228,7 +226,6 @@ add_task(async function v5_upgrade() {
 
     Service.status.resetSync();
 
-    Service.serverURL = server.baseURI + "/";
     Service.clusterURL = server.baseURI + "/";
 
     await configureIdentity({ "username": "johndoe" }, server);

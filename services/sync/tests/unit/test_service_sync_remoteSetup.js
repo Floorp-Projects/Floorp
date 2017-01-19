@@ -74,9 +74,6 @@ add_task(async function run_test() {
   let server = httpd_setup(handlers);
 
   try {
-    _("Log in.");
-    Service.serverURL = server.baseURI;
-
     _("Checking Status.sync with no credentials.");
     Service.verifyAndFetchSymmetricKeys();
     do_check_eq(Service.status.sync, CREDENTIALS_CHANGED);

@@ -887,8 +887,7 @@ add_task(async function test_sync_503_Retry_After() {
 add_task(async function test_loginError_recoverable_reschedules() {
   _("Verify that a recoverable login error schedules a new sync.");
   await configureIdentity({username: "johndoe@mozilla.com"});
-  Service.serverURL = "http://localhost:1234/";
-  Service.clusterURL = Service.serverURL;
+  Service.clusterURL = "http://localhost:1234/";
   Status.resetSync(); // reset Status.login
 
   let promiseObserved = promiseOneObserver("weave:service:login:error");
@@ -932,8 +931,7 @@ add_task(async function test_loginError_fatal_clearsTriggers() {
     "/1.1/johndoe@mozilla.com/info/collections": httpd_handler(401, "Unauthorized")
   });
 
-  Service.serverURL = server.baseURI + "/";
-  Service.clusterURL = Service.serverURL;
+  Service.clusterURL = server.baseURI + "/";
   Status.resetSync(); // reset Status.login
 
   let promiseObserved = promiseOneObserver("weave:service:login:error");
