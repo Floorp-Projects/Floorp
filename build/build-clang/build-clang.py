@@ -203,7 +203,7 @@ def is_windows():
 def build_one_stage(cc, cxx, ld, ar, ranlib,
                     src_dir, stage_dir, build_libcxx,
                     osx_cross_compile, build_type, assertions,
-                    python_path, gcc_dir):
+                    python_path, gcc_dir, libcxx_include_dir):
     if not os.path.exists(stage_dir):
         os.mkdir(stage_dir)
 
@@ -249,7 +249,7 @@ def build_one_stage(cc, cxx, ld, ar, ranlib,
         cmake_args += ["-DCMAKE_SYSTEM_NAME=Darwin",
                        "-DCMAKE_SYSTEM_VERSION=10.10",
                        "-DLLVM_ENABLE_THREADS=OFF",
-                       "-DLIBCXXABI_LIBCXX_INCLUDES=%s" % slashify_path(os.getenv("LIBCXX_INCLUDE_PATH")),
+                       "-DLIBCXXABI_LIBCXX_INCLUDES=%s" % libcxx_include_dir,
                        "-DCMAKE_OSX_SYSROOT=%s" % slashify_path(os.getenv("CROSS_SYSROOT")),
                        "-DCMAKE_FIND_ROOT_PATH=%s" % slashify_path(os.getenv("CROSS_CCTOOLS_PATH")),
                        "-DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER",
@@ -523,6 +523,9 @@ if __name__ == "__main__":
     if not os.path.exists(build_dir):
         os.makedirs(build_dir)
 
+    libcxx_include_dir = os.path.join(llvm_source_dir, "projects",
+                                      "libcxx", "include")
+
     stage1_dir = build_dir + '/stage1'
     stage1_inst_dir = stage1_dir + '/clang'
 
@@ -582,7 +585,7 @@ if __name__ == "__main__":
         [ld] + extra_ldflags,
         ar, ranlib,
         llvm_source_dir, stage1_dir, build_libcxx, osx_cross_compile,
-        build_type, assertions, python_path, gcc_dir)
+        build_type, assertions, python_path, gcc_dir, libcxx_include_dir)
 
     if stages > 1:
         stage2_dir = build_dir + '/stage2'
@@ -596,7 +599,7 @@ if __name__ == "__main__":
             [ld] + extra_ldflags,
             ar, ranlib,
             llvm_source_dir, stage2_dir, build_libcxx, osx_cross_compile,
-            build_type, assertions, python_path, gcc_dir)
+            build_type, assertions, python_path, gcc_dir, libcxx_include_dir)
 
     if stages > 2:
         stage3_dir = build_dir + '/stage3'
@@ -609,7 +612,7 @@ if __name__ == "__main__":
             [ld] + extra_ldflags,
             ar, ranlib,
             llvm_source_dir, stage3_dir, build_libcxx, osx_cross_compile,
-            build_type, assertions, python_path, gcc_dir)
+            build_type, assertions, python_path, gcc_dir, libcxx_include_dir)
 
     package_name = "clang"
     if build_clang_tidy:

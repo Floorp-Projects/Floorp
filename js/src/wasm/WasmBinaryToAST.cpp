@@ -599,6 +599,8 @@ AstDecodeEnd(AstDecodeContext& c)
     if (!c.iter().readEnd(&kind, &type, nullptr))
         return false;
 
+    c.iter().popEnd();
+
     if (!c.push(AstDecodeStackItem(AstDecodeTerminationKind::End, type)))
         return false;
 

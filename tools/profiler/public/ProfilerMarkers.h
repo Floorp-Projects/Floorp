@@ -11,6 +11,8 @@
 
 #include "GeckoProfiler.h"
 
+#include "gfxASurface.h"
+
 namespace mozilla {
 namespace layers {
 class Layer;
@@ -86,9 +88,6 @@ private:
   TracingMetadata mMetaData;
 };
 
-
-#ifndef SPS_STANDALONE
-#include "gfxASurface.h"
 class ProfilerMarkerImagePayload : public ProfilerMarkerPayload
 {
 public:
@@ -204,6 +203,5 @@ private:
   uint64_t mGpuTimeStart;
   uint64_t mGpuTimeEnd;
 };
-#endif
 
 #endif // PROFILER_MARKERS_H

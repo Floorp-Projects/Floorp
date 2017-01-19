@@ -56,4 +56,3 @@ The following environment variables are used for cross-compile builds targeting 
 
 * CROSS_CCTOOLS_PATH: Path to the cctools directory where the cross compiler toolchain is located.
 * CROSS_SYSROOT: Path to the OS X SDK directory for cross compile builds.
-* LIBCXX_INCLUDE_PATH: Path to the cross compiler libc++ headers.
