@@ -217,7 +217,7 @@ NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent)
       mutEvent->IsHide()) {
     AccHideEvent* prevHide = downcast_accEvent(prevEvent);
     AccTextChangeEvent* prevTextChange = prevHide->mTextChangeEvent;
-    if (prevTextChange) {
+    if (prevTextChange && prevHide->Parent() == mutEvent->Parent()) {
       if (prevHide->mNextSibling == target) {
         target->AppendTextTo(prevTextChange->mModifiedText);
       } else if (prevHide->mPrevSibling == target) {
@@ -236,7 +236,7 @@ NotificationController::QueueMutationEvent(AccTreeMutationEvent* aEvent)
              prevEvent->GetEventType() == nsIAccessibleEvent::EVENT_SHOW) {
     AccShowEvent* prevShow = downcast_accEvent(prevEvent);
     AccTextChangeEvent* prevTextChange = prevShow->mTextChangeEvent;
-    if (prevTextChange) {
+    if (prevTextChange && prevShow->Parent() == target->Parent()) {
       int32_t index = target->IndexInParent();
       int32_t prevIndex = prevShow->GetAccessible()->IndexInParent();
       if (prevIndex + 1 == index) {
