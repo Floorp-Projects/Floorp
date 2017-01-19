@@ -15,7 +15,7 @@ module.exports = createClass({
 
   propTypes: {
     viewport: PropTypes.shape(Types.viewport).isRequired,
-    onChangeViewportDevice: PropTypes.func.isRequired,
+    onChangeDevice: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
   },
 
@@ -114,7 +114,7 @@ module.exports = createClass({
     }
 
     // Change the device selector back to an unselected device
-    this.props.onChangeViewportDevice({ name: "" });
+    this.props.onChangeDevice({ name: "" });
     this.props.onResizeViewport(parseInt(this.state.width, 10),
                                 parseInt(this.state.height, 10));
   },
