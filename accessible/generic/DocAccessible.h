@@ -352,7 +352,7 @@ public:
   }
   void ContentRemoved(nsIContent* aContainerNode, nsIContent* aChildNode)
   {
-    ContentRemoved(GetAccessibleOrContainer(aContainerNode), aChildNode);
+    ContentRemoved(AccessibleOrTrueContainer(aContainerNode), aChildNode);
   }
 
   /**
