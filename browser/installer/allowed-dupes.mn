@@ -200,13 +200,11 @@ chrome/toolkit/skin/classic/mozapps/extensions/dictionaryGeneric.png
 chrome/toolkit/skin/classic/mozapps/extensions/experimentGeneric.png
 chrome/toolkit/skin/classic/mozapps/update/buttons.png
 chrome/toolkit/skin/classic/mozapps/update/downloadButtons.png
-components/FxAccountsPush.js
 crashreporter.app/Contents/Resources/English.lproj/MainMenu.nib/classes.nib
 crashreporter.app/Contents/Resources/English.lproj/MainMenuRTL.nib/classes.nib
 # firefox/firefox-bin is bug 658850
 firefox
 firefox-bin
-modules/FxAccountsPush.js
 modules/commonjs/index.js
 modules/commonjs/sdk/ui/button/view/events.js
 modules/commonjs/sdk/ui/state/events.js
