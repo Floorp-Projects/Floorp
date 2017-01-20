@@ -10,27 +10,18 @@ with Files('nsString*'):
 DIRS += ['standalone']
 
 EXPORTS += [
-    'MainThreadUtils.h',
     'nsCategoryCache.h',
     'nsComponentManagerUtils.h',
-    'nsProxyRelease.h',
     'nsServiceManagerUtils.h',
     'nsStringAPI.h',
     'nsStringGlue.h',
     'nsTextFormatter.h',
-    'nsThreadUtils.h',
     'nsXPTCUtils.h',
 ]
 
 EXPORTS.mozilla += [
-    'BlockingResourceBase.h',
-    'CondVar.h',
-    'DeadlockDetector.h',
     'FileUtils.h',
     'GenericFactory.h',
-    'Monitor.h',
-    'Mutex.h',
-    'ReentrantMonitor.h',
 ]
 
 if CONFIG['ENABLE_TESTS']:
