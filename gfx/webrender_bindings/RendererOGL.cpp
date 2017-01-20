@@ -39,13 +39,7 @@ RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
 RendererOGL::~RendererOGL()
 {
   MOZ_COUNT_DTOR(RendererOGL);
-#ifdef MOZ_ENABLE_WEBRENDER
-  // Need to wrap this in an ifdef otherwise VC++ emits a warning (treated as error)
-  // in the non-webrender targets.
-  // We should be able to remove this #ifdef if/when we remove the
-  // MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE annotations in webrender.h
   wr_renderer_delete(mWrRenderer);
-#endif
 }
 
 void
