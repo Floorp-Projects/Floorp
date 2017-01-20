@@ -223,7 +223,6 @@ this.ExtensionsUI = {
       ...perms.hosts.map(formatHostPermission),
     ];
 
-    let rendered = false;
     let popupOptions = {
       hideClose: true,
       popupIconURL: info.icon,
@@ -231,11 +230,6 @@ this.ExtensionsUI = {
 
       eventCallback(topic) {
         if (topic == "showing") {
-          // This check can be removed when bug 1325223 is resolved.
-          if (rendered) {
-            return false;
-          }
-
           let doc = this.browser.ownerDocument;
           doc.getElementById("addon-webext-perm-header").textContent = header;
 
@@ -257,11 +251,7 @@ this.ExtensionsUI = {
             item.textContent = msg;
             list.appendChild(item);
           }
-          rendered = true;
-        } else if (topic == "dismissed") {
-          rendered = false;
         } else if (topic == "swapping") {
-          rendered = false;
           return true;
         }
         return false;
