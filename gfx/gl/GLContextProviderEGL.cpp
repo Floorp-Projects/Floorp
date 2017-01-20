@@ -39,41 +39,6 @@
     #endif
 
     #include <windows.h>
-
-    // a little helper
-    class AutoDestroyHWND {
-    public:
-        explicit AutoDestroyHWND(HWND aWnd = nullptr)
-            : mWnd(aWnd)
-        {
-        }
-
-        ~AutoDestroyHWND() {
-            if (mWnd) {
-                ::DestroyWindow(mWnd);
-            }
-        }
-
-        operator HWND() {
-            return mWnd;
-        }
-
-        HWND forget() {
-            HWND w = mWnd;
-            mWnd = nullptr;
-            return w;
-        }
-
-        HWND operator=(HWND aWnd) {
-            if (mWnd && mWnd != aWnd) {
-                ::DestroyWindow(mWnd);
-            }
-            mWnd = aWnd;
-            return mWnd;
-        }
-
-        HWND mWnd;
-    };
 #else
     #error "Platform not recognized"
 #endif
