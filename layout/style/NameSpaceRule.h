@@ -37,8 +37,7 @@ private:
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CSS_NAMESPACE_RULE_IMPL_CID)
 
-  NS_DECL_ISUPPORTS_INHERITED
-  virtual bool IsCCLeaf() const override;
+  NS_DECL_ISUPPORTS
 
   // Rule methods
   DECL_STYLE_RULE_INHERIT
