@@ -80,7 +80,12 @@ static const uint32_t kRelationAttrsLen = ArrayLength(kRelationAttrs);
 
 DocAccessible::
   DocAccessible(nsIDocument* aDocument, nsIPresShell* aPresShell) :
-  HyperTextAccessibleWrap(nullptr, this),
+    // XXX don't pass a document to the Accessible constructor so that we don't
+    // set mDoc until our vtable is fully setup.  If we set mDoc before setting
+    // up the vtable we will call Accessible::AddRef() but not the overrides of
+    // it for subclasses.  It is important to call those overrides to avoid
+    // confusing leak checking machinary.
+  HyperTextAccessibleWrap(nullptr, nullptr),
   // XXX aaronl should we use an algorithm for the initial cache size?
   mAccessibleCache(kDefaultCacheLength),
   mNodeToAccessibleMap(kDefaultCacheLength),
@@ -92,6 +97,7 @@ DocAccessible::
 {
   mGenericTypes |= eDocument;
   mStateFlags |= eNotNodeMapEntry;
+  mDoc = this;
 
   MOZ_ASSERT(mPresShell, "should have been given a pres shell");
   mPresShell->SetDocAccessible(this);

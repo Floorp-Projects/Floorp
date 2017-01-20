@@ -65,7 +65,11 @@ void SprintfLiteralChecker::check(
       Literal = Result.Nodes.getNodeAs<IntegerLiteral>("constant");
     }
 
-    if (Type->getSize().ule(Literal->getValue())) {
+    // We're going to assume here that the bitwidth of both of these values fits within 64 bits.
+    // and zero-extend both values to 64-bits before comparing them.
+    uint64_t Size = Type->getSize().getZExtValue();
+    uint64_t Lit = Literal->getValue().getZExtValue();
+    if (Size <= Lit) {
       diag(D->getLocStart(), Error, DiagnosticIDs::Error) << Name << Replacement;
       diag(D->getLocStart(), Note, DiagnosticIDs::Note) << Name;
     }

@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_WebAuthentication_h
 #define mozilla_dom_WebAuthentication_h
 
+#include "hasht.h"
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -18,6 +19,7 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/SharedThreadPool.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsNetCID.h"
 #include "nsWrapperCache.h"
 
 #include "U2FAuthenticator.h"
