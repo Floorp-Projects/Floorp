@@ -8,6 +8,7 @@ const {
   ADD_VIEWPORT,
   CHANGE_DEVICE,
   CHANGE_PIXEL_RATIO,
+  REMOVE_DEVICE,
   RESIZE_VIEWPORT,
   ROTATE_VIEWPORT,
 } = require("../actions/index");
@@ -57,6 +58,18 @@ let reducers = {
         pixelRatio: {
           value: pixelRatio
         },
+      });
+    });
+  },
+
+  [REMOVE_DEVICE](viewports, { id }) {
+    return viewports.map(viewport => {
+      if (viewport.id !== id) {
+        return viewport;
+      }
+
+      return Object.assign({}, viewport, {
+        device: "",
       });
     });
   },

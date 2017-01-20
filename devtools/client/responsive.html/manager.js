@@ -467,6 +467,9 @@ ResponsiveUI.prototype = {
       case "exit":
         this.onExit();
         break;
+      case "remove-device":
+        this.onRemoveDevice(event);
+        break;
     }
   },
 
@@ -508,6 +511,14 @@ ResponsiveUI.prototype = {
     let { browserWindow, tab } = this;
     ResponsiveUIManager.closeIfNeeded(browserWindow, tab);
   },
+
+  onRemoveDevice: Task.async(function* (event) {
+    yield this.updateUserAgent();
+    yield this.updateDPPX();
+    yield this.updateTouchSimulation();
+    // Used by tests
+    this.emit("device-removed");
+  }),
 
   updateDPPX: Task.async(function* (dppx) {
     if (!dppx) {

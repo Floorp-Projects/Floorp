@@ -21,8 +21,9 @@ const { changeTouchSimulation } = require("./actions/touch-simulation");
 const {
   changeDevice,
   changePixelRatio,
+  removeDevice,
   resizeViewport,
-  rotateViewport
+  rotateViewport,
 } = require("./actions/viewports");
 const DeviceModal = createFactory(require("./components/device-modal"));
 const GlobalToolbar = createFactory(require("./components/global-toolbar"));
@@ -98,6 +99,16 @@ let App = createClass({
     window.postMessage({ type: "exit" }, "*");
   },
 
+  onRemoveDevice(id) {
+    // TODO: Bug 1332754: Move messaging and logic into the action creator.
+    window.postMessage({
+      type: "remove-device",
+    }, "*");
+    this.props.dispatch(removeDevice(id));
+    this.props.dispatch(changeTouchSimulation(false));
+    this.props.dispatch(changePixelRatio(id, 0));
+  },
+
   onResizeViewport(id, width, height) {
     this.props.dispatch(resizeViewport(id, width, height));
   },
@@ -138,6 +149,7 @@ let App = createClass({
       onContentResize,
       onDeviceListUpdate,
       onExit,
+      onRemoveDevice,
       onResizeViewport,
       onRotateViewport,
       onScreenshot,
@@ -179,6 +191,7 @@ let App = createClass({
         onBrowserMounted,
         onChangeDevice,
         onContentResize,
+        onRemoveDevice,
         onRotateViewport,
         onResizeViewport,
         onUpdateDeviceModalOpen,
