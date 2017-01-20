@@ -6,7 +6,12 @@
 #ifndef mozilla_widget_AndroidCompositorWidget_h
 #define mozilla_widget_AndroidCompositorWidget_h
 
+#include "GLContext.h"
+#include "GLLibraryEGL.h"
+#include "GLTypes.h"
 #include "mozilla/widget/InProcessCompositorWidget.h"
+
+struct ANativeWindow;
 
 namespace mozilla {
 namespace widget {
@@ -36,6 +41,13 @@ public:
                           bool aLayersUpdated,
                           int32_t aPaintSyncId,
                           ScreenMargin& aFixedLayerMargins);
+
+    EGLNativeWindowType GetEGLNativeWindow();
+
+    EGLSurface GetPresentationEGLSurface();
+    void SetPresentationEGLSurface(EGLSurface aVal);
+
+    ANativeWindow* GetPresentationANativeWindow();
 };
 
 } // namespace widget
