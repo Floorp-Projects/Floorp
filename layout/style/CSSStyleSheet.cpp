@@ -151,7 +151,8 @@ struct ChildSheetListBuilder {
 
   void SetParentLinks(CSSStyleSheet* aSheet) {
     aSheet->mParent = parent;
-    aSheet->SetOwningDocument(parent->mDocument);
+    aSheet->SetAssociatedDocument(parent->mDocument,
+                                  parent->mDocumentAssociationMode);
   }
 
   static void ReparentChildList(CSSStyleSheet* aPrimarySheet,
@@ -159,7 +160,8 @@ struct ChildSheetListBuilder {
   {
     for (CSSStyleSheet *child = aFirstChild; child; child = child->mNext) {
       child->mParent = aPrimarySheet;
-      child->SetOwningDocument(aPrimarySheet->mDocument);
+      child->SetAssociatedDocument(aPrimarySheet->mDocument,
+                                   aPrimarySheet->mDocumentAssociationMode);
     }
   }
 };
@@ -612,16 +614,22 @@ CSSStyleSheet::GetParentSheet() const
 }
 
 void
-CSSStyleSheet::SetOwningDocument(nsIDocument* aDocument)
-{ // not ref counted
+CSSStyleSheet::SetAssociatedDocument(nsIDocument* aDocument,
+                                     DocumentAssociationMode aAssociationMode)
+{
+  MOZ_ASSERT_IF(!aDocument, aAssociationMode == NotOwnedByDocument);
+
+  // not ref counted
   mDocument = aDocument;
+  mDocumentAssociationMode = aAssociationMode;
+
   // Now set the same document on all our child sheets....
   // XXXbz this is a little bogus; see the XXX comment where we
   // declare mFirstChild.
   for (CSSStyleSheet* child = mInner->mFirstChild;
        child; child = child->mNext) {
     if (child->mParent == this) {
-      child->SetOwningDocument(aDocument);
+      child->SetAssociatedDocument(aDocument, aAssociationMode);
     }
   }
 }

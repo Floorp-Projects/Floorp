@@ -583,7 +583,7 @@ nsMediaList::GetMediaText(nsAString& aMediaText)
 // nsCOMPtr<nsIDocument>
 #define BEGIN_MEDIA_CHANGE(sheet, doc)                         \
   if (sheet) {                                                 \
-    doc = sheet->GetOwningDocument();                          \
+    doc = sheet->GetAssociatedDocument();                      \
   }                                                            \
   mozAutoDocUpdate updateBatch(doc, UPDATE_STYLE, true);       \
   if (sheet) {                                                 \

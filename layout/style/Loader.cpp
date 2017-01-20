@@ -2218,13 +2218,13 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
 
   nsCOMPtr<nsINode> owningNode;
 
-  // check for an owning document: if none, don't bother walking up the parent
-  // sheets
+  // check for an associated document: if none, don't bother walking up the
+  // parent sheets
   //
   // FIXME(emilio): Figure out whether this walk up is necessary (try seems
   // green without it), and fix the parenting of stylesheets in the servo case
   // if that's the case.
-  if (aParentSheet->GetOwningDocument() && aParentSheet->IsGecko()) {
+  if (aParentSheet->GetAssociatedDocument() && aParentSheet->IsGecko()) {
     StyleSheet* topSheet = aParentSheet;
     while (StyleSheet* parent = topSheet->GetParentSheet()) {
       topSheet = parent;
