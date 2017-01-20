@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>fxa_oauth_test</title>
+</head>
+<body>
+<script>
+  window.onload = function() {
+    var event = new window.CustomEvent("WebChannelMessageToChrome", {
+      // Note: This intentionally sends a string instead of an object, to ensure both work
+      // (see browser_fxa_oauth.html for the other test)
+      detail: JSON.stringify({
+        id: "oauth_client_id",
+        message: {
+          command: "oauth_complete",
+          data: {
+            state: "state",
+            code: "code1",
+            closeWindow: "signin",
+            // Keys normally contain more information, but this is enough
+            // to keep Loop's tests happy.
+            keys: { kAr: { k: "kAr" }, kBr: { k: "kBr" }},
+          },
+        },
+      }),
+    });
+
+    window.dispatchEvent(event);
+  };
+</script>
+</body>
+</html>
