@@ -238,3 +238,6 @@ FxAccountsPushService.prototype = {
 // Service registration below registers with FxAccountsComponents.manifest
 const components = [FxAccountsPushService];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+
+// The following registration below helps with testing this service.
+this.EXPORTED_SYMBOLS = ["FxAccountsPushService"];
