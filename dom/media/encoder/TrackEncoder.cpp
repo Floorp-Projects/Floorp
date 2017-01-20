@@ -57,6 +57,8 @@ AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
                                             uint32_t aTrackEvents,
                                             const MediaSegment& aQueuedMedia)
 {
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
   if (mCanceled) {
     return;
   }
@@ -109,13 +111,14 @@ AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
 void
 AudioTrackEncoder::NotifyEndOfStream()
 {
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
   // If source audio track is completely silent till the end of encoding,
   // initialize the encoder with default channel counts and sampling rate.
   if (!mCanceled && !mInitialized) {
     Init(DEFAULT_CHANNELS, DEFAULT_SAMPLING_RATE);
   }
 
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   mEndOfStream = true;
   mReentrantMonitor.NotifyAll();
 }
@@ -195,6 +198,8 @@ AudioTrackEncoder::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) cons
 void
 VideoTrackEncoder::Init(const VideoSegment& aSegment)
 {
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
   if (mInitialized) {
     return;
   }
@@ -227,12 +232,13 @@ VideoTrackEncoder::Init(const VideoSegment& aSegment)
     NotifyEndOfStream();
     return;
   }
-
 }
 
 void
 VideoTrackEncoder::SetCurrentFrames(const VideoSegment& aSegment)
 {
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
   if (mCanceled) {
     return;
   }
@@ -248,6 +254,8 @@ VideoTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
                                             uint32_t aTrackEvents,
                                             const MediaSegment& aQueuedMedia)
 {
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
   if (mCanceled) {
     return;
   }
@@ -390,14 +398,14 @@ VideoTrackEncoder::AppendVideoSegment(const VideoSegment& aSegment)
 void
 VideoTrackEncoder::NotifyEndOfStream()
 {
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
   // If source video track is muted till the end of encoding, initialize the
   // encoder with default frame width, frame height, and track rate.
   if (!mCanceled && !mInitialized) {
     Init(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT,
          DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT);
   }
-
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   if (mEndOfStream) {
     // We have already been notified.
