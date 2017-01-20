@@ -322,6 +322,10 @@ JsepSessionImpl::SetParameters(const std::string& streamId,
                                                                       | it->mTrack->GetDirection());
           break;
         }
+        default: {
+          MOZ_ASSERT(false);
+          return NS_ERROR_INVALID_ARG;
+        }
       }
     }
   }
@@ -1708,17 +1712,6 @@ JsepSessionImpl::ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp)
       return NS_ERROR_INVALID_ARG;
     }
 
-    auto& formats = parsed->GetMediaSection(i).GetFormats();
-    for (auto f = formats.begin(); f != formats.end(); ++f) {
-      uint16_t pt;
-      if (!SdpHelper::GetPtAsInt(*f, &pt)) {
-        JSEP_SET_ERROR("Payload type \""
-                       << *f << "\" is not a 16-bit unsigned int at level "
-                       << i);
-        return NS_ERROR_INVALID_ARG;
-      }
-    }
-
     std::string streamId;
     std::string trackId;
     nsresult rv = mSdpHelper.GetIdsFromMsid(*parsed,
@@ -1745,15 +1738,21 @@ JsepSessionImpl::ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp)
       // Sanity-check that payload type can work with RTP
       for (const std::string& fmt : msection.GetFormats()) {
         uint16_t payloadType;
-        // TODO (bug 1204099): Make this check for reserved ranges.
-        if (!SdpHelper::GetPtAsInt(fmt, &payloadType) || payloadType > 127) {
-          JSEP_SET_ERROR("audio/video payload type is too large: " << fmt);
+        if (!SdpHelper::GetPtAsInt(fmt, &payloadType)) {
+          JSEP_SET_ERROR("Payload type \"" << fmt <<
+                         "\" is not a 16-bit unsigned int at level " << i);
           return NS_ERROR_INVALID_ARG;
         }
-	if (forbidden.test(payloadType)) {
-	  JSEP_SET_ERROR("Illegal audio/video payload type: " << fmt);
+        if (payloadType > 127) {
+          JSEP_SET_ERROR("audio/video payload type \"" << fmt <<
+                         "\" is too large at level " << i);
           return NS_ERROR_INVALID_ARG;
-	}
+        }
+        if (forbidden.test(payloadType)) {
+          JSEP_SET_ERROR("Illegal audio/video payload type \"" << fmt <<
+                         "\" at level " << i);
+          return NS_ERROR_INVALID_ARG;
+        }
       }
     }
   }
@@ -2277,11 +2276,10 @@ JsepSessionImpl::SetupDefaultCodecs()
       );
   mSupportedCodecs.values.push_back(ulpfec);
 
-
   mSupportedCodecs.values.push_back(new JsepApplicationCodecDescription(
-      "5000",
       "webrtc-datachannel",
-      WEBRTC_DATACHANNEL_STREAMS_DEFAULT
+      WEBRTC_DATACHANNEL_STREAMS_DEFAULT,
+      5000
       ));
 
   // Update the redundant encodings for the RED codec with the supported
