@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 XPCOMUtils.defineLazyPreferenceGetter(this, "WEBEXT_PERMISSION_PROMPTS",
                                       "extensions.webextPermissionPrompts", false);
 
-const DEFAULT_EXENSION_ICON = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
+const DEFAULT_EXTENSION_ICON = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
@@ -33,6 +33,7 @@ this.ExtensionsUI = {
   init() {
     Services.obs.addObserver(this, "webextension-permission-prompt", false);
     Services.obs.addObserver(this, "webextension-update-permissions", false);
+    Services.obs.addObserver(this, "webextension-install-notify", false);
 
     this._checkForSideloaded();
   },
@@ -141,6 +142,9 @@ this.ExtensionsUI = {
     } else if (topic == "webextension-update-permissions") {
       this.updates.add(subject.wrappedJSObject);
       this.emit("change");
+    } else if (topic == "webextension-install-notify") {
+      let {target, addon} = subject.wrappedJSObject;
+      this.showInstallNotification(target, addon);
     }
   },
 
@@ -310,6 +314,47 @@ this.ExtensionsUI = {
                                     },
                                   ], popupOptions);
     });
+  },
+
+  showInstallNotification(target, addon) {
+    let win = target.ownerGlobal;
+    let popups = win.PopupNotifications;
+
+    let addonLabel = `<label class="addon-webext-name">${addon.name}</label>`;
+    let addonIcon = '<image class="addon-addon-icon"/>';
+    let toolbarIcon = '<image class="addon-toolbar-icon"/>';
+
+    let brandBundle = win.document.getElementById("bundle_brand");
+    let appName = brandBundle.getString("brandShortName");
+
+    let bundle = win.gNavigatorBundle;
+    let msg1 = bundle.getFormattedString("addonPostInstall.message1",
+                                         [addonLabel, appName]);
+    let msg2 = bundle.getFormattedString("addonPostInstall.message2",
+                                         [addonLabel, addonIcon, toolbarIcon]);
+
+    let action = {
+      label: bundle.getString("addonPostInstall.okay.label"),
+      accessKey: bundle.getString("addonPostInstall.okay.key"),
+      callback: () => {},
+    };
+
+    let options = {
+      hideClose: true,
+      popupIconURL: addon.iconURL || DEFAULT_EXTENSION_ICON,
+      eventCallback(topic) {
+        if (topic == "showing") {
+          let doc = this.browser.ownerDocument;
+          doc.getElementById("addon-installed-notification-header")
+             .innerHTML = msg1;
+          doc.getElementById("addon-installed-notification-message")
+             .innerHTML = msg2;
+        }
+      }
+    };
+
+    popups.show(target, "addon-installed", "", "addons-notification-icon",
+                action, null, options);
   },
 };
 
