@@ -289,14 +289,14 @@ void ProfilerMarker::StreamJSON(SpliceableJSONWriter& aWriter,
 // Verbosity control for the profiler.  The aim is to check env var
 // MOZ_PROFILER_VERBOSE only once.  However, we may need to temporarily
 // override that so as to print the profiler's help message.  That's
-// what moz_profiler_set_verbosity is for.
+// what profiler_set_verbosity is for.
 
 enum class ProfilerVerbosity : int8_t { UNCHECKED, NOTVERBOSE, VERBOSE };
 
 // Raced on, potentially
 static ProfilerVerbosity profiler_verbosity = ProfilerVerbosity::UNCHECKED;
 
-bool moz_profiler_verbose()
+bool profiler_verbose()
 {
   if (profiler_verbosity == ProfilerVerbosity::UNCHECKED) {
     if (getenv("MOZ_PROFILER_VERBOSE") != nullptr)
@@ -308,7 +308,7 @@ bool moz_profiler_verbose()
   return profiler_verbosity == ProfilerVerbosity::VERBOSE;
 }
 
-void moz_profiler_set_verbosity(ProfilerVerbosity pv)
+void profiler_set_verbosity(ProfilerVerbosity pv)
 {
    MOZ_ASSERT(pv == ProfilerVerbosity::UNCHECKED ||
               pv == ProfilerVerbosity::VERBOSE);
@@ -380,11 +380,11 @@ void read_profiler_env_vars()
 
   if (getenv(PROFILER_HELP)) {
      // Enable verbose output
-     moz_profiler_set_verbosity(ProfilerVerbosity::VERBOSE);
+     profiler_set_verbosity(ProfilerVerbosity::VERBOSE);
      profiler_usage();
-     // Now force the next enquiry of moz_profiler_verbose to re-query
+     // Now force the next enquiry of profiler_verbose to re-query
      // env var MOZ_PROFILER_VERBOSE.
-     moz_profiler_set_verbosity(ProfilerVerbosity::UNCHECKED);
+     profiler_set_verbosity(ProfilerVerbosity::UNCHECKED);
   }
 
   if (!set_profiler_interval(interval) ||
