@@ -613,7 +613,7 @@ LIRGeneratorARM::visitWasmLoad(MWasmLoad* ins)
 
     LAllocation ptr = useRegisterAtStart(base);
 
-    if (ins->access().isUnaligned()) {
+    if (IsUnaligned(ins->access())) {
         // Unaligned access expected! Revert to a byte load.
         LDefinition ptrCopy = tempCopy(base, 0);
 
@@ -662,7 +662,7 @@ LIRGeneratorARM::visitWasmStore(MWasmStore* ins)
 
     LAllocation ptr = useRegisterAtStart(base);
 
-    if (ins->access().isUnaligned()) {
+    if (IsUnaligned(ins->access())) {
         // Unaligned access expected! Revert to a byte store.
         LDefinition ptrCopy = tempCopy(base, 0);
 

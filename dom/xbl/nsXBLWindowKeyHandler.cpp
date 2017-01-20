@@ -214,7 +214,9 @@ BuildHandlerChain(nsIContent* aContent, nsXBLPrototypeHandler** aResult)
           valKey.IsEmpty() && valCharCode.IsEmpty() && valKeyCode.IsEmpty())
         continue;
 
-      nsXBLPrototypeHandler* handler = new nsXBLPrototypeHandler(key);
+      bool reserved = key->AttrValueIs(kNameSpaceID_None, nsGkAtoms::reserved,
+                                       nsGkAtoms::_true, eCaseMatters);
+      nsXBLPrototypeHandler* handler = new nsXBLPrototypeHandler(key, reserved);
 
       handler->SetNextHandler(*aResult);
       *aResult = handler;
@@ -706,17 +708,14 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(
       continue;
     }
 
-    bool isReserved = false;
+    bool isReserved = handler->GetIsReserved();
+    if (aOutReservedForChrome) {
+      *aOutReservedForChrome = isReserved;
+    }
+
     if (commandElement) {
       if (aExecute && !IsExecutableElement(commandElement)) {
         continue;
-      }
-
-      isReserved =
-        commandElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::reserved,
-                                    nsGkAtoms::_true, eCaseMatters);
-      if (aOutReservedForChrome) {
-        *aOutReservedForChrome = isReserved;
       }
     }
 

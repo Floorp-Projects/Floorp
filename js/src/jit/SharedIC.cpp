@@ -372,11 +372,6 @@ ICStub::trace(JSTracer* trc)
         }
         break;
       }
-      case ICStub::SetProp_Unboxed: {
-        ICSetProp_Unboxed* propStub = toSetProp_Unboxed();
-        TraceEdge(trc, &propStub->group(), "baseline-setprop-unboxed-stub-group");
-        break;
-      }
       case ICStub::SetProp_TypedObject: {
         ICSetProp_TypedObject* propStub = toSetProp_TypedObject();
         TraceEdge(trc, &propStub->shape(), "baseline-setprop-typedobject-stub-shape");

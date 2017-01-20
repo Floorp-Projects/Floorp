@@ -70,7 +70,6 @@ namespace jit {
                                                  \
     _(SetProp_Fallback)                          \
     _(SetProp_NativeAdd)                         \
-    _(SetProp_Unboxed)                           \
     _(SetProp_TypedObject)                       \
     _(SetProp_CallScripted)                      \
     _(SetProp_CallNative)                        \

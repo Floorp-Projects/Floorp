@@ -673,6 +673,7 @@ CacheIRStubInfo::copyStubData(ICStub* src, ICStub* dest) const
                 *reinterpret_cast<uintptr_t*>(srcBytes + offset);
             break;
           case StubField::Type::RawInt64:
+          case StubField::Type::DOMExpandoGeneration:
             *reinterpret_cast<uint64_t*>(destBytes + offset) =
                 *reinterpret_cast<uint64_t*>(srcBytes + offset);
             break;
@@ -768,6 +769,7 @@ CacheIRWriter::copyStubData(uint8_t* dest) const
             InitGCPtr<jsid>(destWords, field.asWord());
             break;
           case StubField::Type::RawInt64:
+          case StubField::Type::DOMExpandoGeneration:
             *reinterpret_cast<uint64_t*>(destWords) = field.asInt64();
             break;
           case StubField::Type::Value:
@@ -791,6 +793,7 @@ jit::TraceCacheIRStub(JSTracer* trc, T* stub, const CacheIRStubInfo* stubInfo)
         switch (fieldType) {
           case StubField::Type::RawWord:
           case StubField::Type::RawInt64:
+          case StubField::Type::DOMExpandoGeneration:
             break;
           case StubField::Type::Shape:
             TraceNullableEdge(trc, &stubInfo->getStubField<T, Shape*>(stub, offset),
@@ -834,11 +837,18 @@ template
 void jit::TraceCacheIRStub(JSTracer* trc, IonICStub* stub, const CacheIRStubInfo* stubInfo);
 
 bool
-CacheIRWriter::stubDataEquals(const uint8_t* stubData) const
+CacheIRWriter::stubDataEqualsMaybeUpdate(uint8_t* stubData) const
 {
     MOZ_ASSERT(!failed());
 
     const uintptr_t* stubDataWords = reinterpret_cast<const uintptr_t*>(stubData);
+
+    // If DOMExpandoGeneration fields are different but all other stub fields
+    // are exactly the same, we overwrite the old stub data instead of attaching
+    // a new stub, as the old stub is never going to succeed. This works because
+    // even Ion stubs read the DOMExpandoGeneration field from the stub instead
+    // of baking it in.
+    bool expandoGenerationIsDifferent = false;
 
     for (const StubField& field : stubFields_) {
         if (field.sizeIsWord()) {
@@ -848,10 +858,16 @@ CacheIRWriter::stubDataEquals(const uint8_t* stubData) const
             continue;
         }
 
-        if (field.asInt64() != *reinterpret_cast<const uint64_t*>(stubDataWords))
-            return false;
+        if (field.asInt64() != *reinterpret_cast<const uint64_t*>(stubDataWords)) {
+            if (field.type() != StubField::Type::DOMExpandoGeneration)
+                return false;
+            expandoGenerationIsDifferent = true;
+        }
         stubDataWords += sizeof(uint64_t) / sizeof(uintptr_t);
     }
+
+    if (expandoGenerationIsDifferent)
+        copyStubData(stubData);
 
     return true;
 }
@@ -1041,6 +1057,26 @@ CacheIRCompiler::emitGuardIsObject()
 }
 
 bool
+CacheIRCompiler::emitGuardIsObjectOrNull()
+{
+    ValOperandId inputId = reader.valOperandId();
+    JSValueType knownType = allocator.knownType(inputId);
+    if (knownType == JSVAL_TYPE_OBJECT || knownType == JSVAL_TYPE_NULL)
+        return true;
+
+    ValueOperand input = allocator.useValueRegister(masm, inputId);
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    Label done;
+    masm.branchTestObject(Assembler::Equal, input, &done);
+    masm.branchTestNull(Assembler::NotEqual, input, failure->label());
+    masm.bind(&done);
+    return true;
+}
+
+bool
 CacheIRCompiler::emitGuardIsString()
 {
     ValOperandId inputId = reader.valOperandId();
@@ -1143,6 +1179,9 @@ CacheIRCompiler::emitGuardType()
         break;
       case JSVAL_TYPE_SYMBOL:
         masm.branchTestSymbol(Assembler::NotEqual, input, failure->label());
+        break;
+      case JSVAL_TYPE_INT32:
+        masm.branchTestInt32(Assembler::NotEqual, input, failure->label());
         break;
       case JSVAL_TYPE_DOUBLE:
         masm.branchTestNumber(Assembler::NotEqual, input, failure->label());

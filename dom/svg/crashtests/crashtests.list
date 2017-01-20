@@ -82,3 +82,9 @@ load 1282985-1.svg
 #load long-clipPath-reference-chain.svg
 load zero-size-image.svg
 asserts-if(stylo,2) load 1322286.html # bug 1324669
+load 1329849-1.svg
+load 1329849-2.svg
+load 1329849-3.svg
+load 1329849-4.svg
+load 1329849-5.svg
+load 1329849-6.svg

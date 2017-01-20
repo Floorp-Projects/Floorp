@@ -1649,7 +1649,8 @@ var BrowserApp = {
           isPrivate: (data.isPrivate === true),
           pinned: (data.pinned === true),
           delayLoad: (delayLoad === true),
-          desktopMode: (data.desktopMode === true)
+          desktopMode: (data.desktopMode === true),
+          customTab: ("customTab" in data) ? data.customTab : false
         };
 
         params.userRequested = url;
@@ -3329,6 +3330,13 @@ nsBrowserAccess.prototype = {
                   aWhere == Ci.nsIBrowserDOMWindow.OPEN_SWITCHTAB);
     let isPrivate = false;
 
+    if (aOpener != null) {
+      let parent = BrowserApp.getTabForWindow(aOpener.top);
+      if ((parent != null) && ("isCustomTab" in parent)) {
+        newTab = newTab && !parent.isCustomTab;
+      }
+    }
+
     if (newTab) {
       let parentId = -1;
       if (!isExternal && aOpener) {
@@ -3597,6 +3605,7 @@ Tab.prototype = {
       // The search term the user entered to load the current URL
       this.userRequested = "userRequested" in aParams ? aParams.userRequested : "";
       this.isSearch = "isSearch" in aParams ? aParams.isSearch : false;
+      this.isCustomTab = "customTab" in aParams ? aParams.customTab : false;
 
       try {
         this.browser.loadURIWithFlags(aURL, flags, referrerURI, charset, postData);
