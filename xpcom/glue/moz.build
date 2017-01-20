@@ -11,36 +11,15 @@ DIRS += ['standalone']
 
 EXPORTS += [
     'MainThreadUtils.h',
-    'nsArrayEnumerator.h',
-    'nsArrayUtils.h',
-    'nsBaseHashtable.h',
     'nsCategoryCache.h',
-    'nsClassHashtable.h',
-    'nsCOMArray.h',
     'nsComponentManagerUtils.h',
-    'nsDataHashtable.h',
-    'nsDeque.h',
-    'nsEnumeratorUtils.h',
-    'nsHashKeys.h',
-    'nsInterfaceHashtable.h',
-    'nsJSThingHashtable.h',
-    'nsPointerHashKeys.h',
     'nsProxyRelease.h',
-    'nsQuickSort.h',
-    'nsRefPtrHashtable.h',
     'nsServiceManagerUtils.h',
     'nsStringAPI.h',
     'nsStringGlue.h',
-    'nsTArray-inl.h',
-    'nsTArray.h',
-    'nsTArrayForwardDeclare.h',
     'nsTextFormatter.h',
-    'nsTHashtable.h',
     'nsThreadUtils.h',
-    'nsTObserverArray.h',
-    'nsTPriorityQueue.h',
     'nsXPTCUtils.h',
-    'PLDHashTable.h',
 ]
 
 EXPORTS.mozilla += [
@@ -51,7 +30,6 @@ EXPORTS.mozilla += [
     'GenericFactory.h',
     'Monitor.h',
     'Mutex.h',
-    'Observer.h',
     'ReentrantMonitor.h',
 ]
 

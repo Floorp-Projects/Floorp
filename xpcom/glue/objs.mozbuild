@@ -6,18 +6,9 @@
 
 xpcom_glue_src_lcppsrcs = [
     'FileUtils.cpp',
-    'nsArrayEnumerator.cpp',
-    'nsArrayUtils.cpp',
     'nsCategoryCache.cpp',
-    'nsCOMArray.cpp',
     'nsComponentManagerUtils.cpp',
-    'nsDeque.cpp',
-    'nsEnumeratorUtils.cpp',
-    'nsQuickSort.cpp',
-    'nsTArray.cpp',
     'nsThreadUtils.cpp',
-    'nsTObserverArray.cpp',
-    'PLDHashTable.cpp',
     'XREAppData.cpp',
 ]
 
