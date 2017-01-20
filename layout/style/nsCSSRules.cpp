@@ -42,7 +42,6 @@
 #include "mozilla/dom/CSSFontFaceRuleBinding.h"
 #include "mozilla/dom/CSSFontFeatureValuesRuleBinding.h"
 #include "mozilla/dom/CSSKeyframeRuleBinding.h"
-#include "mozilla/dom/CSSKeyframesRuleBinding.h"
 #include "StyleRule.h"
 #include "nsFont.h"
 #include "nsIURI.h"
@@ -2307,6 +2306,7 @@ nsCSSKeyframesRule::nsCSSKeyframesRule(const nsCSSKeyframesRule& aCopy)
   : GroupRule(aCopy),
     mName(aCopy.mName)
 {
+  SetIsNotDOMBinding();
 }
 
 nsCSSKeyframesRule::~nsCSSKeyframesRule()
@@ -2326,6 +2326,7 @@ NS_IMPL_RELEASE_INHERITED(nsCSSKeyframesRule, css::GroupRule)
 // QueryInterface implementation for nsCSSKeyframesRule
 NS_INTERFACE_MAP_BEGIN(nsCSSKeyframesRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSKeyframesRule)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSKeyframesRule)
 NS_INTERFACE_MAP_END_INHERITING(GroupRule)
 
 #ifdef DEBUG
@@ -2486,18 +2487,13 @@ NS_IMETHODIMP
 nsCSSKeyframesRule::FindRule(const nsAString& aKey,
                              nsIDOMCSSKeyframeRule** aResult)
 {
-  NS_IF_ADDREF(*aResult = FindRule(aKey));
-  return NS_OK;
-}
-
-nsCSSKeyframeRule*
-nsCSSKeyframesRule::FindRule(const nsAString& aKey)
-{
   uint32_t index = FindRuleIndexForKey(aKey);
   if (index == RULE_NOT_FOUND) {
-    return nullptr;
+    *aResult = nullptr;
+  } else {
+    NS_ADDREF(*aResult = static_cast<nsCSSKeyframeRule*>(mRules[index]));
   }
-  return static_cast<nsCSSKeyframeRule*>(mRules[index]);
+  return NS_OK;
 }
 
 // GroupRule interface
@@ -2526,7 +2522,8 @@ nsCSSKeyframesRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 nsCSSKeyframesRule::WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto)
 {
-  return CSSKeyframesRuleBinding::Wrap(aCx, this, aGivenProto);
+  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
+  return nullptr;
 }
 
 // -------------------------------------------
