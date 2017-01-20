@@ -53,6 +53,9 @@ createEnum([
   // Indicates that the device list has been loaded successfully
   "LOAD_DEVICE_LIST_END",
 
+  // Remove the viewport's device assocation.
+  "REMOVE_DEVICE",
+
   // Resize the viewport.
   "RESIZE_VIEWPORT",
 

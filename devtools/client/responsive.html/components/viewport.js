@@ -24,6 +24,7 @@ module.exports = createClass({
     onBrowserMounted: PropTypes.func.isRequired,
     onChangeDevice: PropTypes.func.isRequired,
     onContentResize: PropTypes.func.isRequired,
+    onRemoveDevice: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
     onUpdateDeviceModalOpen: PropTypes.func.isRequired,
@@ -36,6 +37,15 @@ module.exports = createClass({
     } = this.props;
 
     onChangeDevice(viewport.id, device);
+  },
+
+  onRemoveDevice() {
+    let {
+      viewport,
+      onRemoveDevice,
+    } = this.props;
+
+    onRemoveDevice(viewport.id);
   },
 
   onResizeViewport(width, height) {
@@ -70,6 +80,7 @@ module.exports = createClass({
 
     let {
       onChangeDevice,
+      onRemoveDevice,
       onRotateViewport,
       onResizeViewport,
     } = this;
@@ -80,7 +91,7 @@ module.exports = createClass({
       },
       ViewportDimension({
         viewport,
-        onChangeDevice,
+        onRemoveDevice,
         onResizeViewport,
       }),
       ResizableViewport({
@@ -92,6 +103,7 @@ module.exports = createClass({
         onBrowserMounted,
         onChangeDevice,
         onContentResize,
+        onRemoveDevice,
         onResizeViewport,
         onRotateViewport,
         onUpdateDeviceModalOpen,

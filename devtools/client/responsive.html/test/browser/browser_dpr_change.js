@@ -3,7 +3,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-// Tests changing viewport device
+// Tests changing viewport DPR
 const TEST_URL = "data:text/html;charset=utf-8,DPR list test";
 const DEFAULT_DPPX = window.devicePixelRatio;
 const VIEWPORT_DPPX = DEFAULT_DPPX + 2;
@@ -67,8 +67,10 @@ function* testResetWhenResizingViewport(ui) {
 
   let waitPixelRatioChange = onceDevicePixelRatioChange(ui);
 
+  let deviceRemoved = once(ui, "device-removed");
   yield testViewportResize(ui, ".viewport-vertical-resize-handle",
     [-10, -10], [testDevice.width, testDevice.height - 10], [0, -10], ui);
+  yield deviceRemoved;
 
   yield waitPixelRatioChange;
   yield testDevicePixelRatio(ui, window.devicePixelRatio);
@@ -97,14 +99,6 @@ function testViewportDPRSelect(ui, expected) {
      `DPR Select value should be: ${expected.value}`);
   is(select.disabled, expected.disabled,
     `DPR Select should be ${expected.disabled ? "disabled" : "enabled"}.`);
-}
-
-function testViewportDeviceSelectLabel(ui, expected) {
-  info("Test viewport's device select label");
-
-  let select = ui.toolWindow.document.querySelector(".viewport-device-selector");
-  is(select.selectedOptions[0].textContent, expected,
-     `Device Select value should be: ${expected}`);
 }
 
 function* testDevicePixelRatio(ui, expected) {
