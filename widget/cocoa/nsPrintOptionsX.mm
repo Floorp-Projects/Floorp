@@ -50,15 +50,17 @@ nsPrintOptionsX::SerializeToPrintData(nsIPrintSettings* aSettings,
     char16_t** docTitles;
     uint32_t titleCount;
     rv = aWBP->EnumerateDocumentNames(&titleCount, &docTitles);
-    if (NS_SUCCEEDED(rv) && titleCount > 0) {
-      data->printJobName().Assign(docTitles[0]);
-    }
+    if (NS_SUCCEEDED(rv)) {
+      if (titleCount > 0) {
+        data->printJobName().Assign(docTitles[0]);
+      }
 
-    for (int32_t i = titleCount - 1; i >= 0; i--) {
-      free(docTitles[i]);
+      for (int32_t i = titleCount - 1; i >= 0; i--) {
+        free(docTitles[i]);
+      }
+      free(docTitles);
+      docTitles = nullptr;
     }
-    free(docTitles);
-    docTitles = nullptr;
   }
 
   RefPtr<nsPrintSettingsX> settingsX(do_QueryObject(aSettings));
