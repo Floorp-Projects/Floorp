@@ -621,11 +621,15 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
       } else {
         // SKIP_FRAME
         // Extend the duration of the last encoded data in aData
-        // because this frame will be skip.
+        // because this frame will be skipped.
         RefPtr<EncodedFrame> last = nullptr;
         last = aData.GetEncodedFrames().LastElement();
         if (last) {
-          last->SetDuration(last->GetDuration() + encodedDuration);
+          CheckedInt64 skippedDuration = FramesToUsecs(chunk.mDuration, mTrackRate);
+          if (skippedDuration.isValid() && skippedDuration.value() > 0) {
+            last->SetDuration(last->GetDuration() +
+                              (static_cast<uint64_t>(skippedDuration.value())));
+          }
         }
       }
       // Move forward the mEncodedTimestamp.
