@@ -370,18 +370,20 @@ function parseFormData(stream, channel, lenient = false) {
   try {
     let headers;
     if (stream instanceof Ci.nsIMIMEInputStream && stream.data) {
-      // MIME input streams encode additional headers as a block at the
-      // beginning of their stream. The actual request data comes from a
-      // sub-stream, which is accessible via their `data` member. The
-      // difference in available bytes between the outer stream and the
-      // inner data stream tells us the size of that header block.
-      //
-      // Since we need to know at least the value of the Content-Type
-      // header to properly parse the request body, we need to read and
-      // parse the header block in order to extract it.
+      if (channel instanceof Ci.nsIUploadChannel2 && channel.uploadStreamHasHeaders) {
+        // MIME input streams encode additional headers as a block at the
+        // beginning of their stream. The actual request data comes from a
+        // sub-stream, which is accessible via their `data` member. The
+        // difference in available bytes between the outer stream and the
+        // inner data stream tells us the size of that header block.
+        //
+        // Since we need to know at least the value of the Content-Type
+        // header to properly parse the request body, we need to read and
+        // parse the header block in order to extract it.
 
-      headers = readString(createTextStream(stream),
-                           stream.available() - stream.data.available());
+        headers = readString(createTextStream(stream),
+                             stream.available() - stream.data.available());
+      }
 
       rewind(stream);
       stream = stream.data;
