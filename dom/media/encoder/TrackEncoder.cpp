@@ -307,9 +307,12 @@ VideoTrackEncoder::AppendVideoSegment(const VideoSegment& aSegment)
                  nullDuration));
       // Adapt to the time before the first frame. This extends the first frame
       // from [start, end] to [0, end], but it'll do for now.
-      mLastChunk.mTimeStamp -=
-        TimeDuration::FromMicroseconds(
-          RateConvertTicksRoundUp(PR_USEC_PER_SEC, mTrackRate, nullDuration));
+      CheckedInt64 diff = FramesToUsecs(nullDuration, mTrackRate);
+      MOZ_ASSERT(diff.isValid());
+      if (diff.isValid()) {
+        mLastChunk.mTimeStamp -= TimeDuration::FromMicroseconds(diff.value());
+        mLastChunk.mDuration += nullDuration;
+      }
     }
 
     MOZ_ASSERT(!mLastChunk.IsNull());
@@ -394,7 +397,28 @@ VideoTrackEncoder::NotifyEndOfStream()
   }
 
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+  if (mEndOfStream) {
+    // We have already been notified.
+    return;
+  }
+
   mEndOfStream = true;
+  TRACK_LOG(LogLevel::Info, ("[VideoTrackEncoder]: Reached end of stream"));
+
+  if (!mLastChunk.IsNull() && mLastChunk.mDuration > 0) {
+    RefPtr<layers::Image> lastImage = mLastChunk.mFrame.GetImage();
+    TRACK_LOG(LogLevel::Debug,
+              ("[VideoTrackEncoder]: Appending last video frame %p, "
+               "duration=%.5f", lastImage.get(),
+               FramesToTimeUnit(mLastChunk.mDuration, mTrackRate).ToSeconds()));
+    mRawSegment.AppendFrame(lastImage.forget(),
+                            mLastChunk.mDuration,
+                            mLastChunk.mFrame.GetIntrinsicSize(),
+                            PRINCIPAL_HANDLE_NONE,
+                            mLastChunk.mFrame.GetForceBlack(),
+                            mLastChunk.mTimeStamp);
+  }
   mReentrantMonitor.NotifyAll();
 }
 
