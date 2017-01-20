@@ -1287,7 +1287,8 @@ nsLocalFile::GetFileSizeOfLink(int64_t* aFileSize)
  * Fails when /proc/self/mountinfo or diven device don't exist.
  */
 static bool
-GetDeviceName(int aDeviceMajor, int aDeviceMinor, nsACString& aDeviceName)
+GetDeviceName(unsigned int aDeviceMajor, unsigned int aDeviceMinor,
+              nsACString& aDeviceName)
 {
   bool ret = false;
 
@@ -1297,7 +1298,7 @@ GetDeviceName(int aDeviceMajor, int aDeviceMinor, nsACString& aDeviceName)
   char mountinfoLine[kMountInfoLineLength];
   char deviceNum[kMountInfoLineLength];
 
-  SprintfLiteral(deviceNum, "%d:%d", aDeviceMajor, aDeviceMinor);
+  SprintfLiteral(deviceNum, "%u:%u", aDeviceMajor, aDeviceMinor);
 
   FILE* f = fopen("/proc/self/mountinfo", "rt");
   if (!f) {
