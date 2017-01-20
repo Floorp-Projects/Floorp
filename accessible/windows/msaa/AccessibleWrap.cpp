@@ -33,6 +33,7 @@
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
 #include "mozilla/dom/NodeInfo.h"
+#include "mozilla/dom/TabParent.h"
 #include "nsIServiceManager.h"
 #include "nsNameSpaceManager.h"
 #include "nsTextFormatter.h"
@@ -1336,21 +1337,35 @@ GetProxiedAccessibleInSubtree(const DocAccessibleParent* aDoc,
 {
   auto wrapper = static_cast<DocProxyAccessibleWrap*>(WrapperFor(aDoc));
   RefPtr<IAccessible> comProxy;
-  int32_t wrapperChildId = AccessibleWrap::GetChildIDFor(wrapper);
-  if (wrapperChildId == aVarChild.lVal) {
+  int32_t docWrapperChildId = AccessibleWrap::GetChildIDFor(wrapper);
+  // Only top level document accessible proxies are created with a pointer to
+  // their COM proxy.
+  if (aDoc->IsTopLevel()) {
     wrapper->GetNativeInterface(getter_AddRefs(comProxy));
-    return comProxy.forget();
+  } else {
+    auto tab = static_cast<dom::TabParent*>(aDoc->Manager());
+    MOZ_ASSERT(tab);
+    DocAccessibleParent* topLevelDoc = tab->GetTopLevelDocAccessible();
+    MOZ_ASSERT(topLevelDoc && topLevelDoc->IsTopLevel());
+    VARIANT docId = {VT_I4};
+    docId.lVal = docWrapperChildId;
+    RefPtr<IDispatch> disp = GetProxiedAccessibleInSubtree(topLevelDoc, docId);
+    if (!disp) {
+      return nullptr;
+    }
+
+    DebugOnly<HRESULT> hr = disp->QueryInterface(IID_IAccessible,
+                                                 getter_AddRefs(comProxy));
+    MOZ_ASSERT(SUCCEEDED(hr));
   }
 
-  MOZ_ASSERT(aDoc->IsTopLevel());
-  if (!aDoc->IsTopLevel()) {
-    return nullptr;
-  }
-
-  wrapper->GetNativeInterface(getter_AddRefs(comProxy));
   MOZ_ASSERT(comProxy);
   if (!comProxy) {
     return nullptr;
+  }
+
+  if (docWrapperChildId == aVarChild.lVal) {
+    return comProxy.forget();
   }
 
   RefPtr<IDispatch> disp;
