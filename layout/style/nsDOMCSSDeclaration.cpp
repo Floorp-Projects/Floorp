@@ -267,7 +267,7 @@ nsDOMCSSDeclaration::GetCSSParsingEnvironmentForRule(css::Rule* aRule,
     return;
   }
 
-  nsIDocument* document = sheet->GetOwningDocument();
+  nsIDocument* document = sheet->GetAssociatedDocument();
   aCSSParseEnv.mSheetURI = sheet->GetSheetURI();
   aCSSParseEnv.mBaseURI = sheet->GetBaseURI();
   aCSSParseEnv.mPrincipal = sheet->Principal();

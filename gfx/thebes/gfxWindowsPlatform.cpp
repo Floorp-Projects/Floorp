@@ -1516,6 +1516,14 @@ gfxWindowsPlatform::InitializeD3D11()
   }
 
   dm->CreateContentDevices();
+
+  // Content process failed to create the d3d11 device while parent process
+  // succeed.
+  if (XRE_IsContentProcess() &&
+      !gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
+    gfxCriticalError() << "[D3D11] Failed to create the D3D11 device in content \
+                           process.";
+  }
 }
 
 void

@@ -55,19 +55,23 @@ ServoStyleSheet::HasRules() const
 }
 
 void
-ServoStyleSheet::SetOwningDocument(nsIDocument* aDocument)
+ServoStyleSheet::SetAssociatedDocument(nsIDocument* aDocument,
+                                       DocumentAssociationMode aAssociationMode)
 {
+  MOZ_ASSERT_IF(!aDocument, aAssociationMode == NotOwnedByDocument);
+
   // XXXheycam: Traverse to child ServoStyleSheets to set this, like
-  // CSSStyleSheet::SetOwningDocument does.
+  // CSSStyleSheet::SetAssociatedDocument does.
 
   mDocument = aDocument;
+  mDocumentAssociationMode = aAssociationMode;
 }
 
 ServoStyleSheet*
 ServoStyleSheet::GetParentSheet() const
 {
   // XXXheycam: When we implement support for child sheets, we'll have
-  // to fix SetOwningDocument to propagate the owning document down
+  // to fix SetAssociatedDocument to propagate the associated document down
   // to the children.
   MOZ_CRASH("stylo: not implemented");
 }

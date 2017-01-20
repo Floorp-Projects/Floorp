@@ -437,14 +437,16 @@ private:
 
   MediaConduitErrorCode DeliverPacket(const void *data, int len);
 
+  bool RequiresNewSendStream(const VideoCodecConfig& newConfig) const;
+
   mozilla::ReentrantMonitor mTransportMonitor;
   RefPtr<TransportInterface> mTransmitterTransport;
   RefPtr<TransportInterface> mReceiverTransport;
   RefPtr<mozilla::VideoRenderer> mRenderer;
 
   // Engine state we are concerned with.
-  mozilla::Atomic<bool> mEngineTransmitting; //If true ==> Transmit Sub-system is up and running
-  mozilla::Atomic<bool> mEngineReceiving;    // if true ==> Receive Sus-sysmtem up and running
+  mozilla::Atomic<bool> mEngineTransmitting; // If true ==> Transmit Subsystem is up and running
+  mozilla::Atomic<bool> mEngineReceiving;    // if true ==> Receive Subsystem up and running
 
   int mCapId;   // Capturer for this conduit
   //Local database of currently applied receive codecs

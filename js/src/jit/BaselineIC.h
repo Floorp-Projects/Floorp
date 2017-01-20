@@ -1235,94 +1235,6 @@ class ICSetPropNativeAddCompiler : public ICStubCompiler
     ICUpdatedStub* getStub(ICStubSpace* space);
 };
 
-class ICSetProp_TypedObject : public ICUpdatedStub
-{
-    friend class ICStubSpace;
-
-    GCPtrShape shape_;
-    GCPtrObjectGroup group_;
-    uint32_t fieldOffset_;
-    bool isObjectReference_;
-
-    ICSetProp_TypedObject(JitCode* stubCode, Shape* shape, ObjectGroup* group,
-                          uint32_t fieldOffset, bool isObjectReference)
-      : ICUpdatedStub(ICStub::SetProp_TypedObject, stubCode),
-        shape_(shape),
-        group_(group),
-        fieldOffset_(fieldOffset),
-        isObjectReference_(isObjectReference)
-    {
-        (void) fieldOffset_; // Silence clang warning
-    }
-
-  public:
-    GCPtrShape& shape() {
-        return shape_;
-    }
-    GCPtrObjectGroup& group() {
-        return group_;
-    }
-    bool isObjectReference() {
-        return isObjectReference_;
-    }
-
-    static size_t offsetOfShape() {
-        return offsetof(ICSetProp_TypedObject, shape_);
-    }
-    static size_t offsetOfGroup() {
-        return offsetof(ICSetProp_TypedObject, group_);
-    }
-    static size_t offsetOfFieldOffset() {
-        return offsetof(ICSetProp_TypedObject, fieldOffset_);
-    }
-
-    class Compiler : public ICStubCompiler {
-      protected:
-        RootedShape shape_;
-        RootedObjectGroup group_;
-        uint32_t fieldOffset_;
-        TypedThingLayout layout_;
-        Rooted<SimpleTypeDescr*> fieldDescr_;
-
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-
-        virtual int32_t getKey() const {
-            return static_cast<int32_t>(engine_) |
-                  (static_cast<int32_t>(kind) << 1) |
-                  (static_cast<int32_t>(SimpleTypeDescrKey(fieldDescr_)) << 17) |
-                  (static_cast<int32_t>(layout_) << 25);
-        }
-
-      public:
-        Compiler(JSContext* cx, Shape* shape, ObjectGroup* group, uint32_t fieldOffset,
-                 SimpleTypeDescr* fieldDescr)
-          : ICStubCompiler(cx, ICStub::SetProp_TypedObject, Engine::Baseline),
-            shape_(cx, shape),
-            group_(cx, group),
-            fieldOffset_(fieldOffset),
-            layout_(GetTypedThingLayout(shape->getObjectClass())),
-            fieldDescr_(cx, fieldDescr)
-        {}
-
-        ICUpdatedStub* getStub(ICStubSpace* space) {
-            bool isObjectReference =
-                fieldDescr_->is<ReferenceTypeDescr>() &&
-                fieldDescr_->as<ReferenceTypeDescr>().type() == ReferenceTypeDescr::TYPE_OBJECT;
-            ICUpdatedStub* stub = newStub<ICSetProp_TypedObject>(space, getStubCode(), shape_,
-                                                                 group_, fieldOffset_,
-                                                                 isObjectReference);
-            if (!stub || !stub->initUpdatingChain(cx, space))
-                return nullptr;
-            return stub;
-        }
-
-        bool needsUpdateStubs() {
-            return fieldDescr_->is<ReferenceTypeDescr>() &&
-                   fieldDescr_->as<ReferenceTypeDescr>().type() != ReferenceTypeDescr::TYPE_STRING;
-        }
-    };
-};
-
 // Base stub for calling a setters on a native or unboxed object.
 class ICSetPropCallSetter : public ICStub
 {
@@ -2533,6 +2445,15 @@ struct IonOsrTempData;
 
 void EmitUnboxedPreBarrierForBaseline(MacroAssembler &masm, const BaseIndex& address,
                                       JSValueType type);
+
+// Write an arbitrary value to a typed array or typed object address at dest.
+// If the value could not be converted to the appropriate format, jump to
+// failure or failureModifiedScratch.
+template <typename S, typename T>
+void
+BaselineStoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type, const S& value,
+                          const T& dest, Register scratch, Label* failure,
+                          Label* failureModifiedScratch);
 
 } // namespace jit
 } // namespace js
