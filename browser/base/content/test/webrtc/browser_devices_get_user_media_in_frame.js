@@ -6,17 +6,6 @@ registerCleanupFunction(function() {
   gBrowser.removeCurrentTab();
 });
 
-function promiseReloadFrame(aFrameId) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, aFrameId, function*(contentFrameId) {
-    content.wrappedJSObject
-           .document
-           .getElementById(contentFrameId)
-           .contentWindow
-           .location
-           .reload();
-  });
-}
-
 var gTests = [
 
 {
@@ -111,10 +100,11 @@ var gTests = [
     yield checkSharingUI({video: true, audio: true});
 
     info("reloading the frame");
-    promise = promiseObserverCalled("recording-device-events");
+    promise = promiseObserverCalled("recording-device-stopped");
     yield promiseReloadFrame("frame1");
     yield promise;
 
+    yield expectObserverCalled("recording-device-events");
     yield expectObserverCalled("recording-window-ended");
     yield expectNoObserverCalled();
     yield checkNotSharing();

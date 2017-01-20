@@ -14,7 +14,9 @@ const EXTENSION_DIR = "chrome://mochitests/content/extensions/mozscreenshots/bro
 let TestRunner;
 
 function* setup() {
-  requestLongerTimeout(10);
+  // This timeout doesn't actually end the job even if it is hit - the buildbot timeout will
+  // handle things for us if the test actually hangs.
+  requestLongerTimeout(100);
 
   info("installing extension temporarily");
   let chromeURL = Services.io.newURI(EXTENSION_DIR);

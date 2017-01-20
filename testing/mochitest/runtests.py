@@ -1528,9 +1528,6 @@ toolbar#nav-bar {
         if self.mozLogs:
             browserEnv["MOZ_LOG"] = MOZ_LOG
 
-        if debugger and not options.slowscript:
-            browserEnv["JS_DISABLE_SLOW_SCRIPT_SIGNALS"] = "1"
-
         # For e10s, our tests default to suppressing the "unsafe CPOW usage"
         # warnings that can plague test logs.
         if not options.enableCPOWWarnings:
@@ -2243,10 +2240,7 @@ toolbar#nav-bar {
             # known regressions exist. At least this way we can prevent further damage while
             # they get fixed.
 
-            info = mozinfo.info
-            skip_leak_conditions = [
-                (info['debug'] and options.flavor == 'plain' and d == 'toolkit/components/prompts/test' and info['os'] == 'mac', 'bug 1325275'),  # noqa
-            ]
+            skip_leak_conditions = []
 
             for condition, reason in skip_leak_conditions:
                 if condition:

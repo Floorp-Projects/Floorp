@@ -1251,24 +1251,48 @@ var LoginUtils = {
 
 // nsIAutoCompleteResult implementation
 function UserAutoCompleteResult(aSearchString, matchingLogins, {isSecure, messageManager, isPasswordField}) {
-  this.searchString = aSearchString;
+  function loginSort(a, b) {
+    var userA = a.username.toLowerCase();
+    var userB = b.username.toLowerCase();
 
+    if (userA < userB)
+      return -1;
+
+    if (userA > userB)
+      return 1;
+
+    return 0;
+  }
+
+  function findDuplicates(loginList) {
+    let seen = new Set();
+    let duplicates = new Set();
+    for (let login of loginList) {
+      if (seen.has(login.username)) {
+        duplicates.add(login.username);
+      }
+      seen.add(login.username);
+    }
+    return duplicates;
+  }
+
+  this._showInsecureFieldWarning = (!isSecure && LoginHelper.showInsecureFieldWarning) ? 1 : 0;
+  this.searchString = aSearchString;
+  this.logins = matchingLogins.sort(loginSort);
+  this.matchCount = matchingLogins.length + this._showInsecureFieldWarning;
+  this._messageManager = messageManager;
   this._stringBundle = Services.strings.createBundle("chrome://passwordmgr/locale/passwordmgr.properties");
   this._dateAndTimeFormatter = new Intl.DateTimeFormat(undefined,
                               { day: "numeric", month: "short", year: "numeric" });
 
-  this._messageManager = messageManager;
-  this._matchingLogins = matchingLogins;
   this._isPasswordField = isPasswordField;
-  this._isSecure = isSecure;
 
-  Services.prefs.addObserver("security.insecure_field_warning.contextual.enabled",
-                             this.updateWithPrefChange.bind(this), false);
+  this._duplicateUsernames = findDuplicates(matchingLogins);
 
-  Services.prefs.addObserver("signon.autofillForms.http",
-                             this.updateWithPrefChange.bind(this), false);
-
-  this.updateWithPrefChange();
+  if (this.matchCount > 0) {
+    this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
+    this.defaultIndex = 0;
+  }
 }
 
 UserAutoCompleteResult.prototype = {
@@ -1282,43 +1306,6 @@ UserAutoCompleteResult.prototype = {
   // modify some readonly properties for internal use.
   get wrappedJSObject() {
     return this;
-  },
-
-  updateWithPrefChange() {
-    function loginSort(a, b) {
-      var userA = a.username.toLowerCase();
-      var userB = b.username.toLowerCase();
-
-      if (userA < userB)
-        return -1;
-
-      if (userA > userB)
-        return 1;
-
-      return 0;
-    }
-
-    function findDuplicates(loginList) {
-      let seen = new Set();
-      let duplicates = new Set();
-      for (let login of loginList) {
-        if (seen.has(login.username)) {
-          duplicates.add(login.username);
-        }
-        seen.add(login.username);
-      }
-      return duplicates;
-    }
-
-    this._showInsecureFieldWarning = (!this._isSecure && LoginHelper.showInsecureFieldWarning) ? 1 : 0;
-    this.logins = this._matchingLogins.sort(loginSort);
-    this.matchCount = this._matchingLogins.length + this._showInsecureFieldWarning;
-    this._duplicateUsernames = findDuplicates(this._matchingLogins);
-
-    if (this.matchCount > 0) {
-      this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
-      this.defaultIndex = 0;
-    }
   },
 
   // Interfaces from idl...

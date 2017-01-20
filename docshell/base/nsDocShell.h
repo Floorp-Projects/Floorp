@@ -64,6 +64,7 @@
 namespace mozilla {
 namespace dom {
 class EventTarget;
+class PendingGlobalHistoryEntry;
 typedef uint32_t ScreenOrientationInternal;
 } // namespace dom
 } // namespace mozilla
@@ -807,6 +808,8 @@ protected:
 
   bool HasUnloadedParent();
 
+  void UpdateGlobalHistoryTitle(nsIURI* aURI);
+
   // Dimensions of the docshell
   nsIntRect mBounds;
   nsString mName;
@@ -1042,6 +1045,8 @@ private:
   nsCString mOriginalUriString;
   nsWeakPtr mOpener;
   mozilla::OriginAttributes mOriginAttributes;
+
+  mozilla::UniquePtr<mozilla::dom::PendingGlobalHistoryEntry> mPrerenderGlobalHistory;
 
   // A depth count of how many times NotifyRunToCompletionStart
   // has been called without a matching NotifyRunToCompletionStop.

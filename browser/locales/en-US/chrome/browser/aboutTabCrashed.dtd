@@ -27,4 +27,4 @@
 <!ENTITY tabCrashed.emailMe "Email me when more information is available">
 <!ENTITY tabCrashed.reportSent "Crash report already submitted; thank you for helping make &brandShortName; better!">
 <!ENTITY tabCrashed.requestAutoSubmit2 "Report background tabs">
-<!ENTITY tabCrashed.autoSubmit "Update preferences to automatically submit backlogged crash reports (and get fewer messages like this from us in the future)">
+<!ENTITY tabCrashed.autoSubmit2 "Update preferences to automatically send crash reports, including reports for crashed background tabs from this session and future sessions">

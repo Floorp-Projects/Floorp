@@ -25,7 +25,6 @@ public:
   virtual ~GMPChild();
 
   bool Init(const nsAString& aPluginPath,
-            const nsAString& aVoucherPath,
             base::ProcessId aParentPid,
             MessageLoop* aIOLoop,
             IPC::Channel* aChannel);
@@ -41,9 +40,6 @@ public:
 
 private:
   friend class GMPContentChild;
-
-  bool PreLoadPluginVoucher();
-  void PreLoadSandboxVoucher();
 
   bool GetUTF8LibPath(nsACString& aOutLibPath);
 
@@ -79,11 +75,8 @@ private:
 
   MessageLoop* mGMPMessageLoop;
   nsString mPluginPath;
-  nsString mSandboxVoucherPath;
   nsCString mNodeId;
   GMPLoader* mGMPLoader;
-  nsTArray<uint8_t> mPluginVoucher;
-  nsTArray<uint8_t> mSandboxVoucher;
 };
 
 } // namespace gmp

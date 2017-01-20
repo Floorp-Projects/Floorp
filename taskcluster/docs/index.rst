@@ -26,5 +26,6 @@ check out the :doc:`how-to section <how-tos>`.
     transforms
     yaml-templates
     docker-images
+    cron
     how-tos
     reference

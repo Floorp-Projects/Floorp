@@ -4,6 +4,7 @@
 
 "use strict";
 
+const Services = require("Services");
 const {Task} = require("devtools/shared/task");
 const {colorUtils} = require("devtools/shared/css/color");
 const {Spectrum} = require("devtools/client/shared/widgets/Spectrum");
@@ -13,6 +14,8 @@ const L10N = new LocalizationHelper("devtools/client/locales/inspector.propertie
 
 const Heritage = require("sdk/core/heritage");
 
+const colorWidgetPref = "devtools.inspector.colorWidget.enabled";
+const NEW_COLOR_WIDGET = Services.prefs.getBoolPref(colorWidgetPref);
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**
@@ -34,7 +37,9 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 function SwatchColorPickerTooltip(document,
                                   inspector,
                                   {supportsCssColor4ColorFunction}) {
-  let stylesheet = "chrome://devtools/content/shared/widgets/spectrum.css";
+  let stylesheet = NEW_COLOR_WIDGET ?
+    "chrome://devtools/content/shared/widgets/color-widget.css" :
+    "chrome://devtools/content/shared/widgets/spectrum.css";
   SwatchBasedEditorTooltip.call(this, document, stylesheet);
 
   this.inspector = inspector;
@@ -71,7 +76,13 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
 
     this.tooltip.setContent(container, { width: 218, height: 224 });
 
-    let spectrum = new Spectrum(spectrumNode, color);
+    let spectrum;
+    if (NEW_COLOR_WIDGET) {
+      const {ColorWidget} = require("devtools/client/shared/widgets/ColorWidget");
+      spectrum = new ColorWidget(spectrumNode, color);
+    } else {
+      spectrum = new Spectrum(spectrumNode, color);
+    }
 
     // Wait for the tooltip to be shown before calling spectrum.show
     // as it expect to be visible in order to compute DOM element sizes.

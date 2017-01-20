@@ -117,7 +117,8 @@ public:
 
   // style sheet owner info
   CSSStyleSheet* GetParentSheet() const;  // may be null
-  void SetOwningDocument(nsIDocument* aDocument);
+  void SetAssociatedDocument(nsIDocument* aDocument,
+                             DocumentAssociationMode aAssociationMode);
 
   // Find the ID of the owner inner window.
   uint64_t FindOwningWindowInnerID() const;

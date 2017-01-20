@@ -235,7 +235,7 @@ exports.ERROR_MSG_METHOD_NOT_ALLOWED         = "METHOD_NOT_ALLOWED";
 // See bug 1013064 comments 23-25 for why the sessionToken is "safe"
 exports.FXA_PWDMGR_PLAINTEXT_FIELDS = new Set(
   ["email", "verified", "authAt", "sessionToken", "uid", "oauthTokens", "profile",
-  "deviceId", "deviceRegistrationVersion"]);
+  "deviceId", "deviceRegistrationVersion", "profileCache"]);
 
 // Fields we store in secure storage if it exists.
 exports.FXA_PWDMGR_SECURE_FIELDS = new Set(

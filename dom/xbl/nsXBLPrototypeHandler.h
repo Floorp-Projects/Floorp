@@ -83,7 +83,7 @@ public:
                         uint32_t aLineNumber);
 
   // This constructor is used only by XUL key handlers (e.g., <key>)
-  explicit nsXBLPrototypeHandler(nsIContent* aKeyElement);
+  explicit nsXBLPrototypeHandler(nsIContent* aKeyElement, bool aReserved);
 
   // This constructor is used for handlers loaded from the cache
   explicit nsXBLPrototypeHandler(nsXBLPrototypeBinding* aBinding);
@@ -116,6 +116,7 @@ public:
 
   uint8_t GetPhase() { return mPhase; }
   uint8_t GetType() { return mType; }
+  bool GetIsReserved() { return mReserved; }
 
   nsXBLPrototypeHandler* GetNextHandler() { return mNextHandler; }
   void SetNextHandler(nsXBLPrototypeHandler* aHandler) { mNextHandler = aHandler; }
@@ -225,6 +226,8 @@ protected:
   uint8_t mMisc;             // Miscellaneous extra information.  For key events,
                              // stores whether or not we're a key code or char code.
                              // For mouse events, stores the clickCount.
+
+  bool mReserved;            // <key> is reserved for chrome. Not used by handlers.
 
   int32_t mKeyMask;          // Which modifier keys this event handler expects to have down
                              // in order to be matched.

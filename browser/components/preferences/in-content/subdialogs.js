@@ -11,6 +11,7 @@ var gSubDialog = {
   _frame: null,
   _overlay: null,
   _box: null,
+  _openedURL: null,
   _injectedStyleSheets: [
     "chrome://browser/skin/preferences/preferences.css",
     "chrome://global/skin/in-content/common.css",

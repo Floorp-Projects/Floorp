@@ -4943,8 +4943,8 @@ var TabsProgressListener = {
     let tab = gBrowser.getTabForBrowser(aBrowser);
     if (tab && tab._sharingState) {
       gBrowser.setBrowserSharing(aBrowser, {});
-      webrtcUI.forgetStreamsFromBrowser(aBrowser);
     }
+    webrtcUI.forgetStreamsFromBrowser(aBrowser);
 
     gBrowser.getNotificationBox(aBrowser).removeTransientNotifications();
 
@@ -6682,7 +6682,7 @@ var gIdentityHandler = {
   },
   get _identityPopupContentHosts() {
     delete this._identityPopupContentHosts;
-    let selector = ".identity-popup-headline.host";
+    let selector = ".identity-popup-host";
     return this._identityPopupContentHosts = [
       ...this._identityPopupMultiView._mainView.querySelectorAll(selector),
       ...document.querySelectorAll(selector)
@@ -6690,7 +6690,7 @@ var gIdentityHandler = {
   },
   get _identityPopupContentHostless() {
     delete this._identityPopupContentHostless;
-    let selector = ".identity-popup-headline.hostless";
+    let selector = ".identity-popup-hostless";
     return this._identityPopupContentHostless = [
       ...this._identityPopupMultiView._mainView.querySelectorAll(selector),
       ...document.querySelectorAll(selector)
@@ -7412,10 +7412,12 @@ var gIdentityHandler = {
             // If the permission item we were looking for doesn't exist,
             // the user has temporarily allowed sharing and we need to add
             // an item in the permissions array to reflect this.
-            let permission =
-              SitePermissions.getPermissionDetails(id, SitePermissions.SCOPE_REQUEST);
-            permission.inUse = true;
-            permissions.push(permission);
+            permissions.push({
+              id,
+              state: SitePermissions.ALLOW,
+              scope: SitePermissions.SCOPE_REQUEST,
+              inUse: true,
+            });
           }
         }
       }
@@ -7476,7 +7478,7 @@ var gIdentityHandler = {
       state = SitePermissions.ALLOW;
       scope = SitePermissions.SCOPE_REQUEST;
     }
-    stateLabel.textContent = SitePermissions.getStateLabel(state, scope);
+    stateLabel.textContent = SitePermissions.getCurrentStateLabel(state, scope);
 
     let button = document.createElement("button");
     button.setAttribute("class", "identity-popup-permission-remove-button");
@@ -7512,6 +7514,7 @@ var gIdentityHandler = {
           }
         }
         browser.messageManager.sendAsyncMessage("webrtc:StopSharing", windowId);
+        webrtcUI.forgetActivePermissionsFromBrowser(gBrowser.selectedBrowser);
       }
       SitePermissions.remove(gBrowser.currentURI, aPermission.id, browser);
 

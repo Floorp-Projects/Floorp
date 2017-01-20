@@ -113,6 +113,15 @@ this.SelectContentHelper.prototype = {
     });
   },
 
+  dispatchMouseEvent(win, target, eventName) {
+    let mouseEvent = new win.MouseEvent(eventName, {
+      view: win,
+      bubbles: true,
+      cancelable: true,
+    });
+    target.dispatchEvent(mouseEvent);
+  },
+
   receiveMessage(message) {
     switch (message.name) {
       case "Forms:SelectDropDownItem":
@@ -131,15 +140,8 @@ this.SelectContentHelper.prototype = {
           // to select an element in the dropdown, we only fire input and
           // change events.
           if (!this.closedWithEnter) {
-            const MOUSE_EVENTS = ["mousedown", "mouseup"];
-            for (let eventName of MOUSE_EVENTS) {
-              let mouseEvent = new win.MouseEvent(eventName, {
-                view: win,
-                bubbles: true,
-                cancelable: true,
-              });
-              selectedOption.dispatchEvent(mouseEvent);
-            }
+            this.dispatchMouseEvent(win, selectedOption, "mousedown");
+            this.dispatchMouseEvent(win, selectedOption, "mouseup");
             DOMUtils.removeContentState(this.element, kStateActive);
           }
 
@@ -154,12 +156,7 @@ this.SelectContentHelper.prototype = {
           this.element.dispatchEvent(changeEvent);
 
           if (!this.closedWithEnter) {
-            let mouseEvent = new win.MouseEvent("click", {
-              view: win,
-              bubbles: true,
-              cancelable: true,
-            });
-            selectedOption.dispatchEvent(mouseEvent);
+            this.dispatchMouseEvent(win, selectedOption, "click");
           }
         }
 
@@ -175,9 +172,15 @@ this.SelectContentHelper.prototype = {
         break;
 
       case "Forms:MouseUp":
+        let win = this.element.ownerDocument.defaultView;
+        if (message.data.onAnchor) {
+          this.dispatchMouseEvent(win, this.element, "mouseup");
+        }
         DOMUtils.removeContentState(this.element, kStateActive);
+        if (message.data.onAnchor) {
+          this.dispatchMouseEvent(win, this.element, "click");
+        }
         break;
-
     }
   },
 
