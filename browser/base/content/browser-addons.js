@@ -502,7 +502,8 @@ const gExtensionsNotifications = {
 
   updateAlerts() {
     let sideloaded = ExtensionsUI.sideloaded;
-    if (sideloaded.size == 0) {
+    let updates = ExtensionsUI.updates;
+    if (sideloaded.size + updates.size == 0) {
       gMenuButtonBadgeManager.removeBadge(gMenuButtonBadgeManager.BADGEID_ADDONS);
     } else {
       gMenuButtonBadgeManager.addBadge(gMenuButtonBadgeManager.BADGEID_ADDONS,
@@ -519,6 +520,23 @@ const gExtensionsNotifications = {
     const DEFAULT_EXTENSION_ICON =
       "chrome://mozapps/skin/extensions/extensionGeneric.svg";
     let items = 0;
+    for (let update of updates) {
+      if (++items > 4) {
+        break;
+      }
+      let button = document.createElement("toolbarbutton");
+      button.setAttribute("label", `"${update.addon.name}" requires new permissions`);
+
+      let icon = update.addon.iconURL || DEFAULT_EXTENSION_ICON;
+      button.setAttribute("image", icon);
+
+      button.addEventListener("click", evt => {
+        ExtensionsUI.showUpdate(gBrowser, update);
+      });
+
+      container.appendChild(button);
+    }
+
     for (let addon of sideloaded) {
       if (++items > 4) {
         break;
