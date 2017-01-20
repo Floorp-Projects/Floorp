@@ -184,34 +184,6 @@ this.SitePermissions = {
   },
 
   /**
-   * Returns detailed information on the specified permission.
-   *
-   * @param {String} id
-   *        The permissionID of the permission.
-   * @param {SitePermissions scope} scope
-   *        The current scope of the permission.
-   * @param {SitePermissions state} state (optional)
-   *        The current state of the permission.
-   *        Will default to the default state if omitted.
-   *
-   * @return {Object} an object with the keys:
-   *           - id: the permissionID of the permission
-   *           - label: the localized label
-   *           - state: the passed in state argument
-   *           - scope: the passed in scope argument
-   *           - availableStates: an array of all available states for that permission,
-   *             represented as objects with the keys:
-   *             - id: the state constant
-   *             - label: the translated label of that state
-   */
-  getPermissionDetails(id, scope, state = this.getDefault(id)) {
-    let availableStates = this.getAvailableStates(id).map(val => {
-      return { id: val, label: this.getStateLabel(val) };
-    });
-    return {id, label: this.getPermissionLabel(id), state, scope, availableStates};
-  },
-
-  /**
    * Returns all custom permissions for a given browser.
    *
    * To receive a more detailed, albeit less performant listing see
@@ -249,11 +221,17 @@ this.SitePermissions = {
    * @param {Browser} browser
    *        The browser to fetch permission for.
    *
-   * @return {Array} a list of objects. See getPermissionDetails for the content of each object.
+   * @return {Array<Object>} a list of objects with the keys:
+   *           - id: the permissionID of the permission
+   *           - state: a constant representing the current permission state
+   *             (e.g. SitePermissions.ALLOW)
+   *           - scope: a constant representing how long the permission will
+   *             be kept.
+   *           - label: the localized label
    */
   getAllPermissionDetailsForBrowser(browser) {
     return this.getAllForBrowser(browser).map(({id, scope, state}) =>
-      this.getPermissionDetails(id, scope, state));
+      ({id, scope, state, label: this.getPermissionLabel(id)}));
   },
 
   /**
@@ -489,29 +467,52 @@ this.SitePermissions = {
    *
    * @param {SitePermissions state} state
    *        The state to get the label for.
-   * @param {SitePermissions scope} scope (optional)
-   *        The scope to get the label for.
    *
-   * @return {String} the localized label.
+   * @return {String|null} the localized label or null if an
+   *         unknown state was passed.
    */
-  getStateLabel(state, scope = null) {
+  getMultichoiceStateLabel(state) {
     switch (state) {
       case this.UNKNOWN:
-        return gStringBundle.GetStringFromName("alwaysAsk");
+        return gStringBundle.GetStringFromName("state.multichoice.alwaysAsk");
       case this.ALLOW:
-        if (scope && scope != this.SCOPE_PERSISTENT)
-          return gStringBundle.GetStringFromName("allowTemporarily");
-        return gStringBundle.GetStringFromName("allow");
+        return gStringBundle.GetStringFromName("state.multichoice.allow");
       case this.ALLOW_COOKIES_FOR_SESSION:
-        return gStringBundle.GetStringFromName("allowForSession");
+        return gStringBundle.GetStringFromName("state.multichoice.allowForSession");
       case this.BLOCK:
-        if (scope && scope != this.SCOPE_PERSISTENT)
-          return gStringBundle.GetStringFromName("blockTemporarily");
-        return gStringBundle.GetStringFromName("block");
+        return gStringBundle.GetStringFromName("state.multichoice.block");
       default:
         return null;
     }
-  }
+  },
+
+  /**
+   * Returns the localized label for a permission's current state.
+   *
+   * @param {SitePermissions state} state
+   *        The state to get the label for.
+   * @param {SitePermissions scope} scope (optional)
+   *        The scope to get the label for.
+   *
+   * @return {String|null} the localized label or null if an
+   *         unknown state was passed.
+   */
+  getCurrentStateLabel(state, scope = null) {
+    switch (state) {
+      case this.ALLOW:
+        if (scope && scope != this.SCOPE_PERSISTENT)
+          return gStringBundle.GetStringFromName("state.current.allowedTemporarily");
+        return gStringBundle.GetStringFromName("state.current.allowed");
+      case this.ALLOW_COOKIES_FOR_SESSION:
+        return gStringBundle.GetStringFromName("state.current.allowedForSession");
+      case this.BLOCK:
+        if (scope && scope != this.SCOPE_PERSISTENT)
+          return gStringBundle.GetStringFromName("state.current.blockedTemporarily");
+        return gStringBundle.GetStringFromName("state.current.blocked");
+      default:
+        return null;
+    }
+  },
 };
 
 var gPermissionObject = {

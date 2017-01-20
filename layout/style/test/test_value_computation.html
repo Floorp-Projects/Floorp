@@ -104,6 +104,7 @@ function swap_when_frame(property, value) {
          gSwapInitialWhenHaveFrame[property].indexOf(value) != -1;
 }
 
+var gDisplayTree = document.getElementById("display");
 var gElementN = document.getElementById("elementn");
 var gElementF = document.getElementById("elementf");
 var gStyleSheet = document.getElementById("stylesheet").sheet;
@@ -206,12 +207,12 @@ function test_value(property, val, is_initial)
     gElementF.parentNode.style.removeProperty(property);
   }
 
-  // FIXME: Something (maybe with the -moz-binding values) causes
-  // gElementF's frame to get lost.  Force it to get recreated after
-  // each property.
-  gElementF.parentNode.style.display = "none";
+  // FIXME -moz-binding value makes gElementF and its parent loses
+  // their frame. Force it to get recreated after each property.
+  // See bug 1331903.
+  gDisplayTree.style.display = "none";
   get_computed_value(getComputedStyle(gElementF, ""), "width");
-  gElementF.parentNode.style.display = "";
+  gDisplayTree.style.display = "";
   get_computed_value(getComputedStyle(gElementF, ""), "width");
 }
 

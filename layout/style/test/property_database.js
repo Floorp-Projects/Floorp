@@ -3959,8 +3959,13 @@ var gCSSProperties = {
     domProp: "width",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    /* computed value tests for width test more with display:block */
-    prerequisites: { "display": "block" },
+    prerequisites: {
+      // computed value tests for width test more with display:block
+      "display": "block",
+      // add some margin to avoid the initial "auto" value getting
+      // resolved to the same length as the parent element.
+      "margin-left": "5px",
+    },
     initial_values: [ " auto" ],
     /* XXX these have prerequisites */
     other_values: [ "15px", "3em", "15%",
@@ -5106,7 +5111,12 @@ var gCSSProperties = {
     get_computed: logical_axis_prop_get_computed,
     /* XXX testing auto has prerequisites */
     initial_values: [ "auto" ],
-    prerequisites: { "display": "block" },
+    prerequisites: {
+      "display": "block",
+      // add some margin to avoid the initial "auto" value getting
+      // resolved to the same length as the parent element.
+      "margin-left": "5px",
+    },
     other_values: [ "15px", "3em", "15%",
       // these three keywords compute to the initial value only when the
       // writing mode is vertical, and we're testing with a horizontal
