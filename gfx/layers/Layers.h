@@ -2510,6 +2510,11 @@ public:
     ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
   }
 
+  const BorderColors& GetColors() { return mColors; }
+  const LayerRect& GetRect() { return mRect; }
+  const BorderCorners& GetCorners() { return mCorners; }
+  const BorderWidths& GetWidths() { return mWidths; }
+
 protected:
   BorderLayer(LayerManager* aManager, void* aImplData)
     : Layer(aManager, aImplData)

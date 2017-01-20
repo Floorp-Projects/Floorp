@@ -1567,6 +1567,8 @@ SetPropIRGenerator::tryAttachStub()
                 return true;
             if (tryAttachUnboxedProperty(obj, objId, id, rhsValId))
                 return true;
+            if (tryAttachTypedObjectProperty(obj, objId, id, rhsValId))
+                return true;
         }
         return false;
     }
@@ -1697,5 +1699,63 @@ SetPropIRGenerator::tryAttachUnboxedProperty(HandleObject obj, ObjOperandId objI
 
     setUpdateStubInfo(id);
     preliminaryObjectAction_ = PreliminaryObjectAction::Unlink;
+    return true;
+}
+
+bool
+SetPropIRGenerator::tryAttachTypedObjectProperty(HandleObject obj, ObjOperandId objId, HandleId id,
+                                                 ValOperandId rhsId)
+{
+    if (!obj->is<TypedObject>() || !cx_->runtime()->jitSupportsFloatingPoint)
+        return false;
+
+    if (cx_->compartment()->detachedTypedObjects)
+        return false;
+
+    if (!obj->as<TypedObject>().typeDescr().is<StructTypeDescr>())
+        return false;
+
+    StructTypeDescr* structDescr = &obj->as<TypedObject>().typeDescr().as<StructTypeDescr>();
+    size_t fieldIndex;
+    if (!structDescr->fieldIndex(id, &fieldIndex))
+        return false;
+
+    TypeDescr* fieldDescr = &structDescr->fieldDescr(fieldIndex);
+    if (!fieldDescr->is<SimpleTypeDescr>())
+        return false;
+
+    uint32_t fieldOffset = structDescr->fieldOffset(fieldIndex);
+    TypedThingLayout layout = GetTypedThingLayout(obj->getClass());
+
+    writer.guardNoDetachedTypedObjects();
+    writer.guardShape(objId, obj->as<TypedObject>().shape());
+    writer.guardGroup(objId, obj->group());
+
+    setUpdateStubInfo(id);
+
+    // Scalar types can always be stored without a type update stub.
+    if (fieldDescr->is<ScalarTypeDescr>()) {
+        Scalar::Type type = fieldDescr->as<ScalarTypeDescr>().type();
+        writer.storeTypedObjectScalarProperty(objId, fieldOffset, layout, type, rhsId);
+        writer.returnFromIC();
+        return true;
+    }
+
+    // For reference types, guard on the RHS type first, so that
+    // StoreTypedObjectReferenceProperty is infallible.
+    ReferenceTypeDescr::Type type = fieldDescr->as<ReferenceTypeDescr>().type();
+    switch (type) {
+      case ReferenceTypeDescr::TYPE_ANY:
+        break;
+      case ReferenceTypeDescr::TYPE_OBJECT:
+        writer.guardIsObjectOrNull(rhsId);
+        break;
+      case ReferenceTypeDescr::TYPE_STRING:
+        writer.guardType(rhsId, JSVAL_TYPE_STRING);
+        break;
+    }
+
+    writer.storeTypedObjectReferenceProperty(objId, fieldOffset, layout, type, rhsId);
+    writer.returnFromIC();
     return true;
 }
