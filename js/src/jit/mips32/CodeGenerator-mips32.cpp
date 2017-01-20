@@ -490,7 +490,7 @@ CodeGeneratorMIPS::emitWasmLoadI64(T* lir)
     masm.memoryBarrier(mir->access().barrierBefore());
 
     MOZ_ASSERT(INT64LOW_OFFSET == 0);
-    if (mir->access().isUnaligned()) {
+    if (IsUnaligned(mir->access())) {
         Register temp = ToRegister(lir->getTemp(1));
 
         if (byteSize <= 4) {
@@ -577,7 +577,7 @@ CodeGeneratorMIPS::emitWasmStoreI64(T* lir)
     masm.memoryBarrier(mir->access().barrierBefore());
 
     MOZ_ASSERT(INT64LOW_OFFSET == 0);
-    if (mir->access().isUnaligned()) {
+    if (IsUnaligned(mir->access())) {
         Register temp = ToRegister(lir->getTemp(1));
 
         if (byteSize <= 4) {

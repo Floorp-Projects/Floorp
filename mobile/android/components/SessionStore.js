@@ -180,6 +180,7 @@ SessionStore.prototype = {
         observerService.addObserver(this, "domwindowopened", true);
         observerService.addObserver(this, "domwindowclosed", true);
         observerService.addObserver(this, "browser:purge-session-history", true);
+        observerService.addObserver(this, "browser:purge-session-tabs", true);
         observerService.addObserver(this, "quit-application-requested", true);
         observerService.addObserver(this, "quit-application-proceeding", true);
         observerService.addObserver(this, "quit-application", true);
@@ -236,8 +237,9 @@ SessionStore.prototype = {
         this._loadState = STATE_QUITTING_FLUSHED;
 
         break;
+      case "browser:purge-session-tabs":
       case "browser:purge-session-history": // catch sanitization
-        log("browser:purge-session-history");
+        log(aTopic);
         this._clearDisk();
 
         // Clear all data about closed tabs
@@ -1780,6 +1782,12 @@ SessionStore.prototype = {
   },
 
   _sendClosedTabsToJava: function ss_sendClosedTabsToJava(aWindow) {
+
+    // If the app is shutting down, we don't need to do anything.
+    if (this._loadState <= STATE_QUITTING) {
+      return;
+    }
+
     if (!aWindow.__SSID) {
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
     }

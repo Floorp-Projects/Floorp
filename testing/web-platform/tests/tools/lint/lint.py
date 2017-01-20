@@ -13,6 +13,7 @@ from collections import defaultdict
 
 from . import fnmatch
 from ..localpaths import repo_root
+from ..gitignore.gitignore import PathFilter
 
 from manifest.sourcefile import SourceFile
 from six import iteritems, itervalues
@@ -39,10 +40,39 @@ def all_git_paths(repo_root):
     for item in output.split("\n"):
         yield item
 
+def all_filesystem_paths(repo_root):
+    path_filter = PathFilter(repo_root, extras=[".git/*"])
+    for dirpath, dirnames, filenames in os.walk(repo_root):
+        for filename in filenames:
+            path = os.path.relpath(os.path.join(dirpath, filename), repo_root)
+            if path_filter(path):
+                yield path
+        dirnames[:] = [item for item in dirnames if
+                       path_filter(os.path.relpath(os.path.join(dirpath, item) + "/",
+                                                   repo_root))]
+
+
+def all_paths(repo_root, ignore_local):
+    fn = all_git_paths if ignore_local else all_filesystem_paths
+    for item in fn(repo_root):
+        yield item
 
 def check_path_length(repo_root, path):
     if len(path) + 1 > 150:
-        return [("PATH LENGTH", "/%s longer than maximum path length (%d > 150)" % (path, len(path) + 1), None)]
+        return [("PATH LENGTH", "/%s longer than maximum path length (%d > 150)" % (path, len(path) + 1), path, None)]
+    return []
+
+
+def check_worker_collision(repo_root, path):
+    endings = [(".any.html", ".any.js"),
+               (".any.worker.html", ".any.js"),
+               (".worker.html", ".worker.js")]
+    for path_ending, generated in endings:
+        if path.endswith(path_ending):
+            return [("WORKER COLLISION",
+                     "path ends with %s which collides with generated tests from %s files" % (path_ending, generated),
+                     path,
+                     None)]
     return []
 
 
@@ -87,7 +117,7 @@ def filter_whitelist_errors(data, path, errors):
     normpath = os.path.normcase(path)
 
     for file_match, whitelist_errors in iteritems(data):
-        if fnmatch.fnmatchcase(path, file_match):
+        if fnmatch.fnmatchcase(normpath, file_match):
             for i, (error_type, msg, path, line) in enumerate(errors):
                 if error_type in whitelist_errors:
                     allowed_lines = whitelist_errors[error_type]
@@ -183,6 +213,12 @@ def check_parsed(repo_root, path, f):
 
     if source_file.root is None:
         return [("PARSE-FAILED", "Unable to parse file", path, None)]
+
+    if source_file.type == "manual" and not source_file.name_is_manual:
+        return [("CONTENT-MANUAL", "Manual test whose filename doesn't end in '-manual'", path, None)]
+
+    if source_file.type == "visual" and not source_file.name_is_visual:
+        return [("CONTENT-VISUAL", "Visual test whose filename doesn't end in '-visual'", path, None)]
 
     if len(source_file.timeout_nodes) > 1:
         errors.append(("MULTIPLE-TIMEOUT", "More than one meta name='timeout'", path, None))
@@ -360,11 +396,13 @@ def parse_args():
                         help="List of paths to lint")
     parser.add_argument("--json", action="store_true",
                         help="Output machine-readable JSON format")
+    parser.add_argument("--ignore-local", action="store_true",
+                        help="Ignore locally added files in the working directory (requires git).")
     return parser.parse_args()
 
 def main():
     args = parse_args()
-    paths = args.paths if args.paths else all_git_paths(repo_root)
+    paths = args.paths if args.paths else all_paths(repo_root, args.ignore_local)
     return lint(repo_root, paths, args.json)
 
 def lint(repo_root, paths, output_json):
@@ -422,7 +460,7 @@ def lint(repo_root, paths, output_json):
             print(ERROR_MSG % (last[0], last[1], last[0], last[1]))
     return sum(itervalues(error_count))
 
-path_lints = [check_path_length]
+path_lints = [check_path_length, check_worker_collision]
 file_lints = [check_regexp_line, check_parsed, check_python_ast]
 
 if __name__ == "__main__":

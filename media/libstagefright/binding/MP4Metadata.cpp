@@ -35,6 +35,8 @@ using namespace stagefright;
 namespace mp4_demuxer
 {
 
+static LazyLogModule sLog("MP4Metadata");
+
 class DataSourceAdapter : public DataSource
 {
 public:
@@ -197,8 +199,6 @@ TrackTypeToString(mozilla::TrackInfo::TrackType aType)
 uint32_t
 MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
 {
-  static LazyLogModule sLog("MP4Metadata");
-
   uint32_t numTracks = mStagefright->GetNumberTracks(aType);
 
 #ifdef MOZ_RUST_MP4PARSE
@@ -616,7 +616,6 @@ bool
 RustStreamAdaptor::Read(uint8_t* buffer, uintptr_t size, size_t* bytes_read)
 {
   if (!mOffset.isValid()) {
-    static LazyLogModule sLog("MP4Metadata");
     MOZ_LOG(sLog, LogLevel::Error, ("Overflow in source stream offset"));
     return false;
   }
@@ -638,7 +637,6 @@ read_source(uint8_t* buffer, uintptr_t size, void* userdata)
   size_t bytes_read = 0;
   bool rv = source->Read(buffer, size, &bytes_read);
   if (!rv) {
-    static LazyLogModule sLog("MP4Metadata");
     MOZ_LOG(sLog, LogLevel::Warning, ("Error reading source data"));
     return -1;
   }
@@ -653,7 +651,10 @@ MP4MetadataRust::MP4MetadataRust(Stream* aSource)
   mRustParser.reset(mp4parse_new(&io));
   MOZ_ASSERT(mRustParser);
 
-  static LazyLogModule sLog("MP4Metadata");
+  if (MOZ_LOG_TEST(sLog, LogLevel::Debug)) {
+    mp4parse_log(true);
+  }
+
   mp4parse_error rv = mp4parse_read(mRustParser.get());
   MOZ_LOG(sLog, LogLevel::Debug, ("rust parser returned %d\n", rv));
   Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_SUCCESS,
@@ -701,8 +702,6 @@ TrackTypeEqual(TrackInfo::TrackType aLHS, mp4parse_track_type aRHS)
 uint32_t
 MP4MetadataRust::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
 {
-  static LazyLogModule sLog("MP4Metadata");
-
   uint32_t tracks;
   auto rv = mp4parse_get_track_count(mRustParser.get(), &tracks);
   if (rv != MP4PARSE_OK) {
@@ -762,8 +761,6 @@ mozilla::UniquePtr<mozilla::TrackInfo>
 MP4MetadataRust::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
                               size_t aTrackNumber) const
 {
-  static LazyLogModule sLog("MP4Metadata");
-
   Maybe<uint32_t> trackIndex = TrackTypeToGlobalTrackIndex(aType, aTrackNumber);
   if (trackIndex.isNothing()) {
     return nullptr;

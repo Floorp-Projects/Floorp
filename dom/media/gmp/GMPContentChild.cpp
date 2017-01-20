@@ -51,9 +51,7 @@ GMPContentChild::ProcessingError(Result aCode, const char* aReason)
 PGMPDecryptorChild*
 GMPContentChild::AllocPGMPDecryptorChild()
 {
-  GMPDecryptorChild* actor = new GMPDecryptorChild(this,
-                                                   mGMPChild->mPluginVoucher,
-                                                   mGMPChild->mSandboxVoucher);
+  GMPDecryptorChild* actor = new GMPDecryptorChild(this);
   actor->AddRef();
   return actor;
 }
@@ -99,10 +97,9 @@ mozilla::ipc::IPCResult
 GMPContentChild::RecvPGMPDecryptorConstructor(PGMPDecryptorChild* aActor)
 {
   GMPDecryptorChild* child = static_cast<GMPDecryptorChild*>(aActor);
-  GMPDecryptorHost* host = static_cast<GMPDecryptorHost*>(child);
 
   void* ptr = nullptr;
-  GMPErr err = mGMPChild->GetAPI(GMP_API_DECRYPTOR, host, &ptr, aActor->Id());
+  GMPErr err = mGMPChild->GetAPI(GMP_API_DECRYPTOR, nullptr, &ptr, aActor->Id());
   if (err != GMPNoErr || !ptr) {
     NS_WARNING("GMPGetAPI call failed trying to construct decryptor.");
     return IPC_FAIL_NO_REASON(this);

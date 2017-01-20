@@ -29,9 +29,6 @@ add_task(function* () {
     document.querySelectorAll("#details-pane tab")[5]);
   yield wait;
 
-  is(document.querySelector("#security-error"), null, "Error box is hidden.");
-  ok(document.querySelector("#security-information"), "Information box visible.");
-
   let tabpanel = document.querySelector("#security-tabpanel");
   let textboxes = tabpanel.querySelectorAll(".textbox-input");
 

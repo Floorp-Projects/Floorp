@@ -6,6 +6,7 @@
 package org.mozilla.gecko.icons.storage;
 
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.support.annotation.VisibleForTesting;
 import android.util.LruCache;
 
@@ -39,14 +40,14 @@ public class FailureCache {
     /**
      * Remember this icon URL after loading from it (over the network) has failed.
      */
-    public void rememberFailure(String iconUrl) {
+    public void rememberFailure(@NonNull String iconUrl) {
         cache.put(iconUrl, SystemClock.elapsedRealtime());
     }
 
     /**
      * Has loading from this URL failed previously and recently?
      */
-    public boolean isKnownFailure(String iconUrl) {
+    public boolean isKnownFailure(@NonNull String iconUrl) {
         synchronized (cache) {
             final Long failedAt = cache.get(iconUrl);
             if (failedAt == null) {

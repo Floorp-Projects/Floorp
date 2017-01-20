@@ -766,6 +766,137 @@ BaselineCacheIRCompiler::emitStoreDynamicSlot()
 }
 
 bool
+BaselineCacheIRCompiler::emitStoreUnboxedProperty()
+{
+    ObjOperandId objId = reader.objOperandId();
+    JSValueType fieldType = reader.valueType();
+    Address offsetAddr = stubAddress(reader.stubOffset());
+
+    // Allocate the fixed registers first. These need to be fixed for
+    // callTypeUpdateIC.
+    AutoStubFrame stubFrame(*this);
+    AutoScratchRegister scratch(allocator, masm, R1.scratchReg());
+    ValueOperand val = allocator.useFixedValueRegister(masm, reader.valOperandId(), R0);
+
+    Register obj = allocator.useRegister(masm, objId);
+
+    // We only need the type update IC if we are storing an object.
+    if (fieldType == JSVAL_TYPE_OBJECT) {
+        LiveGeneralRegisterSet saveRegs;
+        saveRegs.add(obj);
+        saveRegs.add(val);
+        if (!callTypeUpdateIC(stubFrame, obj, val, scratch, saveRegs))
+            return false;
+    }
+
+    masm.load32(offsetAddr, scratch);
+    BaseIndex fieldAddr(obj, scratch, TimesOne);
+
+    // Note that the storeUnboxedProperty call here is infallible, as the
+    // IR emitter is responsible for guarding on |val|'s type.
+    EmitUnboxedPreBarrierForBaseline(masm, fieldAddr, fieldType);
+    masm.storeUnboxedProperty(fieldAddr, fieldType,
+                              ConstantOrRegister(TypedOrValueRegister(val)),
+                              /* failure = */ nullptr);
+
+    if (UnboxedTypeNeedsPostBarrier(fieldType))
+        BaselineEmitPostWriteBarrierSlot(masm, obj, val, scratch, LiveGeneralRegisterSet(), cx_);
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitStoreTypedObjectReferenceProperty()
+{
+    ObjOperandId objId = reader.objOperandId();
+    Address offsetAddr = stubAddress(reader.stubOffset());
+    TypedThingLayout layout = reader.typedThingLayout();
+    ReferenceTypeDescr::Type type = reader.referenceTypeDescrType();
+
+    // Allocate the fixed registers first. These need to be fixed for
+    // callTypeUpdateIC.
+    AutoStubFrame stubFrame(*this);
+    AutoScratchRegister scratch1(allocator, masm, R1.scratchReg());
+    ValueOperand val = allocator.useFixedValueRegister(masm, reader.valOperandId(), R0);
+
+    Register obj = allocator.useRegister(masm, objId);
+
+    // We don't need a type update IC if the property is always a string.
+    if (type != ReferenceTypeDescr::TYPE_STRING) {
+        LiveGeneralRegisterSet saveRegs;
+        saveRegs.add(obj);
+        saveRegs.add(val);
+        if (!callTypeUpdateIC(stubFrame, obj, val, scratch1, saveRegs))
+            return false;
+    }
+
+    // Compute the address being written to.
+    LoadTypedThingData(masm, layout, obj, scratch1);
+    masm.addPtr(offsetAddr, scratch1);
+    Address dest(scratch1, 0);
+
+    // To avoid running out of registers on x86, use ICStubReg as second
+    // scratch. It won't be used after this.
+    Register scratch2 = ICStubReg;
+
+    switch (type) {
+      case ReferenceTypeDescr::TYPE_ANY:
+        EmitPreBarrier(masm, dest, MIRType::Value);
+        masm.storeValue(val, dest);
+        break;
+
+      case ReferenceTypeDescr::TYPE_OBJECT: {
+        EmitPreBarrier(masm, dest, MIRType::Object);
+        Label isNull, done;
+        masm.branchTestObject(Assembler::NotEqual, val, &isNull);
+        masm.unboxObject(val, scratch2);
+        masm.storePtr(scratch2, dest);
+        masm.jump(&done);
+        masm.bind(&isNull);
+        masm.storePtr(ImmWord(0), dest);
+        masm.bind(&done);
+        break;
+      }
+
+      case ReferenceTypeDescr::TYPE_STRING:
+        EmitPreBarrier(masm, dest, MIRType::String);
+        masm.unboxString(val, scratch2);
+        masm.storePtr(scratch2, dest);
+        break;
+    }
+
+    if (type != ReferenceTypeDescr::TYPE_STRING)
+        BaselineEmitPostWriteBarrierSlot(masm, obj, val, scratch1, LiveGeneralRegisterSet(), cx_);
+
+    return true;
+}
+
+bool
+BaselineCacheIRCompiler::emitStoreTypedObjectScalarProperty()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    Address offsetAddr = stubAddress(reader.stubOffset());
+    TypedThingLayout layout = reader.typedThingLayout();
+    Scalar::Type type = reader.scalarType();
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+    AutoScratchRegister scratch1(allocator, masm);
+    AutoScratchRegister scratch2(allocator, masm);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Compute the address being written to.
+    LoadTypedThingData(masm, layout, obj, scratch1);
+    masm.addPtr(offsetAddr, scratch1);
+    Address dest(scratch1, 0);
+
+    BaselineStoreToTypedArray(cx_, masm, type, val, dest, scratch2,
+                              failure->label(), failure->label());
+
+    return true;
+}
+
+bool
 BaselineCacheIRCompiler::emitTypeMonitorResult()
 {
     allocator.discardStack(masm);
@@ -965,7 +1096,7 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
             auto otherStub = iter->toCacheIR_Monitored();
             if (otherStub->stubInfo() != stubInfo)
                 continue;
-            if (!writer.stubDataEquals(otherStub->stubDataStart()))
+            if (!writer.stubDataEqualsMaybeUpdate(otherStub->stubDataStart()))
                 continue;
             break;
           }
@@ -975,7 +1106,7 @@ jit::AttachBaselineCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
             auto otherStub = iter->toCacheIR_Updated();
             if (otherStub->stubInfo() != stubInfo)
                 continue;
-            if (!writer.stubDataEquals(otherStub->stubDataStart()))
+            if (!writer.stubDataEqualsMaybeUpdate(otherStub->stubDataStart()))
                 continue;
             break;
           }

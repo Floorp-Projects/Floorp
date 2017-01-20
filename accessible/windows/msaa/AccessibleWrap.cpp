@@ -90,10 +90,11 @@ void
 AccessibleWrap::Shutdown()
 {
   if (mID != kNoID) {
-    auto doc = static_cast<DocAccessibleWrap*>(mDoc);
+    auto doc = static_cast<DocAccessibleWrap*>(mDoc.get());
     MOZ_ASSERT(doc);
     if (doc) {
       doc->RemoveID(mID);
+      mID = kNoID;
     }
   }
 

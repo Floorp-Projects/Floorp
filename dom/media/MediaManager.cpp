@@ -175,6 +175,7 @@ HostIsHttps(nsIURI &docURI)
  */
 class GetUserMediaCallbackMediaStreamListener : public MediaStreamListener
 {
+  friend MediaManager;
 public:
   // Create in an inactive state
   GetUserMediaCallbackMediaStreamListener(base::Thread *aThread,
@@ -2749,15 +2750,97 @@ MediaManager::RemoveFromWindowList(uint64_t aWindowID,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  nsString videoRawId;
+  nsString audioRawId;
+  nsString videoSourceType;
+  nsString audioSourceType;
+  bool hasVideoDevice = aListener->mVideoDevice;
+  bool hasAudioDevice = aListener->mAudioDevice;
+
+  if (hasVideoDevice) {
+    aListener->mVideoDevice->GetRawId(videoRawId);
+    aListener->mVideoDevice->GetMediaSource(videoSourceType);
+  }
+  if (hasAudioDevice) {
+    aListener->mAudioDevice->GetRawId(audioRawId);
+    aListener->mAudioDevice->GetMediaSource(audioSourceType);
+  }
+
   // This is defined as safe on an inactive GUMCMSListener
   aListener->Remove(); // really queues the remove
 
   StreamListeners* listeners = GetWindowListeners(aWindowID);
   if (!listeners) {
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    auto* globalWindow = nsGlobalWindow::GetInnerWindowWithId(aWindowID);
+    RefPtr<nsPIDOMWindowInner> window = globalWindow ? globalWindow->AsInner()
+                                                     : nullptr;
+    if (window != nullptr) {
+      RefPtr<GetUserMediaRequest> req =
+        new GetUserMediaRequest(window, NullString(), NullString());
+      obs->NotifyObservers(req, "recording-device-stopped", nullptr);
+    }
     return;
   }
   listeners->RemoveElement(aListener);
-  if (listeners->Length() == 0) {
+
+  uint32_t length = listeners->Length();
+
+  if (hasVideoDevice) {
+    bool revokeVideoPermission = true;
+
+    for (uint32_t i = 0; i < length; ++i) {
+      RefPtr<GetUserMediaCallbackMediaStreamListener> listener =
+        listeners->ElementAt(i);
+      if (hasVideoDevice && listener->mVideoDevice) {
+        nsString rawId;
+        listener->mVideoDevice->GetRawId(rawId);
+        if (videoRawId.Equals(rawId)) {
+          revokeVideoPermission = false;
+          break;
+        }
+      }
+    }
+
+    if (revokeVideoPermission) {
+      nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+      auto* globalWindow = nsGlobalWindow::GetInnerWindowWithId(aWindowID);
+      RefPtr<nsPIDOMWindowInner> window = globalWindow ? globalWindow->AsInner()
+                                                       : nullptr;
+      RefPtr<GetUserMediaRequest> req =
+        new GetUserMediaRequest(window, videoRawId, videoSourceType);
+      obs->NotifyObservers(req, "recording-device-stopped", nullptr);
+    }
+  }
+
+  if (hasAudioDevice) {
+    bool revokeAudioPermission = true;
+
+    for (uint32_t i = 0; i < length; ++i) {
+      RefPtr<GetUserMediaCallbackMediaStreamListener> listener =
+        listeners->ElementAt(i);
+      if (hasAudioDevice && listener->mAudioDevice) {
+        nsString rawId;
+        listener->mAudioDevice->GetRawId(rawId);
+        if (audioRawId.Equals(rawId)) {
+          revokeAudioPermission = false;
+          break;
+        }
+      }
+    }
+
+    if (revokeAudioPermission) {
+      nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+      auto* globalWindow = nsGlobalWindow::GetInnerWindowWithId(aWindowID);
+      RefPtr<nsPIDOMWindowInner> window = globalWindow ? globalWindow->AsInner()
+                                                       : nullptr;
+      RefPtr<GetUserMediaRequest> req =
+        new GetUserMediaRequest(window, audioRawId, audioSourceType);
+      obs->NotifyObservers(req, "recording-device-stopped", nullptr);
+    }
+  }
+
+  if (length == 0) {
     RemoveWindowID(aWindowID);
     // listeners has been deleted here
   }

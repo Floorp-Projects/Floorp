@@ -978,6 +978,14 @@ nsFormFillController::MaybeStartControllingInput(nsIDOMHTMLInputElement* aInput)
   if (mPwmgrInputs.Get(inputNode))
       isPwmgrInput = true;
 
+  // Don't show autocomplete on password fields regardless of datalist or
+  // autocomplete being enabled as we don't want to show form history on them.
+  // The GetType() check was more readable than !formControl->IsSingleLineTextControl(true)
+  // but this logic should be kept in-sync with that.
+  if (formControl->GetType() == NS_FORM_INPUT_PASSWORD && !isPwmgrInput) {
+    return;
+  }
+
   if (isPwmgrInput || hasList || autocomplete) {
     StartControllingInput(aInput);
   }

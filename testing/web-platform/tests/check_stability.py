@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import argparse
 import json
 import logging
@@ -12,6 +14,7 @@ import zipfile
 from cStringIO import StringIO
 from collections import defaultdict
 from urlparse import urljoin
+from tools.manifest import manifest
 
 import requests
 
@@ -24,7 +27,6 @@ TbplFormatter = None
 reader = None
 wptcommandline = None
 wptrunner = None
-
 
 logger = logging.getLogger(os.path.splitext(__file__)[0])
 
@@ -75,14 +77,26 @@ def setup_action_filter():
                 return self.inner(item)
 
 
+class TravisFold(object):
+    def __init__(self, name):
+        self.name = name
+
+    def __enter__(self):
+        print("travis_fold:start:%s" % self.name, file=sys.stderr)
+
+    def __exit__(self, type, value, traceback):
+        print("travis_fold:end:%s" % self.name, file=sys.stderr)
+
+
 class GitHub(object):
-    def __init__(self, org, repo, token):
+    def __init__(self, org, repo, token, browser):
         self.token = token
         self.headers = {"Accept": "application/vnd.github.v3+json"}
         self.auth = (self.token, "x-oauth-basic")
         self.org = org
         self.repo = repo
         self.base_url = "https://api.github.com/repos/%s/%s/" % (org, repo)
+        self.browser = browser
 
     def _headers(self, headers):
         if headers is None:
@@ -104,6 +118,19 @@ class GitHub(object):
         resp.raise_for_status()
         return resp
 
+    def patch(self, url, data, headers=None):
+        logger.debug("PATCH %s" % url)
+        if data is not None:
+            data = json.dumps(data)
+        resp = requests.patch(
+            url,
+            data=data,
+            headers=self._headers(headers),
+            auth=self.auth
+        )
+        resp.raise_for_status()
+        return resp
+
     def get(self, url, headers=None):
         logger.debug("GET %s" % url)
         resp = requests.get(
@@ -115,8 +142,19 @@ class GitHub(object):
         return resp
 
     def post_comment(self, issue_number, body):
-        url = urljoin(self.base_url, "issues/%s/comments" % issue_number)
-        return self.post(url, {"body": body})
+        user = self.get(urljoin(self.base_url, "/user")).json()
+        issue_comments_url = urljoin(self.base_url, "issues/%s/comments" % issue_number)
+        comments = self.get(issue_comments_url).json()
+        title_line = "# %s #" % self.browser.title()
+        data = {"body": body}
+        for comment in comments:
+            if (comment["user"]["login"] == user["login"] and
+                comment["body"].startswith(title_line)):
+                comment_url = urljoin(self.base_url, "issues/comments/%s" % comment["id"])
+                self.patch(comment_url, data)
+                break
+        else:
+            self.post(issue_comments_url, data)
 
     def releases(self):
         url = urljoin(self.base_url, "releases/latest")
@@ -154,7 +192,7 @@ class Firefox(Browser):
 
     def install(self):
         call("pip", "install", "-r", "w3c/wptrunner/requirements_firefox.txt")
-        resp = get("https://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central/firefox-52.0a1.en-US.linux-x86_64.tar.bz2")
+        resp = get("https://archive.mozilla.org/pub/firefox/nightly/latest-mozilla-central/firefox-53.0a1.en-US.linux-x86_64.tar.bz2")
         untar(resp.raw)
 
         if not os.path.exists("profiles"):
@@ -178,7 +216,6 @@ class Firefox(Browser):
                     latest_release = version
         assert latest_release != 0
         return "v%s.%s.%s" % tuple(str(item) for item in latest_release)
-
 
     def install_webdriver(self):
         version = self._latest_geckodriver_version()
@@ -231,7 +268,13 @@ def get(url):
 
 def call(*args):
     logger.debug("%s" % " ".join(args))
-    return subprocess.check_output(args)
+    try:
+        return subprocess.check_output(args)
+    except subprocess.CalledProcessError as e:
+        logger.critical("%s exited with return code %i" %
+                        (e.cmd, e.returncode))
+        logger.critical(e.output)
+        raise
 
 
 def get_git_cmd(repo_path):
@@ -275,7 +318,7 @@ def unzip(fileobj):
 def setup_github_logging(args):
     gh_handler = None
     if args.comment_pr:
-        github = GitHub("w3c", "web-platform-tests", args.gh_token)
+        github = GitHub("w3c", "web-platform-tests", args.gh_token, args.browser)
         try:
             pr_number = int(args.comment_pr)
         except ValueError:
@@ -313,6 +356,7 @@ def get_sha1():
     git = get_git_cmd(os.path.join(os.path.abspath(os.curdir), "w3c", "web-platform-tests"))
     return git("rev-parse", "HEAD").strip()
 
+
 def build_manifest():
     with pwd(os.path.join(os.path.abspath(os.curdir), "w3c", "web-platform-tests")):
         # TODO: Call the manifest code directly
@@ -338,6 +382,52 @@ def get_files_changed():
     assert files[-1] == "\0"
     return ["%s/w3c/web-platform-tests/%s" % (root, item)
             for item in files[:-1].split("\0")]
+
+
+def get_affected_testfiles(files_changed):
+    affected_testfiles = []
+    all_tests = set()
+    nontests_changed = set(files_changed)
+    repo_root = os.path.abspath(os.path.join(os.path.abspath(os.curdir), "w3c", "web-platform-tests"))
+    manifest_file = os.path.join(repo_root, "MANIFEST.json")
+    for test, _ in manifest.load(repo_root, manifest_file):
+        test_full_path = os.path.join(repo_root, test)
+        all_tests.add(test_full_path)
+        if test_full_path in nontests_changed:
+            # Reduce the set of changed files to only non-tests.
+            nontests_changed.remove(test_full_path)
+    for changedfile_pathname in nontests_changed:
+        changed_file_repo_path = os.path.join(os.path.sep, os.path.relpath(changedfile_pathname, repo_root))
+        os.path.normpath(changed_file_repo_path)
+        path_components = changed_file_repo_path.split(os.sep)[1:]
+        if len(path_components) < 2:
+            # This changed file is in the repo root, so skip it
+            # (because it's not part of any test).
+            continue
+        top_level_subdir = path_components[0]
+        if top_level_subdir in ["conformance-checkers", "docs"]:
+            continue
+        # OK, this changed file is the kind we care about: It's something
+        # other than a test (e.g., it's a .js or .json file), and it's
+        # somewhere down beneath one of the top-level "spec" directories.
+        # So now we try to find any tests that reference it.
+        for root, dirs, fnames in os.walk(os.path.join(repo_root, top_level_subdir)):
+            # Walk top_level_subdir looking for test files containing either the
+            # relative filepath or absolute filepatch to the changed file.
+            for fname in fnames:
+                testfile_full_path = os.path.join(root, fname)
+                # Skip any test file that's already in files_changed.
+                if testfile_full_path in files_changed:
+                    continue
+                # Skip any file that's not a test file.
+                if testfile_full_path not in all_tests:
+                    continue
+                with open(testfile_full_path, "r") as fh:
+                    file_contents = fh.read()
+                    changed_file_relpath = os.path.relpath(changedfile_pathname, root).replace(os.path.sep, "/")
+                    if changed_file_relpath in file_contents or changed_file_repo_path.replace(os.path.sep, "/") in file_contents:
+                        affected_testfiles.append(testfile_full_path)
+    return affected_testfiles
 
 
 def wptrunner_args(root, files_changed, iterations, browser):
@@ -402,6 +492,14 @@ def process_results(log, iterations):
     return results, inconsistent
 
 
+def markdown_adjust(s):
+    s = s.replace('\t', u'\\t')
+    s = s.replace('\n', u'\\n')
+    s = s.replace('\r', u'\\r')
+    s = s.replace('`',  u'\\`')
+    return s
+
+
 def table(headings, data, log):
     cols = range(len(headings))
     assert all(len(item) == len(cols) for item in data)
@@ -420,8 +518,8 @@ def table(headings, data, log):
 
 def write_inconsistent(inconsistent, iterations):
     logger.error("## Unstable results ##\n")
-    strings = [(test, subtest if subtest else "", err_string(results, iterations))
-                for test, subtest, results in inconsistent]
+    strings = [("`%s`" % markdown_adjust(test), ("`%s`" % markdown_adjust(subtest)) if subtest else "", err_string(results, iterations))
+               for test, subtest, results in inconsistent]
     table(["Test", "Subtest", "Results"], strings, logger.error)
 
 
@@ -438,14 +536,19 @@ def write_results(results, iterations, comment_pr):
             except ValueError:
                 pass
         if pr_number:
-            logger.info("### [%s](%s/%s%s) ###" % (test, baseurl, pr_number, test))
+            logger.info("<details>\n")
+            logger.info('<summary><a href="%s/%s%s">%s</a></summary>\n\n' %
+                        (baseurl, pr_number, test, test))
         else:
             logger.info("### %s ###" % test)
         parent = test_results.pop(None)
         strings = [("", err_string(parent, iterations))]
-        strings.extend(((subtest if subtest else "", err_string(results, iterations))
+        strings.extend(((("`%s`" % markdown_adjust(subtest)) if subtest
+                         else "", err_string(results, iterations))
                         for subtest, results in test_results.iteritems()))
         table(["Subtest", "Results"], strings, logger.info)
+        if pr_number:
+            logger.info("</details>\n")
 
 
 def get_parser():
@@ -490,68 +593,71 @@ def main():
         logger.warning("Can't log to GitHub")
         gh_handler = None
 
-    print >> sys.stderr, "travis_fold:start:browser_setup"
-    logger.info("# %s #" % args.browser.title())
+    with TravisFold("browser_setup"):
+        logger.info("# %s #" % args.browser.title())
 
-    browser_cls = {"firefox": Firefox,
-                   "chrome": Chrome}.get(args.browser)
-    if browser_cls is None:
-        logger.critical("Unrecognised browser %s" % args.browser)
-        return 1
+        browser_cls = {"firefox": Firefox,
+                       "chrome": Chrome}.get(args.browser)
+        if browser_cls is None:
+            logger.critical("Unrecognised browser %s" % args.browser)
+            return 1
 
-    fetch_wpt_master()
+        fetch_wpt_master()
 
-    head_sha1 = get_sha1()
-    logger.info("Testing revision %s" % head_sha1)
+        head_sha1 = get_sha1()
+        logger.info("Testing revision %s" % head_sha1)
 
-    # For now just pass the whole list of changed files to wptrunner and
-    # assume that it will run everything that's actually a test
-    files_changed = get_files_changed()
+        # For now just pass the whole list of changed files to wptrunner and
+        # assume that it will run everything that's actually a test
+        files_changed = get_files_changed()
 
-    if not files_changed:
-        logger.info("No files changed")
-        return 0
+        if not files_changed:
+            logger.info("No files changed")
+            return 0
 
-    build_manifest()
-    install_wptrunner()
-    do_delayed_imports()
+        build_manifest()
+        install_wptrunner()
+        do_delayed_imports()
 
-    logger.debug("Files changed:\n%s" % "".join(" * %s\n" % item for item in files_changed))
+        logger.debug("Files changed:\n%s" % "".join(" * %s\n" % item for item in files_changed))
 
-    browser = browser_cls(args.gh_token)
+        affected_testfiles = get_affected_testfiles(files_changed)
 
-    browser.install()
-    browser.install_webdriver()
+        logger.debug("Affected tests:\n%s" % "".join(" * %s\n" % item for item in affected_testfiles))
 
-    kwargs = wptrunner_args(args.root,
-                            files_changed,
-                            args.iterations,
-                            browser)
+        files_changed.extend(affected_testfiles)
 
-    print >> sys.stderr, "travis_fold:end:browser_setup"
-    print >> sys.stderr, "travis_fold:start:running_tests"
-    logger.info("Starting %i test iterations" % args.iterations)
-    with open("raw.log", "wb") as log:
-        wptrunner.setup_logging(kwargs,
-                                {"raw": log})
-        # Setup logging for wptrunner that keeps process output and
-        # warning+ level logs only
-        wptrunner.logger.add_handler(
-            LogActionFilter(
-                LogLevelFilter(
-                    StreamHandler(
-                        sys.stdout,
-                        TbplFormatter()
-                    ),
-                    "WARNING"),
-                ["log", "process_output"]))
+        browser = browser_cls(args.gh_token)
 
-        wptrunner.run_tests(**kwargs)
+        browser.install()
+        browser.install_webdriver()
 
-    with open("raw.log", "rb") as log:
-        results, inconsistent = process_results(log, args.iterations)
+        kwargs = wptrunner_args(args.root,
+                                files_changed,
+                                args.iterations,
+                                browser)
 
-    print >> sys.stderr, "travis_fold:end:running_tests"
+    with TravisFold("running_tests"):
+        logger.info("Starting %i test iterations" % args.iterations)
+        with open("raw.log", "wb") as log:
+            wptrunner.setup_logging(kwargs,
+                                    {"raw": log})
+            # Setup logging for wptrunner that keeps process output and
+            # warning+ level logs only
+            wptrunner.logger.add_handler(
+                LogActionFilter(
+                    LogLevelFilter(
+                        StreamHandler(
+                            sys.stdout,
+                            TbplFormatter()
+                        ),
+                        "WARNING"),
+                    ["log", "process_output"]))
+
+            wptrunner.run_tests(**kwargs)
+
+        with open("raw.log", "rb") as log:
+            results, inconsistent = process_results(log, args.iterations)
 
     if results:
         if inconsistent:
@@ -559,9 +665,8 @@ def main():
             retcode = 2
         else:
             logger.info("All results were stable\n")
-        print >> sys.stderr, "travis_fold:start:full_results"
-        write_results(results, args.iterations, args.comment_pr)
-        print >> sys.stderr, "travis_fold:end:full_results"
+        with TravisFold("full_results"):
+            write_results(results, args.iterations, args.comment_pr)
     else:
         logger.info("No tests run.")
 

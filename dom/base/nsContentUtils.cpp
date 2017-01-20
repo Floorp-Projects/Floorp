@@ -9699,28 +9699,14 @@ nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel)
     return false;
   }
 
-  nsIDocument* doc = outer->GetExtantDoc();
-
   if (!XRE_IsContentProcess()) {
-    if (doc) {
-      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      NS_LITERAL_CSTRING("DOM"),
-                                      doc,
-                                      nsContentUtils::eDOM_PROPERTIES,
-                                      "LargeAllocationNonE10S");
-    }
+    outer->SetLargeAllocStatus(LargeAllocStatus::NON_E10S);
     return false;
   }
 
   nsIDocShell* docShell = outer->GetDocShell();
   if (!docShell->GetIsOnlyToplevelInTabGroup()) {
-    if (doc) {
-      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      NS_LITERAL_CSTRING("DOM"),
-                                      doc,
-                                      nsContentUtils::eDOM_PROPERTIES,
-                                      "LargeAllocationNotOnlyToplevelInTabGroup");
-    }
+    outer->SetLargeAllocStatus(LargeAllocStatus::NOT_ONLY_TOPLEVEL_IN_TABGROUP);
     return false;
   }
 
@@ -9731,28 +9717,16 @@ nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel)
   NS_ENSURE_SUCCESS(rv, false);
 
   if (NS_WARN_IF(!requestMethod.LowerCaseEqualsLiteral("get"))) {
-    if (doc) {
-      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                      NS_LITERAL_CSTRING("DOM"),
-                                      doc,
-                                      nsContentUtils::eDOM_PROPERTIES,
-                                      "LargeAllocationNonGetRequest");
-    }
+    outer->SetLargeAllocStatus(LargeAllocStatus::NON_GET);
     return false;
   }
 
-  TabChild* tabChild = TabChild::GetFrom(outer);
+  TabChild* tabChild = TabChild::GetFrom(outer->AsOuter());
   NS_ENSURE_TRUE(tabChild, false);
 
   if (tabChild->TakeIsFreshProcess())  {
     NS_WARNING("Already in a fresh process, ignoring Large-Allocation header!");
-    if (doc) {
-      nsContentUtils::ReportToConsole(nsIScriptError::infoFlag,
-                                      NS_LITERAL_CSTRING("DOM"),
-                                      doc,
-                                      nsContentUtils::eDOM_PROPERTIES,
-                                      "LargeAllocationSuccess");
-    }
+    outer->SetLargeAllocStatus(LargeAllocStatus::SUCCESS);
     return false;
   }
 

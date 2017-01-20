@@ -238,6 +238,7 @@ const gXPInstallObserver = {
     switch (aTopic) {
     case "addon-install-disabled": {
       notificationID = "xpinstall-disabled";
+      let secondaryActions = null;
 
       if (gPrefService.prefIsLocked("xpinstall.enabled")) {
         messageString = gNavigatorBundle.getString("xpinstallDisabledMessageLocked");
@@ -252,14 +253,23 @@ const gXPInstallObserver = {
             gPrefService.setBoolPref("xpinstall.enabled", true);
           }
         };
+
+        secondaryActions = [{
+          label: gNavigatorBundle.getString("addonInstall.cancelButton.label"),
+          accessKey: gNavigatorBundle.getString("addonInstall.cancelButton.accesskey"),
+          callback: () => {},
+        }];
       }
 
       PopupNotifications.show(browser, notificationID, messageString, anchorID,
-                              action, null, options);
+                              action, secondaryActions, options);
       break; }
     case "addon-install-origin-blocked": {
       messageString = gNavigatorBundle.getFormattedString("xpinstallPromptMessage",
                         [brandShortName]);
+
+      options.removeOnDismissal = true;
+      options.persistent = false;
 
       let secHistogram = Components.classes["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry).getHistogramById("SECURITY_UI");
       secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_ADDON_ASKING_PREVENTED);
@@ -350,6 +360,9 @@ const gXPInstallObserver = {
 
       break; }
     case "addon-install-failed": {
+      options.removeOnDismissal = true;
+      options.persistent = false;
+
       // TODO This isn't terribly ideal for the multiple failure case
       for (let install of installInfo.installs) {
         let host;
@@ -489,7 +502,8 @@ const gExtensionsNotifications = {
 
   updateAlerts() {
     let sideloaded = ExtensionsUI.sideloaded;
-    if (sideloaded.size == 0) {
+    let updates = ExtensionsUI.updates;
+    if (sideloaded.size + updates.size == 0) {
       gMenuButtonBadgeManager.removeBadge(gMenuButtonBadgeManager.BADGEID_ADDONS);
     } else {
       gMenuButtonBadgeManager.addBadge(gMenuButtonBadgeManager.BADGEID_ADDONS,
@@ -506,6 +520,23 @@ const gExtensionsNotifications = {
     const DEFAULT_EXTENSION_ICON =
       "chrome://mozapps/skin/extensions/extensionGeneric.svg";
     let items = 0;
+    for (let update of updates) {
+      if (++items > 4) {
+        break;
+      }
+      let button = document.createElement("toolbarbutton");
+      button.setAttribute("label", `"${update.addon.name}" requires new permissions`);
+
+      let icon = update.addon.iconURL || DEFAULT_EXTENSION_ICON;
+      button.setAttribute("image", icon);
+
+      button.addEventListener("click", evt => {
+        ExtensionsUI.showUpdate(gBrowser, update);
+      });
+
+      container.appendChild(button);
+    }
+
     for (let addon of sideloaded) {
       if (++items > 4) {
         break;
