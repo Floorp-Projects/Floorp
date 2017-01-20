@@ -746,30 +746,6 @@ EventSourceImpl::ParseSegment(const char* aBuffer, uint32_t aLength)
   }
 }
 
-class DataAvailableRunnable final : public Runnable
-{
-  private:
-    RefPtr<EventSourceImpl> mEventSourceImpl;
-    UniquePtr<char[]> mData;
-    uint32_t mLength;
-  public:
-    DataAvailableRunnable(EventSourceImpl* aEventSourceImpl,
-                          UniquePtr<char[]> aData,
-                          uint32_t aLength)
-      : Runnable("dom::DataAvailableRunnable")
-      , mEventSourceImpl(aEventSourceImpl)
-      , mData(Move(aData))
-      , mLength(aLength)
-    {
-    }
-
-    NS_IMETHOD Run() override
-    {
-      mEventSourceImpl->ParseSegment(mData.get(), mLength);
-      return NS_OK;
-    }
-};
-
 NS_IMETHODIMP
 EventSourceImpl::OnDataAvailable(nsIRequest* aRequest,
                                  nsISupports* aContext,
@@ -777,8 +753,7 @@ EventSourceImpl::OnDataAvailable(nsIRequest* aRequest,
                                  uint64_t aOffset,
                                  uint32_t aCount)
 {
-  // Although we try to retarget OnDataAvailable to target thread, it may fail
-  // and fallback to main thread.
+  AssertIsOnTargetThread();
   NS_ENSURE_ARG_POINTER(aInputStream);
   if (IsClosed()) {
     return NS_ERROR_ABORT;
@@ -788,28 +763,8 @@ EventSourceImpl::OnDataAvailable(nsIRequest* aRequest,
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t totalRead;
-  if (IsTargetThread()) {
-    rv = aInputStream->ReadSegments(EventSourceImpl::StreamReaderFunc, this,
+  return aInputStream->ReadSegments(EventSourceImpl::StreamReaderFunc, this,
                                     aCount, &totalRead);
-  } else {
-    // This could be happened when fail to retarget to target thread and
-    // fallback to the main thread.
-    AssertIsOnMainThread();
-    auto data = MakeUniqueFallible<char[]>(aCount);
-    if (!data) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    rv = aInputStream->Read(data.get(), aCount, &totalRead);
-    NS_ENSURE_SUCCESS(rv, rv);
-    MOZ_ASSERT(totalRead <= aCount, "EventSource read more than available!!");
-
-    nsCOMPtr<nsIRunnable> dataAvailable =
-      new DataAvailableRunnable(this, Move(data), totalRead);
-
-    MOZ_ASSERT(mWorkerPrivate);
-    rv = Dispatch(dataAvailable.forget(), NS_DISPATCH_NORMAL);
-  }
-  return rv;
 }
 
 NS_IMETHODIMP
