@@ -24,7 +24,6 @@ BoxObject implements LegacyQueryInterface;
 CaretPosition implements LegacyQueryInterface;
 Comment implements LegacyQueryInterface;
 Crypto implements LegacyQueryInterface;
-CSSMozDocumentRule implements LegacyQueryInterface;
 CSSPrimitiveValue implements LegacyQueryInterface;
 CSSStyleDeclaration implements LegacyQueryInterface;
 CSSStyleRule implements LegacyQueryInterface;
