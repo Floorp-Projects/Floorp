@@ -110,6 +110,8 @@ function startIframe(url) {
 async function runTests() {
   SimpleTest.waitForExplicitFinish();
   SimpleTest.requestFlakyTimeout("async link coloring");
+  // Set caret to a known size, for tests of :visited caret-color styling
+  await SpecialPowers.pushPrefEnv({'set': [['ui.caretWidth', 16]]});
   await startIframe("visited-page.html");
   await Promise.all(gTests.map(runTest));
   SimpleTest.finish();
@@ -158,7 +160,7 @@ async function runTest(testLine) {
     if (needsFocus) {
       await SimpleTest.promiseFocus(testWindow, false);
     }
-    testSnapshot = snapshotWindow(testWindow);
+    testSnapshot = snapshotWindow(testWindow, true);
     if (passes(isEqual, testSnapshot, refSnapshot)) {
       if (tries > gMaxPassingTries) {
         gMaxPassingTries = tries;
