@@ -11,18 +11,81 @@
 #include "mozilla/gfx/Types.h"
 
 extern "C" {
+
+// ----
+// Functions invoked from Rust code
+// ----
+
 bool is_in_compositor_thread();
 bool is_in_render_thread();
 void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname);
 
-enum class WrImageFormat {
-    Invalid,
-    A8,
-    RGB8,
-    RGBA8,
-    RGBAF32,
+// -----
+// Enums used in C++ code with corresponding enums in Rust code
+// -----
 
-    Sentinel /* this must be last, for IPC serialization purposes */
+enum class WrImageFormat
+{
+  Invalid,
+  A8,
+  RGB8,
+  RGBA8,
+  RGBAF32,
+
+  Sentinel /* this must be last, for IPC serialization purposes */
+};
+
+enum class WrBorderStyle
+{
+  None,
+  Solid,
+  Double,
+  Dotted,
+  Dashed,
+  Hidden,
+  Groove,
+  Ridge,
+  Inset,
+  Outset,
+
+  Sentinel /* this must be last, for IPC serialization purposes */
+};
+
+enum class WrTextureFilter
+{
+  Linear,
+  Point,
+
+  Sentinel /* this must be last, for IPC serialization purposes */
+};
+
+enum class WrExternalImageIdType
+{
+  TEXTURE_HANDLE, // Currently, we only support gl texture handle.
+  // TODO(Jerry): handle shmem or cpu raw buffers.
+  //// MEM_OR_SHMEM,
+};
+
+enum class WrMixBlendMode
+{
+  Normal,
+  Multiply,
+  Screen,
+  Overlay,
+  Darken,
+  Lighten,
+  ColorDodge,
+  ColorBurn,
+  HardLight,
+  SoftLight,
+  Difference,
+  Exclusion,
+  Hue,
+  Saturation,
+  Color,
+  Luminosity,
+
+  Sentinel /* this must be last, for IPC serialization purposes */
 };
 
 #ifdef DEBUG
@@ -30,8 +93,10 @@ enum class WrImageFormat {
 // we use |enum class| in this file (to avoid polluting the global namespace)
 // but Rust assumes |enum|. If there is a size mismatch that could lead to
 // problems with values being corrupted across the language boundary.
-class DebugEnumSizeChecker { // scope the enum to the class
-  enum DummyWrImageFormatEnum {
+class DebugEnumSizeChecker
+{ // scope the enum to the class
+  enum DummyWrImageFormatEnum
+  {
     Invalid,
     A8,
     RGB8,
@@ -45,30 +110,43 @@ class DebugEnumSizeChecker { // scope the enum to the class
 };
 #endif
 
+// -----
+// Typedefs for struct fields and function signatures below.
+// -----
+
 typedef uint64_t WrWindowId;
 typedef uint64_t WrImageKey;
 typedef uint64_t WrFontKey;
 typedef uint64_t WrPipelineId;
 typedef uint32_t WrEpoch;
+typedef uint64_t WrImageIdType;
 
-struct WrColor {
+// -----
+// Structs used in C++ code with corresponding types in Rust code
+// -----
+
+struct WrColor
+{
   float r;
   float g;
   float b;
   float a;
 
-  bool operator==(const WrColor& aRhs) const {
+  bool operator==(const WrColor& aRhs) const
+  {
     return r == aRhs.r && g == aRhs.g &&
            b == aRhs.b && a == aRhs.a;
   }
 };
 
-struct WRGlyphInstance {
+struct WRGlyphInstance
+{
   uint32_t index;
   float x;
   float y;
 
-  bool operator==(const WRGlyphInstance& other) const {
+  bool operator==(const WRGlyphInstance& other) const
+  {
     return index == other.index &&
            x == other.x &&
            y == other.y;
@@ -79,11 +157,13 @@ struct WRGlyphInstance {
 // the definition in bindings.rs. WRGlyphInstance
 // versus GlyphInstance, but their layout is the same.
 // So we're really overlapping the types for the same memory.
-struct WrGlyphArray {
+struct WrGlyphArray
+{
   mozilla::gfx::Color color;
   nsTArray<WRGlyphInstance> glyphs;
 
-  bool operator==(const WrGlyphArray& other) const {
+  bool operator==(const WrGlyphArray& other) const
+  {
     if (!(color == other.color) ||
        (glyphs.Length() != other.glyphs.Length())) {
       return false;
@@ -99,48 +179,38 @@ struct WrGlyphArray {
   }
 };
 
-enum class WrBorderStyle {
-  None,
-  Solid,
-  Double,
-  Dotted,
-  Dashed,
-  Hidden,
-  Groove,
-  Ridge,
-  Inset,
-  Outset,
-
-  Sentinel /* this must be last, for IPC serialization purposes */
-};
-
 struct WrBorderSide {
   float width;
   WrColor color;
   WrBorderStyle style;
 
-  bool operator==(const WrBorderSide& aRhs) const {
+  bool operator==(const WrBorderSide& aRhs) const
+  {
     return width == aRhs.width && color == aRhs.color &&
            style == aRhs.style;
   }
 };
 
-struct WrLayoutSize {
+struct WrLayoutSize
+{
   float width;
   float height;
 
-  bool operator==(const WrLayoutSize& aRhs) const {
+  bool operator==(const WrLayoutSize& aRhs) const
+  {
     return width == aRhs.width && height == aRhs.height;
   }
 };
 
-struct WrRect {
+struct WrRect
+{
   float x;
   float y;
   float width;
   float height;
 
-  bool operator==(const WrRect& aRhs) const {
+  bool operator==(const WrRect& aRhs) const
+  {
     return x == aRhs.x && y == aRhs.y &&
            width == aRhs.width && height == aRhs.height;
   }
@@ -148,35 +218,23 @@ struct WrRect {
 
 struct WrImageMask
 {
-    WrImageKey image;
-    WrRect rect;
-    bool repeat;
+  WrImageKey image;
+  WrRect rect;
+  bool repeat;
 
-    bool operator==(const WrImageMask& aRhs) const {
-      return image == aRhs.image && rect == aRhs.rect && repeat == aRhs.repeat;
-    }
+  bool operator==(const WrImageMask& aRhs) const
+  {
+    return image == aRhs.image && rect == aRhs.rect && repeat == aRhs.repeat;
+  }
 };
 
-enum class WrTextureFilter
+struct WrExternalImageIdId
 {
-  Linear,
-  Point,
-
-  Sentinel /* this must be last, for IPC serialization purposes */
-};
-
-typedef uint64_t WrImageIdType;
-struct WrExternalImageIdId {
   WrImageIdType id;
 };
 
-enum class WrExternalImageIdType {
-    TEXTURE_HANDLE, // Currently, we only support gl texture handle.
-    // TODO(Jerry): handle shmem or cpu raw buffers.
-    //// MEM_OR_SHMEM,
-};
-
-struct WrExternalImageId {
+struct WrExternalImageId
+{
   WrExternalImageIdType type;
 
   // Texture coordinate
@@ -196,36 +254,17 @@ typedef WrExternalImageId (*LockExternalImageCallback)(void*, WrExternalImageIdI
 typedef void (*UnlockExternalImageCallback)(void*, WrExternalImageIdId);
 typedef void (*ReleaseExternalImageCallback)(void*, WrExternalImageIdId);
 
-struct WrExternalImageIdHandler {
+struct WrExternalImageIdHandler
+{
   void* ExternalImageObj;
   LockExternalImageCallback lock_func;
   UnlockExternalImageCallback unlock_func;
   ReleaseExternalImageCallback release_func;
 };
 
-enum class WrMixBlendMode
-{
-    Normal,
-    Multiply,
-    Screen,
-    Overlay,
-    Darken,
-    Lighten,
-    ColorDodge,
-    ColorBurn,
-    HardLight,
-    SoftLight,
-    Difference,
-    Exclusion,
-    Hue,
-    Saturation,
-    Color,
-    Luminosity,
-
-    Sentinel /* this must be last, for IPC serialization purposes */
-};
-
-struct WrWindowState;
+// -----
+// Functions exposed by the webrender API
+// -----
 
 #ifdef MOZ_ENABLE_WEBRENDER
 #  define WR_INLINE
@@ -235,74 +274,93 @@ struct WrWindowState;
 #  define WR_FUNC { MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("WebRender disabled"); }
 #endif
 
+// Structs defined in Rust, but opaque to C++ code.
+struct WrWindowState;
 struct WrRenderer;
 struct WrState;
-
-WR_INLINE void
-wr_renderer_update(WrRenderer* renderer) WR_FUNC;
-
-WR_INLINE void
-wr_renderer_render(WrRenderer* renderer, uint32_t width, uint32_t height) WR_FUNC;
-
-WR_INLINE void
-wr_renderer_set_profiler_enabled(WrRenderer* renderer, bool enabled) WR_FUNC;
-
-WR_INLINE bool
-wr_renderer_current_epoch(WrRenderer* renderer, WrPipelineId pipeline_id, WrEpoch* out_epoch) WR_FUNC;
-
-WR_INLINE void
-wr_renderer_delete(WrRenderer* renderer) WR_FUNC;
-
-WR_INLINE void
-wr_gl_init(void* aGLContext) WR_FUNC;
-
 struct WrAPI;
 
 WR_INLINE void
-wr_window_new(WrWindowId window_id,
-              bool enable_profiler,
-              WrAPI** out_api,
-              WrRenderer** out_renderer) WR_FUNC;
+wr_renderer_update(WrRenderer* renderer)
+WR_FUNC;
 
 WR_INLINE void
-wr_window_remove_pipeline(WrWindowState* window, WrState* state) WR_FUNC;
+wr_renderer_render(WrRenderer* renderer, uint32_t width, uint32_t height)
+WR_FUNC;
 
 WR_INLINE void
-wr_api_delete(WrAPI* api) WR_FUNC;
+wr_renderer_set_profiler_enabled(WrRenderer* renderer, bool enabled)
+WR_FUNC;
+
+WR_INLINE bool
+wr_renderer_current_epoch(WrRenderer* renderer, WrPipelineId pipeline_id,
+                          WrEpoch* out_epoch)
+WR_FUNC;
+
+WR_INLINE void
+wr_renderer_delete(WrRenderer* renderer)
+WR_FUNC;
+
+WR_INLINE void
+wr_gl_init(void* aGLContext)
+WR_FUNC;
+
+WR_INLINE void
+wr_window_new(WrWindowId window_id, bool enable_profiler, WrAPI** out_api,
+              WrRenderer** out_renderer)
+WR_FUNC;
+
+WR_INLINE void
+wr_window_remove_pipeline(WrWindowState* window, WrState* state)
+WR_FUNC;
+
+WR_INLINE void
+wr_api_delete(WrAPI* api)
+WR_FUNC;
 
 WR_INLINE WrImageKey
 wr_api_add_image(WrAPI* api, uint32_t width, uint32_t height,
-                 uint32_t stride, WrImageFormat format, uint8_t *bytes, size_t size) WR_FUNC;
+                 uint32_t stride, WrImageFormat format, uint8_t *bytes,
+                 size_t size)
+WR_FUNC;
 
 WR_INLINE WrImageKey
 wr_api_add_external_image_texture(WrAPI* api, uint32_t width, uint32_t height,
-                                  WrImageFormat format, uint64_t external_image_id) WR_FUNC;
+                                  WrImageFormat format, uint64_t external_image_id)
+WR_FUNC;
 
 WR_INLINE void
-wr_api_update_image(WrAPI* api, WrImageKey key,
-                    uint32_t width, uint32_t height,
-                    WrImageFormat format, uint8_t *bytes, size_t size) WR_FUNC;
+wr_api_update_image(WrAPI* api, WrImageKey key, uint32_t width, uint32_t height,
+                    WrImageFormat format, uint8_t *bytes, size_t size)
+WR_FUNC;
 
 WR_INLINE void
-wr_api_delete_image(WrAPI* api, WrImageKey key) WR_FUNC;
+wr_api_delete_image(WrAPI* api, WrImageKey key)
+WR_FUNC;
 
 WR_INLINE void
-wr_api_set_root_pipeline(WrAPI* api, WrPipelineId pipeline_id) WR_FUNC;
+wr_api_set_root_pipeline(WrAPI* api, WrPipelineId pipeline_id)
+WR_FUNC;
 
 WR_INLINE void
-wr_api_set_root_display_list(WrAPI* api, WrState* state, uint32_t epoch, float w, float h) WR_FUNC;
+wr_api_set_root_display_list(WrAPI* api, WrState* state, uint32_t epoch, float w, float h)
+WR_FUNC;
 
 WR_INLINE void
-wr_api_send_external_event(WrAPI* api, uintptr_t evt) WR_FUNC;
+wr_api_send_external_event(WrAPI* api, uintptr_t evt)
+WR_FUNC;
 
 WR_INLINE void
-wr_window_init_pipeline_epoch(WrWindowState* window, WrPipelineId pipeline, uint32_t width, uint32_t height) WR_FUNC;
+wr_window_init_pipeline_epoch(WrWindowState* window, WrPipelineId pipeline, uint32_t width, uint32_t height)
+WR_FUNC;
 
 WR_INLINE WrFontKey
-wr_api_add_raw_font(WrAPI* api, uint8_t* font_buffer, size_t buffer_size) WR_FUNC;
+wr_api_add_raw_font(WrAPI* api, uint8_t* font_buffer, size_t buffer_size)
+WR_FUNC;
 
 WR_INLINE WrFontKey
-wr_window_add_raw_font(WrWindowState* window, uint8_t* font_buffer, size_t buffer_size) WR_FUNC;
+wr_window_add_raw_font(WrWindowState* window, uint8_t* font_buffer, size_t buffer_size)
+WR_FUNC;
 
 WR_INLINE WrWindowState*
 wr_init_window(WrPipelineId root_pipeline_id,
@@ -312,10 +370,12 @@ wr_init_window(WrPipelineId root_pipeline_id,
 WR_FUNC;
 
 WR_INLINE WrState*
-wr_state_new(uint32_t width, uint32_t height, WrPipelineId pipeline_id) WR_FUNC;
+wr_state_new(uint32_t width, uint32_t height, WrPipelineId pipeline_id)
+WR_FUNC;
 
 WR_INLINE void
-wr_state_delete(WrState* state) WR_FUNC;
+wr_state_delete(WrState* state)
+WR_FUNC;
 
 WR_INLINE void
 wr_destroy(WrWindowState* wrWindow, WrState* WrState)
@@ -371,7 +431,8 @@ wr_window_dp_end(WrWindowState* wrWindow, WrState* wrState)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_end(WrState* builder, WrAPI* api, uint32_t epoch) WR_FUNC;
+wr_dp_end(WrState* builder, WrAPI* api, uint32_t epoch)
+WR_FUNC;
 
 WR_INLINE void
 wr_composite_window(WrWindowState* wrWindow)
@@ -383,12 +444,10 @@ wr_dp_push_rect(WrState* wrState, WrRect bounds, WrRect clip,
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_text(WrState* wrState,
-                WrRect bounds, WrRect clip,
-                WrColor color,
-                WrFontKey font_Key,
-                const WRGlyphInstance* glyphs,
-                uint32_t glyph_count, float glyph_size) WR_FUNC;
+wr_dp_push_text(WrState* wrState, WrRect bounds, WrRect clip, WrColor color,
+                WrFontKey font_Key, const WRGlyphInstance* glyphs,
+                uint32_t glyph_count, float glyph_size)
+WR_FUNC;
 
 WR_INLINE void
 wr_dp_push_border(WrState* wrState, WrRect bounds, WrRect clip,
@@ -405,11 +464,12 @@ WR_FUNC;
 // TODO: Remove.
 WR_INLINE void
 wr_window_dp_push_iframe(WrWindowState* wrWindow, WrState* wrState, WrRect bounds, WrRect clip,
-                        WrPipelineId layers_id)
+                         WrPipelineId layers_id)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_iframe(WrState* wrState, WrRect bounds, WrRect clip, WrPipelineId layers_id) WR_FUNC;
+wr_dp_push_iframe(WrState* wrState, WrRect bounds, WrRect clip, WrPipelineId layers_id)
+WR_FUNC;
 
 // TODO: Remove.
 // It is the responsibility of the caller to manage the dst_buffer memory
@@ -425,5 +485,6 @@ wr_profiler_set_enabled(WrWindowState* wrWindow, bool enabled)
 WR_FUNC;
 
 #undef WR_FUNC
-}
-#endif
+} // extern "C"
+
+#endif // WR_h
