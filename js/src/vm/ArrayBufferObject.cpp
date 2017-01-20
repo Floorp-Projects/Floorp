@@ -1037,6 +1037,13 @@ ArrayBufferObject::create(JSContext* cx, uint32_t nbytes, BufferContents content
 {
     MOZ_ASSERT_IF(contents.kind() == MAPPED, contents);
 
+    // 24.1.1.1, step 3 (Inlined 6.2.6.1 CreateByteDataBlock, step 2).
+    // Refuse to allocate too large buffers, currently limited to ~2 GiB.
+    if (nbytes > INT32_MAX) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
+        return nullptr;
+    }
+
     // If we need to allocate data, try to use a larger object size class so
     // that the array buffer's data can be allocated inline with the object.
     // The extra space will be left unused by the object's fixed slots and
