@@ -40,7 +40,6 @@
 #include "mozilla/dom/CSSMozDocumentRuleBinding.h"
 #include "mozilla/dom/CSSPageRuleBinding.h"
 #include "mozilla/dom/CSSFontFaceRuleBinding.h"
-#include "mozilla/dom/CSSFontFeatureValuesRuleBinding.h"
 #include "StyleRule.h"
 #include "nsFont.h"
 #include "nsIURI.h"
@@ -1801,6 +1800,7 @@ NS_IMPL_RELEASE_INHERITED(nsCSSFontFeatureValuesRule, mozilla::css::Rule)
 // implementation.
 NS_INTERFACE_MAP_BEGIN(nsCSSFontFeatureValuesRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSFontFeatureValuesRule)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSFontFeatureValuesRule)
 NS_INTERFACE_MAP_END_INHERITING(mozilla::css::Rule)
 
 bool
@@ -1909,20 +1909,6 @@ nsCSSFontFeatureValuesRule::GetCssTextImpl(nsAString& aCssText) const
   FontFeatureValuesRuleToString(mFamilyList, mFeatureValues, aCssText);
 }
 
-void
-nsCSSFontFeatureValuesRule::SetFontFamily(const nsAString& aFamily,
-                                          ErrorResult& aRv)
-{
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-}
-
-void
-nsCSSFontFeatureValuesRule::SetValueText(const nsAString& aFamily,
-                                         ErrorResult& aRv)
-{
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-}
-
 NS_IMETHODIMP
 nsCSSFontFeatureValuesRule::GetFontFamily(nsAString& aFamilyListStr)
 {
@@ -2015,7 +2001,8 @@ nsCSSFontFeatureValuesRule::SizeOfIncludingThis(
 nsCSSFontFeatureValuesRule::WrapObject(JSContext* aCx,
                                        JS::Handle<JSObject*> aGivenProto)
 {
-  return CSSFontFeatureValuesRuleBinding::Wrap(aCx, this, aGivenProto);
+  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
+  return nullptr;
 }
 
 // -------------------------------------------
