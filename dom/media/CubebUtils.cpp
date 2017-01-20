@@ -22,6 +22,7 @@
 #define PREF_VOLUME_SCALE "media.volume_scale"
 #define PREF_CUBEB_LATENCY_PLAYBACK "media.cubeb_latency_playback_ms"
 #define PREF_CUBEB_LATENCY_MSG "media.cubeb_latency_msg_frames"
+#define PREF_CUBEB_LOG_LEVEL "media.cubeb.log_level"
 
 namespace mozilla {
 
@@ -131,6 +132,20 @@ void PrefChanged(const char* aPref, void* aClosure)
     // We don't want to limit the upper limit too much, so that people can
     // experiment.
     sCubebMSGLatencyInFrames = std::min<uint32_t>(std::max<uint32_t>(value, 128), 1e6);
+  } else if (strcmp(aPref, PREF_CUBEB_LOG_LEVEL) == 0) {
+    nsAdoptingString value = Preferences::GetString(aPref);
+    NS_ConvertUTF16toUTF8 utf8(value);
+    LogModule* cubebLog = LogModule::Get("cubeb");
+    if (strcmp(utf8.get(), "verbose") == 0) {
+      cubeb_set_log_callback(CUBEB_LOG_VERBOSE, CubebLogCallback);
+      cubebLog->SetLevel(LogLevel::Verbose);
+    } else if (strcmp(utf8.get(), "normal") == 0) {
+      cubeb_set_log_callback(CUBEB_LOG_NORMAL, CubebLogCallback);
+      cubebLog->SetLevel(LogLevel::Error);
+    } else if (utf8.IsEmpty()) {
+      cubeb_set_log_callback(CUBEB_LOG_DISABLED, nullptr);
+      cubebLog->SetLevel(LogLevel::Disabled);
+    }
   }
 }
 
@@ -308,6 +323,7 @@ void InitLibrary()
   PrefChanged(PREF_CUBEB_LATENCY_MSG, nullptr);
   Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LATENCY_PLAYBACK);
   Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LATENCY_MSG);
+  Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LOG_LEVEL);
 #ifndef MOZ_WIDGET_ANDROID
   NS_DispatchToMainThread(NS_NewRunnableFunction(&InitBrandName));
 #endif
@@ -318,6 +334,7 @@ void ShutdownLibrary()
   Preferences::UnregisterCallback(PrefChanged, PREF_VOLUME_SCALE);
   Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LATENCY_PLAYBACK);
   Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LATENCY_MSG);
+  Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LOG_LEVEL);
 
   StaticMutexAutoLock lock(sMutex);
   if (sCubebContext) {
