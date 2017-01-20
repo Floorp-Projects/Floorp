@@ -20,6 +20,7 @@ using namespace gfx;
 WebRenderImageLayer::WebRenderImageLayer(WebRenderLayerManager* aLayerManager)
   : ImageLayer(aLayerManager, static_cast<WebRenderLayer*>(this))
   , mExternalImageId(0)
+  , mImageClientTypeContainer(CompositableType::UNKNOWN)
 {
   MOZ_COUNT_CTOR(WebRenderImageLayer);
 }
@@ -30,6 +31,25 @@ WebRenderImageLayer::~WebRenderImageLayer()
   if (mExternalImageId) {
     WrBridge()->DeallocExternalImageId(mExternalImageId);
   }
+}
+
+CompositableType
+WebRenderImageLayer::GetImageClientType()
+{
+  if (mImageClientTypeContainer != CompositableType::UNKNOWN) {
+    return mImageClientTypeContainer;
+  }
+
+  if (mContainer->IsAsync()) {
+    mImageClientTypeContainer = CompositableType::IMAGE_BRIDGE;
+    return mImageClientTypeContainer;
+  }
+
+  AutoLockImage autoLock(mContainer);
+
+  mImageClientTypeContainer = autoLock.HasImage()
+    ? CompositableType::IMAGE : CompositableType::UNKNOWN;
+  return mImageClientTypeContainer;
 }
 
 already_AddRefed<gfx::SourceSurface>
@@ -61,16 +81,18 @@ WebRenderImageLayer::ClearCachedResources()
 void
 WebRenderImageLayer::RenderLayer()
 {
-  RefPtr<gfx::SourceSurface> surface = GetAsSourceSurface();
-  if (!surface) {
+  if (!mContainer) {
+     return;
+  }
+
+  CompositableType type = GetImageClientType();
+  if (type == CompositableType::UNKNOWN) {
     return;
   }
 
-  if (!mImageContainerForWR) {
-    mImageContainerForWR = LayerManager::CreateImageContainer();
-  }
+  MOZ_ASSERT(GetImageClientType() != CompositableType::UNKNOWN);
 
-  if (!mImageClient) {
+  if (GetImageClientType() == CompositableType::IMAGE && !mImageClient) {
     mImageClient = ImageClient::CreateImageClient(CompositableType::IMAGE,
                                                   WrBridge(),
                                                   TextureFlags::DEFAULT);
@@ -80,47 +102,27 @@ WebRenderImageLayer::RenderLayer()
     mImageClient->Connect();
   }
 
-  // XXX Enable external image id for async image container.
-
-  // XXX update async ImageContainer rendering path
-  //if (mContainer->IsAsync() && !mImageId) {
-  //  mExternalImageId = WrBridge()->AllocExternalImageId(mContainer->GetAsyncContainerID());
-  //  MOZ_ASSERT(mImageId);
-  //}
-
   if (!mExternalImageId) {
-    mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
-    MOZ_ASSERT(mExternalImageId);
+    if (GetImageClientType() == CompositableType::IMAGE_BRIDGE) {
+      MOZ_ASSERT(!mImageClient);
+      mExternalImageId = WrBridge()->AllocExternalImageId(mContainer->GetAsyncContainerHandle());
+    } else {
+      // Handle CompositableType::IMAGE case
+      MOZ_ASSERT(mImageClient);
+      mExternalImageId = WrBridge()->AllocExternalImageIdForCompositable(mImageClient);
+    }
   }
+  MOZ_ASSERT(mExternalImageId);
 
-  gfx::IntSize size = surface->GetSize();
-
-  RefPtr<TextureClient> texture = mImageClient->GetTextureClientRecycler()
-    ->CreateOrRecycle(surface->GetFormat(),
-                      size,
-                      BackendSelector::Content,
-                      TextureFlags::DEFAULT);
-  if (!texture) {
+  // XXX Not good for async ImageContainer case.
+  AutoLockImage autoLock(mContainer);
+  Image* image = autoLock.GetImage();
+  if (!image) {
     return;
   }
+  gfx::IntSize size = image->GetSize();
 
-  MOZ_ASSERT(texture->CanExposeDrawTarget());
-  {
-    TextureClientAutoLock autoLock(texture, OpenMode::OPEN_WRITE_ONLY);
-    if (!autoLock.Succeeded()) {
-      return;
-    }
-    RefPtr<DrawTarget> drawTarget = texture->BorrowDrawTarget();
-    if (!drawTarget || !drawTarget->IsValid()) {
-      return;
-    }
-    drawTarget->CopySurface(surface, IntRect(IntPoint(), size), IntPoint());
-  }
-  RefPtr<TextureWrapperImage> image =
-    new TextureWrapperImage(texture, IntRect(IntPoint(0, 0), size));
-  mImageContainerForWR->SetCurrentImageInTransaction(image);
-
-  if (!mImageClient->UpdateImage(mImageContainerForWR, /* unused */0)) {
+  if (mImageClient && !mImageClient->UpdateImage(mContainer, /* unused */0)) {
     return;
   }
 
