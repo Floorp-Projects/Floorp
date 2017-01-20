@@ -109,3 +109,6 @@ if CONFIG['INTEL_ARCHITECTURE']:
 
 if CONFIG['MACOS_SDK_DIR']:
     gyp_vars['mac_sdk_path'] = CONFIG['MACOS_SDK_DIR']
+
+if not CONFIG['MOZ_SYSTEM_LIBVPX']:
+    gyp_vars['libvpx_dir'] =  '/media/libvpx/libvpx'
