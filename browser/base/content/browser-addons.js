@@ -516,7 +516,6 @@ const gExtensionsNotifications = {
       container.firstChild.remove();
     }
 
-    // Strings below to be properly localized in bug 1316996
     const DEFAULT_EXTENSION_ICON =
       "chrome://mozapps/skin/extensions/extensionGeneric.svg";
     let items = 0;
@@ -524,8 +523,10 @@ const gExtensionsNotifications = {
       if (++items > 4) {
         break;
       }
+
       let button = document.createElement("toolbarbutton");
-      button.setAttribute("label", `"${update.addon.name}" requires new permissions`);
+      let text = gNavigatorBundle.getFormattedString("webextPerms.updateMenuItem", [update.addon.name]);
+      button.setAttribute("label", text);
 
       let icon = update.addon.iconURL || DEFAULT_EXTENSION_ICON;
       button.setAttribute("image", icon);
@@ -537,12 +538,19 @@ const gExtensionsNotifications = {
       container.appendChild(button);
     }
 
+    let appName;
     for (let addon of sideloaded) {
       if (++items > 4) {
         break;
       }
+      if (!appName) {
+        let brandBundle = document.getElementById("bundle_brand");
+        appName = brandBundle.getString("brandShortName");
+      }
+
       let button = document.createElement("toolbarbutton");
-      button.setAttribute("label", `"${addon.name}" added to Firefox`);
+      let text = gNavigatorBundle.getFormattedString("webextPerms.sideloadMenuItem", [addon.name, appName]);
+      button.setAttribute("label", text);
 
       let icon = addon.iconURL || DEFAULT_EXTENSION_ICON;
       button.setAttribute("image", icon);
