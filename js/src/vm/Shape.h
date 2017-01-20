@@ -1545,38 +1545,6 @@ Shape::matches(const StackShape& other) const
                                 other.rawGetter, other.rawSetter);
 }
 
-// Property lookup hooks on objects are required to return a non-nullptr shape
-// to signify that the property has been found. For cases where the property is
-// not actually represented by a Shape, use a dummy value. This includes all
-// properties of non-native objects, and dense elements for native objects.
-// Use separate APIs for these two cases.
-
-template <AllowGC allowGC>
-static inline void
-MarkNonNativePropertyFound(typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
-{
-    propp.set(reinterpret_cast<Shape*>(1));
-}
-
-template <AllowGC allowGC>
-static inline void
-MarkDenseOrTypedArrayElementFound(typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp)
-{
-    propp.set(reinterpret_cast<Shape*>(1));
-}
-
-static inline bool
-IsImplicitDenseOrTypedArrayElement(Shape* prop)
-{
-    return prop == reinterpret_cast<Shape*>(1);
-}
-
-static inline bool
-IsImplicitNonNativeProperty(Shape* prop)
-{
-    return prop == reinterpret_cast<Shape*>(1);
-}
-
 Shape*
 ReshapeForAllocKind(JSContext* cx, Shape* shape, TaggedProto proto,
                     gc::AllocKind allocKind);

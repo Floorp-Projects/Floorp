@@ -566,18 +566,18 @@ Proxy::trace(JSTracer* trc, JSObject* proxy)
 
 static bool
 proxy_LookupProperty(JSContext* cx, HandleObject obj, HandleId id,
-                     MutableHandleObject objp, MutableHandleShape propp)
+                     MutableHandleObject objp, MutableHandle<JS::PropertyResult> propp)
 {
     bool found;
     if (!Proxy::has(cx, obj, id, &found))
         return false;
 
     if (found) {
-        MarkNonNativePropertyFound<CanGC>(propp);
+        propp.setNonNativeProperty();
         objp.set(obj);
     } else {
+        propp.setNotFound();
         objp.set(nullptr);
-        propp.set(nullptr);
     }
     return true;
 }

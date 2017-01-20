@@ -1987,16 +1987,16 @@ GetDOMProxyProto(JSObject* obj)
 // existence of the property on the object.
 bool
 EffectlesslyLookupProperty(JSContext* cx, HandleObject obj, HandleId id,
-                           MutableHandleObject holder, MutableHandleShape shape)
+                           MutableHandleObject holder, MutableHandle<PropertyResult> prop)
 {
-    shape.set(nullptr);
+    prop.setNotFound();
     holder.set(nullptr);
 
-    if (LookupPropertyPure(cx, obj, id, holder.address(), shape.address()))
+    if (LookupPropertyPure(cx, obj, id, holder.address(), prop.address()))
         return true;
 
     holder.set(nullptr);
-    shape.set(nullptr);
+    prop.setNotFound();
     return true;
 }
 

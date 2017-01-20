@@ -392,9 +392,9 @@ JO(JSContext* cx, HandleObject obj, StringifyContext* scx)
 #ifdef DEBUG
         if (scx->maybeSafely) {
             RootedNativeObject nativeObj(cx, &obj->as<NativeObject>());
-            RootedShape prop(cx);
+            Rooted<PropertyResult> prop(cx);
             NativeLookupOwnPropertyNoResolve(cx, nativeObj, id, &prop);
-            MOZ_ASSERT(prop && prop->isDataDescriptor());
+            MOZ_ASSERT(prop && prop.isNativeProperty() && prop.shape()->isDataDescriptor());
         }
 #endif // DEBUG
         if (!GetProperty(cx, obj, obj, id, &outputValue))

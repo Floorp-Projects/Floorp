@@ -267,7 +267,8 @@ CanAttachNativeGetProp(JSContext* cx, HandleObject obj, HandleId id,
     // only miss out on shape hashification, which is only a temporary perf cost.
     // The limits were arbitrarily set, anyways.
     JSObject* baseHolder = nullptr;
-    if (!LookupPropertyPure(cx, obj, id, &baseHolder, shape.address()))
+    PropertyResult prop;
+    if (!LookupPropertyPure(cx, obj, id, &baseHolder, &prop))
         return CanAttachNone;
 
     MOZ_ASSERT(!holder);
@@ -276,8 +277,9 @@ CanAttachNativeGetProp(JSContext* cx, HandleObject obj, HandleId id,
             return CanAttachNone;
         holder.set(&baseHolder->as<NativeObject>());
     }
+    shape.set(prop.maybeShape());
 
-    if (IsCacheableGetPropReadSlotForIonOrCacheIR(obj, holder, shape))
+    if (IsCacheableGetPropReadSlotForIonOrCacheIR(obj, holder, prop))
         return CanAttachReadSlot;
 
     // Idempotent ICs only support plain data properties, see
@@ -1334,7 +1336,6 @@ GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId, HandleId id)
     Handle<LexicalEnvironmentObject*> globalLexical = env_.as<LexicalEnvironmentObject>();
     MOZ_ASSERT(globalLexical->isGlobal());
 
-
     RootedNativeObject holder(cx_);
     RootedShape shape(cx_);
     if (!CanAttachGlobalName(cx_, globalLexical, id, &holder, &shape))
@@ -1362,7 +1363,8 @@ GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId, HandleId id)
         // prototype. Ignore the global lexical scope as it doesn't figure
         // into the prototype chain. We guard on the global lexical
         // scope's shape independently.
-        if (!IsCacheableGetPropReadSlotForIonOrCacheIR(&globalLexical->global(), holder, shape))
+        if (!IsCacheableGetPropReadSlotForIonOrCacheIR(&globalLexical->global(), holder,
+                                                       PropertyResult(shape)))
             return false;
 
         // Shape guard for global lexical.
@@ -1460,7 +1462,7 @@ GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId, HandleId id)
     }
 
     holder = &env->as<NativeObject>();
-    if (!IsCacheableGetPropReadSlotForIonOrCacheIR(holder, holder, shape))
+    if (!IsCacheableGetPropReadSlotForIonOrCacheIR(holder, holder, PropertyResult(shape)))
         return false;
     if (holder->getSlot(shape->slot()).isMagic())
         return false;
