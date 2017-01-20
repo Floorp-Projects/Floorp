@@ -80,3 +80,10 @@
         <html:ul id="addon-webext-perm-list" class="addon-webext-perm-list"/>
       </popupnotificationcontent>
     </popupnotification>
+
+    <popupnotification id="addon-installed-notification" hidden="true">
+      <popupnotificationcontent orient="vertical">
+        <description id="addon-installed-notification-header"/>
+        <description id="addon-installed-notification-message"/>
+      </popupnotificationcontent>
+    </popupnotification>

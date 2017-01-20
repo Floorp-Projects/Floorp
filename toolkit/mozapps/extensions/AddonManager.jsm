@@ -2109,7 +2109,13 @@ var AddonManagerInternal = {
             install.addon.appDisabled == false) {
               install.addon.userDisabled = false;
         }
-        self.installNotifyObservers("addon-install-complete", browser, url, install);
+
+        if (WEBEXT_PERMISSION_PROMPTS) {
+          let subject = {wrappedJSObject: {target: browser, addon: install.addon}};
+          Services.obs.notifyObservers(subject, "webextension-install-notify", null);
+        } else {
+          self.installNotifyObservers("addon-install-complete", browser, url, install);
+        }
       },
     };
 
