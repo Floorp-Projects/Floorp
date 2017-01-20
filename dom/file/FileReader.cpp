@@ -203,9 +203,7 @@ ReadFuncBinaryString(nsIInputStream* in,
 }
 
 nsresult
-FileReader::DoOnLoadEnd(nsresult aStatus,
-                        nsAString& aSuccessEvent,
-                        nsAString& aTerminationEvent)
+FileReader::DoOnLoadEnd(nsresult aStatus)
 {
   // Make sure we drop all the objects that could hold files open now.
   nsCOMPtr<nsIAsyncInputStream> stream;
@@ -223,13 +221,9 @@ FileReader::DoOnLoadEnd(nsresult aStatus,
   // In case we read a different number of bytes, we can assume that the
   // underlying storage has changed. We should not continue.
   if (mDataLen != mTotal) {
-    DispatchError(NS_ERROR_FAILURE, aTerminationEvent);
     FreeFileData();
     return NS_ERROR_FAILURE;
   }
-
-  aSuccessEvent = NS_LITERAL_STRING(LOAD_STR);
-  aTerminationEvent = NS_LITERAL_STRING(LOADEND_STR);
 
   nsresult rv = NS_OK;
   switch (mDataFormat) {
@@ -541,10 +535,10 @@ FileReader::ClearProgressEventTimer()
 }
 
 void
-FileReader::DispatchError(nsresult rv, nsAString& finalEvent)
+FileReader::DispatchError(nsresult aRv)
 {
   // Set the status attribute, and dispatch the error event
-  switch (rv) {
+  switch (aRv) {
   case NS_ERROR_FILE_NOT_FOUND:
     mError = new DOMError(GetOwner(), NS_LITERAL_STRING("NotFoundError"));
     break;
@@ -558,7 +552,7 @@ FileReader::DispatchError(nsresult rv, nsAString& finalEvent)
 
   // Dispatch error event to signify load failure
   DispatchProgressEvent(NS_LITERAL_STRING(ERROR_STR));
-  DispatchProgressEvent(finalEvent);
+  DispatchProgressEvent(NS_LITERAL_STRING(LOADEND_STR));
 }
 
 nsresult
@@ -655,19 +649,21 @@ FileReader::OnLoadEnd(nsresult aStatus)
   // FileReader must be in DONE stage after an operation
   mReadyState = DONE;
 
-  nsAutoString successEvent, termEvent;
-  nsresult rv = DoOnLoadEnd(aStatus, successEvent, termEvent);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = DoOnLoadEnd(aStatus);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    DispatchError(rv);
+    return NS_OK;
+  }
 
   // Set the status field as appropriate
   if (NS_FAILED(aStatus)) {
-    DispatchError(aStatus, termEvent);
+    DispatchError(aStatus);
     return NS_OK;
   }
 
   // Dispatch event to signify end of a successful operation
-  DispatchProgressEvent(successEvent);
-  DispatchProgressEvent(termEvent);
+  DispatchProgressEvent(NS_LITERAL_STRING(LOAD_STR));
+  DispatchProgressEvent(NS_LITERAL_STRING(LOADEND_STR));
 
   return NS_OK;
 }
