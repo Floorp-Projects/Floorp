@@ -8,7 +8,6 @@
 #define mozilla_dom_U2FAuthenticator_h
 
 #include "nsIU2FToken.h"
-#include "USBToken.h"
 
 namespace mozilla {
 namespace dom {

@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace dom {
 
-extern mozilla::LazyLogModule gWebauthLog; // defined in U2F.cpp
+//extern mozilla::LazyLogModule gWebauthLog; // defined in U2F.cpp
 
 // WebAuthnRequest tracks the completion of a single WebAuthn request that
 // may run on multiple kinds of authenticators, and be subject to a deadline.
@@ -32,9 +32,9 @@ public:
 
   void AddActiveToken(const char* aCallSite)
   {
-    MOZ_LOG(gWebauthLog, LogLevel::Debug,
-           ("WebAuthnRequest is tracking a new token, called from [%s]",
-            aCallSite));
+    // MOZ_LOG(gWebauthLog, LogLevel::Debug,
+    //        ("WebAuthnRequest is tracking a new token, called from [%s]",
+    //         aCallSite));
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     MOZ_ASSERT(!IsComplete());
     mCountTokens += 1;
