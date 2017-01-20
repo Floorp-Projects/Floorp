@@ -15,7 +15,6 @@ EXPORTS += [
     'nsServiceManagerUtils.h',
     'nsStringAPI.h',
     'nsStringGlue.h',
-    'nsTextFormatter.h',
     'nsXPTCUtils.h',
 ]
 

@@ -17,7 +17,6 @@ xpcom_glue_src_cppsrcs = [
 
 xpcom_gluens_src_lcppsrcs = [
     'GenericFactory.cpp',
-    'nsTextFormatter.cpp',
 ]
 
 xpcom_gluens_src_cppsrcs = [
