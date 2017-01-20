@@ -9,6 +9,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/TextRange.h"
+#include "mozilla/UniquePtr.h"
 #include "nsIFrame.h"
 #include "nsIContent.h"
 #include "nsISelectionController.h"
@@ -47,7 +48,7 @@ struct SelectionDetails
   int32_t mEnd;
   mozilla::SelectionType mSelectionType;
   mozilla::TextRangeStyle mTextRangeStyle;
-  SelectionDetails *mNext;
+  mozilla::UniquePtr<SelectionDetails> mNext;
 };
 
 class nsIPresShell;
@@ -317,13 +318,12 @@ public:
    * @param aContent is the content asking
    * @param aContentOffset is the starting content boundary
    * @param aContentLength is the length of the content piece asking
-   * @param aReturnDetails linkedlist of return values for the selection. 
    * @param aSlowCheck will check using slow method with no shortcuts
    */
-  SelectionDetails* LookUpSelection(nsIContent *aContent,
-                                    int32_t aContentOffset,
-                                    int32_t aContentLength,
-                                    bool aSlowCheck) const;
+  mozilla::UniquePtr<SelectionDetails> LookUpSelection(nsIContent *aContent,
+                                                       int32_t aContentOffset,
+                                                       int32_t aContentLength,
+                                                       bool aSlowCheck) const;
 
   /** SetDragState(bool);
    *  sets the drag state to aState for resons of drag state.

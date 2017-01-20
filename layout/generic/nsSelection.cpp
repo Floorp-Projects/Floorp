@@ -1882,7 +1882,7 @@ printf(" * TakeFocus - moving into new cell\n");
 }
 
 
-SelectionDetails*
+UniquePtr<SelectionDetails>
 nsFrameSelection::LookUpSelection(nsIContent *aContent,
                                   int32_t aContentOffset,
                                   int32_t aContentLength,
@@ -1891,7 +1891,7 @@ nsFrameSelection::LookUpSelection(nsIContent *aContent,
   if (!aContent || !mShell)
     return nullptr;
 
-  SelectionDetails* details = nullptr;
+  UniquePtr<SelectionDetails> details;
 
   for (size_t j = 0; j < kPresentSelectionTypeCount; j++) {
     if (mDomSelections[j]) {
@@ -4598,7 +4598,7 @@ Selection::selectFrames(nsPresContext* aPresContext, nsRange* aRange,
 NS_IMETHODIMP
 Selection::LookUpSelection(nsIContent* aContent, int32_t aContentOffset,
                            int32_t aContentLength,
-                           SelectionDetails** aReturnDetails,
+                           UniquePtr<SelectionDetails>* aReturnDetails,
                            SelectionType aSelectionType,
                            bool aSlowCheck)
 {
@@ -4661,9 +4661,9 @@ Selection::LookUpSelection(nsIContent* aContent, int32_t aContentOffset,
     if (start < 0)
       continue; // the ranges do not overlap the input range
 
-    SelectionDetails* details = new SelectionDetails;
+    auto details = MakeUnique<SelectionDetails>();
 
-    details->mNext = *aReturnDetails;
+    details->mNext = Move(*aReturnDetails);
     details->mStart = start;
     details->mEnd = end;
     details->mSelectionType = aSelectionType;
@@ -4671,7 +4671,7 @@ Selection::LookUpSelection(nsIContent* aContent, int32_t aContentOffset,
     if (rd) {
       details->mTextRangeStyle = rd->mTextRangeStyle;
     }
-    *aReturnDetails = details;
+    *aReturnDetails = Move(details);
   }
   return NS_OK;
 }

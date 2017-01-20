@@ -54,18 +54,10 @@ nsMathMLmoFrame::IsFrameInSelection(nsIFrame* aFrame)
     return false;
 
   const nsFrameSelection* frameSelection = aFrame->GetConstFrameSelection();
-  SelectionDetails* details =
+  UniquePtr<SelectionDetails> details =
     frameSelection->LookUpSelection(aFrame->GetContent(), 0, 1, true);
 
-  if (!details)
-    return false;
-
-  while (details) {
-    SelectionDetails* next = details->mNext;
-    delete details;
-    details = next;
-  }
-  return true;
+  return details != nullptr;
 }
 
 bool
