@@ -21,11 +21,6 @@
         #include <android/native_window_jni.h>
     #endif
 
-    #ifdef ANDROID
-        #include <android/log.h>
-        #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk" , ## args)
-    #endif
-
     #define GLES2_LIB "libGLESv2.so"
     #define GLES2_LIB2 "libGLESv2.so.2"
 
