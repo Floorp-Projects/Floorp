@@ -253,15 +253,15 @@ static void
 zone_force_unlock(malloc_zone_t *zone)
 {
   /* /!\ This calls into jemalloc. It works because we're linked in the
-   * same library. Stolen from jemalloc's zone.c. */
+   * same library. Stolen from jemalloc's zone.c. See the comment there. */
   if (isthreaded)
-    jemalloc_postfork_parent();
+    jemalloc_postfork_child();
 }
 
 #else
 
 extern void _malloc_prefork(void);
-extern void _malloc_postfork(void);
+extern void _malloc_postfork_child(void);
 
 static void
 zone_force_lock(malloc_zone_t *zone)
@@ -276,7 +276,7 @@ zone_force_unlock(malloc_zone_t *zone)
 {
   /* /!\ This calls into mozjemalloc. It works because we're linked in the
    * same library. */
-  _malloc_postfork();
+  _malloc_postfork_child();
 }
 
 #endif
