@@ -1562,6 +1562,10 @@ public:
 
   bool GetIsPrerendered();
 
+private:
+  void ReportLargeAllocStatus();
+
+public:
   // Inner windows only.
   nsresult ScheduleNextIdleObserverCallback();
   uint32_t GetFuzzTimeMS();

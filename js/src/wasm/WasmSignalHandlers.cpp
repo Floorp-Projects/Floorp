@@ -1302,11 +1302,6 @@ ProcessHasSignalHandlers()
         return sHaveSignalHandlers;
     sTriedInstallSignalHandlers = true;
 
-    // Developers might want to forcibly disable signals to avoid seeing
-    // spurious SIGSEGVs in the debugger.
-    if (getenv("JS_DISABLE_SLOW_SCRIPT_SIGNALS") || getenv("JS_NO_SIGNALS"))
-        return false;
-
 #if defined(ANDROID)
     // Before Android 4.4 (SDK version 19), there is a bug
     //   https://android-review.googlesource.com/#/c/52333

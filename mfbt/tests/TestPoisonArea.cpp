@@ -154,6 +154,9 @@
 #elif defined __s390__
 #define RETURN_INSTR 0x07fe0000 /* br %r14 */
 
+#elif defined __sh__
+#define RETURN_INSTR 0x0b000b00 /* rts; rts */
+
 #elif defined __aarch64__
 #define RETURN_INSTR 0xd65f03c0 /* ret */
 
