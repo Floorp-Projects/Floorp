@@ -201,7 +201,6 @@ function runTestInNewWindow(aFile) {
   // to the test case after DOM elements are constructed and before the load
   // event is fired.
   testWindow.addEventListener("DOMContentLoaded", function() {
-    const PARENT_ORIGIN = "http://mochi.test:8888/";
     var e = testWindow.document.createElement('script');
     e.type = 'text/javascript';
     e.src = "mochitest_support_internal.js";
