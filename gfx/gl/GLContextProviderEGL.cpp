@@ -426,37 +426,6 @@ GLContextEGL::HoldSurface(gfxASurface* aSurf) {
     mThebesSurface = aSurf;
 }
 
-/* static */ EGLSurface
-GLContextEGL::CreateSurfaceForWindow(nsIWidget* aWidget)
-{
-    nsCString discardFailureId;
-    if (!sEGLLibrary.EnsureInitialized(false, &discardFailureId)) {
-        MOZ_CRASH("GFX: Failed to load EGL library!\n");
-        return nullptr;
-    }
-
-    EGLConfig config;
-    if (!CreateConfig(&config, aWidget)) {
-        MOZ_CRASH("GFX: Failed to create EGLConfig!\n");
-        return nullptr;
-    }
-
-    EGLSurface surface = mozilla::gl::CreateSurfaceForWindow(aWidget, config);
-    if (!surface) {
-        MOZ_CRASH("GFX: Failed to create EGLSurface for window!\n");
-        return nullptr;
-    }
-    return surface;
-}
-
-/* static */ void
-GLContextEGL::DestroySurface(EGLSurface aSurface)
-{
-    if (aSurface != EGL_NO_SURFACE) {
-        sEGLLibrary.fDestroySurface(EGL_DISPLAY(), aSurface);
-    }
-}
-
 already_AddRefed<GLContextEGL>
 GLContextEGL::CreateGLContext(CreateContextFlags flags,
                 const SurfaceCaps& caps,
