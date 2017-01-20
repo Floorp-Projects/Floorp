@@ -494,9 +494,16 @@ class MOZ_STACK_CLASS OpIter : private Policy
         return true;
     }
 
-    void enterUnreachableCode() {
+    MOZ_MUST_USE bool enterUnreachableCode() {
+        if (Validate) {
+            uint16_t op = peekOp();
+            if (op != uint16_t(Op::End) && op != uint16_t(Op::Else))
+                return fail("non-fallthrough instruction must be followed by end or else");
+        }
+
         valueStack_.shrinkTo(controlStack_.back().valueStackStart());
         reachable_ = false;
+        return true;
     }
 
     bool checkBrValue(uint32_t relativeDepth, ExprType* type, Value* value);
@@ -628,6 +635,11 @@ class MOZ_STACK_CLASS OpIter : private Policy
                                       Value* arg);
     MOZ_MUST_USE bool readSimdCtorArgsEnd(uint32_t numElements);
     MOZ_MUST_USE bool readSimdCtorReturn(ValType simdType);
+
+    // At a location where readOp is allowed, peek at the next opcode
+    // without consuming it or updating any internal state.
+    // Never fails: returns uint16_t(Op::Limit) if it can't read.
+    uint16_t peekOp();
 
     // ------------------------------------------------------------------------
     // Stack management.
@@ -859,6 +871,25 @@ OpIter<Policy>::readOp(uint16_t* op)
 }
 
 template <typename Policy>
+inline uint16_t
+OpIter<Policy>::peekOp()
+{
+    const uint8_t* pos = d_.currentPosition();
+    uint16_t op;
+
+    if (Validate) {
+        if (MOZ_UNLIKELY(!d_.readOp(&op)))
+            op = uint16_t(Op::Limit);
+    } else {
+        op = uint16_t(d_.uncheckedReadOp());
+    }
+
+    d_.rollbackPosition(pos);
+
+    return op;
+}
+
+template <typename Policy>
 inline bool
 OpIter<Policy>::readFunctionStart(ExprType ret)
 {
@@ -904,8 +935,7 @@ OpIter<Policy>::readReturn(Value* value)
         }
     }
 
-    enterUnreachableCode();
-    return true;
+    return enterUnreachableCode();
 }
 
 template <typename Policy>
@@ -1050,8 +1080,7 @@ OpIter<Policy>::readBr(uint32_t* relativeDepth, ExprType* type, Value* value)
     if (Output)
         *relativeDepth = validateRelativeDepth;
 
-    enterUnreachableCode();
-    return true;
+    return enterUnreachableCode();
 }
 
 template <typename Policy>
@@ -1180,8 +1209,7 @@ OpIter<Policy>::readBrTableDefault(ExprType* type, Value* value, uint32_t* depth
 
     MOZ_ASSERT(!reachable_ || *type != ExprType::Limit);
 
-    enterUnreachableCode();
-    return true;
+    return enterUnreachableCode();
 }
 
 template <typename Policy>
@@ -1190,8 +1218,7 @@ OpIter<Policy>::readUnreachable()
 {
     MOZ_ASSERT(Classify(op_) == OpKind::Unreachable);
 
-    enterUnreachableCode();
-    return true;
+    return enterUnreachableCode();
 }
 
 template <typename Policy>

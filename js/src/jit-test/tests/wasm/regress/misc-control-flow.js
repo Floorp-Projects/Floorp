@@ -24,8 +24,13 @@ assertEq(wasmEvalText(`(module
    (export "" 0)
 )`).exports[""](42), 42);
 
-wasmEvalText(`(module (func $func$0
+wasmFailValidateText(`(module (func $func$0
       (block (if (i32.const 1) (loop (br_table 0 (br 0)))))
+  )
+)`, /non-fallthrough instruction must be followed by end or else/);
+
+wasmEvalText(`(module (func $func$0
+      (block (if (i32.const 1) (loop (br_table 0 (block i32 (br 1))))))
   )
 )`);
 
@@ -53,13 +58,43 @@ wasmEvalText(`(module (func (result i32)
 ))
 `);
 
-wasmEvalText(`(module
+wasmFailValidateText(`(module
   (func (result i32) (param i32) (param i32) (i32.const 0))
   (func (result i32)
    (call 0 (i32.const 1) (call 0 (i32.const 2) (i32.const 3)))
    (call 0 (unreachable) (i32.const 4))
   )
+)`, /non-fallthrough instruction must be followed by end or else/);
+
+wasmEvalText(`(module
+  (func (result i32) (param i32) (param i32) (i32.const 0))
+  (func (result i32)
+   (call 0 (i32.const 1) (call 0 (i32.const 2) (i32.const 3)))
+   (call 0 (block i32 (unreachable)) (i32.const 4))
+  )
 )`);
+
+wasmFailValidateText(`
+(module
+
+ (func
+  (param i32) (param i32) (param i32) (param i32)
+  (result i32)
+  (i32.const 0)
+ )
+
+ (func (result i32)
+  (call 0
+   (i32.const 42)
+   (i32.const 53)
+   (call 0 (i32.const 100) (i32.const 13) (i32.const 37) (i32.const 128))
+   (return (i32.const 42))
+  )
+ )
+
+ (export "" 1)
+)
+`, /non-fallthrough instruction must be followed by end or else/);
 
 wasmEvalText(`
 (module
@@ -75,7 +110,7 @@ wasmEvalText(`
    (i32.const 42)
    (i32.const 53)
    (call 0 (i32.const 100) (i32.const 13) (i32.const 37) (i32.const 128))
-   (return (i32.const 42))
+   (block i32 (return (i32.const 42)))
   )
  )
 
@@ -112,8 +147,17 @@ wasmEvalText(`
     }
 }).exports.foo();
 
-assertEq(wasmEvalText(`(module (func
+wasmFailValidateText(`(module (func
  (return)
+ (select
+  (loop (i32.const 1))
+  (loop (i32.const 2))
+  (i32.const 3)
+ )
+) (export "" 0))`, /non-fallthrough instruction must be followed by end or else/);
+
+assertEq(wasmEvalText(`(module (func
+ (block (return))
  (select
   (loop (i32.const 1))
   (loop (i32.const 2))
@@ -121,8 +165,17 @@ assertEq(wasmEvalText(`(module (func
  )
 ) (export "" 0))`).exports[""](), undefined);
 
-wasmEvalText(`(module (func (result i32)
+wasmFailValidateText(`(module (func (result i32)
  (return (i32.const 0))
+ (select
+  (loop (i32.const 1))
+  (loop (i32.const 2))
+  (i32.const 3)
+ )
+))`, /non-fallthrough instruction must be followed by end or else/);
+
+wasmEvalText(`(module (func (result i32)
+ (block (return (i32.const 0)))
  (select
   (loop (i32.const 1))
   (loop (i32.const 2))
