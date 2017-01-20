@@ -741,6 +741,7 @@ public class BrowserApp extends GeckoApp
             "CharEncoding:State",
             "Settings:Show",
             "Updater:Launch",
+            "Sanitize:OpenTabs",
             null);
 
         EventDispatcher.getInstance().registerBackgroundThreadListener(this,
@@ -1454,6 +1455,7 @@ public class BrowserApp extends GeckoApp
             "CharEncoding:State",
             "Settings:Show",
             "Updater:Launch",
+            "Sanitize:OpenTabs",
             null);
 
         EventDispatcher.getInstance().unregisterBackgroundThreadListener(this,
@@ -1912,6 +1914,11 @@ public class BrowserApp extends GeckoApp
             case "Feedback:MaybeLater":
                 SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
                 settings.edit().putInt(getPackageName() + ".feedback_launch_count", 0).apply();
+                break;
+
+            case "Sanitize:OpenTabs":
+                Tabs.getInstance().closeAll();
+                callback.sendSuccess(null);
                 break;
 
             case "Sanitize:ClearHistory":

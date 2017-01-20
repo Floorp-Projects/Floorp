@@ -1451,67 +1451,18 @@ static
 #endif
 bool		malloc_init_hard(void);
 
-static void	_malloc_prefork(void);
-static void	_malloc_postfork(void);
-
-#ifdef MOZ_MEMORY_DARWIN
-/*
- * MALLOC_ZONE_T_NOTE
- *
- * On Darwin, we hook into the memory allocator using a malloc_zone_t struct.
- * We must be very careful around this struct because of different behaviour on
- * different versions of OSX.
- *
- * Each of OSX 10.5, 10.6 and 10.7 use different versions of the struct
- * (with version numbers 3, 6 and 8 respectively). The binary we use on each of
- * these platforms will not necessarily be built using the correct SDK [1].
- * This means we need to statically know the correct struct size to use on all
- * OSX releases, and have a fallback for unknown future versions. The struct
- * sizes defined in osx_zone_types.h.
- *
- * For OSX 10.8 and later, we may expect the malloc_zone_t struct to change
- * again, and need to dynamically account for this. By simply leaving
- * malloc_zone_t alone, we don't quite deal with the problem, because there
- * remain calls to jemalloc through the mozalloc interface. We check this
- * dynamically on each allocation, using the CHECK_DARWIN macro and
- * osx_use_jemalloc.
- *
- *
- * [1] Mozilla is built as a universal binary on Mac, supporting i386 and
- *     x86_64. The i386 target is built using the 10.5 SDK, even if it runs on
- *     10.6. The x86_64 target is built using the 10.6 SDK, even if it runs on
- *     10.7 or later, or 10.5.
- *
- * FIXME:
- *   When later versions of OSX come out (10.8 and up), we need to check their
- *   malloc_zone_t versions. If they're greater than 8, we need a new version
- *   of malloc_zone_t adapted into osx_zone_types.h.
- */
-
-#ifndef MOZ_REPLACE_MALLOC
-#include "osx_zone_types.h"
-
-#define LEOPARD_MALLOC_ZONE_T_VERSION 3
-#define SNOW_LEOPARD_MALLOC_ZONE_T_VERSION 6
-#define LION_MALLOC_ZONE_T_VERSION 8
-
-static bool osx_use_jemalloc = false;
-
-
-static lion_malloc_zone l_szone;
-static malloc_zone_t * szone = (malloc_zone_t*)(&l_szone);
-
-static lion_malloc_introspection l_ozone_introspect;
-static malloc_introspection_t * const ozone_introspect =
-	(malloc_introspection_t*)(&l_ozone_introspect);
-static malloc_zone_t *get_default_zone();
-static void szone2ozone(malloc_zone_t *zone, size_t size);
-static size_t zone_version_size(int version);
-#else
-static const bool osx_use_jemalloc = true;
+#ifndef MOZ_MEMORY_DARWIN
+static
 #endif
-
+void	_malloc_prefork(void);
+#ifndef MOZ_MEMORY_DARWIN
+static
 #endif
+void	_malloc_postfork_parent(void);
+#ifndef MOZ_MEMORY_DARWIN
+static
+#endif
+void	_malloc_postfork_child(void);
 
 /*
  * End function prototypes.
@@ -5580,6 +5531,10 @@ malloc_init(void)
 }
 #endif
 
+#if defined(MOZ_MEMORY_DARWIN) && !defined(MOZ_REPLACE_MALLOC)
+extern void register_zone(void);
+#endif
+
 #if !defined(MOZ_MEMORY_WINDOWS)
 static
 #endif
@@ -5592,9 +5547,6 @@ malloc_init_hard(void)
 	long result;
 #ifndef MOZ_MEMORY_WINDOWS
 	int linklen;
-#endif
-#ifdef MOZ_MEMORY_DARWIN
-    malloc_zone_t* default_zone;
 #endif
 
 #ifndef MOZ_MEMORY_WINDOWS
@@ -6091,7 +6043,7 @@ MALLOC_OUT:
 
 #if !defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_DARWIN)
 	/* Prevent potential deadlock on malloc locks after fork. */
-	pthread_atfork(_malloc_prefork, _malloc_postfork, _malloc_postfork);
+	pthread_atfork(_malloc_prefork, _malloc_postfork_parent, _malloc_postfork_child);
 #endif
 
 #if defined(NEEDS_PTHREAD_MMAP_UNALIGNED_TSD)
@@ -6101,45 +6053,7 @@ MALLOC_OUT:
 #endif
 
 #if defined(MOZ_MEMORY_DARWIN) && !defined(MOZ_REPLACE_MALLOC)
-	/*
-	* Overwrite the default memory allocator to use jemalloc everywhere.
-	*/
-	default_zone = get_default_zone();
-
-	/*
-	 * We only use jemalloc with MacOS 10.6 and 10.7.  jemalloc is disabled
-	 * on 32-bit builds (10.5 and 32-bit 10.6) due to bug 702250, an
-	 * apparent MacOS bug.  In fact, this code isn't even compiled on
-	 * 32-bit builds.
-	 *
-	 * We'll have to update our code to work with newer versions, because
-	 * the malloc zone layout is likely to change.
-	 */
-
-	osx_use_jemalloc = (default_zone->version == SNOW_LEOPARD_MALLOC_ZONE_T_VERSION ||
-			    default_zone->version == LION_MALLOC_ZONE_T_VERSION);
-
-	/* Allow us dynamically turn off jemalloc for testing. */
-	if (getenv("NO_MAC_JEMALLOC")) {
-		osx_use_jemalloc = false;
-#ifdef __i386__
-		malloc_printf("Warning: NO_MAC_JEMALLOC has no effect on "
-			      "i386 machines (such as this one).\n");
-#endif
-	}
-
-	if (osx_use_jemalloc) {
-		/*
-		 * Convert the default szone to an "overlay zone" that is capable
-		 * of deallocating szone-allocated objects, but allocating new
-		 * objects from jemalloc.
-		 */
-		size_t size = zone_version_size(default_zone->version);
-		szone2ozone(default_zone, size);
-	}
-	else {
-		szone = default_zone;
-	}
+	register_zone();
 #endif
 
 #ifndef MOZ_MEMORY_WINDOWS
@@ -6166,31 +6080,10 @@ malloc_shutdown()
  * Begin malloc(3)-compatible functions.
  */
 
-/*
- * Even though we compile with MOZ_MEMORY, we may have to dynamically decide
- * not to use jemalloc, as discussed above. However, we call jemalloc
- * functions directly from mozalloc. Since it's pretty dangerous to mix the
- * allocators, we need to call the OSX allocators from the functions below,
- * when osx_use_jemalloc is not (dynamically) set.
- *
- * Note that we assume jemalloc is enabled on i386.  This is safe because the
- * only i386 versions of MacOS are 10.5 and 10.6, which we support.  We have to
- * do this because madvise isn't in the malloc zone struct for 10.5.
- *
- * This means that NO_MAC_JEMALLOC doesn't work on i386.
- */
-#if defined(MOZ_MEMORY_DARWIN) && !defined(__i386__) && !defined(MOZ_REPLACE_MALLOC)
-#define DARWIN_ONLY(A) if (!osx_use_jemalloc) { A; }
-#else
-#define DARWIN_ONLY(A)
-#endif
-
 MOZ_MEMORY_API void *
 malloc_impl(size_t size)
 {
 	void *ret;
-
-	DARWIN_ONLY(return (szone->malloc)(szone, size));
 
 	if (malloc_init()) {
 		ret = NULL;
@@ -6273,8 +6166,6 @@ void *
 MEMALIGN(size_t alignment, size_t size)
 {
 	void *ret;
-
-	DARWIN_ONLY(return (szone->memalign)(szone, alignment, size));
 
 	assert(((alignment - 1) & alignment) == 0);
 
@@ -6374,8 +6265,6 @@ calloc_impl(size_t num, size_t size)
 	void *ret;
 	size_t num_size;
 
-	DARWIN_ONLY(return (szone->calloc)(szone, num, size));
-
 	if (malloc_init()) {
 		num_size = 0;
 		ret = NULL;
@@ -6429,8 +6318,6 @@ MOZ_MEMORY_API void *
 realloc_impl(void *ptr, size_t size)
 {
 	void *ret;
-
-	DARWIN_ONLY(return (szone->realloc)(szone, ptr, size));
 
 	if (size == 0) {
 #ifdef MALLOC_SYSV
@@ -6494,8 +6381,6 @@ free_impl(void *ptr)
 {
 	size_t offset;
 
-	DARWIN_ONLY((szone->free)(szone, ptr); return);
-
 	UTRACE(ptr, 0, 0);
 
 	/*
@@ -6519,12 +6404,7 @@ free_impl(void *ptr)
  */
 
 /* This was added by Mozilla for use by SQLite. */
-#if defined(MOZ_MEMORY_DARWIN) && !defined(MOZ_REPLACE_MALLOC)
-static
-#else
-MOZ_MEMORY_API
-#endif
-size_t
+MOZ_MEMORY_API size_t
 malloc_good_size_impl(size_t size)
 {
 	/*
@@ -6566,8 +6446,6 @@ malloc_good_size_impl(size_t size)
 MOZ_MEMORY_API size_t
 malloc_usable_size_impl(MALLOC_USABLE_SIZE_CONST_PTR void *ptr)
 {
-	DARWIN_ONLY(return (szone->size)(szone, ptr));
-
 #ifdef MALLOC_VALIDATE
 	return (isalloc_validate(ptr));
 #else
@@ -6885,7 +6763,10 @@ jemalloc_free_dirty_pages_impl(void)
  * is threaded here.
  */
 
-static void
+#ifndef MOZ_MEMORY_DARWIN
+static
+#endif
+void
 _malloc_prefork(void)
 {
 	unsigned i;
@@ -6903,8 +6784,11 @@ _malloc_prefork(void)
 	malloc_mutex_lock(&huge_mtx);
 }
 
-static void
-_malloc_postfork(void)
+#ifndef MOZ_MEMORY_DARWIN
+static
+#endif
+void
+_malloc_postfork_parent(void)
 {
 	unsigned i;
 
@@ -6921,6 +6805,27 @@ _malloc_postfork(void)
 	malloc_spin_unlock(&arenas_lock);
 }
 
+#ifndef MOZ_MEMORY_DARWIN
+static
+#endif
+void
+_malloc_postfork_child(void)
+{
+	unsigned i;
+
+	/* Reinitialize all mutexes, now that fork() has completed. */
+
+	malloc_mutex_init(&huge_mtx);
+
+	malloc_mutex_init(&base_mtx);
+
+	for (i = 0; i < narenas; i++) {
+		if (arenas[i] != NULL)
+			malloc_spin_init(&arenas[i]->lock);
+	}
+	malloc_spin_init(&arenas_lock);
+}
+
 /*
  * End library-private functions.
  */
@@ -6931,254 +6836,6 @@ _malloc_postfork(void)
 #endif
 
 #if defined(MOZ_MEMORY_DARWIN)
-
-#if !defined(MOZ_REPLACE_MALLOC)
-static void *
-zone_malloc(malloc_zone_t *zone, size_t size)
-{
-
-	return (malloc_impl(size));
-}
-
-static void *
-zone_calloc(malloc_zone_t *zone, size_t num, size_t size)
-{
-
-	return (calloc_impl(num, size));
-}
-
-static void *
-zone_valloc(malloc_zone_t *zone, size_t size)
-{
-	void *ret = NULL; /* Assignment avoids useless compiler warning. */
-
-	posix_memalign_impl(&ret, pagesize, size);
-
-	return (ret);
-}
-
-static void *
-zone_memalign(malloc_zone_t *zone, size_t alignment, size_t size)
-{
-	return (memalign_impl(alignment, size));
-}
-
-static void *
-zone_destroy(malloc_zone_t *zone)
-{
-
-	/* This function should never be called. */
-	assert(false);
-	return (NULL);
-}
-
-static size_t
-zone_good_size(malloc_zone_t *zone, size_t size)
-{
-	return malloc_good_size_impl(size);
-}
-
-static size_t
-ozone_size(malloc_zone_t *zone, void *ptr)
-{
-	size_t ret = isalloc_validate(ptr);
-	if (ret == 0)
-		ret = szone->size(zone, ptr);
-
-	return ret;
-}
-
-static void
-ozone_free(malloc_zone_t *zone, void *ptr)
-{
-	if (isalloc_validate(ptr) != 0)
-		free_impl(ptr);
-	else {
-		size_t size = szone->size(zone, ptr);
-		if (size != 0)
-			(szone->free)(zone, ptr);
-		/* Otherwise we leak. */
-	}
-}
-
-static void *
-ozone_realloc(malloc_zone_t *zone, void *ptr, size_t size)
-{
-    size_t oldsize;
-	if (ptr == NULL)
-		return (malloc_impl(size));
-
-	oldsize = isalloc_validate(ptr);
-	if (oldsize != 0)
-		return (realloc_impl(ptr, size));
-	else {
-		oldsize = szone->size(zone, ptr);
-		if (oldsize == 0)
-			return (malloc_impl(size));
-		else {
-			void *ret = malloc_impl(size);
-			if (ret != NULL) {
-				memcpy(ret, ptr, (oldsize < size) ? oldsize :
-				    size);
-				(szone->free)(zone, ptr);
-			}
-			return (ret);
-		}
-	}
-}
-
-static unsigned
-ozone_batch_malloc(malloc_zone_t *zone, size_t size, void **results,
-    unsigned num_requested)
-{
-	/* Don't bother implementing this interface, since it isn't required. */
-	return 0;
-}
-
-static void
-ozone_batch_free(malloc_zone_t *zone, void **to_be_freed, unsigned num)
-{
-	unsigned i;
-
-	for (i = 0; i < num; i++)
-		ozone_free(zone, to_be_freed[i]);
-}
-
-static void
-ozone_free_definite_size(malloc_zone_t *zone, void *ptr, size_t size)
-{
-	if (isalloc_validate(ptr) != 0) {
-		assert(isalloc_validate(ptr) == size);
-		free_impl(ptr);
-	} else {
-		assert(size == szone->size(zone, ptr));
-		l_szone.m16(zone, ptr, size);
-	}
-}
-
-static void
-ozone_force_lock(malloc_zone_t *zone)
-{
-	_malloc_prefork();
-	szone->introspect->force_lock(zone);
-}
-
-static void
-ozone_force_unlock(malloc_zone_t *zone)
-{
-	szone->introspect->force_unlock(zone);
-        _malloc_postfork();
-}
-
-static size_t
-zone_version_size(int version)
-{
-    switch (version)
-    {
-        case SNOW_LEOPARD_MALLOC_ZONE_T_VERSION:
-            return sizeof(snow_leopard_malloc_zone);
-        case LEOPARD_MALLOC_ZONE_T_VERSION:
-            return sizeof(leopard_malloc_zone);
-        default:
-        case LION_MALLOC_ZONE_T_VERSION:
-            return sizeof(lion_malloc_zone);
-    }
-}
-
-static malloc_zone_t *get_default_zone()
-{
-  malloc_zone_t **zones = NULL;
-  unsigned int num_zones = 0;
-
-  /*
-   * On OSX 10.12, malloc_default_zone returns a special zone that is not
-   * present in the list of registered zones. That zone uses a "lite zone"
-   * if one is present (apparently enabled when malloc stack logging is
-   * enabled), or the first registered zone otherwise. In practice this
-   * means unless malloc stack logging is enabled, the first registered
-   * zone is the default.
-   * So get the list of zones to get the first one, instead of relying on
-   * malloc_default_zone.
-   */
-  if (KERN_SUCCESS != malloc_get_all_zones(0, NULL, (vm_address_t**) &zones,
-                                           &num_zones)) {
-    /* Reset the value in case the failure happened after it was set. */
-    num_zones = 0;
-  }
-  if (num_zones) {
-    return zones[0];
-  }
-  return malloc_default_zone();
-}
-
-/*
- * Overlay the default scalable zone (szone) such that existing allocations are
- * drained, and further allocations come from jemalloc. This is necessary
- * because Core Foundation directly accesses and uses the szone before the
- * jemalloc library is even loaded.
- */
-static void
-szone2ozone(malloc_zone_t *default_zone, size_t size)
-{
-    lion_malloc_zone *l_zone;
-	assert(malloc_initialized);
-
-	/*
-	 * Stash a copy of the original szone so that we can call its
-	 * functions as needed. Note that internally, the szone stores its
-	 * bookkeeping data structures immediately following the malloc_zone_t
-	 * header, so when calling szone functions, we need to pass a pointer to
-	 * the original zone structure.
-	 */
-	memcpy(szone, default_zone, size);
-
-	/* OSX 10.7 allocates the default zone in protected memory. */
-	if (default_zone->version >= LION_MALLOC_ZONE_T_VERSION) {
-		void* start_of_page = (void*)((size_t)(default_zone) & ~pagesize_mask);
-		mprotect (start_of_page, size, PROT_READ | PROT_WRITE);
-	}
-
-	default_zone->size = (void *)ozone_size;
-	default_zone->malloc = (void *)zone_malloc;
-	default_zone->calloc = (void *)zone_calloc;
-	default_zone->valloc = (void *)zone_valloc;
-	default_zone->free = (void *)ozone_free;
-	default_zone->realloc = (void *)ozone_realloc;
-	default_zone->destroy = (void *)zone_destroy;
-	default_zone->batch_malloc = NULL;
-	default_zone->batch_free = ozone_batch_free;
-	default_zone->introspect = ozone_introspect;
-
-	/* Don't modify default_zone->zone_name; Mac libc may rely on the name
-	 * being unchanged.  See Mozilla bug 694896. */
-
-	ozone_introspect->enumerator = NULL;
-	ozone_introspect->good_size = (void *)zone_good_size;
-	ozone_introspect->check = NULL;
-	ozone_introspect->print = NULL;
-	ozone_introspect->log = NULL;
-	ozone_introspect->force_lock = (void *)ozone_force_lock;
-	ozone_introspect->force_unlock = (void *)ozone_force_unlock;
-	ozone_introspect->statistics = NULL;
-
-    /* Platform-dependent structs */
-    l_zone = (lion_malloc_zone*)(default_zone);
-
-    if (default_zone->version >= SNOW_LEOPARD_MALLOC_ZONE_T_VERSION) {
-        l_zone->m15 = (void (*)())zone_memalign;
-        l_zone->m16 = (void (*)())ozone_free_definite_size;
-        l_ozone_introspect.m9 = NULL;
-    }
-
-    if (default_zone->version >= LION_MALLOC_ZONE_T_VERSION) {
-        l_zone->m17 = NULL;
-        l_ozone_introspect.m10 = NULL;
-        l_ozone_introspect.m11 = NULL;
-        l_ozone_introspect.m12 = NULL;
-        l_ozone_introspect.m13 = NULL;
-    }
-}
-#endif
 
 __attribute__((constructor))
 void
