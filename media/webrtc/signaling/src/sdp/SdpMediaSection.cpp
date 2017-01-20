@@ -84,7 +84,7 @@ SdpMediaSection::FindRtpmap(const std::string& pt) const
 }
 
 const SdpSctpmapAttributeList::Sctpmap*
-SdpMediaSection::FindSctpmap(const std::string& pt) const
+SdpMediaSection::GetSctpmap() const
 {
   auto& attrs = GetAttributeList();
   if (!attrs.HasAttribute(SdpAttribute::kSctpmapAttribute)) {
@@ -92,11 +92,23 @@ SdpMediaSection::FindSctpmap(const std::string& pt) const
   }
 
   const SdpSctpmapAttributeList& sctpmap = attrs.GetSctpmap();
-  if (!sctpmap.HasEntry(pt)) {
+  if (!sctpmap.mSctpmaps.size()) {
     return nullptr;
   }
 
-  return &sctpmap.GetEntry(pt);
+  return &sctpmap.GetFirstEntry();
+}
+
+int
+SdpMediaSection::GetSctpPort() const
+{
+  auto& attrs = GetAttributeList();
+  if (!attrs.HasAttribute(SdpAttribute::kSctpPortAttribute)) {
+    return 0;
+  }
+
+  uint32_t val = attrs.GetSctpPort();
+  return val;
 }
 
 bool
