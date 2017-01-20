@@ -24,7 +24,8 @@ class nsIAtom;
 namespace mozilla {
 namespace css {
 
-class NameSpaceRule final : public Rule
+class NameSpaceRule final : public Rule,
+                            public nsIDOMCSSRule
 {
 public:
   NameSpaceRule(nsIAtom* aPrefix, const nsString& aURLSpec,
