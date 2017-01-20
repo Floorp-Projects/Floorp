@@ -1720,7 +1720,7 @@ CompositorOGL::Resume()
     return false;
 
   // RenewSurface internally calls MakeCurrent.
-  return gl()->RenewSurface(GetWidget()->RealWidget());
+  return gl()->RenewSurface(GetWidget());
 #endif
   return true;
 }
