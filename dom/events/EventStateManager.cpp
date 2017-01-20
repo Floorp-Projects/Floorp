@@ -1277,56 +1277,11 @@ EventStateManager::IsRemoteTarget(nsIContent* target) {
   return false;
 }
 
-static bool
-CrossProcessSafeEvent(const WidgetEvent& aEvent)
-{
-  switch (aEvent.mClass) {
-  case eKeyboardEventClass:
-  case eWheelEventClass:
-    return true;
-  case eMouseEventClass:
-    switch (aEvent.mMessage) {
-    case eMouseDown:
-    case eMouseUp:
-    case eMouseMove:
-    case eContextMenu:
-    case eMouseEnterIntoWidget:
-    case eMouseExitFromWidget:
-    case eMouseTouchDrag:
-      return true;
-    default:
-      return false;
-    }
-  case eTouchEventClass:
-    switch (aEvent.mMessage) {
-    case eTouchStart:
-    case eTouchMove:
-    case eTouchEnd:
-    case eTouchCancel:
-      return true;
-    default:
-      return false;
-    }
-  case eDragEventClass:
-    switch (aEvent.mMessage) {
-    case eDragOver:
-    case eDragExit:
-    case eDrop:
-      return true;
-    default:
-      return false;
-    }
-  default:
-    return false;
-  }
-}
-
 bool
 EventStateManager::HandleCrossProcessEvent(WidgetEvent* aEvent,
                                            nsEventStatus *aStatus) {
   if (*aStatus == nsEventStatus_eConsumeNoDefault ||
-      aEvent->mFlags.mNoCrossProcessBoundaryForwarding ||
-      !CrossProcessSafeEvent(*aEvent)) {
+      !aEvent->CanBeSentToRemoteProcess()) {
     return false;
   }
 

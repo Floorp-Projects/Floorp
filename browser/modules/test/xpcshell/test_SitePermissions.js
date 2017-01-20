@@ -51,3 +51,19 @@ add_task(function* testGetAllByURI() {
   Assert.deepEqual(SitePermissions.getAllByURI(uri), []);
   SitePermissions.remove(uri, "addon");
 });
+
+add_task(function* testGetAvailableStates() {
+  Assert.deepEqual(SitePermissions.getAvailableStates("camera"),
+                   [ SitePermissions.UNKNOWN,
+                     SitePermissions.ALLOW,
+                     SitePermissions.BLOCK ]);
+
+  Assert.deepEqual(SitePermissions.getAvailableStates("cookie"),
+                   [ SitePermissions.ALLOW,
+                     SitePermissions.ALLOW_COOKIES_FOR_SESSION,
+                     SitePermissions.BLOCK ]);
+
+  Assert.deepEqual(SitePermissions.getAvailableStates("popup"),
+                   [ SitePermissions.ALLOW,
+                     SitePermissions.BLOCK ]);
+});
