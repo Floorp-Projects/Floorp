@@ -30,6 +30,7 @@ module.exports = createClass({
     onBrowserMounted: PropTypes.func.isRequired,
     onChangeDevice: PropTypes.func.isRequired,
     onContentResize: PropTypes.func.isRequired,
+    onRemoveDevice: PropTypes.func.isRequired,
     onResizeViewport: PropTypes.func.isRequired,
     onRotateViewport: PropTypes.func.isRequired,
     onUpdateDeviceModalOpen: PropTypes.func.isRequired,
@@ -107,9 +108,14 @@ module.exports = createClass({
     // Update the viewport store with the new width and height.
     this.props.onResizeViewport(width, height);
     // Change the device selector back to an unselected device
-    // TODO: Bug 1313140: We should avoid calling this for every resize event, since it
-    // triggers RDP calls each time.
-    this.props.onChangeDevice({ name: "" });
+    // TODO: Bug 1332754: Logic like this probably belongs in the action creator.
+    if (this.props.viewport.device) {
+      // In bug 1329843 and others, we may eventually stop this approach of removing the
+      // the properties of the device on resize.  However, at the moment, there is no
+      // way to edit dPR when a device is selected, and there is no UI at all for editing
+      // UA, so it's important to keep doing this for now.
+      this.props.onRemoveDevice();
+    }
 
     this.setState({
       lastClientX,
