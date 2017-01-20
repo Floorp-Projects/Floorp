@@ -382,7 +382,8 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
           auto slice = Range<uint8_t>(map.mData, validRect.height * map.mStride);
           key = mApi->AddImageBuffer(validRect.Size(), map.mStride, SurfaceFormat::B8G8R8A8, slice);
         } else {
-          key = wr::ImageKey(wr_add_image(mWRWindowState, validRect.width, validRect.height, map.mStride, RGBA8, map.mData, validRect.height * map.mStride));
+          key = wr::ImageKey(wr_add_image(mWRWindowState, validRect.width, validRect.height, map.mStride,
+            WrImageFormat::RGBA8, map.mData, validRect.height * map.mStride));
         }
 
         builder.PushImage(op.bounds(), op.clip(), op.mask().ptrOr(nullptr), op.filter(), key);

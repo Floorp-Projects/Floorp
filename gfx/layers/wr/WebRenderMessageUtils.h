@@ -88,7 +88,7 @@ struct ParamTraits<WrImageFormat>
   : public ContiguousEnumSerializer<
         WrImageFormat,
         WrImageFormat::Invalid,
-        WrImageFormat::RGBAF32>
+        WrImageFormat::Sentinel>
 {
 };
 
@@ -97,7 +97,7 @@ struct ParamTraits<WrBorderStyle>
   : public ContiguousEnumSerializer<
         WrBorderStyle,
         WrBorderStyle::None,
-        WrBorderStyle::Outset>
+        WrBorderStyle::Sentinel>
 {
 };
 
