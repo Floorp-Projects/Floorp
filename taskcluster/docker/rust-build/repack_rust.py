@@ -57,6 +57,9 @@ def install(filename, target):
     print(' Unpacking %s...' % filename)
     subprocess.check_call(['tar', 'xf', filename])
     basename = filename.split('.tar')[0]
+    # Work around bad tarball naming in 1.15 cargo packages.
+    basename = basename.replace('cargo-beta', 'cargo-nightly')
+    basename = basename.replace('cargo-0.16', 'cargo-nightly')
     print(' Installing %s...' % basename)
     install_cmd = [os.path.join(basename, 'install.sh')]
     install_cmd += ['--prefix=' + os.path.abspath(target)]
@@ -195,4 +198,4 @@ if __name__ == '__main__':
     repack(win64, [win64])
     repack(linux64, [linux64, linux32])
     repack(linux64, [linux64, mac64, mac32], suffix='mac-cross')
-    repack(linux64, [linux64, android, android_x86], suffix='android-cross')
+    repack(linux64, [linux64, android, android_x86], channel='beta', suffix='android-cross')
