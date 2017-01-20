@@ -154,13 +154,7 @@ WebRenderAPI::~WebRenderAPI()
   RunOnRenderThread(Move(event));
   task.Wait();
 
-#ifdef MOZ_ENABLE_WEBRENDER
-  // Need to wrap this in an ifdef otherwise VC++ emits a warning (treated as error)
-  // in the non-webrender targets.
-  // We should be able to remove this #ifdef if/when we remove the
-  // MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE annotations in webrender.h
   wr_api_delete(mWrApi);
-#endif
 }
 
 void
@@ -262,12 +256,8 @@ WebRenderAPI::SetProfilerEnabled(bool aEnabled)
 void
 WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent>&& aEvent)
 {
-#ifdef MOZ_ENABLE_WEBRENDER
-  // ifdef this out so that calling this function from a destructor does
-  // not break windows builds...
   auto event = reinterpret_cast<uintptr_t>(aEvent.release());
   wr_api_send_external_event(mWrApi, event);
-#endif
 }
 
 DisplayListBuilder::DisplayListBuilder(const LayerIntSize& aSize, PipelineId aId)
@@ -279,9 +269,7 @@ DisplayListBuilder::DisplayListBuilder(const LayerIntSize& aSize, PipelineId aId
 DisplayListBuilder::~DisplayListBuilder()
 {
   MOZ_COUNT_DTOR(DisplayListBuilder);
-#ifdef MOZ_ENABLE_WEBRENDER
   wr_state_delete(mWrState);
-#endif
 }
 
 void

@@ -266,12 +266,21 @@ struct WrExternalImageIdHandler
 // Functions exposed by the webrender API
 // -----
 
+// Some useful defines to stub out webrender binding functions for when we
+// build gecko without webrender. We try to tell the compiler these functions
+// are unreachable in that case, but VC++ emits a warning if it finds any
+// unreachable functions invoked from destructors. That warning gets turned into
+// an error and causes the build to fail. So for wr_* functions called by
+// destructors in C++ classes, use WR_DESTRUCTOR_SAFE_FUNC instead, which omits
+// the unreachable annotation.
 #ifdef MOZ_ENABLE_WEBRENDER
 #  define WR_INLINE
 #  define WR_FUNC
+#  define WR_DESTRUCTOR_SAFE_FUNC
 #else
 #  define WR_INLINE inline
 #  define WR_FUNC { MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("WebRender disabled"); }
+#  define WR_DESTRUCTOR_SAFE_FUNC {}
 #endif
 
 // Structs defined in Rust, but opaque to C++ code.
@@ -299,7 +308,7 @@ WR_FUNC;
 
 WR_INLINE void
 wr_renderer_delete(WrRenderer* renderer)
-WR_FUNC;
+WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE void
 wr_gl_init(void* aGLContext)
@@ -316,7 +325,7 @@ WR_FUNC;
 
 WR_INLINE void
 wr_api_delete(WrAPI* api)
-WR_FUNC;
+WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE WrImageKey
 wr_api_add_image(WrAPI* api, uint32_t width, uint32_t height,
@@ -348,7 +357,7 @@ WR_FUNC;
 
 WR_INLINE void
 wr_api_send_external_event(WrAPI* api, uintptr_t evt)
-WR_FUNC;
+WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE void
 wr_window_init_pipeline_epoch(WrWindowState* window, WrPipelineId pipeline, uint32_t width, uint32_t height)
@@ -375,7 +384,7 @@ WR_FUNC;
 
 WR_INLINE void
 wr_state_delete(WrState* state)
-WR_FUNC;
+WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE void
 wr_destroy(WrWindowState* wrWindow, WrState* WrState)
@@ -485,6 +494,7 @@ wr_profiler_set_enabled(WrWindowState* wrWindow, bool enabled)
 WR_FUNC;
 
 #undef WR_FUNC
+#undef WR_DESTRUCTOR_SAFE_FUNC
 } // extern "C"
 
 #endif // WR_h
