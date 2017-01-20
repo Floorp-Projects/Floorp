@@ -291,13 +291,45 @@ extern bool stack_key_initialized;
 
 // Returns a handle to pass on exit. This can check that we are popping the
 // correct callstack.
-inline void* mozilla_sampler_call_enter(const char *aInfo, js::ProfileEntry::Category aCategory,
-                                        void *aFrameAddress = nullptr, bool aCopy = false,
-                                        uint32_t line = 0);
+inline void*
+mozilla_sampler_call_enter(const char *aInfo,
+                           js::ProfileEntry::Category aCategory,
+                           void *aFrameAddress, bool aCopy, uint32_t line)
+{
+  // check if we've been initialized to avoid calling pthread_getspecific
+  // with a null tlsStack which will return undefined results.
+  if (!stack_key_initialized)
+    return nullptr;
 
-inline void mozilla_sampler_call_exit(void* handle);
+  PseudoStack *stack = tlsPseudoStack.get();
+  // we can't infer whether 'stack' has been initialized
+  // based on the value of stack_key_intiailized because
+  // 'stack' is only intialized when a thread is being
+  // profiled.
+  if (!stack) {
+    return stack;
+  }
+  stack->push(aInfo, aCategory, aFrameAddress, aCopy, line);
 
-void mozilla_sampler_add_marker(const char *aInfo,
+  // The handle is meant to support future changes
+  // but for now it is simply use to save a call to
+  // pthread_getspecific on exit. It also supports the
+  // case where the sampler is initialized between
+  // enter and exit.
+  return stack;
+}
+
+inline void
+mozilla_sampler_call_exit(void *aHandle)
+{
+  if (!aHandle)
+    return;
+
+  PseudoStack *stack = (PseudoStack*)aHandle;
+  stack->popAndMaybeDelete();
+}
+
+void mozilla_sampler_add_marker(const char *aMarker,
                                 ProfilerMarkerPayload *aPayload = nullptr);
 
 void mozilla_sampler_start(int aEntries, double aInterval,
@@ -761,43 +793,6 @@ inline PseudoStack* mozilla_get_pseudo_stack(void)
     return nullptr;
   return tlsPseudoStack.get();
 }
-
-inline void* mozilla_sampler_call_enter(const char *aInfo,
-  js::ProfileEntry::Category aCategory, void *aFrameAddress, bool aCopy, uint32_t line)
-{
-  // check if we've been initialized to avoid calling pthread_getspecific
-  // with a null tlsStack which will return undefined results.
-  if (!stack_key_initialized)
-    return nullptr;
-
-  PseudoStack *stack = tlsPseudoStack.get();
-  // we can't infer whether 'stack' has been initialized
-  // based on the value of stack_key_intiailized because
-  // 'stack' is only intialized when a thread is being
-  // profiled.
-  if (!stack) {
-    return stack;
-  }
-  stack->push(aInfo, aCategory, aFrameAddress, aCopy, line);
-
-  // The handle is meant to support future changes
-  // but for now it is simply use to save a call to
-  // pthread_getspecific on exit. It also supports the
-  // case where the sampler is initialized between
-  // enter and exit.
-  return stack;
-}
-
-inline void mozilla_sampler_call_exit(void *aHandle)
-{
-  if (!aHandle)
-    return;
-
-  PseudoStack *stack = (PseudoStack*)aHandle;
-  stack->popAndMaybeDelete();
-}
-
-void mozilla_sampler_add_marker(const char *aMarker, ProfilerMarkerPayload *aPayload);
 
 static inline
 void profiler_log(const char *str)
