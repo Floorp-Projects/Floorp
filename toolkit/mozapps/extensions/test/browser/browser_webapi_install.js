@@ -125,7 +125,16 @@ function* testInstall(browser, args, steps, description) {
       let nextStep = steps.shift();
       if (nextStep.action) {
         if (nextStep.action == "install") {
-          yield install.install();
+          try {
+            yield install.install();
+            if (nextStep.expectError) {
+              throw new Error("Expected install to fail but it did not");
+            }
+          } catch (err) {
+            if (!nextStep.expectError) {
+              throw new Error("Install failed unexpectedly");
+            }
+          }
         } else if (nextStep.action == "cancel") {
           yield install.cancel();
         } else {
@@ -234,7 +243,7 @@ add_task(makeInstallTest(function* (browser) {
 
 add_task(makeInstallTest(function* (browser) {
   let steps = [
-    {action: "install"},
+    {action: "install", expectError: true},
     {
       event: "onDownloadStarted",
       props: {state: "STATE_DOWNLOADING"},
@@ -259,7 +268,7 @@ add_task(makeInstallTest(function* (browser) {
 
 add_task(makeInstallTest(function* (browser) {
   let steps = [
-    {action: "install"},
+    {action: "install", expectError: true},
     {
       event: "onDownloadStarted",
       props: {state: "STATE_DOWNLOADING"},
