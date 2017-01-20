@@ -1287,7 +1287,12 @@ pref("javascript.options.mem.gc_max_empty_chunk_count", 30);
 
 pref("javascript.options.showInConsole", false);
 
+#ifdef RELEASE_OR_BETA
+// Disabled in Beta and Release for now, see bug 1225406
+pref("javascript.options.shared_memory", false);
+#else
 pref("javascript.options.shared_memory", true);
+#endif
 
 pref("javascript.options.throw_on_debuggee_would_run", false);
 pref("javascript.options.dump_stack_on_debuggee_would_run", false);
