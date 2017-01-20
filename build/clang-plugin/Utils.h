@@ -306,7 +306,9 @@ inline bool typeIsRefPtr(QualType Q) {
 // IgnoreTrivials.
 inline const Stmt *IgnoreTrivials(const Stmt *s) {
   while (true) {
-    if (auto *ewc = dyn_cast<ExprWithCleanups>(s)) {
+    if (!s) {
+      return nullptr;
+    } else if (auto *ewc = dyn_cast<ExprWithCleanups>(s)) {
       s = ewc->getSubExpr();
     } else if (auto *mte = dyn_cast<MaterializeTemporaryExpr>(s)) {
       s = mte->GetTemporaryExpr();

@@ -49,9 +49,9 @@ function keepThisScopedCredential(aScopedCredInfo) {
   return Promise.resolve(aScopedCredInfo);
 }
 
-SpecialPowers.pushPrefEnv({"set": [["security.webauth.w3c", true],
-                                   ["security.webauth.u2f_enable_softtoken", true],
-                                   ["security.webauth.u2f_enable_usbtoken", false]]},
+SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
+                                   ["security.webauth.webauthn_enable_softtoken", true],
+                                   ["security.webauth.webauthn_enable_usbtoken", false]]},
 function() {
   isnot(navigator.authentication, undefined, "WebAuthn API endpoint must exist");
   isnot(navigator.authentication.makeCredential, undefined,

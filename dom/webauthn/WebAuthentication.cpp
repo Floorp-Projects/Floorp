@@ -13,10 +13,13 @@
 #include "pkix/Input.h"
 #include "pkixutil.h"
 
+#define PREF_WEBAUTHN_SOFTTOKEN_ENABLED "security.webauth.webauthn_enable_softtoken"
+#define PREF_WEBAUTHN_USBTOKEN_ENABLED  "security.webauth.webauthn_enable_usbtoken"
+
 namespace mozilla {
 namespace dom {
 
-extern mozilla::LazyLogModule gWebauthLog; // defined in U2F.cpp
+static mozilla::LazyLogModule gWebauthLog("webauthn");
 
 // Only needed for refcounted objects.
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebAuthentication, mParent)
@@ -288,7 +291,7 @@ WebAuthentication::InitLazily()
     return NS_ERROR_FAILURE;
   }
 
-  if (Preferences::GetBool(PREF_U2F_SOFTTOKEN_ENABLED)) {
+  if (Preferences::GetBool(PREF_WEBAUTHN_SOFTTOKEN_ENABLED)) {
     if (!mAuthenticators.AppendElement(new NSSU2FTokenRemote(),
                                        mozilla::fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
