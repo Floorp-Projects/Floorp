@@ -20,7 +20,8 @@ Cu.import("resource://testing-common/PlacesTestUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
-
+XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
+                                  "resource://gre/modules/Sqlite.jsm");
 // Initialize profile.
 var gProfD = do_get_profile();
 
