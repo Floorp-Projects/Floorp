@@ -26,11 +26,9 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 
 this.ExtensionsUI = {
   sideloaded: new Set(),
-  updates: new Set(),
 
   init() {
     Services.obs.addObserver(this, "webextension-permission-prompt", false);
-    Services.obs.addObserver(this, "webextension-update-permissions", false);
 
     this._checkForSideloaded();
   },
@@ -62,7 +60,11 @@ this.ExtensionsUI = {
     });
   },
 
-  showAddonsManager(browser, info) {
+  showSideloaded(browser, addon) {
+    addon.markAsSeen();
+    this.sideloaded.delete(addon);
+    this.emit("change");
+
     let loadPromise = new Promise(resolve => {
       let listener = (subject, topic) => {
         if (subject.location.href == "about:addons") {
@@ -74,41 +76,16 @@ this.ExtensionsUI = {
     });
     let tab = browser.addTab("about:addons");
     browser.selectedTab = tab;
-
-    return loadPromise.then(win => {
+    loadPromise.then(win => {
       win.loadView("addons://list/extension");
-      return this.showPermissionsPrompt(browser.selectedBrowser, info);
-    });
-  },
-
-  showSideloaded(browser, addon) {
-    addon.markAsSeen();
-    this.sideloaded.delete(addon);
-    this.emit("change");
-
-    let info = {
-      addon,
-      permissions: addon.userPermissions,
-      icon: addon.iconURL,
-      type: "sideload",
-    };
-    this.showAddonsManager(browser, info).then(answer => {
-      addon.userDisabled = !answer;
-    });
-  },
-
-  showUpdate(browser, info) {
-    info.type = "update";
-    this.showAddonsManager(browser, info).then(answer => {
-      if (answer) {
-        info.resolve();
-      } else {
-        info.reject();
-      }
-      // At the moment, this prompt will re-appear next time we do an update
-      // check.  See bug 1332360 for proposal to avoid this.
-      this.updates.delete(info);
-      this.emit("change");
+      let info = {
+        addon,
+        icon: addon.iconURL,
+        type: "sideload",
+      };
+      this.showPermissionsPrompt(browser.selectedBrowser, info).then(answer => {
+        addon.userDisabled = !answer;
+      });
     });
   },
 
@@ -124,26 +101,15 @@ this.ExtensionsUI = {
         progressNotification.remove();
       }
 
-      let reply = answer => {
+      this.showPermissionsPrompt(target, info).then(answer => {
         Services.obs.notifyObservers(subject, "webextension-permission-response",
                                      JSON.stringify(answer));
-      };
-
-      let perms = info.addon.userPermissions;
-      if (!perms) {
-        reply(true);
-      } else {
-        info.permissions = perms;
-        this.showPermissionsPrompt(target, info).then(reply);
-      }
-    } else if (topic == "webextension-update-permissions") {
-      this.updates.add(subject.wrappedJSObject);
-      this.emit("change");
+      });
     }
   },
 
   showPermissionsPrompt(target, info) {
-    let perms = info.permissions;
+    let perms = info.addon.userPermissions;
     if (!perms) {
       return Promise.resolve();
     }
@@ -181,11 +147,6 @@ this.ExtensionsUI = {
       acceptKey = "E";
       cancelText = "Disable";
       cancelKey = "D";
-    } else if (info.type == "update") {
-      header = "";
-      text = `${name} has been updated.  You must approve new permissions before the updated version will install.`;
-      acceptText = "Update";
-      acceptKey = "U";
     }
 
     let formatPermission = perm => {
