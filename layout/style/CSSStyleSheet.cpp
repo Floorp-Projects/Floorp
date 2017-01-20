@@ -509,10 +509,8 @@ CSSStyleSheet::TraverseInner(nsCycleCollectionTraversalCallback &cb)
 
   const nsCOMArray<css::Rule>& rules = mInner->mOrderedRules;
   for (int32_t i = 0, count = rules.Count(); i < count; ++i) {
-    if (!rules[i]->IsCCLeaf()) {
-      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mOrderedRules[i]");
-      cb.NoteXPCOMChild(rules[i]);
-    }
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mOrderedRules[i]");
+    cb.NoteXPCOMChild(rules[i]->GetExistingDOMRule());
   }
 }
 
