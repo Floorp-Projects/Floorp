@@ -556,7 +556,8 @@ class BaseBootstrapper(object):
             # so fall back to a manual PATH update. Bootstrap
             # only runs under msys, so a unix-style shell command
             # is appropriate there.
-            cmd = 'export PATH=%s:$PATH' % self.win_to_msys_path(cargo_bin)
+            cargo_bin = self.win_to_msys_path(cargo_bin)
+            cmd = 'export PATH=%s:$PATH' % cargo_bin
         print(template % {
             'cargo_bin': cargo_bin,
             'cmd': cmd,
