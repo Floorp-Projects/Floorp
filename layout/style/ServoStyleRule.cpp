@@ -190,16 +190,43 @@ ServoStyleRule::List(FILE* out, int32_t aIndent) const
 
 /* CSSRule implementation */
 
-uint16_t
-ServoStyleRule::Type() const
+NS_IMETHODIMP
+ServoStyleRule::GetType(uint16_t* aType)
 {
-  return nsIDOMCSSRule::STYLE_RULE;
+  *aType = nsIDOMCSSRule::STYLE_RULE;
+  return NS_OK;
 }
 
-void
-ServoStyleRule::GetCssTextImpl(nsAString& aCssText) const
+NS_IMETHODIMP
+ServoStyleRule::GetCssText(nsAString& aCssText)
 {
   Servo_StyleRule_GetCssText(mRawRule, &aCssText);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServoStyleRule::SetCssText(const nsAString& aCssText)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServoStyleRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
+{
+  return css::Rule::GetParentStyleSheet(aSheet);
+}
+
+NS_IMETHODIMP
+ServoStyleRule::GetParentRule(nsIDOMCSSRule** aParentRule)
+{
+  *aParentRule = nullptr;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+css::Rule*
+ServoStyleRule::GetCSSRule()
+{
+  return this;
 }
 
 /* CSSStyleRule implementation */
