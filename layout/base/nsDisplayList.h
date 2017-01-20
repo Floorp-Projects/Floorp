@@ -4397,6 +4397,9 @@ public:
 
   virtual bool ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder) override
   {
+    if (!mList.GetChildren()->GetTop()) {
+      return false;
+    }
     return mList.GetChildren()->GetTop()->ShouldBuildLayerEvenIfInvisible(aBuilder);
   }
 
@@ -4423,7 +4426,9 @@ public:
 
   virtual void
   DoUpdateBoundsPreserves3D(nsDisplayListBuilder* aBuilder) override {
-    static_cast<nsDisplayTransform*>(mList.GetChildren()->GetTop())->DoUpdateBoundsPreserves3D(aBuilder);
+    if (mList.GetChildren()->GetTop()) {
+      static_cast<nsDisplayTransform*>(mList.GetChildren()->GetTop())->DoUpdateBoundsPreserves3D(aBuilder);
+    }
   }
 
 private:
