@@ -54,14 +54,6 @@ public:
     return GMPNoErr;
   }
 
-  GMPErr GetRecordNames(nsTArray<nsCString>& aOutRecordNames) const override
-  {
-    for (auto iter = mRecords.ConstIter(); !iter.Done(); iter.Next()) {
-      aOutRecordNames.AppendElement(iter.Key());
-    }
-    return GMPNoErr;
-  }
-
   void Close(const nsCString& aRecordName) override
   {
     Record* record = nullptr;

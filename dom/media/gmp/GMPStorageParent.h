@@ -28,7 +28,6 @@ protected:
   mozilla::ipc::IPCResult RecvRead(const nsCString& aRecordName) override;
   mozilla::ipc::IPCResult RecvWrite(const nsCString& aRecordName,
                                     InfallibleTArray<uint8_t>&& aBytes) override;
-  mozilla::ipc::IPCResult RecvGetRecordNames() override;
   mozilla::ipc::IPCResult RecvClose(const nsCString& aRecordName) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
