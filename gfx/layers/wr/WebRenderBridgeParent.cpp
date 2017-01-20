@@ -17,6 +17,7 @@
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/TextureHost.h"
+#include "mozilla/layers/WebRenderCompositableHolder.h"
 #include "mozilla/layers/WebRenderCompositorOGL.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
@@ -113,7 +114,8 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
 WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
                                              const wr::PipelineId& aPipelineId,
                                              widget::CompositorWidget* aWidget,
-                                             RefPtr<wr::WebRenderAPI>&& aApi)
+                                             RefPtr<wr::WebRenderAPI>&& aApi,
+                                             RefPtr<WebRenderCompositableHolder>&& aHolder)
   : mCompositorBridge(aCompositorBridge)
   , mPipelineId(aPipelineId)
   , mWidget(aWidget)
@@ -121,12 +123,14 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   , mGLContext(nullptr)
   , mWRWindowState(nullptr)
   , mApi(aApi)
+  , mCompositableHolder(aHolder)
   , mCompositor(nullptr)
   , mChildLayerObserverEpoch(0)
   , mParentLayerObserverEpoch(0)
   , mPendingTransactionId(0)
   , mDestroyed(false)
 {
+  MOZ_ASSERT(mCompositableHolder);
   if (mWidget) {
     mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
   }
@@ -335,10 +339,6 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         break;
       }
       case WebRenderCommand::TOpDPPushExternalImageId: {
-        if (MOZ_USE_RENDER_THREAD) {
-          // TODO(bug 1328602)
-          break;
-        }
         const OpDPPushExternalImageId& op = cmd.get_OpDPPushExternalImageId();
         MOZ_ASSERT(mExternalImageIds.Get(op.externalImageId()).get());
 
@@ -515,10 +515,6 @@ WebRenderBridgeParent::RecvAddExternalImageId(const uint64_t& aImageId,
   if (mDestroyed) {
     return IPC_OK();
   }
-  if (MOZ_USE_RENDER_THREAD) {
-    // TODO(bug 1328602)
-    return IPC_OK();
-  }
 
   MOZ_ASSERT(!mExternalImageIds.Get(aImageId).get());
 
@@ -538,8 +534,12 @@ WebRenderBridgeParent::RecvAddExternalImageId(const uint64_t& aImageId,
     return IPC_OK();
   }
 
-  host->SetCompositor(mCompositor);
-  mCompositor->AsWebRenderCompositorOGL()->AddExternalImageId(aImageId, host);
+  if (!MOZ_USE_RENDER_THREAD) {
+    host->SetCompositor(mCompositor);
+    mCompositor->AsWebRenderCompositorOGL()->AddExternalImageId(aImageId, host);
+  } else {
+    mCompositableHolder->AddExternalImageId(aImageId, host);
+  }
   mExternalImageIds.Put(aImageId, host);
   return IPC_OK();
 }
@@ -549,10 +549,6 @@ WebRenderBridgeParent::RecvAddExternalImageIdForCompositable(const uint64_t& aIm
                                                              const CompositableHandle& aHandle)
 {
   if (mDestroyed) {
-    return IPC_OK();
-  }
-  if (MOZ_USE_RENDER_THREAD) {
-    // TODO(bug 1328602)
     return IPC_OK();
   }
   MOZ_ASSERT(!mExternalImageIds.Get(aImageId).get());
@@ -565,8 +561,12 @@ WebRenderBridgeParent::RecvAddExternalImageIdForCompositable(const uint64_t& aIm
     return IPC_OK();
   }
 
-  host->SetCompositor(mCompositor);
-  mCompositor->AsWebRenderCompositorOGL()->AddExternalImageId(aImageId, host);
+  if (!MOZ_USE_RENDER_THREAD) {
+    host->SetCompositor(mCompositor);
+    mCompositor->AsWebRenderCompositorOGL()->AddExternalImageId(aImageId, host);
+  } else {
+    mCompositableHolder->AddExternalImageId(aImageId, host);
+  }
   mExternalImageIds.Put(aImageId, host);
   return IPC_OK();
 }
@@ -577,13 +577,13 @@ WebRenderBridgeParent::RecvRemoveExternalImageId(const uint64_t& aImageId)
   if (mDestroyed) {
     return IPC_OK();
   }
-  if (MOZ_USE_RENDER_THREAD) {
-    // TODO(bug 1328602)
-    return IPC_OK();
-  }
   MOZ_ASSERT(mExternalImageIds.Get(aImageId).get());
   mExternalImageIds.Remove(aImageId);
-  mCompositor->AsWebRenderCompositorOGL()->RemoveExternalImageId(aImageId);
+  if (!MOZ_USE_RENDER_THREAD) {
+    mCompositor->AsWebRenderCompositorOGL()->RemoveExternalImageId(aImageId);
+  } else {
+    mCompositableHolder->RemoveExternalImageId(aImageId);
+  }
   return IPC_OK();
 }
 
@@ -702,6 +702,12 @@ WebRenderBridgeParent::ClearResources()
     for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
       uint64_t externalImageId = iter.Key();
       mCompositor->AsWebRenderCompositorOGL()->RemoveExternalImageId(externalImageId);
+    }
+  }
+  if (mCompositableHolder) {
+    for (auto iter = mExternalImageIds.Iter(); !iter.Done(); iter.Next()) {
+      uint64_t externalImageId = iter.Key();
+      mCompositableHolder->RemoveExternalImageId(externalImageId);
     }
   }
   mExternalImageIds.Clear();
