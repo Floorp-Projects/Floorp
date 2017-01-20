@@ -690,6 +690,23 @@ nsGlobalWindow::ScheduleIdleRequestDispatch()
 }
 
 void
+nsGlobalWindow::SuspendIdleRequests()
+{
+  if (mIdleRequestExecutor) {
+    mIdleRequestExecutor->Cancel();
+    mIdleRequestExecutor = nullptr;
+  }
+}
+
+void
+nsGlobalWindow::ResumeIdleRequests()
+{
+  MOZ_ASSERT(!mIdleRequestExecutor);
+
+  ScheduleIdleRequestDispatch();
+}
+
+void
 nsGlobalWindow::InsertIdleCallback(IdleRequest* aRequest)
 {
   AssertIsOnMainThread();
@@ -12148,6 +12165,8 @@ nsGlobalWindow::Suspend()
 
   mozilla::dom::workers::SuspendWorkersForWindow(AsInner());
 
+  SuspendIdleRequests();
+
   mTimeoutManager->Suspend();
 
   // Suspend all of the AudioContexts for this window
@@ -12201,6 +12220,8 @@ nsGlobalWindow::Resume()
   }
 
   mTimeoutManager->Resume();
+
+  ResumeIdleRequests();
 
   // Resume all of the workers for this window.  We must do this
   // after timeouts since workers may have queued events that can trigger
