@@ -10,16 +10,12 @@ with Files('nsString*'):
 DIRS += ['standalone']
 
 EXPORTS += [
-    'nsCategoryCache.h',
-    'nsComponentManagerUtils.h',
-    'nsServiceManagerUtils.h',
     'nsStringAPI.h',
     'nsStringGlue.h',
 ]
 
 EXPORTS.mozilla += [
     'FileUtils.h',
-    'GenericFactory.h',
 ]
 
 if CONFIG['ENABLE_TESTS']:
