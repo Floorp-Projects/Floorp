@@ -295,6 +295,46 @@ TEST(VP8VideoTrackEncoder, FrameEncode)
   EXPECT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
 }
 
+// Test that encoding a single frame gives useful output.
+TEST(VP8VideoTrackEncoder, SingleFrameEncode)
+{
+  // Initiate VP8 encoder
+  TestVP8TrackEncoder encoder;
+  InitParam param = {true, 640, 480};
+  encoder.TestInit(param);
+
+  // Pass a half-second frame to the encoder.
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  VideoSegment segment;
+  segment.AppendFrame(generator.GenerateI420Image(),
+                      mozilla::StreamTime(45000), // 1/2 second
+                      generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE);
+
+  encoder.SetCurrentFrames(segment);
+
+  // End the track.
+  segment.Clear();
+  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, TrackEventCommand::TRACK_EVENT_ENDED, segment);
+
+  EncodedFrameContainer container;
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  // Read out encoded data, and verify.
+  const nsTArray<RefPtr<EncodedFrame>>& frames = container.GetEncodedFrames();
+  const size_t oneElement = 1;
+  ASSERT_EQ(oneElement, frames.Length());
+
+  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[0]->GetFrameType()) <<
+    "We only have one frame, so it should be a keyframe";
+
+  const uint64_t halfSecond = PR_USEC_PER_SEC / 2;
+  EXPECT_EQ(halfSecond, frames[0]->GetDuration());
+}
+
 // EOS test
 TEST(VP8VideoTrackEncoder, EncodeComplete)
 {
