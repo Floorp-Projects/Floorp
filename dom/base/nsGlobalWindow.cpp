@@ -655,7 +655,8 @@ nsPIDOMWindow<T>::nsPIDOMWindow(nsPIDOMWindowOuter *aOuterWindow)
   mOuterWindow(aOuterWindow),
   // Make sure no actual window ends up with mWindowID == 0
   mWindowID(NextWindowID()), mHasNotifiedGlobalCreated(false),
-  mMarkedCCGeneration(0), mServiceWorkersTestingEnabled(false)
+  mMarkedCCGeneration(0), mServiceWorkersTestingEnabled(false),
+  mLargeAllocStatus(LargeAllocStatus::NONE)
 {
   if (aOuterWindow) {
     mTimeoutManager =
@@ -2933,6 +2934,11 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   }
 
   PreloadLocalStorage();
+
+  // If we have a recorded interesting Large-Allocation header status, report it
+  // to the newly attached document.
+  ReportLargeAllocStatus();
+  mLargeAllocStatus = LargeAllocStatus::NONE;
 
   return NS_OK;
 }
@@ -13902,6 +13908,48 @@ nsGlobalWindow::GetIsPrerendered()
 {
   nsIDocShell* docShell = GetDocShell();
   return docShell && docShell->GetIsPrerendered();
+}
+
+void
+nsPIDOMWindowOuter::SetLargeAllocStatus(LargeAllocStatus aStatus)
+{
+  MOZ_ASSERT(mLargeAllocStatus == LargeAllocStatus::NONE);
+  mLargeAllocStatus = aStatus;
+}
+
+void
+nsGlobalWindow::ReportLargeAllocStatus()
+{
+  MOZ_RELEASE_ASSERT(IsOuterWindow());
+
+  uint32_t errorFlags = nsIScriptError::warningFlag;
+  const char* message = nullptr;
+
+  switch (mLargeAllocStatus) {
+    case LargeAllocStatus::SUCCESS:
+      // Override the error flags such that the success message isn't reported
+      // as a warning.
+      errorFlags = nsIScriptError::infoFlag;
+      message = "LargeAllocationSuccess";
+      break;
+    case LargeAllocStatus::NON_GET:
+      message = "LargeAllocationNonGetRequest";
+      break;
+    case LargeAllocStatus::NON_E10S:
+      message = "LargeAllocationNonE10S";
+      break;
+    case LargeAllocStatus::NOT_ONLY_TOPLEVEL_IN_TABGROUP:
+      message = "LargeAllocationNotOnlyToplevelInTabGroup";
+      break;
+    default: // LargeAllocStatus::NONE
+      return; // Don't report a message to the console
+  }
+
+  nsContentUtils::ReportToConsole(errorFlags,
+                                  NS_LITERAL_CSTRING("DOM"),
+                                  mDoc,
+                                  nsContentUtils::eDOM_PROPERTIES,
+                                  message);
 }
 
 #ifdef MOZ_B2G

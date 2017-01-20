@@ -1037,6 +1037,9 @@ class LinuxCrossCompileToolchainTest(BaseToolchainTest):
         'mips-unknown-linux-gnu': big_endian + {
             '__mips__': 1,
         },
+        'sh4-unknown-linux-gnu': little_endian + {
+            '__sh__': 1,
+        },
     }
 
     PLATFORMS['powerpc64le-unknown-linux-gnu'] = \

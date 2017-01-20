@@ -107,6 +107,9 @@
 #elif defined(__s390__)
 #define ARCH_CPU_S390 1
 #define ARCH_CPU_32_BITS 1
+#elif defined(__sh__)
+#define ARCH_CPU_SH 1
+#define ARCH_CPU_32_BITS 1
 #elif defined(__alpha__)
 #define ARCH_CPU_ALPHA 1
 #define ARCH_CPU_64_BITS 1

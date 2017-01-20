@@ -28,7 +28,14 @@ TabGroup::TabGroup(bool aIsChrome)
 {
   for (size_t i = 0; i < size_t(TaskCategory::Count); i++) {
     TaskCategory category = static_cast<TaskCategory>(i);
-    mEventTargets[i] = CreateEventTargetFor(category);
+    if (aIsChrome) {
+      // The chrome TabGroup dispatches directly to the main thread. This means
+      // that we don't have to worry about cyclical references when cleaning up
+      // the chrome TabGroup.
+      mEventTargets[i] = do_GetMainThread();
+    } else {
+      mEventTargets[i] = CreateEventTargetFor(category);
+    }
   }
 
   // Do not throttle runnables from chrome windows.  In theory we should
@@ -76,7 +83,7 @@ TabGroup::EnsureThrottledEventQueues()
   }
 }
 
-TabGroup*
+/* static */ TabGroup*
 TabGroup::GetChromeTabGroup()
 {
   if (!sChromeTabGroup) {
@@ -162,7 +169,10 @@ TabGroup::Leave(nsPIDOMWindowOuter* aWindow)
   MOZ_ASSERT(mWindows.Contains(aWindow));
   mWindows.RemoveElement(aWindow);
 
-  if (mWindows.IsEmpty()) {
+  // The Chrome TabGroup doesn't have cyclical references through mEventTargets
+  // to itself, meaning that we don't have to worry about nulling mEventTargets
+  // out after the last window leaves.
+  if (sChromeTabGroup != this && mWindows.IsEmpty()) {
     mLastWindowLeft = true;
 
     // There is a RefPtr cycle TabGroup -> DispatcherEventTarget -> TabGroup. To

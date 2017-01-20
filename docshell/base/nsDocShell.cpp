@@ -16,6 +16,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/PendingGlobalHistoryEntry.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
 #include "mozilla/dom/ScreenOrientation.h"
@@ -6171,7 +6172,19 @@ nsDocShell::SetIsActive(bool aIsActive)
   mIsActive = aIsActive;
 
   // Clear prerender flag if necessary.
-  mIsPrerendered &= !aIsActive;
+  if (mIsPrerendered && aIsActive) {
+    MOZ_ASSERT(mPrerenderGlobalHistory.get());
+    mIsPrerendered = false;
+    nsCOMPtr<IHistory> history = services::GetHistoryService();
+    nsresult rv = NS_OK;
+    if (history) {
+      rv = mPrerenderGlobalHistory->ApplyChanges(history);
+    } else if (mGlobalHistory) {
+      rv = mPrerenderGlobalHistory->ApplyChanges(mGlobalHistory);
+    }
+    mPrerenderGlobalHistory = nullptr;
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // Tell the PresShell about it.
   nsCOMPtr<nsIPresShell> pshell = GetPresShell();
@@ -6252,6 +6265,7 @@ nsDocShell::SetIsPrerendered()
              "SetIsPrerendered() called on already prerendered docshell");
   SetIsActive(false);
   mIsPrerendered = true;
+  mPrerenderGlobalHistory = mozilla::MakeUnique<PendingGlobalHistoryEntry>();
   return NS_OK;
 }
 
@@ -6502,14 +6516,8 @@ nsDocShell::SetTitle(const char16_t* aTitle)
   }
 
   AssertOriginAttributesMatchPrivateBrowsing();
-  if (mCurrentURI && mLoadType != LOAD_ERROR_PAGE && mUseGlobalHistory &&
-      !UsePrivateBrowsing()) {
-    nsCOMPtr<IHistory> history = services::GetHistoryService();
-    if (history) {
-      history->SetURITitle(mCurrentURI, mTitle);
-    } else if (mGlobalHistory) {
-      mGlobalHistory->SetPageTitle(mCurrentURI, nsString(mTitle));
-    }
+  if (mCurrentURI && mLoadType != LOAD_ERROR_PAGE) {
+    UpdateGlobalHistoryTitle(mCurrentURI);
   }
 
   // Update SessionHistory with the document's title.
@@ -10400,14 +10408,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
 
       /* Set the title for the Global History entry for this anchor url.
        */
-      if (mUseGlobalHistory && !UsePrivateBrowsing()) {
-        nsCOMPtr<IHistory> history = services::GetHistoryService();
-        if (history) {
-          history->SetURITitle(aURI, mTitle);
-        } else if (mGlobalHistory) {
-          mGlobalHistory->SetPageTitle(aURI, mTitle);
-        }
-      }
+      UpdateGlobalHistoryTitle(aURI);
 
       SetDocCurrentStateObj(mOSHE);
 
@@ -12093,14 +12094,7 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
 
     // AddURIVisit doesn't set the title for the new URI in global history,
     // so do that here.
-    if (mUseGlobalHistory && !UsePrivateBrowsing()) {
-      nsCOMPtr<IHistory> history = services::GetHistoryService();
-      if (history) {
-        history->SetURITitle(newURI, mTitle);
-      } else if (mGlobalHistory) {
-        mGlobalHistory->SetPageTitle(newURI, mTitle);
-      }
-    }
+    UpdateGlobalHistoryTitle(newURI);
 
     // Inform the favicon service that our old favicon applies to this new
     // URI.
@@ -13052,7 +13046,7 @@ nsDocShell::AddURIVisit(nsIURI* aURI,
 
   nsCOMPtr<IHistory> history = services::GetHistoryService();
 
-  if (history) {
+  if (mPrerenderGlobalHistory || history) {
     uint32_t visitURIFlags = 0;
 
     if (!IsFrame()) {
@@ -13063,6 +13057,10 @@ nsDocShell::AddURIVisit(nsIURI* aURI,
       visitURIFlags |= IHistory::REDIRECT_TEMPORARY;
     } else if (aChannelRedirectFlags & nsIChannelEventSink::REDIRECT_PERMANENT) {
       visitURIFlags |= IHistory::REDIRECT_PERMANENT;
+    } else {
+      MOZ_ASSERT(!aChannelRedirectFlags,
+                 "One of REDIRECT_TEMPORARY or REDIRECT_PERMANENT must be set "
+                 "if any flags in aChannelRedirectFlags is set.");
     }
 
     if (aResponseStatus >= 300 && aResponseStatus < 400) {
@@ -13078,7 +13076,14 @@ nsDocShell::AddURIVisit(nsIURI* aURI,
       visitURIFlags |= IHistory::UNRECOVERABLE_ERROR;
     }
 
-    (void)history->VisitURI(aURI, aPreviousURI, visitURIFlags);
+    if (mPrerenderGlobalHistory) {
+      mPrerenderGlobalHistory->VisitURI(aURI,
+                                        aPreviousURI,
+                                        aReferrerURI,
+                                        visitURIFlags);
+    } else {
+      (void)history->VisitURI(aURI, aPreviousURI, visitURIFlags);
+    }
   } else if (mGlobalHistory) {
     // Falls back to sync global history interface.
     (void)mGlobalHistory->AddURI(aURI,
@@ -14463,6 +14468,21 @@ nsDocShell::HasUnloadedParent()
     parent = parent->GetParentDocshell();
   }
   return false;
+}
+
+void
+nsDocShell::UpdateGlobalHistoryTitle(nsIURI* aURI)
+{
+  if (mUseGlobalHistory && !UsePrivateBrowsing()) {
+    nsCOMPtr<IHistory> history = services::GetHistoryService();
+    if (mPrerenderGlobalHistory) {
+      mPrerenderGlobalHistory->SetURITitle(aURI, mTitle);
+    } else if (history) {
+      history->SetURITitle(aURI, mTitle);
+    } else if (mGlobalHistory) {
+      mGlobalHistory->SetPageTitle(aURI, nsString(mTitle));
+    }
+  }
 }
 
 bool
