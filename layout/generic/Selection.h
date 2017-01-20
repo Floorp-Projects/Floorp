@@ -138,12 +138,15 @@ public:
   //  NS_IMETHOD   GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, int32_t aOffset, bool aIsEndNode, nsIFrame **aResultFrame);
   NS_IMETHOD   GetPrimaryFrameForAnchorNode(nsIFrame **aResultFrame);
   NS_IMETHOD   GetPrimaryFrameForFocusNode(nsIFrame **aResultFrame, int32_t *aOffset, bool aVisual);
-  NS_IMETHOD   LookUpSelection(nsIContent *aContent,
-                               int32_t aContentOffset,
-                               int32_t aContentLength,
-                               UniquePtr<SelectionDetails>* aReturnDetails,
-                               SelectionType aSelectionType,
-                               bool aSlowCheck);
+
+  UniquePtr<SelectionDetails> LookUpSelection(
+    nsIContent* aContent,
+    int32_t aContentOffset,
+    int32_t aContentLength,
+    UniquePtr<SelectionDetails> aDetailsHead,
+    SelectionType aSelectionType,
+    bool aSlowCheck);
+
   NS_IMETHOD   Repaint(nsPresContext* aPresContext);
 
   // Note: StartAutoScrollTimer might destroy arbitrary frames etc.
