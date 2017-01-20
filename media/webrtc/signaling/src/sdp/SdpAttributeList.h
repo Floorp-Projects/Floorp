@@ -64,6 +64,7 @@ public:
   virtual const SdpRtcpFbAttributeList& GetRtcpFb() const = 0;
   virtual const SdpRtpmapAttributeList& GetRtpmap() const = 0;
   virtual const SdpSctpmapAttributeList& GetSctpmap() const = 0;
+  virtual unsigned int GetSctpPort() const = 0;
   virtual const SdpSsrcAttributeList& GetSsrc() const = 0;
   virtual const SdpSsrcGroupAttributeList& GetSsrcGroup() const = 0;
 

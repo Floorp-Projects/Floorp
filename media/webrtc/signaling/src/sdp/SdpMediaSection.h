@@ -66,8 +66,9 @@ public:
     kPstn,              // PSTN [RFC7195]
     kUdpTlsUdptl,       // UDP/TLS/UDPTL [RFC7345]
     kSctp,              // SCTP [draft-ietf-mmusic-sctp-sdp-07]
-    kSctpDtls,          // SCTP/DTLS [draft-ietf-mmusic-sctp-sdp-07]
-    kDtlsSctp           // DTLS/SCTP [draft-ietf-mmusic-sctp-sdp-07]
+    kDtlsSctp,          // DTLS/SCTP [draft-ietf-mmusic-sctp-sdp-07]
+    kUdpDtlsSctp,       // UDP/DTLS/SCTP [draft-ietf-mmusic-sctp-sdp-21]
+    kTcpDtlsSctp        // TCP/DTLS/SCTP [draft-ietf-mmusic-sctp-sdp-21]
   };
 
   explicit SdpMediaSection(size_t level) : mLevel(level) {}
@@ -95,8 +96,8 @@ public:
                         uint32_t clockrate, uint16_t channels) = 0;
   virtual void ClearCodecs() = 0;
 
-  virtual void AddDataChannel(const std::string& pt, const std::string& name,
-                              uint16_t streams) = 0;
+  virtual void AddDataChannel(const std::string& name,
+                              uint16_t port, uint16_t streams) = 0;
 
   size_t
   GetLevel() const
@@ -155,8 +156,8 @@ public:
   void SetFmtp(const SdpFmtpAttributeList::Fmtp& fmtp);
   void RemoveFmtp(const std::string& pt);
   const SdpRtpmapAttributeList::Rtpmap* FindRtpmap(const std::string& pt) const;
-  const SdpSctpmapAttributeList::Sctpmap* FindSctpmap(
-      const std::string& pt) const;
+  const SdpSctpmapAttributeList::Sctpmap* GetSctpmap() const;
+  int GetSctpPort() const;
   bool HasRtcpFb(const std::string& pt,
                  SdpRtcpFbAttributeList::Type type,
                  const std::string& subType) const;
@@ -277,10 +278,12 @@ inline std::ostream& operator<<(std::ostream& os, SdpMediaSection::Protocol p)
       return os << "UDP/TLS/UDPTL";
     case SdpMediaSection::kSctp:
       return os << "SCTP";
-    case SdpMediaSection::kSctpDtls:
-      return os << "SCTP/DTLS";
     case SdpMediaSection::kDtlsSctp:
       return os << "DTLS/SCTP";
+    case SdpMediaSection::kUdpDtlsSctp:
+      return os << "UDP/DTLS/SCTP";
+    case SdpMediaSection::kTcpDtlsSctp:
+      return os << "TCP/DTLS/SCTP";
   }
   MOZ_ASSERT(false, "Unknown Protocol");
   return os << "?";

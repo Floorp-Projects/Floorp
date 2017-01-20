@@ -47,6 +47,7 @@ sdp_mca_t *sdp_alloc_mca (uint32_t line) {
     mca_p->bw.bw_data_count   = 0;
     mca_p->bw.bw_data_list    = NULL;
     mca_p->line_number        = line;
+    mca_p->sctp_fmt           = SDP_SCTP_MEDIA_FMT_UNKNOWN;
 
     return (mca_p);
 }
