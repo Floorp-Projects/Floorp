@@ -43,7 +43,7 @@ public:
   // If you can override this method, inherit from CompositorWidget instead.
   nsIWidget* RealWidget() override;
 
-private:
+protected:
   nsBaseWidget* mWidget;
 };
 
