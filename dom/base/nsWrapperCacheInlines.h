@@ -22,7 +22,7 @@ nsWrapperCache::GetWrapper() const
 }
 
 inline bool
-nsWrapperCache::IsBlack() const
+nsWrapperCache::IsBlack()
 {
   JSObject* o = GetWrapperPreserveColor();
   return o && !JS::ObjectIsMarkedGray(o);
