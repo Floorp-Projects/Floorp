@@ -20,7 +20,6 @@ class nsString;
 namespace mozilla {
 
 class CSSStyleSheet;
-class StyleSheet;
 
 namespace css {
 
@@ -62,9 +61,6 @@ public:
   // WebIDL interface
   uint16_t Type() const override;
   void GetCssTextImpl(nsAString& aCssText) const override;
-  // The XPCOM GetHref is fine, since it never fails.
-  nsMediaList* Media() const { return mMedia; }
-  StyleSheet* GetStyleSheet() const;
 
 private:
   nsString  mURLSpec;
