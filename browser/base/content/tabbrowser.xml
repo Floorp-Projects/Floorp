@@ -6992,6 +6992,12 @@
         </getter>
       </property>
 
+      <property name="soundBlocked" readonly="true">
+        <getter>
+          return this.getAttribute("blocked") == "true";
+        </getter>
+      </property>
+
       <property name="lastAccessed">
         <getter>
           return this._lastAccessed == Infinity ? Date.now() : this._lastAccessed;
