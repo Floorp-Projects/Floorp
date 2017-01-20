@@ -426,7 +426,7 @@ skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-opa
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) fails-if(webrender) == blend-lighten.svg blend-lighten-ref.svg
 # pref(layout.css.mix-blend-mode.enabled,true) == blend-luminosity.svg blend-luminosity-ref.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply-alpha.svg blend-multiply-alpha-ref.svg
-skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) fails-if(webrender) == blend-multiply.svg blend-multiply-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply.svg blend-multiply-ref.svg
 pref(layout.css.mix-blend-mode.enabled,true) == blend-normal.svg blend-normal-ref.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-overlay.svg blend-overlay-ref.svg
 #skip-if(Android)  pref(layout.css.mix-blend-mode.enabled,true) == blend-saturation.svg blend-saturation-ref.svg
