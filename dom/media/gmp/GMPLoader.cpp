@@ -17,8 +17,6 @@
 #include "windows.h"
 #endif
 
-#include "GMPDeviceBinding.h"
-
 namespace mozilla {
 namespace gmp {
 
@@ -108,17 +106,6 @@ public:
     }
   }
 
-  void GMPSetNodeId(const char* aNodeId, uint32_t aLength) override
-  {
-    if (!mLib) {
-      return;
-    }
-    GMPSetNodeIdFunc setNodeIdFunc = reinterpret_cast<GMPSetNodeIdFunc>(PR_FindFunctionSymbol(mLib, "GMPSetNodeId"));
-    if (setNodeIdFunc) {
-      setNodeIdFunc(aNodeId, aLength);
-    }
-  }
-
 private:
   PRLibrary* mLib = nullptr;
 };
@@ -131,11 +118,6 @@ GMPLoaderImpl::Load(const char* aUTF8LibPath,
                     const GMPPlatformAPI* aPlatformAPI,
                     GMPAdapter* aAdapter)
 {
-  std::string nodeId;
-  if (!CalculateGMPDeviceId(aOriginSalt, aOriginSaltLen, nodeId)) {
-    return false;
-  }
-
   // Start the sandbox now that we've generated the device bound node id.
   // This must happen after the node id is bound to the device id, as
   // generating the device id requires privileges.
@@ -185,8 +167,6 @@ GMPLoaderImpl::Load(const char* aUTF8LibPath,
   if (mAdapter->GMPInit(aPlatformAPI) != GMPNoErr) {
     return false;
   }
-
-  mAdapter->GMPSetNodeId(nodeId.c_str(), nodeId.size());
 
   return true;
 }
