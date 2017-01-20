@@ -639,17 +639,17 @@ void mozilla_sampler_get_profile_data_async(double aSinceTime,
 }
 
 void mozilla_sampler_save_profile_to_file_async(double aSinceTime,
-						const char* aFileName)
+                                                const char* aFileName)
 {
   nsCString filename(aFileName);
   NS_DispatchToMainThread(NS_NewRunnableFunction([=] () {
-	GeckoSampler *t = tlsTicker.get();
-	if (NS_WARN_IF(!t)) {
-	  return;
-	}
+    GeckoSampler *t = tlsTicker.get();
+    if (NS_WARN_IF(!t)) {
+      return;
+    }
 
-	t->ToFileAsync(filename, aSinceTime);
-      }));
+    t->ToFileAsync(filename, aSinceTime);
+  }));
 }
 
 void mozilla_sampler_get_profiler_start_params(int* aEntrySize,
@@ -817,26 +817,26 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
   tlsTicker.set(t);
   t->Start();
   if (t->ProfileJS() || t->InPrivacyMode()) {
-      ::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
-      const std::vector<ThreadInfo*>& threads = t->GetRegisteredThreads();
+    ::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
+    const std::vector<ThreadInfo*>& threads = t->GetRegisteredThreads();
 
-      for (uint32_t i = 0; i < threads.size(); i++) {
-        ThreadInfo* info = threads[i];
-        if (info->IsPendingDelete()) {
-          continue;
-        }
-        ThreadProfile* thread_profile = info->Profile();
-        if (!thread_profile) {
-          continue;
-        }
-        thread_profile->GetPseudoStack()->reinitializeOnResume();
-        if (t->ProfileJS()) {
-          thread_profile->GetPseudoStack()->enableJSSampling();
-        }
-        if (t->InPrivacyMode()) {
-          thread_profile->GetPseudoStack()->mPrivacyMode = true;
-        }
+    for (uint32_t i = 0; i < threads.size(); i++) {
+      ThreadInfo* info = threads[i];
+      if (info->IsPendingDelete()) {
+        continue;
       }
+      ThreadProfile* thread_profile = info->Profile();
+      if (!thread_profile) {
+        continue;
+      }
+      thread_profile->GetPseudoStack()->reinitializeOnResume();
+      if (t->ProfileJS()) {
+        thread_profile->GetPseudoStack()->enableJSSampling();
+      }
+      if (t->InPrivacyMode()) {
+        thread_profile->GetPseudoStack()->mPrivacyMode = true;
+      }
+    }
   }
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
@@ -1061,27 +1061,27 @@ void mozilla_sampler_unregister_thread()
 }
 
 void mozilla_sampler_sleep_start() {
-    if (sInitCount == 0) {
-	return;
-    }
+  if (sInitCount == 0) {
+    return;
+  }
 
-    PseudoStack *stack = tlsPseudoStack.get();
-    if (stack == nullptr) {
-      return;
-    }
-    stack->setSleeping(1);
+  PseudoStack *stack = tlsPseudoStack.get();
+  if (stack == nullptr) {
+    return;
+  }
+  stack->setSleeping(1);
 }
 
 void mozilla_sampler_sleep_end() {
-    if (sInitCount == 0) {
-	return;
-    }
+  if (sInitCount == 0) {
+    return;
+  }
 
-    PseudoStack *stack = tlsPseudoStack.get();
-    if (stack == nullptr) {
-      return;
-    }
-    stack->setSleeping(0);
+  PseudoStack *stack = tlsPseudoStack.get();
+  if (stack == nullptr) {
+    return;
+  }
+  stack->setSleeping(0);
 }
 
 bool mozilla_sampler_is_sleeping() {
