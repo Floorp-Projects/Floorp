@@ -654,32 +654,14 @@ public:
     }
   }
 
-  bool
-  ShouldResetSuspend() const
-  {
-    // The disposable-pause should be clear after media starts playing.
-    if (!mOwner->Paused() &&
-        mSuspended == nsISuspendedTypes::SUSPENDED_PAUSE_DISPOSABLE) {
-      return true;
-    }
-
-    // If the blocked media is paused, we don't need to resume it. We reset the
-    // mSuspended in order to unregister the agent.
-    if (mOwner->Paused() &&
-        mSuspended == nsISuspendedTypes::SUSPENDED_BLOCK) {
-      return true;
-    }
-
-    return false;
-  }
-
   void
-  NotifyPlayStateChanged()
+  NotifyPlayStarted()
   {
     MOZ_ASSERT(!mIsShutDown);
-    if (ShouldResetSuspend()) {
-      SetSuspended(nsISuspendedTypes::NONE_SUSPENDED);
-    }
+    // Reset the suspend type because the media element might be paused by
+    // audio channel before calling play(). eg. paused by Fennec media control,
+    // but resumed it from page.
+    SetSuspended(nsISuspendedTypes::NONE_SUSPENDED);
     UpdateAudioChannelPlayingState();
   }
 
@@ -898,7 +880,7 @@ private:
     if (!IsSuspended()) {
       MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
              ("HTMLMediaElement::AudioChannelAgentCallback, ResumeFromAudioChannel, "
-              "this = %p, don't need to be resumed!\n", this));
+              "this = %p, Error : resume without suspended!\n", this));
       return;
     }
 
@@ -2775,9 +2757,7 @@ HTMLMediaElement::Pause(ErrorResult& aRv)
   // We changed mPaused and mAutoplaying which can affect AddRemoveSelfReference
   AddRemoveSelfReference();
   UpdateSrcMediaStreamPlaying();
-  if (mAudioChannelWrapper) {
-    mAudioChannelWrapper->NotifyPlayStateChanged();
-  }
+  UpdateAudioChannelPlayingState();
 
   if (!oldPaused) {
     FireTimeUpdate(false);
@@ -7152,7 +7132,7 @@ HTMLMediaElement::UpdateCustomPolicyAfterPlayed()
 {
   OpenUnsupportedMediaWithExternalAppIfNeeded();
   if (mAudioChannelWrapper) {
-    mAudioChannelWrapper->NotifyPlayStateChanged();
+    mAudioChannelWrapper->NotifyPlayStarted();
   }
 }
 
