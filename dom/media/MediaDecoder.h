@@ -465,7 +465,7 @@ private:
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-    mOwner->UpdateReadyState();
+    GetOwner()->UpdateReadyState();
   }
 
   virtual MediaDecoderOwner::NextFrameStatus NextFrameStatus() { return mNextFrameStatus; }
