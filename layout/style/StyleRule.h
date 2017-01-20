@@ -349,6 +349,8 @@ public:
 
   virtual nsIDOMCSSRule* GetDOMRule() override;
 
+  virtual nsIDOMCSSRule* GetExistingDOMRule() override;
+
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
