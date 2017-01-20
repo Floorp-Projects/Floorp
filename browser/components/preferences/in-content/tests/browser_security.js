@@ -50,10 +50,10 @@ add_task(function*() {
     yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 
-  yield checkPrefSwitch(true, true);
-  yield checkPrefSwitch(false, true);
-  yield checkPrefSwitch(true, false);
-  yield checkPrefSwitch(false, false);
+  yield* checkPrefSwitch(true, true);
+  yield* checkPrefSwitch(false, true);
+  yield* checkPrefSwitch(true, false);
+  yield* checkPrefSwitch(false, false);
 });
 
 // test the download protection preference
@@ -84,8 +84,8 @@ add_task(function*() {
     yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 
-  yield checkPrefSwitch(true);
-  yield checkPrefSwitch(false);
+  yield* checkPrefSwitch(true);
+  yield* checkPrefSwitch(false);
 });
 
 // test the unwanted/uncommon software warning preference
