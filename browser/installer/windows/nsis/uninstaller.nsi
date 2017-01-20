@@ -200,16 +200,25 @@ Function un.UninstallServiceIfNotUsed
     SetRegView lastUsed
   ${EndIf}
   ${If} $0 == 0
-    ; Get the path of the maintenance service uninstaller
+    ; Get the path of the maintenance service uninstaller.
+    ; Look in both the 32-bit and 64-bit registry views.
+    SetRegView 32
     ReadRegStr $1 HKLM ${MaintUninstallKey} "UninstallString"
+    SetRegView lastused
+
+    ${If} $1 == ""
+    ${AndIf} ${RunningX64}
+      SetRegView 64
+      ReadRegStr $1 HKLM ${MaintUninstallKey} "UninstallString"
+      SetRegView lastused
+    ${EndIf}
 
     ; If the uninstall string does not exist, skip executing it
-    StrCmp $1 "" doneUninstall
-
-    ; $1 is already a quoted string pointing to the install path
-    ; so we're already protected against paths with spaces
-    nsExec::Exec "$1 /S"
-doneUninstall:
+    ${If} $1 != ""
+      ; $1 is already a quoted string pointing to the install path
+      ; so we're already protected against paths with spaces
+      nsExec::Exec "$1 /S"
+    ${EndIf}
   ${EndIf}
 
   ; Restore the old value of $1 and $0
