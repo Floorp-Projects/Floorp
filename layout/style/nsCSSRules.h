@@ -417,6 +417,7 @@ public:
     , mKeys(mozilla::Move(aKeys))
     , mDeclaration(mozilla::Move(aDeclaration))
   {
+    SetIsNotDOMBinding();
     mDeclaration->SetOwningRule(this);
   }
 private:
@@ -440,9 +441,6 @@ public:
   // WebIDL interface
   uint16_t Type() const override;
   void GetCssTextImpl(nsAString& aCssText) const override;
-  // The XPCOM GetKeyText is fine.
-  // The XPCOM SetKeyText is fine.
-  nsICSSDeclaration* Style();
 
   const nsTArray<float>& GetKeys() const     { return mKeys; }
   mozilla::css::Declaration* Declaration()   { return mDeclaration; }
