@@ -213,7 +213,7 @@ EditorEventListener::InstallToEditor()
 void
 EditorEventListener::Disconnect()
 {
-  if (!mEditorBase) {
+  if (DetachedFromEditor()) {
     return;
   }
   UninstallFromEditor();
@@ -300,8 +300,7 @@ EditorEventListener::UninstallFromEditor()
 already_AddRefed<nsIPresShell>
 EditorEventListener::GetPresShell()
 {
-  NS_PRECONDITION(mEditorBase,
-    "The caller must check whether this is connected to an editor");
+  MOZ_ASSERT(!DetachedFromEditor());
   return mEditorBase->GetPresShell();
 }
 
@@ -315,8 +314,7 @@ EditorEventListener::GetPresContext()
 nsIContent*
 EditorEventListener::GetFocusedRootContent()
 {
-  NS_ENSURE_TRUE(mEditorBase, nullptr);
-
+  MOZ_ASSERT(!DetachedFromEditor());
   nsCOMPtr<nsIContent> focusedContent = mEditorBase->GetFocusedContent();
   if (!focusedContent) {
     return nullptr;
@@ -335,8 +333,7 @@ EditorEventListener::GetFocusedRootContent()
 bool
 EditorEventListener::EditorHasFocus()
 {
-  NS_PRECONDITION(mEditorBase,
-    "The caller must check whether this is connected to an editor");
+  MOZ_ASSERT(!DetachedFromEditor());
   nsCOMPtr<nsIContent> focusedContent = mEditorBase->GetFocusedContent();
   if (!focusedContent) {
     return false;
@@ -347,15 +344,25 @@ EditorEventListener::EditorHasFocus()
 
 NS_IMPL_ISUPPORTS(EditorEventListener, nsIDOMEventListener)
 
+bool
+EditorEventListener::DetachedFromEditor() const
+{
+  return !mEditorBase;
+}
+
+bool
+EditorEventListener::DetachedFromEditorOrDefaultPrevented(
+                       WidgetEvent* aWidgetEvent) const
+{
+  return NS_WARN_IF(!aWidgetEvent) || DetachedFromEditor() ||
+         aWidgetEvent->DefaultPrevented();
+}
+
 NS_IMETHODIMP
 EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  NS_ENSURE_TRUE(mEditorBase, NS_ERROR_FAILURE);
-
   nsCOMPtr<nsIEditor> kungFuDeathGrip = mEditorBase;
   Unused << kungFuDeathGrip; // mEditorBase is not referred to in this function
-
-  WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
 
   // Let's handle each event with the message of the internal event of the
   // coming event.  If the DOM event was created with improper interface,
@@ -367,6 +374,7 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
   //       calling it, this queries the specific interface.  If it would fail,
   //       each event handler would just ignore the event.  So, in this method,
   //       you don't need to check if the QI succeeded before each call.
+  WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
   switch (internalEvent->mMessage) {
     // dragenter
     case eDragEnter: {
@@ -453,19 +461,19 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
     }
     // focus
     case eFocus:
-      return Focus(aEvent);
+      return Focus(internalEvent);
     // blur
     case eBlur:
-      return Blur(aEvent);
+      return Blur(internalEvent);
     // text
     case eCompositionChange:
-      return HandleText(aEvent);
+      return HandleChangeComposition(internalEvent->AsCompositionEvent());
     // compositionstart
     case eCompositionStart:
-      return HandleStartComposition(aEvent);
+      return HandleStartComposition(internalEvent->AsCompositionEvent());
     // compositionend
     case eCompositionEnd:
-      HandleEndComposition(aEvent);
+      HandleEndComposition(internalEvent->AsCompositionEvent());
       return NS_OK;
     default:
       break;
@@ -476,10 +484,10 @@ EditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
   // We should accept "focus" and "blur" event even if it's synthesized with
   // wrong interface for compatibility with older Gecko.
   if (eventType.EqualsLiteral("focus")) {
-    return Focus(aEvent);
+    return Focus(internalEvent);
   }
   if (eventType.EqualsLiteral("blur")) {
-    return Blur(aEvent);
+    return Blur(internalEvent);
   }
 #ifdef DEBUG
   nsPrintfCString assertMessage("Editor doesn't handle \"%s\" event "
@@ -540,12 +548,15 @@ bool IsCtrlShiftPressed(nsIDOMKeyEvent* aEvent, bool& isRTL)
 nsresult
 EditorEventListener::KeyUp(nsIDOMKeyEvent* aKeyEvent)
 {
-  NS_ENSURE_TRUE(aKeyEvent, NS_OK);
+  if (NS_WARN_IF(!aKeyEvent) || DetachedFromEditor()) {
+    return NS_OK;
+  }
 
   if (!mHaveBidiKeyboards) {
     return NS_OK;
   }
 
+  // XXX Why doesn't this method check if it's consumed?
   uint32_t keyCode = 0;
   aKeyEvent->GetKeyCode(&keyCode);
   if ((keyCode == nsIDOMKeyEvent::DOM_VK_SHIFT ||
@@ -562,12 +573,15 @@ EditorEventListener::KeyUp(nsIDOMKeyEvent* aKeyEvent)
 nsresult
 EditorEventListener::KeyDown(nsIDOMKeyEvent* aKeyEvent)
 {
-  NS_ENSURE_TRUE(aKeyEvent, NS_OK);
+  if (NS_WARN_IF(!aKeyEvent) || DetachedFromEditor()) {
+    return NS_OK;
+  }
 
   if (!mHaveBidiKeyboards) {
     return NS_OK;
   }
 
+  // XXX Why isn't this method check if it's consumed?
   uint32_t keyCode = 0;
   aKeyEvent->GetKeyCode(&keyCode);
   if (keyCode == nsIDOMKeyEvent::DOM_VK_SHIFT) {
@@ -587,33 +601,22 @@ EditorEventListener::KeyDown(nsIDOMKeyEvent* aKeyEvent)
 nsresult
 EditorEventListener::KeyPress(nsIDOMKeyEvent* aKeyEvent)
 {
-  NS_ENSURE_TRUE(aKeyEvent, NS_OK);
+  if (NS_WARN_IF(!aKeyEvent)) {
+    return NS_OK;
+  }
 
   WidgetKeyboardEvent* keypressEvent =
     aKeyEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
   MOZ_ASSERT(keypressEvent,
              "DOM key event's internal event must be WidgetKeyboardEvent");
-  if (!mEditorBase->IsAcceptableInputEvent(keypressEvent)) {
-    return NS_OK;
-  }
-
-  // DOM event handling happens in two passes, the client pass and the system
-  // pass.  We do all of our processing in the system pass, to allow client
-  // handlers the opportunity to cancel events and prevent typing in the editor.
-  // If the client pass cancelled the event, defaultPrevented will be true
-  // below.
-
-  bool defaultPrevented;
-  aKeyEvent->AsEvent()->GetDefaultPrevented(&defaultPrevented);
-  if (defaultPrevented) {
+  if (!mEditorBase->IsAcceptableInputEvent(keypressEvent) ||
+      DetachedFromEditorOrDefaultPrevented(keypressEvent)) {
     return NS_OK;
   }
 
   nsresult rv = mEditorBase->HandleKeyPressEvent(aKeyEvent);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  aKeyEvent->AsEvent()->GetDefaultPrevented(&defaultPrevented);
-  if (defaultPrevented) {
+  if (DetachedFromEditorOrDefaultPrevented(keypressEvent)) {
     return NS_OK;
   }
 
@@ -644,6 +647,9 @@ EditorEventListener::KeyPress(nsIDOMKeyEvent* aKeyEvent)
 nsresult
 EditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
 {
+  if (NS_WARN_IF(!aMouseEvent) || DetachedFromEditor()) {
+    return NS_OK;
+  }
   // nothing to do if editor isn't editable or clicked on out of the editor.
   WidgetMouseEvent* clickEvent =
     aMouseEvent->AsEvent()->WidgetEventPtr()->AsMouseEvent();
@@ -659,26 +665,23 @@ EditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
     if (presContext) {
       IMEStateManager::OnClickInEditor(presContext, GetFocusedRootContent(),
                                        aMouseEvent);
-     }
+      if (DetachedFromEditor()) {
+        return NS_OK;
+      }
+    }
   }
 
-  bool preventDefault;
-  nsresult rv = aMouseEvent->AsEvent()->GetDefaultPrevented(&preventDefault);
-  if (NS_FAILED(rv) || preventDefault) {
+  if (DetachedFromEditorOrDefaultPrevented(clickEvent)) {
     // We're done if 'preventdefault' is true (see for example bug 70698).
-    return rv;
-  }
-
-  // IMEStateManager::OnClickInEditor() may cause anything because it may
-  // set input context.  For example, it may cause opening VKB, changing focus
-  // or reflow.  So, mEditorBase here might have been gone.
-  if (!mEditorBase) {
     return NS_OK;
   }
 
   // If we got a mouse down inside the editing area, we should force the
   // IME to commit before we change the cursor position
   mEditorBase->ForceCompositionEnd();
+  if (DetachedFromEditor()) {
+    return NS_OK;
+  }
 
   int16_t button = -1;
   aMouseEvent->GetButton(&button);
@@ -691,6 +694,10 @@ EditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
 nsresult
 EditorEventListener::HandleMiddleClickPaste(nsIDOMMouseEvent* aMouseEvent)
 {
+  MOZ_ASSERT(aMouseEvent);
+  MOZ_ASSERT(!DetachedFromEditorOrDefaultPrevented(
+                aMouseEvent->AsEvent()->WidgetEventPtr()));
+
   if (!Preferences::GetBool("middlemouse.paste", false)) {
     // Middle click paste isn't enabled.
     return NS_OK;
@@ -752,16 +759,12 @@ bool
 EditorEventListener::NotifyIMEOfMouseButtonEvent(
                        nsIDOMMouseEvent* aMouseEvent)
 {
+  MOZ_ASSERT(aMouseEvent);
+
   if (!EditorHasFocus()) {
     return false;
   }
 
-  bool defaultPrevented;
-  nsresult rv = aMouseEvent->AsEvent()->GetDefaultPrevented(&defaultPrevented);
-  NS_ENSURE_SUCCESS(rv, false);
-  if (defaultPrevented) {
-    return false;
-  }
   nsPresContext* presContext = GetPresContext();
   NS_ENSURE_TRUE(presContext, false);
   return IMEStateManager::OnMouseButtonEventInEditor(presContext,
@@ -772,20 +775,25 @@ EditorEventListener::NotifyIMEOfMouseButtonEvent(
 nsresult
 EditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
 {
+  // FYI: We don't need to check if it's already consumed here because
+  //      we need to commit composition at mouse button operation.
   // FYI: This may be called by HTMLEditorEventListener::MouseDown() even
   //      when the event is not acceptable for committing composition.
-  if (mEditorBase) {
-    mEditorBase->ForceCompositionEnd();
+  if (DetachedFromEditor()) {
+    return NS_OK;
   }
+  mEditorBase->ForceCompositionEnd();
   return NS_OK;
 }
 
 nsresult
-EditorEventListener::HandleText(nsIDOMEvent* aTextEvent)
+EditorEventListener::HandleChangeComposition(
+                       WidgetCompositionEvent* aCompositionChangeEvent)
 {
-  WidgetCompositionEvent* compositionChangeEvent =
-    aTextEvent->WidgetEventPtr()->AsCompositionEvent();
-  if (!mEditorBase->IsAcceptableInputEvent(compositionChangeEvent)) {
+  MOZ_ASSERT(!aCompositionChangeEvent->DefaultPrevented(),
+             "eCompositionChange event shouldn't be cancelable");
+  if (DetachedFromEditor() ||
+      !mEditorBase->IsAcceptableInputEvent(aCompositionChangeEvent)) {
     return NS_OK;
   }
 
@@ -794,9 +802,7 @@ EditorEventListener::HandleText(nsIDOMEvent* aTextEvent)
     return NS_OK;
   }
 
-  // AsCompositionEvent() should always return non-nullptr.  Anyway, it'll be
-  // checked in TextEditor::UpdateIMEComposition().
-  return mEditorBase->UpdateIMEComposition(compositionChangeEvent);
+  return mEditorBase->UpdateIMEComposition(aCompositionChangeEvent);
 }
 
 /**
@@ -806,7 +812,9 @@ EditorEventListener::HandleText(nsIDOMEvent* aTextEvent)
 nsresult
 EditorEventListener::DragEnter(nsIDOMDragEvent* aDragEvent)
 {
-  NS_ENSURE_TRUE(aDragEvent, NS_OK);
+  if (NS_WARN_IF(!aDragEvent) || DetachedFromEditor()) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIPresShell> presShell = GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_OK);
@@ -829,15 +837,13 @@ EditorEventListener::DragEnter(nsIDOMDragEvent* aDragEvent)
 nsresult
 EditorEventListener::DragOver(nsIDOMDragEvent* aDragEvent)
 {
-  NS_ENSURE_TRUE(aDragEvent, NS_OK);
-
-  nsCOMPtr<nsIDOMNode> parent;
-  bool defaultPrevented;
-  aDragEvent->AsEvent()->GetDefaultPrevented(&defaultPrevented);
-  if (defaultPrevented) {
+  if (NS_WARN_IF(!aDragEvent) ||
+      DetachedFromEditorOrDefaultPrevented(
+        aDragEvent->AsEvent()->WidgetEventPtr())) {
     return NS_OK;
   }
 
+  nsCOMPtr<nsIDOMNode> parent;
   aDragEvent->GetRangeParent(getter_AddRefs(parent));
   nsCOMPtr<nsIContent> dropParent = do_QueryInterface(parent);
   NS_ENSURE_TRUE(dropParent, NS_ERROR_FAILURE);
@@ -892,7 +898,15 @@ EditorEventListener::CleanupDragDropCaret()
 nsresult
 EditorEventListener::DragExit(nsIDOMDragEvent* aDragEvent)
 {
-  NS_ENSURE_TRUE(aDragEvent, NS_OK);
+  // XXX If aDragEvent was created by chrome script, its defaultPrevented
+  //     may be true, though.  We shouldn't handle such event but we don't
+  //     have a way to distinguish if coming event is created by chrome script.
+  NS_WARNING_ASSERTION(
+    !aDragEvent->AsEvent()->WidgetEventPtr()->DefaultPrevented(),
+    "eDragExit shouldn't be cancelable");
+  if (NS_WARN_IF(!aDragEvent) || DetachedFromEditor()) {
+    return NS_OK;
+  }
 
   CleanupDragDropCaret();
 
@@ -902,13 +916,11 @@ EditorEventListener::DragExit(nsIDOMDragEvent* aDragEvent)
 nsresult
 EditorEventListener::Drop(nsIDOMDragEvent* aDragEvent)
 {
-  NS_ENSURE_TRUE(aDragEvent, NS_OK);
-
   CleanupDragDropCaret();
 
-  bool defaultPrevented;
-  aDragEvent->AsEvent()->GetDefaultPrevented(&defaultPrevented);
-  if (defaultPrevented) {
+  if (NS_WARN_IF(!aDragEvent) ||
+      DetachedFromEditorOrDefaultPrevented(
+        aDragEvent->AsEvent()->WidgetEventPtr())) {
     return NS_OK;
   }
 
@@ -938,6 +950,9 @@ EditorEventListener::Drop(nsIDOMDragEvent* aDragEvent)
 bool
 EditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
 {
+  MOZ_ASSERT(!DetachedFromEditorOrDefaultPrevented(
+                aEvent->AsEvent()->WidgetEventPtr()));
+
   // if the target doc is read-only, we can't drop
   if (mEditorBase->IsReadonly() || mEditorBase->IsDisabled()) {
     return false;
@@ -1035,32 +1050,45 @@ EditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
 }
 
 nsresult
-EditorEventListener::HandleStartComposition(nsIDOMEvent* aCompositionEvent)
+EditorEventListener::HandleStartComposition(
+                       WidgetCompositionEvent* aCompositionStartEvent)
 {
-  WidgetCompositionEvent* compositionStart =
-    aCompositionEvent->WidgetEventPtr()->AsCompositionEvent();
-  if (!mEditorBase->IsAcceptableInputEvent(compositionStart)) {
+  if (DetachedFromEditor() ||
+      !mEditorBase->IsAcceptableInputEvent(aCompositionStartEvent)) {
     return NS_OK;
   }
-  return mEditorBase->BeginIMEComposition(compositionStart);
+  // Although, "compositionstart" should be cancelable, but currently,
+  // eCompositionStart event coming from widget is not cancelable.
+  MOZ_ASSERT(!aCompositionStartEvent->DefaultPrevented(),
+             "eCompositionStart shouldn't be cancelable");
+  return mEditorBase->BeginIMEComposition(aCompositionStartEvent);
 }
 
 void
-EditorEventListener::HandleEndComposition(nsIDOMEvent* aCompositionEvent)
+EditorEventListener::HandleEndComposition(
+                       WidgetCompositionEvent* aCompositionEndEvent)
 {
-  WidgetCompositionEvent* compositionEnd =
-    aCompositionEvent->WidgetEventPtr()->AsCompositionEvent();
-  if (!mEditorBase->IsAcceptableInputEvent(compositionEnd)) {
+  if (DetachedFromEditor() ||
+      !mEditorBase->IsAcceptableInputEvent(aCompositionEndEvent)) {
     return;
   }
-
+  MOZ_ASSERT(!aCompositionEndEvent->DefaultPrevented(),
+             "eCompositionEnd shouldn't be cancelable");
   mEditorBase->EndIMEComposition();
 }
 
 nsresult
-EditorEventListener::Focus(nsIDOMEvent* aEvent)
+EditorEventListener::Focus(WidgetEvent* aFocusEvent)
 {
-  NS_ENSURE_TRUE(aEvent, NS_OK);
+  if (NS_WARN_IF(!aFocusEvent) || DetachedFromEditor()) {
+    return NS_OK;
+  }
+
+  // XXX If aFocusEvent was created by chrome script, its defaultPrevented
+  //     may be true, though.  We shouldn't handle such event but we don't
+  //     have a way to distinguish if coming event is created by chrome script.
+  NS_WARNING_ASSERTION(!aFocusEvent->DefaultPrevented(),
+                       "eFocus event shouldn't be cancelable");
 
   // Don't turn on selection and caret when the editor is disabled.
   if (mEditorBase->IsDisabled()) {
@@ -1075,8 +1103,7 @@ EditorEventListener::Focus(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMEventTarget> target;
-  aEvent->GetTarget(getter_AddRefs(target));
+  nsCOMPtr<nsIDOMEventTarget> target = aFocusEvent->GetDOMEventTarget();
   nsCOMPtr<nsINode> node = do_QueryInterface(target);
   NS_ENSURE_TRUE(node, NS_ERROR_UNEXPECTED);
 
@@ -1108,8 +1135,8 @@ EditorEventListener::Focus(nsIDOMEvent* aEvent)
         return NS_OK;
       }
 
-      nsCOMPtr<nsIDOMEventTarget> originalTarget;
-      aEvent->GetOriginalTarget(getter_AddRefs(originalTarget));
+      nsCOMPtr<nsIDOMEventTarget> originalTarget =
+        aFocusEvent->GetOriginalDOMEventTarget();
 
       nsCOMPtr<nsIContent> originalTargetAsContent =
         do_QueryInterface(originalTarget);
@@ -1125,6 +1152,9 @@ EditorEventListener::Focus(nsIDOMEvent* aEvent)
   }
 
   mEditorBase->OnFocus(target);
+  if (DetachedFromEditorOrDefaultPrevented(aFocusEvent)) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_OK);
@@ -1136,9 +1166,17 @@ EditorEventListener::Focus(nsIDOMEvent* aEvent)
 }
 
 nsresult
-EditorEventListener::Blur(nsIDOMEvent* aEvent)
+EditorEventListener::Blur(WidgetEvent* aBlurEvent)
 {
-  NS_ENSURE_TRUE(aEvent, NS_OK);
+  if (NS_WARN_IF(!aBlurEvent) || DetachedFromEditor()) {
+    return NS_OK;
+  }
+
+  // XXX If aBlurEvent was created by chrome script, its defaultPrevented
+  //     may be true, though.  We shouldn't handle such event but we don't
+  //     have a way to distinguish if coming event is created by chrome script.
+  NS_WARNING_ASSERTION(!aBlurEvent->DefaultPrevented(),
+                       "eBlur event shouldn't be cancelable");
 
   // check if something else is focused. If another element is focused, then
   // we should not change the selection.
@@ -1156,6 +1194,8 @@ EditorEventListener::Blur(nsIDOMEvent* aEvent)
 void
 EditorEventListener::SpellCheckIfNeeded()
 {
+  MOZ_ASSERT(!DetachedFromEditor());
+
   // If the spell check skip flag is still enabled from creation time,
   // disable it because focused editors are allowed to spell check.
   uint32_t currentFlags = 0;
@@ -1169,6 +1209,8 @@ EditorEventListener::SpellCheckIfNeeded()
 bool
 EditorEventListener::IsFileControlTextBox()
 {
+  MOZ_ASSERT(!DetachedFromEditor());
+
   Element* root = mEditorBase->GetRoot();
   if (!root || !root->ChromeOnlyAccess()) {
     return false;
@@ -1184,6 +1226,8 @@ EditorEventListener::IsFileControlTextBox()
 bool
 EditorEventListener::ShouldHandleNativeKeyBindings(nsIDOMKeyEvent* aKeyEvent)
 {
+  MOZ_ASSERT(!DetachedFromEditor());
+
   // Only return true if the target of the event is a desendant of the active
   // editing host in order to match the similar decision made in
   // nsXBLWindowKeyHandler.
