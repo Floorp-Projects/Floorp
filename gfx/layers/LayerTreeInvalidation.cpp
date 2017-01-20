@@ -510,6 +510,52 @@ public:
   IntRect mBounds;
 };
 
+struct BorderLayerProperties : public LayerPropertiesBase
+{
+  explicit BorderLayerProperties(BorderLayer *aLayer)
+    : LayerPropertiesBase(aLayer)
+    , mColors(aLayer->GetColors())
+    , mRect(aLayer->GetRect())
+    , mCorners(aLayer->GetCorners())
+    , mWidths(aLayer->GetWidths())
+  { }
+
+protected:
+  BorderLayerProperties(const BorderLayerProperties& a) = delete;
+  BorderLayerProperties& operator=(const BorderLayerProperties& a) = delete;
+
+public:
+  nsIntRegion ComputeChangeInternal(const char* aPrefix,
+                                    NotifySubDocInvalidationFunc aCallback,
+                                    bool& aGeometryChanged) override
+  {
+    BorderLayer* border = static_cast<BorderLayer*>(mLayer.get());
+
+    if (!border->GetLocalVisibleRegion().ToUnknownRegion().IsEqual(mVisibleRegion)) {
+      aGeometryChanged = true;
+      IntRect result = NewTransformedBounds();
+      result = result.Union(OldTransformedBounds());
+      return result;
+    }
+
+    if (!PodEqual(&mColors[0], &border->GetColors()[0], 4) ||
+        !PodEqual(&mWidths[0], &border->GetWidths()[0], 4) ||
+        !PodEqual(&mCorners[0], &border->GetCorners()[0], 4) ||
+        !mRect.IsEqualEdges(border->GetRect())) {
+      aGeometryChanged = true;
+      LTI_DUMP(NewTransformedBounds(), "bounds");
+      return NewTransformedBounds();
+    }
+
+    return nsIntRegion();
+  }
+
+  BorderColors mColors;
+  LayerRect mRect;
+  BorderCorners mCorners;
+  BorderWidths mWidths;
+};
+
 static ImageHost* GetImageHost(Layer* aLayer)
 {
   HostLayer* compositor = aLayer->AsHostLayer();
@@ -644,11 +690,12 @@ CloneLayerTreePropertiesInternal(Layer* aRoot, bool aIsMask /* = false */)
       return MakeUnique<ImageLayerProperties>(static_cast<ImageLayer*>(aRoot), aIsMask);
     case Layer::TYPE_CANVAS:
       return MakeUnique<CanvasLayerProperties>(static_cast<CanvasLayer*>(aRoot));
+  case Layer::TYPE_BORDER:
+      return MakeUnique<BorderLayerProperties>(static_cast<BorderLayer*>(aRoot));
     case Layer::TYPE_READBACK:
     case Layer::TYPE_SHADOW:
     case Layer::TYPE_PAINTED:
     case Layer::TYPE_TEXT:
-    case Layer::TYPE_BORDER:
       return MakeUnique<LayerPropertiesBase>(aRoot);
   }
 

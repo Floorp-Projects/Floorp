@@ -172,6 +172,8 @@ enum class CacheKind : uint8_t
                                           \
     _(StoreFixedSlot)                     \
     _(StoreDynamicSlot)                   \
+    _(StoreTypedObjectReferenceProperty)  \
+    _(StoreTypedObjectScalarProperty)     \
     _(StoreUnboxedProperty)               \
                                           \
     /* The *Result ops load a value into the cache's result register. */ \
@@ -567,6 +569,25 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         addStubField(offset, StubField::Type::RawWord);
         writeOperandId(rhs);
     }
+    void storeTypedObjectReferenceProperty(ObjOperandId obj, uint32_t offset,
+                                           TypedThingLayout layout, ReferenceTypeDescr::Type type,
+                                           ValOperandId rhs)
+    {
+        writeOpWithOperandId(CacheOp::StoreTypedObjectReferenceProperty, obj);
+        addStubField(offset, StubField::Type::RawWord);
+        buffer_.writeByte(uint32_t(layout));
+        buffer_.writeByte(uint32_t(type));
+        writeOperandId(rhs);
+    }
+    void storeTypedObjectScalarProperty(ObjOperandId obj, uint32_t offset, TypedThingLayout layout,
+                                        Scalar::Type type, ValOperandId rhs)
+    {
+        writeOpWithOperandId(CacheOp::StoreTypedObjectScalarProperty, obj);
+        addStubField(offset, StubField::Type::RawWord);
+        buffer_.writeByte(uint32_t(layout));
+        buffer_.writeByte(uint32_t(type));
+        writeOperandId(rhs);
+    }
     void storeUnboxedProperty(ObjOperandId obj, JSValueType type, size_t offset,
                               ValOperandId rhs)
     {
@@ -712,6 +733,10 @@ class MOZ_RAII CacheIRReader
     Scalar::Type scalarType() { return Scalar::Type(buffer_.readByte()); }
     uint32_t typeDescrKey() { return buffer_.readByte(); }
     JSWhyMagic whyMagic() { return JSWhyMagic(buffer_.readByte()); }
+
+    ReferenceTypeDescr::Type referenceTypeDescrType() {
+        return ReferenceTypeDescr::Type(buffer_.readByte());
+    }
 
     bool matchOp(CacheOp op) {
         const uint8_t* pos = buffer_.currentPosition();
@@ -880,6 +905,8 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator
                                         ValOperandId rhsId);
     bool tryAttachUnboxedProperty(HandleObject obj, ObjOperandId objId, HandleId id,
                                   ValOperandId rhsId);
+    bool tryAttachTypedObjectProperty(HandleObject obj, ObjOperandId objId, HandleId id,
+                                      ValOperandId rhsId);
 
   public:
     SetPropIRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind,

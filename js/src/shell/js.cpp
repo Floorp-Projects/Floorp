@@ -146,11 +146,8 @@ static const size_t gMaxStackSize = 128 * sizeof(size_t) * 1024;
  */
 static const TimeDuration MAX_TIMEOUT_INTERVAL = TimeDuration::FromSeconds(1800.0);
 
-#ifdef RELEASE_OR_BETA
-# define SHARED_MEMORY_DEFAULT 0
-#else
-# define SHARED_MEMORY_DEFAULT 1
-#endif
+// SharedArrayBuffer and Atomics are enabled by default (tracking Firefox).
+#define SHARED_MEMORY_DEFAULT 1
 
 using JobQueue = GCVector<JSObject*, 0, SystemAllocPolicy>;
 

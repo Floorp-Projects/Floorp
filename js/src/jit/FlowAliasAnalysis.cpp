@@ -815,7 +815,7 @@ FlowAliasAnalysis::saveStoreDependency(MDefinition* ins, BlockStoreInfo& prevSto
     // To form a store dependency chain, we store the previous last dependencies
     // in the current store.
 
-    StoreDependency* dependency = new(alloc()) StoreDependency(alloc());
+    StoreDependency* dependency = new(alloc().fallible()) StoreDependency(alloc());
     if (!dependency)
         return false;
     if (!dependency->init(prevStores))
