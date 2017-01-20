@@ -85,6 +85,12 @@ public class Tabs implements BundleEventListener {
     private PersistTabsRunnable mPersistTabsRunnable;
     private int mPrivateClearColor;
 
+    public void closeAll() {
+        for (final Tab tab : mOrder) {
+            Tabs.getInstance().closeTab(tab, false);
+        }
+    }
+
     private static class PersistTabsRunnable implements Runnable {
         private final BrowserDB db;
         private final Context context;

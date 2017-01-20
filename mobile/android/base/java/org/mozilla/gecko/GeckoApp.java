@@ -585,17 +585,20 @@ public abstract class GeckoApp
                 Log.e(LOGTAG, "Error adding sanitize object", ex);
             }
 
-            // If the user has opted out of session restore, and does want to clear history
+            // If the user wants to clear open tabs, or else has opted out of session restore and does want to clear history,
             // we also want to prevent the current session info from being saved.
-            if (clearObj.has("private.data.history")) {
-                final String sessionRestore = getSessionRestorePreference(getSharedPreferences());
-                try {
-                    res.put("dontSaveSession", "quit".equals(sessionRestore));
-                } catch (JSONException ex) {
-                    Log.e(LOGTAG, "Error adding session restore data", ex);
-                }
-            }
+            try {
+                if (clearObj.has("private.data.openTabs")) {
+                    res.put("dontSaveSession", true);
+                } else if (clearObj.has("private.data.history")) {
 
+                    final String sessionRestore = getSessionRestorePreference(getSharedPreferences());
+                    res.put("dontSaveSession", "quit".equals(sessionRestore));
+
+                }
+            } catch (JSONException ex) {
+                Log.e(LOGTAG, "Error adding session restore data", ex);
+            }
             GeckoAppShell.notifyObservers("Browser:Quit", res.toString());
             // We don't call doShutdown() here because this creates a race condition which can
             // cause the clearing of private data to fail. Instead, we shut down the UI only after
