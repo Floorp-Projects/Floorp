@@ -220,7 +220,8 @@ CrossProcessCompositorBridgeParent::AllocPWebRenderBridgeParent(const wr::Pipeli
   WebRenderBridgeParent* parent = nullptr;
   if (MOZ_USE_RENDER_THREAD) {
     RefPtr<wr::WebRenderAPI> api = root->GetWebRenderAPI();
-    parent = new WebRenderBridgeParent(this, aPipelineId, nullptr, Move(api));
+    RefPtr<WebRenderCompositableHolder> holder = root->CompositableHolder();
+    parent = new WebRenderBridgeParent(this, aPipelineId, nullptr, Move(api), Move(holder));
   } else {
     parent = new WebRenderBridgeParent(this, aPipelineId, nullptr, root->GLContext(),
                                        root->WindowState(), root->Compositor());
