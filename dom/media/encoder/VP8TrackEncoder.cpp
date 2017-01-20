@@ -553,11 +553,15 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
     } else {
       // SKIP_FRAME
       // Extend the duration of the last encoded data in aData
-      // because this frame will be skip.
+      // because this frame will be skipped.
       VP8LOG(LogLevel::Warning, "MediaRecorder lagging behind. Skipping a frame.");
       RefPtr<EncodedFrame> last = aData.GetEncodedFrames().LastElement();
       if (last) {
-        last->SetDuration(last->GetDuration() + chunk.GetDuration());
+        CheckedInt64 skippedDuration = FramesToUsecs(chunk.mDuration, mTrackRate);
+        if (skippedDuration.isValid() && skippedDuration.value() > 0) {
+          last->SetDuration(last->GetDuration() +
+                            (static_cast<uint64_t>(skippedDuration.value())));
+        }
       }
     }
 
