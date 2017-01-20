@@ -1474,6 +1474,12 @@ StyleRule::GetDOMRule()
   return mDOMRule;
 }
 
+/* virtual */ nsIDOMCSSRule*
+StyleRule::GetExistingDOMRule()
+{
+  return mDOMRule;
+}
+
 void
 StyleRule::SetDeclaration(Declaration* aDecl)
 {
