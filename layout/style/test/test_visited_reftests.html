@@ -126,10 +126,22 @@ function waitFor100ms() {
 }
 
 async function runTest(testLine) {
-  var splitData = testLine.split(" ");
-  let isEqual = splitData[0] == "==";
-  let testFile = splitData[1];
-  let refFile = splitData[2];
+  let splitData = testLine.split(" ");
+  let isEqual;
+  let needsFocus = false;
+  while (true) {
+    let op = splitData.shift();
+    if (op == "needs-focus") {
+      needsFocus = true;
+    } else if (op == "==" || op == "!=") {
+      isEqual = op == "==";
+      break;
+    } else {
+      ok(false, "Unknown syntax");
+      return;
+    }
+  }
+  let [testFile, refFile] = splitData;
 
   let promiseTestWin = startIframe(testFile);
   let promiseRefWin = startIframe(refFile);
@@ -143,6 +155,9 @@ async function runTest(testLine) {
   let tries;
   let testSnapshot;
   for (tries = 0; tries < gMaxPassingTries * gTimeoutFactor; ++tries) {
+    if (needsFocus) {
+      await SimpleTest.promiseFocus(testWindow, false);
+    }
     testSnapshot = snapshotWindow(testWindow);
     if (passes(isEqual, testSnapshot, refSnapshot)) {
       if (tries > gMaxPassingTries) {
