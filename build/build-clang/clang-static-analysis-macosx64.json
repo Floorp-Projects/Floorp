@@ -21,14 +21,17 @@
     "patches": {
         "macosx64": [
           "llvm-debug-frame.patch",
+          "compiler-rt-cross-compile.patch",
           "pr28831-r280042.patch"
         ],
         "linux64": [
           "llvm-debug-frame.patch",
+          "compiler-rt-cross-compile.patch",
           "pr28831-r280042.patch"
         ],
         "linux32": [
           "llvm-debug-frame.patch",
+          "compiler-rt-cross-compile.patch",
           "pr28831-r280042.patch"
         ]
     }
