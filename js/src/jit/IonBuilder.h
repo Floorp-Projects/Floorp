@@ -1036,7 +1036,7 @@ class IonBuilder
         {}
     };
 
-    Vector<MInstruction*, 2, JitAllocPolicy> iterators_;
+    Vector<MDefinition*, 2, JitAllocPolicy> iterators_;
     Vector<LoopHeader, 0, JitAllocPolicy> loopHeaders_;
     Vector<MBasicBlock*, 0, JitAllocPolicy> loopHeaderStack_;
 #ifdef DEBUG
