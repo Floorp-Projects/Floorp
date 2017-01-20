@@ -2992,14 +2992,29 @@ var AddonManagerInternal = {
       ];
 
       let listener = {};
-      events.forEach(event => {
-        listener[event] = (install) => {
-          let data = {event, id};
-          AddonManager.webAPI.copyProps(install, data);
-          this.sendEvent(mm, data);
-        }
+      let installPromise = new Promise((resolve, reject) => {
+        events.forEach(event => {
+          listener[event] = (install, addon) => {
+            let data = {event, id};
+            AddonManager.webAPI.copyProps(install, data);
+            this.sendEvent(mm, data);
+            if (event == "onInstallEnded") {
+              resolve(addon);
+            } else if (event == "onDownloadFailed" || event == "onInstallFailed") {
+              reject({message: "install failed"});
+            } else if (event == "onDownloadCancelled" || event == "onInstallCancelled") {
+              reject({message: "install cancelled"});
+            }
+          }
+        });
       });
-      return listener;
+
+      // We create the promise here since this is where we're setting
+      // up the InstallListener, but if the install is never started,
+      // no handlers will be attached so make sure we terminate errors.
+      installPromise.catch(() => {});
+
+      return {listener, installPromise};
     },
 
     forgetInstall(id) {
@@ -3033,15 +3048,15 @@ var AddonManagerInternal = {
         return Promise.reject({message: err.message});
       }
 
-      return AddonManagerInternal.getInstallForURL(options.url, "application/x-xpinstall",
-                                                   options.hash).then(install => {
+      return AddonManagerInternal.getInstallForURL(options.url, "application/x-xpinstall", options.hash)
+                                 .then(install => {
         AddonManagerInternal.setupPromptHandler(target, null, install, false);
 
         let id = this.nextInstall++;
-        let listener = this.makeListener(id, target.messageManager);
+        let {listener, installPromise} = this.makeListener(id, target.messageManager);
         install.addListener(listener);
 
-        this.installs.set(id, {install, target, listener});
+        this.installs.set(id, {install, target, listener, installPromise});
 
         let result = {id};
         this.copyProps(install, result);
@@ -3084,7 +3099,17 @@ var AddonManagerInternal = {
       if (!state) {
         return Promise.reject(`invalid id ${id}`);
       }
-      return Promise.resolve(state.install.install());
+      let result = state.install.install();
+
+      return state.installPromise.then(addon => new Promise(resolve => {
+        let callback = () => resolve(result);
+        if (Preferences.get(PREF_WEBEXT_PERM_PROMPTS, false)) {
+          let subject = {wrappedJSObject: {target, addon, callback}};
+          Services.obs.notifyObservers(subject, "webextension-install-notify", null)
+        } else {
+          callback();
+        }
+      }));
     },
 
     addonInstallCancel(target, id) {

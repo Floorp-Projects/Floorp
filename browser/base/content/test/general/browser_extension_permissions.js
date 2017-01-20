@@ -63,8 +63,8 @@ function checkNotification(panel, url) {
 
 const INSTALL_FUNCTIONS = [
   function installMozAM(url) {
-    ContentTask.spawn(gBrowser.selectedBrowser, url, function*(cUrl) {
-      content.wrappedJSObject.installMozAM(cUrl);
+    return ContentTask.spawn(gBrowser.selectedBrowser, url, function*(cUrl) {
+      yield content.wrappedJSObject.installMozAM(cUrl);
     });
   },
 
@@ -72,6 +72,7 @@ const INSTALL_FUNCTIONS = [
     ContentTask.spawn(gBrowser.selectedBrowser, url, function*(cUrl) {
       content.wrappedJSObject.installTrigger(cUrl);
     });
+    return Promise.resolve();
   },
 ];
 
@@ -117,16 +118,28 @@ add_task(function* () {
       AddonManager.addInstallListener(listener);
     });
 
-    installFn(url);
+    let installMethodPromise = installFn(url);
 
     let panel = yield promisePopupNotificationShown("addon-webext-permissions");
     checkNotification(panel, url);
 
     if (cancel) {
       panel.secondaryButton.click();
+      try {
+        yield installMethodPromise;
+      } catch (err) {}
     } else {
+      // Look for post-install notification
+      let postInstallPromise = promisePopupNotificationShown("addon-installed");
       panel.button.click();
+
+      // Press OK on the post-install notification
+      panel = yield postInstallPromise;
+      panel.button.click();
+
+      yield installMethodPromise;
     }
+
 
     let result = yield installPromise;
     let addon = yield promiseGetAddonByID(ID);
