@@ -1015,20 +1015,12 @@ RemoteInputStream::ReallyBlockAndWaitForStream()
 
   {
     MonitorAutoLock lock(mMonitor);
+
     waited = !mStream;
-  }
 
-  nsIThread* currentThread = NS_GetCurrentThread();
-  MOZ_ASSERT(currentThread);
-
-  while (true) {
-    {
-      MonitorAutoLock lock(mMonitor);
-      if (mStream) {
-        break;
-      }
+    while (!mStream) {
+      mMonitor.Wait();
     }
-    MOZ_ALWAYS_TRUE(NS_ProcessNextEvent(currentThread));
   }
 
   MOZ_ASSERT(mStream);
