@@ -208,6 +208,12 @@ function run_test() {
       return true;
     }
   });
+  // do the same with an arrow function
+  assert.throws(makeBlock(thrower, TypeError), err => {
+    if ((err instanceof TypeError) && /test/.test(err)) {
+      return true;
+    }
+  });
 
   function testAssertionMessage(actual, expected) {
     try {
