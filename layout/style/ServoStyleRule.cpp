@@ -70,15 +70,15 @@ ServoStyleRuleDeclaration::SetCSSDeclaration(DeclarationBlock* aDecl)
 {
   ServoStyleRule* rule = Rule();
   if (RefPtr<ServoStyleSheet> sheet = rule->GetStyleSheet()->AsServo()) {
-    nsCOMPtr<nsIDocument> owningDoc = sheet->GetOwningDocument();
-    mozAutoDocUpdate updateBatch(owningDoc, UPDATE_STYLE, true);
+    nsCOMPtr<nsIDocument> doc = sheet->GetAssociatedDocument();
+    mozAutoDocUpdate updateBatch(doc, UPDATE_STYLE, true);
     if (aDecl != mDecls) {
       RefPtr<ServoDeclarationBlock> decls = aDecl->AsServo();
       Servo_StyleRule_SetStyle(rule->Raw(), decls->Raw());
       mDecls = decls.forget();
     }
-    if (owningDoc) {
-      owningDoc->StyleRuleChanged(sheet, rule);
+    if (doc) {
+      doc->StyleRuleChanged(sheet, rule);
     }
   }
   return NS_OK;
