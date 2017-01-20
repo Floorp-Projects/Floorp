@@ -1,7 +1,7 @@
-pref(layout.css.mix-blend-mode.enabled,true) fails-if(webrender) == blend-canvas.html blend-canvas-ref.html
-pref(layout.css.mix-blend-mode.enabled,true) fails-if(webrender) == blend-constant-background-color.html blend-constant-background-color-ref.html
-pref(layout.css.mix-blend-mode.enabled,true) fails-if(webrender) == blend-gradient-background-color.html blend-gradient-background-color-ref.html
-pref(layout.css.mix-blend-mode.enabled,true) fails-if(webrender) == blend-image.html blend-image-ref.html
+pref(layout.css.mix-blend-mode.enabled,true) == blend-canvas.html blend-canvas-ref.html
+pref(layout.css.mix-blend-mode.enabled,true) == blend-constant-background-color.html blend-constant-background-color-ref.html
+pref(layout.css.mix-blend-mode.enabled,true) == blend-gradient-background-color.html blend-gradient-background-color-ref.html
+pref(layout.css.mix-blend-mode.enabled,true) == blend-image.html blend-image-ref.html
 pref(layout.css.mix-blend-mode.enabled,true) == blend-difference-stacking.html blend-difference-stacking-ref.html
 
 fuzzy-if(skiaContent,1,30000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-alpha.html background-blending-alpha-ref.html
@@ -97,4 +97,4 @@ fuzzy(1,40000) pref(layout.css.background-blend-mode.enabled,true) fails-if(webr
 # Test plan 4.4.2 element with isolation:isolate creates an isolated group for blended children
 pref(layout.css.isolation.enabled,true) == blend-isolation.html blend-isolation-ref.html
 
-pref(layout.css.background-blend-mode.enabled,true) == bug1281593.html bug1281593-ref.html
+pref(layout.css.background-blend-mode.enabled,true) fails-if(webrender) == bug1281593.html bug1281593-ref.html

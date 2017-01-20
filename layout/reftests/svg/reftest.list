@@ -411,12 +411,12 @@ fuzzy-if(skiaContent,1,100) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-re
 == href-attr-change-restyles.svg href-attr-change-restyles-ref.svg
 == mask-img.html mask-img-ref.html
 
-skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) fails-if(webrender) == blend-color-burn.svg blend-color-burn-ref.svg
-skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) fails-if(webrender) == blend-color-dodge.svg blend-color-dodge-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-burn.svg blend-color-burn-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-dodge.svg blend-color-dodge-ref.svg
 # pref(layout.css.mix-blend-mode.enabled,true) == blend-color.svg blend-color-ref.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) fails-if(webrender) == blend-darken.svg blend-darken-ref.svg
-skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) fails-if(webrender) == blend-difference.svg blend-difference-ref.svg
-skip-if(Android) fuzzy-if(skiaContent,1,1600) pref(layout.css.mix-blend-mode.enabled,true) fails-if(webrender) == blend-exclusion.svg blend-exclusion-ref.svg
+skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-difference.svg blend-difference-ref.svg
+skip-if(Android) fuzzy-if(skiaContent,1,1600) pref(layout.css.mix-blend-mode.enabled,true) == blend-exclusion.svg blend-exclusion-ref.svg
 # pref(layout.css.mix-blend-mode.enabled,true) == blend-hard-light.svg blend-hard-light-ref.svg
 # pref(layout.css.mix-blend-mode.enabled,true) == blend-hue.svg blend-hue-ref.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-blend.svg blend-layer-blend-ref.svg
