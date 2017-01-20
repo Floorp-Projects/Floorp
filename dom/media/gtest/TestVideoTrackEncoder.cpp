@@ -46,11 +46,19 @@ public:
     return mImageSize;
   }
 
-  void Generate(nsTArray<RefPtr<Image> > &aImages)
+  already_AddRefed<Image> GenerateI420Image()
   {
-    aImages.AppendElement(CreateI420Image());
-    aImages.AppendElement(CreateNV12Image());
-    aImages.AppendElement(CreateNV21Image());
+    return do_AddRef(CreateI420Image());
+  }
+
+  already_AddRefed<Image> GenerateNV12Image()
+  {
+    return do_AddRef(CreateNV12Image());
+  }
+
+  already_AddRefed<Image> GenerateNV21Image()
+  {
+    return do_AddRef(CreateNV21Image());
   }
 
 private:
@@ -260,7 +268,9 @@ TEST(VP8VideoTrackEncoder, FrameEncode)
   nsTArray<RefPtr<Image>> images;
   YUVBufferGenerator generator;
   generator.Init(mozilla::gfx::IntSize(640, 480));
-  generator.Generate(images);
+  images.AppendElement(generator.GenerateI420Image());
+  images.AppendElement(generator.GenerateNV12Image());
+  images.AppendElement(generator.GenerateNV21Image());
 
   // Put generated YUV frame into video segment.
   // Duration of each frame is 1 second.
