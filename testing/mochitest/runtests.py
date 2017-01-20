@@ -322,6 +322,7 @@ def killPid(pid, log):
     except Exception as e:
         log.info("Failed to kill process %d: %s" % (pid, str(e)))
 
+
 if mozinfo.isWin:
     import ctypes.wintypes
 
@@ -2358,6 +2359,7 @@ toolbar#nav-bar {
             self.browserEnv["MOZ_LOG_FILE"] = "{}/moz-pid=%PID-uid={}.log".format(
                 self.browserEnv["MOZ_UPLOAD_DIR"], str(uuid.uuid4()))
 
+        status = 0
         try:
             self.startServers(options, debuggerInfo)
 
@@ -2417,23 +2419,25 @@ toolbar#nav-bar {
 
                 self.log.info("runtests.py | Running with e10s: {}".format(options.e10s))
                 self.log.info("runtests.py | Running tests: start.\n")
-                status = self.runApp(testURL,
-                                     self.browserEnv,
-                                     options.app,
-                                     profile=self.profile,
-                                     extraArgs=options.browserArgs,
-                                     utilityPath=options.utilityPath,
-                                     debuggerInfo=debuggerInfo,
-                                     valgrindPath=valgrindPath,
-                                     valgrindArgs=valgrindArgs,
-                                     valgrindSuppFiles=valgrindSuppFiles,
-                                     symbolsPath=options.symbolsPath,
-                                     timeout=timeout,
-                                     detectShutdownLeaks=detectShutdownLeaks,
-                                     screenshotOnFail=options.screenshotOnFail,
-                                     bisectChunk=options.bisectChunk,
-                                     marionette_args=marionette_args,
-                                     )
+                ret = self.runApp(
+                    testURL,
+                    self.browserEnv,
+                    options.app,
+                    profile=self.profile,
+                    extraArgs=options.browserArgs,
+                    utilityPath=options.utilityPath,
+                    debuggerInfo=debuggerInfo,
+                    valgrindPath=valgrindPath,
+                    valgrindArgs=valgrindArgs,
+                    valgrindSuppFiles=valgrindSuppFiles,
+                    symbolsPath=options.symbolsPath,
+                    timeout=timeout,
+                    detectShutdownLeaks=detectShutdownLeaks,
+                    screenshotOnFail=options.screenshotOnFail,
+                    bisectChunk=options.bisectChunk,
+                    marionette_args=marionette_args,
+                )
+                status = ret or status
         except KeyboardInterrupt:
             self.log.info("runtests.py | Received keyboard interrupt.\n")
             status = -1
@@ -2734,6 +2738,7 @@ def cli(args=sys.argv[1:]):
         sys.exit(1)
 
     return run_test_harness(parser, options)
+
 
 if __name__ == "__main__":
     sys.exit(cli())
