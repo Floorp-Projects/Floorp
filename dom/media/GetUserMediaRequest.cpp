@@ -25,6 +25,18 @@ GetUserMediaRequest::GetUserMediaRequest(
 {
 }
 
+GetUserMediaRequest::GetUserMediaRequest(
+    nsPIDOMWindowInner* aInnerWindow,
+    const nsAString& aRawId,
+    const nsAString& aMediaSource)
+  : mRawID(aRawId)
+  , mMediaSource(aMediaSource)
+{
+  if (aInnerWindow && aInnerWindow->GetOuterWindow()) {
+    mOuterWindowID = aInnerWindow->GetOuterWindow()->WindowID();
+  }
+}
+
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(GetUserMediaRequest)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(GetUserMediaRequest)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(GetUserMediaRequest)
@@ -47,6 +59,16 @@ nsISupports* GetUserMediaRequest::GetParentObject()
 void GetUserMediaRequest::GetCallID(nsString& retval)
 {
   retval = mCallID;
+}
+
+void GetUserMediaRequest::GetRawID(nsString& retval)
+{
+  retval = mRawID;
+}
+
+void GetUserMediaRequest::GetMediaSource(nsString& retval)
+{
+  retval = mMediaSource;
 }
 
 uint64_t GetUserMediaRequest::WindowID()

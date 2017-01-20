@@ -51,8 +51,6 @@ this.LightweightThemes = {
           }, 500);
         });
       },
-
-      verifyConfig: verifyConfigHelper,
     },
 
     lightLWT: {
@@ -72,21 +70,18 @@ this.LightweightThemes = {
           }, 500);
         });
       },
-
-      verifyConfig: verifyConfigHelper,
     },
 
+    compactLight: {
+      applyConfig: Task.async(() => {
+        LightweightThemeManager.currentTheme = LightweightThemeManager.getUsedTheme("firefox-compact-light@mozilla.org");
+      }),
+    },
+
+    compactDark: {
+      applyConfig: Task.async(() => {
+        LightweightThemeManager.currentTheme = LightweightThemeManager.getUsedTheme("firefox-compact-dark@mozilla.org");
+      }),
+    },
   },
 };
-
-
-function verifyConfigHelper() {
-  return new Promise((resolve, reject) => {
-    let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-    if (browserWindow.document.documentElement.hasAttribute("lwtheme")) {
-      resolve("verifyConfigHelper");
-    } else {
-      reject("The @lwtheme attribute wasn't present so themes may not be available");
-    }
-  });
-}

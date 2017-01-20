@@ -32,21 +32,24 @@ function testGetTheme() {
 
 function testSetTheme() {
   let originalTheme = getTheme();
+  // Put this in a variable rather than hardcoding it because the default
+  // changes between aurora and nightly
+  let otherTheme = originalTheme == "dark" ? "light" : "dark";
 
   let prefObserver = new PrefObserver("devtools.");
   prefObserver.once("devtools.theme", pref => {
     is(pref, "devtools.theme",
       "A preference event triggered by setTheme has correct pref.");
     let newValue = Services.prefs.getCharPref("devtools.theme");
-    is(newValue, "dark",
+    is(newValue, otherTheme,
       "A preference event triggered by setTheme comes after the value is set.");
   });
-  setTheme("dark");
-  is(Services.prefs.getCharPref("devtools.theme"), "dark",
-     "setTheme() correctly sets dark theme.");
-  setTheme("light");
-  is(Services.prefs.getCharPref("devtools.theme"), "light",
-     "setTheme() correctly sets light theme.");
+  setTheme(otherTheme);
+  is(Services.prefs.getCharPref("devtools.theme"), otherTheme,
+     "setTheme() correctly sets another theme.");
+  setTheme(originalTheme);
+  is(Services.prefs.getCharPref("devtools.theme"), originalTheme,
+     "setTheme() correctly sets the original theme.");
   setTheme("firebug");
   is(Services.prefs.getCharPref("devtools.theme"), "firebug",
      "setTheme() correctly sets firebug theme.");

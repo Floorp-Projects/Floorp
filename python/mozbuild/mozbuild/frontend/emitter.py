@@ -1351,7 +1351,6 @@ class TreeMetadataEmitter(LoggingMixin):
                 'manifest': source_manifest,
                 'name': mozpath.basename(test),
                 'head': '',
-                'tail': '',
                 'support-files': '',
                 'subsuite': '',
             })
@@ -1386,7 +1385,6 @@ class TreeMetadataEmitter(LoggingMixin):
                     'manifest': manifest_path,
                     'name': test.id,
                     'head': '',
-                    'tail': '',
                     'support-files': '',
                     'subsuite': '',
                 })

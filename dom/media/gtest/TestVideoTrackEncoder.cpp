@@ -265,13 +265,16 @@ TEST(VP8VideoTrackEncoder, FrameEncode)
   // Put generated YUV frame into video segment.
   // Duration of each frame is 1 second.
   VideoSegment segment;
+  TimeStamp now = TimeStamp::Now();
   for (nsTArray<RefPtr<Image>>::size_type i = 0; i < images.Length(); i++)
   {
     RefPtr<Image> image = images[i];
     segment.AppendFrame(image.forget(),
                         mozilla::StreamTime(90000),
                         generator.GetSize(),
-                        PRINCIPAL_HANDLE_NONE);
+                        PRINCIPAL_HANDLE_NONE,
+                        false,
+                        now + TimeDuration::FromSeconds(i));
   }
 
   // track change notification.

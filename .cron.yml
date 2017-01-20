@@ -1,0 +1,29 @@
+# Definitions for jobs that run periodically.  For details on the format, see
+# `taskcluster/taskgraph/cron/schema.py`.  For documentation, see
+# `taskcluster/docs/cron.rst`.
+
+jobs:
+    - name: nightly-desktop
+      job:
+          type: decision-task
+          treeherder-symbol: Nd
+          triggered-by: nightly
+          target-tasks-method: nightly_linux
+      projects:
+          - mozilla-central
+          - date
+      when:
+          - {hour: 16, minute: 0}
+
+    - name: nightly-android
+      job:
+          type: decision-task
+          treeherder-symbol: Na
+          triggered-by: nightly
+          target-tasks-method: nightly_fennec
+      projects:
+          - mozilla-central
+          - date
+      when:
+          - {hour: 16, minute: 0}
+
