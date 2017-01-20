@@ -329,7 +329,7 @@ class WrappedPtrOperations<JS::PropertyResult, Wrapper>
 
   public:
     bool isFound() const { return value().isFound(); }
-    operator bool() const { return bool(value()); }
+    explicit operator bool() const { return bool(value()); }
     js::Shape* maybeShape() const { return value().maybeShape(); }
     js::Shape* shape() const { return value().shape(); }
     bool isNativeProperty() const { return value().isNativeProperty(); }
