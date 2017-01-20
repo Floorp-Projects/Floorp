@@ -23,6 +23,7 @@ class ProcessGlobal;
 class SandboxPrivate;
 class nsInProcessTabChildGlobal;
 class nsWindowRoot;
+class nsCSSFontFaceRule;
 class nsCSSFontFeatureValuesRule;
 class nsCSSKeyframeRule;
 class nsCSSKeyframesRule;
@@ -284,6 +285,7 @@ private:
   friend class SandboxPrivate;
   friend class nsInProcessTabChildGlobal;
   friend class nsWindowRoot;
+  friend class nsCSSFontFaceRule;
   friend class nsCSSFontFeatureValuesRule;
   friend class nsCSSKeyframeRule;
   friend class nsCSSKeyframesRule;
