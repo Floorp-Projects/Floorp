@@ -301,6 +301,7 @@ VideoTrackEncoder::AppendVideoSegment(const VideoSegment& aSegment)
       MOZ_ASSERT(!chunk.mTimeStamp.IsNull());
       const StreamTime nullDuration = mLastChunk.mDuration;
       mLastChunk = chunk;
+      chunk.mDuration = 0;
 
       TRACK_LOG(LogLevel::Verbose,
                 ("[VideoTrackEncoder]: Got first video chunk after %lld ticks.",
