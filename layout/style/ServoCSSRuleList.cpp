@@ -81,7 +81,7 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
   return CastToPtr(rule);
 }
 
-css::Rule*
+nsIDOMCSSRule*
 ServoCSSRuleList::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
   if (aIndex >= mRules.Length()) {
@@ -89,7 +89,10 @@ ServoCSSRuleList::IndexedGetter(uint32_t aIndex, bool& aFound)
     return nullptr;
   }
   aFound = true;
-  return GetRule(aIndex);
+  if (css::Rule* rule = GetRule(aIndex)) {
+    return rule;
+  }
+  return nullptr;
 }
 
 template<typename Func>

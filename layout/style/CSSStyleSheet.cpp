@@ -61,7 +61,7 @@ public:
 
   virtual CSSStyleSheet* GetParentObject() override;
 
-  virtual css::Rule*
+  virtual nsIDOMCSSRule*
   IndexedGetter(uint32_t aIndex, bool& aFound) override;
   virtual uint32_t
   Length() override;
@@ -101,7 +101,7 @@ CSSRuleListImpl::Length()
   return AssertedCast<uint32_t>(mStyleSheet->StyleRuleCount());
 }
 
-css::Rule*
+nsIDOMCSSRule*    
 CSSRuleListImpl::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
   aFound = false;
@@ -875,7 +875,7 @@ CSSStyleSheet::RegisterNamespaceRule(css::Rule* aRule)
   return NS_OK;
 }
 
-css::Rule*
+nsIDOMCSSRule*
 CSSStyleSheet::GetDOMOwnerRule() const
 {
   return mOwnerRule;
