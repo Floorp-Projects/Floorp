@@ -834,8 +834,12 @@ menuitem.bookmark-item {
 }
 
 .addon-webext-perm-header {
-  font-weight: bold;
   font-size: 1.3em;
+}
+
+.addon-webext-name {
+  font-weight: bold;
+  margin: 0;
 }
 
 /* Notification icon box */
