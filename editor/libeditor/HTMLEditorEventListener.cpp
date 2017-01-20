@@ -53,6 +53,12 @@ HTMLEditorEventListener::GetHTMLEditor()
 nsresult
 HTMLEditorEventListener::MouseUp(nsIDOMMouseEvent* aMouseEvent)
 {
+  if (DetachedFromEditor()) {
+    return NS_OK;
+  }
+
+  // FYI: We need to notify HTML editor of mouseup even if it's consumed
+  //      because HTML editor always needs to release grabbing resizer.
   HTMLEditor* htmlEditor = GetHTMLEditor();
 
   nsCOMPtr<nsIDOMEventTarget> target;
@@ -72,6 +78,10 @@ HTMLEditorEventListener::MouseUp(nsIDOMMouseEvent* aMouseEvent)
 nsresult
 HTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
 {
+  if (NS_WARN_IF(!aMouseEvent) || DetachedFromEditor()) {
+    return NS_OK;
+  }
+
   WidgetMouseEvent* mousedownEvent =
     aMouseEvent->AsEvent()->WidgetEventPtr()->AsMouseEvent();
 
@@ -85,6 +95,9 @@ HTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
     // point.  Then, we won't be able to commit the composition.
     return EditorEventListener::MouseDown(aMouseEvent);
   }
+
+  // XXX This method may change selection. So, we need to commit composition
+  //     here, first.
 
   // Detect only "context menu" click
   // XXX This should be easier to do!
@@ -178,6 +191,9 @@ HTMLEditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
           selection->Collapse(parent, offset);
         } else {
           htmlEditor->SelectElement(element);
+        }
+        if (DetachedFromEditor()) {
+          return NS_OK;
         }
       }
     }
