@@ -44,7 +44,7 @@ function onLoadEnd1(e) {
 
 function onLoadEnd2(e) {
   e.target.removeEventListener('loadend', onLoadEnd2);
-  ok(false, "This method should not be called - loadEnd2!");
+  ok(true, "This method should be called - loadEnd2!");
 }
 
 function onError1(e) {
