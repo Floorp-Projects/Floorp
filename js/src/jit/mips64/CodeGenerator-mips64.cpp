@@ -449,7 +449,7 @@ CodeGeneratorMIPS64::emitWasmLoadI64(T* lir)
 
     masm.memoryBarrier(mir->access().barrierBefore());
 
-    if (mir->access().isUnaligned()) {
+    if (IsUnaligned(mir->access())) {
         Register temp = ToRegister(lir->getTemp(1));
 
         masm.ma_load_unaligned(ToOutRegister64(lir).reg, BaseIndex(HeapReg, ptr, TimesOne),
@@ -514,7 +514,7 @@ CodeGeneratorMIPS64::emitWasmStoreI64(T* lir)
 
     masm.memoryBarrier(mir->access().barrierBefore());
 
-    if (mir->access().isUnaligned()) {
+    if (IsUnaligned(mir->access())) {
         Register temp = ToRegister(lir->getTemp(1));
 
         masm.ma_store_unaligned(ToRegister64(lir->value()).reg, BaseIndex(HeapReg, ptr, TimesOne),

@@ -324,7 +324,7 @@ LIRGeneratorMIPSShared::visitWasmLoad(MWasmLoad* ins)
 
     LAllocation ptr = useRegisterAtStart(base);
 
-    if (ins->access().isUnaligned()) {
+    if (IsUnaligned(ins->access())) {
         if (ins->type() == MIRType::Int64) {
             auto* lir = new(alloc()) LWasmUnalignedLoadI64(ptr, temp());
             if (ins->access().offset())
@@ -367,7 +367,7 @@ LIRGeneratorMIPSShared::visitWasmStore(MWasmStore* ins)
     MDefinition* value = ins->value();
     LAllocation baseAlloc = useRegisterAtStart(base);
 
-    if (ins->access().isUnaligned()) {
+    if (IsUnaligned(ins->access())) {
         if (ins->type() == MIRType::Int64) {
             LInt64Allocation valueAlloc = useInt64RegisterAtStart(value);
             auto* lir = new(alloc()) LWasmUnalignedStoreI64(baseAlloc, valueAlloc, temp());

@@ -5,27 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
-    'NSSU2FTokenRemote.h',
-    'ScopedCredential.h',
-    'ScopedCredentialInfo.h',
     'U2F.h',
     'U2FAuthenticator.h',
-    'USBToken.h',
-    'WebAuthentication.h',
-    'WebAuthnAssertion.h',
-    'WebAuthnAttestation.h',
-    'WebAuthnRequest.h',
 ]
 
 UNIFIED_SOURCES += [
-    'NSSU2FTokenRemote.cpp',
-    'ScopedCredential.cpp',
-    'ScopedCredentialInfo.cpp',
     'U2F.cpp',
-    'USBToken.cpp',
-    'WebAuthentication.cpp',
-    'WebAuthnAssertion.cpp',
-    'WebAuthnAttestation.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

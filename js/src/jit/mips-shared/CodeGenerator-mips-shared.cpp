@@ -1915,7 +1915,7 @@ CodeGeneratorMIPSShared::emitWasmLoad(T* lir)
 
     BaseIndex address(HeapReg, ptr, TimesOne);
 
-    if (mir->access().isUnaligned()) {
+    if (IsUnaligned(mir->access())) {
         Register temp = ToRegister(lir->getTemp(1));
 
         if (isFloat) {
@@ -2000,7 +2000,7 @@ CodeGeneratorMIPSShared::emitWasmStore(T* lir)
 
     BaseIndex address(HeapReg, ptr, TimesOne);
 
-    if (mir->access().isUnaligned()) {
+    if (IsUnaligned(mir->access())) {
         Register temp = ToRegister(lir->getTemp(1));
 
         if (isFloat) {

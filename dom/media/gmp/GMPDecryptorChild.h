@@ -18,15 +18,12 @@ namespace gmp {
 class GMPContentChild;
 
 class GMPDecryptorChild : public GMPDecryptorCallback
-                        , public GMPDecryptorHost
                         , public PGMPDecryptorChild
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPDecryptorChild);
 
-  explicit GMPDecryptorChild(GMPContentChild* aPlugin,
-                             const nsTArray<uint8_t>& aPluginVoucher,
-                             const nsTArray<uint8_t>& aSandboxVoucher);
+  explicit GMPDecryptorChild(GMPContentChild* aPlugin);
 
   void Init(GMPDecryptor* aSession);
 
@@ -78,12 +75,6 @@ public:
                                const GMPMediaKeyInfo* aKeyInfos,
                                uint32_t aKeyInfosLength) override;
 
-  // GMPDecryptorHost
-  void GetSandboxVoucher(const uint8_t** aVoucher,
-                         uint32_t* aVoucherLength) override;
-
-  void GetPluginVoucher(const uint8_t** aVoucher,
-                        uint32_t* aVoucherLength) override;
 private:
   ~GMPDecryptorChild();
 
@@ -130,10 +121,6 @@ private:
   // Only call into this on the (GMP process) main thread.
   GMPDecryptor* mSession;
   GMPContentChild* mPlugin;
-
-  // Reference to the vouchers owned by the GMPChild.
-  const nsTArray<uint8_t>& mPluginVoucher;
-  const nsTArray<uint8_t>& mSandboxVoucher;
 };
 
 } // namespace gmp

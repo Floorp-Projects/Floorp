@@ -1047,23 +1047,6 @@ add_test({
 
         self.assertTrue(raised)
 
-    def testMissingTailFile(self):
-        """
-        Ensure that missing tail file results in fatal error.
-        """
-        self.writeFile("test_basic.js", SIMPLE_PASSING_TEST)
-        self.writeManifest([("test_basic.js", "tail = missing.js")])
-
-        raised = False
-
-        try:
-            self.assertTestResult(True)
-        except Exception, ex:
-            raised = True
-            self.assertEquals(ex.message[0:9], "tail file")
-
-        self.assertTrue(raised)
-
     def testRandomExecution(self):
         """
         Check that random execution doesn't break.

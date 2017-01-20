@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<head>
+  <title>Test for W3C Web Authentication with no token</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="u2futil.js"></script>
+  <script type="text/javascript" src="pkijs/common.js"></script>
+  <script type="text/javascript" src="pkijs/asn1.js"></script>
+  <script type="text/javascript" src="pkijs/x509_schema.js"></script>
+  <script type="text/javascript" src="pkijs/x509_simpl.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<h1>Test for W3C Web Authentication with no token</h1>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1309284">Mozilla Bug 1309284</a>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+
+// Execute the full-scope test
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({"set": [["security.webauth.webauthn", true],
+                                   ["security.webauth.webauthn_enable_softtoken", false],
+                                   ["security.webauth.webauthn_enable_usbtoken", false]]},
+function() {
+  isnot(navigator.authentication, undefined, "WebAuthn API endpoint must exist");
+  isnot(navigator.authentication.makeCredential, undefined, "WebAuthn makeCredential API endpoint must exist");
+  isnot(navigator.authentication.getAssertion, undefined, "WebAuthn getAssertion API endpoint must exist");
+
+  let authn = navigator.authentication;
+
+  let credentialChallenge = new Uint8Array(16);
+  window.crypto.getRandomValues(credentialChallenge);
+  let assertionChallenge = new Uint8Array(16);
+  window.crypto.getRandomValues(assertionChallenge);
+  let credentialId = new Uint8Array(128);
+  window.crypto.getRandomValues(credentialId);
+
+  testMakeCredential();
+
+  function testMakeCredential() {
+    let acct = {rpDisplayName: "none", displayName: "none", id: "none"};
+    let param = {type: "ScopedCred", algorithm: "p-256"};
+    authn.makeCredential(acct, [param], credentialChallenge)
+    .then(function(aResult) {
+      ok(false, "Should have failed.");
+      testAssertion();
+    })
+    .catch(function(aReason) {
+      ok(aReason.toString().startsWith("NotAllowedError"), aReason);
+      testAssertion();
+    });
+  }
+
+  function testAssertion() {
+    let newCredential = {
+      type: "ScopedCred",
+      id: credentialId,
+      transports: [ "usb" ],
+    }
+    let assertOptions = {rpId: document.origin, timeoutSeconds: 5,
+                         allowList: [ newCredential ]};
+    authn.getAssertion(assertionChallenge, assertOptions)
+    .then(function(aResult) {
+      ok(false, "Should have failed.");
+      SimpleTest.finish();
+    })
+    .catch(function(aReason) {
+      ok(aReason.toString().startsWith("NotAllowedError"), aReason);
+      SimpleTest.finish();
+    })
+  }
+});
+
+</script>
+
+</body>
+</html>

@@ -22,8 +22,8 @@
       <hbox id="identity-popup-security" class="identity-popup-section">
         <vbox id="identity-popup-security-content" flex="1">
           <label class="plain">
-            <label class="identity-popup-headline host"></label>
-            <label class="identity-popup-headline hostless" crop="end"/>
+            <label class="identity-popup-headline identity-popup-host"></label>
+            <label class="identity-popup-headline identity-popup-hostless" crop="end"/>
           </label>
           <description class="identity-popup-connection-not-secure"
                        when-connection="not-secure secure-cert-user-overridden">&identity.connectionNotSecure;</description>
@@ -97,8 +97,8 @@
     <panelview id="identity-popup-securityView" flex="1">
       <vbox id="identity-popup-securityView-header">
         <label class="plain">
-          <label class="identity-popup-headline host"></label>
-          <label class="identity-popup-headline hostless" crop="end"/>
+          <label class="identity-popup-headline identity-popup-host"></label>
+          <label class="identity-popup-headline identity-popup-hostless" crop="end"/>
         </label>
         <description class="identity-popup-connection-not-secure"
                      when-connection="not-secure secure-cert-user-overridden">&identity.connectionNotSecure;</description>

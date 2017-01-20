@@ -42,7 +42,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(U2F)
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(U2F, mParent)
 
-static mozilla::LazyLogModule gWebauthLog("webauth_u2f");
+static mozilla::LazyLogModule gU2FLog("u2f");
 
 static nsresult
 AssembleClientData(const nsAString& aOrigin, const nsAString& aTyp,
@@ -81,7 +81,7 @@ U2FStatus::WaitGroupAdd()
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   mCount += 1;
-  MOZ_LOG(gWebauthLog, LogLevel::Debug,
+  MOZ_LOG(gU2FLog, LogLevel::Debug,
           ("U2FStatus::WaitGroupAdd, now %d", mCount));
 }
 
@@ -92,7 +92,7 @@ U2FStatus::WaitGroupDone()
 
   MOZ_ASSERT(mCount > 0);
   mCount -= 1;
-  MOZ_LOG(gWebauthLog, LogLevel::Debug,
+  MOZ_LOG(gU2FLog, LogLevel::Debug,
           ("U2FStatus::WaitGroupDone, now %d", mCount));
   if (mCount == 0) {
     mReentrantMonitor.NotifyAll();
@@ -103,7 +103,7 @@ void
 U2FStatus::WaitGroupWait()
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  MOZ_LOG(gWebauthLog, LogLevel::Debug,
+  MOZ_LOG(gU2FLog, LogLevel::Debug,
           ("U2FStatus::WaitGroupWait, now %d", mCount));
 
   while (mCount > 0) {
@@ -111,7 +111,7 @@ U2FStatus::WaitGroupWait()
   }
 
   MOZ_ASSERT(mCount == 0);
-  MOZ_LOG(gWebauthLog, LogLevel::Debug,
+  MOZ_LOG(gU2FLog, LogLevel::Debug,
           ("U2FStatus::Wait completed, now count=%d stopped=%d", mCount,
            mIsStopped));
 }
@@ -627,7 +627,7 @@ U2FRegisterRunnable::Run()
     U2FPrepPromise::All(AbstractThread::MainThread(), prepPromiseList)
     ->Then(AbstractThread::MainThread(), __func__,
       [status] (const nsTArray<Authenticator>& aTokens) {
-        MOZ_LOG(gWebauthLog, LogLevel::Debug,
+        MOZ_LOG(gU2FLog, LogLevel::Debug,
                 ("ALL: None of the RegisteredKeys were recognized. n=%d",
                  aTokens.Length()));
 
@@ -784,7 +784,7 @@ U2FSignRunnable::U2FSignRunnable(const nsAString& aOrigin,
   nsresult rv = AssembleClientData(aOrigin, kGetAssertion, aChallenge,
                                    mClientData);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_LOG(gWebauthLog, LogLevel::Warning,
+    MOZ_LOG(gU2FLog, LogLevel::Warning,
             ("Failed to AssembleClientData for the U2FSignRunnable."));
     return;
   }
@@ -976,7 +976,7 @@ U2F::Init(nsPIDOMWindowInner* aParent, ErrorResult& aRv)
   }
 
   if (!EnsureNSSInitializedChromeOrContent()) {
-    MOZ_LOG(gWebauthLog, LogLevel::Debug,
+    MOZ_LOG(gU2FLog, LogLevel::Debug,
             ("Failed to get NSS context for U2F"));
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -984,7 +984,7 @@ U2F::Init(nsPIDOMWindowInner* aParent, ErrorResult& aRv)
 
   // This only functions in e10s mode
   if (XRE_IsParentProcess()) {
-    MOZ_LOG(gWebauthLog, LogLevel::Debug,
+    MOZ_LOG(gU2FLog, LogLevel::Debug,
             ("Is non-e10s Process, U2F not available"));
     aRv.Throw(NS_ERROR_FAILURE);
     return;

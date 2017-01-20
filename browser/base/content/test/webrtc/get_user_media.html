@@ -22,7 +22,7 @@ function message(m) {
   window.parent.postMessage(m, "*");
 }
 
-var gStream;
+var gStreams = [];
 
 function requestDevice(aAudio, aVideo, aShare) {
   var opts = {video: aVideo, audio: aAudio};
@@ -37,17 +37,20 @@ function requestDevice(aAudio, aVideo, aShare) {
 
   window.navigator.mediaDevices.getUserMedia(opts)
     .then(stream => {
-      gStream = stream;
+      gStreams.push(stream);
       message("ok");
     }, err => message("error: " + err));
 }
 message("pending");
 
 function closeStream() {
-  if (!gStream)
-    return;
-  gStream.getTracks().forEach(t => t.stop());
-  gStream = null;
+  for (let stream of gStreams) {
+    if (stream) {
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
+    }
+  }
+  gStreams = [];
   message("closed");
 }
 </script>

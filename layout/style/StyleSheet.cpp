@@ -24,6 +24,7 @@ StyleSheet::StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMod
   , mParsingMode(aParsingMode)
   , mType(aType)
   , mDisabled(false)
+  , mDocumentAssociationMode(NotOwnedByDocument)
 {
 }
 
@@ -36,6 +37,9 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy,
   , mParsingMode(aCopy.mParsingMode)
   , mType(aCopy.mType)
   , mDisabled(aCopy.mDisabled)
+    // We only use this constructor during cloning.  It's the cloner's
+    // responsibility to notify us if we end up being owned by a document.
+  , mDocumentAssociationMode(NotOwnedByDocument)
 {
   if (aCopy.mMedia) {
     // XXX This is wrong; we should be keeping @import rules and

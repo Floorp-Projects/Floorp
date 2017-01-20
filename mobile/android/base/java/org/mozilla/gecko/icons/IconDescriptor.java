@@ -6,6 +6,7 @@
 package org.mozilla.gecko.icons;
 
 import android.support.annotation.IntDef;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.VisibleForTesting;
 
@@ -30,21 +31,21 @@ public class IconDescriptor {
     /**
      * Create a generic icon located at the given URL. No MIME type or size is known.
      */
-    public static IconDescriptor createGenericIcon(String url) {
+    public static IconDescriptor createGenericIcon(@NonNull String url) {
         return new IconDescriptor(TYPE_GENERIC, url, 0, null);
     }
 
     /**
      * Create a favicon located at the given URL and with a known size and MIME type.
      */
-    public static IconDescriptor createFavicon(String url, int size, String mimeType) {
+    public static IconDescriptor createFavicon(@NonNull String url, int size, String mimeType) {
         return new IconDescriptor(TYPE_FAVICON, url, size, mimeType);
     }
 
     /**
      * Create a touch icon located at the given URL and with a known MIME type and size.
      */
-    public static IconDescriptor createTouchicon(String url, int size, String mimeType) {
+    public static IconDescriptor createTouchicon(@NonNull String url, int size, String mimeType) {
         return new IconDescriptor(TYPE_TOUCHICON, url, size, mimeType);
     }
 
@@ -53,11 +54,11 @@ public class IconDescriptor {
      * is an icon with an URL we loaded an icon from previously. Therefore we give it a little higher
      * ranking than a generic icon - even though we do not know the MIME type or size of the icon.
      */
-    public static IconDescriptor createLookupIcon(String url) {
+    public static IconDescriptor createLookupIcon(@NonNull String url) {
         return new IconDescriptor(TYPE_LOOKUP, url, 0, null);
     }
 
-    private IconDescriptor(@IconType int type, String url, int size, String mimeType) {
+    private IconDescriptor(@IconType int type, @NonNull String url, int size, String mimeType) {
         this.type = type;
         this.url = url;
         this.size = size;

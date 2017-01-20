@@ -20,6 +20,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.support.design.widget.Snackbar;
 import android.text.SpannableString;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 
@@ -155,6 +156,10 @@ public class SearchEnginePreference extends CustomListPreference {
         setTitle(titleSpannable);
 
         final String iconURI = geckoEngine.getString("iconURI");
+        if (TextUtils.isEmpty(iconURI)) {
+            return;
+        }
+
         // Keep a reference to the bitmap - we'll need it later in onBindView.
         try {
             Icons.with(getContext())

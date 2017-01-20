@@ -106,8 +106,22 @@ public:
   inline bool HasRules() const;
 
   // style sheet owner info
-  nsIDocument* GetOwningDocument() const { return mDocument; }
-  inline void SetOwningDocument(nsIDocument* aDocument);
+  enum DocumentAssociationMode {
+    // OwnedByDocument means mDocument owns us (possibly via a chain of other
+    // stylesheets).
+    OwnedByDocument,
+    // NotOwnedByDocument means we're owned by something that might have a
+    // different lifetime than mDocument.
+    NotOwnedByDocument
+  };
+  nsIDocument* GetAssociatedDocument() const { return mDocument; }
+  bool IsOwnedByDocument() const {
+    return mDocumentAssociationMode == OwnedByDocument;
+  }
+  // aDocument must not be null.
+  inline void SetAssociatedDocument(nsIDocument* aDocument,
+                                    DocumentAssociationMode aMode);
+  inline void ClearAssociatedDocument();
   nsINode* GetOwnerNode() const { return mOwningNode; }
   inline StyleSheet* GetParentSheet() const;
 
@@ -225,6 +239,11 @@ protected:
 
   const StyleBackendType mType;
   bool                  mDisabled;
+
+  // mDocumentAssociationMode determines whether mDocument directly owns us (in
+  // the sense that if it's known-live then we're known-live).  Always
+  // NotOwnedByDocument when mDocument is null.
+  DocumentAssociationMode mDocumentAssociationMode;
 };
 
 } // namespace mozilla

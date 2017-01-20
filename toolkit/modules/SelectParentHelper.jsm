@@ -22,6 +22,7 @@ var currentBrowser = null;
 var currentMenulist = null;
 var currentZoom = 1;
 var closedWithEnter = false;
+var selectRect;
 
 this.SelectParentHelper = {
   populate(menulist, items, selectedIndex, zoom) {
@@ -36,6 +37,7 @@ this.SelectParentHelper = {
     menulist.hidden = false;
     currentBrowser = browser;
     closedWithEnter = false;
+    selectRect = rect;
     this._registerListeners(browser, menulist.menupopup);
 
     let win = browser.ownerDocument.defaultView;
@@ -76,7 +78,14 @@ this.SelectParentHelper = {
   handleEvent(event) {
     switch (event.type) {
       case "mouseup":
-        currentBrowser.messageManager.sendAsyncMessage("Forms:MouseUp", {});
+        function inRect(rect, x, y) {
+          return x >= rect.left && x <= rect.left + rect.width && y >= rect.top && y <= rect.top + rect.height;
+        }
+
+        let x = event.screenX, y = event.screenY;
+        let onAnchor = !inRect(currentMenulist.menupopup.getOuterScreenRect(), x, y) &&
+                        inRect(selectRect, x, y) && currentMenulist.menupopup.state == "open";
+        currentBrowser.messageManager.sendAsyncMessage("Forms:MouseUp", { onAnchor });
         break;
 
       case "mouseover":

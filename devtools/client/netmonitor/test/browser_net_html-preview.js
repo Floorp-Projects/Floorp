@@ -11,7 +11,7 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CONTENT_TYPE_URL);
   info("Starting test... ");
 
-  let { $, document, EVENTS, NetMonitorView } = monitor.panelWin;
+  let { document, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
 
   RequestsMenu.lazyUpdate = false;
@@ -25,22 +25,22 @@ add_task(function* () {
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.getElementById("details-pane-toggle"));
 
-  is($("#event-details-pane").selectedIndex, 0,
+  is(document.querySelector("#event-details-pane").selectedIndex, 0,
     "The first tab in the details pane should be selected.");
-  is($("#preview-tab").hidden, true,
+  is(document.querySelector("#preview-tab").hidden, true,
     "The preview tab should be hidden for non html responses.");
-  is($("#preview-tabpanel").hidden, false,
+  is(document.querySelector("#preview-tabpanel").hidden, false,
     "The preview tabpanel is not hidden for non html responses.");
 
   RequestsMenu.selectedIndex = 4;
   NetMonitorView.toggleDetailsPane({ visible: true, animated: false }, 6);
 
-  is($("#event-details-pane").selectedIndex, 6,
+  is(document.querySelector("#event-details-pane").selectedIndex, 6,
     "The sixth tab in the details pane should be selected.");
-  is($("#preview-tab").hidden, false,
+  is(document.querySelector("#preview-tab").hidden, false,
     "The preview tab should be visible now.");
 
-  let iframe = $("#response-preview");
+  let iframe = document.querySelector("#preview-tabpanel iframe");
   yield once(iframe, "DOMContentLoaded");
 
   ok(iframe,
@@ -52,11 +52,11 @@ add_task(function* () {
 
   RequestsMenu.selectedIndex = 5;
 
-  is($("#event-details-pane").selectedIndex, 0,
+  is(document.querySelector("#event-details-pane").selectedIndex, 0,
     "The first tab in the details pane should be selected again.");
-  is($("#preview-tab").hidden, true,
+  is(document.querySelector("#preview-tab").hidden, true,
     "The preview tab should be hidden again for non html responses.");
-  is($("#preview-tabpanel").hidden, false,
+  is(document.querySelector("#preview-tabpanel").hidden, false,
     "The preview tabpanel is not hidden again for non html responses.");
 
   yield teardown(monitor);
