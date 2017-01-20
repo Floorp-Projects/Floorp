@@ -126,30 +126,6 @@ namespace jit {
             return m_oom;
         }
 
-#ifndef RELEASE_OR_BETA
-        const unsigned char* acquireBuffer() const
-        {
-            MOZ_RELEASE_ASSERT(!m_oom);
-            return m_buffer.acquire();
-        }
-        void releaseBuffer() const { m_buffer.release(); }
-        unsigned char* acquireData() { return m_buffer.acquire(); }
-        void releaseData() const { m_buffer.release(); }
-        void disableProtection() { m_buffer.disableProtection(); }
-        void enableProtection() { m_buffer.enableProtection(); }
-        void setLowerBoundForProtection(size_t size)
-        {
-            m_buffer.setLowerBoundForProtection(size);
-        }
-        void unprotectRegion(unsigned char* first, size_t size)
-        {
-            m_buffer.unprotectRegion(first, size);
-        }
-        void reprotectRegion(unsigned char* first, size_t size)
-        {
-            m_buffer.reprotectRegion(first, size);
-        }
-#else
         const unsigned char* acquireBuffer() const
         {
             MOZ_RELEASE_ASSERT(!m_oom);
@@ -163,7 +139,6 @@ namespace jit {
         void setLowerBoundForProtection(size_t) {}
         void unprotectRegion(unsigned char*, size_t) {}
         void reprotectRegion(unsigned char*, size_t) {}
-#endif
 
     protected:
         /*
@@ -186,10 +161,7 @@ namespace jit {
         }
 
 #ifndef RELEASE_OR_BETA
-        PageProtectingVector<unsigned char, 256, ProtectedReallocPolicy,
-                             /* ProtectUsed = */ false, /* ProtectUnused = */ false,
-                             /* GuardAgainstReentrancy = */ true, /* DetectPoison = */ true,
-                             /* InitialLowerBound = */ 32 * 1024> m_buffer;
+        mozilla::Vector<unsigned char, 256, ProtectedReallocPolicy> m_buffer;
 #else
         mozilla::Vector<unsigned char, 256, SystemAllocPolicy> m_buffer;
 #endif
