@@ -4667,6 +4667,8 @@ pref("layers.bufferrotation.enabled", true);
 pref("layers.componentalpha.enabled", true);
 pref("layers.draw-mask-debug", false);
 
+pref("layers.advanced.border-layers", false);
+
 pref("gfx.content.always-paint", false);
 
 #ifdef ANDROID
