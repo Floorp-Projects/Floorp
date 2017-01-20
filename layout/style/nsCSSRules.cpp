@@ -38,7 +38,6 @@
 #include "mozilla/dom/CSSMediaRuleBinding.h"
 #include "mozilla/dom/CSSSupportsRuleBinding.h"
 #include "mozilla/dom/CSSMozDocumentRuleBinding.h"
-#include "mozilla/dom/CSSPageRuleBinding.h"
 #include "StyleRule.h"
 #include "nsFont.h"
 #include "nsIURI.h"
@@ -2581,6 +2580,7 @@ nsCSSPageRule::nsCSSPageRule(const nsCSSPageRule& aCopy)
   : Rule(aCopy)
   , mDeclaration(new css::Declaration(*aCopy.mDeclaration))
 {
+  SetIsNotDOMBinding();
   mDeclaration->SetOwningRule(this);
 }
 
@@ -2626,6 +2626,7 @@ nsCSSPageRule::IsCCLeaf() const
 // QueryInterface implementation for nsCSSPageRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsCSSPageRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSPageRule)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSPageRule)
 NS_INTERFACE_MAP_END_INHERITING(mozilla::css::Rule)
 
 #ifdef DEBUG
@@ -2671,17 +2672,11 @@ nsCSSPageRule::GetCssTextImpl(nsAString& aCssText) const
 NS_IMETHODIMP
 nsCSSPageRule::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 {
-  NS_ADDREF(*aStyle = Style());
-  return NS_OK;
-}
-
-nsICSSDeclaration*
-nsCSSPageRule::Style()
-{
   if (!mDOMDeclaration) {
     mDOMDeclaration = new nsCSSPageStyleDeclaration(this);
   }
-  return mDOMDeclaration;
+  NS_ADDREF(*aStyle = mDOMDeclaration);
+  return NS_OK;
 }
 
 void
@@ -2708,7 +2703,8 @@ nsCSSPageRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 nsCSSPageRule::WrapObject(JSContext* aCx,
                           JS::Handle<JSObject*> aGivenProto)
 {
-  return CSSPageRuleBinding::Wrap(aCx, this, aGivenProto);
+  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
+  return nullptr;
 }
 
 namespace mozilla {

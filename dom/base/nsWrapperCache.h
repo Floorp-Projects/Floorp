@@ -27,6 +27,7 @@ class nsCSSFontFaceRule;
 class nsCSSFontFeatureValuesRule;
 class nsCSSKeyframeRule;
 class nsCSSKeyframesRule;
+class nsCSSPageRule;
 class nsCSSCounterStyleRule;
 
 #define NS_WRAPPERCACHE_IID \
@@ -289,6 +290,7 @@ private:
   friend class nsCSSFontFeatureValuesRule;
   friend class nsCSSKeyframeRule;
   friend class nsCSSKeyframesRule;
+  friend class nsCSSPageRule;
   friend class nsCSSCounterStyleRule;
   void SetIsNotDOMBinding()
   {
