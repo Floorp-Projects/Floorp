@@ -79,6 +79,15 @@ function assert_disconnected_log_entry(log, element) {
     assert_equals(log.element, element);
 }
 
+function assert_adopted_log_entry(log, element) {
+    assert_equals(log.type, 'adopted');
+    assert_equals(log.element, element);
+}
+
+function create_adopted_callback_log(element) {
+    return {type: 'adopted', element: element};
+}
+
 function create_attribute_changed_callback_log(element, name, oldValue, newValue, namespace) {
     return {
         type: 'attributeChanged',

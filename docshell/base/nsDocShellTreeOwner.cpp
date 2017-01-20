@@ -73,6 +73,7 @@
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "mozilla/dom/File.h" // for input type=file
 #include "mozilla/dom/FileList.h" // for input type=file
+#include "mozilla/TextEvents.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1115,9 +1116,11 @@ ChromeTooltipListener::AddTooltipListener()
 {
   if (mEventTarget) {
     nsresult rv = NS_OK;
+#ifndef XP_WIN
     rv = mEventTarget->AddSystemEventListener(NS_LITERAL_STRING("keydown"),
                                               this, false, false);
     NS_ENSURE_SUCCESS(rv, rv);
+#endif
     rv = mEventTarget->AddSystemEventListener(NS_LITERAL_STRING("mousedown"),
                                               this, false, false);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1156,9 +1159,11 @@ ChromeTooltipListener::RemoveTooltipListener()
 {
   if (mEventTarget) {
     nsresult rv = NS_OK;
+#ifndef XP_WIN
     rv = mEventTarget->RemoveSystemEventListener(NS_LITERAL_STRING("keydown"),
                                                  this, false);
     NS_ENSURE_SUCCESS(rv, rv);
+#endif
     rv = mEventTarget->RemoveSystemEventListener(NS_LITERAL_STRING("mousedown"),
                                                  this, false);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1181,9 +1186,15 @@ ChromeTooltipListener::HandleEvent(nsIDOMEvent* aEvent)
   nsAutoString eventType;
   aEvent->GetType(eventType);
 
-  if (eventType.EqualsLiteral("keydown") ||
-      eventType.EqualsLiteral("mousedown")) {
+  if (eventType.EqualsLiteral("mousedown")) {
     return HideTooltip();
+  } else if (eventType.EqualsLiteral("keydown")) {
+    WidgetKeyboardEvent* keyEvent = aEvent->WidgetEventPtr()->AsKeyboardEvent();
+    if (!keyEvent->IsModifierKeyEvent()) {
+      return HideTooltip();
+    }
+
+    return NS_OK;
   } else if (eventType.EqualsLiteral("mouseout")) {
     // Reset flag so that tooltip will display on the next MouseMove
     mTooltipShownOnce = false;

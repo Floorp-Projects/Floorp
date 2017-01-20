@@ -1745,6 +1745,9 @@
         if (!this.videocontrols.isTouchControls) {
           addListener(this.scrubber, "input", this.onScrubberInput);
           addListener(this.scrubber, "change", this.onScrubberChange);
+          // add mouseup listener additionally to handle the case that `change` event
+          // isn't fired when the input value before/after dragging are the same. (bug 1328061)
+          addListener(this.scrubber, "mouseup", this.onScrubberChange);
           addListener(this.volumeControl, "input", this.updateVolume);
           addListener(this.video.textTracks, "addtrack", this.onTextTrackAdd);
           addListener(this.video.textTracks, "removetrack", this.onTextTrackRemove);

@@ -1,34 +1,52 @@
 {
-  "items": {
-    "manual": [],
-    "reftest": [],
-    "stub": [],
-    "testharness": [],
-    "wdspec": []
+ "items": {
+  "reftest": {},
+  "reftest_node": {},
+  "support": {
+   "./placeholder": [
+    [
+     {}
+    ]
+   ],
+   "fetch/api/redirect/redirect-referrer-mixed-content.js": [
+    [
+     {}
+    ]
+   ]
   },
-  "local_changes": {
-    "deleted": [],
-    "deleted_reftests": {},
-    "items": {
-      "testharness": {
-        "fetch/api/redirect/redirect-referrer.https.html": [
-          {
-            "path": "fetch/api/redirect/redirect-referrer.https.html",
-            "url": "/_mozilla/fetch/api/redirect/redirect-referrer.https.html"
-          }
-        ],
-        "html/syntax/parsing/math-parse01.html": [
-          {
-            "path": "html/syntax/parsing/math-parse01.html",
-            "url": "/_mozilla/html/syntax/parsing/math-parse01.html"
-          }
-        ]
-      }
-    },
-    "reftest_nodes": {}
-  },
-  "reftest_nodes": {},
-  "rev": null,
-  "url_base": "/_mozilla/",
-  "version": 3
+  "testharness": {
+   "fetch/api/redirect/redirect-referrer.https.html": [
+    [
+     "/_mozilla/fetch/api/redirect/redirect-referrer.https.html",
+     {}
+    ]
+   ],
+   "html/syntax/parsing/math-parse01.html": [
+    [
+     "/_mozilla/html/syntax/parsing/math-parse01.html",
+     {}
+    ]
+   ]
+  }
+ },
+ "paths": {
+  "./placeholder": [
+   "74e16eb87ecdfeb2dfc28f36e0c73a584abdf9c2",
+   "support"
+  ],
+  "fetch/api/redirect/redirect-referrer-mixed-content.js": [
+   "f9d7ec9cf9fa8c847e45664b05482e3f8c191385",
+   "support"
+  ],
+  "fetch/api/redirect/redirect-referrer.https.html": [
+   "99cbd16b78771f35e075e4012d8dbc5dce3209c0",
+   "testharness"
+  ],
+  "html/syntax/parsing/math-parse01.html": [
+   "9b670028f08b5fab713e19a443b9505cb9de5fd3",
+   "testharness"
+  ]
+ },
+ "url_base": "/_mozilla/",
+ "version": 4
 }
