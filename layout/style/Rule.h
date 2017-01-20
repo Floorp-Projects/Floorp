@@ -12,7 +12,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "nsISupports.h"
 #include "nsIDOMCSSRule.h"
-#include "nsWrapperCache.h"
 
 class nsIDocument;
 struct nsRuleData;
@@ -30,9 +29,7 @@ class GroupRule;
   DECL_STYLE_RULE_INHERIT_NO_DOMRULE                       \
   virtual nsIDOMCSSRule* GetDOMRule() override;
 
-class Rule : public nsISupports
-           , public nsWrapperCache
-{
+class Rule : public nsISupports {
 protected:
   Rule(uint32_t aLineNumber, uint32_t aColumnNumber)
     : mSheet(nullptr),
@@ -55,7 +52,7 @@ protected:
 public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(Rule)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_CLASS(Rule)
   // Return true if this rule is known to be a cycle collection leaf, in the
   // sense that it doesn't have any outgoing owning edges.
   virtual bool IsCCLeaf() const MOZ_MUST_OVERRIDE;

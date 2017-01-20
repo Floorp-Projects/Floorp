@@ -1380,7 +1380,6 @@ StyleRule::StyleRule(nsCSSSelectorList* aSelector,
     mSelector(aSelector),
     mDeclaration(aDeclaration)
 {
-  SetIsNotDOMBinding();
   NS_PRECONDITION(aDeclaration, "must have a declaration");
 
   mDeclaration->SetOwningRule(this);
@@ -1392,7 +1391,6 @@ StyleRule::StyleRule(const StyleRule& aCopy)
     mSelector(aCopy.mSelector ? aCopy.mSelector->Clone() : nullptr),
     mDeclaration(new Declaration(*aCopy.mDeclaration))
 {
-  SetIsNotDOMBinding();
   mDeclaration->SetOwningRule(this);
   // rest is constructed lazily on existing data
 }
@@ -1584,14 +1582,6 @@ StyleRule::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   // - mDOMRule;
 
   return n;
-}
-
-/* virtual */ JSObject*
-StyleRule::WrapObject(JSContext* aCx,
-                      JS::Handle<JSObject*> aGivenProto)
-{
-  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
-  return nullptr;
 }
 
 
