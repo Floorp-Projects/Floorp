@@ -24,6 +24,9 @@ public:
                       const nsAString& aCallID,
                       const MediaStreamConstraints& aConstraints,
                       bool aIsSecure);
+  GetUserMediaRequest(nsPIDOMWindowInner* aInnerWindow,
+                      const nsAString& aRawId,
+                      const nsAString& aMediaSource);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(GetUserMediaRequest)
@@ -35,6 +38,8 @@ public:
   uint64_t InnerWindowID();
   bool IsSecure();
   void GetCallID(nsString& retval);
+  void GetRawID(nsString& retval);
+  void GetMediaSource(nsString& retval);
   void GetConstraints(MediaStreamConstraints &result);
 
 private:
@@ -42,6 +47,8 @@ private:
 
   uint64_t mInnerWindowID, mOuterWindowID;
   const nsString mCallID;
+  const nsString mRawID;
+  const nsString mMediaSource;
   nsAutoPtr<MediaStreamConstraints> mConstraints;
   bool mIsSecure;
 };

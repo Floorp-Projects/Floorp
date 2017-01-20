@@ -124,7 +124,9 @@ public final class CodecProxy {
     boolean init(ICodec remote) {
         try {
             remote.setCallbacks(mCallbacks);
-            remote.configure(mFormat, mOutputSurface, 0, mRemoteDrmStubId);
+            if (!remote.configure(mFormat, mOutputSurface, 0, mRemoteDrmStubId)) {
+                return false;
+            }
             remote.start();
         } catch (RemoteException e) {
             e.printStackTrace();

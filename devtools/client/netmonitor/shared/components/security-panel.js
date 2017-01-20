@@ -6,12 +6,12 @@
 
 const { DOM, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const TreeView = createFactory(require("devtools/client/shared/components/tree/tree-view"));
+const PropertiesView = createFactory(require("./properties-view"));
 const { L10N } = require("../../l10n");
 const { getUrlHost } = require("../../request-utils");
 const { getSelectedRequest } = require("../../selectors/index");
 
-const { div, input } = DOM;
+const { div, input, span } = DOM;
 
 /*
  * Security panel component
@@ -87,16 +87,12 @@ function SecurityPanel({
     };
   }
 
-  return div({ id: "security-information" },
-    TreeView({
+  return div({ className: "panel-container" },
+    PropertiesView({
       object,
-      columns: [{
-        id: "value",
-        width: "100%",
-      }],
-      renderValue: renderValue.bind(null, securityInfo.weaknessReasons),
+      renderValue: (props) => renderValue(props, securityInfo.weaknessReasons),
+      enableFilter: false,
       expandedNodes: getExpandedNodes(object),
-      expandableStrings: false,
     })
   );
 }
@@ -108,7 +104,7 @@ SecurityPanel.propTypes = {
   url: PropTypes.string,
 };
 
-function renderValue(weaknessReasons = [], props) {
+function renderValue(props, weaknessReasons = []) {
   const { member, value } = props;
 
   // Hide object summary
@@ -116,7 +112,7 @@ function renderValue(weaknessReasons = [], props) {
     return null;
   }
 
-  return div({ className: "security-info-value" },
+  return span({ className: "security-info-value" },
     member.name === L10N.getStr("netmonitor.security.error") ?
       // Display multiline text for security error
       value

@@ -11,8 +11,6 @@ add_task(function* capture() {
     return;
   }
 
-  requestLongerTimeout(20);
-
   let sets = ["TabsInTitlebar", "Tabs", "WindowSize", "Toolbars", "LightweightThemes"];
   yield TestRunner.start(sets, "primaryUI");
 });

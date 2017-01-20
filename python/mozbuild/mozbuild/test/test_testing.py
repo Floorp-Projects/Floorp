@@ -48,7 +48,6 @@ ALL_TESTS = {
             "name": "test_async_chain.js",
             "path": "/Users/gps/src/firefox/services/common/tests/unit/test_async_chain.js",
             "relpath": "test_async_chain.js",
-            "tail": ""
         }
     ],
     "services/common/tests/unit/test_async_querySpinningly.js": [
@@ -63,7 +62,6 @@ ALL_TESTS = {
             "name": "test_async_querySpinningly.js",
             "path": "/Users/gps/src/firefox/services/common/tests/unit/test_async_querySpinningly.js",
             "relpath": "test_async_querySpinningly.js",
-            "tail": ""
         }
     ],
    "toolkit/mozapps/update/test/unit/test_0201_app_launch_apply_update.js": [
@@ -81,7 +79,6 @@ ALL_TESTS = {
             "relpath": "test_0201_app_launch_apply_update.js",
             "run-sequentially": "Launches application.",
             "skip-if": "toolkit == 'gonk' || os == 'android'",
-            "tail": ""
         },
         {
             "dir_relpath": "toolkit/mozapps/update/test/unit",
@@ -97,7 +94,6 @@ ALL_TESTS = {
             "relpath": "test_0201_app_launch_apply_update.js",
             "run-sequentially": "Launches application.",
             "skip-if": "toolkit == 'gonk' || os == 'android'",
-            "tail": ""
         }
     ],
     "mobile/android/tests/background/junit3/src/common/TestAndroidLogWriters.java": [

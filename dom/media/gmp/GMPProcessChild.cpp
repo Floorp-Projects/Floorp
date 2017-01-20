@@ -28,21 +28,18 @@ bool
 GMPProcessChild::Init()
 {
   nsAutoString pluginFilename;
-  nsAutoString voucherFilename;
 
 #if defined(OS_POSIX)
   // NB: need to be very careful in ensuring that the first arg
   // (after the binary name) here is indeed the plugin module path.
   // Keep in sync with dom/plugins/PluginModuleParent.
   std::vector<std::string> values = CommandLine::ForCurrentProcess()->argv();
-  MOZ_ASSERT(values.size() >= 3, "not enough args");
+  MOZ_ASSERT(values.size() >= 2, "not enough args");
   pluginFilename = NS_ConvertUTF8toUTF16(nsDependentCString(values[1].c_str()));
-  voucherFilename = NS_ConvertUTF8toUTF16(nsDependentCString(values[2].c_str()));
 #elif defined(OS_WIN)
   std::vector<std::wstring> values = CommandLine::ForCurrentProcess()->GetLooseValues();
-  MOZ_ASSERT(values.size() >= 2, "not enough loose args");
+  MOZ_ASSERT(values.size() >= 1, "not enough loose args");
   pluginFilename = nsDependentString(values[0].c_str());
-  voucherFilename = nsDependentString(values[1].c_str());
 #else
 #error Not implemented
 #endif
@@ -50,7 +47,6 @@ GMPProcessChild::Init()
   BackgroundHangMonitor::Startup();
 
   return mPlugin.Init(pluginFilename,
-                      voucherFilename,
                       ParentPid(),
                       IOThreadChild::message_loop(),
                       IOThreadChild::channel());

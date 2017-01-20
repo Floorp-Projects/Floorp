@@ -22,11 +22,11 @@ class TestCreate(unittest.TestCase):
         if 'TASK_ID' in os.environ:
             del os.environ['TASK_ID']
         self.created_tasks = {}
-        self.old_create_task = create._create_task
-        create._create_task = self.fake_create_task
+        self.old_create_task = create.create_task
+        create.create_task = self.fake_create_task
 
     def tearDown(self):
-        create._create_task = self.old_create_task
+        create.create_task = self.old_create_task
         if self.old_task_id:
             os.environ['TASK_ID'] = self.old_task_id
         elif 'TASK_ID' in os.environ:
