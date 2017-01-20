@@ -6,8 +6,6 @@
 
 xpcom_glue_src_lcppsrcs = [
     'FileUtils.cpp',
-    'nsCategoryCache.cpp',
-    'nsComponentManagerUtils.cpp',
     'XREAppData.cpp',
 ]
 
@@ -16,7 +14,6 @@ xpcom_glue_src_cppsrcs = [
 ]
 
 xpcom_gluens_src_lcppsrcs = [
-    'GenericFactory.cpp',
 ]
 
 xpcom_gluens_src_cppsrcs = [
