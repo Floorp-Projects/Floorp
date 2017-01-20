@@ -16,33 +16,6 @@ import pty
 import termios
 from StringIO import StringIO
 
-class unbufferedLineConverter:
-    """
-    Wrap a child process that responds to each line of input with one line of
-    output.  Uses pty to trick the child into providing unbuffered output.
-    """
-    def __init__(self, command, args = []):
-        pid, fd = pty.fork()
-        if pid == 0:
-            # We're the child.  Transfer control to command.
-            os.execvp(command, [command] + args)
-        else:
-            # Disable echoing.
-            attr = termios.tcgetattr(fd)
-            attr[3] = attr[3] & ~termios.ECHO
-            termios.tcsetattr(fd, termios.TCSANOW, attr)
-            # Set up a file()-like interface to the child process
-            self.r = os.fdopen(fd, "r", 1)
-            self.w = os.fdopen(os.dup(fd), "w", 1)
-    def convert(self, line):
-        self.w.write(line + "\n")
-        return (self.r.readline().rstrip("\r\n"), self.r.readline().rstrip("\r\n"))
-    @staticmethod
-    def test():
-        assert unbufferedLineConverter("rev").convert("123") == "321"
-        assert unbufferedLineConverter("cut", ["-c3"]).convert("abcde") == "c"
-        print "Pass"
-
 objdump_section_re = re.compile("^ [0-9a-f]* ([0-9a-f ]{8}) ([0-9a-f ]{8}) ([0-9a-f ]{8}) ([0-9a-f ]{8}).*")
 def elf_section(file, section):
     """
@@ -268,22 +241,34 @@ def address_adjustment_for(file):
     readelf.terminate()
     return adjustment
 
-addr2lines = {}
+
+devnull = open(os.devnull)
+file_stuff = {}
+
 def addressToSymbol(file, address):
-    converter = None
-    address_adjustment = None
-    cache = None
-    if not file in addr2lines:
+    if not file in file_stuff:
         debug_file = separate_debug_file_for(file) or file
-        converter = unbufferedLineConverter('/usr/bin/addr2line', ['-C', '-f', '-e', debug_file])
+
+        # Start an addr2line process for this file. Note that addr2line
+        # sometimes prints error messages, which we want to suppress.
+        args = ['/usr/bin/addr2line', '-C', '-f', '-e', debug_file]
+        addr2line = subprocess.Popen(args, stdin=subprocess.PIPE,
+                                     stdout=subprocess.PIPE,
+                                     stderr=devnull)
         address_adjustment = address_adjustment_for(file)
         cache = {}
-        addr2lines[file] = (converter, address_adjustment, cache)
+        file_stuff[file] = (addr2line, address_adjustment, cache)
     else:
-        (converter, address_adjustment, cache) = addr2lines[file]
+        (addr2line, address_adjustment, cache) = file_stuff[file]
+
     if address in cache:
         return cache[address]
-    result = converter.convert(hex(int(address, 16) + address_adjustment))
+
+    # For each line of input, addr2line produces two lines of output.
+    addr2line.stdin.write(hex(int(address, 16) + address_adjustment) + '\n')
+    addr2line.stdin.flush()
+    result = (addr2line.stdout.readline().rstrip("\r\n"), \
+              addr2line.stdout.readline().rstrip("\r\n"))
     cache[address] = result
     return result
 
