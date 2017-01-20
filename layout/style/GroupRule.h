@@ -83,7 +83,7 @@ public:
 
 protected:
   // to help implement nsIDOMCSSRule
-  void AppendRulesToCssText(nsAString& aCssText) const;
+  void AppendRulesToCssText(nsAString& aCssText);
 
   // to implement common methods on nsIDOMCSSMediaRule and
   // nsIDOMCSSMozDocumentRule
