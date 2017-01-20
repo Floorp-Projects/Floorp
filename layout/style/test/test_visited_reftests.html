@@ -32,6 +32,7 @@ var gTests = [
   // assumed to be complete when loaded, but we poll for visited link
   // coloring on the TEST (first file) until the test passes.
   "== pseudo-classes-02.svg pseudo-classes-02-ref.svg",
+  "needs-focus == caret-color-on-visited-1.html caret-color-on-visited-1-ref.html",
   "!= color-on-link-1-ref.html color-on-visited-1-ref.html",
   "== color-on-link-1.html color-on-link-1-ref.html",
   "== color-on-link-before-1.html color-on-link-1-ref.html",
@@ -98,7 +99,9 @@ function startIframe(url) {
   return new Promise(resolve => {
     var element = document.createElement("iframe");
     element.addEventListener("load", () => {
-      resolve(element.contentWindow);
+      element.contentDocument.fonts.ready.then(() => {
+        resolve(element.contentWindow);
+      });
     }, {once: true});
     // smaller than normal reftests, but enough for these
     element.setAttribute("style", "width: 30em; height: 10em");
