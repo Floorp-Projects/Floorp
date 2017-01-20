@@ -12,6 +12,8 @@ Cu.import("resource://devtools/shared/event-emitter.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
+                                  "resource://gre/modules/PluralForm.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
                                   "resource:///modules/RecentWindow.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
@@ -154,74 +156,98 @@ this.ExtensionsUI = {
     if (name.length > 50) {
       name = name.slice(0, 49) + "…";
     }
+    name = name.replace(/&/g, "&amp;")
+               .replace(/</g, "&lt;")
+               .replace(/>/g, "&gt;");
 
-    // The strings below are placeholders, they will switch over to the
-    // bundle.get*String() calls as part of bug 1316996.
+    let addonLabel = `<label class="addon-webext-name">${name}</label>`;
+    let bundle = win.gNavigatorBundle;
 
-    // let bundle = win.gNavigatorBundle;
-    // let header = bundle.getFormattedString("webextPerms.header", [name])
-    // let listHeader = bundle.getString("webextPerms.listHeader");
-    let header = "Add ADDON?".replace("ADDON", name);
+    let header = bundle.getFormattedString("webextPerms.header", [addonLabel]);
     let text = "";
-    let listHeader = "It can:";
+    let listIntro = bundle.getString("webextPerms.listIntro");
 
-    // let acceptText = bundle.getString("webextPerms.accept.label");
-    // let acceptKey = bundle.getString("webextPerms.accept.accessKey");
-    // let cancelText = bundle.getString("webextPerms.cancel.label");
-    // let cancelKey = bundle.getString("webextPerms.cancel.accessKey");
-    let acceptText = "Add extension";
-    let acceptKey = "A";
-    let cancelText = "Cancel";
-    let cancelKey = "C";
+    let acceptText = bundle.getString("webextPerms.add.label");
+    let acceptKey = bundle.getString("webextPerms.add.accessKey");
+    let cancelText = bundle.getString("webextPerms.cancel.label");
+    let cancelKey = bundle.getString("webextPerms.cancel.accessKey");
 
     if (info.type == "sideload") {
-      header = `${name} added`;
-      text = "Another program on your computer installed an add-on that may affect your browser.  Please review this add-on's permission requests and choose to Enable or Disable";
-      acceptText = "Enable";
-      acceptKey = "E";
-      cancelText = "Disable";
-      cancelKey = "D";
+      header = bundle.getFormattedString("webextPerms.sideloadHeader", [addonLabel]);
+      text = bundle.getString("webextPerms.sideloadText");
+      acceptText = bundle.getString("webextPerms.sideloadEnable.label");
+      acceptKey = bundle.getString("webextPerms.sideloadEnable.accessKey");
+      cancelText = bundle.getString("webextPerms.sideloadDisable.label");
+      cancelKey = bundle.getString("webextPerms.sideloadDisable.accessKey");
     } else if (info.type == "update") {
       header = "";
-      text = `${name} has been updated.  You must approve new permissions before the updated version will install.`;
-      acceptText = "Update";
-      acceptKey = "U";
+      text = bundle.getFormattedString("webextPerms.updateText", [addonLabel]);
+      acceptText = bundle.getString("webextPerms.updateAccept.label");
+      acceptKey = bundle.getString("webextPerms.updateAccept.accessKey");
     }
 
-    let formatPermission = perm => {
-      try {
-        // return bundle.getString(`webextPerms.description.${perm}`);
-        return `localized description of permission ${perm}`;
-      } catch (err) {
-        // return bundle.getFormattedString("webextPerms.description.unknown",
-        //                                  [perm]);
-        return `localized description of unknown permission ${perm}`;
+    let msgs = [];
+    for (let permission of perms.permissions) {
+      let key = `webextPerms.description.${permission}`;
+      if (permission == "nativeMessaging") {
+        let brandBundle = win.document.getElementById("bundle_brand");
+        let appName = brandBundle.getString("brandShortName");
+        msgs.push(bundle.getFormattedString(key, [appName]));
+      } else {
+        try {
+          msgs.push(bundle.getString(key));
+        } catch (err) {
+          // We deliberately do not include all permissions in the prompt.
+          // So if we don't find one then just skip it.
+        }
       }
-    };
+    }
 
-    let formatHostPermission = perm => {
-      if (perm == "<all_urls>") {
-        // return bundle.getString("webextPerms.hostDescription.allUrls");
-        return "localized description of <all_urls> host permission";
+    let allUrls = false, wildcards = [], sites = [];
+    for (let permission of perms.hosts) {
+      if (permission == "<all_urls>") {
+        allUrls = true;
+        break;
       }
-      let match = /^[htps*]+:\/\/([^/]+)\//.exec(perm);
+      let match = /^[htps*]+:\/\/([^/]+)\//.exec(permission);
       if (!match) {
         throw new Error("Unparseable host permission");
       }
-      if (match[1].startsWith("*.")) {
-        let domain = match[1].slice(2);
-        // return bundle.getFormattedString("webextPerms.hostDescription.wildcard", [domain]);
-        return `localized description of wildcard host permission for ${domain}`;
+      if (match[1] == "*") {
+        allUrls = true;
+      } else if (match[1].startsWith("*.")) {
+        wildcards.push(match[1].slice(2));
+      } else {
+        sites.push(match[1]);
+      }
+    }
+
+    if (allUrls) {
+      msgs.push(bundle.getString("webextPerms.hostDescription.allUrls"));
+    } else {
+      // Formats a list of host permissions.  If we have 4 or fewer, display
+      // them all, otherwise display the first 3 followed by an item that
+      // says "...plus N others"
+      function format(list, itemKey, moreKey) {
+        function formatItems(items) {
+          msgs.push(...items.map(item => bundle.getFormattedString(itemKey, [item])));
+        }
+        if (list.length < 5) {
+          formatItems(list);
+        } else {
+          formatItems(list.slice(0, 3));
+
+          let remaining = list.length - 3;
+          msgs.push(PluralForm.get(remaining, bundle.getString(moreKey))
+                              .replace("#1", remaining));
+        }
       }
 
-      //  return bundle.getFormattedString("webextPerms.hostDescription.oneSite", [match[1]]);
-      return `localized description of single host permission for ${match[1]}`;
-    };
-
-    let msgs = [
-      ...perms.permissions.map(formatPermission),
-      ...perms.hosts.map(formatHostPermission),
-    ];
+      format(wildcards, "webextPerms.hostDescription.wildcard",
+             "webextPerms.hostDescription.tooManyWildcards");
+      format(sites, "webextPerms.hostDescription.oneSite",
+             "webextPerms.hostDescription.tooManySites");
+    }
 
     let rendered = false;
     let popupOptions = {
@@ -237,20 +263,20 @@ this.ExtensionsUI = {
           }
 
           let doc = this.browser.ownerDocument;
-          doc.getElementById("addon-webext-perm-header").textContent = header;
+          doc.getElementById("addon-webext-perm-header").innerHTML = header;
+
+          if (text) {
+            doc.getElementById("addon-webext-perm-text").innerHTML = text;
+          }
+
+          let listIntroEl = doc.getElementById("addon-webext-perm-intro");
+          listIntroEl.value = listIntro;
+          listIntroEl.hidden = (msgs.length == 0);
 
           let list = doc.getElementById("addon-webext-perm-list");
           while (list.firstChild) {
             list.firstChild.remove();
           }
-
-          if (text) {
-            doc.getElementById("addon-webext-perm-text").textContent = text;
-          }
-
-          let listHeaderEl = doc.getElementById("addon-webext-perm-intro");
-          listHeaderEl.value = listHeader;
-          listHeaderEl.hidden = (msgs.length == 0);
 
           for (let msg of msgs) {
             let item = doc.createElementNS(HTML_NS, "li");
