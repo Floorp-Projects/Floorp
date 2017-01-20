@@ -19,7 +19,6 @@ child:
   async OpenComplete(nsCString aRecordName, GMPErr aStatus);
   async ReadComplete(nsCString aRecordName, GMPErr aStatus, uint8_t[] aBytes);
   async WriteComplete(nsCString aRecordName, GMPErr aStatus);
-  async RecordNames(nsCString[] aRecordNames, GMPErr aStatus);
   async Shutdown();
 
 parent:
@@ -27,7 +26,6 @@ parent:
   async Read(nsCString aRecordName);
   async Write(nsCString aRecordName, uint8_t[] aBytes);
   async Close(nsCString aRecordName);
-  async GetRecordNames();
   async __delete__();
 
 };
