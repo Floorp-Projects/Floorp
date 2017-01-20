@@ -352,4 +352,6 @@ TEST(VP8VideoTrackEncoder, EncodeComplete)
   // NS_OK immidiately.
   EncodedFrameContainer container;
   EXPECT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+
+  EXPECT_TRUE(encoder.IsEncodingComplete());
 }
