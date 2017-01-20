@@ -742,6 +742,9 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     FlushPendingEvents(aPresContext);
     break;
   }
+  case ePointerGotCapture:
+    GenerateMouseEnterExit(mouseEvent);
+    break;
   case eDragStart:
     if (Prefs::ClickHoldContextMenu()) {
       // an external drag gesture event came in, not generated internally
@@ -4252,6 +4255,7 @@ EventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
     MOZ_FALLTHROUGH;
   case ePointerMove:
   case ePointerDown:
+  case ePointerGotCapture:
     {
       // Get the target content target (mousemove target == mouseover target)
       nsCOMPtr<nsIContent> targetElement = GetEventTargetContent(aMouseEvent);
