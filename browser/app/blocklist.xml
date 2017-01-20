@@ -994,7 +994,7 @@
     </emItem>
     <emItem blockID="i1493" id="{de71f09a-3342-48c5-95c1-4b0f17567554}">
       <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+      <versionRange minVersion="0" maxVersion="1.3.9" severity="3"/>
     </emItem>
     <emItem blockID="i712" id="{a2bfe612-4cf5-48ea-907c-f3fb25bc9d6b}">
       <prefs/>
