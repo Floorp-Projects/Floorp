@@ -2398,7 +2398,7 @@ nsCSSKeyframesRule::DeleteRule(const nsAString& aKey)
     nsIDocument* doc = GetDocument();
     MOZ_AUTO_DOC_UPDATE(doc, UPDATE_STYLE, true);
 
-    mRules.RemoveObjectAt(index);
+    DeleteStyleRuleAt(index);
 
     CSSStyleSheet* sheet = GetStyleSheet();
     if (sheet) {
