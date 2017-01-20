@@ -8,6 +8,7 @@
 #define ds_PageProtectingVector_h
 
 #include "mozilla/Atomics.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/Vector.h"
 
 #include "ds/MemoryProtectionExceptionHandler.h"
@@ -539,10 +540,7 @@ PageProtectingVector<T, N, A, P, Q, G, D, I, X>::lockSlow() const
 
 class ProtectedReallocPolicy
 {
-    /* We hardcode the page size here to minimize administrative overhead. */
-    static const size_t pageShift = 12;
-    static const size_t pageSize = 1 << pageShift;
-    static const size_t pageMask = pageSize - 1;
+    static const uint8_t PoisonPattern = 0xe5;
 
   public:
     template <typename T> T* maybe_pod_malloc(size_t numElems) {
@@ -553,35 +551,34 @@ class ProtectedReallocPolicy
     }
     template <typename T> T* maybe_pod_realloc(T* oldAddr, size_t oldSize, size_t newSize) {
         MOZ_ASSERT_IF(oldAddr, oldSize);
-        MOZ_ASSERT(gc::SystemPageSize() == pageSize);
         if (MOZ_UNLIKELY(!newSize))
             return nullptr;
         if (MOZ_UNLIKELY(!oldAddr))
             return js_pod_malloc<T>(newSize);
 
-        T* newAddr = nullptr;
-        size_t initPage = (uintptr_t(oldAddr - 1) >> pageShift) + 1;
-        size_t lastPage = (uintptr_t(oldAddr + oldSize) >> pageShift) - 1;
-        size_t toCopy = (newSize >= oldSize ? oldSize : newSize) * sizeof(T);
-        if (MOZ_UNLIKELY(oldSize >= 32 * 1024 && lastPage >= initPage)) {
-            T* protectAddr = reinterpret_cast<T*>(initPage << pageShift);
-            size_t protectSize = (lastPage - initPage + 1) << pageShift;
-            MemoryProtectionExceptionHandler::addRegion(protectAddr, protectSize);
-            gc::MakePagesReadOnly(protectAddr, protectSize);
-            newAddr = js_pod_malloc<T>(newSize);
-            if (MOZ_LIKELY(newAddr))
-                memcpy(newAddr, oldAddr, toCopy);
-            gc::UnprotectPages(protectAddr, protectSize);
-            MemoryProtectionExceptionHandler::removeRegion(protectAddr);
-            if (MOZ_LIKELY(newAddr))
-                js_free(oldAddr);
-        } else {
-            newAddr = js_pod_malloc<T>(newSize);
-            if (MOZ_LIKELY(newAddr)) {
-                memcpy(newAddr, oldAddr, toCopy);
-                js_free(oldAddr);
-            }
+        T* tmpAddr = js_pod_malloc<T>(newSize);
+        if (MOZ_UNLIKELY(!tmpAddr))
+            return js_pod_realloc<T>(oldAddr, oldSize, newSize);
+
+        size_t bytes = (newSize >= oldSize ? oldSize : newSize) * sizeof(T);
+        memcpy(tmpAddr, oldAddr, bytes);
+
+        T* newAddr = js_pod_realloc<T>(oldAddr, oldSize, newSize);
+        if (MOZ_UNLIKELY(!newAddr)) {
+            js_free(tmpAddr);
+            return js_pod_realloc<T>(oldAddr, oldSize, newSize);
         }
+
+        const uint8_t* newAddrBytes = reinterpret_cast<const uint8_t*>(newAddr);
+        const uint8_t* tmpAddrBytes = reinterpret_cast<const uint8_t*>(tmpAddr);
+        if (!mozilla::PodEqual(tmpAddrBytes, newAddrBytes, bytes)) {
+            if (oldAddr == newAddr)
+                MOZ_CRASH("New buffer doesn't match the old buffer (newAddr == oldAddr)!");
+            else
+                MOZ_CRASH("New buffer doesn't match the old buffer (newAddr != oldAddr)!");
+        }
+
+        js_free(tmpAddr);
         return newAddr;
     }
 
