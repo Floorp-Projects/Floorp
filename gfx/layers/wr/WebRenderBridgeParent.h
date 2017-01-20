@@ -36,6 +36,7 @@ class CompositableHost;
 class Compositor;
 class CompositorBridgeParentBase;
 class CompositorVsyncScheduler;
+class WebRenderCompositableHolder;
 
 class WebRenderBridgeParent final : public PWebRenderBridgeParent
                                   , public CompositorVsyncSchedulerOwner
@@ -45,7 +46,8 @@ public:
   WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
                         const wr::PipelineId& aPipelineId,
                         widget::CompositorWidget* aWidget,
-                        RefPtr<wr::WebRenderAPI>&& aApi);
+                        RefPtr<wr::WebRenderAPI>&& aApi,
+                        RefPtr<WebRenderCompositableHolder>&& aHolder);
 
   WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
                         const wr::PipelineId& aPipelineId,
@@ -57,6 +59,7 @@ public:
   gl::GLContext* GLContext() { return mGLContext.get(); }
   WrWindowState* WindowState() { return mWRWindowState; }
   wr::WebRenderAPI* GetWebRenderAPI() { return mApi; }
+  WebRenderCompositableHolder* CompositableHolder() { return mCompositableHolder; }
   layers::Compositor* Compositor() { return mCompositor.get(); }
   CompositorVsyncScheduler* CompositorScheduler() { return mCompositorScheduler.get(); }
 
@@ -144,6 +147,7 @@ private:
   RefPtr<gl::GLContext> mGLContext;
   WrWindowState* mWRWindowState;
   RefPtr<wr::WebRenderAPI> mApi;
+  RefPtr<WebRenderCompositableHolder> mCompositableHolder;
   RefPtr<layers::Compositor> mCompositor;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   std::vector<wr::ImageKey> mKeysToDelete;
