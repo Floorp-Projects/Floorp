@@ -11,6 +11,12 @@ using struct mozilla::void_t
 namespace mozilla {
 namespace ipc {
 
+struct HeaderEntry
+{
+  nsCString name;
+  nsCString value;
+};
+
 struct StringInputStreamParams
 {
   nsCString data;
@@ -86,10 +92,8 @@ struct BufferedInputStreamParams
 struct MIMEInputStreamParams
 {
   OptionalInputStreamParams optionalStream;
-  nsCString headers;
-  nsCString contentLength;
+  HeaderEntry[] headers;
   bool startedReading;
-  bool addContentLength;
 };
 
 } // namespace ipc
