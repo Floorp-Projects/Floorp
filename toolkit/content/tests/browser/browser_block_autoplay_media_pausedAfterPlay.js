@@ -9,7 +9,7 @@ var SuspendedType = {
 };
 
 function check_audio_suspended(suspendedType) {
-  var audio = content.document.getElementById('testAudio');
+  var audio = content.document.getElementById("testAudio");
   if (!audio) {
     ok(false, "Can't get the audio element!");
   }
@@ -19,7 +19,7 @@ function check_audio_suspended(suspendedType) {
 }
 
 function check_audio_pause_state(expectPause) {
-  var audio = content.document.getElementById('testAudio');
+  var audio = content.document.getElementById("testAudio");
   if (!audio) {
     ok(false, "Can't get the audio element!");
   }
