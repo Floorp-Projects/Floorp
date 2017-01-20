@@ -335,6 +335,49 @@ TEST(VP8VideoTrackEncoder, SingleFrameEncode)
   EXPECT_EQ(halfSecond, frames[0]->GetDuration());
 }
 
+// Test that encoding a couple of identical images gives useful output.
+TEST(VP8VideoTrackEncoder, SameFrameEncode)
+{
+  // Initiate VP8 encoder
+  TestVP8TrackEncoder encoder;
+  InitParam param = {true, 640, 480};
+  encoder.TestInit(param);
+
+  // Pass 15 100ms frames to the encoder.
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  RefPtr<Image> image = generator.GenerateI420Image();
+  TimeStamp now = TimeStamp::Now();
+  VideoSegment segment;
+  for (uint32_t i = 0; i < 15; ++i) {
+    segment.AppendFrame(do_AddRef(image),
+                        mozilla::StreamTime(9000), // 100ms
+                        generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE,
+                        false,
+                        now + TimeDuration::FromSeconds(i * 0.1));
+  }
+
+  encoder.SetCurrentFrames(segment);
+
+  // End the track.
+  segment.Clear();
+  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, TrackEventCommand::TRACK_EVENT_ENDED, segment);
+
+  EncodedFrameContainer container;
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  // Verify total duration being 1.5s.
+  uint64_t totalDuration = 0;
+  for (auto& frame : container.GetEncodedFrames()) {
+    totalDuration += frame->GetDuration();
+  }
+  const uint64_t oneAndAHalf = (PR_USEC_PER_SEC / 2) * 3;
+  EXPECT_EQ(oneAndAHalf, totalDuration);
+}
+
 // EOS test
 TEST(VP8VideoTrackEncoder, EncodeComplete)
 {
