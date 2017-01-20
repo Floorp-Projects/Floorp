@@ -79,17 +79,18 @@ IsUninitializedLexical(const Value& val)
 }
 
 static inline bool
-IsUninitializedLexicalSlot(HandleObject obj, HandleShape shape)
+IsUninitializedLexicalSlot(HandleObject obj, Handle<PropertyResult> prop)
 {
-    MOZ_ASSERT(shape);
+    MOZ_ASSERT(prop);
     if (obj->is<WithEnvironmentObject>())
         return false;
-    // We check for IsImplicitDenseOrTypedArrayElement even though the shape
-    // is always a non-indexed property because proxy hooks may return a
-    // "non-native property found" shape, which happens to be encoded in the
-    // same way as the "dense element" shape. See MarkNonNativePropertyFound.
-    if (IsImplicitDenseOrTypedArrayElement(shape) ||
-        !shape->hasSlot() ||
+
+    // Proxy hooks may return a non-native property.
+    if (prop.isNonNativeProperty())
+        return false;
+
+    Shape* shape = prop.shape();
+    if (!shape->hasSlot() ||
         !shape->hasDefaultGetter() ||
         !shape->hasDefaultSetter())
     {
@@ -175,9 +176,9 @@ GetLengthProperty(const Value& lval, MutableHandleValue vp)
 
 template <bool TypeOf> inline bool
 FetchName(JSContext* cx, HandleObject obj, HandleObject obj2, HandlePropertyName name,
-          HandleShape shape, MutableHandleValue vp)
+          Handle<PropertyResult> prop, MutableHandleValue vp)
 {
-    if (!shape) {
+    if (!prop) {
         if (TypeOf) {
             vp.setUndefined();
             return true;
@@ -191,6 +192,7 @@ FetchName(JSContext* cx, HandleObject obj, HandleObject obj2, HandlePropertyName
         if (!GetProperty(cx, obj, obj, id, vp))
             return false;
     } else {
+        RootedShape shape(cx, prop.shape());
         RootedObject normalized(cx, obj);
         if (normalized->is<WithEnvironmentObject>() && !shape->hasDefaultGetter())
             normalized = &normalized->as<WithEnvironmentObject>().object();
@@ -214,9 +216,13 @@ FetchName(JSContext* cx, HandleObject obj, HandleObject obj2, HandlePropertyName
 }
 
 inline bool
-FetchNameNoGC(JSObject* pobj, Shape* shape, MutableHandleValue vp)
+FetchNameNoGC(JSObject* pobj, PropertyResult prop, MutableHandleValue vp)
 {
-    if (!shape || !pobj->isNative() || !shape->isDataDescriptor() || !shape->hasDefaultGetter())
+    if (!prop || !pobj->isNative())
+        return false;
+
+    Shape* shape = prop.shape();
+    if (!shape->isDataDescriptor() || !shape->hasDefaultGetter())
         return false;
 
     vp.set(pobj->as<NativeObject>().getSlot(shape->slot()));
@@ -362,7 +368,7 @@ DefVarOperation(JSContext* cx, HandleObject varobj, HandlePropertyName dn, unsig
     }
 #endif
 
-    RootedShape prop(cx);
+    Rooted<PropertyResult> prop(cx);
     RootedObject obj2(cx);
     if (!LookupProperty(cx, varobj, dn, &obj2, &prop))
         return false;

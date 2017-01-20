@@ -248,7 +248,118 @@ class ObjectOpResult
     }
 };
 
+class PropertyResult
+{
+    union {
+        js::Shape* shape_;
+        uintptr_t bits_;
+    };
+
+    static const uintptr_t NotFound = 0;
+    static const uintptr_t NonNativeProperty = 1;
+    static const uintptr_t DenseOrTypedArrayElement = 1;
+
+  public:
+    PropertyResult() : bits_(NotFound) {}
+
+    explicit PropertyResult(js::Shape* propertyShape)
+      : shape_(propertyShape)
+    {
+        MOZ_ASSERT(!isFound() || isNativeProperty());
+    }
+
+    explicit operator bool() const {
+        return isFound();
+    }
+
+    bool isFound() const {
+        return bits_ != NotFound;
+    }
+
+    bool isNonNativeProperty() const {
+        return bits_ == NonNativeProperty;
+    }
+
+    bool isDenseOrTypedArrayElement() const {
+        return bits_ == DenseOrTypedArrayElement;
+    }
+
+    bool isNativeProperty() const {
+        return isFound() && !isNonNativeProperty();
+    }
+
+    js::Shape* maybeShape() const {
+        MOZ_ASSERT(!isNonNativeProperty());
+        return isFound() ? shape_ : nullptr;
+    }
+
+    js::Shape* shape() const {
+        MOZ_ASSERT(isNativeProperty());
+        return shape_;
+    }
+
+    void setNotFound() {
+        bits_ = NotFound;
+    }
+
+    void setNativeProperty(js::Shape* propertyShape) {
+        shape_ = propertyShape;
+        MOZ_ASSERT(isNativeProperty());
+    }
+
+    void setNonNativeProperty() {
+        bits_ = NonNativeProperty;
+    }
+
+    void setDenseOrTypedArrayElement() {
+        bits_ = DenseOrTypedArrayElement;
+    }
+
+    void trace(JSTracer* trc);
+};
+
 } // namespace JS
+
+namespace js {
+
+template <class Wrapper>
+class WrappedPtrOperations<JS::PropertyResult, Wrapper>
+{
+    const JS::PropertyResult& value() const { return static_cast<const Wrapper*>(this)->get(); }
+
+  public:
+    bool isFound() const { return value().isFound(); }
+    operator bool() const { return bool(value()); }
+    js::Shape* maybeShape() const { return value().maybeShape(); }
+    js::Shape* shape() const { return value().shape(); }
+    bool isNativeProperty() const { return value().isNativeProperty(); }
+    bool isNonNativeProperty() const { return value().isNonNativeProperty(); }
+    bool isDenseOrTypedArrayElement() const { return value().isDenseOrTypedArrayElement(); }
+    js::Shape* asTaggedShape() const { return value().asTaggedShape(); }
+};
+
+template <class Wrapper>
+class MutableWrappedPtrOperations<JS::PropertyResult, Wrapper>
+  : public WrappedPtrOperations<JS::PropertyResult, Wrapper>
+{
+    JS::PropertyResult& value() { return static_cast<Wrapper*>(this)->get(); }
+
+  public:
+    void setNotFound() {
+        value().setNotFound();
+    }
+    void setNativeProperty(js::Shape* shape) {
+        value().setNativeProperty(shape);
+    }
+    void setNonNativeProperty() {
+        value().setNonNativeProperty();
+    }
+    void setDenseOrTypedArrayElement() {
+        value().setDenseOrTypedArrayElement();
+    }
+};
+
+} // namespace js
 
 // JSClass operation signatures.
 
@@ -405,7 +516,7 @@ namespace js {
 
 typedef bool
 (* LookupPropertyOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-                     JS::MutableHandleObject objp, JS::MutableHandle<Shape*> propp);
+                     JS::MutableHandleObject objp, JS::MutableHandle<JS::PropertyResult> propp);
 typedef bool
 (* DefinePropertyOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
                      JS::Handle<JS::PropertyDescriptor> desc,
