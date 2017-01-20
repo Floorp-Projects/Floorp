@@ -15,13 +15,35 @@ bool is_in_compositor_thread();
 bool is_in_render_thread();
 void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname);
 
-enum WrImageFormat {
+enum class WrImageFormat {
     Invalid,
     A8,
     RGB8,
     RGBA8,
-    RGBAF32
+    RGBAF32,
+
+    Sentinel /* this must be last, for IPC serialization purposes */
 };
+
+#ifdef DEBUG
+// This ensures that the size of |enum class| and |enum| are the same, because
+// we use |enum class| in this file (to avoid polluting the global namespace)
+// but Rust assumes |enum|. If there is a size mismatch that could lead to
+// problems with values being corrupted across the language boundary.
+class DebugEnumSizeChecker { // scope the enum to the class
+  enum DummyWrImageFormatEnum {
+    Invalid,
+    A8,
+    RGB8,
+    RGBA8,
+    RGBAF32,
+    Sentinel
+  };
+
+  static_assert(sizeof(WrImageFormat) == sizeof(DummyWrImageFormatEnum),
+    "Size of enum doesn't match size of enum class!");
+};
+#endif
 
 typedef uint64_t WrWindowId;
 typedef uint64_t WrImageKey;
@@ -77,7 +99,7 @@ struct WrGlyphArray {
   }
 };
 
-enum WrBorderStyle {
+enum class WrBorderStyle {
   None,
   Solid,
   Double,
@@ -87,7 +109,9 @@ enum WrBorderStyle {
   Groove,
   Ridge,
   Inset,
-  Outset
+  Outset,
+
+  Sentinel /* this must be last, for IPC serialization purposes */
 };
 
 struct WrBorderSide {
@@ -137,7 +161,8 @@ enum class WrTextureFilter
 {
   Linear,
   Point,
-  Sentinel,
+
+  Sentinel /* this must be last, for IPC serialization purposes */
 };
 
 typedef uint64_t WrImageIdType;
@@ -145,7 +170,7 @@ struct WrExternalImageIdId {
   WrImageIdType id;
 };
 
-enum WrExternalImageIdType {
+enum class WrExternalImageIdType {
     TEXTURE_HANDLE, // Currently, we only support gl texture handle.
     // TODO(Jerry): handle shmem or cpu raw buffers.
     //// MEM_OR_SHMEM,
@@ -196,7 +221,8 @@ enum class WrMixBlendMode
     Saturation,
     Color,
     Luminosity,
-    Sentinel,
+
+    Sentinel /* this must be last, for IPC serialization purposes */
 };
 
 struct WrWindowState;
