@@ -74,15 +74,10 @@ public:
   void ProcessRecordNames(GMPRecordIterator* aRecordIterator,
                           GMPErr aStatus);
 
-  static void SetNodeId(const char* aNodeId, uint32_t aLength) {
-    sNodeId = std::string(aNodeId, aNodeId + aLength);
-  }
-
 private:
 
   virtual ~FakeDecryptor() {}
   static FakeDecryptor* sInstance;
-  static std::string sNodeId;
 
   void TestStorage();
 

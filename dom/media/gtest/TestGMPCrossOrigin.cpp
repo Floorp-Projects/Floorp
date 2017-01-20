@@ -20,7 +20,6 @@
 #include "mozilla/Atomics.h"
 #include "nsNSSComponent.h"
 #include "mozilla/DebugOnly.h"
-#include "GMPDeviceBinding.h"
 #include "mozilla/dom/MediaKeyStatusMapBinding.h" // For MediaKeyStatus
 #include "mozilla/dom/MediaKeyMessageEventBinding.h" // For MediaKeyMessageType
 
@@ -1212,24 +1211,6 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
                     update);
   }
 
-  void TestNodeId() {
-    // Calculate the nodeId, and the device bound nodeId. Start a GMP, and
-    // have it return the device bound nodeId that it's been passed. Assert
-    // they have the same value.
-    const nsString origin = NS_LITERAL_STRING("http://example-fuz-baz.com");
-    nsCString originSalt1 = GetNodeId(origin, origin, false);
-
-    nsCString salt = originSalt1;
-    std::string nodeId;
-    EXPECT_TRUE(CalculateGMPDeviceId(salt.BeginWriting(), salt.Length(), nodeId));
-
-    std::string expected = "node-id " + nodeId;
-    Expect(nsDependentCString(expected.c_str()), NewRunnableMethod(this, &GMPStorageTest::SetFinished));
-
-    CreateDecryptor(originSalt1,
-                    NS_LITERAL_CSTRING("retrieve-node-id"));
-  }
-
   void Expect(const nsCString& aMessage, already_AddRefed<nsIRunnable> aContinuation) {
     mExpected.AppendElement(ExpectedMessage(aMessage, Move(aContinuation)));
   }
@@ -1438,9 +1419,4 @@ TEST(GeckoMediaPlugins, GMPStorageGetRecordNamesPersistentStorage) {
 TEST(GeckoMediaPlugins, GMPStorageLongRecordNames) {
   RefPtr<GMPStorageTest> runner = new GMPStorageTest();
   runner->DoTest(&GMPStorageTest::TestLongRecordNames);
-}
-
-TEST(GeckoMediaPlugins, GMPNodeId) {
-  RefPtr<GMPStorageTest> runner = new GMPStorageTest();
-  runner->DoTest(&GMPStorageTest::TestNodeId);
 }
