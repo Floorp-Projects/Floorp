@@ -207,6 +207,8 @@ Node::exposeToJS() const
         v.setUndefined();
     }
 
+    ExposeValueToActiveJS(v);
+
     return v;
 }
 
