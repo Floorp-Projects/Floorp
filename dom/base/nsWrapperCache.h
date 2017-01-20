@@ -145,7 +145,7 @@ public:
     }
   }
 
-  bool PreservingWrapper() const
+  bool PreservingWrapper()
   {
     return HasWrapperFlag(WRAPPER_BIT_PRESERVED);
   }
