@@ -510,7 +510,7 @@ class MarionetteRefTestExecutor(RefTestExecutor):
 
         marionette.execute_async_script(self.wait_script)
 
-        screenshot = marionette.screenshot()
+        screenshot = marionette.screenshot(full=False)
         # strip off the data:img/png, part of the url
         if screenshot.startswith("data:image/png;base64,"):
             screenshot = screenshot.split(",", 1)[1]

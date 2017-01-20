@@ -16,6 +16,7 @@ namespace jit {
 // BaselineCacheIRCompiler and IonCacheIRCompiler.
 #define CACHE_IR_SHARED_OPS(_)            \
     _(GuardIsObject)                      \
+    _(GuardIsObjectOrNull)                \
     _(GuardIsString)                      \
     _(GuardIsSymbol)                      \
     _(GuardIsInt32Index)                  \
