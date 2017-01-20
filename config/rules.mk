@@ -942,7 +942,13 @@ ifndef MOZ_OPTIMIZE
 rustflags_override = RUSTFLAGS='-C opt-level=0'
 endif
 
-CARGO_BUILD = env $(rustflags_override) CARGO_TARGET_DIR=. RUSTC=$(RUSTC) MOZ_DIST=$(ABS_DIST) $(CARGO) build $(cargo_build_flags)
+CARGO_BUILD = env $(rustflags_override) \
+	CARGO_TARGET_DIR=. \
+	RUSTC=$(RUSTC) \
+	MOZ_DIST=$(ABS_DIST) \
+	LIBCLANG_PATH=$(MOZ_LIBCLANG_PATH) \
+	CLANG_PATH=$(MOZ_CLANG_PATH) \
+	$(CARGO) build $(cargo_build_flags)
 
 ifdef RUST_LIBRARY_FILE
 
