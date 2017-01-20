@@ -1771,6 +1771,19 @@ function textChangeChecker(aID, aStart, aEnd, aTextOrFunc, aIsInserted, aFromUse
   this.endOffset = aEnd;
   this.textOrFunc = aTextOrFunc;
 
+  this.match = function stextChangeChecker_match(aEvent)
+  {
+    if (!(aEvent instanceof nsIAccessibleTextChangeEvent) ||
+        aEvent.accessible !== getAccessible(this.target)) {
+      return false;
+    }
+
+    let tcEvent = aEvent.QueryInterface(nsIAccessibleTextChangeEvent);
+    let modifiedText = (typeof this.textOrFunc === "function") ?
+      this.textOrFunc() : this.textOrFunc;
+    return modifiedText === tcEvent.modifiedText;
+  };
+
   this.check = function textChangeChecker_check(aEvent)
   {
     aEvent.QueryInterface(nsIAccessibleTextChangeEvent);
