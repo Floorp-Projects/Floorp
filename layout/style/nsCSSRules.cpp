@@ -43,7 +43,6 @@
 #include "mozilla/dom/CSSFontFeatureValuesRuleBinding.h"
 #include "mozilla/dom/CSSKeyframeRuleBinding.h"
 #include "mozilla/dom/CSSKeyframesRuleBinding.h"
-#include "mozilla/dom/CSSCounterStyleRuleBinding.h"
 #include "StyleRule.h"
 #include "nsFont.h"
 #include "nsIURI.h"
@@ -2888,6 +2887,7 @@ nsCSSCounterStyleRule::nsCSSCounterStyleRule(const nsCSSCounterStyleRule& aCopy)
   , mName(aCopy.mName)
   , mGeneration(aCopy.mGeneration)
 {
+  SetIsNotDOMBinding();
   for (size_t i = 0; i < ArrayLength(mValues); ++i) {
     mValues[i] = aCopy.mValues[i];
   }
@@ -2919,6 +2919,7 @@ NS_IMPL_RELEASE_INHERITED(nsCSSCounterStyleRule, mozilla::css::Rule)
 // implementation.
 NS_INTERFACE_MAP_BEGIN(nsCSSCounterStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSCounterStyleRule)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSCounterStyleRule)
 NS_INTERFACE_MAP_END_INHERITING(mozilla::css::Rule)
 
 bool
@@ -3320,5 +3321,6 @@ nsCSSCounterStyleRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 nsCSSCounterStyleRule::WrapObject(JSContext* aCx,
                                   JS::Handle<JSObject*> aGivenProto)
 {
-  return CSSCounterStyleRuleBinding::Wrap(aCx, this, aGivenProto);
+  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
+  return nullptr;
 }
