@@ -20,13 +20,12 @@
   --devtools-splitter-inline-end-width: 4px;
 }
 
-:root[devtoolstheme="light"] {
+#content[devtoolstheme="light"] {
   /* These variables are used in browser.xul but inside the toolbox they are overridden by --theme-splitter-color */
   --devtools-splitter-color: #dde1e4;
 }
 
-:root[devtoolstheme="dark"],
-:root[devtoolstheme="firebug"] {
+#content[devtoolstheme="dark"] {
   --devtools-splitter-color: #42484f;
 }
 
