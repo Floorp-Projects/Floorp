@@ -1458,7 +1458,11 @@ void	_malloc_prefork(void);
 #ifndef MOZ_MEMORY_DARWIN
 static
 #endif
-void	_malloc_postfork(void);
+void	_malloc_postfork_parent(void);
+#ifndef MOZ_MEMORY_DARWIN
+static
+#endif
+void	_malloc_postfork_child(void);
 
 /*
  * End function prototypes.
@@ -6039,7 +6043,7 @@ MALLOC_OUT:
 
 #if !defined(MOZ_MEMORY_WINDOWS) && !defined(MOZ_MEMORY_DARWIN)
 	/* Prevent potential deadlock on malloc locks after fork. */
-	pthread_atfork(_malloc_prefork, _malloc_postfork, _malloc_postfork);
+	pthread_atfork(_malloc_prefork, _malloc_postfork_parent, _malloc_postfork_child);
 #endif
 
 #if defined(NEEDS_PTHREAD_MMAP_UNALIGNED_TSD)
@@ -6784,7 +6788,7 @@ _malloc_prefork(void)
 static
 #endif
 void
-_malloc_postfork(void)
+_malloc_postfork_parent(void)
 {
 	unsigned i;
 
@@ -6799,6 +6803,27 @@ _malloc_postfork(void)
 			malloc_spin_unlock(&arenas[i]->lock);
 	}
 	malloc_spin_unlock(&arenas_lock);
+}
+
+#ifndef MOZ_MEMORY_DARWIN
+static
+#endif
+void
+_malloc_postfork_child(void)
+{
+	unsigned i;
+
+	/* Reinitialize all mutexes, now that fork() has completed. */
+
+	malloc_mutex_init(&huge_mtx);
+
+	malloc_mutex_init(&base_mtx);
+
+	for (i = 0; i < narenas; i++) {
+		if (arenas[i] != NULL)
+			malloc_spin_init(&arenas[i]->lock);
+	}
+	malloc_spin_init(&arenas_lock);
 }
 
 /*
