@@ -21,6 +21,7 @@ class ProcessGlobal;
 } // namespace dom
 namespace css {
 class ImportRule;
+class NameSpaceRule;
 class StyleRule;
 class MediaRule;
 class DocumentRule;
@@ -295,6 +296,7 @@ private:
   friend class nsInProcessTabChildGlobal;
   friend class nsWindowRoot;
   friend class mozilla::css::ImportRule;
+  friend class mozilla::css::NameSpaceRule;
   friend class mozilla::css::StyleRule;
   friend class mozilla::css::MediaRule;
   friend class mozilla::css::DocumentRule;
