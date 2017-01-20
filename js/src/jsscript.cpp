@@ -2800,9 +2800,10 @@ JSScript::assertValidJumpTargets() const
         for (; tn < tnlimit; tn++) {
             jsbytecode* tryStart = mainEntry + tn->start;
             jsbytecode* tryPc = tryStart - 1;
-            if (JSOp(*tryPc) != JSOP_TRY)
+            if (tn->kind != JSTRY_CATCH && tn->kind != JSTRY_FINALLY)
                 continue;
 
+            MOZ_ASSERT(JSOp(*tryPc) == JSOP_TRY);
             jsbytecode* tryTarget = tryStart + tn->length;
             MOZ_ASSERT(mainEntry <= tryTarget && tryTarget < end);
             MOZ_ASSERT(BytecodeIsJumpTarget(JSOp(*tryTarget)));
