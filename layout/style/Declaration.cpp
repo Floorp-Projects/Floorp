@@ -1645,14 +1645,14 @@ Declaration::AppendVariableAndValueToString(const nsAString& aName,
     important = false;
   }
 
+  bool isTokenStream = type == CSSVariableDeclarations::eTokenStream;
+  aResult.Append(':');
+  if (!isTokenStream) {
+    aResult.Append(' ');
+  }
   switch (type) {
     case CSSVariableDeclarations::eTokenStream:
-      if (value.IsEmpty()) {
-        aResult.Append(':');
-      } else {
-        aResult.AppendLiteral(": ");
-        aResult.Append(value);
-      }
+      aResult.Append(value);
       break;
 
     case CSSVariableDeclarations::eInitial:
@@ -1672,6 +1672,9 @@ Declaration::AppendVariableAndValueToString(const nsAString& aName,
   }
 
   if (important) {
+    if (!isTokenStream) {
+      aResult.Append(' ');
+    }
     aResult.AppendLiteral("!important");
   }
   aResult.AppendLiteral("; ");
