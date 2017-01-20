@@ -14,7 +14,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/BindingStyleRule.h"
+#include "mozilla/css/Rule.h"
 
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -311,7 +311,7 @@ namespace css {
 
 class Declaration;
 
-class StyleRule final : public BindingStyleRule
+class StyleRule final : public Rule
                       , public nsICSSStyleRuleDOMWrapper
 {
  public:
@@ -336,7 +336,6 @@ public:
   // WebIDL interface
   uint16_t Type() const override;
   void GetCssTextImpl(nsAString& aCssText) const override;
-  virtual nsICSSDeclaration* Style() override;
 
   // null for style attribute
   nsCSSSelectorList* Selector() { return mSelector; }
@@ -361,6 +360,9 @@ public:
 #endif
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
+
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
 private:
   ~StyleRule();
