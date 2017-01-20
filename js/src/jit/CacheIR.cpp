@@ -1498,7 +1498,8 @@ IRGenerator::maybeGuardInt32Index(const Value& index, ValOperandId indexId,
         if (index.isInt32()) {
             indexSigned = index.toInt32();
         } else {
-            if (!mozilla::NumberIsInt32(index.toDouble(), &indexSigned))
+            // We allow negative zero here.
+            if (!mozilla::NumberEqualsInt32(index.toDouble(), &indexSigned))
                 return false;
             if (!cx_->runtime()->jitSupportsFloatingPoint)
                 return false;

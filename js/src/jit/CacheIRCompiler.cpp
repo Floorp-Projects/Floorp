@@ -1140,8 +1140,10 @@ CacheIRCompiler::emitGuardIsInt32Index()
             masm.push(FloatReg0);
 
         masm.unboxDouble(input, FloatReg0);
+        // ToPropertyKey(-0.0) is "0", so we can truncate -0.0 to 0 here.
         masm.convertDoubleToInt32(FloatReg0, output,
-                                  (mode_ == Mode::Baseline) ? failure->label() : &failurePopReg);
+                                  (mode_ == Mode::Baseline) ? failure->label() : &failurePopReg,
+                                  false);
         if (mode_ != Mode::Baseline) {
             masm.pop(FloatReg0);
             masm.jump(&done);
