@@ -5301,7 +5301,7 @@ pref("browser.addon-watch.interval", 15000);
 #else
 pref("browser.addon-watch.interval", -1);
 #endif
-pref("browser.addon-watch.ignore", "[\"mochikit@mozilla.org\",\"special-powers@mozilla.org\",\"fxdevtools-adapters@mozilla.org\",\"fx-devtools\"]");
+pref("browser.addon-watch.ignore", "[\"mochikit@mozilla.org\",\"special-powers@mozilla.org\",\"fxdevtools-adapters@mozilla.org\",\"fx-devtools\",\"webcompat-reporter@mozilla.org\"]");
 
 // Search service settings
 pref("browser.search.log", false);
