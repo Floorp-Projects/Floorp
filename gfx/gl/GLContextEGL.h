@@ -45,10 +45,6 @@ public:
         return static_cast<GLContextEGL*>(gl);
     }
 
-    static EGLSurface CreateSurfaceForWindow(nsIWidget* aWidget);
-
-    static void DestroySurface(EGLSurface aSurface);
-
     bool Init() override;
 
     virtual bool IsDoubleBuffered() const override {
