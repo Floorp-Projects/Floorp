@@ -1562,7 +1562,7 @@ XPCJSContext::~XPCJSContext()
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
     // Tell the profiler that the context is gone
-    if (PseudoStack* stack = mozilla_get_pseudo_stack())
+    if (PseudoStack* stack = profiler_get_pseudo_stack())
         stack->sampleContext(nullptr);
 #endif
 
@@ -3423,7 +3423,7 @@ XPCJSContext::Initialize()
     JS_SetWrapObjectCallbacks(cx, &WrapObjectCallbacks);
     js::SetPreserveWrapperCallback(cx, PreserveWrapper);
 #ifdef MOZ_ENABLE_PROFILER_SPS
-    if (PseudoStack* stack = mozilla_get_pseudo_stack())
+    if (PseudoStack* stack = profiler_get_pseudo_stack())
         stack->sampleContext(cx);
 #endif
     JS_SetAccumulateTelemetryCallback(cx, AccumulateTelemetryCallback);

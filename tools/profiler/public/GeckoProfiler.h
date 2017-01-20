@@ -787,7 +787,8 @@ private:
 
 } // namespace mozilla
 
-inline PseudoStack* mozilla_get_pseudo_stack(void)
+inline PseudoStack*
+profiler_get_pseudo_stack(void)
 {
   if (!stack_key_initialized)
     return nullptr;
