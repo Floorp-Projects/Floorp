@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
 import json
+import logging
 import os
 import sys
 import tempfile
@@ -509,6 +510,45 @@ class JsapiTestsCommand(MachCommandBase):
         jsapi_tests_result = subprocess.call(jsapi_tests_cmd)
 
         return jsapi_tests_result
+
+
+@CommandProvider
+class CramTest(MachCommandBase):
+    @Command('cramtest', category='testing',
+             description="Mercurial style .t tests for command line applications.")
+    @CommandArgument('test_paths', nargs='*', metavar='N',
+                     help="Test paths to run. Each path can be a test file or directory. "
+                          "If omitted, the entire suite will be run.")
+    @CommandArgument('cram_args', nargs=argparse.REMAINDER,
+                     help="Extra arguments to pass down to the cram binary. See "
+                          "'./mach python -m cram -- -h' for a list of available options.")
+    def cramtest(self, cram_args=None, test_paths=None, test_objects=None):
+        self._activate_virtualenv()
+        import mozinfo
+        from manifestparser import TestManifest
+
+        if test_objects is None:
+            from mozbuild.testing import TestResolver
+            resolver = self._spawn(TestResolver)
+            if test_paths:
+                # If we were given test paths, try to find tests matching them.
+                test_objects = resolver.resolve_tests(paths=test_paths, flavor='cram')
+            else:
+                # Otherwise just run everything in CRAMTEST_MANIFESTS
+                test_objects = resolver.resolve_tests(flavor='cram')
+
+        if not test_objects:
+            message = 'No tests were collected, check spelling of the test paths.'
+            self.log(logging.WARN, 'cramtest', {}, message)
+            return 1
+
+        mp = TestManifest()
+        mp.tests.extend(test_objects)
+        tests = mp.active_tests(disabled=False, **mozinfo.info)
+
+        python = self.virtualenv_manager.python_path
+        cmd = [python, '-m', 'cram'] + cram_args + [t['relpath'] for t in tests]
+        return subprocess.call(cmd, cwd=self.topsrcdir)
 
 
 def get_parser(argv=None):
