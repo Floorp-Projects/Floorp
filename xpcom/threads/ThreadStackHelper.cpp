@@ -115,7 +115,7 @@ ThreadStackHelper::Shutdown()
 ThreadStackHelper::ThreadStackHelper()
   : mStackToFill(nullptr)
 #ifdef MOZ_THREADSTACKHELPER_PSEUDO
-  , mPseudoStack(mozilla_get_pseudo_stack())
+  , mPseudoStack(profiler_get_pseudo_stack())
 #ifdef MOZ_THREADSTACKHELPER_NATIVE
   , mContextToFill(nullptr)
 #endif
