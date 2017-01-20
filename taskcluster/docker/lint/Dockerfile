@@ -11,6 +11,9 @@ ADD topsrcdir/taskcluster/docker/recipes/tooltool.py /build/tooltool.py
 # %include testing/mozharness/external_tools/robustcheckout.py
 ADD topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
 
+# %include taskcluster/docker/recipes/install-node.sh
+ADD topsrcdir/taskcluster/docker/recipes/install-node.sh /build/install-node.sh
+
 # %include taskcluster/docker/recipes/install-mercurial.sh
 ADD topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /build/install-mercurial.sh
 ADD system-setup.sh /tmp/system-setup.sh
