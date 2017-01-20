@@ -11,6 +11,9 @@
 #include "GLLibraryEGL.h"
 
 namespace mozilla {
+namespace widget {
+class CompositorWidget;
+} // namespace widget
 namespace gl {
 
 class GLContextEGL : public GLContext
@@ -77,7 +80,7 @@ public:
 
     virtual bool IsCurrent() override;
 
-    virtual bool RenewSurface(nsIWidget* aWidget) override;
+    virtual bool RenewSurface(widget::CompositorWidget* aWidget) override;
 
     virtual void ReleaseSurface() override;
 

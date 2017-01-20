@@ -374,14 +374,15 @@ GLContextEGL::IsCurrent() {
 }
 
 bool
-GLContextEGL::RenewSurface(nsIWidget* aWidget) {
+GLContextEGL::RenewSurface(CompositorWidget* aWidget) {
     if (!mOwnsContext) {
         return false;
     }
     // unconditionally release the surface and create a new one. Don't try to optimize this away.
     // If we get here, then by definition we know that we want to get a new surface.
     ReleaseSurface();
-    mSurface = mozilla::gl::CreateSurfaceForWindow(aWidget, mConfig);
+    MOZ_ASSERT(aWidget);
+    mSurface = mozilla::gl::CreateSurfaceForWindow(aWidget->RealWidget(), mConfig);
     if (!mSurface) {
         return false;
     }
