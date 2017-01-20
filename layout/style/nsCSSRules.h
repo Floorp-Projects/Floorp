@@ -472,6 +472,7 @@ public:
     : mozilla::css::GroupRule(aLineNumber, aColumnNumber)
     , mName(aName)
   {
+    SetIsNotDOMBinding();
   }
 private:
   nsCSSKeyframesRule(const nsCSSKeyframesRule& aCopy);
@@ -493,12 +494,6 @@ public:
   // WebIDL interface
   uint16_t Type() const override;
   void GetCssTextImpl(nsAString& aCssText) const override;
-  // The XPCOM GetName is OK
-  // The XPCOM SetName is OK
-  using mozilla::css::GroupRule::CssRules;
-  // The XPCOM appendRule is OK, since it never throws
-  // The XPCOM deleteRule is OK, since it never throws
-  nsCSSKeyframeRule* FindRule(const nsAString& aKey);
 
   // rest of GroupRule
   virtual bool UseForPresentation(nsPresContext* aPresContext,
