@@ -4943,8 +4943,8 @@ var TabsProgressListener = {
     let tab = gBrowser.getTabForBrowser(aBrowser);
     if (tab && tab._sharingState) {
       gBrowser.setBrowserSharing(aBrowser, {});
-      webrtcUI.forgetStreamsFromBrowser(aBrowser);
     }
+    webrtcUI.forgetStreamsFromBrowser(aBrowser);
 
     gBrowser.getNotificationBox(aBrowser).removeTransientNotifications();
 
@@ -6682,7 +6682,7 @@ var gIdentityHandler = {
   },
   get _identityPopupContentHosts() {
     delete this._identityPopupContentHosts;
-    let selector = ".identity-popup-headline.host";
+    let selector = ".identity-popup-host";
     return this._identityPopupContentHosts = [
       ...this._identityPopupMultiView._mainView.querySelectorAll(selector),
       ...document.querySelectorAll(selector)
@@ -6690,7 +6690,7 @@ var gIdentityHandler = {
   },
   get _identityPopupContentHostless() {
     delete this._identityPopupContentHostless;
-    let selector = ".identity-popup-headline.hostless";
+    let selector = ".identity-popup-hostless";
     return this._identityPopupContentHostless = [
       ...this._identityPopupMultiView._mainView.querySelectorAll(selector),
       ...document.querySelectorAll(selector)
@@ -7512,6 +7512,7 @@ var gIdentityHandler = {
           }
         }
         browser.messageManager.sendAsyncMessage("webrtc:StopSharing", windowId);
+        webrtcUI.forgetActivePermissionsFromBrowser(gBrowser.selectedBrowser);
       }
       SitePermissions.remove(gBrowser.currentURI, aPermission.id, browser);
 

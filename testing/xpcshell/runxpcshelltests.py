@@ -376,30 +376,26 @@ class XPCShellTestThread(Thread):
         mozinfo.output_to_file(mozInfoJSPath)
         return mozInfoJSPath
 
-    def buildCmdHead(self, headfiles, tailfiles, xpcscmd):
+    def buildCmdHead(self, headfiles, xpcscmd):
         """
-          Build the command line arguments for the head and tail files,
+          Build the command line arguments for the head files,
           along with the address of the webserver which some tests require.
 
           On a remote system, this is overloaded to resolve quoting issues over a secondary command line.
         """
         cmdH = ", ".join(['"' + f.replace('\\', '/') + '"'
                        for f in headfiles])
-        cmdT = ", ".join(['"' + f.replace('\\', '/') + '"'
-                       for f in tailfiles])
 
         dbgport = 0 if self.jsDebuggerInfo is None else self.jsDebuggerInfo.port
 
         return xpcscmd + \
                 ['-e', 'const _SERVER_ADDR = "localhost"',
                  '-e', 'const _HEAD_FILES = [%s];' % cmdH,
-                 '-e', 'const _TAIL_FILES = [%s];' % cmdT,
                  '-e', 'const _JSDEBUGGER_PORT = %d;' % dbgport,
                 ]
 
-    def getHeadAndTailFiles(self, test):
-        """Obtain lists of head- and tail files.  Returns a tuple
-        containing a list of head files and a list of tail files.
+    def getHeadFiles(self, test):
+        """Obtain lists of head- files.  Returns a list of head files.
         """
         def sanitize_list(s, kind):
             for f in s.strip().split(' '):
@@ -417,13 +413,11 @@ class XPCShellTestThread(Thread):
                 yield path
 
         headlist = test.get('head', '')
-        taillist = test.get('tail', '')
-        return (list(sanitize_list(headlist, 'head')),
-                list(sanitize_list(taillist, 'tail')))
+        return list(sanitize_list(headlist, 'head'))
 
     def buildXpcsCmd(self):
         """
-          Load the root head.js file as the first file in our test path, before other head, test, and tail files.
+          Load the root head.js file as the first file in our test path, before other head, and test files.
           On a remote system, we overload this to add additional command line arguments, so this gets overloaded.
         """
         # - NOTE: if you rename/add any of the constants set here, update
@@ -623,8 +617,8 @@ class XPCShellTestThread(Thread):
         self.mozInfoJSPath = self.setupMozinfoJS()
 
         self.buildXpcsCmd()
-        head_files, tail_files = self.getHeadAndTailFiles(self.test_object)
-        cmdH = self.buildCmdHead(head_files, tail_files, self.xpcsCmd)
+        head_files = self.getHeadFiles(self.test_object)
+        cmdH = self.buildCmdHead(head_files, self.xpcsCmd)
 
         # The test file will have to be loaded after the head files.
         cmdT = self.buildCmdTestFile(path)

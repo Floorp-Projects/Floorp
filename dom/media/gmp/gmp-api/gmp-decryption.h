@@ -216,18 +216,6 @@ public:
   virtual ~GMPDecryptorCallback() {}
 };
 
-// Host interface, passed to GetAPIFunc(), with "decrypt".
-class GMPDecryptorHost {
-public:
-  virtual void GetSandboxVoucher(const uint8_t** aVoucher,
-                                 uint32_t* aVoucherLength) = 0;
-
-  virtual void GetPluginVoucher(const uint8_t** aVoucher,
-                                uint32_t* aVoucherLength) = 0;
-
-  virtual ~GMPDecryptorHost() {}
-};
-
 enum GMPSessionType {
   kGMPTemporySession = 0,
   kGMPPersistentSession = 1,
@@ -240,7 +228,6 @@ enum GMPSessionType {
 // When the Host requests this by calling GMPGetAPIFunc().
 //
 // API name macro: GMP_API_DECRYPTOR
-// Host API: GMPDecryptorHost
 class GMPDecryptor {
 public:
 
