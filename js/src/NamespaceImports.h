@@ -46,6 +46,7 @@ class MOZ_STACK_CLASS SourceBufferHolder;
 class HandleValueArray;
 
 class ObjectOpResult;
+class PropertyResult;
 
 class Symbol;
 enum class SymbolCode: uint32_t;
@@ -155,6 +156,7 @@ using JS::FalseHandleValue;
 using JS::HandleValueArray;
 
 using JS::ObjectOpResult;
+using JS::PropertyResult;
 
 using JS::Zone;
 
