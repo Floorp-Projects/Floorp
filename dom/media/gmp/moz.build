@@ -72,9 +72,6 @@ if CONFIG['OS_ARCH'] == 'Linux':
     SOURCES += [
       'GMPLoader.cpp',
     ]
-    USE_LIBS += [
-        'rlz',
-    ]
 
 UNIFIED_SOURCES += [
     'GMPCDMCallbackProxy.cpp',
@@ -112,7 +109,6 @@ UNIFIED_SOURCES += [
 ]
 
 DIRS += [
-    'rlz',
     'widevine-adapter',
 ]
 

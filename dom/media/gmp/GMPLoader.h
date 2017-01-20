@@ -47,7 +47,6 @@ public:
                            void** aPluginAPI,
                            uint32_t aDecryptorId) = 0;
   virtual void GMPShutdown() = 0;
-  virtual void GMPSetNodeId(const char* aNodeId, uint32_t aLength) = 0;
 };
 
 // Encapsulates generating the device-bound node id, activating the sandbox,
@@ -73,11 +72,10 @@ class GMPLoader {
 public:
   virtual ~GMPLoader() {}
 
-  // Calculates the device-bound node id, then activates the sandbox,
-  // then loads the GMP library and (if applicable) passes the bound node id
-  // to the GMP. If aAdapter is non-null, the lib path is assumed to be
-  // a non-GMP, and the adapter is initialized with the lib and the adapter
-  // is used to interact with the plugin.
+  // Activates the sandbox, then loads the GMP library. If aAdapter is
+  // non-null, the lib path is assumed to be a non-GMP, and the adapter
+  // is initialized with the lib and the adapter is used to interact with
+  // the plugin.
   virtual bool Load(const char* aUTF8LibPath,
                     uint32_t aLibPathLen,
                     char* aOriginSalt,

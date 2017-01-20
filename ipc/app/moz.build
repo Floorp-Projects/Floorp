@@ -33,9 +33,6 @@ if CONFIG['OS_ARCH'] != 'Linux':
     SOURCES += [
         '../../dom/media/gmp/GMPLoader.cpp',
     ]
-    USE_LIBS += [
-        'rlz',
-    ]
 
 # DELAYLOAD_DLLS in this block ensures that the DLL blocklist is functional
 if CONFIG['OS_ARCH'] == 'WINNT':
