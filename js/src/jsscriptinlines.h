@@ -100,7 +100,7 @@ JSScript::functionDelazifying() const
 }
 
 inline void
-JSScript::ensureNonLazyCanonicalFunction(JSContext* cx)
+JSScript::ensureNonLazyCanonicalFunction()
 {
     // Infallibly delazify the canonical script.
     JSFunction* fun = function();

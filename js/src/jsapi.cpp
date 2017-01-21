@@ -4379,7 +4379,7 @@ JS_DecompileScript(JSContext* cx, HandleScript script, const char* name, unsigne
 
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    script->ensureNonLazyCanonicalFunction(cx);
+    script->ensureNonLazyCanonicalFunction();
     RootedFunction fun(cx, script->functionNonDelazifying());
     if (fun)
         return JS_DecompileFunction(cx, fun, indent);
