@@ -25,7 +25,6 @@ module.exports = createClass({
     debugDisabled: PropTypes.bool,
     target: PropTypes.shape({
       active: PropTypes.bool,
-      fetch: PropTypes.bool.isRequired,
       icon: PropTypes.string,
       name: PropTypes.string.isRequired,
       url: PropTypes.string,
@@ -196,9 +195,6 @@ module.exports = createClass({
     let { pushSubscription } = this.state;
     let status = this.getServiceWorkerStatus();
 
-    let fetch = target.fetch ? Strings.GetStringFromName("listeningForFetchEvents") :
-      Strings.GetStringFromName("notListeningForFetchEvents");
-
     return dom.div({ className: "target-container" },
       dom.img({
         className: "target-icon",
@@ -219,12 +215,6 @@ module.exports = createClass({
               }, pushSubscription.endpoint)) :
             null
           ),
-          dom.li({ className: "target-detail" },
-            dom.strong(null, Strings.GetStringFromName("fetch")),
-            dom.span({
-              className: "service-worker-fetch-flag",
-              title: fetch
-            }, fetch)),
           dom.li({ className: "target-detail" },
             dom.strong(null, Strings.GetStringFromName("scope")),
             dom.span({
