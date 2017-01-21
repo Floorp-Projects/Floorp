@@ -275,7 +275,7 @@ jit::BaselineCompile(JSContext* cx, JSScript* script, bool forceDebugInstrumenta
     MOZ_ASSERT(script->canBaselineCompile());
     MOZ_ASSERT(IsBaselineEnabled(cx));
 
-    script->ensureNonLazyCanonicalFunction(cx);
+    script->ensureNonLazyCanonicalFunction();
 
     LifoAlloc alloc(TempAllocator::PreferredLifoChunkSize);
     TempAllocator* temp = alloc.new_<TempAllocator>(&alloc);

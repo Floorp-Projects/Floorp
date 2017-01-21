@@ -334,18 +334,12 @@ dbs_readBlob(DBS *dbsp, DBT *data)
     }
 
     len = dbs_getBlobSize(data);
-    mapfile = PR_CreateFileMap(filed, len, PR_PROT_READONLY);
-    if (mapfile == NULL) {
-        /* USE PR_GetError instead of PORT_GetError here
-	     * because we are getting the error from PR_xxx
-	     * function */
-        if (PR_GetError() != PR_NOT_IMPLEMENTED_ERROR) {
-            goto loser;
-        }
-        addr = dbs_EmulateMap(filed, len);
-    } else {
-        addr = PR_MemMap(mapfile, 0, len);
-    }
+    /* Bug 1323150
+     * PR_MemMap fails on Windows for larger certificates.
+     * https://msdn.microsoft.com/en-us/library/windows/desktop/aa366761(v=vs.85).aspx
+     * Let's always use the emulated map, i.e. read the file.
+     */
+    addr = dbs_EmulateMap(filed, len);
     if (addr == NULL) {
         goto loser;
     }

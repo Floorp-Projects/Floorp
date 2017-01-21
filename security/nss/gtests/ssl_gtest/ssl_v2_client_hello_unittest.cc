@@ -202,6 +202,28 @@ TEST_P(SSLv2ClientHelloTest, Connect) {
   Connect();
 }
 
+// Sending a v2 ClientHello after a no-op v3 record must fail.
+TEST_P(SSLv2ClientHelloTest, ConnectAfterEmptyV3Record) {
+  DataBuffer buffer;
+
+  size_t idx = 0;
+  idx = buffer.Write(idx, 0x16, 1);    // handshake
+  idx = buffer.Write(idx, 0x0301, 2);  // record_version
+  (void)buffer.Write(idx, 0U, 2);      // length=0
+
+  SetAvailableCipherSuite(TLS_DHE_RSA_WITH_AES_128_CBC_SHA);
+  EnsureTlsSetup();
+  client_->SendDirect(buffer);
+
+  // Need padding so the connection doesn't just time out. With a v2
+  // ClientHello parsed as a v3 record we will use the record version
+  // as the record length.
+  SetPadding(255);
+
+  ConnectExpectFail();
+  EXPECT_EQ(SSL_ERROR_BAD_CLIENT, server_->error_code());
+}
+
 // Test negotiating TLS 1.3.
 TEST_F(SSLv2ClientHelloTestF, Connect13) {
   EnsureTlsSetup();

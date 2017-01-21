@@ -17,17 +17,17 @@ add_task(function* test_indicatorDrop() {
   let EventUtils = {};
   scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
-  function task_drop(win, urls) {
+  async function drop(win, urls) {
     let dragData = [[{type: "text/plain", data: urls.join("\n")}]];
 
     let listBox = win.document.getElementById("downloadsRichListBox");
     ok(listBox, "download list box present");
 
-    let list = yield Downloads.getList(Downloads.ALL);
+    let list = await Downloads.getList(Downloads.ALL);
 
     let added = new Set();
     let succeeded = new Set();
-    yield new Promise(function(resolve) {
+    await new Promise(resolve => {
       let view = {
         onDownloadAdded: function(download) {
           added.add(download.source.url);
@@ -65,8 +65,8 @@ add_task(function* test_indicatorDrop() {
     win.close();
   });
 
-  yield* task_drop(win, [httpUrl("file1.txt")]);
-  yield* task_drop(win, [httpUrl("file1.txt"),
-                         httpUrl("file2.txt"),
-                         httpUrl("file3.txt")]);
+  yield drop(win, [httpUrl("file1.txt")]);
+  yield drop(win, [httpUrl("file1.txt"),
+                   httpUrl("file2.txt"),
+                   httpUrl("file3.txt")]);
 });

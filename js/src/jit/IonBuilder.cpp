@@ -866,11 +866,16 @@ IonBuilder::processIterators()
     // Find phis that must directly hold an iterator live.
     Vector<MPhi*, 0, SystemAllocPolicy> worklist;
     for (size_t i = 0; i < iterators_.length(); i++) {
-        MInstruction* ins = iterators_[i];
-        for (MUseDefIterator iter(ins); iter; iter++) {
-            if (iter.def()->isPhi()) {
-                if (!worklist.append(iter.def()->toPhi()))
-                    return abort(AbortReason::Alloc);
+        MDefinition* def = iterators_[i];
+        if (def->isPhi()) {
+            if (!worklist.append(def->toPhi()))
+                return abort(AbortReason::Alloc);
+        } else {
+            for (MUseDefIterator iter(def); iter; iter++) {
+                if (iter.def()->isPhi()) {
+                    if (!worklist.append(iter.def()->toPhi()))
+                        return abort(AbortReason::Alloc);
+                }
             }
         }
     }
@@ -1999,7 +2004,12 @@ IonBuilder::inspectOpcode(JSOp op)
       case JSOP_CALLITER:
       case JSOP_NEW:
       case JSOP_SUPERCALL:
-        return jsop_call(GET_ARGC(pc), (JSOp)*pc == JSOP_NEW || (JSOp)*pc == JSOP_SUPERCALL);
+        MOZ_TRY(jsop_call(GET_ARGC(pc), (JSOp)*pc == JSOP_NEW || (JSOp)*pc == JSOP_SUPERCALL));
+        if (op == JSOP_CALLITER) {
+            if (!outermostBuilder()->iterators_.append(current->peek(-1)))
+                return abort(AbortReason::Alloc);
+        }
+        return Ok();
 
       case JSOP_EVAL:
       case JSOP_STRICTEVAL:

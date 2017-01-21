@@ -8,7 +8,7 @@ const URL = ROOT + "browser_466937_sample.html";
 /**
  * Bug 466937 - Prevent file stealing with sessionstore.
  */
-add_task(function test_prevent_file_stealing() {
+add_task(function* test_prevent_file_stealing() {
   // Add a tab with some file input fields.
   let tab = gBrowser.addTab(URL);
   let browser = tab.linkedBrowser;

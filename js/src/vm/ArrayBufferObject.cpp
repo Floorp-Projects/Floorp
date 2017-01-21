@@ -102,7 +102,7 @@ js::ToClampedIndex(JSContext* cx, HandleValue v, uint32_t length, uint32_t* out)
 static JSObject*
 CreateArrayBufferPrototype(JSContext* cx, JSProtoKey key)
 {
-    return cx->global()->createBlankPrototype(cx, &ArrayBufferObject::protoClass_);
+    return GlobalObject::createBlankPrototype(cx, cx->global(), &ArrayBufferObject::protoClass_);
 }
 
 static const ClassOps ArrayBufferObjectClassOps = {

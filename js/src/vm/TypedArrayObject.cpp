@@ -362,7 +362,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             return nullptr;
 
         const Class* clasp = TypedArrayObject::protoClassForType(ArrayTypeID());
-        return global->createBlankPrototypeInheriting(cx, clasp, typedArrayProto);
+        return GlobalObject::createBlankPrototypeInheriting(cx, global, clasp, typedArrayProto);
     }
 
     static JSObject*
@@ -1915,7 +1915,7 @@ DataViewObject::constructWrapped(JSContext* cx, HandleObject bufobj, const CallA
 
     Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
     if (!proto) {
-        proto = global->getOrCreateDataViewPrototype(cx);
+        proto = GlobalObject::getOrCreateDataViewPrototype(cx, global);
         if (!proto)
             return false;
     }
@@ -2912,12 +2912,13 @@ DataViewObject::initClass(JSContext* cx)
     if (global->isStandardClassResolved(JSProto_DataView))
         return true;
 
-    RootedNativeObject proto(cx, global->createBlankPrototype(cx, &DataViewObject::protoClass));
+    RootedNativeObject proto(cx, GlobalObject::createBlankPrototype(cx, global,
+                                                                    &DataViewObject::protoClass));
     if (!proto)
         return false;
 
-    RootedFunction ctor(cx, global->createConstructor(cx, DataViewObject::class_constructor,
-                                                      cx->names().DataView, 3));
+    RootedFunction ctor(cx, GlobalObject::createConstructor(cx, DataViewObject::class_constructor,
+                                                            cx->names().DataView, 3));
     if (!ctor)
         return false;
 
