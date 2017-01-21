@@ -18,19 +18,8 @@ function makeURI(url) {
   return Services.io.newURI(url);
 }
 
-function serializeInputStream(aStream) {
-  let data = {
-    content: NetUtil.readInputStreamToString(aStream, aStream.available()),
-  };
-
-  if (aStream instanceof Ci.nsIMIMEInputStream) {
-    data.headers = new Map();
-    aStream.visitHeaders((name, value) => {
-      data.headers.set(name, value);
-    });
-  }
-
-  return data;
+function readInputStreamToString(aStream) {
+  return NetUtil.readInputStreamToString(aStream, aStream.available());
 }
 
 function RemoteWebNavigation() {
@@ -92,8 +81,8 @@ RemoteWebNavigation.prototype = {
       flags: aLoadFlags,
       referrer: aReferrer ? aReferrer.spec : null,
       referrerPolicy: aReferrerPolicy,
-      postData: aPostData ? serializeInputStream(aPostData) : null,
-      headers: aHeaders ? serializeInputStream(aHeaders) : null,
+      postData: aPostData ? readInputStreamToString(aPostData) : null,
+      headers: aHeaders ? readInputStreamToString(aHeaders) : null,
       baseURI: aBaseURI ? aBaseURI.spec : null,
       triggeringPrincipal: aTriggeringPrincipal
                            ? Utils.serializePrincipal(aTriggeringPrincipal)

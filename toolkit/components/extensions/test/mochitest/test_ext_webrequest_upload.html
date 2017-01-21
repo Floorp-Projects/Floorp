@@ -69,13 +69,14 @@ add_task(function* test_setup() {
 function background() {
   const FILTERS = {urls: ["<all_urls>"]};
 
+  let requestBodySupported = true;
+
   function onUpload(details) {
     let url = new URL(details.url);
     let upload = url.searchParams.get("upload");
-    if (!upload) {
+    if (!upload || !requestBodySupported) {
       return;
     }
-
     let requestBody = details.requestBody;
     browser.test.log(`onBeforeRequest upload: ${details.url} ${JSON.stringify(details.requestBody)}`);
     browser.test.assertTrue(!!requestBody, `Intercepted upload ${details.url} #${details.requestId} ${upload} have a requestBody`);
@@ -109,8 +110,21 @@ function background() {
     onUpload(details);
   };
 
-  browser.webRequest.onBeforeRequest.addListener(
-    onBeforeRequest, FILTERS, ["requestBody"]);
+  try {
+    browser.webRequest.onBeforeRequest.addListener(
+      onBeforeRequest, FILTERS, ["requestBody"]);
+  } catch (e) {
+    browser.test.assertTrue(/\brequestBody\b/.test(e.message),
+                            "Request body is unsupported");
+
+    // requestBody is disabled in release builds
+    if (!/\brequestBody\b/.test(e.message)) {
+      throw e;
+    }
+
+    browser.webRequest.onBeforeRequest.addListener(
+      onBeforeRequest, FILTERS);
+  }
 }
 
 add_task(function* test_xhr_forms() {
