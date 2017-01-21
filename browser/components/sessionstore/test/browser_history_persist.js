@@ -7,7 +7,7 @@
  * Ensure that history entries that should not be persisted are restored in the
  * same state.
  */
-add_task(function check_history_not_persisted() {
+add_task(function* check_history_not_persisted() {
   // Create an about:blank tab
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
@@ -44,7 +44,7 @@ add_task(function check_history_not_persisted() {
  * Check that entries default to being persisted when the attribute doesn't
  * exist
  */
-add_task(function check_history_default_persisted() {
+add_task(function* check_history_default_persisted() {
   // Create an about:blank tab
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;

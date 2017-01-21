@@ -9,7 +9,7 @@ const URL = ROOT + "browser_485482_sample.html";
  * Bug 485482 - Make sure that we produce valid XPath expressions even for very
  * weird HTML documents.
  */
-add_task(function test_xpath_exp_for_strange_documents() {
+add_task(function* test_xpath_exp_for_strange_documents() {
   // Load a page with weird tag names.
   let tab = gBrowser.addTab(URL);
   let browser = tab.linkedBrowser;

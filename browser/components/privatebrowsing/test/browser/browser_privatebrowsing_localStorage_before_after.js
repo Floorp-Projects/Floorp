@@ -10,7 +10,7 @@
 // Step 2: Load the same page in a non-private tab, ensuring that the storage instance reports only one item
 //   existing.
 
-add_task(function test() {
+add_task(function* test() {
   let testURI = "about:blank";
   let prefix = 'http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/';
 
