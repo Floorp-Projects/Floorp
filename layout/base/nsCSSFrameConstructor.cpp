@@ -4187,6 +4187,13 @@ ConnectAnonymousTreeDescendants(nsIContent* aParent,
   }
 }
 
+void SetNativeAnonymousBitOnDescendants(nsIContent *aRoot)
+{
+  for (nsIContent* curr = aRoot; curr; curr = curr->GetNextNode(aRoot)) {
+    curr->SetFlags(NODE_IS_NATIVE_ANONYMOUS);
+  }
+}
+
 nsresult
 nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
                                            nsIFrame* aParentFrame,
@@ -4208,15 +4215,16 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
     nsIContent* content = aContent[i].mContent;
     NS_ASSERTION(content, "null anonymous content?");
 
+    ConnectAnonymousTreeDescendants(content, aContent[i].mChildren);
+
     // least-surprise CSS binding until we do the SVG specified
     // cascading rules for <svg:use> - bug 265894
     if (aParentFrame->GetType() == nsGkAtoms::svgUseFrame) {
       content->SetFlags(NODE_IS_ANONYMOUS_ROOT);
     } else {
       content->SetIsNativeAnonymousRoot();
+      SetNativeAnonymousBitOnDescendants(content);
     }
-
-    ConnectAnonymousTreeDescendants(content, aContent[i].mChildren);
 
     bool anonContentIsEditable = content->HasFlag(NODE_IS_EDITABLE);
 
