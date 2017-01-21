@@ -3,10 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMCSSRule.idl"
+#include "nsISupports.idl"
+
+interface nsIDOMCSSStyleDeclaration;
 
 [scriptable, uuid(a281a8b4-eaa2-49a8-8b97-acc2814a57c9)]
-interface nsIDOMCSSKeyframeRule : nsIDOMCSSRule
+interface nsIDOMCSSKeyframeRule : nsISupports
 {
            attribute DOMString                 keyText;
   readonly attribute nsIDOMCSSStyleDeclaration style;

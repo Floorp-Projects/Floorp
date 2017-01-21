@@ -569,13 +569,98 @@ option('--enable-stylo', env='STYLO_ENABLED', nargs=0,
             'This requires either building servo within Gecko\'s cargo phase '
             'or passing --with-servo')
 
-@depends('--enable-stylo')
-def stylo(value):
-    if value:
-        return True
+# We support setting up the appropriate options for Stylo's build-time
+# bindings generation via setting LLVM_CONFIG or by providing explicit
+# configure options.  The Windows installer of LLVM/Clang doesn't provide
+# llvm-config, so we need both methods to support all of our tier-1
+# platforms.
+llvm_config = check_prog('LLVM_CONFIG', ('llvm-config',),
+                         what='llvm-config', allow_missing=True)
 
-set_config('MOZ_STYLO', stylo)
-set_define('MOZ_STYLO', stylo)
+option('--disable-stylo-build-bindgen',
+       help='Enable build-time bindgen for Stylo')
+
+option('--with-libclang-path', nargs=1,
+       help='Absolute path to Clang/LLVM libraries for Stylo (at least version 3.9.0')
+option('--with-clang-path', nargs=1,
+       help='Absolute path to a Clang binary for Stylo bindgen (at least version 3.9.0)')
+
+def invoke_llvm_config(llvm_config, *options):
+    '''Invoke llvm_config with the given options and return the first line of
+    output.'''
+    lines = check_cmd_output(llvm_config, *options).splitlines()
+    return lines[0]
+
+@imports(_from='textwrap', _import='dedent')
+def check_minimum_llvm_config_version(llvm_config):
+    version = Version(invoke_llvm_config(llvm_config, '--version'))
+    min_version = Version('3.9.0')
+    if version < min_version:
+        die(dedent('''\
+        llvm installation {} is too old.
+
+        To compile Stylo, please install at least version {} of
+        Clang + LLVM and ensure that the 'llvm-config' from that
+        installation is first on your path.
+
+        You can verify this by typing 'llvm-config --version'.
+        '''.format(version, min_version)))
+
+@depends(llvm_config, '--with-libclang-path', '--with-clang-path')
+@imports(_from='textwrap', _import='dedent')
+def bindgen_config_paths(llvm_config, libclang_path, clang_path):
+    if not libclang_path and not clang_path:
+        # We must have LLVM_CONFIG in this case.
+        if not llvm_config:
+            return None
+
+        check_minimum_llvm_config_version(llvm_config)
+        return namespace(
+            libclang_path=invoke_llvm_config(llvm_config, '--libdir'),
+            clang_path=os.path.join(invoke_llvm_config(llvm_config, '--bindir'),
+                                    'clang'),
+        )
+
+    if (not libclang_path and clang_path) or \
+       (libclang_path and not clang_path):
+        die(dedent('''\
+        You must provide both of --with-libclang-path and --with-clang-path
+        or neither of them.'''))
+
+    return namespace(
+        libclang_path=libclang_path[0],
+        clang_path=clang_path[0],
+    )
+
+@depends('--enable-stylo', bindgen_config_paths, '--enable-stylo-build-bindgen')
+@imports(_from='textwrap', _import='dedent')
+def stylo(stylo_enabled, bindgen_config_paths, bindgen_enabled):
+    if not stylo_enabled:
+        return None
+    elif not bindgen_enabled:
+        return namespace(
+            enabled=bool(stylo_enabled)
+        )
+    elif not bindgen_config_paths:
+        die(dedent('''\
+        Could not find LLVM/Clang installation for compiling stylo build-time
+        bindgen.  Please put 'llvm-config' in your PATH, specify the
+        'LLVM_CONFIG' environment variable, or pass the '--with-libclang-path'
+        and '--with-clang-path' options to configure.'''))
+
+    return namespace(
+        enabled=bool(stylo_enabled),
+        libclang_path=bindgen_config_paths.libclang_path,
+        clang_path=bindgen_config_paths.clang_path,
+        bindgen_enabled=bool(bindgen_enabled),
+    )
+
+set_config('MOZ_STYLO', delayed_getattr(stylo, 'enabled'))
+set_define('MOZ_STYLO', delayed_getattr(stylo, 'enabled'))
+
+set_config('MOZ_LIBCLANG_PATH', delayed_getattr(stylo, 'libclang_path'))
+set_config('MOZ_CLANG_PATH', delayed_getattr(stylo, 'clang_path'))
+set_config('MOZ_STYLO_BINDGEN', delayed_getattr(stylo, 'bindgen_enabled'))
 
 @depends(stylo, dmd)
 def jemalloc(stylo, dmd):

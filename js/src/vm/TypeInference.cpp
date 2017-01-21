@@ -4250,8 +4250,10 @@ EnsureHasAutoClearTypeInferenceStateOnOOM(AutoClearTypeInferenceStateOnOOM*& oom
                                           Maybe<AutoClearTypeInferenceStateOnOOM>& fallback)
 {
     if (!oom) {
-        if (zone->types.activeAnalysis) {
-            oom = &zone->types.activeAnalysis->oom;
+        if (AutoEnterAnalysis* analysis = zone->types.activeAnalysis) {
+            if (analysis->oom.isNothing())
+                analysis->oom.emplace(zone);
+            oom = analysis->oom.ptr();
         } else {
             fallback.emplace(zone);
             oom = &fallback.ref();
@@ -4444,6 +4446,7 @@ TypeZone::TypeZone(Zone* zone)
     sweepTypeLifoAlloc(TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     sweepCompilerOutputs(nullptr),
     sweepReleaseTypes(false),
+    sweepingTypes(false),
     activeAnalysis(nullptr)
 {
 }
@@ -4452,6 +4455,7 @@ TypeZone::~TypeZone()
 {
     js_delete(compilerOutputs);
     js_delete(sweepCompilerOutputs);
+    MOZ_RELEASE_ASSERT(!sweepingTypes);
 }
 
 void
@@ -4525,8 +4529,17 @@ TypeZone::clearAllNewScriptsOnOOM()
     }
 }
 
+AutoClearTypeInferenceStateOnOOM::AutoClearTypeInferenceStateOnOOM(Zone* zone)
+  : zone(zone), oom(false)
+{
+    MOZ_RELEASE_ASSERT(CurrentThreadCanAccessZone(zone));
+    zone->types.setSweepingTypes(true);
+}
+
 AutoClearTypeInferenceStateOnOOM::~AutoClearTypeInferenceStateOnOOM()
 {
+    zone->types.setSweepingTypes(false);
+
     if (oom) {
         JSRuntime* rt = zone->runtimeFromMainThread();
         js::CancelOffThreadIonCompile(rt);

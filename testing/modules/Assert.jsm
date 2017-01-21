@@ -314,7 +314,10 @@ function expectedException(actual, expected) {
 
   if (instanceOf(expected, "RegExp")) {
     return expected.test(actual);
-  } else if (actual instanceof expected) {
+  // We need to guard against the right hand parameter of "instanceof" lacking
+  // the "prototype" property, which is true of arrow functions in particular.
+  } else if (!(typeof expected === "function" && !expected.prototype) &&
+             actual instanceof expected) {
     return true;
   } else if (expected.call({}, actual) === true) {
     return true;

@@ -293,7 +293,7 @@ struct AutoEnterAnalysis
     gc::AutoSuppressGC suppressGC;
 
     // Allow clearing inference info on OOM during incremental sweeping.
-    AutoClearTypeInferenceStateOnOOM oom;
+    mozilla::Maybe<AutoClearTypeInferenceStateOnOOM> oom;
 
     // Pending recompilations to perform before execution of JIT code can resume.
     RecompileInfoVector pendingRecompiles;
@@ -305,14 +305,14 @@ struct AutoEnterAnalysis
     Zone* zone;
 
     explicit AutoEnterAnalysis(ExclusiveContext* cx)
-      : suppressGC(cx), oom(cx->zone()), suppressMetadata(cx)
+      : suppressGC(cx), suppressMetadata(cx)
     {
         init(cx->defaultFreeOp(), cx->zone());
     }
 
     AutoEnterAnalysis(FreeOp* fop, Zone* zone)
       : suppressGC(zone->runtimeFromMainThread()->contextFromMainThread()),
-        oom(zone), suppressMetadata(zone)
+        suppressMetadata(zone)
     {
         init(fop, zone);
     }
@@ -333,8 +333,10 @@ struct AutoEnterAnalysis
         this->freeOp = fop;
         this->zone = zone;
 
-        if (!zone->types.activeAnalysis)
+        if (!zone->types.activeAnalysis) {
+            MOZ_RELEASE_ASSERT(!zone->types.sweepingTypes);
             zone->types.activeAnalysis = this;
+        }
     }
 };
 

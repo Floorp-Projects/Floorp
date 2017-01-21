@@ -17,9 +17,7 @@
 #include "webrtc/modules/video_coding/codecs/vp9/include/vp9.h"
 #include "webrtc/modules/video_coding/codecs/vp9/vp9_frame_buffer_pool.h"
 
-#ifdef LIBVPX_SVC
 #include "vpx/svc_context.h"
-#endif
 #include "vpx/vpx_decoder.h"
 #include "vpx/vpx_encoder.h"
 
@@ -84,7 +82,6 @@ class VP9EncoderImpl : public VP9Encoder {
   bool ExplicitlyConfiguredSpatialLayers() const;
   bool SetSvcRates();
 
-#ifdef LIBVPX_SVC
   // Used for flexible mode to set the flags and buffer references used
   // by the encoder. Also calculates the references used by the RTP
   // packetizer.
@@ -93,7 +90,6 @@ class VP9EncoderImpl : public VP9Encoder {
   // state used to calculate references.
   vpx_svc_ref_frame_config GenerateRefsAndFlags(
       const SuperFrameRefSettings& settings);
-#endif
 
   virtual int GetEncodedLayerFrame(const vpx_codec_cx_pkt* pkt);
 
@@ -120,9 +116,7 @@ class VP9EncoderImpl : public VP9Encoder {
   vpx_codec_ctx_t* encoder_;
   vpx_codec_enc_cfg_t* config_;
   vpx_image_t* raw_;
-#ifdef LIBVPX_SVC
   SvcInternal_t svc_internal_;
-#endif
   const VideoFrame* input_image_;
   GofInfoVP9 gof_;       // Contains each frame's temporal information for
                          // non-flexible mode.

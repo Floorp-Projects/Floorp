@@ -1,30 +1,27 @@
 {
-    "llvm_revision": "262557",
+    "llvm_revision": "290136",
     "stages": "3",
     "build_libcxx": true,
     "build_type": "Release",
     "assertions": false,
-    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_380/final",
-    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_380/final",
-    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/tags/RELEASE_380/final",
-    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_380/final",
-    "libcxxabi_repo": "https://llvm.org/svn/llvm-project/libcxxabi/tags/RELEASE_380/final",
+    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_390/final",
+    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_390/final",
+    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/tags/RELEASE_390/final",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_390/final",
+    "libcxxabi_repo": "https://llvm.org/svn/llvm-project/libcxxabi/tags/RELEASE_390/final",
     "python_path": "/usr/bin/python2.7",
     "gcc_dir": "/home/worker/workspace/build/src/gcc",
     "cc": "/home/worker/workspace/build/src/gcc/bin/gcc",
     "cxx": "/home/worker/workspace/build/src/gcc/bin/g++",
     "patches": {
         "macosx64": [
-          "llvm-debug-frame.patch",
-          "return-empty-string-non-mangled.patch"
+          "llvm-debug-frame.patch"
         ],
         "linux64": [
-          "llvm-debug-frame.patch",
-          "return-empty-string-non-mangled.patch"
+          "llvm-debug-frame.patch"
         ],
         "linux32": [
-          "llvm-debug-frame.patch",
-          "return-empty-string-non-mangled.patch"
+          "llvm-debug-frame.patch"
         ]
     }
 }

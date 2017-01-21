@@ -305,8 +305,8 @@ var AboutNetAndCertErrorListener = {
         learnMoreLink.href = baseURL + "security-error";
         break;
 
-      // in case the certificate expired we make sure the system clock
-      // matches settings server (kinto) time
+      // In case the certificate expired we make sure the system clock
+      // matches the blocklist ping (Kinto) time and is not before the build date.
       case SEC_ERROR_EXPIRED_CERTIFICATE:
       case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
       case SEC_ERROR_OCSP_FUTURE_RESPONSE:
@@ -314,27 +314,55 @@ var AboutNetAndCertErrorListener = {
       case MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE:
       case MOZILLA_PKIX_ERROR_NOT_YET_VALID_ISSUER_CERTIFICATE:
 
-        // use blocklist stats if available
+        // We check against Kinto time first if available, because that allows us
+        // to give the user an approximation of what the correct time is.
+        let difference = 0;
         if (Services.prefs.getPrefType(PREF_BLOCKLIST_CLOCK_SKEW_SECONDS)) {
-          let difference = Services.prefs.getIntPref(PREF_BLOCKLIST_CLOCK_SKEW_SECONDS);
+          difference = Services.prefs.getIntPref(PREF_BLOCKLIST_CLOCK_SKEW_SECONDS);
+        }
 
-          // if the difference is more than a day
-          if (Math.abs(difference) > 60 * 60 * 24) {
+        // If the difference is more than a day.
+        if (Math.abs(difference) > 60 * 60 * 24) {
+          let formatter = new Intl.DateTimeFormat();
+          let systemDate = formatter.format(new Date());
+          // negative difference means local time is behind server time
+          let actualDate = formatter.format(new Date(Date.now() - difference * 1000));
+
+          content.document.getElementById("wrongSystemTime_URL")
+            .textContent = content.document.location.hostname;
+          content.document.getElementById("wrongSystemTime_systemDate")
+            .textContent = systemDate;
+          content.document.getElementById("wrongSystemTime_actualDate")
+            .textContent = actualDate;
+
+          content.document.getElementById("errorShortDesc")
+            .style.display = "none";
+          content.document.getElementById("wrongSystemTimePanel")
+            .style.display = "block";
+
+        // If there is no clock skew with Kinto servers, check against the build date.
+        // (The Kinto ping could have happened when the time was still right, or not at all)
+        } else {
+          let appBuildID = Services.appinfo.appBuildID;
+
+          let year = parseInt(appBuildID.substr(0, 4), 10);
+          let month = parseInt(appBuildID.substr(4, 2), 10) - 1;
+          let day = parseInt(appBuildID.substr(6, 2), 10);
+
+          let buildDate = new Date(year, month, day);
+          let systemDate = new Date();
+
+          if (buildDate > systemDate) {
             let formatter = new Intl.DateTimeFormat();
-            let systemDate = formatter.format(new Date());
-            // negative difference means local time is behind server time
-            let actualDate = formatter.format(new Date(Date.now() - difference * 1000));
 
-            content.document.getElementById("wrongSystemTime_URL")
+            content.document.getElementById("wrongSystemTimeWithoutReference_URL")
               .textContent = content.document.location.hostname;
-            content.document.getElementById("wrongSystemTime_systemDate")
-              .textContent = systemDate;
-            content.document.getElementById("wrongSystemTime_actualDate")
-              .textContent = actualDate;
+            content.document.getElementById("wrongSystemTimeWithoutReference_systemDate")
+              .textContent = formatter.format(systemDate);
 
             content.document.getElementById("errorShortDesc")
               .style.display = "none";
-            content.document.getElementById("wrongSystemTimePanel")
+            content.document.getElementById("wrongSystemTimeWithoutReferencePanel")
               .style.display = "block";
           }
         }
