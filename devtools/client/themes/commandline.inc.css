@@ -9,7 +9,7 @@
 /* NOTE: THESE NEED TO STAY IN SYNC WITH LIGHT-THEME.CSS AND DARK-THEME.CSS.
    We are copy/pasting variables from light-theme and dark-theme,
    since they aren't loaded in this context (within browser.css). */
-:root[devtoolstheme="light"] #developer-toolbar {
+#browser-bottombox[devtoolstheme="light"] #developer-toolbar {
   --gcli-background-color: #fcfcfc; /* --theme-tab-toolbar-background */
   --gcli-input-background: #fcfcfc; /* --theme-toolbar-background */
   --gcli-input-focused-background: #ffffff; /* --theme-sidebar-background */
@@ -21,7 +21,7 @@
   --command-line-image-focus: url(chrome://devtools/skin/images/commandline-icon.svg#light-theme-focus); /* --theme-command-line-image-focus */
 }
 
-:root[devtoolstheme="dark"] #developer-toolbar {
+#browser-bottombox[devtoolstheme="dark"] #developer-toolbar {
   --gcli-background-color: #272b35; /* --theme-toolbar-background */
   --gcli-input-background: #272b35; /* --theme-tab-toolbar-background */
   --gcli-input-focused-background: #272b35; /* --theme-tab-toolbar-background */
@@ -54,8 +54,8 @@
   margin: auto 10px;
 }
 
-:root[devtoolstheme="light"] #developer-toolbar > .developer-toolbar-button:not([checked=true]) > image,
-:root[devtoolstheme="light"] .gclitoolbar-input-node:not([focused=true])::before  {
+#browser-bottombox[devtoolstheme="light"] #developer-toolbar > .developer-toolbar-button:not([checked=true]) > image,
+#browser-bottombox[devtoolstheme="light"] .gclitoolbar-input-node:not([focused=true])::before  {
   filter: invert(1);
 }
 
@@ -65,7 +65,7 @@
 }
 
 /* The toolkit close button is low contrast in the dark theme so invert it. */
-:root[devtoolstheme="dark"] #developer-toolbar > .close-icon:not(:hover) > image {
+#browser-bottombox[devtoolstheme="dark"] #developer-toolbar > .close-icon:not(:hover) > image {
   filter: invert(1);
 }
 

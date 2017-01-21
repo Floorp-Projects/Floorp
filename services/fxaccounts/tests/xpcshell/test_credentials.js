@@ -67,8 +67,6 @@ add_task(function* test_onepw_setup_credentials() {
 });
 
 add_task(function* test_client_stretch_kdf() {
-  let pbkdf2 = CryptoUtils.pbkdf2Generate;
-  let hkdf = CryptoUtils.hkdf;
   let expected = vectors["client stretch-KDF"];
 
   let email = h2s(expected.email);

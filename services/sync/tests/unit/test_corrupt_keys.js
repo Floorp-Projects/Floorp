@@ -90,8 +90,6 @@ add_task(async function test_locally_changed_keys() {
     _("Tabs modified: " + johndoe.modified("tabs"));
     do_check_true(johndoe.modified("tabs") > 0);
 
-    let coll_modified = Service.collectionKeys.lastModified;
-
     // Let's create some server side history records.
     let liveKeys = Service.collectionKeys.keyForCollection("history");
     _("Keys now: " + liveKeys.keyPair);
@@ -144,7 +142,6 @@ add_task(async function test_locally_changed_keys() {
     _("Keys now: " + Service.collectionKeys.keyForCollection("history").keyPair);
 
     // And look! We downloaded history!
-    let store = Service.engineManager.get("history")._store;
     do_check_true(await promiseIsURIVisited("http://foo/bar?record-no--0"));
     do_check_true(await promiseIsURIVisited("http://foo/bar?record-no--1"));
     do_check_true(await promiseIsURIVisited("http://foo/bar?record-no--2"));
@@ -202,7 +199,6 @@ add_task(async function test_locally_changed_keys() {
 });
 
 function run_test() {
-  let logger = Log.repository.rootLogger;
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
   validate_all_future_pings();
 

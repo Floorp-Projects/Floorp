@@ -900,7 +900,6 @@ add_task(async function test_engine_applyFailed() {
     Svc.Obs.notify("weave:engine:sync:applied", {newFailed:1}, "catapult");
   };
 
-  let log = Log.repository.getLogger("Sync.ErrorHandler");
   Svc.Prefs.set("log.appender.file.logOnError", true);
 
   let promiseObserved = promiseOneObserver("weave:service:reset-file-log");

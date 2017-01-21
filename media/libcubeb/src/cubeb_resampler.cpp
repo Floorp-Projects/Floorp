@@ -124,7 +124,6 @@ cubeb_resampler_speex<T, InputProcessor, OutputProcessor>
   T * out_unprocessed = nullptr;
   long output_frames_before_processing = 0;
 
-
   /* fill directly the input buffer of the output processor to save a copy */
   output_frames_before_processing =
     output_processor->input_needed_for_output(output_frames_needed);
@@ -173,7 +172,6 @@ cubeb_resampler_speex<T, InputProcessor, OutputProcessor>
   * available number outside resampler is the initial number of frames. */
   return (*input_frames_count) * (got / resampled_frame_count);
 }
-
 
 template<typename T, typename InputProcessor, typename OutputProcessor>
 long
