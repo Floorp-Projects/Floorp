@@ -31,7 +31,6 @@ public:
   void FinalizeIceRestart();
   void RollbackIceRestart();
 
-  NrIceStats Destroy();
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrIceCtxHandler)
 
@@ -40,7 +39,7 @@ private:
                   bool offerer,
                   NrIceCtx::Policy policy);
   NrIceCtxHandler() = delete;
-  ~NrIceCtxHandler();
+  ~NrIceCtxHandler() {}
   DISALLOW_COPY_ASSIGN(NrIceCtxHandler);
 
   RefPtr<NrIceCtx> current_ctx;
