@@ -1452,7 +1452,7 @@ extern bool
 NativeLookupOwnProperty(ExclusiveContext* cx,
                         typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
                         typename MaybeRooted<jsid, allowGC>::HandleType id,
-                        typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp);
+                        typename MaybeRooted<PropertyResult, allowGC>::MutableHandleType propp);
 
 /*
  * Get a property from `receiver`, after having already done a lookup and found

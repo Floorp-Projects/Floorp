@@ -183,6 +183,8 @@ EXPORTS.mozilla.layers += [
     'ipc/SharedRGBImage.h',
     'ipc/SynchronousTask.h',
     'ipc/TextureForwarder.h',
+    'ipc/UiCompositorControllerChild.h',
+    'ipc/UiCompositorControllerParent.h',
     'ipc/VideoBridgeChild.h',
     'ipc/VideoBridgeParent.h',
     'LayerMetricsWrapper.h',
@@ -347,6 +349,8 @@ UNIFIED_SOURCES += [
     'ipc/ShadowLayers.cpp',
     'ipc/SharedPlanarYCbCrImage.cpp',
     'ipc/SharedRGBImage.cpp',
+    'ipc/UiCompositorControllerChild.cpp',
+    'ipc/UiCompositorControllerParent.cpp',
     'ipc/VideoBridgeChild.cpp',
     'ipc/VideoBridgeParent.cpp',
     'LayerScope.cpp',
@@ -394,7 +398,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'opengl/MacIOSurfaceTextureHostOGL.cpp',
     ]
 
-IPDL_SOURCES = [
+IPDL_SOURCES += [
     'ipc/LayersMessages.ipdlh',
     'ipc/LayersSurfaces.ipdlh',
     'ipc/PAPZ.ipdl',
@@ -403,6 +407,7 @@ IPDL_SOURCES = [
     'ipc/PImageBridge.ipdl',
     'ipc/PLayerTransaction.ipdl',
     'ipc/PTexture.ipdl',
+    'ipc/PUiCompositorController.ipdl',
     'ipc/PVideoBridge.ipdl',
 ]
 

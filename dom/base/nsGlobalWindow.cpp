@@ -10675,10 +10675,9 @@ nsGlobalWindow::GetSessionStorage(ErrorResult& aError)
       return nullptr;
     }
 
-    MOZ_ASSERT_IF(!mIsChrome, (principal->GetPrivateBrowsingId() > 0) == IsPrivateBrowsing());
-
     nsCOMPtr<nsIDOMStorage> storage;
     aError = storageManager->CreateStorage(AsInner(), principal, documentURI,
+                                           IsPrivateBrowsing(),
                                            getter_AddRefs(storage));
     if (aError.Failed()) {
       return nullptr;
@@ -10741,12 +10740,9 @@ nsGlobalWindow::GetLocalStorage(ErrorResult& aError)
       }
     }
 
-    //XXX huseby -- was causing crashes see bug 1321969. Bug 1322760 covers
-    //investigating and fixing the following assert.
-    //MOZ_DIAGNOSTIC_ASSERT((principal->GetPrivateBrowsingId() > 0) == IsPrivateBrowsing());
-
     nsCOMPtr<nsIDOMStorage> storage;
     aError = storageManager->CreateStorage(AsInner(), principal, documentURI,
+                                           IsPrivateBrowsing(),
                                            getter_AddRefs(storage));
     if (aError.Failed()) {
       return nullptr;
@@ -11599,14 +11595,9 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_OK;
     }
 
-    uint32_t privateBrowsingId = 0;
-    nsIPrincipal *storagePrincipal = changingStorage->GetPrincipal();
-    rv = storagePrincipal->GetPrivateBrowsingId(&privateBrowsingId);
-    if (NS_FAILED(rv)) {
-      return rv;
+    if (changingStorage->IsPrivate() != IsPrivateBrowsing()) {
+      return NS_OK;
     }
-
-    MOZ_ASSERT((privateBrowsingId > 0) == isPrivateBrowsing);
 
     switch (changingStorage->GetType())
     {

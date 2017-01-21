@@ -54,6 +54,7 @@ class ObjectBox;
     F(TRUE) \
     F(FALSE) \
     F(NULL) \
+    F(RAW_UNDEFINED) \
     F(THIS) \
     F(FUNCTION) \
     F(MODULE) \
@@ -406,7 +407,8 @@ IsTypeofKind(ParseNodeKind kind)
  * PNK_NUMBER   dval        pn_dval: double value of numeric literal
  * PNK_TRUE,    nullary     pn_op: JSOp bytecode
  * PNK_FALSE,
- * PNK_NULL
+ * PNK_NULL,
+ * PNK_RAW_UNDEFINED
  *
  * PNK_THIS,        unary   pn_kid: '.this' Name if function `this`, else nullptr
  * PNK_SUPERBASE    unary   pn_kid: '.this' Name
@@ -686,7 +688,8 @@ class ParseNode
                isKind(PNK_STRING) ||
                isKind(PNK_TRUE) ||
                isKind(PNK_FALSE) ||
-               isKind(PNK_NULL);
+               isKind(PNK_NULL) ||
+               isKind(PNK_RAW_UNDEFINED);
     }
 
     /* Return true if this node appears in a Directive Prologue. */
@@ -1141,6 +1144,16 @@ class NullLiteral : public ParseNode
     explicit NullLiteral(const TokenPos& pos) : ParseNode(PNK_NULL, JSOP_NULL, PN_NULLARY, pos) { }
 };
 
+// This is only used internally, currently just for tagged templates.
+// It represents the value 'undefined' (aka `void 0`), like NullLiteral
+// represents the value 'null'.
+class RawUndefinedLiteral : public ParseNode
+{
+  public:
+    explicit RawUndefinedLiteral(const TokenPos& pos)
+      : ParseNode(PNK_RAW_UNDEFINED, JSOP_UNDEFINED, PN_NULLARY, pos) { }
+};
+
 class BooleanLiteral : public ParseNode
 {
   public:
@@ -1361,6 +1374,7 @@ ParseNode::isConstant()
       case PNK_STRING:
       case PNK_TEMPLATE_STRING:
       case PNK_NULL:
+      case PNK_RAW_UNDEFINED:
       case PNK_FALSE:
       case PNK_TRUE:
         return true;

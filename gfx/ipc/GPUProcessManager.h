@@ -193,6 +193,7 @@ private:
 
   void EnsureImageBridgeChild();
   void EnsureVRManager();
+  void EnsureUiCompositorController();
 
   RefPtr<CompositorSession> CreateRemoteSession(
     nsBaseWidget* aWidget,
