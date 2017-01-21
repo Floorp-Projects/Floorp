@@ -192,17 +192,17 @@ AutoRooterGetterSetter::AutoRooterGetterSetter(ExclusiveContext* cx, uint8_t att
 }
 
 static inline uint8_t
-GetShapeAttributes(JSObject* obj, Shape* shape)
+GetPropertyAttributes(JSObject* obj, PropertyResult prop)
 {
     MOZ_ASSERT(obj->isNative());
 
-    if (IsImplicitDenseOrTypedArrayElement(shape)) {
+    if (prop.isDenseOrTypedArrayElement()) {
         if (obj->is<TypedArrayObject>())
             return JSPROP_ENUMERATE | JSPROP_PERMANENT;
         return obj->as<NativeObject>().getElementsHeader()->elementAttributes();
     }
 
-    return shape->attributes();
+    return prop.shape()->attributes();
 }
 
 } /* namespace js */

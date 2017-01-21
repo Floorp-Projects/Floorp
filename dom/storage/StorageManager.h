@@ -95,6 +95,7 @@ private:
                               mozIDOMWindow* aWindow,
                               nsIPrincipal* aPrincipal,
                               const nsAString& aDocumentURI,
+                              bool aPrivate,
                               nsIDOMStorage** aRetval);
 
   // Suffix->origin->cache map

@@ -33,6 +33,11 @@
 #include "mozilla/dom/VideoDecoderManagerParent.h"
 #include "MediaPrefs.h"
 
+#if defined(MOZ_WIDGET_ANDROID)
+#include "mozilla/widget/AndroidUiThread.h"
+#include "mozilla/layers/UiCompositorControllerChild.h"
+#endif // defined(MOZ_WIDGET_ANDROID)
+
 namespace mozilla {
 namespace gfx {
 
@@ -228,6 +233,44 @@ GPUProcessManager::EnsureVRManager()
   mGPUChild->SendInitVRManager(Move(parentPipe));
   VRManagerChild::InitWithGPUProcess(Move(childPipe));
 }
+
+#if defined(MOZ_WIDGET_ANDROID)
+void
+GPUProcessManager::EnsureUiCompositorController()
+{
+  if (UiCompositorControllerChild::IsInitialized()) {
+    return;
+  }
+
+  EnsureGPUReady();
+
+  RefPtr<nsThread> uiThread;
+
+  uiThread = GetAndroidUiThread();
+
+  MOZ_ASSERT(uiThread);
+
+  if (!mGPUChild) {
+    UiCompositorControllerChild::InitSameProcess(uiThread);
+    return;
+  }
+
+  ipc::Endpoint<PUiCompositorControllerParent> parentPipe;
+  ipc::Endpoint<PUiCompositorControllerChild> childPipe;
+  nsresult rv = PUiCompositorController::CreateEndpoints(
+    mGPUChild->OtherPid(),
+    base::GetCurrentProcId(),
+    &parentPipe,
+    &childPipe);
+  if (NS_FAILED(rv)) {
+    DisableGPUProcess("Failed to create PUiCompositorController endpoints");
+    return;
+  }
+
+  mGPUChild->SendInitUiCompositorController(Move(parentPipe));
+  UiCompositorControllerChild::InitWithGPUProcess(uiThread, mProcessToken, Move(childPipe));
+}
+#endif // defined(MOZ_WIDGET_ANDROID)
 
 void
 GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost)
@@ -482,6 +525,9 @@ GPUProcessManager::DestroyProcess()
     mVsyncBridge->Close();
     mVsyncBridge = nullptr;
   }
+#if defined(MOZ_WIDGET_ANDROID)
+  UiCompositorControllerChild::Shutdown();
+#endif // defined(MOZ_WIDGET_ANDROID)
 }
 
 RefPtr<CompositorSession>
@@ -497,6 +543,9 @@ GPUProcessManager::CreateTopLevelCompositor(nsBaseWidget* aWidget,
   EnsureGPUReady();
   EnsureImageBridgeChild();
   EnsureVRManager();
+#if defined(MOZ_WIDGET_ANDROID)
+  EnsureUiCompositorController();
+#endif // defined(MOZ_WIDGET_ANDROID)
 
   if (mGPUChild) {
     RefPtr<CompositorSession> session = CreateRemoteSession(

@@ -31,5 +31,13 @@
 "unpack": true,
 "digest": "b89c40dbf28c2bd54fadf017c15a8789f6e7611252a623cc3a1507e3dd6fc9e5a50d746e81776ba856e33fdc99b4a6413ba7c3ac0aed5f4835705da2b758ef22",
 "size": 1020700
+},
+{
+"version": "clang + llvm 3.9.0, built from SVN r290136",
+"size": 151724092,
+"digest": "4ab5ff2131e4ce4888d38c17feb192c19bc6ede83abef55af7d2f29e2446f6335dc860377fa25cbb0283b3958c0a3d377a3cfdc7705a85d4843e3ab357ddca7f",
+"algorithm": "sha512",
+"filename": "clang.tar.xz",
+"unpack": true
 }
 ]

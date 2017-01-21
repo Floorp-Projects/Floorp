@@ -588,11 +588,11 @@ class AutoClearTypeInferenceStateOnOOM
     Zone* zone;
     bool oom;
 
-  public:
-    explicit AutoClearTypeInferenceStateOnOOM(Zone* zone)
-      : zone(zone), oom(false)
-    {}
+    AutoClearTypeInferenceStateOnOOM(const AutoClearTypeInferenceStateOnOOM&) = delete;
+    void operator=(const AutoClearTypeInferenceStateOnOOM&) = delete;
 
+  public:
+    explicit AutoClearTypeInferenceStateOnOOM(Zone* zone);
     ~AutoClearTypeInferenceStateOnOOM();
 
     void setOOM() {
@@ -1266,6 +1266,8 @@ struct TypeZone
     // information attached to scripts.
     bool sweepReleaseTypes;
 
+    bool sweepingTypes;
+
     // The topmost AutoEnterAnalysis on the stack, if there is one.
     AutoEnterAnalysis* activeAnalysis;
 
@@ -1283,6 +1285,11 @@ struct TypeZone
     void addPendingRecompile(JSContext* cx, JSScript* script);
 
     void processPendingRecompiles(FreeOp* fop, RecompileInfoVector& recompiles);
+
+    void setSweepingTypes(bool sweeping) {
+        MOZ_RELEASE_ASSERT(sweepingTypes != sweeping);
+        sweepingTypes = sweeping;
+    }
 };
 
 enum SpewChannel {

@@ -98,6 +98,8 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CSS_DECLARATION_IMPL_CID)
 
+  // If this ever becomes cycle-collected, please change the CC implementation
+  // for StyleRule to traverse it.
   NS_DECL_ISUPPORTS
 
 private:
