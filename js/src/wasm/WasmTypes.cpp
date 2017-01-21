@@ -151,12 +151,16 @@ WasmHandleThrow()
 
         DebugFrame* frame = iter.debugFrame();
 
-        JSTrapStatus status = Debugger::onExceptionUnwind(cx, frame);
-        if (status == JSTRAP_RETURN) {
-            // Unexpected trap return -- raising error since throw recovery
-            // is not yet implemented in the wasm baseline.
-            // TODO properly handle JSTRAP_RETURN and resume wasm execution.
-            JS_ReportErrorASCII(cx, "Unexpected resumption value from onExceptionUnwind");
+        // Assume JSTRAP_ERROR status if no exception is pending --
+        // no onExceptionUnwind handlers must be fired.
+        if (cx->isExceptionPending()) {
+            JSTrapStatus status = Debugger::onExceptionUnwind(cx, frame);
+            if (status == JSTRAP_RETURN) {
+                // Unexpected trap return -- raising error since throw recovery
+                // is not yet implemented in the wasm baseline.
+                // TODO properly handle JSTRAP_RETURN and resume wasm execution.
+                JS_ReportErrorASCII(cx, "Unexpected resumption value from onExceptionUnwind");
+            }
         }
 
         bool ok = Debugger::onLeaveFrame(cx, frame, nullptr, false);

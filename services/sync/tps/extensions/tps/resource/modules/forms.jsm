@@ -167,12 +167,11 @@ FormData.prototype = {
         // this item doesn't exist yet in the db, so we need to insert it
         return FormDB.insertValue(this.fieldname, this.value,
                                   this.hours_to_us(this.date));
-      } else {
-        /* Right now, we ignore this case.  If bug 552531 is ever fixed,
-           we might need to add code here to update the firstUsed or
-           lastUsed fields, as appropriate.
-         */
       }
+      /* Right now, we ignore this case.  If bug 552531 is ever fixed,
+         we might need to add code here to update the firstUsed or
+         lastUsed fields, as appropriate.
+       */
     });
   },
 

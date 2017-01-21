@@ -50,4 +50,25 @@ var tests = [
       this.notification.remove();
     }
   },
+  // Test that the space key on an anchor element focuses an active notification
+  { id: "Test#3",
+    *run() {
+      this.notifyObj = new BasicNotification(this.id);
+      this.notifyObj.anchorID = "geo-notification-icon";
+      this.notifyObj.addOptions({
+        persistent: true
+      });
+      this.notification = showNotification(this.notifyObj);
+    },
+    *onShown(popup) {
+      checkPopup(popup, this.notifyObj);
+      let anchor = document.getElementById(this.notifyObj.anchorID);
+      anchor.focus();
+      is(document.activeElement, anchor);
+      EventUtils.synthesizeKey(" ", {});
+      is(document.activeElement, popup.childNodes[0].button);
+      this.notification.remove();
+    },
+    onHidden(popup) { }
+  },
 ];

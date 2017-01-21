@@ -97,7 +97,7 @@ add_task(async function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
   Service.identity.username = "foo";
 
   let engine = makeRotaryEngine();
@@ -141,7 +141,7 @@ add_task(async function test_syncStartup_serverHasNewerVersion() {
       "/1.1/foo/storage/meta/global": global.handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
   Service.identity.username = "foo";
 
   let engine = makeRotaryEngine();
@@ -167,7 +167,7 @@ add_task(async function test_syncStartup_syncIDMismatchResetsClient() {
   _("SyncEngine._syncStartup resets sync if syncIDs don't match");
 
   let server = sync_httpd_setup({});
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
   Service.identity.username = "foo";
 
   // global record with a different syncID than our engine has
@@ -207,7 +207,7 @@ add_task(async function test_processIncoming_emptyServer() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
   Service.identity.username = "foo";
 
   let engine = makeRotaryEngine();
@@ -246,7 +246,7 @@ add_task(async function test_processIncoming_createFromServer() {
       "/1.1/foo/storage/rotary/scotsman": collection.wbo("scotsman").handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
   Service.identity.username = "foo";
 
   generateNewKeys(Service.collectionKeys);
@@ -331,7 +331,7 @@ add_task(async function test_processIncoming_reconcile() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
   Service.identity.username = "foo";
 
   let engine = makeRotaryEngine();
@@ -633,7 +633,7 @@ add_task(async function test_processIncoming_mobile_batchSize() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
 
   let engine = makeRotaryEngine();
   let meta_global = Service.recordManager.set(engine.metaURL,
@@ -708,7 +708,7 @@ add_task(async function test_processIncoming_store_toFetch() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
 
   let meta_global = Service.recordManager.set(engine.metaURL,
                                               new WBORecord(engine.metaURL));
@@ -720,11 +720,9 @@ add_task(async function test_processIncoming_store_toFetch() {
     do_check_eq(engine.lastSync, 0);
     do_check_empty(engine._store.items);
 
-    let error;
     try {
       await sync_engine_and_validate_telem(engine, true);
     } catch (ex) {
-      error = ex;
     }
 
     // Only the first two batches have been applied.
@@ -781,7 +779,7 @@ add_task(async function test_processIncoming_resume_toFetch() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
 
   let meta_global = Service.recordManager.set(engine.metaURL,
                                               new WBORecord(engine.metaURL));
@@ -839,7 +837,7 @@ add_task(async function test_processIncoming_applyIncomingBatchSize_smaller() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
 
   let meta_global = Service.recordManager.set(engine.metaURL,
                                               new WBORecord(engine.metaURL));
@@ -895,7 +893,7 @@ add_task(async function test_processIncoming_applyIncomingBatchSize_multiple() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
 
   let meta_global = Service.recordManager.set(engine.metaURL,
                                               new WBORecord(engine.metaURL));
@@ -947,7 +945,7 @@ add_task(async function test_processIncoming_notify_count() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
 
   let meta_global = Service.recordManager.set(engine.metaURL,
                                               new WBORecord(engine.metaURL));
@@ -1037,7 +1035,7 @@ add_task(async function test_processIncoming_previousFailed() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
 
   let meta_global = Service.recordManager.set(engine.metaURL,
                                               new WBORecord(engine.metaURL));
@@ -1153,7 +1151,7 @@ add_task(async function test_processIncoming_failed_records() {
       "/1.1/foo/storage/rotary": recording_handler(collection)
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
 
   let meta_global = Service.recordManager.set(engine.metaURL,
                                               new WBORecord(engine.metaURL));
@@ -1266,7 +1264,7 @@ add_task(async function test_processIncoming_decrypt_failed() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
 
   let meta_global = Service.recordManager.set(engine.metaURL,
                                               new WBORecord(engine.metaURL));
@@ -1323,7 +1321,7 @@ add_task(async function test_uploadOutgoing_toEmptyServer() {
       "/1.1/foo/storage/rotary/scotsman": collection.wbo("scotsman").handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
 
   let engine = makeRotaryEngine();
@@ -1379,7 +1377,7 @@ add_task(async function test_uploadOutgoing_huge() {
       "/1.1/foo/storage/rotary/flying": collection.wbo("flying").handler(),
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
 
   let engine = makeRotaryEngine();
@@ -1428,7 +1426,7 @@ add_task(async function test_uploadOutgoing_failed() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
 
   let engine = makeRotaryEngine();
   engine.lastSync = 123; // needs to be non-zero so that tracker is queried
@@ -1523,8 +1521,7 @@ add_task(async function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
-
+  await SyncTestingInfrastructure(server);
   try {
 
     // Confirm initial environment.
@@ -1568,7 +1565,7 @@ add_task(async function test_uploadOutgoing_largeRecords() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
 
   try {
     engine._syncStartup();
@@ -1590,7 +1587,7 @@ add_task(async function test_syncFinish_noDelete() {
 
   let server = httpd_setup({});
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
   let engine = makeRotaryEngine();
   engine._delete = {}; // Nothing to delete
   engine._tracker.score = 100;
@@ -1620,7 +1617,7 @@ add_task(async function test_syncFinish_deleteByIds() {
   let server = httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
 
   let engine = makeRotaryEngine();
   try {
@@ -1671,7 +1668,7 @@ add_task(async function test_syncFinish_deleteLotsInBatches() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
 
   let engine = makeRotaryEngine();
   try {
@@ -1722,7 +1719,7 @@ add_task(async function test_sync_partialUpload() {
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()
   });
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
 
   let engine = makeRotaryEngine();
@@ -1804,7 +1801,7 @@ add_task(async function test_canDecrypt_noCryptoKeys() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
   let engine = makeRotaryEngine();
   try {
 
@@ -1830,7 +1827,7 @@ add_task(async function test_canDecrypt_true() {
       "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
   let engine = makeRotaryEngine();
   try {
 
@@ -1861,7 +1858,7 @@ add_task(async function test_syncapplied_observer() {
     "/1.1/foo/storage/rotary": collection.handler()
   });
 
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
 
   let meta_global = Service.recordManager.set(engine.metaURL,
                                               new WBORecord(engine.metaURL));

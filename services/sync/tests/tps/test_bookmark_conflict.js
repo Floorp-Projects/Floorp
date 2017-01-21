@@ -79,7 +79,7 @@ var bookmarkMods = {
 };
 
 // a list of bookmarks to delete during a 'delete' action
-var bookmarksToDelete = {
+bookmarksToDelete = {
   "menu": [
     { folder: "foldera" },
     { folder: "folderb" },

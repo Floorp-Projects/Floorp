@@ -188,8 +188,6 @@ add_task(async function test_smart_bookmarks_duped() {
   let record = store.createRecord(mostVisitedGUID);
 
   _("Prepare sync.");
-  let collection = server.user("foo").collection("bookmarks");
-
   try {
     engine._syncStartup();
 

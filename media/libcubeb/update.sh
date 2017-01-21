@@ -31,6 +31,8 @@ cp $1/src/cubeb_utils_unix.h src
 cp $1/src/cubeb_utils_win.h src
 cp $1/src/cubeb_wasapi.cpp src
 cp $1/src/cubeb_winmm.c src
+cp $1/src/cubeb_mixer.h src
+cp $1/src/cubeb_mixer.cpp src
 cp $1/test/common.h gtest
 cp $1/test/test_audio.cpp gtest
 cp $1/test/test_devices.cpp gtest
@@ -42,6 +44,7 @@ cp $1/test/test_ring_array.cpp gtest
 cp $1/test/test_sanity.cpp gtest
 cp $1/test/test_tone.cpp gtest
 cp $1/test/test_utils.cpp gtest
+cp $1/test/test_mixer.cpp gtest
 
 if [ -d $1/.git ]; then
   rev=$(cd $1 && git rev-parse --verify HEAD)

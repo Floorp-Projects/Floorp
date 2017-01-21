@@ -3091,7 +3091,11 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            this.getBrowserForTab(aTab).reload();
+            let browser = this.getBrowserForTab(aTab);
+            // Reset temporary permissions on the current tab. This is done here
+            // because we only want to reset permissions on user reload.
+            SitePermissions.clearTemporaryPermissions(browser);
+            browser.reload();
           ]]>
         </body>
       </method>

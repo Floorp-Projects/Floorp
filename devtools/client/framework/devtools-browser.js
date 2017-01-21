@@ -146,7 +146,10 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       devtoolsTheme = "light";
     }
 
-    win.document.documentElement.setAttribute("devtoolstheme", devtoolsTheme);
+    // Style gcli and the splitter between the toolbox and page content.  This used to
+    // set the attribute on the browser's root node but that regressed tpaint: bug 1331449.
+    win.document.getElementById("browser-bottombox").setAttribute("devtoolstheme", devtoolsTheme);
+    win.document.getElementById("content").setAttribute("devtoolstheme", devtoolsTheme);
 
     // If the toolbox color changes and we have the opposite compact theme applied,
     // change it to match.  For example:

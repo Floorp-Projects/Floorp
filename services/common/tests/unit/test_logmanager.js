@@ -83,7 +83,7 @@ add_task(function* test_SharedLogs() {
   let lm2 = new LogManager("log-manager-2.test.", ["TestLog3"], "test");
 
   let log = Log.repository.getLogger("TestLog3");
-  let [capp, dapp, fapps] = getAppenders(log);
+  let [capp, dapp, ] = getAppenders(log);
 
   // console and dump appenders should be "trace" as it is more verbose than
   // "debug"
