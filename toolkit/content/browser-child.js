@@ -26,22 +26,10 @@ if (AppConstants.MOZ_CRASHREPORTER) {
                                      "nsICrashReporter");
 }
 
-function makeInputStream(data) {
+function makeInputStream(aString) {
   let stream = Cc["@mozilla.org/io/string-input-stream;1"].
                createInstance(Ci.nsISupportsCString);
-  stream.data = data.content;
-
-  if (data.headers) {
-    let mimeStream = Cc["@mozilla.org/network/mime-input-stream;1"]
-        .createInstance(Ci.nsIMIMEInputStream);
-
-    mimeStream.setData(stream);
-    for (let [name, value] of data.headers) {
-      mimeStream.addHeader(name, value);
-    }
-    return mimeStream;
-  }
-
+  stream.data = aString;
   return stream; // XPConnect will QI this to nsIInputStream for us.
 }
 

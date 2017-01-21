@@ -52,9 +52,7 @@
 #include "nsIURL.h"
 #include "nsIConsoleService.h"
 #include "mozilla/BinarySearch.h"
-#include "mozilla/DebugOnly.h"
 #include "nsIHttpHeaderVisitor.h"
-#include "nsIMIMEInputStream.h"
 #include "nsIXULRuntime.h"
 #include "nsICacheInfoChannel.h"
 #include "nsIDOMWindowUtils.h"
@@ -64,85 +62,6 @@
 
 namespace mozilla {
 namespace net {
-
-static
-bool IsHeaderBlacklistedForRedirectCopy(nsHttpAtom const& aHeader)
-{
-  // IMPORTANT: keep this list ASCII-code sorted
-  static nsHttpAtom const* blackList[] = {
-    &nsHttp::Accept,
-    &nsHttp::Accept_Encoding,
-    &nsHttp::Accept_Language,
-    &nsHttp::Authentication,
-    &nsHttp::Authorization,
-    &nsHttp::Connection,
-    &nsHttp::Content_Length,
-    &nsHttp::Cookie,
-    &nsHttp::Host,
-    &nsHttp::If,
-    &nsHttp::If_Match,
-    &nsHttp::If_Modified_Since,
-    &nsHttp::If_None_Match,
-    &nsHttp::If_None_Match_Any,
-    &nsHttp::If_Range,
-    &nsHttp::If_Unmodified_Since,
-    &nsHttp::Proxy_Authenticate,
-    &nsHttp::Proxy_Authorization,
-    &nsHttp::Range,
-    &nsHttp::TE,
-    &nsHttp::Transfer_Encoding,
-    &nsHttp::Upgrade,
-    &nsHttp::User_Agent,
-    &nsHttp::WWW_Authenticate
-  };
-
-  class HttpAtomComparator
-  {
-    nsHttpAtom const& mTarget;
-  public:
-    explicit HttpAtomComparator(nsHttpAtom const& aTarget)
-      : mTarget(aTarget) {}
-    int operator()(nsHttpAtom const* aVal) const {
-      if (mTarget == *aVal) {
-        return 0;
-      }
-      return strcmp(mTarget._val, aVal->_val);
-    }
-  };
-
-  size_t unused;
-  return BinarySearchIf(blackList, 0, ArrayLength(blackList),
-                        HttpAtomComparator(aHeader), &unused);
-}
-
-class AddHeadersToChannelVisitor final : public nsIHttpHeaderVisitor
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  explicit AddHeadersToChannelVisitor(nsIHttpChannel *aChannel)
-    : mChannel(aChannel)
-  {
-  }
-
-  NS_IMETHOD VisitHeader(const nsACString& aHeader,
-                         const nsACString& aValue) override
-  {
-    nsHttpAtom atom = nsHttp::ResolveAtom(aHeader);
-    if (!IsHeaderBlacklistedForRedirectCopy(atom)) {
-      mChannel->SetRequestHeader(aHeader, aValue, false);
-    }
-    return NS_OK;
-  }
-private:
-  ~AddHeadersToChannelVisitor()
-  {
-  }
-
-  nsCOMPtr<nsIHttpChannel> mChannel;
-};
-
-NS_IMPL_ISUPPORTS(AddHeadersToChannelVisitor, nsIHttpHeaderVisitor)
 
 HttpBaseChannel::HttpBaseChannel()
   : mStartPos(UINT64_MAX)
@@ -734,38 +653,22 @@ HttpBaseChannel::SetUploadStream(nsIInputStream *stream,
 
   if (stream) {
     nsAutoCString method;
-    bool hasHeaders = false;
+    bool hasHeaders;
 
     // This method and ExplicitSetUploadStream mean different things by "empty
     // content type string".  This method means "no header", but
     // ExplicitSetUploadStream means "header with empty value".  So we have to
     // massage the contentType argument into the form ExplicitSetUploadStream
     // expects.
-    nsCOMPtr<nsIMIMEInputStream> mimeStream;
-    nsCString contentType(contentTypeArg);
-    if (contentType.IsEmpty()) {
-      contentType.SetIsVoid(true);
+    nsAutoCString contentType;
+    if (contentTypeArg.IsEmpty()) {
       method = NS_LITERAL_CSTRING("POST");
-
-      // MIME streams are a special case, and include headers which need to be
-      // copied to the channel.
-      mimeStream = do_QueryInterface(stream);
-      if (mimeStream) {
-        // Copy non-origin related headers to the channel.
-        nsCOMPtr<nsIHttpHeaderVisitor> visitor =
-          new AddHeadersToChannelVisitor(this);
-        mimeStream->VisitHeaders(visitor);
-
-        return ExplicitSetUploadStream(stream, contentType, contentLength,
-                                       method, hasHeaders);
-      }
-
       hasHeaders = true;
+      contentType.SetIsVoid(true);
     } else {
       method = NS_LITERAL_CSTRING("PUT");
-
-      MOZ_ASSERT(NS_FAILED(CallQueryInterface(stream, getter_AddRefs(mimeStream))),
-                 "nsIMIMEInputStream should not be set with an explicit content type");
+      hasHeaders = false;
+      contentType = contentTypeArg;
     }
     return ExplicitSetUploadStream(stream, contentType, contentLength,
                                    method, hasHeaders);
@@ -906,13 +809,6 @@ HttpBaseChannel::ExplicitSetUploadStream(nsIInputStream *aStream,
 {
   // Ensure stream is set and method is valid
   NS_ENSURE_TRUE(aStream, NS_ERROR_FAILURE);
-
-  {
-    DebugOnly<nsCOMPtr<nsIMIMEInputStream>> mimeStream;
-    MOZ_ASSERT(!aStreamHasHeaders ||
-               NS_FAILED(CallQueryInterface(aStream, getter_AddRefs(mimeStream.value))),
-               "nsIMIMEInputStream should not include headers");
-  }
 
   if (aContentLength < 0 && !aStreamHasHeaders) {
     nsresult rv = aStream->Available(reinterpret_cast<uint64_t*>(&aContentLength));
@@ -2997,6 +2893,85 @@ HttpBaseChannel::ShouldRewriteRedirectToGET(uint32_t httpStatus,
   return false;
 }
 
+static
+bool IsHeaderBlacklistedForRedirectCopy(nsHttpAtom const& aHeader)
+{
+  // IMPORTANT: keep this list ASCII-code sorted
+  static nsHttpAtom const* blackList[] = {
+    &nsHttp::Accept,
+    &nsHttp::Accept_Encoding,
+    &nsHttp::Accept_Language,
+    &nsHttp::Authentication,
+    &nsHttp::Authorization,
+    &nsHttp::Connection,
+    &nsHttp::Content_Length,
+    &nsHttp::Cookie,
+    &nsHttp::Host,
+    &nsHttp::If,
+    &nsHttp::If_Match,
+    &nsHttp::If_Modified_Since,
+    &nsHttp::If_None_Match,
+    &nsHttp::If_None_Match_Any,
+    &nsHttp::If_Range,
+    &nsHttp::If_Unmodified_Since,
+    &nsHttp::Proxy_Authenticate,
+    &nsHttp::Proxy_Authorization,
+    &nsHttp::Range,
+    &nsHttp::TE,
+    &nsHttp::Transfer_Encoding,
+    &nsHttp::Upgrade,
+    &nsHttp::User_Agent,
+    &nsHttp::WWW_Authenticate
+  };
+
+  class HttpAtomComparator
+  {
+    nsHttpAtom const& mTarget;
+  public:
+    explicit HttpAtomComparator(nsHttpAtom const& aTarget)
+      : mTarget(aTarget) {}
+    int operator()(nsHttpAtom const* aVal) const {
+      if (mTarget == *aVal) {
+        return 0;
+      }
+      return strcmp(mTarget._val, aVal->_val);
+    }
+  };
+
+  size_t unused;
+  return BinarySearchIf(blackList, 0, ArrayLength(blackList),
+                        HttpAtomComparator(aHeader), &unused);
+}
+
+class SetupReplacementChannelHeaderVisitor final : public nsIHttpHeaderVisitor
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  explicit SetupReplacementChannelHeaderVisitor(nsIHttpChannel *aChannel)
+    : mChannel(aChannel)
+  {
+  }
+
+  NS_IMETHOD VisitHeader(const nsACString& aHeader,
+                         const nsACString& aValue) override
+  {
+    nsHttpAtom atom = nsHttp::ResolveAtom(aHeader);
+    if (!IsHeaderBlacklistedForRedirectCopy(atom)) {
+      mChannel->SetRequestHeader(aHeader, aValue, false);
+    }
+    return NS_OK;
+  }
+private:
+  ~SetupReplacementChannelHeaderVisitor()
+  {
+  }
+
+  nsCOMPtr<nsIHttpChannel> mChannel;
+};
+
+NS_IMPL_ISUPPORTS(SetupReplacementChannelHeaderVisitor, nsIHttpHeaderVisitor)
+
 nsresult
 HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
                                          nsIChannel   *newChannel,
@@ -3292,7 +3267,7 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
                        nsIChannelEventSink::REDIRECT_STS_UPGRADE)) {
     // Copy non-origin related headers to the new channel.
     nsCOMPtr<nsIHttpHeaderVisitor> visitor =
-      new AddHeadersToChannelVisitor(httpChannel);
+      new SetupReplacementChannelHeaderVisitor(httpChannel);
     mRequestHead.VisitHeaders(visitor);
   }
 
