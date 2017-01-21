@@ -565,6 +565,8 @@ PopupNotifications.prototype = {
         this._onPopupHidden(aEvent);
         break;
       case "activate":
+        if (this.isPanelOpen)
+          break;
       case "TabSelect":
         let self = this;
         // This is where we could detect if the panel is dismissed if the page

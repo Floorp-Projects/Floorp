@@ -1372,7 +1372,8 @@ static const JSFunctionSpec math_static_methods[] = {
 JSObject*
 js::InitMathClass(JSContext* cx, HandleObject obj)
 {
-    RootedObject proto(cx, obj->as<GlobalObject>().getOrCreateObjectPrototype(cx));
+    Handle<GlobalObject*> global = obj.as<GlobalObject>();
+    RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
     if (!proto)
         return nullptr;
     RootedObject Math(cx, NewObjectWithGivenProto(cx, &MathClass, proto, SingletonObject));

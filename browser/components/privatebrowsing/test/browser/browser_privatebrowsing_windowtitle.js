@@ -5,7 +5,7 @@
 // This test makes sure that the window title changes correctly while switching
 // from and to private browsing mode.
 
-add_task(function test() {
+add_task(function* test() {
   const testPageURL = "http://mochi.test:8888/browser/" +
     "browser/components/privatebrowsing/test/browser/browser_privatebrowsing_windowtitle_page.html";
   requestLongerTimeout(2);
@@ -37,12 +37,12 @@ add_task(function test() {
     pb_about_pb_title = "Private Browsing - " + app_name + " (Private Browsing)";
   }
 
-  function* testTabTitle(aWindow, url, insidePB, expected_title) {
-    let tab = (yield BrowserTestUtils.openNewForegroundTab(aWindow.gBrowser));
-    yield BrowserTestUtils.loadURI(tab.linkedBrowser, url);
-    yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  async function testTabTitle(aWindow, url, insidePB, expected_title) {
+    let tab = (await BrowserTestUtils.openNewForegroundTab(aWindow.gBrowser));
+    await BrowserTestUtils.loadURI(tab.linkedBrowser, url);
+    await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-    yield BrowserTestUtils.waitForCondition(() => {
+    await BrowserTestUtils.waitForCondition(() => {
       return aWindow.document.title === expected_title;
     }, `Window title should be ${expected_title}, got ${aWindow.document.title}`);
 
@@ -51,9 +51,9 @@ add_task(function test() {
        " private browsing mode)");
 
     let win = aWindow.gBrowser.replaceTabWithWindow(tab);
-    yield BrowserTestUtils.waitForEvent(win, "load", false);
+    await BrowserTestUtils.waitForEvent(win, "load", false);
 
-    yield BrowserTestUtils.waitForCondition(() => {
+    await BrowserTestUtils.waitForCondition(() => {
       return win.document.title === expected_title;
     }, `Window title should be ${expected_title}, got ${aWindow.document.title}`);
 
@@ -61,17 +61,17 @@ add_task(function test() {
        " detached tab is correct (" + (insidePB ? "inside" : "outside") +
        " private browsing mode)");
 
-    yield Promise.all([ BrowserTestUtils.closeWindow(win),
+    await Promise.all([ BrowserTestUtils.closeWindow(win),
                         BrowserTestUtils.closeWindow(aWindow) ]);
   }
 
   function openWin(private) {
     return BrowserTestUtils.openNewBrowserWindow({ private });
   }
-  yield Task.spawn(testTabTitle((yield openWin(false)), "about:blank", false, page_without_title));
-  yield Task.spawn(testTabTitle((yield openWin(false)), testPageURL, false, page_with_title));
-  yield Task.spawn(testTabTitle((yield openWin(false)), "about:privatebrowsing", false, about_pb_title));
-  yield Task.spawn(testTabTitle((yield openWin(true)), "about:blank", true, pb_page_without_title));
-  yield Task.spawn(testTabTitle((yield openWin(true)), testPageURL, true, pb_page_with_title));
-  yield Task.spawn(testTabTitle((yield openWin(true)), "about:privatebrowsing", true, pb_about_pb_title));
+  yield testTabTitle((yield openWin(false)), "about:blank", false, page_without_title);
+  yield testTabTitle((yield openWin(false)), testPageURL, false, page_with_title);
+  yield testTabTitle((yield openWin(false)), "about:privatebrowsing", false, about_pb_title);
+  yield testTabTitle((yield openWin(true)), "about:blank", true, pb_page_without_title);
+  yield testTabTitle((yield openWin(true)), testPageURL, true, pb_page_with_title);
+  yield testTabTitle((yield openWin(true)), "about:privatebrowsing", true, pb_about_pb_title);
 });

@@ -12,20 +12,16 @@
 #include "nss.h"
 #include "prio.h"
 #include "prnetdb.h"
+#include "secerr.h"
 #include "ssl.h"
+#include "ssl3prot.h"
 #include "sslerr.h"
 #include "sslproto.h"
-#include "ssl3prot.h"
 
 #include "nsskeys.h"
 
-static const char* kVersionDisableFlags[] = {
-  "no-ssl3",
-  "no-tls1",
-  "no-tls11",
-  "no-tls12",
-  "no-tls13"
-};
+static const char* kVersionDisableFlags[] = {"no-ssl3", "no-tls1", "no-tls11",
+                                             "no-tls12", "no-tls13"};
 
 bool exitCodeUnimplemented = false;
 
@@ -154,8 +150,7 @@ class TestAgent {
   }
 
   static bool ConvertFromWireVersion(SSLProtocolVariant variant,
-                                     int wire_version,
-                                     uint16_t* lib_version) {
+                                     int wire_version, uint16_t* lib_version) {
     // These default values are used when {min,max}-version isn't given.
     if (wire_version == 0 || wire_version == 0xffff) {
       *lib_version = static_cast<uint16_t>(wire_version);
@@ -171,18 +166,18 @@ class TestAgent {
 
     if (variant == ssl_variant_datagram) {
       switch (wire_version) {
-      case SSL_LIBRARY_VERSION_DTLS_1_0_WIRE:
-        *lib_version = SSL_LIBRARY_VERSION_DTLS_1_0;
-        break;
-      case SSL_LIBRARY_VERSION_DTLS_1_2_WIRE:
-        *lib_version = SSL_LIBRARY_VERSION_DTLS_1_2;
-        break;
-      case SSL_LIBRARY_VERSION_DTLS_1_3_WIRE:
-        *lib_version = SSL_LIBRARY_VERSION_DTLS_1_3;
-        break;
-      default:
-        std::cerr << "Unrecognized DTLS version " << wire_version << ".\n";
-        return false;
+        case SSL_LIBRARY_VERSION_DTLS_1_0_WIRE:
+          *lib_version = SSL_LIBRARY_VERSION_DTLS_1_0;
+          break;
+        case SSL_LIBRARY_VERSION_DTLS_1_2_WIRE:
+          *lib_version = SSL_LIBRARY_VERSION_DTLS_1_2;
+          break;
+        case SSL_LIBRARY_VERSION_DTLS_1_3_WIRE:
+          *lib_version = SSL_LIBRARY_VERSION_DTLS_1_3;
+          break;
+        default:
+          std::cerr << "Unrecognized DTLS version " << wire_version << ".\n";
+          return false;
       }
     } else {
       if (wire_version < SSL_LIBRARY_VERSION_3_0 ||
@@ -220,7 +215,7 @@ class TestAgent {
     // Ignore -no-ssl3, because SSLv3 is never supported.
     for (size_t i = 1; i < PR_ARRAY_SIZE(kVersionDisableFlags); ++i) {
       auto version =
-        static_cast<uint16_t>(SSL_LIBRARY_VERSION_TLS_1_0 + (i - 1));
+          static_cast<uint16_t>(SSL_LIBRARY_VERSION_TLS_1_0 + (i - 1));
       if (variant == ssl_variant_datagram) {
         // In DTLS mode, the -no-tlsN flags refer to DTLS versions,
         // but NSS wants the corresponding TLS versions.
@@ -348,8 +343,49 @@ class TestAgent {
       rv = PR_Write(ssl_fd_, block, len);
       if (rv != len) {
         std::cerr << "Write failure\n";
+        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
         return SECFailure;
       }
+    }
+    return SECSuccess;
+  }
+
+  // Write bytes to the other side then read them back and check
+  // that they were correctly XORed as in ReadWrite.
+  SECStatus WriteRead() {
+    static const uint8_t ch = 'E';
+
+    // We do 600-byte blocks to provide mis-alignment of the
+    // reader and writer.
+    uint8_t block[600];
+    memset(block, ch, sizeof(block));
+    int32_t rv = PR_Write(ssl_fd_, block, sizeof(block));
+    if (rv != sizeof(block)) {
+      std::cerr << "Write failure\n";
+      PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+      return SECFailure;
+    }
+
+    size_t left = sizeof(block);
+    while (left) {
+      int32_t rv = PR_Read(ssl_fd_, block, left);
+      if (rv < 0) {
+        std::cerr << "Failure reading\n";
+        return SECFailure;
+      }
+      if (rv == 0) {
+        PORT_SetError(SEC_ERROR_INPUT_LEN);
+        return SECFailure;
+      }
+
+      int32_t len = rv;
+      for (int32_t i = 0; i < len; ++i) {
+        if (block[i] != (ch ^ 0xff)) {
+          PORT_SetError(SEC_ERROR_BAD_DATA);
+          return SECFailure;
+        }
+      }
+      left -= len;
     }
     return SECSuccess;
   }
@@ -363,12 +399,22 @@ class TestAgent {
       return SECFailure;
     }
 
-    rv = ReadWrite();
-    if (rv != SECSuccess) {
-      PRErrorCode err = PR_GetError();
-      std::cerr << "ReadWrite failed with error=" << FormatError(err)
-                << std::endl;
-      return SECFailure;
+    if (cfg_.get<bool>("write-then-read")) {
+      rv = WriteRead();
+      if (rv != SECSuccess) {
+        PRErrorCode err = PR_GetError();
+        std::cerr << "WriteRead failed with error=" << FormatError(err)
+                  << std::endl;
+        return SECFailure;
+      }
+    } else {
+      rv = ReadWrite();
+      if (rv != SECSuccess) {
+        PRErrorCode err = PR_GetError();
+        std::cerr << "ReadWrite failed with error=" << FormatError(err)
+                  << std::endl;
+        return SECFailure;
+      }
     }
 
     return SECSuccess;
@@ -395,6 +441,7 @@ std::unique_ptr<const Config> ReadConfig(int argc, char** argv) {
   for (auto flag : kVersionDisableFlags) {
     cfg->AddEntry<bool>(flag, false);
   }
+  cfg->AddEntry<bool>("write-then-read", false);
 
   auto rv = cfg->ParseArgs(argc, argv);
   switch (rv) {
@@ -409,7 +456,6 @@ std::unique_ptr<const Config> ReadConfig(int argc, char** argv) {
   // Needed to change to std::unique_ptr<const Config>
   return std::move(cfg);
 }
-
 
 bool RunCycle(std::unique_ptr<const Config>& cfg) {
   std::unique_ptr<TestAgent> agent(TestAgent::Create(*cfg));

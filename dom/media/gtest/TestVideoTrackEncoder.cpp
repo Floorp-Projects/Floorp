@@ -46,11 +46,19 @@ public:
     return mImageSize;
   }
 
-  void Generate(nsTArray<RefPtr<Image> > &aImages)
+  already_AddRefed<Image> GenerateI420Image()
   {
-    aImages.AppendElement(CreateI420Image());
-    aImages.AppendElement(CreateNV12Image());
-    aImages.AppendElement(CreateNV21Image());
+    return do_AddRef(CreateI420Image());
+  }
+
+  already_AddRefed<Image> GenerateNV12Image()
+  {
+    return do_AddRef(CreateNV12Image());
+  }
+
+  already_AddRefed<Image> GenerateNV21Image()
+  {
+    return do_AddRef(CreateNV21Image());
   }
 
 private:
@@ -260,7 +268,9 @@ TEST(VP8VideoTrackEncoder, FrameEncode)
   nsTArray<RefPtr<Image>> images;
   YUVBufferGenerator generator;
   generator.Init(mozilla::gfx::IntSize(640, 480));
-  generator.Generate(images);
+  images.AppendElement(generator.GenerateI420Image());
+  images.AppendElement(generator.GenerateNV12Image());
+  images.AppendElement(generator.GenerateNV21Image());
 
   // Put generated YUV frame into video segment.
   // Duration of each frame is 1 second.
@@ -285,6 +295,140 @@ TEST(VP8VideoTrackEncoder, FrameEncode)
   EXPECT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
 }
 
+// Test that encoding a single frame gives useful output.
+TEST(VP8VideoTrackEncoder, SingleFrameEncode)
+{
+  // Initiate VP8 encoder
+  TestVP8TrackEncoder encoder;
+  InitParam param = {true, 640, 480};
+  encoder.TestInit(param);
+
+  // Pass a half-second frame to the encoder.
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  VideoSegment segment;
+  segment.AppendFrame(generator.GenerateI420Image(),
+                      mozilla::StreamTime(45000), // 1/2 second
+                      generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE);
+
+  encoder.SetCurrentFrames(segment);
+
+  // End the track.
+  segment.Clear();
+  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, TrackEventCommand::TRACK_EVENT_ENDED, segment);
+
+  EncodedFrameContainer container;
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  // Read out encoded data, and verify.
+  const nsTArray<RefPtr<EncodedFrame>>& frames = container.GetEncodedFrames();
+  const size_t oneElement = 1;
+  ASSERT_EQ(oneElement, frames.Length());
+
+  EXPECT_EQ(EncodedFrame::VP8_I_FRAME, frames[0]->GetFrameType()) <<
+    "We only have one frame, so it should be a keyframe";
+
+  const uint64_t halfSecond = PR_USEC_PER_SEC / 2;
+  EXPECT_EQ(halfSecond, frames[0]->GetDuration());
+}
+
+// Test that encoding a couple of identical images gives useful output.
+TEST(VP8VideoTrackEncoder, SameFrameEncode)
+{
+  // Initiate VP8 encoder
+  TestVP8TrackEncoder encoder;
+  InitParam param = {true, 640, 480};
+  encoder.TestInit(param);
+
+  // Pass 15 100ms frames to the encoder.
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  RefPtr<Image> image = generator.GenerateI420Image();
+  TimeStamp now = TimeStamp::Now();
+  VideoSegment segment;
+  for (uint32_t i = 0; i < 15; ++i) {
+    segment.AppendFrame(do_AddRef(image),
+                        mozilla::StreamTime(9000), // 100ms
+                        generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE,
+                        false,
+                        now + TimeDuration::FromSeconds(i * 0.1));
+  }
+
+  encoder.SetCurrentFrames(segment);
+
+  // End the track.
+  segment.Clear();
+  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, TrackEventCommand::TRACK_EVENT_ENDED, segment);
+
+  EncodedFrameContainer container;
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  // Verify total duration being 1.5s.
+  uint64_t totalDuration = 0;
+  for (auto& frame : container.GetEncodedFrames()) {
+    totalDuration += frame->GetDuration();
+  }
+  const uint64_t oneAndAHalf = (PR_USEC_PER_SEC / 2) * 3;
+  EXPECT_EQ(oneAndAHalf, totalDuration);
+}
+
+// Test encoding a track that starts with null data
+TEST(VP8VideoTrackEncoder, NullFrameFirst)
+{
+  // Initiate VP8 encoder
+  TestVP8TrackEncoder encoder;
+  InitParam param = {true, 640, 480};
+  encoder.TestInit(param);
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  RefPtr<Image> image = generator.GenerateI420Image();
+  TimeStamp now = TimeStamp::Now();
+  VideoSegment segment;
+
+  // Pass 2 100ms null frames to the encoder.
+  for (uint32_t i = 0; i < 2; ++i) {
+    segment.AppendFrame(nullptr,
+                        mozilla::StreamTime(9000), // 100ms
+                        generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE,
+                        false,
+                        now + TimeDuration::FromSeconds(i * 0.1));
+  }
+
+  // Pass a real 100ms frame to the encoder.
+  segment.AppendFrame(image.forget(),
+                      mozilla::StreamTime(9000), // 100ms
+                      generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE,
+                      false,
+                      now + TimeDuration::FromSeconds(0.3));
+
+  encoder.SetCurrentFrames(segment);
+
+  // End the track.
+  segment.Clear();
+  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, TrackEventCommand::TRACK_EVENT_ENDED, segment);
+
+  EncodedFrameContainer container;
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  // Verify total duration being 0.3s.
+  uint64_t totalDuration = 0;
+  for (auto& frame : container.GetEncodedFrames()) {
+    totalDuration += frame->GetDuration();
+  }
+  const uint64_t pointThree = (PR_USEC_PER_SEC / 10) * 3;
+  EXPECT_EQ(pointThree, totalDuration);
+}
+
 // EOS test
 TEST(VP8VideoTrackEncoder, EncodeComplete)
 {
@@ -302,4 +446,6 @@ TEST(VP8VideoTrackEncoder, EncodeComplete)
   // NS_OK immidiately.
   EncodedFrameContainer container;
   EXPECT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+
+  EXPECT_TRUE(encoder.IsEncodingComplete());
 }

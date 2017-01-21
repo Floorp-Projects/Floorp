@@ -54,6 +54,18 @@ extern void SEC_ASN1DecoderSetNotifyProc(SEC_ASN1DecoderContext *cx,
 
 extern void SEC_ASN1DecoderClearNotifyProc(SEC_ASN1DecoderContext *cx);
 
+/* Sets the maximum size that should be allocated for a single ASN.1
+ * element. Set to 0 to indicate there is no limit.
+ *
+ * Note: This does not set the maximum size overall that may be allocated
+ * while parsing, nor does it guarantee that the decoder won't allocate
+ * more than |max_size| while parsing an individual element; rather, it
+ * merely guarantees that any individual allocation for returned data
+ * should not exceed |max_size|.
+*/
+extern void SEC_ASN1DecoderSetMaximumElementSize(SEC_ASN1DecoderContext *cx,
+                                                 unsigned long max_size);
+
 extern SECStatus SEC_ASN1Decode(PLArenaPool *pool, void *dest,
                                 const SEC_ASN1Template *t,
                                 const char *buf, long len);

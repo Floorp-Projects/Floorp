@@ -1417,11 +1417,11 @@ JSScript::loadSource(JSContext* cx, ScriptSource* ss, bool* worked)
     return true;
 }
 
-JSFlatString*
-JSScript::sourceData(JSContext* cx)
+/* static */ JSFlatString*
+JSScript::sourceData(JSContext* cx, HandleScript script)
 {
-    MOZ_ASSERT(scriptSource()->hasSourceData());
-    return scriptSource()->substring(cx, sourceStart(), sourceEnd());
+    MOZ_ASSERT(script->scriptSource()->hasSourceData());
+    return script->scriptSource()->substring(cx, script->sourceStart(), script->sourceEnd());
 }
 
 UncompressedSourceCache::AutoHoldEntry::AutoHoldEntry()
@@ -2800,9 +2800,10 @@ JSScript::assertValidJumpTargets() const
         for (; tn < tnlimit; tn++) {
             jsbytecode* tryStart = mainEntry + tn->start;
             jsbytecode* tryPc = tryStart - 1;
-            if (JSOp(*tryPc) != JSOP_TRY)
+            if (tn->kind != JSTRY_CATCH && tn->kind != JSTRY_FINALLY)
                 continue;
 
+            MOZ_ASSERT(JSOp(*tryPc) == JSOP_TRY);
             jsbytecode* tryTarget = tryStart + tn->length;
             MOZ_ASSERT(mainEntry <= tryTarget && tryTarget < end);
             MOZ_ASSERT(BytecodeIsJumpTarget(JSOp(*tryTarget)));

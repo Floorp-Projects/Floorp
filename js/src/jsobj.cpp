@@ -1860,7 +1860,7 @@ js::SetClassAndProto(JSContext* cx, HandleObject obj,
             if (!oldproto->as<NativeObject>().generateOwnShape(cx))
                 return false;
         } else {
-            if (!oldproto->setUncacheableProto(cx))
+            if (!JSObject::setUncacheableProto(cx, oldproto))
                 return false;
         }
         if (!obj->isDelegate()) {
@@ -1872,8 +1872,11 @@ js::SetClassAndProto(JSContext* cx, HandleObject obj,
         oldproto = oldproto->staticPrototype();
     }
 
-    if (proto.isObject() && !proto.toObject()->setDelegate(cx))
-        return false;
+    if (proto.isObject()) {
+        RootedObject protoObj(cx, proto.toObject());
+        if (!JSObject::setDelegate(cx, protoObj))
+            return false;
+    }
 
     if (obj->isSingleton()) {
         /*
@@ -2000,7 +2003,8 @@ js::GetObjectFromIncumbentGlobal(JSContext* cx, MutableHandleObject obj)
 
     {
         AutoCompartment ac(cx, globalObj);
-        obj.set(globalObj->as<GlobalObject>().getOrCreateObjectPrototype(cx));
+        Handle<GlobalObject*> global = globalObj.as<GlobalObject>();
+        obj.set(GlobalObject::getOrCreateObjectPrototype(cx, global));
         if (!obj)
             return false;
     }
@@ -2213,7 +2217,8 @@ js::LookupNameUnqualified(JSContext* cx, HandlePropertyName name, HandleObject e
             // environments.
             if (env->is<DebugEnvironmentProxy>()) {
                 RootedValue v(cx);
-                if (!env->as<DebugEnvironmentProxy>().getMaybeSentinelValue(cx, id, &v))
+                Rooted<DebugEnvironmentProxy*> envProxy(cx, &env->as<DebugEnvironmentProxy>());
+                if (!DebugEnvironmentProxy::getMaybeSentinelValue(cx, envProxy, id, &v))
                     return false;
                 isTDZ = IsUninitializedLexical(v);
             } else {
@@ -2481,7 +2486,7 @@ js::HasOwnDataPropertyPure(JSContext* cx, JSObject* obj, jsid id, bool* result)
     return true;
 }
 
-bool
+/* static */ bool
 JSObject::reportReadOnly(JSContext* cx, jsid id, unsigned report)
 {
     RootedValue val(cx, IdToValue(id));
@@ -2490,7 +2495,7 @@ JSObject::reportReadOnly(JSContext* cx, jsid id, unsigned report)
                                  nullptr, nullptr);
 }
 
-bool
+/* static */ bool
 JSObject::reportNotConfigurable(JSContext* cx, jsid id, unsigned report)
 {
     RootedValue val(cx, IdToValue(id));
@@ -2499,10 +2504,10 @@ JSObject::reportNotConfigurable(JSContext* cx, jsid id, unsigned report)
                                  nullptr, nullptr);
 }
 
-bool
-JSObject::reportNotExtensible(JSContext* cx, unsigned report)
+/* static */ bool
+JSObject::reportNotExtensible(JSContext* cx, HandleObject obj, unsigned report)
 {
-    RootedValue val(cx, ObjectValue(*this));
+    RootedValue val(cx, ObjectValue(*obj));
     return ReportValueErrorFlags(cx, report, JSMSG_OBJECT_NOT_EXTENSIBLE,
                                  JSDVG_IGNORE_STACK, val, nullptr,
                                  nullptr, nullptr);
@@ -2574,7 +2579,7 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto, JS::Object
     // [[Prototype]] chain is always properly immutable, even in the presence
     // of lazy standard classes.
     if (obj->is<GlobalObject>()) {
-        Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
+        Handle<GlobalObject*> global = obj.as<GlobalObject>();
         if (!GlobalObject::ensureConstructor(cx, global, JSProto_Object))
             return false;
     }
@@ -2649,7 +2654,7 @@ js::PreventExtensions(JSContext* cx, HandleObject obj, ObjectOpResult& result, I
         }
     }
 
-    if (!obj->setFlags(cx, BaseShape::NOT_EXTENSIBLE, JSObject::GENERATE_SHAPE)) {
+    if (!JSObject::setFlags(cx, obj, BaseShape::NOT_EXTENSIBLE, JSObject::GENERATE_SHAPE)) {
         // We failed to mark the object non-extensible, so reset the frozen
         // flag on the elements.
         MOZ_ASSERT(obj->nonProxyIsExtensible());
@@ -2789,7 +2794,7 @@ js::SetImmutablePrototype(ExclusiveContext* cx, HandleObject obj, bool* succeede
         return Proxy::setImmutablePrototype(cx->asJSContext(), obj, succeeded);
     }
 
-    if (!obj->setFlags(cx, BaseShape::IMMUTABLE_PROTOTYPE))
+    if (!JSObject::setFlags(cx, obj, BaseShape::IMMUTABLE_PROTOTYPE))
         return false;
     *succeeded = true;
     return true;
