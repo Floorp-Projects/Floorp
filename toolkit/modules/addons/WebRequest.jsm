@@ -658,6 +658,23 @@ HttpObserverManager = {
     return Object.assign(data, extraData);
   },
 
+  canModify(channel) {
+    let {isHostPermitted} = AddonManagerPermissions;
+
+    if (isHostPermitted(channel.URI.host)) {
+      return false;
+    }
+
+    let {loadInfo} = channel;
+    if (loadInfo && loadInfo.loadingPrincipal) {
+      let {loadingPrincipal} = loadInfo;
+
+      return loadingPrincipal.URI && !isHostPermitted(loadingPrincipal.URI.host);
+    }
+
+    return true;
+  },
+
   runChannelListener(channel, loadContext = null, kind, extraData = null) {
     let handlerResults = [];
     let requestHeaders;
@@ -683,6 +700,7 @@ HttpObserverManager = {
       let includeStatus = (["headersReceived", "onRedirect", "onStart", "onStop"].includes(kind) &&
                            channel instanceof Ci.nsIHttpChannel);
 
+      let canModify = this.canModify(channel);
       let commonData = null;
       let uri = channel.URI;
       let requestBody;
@@ -718,11 +736,7 @@ HttpObserverManager = {
         try {
           let result = callback(data);
 
-          if (result && typeof result === "object" && opts.blocking
-              && !AddonManagerPermissions.isHostPermitted(uri.host)
-              && (!loadInfo || !loadInfo.loadingPrincipal
-                  || !loadInfo.loadingPrincipal.URI
-                  || !AddonManagerPermissions.isHostPermitted(loadInfo.loadingPrincipal.URI.host))) {
+          if (canModify && result && typeof result === "object" && opts.blocking) {
             handlerResults.push({opts, result});
           }
         } catch (e) {
