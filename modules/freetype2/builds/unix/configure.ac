@@ -11,13 +11,13 @@
 # indicate that you have read the license and understand and accept it
 # fully.
 
-AC_INIT([FreeType], [2.7], [freetype@nongnu.org], [freetype])
+AC_INIT([FreeType], [2.7.1], [freetype@nongnu.org], [freetype])
 AC_CONFIG_SRCDIR([ftconfig.in])
 
 
 # Don't forget to update `docs/VERSIONS.TXT'!
 
-version_info='18:6:12'
+version_info='19:0:13'
 AC_SUBST([version_info])
 ft_version=`echo $version_info | tr : .`
 AC_SUBST([ft_version])
@@ -105,6 +105,7 @@ AC_CHECK_HEADERS([fcntl.h unistd.h])
 AC_C_CONST
 AC_CHECK_SIZEOF([int])
 AC_CHECK_SIZEOF([long])
+AC_TYPE_LONG_LONG_INT
 
 
 # check whether cpp computation of size of int and long in ftconfig.in works
