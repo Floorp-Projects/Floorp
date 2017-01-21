@@ -121,7 +121,7 @@ function run_test() {
 add_task(function* test_records_obtained_from_server_are_stored_in_db() {
   for (let {client} of gBlocklistClients) {
     // Test an empty db populates
-    let result = yield client.maybeSync(2000, Date.now());
+    yield client.maybeSync(2000, Date.now());
 
     // Open the collection, verify it's been populated:
     // Our test data has a single record; it should be in the local collection
@@ -139,7 +139,7 @@ add_task(function* test_list_is_written_to_file_in_profile() {
     const profFile = FileUtils.getFile(KEY_PROFILEDIR, [filename]);
     strictEqual(profFile.exists(), false);
 
-    let result = yield client.maybeSync(2000, Date.now());
+    yield client.maybeSync(2000, Date.now());
 
     strictEqual(profFile.exists(), true);
     const content = yield readJSON(profFile.path);
@@ -150,7 +150,6 @@ add_task(clear_state);
 
 add_task(function* test_current_server_time_is_saved_in_pref() {
   for (let {client} of gBlocklistClients) {
-    const before = Services.prefs.getIntPref(client.lastCheckTimePref);
     const serverTime = Date.now();
     yield client.maybeSync(2000, serverTime);
     const after = Services.prefs.getIntPref(client.lastCheckTimePref);
@@ -162,7 +161,6 @@ add_task(clear_state);
 add_task(function* test_update_json_file_when_addons_has_changes() {
   for (let {client, filename, testData} of gBlocklistClients) {
     yield client.maybeSync(2000, Date.now() - 1000);
-    const before = Services.prefs.getIntPref(client.lastCheckTimePref);
     const profFile = FileUtils.getFile(KEY_PROFILEDIR, [filename]);
     const fileLastModified = profFile.lastModifiedTime = profFile.lastModifiedTime - 1000;
     const serverTime = Date.now();
@@ -198,7 +196,6 @@ add_task(clear_state);
 add_task(function* test_do_nothing_when_blocklist_is_up_to_date() {
   for (let {client, filename} of gBlocklistClients) {
     yield client.maybeSync(2000, Date.now() - 1000);
-    const before = Services.prefs.getIntPref(client.lastCheckTimePref);
     const profFile = FileUtils.getFile(KEY_PROFILEDIR, [filename]);
     const fileLastModified = profFile.lastModifiedTime = profFile.lastModifiedTime - 1000;
     const serverTime = Date.now();

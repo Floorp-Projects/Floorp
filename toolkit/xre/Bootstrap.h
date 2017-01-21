@@ -110,9 +110,7 @@ public:
 #endif
 
 #ifdef LIBFUZZER
-  virtual void XRE_LibFuzzerSetMain(int argc, char** argv, LibFuzzerMain aMain) = 0;
-
-  virtual void XRE_LibFuzzerGetFuncs(const char* aModuleName, LibFuzzerInitFunc* aInitFunc, LibFuzzerTestingFunc* aTestingFunc) = 0;
+  virtual void XRE_LibFuzzerSetDriver(LibFuzzerDriver aDriver) = 0;
 #endif
 
 #ifdef MOZ_IPDL_TESTS

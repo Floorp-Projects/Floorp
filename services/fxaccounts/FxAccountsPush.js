@@ -135,7 +135,6 @@ FxAccountsPushService.prototype = {
         return this.unsubscribe().catch(err => {
           this.log.error("Error during unsubscribe", err);
         });
-        break;
       default:
         break;
     }
@@ -169,11 +168,9 @@ FxAccountsPushService.prototype = {
         break;
       case ON_DEVICE_DISCONNECTED_NOTIFICATION:
         return this.fxAccounts.handleDeviceDisconnection(payload.data.id);
-        break;
       case ON_PASSWORD_CHANGED_NOTIFICATION:
       case ON_PASSWORD_RESET_NOTIFICATION:
         return this._onPasswordChanged();
-        break;
       case ON_COLLECTION_CHANGED_NOTIFICATION:
         Services.obs.notifyObservers(null, ON_COLLECTION_CHANGED_NOTIFICATION, payload.data.collections);
       default:

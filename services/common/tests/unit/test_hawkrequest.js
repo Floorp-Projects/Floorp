@@ -57,7 +57,6 @@ add_test(function test_intl_accept_language() {
   setLanguagePref(languages[testCount]);
 
   function checkLanguagePref() {
-    var _done = false;
     CommonUtils.nextTick(function() {
       // Ensure we're only called for the number of entries in languages[].
       do_check_true(testCount < languages.length);
@@ -186,7 +185,6 @@ add_test(function test_hawk_language_pref_changed() {
   });
 
   let url = server.baseURI + "/foo";
-  let postData = {};
   let request;
 
   setLanguage(languages[0]);

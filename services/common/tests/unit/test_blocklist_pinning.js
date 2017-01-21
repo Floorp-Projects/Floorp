@@ -98,7 +98,7 @@ add_task(function* test_something() {
   ok(!sss.isSecureHost(sss.HEADER_HSTS, "five.example.com", 0));
 
   // Test an empty db populates
-  let result = yield PinningPreloadClient.maybeSync(2000, Date.now());
+  yield PinningPreloadClient.maybeSync(2000, Date.now());
 
   let connection = yield FirefoxAdapter.openConnection({path: KINTO_STORAGE_PATH});
 
@@ -112,7 +112,7 @@ add_task(function* test_something() {
   ok(sss.isSecureHost(sss.HEADER_HPKP, "one.example.com", 0));
 
   // Test the db is updated when we call again with a later lastModified value
-  result = yield PinningPreloadClient.maybeSync(4000, Date.now());
+  yield PinningPreloadClient.maybeSync(4000, Date.now());
 
   // Open the collection, verify it's been updated:
   // Our data now has four new records; all should be in the local collection

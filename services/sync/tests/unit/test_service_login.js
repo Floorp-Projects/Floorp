@@ -23,7 +23,6 @@ function login_handling(handler) {
 }
 
 function run_test() {
-  let logger = Log.repository.rootLogger;
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
   run_next_test();
@@ -45,10 +44,8 @@ add_test(function test_offline() {
 function setup() {
   let janeHelper = track_collections_helper();
   let janeU      = janeHelper.with_updated_collection;
-  let janeColls  = janeHelper.collections;
   let johnHelper = track_collections_helper();
   let johnU      = johnHelper.with_updated_collection;
-  let johnColls  = johnHelper.collections;
 
   let server = httpd_setup({
     "/1.1/johndoe/info/collections": login_handling(johnHelper.handler),
@@ -157,7 +154,6 @@ add_test(function test_login_on_sync() {
     Service.login = oldLogin;
 
     // Stub mpLocked.
-    let mpLockedF = Utils.mpLocked;
     let mpLocked = true;
     Utils.mpLocked = () => mpLocked;
 
@@ -208,9 +204,6 @@ add_test(function test_login_on_sync() {
                            function() {
                              throw "User canceled Master Password entry";
                            });
-
-    let oldClearSyncTriggers = Service.scheduler.clearSyncTriggers;
-    let oldLockedSync = Service._lockedSync;
 
     let cSTCalled = false;
     let lockedSyncCalled = false;

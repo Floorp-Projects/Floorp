@@ -52,7 +52,9 @@ TEST_HARNESS_FILES.testing.mochitest.tests.toolkit.components.places.tests.brows
     'browser/redirect-target.html',
     'browser/redirect.sjs',
     'browser/redirect_once.sjs',
+    'browser/redirect_thrice.sjs',
     'browser/redirect_twice.sjs',
+    'browser/redirect_twice_perma.sjs',
     'browser/title1.html',
     'browser/title2.html',
 ]

@@ -80,12 +80,8 @@ public:
 #endif
 
 #ifdef LIBFUZZER
-  virtual void XRE_LibFuzzerSetMain(int argc, char** argv, LibFuzzerMain aMain) override {
-    ::XRE_LibFuzzerSetMain(argc, argv, aMain);
-  }
-
-  virtual void XRE_LibFuzzerGetFuncs(const char* aModuleName, LibFuzzerInitFunc* aInitFunc, LibFuzzerTestingFunc* aTestingFunc) override {
-    ::XRE_LibFuzzerGetFuncs(aModuleName, aInitFunc, aTestingFunc);
+  virtual void XRE_LibFuzzerSetDriver(LibFuzzerDriver aDriver) override {
+    ::XRE_LibFuzzerSetDriver(aDriver);
   }
 #endif
 

@@ -14,6 +14,7 @@ apt_packages+=('curl')
 apt_packages+=('python')
 apt_packages+=('python-pip')
 apt_packages+=('sudo')
+apt_packages+=('wget')
 apt_packages+=('xz-utils')
 
 apt-get update
@@ -39,22 +40,7 @@ cd /build
 
 # install node
 
-# For future reference things like this don't need to be uploaded to tooltool, as long
-# as we verify the hash, we can download it from the external net.
-cd /setup
-tooltool_fetch <<'EOF'
-[
-{
-    "size": 8310316,
-    "digest": "95f4fa3d9b215348393dfac4a1c5eff72e9ef85dca38eb69cc8e6c1fe5aada0136c3b182dc04ed5c19fb69f0ac7df85d9c4045b9eb382fcb545b0ccacfece25b",
-    "algorithm": "sha512",
-    "filename": "node-v4.4.5-linux-x64.tar.xz"
-}
-]
-EOF
-tar -C /usr/local --strip-components 1 -xJ < node-*.tar.xz
-node -v  # verify
-npm -v
+. install-node.sh
 
 ###
 # Flake8 Setup

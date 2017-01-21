@@ -343,14 +343,11 @@ this.FxAccountsClient.prototype = {
         switch (expectedError.errno) {
           case ERRNO_ACCOUNT_DOES_NOT_EXIST:
             return false;
-            break;
           case ERRNO_INCORRECT_PASSWORD:
             return true;
-            break;
           default:
             // not so expected, any more ...
             throw expectedError;
-            break;
         }
       }
     );
