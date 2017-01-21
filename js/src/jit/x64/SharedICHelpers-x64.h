@@ -334,11 +334,6 @@ EmitPreBarrier(MacroAssembler& masm, const AddrType& addr, MIRType type)
 inline void
 EmitStubGuardFailure(MacroAssembler& masm)
 {
-    // NOTE: This routine assumes that the stub guard code left the stack in the
-    // same state it was in when it was entered.
-
-    // BaselineStubEntry points to the current stub.
-
     // Load next stub into ICStubReg
     masm.loadPtr(Address(ICStubReg, ICStub::offsetOfNext()), ICStubReg);
 

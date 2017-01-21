@@ -7,7 +7,7 @@
  * Ensure that static frames of framesets are serialized but dynamically
  * inserted iframes are ignored.
  */
-add_task(function () {
+add_task(function*() {
   // This URL has the following frames:
   //  + data:text/html,A (static)
   //  + data:text/html,B (static)
@@ -45,7 +45,7 @@ add_task(function () {
  * dynamically inserted iframes are ignored. Navigating a subframe should
  * create a second root entry that doesn't contain any dynamic children either.
  */
-add_task(function () {
+add_task(function*() {
   // This URL has the following frames:
   //  + data:text/html,A (static)
   //  + data:text/html,C (dynamic iframe)

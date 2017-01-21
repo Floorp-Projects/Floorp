@@ -15,7 +15,7 @@ const INNER_VALUE = "inner-value-" + RAND;
  * This test ensures that setting, modifying and restoring sessionStorage data
  * works as expected.
  */
-add_task(function session_storage() {
+add_task(function* session_storage() {
   let tab = gBrowser.addTab(URL);
   let browser = tab.linkedBrowser;
   yield promiseBrowserLoaded(browser);
@@ -102,7 +102,7 @@ add_task(function session_storage() {
  * This test ensures that purging domain data also purges data from the
  * sessionStorage data collected for tabs.
  */
-add_task(function purge_domain() {
+add_task(function* purge_domain() {
   let tab = gBrowser.addTab(URL);
   let browser = tab.linkedBrowser;
   yield promiseBrowserLoaded(browser);
@@ -126,7 +126,7 @@ add_task(function purge_domain() {
  * This test ensures that collecting sessionStorage data respects the privacy
  * levels as set by the user.
  */
-add_task(function respect_privacy_level() {
+add_task(function* respect_privacy_level() {
   let tab = gBrowser.addTab(URL + "&secure");
   yield promiseBrowserLoaded(tab.linkedBrowser);
   yield promiseRemoveTab(tab);

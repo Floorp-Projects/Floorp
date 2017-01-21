@@ -8,7 +8,7 @@ add_task(function cleanup() {
   }
 });
 
-add_task(function() {
+add_task(function*() {
   let URL_PUBLIC = "http://example.com/public/" + Math.random();
   let URL_PRIVATE = "http://example.com/private/" + Math.random();
   let tab1, tab2;
@@ -59,7 +59,7 @@ add_task(function() {
   }
 });
 
-add_task(function () {
+add_task(function* () {
   const FRAME_SCRIPT = "data:," +
     "docShell.QueryInterface%28Components.interfaces.nsILoadContext%29.usePrivateBrowsing%3Dtrue";
 
@@ -101,7 +101,7 @@ add_task(function () {
   is(ss.getClosedWindowCount(), 0, "no windows to restore");
 });
 
-add_task(function () {
+add_task(function* () {
   // Clear the list of closed windows.
   forgetClosedWindows();
 

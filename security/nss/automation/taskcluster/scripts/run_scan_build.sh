@@ -1,15 +1,10 @@
 #!/usr/bin/env bash
 
-source $(dirname $0)/tools.sh
-
-if [ $(id -u) = 0 ]; then
-    # Drop privileges by re-running this script.
-    exec su worker $0 $@
-fi
+source $(dirname "$0")/tools.sh
 
 # Clone NSPR if needed.
 if [ ! -d "nspr" ]; then
-    hg_clone https://hg.mozilla.org/projects/nspr nspr default
+    hg_clone https://hg.mozilla.org/projects/nspr ./nspr default
 fi
 
 # Build.

@@ -2859,7 +2859,7 @@ WorkerThreadPrimaryRunnable::Run()
 
     {
 #ifdef MOZ_ENABLE_PROFILER_SPS
-      PseudoStack* stack = mozilla_get_pseudo_stack();
+      PseudoStack* stack = profiler_get_pseudo_stack();
       if (stack) {
         stack->sampleContext(cx);
       }
