@@ -1521,7 +1521,7 @@ SetObjectElementOperation(JSContext* cx, HandleObject obj, HandleId id, HandleVa
         }
     }
 
-    if (obj->isNative() && !JSID_IS_INT(id) && !obj->setHadElementsAccess(cx))
+    if (obj->isNative() && !JSID_IS_INT(id) && !JSObject::setHadElementsAccess(cx, obj))
         return false;
 
     ObjectOpResult result;

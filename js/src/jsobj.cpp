@@ -1860,7 +1860,7 @@ js::SetClassAndProto(JSContext* cx, HandleObject obj,
             if (!oldproto->as<NativeObject>().generateOwnShape(cx))
                 return false;
         } else {
-            if (!oldproto->setUncacheableProto(cx))
+            if (!JSObject::setUncacheableProto(cx, oldproto))
                 return false;
         }
         if (!obj->isDelegate()) {
@@ -1872,8 +1872,11 @@ js::SetClassAndProto(JSContext* cx, HandleObject obj,
         oldproto = oldproto->staticPrototype();
     }
 
-    if (proto.isObject() && !proto.toObject()->setDelegate(cx))
-        return false;
+    if (proto.isObject()) {
+        RootedObject protoObj(cx, proto.toObject());
+        if (!JSObject::setDelegate(cx, protoObj))
+            return false;
+    }
 
     if (obj->isSingleton()) {
         /*
@@ -2649,7 +2652,7 @@ js::PreventExtensions(JSContext* cx, HandleObject obj, ObjectOpResult& result, I
         }
     }
 
-    if (!obj->setFlags(cx, BaseShape::NOT_EXTENSIBLE, JSObject::GENERATE_SHAPE)) {
+    if (!JSObject::setFlags(cx, obj, BaseShape::NOT_EXTENSIBLE, JSObject::GENERATE_SHAPE)) {
         // We failed to mark the object non-extensible, so reset the frozen
         // flag on the elements.
         MOZ_ASSERT(obj->nonProxyIsExtensible());
@@ -2789,7 +2792,7 @@ js::SetImmutablePrototype(ExclusiveContext* cx, HandleObject obj, bool* succeede
         return Proxy::setImmutablePrototype(cx->asJSContext(), obj, succeeded);
     }
 
-    if (!obj->setFlags(cx, BaseShape::IMMUTABLE_PROTOTYPE))
+    if (!JSObject::setFlags(cx, obj, BaseShape::IMMUTABLE_PROTOTYPE))
         return false;
     *succeeded = true;
     return true;
