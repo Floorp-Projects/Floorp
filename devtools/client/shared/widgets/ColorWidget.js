@@ -10,12 +10,6 @@
 "use strict";
 
 const EventEmitter = require("devtools/shared/event-emitter");
-const {rgbToColorName} = require("devtools/shared/css/color").colorUtils;
-
-const { LocalizationHelper } = require("devtools/shared/l10n");
-const STRINGS_URI = "devtools/client/locales/colorwidget.properties";
-const L10N = new LocalizationHelper(STRINGS_URI);
-
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 /**
@@ -44,8 +38,6 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 function ColorWidget(parentEl, rgb) {
   EventEmitter.decorate(this);
 
-  let colorNameLabel = L10N.getStr("colorNameLabel");
-
   this.element = parentEl.ownerDocument.createElementNS(XHTML_NS, "div");
   this.parentEl = parentEl;
 
@@ -71,10 +63,6 @@ function ColorWidget(parentEl, rgb) {
         <div class="colorwidget-alpha-handle colorwidget-slider-control"></div>
       </div>
     </div>
-    <div class="colorwidget-colorname">
-      <label class="colorwidget-colorname-label">${colorNameLabel}</label>
-      <span class="colorwidget-colorname-value"></span>
-    </div>
   `;
 
   this.onElementClick = this.onElementClick.bind(this);
@@ -94,8 +82,6 @@ function ColorWidget(parentEl, rgb) {
   this.alphaSliderInner = this.element.querySelector(".colorwidget-alpha-inner");
   this.alphaSliderHelper = this.element.querySelector(".colorwidget-alpha-handle");
   ColorWidget.draggable(this.alphaSliderInner, this.onAlphaSliderMove.bind(this));
-
-  this.colorName = this.element.querySelector(".colorwidget-colorname-value");
 
   if (rgb) {
     this.rgb = rgb;
@@ -339,9 +325,6 @@ ColorWidget.prototype = {
     let alphaGradient = "linear-gradient(to right, " + rgbAlpha0 + ", " +
       rgbNoAlpha + ")";
     this.alphaSliderInner.style.background = alphaGradient;
-
-    let colorName = rgbToColorName(rgb[0], rgb[1], rgb[2]);
-    this.colorName.textContent = colorName || "---";
   },
 
   destroy: function () {
@@ -354,6 +337,5 @@ ColorWidget.prototype = {
     this.alphaSlider = this.alphaSliderInner = this.alphaSliderHelper = null;
     this.parentEl = null;
     this.element = null;
-    this.colorName = null;
   }
 };
