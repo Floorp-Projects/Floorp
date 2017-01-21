@@ -39,9 +39,6 @@ bogo_cleanup()
   . common/cleanup.sh
 }
 
-# Need to add go to the PATH.
-export PATH=$PATH:/usr/lib/go-1.6/bin
-
 cd "$(dirname "$0")"
 SOURCE_DIR="$PWD"/../..
 bogo_init
