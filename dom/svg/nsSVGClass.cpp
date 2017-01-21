@@ -70,7 +70,7 @@ nsSVGClass::SetBaseValue(const nsAString& aValue,
 {
   NS_ASSERTION(aSVGElement, "Null element passed to SetBaseValue");
 
-  aSVGElement->SetFlags(NODE_MAY_HAVE_CLASS);
+  aSVGElement->SetMayHaveClass();
   if (aDoSetAttr) {
     aSVGElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class, aValue, true);
   }
@@ -106,7 +106,7 @@ nsSVGClass::SetAnimValue(const nsAString& aValue, nsSVGElement *aSVGElement)
     mAnimVal = new nsString();
   }
   *mAnimVal = aValue;
-  aSVGElement->SetFlags(NODE_MAY_HAVE_CLASS);
+  aSVGElement->SetMayHaveClass();
   aSVGElement->DidAnimateClass();
 }
 
