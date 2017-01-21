@@ -1122,7 +1122,7 @@ class MethodCall : public MethodCallBase
 {
 public:
   template<typename... Args>
-  MethodCall(MethodType aMethod, ThisType* aThisVal, Args... aArgs)
+  MethodCall(MethodType aMethod, ThisType* aThisVal, Args&&... aArgs)
     : mMethod(aMethod)
     , mThisVal(aThisVal)
     , mArgs(Forward<Args>(aArgs)...)
