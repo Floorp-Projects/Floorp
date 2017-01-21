@@ -17,3 +17,4 @@ GTAGS
 .ycm_extra_conf.py*
 fuzz/libFuzzer/*
 fuzz/corpus
+fuzz/out

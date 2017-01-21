@@ -120,6 +120,7 @@
             'cmd/smimetools/smimetools.gyp:cmsutil',
             'cmd/ssltap/ssltap.gyp:ssltap',
             'cmd/symkeyutil/symkeyutil.gyp:symkeyutil',
+            'nss-tool/nss_tool.gyp:nss',
           ],
         }],
       ],
@@ -177,7 +178,6 @@
             'cmd/vfychain/vfychain.gyp:vfychain',
             'cmd/vfyserv/vfyserv.gyp:vfyserv',
             'gtests/google_test/google_test.gyp:gtest1',
-            'gtests/common/common.gyp:gtests',
             'gtests/der_gtest/der_gtest.gyp:der_gtest',
             'gtests/pk11_gtest/pk11_gtest.gyp:pk11_gtest',
             'gtests/ssl_gtest/ssl_gtest.gyp:ssl_gtest',
@@ -241,7 +241,7 @@
         },
       ],
     }],
-    [ 'fuzz==1', {
+    [ 'fuzz_tls==1', {
       'targets': [
         {
           'target_name': 'fuzz_warning',
@@ -256,12 +256,16 @@
             }
           ],
         },
+      ],
+    }],
+    [ 'fuzz==1', {
+      'targets': [
         {
           'target_name': 'fuzz',
           'type': 'none',
           'dependencies': [
             'fuzz/fuzz.gyp:nssfuzz',
-          ]
+          ],
         },
       ],
     }],
