@@ -76,7 +76,6 @@ module.exports = createClass({
           name: form.url,
           url: form.url,
           scope: form.scope,
-          fetch: form.fetch,
           registrationActor: form.actor,
           active: form.active
         });
@@ -100,8 +99,6 @@ module.exports = createClass({
               }
               registration.workerActor = form.actor;
             } else {
-              worker.fetch = form.fetch;
-
               // If a service worker registration could not be found, this means we are in
               // e10s, and registrations are not forwarded to other processes until they
               // reach the activated state. Augment the worker as a registration worker to

@@ -61,15 +61,6 @@ ServiceWorkerInfo::GetDebugger(nsIWorkerDebugger** aResult)
 }
 
 NS_IMETHODIMP
-ServiceWorkerInfo::GetHandlesFetchEvents(bool* aValue)
-{
-  MOZ_ASSERT(aValue);
-  AssertIsOnMainThread();
-  *aValue = HandlesFetch();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 ServiceWorkerInfo::AttachDebugger()
 {
   return mServiceWorkerPrivate->AttachDebugger();
