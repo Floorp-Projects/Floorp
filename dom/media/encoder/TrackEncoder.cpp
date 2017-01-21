@@ -57,6 +57,8 @@ AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
                                             uint32_t aTrackEvents,
                                             const MediaSegment& aQueuedMedia)
 {
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
   if (mCanceled) {
     return;
   }
@@ -109,13 +111,14 @@ AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
 void
 AudioTrackEncoder::NotifyEndOfStream()
 {
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
   // If source audio track is completely silent till the end of encoding,
   // initialize the encoder with default channel counts and sampling rate.
   if (!mCanceled && !mInitialized) {
     Init(DEFAULT_CHANNELS, DEFAULT_SAMPLING_RATE);
   }
 
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   mEndOfStream = true;
   mReentrantMonitor.NotifyAll();
 }
@@ -195,6 +198,8 @@ AudioTrackEncoder::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) cons
 void
 VideoTrackEncoder::Init(const VideoSegment& aSegment)
 {
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
   if (mInitialized) {
     return;
   }
@@ -227,12 +232,13 @@ VideoTrackEncoder::Init(const VideoSegment& aSegment)
     NotifyEndOfStream();
     return;
   }
-
 }
 
 void
 VideoTrackEncoder::SetCurrentFrames(const VideoSegment& aSegment)
 {
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
   if (mCanceled) {
     return;
   }
@@ -248,6 +254,8 @@ VideoTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
                                             uint32_t aTrackEvents,
                                             const MediaSegment& aQueuedMedia)
 {
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
   if (mCanceled) {
     return;
   }
@@ -277,6 +285,11 @@ VideoTrackEncoder::AppendVideoSegment(const VideoSegment& aSegment)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
+  if (mEndOfStream) {
+    MOZ_ASSERT(false);
+    return NS_OK;
+  }
+
   // Append all video segments from MediaStreamGraph, including null an
   // non-null frames.
   VideoSegment::ConstChunkIterator iter(aSegment);
@@ -296,15 +309,19 @@ VideoTrackEncoder::AppendVideoSegment(const VideoSegment& aSegment)
       MOZ_ASSERT(!chunk.mTimeStamp.IsNull());
       const StreamTime nullDuration = mLastChunk.mDuration;
       mLastChunk = chunk;
+      chunk.mDuration = 0;
 
       TRACK_LOG(LogLevel::Verbose,
                 ("[VideoTrackEncoder]: Got first video chunk after %lld ticks.",
                  nullDuration));
       // Adapt to the time before the first frame. This extends the first frame
       // from [start, end] to [0, end], but it'll do for now.
-      mLastChunk.mTimeStamp -=
-        TimeDuration::FromMicroseconds(
-          RateConvertTicksRoundUp(PR_USEC_PER_SEC, mTrackRate, nullDuration));
+      CheckedInt64 diff = FramesToUsecs(nullDuration, mTrackRate);
+      MOZ_ASSERT(diff.isValid());
+      if (diff.isValid()) {
+        mLastChunk.mTimeStamp -= TimeDuration::FromMicroseconds(diff.value());
+        mLastChunk.mDuration += nullDuration;
+      }
     }
 
     MOZ_ASSERT(!mLastChunk.IsNull());
@@ -330,6 +347,9 @@ VideoTrackEncoder::AppendVideoSegment(const VideoSegment& aSegment)
       // to the encoder to make sure there is some output.
       chunk.mTimeStamp = mLastChunk.mTimeStamp + TimeDuration::FromSeconds(1);
 
+      // chunk's duration has already been accounted for.
+      chunk.mDuration = 0;
+
       if (chunk.IsNull()) {
         // Ensure that we don't pass null to the encoder by making mLastChunk
         // null later on.
@@ -353,14 +373,16 @@ VideoTrackEncoder::AppendVideoSegment(const VideoSegment& aSegment)
       TRACK_LOG(LogLevel::Verbose,
                 ("[VideoTrackEncoder]: Appending video frame %p, duration=%.5f",
                  lastImage.get(), diff.ToSeconds()));
-      mRawSegment.AppendFrame(lastImage.forget(),
-                              RateConvertTicksRoundUp(
-                                  mTrackRate, PR_USEC_PER_SEC,
-                                  diff.ToMicroseconds()),
-                              mLastChunk.mFrame.GetIntrinsicSize(),
-                              PRINCIPAL_HANDLE_NONE,
-                              mLastChunk.mFrame.GetForceBlack(),
-                              mLastChunk.mTimeStamp);
+      CheckedInt64 duration = UsecsToFrames(diff.ToMicroseconds(), mTrackRate);
+      MOZ_ASSERT(duration.isValid());
+      if (duration.isValid()) {
+        mRawSegment.AppendFrame(lastImage.forget(),
+                                duration.value(),
+                                mLastChunk.mFrame.GetIntrinsicSize(),
+                                PRINCIPAL_HANDLE_NONE,
+                                mLastChunk.mFrame.GetForceBlack(),
+                                mLastChunk.mTimeStamp);
+      }
     }
 
     mLastChunk = chunk;
@@ -376,6 +398,8 @@ VideoTrackEncoder::AppendVideoSegment(const VideoSegment& aSegment)
 void
 VideoTrackEncoder::NotifyEndOfStream()
 {
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
   // If source video track is muted till the end of encoding, initialize the
   // encoder with default frame width, frame height, and track rate.
   if (!mCanceled && !mInitialized) {
@@ -383,8 +407,27 @@ VideoTrackEncoder::NotifyEndOfStream()
          DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT);
   }
 
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  if (mEndOfStream) {
+    // We have already been notified.
+    return;
+  }
+
   mEndOfStream = true;
+  TRACK_LOG(LogLevel::Info, ("[VideoTrackEncoder]: Reached end of stream"));
+
+  if (!mLastChunk.IsNull() && mLastChunk.mDuration > 0) {
+    RefPtr<layers::Image> lastImage = mLastChunk.mFrame.GetImage();
+    TRACK_LOG(LogLevel::Debug,
+              ("[VideoTrackEncoder]: Appending last video frame %p, "
+               "duration=%.5f", lastImage.get(),
+               FramesToTimeUnit(mLastChunk.mDuration, mTrackRate).ToSeconds()));
+    mRawSegment.AppendFrame(lastImage.forget(),
+                            mLastChunk.mDuration,
+                            mLastChunk.mFrame.GetIntrinsicSize(),
+                            PRINCIPAL_HANDLE_NONE,
+                            mLastChunk.mFrame.GetForceBlack(),
+                            mLastChunk.mTimeStamp);
+  }
   mReentrantMonitor.NotifyAll();
 }
 

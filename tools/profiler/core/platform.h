@@ -76,7 +76,7 @@ static inline pid_t gettid()
 
 #define ASSERT(a) MOZ_ASSERT(a)
 
-bool moz_profiler_verbose();
+bool profiler_verbose();
 
 #ifdef ANDROID
 # if defined(__arm__) || defined(__thumb__)
@@ -84,22 +84,22 @@ bool moz_profiler_verbose();
 #  define ENABLE_ARM_LR_SAVING
 # endif
 # define LOG(text) \
-    do { if (moz_profiler_verbose()) \
+    do { if (profiler_verbose()) \
            __android_log_write(ANDROID_LOG_ERROR, "Profiler", text); \
     } while (0)
 # define LOGF(format, ...) \
-    do { if (moz_profiler_verbose()) \
+    do { if (profiler_verbose()) \
            __android_log_print(ANDROID_LOG_ERROR, "Profiler", format, \
                                __VA_ARGS__); \
     } while (0)
 
 #else
 # define LOG(text) \
-    do { if (moz_profiler_verbose()) fprintf(stderr, "Profiler: %s\n", text); \
+    do { if (profiler_verbose()) fprintf(stderr, "Profiler: %s\n", text); \
     } while (0)
 # define LOGF(format, ...) \
-    do { if (moz_profiler_verbose()) fprintf(stderr, "Profiler: " format \
-                                             "\n", __VA_ARGS__);        \
+    do { if (profiler_verbose()) fprintf(stderr, "Profiler: " format "\n", \
+                                         __VA_ARGS__); \
     } while (0)
 
 #endif

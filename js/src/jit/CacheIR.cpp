@@ -499,8 +499,8 @@ GetPropIRGenerator::tryAttachNative(HandleObject obj, ObjOperandId objId, Handle
 bool
 GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, HandleId id)
 {
-    // Attach a stub when the receiver is a WindowProxy and we are calling some
-    // kinds of JSNative getters on the Window object (the global object).
+    // Attach a stub when the receiver is a WindowProxy and we can do the lookup
+    // on the Window (the global object).
 
     if (!IsWindowProxy(obj))
         return false;
@@ -511,34 +511,49 @@ GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, H
     MOZ_ASSERT(obj->getClass() == cx_->maybeWindowProxyClass());
     MOZ_ASSERT(ToWindowIfWindowProxy(obj) == cx_->global());
 
-    // Now try to do the lookup on the Window (the current global) and see if
-    // it's a native getter.
+    // Now try to do the lookup on the Window (the current global).
     HandleObject windowObj = cx_->global();
     RootedShape shape(cx_);
     RootedNativeObject holder(cx_);
     NativeGetPropCacheability type = CanAttachNativeGetProp(cx_, windowObj, id, &holder, &shape, pc_,
                                                             engine_, canAttachGetter_,
                                                             isTemporarilyUnoptimizable_);
-    if (type != CanAttachCallGetter ||
-        !IsCacheableGetPropCallNative(windowObj, holder, shape))
-    {
+    switch (type) {
+      case CanAttachNone:
         return false;
+
+      case CanAttachReadSlot: {
+        maybeEmitIdGuard(id);
+        writer.guardClass(objId, GuardClassKind::WindowProxy);
+
+        ObjOperandId windowObjId = writer.loadObject(windowObj);
+        EmitReadSlotResult(writer, windowObj, holder, shape, windowObjId);
+        EmitReadSlotReturn(writer, windowObj, holder, shape);
+        return true;
+      }
+
+      case CanAttachCallGetter: {
+        if (!IsCacheableGetPropCallNative(windowObj, holder, shape))
+            return false;
+
+        // Make sure the native getter is okay with the IC passing the Window
+        // instead of the WindowProxy as |this| value.
+        JSFunction* callee = &shape->getterObject()->as<JSFunction>();
+        MOZ_ASSERT(callee->isNative());
+        if (!callee->jitInfo() || callee->jitInfo()->needsOuterizedThisObject())
+            return false;
+
+        // Guard the incoming object is a WindowProxy and inline a getter call based
+        // on the Window object.
+        maybeEmitIdGuard(id);
+        writer.guardClass(objId, GuardClassKind::WindowProxy);
+        ObjOperandId windowObjId = writer.loadObject(windowObj);
+        EmitCallGetterResult(writer, windowObj, holder, shape, windowObjId);
+        return true;
+      }
     }
 
-    // Make sure the native getter is okay with the IC passing the Window
-    // instead of the WindowProxy as |this| value.
-    JSFunction* callee = &shape->getterObject()->as<JSFunction>();
-    MOZ_ASSERT(callee->isNative());
-    if (!callee->jitInfo() || callee->jitInfo()->needsOuterizedThisObject())
-        return false;
-
-    // Guard the incoming object is a WindowProxy and inline a getter call based
-    // on the Window object.
-    maybeEmitIdGuard(id);
-    writer.guardClass(objId, GuardClassKind::WindowProxy);
-    ObjOperandId windowObjId = writer.loadObject(windowObj);
-    EmitCallGetterResult(writer, windowObj, holder, shape, windowObjId);
-    return true;
+    MOZ_CRASH("Unreachable");
 }
 
 bool

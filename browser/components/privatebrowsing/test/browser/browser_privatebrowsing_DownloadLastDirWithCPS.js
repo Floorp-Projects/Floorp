@@ -7,8 +7,7 @@ var gTests;
 function test() {
   waitForExplicitFinish();
   requestLongerTimeout(2);
-  gTests = runTest();
-  gTests.next();
+  runTest().catch(ex => ok(false, ex));
 }
 
 /*
@@ -17,34 +16,22 @@ function test() {
  * ================
  */
 
-function moveAlong(aResult) {
-  try {
-    gTests.send(aResult);
-  } catch (x if x instanceof StopIteration) {
-    finish();
-  }
-}
-
 function createWindow(aOptions) {
-  whenNewWindowLoaded(aOptions, function(win) {
-    moveAlong(win);
-  });
+  return new Promise(resolve => whenNewWindowLoaded(aOptions, resolve));
 }
 
 function getFile(downloadLastDir, aURI) {
-  downloadLastDir.getFileAsync(aURI, function(result) {
-    moveAlong(result);
-  });
+  return new Promise(resolve => downloadLastDir.getFileAsync(aURI, resolve));
 }
 
 function setFile(downloadLastDir, aURI, aValue) {
   downloadLastDir.setFile(aURI, aValue);
-  executeSoon(moveAlong);
+  return new Promise(resolve => executeSoon(resolve));
 }
 
 function clearHistoryAndWait() {
   clearHistory();
-  executeSoon(() => executeSoon(moveAlong));
+  return new Promise(resolve => executeSoon(_ => executeSoon(resolve)));
 }
 
 /*
@@ -53,7 +40,7 @@ function clearHistoryAndWait() {
  * ===================
  */
 
-function runTest() {
+async function runTest() {
   let FileUtils =
     Cu.import("resource://gre/modules/FileUtils.jsm", {}).FileUtils;
   let DownloadLastDir =
@@ -81,12 +68,12 @@ function runTest() {
   function checkDownloadLastDir(gDownloadLastDir, aLastDir) {
     is(gDownloadLastDir.file.path, aLastDir.path,
        "gDownloadLastDir should point to the expected last directory");
-    getFile(gDownloadLastDir, uri1);
+    return getFile(gDownloadLastDir, uri1);
   }
 
   function checkDownloadLastDirNull(gDownloadLastDir) {
     is(gDownloadLastDir.file, null, "gDownloadLastDir should be null");
-    getFile(gDownloadLastDir, uri1);
+    return getFile(gDownloadLastDir, uri1);
   }
 
   /*
@@ -95,8 +82,8 @@ function runTest() {
    * ================================
    */
 
-  let win = yield createWindow({private: false});
-  let pbWin = yield createWindow({private: true});
+  let win = await createWindow({private: false});
+  let pbWin = await createWindow({private: true});
 
   let downloadLastDir = new DownloadLastDir(win);
   let pbDownloadLastDir = new DownloadLastDir(pbWin);
@@ -113,7 +100,7 @@ function runTest() {
      "LastDir pref should be null to start with");
 
   // set up last dir
-  yield setFile(downloadLastDir, null, tmpDir);
+  await setFile(downloadLastDir, null, tmpDir);
   is(downloadLastDir.file.path, tmpDir.path,
      "LastDir should point to the tmpDir");
   isnot(downloadLastDir.file, tmpDir,
@@ -121,111 +108,111 @@ function runTest() {
 
   // set uri1 to dir1, all should now return dir1
   // also check that a new object is returned
-  yield setFile(downloadLastDir, uri1, dir1);
+  await setFile(downloadLastDir, uri1, dir1);
   is(downloadLastDir.file.path, dir1.path,
      "downloadLastDir should return dir1");
   isnot(downloadLastDir.file, dir1,
         "downloadLastDir.file should not return dir1");
-  is((yield getFile(downloadLastDir, uri1)).path, dir1.path,
+  is((await getFile(downloadLastDir, uri1)).path, dir1.path,
      "uri1 should return dir1"); // set in CPS
-  isnot((yield getFile(downloadLastDir, uri1)), dir1,
+  isnot((await getFile(downloadLastDir, uri1)), dir1,
         "getFile on uri1 should not return dir1");
-  is((yield getFile(downloadLastDir, uri2)).path, dir1.path,
+  is((await getFile(downloadLastDir, uri2)).path, dir1.path,
      "uri2 should return dir1"); // fallback
-  isnot((yield getFile(downloadLastDir, uri2)), dir1,
+  isnot((await getFile(downloadLastDir, uri2)), dir1,
         "getFile on uri2 should not return dir1");
-  is((yield getFile(downloadLastDir, uri3)).path, dir1.path,
+  is((await getFile(downloadLastDir, uri3)).path, dir1.path,
      "uri3 should return dir1"); // fallback
-  isnot((yield getFile(downloadLastDir, uri3)), dir1,
+  isnot((await getFile(downloadLastDir, uri3)), dir1,
         "getFile on uri3 should not return dir1");
-  is((yield getFile(downloadLastDir, uri4)).path, dir1.path,
+  is((await getFile(downloadLastDir, uri4)).path, dir1.path,
      "uri4 should return dir1"); // fallback
-  isnot((yield getFile(downloadLastDir, uri4)), dir1,
+  isnot((await getFile(downloadLastDir, uri4)), dir1,
         "getFile on uri4 should not return dir1");
 
   // set uri2 to dir2, all except uri1 should now return dir2
-  yield setFile(downloadLastDir, uri2, dir2);
+  await setFile(downloadLastDir, uri2, dir2);
   is(downloadLastDir.file.path, dir2.path,
      "downloadLastDir should point to dir2");
-  is((yield getFile(downloadLastDir, uri1)).path, dir1.path,
+  is((await getFile(downloadLastDir, uri1)).path, dir1.path,
      "uri1 should return dir1"); // set in CPS
-  is((yield getFile(downloadLastDir, uri2)).path, dir2.path,
+  is((await getFile(downloadLastDir, uri2)).path, dir2.path,
      "uri2 should return dir2"); // set in CPS
-  is((yield getFile(downloadLastDir, uri3)).path, dir2.path,
+  is((await getFile(downloadLastDir, uri3)).path, dir2.path,
      "uri3 should return dir2"); // fallback
-  is((yield getFile(downloadLastDir, uri4)).path, dir2.path,
+  is((await getFile(downloadLastDir, uri4)).path, dir2.path,
      "uri4 should return dir2"); // fallback
 
   // set uri3 to dir3, all except uri1 and uri2 should now return dir3
-  yield setFile(downloadLastDir, uri3, dir3);
+  await setFile(downloadLastDir, uri3, dir3);
   is(downloadLastDir.file.path, dir3.path,
      "downloadLastDir should point to dir3");
-  is((yield getFile(downloadLastDir, uri1)).path, dir1.path,
+  is((await getFile(downloadLastDir, uri1)).path, dir1.path,
      "uri1 should return dir1"); // set in CPS
-  is((yield getFile(downloadLastDir, uri2)).path, dir2.path,
+  is((await getFile(downloadLastDir, uri2)).path, dir2.path,
      "uri2 should return dir2"); // set in CPS
-  is((yield getFile(downloadLastDir, uri3)).path, dir3.path,
+  is((await getFile(downloadLastDir, uri3)).path, dir3.path,
      "uri3 should return dir3"); // set in CPS
-  is((yield getFile(downloadLastDir, uri4)).path, dir3.path,
+  is((await getFile(downloadLastDir, uri4)).path, dir3.path,
      "uri4 should return dir4"); // fallback
 
   // set uri1 to dir2, all except uri3 should now return dir2
-  yield setFile(downloadLastDir, uri1, dir2);
+  await setFile(downloadLastDir, uri1, dir2);
   is(downloadLastDir.file.path, dir2.path,
      "downloadLastDir should point to dir2");
-  is((yield getFile(downloadLastDir, uri1)).path, dir2.path,
+  is((await getFile(downloadLastDir, uri1)).path, dir2.path,
      "uri1 should return dir2"); // set in CPS
-  is((yield getFile(downloadLastDir, uri2)).path, dir2.path,
+  is((await getFile(downloadLastDir, uri2)).path, dir2.path,
      "uri2 should return dir2"); // set in CPS
-  is((yield getFile(downloadLastDir, uri3)).path, dir3.path,
+  is((await getFile(downloadLastDir, uri3)).path, dir3.path,
      "uri3 should return dir3"); // set in CPS
-  is((yield getFile(downloadLastDir, uri4)).path, dir2.path,
+  is((await getFile(downloadLastDir, uri4)).path, dir2.path,
      "uri4 should return dir2"); // fallback
 
-  yield clearHistoryAndWait();
+  await clearHistoryAndWait();
 
   // check clearHistory removes all data
   is(downloadLastDir.file, null, "clearHistory removes all data");
   //is(Services.contentPrefs.hasPref(uri1, "browser.download.lastDir", null),
   //   false, "LastDir preference should be absent");
-  is((yield getFile(downloadLastDir, uri1)), null, "uri1 should point to null");
-  is((yield getFile(downloadLastDir, uri2)), null, "uri2 should point to null");
-  is((yield getFile(downloadLastDir, uri3)), null, "uri3 should point to null");
-  is((yield getFile(downloadLastDir, uri4)), null, "uri4 should point to null");
+  is((await getFile(downloadLastDir, uri1)), null, "uri1 should point to null");
+  is((await getFile(downloadLastDir, uri2)), null, "uri2 should point to null");
+  is((await getFile(downloadLastDir, uri3)), null, "uri3 should point to null");
+  is((await getFile(downloadLastDir, uri4)), null, "uri4 should point to null");
 
-  yield setFile(downloadLastDir, null, tmpDir);
+  await setFile(downloadLastDir, null, tmpDir);
 
   // check data set outside PB mode is remembered
-  is((yield checkDownloadLastDir(pbDownloadLastDir, tmpDir)).path, tmpDir.path, "uri1 should return the expected last directory");
-  is((yield checkDownloadLastDir(downloadLastDir, tmpDir)).path, tmpDir.path, "uri1 should return the expected last directory");
-  yield clearHistoryAndWait();
+  is((await checkDownloadLastDir(pbDownloadLastDir, tmpDir)).path, tmpDir.path, "uri1 should return the expected last directory");
+  is((await checkDownloadLastDir(downloadLastDir, tmpDir)).path, tmpDir.path, "uri1 should return the expected last directory");
+  await clearHistoryAndWait();
 
-  yield setFile(downloadLastDir, uri1, dir1);
+  await setFile(downloadLastDir, uri1, dir1);
 
   // check data set using CPS outside PB mode is remembered
-  is((yield checkDownloadLastDir(pbDownloadLastDir, dir1)).path, dir1.path, "uri1 should return the expected last directory");
-  is((yield checkDownloadLastDir(downloadLastDir, dir1)).path, dir1.path, "uri1 should return the expected last directory");
-  yield clearHistoryAndWait();
+  is((await checkDownloadLastDir(pbDownloadLastDir, dir1)).path, dir1.path, "uri1 should return the expected last directory");
+  is((await checkDownloadLastDir(downloadLastDir, dir1)).path, dir1.path, "uri1 should return the expected last directory");
+  await clearHistoryAndWait();
 
   // check data set inside PB mode is forgotten
-  yield setFile(pbDownloadLastDir, null, tmpDir);
+  await setFile(pbDownloadLastDir, null, tmpDir);
 
-  is((yield checkDownloadLastDir(pbDownloadLastDir, tmpDir)).path, tmpDir.path, "uri1 should return the expected last directory");
-  is((yield checkDownloadLastDirNull(downloadLastDir)), null, "uri1 should return the expected last directory");
+  is((await checkDownloadLastDir(pbDownloadLastDir, tmpDir)).path, tmpDir.path, "uri1 should return the expected last directory");
+  is((await checkDownloadLastDirNull(downloadLastDir)), null, "uri1 should return the expected last directory");
 
-  yield clearHistoryAndWait();
+  await clearHistoryAndWait();
 
   // check data set using CPS inside PB mode is forgotten
-  yield setFile(pbDownloadLastDir, uri1, dir1);
+  await setFile(pbDownloadLastDir, uri1, dir1);
 
-  is((yield checkDownloadLastDir(pbDownloadLastDir, dir1)).path, dir1.path, "uri1 should return the expected last directory");
-  is((yield checkDownloadLastDirNull(downloadLastDir)), null, "uri1 should return the expected last directory");
+  is((await checkDownloadLastDir(pbDownloadLastDir, dir1)).path, dir1.path, "uri1 should return the expected last directory");
+  is((await checkDownloadLastDirNull(downloadLastDir)), null, "uri1 should return the expected last directory");
 
   // check data set outside PB mode but changed inside is remembered correctly
-  yield setFile(downloadLastDir, uri1, dir1);
-  yield setFile(pbDownloadLastDir, uri1, dir2);
-  is((yield checkDownloadLastDir(pbDownloadLastDir, dir2)).path, dir2.path, "uri1 should return the expected last directory");
-  is((yield checkDownloadLastDir(downloadLastDir, dir1)).path, dir1.path, "uri1 should return the expected last directory");
+  await setFile(downloadLastDir, uri1, dir1);
+  await setFile(pbDownloadLastDir, uri1, dir2);
+  is((await checkDownloadLastDir(pbDownloadLastDir, dir2)).path, dir2.path, "uri1 should return the expected last directory");
+  is((await checkDownloadLastDir(downloadLastDir, dir1)).path, dir1.path, "uri1 should return the expected last directory");
 
   /*
    * ====================
@@ -236,47 +223,49 @@ function runTest() {
   // check that the last dir store got cleared in a new PB window
   pbWin.close();
   // And give it time to close
-  executeSoon(moveAlong);
-  yield;
-  pbWin = yield createWindow({private: true});
+  await new Promise(resolve => executeSoon(resolve));
+
+  pbWin = await createWindow({private: true});
   pbDownloadLastDir = new DownloadLastDir(pbWin);
 
-  is((yield checkDownloadLastDir(pbDownloadLastDir, dir1)).path, dir1.path, "uri1 should return the expected last directory");
+  is((await checkDownloadLastDir(pbDownloadLastDir, dir1)).path, dir1.path, "uri1 should return the expected last directory");
 
-  yield clearHistoryAndWait();
+  await clearHistoryAndWait();
 
   // check clearHistory inside PB mode clears data outside PB mode
-  yield setFile(pbDownloadLastDir, uri1, dir2);
+  await setFile(pbDownloadLastDir, uri1, dir2);
 
-  yield clearHistoryAndWait();
+  await clearHistoryAndWait();
 
-  is((yield checkDownloadLastDirNull(downloadLastDir)), null, "uri1 should return the expected last directory");
-  is((yield checkDownloadLastDirNull(pbDownloadLastDir)), null, "uri1 should return the expected last directory");
+  is((await checkDownloadLastDirNull(downloadLastDir)), null, "uri1 should return the expected last directory");
+  is((await checkDownloadLastDirNull(pbDownloadLastDir)), null, "uri1 should return the expected last directory");
 
   // check that disabling CPS works
   Services.prefs.setBoolPref("browser.download.lastDir.savePerSite", false);
 
-  yield setFile(downloadLastDir, uri1, dir1);
+  await setFile(downloadLastDir, uri1, dir1);
   is(downloadLastDir.file.path, dir1.path, "LastDir should be set to dir1");
-  is((yield getFile(downloadLastDir, uri1)).path, dir1.path, "uri1 should return dir1");
-  is((yield getFile(downloadLastDir, uri2)).path, dir1.path, "uri2 should return dir1");
-  is((yield getFile(downloadLastDir, uri3)).path, dir1.path, "uri3 should return dir1");
-  is((yield getFile(downloadLastDir, uri4)).path, dir1.path, "uri4 should return dir1");
+  is((await getFile(downloadLastDir, uri1)).path, dir1.path, "uri1 should return dir1");
+  is((await getFile(downloadLastDir, uri2)).path, dir1.path, "uri2 should return dir1");
+  is((await getFile(downloadLastDir, uri3)).path, dir1.path, "uri3 should return dir1");
+  is((await getFile(downloadLastDir, uri4)).path, dir1.path, "uri4 should return dir1");
 
   downloadLastDir.setFile(uri2, dir2);
   is(downloadLastDir.file.path, dir2.path, "LastDir should be set to dir2");
-  is((yield getFile(downloadLastDir, uri1)).path, dir2.path, "uri1 should return dir2");
-  is((yield getFile(downloadLastDir, uri2)).path, dir2.path, "uri2 should return dir2");
-  is((yield getFile(downloadLastDir, uri3)).path, dir2.path, "uri3 should return dir2");
-  is((yield getFile(downloadLastDir, uri4)).path, dir2.path, "uri4 should return dir2");
+  is((await getFile(downloadLastDir, uri1)).path, dir2.path, "uri1 should return dir2");
+  is((await getFile(downloadLastDir, uri2)).path, dir2.path, "uri2 should return dir2");
+  is((await getFile(downloadLastDir, uri3)).path, dir2.path, "uri3 should return dir2");
+  is((await getFile(downloadLastDir, uri4)).path, dir2.path, "uri4 should return dir2");
 
   Services.prefs.clearUserPref("browser.download.lastDir.savePerSite");
 
   // check that passing null to setFile clears the stored value
-  yield setFile(downloadLastDir, uri3, dir3);
-  is((yield getFile(downloadLastDir, uri3)).path, dir3.path, "LastDir should be set to dir3");
-  yield setFile(downloadLastDir, uri3, null);
-  is((yield getFile(downloadLastDir, uri3)), null, "uri3 should return null");
+  await setFile(downloadLastDir, uri3, dir3);
+  is((await getFile(downloadLastDir, uri3)).path, dir3.path, "LastDir should be set to dir3");
+  await setFile(downloadLastDir, uri3, null);
+  is((await getFile(downloadLastDir, uri3)), null, "uri3 should return null");
 
-  yield clearHistoryAndWait();
+  await clearHistoryAndWait();
+
+  finish();
 }

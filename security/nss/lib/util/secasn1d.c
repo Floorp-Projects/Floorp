@@ -292,6 +292,17 @@ struct sec_DecoderContext_struct {
     sec_asn1d_state *current;
     sec_asn1d_parse_status status;
 
+    /* The maximum size the caller is willing to allow a single element
+     * to be before returning an error.
+     *
+     * In the case of an indefinite length element, this is the sum total
+     * of all child elements.
+     *
+     * In the case of a definite length element, this represents the maximum
+     * size of the top-level element.
+     */
+    unsigned long max_element_size;
+
     SEC_ASN1NotifyProc notify_proc; /* call before/after handling field */
     void *notify_arg;               /* argument to notify_proc */
     PRBool during_notify;           /* true during call to notify_proc */
@@ -1288,6 +1299,13 @@ sec_asn1d_prepare_for_contents(sec_asn1d_state *state)
                         alloc_len += subitem->len;
                 }
 
+                if (state->top->max_element_size > 0 &&
+                    alloc_len > state->top->max_element_size) {
+                    PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+                    state->top->status = decodeError;
+                    return;
+                }
+
                 item->data = (unsigned char *)sec_asn1d_zalloc(poolp, alloc_len);
                 if (item->data == NULL) {
                     state->top->status = decodeError;
@@ -1396,6 +1414,13 @@ sec_asn1d_prepare_for_contents(sec_asn1d_state *state)
                 if (state->dest != NULL) {
                     item = (SECItem *)(state->dest);
                     item->len = 0;
+                    if (state->top->max_element_size > 0 &&
+                        state->contents_length > state->top->max_element_size) {
+                        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+                        state->top->status = decodeError;
+                        return;
+                    }
+
                     if (state->top->filter_only) {
                         item->data = NULL;
                     } else {
@@ -2223,6 +2248,13 @@ sec_asn1d_concat_substrings(sec_asn1d_state *state)
             alloc_len = item_len;
         }
 
+        if (state->top->max_element_size > 0 &&
+            alloc_len > state->top->max_element_size) {
+            PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+            state->top->status = decodeError;
+            return;
+        }
+
         item = (SECItem *)(state->dest);
         PORT_Assert(item != NULL);
         PORT_Assert(item->data == NULL);
@@ -2726,7 +2758,7 @@ SEC_ASN1DecoderUpdate(SEC_ASN1DecoderContext *cx,
 #ifdef DEBUG_ASN1D_STATES
         printf("\nPLACE = %s, next byte = 0x%02x, %08x[%d]\n",
                (state->place >= 0 && state->place <= notInUse) ? place_names[state->place] : "(undefined)",
-               (unsigned int)((unsigned char *)buf)[consumed],
+               len ? (unsigned int)((unsigned char *)buf)[consumed] : 0,
                buf, consumed);
         dump_states(cx);
 #endif /* DEBUG_ASN1D_STATES */
@@ -3042,6 +3074,13 @@ SEC_ASN1DecoderClearNotifyProc(SEC_ASN1DecoderContext *cx)
 }
 
 void
+SEC_ASN1DecoderSetMaximumElementSize(SEC_ASN1DecoderContext *cx,
+                                     unsigned long max_size)
+{
+    cx->max_element_size = max_size;
+}
+
+void
 SEC_ASN1DecoderAbort(SEC_ASN1DecoderContext *cx, int error)
 {
     PORT_Assert(cx);
@@ -3060,6 +3099,10 @@ SEC_ASN1Decode(PLArenaPool *poolp, void *dest,
     dcx = SEC_ASN1DecoderStart(poolp, dest, theTemplate);
     if (dcx == NULL)
         return SECFailure;
+
+    /* In one-shot mode, there's no possibility of streaming data beyond the
+     * length of len */
+    SEC_ASN1DecoderSetMaximumElementSize(dcx, len);
 
     urv = SEC_ASN1DecoderUpdate(dcx, buf, len);
     frv = SEC_ASN1DecoderFinish(dcx);

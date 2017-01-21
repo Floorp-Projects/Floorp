@@ -90,20 +90,6 @@ the linear coefficient in the curve defining equation).
 
 ecp_192.c and ecp_224.c provide optimized field arithmetic.
 
-Point Arithmetic over Binary Polynomial Fields
-----------------------------------------------
-
-ec2_aff.c provides point arithmetic using affine coordinates.
-
-ec2_proj.c provides point arithmetic using projective coordinates.
-(Projective coordinates represent a point (x, y) as (X, Y, Z), where
-x=X/Z, y=Y/Z^2).
-
-ec2_mont.c provides point multiplication using Montgomery projective
-coordinates.
-
-ec2_163.c, ec2_193.c, and ec2_233.c provide optimized field arithmetic.
-
 Field Arithmetic
 ----------------
 
@@ -123,18 +109,6 @@ Montgomery multiplication.
 
 ecp_192.c and ecp_224.c provide optimized modular reduction for the
 fields defined by nistp192 and nistp224 primes.
-
-ecl_gf.c provides wrappers around the basic field operations.
-
-Binary Polynomial Field Arithmetic
-----------------------------------
-
-../mpi/mp_gf2m.c provides basic binary polynomial field arithmetic,
-including addition, multiplication, squaring, mod, and division, as well
-as conversion ob polynomial representations between bitstring and int[].
-
-ec2_163.c, ec2_193.c, and ec2_233.c provide optimized field mod, mul,
-and sqr operations.
 
 ecl_gf.c provides wrappers around the basic field operations.
 
@@ -187,81 +161,3 @@ arithmetic. Instead, they use basic field arithmetic with their
 optimized reduction (as in ecp_192.c and ecp_224.c). They
 use the same point multiplication and simultaneous point multiplication
 algorithms as other curves over prime fields.
-
-Curves over binary polynomial fields by default use generic field
-arithmetic with montgomery point multiplication and basic kP + lQ
-computation (multiply, multiply, and add). (Wiring in function
-ECGroup_cons_GF2m in ecl.c.)
-
-Curves over binary polynomial fields that have optimized field
-arithmetic (i.e., any 163-, 193, or 233-bit field) use their optimized
-field arithmetic. They use the same point multiplication and
-simultaneous point multiplication algorithms as other curves over binary
-fields.
-
-Example
--------
-
-We provide an example for plugging in an optimized implementation for
-the Koblitz curve nistk163.
-
-Suppose the file ec2_k163.c contains the optimized implementation. In
-particular it contains a point multiplication function:
-
-	mp_err ec_GF2m_nistk163_pt_mul(const mp_int *n, const mp_int *px, 
-		const mp_int *py, mp_int *rx, mp_int *ry, const ECGroup *group);
-
-Since only a pt_mul function is provided, the generic pt_add function
-will be used.
-
-There are two options for handling the optimized field arithmetic used
-by the ..._pt_mul function. Say the optimized field arithmetic includes
-the following functions:
-
-	mp_err ec_GF2m_nistk163_add(const mp_int *a, const mp_int *b,
-		mp_int *r, const GFMethod *meth);
-	mp_err ec_GF2m_nistk163_mul(const mp_int *a, const mp_int *b,
-		mp_int *r, const GFMethod *meth);
-	mp_err ec_GF2m_nistk163_sqr(const mp_int *a, const mp_int *b,
-		mp_int *r, const GFMethod *meth);
-	mp_err ec_GF2m_nistk163_div(const mp_int *a, const mp_int *b,
-		mp_int *r, const GFMethod *meth);
-
-First, the optimized field arithmetic could simply be called directly
-by the ..._pt_mul function. This would be accomplished by changing
-the ecgroup_fromNameAndHex function in ecl.c to include the following
-statements:
-
-	if (name == ECCurve_NIST_K163) {
-		group = ECGroup_consGF2m(&irr, NULL, &curvea, &curveb, &genx,
-			&geny, &order, params->cofactor);
-		if (group == NULL) { res = MP_UNDEF; goto CLEANUP; }
-		MP_CHECKOK( ec_group_set_nistk163(group) );
-	}
-
-and including in ec2_k163.c the following function:
-
-	mp_err ec_group_set_nistk163(ECGroup *group) {
-		group->point_mul = &ec_GF2m_nistk163_pt_mul;
-		return MP_OKAY;
-	}
-
-As a result, ec_GF2m_pt_add and similar functions would use the
-basic binary polynomial field arithmetic ec_GF2m_add, ec_GF2m_mul,
-ec_GF2m_sqr, and ec_GF2m_div.
-
-Alternatively, the optimized field arithmetic could be wired into the
-group's GFMethod. This would be accomplished by putting the following
-function in ec2_k163.c:
-
-	mp_err ec_group_set_nistk163(ECGroup *group) {
-		group->meth->field_add = &ec_GF2m_nistk163_add;
-		group->meth->field_mul = &ec_GF2m_nistk163_mul;
-		group->meth->field_sqr = &ec_GF2m_nistk163_sqr;
-		group->meth->field_div = &ec_GF2m_nistk163_div;
-		group->point_mul = &ec_GF2m_nistk163_pt_mul;
-		return MP_OKAY;
-	}
-
-For an example of functions that use special field encodings, take a
-look at ecp_mont.c.
