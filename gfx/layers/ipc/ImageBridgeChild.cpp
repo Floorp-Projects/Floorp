@@ -71,7 +71,7 @@ protected:
   MOZ_IS_CLASS_INIT
   void Init() {
 #ifdef MOZ_ENABLE_PROFILER_SPS
-    mPseudoStackHack = mozilla_get_pseudo_stack();
+    mPseudoStackHack = profiler_get_pseudo_stack();
 #endif
   }
 

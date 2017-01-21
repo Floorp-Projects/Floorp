@@ -41,14 +41,15 @@ const JSFunctionSpec WeakSetObject::methods[] = {
 };
 
 JSObject*
-WeakSetObject::initClass(JSContext* cx, JSObject* obj)
+WeakSetObject::initClass(JSContext* cx, HandleObject obj)
 {
-    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
+    Handle<GlobalObject*> global = obj.as<GlobalObject>();
     RootedPlainObject proto(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!proto)
         return nullptr;
 
-    Rooted<JSFunction*> ctor(cx, global->createConstructor(cx, construct, ClassName(JSProto_WeakSet, cx), 0));
+    Rooted<JSFunction*> ctor(cx, GlobalObject::createConstructor(cx, construct,
+                                                                 ClassName(JSProto_WeakSet, cx), 0));
     if (!ctor ||
         !LinkConstructorAndPrototype(cx, ctor, proto) ||
         !DefinePropertiesAndFunctions(cx, proto, properties, methods) ||

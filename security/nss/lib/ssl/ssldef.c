@@ -66,6 +66,8 @@ ssl_DefRecv(sslSocket *ss, unsigned char *buf, int len, int flags)
     PRFileDesc *lower = ss->fd->lower;
     int rv;
 
+    PORT_Assert(buf && len > 0);
+
     rv = lower->methods->recv(lower, (void *)buf, len, flags, ss->rTimeout);
     if (rv < 0) {
         DEFINE_ERROR

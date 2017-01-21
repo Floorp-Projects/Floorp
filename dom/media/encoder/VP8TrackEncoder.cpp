@@ -19,9 +19,9 @@
 namespace mozilla {
 
 LazyLogModule gVP8TrackEncoderLog("VP8TrackEncoder");
-#define VP8LOG(msg, ...) MOZ_LOG(gVP8TrackEncoderLog, mozilla::LogLevel::Debug, \
-                                  (msg, ##__VA_ARGS__))
-// Debug logging macro with object pointer and class name.
+#define VP8LOG(level, msg, ...) MOZ_LOG(gVP8TrackEncoderLog, \
+                                        level, \
+                                        (msg, ##__VA_ARGS__))
 
 #define DEFAULT_BITRATE_BPS 2500000
 
@@ -229,9 +229,10 @@ VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData)
       videoData->SetDuration((uint64_t)duration.value());
     }
     videoData->SwapInFrameData(frameData);
-    VP8LOG("GetEncodedPartitions TimeStamp %lld Duration %lld\n",
-           videoData->GetTimeStamp(), videoData->GetDuration());
-    VP8LOG("frameType %d\n", videoData->GetFrameType());
+    VP8LOG(LogLevel::Verbose,
+           "GetEncodedPartitions TimeStamp %lld, Duration %lld, FrameType %d",
+           videoData->GetTimeStamp(), videoData->GetDuration(),
+           videoData->GetFrameType());
     aData.AppendEncodedFrame(videoData);
   }
 
@@ -277,7 +278,8 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
   }
 
   if (img->GetSize() != IntSize(mFrameWidth, mFrameHeight)) {
-    VP8LOG("Dynamic resolution changes (was %dx%d, now %dx%d) are unsupported\n",
+    VP8LOG(LogLevel::Error,
+           "Dynamic resolution changes (was %dx%d, now %dx%d) are unsupported",
            mFrameWidth, mFrameHeight, img->GetSize().width, img->GetSize().height);
     return NS_ERROR_FAILURE;
   }
@@ -370,29 +372,29 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
                               mFrameWidth, mFrameHeight);
       yuvFormat = "I422";
     } else {
-      VP8LOG("Unsupported planar format\n");
+      VP8LOG(LogLevel::Error, "Unsupported planar format");
       NS_ASSERTION(false, "Unsupported planar format");
       return NS_ERROR_NOT_IMPLEMENTED;
     }
 
     if (rv != 0) {
-      VP8LOG("Converting an %s frame to I420 failed\n", yuvFormat.c_str());
+      VP8LOG(LogLevel::Error, "Converting an %s frame to I420 failed", yuvFormat.c_str());
       return NS_ERROR_FAILURE;
     }
 
-    VP8LOG("Converted an %s frame to I420\n", yuvFormat.c_str());
+    VP8LOG(LogLevel::Verbose, "Converted an %s frame to I420", yuvFormat.c_str());
   } else {
     // Not YCbCr at all. Try to get access to the raw data and convert.
 
     RefPtr<SourceSurface> surf = GetSourceSurface(img.forget());
     if (!surf) {
-      VP8LOG("Getting surface from %s image failed\n", Stringify(format).c_str());
+      VP8LOG(LogLevel::Error, "Getting surface from %s image failed", Stringify(format).c_str());
       return NS_ERROR_FAILURE;
     }
 
     RefPtr<DataSourceSurface> data = surf->GetDataSurface();
     if (!data) {
-      VP8LOG("Getting data surface from %s image with %s (%s) surface failed\n",
+      VP8LOG(LogLevel::Error, "Getting data surface from %s image with %s (%s) surface failed",
              Stringify(format).c_str(), Stringify(surf->GetType()).c_str(),
              Stringify(surf->GetFormat()).c_str());
       return NS_ERROR_FAILURE;
@@ -400,7 +402,7 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
 
     DataSourceSurface::ScopedMap map(data, DataSourceSurface::READ);
     if (!map.IsMapped()) {
-      VP8LOG("Reading DataSourceSurface from %s image with %s (%s) surface failed\n",
+      VP8LOG(LogLevel::Error, "Reading DataSourceSurface from %s image with %s (%s) surface failed",
              Stringify(format).c_str(), Stringify(surf->GetType()).c_str(),
              Stringify(surf->GetFormat()).c_str());
       return NS_ERROR_FAILURE;
@@ -426,20 +428,20 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
                                   mFrameWidth, mFrameHeight);
         break;
       default:
-        VP8LOG("Unsupported SourceSurface format %s\n",
+        VP8LOG(LogLevel::Error, "Unsupported SourceSurface format %s",
                Stringify(surf->GetFormat()).c_str());
         NS_ASSERTION(false, "Unsupported SourceSurface format");
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
     if (rv != 0) {
-      VP8LOG("%s to I420 conversion failed\n",
+      VP8LOG(LogLevel::Error, "%s to I420 conversion failed",
              Stringify(surf->GetFormat()).c_str());
       return NS_ERROR_FAILURE;
     }
 
-    VP8LOG("Converted a %s frame to I420\n",
-           Stringify(surf->GetFormat()).c_str());
+    VP8LOG(LogLevel::Verbose, "Converted a %s frame to I420",
+             Stringify(surf->GetFormat()).c_str());
   }
 
   mVPXImageWrapper->planes[VPX_PLANE_Y] = y;
@@ -527,8 +529,8 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
   for (VideoSegment::ChunkIterator iter(mSourceSegment);
        !iter.IsEnded(); iter.Next()) {
     VideoChunk &chunk = *iter;
-    VP8LOG("nextEncodeOperation is %d for frame of duration %lld\n",
-           nextEncodeOperation, chunk.GetDuration());
+    VP8LOG(LogLevel::Verbose, "nextEncodeOperation is %d for frame of duration %lld",
+             nextEncodeOperation, chunk.GetDuration());
 
     // Encode frame.
     if (nextEncodeOperation != SKIP_FRAME) {
@@ -536,8 +538,11 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
       NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
       // Encode the data with VP8 encoder
-      int flags = (nextEncodeOperation == ENCODE_NORMAL_FRAME) ?
-                  0 : VPX_EFLAG_FORCE_KF;
+      int flags = 0;
+      if (nextEncodeOperation == ENCODE_I_FRAME) {
+        VP8LOG(LogLevel::Warning, "MediaRecorder lagging behind. Encoding keyframe.");
+        flags |= VPX_EFLAG_FORCE_KF;
+      }
       if (vpx_codec_encode(mVPXContext, mVPXImageWrapper, mEncodedTimestamp,
                            (unsigned long)chunk.GetDuration(), flags,
                            VPX_DL_REALTIME)) {
@@ -549,7 +554,7 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
       // SKIP_FRAME
       // Extend the duration of the last encoded data in aData
       // because this frame will be skip.
-      NS_WARNING("MediaRecorder lagging behind. Skipping a frame.");
+      VP8LOG(LogLevel::Warning, "MediaRecorder lagging behind. Skipping a frame.");
       RefPtr<EncodedFrame> last = aData.GetEncodedFrames().LastElement();
       if (last) {
         last->SetDuration(last->GetDuration() + chunk.GetDuration());
@@ -571,7 +576,7 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
 
   // End of stream, pull the rest frames in encoder.
   if (EOS) {
-    VP8LOG("mEndOfStream is true\n");
+    VP8LOG(LogLevel::Debug, "mEndOfStream is true");
     mEncodingComplete = true;
     // Bug 1243611, keep calling vpx_codec_encode and vpx_codec_get_cx_data
     // until vpx_codec_get_cx_data return null.

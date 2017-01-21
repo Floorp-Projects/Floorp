@@ -76,9 +76,9 @@ label.findbar-find-fast:-moz-lwtheme,
   -moz-appearance: none;
   border-radius: 10000px;
   border: @roundButtonBorder@;
+  color: @roundButtonColor@;
   background: @roundButtonBackground@;
   box-shadow: @roundButtonShadow@;
-  color: buttontext;
   margin: 0;
 }
 

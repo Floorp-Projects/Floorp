@@ -53,21 +53,16 @@ function test() {
     [ "value29", "value30" ],
     [ "", "value33" ]
   ];
-  let testTabCount = 0;
-  let callback = function() {
-    testTabCount--;
-    if (testTabCount == 0) {
-      finish();
-    }
-  };
 
+  let promises = [];
   for (let i = 0; i < formData.length; i++) {
-    testTabCount++;
-    testTabRestoreData(formData[i], expectedValues[i], callback);
+    promises.push(testTabRestoreData(formData[i], expectedValues[i]));
   }
+
+  Promise.all(promises).then(() => finish(), ex => ok(false, ex));
 }
 
-function testTabRestoreData(aFormData, aExpectedValue, aCallback) {
+async function testTabRestoreData(aFormData, aExpectedValue) {
   let URL = ROOT + "browser_formdata_format_sample.html";
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
@@ -75,39 +70,35 @@ function testTabRestoreData(aFormData, aExpectedValue, aCallback) {
   aFormData.url = URL;
   let tabState = { entries: [{ url: URL }], formdata: aFormData };
 
-  Task.spawn(function () {
-    yield promiseBrowserLoaded(tab.linkedBrowser);
-    yield promiseTabState(tab, tabState);
+  await promiseBrowserLoaded(tab.linkedBrowser);
+  await promiseTabState(tab, tabState);
 
-    yield TabStateFlusher.flush(tab.linkedBrowser);
-    let restoredTabState = JSON.parse(ss.getTabState(tab));
-    let restoredFormData = restoredTabState.formdata;
+  await TabStateFlusher.flush(tab.linkedBrowser);
+  let restoredTabState = JSON.parse(ss.getTabState(tab));
+  let restoredFormData = restoredTabState.formdata;
 
-    if (restoredFormData) {
-      let doc = tab.linkedBrowser.contentDocument;
-      let input1 = doc.getElementById("input1");
-      let input2 = doc.querySelector("input[name=input2]");
+  if (restoredFormData) {
+    let doc = tab.linkedBrowser.contentDocument;
+    let input1 = doc.getElementById("input1");
+    let input2 = doc.querySelector("input[name=input2]");
 
-      // test format
-      ok("id" in restoredFormData || "xpath" in restoredFormData,
-        "FormData format is valid: " + restoredFormData);
-      // validate that there are no old keys
-      for (let key of Object.keys(restoredFormData)) {
-        if (["id", "xpath", "url"].indexOf(key) === -1) {
-          ok(false, "FormData format is invalid.");
-        }
+    // test format
+    ok("id" in restoredFormData || "xpath" in restoredFormData,
+       "FormData format is valid: " + restoredFormData);
+    // validate that there are no old keys
+    for (let key of Object.keys(restoredFormData)) {
+      if (["id", "xpath", "url"].indexOf(key) === -1) {
+        ok(false, "FormData format is invalid.");
       }
-      // test id
-      is(input1.value, aExpectedValue[0],
-        "FormData by 'id' has been restored correctly");
-      // test xpath
-      is(input2.value, aExpectedValue[1],
-        "FormData by 'xpath' has been restored correctly");
     }
+    // test id
+    is(input1.value, aExpectedValue[0],
+       "FormData by 'id' has been restored correctly");
+    // test xpath
+    is(input2.value, aExpectedValue[1],
+       "FormData by 'xpath' has been restored correctly");
+  }
 
-    // clean up
-    gBrowser.removeTab(tab);
-
-  // This test might time out if the task fails.
-  }).then(aCallback);
+  // clean up
+  gBrowser.removeTab(tab);
 }

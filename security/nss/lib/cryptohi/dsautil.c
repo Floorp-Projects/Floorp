@@ -166,11 +166,15 @@ static SECItem *
 common_DecodeDerSig(const SECItem *item, unsigned int len)
 {
     SECItem *result = NULL;
+    PORTCheapArenaPool arena;
     SECStatus status;
     DSA_ASN1Signature sig;
     SECItem dst;
 
     PORT_Memset(&sig, 0, sizeof(sig));
+
+    /* Make enough room for r + s. */
+    PORT_InitCheapArena(&arena, PR_MAX(2 * MAX_ECKEY_LEN, DSA_MAX_SIGNATURE_LEN));
 
     result = PORT_ZNew(SECItem);
     if (result == NULL)
@@ -183,7 +187,7 @@ common_DecodeDerSig(const SECItem *item, unsigned int len)
 
     sig.r.type = siUnsignedInteger;
     sig.s.type = siUnsignedInteger;
-    status = SEC_ASN1DecodeItem(NULL, &sig, DSA_SignatureTemplate, item);
+    status = SEC_QuickDERDecodeItem(&arena.arena, &sig, DSA_SignatureTemplate, item);
     if (status != SECSuccess)
         goto loser;
 
@@ -202,10 +206,7 @@ common_DecodeDerSig(const SECItem *item, unsigned int len)
         goto loser;
 
 done:
-    if (sig.r.data != NULL)
-        PORT_Free(sig.r.data);
-    if (sig.s.data != NULL)
-        PORT_Free(sig.s.data);
+    PORT_DestroyCheapArena(&arena);
 
     return result;
 

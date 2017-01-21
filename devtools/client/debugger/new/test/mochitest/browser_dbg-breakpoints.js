@@ -31,8 +31,7 @@ function enableBreakpoint(dbg, index) {
 
 function toggleBreakpoints(dbg) {
   return Task.spawn(function* () {
-    const btn = findElement(dbg, "toggleBreakpoints");
-    btn.click();
+    clickElement(dbg, "toggleBreakpoints");
     yield waitForDispatch(dbg, "TOGGLE_BREAKPOINTS");
   });
 }

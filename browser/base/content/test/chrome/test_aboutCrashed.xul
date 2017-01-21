@@ -16,42 +16,38 @@
     const Cu = Components.utils;
 
     Cu.import("resource://gre/modules/Services.jsm");
-    Cu.import("resource://gre/modules/Task.jsm");
-    Cu.import("resource://gre/modules/Promise.jsm");
     Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
     SimpleTest.waitForExplicitFinish();
 
     // Load error pages do not fire "load" events, so let's use a progressListener.
     function waitForErrorPage(frame) {
-      let errorPageDeferred = Promise.defer();
+      return new Promise(resolve => {
+        let progressListener = {
+          onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
+            if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
+              frame.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIWebProgress)
+                            .removeProgressListener(progressListener,
+                                                    Ci.nsIWebProgress.NOTIFY_LOCATION);
 
-      let progressListener = {
-        onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
-          if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
-            frame.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIWebProgress)
-                          .removeProgressListener(progressListener,
-                                                  Ci.nsIWebProgress.NOTIFY_LOCATION);
+              resolve();
+            }
+          },
 
-            errorPageDeferred.resolve();
-          }
-        },
+          QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                                 Ci.nsISupportsWeakReference])
+        };
 
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                               Ci.nsISupportsWeakReference])
-      };
-
-      frame.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebProgress)
-                    .addProgressListener(progressListener,
-                                         Ci.nsIWebProgress.NOTIFY_LOCATION);
-
-      return errorPageDeferred.promise;
+        frame.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIWebProgress)
+                      .addProgressListener(progressListener,
+                                           Ci.nsIWebProgress.NOTIFY_LOCATION);
+      });
     }
 
   function doTest() {
-    Task.spawn(function test_aboutCrashed() {
+    (async function testBody() {
       let frame1 = document.getElementById("frame1");
       let frame2 = document.getElementById("frame2");
       let uri1 = Services.io.newURI("http://www.example.com/1", null, null);
@@ -61,7 +57,7 @@
       frame1.docShell.chromeEventHandler.setAttribute("crashedPageTitle", "pageTitle");
       frame1.docShell.displayLoadError(Components.results.NS_ERROR_CONTENT_CRASHED, uri1, null);
 
-      yield errorPageReady;
+      await errorPageReady;
       frame1.docShell.chromeEventHandler.removeAttribute("crashedPageTitle");
 
       SimpleTest.is(frame1.contentDocument.documentURI,
@@ -71,14 +67,14 @@
       errorPageReady = waitForErrorPage(frame2);
       frame2.docShell.displayLoadError(Components.results.NS_ERROR_CONTENT_CRASHED, uri2, null);
 
-      yield errorPageReady;
+      await errorPageReady;
 
       SimpleTest.is(frame2.contentDocument.documentURI,
                     "about:tabcrashed?e=tabcrashed&u=http%3A//www.example.com/2&c=UTF-8&f=regular&d=%20",
                     "Correct about:tabcrashed displayed for page with no title.");
 
       SimpleTest.finish();
-  });
+    })().catch(ex => SimpleTest.ok(false, ex));
   }
   ]]></script>
 
