@@ -112,6 +112,7 @@ public:
 
 protected:
     friend class GLContextProviderEGL;
+    friend class GLContextEGLFactory;
 
 public:
     const EGLConfig  mConfig;

@@ -6,17 +6,21 @@
 #if defined(MOZ_WIDGET_GTK)
     #include <gdk/gdkx.h>
     // we're using default display for now
-    #define GET_NATIVE_WINDOW(aWidget) ((EGLNativeWindowType)GDK_WINDOW_XID((GdkWindow*)aWidget->GetNativeData(NS_NATIVE_WINDOW)))
+    #define GET_NATIVE_WINDOW_FROM_REAL_WIDGET(aWidget) ((EGLNativeWindowType)GDK_WINDOW_XID((GdkWindow*)aWidget->GetNativeData(NS_NATIVE_WINDOW)))
+    #define GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aWidget) ((EGLNativeWindowType)GDK_WINDOW_XID((GdkWindow*)aWidget->RealWidget()->GetNativeData(NS_NATIVE_WINDOW)))
 #elif defined(MOZ_WIDGET_ANDROID)
-    #define GET_NATIVE_WINDOW(aWidget) ((EGLNativeWindowType)aWidget->GetNativeData(NS_JAVA_SURFACE))
+    #define GET_NATIVE_WINDOW_FROM_REAL_WIDGET(aWidget) ((EGLNativeWindowType)aWidget->GetNativeData(NS_JAVA_SURFACE))
+    #define GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aWidget) (aWidget->AsAndroid()->GetEGLNativeWindow())
 #else
-    #define GET_NATIVE_WINDOW(aWidget) ((EGLNativeWindowType)aWidget->GetNativeData(NS_NATIVE_WINDOW))
+    #define GET_NATIVE_WINDOW_FROM_REAL_WIDGET(aWidget) ((EGLNativeWindowType)aWidget->GetNativeData(NS_NATIVE_WINDOW))
+    #define GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aWidget) ((EGLNativeWindowType)aWidget->RealWidget()->GetNativeData(NS_NATIVE_WINDOW))
 #endif
 
 #if defined(XP_UNIX)
     #ifdef MOZ_WIDGET_ANDROID
         #include <android/native_window.h>
         #include <android/native_window_jni.h>
+        #include "mozilla/widget/AndroidCompositorWidget.h"
     #endif
 
     #define GLES2_LIB "libGLESv2.so"
@@ -119,27 +123,77 @@ DestroySurface(EGLSurface oldSurface) {
 }
 
 static EGLSurface
-CreateSurfaceForWindow(nsIWidget* widget, const EGLConfig& config) {
+CreateSurfaceFromNativeWindow(EGLNativeWindowType window, const EGLConfig& config) {
     EGLSurface newSurface = nullptr;
 
-    MOZ_ASSERT(widget);
+    MOZ_ASSERT(window);
 #ifdef MOZ_WIDGET_ANDROID
-    EGLNativeWindowType javaSurface = GET_NATIVE_WINDOW(widget);
-    if (!javaSurface) {
-        MOZ_CRASH("GFX: Failed to get Java surface.\n");
-    }
     JNIEnv* const env = jni::GetEnvForThread();
     ANativeWindow* const nativeWindow = ANativeWindow_fromSurface(
-            env, reinterpret_cast<jobject>(javaSurface));
+            env, reinterpret_cast<jobject>(window));
     newSurface = sEGLLibrary.fCreateWindowSurface(
             sEGLLibrary.fGetDisplay(EGL_DEFAULT_DISPLAY),
             config, nativeWindow, 0);
     ANativeWindow_release(nativeWindow);
 #else
     newSurface = sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config,
-                                                  GET_NATIVE_WINDOW(widget), 0);
+                                                  window, 0);
 #endif
     return newSurface;
+}
+
+/* GLContextEGLFactory class was added as a friend of GLContextEGL
+ * so that it could access  GLContextEGL::CreateGLContext. This was
+ * done so that a new function would not need to be added to the shared
+ * GLContextProvider interface.
+ */
+class GLContextEGLFactory {
+public:
+    static already_AddRefed<GLContext> Create(EGLNativeWindowType aWindow);
+private:
+    GLContextEGLFactory(){}
+    ~GLContextEGLFactory(){}
+};
+
+already_AddRefed<GLContext>
+GLContextEGLFactory::Create(EGLNativeWindowType aWindow)
+{
+    MOZ_ASSERT(aWindow);
+    nsCString discardFailureId;
+    if (!sEGLLibrary.EnsureInitialized(false, &discardFailureId)) {
+        MOZ_CRASH("GFX: Failed to load EGL library 3!\n");
+        return nullptr;
+    }
+
+    bool doubleBuffered = true;
+
+    EGLConfig config;
+    if (!CreateConfig(&config)) {
+        MOZ_CRASH("GFX: Failed to create EGLConfig!\n");
+        return nullptr;
+    }
+
+    EGLSurface surface = mozilla::gl::CreateSurfaceFromNativeWindow(aWindow, config);
+
+    if (!surface) {
+        MOZ_CRASH("GFX: Failed to create EGLSurface!\n");
+        return nullptr;
+    }
+
+    SurfaceCaps caps = SurfaceCaps::Any();
+    RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(CreateContextFlags::NONE,
+                                                            caps, nullptr, false, config,
+                                                            surface, &discardFailureId);
+    if (!gl) {
+        MOZ_CRASH("GFX: Failed to create EGLContext!\n");
+        mozilla::gl::DestroySurface(surface);
+        return nullptr;
+    }
+
+    gl->MakeCurrent();
+    gl->SetIsDoubleBuffered(doubleBuffered);
+
+    return gl.forget();
 }
 
 GLContextEGL::GLContextEGL(CreateContextFlags flags, const SurfaceCaps& caps,
@@ -340,7 +394,7 @@ GLContextEGL::RenewSurface(CompositorWidget* aWidget) {
     // If we get here, then by definition we know that we want to get a new surface.
     ReleaseSurface();
     MOZ_ASSERT(aWidget);
-    mSurface = mozilla::gl::CreateSurfaceForWindow(aWidget->RealWidget(), mConfig);
+    mSurface = mozilla::gl::CreateSurfaceFromNativeWindow(GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aWidget), mConfig);
     if (!mSurface) {
         return false;
     }
@@ -638,46 +692,15 @@ GLContextProviderEGL::CreateWrappingExisting(void* aContext, void* aSurface)
 already_AddRefed<GLContext>
 GLContextProviderEGL::CreateForCompositorWidget(CompositorWidget* aCompositorWidget, bool aForceAccelerated)
 {
-    return CreateForWindow(aCompositorWidget->RealWidget(), aForceAccelerated);
+    MOZ_ASSERT(aCompositorWidget);
+    return GLContextEGLFactory::Create(GET_NATIVE_WINDOW_FROM_COMPOSITOR_WIDGET(aCompositorWidget));
 }
 
 already_AddRefed<GLContext>
 GLContextProviderEGL::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated)
 {
-    nsCString discardFailureId;
-    if (!sEGLLibrary.EnsureInitialized(false, &discardFailureId)) {
-        MOZ_CRASH("GFX: Failed to load EGL library 3!\n");
-        return nullptr;
-    }
-
-    bool doubleBuffered = true;
-
-    EGLConfig config;
-    if (!CreateConfig(&config)) {
-        MOZ_CRASH("GFX: Failed to create EGLConfig!\n");
-        return nullptr;
-    }
-
-    EGLSurface surface = mozilla::gl::CreateSurfaceForWindow(aWidget, config);
-    if (!surface) {
-        MOZ_CRASH("GFX: Failed to create EGLSurface!\n");
-        return nullptr;
-    }
-
-    SurfaceCaps caps = SurfaceCaps::Any();
-    RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(CreateContextFlags::NONE,
-                                                            caps, nullptr, false, config,
-                                                            surface, &discardFailureId);
-    if (!gl) {
-        MOZ_CRASH("GFX: Failed to create EGLContext!\n");
-        mozilla::gl::DestroySurface(surface);
-        return nullptr;
-    }
-
-    gl->MakeCurrent();
-    gl->SetIsDoubleBuffered(doubleBuffered);
-
-    return gl.forget();
+    MOZ_ASSERT(aWidget);
+    return GLContextEGLFactory::Create(GET_NATIVE_WINDOW_FROM_REAL_WIDGET(aWidget));
 }
 
 #if defined(ANDROID)
