@@ -127,9 +127,8 @@ enum {
 
   NODE_IS_EDITABLE =                      NODE_FLAG_BIT(7),
 
-  // For all Element nodes, NODE_MAY_HAVE_CLASS is guaranteed to be set if the
-  // node in fact has a class, but may be set even if it doesn't.
-  NODE_MAY_HAVE_CLASS =                   NODE_FLAG_BIT(8),
+  // Bit that will soon be used for other things.
+  THIS_BIT_BELONGS_TO_BHOLLEY =           NODE_FLAG_BIT(8),
 
   // Whether the node participates in a shadow tree.
   NODE_IS_IN_SHADOW_TREE =                NODE_FLAG_BIT(9),
@@ -1497,6 +1496,8 @@ private:
     // cases lie for nsXMLElement, such as when the node has been moved between
     // documents with different id mappings.
     ElementHasID,
+    // Set if the element might have a class.
+    ElementMayHaveClass,
     // Set if the element might have inline style.
     ElementMayHaveStyle,
     // Set if the element has a name attribute set.
@@ -1591,6 +1592,8 @@ public:
     { SetBoolFlag(NodeHasRenderingObservers, aValue); }
   bool IsContent() const { return GetBoolFlag(NodeIsContent); }
   bool HasID() const { return GetBoolFlag(ElementHasID); }
+  bool MayHaveClass() const { return GetBoolFlag(ElementMayHaveClass); }
+  void SetMayHaveClass() { SetBoolFlag(ElementMayHaveClass); }
   bool MayHaveStyle() const { return GetBoolFlag(ElementMayHaveStyle); }
   bool HasName() const { return GetBoolFlag(ElementHasName); }
   bool MayHaveContentEditableAttr() const
