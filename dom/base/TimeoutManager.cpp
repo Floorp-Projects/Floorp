@@ -205,7 +205,8 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
   uint32_t nestingLevel = sNestingLevel + 1;
   uint32_t realInterval = interval;
   if (aIsInterval || nestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL ||
-      mBackPressureDelayMS > 0 || mWindow.IsBackgroundInternal()) {
+      mBackPressureDelayMS > 0 || mWindow.IsBackgroundInternal() ||
+      timeout->mIsTracking) {
     // Don't allow timeouts less than DOMMinTimeoutValue() from
     // now...
     realInterval = std::max(realInterval,
