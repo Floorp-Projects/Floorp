@@ -2059,11 +2059,17 @@ TryAttachNativeInStub(JSContext* cx, HandleScript outerScript, ICIn_Fallback* st
         return true;
 
     RootedPropertyName name(cx, JSID_TO_ATOM(id)->asPropertyName());
-    RootedShape shape(cx);
+    Rooted<PropertyResult> prop(cx);
     RootedObject holder(cx);
-    if (!EffectlesslyLookupProperty(cx, obj, id, &holder, &shape))
+    if (!EffectlesslyLookupProperty(cx, obj, id, &holder, &prop))
         return false;
 
+    if (prop.isNonNativeProperty()) {
+        MOZ_ASSERT(!IsCacheableProtoChain(obj, holder, false));
+        return true;
+    }
+
+    RootedShape shape(cx, prop.maybeShape());
     if (IsCacheableGetPropReadSlot(obj, holder, shape)) {
         ICStub::Kind kind = (obj == holder) ? ICStub::In_Native
                                             : ICStub::In_NativePrototype;
@@ -2582,14 +2588,17 @@ TryAttachSetValuePropStub(JSContext* cx, HandleScript script, jsbytecode* pc, IC
     if (obj->watched())
         return true;
 
-    RootedShape shape(cx);
+    Rooted<PropertyResult> prop(cx);
     RootedObject holder(cx);
-    if (!EffectlesslyLookupProperty(cx, obj, id, &holder, &shape))
+    if (!EffectlesslyLookupProperty(cx, obj, id, &holder, &prop))
         return false;
     if (obj != holder)
         return true;
 
-    if (!obj->isNative()) {
+    RootedShape shape(cx);
+    if (obj->isNative()) {
+        shape = prop.shape();
+    } else {
         if (obj->is<UnboxedPlainObject>()) {
             UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando();
             if (expando) {
@@ -2704,11 +2713,17 @@ TryAttachSetAccessorPropStub(JSContext* cx, HandleScript script, jsbytecode* pc,
     if (obj->watched())
         return true;
 
-    RootedShape shape(cx);
+    Rooted<PropertyResult> prop(cx);
     RootedObject holder(cx);
-    if (!EffectlesslyLookupProperty(cx, obj, id, &holder, &shape))
+    if (!EffectlesslyLookupProperty(cx, obj, id, &holder, &prop))
         return false;
 
+    if (prop.isNonNativeProperty()) {
+        MOZ_ASSERT(!IsCacheableProtoChain(obj, holder));
+        return true;
+    }
+
+    RootedShape shape(cx, prop.maybeShape());
     bool isScripted = false;
     bool cacheableCall = IsCacheableSetPropCall(cx, obj, holder, shape,
                                                 &isScripted, isTemporarilyUnoptimizable);

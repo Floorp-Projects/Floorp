@@ -470,11 +470,12 @@ jit::IsCacheableProtoChainForIonOrCacheIR(JSObject* obj, JSObject* holder)
 }
 
 bool
-jit::IsCacheableGetPropReadSlotForIonOrCacheIR(JSObject* obj, JSObject* holder, Shape* shape)
+jit::IsCacheableGetPropReadSlotForIonOrCacheIR(JSObject* obj, JSObject* holder, PropertyResult prop)
 {
-    if (!shape || !IsCacheableProtoChainForIonOrCacheIR(obj, holder))
+    if (!prop || !IsCacheableProtoChainForIonOrCacheIR(obj, holder))
         return false;
 
+    Shape* shape = prop.shape();
     if (!shape->hasSlot() || !shape->hasDefaultGetter())
         return false;
 
@@ -482,10 +483,10 @@ jit::IsCacheableGetPropReadSlotForIonOrCacheIR(JSObject* obj, JSObject* holder, 
 }
 
 static bool
-IsCacheableNoProperty(JSObject* obj, JSObject* holder, Shape* shape, jsbytecode* pc,
+IsCacheableNoProperty(JSObject* obj, JSObject* holder, PropertyResult prop, jsbytecode* pc,
                       const TypedOrValueRegister& output)
 {
-    if (shape)
+    if (prop)
         return false;
 
     MOZ_ASSERT(!holder);
@@ -763,7 +764,7 @@ CheckDOMProxyExpandoDoesNotShadow(JSContext* cx, MacroAssembler& masm, JSObject*
 static void
 GenerateReadSlot(JSContext* cx, IonScript* ion, MacroAssembler& masm,
                  IonCache::StubAttacher& attacher, MaybeCheckTDZ checkTDZ,
-                 JSObject* obj, JSObject* holder, Shape* shape, Register object,
+                 JSObject* obj, JSObject* holder, PropertyResult prop, Register object,
                  TypedOrValueRegister output, Label* failures = nullptr)
 {
     // If there's a single jump to |failures|, we can patch the shape guard
@@ -790,7 +791,7 @@ GenerateReadSlot(JSContext* cx, IonScript* ion, MacroAssembler& masm,
 
     if (obj != holder ||
         obj->is<UnboxedPlainObject>() ||
-        !holder->as<NativeObject>().isFixedSlot(shape->slot()))
+        !holder->as<NativeObject>().isFixedSlot(prop.shape()->slot()))
     {
         if (output.hasValue()) {
             scratchReg = output.valueReg().scratchReg();
@@ -805,7 +806,7 @@ GenerateReadSlot(JSContext* cx, IonScript* ion, MacroAssembler& masm,
 
     // Fast path: single failure jump, no prototype guards.
     if (!multipleFailureJumps) {
-        EmitLoadSlot(masm, &holder->as<NativeObject>(), shape, object, output, scratchReg);
+        EmitLoadSlot(masm, &holder->as<NativeObject>(), prop.shape(), object, output, scratchReg);
         if (restoreScratch)
             masm.pop(scratchReg);
         attacher.jumpRejoin(masm);
@@ -860,7 +861,8 @@ GenerateReadSlot(JSContext* cx, IonScript* ion, MacroAssembler& masm,
 
     // Slot access.
     if (holder) {
-        EmitLoadSlot(masm, &holder->as<NativeObject>(), shape, holderReg, output, scratchReg);
+        EmitLoadSlot(masm, &holder->as<NativeObject>(), prop.shape(), holderReg, output,
+                     scratchReg);
         if (checkTDZ && output.hasValue())
             masm.branchTestMagic(Assembler::Equal, output.valueReg(), failures);
     } else {
@@ -1306,7 +1308,8 @@ CanAttachNativeGetProp(JSContext* cx, const GetPropCache& cache,
     // only miss out on shape hashification, which is only a temporary perf cost.
     // The limits were arbitrarily set, anyways.
     JSObject* baseHolder = nullptr;
-    if (!LookupPropertyPure(cx, obj, id, &baseHolder, shape.address()))
+    PropertyResult prop;
+    if (!LookupPropertyPure(cx, obj, id, &baseHolder, &prop))
         return GetPropertyIC::CanAttachNone;
 
     MOZ_ASSERT(!holder);
@@ -1315,12 +1318,13 @@ CanAttachNativeGetProp(JSContext* cx, const GetPropCache& cache,
             return GetPropertyIC::CanAttachNone;
         holder.set(&baseHolder->as<NativeObject>());
     }
+    shape.set(prop.maybeShape());
 
     RootedScript script(cx);
     jsbytecode* pc;
     cache.getScriptedLocation(&script, &pc);
-    if (IsCacheableGetPropReadSlotForIonOrCacheIR(obj, holder, shape) ||
-        IsCacheableNoProperty(obj, holder, shape, pc, cache.output()))
+    if (IsCacheableGetPropReadSlotForIonOrCacheIR(obj, holder, prop) ||
+        IsCacheableNoProperty(obj, holder, prop, pc, cache.output()))
     {
         return GetPropertyIC::CanAttachReadSlot;
     }
@@ -1503,7 +1507,7 @@ GetPropertyIC::tryAttachNative(JSContext* cx, HandleScript outerScript, IonScrip
     switch (type) {
       case CanAttachReadSlot:
         GenerateReadSlot(cx, ion, masm, attacher, DontCheckTDZ, obj, holder,
-                         shape, object(), output(), maybeFailures);
+                         PropertyResult(shape), object(), output(), maybeFailures);
         attachKind = idempotent() ? "idempotent reading"
                                     : "non idempotent reading";
         outcome = JS::TrackedOutcome::ICGetPropStub_ReadSlot;
@@ -1586,7 +1590,7 @@ GetPropertyIC::tryAttachUnboxedExpando(JSContext* cx, HandleScript outerScript, 
 
     StubAttacher attacher(*this);
     GenerateReadSlot(cx, ion, masm, attacher, DontCheckTDZ, obj, obj,
-                     shape, object(), output(), maybeFailures);
+                     PropertyResult(shape), object(), output(), maybeFailures);
     return linkAndAttachStub(cx, masm, attacher, ion, "read unboxed expando",
                              JS::TrackedOutcome::ICGetPropStub_UnboxedReadExpando);
 }
@@ -2919,12 +2923,14 @@ IsCacheableDOMProxyUnshadowedSetterCall(JSContext* cx, HandleObject obj, HandleI
     if (!checkObj)
         return false;
 
-    if (!LookupPropertyPure(cx, obj, id, holder.address(), shape.address()))
+    PropertyResult prop;
+    if (!LookupPropertyPure(cx, obj, id, holder.address(), &prop))
         return false;
 
-    if (!holder)
+    if (!holder || !holder->isNative())
         return false;
 
+    shape.set(prop.shape());
     return IsCacheableSetPropCallNative(checkObj, holder, shape) ||
            IsCacheableSetPropCallPropertyOp(checkObj, holder, shape) ||
            IsCacheableSetPropCallScripted(checkObj, holder, shape);
@@ -3336,22 +3342,26 @@ CanAttachNativeSetProp(JSContext* cx, HandleObject obj, HandleId id, const Const
 
     // If we couldn't find the property on the object itself, do a full, but
     // still pure lookup for setters.
-    if (!LookupPropertyPure(cx, obj, id, holder.address(), shape.address()))
+    Rooted<PropertyResult> prop(cx);
+    if (!LookupPropertyPure(cx, obj, id, holder.address(), prop.address()))
         return SetPropertyIC::CanAttachNone;
 
     // If the object doesn't have the property, we don't know if we can attach
     // a stub to add the property until we do the VM call to add. If the
     // property exists as a data property on the prototype, we should add
     // a new, shadowing property.
-    if (obj->isNative() && (!shape || (obj != holder && holder->isNative() &&
-                                       shape->hasDefaultSetter() && shape->hasSlot())))
+    if (obj->isNative() &&
+        (!prop || (obj != holder && holder->isNative() &&
+                   prop.shape()->hasDefaultSetter() && prop.shape()->hasSlot())))
     {
+        shape.set(prop.maybeShape());
         return SetPropertyIC::MaybeCanAttachAddSlot;
     }
 
-    if (IsImplicitNonNativeProperty(shape))
+    if (prop.isNonNativeProperty())
         return SetPropertyIC::CanAttachNone;
 
+    shape.set(prop.maybeShape());
     if (IsCacheableSetPropCallPropertyOp(obj, holder, shape) ||
         IsCacheableSetPropCallNative(obj, holder, shape) ||
         IsCacheableSetPropCallScripted(obj, holder, shape))
@@ -4832,7 +4842,7 @@ BindNameIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
 bool
 NameIC::attachReadSlot(JSContext* cx, HandleScript outerScript, IonScript* ion,
                        HandleObject envChain, HandleObject holderBase,
-                       HandleNativeObject holder, HandleShape shape)
+                       HandleNativeObject holder, Handle<PropertyResult> prop)
 {
     MacroAssembler masm(cx, ion, outerScript, profilerLeavePc_);
     Label failures;
@@ -4850,7 +4860,7 @@ NameIC::attachReadSlot(JSContext* cx, HandleScript outerScript, IonScript* ion,
     // doesn't generate the extra guard.
     //
     // NAME ops must do their own TDZ checks.
-    GenerateReadSlot(cx, ion, masm, attacher, CheckTDZ, holderBase, holder, shape, scratchReg,
+    GenerateReadSlot(cx, ion, masm, attacher, CheckTDZ, holderBase, holder, prop, scratchReg,
                      outputReg(), failures.used() ? &failures : nullptr);
 
     return linkAndAttachStub(cx, masm, attacher, ion, "generic",
@@ -4876,26 +4886,26 @@ IsCacheableEnvironmentChain(JSObject* envChain, JSObject* obj)
 }
 
 static bool
-IsCacheableNameReadSlot(HandleObject envChain, HandleObject obj,
-                        HandleObject holder, HandleShape shape, jsbytecode* pc,
+IsCacheableNameReadSlot(JSContext* cx, HandleObject envChain, HandleObject obj,
+                        HandleObject holder, Handle<PropertyResult> prop, jsbytecode* pc,
                         const TypedOrValueRegister& output)
 {
-    if (!shape)
+    if (!prop)
         return false;
     if (!obj->isNative())
         return false;
 
     if (obj->is<GlobalObject>()) {
         // Support only simple property lookups.
-        if (!IsCacheableGetPropReadSlotForIonOrCacheIR(obj, holder, shape) &&
-            !IsCacheableNoProperty(obj, holder, shape, pc, output))
+        if (!IsCacheableGetPropReadSlotForIonOrCacheIR(obj, holder, prop) &&
+            !IsCacheableNoProperty(obj, holder, prop, pc, output))
             return false;
     } else if (obj->is<ModuleEnvironmentObject>()) {
         // We don't yet support lookups in a module environment.
         return false;
     } else if (obj->is<CallObject>()) {
         MOZ_ASSERT(obj == holder);
-        if (!shape->hasDefaultGetter())
+        if (!prop.shape()->hasDefaultGetter())
             return false;
     } else {
         // We don't yet support lookups on Block or DeclEnv objects.
@@ -4938,9 +4948,9 @@ NameIC::attachCallGetter(JSContext* cx, HandleScript outerScript, IonScript* ion
 
 static bool
 IsCacheableNameCallGetter(HandleObject envChain, HandleObject obj, HandleObject holder,
-                          HandleShape shape)
+                          Handle<PropertyResult> prop)
 {
-    if (!shape)
+    if (!prop)
         return false;
     if (!obj->is<GlobalObject>())
         return false;
@@ -4948,6 +4958,10 @@ IsCacheableNameCallGetter(HandleObject envChain, HandleObject obj, HandleObject 
     if (!IsCacheableEnvironmentChain(envChain, obj))
         return false;
 
+    if (!prop || !IsCacheableProtoChainForIonOrCacheIR(obj, holder))
+        return false;
+
+    Shape* shape = prop.shape();
     return IsCacheableGetPropCallNative(obj, holder, shape) ||
         IsCacheableGetPropCallPropertyOp(obj, holder, shape) ||
         IsCacheableGetPropCallScripted(obj, holder, shape);
@@ -4992,10 +5006,10 @@ NameIC::attachTypeOfNoProperty(JSContext* cx, HandleScript outerScript, IonScrip
 
 static bool
 IsCacheableNameNoProperty(HandleObject envChain, HandleObject obj,
-                          HandleObject holder, HandleShape shape, jsbytecode* pc,
+                          HandleObject holder, Handle<PropertyResult> prop, jsbytecode* pc,
                           NameIC& cache)
 {
-    if (cache.isTypeOf() && !shape) {
+    if (cache.isTypeOf() && !prop) {
         MOZ_ASSERT(!obj);
         MOZ_ASSERT(!holder);
         MOZ_ASSERT(envChain);
@@ -5025,34 +5039,35 @@ NameIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex, Handl
 
     RootedObject obj(cx);
     RootedObject holder(cx);
-    RootedShape shape(cx);
-    if (!LookupName(cx, name, envChain, &obj, &holder, &shape))
+    Rooted<PropertyResult> prop(cx);
+    if (!LookupName(cx, name, envChain, &obj, &holder, &prop))
         return false;
 
     // Look first. Don't generate cache entries if the lookup fails.
     if (cache.isTypeOf()) {
-        if (!FetchName<true>(cx, obj, holder, name, shape, vp))
+        if (!FetchName<true>(cx, obj, holder, name, prop, vp))
             return false;
     } else {
-        if (!FetchName<false>(cx, obj, holder, name, shape, vp))
+        if (!FetchName<false>(cx, obj, holder, name, prop, vp))
             return false;
     }
 
     if (cache.canAttachStub()) {
-        if (IsCacheableNameReadSlot(envChain, obj, holder, shape, pc, cache.outputReg())) {
+        if (IsCacheableNameReadSlot(cx, envChain, obj, holder, prop, pc, cache.outputReg())) {
             if (!cache.attachReadSlot(cx, outerScript, ion, envChain, obj,
-                                      holder.as<NativeObject>(), shape))
+                                      holder.as<NativeObject>(), prop))
             {
                 return false;
             }
-        } else if (IsCacheableNameCallGetter(envChain, obj, holder, shape)) {
+        } else if (IsCacheableNameCallGetter(envChain, obj, holder, prop)) {
             void* returnAddr = GetReturnAddressToIonCode(cx);
+            RootedShape shape(cx, prop.shape());
             if (!cache.attachCallGetter(cx, outerScript, ion, envChain, obj, holder, shape,
                                         returnAddr))
             {
                 return false;
             }
-        } else if (IsCacheableNameNoProperty(envChain, obj, holder, shape, pc, cache)) {
+        } else if (IsCacheableNameNoProperty(envChain, obj, holder, prop, pc, cache)) {
             if (!cache.attachTypeOfNoProperty(cx, outerScript, ion, envChain))
                 return false;
         }

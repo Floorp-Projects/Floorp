@@ -470,32 +470,21 @@ if __name__ == "__main__":
 
     if not os.path.exists(source_dir):
         os.makedirs(source_dir)
-    if os.path.exists(llvm_source_dir):
-        svn_update(llvm_source_dir, llvm_revision)
-    else:
-        svn_co(source_dir, llvm_repo, llvm_source_dir, llvm_revision)
-    if os.path.exists(clang_source_dir):
-        svn_update(clang_source_dir, llvm_revision)
-    else:
-        svn_co(source_dir, clang_repo, clang_source_dir, llvm_revision)
-    if os.path.exists(compiler_rt_source_dir):
-        svn_update(compiler_rt_source_dir, llvm_revision)
-    else:
-        svn_co(source_dir, compiler_repo, compiler_rt_source_dir, llvm_revision)
-    if os.path.exists(libcxx_source_dir):
-        svn_update(libcxx_source_dir, llvm_revision)
-    else:
-        svn_co(source_dir, libcxx_repo, libcxx_source_dir, llvm_revision)
+
+    def checkout_or_update(repo, checkout_dir):
+        if os.path.exists(checkout_dir):
+            svn_update(checkout_dir, llvm_revision)
+        else:
+            svn_co(source_dir, repo, checkout_dir, llvm_revision)
+
+    checkout_or_update(llvm_repo, llvm_source_dir)
+    checkout_or_update(clang_repo, clang_source_dir)
+    checkout_or_update(compiler_repo, compiler_rt_source_dir)
+    checkout_or_update(libcxx_repo, libcxx_source_dir)
     if libcxxabi_repo:
-        if os.path.exists(libcxxabi_source_dir):
-            svn_update(libcxxabi_source_dir, llvm_revision)
-        else:
-            svn_co(source_dir, libcxxabi_repo, libcxxabi_source_dir, llvm_revision)
+        checkout_or_update(libcxxabi_repo, libcxxabi_source_dir)
     if extra_repo:
-        if os.path.exists(extra_source_dir):
-            svn_update(extra_source_dir, llvm_revision)
-        else:
-            svn_co(source_dir, extra_repo, extra_source_dir, llvm_revision)
+        checkout_or_update(extra_repo, extra_source_dir)
     for p in config.get("patches", {}).get(get_platform(), []):
         patch(p, source_dir)
 

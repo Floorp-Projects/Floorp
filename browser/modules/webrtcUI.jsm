@@ -554,6 +554,11 @@ function prompt(aBrowser, aRequest) {
       function listDevices(menupopup, devices) {
         while (menupopup.lastChild)
           menupopup.removeChild(menupopup.lastChild);
+        // Removing the child nodes of the menupopup doesn't clear the value
+        // attribute of the menulist. This can have unfortunate side effects
+        // when the list is rebuilt with a different content, so we remove
+        // the value attribute explicitly.
+        menupopup.parentNode.removeAttribute("value");
 
         for (let device of devices)
           addDeviceToList(menupopup, device.name, device.deviceIndex);

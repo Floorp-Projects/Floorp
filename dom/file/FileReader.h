@@ -141,14 +141,13 @@ private:
 
   void StartProgressEventTimer();
   void ClearProgressEventTimer();
-  void DispatchError(nsresult rv, nsAString& finalEvent);
+  void DispatchError(nsresult aRv);
   nsresult DispatchProgressEvent(const nsAString& aType);
 
   nsresult DoAsyncWait();
   nsresult DoReadData(uint64_t aCount);
 
-  nsresult DoOnLoadEnd(nsresult aStatus, nsAString& aSuccessEvent,
-                       nsAString& aTerminationEvent);
+  nsresult DoOnLoadEnd(nsresult aStatus);
 
   void FreeFileData()
   {

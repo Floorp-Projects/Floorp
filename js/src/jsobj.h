@@ -1004,11 +1004,11 @@ GetPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
  */
 extern bool
 LookupProperty(JSContext* cx, HandleObject obj, HandleId id,
-               MutableHandleObject objp, MutableHandleShape propp);
+               MutableHandleObject objp, MutableHandle<PropertyResult> propp);
 
 inline bool
 LookupProperty(JSContext* cx, HandleObject obj, PropertyName* name,
-               MutableHandleObject objp, MutableHandleShape propp)
+               MutableHandleObject objp, MutableHandle<PropertyResult> propp)
 {
     RootedId id(cx, NameToId(name));
     return LookupProperty(cx, obj, id, objp, propp);
@@ -1215,11 +1215,11 @@ ReadPropertyDescriptors(JSContext* cx, HandleObject props, bool checkAccessors,
 /* Read the name using a dynamic lookup on the scopeChain. */
 extern bool
 LookupName(JSContext* cx, HandlePropertyName name, HandleObject scopeChain,
-           MutableHandleObject objp, MutableHandleObject pobjp, MutableHandleShape propp);
+           MutableHandleObject objp, MutableHandleObject pobjp, MutableHandle<PropertyResult> propp);
 
 extern bool
 LookupNameNoGC(JSContext* cx, PropertyName* name, JSObject* scopeChain,
-               JSObject** objp, JSObject** pobjp, Shape** propp);
+               JSObject** objp, JSObject** pobjp, PropertyResult* propp);
 
 /*
  * Like LookupName except returns the global object if 'name' is not found in
@@ -1253,10 +1253,10 @@ FindVariableScope(JSContext* cx, JSFunction** funp);
 
 bool
 LookupPropertyPure(ExclusiveContext* cx, JSObject* obj, jsid id, JSObject** objp,
-                   Shape** propp);
+                   PropertyResult* propp);
 
 bool
-LookupOwnPropertyPure(ExclusiveContext* cx, JSObject* obj, jsid id, Shape** propp,
+LookupOwnPropertyPure(ExclusiveContext* cx, JSObject* obj, jsid id, PropertyResult* propp,
                       bool* isTypedArrayOutOfRange = nullptr);
 
 bool
