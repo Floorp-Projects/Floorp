@@ -319,7 +319,8 @@ AutoStopwatch::exit()
             const uint64_t cyclesEnd = getCycles(runtime);
             cyclesDelta = cyclesEnd - cyclesStart_; // Always >= 0 by definition of `getCycles`.
         }
-#if WINVER >= 0x600
+// Temporary disable untested code path.
+#if 0 // WINVER >= 0x600
         updateTelemetry(cpuStart_, cpuEnd);
 #elif defined(__linux__)
         updateTelemetry(cpuStart_, cpuEnd);
@@ -411,7 +412,8 @@ AutoStopwatch::getCycles(JSRuntime* runtime) const
 cpuid_t inline
 AutoStopwatch::getCPU() const
 {
-#if defined(XP_WIN) && WINVER >= _WIN32_WINNT_VISTA
+// Temporary disable untested code path.
+#if 0 // defined(XP_WIN) && WINVER >= _WIN32_WINNT_VISTA
     PROCESSOR_NUMBER proc;
     GetCurrentProcessorNumberEx(&proc);
 
@@ -425,7 +427,8 @@ AutoStopwatch::getCPU() const
 bool inline
 AutoStopwatch::isSameCPU(const cpuid_t& a, const cpuid_t& b) const
 {
-#if defined(XP_WIN)  && WINVER >= _WIN32_WINNT_VISTA
+// Temporary disable untested code path.
+#if 0 // defined(XP_WIN)  && WINVER >= _WIN32_WINNT_VISTA
     return a.group_ == b.group_ && a.number_ == b.number_;
 #else
     return true;
