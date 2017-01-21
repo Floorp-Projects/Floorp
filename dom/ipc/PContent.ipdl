@@ -681,7 +681,17 @@ child:
 
     async GMPsChanged(GMPCapabilityData[] capabilities);
 
+
     async FileCreationResponse(nsID aID, FileCreationResult aResult);
+
+    /**
+     * Sending an activate message moves focus to the child.
+     */
+    async Activate(PBrowser aTab);
+
+    async Deactivate(PBrowser aTab);
+
+    async ParentActivated(PBrowser aTab, bool aActivated);
 
 parent:
     async InitBackground(Endpoint<PBackgroundParent> aEndpoint);

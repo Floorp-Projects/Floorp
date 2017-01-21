@@ -477,6 +477,12 @@ public:
   RecvNotifyPushSubscriptionModifiedObservers(const nsCString& aScope,
                                               const IPC::Principal& aPrincipal) override;
 
+  virtual mozilla::ipc::IPCResult RecvActivate(PBrowserChild* aTab) override;
+
+  virtual mozilla::ipc::IPCResult RecvDeactivate(PBrowserChild* aTab) override;
+
+  virtual mozilla::ipc::IPCResult RecvParentActivated(PBrowserChild* aTab, const bool& aActivated) override;
+
   // Get the directory for IndexedDB files. We query the parent for this and
   // cache the value
   nsString &GetIndexedDBPath();
