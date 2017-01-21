@@ -1206,38 +1206,37 @@ NativeObject::shadowingShapeChange(ExclusiveContext* cx, const Shape& shape)
     return generateOwnShape(cx);
 }
 
-bool
-JSObject::setFlags(ExclusiveContext* cx, BaseShape::Flag flags, GenerateShape generateShape)
+/* static */ bool
+JSObject::setFlags(ExclusiveContext* cx, HandleObject obj, BaseShape::Flag flags,
+                   GenerateShape generateShape)
 {
-    if (hasAllFlags(flags))
+    if (obj->hasAllFlags(flags))
         return true;
 
-    RootedObject self(cx, this);
-
-    if (isNative() && as<NativeObject>().inDictionaryMode()) {
-        if (generateShape == GENERATE_SHAPE && !as<NativeObject>().generateOwnShape(cx))
+    if (obj->isNative() && obj->as<NativeObject>().inDictionaryMode()) {
+        if (generateShape == GENERATE_SHAPE && !obj->as<NativeObject>().generateOwnShape(cx))
             return false;
-        StackBaseShape base(self->as<NativeObject>().lastProperty());
+        StackBaseShape base(obj->as<NativeObject>().lastProperty());
         base.flags |= flags;
         UnownedBaseShape* nbase = BaseShape::getUnowned(cx, base);
         if (!nbase)
             return false;
 
-        self->as<NativeObject>().lastProperty()->base()->adoptUnowned(nbase);
+        obj->as<NativeObject>().lastProperty()->base()->adoptUnowned(nbase);
         return true;
     }
 
-    Shape* existingShape = self->ensureShape(cx);
+    Shape* existingShape = obj->ensureShape(cx);
     if (!existingShape)
         return false;
 
-    Shape* newShape = Shape::setObjectFlags(cx, flags, self->taggedProto(), existingShape);
+    Shape* newShape = Shape::setObjectFlags(cx, flags, obj->taggedProto(), existingShape);
     if (!newShape)
         return false;
 
-    // The success of the |JSObject::ensureShape| call above means that |self|
+    // The success of the |JSObject::ensureShape| call above means that |obj|
     // can be assumed to have a shape.
-    self->as<ShapedObject>().setShape(newShape);
+    obj->as<ShapedObject>().setShape(newShape);
 
     return true;
 }

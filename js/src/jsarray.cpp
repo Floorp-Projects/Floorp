@@ -3281,7 +3281,7 @@ CreateArrayPrototype(JSContext* cx, JSProtoKey key)
                                                               metadata));
     if (!arrayProto ||
         !JSObject::setSingleton(cx, arrayProto) ||
-        !arrayProto->setDelegate(cx) ||
+        !JSObject::setDelegate(cx, arrayProto) ||
         !AddLengthProperty(cx, arrayProto))
     {
         return nullptr;

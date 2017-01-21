@@ -671,7 +671,7 @@ VectorToKeyIterator(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVecto
 {
     MOZ_ASSERT(!(flags & JSITER_FOREACH));
 
-    if (obj->isSingleton() && !obj->setIteratedSingleton(cx))
+    if (obj->isSingleton() && !JSObject::setIteratedSingleton(cx, obj))
         return false;
     MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_ITERATED);
 
@@ -715,7 +715,7 @@ VectorToValueIterator(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVec
 {
     MOZ_ASSERT(flags & JSITER_FOREACH);
 
-    if (obj->isSingleton() && !obj->setIteratedSingleton(cx))
+    if (obj->isSingleton() && !JSObject::setIteratedSingleton(cx, obj))
         return false;
     MarkObjectGroupFlags(cx, obj, OBJECT_FLAG_ITERATED);
 
