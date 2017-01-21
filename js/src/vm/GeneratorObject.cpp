@@ -256,7 +256,7 @@ static const JSFunctionSpec legacy_generator_methods[] = {
 static JSObject*
 NewSingletonObjectWithObjectPrototype(JSContext* cx, Handle<GlobalObject*> global)
 {
-    RootedObject proto(cx, global->getOrCreateObjectPrototype(cx));
+    RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
     if (!proto)
         return nullptr;
     return NewObjectWithGivenProto<PlainObject>(cx, proto, SingletonObject);
@@ -265,7 +265,7 @@ NewSingletonObjectWithObjectPrototype(JSContext* cx, Handle<GlobalObject*> globa
 JSObject*
 js::NewSingletonObjectWithFunctionPrototype(JSContext* cx, Handle<GlobalObject*> global)
 {
-    RootedObject proto(cx, global->getOrCreateFunctionPrototype(cx));
+    RootedObject proto(cx, GlobalObject::getOrCreateFunctionPrototype(cx, global));
     if (!proto)
         return nullptr;
     return NewObjectWithGivenProto<PlainObject>(cx, proto, SingletonObject);
@@ -297,9 +297,9 @@ GlobalObject::initStarGenerators(JSContext* cx, Handle<GlobalObject*> global)
     if (!iteratorProto)
         return false;
 
-    RootedObject genObjectProto(cx, global->createBlankPrototypeInheriting(cx,
-                                                                           &PlainObject::class_,
-                                                                           iteratorProto));
+    RootedObject genObjectProto(cx, GlobalObject::createBlankPrototypeInheriting(cx, global,
+                                                                                 &PlainObject::class_,
+                                                                                 iteratorProto));
     if (!genObjectProto)
         return false;
     if (!DefinePropertiesAndFunctions(cx, genObjectProto, nullptr, star_generator_methods) ||

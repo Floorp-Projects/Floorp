@@ -344,7 +344,8 @@ SharedArrayBufferObject::copyData(Handle<SharedArrayBufferObject*> toBuffer,
 static JSObject*
 CreateSharedArrayBufferPrototype(JSContext* cx, JSProtoKey key)
 {
-    return cx->global()->createBlankPrototype(cx, &SharedArrayBufferObject::protoClass_);
+    return GlobalObject::createBlankPrototype(cx, cx->global(),
+                                              &SharedArrayBufferObject::protoClass_);
 }
 
 static const ClassOps SharedArrayBufferObjectClassOps = {
