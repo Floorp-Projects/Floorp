@@ -1055,16 +1055,3 @@ int nr_ice_get_new_ice_pwd(char** pwd)
     return(_status);
   }
 
-#ifndef UINT2_MAX
-#define UINT2_MAX ((UINT2)(65535U))
-#endif
-
-void nr_ice_accumulate_count(UINT2* orig_count, UINT2 new_count)
-  {
-    if (UINT2_MAX - new_count < *orig_count) {
-      // don't rollover, just stop accumulating at MAX value
-      *orig_count = UINT2_MAX;
-    } else {
-      *orig_count += new_count;
-    }
-  }
