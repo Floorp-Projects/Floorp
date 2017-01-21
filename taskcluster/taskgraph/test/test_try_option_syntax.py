@@ -204,7 +204,7 @@ class TestTryOptionSyntax(unittest.TestCase):
         "-u gtest[Ubuntu] selects the linux, linux64 and linux64-asan platforms for gtest"
         tos = TryOptionSyntax('try: -u gtest[Ubuntu]', graph_with_jobs)
         self.assertEqual(sorted(tos.unittests), sorted([
-            {'test': 'gtest', 'platforms': ['linux', 'linux64', 'linux64-asan']},
+            {'test': 'gtest', 'platforms': ['linux32', 'linux64', 'linux64-asan']},
         ]))
 
     def test_u_platforms_negated(self):
@@ -218,7 +218,7 @@ class TestTryOptionSyntax(unittest.TestCase):
         "-u gtest[Ubuntu,-x64] selects just linux for gtest"
         tos = TryOptionSyntax('try: -u gtest[Ubuntu,-x64]', graph_with_jobs)
         self.assertEqual(sorted(tos.unittests), sorted([
-            {'test': 'gtest', 'platforms': ['linux']},
+            {'test': 'gtest', 'platforms': ['linux32']},
         ]))
 
     def test_u_chunks_platforms(self):
