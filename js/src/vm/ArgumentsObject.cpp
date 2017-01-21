@@ -214,7 +214,7 @@ ArgumentsObject::createTemplateObject(JSContext* cx, bool mapped)
                          ? &MappedArgumentsObject::class_
                          : &UnmappedArgumentsObject::class_;
 
-    RootedObject proto(cx, cx->global()->getOrCreateObjectPrototype(cx));
+    RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, cx->global()));
     if (!proto)
         return nullptr;
 

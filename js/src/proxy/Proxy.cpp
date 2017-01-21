@@ -744,9 +744,9 @@ js::InitProxyClass(JSContext* cx, HandleObject obj)
         JS_FS_END
     };
 
-    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
+    Handle<GlobalObject*> global = obj.as<GlobalObject>();
     RootedFunction ctor(cx);
-    ctor = global->createConstructor(cx, proxy, cx->names().Proxy, 2);
+    ctor = GlobalObject::createConstructor(cx, proxy, cx->names().Proxy, 2);
     if (!ctor)
         return nullptr;
 
