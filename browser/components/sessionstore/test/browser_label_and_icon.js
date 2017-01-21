@@ -20,7 +20,7 @@ add_task(function setup() {
 /**
  * Ensure that a pending tab has label and icon correctly set.
  */
-add_task(function test_label_and_icon() {
+add_task(function* test_label_and_icon() {
   // Create a new tab.
   let tab = gBrowser.addTab("about:robots");
   let browser = tab.linkedBrowser;
