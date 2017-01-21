@@ -1,4 +1,75 @@
 
+CHANGES BETWEEN 2.7 and 2.7.1
+
+  I. IMPORTANT CHANGES
+
+    - Support for the new CFF2 font format as introduced with OpenType
+      1.8 has been contributed by Dave Arnolds from Adobe.
+
+    - Preliminary support for variation fonts as specified in OpenType
+      1.8 (in addition to the  already existing support for Adobe's MM
+      and Apple's  GX formats).  Dave Arnolds  contributed handling of
+      advance  width change  variation;  more will  come  in the  next
+      version.
+
+
+  II. IMPORTANT BUG FIXES
+
+    - Handling of  raw CID fonts was partially  broken (bug introduced
+      in 2.6.4).
+
+
+  III. MISCELLANEOUS
+
+    - Some limits for TrueType  bytecode execution have been tightened
+      to  speed   up  FreeType's  handling  of   malformed  fonts,  in
+      particular to quickly abort endless loops.
+
+      - The  number of  twilight points  can no  longer be  set to  an
+        arbitrarily large value.
+
+      - The total number of jump  opcode instructions (like JMPR) with
+        negative arguments  is dynamically restricted; the  same holds
+        for the total number of iterations in LOOPCALL opcodes.
+
+      The dynamic limits are based on  the number of points in a glyph
+      and the number of CVT entries.  Please report if you encounter a
+      font where the selected values are not adequate.
+
+    - PCF family names are made more `colourful'; they now include the
+      foundry  and information  whether they contain  wide characters.
+      For example,  you no longer get `Fixed' but  rather `Sony Fixed'
+      or `Misc Fixed Wide'.
+
+    - A new  function `FT_Get_Var_Blend_Coordinates'  (with its  alias
+      name  `FT_Get_MM_Blend_Coordinates') to retrieve the  normalized
+      blend  coordinates of the currently  selected variation instance
+      has been added to the Multiple Masters interface.
+
+    - A new  function `FT_Get_Var_Design_Coordinates' to  retrieve the
+      design coordinates of the  currently selected variation instance
+      has been added to the Multiple Masters interface.
+
+    - A new load flag `FT_LOAD_BITMAP_METRICS_ONLY' to retrieve bitmap
+      information without loading the (embedded) bitmap itself.
+
+    - Retrieving   advance   widths   from   bitmap   strikes   (using
+      `FT_Get_Advance' and `FT_Get_Advances') have been sped up.
+
+    - The  usual round  of  fuzzer fixes  to  better reject  malformed
+      fonts.
+
+    - The `ftmulti' demo program can now switch engines with key `H'.
+
+    - The  `ftstring'  demo  program   can  now  show  some  built-in,
+      non-latin sample strings (to be selected with the TAB key).
+
+    - The  `ftview'  demo program  can  now  switch between  a  font's
+      charmaps using the TAB key.
+
+
+======================================================================
+
 CHANGES BETWEEN 2.6.5 and 2.7
 
   I. IMPORTANT CHANGES

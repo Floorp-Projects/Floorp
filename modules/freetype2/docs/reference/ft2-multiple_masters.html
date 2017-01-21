@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.7 API Reference</title>
+<title>FreeType-2.7.1 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,17 +100,18 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.7 API Reference</h1>
+<h1>FreeType-2.7.1 API Reference</h1>
 
 <h1 id="multiple_masters">Multiple Masters</h1>
 <h2>Synopsis</h2>
 <table class="synopsis">
-<tr><td><a href="#FT_MM_Axis">FT_MM_Axis</a></td><td><a href="#FT_Get_MM_Var">FT_Get_MM_Var</a></td></tr>
-<tr><td><a href="#FT_Multi_Master">FT_Multi_Master</a></td><td><a href="#FT_Set_MM_Design_Coordinates">FT_Set_MM_Design_Coordinates</a></td></tr>
-<tr><td><a href="#FT_Var_Axis">FT_Var_Axis</a></td><td><a href="#FT_Set_Var_Design_Coordinates">FT_Set_Var_Design_Coordinates</a></td></tr>
+<tr><td><a href="#FT_MM_Axis">FT_MM_Axis</a></td><td><a href="#FT_Set_MM_Design_Coordinates">FT_Set_MM_Design_Coordinates</a></td></tr>
+<tr><td><a href="#FT_Multi_Master">FT_Multi_Master</a></td><td><a href="#FT_Set_Var_Design_Coordinates">FT_Set_Var_Design_Coordinates</a></td></tr>
+<tr><td><a href="#FT_Var_Axis">FT_Var_Axis</a></td><td><a href="#FT_Get_Var_Design_Coordinates">FT_Get_Var_Design_Coordinates</a></td></tr>
 <tr><td><a href="#FT_Var_Named_Style">FT_Var_Named_Style</a></td><td><a href="#FT_Set_MM_Blend_Coordinates">FT_Set_MM_Blend_Coordinates</a></td></tr>
-<tr><td><a href="#FT_MM_Var">FT_MM_Var</a></td><td><a href="#FT_Set_Var_Blend_Coordinates">FT_Set_Var_Blend_Coordinates</a></td></tr>
-<tr><td><a href="#FT_Get_Multi_Master">FT_Get_Multi_Master</a></td><td></td></tr>
+<tr><td><a href="#FT_MM_Var">FT_MM_Var</a></td><td><a href="#FT_Get_MM_Blend_Coordinates">FT_Get_MM_Blend_Coordinates</a></td></tr>
+<tr><td><a href="#FT_Get_Multi_Master">FT_Get_Multi_Master</a></td><td><a href="#FT_Set_Var_Blend_Coordinates">FT_Set_Var_Blend_Coordinates</a></td></tr>
+<tr><td><a href="#FT_Get_MM_Var">FT_Get_MM_Var</a></td><td><a href="#FT_Get_Var_Blend_Coordinates">FT_Get_Var_Blend_Coordinates</a></td></tr>
 </table>
 
 
@@ -234,6 +235,7 @@
   {
     <a href="ft2-basic_types.html#FT_Fixed">FT_Fixed</a>*  coords;
     <a href="ft2-basic_types.html#FT_UInt">FT_UInt</a>    strid;
+    <a href="ft2-basic_types.html#FT_UInt">FT_UInt</a>    psid;   /* since 2.7.1 */
 
   } <b>FT_Var_Named_Style</b>;
 </pre>
@@ -430,6 +432,41 @@
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
 
 <div class="section">
+<h3 id="FT_Get_Var_Design_Coordinates">FT_Get_Var_Design_Coordinates</h3>
+<p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
+<pre>
+  FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
+  <b>FT_Get_Var_Design_Coordinates</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>    face,
+                                 <a href="ft2-basic_types.html#FT_UInt">FT_UInt</a>    num_coords,
+                                 <a href="ft2-basic_types.html#FT_Fixed">FT_Fixed</a>*  coords );
+</pre>
+
+<p>For Multiple Master and GX Var fonts, get the design coordinates of the currently selected interpolated font.</p>
+
+<h4>input</h4>
+<table class="fields">
+<tr><td class="val" id="face">face</td><td class="desc">
+<p>A handle to the source face.</p>
+</td></tr>
+<tr><td class="val" id="num_coords">num_coords</td><td class="desc">
+<p>The number of design coordinates to retrieve. If it is larger than the number of axes, set the excess values to&nbsp;0.</p>
+</td></tr>
+</table>
+
+<h4>output</h4>
+<table class="fields">
+<tr><td class="val" id="coords">coords</td><td class="desc">
+<p>The design coordinates array.</p>
+</td></tr>
+</table>
+
+<h4>return</h4>
+<p>FreeType error code. 0&nbsp;means success.</p>
+
+<hr>
+<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
+
+<div class="section">
 <h3 id="FT_Set_MM_Blend_Coordinates">FT_Set_MM_Blend_Coordinates</h3>
 <p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
 <pre>
@@ -454,7 +491,42 @@
 <p>The number of available design coordinates. If it is larger than the number of axes, ignore the excess values. If it is smaller than the number of axes, use default values for the remaining axes.</p>
 </td></tr>
 <tr><td class="val" id="coords">coords</td><td class="desc">
-<p>The design coordinates array (each element must be between 0 and 1.0).</p>
+<p>The design coordinates array (each element must be between 0 and 1.0 for MM fonts, and between -1.0 and 1.0 for GX var fonts).</p>
+</td></tr>
+</table>
+
+<h4>return</h4>
+<p>FreeType error code. 0&nbsp;means success.</p>
+
+<hr>
+<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
+
+<div class="section">
+<h3 id="FT_Get_MM_Blend_Coordinates">FT_Get_MM_Blend_Coordinates</h3>
+<p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
+<pre>
+  FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
+  <b>FT_Get_MM_Blend_Coordinates</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>    face,
+                               <a href="ft2-basic_types.html#FT_UInt">FT_UInt</a>    num_coords,
+                               <a href="ft2-basic_types.html#FT_Fixed">FT_Fixed</a>*  coords );
+</pre>
+
+<p>For Multiple Masters and GX var fonts, get the normalized blend coordinates of the currently selected interpolated font.</p>
+
+<h4>input</h4>
+<table class="fields">
+<tr><td class="val" id="face">face</td><td class="desc">
+<p>A handle to the source face.</p>
+</td></tr>
+<tr><td class="val" id="num_coords">num_coords</td><td class="desc">
+<p>The number of normalized blend coordinates to retrieve. If it is larger than the number of axes, set the excess values to&nbsp;0.5 for MM fonts, and to&nbsp;0 for GX var fonts.</p>
+</td></tr>
+</table>
+
+<h4>output</h4>
+<table class="fields">
+<tr><td class="val" id="coords">coords</td><td class="desc">
+<p>The normalized blend coordinates array.</p>
 </td></tr>
 </table>
 
@@ -475,6 +547,21 @@
 </pre>
 
 <p>This is another name of <a href="ft2-multiple_masters.html#FT_Set_MM_Blend_Coordinates">FT_Set_MM_Blend_Coordinates</a>.</p>
+
+<hr>
+<table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
+
+<div class="section">
+<h3 id="FT_Get_Var_Blend_Coordinates">FT_Get_Var_Blend_Coordinates</h3>
+<p>Defined in FT_MULTIPLE_MASTERS_H (freetype/ftmm.h).</p>
+<pre>
+  FT_EXPORT( <a href="ft2-basic_types.html#FT_Error">FT_Error</a> )
+  <b>FT_Get_Var_Blend_Coordinates</b>( <a href="ft2-base_interface.html#FT_Face">FT_Face</a>    face,
+                                <a href="ft2-basic_types.html#FT_UInt">FT_UInt</a>    num_coords,
+                                <a href="ft2-basic_types.html#FT_Fixed">FT_Fixed</a>*  coords );
+</pre>
+
+<p>This is another name of <a href="ft2-multiple_masters.html#FT_Get_MM_Blend_Coordinates">FT_Get_MM_Blend_Coordinates</a>.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
