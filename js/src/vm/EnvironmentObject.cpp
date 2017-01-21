@@ -2279,11 +2279,11 @@ DebugEnvironmentProxy::isForDeclarative() const
            e.is<LexicalEnvironmentObject>();
 }
 
-bool
-DebugEnvironmentProxy::getMaybeSentinelValue(JSContext* cx, HandleId id, MutableHandleValue vp)
+/* static */ bool
+DebugEnvironmentProxy::getMaybeSentinelValue(JSContext* cx, Handle<DebugEnvironmentProxy*> env,
+                                             HandleId id, MutableHandleValue vp)
 {
-    Rooted<DebugEnvironmentProxy*> self(cx, this);
-    return DebugEnvironmentProxyHandler::singleton.getMaybeSentinelValue(cx, self, id, vp);
+    return DebugEnvironmentProxyHandler::singleton.getMaybeSentinelValue(cx, env, id, vp);
 }
 
 bool
