@@ -3036,7 +3036,8 @@ ObjectGroup::clearNewScript(ExclusiveContext* cx, ObjectGroup* replacement /* = 
 
         // Mark the constructing function as having its 'new' script cleared, so we
         // will not try to construct another one later.
-        if (!newScript->function()->setNewScriptCleared(cx))
+        RootedFunction fun(cx, newScript->function());
+        if (!JSObject::setNewScriptCleared(cx, fun))
             cx->recoverFromOutOfMemory();
     }
 

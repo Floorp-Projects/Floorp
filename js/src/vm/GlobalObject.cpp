@@ -329,9 +329,9 @@ GlobalObject::createInternal(JSContext* cx, const Class* clasp)
 
     cx->compartment()->initGlobal(*global);
 
-    if (!global->setQualifiedVarObj(cx))
+    if (!JSObject::setQualifiedVarObj(cx, global))
         return nullptr;
-    if (!global->setDelegate(cx))
+    if (!JSObject::setDelegate(cx, global))
         return nullptr;
 
     return global;
@@ -595,7 +595,7 @@ CreateBlankProto(JSContext* cx, const Class* clasp, HandleObject proto, HandleOb
 
     RootedNativeObject blankProto(cx, NewNativeObjectWithGivenProto(cx, clasp, proto,
                                                                     SingletonObject));
-    if (!blankProto || !blankProto->setDelegate(cx))
+    if (!blankProto || !JSObject::setDelegate(cx, blankProto))
         return nullptr;
 
     return blankProto;

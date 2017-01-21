@@ -198,8 +198,8 @@ class JSObject : public js::gc::Cell
         GENERATE_SHAPE
     };
 
-    bool setFlags(js::ExclusiveContext* cx, js::BaseShape::Flag flags,
-                  GenerateShape generateShape = GENERATE_NONE);
+    static bool setFlags(js::ExclusiveContext* cx, JS::HandleObject obj, js::BaseShape::Flag flags,
+                         GenerateShape generateShape = GENERATE_NONE);
     inline bool hasAllFlags(js::BaseShape::Flag flags) const;
 
     /*
@@ -212,16 +212,16 @@ class JSObject : public js::gc::Cell
      * (see Purge{Scope,Proto}Chain in jsobj.cpp).
      */
     inline bool isDelegate() const;
-    bool setDelegate(js::ExclusiveContext* cx) {
-        return setFlags(cx, js::BaseShape::DELEGATE, GENERATE_SHAPE);
+    static bool setDelegate(js::ExclusiveContext* cx, JS::HandleObject obj) {
+        return setFlags(cx, obj, js::BaseShape::DELEGATE, GENERATE_SHAPE);
     }
 
     inline bool isBoundFunction() const;
     inline bool hasSpecialEquality() const;
 
     inline bool watched() const;
-    bool setWatched(js::ExclusiveContext* cx) {
-        return setFlags(cx, js::BaseShape::WATCHED, GENERATE_SHAPE);
+    static bool setWatched(js::ExclusiveContext* cx, JS::HandleObject obj) {
+        return setFlags(cx, obj, js::BaseShape::WATCHED, GENERATE_SHAPE);
     }
 
     // A "qualified" varobj is the object on which "qualified" variable
@@ -245,8 +245,8 @@ class JSObject : public js::gc::Cell
     // (e.g., Gecko and XPConnect), as they often wish to run scripts under a
     // scope that captures var bindings.
     inline bool isQualifiedVarObj() const;
-    bool setQualifiedVarObj(js::ExclusiveContext* cx) {
-        return setFlags(cx, js::BaseShape::QUALIFIED_VAROBJ);
+    static bool setQualifiedVarObj(js::ExclusiveContext* cx, JS::HandleObject obj) {
+        return setFlags(cx, obj, js::BaseShape::QUALIFIED_VAROBJ);
     }
 
     // An "unqualified" varobj is the object on which "unqualified"
@@ -260,11 +260,11 @@ class JSObject : public js::gc::Cell
     // generate a new shape when their prototype changes, regardless of this
     // hasUncacheableProto flag.
     inline bool hasUncacheableProto() const;
-    bool setUncacheableProto(js::ExclusiveContext* cx) {
-        MOZ_ASSERT(hasStaticPrototype(),
+    static bool setUncacheableProto(js::ExclusiveContext* cx, JS::HandleObject obj) {
+        MOZ_ASSERT(obj->hasStaticPrototype(),
                    "uncacheability as a concept is only applicable to static "
                    "(not dynamically-computed) prototypes");
-        return setFlags(cx, js::BaseShape::UNCACHEABLE_PROTO, GENERATE_SHAPE);
+        return setFlags(cx, obj, js::BaseShape::UNCACHEABLE_PROTO, GENERATE_SHAPE);
     }
 
     /*
@@ -272,8 +272,8 @@ class JSObject : public js::gc::Cell
      * PropertyTree::MAX_HEIGHT.
      */
     inline bool hadElementsAccess() const;
-    bool setHadElementsAccess(js::ExclusiveContext* cx) {
-        return setFlags(cx, js::BaseShape::HAD_ELEMENTS_ACCESS);
+    static bool setHadElementsAccess(js::ExclusiveContext* cx, JS::HandleObject obj) {
+        return setFlags(cx, obj, js::BaseShape::HAD_ELEMENTS_ACCESS);
     }
 
     /*
@@ -419,8 +419,8 @@ class JSObject : public js::gc::Cell
      * is purged on GC.
      */
     inline bool isIteratedSingleton() const;
-    bool setIteratedSingleton(js::ExclusiveContext* cx) {
-        return setFlags(cx, js::BaseShape::ITERATED_SINGLETON);
+    static bool setIteratedSingleton(js::ExclusiveContext* cx, JS::HandleObject obj) {
+        return setFlags(cx, obj, js::BaseShape::ITERATED_SINGLETON);
     }
 
     /*
@@ -432,8 +432,8 @@ class JSObject : public js::gc::Cell
 
     // Mark an object as having its 'new' script information cleared.
     inline bool wasNewScriptCleared() const;
-    bool setNewScriptCleared(js::ExclusiveContext* cx) {
-        return setFlags(cx, js::BaseShape::NEW_SCRIPT_CLEARED);
+    static bool setNewScriptCleared(js::ExclusiveContext* cx, JS::HandleObject obj) {
+        return setFlags(cx, obj, js::BaseShape::NEW_SCRIPT_CLEARED);
     }
 
     /* Set a new prototype for an object with a singleton type. */
