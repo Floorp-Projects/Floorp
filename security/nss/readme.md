@@ -2,8 +2,8 @@
 
 Network Security Services (NSS) is a set of libraries designed to support
 cross-platform development of security-enabled client and server
-applications. NSS supports SSL v3-TLS 1.2 (experimental TLS 1.3), PKCS #5, PKCS
-#7, PKCS #11, PKCS #12, S/MIME, X.509 v3 certificates, and other security
+applications. NSS supports SSL v3-TLS 1.2 (experimental TLS 1.3), PKCS #5, PKCS#7,
+PKCS #11, PKCS #12, S/MIME, X.509 v3 certificates, and other security
 standards.
 
 ## Getting started
@@ -34,15 +34,16 @@ After changing into the NSS directory a typical build is done as follows
     ./build.sh
 
 Once the build is done the build output is found in the directory
-`../dist/*.OBJ`, where `*` will be a name dynamically derived from your system's
-architecture. Exported header files can be found in the `include` directory,
-library files in directory `lib`, and tools in directory `bin`. In order to run
-the tools, set your system environment to use the libraries of your build from
-the "lib" directory, e.g., using the `LD_LIBRARY_PATH` or `DYLD_LIBRARY_PATH`.
+`../dist/Debug` for debug builds and `../dist/Release` for opt builds.
+Exported header files can be found in the `include` directory, library files in
+directory `lib`, and tools in directory `bin`. In order to run the tools, set
+your system environment to use the libraries of your build from the "lib"
+directory, e.g., using the `LD_LIBRARY_PATH` or `DYLD_LIBRARY_PATH`.
 
-    Usage: build.sh [-hcgv] [-j <n>] [--test] [--fuzz] [--scan-build[=output]]
-                    [-m32] [--opt|-o] [--asan] [--ubsan] [--sancov[=edge|bb|func]]
-                    [--pprof] [--msan]
+    Usage: build.sh [-hcv] [-j <n>] [--nspr] [--gyp|-g] [--opt|-o] [-m32]
+                    [--test] [--fuzz] [--pprof] [--scan-build[=output]]
+                    [--asan] [--ubsan] [--msan] [--sancov[=edge|bb|func|...]]
+                    [--ct-verif] [--disable-tests]
 
     This script builds NSS with gyp and ninja.
 
@@ -51,24 +52,27 @@ the "lib" directory, e.g., using the `LD_LIBRARY_PATH` or `DYLD_LIBRARY_PATH`.
 
     NSS build tool options:
 
-        -h            display this help and exit
-        -c            clean before build
-        -g            force a rebuild of gyp (and NSPR, because why not)
-        -j <n>        run at most <n> concurrent jobs
-        -v            verbose build
-        -m32          do a 32-bit build on a 64-bit system
-        --test        ignore map files and export everything we have
-        --fuzz        enable fuzzing mode. this always enables test builds
-        --scan-build  run the build with scan-build (scan-build has to be in the path)
-                      --scan-build=/out/path sets the output path for scan-build
-        --opt|-o      do an opt build
-        --asan        do an asan build
-        --ubsan       do an ubsan build
-        --msan        do an msan build
-        --sancov      do sanitize coverage builds
-                      --sancov=func sets coverage to function level for example
-        --pprof       build with gperftool support
-
+        -h               display this help and exit
+        -c               clean before build
+        -v               verbose build
+        -j <n>           run at most <n> concurrent jobs
+        --nspr           force a rebuild of NSPR
+        --gyp|-g         force a rerun of gyp
+        --opt|-o         do an opt build
+        -m32             do a 32-bit build on a 64-bit system
+        --test           ignore map files and export everything we have
+        --fuzz           enable fuzzing mode. this always enables test builds
+        --pprof          build with gperftool support
+        --ct-verif       build with valgrind for ct-verif
+        --scan-build     run the build with scan-build (scan-build has to be in the path)
+                         --scan-build=/out/path sets the output path for scan-build
+        --asan           do an asan build
+        --ubsan          do an ubsan build
+                         --ubsan=bool,shift,... sets specific UB sanitizers
+        --msan           do an msan build
+        --sancov         do sanitize coverage builds
+                         --sancov=func sets coverage to function level for example
+        --disable-tests  don't build tests and corresponding cmdline utils
 
 ## Building NSS (legacy build system)
 
