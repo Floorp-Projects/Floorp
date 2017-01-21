@@ -384,8 +384,9 @@ class GCZonesIter
 
   public:
     explicit GCZonesIter(JSRuntime* rt, ZoneSelector selector = WithAtoms) : zone(rt, selector) {
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt) && rt->isHeapBusy());
-        if (!zone->isCollecting())
+        MOZ_ASSERT((CurrentThreadCanAccessRuntime(rt) && rt->isHeapBusy()) ||
+                   CurrentThreadIsPerformingGC());
+        if (!zone->isCollectingFromAnyThread())
             next();
     }
 

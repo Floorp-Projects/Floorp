@@ -43,12 +43,14 @@ Storage::Storage(nsPIDOMWindowInner* aWindow,
                  StorageManagerBase* aManager,
                  StorageCache* aCache,
                  const nsAString& aDocumentURI,
-                 nsIPrincipal* aPrincipal)
+                 nsIPrincipal* aPrincipal,
+                 bool aIsPrivate)
   : mWindow(aWindow)
   , mManager(aManager)
   , mCache(aCache)
   , mDocumentURI(aDocumentURI)
   , mPrincipal(aPrincipal)
+  , mIsPrivate(aIsPrivate)
   , mIsSessionOnly(false)
 {
   mCache->Preload();
@@ -241,6 +243,8 @@ bool
 Storage::CanUseStorage(nsIPrincipal& aSubjectPrincipal)
 {
   // This method is responsible for correct setting of mIsSessionOnly.
+  // It doesn't work with mIsPrivate flag at all, since it is checked
+  // regardless mIsSessionOnly flag in DOMStorageCache code.
 
   if (!mozilla::Preferences::GetBool(kStorageEnabled)) {
     return false;
@@ -278,17 +282,6 @@ bool
 Storage::PrincipalEquals(nsIPrincipal* aPrincipal)
 {
   return PrincipalsEqual(mPrincipal, aPrincipal);
-}
-
-bool
-Storage::IsPrivate() const
-{
-  uint32_t privateBrowsingId = 0;
-  nsresult rv = mPrincipal->GetPrivateBrowsingId(&privateBrowsingId);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-  return privateBrowsingId > 0;
 }
 
 bool

@@ -106,6 +106,12 @@ nsAsyncRedirectVerifyHelper::OnRedirectVerifyCallback(nsresult result)
          "result=%x expectedCBs=%u mResult=%x",
          result, mExpectedCallbacks, mResult));
 
+    MOZ_DIAGNOSTIC_ASSERT(mExpectedCallbacks > 0,
+                          "OnRedirectVerifyCallback called more times than expected");
+    if (mExpectedCallbacks <= 0) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
     --mExpectedCallbacks;
 
     // If response indicates failure we may call back immediately

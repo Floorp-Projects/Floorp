@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Add select options test</title>
+  <title>HTML select options test</title>
   <link rel="stylesheet" type="text/css"
         href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
@@ -91,7 +91,36 @@
       }
     }
 
-    //gA11yEventDumpID = "debug";
+    /**
+     * Setting @href on option makes the accessible to recreate.
+     */
+    function setHrefOnOption()
+    {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, 's2_o'),
+        new invokerChecker(EVENT_SHOW, 's2_o'),
+      ];
+
+      this.invoke = function setHrefOnOption_setHref()
+      {
+        getNode('s2_o').setAttribute('href', '1');
+      }
+
+      this.finalCheck = function() {
+        var tree =
+          { COMBOBOX: [
+            { COMBOBOX_LIST: [
+              { COMBOBOX_OPTION: [ ] }
+            ] }
+          ] };
+        testAccessibleTree('s2', tree);
+      }
+
+      this.getID = function removeptions_getID()
+      {
+        return "setting @href on select option";
+      }
+    }
 
     function doTest()
     {
@@ -99,6 +128,7 @@
 
       gQueue.push(new addOptions("select"));
       gQueue.push(new removeOptions("select"));
+      gQueue.push(new setHrefOnOption());
 
       gQueue.invoke(); // Will call SimpleTest.finish();
 
@@ -109,22 +139,12 @@
   </script>
 </head>
 <body>
-
-  <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=616452"
-     title="Bug 616452 - Dynamically inserted select options aren't reflected in accessible tree">
-    Mozilla Bug 616452</a>
-  <a target="_blank"
-     href="https://bugzilla.mozilla.org/show_bug.cgi?id=616940"
-     title="Removed select option accessibles aren't removed until hide event is fired">
-    Mozilla Bug 616940</a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
 
   <select id="select"></select>
-
-  <div id="debug"/>
+  <select id="s2"><option id="s2_o"></option></select>
 </body>
 </html>

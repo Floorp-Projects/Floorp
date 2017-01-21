@@ -444,6 +444,8 @@
 @RESPATH@/components/PlacesCategoriesStarter.js
 @RESPATH@/components/ColorAnalyzer.js
 @RESPATH@/components/PageThumbsProtocol.js
+@RESPATH@/components/mozProtocolHandler.js
+@RESPATH@/components/mozProtocolHandler.manifest
 @RESPATH@/components/nsDefaultCLH.manifest
 @RESPATH@/components/nsDefaultCLH.js
 @RESPATH@/components/nsContentPrefService.manifest
