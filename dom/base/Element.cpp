@@ -166,8 +166,7 @@ nsIContent::DoGetID() const
 const nsAttrValue*
 Element::DoGetClasses() const
 {
-  MOZ_ASSERT(HasFlag(NODE_MAY_HAVE_CLASS), "Unexpected call");
-
+  MOZ_ASSERT(MayHaveClass(), "Unexpected call");
   if (IsSVGElement()) {
     const nsAttrValue* animClass =
       static_cast<const nsSVGElement*>(this)->GetAnimatedClassName();
@@ -2549,7 +2548,7 @@ Element::ParseAttribute(int32_t aNamespaceID,
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::_class) {
-      SetFlags(NODE_MAY_HAVE_CLASS);
+      SetMayHaveClass();
       // Result should have been preparsed above.
       return true;
     }
