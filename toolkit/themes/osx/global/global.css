@@ -253,11 +253,13 @@ notification > button {
   border-radius: 10000px;
   border: @roundButtonBorder@;
   text-shadow: @loweredShadow@;
+  color: @roundButtonColor@;
   background: @roundButtonBackground@;
   box-shadow: @roundButtonShadow@;
 }
 
 notification > button:active:hover {
+  color: @roundButtonColor@;
   background: @roundButtonPressedBackground@;
   box-shadow: @roundButtonPressedShadow@;
 }
