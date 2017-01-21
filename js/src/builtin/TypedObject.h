@@ -510,7 +510,7 @@ class TypedObject : public ShapedObject
 
     static MOZ_MUST_USE bool obj_lookupProperty(JSContext* cx, HandleObject obj,
                                                 HandleId id, MutableHandleObject objp,
-                                                MutableHandleShape propp);
+                                                MutableHandle<PropertyResult> propp);
 
     static MOZ_MUST_USE bool obj_defineProperty(JSContext* cx, HandleObject obj, HandleId id,
                                                 Handle<PropertyDescriptor> desc,

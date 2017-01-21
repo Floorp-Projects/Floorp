@@ -13,6 +13,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "imgINotificationObserver.h"
+#include "nsIContentPolicy.h"
 
 class nsIURI;
 class nsIContent;
@@ -55,6 +56,8 @@ protected:
   nsresult OnFrameComplete(imgIRequest* aRequest);
 
   nsCOMPtr<nsIContent>      mContent;
+  nsCOMPtr<nsIPrincipal>    mLoadingPrincipal;
+  nsContentPolicyType       mContentType;
   RefPtr<imgRequestProxy> mIconRequest;
   nsMenuObjectX*            mMenuObject; // [weak]
   nsIntRect                 mImageRegionRect;

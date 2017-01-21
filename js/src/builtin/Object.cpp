@@ -68,18 +68,18 @@ js::obj_propertyIsEnumerable(JSContext* cx, unsigned argc, Value* vp)
         JSObject* obj = &args.thisv().toObject();
 
         /* Step 3. */
-        Shape* shape;
+        PropertyResult prop;
         if (obj->isNative() &&
-            NativeLookupOwnProperty<NoGC>(cx, &obj->as<NativeObject>(), id, &shape))
+            NativeLookupOwnProperty<NoGC>(cx, &obj->as<NativeObject>(), id, &prop))
         {
             /* Step 4. */
-            if (!shape) {
+            if (!prop) {
                 args.rval().setBoolean(false);
                 return true;
             }
 
             /* Step 5. */
-            unsigned attrs = GetShapeAttributes(obj, shape);
+            unsigned attrs = GetPropertyAttributes(obj, prop);
             args.rval().setBoolean((attrs & JSPROP_ENUMERATE) != 0);
             return true;
         }
@@ -580,11 +580,11 @@ js::obj_hasOwnProperty(JSContext* cx, unsigned argc, Value* vp)
     jsid id;
     if (args.thisv().isObject() && ValueToId<NoGC>(cx, idValue, &id)) {
         JSObject* obj = &args.thisv().toObject();
-        Shape* prop;
+        PropertyResult prop;
         if (obj->isNative() &&
             NativeLookupOwnProperty<NoGC>(cx, &obj->as<NativeObject>(), id, &prop))
         {
-            args.rval().setBoolean(!!prop);
+            args.rval().setBoolean(prop.isFound());
             return true;
         }
     }
@@ -839,7 +839,7 @@ EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args, EnumerableOwnPr
                 value = nobj->getDenseOrTypedArrayElement(JSID_TO_INT(id));
             } else {
                 shape = nobj->lookup(cx, id);
-                if (!shape || !(GetShapeAttributes(nobj, shape) & JSPROP_ENUMERATE))
+                if (!shape || !(shape->attributes() & JSPROP_ENUMERATE))
                     continue;
                 if (!shape->isAccessorShape()) {
                     if (!NativeGetExistingProperty(cx, nobj, nobj, shape, &value))

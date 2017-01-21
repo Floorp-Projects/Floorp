@@ -39,7 +39,8 @@ interface nsIDOMStorageManager : nsISupports
    */
   nsIDOMStorage createStorage(in mozIDOMWindow aWindow,
                               in nsIPrincipal aPrincipal,
-                              in DOMString aDocumentURI);
+                              in DOMString aDocumentURI,
+                              [optional] in bool aPrivate);
   /**
    * Returns instance of DOM storage object for given principal.
    * If there is no storage managed for the scope, then null is returned and
@@ -54,7 +55,8 @@ interface nsIDOMStorageManager : nsISupports
    *    Whether the demanding document is running in Private Browsing mode or not.
    */
   nsIDOMStorage getStorage(in mozIDOMWindow aWindow,
-                           in nsIPrincipal aPrincipal);
+                           in nsIPrincipal aPrincipal,
+                           [optional] in bool aPrivate);
 
   /**
    * Clones given storage into this storage manager.
@@ -98,5 +100,6 @@ interface nsIDOMStorageManager : nsISupports
    * or createStorage method instead.
    */
   nsIDOMStorage getLocalStorageForPrincipal(in nsIPrincipal aPrincipal,
-                                            in DOMString aDocumentURI);
+                                            in DOMString aDocumentURI,
+                                            [optional] in bool aPrivate);
 };

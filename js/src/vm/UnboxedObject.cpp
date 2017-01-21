@@ -721,10 +721,10 @@ UnboxedPlainObject::createWithProperties(ExclusiveContext* cx, HandleObjectGroup
 /* static */ bool
 UnboxedPlainObject::obj_lookupProperty(JSContext* cx, HandleObject obj,
                                        HandleId id, MutableHandleObject objp,
-                                       MutableHandleShape propp)
+                                       MutableHandle<PropertyResult> propp)
 {
     if (obj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, id)) {
-        MarkNonNativePropertyFound<CanGC>(propp);
+        propp.setNonNativeProperty();
         objp.set(obj);
         return true;
     }
@@ -732,7 +732,7 @@ UnboxedPlainObject::obj_lookupProperty(JSContext* cx, HandleObject obj,
     RootedObject proto(cx, obj->staticPrototype());
     if (!proto) {
         objp.set(nullptr);
-        propp.set(nullptr);
+        propp.setNotFound();
         return true;
     }
 
@@ -1422,10 +1422,10 @@ UnboxedArrayObject::containsProperty(ExclusiveContext* cx, jsid id)
 /* static */ bool
 UnboxedArrayObject::obj_lookupProperty(JSContext* cx, HandleObject obj,
                                        HandleId id, MutableHandleObject objp,
-                                       MutableHandleShape propp)
+                                       MutableHandle<PropertyResult> propp)
 {
     if (obj->as<UnboxedArrayObject>().containsProperty(cx, id)) {
-        MarkNonNativePropertyFound<CanGC>(propp);
+        propp.setNonNativeProperty();
         objp.set(obj);
         return true;
     }
@@ -1433,7 +1433,7 @@ UnboxedArrayObject::obj_lookupProperty(JSContext* cx, HandleObject obj,
     RootedObject proto(cx, obj->staticPrototype());
     if (!proto) {
         objp.set(nullptr);
-        propp.set(nullptr);
+        propp.setNotFound();
         return true;
     }
 

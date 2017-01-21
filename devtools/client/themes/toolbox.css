@@ -74,12 +74,10 @@
 
 /* Set flex attribute to Toolbox buttons and Picker container so,
    they don't overlap with the tab bar */
+#toolbox-buttons-start,
 #toolbox-buttons-end {
   display: flex;
-}
-
-#toolbox-picker-container {
-  display: flex;
+  align-items: stretch;
 }
 
 #toolbox-buttons-start {
@@ -318,8 +316,9 @@
 /* Command buttons */
 
 .command-button {
-  padding: 0;
-  margin: 0;
+  /* !important is needed to override .devtools-button rules in common.css */
+  padding: 0 !important;
+  margin: 0 !important;
   position: relative;
 }
 

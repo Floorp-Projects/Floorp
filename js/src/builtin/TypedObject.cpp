@@ -1673,10 +1673,10 @@ TypeDescr::hasProperty(const JSAtomState& names, jsid id)
 
 /* static */ bool
 TypedObject::obj_lookupProperty(JSContext* cx, HandleObject obj, HandleId id,
-                                MutableHandleObject objp, MutableHandleShape propp)
+                                MutableHandleObject objp, MutableHandle<PropertyResult> propp)
 {
     if (obj->as<TypedObject>().typeDescr().hasProperty(cx->names(), id)) {
-        MarkNonNativePropertyFound<CanGC>(propp);
+        propp.setNonNativeProperty();
         objp.set(obj);
         return true;
     }
@@ -1684,7 +1684,7 @@ TypedObject::obj_lookupProperty(JSContext* cx, HandleObject obj, HandleId id,
     RootedObject proto(cx, obj->staticPrototype());
     if (!proto) {
         objp.set(nullptr);
-        propp.set(nullptr);
+        propp.setNotFound();
         return true;
     }
 

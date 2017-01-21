@@ -4,4 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-RustLibrary('gkrust-gtest')
+features = []
+if CONFIG['MOZ_STYLO'] and CONFIG['MOZ_STYLO_BINDGEN']:
+    features += ['bindgen']
+
+RustLibrary('gkrust-gtest', features)

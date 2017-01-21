@@ -1161,7 +1161,9 @@ DownloadsPlacesView.prototype = {
   isCommandEnabled(aCommand) {
     switch (aCommand) {
       case "cmd_copy":
-        return this._richlistbox.selectedItems.length > 0;
+      case "downloadsCmd_openReferrer":
+      case "downloadShowMenuItem":
+        return this._richlistbox.selectedItems.length == 1;
       case "cmd_selectAll":
         return true;
       case "cmd_paste":
