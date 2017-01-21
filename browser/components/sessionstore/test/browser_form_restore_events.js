@@ -9,7 +9,7 @@ const URL = ROOT + "browser_form_restore_events_sample.html";
  * Originally a test for Bug 476161, but then expanded to include all input
  * types in bug 640136.
  */
-add_task(function () {
+add_task(function*() {
   // Load a page with some form elements.
   let tab = gBrowser.addTab(URL);
   let browser = tab.linkedBrowser;

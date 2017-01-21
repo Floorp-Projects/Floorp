@@ -8,7 +8,7 @@
  */
 
 // Loading a toplevel frameset
-add_task(function() {
+add_task(function*() {
   let testURL = getRootDirectory(gTestPath) + "browser_frame_history_index.html";
   let tab = gBrowser.addTab(testURL);
   gBrowser.selectedTab = tab;
@@ -51,7 +51,7 @@ add_task(function() {
 });
 
 // Loading the frameset inside an iframe
-add_task(function() {
+add_task(function*() {
   let testURL = getRootDirectory(gTestPath) + "browser_frame_history_index2.html";
   let tab = gBrowser.addTab(testURL);
   gBrowser.selectedTab = tab;
@@ -98,7 +98,7 @@ add_task(function() {
 });
 
 // Now, test that we don't record history if the iframe is added dynamically
-add_task(function() {
+add_task(function*() {
   // Start with an empty history
     let blankState = JSON.stringify({
       windows: [{
