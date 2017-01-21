@@ -220,35 +220,35 @@ private:
       mResolveValues.SetLength(aDependentPromises);
     }
 
-    void Resolve(size_t aIndex, const ResolveValueType& aResolveValue)
+    void Resolve(size_t aIndex, ResolveValueType&& aResolveValue)
     {
       if (!mPromise) {
         // Already rejected.
         return;
       }
 
-      mResolveValues[aIndex].emplace(aResolveValue);
+      mResolveValues[aIndex].emplace(Move(aResolveValue));
       if (--mOutstandingPromises == 0) {
         nsTArray<ResolveValueType> resolveValues;
         resolveValues.SetCapacity(mResolveValues.Length());
         for (size_t i = 0; i < mResolveValues.Length(); ++i) {
-          resolveValues.AppendElement(mResolveValues[i].ref());
+          resolveValues.AppendElement(Move(mResolveValues[i].ref()));
         }
 
-        mPromise->Resolve(resolveValues, __func__);
+        mPromise->Resolve(Move(resolveValues), __func__);
         mPromise = nullptr;
         mResolveValues.Clear();
       }
     }
 
-    void Reject(const RejectValueType& aRejectValue)
+    void Reject(RejectValueType&& aRejectValue)
     {
       if (!mPromise) {
         // Already rejected.
         return;
       }
 
-      mPromise->Reject(aRejectValue, __func__);
+      mPromise->Reject(Move(aRejectValue), __func__);
       mPromise = nullptr;
       mResolveValues.Clear();
     }
@@ -267,8 +267,8 @@ public:
     RefPtr<AllPromiseHolder> holder = new AllPromiseHolder(aPromises.Length());
     for (size_t i = 0; i < aPromises.Length(); ++i) {
       aPromises[i]->Then(aProcessingThread, __func__,
-        [holder, i] (ResolveValueType aResolveValue) -> void { holder->Resolve(i, aResolveValue); },
-        [holder] (RejectValueType aRejectValue) -> void { holder->Reject(aRejectValue); }
+        [holder, i] (ResolveValueType aResolveValue) -> void { holder->Resolve(i, Move(aResolveValue)); },
+        [holder] (RejectValueType aRejectValue) -> void { holder->Reject(Move(aRejectValue)); }
       );
     }
     return holder->Promise();
