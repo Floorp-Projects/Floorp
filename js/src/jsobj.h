@@ -518,8 +518,9 @@ class JSObject : public js::gc::Cell
 
   public:
     static bool reportReadOnly(JSContext* cx, jsid id, unsigned report = JSREPORT_ERROR);
-    bool reportNotConfigurable(JSContext* cx, jsid id, unsigned report = JSREPORT_ERROR);
-    bool reportNotExtensible(JSContext* cx, unsigned report = JSREPORT_ERROR);
+    static bool reportNotConfigurable(JSContext* cx, jsid id, unsigned report = JSREPORT_ERROR);
+    static bool reportNotExtensible(JSContext* cx, js::HandleObject obj,
+                                    unsigned report = JSREPORT_ERROR);
 
     static bool nonNativeSetProperty(JSContext* cx, js::HandleObject obj, js::HandleId id,
                                      js::HandleValue v, js::HandleValue receiver,

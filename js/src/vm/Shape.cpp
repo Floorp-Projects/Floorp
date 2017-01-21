@@ -534,7 +534,7 @@ NativeObject::addProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId
         return nullptr;
     if (!extensible) {
         if (cx->isJSContext())
-            obj->reportNotExtensible(cx->asJSContext());
+            JSObject::reportNotExtensible(cx->asJSContext(), obj);
         return nullptr;
     }
 
@@ -727,7 +727,7 @@ CheckCanChangeAttrs(ExclusiveContext* cx, JSObject* obj, Shape* shape, unsigned*
         (*attrsp & (JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED)))
     {
         if (cx->isJSContext())
-            obj->reportNotConfigurable(cx->asJSContext(), shape->propid());
+            JSObject::reportNotConfigurable(cx->asJSContext(), shape->propid());
         return false;
     }
 
@@ -785,7 +785,7 @@ NativeObject::putProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId
 
         if (!extensible) {
             if (cx->isJSContext())
-                obj->reportNotExtensible(cx->asJSContext());
+                JSObject::reportNotExtensible(cx->asJSContext(), obj);
             return nullptr;
         }
 
