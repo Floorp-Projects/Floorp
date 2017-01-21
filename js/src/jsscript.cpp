@@ -1417,11 +1417,11 @@ JSScript::loadSource(JSContext* cx, ScriptSource* ss, bool* worked)
     return true;
 }
 
-JSFlatString*
-JSScript::sourceData(JSContext* cx)
+/* static */ JSFlatString*
+JSScript::sourceData(JSContext* cx, HandleScript script)
 {
-    MOZ_ASSERT(scriptSource()->hasSourceData());
-    return scriptSource()->substring(cx, sourceStart(), sourceEnd());
+    MOZ_ASSERT(script->scriptSource()->hasSourceData());
+    return script->scriptSource()->substring(cx, script->sourceStart(), script->sourceEnd());
 }
 
 UncompressedSourceCache::AutoHoldEntry::AutoHoldEntry()
