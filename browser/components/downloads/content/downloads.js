@@ -728,6 +728,11 @@ const DownloadsView = {
   contextMenuOpen: false,
 
   /**
+   * Indicates whether there is a DownloadsBlockedSubview open.
+   */
+  subViewOpen: false,
+
+  /**
    * Indicates whether we are still loading downloads data asynchronously.
    */
   loading: false,
@@ -1032,14 +1037,14 @@ const DownloadsView = {
    * Mouse listeners to handle selection on hover.
    */
   onDownloadMouseOver(aEvent) {
-    if (!this.contextMenuOpen &&
+    if (!(this.contextMenuOpen || this.subViewOpen) &&
         aEvent.target.parentNode == this.richListBox) {
       this.richListBox.selectedItem = aEvent.target;
     }
   },
 
   onDownloadMouseOut(aEvent) {
-    if (!this.contextMenuOpen &&
+    if (!(this.contextMenuOpen || this.subViewOpen) &&
         aEvent.target.parentNode == this.richListBox) {
       // If the destination element is outside of the richlistitem, clear the
       // selection.
@@ -1666,6 +1671,8 @@ const DownloadsBlockedSubview = {
 
     this.element = element;
     element.setAttribute("showingsubview", "true");
+    DownloadsView.subViewOpen = true;
+    DownloadsViewController.updateCommands();
 
     let e = this.elements;
     let s = DownloadsCommon.strings;
@@ -1692,6 +1699,7 @@ const DownloadsBlockedSubview = {
       case "ViewHiding":
         this.subview.removeEventListener(event.type, this);
         this.element.removeAttribute("showingsubview");
+        DownloadsView.subViewOpen = false;
         delete this.element;
         break;
       default:
