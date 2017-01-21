@@ -49,7 +49,6 @@
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_WARNING, NS_RUNTIMEABORT, etc
 #include "nsISupportsImpl.h"            // for Layer::AddRef, etc
-#include "nsIWidget.h"                  // for nsIWidget
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsRect.h"                     // for mozilla::gfx::IntRect
 #include "nsRegion.h"                   // for nsIntRegion, etc
@@ -1038,16 +1037,14 @@ private:
 void
 LayerManagerComposite::RenderToPresentationSurface()
 {
-#ifdef MOZ_WIDGET_ANDROID
-  nsIWidget* const widget = mCompositor->GetWidget()->RealWidget();
-  auto window = static_cast<ANativeWindow*>(
-      widget->GetNativeData(NS_PRESENTATION_WINDOW));
+  widget::CompositorWidget* const widget = mCompositor->GetWidget();
+  ANativeWindow* window = widget->AsAndroid()->GetPresentationANativeWindow();
 
   if (!window) {
     return;
   }
 
-  EGLSurface surface = widget->GetNativeData(NS_PRESENTATION_SURFACE);
+  EGLSurface surface = widget->AsAndroid()->GetPresentationEGLSurface();
 
   if (!surface) {
     //create surface;
@@ -1056,8 +1053,7 @@ LayerManagerComposite::RenderToPresentationSurface()
       return;
     }
 
-    widget->SetNativeData(NS_PRESENTATION_SURFACE,
-                          reinterpret_cast<uintptr_t>(surface));
+    widget->AsAndroid()->SetPresentationEGLSurface(surface);
   }
 
   CompositorOGL* compositor = mCompositor->AsCompositorOGL();
@@ -1071,7 +1067,6 @@ LayerManagerComposite::RenderToPresentationSurface()
   const IntSize windowSize(ANativeWindow_getWidth(window),
                            ANativeWindow_getHeight(window));
 
-#endif
 
   if ((windowSize.width <= 0) || (windowSize.height <= 0)) {
     return;
