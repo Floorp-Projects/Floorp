@@ -141,12 +141,6 @@ NrIceCtxHandler::BeginIceRestart(RefPtr<NrIceCtx> new_ctx)
 void
 NrIceCtxHandler::FinalizeIceRestart()
 {
-  if (old_ctx) {
-    // Fixup the telemetry by transferring old stats to current ctx.
-    NrIceStats stats = old_ctx->Destroy();
-    current_ctx->AccumulateStats(stats);
-  }
-
   // no harm calling this even if we're not in the middle of restarting
   old_ctx = nullptr;
 }
@@ -162,30 +156,5 @@ NrIceCtxHandler::RollbackIceRestart()
   old_ctx = nullptr;
 }
 
-NrIceStats NrIceCtxHandler::Destroy()
-{
-  NrIceStats stats;
-
-  // designed to be called more than once so if stats are desired, this can be
-  // called just prior to the destructor
-  if (old_ctx && current_ctx) {
-    stats = old_ctx->Destroy();
-    current_ctx->AccumulateStats(stats);
-  }
-
-  if (current_ctx) {
-    stats = current_ctx->Destroy();
-  }
-
-  old_ctx = nullptr;
-  current_ctx = nullptr;
-
-  return stats;
-}
-
-NrIceCtxHandler::~NrIceCtxHandler()
-{
-  Destroy();
-}
 
 } // close namespace

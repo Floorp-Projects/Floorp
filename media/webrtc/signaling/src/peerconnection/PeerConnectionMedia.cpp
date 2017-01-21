@@ -53,7 +53,6 @@
 #include "MediaStreamList.h"
 #include "nsIScriptGlobalObject.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "MediaStreamTrack.h"
 #include "VideoStreamTrack.h"
@@ -792,11 +791,6 @@ PeerConnectionMedia::RollbackIceRestart_s()
 
   mIceCtxHdlr->RollbackIceRestart();
   ConnectSignals(mIceCtxHdlr->ctx().get(), restartCtx.get());
-
-  // Fixup the telemetry by transferring abandoned ctx stats to current ctx.
-  NrIceStats stats = restartCtx->Destroy();
-  restartCtx = nullptr;
-  mIceCtxHdlr->ctx()->AccumulateStats(stats);
 }
 
 bool
@@ -1107,25 +1101,6 @@ PeerConnectionMedia::ShutdownMediaTransport_s()
 
   disconnect_all();
   mTransportFlows.clear();
-
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  NrIceStats stats = mIceCtxHdlr->Destroy();
-
-  CSFLogDebug(logTag, "Ice Telemetry: stun (retransmits: %d)"
-                      "   turn (401s: %d   403s: %d   438s: %d)",
-              stats.stun_retransmits, stats.turn_401s, stats.turn_403s,
-              stats.turn_438s);
-
-  Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_NICER_STUN_RETRANSMITS,
-                       stats.stun_retransmits);
-  Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_NICER_TURN_401S,
-                       stats.turn_401s);
-  Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_NICER_TURN_403S,
-                       stats.turn_403s);
-  Telemetry::ScalarAdd(Telemetry::ScalarID::WEBRTC_NICER_TURN_438S,
-                       stats.turn_438s);
-#endif
-
   mIceCtxHdlr = nullptr;
 
   mMainThread->Dispatch(WrapRunnable(this, &PeerConnectionMedia::SelfDestruct_m),

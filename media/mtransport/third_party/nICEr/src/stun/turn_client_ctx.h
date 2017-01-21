@@ -101,11 +101,6 @@ typedef struct nr_turn_client_ctx_ {
 
   void *connected_timer_handle;
   void *refresh_timer_handle;
-
-  // ice telemetry
-  UINT2 cnt_401s;
-  UINT2 cnt_403s;
-  UINT2 cnt_438s;
 } nr_turn_client_ctx;
 
 extern int NR_LOG_TURN;

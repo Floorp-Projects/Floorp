@@ -112,13 +112,6 @@ typedef struct nr_ice_stun_id_ {
 
 typedef STAILQ_HEAD(nr_ice_stun_id_head_,nr_ice_stun_id_) nr_ice_stun_id_head;
 
-typedef struct nr_ice_stats_ {
-  UINT2 stun_retransmits;
-  UINT2 turn_401s;
-  UINT2 turn_403s;
-  UINT2 turn_438s;
-} nr_ice_stats;
-
 struct nr_ice_ctx_ {
   UINT4 flags;
   char *label;
@@ -162,7 +155,6 @@ struct nr_ice_ctx_ {
   void *trickle_cb_arg;
 
   char force_net_interface[MAXIFNAME];
-  nr_ice_stats stats;
 };
 
 int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp);
@@ -200,8 +192,6 @@ int nr_ice_ctx_set_trickle_cb(nr_ice_ctx *ctx, nr_ice_trickle_candidate_cb cb, v
 int nr_ice_ctx_hide_candidate(nr_ice_ctx *ctx, nr_ice_candidate *cand);
 int nr_ice_get_new_ice_ufrag(char** ufrag);
 int nr_ice_get_new_ice_pwd(char** pwd);
-// accumulate a count without worrying about rollover
-void nr_ice_accumulate_count(UINT2* orig_count, UINT2 new_count);
 
 #define NR_ICE_MAX_ATTRIBUTE_SIZE 256
 
