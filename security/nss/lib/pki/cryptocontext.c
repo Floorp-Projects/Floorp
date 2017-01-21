@@ -47,7 +47,10 @@ NSS_IMPLEMENT PRStatus
 NSSCryptoContext_Destroy(NSSCryptoContext *cc)
 {
     PRStatus status = PR_SUCCESS;
-    PORT_Assert(cc->certStore);
+    PORT_Assert(cc && cc->certStore);
+    if (!cc) {
+        return PR_FAILURE;
+    }
     if (cc->certStore) {
         status = nssCertificateStore_Destroy(cc->certStore);
         if (status == PR_FAILURE) {
@@ -93,8 +96,8 @@ NSSCryptoContext_FindOrImportCertificate(
 {
     NSSCertificate *rvCert = NULL;
 
-    PORT_Assert(cc->certStore);
-    if (!cc->certStore) {
+    PORT_Assert(cc && cc->certStore);
+    if (!cc || !cc->certStore) {
         nss_SetError(NSS_ERROR_INVALID_ARGUMENT);
         return rvCert;
     }
@@ -146,8 +149,8 @@ nssCryptoContext_ImportTrust(
     NSSTrust *trust)
 {
     PRStatus nssrv;
-    PORT_Assert(cc->certStore);
-    if (!cc->certStore) {
+    PORT_Assert(cc && cc->certStore);
+    if (!cc || !cc->certStore) {
         return PR_FAILURE;
     }
     nssrv = nssCertificateStore_AddTrust(cc->certStore, trust);
@@ -165,8 +168,8 @@ nssCryptoContext_ImportSMIMEProfile(
     nssSMIMEProfile *profile)
 {
     PRStatus nssrv;
-    PORT_Assert(cc->certStore);
-    if (!cc->certStore) {
+    PORT_Assert(cc && cc->certStore);
+    if (!cc || !cc->certStore) {
         return PR_FAILURE;
     }
     nssrv = nssCertificateStore_AddSMIMEProfile(cc->certStore, profile);
@@ -189,8 +192,8 @@ NSSCryptoContext_FindBestCertificateByNickname(
 {
     NSSCertificate **certs;
     NSSCertificate *rvCert = NULL;
-    PORT_Assert(cc->certStore);
-    if (!cc->certStore) {
+    PORT_Assert(cc && cc->certStore);
+    if (!cc || !cc->certStore) {
         return NULL;
     }
     certs = nssCertificateStore_FindCertificatesByNickname(cc->certStore,
@@ -215,8 +218,8 @@ NSSCryptoContext_FindCertificatesByNickname(
     NSSArena *arenaOpt)
 {
     NSSCertificate **rvCerts;
-    PORT_Assert(cc->certStore);
-    if (!cc->certStore) {
+    PORT_Assert(cc && cc->certStore);
+    if (!cc || !cc->certStore) {
         return NULL;
     }
     rvCerts = nssCertificateStore_FindCertificatesByNickname(cc->certStore,
@@ -233,8 +236,8 @@ NSSCryptoContext_FindCertificateByIssuerAndSerialNumber(
     NSSDER *issuer,
     NSSDER *serialNumber)
 {
-    PORT_Assert(cc->certStore);
-    if (!cc->certStore) {
+    PORT_Assert(cc && cc->certStore);
+    if (!cc || !cc->certStore) {
         return NULL;
     }
     return nssCertificateStore_FindCertificateByIssuerAndSerialNumber(
@@ -253,8 +256,8 @@ NSSCryptoContext_FindBestCertificateBySubject(
 {
     NSSCertificate **certs;
     NSSCertificate *rvCert = NULL;
-    PORT_Assert(cc->certStore);
-    if (!cc->certStore) {
+    PORT_Assert(cc && cc->certStore);
+    if (!cc || !cc->certStore) {
         return NULL;
     }
     certs = nssCertificateStore_FindCertificatesBySubject(cc->certStore,
@@ -279,8 +282,8 @@ nssCryptoContext_FindCertificatesBySubject(
     NSSArena *arenaOpt)
 {
     NSSCertificate **rvCerts;
-    PORT_Assert(cc->certStore);
-    if (!cc->certStore) {
+    PORT_Assert(cc && cc->certStore);
+    if (!cc || !cc->certStore) {
         return NULL;
     }
     rvCerts = nssCertificateStore_FindCertificatesBySubject(cc->certStore,
@@ -333,8 +336,8 @@ NSSCryptoContext_FindCertificateByEncodedCertificate(
     NSSCryptoContext *cc,
     NSSBER *encodedCertificate)
 {
-    PORT_Assert(cc->certStore);
-    if (!cc->certStore) {
+    PORT_Assert(cc && cc->certStore);
+    if (!cc || !cc->certStore) {
         return NULL;
     }
     return nssCertificateStore_FindCertificateByEncodedCertificate(
@@ -353,8 +356,8 @@ NSSCryptoContext_FindBestCertificateByEmail(
     NSSCertificate **certs;
     NSSCertificate *rvCert = NULL;
 
-    PORT_Assert(cc->certStore);
-    if (!cc->certStore) {
+    PORT_Assert(cc && cc->certStore);
+    if (!cc || !cc->certStore) {
         return NULL;
     }
     certs = nssCertificateStore_FindCertificatesByEmail(cc->certStore,
@@ -379,8 +382,8 @@ NSSCryptoContext_FindCertificatesByEmail(
     NSSArena *arenaOpt)
 {
     NSSCertificate **rvCerts;
-    PORT_Assert(cc->certStore);
-    if (!cc->certStore) {
+    PORT_Assert(cc && cc->certStore);
+    if (!cc || !cc->certStore) {
         return NULL;
     }
     rvCerts = nssCertificateStore_FindCertificatesByEmail(cc->certStore,
@@ -488,8 +491,8 @@ nssCryptoContext_FindTrustForCertificate(
     NSSCryptoContext *cc,
     NSSCertificate *cert)
 {
-    PORT_Assert(cc->certStore);
-    if (!cc->certStore) {
+    PORT_Assert(cc && cc->certStore);
+    if (!cc || !cc->certStore) {
         return NULL;
     }
     return nssCertificateStore_FindTrustForCertificate(cc->certStore, cert);
@@ -500,8 +503,8 @@ nssCryptoContext_FindSMIMEProfileForCertificate(
     NSSCryptoContext *cc,
     NSSCertificate *cert)
 {
-    PORT_Assert(cc->certStore);
-    if (!cc->certStore) {
+    PORT_Assert(cc && cc->certStore);
+    if (!cc || !cc->certStore) {
         return NULL;
     }
     return nssCertificateStore_FindSMIMEProfileForCertificate(cc->certStore,

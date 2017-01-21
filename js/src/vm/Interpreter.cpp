@@ -376,7 +376,7 @@ js::RunScript(JSContext* cx, RunState& state)
 
     SPSEntryMarker marker(cx->runtime(), state.script());
 
-    state.script()->ensureNonLazyCanonicalFunction(cx);
+    state.script()->ensureNonLazyCanonicalFunction();
 
     if (jit::IsIonEnabled(cx)) {
         jit::MethodStatus status = jit::CanEnter(cx, state);
@@ -1521,7 +1521,7 @@ SetObjectElementOperation(JSContext* cx, HandleObject obj, HandleId id, HandleVa
         }
     }
 
-    if (obj->isNative() && !JSID_IS_INT(id) && !obj->setHadElementsAccess(cx))
+    if (obj->isNative() && !JSID_IS_INT(id) && !JSObject::setHadElementsAccess(cx, obj))
         return false;
 
     ObjectOpResult result;

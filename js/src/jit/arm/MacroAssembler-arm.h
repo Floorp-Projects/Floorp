@@ -557,12 +557,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void mov(ImmPtr imm, Register dest) {
         mov(ImmWord(uintptr_t(imm.value)), dest);
     }
-    void mov(Register src, Address dest) {
-        MOZ_CRASH("NYI-IC");
-    }
-    void mov(Address src, Register dest) {
-        MOZ_CRASH("NYI-IC");
-    }
 
     void branch(JitCode* c) {
         BufferOffset bo = m_buffer.nextOffset();

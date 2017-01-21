@@ -32,8 +32,6 @@
           '<(DEPTH)/lib/dev/dev.gyp:nssdev',
           '<(DEPTH)/lib/base/base.gyp:nssb',
           '<(DEPTH)/lib/freebl/freebl.gyp:freebl',
-          '<(DEPTH)/lib/pk11wrap/pk11wrap.gyp:pk11wrap',
-          '<(DEPTH)/lib/certhigh/certhigh.gyp:certhi',
           '<(DEPTH)/lib/sqlite/sqlite.gyp:sqlite3',
         ],
         'conditions': [

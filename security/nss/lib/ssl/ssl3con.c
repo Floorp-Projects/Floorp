@@ -1044,8 +1044,9 @@ Null_Cipher(void *ctx, unsigned char *output, int *outputLen, int maxOutputLen,
         return SECFailure;
     }
     *outputLen = inputLen;
-    if (input != output)
+    if (inputLen > 0 && input != output) {
         PORT_Memcpy(output, input, inputLen);
+    }
     return SECSuccess;
 }
 
@@ -3121,6 +3122,10 @@ SSL3_SendAlert(sslSocket *ss, SSL3AlertLevel level, SSL3AlertDescription desc)
 {
     PRUint8 bytes[2];
     SECStatus rv;
+    PRBool needHsLock = !ssl_HaveSSL3HandshakeLock(ss);
+
+    /* Check that if I need the HS lock I also need the Xmit lock */
+    PORT_Assert(!needHsLock || !ssl_HaveXmitBufLock(ss));
 
     SSL_TRC(3, ("%d: SSL3[%d]: send alert record, level=%d desc=%d",
                 SSL_GETPID(), ss->fd, level, desc));
@@ -3128,7 +3133,9 @@ SSL3_SendAlert(sslSocket *ss, SSL3AlertLevel level, SSL3AlertDescription desc)
     bytes[0] = level;
     bytes[1] = desc;
 
-    ssl_GetSSL3HandshakeLock(ss);
+    if (needHsLock) {
+        ssl_GetSSL3HandshakeLock(ss);
+    }
     if (level == alert_fatal) {
         if (!ss->opt.noCache && ss->sec.ci.sid) {
             ss->sec.uncache(ss->sec.ci.sid);
@@ -3146,7 +3153,9 @@ SSL3_SendAlert(sslSocket *ss, SSL3AlertLevel level, SSL3AlertDescription desc)
         ss->ssl3.fatalAlertSent = PR_TRUE;
     }
     ssl_ReleaseXmitBufLock(ss);
-    ssl_ReleaseSSL3HandshakeLock(ss);
+    if (needHsLock) {
+        ssl_ReleaseSSL3HandshakeLock(ss);
+    }
     return rv; /* error set by ssl3_FlushHandshake or ssl3_SendRecord */
 }
 
@@ -6646,12 +6655,19 @@ ssl3_HandleServerHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 
     /* The server didn't pick 1.3 although we either received a
      * HelloRetryRequest, or we prepared to send early app data. */
-    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3 &&
-        (ss->ssl3.hs.helloRetry || ss->ssl3.hs.zeroRttState == ssl_0rtt_sent)) {
-        /* SSL3_SendAlert() will uncache the SID. */
-        desc = illegal_parameter;
-        errCode = SSL_ERROR_RX_MALFORMED_SERVER_HELLO;
-        goto alert_loser;
+    if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+        if (ss->ssl3.hs.helloRetry) {
+            /* SSL3_SendAlert() will uncache the SID. */
+            desc = illegal_parameter;
+            errCode = SSL_ERROR_RX_MALFORMED_SERVER_HELLO;
+            goto alert_loser;
+        }
+        if (ss->ssl3.hs.zeroRttState == ssl_0rtt_sent) {
+            /* SSL3_SendAlert() will uncache the SID. */
+            desc = illegal_parameter;
+            errCode = SSL_ERROR_DOWNGRADE_WITH_EARLY_DATA;
+            goto alert_loser;
+        }
     }
 
     /* Check that the server negotiated the same version as it did
@@ -8214,6 +8230,20 @@ ssl3_SelectServerCert(sslSocket *ss)
 {
     const ssl3KEADef *kea_def = ss->ssl3.hs.kea_def;
     PRCList *cursor;
+
+    /* If the client didn't include the supported groups extension, assume just
+     * P-256 support and disable all the other ECDHE groups.  This also affects
+     * ECDHE group selection, but this function is called first. */
+    if (!ssl3_ExtensionNegotiated(ss, ssl_supported_groups_xtn)) {
+        unsigned int i;
+        for (i = 0; i < SSL_NAMED_GROUP_COUNT; ++i) {
+            if (ss->namedGroupPreferences[i] &&
+                ss->namedGroupPreferences[i]->keaType == ssl_kea_ecdh &&
+                ss->namedGroupPreferences[i]->name != ssl_grp_ec_secp256r1) {
+                ss->namedGroupPreferences[i] = NULL;
+            }
+        }
+    }
 
     /* This picks the first certificate that has:
      * a) the right authentication method, and

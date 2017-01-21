@@ -125,7 +125,7 @@ function promiseTabCrashedReady(browser) {
  * Checks that if a tab crashes, that information about the tab crashed
  * page does not get added to the tab history.
  */
-add_task(function test_crash_page_not_in_history() {
+add_task(function* test_crash_page_not_in_history() {
   let newTab = gBrowser.addTab();
   gBrowser.selectedTab = newTab;
   let browser = newTab.linkedBrowser;
@@ -154,7 +154,7 @@ add_task(function test_crash_page_not_in_history() {
  * to a non-blacklisted site (so the browser becomes remote again), that
  * we record history for that new visit.
  */
-add_task(function test_revived_history_from_remote() {
+add_task(function* test_revived_history_from_remote() {
   let newTab = gBrowser.addTab();
   gBrowser.selectedTab = newTab;
   let browser = newTab.linkedBrowser;
@@ -193,7 +193,7 @@ add_task(function test_revived_history_from_remote() {
  * to a blacklisted site (so the browser stays non-remote), that
  * we record history for that new visit.
  */
-add_task(function test_revived_history_from_non_remote() {
+add_task(function* test_revived_history_from_non_remote() {
   let newTab = gBrowser.addTab();
   gBrowser.selectedTab = newTab;
   let browser = newTab.linkedBrowser;
@@ -231,7 +231,7 @@ add_task(function test_revived_history_from_non_remote() {
  * Checks that we can revive a crashed tab back to the page that
  * it was on when it crashed.
  */
-add_task(function test_revive_tab_from_session_store() {
+add_task(function* test_revive_tab_from_session_store() {
   let newTab = gBrowser.addTab();
   gBrowser.selectedTab = newTab;
   let browser = newTab.linkedBrowser;
@@ -284,7 +284,7 @@ add_task(function test_revive_tab_from_session_store() {
  * Checks that we can revive multiple crashed tabs back to the pages
  * that they were on when they crashed.
  */
-add_task(function test_revive_all_tabs_from_session_store() {
+add_task(function* test_revive_all_tabs_from_session_store() {
   let newTab = gBrowser.addTab();
   gBrowser.selectedTab = newTab;
   let browser = newTab.linkedBrowser;
@@ -344,7 +344,7 @@ add_task(function test_revive_all_tabs_from_session_store() {
 /**
  * Checks that about:tabcrashed can close the current tab
  */
-add_task(function test_close_tab_after_crash() {
+add_task(function* test_close_tab_after_crash() {
   let newTab = gBrowser.addTab();
   gBrowser.selectedTab = newTab;
   let browser = newTab.linkedBrowser;

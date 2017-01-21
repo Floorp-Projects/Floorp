@@ -3237,7 +3237,7 @@ js::DateConstructor(JSContext* cx, unsigned argc, Value* vp)
 static JSObject*
 CreateDatePrototype(JSContext* cx, JSProtoKey key)
 {
-    return cx->global()->createBlankPrototype(cx, &DateObject::protoClass_);
+    return GlobalObject::createBlankPrototype(cx, cx->global(), &DateObject::protoClass_);
 }
 
 static bool

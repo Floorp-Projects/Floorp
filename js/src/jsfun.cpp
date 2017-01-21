@@ -417,7 +417,7 @@ ResolveInterpretedFunctionPrototype(JSContext* cx, HandleFunction fun, HandleId 
     if (isStarGenerator)
         objProto = GlobalObject::getOrCreateStarGeneratorObjectPrototype(cx, global);
     else
-        objProto = fun->global().getOrCreateObjectPrototype(cx);
+        objProto = GlobalObject::getOrCreateObjectPrototype(cx, global);
     if (!objProto)
         return false;
 
@@ -1018,7 +1018,7 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool prettyPrint)
         return nullptr;
     }
     if (haveSource) {
-        Rooted<JSFlatString*> src(cx, script->sourceData(cx));
+        Rooted<JSFlatString*> src(cx, JSScript::sourceData(cx, script));
         if (!src)
             return nullptr;
 
@@ -1407,7 +1407,7 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
         }
 
         if (fun != lazy->functionNonDelazifying()) {
-            if (!lazy->functionDelazifying(cx))
+            if (!LazyScript::functionDelazifying(cx, lazy))
                 return false;
             script = lazy->functionNonDelazifying()->nonLazyScript();
             if (!script)

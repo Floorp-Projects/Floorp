@@ -289,14 +289,14 @@ void ProfilerMarker::StreamJSON(SpliceableJSONWriter& aWriter,
 // Verbosity control for the profiler.  The aim is to check env var
 // MOZ_PROFILER_VERBOSE only once.  However, we may need to temporarily
 // override that so as to print the profiler's help message.  That's
-// what moz_profiler_set_verbosity is for.
+// what profiler_set_verbosity is for.
 
 enum class ProfilerVerbosity : int8_t { UNCHECKED, NOTVERBOSE, VERBOSE };
 
 // Raced on, potentially
 static ProfilerVerbosity profiler_verbosity = ProfilerVerbosity::UNCHECKED;
 
-bool moz_profiler_verbose()
+bool profiler_verbose()
 {
   if (profiler_verbosity == ProfilerVerbosity::UNCHECKED) {
     if (getenv("MOZ_PROFILER_VERBOSE") != nullptr)
@@ -308,7 +308,7 @@ bool moz_profiler_verbose()
   return profiler_verbosity == ProfilerVerbosity::VERBOSE;
 }
 
-void moz_profiler_set_verbosity(ProfilerVerbosity pv)
+void profiler_set_verbosity(ProfilerVerbosity pv)
 {
    MOZ_ASSERT(pv == ProfilerVerbosity::UNCHECKED ||
               pv == ProfilerVerbosity::VERBOSE);
@@ -380,11 +380,11 @@ void read_profiler_env_vars()
 
   if (getenv(PROFILER_HELP)) {
      // Enable verbose output
-     moz_profiler_set_verbosity(ProfilerVerbosity::VERBOSE);
+     profiler_set_verbosity(ProfilerVerbosity::VERBOSE);
      profiler_usage();
-     // Now force the next enquiry of moz_profiler_verbose to re-query
+     // Now force the next enquiry of profiler_verbose to re-query
      // env var MOZ_PROFILER_VERBOSE.
-     moz_profiler_set_verbosity(ProfilerVerbosity::UNCHECKED);
+     profiler_set_verbosity(ProfilerVerbosity::UNCHECKED);
   }
 
   if (!set_profiler_interval(interval) ||
@@ -639,17 +639,17 @@ void mozilla_sampler_get_profile_data_async(double aSinceTime,
 }
 
 void mozilla_sampler_save_profile_to_file_async(double aSinceTime,
-						const char* aFileName)
+                                                const char* aFileName)
 {
   nsCString filename(aFileName);
   NS_DispatchToMainThread(NS_NewRunnableFunction([=] () {
-	GeckoSampler *t = tlsTicker.get();
-	if (NS_WARN_IF(!t)) {
-	  return;
-	}
+    GeckoSampler *t = tlsTicker.get();
+    if (NS_WARN_IF(!t)) {
+      return;
+    }
 
-	t->ToFileAsync(filename, aSinceTime);
-      }));
+    t->ToFileAsync(filename, aSinceTime);
+  }));
 }
 
 void mozilla_sampler_get_profiler_start_params(int* aEntrySize,
@@ -817,26 +817,26 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
   tlsTicker.set(t);
   t->Start();
   if (t->ProfileJS() || t->InPrivacyMode()) {
-      ::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
-      const std::vector<ThreadInfo*>& threads = t->GetRegisteredThreads();
+    ::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
+    const std::vector<ThreadInfo*>& threads = t->GetRegisteredThreads();
 
-      for (uint32_t i = 0; i < threads.size(); i++) {
-        ThreadInfo* info = threads[i];
-        if (info->IsPendingDelete()) {
-          continue;
-        }
-        ThreadProfile* thread_profile = info->Profile();
-        if (!thread_profile) {
-          continue;
-        }
-        thread_profile->GetPseudoStack()->reinitializeOnResume();
-        if (t->ProfileJS()) {
-          thread_profile->GetPseudoStack()->enableJSSampling();
-        }
-        if (t->InPrivacyMode()) {
-          thread_profile->GetPseudoStack()->mPrivacyMode = true;
-        }
+    for (uint32_t i = 0; i < threads.size(); i++) {
+      ThreadInfo* info = threads[i];
+      if (info->IsPendingDelete()) {
+        continue;
       }
+      ThreadProfile* thread_profile = info->Profile();
+      if (!thread_profile) {
+        continue;
+      }
+      thread_profile->GetPseudoStack()->reinitializeOnResume();
+      if (t->ProfileJS()) {
+        thread_profile->GetPseudoStack()->enableJSSampling();
+      }
+      if (t->InPrivacyMode()) {
+        thread_profile->GetPseudoStack()->mPrivacyMode = true;
+      }
+    }
   }
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
@@ -1061,27 +1061,27 @@ void mozilla_sampler_unregister_thread()
 }
 
 void mozilla_sampler_sleep_start() {
-    if (sInitCount == 0) {
-	return;
-    }
+  if (sInitCount == 0) {
+    return;
+  }
 
-    PseudoStack *stack = tlsPseudoStack.get();
-    if (stack == nullptr) {
-      return;
-    }
-    stack->setSleeping(1);
+  PseudoStack *stack = tlsPseudoStack.get();
+  if (stack == nullptr) {
+    return;
+  }
+  stack->setSleeping(1);
 }
 
 void mozilla_sampler_sleep_end() {
-    if (sInitCount == 0) {
-	return;
-    }
+  if (sInitCount == 0) {
+    return;
+  }
 
-    PseudoStack *stack = tlsPseudoStack.get();
-    if (stack == nullptr) {
-      return;
-    }
-    stack->setSleeping(0);
+  PseudoStack *stack = tlsPseudoStack.get();
+  if (stack == nullptr) {
+    return;
+  }
+  stack->setSleeping(0);
 }
 
 bool mozilla_sampler_is_sleeping() {

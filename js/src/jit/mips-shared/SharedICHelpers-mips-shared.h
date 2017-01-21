@@ -360,20 +360,12 @@ EmitPreBarrier(MacroAssembler& masm, const AddrType& addr, MIRType type)
 inline void
 EmitStubGuardFailure(MacroAssembler& masm)
 {
-    // NOTE: This routine assumes that the stub guard code left the stack in
-    // the same state it was in when it was entered.
-
-    // BaselineStubEntry points to the current stub.
-
     // Load next stub into ICStubReg
     masm.loadPtr(Address(ICStubReg, ICStub::offsetOfNext()), ICStubReg);
 
-    // Load stubcode pointer from BaselineStubEntry into scratch register.
-    masm.loadPtr(Address(ICStubReg, ICStub::offsetOfStubCode()), R2.scratchReg());
-
     // Return address is already loaded, just jump to the next stubcode.
     MOZ_ASSERT(ICTailCallReg == ra);
-    masm.branch(R2.scratchReg());
+    masm.jump(Address(ICStubReg, ICStub::offsetOfStubCode()));
 }
 
 } // namespace jit
