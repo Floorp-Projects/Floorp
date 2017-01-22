@@ -83,7 +83,7 @@ add_task(function* test_principal_right_click_open_link_in_new_tab() {
   yield SpecialPowers.pushPrefEnv({
     "set": [["security.sandbox.content.level", 1]],
   });
-  
+
   yield BrowserTestUtils.withNewTab("about:test-about-principal-parent", function*(browser) {
     let loadPromise = BrowserTestUtils.waitForNewTab(gBrowser, "about:test-about-principal-child");
 
