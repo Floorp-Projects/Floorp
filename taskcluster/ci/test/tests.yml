@@ -59,6 +59,7 @@ crashtest:
     e10s:
         by-test-platform:
             windows.*: false # Bug 1304435
+            linux64-ccov/opt: false
             default: both
     mozharness:
         by-test-platform:
@@ -211,6 +212,7 @@ jsreftest:
             # Bug 1321782
             windows.*: false
             android.*: false
+            linux64-ccov/opt: false
             default: both
     max-run-time:
         by-test-platform:
@@ -299,10 +301,6 @@ mochitest:
         by-test-platform:
             android.*: xlarge
             default: legacy # Bug 1281241: migrating to m3.large instances
-    run-on-projects:
-        by-test-platform:
-            linux64-ccov/opt: []
-            default: ['all']
     chunks:
         by-test-platform:
             android-4.3-arm7-api-15/debug: 32
@@ -346,12 +344,7 @@ mochitest:
                             - unittests/linux_unittest.py
                             - remove_executables.py
                 extra-options:
-                    by-test-platform:
-                        linux64-ccov/opt:
-                            - --mochitest-suite=plain-chunked
-                            - --code-coverage
-                        default:
-                            - --mochitest-suite=plain-chunked
+                    - --mochitest-suite=plain-chunked
 
 mochitest-a11y:
     description: "Mochitest a11y run"
@@ -387,7 +380,6 @@ mochitest-browser-chrome:
     run-on-projects:
         by-test-platform:
             linux64-jsdcov/opt: []
-            linux64-ccov/opt: []
             default: ['all']
     chunks:
         by-test-platform:
@@ -425,9 +417,6 @@ mochitest-browser-chrome:
             by-test-platform:
                 linux64-jsdcov/opt:
                     - --mochitest-suite=browser-chrome-coverage
-                linux64-ccov/opt:
-                    - --mochitest-suite=browser-chrome-chunked
-                    - --code-coverage
                 default:
                     - --mochitest-suite=browser-chrome-chunked
     # Bug 1281241: migrating to m3.large instances
@@ -568,7 +557,6 @@ mochitest-devtools-chrome:
             default: 10
     run-on-projects:
         by-test-platform:
-            linux64-ccov/opt: []
             linux64-jsdcov/opt: []
             windows.*: ['mozilla-central', 'try']
             default: ['all']
@@ -594,9 +582,6 @@ mochitest-devtools-chrome:
                     - remove_executables.py
         extra-options:
             by-test-platform:
-                linux64-ccov/opt:
-                    - --mochitest-suite=mochitest-devtools-chrome-chunked
-                    - --code-coverage
                 linux64-jsdcov/opt:
                     - --mochitest-suite=mochitest-devtools-chrome-coverage
                 default:
@@ -851,6 +836,10 @@ reftest:
         by-test-platform:
             android.*: 10800
             default: 3600
+    e10s:
+        by-test-platform:
+            linux64-ccov/opt: false
+            default: both
     mozharness:
         by-test-platform:
             android.*:
@@ -1189,10 +1178,6 @@ xpcshell:
     description: "xpcshell test run"
     suite: xpcshell
     treeherder-symbol: tc-X()
-    run-on-projects:
-        by-test-platform:
-            linux64-ccov/opt: []
-            default: ['all']
     chunks:
         by-test-platform:
             linux64/debug: 10
@@ -1240,9 +1225,4 @@ xpcshell:
                             - unittests/linux_unittest.py
                             - remove_executables.py
                 extra-options:
-                    by-test-platform:
-                        linux64-ccov/opt:
-                            - --xpcshell-suite=xpcshell
-                            - --code-coverage
-                        default:
-                            - --xpcshell-suite=xpcshell
+                    - --xpcshell-suite=xpcshell
