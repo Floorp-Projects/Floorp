@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.7 API Reference</title>
+<title>FreeType-2.7.1 API Reference</title>
 <style type="text/css">
   a:link { color: #0000EF; }
   a:visited { color: #51188E; }
@@ -100,7 +100,7 @@
 <body>
 
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table>
-<h1>FreeType-2.7 API Reference</h1>
+<h1>FreeType-2.7.1 API Reference</h1>
 
 <h1 id="base_interface">Base Interface</h1>
 <h2>Synopsis</h2>
@@ -511,6 +511,7 @@
 </td></tr>
 <tr><td class="val" id="available_sizes">available_sizes</td><td class="desc">
 <p>An array of <a href="ft2-base_interface.html#FT_Bitmap_Size">FT_Bitmap_Size</a> for all bitmap strikes in the face. It is set to NULL if there is no bitmap strike.</p>
+<p>Note that FreeType tries to sanitize the strike data since they are sometimes sloppy or incorrect, but this can easily fail.</p>
 </td></tr>
 <tr><td class="val" id="num_charmaps">num_charmaps</td><td class="desc">
 <p>The number of charmaps in the face.</p>
@@ -932,8 +933,6 @@
 <p>This image can later be converted into a bitmap by calling <a href="ft2-base_interface.html#FT_Render_Glyph">FT_Render_Glyph</a>. This function finds the current renderer for the native image's format, then invokes it.</p>
 <p>The renderer is in charge of transforming the native image through the slot's face transformation fields, then converting it into a bitmap that is returned in &lsquo;slot-&gt;bitmap&rsquo;.</p>
 <p>Note that &lsquo;slot-&gt;bitmap_left&rsquo; and &lsquo;slot-&gt;bitmap_top&rsquo; are also used to specify the position of the bitmap relative to the current pen position (e.g., coordinates (0,0) on the baseline). Of course, &lsquo;slot-&gt;format&rsquo; is also changed to <a href="ft2-basic_types.html#FT_Glyph_Format">FT_GLYPH_FORMAT_BITMAP</a>.</p>
-
-<h4>note</h4>
 <p>Here is a small pseudo code fragment that shows how to use &lsquo;lsb_delta&rsquo; and &lsquo;rsb_delta&rsquo;:</p>
 <pre class="colored">
   FT_Pos  origin_x       = 0;
@@ -958,6 +957,7 @@
     origin_x += face-&gt;glyph-&gt;advance.x;
   endfor
 </pre>
+<p>If you use strong auto-hinting, you <b>must</b> apply these delta values! Otherwise you will experience far too large inter-glyph spacing at small rendering sizes in most cases. Note that it doesn't harm to use the above code for other hinting modes also, since the delta values are zero then.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
@@ -1679,7 +1679,7 @@
                   <a href="ft2-basic_types.html#FT_Int">FT_Int</a>   strike_index );
 </pre>
 
-<p>Select a bitmap strike.</p>
+<p>Select a bitmap strike. To be more precise, this function sets the scaling factors of the active <a href="ft2-base_interface.html#FT_Size">FT_Size</a> object in a face so that bitmaps from this particular strike are taken by <a href="ft2-base_interface.html#FT_Load_Glyph">FT_Load_Glyph</a> and friends.</p>
 
 <h4>inout</h4>
 <table class="fields">
@@ -1697,6 +1697,11 @@
 
 <h4>return</h4>
 <p>FreeType error code. 0&nbsp;means success.</p>
+
+<h4>note</h4>
+<p>For bitmaps embedded in outline fonts it is common that only a subset of the available glyphs at a given ppem value is available. FreeType silently uses outlines if there is no bitmap for a given glyph index.</p>
+<p>For GX variation fonts, a bitmap strike makes sense only if the default instance is active (this is, no glyph variation takes place); otherwise, FreeType simply ignores bitmap strikes. The same is true for all named instances that are different from the default instance.</p>
+<p>Don't use this function if you are using the FreeType cache API.</p>
 
 <hr>
 <table class="index-toc-link"><tr><td class="left">[<a href="ft2-index.html">Index</a>]</td><td class="middle">[<a href="#">Top</a>]</td><td class="right">[<a href="ft2-toc.html">TOC</a>]</td></tr></table></div>
@@ -2797,6 +2802,7 @@
   /* Bits 16..19 are used by `FT_LOAD_TARGET_' */
 #define <a href="ft2-base_interface.html#FT_LOAD_COLOR">FT_LOAD_COLOR</a>                        ( 1L &lt;&lt; 20 )
 #define <a href="ft2-base_interface.html#FT_LOAD_COMPUTE_METRICS">FT_LOAD_COMPUTE_METRICS</a>              ( 1L &lt;&lt; 21 )
+#define <a href="ft2-base_interface.html#FT_LOAD_BITMAP_METRICS_ONLY">FT_LOAD_BITMAP_METRICS_ONLY</a>          ( 1L &lt;&lt; 22 )
 </pre>
 
 <p>A list of bit field constants used with <a href="ft2-base_interface.html#FT_Load_Glyph">FT_Load_Glyph</a> to indicate what kind of operations to perform during glyph loading.</p>
@@ -2860,6 +2866,10 @@
 <tr><td class="val" id="FT_LOAD_COMPUTE_METRICS">FT_LOAD_COMPUTE_METRICS</td><td class="desc">
 <p>This flag sets computing glyph metrics without the use of bundled metrics tables (for example, the &lsquo;hdmx&rsquo; table in TrueType fonts). Well-behaving fonts have optimized bundled metrics and these should be used. This flag is mainly used by font validating or font editing applications, which need to ignore, verify, or edit those tables.</p>
 <p>Currently, this flag is only implemented for TrueType fonts.</p>
+</td></tr>
+<tr><td class="val" id="FT_LOAD_BITMAP_METRICS_ONLY">FT_LOAD_BITMAP_METRICS_ONLY</td><td class="desc">
+<p>This flag is used to request loading of the metrics and bitmap image information of a (possibly embedded) bitmap glyph without allocating or copying the bitmap image data itself. No effect if the target glyph is not a bitmap image.</p>
+<p>This flag unsets <a href="ft2-base_interface.html#FT_LOAD_XXX">FT_LOAD_RENDER</a>.</p>
 </td></tr>
 <tr><td class="val" id="FT_LOAD_CROP_BITMAP">FT_LOAD_CROP_BITMAP</td><td class="desc">
 <p>Ignored. Deprecated.</p>

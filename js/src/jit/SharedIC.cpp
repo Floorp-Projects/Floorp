@@ -415,7 +415,8 @@ ICStub::trace(JSTracer* trc)
         break;
       case ICStub::CacheIR_Updated: {
         ICCacheIR_Updated* stub = toCacheIR_Updated();
-        TraceEdge(trc, &stub->updateStubId(), "baseline-updated-id");
+        TraceEdge(trc, &stub->updateStubGroup(), "baseline-update-stub-group");
+        TraceEdge(trc, &stub->updateStubId(), "baseline-update-stub-id");
         TraceCacheIRStub(trc, this, stub->stubInfo());
         break;
       }
