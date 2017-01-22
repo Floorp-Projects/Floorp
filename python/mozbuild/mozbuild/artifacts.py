@@ -439,7 +439,7 @@ class WinArtifactJob(ArtifactJob):
 # The values correpsond to a pair of (<package regex>, <test archive regex>).
 JOB_DETAILS = {
     'android-api-15-opt': (AndroidArtifactJob, (r'(public/build/fennec-(.*)\.android-arm.apk|public/build/target\.apk)',
-                                                r'public/build/fennec-(.*)\.common\.tests\.zip|public/build/target-(.*)\.common\.tests\.zip')),
+                                                r'public/build/fennec-(.*)\.common\.tests\.zip|public/build/target\.common\.tests\.zip')),
     'android-api-15-debug': (AndroidArtifactJob, (r'public/build/target\.apk',
                                                   r'public/build/target\.common\.tests\.zip')),
     'android-x86-opt': (AndroidArtifactJob, (r'public/build/target\.apk',
