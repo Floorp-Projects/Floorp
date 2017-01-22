@@ -169,17 +169,14 @@ CssColor.prototype = {
       return invalidOrSpecialValue;
     }
 
-    try {
-      let tuple = this._getRGBATuple();
+    let tuple = this._getRGBATuple();
 
-      if (tuple.a !== 1) {
-        return this.hex;
-      }
-      let {r, g, b} = tuple;
-      return rgbToColorName(r, g, b);
-    } catch (e) {
+    if (tuple.a !== 1) {
       return this.hex;
     }
+
+    let {r, g, b} = tuple;
+    return rgbToColorName(r, g, b) || this.hex;
   },
 
   get hex() {
@@ -537,11 +534,11 @@ function classifyColor(value) {
 var cssRGBMap;
 
 /**
- * Given a color, return its name, if it has one.  Throws an exception
- * if the color does not have a name.
+ * Given a color, return its name, if it has one. Otherwise
+ * return an empty string.
  *
  * @param {Number} r, g, b  The color components.
- * @return {String} the name of the color
+ * @return {String} the name of the color or an empty string
  */
 function rgbToColorName(r, g, b) {
   if (!cssRGBMap) {
@@ -553,11 +550,7 @@ function rgbToColorName(r, g, b) {
       }
     }
   }
-  let value = cssRGBMap[JSON.stringify([r, g, b, 1])];
-  if (!value) {
-    throw new Error("no such color");
-  }
-  return value;
+  return cssRGBMap[JSON.stringify([r, g, b, 1])] || "";
 }
 
 // Translated from nsColor.cpp.
