@@ -51,6 +51,7 @@ private:
   gfx::IntSize mSize;
   RefPtr<ImageClient> mCompositable;
   RefPtr<TextureClient> mTextureClient;
+  nsCountedRef<nsMainThreadSourceSurfaceRef> mSourceSurface;
 };
 
 } // namespace layers
