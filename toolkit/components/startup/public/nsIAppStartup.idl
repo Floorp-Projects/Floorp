@@ -5,7 +5,6 @@
 
 #include "nsISupports.idl"
 
-interface nsICmdLineService;
 interface nsIToolkitProfile;
 
 [scriptable, uuid(6621f6d5-6c04-4a0e-9e74-447db221484e)]
