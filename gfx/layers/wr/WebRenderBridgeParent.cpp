@@ -815,7 +815,7 @@ WebRenderBridgeParent::GetTextureFactoryIdentifier()
 
   MOZ_ASSERT(mApi);
 
-  return TextureFactoryIdentifier(LayersBackend::LAYERS_OPENGL,
+  return TextureFactoryIdentifier(LayersBackend::LAYERS_WR,
                                   XRE_GetProcessType(),
                                   mApi->GetMaxTextureSize());
 }
