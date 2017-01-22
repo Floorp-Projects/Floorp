@@ -154,7 +154,7 @@ public class BookmarksListView extends HomeListView
             // If we're clicking on a folder, update adapter to move to that folder
             final int folderId = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
             final String folderTitle = adapter.getFolderTitle(parent.getContext(), cursor);
-            adapter.moveToChildFolder(folderId, folderTitle);
+            adapter.moveToChildFolder(folderId, folderTitle, getFirstVisiblePosition());
 
             final List<BookmarksListAdapter.FolderInfo> parentStack = ((BookmarksListAdapter) getAdapter()).getParentStack();
 
