@@ -365,6 +365,12 @@
           'cflags_mozilla': [
           ],
         }],
+        ['clang == 1', {
+          'cflags_mozilla': [
+            '-Wno-inconsistent-missing-override',
+            '-Wno-macro-redefined',
+         ],
+        }],
       ],
     },
   ],
