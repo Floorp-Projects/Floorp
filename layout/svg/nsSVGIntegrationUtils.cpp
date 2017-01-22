@@ -403,32 +403,30 @@ class RegularFramePaintCallback : public nsSVGFilterPaintCallback
 public:
   RegularFramePaintCallback(nsDisplayListBuilder* aBuilder,
                             LayerManager* aManager,
-                            const nsPoint& aOffset)
+                            const gfxPoint& aUserSpaceToFrameSpaceOffset)
     : mBuilder(aBuilder), mLayerManager(aManager),
-      mOffset(aOffset) {}
+      mUserSpaceToFrameSpaceOffset(aUserSpaceToFrameSpaceOffset) {}
 
   virtual DrawResult Paint(gfxContext& aContext, nsIFrame *aTarget,
                            const gfxMatrix& aTransform,
                            const nsIntRect* aDirtyRect) override
   {
     BasicLayerManager* basic = mLayerManager->AsBasicLayerManager();
+    RefPtr<gfxContext> oldCtx = basic->GetTarget();
     basic->SetTarget(&aContext);
 
-    gfxPoint devPixelOffset =
-      nsLayoutUtils::PointToGfxPoint(-mOffset,
-                                     aTarget->PresContext()->AppUnitsPerDevPixel());
-
     gfxContextMatrixAutoSaveRestore autoSR(&aContext);
-    aContext.SetMatrix(aContext.CurrentMatrix().Translate(devPixelOffset));
+    aContext.SetMatrix(aContext.CurrentMatrix().Translate(-mUserSpaceToFrameSpaceOffset));
 
     mLayerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, mBuilder);
+    basic->SetTarget(oldCtx);
     return DrawResult::SUCCESS;
   }
 
 private:
   nsDisplayListBuilder* mBuilder;
   LayerManager* mLayerManager;
-  nsPoint mOffset;
+  gfxPoint mUserSpaceToFrameSpaceOffset;
 };
 
 typedef nsSVGIntegrationUtils::PaintFramesParams PaintFramesParams;
@@ -1123,7 +1121,7 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
 
   /* Paint the child and apply filters */
   RegularFramePaintCallback callback(aParams.builder, aParams.layerManager,
-                                     offsets.offsetToUserSpace);
+                                     offsets.offsetToUserSpaceInDevPx);
   nsRegion dirtyRegion = aParams.dirtyRect - offsets.offsetToBoundingBox;
   gfxMatrix tm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(frame);
   DrawResult result =
