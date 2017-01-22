@@ -22,17 +22,20 @@
         "macosx64": [
           "llvm-debug-frame.patch",
           "compiler-rt-cross-compile.patch",
-          "pr28831-r280042.patch"
+          "pr28831-r280042.patch",
+          "r277806.patch"
         ],
         "linux64": [
           "llvm-debug-frame.patch",
           "compiler-rt-cross-compile.patch",
-          "pr28831-r280042.patch"
+          "pr28831-r280042.patch",
+          "r277806.patch"
         ],
         "linux32": [
           "llvm-debug-frame.patch",
           "compiler-rt-cross-compile.patch",
-          "pr28831-r280042.patch"
+          "pr28831-r280042.patch",
+          "r277806.patch"
         ]
     }
 }
