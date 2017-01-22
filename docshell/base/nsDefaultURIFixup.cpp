@@ -653,47 +653,9 @@ nsDefaultURIFixup::ConvertFileToStringURI(const nsACString& aIn,
     // Test if this is a valid path by trying to create a local file
     // object. The URL of that is returned if successful.
 
-    // NOTE: Please be sure to check that the call to NS_NewLocalFile
-    //       rejects bad file paths when using this code on a new
-    //       platform.
-
     nsCOMPtr<nsIFile> filePath;
-    nsresult rv;
-
-    // this is not the real fix but a temporary fix
-    // in order to really fix the problem, we need to change the
-    // nsICmdLineService interface to use wstring to pass paramenters
-    // instead of string since path name and other argument could be
-    // in non ascii.(see bug 87127) Since it is too risky to make interface
-    // change right now, we decide not to do so now.
-    // Therefore, the aIn we receive here maybe already in damage form
-    // (e.g. treat every bytes as ISO-8859-1 and cast up to char16_t
-    //  while the real data could be in file system charset )
-    // we choice the following logic which will work for most of the case.
-    // Case will still failed only if it meet ALL the following condiction:
-    //    1. running on CJK, Russian, or Greek system, and
-    //    2. user type it from URL bar
-    //    3. the file name contains character in the range of
-    //       U+00A1-U+00FF but encode as different code point in file
-    //       system charset (e.g. ACP on window)- this is very rare case
-    // We should remove this logic and convert to File system charset here
-    // once we change nsICmdLineService to use wstring and ensure
-    // all the Unicode data come in is correctly converted.
-    // XXXbz nsICmdLineService doesn't hand back unicode, so in some cases
-    // what we have is actually a "utf8" version of a "utf16" string that's
-    // actually byte-expanded native-encoding data.  Someone upstream needs
-    // to stop using AssignWithConversion and do things correctly.  See bug
-    // 58866 for what happens if we remove this
-    // PossiblyByteExpandedFileName check.
-    NS_ConvertUTF8toUTF16 in(aIn);
-    if (PossiblyByteExpandedFileName(in)) {
-      // removes high byte
-      rv = NS_NewNativeLocalFile(NS_LossyConvertUTF16toASCII(in), false,
-                                 getter_AddRefs(filePath));
-    } else {
-      // input is unicode
-      rv = NS_NewLocalFile(in, false, getter_AddRefs(filePath));
-    }
+    nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(aIn), false,
+                                  getter_AddRefs(filePath));
 
     if (NS_SUCCEEDED(rv)) {
       NS_GetURLSpecFromFile(filePath, aResult);
@@ -830,28 +792,6 @@ nsDefaultURIFixup::PossiblyHostPortUrl(const nsACString& aUrl)
 
   // Yes, it's possibly a host:port url
   return true;
-}
-
-bool
-nsDefaultURIFixup::PossiblyByteExpandedFileName(const nsAString& aIn)
-{
-  // XXXXX HACK XXXXX : please don't copy this code.
-  // There are cases where aIn contains the locale byte chars padded to short
-  // (thus the name "ByteExpanded"); whereas other cases
-  // have proper Unicode code points.
-  // This is a temporary fix.  Please refer to 58866, 86948
-
-  nsReadingIterator<char16_t> iter;
-  nsReadingIterator<char16_t> iterEnd;
-  aIn.BeginReading(iter);
-  aIn.EndReading(iterEnd);
-  while (iter != iterEnd) {
-    if (*iter >= 0x0080 && *iter <= 0x00FF) {
-      return true;
-    }
-    ++iter;
-  }
-  return false;
 }
 
 nsresult
