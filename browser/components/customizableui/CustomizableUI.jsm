@@ -38,7 +38,6 @@ const kPrefCustomizationState        = "browser.uiCustomization.state";
 const kPrefCustomizationAutoAdd      = "browser.uiCustomization.autoAdd";
 const kPrefCustomizationDebug        = "browser.uiCustomization.debug";
 const kPrefDrawInTitlebar            = "browser.tabs.drawInTitlebar";
-const kPrefSelectedThemeID           = "lightweightThemes.selectedThemeID";
 const kPrefWebIDEInNavbar            = "devtools.webide.widget.inNavbarByDefault";
 
 const kExpectedWindowURL = "chrome://browser/content/browser.xul";
@@ -1927,7 +1926,15 @@ var CustomizableUIInternal = {
   // state immediately when a browser window opens, which is important for
   // other consumers of this API.
   loadSavedState() {
-    let state = Services.prefs.getCharPref(kPrefCustomizationState);
+    let state = null;
+    try {
+      state = Services.prefs.getCharPref(kPrefCustomizationState);
+    } catch (e) {
+      log.debug("No saved state found");
+      // This will fail if nothing has been customized, so silently fall back to
+      // the defaults.
+    }
+
     if (!state) {
       return;
     }
@@ -2513,18 +2520,18 @@ var CustomizableUIInternal = {
   },
 
   _resetUIState() {
+    try {
+      gUIStateBeforeReset.drawInTitlebar = Services.prefs.getBoolPref(kPrefDrawInTitlebar);
+      gUIStateBeforeReset.uiCustomizationState = Services.prefs.getCharPref(kPrefCustomizationState);
+      gUIStateBeforeReset.currentTheme = LightweightThemeManager.currentTheme;
+    } catch (e) { }
+
     this._resetExtraToolbars();
 
-    gUIStateBeforeReset.selectedThemeID = Services.prefs.getCharPref(kPrefSelectedThemeID);
-    let selectedThemeID = Services.prefs.getDefaultBranch("").getCharPref(kPrefSelectedThemeID);
-    LightweightThemeManager.currentTheme =
-      selectedThemeID ? LightweightThemeManager.getUsedTheme(selectedThemeID) : null;
-
-    gUIStateBeforeReset.drawInTitlebar = Services.prefs.getBoolPref(kPrefDrawInTitlebar);
-    Services.prefs.clearUserPref(kPrefDrawInTitlebar);
-
-    gUIStateBeforeReset.uiCustomizationState = Services.prefs.getCharPref(kPrefCustomizationState);
     Services.prefs.clearUserPref(kPrefCustomizationState);
+    Services.prefs.clearUserPref(kPrefDrawInTitlebar);
+    LightweightThemeManager.currentTheme = null;
+    log.debug("State reset");
 
     // Reset placements to make restoring default placements possible.
     gPlacements = new Map();
@@ -2592,7 +2599,7 @@ var CustomizableUIInternal = {
 
     let uiCustomizationState = gUIStateBeforeReset.uiCustomizationState;
     let drawInTitlebar = gUIStateBeforeReset.drawInTitlebar;
-    let selectedThemeID = gUIStateBeforeReset.selectedThemeID;
+    let currentTheme = gUIStateBeforeReset.currentTheme;
 
     // Need to clear the previous state before setting the prefs
     // because pref observers may check if there is a previous UI state.
@@ -2600,8 +2607,7 @@ var CustomizableUIInternal = {
 
     Services.prefs.setCharPref(kPrefCustomizationState, uiCustomizationState);
     Services.prefs.setBoolPref(kPrefDrawInTitlebar, drawInTitlebar);
-    LightweightThemeManager.currentTheme =
-      selectedThemeID ? LightweightThemeManager.getUsedTheme(selectedThemeID) : null;
+    LightweightThemeManager.currentTheme = currentTheme;
     this.loadSavedState();
     // If the user just customizes toolbar/titlebar visibility, gSavedState will be null
     // and we don't need to do anything else here:
@@ -2780,9 +2786,8 @@ var CustomizableUIInternal = {
       return false;
     }
 
-    if (Services.prefs.getDefaultBranch("").getCharPref(kPrefSelectedThemeID) !=
-        Services.prefs.getCharPref(kPrefSelectedThemeID)) {
-      log.debug(kPrefSelectedThemeID + " pref is non-default");
+    if (LightweightThemeManager.currentTheme) {
+      log.debug(LightweightThemeManager.currentTheme + " theme is non-default");
       return false;
     }
 

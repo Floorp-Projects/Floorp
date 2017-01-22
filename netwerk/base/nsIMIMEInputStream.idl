@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsIHttpHeaderVisitor.idl"
 #include "nsIInputStream.idl"
 
 /**
@@ -19,6 +20,10 @@ interface nsIMIMEInputStream : nsIInputStream
      * using the available() method on the data stream. The value is
      * recalculated every time the stream is rewinded to the start.
      * Not allowed to be changed once the stream has been started to be read.
+     *
+     * @deprecated A Content-Length header is automatically added when
+     * attaching the stream to a channel, so this setting no longer has any
+     * effect, and may not be set to false.
      */
     attribute boolean addContentLength;
 
@@ -29,6 +34,15 @@ interface nsIMIMEInputStream : nsIInputStream
      * @param value  value of the header
      */
     void addHeader(in string name, in string value);
+
+    /**
+     * Visits all headers which have been added via addHeader.  Calling
+     * addHeader while visiting request headers has undefined behavior.
+     *
+     * @param aVisitor
+     *        The header visitor instance.
+     */
+    void visitHeaders(in nsIHttpHeaderVisitor visitor);
 
     /**
      * Sets data-stream. May not be called once the stream has been started

@@ -118,14 +118,19 @@ add_task(function* testFormSubmission() {
 
   let client = hud.ui.webConsoleClient;
   const postData = yield client.getRequestPostData(request.actor);
+  const requestHeaders = yield client.getRequestHeaders(request.actor);
   const responseContent = yield client.getResponseContent(request.actor);
 
+  let getHeader = name => {
+    let header = requestHeaders.headers.find(h => h.name == name);
+    return header && header.value;
+  };
+
   is(request.request.method, "POST", "Method is correct");
-  isnot(postData.postData.text
-    .indexOf("Content-Type: application/x-www-form-urlencoded"), -1,
-    "Content-Type is correct");
-  isnot(postData.postData.text
-    .indexOf("Content-Length: 20"), -1, "Content-length is correct");
+  is(getHeader("Content-Type"), "application/x-www-form-urlencoded",
+     "Content-Type is correct");
+  is(getHeader("Content-Length"), "20",
+     "Content-length is correct");
   isnot(postData.postData.text
     .indexOf("name=foo+bar&age=144"), -1, "Form data is correct");
   is(responseContent.content.text.indexOf("<!DOCTYPE HTML>"), 0,
