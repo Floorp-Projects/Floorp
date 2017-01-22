@@ -287,14 +287,24 @@ FT_BEGIN_HEADER
 #endif
 
 
-  /* determine whether we have a 64-bit int type for platforms without */
-  /* Autoconf                                                          */
+  /* determine whether we have a 64-bit int type  */
+  /* (mostly for environments without `autoconf') */
 #if FT_SIZEOF_LONG == 8
 
   /* FT_LONG64 must be defined if a 64-bit type is available */
 #define FT_LONG64
 #define FT_INT64   long
 #define FT_UINT64  unsigned long
+
+  /* we handle the LLP64 scheme separately for GCC and clang, */
+  /* suppressing the `long long' warning                      */
+#elif ( FT_SIZEOF_LONG == 4 )       && \
+      defined( HAVE_LONG_LONG_INT ) && \
+      defined( __GNUC__ )
+#pragma GCC diagnostic ignored "-Wlong-long"
+#define FT_LONG64
+#define FT_INT64   long long int
+#define FT_UINT64  unsigned long long int
 
   /*************************************************************************/
   /*                                                                       */
@@ -368,10 +378,11 @@ FT_BEGIN_HEADER
 
 
   /* typeof condition taken from gnulib's `intprops.h' header file */
-#if ( __GNUC__ >= 2                         || \
-      defined( __IBM__TYPEOF__ )            || \
-      ( __SUNPRO_C >= 0x5110 && !__STDC__ ) )
-#define FT_TYPEOF( type )  (__typeof__ (type))
+#if ( ( defined( __GNUC__ ) && __GNUC__ >= 2 )                       || \
+      ( defined( __IBMC__ ) && __IBMC__ >= 1210 &&                      \
+        defined( __IBM__TYPEOF__ ) )                                 || \
+      ( defined( __SUNPRO_C ) && __SUNPRO_C >= 0x5110 && !__STDC__ ) )
+#define FT_TYPEOF( type )  ( __typeof__ ( type ) )
 #else
 #define FT_TYPEOF( type )  /* empty */
 #endif
