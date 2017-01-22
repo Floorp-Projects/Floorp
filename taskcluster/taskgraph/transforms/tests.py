@@ -479,6 +479,16 @@ def handle_keyed_by(config, tests):
 
 
 @transforms.add
+def enable_code_coverage(config, tests):
+    """Enable code coverage for linux64-ccov/opt build-platforms"""
+    for test in tests:
+        if test['build-platform'] == 'linux64-ccov/opt':
+            test['mozharness'].setdefault('extra-options', []).append('--code-coverage')
+            test['run-on-projects'] = []
+        yield test
+
+
+@transforms.add
 def split_e10s(config, tests):
     for test in tests:
         e10s = test['e10s']
