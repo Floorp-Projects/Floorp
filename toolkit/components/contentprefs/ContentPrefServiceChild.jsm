@@ -113,85 +113,9 @@ var ContentPrefServiceChild = {
     this._requests.set(requestId, new CallbackCaller(callback));
   },
 
-  getByName(name, context, callback) {
-    return this._callFunction("getByName",
-                              [ name, contextArg(context) ],
-                              callback);
-  },
-
-  getByDomainAndName(domain, name, context, callback) {
-    return this._callFunction("getByDomainAndName",
-                              [ domain, name, contextArg(context) ],
-                              callback);
-  },
-
-  getBySubdomainAndName(domain, name, context, callback) {
-    return this._callFunction("getBySubdomainAndName",
-                              [ domain, name, contextArg(context) ],
-                              callback);
-  },
-
-  getGlobal(name, context, callback) {
-    return this._callFunction("getGlobal",
-                              [ name, contextArg(context) ],
-                              callback);
-  },
-
   getCachedByDomainAndName: NYI,
   getCachedBySubdomainAndName: NYI,
   getCachedGlobal: NYI,
-
-  set(domain, name, value, context, callback) {
-    this._callFunction("set",
-                       [ domain, name, value, contextArg(context) ],
-                       callback);
-  },
-
-  setGlobal(name, value, context, callback) {
-    this._callFunction("setGlobal",
-                       [ name, value, contextArg(context) ],
-                       callback);
-  },
-
-  removeByDomainAndName(domain, name, context, callback) {
-    this._callFunction("removeByDomainAndName",
-                       [ domain, name, contextArg(context) ],
-                       callback);
-  },
-
-  removeBySubdomainAndName(domain, name, context, callback) {
-    this._callFunction("removeBySubdomainAndName",
-                       [ domain, name, contextArg(context) ],
-                       callback);
-  },
-
-  removeGlobal(name, context, callback) {
-    this._callFunction("removeGlobal", [ name, contextArg(context) ], callback);
-  },
-
-  removeByDomain(domain, context, callback) {
-    this._callFunction("removeByDomain", [ domain, contextArg(context) ],
-                       callback);
-  },
-
-  removeBySubdomain(domain, context, callback) {
-    this._callFunction("removeBySubdomain", [ domain, contextArg(context) ],
-                       callback);
-  },
-
-  removeByName(name, context, callback) {
-    this._callFunction("removeByName", [ name, value, contextArg(context) ],
-                       callback);
-  },
-
-  removeAllDomains(context, callback) {
-    this._callFunction("removeAllDomains", [ contextArg(context) ], callback);
-  },
-
-  removeAllGlobals(context, callback) {
-    this._callFunction("removeAllGlobals", [ contextArg(context) ],
-                       callback);
-  },
 
   addObserverForName(name, observer) {
     let set = this._observers.get(name);
@@ -232,5 +156,27 @@ var ContentPrefServiceChild = {
 
   extractDomain: NYI
 };
+
+function forwardMethodToParent(method, signature, ...args) {
+  // Ignore superfluous arguments
+  args = args.slice(0, signature.length);
+
+  // Process context argument for forwarding
+  let contextIndex = signature.indexOf("context");
+  if (contextIndex > -1) {
+    args[contextIndex] = contextArg(args[contextIndex]);
+  }
+  // Take out the callback argument, if present.
+  let callbackIndex = signature.indexOf("callback");
+  let callback = null;
+  if (callbackIndex > -1 && args.length > callbackIndex) {
+    callback = args.splice(callbackIndex, 1)[0];
+  }
+  this._callFunction(method, args, callback);
+}
+
+for (let [method, signature] of _methodsCallableFromChild) {
+  ContentPrefServiceChild[method] = forwardMethodToParent.bind(ContentPrefServiceChild, method, signature);
+}
 
 ContentPrefServiceChild.init();
