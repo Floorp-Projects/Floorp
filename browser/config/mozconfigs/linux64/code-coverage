@@ -8,6 +8,6 @@ ac_add_options --disable-crashreporter
 ac_add_options --disable-elf-hack
 
 MOZ_CODE_COVERAGE=1
-export CFLAGS="-fprofile-arcs -ftest-coverage"
-export CXXFLAGS="-fprofile-arcs -ftest-coverage"
-export LDFLAGS="-fprofile-arcs -ftest-coverage -lgcov -L$TOOLTOOL_DIR/gtk3/usr/local/lib"
+export CFLAGS="--coverage"
+export CXXFLAGS="--coverage"
+export LDFLAGS="--coverage -L$TOOLTOOL_DIR/gtk3/usr/local/lib"
