@@ -40,7 +40,7 @@ public:
   virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() override
   {
     TextureFactoryIdentifier result =
-      TextureFactoryIdentifier(LayersBackend::LAYERS_OPENGL,
+      TextureFactoryIdentifier(LayersBackend::LAYERS_WR,
                                XRE_GetProcessType(),
                                GetMaxTextureSize(),
                                true,
@@ -107,7 +107,7 @@ public:
 #endif // MOZ_DUMP_PAINTING
 
   virtual LayersBackend GetBackendType() const override {
-    return LayersBackend::LAYERS_OPENGL;
+    return LayersBackend::LAYERS_WR;
   }
 
   virtual bool IsValid() const override { return true; }
