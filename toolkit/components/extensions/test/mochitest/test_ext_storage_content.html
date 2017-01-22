@@ -294,6 +294,10 @@ add_task(function* test_config_flag_needed() {
   let win = window.open("file_sample.html");
   yield waitForLoad(win);
 
+  yield SpecialPowers.pushPrefEnv({
+    set: [[STORAGE_SYNC_PREF, false]],
+  });
+
   function background() {
     let promises = [];
     let apiTests = [

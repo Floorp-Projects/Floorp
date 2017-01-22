@@ -19,8 +19,7 @@ const global = this;
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
 const KINTO_PROD_SERVER_URL = "https://webextensions.settings.services.mozilla.com/v1";
-const KINTO_DEV_SERVER_URL = "https://webextensions.dev.mozaws.net/v1";
-const KINTO_DEFAULT_SERVER_URL = AppConstants.RELEASE_OR_BETA ? KINTO_PROD_SERVER_URL : KINTO_DEV_SERVER_URL;
+const KINTO_DEFAULT_SERVER_URL = KINTO_PROD_SERVER_URL;
 
 const STORAGE_SYNC_ENABLED_PREF = "webextensions.storage.sync.enabled";
 const STORAGE_SYNC_SERVER_URL_PREF = "webextensions.storage.sync.serverURL";
@@ -69,7 +68,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 XPCOMUtils.defineLazyModuleGetter(this, "KeyRingEncryptionRemoteTransformer",
                                   "resource://services-sync/engines/extension-storage.js");
 XPCOMUtils.defineLazyPreferenceGetter(this, "prefPermitsStorageSync",
-                                      STORAGE_SYNC_ENABLED_PREF, false);
+                                      STORAGE_SYNC_ENABLED_PREF, true);
 XPCOMUtils.defineLazyPreferenceGetter(this, "prefStorageSyncServerURL",
                                       STORAGE_SYNC_SERVER_URL_PREF,
                                       KINTO_DEFAULT_SERVER_URL);
