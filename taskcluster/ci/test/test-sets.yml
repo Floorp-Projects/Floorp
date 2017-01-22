@@ -180,6 +180,9 @@ linux32-opt-tests:
     # mochitest-dt is too slow on linux32/debug
     - mochitest-devtools-chrome
 
+desktop-screenshot-capture:
+    - mochitest-browser-screenshots
+
 android-common-tests:
     - cppunit
     - crashtest
