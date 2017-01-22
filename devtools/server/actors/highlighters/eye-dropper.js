@@ -507,7 +507,12 @@ function toColorString(rgb, format) {
       let [h, s, l] = rgbToHsl(rgb);
       return "hsl(" + h + ", " + s + "%, " + l + "%)";
     case "name":
-      let str = rgbToColorName(r, g, b) || hexString(rgb);
+      let str;
+      try {
+        str = rgbToColorName(r, g, b);
+      } catch (e) {
+        str = hexString(rgb);
+      }
       return str;
     default:
       return hexString(rgb);
