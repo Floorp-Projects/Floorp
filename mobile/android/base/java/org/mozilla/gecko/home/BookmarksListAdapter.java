@@ -62,18 +62,20 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
     public static class FolderInfo implements Parcelable {
         public final int id;
         public final String title;
+        public final int position;
 
         public FolderInfo(int id) {
-            this(id, "");
+            this(id, "", 0);
         }
 
         public FolderInfo(Parcel in) {
-            this(in.readInt(), in.readString());
+            this(in.readInt(), in.readString(), in.readInt());
         }
 
-        public FolderInfo(int id, String title) {
+        public FolderInfo(int id, String title, int position) {
             this.id = id;
             this.title = title;
+            this.position = position;
         }
 
         @Override
@@ -85,6 +87,7 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
         public void writeToParcel(Parcel dest, int flags) {
             dest.writeInt(id);
             dest.writeString(title);
+            dest.writeInt(position);
         }
 
         public static final Creator<FolderInfo> CREATOR = new Creator<FolderInfo>() {
@@ -104,7 +107,9 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
     // This is usually implemented by the enclosing fragment/activity.
     public static interface OnRefreshFolderListener {
         // The folder id to refresh the list with.
-        public void onRefreshFolder(FolderInfo folderInfo, RefreshType refreshType);
+        public void onRefreshFolder(FolderInfo folderInfo,
+                                    RefreshType refreshType,
+                                    int targetPosition);
     }
 
     /**
@@ -164,9 +169,10 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
         }
 
         if (mListener != null) {
+            int targetPosition = mParentStack.peek().position;
             // We pick the second folder in the stack as it represents
             // the parent folder.
-            mListener.onRefreshFolder(mParentStack.get(1), RefreshType.PARENT);
+            mListener.onRefreshFolder(mParentStack.get(1), RefreshType.PARENT, targetPosition);
         }
 
         return true;
@@ -177,12 +183,14 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
      *
      * @param folderId The id of the folder to show.
      * @param folderTitle The title of the folder to show.
+     * @param position The current position of the list view, which
+     *                 will be restored when moving back up one level.
      */
-    public void moveToChildFolder(int folderId, String folderTitle) {
-        FolderInfo folderInfo = new FolderInfo(folderId, folderTitle);
+    public void moveToChildFolder(int folderId, String folderTitle, int position) {
+        FolderInfo folderInfo = new FolderInfo(folderId, folderTitle, position);
 
         if (mListener != null) {
-            mListener.onRefreshFolder(folderInfo, RefreshType.CHILD);
+            mListener.onRefreshFolder(folderInfo, RefreshType.CHILD, 0 /* scroll to top of list */);
         }
     }
 
