@@ -281,9 +281,20 @@ DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame, ICUpdatedStub* stub, H
     RootedId id(cx);
 
     switch (stub->kind()) {
-      case ICStub::CacheIR_Updated:
+      case ICStub::CacheIR_Updated: {
         id = stub->toCacheIR_Updated()->updateStubId();
         MOZ_ASSERT(id != JSID_EMPTY);
+
+        // The group should match the object's group, except when the object is
+        // an unboxed expando object: in that case, the group is the group of
+        // the unboxed object.
+        RootedObjectGroup group(cx, stub->toCacheIR_Updated()->updateStubGroup());
+#ifdef DEBUG
+        if (obj->is<UnboxedExpandoObject>())
+            MOZ_ASSERT(group->clasp() == &UnboxedPlainObject::class_);
+        else
+            MOZ_ASSERT(obj->group() == group);
+#endif
 
         // If we're storing null/undefined to a typed object property, check if
         // we want to include it in this property's type information.
@@ -311,8 +322,10 @@ DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame, ICUpdatedStub* stub, H
             }
         }
 
-        AddTypePropertyId(cx, obj, id, value);
+        JSObject* maybeSingleton = obj->isSingleton() ? obj.get() : nullptr;
+        AddTypePropertyId(cx, group, maybeSingleton, id, value);
         break;
+      }
       case ICStub::SetElem_DenseOrUnboxedArray:
       case ICStub::SetElem_DenseOrUnboxedArrayAdd: {
         id = JSID_VOID;
@@ -2854,6 +2867,7 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
                 JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
                 attached = true;
 
+                newStub->toCacheIR_Updated()->updateStubGroup() = gen.updateStubGroup();
                 newStub->toCacheIR_Updated()->updateStubId() = gen.updateStubId();
 
                 if (gen.shouldNotePreliminaryObjectStub())
