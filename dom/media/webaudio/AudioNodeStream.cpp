@@ -29,8 +29,9 @@ namespace mozilla {
 
 AudioNodeStream::AudioNodeStream(AudioNodeEngine* aEngine,
                                  Flags aFlags,
-                                 TrackRate aSampleRate)
-  : ProcessedMediaStream(),
+                                 TrackRate aSampleRate,
+                                 AbstractThread* aMainThread)
+  : ProcessedMediaStream(aMainThread),
     mEngine(aEngine),
     mSampleRate(aSampleRate),
     mFlags(aFlags),
@@ -77,7 +78,8 @@ AudioNodeStream::Create(AudioContext* aCtx, AudioNodeEngine* aEngine,
   AudioNode* node = aEngine->NodeMainThread();
 
   RefPtr<AudioNodeStream> stream =
-    new AudioNodeStream(aEngine, aFlags, aGraph->GraphRate());
+    new AudioNodeStream(aEngine, aFlags, aGraph->GraphRate(),
+      aCtx->GetOwnerGlobal()->AbstractMainThreadFor(TaskCategory::Other));
   stream->mSuspendedCount += aCtx->ShouldSuspendNewStream();
   if (node) {
     stream->SetChannelMixingParametersImpl(node->ChannelCount(),

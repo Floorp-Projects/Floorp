@@ -163,18 +163,18 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(DOMPrototype, nsDOMConstructorSH,
                            DOM_BASE_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_PRECREATE |
-                           nsIXPCScriptable::WANT_RESOLVE |
-                           nsIXPCScriptable::WANT_HASINSTANCE |
-                           nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
+                           XPC_SCRIPTABLE_WANT_PRECREATE |
+                           XPC_SCRIPTABLE_WANT_RESOLVE |
+                           XPC_SCRIPTABLE_WANT_HASINSTANCE |
+                           XPC_SCRIPTABLE_DONT_ENUM_QUERY_INTERFACE)
   NS_DEFINE_CLASSINFO_DATA(DOMConstructor, nsDOMConstructorSH,
                            DOM_BASE_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_PRECREATE |
-                           nsIXPCScriptable::WANT_RESOLVE |
-                           nsIXPCScriptable::WANT_HASINSTANCE |
-                           nsIXPCScriptable::WANT_CALL |
-                           nsIXPCScriptable::WANT_CONSTRUCT |
-                           nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE)
+                           XPC_SCRIPTABLE_WANT_PRECREATE |
+                           XPC_SCRIPTABLE_WANT_RESOLVE |
+                           XPC_SCRIPTABLE_WANT_HASINSTANCE |
+                           XPC_SCRIPTABLE_WANT_CALL |
+                           XPC_SCRIPTABLE_WANT_CONSTRUCT |
+                           XPC_SCRIPTABLE_DONT_ENUM_QUERY_INTERFACE)
 
   // Misc Core related classes
 
@@ -203,13 +203,13 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ContentFrameMessageManager,
                                        nsMessageManagerSH<nsEventTargetSH>,
                                        DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                                       nsIXPCScriptable::WANT_ENUMERATE |
-                                       nsIXPCScriptable::IS_GLOBAL_OBJECT)
+                                       XPC_SCRIPTABLE_WANT_ENUMERATE |
+                                       XPC_SCRIPTABLE_IS_GLOBAL_OBJECT)
   NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ContentProcessMessageManager,
                                        nsMessageManagerSH<nsDOMGenericSH>,
                                        DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                                       nsIXPCScriptable::WANT_ENUMERATE |
-                                       nsIXPCScriptable::IS_GLOBAL_OBJECT)
+                                       XPC_SCRIPTABLE_WANT_ENUMERATE |
+                                       XPC_SCRIPTABLE_IS_GLOBAL_OBJECT)
   NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ChromeMessageBroadcaster, nsDOMGenericSH,
                                        DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ChromeMessageSender, nsDOMGenericSH,

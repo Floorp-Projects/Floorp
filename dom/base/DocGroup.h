@@ -17,6 +17,7 @@
 #include "mozilla/RefPtr.h"
 
 namespace mozilla {
+class AbstractThread;
 namespace dom {
 
 // Two browsing contexts are considered "related" if they are reachable from one
@@ -75,6 +76,9 @@ public:
                             already_AddRefed<nsIRunnable>&& aRunnable) override;
 
   virtual nsIEventTarget* EventTargetFor(TaskCategory aCategory) const override;
+
+  virtual AbstractThread*
+  AbstractMainThreadFor(TaskCategory aCategory) override;
 
 private:
   DocGroup(TabGroup* aTabGroup, const nsACString& aKey);

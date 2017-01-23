@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1329288
+-->
+<head>
+  <title>Test for Bug 1329288</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1329288">Mozilla Bug 1329288</a>
+
+
+<!-- have a testlink which we can use for the test to open a new window -->
+<a href="http://test1.example.org/tests/docshell/test/navigation/file_contentpolicy_block_window.html"
+   target="_blank"
+   id="testlink">This is a link</a>
+
+<script class="testbody" type="text/javascript">
+/*
+ * Description of the test:
+ * The test tries to open a new window and makes sure that a registered contentPolicy
+ * gets called with the right (a non null) 'context' for the TYPE_DOCUMENT load.
+ */
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+
+var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
+var componentManager = SpecialPowers.wrap(SpecialPowers.Components).manager
+                                    .QueryInterface(Ci.nsIComponentRegistrar);
+
+// Content policy / factory implementation for the test
+var policyID = SpecialPowers.wrap(SpecialPowers.Components).ID("{b80e19d0-878f-d41b-2654-194714a4115c}");
+var policyName = "@mozilla.org/testpolicy;1";
+var policy = {
+  // nsISupports implementation
+  QueryInterface: function(iid) {
+    iid = SpecialPowers.wrap(iid);
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIFactory) ||
+        iid.equals(Ci.nsIContentPolicy))
+      return this;
+    throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+  // nsIFactory implementation
+  createInstance: function(outer, iid) {
+    return this.QueryInterface(iid);
+  },
+
+  // nsIContentPolicy implementation
+  shouldLoad: function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra) {
+
+    if (SpecialPowers.wrap(contentLocation).spec !== document.getElementById("testlink").href) {
+      // not the URI we are looking for, allow the load
+      return Ci.nsIContentPolicy.ACCEPT;
+    }
+
+    is(contentType, Ci.nsIContentPolicy.TYPE_DOCUMENT,
+       "needs to be type document load");
+    ok(context, "context is not allowed to be null");
+    ok(context.name.endsWith("test_contentpolicy_block_window.html"),
+       "context should be the current window");
+
+    // remove the policy and finish test.
+    categoryManager.deleteCategoryEntry("content-policy", policyName, false);
+
+    setTimeout(function() {
+      // Component must be unregistered delayed, otherwise other content
+      // policy will not be removed from the category correctly
+      componentManager.unregisterFactory(policyID, policy);
+    }, 0);
+
+    SimpleTest.finish();
+    return Ci.nsIContentPolicy.REJECT_REQUEST;
+  },
+
+  shouldProcess: function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra) {
+    return Ci.nsIContentPolicy.ACCEPT;
+  }
+}
+
+policy = SpecialPowers.wrapCallbackObject(policy);
+componentManager.registerFactory(policyID, "Test content policy", policyName, policy);
+categoryManager.addCategoryEntry("content-policy", policyName, policyName, false, true);
+
+SimpleTest.waitForExplicitFinish();
+
+// now everything is set up, let's start the test
+document.getElementById("testlink").click()
+
+</script>
+</body>
+</html>
