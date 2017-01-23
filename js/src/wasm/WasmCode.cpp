@@ -214,6 +214,11 @@ CodeSegment::create(JSContext* cx,
     MOZ_ASSERT(linkData.globalDataLength % gc::SystemPageSize() == 0);
     MOZ_ASSERT(linkData.functionCodeLength < bytecode.length());
 
+    // These should always exist and should never be first in the code segment.
+    MOZ_ASSERT(linkData.interruptOffset != 0);
+    MOZ_ASSERT(linkData.outOfBoundsOffset != 0);
+    MOZ_ASSERT(linkData.unalignedAccessOffset != 0);
+
     auto cs = cx->make_unique<CodeSegment>();
     if (!cs)
         return nullptr;

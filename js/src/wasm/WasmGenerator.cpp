@@ -628,6 +628,7 @@ ModuleGenerator::finishCodegen()
 
     // Fill in LinkData with the offsets of these stubs.
 
+    linkData_.unalignedAccessOffset = unalignedAccessExit.begin;
     linkData_.outOfBoundsOffset = outOfBoundsExit.begin;
     linkData_.interruptOffset = interruptExit.begin;
 
