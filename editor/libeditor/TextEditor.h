@@ -194,7 +194,6 @@ protected:
                         int32_t* aInOutOffset,
                         nsCOMPtr<nsIDOMNode>* outBRNode,
                         EDirection aSelect);
-  nsresult InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode);
 
   /**
    * Factored methods for handling insertion of data from transferables

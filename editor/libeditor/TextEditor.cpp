@@ -531,38 +531,6 @@ TextEditor::CreateBR(nsIDOMNode* aNode,
 }
 
 nsresult
-TextEditor::InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode)
-{
-  NS_ENSURE_TRUE(outBRNode, NS_ERROR_NULL_POINTER);
-  *outBRNode = nullptr;
-
-  // calling it text insertion to trigger moz br treatment by rules
-  AutoRules beginRulesSniffing(this, EditAction::insertText, nsIEditor::eNext);
-
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_STATE(selection);
-
-  if (!selection->Collapsed()) {
-    nsresult rv = DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  nsCOMPtr<nsIDOMNode> selNode;
-  int32_t selOffset;
-  nsresult rv =
-    GetStartNodeAndOffset(selection, getter_AddRefs(selNode), &selOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = CreateBR(selNode, selOffset, outBRNode);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // position selection after br
-  selNode = GetNodeLocation(*outBRNode, &selOffset);
-  selection->SetInterlinePosition(true);
-  return selection->Collapse(selNode, selOffset+1);
-}
-
-nsresult
 TextEditor::ExtendSelectionForDelete(Selection* aSelection,
                                      nsIEditor::EDirection* aAction)
 {
