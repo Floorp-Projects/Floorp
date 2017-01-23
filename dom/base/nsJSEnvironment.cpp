@@ -604,7 +604,7 @@ void
 nsJSContext::Destroy()
 {
   if (mGCOnDestruction) {
-    PokeGC(JS::gcreason::NSJSCONTEXT_DESTROY);
+    PokeGC(JS::gcreason::NSJSCONTEXT_DESTROY, mWindowProxy);
   }
 
   DropJSObjects(this);
@@ -1202,8 +1202,11 @@ nsJSContext::GarbageCollectNow(JS::gcreason::Reason aReason,
 
   JSGCInvocationKind gckind = aShrinking == ShrinkingGC ? GC_SHRINK : GC_NORMAL;
 
-  if (sNeedsFullGC || aReason != JS::gcreason::CC_WAITING) {
-    sNeedsFullGC = false;
+  if (aIncremental == NonIncrementalGC || aReason == JS::gcreason::FULL_GC_TIMER) {
+    sNeedsFullGC = true;
+  }
+
+  if (sNeedsFullGC) {
     JS::PrepareForFullGC(sContext);
   } else {
     CycleCollectedJSContext::Get()->PrepareWaitingZonesForGC();
@@ -1580,7 +1583,7 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
   uint32_t ccNowDuration = TimeBetween(gCCStats.mBeginTime, endCCTimeStamp);
 
   if (NeedsGCAfterCC()) {
-    PokeGC(JS::gcreason::CC_WAITING,
+    PokeGC(JS::gcreason::CC_WAITING, nullptr,
            NS_GC_DELAY - std::min(ccNowDuration, kMaxICCDuration));
   }
 
@@ -1913,11 +1916,22 @@ nsJSContext::RunNextCollectorTimer()
 
 // static
 void
-nsJSContext::PokeGC(JS::gcreason::Reason aReason, int aDelay)
+nsJSContext::PokeGC(JS::gcreason::Reason aReason,
+                    JSObject* aObj,
+                    int aDelay)
 {
-  sNeedsFullGC = sNeedsFullGC || aReason != JS::gcreason::CC_WAITING;
+  if (sShuttingDown) {
+    return;
+  }
 
-  if (sGCTimer || sInterSliceGCTimer || sShuttingDown) {
+  if (aObj) {
+    JS::Zone* zone = JS::GetObjectZone(aObj);
+    CycleCollectedJSContext::Get()->AddZoneWaitingForGC(zone);
+  } else if (aReason != JS::gcreason::CC_WAITING) {
+    sNeedsFullGC = true;
+  }
+
+  if (sGCTimer || sInterSliceGCTimer) {
     // There's already a timer for GC'ing, just return
     return;
   }
@@ -2158,6 +2172,10 @@ DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress, const JS::GCDescrip
 
       if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {
         nsCycleCollector_dispatchDeferredDeletion();
+      }
+
+      if (!aDesc.isZone_) {
+        sNeedsFullGC = false;
       }
 
       break;

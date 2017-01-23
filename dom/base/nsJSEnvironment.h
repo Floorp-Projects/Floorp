@@ -105,7 +105,8 @@ public:
 
   static void RunNextCollectorTimer();
 
-  static void PokeGC(JS::gcreason::Reason aReason, int aDelay = 0);
+  // The GC should probably run soon, in the zone of object aObj (if given).
+  static void PokeGC(JS::gcreason::Reason aReason, JSObject* aObj, int aDelay = 0);
   static void KillGCTimer();
 
   static void PokeShrinkingGC();
