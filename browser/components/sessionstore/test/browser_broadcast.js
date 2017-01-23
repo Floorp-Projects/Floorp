@@ -9,7 +9,7 @@ const INITIAL_VALUE = "browser_broadcast.js-initial-value-" + Date.now();
  * This test ensures we won't lose tab data queued in the content script when
  * closing a tab.
  */
-add_task(function flush_on_tabclose() {
+add_task(function* flush_on_tabclose() {
   let tab = yield createTabWithStorageData(["http://example.com"]);
   let browser = tab.linkedBrowser;
 
@@ -25,7 +25,7 @@ add_task(function flush_on_tabclose() {
  * This test ensures we won't lose tab data queued in the content script when
  * duplicating a tab.
  */
-add_task(function flush_on_duplicate() {
+add_task(function* flush_on_duplicate() {
   let tab = yield createTabWithStorageData(["http://example.com"]);
   let browser = tab.linkedBrowser;
 
@@ -45,7 +45,7 @@ add_task(function flush_on_duplicate() {
  * This test ensures we won't lose tab data queued in the content script when
  * a window is closed.
  */
-add_task(function flush_on_windowclose() {
+add_task(function* flush_on_windowclose() {
   let win = yield promiseNewWindow();
   let tab = yield createTabWithStorageData(["http://example.com"], win);
   let browser = tab.linkedBrowser;
@@ -62,7 +62,7 @@ add_task(function flush_on_windowclose() {
  * This test ensures that stale tab data is ignored when reusing a tab
  * (via e.g. setTabState) and does not overwrite the new data.
  */
-add_task(function flush_on_settabstate() {
+add_task(function* flush_on_settabstate() {
   let tab = yield createTabWithStorageData(["http://example.com"]);
   let browser = tab.linkedBrowser;
 
@@ -90,7 +90,7 @@ add_task(function flush_on_settabstate() {
  * asynchronously just before closing a tab. Flushing must re-send all data
  * that hasn't been received by chrome, yet.
  */
-add_task(function flush_on_tabclose_racy() {
+add_task(function* flush_on_tabclose_racy() {
   let tab = yield createTabWithStorageData(["http://example.com"]);
   let browser = tab.linkedBrowser;
 
@@ -115,17 +115,15 @@ function promiseNewWindow() {
   return deferred.promise;
 }
 
-function createTabWithStorageData(urls, win = window) {
-  return Task.spawn(function task() {
-    let tab = win.gBrowser.addTab();
-    let browser = tab.linkedBrowser;
+async function createTabWithStorageData(urls, win = window) {
+  let tab = win.gBrowser.addTab();
+  let browser = tab.linkedBrowser;
 
-    for (let url of urls) {
-      browser.loadURI(url);
-      yield promiseBrowserLoaded(browser);
-      yield modifySessionStorage(browser, {test: INITIAL_VALUE});
-    }
+  for (let url of urls) {
+    browser.loadURI(url);
+    await promiseBrowserLoaded(browser);
+    await modifySessionStorage(browser, {test: INITIAL_VALUE});
+  }
 
-    throw new Task.Result(tab);
-  });
+  return tab;
 }

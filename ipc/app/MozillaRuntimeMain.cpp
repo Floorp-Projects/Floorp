@@ -18,8 +18,7 @@ main(int argc, char *argv[])
   DllBlocklist_Initialize();
 #endif
 
-  Bootstrap::UniquePtr bootstrap;
-  XRE_GetBootstrap(bootstrap);
+  Bootstrap::UniquePtr bootstrap = GetBootstrap();
   if (!bootstrap) {
     return 2;
   }

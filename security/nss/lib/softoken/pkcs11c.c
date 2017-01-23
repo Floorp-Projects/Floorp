@@ -7267,14 +7267,6 @@ NSC_DeriveKey(CK_SESSION_HANDLE hSession,
 
             if (mechanism == CKM_ECDH1_COFACTOR_DERIVE) {
                 withCofactor = PR_TRUE;
-            } else {
-                /* When not using cofactor derivation, one should
-                 * validate the public key to avoid small subgroup
-                 * attacks.
-                 */
-                if (EC_ValidatePublicKey(&privKey->u.ec.ecParams, &ecPoint) != SECSuccess) {
-                    goto ec_loser;
-                }
             }
 
             rv = ECDH_Derive(&ecPoint, &privKey->u.ec.ecParams, &ecScalar,

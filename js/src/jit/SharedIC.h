@@ -959,15 +959,20 @@ class ICUpdatedStub : public ICStub
 class ICCacheIR_Updated : public ICUpdatedStub
 {
     const CacheIRStubInfo* stubInfo_;
+    GCPtrObjectGroup updateStubGroup_;
     GCPtrId updateStubId_;
 
   public:
     ICCacheIR_Updated(JitCode* stubCode, const CacheIRStubInfo* stubInfo)
       : ICUpdatedStub(ICStub::CacheIR_Updated, stubCode),
         stubInfo_(stubInfo),
+        updateStubGroup_(nullptr),
         updateStubId_(JSID_EMPTY)
     {}
 
+    GCPtrObjectGroup& updateStubGroup() {
+        return updateStubGroup_;
+    }
     GCPtrId& updateStubId() {
         return updateStubId_;
     }
@@ -2249,6 +2254,10 @@ StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub);
 MOZ_MUST_USE bool
 EffectlesslyLookupProperty(JSContext* cx, HandleObject obj, HandleId name,
                            MutableHandleObject holder, MutableHandleShape shape);
+
+MOZ_MUST_USE bool
+EffectlesslyLookupProperty(JSContext* cx, HandleObject obj, HandleId name,
+                           MutableHandleObject holder, MutableHandle<PropertyResult> prop);
 
 JSObject*
 GetDOMProxyProto(JSObject* obj);

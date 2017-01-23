@@ -60,7 +60,8 @@ public:
           StorageManagerBase* aManager,
           StorageCache* aCache,
           const nsAString& aDocumentURI,
-          nsIPrincipal* aPrincipal);
+          nsIPrincipal* aPrincipal,
+          bool aIsPrivate);
 
   // WebIDL
   JSObject* WrapObject(JSContext* aCx,
@@ -119,7 +120,7 @@ public:
   void Clear(nsIPrincipal& aSubjectPrincipal,
              ErrorResult& aRv);
 
-  bool IsPrivate() const;
+  bool IsPrivate() const { return mIsPrivate; }
   bool IsSessionOnly() const { return mIsSessionOnly; }
 
   bool IsForkOf(const Storage* aOther) const
@@ -152,6 +153,9 @@ private:
   // Principal this Storage (i.e. localStorage or sessionStorage) has
   // been created for
   nsCOMPtr<nsIPrincipal> mPrincipal;
+
+  // Whether this storage is running in private-browsing window.
+  bool mIsPrivate : 1;
 
   // Whether storage is set to persist data only per session, may change
   // dynamically and is set by CanUseStorage function that is called

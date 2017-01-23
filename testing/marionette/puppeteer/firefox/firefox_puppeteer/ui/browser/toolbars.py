@@ -527,7 +527,7 @@ class IdentityPopupMainView(IdentityPopupView):
 
         :returns: Reference to the identity-popup content host.
         """
-        return self.element.find_element(By.CLASS_NAME, 'identity-popup-headline host')
+        return self.element.find_element(By.CLASS_NAME, 'identity-popup-host')
 
     @property
     def insecure_connection_label(self):
@@ -588,7 +588,7 @@ class IdentityPopupSecurityView(IdentityPopupView):
 
         :returns: Reference to the identity-popup content host.
         """
-        return self.element.find_element(By.CLASS_NAME, 'identity-popup-headline host')
+        return self.element.find_element(By.CLASS_NAME, 'identity-popup-host')
 
     @property
     def insecure_connection_label(self):

@@ -30,7 +30,7 @@ function createEntries(sessionData) {
   };
 }
 
-add_task(function test_nested_about_sessionrestore() {
+add_task(function* test_nested_about_sessionrestore() {
   // Prepare a blank tab.
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;

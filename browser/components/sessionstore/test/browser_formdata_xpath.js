@@ -38,7 +38,7 @@ const FIELDS = {
   "//input[@type='file'][2]":   [FILE1, FILE2]
 };
 
-add_task(function test_form_data_restoration() {
+add_task(function* test_form_data_restoration() {
   // Load page with some input fields.
   let tab = gBrowser.addTab(URL);
   let browser = tab.linkedBrowser;

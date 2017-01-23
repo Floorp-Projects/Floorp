@@ -92,6 +92,7 @@ add_task(function* test_config_flag_needed() {
     Promise.all(promises).then(() => browser.test.notifyPass("flag needed"));
   }
 
+  Preferences.set(STORAGE_SYNC_PREF, false);
   ok(!Preferences.get(STORAGE_SYNC_PREF));
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -103,6 +104,7 @@ add_task(function* test_config_flag_needed() {
   yield extension.startup();
   yield extension.awaitFinish("flag needed");
   yield extension.unload();
+  Preferences.reset(STORAGE_SYNC_PREF);
 });
 
 add_task(function* test_reloading_extensions_works() {

@@ -16,7 +16,7 @@ class WeakSetObject : public NativeObject
   public:
     static const unsigned RESERVED_SLOTS = 1;
 
-    static JSObject* initClass(JSContext* cx, JSObject* obj);
+    static JSObject* initClass(JSContext* cx, HandleObject obj);
     static const Class class_;
 
   private:

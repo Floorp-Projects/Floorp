@@ -10,6 +10,7 @@
 #include "mozilla/dom/BaseAudioContextBinding.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/AbstractThread.h"
 #include <speex/speex_resampler.h>
 #include "nsXPCOMCIDInternal.h"
 #include "nsComponentManagerUtils.h"
@@ -186,9 +187,11 @@ MediaDecodeTask::CreateReader()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  nsPIDOMWindowInner* parent = mDecodeJob.mContext->GetParentObject();
+  MOZ_ASSERT(parent);
 
   nsCOMPtr<nsIPrincipal> principal;
-  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(mDecodeJob.mContext->GetParentObject());
+  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(parent);
   if (sop) {
     principal = sop->GetPrincipal();
   }
@@ -198,8 +201,10 @@ MediaDecodeTask::CreateReader()
                             mLength, principal, mContainerType);
 
   MOZ_ASSERT(!mBufferDecoder);
-  mBufferDecoder = new BufferDecoder(resource,
-    new BufferDecoderGMPCrashHelper(mDecodeJob.mContext->GetParentObject()));
+  RefPtr<AbstractThread> mainThread =
+    mDecodeJob.mContext->GetOwnerGlobal()->AbstractMainThreadFor(TaskCategory::Other);
+  mBufferDecoder = new BufferDecoder(resource, mainThread,
+                                     new BufferDecoderGMPCrashHelper(parent));
 
   // If you change this list to add support for new decoders, please consider
   // updating HTMLMediaElement::CreateDecoder as well.
@@ -286,6 +291,7 @@ MediaDecodeTask::OnMetadataRead(MetadataHolder* aMetadata)
             ("Telemetry (WebAudio) MEDIA_CODEC_USED= '%s'", codec.get()));
     Telemetry::Accumulate(Telemetry::ID::MEDIA_CODEC_USED, codec);
   });
+  // Non-DocGroup version of AbstractThread::MainThread is fine for Telemetry.
   AbstractThread::MainThread()->Dispatch(task.forget());
 
   RequestSample();

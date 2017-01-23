@@ -593,11 +593,11 @@ HasNoToPrimitiveMethodPure(JSObject* obj, JSContext* cx)
 {
     jsid id = SYMBOL_TO_JSID(cx->wellKnownSymbols().toPrimitive);
     JSObject* pobj;
-    Shape* shape;
-    if (!LookupPropertyPure(cx, obj, id, &pobj, &shape))
+    PropertyResult prop;
+    if (!LookupPropertyPure(cx, obj, id, &pobj, &prop))
         return false;
 
-    return !shape;
+    return !prop;
 }
 
 /* ES6 draft rev 28 (2014 Oct 14) 7.1.14 */

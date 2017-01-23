@@ -639,6 +639,9 @@ AudioCallbackDriver::Init()
     output.format = CUBEB_SAMPLE_FLOAT32NE;
   }
 
+  // Graphs are always stereo for now.
+  output.layout = CUBEB_LAYOUT_STEREO;
+
   Maybe<uint32_t> latencyPref = CubebUtils::GetCubebMSGLatencyInFrames();
   if (latencyPref) {
     latency_frames = latencyPref.value();
@@ -658,6 +661,7 @@ AudioCallbackDriver::Init()
 
   input = output;
   input.channels = mInputChannels; // change to support optional stereo capture
+  input.layout = CUBEB_LAYOUT_MONO;
 
   cubeb_stream* stream = nullptr;
   CubebUtils::AudioDeviceID input_id = nullptr, output_id = nullptr;

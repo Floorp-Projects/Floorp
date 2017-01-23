@@ -49,7 +49,6 @@ add_task(async function test_delete_invalid_roots_from_server() {
 
   let engine  = new BookmarksEngine(Service);
   let store   = engine._store;
-  let tracker = engine._tracker;
   let server = serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
@@ -106,7 +105,6 @@ add_task(async function test_change_during_sync() {
 
   let engine  = new BookmarksEngine(Service);
   let store   = engine._store;
-  let tracker = engine._tracker;
   let server = serverForFoo(engine);
   await SyncTestingInfrastructure(server);
 
@@ -256,11 +254,9 @@ add_task(async function test_change_during_sync() {
 add_task(async function bad_record_allIDs() {
   let server = new SyncServer();
   server.start();
-  let syncTesting = await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(server);
 
   _("Ensure that bad Places queries don't cause an error in getAllIDs.");
-  let engine = new BookmarksEngine(Service);
-  let store = engine._store;
   let badRecordID = PlacesUtils.bookmarks.insertBookmark(
       PlacesUtils.bookmarks.toolbarFolder,
       Utils.makeURI("place:folder=1138"),
@@ -319,10 +315,8 @@ add_task(async function test_processIncoming_error_orderChildren() {
 
     let bmk1_id = PlacesUtils.bookmarks.insertBookmark(
       folder1_id, fxuri, PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Firefox!");
-    let bmk1_guid = store.GUIDForId(bmk1_id);
     let bmk2_id = PlacesUtils.bookmarks.insertBookmark(
       folder1_id, tburi, PlacesUtils.bookmarks.DEFAULT_INDEX, "Get Thunderbird!");
-    let bmk2_guid = store.GUIDForId(bmk2_id);
 
     // Create a server record for folder1 where we flip the order of
     // the children.

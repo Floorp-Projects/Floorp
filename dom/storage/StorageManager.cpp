@@ -313,6 +313,7 @@ StorageManagerBase::GetStorageInternal(bool aCreate,
                                        mozIDOMWindow* aWindow,
                                        nsIPrincipal* aPrincipal,
                                        const nsAString& aDocumentURI,
+                                       bool aPrivate,
                                        nsIDOMStorage** aRetval)
 {
   nsresult rv;
@@ -363,7 +364,7 @@ StorageManagerBase::GetStorageInternal(bool aCreate,
     nsCOMPtr<nsPIDOMWindowInner> inner = nsPIDOMWindowInner::From(aWindow);
 
     nsCOMPtr<nsIDOMStorage> storage = new Storage(
-      inner, this, cache, aDocumentURI, aPrincipal);
+      inner, this, cache, aDocumentURI, aPrincipal, aPrivate);
     storage.forget(aRetval);
   }
 
@@ -373,24 +374,29 @@ StorageManagerBase::GetStorageInternal(bool aCreate,
 NS_IMETHODIMP
 StorageManagerBase::PrecacheStorage(nsIPrincipal* aPrincipal)
 {
-  return GetStorageInternal(true, nullptr, aPrincipal, EmptyString(), nullptr);
+  return GetStorageInternal(true, nullptr, aPrincipal, EmptyString(), false,
+                            nullptr);
 }
 
 NS_IMETHODIMP
 StorageManagerBase::CreateStorage(mozIDOMWindow* aWindow,
                                   nsIPrincipal* aPrincipal,
                                   const nsAString& aDocumentURI,
+                                  bool aPrivate,
                                   nsIDOMStorage** aRetval)
 {
-  return GetStorageInternal(true, aWindow, aPrincipal, aDocumentURI, aRetval);
+  return GetStorageInternal(true, aWindow, aPrincipal, aDocumentURI, aPrivate,
+                            aRetval);
 }
 
 NS_IMETHODIMP
 StorageManagerBase::GetStorage(mozIDOMWindow* aWindow,
                                nsIPrincipal* aPrincipal,
+                               bool aPrivate,
                                nsIDOMStorage** aRetval)
 {
-  return GetStorageInternal(false, aWindow, aPrincipal, EmptyString(), aRetval);
+  return GetStorageInternal(false, aWindow, aPrincipal, EmptyString(), aPrivate,
+                            aRetval);
 }
 
 NS_IMETHODIMP
@@ -470,13 +476,14 @@ StorageManagerBase::CheckStorage(nsIPrincipal* aPrincipal,
 NS_IMETHODIMP
 StorageManagerBase::GetLocalStorageForPrincipal(nsIPrincipal* aPrincipal,
                                                 const nsAString& aDocumentURI,
+                                                bool aPrivate,
                                                 nsIDOMStorage** aRetval)
 {
   if (mType != LocalStorage) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  return CreateStorage(nullptr, aPrincipal, aDocumentURI, aRetval);
+  return CreateStorage(nullptr, aPrincipal, aDocumentURI, aPrivate, aRetval);
 }
 
 void

@@ -89,7 +89,7 @@ CrossCompartmentWrapper::getPrototype(JSContext* cx, HandleObject wrapper,
         if (!GetPrototype(cx, wrapped, protop))
             return false;
         if (protop) {
-            if (!protop->setDelegate(cx))
+            if (!JSObject::setDelegate(cx, protop))
                 return false;
         }
     }
@@ -122,7 +122,7 @@ CrossCompartmentWrapper::getPrototypeIfOrdinary(JSContext* cx, HandleObject wrap
             return true;
 
         if (protop) {
-            if (!protop->setDelegate(cx))
+            if (!JSObject::setDelegate(cx, protop))
                 return false;
         }
     }

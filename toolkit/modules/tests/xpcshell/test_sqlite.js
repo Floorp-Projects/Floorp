@@ -1,6 +1,3 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
 "use strict";
 
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
@@ -84,12 +81,10 @@ function* getDummyTempDatabase(name, extraOptions = {}) {
   return c;
 }
 
-function run_test() {
+add_task(function* test_setup() {
   Cu.import("resource://testing-common/services/common/logging.js");
   initTestLogging("Trace");
-
-  run_next_test();
-}
+});
 
 add_task(function* test_open_normal() {
   let c = yield Sqlite.openConnection({path: "test_open_normal.sqlite"});
@@ -1090,4 +1085,60 @@ add_task(function* test_close_database_on_gc() {
 
   yield finalPromise;
   failTestsOnAutoClose(true);
+});
+
+// Test all supported datatypes
+add_task(function* test_datatypes() {
+  let c = yield getConnection("datatypes");
+  yield c.execute("DROP TABLE IF EXISTS datatypes");
+  yield c.execute(`CREATE TABLE datatypes (
+                     null_col    NULL,
+                     integer_col INTEGER NOT NULL,
+                     text_col    TEXT    NOT NULL,
+                     blob_col    BLOB    NOT NULL,
+                     real_col    REAL    NOT NULL,
+                     numeric_col NUMERIC NOT NULL
+                   )`);
+  const bindings = [
+    {
+      null_col: null,
+      integer_col: 12345,
+      text_col: "qwerty",
+      blob_col: new Array(256).fill(undefined).map( (value, index) => index % 256 ),
+      real_col: 3.14159265359,
+      numeric_col: true
+    },
+    {
+      null_col: null,
+      integer_col: -12345,
+      text_col: "",
+      blob_col: new Array(256 * 2).fill(undefined).map( (value, index) => index % 256 ),
+      real_col: Number.NEGATIVE_INFINITY,
+      numeric_col: false
+    }
+  ];
+
+  yield c.execute(`INSERT INTO datatypes VALUES (
+                     :null_col,
+                     :integer_col,
+                     :text_col,
+                     :blob_col,
+                     :real_col,
+                     :numeric_col
+                   )`, bindings);
+
+  let rows = yield c.execute("SELECT * FROM datatypes");
+  Assert.ok(Array.isArray(rows));
+  Assert.equal(rows.length, bindings.length);
+  for (let i = 0 ; i < bindings.length; ++i) {
+    let binding = bindings[i];
+    let row = rows[i];
+    for (let colName in binding) {
+      // In Sqlite bool is stored and then retrieved as numeric.
+      let val = typeof binding[colName] == "boolean" ? +binding[colName]
+                                                       : binding[colName];
+      Assert.deepEqual(val, row.getResultByName(colName));
+    }
+  }
+  yield c.close();
 });

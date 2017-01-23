@@ -8,6 +8,7 @@ interface nsIURI;
 interface nsIObserver;
 interface nsIHttpChannel;
 interface nsISSLStatus;
+interface nsISimpleEnumerator;
 
 %{C++
 #include "nsTArrayForwardDeclare.h"
@@ -22,6 +23,44 @@ namespace mozilla
 %}
 [ref] native nsCStringTArrayRef(nsTArray<nsCString>);
 [ref] native mozillaPkixTime(mozilla::pkix::Time);
+
+// [infallible] attributes are only allowed on [builtinclass]
+[scriptable, uuid(31313372-842c-4110-bdf1-6aea17c845ad), builtinclass]
+interface nsISiteSecurityState : nsISupports
+{
+  readonly attribute ACString hostname;
+  [infallible] readonly attribute long long expireTime;
+  [infallible] readonly attribute short securityPropertyState;
+  [infallible] readonly attribute boolean includeSubdomains;
+
+  /*
+   * SECURITY_PROPERTY_SET and SECURITY_PROPERTY_UNSET correspond to indicating
+   * a site has or does not have the security property in question,
+   * respectively.
+   * SECURITY_PROPERTY_KNOCKOUT indicates a value on a preloaded
+   * list is being overridden, and the associated site does not have the
+   * security property in question.
+   * SECURITY_PROPERTY_NEGATIVE is used when we've gotten a negative result from
+   * HSTS priming.
+   */
+  const short SECURITY_PROPERTY_UNSET = 0;
+  const short SECURITY_PROPERTY_SET = 1;
+  const short SECURITY_PROPERTY_KNOCKOUT = 2;
+  const short SECURITY_PROPERTY_NEGATIVE = 3;
+};
+
+// This has to be a builtinclass because it derives from a builtinclass.
+[scriptable, uuid(9ff16e40-1029-496c-95c2-bc819872b216), builtinclass]
+interface nsISiteHSTSState : nsISiteSecurityState
+{
+};
+
+// This has to be a builtinclass because it derives from a builtinclass.
+[scriptable, uuid(ae395078-c7d0-474d-b147-f4aa203a9b2c), builtinclass]
+interface nsISiteHPKPState : nsISiteSecurityState
+{
+  readonly attribute nsISimpleEnumerator sha256Keys;
+};
 
 [scriptable, uuid(275127f8-dbd7-4681-afbf-6df0c6587a01)]
 interface nsISiteSecurityService : nsISupports
@@ -210,6 +249,17 @@ interface nsISiteSecurityService : nsISupports
      * @param aMaxAge lifetime (in seconds) of this negative cache
      */
     [noscript] void cacheNegativeHSTSResult(in nsIURI aURI, in unsigned long long aMaxAge);
+
+    /**
+     * Returns an enumerator of the nsISiteSecurityService storage. Each item in
+     * the enumeration is a nsISiteSecurityState that can be QueryInterfaced to
+     * the appropriate nsISiteHSTSState or nsISiteHPKPState, depending on the
+     * provided type. Doesn't include preloaded entries (either the hard-coded
+     * ones or the preloaded-delivered-by-kinto ones).
+     *
+     * @param aType the type of security state in question.
+     */
+    nsISimpleEnumerator enumerate(in uint32_t aType);
 };
 
 %{C++

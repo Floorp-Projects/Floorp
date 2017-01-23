@@ -18,10 +18,6 @@ function makeURI(url) {
   return Services.io.newURI(url);
 }
 
-function readInputStreamToString(aStream) {
-  return NetUtil.readInputStreamToString(aStream, aStream.available());
-}
-
 function RemoteWebNavigation() {
   this.wrappedJSObject = this;
 }
@@ -81,8 +77,8 @@ RemoteWebNavigation.prototype = {
       flags: aLoadFlags,
       referrer: aReferrer ? aReferrer.spec : null,
       referrerPolicy: aReferrerPolicy,
-      postData: aPostData ? readInputStreamToString(aPostData) : null,
-      headers: aHeaders ? readInputStreamToString(aHeaders) : null,
+      postData: aPostData ? Utils.serializeInputStream(aPostData) : null,
+      headers: aHeaders ? Utils.serializeInputStream(aHeaders) : null,
       baseURI: aBaseURI ? aBaseURI.spec : null,
       triggeringPrincipal: aTriggeringPrincipal
                            ? Utils.serializePrincipal(aTriggeringPrincipal)

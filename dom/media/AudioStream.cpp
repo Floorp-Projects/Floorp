@@ -354,6 +354,10 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
     return NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR;
   }
 
+  // The DecodedAudioDataSink forces mono or stereo for now.
+  params.layout = params.channels == 1 ? CUBEB_LAYOUT_MONO
+                                       : CUBEB_LAYOUT_STEREO;
+
   return OpenCubeb(cubebContext, params, startTime, CubebUtils::GetFirstStream());
 }
 

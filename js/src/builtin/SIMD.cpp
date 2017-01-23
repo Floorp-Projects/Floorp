@@ -475,7 +475,7 @@ const Class SimdObject::class_ = {
     &SimdObjectClassOps
 };
 
-bool
+/* static */ bool
 GlobalObject::initSimdObject(JSContext* cx, Handle<GlobalObject*> global)
 {
     // SIMD relies on the TypedObject module being initialized.
@@ -483,11 +483,11 @@ GlobalObject::initSimdObject(JSContext* cx, Handle<GlobalObject*> global)
     // to be able to call GetTypedObjectModule(). It is NOT necessary
     // to install the TypedObjectModule global, but at the moment
     // those two things are not separable.
-    if (!global->getOrCreateTypedObjectModule(cx))
+    if (!GlobalObject::getOrCreateTypedObjectModule(cx, global))
         return false;
 
     RootedObject globalSimdObject(cx);
-    RootedObject objProto(cx, global->getOrCreateObjectPrototype(cx));
+    RootedObject objProto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
     if (!objProto)
         return false;
 
@@ -510,7 +510,7 @@ static bool
 CreateSimdType(JSContext* cx, Handle<GlobalObject*> global, HandlePropertyName stringRepr,
                SimdType simdType, const JSFunctionSpec* methods)
 {
-    RootedObject funcProto(cx, global->getOrCreateFunctionPrototype(cx));
+    RootedObject funcProto(cx, GlobalObject::getOrCreateFunctionPrototype(cx, global));
     if (!funcProto)
         return false;
 
@@ -531,7 +531,7 @@ CreateSimdType(JSContext* cx, Handle<GlobalObject*> global, HandlePropertyName s
         return false;
 
     // Create prototype property, which inherits from Object.prototype.
-    RootedObject objProto(cx, global->getOrCreateObjectPrototype(cx));
+    RootedObject objProto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
     if (!objProto)
         return false;
     Rooted<TypedProto*> proto(cx);
@@ -551,7 +551,7 @@ CreateSimdType(JSContext* cx, Handle<GlobalObject*> global, HandlePropertyName s
     }
 
     // Bind type descriptor to the global SIMD object
-    RootedObject globalSimdObject(cx, global->getOrCreateSimdGlobalObject(cx));
+    RootedObject globalSimdObject(cx, GlobalObject::getOrCreateSimdGlobalObject(cx, global));
     MOZ_ASSERT(globalSimdObject);
 
     RootedValue typeValue(cx, ObjectValue(*typeDescr));
@@ -568,7 +568,7 @@ CreateSimdType(JSContext* cx, Handle<GlobalObject*> global, HandlePropertyName s
     return !!typeDescr;
 }
 
-bool
+/* static */ bool
 GlobalObject::initSimdType(JSContext* cx, Handle<GlobalObject*> global, SimdType simdType)
 {
 #define CREATE_(Type) \
@@ -584,13 +584,13 @@ GlobalObject::initSimdType(JSContext* cx, Handle<GlobalObject*> global, SimdType
 #undef CREATE_
 }
 
-SimdTypeDescr*
+/* static */ SimdTypeDescr*
 GlobalObject::getOrCreateSimdTypeDescr(JSContext* cx, Handle<GlobalObject*> global,
                                        SimdType simdType)
 {
     MOZ_ASSERT(unsigned(simdType) < unsigned(SimdType::Count), "Invalid SIMD type");
 
-    RootedObject globalSimdObject(cx, global->getOrCreateSimdGlobalObject(cx));
+    RootedObject globalSimdObject(cx, GlobalObject::getOrCreateSimdGlobalObject(cx, global));
     if (!globalSimdObject)
        return nullptr;
 
@@ -628,8 +628,8 @@ SimdObject::resolve(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* 
 JSObject*
 js::InitSimdClass(JSContext* cx, HandleObject obj)
 {
-    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
-    return global->getOrCreateSimdGlobalObject(cx);
+    Handle<GlobalObject*> global = obj.as<GlobalObject>();
+    return GlobalObject::getOrCreateSimdGlobalObject(cx, global);
 }
 
 template<typename V>

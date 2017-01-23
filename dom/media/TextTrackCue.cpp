@@ -56,7 +56,7 @@ TextTrackCue::TextTrackCue(nsPIDOMWindowInner* aOwnerWindow,
   , mEndTime(aEndTime)
   , mReset(false, "TextTrackCue::mReset")
   , mHaveStartedWatcher(false)
-  , mWatchManager(this, AbstractThread::MainThread())
+  , mWatchManager(this, GetOwnerGlobal()->AbstractMainThreadFor(TaskCategory::Other))
 {
   SetDefaultCueSettings();
   MOZ_ASSERT(aOwnerWindow);
@@ -78,7 +78,7 @@ TextTrackCue::TextTrackCue(nsPIDOMWindowInner* aOwnerWindow,
   , mTrackElement(aTrackElement)
   , mReset(false, "TextTrackCue::mReset")
   , mHaveStartedWatcher(false)
-  , mWatchManager(this, AbstractThread::MainThread())
+  , mWatchManager(this, GetOwnerGlobal()->AbstractMainThreadFor(TaskCategory::Other))
 {
   SetDefaultCueSettings();
   MOZ_ASSERT(aOwnerWindow);

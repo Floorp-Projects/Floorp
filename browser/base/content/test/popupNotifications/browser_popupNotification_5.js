@@ -179,6 +179,9 @@ var tests = [
     *run() {
       this.oldSelectedTab = gBrowser.selectedTab;
       yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
+      let firstTab = gBrowser.selectedTab;
+
+      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
 
       let shown = waitForNotificationPanel();
       let notifyObj = new BasicNotification(this.id);
@@ -186,11 +189,14 @@ var tests = [
       this.notification = showNotification(notifyObj);
       yield shown;
 
-      ok(notifyObj.shownCallbackTriggered, "Should have triggered the shown callback");
+      ok(notifyObj.shownCallbackTriggered, "Should have triggered the shown event");
+      ok(notifyObj.showingCallbackTriggered, "Should have triggered the showing event");
+      // Reset to false so that we can ensure these are not fired a second time.
+      notifyObj.shownCallbackTriggered = false;
+      notifyObj.showingCallbackTriggered = false;
 
-      yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       let promiseWin = BrowserTestUtils.waitForNewWindow();
-      gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
+      gBrowser.replaceTabWithWindow(firstTab);
       let win = yield promiseWin;
 
       let anchor = win.document.getElementById("default-notification-icon");
@@ -203,7 +209,15 @@ var tests = [
 
       let id = PopupNotifications.panel.firstChild.getAttribute("popupid");
       ok(id.endsWith("Test#7"), "Should have found the notification from Test7");
-      ok(PopupNotifications.isPanelOpen, "Should have shown the popup again after getting back to the window");
+      ok(PopupNotifications.isPanelOpen,
+         "Should have kept the popup on the first window");
+      ok(!notifyObj.dismissalCallbackTriggered,
+         "Should not have triggered a dismissed event");
+      ok(!notifyObj.shownCallbackTriggered,
+         "Should not have triggered a second shown event");
+      ok(!notifyObj.showingCallbackTriggered,
+         "Should not have triggered a second showing event");
+
       this.notification.remove();
       gBrowser.removeTab(gBrowser.selectedTab);
       gBrowser.selectedTab = this.oldSelectedTab;

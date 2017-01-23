@@ -8,7 +8,7 @@ const URL = "about:config";
 /**
  * Bug 393716 - Basic tests for getTabState(), setTabState(), and duplicateTab().
  */
-add_task(function test_set_tabstate() {
+add_task(function* test_set_tabstate() {
   let key = "Unique key: " + Date.now();
   let value = "Unique value: " + Math.random();
 
@@ -35,7 +35,7 @@ add_task(function test_set_tabstate() {
   gBrowser.removeTab(tab);
 });
 
-add_task(function test_set_tabstate_and_duplicate() {
+add_task(function* test_set_tabstate_and_duplicate() {
   let key2 = "key2";
   let value2 = "Value " + Math.random();
   let value3 = "Another value: " + Date.now();

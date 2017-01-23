@@ -8,7 +8,7 @@ requestLongerTimeout(2);
 /**
  * Ensure that starting a load invalidates shistory.
  */
-add_task(function test_load_start() {
+add_task(function* test_load_start() {
   // Create a new tab.
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
@@ -36,7 +36,7 @@ add_task(function test_load_start() {
 /**
  * Ensure that anchor navigation invalidates shistory.
  */
-add_task(function test_hashchange() {
+add_task(function* test_hashchange() {
   const URL = "data:text/html;charset=utf-8,<a id=a href=%23>clickme</a>";
 
   // Create a new tab.
@@ -65,7 +65,7 @@ add_task(function test_hashchange() {
 /**
  * Ensure that loading pages from the bfcache invalidates shistory.
  */
-add_task(function test_pageshow() {
+add_task(function* test_pageshow() {
   const URL = "data:text/html;charset=utf-8,<h1>first</h1>";
   const URL2 = "data:text/html;charset=utf-8,<h1>second</h1>";
 
@@ -95,7 +95,7 @@ add_task(function test_pageshow() {
 /**
  * Ensure that subframe navigation invalidates shistory.
  */
-add_task(function test_subframes() {
+add_task(function* test_subframes() {
   const URL = "data:text/html;charset=utf-8," +
               "<iframe src=http%3A//example.com/ name=t></iframe>" +
               "<a id=a1 href=http%3A//example.com/1 target=t>clickme</a>" +
@@ -143,7 +143,7 @@ add_task(function test_subframes() {
 /**
  * Ensure that navigating from an about page invalidates shistory.
  */
-add_task(function test_about_page_navigate() {
+add_task(function* test_about_page_navigate() {
   // Create a new tab.
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
@@ -171,7 +171,7 @@ add_task(function test_about_page_navigate() {
 /**
  * Ensure that history.pushState and history.replaceState invalidate shistory.
  */
-add_task(function test_pushstate_replacestate() {
+add_task(function* test_pushstate_replacestate() {
   // Create a new tab.
   let tab = gBrowser.addTab("http://example.com/1");
   let browser = tab.linkedBrowser;
@@ -210,7 +210,7 @@ add_task(function test_pushstate_replacestate() {
 /**
  * Ensure that slow loading subframes will invalidate shistory.
  */
-add_task(function test_slow_subframe_load() {
+add_task(function* test_slow_subframe_load() {
   const SLOW_URL = "http://mochi.test:8888/browser/browser/components/" +
                    "sessionstore/test/browser_sessionHistory_slow.sjs";
 

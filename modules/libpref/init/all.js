@@ -598,6 +598,10 @@ pref("media.video_stats.enabled", true);
 // Whether to check the decoder supports recycling.
 pref("media.decoder.recycle.enabled", false);
 
+// Log level for cubeb, the audio input/output system. Valid values are
+// "verbose", "normal" and "" (log disabled).
+pref("media.cubeb.log_level", "");
+
 // Weather we allow AMD switchable graphics
 pref("layers.amd-switchable-gfx.enabled", true);
 
@@ -4751,6 +4755,14 @@ pref("extensions.webextensions.keepUuidOnUninstall", false);
 pref("extensions.webextensions.identity.redirectDomain", "extensions.allizom.org");
 pref("extensions.webextensions.remote", false);
 
+// Report Site Issue button
+pref("extensions.webcompat-reporter.newIssueEndpoint", "https://webcompat.com/issues/new");
+#ifdef NIGHTLY_BUILD
+pref("extensions.webcompat-reporter.enabled", true);
+#else
+pref("extensions.webcompat-reporter.enabled", false);
+#endif
+
 pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  32768);
 
@@ -5187,6 +5199,8 @@ pref("browser.safebrowsing.id", "navclient-auto-ffox");
 pref("browser.safebrowsing.id", "Firefox");
 #endif
 
+pref("browser.safebrowsing.temporary.take_v4_completion_result", false);
+
 // Turn off Spatial navigation by default.
 pref("snav.enabled", false);
 
@@ -5304,7 +5318,7 @@ pref("browser.addon-watch.interval", 15000);
 #else
 pref("browser.addon-watch.interval", -1);
 #endif
-pref("browser.addon-watch.ignore", "[\"mochikit@mozilla.org\",\"special-powers@mozilla.org\",\"fxdevtools-adapters@mozilla.org\",\"fx-devtools\"]");
+pref("browser.addon-watch.ignore", "[\"mochikit@mozilla.org\",\"special-powers@mozilla.org\",\"fxdevtools-adapters@mozilla.org\",\"fx-devtools\",\"webcompat-reporter@mozilla.org\"]");
 
 // Search service settings
 pref("browser.search.log", false);
@@ -5465,13 +5479,8 @@ pref("webextensions.tests", false);
 // 16MB default non-parseable upload limit for requestBody.raw.bytes
 pref("webextensions.webRequest.requestBodyMaxRawBytes", 16777216);
 
-// This functionality is still experimental
-pref("webextensions.storage.sync.enabled", false);
-#ifdef RELEASE_OR_BETA
+pref("webextensions.storage.sync.enabled", true);
 pref("webextensions.storage.sync.serverURL", "https://webextensions.settings.services.mozilla.com/v1");
-#else
-pref("webextensions.storage.sync.serverURL", "https://webextensions.dev.mozaws.net/v1");
-#endif
 
 // Allow customization of the fallback directory for file uploads
 pref("dom.input.fallbackUploadDir", "");

@@ -45,6 +45,8 @@ interface nsIServiceWorkerInfo : nsISupports
 
   readonly attribute nsIWorkerDebugger debugger;
 
+  readonly attribute bool handlesFetchEvents;
+
   void attachDebugger();
 
   void detachDebugger();

@@ -75,31 +75,29 @@ add_task(function* test_downloads_last_dir_toggle() {
  *
  * @returns Promise
  */
-function testHelper(options) {
-  return new Task.spawn(function() {
-    let win = yield BrowserTestUtils.openNewBrowserWindow(options);
-    let gDownloadLastDir = new DownloadLastDir(win);
+async function testHelper(options) {
+  let win = await BrowserTestUtils.openNewBrowserWindow(options);
+  let gDownloadLastDir = new DownloadLastDir(win);
 
-    if (options.clearHistory) {
-      clearHistory();
-    }
+  if (options.clearHistory) {
+    clearHistory();
+  }
 
-    if (options.setDir) {
-      gDownloadLastDir.file = options.setDir;
-    }
+  if (options.setDir) {
+    gDownloadLastDir.file = options.setDir;
+  }
 
-    let expectedDir = options.expectedDir;
+  let expectedDir = options.expectedDir;
 
-    if (expectedDir) {
-      is(gDownloadLastDir.file.path, expectedDir.path,
-         "gDownloadLastDir should point to the expected last directory");
-      isnot(gDownloadLastDir.file, expectedDir,
-            "gDownloadLastDir.file should not be pointing to the last directory");
-    } else {
-      is(gDownloadLastDir.file, null, "gDownloadLastDir should be null");
-    }
+  if (expectedDir) {
+    is(gDownloadLastDir.file.path, expectedDir.path,
+       "gDownloadLastDir should point to the expected last directory");
+    isnot(gDownloadLastDir.file, expectedDir,
+          "gDownloadLastDir.file should not be pointing to the last directory");
+  } else {
+    is(gDownloadLastDir.file, null, "gDownloadLastDir should be null");
+  }
 
-    gDownloadLastDir.cleanupPrivateFile();
-    yield BrowserTestUtils.closeWindow(win);
-  });
+  gDownloadLastDir.cleanupPrivateFile();
+  await BrowserTestUtils.closeWindow(win);
 }

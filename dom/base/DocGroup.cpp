@@ -79,5 +79,12 @@ DocGroup::EventTargetFor(TaskCategory aCategory) const
   return mTabGroup->EventTargetFor(aCategory);
 }
 
+AbstractThread*
+DocGroup::AbstractMainThreadFor(TaskCategory aCategory)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  return mTabGroup->AbstractMainThreadFor(aCategory);
+}
+
 }
 }

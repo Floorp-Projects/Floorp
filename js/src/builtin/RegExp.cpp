@@ -801,7 +801,7 @@ const JSFunctionSpec js::regexp_methods[] = {
     name(JSContext* cx, unsigned argc, Value* vp)                               \
     {                                                                           \
         CallArgs args = CallArgsFromVp(argc, vp);                               \
-        RegExpStatics* res = cx->global()->getRegExpStatics(cx);                \
+        RegExpStatics* res = GlobalObject::getRegExpStatics(cx, cx->global());  \
         if (!res)                                                               \
             return false;                                                       \
         code;                                                                   \
@@ -827,7 +827,7 @@ DEFINE_STATIC_GETTER(static_paren9_getter,       STATIC_PAREN_GETTER_CODE(9))
     static bool                                                                 \
     name(JSContext* cx, unsigned argc, Value* vp)                               \
     {                                                                           \
-        RegExpStatics* res = cx->global()->getRegExpStatics(cx);                \
+        RegExpStatics* res = GlobalObject::getRegExpStatics(cx, cx->global());  \
         if (!res)                                                               \
             return false;                                                       \
         code;                                                                   \
@@ -838,7 +838,7 @@ static bool
 static_input_setter(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RegExpStatics* res = cx->global()->getRegExpStatics(cx);
+    RegExpStatics* res = GlobalObject::getRegExpStatics(cx, cx->global());
     if (!res)
         return false;
 
@@ -923,7 +923,7 @@ ExecuteRegExp(JSContext* cx, HandleObject regexp, HandleString string,
 
     RegExpStatics* res;
     if (staticsUpdate == UpdateRegExpStatics) {
-        res = cx->global()->getRegExpStatics(cx);
+        res = GlobalObject::getRegExpStatics(cx, cx->global());
         if (!res)
             return RegExpRunStatus_Error;
     } else {

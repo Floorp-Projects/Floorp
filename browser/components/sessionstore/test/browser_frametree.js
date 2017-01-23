@@ -13,7 +13,7 @@ const URL_FRAMESET = HTTPROOT + "browser_frametree_sample_frameset.html";
  * when a page starts loading and we also expect a valid frame tree to exist
  * when it has stopped loading.
  */
-add_task(function test_frametree() {
+add_task(function* test_frametree() {
   const FRAME_TREE_SINGLE = { href: URL };
   const FRAME_TREE_FRAMESET = {
     href: URL_FRAMESET,
@@ -65,7 +65,7 @@ add_task(function test_frametree() {
  * after the load event. SessionStore can't handle these and will not restore
  * or collect any data for them.
  */
-add_task(function test_frametree_dynamic() {
+add_task(function* test_frametree_dynamic() {
   // The frame tree as expected. The first two frames are static
   // and the third one was created on DOMContentLoaded.
   const FRAME_TREE = {

@@ -1115,7 +1115,7 @@ JSObject*
 AtomicsObject::initClass(JSContext* cx, Handle<GlobalObject*> global)
 {
     // Create Atomics Object.
-    RootedObject objProto(cx, global->getOrCreateObjectPrototype(cx));
+    RootedObject objProto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
     if (!objProto)
         return nullptr;
     RootedObject Atomics(cx, NewObjectWithGivenProto(cx, &AtomicsObject::class_, objProto,

@@ -43,10 +43,10 @@ treecol {
   min-width: 26px;
 }
 
-/* For the "learn more" links, line up after text */
 .learnMore {
   margin-inline-start: 1.5em;
   font-weight: normal;
+  white-space: nowrap;
 }
 
 /* Category List */

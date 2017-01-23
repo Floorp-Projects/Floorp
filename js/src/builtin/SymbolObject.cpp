@@ -52,17 +52,17 @@ const JSFunctionSpec SymbolObject::staticMethods[] = {
 JSObject*
 SymbolObject::initClass(JSContext* cx, HandleObject obj)
 {
-    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
+    Handle<GlobalObject*> global = obj.as<GlobalObject>();
 
     // This uses &JSObject::class_ because: "The Symbol prototype object is an
     // ordinary object. It is not a Symbol instance and does not have a
     // [[SymbolData]] internal slot." (ES6 rev 24, 19.4.3)
-    RootedObject proto(cx, global->createBlankPrototype<PlainObject>(cx));
+    RootedObject proto(cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
     if (!proto)
         return nullptr;
 
-    RootedFunction ctor(cx, global->createConstructor(cx, construct,
-                                                      ClassName(JSProto_Symbol, cx), 0));
+    RootedFunction ctor(cx, GlobalObject::createConstructor(cx, construct,
+                                                            ClassName(JSProto_Symbol, cx), 0));
     if (!ctor)
         return nullptr;
 

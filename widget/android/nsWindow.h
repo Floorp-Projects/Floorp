@@ -27,7 +27,6 @@ namespace mozilla {
     class WidgetTouchEvent;
 
     namespace layers {
-        class CompositorBridgeParent;
         class CompositorBridgeChild;
         class LayerManager;
         class APZCTreeManager;
@@ -239,7 +238,7 @@ public:
     nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
                                        nsIObserver* aObserver) override;
 
-    CompositorBridgeParent* GetCompositorBridgeParent() const;
+    CompositorBridgeChild* GetCompositorBridgeChild() const;
 
     mozilla::jni::DependentRef<mozilla::java::GeckoLayerClient> GetLayerClient();
 
@@ -292,6 +291,8 @@ private:
     void RedrawAll();
 
     mozilla::java::LayerRenderer::Frame::GlobalRef mLayerRendererFrame;
+
+    int64_t GetRootLayerId() const;
 };
 
 #endif /* NSWINDOW_H_ */

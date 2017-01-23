@@ -102,6 +102,7 @@ class nsIGlobalObject;
 struct nsCSSSelectorList;
 
 namespace mozilla {
+class AbstractThread;
 class CSSStyleSheet;
 class ErrorResult;
 class EventStates;
@@ -2882,6 +2883,9 @@ public:
 
   virtual nsIEventTarget*
   EventTargetFor(mozilla::dom::TaskCategory aCategory) const override;
+
+  virtual mozilla::AbstractThread*
+  AbstractMainThreadFor(mozilla::dom::TaskCategory aCategory) override;
 
   // The URLs passed to these functions should match what
   // JS::DescribeScriptedCaller() returns, since these APIs are used to

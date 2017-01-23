@@ -2901,6 +2901,16 @@ nsIDocument::EventTargetFor(TaskCategory aCategory) const
   return DispatcherTrait::EventTargetFor(aCategory);
 }
 
+AbstractThread*
+nsIDocument::AbstractMainThreadFor(mozilla::dom::TaskCategory aCategory)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mDocGroup) {
+    return mDocGroup->AbstractMainThreadFor(aCategory);
+  }
+  return DispatcherTrait::AbstractMainThreadFor(aCategory);
+}
+
 void
 nsIDocument::NoteScriptTrackingStatus(const nsACString& aURL, bool aIsTracking)
 {
@@ -5198,7 +5208,7 @@ nsDocument::StyleRuleChanged(StyleSheet* aSheet,
     DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent,
                                "StyleRuleChanged",
                                mRule,
-                               aStyleRule ? aStyleRule->GetDOMRule() : nullptr);
+                               aStyleRule);
   }
 }
 
@@ -5212,8 +5222,7 @@ nsDocument::StyleRuleAdded(StyleSheet* aSheet,
     DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent,
                                "StyleRuleAdded",
                                mRule,
-                               aStyleRule ? aStyleRule->GetDOMRule()
-                                          : nullptr);
+                               aStyleRule);
   }
 }
 
@@ -5227,8 +5236,7 @@ nsDocument::StyleRuleRemoved(StyleSheet* aSheet,
     DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent,
                                "StyleRuleRemoved",
                                mRule,
-                               aStyleRule ? aStyleRule->GetDOMRule()
-                                          : nullptr);
+                               aStyleRule);
   }
 }
 

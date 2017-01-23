@@ -16,10 +16,6 @@ SOURCES += [
 
 Library('xpcomglue')
 
-EXPORTS += [
-    'nsXPCOMGlue.h',
-]
-
 SDK_LIBRARY = True
 
 FORCE_STATIC_LIB = True

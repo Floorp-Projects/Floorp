@@ -209,8 +209,6 @@ add_task(async function test_track_delete() {
 
 add_task(async function test_dont_track_expiration() {
   _("Expirations are not tracked.");
-  let uriToExpire = await addVisit("to_expire");
-  let guidToExpire = engine._store.GUIDForUri(uriToExpire);
   let uriToRemove = await addVisit("to_remove");
   let guidToRemove = engine._store.GUIDForUri(uriToRemove);
 
