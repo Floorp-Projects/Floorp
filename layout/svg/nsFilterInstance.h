@@ -228,21 +228,20 @@ private:
    * Creates a SourceSurface for either the FillPaint or StrokePaint graph
    * nodes
    */
-  DrawResult BuildSourcePaint(SourceInfo *aPrimitive,
-                            DrawTarget* aTargetDT);
+  DrawResult BuildSourcePaint(SourceInfo *aPrimitive);
 
   /**
    * Creates a SourceSurface for either the FillPaint and StrokePaint graph
    * nodes, fills its contents and assigns it to mFillPaint.mSourceSurface and
    * mStrokePaint.mSourceSurface respectively.
    */
-  DrawResult BuildSourcePaints(DrawTarget* aTargetDT);
+  DrawResult BuildSourcePaints();
 
   /**
    * Creates the SourceSurface for the SourceGraphic graph node, paints its
    * contents, and assigns it to mSourceGraphic.mSourceSurface.
    */
-  DrawResult BuildSourceImage(DrawTarget* aTargetDT);
+  DrawResult BuildSourceImage();
 
   /**
    * Build the list of FilterPrimitiveDescriptions that describes the filter's
