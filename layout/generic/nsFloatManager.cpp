@@ -629,33 +629,10 @@ nsFloatManager::CircleShapeInfo::CircleShapeInfo(
     aShapeBoxRect.GetPhysicalRect(aWM, aContainerSize);
   nsPoint physicalCenter =
     ShapeUtils::ComputeCircleOrEllipseCenter(aBasicShape, physicalShapeBoxRect);
-  mRadius = ShapeUtils::ComputeCircleRadius(aBasicShape, physicalCenter,
-                                            physicalShapeBoxRect);
+  nscoord radius = ShapeUtils::ComputeCircleRadius(aBasicShape, physicalCenter,
+                                                   physicalShapeBoxRect);
+  mRadii = nsSize(radius, radius);
   mCenter = ConvertPhysicalToLogical(aWM, physicalCenter, aContainerSize);
-}
-
-nscoord
-nsFloatManager::CircleShapeInfo::LineLeft(WritingMode aWM,
-                                          const nscoord aBStart,
-                                          const nscoord aBEnd) const
-{
-  nscoord lineLeftDiff =
-    ComputeEllipseLineInterceptDiff(BStart(), BEnd(),
-                                    mRadius, mRadius, mRadius, mRadius,
-                                    aBStart, aBEnd);
-  return mCenter.x - mRadius + lineLeftDiff;
-}
-
-nscoord
-nsFloatManager::CircleShapeInfo::LineRight(WritingMode aWM,
-                                           const nscoord aBStart,
-                                           const nscoord aBEnd) const
-{
-  nscoord lineRightDiff =
-    ComputeEllipseLineInterceptDiff(BStart(), BEnd(),
-                                    mRadius, mRadius, mRadius, mRadius,
-                                    aBStart, aBEnd);
-  return mCenter.x + mRadius - lineRightDiff;
 }
 
 /////////////////////////////////////////////////////////////////////////////
