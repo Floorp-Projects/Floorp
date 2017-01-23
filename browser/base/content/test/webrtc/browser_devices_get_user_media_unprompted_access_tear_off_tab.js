@@ -39,13 +39,14 @@ var gTests = [
     info("request audio+video and check if there is no prompt");
     yield promiseRequestDevice(true, true, null, null, win.gBrowser.selectedBrowser);
     yield promiseObserverCalled("getUserMedia:request");
-    yield promiseNoPopupNotification("webRTC-shareDevices");
-    yield expectObserverCalled("getUserMedia:response:allow");
-    yield expectObserverCalled("recording-device-events");
+    let promises = [promiseNoPopupNotification("webRTC-shareDevices"),
+                    promiseObserverCalled("getUserMedia:response:allow"),
+                    promiseObserverCalled("recording-device-events")];
+    yield Promise.all(promises);
 
-    let promises = [promiseObserverCalled("recording-device-events"),
-                    promiseObserverCalled("recording-device-events"),
-                    promiseObserverCalled("recording-window-ended")];
+    promises = [promiseObserverCalled("recording-device-events"),
+                promiseObserverCalled("recording-device-events"),
+                promiseObserverCalled("recording-window-ended")];
     yield BrowserTestUtils.closeWindow(win);
     yield Promise.all(promises);
 
