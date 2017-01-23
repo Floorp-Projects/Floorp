@@ -1360,21 +1360,21 @@ function getInternals(obj)
 
     var internals = callFunction(std_WeakMap_get, internalsMap, obj);
 
-    assert(internals.type !== "partial", "must have been successfully initialized");
-    var lazyData = internals.lazyData;
-    if (!lazyData)
-        return internals.internalProps;
+    // If internal properties have already been computed, use them.
+    var internalProps = maybeInternalProperties(internals);
+    if (internalProps)
+        return internalProps;
 
-    var internalProps;
+    // Otherwise it's time to fully create them.
     var type = internals.type;
     if (type === "Collator")
-        internalProps = resolveCollatorInternals(lazyData)
+        internalProps = resolveCollatorInternals(internals.lazyData)
     else if (type === "DateTimeFormat")
-        internalProps = resolveDateTimeFormatInternals(lazyData)
-    else if (type === "PluralRules")
-        internalProps = resolvePluralRulesInternals(lazyData)
+        internalProps = resolveDateTimeFormatInternals(internals.lazyData)
+    else if (type === "NumberFormat")
+        internalProps = resolveNumberFormatInternals(internals.lazyData);
     else
-        internalProps = resolveNumberFormatInternals(lazyData);
+        internalProps = resolvePluralRulesInternals(internals.lazyData)
     setInternalProperties(internals, internalProps);
     return internalProps;
 }
@@ -2797,7 +2797,7 @@ function dateTimeFormatFormatToBind() {
     var x = (date === undefined) ? std_Date_now() : ToNumber(date);
 
     // Step 1.a.iii.
-    return intl_FormatDateTime(this, x, false);
+    return intl_FormatDateTime(this, x, /* formatToParts = */ false);
 }
 
 /**
@@ -2836,7 +2836,7 @@ function Intl_DateTimeFormat_formatToParts() {
     var x = (date === undefined) ? std_Date_now() : ToNumber(date);
 
     // Step 1.a.iii.
-    return intl_FormatDateTime(this, x, true);
+    return intl_FormatDateTime(this, x, /* formatToParts = */ true);
 }
 
 
@@ -2960,7 +2960,9 @@ function resolveICUPattern(pattern, result) {
     }
 }
 
+
 /********** Intl.PluralRules **********/
+
 
 /**
  * PluralRules internal properties.
@@ -3181,45 +3183,88 @@ function Intl_PluralRules_resolvedOptions() {
 }
 
 
+/********** Intl **********/
+
+
+/**
+ * 8.2.1 Intl.getCanonicalLocales ( locales )
+ *
+ * ES2017 Intl draft rev 947aa9a0c853422824a0c9510d8f09be3eb416b9
+ */
 function Intl_getCanonicalLocales(locales) {
-  let codes = CanonicalizeLocaleList(locales);
-  let result = [];
+    // Step 1.
+    var localeList = CanonicalizeLocaleList(locales);
 
-  let len = codes.length;
-  let k = 0;
+    // Step 2 (Inlined CreateArrayFromList).
+    var array = [];
 
-  while (k < len) {
-    _DefineDataProperty(result, k, codes[k]);
-    k++;
-  }
-  return result;
-}
+    for (var n = 0, len = localeList.length; n < len; n++)
+        _DefineDataProperty(array, n, localeList[n]);
 
-function Intl_getCalendarInfo(locales) {
-  const requestedLocales = CanonicalizeLocaleList(locales);
-
-  const DateTimeFormat = dateTimeFormatInternalProperties;
-  const localeData = DateTimeFormat.localeData;
-
-  const localeOpt = new Record();
-  localeOpt.localeMatcher = "best fit";
-
-  const r = ResolveLocale(callFunction(DateTimeFormat.availableLocales, DateTimeFormat),
-                          requestedLocales,
-                          localeOpt,
-                          DateTimeFormat.relevantExtensionKeys,
-                          localeData);
-
-  const result = intl_GetCalendarInfo(r.locale);
-  result.calendar = r.ca;
-  result.locale = r.locale;
-
-  return result;
+    return array;
 }
 
 /**
- * This function is a custom method designed after Intl API, but currently
- * not part of the spec or spec proposal.
+ * This function is a custom function in the style of the standard Intl.*
+ * functions, that isn't part of any spec or proposal yet.
+ *
+ * Returns an object with the following properties:
+ *   locale:
+ *     The actual resolved locale.
+ *
+ *   calendar:
+ *     The default calendar of the resolved locale.
+ *
+ *   firstDayOfWeek:
+ *     The first day of the week for the resolved locale.
+ *
+ *   minDays:
+ *     The minimum number of days in a week for the resolved locale.
+ *
+ *   weekendStart:
+ *     The day considered the beginning of a weekend for the resolved locale.
+ *
+ *   weekendEnd:
+ *     The day considered the end of a weekend for the resolved locale.
+ *
+ * Days are encoded as integers in the range 1=Sunday to 7=Saturday.
+ */
+function Intl_getCalendarInfo(locales) {
+    // 1. Let requestLocales be ? CanonicalizeLocaleList(locales).
+    const requestedLocales = CanonicalizeLocaleList(locales);
+
+    const DateTimeFormat = dateTimeFormatInternalProperties;
+
+    // 2. Let localeData be %DateTimeFormat%.[[localeData]].
+    const localeData = DateTimeFormat.localeData;
+
+    // 3. Let localeOpt be a new Record.
+    const localeOpt = new Record();
+
+    // 4. Set localeOpt.[[localeMatcher]] to "best fit".
+    localeOpt.localeMatcher = "best fit";
+
+    // 5. Let r be ResolveLocale(%DateTimeFormat%.[[availableLocales]],
+    //    requestedLocales, localeOpt,
+    //    %DateTimeFormat%.[[relevantExtensionKeys]], localeData).
+    const r = ResolveLocale(callFunction(DateTimeFormat.availableLocales, DateTimeFormat),
+                            requestedLocales,
+                            localeOpt,
+                            DateTimeFormat.relevantExtensionKeys,
+                            localeData);
+
+    // 6. Let result be GetCalendarInfo(r.[[locale]]).
+    const result = intl_GetCalendarInfo(r.locale);
+    _DefineDataProperty(result, "calendar", r.ca);
+    _DefineDataProperty(result, "locale", r.locale);
+
+    // 7. Return result.
+    return result;
+}
+
+/**
+ * This function is a custom function in the style of the standard Intl.*
+ * functions, that isn't part of any spec or proposal yet.
  * We want to use it internally to retrieve translated values from CLDR in
  * order to ensure they're aligned with what Intl API returns.
  *
@@ -3265,8 +3310,9 @@ function Intl_getDisplayNames(locales, options) {
     // 4. Let localeData be %DateTimeFormat%.[[localeData]].
     const localeData = DateTimeFormat.localeData;
 
-    // 5. Let opt be a new Record.
+    // 5. Let localeOpt be a new Record.
     const localeOpt = new Record();
+
     // 6. Set localeOpt.[[localeMatcher]] to "best fit".
     localeOpt.localeMatcher = "best fit";
 
@@ -3280,6 +3326,7 @@ function Intl_getDisplayNames(locales, options) {
 
     // 8. Let style be ? GetOption(options, "style", "string", « "long", "short", "narrow" », "long").
     const style = GetOption(options, "style", "string", ["long", "short", "narrow"], "long");
+
     // 9. Let keys be ? Get(options, "keys").
     let keys = options.keys;
 
@@ -3298,8 +3345,10 @@ function Intl_getDisplayNames(locales, options) {
     // |intl_ComputeDisplayNames| may infallibly access the list's length via
     // |ArrayObject::length|.)
     let processedKeys = [];
+
     // 13. Let len be ? ToLength(? Get(keys, "length")).
     let len = ToLength(keys.length);
+
     // 14. Let i be 0.
     // 15. Repeat, while i < len
     for (let i = 0; i < len; i++) {

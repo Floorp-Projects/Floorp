@@ -262,7 +262,7 @@ intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp);
  *
  * Spec: ECMAScript Internationalization API Specification, 11.3.2.
  *
- * Usage: formatted = intl_FormatNumber(numberFormat, x)
+ * Usage: formatted = intl_FormatNumber(numberFormat, x, formatToParts)
  */
 extern MOZ_MUST_USE bool
 intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp);
@@ -358,10 +358,11 @@ intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp);
  *
  * Spec: ECMAScript Internationalization API Specification, 12.3.2.
  *
- * Usage: formatted = intl_FormatDateTime(dateTimeFormat, x)
+ * Usage: formatted = intl_FormatDateTime(dateTimeFormat, x, formatToParts)
  */
 extern MOZ_MUST_USE bool
 intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp);
+
 
 /******************** PluralRules ********************/
 
@@ -400,6 +401,9 @@ intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp);
  */
 extern MOZ_MUST_USE bool
 intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp);
+
+
+/******************** Intl ********************/
 
 /**
  * Returns a plain object with calendar information for a single valid locale
