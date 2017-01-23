@@ -331,7 +331,6 @@ this.Heartbeat = class {
 
   close() {
     this.notificationBox.removeNotification(this.notice);
-    this.cleanup();
   }
 
   cleanup() {
