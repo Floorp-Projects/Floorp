@@ -38,7 +38,6 @@ EXPORTS.mozilla.dom += [
 ]
 
 EXPORTS.mozilla += [
-    'PreallocatedProcessManager.h',
     'ProcessHangMonitor.h',
     'ProcessHangMonitorIPC.h',
     'ProcessPriorityManager.h',
@@ -57,7 +56,6 @@ UNIFIED_SOURCES += [
     'nsIContentChild.cpp',
     'nsIContentParent.cpp',
     'PermissionMessageUtils.cpp',
-    'PreallocatedProcessManager.cpp',
     'ProcessPriorityManager.cpp',
     'ScreenManagerParent.cpp',
     'StructuredCloneData.cpp',
