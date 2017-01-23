@@ -56,6 +56,12 @@ var AboutReaderListener = {
     return content.document.documentURI.startsWith("about:reader");
   },
 
+  get isErrorPage() {
+    return content.document.documentURI.startsWith("about:neterror") ||
+        content.document.documentURI.startsWith("about:certerror") ||
+        content.document.documentURI.startsWith("about:blocked");
+  },
+
   handleEvent: function(aEvent) {
     if (aEvent.originalTarget.defaultView != content) {
       return;
@@ -100,13 +106,16 @@ var AboutReaderListener = {
     }
   },
   updateReaderButton: function(forceNonArticle) {
-    if (!ReaderMode.isEnabledForParseOnLoad || this.isAboutReader ||
+    // Do not show Reader View icon on error pages (bug 1320900)
+    if (this.isErrorPage) {
+        sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: false });
+    } else if (!ReaderMode.isEnabledForParseOnLoad || this.isAboutReader ||
         !(content.document instanceof content.HTMLDocument) ||
         content.document.mozSyntheticDocument) {
       return;
+    } else {
+        this.scheduleReadabilityCheckPostPaint(forceNonArticle);
     }
-
-    this.scheduleReadabilityCheckPostPaint(forceNonArticle);
   },
 
   cancelPotentialPendingReadabilityCheck: function() {

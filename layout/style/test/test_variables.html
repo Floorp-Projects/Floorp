@@ -29,6 +29,9 @@
 <style id="test7">
 </style>
 
+<style id="test8">
+</style>
+
 <script>
 var tests = [
   function() {
@@ -99,9 +102,20 @@ var tests = [
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1154356
     var test7 = document.getElementById("test7");
     test7.textContent = "p { --weird\\;name: green; }";
-    is(test7.sheet.cssRules[0].style.cssText, "--weird\\;name:  green;");
+    is(test7.sheet.cssRules[0].style.cssText, "--weird\\;name: green;");
     test7.textContent = "p { --0: green; }";
-    is(test7.sheet.cssRules[0].style.cssText, "--0:  green;");
+    is(test7.sheet.cssRules[0].style.cssText, "--0: green;");
+  },
+
+  function() {
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1330172
+    var test8 = document.getElementById("test8");
+    test8.textContent = "p { --a:inHerit; }";
+    is(test8.sheet.cssRules[0].style.cssText, "--a: inherit;");
+    test8.textContent = "p { --b: initial!important; }";
+    is(test8.sheet.cssRules[0].style.cssText, "--b: initial !important;");
+    test8.textContent = "p { --c:   UNSET  !important }";
+    is(test8.sheet.cssRules[0].style.cssText, "--c: unset !important;");
   },
 ];
 

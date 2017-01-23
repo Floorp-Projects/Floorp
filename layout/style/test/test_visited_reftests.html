@@ -32,6 +32,7 @@ var gTests = [
   // assumed to be complete when loaded, but we poll for visited link
   // coloring on the TEST (first file) until the test passes.
   "== pseudo-classes-02.svg pseudo-classes-02-ref.svg",
+  "needs-focus == caret-color-on-visited-1.html caret-color-on-visited-1-ref.html",
   "!= color-on-link-1-ref.html color-on-visited-1-ref.html",
   "== color-on-link-1.html color-on-link-1-ref.html",
   "== color-on-link-before-1.html color-on-link-1-ref.html",
@@ -85,14 +86,6 @@ var gTests = [
   "== mathml-links.html mathml-links-ref.html",
 ];
 
-// Maintain a reference count of how many things we're waiting for until
-// we can say the tests are done.
-var gDelayCount = 0;
-function AddFinishDependency()
-  { ++gDelayCount; }
-function RemoveFinishDependency()
-  { if (--gDelayCount == 0) SimpleTest.finish(); }
-
 // We record the maximum number of times we had to look at a test before
 // it switched to the passing state (though we assume it's 10 to start
 // rather than 0 so that we have a reasonable default).  Then we make a
@@ -102,107 +95,94 @@ function RemoveFinishDependency()
 var gMaxPassingTries = 10;
 var gTimeoutFactor = 10;
 
-function loadVisitedPage()
-{
-  var element = document.createElement("iframe");
-  element.addEventListener("load", visitedPageLoad);
-  element.src = "css-visited/visited-page.html";
-  document.body.appendChild(element);
-  AddFinishDependency();
-}
-
-function visitedPageLoad()
-{
-  for (var i = 0; i < gTests.length; ++i) {
-    startTest(i);
-  }
-  RemoveFinishDependency();
-}
-
-function takeSnapshot(iframe_element)
-{
-  return snapshotWindow(iframe_element.contentWindow, false);
-}
-
-function passes(op, shot1, shot2)
-{
-  var [correct, s1, s2] = compareSnapshots(shot1, shot2, op == "==");
-  return correct;
-}
-
-function startTest(i)
-{
-  var testLine = gTests[i];
-  var splitData = testLine.split(" ");
-  var testData =
-    { op: splitData[0], test: splitData[1], reference: splitData[2] };
-  var tries = 0;
-
-  // Maintain state specific to this test in the closure exposed to all
-  // the functions nested inside this one.
-
-  function startIframe(url)
-  {
+function startIframe(url) {
+  return new Promise(resolve => {
     var element = document.createElement("iframe");
-    element.addEventListener("load", handleLoad);
+    element.addEventListener("load", () => {
+      element.contentDocument.fonts.ready.then(() => {
+        resolve(element.contentWindow);
+      });
+    }, {once: true});
     // smaller than normal reftests, but enough for these
     element.setAttribute("style", "width: 30em; height: 10em");
     element.src = "css-visited/" + url;
     document.body.appendChild(element);
-    function handleLoad(event)
-    {
-      iframe.loaded = true;
-      if (iframe == reference) {
-        reference.snapshot = takeSnapshot(element);
-      }
-      var other = (iframe == test) ? reference : test;
-      if (other.loaded) {
-        // Always wait at least 100ms, so that any test that switches
-        // from passing to failing when the asynchronous link coloring
-        // happens should fail at least some of the time.
-        setTimeout(checkTest, 100);
-      }
-    }
-    function checkTest()
-    {
-      var test_snapshot = takeSnapshot(test.element);
-      if (passes(testData.op, test_snapshot, reference.snapshot)) {
-        if (tries > gMaxPassingTries) {
-          gMaxPassingTries = tries;
-        }
-        report(true);
-      } else {
-        ++tries;
-        if (tries > gMaxPassingTries * gTimeoutFactor) {
-          info("Giving up after " + tries + " tries, " +
-               "maxp=" + gMaxPassingTries +
-               "fact=" + gTimeoutFactor);
-          report(false);
-        } else {
-          // Links might not have been colored yet.  Try again in 100ms.
-          setTimeout(checkTest, 100);
-        }
-      }
-    }
-    function report(result)
-    {
-      ok(result, "(" + i + ") " +
-                 testData.op + " " + testData.test + " " + testData.reference);
-      RemoveFinishDependency();
-    }
-    var iframe = { element: element, loaded: false };
-
-    return iframe;
-  }
-
-  AddFinishDependency();
-  var test = startIframe(testData.test);
-  var reference = startIframe(testData.reference);
+  });
 }
 
-SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout("untriaged");
-loadVisitedPage();
+async function runTests() {
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.requestFlakyTimeout("async link coloring");
+  // Set caret to a known size, for tests of :visited caret-color styling
+  await SpecialPowers.pushPrefEnv({'set': [['ui.caretWidth', 16]]});
+  await startIframe("visited-page.html");
+  await Promise.all(gTests.map(runTest));
+  SimpleTest.finish();
+}
+
+function passes(equal, shot1, shot2)
+{
+  let [correct] = compareSnapshots(shot1, shot2, equal);
+  return correct;
+}
+
+function waitFor100ms() {
+  return new Promise(resolve => setTimeout(resolve, 100));
+}
+
+async function runTest(testLine) {
+  let splitData = testLine.split(" ");
+  let isEqual;
+  let needsFocus = false;
+  while (true) {
+    let op = splitData.shift();
+    if (op == "needs-focus") {
+      needsFocus = true;
+    } else if (op == "==" || op == "!=") {
+      isEqual = op == "==";
+      break;
+    } else {
+      ok(false, "Unknown syntax");
+      return;
+    }
+  }
+  let [testFile, refFile] = splitData;
+
+  let promiseTestWin = startIframe(testFile);
+  let promiseRefWin = startIframe(refFile);
+  let refSnapshot = snapshotWindow(await promiseRefWin);
+  let testWindow = await promiseTestWin;
+  // Always wait at least 100ms, so that any test that switches
+  // from passing to failing when the asynchronous link coloring
+  // happens should fail at least some of the time.
+  await waitFor100ms();
+
+  let tries;
+  let testSnapshot;
+  for (tries = 0; tries < gMaxPassingTries * gTimeoutFactor; ++tries) {
+    if (needsFocus) {
+      await SimpleTest.promiseFocus(testWindow, false);
+    }
+    testSnapshot = snapshotWindow(testWindow, true);
+    if (passes(isEqual, testSnapshot, refSnapshot)) {
+      if (tries > gMaxPassingTries) {
+        gMaxPassingTries = tries;
+      }
+      break;
+    }
+    // Links might not have been colored yet. Try again in 100ms.
+    await waitFor100ms();
+  }
+
+  let result = assertSnapshots(testSnapshot, refSnapshot,
+                               isEqual, null, testFile, refFile);
+  if (!result) {
+    info(`Gave up after ${tries} tries, ` +
+         `maxp=${gMaxPassingTries}, fact=${gTimeoutFactor}`);
+  }
+}
+
+runTests();
 
 </script>
 </pre>

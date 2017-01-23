@@ -5188,6 +5188,8 @@ pref("browser.safebrowsing.id", "navclient-auto-ffox");
 pref("browser.safebrowsing.id", "Firefox");
 #endif
 
+pref("browser.safebrowsing.temporary.take_v4_completion_result", false);
+
 // Turn off Spatial navigation by default.
 pref("snav.enabled", false);
 
@@ -5556,4 +5558,4 @@ pref("prompts.authentication_dialog_abuse_limit", 3);
 // Enable the Storage management in about:preferences and persistent-storage permission request
 // To enable the DOM implementation, turn on "dom.storageManager.enabled"
 pref("browser.storageManager.enabled", false);
-pref("dom.IntersectionObserver.enabled", true);
+pref("dom.IntersectionObserver.enabled", false);
