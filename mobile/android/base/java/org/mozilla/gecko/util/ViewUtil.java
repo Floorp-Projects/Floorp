@@ -6,6 +6,7 @@ package org.mozilla.gecko.util;
 
 import android.annotation.TargetApi;
 import android.content.res.TypedArray;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.v4.text.TextUtilsCompat;
 import android.support.v4.view.MarginLayoutParamsCompat;
@@ -27,7 +28,18 @@ public class ViewUtil {
      *
      * Because of platform limitations a square ripple is used on Android 4.
      */
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     public static void enableTouchRipple(final View view) {
+        final TypedArray backgroundDrawableArray;
+        if (AppConstants.Versions.feature21Plus) {
+            backgroundDrawableArray = view.getContext().obtainStyledAttributes(new int[] { R.attr.selectableItemBackgroundBorderless });
+        } else {
+            backgroundDrawableArray = view.getContext().obtainStyledAttributes(new int[] { R.attr.selectableItemBackground });
+        }
+        final Drawable backgroundDrawable = backgroundDrawableArray.getDrawable(0);
+        backgroundDrawableArray.recycle();
+
+
         // On certain older devices (e.g. ASUS TF200T, Motorola Droid 4), setting a background
         // drawable results in the padding getting wiped. We work around this by saving the pre-existing
         // padding, followed by restoring it at the end in view.setPadding().
@@ -46,24 +58,18 @@ public class ViewUtil {
             paddingBottom = view.getPaddingBottom();
         }
 
-        setTouchRipple(view);
+        // This call is deprecated, but the replacement setBackground(Drawable) isn't available
+        // until API 16.
+        if (AppConstants.Versions.feature16Plus) {
+            view.setBackground(backgroundDrawable);
+        } else {
+            view.setBackgroundDrawable(backgroundDrawable);
+        }
 
+        // Restore the padding on certain devices, as explained above:
         if (!AppConstants.Versions.feature21Plus) {
             view.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom);
         }
-    }
-
-    private static void setTouchRipple(final View view) {
-        final TypedArray backgroundDrawableArray;
-        if (AppConstants.Versions.feature21Plus) {
-            backgroundDrawableArray = view.getContext().obtainStyledAttributes(new int[] { R.attr.selectableItemBackgroundBorderless });
-        } else {
-            backgroundDrawableArray = view.getContext().obtainStyledAttributes(new int[] { R.attr.selectableItemBackground });
-        }
-
-        // This call is deprecated, but the replacement setBackground(Drawable) isn't available
-        // until API 16.
-        view.setBackgroundDrawable(backgroundDrawableArray.getDrawable(0));
     }
 
     /**
