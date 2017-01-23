@@ -346,6 +346,13 @@ CompositorBridgeChild::RecvCompositorUpdated(const uint64_t& aLayersId,
   } else if (aLayersId != 0) {
     if (dom::TabChild* child = dom::TabChild::GetFrom(aLayersId)) {
       child->CompositorUpdated(aNewIdentifier);
+
+      // If we still get device reset here, something must wrong when creating
+      // d3d11 devices.
+      if (gfxPlatform::GetPlatform()->DidRenderingDeviceReset()) {
+        gfxCriticalError() << "Unexpected reset device processing when \
+                               updating compositor.";
+      }
     }
     if (!mCanSend) {
       return true;
