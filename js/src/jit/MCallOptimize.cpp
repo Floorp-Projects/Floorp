@@ -111,6 +111,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
       // Intl natives.
       case InlinableNative::IntlIsCollator:
         return inlineHasClass(callInfo, &CollatorObject::class_);
+      case InlinableNative::IntlIsNumberFormat:
+        return inlineHasClass(callInfo, &NumberFormatObject::class_);
       case InlinableNative::IntlIsPluralRules:
         return inlineHasClass(callInfo, &PluralRulesObject::class_);
 

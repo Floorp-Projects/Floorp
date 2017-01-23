@@ -1852,10 +1852,12 @@ function resolveNumberFormatInternals(lazyNumberFormatData) {
 
 
 /**
- * Returns an object containing the NumberFormat internal properties of |obj|,
- * or throws a TypeError if |obj| isn't NumberFormat-initialized.
+ * Returns an object containing the NumberFormat internal properties of |obj|.
  */
 function getNumberFormatInternals(obj, methodName) {
+    assert(IsObject(obj), "getNumberFormatInternals called with non-object");
+    assert(IsNumberFormat(obj), "getNumberFormatInternals called with non-NumberFormat");
+
     var internals = getIntlObjectInternals(obj, "NumberFormat", methodName);
     assert(internals.type === "NumberFormat", "bad type escaped getIntlObjectInternals");
 
@@ -1869,6 +1871,25 @@ function getNumberFormatInternals(obj, methodName) {
     setInternalProperties(internals, internalProps);
     return internalProps;
 }
+
+
+/**
+ * UnwrapNumberFormat(nf)
+ */
+function UnwrapNumberFormat(nf, methodName) {
+    // Step 1.
+    if ((!IsObject(nf) || !IsNumberFormat(nf)) && nf instanceof GetNumberFormatConstructor()) {
+        nf = nf[intlFallbackSymbol()];
+    }
+
+    // Step 2.
+    if (!IsObject(nf) || !IsNumberFormat(nf))
+        ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "NumberFormat", methodName, "NumberFormat");
+
+    // Step 3.
+    return nf;
+}
+
 
 /**
  * Applies digit options used for number formatting onto the intl object.
@@ -1920,12 +1941,13 @@ function SetNumberFormatDigitOptions(lazyData, options, mnfdDefault, mxfdDefault
  *
  * Spec: ECMAScript Internationalization API Specification, 11.1.1.
  */
-function InitializeNumberFormat(numberFormat, locales, options) {
-    assert(IsObject(numberFormat), "InitializeNumberFormat");
+function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
+    assert(IsObject(numberFormat), "InitializeNumberFormat called with non-object");
+    assert(IsNumberFormat(numberFormat), "InitializeNumberFormat called with non-NumberFormat");
 
-    // Step 1.
-    if (isInitializedIntlObject(numberFormat))
-        ThrowTypeError(JSMSG_INTL_OBJECT_REINITED);
+    // Steps 1-2 (These steps are no longer required and should be removed
+    // from the spec; https://github.com/tc39/ecma402/issues/115).
+    assert(!isInitializedIntlObject(numberFormat), "numberFormat mustn't be initialized");
 
     // Step 2.
     var internals = initializeIntlObject(numberFormat);
@@ -2031,6 +2053,18 @@ function InitializeNumberFormat(numberFormat, locales, options) {
     // We've done everything that must be done now: mark the lazy data as fully
     // computed and install it.
     setLazyData(internals, "NumberFormat", lazyNumberFormatData);
+
+    if (numberFormat !== thisValue && thisValue instanceof GetNumberFormatConstructor()) {
+        if (!IsObject(thisValue))
+            ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, typeof thisValue);
+
+        _DefineDataProperty(thisValue, intlFallbackSymbol(), numberFormat,
+                            ATTR_NONENUMERABLE | ATTR_NONCONFIGURABLE | ATTR_NONWRITABLE);
+
+        return thisValue;
+    }
+
+    return numberFormat;
 }
 
 
@@ -2127,29 +2161,32 @@ function numberFormatFormatToBind(value) {
  * Spec: ECMAScript Internationalization API Specification, 11.3.2.
  */
 function Intl_NumberFormat_format_get() {
-    // Check "this NumberFormat object" per introduction of section 11.3.
-    var internals = getNumberFormatInternals(this, "format");
+    // Steps 1-3.
+    var nf = UnwrapNumberFormat(this, "format");
 
-    // Step 1.
+    var internals = getNumberFormatInternals(nf, "format");
+
+    // Step 4.
     if (internals.boundFormat === undefined) {
-        // Step 1.a.
+        // Step 4.a.
         var F = numberFormatFormatToBind;
 
-        // Step 1.b-d.
-        var bf = callFunction(FunctionBind, F, this);
+        // Steps 4.b-d.
+        var bf = callFunction(FunctionBind, F, nf);
         internals.boundFormat = bf;
     }
-    // Step 2.
+
+    // Step 5.
     return internals.boundFormat;
 }
 _SetCanonicalName(Intl_NumberFormat_format_get, "get format");
 
 
 function Intl_NumberFormat_formatToParts(value) {
-    // Step 1.
-    var nf = this;
+    // Steps 1-3.
+    var nf = UnwrapNumberFormat(this, "formatToParts");
 
-    // Steps 2-3.
+    // Ensure the NumberFormat internals are resolved.
     getNumberFormatInternals(nf, "formatToParts");
 
     // Step 4.
@@ -2166,8 +2203,10 @@ function Intl_NumberFormat_formatToParts(value) {
  * Spec: ECMAScript Internationalization API Specification, 11.3.3 and 11.4.
  */
 function Intl_NumberFormat_resolvedOptions() {
-    // Check "this NumberFormat object" per introduction of section 11.3.
-    var internals = getNumberFormatInternals(this, "resolvedOptions");
+    // Invoke |UnwrapNumberFormat| per introduction of section 11.3.
+    var nf = UnwrapNumberFormat(this, "resolvedOptions");
+
+    var internals = getNumberFormatInternals(nf, "resolvedOptions");
 
     var result = {
         locale: internals.locale,
