@@ -10,6 +10,7 @@
 #include "MediaPrefs.h"
 #include "PDMFactory.h"
 #include "WebMDemuxer.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/ContentChild.h"
@@ -57,6 +58,7 @@ VP9Benchmark::IsVP9DecodeFast()
                         Preferences::GetUint("media.benchmark.timeout", 1000))
                     });
     estimiser->Run()->Then(
+      // Non-DocGroup version of AbstractThread::MainThread for utility function.
       AbstractThread::MainThread(), __func__,
       [](uint32_t aDecodeFps) {
         if (XRE_IsContentProcess()) {

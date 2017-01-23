@@ -10,21 +10,21 @@
 #include "nsIXPCScriptable.h"
 
 #define DOM_BASE_SCRIPTABLE_FLAGS                                          \
-  (nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY |                          \
-   nsIXPCScriptable::USE_JSSTUB_FOR_DELPROPERTY |                          \
-   nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY |                          \
-   nsIXPCScriptable::ALLOW_PROP_MODS_TO_PROTOTYPE |                        \
-   nsIXPCScriptable::DONT_ASK_INSTANCE_FOR_SCRIPTABLE |                    \
-   nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES)
+  (XPC_SCRIPTABLE_USE_JSSTUB_FOR_ADDPROPERTY |                             \
+   XPC_SCRIPTABLE_USE_JSSTUB_FOR_DELPROPERTY |                             \
+   XPC_SCRIPTABLE_USE_JSSTUB_FOR_SETPROPERTY |                             \
+   XPC_SCRIPTABLE_ALLOW_PROP_MODS_TO_PROTOTYPE |                           \
+   XPC_SCRIPTABLE_DONT_ASK_INSTANCE_FOR_SCRIPTABLE |                       \
+   XPC_SCRIPTABLE_DONT_REFLECT_INTERFACE_NAMES)
 
 #define DEFAULT_SCRIPTABLE_FLAGS                                           \
   (DOM_BASE_SCRIPTABLE_FLAGS |                                             \
-   nsIXPCScriptable::WANT_RESOLVE |                                        \
-   nsIXPCScriptable::WANT_PRECREATE)
+   XPC_SCRIPTABLE_WANT_RESOLVE |                                           \
+   XPC_SCRIPTABLE_WANT_PRECREATE)
 
 #define DOM_DEFAULT_SCRIPTABLE_FLAGS                                       \
   (DEFAULT_SCRIPTABLE_FLAGS |                                              \
-   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |                           \
-   nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY)
+   XPC_SCRIPTABLE_DONT_ENUM_QUERY_INTERFACE |                              \
+   XPC_SCRIPTABLE_CLASSINFO_INTERFACES_ONLY)
 
 #endif /* nsIDOMClassInfo_h___ */

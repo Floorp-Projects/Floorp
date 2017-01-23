@@ -208,6 +208,8 @@ public:
     // since otherwise nsJSUtils::EvaluateString will set it up for us.
     compileOptions.setNoScriptRval(true);
 
+    JSAutoCompartment comp(cx, globalObj);
+
     JS::Rooted<JS::Value> unused(cx);
     if (!JS::Evaluate(cx, compileOptions, buffer, &unused)) {
       ErrorResult error;

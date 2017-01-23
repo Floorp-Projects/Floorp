@@ -8,7 +8,7 @@
  * properties are (re)stored as disabled. Disallowed features must be
  * re-enabled when the tab is re-used by another tab restoration.
  */
-add_task(function docshell_capabilities() {
+add_task(function* docshell_capabilities() {
   let tab = yield createTab();
   let browser = tab.linkedBrowser;
   let docShell = browser.docShell;
@@ -69,8 +69,9 @@ add_task(function docshell_capabilities() {
   gBrowser.removeTab(tab);
 });
 
-function createTab() {
+async function createTab() {
   let tab = gBrowser.addTab("about:mozilla");
   let browser = tab.linkedBrowser;
-  return promiseBrowserLoaded(browser).then(() => tab);
+  await promiseBrowserLoaded(browser);
+  return tab;
 }

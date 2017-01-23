@@ -3007,17 +3007,17 @@ js::InitStringClass(JSContext* cx, HandleObject obj)
 {
     MOZ_ASSERT(obj->isNative());
 
-    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
+    Handle<GlobalObject*> global = obj.as<GlobalObject>();
 
     Rooted<JSString*> empty(cx, cx->runtime()->emptyString);
-    RootedObject proto(cx, global->createBlankPrototype(cx, &StringObject::class_));
+    RootedObject proto(cx, GlobalObject::createBlankPrototype(cx, global, &StringObject::class_));
     if (!proto || !proto->as<StringObject>().init(cx, empty))
         return nullptr;
 
     /* Now create the String function. */
     RootedFunction ctor(cx);
-    ctor = global->createConstructor(cx, StringConstructor, cx->names().String, 1,
-                                     AllocKind::FUNCTION, &jit::JitInfo_String);
+    ctor = GlobalObject::createConstructor(cx, StringConstructor, cx->names().String, 1,
+                                           AllocKind::FUNCTION, &jit::JitInfo_String);
     if (!ctor)
         return nullptr;
 

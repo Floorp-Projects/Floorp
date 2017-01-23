@@ -600,11 +600,11 @@ GetDynamicName(JSContext* cx, JSObject* envChain, JSString* str, Value* vp)
         return;
     }
 
-    Shape* shape = nullptr;
+    PropertyResult prop;
     JSObject* scope = nullptr;
     JSObject* pobj = nullptr;
-    if (LookupNameNoGC(cx, atom->asPropertyName(), envChain, &scope, &pobj, &shape)) {
-        if (FetchNameNoGC(pobj, shape, MutableHandleValue::fromMarkedLocation(vp)))
+    if (LookupNameNoGC(cx, atom->asPropertyName(), envChain, &scope, &pobj, &prop)) {
+        if (FetchNameNoGC(pobj, prop, MutableHandleValue::fromMarkedLocation(vp)))
             return;
     }
 

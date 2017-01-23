@@ -83,8 +83,10 @@ TEST_F(MPITest, MpiCmpConstTest) {
           "FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632550"),
       16);
 
+#ifdef CT_VERIF
   mp_taint(&b);
   mp_taint(&c);
+#endif
 
   uint32_t runs = 5000000;
   uint32_t time_b = 0, time_c = 0;

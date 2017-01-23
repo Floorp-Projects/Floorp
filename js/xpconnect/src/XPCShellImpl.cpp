@@ -1192,11 +1192,11 @@ public:
 NS_IMPL_ISUPPORTS(TestGlobal, nsIXPCTestNoisy, nsIXPCScriptable)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
-#define XPC_MAP_CLASSNAME           TestGlobal
-#define XPC_MAP_QUOTED_CLASSNAME   "TestGlobal"
-#define XPC_MAP_FLAGS               nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY |\
-                                    nsIXPCScriptable::USE_JSSTUB_FOR_DELPROPERTY |\
-                                    nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY
+#define XPC_MAP_CLASSNAME         TestGlobal
+#define XPC_MAP_QUOTED_CLASSNAME "TestGlobal"
+#define XPC_MAP_FLAGS (XPC_SCRIPTABLE_USE_JSSTUB_FOR_ADDPROPERTY |\
+                       XPC_SCRIPTABLE_USE_JSSTUB_FOR_DELPROPERTY |\
+                       XPC_SCRIPTABLE_USE_JSSTUB_FOR_SETPROPERTY)
 #include "xpc_map_end.h" /* This will #undef the above */
 
 NS_IMETHODIMP TestGlobal::Squawk() {return NS_OK;}

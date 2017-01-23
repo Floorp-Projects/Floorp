@@ -19,8 +19,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-                                  "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
                                   "resource://gre/modules/BrowserUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionUtils",
@@ -660,6 +658,23 @@ HttpObserverManager = {
     return Object.assign(data, extraData);
   },
 
+  canModify(channel) {
+    let {isHostPermitted} = AddonManagerPermissions;
+
+    if (isHostPermitted(channel.URI.host)) {
+      return false;
+    }
+
+    let {loadInfo} = channel;
+    if (loadInfo && loadInfo.loadingPrincipal) {
+      let {loadingPrincipal} = loadInfo;
+
+      return loadingPrincipal.URI && !isHostPermitted(loadingPrincipal.URI.host);
+    }
+
+    return true;
+  },
+
   runChannelListener(channel, loadContext = null, kind, extraData = null) {
     let handlerResults = [];
     let requestHeaders;
@@ -685,6 +700,7 @@ HttpObserverManager = {
       let includeStatus = (["headersReceived", "onRedirect", "onStart", "onStop"].includes(kind) &&
                            channel instanceof Ci.nsIHttpChannel);
 
+      let canModify = this.canModify(channel);
       let commonData = null;
       let uri = channel.URI;
       let requestBody;
@@ -720,11 +736,7 @@ HttpObserverManager = {
         try {
           let result = callback(data);
 
-          if (result && typeof result === "object" && opts.blocking
-              && !AddonManagerPermissions.isHostPermitted(uri.host)
-              && (!loadInfo || !loadInfo.loadingPrincipal
-                  || !loadInfo.loadingPrincipal.URI
-                  || !AddonManagerPermissions.isHostPermitted(loadInfo.loadingPrincipal.URI.host))) {
+          if (canModify && result && typeof result === "object" && opts.blocking) {
             handlerResults.push({opts, result});
           }
         } catch (e) {
@@ -843,14 +855,8 @@ HttpObserverManager = {
 };
 
 var onBeforeRequest = {
-  get allowedOptions() {
-    delete this.allowedOptions;
-    this.allowedOptions = ["blocking"];
-    if (!AppConstants.RELEASE_OR_BETA) {
-      this.allowedOptions.push("requestBody");
-    }
-    return this.allowedOptions;
-  },
+  allowedOptions: ["blocking", "requestBody"],
+
   addListener(callback, filter = null, opt_extraInfoSpec = null) {
     let opts = parseExtra(opt_extraInfoSpec, this.allowedOptions);
     opts.filter = parseFilter(filter);

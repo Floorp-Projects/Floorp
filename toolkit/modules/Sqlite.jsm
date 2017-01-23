@@ -679,6 +679,14 @@ ConnectionData.prototype = Object.freeze({
       return;
     }
 
+    function bindParam(obj, key, val) {
+      let isBlob = Array.isArray(val);
+      let args = [key, val].concat(isBlob ? [val.length] : []);
+      let methodName =
+        `bind${isBlob ? "Blob" : ""}By${typeof key == "number" ? "Index" : "Name"}`;
+      obj[methodName](...args);
+    }
+
     if (Array.isArray(params)) {
       // It's an array of separate params.
       if (params.length && (typeof(params[0]) == "object")) {
@@ -686,7 +694,7 @@ ConnectionData.prototype = Object.freeze({
         for (let p of params) {
           let bindings = paramsArray.newBindingParams();
           for (let [key, value] of Object.entries(p)) {
-            bindings.bindByName(key, value);
+            bindParam(bindings, key, value);
           }
           paramsArray.addParams(bindings);
         }
@@ -697,7 +705,7 @@ ConnectionData.prototype = Object.freeze({
 
       // Indexed params.
       for (let i = 0; i < params.length; i++) {
-        statement.bindByIndex(i, params[i]);
+        bindParam(statement, i, params[i]);
       }
       return;
     }
@@ -705,7 +713,7 @@ ConnectionData.prototype = Object.freeze({
     // Named params.
     if (params && typeof(params) == "object") {
       for (let k in params) {
-        statement.bindByName(k, params[k]);
+        bindParam(statement, k, params[k]);
       }
       return;
     }

@@ -65,7 +65,6 @@ add_task(async function hmac_error_during_404() {
 
   let collectionsHelper = track_collections_helper();
   let upd = collectionsHelper.with_updated_collection;
-  let collections = collectionsHelper.collections;
   let handlers = {
     "/1.1/foo/info/collections": collectionsHelper.handler,
     "/1.1/foo/storage/meta/global": upd("meta", global.handler()),

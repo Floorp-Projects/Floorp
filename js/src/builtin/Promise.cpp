@@ -2691,7 +2691,7 @@ PromiseTask::executeAndFinish(JSContext* cx)
 static JSObject*
 CreatePromisePrototype(JSContext* cx, JSProtoKey key)
 {
-    return cx->global()->createBlankPrototype(cx, &PromiseObject::protoClass_);
+    return GlobalObject::createBlankPrototype(cx, cx->global(), &PromiseObject::protoClass_);
 }
 
 static const JSFunctionSpec promise_methods[] = {

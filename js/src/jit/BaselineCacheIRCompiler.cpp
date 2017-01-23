@@ -103,6 +103,7 @@ class MOZ_RAII AutoStubFrame
     }
 
     void enter(MacroAssembler& masm, Register scratch, CallCanGC canGC = CallCanGC::CanGC) {
+        MOZ_ASSERT(compiler.allocator.stackPushed() == 0);
         if (compiler.engine_ == ICStubEngine::Baseline) {
             EmitBaselineEnterStubFrame(masm, scratch);
 #ifdef DEBUG
@@ -663,6 +664,9 @@ bool
 BaselineCacheIRCompiler::callTypeUpdateIC(AutoStubFrame& stubFrame, Register obj, ValueOperand val,
                                           Register scratch, LiveGeneralRegisterSet saveRegs)
 {
+    // Ensure the stack is empty for the VM call below.
+    allocator.discardStack(masm);
+
     // R0 contains the value that needs to be typechecked.
     MOZ_ASSERT(val == R0);
     MOZ_ASSERT(scratch == R1.scratchReg());

@@ -91,19 +91,13 @@ add_task(function* test_crash_in_previous_frameloader() {
         badptr.contents
       };
 
-      // Use a timeout to give the parent a little extra time
-      // to flip the remoteness of the browser. This has the
-      // potential to be a bit race-y, since in theory, the
-      // setTimeout could complete before the parent finishes
-      // the remoteness flip, which would mean we'd get the
-      // oop-browser-crashed event, and we'll fail here.
-      // Unfortunately, I can't find a way around that right
-      // now, since you cannot send a frameloader a message
-      // once its been replaced.
-      setTimeout(() => {
+      // When the parent flips the remoteness of the browser, the
+      // page should receive the pagehide event, which we'll then
+      // use to crash the frameloader.
+      addEventListener("pagehide", function() {
         dump("\nEt tu, Brute?\n");
         dies();
-      }, 0);
+      });
     });
 
     gBrowser.updateBrowserRemoteness(browser, false);

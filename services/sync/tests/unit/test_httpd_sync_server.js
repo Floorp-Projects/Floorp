@@ -57,8 +57,8 @@ add_test(function test_url_parsing() {
   do_check_eq(rest, undefined);
 
   parts = server.storageRE.exec("storage");
-  let storage, collection, id;
-  [all, storage, collection, id] = parts;
+  let collection;
+  [all, , collection, ] = parts;
   do_check_eq(all, "storage");
   do_check_eq(collection, undefined);
 

@@ -408,7 +408,7 @@ class ModuleEnvironmentObject : public EnvironmentObject
 
   private:
     static bool lookupProperty(JSContext* cx, HandleObject obj, HandleId id,
-                               MutableHandleObject objp, MutableHandleShape propp);
+                               MutableHandleObject objp, MutableHandle<PropertyResult> propp);
     static bool hasProperty(JSContext* cx, HandleObject obj, HandleId id, bool* foundp);
     static bool getProperty(JSContext* cx, HandleObject obj, HandleValue receiver, HandleId id,
                             MutableHandleValue vp);
@@ -895,7 +895,8 @@ class DebugEnvironmentProxy : public ProxyObject
 
     // Get a property by 'id', but returns sentinel values instead of throwing
     // on exceptional cases.
-    bool getMaybeSentinelValue(JSContext* cx, HandleId id, MutableHandleValue vp);
+    static bool getMaybeSentinelValue(JSContext* cx, Handle<DebugEnvironmentProxy*> env,
+                                      HandleId id, MutableHandleValue vp);
 
     // Returns true iff this is a function environment with its own this-binding
     // (all functions except arrow functions and generator expression lambdas).

@@ -30,16 +30,21 @@ queue.filter(task => {
     }
   }
 
-  if (task.tests == "bogo") {
-    // No BoGo tests on Windows.
+  if (task.tests == "bogo" || task.tests == "interop") {
+    // No windows
     if (task.platform == "windows2012-64") {
       return false;
     }
 
-    // No BoGo tests on ARM.
+    // No ARM
     if (task.collection == "arm-debug") {
       return false;
     }
+  }
+
+  // Temporarily disable SSL tests on ARM.
+  if (task.tests == "ssl" && task.collection == "arm-debug") {
+    return false;
   }
 
   // GYP builds with -Ddisable_libpkix=1 by default.
@@ -280,7 +285,7 @@ async function scheduleFuzzing() {
       "/bin/bash",
       "-c",
       "bin/checkout.sh && " +
-      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --fuzz"
+      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --fuzz=tls"
     ],
     artifacts: {
       public: {
@@ -316,31 +321,16 @@ async function scheduleFuzzing() {
 
   queue.scheduleTask(merge(base, {
     parent: task_build,
-    name: "Cert",
+    name: "QuickDER",
     command: [
       "/bin/bash",
       "-c",
       "bin/checkout.sh && nss/automation/taskcluster/scripts/fuzz.sh " +
-        "cert nss/fuzz/corpus/cert -max_total_time=300"
+        "quickder nss/fuzz/corpus/quickder -max_total_time=300"
     ],
     // Need a privileged docker container to remove this.
     env: {ASAN_OPTIONS: "detect_leaks=0"},
-    symbol: "SCert",
-    kind: "test"
-  }));
-
-  queue.scheduleTask(merge(base, {
-    parent: task_build,
-    name: "SPKI",
-    command: [
-      "/bin/bash",
-      "-c",
-      "bin/checkout.sh && nss/automation/taskcluster/scripts/fuzz.sh " +
-        "spki nss/fuzz/corpus/spki -max_total_time=300"
-    ],
-    // Need a privileged docker container to remove this.
-    env: {ASAN_OPTIONS: "detect_leaks=0"},
-    symbol: "SPKI",
+    symbol: "QuickDER",
     kind: "test"
   }));
 
@@ -363,7 +353,7 @@ async function scheduleTestBuilds() {
       "/bin/bash",
       "-c",
       "bin/checkout.sh && " +
-      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --test"
+      "nss/automation/taskcluster/scripts/build_gyp.sh -g -v --test --ct-verif"
     ],
     artifacts: {
       public: {
@@ -470,6 +460,9 @@ function scheduleTests(task_build, task_cert, test_base) {
   }));
   queue.scheduleTask(merge(no_cert_base, {
     name: "Bogo tests", symbol: "Bogo", tests: "bogo", cycle: "standard"
+  }));
+  queue.scheduleTask(merge(no_cert_base, {
+    name: "Interop tests", symbol: "Interop", tests: "interop", cycle: "standard"
   }));
   queue.scheduleTask(merge(no_cert_base, {
     name: "Chains tests", symbol: "Chains", tests: "chains"

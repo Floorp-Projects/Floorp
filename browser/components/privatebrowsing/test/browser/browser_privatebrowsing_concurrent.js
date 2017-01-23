@@ -17,7 +17,7 @@ add_task(function* setup() {
   });
 });
 
-add_task(function test() {
+add_task(function* test() {
   let prefix = 'http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/browser_privatebrowsing_concurrent_page.html';
 
   function getElts(browser) {

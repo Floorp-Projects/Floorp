@@ -594,9 +594,8 @@ ClientEngine.prototype = {
     if (!commandData) {
       this._log.error("Unknown command to send: " + command);
       return;
-    }
-    // Don't send a command with the wrong number of arguments.
-    else if (!args || args.length != commandData.args) {
+    } else if (!args || args.length != commandData.args) {
+      // Don't send a command with the wrong number of arguments.
       this._log.error("Expected " + commandData.args + " args for '" +
                       command + "', but got " + args);
       return;

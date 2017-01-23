@@ -289,14 +289,14 @@ void ProfilerMarker::StreamJSON(SpliceableJSONWriter& aWriter,
 // Verbosity control for the profiler.  The aim is to check env var
 // MOZ_PROFILER_VERBOSE only once.  However, we may need to temporarily
 // override that so as to print the profiler's help message.  That's
-// what moz_profiler_set_verbosity is for.
+// what profiler_set_verbosity is for.
 
 enum class ProfilerVerbosity : int8_t { UNCHECKED, NOTVERBOSE, VERBOSE };
 
 // Raced on, potentially
 static ProfilerVerbosity profiler_verbosity = ProfilerVerbosity::UNCHECKED;
 
-bool moz_profiler_verbose()
+bool profiler_verbose()
 {
   if (profiler_verbosity == ProfilerVerbosity::UNCHECKED) {
     if (getenv("MOZ_PROFILER_VERBOSE") != nullptr)
@@ -308,7 +308,7 @@ bool moz_profiler_verbose()
   return profiler_verbosity == ProfilerVerbosity::VERBOSE;
 }
 
-void moz_profiler_set_verbosity(ProfilerVerbosity pv)
+void profiler_set_verbosity(ProfilerVerbosity pv)
 {
    MOZ_ASSERT(pv == ProfilerVerbosity::UNCHECKED ||
               pv == ProfilerVerbosity::VERBOSE);
@@ -380,11 +380,11 @@ void read_profiler_env_vars()
 
   if (getenv(PROFILER_HELP)) {
      // Enable verbose output
-     moz_profiler_set_verbosity(ProfilerVerbosity::VERBOSE);
+     profiler_set_verbosity(ProfilerVerbosity::VERBOSE);
      profiler_usage();
-     // Now force the next enquiry of moz_profiler_verbose to re-query
+     // Now force the next enquiry of profiler_verbose to re-query
      // env var MOZ_PROFILER_VERBOSE.
-     moz_profiler_set_verbosity(ProfilerVerbosity::UNCHECKED);
+     profiler_set_verbosity(ProfilerVerbosity::UNCHECKED);
   }
 
   if (!set_profiler_interval(interval) ||
@@ -463,7 +463,13 @@ bool is_main_thread_name(const char* aName) {
 #endif
 
 void
-mozilla_sampler_log(const char *fmt, va_list args)
+profiler_log(const char* str)
+{
+  profiler_tracing("log", str, TRACING_EVENT);
+}
+
+void
+profiler_log(const char* fmt, va_list args)
 {
   if (profiler_is_active()) {
     // nsAutoCString AppendPrintf would be nicer but
@@ -496,7 +502,8 @@ mozilla_sampler_log(const char *fmt, va_list args)
 ////////////////////////////////////////////////////////////////////////
 // BEGIN externally visible functions
 
-void mozilla_sampler_init(void* stackTop)
+void
+profiler_init(void* stackTop)
 {
   sInitCount++;
 
@@ -507,7 +514,7 @@ void mozilla_sampler_init(void* stackTop)
   mozilla::tasktracer::InitTaskTracer();
 #endif
 
-  LOG("BEGIN mozilla_sampler_init");
+  LOG("BEGIN profiler_init");
   if (!tlsPseudoStack.init() || !tlsTicker.init()) {
     LOG("Failed to init.");
     return;
@@ -534,7 +541,7 @@ void mozilla_sampler_init(void* stackTop)
   // platform specific initialization
   OS::Startup();
 
-  set_stderr_callback(mozilla_sampler_log);
+  set_stderr_callback(profiler_log);
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
   if (mozilla::jni::IsFennec()) {
@@ -568,10 +575,11 @@ void mozilla_sampler_init(void* stackTop)
   profiler_start(PROFILE_DEFAULT_ENTRY, PROFILE_DEFAULT_INTERVAL,
                          features, MOZ_ARRAY_LENGTH(features),
                          threadFilters, MOZ_ARRAY_LENGTH(threadFilters));
-  LOG("END   mozilla_sampler_init");
+  LOG("END   profiler_init");
 }
 
-void mozilla_sampler_shutdown()
+void
+profiler_shutdown()
 {
   sInitCount--;
 
@@ -607,7 +615,8 @@ void mozilla_sampler_shutdown()
 #endif
 }
 
-mozilla::UniquePtr<char[]> mozilla_sampler_get_profile(double aSinceTime)
+mozilla::UniquePtr<char[]>
+profiler_get_profile(double aSinceTime)
 {
   GeckoSampler *t = tlsTicker.get();
   if (!t) {
@@ -617,7 +626,8 @@ mozilla::UniquePtr<char[]> mozilla_sampler_get_profile(double aSinceTime)
   return t->ToJSON(aSinceTime);
 }
 
-JSObject *mozilla_sampler_get_profile_data(JSContext *aCx, double aSinceTime)
+JSObject*
+profiler_get_profile_jsobject(JSContext *aCx, double aSinceTime)
 {
   GeckoSampler *t = tlsTicker.get();
   if (!t) {
@@ -627,8 +637,9 @@ JSObject *mozilla_sampler_get_profile_data(JSContext *aCx, double aSinceTime)
   return t->ToJSObject(aCx, aSinceTime);
 }
 
-void mozilla_sampler_get_profile_data_async(double aSinceTime,
-                                            mozilla::dom::Promise* aPromise)
+void
+profiler_get_profile_jsobject_async(double aSinceTime,
+                                    mozilla::dom::Promise* aPromise)
 {
   GeckoSampler *t = tlsTicker.get();
   if (NS_WARN_IF(!t)) {
@@ -638,24 +649,25 @@ void mozilla_sampler_get_profile_data_async(double aSinceTime,
   t->ToJSObjectAsync(aSinceTime, aPromise);
 }
 
-void mozilla_sampler_save_profile_to_file_async(double aSinceTime,
-						const char* aFileName)
+void
+profiler_save_profile_to_file_async(double aSinceTime, const char* aFileName)
 {
   nsCString filename(aFileName);
   NS_DispatchToMainThread(NS_NewRunnableFunction([=] () {
-	GeckoSampler *t = tlsTicker.get();
-	if (NS_WARN_IF(!t)) {
-	  return;
-	}
+    GeckoSampler *t = tlsTicker.get();
+    if (NS_WARN_IF(!t)) {
+      return;
+    }
 
-	t->ToFileAsync(filename, aSinceTime);
-      }));
+    t->ToFileAsync(filename, aSinceTime);
+  }));
 }
 
-void mozilla_sampler_get_profiler_start_params(int* aEntrySize,
-                                               double* aInterval,
-                                               mozilla::Vector<const char*>* aFilters,
-                                               mozilla::Vector<const char*>* aFeatures)
+void
+profiler_get_start_params(int* aEntrySize,
+                          double* aInterval,
+                          mozilla::Vector<const char*>* aFilters,
+                          mozilla::Vector<const char*>* aFeatures)
 {
   if (NS_WARN_IF(!aEntrySize) || NS_WARN_IF(!aInterval) ||
       NS_WARN_IF(!aFilters) || NS_WARN_IF(!aFeatures)) {
@@ -683,7 +695,8 @@ void mozilla_sampler_get_profiler_start_params(int* aEntrySize,
   }
 }
 
-void mozilla_sampler_get_gatherer(nsISupports** aRetVal)
+void
+profiler_get_gatherer(nsISupports** aRetVal)
 {
   if (!aRetVal) {
     return;
@@ -703,7 +716,8 @@ void mozilla_sampler_get_gatherer(nsISupports** aRetVal)
   t->GetGatherer(aRetVal);
 }
 
-void mozilla_sampler_save_profile_to_file(const char* aFilename)
+void
+profiler_save_profile_to_file(const char* aFilename)
 {
   GeckoSampler *t = tlsTicker.get();
   if (!t) {
@@ -721,8 +735,8 @@ void mozilla_sampler_save_profile_to_file(const char* aFilename)
   }
 }
 
-
-const char** mozilla_sampler_get_features()
+const char**
+profiler_get_features()
 {
   static const char* features[] = {
 #if defined(MOZ_PROFILING) && defined(HAVE_NATIVE_UNWIND)
@@ -768,12 +782,13 @@ const char** mozilla_sampler_get_features()
   return features;
 }
 
-void mozilla_sampler_get_buffer_info(uint32_t *aCurrentPosition, uint32_t *aTotalSize,
-                                     uint32_t *aGeneration)
+void
+profiler_get_buffer_info_helper(uint32_t *aCurrentPosition,
+                                uint32_t *aTotalSize,
+                                uint32_t *aGeneration)
 {
-  *aCurrentPosition = 0;
-  *aTotalSize = 0;
-  *aGeneration = 0;
+  // This function is called by profiler_get_buffer_info(), which has already
+  // zeroed the outparams.
 
   if (!stack_key_initialized)
     return;
@@ -786,12 +801,13 @@ void mozilla_sampler_get_buffer_info(uint32_t *aCurrentPosition, uint32_t *aTota
 }
 
 // Values are only honored on the first start
-void mozilla_sampler_start(int aProfileEntries, double aInterval,
-                           const char** aFeatures, uint32_t aFeatureCount,
-                           const char** aThreadNameFilters, uint32_t aFilterCount)
+void
+profiler_start(int aProfileEntries, double aInterval,
+               const char** aFeatures, uint32_t aFeatureCount,
+               const char** aThreadNameFilters, uint32_t aFilterCount)
 
 {
-  LOG("BEGIN mozilla_sampler_start");
+  LOG("BEGIN profiler_start");
 
   if (!stack_key_initialized)
     profiler_init(nullptr);
@@ -817,26 +833,26 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
   tlsTicker.set(t);
   t->Start();
   if (t->ProfileJS() || t->InPrivacyMode()) {
-      ::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
-      const std::vector<ThreadInfo*>& threads = t->GetRegisteredThreads();
+    ::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
+    const std::vector<ThreadInfo*>& threads = t->GetRegisteredThreads();
 
-      for (uint32_t i = 0; i < threads.size(); i++) {
-        ThreadInfo* info = threads[i];
-        if (info->IsPendingDelete()) {
-          continue;
-        }
-        ThreadProfile* thread_profile = info->Profile();
-        if (!thread_profile) {
-          continue;
-        }
-        thread_profile->GetPseudoStack()->reinitializeOnResume();
-        if (t->ProfileJS()) {
-          thread_profile->GetPseudoStack()->enableJSSampling();
-        }
-        if (t->InPrivacyMode()) {
-          thread_profile->GetPseudoStack()->mPrivacyMode = true;
-        }
+    for (uint32_t i = 0; i < threads.size(); i++) {
+      ThreadInfo* info = threads[i];
+      if (info->IsPendingDelete()) {
+        continue;
       }
+      ThreadProfile* thread_profile = info->Profile();
+      if (!thread_profile) {
+        continue;
+      }
+      thread_profile->GetPseudoStack()->reinitializeOnResume();
+      if (t->ProfileJS()) {
+        thread_profile->GetPseudoStack()->enableJSSampling();
+      }
+      if (t->InPrivacyMode()) {
+        thread_profile->GetPseudoStack()->mPrivacyMode = true;
+      }
+    }
   }
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
@@ -887,19 +903,20 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
     }
   }
 
-  LOG("END   mozilla_sampler_start");
+  LOG("END   profiler_start");
 }
 
-void mozilla_sampler_stop()
+void
+profiler_stop()
 {
-  LOG("BEGIN mozilla_sampler_stop");
+  LOG("BEGIN profiler_stop");
 
   if (!stack_key_initialized)
     return;
 
   GeckoSampler *t = tlsTicker.get();
   if (!t) {
-    LOG("END   mozilla_sampler_stop-early");
+    LOG("END   profiler_stop-early");
     return;
   }
 
@@ -931,10 +948,12 @@ void mozilla_sampler_stop()
       os->NotifyObservers(nullptr, "profiler-stopped", nullptr);
   }
 
-  LOG("END   mozilla_sampler_stop");
+  LOG("END   profiler_stop");
 }
 
-bool mozilla_sampler_is_paused() {
+bool
+profiler_is_paused()
+{
   if (Sampler::GetActiveSampler()) {
     return Sampler::GetActiveSampler()->IsPaused();
   } else {
@@ -942,7 +961,9 @@ bool mozilla_sampler_is_paused() {
   }
 }
 
-void mozilla_sampler_pause() {
+void
+profiler_pause()
+{
   if (Sampler::GetActiveSampler()) {
     Sampler::GetActiveSampler()->SetPaused(true);
     if (Sampler::CanNotifyObservers()) {
@@ -953,7 +974,9 @@ void mozilla_sampler_pause() {
   }
 }
 
-void mozilla_sampler_resume() {
+void
+profiler_resume()
+{
   if (Sampler::GetActiveSampler()) {
     Sampler::GetActiveSampler()->SetPaused(false);
     if (Sampler::CanNotifyObservers()) {
@@ -964,7 +987,8 @@ void mozilla_sampler_resume() {
   }
 }
 
-bool mozilla_sampler_feature_active(const char* aName)
+bool
+profiler_feature_active(const char* aName)
 {
   if (!profiler_is_active()) {
     return false;
@@ -989,22 +1013,26 @@ bool mozilla_sampler_feature_active(const char* aName)
   return false;
 }
 
-bool mozilla_sampler_is_active()
+bool
+profiler_is_active()
 {
   return sIsProfiling;
 }
 
-void mozilla_sampler_responsiveness(const mozilla::TimeStamp& aTime)
+void
+profiler_responsiveness(const mozilla::TimeStamp& aTime)
 {
   sLastTracerEvent = aTime;
 }
 
-void mozilla_sampler_frame_number(int frameNumber)
+void
+profiler_set_frame_number(int frameNumber)
 {
   sFrameNumber = frameNumber;
 }
 
-void mozilla_sampler_lock()
+void
+profiler_lock()
 {
   profiler_stop();
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
@@ -1012,17 +1040,19 @@ void mozilla_sampler_lock()
     os->NotifyObservers(nullptr, "profiler-locked", nullptr);
 }
 
-void mozilla_sampler_unlock()
+void
+profiler_unlock()
 {
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os)
     os->NotifyObservers(nullptr, "profiler-unlocked", nullptr);
 }
 
-bool mozilla_sampler_register_thread(const char* aName, void* aGuessStackTop)
+void
+profiler_register_thread(const char* aName, void* aGuessStackTop)
 {
   if (sInitCount == 0) {
-    return false;
+    return;
   }
 
 #if defined(MOZ_WIDGET_GONK) && !defined(MOZ_PROFILING)
@@ -1030,7 +1060,7 @@ bool mozilla_sampler_register_thread(const char* aName, void* aGuessStackTop)
   // is to build with profiling OR have the profiler
   // running on startup.
   if (!profiler_is_active()) {
-    return false;
+    return;
   }
 #endif
 
@@ -1039,10 +1069,11 @@ bool mozilla_sampler_register_thread(const char* aName, void* aGuessStackTop)
   tlsPseudoStack.set(stack);
   bool isMainThread = is_main_thread_name(aName);
   void* stackTop = GetStackTop(aGuessStackTop);
-  return Sampler::RegisterCurrentThread(aName, stack, isMainThread, stackTop);
+  Sampler::RegisterCurrentThread(aName, stack, isMainThread, stackTop);
 }
 
-void mozilla_sampler_unregister_thread()
+void
+profiler_unregister_thread()
 {
   // Don't check sInitCount count here -- we may be unregistering the
   // thread after the sampler was shut down.
@@ -1060,31 +1091,37 @@ void mozilla_sampler_unregister_thread()
   Sampler::UnregisterCurrentThread();
 }
 
-void mozilla_sampler_sleep_start() {
-    if (sInitCount == 0) {
-	return;
-    }
+void
+profiler_sleep_start()
+{
+  if (sInitCount == 0) {
+    return;
+  }
 
-    PseudoStack *stack = tlsPseudoStack.get();
-    if (stack == nullptr) {
-      return;
-    }
-    stack->setSleeping(1);
+  PseudoStack *stack = tlsPseudoStack.get();
+  if (stack == nullptr) {
+    return;
+  }
+  stack->setSleeping(1);
 }
 
-void mozilla_sampler_sleep_end() {
-    if (sInitCount == 0) {
-	return;
-    }
+void
+profiler_sleep_end()
+{
+  if (sInitCount == 0) {
+    return;
+  }
 
-    PseudoStack *stack = tlsPseudoStack.get();
-    if (stack == nullptr) {
-      return;
-    }
-    stack->setSleeping(0);
+  PseudoStack *stack = tlsPseudoStack.get();
+  if (stack == nullptr) {
+    return;
+  }
+  stack->setSleeping(0);
 }
 
-bool mozilla_sampler_is_sleeping() {
+bool
+profiler_is_sleeping()
+{
   if (sInitCount == 0) {
     return false;
   }
@@ -1095,18 +1132,42 @@ bool mozilla_sampler_is_sleeping() {
   return stack->isSleeping();
 }
 
-double mozilla_sampler_time(const mozilla::TimeStamp& aTime)
+void
+profiler_js_operation_callback()
+{
+  PseudoStack *stack = tlsPseudoStack.get();
+  if (!stack) {
+    return;
+  }
+
+  stack->jsOperationCallback();
+}
+
+double
+profiler_time(const mozilla::TimeStamp& aTime)
 {
   mozilla::TimeDuration delta = aTime - sStartTime;
   return delta.ToMilliseconds();
 }
 
-double mozilla_sampler_time()
+double
+profiler_time()
 {
-  return mozilla_sampler_time(mozilla::TimeStamp::Now());
+  return profiler_time(mozilla::TimeStamp::Now());
 }
 
-UniqueProfilerBacktrace mozilla_sampler_get_backtrace()
+bool
+profiler_in_privacy_mode()
+{
+  PseudoStack *stack = tlsPseudoStack.get();
+  if (!stack) {
+    return false;
+  }
+  return stack->mPrivacyMode;
+}
+
+UniqueProfilerBacktrace
+profiler_get_backtrace()
 {
   if (!stack_key_initialized)
     return nullptr;
@@ -1138,7 +1199,8 @@ ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace)
 // Fill the output buffer with the following pattern:
 // "Lable 1" "\0" "Label 2" "\0" ... "Label N" "\0" "\0"
 // TODO: use the unwinder instead of pseudo stack.
-void mozilla_sampler_get_backtrace_noalloc(char *output, size_t outputSize)
+void
+profiler_get_backtrace_noalloc(char *output, size_t outputSize)
 {
   MOZ_ASSERT(outputSize >= 2);
   char *bound = output + outputSize - 2;
@@ -1162,21 +1224,35 @@ void mozilla_sampler_get_backtrace_noalloc(char *output, size_t outputSize)
   }
 }
 
-void mozilla_sampler_tracing(const char* aCategory, const char* aInfo,
-                             TracingMetadata aMetaData)
+void
+profiler_tracing(const char* aCategory, const char* aInfo,
+                 TracingMetadata aMetaData)
 {
-  mozilla_sampler_add_marker(aInfo, new ProfilerMarkerTracing(aCategory, aMetaData));
+  // Don't insert a marker if we're not profiling, to avoid the heap copy
+  // (malloc).
+  if (!stack_key_initialized || !profiler_is_active()) {
+    return;
+  }
+
+  profiler_add_marker(aInfo, new ProfilerMarkerTracing(aCategory, aMetaData));
 }
 
-void mozilla_sampler_tracing(const char* aCategory, const char* aInfo,
-                             UniqueProfilerBacktrace aCause,
-                             TracingMetadata aMetaData)
+void
+profiler_tracing(const char* aCategory, const char* aInfo,
+                 UniqueProfilerBacktrace aCause, TracingMetadata aMetaData)
 {
-  mozilla_sampler_add_marker(aInfo, new ProfilerMarkerTracing(aCategory, aMetaData,
-                                                              mozilla::Move(aCause)));
+  // Don't insert a marker if we're not profiling, to avoid the heap copy
+  // (malloc).
+  if (!stack_key_initialized || !profiler_is_active()) {
+    return;
+  }
+
+  profiler_add_marker(aInfo, new ProfilerMarkerTracing(aCategory, aMetaData,
+                                                       mozilla::Move(aCause)));
 }
 
-void mozilla_sampler_add_marker(const char *aMarker, ProfilerMarkerPayload *aPayload)
+void
+profiler_add_marker(const char *aMarker, ProfilerMarkerPayload *aPayload)
 {
   // Note that aPayload may be allocated by the caller, so we need to make sure
   // that we free it at some point.

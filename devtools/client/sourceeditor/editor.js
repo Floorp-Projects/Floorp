@@ -51,6 +51,10 @@ const CM_STYLES = [
   "chrome://devtools/content/sourceeditor/codemirror/mozilla.css"
 ];
 
+CM_STYLES.push(
+  "chrome://devtools/content/sourceeditor/codemirror/old-debugger.css"
+);
+
 const CM_SCRIPTS = [
   "chrome://devtools/content/sourceeditor/codemirror/codemirror.bundle.js",
 ];

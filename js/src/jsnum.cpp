@@ -1209,15 +1209,16 @@ js::InitNumberClass(JSContext* cx, HandleObject obj)
     /* XXX must do at least once per new thread, so do it per JSContext... */
     FIX_FPU();
 
-    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
+    Handle<GlobalObject*> global = obj.as<GlobalObject>();
 
-    RootedObject numberProto(cx, global->createBlankPrototype(cx, &NumberObject::class_));
+    RootedObject numberProto(cx, GlobalObject::createBlankPrototype(cx, global,
+                                                                    &NumberObject::class_));
     if (!numberProto)
         return nullptr;
     numberProto->as<NumberObject>().setPrimitiveValue(0);
 
     RootedFunction ctor(cx);
-    ctor = global->createConstructor(cx, Number, cx->names().Number, 1);
+    ctor = GlobalObject::createConstructor(cx, Number, cx->names().Number, 1);
     if (!ctor)
         return nullptr;
 

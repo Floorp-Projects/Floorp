@@ -176,7 +176,8 @@ function testClone1() {
     var sab1 = b;
     var blob = serialize(sab1, []);
     var sab2 = deserialize(blob);
-    assertEq(sharedAddress(sab1), sharedAddress(sab2));
+    if (typeof sharedAddress != "undefined")
+	assertEq(sharedAddress(sab1), sharedAddress(sab2));
 }
 
 function testClone2() {
@@ -186,7 +187,8 @@ function testClone2() {
     var ia2 = deserialize(blob);
     assertEq(ia1.length, ia2.length);
     assertEq(ia1.buffer instanceof SharedArrayBuffer, true);
-    assertEq(sharedAddress(ia1.buffer), sharedAddress(ia2.buffer));
+    if (typeof sharedAddress != "undefined")
+	assertEq(sharedAddress(ia1.buffer), sharedAddress(ia2.buffer));
     ia1[10] = 37;
     assertEq(ia2[10], 37);
 }
@@ -212,7 +214,8 @@ function testRedundantTransfer() {
     var sab1 = b;
     var blob = serialize(sab1, [sab1]);
     var sab2 = deserialize(blob);
-    assertEq(sharedAddress(sab1), sharedAddress(sab2));
+    if (typeof sharedAddress != "undefined")
+	assertEq(sharedAddress(sab1), sharedAddress(sab2));
 }
 
 function testApplicable() {

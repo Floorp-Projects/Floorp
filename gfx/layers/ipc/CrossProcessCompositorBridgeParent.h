@@ -54,6 +54,7 @@ public:
   virtual mozilla::ipc::IPCResult RecvWillClose() override { return IPC_OK(); }
   virtual mozilla::ipc::IPCResult RecvPause() override { return IPC_OK(); }
   virtual mozilla::ipc::IPCResult RecvResume() override { return IPC_OK(); }
+  virtual mozilla::ipc::IPCResult RecvForceIsFirstPaint() override { return IPC_OK(); }
   virtual mozilla::ipc::IPCResult RecvNotifyChildCreated(const uint64_t& child) override;
   virtual mozilla::ipc::IPCResult RecvNotifyChildRecreated(const uint64_t& child) override { return IPC_FAIL_NO_REASON(this); }
   virtual mozilla::ipc::IPCResult RecvAdoptChild(const uint64_t& child) override { return IPC_FAIL_NO_REASON(this); }

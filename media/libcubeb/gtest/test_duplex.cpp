@@ -108,9 +108,11 @@ TEST(cubeb, duplex)
   input_params.format = STREAM_FORMAT;
   input_params.rate = 48000;
   input_params.channels = 1;
+  input_params.layout = CUBEB_LAYOUT_MONO;
   output_params.format = STREAM_FORMAT;
   output_params.rate = 48000;
   output_params.channels = 2;
+  output_params.layout = CUBEB_LAYOUT_STEREO;
 
   r = cubeb_get_min_latency(ctx, output_params, &latency_frames);
 

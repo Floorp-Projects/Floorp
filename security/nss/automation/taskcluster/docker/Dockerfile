@@ -12,6 +12,9 @@ RUN chmod +x /home/worker/bin/*
 ADD setup.sh /tmp/setup.sh
 RUN bash /tmp/setup.sh
 
+# Change user.
+USER worker
+
 # Env variables.
 ENV HOME /home/worker
 ENV SHELL /bin/bash
@@ -22,6 +25,9 @@ ENV LANG en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
 ENV HOST localhost
 ENV DOMSUF localdomain
+
+# Rust + Go
+ENV PATH "${PATH}:/home/worker/.cargo/bin/:/usr/lib/go-1.6/bin"
 
 # Set a default command for debugging.
 CMD ["/bin/bash", "--login"]

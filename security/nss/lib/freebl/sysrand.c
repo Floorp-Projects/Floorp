@@ -8,42 +8,9 @@
 
 #include "seccomon.h"
 
-#ifndef XP_WIN
-static size_t rng_systemFromNoise(unsigned char *dest, size_t maxLen);
-#endif
-
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #include "unix_rand.c"
 #endif
 #ifdef XP_WIN
 #include "win_rand.c"
-#endif
-#ifdef XP_OS2
-#include "os2_rand.c"
-#endif
-
-#ifndef XP_WIN
-/*
- * Normal RNG_SystemRNG() isn't available, use the system noise to collect
- * the required amount of entropy.
- */
-static size_t
-rng_systemFromNoise(unsigned char *dest, size_t maxLen)
-{
-    size_t retBytes = maxLen;
-
-    while (maxLen) {
-        size_t nbytes = RNG_GetNoise(dest, maxLen);
-
-        PORT_Assert(nbytes != 0);
-
-        dest += nbytes;
-        maxLen -= nbytes;
-
-        /* some hw op to try to introduce more entropy into the next
-         * RNG_GetNoise call */
-        rng_systemJitter();
-    }
-    return retBytes;
-}
 #endif

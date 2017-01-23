@@ -38,6 +38,9 @@ var { Toolbox } = require("devtools/client/framework/toolbox");
 const EXAMPLE_URL = "http://example.com/browser/devtools/client/debugger/new/test/mochitest/examples/";
 
 Services.prefs.setBoolPref("devtools.debugger.new-debugger-frontend", true);
+Services.prefs.clearUserPref("devtools.debugger.tabs")
+Services.prefs.clearUserPref("devtools.debugger.pending-selected-location")
+
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.debugger.new-debugger-frontend");
   delete window.resumeTest;
@@ -301,6 +304,8 @@ function createDebuggerContext(toolbox) {
  */
 function initDebugger(url, ...sources) {
   return Task.spawn(function* () {
+    Services.prefs.clearUserPref("devtools.debugger.tabs")
+    Services.prefs.clearUserPref("devtools.debugger.pending-selected-location")
     const toolbox = yield openNewTabAndToolbox(EXAMPLE_URL + url, "jsdebugger");
     return createDebuggerContext(toolbox);
   });
@@ -534,6 +539,7 @@ const keyMappings = {
   "Enter": { code: "VK_RETURN" },
   "Up": { code: "VK_UP" },
   "Down": { code: "VK_DOWN" },
+  "Escape": { code: "VK_ESCAPE" },
   pauseKey: { code: "VK_F8" },
   resumeKey: { code: "VK_F8" },
   stepOverKey: { code: "VK_F10" },
@@ -592,7 +598,7 @@ const selectors = {
   stepOver: ".stepOver.active",
   stepOut: ".stepOut.active",
   stepIn: ".stepIn.active",
-  toggleBreakpoints: ".toggleBreakpoints",
+  toggleBreakpoints: ".breakpoints-toggle",
   prettyPrintButton: ".prettyPrint",
   sourceFooter: ".source-footer",
   sourceNode: i => `.sources-list .tree-node:nth-child(${i})`,

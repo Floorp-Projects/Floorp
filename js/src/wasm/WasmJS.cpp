@@ -2098,7 +2098,7 @@ js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
     Handle<GlobalObject*> global = obj.as<GlobalObject>();
     MOZ_ASSERT(!global->isStandardClassResolved(JSProto_WebAssembly));
 
-    RootedObject proto(cx, global->getOrCreateObjectPrototype(cx));
+    RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
     if (!proto)
         return nullptr;
 

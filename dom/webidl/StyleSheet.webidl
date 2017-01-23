@@ -7,8 +7,6 @@
  * http://dev.w3.org/csswg/cssom/
  */
 
-interface CSSRule;
-
 interface StyleSheet {
   [Constant]
   readonly attribute DOMString type;

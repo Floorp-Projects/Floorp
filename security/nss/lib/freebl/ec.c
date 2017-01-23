@@ -566,6 +566,15 @@ ECDH_Derive(SECItem *publicValue,
         return SECFailure;
     }
 
+    /*
+     * Make sure the point is on the requested curve to avoid
+     * certain small subgroup attacks.
+     */
+    if (EC_ValidatePublicKey(ecParams, publicValue) != SECSuccess) {
+        PORT_SetError(SEC_ERROR_BAD_KEY);
+        return SECFailure;
+    }
+
     /* Perform curve specific multiplication using ECMethod */
     if (ecParams->fieldID.type == ec_field_plain) {
         const ECMethod *method;
@@ -579,10 +588,6 @@ ECDH_Derive(SECItem *publicValue,
         if (method == NULL || method->validate == NULL ||
             method->mul == NULL) {
             PORT_SetError(SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE);
-            return SECFailure;
-        }
-        if (method->validate(publicValue) != SECSuccess) {
-            PORT_SetError(SEC_ERROR_BAD_KEY);
             return SECFailure;
         }
         return method->mul(derivedSecret, privateValue, publicValue);
@@ -1002,9 +1007,14 @@ ECDSA_VerifyDigest(ECPublicKey *key, const SECItem *signature,
     }
     slen = signature->len / 2;
 
+    /*
+     * The incoming point has been verified in sftk_handlePublicKeyObject.
+     */
+
     SECITEM_AllocItem(NULL, &pointC, ecParams->pointSize);
-    if (pointC.data == NULL)
+    if (pointC.data == NULL) {
         goto cleanup;
+    }
 
     CHECK_MPI_OK(mp_init(&r_));
     CHECK_MPI_OK(mp_init(&s_));

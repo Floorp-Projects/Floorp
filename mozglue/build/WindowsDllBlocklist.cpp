@@ -757,8 +757,13 @@ DllBlocklist_Initialize()
   }
   sBlocklistInitAttempted = true;
 
+  // In order to be effective against AppInit DLLs, the blocklist must be
+  // initialized before user32.dll is loaded into the process (bug 932100).
   if (GetModuleHandleA("user32.dll")) {
     sUser32BeforeBlocklist = true;
+#ifdef DEBUG
+    printf_stderr("DLL blocklist was unable to intercept AppInit DLLs.\n");
+#endif
   }
 
   NtDllIntercept.Init("ntdll.dll");
@@ -773,7 +778,7 @@ DllBlocklist_Initialize()
   if (!ok) {
     sBlocklistInitFailed = true;
 #ifdef DEBUG
-    printf_stderr ("LdrLoadDll hook failed, no dll blocklisting active\n");
+    printf_stderr("LdrLoadDll hook failed, no dll blocklisting active\n");
 #endif
   }
 }

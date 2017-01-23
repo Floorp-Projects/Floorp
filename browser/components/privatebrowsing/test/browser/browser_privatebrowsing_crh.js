@@ -5,7 +5,7 @@
 // This test makes sure that the Clear Recent History menu item and command 
 // is disabled inside the private browsing mode.
 
-add_task(function test() {
+add_task(function* test() {
   function checkDisableOption(aPrivateMode, aWindow) {
     let crhCommand = aWindow.document.getElementById("Tools:Sanitize");
     ok(crhCommand, "The clear recent history command should exist");

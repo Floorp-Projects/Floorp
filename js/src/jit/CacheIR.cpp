@@ -267,7 +267,8 @@ CanAttachNativeGetProp(JSContext* cx, HandleObject obj, HandleId id,
     // only miss out on shape hashification, which is only a temporary perf cost.
     // The limits were arbitrarily set, anyways.
     JSObject* baseHolder = nullptr;
-    if (!LookupPropertyPure(cx, obj, id, &baseHolder, shape.address()))
+    PropertyResult prop;
+    if (!LookupPropertyPure(cx, obj, id, &baseHolder, &prop))
         return CanAttachNone;
 
     MOZ_ASSERT(!holder);
@@ -276,8 +277,9 @@ CanAttachNativeGetProp(JSContext* cx, HandleObject obj, HandleId id,
             return CanAttachNone;
         holder.set(&baseHolder->as<NativeObject>());
     }
+    shape.set(prop.maybeShape());
 
-    if (IsCacheableGetPropReadSlotForIonOrCacheIR(obj, holder, shape))
+    if (IsCacheableGetPropReadSlotForIonOrCacheIR(obj, holder, prop))
         return CanAttachReadSlot;
 
     // Idempotent ICs only support plain data properties, see
@@ -497,8 +499,8 @@ GetPropIRGenerator::tryAttachNative(HandleObject obj, ObjOperandId objId, Handle
 bool
 GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, HandleId id)
 {
-    // Attach a stub when the receiver is a WindowProxy and we are calling some
-    // kinds of JSNative getters on the Window object (the global object).
+    // Attach a stub when the receiver is a WindowProxy and we can do the lookup
+    // on the Window (the global object).
 
     if (!IsWindowProxy(obj))
         return false;
@@ -509,34 +511,49 @@ GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, H
     MOZ_ASSERT(obj->getClass() == cx_->maybeWindowProxyClass());
     MOZ_ASSERT(ToWindowIfWindowProxy(obj) == cx_->global());
 
-    // Now try to do the lookup on the Window (the current global) and see if
-    // it's a native getter.
+    // Now try to do the lookup on the Window (the current global).
     HandleObject windowObj = cx_->global();
     RootedShape shape(cx_);
     RootedNativeObject holder(cx_);
     NativeGetPropCacheability type = CanAttachNativeGetProp(cx_, windowObj, id, &holder, &shape, pc_,
                                                             engine_, canAttachGetter_,
                                                             isTemporarilyUnoptimizable_);
-    if (type != CanAttachCallGetter ||
-        !IsCacheableGetPropCallNative(windowObj, holder, shape))
-    {
+    switch (type) {
+      case CanAttachNone:
         return false;
+
+      case CanAttachReadSlot: {
+        maybeEmitIdGuard(id);
+        writer.guardClass(objId, GuardClassKind::WindowProxy);
+
+        ObjOperandId windowObjId = writer.loadObject(windowObj);
+        EmitReadSlotResult(writer, windowObj, holder, shape, windowObjId);
+        EmitReadSlotReturn(writer, windowObj, holder, shape);
+        return true;
+      }
+
+      case CanAttachCallGetter: {
+        if (!IsCacheableGetPropCallNative(windowObj, holder, shape))
+            return false;
+
+        // Make sure the native getter is okay with the IC passing the Window
+        // instead of the WindowProxy as |this| value.
+        JSFunction* callee = &shape->getterObject()->as<JSFunction>();
+        MOZ_ASSERT(callee->isNative());
+        if (!callee->jitInfo() || callee->jitInfo()->needsOuterizedThisObject())
+            return false;
+
+        // Guard the incoming object is a WindowProxy and inline a getter call based
+        // on the Window object.
+        maybeEmitIdGuard(id);
+        writer.guardClass(objId, GuardClassKind::WindowProxy);
+        ObjOperandId windowObjId = writer.loadObject(windowObj);
+        EmitCallGetterResult(writer, windowObj, holder, shape, windowObjId);
+        return true;
+      }
     }
 
-    // Make sure the native getter is okay with the IC passing the Window
-    // instead of the WindowProxy as |this| value.
-    JSFunction* callee = &shape->getterObject()->as<JSFunction>();
-    MOZ_ASSERT(callee->isNative());
-    if (!callee->jitInfo() || callee->jitInfo()->needsOuterizedThisObject())
-        return false;
-
-    // Guard the incoming object is a WindowProxy and inline a getter call based
-    // on the Window object.
-    maybeEmitIdGuard(id);
-    writer.guardClass(objId, GuardClassKind::WindowProxy);
-    ObjOperandId windowObjId = writer.loadObject(windowObj);
-    EmitCallGetterResult(writer, windowObj, holder, shape, windowObjId);
-    return true;
+    MOZ_CRASH("Unreachable");
 }
 
 bool
@@ -1334,7 +1351,6 @@ GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId, HandleId id)
     Handle<LexicalEnvironmentObject*> globalLexical = env_.as<LexicalEnvironmentObject>();
     MOZ_ASSERT(globalLexical->isGlobal());
 
-
     RootedNativeObject holder(cx_);
     RootedShape shape(cx_);
     if (!CanAttachGlobalName(cx_, globalLexical, id, &holder, &shape))
@@ -1362,7 +1378,8 @@ GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId, HandleId id)
         // prototype. Ignore the global lexical scope as it doesn't figure
         // into the prototype chain. We guard on the global lexical
         // scope's shape independently.
-        if (!IsCacheableGetPropReadSlotForIonOrCacheIR(&globalLexical->global(), holder, shape))
+        if (!IsCacheableGetPropReadSlotForIonOrCacheIR(&globalLexical->global(), holder,
+                                                       PropertyResult(shape)))
             return false;
 
         // Shape guard for global lexical.
@@ -1460,7 +1477,7 @@ GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId, HandleId id)
     }
 
     holder = &env->as<NativeObject>();
-    if (!IsCacheableGetPropReadSlotForIonOrCacheIR(holder, holder, shape))
+    if (!IsCacheableGetPropReadSlotForIonOrCacheIR(holder, holder, PropertyResult(shape)))
         return false;
     if (holder->getSlot(shape->slot()).isMagic())
         return false;
@@ -1498,7 +1515,8 @@ IRGenerator::maybeGuardInt32Index(const Value& index, ValOperandId indexId,
         if (index.isInt32()) {
             indexSigned = index.toInt32();
         } else {
-            if (!mozilla::NumberIsInt32(index.toDouble(), &indexSigned))
+            // We allow negative zero here.
+            if (!mozilla::NumberEqualsInt32(index.toDouble(), &indexSigned))
                 return false;
             if (!cx_->runtime()->jitSupportsFloatingPoint)
                 return false;
@@ -1535,6 +1553,7 @@ SetPropIRGenerator::SetPropIRGenerator(JSContext* cx, jsbytecode* pc, CacheKind 
     rhsVal_(rhsVal),
     isTemporarilyUnoptimizable_(isTemporarilyUnoptimizable),
     preliminaryObjectAction_(PreliminaryObjectAction::None),
+    updateStubGroup_(cx),
     updateStubId_(cx, JSID_EMPTY),
     needUpdateStub_(false)
 {}
@@ -1639,7 +1658,7 @@ SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj, ObjOperandId objId,
     else
         preliminaryObjectAction_ = PreliminaryObjectAction::Unlink;
 
-    setUpdateStubInfo(id);
+    setUpdateStubInfo(nobj->group(), id);
     EmitStoreSlotAndReturn(writer, objId, nobj, propShape, rhsId);
     return true;
 }
@@ -1663,7 +1682,9 @@ SetPropIRGenerator::tryAttachUnboxedExpandoSetSlot(HandleObject obj, ObjOperandI
     ObjOperandId expandoId = writer.guardAndLoadUnboxedExpando(objId);
     writer.guardShape(expandoId, expando->lastProperty());
 
-    setUpdateStubInfo(id);
+    // Property types must be added to the unboxed object's group, not the
+    // expando's group (it has unknown properties).
+    setUpdateStubInfo(obj->group(), id);
     EmitStoreSlotAndReturn(writer, expandoId, expando, propShape, rhsId);
     return true;
 }
@@ -1697,7 +1718,7 @@ SetPropIRGenerator::tryAttachUnboxedProperty(HandleObject obj, ObjOperandId objI
                                 rhsId);
     writer.returnFromIC();
 
-    setUpdateStubInfo(id);
+    setUpdateStubInfo(obj->group(), id);
     preliminaryObjectAction_ = PreliminaryObjectAction::Unlink;
     return true;
 }
@@ -1731,7 +1752,7 @@ SetPropIRGenerator::tryAttachTypedObjectProperty(HandleObject obj, ObjOperandId 
     writer.guardShape(objId, obj->as<TypedObject>().shape());
     writer.guardGroup(objId, obj->group());
 
-    setUpdateStubInfo(id);
+    setUpdateStubInfo(obj->group(), id);
 
     // Scalar types can always be stored without a type update stub.
     if (fieldDescr->is<ScalarTypeDescr>()) {

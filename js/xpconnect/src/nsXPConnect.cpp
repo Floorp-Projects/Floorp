@@ -499,7 +499,7 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     // Call into XPCWrappedNative to make a new global object, scope, and global
     // prototype.
     xpcObjectHelper helper(aCOMObj);
-    MOZ_ASSERT(helper.GetScriptableFlags() & nsIXPCScriptable::IS_GLOBAL_OBJECT);
+    MOZ_ASSERT(helper.GetScriptableFlags() & XPC_SCRIPTABLE_IS_GLOBAL_OBJECT);
     RefPtr<XPCWrappedNative> wrappedGlobal;
     nsresult rv =
         XPCWrappedNative::WrapNewGlobal(helper, aPrincipal,
