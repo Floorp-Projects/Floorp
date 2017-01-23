@@ -57,24 +57,22 @@ add_test(function test_user_agent_mobile() {
   });
 });
 
-// XXX - DISABLED BECAUSE getStorageRequest broken with browserid_manager
-// add_test(function test_auth() {
-//   let handler = httpd_handler(200, "OK");
-//   let server = httpd_setup({"/resource": handler});
+add_task(async function test_auth() {
+  let handler = httpd_handler(200, "OK");
+  let server = httpd_setup({"/resource": handler});
+  await configureIdentity({ username: "foo" }, server);
 
-//   configureIdentity();
+  let request = Service.getStorageRequest(server.baseURI + "/resource");
+  request.get(function(error) {
+    do_check_eq(error, null);
+    do_check_eq(this.response.status, 200);
+    do_check_true(has_hawk_header(handler.request));
 
-//   let request = Service.getStorageRequest(server.baseURI + "/resource");
-//   request.get(function(error) {
-//     do_check_eq(error, null);
-//     do_check_eq(this.response.status, 200);
-//     do_check_true(has_hawk_header(handler.request));
+    Svc.Prefs.reset("");
 
-//     Svc.Prefs.reset("");
-
-//     server.stop(run_next_test);
-//   });
-// });
+    server.stop(run_next_test);
+  });
+});
 
 /**
  *  The X-Weave-Timestamp header updates SyncStorageRequest.serverTime.
