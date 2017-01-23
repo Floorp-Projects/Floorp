@@ -372,6 +372,12 @@ private:
 
     static nscoord XInterceptAtY(const nscoord aY, const nscoord aRadiusX,
                                  const nscoord aRadiusY);
+
+    // Convert the coordinate space from physical to the logical space used
+    // in nsFloatManager, which is the same as FloatInfo::mRect.
+    static nsPoint ConvertPhysicalToLogical(mozilla::WritingMode aWM,
+                                            const nsPoint& aPoint,
+                                            const nsSize& aContainerSize);
   };
 
   // Implements shape-outside: <shape-box>.
@@ -438,6 +444,39 @@ private:
     nsPoint mCenter;
     // The radius of the circle in app units.
     nscoord mRadius;
+  };
+
+  // Implements shape-outside: ellipse().
+  class EllipseShapeInfo final : public ShapeInfo
+  {
+  public:
+    EllipseShapeInfo(mozilla::StyleBasicShape* const aBasicShape,
+                     const mozilla::LogicalRect& aShapeBoxRect,
+                     mozilla::WritingMode aWM,
+                     const nsSize& aContainerSize);
+
+    nscoord LineLeft(mozilla::WritingMode aWM,
+                     const nscoord aBStart,
+                     const nscoord aBEnd) const override;
+    nscoord LineRight(mozilla::WritingMode aWM,
+                      const nscoord aBStart,
+                      const nscoord aBEnd) const override;
+    nscoord BStart() const override { return mCenter.y - mRadii.height; }
+    nscoord BEnd() const override { return mCenter.y + mRadii.height; }
+    bool IsEmpty() const override { return mRadii.IsEmpty(); };
+
+    void Translate(nscoord aLineLeft, nscoord aBlockStart) override
+    {
+      mCenter.MoveBy(aLineLeft, aBlockStart);
+    }
+
+  private:
+    // The position of the center of the ellipse. The coordinate space is the
+    // same as FloatInfo::mRect.
+    nsPoint mCenter;
+    // The radii of the ellipse in app units. The width and height represent
+    // the line-axis and block-axis radii of the ellipse.
+    nsSize mRadii;
   };
 
   struct FloatInfo {
