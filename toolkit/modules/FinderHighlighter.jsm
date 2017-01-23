@@ -431,6 +431,10 @@ FinderHighlighter.prototype = {
       return;
     }
 
+    dict.animateOutline = true;
+    // Immediately finish running animations, if any.
+    this._finishOutlineAnimations(dict);
+
     if (foundRange !== dict.currentFoundRange || data.findAgain) {
       dict.previousFoundRange = dict.currentFoundRange;
       dict.currentFoundRange = foundRange;
@@ -439,22 +443,6 @@ FinderHighlighter.prototype = {
         this.show(window);
       else
         this._maybeCreateModalHighlightNodes(window);
-    }
-
-    let outlineNode = dict.modalHighlightOutline;
-    if (outlineNode && !this._isPageTooBig(dict)) {
-      let animation;
-      if (dict.animations) {
-        for (animation of dict.animations)
-          animation.finish();
-      }
-      dict.animations = [];
-      for (let i = dict.previousRangeRectsAndTexts.rectList.length - 1; i >= 0; --i) {
-        animation = outlineNode.setAnimationForElement(kModalOutlineId + i,
-          Cu.cloneInto(kModalOutlineAnim.keyframes, window), kModalOutlineAnim.duration);
-        animation.onfinish = function(idx) { dict.animations.splice(idx, 1); }.bind(null, i);
-        dict.animations.push(animation);
-      }
     }
 
     if (this._highlightAll)
@@ -476,10 +464,7 @@ FinderHighlighter.prototype = {
     }
 
     let dict = this.getForWindow(window.top);
-    if (dict.animations) {
-      for (let animation of dict.animations)
-        animation.finish();
-    }
+    this._finishOutlineAnimations(dict);
     dict.dynamicRangesSet.clear();
     dict.frames.clear();
     dict.modalHighlightRectsMap.clear();
@@ -1006,7 +991,32 @@ FinderHighlighter.prototype = {
         document.insertAnonymousContent(outlineBox);
     }
 
+    if (dict.animateOutline && !this._isPageTooBig(dict)) {
+      let animation;
+      dict.animations = new Set();
+      for (let i = rectsAndTexts.rectList.length - 1; i >= 0; --i) {
+        animation = dict.modalHighlightOutline.setAnimationForElement(kModalOutlineId + i,
+          Cu.cloneInto(kModalOutlineAnim.keyframes, window), kModalOutlineAnim.duration);
+        animation.onfinish = function() { dict.animations.delete(this); };
+        dict.animations.add(animation);
+      }
+    }
+    dict.animateOutline = false;
+
     dict.previousUpdatedRange = range;
+  },
+
+  /**
+   * Finish any currently playing animations on the found range outline node.
+   *
+   * @param {Object} dict Dictionary of properties belonging to the currently
+   *                      active window
+   */
+  _finishOutlineAnimations(dict) {
+    if (!dict.animations)
+      return;
+    for (let animation of dict.animations)
+      animation.finish();
   },
 
   /**
