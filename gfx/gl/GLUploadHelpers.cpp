@@ -161,30 +161,52 @@ TexSubImage2DWithoutUnpackSubimage(GLContext* gl,
     // isn't supported. We make a copy of the texture data we're using,
     // such that we're using the whole row of data in the copy. This turns
     // out to be more efficient than uploading row-by-row; see bug 698197.
-    unsigned char* newPixels = new unsigned char[width*height*pixelsize];
-    unsigned char* rowDest = newPixels;
-    const unsigned char* rowSource = (const unsigned char*)pixels;
-    for (int h = 0; h < height; h++) {
+    unsigned char* newPixels = new (fallible) unsigned char[width*height*pixelsize];
+
+    if (newPixels) {
+        unsigned char* rowDest = newPixels;
+        const unsigned char* rowSource = (const unsigned char*)pixels;
+        for (int h = 0; h < height; h++) {
             memcpy(rowDest, rowSource, width*pixelsize);
             rowDest += width*pixelsize;
             rowSource += stride;
-    }
+        }
 
-    stride = width*pixelsize;
-    gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
-                     std::min(GetAddressAlignment((ptrdiff_t)newPixels),
-                              GetAddressAlignment((ptrdiff_t)stride)));
-    gl->fTexSubImage2D(target,
-                       level,
-                       xoffset,
-                       yoffset,
-                       width,
-                       height,
-                       format,
-                       type,
-                       newPixels);
-    delete [] newPixels;
-    gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
+        stride = width*pixelsize;
+        gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
+                         std::min(GetAddressAlignment((ptrdiff_t)newPixels),
+                                  GetAddressAlignment((ptrdiff_t)stride)));
+        gl->fTexSubImage2D(target,
+                           level,
+                           xoffset,
+                           yoffset,
+                           width,
+                           height,
+                           format,
+                           type,
+                           newPixels);
+        delete [] newPixels;
+        gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
+
+    } else {
+        // If we did not have sufficient memory for the required
+        // temporary buffer, then fall back to uploading row-by-row.
+        const unsigned char* rowSource = (const unsigned char*)pixels;
+
+        gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT,
+                         std::min(GetAddressAlignment((ptrdiff_t)pixels),
+                                  GetAddressAlignment((ptrdiff_t)stride)));
+
+        for (int i = 0; i < height; i++) {
+            gl->fTexSubImage2D(target, level,
+                               xoffset, yoffset + i,
+                               width, 1,
+                               format, type, rowSource);
+            rowSource += stride;
+        }
+
+        gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
+    }
 }
 
 static void
