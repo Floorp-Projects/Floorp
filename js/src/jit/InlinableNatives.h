@@ -29,6 +29,7 @@
     _(AtomicsIsLockFree)            \
                                     \
     _(IntlIsCollator)               \
+    _(IntlIsDateTimeFormat)         \
     _(IntlIsNumberFormat)           \
     _(IntlIsPluralRules)            \
                                     \
