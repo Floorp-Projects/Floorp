@@ -28,6 +28,7 @@
     _(AtomicsXor)                   \
     _(AtomicsIsLockFree)            \
                                     \
+    _(IntlIsCollator)               \
     _(IntlIsPluralRules)            \
                                     \
     _(MathAbs)                      \

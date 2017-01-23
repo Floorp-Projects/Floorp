@@ -977,65 +977,35 @@ static const JSPropertySpec collator_properties[] = {
  * ES2017 Intl draft rev 94045d234762ad107a3d09bb6f7381a65f1a2f9b
  */
 static bool
-Collator(JSContext* cx, const CallArgs& args, bool construct)
+Collator(JSContext* cx, const CallArgs& args)
 {
-    RootedObject obj(cx);
+    // Step 1 (Handled by OrdinaryCreateFromConstructor fallback code).
 
-    // We're following ECMA-402 1st Edition when Collator is called because of
-    // backward compatibility issues.
-    // See https://github.com/tc39/ecma402/issues/57
-    if (!construct) {
-        // ES Intl 1st ed., 10.1.2.1 step 3
-        JSObject* intl = GlobalObject::getOrCreateIntlObject(cx, cx->global());
-        if (!intl)
+    // Steps 2-5 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
+    RootedObject proto(cx);
+    if (args.isConstructing() && !GetPrototypeFromCallableConstructor(cx, args, &proto))
+        return false;
+
+    if (!proto) {
+        proto = GlobalObject::getOrCreateCollatorPrototype(cx, cx->global());
+        if (!proto)
             return false;
-        RootedValue self(cx, args.thisv());
-        if (!self.isUndefined() && (!self.isObject() || self.toObject() != *intl)) {
-            // ES Intl 1st ed., 10.1.2.1 step 4
-            obj = ToObject(cx, self);
-            if (!obj)
-                return false;
-
-            // ES Intl 1st ed., 10.1.2.1 step 5
-            bool extensible;
-            if (!IsExtensible(cx, obj, &extensible))
-                return false;
-            if (!extensible)
-                return Throw(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE);
-        } else {
-            // ES Intl 1st ed., 10.1.2.1 step 3.a
-            construct = true;
-        }
     }
 
-    if (construct) {
-        // Steps 2-5 (Inlined 9.1.14, OrdinaryCreateFromConstructor).
-        RootedObject proto(cx);
-        if (args.isConstructing() && !GetPrototypeFromCallableConstructor(cx, args, &proto))
-            return false;
+    Rooted<CollatorObject*> collator(cx, NewObjectWithGivenProto<CollatorObject>(cx, proto));
+    if (!collator)
+        return false;
 
-        if (!proto) {
-            proto = GlobalObject::getOrCreateCollatorPrototype(cx, cx->global());
-            if (!proto)
-                return false;
-        }
-
-        obj = NewObjectWithGivenProto<CollatorObject>(cx, proto);
-        if (!obj)
-            return false;
-
-        obj->as<CollatorObject>().setReservedSlot(CollatorObject::UCOLLATOR_SLOT,
-                                                  PrivateValue(nullptr));
-    }
+    collator->setReservedSlot(CollatorObject::UCOLLATOR_SLOT, PrivateValue(nullptr));
 
     RootedValue locales(cx, args.get(0));
     RootedValue options(cx, args.get(1));
 
     // Step 6.
-    if (!IntlInitialize(cx, obj, cx->names().InitializeCollator, locales, options))
+    if (!IntlInitialize(cx, collator, cx->names().InitializeCollator, locales, options))
         return false;
 
-    args.rval().setObject(*obj);
+    args.rval().setObject(*collator);
     return true;
 }
 
@@ -1043,7 +1013,7 @@ static bool
 Collator(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return Collator(cx, args, args.isConstructing());
+    return Collator(cx, args);
 }
 
 bool
@@ -1052,9 +1022,8 @@ js::intl_Collator(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
     MOZ_ASSERT(!args.isConstructing());
-    // intl_Collator is an intrinsic for self-hosted JavaScript, so it cannot
-    // be used with "new", but it still has to be treated as a constructor.
-    return Collator(cx, args, true);
+
+    return Collator(cx, args);
 }
 
 void
@@ -1202,7 +1171,7 @@ js::intl_availableCollations(JSContext* cx, unsigned argc, Value* vp)
  * of the given Collator.
  */
 static UCollator*
-NewUCollator(JSContext* cx, HandleObject collator)
+NewUCollator(JSContext* cx, Handle<CollatorObject*> collator)
 {
     RootedValue value(cx);
 
@@ -1380,46 +1349,23 @@ js::intl_CompareStrings(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args[1].isString());
     MOZ_ASSERT(args[2].isString());
 
-    RootedObject collator(cx, &args[0].toObject());
+    Rooted<CollatorObject*> collator(cx, &args[0].toObject().as<CollatorObject>());
 
-    // Obtain a UCollator object, cached if possible.
+    // Obtain a cached UCollator object.
     // XXX Does this handle Collator instances from other globals correctly?
-    bool isCollatorInstance = collator->is<CollatorObject>();
-    UCollator* coll;
-    if (isCollatorInstance) {
-        void* priv =
-            collator->as<CollatorObject>().getReservedSlot(CollatorObject::UCOLLATOR_SLOT)
-                                          .toPrivate();
-        coll = static_cast<UCollator*>(priv);
-        if (!coll) {
-            coll = NewUCollator(cx, collator);
-            if (!coll)
-                return false;
-            collator->as<CollatorObject>().setReservedSlot(CollatorObject::UCOLLATOR_SLOT,
-                                                           PrivateValue(coll));
-        }
-    } else {
-        // There's no good place to cache the ICU collator for an object
-        // that has been initialized as a Collator but is not a Collator
-        // instance. One possibility might be to add a Collator instance as an
-        // internal property to each such object.
+    void* priv = collator->getReservedSlot(CollatorObject::UCOLLATOR_SLOT).toPrivate();
+    UCollator* coll = static_cast<UCollator*>(priv);
+    if (!coll) {
         coll = NewUCollator(cx, collator);
         if (!coll)
             return false;
+        collator->setReservedSlot(CollatorObject::UCOLLATOR_SLOT, PrivateValue(coll));
     }
 
     // Use the UCollator to actually compare the strings.
     RootedString str1(cx, args[1].toString());
     RootedString str2(cx, args[2].toString());
-    RootedValue result(cx);
-    bool success = intl_CompareStrings(cx, coll, str1, str2, &result);
-
-    if (!isCollatorInstance)
-        ucol_close(coll);
-    if (!success)
-        return false;
-    args.rval().set(result);
-    return true;
+    return intl_CompareStrings(cx, coll, str1, str2, args.rval());
 }
 
 
