@@ -148,6 +148,14 @@ this.ExtensionsUI = {
     }
   },
 
+  // Escape &, <, and > characters in a string so that it may be
+  // injected as part of raw markup.
+  _sanitizeName(name) {
+    return name.replace(/&/g, "&amp;")
+               .replace(/</g, "&lt;")
+               .replace(/>/g, "&gt;");
+  },
+
   showPermissionsPrompt(target, info) {
     let perms = info.permissions;
     if (!perms) {
@@ -160,9 +168,7 @@ this.ExtensionsUI = {
     if (name.length > 50) {
       name = name.slice(0, 49) + "…";
     }
-    name = name.replace(/&/g, "&amp;")
-               .replace(/</g, "&lt;")
-               .replace(/>/g, "&gt;");
+    name = this._sanitizeName(name);
 
     let addonLabel = `<label class="addon-webext-name">${name}</label>`;
     let bundle = win.gNavigatorBundle;
@@ -310,7 +316,8 @@ this.ExtensionsUI = {
     let win = target.ownerGlobal;
     let popups = win.PopupNotifications;
 
-    let addonLabel = `<label class="addon-webext-name">${addon.name}</label>`;
+    let name = this._sanitizeName(addon.name);
+    let addonLabel = `<label class="addon-webext-name">${name}</label>`;
     let addonIcon = '<image class="addon-addon-icon"/>';
     let toolbarIcon = '<image class="addon-toolbar-icon"/>';
 
