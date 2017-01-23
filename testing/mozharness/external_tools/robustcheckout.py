@@ -15,7 +15,9 @@ import contextlib
 import errno
 import functools
 import os
+import random
 import re
+import time
 
 from mercurial.i18n import _
 from mercurial.node import hex
@@ -30,7 +32,7 @@ from mercurial import (
     util,
 )
 
-testedwith = '3.6 3.7 3.8 3.9'
+testedwith = '3.7 3.8 3.9 4.0'
 minimumhgversion = '3.7'
 
 cmdtable = {}
@@ -116,11 +118,13 @@ def purgewrapper(orig, ui, *args, **kwargs):
     ('b', 'branch', '', 'Branch to check out'),
     ('', 'purge', False, 'Whether to purge the working directory'),
     ('', 'sharebase', '', 'Directory where shared repos should be placed'),
+    ('', 'networkattempts', 3, 'Maximum number of attempts for network '
+                               'operations'),
     ],
     '[OPTION]... URL DEST',
     norepo=True)
 def robustcheckout(ui, url, dest, upstream=None, revision=None, branch=None,
-                   purge=False, sharebase=None):
+                   purge=False, sharebase=None, networkattempts=None):
     """Ensure a working copy has the specified revision checked out."""
     if not revision and not branch:
         raise error.Abort('must specify one of --revision or --branch')
@@ -156,12 +160,16 @@ def robustcheckout(ui, url, dest, upstream=None, revision=None, branch=None,
     sharebase = os.path.realpath(sharebase)
 
     return _docheckout(ui, url, dest, upstream, revision, branch, purge,
-                       sharebase)
+                       sharebase, networkattempts)
 
-def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase):
+def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase,
+                networkattemptlimit, networkattempts=None):
+    if not networkattempts:
+        networkattempts = [1]
+
     def callself():
         return _docheckout(ui, url, dest, upstream, revision, branch, purge,
-                           sharebase)
+                           sharebase, networkattemptlimit, networkattempts)
 
     ui.write('ensuring %s@%s is available at %s\n' % (url, revision or branch,
                                                       dest))
@@ -217,6 +225,45 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase):
 
     # At this point we either have an existing working directory using
     # shared, pooled storage or we have nothing.
+
+    def handlepullabort(e):
+        """Handle an error.Abort raised during a pull.
+
+        Returns True if caller should call ``callself()`` to retry.
+        """
+        if e.args[0] == _('repository is unrelated'):
+            ui.warn('(repository is unrelated; deleting)\n')
+            destvfs.rmtree(forcibly=True)
+            return True
+        elif e.args[0].startswith(_('stream ended unexpectedly')):
+            ui.warn('%s\n' % e.args[0])
+            if networkattempts[0] < networkattemptlimit:
+                ui.warn('(retrying after network failure on attempt %d of %d)\n' %
+                        (networkattempts[0], networkattemptlimit))
+
+                # Do a backoff on retries to mitigate the thundering herd
+                # problem. This is an exponential backoff with a multipler
+                # plus random jitter thrown in for good measure.
+                # With the default settings, backoffs will be:
+                # 1) 2.5 - 6.5
+                # 2) 5.5 - 9.5
+                # 3) 11.5 - 15.5
+                backoff = (2 ** networkattempts[0] - 1) * 1.5
+                jittermin = ui.configint('robustcheckout', 'retryjittermin', 1000)
+                jittermax = ui.configint('robustcheckout', 'retryjittermax', 5000)
+                backoff += float(random.randint(jittermin, jittermax)) / 1000.0
+                ui.warn('(waiting %.2fs before retry)\n' % backoff)
+                time.sleep(backoff)
+
+                networkattempts[0] += 1
+
+                return True
+            else:
+                raise error.Abort('reached maximum number of network attempts; '
+                                  'giving up\n')
+
+        return False
+
     created = False
 
     if not destvfs.exists():
@@ -237,6 +284,10 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase):
         try:
             res = hg.clone(ui, {}, cloneurl, dest=dest, update=False,
                            shareopts={'pool': sharebase, 'mode': 'identity'})
+        except error.Abort as e:
+            if handlepullabort(e):
+                return callself()
+            raise
         except error.RepoError as e:
             return handlerepoerror(e)
         except error.RevlogError as e:
@@ -293,11 +344,8 @@ def _docheckout(ui, url, dest, upstream, revision, branch, purge, sharebase):
                 if not pullop.rheads:
                     raise error.Abort('unable to pull requested revision')
         except error.Abort as e:
-            if e.message == _('repository is unrelated'):
-                ui.warn('(repository is unrelated; deleting)\n')
-                destvfs.rmtree(forcibly=True)
+            if handlepullabort(e):
                 return callself()
-
             raise
         except error.RepoError as e:
             return handlerepoerror(e)
