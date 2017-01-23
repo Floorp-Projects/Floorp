@@ -15,8 +15,8 @@
     "cc": "/home/worker/workspace/build/src/clang/bin/clang",
     "cxx": "/home/worker/workspace/build/src/clang/bin/clang++",
     "as": "/home/worker/workspace/build/src/clang/bin/clang",
-    "ar": "/home/worker/workspace/build/src/cctools/bin/x86_64-apple-darwin10-ar",
-    "ranlib": "/home/worker/workspace/build/src/cctools/bin/x86_64-apple-darwin10-ranlib",
+    "ar": "/home/worker/workspace/build/src/cctools/bin/x86_64-apple-darwin11-ar",
+    "ranlib": "/home/worker/workspace/build/src/cctools/bin/x86_64-apple-darwin11-ranlib",
     "ld": "/home/worker/workspace/build/src/clang/bin/clang",
     "patches": {
         "macosx64": [
