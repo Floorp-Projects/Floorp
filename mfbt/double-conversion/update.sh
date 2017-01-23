@@ -29,27 +29,28 @@ if [ "$1" !=  "" ]; then
 fi
 
 # First clear out everything already present.
-rm -rf ./*
-
-# Restore non-upstream files
-hg revert update.sh
-hg revert $LOCAL_PATCHES
+DEST=./source
+rm -rf "$DEST"
+mkdir "$DEST"
 
 # Copy over critical files.
-cp "$LOCAL_CLONE/LICENSE" ./
-cp "$LOCAL_CLONE/README" ./
+cp "$LOCAL_CLONE/LICENSE" "$DEST/"
+cp "$LOCAL_CLONE/README" "$DEST/"
 
 # Includes
 for header in "$LOCAL_CLONE/src/"*.h; do
-  cp "$header" ./
+  cp "$header" "$DEST/"
 done
 
 # Source
 for ccfile in "$LOCAL_CLONE/src/"*.cc; do
-  cp "$ccfile" ./
+  cp "$ccfile" "$DEST/"
 done
 
 # Now apply our local patches.
 for patch in $LOCAL_PATCHES; do
-  patch -p3 < "$patch"
+  patch --directory "$DEST" --strip 4 < "$patch"
 done
+
+# Update Mercurial file status.
+hg addremove "$DEST"

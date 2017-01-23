@@ -1,6 +1,6 @@
-diff --git a/mfbt/double-conversion/strtod.cc b/mfbt/double-conversion/strtod.cc
---- a/mfbt/double-conversion/strtod.cc
-+++ b/mfbt/double-conversion/strtod.cc
+diff --git a/mfbt/double-conversion/source/strtod.cc b/mfbt/double-conversion/source/strtod.cc
+--- a/mfbt/double-conversion/source/strtod.cc
++++ b/mfbt/double-conversion/source/strtod.cc
 @@ -510,16 +510,17 @@ float Strtof(Vector<const char> buffer, 
    float f3 = static_cast<float>(double_next);
    float f4;
@@ -19,9 +19,9 @@ diff --git a/mfbt/double-conversion/strtod.cc b/mfbt/double-conversion/strtod.cc
      return float_guess;
    }
  
-diff --git a/mfbt/double-conversion/utils.h b/mfbt/double-conversion/utils.h
---- a/mfbt/double-conversion/utils.h
-+++ b/mfbt/double-conversion/utils.h
+diff --git a/mfbt/double-conversion/source/utils.h b/mfbt/double-conversion/source/utils.h
+--- a/mfbt/double-conversion/source/utils.h
++++ b/mfbt/double-conversion/source/utils.h
 @@ -55,17 +55,17 @@
  #if defined(_M_X64) || defined(__x86_64__) || \
      defined(__ARMEL__) || defined(__avr32__) || \
