@@ -5,7 +5,7 @@
 from marionette_driver.by import By
 from marionette_driver.keys import Keys
 
-from marionette_harness import MarionetteTestCase
+from marionette_harness import MarionetteTestCase, skip_if_mobile
 
 
 class TestText(MarionetteTestCase):
@@ -53,7 +53,7 @@ class TestText(MarionetteTestCase):
         key_reporter.send_keys("a")
 
         result = self.marionette.find_element(By.ID, "result")
-        self.assertTrue("press:" in result.text)
+        self.assertIn("press:", result.text)
 
     def test_should_fire_key_down_events(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
@@ -62,7 +62,7 @@ class TestText(MarionetteTestCase):
         key_reporter.send_keys("a")
 
         result = self.marionette.find_element(By.ID, "result")
-        self.assertTrue("down:" in result.text)
+        self.assertIn("down:", result.text)
 
     def test_should_fire_key_up_events(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
@@ -71,7 +71,7 @@ class TestText(MarionetteTestCase):
         key_reporter.send_keys("a")
 
         result = self.marionette.find_element(By.ID, "result")
-        self.assertTrue("up:" in result.text)
+        self.assertIn("up:", result.text)
 
     def test_should_type_lowercase_characters(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
@@ -183,26 +183,27 @@ class TestText(MarionetteTestCase):
         # filled, we're a letter short here
         self.assertEqual(result.text, "I like chees")
 
+    @skip_if_mobile("Bug 1333069 - Assertion: 'down: 40' not found in u''")
     def test_should_report_key_code_of_arrow_keys_up_down_events(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
         result = self.marionette.find_element(By.ID, "result")
         element = self.marionette.find_element(By.ID, "keyReporter")
         element.send_keys(Keys.ARROW_DOWN)
-        self.assertTrue("down: 40" in result.text.strip())
-        self.assertTrue("up: 40" in result.text.strip())
+        self.assertIn("down: 40", result.text.strip())
+        self.assertIn("up: 40", result.text.strip())
 
         element.send_keys(Keys.ARROW_UP)
-        self.assertTrue("down: 38" in result.text.strip())
-        self.assertTrue("up: 38" in result.text.strip())
+        self.assertIn("down: 38", result.text.strip())
+        self.assertIn("up: 38", result.text.strip())
 
         element.send_keys(Keys.ARROW_LEFT)
-        self.assertTrue("down: 37" in result.text.strip())
-        self.assertTrue("up: 37" in result.text.strip())
+        self.assertIn("down: 37", result.text.strip())
+        self.assertIn("up: 37", result.text.strip())
 
         element.send_keys(Keys.ARROW_RIGHT)
-        self.assertTrue("down: 39" in result.text.strip())
-        self.assertTrue("up: 39" in result.text.strip())
+        self.assertIn("down: 39", result.text.strip())
+        self.assertIn("up: 39", result.text.strip())
 
         #  And leave no rubbish/printable keys in the "keyReporter"
         self.assertEqual("", element.get_property("value"))
