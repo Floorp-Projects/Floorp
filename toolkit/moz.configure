@@ -606,9 +606,17 @@ def check_minimum_llvm_config_version(llvm_config):
         You can verify this by typing 'llvm-config --version'.
         '''.format(version, min_version)))
 
-@depends(llvm_config, '--with-libclang-path', '--with-clang-path')
+@depends('--enable-stylo', '--enable-stylo-build-bindgen',
+         llvm_config, '--with-libclang-path', '--with-clang-path')
 @imports(_from='textwrap', _import='dedent')
-def bindgen_config_paths(llvm_config, libclang_path, clang_path):
+def bindgen_config_paths(stylo_enabled, bindgen_enabled,
+                         llvm_config, libclang_path, clang_path):
+    if not stylo_enabled:
+        return None
+
+    if not bindgen_enabled:
+        return None
+
     if not libclang_path and not clang_path:
         # We must have LLVM_CONFIG in this case.
         if not llvm_config:
