@@ -429,6 +429,49 @@ TEST(VP8VideoTrackEncoder, NullFrameFirst)
   EXPECT_EQ(pointThree, totalDuration);
 }
 
+// Test encoding a track that has to skip frames.
+TEST(VP8VideoTrackEncoder, SkippedFrames)
+{
+  // Initiate VP8 encoder
+  TestVP8TrackEncoder encoder;
+  InitParam param = {true, 640, 480};
+  encoder.TestInit(param);
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  TimeStamp now = TimeStamp::Now();
+  VideoSegment segment;
+
+  // Pass 100 frames of the shortest possible duration where we don't get
+  // rounding errors between input/output rate.
+  for (uint32_t i = 0; i < 100; ++i) {
+    segment.AppendFrame(generator.GenerateI420Image(),
+                        mozilla::StreamTime(90), // 1ms
+                        generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE,
+                        false,
+                        now + TimeDuration::FromMilliseconds(i));
+  }
+
+  encoder.SetCurrentFrames(segment);
+
+  // End the track.
+  segment.Clear();
+  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, TrackEventCommand::TRACK_EVENT_ENDED, segment);
+
+  EncodedFrameContainer container;
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  // Verify total duration being 100 * 1ms = 100ms.
+  uint64_t totalDuration = 0;
+  for (auto& frame : container.GetEncodedFrames()) {
+    totalDuration += frame->GetDuration();
+  }
+  const uint64_t hundredMillis = PR_USEC_PER_SEC / 100;
+  EXPECT_EQ(hundredMillis, totalDuration);
+}
+
 // EOS test
 TEST(VP8VideoTrackEncoder, EncodeComplete)
 {
