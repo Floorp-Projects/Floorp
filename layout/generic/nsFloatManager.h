@@ -64,6 +64,12 @@ struct nsFlowAreaRect {
  * passing in the writing mode of the block formatting context (BFC), i.e.
  * the of BlockReflowInput's writing mode.
  *
+ * nsFloatManager uses a special logical coordinate space with inline
+ * coordinates on the line-axis and block coordinates on the block-axis
+ * based on the writing mode of the block formatting context. All the
+ * physical types like nsRect, nsPoint, etc. use this coordinate space. See
+ * FloatInfo::mRect for an example.
+ *
  * [1] https://drafts.csswg.org/css-writing-modes/#line-mappings
  * [2] https://drafts.csswg.org/css-writing-modes/#logical-to-physical
  */
@@ -107,7 +113,7 @@ public:
                              const mozilla::LogicalRect& aRegion,
                              const nsSize& aContainerSize);
 
-  // Structure that stores the current state of a frame manager for
+  // Structure that stores the current state of a float manager for
   // Save/Restore purposes.
   struct SavedState {
     explicit SavedState() {}
@@ -515,10 +521,10 @@ private:
 
     // NB! This is really a logical rect in a writing mode suitable for
     // placing floats, which is not necessarily the actual writing mode
-    // either of the block which created the frame manager or the block
-    // that is calling the frame manager. The inline coordinates are in
-    // the line-relative axis of the frame manager and its block
-    // coordinates are in the frame manager's real block direction.
+    // either of the block which created the float manager or the block
+    // that is calling the float manager. The inline coordinates are in
+    // the line-relative axis of the float manager and its block
+    // coordinates are in the float manager's block direction.
     nsRect mRect;
     // Pointer to a concrete subclass of ShapeInfo or null, which means that
     // there is no shape-outside.
