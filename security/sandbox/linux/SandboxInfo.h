@@ -29,7 +29,7 @@ public:
     kEnabledForContent = 1 << 1,
     // Config flag MOZ_GMP_SANDBOX; env var MOZ_DISABLE_GMP_SANDBOX.
     kEnabledForMedia   = 1 << 2,
-    // Env var MOZ_SANDBOX_VERBOSE.
+    // Env var MOZ_SANDBOX_LOGGING.
     kVerbose           = 1 << 3,
     // Kernel can atomically set system call filtering on entire thread group.
     kHasSeccompTSync   = 1 << 4,
