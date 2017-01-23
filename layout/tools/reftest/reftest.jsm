@@ -435,10 +435,11 @@ function InitAndStartRefTests()
 
     // Focus the content browser.
     if (gFocusFilterMode != FOCUS_FILTER_NON_NEEDS_FOCUS_TESTS) {
+        gBrowser.addEventListener("focus", StartTests, true);
         gBrowser.focus();
+    } else {
+        StartTests();
     }
-
-    StartTests();
 }
 
 function StartHTTPServer()
@@ -461,6 +462,10 @@ function Shuffle(array)
 
 function StartTests()
 {
+    if (gFocusFilterMode != FOCUS_FILTER_NON_NEEDS_FOCUS_TESTS) {
+        gBrowser.removeEventListener("focus", StartTests, true);
+    }
+
     var manifests;
     /* These prefs are optional, so we don't need to spit an error to the log */
     try {
