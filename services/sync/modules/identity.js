@@ -16,6 +16,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-common/async.js");
 
 // Lazy import to prevent unnecessary load on startup.
+/* global BulkKeyBundle, SyncKeyBundle */
 for (let symbol of ["BulkKeyBundle", "SyncKeyBundle"]) {
   XPCOMUtils.defineLazyModuleGetter(this, symbol,
                                     "resource://services-sync/keys.js",
