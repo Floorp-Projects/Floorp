@@ -1021,6 +1021,7 @@ Collator(JSContext* cx, const CallArgs& args)
     if (!collator)
         return false;
 
+    collator->setReservedSlot(CollatorObject::INTERNALS_SLOT, NullValue());
     collator->setReservedSlot(CollatorObject::UCOLLATOR_SLOT, PrivateValue(nullptr));
 
     RootedValue locales(cx, args.get(0));
@@ -1079,6 +1080,7 @@ CreateCollatorPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> 
     proto = GlobalObject::createBlankPrototype<CollatorObject>(cx, global);
     if (!proto)
         return nullptr;
+    proto->setReservedSlot(CollatorObject::INTERNALS_SLOT, NullValue());
     proto->setReservedSlot(CollatorObject::UCOLLATOR_SLOT, PrivateValue(nullptr));
 
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
@@ -1469,6 +1471,7 @@ NumberFormat(JSContext* cx, const CallArgs& args, bool construct)
     if (!numberFormat)
         return false;
 
+    numberFormat->setReservedSlot(NumberFormatObject::INTERNALS_SLOT, NullValue());
     numberFormat->setReservedSlot(NumberFormatObject::UNUMBER_FORMAT_SLOT, PrivateValue(nullptr));
 
     RootedValue thisValue(cx, construct ? ObjectValue(*numberFormat) : args.thisv());
@@ -1529,6 +1532,7 @@ CreateNumberFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObjec
     proto = GlobalObject::createBlankPrototype<NumberFormatObject>(cx, global);
     if (!proto)
         return nullptr;
+    proto->setReservedSlot(NumberFormatObject::INTERNALS_SLOT, NullValue());
     proto->setReservedSlot(NumberFormatObject::UNUMBER_FORMAT_SLOT, PrivateValue(nullptr));
 
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
@@ -2427,6 +2431,7 @@ DateTimeFormat(JSContext* cx, const CallArgs& args, bool construct)
     if (!dateTimeFormat)
         return false;
 
+    dateTimeFormat->setReservedSlot(DateTimeFormatObject::INTERNALS_SLOT, NullValue());
     dateTimeFormat->setReservedSlot(DateTimeFormatObject::UDATE_FORMAT_SLOT,
                                     PrivateValue(nullptr));
 
@@ -2488,6 +2493,7 @@ CreateDateTimeFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObj
     proto = GlobalObject::createBlankPrototype<DateTimeFormatObject>(cx, global);
     if (!proto)
         return nullptr;
+    proto->setReservedSlot(DateTimeFormatObject::INTERNALS_SLOT, NullValue());
     proto->setReservedSlot(DateTimeFormatObject::UDATE_FORMAT_SLOT, PrivateValue(nullptr));
 
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
@@ -3504,6 +3510,7 @@ PluralRules(JSContext* cx, unsigned argc, Value* vp)
     if (!pluralRules)
         return false;
 
+    pluralRules->setReservedSlot(PluralRulesObject::INTERNALS_SLOT, NullValue());
     pluralRules->setReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT, PrivateValue(nullptr));
 
     RootedValue locales(cx, args.get(0));
@@ -3546,6 +3553,7 @@ CreatePluralRulesPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObject
     proto = GlobalObject::createBlankPrototype<PluralRulesObject>(cx, global);
     if (!proto)
         return nullptr;
+    proto->setReservedSlot(PluralRulesObject::INTERNALS_SLOT, NullValue());
     proto->setReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT, PrivateValue(nullptr));
 
     if (!LinkConstructorAndPrototype(cx, ctor, proto))

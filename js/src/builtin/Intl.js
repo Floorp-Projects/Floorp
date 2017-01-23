@@ -7,7 +7,7 @@
 /*global JSMSG_INTL_OBJECT_NOT_INITED: false, JSMSG_INVALID_LOCALES_ELEMENT: false,
          JSMSG_INVALID_LANGUAGE_TAG: false, JSMSG_INVALID_LOCALE_MATCHER: false,
          JSMSG_INVALID_OPTION_VALUE: false, JSMSG_INVALID_DIGITS_VALUE: false,
-         JSMSG_INTL_OBJECT_REINITED: false, JSMSG_INVALID_CURRENCY_CODE: false,
+         JSMSG_INVALID_CURRENCY_CODE: false,
          JSMSG_UNDEFINED_CURRENCY: false, JSMSG_INVALID_TIME_ZONE: false,
          JSMSG_DATE_NOT_FINITE: false, JSMSG_INVALID_KEYS_TYPE: false,
          JSMSG_INVALID_KEY: false,
@@ -1217,76 +1217,39 @@ function intlFallbackSymbol() {
 
 
 /**
- * Weak map used to track the initialize-as-Intl status (and, if an object has
- * been so initialized, the Intl-specific internal properties) of all objects.
- * Presence of an object as a key within this map indicates that the object has
- * its [[initializedIntlObject]] internal property set to true.  The associated
- * value is an object whose structure is documented in |initializeIntlObject|
- * below.
- *
- * Ideally we'd be using private symbols for internal properties, but
- * SpiderMonkey doesn't have those yet.
+ * Initializes the INTL_INTERNALS_OBJECT_SLOT of the given object.
  */
-var internalsMap = new WeakMap();
-
-
-/**
- * Set the [[initializedIntlObject]] internal property of |obj| to true.
- */
-function initializeIntlObject(obj) {
+function initializeIntlObject(obj, type, lazyData) {
     assert(IsObject(obj), "Non-object passed to initializeIntlObject");
-
-    // Intl-initialized objects are weird.  They have [[initializedIntlObject]]
-    // set on them, but they don't *necessarily* have any other properties.
-
-    var internals = std_Object_create(null);
+    assert((type === "Collator" && IsCollator(obj)) ||
+           (type === "DateTimeFormat" && IsDateTimeFormat(obj)) ||
+           (type === "NumberFormat" && IsNumberFormat(obj)) ||
+           (type === "PluralRules" && IsPluralRules(obj)),
+           "type must match the object's class");
+    assert(IsObject(lazyData), "non-object lazy data");
 
     // The meaning of an internals object for an object |obj| is as follows.
     //
-    // If the .type is "partial", |obj| has [[initializedIntlObject]] set but
-    // nothing else.  No other property of |internals| can be used.  (This
-    // occurs when InitializeCollator or similar marks an object as
-    // [[initializedIntlObject]] but fails before marking it as the appropriate
-    // more-specific type ["Collator", "DateTimeFormat", "NumberFormat"].)
+    // The .type property indicates the type of Intl object that |obj| is:
+    // "Collator", "DateTimeFormat", "NumberFormat", or "PluralRules" (likely
+    // with more coming in future Intl specs).
     //
-    // Otherwise, the .type indicates the type of Intl object that |obj| is:
-    // "Collator", "DateTimeFormat", or "NumberFormat" (likely with more coming
-    // in future Intl specs).  In these cases |obj| *conceptually* also has
-    // [[initializedCollator]] or similar set, and all the other properties
-    // implied by that.
-    //
-    // If |internals| doesn't have a "partial" .type, two additional properties
-    // have meaning.  The .lazyData property stores information needed to
-    // compute -- without observable side effects -- the actual internal Intl
-    // properties of |obj|.  If it is non-null, then the actual internal
-    // properties haven't been computed, and .lazyData must be processed by
+    // The .lazyData property stores information needed to compute -- without
+    // observable side effects -- the actual internal Intl properties of
+    // |obj|.  If it is non-null, then the actual internal properties haven't
+    // been computed, and .lazyData must be processed by
     // |setInternalProperties| before internal Intl property values are
     // available.  If it is null, then the .internalProps property contains an
     // object whose properties are the internal Intl properties of |obj|.
 
-    internals.type = "partial";
-    internals.lazyData = null;
+    var internals = std_Object_create(null);
+    internals.type = type;
+    internals.lazyData = lazyData;
     internals.internalProps = null;
 
-    callFunction(std_WeakMap_set, internalsMap, obj, internals);
-    return internals;
-}
-
-
-/**
- * Mark |internals| as having the given type and lazy data.
- */
-function setLazyData(internals, type, lazyData)
-{
-    assert(internals.type === "partial", "can't set lazy data for anything but a newborn");
-    assert(type === "Collator" || type === "DateTimeFormat" ||
-           type == "NumberFormat" || type === "PluralRules",
-           "bad type");
-    assert(IsObject(lazyData), "non-object lazy data");
-
-    // Set in reverse order so that the .type change is a barrier.
-    internals.lazyData = lazyData;
-    internals.type = type;
+    assert(UnsafeGetReservedSlot(obj, INTL_INTERNALS_OBJECT_SLOT) === null,
+           "Internal slot already initialized?");
+    UnsafeSetReservedSlot(obj, INTL_INTERNALS_OBJECT_SLOT, internals);
 }
 
 
@@ -1294,9 +1257,7 @@ function setLazyData(internals, type, lazyData)
  * Set the internal properties object for an |internals| object previously
  * associated with lazy data.
  */
-function setInternalProperties(internals, internalProps)
-{
-    assert(internals.type !== "partial", "newborn internals can't have computed internals");
+function setInternalProperties(internals, internalProps) {
     assert(IsObject(internals.lazyData), "lazy data must exist already");
     assert(IsObject(internalProps), "internalProps argument should be an object");
 
@@ -1310,10 +1271,8 @@ function setInternalProperties(internals, internalProps)
  * Get the existing internal properties out of a non-newborn |internals|, or
  * null if none have been computed.
  */
-function maybeInternalProperties(internals)
-{
+function maybeInternalProperties(internals) {
     assert(IsObject(internals), "non-object passed to maybeInternalProperties");
-    assert(internals.type !== "partial", "maybeInternalProperties must only be used on completely-initialized internals objects");
     var lazyData = internals.lazyData;
     if (lazyData)
         return null;
@@ -1323,47 +1282,31 @@ function maybeInternalProperties(internals)
 
 
 /**
- * Return whether |obj| has an[[initializedIntlObject]] property set to true.
- */
-function isInitializedIntlObject(obj) {
-#ifdef DEBUG
-    var internals = callFunction(std_WeakMap_get, internalsMap, obj);
-    if (IsObject(internals)) {
-        assert(callFunction(std_Object_hasOwnProperty, internals, "type"), "missing type");
-        var type = internals.type;
-        assert(type === "partial" || type === "Collator" ||
-               type === "DateTimeFormat" || type === "NumberFormat" || type === "PluralRules",
-               "unexpected type");
-        assert(callFunction(std_Object_hasOwnProperty, internals, "lazyData"), "missing lazyData");
-        assert(callFunction(std_Object_hasOwnProperty, internals, "internalProps"), "missing internalProps");
-    } else {
-        assert(internals === undefined, "bad mapping for |obj|");
-    }
-#endif
-    return callFunction(std_WeakMap_has, internalsMap, obj);
-}
-
-
-/**
- * Check that |obj| meets the requirements for "this Collator object", "this
- * NumberFormat object", or "this DateTimeFormat object" as used in the method
- * with the given name.  Throw a TypeError if |obj| doesn't meet these
- * requirements.  But if it does, return |obj|'s internals object (*not* the
- * object holding its internal properties!), associated with it by
- * |internalsMap|, with structure specified above.
+ * Return |obj|'s internals object (*not* the object holding its internal
+ * properties!), with structure specified above.
  *
  * Spec: ECMAScript Internationalization API Specification, 10.3.
  * Spec: ECMAScript Internationalization API Specification, 11.3.
  * Spec: ECMAScript Internationalization API Specification, 12.3.
  */
-function getIntlObjectInternals(obj, className, methodName) {
-    assert(typeof className === "string", "bad className for getIntlObjectInternals");
+function getIntlObjectInternals(obj) {
+    assert(IsObject(obj), "getIntlObjectInternals called with non-Object");
+    assert(IsCollator(obj) || IsDateTimeFormat(obj) || IsNumberFormat(obj) || IsPluralRules(obj),
+           "getIntlObjectInternals called with non-Intl object");
 
-    var internals = callFunction(std_WeakMap_get, internalsMap, obj);
-    assert(internals === undefined || isInitializedIntlObject(obj), "bad mapping in internalsMap");
+    var internals = UnsafeGetReservedSlot(obj, INTL_INTERNALS_OBJECT_SLOT);
 
-    if (internals === undefined || internals.type !== className)
-        ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, className, methodName, className);
+    assert(IsObject(internals), "internals not an object");
+    assert(callFunction(std_Object_hasOwnProperty, internals, "type"), "missing type");
+    assert((internals.type === "Collator" && IsCollator(obj)) ||
+           (internals.type === "DateTimeFormat" && IsDateTimeFormat(obj)) ||
+           (internals.type === "NumberFormat" && IsNumberFormat(obj)) ||
+           (internals.type === "PluralRules" && IsPluralRules(obj)),
+           "type must match the object's class");
+    assert(callFunction(std_Object_hasOwnProperty, internals, "lazyData"),
+           "missing lazyData");
+    assert(callFunction(std_Object_hasOwnProperty, internals, "internalProps"),
+           "missing internalProps");
 
     return internals;
 }
@@ -1373,11 +1316,8 @@ function getIntlObjectInternals(obj, className, methodName) {
  * Get the internal properties of known-Intl object |obj|.  For use only by
  * C++ code that knows what it's doing!
  */
-function getInternals(obj)
-{
-    assert(isInitializedIntlObject(obj), "for use only on guaranteed Intl objects");
-
-    var internals = callFunction(std_WeakMap_get, internalsMap, obj);
+function getInternals(obj) {
+    var internals = getIntlObjectInternals(obj);
 
     // If internal properties have already been computed, use them.
     var internalProps = maybeInternalProperties(internals);
@@ -1505,11 +1445,11 @@ function resolveCollatorInternals(lazyCollatorData) {
 /**
  * Returns an object containing the Collator internal properties of |obj|.
  */
-function getCollatorInternals(obj, methodName) {
+function getCollatorInternals(obj) {
     assert(IsObject(obj), "getCollatorInternals called with non-object");
     assert(IsCollator(obj), "getCollatorInternals called with non-Collator");
 
-    var internals = getIntlObjectInternals(obj, "Collator", methodName);
+    var internals = getIntlObjectInternals(obj);
     assert(internals.type === "Collator", "bad type escaped getIntlObjectInternals");
 
     // If internal properties have already been computed, use them.
@@ -1541,10 +1481,6 @@ function InitializeCollator(collator, locales, options) {
 
     // Steps 1-2 (These steps are no longer required and should be removed
     // from the spec; https://github.com/tc39/ecma402/issues/115).
-    assert(!isInitializedIntlObject(collator), "collator mustn't be initialized");
-
-    // Step 2.
-    var internals = initializeIntlObject(collator);
 
     // Lazy Collator data has the following structure:
     //
@@ -1618,7 +1554,7 @@ function InitializeCollator(collator, locales, options) {
     //
     // We've done everything that must be done now: mark the lazy data as fully
     // computed and install it.
-    setLazyData(internals, "Collator", lazyCollatorData);
+    initializeIntlObject(collator, "Collator", lazyCollatorData);
 }
 
 
@@ -1713,7 +1649,7 @@ function Intl_Collator_compare_get() {
     if (!IsObject(this) || !IsCollator(this))
         ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "Collator", "compare", "Collator");
 
-    var internals = getCollatorInternals(this, "compare");
+    var internals = getCollatorInternals(this);
 
     // Step 1.
     if (internals.boundCompare === undefined) {
@@ -1741,7 +1677,7 @@ function Intl_Collator_resolvedOptions() {
     if (!IsObject(this) || !IsCollator(this))
         ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "Collator", "resolvedOptions", "Collator");
 
-    var internals = getCollatorInternals(this, "resolvedOptions");
+    var internals = getCollatorInternals(this);
 
     var result = {
         locale: internals.locale,
@@ -1854,11 +1790,11 @@ function resolveNumberFormatInternals(lazyNumberFormatData) {
 /**
  * Returns an object containing the NumberFormat internal properties of |obj|.
  */
-function getNumberFormatInternals(obj, methodName) {
+function getNumberFormatInternals(obj) {
     assert(IsObject(obj), "getNumberFormatInternals called with non-object");
     assert(IsNumberFormat(obj), "getNumberFormatInternals called with non-NumberFormat");
 
-    var internals = getIntlObjectInternals(obj, "NumberFormat", methodName);
+    var internals = getIntlObjectInternals(obj);
     assert(internals.type === "NumberFormat", "bad type escaped getIntlObjectInternals");
 
     // If internal properties have already been computed, use them.
@@ -1947,10 +1883,6 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
 
     // Steps 1-2 (These steps are no longer required and should be removed
     // from the spec; https://github.com/tc39/ecma402/issues/115).
-    assert(!isInitializedIntlObject(numberFormat), "numberFormat mustn't be initialized");
-
-    // Step 2.
-    var internals = initializeIntlObject(numberFormat);
 
     // Lazy NumberFormat data has the following structure:
     //
@@ -2052,7 +1984,7 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     //
     // We've done everything that must be done now: mark the lazy data as fully
     // computed and install it.
-    setLazyData(internals, "NumberFormat", lazyNumberFormatData);
+    initializeIntlObject(numberFormat, "NumberFormat", lazyNumberFormatData);
 
     if (numberFormat !== thisValue && thisValue instanceof GetNumberFormatConstructor()) {
         if (!IsObject(thisValue))
@@ -2164,7 +2096,7 @@ function Intl_NumberFormat_format_get() {
     // Steps 1-3.
     var nf = UnwrapNumberFormat(this, "format");
 
-    var internals = getNumberFormatInternals(nf, "format");
+    var internals = getNumberFormatInternals(nf);
 
     // Step 4.
     if (internals.boundFormat === undefined) {
@@ -2187,7 +2119,7 @@ function Intl_NumberFormat_formatToParts(value) {
     var nf = UnwrapNumberFormat(this, "formatToParts");
 
     // Ensure the NumberFormat internals are resolved.
-    getNumberFormatInternals(nf, "formatToParts");
+    getNumberFormatInternals(nf);
 
     // Step 4.
     var x = ToNumber(value);
@@ -2206,7 +2138,7 @@ function Intl_NumberFormat_resolvedOptions() {
     // Invoke |UnwrapNumberFormat| per introduction of section 11.3.
     var nf = UnwrapNumberFormat(this, "resolvedOptions");
 
-    var internals = getNumberFormatInternals(nf, "resolvedOptions");
+    var internals = getNumberFormatInternals(nf);
 
     var result = {
         locale: internals.locale,
@@ -2317,11 +2249,11 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
 /**
  * Returns an object containing the DateTimeFormat internal properties of |obj|.
  */
-function getDateTimeFormatInternals(obj, methodName) {
+function getDateTimeFormatInternals(obj) {
     assert(IsObject(obj), "getDateTimeFormatInternals called with non-object");
     assert(IsDateTimeFormat(obj), "getDateTimeFormatInternals called with non-DateTimeFormat");
 
-    var internals = getIntlObjectInternals(obj, "DateTimeFormat", methodName);
+    var internals = getIntlObjectInternals(obj);
     assert(internals.type === "DateTimeFormat", "bad type escaped getIntlObjectInternals");
 
     // If internal properties have already been computed, use them.
@@ -2376,10 +2308,6 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options) {
 
     // Steps 1-2 (These steps are no longer required and should be removed
     // from the spec; https://github.com/tc39/ecma402/issues/115).
-    assert(!isInitializedIntlObject(dateTimeFormat), "dateTimeFormat mustn't be initialized");
-
-    // Step 2.
-    var internals = initializeIntlObject(dateTimeFormat);
 
     // Lazy DateTimeFormat data has the following structure:
     //
@@ -2490,7 +2418,7 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options) {
     //
     // We've done everything that must be done now: mark the lazy data as fully
     // computed and install it.
-    setLazyData(internals, "DateTimeFormat", lazyDateTimeFormatData);
+    initializeIntlObject(dateTimeFormat, "DateTimeFormat", lazyDateTimeFormatData);
 
     if (dateTimeFormat !== thisValue && thisValue instanceof GetDateTimeFormatConstructor()) {
         if (!IsObject(thisValue))
@@ -2915,7 +2843,7 @@ function Intl_DateTimeFormat_format_get() {
     // Steps 1-3.
     var dtf = UnwrapDateTimeFormat(this, "format");
 
-    var internals = getDateTimeFormatInternals(dtf, "format");
+    var internals = getDateTimeFormatInternals(dtf);
 
     // Step 4.
     if (internals.boundFormat === undefined) {
@@ -2938,7 +2866,7 @@ function Intl_DateTimeFormat_formatToParts() {
     var dtf = UnwrapDateTimeFormat(this, "formatToParts");
 
     // Ensure the DateTimeFormat internals are resolved.
-    getDateTimeFormatInternals(dtf, "formatToParts");
+    getDateTimeFormatInternals(dtf);
 
     // Steps 4-5.
     var date = arguments.length > 0 ? arguments[0] : undefined;
@@ -2958,7 +2886,7 @@ function Intl_DateTimeFormat_resolvedOptions() {
     // Invoke |UnwrapDateTimeFormat| per introduction of section 12.3.
     var dtf = UnwrapDateTimeFormat(this, "resolvedOptions");
 
-    var internals = getDateTimeFormatInternals(dtf, "resolvedOptions");
+    var internals = getDateTimeFormatInternals(dtf);
 
     var result = {
         locale: internals.locale,
@@ -3136,11 +3064,11 @@ function resolvePluralRulesInternals(lazyPluralRulesData) {
 /**
  * Returns an object containing the PluralRules internal properties of |obj|.
  */
-function getPluralRulesInternals(obj, methodName) {
+function getPluralRulesInternals(obj) {
     assert(IsObject(obj), "getPluralRulesInternals called with non-object");
     assert(IsPluralRules(obj), "getPluralRulesInternals called with non-PluralRules");
 
-    var internals = getIntlObjectInternals(obj, "PluralRules", methodName);
+    var internals = getIntlObjectInternals(obj);
     assert(internals.type === "PluralRules", "bad type escaped getIntlObjectInternals");
 
     var internalProps = maybeInternalProperties(internals);
@@ -3169,9 +3097,6 @@ function InitializePluralRules(pluralRules, locales, options) {
 
     // Steps 1-2 (These steps are no longer required and should be removed
     // from the spec; https://github.com/tc39/ecma402/issues/115).
-    assert(!isInitializedIntlObject(pluralRules), "pluralRules mustn't be initialized");
-
-    let internals = initializeIntlObject(pluralRules);
 
     // Lazy PluralRules data has the following structure:
     //
@@ -3223,7 +3148,7 @@ function InitializePluralRules(pluralRules, locales, options) {
     // Steps 11-12.
     SetNumberFormatDigitOptions(lazyPluralRulesData, options, 0, 3);
 
-    setLazyData(internals, "PluralRules", lazyPluralRulesData)
+    initializeIntlObject(pluralRules, "PluralRules", lazyPluralRulesData);
 }
 
 /**
@@ -3262,7 +3187,7 @@ function Intl_PluralRules_select(value) {
         ThrowTypeError(JSMSG_INTL_OBJECT_NOT_INITED, "PluralRules", "select", "PluralRules");
 
     // Ensure the PluralRules internals are resolved.
-    getPluralRulesInternals(pluralRules, "select");
+    getPluralRulesInternals(pluralRules);
 
     // Steps 3-4.
     let n = ToNumber(value);
@@ -3283,7 +3208,7 @@ function Intl_PluralRules_resolvedOptions() {
                        "PluralRules");
     }
 
-    var internals = getPluralRulesInternals(this, "resolvedOptions");
+    var internals = getPluralRulesInternals(this);
 
     var result = {
         locale: internals.locale,
