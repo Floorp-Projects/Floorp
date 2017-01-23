@@ -168,10 +168,10 @@ add_task(async function test_wipeServer() {
 
   const PAYLOAD = 42;
   let steamCollection = new ServerWBO("steam", PAYLOAD);
-  let server = httpd_setup({
+  let steamServer = httpd_setup({
     "/1.1/foo/storage/steam": steamCollection.handler()
   });
-  await SyncTestingInfrastructure(server);
+  await SyncTestingInfrastructure(steamServer);
   do_test_pending();
 
   try {
@@ -186,7 +186,7 @@ add_task(async function test_wipeServer() {
     do_check_eq(engine.toFetch.length, 0);
 
   } finally {
-    server.stop(do_test_finished);
+    steamServer.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
   }
 });

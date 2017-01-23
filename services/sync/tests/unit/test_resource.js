@@ -7,8 +7,6 @@ Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 
-var logger;
-
 var fetched = false;
 function server_open(metadata, response) {
   let body;
