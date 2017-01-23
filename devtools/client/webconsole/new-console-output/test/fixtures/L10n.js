@@ -15,6 +15,28 @@ class L10n {
         return "XHR";
       case "webConsoleMoreInfoLabel":
         return "Learn More";
+      case "webconsole.clearButton.tooltip":
+        return "Clear the Web Console output";
+      case "webconsole.toggleFilterButton.tooltip":
+        return "Toggle filter bar";
+      case "webconsole.filterInput.placeholder":
+        return "Filter output";
+      case "webconsole.errorsFilterButton.label":
+        return "Errors";
+      case "webconsole.warningsFilterButton.label":
+        return "Warnings";
+      case "webconsole.logsFilterButton.label":
+        return "Logs";
+      case "webconsole.infoFilterButton.label":
+        return "Info";
+      case "webconsole.debugFilterButton.label":
+        return "Debug";
+      case "webconsole.cssFilterButton.label":
+        return "CSS";
+      case "webconsole.xhrFilterButton.label":
+        return "XHR";
+      case "webconsole.requestsFilterButton.label":
+        return "Requests";
       default:
         return str;
     }
