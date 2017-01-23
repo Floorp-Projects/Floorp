@@ -1693,7 +1693,7 @@ js::intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp)
  * percent types.
  */
 static UNumberFormat*
-NewUNumberFormatForPluralRules(JSContext* cx, HandleObject pluralRules)
+NewUNumberFormatForPluralRules(JSContext* cx, Handle<PluralRulesObject*> pluralRules)
 {
     RootedObject internals(cx, GetInternals(cx, pluralRules));
     if (!internals)
@@ -3755,7 +3755,7 @@ js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 2);
 
-    RootedObject pluralRules(cx, &args[0].toObject());
+    Rooted<PluralRulesObject*> pluralRules(cx, &args[0].toObject().as<PluralRulesObject>());
 
     UNumberFormat* nf = NewUNumberFormatForPluralRules(cx, pluralRules);
     if (!nf)

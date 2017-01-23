@@ -28,6 +28,8 @@
     _(AtomicsXor)                   \
     _(AtomicsIsLockFree)            \
                                     \
+    _(IntlIsPluralRules)            \
+                                    \
     _(MathAbs)                      \
     _(MathFloor)                    \
     _(MathCeil)                     \
