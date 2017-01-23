@@ -352,6 +352,9 @@ private:
     virtual nscoord BEnd() const = 0;
     virtual bool IsEmpty() const = 0;
 
+    // Translate the current origin by the specified offsets.
+    virtual void Translate(nscoord aLineLeft, nscoord aBlockStart) = 0;
+
   protected:
     // Compute the minimum line-axis difference between the bounding shape
     // box and its rounded corner within the given band (block-axis region).
@@ -391,11 +394,16 @@ private:
     nscoord BEnd() const override { return mShapeBoxRect.YMost(); }
     bool IsEmpty() const override { return mShapeBoxRect.IsEmpty(); };
 
+    void Translate(nscoord aLineLeft, nscoord aBlockStart) override
+    {
+      mShapeBoxRect.MoveBy(aLineLeft, aBlockStart);
+    }
+
   private:
     // This is the reference box of css shape-outside if specified, which
     // implements the <shape-box> value in the CSS Shapes Module Level 1.
     // The coordinate space is the same as FloatInfo::mRect.
-    const nsRect mShapeBoxRect;
+    nsRect mShapeBoxRect;
     // The frame of the float.
     nsIFrame* const mFrame;
   };
@@ -405,8 +413,6 @@ private:
   {
   public:
     CircleShapeInfo(mozilla::StyleBasicShape* const aBasicShape,
-                    nscoord aLineLeft,
-                    nscoord aBlockStart,
                     const mozilla::LogicalRect& aShapeBoxRect,
                     mozilla::WritingMode aWM,
                     const nsSize& aContainerSize);
@@ -420,6 +426,11 @@ private:
     nscoord BStart() const override { return mCenter.y - mRadius; }
     nscoord BEnd() const override { return mCenter.y + mRadius; }
     bool IsEmpty() const override { return mRadius == 0; };
+
+    void Translate(nscoord aLineLeft, nscoord aBlockStart) override
+    {
+      mCenter.MoveBy(aLineLeft, aBlockStart);
+    }
 
   private:
     // The position of the center of the circle. The coordinate space is the
