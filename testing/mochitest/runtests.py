@@ -826,7 +826,6 @@ class MochitestDesktop(object):
         self.result = {}
 
         self.start_script = os.path.join(here, 'start_desktop.js')
-        self.disable_leak_checking = False
 
     def update_mozinfo(self):
         """walk up directories to find mozinfo.json update the info"""
@@ -1509,8 +1508,7 @@ toolbar#nav-bar {
             self.log.error(str(e))
             return None
 
-        if not self.disable_leak_checking:
-            browserEnv["XPCOM_MEM_BLOAT_LOG"] = self.leak_report_file
+        browserEnv["XPCOM_MEM_BLOAT_LOG"] = self.leak_report_file
 
         try:
             gmp_path = self.getGMPPluginPath(options)
@@ -1953,13 +1951,12 @@ toolbar#nav-bar {
             args.append('-foreground')
             self.start_script_kwargs['testUrl'] = testUrl or 'about:blank'
 
-            if detectShutdownLeaks and not self.disable_leak_checking:
+            if detectShutdownLeaks:
                 shutdownLeaks = ShutdownLeaks(self.log)
             else:
                 shutdownLeaks = None
 
-            if mozinfo.info["asan"] and (mozinfo.isLinux or mozinfo.isMac) \
-                    and not self.disable_leak_checking:
+            if mozinfo.info["asan"] and (mozinfo.isLinux or mozinfo.isMac):
                 lsanLeaks = LSANLeaks(self.log)
             else:
                 lsanLeaks = None
@@ -2231,28 +2228,6 @@ toolbar#nav-bar {
         result = 1  # default value, if no tests are run.
         for d in dirs:
             print("dir: %s" % d)
-
-            # BEGIN LEAKCHECK HACK
-            # Leak checking was broken in mochitest unnoticed for a length of time. During
-            # this time, several leaks slipped through. The leak checking was fixed by bug
-            # 1325148, but it couldn't land until all the regressions were also fixed or
-            # backed out. Rather than waiting and risking new regressions, in the meantime
-            # this code will selectively disable leak checking on flavors/directories where
-            # known regressions exist. At least this way we can prevent further damage while
-            # they get fixed.
-
-            skip_leak_conditions = []
-
-            for condition, reason in skip_leak_conditions:
-                if condition:
-                    self.log.warning('WARNING | disabling leakcheck due to {}'.format(reason))
-                    self.disable_leak_checking = True
-                    break
-            else:
-                self.disable_leak_checking = False
-
-            # END LEAKCHECK HACK
-
             tests_in_dir = [t for t in testsToRun if os.path.dirname(t) == d]
 
             # If we are using --run-by-dir, we should not use the profile path (if) provided
