@@ -27,7 +27,33 @@ public class ViewUtil {
      *
      * Because of platform limitations a square ripple is used on Android 4.
      */
-    public static void enableTouchRipple(View view) {
+    public static void enableTouchRipple(final View view) {
+        // On certain older devices (e.g. ASUS TF200T, Motorola Droid 4), setting a background
+        // drawable results in the padding getting wiped. We work around this by saving the pre-existing
+        // padding, followed by restoring it at the end in view.setPadding().
+
+        // Unfortunately the IDE and compiler aren't clever enough for us to be able to make
+        // these final (and uninitialised). So we just use garbage values instead:
+        int paddingLeft = -1;
+        int paddingTop = -1;
+        int paddingRight = -1;
+        int paddingBottom = -1;
+
+        if (!AppConstants.Versions.feature21Plus) {
+            paddingLeft = view.getPaddingLeft();
+            paddingTop = view.getPaddingTop();
+            paddingRight = view.getPaddingRight();
+            paddingBottom = view.getPaddingBottom();
+        }
+
+        setTouchRipple(view);
+
+        if (!AppConstants.Versions.feature21Plus) {
+            view.setPadding(paddingLeft, paddingTop, paddingRight, paddingBottom);
+        }
+    }
+
+    private static void setTouchRipple(final View view) {
         final TypedArray backgroundDrawableArray;
         if (AppConstants.Versions.feature21Plus) {
             backgroundDrawableArray = view.getContext().obtainStyledAttributes(new int[] { R.attr.selectableItemBackgroundBorderless });
