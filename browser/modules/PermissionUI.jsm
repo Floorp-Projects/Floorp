@@ -341,9 +341,9 @@ this.PermissionPromptPrototype = {
     if (!options.hasOwnProperty("displayURI") || options.displayURI) {
       options.displayURI = this.principal.URI;
     }
-    // Permission prompts are always persistent and don't have a close button.
+    // Permission prompts are always persistent; the close button is controlled by a pref.
     options.persistent = true;
-    options.hideClose = true;
+    options.hideClose = !Services.prefs.getBoolPref("privacy.permissionPrompts.showCloseButton");
 
     this.onBeforeShow();
     chromeWin.PopupNotifications.show(this.browser,

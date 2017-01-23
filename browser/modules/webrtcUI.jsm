@@ -444,7 +444,7 @@ function prompt(aBrowser, aRequest) {
 
   let options = {
     persistent: true,
-    hideClose: true,
+    hideClose: !Services.prefs.getBoolPref("privacy.permissionPrompts.showCloseButton"),
     checkbox: {
       label: stringBundle.getString("getUserMedia.remember"),
       checkedState: reasonForNoPermanentAllow ? {
