@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
@@ -30,7 +29,6 @@ import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.MergeCursor;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
