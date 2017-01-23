@@ -12,9 +12,13 @@ const {
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { getAllFilters } = require("devtools/client/webconsole/new-console-output/selectors/filters");
 const { getAllUi } = require("devtools/client/webconsole/new-console-output/selectors/ui");
-const { filterTextSet, filtersClear } = require("devtools/client/webconsole/new-console-output/actions/index");
-const { messagesClear } = require("devtools/client/webconsole/new-console-output/actions/index");
-const uiActions = require("devtools/client/webconsole/new-console-output/actions/index");
+const {
+  filterTextSet,
+  filtersClear,
+  filterBarToggle,
+  messagesClear
+} = require("devtools/client/webconsole/new-console-output/actions/index");
+const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const {
   MESSAGE_LEVEL
 } = require("../constants");
@@ -43,7 +47,7 @@ const FilterBar = createClass({
   },
 
   onClickFilterBarToggle: function () {
-    this.props.dispatch(uiActions.filterBarToggle());
+    this.props.dispatch(filterBarToggle());
   },
 
   onClickFiltersClear: function () {
@@ -134,23 +138,6 @@ const FilterBar = createClass({
             filterKey: "net",
             dispatch
           })
-        )
-      );
-    }
-
-    if (ui.filteredMessageVisible) {
-      children.push(
-        dom.div({className: "devtools-toolbar"},
-          dom.span({
-            className: "clear"},
-            "You have filters set that may hide some results. " +
-            "Learn more about our filtering syntax ",
-            dom.a({}, "here"),
-            "."),
-          dom.button({
-            className: "menu-filter-button",
-            onClick: this.onClickFiltersClear
-          }, "Remove filters")
         )
       );
     }
