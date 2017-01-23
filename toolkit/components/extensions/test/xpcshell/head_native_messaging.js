@@ -15,7 +15,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
 let {Subprocess, SubprocessImpl} = Cu.import("resource://gre/modules/Subprocess.jsm", {});
 
 
-let tmpDir = FileUtils.getDir("TmpD", ["NativeMessaging"]);
+// It's important that we use a space in this directory name to make sure we
+// correctly handle executing batch files with spaces in their path.
+let tmpDir = FileUtils.getDir("TmpD", ["Native Messaging"]);
 tmpDir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
 do_register_cleanup(() => {
@@ -90,10 +92,12 @@ function* setupHosts(scripts) {
       });
 
       for (let script of scripts) {
-        let batPath = getPath(`${script.name}.bat`);
+        // It's important that we use a space in this filename. See directory
+        // name comment above.
+        let batPath = getPath(`batch ${script.name}.bat`);
         let scriptPath = getPath(`${script.name}.py`);
 
-        let batBody = `@ECHO OFF\n${pythonPath} -u ${scriptPath} %*\n`;
+        let batBody = `@ECHO OFF\n${pythonPath} -u "${scriptPath}" %*\n`;
         yield OS.File.writeAtomic(batPath, batBody);
 
         // Create absolute and relative path versions of the entry.
