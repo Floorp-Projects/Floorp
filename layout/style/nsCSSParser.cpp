@@ -1650,7 +1650,7 @@ CSSParserImpl::GetDocument()
   if (!mSheet) {
     return nullptr;
   }
-  return mSheet->GetDocument();
+  return mSheet->GetAssociatedDocument();
 }
 
 nsresult
