@@ -259,7 +259,7 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib,
                        "-DCMAKE_MACOSX_RPATH=@executable_path",
                        "-DCMAKE_OSX_ARCHITECTURES=x86_64",
                        "-DDARWIN_osx_ARCHS=x86_64",
-                       "-DLLVM_DEFAULT_TARGET_TRIPLE=x86_64-apple-darwin10"]
+                       "-DLLVM_DEFAULT_TARGET_TRIPLE=x86_64-apple-darwin11"]
     build_package(build_dir, cmake_args)
 
     if is_linux():
@@ -559,7 +559,7 @@ if __name__ == "__main__":
         extra_cxxflags = ["-stdlib=libc++"]
         extra_cxxflags2 = ["-stdlib=libc++"]
 
-        extra_flags = ["-target", "x86_64-apple-darwin10", "-mlinker-version=136",
+        extra_flags = ["-target", "x86_64-apple-darwin11", "-mlinker-version=137",
                        "-B", "%s/bin" %  os.getenv("CROSS_CCTOOLS_PATH"),
                        "-isysroot", os.getenv("CROSS_SYSROOT"),
                        # technically the sysroot flag there should be enough to deduce this,
