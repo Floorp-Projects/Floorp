@@ -1,6 +1,6 @@
-diff --git a/mfbt/double-conversion/utils.h b/mfbt/double-conversion/utils.h
---- a/mfbt/double-conversion/utils.h
-+++ b/mfbt/double-conversion/utils.h
+diff --git a/mfbt/double-conversion/source/utils.h b/mfbt/double-conversion/source/utils.h
+--- a/mfbt/double-conversion/source/utils.h
++++ b/mfbt/double-conversion/source/utils.h
 @@ -31,15 +31,15 @@
  #include <stdlib.h>
  #include <string.h>
