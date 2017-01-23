@@ -384,7 +384,7 @@ add_task(function* test_500_no_retry() {
   let method = "GET";
 
   let server = httpd_setup({
-    "/no-shutup": function() {
+    "/no-shutup": function(request, response) {
       let message = "Cannot get ye flask.";
       response.setStatusLine(request.httpVersion, 500, "Internal server error");
       response.bodyOutputStream.write(message, message.length);

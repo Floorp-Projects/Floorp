@@ -260,7 +260,7 @@ EngineSynchronizer.prototype = {
         let infoResp = this.service._fetchInfo(collectionCountsURL);
         if (!infoResp.success) {
           this._log.error("Can't run validation: request to info/collection_counts responded with "
-                          + resp.status);
+                          + infoResp.status);
           return;
         }
         info = infoResp.obj; // might throw because obj is a getter which parses json.
