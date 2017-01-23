@@ -118,11 +118,6 @@ public:
   virtual bool IsContentParent() const override { return true; }
 
   /**
-   * Create a subprocess suitable for use later as a content process.
-   */
-  static already_AddRefed<ContentParent> PreallocateProcess();
-
-  /**
    * Start up the content-process machinery.  This might include
    * scheduling pre-launch tasks.
    */
@@ -138,22 +133,6 @@ public:
    * shutdown process.
    */
   static void JoinAllSubprocesses();
-
-  static uint32_t GetPoolSize(const nsAString& aContentProcessType);
-
-  static uint32_t GetMaxProcessCount(const nsAString& aContentProcessType);
-
-  static bool IsMaxProcessCountReached(const nsAString& aContentProcessType);
-
-  /**
-   * Picks a random content parent from |aContentParents| with a given |aOpener|
-   * respecting the index limit set by |aMaxContentParents|.
-   * Returns null if non available.
-   */
-  static already_AddRefed<ContentParent>
-  RandomSelect(const nsTArray<ContentParent*>& aContentParents,
-               ContentParent* aOpener,
-               int32_t maxContentParents);
 
   /**
    * Get or create a content process for:
@@ -734,12 +713,6 @@ private:
   AllocPBackgroundParent(Transport* aTransport, ProcessId aOtherProcess)
                          override;
 
-  /**
-   * Get or create the corresponding content parent array to |aContentProcessType|.
-   */
-  static nsTArray<ContentParent*>&
-  GetOrCreatePool(const nsAString& aContentProcessType);
-
   virtual mozilla::ipc::IPCResult RecvGetProcessAttributes(ContentParentId* aCpId,
                                                            bool* aIsForBrowser) override;
 
@@ -994,8 +967,6 @@ private:
                                                   const nsCString& aCategory) override;
 
   virtual mozilla::ipc::IPCResult RecvPrivateDocShellsExist(const bool& aExist) override;
-
-  virtual mozilla::ipc::IPCResult RecvFirstIdle() override;
 
   virtual mozilla::ipc::IPCResult RecvAudioChannelChangeDefVolChannel(const int32_t& aChannel,
                                                                       const bool& aHidden) override;

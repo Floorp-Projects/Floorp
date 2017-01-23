@@ -60,9 +60,6 @@ enum ProcessPriority {
   PROCESS_PRIORITY_BACKGROUND,
   PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE,
   PROCESS_PRIORITY_FOREGROUND_KEYBOARD,
-  // The special class for the preallocated process, high memory priority but
-  // low CPU priority.
-  PROCESS_PRIORITY_PREALLOC,
   // Any priority greater than or equal to FOREGROUND is considered
   // "foreground" for the purposes of priority testing, for example
   // CurrentProcessIsForeground().
