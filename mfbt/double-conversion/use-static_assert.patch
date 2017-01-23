@@ -1,6 +1,6 @@
-diff --git a/mfbt/double-conversion/utils.h b/mfbt/double-conversion/utils.h
---- a/mfbt/double-conversion/utils.h
-+++ b/mfbt/double-conversion/utils.h
+diff --git a/mfbt/double-conversion/source/utils.h b/mfbt/double-conversion/source/utils.h
+--- a/mfbt/double-conversion/source/utils.h
++++ b/mfbt/double-conversion/source/utils.h
 @@ -275,19 +275,18 @@ class StringBuilder {
  // There is an additional use for BitCast.
  // Recent gccs will warn when they see casts that may result in breakage due to

@@ -1,7 +1,7 @@
-diff --git a/mfbt/double-conversion/utils.h b/mfbt/double-conversion/utils.h
+diff --git a/mfbt/double-conversion/source/utils.h b/mfbt/double-conversion/source/utils.h
 index cd3e330..bdc7d4b 100644
---- a/mfbt/double-conversion/utils.h
-+++ b/mfbt/double-conversion/utils.h
+--- a/mfbt/double-conversion/source/utils.h
++++ b/mfbt/double-conversion/source/utils.h
 @@ -74,23 +74,7 @@
  #endif
  
