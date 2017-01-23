@@ -360,8 +360,11 @@ TCPSocketParent::FireStringDataEvent(const nsACString& aData, TCPReadyState aRea
 void
 TCPSocketParent::SendEvent(const nsAString& aType, CallbackData aData, TCPReadyState aReadyState)
 {
-  mozilla::Unused << PTCPSocketParent::SendCallback(nsString(aType), aData,
-                                                    static_cast<uint32_t>(aReadyState));
+  if (mIPCOpen) {
+    mozilla::Unused << PTCPSocketParent::SendCallback(nsString(aType),
+                                                      aData,
+                                                      static_cast<uint32_t>(aReadyState));
+  }
 }
 
 void
