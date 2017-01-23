@@ -6,7 +6,7 @@ this.EXPORTED_SYMBOLS = ["TabEngine", "TabSetRecord"];
 
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-const TABS_TTL = 604800;           // 7 days.
+const TABS_TTL = 1814400;          // 21 days.
 const TAB_ENTRIES_LIMIT = 25;      // How many URLs to include in tab history.
 
 Cu.import("resource://gre/modules/Preferences.jsm");
