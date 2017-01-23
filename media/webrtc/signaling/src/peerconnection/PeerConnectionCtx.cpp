@@ -110,9 +110,10 @@ private:
     {
       nsCOMPtr<nsIObserverService> observerService =
         services::GetObserverService();
-      if (observerService)
+      if (observerService) {
         observerService->RemoveObserver(this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
         observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+      }
     }
 };
 
@@ -340,7 +341,7 @@ PeerConnectionCtx::EverySecondTelemetryCallback_m(nsITimer* timer, void *closure
         p != ctx->mPeerConnections.end(); ++p) {
     if (p->second->HasMedia()) {
       if (!queries->append(nsAutoPtr<RTCStatsQuery>(new RTCStatsQuery(true)))) {
-	return;
+        return;
       }
       if (NS_WARN_IF(NS_FAILED(p->second->BuildStatsQuery_m(nullptr, // all tracks
                                                             queries->back())))) {
