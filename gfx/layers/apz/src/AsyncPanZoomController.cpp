@@ -2626,7 +2626,12 @@ void AsyncPanZoomController::StartAnimation(AsyncPanZoomAnimation* aAnimation)
 
 void AsyncPanZoomController::CancelAnimation(CancelAnimationFlags aFlags) {
   ReentrantMonitorAutoEnter lock(mMonitor);
-  APZC_LOG("%p running CancelAnimation in state %d\n", this, mState);
+  APZC_LOG("%p running CancelAnimation(0x%x) in state %d\n", this, aFlags, mState);
+
+  if ((aFlags & ExcludeWheel) && mState == WHEEL_SCROLL) {
+    return;
+  }
+
   SetState(NOTHING);
   mAnimation = nullptr;
   // Since there is no animation in progress now the axes should
