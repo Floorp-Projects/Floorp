@@ -22,7 +22,7 @@ class SymbolObject : public NativeObject
 
     static const Class class_;
 
-    static JSObject* initClass(JSContext* cx, js::HandleObject obj);
+    static JSObject* initClass(JSContext* cx, js::HandleObject obj, bool defineMembers);
 
     /*
      * Creates a new Symbol object boxing the given primitive Symbol.  The
@@ -59,6 +59,9 @@ class SymbolObject : public NativeObject
 
 extern JSObject*
 InitSymbolClass(JSContext* cx, HandleObject obj);
+
+extern JSObject*
+InitBareSymbolCtor(JSContext* cx, HandleObject obj);
 
 } /* namespace js */
 
