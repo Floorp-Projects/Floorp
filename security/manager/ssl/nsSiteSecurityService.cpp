@@ -11,9 +11,12 @@
 #include "base64.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
+#include "mozilla/dom/PContent.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "nsArrayEnumerator.h"
+#include "nsCOMArray.h"
 #include "nsCRTGlue.h"
 #include "nsISSLStatus.h"
 #include "nsISocketProvider.h"
@@ -22,9 +25,11 @@
 #include "nsNSSComponent.h"
 #include "nsNetUtil.h"
 #include "nsPromiseFlatString.h"
+#include "nsReadableUtils.h"
 #include "nsSecurityHeaderParser.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
+#include "nsVariant.h"
 #include "plstr.h"
 #include "prnetdb.h"
 #include "prprf.h"
@@ -45,10 +50,17 @@ static LazyLogModule gSSSLog("nsSSService");
 
 #define SSSLOG(args) MOZ_LOG(gSSSLog, mozilla::LogLevel::Debug, args)
 
+const char kHSTSKeySuffix[] = ":HSTS";
+const char kHPKPKeySuffix[] = ":HPKP";
+
 ////////////////////////////////////////////////////////////////////////////////
 
-SiteHSTSState::SiteHSTSState(nsCString& aStateString)
-  : mHSTSExpireTime(0)
+NS_IMPL_ISUPPORTS(SiteHSTSState, nsISiteSecurityState, nsISiteHSTSState)
+
+SiteHSTSState::SiteHSTSState(const nsCString& aHost,
+                             const nsCString& aStateString)
+  : mHostname(aHost)
+  , mHSTSExpireTime(0)
   , mHSTSState(SecurityPropertyUnset)
   , mHSTSIncludeSubdomains(false)
 {
@@ -74,11 +86,13 @@ SiteHSTSState::SiteHSTSState(nsCString& aStateString)
   }
 }
 
-SiteHSTSState::SiteHSTSState(PRTime aHSTSExpireTime,
+SiteHSTSState::SiteHSTSState(const nsCString& aHost,
+                             PRTime aHSTSExpireTime,
                              SecurityPropertyState aHSTSState,
                              bool aHSTSIncludeSubdomains)
 
-  : mHSTSExpireTime(aHSTSExpireTime)
+  : mHostname(aHost)
+  , mHSTSExpireTime(aHSTSExpireTime)
   , mHSTSState(aHSTSState)
   , mHSTSIncludeSubdomains(aHSTSIncludeSubdomains)
 {
@@ -95,7 +109,41 @@ SiteHSTSState::ToString(nsCString& aString)
   aString.AppendInt(static_cast<uint32_t>(mHSTSIncludeSubdomains));
 }
 
+NS_IMETHODIMP
+SiteHSTSState::GetHostname(nsACString& aHostname)
+{
+  aHostname = mHostname;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SiteHSTSState::GetExpireTime(int64_t* aExpireTime)
+{
+  NS_ENSURE_ARG(aExpireTime);
+  *aExpireTime = mHSTSExpireTime;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SiteHSTSState::GetSecurityPropertyState(int16_t* aSecurityPropertyState)
+{
+  NS_ENSURE_ARG(aSecurityPropertyState);
+  *aSecurityPropertyState = mHSTSState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SiteHSTSState::GetIncludeSubdomains(bool* aIncludeSubdomains)
+{
+  NS_ENSURE_ARG(aIncludeSubdomains);
+  *aIncludeSubdomains = mHSTSIncludeSubdomains;
+  return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
+
+NS_IMPL_ISUPPORTS(SiteHPKPState, nsISiteSecurityState, nsISiteHPKPState)
+
 static bool
 stringIsBase64EncodingOf256bitValue(nsCString& encodedString) {
   nsAutoCString binaryValue;
@@ -116,8 +164,10 @@ SiteHPKPState::SiteHPKPState()
 {
 }
 
-SiteHPKPState::SiteHPKPState(nsCString& aStateString)
-  : mExpireTime(0)
+SiteHPKPState::SiteHPKPState(const nsCString& aHost,
+                             const nsCString& aStateString)
+  : mHostname(aHost)
+  , mExpireTime(0)
   , mState(SecurityPropertyUnset)
   , mIncludeSubdomains(false)
 {
@@ -177,15 +227,48 @@ SiteHPKPState::SiteHPKPState(nsCString& aStateString)
   }
 }
 
-SiteHPKPState::SiteHPKPState(PRTime aExpireTime,
+SiteHPKPState::SiteHPKPState(const nsCString& aHost,
+                             PRTime aExpireTime,
                              SecurityPropertyState aState,
                              bool aIncludeSubdomains,
                              nsTArray<nsCString>& aSHA256keys)
-  : mExpireTime(aExpireTime)
+  : mHostname(aHost)
+  , mExpireTime(aExpireTime)
   , mState(aState)
   , mIncludeSubdomains(aIncludeSubdomains)
   , mSHA256keys(aSHA256keys)
 {
+}
+
+NS_IMETHODIMP
+SiteHPKPState::GetHostname(nsACString& aHostname)
+{
+  aHostname = mHostname;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SiteHPKPState::GetExpireTime(int64_t* aExpireTime)
+{
+  NS_ENSURE_ARG(aExpireTime);
+  *aExpireTime = mExpireTime;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SiteHPKPState::GetSecurityPropertyState(int16_t* aSecurityPropertyState)
+{
+  NS_ENSURE_ARG(aSecurityPropertyState);
+  *aSecurityPropertyState = mState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+SiteHPKPState::GetIncludeSubdomains(bool* aIncludeSubdomains)
+{
+  NS_ENSURE_ARG(aIncludeSubdomains);
+  *aIncludeSubdomains = mIncludeSubdomains;
+  return NS_OK;
 }
 
 void
@@ -201,6 +284,25 @@ SiteHPKPState::ToString(nsCString& aString)
   for (unsigned int i = 0; i < mSHA256keys.Length(); i++) {
     aString.Append(mSHA256keys[i]);
   }
+}
+
+NS_IMETHODIMP
+SiteHPKPState::GetSha256Keys(nsISimpleEnumerator** aSha256Keys)
+{
+  NS_ENSURE_ARG(aSha256Keys);
+
+  nsCOMArray<nsIVariant> keys;
+  for (const nsCString& key : mSHA256keys) {
+    nsCOMPtr<nsIWritableVariant> variant = new nsVariant();
+    nsresult rv = variant->SetAsAUTF8String(key);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    if (!keys.AppendObject(variant)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  return NS_NewArrayEnumerator(aSha256Keys, keys);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -299,10 +401,10 @@ SetStorageKey(nsAutoCString& storageKey, const nsACString& hostname, uint32_t aT
   storageKey = hostname;
   switch (aType) {
     case nsISiteSecurityService::HEADER_HSTS:
-      storageKey.AppendLiteral(":HSTS");
+      storageKey.AppendASCII(kHSTSKeySuffix);
       break;
     case nsISiteSecurityService::HEADER_HPKP:
-      storageKey.AppendLiteral(":HPKP");
+      storageKey.AppendASCII(kHPKPKeySuffix);
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("SSS:SetStorageKey got invalid type");
@@ -338,9 +440,10 @@ nsSiteSecurityService::SetHSTSState(uint32_t aType,
       "HSTS State must be SecurityPropertySet or SecurityPropertyNegative");
 
   int64_t expiretime = ExpireTimeFromMaxAge(maxage);
-  SiteHSTSState siteState(expiretime, aHSTSState, includeSubdomains);
+  RefPtr<SiteHSTSState> siteState =
+    new SiteHSTSState(hostname, expiretime, aHSTSState, includeSubdomains);
   nsAutoCString stateString;
-  siteState.ToString(stateString);
+  siteState->ToString(stateString);
   SSSLOG(("SSS: setting state for %s", hostname.get()));
   bool isPrivate = flags & nsISocketProvider::NO_PERMANENT_STORAGE;
   mozilla::DataStorageType storageType = isPrivate
@@ -398,13 +501,14 @@ nsSiteSecurityService::RemoveStateInternal(uint32_t aType,
 
   nsCString value = mPreloadStateStorage->Get(storageKey,
                                               mozilla::DataStorage_Persistent);
-  SiteHSTSState dynamicState(value);
+  RefPtr<SiteHSTSState> dynamicState = new SiteHSTSState(aHost, value);
   if (GetPreloadListEntry(aHost.get()) ||
-      dynamicState.mHSTSState != SecurityPropertyUnset) {
+      dynamicState->mHSTSState != SecurityPropertyUnset) {
     SSSLOG(("SSS: storing knockout entry for %s", aHost.get()));
-    SiteHSTSState siteState(0, SecurityPropertyKnockout, false);
+    RefPtr<SiteHSTSState> siteState =
+      new SiteHSTSState(aHost, 0, SecurityPropertyKnockout, false);
     nsAutoCString stateString;
-    siteState.ToString(stateString);
+    siteState->ToString(stateString);
     nsresult rv;
     if (aIsPreload) {
       rv = mPreloadStateStorage->Put(storageKey, stateString,
@@ -852,12 +956,13 @@ nsSiteSecurityService::ProcessPKPHeader(nsIURI* aSourceURI,
   }
 
   int64_t expireTime = ExpireTimeFromMaxAge(maxAge);
-  SiteHPKPState dynamicEntry(expireTime, SecurityPropertySet,
-                             foundIncludeSubdomains, sha256keys);
+  RefPtr<SiteHPKPState> dynamicEntry =
+    new SiteHPKPState(host, expireTime, SecurityPropertySet,
+                      foundIncludeSubdomains, sha256keys);
   SSSLOG(("SSS: about to set pins for  %s, expires=%ld now=%ld maxAge=%lu\n",
            host.get(), expireTime, PR_Now() / PR_USEC_PER_MSEC, maxAge));
 
-  rv = SetHPKPState(host.get(), dynamicEntry, aFlags, false);
+  rv = SetHPKPState(host.get(), *dynamicEntry, aFlags, false);
   if (NS_FAILED(rv)) {
     SSSLOG(("SSS: failed to set pins for %s\n", host.get()));
     if (aFailureResult) {
@@ -1028,20 +1133,20 @@ nsSiteSecurityService::HostHasHSTSEntry(const nsAutoCString& aHost,
   SSSLOG(("Seeking HSTS entry for %s", aHost.get()));
   SetStorageKey(storageKey, aHost, nsISiteSecurityService::HEADER_HSTS);
   nsCString value = mSiteStateStorage->Get(storageKey, storageType);
-  SiteHSTSState siteState(value);
-  if (siteState.mHSTSState != SecurityPropertyUnset) {
+  RefPtr<SiteHSTSState> siteState = new SiteHSTSState(aHost, value);
+  if (siteState->mHSTSState != SecurityPropertyUnset) {
     SSSLOG(("Found HSTS entry for %s", aHost.get()));
-    bool expired = siteState.IsExpired(nsISiteSecurityService::HEADER_HSTS);
+    bool expired = siteState->IsExpired(nsISiteSecurityService::HEADER_HSTS);
     if (!expired) {
       SSSLOG(("Entry for %s is not expired", aHost.get()));
       if (aCached) {
         *aCached = true;
       }
-      if (siteState.mHSTSState == SecurityPropertySet) {
-        *aResult = aRequireIncludeSubdomains ? siteState.mHSTSIncludeSubdomains
+      if (siteState->mHSTSState == SecurityPropertySet) {
+        *aResult = aRequireIncludeSubdomains ? siteState->mHSTSIncludeSubdomains
                                              : true;
         return true;
-      } else if (siteState.mHSTSState == SecurityPropertyNegative) {
+      } else if (siteState->mHSTSState == SecurityPropertyNegative) {
         *aResult = false;
         return true;
       }
@@ -1054,8 +1159,8 @@ nsSiteSecurityService::HostHasHSTSEntry(const nsAutoCString& aHost,
       // First, check the dynamic preload list.
       value = mPreloadStateStorage->Get(storageKey,
                                         mozilla::DataStorage_Persistent);
-      SiteHSTSState dynamicState(value);
-      if (dynamicState.mHSTSState == SecurityPropertyUnset) {
+      RefPtr<SiteHSTSState> dynamicState = new SiteHSTSState(aHost, value);
+      if (dynamicState->mHSTSState == SecurityPropertyUnset) {
         SSSLOG(("No dynamic preload - checking for static preload"));
         // Now check the static preload list.
         if (!GetPreloadListEntry(aHost.get())) {
@@ -1070,16 +1175,16 @@ nsSiteSecurityService::HostHasHSTSEntry(const nsAutoCString& aHost,
   // Next, look in the dynamic preload list.
   value = mPreloadStateStorage->Get(storageKey,
                                     mozilla::DataStorage_Persistent);
-  SiteHSTSState dynamicState(value);
-  if (dynamicState.mHSTSState != SecurityPropertyUnset) {
+  RefPtr<SiteHSTSState> dynamicState = new SiteHSTSState(aHost, value);
+  if (dynamicState->mHSTSState != SecurityPropertyUnset) {
     SSSLOG(("Found dynamic preload entry for %s", aHost.get()));
-    bool expired = dynamicState.IsExpired(nsISiteSecurityService::HEADER_HSTS);
+    bool expired = dynamicState->IsExpired(nsISiteSecurityService::HEADER_HSTS);
     if (!expired) {
-      if (dynamicState.mHSTSState == SecurityPropertySet) {
-        *aResult = aRequireIncludeSubdomains ? dynamicState.mHSTSIncludeSubdomains
+      if (dynamicState->mHSTSState == SecurityPropertySet) {
+        *aResult = aRequireIncludeSubdomains ? dynamicState->mHSTSIncludeSubdomains
                                              : true;
         return true;
-      } else if (dynamicState.mHSTSState == SecurityPropertyNegative) {
+      } else if (dynamicState->mHSTSState == SecurityPropertyNegative) {
         *aResult = false;
         return true;
       }
@@ -1097,8 +1202,8 @@ nsSiteSecurityService::HostHasHSTSEntry(const nsAutoCString& aHost,
   const nsSTSPreload* preload = nullptr;
 
   // Finally look in the static preload list.
-  if (siteState.mHSTSState == SecurityPropertyUnset &&
-      dynamicState.mHSTSState == SecurityPropertyUnset &&
+  if (siteState->mHSTSState == SecurityPropertyUnset &&
+      dynamicState->mHSTSState == SecurityPropertyUnset &&
       (preload = GetPreloadListEntry(aHost.get())) != nullptr) {
     SSSLOG(("%s is a preloaded HSTS host", aHost.get()));
     *aResult = aRequireIncludeSubdomains ? preload->mIncludeSubdomains
@@ -1264,17 +1369,17 @@ nsSiteSecurityService::GetKeyPinsForHostname(const nsACString& aHostname,
   nsCString value = mSiteStateStorage->Get(storageKey, storageType);
 
   // decode now
-  SiteHPKPState foundEntry(value);
-  if (entryStateNotOK(foundEntry, aEvalTime)) {
+  RefPtr<SiteHPKPState> foundEntry = new SiteHPKPState(host, value);
+  if (entryStateNotOK(*foundEntry, aEvalTime)) {
     // not in permanent storage, try now private
     value = mSiteStateStorage->Get(storageKey, mozilla::DataStorage_Private);
-    SiteHPKPState privateEntry(value);
-    if (entryStateNotOK(privateEntry, aEvalTime)) {
+    RefPtr<SiteHPKPState> privateEntry = new SiteHPKPState(host, value);
+    if (entryStateNotOK(*privateEntry, aEvalTime)) {
       // not in private storage, try dynamic preload
       value = mPreloadStateStorage->Get(storageKey,
                                         mozilla::DataStorage_Persistent);
-      SiteHPKPState preloadEntry(value);
-      if (entryStateNotOK(preloadEntry, aEvalTime)) {
+      RefPtr<SiteHPKPState> preloadEntry = new SiteHPKPState(host, value);
+      if (entryStateNotOK(*preloadEntry, aEvalTime)) {
         return NS_OK;
       }
       foundEntry = preloadEntry;
@@ -1282,8 +1387,8 @@ nsSiteSecurityService::GetKeyPinsForHostname(const nsACString& aHostname,
       foundEntry = privateEntry;
     }
   }
-  pinArray = foundEntry.mSHA256keys;
-  *aIncludeSubdomains = foundEntry.mIncludeSubdomains;
+  pinArray = foundEntry->mSHA256keys;
+  *aIncludeSubdomains = foundEntry->mIncludeSubdomains;
   *afound = true;
   return NS_OK;
 }
@@ -1316,13 +1421,14 @@ nsSiteSecurityService::SetKeyPins(const nsACString& aHost,
     }
     sha256keys.AppendElement(pin);
   }
-  SiteHPKPState dynamicEntry(aExpires, SecurityPropertySet,
-                             aIncludeSubdomains, sha256keys);
   // we always store data in permanent storage (ie no flags)
   const nsCString& flatHost = PromiseFlatCString(aHost);
   nsAutoCString host(
     PublicKeyPinningService::CanonicalizeHostname(flatHost.get()));
-  return SetHPKPState(host.get(), dynamicEntry, 0, aIsPreload);
+  RefPtr<SiteHPKPState> dynamicEntry =
+    new SiteHPKPState(host, aExpires, SecurityPropertySet, aIncludeSubdomains,
+                      sha256keys);
+  return SetHPKPState(host.get(), *dynamicEntry, 0, aIsPreload);
 }
 
 NS_IMETHODIMP
@@ -1371,6 +1477,55 @@ nsSiteSecurityService::SetHPKPState(const char* aHost, SiteHPKPState& entry,
     rv = mSiteStateStorage->Put(storageKey, stateString, storageType);
   }
   NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSiteSecurityService::Enumerate(uint32_t aType,
+                                 nsISimpleEnumerator** aEnumerator)
+{
+  NS_ENSURE_ARG(aEnumerator);
+
+  nsAutoCString keySuffix;
+  switch (aType) {
+    case nsISiteSecurityService::HEADER_HSTS:
+      keySuffix.AssignASCII(kHSTSKeySuffix);
+      break;
+    case nsISiteSecurityService::HEADER_HPKP:
+      keySuffix.AssignASCII(kHPKPKeySuffix);
+      break;
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
+
+  InfallibleTArray<mozilla::dom::DataStorageItem> items;
+  mSiteStateStorage->GetAll(&items);
+
+  nsCOMArray<nsISiteSecurityState> states;
+  for (const mozilla::dom::DataStorageItem& item : items) {
+    if (!StringEndsWith(item.key(), keySuffix)) {
+      // The key does not end with correct suffix, so is not the type we want.
+      continue;
+    }
+
+    nsCString hostname(
+      StringHead(item.key(), item.key().Length() - keySuffix.Length()));
+    nsCOMPtr<nsISiteSecurityState> state;
+    switch(aType) {
+      case nsISiteSecurityService::HEADER_HSTS:
+        state = new SiteHSTSState(hostname, item.value());
+        break;
+      case nsISiteSecurityService::HEADER_HPKP:
+        state = new SiteHPKPState(hostname, item.value());
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("SSS:Enumerate got invalid type");
+    }
+
+    states.AppendObject(state);
+  }
+
+  NS_NewArrayEnumerator(aEnumerator, states);
   return NS_OK;
 }
 
