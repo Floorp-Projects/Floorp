@@ -1,0 +1,85 @@
+diff --git a/mfbt/double-conversion/strtod.cc b/mfbt/double-conversion/strtod.cc
+--- a/mfbt/double-conversion/strtod.cc
++++ b/mfbt/double-conversion/strtod.cc
+@@ -510,16 +510,17 @@ float Strtof(Vector<const char> buffer, 
+   float f3 = static_cast<float>(double_next);
+   float f4;
+   if (is_correct) {
+     f4 = f3;
+   } else {
+     double double_next2 = Double(double_next).NextDouble();
+     f4 = static_cast<float>(double_next2);
+   }
++  (void) f2; // Mark variable as used.
+   ASSERT(f1 <= f2 && f2 <= f3 && f3 <= f4);
+ 
+   // If the guess doesn't lie near a single-precision boundary we can simply
+   // return its float-value.
+   if (f1 == f4) {
+     return float_guess;
+   }
+ 
+diff --git a/mfbt/double-conversion/utils.h b/mfbt/double-conversion/utils.h
+--- a/mfbt/double-conversion/utils.h
++++ b/mfbt/double-conversion/utils.h
+@@ -55,17 +55,17 @@
+ #if defined(_M_X64) || defined(__x86_64__) || \
+     defined(__ARMEL__) || defined(__avr32__) || \
+     defined(__hppa__) || defined(__ia64__) || \
+     defined(__mips__) || \
+     defined(__powerpc__) || defined(__ppc__) || defined(__ppc64__) || \
+     defined(__sparc__) || defined(__sparc) || defined(__s390__) || \
+     defined(__SH4__) || defined(__alpha__) || \
+     defined(_MIPS_ARCH_MIPS32R2) || \
+-    defined(_AARCH64EL_)
++    defined(__AARCH64EL__) || defined(__aarch64__)
+ #define DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS 1
+ #elif defined(_M_IX86) || defined(__i386__) || defined(__i386)
+ #if defined(_WIN32)
+ // Windows uses a 64bit wide floating point stack.
+ #define DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS 1
+ #else
+ #undef DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS
+ #endif  // _WIN32
+@@ -136,18 +136,18 @@ inline int StrLength(const char* string)
+   return static_cast<int>(length);
+ }
+ 
+ // This is a simplified version of V8's Vector class.
+ template <typename T>
+ class Vector {
+  public:
+   Vector() : start_(NULL), length_(0) {}
+-  Vector(T* data, int length) : start_(data), length_(length) {
+-    ASSERT(length == 0 || (length > 0 && data != NULL));
++  Vector(T* data, int len) : start_(data), length_(len) {
++    ASSERT(len == 0 || (len > 0 && data != NULL));
+   }
+ 
+   // Returns a vector using the same backing storage as this one,
+   // spanning from and including 'from', to but not including 'to'.
+   Vector<T> SubVector(int from, int to) {
+     ASSERT(to <= length_);
+     ASSERT(from < to);
+     ASSERT(0 <= from);
+@@ -179,18 +179,18 @@ class Vector {
+ };
+ 
+ 
+ // Helper class for building result strings in a character buffer. The
+ // purpose of the class is to use safe operations that checks the
+ // buffer bounds on all operations in debug mode.
+ class StringBuilder {
+  public:
+-  StringBuilder(char* buffer, int size)
+-      : buffer_(buffer, size), position_(0) { }
++  StringBuilder(char* buffer, int buffer_size)
++      : buffer_(buffer, buffer_size), position_(0) { }
+ 
+   ~StringBuilder() { if (!is_finalized()) Finalize(); }
+ 
+   int size() const { return buffer_.length(); }
+ 
+   // Get the current position in the builder.
+   int position() const {
+     ASSERT(!is_finalized());
