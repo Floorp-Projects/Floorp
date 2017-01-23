@@ -41,6 +41,7 @@
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/SelfHosting.h"
 #include "vm/Stack.h"
 #include "vm/StringBuffer.h"
 #include "vm/Unicode.h"
@@ -797,12 +798,6 @@ static bool
 IntlInitialize(JSContext* cx, HandleObject obj, Handle<PropertyName*> initializer,
                HandleValue locales, HandleValue options)
 {
-    RootedValue initializerValue(cx);
-    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), initializer, &initializerValue))
-        return false;
-    MOZ_ASSERT(initializerValue.isObject());
-    MOZ_ASSERT(initializerValue.toObject().is<JSFunction>());
-
     FixedInvokeArgs<3> args(cx);
 
     args[0].setObject(*obj);
@@ -811,7 +806,7 @@ IntlInitialize(JSContext* cx, HandleObject obj, Handle<PropertyName*> initialize
 
     RootedValue thisv(cx, NullValue());
     RootedValue ignored(cx);
-    return js::Call(cx, initializerValue, thisv, args, &ignored);
+    return js::CallSelfHostedFunction(cx, initializer, thisv, args, &ignored);
 }
 
 static bool
@@ -871,21 +866,12 @@ intl_availableLocales(JSContext* cx, CountAvailable countAvailable,
 static JSObject*
 GetInternals(JSContext* cx, HandleObject obj)
 {
-    RootedValue getInternalsValue(cx);
-    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().getInternals,
-                                         &getInternalsValue))
-    {
-        return nullptr;
-    }
-    MOZ_ASSERT(getInternalsValue.isObject());
-    MOZ_ASSERT(getInternalsValue.toObject().is<JSFunction>());
-
     FixedInvokeArgs<1> args(cx);
 
     args[0].setObject(*obj);
 
     RootedValue v(cx, NullValue());
-    if (!js::Call(cx, getInternalsValue, v, args, &v))
+    if (!js::CallSelfHostedFunction(cx, cx->names().getInternals, v, args, &v))
         return nullptr;
 
     return &v.toObject();
@@ -934,6 +920,7 @@ class ScopedICUObject
 
 // The inline capacity we use for the char16_t Vectors.
 static const size_t INITIAL_CHAR_BUFFER_SIZE = 32;
+
 
 /******************** Collator ********************/
 
@@ -3576,6 +3563,7 @@ js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+
 /**************** PluralRules *****************/
 
 static void pluralRules_finalize(FreeOp* fop, JSObject* obj);
@@ -3692,9 +3680,6 @@ CreatePluralRulesPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObject
                                                                     &PluralRulesClass));
     if (!proto)
         return nullptr;
-    MOZ_ASSERT(proto->getReservedSlot(UPLURAL_RULES_SLOT).isUndefined(),
-               "improperly creating PluralRules more than once for a single "
-               "global?");
     proto->setReservedSlot(UPLURAL_RULES_SLOT, PrivateValue(nullptr));
 
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
@@ -3959,6 +3944,9 @@ js::intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setObject(*res);
     return true;
 }
+
+
+/******************** Intl ********************/
 
 bool
 js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp)
@@ -4392,8 +4380,6 @@ js::intl_ComputeDisplayNames(JSContext* cx, unsigned argc, Value* vp)
     args.rval().setObject(*result);
     return true;
 }
-
-/******************** Intl ********************/
 
 const Class js::IntlClass = {
     js_Object_str,
