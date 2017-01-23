@@ -310,6 +310,7 @@ UDPSocketParent::ConnectInternal(const nsCString& aHost, const uint16_t& aPort)
 
   UDPSOCKET_LOG(("%s: %s:%u", __FUNCTION__, nsCString(aHost).get(), aPort));
   PRNetAddr prAddr;
+  memset(&prAddr, 0, sizeof(prAddr));
   PR_InitializeNetAddr(PR_IpAddrAny, aPort, &prAddr);
   PRStatus status = PR_StringToNetAddr(aHost.BeginReading(), &prAddr);
   if (status != PR_SUCCESS) {
