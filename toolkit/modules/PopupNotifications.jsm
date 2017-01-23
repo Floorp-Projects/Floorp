@@ -718,8 +718,7 @@ PopupNotifications.prototype = {
       popupnotification.setAttribute("popupid", n.id);
       if (Services.prefs.getBoolPref("privacy.permissionPrompts.showCloseButton")) {
         popupnotification.setAttribute("closebuttoncommand", "PopupNotifications._onButtonEvent(event, 'secondarybuttoncommand');");
-      }
-      else {
+      } else {
         popupnotification.setAttribute("closebuttoncommand", `PopupNotifications._dismiss(event, ${TELEMETRY_STAT_DISMISSAL_CLOSE_BUTTON});`);
       }
       if (n.mainAction) {
