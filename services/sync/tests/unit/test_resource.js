@@ -9,8 +9,6 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/browserid_identity.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-var logger;
-
 var fetched = false;
 function server_open(metadata, response) {
   let body;

@@ -207,8 +207,8 @@ add_test(function test_get_utf8() {
     // Check that we default to UTF-8 if Content-Type doesn't have a charset.
     charset = false;
     let request2 = new RESTRequest(server.baseURI + "/resource");
-    request2.get(function(error) {
-      do_check_null(error);
+    request2.get(function(error2) {
+      do_check_null(error2);
 
       do_check_eq(request2.response.status, 200);
       do_check_eq(request2.response.body, response);
@@ -291,8 +291,8 @@ add_test(function test_charsets() {
     charset = false;
     let request2 = new RESTRequest(server.baseURI + "/resource");
     request2.charset = "us-ascii";
-    request2.get(function(error) {
-      do_check_null(error);
+    request2.get(function(error2) {
+      do_check_null(error2);
 
       do_check_eq(request2.response.status, 200);
       do_check_eq(request2.response.body, response);
@@ -870,4 +870,3 @@ add_test(function test_not_sending_cookie() {
     server.stop(run_next_test);
   });
 });
-

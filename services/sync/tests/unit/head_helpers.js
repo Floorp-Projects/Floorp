@@ -194,9 +194,9 @@ function mockGetTabState(tab) {
 function mockGetWindowEnumerator(url, numWindows, numTabs, indexes, moreURLs) {
   let elements = [];
 
-  function url2entry(url) {
+  function url2entry(urlToConvert) {
     return {
-      url: ((typeof url == "function") ? url() : url),
+      url: ((typeof urlToConvert == "function") ? urlToConvert() : urlToConvert),
       title: "title"
     };
   }
