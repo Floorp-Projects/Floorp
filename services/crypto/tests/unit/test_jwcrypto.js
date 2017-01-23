@@ -4,7 +4,7 @@
 "use strict"
 
 XPCOMUtils.defineLazyModuleGetter(this, "jwcrypto",
-                                  "resource://gre/modules/identity/jwcrypto.jsm");
+                                  "resource://gre/modules/services-crypto/jwcrypto.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this,
                                    "CryptoService",
