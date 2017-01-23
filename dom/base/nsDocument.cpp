@@ -1494,6 +1494,11 @@ nsDocument::~nsDocument()
   for (StyleSheet* sheet : mStyleSheets) {
     sheet->SetOwningDocument(nullptr);
   }
+  for (auto& sheets : mAdditionalSheets) {
+    for (StyleSheet* sheet : sheets) {
+      sheet->SetOwningDocument(nullptr);
+    }
+  }
   if (mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nullptr);
   }
