@@ -454,7 +454,7 @@ fuzzy(1,32400) == clipPath-on-outflowElement-02b.html clipPath-on-outflowElement
 default-preferences
 
 == mask-on-outflowElement-01a.html clipPath-on-outflowElement-01-ref.html
-== mask-on-outflowElement-01b.html clipPath-on-outflowElement-01-ref.html
+fails == mask-on-outflowElement-01b.html clipPath-on-outflowElement-01-ref.html
 
 == clipPath-and-mask-on-outflowElement-01a.html clipPath-on-outflowElement-01-ref.html
 == clipPath-and-mask-on-outflowElement-01b.html clipPath-on-outflowElement-01-ref.html
