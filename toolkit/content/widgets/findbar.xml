@@ -1200,7 +1200,6 @@
             this._findAgain(aFindPrevious);
             if (this._useModalHighlight) {
               this.open();
-              this._findField.select();
               this._findField.focus();
             }
           }
