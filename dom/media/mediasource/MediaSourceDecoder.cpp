@@ -44,7 +44,7 @@ MediaDecoderStateMachine*
 MediaSourceDecoder::CreateStateMachine()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mDemuxer = new MediaSourceDemuxer();
+  mDemuxer = new MediaSourceDemuxer(AbstractMainThread());
   mReader = new MediaFormatReader(this, mDemuxer, GetVideoFrameContainer());
   return new MediaDecoderStateMachine(this, mReader);
 }

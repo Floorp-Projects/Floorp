@@ -32,6 +32,7 @@ struct JSContext;
 
 namespace mozilla {
 
+class AbstractThread;
 class ErrorResult;
 class MediaByteBuffer;
 template <typename T> class AsyncEventRunner;
@@ -167,6 +168,7 @@ private:
   void AppendDataErrored(const MediaResult& aError);
 
   RefPtr<MediaSource> mMediaSource;
+  const RefPtr<AbstractThread> mAbstractMainThread;
 
   RefPtr<TrackBuffersManager> mTrackBuffersManager;
   SourceBufferAttributes mCurrentAttributes;

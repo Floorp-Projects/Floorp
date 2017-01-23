@@ -9,6 +9,7 @@
 #include "AbstractMediaDecoder.h"
 #include "OggDemuxer.h"
 #include "OggCodecState.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/SharedThreadPool.h"
@@ -131,6 +132,7 @@ OggDemuxer::~OggDemuxer()
       OGG_DEBUG("Reporting telemetry MEDIA_OGG_LOADED_IS_CHAINED=%d", isChained);
       Telemetry::Accumulate(Telemetry::ID::MEDIA_OGG_LOADED_IS_CHAINED, isChained);
     });
+    // Non-DocGroup version of AbstractThread::MainThread is fine for Telemetry.
     AbstractThread::MainThread()->Dispatch(task.forget());
   }
 }

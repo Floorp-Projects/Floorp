@@ -25,19 +25,18 @@ NS_IMPL_ADDREF(BackstagePass)
 NS_IMPL_RELEASE(BackstagePass)
 
 // The nsIXPCScriptable map declaration that will generate stubs for us...
-#define XPC_MAP_CLASSNAME           BackstagePass
-#define XPC_MAP_QUOTED_CLASSNAME   "BackstagePass"
-#define                             XPC_MAP_WANT_RESOLVE
-#define                             XPC_MAP_WANT_ENUMERATE
-#define                             XPC_MAP_WANT_FINALIZE
-#define                             XPC_MAP_WANT_PRECREATE
-
-#define XPC_MAP_FLAGS       nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY   |  \
-                            nsIXPCScriptable::USE_JSSTUB_FOR_DELPROPERTY   |  \
-                            nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY   |  \
-                            nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE    |  \
-                            nsIXPCScriptable::IS_GLOBAL_OBJECT             |  \
-                            nsIXPCScriptable::DONT_REFLECT_INTERFACE_NAMES
+#define XPC_MAP_CLASSNAME         BackstagePass
+#define XPC_MAP_QUOTED_CLASSNAME "BackstagePass"
+#define XPC_MAP_FLAGS (XPC_SCRIPTABLE_WANT_RESOLVE | \
+                       XPC_SCRIPTABLE_WANT_ENUMERATE | \
+                       XPC_SCRIPTABLE_WANT_FINALIZE | \
+                       XPC_SCRIPTABLE_WANT_PRECREATE | \
+                       XPC_SCRIPTABLE_USE_JSSTUB_FOR_ADDPROPERTY |  \
+                       XPC_SCRIPTABLE_USE_JSSTUB_FOR_DELPROPERTY |  \
+                       XPC_SCRIPTABLE_USE_JSSTUB_FOR_SETPROPERTY |  \
+                       XPC_SCRIPTABLE_DONT_ENUM_QUERY_INTERFACE |  \
+                       XPC_SCRIPTABLE_IS_GLOBAL_OBJECT |  \
+                       XPC_SCRIPTABLE_DONT_REFLECT_INTERFACE_NAMES)
 #include "xpc_map_end.h" /* This will #undef the above */
 
 

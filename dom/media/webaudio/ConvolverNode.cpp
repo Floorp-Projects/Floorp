@@ -126,7 +126,8 @@ public:
           RefPtr<PlayingRefChanged> refchanged =
             new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
           aStream->Graph()->
-            DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());
+            DispatchToMainThreadAfterStreamStateUpdate(mAbstractMainThread,
+                                                       refchanged.forget());
         }
         aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
         return;
@@ -147,7 +148,8 @@ public:
         RefPtr<PlayingRefChanged> refchanged =
           new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
         aStream->Graph()->
-          DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());
+          DispatchToMainThreadAfterStreamStateUpdate(mAbstractMainThread,
+                                                     refchanged.forget());
       }
       mLeftOverData = mBufferLength;
       MOZ_ASSERT(mLeftOverData > 0);

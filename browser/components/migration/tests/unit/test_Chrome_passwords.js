@@ -80,31 +80,12 @@ var crypto = new OSCrypto();
 var dbConn;
 
 function promiseSetPassword(login) {
-  return new Promise((resolve, reject) => {
-    let stmt = dbConn.createAsyncStatement(`
-      UPDATE logins
-      SET password_value = :password_value
-      WHERE rowid = :rowid
-    `);
-    let passwordValue = crypto.stringToArray(crypto.encryptData(login.password));
-    stmt.bindBlobByName("password_value", passwordValue, passwordValue.length);
-    stmt.params.rowid = login.id;
-
-    stmt.executeAsync({
-      handleError(aError) {
-        reject("Error with the query: " + aError.message);
-      },
-
-      handleCompletion(aReason) {
-        if (aReason === Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-          resolve();
-        } else {
-          reject("Query has failed: " + aReason);
-        }
-      },
-    });
-    stmt.finalize();
-  });
+  let passwordValue = crypto.stringToArray(crypto.encryptData(login.password));
+  return dbConn.execute(`UPDATE logins
+                         SET password_value = :password_value
+                         WHERE rowid = :rowid
+                        `, { password_value: passwordValue,
+                             rowid: login.id });
 }
 
 function checkLoginsAreEqual(passwordManagerLogin, chromeLogin, id) {
@@ -147,13 +128,13 @@ function generateDifferentLogin(login) {
 
 add_task(function* setup() {
   let loginDataFile = do_get_file("AppData/Local/Google/Chrome/User Data/Default/Login Data");
-  dbConn = Services.storage.openUnsharedDatabase(loginDataFile);
+  dbConn = yield Sqlite.openConnection({ path: loginDataFile.path });
   registerFakePath("LocalAppData", do_get_file("AppData/Local/"));
 
   do_register_cleanup(() => {
     Services.logins.removeAllLogins();
-    dbConn.asyncClose();
     crypto.finalize();
+    return dbConn.close();
   });
 });
 

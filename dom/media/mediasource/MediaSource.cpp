@@ -454,6 +454,7 @@ MediaSource::MediaSource(nsPIDOMWindowInner* aWindow)
   : DOMEventTargetHelper(aWindow)
   , mDecoder(nullptr)
   , mPrincipal(nullptr)
+  , mAbstractMainThread(GetOwnerGlobal()->AbstractMainThreadFor(TaskCategory::Other))
   , mReadyState(MediaSourceReadyState::Closed)
 {
   MOZ_ASSERT(NS_IsMainThread());

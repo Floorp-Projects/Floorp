@@ -158,7 +158,7 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper& nativeHelper,
     nsISupports* identity = nativeHelper.GetCanonical();
 
     // The object should specify that it's meant to be global.
-    MOZ_ASSERT(nativeHelper.GetScriptableFlags() & nsIXPCScriptable::IS_GLOBAL_OBJECT);
+    MOZ_ASSERT(nativeHelper.GetScriptableFlags() & XPC_SCRIPTABLE_IS_GLOBAL_OBJECT);
 
     // We shouldn't be reusing globals.
     MOZ_ASSERT(!nativeHelper.GetWrapperCache() ||

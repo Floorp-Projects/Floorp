@@ -104,6 +104,7 @@ namespace media {
 class MediaSink;
 }
 
+class AbstractThread;
 class AudioSegment;
 class DecodedStream;
 class MediaDecoderReaderWrapper;
@@ -466,6 +467,7 @@ private:
   void OnMediaSinkVideoError();
 
   void* const mDecoderID;
+  const RefPtr<AbstractThread> mAbstractMainThread;
   const RefPtr<FrameStatistics> mFrameStats;
   const RefPtr<VideoFrameContainer> mVideoFrameContainer;
   const dom::AudioChannel mAudioChannel;

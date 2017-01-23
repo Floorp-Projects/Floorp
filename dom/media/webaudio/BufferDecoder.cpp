@@ -14,8 +14,11 @@ namespace mozilla {
 
 NS_IMPL_ISUPPORTS0(BufferDecoder)
 
-BufferDecoder::BufferDecoder(MediaResource* aResource, GMPCrashHelper* aCrashHelper)
+BufferDecoder::BufferDecoder(MediaResource* aResource,
+                             AbstractThread* aMainThread,
+                             GMPCrashHelper* aCrashHelper)
   : mResource(aResource)
+  , mAbstractMainThread(aMainThread)
   , mCrashHelper(aCrashHelper)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -70,6 +73,12 @@ already_AddRefed<GMPCrashHelper>
 BufferDecoder::GetCrashHelper()
 {
   return do_AddRef(mCrashHelper);
+}
+
+AbstractThread*
+BufferDecoder::AbstractMainThread() const
+{
+  return mAbstractMainThread;
 }
 
 } // namespace mozilla
