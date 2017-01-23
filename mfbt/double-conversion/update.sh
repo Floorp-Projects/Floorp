@@ -8,6 +8,15 @@
 
 set -e
 
+LOCAL_PATCHES=""
+
+LOCAL_PATCHES="$LOCAL_PATCHES add-mfbt-api-markers.patch"
+LOCAL_PATCHES="$LOCAL_PATCHES use-StandardInteger.patch"
+LOCAL_PATCHES="$LOCAL_PATCHES use-mozilla-assertions.patch"
+LOCAL_PATCHES="$LOCAL_PATCHES use-static_assert.patch"
+LOCAL_PATCHES="$LOCAL_PATCHES ToPrecision-exponential.patch"
+LOCAL_PATCHES="$LOCAL_PATCHES fix-Wshadow-issues.patch"
+
 TMPDIR=`mktemp --directory`
 LOCAL_CLONE="$TMPDIR/double-conversion"
 
@@ -19,6 +28,14 @@ if [ "$1" !=  "" ]; then
   git -C "$LOCAL_CLONE" checkout "$1"
 fi
 
+# First clear out everything already present.
+rm -rf ./*
+
+# Restore non-upstream files
+hg revert update.sh
+hg revert $LOCAL_PATCHES
+
+# Copy over critical files.
 cp "$LOCAL_CLONE/LICENSE" ./
 cp "$LOCAL_CLONE/README" ./
 
@@ -32,9 +49,7 @@ for ccfile in "$LOCAL_CLONE/src/"*.cc; do
   cp "$ccfile" ./
 done
 
-patch -p3 < add-mfbt-api-markers.patch
-patch -p3 < use-StandardInteger.patch
-patch -p3 < use-mozilla-assertions.patch
-patch -p3 < use-static_assert.patch
-patch -p3 < ToPrecision-exponential.patch
-patch -p3 < fix-Wshadow-issues.patch
+# Now apply our local patches.
+for patch in $LOCAL_PATCHES; do
+  patch -p3 < "$patch"
+done
