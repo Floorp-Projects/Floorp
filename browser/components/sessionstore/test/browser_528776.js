@@ -11,7 +11,7 @@ function browserWindowsCount(expected) {
      "number of open browser windows according to getBrowserState");
 }
 
-add_task(function() {
+add_task(function*() {
   browserWindowsCount(1);
 
   let win = yield BrowserTestUtils.openNewBrowserWindow();

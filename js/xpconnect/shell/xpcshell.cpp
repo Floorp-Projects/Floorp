@@ -60,8 +60,7 @@ main(int argc, char** argv, char** envp)
       mozilla::sandboxing::GetInitializedBrokerServices();
 #endif
 
-    mozilla::Bootstrap::UniquePtr bootstrap;
-    XRE_GetBootstrap(bootstrap);
+    mozilla::Bootstrap::UniquePtr bootstrap = mozilla::GetBootstrap();
     if (!bootstrap) {
         return 2;
     }

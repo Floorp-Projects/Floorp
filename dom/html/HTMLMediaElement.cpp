@@ -654,14 +654,32 @@ public:
     }
   }
 
+  bool
+  ShouldResetSuspend() const
+  {
+    // The disposable-pause should be clear after media starts playing.
+    if (!mOwner->Paused() &&
+        mSuspended == nsISuspendedTypes::SUSPENDED_PAUSE_DISPOSABLE) {
+      return true;
+    }
+
+    // If the blocked media is paused, we don't need to resume it. We reset the
+    // mSuspended in order to unregister the agent.
+    if (mOwner->Paused() &&
+        mSuspended == nsISuspendedTypes::SUSPENDED_BLOCK) {
+      return true;
+    }
+
+    return false;
+  }
+
   void
-  NotifyPlayStarted()
+  NotifyPlayStateChanged()
   {
     MOZ_ASSERT(!mIsShutDown);
-    // Reset the suspend type because the media element might be paused by
-    // audio channel before calling play(). eg. paused by Fennec media control,
-    // but resumed it from page.
-    SetSuspended(nsISuspendedTypes::NONE_SUSPENDED);
+    if (ShouldResetSuspend()) {
+      SetSuspended(nsISuspendedTypes::NONE_SUSPENDED);
+    }
     UpdateAudioChannelPlayingState();
   }
 
@@ -880,7 +898,7 @@ private:
     if (!IsSuspended()) {
       MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
              ("HTMLMediaElement::AudioChannelAgentCallback, ResumeFromAudioChannel, "
-              "this = %p, Error : resume without suspended!\n", this));
+              "this = %p, don't need to be resumed!\n", this));
       return;
     }
 
@@ -2757,7 +2775,9 @@ HTMLMediaElement::Pause(ErrorResult& aRv)
   // We changed mPaused and mAutoplaying which can affect AddRemoveSelfReference
   AddRemoveSelfReference();
   UpdateSrcMediaStreamPlaying();
-  UpdateAudioChannelPlayingState();
+  if (mAudioChannelWrapper) {
+    mAudioChannelWrapper->NotifyPlayStateChanged();
+  }
 
   if (!oldPaused) {
     FireTimeUpdate(false);
@@ -3573,7 +3593,8 @@ NS_IMPL_ISUPPORTS(HTMLMediaElement::ShutdownObserver, nsIObserver)
 
 HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
-    mWatchManager(this, AbstractThread::MainThread()),
+    mAbstractMainThread(OwnerDoc()->AbstractMainThreadFor(TaskCategory::Other)),
+    mWatchManager(this, mAbstractMainThread),
     mSrcStreamTracksAvailable(false),
     mSrcStreamPausedCurrentTime(-1),
     mShutdownObserver(new ShutdownObserver),
@@ -4637,7 +4658,7 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder,
   // Not every decoder will produce waitingForKey events, only add ones that can
   if (waitingForKeyProducer) {
     mWaitingForKeyListener = waitingForKeyProducer->Connect(
-      AbstractThread::MainThread(), this, &HTMLMediaElement::CannotDecryptWaitingForKey);
+      mAbstractMainThread, this, &HTMLMediaElement::CannotDecryptWaitingForKey);
   }
 
   if (mChannelLoader) {
@@ -4672,14 +4693,15 @@ class HTMLMediaElement::StreamListener : public MediaStreamListener,
                                          public WatchTarget
 {
 public:
-  explicit StreamListener(HTMLMediaElement* aElement, const char* aName) :
+  StreamListener(HTMLMediaElement* aElement, const char* aName) :
     WatchTarget(aName),
     mElement(aElement),
     mHaveCurrentData(false),
     mBlocked(false),
     mFinished(false),
     mMutex(aName),
-    mPendingNotifyOutput(false)
+    mPendingNotifyOutput(false),
+    mAbstractMainThread(aElement->AbstractMainThread())
   {}
   void Forget()
   {
@@ -4741,14 +4763,15 @@ public:
     } else {
       event = NewRunnableMethod(this, &StreamListener::DoNotifyUnblocked);
     }
-    aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
+    aGraph->DispatchToMainThreadAfterStreamStateUpdate(mAbstractMainThread,
+                                                       event.forget());
   }
   virtual void NotifyHasCurrentData(MediaStreamGraph* aGraph) override
   {
     MutexAutoLock lock(mMutex);
-    nsCOMPtr<nsIRunnable> event =
-      NewRunnableMethod(this, &StreamListener::DoNotifyHaveCurrentData);
-    aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
+    aGraph->DispatchToMainThreadAfterStreamStateUpdate(
+      mAbstractMainThread,
+      NewRunnableMethod(this, &StreamListener::DoNotifyHaveCurrentData));
   }
   virtual void NotifyOutput(MediaStreamGraph* aGraph,
                             GraphTime aCurrentTime) override
@@ -4757,9 +4780,9 @@ public:
     if (mPendingNotifyOutput)
       return;
     mPendingNotifyOutput = true;
-    nsCOMPtr<nsIRunnable> event =
-      NewRunnableMethod(this, &StreamListener::DoNotifyOutput);
-    aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
+    aGraph->DispatchToMainThreadAfterStreamStateUpdate(
+      mAbstractMainThread,
+      NewRunnableMethod(this, &StreamListener::DoNotifyOutput));
   }
 
 private:
@@ -4772,6 +4795,7 @@ private:
   // mMutex protects the fields below; they can be accessed on any thread
   Mutex mMutex;
   bool mPendingNotifyOutput;
+  const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
 class HTMLMediaElement::MediaStreamTracksAvailableCallback:
@@ -7132,8 +7156,16 @@ HTMLMediaElement::UpdateCustomPolicyAfterPlayed()
 {
   OpenUnsupportedMediaWithExternalAppIfNeeded();
   if (mAudioChannelWrapper) {
-    mAudioChannelWrapper->NotifyPlayStarted();
+    mAudioChannelWrapper->NotifyPlayStateChanged();
   }
+}
+
+AbstractThread*
+HTMLMediaElement::AbstractMainThread() const
+{
+  MOZ_ASSERT(mAbstractMainThread);
+
+  return mAbstractMainThread;
 }
 
 nsTArray<RefPtr<Promise>>

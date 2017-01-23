@@ -11,6 +11,7 @@
 #include "nsIRunnable.h"
 #include "nsIWritablePropertyBag2.h"
 #include "mozIGeckoMediaPluginService.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/SSE.h"
 #include "mozilla/SyncRunnable.h"
@@ -743,6 +744,7 @@ GMPParent::ReadChromiumManifestFile(nsIFile* aFile)
 
   // DOM JSON parsing needs to run on the main thread.
   return InvokeAsync<nsString&&>(
+    // Non DocGroup-version of AbstractThread::MainThread for the task in parent.
     AbstractThread::MainThread(), this, __func__,
     &GMPParent::ParseChromiumManifest, NS_ConvertUTF8toUTF16(json));
 }

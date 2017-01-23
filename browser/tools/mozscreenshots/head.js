@@ -34,20 +34,29 @@ function* setup() {
   });
 }
 
+/**
+ * Used by pre-defined sets of configurations to decide whether to run for a build.
+ * @note This is not used by browser_screenshots.js which handles when MOZSCREENSHOTS_SETS is set.
+ * @return {bool} whether to capture screenshots.
+ */
 function shouldCapture() {
-  // Try pushes only capture in browser_screenshots.js with MOZSCREENSHOTS_SETS.
   if (env.get("MOZSCREENSHOTS_SETS")) {
     ok(true, "MOZSCREENSHOTS_SETS was specified so only capture what was " +
        "requested (in browser_screenshots.js)");
     return false;
   }
 
-  // Automation isn't able to schedule test jobs to only run on nightlies so we handle it here
-  // (see also: bug 1116275).
-  let capture = AppConstants.MOZ_UPDATE_CHANNEL == "nightly" ||
-                AppConstants.SOURCE_REVISION_URL == "";
+  if (AppConstants.MOZ_UPDATE_CHANNEL == "nightly") {
+    ok(true, "Screenshots aren't captured on Nightlies");
+    return false;
+  }
+
+  // Don't run pre-defined sets (e.g. primaryUI) on try, require MOZSCREENSHOTS_SETS.
+  // The job is only scheduled on specific repos:
+  // https://dxr.mozilla.org/build-central/search?q=MOCHITEST_BC_SCREENSHOTS
+  let capture = !AppConstants.SOURCE_REVISION_URL.includes("/try/rev/");
   if (!capture) {
-    ok(true, "Capturing is disabled for this MOZ_UPDATE_CHANNEL or REPO");
+    ok(true, "Capturing is disabled for this REPO. You may need to use MOZSCREENSHOTS_SETS");
   }
   return capture;
 }

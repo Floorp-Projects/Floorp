@@ -2,23 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+
 :root {
-  --breakpoint-background: url("chrome://devtools/skin/images/breakpoint.svg#light");
-  --breakpoint-hover-background: url("chrome://devtools/skin/images/breakpoint.svg#light-hover");
   --breakpoint-active-color: rgba(44,187,15,.2);
-  --breakpoint-conditional-background: url("chrome://devtools/skin/images/breakpoint.svg#light-conditional");
+  --breakpoint-active-color-hover: rgba(44,187,15,.5);
 }
 
 .theme-dark:root {
-  --breakpoint-background: url("chrome://devtools/skin/images/breakpoint.svg#dark");
-  --breakpoint-hover-background: url("chrome://devtools/skin/images/breakpoint.svg#dark-hover");
-  --breakpoint-active-color: rgba(112,191,83,.4);
-  --breakpoint-conditional-background: url("chrome://devtools/skin/images/breakpoint.svg#dark-conditional");
-}
-
-.CodeMirror {
-  height: 100%;
-  cursor: text;
+  --breakpoint-active-color: rgba(0,255,175,.4);
+  --breakpoint-active-color-hover: rgba(0,255,175,.7);
 }
 
 .CodeMirror .errors {
@@ -33,7 +25,6 @@
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
-  background-image: url("chrome://devtools/skin/images/editor-error.png");
   opacity: 0.75;
 }
 
@@ -71,14 +62,6 @@
   color: var(--theme-body-background);
 }
 
-.breakpoint .CodeMirror-linenumber:before {
-  background-image: var(--breakpoint-background) !important;
-}
-
-.conditional .CodeMirror-linenumber:before {
-  background-image: var(--breakpoint-conditional-background) !important;
-}
-
 .debug-line .CodeMirror-linenumber {
   background-color: var(--breakpoint-active-color);
 }
@@ -95,6 +78,11 @@
    is already highlighted */
 .debug-line .CodeMirror-activeline-background {
   display: none;
+}
+
+.CodeMirror {
+  cursor: text;
+  height: 100%;
 }
 
 .CodeMirror-gutters {
@@ -122,6 +110,48 @@ selector in floating-scrollbar-light.css across all platforms. */
   opacity: 0.75;
   background-position: left bottom;
   background-repeat: repeat-x;
+}
+
+.cm-highlight {
+  position: relative;
+}
+
+.cm-highlight:before {
+  position: absolute;
+  border-top-style: solid;
+  border-bottom-style: solid;
+  border-top-color: var(--theme-comment-alt);
+  border-bottom-color: var(--theme-comment-alt);
+  border-top-width: 1px;
+  border-bottom-width: 1px;
+  top: -1px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  content: "";
+  margin-bottom: -1px;
+}
+
+.cm-highlight-full:before {
+  border: 1px solid var(--theme-comment-alt);
+}
+
+.cm-highlight-start:before {
+  border-left-width: 1px;
+  border-left-style: solid;
+  border-left-color: var(--theme-comment-alt);
+  margin: 0 0 -1px -1px;
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
+.cm-highlight-end:before {
+  border-right-width: 1px;
+  border-right-style: solid;
+  border-right-color: var(--theme-comment-alt);
+  margin: 0 -1px -1px 0;
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
 }
 
 /* CodeMirror dialogs styling */

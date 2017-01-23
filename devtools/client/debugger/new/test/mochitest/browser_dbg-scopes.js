@@ -17,11 +17,6 @@ add_task(function* () {
   invokeInTab("firstCall");
   yield waitForPaused(dbg);
 
-  toggleNode(dbg, 1);
-  toggleNode(dbg, 2);
-
-  yield waitForDispatch(dbg, "LOAD_OBJECT_PROPERTIES");
-
   is(getLabel(dbg, 1), "secondCall");
   is(getLabel(dbg, 2), "<this>");
 });

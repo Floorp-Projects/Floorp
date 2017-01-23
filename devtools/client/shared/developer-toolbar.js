@@ -933,8 +933,8 @@ OutputPanel.prototype._init = function (devtoolbar) {
    so it can be styled correctly. */
 OutputPanel.prototype._copyTheme = function () {
   if (this.document) {
-    let theme =
-      this._devtoolbar._doc.documentElement.getAttribute("devtoolstheme");
+    let theme = this._devtoolbar._doc.getElementById("browser-bottombox")
+                  .getAttribute("devtoolstheme");
     this.document.documentElement.setAttribute("devtoolstheme", theme);
   }
 };
@@ -1253,8 +1253,8 @@ TooltipPanel.prototype._init = function (devtoolbar) {
    so it can be styled correctly. */
 TooltipPanel.prototype._copyTheme = function () {
   if (this.document) {
-    let theme =
-      this._devtoolbar._doc.documentElement.getAttribute("devtoolstheme");
+    let theme = this._devtoolbar._doc.getElementById("browser-bottombox")
+                  .getAttribute("devtoolstheme");
     this.document.documentElement.setAttribute("devtoolstheme", theme);
   }
 };

@@ -1,15 +1,16 @@
 
-##############################################
-##                                          ##
-##  WARNING: You're building with -Dfuzz=1  ##
-##                                          ##
-##  This means:                             ##
-##                                          ##
-##   * Your PRNG is DETERMINISTIC.          ##
-##   * TLS transcripts are PLAINTEXT.       ##
-##   * TLS signature checks are DISABLED.   ##
-##                                          ##
-##  Thank you for fuzzing!                  ##
-##                                          ##
-##############################################
+##################################################
+##                                              ##
+##  WARNING: You're building with -Dfuzz_tls=1  ##
+##                                              ##
+##  This means:                                 ##
+##                                              ##
+##   * Your PRNG is DETERMINISTIC.              ##
+##   * TLS transcripts are PLAINTEXT.           ##
+##   * Session tickets are NOT encrypted.       ##
+##   * TLS signature/MAC checks are DISABLED.   ##
+##                                              ##
+##  Thank you for fuzzing!                      ##
+##                                              ##
+##################################################
 

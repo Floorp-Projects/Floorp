@@ -111,6 +111,9 @@ if (AppConstants.MOZ_CRASHREPORTER) {
                                      "nsICrashReporter");
 }
 
+XPCOMUtils.defineLazyServiceGetter(this, "gSerializationHelper",
+                                   "@mozilla.org/network/serialization-helper;1",
+                                   "nsISerializationHelper");
 
 XPCOMUtils.defineLazyGetter(this, "BrowserToolboxProcess", function() {
   let tmp = {};
@@ -842,12 +845,28 @@ function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
   }
 }
 
+function serializeInputStream(aStream) {
+  let data = {
+    content: NetUtil.readInputStreamToString(aStream, aStream.available()),
+  };
+
+  if (aStream instanceof Ci.nsIMIMEInputStream) {
+    data.headers = new Map();
+    aStream.visitHeaders((name, value) => {
+      data.headers.set(name, value);
+    });
+  }
+
+  return data;
+}
+
 // A shared function used by both remote and non-remote browser XBL bindings to
 // load a URI or redirect it to the correct process.
 function _loadURIWithFlags(browser, uri, params) {
   if (!uri) {
     uri = "about:blank";
   }
+  let triggeringPrincipal = params.triggeringPrincipal || null;
   let flags = params.flags || 0;
   let referrer = params.referrerURI;
   let referrerPolicy = ("referrerPolicy" in params ? params.referrerPolicy :
@@ -871,7 +890,7 @@ function _loadURIWithFlags(browser, uri, params) {
 
       browser.webNavigation.loadURIWithOptions(uri, flags,
                                                referrer, referrerPolicy,
-                                               postData, null, null);
+                                               postData, null, null, triggeringPrincipal);
     } else {
       // Check if the current browser is allowed to unload.
       let {permitUnload, timedOut} = browser.permitUnload();
@@ -880,11 +899,14 @@ function _loadURIWithFlags(browser, uri, params) {
       }
 
       if (postData) {
-        postData = NetUtil.readInputStreamToString(postData, postData.available());
+        postData = serializeInputStream(postData);
       }
 
       let loadParams = {
         uri,
+        triggeringPrincipal: triggeringPrincipal
+          ? gSerializationHelper.serializePrincipal(triggeringPrincipal)
+          : null,
         flags,
         referrer: referrer ? referrer.spec : null,
         referrerPolicy,
@@ -912,7 +934,7 @@ function _loadURIWithFlags(browser, uri, params) {
       }
 
       browser.webNavigation.loadURIWithOptions(uri, flags, referrer, referrerPolicy,
-                                               postData, null, null);
+                                               postData, null, null, triggeringPrincipal);
     } else {
       throw e;
     }
@@ -1009,6 +1031,7 @@ var gBrowserInit = {
     AboutPrivateBrowsingListener.init();
     TrackingProtection.init();
     RefreshBlocker.init();
+    CaptivePortalWatcher.init();
 
     let mm = window.getGroupMessageManager("browsers");
     mm.loadFrameScript("chrome://browser/content/tab-content.js", true);
@@ -1535,6 +1558,8 @@ var gBrowserInit = {
     TrackingProtection.uninit();
 
     RefreshBlocker.uninit();
+
+    CaptivePortalWatcher.uninit();
 
     gMenuButtonUpdateBadge.uninit();
 
@@ -2852,7 +2877,7 @@ var BrowserOnClick = {
                          msg.data.securityInfoAsString);
       break;
       case "Browser:OpenCaptivePortalPage":
-        this.onOpenCaptivePortalPage();
+        CaptivePortalWatcher.ensureCaptivePortalTab();
       break;
       case "Browser:SiteBlockedError":
         this.onAboutBlocked(msg.data.elementId, msg.data.reason,
@@ -2986,28 +3011,6 @@ var BrowserOnClick = {
         break;
 
     }
-  },
-
-  onOpenCaptivePortalPage() {
-    // Open a new tab with the canonical URL that we use to check for a captive portal.
-    // It will be redirected to the login page.
-    let canonicalURL = Services.prefs.getCharPref("captivedetect.canonicalURL");
-    let tab = gBrowser.addTab(canonicalURL);
-    let canonicalURI = makeURI(canonicalURL);
-    gBrowser.selectedTab = tab;
-
-    // When we are no longer captive, close the tab if it's at the canonical URL.
-    let tabCloser = () => {
-      Services.obs.removeObserver(tabCloser, "captive-portal-login-abort");
-      Services.obs.removeObserver(tabCloser, "captive-portal-login-success");
-      if (!tab || tab.closing || !tab.parentNode || !tab.linkedBrowser ||
-          !tab.linkedBrowser.currentURI.equalsExceptRef(canonicalURI)) {
-        return;
-      }
-      gBrowser.removeTab(tab);
-    }
-    Services.obs.addObserver(tabCloser, "captive-portal-login-abort", false);
-    Services.obs.addObserver(tabCloser, "captive-portal-login-success", false);
   },
 
   onAboutBlocked(elementId, reason, isTopFrame, location) {
@@ -4960,7 +4963,7 @@ nsBrowserAccess.prototype = {
   _openURIInNewTab(aURI, aReferrer, aReferrerPolicy, aIsPrivate,
                              aIsExternal, aForceNotRemote = false,
                              aUserContextId = Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID,
-                             aOpener = null) {
+                             aOpener = null, aTriggeringPrincipal = null) {
     let win, needToFocusWin;
 
     // try the current window.  if we're in a popup, fall back on the most recent browser window
@@ -4985,6 +4988,7 @@ nsBrowserAccess.prototype = {
     let loadInBackground = gPrefService.getBoolPref("browser.tabs.loadDivertedInBackground");
 
     let tab = win.gBrowser.loadOneTab(aURI ? aURI.spec : "about:blank", {
+                                      triggeringPrincipal: aTriggeringPrincipal,
                                       referrerURI: aReferrer,
                                       referrerPolicy: aReferrerPolicy,
                                       userContextId: aUserContextId,
@@ -5033,9 +5037,11 @@ nsBrowserAccess.prototype = {
     }
 
     let referrer = aOpener ? makeURI(aOpener.location.href) : null;
+    let triggeringPrincipal = null;
     let referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_UNSET;
     if (aOpener && aOpener.document) {
       referrerPolicy = aOpener.document.referrerPolicy;
+      triggeringPrincipal = aOpener.document.nodePrincipal;
     }
     let isPrivate = aOpener
                   ? PrivateBrowsingUtils.isContentWindowPrivate(aOpener)
@@ -5069,7 +5075,7 @@ nsBrowserAccess.prototype = {
         let browser = this._openURIInNewTab(aURI, referrer, referrerPolicy,
                                             isPrivate, isExternal,
                                             forceNotRemote, userContextId,
-                                            openerWindow);
+                                            openerWindow, triggeringPrincipal);
         if (browser)
           newWindow = browser.contentWindow;
         break;
@@ -5080,6 +5086,7 @@ nsBrowserAccess.prototype = {
                             Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL :
                             Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
           gBrowser.loadURIWithFlags(aURI.spec, {
+                                    triggeringPrincipal,
                                     flags: loadflags,
                                     referrerURI: referrer,
                                     referrerPolicy,
@@ -5109,7 +5116,8 @@ nsBrowserAccess.prototype = {
                                         aParams.referrerPolicy,
                                         aParams.isPrivate,
                                         isExternal, false,
-                                        userContextId);
+                                        userContextId, null,
+                                        aParams.triggeringPrincipal);
     if (browser)
       return browser.QueryInterface(Ci.nsIFrameLoaderOwner);
 
@@ -7870,7 +7878,10 @@ var TabContextMenu = {
 
     // Adjust the state of the toggle mute menu item.
     let toggleMute = document.getElementById("context_toggleMuteTab");
-    if (this.contextTab.hasAttribute("muted")) {
+    if (this.contextTab.hasAttribute("blocked")) {
+      toggleMute.label = gNavigatorBundle.getString("playTab.label");
+      toggleMute.accessKey = gNavigatorBundle.getString("playTab.accesskey");
+    } else if (this.contextTab.hasAttribute("muted")) {
       toggleMute.label = gNavigatorBundle.getString("unmuteTab.label");
       toggleMute.accessKey = gNavigatorBundle.getString("unmuteTab.accesskey");
     } else {

@@ -192,8 +192,8 @@ function dragElementBy(selector, x, y, win) {
   let { Simulate } = React.addons.TestUtils;
   let rect = getElRect(selector, win);
   let startPoint = {
-    clientX: rect.left + Math.floor(rect.width / 2),
-    clientY: rect.top + Math.floor(rect.height / 2),
+    clientX: Math.floor(rect.left + rect.width / 2),
+    clientY: Math.floor(rect.top + rect.height / 2),
   };
   let endPoint = [ startPoint.clientX + x, startPoint.clientY + y ];
 

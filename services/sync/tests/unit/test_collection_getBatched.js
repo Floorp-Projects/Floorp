@@ -126,13 +126,13 @@ add_test(function test_total_limit() {
   const recordLimit = 11;
   const batchSize = 2;
   const lastModified = "111111";
-  let { records, responses, requests, coll } = get_test_collection_info({
+  let { records, requests, coll } = get_test_collection_info({
     totalRecords,
     batchSize,
     lastModified,
   });
   coll.limit = recordLimit;
-  let response = coll.getBatched(batchSize);
+  coll.getBatched(batchSize);
 
   equal(requests.length, Math.ceil(recordLimit / batchSize));
   equal(records.length, recordLimit);
@@ -180,7 +180,7 @@ add_test(function test_get_throws() {
   const totalRecords = 11;
   const batchSize = 2;
   const lastModified = "111111";
-  let { records, responses, requests, coll } = get_test_collection_info({
+  let { records, requests, coll } = get_test_collection_info({
     totalRecords,
     batchSize,
     lastModified,

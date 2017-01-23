@@ -392,9 +392,9 @@ JO(JSContext* cx, HandleObject obj, StringifyContext* scx)
 #ifdef DEBUG
         if (scx->maybeSafely) {
             RootedNativeObject nativeObj(cx, &obj->as<NativeObject>());
-            RootedShape prop(cx);
+            Rooted<PropertyResult> prop(cx);
             NativeLookupOwnPropertyNoResolve(cx, nativeObj, id, &prop);
-            MOZ_ASSERT(prop && prop->isDataDescriptor());
+            MOZ_ASSERT(prop && prop.isNativeProperty() && prop.shape()->isDataDescriptor());
         }
 #endif // DEBUG
         if (!GetProperty(cx, obj, obj, id, &outputValue))
@@ -971,9 +971,9 @@ static const JSFunctionSpec json_static_methods[] = {
 JSObject*
 js::InitJSONClass(JSContext* cx, HandleObject obj)
 {
-    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
+    Handle<GlobalObject*> global = obj.as<GlobalObject>();
 
-    RootedObject proto(cx, global->getOrCreateObjectPrototype(cx));
+    RootedObject proto(cx, GlobalObject::getOrCreateObjectPrototype(cx, global));
     if (!proto)
         return nullptr;
     RootedObject JSON(cx, NewObjectWithGivenProto(cx, &JSONClass, proto, SingletonObject));

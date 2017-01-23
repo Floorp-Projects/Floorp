@@ -512,7 +512,6 @@ winmm_stream_init(cubeb * context, cubeb_stream ** stream, char const * stream_n
     return CUBEB_ERROR;
   }
 
-
   for (i = 0; i < NBUFS; ++i) {
     WAVEHDR * hdr = &stm->buffers[i];
 
@@ -768,7 +767,6 @@ winmm_calculate_device_rate(cubeb_device_info * info, DWORD formats)
     info->max_rate = 96000;
   }
 }
-
 
 #define MM_S16_MASK (WAVE_FORMAT_1M16 | WAVE_FORMAT_1S16 | WAVE_FORMAT_2M16 | WAVE_FORMAT_2S16 | WAVE_FORMAT_4M16 | \
     WAVE_FORMAT_4S16 | WAVE_FORMAT_48M16 | WAVE_FORMAT_48S16 | WAVE_FORMAT_96M16 | WAVE_FORMAT_96S16)
@@ -1050,6 +1048,7 @@ static struct cubeb_ops const winmm_ops = {
   /*.get_max_channel_count=*/ winmm_get_max_channel_count,
   /*.get_min_latency=*/ winmm_get_min_latency,
   /*.get_preferred_sample_rate =*/ winmm_get_preferred_sample_rate,
+  /*.get_preferred_channel_layout =*/ NULL,
   /*.enumerate_devices =*/ winmm_enumerate_devices,
   /*.destroy =*/ winmm_destroy,
   /*.stream_init =*/ winmm_stream_init,

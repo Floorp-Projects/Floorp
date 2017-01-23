@@ -132,7 +132,7 @@ TimeoutManager::Initialize()
                               DEFAULT_MIN_TRACKING_TIMEOUT_VALUE);
   Preferences::AddIntVarCache(&gMinTrackingBackgroundTimeoutValue,
                               "dom.min_tracking_background_timeout_value",
-                              DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE);
+                              DEFAULT_MIN_TRACKING_BACKGROUND_TIMEOUT_VALUE);
   Preferences::AddIntVarCache(&gTimeoutBucketingStrategy,
                               "dom.timeout_bucketing_strategy",
                               TRACKING_SEPARATE_TIMEOUT_BUCKETING_STRATEGY);

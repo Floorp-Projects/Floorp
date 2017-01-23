@@ -69,6 +69,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScrollableFrame.h"
+#include "nsContentPolicyUtils.h" // NS_CheckContentLoadPolicy(...)
 #include "nsISeekableStream.h"
 #include "nsAutoPtr.h"
 #include "nsQueryObject.h"
@@ -138,6 +139,7 @@
 #include "nsISiteSecurityService.h"
 #include "nsStructuredCloneContainer.h"
 #include "nsIStructuredCloneContainer.h"
+#include "nsISupportsPrimitives.h"
 #ifdef MOZ_PLACES
 #include "nsIFaviconService.h"
 #include "mozIPlacesPendingOperation.h"
@@ -9880,6 +9882,34 @@ nsDocShell::InternalLoad(nsIURI* aURI,
       MOZ_ASSERT(mItemType == elementDocShell->ItemType(),
                 "subframes should have the same docshell type as their parent");
 #endif
+    }
+
+    // Since Content Policy checks are performed within docShell as well as
+    // the ContentSecurityManager we need a reliable way to let certain
+    // nsIContentPolicy consumers ignore duplicate calls. Let's use the 'extra'
+    // argument to pass a specific identifier.
+    nsCOMPtr<nsISupportsString> extraStr =
+      do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_NAMED_LITERAL_STRING(msg, "conPolCheckFromDocShell");
+    rv = extraStr->SetData(msg);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    int16_t shouldLoad = nsIContentPolicy::ACCEPT;
+    rv = NS_CheckContentLoadPolicy(contentType,
+                                   aURI,
+                                   aTriggeringPrincipal,
+                                   requestingContext,
+                                   EmptyCString(),  // mime guess
+                                   extraStr,  // extra
+                                   &shouldLoad);
+  
+    if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
+      if (NS_SUCCEEDED(rv) && shouldLoad == nsIContentPolicy::REJECT_TYPE) {
+        return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
+      }
+
+      return NS_ERROR_CONTENT_BLOCKED;
     }
 
     // If HSTS priming was set by nsMixedContentBlocker::ShouldLoad, and we

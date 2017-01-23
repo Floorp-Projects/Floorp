@@ -30,7 +30,11 @@ let gWhitelist = [{
     type: "single-quote"
   }, {
     file: "netError.dtd",
-    key: "certerror.wrongSystemTime",
+    key: "certerror.wrongSystemTime2",
+    type: "single-quote"
+  }, {
+    file: "netError.dtd",
+    key: "certerror.wrongSystemTimeWithoutReference",
     type: "single-quote"
   }, {
     file: "phishing-afterload-warning-message.dtd",

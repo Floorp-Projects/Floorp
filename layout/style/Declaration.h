@@ -98,6 +98,8 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CSS_DECLARATION_IMPL_CID)
 
+  // If this ever becomes cycle-collected, please change the CC implementation
+  // for StyleRule to traverse it.
   NS_DECL_ISUPPORTS
 
 private:
@@ -310,19 +312,21 @@ private:
   bool operator==(const Declaration& aCopy) const = delete;
 
   void GetPropertyValueInternal(nsCSSPropertyID aProperty, nsAString& aValue,
-                                nsCSSValue::Serialization aValueSerialization)
-    const;
+                                nsCSSValue::Serialization aValueSerialization,
+                                bool* aIsTokenStream = nullptr) const;
   bool GetPropertyIsImportantByID(nsCSSPropertyID aProperty) const;
 
   static void AppendImportanceToString(bool aIsImportant, nsAString& aString);
   // return whether there was a value in |aValue| (i.e., it had a non-null unit)
   bool AppendValueToString(nsCSSPropertyID aProperty, nsAString& aResult) const;
   bool AppendValueToString(nsCSSPropertyID aProperty, nsAString& aResult,
-                           nsCSSValue::Serialization aValueSerialization) const;
+                           nsCSSValue::Serialization aValueSerialization,
+                           bool* aIsTokenStream = nullptr) const;
   // Helper for ToString with strange semantics regarding aValue.
   void AppendPropertyAndValueToString(nsCSSPropertyID aProperty,
+                                      nsAString& aResult,
                                       nsAutoString& aValue,
-                                      nsAString& aResult) const;
+                                      bool aValueIsTokenStream) const;
   // helper for ToString that serializes a custom property declaration for
   // a variable with the specified name
   void AppendVariableAndValueToString(const nsAString& aName,

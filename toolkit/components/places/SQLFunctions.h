@@ -187,14 +187,10 @@ private:
  * Optional parameters must be passed in if the page is not yet in the database,
  * otherwise they will be fetched from it automatically.
  *
- * @param pageId
+ * @param {int64_t} pageId
  *        The id of the page.  Pass -1 if the page is being added right now.
- * @param [optional] typed
- *        Whether the page has been typed in.  Default is false.
- * @param [optional] fullVisitCount
- *        Count of all the visits (All types).  Default is 0.
- * @param [optional] isBookmarked
- *        Whether the page is bookmarked. Default is false.
+ * @param [optional] {int32_t} redirect
+ *        Whether the page visit is a redirect.  Default is false.
  */
 class CalculateFrecencyFunction final : public mozIStorageFunction
 {

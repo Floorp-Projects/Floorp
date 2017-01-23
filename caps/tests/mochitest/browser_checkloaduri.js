@@ -21,6 +21,7 @@ const URLs = new Map([
     ["data:text/html,Hi", true, false, true],
     ["view-source:data:text/html,Hi", false, false, true],
     ["javascript:alert('hi')", true, false, true],
+    ["moz://a", false, false, true],
   ]],
   ["feed:http://www.example.com", [
     ["http://www.example2.com", true, true, true],
@@ -36,6 +37,7 @@ const URLs = new Map([
     ["data:text/html,Hi", true, false, true],
     ["view-source:data:text/html,Hi", false, false, true],
     ["javascript:alert('hi')", true, false, true],
+    ["moz://a", false, false, true],
   ]],
   ["view-source:http://www.example.com", [
     ["http://www.example2.com", true, true, true],
@@ -51,6 +53,7 @@ const URLs = new Map([
     ["data:text/html,Hi", true, false, true],
     ["view-source:data:text/html,Hi", true, false, true],
     ["javascript:alert('hi')", true, false, true],
+    ["moz://a", false, false, true],
   ]],
   ["about:foo", [
     ["about:foo?", true, true, true],
@@ -63,6 +66,7 @@ const URLs = new Map([
     ["about:bar?foo#baz", false, false, true],
     ["about:bar?foo", false, false, true],
     ["http://www.example.com/", true, true, true],
+    ["moz://a", false, false, true],
   ]],
 ]);
 

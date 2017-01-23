@@ -10,6 +10,7 @@
 #include "WMFUtils.h"
 #include "nsTArray.h"
 #include "TimeUnits.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Logging.h"
 
@@ -254,6 +255,7 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset,
       LOG("Reporting telemetry AUDIO_MFT_OUTPUT_NULL_SAMPLES");
       Telemetry::Accumulate(Telemetry::ID::AUDIO_MFT_OUTPUT_NULL_SAMPLES, 1);
     });
+    // Non-DocGroup version of AbstractThread::MainThread is fine for Telemetry.
     AbstractThread::MainThread()->Dispatch(task.forget());
     return E_FAIL;
   }

@@ -43,8 +43,8 @@ class TestServoFilter(unittest.TestCase):
         # Missing servo/ directory should prune tasks requiring Servo.
         self.assertEqual(set(filter_tasks.filter_servo(graph, {})), {'a', 'c'})
 
-        # Servo tasks should be retained if servo/ present.
-        os.mkdir(os.path.join(self._tmpdir, 'servo'))
+        # Servo tasks should be retained if servo/components/style/ present.
+        os.makedirs(os.path.join(self._tmpdir, 'servo', 'components', 'style'))
         self.assertEqual(set(filter_tasks.filter_servo(graph, {})),
                          {'a', 'b', 'c'})
 

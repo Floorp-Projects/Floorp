@@ -1030,7 +1030,7 @@ JS_ResolveStandardClass(JSContext* cx, HandleObject obj, HandleId id, bool* reso
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
 
-    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
+    Handle<GlobalObject*> global = obj.as<GlobalObject>();
     *resolved = false;
 
     if (!JSID_IS_ATOM(id))
@@ -1074,7 +1074,7 @@ JS_ResolveStandardClass(JSContext* cx, HandleObject obj, HandleId id, bool* reso
     // more way: its prototype chain is lazily initialized. That is,
     // global->getProto() might be null right now because we haven't created
     // Object.prototype yet. Force it now.
-    return global->getOrCreateObjectPrototype(cx);
+    return GlobalObject::getOrCreateObjectPrototype(cx, global);
 }
 
 JS_PUBLIC_API(bool)
@@ -1107,8 +1107,7 @@ JS_EnumerateStandardClasses(JSContext* cx, HandleObject obj)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    MOZ_ASSERT(obj->is<GlobalObject>());
-    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
+    Handle<GlobalObject*> global = obj.as<GlobalObject>();
     return GlobalObject::initStandardClasses(cx, global);
 }
 
@@ -1164,7 +1163,8 @@ JS_GetObjectPrototype(JSContext* cx, HandleObject forObj)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, forObj);
-    return forObj->global().getOrCreateObjectPrototype(cx);
+    Rooted<GlobalObject*> global(cx, &forObj->global());
+    return GlobalObject::getOrCreateObjectPrototype(cx, global);
 }
 
 JS_PUBLIC_API(JSObject*)
@@ -1172,7 +1172,8 @@ JS_GetFunctionPrototype(JSContext* cx, HandleObject forObj)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, forObj);
-    return forObj->global().getOrCreateFunctionPrototype(cx);
+    Rooted<GlobalObject*> global(cx, &forObj->global());
+    return GlobalObject::getOrCreateFunctionPrototype(cx, global);
 }
 
 JS_PUBLIC_API(JSObject*)
@@ -2906,9 +2907,9 @@ JS_AlreadyHasOwnPropertyById(JSContext* cx, HandleObject obj, HandleId id, bool*
         return js::HasOwnProperty(cx, obj, id, foundp);
 
     RootedNativeObject nativeObj(cx, &obj->as<NativeObject>());
-    RootedShape prop(cx);
+    Rooted<PropertyResult> prop(cx);
     NativeLookupOwnPropertyNoResolve(cx, nativeObj, id, &prop);
-    *foundp = !!prop;
+    *foundp = prop.isFound();
     return true;
 }
 
@@ -3485,7 +3486,7 @@ CreateNonSyntacticEnvironmentChain(JSContext* cx, AutoObjectVector& envChain,
         // declaration was qualified by "var". There is only sadness.
         //
         // See JSObject::isQualifiedVarObj.
-        if (!env->setQualifiedVarObj(cx))
+        if (!JSObject::setQualifiedVarObj(cx, env))
             return false;
 
         // Also get a non-syntactic lexical environment to capture 'let' and
@@ -4379,14 +4380,15 @@ JS_DecompileScript(JSContext* cx, HandleScript script, const char* name, unsigne
 
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    script->ensureNonLazyCanonicalFunction(cx);
+    script->ensureNonLazyCanonicalFunction();
     RootedFunction fun(cx, script->functionNonDelazifying());
     if (fun)
         return JS_DecompileFunction(cx, fun, indent);
     bool haveSource = script->scriptSource()->hasSourceData();
     if (!haveSource && !JSScript::loadSource(cx, script->scriptSource(), &haveSource))
         return nullptr;
-    return haveSource ? script->sourceData(cx) : NewStringCopyZ<CanGC>(cx, "[no source]");
+    return haveSource ? JSScript::sourceData(cx, script)
+                      : NewStringCopyZ<CanGC>(cx, "[no source]");
 }
 
 JS_PUBLIC_API(JSString*)
@@ -5924,7 +5926,8 @@ JS_SetRegExpInput(JSContext* cx, HandleObject obj, HandleString input)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, input);
 
-    RegExpStatics* res = obj->as<GlobalObject>().getRegExpStatics(cx);
+    Handle<GlobalObject*> global = obj.as<GlobalObject>();
+    RegExpStatics* res = GlobalObject::getRegExpStatics(cx, global);
     if (!res)
         return false;
 
@@ -5939,7 +5942,8 @@ JS_ClearRegExpStatics(JSContext* cx, HandleObject obj)
     CHECK_REQUEST(cx);
     MOZ_ASSERT(obj);
 
-    RegExpStatics* res = obj->as<GlobalObject>().getRegExpStatics(cx);
+    Handle<GlobalObject*> global = obj.as<GlobalObject>();
+    RegExpStatics* res = GlobalObject::getRegExpStatics(cx, global);
     if (!res)
         return false;
 
@@ -5954,7 +5958,8 @@ JS_ExecuteRegExp(JSContext* cx, HandleObject obj, HandleObject reobj, char16_t* 
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    RegExpStatics* res = obj->as<GlobalObject>().getRegExpStatics(cx);
+    Handle<GlobalObject*> global = obj.as<GlobalObject>();
+    RegExpStatics* res = GlobalObject::getRegExpStatics(cx, global);
     if (!res)
         return false;
 

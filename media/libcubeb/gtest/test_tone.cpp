@@ -110,6 +110,7 @@ TEST(cubeb, tone)
   params.format = STREAM_FORMAT;
   params.rate = SAMPLE_FREQUENCY;
   params.channels = 1;
+  params.layout = CUBEB_LAYOUT_MONO;
 
   user_data = (struct cb_user_data *) malloc(sizeof(*user_data));
   if (user_data == NULL) {

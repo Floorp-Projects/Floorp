@@ -84,7 +84,7 @@ add_task(function* test_run() {
  * different cookie domains given in the Set-Cookie header. See above for some
  * usage examples.
  */
-var testCookieCollection = Task.async(function (params) {
+var testCookieCollection = async function (params) {
   let tab = gBrowser.addTab("about:blank");
   let browser = tab.linkedBrowser;
 
@@ -102,14 +102,14 @@ var testCookieCollection = Task.async(function (params) {
   // Wait for the browser to load and the cookie to be set.
   // These two events can probably happen in no particular order,
   // so let's wait for them in parallel.
-  yield Promise.all([
+  await Promise.all([
     waitForNewCookie(),
     replaceCurrentURI(browser, uri)
   ]);
 
   // Check all URIs for which the cookie should be collected.
   for (let uri of params.cookieURIs || []) {
-    yield replaceCurrentURI(browser, uri);
+    await replaceCurrentURI(browser, uri);
 
     // Check the cookie.
     let cookie = getCookie();
@@ -121,7 +121,7 @@ var testCookieCollection = Task.async(function (params) {
 
   // Check all URIs for which the cookie should NOT be collected.
   for (let uri of params.noCookieURIs || []) {
-    yield replaceCurrentURI(browser, uri);
+    await replaceCurrentURI(browser, uri);
 
     // Cookie should be ignored.
     ok(!getCookie(), "no cookie collected");
@@ -130,22 +130,22 @@ var testCookieCollection = Task.async(function (params) {
   // Clean up.
   gBrowser.removeTab(tab);
   Services.cookies.removeAll();
-});
+};
 
 /**
  * Replace the current URI of the given browser by loading a new URI. The
  * browser's session history will be completely replaced. This function ensures
  * that the parent process has the lastest shistory data before resolving.
  */
-var replaceCurrentURI = Task.async(function* (browser, uri) {
+var replaceCurrentURI = async function(browser, uri) {
   // Replace the tab's current URI with the parent domain.
   let flags = Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
   browser.loadURIWithFlags(uri, flags);
-  yield promiseBrowserLoaded(browser);
+  await promiseBrowserLoaded(browser);
 
   // Ensure the tab's session history is up-to-date.
-  yield TabStateFlusher.flush(browser);
-});
+  await TabStateFlusher.flush(browser);
+};
 
 /**
  * Waits for a new "*example.com" cookie to be added.

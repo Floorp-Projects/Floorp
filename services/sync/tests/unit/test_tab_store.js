@@ -93,8 +93,6 @@ function test_createRecord() {
   store.shouldSkipWindow = mockShouldSkipWindow;
   store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, "http://foo.com", 1, 1);
 
-  let tabs = store.getAllTabs();
-  let tabsize = JSON.stringify(tabs[0]).length;
   let numtabs = Math.ceil(20000. / 77.);
 
   store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, "http://foo.com", 1, 1);

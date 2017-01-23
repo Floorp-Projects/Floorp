@@ -1053,7 +1053,8 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     JSAtom* stopStringCompression();
 
     Node stringLiteral();
-    Node noSubstitutionTemplate();
+    Node noSubstitutionTaggedTemplate();
+    Node noSubstitutionUntaggedTemplate();
     Node templateLiteral(YieldHandling yieldHandling);
     bool taggedTemplate(YieldHandling yieldHandling, Node nodeList, TokenKind tt);
     bool appendToCallSiteObj(Node callSiteObj);

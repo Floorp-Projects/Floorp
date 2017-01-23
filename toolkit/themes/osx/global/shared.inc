@@ -5,6 +5,7 @@
 %define yosemiteFocusRingShadow 0 0 0 0.5px -moz-mac-focusring inset, 0 0 0 2px -moz-mac-focusring
 
 %define roundButtonBorder 1px solid rgba(0,0,0,.35)
+%define roundButtonColor black
 %define roundButtonBackground linear-gradient(#f6f6f6, #e9e9e9)
 %define roundButtonShadow 0 1px rgba(255,255,255,.5), inset 0 1px 1px rgba(255,255,255,.5)
 %define roundButtonPressedBackground #dadada

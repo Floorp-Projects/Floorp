@@ -22,9 +22,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-s
 /* global AboutHome:false, AboutNewTab:false, AddonManager:false, AddonWatcher:false,
           AsyncShutdown:false, AutoCompletePopup:false, BookmarkHTMLUtils:false,
           BookmarkJSONUtils:false, BrowserUITelemetry:false, BrowserUsageTelemetry:false,
-          CaptivePortalWatcher:false, ContentClick:false, ContentPrefServiceParent:false,
-          ContentSearch:false, DateTimePickerHelper:false, DirectoryLinksProvider:false,
-          Feeds:false, FileUtils:false, FormValidationHandler:false, Integration:false,
+          ContentClick:false, ContentPrefServiceParent:false, ContentSearch:false,
+          DateTimePickerHelper:false, DirectoryLinksProvider:false, Feeds:false,
+          FileUtils:false, FormValidationHandler:false, Integration:false,
           LightweightThemeManager:false, LoginHelper:false, LoginManagerParent:false,
           NetUtil:false, NewTabMessages:false, NewTabUtils:false, OS:false,
           PageThumbs:false, PdfJs:false, PermissionUI:false, PlacesBackups:false,
@@ -51,7 +51,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-s
   ["BookmarkJSONUtils", "resource://gre/modules/BookmarkJSONUtils.jsm"],
   ["BrowserUITelemetry", "resource:///modules/BrowserUITelemetry.jsm"],
   ["BrowserUsageTelemetry", "resource:///modules/BrowserUsageTelemetry.jsm"],
-  ["CaptivePortalWatcher", "resource:///modules/CaptivePortalWatcher.jsm"],
   ["ContentClick", "resource:///modules/ContentClick.jsm"],
   ["ContentPrefServiceParent", "resource://gre/modules/ContentPrefServiceParent.jsm"],
   ["ContentSearch", "resource:///modules/ContentSearch.jsm"],
@@ -980,8 +979,6 @@ BrowserGlue.prototype = {
 
     this._checkForOldBuildUpdates();
 
-    CaptivePortalWatcher.init();
-
     AutoCompletePopup.init();
     DateTimePickerHelper.init();
 
@@ -1010,7 +1007,6 @@ BrowserGlue.prototype = {
     BrowserUsageTelemetry.uninit();
     SelfSupportBackend.uninit();
     NewTabMessages.uninit();
-    CaptivePortalWatcher.uninit();
     AboutNewTab.uninit();
     webrtcUI.uninit();
     FormValidationHandler.uninit();

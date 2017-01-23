@@ -517,14 +517,14 @@ ModuleEnvironmentObject::fixEnclosingEnvironmentAfterCompartmentMerge(GlobalObje
 
 /* static */ bool
 ModuleEnvironmentObject::lookupProperty(JSContext* cx, HandleObject obj, HandleId id,
-                                        MutableHandleObject objp, MutableHandleShape propp)
+                                        MutableHandleObject objp, MutableHandle<PropertyResult> propp)
 {
     const IndirectBindingMap& bindings = obj->as<ModuleEnvironmentObject>().importBindings();
     Shape* shape;
     ModuleEnvironmentObject* env;
     if (bindings.lookup(id, &env, &shape)) {
         objp.set(env);
-        propp.set(shape);
+        propp.setNativeProperty(shape);
         return true;
     }
 
@@ -719,13 +719,13 @@ CheckUnscopables(JSContext *cx, HandleObject obj, HandleId id, bool *scopable)
 
 static bool
 with_LookupProperty(JSContext* cx, HandleObject obj, HandleId id,
-                    MutableHandleObject objp, MutableHandleShape propp)
+                    MutableHandleObject objp, MutableHandle<PropertyResult> propp)
 {
     // SpiderMonkey-specific: consider internal '.generator' and '.this' names
     // to be unscopable.
     if (IsUnscopableDotName(cx, id)) {
         objp.set(nullptr);
-        propp.set(nullptr);
+        propp.setNotFound();
         return true;
     }
 
@@ -739,7 +739,7 @@ with_LookupProperty(JSContext* cx, HandleObject obj, HandleId id,
             return false;
         if (!scopable) {
             objp.set(nullptr);
-            propp.set(nullptr);
+            propp.setNotFound();
         }
     }
     return true;
@@ -845,7 +845,7 @@ NonSyntacticVariablesObject::create(JSContext* cx)
         return nullptr;
 
     MOZ_ASSERT(obj->isUnqualifiedVarObj());
-    if (!obj->setQualifiedVarObj(cx))
+    if (!JSObject::setQualifiedVarObj(cx, obj))
         return nullptr;
 
     obj->initEnclosingEnvironment(&cx->global()->lexicalEnvironment());
@@ -985,7 +985,7 @@ LexicalEnvironmentObject::createHollowForDebug(JSContext* cx, Handle<LexicalScop
             return nullptr;
     }
 
-    if (!env->setFlags(cx, BaseShape::NOT_EXTENSIBLE, JSObject::GENERATE_SHAPE))
+    if (!JSObject::setFlags(cx, env, BaseShape::NOT_EXTENSIBLE, JSObject::GENERATE_SHAPE))
         return nullptr;
 
     env->initScopeUnchecked(scope);
@@ -1135,7 +1135,7 @@ ReportRuntimeLexicalErrorId(JSContext* cx, unsigned errorNumber, HandleId id)
 
 static bool
 lexicalError_LookupProperty(JSContext* cx, HandleObject obj, HandleId id,
-                            MutableHandleObject objp, MutableHandleShape propp)
+                            MutableHandleObject objp, MutableHandle<PropertyResult> propp)
 {
     ReportRuntimeLexicalErrorId(cx, obj->as<RuntimeLexicalErrorObject>().errorNumber(), id);
     return false;
@@ -2279,11 +2279,11 @@ DebugEnvironmentProxy::isForDeclarative() const
            e.is<LexicalEnvironmentObject>();
 }
 
-bool
-DebugEnvironmentProxy::getMaybeSentinelValue(JSContext* cx, HandleId id, MutableHandleValue vp)
+/* static */ bool
+DebugEnvironmentProxy::getMaybeSentinelValue(JSContext* cx, Handle<DebugEnvironmentProxy*> env,
+                                             HandleId id, MutableHandleValue vp)
 {
-    Rooted<DebugEnvironmentProxy*> self(cx, this);
-    return DebugEnvironmentProxyHandler::singleton.getMaybeSentinelValue(cx, self, id, vp);
+    return DebugEnvironmentProxyHandler::singleton.getMaybeSentinelValue(cx, env, id, vp);
 }
 
 bool

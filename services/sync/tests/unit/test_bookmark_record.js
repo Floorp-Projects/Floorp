@@ -26,7 +26,6 @@ add_task(async function test_bookmark_record() {
 
   log.info("Creating a record");
 
-  let u = "http://localhost:8080/storage/bookmarks/foo";
   let placesItem = new PlacesItem("bookmarks", "foo", "bookmark");
   let bookmarkItem = prepareBookmarkItem("bookmarks", "foo");
 

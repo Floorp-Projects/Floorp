@@ -149,15 +149,23 @@ document.getElementById('form').submit();
 `;
     } else if (this.uri.spec.startsWith(ACTION_BASE)) {
       var postData = "";
+      var headers = {};
       if (this._uploadStream) {
         var bstream = Cc["@mozilla.org/binaryinputstream;1"]
             .createInstance(Ci.nsIBinaryInputStream);
         bstream.setInputStream(this._uploadStream);
         postData = bstream.readBytes(bstream.available());
+
+        if (this._uploadStream instanceof Ci.nsIMIMEInputStream) {
+          this._uploadStream.visitHeaders((name, value) => {
+            headers[name] = value;
+          });
+        }
       }
       data += `
 <input id="upload_stream" value="${this._uploadStream ? "yes" : "no"}">
 <input id="post_data" value="${btoa(postData)}">
+<input id="upload_headers" value='${JSON.stringify(headers)}'>
 `;
     }
 
@@ -214,8 +222,9 @@ function frameScript() {
         if (frame) {
           var upload_stream = frame.contentDocument.getElementById("upload_stream");
           var post_data = frame.contentDocument.getElementById("post_data");
-          if (upload_stream && post_data) {
-            sendAsyncMessage("Test:IFrameLoaded", [upload_stream.value, post_data.value]);
+          var headers = frame.contentDocument.getElementById("upload_headers");
+          if (upload_stream && post_data && headers) {
+            sendAsyncMessage("Test:IFrameLoaded", [upload_stream.value, post_data.value, headers.value]);
             return;
           }
         }
@@ -236,9 +245,9 @@ function loadTestTab(uri) {
   browser.messageManager.loadFrameScript("data:,(" + frameScript.toString() + ")();", true);
 
   return new Promise(resolve => {
-    function listener({ data: [hasUploadStream, postData] }) {
+    function listener({ data: [hasUploadStream, postData, headers] }) {
       manager.removeMessageListener("Test:IFrameLoaded", listener);
-      resolve([hasUploadStream, atob(postData)]);
+      resolve([hasUploadStream, atob(postData), JSON.parse(headers)]);
     }
 
     manager.addMessageListener("Test:IFrameLoaded", listener);
@@ -272,13 +281,14 @@ add_task(function*() {
 });
 
 add_task(function*() {
-  var [hasUploadStream, postData] = yield loadTestTab(POST_FORM_URI);
+  var [hasUploadStream, postData, headers] = yield loadTestTab(POST_FORM_URI);
+
   is(hasUploadStream, "yes", "post action should have uploadStream");
-  is(postData,
-     "Content-Type: text/plain\r\n" +
-     "Content-Length: 9\r\n" +
-     "\r\n" +
-     "foo=bar\r\n", "POST data is received correctly");
+  is(postData, "foo=bar\r\n",
+     "POST data is received correctly");
+
+  is(headers["Content-Type"], "text/plain", "Content-Type header is correct");
+  is(headers["Content-Length"], undefined, "Content-Length header is correct");
 
   gBrowser.removeCurrentTab();
 });

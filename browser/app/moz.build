@@ -34,7 +34,10 @@ USE_LIBS += [
 ]
 
 if CONFIG['LIBFUZZER']:
-  USE_LIBS += [ 'fuzzer' ]
+    USE_LIBS += [ 'fuzzer' ]
+    LOCAL_INCLUDES += [
+        '/tools/fuzzing/libfuzzer',
+    ]
 
 if CONFIG['_MSC_VER']:
     # Always enter a Windows program through wmain, whether or not we're

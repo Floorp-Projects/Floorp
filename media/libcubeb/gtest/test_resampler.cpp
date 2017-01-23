@@ -286,7 +286,6 @@ long data_cb_resampler(cubeb_stream * /*stm*/, void * user_ptr,
   const float * in = reinterpret_cast<const float*>(input_buffer);
   float * out = reinterpret_cast<float*>(output_buffer);
 
-
   state->input.push(in, frame_count * state->input_channels);
 
   /* Check how much output frames we need to write */
@@ -361,7 +360,6 @@ void test_resampler_duplex(uint32_t input_channels, uint32_t output_channels,
   /* expected output is a 440Hz sine wave at 32kHz */
   fill_with_sine(expected_resampled_output.data() + latency,
                  output_rate, output_channels, output_rate * duration_s - latency, 0);
-
 
   while (state.output_phase_index != state.max_output_phase_index) {
     uint32_t leftover_samples = input_buffer.length() * input_channels;

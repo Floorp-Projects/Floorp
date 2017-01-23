@@ -91,7 +91,7 @@ nssSlot_ResetDelay(
 }
 
 static PRBool
-within_token_delay_period(NSSSlot *slot)
+within_token_delay_period(const NSSSlot *slot)
 {
     PRIntervalTime time, lastTime;
     /* Set the delay time for checking the token presence */
@@ -103,7 +103,6 @@ within_token_delay_period(NSSSlot *slot)
     if ((lastTime) && ((time - lastTime) < s_token_delay_time)) {
         return PR_TRUE;
     }
-    slot->lastTokenPing = time;
     return PR_FALSE;
 }
 
@@ -136,6 +135,7 @@ nssSlot_IsTokenPresent(
     nssSlot_ExitMonitor(slot);
     if (ckrv != CKR_OK) {
         slot->token->base.name[0] = 0; /* XXX */
+        slot->lastTokenPing = PR_IntervalNow();
         return PR_FALSE;
     }
     slot->ckFlags = slotInfo.flags;
@@ -143,6 +143,7 @@ nssSlot_IsTokenPresent(
     if ((slot->ckFlags & CKF_TOKEN_PRESENT) == 0) {
         if (!slot->token) {
             /* token was never present */
+            slot->lastTokenPing = PR_IntervalNow();
             return PR_FALSE;
         }
         session = nssToken_GetDefaultSession(slot->token);
@@ -165,6 +166,7 @@ nssSlot_IsTokenPresent(
         slot->token->base.name[0] = 0; /* XXX */
         /* clear the token cache */
         nssToken_Remove(slot->token);
+        slot->lastTokenPing = PR_IntervalNow();
         return PR_FALSE;
     }
     /* token is present, use the session info to determine if the card
@@ -187,8 +189,10 @@ nssSlot_IsTokenPresent(
         isPresent = session->handle != CK_INVALID_SESSION;
         nssSession_ExitMonitor(session);
         /* token not removed, finished */
-        if (isPresent)
+        if (isPresent) {
+            slot->lastTokenPing = PR_IntervalNow();
             return PR_TRUE;
+        }
     }
     /* the token has been removed, and reinserted, or the slot contains
      * a token it doesn't recognize. invalidate all the old
@@ -201,8 +205,11 @@ nssSlot_IsTokenPresent(
     if (nssrv != PR_SUCCESS) {
         slot->token->base.name[0] = 0; /* XXX */
         slot->ckFlags &= ~CKF_TOKEN_PRESENT;
+        /* TODO: insert a barrier here to avoid reordering of the assingments */
+        slot->lastTokenPing = PR_IntervalNow();
         return PR_FALSE;
     }
+    slot->lastTokenPing = PR_IntervalNow();
     return PR_TRUE;
 }
 

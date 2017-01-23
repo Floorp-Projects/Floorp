@@ -107,7 +107,12 @@ pref("devtools.debugger.pretty-print-enabled", true);
 pref("devtools.debugger.auto-pretty-print", false);
 pref("devtools.debugger.auto-black-box", true);
 pref("devtools.debugger.workers", false);
+
+#ifdef RELEASE_OR_BETA
+pref("devtools.debugger.new-debugger-frontend", false);
+#else
 pref("devtools.debugger.new-debugger-frontend", true);
+#endif
 
 // The default Debugger UI settings
 pref("devtools.debugger.ui.panes-workers-and-sources-width", 200);
@@ -116,6 +121,12 @@ pref("devtools.debugger.ui.panes-visible-on-startup", false);
 pref("devtools.debugger.ui.variables-sorting-enabled", true);
 pref("devtools.debugger.ui.variables-only-enum-visible", false);
 pref("devtools.debugger.ui.variables-searchbox-visible", false);
+pref("devtools.debugger.call-stack-visible", false);
+pref("devtools.debugger.scopes-visible", false);
+pref("devtools.debugger.start-panel-collapsed", false);
+pref("devtools.debugger.end-panel-collapsed", false);
+pref("devtools.debugger.tabs", "[]");
+pref("devtools.debugger.pending-selected-location", "{}");
 
 // Enable the Memory tools
 pref("devtools.memory.enabled", true);
