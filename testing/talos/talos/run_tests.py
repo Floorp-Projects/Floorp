@@ -92,6 +92,7 @@ def run_tests(config, browser_config):
 
     paths = ['profile_path', 'tpmanifest', 'extensions', 'setup', 'cleanup']
     for test in tests:
+
         # Check for profile_path, tpmanifest and interpolate based on Talos
         # root https://bugzilla.mozilla.org/show_bug.cgi?id=727711
         # Build command line from config

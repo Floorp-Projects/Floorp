@@ -195,6 +195,7 @@ GLOBAL_OVERRIDES = (
     'sps_profile_interval',
     'sps_profile_entries',
     'rss',
+    'mainthread',
     'shutdown',
     'tpcycles',
     'tpdelay',
@@ -355,6 +356,7 @@ def build_manifest(config, manifestName):
 
 def get_test(config, global_overrides, counters, test_instance):
     mozAfterPaint = getattr(test_instance, 'tpmozafterpaint', None)
+
     test_instance.update(**global_overrides)
 
     # update original value of mozAfterPaint, this could be 'false',
