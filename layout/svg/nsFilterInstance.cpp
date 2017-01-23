@@ -362,8 +362,7 @@ nsFilterInstance::ComputeNeededBoxes()
 }
 
 DrawResult
-nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
-                                   DrawTarget* aTargetDT)
+nsFilterInstance::BuildSourcePaint(SourceInfo *aSource)
 {
   MOZ_ASSERT(mTargetFrame);
   nsIntRect neededRect = aSource->mNeededBounds;
@@ -410,17 +409,17 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
 }
 
 DrawResult
-nsFilterInstance::BuildSourcePaints(DrawTarget* aTargetDT)
+nsFilterInstance::BuildSourcePaints()
 {
   if (!mFillPaint.mNeededBounds.IsEmpty()) {
-    DrawResult result = BuildSourcePaint(&mFillPaint, aTargetDT);
+    DrawResult result = BuildSourcePaint(&mFillPaint);
     if (result != DrawResult::SUCCESS) {
       return result;
     }
   }
 
   if (!mStrokePaint.mNeededBounds.IsEmpty()) {
-    DrawResult result = BuildSourcePaint(&mStrokePaint, aTargetDT);
+    DrawResult result = BuildSourcePaint(&mStrokePaint);
     if (result != DrawResult::SUCCESS) {
       return result;
     }
@@ -430,7 +429,7 @@ nsFilterInstance::BuildSourcePaints(DrawTarget* aTargetDT)
 }
 
 DrawResult
-nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
+nsFilterInstance::BuildSourceImage()
 {
   MOZ_ASSERT(mTargetFrame);
 
@@ -511,11 +510,11 @@ nsFilterInstance::Render(DrawTarget* aDrawTarget)
   aDrawTarget->SetTransform(newTM);
 
   ComputeNeededBoxes();
-  DrawResult result = BuildSourceImage(aDrawTarget);
+  DrawResult result = BuildSourceImage();
   if (result != DrawResult::SUCCESS){
     return result;
   }
-  result = BuildSourcePaints(aDrawTarget);
+  result = BuildSourcePaints();
   if (result != DrawResult::SUCCESS){
     return result;
   }
