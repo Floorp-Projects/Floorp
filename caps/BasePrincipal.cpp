@@ -286,6 +286,31 @@ OriginAttributes::IsFirstPartyEnabled()
 
 /* static */
 bool
+OriginAttributes::IsRestrictOpenerAccessForFPI()
+{
+  bool isFirstPartyEnabled = IsFirstPartyEnabled();
+
+  // Cache the privacy.firstparty.isolate.restrict_opener_access pref.
+  static bool sRestrictedOpenerAccess = false;
+  static bool sCachedRestrictedAccessPref = false;
+  if (!sCachedRestrictedAccessPref) {
+    MOZ_ASSERT(NS_IsMainThread());
+    sCachedRestrictedAccessPref = true;
+    Preferences::AddBoolVarCache(&sRestrictedOpenerAccess,
+                                 "privacy.firstparty.isolate.restrict_opener_access");
+  }
+
+  // We always want to restrict window.opener if first party isolation is
+  // disabled.
+  if (!isFirstPartyEnabled) {
+    return true;
+  }
+
+  return isFirstPartyEnabled && sRestrictedOpenerAccess;
+}
+
+/* static */
+bool
 OriginAttributes::IsPrivateBrowsing(const nsACString& aOrigin)
 {
   nsAutoCString dummy;
