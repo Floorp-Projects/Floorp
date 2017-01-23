@@ -6,10 +6,13 @@
 
 Cu.import("resource:///modules/SitePermissions.jsm", this);
 
+const EXPIRE_TIME_MS = 100;
+const TIMEOUT_MS = 500;
+
 // This tests the time delay to expire temporary permission entries.
 add_task(function* testTemporaryPermissionExpiry() {
   SpecialPowers.pushPrefEnv({set: [
-        ["privacy.temporary_permission_expire_time_ms", 100],
+        ["privacy.temporary_permission_expire_time_ms", EXPIRE_TIME_MS],
   ]});
 
   let uri = Services.io.newURI("https://example.com")
@@ -23,7 +26,7 @@ add_task(function* testTemporaryPermissionExpiry() {
       scope: SitePermissions.SCOPE_TEMPORARY,
     });
 
-    yield new Promise((c) => setTimeout(c, 500));
+    yield new Promise((c) => setTimeout(c, TIMEOUT_MS));
 
     Assert.deepEqual(SitePermissions.get(uri, id, browser), {
       state: SitePermissions.UNKNOWN,
