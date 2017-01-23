@@ -11008,6 +11008,29 @@ nsDocShell::DoURILoad(nsIURI* aURI,
     }
   }
 
+  // Navigational requests that are same origin need to be upgraded in case
+  // upgrade-insecure-requests is present. Please note that in that case
+  // the triggeringPrincipal is holding the CSP that potentially
+  // holds upgrade-insecure-requests.
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  aTriggeringPrincipal->GetCsp(getter_AddRefs(csp));
+  if (csp) {
+    bool upgradeInsecureRequests = false;
+    csp->GetUpgradeInsecureRequests(&upgradeInsecureRequests);
+    if (upgradeInsecureRequests) {
+      // only upgrade if the navigation is same origin
+      nsCOMPtr<nsIPrincipal> resultPrincipal;
+      rv = nsContentUtils::GetSecurityManager()->
+             GetChannelResultPrincipal(channel,
+                                       getter_AddRefs(resultPrincipal));
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (resultPrincipal->Equals(aTriggeringPrincipal)) {
+        static_cast<mozilla::LoadInfo*>(loadInfo.get())->SetUpgradeInsecureRequests();
+      }
+    }
+  }
+
+
   nsCOMPtr<nsIApplicationCacheChannel> appCacheChannel =
     do_QueryInterface(channel);
   if (appCacheChannel) {
