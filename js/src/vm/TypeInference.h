@@ -534,19 +534,53 @@ class TypeSet
     static bool IsTypeAboutToBeFinalized(Type* v);
 } JS_HAZ_GC_POINTER;
 
+#if JS_BITS_PER_WORD == 32
+static const uintptr_t TypeInferenceMagic = 0xa1a2b3b4;
+#else
+static const uintptr_t TypeInferenceMagic = 0xa1a2b3b4c5c6d7d8;
+#endif
+
 /*
  * A constraint which listens to additions to a type set and propagates those
  * changes to other type sets.
  */
 class TypeConstraint
 {
-public:
-    /* Next constraint listening to the same type set. */
-    TypeConstraint* next;
+#ifdef JS_CRASH_DIAGNOSTICS
+    uintptr_t magic_;
+#endif
 
+    /* Next constraint listening to the same type set. */
+    TypeConstraint* next_;
+
+  public:
     TypeConstraint()
-        : next(nullptr)
-    {}
+      : next_(nullptr)
+    {
+#ifdef JS_CRASH_DIAGNOSTICS
+        magic_ = TypeInferenceMagic;
+#endif
+    }
+
+    void checkMagic() const {
+#ifdef JS_CRASH_DIAGNOSTICS
+        MOZ_RELEASE_ASSERT(magic_ == TypeInferenceMagic);
+#endif
+    }
+
+    TypeConstraint* next() const {
+        checkMagic();
+        if (next_)
+            next_->checkMagic();
+        return next_;
+    }
+    void setNext(TypeConstraint* next) {
+        MOZ_ASSERT(!next_);
+        checkMagic();
+        if (next)
+            next->checkMagic();
+        next_ = next;
+    }
 
     /* Debugging name for this kind of constraint. */
     virtual const char* kind() = 0;
@@ -606,11 +640,49 @@ class AutoClearTypeInferenceStateOnOOM
 /* Superclass common to stack and heap type sets. */
 class ConstraintTypeSet : public TypeSet
 {
-  public:
-    /* Chain of constraints which propagate changes out from this type set. */
-    TypeConstraint* constraintList;
+#ifdef JS_CRASH_DIAGNOSTICS
+    uintptr_t magic_;
+#endif
 
-    ConstraintTypeSet() : constraintList(nullptr) {}
+  protected:
+    /* Chain of constraints which propagate changes out from this type set. */
+    TypeConstraint* constraintList_;
+
+  public:
+    ConstraintTypeSet()
+      : constraintList_(nullptr)
+    {
+#ifdef JS_CRASH_DIAGNOSTICS
+        magic_ = TypeInferenceMagic;
+#endif
+    }
+
+#ifdef JS_CRASH_DIAGNOSTICS
+    void initMagic() {
+        MOZ_ASSERT(!magic_);
+        magic_ = TypeInferenceMagic;
+    }
+#endif
+
+    void checkMagic() const {
+#ifdef JS_CRASH_DIAGNOSTICS
+        MOZ_RELEASE_ASSERT(magic_ == TypeInferenceMagic);
+#endif
+    }
+
+    TypeConstraint* constraintList() const {
+        checkMagic();
+        if (constraintList_)
+            constraintList_->checkMagic();
+        return constraintList_;
+    }
+    void setConstraintList(TypeConstraint* constraint) {
+        MOZ_ASSERT(!constraintList_);
+        checkMagic();
+        if (constraint)
+            constraint->checkMagic();
+        constraintList_ = constraint;
+    }
 
     /*
      * Add a type to this set, calling any constraint handlers if this is a new

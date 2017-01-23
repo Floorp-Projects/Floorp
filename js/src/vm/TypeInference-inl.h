@@ -920,13 +920,13 @@ HeapTypeSet::newPropertyState(ExclusiveContext* cxArg)
 {
     /* Propagate the change to all constraints. */
     if (JSContext* cx = cxArg->maybeJSContext()) {
-        TypeConstraint* constraint = constraintList;
+        TypeConstraint* constraint = constraintList();
         while (constraint) {
             constraint->newPropertyState(cx, this);
-            constraint = constraint->next;
+            constraint = constraint->next();
         }
     } else {
-        MOZ_ASSERT(!constraintList);
+        MOZ_ASSERT(!constraintList());
     }
 }
 
