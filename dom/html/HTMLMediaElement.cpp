@@ -655,12 +655,13 @@ public:
   }
 
   void
-  NotifyPlayStarted()
+  NotifyPlayStateChanged()
   {
     MOZ_ASSERT(!mIsShutDown);
-    // Reset the suspend type because the media element might be paused by
-    // audio channel before calling play(). eg. paused by Fennec media control,
-    // but resumed it from page.
+    // When owner's play state changed, we should reset the suspend type. If
+    // owner is playing, the suspend type should be 'NONE_SUSPENDED', and if
+    // owner paused, the suspend type also needs to be reset because the agent
+    // maybe need to be unregistered.
     SetSuspended(nsISuspendedTypes::NONE_SUSPENDED);
     UpdateAudioChannelPlayingState();
   }
@@ -7132,7 +7133,7 @@ HTMLMediaElement::UpdateCustomPolicyAfterPlayed()
 {
   OpenUnsupportedMediaWithExternalAppIfNeeded();
   if (mAudioChannelWrapper) {
-    mAudioChannelWrapper->NotifyPlayStarted();
+    mAudioChannelWrapper->NotifyPlayStateChanged();
   }
 }
 
