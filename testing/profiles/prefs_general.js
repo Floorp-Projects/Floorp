@@ -62,6 +62,8 @@ user_pref("dom.htmlimports.enabled", true);
 // Existing tests assume there is no font size inflation.
 user_pref("font.size.inflation.emPerLine", 0);
 user_pref("font.size.inflation.minTwips", 0);
+// Disable the caret blinking so we get stable snapshot
+user_pref("ui.caretBlinkTime", -1);
 
 // AddonManager tests require that the experiments provider be present.
 user_pref("experiments.supported", true);
