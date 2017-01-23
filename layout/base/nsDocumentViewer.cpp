@@ -2405,6 +2405,12 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument)
 NS_IMETHODIMP
 nsDocumentViewer::ClearHistoryEntry()
 {
+  if (mDocument) {
+    nsJSContext::PokeGC(JS::gcreason::PAGE_HIDE,
+                        mDocument->GetWrapperPreserveColor(),
+                        NS_GC_DELAY * 2);
+  }
+
   mSHEntry = nullptr;
   return NS_OK;
 }
