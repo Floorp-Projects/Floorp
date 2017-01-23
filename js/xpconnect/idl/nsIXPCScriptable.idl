@@ -31,6 +31,32 @@ interface nsIXPConnectWrappedNative;
 [ptr] native jsClassPtr(const js::Class);
 [ptr] native JSClassPtr(const JSClass);
 
+%{ C++
+    // nsIXPCScriptable flags (only 32 bits available!). They are defined via
+    // #defines so they can be used in #ifndef guards in xpc_map_end.h.
+
+    #define XPC_SCRIPTABLE_WANT_PRECREATE                   (1 <<  0)
+    #define XPC_SCRIPTABLE_WANT_GETPROPERTY                 (1 <<  1)
+    #define XPC_SCRIPTABLE_WANT_SETPROPERTY                 (1 <<  2)
+    #define XPC_SCRIPTABLE_WANT_ENUMERATE                   (1 <<  3)
+    #define XPC_SCRIPTABLE_WANT_NEWENUMERATE                (1 <<  4)
+    #define XPC_SCRIPTABLE_WANT_RESOLVE                     (1 <<  5)
+    #define XPC_SCRIPTABLE_WANT_FINALIZE                    (1 <<  6)
+    #define XPC_SCRIPTABLE_WANT_CALL                        (1 <<  7)
+    #define XPC_SCRIPTABLE_WANT_CONSTRUCT                   (1 <<  8)
+    #define XPC_SCRIPTABLE_WANT_HASINSTANCE                 (1 <<  9)
+    #define XPC_SCRIPTABLE_USE_JSSTUB_FOR_ADDPROPERTY       (1 << 10)
+    #define XPC_SCRIPTABLE_USE_JSSTUB_FOR_DELPROPERTY       (1 << 11)
+    #define XPC_SCRIPTABLE_USE_JSSTUB_FOR_SETPROPERTY       (1 << 12)
+    #define XPC_SCRIPTABLE_DONT_ENUM_QUERY_INTERFACE        (1 << 13)
+    #define XPC_SCRIPTABLE_DONT_ASK_INSTANCE_FOR_SCRIPTABLE (1 << 14)
+    #define XPC_SCRIPTABLE_CLASSINFO_INTERFACES_ONLY        (1 << 15)
+    #define XPC_SCRIPTABLE_ALLOW_PROP_MODS_DURING_RESOLVE   (1 << 16)
+    #define XPC_SCRIPTABLE_ALLOW_PROP_MODS_TO_PROTOTYPE     (1 << 17)
+    #define XPC_SCRIPTABLE_IS_GLOBAL_OBJECT                 (1 << 18)
+    #define XPC_SCRIPTABLE_DONT_REFLECT_INTERFACE_NAMES     (1 << 19)
+%}
+
 /**
  * Note: This is not really an XPCOM interface.  For example, callers must
  * guarantee that they set the *_retval of the various methods that return a
@@ -40,29 +66,6 @@ interface nsIXPConnectWrappedNative;
 [uuid(19b70b26-7c3f-437f-a04a-2a8f9e28b617)]
 interface nsIXPCScriptable : nsISupports
 {
-    /* bitflags used for 'flags' (only 32 bits available!) */
-
-    const uint32_t WANT_PRECREATE                   = 1 <<  0;
-    const uint32_t WANT_GETPROPERTY                 = 1 <<  1;
-    const uint32_t WANT_SETPROPERTY                 = 1 <<  2;
-    const uint32_t WANT_ENUMERATE                   = 1 <<  3;
-    const uint32_t WANT_NEWENUMERATE                = 1 <<  4;
-    const uint32_t WANT_RESOLVE                     = 1 <<  5;
-    const uint32_t WANT_FINALIZE                    = 1 <<  6;
-    const uint32_t WANT_CALL                        = 1 <<  7;
-    const uint32_t WANT_CONSTRUCT                   = 1 <<  8;
-    const uint32_t WANT_HASINSTANCE                 = 1 <<  9;
-    const uint32_t USE_JSSTUB_FOR_ADDPROPERTY       = 1 << 10;
-    const uint32_t USE_JSSTUB_FOR_DELPROPERTY       = 1 << 11;
-    const uint32_t USE_JSSTUB_FOR_SETPROPERTY       = 1 << 12;
-    const uint32_t DONT_ENUM_QUERY_INTERFACE        = 1 << 13;
-    const uint32_t DONT_ASK_INSTANCE_FOR_SCRIPTABLE = 1 << 14;
-    const uint32_t CLASSINFO_INTERFACES_ONLY        = 1 << 15;
-    const uint32_t ALLOW_PROP_MODS_DURING_RESOLVE   = 1 << 16;
-    const uint32_t ALLOW_PROP_MODS_TO_PROTOTYPE     = 1 << 17;
-    const uint32_t IS_GLOBAL_OBJECT                 = 1 << 18;
-    const uint32_t DONT_REFLECT_INTERFACE_NAMES     = 1 << 19;
-
     readonly attribute string className;
     [notxpcom,nostdcall] uint32_t getScriptableFlags();
     [notxpcom,nostdcall] jsClassPtr getClass();
@@ -108,33 +111,33 @@ interface nsIXPCScriptable : nsISupports
     void postCreatePrototype(in JSContextPtr cx, in JSObjectPtr proto);
 
 %{ C++
-    #define GET_IT(f_) \
-    { \
-        return 0 != (GetScriptableFlags() & nsIXPCScriptable::f_); \
+    #define GET_IT(f_, c_) \
+    bool f_() { \
+        return 0 != (GetScriptableFlags() & XPC_SCRIPTABLE_##c_); \
     }
 
-    bool WantPreCreate()                GET_IT(WANT_PRECREATE)
-    bool WantGetProperty()              GET_IT(WANT_GETPROPERTY)
-    bool WantSetProperty()              GET_IT(WANT_SETPROPERTY)
-    bool WantEnumerate()                GET_IT(WANT_ENUMERATE)
-    bool WantNewEnumerate()             GET_IT(WANT_NEWENUMERATE)
-    bool WantResolve()                  GET_IT(WANT_RESOLVE)
-    bool WantFinalize()                 GET_IT(WANT_FINALIZE)
-    bool WantCall()                     GET_IT(WANT_CALL)
-    bool WantConstruct()                GET_IT(WANT_CONSTRUCT)
-    bool WantHasInstance()              GET_IT(WANT_HASINSTANCE)
-    bool UseJSStubForAddProperty()      GET_IT(USE_JSSTUB_FOR_ADDPROPERTY)
-    bool UseJSStubForDelProperty()      GET_IT(USE_JSSTUB_FOR_DELPROPERTY)
-    bool UseJSStubForSetProperty()      GET_IT(USE_JSSTUB_FOR_SETPROPERTY)
-    bool DontEnumQueryInterface()       GET_IT(DONT_ENUM_QUERY_INTERFACE)
-    bool DontAskInstanceForScriptable() GET_IT(DONT_ASK_INSTANCE_FOR_SCRIPTABLE)
-    bool ClassInfoInterfacesOnly()      GET_IT(CLASSINFO_INTERFACES_ONLY)
-    bool AllowPropModsDuringResolve()   GET_IT(ALLOW_PROP_MODS_DURING_RESOLVE)
-    bool AllowPropModsToPrototype()     GET_IT(ALLOW_PROP_MODS_TO_PROTOTYPE)
-    bool IsGlobalObject()               GET_IT(IS_GLOBAL_OBJECT)
-    bool DontReflectInterfaceNames()    GET_IT(DONT_REFLECT_INTERFACE_NAMES)
+    GET_IT(WantPreCreate,                WANT_PRECREATE)
+    GET_IT(WantGetProperty,              WANT_GETPROPERTY)
+    GET_IT(WantSetProperty,              WANT_SETPROPERTY)
+    GET_IT(WantEnumerate,                WANT_ENUMERATE)
+    GET_IT(WantNewEnumerate,             WANT_NEWENUMERATE)
+    GET_IT(WantResolve,                  WANT_RESOLVE)
+    GET_IT(WantFinalize,                 WANT_FINALIZE)
+    GET_IT(WantCall,                     WANT_CALL)
+    GET_IT(WantConstruct,                WANT_CONSTRUCT)
+    GET_IT(WantHasInstance,              WANT_HASINSTANCE)
+    GET_IT(UseJSStubForAddProperty,      USE_JSSTUB_FOR_ADDPROPERTY)
+    GET_IT(UseJSStubForDelProperty,      USE_JSSTUB_FOR_DELPROPERTY)
+    GET_IT(UseJSStubForSetProperty,      USE_JSSTUB_FOR_SETPROPERTY)
+    GET_IT(DontEnumQueryInterface,       DONT_ENUM_QUERY_INTERFACE)
+    GET_IT(DontAskInstanceForScriptable, DONT_ASK_INSTANCE_FOR_SCRIPTABLE)
+    GET_IT(ClassInfoInterfacesOnly,      CLASSINFO_INTERFACES_ONLY)
+    GET_IT(AllowPropModsDuringResolve,   ALLOW_PROP_MODS_DURING_RESOLVE)
+    GET_IT(AllowPropModsToPrototype,     ALLOW_PROP_MODS_TO_PROTOTYPE)
+    GET_IT(IsGlobalObject,               IS_GLOBAL_OBJECT)
+    GET_IT(DontReflectInterfaceNames,    DONT_REFLECT_INTERFACE_NAMES)
 
-#undef GET_IT
+    #undef GET_IT
 %}
 };
 
