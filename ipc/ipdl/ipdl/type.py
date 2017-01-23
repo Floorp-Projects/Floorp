@@ -37,9 +37,6 @@ class TypeVisitor:
     def visitVoidType(self, v, *args):
         pass
 
-    def visitBuiltinCxxType(self, t, *args):
-        pass
-
     def visitImportedCxxType(self, t, *args):
         pass
 
@@ -148,26 +145,12 @@ class CxxType(Type):
         return True
     def isAtom(self):
         return True
-    def isBuiltin(self):
-        return False
     def isImported(self):
         return False
     def isGenerated(self):
         return False
     def isVisible(self):
         return True
-
-class BuiltinCxxType(CxxType):
-    def __init__(self, qname):
-        assert isinstance(qname, QualifiedId)
-        self.loc = qname.loc
-        self.qname = qname
-    def isBuiltin(self):  return True
-
-    def name(self):
-        return self.qname.baseid
-    def fullname(self):
-        return str(self.qname)
 
 class ImportedCxxType(CxxType):
     def __init__(self, qname):
