@@ -9,7 +9,6 @@ this.EXPORTED_SYMBOLS = ["CryptoUtils"];
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://services-sync/constants.js");
 
 this.CryptoUtils = {
   xor: function xor(a, b) {
@@ -187,9 +186,8 @@ this.CryptoUtils = {
                        hmacAlg = Ci.nsICryptoHMAC.SHA1, hmacLen = 20) {
 
     // We don't have a default in the algo itself, as NSS does.
-    // Use the constant.
     if (!dkLen) {
-      dkLen = SYNC_KEY_DECODED_LENGTH;
+      throw new Error("dkLen should be defined");
     }
 
     function F(S, c, i, h) {

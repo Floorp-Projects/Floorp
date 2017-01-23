@@ -47,7 +47,7 @@ function base64UrlDecode(s) {
       s += "=";
       break; // One pad char
     default:
-      throw new InputException("Illegal base64url string!");
+      throw new Error("Illegal base64url string!");
   }
 
   // With correct padding restored, apply the standard base64 decoder

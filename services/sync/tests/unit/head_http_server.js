@@ -1,5 +1,6 @@
 /* import-globals-from head_appinfo.js */
 /* import-globals-from ../../../common/tests/unit/head_helpers.js */
+/* import-globals-from head_helpers.js */
 
 var Cm = Components.manager;
 

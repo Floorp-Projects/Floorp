@@ -4,6 +4,13 @@
 /* import-globals-from head_appinfo.js */
 /* import-globals-from ../../../common/tests/unit/head_helpers.js */
 
+// From head_http_server.js (which also imports this file).
+/* global new_timestamp */
+
+// This file expects Service to be defined in the global scope when EHTestsCommon
+// is used (from service.js).
+/* global Service */
+
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://testing-common/services/common/utils.js");
 Cu.import("resource://testing-common/PlacesTestUtils.jsm");
@@ -75,6 +82,7 @@ function loadAddonTestFunctions() {
   const path = ExtensionsTestPath("/head_addons.js");
   let file = do_get_file(path);
   let uri = Services.io.newFileURI(file);
+  /* import-globals-from ../../../../toolkit/mozapps/extensions/test/xpcshell/head_addons.js */
   Services.scriptloader.loadSubScript(uri.spec, gGlobalScope);
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 }
@@ -91,6 +99,7 @@ function webExtensionsTestPath(path) {
  * Loads the WebExtension test functions by importing its test file.
  */
 function loadWebExtensionTestFunctions() {
+  /* import-globals-from ../../../../toolkit/components/extensions/test/xpcshell/head_sync.js */
   const path = webExtensionsTestPath("/head_sync.js");
   let file = do_get_file(path);
   let uri = Services.io.newFileURI(file);
