@@ -451,7 +451,7 @@ function run_test() {
     throw "BOO!";
   };
   res18._onProgress = onProgress;
-  oldWarn = res18._log.warn;
+  let oldWarn = res18._log.warn;
   warnings = [];
   res18._log.warn = function(msg) { warnings.push(msg) };
   error = undefined;
@@ -469,6 +469,7 @@ function run_test() {
               "Got exception calling onProgress handler during fetch of " +
               server.baseURI + "/json");
 
+  res18._log.warn = oldWarn;
 
   _("Ensure channel timeouts are thrown appropriately.");
   let res19 = new Resource(server.baseURI + "/json");
