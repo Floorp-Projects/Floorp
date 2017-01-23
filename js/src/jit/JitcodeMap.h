@@ -208,7 +208,7 @@ class JitcodeGlobalEntry
         }
 
         template <class ShouldTraceProvider> bool traceJitcode(JSTracer* trc);
-        bool isJitcodeMarkedFromAnyThread();
+        bool isJitcodeMarkedFromAnyThread(JSRuntime* rt);
         bool isJitcodeAboutToBeFinalized();
     };
 
@@ -370,7 +370,7 @@ class JitcodeGlobalEntry
 
         template <class ShouldTraceProvider> bool trace(JSTracer* trc);
         void sweepChildren();
-        bool isMarkedFromAnyThread();
+        bool isMarkedFromAnyThread(JSRuntime* rt);
     };
 
     struct BaselineEntry : public BaseEntry
@@ -428,7 +428,7 @@ class JitcodeGlobalEntry
 
         template <class ShouldTraceProvider> bool trace(JSTracer* trc);
         void sweepChildren();
-        bool isMarkedFromAnyThread();
+        bool isMarkedFromAnyThread(JSRuntime* rt);
     };
 
     struct IonCacheEntry : public BaseEntry
@@ -951,13 +951,13 @@ class JitcodeGlobalEntry
     }
 
     bool isMarkedFromAnyThread(JSRuntime* rt) {
-        if (!baseEntry().isJitcodeMarkedFromAnyThread())
+        if (!baseEntry().isJitcodeMarkedFromAnyThread(rt))
             return false;
         switch (kind()) {
           case Ion:
-            return ionEntry().isMarkedFromAnyThread();
+            return ionEntry().isMarkedFromAnyThread(rt);
           case Baseline:
-            return baselineEntry().isMarkedFromAnyThread();
+            return baselineEntry().isMarkedFromAnyThread(rt);
           case IonCache:
             return ionCacheEntry().isMarkedFromAnyThread(rt);
           case Dummy:
