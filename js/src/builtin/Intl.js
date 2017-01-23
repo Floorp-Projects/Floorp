@@ -1197,6 +1197,25 @@ function GetNumberOption(options, property, minimum, maximum, fallback) {
 /********** Property access for Intl objects **********/
 
 
+// Symbols in the self-hosting compartment can't be cloned, use a separate
+// object to hold the actual symbol value.
+// TODO: Can we add support to clone symbols?
+var intlFallbackSymbolHolder = { value: undefined };
+
+/**
+ * The [[FallbackSymbol]] symbol of the %Intl% intrinsic object.
+ *
+ * This symbol is used to implement the legacy constructor semantics for
+ * Intl.DateTimeFormat and Intl.NumberFormat.
+ */
+function intlFallbackSymbol() {
+    var fallbackSymbol = intlFallbackSymbolHolder.value;
+    if (!fallbackSymbol)
+        intlFallbackSymbolHolder.value = fallbackSymbol = std_Symbol();
+    return fallbackSymbol;
+}
+
+
 /**
  * Weak map used to track the initialize-as-Intl status (and, if an object has
  * been so initialized, the Intl-specific internal properties) of all objects.
