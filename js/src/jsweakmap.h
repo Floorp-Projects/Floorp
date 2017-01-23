@@ -187,7 +187,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
 
         Key key(p->key());
         MOZ_ASSERT((markedCell == extractUnbarriered(key)) || (markedCell == getDelegate(key)));
-        if (gc::IsMarked(&key)) {
+        if (gc::IsMarked(trc->runtime(), &key)) {
             TraceEdge(trc, &p->value(), "ephemeron value");
         } else if (keyNeedsMark(key)) {
             TraceEdge(trc, &p->value(), "WeakMap ephemeron value");
@@ -252,7 +252,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
 
         for (Enum e(*this); !e.empty(); e.popFront()) {
             // If the entry is live, ensure its key and value are marked.
-            bool keyIsMarked = gc::IsMarked(&e.front().mutableKey());
+            bool keyIsMarked = gc::IsMarked(trc->runtime(), &e.front().mutableKey());
             if (!keyIsMarked && keyNeedsMark(e.front().key())) {
                 TraceEdge(trc, &e.front().mutableKey(), "proxy-preserved WeakMap entry key");
                 keyIsMarked = true;
@@ -260,7 +260,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
             }
 
             if (keyIsMarked) {
-                if (!gc::IsMarked(&e.front().value())) {
+                if (!gc::IsMarked(trc->runtime(), &e.front().value())) {
                     TraceEdge(trc, &e.front().value(), "WeakMap entry value");
                     markedAny = true;
                 }
@@ -299,7 +299,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
          * Check if the delegate is marked with any color to properly handle
          * gray marking when the key's delegate is black and the map is gray.
          */
-        return delegate && gc::IsMarkedUnbarriered(&delegate);
+        return delegate && gc::IsMarkedUnbarriered(zone->runtimeFromMainThread(), &delegate);
     }
 
     bool keyNeedsMark(JSScript* script) const {
