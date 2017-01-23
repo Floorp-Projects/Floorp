@@ -26,6 +26,8 @@ public:
 
   virtual bool Lock() override;
 
+  virtual void Unlock() override;
+
   virtual gfx::SurfaceFormat GetFormat() const override;
 
   virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
