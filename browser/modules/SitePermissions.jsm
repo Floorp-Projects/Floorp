@@ -129,6 +129,13 @@ const TemporaryBlockedPermissions = {
   },
 };
 
+/**
+ * A module to manage permanent and temporary permissions
+ * by URI and browser.
+ *
+ * Some methods have the side effect of dispatching a "PermissionStateChange"
+ * event on changes to temporary permissions, as mentioned in the respective docs.
+ */
 this.SitePermissions = {
   // Permission states.
   UNKNOWN: Services.perms.UNKNOWN_ACTION,
@@ -296,6 +303,9 @@ this.SitePermissions = {
   /**
    * Returns the state and scope of a particular permission for a given URI.
    *
+   * This method will NOT dispatch a "PermissionStateChange" event on the specified
+   * browser if a temporary permission was removed because it has expired.
+   *
    * @param {nsIURI} uri
    *        The URI to check.
    * @param {String} permissionID
@@ -344,6 +354,8 @@ this.SitePermissions = {
 
   /**
    * Sets the state of a particular permission for a given URI or browser.
+   * This method will dispatch a "PermissionStateChange" event on the specified
+   * browser if a temporary permission was set
    *
    * @param {nsIURI} uri
    *        The URI to set the permission for.
@@ -402,6 +414,8 @@ this.SitePermissions = {
 
   /**
    * Removes the saved state of a particular permission for a given URI and/or browser.
+   * This method will dispatch a "PermissionStateChange" event on the specified
+   * browser if a temporary permission was removed.
    *
    * @param {nsIURI} uri
    *        The URI to remove the permission for.

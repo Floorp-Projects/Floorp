@@ -279,6 +279,11 @@ this.PermissionPromptPrototype = {
         this.allow();
         return;
       }
+
+      // Tell the browser to refresh the identity block display in case there
+      // are expired permission states.
+      this.browser.dispatchEvent(new this.browser.ownerGlobal
+                                         .CustomEvent("PermissionStateChange"));
     }
 
     // Transform the PermissionPrompt actions into PopupNotification actions.
