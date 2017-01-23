@@ -121,13 +121,15 @@ static const char kPrefThirdPartySession[]    = "network.cookie.thirdparty.sessi
 static const char kCookieLeaveSecurityAlone[] = "network.cookie.leave-secure-alone";
 
 // For telemetry COOKIE_LEAVE_SECURE_ALONE
-#define BLOCKED_SECURE_SET_FROM_HTTP 0
-#define BLOCKED_DOWNGRADE_SECURE     1
-#define DOWNGRADE_SECURE_FROM_SECURE 2
-#define EVICTED_NEWER_INSECURE       3
-#define EVICTED_OLDEST_COOKIE        4
-#define EVICTED_PREFERRED_COOKIE     5
-#define EVICTING_SECURE_BLOCKED      6
+#define BLOCKED_SECURE_SET_FROM_HTTP          0
+#define BLOCKED_DOWNGRADE_SECURE_INEXACT      1
+#define DOWNGRADE_SECURE_FROM_SECURE_INEXACT  2
+#define EVICTED_NEWER_INSECURE                3
+#define EVICTED_OLDEST_COOKIE                 4
+#define EVICTED_PREFERRED_COOKIE              5
+#define EVICTING_SECURE_BLOCKED               6
+#define BLOCKED_DOWNGRADE_SECURE_EXACT        7
+#define DOWNGRADE_SECURE_FROM_SECURE_EXACT    8
 
 static void
 bindCookieParameters(mozIStorageBindingParamsArray *aParamsArray,
@@ -3556,6 +3558,9 @@ nsCookieService::AddInternal(const nsCookieKey             &aKey,
   }
   nsListIter exactIter;
   bool foundCookie = false;
+  foundCookie = FindCookie(aKey, aCookie->Host(),
+                           aCookie->Name(), aCookie->Path(), exactIter);
+  bool foundSecureExact = foundCookie && exactIter.Cookie()->IsSecure();
   if (mLeaveSecureAlone) {
     // Step1, call FindSecureCookie(). FindSecureCookie() would
     // find the existing cookie with the security flag and has
@@ -3567,25 +3572,32 @@ nsCookieService::AddInternal(const nsCookieKey             &aKey,
     // of the "request-uri" does not denote a "secure" protocol,
     // then ignore the new cookie.
     // (draft-ietf-httpbis-cookie-alone section 3.2)
-    foundCookie = FindSecureCookie(aKey, aCookie);
-    if (foundCookie && !aCookie->IsSecure()) {
+    if (!aCookie->IsSecure()
+         && (foundSecureExact || FindSecureCookie(aKey, aCookie))) {
       if (!isSecure) {
         COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, aCookieHeader,
-           "cookie can't save because older cookie is secure cookie but newer cookie is non-secure cookie");
-        Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
-                              BLOCKED_DOWNGRADE_SECURE);
+          "cookie can't save because older cookie is secure cookie but newer cookie is non-secure cookie");
+        if (foundSecureExact) {
+          Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
+                                BLOCKED_DOWNGRADE_SECURE_EXACT);
+        } else {
+          Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
+                                BLOCKED_DOWNGRADE_SECURE_INEXACT);
+        }
         return;
       } else {
         // A secure site is allowed to downgrade a secure cookie
-        // but we want to measure anyway
-        Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
-                              DOWNGRADE_SECURE_FROM_SECURE);
+        // but we want to measure anyway.
+        if (foundSecureExact) {
+          Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
+                                DOWNGRADE_SECURE_FROM_SECURE_EXACT);
+        } else {
+          Telemetry::Accumulate(Telemetry::COOKIE_LEAVE_SECURE_ALONE,
+                                DOWNGRADE_SECURE_FROM_SECURE_INEXACT);
+        }
       }
     }
   }
-
-  foundCookie = FindCookie(aKey, aCookie->Host(),
-                           aCookie->Name(), aCookie->Path(), exactIter);
 
   RefPtr<nsCookie> oldCookie;
   nsCOMPtr<nsIArray> purgedList;
