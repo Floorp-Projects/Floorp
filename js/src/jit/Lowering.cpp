@@ -3644,7 +3644,7 @@ LIRGenerator::visitGetPropertyCache(MGetPropertyCache* ins)
     // We need a temp register if we can't use the output register as scratch.
     // See IonIC::scratchRegisterForEntryJump.
     LDefinition maybeTemp = LDefinition::BogusTemp();
-    if (EnableIonCacheIR && ins->type() == MIRType::Double)
+    if (ins->type() == MIRType::Double)
         maybeTemp = temp();
 
     if (ins->type() == MIRType::Value) {
