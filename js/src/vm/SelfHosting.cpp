@@ -2482,6 +2482,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_GetPluralCategories", intl_GetPluralCategories, 2, 0),
     JS_FN("intl_SelectPluralRule", intl_SelectPluralRule, 2,0),
 
+    JS_INLINABLE_FN("IsCollator",
+                    intrinsic_IsInstanceOfBuiltin<CollatorObject>, 1,0,
+                    IntlIsCollator),
     JS_INLINABLE_FN("IsPluralRules",
                     intrinsic_IsInstanceOfBuiltin<PluralRulesObject>, 1,0,
                     IntlIsPluralRules),
