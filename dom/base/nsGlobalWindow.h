@@ -1874,6 +1874,8 @@ protected:
   // even if "dom.allow_scripts_to_close_windows" is false.
   bool                   mAllowScriptsToClose : 1;
 
+  bool mTopLevelOuterContentWindow : 1;
+
   nsCOMPtr<nsIScriptContext>    mContext;
   nsWeakPtr                     mOpener;
   nsCOMPtr<nsIControllers>      mControllers;
