@@ -663,7 +663,8 @@ nsUDPSocket::InitWithAddress(const NetAddr *aAddr, nsIPrincipal *aPrincipal,
   PR_SetSocketOption(mFD, &opt);
 
   PRNetAddr addr;
-  PR_InitializeNetAddr(PR_IpAddrAny, 0, &addr);
+  // Temporary work around for IPv6 until bug 1330490 is fixed
+  memset(&addr, 0, sizeof(addr));
   NetAddrToPRNetAddr(aAddr, &addr);
 
   if (PR_Bind(mFD, &addr) != PR_SUCCESS)
@@ -720,6 +721,7 @@ nsUDPSocket::Connect(const NetAddr *aAddr)
   }
 
   PRNetAddr prAddr;
+  memset(&prAddr, 0, sizeof(prAddr));
   NetAddrToPRNetAddr(aAddr, &prAddr);
 
   if (PR_Connect(mFD, &prAddr, PR_INTERVAL_NO_WAIT) != PR_SUCCESS) {
