@@ -654,15 +654,32 @@ public:
     }
   }
 
+  bool
+  ShouldResetSuspend() const
+  {
+    // The disposable-pause should be clear after media starts playing.
+    if (!mOwner->Paused() &&
+        mSuspended == nsISuspendedTypes::SUSPENDED_PAUSE_DISPOSABLE) {
+      return true;
+    }
+
+    // If the blocked media is paused, we don't need to resume it. We reset the
+    // mSuspended in order to unregister the agent.
+    if (mOwner->Paused() &&
+        mSuspended == nsISuspendedTypes::SUSPENDED_BLOCK) {
+      return true;
+    }
+
+    return false;
+  }
+
   void
   NotifyPlayStateChanged()
   {
     MOZ_ASSERT(!mIsShutDown);
-    // When owner's play state changed, we should reset the suspend type. If
-    // owner is playing, the suspend type should be 'NONE_SUSPENDED', and if
-    // owner paused, the suspend type also needs to be reset because the agent
-    // maybe need to be unregistered.
-    SetSuspended(nsISuspendedTypes::NONE_SUSPENDED);
+    if (ShouldResetSuspend()) {
+      SetSuspended(nsISuspendedTypes::NONE_SUSPENDED);
+    }
     UpdateAudioChannelPlayingState();
   }
 
@@ -881,7 +898,7 @@ private:
     if (!IsSuspended()) {
       MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
              ("HTMLMediaElement::AudioChannelAgentCallback, ResumeFromAudioChannel, "
-              "this = %p, Error : resume without suspended!\n", this));
+              "this = %p, don't need to be resumed!\n", this));
       return;
     }
 
@@ -2758,7 +2775,9 @@ HTMLMediaElement::Pause(ErrorResult& aRv)
   // We changed mPaused and mAutoplaying which can affect AddRemoveSelfReference
   AddRemoveSelfReference();
   UpdateSrcMediaStreamPlaying();
-  UpdateAudioChannelPlayingState();
+  if (mAudioChannelWrapper) {
+    mAudioChannelWrapper->NotifyPlayStateChanged();
+  }
 
   if (!oldPaused) {
     FireTimeUpdate(false);
