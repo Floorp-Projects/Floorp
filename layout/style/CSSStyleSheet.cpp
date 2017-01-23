@@ -422,7 +422,7 @@ CSSStyleSheet::CSSStyleSheet(const CSSStyleSheet& aCopy,
 
 CSSStyleSheet::~CSSStyleSheet()
 {
-  for (StyleSheet* child = mInner->mFirstChild;
+  for (StyleSheet* child = GetFirstChild();
        child;
        child = child->mNext) {
     // XXXbz this is a little bogus; see the XXX comment where we
@@ -474,7 +474,7 @@ CSSStyleSheet::UnlinkInner()
   // we don't confuse the cycle collector (though on the face of it,
   // addref/release pairs during unlink should probably be ok).
   RefPtr<StyleSheet> child;
-  child.swap(mInner->mFirstChild);
+  child.swap(SheetInfo().mFirstChild);
   while (child) {
     MOZ_ASSERT(child->mParent == this, "We have a unique inner!");
     child->mParent = nullptr;
@@ -499,11 +499,11 @@ CSSStyleSheet::TraverseInner(nsCycleCollectionTraversalCallback &cb)
     return;
   }
 
-  RefPtr<StyleSheet>* childSheetSlot = &mInner->mFirstChild;
-  while (*childSheetSlot) {
+  StyleSheet* childSheet = GetFirstChild();
+  while (childSheet) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "child sheet");
-    cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMCSSStyleSheet*, childSheetSlot->get()));
-    childSheetSlot = &(*childSheetSlot)->mNext;
+    cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMCSSStyleSheet*, childSheet));
+    childSheet = childSheet->mNext;
   }
 
   const nsCOMArray<css::Rule>& rules = mInner->mOrderedRules;
@@ -621,7 +621,7 @@ CSSStyleSheet::SetAssociatedDocument(nsIDocument* aDocument,
   // Now set the same document on all our child sheets....
   // XXXbz this is a little bogus; see the XXX comment where we
   // declare mFirstChild.
-  for (StyleSheet* child = mInner->mFirstChild;
+  for (StyleSheet* child = GetFirstChild();
        child; child = child->mNext) {
     if (child->mParent == this) {
       child->SetAssociatedDocument(aDocument, aAssociationMode);
@@ -663,7 +663,7 @@ CSSStyleSheet::AppendStyleSheet(CSSStyleSheet* aSheet)
   NS_PRECONDITION(nullptr != aSheet, "null arg");
 
   WillDirty();
-  RefPtr<StyleSheet>* tail = &mInner->mFirstChild;
+  RefPtr<StyleSheet>* tail = &SheetInfo().mFirstChild;
   while (*tail) {
     tail = &(*tail)->mNext;
   }
@@ -740,7 +740,7 @@ CSSStyleSheet::EnsureUniqueInner()
 void
 CSSStyleSheet::AppendAllChildSheets(nsTArray<CSSStyleSheet*>& aArray)
 {
-  for (StyleSheet* child = mInner->mFirstChild; child;
+  for (StyleSheet* child = GetFirstChild(); child;
        child = child->mNext) {
 
     aArray.AppendElement(child->AsGecko());
@@ -798,7 +798,7 @@ CSSStyleSheet::List(FILE* out, int32_t aIndent) const
   str.Append('\n');
   fprintf_stderr(out, "%s", str.get());
 
-  for (const StyleSheet* child = mInner->mFirstChild;
+  for (const StyleSheet* child = GetFirstChild();
        child;
        child = child->mNext) {
     child->List(out, aIndent + 1);
@@ -1217,7 +1217,7 @@ CSSStyleSheet::ReparseSheet(const nsAString& aInput)
   }
 
   // nuke child sheets list and current namespace map
-  for (StyleSheet* child = mInner->mFirstChild; child; ) {
+  for (StyleSheet* child = GetFirstChild(); child; ) {
     NS_ASSERTION(child->mParent == this, "Child sheet is not parented to this!");
     StyleSheet* next = child->mNext;
     child->mParent = nullptr;
@@ -1225,7 +1225,7 @@ CSSStyleSheet::ReparseSheet(const nsAString& aInput)
     child->mNext = nullptr;
     child = next;
   }
-  mInner->mFirstChild = nullptr;
+  SheetInfo().mFirstChild = nullptr;
   mInner->mNameSpaceMap = nullptr;
 
   uint32_t lineNumber = 1;
