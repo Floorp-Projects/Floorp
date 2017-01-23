@@ -63,7 +63,7 @@ this.webrtcUI = {
     mm.removeMessageListener("rtcpeer:Request", this);
     mm.removeMessageListener("rtcpeer:CancelRequest", this);
     mm.removeMessageListener("webrtc:Request", this);
-    mm.removeMessageListener("webrtc:StopRecording");
+    mm.removeMessageListener("webrtc:StopRecording", this);
     mm.removeMessageListener("webrtc:CancelRequest", this);
     mm.removeMessageListener("webrtc:UpdateBrowserIndicators", this);
 
