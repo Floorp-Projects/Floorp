@@ -3,7 +3,7 @@
 rm -rf ./*.wast ./*.wast.js
 
 git clone https://github.com/WebAssembly/spec spec
-mv spec/interpreter/test/*.wast ./
+mv spec/test/core/*.wast ./
 rm -rf spec/
 
 # TODO not handled yet
