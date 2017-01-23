@@ -1065,6 +1065,9 @@ nsDocumentViewer::LoadComplete(nsresult aStatus)
 
   nsJSContext::LoadEnd();
 
+  // It's probably a good idea to GC soon since we have finished loading.
+  PokeGC(JS::gcreason::LOAD_END);
+
 #ifdef NS_PRINTING
   // Check to see if someone tried to print during the load
   if (mPrintIsPending) {
