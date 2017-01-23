@@ -17,6 +17,7 @@
     "as": "/home/worker/workspace/build/src/clang/bin/clang",
     "ar": "/home/worker/workspace/build/src/cctools/bin/x86_64-apple-darwin11-ar",
     "ranlib": "/home/worker/workspace/build/src/cctools/bin/x86_64-apple-darwin11-ranlib",
+    "libtool": "/home/worker/workspace/build/src/cctools/bin/x86_64-apple-darwin11-libtool",
     "ld": "/home/worker/workspace/build/src/clang/bin/clang",
     "patches": {
         "macosx64": [
