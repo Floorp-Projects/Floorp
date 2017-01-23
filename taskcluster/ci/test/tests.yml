@@ -874,6 +874,10 @@ reftest-stylo:
     suite: reftest/reftest-stylo
     treeherder-symbol: tc-R(Rs)
     chunks: 16
+    run-on-projects:
+        by-test-platform:
+            linux64-stylo/opt: []
+            linux64-stylo/debug: []
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
