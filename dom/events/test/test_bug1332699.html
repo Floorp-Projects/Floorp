@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Test for bug 1332699</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<style>
+#test {
+  color: red;
+  transition: color 100ms;
+}
+#test.changed {
+  color: green;
+}
+</style>
+<div id="test"></div>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+window.onload = function () {
+  let $test = document.getElementById('test');
+  is(getComputedStyle($test).color, 'rgb(255, 0, 0)',
+     'color should be red before transition');
+  let numEvents = 0;
+  $test.addEventListener('webkittransitionend', function() {
+    ++numEvents;
+    if (numEvents == 1) {
+      is(getComputedStyle($test).color, 'rgb(0, 128, 0)',
+         'color should be green after transition');
+      $test.dispatchEvent(new TransitionEvent('transitionend'));
+      is(numEvents, 1, "Shouldn't receive the prefixed event again");
+      SimpleTest.finish();
+    }
+  });
+  $test.className = 'changed';
+};
+</script>
