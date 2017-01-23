@@ -154,7 +154,7 @@ WatchpointMap::markIteratively(GCMarker* marker)
         JSObject* priorKeyObj = entry.key().object;
         jsid priorKeyId(entry.key().id.get());
         bool objectIsLive =
-            IsMarked(const_cast<PreBarrieredObject*>(&entry.key().object));
+            IsMarked(marker->runtime(), const_cast<PreBarrieredObject*>(&entry.key().object));
         if (objectIsLive || entry.value().held) {
             if (!objectIsLive) {
                 TraceEdge(marker, const_cast<PreBarrieredObject*>(&entry.key().object),
@@ -167,7 +167,7 @@ WatchpointMap::markIteratively(GCMarker* marker)
                        JSID_IS_SYMBOL(priorKeyId));
             TraceEdge(marker, const_cast<PreBarrieredId*>(&entry.key().id), "WatchKey::id");
 
-            if (entry.value().closure && !IsMarked(&entry.value().closure)) {
+            if (entry.value().closure && !IsMarked(marker->runtime(), &entry.value().closure)) {
                 TraceEdge(marker, &entry.value().closure, "Watchpoint::closure");
                 marked = true;
             }
