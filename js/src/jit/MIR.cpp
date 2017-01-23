@@ -5651,25 +5651,6 @@ MConstant::appendRoots(MRootList& roots) const
     }
 }
 
-void
-MGetPropertyCache::setBlock(MBasicBlock* block)
-{
-    MDefinition::setBlock(block);
-    // Track where we started.
-    if (!location_.pc) {
-        location_.pc = block->trackedPc();
-        location_.script = block->info().script();
-    }
-}
-
-bool
-MGetPropertyCache::updateForReplacement(MDefinition* ins)
-{
-    MGetPropertyCache* other = ins->toGetPropertyCache();
-    location_.append(&other->location_);
-    return true;
-}
-
 MDefinition*
 MWasmUnsignedToDouble::foldsTo(TempAllocator& alloc)
 {
