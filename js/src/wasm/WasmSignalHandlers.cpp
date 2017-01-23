@@ -1172,6 +1172,10 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
 
 #ifdef JS_CODEGEN_ARM
     if (signal == Signal::BusError) {
+        // TODO: We may see a bus error for something that is an unaligned access that
+        // partly overlaps the end of the heap.  In this case, it is an out-of-bounds
+        // error and we should signal that properly, but to do so we must inspect
+        // the operand of the failed access.
         *ppc = instance->codeSegment().unalignedAccessCode();
         return true;
     }
