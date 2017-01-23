@@ -961,30 +961,6 @@ def skia_includes(skia, skia_gpu):
 
 set_config('SKIA_INCLUDES', skia_includes)
 
-# Support various fuzzing options
-# ==============================================================
-with only_when('--enable-compile-environment'):
-    option('--enable-fuzzing', help='Enable fuzzing support')
-
-    @depends('--enable-fuzzing')
-    def enable_fuzzing(value):
-        if value:
-            return True
-
-    @depends(enable_fuzzing,
-             try_compile(body='__AFL_COMPILER;',
-                         check_msg='for AFL compiler',
-                         when='--enable-fuzzing'))
-    def enable_libfuzzer(fuzzing, afl):
-        if fuzzing and not afl:
-            return True
-
-    set_config('FUZZING', enable_fuzzing)
-    set_define('FUZZING', enable_fuzzing)
-
-    set_config('LIBFUZZER', enable_libfuzzer)
-    set_define('LIBFUZZER', enable_libfuzzer)
-
 # Mortar
 # ==============================================================
 option('--enable-mortar', help='Enable mortar extension')
