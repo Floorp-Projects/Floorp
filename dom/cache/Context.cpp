@@ -993,6 +993,11 @@ Context::Start()
   if (mState == STATE_CONTEXT_CANCELED) {
     MOZ_DIAGNOSTIC_ASSERT(!mInitRunnable);
     MOZ_DIAGNOSTIC_ASSERT(!mInitAction);
+    // If we can't initialize the quota subsystem we will never be able to
+    // clear our shared data object via the target IO thread.  Instead just
+    // clear it here to maintain the invariant that the shared data is
+    // cleared before Context destruction.
+    mData = nullptr;
     return;
   }
 
