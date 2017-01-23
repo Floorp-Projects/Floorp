@@ -29,21 +29,12 @@ KEY_RUN_COUNT = 'RunCount'
 
 LEAKED_SYMLINK_PREFIX = "::\\{"
 
-PATH_SUBSTITUTIONS = {'profile': '{profile}',
-                      'firefox': '{xre}',
+PATH_SUBSTITUTIONS = {'profile': '{profile}', 'firefox': '{xre}',
                       'desktop': '{desktop}',
-                      'fonts': '{fonts}',
-                      'appdata': ' {appdata}'}
-NAME_SUBSTITUTIONS = {'installtime': '{time}',
-                      'prefetch': '{prefetch}',
+                      'fonts': '{fonts}', 'appdata': ' {appdata}'}
+NAME_SUBSTITUTIONS = {'installtime': '{time}', 'prefetch': '{prefetch}',
                       'thumbnails': '{thumbnails}',
-                      'windows media player': '{media_player}',
-                      # {appdata}\locallow\mozilla\temp-{*}
-                      'temp-{': '{temp}',
-                      # {appdata}\roaming\microsoft\windows\recent\customdestinations\*
-                      'customdestinations': '{customdestinations}',
-                      # {profile}\jumplistcache\w+hgqdp1iezlscab89jirg==.ico (*.ico)
-                      'jumplistcache': '{jumplist}'}
+                      'windows media player': '{media_player}'}
 
 TUPLE_FILENAME_INDEX = 2
 WHITELIST_FILENAME = os.path.join(SCRIPT_DIR, 'mtio-whitelist.json')
