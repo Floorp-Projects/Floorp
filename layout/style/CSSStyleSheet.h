@@ -37,7 +37,6 @@ class nsPresContext;
 class nsXMLNameSpaceMap;
 
 namespace mozilla {
-struct ChildSheetListBuilder;
 class CSSStyleSheet;
 
 namespace css {
@@ -82,7 +81,7 @@ struct CSSStyleSheetInner : public StyleSheetInfo
   // currently this is the case) that any time page JS can get ts hands on a
   // child sheet that means we've already ensured unique inners throughout its
   // parent chain and things are good.
-  RefPtr<CSSStyleSheet> mFirstChild;
+  RefPtr<StyleSheet> mFirstChild;
 };
 
 
@@ -233,7 +232,6 @@ protected:
 
   void EnabledStateChangedInternal();
 
-  RefPtr<CSSStyleSheet> mNext;
   css::ImportRule*      mOwnerRule; // weak ref
 
   RefPtr<CSSRuleListImpl> mRuleCollection;
@@ -248,7 +246,6 @@ protected:
 
   friend class ::nsCSSRuleProcessor;
   friend class mozilla::StyleSheet;
-  friend struct mozilla::ChildSheetListBuilder;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(CSSStyleSheet, NS_CSS_STYLE_SHEET_IMPL_CID)

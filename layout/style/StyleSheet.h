@@ -21,9 +21,11 @@ class nsIDocument;
 class nsINode;
 class nsIPrincipal;
 class nsMediaList;
+class nsCSSRuleProcessor;
 
 namespace mozilla {
 
+struct ChildSheetListBuilder;
 class CSSStyleSheet;
 class ServoStyleSheet;
 struct StyleSheetInfo;
@@ -235,6 +237,8 @@ protected:
 
   RefPtr<nsMediaList> mMedia;
 
+  RefPtr<StyleSheet> mNext;
+
   // mParsingMode controls access to nonstandard style constructs that
   // are not safe for use on the public Web but necessary in UA sheets
   // and/or useful in user sheets.
@@ -247,6 +251,13 @@ protected:
   // the sense that if it's known-live then we're known-live).  Always
   // NotOwnedByDocument when mDocument is null.
   DocumentAssociationMode mDocumentAssociationMode;
+
+  friend class ::nsCSSRuleProcessor;
+  friend struct mozilla::ChildSheetListBuilder;
+
+  // Make CSSStyleSheet a friend so it can access protected members of
+  // other StyleSheet objects (useful for iterating through children).
+  friend class mozilla::CSSStyleSheet;
 };
 
 } // namespace mozilla
