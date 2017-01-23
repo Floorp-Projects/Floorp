@@ -20,7 +20,10 @@ Cu.import("resource://gre/modules/ctypes.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/subprocess/subprocess_common.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "env", "@mozilla.org/process/environment;1", "nsIEnvironment");
 
 Services.scriptloader.loadSubScript("resource://gre/modules/subprocess/subprocess_shared.js", this);
 Services.scriptloader.loadSubScript("resource://gre/modules/subprocess/subprocess_shared_win.js", this);
@@ -33,6 +36,7 @@ class WinPromiseWorker extends PromiseWorker {
 
     this.call("init", [{
       breakAwayFromJob: !AppConstants.isPlatformAndVersionAtLeast("win", "6.2"),
+      comspec: env.get("COMSPEC"),
       signalEvent: String(ctypes.cast(this.signalEvent, ctypes.uintptr_t).value),
     }]);
   }
