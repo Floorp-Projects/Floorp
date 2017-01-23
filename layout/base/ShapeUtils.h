@@ -48,6 +48,15 @@ struct ShapeUtils final
   static nscoord ComputeCircleRadius(
     mozilla::StyleBasicShape* const aBasicShape,
     const nsPoint& aCenter, const nsRect& aRefBox);
+
+  // Compute the radii for an ellipse.
+  // @param aCenter the center of the ellipse.
+  // @param aRefBox the reference box of the ellipse.
+  // @return The radii of the ellipse in app units. The width and height
+  // represent the x-axis and y-axis radii of the ellipse.
+  static nsSize ComputeEllipseRadii(
+    mozilla::StyleBasicShape* const aBasicShape,
+    const nsPoint& aCenter, const nsRect& aRefBox);
 };
 
 } // namespace mozilla
