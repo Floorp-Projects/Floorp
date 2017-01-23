@@ -354,25 +354,25 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
 
   nsIContent* cChild = nullptr;
 
-  if (!startIsData && startNode->HasChildren()) {
+  // Valid start indices are 0 <= startIndx <= childCount. That means if start
+  // node has no children, only offset 0 is valid.
+  if (!startIsData && uint32_t(startIndx) < startNode->GetChildCount()) {
     cChild = startNode->GetChildAt(startIndx);
     NS_WARNING_ASSERTION(cChild, "GetChildAt returned null");
   }
 
   if (!cChild) {
-    // no children, must be a text node
-    //
-    // XXXbz no children might also just mean no children.  So I'm not
-    // sure what that comment above is talking about.
+    // No children (possibly a <br> or text node), or index is after last child.
 
     if (mPre) {
       // XXX: In the future, if start offset is after the last
       //      character in the cdata node, should we set mFirst to
       //      the next sibling?
 
-      // If the node has no child, the child may be <br> or something.
-      // So, we shouldn't skip the empty node if the start offset is 0.
-      // In other words, if the offset is 1, the node should be ignored.
+      // Normally we would skip the start node because the start node is outside
+      // of the range in pre mode. However, if startIndx == 0, it means the node
+      // has no children, and the node may be <br> or something. We don't skip
+      // the node in this case in order to address bug 1215798.
       if (!startIsData && startIndx) {
         mFirst = GetNextSibling(startNode);
         NS_WARNING_ASSERTION(mFirst, "GetNextSibling returned null");
@@ -430,8 +430,8 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
         // the last element should be the previous node (i.e., shouldn't
         // include the end node in the range).
         if (!endIsData && !endNode->HasChildren() && !endIndx) {
-          mLast = GetPrevSibling(endNode);
-          NS_WARNING_ASSERTION(mLast, "GetPrevSibling returned null");
+          mLast = PrevNode(endNode);
+          NS_WARNING_ASSERTION(mLast, "PrevNode returned null");
           if (NS_WARN_IF(!NodeIsInTraversalRange(mLast, mPre,
                                                  startNode, startIndx,
                                                  endNode, endIndx))) {
