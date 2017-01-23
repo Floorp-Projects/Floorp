@@ -365,6 +365,12 @@ StyleSheet::AreRulesAvailable(nsIPrincipal& aSubjectPrincipal,
   return true;
 }
 
+StyleSheet*
+StyleSheet::GetFirstChild() const
+{
+  return SheetInfo().mFirstChild;
+}
+
 void
 StyleSheet::SetMedia(nsMediaList* aMedia)
 {
