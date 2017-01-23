@@ -48,7 +48,10 @@ class TestCapabilities(MarionetteTestCase):
 
         self.assertIn("moz:profile", self.caps)
         if self.marionette.instance is not None:
-            current_profile = self.marionette.instance.runner.profile.profile
+            if self.caps["browserName"] == "fennec":
+                current_profile = self.marionette.instance.runner.device.app_ctx.remote_profile
+            else:
+                current_profile = self.marionette.instance.runner.profile.profile
             self.assertEqual(self.caps["moz:profile"], current_profile)
             self.assertEqual(self.marionette.profile, current_profile)
 
