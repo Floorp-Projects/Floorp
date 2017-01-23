@@ -30,9 +30,11 @@
 #include "nsIScriptError.h"
 #include "nsIURI.h"
 #include "nsIChannelEventSink.h"
+#include "nsNetUtil.h"
 #include "nsAsyncRedirectVerifyHelper.h"
 #include "mozilla/LoadInfo.h"
 #include "nsISiteSecurityService.h"
+#include "prnetdb.h"
 
 #include "mozilla/Logging.h"
 #include "mozilla/Telemetry.h"
@@ -60,6 +62,33 @@ bool nsMixedContentBlocker::sUseHSTS = false;
 bool nsMixedContentBlocker::sSendHSTSPriming = false;
 // Default HSTS Priming failure timeout to 7 days, in seconds
 uint32_t nsMixedContentBlocker::sHSTSPrimingCacheTimeout = (60 * 24 * 7);
+
+bool
+IsEligibleForHSTSPriming(nsIURI* aContentLocation) {
+  bool isHttpScheme = false;
+  nsresult rv = aContentLocation->SchemeIs("http", &isHttpScheme);
+  NS_ENSURE_SUCCESS(rv, false);
+  if (!isHttpScheme) {
+    return false;
+  }
+
+  int32_t port = -1;
+  rv = aContentLocation->GetPort(&port);
+  NS_ENSURE_SUCCESS(rv, false);
+  int32_t defaultPort = NS_GetDefaultPort("https");
+
+  if (port != -1 && port != defaultPort) {
+    // HSTS priming requests are only sent if the port is the default port
+    return false;
+  }
+
+  nsAutoCString hostname;
+  rv = aContentLocation->GetHost(hostname);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  PRNetAddr hostAddr;
+  return (PR_StringToNetAddr(hostname.get(), &hostAddr) != PR_SUCCESS);
+}
 
 // Fired at the document that attempted to load mixed content.  The UI could
 // handle this event, for example, by displaying an info bar that offers the
@@ -832,7 +861,7 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   nsresult stateRV = securityUI->GetState(&state);
 
   bool doHSTSPriming = false;
-  if (isHttpScheme) {
+  if (IsEligibleForHSTSPriming(aContentLocation)) {
     bool hsts = false;
     bool cached = false;
     nsCOMPtr<nsISiteSecurityService> sss =
