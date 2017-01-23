@@ -924,12 +924,7 @@ static const size_t INITIAL_CHAR_BUFFER_SIZE = 32;
 
 /******************** Collator ********************/
 
-static void collator_finalize(FreeOp* fop, JSObject* obj);
-
-static const uint32_t UCOLLATOR_SLOT = 0;
-static const uint32_t COLLATOR_SLOTS_COUNT = 1;
-
-static const ClassOps CollatorClassOps = {
+const ClassOps CollatorObject::classOps_ = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -937,14 +932,14 @@ static const ClassOps CollatorClassOps = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    collator_finalize
+    CollatorObject::finalize
 };
 
-static const Class CollatorClass = {
+const Class CollatorObject::class_ = {
     js_Object_str,
-    JSCLASS_HAS_RESERVED_SLOTS(COLLATOR_SLOTS_COUNT) |
+    JSCLASS_HAS_RESERVED_SLOTS(CollatorObject::SLOT_COUNT) |
     JSCLASS_FOREGROUND_FINALIZE,
-    &CollatorClassOps
+    &CollatorObject::classOps_
 };
 
 #if JS_HAS_TOSOURCE
@@ -1025,11 +1020,12 @@ Collator(JSContext* cx, const CallArgs& args, bool construct)
                 return false;
         }
 
-        obj = NewObjectWithGivenProto(cx, &CollatorClass, proto);
+        obj = NewObjectWithGivenProto<CollatorObject>(cx, proto);
         if (!obj)
             return false;
 
-        obj->as<NativeObject>().setReservedSlot(UCOLLATOR_SLOT, PrivateValue(nullptr));
+        obj->as<CollatorObject>().setReservedSlot(CollatorObject::UCOLLATOR_SLOT,
+                                                  PrivateValue(nullptr));
     }
 
     RootedValue locales(cx, args.get(0));
@@ -1061,8 +1057,8 @@ js::intl_Collator(JSContext* cx, unsigned argc, Value* vp)
     return Collator(cx, args, true);
 }
 
-static void
-collator_finalize(FreeOp* fop, JSObject* obj)
+void
+CollatorObject::finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(fop->onMainThread());
 
@@ -1070,7 +1066,7 @@ collator_finalize(FreeOp* fop, JSObject* obj)
     // brokenness in object allocation code.  For the moment, hack around it by
     // explicitly guarding against the possibility of the reserved slot not
     // containing a private.  See bug 949220.
-    const Value& slot = obj->as<NativeObject>().getReservedSlot(UCOLLATOR_SLOT);
+    const Value& slot = obj->as<CollatorObject>().getReservedSlot(CollatorObject::UCOLLATOR_SLOT);
     if (!slot.isUndefined()) {
         if (UCollator* coll = static_cast<UCollator*>(slot.toPrivate()))
             ucol_close(coll);
@@ -1085,10 +1081,11 @@ CreateCollatorPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> 
     if (!ctor)
         return nullptr;
 
-    RootedNativeObject proto(cx, GlobalObject::createBlankPrototype(cx, global, &CollatorClass));
+    Rooted<CollatorObject*> proto(cx);
+    proto = GlobalObject::createBlankPrototype<CollatorObject>(cx, global);
     if (!proto)
         return nullptr;
-    proto->setReservedSlot(UCOLLATOR_SLOT, PrivateValue(nullptr));
+    proto->setReservedSlot(CollatorObject::UCOLLATOR_SLOT, PrivateValue(nullptr));
 
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
@@ -1387,16 +1384,19 @@ js::intl_CompareStrings(JSContext* cx, unsigned argc, Value* vp)
 
     // Obtain a UCollator object, cached if possible.
     // XXX Does this handle Collator instances from other globals correctly?
-    bool isCollatorInstance = collator->getClass() == &CollatorClass;
+    bool isCollatorInstance = collator->is<CollatorObject>();
     UCollator* coll;
     if (isCollatorInstance) {
-        void* priv = collator->as<NativeObject>().getReservedSlot(UCOLLATOR_SLOT).toPrivate();
+        void* priv =
+            collator->as<CollatorObject>().getReservedSlot(CollatorObject::UCOLLATOR_SLOT)
+                                          .toPrivate();
         coll = static_cast<UCollator*>(priv);
         if (!coll) {
             coll = NewUCollator(cx, collator);
             if (!coll)
                 return false;
-            collator->as<NativeObject>().setReservedSlot(UCOLLATOR_SLOT, PrivateValue(coll));
+            collator->as<CollatorObject>().setReservedSlot(CollatorObject::UCOLLATOR_SLOT,
+                                                           PrivateValue(coll));
         }
     } else {
         // There's no good place to cache the ICU collator for an object
@@ -1425,12 +1425,7 @@ js::intl_CompareStrings(JSContext* cx, unsigned argc, Value* vp)
 
 /******************** NumberFormat ********************/
 
-static void numberFormat_finalize(FreeOp* fop, JSObject* obj);
-
-static const uint32_t UNUMBER_FORMAT_SLOT = 0;
-static const uint32_t NUMBER_FORMAT_SLOTS_COUNT = 1;
-
-static const ClassOps NumberFormatClassOps = {
+const ClassOps NumberFormatObject::classOps_ = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -1438,14 +1433,14 @@ static const ClassOps NumberFormatClassOps = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    numberFormat_finalize
+    NumberFormatObject::finalize
 };
 
-static const Class NumberFormatClass = {
+const Class NumberFormatObject::class_ = {
     js_Object_str,
-    JSCLASS_HAS_RESERVED_SLOTS(NUMBER_FORMAT_SLOTS_COUNT) |
+    JSCLASS_HAS_RESERVED_SLOTS(NumberFormatObject::SLOT_COUNT) |
     JSCLASS_FOREGROUND_FINALIZE,
-    &NumberFormatClassOps
+    &NumberFormatObject::classOps_
 };
 
 #if JS_HAS_TOSOURCE
@@ -1526,11 +1521,12 @@ NumberFormat(JSContext* cx, const CallArgs& args, bool construct)
                 return false;
         }
 
-        obj = NewObjectWithGivenProto(cx, &NumberFormatClass, proto);
+        obj = NewObjectWithGivenProto<NumberFormatObject>(cx, proto);
         if (!obj)
             return false;
 
-        obj->as<NativeObject>().setReservedSlot(UNUMBER_FORMAT_SLOT, PrivateValue(nullptr));
+        obj->as<NumberFormatObject>().setReservedSlot(NumberFormatObject::UNUMBER_FORMAT_SLOT,
+                                                      PrivateValue(nullptr));
     }
 
     RootedValue locales(cx, args.get(0));
@@ -1563,8 +1559,8 @@ js::intl_NumberFormat(JSContext* cx, unsigned argc, Value* vp)
     return NumberFormat(cx, args, true);
 }
 
-static void
-numberFormat_finalize(FreeOp* fop, JSObject* obj)
+void
+NumberFormatObject::finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(fop->onMainThread());
 
@@ -1572,7 +1568,8 @@ numberFormat_finalize(FreeOp* fop, JSObject* obj)
     // brokenness in object allocation code.  For the moment, hack around it by
     // explicitly guarding against the possibility of the reserved slot not
     // containing a private.  See bug 949220.
-    const Value& slot = obj->as<NativeObject>().getReservedSlot(UNUMBER_FORMAT_SLOT);
+    const Value& slot =
+        obj->as<NumberFormatObject>().getReservedSlot(NumberFormatObject::UNUMBER_FORMAT_SLOT);
     if (!slot.isUndefined()) {
         if (UNumberFormat* nf = static_cast<UNumberFormat*>(slot.toPrivate()))
             unum_close(nf);
@@ -1587,11 +1584,11 @@ CreateNumberFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObjec
     if (!ctor)
         return nullptr;
 
-    RootedNativeObject proto(cx, GlobalObject::createBlankPrototype(cx, global,
-                                                                    &NumberFormatClass));
+    RootedNativeObject proto(cx);
+    proto = GlobalObject::createBlankPrototype<NumberFormatObject>(cx, global);
     if (!proto)
         return nullptr;
-    proto->setReservedSlot(UNUMBER_FORMAT_SLOT, PrivateValue(nullptr));
+    proto->setReservedSlot(NumberFormatObject::UNUMBER_FORMAT_SLOT, PrivateValue(nullptr));
 
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
@@ -2386,17 +2383,19 @@ js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp)
     RootedObject numberFormat(cx, &args[0].toObject());
 
     // Obtain a UNumberFormat object, cached if possible.
-    bool isNumberFormatInstance = numberFormat->getClass() == &NumberFormatClass;
+    bool isNumberFormatInstance = numberFormat->is<NumberFormatObject>();
     UNumberFormat* nf;
     if (isNumberFormatInstance) {
         void* priv =
-            numberFormat->as<NativeObject>().getReservedSlot(UNUMBER_FORMAT_SLOT).toPrivate();
+            numberFormat->as<NumberFormatObject>().getReservedSlot(NumberFormatObject::UNUMBER_FORMAT_SLOT)
+                                                  .toPrivate();
         nf = static_cast<UNumberFormat*>(priv);
         if (!nf) {
             nf = NewUNumberFormat(cx, numberFormat);
             if (!nf)
                 return false;
-            numberFormat->as<NativeObject>().setReservedSlot(UNUMBER_FORMAT_SLOT, PrivateValue(nf));
+            numberFormat->as<NumberFormatObject>().setReservedSlot(NumberFormatObject::UNUMBER_FORMAT_SLOT,
+                                                                   PrivateValue(nf));
         }
     } else {
         // There's no good place to cache the ICU number format for an object
@@ -2436,12 +2435,7 @@ js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp)
 
 /******************** DateTimeFormat ********************/
 
-static void dateTimeFormat_finalize(FreeOp* fop, JSObject* obj);
-
-static const uint32_t UDATE_FORMAT_SLOT = 0;
-static const uint32_t DATE_TIME_FORMAT_SLOTS_COUNT = 1;
-
-static const ClassOps DateTimeFormatClassOps = {
+const ClassOps DateTimeFormatObject::classOps_ = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -2449,14 +2443,14 @@ static const ClassOps DateTimeFormatClassOps = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    dateTimeFormat_finalize
+    DateTimeFormatObject::finalize
 };
 
-static const Class DateTimeFormatClass = {
+const Class DateTimeFormatObject::class_ = {
     js_Object_str,
-    JSCLASS_HAS_RESERVED_SLOTS(DATE_TIME_FORMAT_SLOTS_COUNT) |
+    JSCLASS_HAS_RESERVED_SLOTS(DateTimeFormatObject::SLOT_COUNT) |
     JSCLASS_FOREGROUND_FINALIZE,
-    &DateTimeFormatClassOps
+    &DateTimeFormatObject::classOps_
 };
 
 #if JS_HAS_TOSOURCE
@@ -2538,11 +2532,12 @@ DateTimeFormat(JSContext* cx, const CallArgs& args, bool construct)
                 return false;
         }
 
-        obj = NewObjectWithGivenProto(cx, &DateTimeFormatClass, proto);
+        obj = NewObjectWithGivenProto<DateTimeFormatObject>(cx, proto);
         if (!obj)
             return false;
 
-        obj->as<NativeObject>().setReservedSlot(UDATE_FORMAT_SLOT, PrivateValue(nullptr));
+        obj->as<DateTimeFormatObject>().setReservedSlot(DateTimeFormatObject::UDATE_FORMAT_SLOT,
+                                                        PrivateValue(nullptr));
     }
 
     RootedValue locales(cx, args.get(0));
@@ -2575,8 +2570,8 @@ js::intl_DateTimeFormat(JSContext* cx, unsigned argc, Value* vp)
     return DateTimeFormat(cx, args, true);
 }
 
-static void
-dateTimeFormat_finalize(FreeOp* fop, JSObject* obj)
+void
+DateTimeFormatObject::finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(fop->onMainThread());
 
@@ -2584,7 +2579,8 @@ dateTimeFormat_finalize(FreeOp* fop, JSObject* obj)
     // brokenness in object allocation code.  For the moment, hack around it by
     // explicitly guarding against the possibility of the reserved slot not
     // containing a private.  See bug 949220.
-    const Value& slot = obj->as<NativeObject>().getReservedSlot(UDATE_FORMAT_SLOT);
+    const Value& slot =
+        obj->as<DateTimeFormatObject>().getReservedSlot(DateTimeFormatObject::UDATE_FORMAT_SLOT);
     if (!slot.isUndefined()) {
         if (UDateFormat* df = static_cast<UDateFormat*>(slot.toPrivate()))
             udat_close(df);
@@ -2599,11 +2595,11 @@ CreateDateTimeFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObj
     if (!ctor)
         return nullptr;
 
-    RootedNativeObject proto(cx, GlobalObject::createBlankPrototype(cx, global,
-                                                                    &DateTimeFormatClass));
+    Rooted<DateTimeFormatObject*> proto(cx);
+    proto = GlobalObject::createBlankPrototype<DateTimeFormatObject>(cx, global);
     if (!proto)
         return nullptr;
-    proto->setReservedSlot(UDATE_FORMAT_SLOT, PrivateValue(nullptr));
+    proto->setReservedSlot(DateTimeFormatObject::UDATE_FORMAT_SLOT, PrivateValue(nullptr));
 
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
@@ -3527,17 +3523,19 @@ js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp)
     RootedObject dateTimeFormat(cx, &args[0].toObject());
 
     // Obtain a UDateFormat object, cached if possible.
-    bool isDateTimeFormatInstance = dateTimeFormat->getClass() == &DateTimeFormatClass;
+    bool isDateTimeFormatInstance = dateTimeFormat->is<DateTimeFormatObject>();
     UDateFormat* df;
     if (isDateTimeFormatInstance) {
         void* priv =
-            dateTimeFormat->as<NativeObject>().getReservedSlot(UDATE_FORMAT_SLOT).toPrivate();
+            dateTimeFormat->as<DateTimeFormatObject>().getReservedSlot(DateTimeFormatObject::UDATE_FORMAT_SLOT)
+                                                      .toPrivate();
         df = static_cast<UDateFormat*>(priv);
         if (!df) {
             df = NewUDateFormat(cx, dateTimeFormat);
             if (!df)
                 return false;
-            dateTimeFormat->as<NativeObject>().setReservedSlot(UDATE_FORMAT_SLOT, PrivateValue(df));
+            dateTimeFormat->as<DateTimeFormatObject>().setReservedSlot(DateTimeFormatObject::UDATE_FORMAT_SLOT,
+                                                                       PrivateValue(df));
         }
     } else {
         // There's no good place to cache the ICU date-time format for an object
@@ -3566,12 +3564,7 @@ js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp)
 
 /**************** PluralRules *****************/
 
-static void pluralRules_finalize(FreeOp* fop, JSObject* obj);
-
-static const uint32_t UPLURAL_RULES_SLOT = 0;
-static const uint32_t PLURAL_RULES_SLOTS_COUNT = 1;
-
-static const ClassOps PluralRulesClassOps = {
+const ClassOps PluralRulesObject::classOps_ = {
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
@@ -3579,14 +3572,14 @@ static const ClassOps PluralRulesClassOps = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    pluralRules_finalize
+    PluralRulesObject::finalize
 };
 
-static const Class PluralRulesClass = {
+const Class PluralRulesObject::class_ = {
     js_Object_str,
-    JSCLASS_HAS_RESERVED_SLOTS(PLURAL_RULES_SLOTS_COUNT) |
+    JSCLASS_HAS_RESERVED_SLOTS(PluralRulesObject::SLOT_COUNT) |
     JSCLASS_FOREGROUND_FINALIZE,
-    &PluralRulesClassOps
+    &PluralRulesObject::classOps_
 };
 
 #if JS_HAS_TOSOURCE
@@ -3635,25 +3628,26 @@ PluralRules(JSContext* cx, unsigned argc, Value* vp)
             return false;
     }
 
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, &PluralRulesClass, proto));
-    if (!obj)
+    Rooted<PluralRulesObject*> pluralRules(cx);
+    pluralRules = NewObjectWithGivenProto<PluralRulesObject>(cx, proto);
+    if (!pluralRules)
         return false;
 
-    obj->as<NativeObject>().setReservedSlot(UPLURAL_RULES_SLOT, PrivateValue(nullptr));
+    pluralRules->setReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT, PrivateValue(nullptr));
 
     RootedValue locales(cx, args.get(0));
     RootedValue options(cx, args.get(1));
 
     // Step 3.
-    if (!IntlInitialize(cx, obj, cx->names().InitializePluralRules, locales, options))
+    if (!IntlInitialize(cx, pluralRules, cx->names().InitializePluralRules, locales, options))
         return false;
 
-    args.rval().setObject(*obj);
+    args.rval().setObject(*pluralRules);
     return true;
 }
 
-static void
-pluralRules_finalize(FreeOp* fop, JSObject* obj)
+void
+PluralRulesObject::finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(fop->onMainThread());
 
@@ -3661,7 +3655,8 @@ pluralRules_finalize(FreeOp* fop, JSObject* obj)
     // brokenness in object allocation code.  For the moment, hack around it by
     // explicitly guarding against the possibility of the reserved slot not
     // containing a private.  See bug 949220.
-    const Value& slot = obj->as<NativeObject>().getReservedSlot(UPLURAL_RULES_SLOT);
+    const Value& slot =
+        obj->as<PluralRulesObject>().getReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT);
     if (!slot.isUndefined()) {
         if (UPluralRules* pr = static_cast<UPluralRules*>(slot.toPrivate()))
             uplrules_close(pr);
@@ -3676,11 +3671,11 @@ CreatePluralRulesPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObject
     if (!ctor)
         return nullptr;
 
-    RootedNativeObject proto(cx, GlobalObject::createBlankPrototype(cx, global,
-                                                                    &PluralRulesClass));
+    Rooted<PluralRulesObject*> proto(cx);
+    proto = GlobalObject::createBlankPrototype<PluralRulesObject>(cx, global);
     if (!proto)
         return nullptr;
-    proto->setReservedSlot(UPLURAL_RULES_SLOT, PrivateValue(nullptr));
+    proto->setReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT, PrivateValue(nullptr));
 
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
@@ -3717,7 +3712,7 @@ js::GlobalObject::addPluralRulesConstructor(JSContext* cx, HandleObject intl)
         const HeapSlot& slot = global->getReservedSlotRef(PLURAL_RULES_PROTO);
         if (!slot.isUndefined()) {
             MOZ_ASSERT(slot.isObject());
-            MOZ_ASSERT(slot.toObject().hasClass(&PluralRulesClass));
+            MOZ_ASSERT(slot.toObject().is<PluralRulesObject>());
             JS_ReportErrorASCII(cx,
                                 "the PluralRules constructor can't be added "
                                 "multiple times in the same global");
@@ -3830,6 +3825,7 @@ js::intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp)
         category = UPLURAL_TYPE_ORDINAL;
     }
 
+    // TODO: Cache UPluralRules in PluralRulesObject::UPluralRulesSlot.
     UPluralRules* pr = uplrules_openForType(icuLocale(locale.ptr()), category, &status);
     if (U_FAILURE(status)) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
