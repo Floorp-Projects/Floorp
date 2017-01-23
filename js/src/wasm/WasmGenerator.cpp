@@ -1085,7 +1085,7 @@ ModuleGenerator::initSigTableLength(uint32_t sigIndex, uint32_t length)
 {
     MOZ_ASSERT(isAsmJS());
     MOZ_ASSERT(length != 0);
-    MOZ_ASSERT(length <= MaxTableLength);
+    MOZ_ASSERT(length <= MaxTableInitialLength);
 
     MOZ_ASSERT(env_->asmJSSigToTableIndex[sigIndex] == 0);
     env_->asmJSSigToTableIndex[sigIndex] = numTables_;
