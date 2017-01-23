@@ -3,12 +3,6 @@
 
 "use strict"
 
-Cu.import("resource://gre/modules/identity/LogUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "IDService",
-                                  "resource://gre/modules/identity/Identity.jsm",
-                                  "IdentityService");
-
 XPCOMUtils.defineLazyModuleGetter(this, "jwcrypto",
                                   "resource://gre/modules/identity/jwcrypto.jsm");
 
