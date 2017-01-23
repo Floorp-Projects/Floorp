@@ -48,7 +48,6 @@ browser/chrome/devtools/modules/devtools/client/projecteditor/lib/helpers/readdi
 browser/chrome/devtools/modules/devtools/client/shared/frame-script-utils.js
 browser/chrome/devtools/modules/devtools/client/shared/theme-switching.js
 browser/chrome/devtools/modules/devtools/client/themes/common.css
-browser/chrome/devtools/modules/devtools/client/themes/toolbars.css
 browser/chrome/devtools/modules/devtools/client/themes/variables.css
 browser/chrome/devtools/skin/common.css
 browser/chrome/devtools/skin/images/command-scratchpad.svg
