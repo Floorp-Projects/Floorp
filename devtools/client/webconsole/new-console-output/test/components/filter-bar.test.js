@@ -32,7 +32,7 @@ describe("FilterBar component:", () => {
     // Clear button
     expect(toolbar.children().eq(0).attr("class"))
       .toBe("devtools-button devtools-clear-icon");
-    expect(toolbar.children().eq(0).attr("title")).toBe("Clear output");
+    expect(toolbar.children().eq(0).attr("title")).toBe("Clear the Web Console output");
 
     // Filter bar toggle
     expect(toolbar.children().eq(1).attr("class"))
