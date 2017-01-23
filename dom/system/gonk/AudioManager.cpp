@@ -24,6 +24,7 @@
 #include "nsISettingsService.h"
 #include "nsPrintfCString.h"
 
+#include "mozilla/AbstractThread.h"
 #include "mozilla/Hal.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
@@ -1035,7 +1036,8 @@ AudioManager::InitVolumeFromDatabase()
 
   RefPtr<VolumeInitCallback> callback = new VolumeInitCallback();
   MOZ_ASSERT(callback);
-  callback->GetPromise()->Then(AbstractThread::MainThread(), __func__, this,
+  callback->GetPromise()->Then(AbstractThread::MainThread(), // Non DocGroup-version for the task in parent.
+                               __func__, this,
                                &AudioManager::InitDeviceVolumeSucceeded,
                                &AudioManager::InitDeviceVolumeFailed);
 

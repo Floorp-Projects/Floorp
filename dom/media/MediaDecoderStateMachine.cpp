@@ -1942,8 +1942,12 @@ StateObject::HandleResumeVideoDecoding()
                           type,
                           true /* aVideoOnly */);
 
+  // Hold mMaster->mAbstractMainThread here because this->mMaster will be invalid
+  // after the current state object is deleted in SetState();
+  RefPtr<AbstractThread> mainThread = mMaster->mAbstractMainThread;
+
   SetSeekingState(Move(seekJob), EventVisibility::Suppressed)->Then(
-    AbstractThread::MainThread(), __func__,
+    mainThread, __func__,
     [start, info, hw](){ ReportRecoveryTelemetry(start, info, hw); },
     [](){});
 }
@@ -2477,6 +2481,7 @@ ShutdownState::Enter()
 MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
                                                    MediaDecoderReader* aReader) :
   mDecoderID(aDecoder),
+  mAbstractMainThread(aDecoder->AbstractMainThread()),
   mFrameStats(&aDecoder->GetFrameStatistics()),
   mVideoFrameContainer(aDecoder->GetVideoFrameContainer()),
   mAudioChannel(aDecoder->GetAudioChannel()),
@@ -2612,7 +2617,7 @@ already_AddRefed<media::MediaSink>
 MediaDecoderStateMachine::CreateMediaSink(bool aAudioCaptured)
 {
   RefPtr<media::MediaSink> audioSink = aAudioCaptured
-    ? new DecodedStream(mTaskQueue, mAudioQueue, mVideoQueue,
+    ? new DecodedStream(mTaskQueue, mAbstractMainThread, mAudioQueue, mVideoQueue,
                         mOutputStreamManager, mSameOriginMedia.Ref(),
                         mMediaPrincipalHandle.Ref())
     : CreateAudioSink();
