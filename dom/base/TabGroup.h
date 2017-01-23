@@ -18,6 +18,7 @@
 #include "mozilla/RefPtr.h"
 
 namespace mozilla {
+class AbstractThread;
 class ThrottledEventQueue;
 namespace dom {
 
@@ -121,6 +122,9 @@ public:
 
   TabGroup* AsTabGroup() override { return this; }
 
+  virtual AbstractThread*
+  AbstractMainThreadFor(TaskCategory aCategory) override;
+
 private:
   void EnsureThrottledEventQueues();
 
@@ -130,6 +134,7 @@ private:
   nsTArray<nsPIDOMWindowOuter*> mWindows;
   Atomic<bool> mThrottledQueuesInitialized;
   nsCOMPtr<nsIEventTarget> mEventTargets[size_t(TaskCategory::Count)];
+  RefPtr<AbstractThread> mAbstractThreads[size_t(TaskCategory::Count)];
 };
 
 } // namespace dom

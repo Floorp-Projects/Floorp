@@ -14,8 +14,9 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-AudioNodeExternalInputStream::AudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate)
-  : AudioNodeStream(aEngine, NO_STREAM_FLAGS, aSampleRate)
+AudioNodeExternalInputStream::AudioNodeExternalInputStream(
+  AudioNodeEngine* aEngine, TrackRate aSampleRate, AbstractThread* aMainThread)
+  : AudioNodeStream(aEngine, NO_STREAM_FLAGS, aSampleRate, aMainThread)
 {
   MOZ_COUNT_CTOR(AudioNodeExternalInputStream);
 }
@@ -27,14 +28,15 @@ AudioNodeExternalInputStream::~AudioNodeExternalInputStream()
 
 /* static */ already_AddRefed<AudioNodeExternalInputStream>
 AudioNodeExternalInputStream::Create(MediaStreamGraph* aGraph,
-                                     AudioNodeEngine* aEngine)
+                                     AudioNodeEngine* aEngine,
+                                     AbstractThread* aMainThread)
 {
   AudioContext* ctx = aEngine->NodeMainThread()->Context();
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aGraph->GraphRate() == ctx->SampleRate());
 
   RefPtr<AudioNodeExternalInputStream> stream =
-    new AudioNodeExternalInputStream(aEngine, aGraph->GraphRate());
+    new AudioNodeExternalInputStream(aEngine, aGraph->GraphRate(), aMainThread);
   stream->mSuspendedCount += ctx->ShouldSuspendNewStream();
   aGraph->AddStream(stream);
   return stream.forget();

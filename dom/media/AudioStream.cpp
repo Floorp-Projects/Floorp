@@ -354,10 +354,9 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
     return NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR;
   }
 
-  cubeb_channel_layout layout;
-  int r = cubeb_get_preferred_channel_layout(cubebContext, &layout);
-  MOZ_ASSERT(r == CUBEB_OK || r == CUBEB_ERROR_NOT_SUPPORTED);
-  params.layout = (r == CUBEB_OK) ? layout : CUBEB_LAYOUT_UNDEFINED;
+  // The DecodedAudioDataSink forces mono or stereo for now.
+  params.layout = params.channels == 1 ? CUBEB_LAYOUT_MONO
+                                       : CUBEB_LAYOUT_STEREO;
 
   return OpenCubeb(cubebContext, params, startTime, CubebUtils::GetFirstStream());
 }

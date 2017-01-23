@@ -12,6 +12,8 @@
 
 namespace mozilla {
 
+class AbstractThread;
+
 /**
  * This is a MediaStream implementation that acts for a Web Audio node but
  * unlike other AudioNodeStreams, supports any kind of MediaStream as an
@@ -22,10 +24,11 @@ class AudioNodeExternalInputStream final : public AudioNodeStream
 {
 public:
   static already_AddRefed<AudioNodeExternalInputStream>
-  Create(MediaStreamGraph* aGraph, AudioNodeEngine* aEngine);
+  Create(MediaStreamGraph* aGraph, AudioNodeEngine* aEngine, AbstractThread* aMainThread);
 
 protected:
-  AudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate);
+  AudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate,
+                               AbstractThread* aMainThread);
   ~AudioNodeExternalInputStream();
 
 public:

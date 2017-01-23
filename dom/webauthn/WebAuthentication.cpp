@@ -852,7 +852,8 @@ WebAuthentication::MakeCredential(JSContext* aCx, const Account& aAccount,
 
   requestMonitor->CompleteTask();
 
-  monitorPromise->Then(AbstractThread::MainThread(), __func__,
+  monitorPromise->Then(
+    global->AbstractMainThreadFor(TaskCategory::Other), __func__,
     [promise] (CredentialPtr aInfo) {
       promise->MaybeResolve(aInfo);
     },
@@ -1042,7 +1043,8 @@ WebAuthentication::GetAssertion(const ArrayBufferViewOrArrayBuffer& aChallenge,
 
   requestMonitor->CompleteTask();
 
-  monitorPromise->Then(AbstractThread::MainThread(), __func__,
+  monitorPromise->Then(
+    global->AbstractMainThreadFor(TaskCategory::Other), __func__,
     [promise] (AssertionPtr aAssertion) {
       promise->MaybeResolve(aAssertion);
     },

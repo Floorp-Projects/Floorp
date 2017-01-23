@@ -14295,6 +14295,16 @@ nsGlobalWindow::EventTargetFor(TaskCategory aCategory) const
   return DispatcherTrait::EventTargetFor(aCategory);
 }
 
+AbstractThread*
+nsGlobalWindow::AbstractMainThreadFor(TaskCategory aCategory)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  if (GetDocGroup()) {
+    return GetDocGroup()->AbstractMainThreadFor(aCategory);
+  }
+  return DispatcherTrait::AbstractMainThreadFor(aCategory);
+}
+
 nsGlobalWindow::TemporarilyDisableDialogs::TemporarilyDisableDialogs(
   nsGlobalWindow* aWindow MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 {

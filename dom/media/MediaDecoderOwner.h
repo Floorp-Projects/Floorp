@@ -10,6 +10,7 @@
 
 namespace mozilla {
 
+class AbstractThread;
 class VideoFrameContainer;
 class MediaResult;
 
@@ -43,6 +44,9 @@ public:
   {
     return nullptr;
   }
+
+  // Return an abstract thread on which to run main thread runnables.
+  virtual AbstractThread* AbstractMainThread() const = 0;
 
   // Return true if decoding should be paused
   virtual bool GetPaused() = 0;

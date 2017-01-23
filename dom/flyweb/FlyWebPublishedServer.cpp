@@ -7,6 +7,7 @@
 #include "mozilla/dom/FlyWebPublishedServerIPC.h"
 #include "mozilla/dom/FlyWebPublishBinding.h"
 #include "mozilla/dom/FlyWebService.h"
+#include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/FlyWebServerEvents.h"
 #include "mozilla/dom/ContentChild.h"
@@ -15,6 +16,7 @@
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/net/IPCTransportProvider.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
@@ -168,7 +170,7 @@ FlyWebPublishedServerImpl::FlyWebPublishedServerImpl(nsPIDOMWindowInner* aOwner,
                                                      const nsAString& aName,
                                                      const FlyWebPublishOptions& aOptions)
   : FlyWebPublishedServer(aOwner, aName, aOptions)
-  , mHttpServer(new HttpServer())
+  , mHttpServer(new HttpServer(aOwner->GetDocGroup()->AbstractMainThreadFor(TaskCategory::Other)))
 {
   LOG_I("FlyWebPublishedServerImpl::FlyWebPublishedServerImpl(%p)", this);
 }
@@ -486,6 +488,7 @@ FlyWebPublishedServerParent::FlyWebPublishedServerParent(const nsAString& aName,
   RefPtr<FlyWebPublishedServerParent> self = this;
 
   mozPromise->Then(
+    // Non DocGroup-version of AbstractThread::MainThread() for the task in parent.
     AbstractThread::MainThread(),
     __func__,
     [this, self] (FlyWebPublishedServer* aServer) {
