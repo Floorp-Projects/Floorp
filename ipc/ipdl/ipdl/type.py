@@ -131,17 +131,15 @@ class VoidType(Type):
 VOID = VoidType()
 
 ##--------------------
-class CxxType(Type):
-    def isCxx(self):
-        return True
-    def isAtom(self):
-        return True
-
-class ImportedCxxType(CxxType):
+class ImportedCxxType(Type):
     def __init__(self, qname):
         assert isinstance(qname, QualifiedId)
         self.loc = qname.loc
         self.qname = qname
+    def isCxx(self):
+        return True
+    def isAtom(self):
+        return True
 
     def name(self):
         return self.qname.baseid
