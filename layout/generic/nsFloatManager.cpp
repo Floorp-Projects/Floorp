@@ -618,8 +618,6 @@ nsFloatManager::BoxShapeInfo::LineRight(WritingMode aWM,
 
 nsFloatManager::CircleShapeInfo::CircleShapeInfo(
   StyleBasicShape* const aBasicShape,
-  nscoord aLineLeft,
-  nscoord aBlockStart,
   const LogicalRect& aShapeBoxRect,
   WritingMode aWM,
   const nsSize& aContainerSize)
@@ -639,8 +637,8 @@ nsFloatManager::CircleShapeInfo::CircleShapeInfo(
   // mCenter.x is in the line-axis of the frame manager and mCenter.y are in
   // the frame manager's real block-axis.
   LogicalPoint logicalCenter(aWM, physicalCenter, aContainerSize);
-  mCenter = nsPoint(logicalCenter.LineRelative(aWM, aContainerSize) + aLineLeft,
-                    logicalCenter.B(aWM) + aBlockStart);
+  mCenter = nsPoint(logicalCenter.LineRelative(aWM, aContainerSize),
+                    logicalCenter.B(aWM));
 }
 
 nscoord
@@ -719,20 +717,22 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
   }
 
   if (shapeOutside.GetType() == StyleShapeSourceType::Box) {
-    nsRect shapeBoxRect(rect.LineLeft(aWM, aContainerSize) + aLineLeft,
-                        rect.BStart(aWM) + aBlockStart,
+    nsRect shapeBoxRect(rect.LineLeft(aWM, aContainerSize), rect.BStart(aWM),
                         rect.ISize(aWM), rect.BSize(aWM));
     mShapeInfo = MakeUnique<BoxShapeInfo>(shapeBoxRect, mFrame);
   } else if (shapeOutside.GetType() == StyleShapeSourceType::Shape) {
     StyleBasicShape* const basicShape = shapeOutside.GetBasicShape();
 
     if (basicShape->GetShapeType() == StyleBasicShapeType::Circle) {
-      mShapeInfo = MakeUnique<CircleShapeInfo>(basicShape, aLineLeft, aBlockStart,
-                                               rect, aWM, aContainerSize);
+      mShapeInfo =
+        MakeUnique<CircleShapeInfo>(basicShape, rect, aWM, aContainerSize);
     }
   } else {
     MOZ_ASSERT_UNREACHABLE("Unknown StyleShapeSourceType!");
   }
+
+  // Translate the shape to the same origin as nsFloatManager.
+  mShapeInfo->Translate(aLineLeft, aBlockStart);
 }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
