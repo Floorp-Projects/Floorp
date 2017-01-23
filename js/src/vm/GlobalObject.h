@@ -101,6 +101,7 @@ class GlobalObject : public NativeObject
         MAP_ITERATOR_PROTO,
         SET_ITERATOR_PROTO,
         COLLATOR_PROTO,
+        NUMBER_FORMAT,
         NUMBER_FORMAT_PROTO,
         DATE_TIME_FORMAT_PROTO,
         PLURAL_RULES_PROTO,
@@ -481,6 +482,12 @@ class GlobalObject : public NativeObject
     static JSObject*
     getOrCreateCollatorPrototype(JSContext* cx, Handle<GlobalObject*> global) {
         return getOrCreateObject(cx, global, COLLATOR_PROTO, initIntlObject);
+    }
+
+    static JSFunction*
+    getOrCreateNumberFormatConstructor(JSContext* cx, Handle<GlobalObject*> global) {
+        JSObject* obj = getOrCreateObject(cx, global, NUMBER_FORMAT, initIntlObject);
+        return obj ? &obj->as<JSFunction>() : nullptr;
     }
 
     static JSObject*
