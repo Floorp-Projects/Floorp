@@ -110,6 +110,10 @@ Converter.prototype = {
     this.channel = request;
     this.channel.contentType = "text/html";
     this.channel.contentCharset = "UTF-8";
+    // Because content might still have a reference to this window,
+    // force setting it to a null principal to avoid it being same-
+    // origin with (other) content.
+    this.channel.loadInfo.resetPrincipalsToNullPrincipal();
 
     this.listener.onStartRequest(this.channel, context);
   },

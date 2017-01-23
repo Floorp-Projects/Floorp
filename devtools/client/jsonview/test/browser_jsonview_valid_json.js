@@ -10,7 +10,9 @@ const TEST_JSON_URL = URL_ROOT + "valid_json.json";
 add_task(function* () {
   info("Test valid JSON started");
 
-  yield addJsonViewTab(TEST_JSON_URL);
+  let tab = yield addJsonViewTab(TEST_JSON_URL);
+
+  ok(tab.linkedBrowser.contentPrincipal.isNullPrincipal, "Should have null principal");
 
   let countBefore = yield getElementCount(".jsonPanelBox .treeTable .treeRow");
   ok(countBefore == 3, "There must be three rows");
