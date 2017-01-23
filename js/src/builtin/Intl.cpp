@@ -1047,15 +1047,9 @@ CollatorObject::finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(fop->onMainThread());
 
-    // This is-undefined check shouldn't be necessary, but for internal
-    // brokenness in object allocation code.  For the moment, hack around it by
-    // explicitly guarding against the possibility of the reserved slot not
-    // containing a private.  See bug 949220.
     const Value& slot = obj->as<CollatorObject>().getReservedSlot(CollatorObject::UCOLLATOR_SLOT);
-    if (!slot.isUndefined()) {
-        if (UCollator* coll = static_cast<UCollator*>(slot.toPrivate()))
-            ucol_close(coll);
-    }
+    if (UCollator* coll = static_cast<UCollator*>(slot.toPrivate()))
+        ucol_close(coll);
 }
 
 static JSObject*
@@ -1486,16 +1480,10 @@ NumberFormatObject::finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(fop->onMainThread());
 
-    // This is-undefined check shouldn't be necessary, but for internal
-    // brokenness in object allocation code.  For the moment, hack around it by
-    // explicitly guarding against the possibility of the reserved slot not
-    // containing a private.  See bug 949220.
     const Value& slot =
         obj->as<NumberFormatObject>().getReservedSlot(NumberFormatObject::UNUMBER_FORMAT_SLOT);
-    if (!slot.isUndefined()) {
-        if (UNumberFormat* nf = static_cast<UNumberFormat*>(slot.toPrivate()))
-            unum_close(nf);
-    }
+    if (UNumberFormat* nf = static_cast<UNumberFormat*>(slot.toPrivate()))
+        unum_close(nf);
 }
 
 static JSObject*
@@ -2431,16 +2419,10 @@ DateTimeFormatObject::finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(fop->onMainThread());
 
-    // This is-undefined check shouldn't be necessary, but for internal
-    // brokenness in object allocation code.  For the moment, hack around it by
-    // explicitly guarding against the possibility of the reserved slot not
-    // containing a private.  See bug 949220.
     const Value& slot =
         obj->as<DateTimeFormatObject>().getReservedSlot(DateTimeFormatObject::UDATE_FORMAT_SLOT);
-    if (!slot.isUndefined()) {
-        if (UDateFormat* df = static_cast<UDateFormat*>(slot.toPrivate()))
-            udat_close(df);
-    }
+    if (UDateFormat* df = static_cast<UDateFormat*>(slot.toPrivate()))
+        udat_close(df);
 }
 
 static JSObject*
@@ -3476,16 +3458,10 @@ PluralRulesObject::finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(fop->onMainThread());
 
-    // This is-undefined check shouldn't be necessary, but for internal
-    // brokenness in object allocation code.  For the moment, hack around it by
-    // explicitly guarding against the possibility of the reserved slot not
-    // containing a private.  See bug 949220.
     const Value& slot =
         obj->as<PluralRulesObject>().getReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT);
-    if (!slot.isUndefined()) {
-        if (UPluralRules* pr = static_cast<UPluralRules*>(slot.toPrivate()))
-            uplrules_close(pr);
-    }
+    if (UPluralRules* pr = static_cast<UPluralRules*>(slot.toPrivate()))
+        uplrules_close(pr);
 }
 
 static JSObject*
