@@ -539,7 +539,13 @@ ServiceWorkerUpdateJob::ContinueAfterInstallEvent(bool aInstallEventSuccess)
     return FailUpdateJob(NS_ERROR_DOM_ABORT_ERR);
   }
 
-  MOZ_ASSERT(mRegistration->GetInstalling());
+  // If we haven't been canceled we should have a registration.  There appears
+  // to be a path where it gets cleared before we call into here.  Assert
+  // to try to catch this condition, but don't crash in release.
+  MOZ_DIAGNOSTIC_ASSERT(mRegistration);
+  if (!mRegistration) {
+    return FailUpdateJob(NS_ERROR_DOM_ABORT_ERR);
+  }
 
   // Continue executing the Install algorithm at step 12.
 
@@ -550,6 +556,7 @@ ServiceWorkerUpdateJob::ContinueAfterInstallEvent(bool aInstallEventSuccess)
     return;
   }
 
+  MOZ_DIAGNOSTIC_ASSERT(mRegistration->GetInstalling());
   mRegistration->TransitionInstallingToWaiting();
 
   Finish(NS_OK);
