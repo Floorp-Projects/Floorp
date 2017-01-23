@@ -162,7 +162,7 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     public void onResume() {
         if (lastSelectedTabId >= 0) {
             final Tabs tabs = Tabs.getInstance();
-            final Tab tab =  tabs.getTab(lastSelectedTabId);
+            final Tab tab = tabs.getTab(lastSelectedTabId);
             if (tab == null) {
                 finish();
             }
@@ -189,7 +189,7 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
 
     private void updateToolbarColor(final Toolbar toolbar) {
         if (toolbarColor == NO_COLOR) {
-           return;
+            return;
         }
 
         toolbar.setBackgroundColor(toolbarColor);
