@@ -490,13 +490,11 @@ class SymbolTable:
     def __init__(self, errors):
         self.errors = errors
         self.scopes = [ { } ]   # stack({})
-        self.globalScope = self.scopes[0]
-        self.currentScope = self.globalScope
+        self.currentScope = self.scopes[0]
 
     def enterScope(self, node):
-        assert (isinstance(self.scopes[0], dict)
-                and self.globalScope is self.scopes[0])
-        assert (isinstance(self.currentScope, dict))
+        assert isinstance(self.scopes[0], dict)
+        assert isinstance(self.currentScope, dict)
 
         if not hasattr(node, 'symtab'):
             node.symtab = { }
@@ -510,8 +508,7 @@ class SymbolTable:
 
         self.currentScope = self.scopes[-1]
 
-        assert (isinstance(self.scopes[0], dict)
-                and self.globalScope is self.scopes[0])
+        assert isinstance(self.scopes[0], dict)
         assert isinstance(self.currentScope, dict)
 
     def lookup(self, sym):
