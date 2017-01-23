@@ -207,9 +207,9 @@ add_task(async function hmac_error_during_node_reassignment() {
       _("---------------------------");
       onSyncFinished = function() {
         _("== Second (automatic) sync done.");
-        hasData = rotaryColl.wbo("flying") ||
-                  rotaryColl.wbo("scotsman");
-        hasKeys = keysWBO.modified;
+        let hasData = rotaryColl.wbo("flying") ||
+                      rotaryColl.wbo("scotsman");
+        let hasKeys = keysWBO.modified;
         do_check_true(!hasData == !hasKeys);
 
         // Kick off another sync. Can't just call it, because we're inside the

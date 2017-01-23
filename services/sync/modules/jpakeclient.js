@@ -534,7 +534,7 @@ JPAKEClient.prototype = {
 
     let step2 = this._incoming.payload;
     if (!step2 || !step2.zkp_A || step2.zkp_A.id != this._their_signerid) {
-      this._log.error("Invalid round 2 payload: " + JSON.stringify(step1));
+      this._log.error("Invalid round 2 payload: " + JSON.stringify(step2));
       this.abort(JPAKE_ERROR_WRONGMESSAGE);
       return;
     }

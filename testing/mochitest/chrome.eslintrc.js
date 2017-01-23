@@ -2,6 +2,7 @@
 module.exports = {
   rules: {
     "mozilla/import-headjs-globals": "warn",
+    "mozilla/import-browserjs-globals": "warn",
     "mozilla/import-test-globals": "warn",
     "mozilla/mark-test-function-used": "warn",
   },
@@ -17,6 +18,7 @@ module.exports = {
     "add_task": false,
     "addLoadEvent": false,
     "Assert": false,
+    "BrowserTestUtils": false,
     "EventUtils": false,
     "executeSoon": false,
     "export_assertions": false,
