@@ -16,6 +16,7 @@
 #define MAX_ALLOW_MEMORY_BUFFER 1024000
 namespace mozilla {
 
+class AbstractThread;
 class AudioNodeStream;
 class DOMMediaStream;
 class ErrorResult;
@@ -157,6 +158,8 @@ protected:
   uint32_t mAudioBitsPerSecond;
   uint32_t mVideoBitsPerSecond;
   uint32_t mBitsPerSecond;
+
+  const RefPtr<AbstractThread> mAbstractMainThread;
 private:
   // Register MediaRecorder into Document to listen the activity changes.
   void RegisterActivityObserver();

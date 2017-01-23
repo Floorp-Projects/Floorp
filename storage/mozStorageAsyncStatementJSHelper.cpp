@@ -82,10 +82,10 @@ NS_INTERFACE_MAP_END
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIXPCScriptable
 
-#define XPC_MAP_CLASSNAME AsyncStatementJSHelper
+#define XPC_MAP_CLASSNAME         AsyncStatementJSHelper
 #define XPC_MAP_QUOTED_CLASSNAME "AsyncStatementJSHelper"
-#define XPC_MAP_WANT_GETPROPERTY
-#define XPC_MAP_FLAGS nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
+#define XPC_MAP_FLAGS (XPC_SCRIPTABLE_WANT_GETPROPERTY | \
+                       XPC_SCRIPTABLE_ALLOW_PROP_MODS_DURING_RESOLVE)
 #include "xpc_map_end.h"
 
 NS_IMETHODIMP

@@ -20,13 +20,14 @@
 
 namespace mozilla {
 
+class AbstractThread;
 class MediaResult;
 class MediaSourceTrackDemuxer;
 
 class MediaSourceDemuxer : public MediaDataDemuxer
 {
 public:
-  explicit MediaSourceDemuxer();
+  explicit MediaSourceDemuxer(AbstractThread* aAbstractMainThread);
 
   RefPtr<InitPromise> Init() override;
 

@@ -76,7 +76,7 @@ MediaDataDecoderProxy::Shutdown()
 #if defined(DEBUG)
   mIsShutdown = true;
 #endif
-  mProxyThread->AsXPCOMThread()->Dispatch(NewRunnableMethod(mProxyDecoder,
+  mProxyThread->AsEventTarget()->Dispatch(NewRunnableMethod(mProxyDecoder,
                                                             &MediaDataDecoder::Shutdown),
                                           NS_DISPATCH_SYNC);
 }

@@ -83,7 +83,9 @@ class MediaStreamTrack::PrincipalHandleListener : public MediaStreamTrackListene
 {
 public:
   explicit PrincipalHandleListener(MediaStreamTrack* aTrack)
-    : mTrack(aTrack) {}
+    : mTrack(aTrack)
+    , mAbstractMainThread(aTrack->mOwningStream->AbstractMainThread())
+    {}
 
   void Forget()
   {
@@ -105,15 +107,16 @@ public:
   void NotifyPrincipalHandleChanged(MediaStreamGraph* aGraph,
                                     const PrincipalHandle& aNewPrincipalHandle) override
   {
-    nsCOMPtr<nsIRunnable> runnable =
+    aGraph->DispatchToMainThreadAfterStreamStateUpdate(
+      mAbstractMainThread,
       NewRunnableMethod<StoreCopyPassByConstLRef<PrincipalHandle>>(
-        this, &PrincipalHandleListener::DoNotifyPrincipalHandleChanged, aNewPrincipalHandle);
-    aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
+        this, &PrincipalHandleListener::DoNotifyPrincipalHandleChanged, aNewPrincipalHandle));
   }
 
 protected:
   // These fields may only be accessed on the main thread
   MediaStreamTrack* mTrack;
+  const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
 MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,

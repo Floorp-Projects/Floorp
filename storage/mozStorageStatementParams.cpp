@@ -37,12 +37,12 @@ NS_IMPL_ISUPPORTS(
 ////////////////////////////////////////////////////////////////////////////////
 //// nsIXPCScriptable
 
-#define XPC_MAP_CLASSNAME StatementParams
+#define XPC_MAP_CLASSNAME         StatementParams
 #define XPC_MAP_QUOTED_CLASSNAME "StatementParams"
-#define XPC_MAP_WANT_SETPROPERTY
-#define XPC_MAP_WANT_NEWENUMERATE
-#define XPC_MAP_WANT_RESOLVE
-#define XPC_MAP_FLAGS nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
+#define XPC_MAP_FLAGS (XPC_SCRIPTABLE_WANT_SETPROPERTY | \
+                       XPC_SCRIPTABLE_WANT_NEWENUMERATE | \
+                       XPC_SCRIPTABLE_WANT_RESOLVE | \
+                       XPC_SCRIPTABLE_ALLOW_PROP_MODS_DURING_RESOLVE)
 #include "xpc_map_end.h"
 
 NS_IMETHODIMP
