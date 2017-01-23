@@ -523,23 +523,23 @@ add_test(function test_getKeys() {
   user.verified = true;
 
   fxa.setSignedInUser(user).then(() => {
-    fxa.getSignedInUser().then((user) => {
+    fxa.getSignedInUser().then((user2) => {
       // Before getKeys, we have no keys
-      do_check_eq(!!user.kA, false);
-      do_check_eq(!!user.kB, false);
+      do_check_eq(!!user2.kA, false);
+      do_check_eq(!!user2.kB, false);
       // And we still have a key-fetch token and unwrapBKey to use
-      do_check_eq(!!user.keyFetchToken, true);
-      do_check_eq(!!user.unwrapBKey, true);
+      do_check_eq(!!user2.keyFetchToken, true);
+      do_check_eq(!!user2.unwrapBKey, true);
 
       fxa.internal.getKeys().then(() => {
-        fxa.getSignedInUser().then((user) => {
+        fxa.getSignedInUser().then((user3) => {
           // Now we should have keys
-          do_check_eq(fxa.internal.isUserEmailVerified(user), true);
-          do_check_eq(!!user.verified, true);
-          do_check_eq(user.kA, expandHex("11"));
-          do_check_eq(user.kB, expandHex("66"));
-          do_check_eq(user.keyFetchToken, undefined);
-          do_check_eq(user.unwrapBKey, undefined);
+          do_check_eq(fxa.internal.isUserEmailVerified(user3), true);
+          do_check_eq(!!user3.verified, true);
+          do_check_eq(user3.kA, expandHex("11"));
+          do_check_eq(user3.kB, expandHex("66"));
+          do_check_eq(user3.keyFetchToken, undefined);
+          do_check_eq(user3.unwrapBKey, undefined);
           run_next_test();
         });
       });
@@ -620,13 +620,13 @@ add_test(function test_fetchAndUnwrapKeys_no_token() {
 
   makeObserver(ONLOGOUT_NOTIFICATION, function() {
     log.debug("test_fetchAndUnwrapKeys_no_token observed logout");
-    fxa.internal.getUserAccountData().then(user => {
+    fxa.internal.getUserAccountData().then(user2 => {
       run_next_test();
     });
   });
 
   fxa.setSignedInUser(user).then(
-    user => {
+    user2 => {
       return fxa.internal.fetchAndUnwrapKeys();
     }
   ).then(
@@ -861,8 +861,8 @@ add_test(function test_accountStatus() {
                do_check_true(result);
                fxa.internal.fxAccountsClient._deletedOnServer = true;
                fxa.accountStatus().then(
-                 (result) => {
-                   do_check_false(result);
+                 (result2) => {
+                   do_check_false(result2);
                    fxa.internal.fxAccountsClient._deletedOnServer = false;
                    fxa.signOut().then(run_next_test);
                  }

@@ -869,8 +869,8 @@ SyncServer.prototype = {
 
     // Hand off to the appropriate handler for this path component.
     if (first in this.toplevelHandlers) {
-      let handler = this.toplevelHandlers[first];
-      return handler.call(this, handler, req, resp, version, username, rest);
+      let newHandler = this.toplevelHandlers[first];
+      return newHandler.call(this, newHandler, req, resp, version, username, rest);
     }
     this._log.debug("SyncServer: Unknown top-level " + first);
     throw HTTP_404;
@@ -922,7 +922,7 @@ SyncServer.prototype = {
       let [, collection, wboID] = match;
       let coll = this.getCollection(username, collection);
       switch (req.method) {
-        case "GET":
+        case "GET": {
           if (!coll) {
             if (wboID) {
               respond(404, "Not found", "Not found");
@@ -941,9 +941,9 @@ SyncServer.prototype = {
             return undefined;
           }
           return wbo.handler()(req, resp);
-
+        }
         // TODO: implement handling of X-If-Unmodified-Since for write verbs.
-        case "DELETE":
+        case "DELETE": {
           if (!coll) {
             respond(200, "OK", "{}");
             return undefined;
@@ -987,6 +987,7 @@ SyncServer.prototype = {
             this.callback.onItemDeleted(username, collection, deleted[i]);
           }
           return undefined;
+        }
         case "POST":
         case "PUT":
           if (!coll) {
