@@ -2159,7 +2159,7 @@ class MOZ_STACK_CLASS ModuleValidator
     bool declareFuncPtrTable(Sig&& sig, PropertyName* name, uint32_t firstUse, uint32_t mask,
                              uint32_t* index)
     {
-        if (mask > MaxTableLength)
+        if (mask > MaxTableInitialLength)
             return failCurrentOffset("function pointer table too big");
         uint32_t sigIndex;
         if (!newSig(Move(sig), &sigIndex))
