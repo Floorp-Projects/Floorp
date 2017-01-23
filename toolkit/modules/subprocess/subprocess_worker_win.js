@@ -447,6 +447,11 @@ class Process extends BaseProcess {
       args = args.map(arg => this.quoteString(arg));
     }
 
+    if (/\.bat$/i.test(command)) {
+      command = io.comspec;
+      args = ["cmd.exe", "/s/c", `"${args.join(" ")}"`];
+    }
+
     let envp = this.stringList(options.environment);
 
     let handles = this.initPipes(options);
@@ -598,6 +603,8 @@ io = {
   running: true,
 
   init(details) {
+    this.comspec = details.comspec;
+
     let signalEvent = ctypes.cast(ctypes.uintptr_t(details.signalEvent),
                                   win32.HANDLE);
     this.signal = new Signal(signalEvent);
