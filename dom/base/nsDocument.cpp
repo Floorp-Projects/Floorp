@@ -1487,6 +1487,11 @@ nsDocument::~nsDocument()
   for (StyleSheet* sheet : mStyleSheets) {
     sheet->ClearAssociatedDocument();
   }
+  for (auto& sheets : mAdditionalSheets) {
+    for (StyleSheet* sheet : sheets) {
+      sheet->ClearAssociatedDocument();
+    }
+  }
   if (mAttrStyleSheet) {
     mAttrStyleSheet->SetOwningDocument(nullptr);
   }
