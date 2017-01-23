@@ -76,12 +76,6 @@ struct CSSStyleSheetInner : public StyleSheetInfo
   AutoTArray<CSSStyleSheet*, 8> mSheets;
   IncrementalClearCOMRuleArray mOrderedRules;
   nsAutoPtr<nsXMLNameSpaceMap> mNameSpaceMap;
-  // Linked list of child sheets.  This is al fundamentally broken, because
-  // each of the child sheets has a unique parent... We can only hope (and
-  // currently this is the case) that any time page JS can get ts hands on a
-  // child sheet that means we've already ensured unique inners throughout its
-  // parent chain and things are good.
-  RefPtr<StyleSheet> mFirstChild;
 };
 
 
@@ -244,8 +238,8 @@ protected:
   AutoTArray<nsCSSRuleProcessor*, 8>* mRuleProcessors;
   nsTArray<nsStyleSet*> mStyleSets;
 
-  friend class ::nsCSSRuleProcessor;
   friend class mozilla::StyleSheet;
+  friend class ::nsCSSRuleProcessor;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(CSSStyleSheet, NS_CSS_STYLE_SHEET_IMPL_CID)

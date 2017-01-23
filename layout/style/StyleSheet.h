@@ -130,6 +130,8 @@ public:
 
   inline void AppendStyleSheet(StyleSheet* aSheet);
 
+  StyleSheet* GetFirstChild() const;
+
   // Principal() never returns a null pointer.
   inline nsIPrincipal* Principal() const;
   /**
