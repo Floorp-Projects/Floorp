@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/AbstractThread.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/SyncRunnable.h"
@@ -33,9 +34,11 @@ struct PlaybackInfoInit {
 class DecodedStreamGraphListener : public MediaStreamListener {
 public:
   DecodedStreamGraphListener(MediaStream* aStream,
-                             MozPromiseHolder<GenericPromise>&& aPromise)
+                             MozPromiseHolder<GenericPromise>&& aPromise,
+                             AbstractThread* aMainThread)
     : mMutex("DecodedStreamGraphListener::mMutex")
     , mStream(aStream)
+    , mAbstractMainThread(aMainThread)
   {
     mFinishPromise = Move(aPromise);
   }
@@ -53,9 +56,9 @@ public:
   void NotifyEvent(MediaStreamGraph* aGraph, MediaStreamGraphEvent event) override
   {
     if (event == MediaStreamGraphEvent::EVENT_FINISHED) {
-      nsCOMPtr<nsIRunnable> event =
-        NewRunnableMethod(this, &DecodedStreamGraphListener::DoNotifyFinished);
-      aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
+      aGraph->DispatchToMainThreadAfterStreamStateUpdate(
+        mAbstractMainThread,
+        NewRunnableMethod(this, &DecodedStreamGraphListener::DoNotifyFinished));
     }
   }
 
@@ -67,7 +70,7 @@ public:
 
   void Forget()
   {
-    AbstractThread::MainThread()->Dispatch(NS_NewRunnableFunction([this] () {
+    mAbstractMainThread->Dispatch(NS_NewRunnableFunction([this] () {
       MOZ_ASSERT(NS_IsMainThread());
       mFinishPromise.ResolveIfExists(true, __func__);
     }));
@@ -88,10 +91,12 @@ private:
   RefPtr<MediaStream> mStream;
   // Main thread only.
   MozPromiseHolder<GenericPromise> mFinishPromise;
+
+  const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
 static void
-UpdateStreamSuspended(MediaStream* aStream, bool aBlocking)
+UpdateStreamSuspended(AbstractThread* aMainThread, MediaStream* aStream, bool aBlocking)
 {
   if (NS_IsMainThread()) {
     if (aBlocking) {
@@ -106,7 +111,7 @@ UpdateStreamSuspended(MediaStream* aStream, bool aBlocking)
     } else {
       r = NewRunnableMethod(aStream, &MediaStream::Resume);
     }
-    AbstractThread::MainThread()->Dispatch(r.forget());
+    aMainThread->Dispatch(r.forget());
   }
 }
 
@@ -122,7 +127,8 @@ class DecodedStreamData {
 public:
   DecodedStreamData(OutputStreamManager* aOutputStreamManager,
                     PlaybackInfoInit&& aInit,
-                    MozPromiseHolder<GenericPromise>&& aPromise);
+                    MozPromiseHolder<GenericPromise>&& aPromise,
+                    AbstractThread* aMainThread);
   ~DecodedStreamData();
   void SetPlaying(bool aPlaying);
   MediaEventSource<int64_t>& OnOutput();
@@ -156,25 +162,28 @@ public:
   bool mEOSVideoCompensation;
 
   const RefPtr<OutputStreamManager> mOutputStreamManager;
+  const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
 DecodedStreamData::DecodedStreamData(OutputStreamManager* aOutputStreamManager,
                                      PlaybackInfoInit&& aInit,
-                                     MozPromiseHolder<GenericPromise>&& aPromise)
+                                     MozPromiseHolder<GenericPromise>&& aPromise,
+                                     AbstractThread* aMainThread)
   : mAudioFramesWritten(0)
   , mNextVideoTime(aInit.mStartTime)
   , mNextAudioTime(aInit.mStartTime)
   , mHaveSentFinish(false)
   , mHaveSentFinishAudio(false)
   , mHaveSentFinishVideo(false)
-  , mStream(aOutputStreamManager->Graph()->CreateSourceStream())
+  , mStream(aOutputStreamManager->Graph()->CreateSourceStream(aMainThread))
   // DecodedStreamGraphListener will resolve this promise.
-  , mListener(new DecodedStreamGraphListener(mStream, Move(aPromise)))
+  , mListener(new DecodedStreamGraphListener(mStream, Move(aPromise), aMainThread))
   // mPlaying is initially true because MDSM won't start playback until playing
   // becomes true. This is consistent with the settings of AudioSink.
   , mPlaying(true)
   , mEOSVideoCompensation(false)
   , mOutputStreamManager(aOutputStreamManager)
+  , mAbstractMainThread(aMainThread)
 {
   mStream->AddListener(mListener);
   mOutputStreamManager->Connect(mStream);
@@ -207,7 +216,7 @@ DecodedStreamData::SetPlaying(bool aPlaying)
 {
   if (mPlaying != aPlaying) {
     mPlaying = aPlaying;
-    UpdateStreamSuspended(mStream, !mPlaying);
+    UpdateStreamSuspended(mAbstractMainThread, mStream, !mPlaying);
   }
 }
 
@@ -229,12 +238,14 @@ DecodedStreamData::GetDebugInfo()
 }
 
 DecodedStream::DecodedStream(AbstractThread* aOwnerThread,
+                             AbstractThread* aMainThread,
                              MediaQueue<MediaData>& aAudioQueue,
                              MediaQueue<MediaData>& aVideoQueue,
                              OutputStreamManager* aOutputStreamManager,
                              const bool& aSameOrigin,
                              const PrincipalHandle& aPrincipalHandle)
   : mOwnerThread(aOwnerThread)
+  , mAbstractMainThread(aMainThread)
   , mOutputStreamManager(aOutputStreamManager)
   , mPlaying(false)
   , mSameOrigin(aSameOrigin)
@@ -295,8 +306,9 @@ DecodedStream::Start(int64_t aStartTime, const MediaInfo& aInfo)
   class R : public Runnable {
     typedef MozPromiseHolder<GenericPromise> Promise;
   public:
-    R(PlaybackInfoInit&& aInit, Promise&& aPromise, OutputStreamManager* aManager)
-      : mInit(Move(aInit)), mOutputStreamManager(aManager)
+    R(PlaybackInfoInit&& aInit, Promise&& aPromise,
+      OutputStreamManager* aManager, AbstractThread* aMainThread)
+      : mInit(Move(aInit)), mOutputStreamManager(aManager), mAbstractMainThread(aMainThread)
     {
       mPromise = Move(aPromise);
     }
@@ -311,7 +323,7 @@ DecodedStream::Start(int64_t aStartTime, const MediaInfo& aInfo)
         return NS_OK;
       }
       mData = MakeUnique<DecodedStreamData>(
-        mOutputStreamManager, Move(mInit), Move(mPromise));
+        mOutputStreamManager, Move(mInit), Move(mPromise), mAbstractMainThread);
       return NS_OK;
     }
     UniquePtr<DecodedStreamData> ReleaseData()
@@ -323,6 +335,7 @@ DecodedStream::Start(int64_t aStartTime, const MediaInfo& aInfo)
     Promise mPromise;
     RefPtr<OutputStreamManager> mOutputStreamManager;
     UniquePtr<DecodedStreamData> mData;
+    const RefPtr<AbstractThread> mAbstractMainThread;
   };
 
   MozPromiseHolder<GenericPromise> promise;
@@ -330,7 +343,8 @@ DecodedStream::Start(int64_t aStartTime, const MediaInfo& aInfo)
   PlaybackInfoInit init {
     aStartTime, aInfo
   };
-  nsCOMPtr<nsIRunnable> r = new R(Move(init), Move(promise), mOutputStreamManager);
+  nsCOMPtr<nsIRunnable> r =
+    new R(Move(init), Move(promise), mOutputStreamManager, mAbstractMainThread);
   nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
   SyncRunnable::DispatchToThread(mainThread, r);
   mData = static_cast<R*>(r.get())->ReleaseData();
@@ -388,7 +402,7 @@ DecodedStream::DestroyData(UniquePtr<DecodedStreamData> aData)
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
     delete data;
   });
-  AbstractThread::MainThread()->Dispatch(r.forget());
+  mAbstractMainThread->Dispatch(r.forget());
 }
 
 void

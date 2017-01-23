@@ -12,6 +12,7 @@
 #include "MP4Demuxer.h"
 #include "WebMDecoder.h"
 #include "WebMDemuxer.h"
+#include "mozilla/AbstractThread.h"
 
 using namespace mozilla;
 
@@ -28,6 +29,7 @@ public:
 
     mBenchmark->Init();
     mBenchmark->Run()->Then(
+      // Non DocGroup-version of AbstractThread::MainThread() is fine for testing.
       AbstractThread::MainThread(), __func__,
       [&](uint32_t aDecodeFps) { result = aDecodeFps; done = true; },
       [&]() { done = true; });

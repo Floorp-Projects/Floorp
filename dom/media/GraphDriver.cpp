@@ -639,10 +639,8 @@ AudioCallbackDriver::Init()
     output.format = CUBEB_SAMPLE_FLOAT32NE;
   }
 
-  cubeb_channel_layout layout;
-  int r = cubeb_get_preferred_channel_layout(cubebContext, &layout);
-  MOZ_ASSERT(r == CUBEB_OK || r == CUBEB_ERROR_NOT_SUPPORTED);
-  output.layout = (r == CUBEB_OK) ? layout : CUBEB_LAYOUT_UNDEFINED;
+  // Graphs are always stereo for now.
+  output.layout = CUBEB_LAYOUT_STEREO;
 
   Maybe<uint32_t> latencyPref = CubebUtils::GetCubebMSGLatencyInFrames();
   if (latencyPref) {

@@ -15,17 +15,18 @@
 
 add_task(function* test_contentscript() {
   function background() {
-    browser.test.onMessage.addListener(url => {
-      browser.tabs.create({url}).then(tab => {
-        return browser.tabs.executeScript(tab.id, {code: "true;"})
-                      .then(() => {
-                        browser.test.sendMessage("executed", true);
-                        browser.tabs.remove([tab.id]);
-                      }, err => {
-                        browser.test.sendMessage("executed", false);
-                        browser.tabs.remove([tab.id]);
-                      });
-      });
+    browser.test.onMessage.addListener(async url => {
+      let tab = await browser.tabs.create({url});
+
+      let executed = true;
+      try {
+        await browser.tabs.executeScript(tab.id, {code: "true;"});
+      } catch (e) {
+        executed = false;
+      }
+
+      await browser.tabs.remove([tab.id]);
+      browser.test.sendMessage("executed", executed);
     });
   }
 

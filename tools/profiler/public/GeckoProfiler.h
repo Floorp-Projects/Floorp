@@ -90,6 +90,13 @@ using UniqueProfilerBacktrace =
 
 #if !defined(MOZ_ENABLE_PROFILER_SPS)
 
+// Use these for functions below that must be visible whether the profiler is
+// enabled or not. When the profiler is disabled they are static inline
+// functions (with a simple return value if they are non-void) that should be
+// optimized away during compilation.
+#define PROFILER_FUNC(decl, rv)  static inline decl { return rv; }
+#define PROFILER_FUNC_VOID(decl) static inline void decl {}
+
 // Insert a RAII in this scope to active a pseudo label. Any samples collected
 // in this scope will contain this annotation. For dynamic strings use
 // PROFILER_LABEL_PRINTF. Arguments must be string literals.
@@ -112,21 +119,42 @@ using UniqueProfilerBacktrace =
 #define PROFILER_MARKER(info) do {} while (0)
 #define PROFILER_MARKER_PAYLOAD(info, payload) do { mozilla::UniquePtr<ProfilerMarkerPayload> payloadDeletor(payload); } while (0)
 
-static inline void profiler_tracing(const char* aCategory, const char* aInfo,
-                                    TracingMetadata metaData = TRACING_DEFAULT) {}
-static inline void profiler_tracing(const char* aCategory, const char* aInfo,
+#else   // defined(MOZ_ENABLE_PROFILER_SPS)
+
+#define PROFILER_FUNC(decl, rv)  decl;
+#define PROFILER_FUNC_VOID(decl) void decl;
+
+// we want the class and function name but can't easily get that using preprocessor macros
+// __func__ doesn't have the class name and __PRETTY_FUNCTION__ has the parameters
+
+#define PROFILER_LABEL(name_space, info, category) MOZ_PLATFORM_TRACING(name_space "::" info) mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, category, __LINE__)
+
+#define PROFILER_LABEL_FUNC(category) MOZ_PLATFORM_TRACING(SAMPLE_FUNCTION_NAME) mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(SAMPLE_FUNCTION_NAME, category, __LINE__)
+
+#define PROFILER_LABEL_PRINTF(name_space, info, category, ...) MOZ_PLATFORM_TRACING(name_space "::" info) mozilla::SamplerStackFramePrintfRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, category, __LINE__, __VA_ARGS__)
+
+#define PROFILER_MARKER(info) profiler_add_marker(info)
+#define PROFILER_MARKER_PAYLOAD(info, payload) profiler_add_marker(info, payload)
+
+#endif  // defined(MOZ_ENABLE_PROFILER_SPS)
+
+// These functions are defined whether the profiler is enabled or not.
+
+PROFILER_FUNC_VOID(profiler_tracing(const char* aCategory, const char* aInfo,
+                                    TracingMetadata metaData = TRACING_DEFAULT))
+PROFILER_FUNC_VOID(profiler_tracing(const char* aCategory, const char* aInfo,
                                     UniqueProfilerBacktrace aCause,
-                                    TracingMetadata metaData = TRACING_DEFAULT) {}
+                                    TracingMetadata metaData = TRACING_DEFAULT))
 
 // Initilize the profiler TLS, signal handlers on linux. If MOZ_PROFILER_STARTUP
 // is set the profiler will be started. This call must happen before any other
 // sampler calls. Particularly sampler_label/sampler_marker.
-static inline void profiler_init(void* stackTop) {};
+PROFILER_FUNC_VOID(profiler_init(void* stackTop))
 
 // Clean up the profiler module, stopping it if required. This function may
 // also save a shutdown profile if requested. No profiler calls should happen
 // after this point and all pseudo labels should have been popped.
-static inline void profiler_shutdown() {};
+PROFILER_FUNC_VOID(profiler_shutdown())
 
 // Start the profiler with the selected options. The samples will be
 // recorded in a circular buffer.
@@ -136,69 +164,78 @@ static inline void profiler_shutdown() {};
 //   "aInterval" the sampling interval. The profiler will do its
 //       best to sample at this interval. The profiler visualization
 //       should represent the actual sampling accuracy.
-static inline void profiler_start(int aProfileEntries, double aInterval,
+PROFILER_FUNC_VOID(profiler_start(int aProfileEntries, double aInterval,
                               const char** aFeatures, uint32_t aFeatureCount,
-                              const char** aThreadNameFilters, uint32_t aFilterCount) {}
+                              const char** aThreadNameFilters, uint32_t aFilterCount))
 
 // Stop the profiler and discard the profile. Call 'profiler_save' before this
 // to retrieve the profile.
-static inline void profiler_stop() {}
+PROFILER_FUNC_VOID(profiler_stop())
 
 // These functions pause and resume the profiler. While paused the profile will not
 // take any samples and will not record any data into its buffers. The profiler
 // remains fully initialized in this state. Timeline markers will still be stored.
 // This feature will keep javascript profiling enabled, thus allowing toggling the
 // profiler without invalidating the JIT.
-static inline bool profiler_is_paused() { return false; }
-static inline void profiler_pause() {}
-static inline void profiler_resume() {}
-
+PROFILER_FUNC(bool profiler_is_paused(), false)
+PROFILER_FUNC_VOID(profiler_pause())
+PROFILER_FUNC_VOID(profiler_resume())
 
 // Immediately capture the current thread's call stack and return it
-static inline UniqueProfilerBacktrace profiler_get_backtrace() { return nullptr; }
-static inline void profiler_get_backtrace_noalloc(char *output, size_t outputSize) { return; }
+PROFILER_FUNC(UniqueProfilerBacktrace profiler_get_backtrace(), nullptr)
+PROFILER_FUNC_VOID(profiler_get_backtrace_noalloc(char *output,
+                                                  size_t outputSize))
 
 // Free a ProfilerBacktrace returned by profiler_get_backtrace()
+#if !defined(MOZ_ENABLE_PROFILER_SPS)
 inline void ProfilerBacktraceDestructor::operator()(ProfilerBacktrace* aBacktrace) {}
+#endif
 
-static inline bool profiler_is_active() { return false; }
+PROFILER_FUNC(bool profiler_is_active(), false)
 
 // Check if an external profiler feature is active.
 // Supported:
 //  * gpu
-static inline bool profiler_feature_active(const char*) { return false; }
+PROFILER_FUNC(bool profiler_feature_active(const char*), false)
 
 // Internal-only. Used by the event tracer.
-static inline void profiler_responsiveness(const mozilla::TimeStamp& aTime) {}
+PROFILER_FUNC_VOID(profiler_responsiveness(const mozilla::TimeStamp& aTime))
 
 // Internal-only.
-static inline void profiler_set_frame_number(int frameNumber) {}
+PROFILER_FUNC_VOID(profiler_set_frame_number(int frameNumber))
 
 // Get the profile encoded as a JSON string.
-static inline mozilla::UniquePtr<char[]> profiler_get_profile(double aSinceTime = 0) {
-  return nullptr;
-}
+PROFILER_FUNC(mozilla::UniquePtr<char[]> profiler_get_profile(double aSinceTime = 0),
+              nullptr)
 
 // Get the profile encoded as a JSON object.
-static inline JSObject* profiler_get_profile_jsobject(JSContext* aCx,
-                                                      double aSinceTime = 0) {
-  return nullptr;
-}
+PROFILER_FUNC(JSObject* profiler_get_profile_jsobject(JSContext* aCx,
+                                                       double aSinceTime = 0),
+	       nullptr)
 
 // Get the profile encoded as a JSON object.
-static inline void profiler_get_profile_jsobject_async(double aSinceTime = 0,
-                                                       mozilla::dom::Promise* = 0) {}
-static inline void profiler_get_start_params(int* aEntrySize,
+PROFILER_FUNC_VOID(profiler_get_profile_jsobject_async(double aSinceTime = 0,
+                                                       mozilla::dom::Promise* = 0))
+
+PROFILER_FUNC_VOID(profiler_get_start_params(int* aEntrySize,
                                              double* aInterval,
                                              mozilla::Vector<const char*>* aFilters,
-                                             mozilla::Vector<const char*>* aFeatures) {}
+                                             mozilla::Vector<const char*>* aFeatures))
 
-// Get the profile and write it into a file
-static inline void profiler_save_profile_to_file(char* aFilename) { }
+// Get the profile and write it into a file. It is 'extern "C"' so that it is
+// easily callable from a debugger in a build without debugging information
+// (work around http://llvm.org/bugs/show_bug.cgi?id=22211).
+extern "C" {
+PROFILER_FUNC_VOID(profiler_save_profile_to_file(const char* aFilename))
+}
 
 // Get the features supported by the profiler that are accepted by profiler_init.
 // Returns a null terminated char* array.
-static inline char** profiler_get_features() { return nullptr; }
+PROFILER_FUNC(const char** profiler_get_features(), nullptr)
+
+PROFILER_FUNC_VOID(profiler_get_buffer_info_helper(uint32_t* aCurrentPosition,
+                                                   uint32_t* aTotalSize,
+                                                   uint32_t* aGeneration))
 
 // Get information about the current buffer status.
 // Retursn (using outparams) the current write position in the buffer,
@@ -207,46 +244,52 @@ static inline char** profiler_get_features() { return nullptr; }
 // current status of the profiler, allowing the user to get a sense
 // for how fast the buffer is being written to, and how much
 // data is visible.
-static inline void profiler_get_buffer_info(uint32_t *aCurrentPosition,
-                                            uint32_t *aTotalSize,
-                                            uint32_t *aGeneration)
+static inline void profiler_get_buffer_info(uint32_t* aCurrentPosition,
+                                            uint32_t* aTotalSize,
+                                            uint32_t* aGeneration)
 {
   *aCurrentPosition = 0;
   *aTotalSize = 0;
   *aGeneration = 0;
+
+  profiler_get_buffer_info_helper(aCurrentPosition, aTotalSize, aGeneration);
 }
 
-// Discard the profile, throw away the profile and notify 'profiler-locked'.
-// This function is to be used when entering private browsing to prevent
-// the profiler from collecting sensitive data.
-static inline void profiler_lock() {}
+// Lock the profiler. When locked the profiler is (1) stopped,
+// (2) profile data is cleared, (3) 'profiler-locked' is fired.
+// This is used to lock down the profiler during private browsing.
+PROFILER_FUNC_VOID(profiler_lock())
 
-// Re-enable the profiler and notify 'profiler-unlocked'.
-static inline void profiler_unlock() {}
+// Unlock the profiler, leaving it stopped, and fire 'profiler-unlocked'.
+PROFILER_FUNC_VOID(profiler_unlock())
 
-static inline void profiler_register_thread(const char* name, void* guessStackTop) {}
-static inline void profiler_unregister_thread() {}
+// Register/unregister threads with the profiler.
+PROFILER_FUNC_VOID(profiler_register_thread(const char* name,
+                                            void* guessStackTop))
+PROFILER_FUNC_VOID(profiler_unregister_thread())
 
 // These functions tell the profiler that a thread went to sleep so that we can avoid
 // sampling it while it's sleeping. Calling profiler_sleep_start() twice without
 // profiler_sleep_end() is an error.
-static inline void profiler_sleep_start() {}
-static inline void profiler_sleep_end() {}
-static inline bool profiler_is_sleeping() { return false; }
+PROFILER_FUNC_VOID(profiler_sleep_start())
+PROFILER_FUNC_VOID(profiler_sleep_end())
+PROFILER_FUNC(bool profiler_is_sleeping(), false)
 
 // Call by the JSRuntime's operation callback. This is used to enable
 // profiling on auxilerary threads.
-static inline void profiler_js_operation_callback() {}
+PROFILER_FUNC_VOID(profiler_js_operation_callback())
 
-static inline double profiler_time() { return 0; }
-static inline double profiler_time(const mozilla::TimeStamp& aTime) { return 0; }
+PROFILER_FUNC(double profiler_time(), 0)
+PROFILER_FUNC(double profiler_time(const mozilla::TimeStamp& aTime), 0)
 
-static inline bool profiler_in_privacy_mode() { return false; }
+PROFILER_FUNC(bool profiler_in_privacy_mode(), false)
 
-static inline void profiler_log(const char *str) {}
-static inline void profiler_log(const char *fmt, va_list args) {}
+PROFILER_FUNC_VOID(profiler_log(const char *str))
+PROFILER_FUNC_VOID(profiler_log(const char *fmt, va_list args))
 
-#else
+// End of the functions defined whether the profiler is enabled or not.
+
+#if defined(MOZ_ENABLE_PROFILER_SPS)
 
 #include <stdlib.h>
 #include <signal.h>
@@ -266,15 +309,6 @@ class GeckoSampler;
 class nsISupports;
 class ProfilerMarkerPayload;
 
-namespace mozilla {
-class TimeStamp;
-
-namespace dom {
-class Promise;
-} // namespace dom
-} // namespace mozilla
-
-
 extern MOZ_THREAD_LOCAL(PseudoStack *) tlsPseudoStack;
 extern MOZ_THREAD_LOCAL(GeckoSampler *) tlsTicker;
 extern bool stack_key_initialized;
@@ -291,10 +325,10 @@ extern bool stack_key_initialized;
 
 // Returns a handle to pass on exit. This can check that we are popping the
 // correct callstack.
-inline void*
-mozilla_sampler_call_enter(const char *aInfo,
-                           js::ProfileEntry::Category aCategory,
-                           void *aFrameAddress, bool aCopy, uint32_t line)
+static inline void*
+profiler_call_enter(const char* aInfo,
+                    js::ProfileEntry::Category aCategory,
+                    void *aFrameAddress, bool aCopy, uint32_t line)
 {
   // check if we've been initialized to avoid calling pthread_getspecific
   // with a null tlsStack which will return undefined results.
@@ -319,8 +353,8 @@ mozilla_sampler_call_enter(const char *aInfo,
   return stack;
 }
 
-inline void
-mozilla_sampler_call_exit(void *aHandle)
+static inline void
+profiler_call_exit(void* aHandle)
 {
   if (!aHandle)
     return;
@@ -329,322 +363,13 @@ mozilla_sampler_call_exit(void *aHandle)
   stack->popAndMaybeDelete();
 }
 
-void mozilla_sampler_add_marker(const char *aMarker,
-                                ProfilerMarkerPayload *aPayload = nullptr);
+void profiler_add_marker(const char *aMarker,
+                         ProfilerMarkerPayload *aPayload = nullptr);
 
-void mozilla_sampler_start(int aEntries, double aInterval,
-                           const char** aFeatures, uint32_t aFeatureCount,
-                           const char** aThreadNameFilters, uint32_t aFilterCount);
-
-void mozilla_sampler_stop();
-
-bool mozilla_sampler_is_paused();
-void mozilla_sampler_pause();
-void mozilla_sampler_resume();
-
-UniqueProfilerBacktrace mozilla_sampler_get_backtrace();
-void mozilla_sampler_get_backtrace_noalloc(char *output, size_t outputSize);
-
-bool mozilla_sampler_is_active();
-
-bool mozilla_sampler_feature_active(const char* aName);
-
-void mozilla_sampler_responsiveness(const mozilla::TimeStamp& time);
-
-void mozilla_sampler_frame_number(int frameNumber);
-
-mozilla::UniquePtr<char[]> mozilla_sampler_get_profile(double aSinceTime);
-
-JSObject *mozilla_sampler_get_profile_data(JSContext* aCx, double aSinceTime);
-void mozilla_sampler_get_profile_data_async(double aSinceTime,
-                                            mozilla::dom::Promise* aPromise);
-MOZ_EXPORT
-void mozilla_sampler_save_profile_to_file_async(double aSinceTime,
-                                                const char* aFileName);
-void mozilla_sampler_get_profiler_start_params(int* aEntrySize,
-                                               double* aInterval,
-                                               mozilla::Vector<const char*>* aFilters,
-                                               mozilla::Vector<const char*>* aFeatures);
-void mozilla_sampler_get_gatherer(nsISupports** aRetVal);
-
-// Make this function easily callable from a debugger in a build without
-// debugging information (work around http://llvm.org/bugs/show_bug.cgi?id=22211)
-extern "C" {
-  void mozilla_sampler_save_profile_to_file(const char* aFilename);
-}
-
-const char** mozilla_sampler_get_features();
-
-void mozilla_sampler_get_buffer_info(uint32_t *aCurrentPosition, uint32_t *aTotalSize,
-                                     uint32_t *aGeneration);
-
-void mozilla_sampler_init(void* stackTop);
-
-void mozilla_sampler_shutdown();
-
-// Lock the profiler. When locked the profiler is (1) stopped,
-// (2) profile data is cleared, (3) profiler-locked is fired.
-// This is used to lock down the profiler during private browsing
-void mozilla_sampler_lock();
-
-// Unlock the profiler, leaving it stopped and fires profiler-unlocked.
-void mozilla_sampler_unlock();
-
-// Register/unregister threads with the profiler
-bool mozilla_sampler_register_thread(const char* name, void* stackTop);
-void mozilla_sampler_unregister_thread();
-
-void mozilla_sampler_sleep_start();
-void mozilla_sampler_sleep_end();
-bool mozilla_sampler_is_sleeping();
-
-double mozilla_sampler_time();
-double mozilla_sampler_time(const mozilla::TimeStamp& aTime);
-
-void mozilla_sampler_tracing(const char* aCategory, const char* aInfo,
-                             TracingMetadata aMetaData);
-
-void mozilla_sampler_tracing(const char* aCategory, const char* aInfo,
-                             UniqueProfilerBacktrace aCause,
-                             TracingMetadata aMetaData);
-
-void mozilla_sampler_log(const char *fmt, va_list args);
-
-static inline
-void profiler_init(void* stackTop)
-{
-  mozilla_sampler_init(stackTop);
-}
-
-static inline
-void profiler_shutdown()
-{
-  mozilla_sampler_shutdown();
-}
-
-static inline
-void profiler_start(int aProfileEntries, double aInterval,
-                    const char** aFeatures, uint32_t aFeatureCount,
-                    const char** aThreadNameFilters, uint32_t aFilterCount)
-{
-  mozilla_sampler_start(aProfileEntries, aInterval, aFeatures, aFeatureCount, aThreadNameFilters, aFilterCount);
-}
-
-static inline
-void profiler_stop()
-{
-  mozilla_sampler_stop();
-}
-
-static inline
-bool profiler_is_paused()
-{
-  return mozilla_sampler_is_paused();
-}
-
-static inline
-void profiler_pause()
-{
-  mozilla_sampler_pause();
-}
-
-static inline
-void profiler_resume()
-{
-  mozilla_sampler_resume();
-}
-
-static inline
-UniqueProfilerBacktrace profiler_get_backtrace()
-{
-  return mozilla_sampler_get_backtrace();
-}
-
-static inline
-void profiler_get_backtrace_noalloc(char *output, size_t outputSize)
-{
-  return mozilla_sampler_get_backtrace_noalloc(output, outputSize);
-}
-
-static inline
-bool profiler_is_active()
-{
-  return mozilla_sampler_is_active();
-}
-
-static inline
-bool profiler_feature_active(const char* aName)
-{
-  return mozilla_sampler_feature_active(aName);
-}
-
-static inline
-void profiler_responsiveness(const mozilla::TimeStamp& aTime)
-{
-  mozilla_sampler_responsiveness(aTime);
-}
-
-static inline
-void profiler_set_frame_number(int frameNumber)
-{
-  return mozilla_sampler_frame_number(frameNumber);
-}
-
-static inline
-mozilla::UniquePtr<char[]> profiler_get_profile(double aSinceTime = 0)
-{
-  return mozilla_sampler_get_profile(aSinceTime);
-}
-
-static inline
-JSObject* profiler_get_profile_jsobject(JSContext* aCx, double aSinceTime = 0)
-{
-  return mozilla_sampler_get_profile_data(aCx, aSinceTime);
-}
-
-static inline
-void profiler_get_profile_jsobject_async(double aSinceTime = 0,
-                                         mozilla::dom::Promise* aPromise = 0)
-{
-  mozilla_sampler_get_profile_data_async(aSinceTime, aPromise);
-}
-
-static inline
-void profiler_get_start_params(int* aEntrySize,
-                               double* aInterval,
-                               mozilla::Vector<const char*>* aFilters,
-                               mozilla::Vector<const char*>* aFeatures)
-{
-  mozilla_sampler_get_profiler_start_params(aEntrySize, aInterval, aFilters, aFeatures);
-}
-
-static inline
-void profiler_get_gatherer(nsISupports** aRetVal)
-{
-  mozilla_sampler_get_gatherer(aRetVal);
-}
-
-static inline
-void profiler_save_profile_to_file(const char* aFilename)
-{
-  return mozilla_sampler_save_profile_to_file(aFilename);
-}
-
-static inline
-const char** profiler_get_features()
-{
-  return mozilla_sampler_get_features();
-}
-
-static inline
-void profiler_get_buffer_info(uint32_t *aCurrentPosition, uint32_t *aTotalSize,
-                              uint32_t *aGeneration)
-{
-  return mozilla_sampler_get_buffer_info(aCurrentPosition, aTotalSize, aGeneration);
-}
-
-static inline
-void profiler_lock()
-{
-  return mozilla_sampler_lock();
-}
-
-static inline
-void profiler_unlock()
-{
-  return mozilla_sampler_unlock();
-}
-
-static inline
-void profiler_register_thread(const char* name, void* guessStackTop)
-{
-  mozilla_sampler_register_thread(name, guessStackTop);
-}
-
-static inline
-void profiler_unregister_thread()
-{
-  mozilla_sampler_unregister_thread();
-}
-
-static inline
-void profiler_sleep_start()
-{
-  mozilla_sampler_sleep_start();
-}
-
-static inline
-void profiler_sleep_end()
-{
-  mozilla_sampler_sleep_end();
-}
-
-static inline
-bool profiler_is_sleeping()
-{
-  return mozilla_sampler_is_sleeping();
-}
-
-static inline
-void profiler_js_operation_callback()
-{
-  PseudoStack *stack = tlsPseudoStack.get();
-  if (!stack) {
-    return;
-  }
-
-  stack->jsOperationCallback();
-}
-
-static inline
-double profiler_time()
-{
-  return mozilla_sampler_time();
-}
-
-static inline
-double profiler_time(const mozilla::TimeStamp& aTime)
-{
-  return mozilla_sampler_time(aTime);
-}
-
-static inline
-bool profiler_in_privacy_mode()
-{
-  PseudoStack *stack = tlsPseudoStack.get();
-  if (!stack) {
-    return false;
-  }
-  return stack->mPrivacyMode;
-}
-
-static inline void profiler_tracing(const char* aCategory, const char* aInfo,
-                                    UniqueProfilerBacktrace aCause,
-                                    TracingMetadata aMetaData = TRACING_DEFAULT)
-{
-  // Don't insert a marker if we're not profiling to avoid
-  // the heap copy (malloc).
-  if (!stack_key_initialized || !profiler_is_active()) {
-    return;
-  }
-
-  mozilla_sampler_tracing(aCategory, aInfo, mozilla::Move(aCause), aMetaData);
-}
-
-static inline void profiler_tracing(const char* aCategory, const char* aInfo,
-                                    TracingMetadata aMetaData = TRACING_DEFAULT)
-{
-  if (!stack_key_initialized)
-    return;
-
-  // Don't insert a marker if we're not profiling to avoid
-  // the heap copy (malloc).
-  if (!profiler_is_active()) {
-    return;
-  }
-
-  mozilla_sampler_tracing(aCategory, aInfo, aMetaData);
-}
+MOZ_EXPORT  // XXX: should this be 'extern "C"' as well?
+void profiler_save_profile_to_file_async(double aSinceTime,
+                                         const char* aFileName);
+void profiler_get_gatherer(nsISupports** aRetVal);
 
 #define SAMPLER_APPEND_LINE_NUMBER_PASTE(id, line) id ## line
 #define SAMPLER_APPEND_LINE_NUMBER_EXPAND(id, line) SAMPLER_APPEND_LINE_NUMBER_PASTE(id, line)
@@ -679,18 +404,6 @@ static inline void profiler_tracing(const char* aCategory, const char* aInfo,
 #else
 # define MOZ_PLATFORM_TRACING(name)
 #endif
-
-// we want the class and function name but can't easily get that using preprocessor macros
-// __func__ doesn't have the class name and __PRETTY_FUNCTION__ has the parameters
-
-#define PROFILER_LABEL(name_space, info, category) MOZ_PLATFORM_TRACING(name_space "::" info) mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, category, __LINE__)
-
-#define PROFILER_LABEL_FUNC(category) MOZ_PLATFORM_TRACING(SAMPLE_FUNCTION_NAME) mozilla::SamplerStackFrameRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(SAMPLE_FUNCTION_NAME, category, __LINE__)
-
-#define PROFILER_LABEL_PRINTF(name_space, info, category, ...) MOZ_PLATFORM_TRACING(name_space "::" info) mozilla::SamplerStackFramePrintfRAII SAMPLER_APPEND_LINE_NUMBER(sampler_raii)(name_space "::" info, category, __LINE__, __VA_ARGS__)
-
-#define PROFILER_MARKER(info) mozilla_sampler_add_marker(info)
-#define PROFILER_MARKER_PAYLOAD(info, payload) mozilla_sampler_add_marker(info, payload)
 
 /* FIXME/bug 789667: memory constraints wouldn't much of a problem for
  * this small a sample buffer size, except that serializing the
@@ -743,10 +456,10 @@ public:
     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    mHandle = mozilla_sampler_call_enter(aInfo, aCategory, this, false, line);
+    mHandle = profiler_call_enter(aInfo, aCategory, this, false, line);
   }
   ~SamplerStackFrameRAII() {
-    mozilla_sampler_call_exit(mHandle);
+    profiler_call_exit(mHandle);
   }
 private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
@@ -771,14 +484,14 @@ public:
       VsprintfLiteral(buff, aFormat, args);
       SprintfLiteral(mDest, "%s %s", aInfo, buff);
 
-      mHandle = mozilla_sampler_call_enter(mDest, aCategory, this, true, line);
+      mHandle = profiler_call_enter(mDest, aCategory, this, true, line);
       va_end(args);
     } else {
-      mHandle = mozilla_sampler_call_enter(aInfo, aCategory, this, false, line);
+      mHandle = profiler_call_enter(aInfo, aCategory, this, false, line);
     }
   }
   ~SamplerStackFramePrintfRAII() {
-    mozilla_sampler_call_exit(mHandle);
+    profiler_call_exit(mHandle);
   }
 private:
   char mDest[SAMPLER_MAX_STRING];
@@ -795,19 +508,7 @@ profiler_get_pseudo_stack(void)
   return tlsPseudoStack.get();
 }
 
-static inline
-void profiler_log(const char *str)
-{
-  profiler_tracing("log", str, TRACING_EVENT);
-}
-
-static inline
-void profiler_log(const char *fmt, va_list args)
-{
-  mozilla_sampler_log(fmt, args);
-}
-
-#endif
+#endif  // defined(MOZ_ENABLE_PROFILER_SPS)
 
 namespace mozilla {
 

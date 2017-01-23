@@ -14,6 +14,7 @@ class nsIEventTarget;
 class nsIRunnable;
 
 namespace mozilla {
+class AbstractThread;
 namespace dom {
 
 class TabGroup;
@@ -60,6 +61,10 @@ public:
   // it is safe. For nsIGlobalWindow it is not safe. The nsIEventTarget can
   // always be used off the main thread.
   virtual nsIEventTarget* EventTargetFor(TaskCategory aCategory) const;
+
+  // Must be called on the main thread. The AbstractThread can always be used
+  // off the main thread.
+  virtual AbstractThread* AbstractMainThreadFor(TaskCategory aCategory);
 };
 
 // Base class for DocGroup and TabGroup.
@@ -73,6 +78,10 @@ public:
   // This method is always safe to call off the main thread. The nsIEventTarget
   // can always be used off the main thread.
   virtual nsIEventTarget* EventTargetFor(TaskCategory aCategory) const = 0;
+
+  // Must be called on the main thread. The AbstractThread can always be used
+  // off the main thread.
+  virtual AbstractThread* AbstractMainThreadFor(TaskCategory aCategory) = 0;
 
   // These methods perform a safe cast. They return null if |this| is not of the
   // requested type.

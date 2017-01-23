@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/Dispatcher.h"
+
+#include "mozilla/AbstractThread.h"
 #include "mozilla/Move.h"
 #include "nsINamed.h"
 #include "nsQueryObject.h"
@@ -34,6 +36,13 @@ DispatcherTrait::EventTargetFor(TaskCategory aCategory) const
 {
   nsCOMPtr<nsIEventTarget> main = do_GetMainThread();
   return main;
+}
+
+AbstractThread*
+DispatcherTrait::AbstractMainThreadFor(TaskCategory aCategory)
+{
+  // Return non DocGroup version by default.
+  return AbstractThread::MainThread();
 }
 
 namespace {

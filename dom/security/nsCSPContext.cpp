@@ -168,9 +168,10 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
     }
   }
 
-  // aExtra is only non-null if the channel got redirected.
-  bool wasRedirected = (aExtra != nullptr);
+  // aExtra holds the original URI of the channel if the
+  // channel got redirected (until we fix Bug 1332422).
   nsCOMPtr<nsIURI> originalURI = do_QueryInterface(aExtra);
+  bool wasRedirected = originalURI;
 
   bool permitted = permitsInternal(dir,
                                    aContentLocation,

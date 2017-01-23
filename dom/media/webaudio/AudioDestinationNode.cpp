@@ -262,7 +262,8 @@ public:
       RefPtr<InputMutedRunnable> runnable =
         new InputMutedRunnable(aStream, newInputMuted);
       aStream->Graph()->
-        DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
+        DispatchToMainThreadAfterStreamStateUpdate(mAbstractMainThread,
+                                                   runnable.forget());
     }
   }
 

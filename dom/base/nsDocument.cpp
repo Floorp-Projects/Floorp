@@ -2901,6 +2901,16 @@ nsIDocument::EventTargetFor(TaskCategory aCategory) const
   return DispatcherTrait::EventTargetFor(aCategory);
 }
 
+AbstractThread*
+nsIDocument::AbstractMainThreadFor(mozilla::dom::TaskCategory aCategory)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mDocGroup) {
+    return mDocGroup->AbstractMainThreadFor(aCategory);
+  }
+  return DispatcherTrait::AbstractMainThreadFor(aCategory);
+}
+
 void
 nsIDocument::NoteScriptTrackingStatus(const nsACString& aURL, bool aIsTracking)
 {

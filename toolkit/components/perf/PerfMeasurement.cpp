@@ -32,8 +32,7 @@ Module::~Module() = default;
 
 #define XPC_MAP_CLASSNAME Module
 #define XPC_MAP_QUOTED_CLASSNAME "Module"
-#define XPC_MAP_WANT_CALL
-#define XPC_MAP_FLAGS 0
+#define XPC_MAP_FLAGS XPC_SCRIPTABLE_WANT_CALL
 #include "xpc_map_end.h"
 
 static bool
