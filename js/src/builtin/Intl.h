@@ -13,6 +13,7 @@
 #include "jsalloc.h"
 #include "NamespaceImports.h"
 
+#include "builtin/SelfHostingDefines.h"
 #include "js/Class.h"
 #include "js/GCAPI.h"
 #include "js/GCHashTable.h"
@@ -187,8 +188,12 @@ class CollatorObject : public NativeObject
   public:
     static const Class class_;
 
-    static constexpr uint32_t UCOLLATOR_SLOT = 0;
-    static constexpr uint32_t SLOT_COUNT = 1;
+    static constexpr uint32_t INTERNALS_SLOT = 0;
+    static constexpr uint32_t UCOLLATOR_SLOT = 1;
+    static constexpr uint32_t SLOT_COUNT = 2;
+
+    static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
+                  "INTERNALS_SLOT must match self-hosting define for internals object slot");
 
   private:
     static const ClassOps classOps_;
@@ -249,8 +254,12 @@ class NumberFormatObject : public NativeObject
   public:
     static const Class class_;
 
-    static constexpr uint32_t UNUMBER_FORMAT_SLOT = 0;
-    static constexpr uint32_t SLOT_COUNT = 1;
+    static constexpr uint32_t INTERNALS_SLOT = 0;
+    static constexpr uint32_t UNUMBER_FORMAT_SLOT = 1;
+    static constexpr uint32_t SLOT_COUNT = 2;
+
+    static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
+                  "INTERNALS_SLOT must match self-hosting define for internals object slot");
 
   private:
     static const ClassOps classOps_;
@@ -308,8 +317,12 @@ class DateTimeFormatObject : public NativeObject
   public:
     static const Class class_;
 
-    static constexpr uint32_t UDATE_FORMAT_SLOT = 0;
-    static constexpr uint32_t SLOT_COUNT = 1;
+    static constexpr uint32_t INTERNALS_SLOT = 0;
+    static constexpr uint32_t UDATE_FORMAT_SLOT = 1;
+    static constexpr uint32_t SLOT_COUNT = 2;
+
+    static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
+                  "INTERNALS_SLOT must match self-hosting define for internals object slot");
 
   private:
     static const ClassOps classOps_;
@@ -418,8 +431,12 @@ class PluralRulesObject : public NativeObject
   public:
     static const Class class_;
 
-    static constexpr uint32_t UPLURAL_RULES_SLOT = 0;
-    static constexpr uint32_t SLOT_COUNT = 1;
+    static constexpr uint32_t INTERNALS_SLOT = 0;
+    static constexpr uint32_t UPLURAL_RULES_SLOT = 1;
+    static constexpr uint32_t SLOT_COUNT = 2;
+
+    static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
+                  "INTERNALS_SLOT must match self-hosting define for internals object slot");
 
   private:
     static const ClassOps classOps_;
