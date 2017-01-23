@@ -24,6 +24,8 @@ const {
 // Map[extension -> DevToolsPageDefinition]
 let devtoolsPageDefinitionMap = new Map();
 
+let initDevTools;
+
 /**
  * Retrieve the devtools target for the devtools extension proxy context
  * (lazily cloned from the target of the toolbox associated to the context
@@ -194,6 +196,8 @@ class DevToolsPage extends HiddenExtensionPage {
  */
 class DevToolsPageDefinition {
   constructor(extension, url) {
+    initDevTools();
+
     this.url = url;
     this.extension = extension;
 
@@ -246,41 +250,50 @@ class DevToolsPageDefinition {
 
 /* eslint-disable mozilla/balanced-listeners */
 
-// Create a devtools page context for a new opened toolbox,
-// based on the registered devtools_page definitions.
-gDevTools.on("toolbox-created", (evt, toolbox) => {
-  if (!toolbox.target.isLocalTab) {
-    // Only local tabs are currently supported (See Bug 1304378 for additional details
-    // related to remote targets support).
-    let msg = `Ignoring DevTools Toolbox for target "${toolbox.target.toString()}": ` +
-              `"${toolbox.target.name}" ("${toolbox.target.url}"). ` +
-              "Only local tab are currently supported by the WebExtensions DevTools API.";
-    let scriptError = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
-    scriptError.init(msg, null, null, null, null, Ci.nsIScriptError.warningFlag, "content javascript");
-    let consoleService = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
-    consoleService.logMessage(scriptError);
-
+let devToolsInitialized = false;
+initDevTools = function() {
+  if (devToolsInitialized) {
     return;
   }
 
-  for (let devtoolsPage of devtoolsPageDefinitionMap.values()) {
-    devtoolsPage.buildForToolbox(toolbox);
-  }
-});
+  // Create a devtools page context for a new opened toolbox,
+  // based on the registered devtools_page definitions.
+  gDevTools.on("toolbox-created", (evt, toolbox) => {
+    if (!toolbox.target.isLocalTab) {
+      // Only local tabs are currently supported (See Bug 1304378 for additional details
+      // related to remote targets support).
+      let msg = `Ignoring DevTools Toolbox for target "${toolbox.target.toString()}": ` +
+                `"${toolbox.target.name}" ("${toolbox.target.url}"). ` +
+                "Only local tab are currently supported by the WebExtensions DevTools API.";
+      let scriptError = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
+      scriptError.init(msg, null, null, null, null, Ci.nsIScriptError.warningFlag, "content javascript");
+      let consoleService = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
+      consoleService.logMessage(scriptError);
 
-// Destroy a devtools page context for a destroyed toolbox,
-// based on the registered devtools_page definitions.
-gDevTools.on("toolbox-destroy", (evt, target) => {
-  if (!target.isLocalTab) {
-    // Only local tabs are currently supported (See Bug 1304378 for additional details
-    // related to remote targets support).
-    return;
-  }
+      return;
+    }
 
-  for (let devtoolsPageDefinition of devtoolsPageDefinitionMap.values()) {
-    devtoolsPageDefinition.shutdownForTarget(target);
-  }
-});
+    for (let devtoolsPage of devtoolsPageDefinitionMap.values()) {
+      devtoolsPage.buildForToolbox(toolbox);
+    }
+  });
+
+  // Destroy a devtools page context for a destroyed toolbox,
+  // based on the registered devtools_page definitions.
+  gDevTools.on("toolbox-destroy", (evt, target) => {
+    if (!target.isLocalTab) {
+      // Only local tabs are currently supported (See Bug 1304378 for additional details
+      // related to remote targets support).
+      return;
+    }
+
+    for (let devtoolsPageDefinition of devtoolsPageDefinitionMap.values()) {
+      devtoolsPageDefinition.shutdownForTarget(target);
+    }
+  });
+
+  devToolsInitialized = true;
+};
 
 // Create and register a new devtools_page definition as specified in the
 // "devtools_page" property in the extension manifest.
