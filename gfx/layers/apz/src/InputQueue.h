@@ -143,7 +143,8 @@ private:
    * If animations are present for the current pending input block, cancel
    * them as soon as possible.
    */
-  void CancelAnimationsForNewBlock(CancelableBlockState* aBlock);
+  void CancelAnimationsForNewBlock(CancelableBlockState* aBlock,
+                                   CancelAnimationFlags aExtraFlags = Default);
 
   /**
    * If we need to wait for a content response, schedule that now.
