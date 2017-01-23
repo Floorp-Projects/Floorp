@@ -259,7 +259,7 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
      * Get the title of the folder given a cursor moved to the position.
      *
      * @param context The context of the view.
-     * @param cursor A cursor moved to the required position.
+     * @param c A cursor moved to the required position.
      * @return The title of the folder at the position.
      */
     public String getFolderTitle(Context context, Cursor c) {
