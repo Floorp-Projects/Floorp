@@ -16,7 +16,6 @@
 #include "nsError.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
-#include "nsIDOMCharacterData.h"
 #include "nsINode.h"
 #include "nsAString.h"
 
