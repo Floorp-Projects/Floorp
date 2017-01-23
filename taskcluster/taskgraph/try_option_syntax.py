@@ -559,5 +559,5 @@ class TryOptionSyntax(object):
             "jobs: " + none_for_all(self.jobs),
             "trigger_tests: " + str(self.trigger_tests),
             "interactive: " + str(self.interactive),
-            "notifications: " + str(self.notifications),
+            "notifications: " + self.notifications,
         ])
