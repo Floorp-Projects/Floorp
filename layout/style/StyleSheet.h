@@ -153,7 +153,7 @@ public:
 
   inline size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 #ifdef DEBUG
-  inline void List(FILE* aOut = stdout, int32_t aIndex = 0) const;
+  virtual void List(FILE* aOut = stdout, int32_t aIndex = 0) const;
 #endif
 
   // WebIDL StyleSheet API

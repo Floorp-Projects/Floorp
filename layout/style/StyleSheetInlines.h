@@ -140,14 +140,6 @@ StyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   MOZ_STYLO_FORWARD(SizeOfIncludingThis, (aMallocSizeOf))
 }
 
-#ifdef DEBUG
-void
-StyleSheet::List(FILE* aOut, int32_t aIndex) const
-{
-  MOZ_STYLO_FORWARD(List, (aOut, aIndex))
-}
-#endif
-
 void StyleSheet::WillDirty() { MOZ_STYLO_FORWARD(WillDirty, ()) }
 void StyleSheet::DidDirty() { MOZ_STYLO_FORWARD(DidDirty, ()) }
 
