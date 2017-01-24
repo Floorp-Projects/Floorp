@@ -90,14 +90,6 @@ add_task(function* () {
       time: true
     });
 
-  wait = waitForDOM(document, "#panel-3");
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.getElementById("details-pane-toggle"));
-  document.querySelector("#tab-3 a").click();
-  yield wait;
-
-  RequestsMenu.selectedIndex = -1;
-
   yield selectIndexAndWaitForEditor(0);
   yield testResponseTab("xml");
 
@@ -122,7 +114,7 @@ add_task(function* () {
   yield teardown(monitor);
 
   function* testResponseTab(type) {
-    let tabpanel = document.querySelector("#panel-3");
+    let tabpanel = document.querySelector("#response-panel");
 
     function checkVisibility(box) {
       is(tabpanel.querySelector(".response-error-header") === null,
@@ -232,10 +224,11 @@ add_task(function* () {
   }
 
   function* selectIndexAndWaitForEditor(index) {
-    let editor = document.querySelector("#panel-3 .editor-mount iframe");
+    let editor = document.querySelector("#response-panel .editor-mount iframe");
     if (!editor) {
-      let waitDOM = waitForDOM(document, ".editor-mount iframe");
+      let waitDOM = waitForDOM(document, "#response-panel .editor-mount iframe");
       RequestsMenu.selectedIndex = index;
+      document.querySelector("#response-tab").click();
       [editor] = yield waitDOM;
       yield once(editor, "DOMContentLoaded");
     } else {
@@ -246,14 +239,14 @@ add_task(function* () {
   }
 
   function* selectIndexAndWaitForJSONView(index) {
-    let tabpanel = document.querySelector("#panel-3");
+    let tabpanel = document.querySelector("#response-panel");
     let waitDOM = waitForDOM(tabpanel, ".treeTable");
     RequestsMenu.selectedIndex = index;
     yield waitDOM;
   }
 
   function* selectIndexAndWaitForImageView(index) {
-    let tabpanel = document.querySelector("#panel-3");
+    let tabpanel = document.querySelector("#response-panel");
     let waitDOM = waitForDOM(tabpanel, ".response-image");
     RequestsMenu.selectedIndex = index;
     let [imageNode] = yield waitDOM;
