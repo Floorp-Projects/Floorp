@@ -1456,7 +1456,7 @@ void nsTableRowFrame::SetContinuousBCBorderWidth(LogicalSide aForSide,
       mIStartContBorderWidth = aPixelValue;
       return;
     default:
-      NS_ERROR("invalid NS_SIDE arg");
+      NS_ERROR("invalid LogicalSide arg");
   }
 }
 #ifdef ACCESSIBILITY

@@ -1205,7 +1205,7 @@ public:
   /**
    * Fill in border radii for this frame.  Return whether any are nonzero.
    * Indices into aRadii are the enum HalfCorner constants in gfx/2d/Types.h
-   * aSkipSides is a union of SIDE_BIT_LEFT/RIGHT/TOP/BOTTOM bits that says
+   * aSkipSides is a union of eSideBitsLeft/Right/Top/Bottom bits that says
    * which side(s) to skip.
    *
    * Note: GetMarginBoxBorderRadii() and GetShapeBoxBorderRadii() work only
