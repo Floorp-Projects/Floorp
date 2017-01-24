@@ -1145,8 +1145,12 @@ nsJSProtocolHandler::EnsureUTF8Spec(const nsAFlatCString &aSpec, const char *aCh
   rv = mTextToSubURI->UnEscapeNonAsciiURI(nsDependentCString(aCharset), aSpec, uStr);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!IsASCII(uStr))
-    NS_EscapeURL(NS_ConvertUTF16toUTF8(uStr), esc_AlwaysCopy | esc_OnlyNonASCII, aUTF8Spec);
+  if (!IsASCII(uStr)) {
+    rv = NS_EscapeURL(NS_ConvertUTF16toUTF8(uStr),
+                      esc_AlwaysCopy | esc_OnlyNonASCII, aUTF8Spec,
+                      mozilla::fallible);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
