@@ -743,7 +743,7 @@ profiler_get_features()
     // Walk the C++ stack.
     "stackwalk",
 #endif
-#if defined(ENABLE_SPS_LEAF_DATA)
+#if defined(ENABLE_LEAF_DATA)
     // Include the C++ leaf node if not stackwalking. DevTools
     // profiler doesn't want the native addresses.
     "leaf",
