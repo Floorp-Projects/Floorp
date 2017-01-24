@@ -127,6 +127,7 @@ class subsuite(InstanceFilter):
         # itself (if the condition is true), or nothing.
         for test in tests:
             subsuite = test.get('subsuite', '')
+            subsuite = subsuite.split('#', 1)[0].strip()
             if ',' in subsuite:
                 try:
                     subsuite, cond = subsuite.split(',')
@@ -137,6 +138,8 @@ class subsuite(InstanceFilter):
                     test['subsuite'] = subsuite
                 else:
                     test['subsuite'] = ''
+            else:
+                test['subsuite'] = subsuite
 
             # Filter on current subsuite
             if self.name is None:
