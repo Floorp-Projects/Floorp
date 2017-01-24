@@ -6,7 +6,7 @@
  * This utility script is for instrumenting your Talos test for
  * performance profiles while running within the parent process.
  * Almost all of the functions that this script exposes to the
- * SPS Profiler are synchronous, except for finishTest, since that
+ * Gecko Profiler are synchronous, except for finishTest, since that
  * involves requesting the profiles from any content processes and
  * then writing to disk.
  *
@@ -20,7 +20,7 @@ var TalosParentProfiler;
 
   // Whether or not this TalosContentProfiler object has had initFromObject
   // or initFromURLQueryParams called on it. Any functions that change the
-  // state of the SPS Profiler should only be called after calling either
+  // state of the Gecko Profiler should only be called after calling either
   // initFromObject or initFromURLQueryParams.
   let initted = false;
 
@@ -102,7 +102,7 @@ var TalosParentProfiler;
     },
 
     /**
-     * A Talos test is about to start. Note that the SPS profiler will be
+     * A Talos test is about to start. Note that the Gecko Profiler will be
      * paused immediately after starting and that resume() should be called
      * in order to collect samples.
      *
@@ -121,9 +121,9 @@ var TalosParentProfiler;
     },
 
     /**
-     * A Talos test has finished. This will stop the SPS profiler from sampling,
-     * and return a Promise that resolves once the Profiler has finished dumping
-     * the multi-process profile to disk.
+     * A Talos test has finished. This will stop the Gecko Profiler from
+     * sampling, and return a Promise that resolves once the Profiler has
+     * finished dumping the multi-process profile to disk.
      *
      * @returns Promise
      *          Resolves once the profile has been dumped to disk. The test should
@@ -159,10 +159,10 @@ var TalosParentProfiler;
     },
 
     /**
-     * Resumes the SPS profiler sampler. Can also simultaneously set a marker.
+     * Resumes the Gecko Profiler sampler. Can also simultaneously set a marker.
      *
      * @returns Promise
-     *          Resolves once the SPS profiler has resumed.
+     *          Resolves once the Gecko Profiler has resumed.
      */
     resume(marker="") {
       if (initted) {
@@ -171,10 +171,10 @@ var TalosParentProfiler;
     },
 
     /**
-     * Pauses the SPS profiler sampler. Can also simultaneously set a marker.
+     * Pauses the Gecko Profiler sampler. Can also simultaneously set a marker.
      *
      * @returns Promise
-     *          Resolves once the SPS profiler has paused.
+     *          Resolves once the Gecko Profiler has paused.
      */
     pause(marker="") {
       if (initted) {
