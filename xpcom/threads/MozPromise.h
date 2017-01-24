@@ -379,7 +379,7 @@ protected:
 
     void Disconnect() override
     {
-      MOZ_ASSERT(ThenValueBase::mResponseTarget->IsCurrentThreadIn());
+      MOZ_DIAGNOSTIC_ASSERT(ThenValueBase::mResponseTarget->IsCurrentThreadIn());
       MOZ_DIAGNOSTIC_ASSERT(!Request::mComplete);
       Request::mDisconnected = true;
 
@@ -395,6 +395,7 @@ protected:
 
     void DoResolveOrReject(const ResolveOrRejectValue& aValue)
     {
+      MOZ_DIAGNOSTIC_ASSERT(mResponseTarget->IsCurrentThreadIn());
       Request::mComplete = true;
       if (Request::mDisconnected) {
         PROMISE_LOG("ThenValue::DoResolveOrReject disconnected - bailing out [this=%p]", this);
