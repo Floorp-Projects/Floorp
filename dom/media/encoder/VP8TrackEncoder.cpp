@@ -187,7 +187,7 @@ VP8TrackEncoder::GetMetadata()
   return meta.forget();
 }
 
-bool
+nsresult
 VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData)
 {
   vpx_codec_iter_t iter = nullptr;
@@ -219,15 +219,36 @@ VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData)
     // Copy the encoded data to aData.
     EncodedFrame* videoData = new EncodedFrame();
     videoData->SetFrameType(frameType);
+
     // Convert the timestamp and duration to Usecs.
     CheckedInt64 timestamp = FramesToUsecs(pkt->data.frame.pts, mTrackRate);
-    if (timestamp.isValid()) {
-      videoData->SetTimeStamp((uint64_t)timestamp.value());
+    if (!timestamp.isValid()) {
+      NS_ERROR("Microsecond timestamp overflow");
+      return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
-    CheckedInt64 duration = FramesToUsecs(pkt->data.frame.duration, mTrackRate);
-    if (duration.isValid()) {
-      videoData->SetDuration((uint64_t)duration.value());
+    videoData->SetTimeStamp((uint64_t)timestamp.value());
+
+    mExtractedDuration += pkt->data.frame.duration;
+    if (!mExtractedDuration.isValid()) {
+      NS_ERROR("Duration overflow");
+      return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
+
+    CheckedInt64 totalDuration =
+      FramesToUsecs(mExtractedDuration.value(), mTrackRate);
+    if (!totalDuration.isValid()) {
+      NS_ERROR("Duration overflow");
+      return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
+    }
+
+    CheckedInt64 duration = totalDuration - mExtractedDurationUs;
+    if (!duration.isValid()) {
+      NS_ERROR("Duration overflow");
+      return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
+    }
+
+    mExtractedDurationUs = totalDuration;
+    videoData->SetDuration((uint64_t)duration.value());
     videoData->SwapInFrameData(frameData);
     VP8LOG(LogLevel::Verbose,
            "GetEncodedPartitions TimeStamp %lld, Duration %lld, FrameType %d",
@@ -236,7 +257,7 @@ VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData)
     aData.AppendEncodedFrame(videoData);
   }
 
-  return !!pkt;
+  return pkt ? NS_OK : NS_ERROR_NOT_AVAILABLE;
 }
 
 static bool isYUV420(const PlanarYCbCrImage::Data *aData)
@@ -549,7 +570,8 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
         return NS_ERROR_FAILURE;
       }
       // Get the encoded data from VP8 encoder.
-      GetEncodedPartitions(aData);
+      rv = GetEncodedPartitions(aData);
+      NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
     } else {
       // SKIP_FRAME
       // Extend the duration of the last encoded data in aData
@@ -557,11 +579,21 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
       VP8LOG(LogLevel::Warning, "MediaRecorder lagging behind. Skipping a frame.");
       RefPtr<EncodedFrame> last = aData.GetEncodedFrames().LastElement();
       if (last) {
-        CheckedInt64 skippedDuration = FramesToUsecs(chunk.mDuration, mTrackRate);
-        if (skippedDuration.isValid() && skippedDuration.value() > 0) {
-          last->SetDuration(last->GetDuration() +
-                            (static_cast<uint64_t>(skippedDuration.value())));
+        mExtractedDuration += chunk.mDuration;
+        if (!mExtractedDuration.isValid()) {
+          NS_ERROR("skipped duration overflow");
+          return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
         }
+
+        CheckedInt64 totalDuration = FramesToUsecs(mExtractedDuration.value(), mTrackRate);
+        CheckedInt64 skippedDuration = totalDuration - mExtractedDurationUs;
+        mExtractedDurationUs = totalDuration;
+        if (!skippedDuration.isValid()) {
+          NS_ERROR("skipped duration overflow");
+          return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
+        }
+        last->SetDuration(last->GetDuration() +
+                          (static_cast<uint64_t>(skippedDuration.value())));
       }
     }
 
@@ -590,7 +622,7 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
                            0, 0, VPX_DL_REALTIME)) {
         return NS_ERROR_FAILURE;
       }
-    } while(GetEncodedPartitions(aData));
+    } while(NS_SUCCEEDED(GetEncodedPartitions(aData)));
   }
 
   return NS_OK ;
