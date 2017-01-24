@@ -321,7 +321,7 @@ var gCSSProperties = {
   'clear': {
     // https://drafts.csswg.org/css-page-floats/#propdef-clear
     types: [
-      { type: 'discrete', options: [ [ 'inline-start', 'inline-end' ] ] }
+      { type: 'discrete', options: [ [ 'left', 'right' ] ] }
     ]
   },
   'clip': {
