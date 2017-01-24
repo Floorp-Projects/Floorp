@@ -42,25 +42,6 @@ nsEventQueue::~nsEventQueue()
 }
 
 bool
-nsEventQueue::PeekEvent(nsIRunnable** aEvent, MutexAutoLock& aProofOfLock)
-{
-  MOZ_ASSERT(aEvent);
-  *aEvent = nullptr;
-
-  if (IsEmpty()) {
-    return false;
-  }
-
-  MOZ_ASSERT(mOffsetHead < EVENTS_PER_PAGE);
-  MOZ_ASSERT_IF(mHead == mTail, mOffsetHead <= mOffsetTail);
-  NS_ADDREF(*aEvent = mHead->mEvents[mOffsetHead]);
-
-  MOZ_ASSERT(*aEvent);
-
-  return true;
-}
-
-bool
 nsEventQueue::GetEvent(bool aMayWait, nsIRunnable** aResult,
                        MutexAutoLock& aProofOfLock)
 {

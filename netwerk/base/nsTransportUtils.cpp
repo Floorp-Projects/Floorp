@@ -55,8 +55,7 @@ public:
                            nsresult status,
                            int64_t progress,
                            int64_t progressMax)
-        : Runnable("nsTransportStatusEvent")
-        , mProxy(proxy)
+        : mProxy(proxy)
         , mTransport(transport)
         , mStatus(status)
         , mProgress(progress)

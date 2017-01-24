@@ -29,14 +29,11 @@ typedef void (*nsTimerCallbackFunc) (nsITimer *aTimer, void *aClosure);
  * via the "TimerFirings" log module.
  *
  * @param aTimer the timer which has expired
- * @param aAnonymize whether the name should avoid including privacy sensitive info
  * @param aClosure opaque parameter passed to initWithFuncCallback
  * @param aBuf a buffer in which to put the name
  * @param aLen the length of the buffer
  */
-typedef void (*nsTimerNameCallbackFunc) (nsITimer *aTimer,
-                                         bool aAnonymize,
-                                         void *aClosure,
+typedef void (*nsTimerNameCallbackFunc) (nsITimer *aTimer, void *aClosure,
                                          char *aBuf, size_t aLen);
 %}
 

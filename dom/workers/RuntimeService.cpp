@@ -1192,8 +1192,7 @@ class WorkerThreadPrimaryRunnable final : public Runnable
 
   public:
     explicit FinishedRunnable(already_AddRefed<WorkerThread> aThread)
-    : Runnable("WorkerThreadPrimaryRunnable::FinishedRunnable")
-    , mThread(aThread)
+    : mThread(aThread)
     {
       MOZ_ASSERT(mThread);
     }

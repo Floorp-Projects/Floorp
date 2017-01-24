@@ -220,7 +220,7 @@ for protocol in sorted(allmessages.keys()):
 
 print >>ipc_msgtype_name, """
   default:
-    return "<unknown IPC msg name>";
+    return "???";
   }
 }
 

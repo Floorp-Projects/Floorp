@@ -16,17 +16,9 @@ interface nsINamed : nsISupports
      * A string describing the purpose of the runnable/timer/whatever. Useful
      * for debugging. This attribute is read-only, but you can change it to a
      * compile-time string literal with setName.
-     *
-     * WARNING: This attribute will be included in telemetry, so it should
-     * never contain privacy sensitive information.
      */
     readonly attribute ACString name;
 
-    /*
-     * Note: The string you pass in should be a compile-time literal.
-     *
-     * WARNING: This value will be included in telemetry, so it should
-     * never contain privacy sensitive information.
-     */
+    /* Note: The string you pass in should be a compile-time literal. */
     [noscript] void setName(in string aName);
 };
