@@ -45,6 +45,9 @@ let whitelist = [
   {sourceName: /res\/(ua|html)\.css$/i,
    errorMessage: /Unknown pseudo-class .*\bfullscreen\b/i,
    isFromDevTools: false},
+  {sourceName: /skin\/timepicker\.css$/i,
+   errorMessage: /Error in parsing.*mask/i,
+   isFromDevTools: false},
 ];
 
 // Platform can be "linux", "macosx" or "win". If omitted, the exception applies to all platforms.
