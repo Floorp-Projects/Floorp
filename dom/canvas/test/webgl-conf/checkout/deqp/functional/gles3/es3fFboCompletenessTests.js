@@ -558,6 +558,7 @@ goog.scope(function() {
             es3fFboCompletenessTests.init();
             tcuTestCase.runner.runCallback(tcuTestCase.runTestCases);
         } catch (err) {
+            console.log(err);
             bufferedLogToConsole(err);
             tcuTestCase.runner.terminate();
         }
