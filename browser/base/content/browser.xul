@@ -689,13 +689,9 @@
                      newlines="stripsurroundingwhitespace"
                      ontextentered="this.handleCommand(param);"
                      ontextreverted="return this.handleRevert();"
-                     pageproxystate="invalid"
-                     onfocus="document.getElementById('identity-box').style.MozUserFocus= 'normal'"
-                     onblur="setTimeout(() => { document.getElementById('identity-box').style.MozUserFocus = ''; }, 0);">
+                     pageproxystate="invalid">
               <!-- Use onclick instead of normal popup= syntax since the popup
-                   code fires onmousedown, and hence eats our favicon drag events.
-                   We only add the identity-box button to the tab order when the location bar
-                   has focus, otherwise pressing F6 focuses it instead of the location bar -->
+                   code fires onmousedown, and hence eats our favicon drag events. -->
               <box id="identity-box" role="button"
                    align="center"
                    aria-label="&urlbar.viewSiteInfo.label;"
