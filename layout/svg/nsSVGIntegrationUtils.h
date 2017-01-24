@@ -181,15 +181,6 @@ public:
   PaintFilter(const PaintFramesParams& aParams);
 
   /**
-   * SVG frames expect to paint in SVG user units, which are equal to CSS px
-   * units. This method provides a transform matrix to multiply onto a
-   * gfxContext's current transform to convert the context's current units from
-   * its usual dev pixels to SVG user units/CSS px to keep the SVG code happy.
-   */
-  static gfxMatrix
-  GetCSSPxToDevPxMatrix(nsIFrame* aNonSVGFrame);
-
-  /**
    * @param aRenderingContext the target rendering context in which the paint
    * server will be rendered
    * @param aTarget the target frame onto which the paint server will be
