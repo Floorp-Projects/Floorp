@@ -619,7 +619,7 @@ JitRuntime::Trace(JSTracer* trc, AutoLockForExclusiveAccess& lock)
 /* static */ void
 JitRuntime::TraceJitcodeGlobalTable(JSTracer* trc)
 {
-    if (trc->runtime()->spsProfiler.enabled() &&
+    if (trc->runtime()->geckoProfiler.enabled() &&
         trc->runtime()->hasJitRuntime() &&
         trc->runtime()->jitRuntime()->hasJitcodeGlobalTable())
     {
@@ -3321,7 +3321,7 @@ jit::Invalidate(JSContext* cx, JSScript* script, bool resetUses, bool cancelOffT
 {
     MOZ_ASSERT(script->hasIonScript());
 
-    if (cx->runtime()->spsProfiler.enabled()) {
+    if (cx->runtime()->geckoProfiler.enabled()) {
         // Register invalidation with profiler.
         // Format of event payload string:
         //      "<filename>:<lineno>"
@@ -3336,7 +3336,7 @@ jit::Invalidate(JSContext* cx, JSScript* script, bool resetUses, bool cancelOffT
 
         // Ignore the event on allocation failure.
         if (buf) {
-            cx->runtime()->spsProfiler.markEvent(buf);
+            cx->runtime()->geckoProfiler.markEvent(buf);
             JS_smprintf_free(buf);
         }
     }

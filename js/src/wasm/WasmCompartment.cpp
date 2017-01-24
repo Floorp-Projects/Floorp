@@ -142,7 +142,7 @@ Compartment::lookupInstanceDeprecated(const void* pc) const
 bool
 Compartment::ensureProfilingState(JSContext* cx)
 {
-    bool newProfilingEnabled = cx->spsProfiler.enabled();
+    bool newProfilingEnabled = cx->geckoProfiler.enabled();
     if (profilingEnabled_ == newProfilingEnabled)
         return true;
 

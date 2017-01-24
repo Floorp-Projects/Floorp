@@ -38,9 +38,9 @@ for (let threshold of [0, 50, 100, 5000, -1]) {
             `)(this, null, buf)(0), 52);
     }
 
-    enableSPSProfiling();
+    enableGeckoProfiling();
     asmLink(asmCompile(USE_ASM + 'function f() {} function g() { f() } function h() { g() } return h'))();
-    disableSPSProfiling();
+    disableGeckoProfiling();
 
     assertEq(asmCompile(fatFunc)()(), 142);
 }

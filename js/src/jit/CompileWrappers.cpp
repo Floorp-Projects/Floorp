@@ -100,10 +100,10 @@ CompileRuntime::jitRuntime()
     return runtime()->jitRuntime();
 }
 
-SPSProfiler&
-CompileRuntime::spsProfiler()
+GeckoProfiler&
+CompileRuntime::geckoProfiler()
 {
-    return runtime()->spsProfiler;
+    return runtime()->geckoProfiler;
 }
 
 bool
@@ -296,7 +296,7 @@ CompileCompartment::setSingletonsAsValues()
 
 JitCompileOptions::JitCompileOptions()
   : cloneSingletons_(false),
-    spsSlowAssertionsEnabled_(false),
+    profilerSlowAssertionsEnabled_(false),
     offThreadCompilationAvailable_(false)
 {
 }
@@ -304,7 +304,7 @@ JitCompileOptions::JitCompileOptions()
 JitCompileOptions::JitCompileOptions(JSContext* cx)
 {
     cloneSingletons_ = cx->compartment()->creationOptions().cloneSingletons();
-    spsSlowAssertionsEnabled_ = cx->runtime()->spsProfiler.enabled() &&
-                                cx->runtime()->spsProfiler.slowAssertionsEnabled();
+    profilerSlowAssertionsEnabled_ = cx->runtime()->geckoProfiler.enabled() &&
+                                     cx->runtime()->geckoProfiler.slowAssertionsEnabled();
     offThreadCompilationAvailable_ = OffThreadCompilationAvailable(cx);
 }
