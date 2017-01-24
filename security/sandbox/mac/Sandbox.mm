@@ -159,6 +159,7 @@ static const char contentSandboxRules[] =
   "(define hasProfileDir %d)\n"
   "(define profileDir \"%s\")\n"
   "(define home-path \"%s\")\n"
+  "(define hasFilePrivileges %d)\n"
   "\n"
   "; Allow read access to standard system paths.\n"
   "(allow file-read*\n"
@@ -353,18 +354,22 @@ static const char contentSandboxRules[] =
   ";          no read/write access to $PROFILE,\n"
   ";          read access permitted to $PROFILE/{extensions,weave,chrome}\n"
   "  (if (= sandbox-level 2)\n"
-  "    (if (not (zero? hasProfileDir))\n"
-  "      ; we have a profile dir\n"
-  "      (begin\n"
-  "        (allow file-read* (require-all\n"
+  "    (if (not (zero? hasFilePrivileges))\n"
+  "      ; This process has blanket file read privileges\n"
+  "      (allow file-read*)\n"
+  "      ; This process does not have blanket file read privileges\n"
+  "      (if (not (zero? hasProfileDir))\n"
+  "        ; we have a profile dir\n"
+  "        (begin\n"
+  "          (allow file-read* (require-all\n"
   "              (require-not (home-subpath \"/Library\"))\n"
   "              (require-not (subpath profileDir))))\n"
-  "        (allow file-read*\n"
+  "          (allow file-read*\n"
   "              (profile-subpath \"/extensions\")\n"
   "              (profile-subpath \"/weave\")\n"
   "              (profile-subpath \"/chrome\")))\n"
-  "      ; we don't have a profile dir\n"
-  "      (allow file-read* (require-not (home-subpath \"/Library\")))))\n"
+  "        ; we don't have a profile dir\n"
+  "        (allow file-read* (require-not (home-subpath \"/Library\"))))))\n"
   "\n"
   "; accelerated graphics\n"
   "  (allow-shared-preferences-read \"com.apple.opengl\")\n"
@@ -439,6 +444,7 @@ bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
                aInfo.hasSandboxedProfile ? 1 : 0,
                aInfo.profileDir.c_str(),
                getenv("HOME"),
+               aInfo.hasFilePrivileges ? 1 : 0,
                aInfo.shouldLog ? "" : NO_LOGGING_CMD);
     } else {
       fprintf(stderr,
