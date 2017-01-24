@@ -27,7 +27,7 @@ public class TabsRecord extends Record {
   public static final String LOG_TAG = "TabsRecord";
 
   public static final String COLLECTION_NAME = "tabs";
-  public static final long TABS_TTL = 7 * 24 * 60 * 60; // 7 days in seconds.
+  public static final long TABS_TTL = 21 * 24 * 60 * 60; // 21 days in seconds.
 
   public TabsRecord(String guid, String collection, long lastModified, boolean deleted) {
     super(guid, collection, lastModified, deleted);
