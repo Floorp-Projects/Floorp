@@ -36,7 +36,6 @@
 
 .popup-notification-button-container {
   background-color: var(--arrowpanel-dimmed);
-  border-top: 1px solid var(--panel-separator-color);
   display: flex;
 }
 
@@ -60,8 +59,9 @@
   margin: 0;
   padding: 0;
   min-width: 0;
-  min-height: 40px;
+  min-height: 41px;
   border: none;
+  border-top: 1px solid var(--panel-separator-color);
 }
 
 .popup-notification-button:hover:not([disabled]) {
@@ -78,6 +78,9 @@
 .popup-notification-button[disabled] {
   background-color: var(--arrowpanel-dimmed-further);
   color: graytext;
+  /* the !important is to override the button[disabled] settings in
+   * windows/linux button.css */
+  -moz-border-top-colors: var(--panel-separator-color) !important;
 }
 
 .popup-notification-button[default] {
