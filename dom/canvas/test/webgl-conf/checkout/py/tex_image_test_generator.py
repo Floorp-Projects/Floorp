@@ -68,7 +68,6 @@ DO NOT EDIT!
 
 _ELEMENT_TYPES = [
   'canvas',
-  'canvas-sub-rectangle',
   'image',
   'image-data',
   'svg-image',
