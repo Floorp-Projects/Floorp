@@ -555,11 +555,6 @@ LookupPropertyInline(ExclusiveContext* cx,
                      typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
                      typename MaybeRooted<PropertyResult, allowGC>::MutableHandleType propp)
 {
-    /* NB: The logic of this procedure is implicitly reflected in
-     *     BaselineIC.cpp's |EffectlesslyLookupProperty| logic.
-     *     If this changes, please remember to update the logic there as well.
-     */
-
     /* Search scopes starting with obj and following the prototype link. */
     typename MaybeRooted<NativeObject*, allowGC>::RootType current(cx, obj);
 

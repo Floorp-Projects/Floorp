@@ -2118,10 +2118,6 @@ bool
 js::LookupProperty(JSContext* cx, HandleObject obj, js::HandleId id,
                    MutableHandleObject objp, MutableHandle<PropertyResult> propp)
 {
-    /* NB: The logic of lookupProperty is implicitly reflected in
-     *     BaselineIC.cpp's |EffectlesslyLookupProperty| logic.
-     *     If this changes, please remember to update the logic there as well.
-     */
     if (LookupPropertyOp op = obj->getOpsLookupProperty())
         return op(cx, obj, id, objp, propp);
     return LookupPropertyInline<CanGC>(cx, obj.as<NativeObject>(), id, objp, propp);
