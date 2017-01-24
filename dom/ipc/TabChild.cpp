@@ -3013,14 +3013,15 @@ TabChild::ReinitRendering()
 }
 
 void
-TabChild::CompositorUpdated(const TextureFactoryIdentifier& aNewIdentifier)
+TabChild::CompositorUpdated(const TextureFactoryIdentifier& aNewIdentifier,
+                            uint64_t aDeviceResetSeqNo)
 {
   RefPtr<LayerManager> lm = mPuppetWidget->GetLayerManager();
   ClientLayerManager* clm = lm->AsClientLayerManager();
   MOZ_ASSERT(clm);
 
   mTextureFactoryIdentifier = aNewIdentifier;
-  clm->UpdateTextureFactoryIdentifier(aNewIdentifier);
+  clm->UpdateTextureFactoryIdentifier(aNewIdentifier, aDeviceResetSeqNo);
   FrameLayerBuilder::InvalidateAllLayers(clm);
 }
 
