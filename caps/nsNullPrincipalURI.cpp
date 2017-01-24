@@ -98,6 +98,8 @@ nsNullPrincipalURI::GetAsciiSpec(nsACString &_spec)
   nsAutoCString buffer;
   // Ignore the return value -- nsNullPrincipalURI::GetSpec() is infallible.
   Unused << GetSpec(buffer);
+  // This uses the infallible version of |NS_EscapeURL| as |GetSpec| is
+  // already infallible.
   NS_EscapeURL(buffer, esc_OnlyNonASCII | esc_AlwaysCopy, _spec);
   return NS_OK;
 }

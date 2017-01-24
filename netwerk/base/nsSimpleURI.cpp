@@ -660,8 +660,7 @@ nsSimpleURI::GetAsciiSpec(nsACString &result)
     nsAutoCString buf;
     nsresult rv = GetSpec(buf);
     if (NS_FAILED(rv)) return rv;
-    NS_EscapeURL(buf, esc_OnlyNonASCII|esc_AlwaysCopy, result);
-    return NS_OK;
+    return NS_EscapeURL(buf, esc_OnlyNonASCII|esc_AlwaysCopy, result, fallible);
 }
 
 NS_IMETHODIMP
