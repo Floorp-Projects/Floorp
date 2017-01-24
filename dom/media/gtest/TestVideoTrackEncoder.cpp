@@ -472,6 +472,58 @@ TEST(VP8VideoTrackEncoder, SkippedFrames)
   EXPECT_EQ(hundredMillis, totalDuration);
 }
 
+// Test encoding a track with frames subject to rounding errors.
+TEST(VP8VideoTrackEncoder, RoundingErrorFramesEncode)
+{
+  // Initiate VP8 encoder
+  TestVP8TrackEncoder encoder;
+  InitParam param = {true, 640, 480};
+  encoder.TestInit(param);
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  TimeStamp now = TimeStamp::Now();
+  VideoSegment segment;
+
+  // Pass nine frames with timestamps not expressable in 90kHz sample rate,
+  // then one frame to make the total duration one second.
+  uint32_t usPerFrame = 99999; //99.999ms
+  for (uint32_t i = 0; i < 9; ++i) {
+    segment.AppendFrame(generator.GenerateI420Image(),
+                        mozilla::StreamTime(9000), // 100ms
+                        generator.GetSize(),
+                        PRINCIPAL_HANDLE_NONE,
+                        false,
+                        now + TimeDuration::FromMicroseconds(i * usPerFrame));
+  }
+
+  // This last frame has timestamp start + 0.9s and duration 0.1s.
+  segment.AppendFrame(generator.GenerateI420Image(),
+                      mozilla::StreamTime(9000), // 100ms
+                      generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE,
+                      false,
+                      now + TimeDuration::FromSeconds(0.9));
+
+  encoder.SetCurrentFrames(segment);
+
+  // End the track.
+  segment.Clear();
+  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, TrackEventCommand::TRACK_EVENT_ENDED, segment);
+
+  EncodedFrameContainer container;
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  // Verify total duration being 1s.
+  uint64_t totalDuration = 0;
+  for (auto& frame : container.GetEncodedFrames()) {
+    totalDuration += frame->GetDuration();
+  }
+  const uint64_t oneSecond= PR_USEC_PER_SEC;
+  EXPECT_EQ(oneSecond, totalDuration);
+}
+
 // EOS test
 TEST(VP8VideoTrackEncoder, EncodeComplete)
 {
