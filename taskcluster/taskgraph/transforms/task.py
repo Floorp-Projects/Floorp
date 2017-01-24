@@ -742,6 +742,25 @@ def add_index_routes(config, tasks):
 
 
 @transforms.add
+def add_files_changed(config, tasks):
+    for task in tasks:
+        if 'files-changed' not in task.get('when', {}):
+            yield task
+            continue
+
+        task['when']['files-changed'].extend([
+            '{}/**'.format(config.path),
+            'taskcluster/taskgraph/**',
+        ])
+
+        if 'in-tree' in task['worker'].get('docker-image', {}):
+            task['when']['files-changed'].append('taskcluster/docker/{}/**'.format(
+                task['worker']['docker-image']['in-tree']))
+
+        yield task
+
+
+@transforms.add
 def build_task(config, tasks):
     for task in tasks:
         worker_type = task['worker-type'].format(level=str(config.params['level']))
