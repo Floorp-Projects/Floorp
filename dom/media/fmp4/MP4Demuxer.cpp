@@ -360,7 +360,12 @@ MP4TrackDemuxer::GetNextSample()
     nsAutoPtr<MediaRawDataWriter> writer(sample->CreateWriter());
     writer->mCrypto.mMode = mInfo->mCrypto.mMode;
     writer->mCrypto.mIVSize = mInfo->mCrypto.mIVSize;
-    writer->mCrypto.mKeyId.AppendElements(mInfo->mCrypto.mKeyId);
+
+    // The length of the key will be zero if no key was specified in the sample
+    // information, meaning we should fall back to the default key.
+    if (writer->mCrypto.mKeyId.Length() == 0) {
+      writer->mCrypto.mKeyId.AppendElements(mInfo->mCrypto.mKeyId);
+    }
   }
   return sample.forget();
 }
