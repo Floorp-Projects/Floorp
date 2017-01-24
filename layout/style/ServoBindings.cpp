@@ -329,7 +329,8 @@ Gecko_GetServoDeclarationBlock(RawGeckoElementBorrowed aElement)
 
 RawServoDeclarationBlockStrong
 Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
-                       nsIAtom* aPseudoTag)
+                       nsIAtom* aPseudoTag,
+                       EffectCompositor::CascadeLevel aCascadeLevel)
 {
   MOZ_ASSERT(aElement, "Invalid GeckoElement");
 
@@ -343,7 +344,6 @@ Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
     return emptyDeclarationBlock;
   }
 
-  // FIXME: support different cascading levels in the later patch
   CSSPseudoElementType pseudoType =
     aPseudoTag
     ? nsCSSPseudoElements::GetPseudoType(
@@ -357,10 +357,8 @@ Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
   }
 
   ServoAnimationRule* rule =
-    presContext->EffectCompositor()->GetServoAnimationRule(
-      aElement,
-      pseudoType,
-      EffectCompositor::CascadeLevel::Animations);
+    presContext->EffectCompositor()
+               ->GetServoAnimationRule(aElement, pseudoType, aCascadeLevel);
   if (!rule) {
     return emptyDeclarationBlock;
   }
