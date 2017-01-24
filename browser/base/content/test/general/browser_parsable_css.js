@@ -48,6 +48,14 @@ let whitelist = [
    isFromDevTools: false},
 ];
 
+if (!Services.prefs.getBoolPref("full-screen-api.unprefix.enabled")) {
+  whitelist.push({
+    sourceName: /res\/(ua|html)\.css$/i,
+    errorMessage: /Unknown pseudo-class .*\bfullscreen\b/i,
+    isFromDevTools: false
+  });
+}
+
 // Platform can be "linux", "macosx" or "win". If omitted, the exception applies to all platforms.
 let allowedImageReferences = [
   // Bug 1302691
