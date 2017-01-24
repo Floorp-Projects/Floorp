@@ -422,16 +422,8 @@ CSSStyleSheet::CSSStyleSheet(const CSSStyleSheet& aCopy,
 
 CSSStyleSheet::~CSSStyleSheet()
 {
-  for (StyleSheet* child = GetFirstChild();
-       child;
-       child = child->mNext) {
-    // XXXbz this is a little bogus; see the XXX comment where we
-    // declare mFirstChild.
-    if (child->mParent == this) {
-      child->mParent = nullptr;
-      child->mDocument = nullptr;
-    }
-  }
+  UnparentChildren();
+
   DropRuleCollection();
   mInner->RemoveSheet(this);
   // XXX The document reference is not reference counted and should
