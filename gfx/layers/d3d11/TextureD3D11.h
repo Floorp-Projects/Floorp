@@ -415,6 +415,7 @@ class SyncObjectD3D11 : public SyncObject
 public:
   SyncObjectD3D11(SyncHandle aSyncHandle);
   virtual void FinalizeFrame();
+  virtual bool IsSyncObjectValid();
 
   virtual SyncType GetSyncType() { return SyncType::D3D11; }
 
@@ -422,6 +423,7 @@ public:
 
 private:
   RefPtr<ID3D11Texture2D> mD3D11Texture;
+  RefPtr<ID3D11Device> mD3D11Device;
   std::vector<ID3D11Texture2D*> mD3D11SyncedTextures;
   SyncHandle mHandle;
 };
