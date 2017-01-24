@@ -130,8 +130,16 @@ class TestFirefoxRefresh(MarionetteTestCase):
               }
             }
           });
+          let expectedTabs = new Set();
           for (let url of expectedURLs) {
-            gBrowser.addTab(url);
+            expectedTabs.add(gBrowser.addTab(url));
+          }
+          // Close any other tabs that might be open:
+          let allTabs = Array.from(gBrowser.tabs);
+          for (let tab of allTabs) {
+            if (!expectedTabs.has(tab)) {
+              gBrowser.removeTab(tab);
+            }
           }
         """, script_args=[self._expectedURLs])
 
@@ -275,8 +283,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
           }, false);
           mm.loadFrameScript("data:application/javascript,(" + fs.toString() + ")()", true);
         """)
-        self.assertSequenceEqual(tabURIs, ["about:blank"] + self._expectedURLs)
-        pass
+        self.assertSequenceEqual(tabURIs, self._expectedURLs)
 
     def checkProfile(self, hasMigrated=False):
         self.checkPassword()
