@@ -1165,7 +1165,7 @@ public:
   /**
    * Get the size, in app units, of the border radii. It returns FALSE iff all
    * returned radii == 0 (so no border radii), TRUE otherwise.
-   * For the aRadii indexes, use the NS_CORNER_* constants in nsStyleConsts.h
+   * For the aRadii indexes, use the enum HalfCorner constants in gfx/2d/Types.h
    * If a side is skipped via aSkipSides, its corners are forced to 0.
    *
    * All corner radii are then adjusted so they do not require more
@@ -1192,7 +1192,7 @@ public:
    * padding box, out to outline box) by reducing radii or increasing
    * nonzero radii as appropriate.
    *
-   * Indices into aRadii are the NS_CORNER_* constants in nsStyleConsts.h
+   * Indices into aRadii are the enum HalfCorner constants in gfx/2d/Types.h
    *
    * Note that InsetBorderRadii is lossy, since it can turn nonzero
    * radii into zero, and OutsetBorderRadii does not inflate zero radii.
@@ -1204,7 +1204,7 @@ public:
 
   /**
    * Fill in border radii for this frame.  Return whether any are nonzero.
-   * Indices into aRadii are the NS_CORNER_* constants in nsStyleConsts.h
+   * Indices into aRadii are the enum HalfCorner constants in gfx/2d/Types.h
    * aSkipSides is a union of SIDE_BIT_LEFT/RIGHT/TOP/BOTTOM bits that says
    * which side(s) to skip.
    *
