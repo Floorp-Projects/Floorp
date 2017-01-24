@@ -175,9 +175,16 @@ CencSampleEncryptionInfoEntry* SampleIterator::GetSampleEncryptionEntry()
   Moof* currentMoof = &moofs[mCurrentMoof];
   SampleToGroupEntry* sampleToGroupEntry = nullptr;
 
+  // Default to using the sample to group entries for the fragment, otherwise
+  // fall back to the sample to group entries for the track.
+  nsTArray<SampleToGroupEntry>* sampleToGroupEntries =
+    currentMoof->mFragmentSampleToGroupEntries.Length() != 0
+    ? &currentMoof->mFragmentSampleToGroupEntries
+    : &mIndex->mMoofParser->mTrackSampleToGroupEntries;
+
   uint32_t seen = 0;
 
-  for (SampleToGroupEntry& entry : currentMoof->mSampleToGroupEntries) {
+  for (SampleToGroupEntry& entry : *sampleToGroupEntries) {
     if (seen + entry.mSampleCount > mCurrentSample) {
       sampleToGroupEntry = &entry;
       break;
@@ -194,20 +201,31 @@ CencSampleEncryptionInfoEntry* SampleIterator::GetSampleEncryptionEntry()
   // 1, with the value 1 in the top 16 bits, to reference fragment-local
   // SampleGroupDescription Box.
 
+  // According to the spec, ISO-14496-12, the sum of the sample counts in this
+  // box should be equal to the total number of samples, and, if less, the
+  // reader should behave as if an extra SampleToGroupEntry existed, with
+  // groupDescriptionIndex 0.
+
   if (!sampleToGroupEntry || sampleToGroupEntry->mGroupDescriptionIndex == 0) {
     return nullptr;
   }
 
-  uint32_t group_index = sampleToGroupEntry->mGroupDescriptionIndex;
+  nsTArray<CencSampleEncryptionInfoEntry>* entries =
+                      &mIndex->mMoofParser->mTrackSampleEncryptionInfoEntries;
 
-  if (group_index > SampleToGroupEntry::kFragmentGroupDescriptionIndexBase) {
-    group_index -= SampleToGroupEntry::kFragmentGroupDescriptionIndexBase;
+  uint32_t groupIndex = sampleToGroupEntry->mGroupDescriptionIndex;
+
+  // If the first bit is set to a one, then we should use the sample group
+  // descriptions from the fragment.
+  if (groupIndex > SampleToGroupEntry::kFragmentGroupDescriptionIndexBase) {
+    groupIndex -= SampleToGroupEntry::kFragmentGroupDescriptionIndexBase;
+    entries = &currentMoof->mFragmentSampleEncryptionInfoEntries;
   }
 
-  // The group_index is one indexed
-  return group_index > currentMoof->mSampleEncryptionInfoEntries.Length()
+  // The group_index is one based.
+  return groupIndex > entries->Length()
          ? nullptr
-         : &currentMoof->mSampleEncryptionInfoEntries.ElementAt(group_index - 1);
+         : &entries->ElementAt(groupIndex - 1);
 }
 
 Sample* SampleIterator::Get()

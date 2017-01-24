@@ -317,6 +317,18 @@ MoofParser::ParseStbl(Box& aBox)
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("stsd")) {
       ParseStsd(box);
+    } else if (box.IsType("sgpd")) {
+      Sgpd sgpd(box);
+      if (sgpd.IsValid() && sgpd.mGroupingType == "seig") {
+        mTrackSampleEncryptionInfoEntries.Clear();
+        mTrackSampleEncryptionInfoEntries.AppendElements(sgpd.mEntries);
+      }
+    } else if (box.IsType("sbgp")) {
+      Sbgp sbgp(box);
+      if (sbgp.IsValid() && sbgp.mGroupingType == "seig") {
+        mTrackSampleToGroupEntries.Clear();
+        mTrackSampleToGroupEntries.AppendElements(sbgp.mEntries);
+      }
     }
   }
 }
@@ -482,6 +494,7 @@ Moof::ParseTraf(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, S
   MOZ_ASSERT(aDecodeTime);
   Tfhd tfhd(aTrex);
   Tfdt tfdt;
+
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("tfhd")) {
       tfhd = Tfhd(box, aTrex);
@@ -491,14 +504,14 @@ Moof::ParseTraf(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, S
       } else if (box.IsType("sgpd")) {
         Sgpd sgpd(box);
         if (sgpd.IsValid() && sgpd.mGroupingType == "seig") {
-          mSampleEncryptionInfoEntries.Clear();
-          mSampleEncryptionInfoEntries.AppendElements(sgpd.mEntries);
+          mFragmentSampleEncryptionInfoEntries.Clear();
+          mFragmentSampleEncryptionInfoEntries.AppendElements(sgpd.mEntries);
         }
       } else if (box.IsType("sbgp")) {
         Sbgp sbgp(box);
         if (sbgp.IsValid() && sbgp.mGroupingType == "seig") {
-          mSampleToGroupEntries.Clear();
-          mSampleToGroupEntries.AppendElements(sbgp.mEntries);
+          mFragmentSampleToGroupEntries.Clear();
+          mFragmentSampleToGroupEntries.AppendElements(sbgp.mEntries);
         }
       } else if (box.IsType("saiz")) {
         mSaizs.AppendElement(Saiz(box, aSinf.mDefaultEncryptionType));
