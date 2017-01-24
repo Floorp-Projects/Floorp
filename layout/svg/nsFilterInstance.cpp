@@ -383,23 +383,21 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource)
              "(nsFilterInstance::Render)");
 
   if (!mPaintTransform.IsSingular()) {
-    RefPtr<gfxContext> gfx = gfxContext::CreateOrNull(offscreenDT);
-    MOZ_ASSERT(gfx); // already checked the draw target above
-    gfx->Save();
-    gfx->Multiply(mPaintTransform *
+    RefPtr<gfxContext> sourceCtx = gfxContext::CreateOrNull(offscreenDT);
+    MOZ_ASSERT(sourceCtx); // already checked the draw target above
+    sourceCtx->Multiply(mPaintTransform *
                   deviceToFilterSpace *
                   gfxMatrix::Translation(-neededRect.TopLeft()));
     GeneralPattern pattern;
     if (aSource == &mFillPaint) {
-      nsSVGUtils::MakeFillPatternFor(mTargetFrame, gfx, &pattern);
+      nsSVGUtils::MakeFillPatternFor(mTargetFrame, sourceCtx, &pattern);
     } else if (aSource == &mStrokePaint) {
-      nsSVGUtils::MakeStrokePatternFor(mTargetFrame, gfx, &pattern);
+      nsSVGUtils::MakeStrokePatternFor(mTargetFrame, sourceCtx, &pattern);
     }
     if (pattern.GetPattern()) {
       offscreenDT->FillRect(ToRect(FilterSpaceToUserSpace(ThebesRect(neededRect))),
                             pattern);
     }
-    gfx->Restore();
   }
 
   aSource->mSourceSurface = offscreenDT->Snapshot();
