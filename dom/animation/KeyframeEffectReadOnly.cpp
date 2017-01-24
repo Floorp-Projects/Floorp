@@ -10,6 +10,7 @@
   // For UnrestrictedDoubleOrKeyframeAnimationOptions;
 #include "mozilla/dom/CSSPseudoElement.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
+#include "mozilla/AnimationRule.h"
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EffectSet.h"
@@ -464,7 +465,7 @@ KeyframeEffectReadOnly::EnsureBaseStylesForCompositor(
 
 void
 KeyframeEffectReadOnly::ComposeStyle(
-  RefPtr<AnimValuesStyleRule>& aStyleRule,
+  AnimationRule& aStyleRule,
   const nsCSSPropertyIDSet& aPropertiesToSkip)
 {
   MOZ_DIAGNOSTIC_ASSERT(!mIsComposingStyle,
@@ -531,17 +532,17 @@ KeyframeEffectReadOnly::ComposeStyle(
                  prop.mSegments.Length(),
                "out of array bounds");
 
-    if (!aStyleRule) {
+    if (!aStyleRule.mGecko) {
       // Allocate the style rule now that we know we have animation data.
-      aStyleRule = new AnimValuesStyleRule();
+      aStyleRule.mGecko = new AnimValuesStyleRule();
     }
 
     StyleAnimationValue fromValue =
-      CompositeValue(prop.mProperty, aStyleRule,
+      CompositeValue(prop.mProperty, aStyleRule.mGecko,
                      segment->mFromValue,
                      segment->mFromComposite);
     StyleAnimationValue toValue =
-      CompositeValue(prop.mProperty, aStyleRule,
+      CompositeValue(prop.mProperty, aStyleRule.mGecko,
                      segment->mToValue,
                      segment->mToComposite);
 
@@ -554,7 +555,7 @@ KeyframeEffectReadOnly::ComposeStyle(
       // FIXME: Bug 1293492: Add a utility function to calculate both of
       // below StyleAnimationValues.
       StyleAnimationValue lastValue = lastSegment.mToValue.IsNull()
-        ? GetUnderlyingStyle(prop.mProperty, aStyleRule)
+        ? GetUnderlyingStyle(prop.mProperty, aStyleRule.mGecko)
         : lastSegment.mToValue;
       fromValue =
         StyleAnimationValue::Accumulate(prop.mProperty,
@@ -571,9 +572,9 @@ KeyframeEffectReadOnly::ComposeStyle(
     // Special handling for zero-length segments
     if (segment->mToKey == segment->mFromKey) {
       if (computedTiming.mProgress.Value() < 0) {
-        aStyleRule->AddValue(prop.mProperty, Move(fromValue));
+        aStyleRule.mGecko->AddValue(prop.mProperty, Move(fromValue));
       } else {
-        aStyleRule->AddValue(prop.mProperty, Move(toValue));
+        aStyleRule.mGecko->AddValue(prop.mProperty, Move(toValue));
       }
       continue;
     }
@@ -592,11 +593,11 @@ KeyframeEffectReadOnly::ComposeStyle(
                                          fromValue,
                                          toValue,
                                          valuePosition, val)) {
-      aStyleRule->AddValue(prop.mProperty, Move(val));
+      aStyleRule.mGecko->AddValue(prop.mProperty, Move(val));
     } else if (valuePosition < 0.5) {
-      aStyleRule->AddValue(prop.mProperty, Move(fromValue));
+      aStyleRule.mGecko->AddValue(prop.mProperty, Move(fromValue));
     } else {
-      aStyleRule->AddValue(prop.mProperty, Move(toValue));
+      aStyleRule.mGecko->AddValue(prop.mProperty, Move(toValue));
     }
   }
 
