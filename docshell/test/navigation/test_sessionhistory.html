@@ -31,7 +31,8 @@ var testFiles =
     "file_nested_frames.html",
     "file_shiftReload_and_pushState.html",
     "file_scrollRestoration.html",
-    "file_bug1300461.html"
+    "file_bug1300461.html",
+    "file_bug1326251.html",
   ];
 var testCount = 0; // Used by the test files.
 
@@ -42,7 +43,9 @@ var testWindow;
 function nextTest_() {
   if (testFiles.length) {
     testCount = 0;
-    testWindow = window.open(testFiles.shift(), "", "width=300,height=300");
+    let nextFile = testFiles.shift();
+    info("Running " + nextFile);
+    testWindow = window.open(nextFile, "", "width=360,height=480");
     testWindow.onunload = function () { } // to prevent bfcache
   } else {
     SimpleTest.finish();
