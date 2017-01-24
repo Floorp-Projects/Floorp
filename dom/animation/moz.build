@@ -22,6 +22,7 @@ EXPORTS.mozilla.dom += [
 EXPORTS.mozilla += [
     'AnimationComparator.h',
     'AnimationPerformanceWarning.h',
+    'AnimationRule.h',
     'AnimationTarget.h',
     'AnimationUtils.h',
     'AnimValuesStyleRule.h',
@@ -33,6 +34,7 @@ EXPORTS.mozilla += [
     'KeyframeUtils.h',
     'PendingAnimationTracker.h',
     'PseudoElementHashEntry.h',
+    'ServoAnimationRule.h',
     'TimingParams.h',
 ]
 
@@ -55,6 +57,7 @@ UNIFIED_SOURCES += [
     'KeyframeEffectReadOnly.cpp',
     'KeyframeUtils.cpp',
     'PendingAnimationTracker.cpp',
+    'ServoAnimationRule.cpp',
     'TimingParams.cpp',
 ]
 

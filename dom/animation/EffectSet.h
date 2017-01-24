@@ -7,7 +7,7 @@
 #ifndef mozilla_EffectSet_h
 #define mozilla_EffectSet_h
 
-#include "mozilla/AnimValuesStyleRule.h"
+#include "mozilla/AnimationRule.h" // For AnimationRule
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EnumeratedArray.h"
@@ -163,8 +163,8 @@ public:
 
   size_t Count() const { return mEffects.Count(); }
 
-  RefPtr<AnimValuesStyleRule>& AnimationRule(EffectCompositor::CascadeLevel
-                                             aCascadeLevel)
+  struct AnimationRule&
+  AnimationRule(EffectCompositor::CascadeLevel aCascadeLevel)
   {
     return mAnimationRule[aCascadeLevel];
   }
@@ -232,7 +232,7 @@ private:
   EnumeratedArray<EffectCompositor::CascadeLevel,
                   EffectCompositor::CascadeLevel(
                     EffectCompositor::kCascadeLevelCount),
-                  RefPtr<AnimValuesStyleRule>> mAnimationRule;
+                  mozilla::AnimationRule> mAnimationRule;
 
   // A parallel array to mAnimationRule that records the refresh driver
   // timestamp when the rule was last updated. This is used for certain

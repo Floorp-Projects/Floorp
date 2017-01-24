@@ -40,7 +40,7 @@ class nsIFrame;
 
 namespace mozilla {
 
-class AnimValuesStyleRule;
+struct AnimationRule;
 
 namespace dom {
 
@@ -317,7 +317,7 @@ public:
    * Any properties contained in |aPropertiesToSkip| will not be added or
    * updated in |aStyleRule|.
    */
-  void ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
+  void ComposeStyle(AnimationRule& aStyleRule,
                     const nsCSSPropertyIDSet& aPropertiesToSkip);
 
   void NotifyEffectTimingUpdated();
