@@ -705,6 +705,11 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // videos.
     bool                        mRewrittenYoutubeEmbed : 1;
 
+    // Cache the answer of PreferFallback() because ShouldPlay is called several
+    // times during the load process.
+    bool                        mPreferFallback : 1;
+    bool                        mPreferFallbackKnown : 1;
+
     nsWeakFrame                 mPrintFrame;
 
     RefPtr<nsPluginInstanceOwner> mInstanceOwner;

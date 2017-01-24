@@ -666,7 +666,9 @@ nsObjectLoadingContent::nsObjectLoadingContent()
   , mIsStopping(false)
   , mIsLoading(false)
   , mScriptRequested(false)
-  , mRewrittenYoutubeEmbed(false) {}
+  , mRewrittenYoutubeEmbed(false)
+  , mPreferFallback(false)
+  , mPreferFallbackKnown(false) {}
 
 nsObjectLoadingContent::~nsObjectLoadingContent()
 {
@@ -3457,7 +3459,13 @@ nsObjectLoadingContent::HasGoodFallback() {
 
 bool
 nsObjectLoadingContent::PreferFallback(bool aIsPluginClickToPlay) {
-  return FavorFallbackMode(aIsPluginClickToPlay) && HasGoodFallback();
+  if (mPreferFallbackKnown) {
+    return mPreferFallback;
+  }
+
+  mPreferFallbackKnown = true;
+  mPreferFallback = FavorFallbackMode(aIsPluginClickToPlay) && HasGoodFallback();
+  return mPreferFallback;
 }
 
 nsIDocument*
