@@ -35,15 +35,22 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsHtml5Parser)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 nsHtml5Parser::nsHtml5Parser()
-  : mFirstBuffer(new nsHtml5OwningUTF16Buffer((void*)nullptr))
+  : mLastWasCR(false)
+  , mDocWriteSpeculativeLastWasCR(false)
+  , mBlocked(false)
+  , mDocWriteSpeculatorActive(false)
+  , mInsertionPointPushLevel(0)
+  , mDocumentClosed(false)
+  , mInDocumentWrite(false)
+  , mFirstBuffer(new nsHtml5OwningUTF16Buffer((void*)nullptr))
   , mLastBuffer(mFirstBuffer)
   , mExecutor(new nsHtml5TreeOpExecutor())
   , mTreeBuilder(new nsHtml5TreeBuilder(mExecutor, nullptr))
   , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder, false))
   , mRootContextLineNumber(1)
+  , mReturnToStreamParserPermitted(false)
 {
   mTokenizer->setInterner(&mAtomTable);
-  // There's a zeroing operator new for everything else
 }
 
 nsHtml5Parser::~nsHtml5Parser()

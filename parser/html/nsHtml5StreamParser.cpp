@@ -149,7 +149,10 @@ class nsHtml5LoadFlusher : public Runnable
 nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
                                          nsHtml5Parser* aOwner,
                                          eParserMode aMode)
-  : mFirstBuffer(nullptr) // Will be filled when starting
+  : mSniffingLength(0)
+  , mBomState(eBomState::BOM_SNIFFING_NOT_STARTED)
+  , mCharsetSource(kCharsetUninitialized)
+  , mReparseForbidden(false)
   , mLastBuffer(nullptr) // Will be filled when starting
   , mExecutor(aExecutor)
   , mTreeBuilder(new nsHtml5TreeBuilder((aMode == VIEW_SOURCE_HTML ||
@@ -160,12 +163,23 @@ nsHtml5StreamParser::nsHtml5StreamParser(nsHtml5TreeOpExecutor* aExecutor,
   , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder, aMode == VIEW_SOURCE_XML))
   , mTokenizerMutex("nsHtml5StreamParser mTokenizerMutex")
   , mOwner(aOwner)
+  , mLastWasCR(false)
+  , mStreamState(eHtml5StreamState::STREAM_NOT_STARTED)
+  , mSpeculating(false)
+  , mAtEOF(false)
   , mSpeculationMutex("nsHtml5StreamParser mSpeculationMutex")
+  , mSpeculationFailureCount(0)
+  , mTerminated(false)
+  , mInterrupted(false)
   , mTerminatedMutex("nsHtml5StreamParser mTerminatedMutex")
   , mThread(nsHtml5Module::GetStreamParserThread())
   , mExecutorFlusher(new nsHtml5ExecutorFlusher(aExecutor))
   , mLoadFlusher(new nsHtml5LoadFlusher(aExecutor))
+  , mFeedChardet(false)
+  , mInitialEncodingWasFromParentFrame(false)
   , mFlushTimer(do_CreateInstance("@mozilla.org/timer;1"))
+  , mFlushTimerArmed(false)
+  , mFlushTimerEverFired(false)
   , mMode(aMode)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
