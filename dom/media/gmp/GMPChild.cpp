@@ -350,11 +350,13 @@ GMPChild::AnswerStartPlugin(const nsString& aAdapter)
   InitPlatformAPI(*platformAPI, this);
 
   mGMPLoader = MakeUnique<GMPLoader>();
+#if defined(MOZ_GMP_SANDBOX)
   if (!mGMPLoader->CanSandbox()) {
     LOGD("%s Can't sandbox GMP, failing", __FUNCTION__);
     delete platformAPI;
     return IPC_FAIL_NO_REASON(this);
   }
+#endif
 
   bool isWidevine = aAdapter.EqualsLiteral("widevine");
 #if defined(MOZ_GMP_SANDBOX) && defined(XP_MACOSX)
