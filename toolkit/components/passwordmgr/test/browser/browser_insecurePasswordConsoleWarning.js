@@ -1,7 +1,5 @@
 "use strict";
 
-const TEST_URL_PATH = "/browser/toolkit/components/passwordmgr/test/browser/";
-
 const WARNING_PATTERN = [{
   key: "INSECURE_FORM_ACTION",
   msg: 'JavaScript Warning: "Password fields present in a form with an insecure (http://) form action. This is a security risk that allows user login credentials to be stolen."'
@@ -58,7 +56,7 @@ add_task(function* testInsecurePasswordWarning() {
     ["http://example.com", "form_cross_origin_secure_action.html", ["INSECURE_PAGE"]],
     ["https://example.com", "form_cross_origin_secure_action.html", []],
   ]) {
-    let testURL = origin + TEST_URL_PATH + testFile;
+    let testURL = origin + DIRECTORY_PATH + testFile;
     let promiseConsoleMessages = new Promise(resolve => {
       warningPatternHandler = function(warning, originMessage) {
         ok(warning, "Handling a warning pattern");
