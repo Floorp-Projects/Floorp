@@ -109,6 +109,7 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 static const char *kPrefJavaMIME = "plugin.java.mime";
 static const char *kPrefYoutubeRewrite = "plugins.rewrite_youtube_embeds";
 static const char *kPrefBlockURIs = "browser.safebrowsing.blockedURIs.enabled";
+static const char *kPrefFavorFallbackMode = "plugins.favorfallback.mode";
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -3372,11 +3373,22 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
     }
     switch (permission) {
     case nsIPermissionManager::ALLOW_ACTION:
+      if (PreferFallback(false /* isPluginClickToPlay */)) {
+        aReason = eFallbackAlternate;
+        return false;
+      }
+
       return true;
     case nsIPermissionManager::DENY_ACTION:
       aReason = eFallbackDisabled;
       return false;
     case nsIPermissionManager::PROMPT_ACTION:
+      if (PreferFallback(true /* isPluginClickToPlay */)) {
+        // False is already returned in this case, but
+        // it's important to correctly set aReason too.
+        aReason = eFallbackAlternate;
+      }
+
       return false;
     case nsIPermissionManager::UNKNOWN_ACTION:
       break;
@@ -3392,6 +3404,11 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
     return false;
   }
 
+  if (PreferFallback(enabledState == nsIPluginTag::STATE_CLICKTOPLAY)) {
+    aReason = eFallbackAlternate;
+    return false;
+  }
+
   switch (enabledState) {
   case nsIPluginTag::STATE_ENABLED:
     return true;
@@ -3399,6 +3416,48 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
     return false;
   }
   MOZ_CRASH("Unexpected enabledState");
+}
+
+bool
+nsObjectLoadingContent::FavorFallbackMode(bool aIsPluginClickToPlay) {
+  if (!IsFlashMIME(mContentType)) {
+    return false;
+  }
+
+  nsCString prefString;
+  if (NS_SUCCEEDED(Preferences::GetCString(kPrefFavorFallbackMode, &prefString))) {
+    if (aIsPluginClickToPlay &&
+        prefString.EqualsLiteral("follow-ctp")) {
+      return true;
+    }
+
+    if (prefString.EqualsLiteral("always")) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool
+nsObjectLoadingContent::HasGoodFallback() {
+  nsCOMPtr<nsIContent> thisContent =
+  do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  NS_ASSERTION(thisContent, "must be a content");
+
+  if (!thisContent->IsHTMLElement(nsGkAtoms::object) ||
+      mContentType.IsEmpty()) {
+    return false;
+  }
+
+  // xxx to be filled
+
+  return false;
+}
+
+bool
+nsObjectLoadingContent::PreferFallback(bool aIsPluginClickToPlay) {
+  return FavorFallbackMode(aIsPluginClickToPlay) && HasGoodFallback();
 }
 
 nsIDocument*
