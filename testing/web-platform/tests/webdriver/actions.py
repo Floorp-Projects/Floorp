@@ -5,15 +5,24 @@ from support.keys import Keys
 
 def get_events(session):
     """Return list of key events recorded in the test_keys_page fixture."""
-    return session.execute_script("return allEvents.events;") or []
+    events = session.execute_script("return allEvents.events;") or []
+    # `key` values in `allEvents` may be escaped (see `escapeSurrogateHalf` in
+    # test_keys_wdspec.html), so this converts them back into unicode literals.
+    for e in events:
+        # example: turn "U+d83d" (6 chars) into u"\ud83d" (1 char)
+        if e["key"].startswith(u"U+"):
+            key = e["key"]
+            hex_suffix = key[key.index("+") + 1:]
+            e["key"] = unichr(int(hex_suffix, 16))
+    return events
 
 
-def get_keys(input):
-    """Get printable characters entered into |input|.
+def get_keys(input_el):
+    """Get printable characters entered into `input_el`.
 
-    :param input: HTML input element.
+    :param input_el: HTML input element.
     """
-    rv = input.property("value")
+    rv = input_el.property("value")
     if rv is None:
         return ""
     else:
@@ -21,7 +30,7 @@ def get_keys(input):
 
 
 def filter_dict(source, d):
-    """Filter |source| dict to only contain same keys as |d| dict.
+    """Filter `source` dict to only contain same keys as `d` dict.
 
     :param source: dictionary to filter.
     :param d: dictionary whose keys determine the filtering.
@@ -31,10 +40,10 @@ def filter_dict(source, d):
 
 @pytest.fixture
 def key_reporter(session, test_keys_page, request):
-    """ Represents focused input element on |test_keys_page| """
-    input = session.find.css("#keys", all=False)
-    input.click()
-    return input
+    """Represents focused input element from `test_keys_page` fixture."""
+    input_el = session.find.css("#keys", all=False)
+    input_el.click()
+    return input_el
 
 
 @pytest.fixture
@@ -46,11 +55,13 @@ def test_keys_page(session, server):
 def key_chain(session):
     return session.actions.sequence("key", "keyboard_id")
 
+
 @pytest.fixture(autouse=True)
 def release_actions(session, request):
     # release all actions after each test
     # equivalent to a teardown_function, but with access to session fixture
     request.addfinalizer(session.actions.release)
+
 
 def test_no_actions_send_no_events(session, key_reporter, key_chain):
     key_chain.perform()
@@ -100,6 +111,7 @@ def test_lone_keyup_sends_no_events(session, key_reporter, key_chain):
     (u"\u00E0", ""),
     (u"\u0416", ""),
     (u"@", "Digit2"),
+    (u"\u2603", ""),
     (u"\uF6C2", ""),  # PUA
 ])
 def test_single_printable_key_sends_correct_events(session,
@@ -118,6 +130,22 @@ def test_single_printable_key_sends_correct_events(session,
     ]
     events = [filter_dict(e, expected[0]) for e in get_events(session)]
     assert events == expected
+    assert get_keys(key_reporter) == value
+
+
+@pytest.mark.parametrize("value", [
+    (u"\U0001F604"),
+    (u"\U0001F60D"),
+])
+def test_single_emoji_records_correct_key(session, key_reporter, key_chain, value):
+    # Not using key_chain.send_keys() because we always want to treat value as
+    # one character here. `len(value)` varies by platform for non-BMP characters,
+    # so we don't want to iterate over value.
+    key_chain \
+        .key_down(value) \
+        .key_up(value) \
+        .perform()
+    # events sent by major browsers are inconsistent so only check key value
     assert get_keys(key_reporter) == value
 
 
