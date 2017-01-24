@@ -29,6 +29,8 @@ ServoStyleSheet::ServoStyleSheet(css::SheetParsingMode aParsingMode,
 
 ServoStyleSheet::~ServoStyleSheet()
 {
+  UnparentChildren();
+
   DropSheet();
 }
 
