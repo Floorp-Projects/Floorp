@@ -97,13 +97,6 @@ StyleSheet::GetParentObject() const
   return dom::ParentObject(GetParentSheet());
 }
 
-void
-StyleSheet::AppendStyleSheet(StyleSheet* aSheet)
-{
-  MOZ_STYLO_FORWARD_CONCRETE(AppendStyleSheet,
-                             (aSheet->AsGecko()), (aSheet->AsServo()))
-}
-
 nsIPrincipal*
 StyleSheet::Principal() const
 {

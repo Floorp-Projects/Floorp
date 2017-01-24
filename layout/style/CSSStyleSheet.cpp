@@ -637,25 +637,6 @@ CSSStyleSheet::FindOwningWindowInnerID() const
 }
 
 void
-CSSStyleSheet::AppendStyleSheet(CSSStyleSheet* aSheet)
-{
-  NS_PRECONDITION(nullptr != aSheet, "null arg");
-
-  WillDirty();
-  RefPtr<StyleSheet>* tail = &SheetInfo().mFirstChild;
-  while (*tail) {
-    tail = &(*tail)->mNext;
-  }
-  *tail = aSheet;
-
-  // This is not reference counted. Our parent tells us when
-  // it's going away.
-  aSheet->mParent = this;
-  aSheet->mDocument = mDocument;
-  DidDirty();
-}
-
-void
 CSSStyleSheet::AppendStyleRule(css::Rule* aRule)
 {
   NS_PRECONDITION(nullptr != aRule, "null arg");
