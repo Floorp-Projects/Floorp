@@ -65,8 +65,8 @@ add_task(function* () {
 
     is(tabpanel.querySelectorAll(".tree-section").length, 1,
       "There should be 1 tree sections displayed in this tabpanel.");
-    is(tabpanel.querySelectorAll(".treeRow:not(.tree-section)").length, 4094,
-      "There should be 4094 json properties displayed in this tabpanel.");
+    is(tabpanel.querySelectorAll(".treeRow:not(.tree-section)").length, 2047,
+      "There should be 2047 json properties displayed in this tabpanel.");
     is(tabpanel.querySelectorAll(".empty-notice").length, 0,
       "The empty notice should not be displayed in this tabpanel.");
 
@@ -84,9 +84,9 @@ add_task(function* () {
     is(values[0].textContent, "Object",
       "The first json property value was incorrect.");
 
-    is(labels[1].textContent, "greeting",
+    is(labels[1].textContent, "1",
       "The second json property name was incorrect.");
-    is(values[1].textContent, "\"Hello long string JSON!\"",
+    is(values[1].textContent, "Object",
       "The second json property value was incorrect.");
   }
 });
