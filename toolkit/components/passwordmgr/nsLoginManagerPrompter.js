@@ -1013,7 +1013,7 @@ LoginManagerPrompter.prototype = {
         timeout: Date.now() + 10000,
         persistWhileVisible: true,
         passwordNotificationType: type,
-        hideClose: true,
+        hideClose: !Services.prefs.getBoolPref("privacy.permissionPrompts.showCloseButton"),
         eventCallback(topic) {
           switch (topic) {
             case "showing":
