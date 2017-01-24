@@ -545,7 +545,7 @@ class Marionette(object):
 
     CONTEXT_CHROME = "chrome"  # non-browser content: windows, dialogs, etc.
     CONTEXT_CONTENT = "content"  # browser content: iframes, divs, etc.
-    DEFAULT_SOCKET_TIMEOUT = 60
+    DEFAULT_SOCKET_TIMEOUT = 65
     DEFAULT_STARTUP_TIMEOUT = 120
     DEFAULT_SHUTDOWN_TIMEOUT = 65  # Firefox will kill hanging threads after 60s
 
