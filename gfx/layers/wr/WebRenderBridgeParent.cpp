@@ -413,7 +413,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         const nsTArray<WrGlyphArray>& glyph_array = op.glyph_array();
 
         for (size_t i = 0; i < glyph_array.Length(); i++) {
-          const nsTArray<WRGlyphInstance>& glyphs = glyph_array[i].glyphs;
+          const nsTArray<WrGlyphInstance>& glyphs = glyph_array[i].glyphs;
 
           // TODO: We are leaking the key
           wr::FontKey fontKey;
@@ -429,7 +429,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
                            op.clip(),
                            glyph_array[i].color,
                            fontKey,
-                           Range<const WRGlyphInstance>(glyphs.Elements(), glyphs.Length()),
+                           Range<const WrGlyphInstance>(glyphs.Elements(), glyphs.Length()),
                            op.glyph_size());
         }
 
