@@ -88,21 +88,37 @@ protected:
 
 } // namespace impl
 
-class VRDisplayManagerOculus : public VRDisplayManager
+class VRSystemManagerOculus : public VRSystemManager
 {
 public:
-  static already_AddRefed<VRDisplayManagerOculus> Create();
+  static already_AddRefed<VRSystemManagerOculus> Create();
   virtual bool Init() override;
   virtual void Destroy() override;
   virtual void GetHMDs(nsTArray<RefPtr<VRDisplayHost> >& aHMDResult) override;
+  virtual void HandleInput() override;
+  virtual void GetControllers(nsTArray<RefPtr<VRControllerHost>>&
+                              aControllerResult) override;
+  virtual void ScanForControllers() override;
+  virtual void RemoveControllers() override;
+
 protected:
-  VRDisplayManagerOculus()
+  VRSystemManagerOculus()
     : mOculusInitialized(false)
   { }
 
+private:
+  virtual void HandleButtonPress(uint32_t aControllerIdx,
+                                 uint64_t aButtonPressed) override;
+  virtual void HandleAxisMove(uint32_t aControllerIdx, uint32_t aAxis,
+                              float aValue) override;
+  virtual void HandlePoseTracking(uint32_t aControllerIdx,
+                                  const dom::GamepadPoseState& aPose,
+                                  VRControllerHost* aController) override;
+
   RefPtr<impl::VRDisplayOculus> mHMDInfo;
-  bool mOculusInitialized;
   RefPtr<nsIThread> mOculusThread;
+  ovrSession mSession;
+  bool mOculusInitialized;
 };
 
 } // namespace gfx

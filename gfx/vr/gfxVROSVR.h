@@ -61,16 +61,21 @@ protected:
 
 } // namespace impl
 
-class VRDisplayManagerOSVR : public VRDisplayManager
+class VRSystemManagerOSVR : public VRSystemManager
 {
 public:
-  static already_AddRefed<VRDisplayManagerOSVR> Create();
+  static already_AddRefed<VRSystemManagerOSVR> Create();
   virtual bool Init() override;
   virtual void Destroy() override;
   virtual void GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) override;
+  virtual void HandleInput() override;
+  virtual void GetControllers(nsTArray<RefPtr<VRControllerHost>>&
+                              aControllerResult) override;
+  virtual void ScanForControllers() override;
+  virtual void RemoveControllers() override;
 
 protected:
-  VRDisplayManagerOSVR()
+  VRSystemManagerOSVR()
     : mOSVRInitialized(false)
     , mClientContextInitialized(false)
     , mDisplayConfigInitialized(false)
@@ -93,6 +98,13 @@ protected:
   OSVR_DisplayConfig m_display;
 
 private:
+  virtual void HandleButtonPress(uint32_t aControllerIdx,
+                                 uint64_t aButtonPressed) override;
+  virtual void HandleAxisMove(uint32_t aControllerIdx, uint32_t aAxis,
+                              float aValue) override;
+  virtual void HandlePoseTracking(uint32_t aControllerIdx,
+                                  const dom::GamepadPoseState& aPose,
+                                  VRControllerHost* aController) override;
   // check if all components are initialized
   // and if not, it will try to initialize them
   void CheckOSVRStatus();
