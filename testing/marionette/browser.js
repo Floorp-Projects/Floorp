@@ -16,59 +16,6 @@ this.browser = {};
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-
-/**
- * Get the <xul:browser> for the specified tab.
- *
- * @param {<xul:tab>} tab
- *     The tab whose browser needs to be returned.
- *
- * @return {<xul:browser>}
- *     The linked browser for the tab.
- *
- * @throws UnsupportedOperationError
- *     If tab handling for the current application isn't supported.
- */
-browser.getBrowserForTab = function (tab) {
-  if (tab.hasOwnProperty("browser")) {
-    // Fennec
-    return tab.browser;
-
-  } else if (tab.hasOwnProperty("linkedBrowser")) {
-    // Firefox
-    return tab.linkedBrowser;
-
-  } else {
-      new UnsupportedOperationError("getBrowserForTab() not supported.");
-  }
-};
-
-/**
- * Return the tab browser for the specified chrome window.
- *
- * @param {nsIDOMWindow} win
- *     The window whose tabbrowser needs to be accessed.
- *
- * @return {<xul:tabbrowser>}
- *     Tab browser or null if it's not a browser window.
- *
- * @throws UnsupportedOperationError
- *     If tab handling for the current application isn't supported.
- */
-browser.getTabBrowser = function (win) {
-  if (win.hasOwnProperty("BrowserApp")) {
-    // Fennec
-    return win.BrowserApp;
-
-  } else if (win.hasOwnProperty("gBrowser")) {
-    // Firefox
-    return win.gBrowser;
-
-  } else {
-      new UnsupportedOperationError("getBrowserForTab() not supported.");
-  }
-};
-
 /**
  * Creates a browsing context wrapper.
  *
@@ -94,7 +41,8 @@ browser.Context = class {
 
     // In Firefox this is <xul:tabbrowser> (not <xul:browser>!)
     // and BrowserApp in Fennec
-    this.tabBrowser = browser.getTabBrowser(win);
+    this.browser = undefined;
+    this.setBrowser(win);
 
     this.knownFrames = [];
 
@@ -131,6 +79,21 @@ browser.Context = class {
   }
 
   /**
+   * Get the <xul:browser> for the current tab in this tab browser.
+   *
+   * @return {<xul:browser>}
+   *     Browser linked to |this.tab| or the tab browser's
+   *     |selectedBrowser|.
+   */
+  get browserForTab() {
+    if (this.browser.getBrowserForTab) {
+      return this.browser.getBrowserForTab(this.tab);
+    } else {
+      return this.browser.selectedBrowser;
+    }
+  }
+
+  /**
    * The current frame ID is managed per browser element on desktop in
    * case the ID needs to be refreshed. The currently selected window is
    * identified by a tab.
@@ -140,7 +103,7 @@ browser.Context = class {
     if (this.driver.appName == "B2G") {
       rv = this._curFrameId;
     } else if (this.tab) {
-      rv = this.getIdForBrowser(browser.getBrowserForTab(this.tab));
+      rv = this.getIdForBrowser(this.browserForTab);
     }
     return rv;
   }
@@ -156,7 +119,7 @@ browser.Context = class {
    * associated with the currently selected tab.
    */
   getTabModalUI() {
-    let br = browser.getBrowserForTab(this.tab);
+    let br = this.browserForTab;
     if (!br.hasAttribute("tabmodalPromptShowing")) {
       return null;
     }
@@ -166,6 +129,24 @@ browser.Context = class {
     let modals = br.parentNode.getElementsByTagNameNS(
         XUL_NS, "tabmodalprompt");
     return modals[0].ui;
+  }
+
+  /**
+   * Set the browser if the application is not B2G.
+   *
+   * @param {nsIDOMWindow} win
+   *     Current window reference.
+   */
+  setBrowser(win) {
+    switch (this.driver.appName) {
+      case "Firefox":
+        this.browser = win.gBrowser;
+        break;
+
+      case "Fennec":
+        this.browser = win.BrowserApp;
+        break;
+    }
   }
 
   /**
@@ -193,32 +174,20 @@ browser.Context = class {
    *
    * @return {Promise}
    *     A promise which is resolved when the current tab has been closed.
-   *
-   * @throws UnsupportedOperationError
-   *     If tab handling for the current application isn't supported.
    */
   closeTab() {
     // If the current window is not a browser then close it directly. Do the
     // same if only one remaining tab is open, or no tab selected at all.
-    if (!this.tabBrowser || this.tabBrowser.tabs.length === 1 || !this.tab) {
+    if (!this.browser || !this.tab || this.browser.browsers.length == 1) {
       return this.closeWindow();
     }
 
     return new Promise((resolve, reject) => {
-      if (this.tabBrowser.closeTab) {
-        // Fennec
-        this.tabBrowser.deck.addEventListener("TabClose", ev => {
-          resolve();
-        }, {once: true});
-        this.tabBrowser.closeTab(this.tab);
-
-      } else if (this.tabBrowser.removeTab) {
-        // Firefox
+      if (this.browser.removeTab) {
         this.tab.addEventListener("TabClose", ev => {
           resolve();
         }, {once: true});
-        this.tabBrowser.removeTab(this.tab);
-
+        this.browser.removeTab(this.tab);
       } else {
         reject(new UnsupportedOperationError(
             `closeTab() not supported in ${this.driver.appName}`));
@@ -233,47 +202,29 @@ browser.Context = class {
    *      URI to open.
    */
   addTab(uri) {
-    return this.tabBrowser.addTab(uri, true);
+    return this.browser.addTab(uri, true);
   }
 
   /**
-   * Set the current tab and update remoteness tracking if a tabbrowser is available.
+   * Re-sets current tab and updates remoteness tracking.
    *
-   * @param {number=} index
-   *     Tab index to switch to. If the parameter is undefined,
-   *     the currently selected tab will be used.
-   * @param {nsIDOMWindow=} win
-   *     Switch to this window before selecting the tab.
+   * If a window is provided, the internal reference is updated before
+   * proceeding.
    */
-  switchToTab(index, win) {
+  switchToTab(ind, win) {
     if (win) {
       this.window = win;
-      this.tabBrowser = browser.getTabBrowser(win);
+      this.setBrowser(win);
     }
-
-    if (!this.tabBrowser) {
-      return;
+    if (this.browser.selectTabAtIndex) {
+      this.browser.selectTabAtIndex(ind);
+      this.tab = this.browser.selectedTab;
+      this._browserWasRemote = this.browserForTab.isRemoteBrowser;
     }
-
-    if (typeof index == "undefined") {
-      this.tab = this.tabBrowser.selectedTab;
-    } else {
-      this.tab = this.tabBrowser.tabs[index];
-
-      if (this.tabBrowser.selectTab) {
-        // Fennec
-        this.tabBrowser.selectTab(this.tab);
-
-      } else {
-        // Firefox
-        this.tabBrowser.selectedTab = this.tab;
-      }
+    else {
+      this.tab = this.browser.selectedTab;
     }
-
-    if (this.driver.appName == "Firefox") {
-      this._browserWasRemote = browser.getBrowserForTab(this.tab).isRemoteBrowser;
-      this._hasRemotenessChange = false;
-    }
+    this._hasRemotenessChange = false;
   }
 
   /**
@@ -288,15 +239,15 @@ browser.Context = class {
   register(uid, target) {
     let remotenessChange = this.hasRemotenessChange();
     if (this.curFrameId === null || remotenessChange) {
-      if (this.tabBrowser) {
+      if (this.browser) {
         // If we're setting up a new session on Firefox, we only process the
         // registration for this frame if it belongs to the current tab.
         if (!this.tab) {
-          this.switchToTab();
+          this.switchToTab(this.browser.selectedIndex);
         }
 
-        if (target == browser.getBrowserForTab(this.tab)) {
-          this.updateIdForBrowser(browser.getBrowserForTab(this.tab), uid);
+        if (target == this.browserForTab) {
+          this.updateIdForBrowser(this.browserForTab, uid);
           this.mainContentId = uid;
         }
       } else {
@@ -320,7 +271,7 @@ browser.Context = class {
     // and may not apply on Fennec.
     if (this.driver.appName != "Firefox" ||
         this.tab === null ||
-        browser.getBrowserForTab(this.tab) === null) {
+        this.browserForTab === null) {
       return false;
     }
 
@@ -328,7 +279,7 @@ browser.Context = class {
       return true;
     }
 
-    let currentIsRemote = browser.getBrowserForTab(this.tab).isRemoteBrowser;
+    let currentIsRemote = this.browserForTab.isRemoteBrowser;
     this._hasRemotenessChange = this._browserWasRemote !== currentIsRemote;
     this._browserWasRemote = currentIsRemote;
     return this._hasRemotenessChange;
