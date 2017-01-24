@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Usage: ./update.sh [<git-rev-to-use>]
 #
 # Copies the needed files from a directory containing the original
@@ -28,7 +30,7 @@ fi
 
 # First clear out everything already present.
 DEST=./source
-rm -rf "$DEST"
+mv "$DEST" "$TMPDIR"/
 mkdir "$DEST"
 
 # Copy over critical files.
@@ -48,6 +50,23 @@ done
 # Now apply our local patches.
 for patch in $LOCAL_PATCHES; do
   patch --directory "$DEST" --strip 4 < "$patch"
+
+  # Out-of-date patches may spew *.{orig,rej} when applied.  Report an error if
+  # any such file is found, and roll the source directory back to its previous
+  # state in such case.
+  detritus_files=`find "$DEST" -name '*.orig' -o -name '*.rej'`
+  if [ "$detritus_files" != "" ]; then
+    echo "ERROR: Local patch $patch created these detritus files when applied:"
+    echo ""
+    echo "  $detritus_files"
+    echo ""
+    echo "Please fix $patch before running $0."
+
+    rm -rf "$DEST"
+    mv "$TMPDIR"/source "$DEST"
+
+    exit 1
+  fi
 done
 
 # Update Mercurial file status.
