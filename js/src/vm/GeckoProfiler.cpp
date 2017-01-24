@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "vm/SPSProfiler.h"
+#include "vm/GeckoProfiler.h"
 
 #include "mozilla/DebugOnly.h"
 
@@ -23,9 +23,9 @@ using namespace js;
 
 using mozilla::DebugOnly;
 
-SPSProfiler::SPSProfiler(JSRuntime* rt)
+GeckoProfiler::GeckoProfiler(JSRuntime* rt)
   : rt(rt),
-    strings(mutexid::SPSProfilerStrings),
+    strings(mutexid::GeckoProfilerStrings),
     stack_(nullptr),
     size_(nullptr),
     max_(0),
@@ -37,7 +37,7 @@ SPSProfiler::SPSProfiler(JSRuntime* rt)
 }
 
 bool
-SPSProfiler::init()
+GeckoProfiler::init()
 {
     auto locked = strings.lock();
     if (!locked->init())
@@ -47,7 +47,7 @@ SPSProfiler::init()
 }
 
 void
-SPSProfiler::setProfilingStack(ProfileEntry* stack, uint32_t* size, uint32_t max)
+GeckoProfiler::setProfilingStack(ProfileEntry* stack, uint32_t* size, uint32_t max)
 {
     MOZ_ASSERT_IF(size_ && *size_ != 0, !enabled());
     MOZ_ASSERT(strings.lock()->initialized());
@@ -58,13 +58,13 @@ SPSProfiler::setProfilingStack(ProfileEntry* stack, uint32_t* size, uint32_t max
 }
 
 void
-SPSProfiler::setEventMarker(void (*fn)(const char*))
+GeckoProfiler::setEventMarker(void (*fn)(const char*))
 {
     eventMarker_ = fn;
 }
 
 void
-SPSProfiler::enable(bool enabled)
+GeckoProfiler::enable(bool enabled)
 {
     MOZ_ASSERT(installed());
 
@@ -94,7 +94,7 @@ SPSProfiler::enable(bool enabled)
 
     enabled_ = enabled;
 
-    /* Toggle SPS-related jumps on baseline jitcode.
+    /* Toggle Gecko Profiler-related jumps on baseline jitcode.
      * The call to |ReleaseAllJITCode| above will release most baseline jitcode, but not
      * jitcode for scripts with active frames on the stack.  These scripts need to have
      * their profiler state toggled so they behave properly.
@@ -129,7 +129,7 @@ SPSProfiler::enable(bool enabled)
 
 /* Lookup the string for the function/script, creating one if necessary */
 const char*
-SPSProfiler::profileString(JSScript* script, JSFunction* maybeFun)
+GeckoProfiler::profileString(JSScript* script, JSFunction* maybeFun)
 {
     auto locked = strings.lock();
     MOZ_ASSERT(locked->initialized());
@@ -146,7 +146,7 @@ SPSProfiler::profileString(JSScript* script, JSFunction* maybeFun)
 }
 
 void
-SPSProfiler::onScriptFinalized(JSScript* script)
+GeckoProfiler::onScriptFinalized(JSScript* script)
 {
     /*
      * This function is called whenever a script is destroyed, regardless of
@@ -163,7 +163,7 @@ SPSProfiler::onScriptFinalized(JSScript* script)
 }
 
 void
-SPSProfiler::markEvent(const char* event)
+GeckoProfiler::markEvent(const char* event)
 {
     MOZ_ASSERT(enabled());
     if (eventMarker_) {
@@ -173,7 +173,7 @@ SPSProfiler::markEvent(const char* event)
 }
 
 bool
-SPSProfiler::enter(JSContext* cx, JSScript* script, JSFunction* maybeFun)
+GeckoProfiler::enter(JSContext* cx, JSScript* script, JSFunction* maybeFun)
 {
     const char* str = profileString(script, maybeFun);
     if (str == nullptr) {
@@ -197,7 +197,7 @@ SPSProfiler::enter(JSContext* cx, JSScript* script, JSFunction* maybeFun)
 }
 
 void
-SPSProfiler::exit(JSScript* script, JSFunction* maybeFun)
+GeckoProfiler::exit(JSScript* script, JSFunction* maybeFun)
 {
     pop();
 
@@ -230,7 +230,7 @@ SPSProfiler::exit(JSScript* script, JSFunction* maybeFun)
 }
 
 void
-SPSProfiler::beginPseudoJS(const char* string, void* sp)
+GeckoProfiler::beginPseudoJS(const char* string, void* sp)
 {
     /* these operations cannot be re-ordered, so volatile-ize operations */
     volatile ProfileEntry* stack = stack_;
@@ -247,7 +247,7 @@ SPSProfiler::beginPseudoJS(const char* string, void* sp)
 }
 
 void
-SPSProfiler::push(const char* string, void* sp, JSScript* script, jsbytecode* pc, bool copy,
+GeckoProfiler::push(const char* string, void* sp, JSScript* script, jsbytecode* pc, bool copy,
                   ProfileEntry::Category category)
 {
     MOZ_ASSERT_IF(sp != nullptr, script == nullptr && pc == nullptr);
@@ -284,7 +284,7 @@ SPSProfiler::push(const char* string, void* sp, JSScript* script, jsbytecode* pc
 }
 
 void
-SPSProfiler::pop()
+GeckoProfiler::pop()
 {
     MOZ_ASSERT(installed());
     MOZ_ASSERT(*size_ > 0);
@@ -298,7 +298,7 @@ SPSProfiler::pop()
  * AddPtr held while invoking allocProfileString.
  */
 UniqueChars
-SPSProfiler::allocProfileString(JSScript* script, JSFunction* maybeFun)
+GeckoProfiler::allocProfileString(JSScript* script, JSFunction* maybeFun)
 {
     // Note: this profiler string is regexp-matched by
     // devtools/client/profiler/cleopatra/js/parserWorker.js.
@@ -346,7 +346,7 @@ SPSProfiler::allocProfileString(JSScript* script, JSFunction* maybeFun)
 }
 
 void
-SPSProfiler::trace(JSTracer* trc)
+GeckoProfiler::trace(JSTracer* trc)
 {
     if (stack_) {
         size_t limit = Min(*size_, max_);
@@ -356,7 +356,7 @@ SPSProfiler::trace(JSTracer* trc)
 }
 
 void
-SPSProfiler::fixupStringsMapAfterMovingGC()
+GeckoProfiler::fixupStringsMapAfterMovingGC()
 {
     auto locked = strings.lock();
     if (!locked->initialized())
@@ -373,7 +373,7 @@ SPSProfiler::fixupStringsMapAfterMovingGC()
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 void
-SPSProfiler::checkStringsMapAfterMovingGC()
+GeckoProfiler::checkStringsMapAfterMovingGC()
 {
     auto locked = strings.lock();
     if (!locked->initialized())
@@ -398,10 +398,10 @@ ProfileEntry::trace(JSTracer* trc)
     }
 }
 
-SPSEntryMarker::SPSEntryMarker(JSRuntime* rt,
-                               JSScript* script
-                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-    : profiler(&rt->spsProfiler)
+GeckoProfilerEntryMarker::GeckoProfilerEntryMarker(JSRuntime* rt,
+                                                   JSScript* script
+                                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+    : profiler(&rt->geckoProfiler)
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     if (!profiler->installed()) {
@@ -414,7 +414,7 @@ SPSEntryMarker::SPSEntryMarker(JSRuntime* rt,
     profiler->push("js::RunScript", nullptr, script, script->code(), /* copy = */ false);
 }
 
-SPSEntryMarker::~SPSEntryMarker()
+GeckoProfilerEntryMarker::~GeckoProfilerEntryMarker()
 {
     if (profiler == nullptr)
         return;
@@ -424,9 +424,10 @@ SPSEntryMarker::~SPSEntryMarker()
     MOZ_ASSERT(size_before == *profiler->size_);
 }
 
-AutoSPSEntry::AutoSPSEntry(JSRuntime* rt, const char* label, ProfileEntry::Category category
-                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-    : profiler_(&rt->spsProfiler)
+AutoGeckoProfilerEntry::AutoGeckoProfilerEntry(JSRuntime* rt, const char* label,
+                                               ProfileEntry::Category category
+                                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+    : profiler_(&rt->geckoProfiler)
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     if (!profiler_->installed()) {
@@ -438,7 +439,7 @@ AutoSPSEntry::AutoSPSEntry(JSRuntime* rt, const char* label, ProfileEntry::Categ
     profiler_->push(label, this, nullptr, nullptr, /* copy = */ false, category);
 }
 
-AutoSPSEntry::~AutoSPSEntry()
+AutoGeckoProfilerEntry::~AutoGeckoProfilerEntry()
 {
     if (!profiler_)
         return;
@@ -448,12 +449,12 @@ AutoSPSEntry::~AutoSPSEntry()
     MOZ_ASSERT(sizeBefore_ == *profiler_->size_);
 }
 
-SPSBaselineOSRMarker::SPSBaselineOSRMarker(JSRuntime* rt, bool hasSPSFrame
-                                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-    : profiler(&rt->spsProfiler)
+GeckoProfilerBaselineOSRMarker::GeckoProfilerBaselineOSRMarker(JSRuntime* rt, bool hasProfilerFrame
+                                                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+    : profiler(&rt->geckoProfiler)
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    if (!hasSPSFrame || !profiler->enabled() ||
+    if (!hasProfilerFrame || !profiler->enabled() ||
         profiler->size() >= profiler->maxSize())
     {
         profiler = nullptr;
@@ -469,7 +470,7 @@ SPSBaselineOSRMarker::SPSBaselineOSRMarker(JSRuntime* rt, bool hasSPSFrame
     entry.setOSR();
 }
 
-SPSBaselineOSRMarker::~SPSBaselineOSRMarker()
+GeckoProfilerBaselineOSRMarker::~GeckoProfilerBaselineOSRMarker()
 {
     if (profiler == nullptr)
         return;
@@ -525,26 +526,26 @@ ProfileEntry::setPC(jsbytecode* pc) volatile
 JS_FRIEND_API(void)
 js::SetContextProfilingStack(JSContext* cx, ProfileEntry* stack, uint32_t* size, uint32_t max)
 {
-    cx->spsProfiler.setProfilingStack(stack, size, max);
+    cx->geckoProfiler.setProfilingStack(stack, size, max);
 }
 
 JS_FRIEND_API(void)
 js::EnableContextProfilingStack(JSContext* cx, bool enabled)
 {
-    cx->spsProfiler.enable(enabled);
+    cx->geckoProfiler.enable(enabled);
 }
 
 JS_FRIEND_API(void)
 js::RegisterContextProfilingEventMarker(JSContext* cx, void (*fn)(const char*))
 {
-    MOZ_ASSERT(cx->spsProfiler.enabled());
-    cx->spsProfiler.setEventMarker(fn);
+    MOZ_ASSERT(cx->geckoProfiler.enabled());
+    cx->geckoProfiler.setEventMarker(fn);
 }
 
 JS_FRIEND_API(jsbytecode*)
 js::ProfilingGetPC(JSContext* cx, JSScript* script, void* ip)
 {
-    return cx->spsProfiler.ipToPC(script, size_t(ip));
+    return cx->geckoProfiler.ipToPC(script, size_t(ip));
 }
 
 AutoSuppressProfilerSampling::AutoSuppressProfilerSampling(JSContext* cx

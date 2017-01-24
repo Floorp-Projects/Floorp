@@ -62,7 +62,7 @@ class BaselineCompilerShared
     bool inCall_;
 #endif
 
-    CodeOffset spsPushToggleOffset_;
+    CodeOffset profilerPushToggleOffset_;
     CodeOffset profilerEnterFrameToggleOffset_;
     CodeOffset profilerExitFrameToggleOffset_;
 
