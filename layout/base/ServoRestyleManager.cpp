@@ -316,6 +316,7 @@ ServoRestyleManager::ProcessPendingRestyles()
   if (HasPendingRestyles()) {
     mInStyleRefresh = true;
     styleSet->StyleDocument();
+    PresContext()->EffectCompositor()->ClearElementsToRestyle();
 
     // First do any queued-up frame creation. (see bugs 827239 and 997506).
     //

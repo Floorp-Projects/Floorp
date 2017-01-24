@@ -273,6 +273,8 @@ EffectCompositor::RequestRestyle(dom::Element* aElement,
   }
 
   if (aRestyleType == RestyleType::Layer) {
+    // FIXME: we call RequestRestyle for both stylo and gecko, so we
+    // should fix this after supporting animations on the compositor.
     // Prompt layers to re-sync their animations.
     if (mPresContext->RestyleManager()->IsServo()) {
       NS_ERROR("stylo: Servo-backed style system should not be using "
@@ -305,6 +307,12 @@ EffectCompositor::PostRestyleForAnimation(dom::Element* aElement,
   nsRestyleHint hint = aCascadeLevel == CascadeLevel::Transitions ?
                                         eRestyle_CSSTransitions :
                                         eRestyle_CSSAnimations;
+
+  // FIXME: stylo only supports Self and Subtree hints now, so we override it
+  // for stylo.
+  if (mPresContext->StyleSet()->IsServo()) {
+    hint = eRestyle_Self | eRestyle_Subtree;
+  }
   mPresContext->PresShell()->RestyleForAnimation(element, hint);
 }
 
@@ -421,6 +429,81 @@ EffectCompositor::GetAnimationRule(dom::Element* aElement,
   }
 
   return effectSet->AnimationRule(aCascadeLevel).mGecko;
+}
+
+namespace {
+  class EffectCompositeOrderComparator {
+  public:
+    bool Equals(const KeyframeEffectReadOnly* a,
+                const KeyframeEffectReadOnly* b) const
+    {
+      return a == b;
+    }
+
+    bool LessThan(const KeyframeEffectReadOnly* a,
+                  const KeyframeEffectReadOnly* b) const
+    {
+      MOZ_ASSERT(a->GetAnimation() && b->GetAnimation());
+      MOZ_ASSERT(
+        Equals(a, b) ||
+        a->GetAnimation()->HasLowerCompositeOrderThan(*b->GetAnimation()) !=
+          b->GetAnimation()->HasLowerCompositeOrderThan(*a->GetAnimation()));
+      return a->GetAnimation()->HasLowerCompositeOrderThan(*b->GetAnimation());
+    }
+  };
+}
+
+ServoAnimationRule*
+EffectCompositor::GetServoAnimationRule(const dom::Element* aElement,
+                                        CSSPseudoElementType aPseudoType,
+                                        CascadeLevel aCascadeLevel)
+{
+  if (!mPresContext || !mPresContext->IsDynamic()) {
+    // For print or print preview, ignore animations.
+    return nullptr;
+  }
+
+  EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
+  if (!effectSet) {
+    return nullptr;
+  }
+
+  // Get a list of effects sorted by composite order.
+  nsTArray<KeyframeEffectReadOnly*> sortedEffectList(effectSet->Count());
+  for (KeyframeEffectReadOnly* effect : *effectSet) {
+    sortedEffectList.AppendElement(effect);
+  }
+  sortedEffectList.Sort(EffectCompositeOrderComparator());
+
+  AnimationRule& animRule = effectSet->AnimationRule(aCascadeLevel);
+  animRule.mServo = nullptr;
+
+  // If multiple animations affect the same property, animations with higher
+  // composite order (priority) override or add or animations with lower
+  // priority.
+  // stylo: we don't support animations on compositor now, so propertiesToSkip
+  // is an empty set.
+  const nsCSSPropertyIDSet propertiesToSkip;
+  for (KeyframeEffectReadOnly* effect : sortedEffectList) {
+    effect->GetAnimation()->ComposeStyle(animRule, propertiesToSkip);
+  }
+
+  MOZ_ASSERT(effectSet == EffectSet::GetEffectSet(aElement, aPseudoType),
+             "EffectSet should not change while composing style");
+
+  effectSet->UpdateAnimationRuleRefreshTime(
+    aCascadeLevel, mPresContext->RefreshDriver()->MostRecentRefresh());
+  return animRule.mServo;
+}
+
+void
+EffectCompositor::ClearElementsToRestyle()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  const auto iterEnd = mElementsToRestyle.end();
+  for (auto iter = mElementsToRestyle.begin(); iter != iterEnd; ++iter) {
+    iter->Clear();
+  }
 }
 
 /* static */ dom::Element*
@@ -589,28 +672,6 @@ EffectCompositor::MaybeUpdateCascadeResults(Element* aElement,
   UpdateCascadeResults(*effects, aElement, aPseudoType, styleContext);
 
   MOZ_ASSERT(!effects->CascadeNeedsUpdate(), "Failed to update cascade state");
-}
-
-namespace {
-  class EffectCompositeOrderComparator {
-  public:
-    bool Equals(const KeyframeEffectReadOnly* a,
-                const KeyframeEffectReadOnly* b) const
-    {
-      return a == b;
-    }
-
-    bool LessThan(const KeyframeEffectReadOnly* a,
-                  const KeyframeEffectReadOnly* b) const
-    {
-      MOZ_ASSERT(a->GetAnimation() && b->GetAnimation());
-      MOZ_ASSERT(
-        Equals(a, b) ||
-        a->GetAnimation()->HasLowerCompositeOrderThan(*b->GetAnimation()) !=
-          b->GetAnimation()->HasLowerCompositeOrderThan(*a->GetAnimation()));
-      return a->GetAnimation()->HasLowerCompositeOrderThan(*b->GetAnimation());
-    }
-  };
 }
 
 /* static */ void

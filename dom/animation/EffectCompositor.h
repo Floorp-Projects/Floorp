@@ -29,6 +29,7 @@ namespace mozilla {
 class EffectSet;
 class RestyleTracker;
 class StyleAnimationValue;
+class ServoAnimationRule;
 struct AnimationPerformanceWarning;
 struct AnimationProperty;
 struct NonOwningAnimationTarget;
@@ -149,6 +150,21 @@ public:
                                  CSSPseudoElementType aPseudoType,
                                  CascadeLevel aCascadeLevel,
                                  nsStyleContext* aStyleContext);
+
+  // Get animation rule for stylo. This is an equivalent of GetAnimationRule
+  // and will be called from servo side. We need to be careful while doing any
+  // modification because it may case some thread-safe issues.
+  ServoAnimationRule* GetServoAnimationRule(const dom::Element* aElement,
+                                            CSSPseudoElementType aPseudoType,
+                                            CascadeLevel aCascadeLevel);
+
+  // Clear mElementsToRestyle hashtable. Unlike GetAnimationRule,
+  // in GetServoAnimationRule, we don't remove the entry of the composed
+  // animation, so we can prevent the thread-safe issues of dom::Element.
+  // Therefore, we need to call Clear mElementsToRestyle until we go back to
+  // Gecko side.
+  // FIXME: we shouldn't clear the animations on the compositor.
+  void ClearElementsToRestyle();
 
   bool HasPendingStyleUpdates() const;
   bool HasThrottledStyleUpdates() const;
