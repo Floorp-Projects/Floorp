@@ -113,12 +113,6 @@ private:
 class NS_NO_VTABLE nsCycleCollectionParticipant
 {
 public:
-  constexpr nsCycleCollectionParticipant()
-    : mMightSkip(false)
-    , mTraverseShouldTrace(false)
-  {
-  }
-
   constexpr explicit nsCycleCollectionParticipant(bool aSkip,
                                                   bool aTraverseShouldTrace = false)
     : mMightSkip(aSkip)
@@ -248,10 +242,6 @@ private:
 class NS_NO_VTABLE nsScriptObjectTracer : public nsCycleCollectionParticipant
 {
 public:
-  constexpr nsScriptObjectTracer()
-    : nsCycleCollectionParticipant(false, true)
-  {
-  }
   constexpr explicit nsScriptObjectTracer(bool aSkip)
     : nsCycleCollectionParticipant(aSkip, true)
   {
@@ -265,10 +255,6 @@ public:
 class NS_NO_VTABLE nsXPCOMCycleCollectionParticipant : public nsScriptObjectTracer
 {
 public:
-  constexpr nsXPCOMCycleCollectionParticipant()
-    : nsScriptObjectTracer(false)
-  {
-  }
   constexpr explicit nsXPCOMCycleCollectionParticipant(bool aSkip)
     : nsScriptObjectTracer(aSkip)
   {
@@ -629,6 +615,10 @@ public:                                                                        \
 class NS_CYCLE_COLLECTION_INNERCLASS                                           \
  : public nsXPCOMCycleCollectionParticipant                                    \
 {                                                                              \
+public:                                                                        \
+  constexpr explicit NS_CYCLE_COLLECTION_INNERCLASS (bool aSkip = false)       \
+    : nsXPCOMCycleCollectionParticipant(aSkip) {}                              \
+private:                                                                       \
   NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                           \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                       \
 };                                                                             \
@@ -645,7 +635,8 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                            
  : public nsXPCOMCycleCollectionParticipant                                      \
 {                                                                                \
 public:                                                                          \
-  constexpr NS_CYCLE_COLLECTION_INNERCLASS ()                                    \
+  constexpr explicit NS_CYCLE_COLLECTION_INNERCLASS (bool aSkip = true)          \
+    /* Ignore aSkip: we always want skippability. */                             \
   : nsXPCOMCycleCollectionParticipant(true) {}                                   \
 private:                                                                         \
   NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                             \
@@ -665,6 +656,10 @@ NOT_INHERITED_CANT_OVERRIDE
 class NS_CYCLE_COLLECTION_INNERCLASS                                                   \
  : public nsXPCOMCycleCollectionParticipant                                            \
 {                                                                                      \
+public:                                                                                \
+  constexpr explicit NS_CYCLE_COLLECTION_INNERCLASS (bool aSkip = false)               \
+  : nsXPCOMCycleCollectionParticipant(aSkip) {}                                        \
+private:                                                                               \
   NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                                   \
   NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure) override;  \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                               \
@@ -678,7 +673,8 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                            
  : public nsXPCOMCycleCollectionParticipant                                               \
 {                                                                                         \
 public:                                                                                   \
-  constexpr NS_CYCLE_COLLECTION_INNERCLASS ()                                             \
+  constexpr explicit NS_CYCLE_COLLECTION_INNERCLASS (bool aSkip = true)                   \
+    /* Ignore aSkip: we always want skippability. */                                      \
   : nsXPCOMCycleCollectionParticipant(true) {}                                            \
 private:                                                                                  \
   NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                                      \
@@ -700,6 +696,11 @@ NOT_INHERITED_CANT_OVERRIDE
 class NS_CYCLE_COLLECTION_INNERCLASS                                                   \
  : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class)                                   \
 {                                                                                      \
+public:                                                                                \
+  constexpr explicit NS_CYCLE_COLLECTION_INNERCLASS (bool aSkip = true)                \
+    /* Ignore aSkip: we always want skippability. */                                   \
+    : NS_CYCLE_COLLECTION_CLASSNAME(_base_class) (true) {}                             \
+private:                                                                               \
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY(_class, _base_class)                   \
   NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure) override;  \
   NS_IMETHOD_(bool) CanSkipReal(void *p, bool aRemovingAllowed) override;              \
@@ -734,6 +735,9 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                           \
  : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class)                           \
 {                                                                              \
 public:                                                                        \
+  constexpr explicit NS_CYCLE_COLLECTION_INNERCLASS (bool aSkip = false)       \
+    : NS_CYCLE_COLLECTION_CLASSNAME(_base_class) (aSkip) {}                    \
+private:                                                                       \
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY(_class, _base_class)           \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                       \
 };                                                                             \
@@ -746,6 +750,9 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                           \
  : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class)                           \
 {                                                                              \
 public:                                                                        \
+  constexpr explicit NS_CYCLE_COLLECTION_INNERCLASS (bool aSkip = false)       \
+    : NS_CYCLE_COLLECTION_CLASSNAME(_base_class) (aSkip) {}                    \
+private:                                                                       \
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY_NO_UNLINK(_class, _base_class) \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                       \
 };                                                                             \
@@ -757,6 +764,10 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
 class NS_CYCLE_COLLECTION_INNERCLASS                                                   \
  : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class)                                   \
 {                                                                                      \
+public:                                                                                \
+  constexpr explicit NS_CYCLE_COLLECTION_INNERCLASS (bool aSkip = false)               \
+    : NS_CYCLE_COLLECTION_CLASSNAME(_base_class) (aSkip) {}                            \
+private:                                                                               \
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY(_class, _base_class)                   \
   NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure)            \
     override;                                                                          \
@@ -796,6 +807,10 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
   class NS_CYCLE_COLLECTION_INNERCLASS                                         \
    : public nsCycleCollectionParticipant                                       \
   {                                                                            \
+public:                                                                        \
+  constexpr explicit NS_CYCLE_COLLECTION_INNERCLASS (bool aSkip = false)       \
+    : nsCycleCollectionParticipant(aSkip) {}                                   \
+private:                                                                       \
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS_BODY(_class)                         \
     static constexpr nsCycleCollectionParticipant* GetParticipant()            \
     {                                                                          \
@@ -813,7 +828,8 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
    : public nsCycleCollectionParticipant                                       \
   {                                                                            \
   public:                                                                      \
-    constexpr NS_CYCLE_COLLECTION_INNERCLASS ()                                \
+    constexpr explicit NS_CYCLE_COLLECTION_INNERCLASS (bool aSkip = true)      \
+      /* Ignore aSkip: we always want skippability. */                         \
     : nsCycleCollectionParticipant(true) {}                                    \
   private:                                                                     \
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS_BODY(_class)                         \
@@ -854,6 +870,10 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
   class NS_CYCLE_COLLECTION_INNERCLASS                                         \
    : public nsScriptObjectTracer                                               \
   {                                                                            \
+  public:                                                                      \
+    constexpr explicit NS_CYCLE_COLLECTION_INNERCLASS (bool aSkip = false)     \
+      : nsScriptObjectTracer(aSkip) {}                                         \
+  private:                                                                     \
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS_BODY(_class)                         \
     NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure)  \
       override;                                                                \
