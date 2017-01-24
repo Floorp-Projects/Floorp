@@ -39,10 +39,6 @@ public:
   void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
                 MutexAutoLock& aProofOfLock);
 
-  // Return the first event in the queue without popping it. Returns whether the
-  // queue was empty or not. aEvent is set to null if the queue was empty.
-  bool PeekEvent(nsIRunnable** aEvent, MutexAutoLock& aProofOfLock);
-
   // This method gets an event from the event queue.  If mayWait is true, then
   // the method will block the calling thread until an event is available.  If
   // the event is null, then the method returns immediately indicating whether
