@@ -137,6 +137,11 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext()
     writer->mCrypto.mValid = true;
     writer->mCrypto.mIVSize = ivSize;
 
+    CencSampleEncryptionInfoEntry* sampleInfo = GetSampleEncryptionEntry();
+    if (sampleInfo) {
+      writer->mCrypto.mKeyId.AppendElements(sampleInfo->mKeyId);
+    }
+
     if (!reader.ReadArray(writer->mCrypto.mIV, ivSize)) {
       return nullptr;
     }
@@ -162,6 +167,47 @@ already_AddRefed<MediaRawData> SampleIterator::GetNext()
   Next();
 
   return sample.forget();
+}
+
+CencSampleEncryptionInfoEntry* SampleIterator::GetSampleEncryptionEntry()
+{
+  nsTArray<Moof>& moofs = mIndex->mMoofParser->Moofs();
+  Moof* currentMoof = &moofs[mCurrentMoof];
+  SampleToGroupEntry* sampleToGroupEntry = nullptr;
+
+  uint32_t seen = 0;
+
+  for (SampleToGroupEntry& entry : currentMoof->mSampleToGroupEntries) {
+    if (seen + entry.mSampleCount > mCurrentSample) {
+      sampleToGroupEntry = &entry;
+      break;
+    }
+    seen += entry.mSampleCount;
+  }
+
+  // ISO-14496-12 Section 8.9.2.3 and 8.9.4 : group description index
+  // (1) ranges from 1 to the number of sample group entries in the track
+  // level SampleGroupDescription Box, or (2) takes the value 0 to
+  // indicate that this sample is a member of no group, in this case, the
+  // sample is associated with the default values specified in
+  // TrackEncryption Box, or (3) starts at 0x10001, i.e. the index value
+  // 1, with the value 1 in the top 16 bits, to reference fragment-local
+  // SampleGroupDescription Box.
+
+  if (!sampleToGroupEntry || sampleToGroupEntry->mGroupDescriptionIndex == 0) {
+    return nullptr;
+  }
+
+  uint32_t group_index = sampleToGroupEntry->mGroupDescriptionIndex;
+
+  if (group_index > SampleToGroupEntry::kFragmentGroupDescriptionIndexBase) {
+    group_index -= SampleToGroupEntry::kFragmentGroupDescriptionIndexBase;
+  }
+
+  // The group_index is one indexed
+  return group_index > currentMoof->mSampleEncryptionInfoEntries.Length()
+         ? nullptr
+         : &currentMoof->mSampleEncryptionInfoEntries.ElementAt(group_index - 1);
 }
 
 Sample* SampleIterator::Get()
