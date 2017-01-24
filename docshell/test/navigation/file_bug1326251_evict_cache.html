@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Bug 1326251</title>
+    <script>
+    SpecialPowers.Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+
+    // Evict bfcache and then go back.
+    async function evictCache() {
+      let shistory = SpecialPowers.wrap(window)
+                       .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                       .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+                       .sessionHistory;
+      let shPrivate = shistory.QueryInterface(SpecialPowers.Ci.nsISHistoryInternal);
+      shPrivate.evictAllContentViewers();
+      history.back();
+    }
+    </script>
+  </head>
+  <body onload="setTimeout(evictCache, 0);">
+  </body>
+</html>
