@@ -2670,7 +2670,7 @@ void
 TabChild::GetDPI(float* aDPI)
 {
     *aDPI = -1.0;
-    if (!mRemoteFrame) {
+    if (!(mDidFakeShow || mDidSetRealShowInfo)) {
         return;
     }
 
@@ -2687,7 +2687,7 @@ void
 TabChild::GetDefaultScale(double* aScale)
 {
     *aScale = -1.0;
-    if (!mRemoteFrame) {
+    if (!(mDidFakeShow || mDidSetRealShowInfo)) {
         return;
     }
 
@@ -2704,7 +2704,7 @@ void
 TabChild::GetWidgetRounding(int32_t* aRounding)
 {
   *aRounding = 1;
-  if (!mRemoteFrame) {
+  if (!(mDidFakeShow || mDidSetRealShowInfo)) {
     return;
   }
   if (mRounding > 0) {

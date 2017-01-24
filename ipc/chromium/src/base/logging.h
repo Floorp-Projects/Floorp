@@ -76,8 +76,6 @@ struct EmptyLog
 {
 };
 
-} // namespace mozilla
-
 mozilla::Logger& operator<<(mozilla::Logger& log, const char* s);
 mozilla::Logger& operator<<(mozilla::Logger& log, const std::string& s);
 mozilla::Logger& operator<<(mozilla::Logger& log, int i);
@@ -89,6 +87,8 @@ const mozilla::EmptyLog& operator <<(const mozilla::EmptyLog& log, const T&)
 {
   return log;
 }
+
+} // namespace mozilla
 
 #ifdef NO_CHROMIUM_LOGGING
 #define CHROMIUM_LOG(info) std::stringstream()
