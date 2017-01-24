@@ -158,7 +158,7 @@ private:
   nsTArray<nsCString> mActiveTablesCache;
   uint32_t mHashKey;
   // Stores the last time a given table was updated (seconds).
-  nsDataHashtable<nsCStringHashKey, int64_t> mTableFreshness;
+  TableFreshnessMap mTableFreshness;
 
   // In-memory cache for the result of TableRequest. See
   // nsIUrlClassifierDBService.getTables for the format.
