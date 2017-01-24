@@ -37,8 +37,6 @@ class nsXMLFragmentContentSink : public nsXMLContentSink,
 public:
   nsXMLFragmentContentSink();
 
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
-
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsXMLFragmentContentSink,
