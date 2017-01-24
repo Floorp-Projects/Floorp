@@ -67,15 +67,6 @@ ServoStyleSheet::SetAssociatedDocument(nsIDocument* aDocument,
   mDocumentAssociationMode = aAssociationMode;
 }
 
-ServoStyleSheet*
-ServoStyleSheet::GetParentSheet() const
-{
-  // XXXheycam: When we implement support for child sheets, we'll have
-  // to fix SetAssociatedDocument to propagate the associated document down
-  // to the children.
-  MOZ_CRASH("stylo: not implemented");
-}
-
 void
 ServoStyleSheet::AppendStyleSheet(ServoStyleSheet* aSheet)
 {

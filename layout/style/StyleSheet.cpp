@@ -19,7 +19,8 @@
 namespace mozilla {
 
 StyleSheet::StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMode)
-  : mDocument(nullptr)
+  : mParent(nullptr)
+  , mDocument(nullptr)
   , mOwningNode(nullptr)
   , mParsingMode(aParsingMode)
   , mType(aType)
@@ -31,7 +32,8 @@ StyleSheet::StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMod
 StyleSheet::StyleSheet(const StyleSheet& aCopy,
                        nsIDocument* aDocumentToUse,
                        nsINode* aOwningNodeToUse)
-  : mTitle(aCopy.mTitle)
+  : mParent(nullptr)
+  , mTitle(aCopy.mTitle)
   , mDocument(aDocumentToUse)
   , mOwningNode(aOwningNodeToUse)
   , mParsingMode(aCopy.mParsingMode)
