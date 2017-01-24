@@ -1275,8 +1275,10 @@ StartMacOSContentSandbox()
     MOZ_CRASH("Failed to get NS_OS_TEMP_DIR path");
   }
 
+  ContentChild* cc = ContentChild::GetSingleton();
+
   nsCOMPtr<nsIFile> profileDir;
-  ContentChild::GetSingleton()->GetProfileDir(getter_AddRefs(profileDir));
+  cc->GetProfileDir(getter_AddRefs(profileDir));
   nsCString profileDirPath;
   if (profileDir) {
     rv = profileDir->GetNativePath(profileDirPath);
@@ -1285,9 +1287,12 @@ StartMacOSContentSandbox()
     }
   }
 
+  bool isFileProcess = cc->GetRemoteType().EqualsLiteral(FILE_REMOTE_TYPE);
+
   MacSandboxInfo info;
   info.type = MacSandboxType_Content;
-  info.level = info.level = sandboxLevel;
+  info.level = sandboxLevel;
+  info.hasFilePrivileges = isFileProcess;
   info.shouldLog = Preferences::GetBool("security.sandbox.logging.enabled") ||
                    PR_GetEnv("MOZ_SANDBOX_LOGGING");
   info.appPath.assign(appPath.get());
