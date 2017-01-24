@@ -97,12 +97,6 @@ StyleSheet::ClearAssociatedDocument()
 }
 
 StyleSheet*
-StyleSheet::GetParentSheet() const
-{
-  MOZ_STYLO_FORWARD(GetParentSheet, ())
-}
-
-StyleSheet*
 StyleSheet::GetParentStyleSheet() const
 {
   return GetParentSheet();

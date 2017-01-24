@@ -371,7 +371,6 @@ CSSStyleSheetInner::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
                              CORSMode aCORSMode, ReferrerPolicy aReferrerPolicy)
   : StyleSheet(StyleBackendType::Gecko, aParsingMode),
-    mParent(nullptr),
     mOwnerRule(nullptr),
     mDirty(false),
     mInRuleProcessorCache(false),
@@ -387,7 +386,6 @@ CSSStyleSheet::CSSStyleSheet(css::SheetParsingMode aParsingMode,
                              ReferrerPolicy aReferrerPolicy,
                              const SRIMetadata& aIntegrity)
   : StyleSheet(StyleBackendType::Gecko, aParsingMode),
-    mParent(nullptr),
     mOwnerRule(nullptr),
     mDirty(false),
     mInRuleProcessorCache(false),
@@ -404,7 +402,6 @@ CSSStyleSheet::CSSStyleSheet(const CSSStyleSheet& aCopy,
                              nsIDocument* aDocumentToUse,
                              nsINode* aOwningNodeToUse)
   : StyleSheet(aCopy, aDocumentToUse, aOwningNodeToUse),
-    mParent(aParentToUse),
     mOwnerRule(aOwnerRuleToUse),
     mDirty(aCopy.mDirty),
     mInRuleProcessorCache(false),
@@ -412,6 +409,7 @@ CSSStyleSheet::CSSStyleSheet(const CSSStyleSheet& aCopy,
     mInner(aCopy.mInner),
     mRuleProcessors(nullptr)
 {
+  mParent = aParentToUse;
 
   mInner->AddSheet(this);
 
@@ -609,12 +607,6 @@ CSSStyleSheet::EnabledStateChangedInternal()
   ClearRuleCascades();
 }
 
-CSSStyleSheet*
-CSSStyleSheet::GetParentSheet() const
-{
-  return mParent;
-}
-
 void
 CSSStyleSheet::SetAssociatedDocument(nsIDocument* aDocument,
                                      DocumentAssociationMode aAssociationMode)
@@ -657,7 +649,8 @@ CSSStyleSheet::FindOwningWindowInnerID() const
   }
 
   if (windowID == 0 && mParent) {
-    windowID = mParent->FindOwningWindowInnerID();
+    CSSStyleSheet* parentAsCSS = mParent->AsGecko();
+    windowID = parentAsCSS->FindOwningWindowInnerID();
   }
 
   return windowID;
