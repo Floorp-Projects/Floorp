@@ -1697,8 +1697,8 @@ nsMenuPopupFrame::GetConstraintRect(const LayoutDeviceIntRect& aAnchorRect,
   return screenRectPixels;
 }
 
-void nsMenuPopupFrame::CanAdjustEdges(int8_t aHorizontalSide,
-                                      int8_t aVerticalSide,
+void nsMenuPopupFrame::CanAdjustEdges(Side aHorizontalSide,
+                                      Side aVerticalSide,
                                       LayoutDeviceIntPoint& aChange)
 {
   int8_t popupAlign(mPopupAlignment);
