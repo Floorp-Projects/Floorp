@@ -33,14 +33,29 @@
 
 #include "mozilla/Assertions.h"
 #ifndef ASSERT
-#define ASSERT(condition)      MOZ_ASSERT(condition)
+#define ASSERT(condition)         \
+    MOZ_ASSERT(condition)
 #endif
 #ifndef UNIMPLEMENTED
 #define UNIMPLEMENTED() MOZ_CRASH()
 #endif
+#ifndef DOUBLE_CONVERSION_NO_RETURN
+#ifdef _MSC_VER
+#define DOUBLE_CONVERSION_NO_RETURN __declspec(noreturn)
+#else
+#define DOUBLE_CONVERSION_NO_RETURN __attribute__((noreturn))
+#endif
+#endif
 #ifndef UNREACHABLE
+#ifdef _MSC_VER
+void DOUBLE_CONVERSION_NO_RETURN abort_noreturn();
+inline void abort_noreturn() { MOZ_CRASH(); }
+#define UNREACHABLE()   (abort_noreturn())
+#else
 #define UNREACHABLE()   MOZ_CRASH()
 #endif
+#endif
+
 
 // Double operations detection based on target architecture.
 // Linux uses a 80bit wide floating point stack on x86. This induces double
@@ -57,11 +72,15 @@
     defined(__hppa__) || defined(__ia64__) || \
     defined(__mips__) || \
     defined(__powerpc__) || defined(__ppc__) || defined(__ppc64__) || \
+    defined(_POWER) || defined(_ARCH_PPC) || defined(_ARCH_PPC64) || \
     defined(__sparc__) || defined(__sparc) || defined(__s390__) || \
     defined(__SH4__) || defined(__alpha__) || \
     defined(_MIPS_ARCH_MIPS32R2) || \
-    defined(__AARCH64EL__) || defined(__aarch64__)
+    defined(__AARCH64EL__) || defined(__aarch64__) || \
+    defined(__riscv)
 #define DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS 1
+#elif defined(__mc68000__)
+#undef DOUBLE_CONVERSION_CORRECT_DOUBLE_OPERATIONS
 #elif defined(_M_IX86) || defined(__i386__) || defined(__i386)
 #if defined(_WIN32)
 // Windows uses a 64bit wide floating point stack.
@@ -73,8 +92,15 @@
 #error Target architecture was not detected as supported by Double-Conversion.
 #endif
 
+#if defined(__GNUC__)
+#define DOUBLE_CONVERSION_UNUSED __attribute__((unused))
+#else
+#define DOUBLE_CONVERSION_UNUSED
+#endif
 
 #include <stdint.h>
+
+typedef uint16_t uc16;
 
 // The following macro works on both 32 and 64-bit platforms.
 // Usage: instead of writing 0x1234567890123456
@@ -280,8 +306,10 @@ class StringBuilder {
 // another thus avoiding the warning.
 template <class Dest, class Source>
 inline Dest BitCast(const Source& source) {
-  static_assert(sizeof(Dest) == sizeof(Source),
-                "BitCast's source and destination types must be the same size");
+  // Compile time assertion: sizeof(Dest) == sizeof(Source)
+  // A compile error here means your Dest and Source have different sizes.
+  DOUBLE_CONVERSION_UNUSED
+      typedef char VerifySizesAreEqual[sizeof(Dest) == sizeof(Source) ? 1 : -1];
 
   Dest dest;
   memmove(&dest, &source, sizeof(dest));
