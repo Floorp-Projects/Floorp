@@ -66,7 +66,7 @@ public:
 
     gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, mMaxTextureSize);
 
-    wr_gl_init(&*gl);
+    wr_gl_init(gl.get());
 
     WrRenderer* wrRenderer = nullptr;
     wr_window_new(aWindowId.mHandle, this->mEnableProfiler, mWrApi, &wrRenderer);
@@ -83,6 +83,7 @@ public:
     aRenderThread.AddRenderer(aWindowId, Move(renderer));
   }
 
+private:
   WrAPI** mWrApi;
   GLint* mMaxTextureSize;
   layers::CompositorBridgeParentBase* mBridge;
@@ -111,6 +112,7 @@ public:
     layers::AutoCompleteTask complete(mTask);
   }
 
+private:
   layers::SynchronousTask* mTask;
 };
 
@@ -251,6 +253,7 @@ public:
     }
   }
 
+private:
   bool mEnabled;
 };
 
