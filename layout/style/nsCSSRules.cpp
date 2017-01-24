@@ -271,6 +271,10 @@ ImportRule::ImportRule(const ImportRule& aCopy)
       aCopy.mChildSheet->Clone(nullptr, this, nullptr, nullptr);
     SetSheet(sheet);
     // SetSheet sets mMedia appropriately
+  } else {
+    // We better just copy mMedia from aCopy, since we have nowhere else to get
+    // one.
+    mMedia = aCopy.mMedia;
   }
 }
 
