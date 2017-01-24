@@ -134,12 +134,6 @@ StyleSheet::GetIntegrity(dom::SRIMetadata& aResult) const
   aResult = SheetInfo().mIntegrity;
 }
 
-size_t
-StyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
-  MOZ_STYLO_FORWARD(SizeOfIncludingThis, (aMallocSizeOf))
-}
-
 void StyleSheet::WillDirty() { MOZ_STYLO_FORWARD(WillDirty, ()) }
 void StyleSheet::DidDirty() { MOZ_STYLO_FORWARD(DidDirty, ()) }
 

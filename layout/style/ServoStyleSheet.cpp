@@ -109,12 +109,6 @@ ServoStyleSheet::DropRuleList()
   }
 }
 
-size_t
-ServoStyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
-  MOZ_CRASH("stylo: not implemented");
-}
-
 css::Rule*
 ServoStyleSheet::GetDOMOwnerRule() const
 {
