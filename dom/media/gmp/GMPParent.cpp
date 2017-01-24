@@ -716,9 +716,12 @@ GMPParent::ReadGMPInfoFile(nsIFile* aFile)
 
 #if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
       if (!mozilla::SandboxInfo::Get().CanSandboxMedia()) {
-        printf_stderr("GMPParent::ReadGMPMetaData: Plugin \"%s\" is an EME CDM"
-                      " but this system can't sandbox it; not loading.\n",
-                      mDisplayName.get());
+        nsPrintfCString msg(
+          "GMPParent::ReadGMPMetaData: Plugin \"%s\" is an EME CDM"
+          " but this system can't sandbox it; not loading.",
+          mDisplayName.get());
+        printf_stderr("%s\n", msg.get());
+        LOGD("%s", msg.get());
         return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
       }
 #endif
@@ -770,6 +773,18 @@ GMPParent::ParseChromiumManifest(const nsAString& aJSON)
   mDisplayName = NS_ConvertUTF16toUTF8(m.mName);
   mDescription = NS_ConvertUTF16toUTF8(m.mDescription);
   mVersion = NS_ConvertUTF16toUTF8(m.mVersion);
+
+#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+  if (!mozilla::SandboxInfo::Get().CanSandboxMedia()) {
+    nsPrintfCString msg(
+      "GMPParent::ParseChromiumManifest: Plugin \"%s\" is an EME CDM"
+      " but this system can't sandbox it; not loading.",
+      mDisplayName.get());
+    printf_stderr("%s\n", msg.get());
+    LOGD("%s", msg.get());
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
+#endif
 
   nsCString kEMEKeySystem;
 

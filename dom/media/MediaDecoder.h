@@ -473,7 +473,7 @@ private:
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_DIAGNOSTIC_ASSERT(!IsShutdown());
-    mOwner->UpdateReadyState();
+    GetOwner()->UpdateReadyState();
   }
 
   virtual MediaDecoderOwner::NextFrameStatus NextFrameStatus() { return mNextFrameStatus; }
@@ -484,6 +484,9 @@ private:
   virtual void GetMozDebugReaderData(nsACString& aString) {}
 
   virtual void DumpDebugInfo();
+
+  using DebugInfoPromise = MozPromise<nsCString, bool, true>;
+  RefPtr<DebugInfoPromise> RequestDebugInfo();
 
 protected:
   virtual ~MediaDecoder();
@@ -552,6 +555,8 @@ protected:
   static const int DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED = 250000;
 
 private:
+  nsCString GetDebugInfo();
+
   // Called when the metadata from the media file has been loaded by the
   // state machine. Call on the main thread only.
   void MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,

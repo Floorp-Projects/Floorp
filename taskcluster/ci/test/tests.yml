@@ -438,6 +438,35 @@ mochitest-browser-chrome:
             default: legacy
     allow-software-gl-layers: false
 
+mochitest-browser-screenshots:
+    description: "Mochitest Browser Screenshots"
+    suite: mochitest/browser-chrome-screenshots
+    treeherder-symbol: tc-M(ss)
+    loopback-video: true
+    run-on-projects:
+        by-test-platform:
+            linux64/opt: ['mozilla-central', 'try']
+            default: []
+    e10s: true
+    max-run-time: 3600
+    mozharness:
+        script: desktop_unittest.py
+        no-read-buildbot-config: true
+        config:
+            by-test-platform:
+                windows.*:
+                    - unittests/win_taskcluster_unittest.py
+                macosx.*:
+                    - remove_executables.py
+                    - unittests/mac_unittest.py
+                linux.*:
+                    - unittests/linux_unittest.py
+                    - remove_executables.py
+        extra-options:
+            - --mochitest-suite=browser-chrome-screenshots
+    instance-size: legacy
+    allow-software-gl-layers: false
+
 mochitest-chrome:
     description: "Mochitest chrome run"
     suite: mochitest/chrome

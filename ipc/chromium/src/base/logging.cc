@@ -61,7 +61,6 @@ Logger::printf(const char* fmt, ...)
 }
 
 LazyLogModule Logger::gChromiumPRLog("chromium");
-} // namespace mozilla 
 
 mozilla::Logger&
 operator<<(mozilla::Logger& log, const char* s)
@@ -97,3 +96,5 @@ operator<<(mozilla::Logger& log, void* p)
   log.printf("%p", p);
   return log;
 }
+
+} // namespace mozilla
