@@ -305,7 +305,6 @@ class JSObject : public js::gc::Cell
 
     static const JS::TraceKind TraceKind = JS::TraceKind::Object;
     static const size_t MaxTagBits = 3;
-    static bool isNullLike(const JSObject* obj) { return uintptr_t(obj) < (1 << MaxTagBits); }
 
     MOZ_ALWAYS_INLINE JS::Zone* zone() const {
         return group_->zone();
@@ -641,7 +640,6 @@ struct JSObject_Slots16 : JSObject { void* data[3]; js::Value fslots[16]; };
 /* static */ MOZ_ALWAYS_INLINE void
 JSObject::readBarrier(JSObject* obj)
 {
-    MOZ_ASSERT_IF(obj, !isNullLike(obj));
     if (obj && obj->isTenured())
         obj->asTenured().readBarrier(&obj->asTenured());
 }
@@ -649,7 +647,6 @@ JSObject::readBarrier(JSObject* obj)
 /* static */ MOZ_ALWAYS_INLINE void
 JSObject::writeBarrierPre(JSObject* obj)
 {
-    MOZ_ASSERT_IF(obj, !isNullLike(obj));
     if (obj && obj->isTenured())
         obj->asTenured().writeBarrierPre(&obj->asTenured());
 }
@@ -658,8 +655,6 @@ JSObject::writeBarrierPre(JSObject* obj)
 JSObject::writeBarrierPost(void* cellp, JSObject* prev, JSObject* next)
 {
     MOZ_ASSERT(cellp);
-    MOZ_ASSERT_IF(next, !IsNullTaggedPointer(next));
-    MOZ_ASSERT_IF(prev, !IsNullTaggedPointer(prev));
 
     // If the target needs an entry, add it.
     js::gc::StoreBuffer* buffer;

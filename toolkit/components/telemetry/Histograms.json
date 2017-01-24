@@ -1738,42 +1738,6 @@
     "n_values": 12,
     "description": "Whether the URL gets redirected?  (0=200, 1=301, 2=302, 3=304, 4=307, 5=308, 6=400, 7=401, 8=403, 9=404, 10=500, 11=other)"
   },
-  "HTTP_NET_VS_CACHE_ONSTART_ISIMG": {
-    "expires_in_version": "58",
-      "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStartRequest) difference (ms) for images. Offset by 500 ms."
-  },
-  "HTTP_NET_VS_CACHE_ONSTART_NOTIMG": {
-    "expires_in_version": "58",
-      "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStartRequest) difference (ms) for non-images. Offset by 500 ms."
-  },
-  "HTTP_NET_VS_CACHE_ONSTOP_ISIMG": {
-    "expires_in_version": "58",
-      "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStopRequest) difference (ms) for images. Offset by 500 ms."
-  },
-  "HTTP_NET_VS_CACHE_ONSTOP_NOTIMG": {
-    "expires_in_version": "58",
-      "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStopRequest) difference (ms) for non-images. Offset by 500 ms."
-  },
   "HTTP_NET_VS_CACHE_ONSTART_QSMALL_NORMALPRI": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
@@ -1882,113 +1846,23 @@
       "n_buckets": 100,
       "description": "Network vs cache time load (OnStopRequest) difference (ms) for requests with a high priority and large queue. Offset by 500 ms."
   },
-  "HTTP_NET_VS_CACHE_ONSTART_SMALL_NORMALPRI": {
+  "HTTP_NET_VS_CACHE_ONSTOP_SMALL": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
+      "bug_numbers": [1325090],
       "kind": "linear",
       "high": 1000,
       "n_buckets": 100,
-      "description": "Network vs cache time load (OnStartRequest) difference (ms) for cache files with a small size (<32K) and normal priority. Offset by 500 ms."
+      "description": "Network vs cache time load (OnStopRequest) difference (ms) for cache files with a small size (<256K). Offset by 500 ms."
   },
-  "HTTP_NET_VS_CACHE_ONSTART_MED_NORMALPRI": {
+  "HTTP_NET_VS_CACHE_ONSTOP_LARGE": {
     "expires_in_version": "58",
       "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
+      "bug_numbers": [1325090],
       "kind": "linear",
       "high": 1000,
       "n_buckets": 100,
-      "description": "Network vs cache time load (OnStartRequest) difference (ms) for cache files with a medium size (<256K) and normal priority. Offset by 500 ms."
-  },
-  "HTTP_NET_VS_CACHE_ONSTART_LARGE_NORMALPRI": {
-    "expires_in_version": "58",
-      "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStartRequest) difference (ms) for cache files with a large size (>256K) and normal priority. Offset by 500 ms."
-  },
-  "HTTP_NET_VS_CACHE_ONSTART_SMALL_HIGHPRI": {
-    "expires_in_version": "58",
-      "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStartRequest) difference (ms) for cache files with a small size (<32K) and high priority. Offset by 500 ms."
-  },
-  "HTTP_NET_VS_CACHE_ONSTART_MED_HIGHPRI": {
-    "expires_in_version": "58",
-      "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStartRequest) difference (ms) for cache files with a medium size (<256K) and high priority. Offset by 500 ms."
-  },
-  "HTTP_NET_VS_CACHE_ONSTART_LARGE_HIGHPRI": {
-    "expires_in_version": "58",
-      "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStartRequest) difference (ms) for cache files with a large size (>256K) and high priority. Offset by 500 ms."
-  },
-  "HTTP_NET_VS_CACHE_ONSTOP_SMALL_NORMALPRI": {
-    "expires_in_version": "58",
-      "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStopRequest) difference (ms) for cache files with a small size (<32K) and normal priority. Offset by 500 ms."
-  },
-  "HTTP_NET_VS_CACHE_ONSTOP_MED_NORMALPRI": {
-    "expires_in_version": "58",
-      "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStopRequest) difference (ms) for cache files with a medium size (<256K) and normal priority. Offset by 500 ms."
-  },
-  "HTTP_NET_VS_CACHE_ONSTOP_LARGE_NORMALPRI": {
-    "expires_in_version": "58",
-      "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStopRequest) difference (ms) for cache files with a large size (>256K) and normal priority. Offset by 500 ms."
-  },
-  "HTTP_NET_VS_CACHE_ONSTOP_SMALL_HIGHPRI": {
-    "expires_in_version": "58",
-      "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStopRequest) difference (ms) for cache files with a small size (<32K) and high priority. Offset by 500 ms."
-  },
-  "HTTP_NET_VS_CACHE_ONSTOP_MED_HIGHPRI": {
-    "expires_in_version": "58",
-      "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStopRequest) difference (ms) for cache files with a medium size (<256K) and high priority. Offset by 500 ms."
-  },
-  "HTTP_NET_VS_CACHE_ONSTOP_LARGE_HIGHPRI": {
-    "expires_in_version": "58",
-      "alert_emails": ["necko@mozilla.com"],
-      "bug_numbers": [1313095],
-      "kind": "linear",
-      "high": 1000,
-      "n_buckets": 100,
-      "description": "Network vs cache time load (OnStopRequest) difference (ms) for cache files with a large size (>256K) and high priority. Offset by 500 ms."
+      "description": "Network vs cache time load (OnStopRequest) difference (ms) for cache files with a large size (>=256K). Offset by 500 ms."
   },
   "HTTP_NET_VS_CACHE_ONSTART_REVALIDATED": {
     "expires_in_version": "58",
