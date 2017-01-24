@@ -122,9 +122,9 @@ public:
     return mDocumentAssociationMode == OwnedByDocument;
   }
   // aDocument must not be null.
-  inline void SetAssociatedDocument(nsIDocument* aDocument,
-                                    DocumentAssociationMode aMode);
-  inline void ClearAssociatedDocument();
+  void SetAssociatedDocument(nsIDocument* aDocument,
+                             DocumentAssociationMode aMode);
+  void ClearAssociatedDocument();
   nsINode* GetOwnerNode() const { return mOwningNode; }
   inline StyleSheet* GetParentSheet() const { return mParent; }
 

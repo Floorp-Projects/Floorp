@@ -82,20 +82,6 @@ StyleSheet::HasRules() const
   MOZ_STYLO_FORWARD(HasRules, ())
 }
 
-void
-StyleSheet::SetAssociatedDocument(nsIDocument* aDocument,
-                                  DocumentAssociationMode aAssociationMode)
-{
-  MOZ_ASSERT(aDocument);
-  MOZ_STYLO_FORWARD(SetAssociatedDocument, (aDocument, aAssociationMode))
-}
-
-void
-StyleSheet::ClearAssociatedDocument()
-{
-  MOZ_STYLO_FORWARD(SetAssociatedDocument, (nullptr, NotOwnedByDocument));
-}
-
 StyleSheet*
 StyleSheet::GetParentStyleSheet() const
 {

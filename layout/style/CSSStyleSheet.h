@@ -108,9 +108,6 @@ public:
 
   bool HasRules() const;
 
-  void SetAssociatedDocument(nsIDocument* aDocument,
-                             DocumentAssociationMode aAssociationMode);
-
   // Find the ID of the owner inner window.
   uint64_t FindOwningWindowInnerID() const;
 #ifdef DEBUG
