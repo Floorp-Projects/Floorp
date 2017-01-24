@@ -447,7 +447,7 @@ PaintMaskSurface(const PaintFramesParams& aParams,
 
   const nsStyleSVGReset *svgReset = aSC->StyleSVGReset();
   gfxMatrix cssPxToDevPxMatrix =
-    nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(aParams.frame);
+    nsSVGUtils::GetCSSPxToDevPxMatrix(aParams.frame);
 
   nsPresContext* presContext = aParams.frame->PresContext();
   gfxPoint devPixelOffsetToUserSpace =
@@ -546,7 +546,7 @@ CreateAndPaintMaskSurface(const PaintFramesParams& aParams,
   // Optimization for single SVG mask.
   if (((aMaskFrames.Length() == 1) && aMaskFrames[0])) {
     gfxMatrix cssPxToDevPxMatrix =
-    nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(aParams.frame);
+      nsSVGUtils::GetCSSPxToDevPxMatrix(aParams.frame);
     paintResult.opacityApplied = true;
     nsSVGMaskFrame::MaskParams params(&ctx, aParams.frame, cssPxToDevPxMatrix,
                                       aOpacity, &paintResult.maskTransform,
@@ -864,7 +864,7 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
 
     MoveContextOriginToUserSpace(firstFrame, aParams);
     Matrix clipMaskTransform;
-    gfxMatrix cssPxToDevPxMatrix = GetCSSPxToDevPxMatrix(frame);
+    gfxMatrix cssPxToDevPxMatrix = nsSVGUtils::GetCSSPxToDevPxMatrix(frame);
 
     nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame();
     RefPtr<SourceSurface> maskSurface =
@@ -924,7 +924,7 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
 
   nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame();
 
-  gfxMatrix cssPxToDevPxMatrix = GetCSSPxToDevPxMatrix(frame);
+  gfxMatrix cssPxToDevPxMatrix = nsSVGUtils::GetCSSPxToDevPxMatrix(frame);
   nsTArray<nsSVGMaskFrame*> maskFrames = effectProperties.GetMaskFrames();
 
   bool shouldGenerateMask = (maskUsage.opacity != 1.0f ||
@@ -1123,7 +1123,7 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
   RegularFramePaintCallback callback(aParams.builder, aParams.layerManager,
                                      offsets.offsetToUserSpaceInDevPx);
   nsRegion dirtyRegion = aParams.dirtyRect - offsets.offsetToBoundingBox;
-  gfxMatrix tm = nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(frame);
+  gfxMatrix tm = nsSVGUtils::GetCSSPxToDevPxMatrix(frame);
   DrawResult result =
     nsFilterInstance::PaintFilteredFrame(frame, context.GetDrawTarget(),
                                          tm, &callback, &dirtyRegion);
@@ -1133,18 +1133,6 @@ nsSVGIntegrationUtils::PaintFilter(const PaintFramesParams& aParams)
   }
 
   return result;
-}
-
-gfxMatrix
-nsSVGIntegrationUtils::GetCSSPxToDevPxMatrix(nsIFrame* aNonSVGFrame)
-{
-  int32_t appUnitsPerDevPixel = aNonSVGFrame->PresContext()->AppUnitsPerDevPixel();
-  float devPxPerCSSPx =
-    1 / nsPresContext::AppUnitsToFloatCSSPixels(appUnitsPerDevPixel);
-
-  return gfxMatrix(devPxPerCSSPx, 0.0,
-                   0.0, devPxPerCSSPx,
-                   0.0, 0.0);
 }
 
 class PaintFrameCallback : public gfxDrawingCallback {
