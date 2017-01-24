@@ -24,8 +24,8 @@ public:
 };
 
 // The implementation versions of this template are:
-// ArrayBuffer, ArrayBufferView, Blob, FormData, nsAString, nsIDocument,
-// nsIInputStream, nsIXHRSendable, URLSearchParams
+// ArrayBuffer, ArrayBufferView, nsIXHRSendable (Blob, FormData,
+// URLSearchParams), nsAString, nsIDocument, nsIInputStream
 template<typename Type>
 class BodyExtractor final : public BodyExtractorBase
 {
