@@ -1312,7 +1312,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
                                                                 startTime,
                                                                 endTime));
 #else
-              MOZ_CRASH("SPS profiler is N/A but profiler_is_active() returned true");
+              MOZ_CRASH("Gecko Profiler is N/A but profiler_is_active() returned true");
 #endif
             } else {
               rv = HandleEventSubType(listener, *aDOMEvent, aCurrentTarget);
