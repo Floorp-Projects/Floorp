@@ -56,7 +56,7 @@ WebRenderTextLayer::RenderLayer()
         GlyphArray glyph_array = mGlyphs[i];
         nsTArray<Glyph>& glyphs = glyph_array.glyphs();
 
-        nsTArray<WRGlyphInstance>& wr_glyph_instances = wr_glyphs[i].glyphs;
+        nsTArray<WrGlyphInstance>& wr_glyph_instances = wr_glyphs[i].glyphs;
         wr_glyph_instances.SetLength(glyphs.Length());
         wr_glyphs[i].color = glyph_array.color().value();
 

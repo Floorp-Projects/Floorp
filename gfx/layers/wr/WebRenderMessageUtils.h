@@ -124,10 +124,10 @@ struct ParamTraits<WrColor>
 };
 
 template<>
-struct ParamTraits<WRGlyphInstance>
+struct ParamTraits<WrGlyphInstance>
 {
   static void
-  Write(Message* aMsg, const WRGlyphInstance& aParam)
+  Write(Message* aMsg, const WrGlyphInstance& aParam)
   {
     WriteParam(aMsg, aParam.index);
     WriteParam(aMsg, aParam.x);
@@ -135,7 +135,7 @@ struct ParamTraits<WRGlyphInstance>
   }
 
   static bool
-  Read(const Message* aMsg, PickleIterator* aIter, WRGlyphInstance* aResult)
+  Read(const Message* aMsg, PickleIterator* aIter, WrGlyphInstance* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->index)
         && ReadParam(aMsg, aIter, &aResult->x)

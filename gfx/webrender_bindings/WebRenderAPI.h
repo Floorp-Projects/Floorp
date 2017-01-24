@@ -142,7 +142,7 @@ public:
                 const WrRect& aClip,
                 const gfx::Color& aColor,
                 wr::FontKey aFontKey,
-                Range<const WRGlyphInstance> aGlyphBuffer,
+                Range<const WrGlyphInstance> aGlyphBuffer,
                 float aGlyphSize);
 
   // Try to avoid using this when possible.
