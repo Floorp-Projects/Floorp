@@ -1470,13 +1470,25 @@ IsCurrentThreadRunningChromeWorker()
 JSContext*
 GetCurrentThreadJSContext()
 {
-  return GetCurrentThreadWorkerPrivate()->GetJSContext();
+  WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
+  if (!wp) {
+    return nullptr;
+  }
+  return wp->GetJSContext();
 }
 
 JSObject*
 GetCurrentThreadWorkerGlobal()
 {
-  return GetCurrentThreadWorkerPrivate()->GlobalScope()->GetGlobalJSObject();
+  WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
+  if (!wp) {
+    return nullptr;
+  }
+  WorkerGlobalScope* scope = wp->GlobalScope();
+  if (!scope) {
+    return nullptr;
+  }
+  return scope->GetGlobalJSObject();
 }
 
 END_WORKERS_NAMESPACE
