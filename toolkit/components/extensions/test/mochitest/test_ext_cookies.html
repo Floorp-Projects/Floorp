@@ -88,7 +88,8 @@ add_task(function* test_cookies() {
     browser.test.assertEq(1, stores[0].tabIds.length, "one tabId returned for store");
     browser.test.assertEq("number", typeof stores[0].tabIds[0], "tabId is a number");
 
-    {
+    // This part causes intermittent failures see Bug 1309637.
+    if (false) {
       let privateWindow = await browser.windows.create({incognito: true});
       let stores = await browser.cookies.getAllCookieStores();
 
@@ -179,7 +180,8 @@ add_task(function* test_cookies() {
     browser.test.assertEq("", cookie.value, "default value set");
     browser.test.assertEq(true, cookie.session, "no expiry date created session cookie");
 
-    {
+    // This part causes intermittent failures see Bug 1309637.
+    if (false) {
       let privateWindow = await browser.windows.create({incognito: true});
 
       // Hacky work-around for bugzil.la/1309637

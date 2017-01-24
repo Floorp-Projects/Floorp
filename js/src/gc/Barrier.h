@@ -253,8 +253,6 @@ struct InternalBarrierMethods<T*>
 {
     static bool isMarkable(T* v) { return v != nullptr; }
 
-    static bool isMarkableTaggedPointer(T* v) { return !IsNullTaggedPointer(v); }
-
     static void preBarrier(T* v) { T::writeBarrierPre(v); }
 
     static void postBarrier(T** vp, T* prev, T* next) { T::writeBarrierPost(vp, prev, next); }
@@ -274,7 +272,6 @@ template <>
 struct InternalBarrierMethods<Value>
 {
     static bool isMarkable(const Value& v) { return v.isGCThing(); }
-    static bool isMarkableTaggedPointer(const Value& v) { return isMarkable(v); }
 
     static void preBarrier(const Value& v) {
         DispatchTyped(PreBarrierFunctor<Value>(), v);
@@ -310,8 +307,6 @@ template <>
 struct InternalBarrierMethods<jsid>
 {
     static bool isMarkable(jsid id) { return JSID_IS_GCTHING(id); }
-    static bool isMarkableTaggedPointer(jsid id) { return isMarkable(id); }
-
     static void preBarrier(jsid id) { DispatchTyped(PreBarrierFunctor<jsid>(), id); }
     static void postBarrier(jsid* idp, jsid prev, jsid next) {}
 };
