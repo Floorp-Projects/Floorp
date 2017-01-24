@@ -356,14 +356,15 @@ MP4TrackDemuxer::GetNextSample()
       }
     }
   }
+
   if (sample->mCrypto.mValid) {
     nsAutoPtr<MediaRawDataWriter> writer(sample->CreateWriter());
     writer->mCrypto.mMode = mInfo->mCrypto.mMode;
-    writer->mCrypto.mIVSize = mInfo->mCrypto.mIVSize;
 
-    // The length of the key will be zero if no key was specified in the sample
-    // information, meaning we should fall back to the default key.
+    // Only use the default key parsed from the moov if we haven't already got
+    // one from the sample group description.
     if (writer->mCrypto.mKeyId.Length() == 0) {
+      writer->mCrypto.mIVSize = mInfo->mCrypto.mIVSize;
       writer->mCrypto.mKeyId.AppendElements(mInfo->mCrypto.mKeyId);
     }
   }
