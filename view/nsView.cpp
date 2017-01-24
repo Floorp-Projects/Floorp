@@ -26,18 +26,27 @@ using namespace mozilla;
 static bool sShowPreviousPage = true;
 
 nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
+  : mViewManager(aViewManager)
+  , mParent(nullptr)
+  , mNextSibling(nullptr)
+  , mFirstChild(nullptr)
+  , mFrame(nullptr)
+  , mDirtyRegion(nullptr)
+  , mZIndex(0)
+  , mVis(aVisibility)
+  , mPosX(0)
+  , mPosY(0)
+  , mVFlags(0)
+  , mWidgetIsTopLevel(false)
+  , mForcedRepaint(false)
+  , mNeedsWindowPropertiesSync(false)
 {
   MOZ_COUNT_CTOR(nsView);
 
-  mVis = aVisibility;
   // Views should be transparent by default. Not being transparent is
   // a promise that the view will paint all its pixels opaquely. Views
   // should make this promise explicitly by calling
   // SetViewContentTransparency.
-  mVFlags = 0;
-  mViewManager = aViewManager;
-  mDirtyRegion = nullptr;
-  mWidgetIsTopLevel = false;
 
   static bool sShowPreviousPageInitialized = false;
   if (!sShowPreviousPageInitialized) {
