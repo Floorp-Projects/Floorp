@@ -330,7 +330,7 @@
       <groupbox id="siteDataGroup" hidden="true">
         <caption><label>&siteData.label;</label></caption>
 
-        <hbox align="center">
+        <hbox align="baseline">
           <label id="totalSiteDataSize"></label>
           <label id="siteDataLearnMoreLink" class="learnMore text-link" value="&siteDataLearnMoreLink.label;"></label>
           <spacer flex="1" />
