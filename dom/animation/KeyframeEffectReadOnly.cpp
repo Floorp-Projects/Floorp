@@ -497,6 +497,9 @@ KeyframeEffectReadOnly::ComposeStyle(
     return;
   }
 
+  nsPresContext* presContext = GetPresContext();
+  bool isServoBackend = presContext && presContext->StyleSet()->IsServo();
+
   mNeedsBaseStyleSet.Empty();
 
   for (size_t propIdx = 0, propEnd = mProperties.Length();
@@ -532,72 +535,131 @@ KeyframeEffectReadOnly::ComposeStyle(
                  prop.mSegments.Length(),
                "out of array bounds");
 
-    if (!aStyleRule.mGecko) {
-      // Allocate the style rule now that we know we have animation data.
-      aStyleRule.mGecko = new AnimValuesStyleRule();
-    }
+    // Bug 1333311 - We use two branches for Gecko and Stylo. However, it's
+    // better to remove the duplicated code.
+    if (isServoBackend) {
+      // Servo backend
 
-    StyleAnimationValue fromValue =
-      CompositeValue(prop.mProperty, aStyleRule.mGecko,
-                     segment->mFromValue,
-                     segment->mFromComposite);
-    StyleAnimationValue toValue =
-      CompositeValue(prop.mProperty, aStyleRule.mGecko,
-                     segment->mToValue,
-                     segment->mToComposite);
+      // Bug 1329878 - Stylo: Implement accumulate and addition on Servo
+      // AnimationValue.
+      RawServoAnimationValue* servoFromValue = segment->mServoFromValue;
+      RawServoAnimationValue* servoToValue = segment->mServoToValue;
 
-    // Iteration composition for accumulate
-    if (mEffectOptions.mIterationComposite ==
+      // For unsupported or non-animatable animation types, we get nullptrs.
+      if (!servoFromValue || !servoToValue) {
+        NS_ERROR("Compose style for unsupported or non-animatable property, "
+                 "so get invalid RawServoAnimationValues");
+        continue;
+      }
+
+      if (!aStyleRule.mServo) {
+        // Allocate the style rule now that we know we have animation data.
+        aStyleRule.mServo = new ServoAnimationRule();
+      }
+
+      // Special handling for zero-length segments
+      if (segment->mToKey == segment->mFromKey) {
+        if (computedTiming.mProgress.Value() < 0) {
+          aStyleRule.mServo->AddValue(prop.mProperty, servoFromValue);
+        } else {
+          aStyleRule.mServo->AddValue(prop.mProperty, servoToValue);
+        }
+        continue;
+      }
+
+      double positionInSegment =
+        (computedTiming.mProgress.Value() - segment->mFromKey) /
+        (segment->mToKey - segment->mFromKey);
+      double valuePosition =
+        ComputedTimingFunction::GetPortion(segment->mTimingFunction,
+                                           positionInSegment,
+                                           computedTiming.mBeforeFlag);
+
+      MOZ_ASSERT(IsFinite(valuePosition), "Position value should be finite");
+
+      RefPtr<RawServoAnimationValue> interpolated =
+        Servo_AnimationValues_Interpolate(servoFromValue,
+                                          servoToValue,
+                                          valuePosition).Consume();
+
+      if (interpolated) {
+        aStyleRule.mServo->AddValue(prop.mProperty, interpolated);
+      } else if (valuePosition < 0.5) {
+        aStyleRule.mServo->AddValue(prop.mProperty, servoFromValue);
+      } else {
+        aStyleRule.mServo->AddValue(prop.mProperty, servoToValue);
+      }
+    } else {
+      // Gecko backend
+
+      if (!aStyleRule.mGecko) {
+        // Allocate the style rule now that we know we have animation data.
+        aStyleRule.mGecko = new AnimValuesStyleRule();
+      }
+
+      StyleAnimationValue fromValue =
+        CompositeValue(prop.mProperty, aStyleRule.mGecko,
+                       segment->mFromValue,
+                       segment->mFromComposite);
+      StyleAnimationValue toValue =
+        CompositeValue(prop.mProperty, aStyleRule.mGecko,
+                       segment->mToValue,
+                       segment->mToComposite);
+
+      // Iteration composition for accumulate
+      if (mEffectOptions.mIterationComposite ==
           IterationCompositeOperation::Accumulate &&
-        computedTiming.mCurrentIteration > 0) {
-      const AnimationPropertySegment& lastSegment =
-        prop.mSegments.LastElement();
-      // FIXME: Bug 1293492: Add a utility function to calculate both of
-      // below StyleAnimationValues.
-      StyleAnimationValue lastValue = lastSegment.mToValue.IsNull()
-        ? GetUnderlyingStyle(prop.mProperty, aStyleRule.mGecko)
-        : lastSegment.mToValue;
-      fromValue =
-        StyleAnimationValue::Accumulate(prop.mProperty,
-                                        lastValue,
-                                        Move(fromValue),
-                                        computedTiming.mCurrentIteration);
-      toValue =
-        StyleAnimationValue::Accumulate(prop.mProperty,
-                                        lastValue,
-                                        Move(toValue),
-                                        computedTiming.mCurrentIteration);
-    }
+          computedTiming.mCurrentIteration > 0) {
+        const AnimationPropertySegment& lastSegment =
+          prop.mSegments.LastElement();
+        // FIXME: Bug 1293492: Add a utility function to calculate both of
+        // below StyleAnimationValues.
+        StyleAnimationValue lastValue = lastSegment.mToValue.IsNull()
+          ? GetUnderlyingStyle(prop.mProperty, aStyleRule.mGecko)
+          : lastSegment.mToValue;
+        fromValue =
+          StyleAnimationValue::Accumulate(prop.mProperty,
+                                          lastValue,
+                                          Move(fromValue),
+                                          computedTiming.mCurrentIteration);
+        toValue =
+          StyleAnimationValue::Accumulate(prop.mProperty,
+                                          lastValue,
+                                          Move(toValue),
+                                          computedTiming.mCurrentIteration);
+      }
 
-    // Special handling for zero-length segments
-    if (segment->mToKey == segment->mFromKey) {
-      if (computedTiming.mProgress.Value() < 0) {
+      // Special handling for zero-length segments
+      if (segment->mToKey == segment->mFromKey) {
+        if (computedTiming.mProgress.Value() < 0) {
+          aStyleRule.mGecko->AddValue(prop.mProperty, Move(fromValue));
+        } else {
+          aStyleRule.mGecko->AddValue(prop.mProperty, Move(toValue));
+        }
+        continue;
+      }
+
+      double positionInSegment =
+        (computedTiming.mProgress.Value() - segment->mFromKey) /
+        (segment->mToKey - segment->mFromKey);
+      double valuePosition =
+        ComputedTimingFunction::GetPortion(segment->mTimingFunction,
+                                           positionInSegment,
+                                           computedTiming.mBeforeFlag);
+
+      MOZ_ASSERT(IsFinite(valuePosition), "Position value should be finite");
+
+      StyleAnimationValue val;
+      if (StyleAnimationValue::Interpolate(prop.mProperty,
+                                           fromValue,
+                                           toValue,
+                                           valuePosition, val)) {
+        aStyleRule.mGecko->AddValue(prop.mProperty, Move(val));
+      } else if (valuePosition < 0.5) {
         aStyleRule.mGecko->AddValue(prop.mProperty, Move(fromValue));
       } else {
         aStyleRule.mGecko->AddValue(prop.mProperty, Move(toValue));
       }
-      continue;
-    }
-
-    double positionInSegment =
-      (computedTiming.mProgress.Value() - segment->mFromKey) /
-      (segment->mToKey - segment->mFromKey);
-    double valuePosition =
-      ComputedTimingFunction::GetPortion(segment->mTimingFunction,
-                                         positionInSegment,
-                                         computedTiming.mBeforeFlag);
-
-    MOZ_ASSERT(IsFinite(valuePosition), "Position value should be finite");
-    StyleAnimationValue val;
-    if (StyleAnimationValue::Interpolate(prop.mProperty,
-                                         fromValue,
-                                         toValue,
-                                         valuePosition, val)) {
-      aStyleRule.mGecko->AddValue(prop.mProperty, Move(val));
-    } else if (valuePosition < 0.5) {
-      aStyleRule.mGecko->AddValue(prop.mProperty, Move(fromValue));
-    } else {
-      aStyleRule.mGecko->AddValue(prop.mProperty, Move(toValue));
     }
   }
 
