@@ -615,7 +615,7 @@ var LoginManagerContent = {
         continue;
       }
 
-      if (skipEmptyFields && !element.value) {
+      if (skipEmptyFields && !element.value.trim()) {
         continue;
       }
 
