@@ -54,12 +54,6 @@ ServoStyleSheet::HasRules() const
   return mSheet && Servo_StyleSheet_HasRules(mSheet);
 }
 
-void
-ServoStyleSheet::AppendStyleSheet(ServoStyleSheet* aSheet)
-{
-  aSheet->mDocument = mDocument;
-}
-
 nsresult
 ServoStyleSheet::ParseSheet(css::Loader* aLoader,
                             const nsAString& aInput,

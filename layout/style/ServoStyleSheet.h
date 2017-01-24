@@ -39,8 +39,6 @@ public:
 
   bool HasRules() const;
 
-  void AppendStyleSheet(ServoStyleSheet* aSheet);
-
   MOZ_MUST_USE nsresult ParseSheet(css::Loader* aLoader,
                                    const nsAString& aInput,
                                    nsIURI* aSheetURI,
