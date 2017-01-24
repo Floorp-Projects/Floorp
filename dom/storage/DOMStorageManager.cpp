@@ -473,13 +473,14 @@ DOMStorageManager::CheckStorage(nsIPrincipal* aPrincipal,
 NS_IMETHODIMP
 DOMStorageManager::GetLocalStorageForPrincipal(nsIPrincipal* aPrincipal,
                                                const nsAString& aDocumentURI,
+                                               bool aPrivate,
                                                nsIDOMStorage** aRetval)
 {
   if (mType != LocalStorage) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  return CreateStorage(nullptr, aPrincipal, aDocumentURI, aRetval);
+  return CreateStorage(nullptr, aPrincipal, aDocumentURI, aPrivate, aRetval);
 }
 
 void
