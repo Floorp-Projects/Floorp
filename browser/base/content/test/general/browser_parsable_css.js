@@ -42,6 +42,9 @@ let whitelist = [
   {sourceName: /res\/forms\.css$/i,
    errorMessage: /Unknown property.*overflow-clip-box/i,
    isFromDevTools: false},
+  {sourceName: /res\/(ua|html)\.css$/i,
+   errorMessage: /Unknown pseudo-class .*\bfullscreen\b/i,
+   isFromDevTools: false},
 ];
 
 // Platform can be "linux", "macosx" or "win". If omitted, the exception applies to all platforms.
