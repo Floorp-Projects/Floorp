@@ -89,7 +89,8 @@ function handleRequest(request, response) {
       data += charcode;
     }
 
-    var mimetype = request.getHeader("Content-Type");
+    var mimetype = request.hasHeader("Content-Type")
+      ? request.getHeader("Content-Type") : "application/octet-stream";
 
     // check to see if this is form data.
     if (mimetype.indexOf("multipart/form-data") != -1) {
