@@ -349,7 +349,7 @@ nsBaseWidget::OnRenderingDeviceReset(uint64_t aSeqNo)
   // accelerated layers again.
   RefPtr<ClientLayerManager> clm = mLayerManager->AsClientLayerManager();
   if (!ComputeShouldAccelerate() &&
-      clm->GetTextureFactoryIdentifier().mParentBackend != LayersBackend::LAYERS_BASIC)
+      clm->GetCompositorBackendType() == LayersBackend::LAYERS_BASIC)
   {
     return;
   }
