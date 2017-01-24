@@ -7,12 +7,14 @@
 #ifndef mozilla_mscom_ActivationContext_h
 #define mozilla_mscom_ActivationContext_h
 
+#include "mozilla/Attributes.h"
+
 #include <windows.h>
 
 namespace mozilla {
 namespace mscom {
 
-class ActivationContext
+class MOZ_RAII ActivationContext
 {
 public:
   explicit ActivationContext(HMODULE aLoadFromModule);
@@ -22,6 +24,11 @@ public:
   {
     return mActCtx != INVALID_HANDLE_VALUE;
   }
+
+  ActivationContext(const ActivationContext&) = delete;
+  ActivationContext(ActivationContext&&) = delete;
+  ActivationContext& operator=(const ActivationContext&) = delete;
+  ActivationContext& operator=(ActivationContext&&) = delete;
 
 private:
   HANDLE    mActCtx;

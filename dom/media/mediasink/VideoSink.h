@@ -68,7 +68,7 @@ public:
 
   void Shutdown() override;
 
-  void DumpDebugInfo() override;
+  nsCString GetDebugInfo() override;
 
 private:
   virtual ~VideoSink();

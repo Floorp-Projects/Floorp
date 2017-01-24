@@ -64,7 +64,7 @@ public:
   bool IsStarted() const override;
   bool IsPlaying() const override;
 
-  void DumpDebugInfo() override;
+  nsCString GetDebugInfo() override;
 
 protected:
   virtual ~DecodedStream();

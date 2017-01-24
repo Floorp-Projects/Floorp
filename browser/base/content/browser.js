@@ -6246,12 +6246,12 @@ var IndexedDBPromptHelper = {
       }
     ];
 
-    PopupNotifications.show(browser, topic, message,
-                            this._notificationIcon, mainAction,
-                            secondaryActions, {
-                              persistent: true,
-                              hideClose: true,
-                            });
+    PopupNotifications.show(
+      browser, topic, message, this._notificationIcon, mainAction, secondaryActions,
+      {
+        persistent: true,
+        hideClose: !Services.prefs.getBoolPref("privacy.permissionPrompts.showCloseButton"),
+      });
   }
 };
 
