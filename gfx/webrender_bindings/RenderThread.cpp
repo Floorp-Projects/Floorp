@@ -15,7 +15,7 @@ namespace wr {
 static StaticRefPtr<RenderThread> sRenderThread;
 
 RenderThread::RenderThread(base::Thread* aThread)
-: mThread(aThread)
+  : mThread(aThread)
 {
 
 }
@@ -186,8 +186,8 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId)
   renderer->Render(transactionId);
 }
 
-} // namespace
-} // namespace
+} // namespace wr
+} // namespace mozilla
 
 extern "C" {
 
