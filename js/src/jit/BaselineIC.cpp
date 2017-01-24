@@ -2032,8 +2032,8 @@ TryAttachNativeInStub(JSContext* cx, HandleScript outerScript, ICIn_Fallback* st
     RootedPropertyName name(cx, JSID_TO_ATOM(id)->asPropertyName());
     Rooted<PropertyResult> prop(cx);
     RootedObject holder(cx);
-    if (!EffectlesslyLookupProperty(cx, obj, id, &holder, &prop))
-        return false;
+    if (!LookupPropertyPure(cx, obj, id, holder.address(), prop.address()))
+        return true;
 
     if (prop.isNonNativeProperty()) {
         MOZ_ASSERT(!IsCacheableProtoChain(obj, holder, false));
@@ -2561,8 +2561,8 @@ TryAttachSetValuePropStub(JSContext* cx, HandleScript script, jsbytecode* pc, IC
 
     Rooted<PropertyResult> prop(cx);
     RootedObject holder(cx);
-    if (!EffectlesslyLookupProperty(cx, obj, id, &holder, &prop))
-        return false;
+    if (!LookupPropertyPure(cx, obj, id, holder.address(), prop.address()))
+        return true;
     if (obj != holder)
         return true;
 
