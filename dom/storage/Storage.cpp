@@ -291,18 +291,18 @@ Storage::ApplyEvent(StorageEvent* aStorageEvent)
   // No key means clearing the full storage.
   if (key.IsVoid()) {
     MOZ_ASSERT(value.IsVoid());
-    mCache->Clear(this);
+    mCache->Clear(this, StorageCache::E10sPropagated);
     return;
   }
 
   // No new value means removing the key.
   if (value.IsVoid()) {
-    mCache->RemoveItem(this, key, old);
+    mCache->RemoveItem(this, key, old, StorageCache::E10sPropagated);
     return;
   }
 
   // Otherwise, we set the new value.
-  mCache->SetItem(this, key, value, old);
+  mCache->SetItem(this, key, value, old, StorageCache::E10sPropagated);
 }
 
 static const char kPermissionType[] = "cookie";
