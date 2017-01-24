@@ -59,7 +59,7 @@ GetDataSetIndex(const Storage* aStorage)
 
 NS_IMPL_ADDREF(StorageCacheBridge)
 
-// Since there is no consumer of return value of Release, we can turn this 
+// Since there is no consumer of return value of Release, we can turn this
 // method to void to make implementation of asynchronous StorageCache::Release
 // much simpler.
 NS_IMETHODIMP_(void) StorageCacheBridge::Release(void)
@@ -149,7 +149,7 @@ StorageCache::Init(StorageManagerBase* aManager,
   // Check the quota string has (or has not) the identical origin suffix as
   // this storage cache is bound to.
   MOZ_ASSERT(StringBeginsWith(mQuotaOriginScope, mOriginSuffix));
-  MOZ_ASSERT(mOriginSuffix.IsEmpty() != StringBeginsWith(mQuotaOriginScope, 
+  MOZ_ASSERT(mOriginSuffix.IsEmpty() != StringBeginsWith(mQuotaOriginScope,
                                                          NS_LITERAL_CSTRING("^")));
 
   mUsage = aManager->GetOriginUsage(mQuotaOriginScope);
@@ -198,28 +198,33 @@ StorageCache::DataSet(const Storage* aStorage)
 }
 
 bool
-StorageCache::ProcessUsageDelta(const Storage* aStorage, int64_t aDelta)
+StorageCache::ProcessUsageDelta(const Storage* aStorage, int64_t aDelta,
+                                const MutationSource aSource)
 {
-  return ProcessUsageDelta(GetDataSetIndex(aStorage), aDelta);
+  return ProcessUsageDelta(GetDataSetIndex(aStorage), aDelta, aSource);
 }
 
 bool
-StorageCache::ProcessUsageDelta(uint32_t aGetDataSetIndex, const int64_t aDelta)
+StorageCache::ProcessUsageDelta(uint32_t aGetDataSetIndex, const int64_t aDelta,
+                                const MutationSource aSource)
 {
   // Check if we are in a low disk space situation
-  if (aDelta > 0 && mManager && mManager->IsLowDiskSpace()) {
+  if (aSource == ContentMutation &&
+      aDelta > 0 && mManager && mManager->IsLowDiskSpace()) {
     return false;
   }
 
   // Check limit per this origin
   Data& data = mData[aGetDataSetIndex];
   uint64_t newOriginUsage = data.mOriginQuotaUsage + aDelta;
-  if (aDelta > 0 && newOriginUsage > StorageManagerBase::GetQuota()) {
+  if (aSource == ContentMutation &&
+      aDelta > 0 && newOriginUsage > StorageManagerBase::GetQuota()) {
     return false;
   }
 
   // Now check eTLD+1 limit
-  if (mUsage && !mUsage->CheckAndSetETLD1UsageDelta(aGetDataSetIndex, aDelta)) {
+  if (mUsage &&
+      !mUsage->CheckAndSetETLD1UsageDelta(aGetDataSetIndex, aDelta, aSource)) {
     return false;
   }
 
@@ -385,7 +390,8 @@ StorageCache::GetItem(const Storage* aStorage, const nsAString& aKey,
 
 nsresult
 StorageCache::SetItem(const Storage* aStorage, const nsAString& aKey,
-                      const nsString& aValue, nsString& aOld)
+                      const nsString& aValue, nsString& aOld,
+                      const MutationSource aSource)
 {
   // Size of the cache that will change after this action.
   int64_t delta = 0;
@@ -408,7 +414,7 @@ StorageCache::SetItem(const Storage* aStorage, const nsAString& aKey,
   delta += static_cast<int64_t>(aValue.Length()) -
            static_cast<int64_t>(aOld.Length());
 
-  if (!ProcessUsageDelta(aStorage, delta)) {
+  if (!ProcessUsageDelta(aStorage, delta, aSource)) {
     return NS_ERROR_DOM_QUOTA_REACHED;
   }
 
@@ -418,7 +424,7 @@ StorageCache::SetItem(const Storage* aStorage, const nsAString& aKey,
 
   data.mKeys.Put(aKey, aValue);
 
-  if (Persist(aStorage)) {
+  if (aSource == ContentMutation && Persist(aStorage)) {
     if (!sDatabase) {
       NS_ERROR("Writing to localStorage after the database has been shut down"
                ", data lose!");
@@ -437,7 +443,7 @@ StorageCache::SetItem(const Storage* aStorage, const nsAString& aKey,
 
 nsresult
 StorageCache::RemoveItem(const Storage* aStorage, const nsAString& aKey,
-                         nsString& aOld)
+                         nsString& aOld, const MutationSource aSource)
 {
   if (Persist(aStorage)) {
     WaitForPreload(Telemetry::LOCALDOMSTORAGE_REMOVEKEY_BLOCKING_MS);
@@ -455,10 +461,10 @@ StorageCache::RemoveItem(const Storage* aStorage, const nsAString& aKey,
   // Recalculate the cached data size
   const int64_t delta = -(static_cast<int64_t>(aOld.Length()) +
                           static_cast<int64_t>(aKey.Length()));
-  Unused << ProcessUsageDelta(aStorage, delta);
+  Unused << ProcessUsageDelta(aStorage, delta, aSource);
   data.mKeys.Remove(aKey);
 
-  if (Persist(aStorage)) {
+  if (aSource == ContentMutation && Persist(aStorage)) {
     if (!sDatabase) {
       NS_ERROR("Writing to localStorage after the database has been shut down"
                ", data lose!");
@@ -472,7 +478,7 @@ StorageCache::RemoveItem(const Storage* aStorage, const nsAString& aKey,
 }
 
 nsresult
-StorageCache::Clear(const Storage* aStorage)
+StorageCache::Clear(const Storage* aStorage, const MutationSource aSource)
 {
   bool refresh = false;
   if (Persist(aStorage)) {
@@ -494,11 +500,11 @@ StorageCache::Clear(const Storage* aStorage)
   bool hadData = !!data.mKeys.Count();
 
   if (hadData) {
-    Unused << ProcessUsageDelta(aStorage, -data.mOriginQuotaUsage);
+    Unused << ProcessUsageDelta(aStorage, -data.mOriginQuotaUsage, aSource);
     data.mKeys.Clear();
   }
 
-  if (Persist(aStorage) && (refresh || hadData)) {
+  if (aSource == ContentMutation && Persist(aStorage) && (refresh || hadData)) {
     if (!sDatabase) {
       NS_ERROR("Writing to localStorage after the database has been shut down"
                ", data lose!");
@@ -673,12 +679,13 @@ StorageUsage::LoadUsage(const int64_t aUsage)
 
 bool
 StorageUsage::CheckAndSetETLD1UsageDelta(uint32_t aDataSetIndex,
-                                         const int64_t aDelta)
+  const int64_t aDelta, const StorageCache::MutationSource aSource)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   int64_t newUsage = mUsage[aDataSetIndex] + aDelta;
-  if (aDelta > 0 && newUsage > StorageManagerBase::GetQuota()) {
+  if (aSource == StorageCache::ContentMutation &&
+      aDelta > 0 && newUsage > StorageManagerBase::GetQuota()) {
     return false;
   }
 
