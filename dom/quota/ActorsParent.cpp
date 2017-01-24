@@ -3396,11 +3396,13 @@ QuotaManager::GetQuotaObject(PersistenceType aPersistenceType,
   }
 
   // Re-escape our parameters above to make sure we get the right quota group.
-  nsAutoCString tempStorage1;
-  const nsCSubstring& group = NS_EscapeURL(aGroup, esc_Query, tempStorage1);
+  nsAutoCString group;
+  rv = NS_EscapeURL(aGroup, esc_Query, group, fallible);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
-  nsAutoCString tempStorage2;
-  const nsCSubstring& origin = NS_EscapeURL(aOrigin, esc_Query, tempStorage2);
+  nsAutoCString origin;
+  rv = NS_EscapeURL(aOrigin, esc_Query, origin, fallible);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   RefPtr<QuotaObject> result;
   {
