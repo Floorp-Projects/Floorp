@@ -73,24 +73,9 @@ _GROUPS = [
     'blend',
 ]
 
-_GROUP_TEST_COUNTS = [
-    1,
-    6,
-    6,
-    6,
-    6,
-    1
-]
-
-def GenerateFilename(group, count, index):
+def GenerateFilename(group):
   """Generate test filename."""
   filename = group
-  assert index >= 0 and index < count
-  if count > 1:
-    index_str = str(index)
-    if index < 10:
-      index_str = "0" + index_str
-    filename += "_" + index_str
   filename += ".html"
   return filename
 
@@ -106,17 +91,11 @@ def WriteTest(filename, start, end):
 
 def GenerateTests():
   """Generate all tests."""
-  assert len(_GROUPS) == len(_GROUP_TEST_COUNTS)
-  test_index = 0
   filelist = []
   for ii in range(len(_GROUPS)):
-    group = _GROUPS[ii]
-    count = _GROUP_TEST_COUNTS[ii]
-    for index in range(count):
-      filename = GenerateFilename(group, count, index)
-      filelist.append(filename)
-      WriteTest(filename, test_index, test_index + 1)
-      test_index += 1
+    filename = GenerateFilename(_GROUPS[ii])
+    filelist.append(filename)
+    WriteTest(filename, ii, ii + 1)
   return filelist
 
 def GenerateTestList(filelist):
