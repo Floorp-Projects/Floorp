@@ -45,7 +45,7 @@ bool MP3Decoder::IsSupportedType(const MediaContainerType& aContainerType)
     return
       IsEnabled()
       && (aContainerType.ExtendedType().Codecs().IsEmpty()
-          || aContainerType.ExtendedType().Codecs().AsString().EqualsASCII("mp3"));
+          || aContainerType.ExtendedType().Codecs() == "mp3");
   }
   return false;
 }
