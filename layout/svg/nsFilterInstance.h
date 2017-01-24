@@ -119,6 +119,7 @@ public:
                                     const gfxRect *aOverrideBBox = nullptr,
                                     const nsRect *aPreFilterBounds = nullptr);
 
+private:
   /**
    * @param aTargetFrame The frame of the filtered element under consideration,
    *   may be null.
@@ -201,7 +202,6 @@ public:
    */
   nsRect ComputeSourceNeededRect();
 
-
   /**
    * Returns the transform from filter space to outer-<svg> device space.
    */
@@ -209,7 +209,6 @@ public:
     return mFilterSpaceToDeviceSpaceTransform;
   }
 
-private:
   struct SourceInfo {
     // Specifies which parts of the source need to be rendered.
     // Set by ComputeNeededBoxes().
