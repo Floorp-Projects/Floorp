@@ -1479,10 +1479,22 @@ HTMLMediaElement::MozRequestDebugInfo(ErrorResult& aRv)
     return nullptr;
   }
 
-  // TODO: collect data from MDSM which must be done off the main thread.
   nsAutoString result;
   GetMozDebugReaderData(result);
-  promise->MaybeResolve(result);
+
+  if (mDecoder) {
+    mDecoder->RequestDebugInfo()->Then(
+      AbstractThread::MainThread(), __func__,
+      [promise, result] (const nsACString& aString) {
+        promise->MaybeResolve(result + NS_ConvertUTF8toUTF16(aString));
+      },
+      [promise, result] () {
+        promise->MaybeResolve(result);
+      });
+  } else {
+    promise->MaybeResolve(result);
+  }
+
   return promise.forget();
 }
 
