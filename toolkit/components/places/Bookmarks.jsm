@@ -1278,8 +1278,9 @@ function reorderChildren(parent, orderedChildrenGuids, options) {
     db => db.executeTransaction(function* () {
       // Select all of the direct children for the given parent.
       let children = yield fetchBookmarksByParent({ parentGuid: parent.guid });
-      if (!children.length)
-        return undefined;
+      if (!children.length) {
+        return [];
+      }
 
       // Build a map of GUIDs to indices for fast lookups in the comparator
       // function.
