@@ -24,8 +24,6 @@ const {
 // Map[extension -> DevToolsPageDefinition]
 let devtoolsPageDefinitionMap = new Map();
 
-let initDevTools;
-
 /**
  * Retrieve the devtools target for the devtools extension proxy context
  * (lazily cloned from the target of the toolbox associated to the context
@@ -106,8 +104,6 @@ global.getTargetTabIdForToolbox = (toolbox) => {
 class DevToolsPage extends HiddenExtensionPage {
   constructor(extension, options) {
     super(extension, "devtools_page");
-
-    initDevTools();
 
     this.url = extension.baseURI.resolve(options.url);
     this.toolbox = options.toolbox;
@@ -250,50 +246,41 @@ class DevToolsPageDefinition {
 
 /* eslint-disable mozilla/balanced-listeners */
 
-let devToolsInitialized = false;
-initDevTools = function() {
-  if (devToolsInitialized) {
+// Create a devtools page context for a new opened toolbox,
+// based on the registered devtools_page definitions.
+gDevTools.on("toolbox-created", (evt, toolbox) => {
+  if (!toolbox.target.isLocalTab) {
+    // Only local tabs are currently supported (See Bug 1304378 for additional details
+    // related to remote targets support).
+    let msg = `Ignoring DevTools Toolbox for target "${toolbox.target.toString()}": ` +
+              `"${toolbox.target.name}" ("${toolbox.target.url}"). ` +
+              "Only local tab are currently supported by the WebExtensions DevTools API.";
+    let scriptError = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
+    scriptError.init(msg, null, null, null, null, Ci.nsIScriptError.warningFlag, "content javascript");
+    let consoleService = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
+    consoleService.logMessage(scriptError);
+
     return;
   }
 
-  // Create a devtools page context for a new opened toolbox,
-  // based on the registered devtools_page definitions.
-  gDevTools.on("toolbox-created", (evt, toolbox) => {
-    if (!toolbox.target.isLocalTab) {
-      // Only local tabs are currently supported (See Bug 1304378 for additional details
-      // related to remote targets support).
-      let msg = `Ignoring DevTools Toolbox for target "${toolbox.target.toString()}": ` +
-                `"${toolbox.target.name}" ("${toolbox.target.url}"). ` +
-                "Only local tab are currently supported by the WebExtensions DevTools API.";
-      let scriptError = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
-      scriptError.init(msg, null, null, null, null, Ci.nsIScriptError.warningFlag, "content javascript");
-      let consoleService = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
-      consoleService.logMessage(scriptError);
+  for (let devtoolsPage of devtoolsPageDefinitionMap.values()) {
+    devtoolsPage.buildForToolbox(toolbox);
+  }
+});
 
-      return;
-    }
+// Destroy a devtools page context for a destroyed toolbox,
+// based on the registered devtools_page definitions.
+gDevTools.on("toolbox-destroy", (evt, target) => {
+  if (!target.isLocalTab) {
+    // Only local tabs are currently supported (See Bug 1304378 for additional details
+    // related to remote targets support).
+    return;
+  }
 
-    for (let devtoolsPage of devtoolsPageDefinitionMap.values()) {
-      devtoolsPage.buildForToolbox(toolbox);
-    }
-  });
-
-  // Destroy a devtools page context for a destroyed toolbox,
-  // based on the registered devtools_page definitions.
-  gDevTools.on("toolbox-destroy", (evt, target) => {
-    if (!target.isLocalTab) {
-      // Only local tabs are currently supported (See Bug 1304378 for additional details
-      // related to remote targets support).
-      return;
-    }
-
-    for (let devtoolsPageDefinition of devtoolsPageDefinitionMap.values()) {
-      devtoolsPageDefinition.shutdownForTarget(target);
-    }
-  });
-
-  devToolsInitialized = true;
-};
+  for (let devtoolsPageDefinition of devtoolsPageDefinitionMap.values()) {
+    devtoolsPageDefinition.shutdownForTarget(target);
+  }
+});
 
 // Create and register a new devtools_page definition as specified in the
 // "devtools_page" property in the extension manifest.
