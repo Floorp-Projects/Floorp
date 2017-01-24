@@ -47,16 +47,16 @@ add_task(function* () {
     });
 
   // Wait for all tree sections updated by react
-  wait = waitForDOM(document, "#panel-2 .tree-section", 2);
+  wait = waitForDOM(document, "#params-panel .tree-section", 2);
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.getElementById("details-pane-toggle"));
-  document.querySelector("#tab-2 a").click();
+  document.querySelector("#params-tab").click();
   yield wait;
   yield testParamsTab("urlencoded");
 
   // Wait for all tree sections and editor updated by react
-  let waitForSections = waitForDOM(document, "#panel-2 .tree-section", 2);
-  let waitForEditor = waitForDOM(document, "#panel-2 .editor-mount iframe");
+  let waitForSections = waitForDOM(document, "#params-panel .tree-section", 2);
+  let waitForEditor = waitForDOM(document, "#params-panel .editor-mount iframe");
   RequestsMenu.selectedIndex = 1;
   let [, editorFrames] = yield Promise.all([waitForSections, waitForEditor]);
   yield once(editorFrames[0], "DOMContentLoaded");
@@ -66,7 +66,7 @@ add_task(function* () {
   return teardown(monitor);
 
   function* testParamsTab(type) {
-    let tabpanel = document.querySelector("#panel-2");
+    let tabpanel = document.querySelector("#params-panel");
 
     function checkVisibility(box) {
       is(!tabpanel.querySelector(".treeTable"), !box.includes("params"),

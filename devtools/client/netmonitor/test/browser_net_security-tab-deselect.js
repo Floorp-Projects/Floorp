@@ -36,13 +36,13 @@ add_task(function* () {
 
   info("Selecting security tab.");
   EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelector("#tab-5 a"));
+    document.querySelector("#security-tab"));
 
   info("Selecting insecure request.");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[1]);
 
-  ok(document.querySelector("#tab-0.is-active"),
+  ok(document.querySelector("#headers-tab[aria-selected=true]"),
     "Selected tab was reset when selected security tab was hidden.");
 
   return teardown(monitor);
