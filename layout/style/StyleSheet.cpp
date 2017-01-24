@@ -372,6 +372,33 @@ StyleSheet::GetFirstChild() const
 }
 
 void
+StyleSheet::SetAssociatedDocument(nsIDocument* aDocument,
+                                  DocumentAssociationMode aAssociationMode)
+{
+  MOZ_ASSERT_IF(!aDocument, aAssociationMode == NotOwnedByDocument);
+
+  // not ref counted
+  mDocument = aDocument;
+  mDocumentAssociationMode = aAssociationMode;
+
+  // Now set the same document on all our child sheets....
+  // XXXbz this is a little bogus; see the XXX comment where we
+  // declare mFirstChild.
+  for (StyleSheet* child = GetFirstChild();
+       child; child = child->mNext) {
+    if (child->mParent == this) {
+      child->SetAssociatedDocument(aDocument, aAssociationMode);
+    }
+  }
+}
+
+void
+StyleSheet::ClearAssociatedDocument()
+{
+  SetAssociatedDocument(nullptr, NotOwnedByDocument);
+}
+
+void
 StyleSheet::SetMedia(nsMediaList* aMedia)
 {
   mMedia = aMedia;
