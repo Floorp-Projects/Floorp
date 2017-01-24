@@ -5755,6 +5755,7 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 
     if (!gHttpHandler->Active()) {
         LOG(("  after HTTP shutdown..."));
+        ReleaseListeners();
         return NS_ERROR_NOT_AVAILABLE;
     }
 
@@ -5833,7 +5834,10 @@ nsHttpChannel::AsyncOpen2(nsIStreamListener *aListener)
 {
   nsCOMPtr<nsIStreamListener> listener = aListener;
   nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+      ReleaseListeners();
+      return rv;
+  }
   return AsyncOpen(listener, nullptr);
 }
 
