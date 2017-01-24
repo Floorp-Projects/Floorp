@@ -49,6 +49,14 @@ function compareCommands(actual, expected, description) {
   equal(allIDs.size, actual.length, "all items have unique IDs");
 }
 
+function cleanup() {
+  Svc.Prefs.resetBranch("");
+  engine._tracker.clearChangedIDs();
+  engine._resetClient();
+  // We don't finalize storage at cleanup, since we use the same clients engine
+  // instance across all tests.
+}
+
 add_task(async function test_bad_hmac() {
   _("Ensure that Clients engine deletes corrupt records.");
   let contents = {
@@ -182,13 +190,12 @@ add_task(async function test_bad_hmac() {
     ok(!oldKey.equals(newKey));
 
   } finally {
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
+    cleanup();
     await promiseStopServer(server);
   }
 });
 
-add_test(function test_properties() {
+add_task(async function test_properties() {
   _("Test lastRecordUpload property");
   try {
     equal(Svc.Prefs.get("clients.lastRecordUpload"), undefined);
@@ -198,9 +205,7 @@ add_test(function test_properties() {
     engine.lastRecordUpload = now / 1000;
     equal(engine.lastRecordUpload, Math.floor(now / 1000));
   } finally {
-    Svc.Prefs.resetBranch("");
-    engine._tracker.clearChangedIDs();
-    run_next_test();
+    cleanup();
   }
 });
 
@@ -266,8 +271,7 @@ add_task(async function test_full_sync() {
               [activeID, engine.localID].sort(),
               "Deleted client should be removed on next sync");
   } finally {
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
+    cleanup();
 
     try {
       server.deleteCollections("foo");
@@ -325,13 +329,12 @@ add_task(async function test_sync() {
     equal(engine.lastRecordUpload, yesterday);
 
   } finally {
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
+    cleanup();
     await promiseStopServer(server);
   }
 });
 
-add_test(function test_client_name_change() {
+add_task(async function test_client_name_change() {
   _("Ensure client name change incurs a client record update.");
 
   let tracker = engine._tracker;
@@ -360,11 +363,10 @@ add_test(function test_client_name_change() {
 
   Svc.Obs.notify("weave:engine:stop-tracking");
 
-  engine._tracker.clearChangedIDs();
-  run_next_test();
+  cleanup();
 });
 
-add_test(function test_send_command() {
+add_task(async function test_send_command() {
   _("Verifies _sendCommandToClient puts commands in the outbound queue.");
 
   let store = engine._store;
@@ -393,11 +395,10 @@ add_test(function test_send_command() {
 
   notEqual(tracker.changedIDs[remoteId], undefined);
 
-  engine._tracker.clearChangedIDs();
-  run_next_test();
+  cleanup();
 });
 
-add_test(function test_command_validation() {
+add_task(async function test_command_validation() {
   _("Verifies that command validation works properly.");
 
   let store = engine._store;
@@ -450,11 +451,10 @@ add_test(function test_command_validation() {
     }
 
   }
-  engine._tracker.clearChangedIDs();
-  run_next_test();
+  cleanup();
 });
 
-add_test(function test_command_duplication() {
+add_task(async function test_command_duplication() {
   _("Ensures duplicate commands are detected and not added");
 
   let store = engine._store;
@@ -485,11 +485,10 @@ add_test(function test_command_duplication() {
   clientCommands = engine._readCommands()[remoteId];
   equal(clientCommands.length, 2);
 
-  engine._tracker.clearChangedIDs();
-  run_next_test();
+  cleanup();
 });
 
-add_test(function test_command_invalid_client() {
+add_task(async function test_command_invalid_client() {
   _("Ensures invalid client IDs are caught");
 
   let id = Utils.makeGUID();
@@ -503,32 +502,32 @@ add_test(function test_command_invalid_client() {
 
   equal(error.message.indexOf("Unknown remote client ID: "), 0);
 
-  engine._tracker.clearChangedIDs();
-  run_next_test();
+  cleanup();
 });
 
-add_test(function test_process_incoming_commands() {
+add_task(async function test_process_incoming_commands() {
   _("Ensures local commands are executed");
 
   engine.localCommands = [{ command: "logout", args: [] }];
 
   let ev = "weave:service:logout:finish";
 
-  var handler = function() {
-    Svc.Obs.remove(ev, handler);
+  let logoutPromise = new Promise(resolve => {
+    var handler = function() {
+      Svc.Obs.remove(ev, handler);
 
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
-    engine._resetClient();
+      resolve();
+    };
 
-    engine._tracker.clearChangedIDs();
-    run_next_test();
-  };
-
-  Svc.Obs.add(ev, handler);
+    Svc.Obs.add(ev, handler);
+  });
 
   // logout command causes processIncomingCommands to return explicit false.
   ok(!engine.processIncomingCommands());
+
+  await logoutPromise;
+
+  cleanup();
 });
 
 add_task(async function test_filter_duplicate_names() {
@@ -676,8 +675,7 @@ add_task(async function test_filter_duplicate_names() {
     equal(engine.remoteClients.length, 3, "recently synced dupe should now be in remoteClients");
 
   } finally {
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
+    cleanup();
 
     try {
       server.deleteCollections("foo");
@@ -753,8 +751,7 @@ add_task(async function test_command_sync() {
     equal(command.args.length, 0);
 
   } finally {
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
+    cleanup();
 
     try {
       let collection = server.getCollection("foo", "clients");
@@ -765,7 +762,7 @@ add_task(async function test_command_sync() {
   }
 });
 
-add_test(function test_send_uri_to_client_for_display() {
+add_task(async function test_send_uri_to_client_for_display() {
   _("Ensure sendURIToClientForDisplay() sends command properly.");
 
   let tracker = engine._tracker;
@@ -812,15 +809,10 @@ add_test(function test_send_uri_to_client_for_display() {
 
   equal(error.message.indexOf("Unknown remote client ID: "), 0);
 
-  Svc.Prefs.resetBranch("");
-  Service.recordManager.clearCache();
-  engine._resetClient();
-
-  engine._tracker.clearChangedIDs();
-  run_next_test();
+  cleanup();
 });
 
-add_test(function test_receive_display_uri() {
+add_task(async function test_receive_display_uri() {
   _("Ensure processing of received 'displayURI' commands works.");
 
   // We don't set up WBOs and perform syncing because other tests verify
@@ -841,28 +833,29 @@ add_test(function test_receive_display_uri() {
   // being called.
   let ev = "weave:engine:clients:display-uris";
 
-  let handler = function(subject, data) {
-    Svc.Obs.remove(ev, handler);
+  let promiseDisplayURI = new Promise(resolve => {
+    let handler = function(subject, data) {
+      Svc.Obs.remove(ev, handler);
 
-    equal(subject[0].uri, uri);
-    equal(subject[0].clientId, remoteId);
-    equal(subject[0].title, title);
-    equal(data, null);
+      resolve({ subject, data });
+    };
 
-    engine._tracker.clearChangedIDs();
-    run_next_test();
-  };
-
-  Svc.Obs.add(ev, handler);
+    Svc.Obs.add(ev, handler);
+  });
 
   ok(engine.processIncomingCommands());
 
-  Svc.Prefs.resetBranch("");
-  Service.recordManager.clearCache();
-  engine._resetClient();
+  let { subject, data } = await promiseDisplayURI;
+
+  equal(subject[0].uri, uri);
+  equal(subject[0].clientId, remoteId);
+  equal(subject[0].title, title);
+  equal(data, null);
+
+  cleanup();
 });
 
-add_test(function test_optional_client_fields() {
+add_task(async function test_optional_client_fields() {
   _("Ensure that we produce records with the fields added in Bug 1097222.");
 
   const SUPPORTED_PROTOCOL_VERSIONS = ["1.1", "1.5"];
@@ -885,9 +878,7 @@ add_test(function test_optional_client_fields() {
   // We don't currently populate device or formfactor.
   // See Bug 1100722, Bug 1100723.
 
-  engine._resetClient();
-  engine._tracker.clearChangedIDs();
-  run_next_test();
+  cleanup();
 });
 
 add_task(async function test_merge_commands() {
@@ -956,9 +947,7 @@ add_task(async function test_merge_commands() {
     compareCommands(mobilePayload.commands, [{ command: "logout", args: [] }],
                     "Should not send a duplicate logout to the mobile client");
   } finally {
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
-    engine._resetClient();
+    cleanup();
 
     try {
       server.deleteCollections("foo");
@@ -1023,9 +1012,7 @@ add_task(async function test_duplicate_remote_commands() {
       args: ["https://foobar.com", engine.localID, "Foo bar!"],
     }], "Should only send the second command to the desktop client");
   } finally {
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
-    engine._resetClient();
+    cleanup();
 
     try {
       server.deleteCollections("foo");
@@ -1113,9 +1100,7 @@ add_task(async function test_upload_after_reboot() {
       args: ["https://example.com", engine.localID, "Yak Herders Anonymous"],
     }], "Should only had written our outgoing command");
   } finally {
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
-    engine._resetClient();
+    cleanup();
 
     try {
       server.deleteCollections("foo");
@@ -1235,8 +1220,7 @@ add_task(async function test_keep_cleared_commands_after_reboot() {
     localRemoteRecord = JSON.parse(JSON.parse(collection.payload(deviceBID)).ciphertext);
     deepEqual(localRemoteRecord.commands, [], "Should be empty");
   } finally {
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
+    cleanup();
 
     // Reset service (remove mocks)
     engine = Service.clientsEngine = new ClientEngine(Service);
@@ -1304,9 +1288,7 @@ add_task(async function test_deleted_commands() {
     compareCommands(activePayload.commands, [{ command: "logout", args: [] }],
       "Should send the command to the active client");
   } finally {
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
-    engine._resetClient();
+    cleanup();
 
     try {
       server.deleteCollections("foo");
@@ -1367,9 +1349,7 @@ add_task(async function test_send_uri_ack() {
     ok(ourPayload, "Should upload the synced client record");
     deepEqual(ourPayload.commands, [], "Should not reupload cleared commands");
   } finally {
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
-    engine._resetClient();
+    cleanup();
 
     try {
       server.deleteCollections("foo");
@@ -1435,8 +1415,7 @@ add_task(async function test_command_sync() {
       "We never notify the local device");
 
   } finally {
-    Svc.Prefs.resetBranch("");
-    Service.recordManager.clearCache();
+    cleanup();
     engine._tracker.clearChangedIDs();
 
     try {
