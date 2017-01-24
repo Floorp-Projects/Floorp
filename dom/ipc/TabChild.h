@@ -620,6 +620,7 @@ public:
     return mParentIsActive;
   }
 
+  const mozilla::layers::CompositorOptions& GetCompositorOptions() const;
   bool AsyncPanZoomEnabled() const;
 
   virtual ScreenIntSize GetInnerSize() override;
