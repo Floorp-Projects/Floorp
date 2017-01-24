@@ -346,7 +346,7 @@ add_task(function*() {
 
 // Dragging the edit-controls to the panel itself should append
 // the edit controls to the bottom of the panel.
-add_task(function*() {
+add_task(function* editControlsToPanelEmptySpace() {
   yield startCustomizing();
   let editControls = document.getElementById("edit-controls");
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
@@ -417,7 +417,7 @@ add_task(function*() {
 
 // Dragging the edit-controls to each of the panel placeholders
 // should append the edit-controls to the bottom of the panel.
-add_task(function*() {
+add_task(function* editControlsToPanelPlaceholders() {
   yield startCustomizing();
   let editControls = document.getElementById("edit-controls");
   let panel = document.getElementById(CustomizableUI.AREA_PANEL);
