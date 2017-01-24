@@ -460,6 +460,32 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      */
     bool ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentType);
 
+    /**
+     * This method tells if the fallback content should be attempted to be used
+     * over the original object content.
+     * It will look at prefs and this plugin's CTP state to make a decision.
+     *
+     * NOTE that this doesn't say whether the fallback _will_ be used, only whether
+     * we should look into it to possibly use it. The final answer will be
+     * given by the PreferFallback method.
+     *
+     * @param aIsPluginClickToPlay Whether this object instance is CTP.
+     */
+    bool FavorFallbackMode(bool aIsPluginClickToPlay);
+
+    /**
+     * Whether the page has provided good fallback content to this object.
+     */
+    bool HasGoodFallback();
+
+    /**
+     * This method tells the final answer on whether this object's fallback
+     * content should be used instead of the original plugin content.
+     *
+     * @param aIsPluginClickToPlay Whether this object instance is CTP.
+     */
+    bool PreferFallback(bool aIsPluginClickToPlay);
+
     /*
      * Helper to check if mBaseURI can be used by java as a codebase
      */
@@ -678,6 +704,11 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     // comments for details), we change these to try to load HTML5 versions of
     // videos.
     bool                        mRewrittenYoutubeEmbed : 1;
+
+    // Cache the answer of PreferFallback() because ShouldPlay is called several
+    // times during the load process.
+    bool                        mPreferFallback : 1;
+    bool                        mPreferFallbackKnown : 1;
 
     nsWeakFrame                 mPrintFrame;
 
