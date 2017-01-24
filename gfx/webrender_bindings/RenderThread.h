@@ -23,7 +23,7 @@ namespace wr {
 class RendererOGL;
 class RenderThread;
 
-/// Base class for an event that can bes cheduled to run on the render thread.
+/// Base class for an event that can be scheduled to run on the render thread.
 ///
 /// The event can be passed through the same channels as regular WebRender messages
 /// to preserve ordering.
@@ -40,14 +40,14 @@ public:
 /// The render thread owns the different RendererOGLs (one per window) and implements
 /// the RenderNotifier api exposed by the WebRender bindings.
 ///
-/// We should generally avoid posting tasks to the render thhread's event loop directly
+/// We should generally avoid posting tasks to the render thread's event loop directly
 /// and instead use the RendererEvent mechanism which avoids races between the events
 /// and WebRender's own messages.
 ///
 /// The GL context(s) should be created and used on this thread only.
 /// XXX - I've tried to organize code so that we can potentially avoid making
-/// this a singleton since this bad habbit has a tendency to bite us later, but
-/// I haven't gotten all the way there either in order to focus on the more
+/// this a singleton since this bad habit has a tendency to bite us later, but
+/// I haven't gotten all the way there either, in order to focus on the more
 /// important pieces first. So we are a bit in-between (this is totally a singleton
 /// but in some places we pretend it's not). Hopefully we can evolve this in a way
 /// that keeps the door open to removing the singleton bits.
@@ -59,12 +59,14 @@ public:
   /// Can be called from any thread.
   static RenderThread* Get();
 
+  /// Can only be called from the main thread.
   static void Start();
 
+  /// Can only be called from the main thread.
   static void ShutDown();
 
   /// Can be called from any thread.
-  /// In most cases it is best to use RendererEvents through WebRender's api instead
+  /// In most cases it is best to post RendererEvents through WebRenderAPI instead
   /// of scheduling directly to this message loop (so as to preserve the ordering
   /// of the messages).
   static MessageLoop* Loop();
@@ -108,7 +110,7 @@ private:
   std::map<wr::WindowId, UniquePtr<RendererOGL>> mRenderers;
 };
 
-} // namespace
-} // namespace
+} // namespace wr
+} // namespace mozilla
 
 #endif

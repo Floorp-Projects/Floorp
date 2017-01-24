@@ -21,12 +21,12 @@ RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
                          wr::WindowId aWindowId,
                          WrRenderer* aWrRenderer,
                          layers::CompositorBridgeParentBase* aBridge)
-: mThread(aThread)
-, mGL(aGL)
-, mWidget(aWidget)
-, mWrRenderer(aWrRenderer)
-, mBridge(aBridge)
-, mWindowId(aWindowId)
+  : mThread(aThread)
+  , mGL(aGL)
+  , mWidget(aWidget)
+  , mWrRenderer(aWrRenderer)
+  , mBridge(aBridge)
+  , mWindowId(aWindowId)
 {
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(mGL);
@@ -105,5 +105,5 @@ RendererOGL::SetProfilerEnabled(bool aEnabled)
   wr_renderer_set_profiler_enabled(mWrRenderer, aEnabled);
 }
 
-}
-}
+} // namespace wr
+} // namespace mozilla

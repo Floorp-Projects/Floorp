@@ -40,12 +40,12 @@ public:
               RefPtr<widget::CompositorWidget>&& aWidget,
               layers::SynchronousTask* aTask,
               bool aEnableProfiler)
-  : mWrApi(aApi)
-  , mMaxTextureSize(aMaxTextureSize)
-  , mBridge(aBridge)
-  , mCompositorWidget(Move(aWidget))
-  , mTask(aTask)
-  , mEnableProfiler(aEnableProfiler)
+    : mWrApi(aApi)
+    , mMaxTextureSize(aMaxTextureSize)
+    , mBridge(aBridge)
+    , mCompositorWidget(Move(aWidget))
+    , mTask(aTask)
+    , mEnableProfiler(aEnableProfiler)
   {
     MOZ_COUNT_CTOR(NewRenderer);
   }
@@ -95,7 +95,7 @@ class RemoveRenderer : public RendererEvent
 {
 public:
   explicit RemoveRenderer(layers::SynchronousTask* aTask)
-  : mTask(aTask)
+    : mTask(aTask)
   {
     MOZ_COUNT_CTOR(RemoveRenderer);
   }
@@ -232,8 +232,16 @@ WebRenderAPI::DeleteFont(wr::FontKey aKey)
 class EnableProfiler : public RendererEvent
 {
 public:
-  explicit EnableProfiler(bool aEnabled) : mEnabled(aEnabled) { MOZ_COUNT_CTOR(EnableProfiler); }
-  ~EnableProfiler()  { MOZ_COUNT_DTOR(EnableProfiler); }
+  explicit EnableProfiler(bool aEnabled)
+    : mEnabled(aEnabled)
+  {
+    MOZ_COUNT_CTOR(EnableProfiler);
+  }
+
+  ~EnableProfiler()
+  {
+    MOZ_COUNT_DTOR(EnableProfiler);
+  }
 
   virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override
   {
@@ -361,5 +369,5 @@ DisplayListBuilder::PushText(const WrRect& aBounds,
                   aGlyphSize);
 }
 
-} // namespace
-} // namespace
+} // namespace wr
+} // namespace mozilla

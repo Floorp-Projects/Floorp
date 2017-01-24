@@ -10,10 +10,10 @@
 #include "AsyncPanZoomController.h"     // for AsyncPanZoomController
 #include "base/task.h"                  // for CancelableTask, etc
 #include "gfxPrefs.h"                   // for gfxPrefs
+#include "InputBlockState.h"            // for TouchBlockState
 #include "mozilla/SizePrintfMacros.h"   // for PRIuSIZE
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsMathUtils.h"                // for NS_hypot
-#include "InputBlockState.h"
 
 #define GEL_LOG(...)
 // #define GEL_LOG(...) printf_stderr("GEL: " __VA_ARGS__)
