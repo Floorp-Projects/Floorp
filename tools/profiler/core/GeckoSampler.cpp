@@ -1142,7 +1142,7 @@ void doSampleStackTrace(ThreadProfile &aProfile, TickSample *aSample, bool aAddL
   NativeStack nativeStack = { nullptr, nullptr, 0, 0 };
   mergeStacksIntoProfile(aProfile, aSample, nativeStack);
 
-#ifdef ENABLE_SPS_LEAF_DATA
+#ifdef ENABLE_LEAF_DATA
   if (aSample && aAddLeafAddresses) {
     aProfile.addTag(ProfileEntry('l', (void*)aSample->pc));
 #ifdef ENABLE_ARM_LR_SAVING

@@ -3,25 +3,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* *************** SPS Sampler Information ****************
+/* *************** Gecko Profiler Information ****************
  *
- * SPS is an always on profiler that takes fast and low overheads samples
- * of the program execution using only userspace functionity for portability.
- * The goal of this module is to provide performance data in a generic
- * cross platform way without requiring custom tools or kernel support.
+ * The Gecko Profiler is an always-on profiler that takes fast and low
+ * overheads samples of the program execution using only userspace
+ * functionality for portability. The goal of this module is to provide
+ * performance data in a generic cross platform way without requiring custom
+ * tools or kernel support.
  *
- * Non goals: Support features that are platform specific or replace
- *            platform specific profilers.
+ * Non goals: Support features that are platform specific or replace platform
+ *            specific profilers.
  *
- * Samples are collected to form a timeline with optional timeline event (markers)
- * used for filtering.
+ * Samples are collected to form a timeline with optional timeline event
+ * (markers) used for filtering.
  *
- * SPS collects samples in a platform independant way by using a speudo stack abstraction
- * of the real program stack by using 'sample stack frames'. When a sample is collected
- * all active sample stack frames and the program counter are recorded.
+ * The profiler collects samples in a platform independant way by using a
+ * speudo stack abstraction of the real program stack by using 'sample stack
+ * frames'. When a sample is collected all active sample stack frames and the
+ * program counter are recorded.
  */
 
-/* *************** SPS Sampler File Format ****************
+/* *************** Gecko Profiler File Format ****************
  *
  * Simple new line seperated tag format:
  * S      -> BOF tags EOF
