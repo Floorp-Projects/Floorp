@@ -5,7 +5,8 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::Mutex;
 use std::thread;
 
-use hyper::header::ContentType;
+use hyper::header::{ContentType, CacheControl, CacheDirective};
+use hyper::mime::{Mime, TopLevel, SubLevel, Attr, Value};
 use hyper::method::Method;
 use hyper::Result;
 use hyper::server::{Handler, Listening, Request, Response, Server};
@@ -223,7 +224,10 @@ impl <U: WebDriverExtensionRoute> Handler for HttpHandler<U> {
                     let resp_status = res.status_mut();
                     *resp_status = status;
                 }
-                res.headers_mut().set(ContentType::json());
+                res.headers_mut().set(
+                    ContentType(Mime(TopLevel::Application, SubLevel::Json,
+                                     vec![(Attr::Charset, Value::Utf8)])));
+                res.headers_mut().set(CacheControl(vec![CacheDirective::NoCache]));
                 res.send(&resp_body.as_bytes()).unwrap();
             },
             _ => {}
