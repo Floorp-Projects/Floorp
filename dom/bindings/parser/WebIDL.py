@@ -1330,7 +1330,7 @@ class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
                 if not indexedGetter:
                     raise WebIDLError("Interface with value iterator does not "
                                       "support indexed properties",
-                                      [self.location])
+                                      [self.location, iterableDecl.location])
 
                 if iterableDecl.valueType != indexedGetter.signatures()[0][0]:
                     raise WebIDLError("Iterable type does not match indexed "
@@ -1341,7 +1341,7 @@ class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
                 if not hasLengthAttribute:
                     raise WebIDLError('Interface with value iterator does not '
                                       'have an integer-typed "length" attribute',
-                                      [self.location])
+                                      [self.location, iterableDecl.location])
             else:
                 assert iterableDecl.isPairIterator()
                 if indexedGetter:
@@ -1349,6 +1349,11 @@ class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
                                       "indexed properties",
                                       [self.location, iterableDecl.location,
                                        indexedGetter.location])
+
+        if indexedGetter and not hasLengthAttribute:
+            raise WebIDLError('Interface with an indexed getter does not have '
+                              'an integer-typed "length" attribute',
+                              [self.location, indexedGetter.location])
 
     def isExternal(self):
         return False
