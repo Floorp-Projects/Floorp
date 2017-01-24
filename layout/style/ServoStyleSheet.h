@@ -42,7 +42,6 @@ public:
   void SetAssociatedDocument(nsIDocument* aDocument,
                              DocumentAssociationMode aAssociationMode);
 
-  ServoStyleSheet* GetParentSheet() const;
   void AppendStyleSheet(ServoStyleSheet* aSheet);
 
   MOZ_MUST_USE nsresult ParseSheet(css::Loader* aLoader,
