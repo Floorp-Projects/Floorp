@@ -2685,8 +2685,6 @@ IsMarkedInternalCommon(T* thingp)
     CheckIsMarkedThing(thingp);
     MOZ_ASSERT(!IsInsideNursery(*thingp));
 
-    if (ThingIsPermanentAtomOrWellKnownSymbol(*thingp))
-        return true;
     Zone* zone = (*thingp)->asTenured().zoneFromAnyThread();
     if (!zone->isCollectingFromAnyThread() || zone->isGCFinished())
         return true;
