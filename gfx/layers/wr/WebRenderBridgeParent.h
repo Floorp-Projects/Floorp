@@ -11,10 +11,10 @@
 #include "mozilla/layers/CompositableTransactionParent.h"
 #include "mozilla/layers/CompositorVsyncSchedulerOwner.h"
 #include "mozilla/layers/PWebRenderBridgeParent.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/webrender/WebRenderAPI.h"
 #include "nsTArrayForwardDeclare.h"
-#include "mozilla/Maybe.h"
 
 namespace mozilla {
 

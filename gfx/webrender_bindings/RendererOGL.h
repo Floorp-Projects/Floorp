@@ -21,12 +21,12 @@ namespace gl {
 class GLContext;
 }
 
-namespace widget {
-class CompositorWidget;
-}
-
 namespace layers {
 class CompositorBridgeParentBase;
+}
+
+namespace widget {
+class CompositorWidget;
 }
 
 namespace wr {
@@ -39,28 +39,29 @@ namespace wr {
 class RendererOGL
 {
 public:
-  /// Render thread only.
+  /// This can be called on the render thread only.
   void Update();
 
-  /// Render thread only.
+  /// This can be called on the render thread only.
   bool Render(uint64_t aTransactionId);
 
-  /// Render thread only.
+  /// This can be called on the render thread only.
   bool RenderToTarget(gfx::DrawTarget& aTarget);
 
-  /// Render thread only.
+  /// This can be called on the render thread only.
   void SetProfilerEnabled(bool aEnabled);
 
-  /// Render thread only.
+  /// This can be called on the render thread only.
   ~RendererOGL();
 
-  /// Render thread only.
+  /// This can be called on the render thread only.
   RendererOGL(RefPtr<RenderThread>&& aThread,
               RefPtr<gl::GLContext>&& aGL,
               RefPtr<widget::CompositorWidget>&&,
               wr::WindowId aWindowId,
               WrRenderer* aWrRenderer,
               layers::CompositorBridgeParentBase* aBridge);
+
 protected:
 
   RefPtr<RenderThread> mThread;
@@ -71,8 +72,7 @@ protected:
   wr::WindowId mWindowId;
 };
 
-}
-}
-
+} // namespace wr
+} // namespace mozilla
 
 #endif
