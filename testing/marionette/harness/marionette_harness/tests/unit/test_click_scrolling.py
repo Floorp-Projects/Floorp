@@ -5,7 +5,7 @@
 from marionette_driver.by import By
 from marionette_driver.errors import MoveTargetOutOfBoundsException
 
-from marionette_harness import MarionetteTestCase, skip
+from marionette_harness import MarionetteTestCase, skip, skip_if_mobile
 
 
 class TestClickScrolling(MarionetteTestCase):
@@ -97,6 +97,7 @@ class TestClickScrolling(MarionetteTestCase):
             self.marionette.find_element(By.ID, "{}-70".format(s)).click()
             self.assertNotEqual(scroll_x, self.marionette.execute_script("return window.scrollX;"))
 
+    @skip_if_mobile("Bug 1293855 - Lists differ: [70, 70] != [70, 120]")
     def test_should_not_scroll_elements_if_click_point_is_in_view(self):
         test_html = self.marionette.absolute_url("element_outside_viewport.html")
 

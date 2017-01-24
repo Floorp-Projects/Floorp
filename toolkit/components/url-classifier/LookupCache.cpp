@@ -421,10 +421,10 @@ LookupCacheV2::ClearAll()
 
 nsresult
 LookupCacheV2::Has(const Completion& aCompletion,
-                   bool* aHas, bool* aComplete,
-                   uint32_t* aMatchLength)
+                   bool* aHas, uint32_t* aMatchLength,
+                   bool* aFromCache)
 {
-  *aHas = *aComplete = false;
+  *aHas = *aFromCache = false;
   *aMatchLength = 0;
 
   uint32_t prefix = aCompletion.ToUint32();
@@ -443,12 +443,31 @@ LookupCacheV2::Has(const Completion& aCompletion,
   if ((mGetHashCache.BinaryIndexOf(aCompletion) != nsTArray<Completion>::NoIndex) ||
       (mUpdateCompletions.BinaryIndexOf(aCompletion) != nsTArray<Completion>::NoIndex)) {
     LOG(("Complete in %s", mTableName.get()));
-    *aComplete = true;
+    *aFromCache = true;
     *aHas = true;
     *aMatchLength = COMPLETE_SIZE;
   }
 
   return NS_OK;
+}
+
+void
+LookupCacheV2::IsHashEntryConfirmed(const Completion& aEntry,
+                                    const TableFreshnessMap& aTableFreshness,
+                                    uint32_t aFreshnessGuarantee,
+                                    bool* aConfirmed)
+{
+  int64_t age; // in seconds
+  bool found = aTableFreshness.Get(mTableName, &age);
+  if (!found) {
+    *aConfirmed = false;
+  } else {
+    int64_t now = (PR_Now() / PR_USEC_PER_SEC);
+    MOZ_ASSERT(age <= now);
+
+    // Considered completion as unsafe if its table is up-to-date.
+    *aConfirmed = (now - age) < aFreshnessGuarantee;
+  }
 }
 
 nsresult

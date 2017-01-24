@@ -80,10 +80,10 @@ LookupCacheV4::Init()
 
 nsresult
 LookupCacheV4::Has(const Completion& aCompletion,
-                   bool* aHas, bool* aComplete,
-                   uint32_t* aMatchLength)
+                   bool* aHas, uint32_t* aMatchLength,
+                   bool* aFromCache)
 {
-  *aHas = *aComplete = false;
+  *aHas = *aFromCache = false;
   *aMatchLength = 0;
 
   uint32_t length = 0;
@@ -94,16 +94,27 @@ LookupCacheV4::Has(const Completion& aCompletion,
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aHas = length >= PREFIX_SIZE;
-  *aComplete = length == COMPLETE_SIZE;
   *aMatchLength = length;
 
   if (LOG_ENABLED()) {
     uint32_t prefix = aCompletion.ToUint32();
     LOG(("Probe in V4 %s: %X, found %d, complete %d", mTableName.get(),
-          prefix, *aHas, *aComplete));
+          prefix, *aHas, length == COMPLETE_SIZE));
   }
 
+  // TODO : Bug 1311935 - Implement v4 caching
+
   return NS_OK;
+}
+
+void
+LookupCacheV4::IsHashEntryConfirmed(const Completion& aEntry,
+                                    const TableFreshnessMap& aTableFreshness,
+                                    uint32_t aFreshnessGuarantee,
+                                    bool* aConfirmed)
+{
+  // TODO : Bug 1311935 - Implement v4 caching
+  *aConfirmed = true;
 }
 
 nsresult
