@@ -1517,6 +1517,16 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         </xul:description>
       </xul:hbox>
     </content>
+
+    <handlers>
+      <handler event="click" button="0"><![CDATA[
+        let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
+        window.openUILinkIn(baseURL + "insecure-password", "tab", {
+          relatedToCurrent: true,
+        });
+      ]]></handler>
+    </handlers>
+
     <implementation>
       <constructor><![CDATA[
         // Unlike other autocomplete items, the height of the insecure warning
