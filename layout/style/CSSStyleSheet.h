@@ -114,8 +114,6 @@ public:
   void List(FILE* out = stdout, int32_t aIndent = 0) const;
 #endif
 
-  void AppendStyleSheet(CSSStyleSheet* aSheet);
-
   // XXX do these belong here or are they generic?
   void AppendStyleRule(css::Rule* aRule);
 
