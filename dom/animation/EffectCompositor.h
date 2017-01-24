@@ -60,12 +60,12 @@ public:
   }
 
   // Animations can be applied at two different levels in the CSS cascade:
-  enum class CascadeLevel {
+  enum class CascadeLevel : uint32_t {
     // The animations sheet (CSS animations, script-generated animations,
     // and CSS transitions that are no longer tied to CSS markup)
-    Animations,
+    Animations = 0,
     // The transitions sheet (CSS transitions that are tied to CSS markup)
-    Transitions
+    Transitions = 1
   };
   // We don't define this as part of CascadeLevel as then we'd have to add
   // explicit checks for the Count enum value everywhere CascadeLevel is used.
