@@ -11,6 +11,7 @@
 #include "nsAttrValueInlines.h"
 #include "nsCSSProps.h"
 #include "nsCSSParser.h"
+#include "nsCSSPseudoElements.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsContentUtils.h"
 #include "nsDOMTokenList.h"
@@ -29,7 +30,9 @@
 #include "nsStyleUtil.h"
 #include "nsTArray.h"
 
+#include "mozilla/EffectCompositor.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/ServoAnimationRule.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/StyleAnimationValue.h"
@@ -322,6 +325,46 @@ Gecko_GetServoDeclarationBlock(RawGeckoElementBorrowed aElement)
   }
   return reinterpret_cast<const RawServoDeclarationBlockStrong*>
     (decl->AsServo()->RefRaw());
+}
+
+RawServoDeclarationBlockStrong
+Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
+                       nsIAtom* aPseudoTag)
+{
+  MOZ_ASSERT(aElement, "Invalid GeckoElement");
+
+  const RawServoDeclarationBlockStrong emptyDeclarationBlock{ nullptr };
+  nsIDocument* doc = aElement->GetComposedDoc();
+  if (!doc || !doc->GetShell()) {
+    return emptyDeclarationBlock;
+  }
+  nsPresContext* presContext = doc->GetShell()->GetPresContext();
+  if (!presContext) {
+    return emptyDeclarationBlock;
+  }
+
+  // FIXME: support different cascading levels in the later patch
+  CSSPseudoElementType pseudoType =
+    aPseudoTag
+    ? nsCSSPseudoElements::GetPseudoType(
+        aPseudoTag,
+        nsCSSProps::EnabledState::eIgnoreEnabledState)
+    : CSSPseudoElementType::NotPseudo;
+  if (pseudoType != CSSPseudoElementType::NotPseudo &&
+      pseudoType != CSSPseudoElementType::before &&
+      pseudoType != CSSPseudoElementType::after) {
+    return emptyDeclarationBlock;
+  }
+
+  ServoAnimationRule* rule =
+    presContext->EffectCompositor()->GetServoAnimationRule(
+      aElement,
+      pseudoType,
+      EffectCompositor::CascadeLevel::Animations);
+  if (!rule) {
+    return emptyDeclarationBlock;
+  }
+  return rule->GetValues();
 }
 
 void
