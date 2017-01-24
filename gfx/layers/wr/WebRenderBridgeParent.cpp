@@ -801,17 +801,7 @@ WebRenderBridgeParent::SetWebRenderProfilerEnabled(bool aEnabled)
     if (MOZ_USE_RENDER_THREAD) {
       mApi->SetProfilerEnabled(aEnabled);
     } else {
-      if (CompositorThreadHolder::IsInCompositorThread()) {
-        wr_profiler_set_enabled(mWRWindowState, aEnabled);
-      } else {
-        bool enabled = aEnabled;
-        WrWindowState* state = mWRWindowState;
-        RefPtr<Runnable> runnable =
-          NS_NewRunnableFunction([state, enabled]() {
-          wr_profiler_set_enabled(state, enabled);
-        });
-        CompositorThreadHolder::Loop()->PostTask(runnable.forget());
-      }
+      wr_profiler_set_enabled(mWRWindowState, aEnabled);
     }
   }
 }
