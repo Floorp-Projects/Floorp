@@ -2872,7 +2872,7 @@ WorkerThreadPrimaryRunnable::Run()
     }
 
     {
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#ifdef MOZ_GECKO_PROFILER
       PseudoStack* stack = profiler_get_pseudo_stack();
       if (stack) {
         stack->sampleContext(cx);
@@ -2891,7 +2891,7 @@ WorkerThreadPrimaryRunnable::Run()
 
       BackgroundChild::CloseForCurrentThread();
 
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#ifdef MOZ_GECKO_PROFILER
       if (stack) {
         stack->sampleContext(nullptr);
       }
