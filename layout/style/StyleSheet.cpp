@@ -309,6 +309,21 @@ StyleSheet::EnabledStateChanged()
 #undef FORWARD_INTERNAL
 
 void
+StyleSheet::UnparentChildren()
+{
+  // XXXbz this is a little bogus; see the XXX comment where we
+  // declare mFirstChild in StyleSheetInfo.
+  for (StyleSheet* child = GetFirstChild();
+       child;
+       child = child->mNext) {
+    if (child->mParent == this) {
+      child->mParent = nullptr;
+      child->mDocument = nullptr;
+    }
+  }
+}
+
+void
 StyleSheet::SubjectSubsumesInnerPrincipal(nsIPrincipal& aSubjectPrincipal,
                                           ErrorResult& aRv)
 {

@@ -218,6 +218,8 @@ private:
                          ErrorResult& aRv);
 
 protected:
+  void UnparentChildren();
+
   // Return success if the subject principal subsumes the principal of our
   // inner, error otherwise.  This will also succeed if the subject has
   // UniversalXPConnect or if access is allowed by CORS.  In the latter case,
@@ -257,9 +259,11 @@ protected:
   friend class ::nsCSSRuleProcessor;
   friend struct mozilla::ChildSheetListBuilder;
 
-  // Make CSSStyleSheet a friend so it can access protected members of
-  // other StyleSheet objects (useful for iterating through children).
+  // Make CSSStyleSheet and ServoStyleSheet friends so they can access
+  // protected members of other StyleSheet objects (useful for iterating
+  // through children).
   friend class mozilla::CSSStyleSheet;
+  friend class mozilla::ServoStyleSheet;
 };
 
 } // namespace mozilla
