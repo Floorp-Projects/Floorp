@@ -55,10 +55,6 @@ public:
 
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
-#ifdef DEBUG
-  void List(FILE* aOut = stdout, int32_t aIndex = 0) const;
-#endif
-
   RawServoStyleSheet* RawSheet() const { return mSheet; }
   void SetSheetForImport(RawServoStyleSheet* aSheet) {
     MOZ_ASSERT(!mSheet);
