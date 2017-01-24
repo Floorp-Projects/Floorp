@@ -11,6 +11,8 @@
       0% {
         width: 100px;
         height: 100px;
+        /* Add a border here to avoid layout warnings in Linux debug builds: Bug 1329784 */
+        border: 1px solid transparent;
         border-radius: 0px;
         background: #f06;
       }
