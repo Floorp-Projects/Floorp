@@ -25,9 +25,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mozilla/StackWalk_windows.h"
-
 #include "mozilla/ScopeExit.h"
+#include "mozilla/StackWalk_windows.h"
 #include "mozilla/WindowsVersion.h"
 
 #include "jsfriendapi.h"
