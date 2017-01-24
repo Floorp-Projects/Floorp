@@ -12,6 +12,7 @@
 #include "gc/GCTrace.h"
 #include "gc/Nursery.h"
 #include "jit/JitCompartment.h"
+#include "threading/CpuCount.h"
 #include "vm/Runtime.h"
 #include "vm/String.h"
 
