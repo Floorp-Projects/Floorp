@@ -2832,6 +2832,12 @@ pref("plugin.persistentPermissionAlways.intervalInDays", 90);
 // "never"      - never use favor fallback mode
 pref("plugins.favorfallback.mode", "never");
 
+// A comma-separated list of rules to follow when deciding
+// whether an object has been provided with good fallback content.
+// The valid values can be found at nsObjectLoadingContent::HasGoodFallback.
+pref("plugins.favorfallback.rules", "");
+
+
 // Set IPC timeouts for plugins and tabs, except in leak-checking and
 // dynamic analysis builds.  (NS_FREE_PERMANENT_DATA is C++ only, so
 // approximate its definition here.)
