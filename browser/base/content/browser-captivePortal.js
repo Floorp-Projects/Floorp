@@ -106,7 +106,6 @@ var CaptivePortalWatcher = {
     if (win != Services.ww.activeWindow) {
       this._delayedCaptivePortalDetectedInProgress = true;
       Services.obs.addObserver(this, "xul-window-visible", false);
-      return;
     }
 
     this._showNotification();
@@ -150,7 +149,6 @@ var CaptivePortalWatcher = {
         return;
       }
 
-      self._showNotification();
       if (time <= self.PORTAL_RECHECK_DELAY_MS) {
         // The amount of time elapsed since we requested a recheck (i.e. since
         // the browser window was focused) was small enough that we can add and
