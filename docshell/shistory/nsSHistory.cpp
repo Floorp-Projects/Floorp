@@ -194,8 +194,10 @@ GetContentViewerForTransaction(nsISHTransaction* aTrans)
   return viewer.forget();
 }
 
+} // namespace
+
 void
-EvictContentViewerForTransaction(nsISHTransaction* aTrans)
+nsSHistory::EvictContentViewerForTransaction(nsISHTransaction* aTrans)
 {
   nsCOMPtr<nsISHEntry> entry;
   aTrans->GetSHEntry(getter_AddRefs(entry));
@@ -217,9 +219,15 @@ EvictContentViewerForTransaction(nsISHTransaction* aTrans)
     ownerEntry->SyncPresentationState();
     viewer->Destroy();
   }
-}
 
-} // namespace
+  // When dropping bfcache, we have to remove associated dynamic entries as well.
+  int32_t index = -1;
+  GetIndexOfEntry(entry, &index);
+  if (index != -1) {
+    nsCOMPtr<nsISHContainer> container(do_QueryInterface(entry));
+    RemoveDynEntries(index, container);
+  }
+}
 
 nsSHistory::nsSHistory()
   : mIndex(-1)
@@ -445,7 +453,6 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist)
     PurgeHistory(mLength - gHistoryMaxSize);
   }
 
-  RemoveDynEntries(mIndex - 1, mIndex);
   return NS_OK;
 }
 
@@ -1121,8 +1128,9 @@ namespace {
 class TransactionAndDistance
 {
 public:
-  TransactionAndDistance(nsISHTransaction* aTrans, uint32_t aDist)
-    : mTransaction(aTrans)
+  TransactionAndDistance(nsSHistory* aSHistory, nsISHTransaction* aTrans, uint32_t aDist)
+    : mSHistory(aSHistory)
+    , mTransaction(aTrans)
     , mLastTouched(0)
     , mDistance(aDist)
   {
@@ -1159,6 +1167,7 @@ public:
            aOther.mLastTouched == this->mLastTouched;
   }
 
+  RefPtr<nsSHistory> mSHistory;
   nsCOMPtr<nsISHTransaction> mTransaction;
   nsCOMPtr<nsIContentViewer> mViewer;
   uint32_t mLastTouched;
@@ -1227,7 +1236,7 @@ nsSHistory::GloballyEvictContentViewers()
         // If we didn't find a TransactionAndDistance for this content viewer,
         // make a new one.
         if (!found) {
-          TransactionAndDistance container(trans,
+          TransactionAndDistance container(shist, trans,
                                            DeprecatedAbs(i - shist->mIndex));
           shTransactions.AppendElement(container);
         }
@@ -1257,7 +1266,8 @@ nsSHistory::GloballyEvictContentViewers()
 
   for (int32_t i = transactions.Length() - 1; i >= sHistoryMaxTotalViewers;
        --i) {
-    EvictContentViewerForTransaction(transactions[i].mTransaction);
+    (transactions[i].mSHistory)->
+      EvictContentViewerForTransaction(transactions[i].mTransaction);
   }
 }
 
@@ -1515,34 +1525,22 @@ nsSHistory::RemoveEntries(nsTArray<nsID>& aIDs, int32_t aStartIndex)
 }
 
 void
-nsSHistory::RemoveDynEntries(int32_t aOldIndex, int32_t aNewIndex)
+nsSHistory::RemoveDynEntries(int32_t aIndex, nsISHContainer* aContainer)
 {
-  // Search for the entries which are in the current index,
-  // but not in the new one.
-  nsCOMPtr<nsISHEntry> originalSH;
-  GetEntryAtIndex(aOldIndex, false, getter_AddRefs(originalSH));
-  nsCOMPtr<nsISHContainer> originalContainer = do_QueryInterface(originalSH);
-  AutoTArray<nsID, 16> toBeRemovedEntries;
-  if (originalContainer) {
-    nsTArray<nsID> originalDynDocShellIDs;
-    GetDynamicChildren(originalContainer, originalDynDocShellIDs, true);
-    if (originalDynDocShellIDs.Length()) {
-      nsCOMPtr<nsISHEntry> currentSH;
-      GetEntryAtIndex(aNewIndex, false, getter_AddRefs(currentSH));
-      nsCOMPtr<nsISHContainer> newContainer = do_QueryInterface(currentSH);
-      if (newContainer) {
-        nsTArray<nsID> newDynDocShellIDs;
-        GetDynamicChildren(newContainer, newDynDocShellIDs, false);
-        for (uint32_t i = 0; i < originalDynDocShellIDs.Length(); ++i) {
-          if (!newDynDocShellIDs.Contains(originalDynDocShellIDs[i])) {
-            toBeRemovedEntries.AppendElement(originalDynDocShellIDs[i]);
-          }
-        }
-      }
-    }
+  // Remove dynamic entries which are at the index and belongs to the container.
+  nsCOMPtr<nsISHContainer> container(aContainer);
+  if (!container) {
+    nsCOMPtr<nsISHEntry> entry;
+    GetEntryAtIndex(aIndex, false, getter_AddRefs(entry));
+    container = do_QueryInterface(entry);
   }
-  if (toBeRemovedEntries.Length()) {
-    RemoveEntries(toBeRemovedEntries, aOldIndex);
+
+  if (container) {
+    AutoTArray<nsID, 16> toBeRemovedEntries;
+    GetDynamicChildren(container, toBeRemovedEntries, true);
+    if (toBeRemovedEntries.Length()) {
+      RemoveEntries(toBeRemovedEntries, aIndex);
+    }
   }
 }
 
@@ -1551,7 +1549,6 @@ nsSHistory::UpdateIndex()
 {
   // Update the actual index with the right value.
   if (mIndex != mRequestedIndex && mRequestedIndex != -1) {
-    RemoveDynEntries(mIndex, mRequestedIndex);
     mIndex = mRequestedIndex;
     NOTIFY_LISTENERS(OnIndexChanged, (mIndex))
   }
