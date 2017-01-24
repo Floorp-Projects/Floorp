@@ -97,17 +97,13 @@ public:
     return OtherPid();
   }
 
-  void AddPendingCompositorUpdate() {
-    mPendingCompositorUpdates++;
+  void SetPendingCompositorUpdate(uint64_t aNumber) {
+    mPendingCompositorUpdate = Some(aNumber);
   }
-  void SetPendingCompositorUpdates(uint32_t aCount) {
-    // Only called after construction.
-    MOZ_ASSERT(mPendingCompositorUpdates == 0);
-    mPendingCompositorUpdates = aCount;
-  }
-  void AcknowledgeCompositorUpdate() {
-    MOZ_ASSERT(mPendingCompositorUpdates > 0);
-    mPendingCompositorUpdates--;
+  void AcknowledgeCompositorUpdate(uint64_t aNumber) {
+    if (mPendingCompositorUpdate == Some(aNumber)) {
+      mPendingCompositorUpdate = Nothing();
+    }
   }
 
 protected:
@@ -200,9 +196,9 @@ private:
 
   uint64_t mPendingTransaction;
 
-  // Number of compositor updates we're waiting for the child to
-  // acknowledge.
-  uint32_t mPendingCompositorUpdates;
+  // Not accepting layers updates until we receive an acknowledgement with this
+  // generation number.
+  Maybe<uint64_t> mPendingCompositorUpdate;
 
   // When the widget/frame/browser stuff in this process begins its
   // destruction process, we need to Disconnect() all the currently

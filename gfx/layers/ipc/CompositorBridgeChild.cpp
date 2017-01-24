@@ -384,7 +384,7 @@ CompositorBridgeChild::RecvCompositorUpdated(const uint64_t& aLayersId,
     if (!mCanSend) {
       return IPC_OK();
     }
-    SendAcknowledgeCompositorUpdate(aLayersId);
+    SendAcknowledgeCompositorUpdate(aLayersId, aSeqNo);
   }
   return IPC_OK();
 }
