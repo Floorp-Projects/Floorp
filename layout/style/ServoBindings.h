@@ -158,6 +158,11 @@ SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_Snapshot,
 RawServoDeclarationBlockStrongBorrowedOrNull
 Gecko_GetServoDeclarationBlock(RawGeckoElementBorrowed element);
 
+// Animations
+RawServoDeclarationBlockStrong
+Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
+                       nsIAtom* aPseudoTag);
+
 // Atoms.
 nsIAtom* Gecko_Atomize(const char* aString, uint32_t aLength);
 void Gecko_AddRefAtom(nsIAtom* aAtom);
