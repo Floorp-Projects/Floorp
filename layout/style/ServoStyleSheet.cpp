@@ -115,14 +115,6 @@ ServoStyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   MOZ_CRASH("stylo: not implemented");
 }
 
-#ifdef DEBUG
-void
-ServoStyleSheet::List(FILE* aOut, int32_t aIndex) const
-{
-  MOZ_CRASH("stylo: not implemented");
-}
-#endif
-
 css::Rule*
 ServoStyleSheet::GetDOMOwnerRule() const
 {

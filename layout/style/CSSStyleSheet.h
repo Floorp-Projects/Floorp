@@ -111,7 +111,7 @@ public:
   // Find the ID of the owner inner window.
   uint64_t FindOwningWindowInnerID() const;
 #ifdef DEBUG
-  void List(FILE* out = stdout, int32_t aIndent = 0) const;
+  void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
 
   // XXX do these belong here or are they generic?

@@ -432,6 +432,42 @@ StyleSheet::AppendStyleSheet(StyleSheet* aSheet)
   DidDirty();
 }
 
+#ifdef DEBUG
+void
+StyleSheet::List(FILE* out, int32_t aIndent) const
+{
+  int32_t index;
+
+  // Indent
+  nsAutoCString str;
+  for (index = aIndent; --index >= 0; ) {
+    str.AppendLiteral("  ");
+  }
+
+  str.AppendLiteral("CSS Style Sheet: ");
+  nsAutoCString urlSpec;
+  nsresult rv = GetSheetURI()->GetSpec(urlSpec);
+  if (NS_SUCCEEDED(rv) && !urlSpec.IsEmpty()) {
+    str.Append(urlSpec);
+  }
+
+  if (mMedia) {
+    str.AppendLiteral(" media: ");
+    nsAutoString  buffer;
+    mMedia->GetText(buffer);
+    AppendUTF16toUTF8(buffer, str);
+  }
+  str.Append('\n');
+  fprintf_stderr(out, "%s", str.get());
+
+  for (const StyleSheet* child = GetFirstChild();
+       child;
+       child = child->mNext) {
+    child->List(out, aIndent + 1);
+  }
+}
+#endif
+
 void
 StyleSheet::SetMedia(nsMediaList* aMedia)
 {
