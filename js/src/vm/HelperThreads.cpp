@@ -16,6 +16,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "gc/GCInternals.h"
 #include "jit/IonBuilder.h"
+#include "threading/CpuCount.h"
 #include "vm/Debugger.h"
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/Time.h"
