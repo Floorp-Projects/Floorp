@@ -2424,11 +2424,14 @@ ContentParent::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-PBackgroundParent*
-ContentParent::AllocPBackgroundParent(Transport* aTransport,
-                                      ProcessId aOtherProcess)
+mozilla::ipc::IPCResult
+ContentParent::RecvInitBackground(Endpoint<PBackgroundParent>&& aEndpoint)
 {
-  return BackgroundParent::Alloc(this, aTransport, aOtherProcess);
+  if (!BackgroundParent::Alloc(this, Move(aEndpoint))) {
+    return IPC_FAIL(this, "BackgroundParent::Alloc failed");
+  }
+
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult

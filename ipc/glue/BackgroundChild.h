@@ -87,10 +87,6 @@ private:
   // Only called by ContentChild or ContentParent.
   static void
   Startup();
-
-  // Only called by ContentChild.
-  static PBackgroundChild*
-  Alloc(Transport* aTransport, ProcessId aOtherProcess);
 };
 
 } // namespace ipc

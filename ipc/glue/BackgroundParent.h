@@ -26,6 +26,8 @@ namespace ipc {
 
 class PBackgroundParent;
 
+template<class PFooSide> class Endpoint;
+
 // This class is not designed for public consumption beyond the few static
 // member functions.
 class BackgroundParent final
@@ -69,10 +71,9 @@ public:
 
 private:
   // Only called by ContentParent for cross-process actors.
-  static PBackgroundParent*
+  static bool
   Alloc(ContentParent* aContent,
-        Transport* aTransport,
-        ProcessId aOtherProcess);
+        Endpoint<PBackgroundParent>&& aEndpoint);
 };
 
 // Implemented in BackgroundImpl.cpp.

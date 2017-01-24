@@ -216,10 +216,9 @@ private:
   GetRawContentParentForComparison(PBackgroundParent* aBackgroundActor);
 
   // Forwarded from BackgroundParent.
-  static PBackgroundParent*
+  static bool
   Alloc(ContentParent* aContent,
-        Transport* aTransport,
-        ProcessId aOtherPid);
+        Endpoint<PBackgroundParent>&& aEndpoint);
 
   static bool
   CreateBackgroundThread();
@@ -386,9 +385,8 @@ private:
   static void
   Startup();
 
-  // Forwarded from BackgroundChild.
-  static PBackgroundChild*
-  Alloc(Transport* aTransport, ProcessId aOtherPid);
+  static void
+  Alloc(Endpoint<PBackgroundChild>&& aEndpoint);
 
   // Forwarded from BackgroundChild.
   static PBackgroundChild*
@@ -567,22 +565,19 @@ private:
 class ParentImpl::ConnectActorRunnable final : public Runnable
 {
   RefPtr<ParentImpl> mActor;
-  Transport* mTransport;
-  ProcessId mOtherPid;
+  Endpoint<PBackgroundParent> mEndpoint;
   nsTArray<ParentImpl*>* mLiveActorArray;
 
 public:
   ConnectActorRunnable(ParentImpl* aActor,
-                       Transport* aTransport,
-                       ProcessId aOtherPid,
+                       Endpoint<PBackgroundParent>&& aEndpoint,
                        nsTArray<ParentImpl*>* aLiveActorArray)
-  : mActor(aActor), mTransport(aTransport), mOtherPid(aOtherPid),
+  : mActor(aActor), mEndpoint(Move(aEndpoint)),
     mLiveActorArray(aLiveActorArray)
   {
     AssertIsInMainProcess();
     AssertIsOnMainThread();
-    MOZ_ASSERT(aActor);
-    MOZ_ASSERT(aTransport);
+    MOZ_ASSERT(mEndpoint.IsValid());
     MOZ_ASSERT(aLiveActorArray);
   }
 
@@ -713,27 +708,23 @@ protected:
 class ChildImpl::OpenChildProcessActorRunnable final : public Runnable
 {
   RefPtr<ChildImpl> mActor;
-  nsAutoPtr<Transport> mTransport;
-  ProcessId mOtherPid;
+  Endpoint<PBackgroundChild> mEndpoint;
 
 public:
   OpenChildProcessActorRunnable(already_AddRefed<ChildImpl>&& aActor,
-                                Transport* aTransport,
-                                ProcessId aOtherPid)
-  : mActor(aActor), mTransport(aTransport),
-    mOtherPid(aOtherPid)
+                                Endpoint<PBackgroundChild>&& aEndpoint)
+  : mActor(aActor), mEndpoint(Move(aEndpoint))
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(mActor);
-    MOZ_ASSERT(aTransport);
+    MOZ_ASSERT(mEndpoint.IsValid());
   }
 
 private:
   ~OpenChildProcessActorRunnable()
   {
-    if (mTransport) {
-      CRASH_IN_CHILD_PROCESS("Leaking transport!");
-      Unused << mTransport.forget();
+    if (mEndpoint.IsValid()) {
+      CRASH_IN_CHILD_PROCESS("Leaking endpoint!");
     }
   }
 
@@ -835,12 +826,11 @@ BackgroundParent::GetRawContentParentForComparison(
 }
 
 // static
-PBackgroundParent*
+bool
 BackgroundParent::Alloc(ContentParent* aContent,
-                        Transport* aTransport,
-                        ProcessId aOtherPid)
+                        Endpoint<PBackgroundParent>&& aEndpoint)
 {
-  return ParentImpl::Alloc(aContent, aTransport, aOtherPid);
+  return ParentImpl::Alloc(aContent, Move(aEndpoint));
 }
 
 // -----------------------------------------------------------------------------
@@ -852,13 +842,6 @@ void
 BackgroundChild::Startup()
 {
   ChildImpl::Startup();
-}
-
-// static
-PBackgroundChild*
-BackgroundChild::Alloc(Transport* aTransport, ProcessId aOtherPid)
-{
-  return ChildImpl::Alloc(aTransport, aOtherPid);
 }
 
 // static
@@ -1028,18 +1011,17 @@ ParentImpl::GetRawContentParentForComparison(
 }
 
 // static
-PBackgroundParent*
+bool
 ParentImpl::Alloc(ContentParent* aContent,
-                  Transport* aTransport,
-                  ProcessId aOtherPid)
+                  Endpoint<PBackgroundParent>&& aEndpoint)
 {
   AssertIsInMainProcess();
   AssertIsOnMainThread();
-  MOZ_ASSERT(aTransport);
+  MOZ_ASSERT(aEndpoint.IsValid());
 
   if (!sBackgroundThread && !CreateBackgroundThread()) {
     NS_WARNING("Failed to create background thread!");
-    return nullptr;
+    return false;
   }
 
   MOZ_ASSERT(sLiveActorsForBackgroundThread);
@@ -1049,7 +1031,7 @@ ParentImpl::Alloc(ContentParent* aContent,
   RefPtr<ParentImpl> actor = new ParentImpl(aContent);
 
   nsCOMPtr<nsIRunnable> connectRunnable =
-    new ConnectActorRunnable(actor, aTransport, aOtherPid,
+    new ConnectActorRunnable(actor, Move(aEndpoint),
                              sLiveActorsForBackgroundThread);
 
   if (NS_FAILED(sBackgroundThread->Dispatch(connectRunnable,
@@ -1059,10 +1041,10 @@ ParentImpl::Alloc(ContentParent* aContent,
     MOZ_ASSERT(sLiveActorCount);
     sLiveActorCount--;
 
-    return nullptr;
+    return false;
   }
 
-  return actor;
+  return true;
 }
 
 // static
@@ -1471,7 +1453,9 @@ ParentImpl::ConnectActorRunnable::Run()
   ParentImpl* actor;
   mActor.forget(&actor);
 
-  if (!actor->Open(mTransport, mOtherPid, XRE_GetIOMessageLoop(), ParentSide)) {
+  Endpoint<PBackgroundParent> endpoint = Move(mEndpoint);
+
+  if (!endpoint.Bind(actor)) {
     actor->Destroy();
     return NS_ERROR_FAILURE;
   }
@@ -1544,12 +1528,12 @@ ChildImpl::Shutdown()
 }
 
 // static
-PBackgroundChild*
-ChildImpl::Alloc(Transport* aTransport, ProcessId aOtherPid)
+void
+ChildImpl::Alloc(Endpoint<PBackgroundChild>&& aEndpoint)
 {
   AssertIsInChildProcess();
   AssertIsOnMainThread();
-  MOZ_ASSERT(aTransport);
+  MOZ_ASSERT(aEndpoint.IsValid());
   MOZ_ASSERT(sPendingTargets);
   MOZ_ASSERT(!sPendingTargets->IsEmpty());
 
@@ -1560,18 +1544,11 @@ ChildImpl::Alloc(Transport* aTransport, ProcessId aOtherPid)
 
   RefPtr<ChildImpl> actor = new ChildImpl();
 
-  ChildImpl* weakActor = actor;
-
   nsCOMPtr<nsIRunnable> openRunnable =
-    new OpenChildProcessActorRunnable(actor.forget(), aTransport,
-                                      aOtherPid);
+    new OpenChildProcessActorRunnable(actor.forget(), Move(aEndpoint));
   if (NS_FAILED(eventTarget->Dispatch(openRunnable, NS_DISPATCH_NORMAL))) {
     MOZ_CRASH("Failed to dispatch OpenActorRunnable!");
   }
-
-  // This value is only checked against null to determine success/failure, so
-  // there is no need to worry about the reference count here.
-  return weakActor;
 }
 
 // static
@@ -1838,7 +1815,7 @@ ChildImpl::OpenChildProcessActorRunnable::Run()
 
   AssertIsInChildProcess();
   MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mTransport);
+  MOZ_ASSERT(mEndpoint.IsValid());
 
   nsCOMPtr<nsIIPCBackgroundChildCreateCallback> callback =
     ChildImpl::GetNextCallback();
@@ -1848,10 +1825,10 @@ ChildImpl::OpenChildProcessActorRunnable::Run()
 
   RefPtr<ChildImpl> strongActor;
   mActor.swap(strongActor);
+  Endpoint<PBackgroundChild> endpoint = Move(mEndpoint);
 
-  if (!strongActor->Open(mTransport.forget(), mOtherPid,
-                         XRE_GetIOMessageLoop(), ChildSide)) {
-    CRASH_IN_CHILD_PROCESS("Failed to open ChildImpl!");
+  if (!endpoint.Bind(strongActor)) {
+    CRASH_IN_CHILD_PROCESS("Failed to bind ChildImpl!");
 
     while (callback) {
       callback->ActorFailed();
@@ -2031,7 +2008,18 @@ ChildImpl::OpenProtocolOnMainThread(nsIEventTarget* aEventTarget)
     return false;
   }
 
-  if (!PBackground::Open(content)) {
+  Endpoint<PBackgroundParent> parent;
+  Endpoint<PBackgroundChild> child;
+  nsresult rv;
+  rv = PBackground::CreateEndpoints(content->OtherPid(),
+                                    base::GetCurrentProcId(),
+                                    &parent, &child);
+  if (NS_FAILED(rv)) {
+    MOZ_CRASH("Failed to create top level actor!");
+    return false;
+  }
+
+  if (!content->SendInitBackground(Move(parent))) {
     MOZ_CRASH("Failed to create top level actor!");
     return false;
   }
@@ -2042,6 +2030,8 @@ ChildImpl::OpenProtocolOnMainThread(nsIEventTarget* aEventTarget)
   }
 
   sPendingTargets->AppendElement(aEventTarget);
+
+  Alloc(Move(child));
 
   return true;
 }
