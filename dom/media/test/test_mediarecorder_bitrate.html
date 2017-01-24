@@ -29,99 +29,96 @@ function runTest(test, token, bitrate) {
   element.token = token;
 
   element.src = test.name;
-  element.test = test;
-  element.stream = element.mozCaptureStreamUntilEnded();
-
-  var mediaRecorder = new MediaRecorder(element.stream , {videoBitsPerSecond: bitrate});
-  var onStopFired = false;
-  var onDataAvailableFired = false;
-  var encoded_size = 0;
-
-  mediaRecorder.onerror = function () {
-    ok(false, 'Unexpected onerror callback fired');
-  };
-
-  mediaRecorder.onwarning = function () {
-    ok(false, 'Unexpected onwarning callback fired');
-  };
-
-  // This handler verifies that only a single onstop event handler is fired.
-  mediaRecorder.onstop = function () {
-    if (onStopFired) {
-      ok(false, 'onstop unexpectedly fired more than once');
-    } else {
-      onStopFired = true;
-
-      // ondataavailable should always fire before onstop
-      if (onDataAvailableFired) {
-        ok(true, 'onstop fired after ondataavailable');
-        info("test " + test.name + " encoded@" + bitrate + "=" + encoded_size);
-        if (results[test.name]) {
-          var big, small, temp;
-          big = {};
-	  big.bitrate = bitrate;
-	  big.size = encoded_size;
-	  small = results[test.name];
-	  // Don't assume the order that these will finish in
-	  if (results[test.name].bitrate > bitrate) {
-	    temp = big;
-	    big = small;
-	    small = temp;
-	  }
-	  // Ensure there is a big enough difference in the encoded
-	  // sizes
-          ok(small.size*1.25 < big.size,
-	     test.name + ' encoded@' + big.bitrate + '=' + big.size +
-	     ' > encoded@' + small.bitrate + '=' + small.size);
-          manager.finished(token);
-        } else {
-	  results[test.name] = {};
-	  results[test.name].bitrate = bitrate;
-          results[test.name].size = encoded_size;
-        }
-      } else {
-        ok(false, 'onstop fired without an ondataavailable event first');
-      }
-    }
-  };
-
-  // This handler verifies that only a single ondataavailable event handler
-  // is fired with the blob generated having greater than zero size
-  // and a correct mime type.
-  mediaRecorder.ondataavailable = function (evt) {
-    if (onDataAvailableFired) {
-      ok(false, 'ondataavailable unexpectedly fired more than once');
-    } else {
-      onDataAvailableFired = true;
-
-      ok(evt instanceof BlobEvent,
-         'Events fired from ondataavailable should be BlobEvent');
-      is(evt.type, 'dataavailable',
-         'Event type should dataavailable');
-      ok(evt.data.size > 0,
-         'Blob data received should be greater than zero');
-      encoded_size = evt.data.size;
-
-      // onstop should not have fired before ondataavailable
-      if (onStopFired) {
-        ok(false, 'ondataavailable unexpectedly fired later than onstop');
-        manager.finished(token);
-      }
-    }
-  };
-
   element.preload = "metadata";
-
   element.onloadedmetadata = function () {
+    info("loadedmetadata");
+    const stream = element.mozCaptureStreamUntilEnded();
     element.onloadedmetadata = null;
+    element.play();
+
+    const mediaRecorder = new MediaRecorder(stream, {videoBitsPerSecond: bitrate});
     mediaRecorder.start();
-    is(mediaRecorder.state, 'recording',
-     'Media recorder should be recording');
-    is(mediaRecorder.stream, element.stream,
+    is(mediaRecorder.state, 'recording', 'Media recorder should be recording');
+    is(mediaRecorder.stream, stream,
      'Media recorder stream = element stream at the start of recording');
 
-    element.play();
-  }
+    var onStopFired = false;
+    var onDataAvailableFired = false;
+    var encoded_size = 0;
+
+    mediaRecorder.onerror = function () {
+      ok(false, 'Unexpected onerror callback fired');
+    };
+
+    mediaRecorder.onwarning = function () {
+      ok(false, 'Unexpected onwarning callback fired');
+    };
+
+    // This handler verifies that only a single onstop event handler is fired.
+    mediaRecorder.onstop = function () {
+      if (onStopFired) {
+        ok(false, 'onstop unexpectedly fired more than once');
+      } else {
+        onStopFired = true;
+
+        // ondataavailable should always fire before onstop
+        if (onDataAvailableFired) {
+          ok(true, 'onstop fired after ondataavailable');
+          info("test " + test.name + " encoded@" + bitrate + "=" + encoded_size);
+          if (results[test.name]) {
+            var big, small, temp;
+            big = {};
+            big.bitrate = bitrate;
+            big.size = encoded_size;
+            small = results[test.name];
+            // Don't assume the order that these will finish in
+            if (results[test.name].bitrate > bitrate) {
+              temp = big;
+              big = small;
+              small = temp;
+            }
+            // Ensure there is a big enough difference in the encoded
+            // sizes
+            ok(small.size*1.25 < big.size,
+               test.name + ' encoded@' + big.bitrate + '=' + big.size +
+               ' > encoded@' + small.bitrate + '=' + small.size);
+            manager.finished(token);
+          } else {
+            results[test.name] = {};
+            results[test.name].bitrate = bitrate;
+            results[test.name].size = encoded_size;
+          }
+        } else {
+          ok(false, 'onstop fired without an ondataavailable event first');
+        }
+      }
+    };
+
+    // This handler verifies that only a single ondataavailable event handler
+    // is fired with the blob generated having greater than zero size
+    // and a correct mime type.
+    mediaRecorder.ondataavailable = function (evt) {
+      if (onDataAvailableFired) {
+        ok(false, 'ondataavailable unexpectedly fired more than once');
+      } else {
+        onDataAvailableFired = true;
+
+        ok(evt instanceof BlobEvent,
+           'Events fired from ondataavailable should be BlobEvent');
+        is(evt.type, 'dataavailable',
+           'Event type should dataavailable');
+        ok(evt.data.size > 0,
+           'Blob data received should be greater than zero');
+        encoded_size = evt.data.size;
+
+        // onstop should not have fired before ondataavailable
+        if (onStopFired) {
+          ok(false, 'ondataavailable unexpectedly fired later than onstop');
+          manager.finished(token);
+        }
+      }
+    };
+  };
 }
 
 manager.runTests(gMediaRecorderVideoTests, startTest);
