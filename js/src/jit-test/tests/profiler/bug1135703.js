@@ -1,6 +1,6 @@
 
 for (var idx = 0; idx < 20; ++idx) {
-  newFunc("enableSPSProfilingWithSlowAssertions(); disableSPSProfiling();");
+  newFunc("enableGeckoProfilingWithSlowAssertions(); disableGeckoProfiling();");
 }
-newFunc("enableSPSProfiling();");
+newFunc("enableGeckoProfiling();");
 function newFunc(x) { new Function(x)(); };

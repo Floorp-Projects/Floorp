@@ -2,7 +2,7 @@
 function TestCase(n, d, e, a) {
   return TestCase.prototype.dump = function () {};
 }
-enableSPSProfiling();
+enableGeckoProfiling();
 new TestCase(typeof Number(new Number()));
 new TestCase(typeof Number(new Number(Number.NaN)));
 test();

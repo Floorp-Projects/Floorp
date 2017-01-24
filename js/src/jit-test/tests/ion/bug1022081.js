@@ -3,6 +3,6 @@ function f() {
         gc()
     })()
 }
-enableSPSProfiling()
+enableGeckoProfiling()
 f()
 f()

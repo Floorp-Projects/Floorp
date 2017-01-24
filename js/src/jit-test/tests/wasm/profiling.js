@@ -64,14 +64,14 @@ function assertEqStacks(got, expect)
 
 function test(code, importObj, expect)
 {
-    enableSPSProfiling();
+    enableGeckoProfiling();
 
     var f = wasmEvalText(code, importObj).exports[""];
     enableSingleStepProfiling();
     f();
     assertEqStacks(disableSingleStepProfiling(), expect);
 
-    disableSPSProfiling();
+    disableGeckoProfiling();
 }
 
 test(
@@ -113,12 +113,12 @@ test(
 
 function testError(code, error, expect)
 {
-    enableSPSProfiling();
+    enableGeckoProfiling();
     var f = wasmEvalText(code).exports[""];
     enableSingleStepProfiling();
     assertThrowsInstanceOf(f, error);
     assertEqStacks(disableSingleStepProfiling(), expect);
-    disableSPSProfiling();
+    disableGeckoProfiling();
 }
 
 testError(
@@ -158,32 +158,32 @@ WebAssembly.RuntimeError,
     assertEq(e.tbl.get(0)(), 42);
     assertEq(e.tbl.get(1)(), 13);
 
-    enableSPSProfiling();
+    enableGeckoProfiling();
     enableSingleStepProfiling();
     assertEq(e.tbl.get(0)(), 42);
     assertEqStacks(disableSingleStepProfiling(), ["", ">", "0,>", ">", ""]);
-    disableSPSProfiling();
+    disableGeckoProfiling();
 
     assertEq(e.foo(), 42);
     assertEq(e.tbl.get(0)(), 42);
     assertEq(e.tbl.get(1)(), 13);
 
-    enableSPSProfiling();
+    enableGeckoProfiling();
     enableSingleStepProfiling();
     assertEq(e.tbl.get(1)(), 13);
     assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", ">", ""]);
-    disableSPSProfiling();
+    disableGeckoProfiling();
 
     assertEq(e.tbl.get(0)(), 42);
     assertEq(e.tbl.get(1)(), 13);
     assertEq(e.foo(), 42);
 
-    enableSPSProfiling();
+    enableGeckoProfiling();
     enableSingleStepProfiling();
     assertEq(e.foo(), 42);
     assertEq(e.tbl.get(1)(), 13);
     assertEqStacks(disableSingleStepProfiling(), ["", ">", "0,>", ">", "", ">", "1,>", ">", ""]);
-    disableSPSProfiling();
+    disableGeckoProfiling();
 
     var e2 = wasmEvalText(`
     (module
@@ -195,23 +195,23 @@ WebAssembly.RuntimeError,
         (export "baz" $baz)
     )`, {a:{b:e.tbl}}).exports;
 
-    enableSPSProfiling();
+    enableGeckoProfiling();
     enableSingleStepProfiling();
     assertEq(e2.baz(0), 42);
     assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", "0,1,>", "1,>", ">", ""]);
-    disableSPSProfiling();
+    disableGeckoProfiling();
 
-    enableSPSProfiling();
+    enableGeckoProfiling();
     enableSingleStepProfiling();
     assertEq(e2.baz(1), 13);
     assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", "1,1,>", "1,>", ">", ""]);
-    disableSPSProfiling();
+    disableGeckoProfiling();
 
-    enableSPSProfiling();
+    enableGeckoProfiling();
     enableSingleStepProfiling();
     assertEq(e2.baz(2), 99);
     assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", "0,1,>", "1,>", ">", ""]);
-    disableSPSProfiling();
+    disableGeckoProfiling();
 })();
 
 (function() {
@@ -228,20 +228,20 @@ WebAssembly.RuntimeError,
     // Instantiate while not active:
     var e1 = new Instance(m1).exports;
     var e2 = new Instance(m2, {a:e1}).exports;
-    enableSPSProfiling();
+    enableGeckoProfiling();
     enableSingleStepProfiling();
     assertEq(e2.bar(), 42);
     assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", "0,1,>", "1,>", ">", ""]);
-    disableSPSProfiling();
+    disableGeckoProfiling();
     assertEq(e2.bar(), 42);
 
     // Instantiate while active:
-    enableSPSProfiling();
+    enableGeckoProfiling();
     var e3 = new Instance(m1).exports;
     var e4 = new Instance(m2, {a:e3}).exports;
     enableSingleStepProfiling();
     assertEq(e4.bar(), 42);
     assertEqStacks(disableSingleStepProfiling(), ["", ">", "1,>", "0,1,>", "1,>", ">", ""]);
-    disableSPSProfiling();
+    disableGeckoProfiling();
     assertEq(e4.bar(), 42);
 })();
