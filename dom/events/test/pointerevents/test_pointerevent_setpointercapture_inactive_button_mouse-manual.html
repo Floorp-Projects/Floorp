@@ -17,9 +17,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1000870
         runTestInNewWindow("pointerevent_setpointercapture_inactive_button_mouse-manual.html");
       }
       function executeTest(int_win) {
-        sendMouseEvent(int_win, "target1", "mousemove");
-        sendMouseEvent(int_win, "target0", "mousemove");
-        sendMouseEvent(int_win, "target1", "mousemove");
+        let target0 = int_win.document.getElementById("target0");
+        let rect = target0.getBoundingClientRect();
+        sendMouseEventAtPoint(int_win, rect.left + 1, rect.top + 1, "mousemove");
+        sendMouseEventAtPoint(int_win, rect.left - 1, rect.top - 1, "mousemove");
       }
     </script>
   </head>
