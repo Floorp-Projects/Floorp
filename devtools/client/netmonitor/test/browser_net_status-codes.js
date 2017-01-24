@@ -145,12 +145,12 @@ add_task(function* () {
    * A function that tests "Headers" panel contains correct information.
    */
   function* testHeaders(data, index) {
-    let wait = waitForDOM(document, "#panel-0");
+    let wait = waitForDOM(document, "#headers-panel");
     EventUtils.sendMouseEvent({ type: "mousedown" },
       document.querySelectorAll(".request-list-item")[index]);
     yield wait;
 
-    let panel = document.querySelector("#panel-0");
+    let panel = document.querySelector("#headers-panel");
     let summaryValues = panel.querySelectorAll(".tabpanel-summary-value.textbox-input");
     let { method, uri, details: { status, statusText } } = data;
 
@@ -166,13 +166,13 @@ add_task(function* () {
    * A function that tests "Params" panel contains correct information.
    */
   function* testParams(data, index) {
-    let wait = waitForDOM(document, "#panel-2 .properties-view");
+    let wait = waitForDOM(document, "#params-panel .properties-view");
     EventUtils.sendMouseEvent({ type: "mousedown" },
       document.querySelectorAll(".request-list-item")[index]);
-    document.querySelector("#tab-2 a").click();
+    document.querySelector("#params-tab").click();
     yield wait;
 
-    let panel = document.querySelector("#panel-2");
+    let panel = document.querySelector("#params-panel");
     let statusParamValue = data.uri.split("=").pop();
     let statusParamShownValue = "\"" + statusParamValue + "\"";
     let treeSections = panel.querySelectorAll(".tree-section");

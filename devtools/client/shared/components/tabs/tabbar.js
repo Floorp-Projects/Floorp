@@ -25,30 +25,38 @@ let Tabbar = createClass({
     children: PropTypes.object,
     onSelect: PropTypes.func,
     showAllTabsMenu: PropTypes.bool,
-    tabActive: PropTypes.number,
+    activeTabId: PropTypes.string,
     toolbox: PropTypes.object,
   },
 
   getDefaultProps: function () {
     return {
       showAllTabsMenu: false,
-      tabActive: 0,
     };
   },
 
   getInitialState: function () {
-    let { children } = this.props;
+    let { activeTabId, children = [] } = this.props;
+    let tabs = this.createTabs(children);
+    let activeTab = tabs.findIndex((tab, index) => tab.id === activeTabId);
+
     return {
-      tabs: children ? this.createTabs(children) : [],
-      activeTab: 0
+      activeTab: activeTab === -1 ? 0 : activeTab,
+      tabs,
     };
   },
 
   componentWillReceiveProps: function (nextProps) {
-    let { children } = nextProps;
+    let { activeTabId, children = [] } = nextProps;
+    let tabs = this.createTabs(children);
+    let activeTab = tabs.findIndex((tab, index) => tab.id === activeTabId);
 
-    if (children && children !== this.props.children) {
-      this.setState({ tabs: this.createTabs(children) });
+    if (activeTab !== this.state.activeTab ||
+        (children !== this.props.children)) {
+      this.setState({
+        activeTab: activeTab === -1 ? 0 : activeTab,
+        tabs,
+      });
     }
   },
 
@@ -57,7 +65,7 @@ let Tabbar = createClass({
       .filter((panel) => panel)
       .map((panel, index) =>
         Object.assign({}, children[index], {
-          id: index,
+          id: panel.props.id || index,
           panel,
           title: panel.props.title,
         })
@@ -137,7 +145,7 @@ let Tabbar = createClass({
   getTabIndex: function (tabId) {
     let tabIndex = -1;
     this.state.tabs.forEach((tab, index) => {
-      if (tab.id == tabId) {
+      if (tab.id === tabId) {
         tabIndex = index;
       }
     });
@@ -214,7 +222,7 @@ let Tabbar = createClass({
         Tabs({
           onAllTabsMenuClick: this.onAllTabsMenuClick,
           showAllTabsMenu: this.props.showAllTabsMenu,
-          tabActive: this.props.tabActive || this.state.activeTab,
+          tabActive: this.state.activeTab,
           onAfterChange: this.onTabChanged,
         },
           tabs
