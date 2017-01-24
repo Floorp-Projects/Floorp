@@ -162,7 +162,7 @@ public:
     DECODER_STATE_SHUTDOWN
   };
 
-  void DumpDebugInfo();
+  RefPtr<MediaDecoder::DebugInfoPromise> RequestDebugInfo();
 
   void AddOutputStream(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
   // Remove an output stream added with AddOutputStream.
@@ -239,6 +239,8 @@ private:
   static const char* ToStateStr(State aState);
   static const char* ToStr(NextFrameStatus aStatus);
   const char* ToStateStr();
+
+  nsCString GetDebugInfo();
 
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.

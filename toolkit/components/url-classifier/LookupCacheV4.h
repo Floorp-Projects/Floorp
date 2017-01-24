@@ -25,8 +25,13 @@ public:
 
   virtual nsresult Init() override;
   virtual nsresult Has(const Completion& aCompletion,
-                       bool* aHas, bool* aComplete,
-                       uint32_t* aMatchLength) override;
+                       bool* aHas, uint32_t* aMatchLength,
+                       bool* aFromCache) override;
+
+  virtual void IsHashEntryConfirmed(const Completion& aEntry,
+                                    const TableFreshnessMap& aTableFreshness,
+                                    uint32_t aFreshnessGuarantee,
+                                    bool* aConfirmed) override;
 
   nsresult Build(PrefixStringMap& aPrefixMap);
 
