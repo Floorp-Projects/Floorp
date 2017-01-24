@@ -353,7 +353,7 @@ CaptivePortalDetector.prototype = {
       debug("retry-Detection: " + this._runningRequest.retryCount + "/" + this._maxRetryCount);
       this._startDetection();
     } else {
-      this.executeCallback(true);
+      this.executeCallback(false);
     }
   },
 
