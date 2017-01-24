@@ -5,13 +5,13 @@
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-jemalloc
 if [ -f /c/builds/gapi.data ]; then
-  _gapi_keyfile=/c/builds/gapi.data
+  _gapi_keyfile=c:/builds/gapi.data
 else
-  _gapi_keyfile=/e/builds/gapi.data
+  _gapi_keyfile=e:/builds/gapi.data
 fi
 ac_add_options --with-google-api-keyfile=${_gapi_keyfile}
 
-ac_add_options --with-mozilla-api-keyfile=/c/builds/mozilla-desktop-geoloc-api.key
+ac_add_options --with-mozilla-api-keyfile=c:/builds/mozilla-desktop-geoloc-api.key
 
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1
