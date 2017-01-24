@@ -69,14 +69,13 @@ private:
   // Evict content viewers in this window which don't lie in the "safe" range
   // around aIndex.
   void EvictOutOfRangeWindowContentViewers(int32_t aIndex);
+  void EvictContentViewerForTransaction(nsISHTransaction* aTrans);
   static void GloballyEvictContentViewers();
   static void GloballyEvictAllContentViewers();
 
   // Calculates a max number of total
   // content viewers to cache, based on amount of total memory
   static uint32_t CalcMaxTotalViewers();
-
-  void RemoveDynEntries(int32_t aOldIndex, int32_t aNewIndex);
 
   nsresult LoadNextPossibleEntry(int32_t aNewIndex, long aLoadType,
                                  uint32_t aHistCmd);
