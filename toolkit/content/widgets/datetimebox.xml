@@ -76,6 +76,7 @@
         if (this.mInputElement.value) {
           this.setFieldsFromInputValue();
         }
+        this.updateResetButtonVisibility();
       ]]>
       </constructor>
 
@@ -110,6 +111,8 @@
           if (!aFromInputElement) {
             this.mInputElement.setUserInput("");
           }
+
+          this.updateResetButtonVisibility();
         ]]>
         </body>
       </method>
@@ -170,6 +173,11 @@
       <method name="setInputValueFromFields">
         <body>
         <![CDATA[
+          if (!this.isAnyValueAvailable(false)) {
+            this.mInputElement.setUserInput("");
+            return;
+          }
+
           if (this.isFieldInvalid(this.mYearField) ||
               this.isFieldInvalid(this.mMonthField) ||
               this.isFieldInvalid(this.mDayField)) {
@@ -406,11 +414,13 @@
           }
 
           aField.value = value;
+          this.updateResetButtonVisibility();
         ]]>
         </body>
       </method>
 
-      <method name="isValueAvailable">
+      <method name="isAnyValueAvailable">
+        <parameter name="aForPicker"/>
         <body>
         <![CDATA[
           return !this.isEmpty(this.mMonthField.value) ||
@@ -492,6 +502,7 @@
         if (this.mInputElement.value) {
           this.setFieldsFromInputValue();
         }
+        this.updateResetButtonVisibility();
         ]]>
       </constructor>
 
@@ -617,6 +628,11 @@
       <method name="setInputValueFromFields">
         <body>
         <![CDATA[
+          if (!this.isAnyValueAvailable(false)) {
+            this.mInputElement.setUserInput("");
+            return;
+          }
+
           if (this.isEmpty(this.mHourField.value) ||
               this.isEmpty(this.mMinuteField.value) ||
               (this.mDayPeriodField && this.isEmpty(this.mDayPeriodField.value)) ||
@@ -724,6 +740,8 @@
           if (!aFromInputElement) {
             this.mInputElement.setUserInput("");
           }
+
+          this.updateResetButtonVisibility();
         ]]>
         </body>
       </method>
@@ -793,6 +811,7 @@
               this.mDayPeriodField.value == this.mAMIndicator ?
                 this.mPMIndicator : this.mAMIndicator;
             this.mDayPeriodField.select();
+            this.updateResetButtonVisibility();
             this.setInputValueFromFields();
             return;
           }
@@ -850,6 +869,7 @@
               this.mDayPeriodField.value = this.mPMIndicator;
               this.mDayPeriodField.select();
             }
+            this.updateResetButtonVisibility();
             return;
           }
 
@@ -905,16 +925,30 @@
           }
 
           aField.value = value;
+          this.updateResetButtonVisibility();
         ]]>
         </body>
       </method>
 
-      <method name="isValueAvailable">
+      <method name="isAnyValueAvailable">
+        <parameter name="aForPicker"/>
         <body>
         <![CDATA[
+          let available = !this.isEmpty(this.mHourField.value) ||
+                          !this.isEmpty(this.mMinuteField.value);
+
+          if (available) {
+            return true;
+          }
+
           // Picker only cares about hour:minute.
-          return !this.isEmpty(this.mHourField.value) ||
-                 !this.isEmpty(this.mMinuteField.value);
+          if (aForPicker) {
+            return false;
+          }
+
+          return (this.mDayPeriodField && !this.isEmpty(this.mDayPeriodField.value)) ||
+                 (this.mSecondField && !this.isEmpty(this.mSecondField.value)) ||
+                 (this.mMillisecField && !this.isEmpty(this.mMillisecField.value));
         ]]>
         </body>
       </method>
@@ -980,9 +1014,8 @@
                       xbl:inherits="disabled,readonly,tabindex"/>
         </html:span>
 
-        <html:button class="datetime-reset-button" anoid="reset-button"
-                     tabindex="-1" xbl:inherits="disabled"
-                     onclick="document.getBindingParent(this).clearInputFields(false);"/>
+        <html:button class="datetime-reset-button" anonid="reset-button"
+                     tabindex="-1" xbl:inherits="disabled"/>
       </html:div>
     </content>
 
@@ -996,6 +1029,9 @@
         this.mMax = this.mInputElement.max;
         this.mStep = this.mInputElement.step;
         this.mIsPickerOpen = false;
+
+        this.mResetButton =
+          document.getAnonymousElementByAttribute(this, "anonid", "reset-button");
 
         this.EVENTS.forEach((eventName) => {
           this.addEventListener(eventName, this, { mozSystemGroup: true });
@@ -1038,6 +1074,18 @@
             dump("[DateTimeBox] " + aMsg + "\n");
           }
         ]]>
+        </body>
+      </method>
+
+      <method name="updateResetButtonVisibility">
+        <body>
+          <![CDATA[
+            if (this.isAnyValueAvailable(false)) {
+              this.mResetButton.style.visibility = "visible";
+            } else {
+              this.mResetButton.style.visibility = "hidden";
+            }
+          ]]>
         </body>
       </method>
 
@@ -1164,10 +1212,16 @@
         </body>
       </method>
 
+      <method name="isAnyValueAvailable">
+        <body>
+          throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        </body>
+      </method>
+
       <method name="notifyPicker">
         <body>
         <![CDATA[
-          if (this.mIsPickerOpen && this.isValueAvailable()) {
+          if (this.mIsPickerOpen && this.isAnyValueAvailable(true)) {
             this.mInputElement.updateDateTimePicker(this.getCurrentValue());
           }
         ]]>
@@ -1270,7 +1324,11 @@
             }
             case "Backspace": {
               let targetField = aEvent.originalTarget;
+              targetField.value = "";
               targetField.setAttribute("typeBuffer", "");
+              this.updateResetButtonVisibility();
+              this.setInputValueFromFields();
+              aEvent.preventDefault();
               break;
             }
             case "ArrowRight":
@@ -1312,12 +1370,14 @@
           // XXX: .originalTarget is not expected.
           // When clicking on one of the inner text boxes, the .originalTarget is
           // a HTMLDivElement and when clicking on the reset button, it's a
-          // HTMLButtonElement but it's not equal to our reset-button.
+          // HTMLButtonElement.
           if (aEvent.defaultPrevented || this.isDisabled() || this.isReadonly()) {
             return;
           }
 
-          if (!(aEvent.originalTarget instanceof HTMLButtonElement)) {
+          if (aEvent.originalTarget == this.mResetButton) {
+            this.clearInputFields(false);
+          } else {
             this.mInputElement.openDateTimePicker(this.getCurrentValue());
           }
         ]]>
