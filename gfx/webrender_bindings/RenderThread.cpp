@@ -104,7 +104,7 @@ RenderThread::GetRenderer(wr::WindowId aWindowId)
     return nullptr;
   }
 
-  return &*it->second;
+  return it->second.get();
 }
 
 void
