@@ -47,13 +47,19 @@ private:
   // Get the encoded data from encoder to aData.
   // Return value: false if the vpx_codec_get_cx_data returns null
   //               for EOS detection.
-  bool GetEncodedPartitions(EncodedFrameContainer& aData);
+  nsresult GetEncodedPartitions(EncodedFrameContainer& aData);
 
   // Prepare the input data to the mVPXImageWrapper for encoding.
   nsresult PrepareRawFrame(VideoChunk &aChunk);
 
   // Encoded timestamp.
   StreamTime mEncodedTimestamp;
+
+  // Total duration in mTrackRate extracted by GetEncodedPartitions().
+  CheckedInt64 mExtractedDuration;
+
+  // Total duration in microseconds extracted by GetEncodedPartitions().
+  CheckedInt64 mExtractedDurationUs;
 
   // Muted frame, we only create it once.
   RefPtr<layers::Image> mMuteFrame;
