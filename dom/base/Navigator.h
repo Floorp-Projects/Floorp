@@ -292,9 +292,17 @@ private:
   already_AddRefed<nsDOMDeviceStorage> FindDeviceStorage(const nsAString& aName,
                                                          const nsAString& aType);
 
+  // This enum helps SendBeaconInternal to apply different behaviors to body
+  // types.
+  enum BeaconType {
+    eBeaconTypeBlob,
+    eBeaconTypeArrayBuffer,
+    eBeaconTypeOther
+  };
+
   bool SendBeaconInternal(const nsAString& aUrl,
                           BodyExtractorBase* aBody,
-                          bool aIsBlob,
+                          BeaconType aType,
                           ErrorResult& aRv);
 
   RefPtr<nsMimeTypeArray> mMimeTypes;

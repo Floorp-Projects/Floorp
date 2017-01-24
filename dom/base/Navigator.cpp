@@ -1233,37 +1233,37 @@ Navigator::SendBeacon(const nsAString& aUrl,
                       ErrorResult& aRv)
 {
   if (aData.IsNull()) {
-    return SendBeaconInternal(aUrl, nullptr, /* isBlob */ false, aRv);
+    return SendBeaconInternal(aUrl, nullptr, eBeaconTypeOther, aRv);
   }
 
   if (aData.Value().IsArrayBuffer()) {
     BodyExtractor<const ArrayBuffer> body(&aData.Value().GetAsArrayBuffer());
-    return SendBeaconInternal(aUrl, &body, /* isBlob*/ false, aRv);
+    return SendBeaconInternal(aUrl, &body, eBeaconTypeArrayBuffer, aRv);
   }
 
   if (aData.Value().IsArrayBufferView()) {
     BodyExtractor<const ArrayBufferView> body(&aData.Value().GetAsArrayBufferView());
-    return SendBeaconInternal(aUrl, &body, /* isBlob*/ false, aRv);
+    return SendBeaconInternal(aUrl, &body, eBeaconTypeArrayBuffer, aRv);
   }
 
   if (aData.Value().IsBlob()) {
     BodyExtractor<nsIXHRSendable> body(&aData.Value().GetAsBlob());
-    return SendBeaconInternal(aUrl, &body, /* isBlob */ true, aRv);
+    return SendBeaconInternal(aUrl, &body, eBeaconTypeBlob, aRv);
   }
 
   if (aData.Value().IsFormData()) {
     BodyExtractor<nsIXHRSendable> body(&aData.Value().GetAsFormData());
-    return SendBeaconInternal(aUrl, &body, /* isBlob */ false, aRv);
+    return SendBeaconInternal(aUrl, &body, eBeaconTypeOther, aRv);
   }
 
   if (aData.Value().IsUSVString()) {
     BodyExtractor<const nsAString> body(&aData.Value().GetAsUSVString());
-    return SendBeaconInternal(aUrl, &body, /* isBlob */ false, aRv);
+    return SendBeaconInternal(aUrl, &body, eBeaconTypeOther, aRv);
   }
 
   if (aData.Value().IsURLSearchParams()) {
     BodyExtractor<nsIXHRSendable> body(&aData.Value().GetAsURLSearchParams());
-    return SendBeaconInternal(aUrl, &body, /* isBlob */ false, aRv);
+    return SendBeaconInternal(aUrl, &body, eBeaconTypeOther, aRv);
   }
 
   MOZ_CRASH("Invalid data type.");
@@ -1273,7 +1273,7 @@ Navigator::SendBeacon(const nsAString& aUrl,
 bool
 Navigator::SendBeaconInternal(const nsAString& aUrl,
                               BodyExtractorBase* aBody,
-                              bool aIsBlob,
+                              BeaconType aType,
                               ErrorResult& aRv)
 {
   if (!mWindow) {
@@ -1316,7 +1316,7 @@ Navigator::SendBeaconInternal(const nsAString& aUrl,
     nsIChannel::LOAD_CLASSIFY_URI;
 
   // No need to use CORS for sendBeacon unless it's a BLOB
-  nsSecurityFlags securityFlags = aIsBlob
+  nsSecurityFlags securityFlags = aType == eBeaconTypeBlob
     ? nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS
     : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
   securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
@@ -1354,6 +1354,12 @@ Navigator::SendBeaconInternal(const nsAString& aUrl,
                              contentTypeWithCharset, charset);
     if (NS_WARN_IF(aRv.Failed())) {
       return false;
+    }
+
+    if (aType == eBeaconTypeArrayBuffer) {
+      MOZ_ASSERT(contentTypeWithCharset.IsEmpty());
+      MOZ_ASSERT(charset.IsEmpty());
+      contentTypeWithCharset.Assign("application/octet-stream");
     }
 
     nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(channel);
