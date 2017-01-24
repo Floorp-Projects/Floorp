@@ -2254,14 +2254,6 @@ IsPreliminaryObject(JSObject* obj);
 void
 StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub);
 
-MOZ_MUST_USE bool
-EffectlesslyLookupProperty(JSContext* cx, HandleObject obj, HandleId name,
-                           MutableHandleObject holder, MutableHandleShape shape);
-
-MOZ_MUST_USE bool
-EffectlesslyLookupProperty(JSContext* cx, HandleObject obj, HandleId name,
-                           MutableHandleObject holder, MutableHandle<PropertyResult> prop);
-
 JSObject*
 GetDOMProxyProto(JSObject* obj);
 

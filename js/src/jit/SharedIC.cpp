@@ -1965,24 +1965,6 @@ GetDOMProxyProto(JSObject* obj)
     return obj->staticPrototype();
 }
 
-// Look up a property's shape on an object, being careful never to do any effectful
-// operations.  This procedure not yielding a shape should not be taken as a lack of
-// existence of the property on the object.
-bool
-EffectlesslyLookupProperty(JSContext* cx, HandleObject obj, HandleId id,
-                           MutableHandleObject holder, MutableHandle<PropertyResult> prop)
-{
-    prop.setNotFound();
-    holder.set(nullptr);
-
-    if (LookupPropertyPure(cx, obj, id, holder.address(), prop.address()))
-        return true;
-
-    holder.set(nullptr);
-    prop.setNotFound();
-    return true;
-}
-
 bool
 IsCacheableProtoChain(JSObject* obj, JSObject* holder, bool isDOMProxy)
 {
