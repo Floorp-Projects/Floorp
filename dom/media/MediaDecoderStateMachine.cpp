@@ -67,24 +67,20 @@ using namespace mozilla::media;
 #undef VERBOSE_LOG
 #undef SAMPLE_LOG
 #undef DECODER_WARN
-#undef DUMP_LOG
 #undef SFMT
 #undef SLOG
 #undef SWARN
-#undef SDUMP
 
 #define FMT(x, ...) "Decoder=%p " x, mDecoderID, ##__VA_ARGS__
 #define DECODER_LOG(x, ...) MOZ_LOG(gMediaDecoderLog, LogLevel::Debug,   (FMT(x, ##__VA_ARGS__)))
 #define VERBOSE_LOG(x, ...) MOZ_LOG(gMediaDecoderLog, LogLevel::Verbose, (FMT(x, ##__VA_ARGS__)))
 #define SAMPLE_LOG(x, ...)  MOZ_LOG(gMediaSampleLog,  LogLevel::Debug,   (FMT(x, ##__VA_ARGS__)))
 #define DECODER_WARN(x, ...) NS_WARNING(nsPrintfCString(FMT(x, ##__VA_ARGS__)).get())
-#define DUMP_LOG(x, ...) NS_DebugBreak(NS_DEBUG_WARNING, nsPrintfCString(FMT(x, ##__VA_ARGS__)).get(), nullptr, nullptr, -1)
 
 // Used by StateObject and its sub-classes
 #define SFMT(x, ...) "Decoder=%p state=%s " x, mMaster->mDecoderID, ToStateStr(GetState()), ##__VA_ARGS__
 #define SLOG(x, ...) MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, (SFMT(x, ##__VA_ARGS__)))
 #define SWARN(x, ...) NS_WARNING(nsPrintfCString(SFMT(x, ##__VA_ARGS__)).get())
-#define SDUMP(x, ...) NS_DebugBreak(NS_DEBUG_WARNING, nsPrintfCString(SFMT(x, ##__VA_ARGS__)).get(), nullptr, nullptr, -1)
 
 // Certain constants get stored as member variables and then adjusted by various
 // scale factors on a per-decoder basis. We want to make sure to avoid using these
@@ -245,7 +241,7 @@ public:
 
   virtual void HandlePlayStateChanged(MediaDecoder::PlayState aPlayState) {}
 
-  virtual void DumpDebugInfo() {}
+  virtual nsCString GetDebugInfo() { return nsCString(); }
 
 private:
   template <class S, typename R, typename... As>
@@ -744,9 +740,9 @@ public:
     }
   }
 
-  void DumpDebugInfo() override
+  nsCString GetDebugInfo() override
   {
-    SDUMP("mIsPrerolling=%d", mIsPrerolling);
+    return nsPrintfCString("mIsPrerolling=%d", mIsPrerolling);
   }
 
 private:
@@ -3654,33 +3650,32 @@ uint32_t MediaDecoderStateMachine::GetAmpleVideoFrames() const
     : std::max<uint32_t>(sVideoQueueDefaultSize, MIN_VIDEO_QUEUE_SIZE);
 }
 
-void
-MediaDecoderStateMachine::DumpDebugInfo()
+nsCString
+MediaDecoderStateMachine::GetDebugInfo()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(OnTaskQueue());
+  return nsPrintfCString(
+    "GetMediaTime=%lld GetClock=%lld mMediaSink=%p "
+    "state=%s mPlayState=%d mSentFirstFrameLoadedEvent=%d IsPlaying=%d "
+    "mAudioStatus=%s mVideoStatus=%s mDecodedAudioEndTime=%lld mDecodedVideoEndTime=%lld "
+    "mAudioCompleted=%d mVideoCompleted=%d ",
+    GetMediaTime(), mMediaSink->IsStarted() ? GetClock() : -1, mMediaSink.get(),
+    ToStateStr(), mPlayState.Ref(), mSentFirstFrameLoadedEvent, IsPlaying(),
+    AudioRequestStatus(), VideoRequestStatus(), mDecodedAudioEndTime, mDecodedVideoEndTime,
+    mAudioCompleted, mVideoCompleted)
+    + mStateObj->GetDebugInfo() + nsCString("\n")
+    + mMediaSink->GetDebugInfo();
+}
 
-  // It is fine to capture a raw pointer here because MediaDecoder only call
-  // this function before shutdown begins.
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([this] () {
-    mMediaSink->DumpDebugInfo();
-    mStateObj->DumpDebugInfo();
-    DUMP_LOG(
-      "GetMediaTime=%lld GetClock=%lld mMediaSink=%p "
-      "state=%s mPlayState=%d mSentFirstFrameLoadedEvent=%d IsPlaying=%d "
-      "mAudioStatus=%s mVideoStatus=%s mDecodedAudioEndTime=%lld mDecodedVideoEndTime=%lld "
-      "mAudioCompleted=%d mVideoCompleted=%d",
-      GetMediaTime(), mMediaSink->IsStarted() ? GetClock() : -1, mMediaSink.get(),
-      ToStateStr(), mPlayState.Ref(), mSentFirstFrameLoadedEvent, IsPlaying(),
-      AudioRequestStatus(), VideoRequestStatus(), mDecodedAudioEndTime, mDecodedVideoEndTime,
-      mAudioCompleted, mVideoCompleted);
-  });
-
-  // Since the task is run asynchronously, it is possible other tasks get first
-  // and change the object states before we print them. Therefore we want to
-  // dispatch this task immediately without waiting for the tail dispatching
-  // phase so object states are less likely to change before being printed.
-  OwnerThread()->Dispatch(r.forget(),
-    AbstractThread::AssertDispatchSuccess, AbstractThread::TailDispatch);
+RefPtr<MediaDecoder::DebugInfoPromise>
+MediaDecoderStateMachine::RequestDebugInfo()
+{
+  using PromiseType = MediaDecoder::DebugInfoPromise;
+  RefPtr<PromiseType::Private> p = new PromiseType::Private(__func__);
+  OwnerThread()->Dispatch(NS_NewRunnableFunction([this, p] () {
+    p->Resolve(GetDebugInfo(), __func__);
+  }), AbstractThread::AssertDispatchSuccess, AbstractThread::TailDispatch);
+  return p.forget();
 }
 
 void MediaDecoderStateMachine::AddOutputStream(ProcessedMediaStream* aStream,

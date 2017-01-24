@@ -12,9 +12,13 @@ const {
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { getAllFilters } = require("devtools/client/webconsole/new-console-output/selectors/filters");
 const { getAllUi } = require("devtools/client/webconsole/new-console-output/selectors/ui");
-const { filterTextSet, filtersClear } = require("devtools/client/webconsole/new-console-output/actions/index");
-const { messagesClear } = require("devtools/client/webconsole/new-console-output/actions/index");
-const uiActions = require("devtools/client/webconsole/new-console-output/actions/index");
+const {
+  filterTextSet,
+  filtersClear,
+  filterBarToggle,
+  messagesClear
+} = require("devtools/client/webconsole/new-console-output/actions/index");
+const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const {
   MESSAGE_LEVEL
 } = require("../constants");
@@ -43,7 +47,7 @@ const FilterBar = createClass({
   },
 
   onClickFilterBarToggle: function () {
-    this.props.dispatch(uiActions.filterBarToggle());
+    this.props.dispatch(filterBarToggle());
   },
 
   onClickFiltersClear: function () {
@@ -62,20 +66,20 @@ const FilterBar = createClass({
     children.push(dom.div({className: "devtools-toolbar webconsole-filterbar-primary"},
       dom.button({
         className: "devtools-button devtools-clear-icon",
-        title: "Clear output",
+        title: l10n.getStr("webconsole.clearButton.tooltip"),
         onClick: this.onClickMessagesClear
       }),
       dom.button({
         className: "devtools-button devtools-filter-icon" + (
           filterBarVisible ? " checked" : ""),
-        title: "Toggle filter bar",
+        title: l10n.getStr("webconsole.toggleFilterButton.tooltip"),
         onClick: this.onClickFilterBarToggle
       }),
       dom.input({
         className: "devtools-plaininput text-filter",
         type: "search",
         value: filter.text,
-        placeholder: "Filter output",
+        placeholder: l10n.getStr("webconsole.filterInput.placeholder"),
         onInput: this.onSearchInput
       })
     ));
@@ -85,31 +89,31 @@ const FilterBar = createClass({
         dom.div({className: "devtools-toolbar webconsole-filterbar-secondary"},
           FilterButton({
             active: filter.error,
-            label: "Errors",
+            label: l10n.getStr("webconsole.errorsFilterButton.label"),
             filterKey: MESSAGE_LEVEL.ERROR,
             dispatch
           }),
           FilterButton({
             active: filter.warn,
-            label: "Warnings",
+            label: l10n.getStr("webconsole.warningsFilterButton.label"),
             filterKey: MESSAGE_LEVEL.WARN,
             dispatch
           }),
           FilterButton({
             active: filter.log,
-            label: "Logs",
+            label: l10n.getStr("webconsole.logsFilterButton.label"),
             filterKey: MESSAGE_LEVEL.LOG,
             dispatch
           }),
           FilterButton({
             active: filter.info,
-            label: "Info",
+            label: l10n.getStr("webconsole.infoFilterButton.label"),
             filterKey: MESSAGE_LEVEL.INFO,
             dispatch
           }),
           FilterButton({
             active: filter.debug,
-            label: "Debug",
+            label: l10n.getStr("webconsole.debugFilterButton.label"),
             filterKey: MESSAGE_LEVEL.DEBUG,
             dispatch
           }),
@@ -118,39 +122,22 @@ const FilterBar = createClass({
           }),
           FilterButton({
             active: filter.css,
-            label: "CSS",
+            label: l10n.getStr("webconsole.cssFilterButton.label"),
             filterKey: "css",
             dispatch
           }),
           FilterButton({
             active: filter.netxhr,
-            label: "XHR",
+            label: l10n.getStr("webconsole.xhrFilterButton.label"),
             filterKey: "netxhr",
             dispatch
           }),
           FilterButton({
             active: filter.net,
-            label: "Requests",
+            label: l10n.getStr("webconsole.requestsFilterButton.label"),
             filterKey: "net",
             dispatch
           })
-        )
-      );
-    }
-
-    if (ui.filteredMessageVisible) {
-      children.push(
-        dom.div({className: "devtools-toolbar"},
-          dom.span({
-            className: "clear"},
-            "You have filters set that may hide some results. " +
-            "Learn more about our filtering syntax ",
-            dom.a({}, "here"),
-            "."),
-          dom.button({
-            className: "menu-filter-button",
-            onClick: this.onClickFiltersClear
-          }, "Remove filters")
         )
       );
     }

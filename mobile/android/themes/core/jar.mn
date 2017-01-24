@@ -54,6 +54,7 @@ chrome.jar:
   skin/images/checkbox_unchecked_disabled.png (images/checkbox_unchecked_disabled.png)
   skin/images/checkbox_unchecked_pressed.png  (images/checkbox_unchecked_pressed.png)
   skin/images/chevron.png                   (images/chevron.png)
+  skin/images/chevron-rtl.png               (images/chevron-rtl.png)
   skin/images/dropmarker.svg                (images/dropmarker.svg)
   skin/images/dropmarker-right.svg          (images/dropmarker-right.svg)
   skin/images/errorpage-warning.png         (images/errorpage-warning.png)
