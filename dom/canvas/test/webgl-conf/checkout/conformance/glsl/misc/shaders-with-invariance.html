@@ -199,7 +199,7 @@ void main()
 // GLSL 1.0.17 4.3.5
 "use strict";
 // See GLSL ES spec 1.0.17 section 4.6.4 "Invariance and linkage".
-var cases = [
+GLSLConformanceTester.runTests([
   {
     vShaderId: "vertexShaderVariant",
     vShaderSuccess: true,
@@ -215,6 +215,14 @@ var cases = [
     fShaderSuccess: true,
     linkSuccess: false,
     passMsg: "vertex shader with invariant varying and fragment shader with variant varying must fail",
+  },
+  {
+    vShaderId: "vertexShaderVariant",
+    vShaderSuccess: true,
+    fShaderId: "fragmentShaderGlobalInvariant",
+    fShaderSuccess: true,
+    linkSuccess: false,
+    passMsg: "vertex shader with variant varying and fragment shader with invariant (global setting) varying must fail",
   },
   {
     vShaderId: "vertexShaderGlobalInvariant",
@@ -263,6 +271,14 @@ var cases = [
     fShaderSuccess: false,
     linkSuccess: false,
     passMsg: "fragment shader with invariant (separately set in wrong order) varying must fail",
+  },
+  {
+    vShaderId: "vertexShaderInvariant",
+    vShaderSuccess: true,
+    fShaderId: "fragmentShaderGlobalInvariant",
+    fShaderSuccess: true,
+    linkSuccess: true,
+    passMsg: "vertex shader with invariant varying and fragment shader with invariant (global setting) varying must succeed",
   },
   {
     vShaderId: "vertexShaderInvariantGlPosition",
@@ -328,25 +344,7 @@ var cases = [
     linkSuccess: false,
     passMsg: "fragment shader with invariant gl_FrontFacing must fail compilation",
   },
-  {
-    vShaderId: "vertexShaderVariant",
-    vShaderSuccess: true,
-    fShaderId: "fragmentShaderGlobalInvariant",
-    fShaderSuccess: true,
-    linkSuccess: false,
-    passMsg: "vertex shader with variant varying and fragment shader with invariant (global setting) varying must fail",
-  },
-  {
-    vShaderId: "vertexShaderInvariant",
-    vShaderSuccess: true,
-    fShaderId: "fragmentShaderGlobalInvariant",
-    fShaderSuccess: true,
-    linkSuccess: true,
-    passMsg: "vertex shader with invariant varying and fragment shader with invariant (global setting) varying must succeed",
-  }
-];
-
-GLSLConformanceTester.runTests(cases);
+]);
 var successfullyParsed = true;
 </script>
 </body>

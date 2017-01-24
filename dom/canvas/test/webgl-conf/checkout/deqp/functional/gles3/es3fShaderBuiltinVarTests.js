@@ -117,7 +117,7 @@ goog.scope(function() {
 
     es3fShaderBuiltinVarTests.ShaderBuiltinConstantCase.prototype.deinit = function() {
         // an attempt to cleanup the GL state when the test fails
-        bufferedLogToConsole('ShaderBuildInConstantCase.deinit()');
+        console.log('ShaderBuildInConstantCase.deinit()');
         gl.useProgram(null);
         gl.bindBuffer(gl.ARRAY_BUFFER, null);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);

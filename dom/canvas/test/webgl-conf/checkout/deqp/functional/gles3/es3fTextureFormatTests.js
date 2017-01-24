@@ -176,7 +176,7 @@ es3fTextureFormatTests.Texture2DFormatCase.prototype.iterate = function() {
     // Compare and log.
     var isOk = glsTextureTestUtil.compareImages(referenceFrame, renderedFrame, threshold);
 
-    assertMsgOptions(isOk, es3fTextureFormatTests.testDescription(), true, false);
+    assertMsgOptions(isOk, es3fTextureFormatTests.testDescription(), true, true);
     return tcuTestCase.IterateResult.STOP;
 };
 
@@ -307,18 +307,9 @@ es3fTextureFormatTests.TextureCubeFormatCase.prototype.testFace = function(face)
         this.m_texture.getRefTexture(), texCoord, renderParams);
 
     // Compare and log.
-    var skipPixels = null;
-    if (renderParams.samplerType == glsTextureTestUtil.samplerType.SAMPLERTYPE_INT ||
-        renderParams.samplerType == glsTextureTestUtil.samplerType.SAMPLERTYPE_UINT) {
-        // Skip top right pixel due to Mac Intel driver bug.
-        // https://github.com/KhronosGroup/WebGL/issues/1819
-        skipPixels = [
-            [this.m_width - 1, this.m_height - 1]
-        ];
-    }
-    var isOk = glsTextureTestUtil.compareImages(referenceFrame, renderedFrame, threshold, skipPixels);
+    var isOk = glsTextureTestUtil.compareImages(referenceFrame, renderedFrame, threshold);
 
-    assertMsgOptions(isOk, 'Face: ' + this.m_curFace + ' ' + es3fTextureFormatTests.testDescription(), true, false);
+    assertMsgOptions(isOk, 'Face: ' + this.m_curFace + ' ' + es3fTextureFormatTests.testDescription(), true, true);
     return isOk;
 };
 
@@ -443,7 +434,7 @@ es3fTextureFormatTests.Texture2DArrayFormatCase.prototype.testLayer = function(l
     // Compare and log.
     var isOk = glsTextureTestUtil.compareImages(referenceFrame, renderedFrame, threshold);
 
-    assertMsgOptions(isOk, 'Layer: ' + this.m_curLayer + ' ' + es3fTextureFormatTests.testDescription(), true, false);
+    assertMsgOptions(isOk, 'Layer: ' + this.m_curLayer + ' ' + es3fTextureFormatTests.testDescription(), true, true);
     return isOk;
 };
 
@@ -569,7 +560,7 @@ es3fTextureFormatTests.Texture3DFormatCase.prototype.testSlice = function(sliceN
     // Compare and log.
     var isOk = glsTextureTestUtil.compareImages(referenceFrame, renderedFrame, threshold);
 
-    assertMsgOptions(isOk, 'Slice: ' + this.m_curSlice + ' ' + es3fTextureFormatTests.testDescription(), true, false);
+    assertMsgOptions(isOk, 'Slice: ' + this.m_curSlice + ' ' + es3fTextureFormatTests.testDescription(), true, true);
     return isOk;
 };
 
@@ -676,7 +667,7 @@ es3fTextureFormatTests.Compressed2DFormatCase.prototype.iterate = function() {
     // Compare and log.
     var isOk = glsTextureTestUtil.compareImages(referenceFrame, renderedFrame, threshold);
 
-    assertMsgOptions(isOk, es3fTextureFormatTests.testDescription(), true, false);
+    assertMsgOptions(isOk, es3fTextureFormatTests.testDescription(), true, true);
     return tcuTestCase.IterateResult.STOP;
 };
 
@@ -717,8 +708,7 @@ es3fTextureFormatTests.CompressedCubeFormatCase.prototype.testFace = function(fa
     /* TODO: Implement
     // tcu::RGBA threshold = m_renderCtx.getRenderTarget().getPixelFormat().getColorThreshold() + tcu::RGBA(1,1,1,1);
     */
-    // Threshold high enough to cover numerical errors in software decoders on Windows and Mac.  Threshold is 17 in native dEQP.
-    var threshold = [6, 6, 6, 6];
+    var threshold = [3, 3, 3, 3];
     var renderParams = new glsTextureTestUtil.ReferenceParams(glsTextureTestUtil.textureType.TEXTURETYPE_CUBE);
 
     /** @const */ var wrapS = gl.CLAMP_TO_EDGE;
@@ -772,7 +762,7 @@ es3fTextureFormatTests.CompressedCubeFormatCase.prototype.testFace = function(fa
     // Compare and log.
     var isOk = glsTextureTestUtil.compareImages(referenceFrame, renderedFrame, threshold);
 
-    assertMsgOptions(isOk, 'Face: ' + this.m_curFace + ' ' + es3fTextureFormatTests.testDescription(), true, false);
+    assertMsgOptions(isOk, 'Face: ' + this.m_curFace + ' ' + es3fTextureFormatTests.testDescription(), true, true);
     return isOk;
 };
 
@@ -1125,10 +1115,6 @@ es3fTextureFormatTests.genTestCases = function() {
         ['gl.COMPRESSED_RGBA8_ETC2_EAC', 'etc2_eac_rgba8', tcuCompressedTexture.Format.ETC2_EAC_RGBA8],
         ['gl.COMPRESSED_SRGB8_ALPHA8_ETC2_EAC', 'etc2_eac_srgb8_alpha8', tcuCompressedTexture.Format.ETC2_EAC_SRGB8_ALPHA8]
     ];
-    if (!gluTextureUtil.enableCompressedTextureETC()) {
-        debug('Skipping ETC2/EAC texture format tests: no support for WEBGL_compressed_texture_etc');
-        etc2Formats = [];
-    }
     etc2Formats.forEach(function(elem) {
         var nameBase = elem[1];
         var descriptionBase = elem[0];

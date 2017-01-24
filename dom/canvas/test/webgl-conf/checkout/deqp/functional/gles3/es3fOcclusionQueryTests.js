@@ -486,7 +486,7 @@ es3fOcclusionQueryTests.OcclusionQueryTests.prototype.init = function() {
 * Run test
 * @param {WebGL2RenderingContext} context
 */
-es3fOcclusionQueryTests.run = function(context, range) {
+es3fOcclusionQueryTests.run = function(context) {
     gl = context;
     //Set up Test Root parameters
     var state = tcuTestCase.runner;
@@ -497,8 +497,6 @@ es3fOcclusionQueryTests.run = function(context, range) {
     description(state.testCases.getDescription());
 
     try {
-        if (range)
-            state.setRange(range);
         //Run test cases
         tcuTestCase.runTestCases();
     }
