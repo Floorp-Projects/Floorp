@@ -53,6 +53,7 @@ public class AndroidImport implements Runnable {
 
     public static final Uri SAMSUNG_BOOKMARKS_URI = Uri.parse("content://com.sec.android.app.sbrowser.browser/bookmarks");
     public static final Uri SAMSUNG_HISTORY_URI = Uri.parse("content://com.sec.android.app.sbrowser.browser/history");
+    public static final String SAMSUNG_BOOKMARK_TYPE = "bookmark_type";
     public static final String SAMSUNG_MANUFACTURER = "samsung";
 
     private static final String LOGTAG = "AndroidImport";
@@ -79,8 +80,9 @@ public class AndroidImport implements Runnable {
         Cursor cursor = null;
         try {
             cursor = query(LegacyBrowserProvider.BOOKMARKS_URI,
-                               SAMSUNG_BOOKMARKS_URI,
-                               LegacyBrowserProvider.BookmarkColumns.BOOKMARK + " = 1");
+                           LegacyBrowserProvider.BookmarkColumns.BOOKMARK + " = 1",
+                           SAMSUNG_BOOKMARKS_URI,
+                           SAMSUNG_BOOKMARK_TYPE + " = 1");
 
             if (cursor != null) {
                 final int faviconCol = cursor.getColumnIndexOrThrow(LegacyBrowserProvider.BookmarkColumns.FAVICON);
@@ -125,10 +127,11 @@ public class AndroidImport implements Runnable {
         ArrayList<ContentValues> visitsToSynthesize = new ArrayList<>();
         Cursor cursor = null;
         try {
-            cursor = query (LegacyBrowserProvider.BOOKMARKS_URI,
-                                SAMSUNG_HISTORY_URI,
-                                LegacyBrowserProvider.BookmarkColumns.BOOKMARK + " = 0 AND " +
-                                LegacyBrowserProvider.BookmarkColumns.VISITS + " > 0");
+            cursor = query(LegacyBrowserProvider.BOOKMARKS_URI,
+                           LegacyBrowserProvider.BookmarkColumns.BOOKMARK + " = 0 AND " +
+                                   LegacyBrowserProvider.BookmarkColumns.VISITS + " > 0",
+                           SAMSUNG_HISTORY_URI,
+                           null);
 
             if (cursor != null) {
                 final int dateCol = cursor.getColumnIndexOrThrow(LegacyBrowserProvider.BookmarkColumns.DATE);
@@ -191,13 +194,13 @@ public class AndroidImport implements Runnable {
         storage.putMapping(url, iconUrl);
     }
 
-    protected Cursor query(Uri mainUri, Uri fallbackUri, String condition) {
-        final Cursor cursor = mCr.query(mainUri, null, condition, null, null);
+    protected Cursor query(Uri mainUri, String mainCondition, Uri fallbackUri, String fallbackCondition) {
+        final Cursor cursor = mCr.query(mainUri, null, mainCondition, null, null);
         if (Build.MANUFACTURER.equals(SAMSUNG_MANUFACTURER) && (cursor == null || cursor.getCount() == 0)) {
             if (cursor != null) {
                 cursor.close();
             }
-            return mCr.query(fallbackUri, null, null, null, null);
+            return mCr.query(fallbackUri, null, fallbackCondition, null, null);
         }
         return cursor;
     }
