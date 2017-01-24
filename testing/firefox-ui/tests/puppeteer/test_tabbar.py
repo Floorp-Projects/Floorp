@@ -73,7 +73,7 @@ class TestTabBar(PuppeteerMixin, MarionetteTestCase):
         tabbar = self.browser.tabbar
 
         new_tab = tabbar.open_tab()
-        tabbar.close_tab(tabbar.tabs[0], trigger="button")
+        tabbar.close_tab(tabbar.tabs[0])
 
         self.assertEqual(len(tabbar.tabs), 1)
         self.assertEqual(new_tab, tabbar.tabs[0])
