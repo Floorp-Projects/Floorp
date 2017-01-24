@@ -65,13 +65,24 @@ net_GetFileFromURLSpec(const nsACString &aURL, nsIFile **result)
     rv = net_ParseFileURL(aURL, directory, fileBaseName, fileExtension);
     if (NS_FAILED(rv)) return rv;
 
-    if (!directory.IsEmpty())
-        NS_EscapeURL(directory, esc_Directory|esc_AlwaysCopy, path);
-    if (!fileBaseName.IsEmpty())
-        NS_EscapeURL(fileBaseName, esc_FileBaseName|esc_AlwaysCopy, path);
+    if (!directory.IsEmpty()) {
+        rv = NS_EscapeURL(directory, esc_Directory|esc_AlwaysCopy, path,
+                         mozilla::fallible);
+        if (NS_FAILED(rv))
+          return rv;
+    }
+    if (!fileBaseName.IsEmpty()) {
+        rv = NS_EscapeURL(fileBaseName, esc_FileBaseName|esc_AlwaysCopy, path,
+                          mozilla::fallible);
+        if (NS_FAILED(rv))
+          return rv;
+    }
     if (!fileExtension.IsEmpty()) {
         path += '.';
-        NS_EscapeURL(fileExtension, esc_FileExtension|esc_AlwaysCopy, path);
+        rv = NS_EscapeURL(fileExtension, esc_FileExtension|esc_AlwaysCopy, path,
+                          mozilla::fallible);
+        if (NS_FAILED(rv))
+          return rv;
     }
     
     NS_UnescapeURL(path);
