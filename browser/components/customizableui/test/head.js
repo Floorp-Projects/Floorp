@@ -123,11 +123,11 @@ function isInNightly() {
 }
 
 function removeNonReleaseButtons(areaPanelPlacements) {
-  if (isInDevEdition()) {
+  if (isInDevEdition() && areaPanelPlacements.includes("developer-button")) {
     areaPanelPlacements.splice(areaPanelPlacements.indexOf("developer-button"), 1);
   }
 
-  if (!isInNightly()) {
+  if (!isInNightly() && areaPanelPlacements.includes("webcompat-reporter-button")) {
     areaPanelPlacements.splice(areaPanelPlacements.indexOf("webcompat-reporter-button"), 1);
   }
 }
@@ -152,6 +152,8 @@ function assertAreaPlacements(areaId, expectedPlacements) {
 }
 
 function placementArraysEqual(areaId, actualPlacements, expectedPlacements) {
+  info("Actual placements: " + actualPlacements.join(", "));
+  info("Expected placements: " + expectedPlacements.join(", "));
   is(actualPlacements.length, expectedPlacements.length,
      "Area " + areaId + " should have " + expectedPlacements.length + " items.");
   let minItems = Math.min(expectedPlacements.length, actualPlacements.length);
