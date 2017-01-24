@@ -208,11 +208,9 @@ CSSStyleSheet::RebuildChildList(css::Rule* aRule, void* aBuilder)
 size_t
 CSSStyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
-  size_t n = 0;
+  size_t n = StyleSheet::SizeOfIncludingThis(aMallocSizeOf);
   const CSSStyleSheet* s = this;
   while (s) {
-    n += aMallocSizeOf(s);
-
     // Each inner can be shared by multiple sheets.  So we only count the inner
     // if this sheet is the last one in the list of those sharing it.  As a
     // result, the last such sheet takes all the blame for the memory
@@ -226,8 +224,6 @@ CSSStyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 
     // Measurement of the following members may be added later if DMD finds it
     // is worthwhile:
-    // - s->mTitle
-    // - s->mMedia
     // - s->mRuleCollection
     // - s->mRuleProcessors
     //

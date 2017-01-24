@@ -169,7 +169,7 @@ public:
   // list after we clone a unique inner for ourselves.
   static bool RebuildChildList(css::Rule* aRule, void* aBuilder);
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
   dom::Element* GetScopeElement() const { return mScopeElement; }
   void SetScopeElement(dom::Element* aScopeElement)
