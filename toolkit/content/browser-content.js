@@ -651,7 +651,19 @@ var Printing = {
       if (printSettings && simplifiedMode)
         printSettings.docURL = contentWindow.document.baseURI;
 
-      docShell.printPreview.printPreview(printSettings, contentWindow, this);
+      // The print preview docshell will be in a different TabGroup,
+      // so we run it in a separate runnable to avoid touching a
+      // different TabGroup in our own runnable.
+      Services.tm.mainThread.dispatch(() => {
+        try {
+          docShell.printPreview.printPreview(printSettings, contentWindow, this);
+        } catch (error) {
+          // This might fail if we, for example, attempt to print a XUL document.
+          // In that case, we inform the parent to bail out of print preview.
+          Components.utils.reportError(error);
+          notifyEntered(error);
+        }
+      }, Ci.nsIThread.DISPATCH_NORMAL);
     } catch (error) {
       // This might fail if we, for example, attempt to print a XUL document.
       // In that case, we inform the parent to bail out of print preview.
