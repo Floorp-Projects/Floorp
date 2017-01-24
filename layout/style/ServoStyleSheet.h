@@ -53,8 +53,6 @@ public:
    */
   void LoadFailed();
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
-
   RawServoStyleSheet* RawSheet() const { return mSheet; }
   void SetSheetForImport(RawServoStyleSheet* aSheet) {
     MOZ_ASSERT(!mSheet);
