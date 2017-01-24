@@ -446,8 +446,7 @@ public:
                        Connection* aClone,
                        const bool aReadOnly,
                        mozIStorageCompletionCallback* aCallback)
-    : Runnable("storage::AsyncInitializeClone")
-    , mConnection(aConnection)
+    : mConnection(aConnection)
     , mClone(aClone)
     , mReadOnly(aReadOnly)
     , mCallback(aCallback)

@@ -455,7 +455,9 @@ class MessageChannel : HasResultCodes
         public nsIRunnablePriority
     {
     public:
-        explicit MessageTask(MessageChannel* aChannel, Message&& aMessage);
+        explicit MessageTask(MessageChannel* aChannel, Message&& aMessage)
+          : mChannel(aChannel), mMessage(Move(aMessage)), mScheduled(false)
+        {}
 
         NS_DECL_ISUPPORTS_INHERITED
 

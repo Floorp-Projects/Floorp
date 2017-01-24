@@ -5284,7 +5284,7 @@ nsDocument::UnblockDOMContentLoaded()
     MOZ_RELEASE_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIRunnable> ev =
       NewRunnableMethod(this, &nsDocument::DispatchContentLoadedEvents);
-    Dispatch("nsDocument::DispatchContentLoadedEvents", TaskCategory::Other, ev.forget());
+    Dispatch("DispatchContentLoadedEvents", TaskCategory::Other, ev.forget());
   } else {
     DispatchContentLoadedEvents();
   }
@@ -12059,7 +12059,7 @@ nsDocument::PostVisibilityUpdateEvent()
 {
   nsCOMPtr<nsIRunnable> event =
     NewRunnableMethod(this, &nsDocument::UpdateVisibilityState);
-  Dispatch("nsDocument::UpdateVisibilityState", TaskCategory::Other, event.forget());
+  Dispatch("UpdateVisibility", TaskCategory::Other, event.forget());
 }
 
 void
@@ -12600,10 +12600,6 @@ nsDocument::UpdateIntersectionObservations()
 void
 nsDocument::ScheduleIntersectionObserverNotification()
 {
-  if (mIntersectionObservers.IsEmpty()) {
-    return;
-  }
-
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIRunnable> notification =
     NewRunnableMethod(this, &nsDocument::NotifyIntersectionObservers);

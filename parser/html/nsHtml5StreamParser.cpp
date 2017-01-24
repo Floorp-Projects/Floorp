@@ -1336,7 +1336,7 @@ nsHtml5StreamParser::FlushTreeOpsAndDisarmTimer()
   }
   mTreeBuilder->Flush();
   nsCOMPtr<nsIRunnable> runnable(mExecutorFlusher);
-  if (NS_FAILED(mExecutor->GetDocument()->Dispatch("nsHtml5ExecutorFlusher",
+  if (NS_FAILED(mExecutor->GetDocument()->Dispatch("FlushTreeOpsAndDisarmTimer",
                                                    dom::TaskCategory::Other,
                                                    runnable.forget()))) {
     NS_WARNING("failed to dispatch executor flush event");

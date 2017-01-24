@@ -750,8 +750,7 @@ public:
   OpenMainProcessActorRunnable(already_AddRefed<ChildImpl>&& aChildActor,
                                already_AddRefed<ParentImpl> aParentActor,
                                MessageLoop* aParentMessageLoop)
-  : Runnable("ChildImpl::OpenMainProcessActorRunnable"),
-    mActor(aChildActor), mParentActor(aParentActor),
+  : mActor(aChildActor), mParentActor(aParentActor),
     mParentMessageLoop(aParentMessageLoop)
   {
     AssertIsOnMainThread();

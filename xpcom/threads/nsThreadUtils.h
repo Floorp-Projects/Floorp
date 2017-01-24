@@ -237,12 +237,6 @@ public:
 
   Runnable() {}
 
-#ifdef RELEASE_OR_BETA
-  explicit Runnable(const char* aName) {}
-#else
-  explicit Runnable(const char* aName) : mName(aName) {}
-#endif
-
 protected:
   virtual ~Runnable() {}
 private:
@@ -265,7 +259,6 @@ public:
   virtual nsresult Cancel() override;
 
   CancelableRunnable() {}
-  explicit CancelableRunnable(const char* aName) : Runnable(aName) {}
 
 protected:
   virtual ~CancelableRunnable() {}

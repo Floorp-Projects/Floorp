@@ -4747,11 +4747,7 @@ nsresult
 WorkerPrivate::DispatchToMainThread(already_AddRefed<nsIRunnable> aRunnable,
                                     uint32_t aFlags)
 {
-  nsCOMPtr<nsIRunnable> runnable = aRunnable;
-  if (nsCOMPtr<nsINamed> named = do_QueryInterface(runnable)) {
-    named->SetName("WorkerRunnable");
-  }
-  return mMainThreadEventTarget->Dispatch(runnable.forget(), aFlags);
+  return mMainThreadEventTarget->Dispatch(Move(aRunnable), aFlags);
 }
 
 void

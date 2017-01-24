@@ -186,8 +186,7 @@ private:
   public:
     AvailableCallbackRunnable(CacheEntry* aEntry,
                               Callback const &aCallback)
-      : Runnable("CacheEntry::AvailableCallbackRunnable")
-      , mEntry(aEntry)
+      : mEntry(aEntry)
       , mCallback(aCallback)
     {}
 
