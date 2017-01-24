@@ -94,12 +94,6 @@ partial interface OfflineResourceList {
   getter DOMString mozItem(unsigned long index);
 
   /**
-   * We need a "length" to actually be valid Web IDL, given that we have an
-   * indexed getter.
-   */
-  readonly attribute unsigned long length;
-
-  /**
    * Add an item to the list of dynamically-managed entries.  The resource
    * will be fetched into the application cache.
    *
