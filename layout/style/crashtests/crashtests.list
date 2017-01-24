@@ -168,3 +168,4 @@ HTTP load 1320423-1.html
 asserts-if(stylo,5-28) load 1321357-1.html # bug 1324669
 load 1328535-1.html
 load 1331272.html
+HTTP load 1333001-1.html
