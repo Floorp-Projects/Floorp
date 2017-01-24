@@ -1171,6 +1171,10 @@ class JSScript : public js::gc::TenuredCell
         return funLength_;
     }
 
+    static size_t offsetOfFunLength() {
+        return offsetof(JSScript, funLength_);
+    }
+
     size_t sourceStart() const {
         return sourceStart_;
     }
