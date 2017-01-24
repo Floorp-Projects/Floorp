@@ -35,7 +35,7 @@ function test_portal_not_found() {
     },
     complete: function complete(success) {
       do_check_eq(++step, 2);
-      do_check_true(success);
+      do_check_false(success);
       do_check_eq(attempt, 6);
       gServer.stop(do_test_finished);
     },

@@ -45,6 +45,8 @@ CaptivePortalService::CaptivePortalService()
 
 CaptivePortalService::~CaptivePortalService()
 {
+  LOG(("CaptivePortalService::~CaptivePortalService isParentProcess:%d\n",
+       XRE_GetProcessType() == GeckoProcessType_Default));
 }
 
 nsresult
@@ -76,6 +78,7 @@ CaptivePortalService::PerformCheck()
 nsresult
 CaptivePortalService::RearmTimer()
 {
+  LOG(("CaptivePortalService::RearmTimer\n"));
   // Start a timer to recheck
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   if (mTimer) {
@@ -292,13 +295,12 @@ CaptivePortalService::Observe(nsISupports *aSubject,
     // The user has successfully logged in. We have connectivity.
     mState = UNLOCKED_PORTAL;
     mLastChecked = TimeStamp::Now();
-    mRequestInProgress = false;
     mSlackCount = 0;
     mDelay = mMinInterval;
+
     RearmTimer();
   } else if (!strcmp(aTopic, kAbortCaptivePortalLoginEvent)) {
     // The login has been aborted
-    mRequestInProgress = false;
     mState = UNKNOWN;
     mLastChecked = TimeStamp::Now();
     mSlackCount = 0;
@@ -336,15 +338,16 @@ CaptivePortalService::Complete(bool success)
   LOG(("CaptivePortalService::Complete(success=%d) mState=%d\n", success, mState));
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   mLastChecked = TimeStamp::Now();
-  if ((mState == UNKNOWN || mState == NOT_CAPTIVE) && success) {
-    mState = NOT_CAPTIVE;
-    // If this check succeeded and we have never been in a captive portal
-    // since the service was started, there is no need to keep polling
-    if (!mEverBeenCaptive) {
-      mDelay = 0;
-      if (mTimer) {
-        mTimer->Cancel();
-      }
+
+  // Note: this callback gets called when:
+  // 1. the request is completed, and content is valid (success == true)
+  // 2. when the request is aborted or times out (success == false)
+
+  if (success) {
+    if (mEverBeenCaptive) {
+      mState = UNLOCKED_PORTAL;
+    } else {
+      mState = NOT_CAPTIVE;
     }
   }
 
