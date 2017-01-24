@@ -225,8 +225,6 @@ class nsDocumentViewer final : public nsIContentViewer,
 public:
   nsDocumentViewer();
 
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
-
   // nsISupports interface...
   NS_DECL_ISUPPORTS
 
@@ -506,14 +504,36 @@ void nsDocumentViewer::PrepareToStartLoad()
 #endif // NS_PRINTING
 }
 
-// Note: operator new zeros our memory, so no need to init things to null.
 nsDocumentViewer::nsDocumentViewer()
-  : mTextZoom(1.0), mPageZoom(1.0), mOverrideDPPX(0.0), mMinFontSize(0),
+  : mParentWidget(nullptr),
+    mAttachedToParent(false),
+    mTextZoom(1.0),
+    mPageZoom(1.0),
+    mOverrideDPPX(0.0),
+    mMinFontSize(0),
+    mNumURLStarts(0),
+    mDestroyRefCount(0),
+    mStopped(false),
+    mLoaded(false),
+    mDeferredWindowClose(false),
     mIsSticky(true),
-#ifdef NS_PRINT_PREVIEW
+    mInPermitUnload(false),
+    mInPermitUnloadPrompt(false),
+#ifdef NS_PRINTING
+    mClosingWhilePrinting(false),
+#if NS_PRINT_PREVIEW
+    mPrintPreviewZoomed(false),
+    mPrintIsPending(false),
+    mPrintDocIsFullyLoaded(false),
+    mOriginalPrintPreviewScale(0.0),
     mPrintPreviewZoom(1.0),
-#endif
+#endif // NS_PRINT_PREVIEW
+#ifdef DEBUG
+    mDebugFile(nullptr),
+#endif // DEBUG
+#endif // NS_PRINTING
     mHintCharsetSource(kCharsetUninitialized),
+    mIsPageMode(false),
     mInitializedForPrintPreview(false),
     mHidden(false)
 {
