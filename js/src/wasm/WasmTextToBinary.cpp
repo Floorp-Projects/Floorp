@@ -4437,7 +4437,7 @@ static bool
 EncodeGlobalType(Encoder& e, const AstGlobal* global)
 {
     return e.writeValType(global->type()) &&
-           e.writeVarU32(global->isMutable() ? uint32_t(GlobalFlags::IsMutable) : 0);
+           e.writeVarU32(global->isMutable() ? uint32_t(GlobalTypeImmediate::IsMutable) : 0);
 }
 
 static bool
