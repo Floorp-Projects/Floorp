@@ -5,6 +5,8 @@
  *
  * The origin of this IDL file is
  * http://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html
+ * http://w3c.github.io/push-api/
+ * https://notifications.spec.whatwg.org/
  *
  * You are granted a license to use, reproduce and create derivative works of
  * this document.
@@ -34,3 +36,8 @@ partial interface ServiceWorkerGlobalScope {
   attribute EventHandler onpushsubscriptionchange;
 };
 
+// https://notifications.spec.whatwg.org/
+partial interface ServiceWorkerGlobalScope {
+  attribute EventHandler onnotificationclick;
+  attribute EventHandler onnotificationclose;
+};

@@ -20,8 +20,3 @@ interface NotificationEvent : ExtendableEvent {
 dictionary NotificationEventInit : ExtendableEventInit {
   required Notification notification;
 };
-
-partial interface ServiceWorkerGlobalScope {
-  attribute EventHandler onnotificationclick;
-  attribute EventHandler onnotificationclose;
-};
