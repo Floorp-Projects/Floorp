@@ -139,13 +139,13 @@ struct WrColor
   }
 };
 
-struct WRGlyphInstance
+struct WrGlyphInstance
 {
   uint32_t index;
   float x;
   float y;
 
-  bool operator==(const WRGlyphInstance& other) const
+  bool operator==(const WrGlyphInstance& other) const
   {
     return index == other.index &&
            x == other.x &&
@@ -154,13 +154,13 @@ struct WRGlyphInstance
 };
 
 // Note that the type is slightly different than
-// the definition in bindings.rs. WRGlyphInstance
+// the definition in bindings.rs. WrGlyphInstance
 // versus GlyphInstance, but their layout is the same.
 // So we're really overlapping the types for the same memory.
 struct WrGlyphArray
 {
   mozilla::gfx::Color color;
-  nsTArray<WRGlyphInstance> glyphs;
+  nsTArray<WrGlyphInstance> glyphs;
 
   bool operator==(const WrGlyphArray& other) const
   {
@@ -454,7 +454,7 @@ WR_FUNC;
 
 WR_INLINE void
 wr_dp_push_text(WrState* wrState, WrRect bounds, WrRect clip, WrColor color,
-                WrFontKey font_Key, const WRGlyphInstance* glyphs,
+                WrFontKey font_Key, const WrGlyphInstance* glyphs,
                 uint32_t glyph_count, float glyph_size)
 WR_FUNC;
 
