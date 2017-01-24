@@ -552,6 +552,7 @@ def set_retry_exit_status(config, tests):
         test['retry-exit-status'] = 4
         yield test
 
+
 @transforms.add
 def remove_linux_pgo_try_talos(config, tests):
     """linux64-pgo talos tests don't run on try."""
@@ -563,6 +564,7 @@ def remove_linux_pgo_try_talos(config, tests):
         )
     for test in filter(predicate, tests):
         yield test
+
 
 @transforms.add
 def make_task_description(config, tests):
@@ -638,6 +640,7 @@ def make_task_description(config, tests):
         yield taskdesc
 
 worker_setup_functions = {}
+
 
 def worker_setup_function(name):
     def wrap(func):
