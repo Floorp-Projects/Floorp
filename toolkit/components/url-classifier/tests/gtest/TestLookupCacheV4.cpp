@@ -60,13 +60,13 @@ TestHasPrefix(const _Fragment& aFragment, bool aExpectedHas, bool aExpectedCompl
     nsCOMPtr<nsICryptoHash> cryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
     lookupHash.FromPlaintext(aFragment, cryptoHash);
 
-    bool has, complete;
+    bool has, fromCache;
     uint32_t matchLength;
-    nsresult rv = cache->Has(lookupHash, &has, &complete, &matchLength);
+    nsresult rv = cache->Has(lookupHash, &has, &matchLength, &fromCache);
 
     EXPECT_EQ(rv, NS_OK);
     EXPECT_EQ(has, aExpectedHas);
-    EXPECT_EQ(complete, aExpectedComplete);
+    EXPECT_EQ(matchLength == COMPLETE_SIZE, aExpectedComplete);
 
     cache->ClearAll();
   });

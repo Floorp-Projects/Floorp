@@ -997,7 +997,7 @@ public:
     return p.forget();
   }
 
-  void Resolve(typename PromiseType::ResolveValueType aResolveValue,
+  void Resolve(const typename PromiseType::ResolveValueType& aResolveValue,
                const char* aMethodName)
   {
     if (mMonitor) {
@@ -1007,17 +1007,33 @@ public:
     mPromise->Resolve(aResolveValue, aMethodName);
     mPromise = nullptr;
   }
+  void Resolve(typename PromiseType::ResolveValueType&& aResolveValue,
+               const char* aMethodName)
+  {
+    if (mMonitor) {
+      mMonitor->AssertCurrentThreadOwns();
+    }
+    MOZ_ASSERT(mPromise);
+    mPromise->Resolve(Move(aResolveValue), aMethodName);
+    mPromise = nullptr;
+  }
 
-
-  void ResolveIfExists(typename PromiseType::ResolveValueType aResolveValue,
+  void ResolveIfExists(const typename PromiseType::ResolveValueType& aResolveValue,
                        const char* aMethodName)
   {
     if (!IsEmpty()) {
       Resolve(aResolveValue, aMethodName);
     }
   }
+  void ResolveIfExists(typename PromiseType::ResolveValueType&& aResolveValue,
+                       const char* aMethodName)
+  {
+    if (!IsEmpty()) {
+      Resolve(Move(aResolveValue), aMethodName);
+    }
+  }
 
-  void Reject(typename PromiseType::RejectValueType aRejectValue,
+  void Reject(const typename PromiseType::RejectValueType& aRejectValue,
               const char* aMethodName)
   {
     if (mMonitor) {
@@ -1027,13 +1043,29 @@ public:
     mPromise->Reject(aRejectValue, aMethodName);
     mPromise = nullptr;
   }
+  void Reject(typename PromiseType::RejectValueType&& aRejectValue,
+              const char* aMethodName)
+  {
+    if (mMonitor) {
+      mMonitor->AssertCurrentThreadOwns();
+    }
+    MOZ_ASSERT(mPromise);
+    mPromise->Reject(Move(aRejectValue), aMethodName);
+    mPromise = nullptr;
+  }
 
-
-  void RejectIfExists(typename PromiseType::RejectValueType aRejectValue,
+  void RejectIfExists(const typename PromiseType::RejectValueType& aRejectValue,
                       const char* aMethodName)
   {
     if (!IsEmpty()) {
       Reject(aRejectValue, aMethodName);
+    }
+  }
+  void RejectIfExists(typename PromiseType::RejectValueType&& aRejectValue,
+                      const char* aMethodName)
+  {
+    if (!IsEmpty()) {
+      Reject(Move(aRejectValue), aMethodName);
     }
   }
 
