@@ -47,7 +47,7 @@ ADTSDecoder::IsSupportedType(const MediaContainerType& aContainerType)
     return
       IsEnabled()
       && (aContainerType.ExtendedType().Codecs().IsEmpty()
-          || aContainerType.ExtendedType().Codecs().AsString().EqualsASCII("aac"));
+          || aContainerType.ExtendedType().Codecs() == "aac");
   }
 
   return false;
