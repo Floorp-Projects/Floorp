@@ -13,6 +13,8 @@
 #include "mozilla/EnumeratedArray.h"
 #include "nsCSSValue.h"
 
+#include <limits>
+
 class nsIFrame;
 class nsStyleContext;
 class nsPresContext;
@@ -26,6 +28,17 @@ class RuleNodeCacheConditions;
  * A helper to generate gfxMatrixes from css transform functions.
  */
 namespace nsStyleTransformMatrix {
+
+  // Function for applying perspective() transform function. We treat
+  // any value smaller than epsilon as perspective(infinity), which
+  // follows CSSWG's resolution on perspective(0). See bug 1316236.
+  inline void ApplyPerspectiveToMatrix(mozilla::gfx::Matrix4x4& aMatrix,
+                                       float aDepth)
+  {
+    if (aDepth >= std::numeric_limits<float>::epsilon()) {
+      aMatrix.Perspective(aDepth);
+    }
+  }
 
   /**
    * This class provides on-demand access to the 'reference box' for CSS
