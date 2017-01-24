@@ -72,7 +72,6 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/Conversions.h"
-#include "js/HeapAPI.h"
 
 #include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
@@ -121,7 +120,6 @@
 #include "nsFontMetrics.h"
 #include "Units.h"
 #include "CanvasUtils.h"
-#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
 #include "mozilla/layers/CanvasClient.h"
@@ -1744,12 +1742,6 @@ CanvasRenderingContext2D::RegisterAllocation()
   JSContext* context = nsContentUtils::GetCurrentJSContext();
   if (context) {
     JS_updateMallocCounter(context, mWidth * mHeight * 4);
-  }
-
-  JSObject* wrapper = GetWrapperPreserveColor();
-  if (wrapper) {
-    CycleCollectedJSContext::Get()->
-      AddZoneWaitingForGC(JS::GetObjectZone(wrapper));
   }
 }
 
