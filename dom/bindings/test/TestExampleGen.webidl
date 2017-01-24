@@ -434,6 +434,7 @@ interface TestExampleInterface {
   void passUnion((object or long) arg);
   // Some union tests are debug-only to avoid creating all those
   // unused union types in opt builds.
+
 #ifdef DEBUG
   void passUnion2((long or boolean) arg);
   void passUnion3((object or long or boolean) arg);
@@ -803,6 +804,7 @@ interface TestExampleInterface {
 interface TestExampleProxyInterface {
   getter long longIndexedGetter(unsigned long ix);
   setter creator void longIndexedSetter(unsigned long y, long z);
+  readonly attribute unsigned long length;
   stringifier DOMString myStringifier();
   getter short shortNameGetter(DOMString nom);
   deleter void (DOMString nomnom);
