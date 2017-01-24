@@ -193,36 +193,6 @@ BodyExtractor<nsIInputStream>::GetAsStream(nsIInputStream** aResult,
 }
 
 template<> nsresult
-BodyExtractor<Blob>::GetAsStream(nsIInputStream** aResult,
-                                 uint64_t* aContentLength,
-                                 nsACString& aContentTypeWithCharset,
-                                 nsACString& aCharset) const
-{
-  return mBody->GetSendInfo(aResult, aContentLength, aContentTypeWithCharset,
-                            aCharset);
-}
-
-template<> nsresult
-BodyExtractor<FormData>::GetAsStream(nsIInputStream** aResult,
-                                     uint64_t* aContentLength,
-                                     nsACString& aContentTypeWithCharset,
-                                     nsACString& aCharset) const
-{
-  return mBody->GetSendInfo(aResult, aContentLength, aContentTypeWithCharset,
-                            aCharset);
-}
-
-template<> nsresult
-BodyExtractor<URLSearchParams>::GetAsStream(nsIInputStream** aResult,
-                                            uint64_t* aContentLength,
-                                            nsACString& aContentTypeWithCharset,
-                                            nsACString& aCharset) const
-{
-  return mBody->GetSendInfo(aResult, aContentLength, aContentTypeWithCharset,
-                            aCharset);
-}
-
-template<> nsresult
 BodyExtractor<nsIXHRSendable>::GetAsStream(nsIInputStream** aResult,
                                            uint64_t* aContentLength,
                                            nsACString& aContentTypeWithCharset,
