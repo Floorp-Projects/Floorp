@@ -68,7 +68,6 @@ goog.scope(function() {
 
     es3fFboStencilbufferTests.BasicFboStencilCase.prototype.preCheck = function() {
         this.checkFormatSupport(this.m_format);
-        return true; // No exception thrown
     };
 
     /**

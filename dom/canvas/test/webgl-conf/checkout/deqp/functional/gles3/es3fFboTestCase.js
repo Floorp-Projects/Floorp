@@ -134,17 +134,9 @@ var DE_ASSERT = function(x) {
             // Exceeds spec-mandated minimum - need to check.
             /** @const @type {goog.NumberArray} */ var supportedSampleCounts = es3fFboTestCase.querySampleCounts(sizedFormat);
             var supported = Array.prototype.slice.call(supportedSampleCounts);
-            if (supported.indexOf(numSamples) == -1) {
-                if (minSampleCount == 0 || numSamples > gl.getParameter(gl.MAX_SAMPLES)) {
-                    checkMessage(false, "Sample count not supported, but it is allowed.");
-                    return false;
-                } else {
-                    throw new Error('Sample count not supported');
-                }
-            }
-            return true;
+            if (supported.indexOf(numSamples) == -1)
+                throw new Error('Sample count not supported');
         }
-        return true;
     };
 
     /**
@@ -210,8 +202,8 @@ var DE_ASSERT = function(x) {
         /** @type {tcuSurface.Surface} */ var result = new tcuSurface.Surface(width, height);
 
         // Call preCheck() that can throw exception if some requirement is not met.
-        if (this.preCheck && !this.preCheck())
-            return tcuTestCase.IterateResult.STOP;
+        if (this.preCheck)
+            this.preCheck();
 
         // Render using GLES3.
         try {
@@ -300,9 +292,7 @@ var DE_ASSERT = function(x) {
             gl.clearColor(0.0, 0.0, 0.0, 0.0);
             gl.clearDepth(1.0);
             gl.clearStencil(0.0);
-            // Do not call clear() here because it might generate an INVALID_OPERATION if
-            // some color buffers are of integer formats due to WebGL2 specific constraint.
-            // The tests do not rely on clear() here.
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
         }
     };
 
