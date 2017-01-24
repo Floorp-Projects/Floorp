@@ -4,9 +4,7 @@
 #
 # Copies the needed files from a directory containing the original
 # double-conversion source that we need.  If no revision is specified, the tip
-# revision is used.
-
-# This was last updated with git rev d8d4e668ee1e6e10b728f0671a89b07d7c4d45be.
+# revision is used.  See GIT-INFO for the last revision used.
 
 set -e
 
@@ -22,8 +20,7 @@ LOCAL_CLONE="$TMPDIR/double-conversion"
 
 git clone https://github.com/google/double-conversion.git "$LOCAL_CLONE"
 
-REV=""
-
+# If a particular revision was requested, check it out.
 if [ "$1" !=  "" ]; then
   git -C "$LOCAL_CLONE" checkout "$1"
 fi
@@ -71,3 +68,6 @@ done
 
 # Update Mercurial file status.
 hg addremove "$DEST"
+
+# Note the revision used in this update.
+git -C "$LOCAL_CLONE" show > ./GIT-INFO
