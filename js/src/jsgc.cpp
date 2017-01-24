@@ -3205,28 +3205,6 @@ GCRuntime::assertBackgroundSweepingFinished()
 #endif
 }
 
-unsigned
-js::GetCPUCount()
-{
-    static unsigned ncpus = 0;
-    if (ncpus == 0) {
-#if defined(XP_WIN)
-        SYSTEM_INFO sysinfo;
-        GetSystemInfo(&sysinfo);
-        ncpus = unsigned(sysinfo.dwNumberOfProcessors);
-#elif (defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)) && defined(_SC_NPROCESSORS_CONF)
-        // See bug 1333059: _SC_NPROCESSORS_ONLN is not reliable on ARM
-        // due to power saving mode.
-        long n = sysconf(_SC_NPROCESSORS_CONF);
-        ncpus = (n > 0) ? unsigned(n) : 1;
-#else
-        long n = sysconf(_SC_NPROCESSORS_ONLN);
-        ncpus = (n > 0) ? unsigned(n) : 1;
-#endif
-    }
-    return ncpus;
-}
-
 void
 GCHelperState::finish()
 {
