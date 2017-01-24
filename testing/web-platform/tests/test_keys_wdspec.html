@@ -1,0 +1,55 @@
+<!doctype html>
+<meta charset=utf-8>
+
+<head>
+    <title>Test Keys</title>
+    <script>
+        var allEvents = {events: []};
+        function displayMessage(message) {
+            document.getElementById("events").innerHTML = "<p>" + message + "</p>";
+        }
+
+        function appendMessage(message) {
+            document.getElementById("events").innerHTML += "<p>" + message + "</p>";
+        }
+
+
+        function recordEvent(event) {
+          allEvents.events.push({
+            "code": event.code,
+            "key": event.key,
+            "which": event.which,
+            "location": event.location,
+            "ctrl": event.ctrlKey,
+            "meta": event.metaKey,
+            "shift": event.shiftKey,
+            "repeat": event.repeat,
+            "type": event.type
+          });
+          appendMessage(`${event.type}(code:${event.code}, key:${event.key}, which:${event.which})`);
+        }
+
+        function resetEvents() {
+            allEvents.events.length = 0;
+            displayMessage('');
+        }
+
+    </script>
+</head>
+<body>
+  <div>
+    <h2>KeyReporter</h2>
+    <input type="text" id="keys" size="80"
+           onkeyup="recordEvent(event)"
+           onkeypress="recordEvent(event)"
+           onkeydown="recordEvent(event)">
+  </div>
+  <div id="resultContainer" style="width:300;height:60">
+    <h2>Events</h2>
+    <div id="events"></div>
+  </div>
+
+</body>
+</html>
+
+
