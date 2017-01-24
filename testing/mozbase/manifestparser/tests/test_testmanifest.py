@@ -71,9 +71,9 @@ class TestTestManifest(unittest.TestCase):
         manifest = TestManifest(manifests=(relative_path,))
         info = {'foo': 'bar'}
 
-        # 7 tests total
+        # 6 tests total
         tests = manifest.active_tests(exists=False, **info)
-        self.assertEquals(len(tests), 7)
+        self.assertEquals(len(tests), 6)
 
         # only 3 tests for subsuite bar when foo==bar
         tests = manifest.active_tests(exists=False,
@@ -81,16 +81,16 @@ class TestTestManifest(unittest.TestCase):
                                       **info)
         self.assertEquals(len(tests), 3)
 
-        # only 2 tests for subsuite baz, regardless of conditions
+        # only 1 test for subsuite baz, regardless of conditions
         other = {'something': 'else'}
         tests = manifest.active_tests(exists=False,
                                       filters=[subsuite('baz')],
                                       **info)
-        self.assertEquals(len(tests), 2)
+        self.assertEquals(len(tests), 1)
         tests = manifest.active_tests(exists=False,
                                       filters=[subsuite('baz')],
                                       **other)
-        self.assertEquals(len(tests), 2)
+        self.assertEquals(len(tests), 1)
 
         # 4 tests match when the condition doesn't match (all tests except
         # the unconditional subsuite)
