@@ -282,8 +282,12 @@ HandleMailtoSubject(nsCString& aPath)
       return;
     aPath.AppendLiteral("subject=");
     nsCString subjectStrEscaped;
-    aPath.Append(NS_EscapeURL(NS_ConvertUTF16toUTF8(subjectStr), esc_Query,
-                              subjectStrEscaped));
+    rv = NS_EscapeURL(NS_ConvertUTF16toUTF8(subjectStr), esc_Query,
+                      subjectStrEscaped, mozilla::fallible);
+    if (NS_FAILED(rv))
+      return;
+
+    aPath.Append(subjectStrEscaped);
   }
 }
 
