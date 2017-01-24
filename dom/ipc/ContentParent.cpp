@@ -1052,8 +1052,6 @@ ContentParent::Init()
     obs->NotifyObservers(static_cast<nsIObserver*>(this), "ipc:content-created", cpId.get());
   }
 
-  Unused << SendRemoteType(mRemoteType);
-
 #ifdef ACCESSIBILITY
   // If accessibility is running in chrome process then start it in content
   // process.
@@ -1822,6 +1820,11 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
   // Initialize the message manager (and load delayed scripts) now that we
   // have established communications with the child.
   mMessageManager->InitWithCallback(this);
+
+  // Send the child its remote type. On Mac, this needs to be sent prior
+  // to the message we send to enable the Sandbox (SendStartProcessSandbox)
+  // because different remote types require different sandbox privileges.
+  Unused << SendRemoteType(mRemoteType);
 
   // Set the subprocess's priority.  We do this early on because we're likely
   // /lowering/ the process's CPU and memory priority, which it has inherited
