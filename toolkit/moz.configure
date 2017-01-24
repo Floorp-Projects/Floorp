@@ -48,8 +48,8 @@ def sps_profiler_define(value):
     if value:
         return True
 
-set_config('MOZ_ENABLE_PROFILER_SPS', sps_profiler_define)
-set_define('MOZ_ENABLE_PROFILER_SPS', sps_profiler_define)
+set_config('MOZ_GECKO_PROFILER', sps_profiler_define)
+set_define('MOZ_GECKO_PROFILER', sps_profiler_define)
 
 
 option('--enable-dmd', env='MOZ_DMD',

@@ -5,7 +5,7 @@
 #ifndef PROFILERIOINTERPOSEOBSERVER_H
 #define PROFILERIOINTERPOSEOBSERVER_H
 
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#ifdef MOZ_GECKO_PROFILER
 
 #include "mozilla/IOInterposer.h"
 
@@ -23,6 +23,6 @@ public:
 
 } // namespace mozilla
 
-#endif // MOZ_ENABLE_PROFILER_SPS
+#endif // MOZ_GECKO_PROFILER
 
 #endif // PROFILERIOINTERPOSEOBSERVER_H

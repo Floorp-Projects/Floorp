@@ -248,7 +248,7 @@
 @RESPATH@/components/layout_xul.xpt
 @RESPATH@/components/locale.xpt
 @RESPATH@/components/lwbrk.xpt
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#ifdef MOZ_GECKO_PROFILER
 @RESPATH@/components/memory_profiler.xpt
 #endif
 @RESPATH@/browser/components/migration.xpt
@@ -285,7 +285,7 @@
 @RESPATH@/components/plugin.xpt
 @RESPATH@/components/pref.xpt
 @RESPATH@/components/prefetch.xpt
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#ifdef MOZ_GECKO_PROFILER
 @RESPATH@/components/profiler.xpt
 #endif
 @RESPATH@/components/rdf.xpt
