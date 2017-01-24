@@ -59,14 +59,14 @@ static inline uint32_t sMin(uint32_t l, uint32_t r) {
   return l < r ? l : r;
 }
 
-// A stack entry exists to allow the JS engine to inform SPS of the current
-// backtrace, but also to instrument particular points in C++ in case stack
-// walking is not available on the platform we are running on.
+// A stack entry exists to allow the JS engine to inform the Gecko Profiler of
+// the current backtrace, but also to instrument particular points in C++ in
+// case stack walking is not available on the platform we are running on.
 //
 // Each entry has a descriptive string, a relevant stack address, and some extra
-// information the JS engine might want to inform SPS of. This class inherits
-// from the JS engine's version of the entry to ensure that the size and layout
-// of the two representations are consistent.
+// information the JS engine might want to inform the Gecko Profiler of. This
+// class inherits from the JS engine's version of the entry to ensure that the
+// size and layout of the two representations are consistent.
 class StackEntry : public js::ProfileEntry
 {
 };

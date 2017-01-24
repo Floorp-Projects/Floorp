@@ -80,7 +80,7 @@ bool profiler_verbose();
 
 #ifdef ANDROID
 # if defined(__arm__) || defined(__thumb__)
-#  define ENABLE_SPS_LEAF_DATA
+#  define ENABLE_LEAF_DATA
 #  define ENABLE_ARM_LR_SAVING
 # endif
 # define LOG(text) \
@@ -105,7 +105,7 @@ bool profiler_verbose();
 #endif
 
 #if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_LINUX)
-#define ENABLE_SPS_LEAF_DATA
+#define ENABLE_LEAF_DATA
 #endif
 
 typedef int32_t Atomic32;
