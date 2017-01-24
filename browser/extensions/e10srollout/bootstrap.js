@@ -69,9 +69,13 @@ function defineCohort() {
     // This is also the proper place to set the blocklist pref
     // in case it is necessary.
 
-    // Tab Mix Plus exception tracked at bug 1185672.
     Preferences.set(PREF_E10S_ADDON_BLOCKLIST,
-                    "{dc572301-7619-498c-a57d-39143191b318}");
+                    // bug 1185672 - Tab Mix Plus
+                    "{dc572301-7619-498c-a57d-39143191b318};" +
+                    // bug 1332692 - LastPass and Amazon Assistant
+                    "support@lastpass.com;" +
+                    "abb@amazon.com;" +
+                    "abb-acer@amazon.com;");
   } else {
     Preferences.reset(PREF_E10S_ADDON_POLICY);
   }
