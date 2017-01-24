@@ -240,7 +240,7 @@ class MarionetteTextTestRunner(StructuredTestRunner):
 
 
 class BaseMarionetteArguments(ArgumentParser):
-    socket_timeout_default = 60.0
+    socket_timeout_default = 65.0
 
     def __init__(self, **kwargs):
         ArgumentParser.__init__(self, **kwargs)
@@ -347,7 +347,8 @@ class BaseMarionetteArguments(ArgumentParser):
         self.add_argument('--socket-timeout',
                           type=float,
                           default=self.socket_timeout_default,
-                          help='Set the global timeout for marionette socket operations.')
+                          help='Set the global timeout for marionette socket operations.'
+                               ' Default: %(default)ss.')
         self.add_argument('--disable-e10s',
                           action='store_false',
                           dest='e10s',
