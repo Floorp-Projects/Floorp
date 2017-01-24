@@ -61,7 +61,9 @@ public:
   typedef mozilla::LayoutDeviceIntRect LayoutDeviceIntRect;
   typedef mozilla::LayoutDeviceIntRegion LayoutDeviceIntRegion;
 
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+  void operator delete(void* ptr) {
+    ::operator delete(ptr);
+  }
 
   /**
    * Get the view manager which "owns" the view.
