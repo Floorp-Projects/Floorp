@@ -31,7 +31,7 @@
 #include <windows.h>
 #endif
 
-#if defined(MOZ_ENABLE_PROFILER_SPS) && defined(MOZ_PROFILING) && defined(XP_WIN)
+#if defined(MOZ_GECKO_PROFILER) && defined(MOZ_PROFILING) && defined(XP_WIN)
   #define REPORT_CHROME_HANGS
 #endif
 
