@@ -11,7 +11,7 @@
 #ifndef _EVENT2_EVENT_CONFIG_H_
 #define _EVENT2_EVENT_CONFIG_H_
 /* config.h.  Generated from config.h.in by configure.  */
-/* config.h.in.  Generated from configure.in by autoheader.  */
+/* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define if libevent should build without support for a debug mode */
 /* #undef _EVENT_DISABLE_DEBUG_MODE */
@@ -370,7 +370,7 @@
 /* #undef _EVENT_NO_MINUS_C_MINUS_O */
 
 /* Numeric representation of the version */
-#define _EVENT_NUMERIC_VERSION 0x02001500
+#define _EVENT_NUMERIC_VERSION 0x02001600
 
 /* Name of package */
 #define _EVENT_PACKAGE "libevent"
@@ -397,51 +397,29 @@
    your system. */
 /* #undef _EVENT_PTHREAD_CREATE_JOINABLE */
 
-/* ------------------------------------------------------------------------ */
-/* MOZILLA NOTE: the following constants are hand-modified to be suitable   */
-/* for both 32-bit and 64-bit platforms. See README.mozilla for details.    */
-/* ------------------------------------------------------------------------ */
-
 /* The size of `int', as computed by sizeof. */
 #define _EVENT_SIZEOF_INT 4
 
 /* The size of `long', as computed by sizeof. */
-#ifdef __LP64__
 #define _EVENT_SIZEOF_LONG 8
-#else
-#define _EVENT_SIZEOF_LONG 4
-#endif
 
 /* The size of `long long', as computed by sizeof. */
 #define _EVENT_SIZEOF_LONG_LONG 8
 
+/* The size of `off_t', as computed by sizeof. */
+#define _EVENT_SIZEOF_OFF_T 8
+
 /* The size of `pthread_t', as computed by sizeof. */
-#ifdef __LP64__
 #define _EVENT_SIZEOF_PTHREAD_T 8
-#else
-#define _EVENT_SIZEOF_PTHREAD_T 4
-#endif
 
 /* The size of `short', as computed by sizeof. */
 #define _EVENT_SIZEOF_SHORT 2
 
 /* The size of `size_t', as computed by sizeof. */
-#ifdef __LP64__
 #define _EVENT_SIZEOF_SIZE_T 8
-#else
-#define _EVENT_SIZEOF_SIZE_T 4
-#endif
 
 /* The size of `void *', as computed by sizeof. */
-#ifdef __LP64__
 #define _EVENT_SIZEOF_VOID_P 8
-#else
-#define _EVENT_SIZEOF_VOID_P 4
-#endif
-
-/* ------------------------------------------------------------------------ */
-/* END MOZILLA NOTE                                                         */
-/* ------------------------------------------------------------------------ */
 
 /* Define to 1 if you have the ANSI C header files. */
 #define _EVENT_STDC_HEADERS 1
@@ -450,7 +428,7 @@
 #define _EVENT_TIME_WITH_SYS_TIME 1
 
 /* Version number of package */
-#define _EVENT_VERSION "2.0.21-stable"
+#define _EVENT_VERSION "2.0.22-stable"
 
 /* Define to appropriate substitue if compiler doesnt have __func__ */
 /* #undef _EVENT___func__ */
