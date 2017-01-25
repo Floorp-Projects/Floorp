@@ -44,6 +44,9 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     private int toolbarColor;
     private String toolbarTitle;
 
+    // A state to indicate whether this activity is finishing with customize animation
+    private boolean usingCustomAnimation = false;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -101,6 +104,32 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
             setTheme(R.style.Theme_AppCompat_NoActionBar);
         }
 
+    }
+
+    // Bug 1329145: 3rd party app could specify customized exit-animation to this activity.
+    // Activity.overridePendingTransition will invoke getPackageName to retrieve that animation resource.
+    // In that case, to return different package name to get customized animation resource.
+    @Override
+    public String getPackageName() {
+        if (usingCustomAnimation) {
+            // Use its package name to retrieve animation resource
+            return IntentUtil.getAnimationPackageName(getIntent());
+        } else {
+            return super.getPackageName();
+        }
+    }
+
+    @Override
+    public void finish() {
+        super.finish();
+
+        // When 3rd party app launch this Activity, it could also specify custom exit-animation.
+        if (IntentUtil.hasExitAnimation(getIntent())) {
+            usingCustomAnimation = true;
+            overridePendingTransition(IntentUtil.getEnterAnimationRes(getIntent()),
+                    IntentUtil.getExitAnimationRes(getIntent()));
+            usingCustomAnimation = false;
+        }
     }
 
     @Override
