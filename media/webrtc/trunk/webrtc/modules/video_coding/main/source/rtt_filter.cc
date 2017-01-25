@@ -53,8 +53,8 @@ VCMRttFilter::Reset()
     _filtFactCount = 1;
     _jumpCount = 0;
     _driftCount = 0;
-    memset(_jumpBuf, 0, kMaxDriftJumpCount);
-    memset(_driftBuf, 0, kMaxDriftJumpCount);
+    memset(_jumpBuf, 0, sizeof(_jumpBuf));
+    memset(_driftBuf, 0, sizeof(_driftBuf));
 }
 
 void
