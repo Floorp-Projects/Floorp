@@ -85,3 +85,4 @@ fails-if(winWidget&&layersGPUAccelerated) == split-intersect1.html split-interse
 fuzzy(255,150) fails-if(winWidget&&layersGPUAccelerated) == split-intersect2.html split-intersect2-ref.html # Bug 1323791
 fuzzy(255,100) fails-if(winWidget&&layersGPUAccelerated) == split-non-ortho1.html split-non-ortho1-ref.html # Bug 1323791
 fuzzy-if(winWidget,150,120) == component-alpha-1.html component-alpha-1-ref.html
+== nested-transform-1.html nested-transform-1-ref.html
