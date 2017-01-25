@@ -4,11 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
 
 #include "jswin.h"
-
-#include "js/Utility.h"
 
 #include "threading/Mutex.h"
 #include "threading/windows/MutexPlatformData.h"
@@ -44,11 +43,6 @@ static MutexNativeImports NativeImports;
 
 js::detail::MutexImpl::MutexImpl()
 {
-  AutoEnterOOMUnsafeRegion oom;
-  platformData_ = js_new<PlatformData>();
-  if (!platformData_)
-    oom.crash("js::Mutex::Mutex");
-
   // This number was adopted from NSPR.
   const static DWORD LockSpinCount = 1500;
   BOOL r;
@@ -65,11 +59,7 @@ js::detail::MutexImpl::MutexImpl()
 
 js::detail::MutexImpl::~MutexImpl()
 {
-  if (!platformData_)
-    return;
-
   DeleteCriticalSection(&platformData()->criticalSection);
-  js_delete(platformData());
 }
 
 void
@@ -82,4 +72,12 @@ void
 js::detail::MutexImpl::unlock()
 {
   LeaveCriticalSection(&platformData()->criticalSection);
+}
+
+js::detail::MutexImpl::PlatformData*
+js::detail::MutexImpl::platformData()
+{
+  static_assert(sizeof(platformData_) >= sizeof(PlatformData),
+                "platformData_ is too small");
+  return reinterpret_cast<PlatformData*>(platformData_);
 }
