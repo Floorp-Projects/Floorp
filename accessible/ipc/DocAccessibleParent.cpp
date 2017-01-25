@@ -12,6 +12,13 @@
 #include "nsAccUtils.h"
 #include "nsCoreUtils.h"
 
+#if defined(XP_WIN)
+#include "AccessibleWrap.h"
+#include "Compatibility.h"
+#include "nsWinUtils.h"
+#include "RootAccessible.h"
+#endif
+
 namespace mozilla {
 namespace a11y {
 
@@ -525,7 +532,43 @@ DocAccessibleParent::SetCOMProxy(const RefPtr<IAccessible>& aCOMProxy)
 
   IAccessibleHolder::COMPtrType ptr(rawNative);
   IAccessibleHolder holder(Move(ptr));
-  Unused << SendParentCOMProxy(holder);
+
+  if (nsWinUtils::IsWindowEmulationStarted()) {
+    RootAccessible* rootDocument = outerDoc->RootAccessible();
+    MOZ_ASSERT(rootDocument);
+
+    bool isActive = true;
+    nsIntRect rect(CW_USEDEFAULT, CW_USEDEFAULT, 0, 0);
+    if (Compatibility::IsDolphin()) {
+      rect = Bounds();
+      nsIntRect rootRect = rootDocument->Bounds();
+      rect.x = rootRect.x - rect.x;
+      rect.y -= rootRect.y;
+      tab->GetDocShellIsActive(&isActive);
+    }
+
+    HWND parentWnd = reinterpret_cast<HWND>(rootDocument->GetNativeWindow());
+    HWND hWnd = nsWinUtils::CreateNativeWindow(kClassNameTabContent,
+                                               parentWnd, rect.x, rect.y,
+                                               rect.width, rect.height,
+                                               isActive);
+    if (hWnd) {
+      // Attach accessible document to the emulated native window
+      ::SetPropW(hWnd, kPropNameDocAccParent, (HANDLE)this);
+      SetEmulatedWindowHandle(hWnd);
+    }
+  }
+  Unused << SendParentCOMProxy(holder, reinterpret_cast<uintptr_t>(
+                               mEmulatedWindowHandle));
+}
+
+void
+DocAccessibleParent::SetEmulatedWindowHandle(HWND aWindowHandle)
+{
+  if (!aWindowHandle && mEmulatedWindowHandle && IsTopLevel()) {
+    ::DestroyWindow(mEmulatedWindowHandle);
+  }
+  mEmulatedWindowHandle = aWindowHandle;
 }
 
 mozilla::ipc::IPCResult

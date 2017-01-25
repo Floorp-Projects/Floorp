@@ -102,6 +102,7 @@
 
 #if defined(XP_WIN) && defined(ACCESSIBILITY)
 #include "mozilla/a11y/AccessibleWrap.h"
+#include "mozilla/a11y/nsWinUtils.h"
 #endif
 
 using namespace mozilla::dom;
@@ -269,6 +270,16 @@ TabParent::SetOwnerElement(Element* aElement)
         reinterpret_cast<uintptr_t>(widget->GetNativeData(NS_NATIVE_WINDOW));
     }
     Unused << SendUpdateNativeWindowHandle(newWindowHandle);
+    a11y::DocAccessibleParent* doc = GetTopLevelDocAccessible();
+    if (doc) {
+      HWND hWnd = reinterpret_cast<HWND>(doc->GetEmulatedWindowHandle());
+      if (hWnd) {
+        HWND parentHwnd = reinterpret_cast<HWND>(newWindowHandle);
+        if (parentHwnd != ::GetParent(hWnd)) {
+          ::SetParent(hWnd, parentHwnd);
+        }
+      }
+    }
   }
 #endif
 
@@ -921,6 +932,9 @@ TabParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
     MOZ_ASSERT(aDocCOMProxy.IsNull());
     if (added) {
       a11y::WrapperFor(doc)->SetID(aMsaaID);
+      if (a11y::nsWinUtils::IsWindowEmulationStarted()) {
+        doc->SetEmulatedWindowHandle(parentDoc->GetEmulatedWindowHandle());
+      }
     }
 #endif
     if (!added) {

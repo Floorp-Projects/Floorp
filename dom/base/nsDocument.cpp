@@ -1283,27 +1283,91 @@ nsIDocument::nsIDocument()
     mUpgradeInsecureRequests(false),
     mUpgradeInsecurePreloads(false),
     mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
+    mCharacterSetSource(0),
+    mParentDocument(nullptr),
+    mCachedRootElement(nullptr),
     mNodeInfoManager(nullptr),
+    mBidiEnabled(false),
+    mMathMLEnabled(false),
     mIsInitialDocumentInWindow(false),
+    mLoadedAsData(false),
+    mLoadedAsInteractiveData(false),
     mMayStartLayout(true),
+    mHaveFiredTitleChange(false),
+    mIsShowing(false),
     mVisible(true),
+    mHasReferrerPolicyCSP(false),
     mRemovedFromDocShell(false),
     // mAllowDNSPrefetch starts true, so that we can always reliably && it
     // with various values that might disable it.  Since we never prefetch
     // unless we get a window, and in that case the docshell value will get
     // &&-ed in, this is safe.
     mAllowDNSPrefetch(true),
+    mIsStaticDocument(false),
+    mCreatingStaticClone(false),
+    mInUnlinkOrDeletion(false),
+    mHasHadScriptHandlingObject(false),
     mIsBeingUsedAsImage(false),
+    mIsSyntheticDocument(false),
     mHasLinksToUpdate(false),
+    mNeedLayoutFlush(false),
+    mNeedStyleFlush(false),
+    mMayHaveDOMMutationObservers(false),
+    mMayHaveAnimationObservers(false),
+    mHasMixedActiveContentLoaded(false),
+    mHasMixedActiveContentBlocked(false),
+    mHasMixedDisplayContentLoaded(false),
+    mHasMixedDisplayContentBlocked(false),
+    mHasMixedContentObjectSubrequest(false),
+    mHasCSP(false),
+    mHasUnsafeEvalCSP(false),
+    mHasUnsafeInlineCSP(false),
+    mHasTrackingContentBlocked(false),
+    mHasTrackingContentLoaded(false),
+    mBFCacheDisallowed(false),
+    mHasHadDefaultView(false),
+    mStyleSheetChangeEventsEnabled(false),
+    mIsSrcdocDocument(false),
+    mDidDocumentOpen(false),
+    mHasDisplayDocument(false),
     mFontFaceSetDirty(true),
     mGetUserFontSetCalled(false),
     mPostedFlushUserFontSet(false),
+    mEverInForeground(false),
     mCompatMode(eCompatibility_FullStandards),
+    mReadyState(ReadyState::READYSTATE_UNINITIALIZED),
+    mStyleBackendType(mozilla::StyleBackendType::Gecko),
+#ifdef MOZILLA_INTERNAL_API
     mVisibilityState(dom::VisibilityState::Hidden),
+#else
+    mDummy(0),
+#endif
+    mType(eUnknown),
+    mDefaultElementType(0),
+    mAllowXULXBL(eTriUnset),
+#ifdef DEBUG
+    mIsLinkUpdateRegistrationsForbidden(false),
+#endif
     mBidiOptions(IBMBIDI_DEFAULT_BIDI_OPTIONS),
+    mSandboxFlags(0),
     mPartID(0),
+    mMarkedCCGeneration(0),
+    mPresShell(nullptr),
+    mSubtreeModifiedDepth(0),
+    mEventsSuppressed(0),
+    mAnimationsPaused(0),
+    mExternalScriptsBeingEvaluated(0),
+    mFrameRequestCallbackCounter(0),
+    mStaticCloneCount(0),
+    mWindow(nullptr),
+    mBFCacheEntry(nullptr),
+    mInSyncOperationCount(0),
+    mBlockDOMContentLoaded(0),
     mDidFireDOMContentLoaded(true),
     mHasScrollLinkedEffect(false),
+    mUseCounters(0),
+    mChildDocumentUseCounters(0),
+    mNotifiedPageForUseCounter(0),
     mUserHasInteracted(false)
 {
   SetIsInDocument();
@@ -1311,12 +1375,54 @@ nsIDocument::nsIDocument()
   PR_INIT_CLIST(&mDOMMediaQueryLists);
 }
 
-// NOTE! nsDocument::operator new() zeroes out all members, so don't
-// bother initializing members to 0.
-
 nsDocument::nsDocument(const char* aContentType)
   : nsIDocument()
+  , mIsTopLevelContentDocument(false)
+  , mIsContentDocument(false)
+  , mSubDocuments(nullptr)
+  , mHeaderData(nullptr)
+  , mIsGoingAway(false)
+  , mInDestructor(false)
+  , mMayHaveTitleElement(false)
+  , mHasWarnedAboutBoxObjects(false)
+  , mDelayFrameLoaderInitialization(false)
+  , mSynchronousDOMContentLoaded(false)
+  , mInXBLUpdate(false)
+  , mInFlush(false)
+  , mParserAborted(false)
+  , mCurrentOrientationAngle(0)
+  , mCurrentOrientationType(OrientationType::Portrait_primary)
+  , mSSApplicableStateNotificationPending(false)
+  , mReportedUseCounters(false)
+  , mStyleSetFilled(false)
+  , mPendingFullscreenRequests(0)
+  , mXMLDeclarationBits(0)
+  , mBoxObjectTable(nullptr)
+  , mUpdateNestLevel(0)
+  , mOnloadBlockCount(0)
+  , mAsyncOnloadBlockCount(0)
+#ifdef DEBUG
+  , mStyledLinksCleared(false)
+#endif
+  , mPreloadPictureDepth(0)
+  , mScrolledToRefAlready(0)
+  , mChangeScrollPosWhenScrollingToRef(0)
   , mViewportType(Unknown)
+  , mValidWidth(false)
+  , mValidHeight(false)
+  , mAutoSize(false)
+  , mAllowZoom(false)
+  , mAllowDoubleTapZoom(false)
+  , mValidScaleFloat(false)
+  , mValidMaxScale(false)
+  , mScaleStrEmpty(false)
+  , mWidthStrEmpty(false)
+  , mStackRefCnt(0)
+  , mNeedsReleaseAfterStackRefCntRelease(false)
+  , mMaybeServiceWorkerControlled(false)
+#ifdef DEBUG
+  , mWillReparent(false)
+#endif
 {
   SetContentTypeInternal(nsDependentCString(aContentType));
 

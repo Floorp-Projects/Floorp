@@ -59,7 +59,6 @@ LayerTransactionParent::LayerTransactionParent(HostLayerManager* aManager,
   , mChildEpoch(0)
   , mParentEpoch(0)
   , mPendingTransaction(0)
-  , mPendingCompositorUpdates(0)
   , mDestroyed(false)
   , mIPCOpen(false)
 {
@@ -575,7 +574,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo,
     case Edit::TOpAttachCompositable: {
       const OpAttachCompositable& op = edit.get_OpAttachCompositable();
       RefPtr<CompositableHost> host = FindCompositable(op.compositable());
-      if (mPendingCompositorUpdates) {
+      if (mPendingCompositorUpdate) {
         // Do not attach compositables from old layer trees. Return true since
         // content cannot handle errors.
         return IPC_OK();
@@ -590,7 +589,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo,
     }
     case Edit::TOpAttachAsyncCompositable: {
       const OpAttachAsyncCompositable& op = edit.get_OpAttachAsyncCompositable();
-      if (mPendingCompositorUpdates) {
+      if (mPendingCompositorUpdate) {
         // Do not attach compositables from old layer trees. Return true since
         // content cannot handle errors.
         return IPC_OK();

@@ -158,8 +158,6 @@ public:
 
   nsDocShell();
 
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
-
   virtual nsresult Init() override;
 
   NS_DECL_ISUPPORTS_INHERITED

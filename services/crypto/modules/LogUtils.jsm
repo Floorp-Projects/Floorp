@@ -7,7 +7,7 @@
 "use strict";
 
 this.EXPORTED_SYMBOLS = ["Logger"];
-const PREF_DEBUG = "toolkit.identity.debug";
+const PREF_DEBUG = "services.sync.log.cryptoDebug";
 
 const Cu = Components.utils;
 const Ci = Components.interfaces;
@@ -69,7 +69,7 @@ IdentityLogger.prototype = {
   /**
    * log() - utility function to print a list of arbitrary things
    *
-   * Enable with about:config pref toolkit.identity.debug
+   * Enable with about:config pref services.sync.log.cryptoDebug
    */
   log: function log(aPrefix, ...args) {
     if (!this._debug) {

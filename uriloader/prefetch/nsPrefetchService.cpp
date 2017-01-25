@@ -156,7 +156,13 @@ nsPrefetchNode::OpenChannel()
             false);
     }
 
-    return mChannel->AsyncOpen2(this);
+    rv = mChannel->AsyncOpen2(this);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      // Drop the ref to the channel, because we don't want to end up with
+      // cycles through it.
+      mChannel = nullptr;
+    }
+    return rv;
 }
 
 nsresult

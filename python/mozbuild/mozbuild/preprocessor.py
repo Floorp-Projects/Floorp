@@ -754,7 +754,7 @@ class Preprocessor:
                 raise
             except:
                 raise Preprocessor.Error(self, 'FILE_NOT_FOUND', str(args))
-        self.checkLineNumbers = bool(re.search('\.(js|jsm|java)(?:\.in)?$', args.name))
+        self.checkLineNumbers = bool(re.search('\.(js|jsm|java|webidl)(?:\.in)?$', args.name))
         oldFile = self.context['FILE']
         oldLine = self.context['LINE']
         oldDir = self.context['DIRECTORY']
