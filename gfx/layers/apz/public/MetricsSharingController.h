@@ -10,8 +10,7 @@
 #include "FrameMetrics.h" // for FrameMetrics
 #include "mozilla/ipc/CrossProcessMutex.h" // for CrossProcessMutexHandle
 #include "mozilla/ipc/SharedMemoryBasic.h" // for SharedMemoryBasic
-#include "mozilla/RefCountType.h" // for MozExternalRefCountType
-#include "nscore.h" // for NS_IMETHOD_
+#include "nsISupportsImpl.h" // for NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
 namespace mozilla {
 namespace layers {
@@ -19,8 +18,7 @@ namespace layers {
 class MetricsSharingController
 {
 public:
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() = 0;
-  NS_IMETHOD_(MozExternalRefCountType) Release() = 0;
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   virtual base::ProcessId RemotePid() = 0;
   virtual bool StartSharingMetrics(mozilla::ipc::SharedMemoryBasic::Handle aHandle,
