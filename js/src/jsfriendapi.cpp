@@ -247,7 +247,8 @@ JS_DefineFunctionsWithHelp(JSContext* cx, HandleObject obj, const JSFunctionSpec
             return false;
 
         Rooted<jsid> id(cx, AtomToId(atom));
-        RootedFunction fun(cx, DefineFunction(cx, obj, id, fs->call, fs->nargs, fs->flags));
+        RootedFunction fun(cx, DefineFunction(cx, obj, id, fs->call, fs->nargs,
+                                              fs->flags | JSPROP_RESOLVING));
         if (!fun)
             return false;
 
