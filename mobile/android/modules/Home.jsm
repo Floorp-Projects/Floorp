@@ -94,12 +94,12 @@ var HomeBanner = (function () {
     for (let key in _messages) {
       let message = _messages[key];
       if (threshold < message.totalWeight) {
-        Messaging.sendRequest({
+        EventDispatcher.instance.sendRequestForResult({
           type: "HomeBanner:Data",
           id: message.id,
           text: message.text,
           iconURI: message.iconURI
-        });
+        }).then(id => _handleShown(id));
         return;
       }
     }
@@ -124,18 +124,14 @@ var HomeBanner = (function () {
   };
 
   return Object.freeze({
-    observe: function(subject, topic, data) {
+    onEvent: function(event, message, callback) {
       switch(topic) {
-        case "HomeBanner:Shown":
-          _handleShown(data);
-          break;
-
         case "HomeBanner:Click":
-          _handleClick(data);
+          _handleClick(message.id);
           break;
 
         case "HomeBanner:Dismiss":
-          _handleDismiss(data);
+          _handleDismiss(message.id);
           break;
       }
     },
@@ -152,9 +148,10 @@ var HomeBanner = (function () {
       // If this is the first message we're adding, add
       // observers to listen for requests from the Java UI.
       if (Object.keys(_messages).length == 1) {
-        Services.obs.addObserver(this, "HomeBanner:Shown", false);
-        Services.obs.addObserver(this, "HomeBanner:Click", false);
-        Services.obs.addObserver(this, "HomeBanner:Dismiss", false);
+        EventDispatcher.instance.registerListener(this, [
+          "HomeBanner:Click",
+          "HomeBanner:Dismiss",
+        ]);
 
         // Send a message to Java if there's a pending "HomeBanner:Get" request.
         if (_pendingRequest) {
@@ -180,9 +177,10 @@ var HomeBanner = (function () {
 
       // If there are no more messages, remove the observers.
       if (Object.keys(_messages).length == 0) {
-        Services.obs.removeObserver(this, "HomeBanner:Shown");
-        Services.obs.removeObserver(this, "HomeBanner:Click");
-        Services.obs.removeObserver(this, "HomeBanner:Dismiss");
+        EventDispatcher.instance.unregisterListener(this, [
+          "HomeBanner:Click",
+          "HomeBanner:Dismiss",
+        ]);
       }
     }
   });
