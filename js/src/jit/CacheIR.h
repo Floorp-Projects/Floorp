@@ -136,6 +136,7 @@ enum class CacheKind : uint8_t
     GetName,
     SetProp,
     SetElem,
+    In,
 };
 
 #define CACHE_IR_OPS(_)                   \
@@ -1023,6 +1024,18 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator
         MOZ_ASSERT(needUpdateStub_);
         return updateStubId_;
     }
+};
+
+// InIRGenerator generates CacheIR for a In IC.
+class MOZ_RAII InIRGenerator : public IRGenerator
+{
+    HandleValue key_;
+    HandleObject obj_;
+
+  public:
+    InIRGenerator(JSContext* cx, jsbytecode* pc, HandleValue key, HandleObject obj);
+
+    bool tryAttachStub();
 };
 
 } // namespace jit
