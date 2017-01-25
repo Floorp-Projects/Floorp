@@ -19,7 +19,6 @@
 #include "platform.h"
 #include "shared-libraries.h"
 #include "mozilla/StackWalk.h"
-#include "GeckoSampler.h"
 
 // JSON
 #include "ProfileJSONWriter.h"
@@ -166,13 +165,19 @@ hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
   return false;
 }
 
-GeckoSampler::GeckoSampler(double aInterval, int aEntrySize,
-                         const char** aFeatures, uint32_t aFeatureCount,
-                         const char** aThreadNameFilters, uint32_t aFilterCount)
-  : Sampler(aInterval, true, aEntrySize)
+Sampler::Sampler(double aInterval, int aEntrySize,
+                 const char** aFeatures, uint32_t aFeatureCount,
+                 const char** aThreadNameFilters, uint32_t aFilterCount)
+  : interval_(aInterval)
+  , profiling_(true)
+  , paused_(false)
+  , active_(false)
+  , entrySize_(aEntrySize)
   , mBuffer(new ProfileBuffer(aEntrySize))
   , mSaveRequested(false)
 {
+  MOZ_COUNT_CTOR(Sampler);
+
   mUseStackWalk = hasFeature(aFeatures, aFeatureCount, "stackwalk");
 
   mProfileJS = hasFeature(aFeatures, aFeatureCount, "js");
@@ -231,8 +236,10 @@ GeckoSampler::GeckoSampler(double aInterval, int aEntrySize,
   mGatherer = new mozilla::ProfileGatherer(this);
 }
 
-GeckoSampler::~GeckoSampler()
+Sampler::~Sampler()
 {
+  MOZ_COUNT_DTOR(Sampler);
+
   if (IsActive())
     Stop();
 
@@ -263,7 +270,8 @@ GeckoSampler::~GeckoSampler()
 #endif
 }
 
-void GeckoSampler::HandleSaveRequest()
+void
+Sampler::HandleSaveRequest()
 {
   if (!mSaveRequested)
     return;
@@ -275,12 +283,14 @@ void GeckoSampler::HandleSaveRequest()
   NS_DispatchToMainThread(runnable);
 }
 
-void GeckoSampler::DeleteExpiredMarkers()
+void
+Sampler::DeleteExpiredMarkers()
 {
   mBuffer->deleteExpiredStoredMarkers();
 }
 
-void GeckoSampler::StreamTaskTracer(SpliceableJSONWriter& aWriter)
+void
+Sampler::StreamTaskTracer(SpliceableJSONWriter& aWriter)
 {
 #ifdef MOZ_TASK_TRACER
   aWriter.StartArrayProperty("data");
@@ -312,7 +322,8 @@ void GeckoSampler::StreamTaskTracer(SpliceableJSONWriter& aWriter)
 }
 
 
-void GeckoSampler::StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter)
+void
+Sampler::StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter)
 {
   aWriter.IntProperty("version", 3);
   aWriter.DoubleProperty("interval", interval());
@@ -375,13 +386,15 @@ void GeckoSampler::StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter)
   }
 }
 
-void GeckoSampler::ToStreamAsJSON(std::ostream& stream, double aSinceTime)
+void
+Sampler::ToStreamAsJSON(std::ostream& stream, double aSinceTime)
 {
   SpliceableJSONWriter b(mozilla::MakeUnique<OStreamJSONWriteFunc>(stream));
   StreamJSON(b, aSinceTime);
 }
 
-JSObject* GeckoSampler::ToJSObject(JSContext *aCx, double aSinceTime)
+JSObject*
+Sampler::ToJSObject(JSContext *aCx, double aSinceTime)
 {
   JS::RootedValue val(aCx);
   {
@@ -393,7 +406,8 @@ JSObject* GeckoSampler::ToJSObject(JSContext *aCx, double aSinceTime)
   return &val.toObject();
 }
 
-void GeckoSampler::GetGatherer(nsISupports** aRetVal)
+void
+Sampler::GetGatherer(nsISupports** aRetVal)
 {
   if (!aRetVal || NS_WARN_IF(!mGatherer)) {
     return;
@@ -401,15 +415,16 @@ void GeckoSampler::GetGatherer(nsISupports** aRetVal)
   NS_ADDREF(*aRetVal = mGatherer);
 }
 
-UniquePtr<char[]> GeckoSampler::ToJSON(double aSinceTime)
+UniquePtr<char[]>
+Sampler::ToJSON(double aSinceTime)
 {
   SpliceableChunkedJSONWriter b;
   StreamJSON(b, aSinceTime);
   return b.WriteFunc()->CopyData();
 }
 
-void GeckoSampler::ToJSObjectAsync(double aSinceTime,
-                                  mozilla::dom::Promise* aPromise)
+void
+Sampler::ToJSObjectAsync(double aSinceTime, mozilla::dom::Promise* aPromise)
 {
   if (NS_WARN_IF(!mGatherer)) {
     return;
@@ -418,7 +433,8 @@ void GeckoSampler::ToJSObjectAsync(double aSinceTime,
   mGatherer->Start(aSinceTime, aPromise);
 }
 
-void GeckoSampler::ToFileAsync(const nsACString& aFileName, double aSinceTime)
+void
+Sampler::ToFileAsync(const nsACString& aFileName, double aSinceTime)
 {
   if (NS_WARN_IF(!mGatherer)) {
     return;
@@ -498,7 +514,8 @@ void BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
 }
 #endif
 
-void GeckoSampler::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
+void
+Sampler::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
 {
   aWriter.Start(SpliceableJSONWriter::SingleLineStyle);
   {
@@ -571,7 +588,8 @@ void GeckoSampler::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
   aWriter.End();
 }
 
-void GeckoSampler::FlushOnJSShutdown(JSContext* aContext)
+void
+Sampler::FlushOnJSShutdown(JSContext* aContext)
 {
   SetPaused(true);
 
@@ -924,7 +942,8 @@ void StackWalkCallback(uint32_t aFrameNumber, void* aPC, void* aSP,
   nativeStack->count++;
 }
 
-void GeckoSampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
+void
+Sampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 {
   void* pc_array[1000];
   void* sp_array[1000];
@@ -966,7 +985,8 @@ void GeckoSampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSampl
 
 
 #ifdef USE_EHABI_STACKWALK
-void GeckoSampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
+void
+Sampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 {
   void *pc_array[1000];
   void *sp_array[1000];
@@ -1034,7 +1054,8 @@ void GeckoSampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSampl
 
 
 #ifdef USE_LUL_STACKWALK
-void GeckoSampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
+void
+Sampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 {
   const mcontext_t* mc
     = &reinterpret_cast<ucontext_t *>(aSample->context)->uc_mcontext;
@@ -1154,13 +1175,15 @@ void doSampleStackTrace(ThreadProfile &aProfile, TickSample *aSample, bool aAddL
 #endif
 }
 
-void GeckoSampler::Tick(TickSample* sample)
+void
+Sampler::Tick(TickSample* sample)
 {
   // Don't allow for ticks to happen within other ticks.
   InplaceTick(sample);
 }
 
-void GeckoSampler::InplaceTick(TickSample* sample)
+void
+Sampler::InplaceTick(TickSample* sample)
 {
   ThreadProfile& currThreadProfile = *sample->threadProfile;
 
@@ -1234,7 +1257,8 @@ SyncProfile* NewSyncProfile()
 
 } // namespace
 
-SyncProfile* GeckoSampler::GetBacktrace()
+SyncProfile*
+Sampler::GetBacktrace()
 {
   SyncProfile* profile = NewSyncProfile();
 
@@ -1261,9 +1285,49 @@ SyncProfile* GeckoSampler::GetBacktrace()
 }
 
 void
-GeckoSampler::GetBufferInfo(uint32_t *aCurrentPosition, uint32_t *aTotalSize, uint32_t *aGeneration)
+Sampler::GetBufferInfo(uint32_t *aCurrentPosition, uint32_t *aTotalSize,
+                       uint32_t *aGeneration)
 {
   *aCurrentPosition = mBuffer->mWritePos;
   *aTotalSize = mBuffer->mEntrySize;
   *aGeneration = mBuffer->mGeneration;
 }
+
+static bool
+ThreadSelected(ThreadInfo* aInfo,
+               const ThreadNameFilterList &aThreadNameFilters)
+{
+  if (aThreadNameFilters.empty()) {
+    return true;
+  }
+
+  std::string name = aInfo->Name();
+  std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+
+  for (uint32_t i = 0; i < aThreadNameFilters.length(); ++i) {
+    std::string filter = aThreadNameFilters[i];
+    std::transform(filter.begin(), filter.end(), filter.begin(), ::tolower);
+
+    // Crude, non UTF-8 compatible, case insensitive substring search
+    if (name.find(filter) != std::string::npos) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void
+Sampler::RegisterThread(ThreadInfo* aInfo)
+{
+  if (!aInfo->IsMainThread() && !mProfileThreads) {
+    return;
+  }
+
+  if (!ThreadSelected(aInfo, mThreadNameFilters)) {
+    return;
+  }
+
+  aInfo->SetProfile(mozilla::MakeUnique<ThreadProfile>(aInfo, mBuffer));
+}
+

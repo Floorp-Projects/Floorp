@@ -30,9 +30,10 @@
 #include <mmsystem.h>
 #include <process.h>
 #include "platform.h"
-#include "GeckoSampler.h"
-#include "ThreadResponsiveness.h"
 #include "ProfileEntry.h"
+#include "ThreadInfo.h"
+#include "ThreadProfile.h"
+#include "ThreadResponsiveness.h"
 
 // Memory profile
 #include "nsMemoryReporterManager.h"

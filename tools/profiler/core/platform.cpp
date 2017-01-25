@@ -20,7 +20,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Sprintf.h"
 #include "PseudoStack.h"
-#include "GeckoSampler.h"
 #include "nsIObserverService.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
@@ -65,7 +64,7 @@ public:
 #endif
 
 MOZ_THREAD_LOCAL(PseudoStack *) tlsPseudoStack;
-GeckoSampler* gSampler;
+Sampler* gSampler;
 
 // We need to track whether we've been initialized otherwise
 // we end up using tlsStack without initializing it.
@@ -73,7 +72,7 @@ GeckoSampler* gSampler;
 // it as the flag itself.
 bool stack_key_initialized;
 
-mozilla::TimeStamp   sLastTracerEvent; // is raced on
+static mozilla::TimeStamp   sLastTracerEvent; // is raced on
 mozilla::TimeStamp   sStartTime;
 int         sFrameNumber = 0;
 int         sLastFrameNumber = 0;
@@ -110,21 +109,6 @@ static mozilla::StaticAutoPtr<mozilla::ProfilerIOInterposeObserver>
 // The name that identifies the gecko thread for calls to
 // profiler_register_thread.
 static const char * gGeckoThreadName = "GeckoMain";
-
-Sampler::Sampler(double interval, bool profiling, int entrySize)
-  : interval_(interval)
-  , profiling_(profiling)
-  , paused_(false)
-  , active_(false)
-  , entrySize_(entrySize)
-{
-  MOZ_COUNT_CTOR(Sampler);
-}
-
-Sampler::~Sampler()
-{
-  MOZ_COUNT_DTOR(Sampler);
-}
 
 void Sampler::Startup() {
   sRegisteredThreads = new std::vector<ThreadInfo*>();
@@ -855,14 +839,13 @@ profiler_start(int aProfileEntries, double aInterval,
   profiler_stop();
 
   gSampler =
-    new GeckoSampler(aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL,
-                     aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY,
-                     aFeatures, aFeatureCount,
-                     aThreadNameFilters, aFilterCount);
+    new Sampler(aInterval ? aInterval : PROFILE_DEFAULT_INTERVAL,
+                aProfileEntries ? aProfileEntries : PROFILE_DEFAULT_ENTRY,
+                aFeatures, aFeatureCount, aThreadNameFilters, aFilterCount);
 
   gSampler->Start();
   if (gSampler->ProfileJS() || gSampler->InPrivacyMode()) {
-    MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
+    mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
     const std::vector<ThreadInfo*>& threads = gSampler->GetRegisteredThreads();
 
     for (uint32_t i = 0; i < threads.size(); i++) {
