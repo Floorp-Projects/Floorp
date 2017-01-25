@@ -794,7 +794,6 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 
 .fxaSyncIllustration {
   height: var(--panel-ui-sync-illustration-height);
-  list-style-image: url(chrome://browser/skin/fxa/sync-illustration.svg);
 }
 
 .PanelUI-remotetabs-prefs-button > .toolbarbutton-text {

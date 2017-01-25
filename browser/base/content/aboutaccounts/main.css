@@ -109,8 +109,7 @@ header h1
 }
 
 
-.graphic-sync-intro {
-  background-image: url(chrome://browser/skin/fxa/sync-illustration.png);
+.graphic-sync-intro{
   background-repeat: no-repeat;
   background-size: contain;
   height: 231px;
@@ -153,14 +152,4 @@ header h1
     padding: 10px 0;
   }
 
-}
-
-/* Retina */
-@media
-only screen and (min-device-pixel-ratio: 2),
-only screen and (        min-resolution: 192dpi),
-only screen and (        min-resolution: 2dppx) {
-  .graphic-sync-intro {
-    background-image: url(chrome://browser/skin/fxa/sync-illustration@2x.png);
-  }
 }

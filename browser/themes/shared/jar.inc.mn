@@ -81,8 +81,6 @@
   skin/classic/browser/fxa/default-avatar.svg                  (../shared/fxa/default-avatar.svg)
   skin/classic/browser/fxa/logo.png                            (../shared/fxa/logo.png)
   skin/classic/browser/fxa/logo@2x.png                         (../shared/fxa/logo@2x.png)
-  skin/classic/browser/fxa/sync-illustration.png               (../shared/fxa/sync-illustration.png)
-  skin/classic/browser/fxa/sync-illustration@2x.png            (../shared/fxa/sync-illustration@2x.png)
   skin/classic/browser/fxa/sync-illustration.svg               (../shared/fxa/sync-illustration.svg)
   skin/classic/browser/fxa/android.png                         (../shared/fxa/android.png)
   skin/classic/browser/fxa/android@2x.png                      (../shared/fxa/android@2x.png)
