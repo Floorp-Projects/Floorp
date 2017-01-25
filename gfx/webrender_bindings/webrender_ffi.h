@@ -484,7 +484,7 @@ WR_FUNC;
 // It is the responsibility of the caller to manage the dst_buffer memory
 // and also free it at the proper time.
 WR_INLINE const uint8_t*
-wr_readback_into_buffer(WrWindowState* wrWindow, uint32_t width, uint32_t height,
+wr_readback_into_buffer(uint32_t width, uint32_t height,
                         uint8_t* dst_buffer, size_t buffer_length)
 WR_FUNC;
 
