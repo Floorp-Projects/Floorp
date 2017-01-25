@@ -9,7 +9,6 @@ this.EXPORTED_SYMBOLS = ["CryptoUtils"];
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://services-sync/constants.js");
 
 this.CryptoUtils = {
   xor: function xor(a, b) {
