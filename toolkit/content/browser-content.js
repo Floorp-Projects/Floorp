@@ -544,7 +544,7 @@ var Printing = {
 
       // Set base URI of document. Print preview code will read this value to
       // populate the URL field in print settings so that it doesn't show
-      // "about:blank" as its URI.
+      // "about:printpreview" as its URI.
       let headBaseElement = content.document.createElement("base");
       headBaseElement.setAttribute("href", URL);
       content.document.head.appendChild(headBaseElement);
@@ -647,11 +647,29 @@ var Printing = {
 
       // If we happen to be on simplified mode, we need to set docURL in order
       // to generate header/footer content correctly, since simplified tab has
-      // "about:blank" as its URI.
+      // "about:printpreview" as its URI.
       if (printSettings && simplifiedMode)
         printSettings.docURL = contentWindow.document.baseURI;
 
-      docShell.printPreview.printPreview(printSettings, contentWindow, this);
+      // Bug 1323987 optimizes nsDocShell::GetPrintPreview() method so it can
+      // return its current content viewer QI'd to nsIWebBrowserPrint if it's
+      // already a blank one. Bug 1323987 also adds a new about: page for
+      // "about:printpreview" (new redirector that essentially aliases itself
+      // to "about:blank").
+      // These changes together can cause a raciness condition in nsDocShell::
+      // GetPrintPreview() if we access it and nsDocShell hasn't even finished
+      // the redirect yet. We solve this issue by checking if the current top
+      // level document has finished loading prior to entering on print preview
+      // mode, and if not, wait until it completes.
+      let print = content.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebBrowserPrint);
+      if (print.doingPrintPreview || content.document.readyState == "complete") {
+        docShell.printPreview.printPreview(printSettings, contentWindow, this);
+      } else if (content.document.readyState != "complete") {
+        addEventListener("DOMContentLoaded", () => {
+          docShell.printPreview.printPreview(printSettings, contentWindow, this);
+        }, {once: true});
+      }
     } catch (error) {
       // This might fail if we, for example, attempt to print a XUL document.
       // In that case, we inform the parent to bail out of print preview.
@@ -669,7 +687,7 @@ var Printing = {
 
     // If we happen to be on simplified mode, we need to set docURL in order
     // to generate header/footer content correctly, since simplified tab has
-    // "about:blank" as its URI.
+    // "about:printpreview" as its URI.
     if (printSettings && simplifiedMode) {
       printSettings.docURL = contentWindow.document.baseURI;
     }
