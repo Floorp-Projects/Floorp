@@ -51,11 +51,14 @@ class SandboxDependsFunction(object):
 
 class DependsFunction(object):
     __slots__ = (
-        'func', 'dependencies', 'when', 'sandboxed', 'sandbox', '_result')
+        '_func', '_name', 'dependencies', 'when', 'sandboxed', 'sandbox',
+        '_result')
 
     def __init__(self, sandbox, func, dependencies, when=None):
         assert isinstance(sandbox, ConfigureSandbox)
-        self.func = func
+        assert not inspect.isgeneratorfunction(func)
+        self._func = func
+        self._name = func.__name__
         self.dependencies = dependencies
         self.sandboxed = wraps(func)(SandboxDependsFunction())
         self.sandbox = sandbox
@@ -71,7 +74,11 @@ class DependsFunction(object):
 
     @property
     def name(self):
-        return self.func.__name__
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
 
     @property
     def sandboxed_dependencies(self):
@@ -88,7 +95,7 @@ class DependsFunction(object):
 
         resolved_args = [self.sandbox._value_for(d, need_help_dependency)
                          for d in self.dependencies]
-        return self.func(*resolved_args)
+        return self._func(*resolved_args)
 
     def __repr__(self):
         return '<%s.%s %s(%s)>' % (
@@ -108,7 +115,7 @@ class CombinedDependsFunction(DependsFunction):
 
         flatten_deps = []
         for d in dependencies:
-            if isinstance(d, CombinedDependsFunction) and d.func == wrapper:
+            if isinstance(d, CombinedDependsFunction) and d._func == wrapper:
                 for d2 in d.dependencies:
                     if d2 not in flatten_deps:
                         flatten_deps.append(d2)
@@ -134,11 +141,11 @@ class CombinedDependsFunction(DependsFunction):
             deps = deps[1:]
         resolved_args = [self.sandbox._value_for(d, need_help_dependency)
                          for d in deps]
-        return self.func(*resolved_args)
+        return self._func(*resolved_args)
 
     def __eq__(self, other):
         return (isinstance(other, self.__class__) and
-                self.func == other.func and
+                self._func == other._func and
                 set(self.dependencies) == set(other.dependencies))
 
     def __ne__(self, other):
@@ -391,7 +398,7 @@ class ConfigureSandbox(dict):
                            '@depends nor a @template' % key)
 
         if isinstance(value, SandboxDependsFunction):
-            self._depends[value].func.__name__ = key
+            self._depends[value].name = key
 
         return super(ConfigureSandbox, self).__setitem__(key, value)
 
@@ -417,7 +424,6 @@ class ConfigureSandbox(dict):
 
     @memoize
     def _value_for_depends(self, obj, need_help_dependency=False):
-        assert not inspect.isgeneratorfunction(obj.func)
         return obj.result(need_help_dependency)
 
     @memoize

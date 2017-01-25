@@ -40,7 +40,7 @@ class LintSandbox(ConfigureSandbox):
         if isinstance(obj, CombinedDependsFunction) or obj in (self._always,
                                                                self._never):
             return
-        func, glob = self.unwrap(obj.func)
+        func, glob = self.unwrap(obj._func)
         loc = '%s:%d' % (func.func_code.co_filename,
                          func.func_code.co_firstlineno)
         func_args = inspect.getargspec(func)
@@ -80,7 +80,7 @@ class LintSandbox(ConfigureSandbox):
             if (self._help_option in obj.dependencies or
                 obj in (self._always, self._never)):
                 return False
-            func, glob = self.unwrap(obj.func)
+            func, glob = self.unwrap(obj._func)
             # We allow missing --help dependencies for functions that:
             # - don't use @imports
             # - don't have a closure
