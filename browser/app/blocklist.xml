@@ -272,6 +272,10 @@
       <versionRange minVersion="208.7.0" maxVersion="208.7.0" severity="3"/>
       <versionRange minVersion="199.7.0" maxVersion="208.7.0" severity="3"/>
     </emItem>
+    <emItem blockID="i1523" id="{a0d7ccb3-214d-498b-b4aa-0e8fda9a7bf7}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="20170120" severity="1"/>
+    </emItem>
     <emItem blockID="i1227" id="{A34CAF42-A3E3-11E5-945F-18C31D5D46B0}">
       <prefs>
         <pref>security.csp.enable</pref>
@@ -1231,6 +1235,10 @@
     <emItem blockID="i88" id="anttoolbar@ant.com">
       <prefs/>
       <versionRange minVersion="2.4.6.4" maxVersion="2.4.6.4" severity="1"/>
+    </emItem>
+    <emItem blockID="i1524" id="ext@alibonus.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="1.20.9" severity="1"/>
     </emItem>
     <emItem blockID="i670" id="/^({ad9a41d2-9a49-4fa6-a79e-71a0785364c8})|(ffxtlbr@mysearchdial\.com)$/">
       <prefs>
