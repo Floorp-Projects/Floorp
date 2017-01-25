@@ -34,7 +34,6 @@ tier_MOZ_AUTOMATION_UPDATE_PACKAGING = update-packaging
 tier_MOZ_AUTOMATION_PRETTY_UPDATE_PACKAGING = pretty-update-packaging
 tier_MOZ_AUTOMATION_UPLOAD_SYMBOLS = uploadsymbols
 tier_MOZ_AUTOMATION_UPLOAD = upload
-tier_MOZ_AUTOMATION_SDK = sdk
 
 # Automation build steps. Everything in MOZ_AUTOMATION_TIERS also gets used in
 # TIERS for mach display. As such, the MOZ_AUTOMATION_TIERS are roughly sorted
@@ -54,7 +53,6 @@ moz_automation_symbols = \
   MOZ_AUTOMATION_L10N_CHECK \
   MOZ_AUTOMATION_PRETTY_L10N_CHECK \
   MOZ_AUTOMATION_UPLOAD \
-  MOZ_AUTOMATION_SDK \
   $(NULL)
 MOZ_AUTOMATION_TIERS := $(foreach sym,$(moz_automation_symbols),$(if $(filter 1,$($(sym))),$(tier_$(sym))))
 
