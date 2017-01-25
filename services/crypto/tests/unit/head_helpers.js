@@ -3,8 +3,6 @@ var Ci = Components.interfaces;
 var Cr = Components.results;
 var Cu = Components.utils;
 
-/* import-globals-from ../../../common/tests/unit/head_helpers.js */
-
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 try {

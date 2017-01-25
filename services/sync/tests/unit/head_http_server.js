@@ -1,6 +1,3 @@
-/* import-globals-from head_appinfo.js */
-/* import-globals-from ../../../common/tests/unit/head_helpers.js */
-
 var Cm = Components.manager;
 
 // Shared logging for all HTTP server functions.

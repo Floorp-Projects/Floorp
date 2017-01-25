@@ -1,10 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* import-globals-from head_appinfo.js */
-/* import-globals-from ../../../common/tests/unit/head_helpers.js */
-/* import-globals-from head_http_server.js */
-
 Cu.import("resource://services-sync/engines.js");
 
 // Common code for test_errorhandler_{1,2}.js -- pulled out to make it less
