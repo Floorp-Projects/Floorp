@@ -167,12 +167,12 @@ nsIContentChild::RecvAsyncMessage(const nsString& aMsg,
                                   const IPC::Principal& aPrincipal,
                                   const ClonedMessageData& aData)
 {
+  CrossProcessCpowHolder cpows(this, aCpows);
   RefPtr<nsFrameMessageManager> cpm = nsFrameMessageManager::GetChildProcessManager();
   if (cpm) {
     ipc::StructuredCloneData data;
     ipc::UnpackClonedMessageDataForChild(aData, data);
 
-    CrossProcessCpowHolder cpows(this, aCpows);
     cpm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(cpm.get()), nullptr,
                         aMsg, false, &data, &cpows, aPrincipal, nullptr);
   }

@@ -40,7 +40,7 @@ addRDMTask(TEST_URL, function* ({ ui, manager }) {
   yield testUserAgent(ui, DEFAULT_UA);
   yield testDevicePixelRatio(ui, DEFAULT_DPPX);
   yield testTouchEventsOverride(ui, false);
-  testViewportSelectLabel(ui, "no device selected");
+  testViewportDeviceSelectLabel(ui, "no device selected");
 
   // Test device with custom properties
   yield selectDevice(ui, "Fake Phone RDM Test");
@@ -50,14 +50,14 @@ addRDMTask(TEST_URL, function* ({ ui, manager }) {
   yield testTouchEventsOverride(ui, true);
 
   // Test resetting device when resizing viewport
-  let deviceChanged = once(ui, "viewport-device-changed");
+  let deviceRemoved = once(ui, "device-removed");
   yield testViewportResize(ui, ".viewport-vertical-resize-handle",
     [-10, -10], [testDevice.width, testDevice.height - 10], [0, -10], ui);
-  yield deviceChanged;
+  yield deviceRemoved;
   yield testUserAgent(ui, DEFAULT_UA);
   yield testDevicePixelRatio(ui, DEFAULT_DPPX);
   yield testTouchEventsOverride(ui, false);
-  testViewportSelectLabel(ui, "no device selected");
+  testViewportDeviceSelectLabel(ui, "no device selected");
 
   // Test device with generic properties
   yield selectDevice(ui, "Laptop (1366 x 768)");
@@ -76,12 +76,6 @@ function testViewportDimensions(ui, w, h) {
      `${h}px`, `Viewport should have height of ${h}px`);
 }
 
-function testViewportSelectLabel(ui, expected) {
-  let select = ui.toolWindow.document.querySelector(".viewport-device-selector");
-  is(select.selectedOptions[0].textContent, expected,
-     `Select label should be changed to ${expected}`);
-}
-
 function* testUserAgent(ui, expected) {
   let ua = yield ContentTask.spawn(ui.getViewportBrowser(), {}, function* () {
     return content.navigator.userAgent;
@@ -92,17 +86,6 @@ function* testUserAgent(ui, expected) {
 function* testDevicePixelRatio(ui, expected) {
   let dppx = yield getViewportDevicePixelRatio(ui);
   is(dppx, expected, `devicePixelRatio should be set to ${expected}`);
-}
-
-function* testTouchEventsOverride(ui, expected) {
-  let { document } = ui.toolWindow;
-  let touchButton = document.querySelector("#global-touch-simulation-button");
-
-  let flag = yield ui.emulationFront.getTouchEventsOverride();
-  is(flag === Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED, expected,
-    `Touch events override should be ${expected ? "enabled" : "disabled"}`);
-  is(touchButton.classList.contains("active"), expected,
-    `Touch simulation button should be ${expected ? "" : "not"} active.`);
 }
 
 function* getViewportDevicePixelRatio(ui) {

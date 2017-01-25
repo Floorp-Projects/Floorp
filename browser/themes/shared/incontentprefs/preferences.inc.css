@@ -179,6 +179,11 @@ treecol {
   margin-inline-start: 0;
 }
 
+#browserHomePage:-moz-locale-dir(rtl) input {
+  unicode-bidi: plaintext;
+  direction: rtl;
+}
+
 /* Content pane */
 
 #defaultFontSizeLabel {

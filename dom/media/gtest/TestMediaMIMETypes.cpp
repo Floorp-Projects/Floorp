@@ -224,6 +224,7 @@ TEST(MediaMIMETypes, MediaExtendedMIMEType)
   EXPECT_TRUE(type->HaveCodecs());
   EXPECT_FALSE(type->Codecs().IsEmpty());
   EXPECT_TRUE(type->Codecs().AsString().EqualsASCII("a,b"));
+  EXPECT_TRUE(type->Codecs() == "a,b");
   EXPECT_TRUE(type->Codecs().Contains(NS_LITERAL_STRING("a")));
   EXPECT_TRUE(type->Codecs().Contains(NS_LITERAL_STRING("b")));
   EXPECT_TRUE(!!type->GetWidth());

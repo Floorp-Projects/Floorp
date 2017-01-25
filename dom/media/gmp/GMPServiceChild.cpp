@@ -80,6 +80,8 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
       base::ProcessId otherProcess;
       nsCString displayName;
       uint32_t pluginId = 0;
+      ipc::Endpoint<PGMPContentParent> endpoint;
+
       bool ok = child->SendLaunchGMP(nodeId,
                                      api,
                                      tags,
@@ -87,7 +89,9 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
                                      &pluginId,
                                      &otherProcess,
                                      &displayName,
+                                     &endpoint,
                                      &rv);
+
       if (helper && pluginId) {
         // Note: Even if the launch failed, we need to connect the crash
         // helper so that if the launch failed due to the plugin crashing,
@@ -103,12 +107,13 @@ GeckoMediaPluginServiceChild::GetContentParent(GMPCrashHelper* aHelper,
         return;
       }
 
-      RefPtr<GMPContentParent> parent;
-      child->GetBridgedGMPContentParent(otherProcess, getter_AddRefs(parent));
+      RefPtr<GMPContentParent> parent = child->GetBridgedGMPContentParent(otherProcess,
+                                                                          Move(endpoint));
       if (!alreadyBridgedTo.Contains(otherProcess)) {
         parent->SetDisplayName(displayName);
         parent->SetPluginId(pluginId);
       }
+
       RefPtr<GMPContentParent::CloseBlocker> blocker(new GMPContentParent::CloseBlocker(parent));
       holder->Resolve(blocker, __func__);
     },
@@ -339,31 +344,30 @@ GMPServiceChild::~GMPServiceChild()
 {
 }
 
-PGMPContentParent*
-GMPServiceChild::AllocPGMPContentParent(Transport* aTransport,
-                                        ProcessId aOtherPid)
+already_AddRefed<GMPContentParent>
+GMPServiceChild::GetBridgedGMPContentParent(ProcessId aOtherPid,
+                                            ipc::Endpoint<PGMPContentParent>&& endpoint)
 {
-  MOZ_ASSERT(!mContentParents.GetWeak(aOtherPid));
+  RefPtr<GMPContentParent> parent;
+  mContentParents.Get(aOtherPid, getter_AddRefs(parent));
+
+  if (parent) {
+    return parent.forget();
+  }
+
+  MOZ_ASSERT(aOtherPid == endpoint.OtherPid());
 
   nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
   MOZ_ASSERT(mainThread);
 
-  RefPtr<GMPContentParent> parent = new GMPContentParent();
+  parent = new GMPContentParent();
 
-  DebugOnly<bool> ok = parent->Open(aTransport, aOtherPid,
-                                    XRE_GetIOMessageLoop(),
-                                    mozilla::ipc::ParentSide);
+  DebugOnly<bool> ok = endpoint.Bind(parent);
   MOZ_ASSERT(ok);
 
   mContentParents.Put(aOtherPid, parent);
-  return parent;
-}
 
-void
-GMPServiceChild::GetBridgedGMPContentParent(ProcessId aOtherPid,
-                                            GMPContentParent** aGMPContentParent)
-{
-  mContentParents.Get(aOtherPid, aGMPContentParent);
+  return parent.forget();
 }
 
 void
@@ -392,11 +396,9 @@ class OpenPGMPServiceChild : public mozilla::Runnable
 {
 public:
   OpenPGMPServiceChild(UniquePtr<GMPServiceChild>&& aGMPServiceChild,
-                       mozilla::ipc::Transport* aTransport,
-                       base::ProcessId aOtherPid)
+                       ipc::Endpoint<PGMPServiceChild>&& aEndpoint)
     : mGMPServiceChild(Move(aGMPServiceChild)),
-      mTransport(aTransport),
-      mOtherPid(aOtherPid)
+      mEndpoint(Move(aEndpoint))
   {
   }
 
@@ -405,8 +407,7 @@ public:
     RefPtr<GeckoMediaPluginServiceChild> gmp =
       GeckoMediaPluginServiceChild::GetSingleton();
     MOZ_ASSERT(!gmp->mServiceChild);
-    if (mGMPServiceChild->Open(mTransport, mOtherPid, XRE_GetIOMessageLoop(),
-                               ipc::ChildSide)) {
+    if (mEndpoint.Bind(mGMPServiceChild.get())) {
       gmp->SetServiceChild(Move(mGMPServiceChild));
     } else {
       gmp->SetServiceChild(nullptr);
@@ -416,13 +417,12 @@ public:
 
 private:
   UniquePtr<GMPServiceChild> mGMPServiceChild;
-  mozilla::ipc::Transport* mTransport;
-  base::ProcessId mOtherPid;
+  ipc::Endpoint<PGMPServiceChild> mEndpoint;
 };
 
 /* static */
-PGMPServiceChild*
-GMPServiceChild::Create(Transport* aTransport, ProcessId aOtherPid)
+bool
+GMPServiceChild::Create(Endpoint<PGMPServiceChild>&& aGMPService)
 {
   RefPtr<GeckoMediaPluginServiceChild> gmp =
     GeckoMediaPluginServiceChild::GetSingleton();
@@ -432,18 +432,12 @@ GMPServiceChild::Create(Transport* aTransport, ProcessId aOtherPid)
 
   nsCOMPtr<nsIThread> gmpThread;
   nsresult rv = gmp->GetThread(getter_AddRefs(gmpThread));
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  NS_ENSURE_SUCCESS(rv, false);
 
-  GMPServiceChild* result = serviceChild.get();
   rv = gmpThread->Dispatch(new OpenPGMPServiceChild(Move(serviceChild),
-                                                    aTransport,
-                                                    aOtherPid),
+                                                    Move(aGMPService)),
                            NS_DISPATCH_NORMAL);
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  return result;
+  return NS_SUCCEEDED(rv);
 }
 
 } // namespace gmp

@@ -1240,11 +1240,13 @@ ContentChild::AllocPContentBridgeParent(mozilla::ipc::Transport* aTransport,
   return mLastBridge;
 }
 
-PGMPServiceChild*
-ContentChild::AllocPGMPServiceChild(mozilla::ipc::Transport* aTransport,
-                                    base::ProcessId aOtherProcess)
+mozilla::ipc::IPCResult
+ContentChild::RecvInitGMPService(Endpoint<PGMPServiceChild>&& aGMPService)
 {
-  return GMPServiceChild::Create(aTransport, aOtherProcess);
+  if (!GMPServiceChild::Create(Move(aGMPService))) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
@@ -2289,12 +2291,12 @@ ContentChild::RecvAsyncMessage(const nsString& aMsg,
                                const IPC::Principal& aPrincipal,
                                const ClonedMessageData& aData)
 {
+  CrossProcessCpowHolder cpows(this, aCpows);
   RefPtr<nsFrameMessageManager> cpm =
     nsFrameMessageManager::GetChildProcessManager();
   if (cpm) {
     StructuredCloneData data;
     ipc::UnpackClonedMessageDataForChild(aData, data);
-    CrossProcessCpowHolder cpows(this, aCpows);
     cpm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(cpm.get()),
                         nullptr, aMsg, false, &data, &cpows, aPrincipal,
                         nullptr);

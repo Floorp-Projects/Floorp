@@ -996,8 +996,8 @@ nsAppStartup::CreateInstanceWithProfile(nsIToolkitProfile* aProfile)
   }
 
   nsCOMPtr<nsIFile> execPath;
-  nsresult rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(gAbsoluteArgv0Path),
-                                      true, getter_AddRefs(execPath));
+  nsresult rv = NS_NewLocalFile(gAbsoluteArgv0Path,
+                                true, getter_AddRefs(execPath));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
