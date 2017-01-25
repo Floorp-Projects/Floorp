@@ -21,6 +21,10 @@
 #include "vm/NativeObject-inl.h"
 #include "vm/Shape-inl.h"
 
+#ifdef FUZZING
+#include "builtin/TestingFunctions.h"
+#endif
+
 using namespace js;
 
 using js::frontend::IsIdentifier;
@@ -1300,6 +1304,16 @@ FinishObjectClassInit(JSContext* cx, JS::HandleObject ctor, JS::HandleObject pro
     if (!evalobj)
         return false;
     global->setOriginalEval(evalobj);
+
+#ifdef FUZZING
+    if (cx->options().fuzzing()) {
+        if (!DefineTestingFunctions(cx, global, /* fuzzingSafe = */ true,
+                                    /* disableOOMFunctions = */ false))
+        {
+            return false;
+        }
+    }
+#endif
 
     Rooted<NativeObject*> holder(cx, GlobalObject::getIntrinsicsHolder(cx, global));
     if (!holder)
