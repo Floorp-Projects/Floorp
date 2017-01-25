@@ -63,7 +63,7 @@ android-x86-nightly/opt:
         max-run-time: 7200
     run:
         using: mozharness
-        actions: [get-secrets build multi-l10n update]
+        actions: [get-secrets build generate-build-stats multi-l10n update]
         config:
             - builds/releng_base_android_64_builds.py
             - disable_signing.py

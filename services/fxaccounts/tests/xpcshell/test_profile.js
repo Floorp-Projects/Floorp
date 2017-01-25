@@ -116,11 +116,9 @@ add_test(function cacheProfile_change() {
     return Promise.resolve();
   }
   let profile = CreateFxAccountsProfile(fxa);
-  profile._cachedAt = 12345;
 
   makeObserver(ON_PROFILE_CHANGE_NOTIFICATION, function(subject, topic, data) {
     do_check_eq(data, ACCOUNT_DATA.uid);
-    do_check_neq(profile._cachedAt, 12345, "cachedAt has been bumped");
     do_check_true(setProfileCacheCalled);
     run_next_test();
   });
@@ -134,6 +132,7 @@ add_test(function fetchAndCacheProfile_ok() {
     return Promise.resolve({ body: { avatar: "myimg"} });
   };
   let profile = CreateFxAccountsProfile(null, client);
+  profile._cachedAt = 12345;
 
   profile._cacheProfile = function(toCache) {
     do_check_eq(toCache.body.avatar, "myimg");
@@ -143,6 +142,24 @@ add_test(function fetchAndCacheProfile_ok() {
   return profile._fetchAndCacheProfile()
     .then(result => {
       do_check_eq(result.avatar, "myimg");
+      do_check_neq(profile._cachedAt, 12345, "cachedAt has been bumped");
+      run_next_test();
+    });
+});
+
+add_test(function fetchAndCacheProfile_always_bumps_cachedAt() {
+  let client = mockClient(mockFxa());
+  client.fetchProfile = function() {
+    return Promise.reject(new Error("oops"));
+  };
+  let profile = CreateFxAccountsProfile(null, client);
+  profile._cachedAt = 12345;
+
+  return profile._fetchAndCacheProfile()
+    .then(result => {
+      do_throw("Should not succeed");
+    }, err => {
+      do_check_neq(profile._cachedAt, 12345, "cachedAt has been bumped");
       run_next_test();
     });
 });
@@ -406,12 +423,10 @@ add_test(function getProfile_fetchAndCacheProfile_throws() {
   fxa.profileCache = { profile: { avatar: "myimg" } };
   let profile = CreateFxAccountsProfile(fxa);
 
-  profile._cachedAt = 12345;
   profile._fetchAndCacheProfile = () => Promise.reject(new Error());
 
   return profile.getProfile()
     .then(result => {
-      do_check_neq(profile._cachedAt, 12345);
       do_check_eq(result.avatar, "myimg");
       run_next_test();
     });

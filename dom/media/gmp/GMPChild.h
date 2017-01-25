@@ -56,12 +56,12 @@ private:
   PGMPStorageChild* AllocPGMPStorageChild() override;
   bool DeallocPGMPStorageChild(PGMPStorageChild* aActor) override;
 
-  PGMPContentChild* AllocPGMPContentChild(Transport* aTransport,
-                                          ProcessId aOtherPid) override;
   void GMPContentChildActorDestroy(GMPContentChild* aGMPContentChild);
 
   mozilla::ipc::IPCResult RecvCrashPluginNow() override;
   mozilla::ipc::IPCResult RecvCloseActive() override;
+
+  mozilla::ipc::IPCResult RecvInitGMPContentChild(Endpoint<PGMPContentChild>&& aEndpoint) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void ProcessingError(Result aCode, const char* aReason) override;

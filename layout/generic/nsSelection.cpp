@@ -1882,7 +1882,7 @@ printf(" * TakeFocus - moving into new cell\n");
 }
 
 
-SelectionDetails*
+UniquePtr<SelectionDetails>
 nsFrameSelection::LookUpSelection(nsIContent *aContent,
                                   int32_t aContentOffset,
                                   int32_t aContentLength,
@@ -1891,14 +1891,14 @@ nsFrameSelection::LookUpSelection(nsIContent *aContent,
   if (!aContent || !mShell)
     return nullptr;
 
-  SelectionDetails* details = nullptr;
+  UniquePtr<SelectionDetails> details;
 
   for (size_t j = 0; j < kPresentSelectionTypeCount; j++) {
     if (mDomSelections[j]) {
-      mDomSelections[j]->LookUpSelection(aContent, aContentOffset,
-                                         aContentLength, &details,
-                                         ToSelectionType(1 << j),
-                                         aSlowCheck);
+      details = mDomSelections[j]->LookUpSelection(aContent, aContentOffset,
+                                                   aContentLength, Move(details),
+                                                   ToSelectionType(1 << j),
+                                                   aSlowCheck);
     }
   }
 
@@ -4595,29 +4595,36 @@ Selection::selectFrames(nsPresContext* aPresContext, nsRange* aRange,
 //    of this function did in the case of 1 range. This would also mean that
 //    the aSlowCheck flag would have meaning again.
 
-NS_IMETHODIMP
+UniquePtr<SelectionDetails>
 Selection::LookUpSelection(nsIContent* aContent, int32_t aContentOffset,
                            int32_t aContentLength,
-                           SelectionDetails** aReturnDetails,
+                           UniquePtr<SelectionDetails> aDetailsHead,
                            SelectionType aSelectionType,
                            bool aSlowCheck)
 {
-  nsresult rv;
-  if (!aContent || ! aReturnDetails)
-    return NS_ERROR_NULL_POINTER;
+  if (!aContent) {
+    return aDetailsHead;
+  }
 
   // it is common to have no ranges, to optimize that
-  if (mRanges.Length() == 0)
-    return NS_OK;
+  if (mRanges.Length() == 0) {
+    return aDetailsHead;
+  }
 
   nsTArray<nsRange*> overlappingRanges;
-  rv = GetRangesForIntervalArray(aContent, aContentOffset,
-                                 aContent, aContentOffset + aContentLength,
-                                 false,
-                                 &overlappingRanges);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (overlappingRanges.Length() == 0)
-    return NS_OK;
+  nsresult rv = GetRangesForIntervalArray(aContent, aContentOffset,
+                                          aContent, aContentOffset + aContentLength,
+                                          false,
+                                          &overlappingRanges);
+  if (NS_FAILED(rv)) {
+    return aDetailsHead;
+  }
+
+  if (overlappingRanges.Length() == 0) {
+    return aDetailsHead;
+  }
+
+  UniquePtr<SelectionDetails> detailsHead = Move(aDetailsHead);
 
   for (uint32_t i = 0; i < overlappingRanges.Length(); i++) {
     nsRange* range = overlappingRanges[i];
@@ -4661,19 +4668,19 @@ Selection::LookUpSelection(nsIContent* aContent, int32_t aContentOffset,
     if (start < 0)
       continue; // the ranges do not overlap the input range
 
-    SelectionDetails* details = new SelectionDetails;
+    auto newHead = MakeUnique<SelectionDetails>();
 
-    details->mNext = *aReturnDetails;
-    details->mStart = start;
-    details->mEnd = end;
-    details->mSelectionType = aSelectionType;
+    newHead->mNext = Move(detailsHead);
+    newHead->mStart = start;
+    newHead->mEnd = end;
+    newHead->mSelectionType = aSelectionType;
     RangeData *rd = FindRangeData(range);
     if (rd) {
-      details->mTextRangeStyle = rd->mTextRangeStyle;
+      newHead->mTextRangeStyle = rd->mTextRangeStyle;
     }
-    *aReturnDetails = details;
+    detailsHead = Move(newHead);
   }
-  return NS_OK;
+  return detailsHead;
 }
 
 NS_IMETHODIMP

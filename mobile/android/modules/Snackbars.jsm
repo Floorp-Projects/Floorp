@@ -45,7 +45,15 @@ var Snackbars = {
         msg.action.label = aOptions.action.label;
       }
 
-      EventDispatcher.instance.sendRequestForResult(msg).then(result => aOptions.action.callback());
+      EventDispatcher.instance.sendRequestForResult(msg)
+        .then(result => aOptions.action.callback())
+        .catch(result => {
+          if (result === null) {
+            /* The snackbar was dismissed without executing the callback, nothing to do here. */
+          } else {
+            Cu.reportError(result);
+          }
+        });
     } else {
       EventDispatcher.instance.sendRequest(msg);
     }

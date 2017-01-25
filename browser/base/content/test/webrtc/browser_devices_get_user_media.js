@@ -567,6 +567,14 @@ var gTests = [
     Perms.remove(uri, "camera");
     Perms.remove(uri, "microphone");
   }
+},
+
+{
+  desc: "getUserMedia init & uninit",
+  run: function* checkInitAndUninit() {
+    webrtcUI.uninit();
+    webrtcUI.init();
+  }
 }
 
 ];

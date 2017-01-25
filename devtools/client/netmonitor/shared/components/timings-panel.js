@@ -5,9 +5,7 @@
 "use strict";
 
 const { DOM, PropTypes } = require("devtools/client/shared/vendor/react");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { L10N } = require("../../l10n");
-const { getSelectedRequest } = require("../../selectors/index");
 
 const { div, span } = DOM;
 const types = ["blocked", "dns", "connect", "send", "wait", "receive"];
@@ -18,9 +16,13 @@ const TIMINGS_END_PADDING = "80px";
  * Display timeline bars that shows the total wait time for various stages
  */
 function TimingsPanel({
-  timings = {},
-  totalTime = 0,
+  request,
 }) {
+  if (!request.eventTimings) {
+    return null;
+  }
+
+  const { timings, totalTime } = request.eventTimings;
   const timelines = types.map((type, idx) => {
     // Determine the relative offset for each timings box. For example, the
     // offset of third timings box will be 0 + blocked offset + dns offset
@@ -33,9 +35,9 @@ function TimingsPanel({
     return div({
       key: type,
       id: `timings-summary-${type}`,
-      className: "tabpanel-summary-container",
+      className: "tabpanel-summary-container timings-container",
     },
-      span({ className: "tabpanel-summary-label" },
+      span({ className: "tabpanel-summary-label timings-label" },
         L10N.getStr(`netmonitor.timings.${type}`)
       ),
       div({ className: "requests-menu-timings-container" },
@@ -64,22 +66,7 @@ function TimingsPanel({
 TimingsPanel.displayName = "TimingsPanel";
 
 TimingsPanel.propTypes = {
-  timings: PropTypes.object,
-  totalTime: PropTypes.number,
+  request: PropTypes.object.isRequired,
 };
 
-module.exports = connect(
-  (state) => {
-    const selectedRequest = getSelectedRequest(state);
-
-    if (selectedRequest && selectedRequest.eventTimings) {
-      const { timings, totalTime } = selectedRequest.eventTimings;
-      return {
-        timings,
-        totalTime,
-      };
-    }
-
-    return {};
-  }
-)(TimingsPanel);
+module.exports = TimingsPanel;

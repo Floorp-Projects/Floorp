@@ -502,9 +502,6 @@ class _ConvertToCxxType(TypeVisitor):
             return thing.fullname()
         return thing.name()
 
-    def visitBuiltinCxxType(self, t):
-        return Type(self.typename(t))
-
     def visitImportedCxxType(self, t):
         return Type(self.typename(t))
 
@@ -1778,11 +1775,6 @@ stmt.  Some types generate both kinds.'''
     def maybeTypedef(self, fqname, name):
         if fqname != name or self.unqualifiedTypedefs:
             self.usingTypedefs.append(Typedef(Type(fqname), name))
-
-    def visitBuiltinCxxType(self, t):
-        if t in self.visited: return
-        self.visited.add(t)
-        self.maybeTypedef(t.fullname(), t.name())
 
     def visitImportedCxxType(self, t):
         if t in self.visited: return
