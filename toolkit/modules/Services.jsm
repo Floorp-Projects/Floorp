@@ -81,7 +81,7 @@ var initTable = [
   ["perms", "@mozilla.org/permissionmanager;1", "nsIPermissionManager"],
   ["prompt", "@mozilla.org/embedcomp/prompt-service;1", "nsIPromptService"],
   ["profiler", "@mozilla.org/tools/profiler;1", "nsIProfiler",
-   AppConstants.MOZ_ENABLE_PROFILER_SPS],
+   AppConstants.MOZ_GECKO_PROFILER],
   ["scriptloader", "@mozilla.org/moz/jssubscript-loader;1", "mozIJSSubScriptLoader"],
   ["scriptSecurityManager", "@mozilla.org/scriptsecuritymanager;1", "nsIScriptSecurityManager"],
   ["search", "@mozilla.org/browser/search-service;1", "nsIBrowserSearchService",

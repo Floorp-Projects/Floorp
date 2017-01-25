@@ -50,10 +50,9 @@ function loadBrowser() {
   iframe.src = 'about:blank';
   document.body.appendChild(iframe);
 
-  iframe.addEventListener("load", function onLoad() {
-    iframe.removeEventListener("load", onLoad);
+  iframe.addEventListener("load", function() {
     runNext();
-  });
+  }, {once: true});
 }
 
 gScript.addMessageListener("permission-request", function (detail) {

@@ -253,20 +253,18 @@ function openAndLoadWindow(aOptions, aWaitForDelayedStartup = false) {
     }, "browser-delayed-startup-finished", false);
 
   } else {
-    win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad);
+    win.addEventListener("load", function() {
       deferred.resolve(win);
-    });
+    }, {once: true});
   }
   return deferred.promise;
 }
 
 function promiseWindowClosed(win) {
   let deferred = Promise.defer();
-  win.addEventListener("unload", function onunload() {
-    win.removeEventListener("unload", onunload);
+  win.addEventListener("unload", function() {
     deferred.resolve();
-  });
+  }, {once: true});
   win.close();
   return deferred.promise;
 }

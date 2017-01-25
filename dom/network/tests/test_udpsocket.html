@@ -75,13 +75,12 @@ function testSendString(socket) {
   socket.send(HELLO_WORLD, '127.0.0.1', socket.localPort);
 
   return new Promise(function(resolve, reject) {
-    socket.addEventListener('message', function recv_callback(msg) {
-      socket.removeEventListener('message', recv_callback);
+    socket.addEventListener('message', function(msg) {
       let recvData= String.fromCharCode.apply(null, new Uint8Array(msg.data));
       is(msg.remotePort, socket.localPort, 'expected packet from ' + socket.localPort);
       is(recvData, HELLO_WORLD, 'expected same string data');
       resolve(socket);
-    });
+    }, {once: true});
   });
 }
 
@@ -91,12 +90,11 @@ function testSendArrayBuffer(socket) {
   socket.send(DATA_ARRAY_BUFFER, '127.0.0.1', socket.localPort);
 
   return new Promise(function(resolve, reject) {
-    socket.addEventListener('message', function recv_callback(msg) {
-      socket.removeEventListener('message', recv_callback);
+    socket.addEventListener('message', function(msg) {
       is(msg.remotePort, socket.localPort, 'expected packet from ' + socket.localPort);
       ok(is_same_buffer(msg.data, DATA_ARRAY_BUFFER), 'expected same buffer data');
       resolve(socket);
-    });
+    }, {once: true});
   });
 }
 
@@ -106,12 +104,11 @@ function testSendArrayBufferView(socket) {
   socket.send(TYPED_DATA_ARRAY, '127.0.0.1', socket.localPort);
 
   return new Promise(function(resolve, reject) {
-    socket.addEventListener('message', function recv_callback(msg) {
-      socket.removeEventListener('message', recv_callback);
+    socket.addEventListener('message', function(msg) {
       is(msg.remotePort, socket.localPort, 'expected packet from ' + socket.localPort);
       ok(is_same_buffer(msg.data, TYPED_DATA_ARRAY), 'expected same buffer data');
       resolve(socket);
-    });
+    }, {once: true});
   });
 }
 
@@ -122,13 +119,12 @@ function testSendBlob(socket) {
   socket.send(blob, '127.0.0.1', socket.localPort);
 
   return new Promise(function(resolve, reject) {
-    socket.addEventListener('message', function recv_callback(msg) {
-      socket.removeEventListener('message', recv_callback);
+    socket.addEventListener('message', function(msg) {
       let recvData= String.fromCharCode.apply(null, new Uint8Array(msg.data));
       is(msg.remotePort, socket.localPort, 'expected packet from ' + socket.localPort);
       is(recvData, HELLO_WORLD, 'expected same string data');
       resolve(socket);
-    });
+    }, {once: true});
   });
 }
 
@@ -190,13 +186,12 @@ function testUDPOptions(socket) {
   return remoteSocket.opened.then(function() {
     remoteSocket.send(HELLO_WORLD);
     return new Promise(function(resolve, reject) {
-      socket.addEventListener('message', function recv_callback(msg) {
-        socket.removeEventListener('message', recv_callback);
+      socket.addEventListener('message', function(msg) {
         let recvData= String.fromCharCode.apply(null, new Uint8Array(msg.data));
         is(msg.remotePort, remoteSocket.localPort, 'expected packet from ' + remoteSocket.localPort);
         is(recvData, HELLO_WORLD, 'expected same string data');
         resolve(socket);
-      });
+      }, {once: true});
     });
   });
 }
@@ -230,14 +225,13 @@ function testMulticast() {
     socket.send(HELLO_WORLD, MCAST_ADDRESS, socket.localPort);
 
     return new Promise(function(resolve, reject) {
-      socket.addEventListener('message', function recv_callback(msg) {
-        socket.removeEventListener('message', recv_callback);
+      socket.addEventListener('message', function(msg) {
         let recvData= String.fromCharCode.apply(null, new Uint8Array(msg.data));
         is(msg.remotePort, socket.localPort, 'expected packet from ' + socket.localPort);
         is(recvData, HELLO_WORLD, 'expected same string data');
         socket.leaveMulticastGroup(MCAST_ADDRESS);
         resolve();
-      });
+      }, {once: true});
     });
   });
 }
@@ -338,11 +332,9 @@ function testBFCache() {
     iframe.src = 'file_udpsocket_iframe.html?' + socket.localPort;
 
     return new Promise(function(resolve, reject) {
-      socket.addEventListener('message', function recv_callback(msg) {
-        socket.removeEventListener('message', recv_callback);
+      socket.addEventListener('message', function(msg) {
         iframe.src = 'about:blank';
-        iframe.addEventListener('load', function onload() {
-          iframe.removeEventListener('load', onload);
+        iframe.addEventListener('load', function() {
           socket.send(HELLO_WORLD, '127.0.0.1', msg.remotePort);
 
           function recv_again_callback(msg) {
@@ -357,8 +349,8 @@ function testBFCache() {
             socket.close();
             resolve();
           }, 5000);
-        });
-      });
+        }, {once: true});
+      }, {once: true});
     });
   });
 }

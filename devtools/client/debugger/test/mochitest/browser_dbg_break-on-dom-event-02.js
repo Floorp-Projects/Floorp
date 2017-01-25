@@ -72,15 +72,15 @@ function testBreakOnClick() {
 
       switch (handlers.length) {
         case 1:
-          is(aPacket.frame.where.line, 26, "Found the clicker handler.");
+          is(aPacket.frame.where.line, 25, "Found the clicker handler.");
           handlers.push("handleEventClick");
           break;
         case 2:
-          is(aPacket.frame.where.line, 36, "Found the handleEventClick handler.");
+          is(aPacket.frame.where.line, 35, "Found the handleEventClick handler.");
           handlers.push("boundHandleEventClick");
           break;
         case 3:
-          is(aPacket.frame.where.line, 46, "Found the boundHandleEventClick handler.");
+          is(aPacket.frame.where.line, 45, "Found the boundHandleEventClick handler.");
           gClient.removeListener("paused", tester);
           deferred.resolve();
       }

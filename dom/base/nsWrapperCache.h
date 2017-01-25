@@ -162,17 +162,24 @@ public:
   virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) = 0;
 
   /**
-   * Returns true if the object has a non-gray wrapper.
+   * Returns true if the object has a wrapper that is known live from the point
+   * of view of cycle collection.
    */
-  bool IsBlack() const;
+  bool HasKnownLiveWrapper() const;
 
   /**
-   * Returns true if the object has a black wrapper,
-   * and all the GC things it is keeping alive are black too.
+   * Returns true if the object has a known-live wrapper (from the CC point of
+   * view) and all the GC things it is keeping alive are already known-live from
+   * CC's point of view.
    */
-  bool IsBlackAndDoesNotNeedTracing(nsISupports* aThis);
+  bool HasKnownLiveWrapperAndDoesNotNeedTracing(nsISupports* aThis);
 
   bool HasNothingToTrace(nsISupports* aThis);
+
+  /**
+   * Mark our wrapper, if any, as live as far as the CC is concerned.
+   */
+  void MarkWrapperLive();
 
   // Only meant to be called by code that preserves a wrapper.
   void SetPreservingWrapper(bool aPreserve)

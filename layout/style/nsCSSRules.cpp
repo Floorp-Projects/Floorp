@@ -79,7 +79,7 @@ Rule::IsCCLeaf() const
 bool
 Rule::IsKnownLive() const
 {
-  if (IsBlack()) {
+  if (HasKnownLiveWrapper()) {
     return true;
   }
 

@@ -6,22 +6,20 @@ add_task(function* () {
   // Wait for a process change and then fulfil the promise.
   function awaitProcessChange(browser) {
     return new Promise(resolve => {
-      browser.addEventListener("BrowserChangedProcess", function bcp(e) {
-        browser.removeEventListener("BrowserChangedProcess", bcp);
+      browser.addEventListener("BrowserChangedProcess", function(e) {
         ok(true, "The browser changed process!");
         resolve();
-      });
+      }, {once: true});
     });
   }
 
   // Wait for the given tab being closed.
   function awaitTabClose(tab) {
     return new Promise(resolve => {
-      tab.addEventListener("TabClose", function f() {
-        tab.removeEventListener("TabClose", f);
+      tab.addEventListener("TabClose", function() {
         ok(true, "The tab is being closed!\n");
         resolve();
-      });
+      }, {once: true});
     });
   }
 

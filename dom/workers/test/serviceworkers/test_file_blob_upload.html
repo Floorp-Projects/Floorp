@@ -44,21 +44,19 @@
     content.appendChild(iframe);
 
     return new Promise(function(resolve, reject) {
-      window.addEventListener('message', function readyCallback(evt) {
-        window.removeEventListener('message', readyCallback);
+      window.addEventListener('message', function(evt) {
         if (evt.data.status === 'READY') {
           resolve();
         } else {
           reject(evt.data.result);
         }
-      });
+      }, {once: true});
     });
   }
 
   function postBlob(body) {
     return new Promise(function(resolve, reject) {
-      window.addEventListener('message', function postBlobCallback(evt) {
-        window.removeEventListener('message', postBlobCallback);
+      window.addEventListener('message', function(evt) {
         if (evt.data.status === 'OK') {
           is(JSON.stringify(body), JSON.stringify(evt.data.result),
              'body echoed back correctly');
@@ -66,7 +64,7 @@
         } else {
           reject(evt.data.result);
         }
-      });
+      }, {once: true});
 
       iframe.contentWindow.postMessage({ type: 'TEST', body: body }, '*');
     });

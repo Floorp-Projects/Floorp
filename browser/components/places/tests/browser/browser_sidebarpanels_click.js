@@ -80,7 +80,6 @@ function test() {
     });
 
     sidebar.addEventListener("load", function() {
-      sidebar.removeEventListener("load", arguments.callee, true);
       executeSoon(function() {
         currentTest.prepare();
 
@@ -115,7 +114,7 @@ function test() {
         // box, which means that the click actually worked, so it's good enough
         // for the purpose of this test.
       });
-    }, true);
+    }, {capture: true, once: true});
   }
 
   function changeSidebarDirection(aDirection) {

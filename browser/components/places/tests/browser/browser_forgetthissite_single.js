@@ -70,9 +70,8 @@ var testForgetThisSiteVisibility = Task.async(function* (selectionCount) {
 
 function promisePopupShown(popup) {
   return new Promise(resolve => {
-    popup.addEventListener("popupshown", function onShown() {
-      popup.removeEventListener("popupshown", onShown, true);
+    popup.addEventListener("popupshown", function() {
       resolve();
-    }, true);
+    }, {capture: true, once: true});
   });
 }

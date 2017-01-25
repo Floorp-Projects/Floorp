@@ -93,22 +93,12 @@ public:
   {
     AddEdit(Edit(aEdit));
   }
-  void AddPaint(const Edit& aPaint)
-  {
-    AddNoSwapPaint(aPaint);
-    mSwapRequired = true;
-  }
   void AddPaint(const CompositableOperation& aPaint)
   {
     AddNoSwapPaint(Edit(aPaint));
     mSwapRequired = true;
   }
 
-  void AddNoSwapPaint(const Edit& aPaint)
-  {
-    MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
-    mPaints.AppendElement(aPaint);
-  }
   void AddNoSwapPaint(const CompositableOperation& aPaint)
   {
     MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
@@ -119,11 +109,17 @@ public:
     MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
     mMutants.PutEntry(aLayer);
   }
+  void AddSimpleMutant(ShadowableLayer* aLayer)
+  {
+    MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
+    mSimpleMutants.PutEntry(aLayer);
+  }
   void End()
   {
     mCset.Clear();
     mPaints.Clear();
     mMutants.Clear();
+    mSimpleMutants.Clear();
     mDestroyedActors.Clear();
     mOpen = false;
     mSwapRequired = false;
@@ -131,8 +127,11 @@ public:
   }
 
   bool Empty() const {
-    return mCset.IsEmpty() && mPaints.IsEmpty() && mMutants.IsEmpty()
-           && mDestroyedActors.IsEmpty();
+    return mCset.IsEmpty() &&
+           mPaints.IsEmpty() &&
+           mMutants.IsEmpty() &&
+           mSimpleMutants.IsEmpty() &&
+           mDestroyedActors.IsEmpty();
   }
   bool RotationChanged() const {
     return mRotationChanged;
@@ -142,9 +141,10 @@ public:
   bool Opened() const { return mOpen; }
 
   EditVector mCset;
-  EditVector mPaints;
+  nsTArray<CompositableOperation> mPaints;
   OpDestroyVector mDestroyedActors;
   ShadowableLayerSet mMutants;
+  ShadowableLayerSet mSimpleMutants;
   gfx::IntRect mTargetBounds;
   ScreenRotation mTargetRotation;
   dom::ScreenOrientationInternal mTargetOrientation;
@@ -289,7 +289,13 @@ ShadowLayerForwarder::CreatedRefLayer(ShadowableLayer* aRef)
 void
 ShadowLayerForwarder::Mutated(ShadowableLayer* aMutant)
 {
-mTxn->AddMutant(aMutant);
+  mTxn->AddMutant(aMutant);
+}
+
+void
+ShadowLayerForwarder::MutatedSimple(ShadowableLayer* aMutant)
+{
+  mTxn->AddSimpleMutant(aMutant);
 }
 
 void
@@ -613,6 +619,21 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
 
   MOZ_LAYERS_LOG(("[LayersForwarder] building transaction..."));
 
+  nsTArray<OpSetSimpleLayerAttributes> setSimpleAttrs;
+  for (ShadowableLayerSet::Iterator it(&mTxn->mSimpleMutants); !it.Done(); it.Next()) {
+    ShadowableLayer* shadow = it.Get()->GetKey();
+    if (!shadow->HasShadow()) {
+      continue;
+    }
+
+    Layer* mutant = shadow->AsLayer();
+    setSimpleAttrs.AppendElement(OpSetSimpleLayerAttributes(
+      Shadow(shadow),
+      mutant->GetSimpleAttributes()));
+  }
+
+  nsTArray<OpSetLayerAttributes> setAttrs;
+
   // We purposely add attribute-change ops to the final changeset
   // before we add paint ops.  This allows layers to record the
   // attribute changes before new pixels arrive, which can be useful
@@ -628,47 +649,16 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
     Layer* mutant = shadow->AsLayer();
     MOZ_ASSERT(!!mutant, "unshadowable layer?");
 
-    LayerAttributes attrs;
+    OpSetLayerAttributes op;
+    op.layer() = Shadow(shadow);
+
+    LayerAttributes& attrs = op.attrs();
     CommonLayerAttributes& common = attrs.common();
-    common.layerBounds() = mutant->GetLayerBounds();
     common.visibleRegion() = mutant->GetVisibleRegion();
     common.eventRegions() = mutant->GetEventRegions();
-    common.postXScale() = mutant->GetPostXScale();
-    common.postYScale() = mutant->GetPostYScale();
-    common.transform() = mutant->GetBaseTransform();
-    common.transformIsPerspective() = mutant->GetTransformIsPerspective();
-    common.contentFlags() = mutant->GetContentFlags();
-    common.opacity() = mutant->GetOpacity();
     common.useClipRect() = !!mutant->GetClipRect();
     common.clipRect() = (common.useClipRect() ?
                          *mutant->GetClipRect() : ParentLayerIntRect());
-    common.scrolledClip() = mutant->GetScrolledClip();
-    common.isFixedPosition() = mutant->GetIsFixedPosition();
-    if (mutant->GetIsFixedPosition()) {
-      common.fixedPositionScrollContainerId() = mutant->GetFixedPositionScrollContainerId();
-      common.fixedPositionAnchor() = mutant->GetFixedPositionAnchor();
-      common.fixedPositionSides() = mutant->GetFixedPositionSides();
-    }
-    common.isStickyPosition() = mutant->GetIsStickyPosition();
-    if (mutant->GetIsStickyPosition()) {
-      common.stickyScrollContainerId() = mutant->GetStickyScrollContainerId();
-      common.stickyScrollRangeOuter() = mutant->GetStickyScrollRangeOuter();
-      common.stickyScrollRangeInner() = mutant->GetStickyScrollRangeInner();
-    } else {
-#ifdef MOZ_VALGRIND
-      // Initialize these so that Valgrind doesn't complain when we send them
-      // to another process.
-      common.stickyScrollContainerId() = 0;
-      common.stickyScrollRangeOuter() = LayerRect();
-      common.stickyScrollRangeInner() = LayerRect();
-#endif
-    }
-    common.scrollbarTargetContainerId() = mutant->GetScrollbarTargetContainerId();
-    common.scrollbarDirection() = mutant->GetScrollbarDirection();
-    common.scrollbarThumbRatio() = mutant->GetScrollbarThumbRatio();
-    common.isScrollbarContainer() = mutant->IsScrollbarContainer();
-    common.mixBlendMode() = (int8_t)mutant->GetMixBlendMode();
-    common.forceIsolatedGroup() = mutant->GetForceIsolatedGroup();
     if (Layer* maskLayer = mutant->GetMaskLayer()) {
       common.maskLayer() = Shadow(maskLayer->AsShadowableLayer());
     } else {
@@ -690,25 +680,23 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
 
     MOZ_LAYERS_LOG(("[LayersForwarder] OpSetLayerAttributes(%p)\n", mutant));
 
-    mTxn->AddEdit(OpSetLayerAttributes(Shadow(shadow), attrs));
+    setAttrs.AppendElement(op);
   }
 
   if (mTxn->mCset.IsEmpty() &&
       mTxn->mPaints.IsEmpty() &&
+      setAttrs.IsEmpty() &&
       !mTxn->RotationChanged())
   {
     return true;
   }
 
-  // Paints after non-paint ops, including attribute changes.  See
-  // above.
-  if (!mTxn->mPaints.IsEmpty()) {
-    mTxn->mCset.AppendElements(mTxn->mPaints);
-  }
-
   mWindowOverlayChanged = false;
 
   info.cset() = Move(mTxn->mCset);
+  info.setSimpleAttrs() = Move(setSimpleAttrs);
+  info.setAttrs() = Move(setAttrs);
+  info.paints() = Move(mTxn->mPaints);
   info.toDestroy() = mTxn->mDestroyedActors;
   info.fwdTransactionId() = GetFwdTransactionId();
   info.id() = aId;

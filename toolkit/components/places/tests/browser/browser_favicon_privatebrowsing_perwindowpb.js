@@ -23,10 +23,9 @@ function test() {
   }
 
   function waitForTabLoad(aWin, aCallback) {
-    aWin.gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
-      aWin.gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
+    aWin.gBrowser.selectedBrowser.addEventListener("load", function() {
       aCallback();
-    }, true);
+    }, {capture: true, once: true});
     aWin.gBrowser.selectedBrowser.loadURI(pageURI);
   }
 

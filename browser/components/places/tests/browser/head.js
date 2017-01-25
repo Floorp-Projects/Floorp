@@ -60,10 +60,9 @@ function promiseLibrary(aLeftPaneRoot) {
 function promiseLibraryClosed(organizer) {
   return new Promise(resolve => {
     // Wait for the Organizer window to actually be closed
-    organizer.addEventListener("unload", function onUnload() {
-      organizer.removeEventListener("unload", onUnload);
+    organizer.addEventListener("unload", function() {
       resolve();
-    });
+    }, {once: true});
 
     // Close Library window.
     organizer.close();
@@ -286,15 +285,14 @@ var withBookmarksDialog = Task.async(function* (autoCancel, openFn, taskFn) {
     Services.ww.registerNotification(function winObserver(subject, topic, data) {
       if (topic == "domwindowopened") {
         let win = subject.QueryInterface(Ci.nsIDOMWindow);
-        win.addEventListener("load", function load() {
-          win.removeEventListener("load", load);
+        win.addEventListener("load", function() {
           ok(win.location.href.startsWith("chrome://browser/content/places/bookmarkProperties"),
              "The bookmark properties dialog is open");
           // This is needed for the overlay.
           waitForFocus(() => {
             resolve(win);
           }, win);
-        });
+        }, {once: true});
       } else if (topic == "domwindowclosed") {
         Services.ww.unregisterNotification(winObserver);
         closed = true;
@@ -438,10 +436,9 @@ var withSidebarTree = Task.async(function* (type, taskFn) {
   let sidebar = document.getElementById("sidebar");
   info("withSidebarTree: waiting sidebar load");
   let sidebarLoadedPromise = new Promise(resolve => {
-    sidebar.addEventListener("load", function load() {
-      sidebar.removeEventListener("load", load, true);
+    sidebar.addEventListener("load", function() {
       resolve();
-    }, true);
+    }, {capture: true, once: true});
   });
   let sidebarId = type == "bookmarks" ? "viewBookmarksSidebar"
                                       : "viewHistorySidebar";

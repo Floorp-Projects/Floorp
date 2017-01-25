@@ -65,10 +65,9 @@ function openDeleteCertConfirmDialog(tabID) {
   let win = window.openDialog("chrome://pippki/content/deletecert.xul", "", "",
                               tabID, gCertArray, retVals);
   return new Promise((resolve, reject) => {
-    win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad);
+    win.addEventListener("load", function() {
       resolve([win, retVals]);
-    });
+    }, {once: true});
   });
 }
 
