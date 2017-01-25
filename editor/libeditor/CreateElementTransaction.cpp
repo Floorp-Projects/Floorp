@@ -19,7 +19,6 @@
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsIContent.h"
-#include "nsIDOMCharacterData.h"
 #include "nsIEditor.h"
 #include "nsINode.h"
 #include "nsISupportsUtils.h"
