@@ -111,51 +111,43 @@ function runTests()
    * Focusing the first element (id='is') is launching the tests.
    */
   document.getElementById('is').addEventListener('focus', function(aEvent) {
-    aEvent.target.removeEventListener('focus', arguments.callee);
     synthesizeMouse(document.getElementById('is'), 5, 5, {});
     document.getElementById('ii').focus();
-  });
+  }, {once: true});
 
   document.getElementById('ii').addEventListener('focus', function(aEvent) {
-    aEvent.target.removeEventListener('focus', arguments.callee);
     synthesizeMouse(document.getElementById('ii'), 5, 5, {});
     document.getElementById('bs').focus();
-  });
+  }, {once: true});
 
   document.getElementById('bs').addEventListener('focus', function(aEvent) {
-    aEvent.target.removeEventListener('focus', arguments.callee);
     synthesizeMouse(document.getElementById('bs'), 5, 5, {});
     document.getElementById('bsbis').focus();
-  });
+  }, {once: true});
 
   document.getElementById('bsbis').addEventListener('focus', function(aEvent) {
-    aEvent.target.removeEventListener('focus', arguments.callee);
     document.getElementById('bsbis').click();
     document.getElementById('is2').focus();
-  });
+  }, {once: true});
 
   document.getElementById('is2').addEventListener('focus', function(aEvent) {
-    aEvent.target.removeEventListener('focus', arguments.callee);
     synthesizeKey("VK_RETURN", {});
     document.getElementById('ii2').focus();
-  });
+  }, {once: true});
 
   document.getElementById('ii2').addEventListener('focus', function(aEvent) {
-    aEvent.target.removeEventListener('focus', arguments.callee);
     synthesizeKey("VK_RETURN", {});
     document.getElementById('bs2').focus();
-  });
+  }, {once: true});
 
   document.getElementById('bs2').addEventListener('focus', function(aEvent) {
-    aEvent.target.removeEventListener('focus', arguments.callee);
     synthesizeKey("VK_RETURN", {});
     document.getElementById('enter').focus();
-  });
+  }, {once: true});
 
   document.getElementById('enter').addEventListener('focus', function(aEvent) {
-    aEvent.target.removeEventListener('focus', arguments.callee);
     synthesizeKey("VK_RETURN", {});
-  });
+  }, {once: true});
 
   document.getElementById('is').focus();
 }

@@ -18,10 +18,9 @@ same domain as the opener.
 
     function waitForMessage(win) {
       return new Promise(resolve => {
-        win.addEventListener("message", function onMessage(event) {
-          win.removeEventListener("message", onMessage);
+        win.addEventListener("message", function(event) {
           resolve(event.data);
-        });
+        }, {once: true});
       });
     }
 

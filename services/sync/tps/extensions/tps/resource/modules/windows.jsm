@@ -28,9 +28,8 @@ var BrowserWindows = {
                .getService(Ci.nsIWindowMediator);
     let mainWindow = wm.getMostRecentWindow("navigator:browser");
     let win = mainWindow.OpenBrowserWindow({private: aPrivate});
-    win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad);
+    win.addEventListener("load", function() {
       fn.call(win);
-    });
+    }, {once: true});
   }
 };

@@ -30,18 +30,16 @@ function duplicate(delta, msg, cb) {
   duplicateTabIn(gBrowser.selectedTab, "tab", delta);
   let tab = gBrowser.selectedTab;
 
-  tab.addEventListener("SSTabRestored", function tabRestoredListener() {
-    tab.removeEventListener("SSTabRestored", tabRestoredListener);
+  tab.addEventListener("SSTabRestored", function() {
     is(gBrowser.sessionHistory.index, start + delta, msg);
     executeSoon(cb);
-  });
+  }, {once: true});
 }
 
 function loadAndWait(url, cb) {
   gBrowser.selectedBrowser.addEventListener("load", function() {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
     executeSoon(cb);
-  }, true);
+  }, {capture: true, once: true});
 
   gBrowser.loadURI(url);
 }

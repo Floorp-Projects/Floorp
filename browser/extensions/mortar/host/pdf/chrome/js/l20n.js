@@ -2381,10 +2381,9 @@
     }
 
     return new Promise(resolve => {
-      document.addEventListener('readystatechange', function onrsc() {
-        document.removeEventListener('readystatechange', onrsc);
+      document.addEventListener('readystatechange', function() {
         resolve();
-      });
+      }, {once: true});
     });
   }
 

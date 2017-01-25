@@ -15,8 +15,7 @@ var contentPage = "http://mochi.test:8888/chrome/dom/workers/test/empty.html";
 
 function testOnWindow(aIsPrivate, aCallback) {
   var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad);
+  win.addEventListener("load", function() {
     win.addEventListener("DOMContentLoaded", function onInnerLoad() {
       if (win.content.location.href != contentPage) {
         win.gBrowser.loadURI(contentPage);
@@ -30,7 +29,7 @@ function testOnWindow(aIsPrivate, aCallback) {
     if (!aIsPrivate) {
       win.gBrowser.loadURI(contentPage);
     }
-  }, true);
+  }, {capture: true, once: true});
 }
 
 function setupWindow() {

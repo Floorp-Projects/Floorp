@@ -47,10 +47,9 @@ function promisePopupShown(popup) {
     if (popup.state == "open") {
       resolve();
     } else {
-      popup.addEventListener("popupshown", function onPopupShown(event) {
-        popup.removeEventListener("popupshown", onPopupShown);
+      popup.addEventListener("popupshown", function(event) {
         resolve();
-      });
+      }, {once: true});
     }
   });
 }

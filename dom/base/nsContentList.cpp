@@ -58,7 +58,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(nsBaseContentList)
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsBaseContentList)
-  if (nsCCUncollectableMarker::sGeneration && tmp->IsBlack()) {
+  if (nsCCUncollectableMarker::sGeneration && tmp->HasKnownLiveWrapper()) {
     for (uint32_t i = 0; i < tmp->mElements.Length(); ++i) {
       nsIContent* c = tmp->mElements[i];
       if (c->IsPurple()) {
@@ -71,11 +71,11 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsBaseContentList)
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsBaseContentList)
-  return nsCCUncollectableMarker::sGeneration && tmp->IsBlack();
+  return nsCCUncollectableMarker::sGeneration && tmp->HasKnownLiveWrapper();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsBaseContentList)
-  return nsCCUncollectableMarker::sGeneration && tmp->IsBlack();
+  return nsCCUncollectableMarker::sGeneration && tmp->HasKnownLiveWrapper();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 #define NS_CONTENT_LIST_INTERFACES(_class)                                    \

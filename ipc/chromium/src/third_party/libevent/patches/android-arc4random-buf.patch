@@ -1,32 +1,45 @@
-only in patch2:
-unchanged:
+diff --git a/ipc/chromium/src/third_party/libevent/android/event2/event-config.h b/ipc/chromium/src/third_party/libevent/android/event2/event-config.h
+--- a/ipc/chromium/src/third_party/libevent/android/event2/event-config.h
++++ b/ipc/chromium/src/third_party/libevent/android/event2/event-config.h
+@@ -22,17 +22,17 @@
+ 
+ /* Define if libevent should not be compiled with thread support */
+ /* #undef _EVENT_DISABLE_THREAD_SUPPORT */
+ 
+ /* Define to 1 if you have the `arc4random' function. */
+ #define _EVENT_HAVE_ARC4RANDOM 1
+ 
+ /* Define to 1 if you have the `arc4random_buf' function. */
+-#define _EVENT_HAVE_ARC4RANDOM_BUF 1
++/* #undef _EVENT_HAVE_ARC4RANDOM_BUF */
+ 
+ /* Define to 1 if you have the <arpa/inet.h> header file. */
+ #define _EVENT_HAVE_ARPA_INET_H 1
+ 
+ /* Define to 1 if you have the `clock_gettime' function. */
+ #define _EVENT_HAVE_CLOCK_GETTIME 1
+ 
+ /* Define to 1 if you have the declaration of `CTL_KERN', and to 0 if you
+diff --git a/ipc/chromium/src/third_party/libevent/evutil_rand.c b/ipc/chromium/src/third_party/libevent/evutil_rand.c
 --- a/ipc/chromium/src/third_party/libevent/evutil_rand.c
 +++ b/ipc/chromium/src/third_party/libevent/evutil_rand.c
-@@ -58,7 +58,7 @@ evutil_secure_rng_global_setup_locks_(const int enable_locks)
+@@ -60,17 +60,18 @@ evutil_secure_rng_global_setup_locks_(co
+ {
+ 	return 0;
+ }
+ 
  static void
  ev_arc4random_buf(void *buf, size_t n)
  {
--#if defined(_EVENT_HAVE_ARC4RANDOM_BUF) && !defined(__APPLE__)
-+#if defined(_EVENT_HAVE_ARC4RANDOM_BUF) && !(defined(__APPLE__) || defined(__ANDROID__))
- 	arc4random_buf(buf, n);
+ #if defined(_EVENT_HAVE_ARC4RANDOM_BUF) && !defined(__APPLE__)
+-	return arc4random_buf(buf, n);
++	arc4random_buf(buf, n);
++	return;
  #else
  	unsigned char *b = buf;
-only in patch2:
-unchanged:
---- a/ipc/chromium/src/third_party/libevent/patches/android-arc4random-buf.patch
-+++ b/ipc/chromium/src/third_party/libevent/patches/android-arc4random-buf.patch
-@@ -1,14 +0,0 @@
--e6dd814 evutil_rand.c fixup for clang
--diff --git a/ipc/chromium/src/third_party/libevent/evutil_rand.c b/ipc/chromium/src/third_party/libevent/evutil_rand.c
--index 86c86b2..0c41765 100644
----- a/ipc/chromium/src/third_party/libevent/evutil_rand.c
--+++ b/ipc/chromium/src/third_party/libevent/evutil_rand.c
--@@ -59,7 +59,7 @@ static void
-- ev_arc4random_buf(void *buf, size_t n)
-- {
-- #if defined(_EVENT_HAVE_ARC4RANDOM_BUF) && !defined(__APPLE__)
---	return arc4random_buf(buf, n);
--+	arc4random_buf(buf, n);
-- #else
-- 	unsigned char *b = buf;
-- 
+ 
+ #if defined(_EVENT_HAVE_ARC4RANDOM_BUF)
+ 	/* OSX 10.7 introducd arc4random_buf, so if you build your program
+ 	 * there, you'll get surprised when older versions of OSX fail to run.
+ 	 * To solve this, we can check whether the function pointer is set,
+ 	 * and fall back otherwise.  (OSX does this using some linker

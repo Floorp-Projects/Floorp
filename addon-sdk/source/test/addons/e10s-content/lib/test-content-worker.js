@@ -75,8 +75,7 @@ function loadAndWait(browser, url, callback) {
 function WorkerTest(url, callback) {
   return function testFunction(assert, done) {
     let chromeWindow = makeWindow();
-    chromeWindow.addEventListener("load", function onload() {
-      chromeWindow.removeEventListener("load", onload, true);
+    chromeWindow.addEventListener("load", function() {
       let browser = chromeWindow.document.createElement("browser");
       browser.setAttribute("type", "content");
       chromeWindow.document.documentElement.appendChild(browser);
@@ -90,7 +89,7 @@ function WorkerTest(url, callback) {
           });
         });
       });
-    }, true);
+    }, {capture: true, once: true});
   };
 }
 
@@ -767,8 +766,7 @@ exports["test:check worker API with page history"] = WorkerTest(
       }, 0);
 
       // Wait for the document to be hidden
-      browser.addEventListener("pagehide", function onpagehide() {
-        browser.removeEventListener("pagehide", onpagehide);
+      browser.addEventListener("pagehide", function() {
         // Now any event sent to this worker should be cached
 
         worker.postMessage("message");
@@ -808,7 +806,7 @@ exports["test:check worker API with page history"] = WorkerTest(
           browser.goForward();
         }, 500);
 
-      });
+      }, {once: true});
     });
 
   }

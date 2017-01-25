@@ -298,15 +298,14 @@ function init() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", function onload() {
-  document.removeEventListener("DOMContentLoaded", onload, true);
+document.addEventListener("DOMContentLoaded", function() {
   init();
   var buttonRetry = document.getElementById('buttonRetry');
   buttonRetry.addEventListener('click', retry);
 
   var buttonOpenPrefs = document.getElementById('buttonOpenPrefs');
   buttonOpenPrefs.addEventListener('click', openPrefs);
-}, true);
+}, {capture: true, once: true});
 
 // This window is contained in a XUL <browser> element.  Return the
 // messageManager of that <browser> element, or null.

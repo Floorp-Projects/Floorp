@@ -27,13 +27,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=615697
 var select = document.getElementsByTagName('select')[0];
 
 select.addEventListener("change", function(aEvent) {
-  select.removeEventListener("change", arguments.callee);
   is(select.selectedIndex, 1, "'b a r' option is selected");
   SimpleTest.finish();
-});
+}, {once: true});
 
 select.addEventListener("focus", function() {
-  select.removeEventListener("focus", arguments.callee);
   SimpleTest.executeSoon(function () {
     synthesizeKey("VK_DOWN", {});
     SimpleTest.executeSoon(function () {
@@ -46,7 +44,7 @@ select.addEventListener("focus", function() {
       });
     });
   });
-});
+}, {once: true});
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {

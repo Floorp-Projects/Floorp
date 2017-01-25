@@ -392,57 +392,57 @@ void read_profiler_env_vars()
       !set_profiler_scan(scanCount)) {
       profiler_usage();
   } else {
-    LOG( "SPS:");
-    LOGF("SPS: Sampling interval = %d ms (zero means \"platform default\")",
+    LOG( "Profiler:");
+    LOGF("Profiler: Sampling interval = %d ms (zero means \"platform default\")",
         (int)sUnwindInterval);
-    LOGF("SPS: Entry store size  = %d (zero means \"platform default\")",
+    LOGF("Profiler: Entry store size  = %d (zero means \"platform default\")",
         (int)sProfileEntries);
-    LOGF("SPS: UnwindStackScan   = %d (max dubious frames per unwind).",
+    LOGF("Profiler: UnwindStackScan   = %d (max dubious frames per unwind).",
         (int)sUnwindStackScan);
-    LOG( "SPS:");
+    LOG( "Profiler:");
   }
 }
 
 void profiler_usage() {
-  LOG( "SPS: ");
-  LOG( "SPS: Environment variable usage:");
-  LOG( "SPS: ");
-  LOG( "SPS:   MOZ_PROFILER_HELP");
-  LOG( "SPS:   If set to any value, prints this message.");
-  LOG( "SPS: ");
-  LOG( "SPS:   MOZ_PROFILER_INTERVAL=<number>   (milliseconds, 1 to 1000)");
-  LOG( "SPS:   If unset, platform default is used.");
-  LOG( "SPS: ");
-  LOG( "SPS:   MOZ_PROFILER_ENTRIES=<number>    (count, minimum of 1)");
-  LOG( "SPS:   If unset, platform default is used.");
-  LOG( "SPS: ");
-  LOG( "SPS:   MOZ_PROFILER_VERBOSE");
-  LOG( "SPS:   If set to any value, increases verbosity (recommended).");
-  LOG( "SPS: ");
-  LOG( "SPS:   MOZ_PROFILER_STACK_SCAN=<number>   (default is zero)");
-  LOG( "SPS:   The number of dubious (stack-scanned) frames allowed");
-  LOG( "SPS: ");
-  LOG( "SPS:   MOZ_PROFILER_LUL_TEST");
-  LOG( "SPS:   If set to any value, runs LUL unit tests at startup of");
-  LOG( "SPS:   the unwinder thread, and prints a short summary of results.");
-  LOG( "SPS: ");
-  LOGF("SPS:   This platform %s native unwinding.",
+  LOG( "Profiler: ");
+  LOG( "Profiler: Environment variable usage:");
+  LOG( "Profiler: ");
+  LOG( "Profiler:   MOZ_PROFILER_HELP");
+  LOG( "Profiler:   If set to any value, prints this message.");
+  LOG( "Profiler: ");
+  LOG( "Profiler:   MOZ_PROFILER_INTERVAL=<number>   (milliseconds, 1 to 1000)");
+  LOG( "Profiler:   If unset, platform default is used.");
+  LOG( "Profiler: ");
+  LOG( "Profiler:   MOZ_PROFILER_ENTRIES=<number>    (count, minimum of 1)");
+  LOG( "Profiler:   If unset, platform default is used.");
+  LOG( "Profiler: ");
+  LOG( "Profiler:   MOZ_PROFILER_VERBOSE");
+  LOG( "Profiler:   If set to any value, increases verbosity (recommended).");
+  LOG( "Profiler: ");
+  LOG( "Profiler:   MOZ_PROFILER_STACK_SCAN=<number>   (default is zero)");
+  LOG( "Profiler:   The number of dubious (stack-scanned) frames allowed");
+  LOG( "Profiler: ");
+  LOG( "Profiler:   MOZ_PROFILER_LUL_TEST");
+  LOG( "Profiler:   If set to any value, runs LUL unit tests at startup of");
+  LOG( "Profiler:   the unwinder thread, and prints a short summary of results.");
+  LOG( "Profiler: ");
+  LOGF("Profiler:   This platform %s native unwinding.",
        is_native_unwinding_avail() ? "supports" : "does not support");
-  LOG( "SPS: ");
+  LOG( "Profiler: ");
 
   /* Re-set defaults */
   sUnwindInterval   = 0;  /* We'll have to look elsewhere */
   sProfileEntries   = 0;
   sUnwindStackScan  = 0;
 
-  LOG( "SPS:");
-  LOGF("SPS: Sampling interval = %d ms (zero means \"platform default\")",
+  LOG( "Profiler:");
+  LOGF("Profiler: Sampling interval = %d ms (zero means \"platform default\")",
        (int)sUnwindInterval);
-  LOGF("SPS: Entry store size  = %d (zero means \"platform default\")",
+  LOGF("Profiler: Entry store size  = %d (zero means \"platform default\")",
        (int)sProfileEntries);
-  LOGF("SPS: UnwindStackScan   = %d (max dubious frames per unwind).",
+  LOGF("Profiler: UnwindStackScan   = %d (max dubious frames per unwind).",
        (int)sUnwindStackScan);
-  LOG( "SPS:");
+  LOG( "Profiler:");
 
   return;
 }
@@ -743,7 +743,7 @@ profiler_get_features()
     // Walk the C++ stack.
     "stackwalk",
 #endif
-#if defined(ENABLE_SPS_LEAF_DATA)
+#if defined(ENABLE_LEAF_DATA)
     // Include the C++ leaf node if not stackwalking. DevTools
     // profiler doesn't want the native addresses.
     "leaf",

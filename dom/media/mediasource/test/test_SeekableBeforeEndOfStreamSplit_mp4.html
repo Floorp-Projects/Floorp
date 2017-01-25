@@ -20,10 +20,9 @@ runWithMSE(function (ms, v) {
       // 25819 is the offset of the first media segment's end
       sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 25819));
       sb.addEventListener("updateend", function () {
-        sb.removeEventListener('updateend', arguments.callee);
         // 25819 is the offset of the first media segment's end
         sb.appendBuffer(new Uint8Array(arrayBuffer, 25819));
-      });
+      }, {once: true});
     });
 
     var target = 1.3;

@@ -126,14 +126,12 @@
         },
 
         test_bug1123514: function() {
-          document.activeElement.addEventListener('input', function test_bug1123514_listener() {
-            this.removeEventListener('input', test_bug1123514_listener);
-
+          document.activeElement.addEventListener('input', function() {
             // Only works on input and textarea.
             if (this.value === 'b') {
               this.value = 'abc';
             }
-          });
+          }, {once: true});
         },
 
         focus_resetting_input: function(val) {

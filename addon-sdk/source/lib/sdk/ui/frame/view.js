@@ -74,9 +74,7 @@ const registerFrame = ({id, url}) => {
       outerFrame.setAttribute("scrolling", "no");
       outerFrame.setAttribute("disablehistory", true);
       outerFrame.setAttribute("seamless", "seamless");
-      outerFrame.addEventListener("load", function onload() {
-        outerFrame.removeEventListener("load", onload, true);
-
+      outerFrame.addEventListener("load", function() {
         let doc = outerFrame.contentDocument;
 
         let innerFrame = doc.createElementNS(HTML_NS, "iframe");
@@ -91,7 +89,7 @@ const registerFrame = ({id, url}) => {
           "left: 0", "overflow: hidden"].join(";"));
 
         doc.body.appendChild(innerFrame);
-      }, true);
+      }, {capture: true, once: true});
 
       view.appendChild(outerFrame);
 

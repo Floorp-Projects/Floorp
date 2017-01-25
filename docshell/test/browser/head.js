@@ -42,20 +42,18 @@ function timelineTestOpenUrl(url) {
   window.focus();
 
   let tabSwitchPromise = new Promise((resolve, reject) => {
-    window.gBrowser.addEventListener("TabSwitchDone", function listener() {
-      window.gBrowser.removeEventListener("TabSwitchDone", listener);
+    window.gBrowser.addEventListener("TabSwitchDone", function() {
       resolve();
-    });
+    }, {once: true});
   });
 
   let loadPromise = new Promise(function(resolve, reject) {
     let tab = window.gBrowser.selectedTab = window.gBrowser.addTab(url);
     let linkedBrowser = tab.linkedBrowser;
 
-    linkedBrowser.addEventListener("load", function onload() {
-      linkedBrowser.removeEventListener("load", onload, true);
+    linkedBrowser.addEventListener("load", function() {
       resolve(tab);
-    }, true);
+    }, {capture: true, once: true});
   });
 
   return Promise.all([tabSwitchPromise, loadPromise]).then(([_, tab]) => tab);

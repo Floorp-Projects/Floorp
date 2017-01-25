@@ -26,10 +26,9 @@ add_task(function* () {
 
   info("Synthesize a mouse click and wait for a new tab...");
   let newTab = yield new Promise((resolve, reject) => {
-    gBrowser.tabContainer.addEventListener("TabOpen", function onTabOpen(openEvent) {
-      gBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen);
+    gBrowser.tabContainer.addEventListener("TabOpen", function(openEvent) {
       resolve(openEvent.target);
-    })
+    }, {once: true})
 
     BrowserTestUtils.synthesizeMouseAtCenter("#clickMe", { button: 1 }, browser);
   });

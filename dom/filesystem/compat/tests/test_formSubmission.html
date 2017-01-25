@@ -55,10 +55,9 @@ function populate_entries(webkitDirectory) {
   var script = SpecialPowers.loadChromeScript(url);
 
   function onOpened(message) {
-    input.addEventListener("change", function onChange() {
-      input.removeEventListener("change", onChange);
+    input.addEventListener("change", function() {
       next();
-    });
+    }, {once: true});
 
     SpecialPowers.wrap(input).mozSetDndFilesAndDirectories([message.data[0]]);
     script.destroy();

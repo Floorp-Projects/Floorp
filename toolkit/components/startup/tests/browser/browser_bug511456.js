@@ -14,9 +14,7 @@ function test() {
 
   // Create foreground window
   let win2 = window.openDialog(location, "", "chrome,all,dialog=no", "about:blank");
-  win2.addEventListener("load", function onLoad() {
-    win2.removeEventListener("load", onLoad);
-
+  win2.addEventListener("load", function() {
     // Create background test tab
     let browser = gBrowser.addTab(TEST_URL).linkedBrowser;
 
@@ -45,5 +43,5 @@ function test() {
       gBrowser.removeTab(gBrowser.selectedTab);
       executeSoon(finish);
     });
-  });
+  }, {once: true});
 }

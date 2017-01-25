@@ -178,7 +178,6 @@ function display(info, pushService) {
   ++gSWCount;
 }
 
-window.addEventListener("DOMContentLoaded", function load() {
-  window.removeEventListener("DOMContentLoaded", load);
+window.addEventListener("DOMContentLoaded", function() {
   init();
-});
+}, {once: true});

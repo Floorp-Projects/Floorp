@@ -66,9 +66,7 @@ function add_task_in_both_processes(taskFn) {
 }
 var add_task_in_child_process = add_task;
 
-window.addEventListener("load", function onLoad() {
-  window.removeEventListener("load", onLoad);
-
+window.addEventListener("load", function() {
   Task.spawn(function* () {
     try {
       for (let [taskFn, taskType, taskId] of gTestTasks) {
@@ -93,7 +91,7 @@ window.addEventListener("load", function onLoad() {
 
     SimpleTest.finish();
   });
-});
+}, {once: true});
 
 // Wait for the test script to be loaded in the parent process.  This means that
 // test tasks are registered and ready, but have not been executed yet.

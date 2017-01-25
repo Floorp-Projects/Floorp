@@ -211,10 +211,9 @@ function* injectEventUtils(ui) {
     EventUtils.KeyboardEvent = content.KeyboardEvent;
 
     EventUtils.synthesizeClick = element => new Promise(resolve => {
-      element.addEventListener("click", function onClick() {
-        element.removeEventListener("click", onClick);
+      element.addEventListener("click", function () {
         resolve();
-      });
+      }, {once: true});
 
       EventUtils.synthesizeMouseAtCenter(element,
         { type: "mousedown", isSynthesized: false }, content);

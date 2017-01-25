@@ -165,10 +165,9 @@ add_task(function* () {
       is(gBrowser.tabs.length, 2, "there's a new tab");
       yield new Promise(resolve => {
         if (gBrowser.selectedBrowser.currentURI.spec == "about:blank") {
-          gBrowser.selectedBrowser.addEventListener("load", function listener(e) {
-            gBrowser.selectedBrowser.removeEventListener("load", listener, true);
+          gBrowser.selectedBrowser.addEventListener("load", function(e) {
             resolve();
-          }, true);
+          }, {capture: true, once: true});
           return;
         }
         // the new tab has already transitioned away from about:blank so we

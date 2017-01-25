@@ -21,18 +21,16 @@ function getMediaElement(aWindow) {
 }
 
 var popup = window.open("seek_with_sound.ogg");
-popup.addEventListener("load", function onLoad() {
-  popup.removeEventListener("load", onLoad);
+popup.addEventListener("load", function() {
   var video = getMediaElement(popup);
   if (!video.paused)
     runTestVideo(video);
   else {
-    video.addEventListener("play", function onPlay() {
-      video.removeEventListener("play", onPlay);
+    video.addEventListener("play", function() {
       runTestVideo(video);
-    });
+    }, {once: true});
   }
-});
+}, {once: true});
 
 function runTestVideo(aVideo) {
   var condition = function() {
@@ -51,18 +49,16 @@ function runTestVideo(aVideo) {
 
 function runTestAudioPre() {
   popup = window.open("audio.ogg");
-  popup.addEventListener("load", function onLoad() {
-    popup.removeEventListener("load", onLoad);
+  popup.addEventListener("load", function() {
     var audio = getMediaElement(popup);
     if (!audio.paused)
       runTestAudio(audio);
     else {
-      audio.addEventListener("play", function onPlay() {
-        audio.removeEventListener("play", onPlay);
+      audio.addEventListener("play", function() {
         runTestAudio(audio);
-      })
+      }, {once: true})
     }
-  })
+  }, {once: true})
 }
 
 function runTestAudio(aAudio) {

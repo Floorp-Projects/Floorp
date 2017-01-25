@@ -53,97 +53,82 @@ function checkChangeEvent(aEvent)
 }
 
 selectMultiple.addEventListener("change", function(aEvent) {
-  selectMultiple.removeEventListener("change", arguments.callee);
   checkChangeEvent(aEvent);
   SimpleTest.finish();
-});
+}, {once: true});
 
 selectMultiple.addEventListener("focus", function() {
-  selectMultiple.removeEventListener("focus", arguments.callee);
   SimpleTest.executeSoon(function () {
     synthesizeMouseAtCenter(selectMultiple, {});
   });
-});
+}, {once: true});
 
 select.addEventListener("change", function(aEvent) {
-  select.removeEventListener("change", arguments.callee);
   checkChangeEvent(aEvent);
   selectMultiple.focus();
-});
+}, {once: true});
 
 select.addEventListener("keyup", function() {
-  select.removeEventListener("keyup", arguments.callee);
   select.blur();
-});
+}, {once: true});
 
 select.addEventListener("focus", function() {
-  select.removeEventListener("focus", arguments.callee);
   SimpleTest.executeSoon(function () {
     synthesizeKey("VK_DOWN", {});
   });
-});
+}, {once: true});
 
 checkbox.addEventListener("change", function(aEvent) {
-  checkbox.removeEventListener("change", arguments.callee);
   checkChangeEvent(aEvent);
   select.focus();
-});
+}, {once: true});
 
 checkbox.addEventListener("focus", function() {
-  checkbox.removeEventListener("focus", arguments.callee);
   SimpleTest.executeSoon(function () {
     synthesizeMouseAtCenter(checkbox, {});
   });
-});
+}, {once: true});
 
 radio.addEventListener("change", function(aEvent) {
-  radio.removeEventListener("change", arguments.callee);
   checkChangeEvent(aEvent);
   checkbox.focus();
-});
+}, {once: true});
 
 radio.addEventListener("focus", function() {
-  radio.removeEventListener("focus", arguments.callee);
   SimpleTest.executeSoon(function () {
     synthesizeMouseAtCenter(radio, {});
   });
-});
+}, {once: true});
 
 textarea.addEventListener("change", function(aEvent) {
-  textarea.removeEventListener("change", arguments.callee);
   checkChangeEvent(aEvent);
   radio.focus();
-});
+}, {once: true});
 
 textarea.addEventListener("input", function() {
-  textarea.removeEventListener("input", arguments.callee);
   textarea.blur();
-});
+}, {once: true});
 
 textarea.addEventListener("focus", function() {
-  textarea.removeEventListener("focus", arguments.callee);
   SimpleTest.executeSoon(function () {
     synthesizeKey('f', {});
   });
-});
+}, {once: true});
 
 input.addEventListener("change", function(aEvent) {
-  input.removeEventListener("change", arguments.callee);
   checkChangeEvent(aEvent);
   textarea.focus();
-});
+}, {once: true});
 
 input.addEventListener("input", function() {
-  input.removeEventListener("input", arguments.callee);
   input.blur();
-});
+}, {once: true});
 
 input.addEventListener("focus", function() {
-  input.removeEventListener("focus", arguments.callee);
   SimpleTest.executeSoon(function () {
     synthesizeKey('f', {});
   });
-});
+}, {once: true});
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {

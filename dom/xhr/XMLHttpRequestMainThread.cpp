@@ -314,29 +314,6 @@ XMLHttpRequestMainThread::SetRequestObserver(nsIRequestObserver* aObserver)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(XMLHttpRequestMainThread)
 
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(XMLHttpRequestMainThread)
-  bool isBlack = tmp->IsBlack();
-  if (isBlack || tmp->mWaitingForOnStopRequest) {
-    if (tmp->mListenerManager) {
-      tmp->mListenerManager->MarkForCC();
-    }
-    if (!isBlack && tmp->PreservingWrapper()) {
-      // This marks the wrapper black.
-      tmp->GetWrapper();
-    }
-    return true;
-  }
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
-
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(XMLHttpRequestMainThread)
-  return tmp->
-    IsBlackAndDoesNotNeedTracing(static_cast<DOMEventTargetHelper*>(tmp));
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
-
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(XMLHttpRequestMainThread)
-  return tmp->IsBlack();
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XMLHttpRequestMainThread,
                                                   XMLHttpRequestEventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContext)
@@ -381,6 +358,12 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(XMLHttpRequestMainThread,
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mResultArrayBuffer)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mResultJSON)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+bool
+XMLHttpRequestMainThread::IsCertainlyAliveForCC() const
+{
+  return mWaitingForOnStopRequest;
+}
 
 // QueryInterface implementation for XMLHttpRequestMainThread
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(XMLHttpRequestMainThread)

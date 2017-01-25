@@ -9,7 +9,7 @@ function run_test() {
     if (!p)
         return;
 
-    // This test assumes that it's starting on an empty SPS stack.
+    // This test assumes that it's starting on an empty profiler stack.
     // (Note that the other profiler tests also assume the profiler
     // isn't already started.)
     do_check_true(!p.IsActive());

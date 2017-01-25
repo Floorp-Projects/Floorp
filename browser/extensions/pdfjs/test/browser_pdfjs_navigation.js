@@ -182,8 +182,7 @@ function* contentSetUp() {
    */
   function waitForOutlineItems(document) {
     return new Promise((resolve, reject) => {
-      document.addEventListener("outlineloaded", function outlineLoaded(evt) {
-        document.removeEventListener("outlineloaded", outlineLoaded);
+      document.addEventListener("outlineloaded", function(evt) {
         var outlineCount = evt.detail.outlineCount;
 
         if (document.querySelectorAll(".outlineItem").length === outlineCount) {
@@ -191,7 +190,7 @@ function* contentSetUp() {
         } else {
           reject();
         }
-      });
+      }, {once: true});
     });
   }
 
@@ -204,11 +203,10 @@ function* contentSetUp() {
    */
   function setZoomToPageFit(document) {
     return new Promise((resolve) => {
-      document.addEventListener("pagerendered", function onZoom(e) {
-        document.removeEventListener("pagerendered", onZoom);
+      document.addEventListener("pagerendered", function(e) {
         document.querySelector("#viewer").click();
         resolve();
-      });
+      }, {once: true});
 
       var select = document.querySelector("select#scaleSelect");
       select.selectedIndex = 2;

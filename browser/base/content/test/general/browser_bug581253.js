@@ -17,8 +17,6 @@ function test() {
 
   let tab = gBrowser.selectedTab = gBrowser.addTab();
   tab.linkedBrowser.addEventListener("load", (function(event) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-
     let uri = makeURI(testURL);
     let bmTxn =
       new PlacesCreateBookmarkTransaction(uri,
@@ -28,7 +26,7 @@ function test() {
 
     ok(PlacesUtils.bookmarks.isBookmarked(uri), "the test url is bookmarked");
     waitForStarChange(true, onStarred);
-  }), true);
+  }), {capture: true, once: true});
 
   content.location = testURL;
 }

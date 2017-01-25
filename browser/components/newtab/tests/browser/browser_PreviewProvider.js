@@ -38,8 +38,7 @@ function pixelsForDataURI(dataURI, options) {
     let img = document.createElementNS(htmlns, "img");
     img.setAttribute("src", dataURI);
 
-    img.addEventListener("load", function onLoad() {
-      img.removeEventListener("load", onLoad, true);
+    img.addEventListener("load", function() {
       let canvas = document.createElementNS(htmlns, "canvas");
       canvas.setAttribute("width", width);
       canvas.setAttribute("height", height);
@@ -47,7 +46,7 @@ function pixelsForDataURI(dataURI, options) {
       ctx.drawImage(img, 0, 0, width, height);
       let result = ctx.getImageData(0, 0, width, height).data;
       resolve(result);
-    });
+    }, {once: true});
   });
 }
 

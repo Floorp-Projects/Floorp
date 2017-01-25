@@ -184,11 +184,10 @@ var tests = [
     function checkSameEffectOnDifferentTarget() {
       gContentAPI.showHighlight("appMenu", "wobble");
       waitForHighlightWithEffect(highlight, "wobble", () => {
-        highlight.addEventListener("animationstart", function onAnimationStart(aEvent) {
-          highlight.removeEventListener("animationstart", onAnimationStart);
+        highlight.addEventListener("animationstart", function(aEvent) {
           ok(true, "Animation occurred again even though the effect was the same");
           checkRandomEffect();
-        });
+        }, {once: true});
         gContentAPI.showHighlight("backForward", "wobble");
       }, "There should be a wobble effect");
     }
@@ -235,8 +234,7 @@ var tests = [
     let icon = document.getElementById("UITourTooltipIcon");
     let buttons = document.getElementById("UITourTooltipButtons");
 
-    popup.addEventListener("popupshown", function onPopupShown() {
-      popup.removeEventListener("popupshown", onPopupShown);
+    popup.addEventListener("popupshown", function() {
       is(popup.popupBoxObject.anchorNode, document.getElementById("urlbar"), "Popup should be anchored to the urlbar");
       is(title.textContent, "test title", "Popup should have correct title");
       is(desc.textContent, "test text", "Popup should have correct description text");
@@ -252,7 +250,7 @@ var tests = [
 
       }, {once: true});
       gContentAPI.hideInfo();
-    });
+    }, {once: true});
 
     gContentAPI.showInfo("urlbar", "test title", "test text");
   },

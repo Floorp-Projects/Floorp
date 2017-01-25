@@ -16,8 +16,6 @@ add_task(function* test() {
   function testPopupBlockerMenuItem(aExpectedDisabled, aWindow, aCallback) {
 
     aWindow.gBrowser.addEventListener("DOMUpdatePageReport", function() {
-      aWindow.gBrowser.removeEventListener("DOMUpdatePageReport", arguments.callee);
-
       executeSoon(function() {
         let notification = aWindow.gBrowser.getNotificationBox().getNotificationWithValue("popup-blocked");
         ok(notification, "The notification box should be displayed");
@@ -46,7 +44,7 @@ add_task(function* test() {
         notification.querySelector("button").doCommand();
       });
 
-    });
+    }, {once: true});
 
     aWindow.gBrowser.selectedBrowser.loadURI(testURI);
   }

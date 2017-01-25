@@ -31,8 +31,7 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
       }
 
       var win = aSubject.QueryInterface(Components.interfaces.nsIDOMWindow);
-      win.addEventListener("load", function onLoad() {
-        win.removeEventListener("load", onLoad);
+      win.addEventListener("load", function() {
         let windowType = win.document.documentElement.getAttribute("windowtype");
         if (windowType == "alert:alert") {
           clearTimeout(timer);
@@ -40,7 +39,7 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
 
           sendAsyncMessage("waitForXULAlert", true);
         }
-      });
+      }, {once: true});
     };
 
     Services.ww.registerNotification(windowObserver);

@@ -12,8 +12,7 @@
     <input type="text" onchange="changeHandler()">
 
     <script type="text/javascript">
-      window.addEventListener("load", function onload() {
-        window.removeEventListener("load", onload);
+      window.addEventListener("load", function () {
         function initialSetup(event) {
           debugger;
           var button = document.querySelector("button");
@@ -36,7 +35,7 @@
         input.addEventListener("keyup", keyupHandler, true);
 
         window.changeHandler = changeHandler;
-      });
+      }, {once: true});
     </script>
   </body>
 

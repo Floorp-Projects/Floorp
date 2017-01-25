@@ -92,7 +92,7 @@ public:
   /* Scrollbar info */
 
   void SetScrollbarData(FrameMetrics::ViewID aScrollViewId,
-                        Layer::ScrollDirection aDir,
+                        ScrollDirection aDir,
                         int32_t aScrollThumbLength,
                         bool aIsScrollContainer);
   bool MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetrics) const;
@@ -129,7 +129,7 @@ private:
   uint64_t mLayersId;
 
   FrameMetrics::ViewID mScrollViewId;
-  Layer::ScrollDirection mScrollDir;
+  ScrollDirection mScrollDir;
   int32_t mScrollThumbLength;
   bool mIsScrollbarContainer;
 

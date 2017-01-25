@@ -45,8 +45,7 @@ function test() {
 }
 
 function whenTabIsLoaded(tab, callback) {
-  tab.linkedBrowser.addEventListener("load", function onLoad() {
-    tab.linkedBrowser.removeEventListener("load", onLoad, true);
+  tab.linkedBrowser.addEventListener("load", function() {
     callback();
-  }, true);
+  }, {capture: true, once: true});
 }

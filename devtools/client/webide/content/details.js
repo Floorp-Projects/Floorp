@@ -8,17 +8,15 @@ const Services = require("Services");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
 const {ProjectBuilding} = require("devtools/client/webide/modules/build");
 
-window.addEventListener("load", function onLoad() {
-  window.removeEventListener("load", onLoad);
+window.addEventListener("load", function () {
   document.addEventListener("visibilitychange", updateUI, true);
   AppManager.on("app-manager-update", onAppManagerUpdate);
   updateUI();
-}, true);
+}, {capture: true, once: true});
 
-window.addEventListener("unload", function onUnload() {
-  window.removeEventListener("unload", onUnload);
+window.addEventListener("unload", function () {
   AppManager.off("app-manager-update", onAppManagerUpdate);
-}, true);
+}, {capture: true, once: true});
 
 function onAppManagerUpdate(event, what, details) {
   if (what == "project" ||

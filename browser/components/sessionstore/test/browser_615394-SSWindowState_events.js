@@ -261,15 +261,13 @@ function test_setBrowserState() {
     if (aTopic == "domwindowopened") {
       newWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
       newWindow.addEventListener("load", function() {
-        newWindow.removeEventListener("load", arguments.callee);
-
         Services.ww.unregisterNotification(windowObserver);
 
         windowEvents[getOuterWindowID(newWindow)] = { busyEventCount: 0, readyEventCount: 0 };
 
         newWindow.addEventListener("SSWindowStateBusy", onSSWindowStateBusy);
         newWindow.addEventListener("SSWindowStateReady", onSSWindowStateReady);
-      });
+      }, {once: true});
     }
   }
 
@@ -326,10 +324,8 @@ function test_undoCloseWindow() {
       reopenedWindow.addEventListener("SSWindowStateReady", onSSWindowStateReady);
 
       reopenedWindow.addEventListener("load", function() {
-        reopenedWindow.removeEventListener("load", arguments.callee);
-
         reopenedWindow.gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored);
-      });
+      }, {once: true});
     });
   });
 

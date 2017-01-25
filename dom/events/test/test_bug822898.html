@@ -93,9 +93,8 @@ function testDefaultArg() {
   let event = getDefaultArgEvent("pointerdown");
 
   testTarget.addEventListener("pointerdown", function(ev) {
-    testTarget.removeEventListener("pointerdown", arguments.callee);
     is(ev.pointerId, 0, "Correct default pointerId");
-  });
+  }, {once: true});
   testTarget.dispatchEvent(event);
 
   nextTest();
@@ -111,18 +110,16 @@ function testStopPropagation() {
   // Capturing phase
   let captured = false;
   parent.addEventListener("pointerdown", function() {
-    parent.removeEventListener("pointerdown", arguments.callee, true);
     captured = true;
-  }, true); // Capturing phase
+  }, {capture: true, once: true}); // Capturing phase
 
   // Bubbling phase
   parent.addEventListener("pointerdown", unreachableListener);
 
   testTarget.addEventListener("pointerdown", function(ev) {
-    testTarget.removeEventListener("pointerdown", arguments.callee);
     is(captured, true, "Event should have been captured");
     ev.stopPropagation();
-  });
+  }, {once: true});
 
   testTarget.dispatchEvent(event);
 
@@ -135,15 +132,13 @@ function testPreventDefault() {
   let event = getDefaultArgEvent("pointerdown");
 
   parent.addEventListener("pointerdown", function(ev) {
-    parent.removeEventListener("pointerdown", arguments.callee);
     is(ev.defaultPrevented, true, "preventDefault can be called");
     nextTest();
-  });
+  }, {once: true});
 
   testTarget.addEventListener("pointerdown", function(ev) {
-    testTarget.removeEventListener("pointerdown", arguments.callee);
     ev.preventDefault();
-  });
+  }, {once: true});
 
   testTarget.dispatchEvent(event);
 }
@@ -157,15 +152,13 @@ function testBlockPreventDefault() {
   });
 
   parent.addEventListener("pointerdown", function(ev) {
-    parent.removeEventListener("pointerdown", arguments.callee);
     is(ev.defaultPrevented, false, "aCancelableArg works");
     nextTest();
-  });
+  }, {once: true});
 
   testTarget.addEventListener("pointerdown", function(ev) {
-    testTarget.removeEventListener("pointerdown", arguments.callee);
     ev.preventDefault();
-  });
+  }, {once: true});
 
   testTarget.dispatchEvent(event);
 }

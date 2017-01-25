@@ -10,13 +10,12 @@ const { require } =
 const Services = require("Services");
 const QR = require("devtools/shared/qrcode/index");
 
-window.addEventListener("load", function onLoad() {
-  window.removeEventListener("load", onLoad);
+window.addEventListener("load", function () {
   document.getElementById("close").onclick = () => window.close();
   document.getElementById("no-scanner").onclick = showToken;
   document.getElementById("yes-scanner").onclick = hideToken;
   buildUI();
-});
+}, {once: true});
 
 function buildUI() {
   let { oob } = window.arguments[0];

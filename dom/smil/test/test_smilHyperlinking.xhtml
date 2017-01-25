@@ -207,19 +207,17 @@ function fireLink(callback) {
   } else {
     window.location.hash = '';
     window.addEventListener("hashchange",
-      function clearHash() {
-        window.removeEventListener("hashchange", clearHash);
+      function() {
         window.setTimeout(fireLinkPart2, 0, callback);
-      });
+      }, {once: true});
   }
 }
 
 function fireLinkPart2(callback) {
   window.addEventListener("hashchange",
-    function triggerCallback() {
-      window.removeEventListener("hashchange", triggerCallback);
+    function() {
       window.setTimeout(callback, 0);
-    });
+    }, {once: true});
   window.location.hash = '#anim';
 }
 

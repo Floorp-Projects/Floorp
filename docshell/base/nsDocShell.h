@@ -1069,6 +1069,13 @@ private:
   void MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
                                        const nsString& aKeyword);
 
+  // Internal implementation of nsIDocShell::FirePageHideNotification.
+  // If aSkipCheckingDynEntries is true, it will not try to remove dynamic
+  // subframe entries. This is to avoid redundant RemoveDynEntries calls in all
+  // children docshells.
+  void FirePageHideNotificationInternal(bool aIsUnload,
+                                        bool aSkipCheckingDynEntries);
+
 #ifdef DEBUG
   // We're counting the number of |nsDocShells| to help find leaks
   static unsigned long gNumberOfDocShells;

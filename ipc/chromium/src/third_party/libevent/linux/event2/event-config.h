@@ -12,7 +12,7 @@
 #define _EVENT2_EVENT_CONFIG_H_
 
 /* config.h.  Generated from config.h.in by configure.  */
-/* config.h.in.  Generated from configure.in by autoheader.  */
+/* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define if libevent should build without support for a debug mode */
 /* #undef _EVENT_DISABLE_DEBUG_MODE */
@@ -261,6 +261,9 @@
 /* Define to 1 if `__ss_family' is a member of `struct sockaddr_storage'. */
 /* #undef _EVENT_HAVE_STRUCT_SOCKADDR_STORAGE___SS_FAMILY */
 
+/* Define to 1 if you have the `sysctl' function. */
+/* #undef _EVENT_HAVE_SYSCTL */
+
 /* Define to 1 if you have the <sys/devpoll.h> header file. */
 /* #undef _EVENT_HAVE_SYS_DEVPOLL_H */
 
@@ -268,7 +271,7 @@
 #define _EVENT_HAVE_SYS_EPOLL_H 1
 
 /* Define to 1 if you have the <sys/eventfd.h> header file. */
-/* #define _EVENT_HAVE_SYS_EVENTFD_H 1 */
+#define _EVENT_HAVE_SYS_EVENTFD_H 1
 
 /* Define to 1 if you have the <sys/event.h> header file. */
 /* #undef _EVENT_HAVE_SYS_EVENT_H */
@@ -296,6 +299,9 @@
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define _EVENT_HAVE_SYS_STAT_H 1
+
+/* Define to 1 if you have the <sys/sysctl.h> header file. */
+/* #undef _EVENT_HAVE_SYS_SYSCTL_H */
 
 /* Define to 1 if you have the <sys/time.h> header file. */
 #define _EVENT_HAVE_SYS_TIME_H 1
@@ -365,7 +371,7 @@
 /* #undef _EVENT_NO_MINUS_C_MINUS_O */
 
 /* Numeric representation of the version */
-#define _EVENT_NUMERIC_VERSION 0x02001500
+#define _EVENT_NUMERIC_VERSION 0x02001600
 
 /* Name of package */
 #define _EVENT_PACKAGE "libevent"
@@ -410,6 +416,13 @@
 /* The size of `long long', as computed by sizeof. */
 #define _EVENT_SIZEOF_LONG_LONG 8
 
+/* The size of `off_t', as computed by sizeof. */
+#ifdef __LP64__
+#define _EVENT_SIZEOF_OFF_T 8
+#else
+#define _EVENT_SIZEOF_OFF_T 4
+#endif
+
 /* The size of `pthread_t', as computed by sizeof. */
 #ifdef __LP64__
 #define _EVENT_SIZEOF_PTHREAD_T 8
@@ -445,7 +458,7 @@
 #define _EVENT_TIME_WITH_SYS_TIME 1
 
 /* Version number of package */
-#define _EVENT_VERSION "2.0.21-stable"
+#define _EVENT_VERSION "2.0.22-stable"
 
 /* Define to appropriate substitue if compiler doesnt have __func__ */
 /* #undef _EVENT___func__ */

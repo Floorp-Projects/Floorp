@@ -398,7 +398,8 @@ public:
   CallbackComplete(nsresult aStatus,
                    nsISupports* aValue,
                    already_AddRefed<mozIStorageCompletionCallback> aCallback)
-    : mStatus(aStatus)
+    : Runnable("storage::CallbackComplete")
+    , mStatus(aStatus)
     , mValue(aValue)
     , mCallback(aCallback)
   {

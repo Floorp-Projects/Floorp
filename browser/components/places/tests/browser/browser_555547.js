@@ -56,10 +56,9 @@ add_task(function* test() {
 function promiseLoadedSidebar(cmd) {
   return new Promise(resolve => {
     let sidebar = document.getElementById("sidebar");
-    sidebar.addEventListener("load", function onLoad() {
-      sidebar.removeEventListener("load", onLoad, true);
+    sidebar.addEventListener("load", function() {
       resolve(sidebar);
-    }, true);
+    }, {capture: true, once: true});
 
     SidebarUI.show(cmd);
   });

@@ -65,22 +65,20 @@ var step1 =function() {
   is(testWindow.document.body.scrollTop, 0,
      "Page1: Ensure the scrollpane is at the top before we start scrolling.");
   testWindow.addEventListener("scroll", function () {
-    testWindow.removeEventListener("scroll", arguments.callee, true);
     isnot(testWindow.document.body.scrollTop, 0,
           "Page1: Ensure we can scroll down.");
     SimpleTest.executeSoon(step1_2);
-  }, true);
+  }, {capture: true, once: true});
   sendKey('DOWN', testWindow);
 
   function step1_2() {
     testWindow.addEventListener("scroll", function () {
-      testWindow.removeEventListener("scroll", arguments.callee, true);
       is(testWindow.document.body.scrollTop, 0,
          "Page1: Ensure we can scroll up, back to the top.");  
 
       // Nav to blue box page. This should fire step2.
       testWindow.location = gTallBlueBoxURI;
-    }, true);
+    }, {capture: true, once: true});
     sendKey('UP', testWindow);
   }
 }
@@ -118,14 +116,12 @@ var step3 =function() {
   is(testWindow.document.body.scrollTop, 0,
      "Page1Again: Ensure scroll pane at top before we scroll.");  
   testWindow.addEventListener("scroll", function () {
-    testWindow.removeEventListener("scroll", arguments.callee, true);
-
     isnot(testWindow.document.body.scrollTop, 0,
           "Page2Again: Ensure we can still scroll.");  
 
     testWindow.close();
     window.SimpleTest.finish();
-  }, true);
+  }, {capture: true, once: true});
   sendKey('DOWN', testWindow);
 }
 

@@ -29,7 +29,7 @@ class ProxyReleaseEvent : public mozilla::Runnable
 {
 public:
   explicit ProxyReleaseEvent(already_AddRefed<T> aDoomed)
-  : mDoomed(aDoomed.take()) {}
+  : Runnable("ProxyReleaseEvent"), mDoomed(aDoomed.take()) {}
 
   NS_IMETHOD Run() override
   {

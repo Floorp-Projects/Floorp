@@ -1443,7 +1443,8 @@ StartMacOSContentSandbox()
   MacSandboxInfo info;
   info.type = MacSandboxType_Content;
   info.level = info.level = sandboxLevel;
-  info.shouldLog = Preferences::GetBool("security.sandbox.logging.enabled", true);
+  info.shouldLog = Preferences::GetBool("security.sandbox.logging.enabled") ||
+                   PR_GetEnv("MOZ_SANDBOX_LOGGING");
   info.appPath.assign(appPath.get());
   info.appBinaryPath.assign(appBinaryPath.get());
   info.appDir.assign(appDir.get());
@@ -2856,7 +2857,7 @@ ContentChild::RecvShutdown()
 
   GetIPCChannel()->SetAbortOnError(false);
 
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#ifdef MOZ_GECKO_PROFILER
   if (profiler_is_active()) {
     // We're shutting down while we were profiling. Send the
     // profile up to the parent so that we don't lose this

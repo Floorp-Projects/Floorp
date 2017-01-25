@@ -1573,13 +1573,12 @@ this.UITour = {
         aAnchor.addTargetListener(document, targetCallback);
       }
 
-      tooltip.addEventListener("popuphiding", function tooltipHiding(event) {
-        tooltip.removeEventListener("popuphiding", tooltipHiding);
+      tooltip.addEventListener("popuphiding", function(event) {
         tooltipClose.removeEventListener("command", closeButtonCallback);
         if (aOptions.targetCallback && aAnchor.removeTargetListener) {
           aAnchor.removeTargetListener(document, targetCallback);
         }
-      });
+      }, {once: true});
 
       tooltip.setAttribute("targetName", aAnchor.targetName);
       tooltip.hidden = false;
@@ -1593,10 +1592,9 @@ this.UITour = {
       this._addAnnotationPanelMutationObserver(tooltip);
       tooltip.openPopup(aAnchorEl, alignment, xOffset || 0, yOffset || 0);
       if (tooltip.state == "closed") {
-        document.defaultView.addEventListener("endmodalstate", function endModalStateHandler() {
-          document.defaultView.removeEventListener("endmodalstate", endModalStateHandler);
+        document.defaultView.addEventListener("endmodalstate", function() {
           tooltip.openPopup(aAnchorEl, alignment);
-        });
+        }, {once: true});
       }
     }
 
@@ -1714,10 +1712,9 @@ this.UITour = {
               return;
             }
 
-            aWindow.PanelUI.panel.addEventListener("popupshown", function onShown() {
-              aWindow.PanelUI.panel.removeEventListener("popupshown", onShown);
+            aWindow.PanelUI.panel.addEventListener("popupshown", function() {
               resolve();
-            });
+            }, {once: true});
 
             aWindow.PanelUI.show();
           });

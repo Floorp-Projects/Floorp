@@ -82,10 +82,9 @@ add_task(function* setup() {
   yield SpecialPowers.pushPrefEnv({"set": [["signon.schemeUpgrades", true]]});
 
   yield new Promise(resolve => {
-    iframe.addEventListener("load", function onLoad() {
-      iframe.removeEventListener("load", onLoad);
+    iframe.addEventListener("load", function() {
       resolve();
-    });
+    }, {once: true});
   });
 
   iframeDoc = iframe.contentDocument;

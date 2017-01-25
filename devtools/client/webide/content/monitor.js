@@ -10,8 +10,7 @@ const {AppActorFront} = require("devtools/shared/apps/app-actor-front");
 const {Connection} = require("devtools/shared/client/connection-manager");
 const EventEmitter = require("devtools/shared/event-emitter");
 
-window.addEventListener("load", function onLoad() {
-  window.removeEventListener("load", onLoad);
+window.addEventListener("load", function () {
   window.addEventListener("resize", Monitor.resize);
   window.addEventListener("unload", Monitor.unload);
 
@@ -20,7 +19,7 @@ window.addEventListener("load", function onLoad() {
   };
 
   Monitor.load();
-});
+}, {once: true});
 
 
 /**

@@ -521,9 +521,7 @@ var BrowserApp = {
     // Notify Java that Gecko has loaded.
     GlobalEventDispatcher.sendRequest({ type: "Gecko:Ready" });
 
-    this.deck.addEventListener("DOMContentLoaded", function BrowserApp_delayedStartup() {
-      BrowserApp.deck.removeEventListener("DOMContentLoaded", BrowserApp_delayedStartup);
-
+    this.deck.addEventListener("DOMContentLoaded", function() {
       InitLater(() => Cu.import("resource://gre/modules/NotificationDB.jsm"));
 
       InitLater(() => Services.obs.notifyObservers(window, "browser-delayed-startup-finished", ""));
@@ -552,7 +550,7 @@ var BrowserApp = {
       InitLater(() => Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager));
       InitLater(() => LoginManagerParent.init(), window, "LoginManagerParent");
 
-    });
+    }, {once: true});
 
     // Pass caret StateChanged events to ActionBarHandler.
     window.addEventListener("mozcaretstatechanged", e => {

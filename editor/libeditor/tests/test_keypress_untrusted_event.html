@@ -33,7 +33,6 @@ addLoadEvent(function() {
   SimpleTest.executeSoon(function() {
     input.addEventListener("keypress",
       function(aEvent) {
-        input.removeEventListener("keypress", arguments.callee);
         is(aEvent.target, input,
            "The keypress event target isn't the input element");
 
@@ -43,7 +42,7 @@ addLoadEvent(function() {
           textarea.focus();
           SimpleTest.executeSoon(runTextareaTest);
         });
-      });
+      }, {once: true});
     var keypress = document.createEvent("KeyboardEvent");
     keypress.initKeyEvent("keypress", true, true, document.defaultView,
                           false, false, false, false, 0, "a".charCodeAt(0));
@@ -55,7 +54,6 @@ function runTextareaTest()
 {
   textarea.addEventListener("keypress",
     function(aEvent) {
-      textarea.removeEventListener("keypress", arguments.callee);
       is(aEvent.target, textarea,
          "The keypress event target isn't the textarea element");
 
@@ -65,7 +63,7 @@ function runTextareaTest()
         div.focus();
         SimpleTest.executeSoon(runContentediableTest);
       });
-    });
+    }, {once: true});
   var keypress = document.createEvent("KeyboardEvent");
   keypress.initKeyEvent("keypress", true, true, document.defaultView,
                         false, false, false, false, 0, "b".charCodeAt(0));
@@ -76,7 +74,6 @@ function runContentediableTest()
 {
   div.addEventListener("keypress",
     function(aEvent) {
-      div.removeEventListener("keypress", arguments.callee);
       is(aEvent.target, div,
          "The keypress event target isn't the div element");
 
@@ -86,7 +83,7 @@ function runContentediableTest()
 
         SimpleTest.finish();
       });
-    });
+    }, {once: true});
   var keypress = document.createEvent("KeyboardEvent");
   keypress.initKeyEvent("keypress", true, true, document.defaultView,
                         false, false, false, false, 0, "c".charCodeAt(0));

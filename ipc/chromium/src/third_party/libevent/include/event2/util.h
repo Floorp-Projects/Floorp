@@ -648,9 +648,12 @@ const char *evutil_gai_strerror(int err);
 
 /** Generate n bytes of secure pseudorandom data, and store them in buf.
  *
- * By default, Libevent uses an ARC4-based random number generator, seeded
- * using the platform's entropy source (/dev/urandom on Unix-like systems;
- * CryptGenRandom on Windows).
+ * Current versions of Libevent use an ARC4-based random number generator,
+ * seeded using the platform's entropy source (/dev/urandom on Unix-like
+ * systems; CryptGenRandom on Windows).  This is not actually as secure as it
+ * should be: ARC4 is a pretty lousy cipher, and the current implementation
+ * provides only rudimentary prediction- and backtracking-resistance.  Don't
+ * use this for serious cryptographic applications.
  */
 void evutil_secure_rng_get_bytes(void *buf, size_t n);
 
@@ -671,6 +674,21 @@ void evutil_secure_rng_get_bytes(void *buf, size_t n);
  * program loses the ability to do it.
  */
 int evutil_secure_rng_init(void);
+
+/**
+ * Set a filename to use in place of /dev/urandom for seeding the secure
+ * PRNG. Return 0 on success, -1 on failure.
+ *
+ * Call this function BEFORE calling any other initialization or RNG
+ * functions.
+ *
+ * (This string will _NOT_ be copied internally. Do not free it while any
+ * user of the secure RNG might be running. Don't pass anything other than a
+ * real /dev/...random device file here, or you might lose security.)
+ *
+ * This API is unstable, and might change in a future libevent version.
+ */
+int evutil_secure_rng_set_urandom_device_file(char *fname);
 
 #if !defined(__OpenBSD__) && !defined(ANDROID)
 /** Seed the random number generator with extra random bytes.

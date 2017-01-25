@@ -1,9 +1,7 @@
 diff --git a/ipc/chromium/src/third_party/libevent/kqueue.c b/ipc/chromium/src/third_party/libevent/kqueue.c
 --- a/ipc/chromium/src/third_party/libevent/kqueue.c
 +++ b/ipc/chromium/src/third_party/libevent/kqueue.c
-@@ -158,26 +158,20 @@ kq_init(struct event_base *base)
- 	base->evsigsel = &kqsigops;
- 
+@@ -160,22 +160,16 @@ kq_init(struct event_base *base)
  	return (kqueueop);
  err:
  	if (kqueueop)
@@ -26,11 +24,7 @@ diff --git a/ipc/chromium/src/third_party/libevent/kqueue.c b/ipc/chromium/src/t
  	memset(out, 0, sizeof(struct kevent));
  	out->ident = fd;
  	out->filter = filter;
- 
- 	if (change & EV_CHANGE_ADD) {
-@@ -431,24 +425,31 @@ kq_sig_add(struct event_base *base, int 
- 	kev.ident = nsignal;
- 	kev.filter = EVFILT_SIGNAL;
+@@ -433,20 +427,27 @@ kq_sig_add(struct event_base *base, int 
  	kev.flags = EV_ADD;
  
  	/* Be ready for the signal if it is sent any
@@ -61,5 +55,3 @@ diff --git a/ipc/chromium/src/third_party/libevent/kqueue.c b/ipc/chromium/src/t
  kq_sig_del(struct event_base *base, int nsignal, short old, short events, void *p)
  {
  	struct kqop *kqop = base->evbase;
- 	struct kevent kev;
- 

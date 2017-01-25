@@ -41,8 +41,7 @@ exports.testWindowTracker = function(assert, done) {
   var myWindow = makeEmptyWindow();
   assert.pass('window was created');
 
-  myWindow.addEventListener("load", function onload() {
-    myWindow.removeEventListener("load", onload);
+  myWindow.addEventListener("load", function() {
     assert.pass("test window has opened");
 
     // test bug 638007 (new is optional), using new
@@ -61,7 +60,7 @@ exports.testWindowTracker = function(assert, done) {
         }
       }
     });
-  });
+  }, {once: true});
 };
 
 exports['test window watcher untracker'] = function(assert, done) {

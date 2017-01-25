@@ -46,11 +46,10 @@ this.createWorker = function (url) {
 
   return new Promise(function (resolve, reject) {
     let worker = new content.Worker(url);
-    worker.addEventListener("message", function listener() {
-      worker.removeEventListener("message", listener);
+    worker.addEventListener("message", function () {
       workers[url] = worker;
       resolve();
-    });
+    }, {once: true});
   });
 };
 
@@ -67,10 +66,9 @@ this.postMessageToWorker = function (url, message) {
   return new Promise(function (resolve) {
     let worker = workers[url];
     worker.postMessage(message);
-    worker.addEventListener("message", function listener() {
-      worker.removeEventListener("message", listener);
+    worker.addEventListener("message", function () {
       resolve();
-    });
+    }, {once: true});
   });
 };
 
@@ -99,8 +97,7 @@ addMessageListener("test:postMessageToWorker", function (message) {
 
   let worker = workers[message.data.url];
   worker.postMessage(message.data.message);
-  worker.addEventListener("message", function listener() {
-    worker.removeEventListener("message", listener);
+  worker.addEventListener("message", function () {
     sendAsyncMessage("test:postMessageToWorker");
-  });
+  }, {once: true});
 });

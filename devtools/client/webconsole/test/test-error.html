@@ -11,10 +11,9 @@
     <script type="text/javascript"><!--
       var button = document.getElementsByTagName("button")[0];
 
-      button.addEventListener("click", function clicker () {
-        button.removeEventListener("click", clicker);
+      button.addEventListener("click", function  () {
         fooBazBaz.bar();
-      });
+      }, {once: true});
     // --></script>
   </body>
 </html>

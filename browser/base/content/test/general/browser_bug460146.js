@@ -6,13 +6,10 @@ function test() {
   gBrowser.selectedTab = gBrowser.addTab();
 
   gBrowser.selectedBrowser.addEventListener("load", function() {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-
     var pageInfo = BrowserPageInfo(gBrowser.selectedBrowser.currentURI.spec,
                                    "mediaTab");
 
     pageInfo.addEventListener("load", function() {
-      pageInfo.removeEventListener("load", arguments.callee, true);
       pageInfo.onFinished.push(function() {
         executeSoon(function() {
           var imageTree = pageInfo.document.getElementById("imagetree");
@@ -28,8 +25,8 @@ function test() {
           finish();
         });
       });
-    }, true);
-  }, true);
+    }, {capture: true, once: true});
+  }, {capture: true, once: true});
 
   content.location =
     "data:text/html," +

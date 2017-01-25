@@ -5,11 +5,9 @@
   </head>
   <body>
     <script>
-      window.addEventListener("load", function onLoad() {
-        window.removeEventListener("load", onLoad, true);
-
+      window.addEventListener("load", function() {
         document.getElementById("test").addEventListener("click", onClick, true);
-      }, true);
+      }, {capture: true, once: true});
 
       function onClick(aEvent) {
         aEvent.preventDefault();

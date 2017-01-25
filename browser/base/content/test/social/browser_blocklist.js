@@ -157,15 +157,12 @@ var tests = {
         let domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                                   .getInterface(Ci.nsIDOMWindow);
 
-        domwindow.addEventListener("load", function _load() {
-          domwindow.removeEventListener("load", _load);
-
-          domwindow.addEventListener("unload", function _unload() {
-            domwindow.removeEventListener("unload", _unload);
+        domwindow.addEventListener("load", function() {
+          domwindow.addEventListener("unload", function() {
             info("blocklist window was closed");
             Services.wm.removeListener(listener);
             next();
-          });
+          }, {once: true});
 
           is(domwindow.document.location.href, URI_EXTENSION_BLOCKLIST_DIALOG, "dialog opened and focused");
           // wait until after load to cancel so the dialog has initalized. we
@@ -175,7 +172,7 @@ var tests = {
             info("***** hit the cancel button\n");
             cancelButton.doCommand();
           });
-        });
+        }, {once: true});
       },
       onCloseWindow(aXULWindow) { },
       onWindowTitleChange(aXULWindow, aNewTitle) { }

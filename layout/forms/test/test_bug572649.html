@@ -46,13 +46,12 @@ addLoadEvent(function() {
 
   is(area.scrollTop, 0, "The textarea should not be scrolled initially");
   area.addEventListener("focus", function() {
-    area.removeEventListener("focus", arguments.callee);
     setTimeout(function() {
       is(area.scrollTop, 0, "The textarea's insertion point should not be scrolled into view");
 
       SimpleTest.finish();
     }, 0);
-  });
+  }, {once: true});
   setTimeout(function() {
     var rect = area.getBoundingClientRect();
     synthesizeMouse(area, rect.width - 5, 5, {});

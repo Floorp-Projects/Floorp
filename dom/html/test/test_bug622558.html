@@ -40,8 +40,6 @@ var textarea = document.getElementsByTagName('textarea')[0];
 var select = document.getElementsByTagName('select')[0];
 
 select.addEventListener("focus", function() {
-  select.removeEventListener("focus", arguments.callee);
-
   SimpleTest.executeSoon(function() {
     select.setCustomValidity('foo');
 
@@ -50,11 +48,9 @@ select.addEventListener("focus", function() {
       SimpleTest.finish();
     });
   });
-});
+}, {once: true});
 
 textarea.addEventListener("focus", function() {
-  textarea.removeEventListener("focus", arguments.callee);
-
   SimpleTest.executeSoon(function() {
     textarea.setCustomValidity('foo');
 
@@ -63,11 +59,9 @@ textarea.addEventListener("focus", function() {
       select.focus();
     });
   });
-});
+}, {once: true});
 
 input.addEventListener("focus", function() {
-  input.removeEventListener("focus", arguments.callee);
-
   SimpleTest.executeSoon(function() {
     input.setCustomValidity('foo');
 
@@ -76,7 +70,7 @@ input.addEventListener("focus", function() {
       textarea.focus();
     });
   });
-});
+}, {once: true});
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {

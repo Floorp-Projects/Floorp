@@ -238,7 +238,7 @@ SandboxInfo::SandboxInfo() {
     flags |= kEnabledForMedia;
   }
 #endif
-  if (getenv("MOZ_SANDBOX_VERBOSE")) {
+  if (getenv("MOZ_SANDBOX_LOGGING")) {
     flags |= kVerbose;
   }
 

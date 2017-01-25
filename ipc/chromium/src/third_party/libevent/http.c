@@ -383,8 +383,6 @@ evhttp_write_buffer(struct evhttp_connection *evcon,
 	evcon->cb = cb;
 	evcon->cb_arg = arg;
 
-	bufferevent_enable(evcon->bufev, EV_WRITE);
-
 	/* Disable the read callback: we don't actually care about data;
 	 * we only care about close detection.  (We don't disable reading,
 	 * since we *do* want to learn about any close events.) */
@@ -393,6 +391,8 @@ evhttp_write_buffer(struct evhttp_connection *evcon,
 	    evhttp_write_cb,
 	    evhttp_error_cb,
 	    evcon);
+
+	bufferevent_enable(evcon->bufev, EV_WRITE);
 }
 
 static void
@@ -2181,6 +2181,8 @@ evhttp_connection_get_peer(struct evhttp_connection *evcon,
 int
 evhttp_connection_connect(struct evhttp_connection *evcon)
 {
+	int old_state = evcon->state;
+
 	if (evcon->state == EVCON_CONNECTING)
 		return (0);
 
@@ -2209,8 +2211,11 @@ evhttp_connection_connect(struct evhttp_connection *evcon)
 	/* make sure that we get a write callback */
 	bufferevent_enable(evcon->bufev, EV_WRITE);
 
+	evcon->state = EVCON_CONNECTING;
+
 	if (bufferevent_socket_connect_hostname(evcon->bufev, evcon->dns_base,
 		AF_UNSPEC, evcon->address, evcon->port) < 0) {
+		evcon->state = old_state;
 		event_sock_warn(evcon->fd, "%s: connection to \"%s\" failed",
 		    __func__, evcon->address);
 		/* some operating systems return ECONNREFUSED immediately
@@ -2220,8 +2225,6 @@ evhttp_connection_connect(struct evhttp_connection *evcon)
 		evhttp_connection_cb_cleanup(evcon);
 		return (0);
 	}
-
-	evcon->state = EVCON_CONNECTING;
 
 	return (0);
 }

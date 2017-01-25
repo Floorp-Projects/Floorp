@@ -8,13 +8,11 @@ function test()
   waitForExplicitFinish();
 
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onTabLoad() {
-    gBrowser.selectedBrowser.removeEventListener("load", onTabLoad, true);
-
+  gBrowser.selectedBrowser.addEventListener("load", function () {
     Services.prefs.setIntPref("devtools.editor.tabsize", 5);
 
     openScratchpad(runTests);
-  }, true);
+  }, {capture: true, once: true});
 
   content.location = "data:text/html,Scratchpad test for the Tab key, bug 660560";
 }

@@ -22,11 +22,10 @@ runWithMSE(function (ms, v) {
 
     var target = 2;
 
-    v.addEventListener("loadeddata", function onloadeddata() {
-      v.removeEventListener("loadeddata", onloadeddata);
+    v.addEventListener("loadeddata", function() {
       ok(v.readyState >= v.HAVE_CURRENT_DATA, "readyState is >= CURRENT_DATA");
       v.currentTime = target;
-    });
+    }, {once: true});
 
     v.addEventListener("seeking", function () {
       is(v.readyState, v.HAVE_METADATA, "readyState is HAVE_METADATA");

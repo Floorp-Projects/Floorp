@@ -366,19 +366,17 @@ function onceProjectRefreshed(projecteditor) {
 
 function onPopupShow(menu) {
   let defer = promise.defer();
-  menu.addEventListener("popupshown", function onpopupshown() {
-    menu.removeEventListener("popupshown", onpopupshown);
+  menu.addEventListener("popupshown", function () {
     defer.resolve();
-  });
+  }, {once: true});
   return defer.promise;
 }
 
 function onPopupHidden(menu) {
   let defer = promise.defer();
-  menu.addEventListener("popuphidden", function onpopuphidden() {
-    menu.removeEventListener("popuphidden", onpopuphidden);
+  menu.addEventListener("popuphidden", function () {
     defer.resolve();
-  });
+  }, {once: true});
   return defer.promise;
 }
 

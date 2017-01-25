@@ -58,12 +58,10 @@ var AboutDebugging = {
   },
 };
 
-window.addEventListener("DOMContentLoaded", function load() {
-  window.removeEventListener("DOMContentLoaded", load);
+window.addEventListener("DOMContentLoaded", function () {
   AboutDebugging.init();
-});
+}, {once: true});
 
-window.addEventListener("unload", function unload() {
-  window.removeEventListener("unload", unload);
+window.addEventListener("unload", function () {
   AboutDebugging.destroy();
-});
+}, {once: true});

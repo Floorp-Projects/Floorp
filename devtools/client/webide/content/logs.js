@@ -6,17 +6,13 @@ var Cu = Components.utils;
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
 
-window.addEventListener("load", function onLoad() {
-  window.removeEventListener("load", onLoad);
-
+window.addEventListener("load", function () {
   Logs.init();
-});
+}, {once: true});
 
-window.addEventListener("unload", function onUnload() {
-  window.removeEventListener("unload", onUnload);
-
+window.addEventListener("unload", function () {
   Logs.uninit();
-});
+}, {once: true});
 
 const Logs = {
   init: function () {

@@ -91,10 +91,9 @@ add_task(function* test_tracking_pb() {
   // Load a blank page
   let browser = BrowserApp.addTab("about:blank", { selected: true, parentId: BrowserApp.selectedTab.id, isPrivate: true }).browser;
   yield new Promise((resolve, reject) => {
-    browser.addEventListener("load", function startTests(event) {
-      browser.removeEventListener("load", startTests, true);
+    browser.addEventListener("load", function(event) {
       Services.tm.mainThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
-    }, true);
+    }, {capture: true, once: true});
   });
 
   // Populate and use 'test-track-simple' for tracking protection lookups
@@ -141,10 +140,9 @@ add_task(function* test_tracking_not_pb() {
   // Load a blank page
   let browser = BrowserApp.addTab("about:blank", { selected: true }).browser;
   yield new Promise((resolve, reject) => {
-    browser.addEventListener("load", function startTests(event) {
-      browser.removeEventListener("load", startTests, true);
+    browser.addEventListener("load", function(event) {
       Services.tm.mainThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
-    }, true);
+    }, {capture: true, once: true});
   });
 
   // Point tab to a test page NOT containing tracking elements

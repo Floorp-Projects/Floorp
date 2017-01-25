@@ -50,10 +50,9 @@
   var browserListener = {
     onOpenWindow: function(aWindow) {
         var win = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
-        win.addEventListener("UIReady", function listener(aEvent) {
-            win.removeEventListener("UIReady", listener);
+        win.addEventListener("UIReady", function(aEvent) {
             attachTo(win);
-        });
+        }, {once: true});
     },
 
     onCloseWindow: function(aWindow) {

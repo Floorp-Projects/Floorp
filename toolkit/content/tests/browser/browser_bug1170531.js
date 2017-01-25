@@ -12,10 +12,9 @@ add_task(function* () {
       return;
     }
 
-    menuPopup.addEventListener("popuphidden", function onPopupHidden() {
-      menuPopup.removeEventListener("popuphidden", onPopupHidden);
+    menuPopup.addEventListener("popuphidden", function() {
       executeSoon(aCallback);
-    });
+    }, {once: true});
 
     executeSoon(function() {
       editMenu.open = false;
@@ -32,10 +31,9 @@ add_task(function* () {
       return;
     }
 
-    menuPopup.addEventListener("popupshown", function onPopupShown() {
-      menuPopup.removeEventListener("popupshown", onPopupShown);
+    menuPopup.addEventListener("popupshown", function() {
       executeSoon(aCallback);
-    });
+    }, {once: true});
 
     executeSoon(function() {
       editMenu.open = true;

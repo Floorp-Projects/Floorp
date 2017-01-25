@@ -939,12 +939,6 @@ pref("browser.tabs.remote.autostart", false);
 pref("browser.tabs.remote.desktopbehavior", true);
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-// When this pref is true the Windows process sandbox will set up dummy
-// interceptions and log to the browser console when calls fail in the sandboxed
-// process and also if they are subsequently allowed by the broker process.
-// This will require a restart.
-pref("security.sandbox.windows.log", false);
-
 // Controls whether and how the Windows NPAPI plugin process is sandboxed.
 // To get a different setting for a particular plugin replace "default", with
 // the plugin's nice file name, see: nsPluginTag::GetNiceFileName.
@@ -1033,14 +1027,9 @@ pref("security.sandbox.content.tempDirSuffix", "");
 #endif
 
 #if defined(MOZ_SANDBOX)
-#if defined(XP_MACOSX)
 // This pref determines if messages relevant to sandbox violations are
 // logged.
-// At present, this setting refers only to mac sandbox messages sent to
-// the system console but the setting will be used on other platforms
-// in the future.
 pref("security.sandbox.logging.enabled", true);
-#endif
 #endif
 
 // This pref governs whether we attempt to work around problems caused by

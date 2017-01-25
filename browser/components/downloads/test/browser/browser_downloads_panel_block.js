@@ -133,10 +133,9 @@ function promisePanelHidden() {
       resolve();
       return;
     }
-    DownloadsPanel.panel.addEventListener("popuphidden", function onHidden() {
-      DownloadsPanel.panel.removeEventListener("popuphidden", onHidden);
+    DownloadsPanel.panel.addEventListener("popuphidden", function() {
       setTimeout(resolve, 0);
-    });
+    }, {once: true});
   });
 }
 

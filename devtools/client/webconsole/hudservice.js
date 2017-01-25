@@ -213,15 +213,13 @@ HUD_SERVICE.prototype =
 
       let win = Services.ww.openWindow(null, Tools.webConsole.url, "_blank",
                                        BROWSER_CONSOLE_WINDOW_FEATURES, null);
-      win.addEventListener("DOMContentLoaded", function onLoad() {
-        win.removeEventListener("DOMContentLoaded", onLoad);
-
+      win.addEventListener("DOMContentLoaded", function () {
         // Set the correct Browser Console title.
         let root = win.document.documentElement;
         root.setAttribute("title", root.getAttribute("browserConsoleTitle"));
 
         deferred.resolve(win);
-      });
+      }, {once: true});
 
       return deferred.promise;
     }

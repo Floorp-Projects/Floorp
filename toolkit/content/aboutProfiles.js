@@ -333,7 +333,6 @@ function restart(safeMode) {
   }
 }
 
-window.addEventListener("DOMContentLoaded", function load() {
-  window.removeEventListener("DOMContentLoaded", load);
+window.addEventListener("DOMContentLoaded", function() {
   refreshUI();
-});
+}, {once: true});
