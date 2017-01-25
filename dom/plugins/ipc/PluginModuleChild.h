@@ -78,9 +78,8 @@ protected:
                                    override;
     virtual mozilla::ipc::IPCResult RecvAsyncNPP_New(PPluginInstanceChild* aActor) override;
 
-    virtual PPluginModuleChild*
-    AllocPPluginModuleChild(mozilla::ipc::Transport* aTransport,
-                            base::ProcessId aOtherProcess) override;
+    virtual mozilla::ipc::IPCResult
+    RecvInitPluginModuleChild(Endpoint<PPluginModuleChild>&& endpoint) override;
 
     virtual PPluginInstanceChild*
     AllocPPluginInstanceChild(const nsCString& aMimeType,
@@ -158,13 +157,10 @@ public:
                        MessageLoop* aIOLoop,
                        IPC::Channel* aChannel);
 
-    bool InitForContent(base::ProcessId aParentPid,
-                        MessageLoop* aIOLoop,
-                        IPC::Channel* aChannel);
+    bool InitForContent(Endpoint<PPluginModuleChild>&& aEndpoint);
 
-    static PluginModuleChild*
-    CreateForContentProcess(mozilla::ipc::Transport* aTransport,
-                            base::ProcessId aOtherProcess);
+    static bool
+    CreateForContentProcess(Endpoint<PPluginModuleChild>&& aEndpoint);
 
     void CleanUp();
 

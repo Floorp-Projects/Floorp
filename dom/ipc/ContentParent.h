@@ -257,10 +257,12 @@ public:
   virtual mozilla::ipc::IPCResult RecvCreateGMPService() override;
 
   virtual mozilla::ipc::IPCResult RecvLoadPlugin(const uint32_t& aPluginId, nsresult* aRv,
-                                                 uint32_t* aRunID) override;
+                                                 uint32_t* aRunID,
+                                                 Endpoint<PPluginModuleParent>* aEndpoint) override;
 
   virtual mozilla::ipc::IPCResult RecvConnectPluginBridge(const uint32_t& aPluginId,
-                                                          nsresult* aRv) override;
+                                                          nsresult* aRv,
+                                                          Endpoint<PPluginModuleParent>* aEndpoint) override;
 
   virtual mozilla::ipc::IPCResult RecvGetBlocklistState(const uint32_t& aPluginId,
                                                         uint32_t* aIsBlocklisted) override;
