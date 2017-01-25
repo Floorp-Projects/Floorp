@@ -34,6 +34,7 @@
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
 #include "mozilla/gfx/UserData.h"       // for UserData, etc
 #include "mozilla/layers/BSPTree.h"     // for LayerPolygon
+#include "mozilla/layers/LayerAttributes.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nsAutoPtr.h"                  // for nsAutoPtr, nsRefPtr, etc
@@ -839,9 +840,8 @@ public:
     NS_ASSERTION((aFlags & (CONTENT_OPAQUE | CONTENT_COMPONENT_ALPHA)) !=
                  (CONTENT_OPAQUE | CONTENT_COMPONENT_ALPHA),
                  "Can't be opaque and require component alpha");
-    if (mContentFlags != aFlags) {
+    if (mSimpleAttrs.SetContentFlags(aFlags)) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ContentFlags", this));
-      mContentFlags = aFlags;
       Mutated();
     }
   }
@@ -856,9 +856,8 @@ public:
    */
   virtual void SetLayerBounds(const gfx::IntRect& aLayerBounds)
   {
-    if (!mLayerBounds.IsEqualEdges(aLayerBounds)) {
+    if (mSimpleAttrs.SetLayerBounds(aLayerBounds)) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) LayerBounds", this));
-      mLayerBounds = aLayerBounds;
       Mutated();
     }
   }
@@ -981,34 +980,31 @@ public:
    */
   void SetOpacity(float aOpacity)
   {
-    if (mOpacity != aOpacity) {
+    if (mSimpleAttrs.SetOpacity(aOpacity)) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) Opacity", this));
-      mOpacity = aOpacity;
       Mutated();
     }
   }
 
   void SetMixBlendMode(gfx::CompositionOp aMixBlendMode)
   {
-    if (mMixBlendMode != aMixBlendMode) {
+    if (mSimpleAttrs.SetMixBlendMode(aMixBlendMode)) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) MixBlendMode", this));
-      mMixBlendMode = aMixBlendMode;
       Mutated();
     }
   }
 
   void SetForceIsolatedGroup(bool aForceIsolatedGroup)
   {
-    if(mForceIsolatedGroup != aForceIsolatedGroup) {
+    if (mSimpleAttrs.SetForceIsolatedGroup(aForceIsolatedGroup)) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ForceIsolatedGroup", this));
-      mForceIsolatedGroup = aForceIsolatedGroup;
       Mutated();
     }
   }
 
   bool GetForceIsolatedGroup() const
   {
-    return mForceIsolatedGroup;
+    return mSimpleAttrs.ForceIsolatedGroup();
   }
 
   /**
@@ -1061,9 +1057,8 @@ public:
    */
   void SetScrolledClip(const Maybe<LayerClip>& aScrolledClip)
   {
-    if (mScrolledClip != aScrolledClip) {
+    if (mSimpleAttrs.SetScrolledClip(aScrolledClip)) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ScrolledClip", this));
-      mScrolledClip = aScrolledClip;
       Mutated();
     }
   }
@@ -1130,11 +1125,10 @@ public:
     NS_ASSERTION(!aMatrix.IsSingular(),
                  "Shouldn't be trying to draw with a singular matrix!");
     mPendingTransform = nullptr;
-    if (mTransform == aMatrix) {
+    if (!mSimpleAttrs.SetTransform(aMatrix)) {
       return;
     }
     MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) BaseTransform", this));
-    mTransform = aMatrix;
     Mutated();
   }
 
@@ -1153,12 +1147,10 @@ public:
 
   void SetPostScale(float aXScale, float aYScale)
   {
-    if (mPostXScale == aXScale && mPostYScale == aYScale) {
+    if (!mSimpleAttrs.SetPostScale(aXScale, aYScale)) {
       return;
     }
     MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) PostScale", this));
-    mPostXScale = aXScale;
-    mPostYScale = aYScale;
     Mutated();
   }
 
@@ -1170,9 +1162,8 @@ public:
    */
   void SetIsFixedPosition(bool aFixedPosition)
   {
-    if (mIsFixedPosition != aFixedPosition) {
+    if (mSimpleAttrs.SetIsFixedPosition(aFixedPosition)) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) IsFixedPosition", this));
-      mIsFixedPosition = aFixedPosition;
       Mutated();
     }
   }
@@ -1185,9 +1176,8 @@ public:
    */
   void SetTransformIsPerspective(bool aTransformIsPerspective)
   {
-    if (mTransformIsPerspective != aTransformIsPerspective) {
+    if (mSimpleAttrs.SetTransformIsPerspective(aTransformIsPerspective)) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) TransformIsPerspective", this));
-      mTransformIsPerspective = aTransformIsPerspective;
       Mutated();
     }
   }
@@ -1236,17 +1226,8 @@ public:
                             const LayerPoint& aAnchor,
                             int32_t aSides)
   {
-    if (!mFixedPositionData ||
-        mFixedPositionData->mScrollId != aScrollId ||
-        mFixedPositionData->mAnchor != aAnchor ||
-        mFixedPositionData->mSides != aSides) {
+    if (mSimpleAttrs.SetFixedPositionData(aScrollId, aAnchor, aSides)) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) FixedPositionData", this));
-      if (!mFixedPositionData) {
-        mFixedPositionData = MakeUnique<FixedPositionData>();
-      }
-      mFixedPositionData->mScrollId = aScrollId;
-      mFixedPositionData->mAnchor = aAnchor;
-      mFixedPositionData->mSides = aSides;
       Mutated();
     }
   }
@@ -1263,16 +1244,8 @@ public:
   void SetStickyPositionData(FrameMetrics::ViewID aScrollId, LayerRect aOuter,
                              LayerRect aInner)
   {
-    if (!mStickyPositionData ||
-        !mStickyPositionData->mOuter.IsEqualEdges(aOuter) ||
-        !mStickyPositionData->mInner.IsEqualEdges(aInner)) {
+    if (mSimpleAttrs.SetStickyPositionData(aScrollId, aOuter, aInner)) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) StickyPositionData", this));
-      if (!mStickyPositionData) {
-        mStickyPositionData = new StickyPositionData;
-      }
-      mStickyPositionData->mScrollId = aScrollId;
-      mStickyPositionData->mOuter = aOuter;
-      mStickyPositionData->mInner = aInner;
       Mutated();
     }
   }
@@ -1284,14 +1257,8 @@ public:
    */
   void SetScrollbarData(FrameMetrics::ViewID aScrollId, ScrollDirection aDir, float aThumbRatio)
   {
-    if (mScrollbarTargetId != aScrollId ||
-        mScrollbarDirection != aDir ||
-        mScrollbarThumbRatio != aThumbRatio)
-    {
+    if (mSimpleAttrs.SetScrollbarData(aScrollId, aDir, aThumbRatio)) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ScrollbarData", this));
-      mScrollbarTargetId = aScrollId;
-      mScrollbarDirection = aDir;
-      mScrollbarThumbRatio = aThumbRatio;
       Mutated();
     }
   }
@@ -1299,20 +1266,19 @@ public:
   // Set during construction for the container layer of scrollbar components.
   void SetIsScrollbarContainer()
   {
-    if (!mIsScrollbarContainer) {
-      mIsScrollbarContainer = true;
+    if (mSimpleAttrs.SetIsScrollbarContainer()) {
       Mutated();
     }
   }
 
   // These getters can be used anytime.
-  float GetOpacity() { return mOpacity; }
-  gfx::CompositionOp GetMixBlendMode() const { return mMixBlendMode; }
+  float GetOpacity() { return mSimpleAttrs.Opacity(); }
+  gfx::CompositionOp GetMixBlendMode() const { return mSimpleAttrs.MixBlendMode(); }
   const Maybe<ParentLayerIntRect>& GetClipRect() const { return mClipRect; }
-  const Maybe<LayerClip>& GetScrolledClip() const { return mScrolledClip; }
+  const Maybe<LayerClip>& GetScrolledClip() const { return mSimpleAttrs.ScrolledClip(); }
   Maybe<ParentLayerIntRect> GetScrolledClipRect() const;
-  uint32_t GetContentFlags() { return mContentFlags; }
-  const gfx::IntRect& GetLayerBounds() const { return mLayerBounds; }
+  uint32_t GetContentFlags() { return mSimpleAttrs.ContentFlags(); }
+  const gfx::IntRect& GetLayerBounds() const { return mSimpleAttrs.LayerBounds(); }
   const LayerIntRegion& GetVisibleRegion() const { return mVisibleRegion; }
   const ScrollMetadata& GetScrollMetadata(uint32_t aIndex) const;
   const FrameMetrics& GetFrameMetrics(uint32_t aIndex) const;
@@ -1342,23 +1308,23 @@ public:
   // Same as GetTransform(), but returns the transform as a strongly-typed
   // matrix. Eventually this will replace GetTransform().
   const CSSTransformMatrix GetTransformTyped() const;
-  const gfx::Matrix4x4& GetBaseTransform() const { return mTransform; }
+  const gfx::Matrix4x4& GetBaseTransform() const { return mSimpleAttrs.Transform(); }
   // Note: these are virtual because ContainerLayerComposite overrides them.
-  virtual float GetPostXScale() const { return mPostXScale; }
-  virtual float GetPostYScale() const { return mPostYScale; }
-  bool GetIsFixedPosition() { return mIsFixedPosition; }
-  bool GetTransformIsPerspective() const { return mTransformIsPerspective; }
-  bool GetIsStickyPosition() { return mStickyPositionData; }
-  FrameMetrics::ViewID GetFixedPositionScrollContainerId() { return mFixedPositionData ? mFixedPositionData->mScrollId : FrameMetrics::NULL_SCROLL_ID; }
-  LayerPoint GetFixedPositionAnchor() { return mFixedPositionData ? mFixedPositionData->mAnchor : LayerPoint(); }
-  int32_t GetFixedPositionSides() { return mFixedPositionData ? mFixedPositionData->mSides : eSideBitsNone; }
-  FrameMetrics::ViewID GetStickyScrollContainerId() { return mStickyPositionData->mScrollId; }
-  const LayerRect& GetStickyScrollRangeOuter() { return mStickyPositionData->mOuter; }
-  const LayerRect& GetStickyScrollRangeInner() { return mStickyPositionData->mInner; }
-  FrameMetrics::ViewID GetScrollbarTargetContainerId() { return mScrollbarTargetId; }
-  ScrollDirection GetScrollbarDirection() { return mScrollbarDirection; }
-  float GetScrollbarThumbRatio() { return mScrollbarThumbRatio; }
-  bool IsScrollbarContainer() { return mIsScrollbarContainer; }
+  virtual float GetPostXScale() const { return mSimpleAttrs.PostXScale(); }
+  virtual float GetPostYScale() const { return mSimpleAttrs.PostYScale(); }
+  bool GetIsFixedPosition() { return mSimpleAttrs.IsFixedPosition(); }
+  bool GetTransformIsPerspective() const { return mSimpleAttrs.TransformIsPerspective(); }
+  bool GetIsStickyPosition() { return mSimpleAttrs.IsStickyPosition(); }
+  FrameMetrics::ViewID GetFixedPositionScrollContainerId() { return mSimpleAttrs.FixedPositionScrollContainerId(); }
+  LayerPoint GetFixedPositionAnchor() { return mSimpleAttrs.FixedPositionAnchor(); }
+  int32_t GetFixedPositionSides() { return mSimpleAttrs.FixedPositionSides(); }
+  FrameMetrics::ViewID GetStickyScrollContainerId() { return mSimpleAttrs.StickyScrollContainerId(); }
+  const LayerRect& GetStickyScrollRangeOuter() { return mSimpleAttrs.StickyScrollRangeOuter(); }
+  const LayerRect& GetStickyScrollRangeInner() { return mSimpleAttrs.StickyScrollRangeInner(); }
+  FrameMetrics::ViewID GetScrollbarTargetContainerId() { return mSimpleAttrs.ScrollbarTargetContainerId(); }
+  ScrollDirection GetScrollbarDirection() { return mSimpleAttrs.ScrollbarDirection(); }
+  float GetScrollbarThumbRatio() { return mSimpleAttrs.ScrollbarThumbRatio(); }
+  bool IsScrollbarContainer() { return mSimpleAttrs.IsScrollbarContainer(); }
   Layer* GetMaskLayer() const { return mMaskLayer; }
   void CheckCanary() const { mCanary.Check(); }
 
@@ -1464,7 +1430,7 @@ public:
   {
     if (CanUseOpaqueSurface())
       return SurfaceMode::SURFACE_OPAQUE;
-    if (mContentFlags & CONTENT_COMPONENT_ALPHA)
+    if (GetContentFlags() & CONTENT_COMPONENT_ALPHA)
       return SurfaceMode::SURFACE_COMPONENT_ALPHA;
     return SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA;
   }
@@ -1894,53 +1860,24 @@ protected:
   // Look for out-of-bound in the middle of the structure
   mozilla::CorruptionCanary mCanary;
   gfx::UserData mUserData;
-  gfx::IntRect mLayerBounds;
+  SimpleLayerAttributes mSimpleAttrs;
   LayerIntRegion mVisibleRegion;
   nsTArray<ScrollMetadata> mScrollMetadata;
   EventRegions mEventRegions;
-  gfx::Matrix4x4 mTransform;
   // A mutation of |mTransform| that we've queued to be applied at the
   // end of the next transaction (if nothing else overrides it in the
   // meantime).
   nsAutoPtr<gfx::Matrix4x4> mPendingTransform;
-  float mPostXScale;
-  float mPostYScale;
   gfx::Matrix4x4 mEffectiveTransform;
   AnimationArray mAnimations;
   // See mPendingTransform above.
   nsAutoPtr<AnimationArray> mPendingAnimations;
   InfallibleTArray<AnimData> mAnimationData;
-  float mOpacity;
-  gfx::CompositionOp mMixBlendMode;
-  bool mForceIsolatedGroup;
   Maybe<ParentLayerIntRect> mClipRect;
-  Maybe<LayerClip> mScrolledClip;
   gfx::IntRect mTileSourceRect;
   gfx::TiledIntRegion mInvalidRegion;
   nsTArray<RefPtr<AsyncPanZoomController> > mApzcs;
-  uint32_t mContentFlags;
   bool mUseTileSourceRect;
-  bool mIsFixedPosition;
-  bool mTransformIsPerspective;
-  struct FixedPositionData {
-    FrameMetrics::ViewID mScrollId;
-    LayerPoint mAnchor;
-    int32_t mSides;
-  };
-  UniquePtr<FixedPositionData> mFixedPositionData;
-  struct StickyPositionData {
-    FrameMetrics::ViewID mScrollId;
-    LayerRect mOuter;
-    LayerRect mInner;
-  };
-  nsAutoPtr<StickyPositionData> mStickyPositionData;
-  FrameMetrics::ViewID mScrollbarTargetId;
-  ScrollDirection mScrollbarDirection;
-  // The scrollbar thumb ratio is the ratio of the thumb position (in the CSS
-  // pixels of the scrollframe's parent's space) to the scroll position (in the
-  // CSS pixels of the scrollframe's space).
-  float mScrollbarThumbRatio;
-  bool mIsScrollbarContainer;
 #ifdef DEBUG
   uint32_t mDebugColorIndex;
 #endif
@@ -2063,7 +2000,6 @@ protected:
     , mUsedForReadback(false)
     , mAllowResidualTranslation(false)
   {
-    mContentFlags = 0; // Clear NO_TEXT, NO_TEXT_OVER_TRANSPARENT
   }
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
