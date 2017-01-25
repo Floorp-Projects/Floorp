@@ -20,7 +20,6 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/ScopeExit.h"
 
 #include "jit/AtomicOperations.h"
 #include "jit/Disassembler.h"
@@ -1076,21 +1075,17 @@ MachExceptionHandler::install(JSRuntime* rt)
     kern_return_t kret;
     mach_port_t thread;
 
-    auto onFailure = mozilla::MakeScopeExit([] {
-        uninstall();
-    });
-
     // Get a port which can send and receive data.
     kret = mach_port_allocate(mach_task_self(), MACH_PORT_RIGHT_RECEIVE, &port_);
     if (kret != KERN_SUCCESS)
-        return false;
+        goto error;
     kret = mach_port_insert_right(mach_task_self(), port_, port_, MACH_MSG_TYPE_MAKE_SEND);
     if (kret != KERN_SUCCESS)
-        return false;
+        goto error;
 
     // Create a thread to block on reading port_.
     if (!thread_.init(MachExceptionHandlerThread, rt))
-        return false;
+        goto error;
 
     // Direct exceptions on this thread to port_ (and thus our handler thread).
     // Note: we are totally clobbering any existing *thread* exception ports and
@@ -1105,11 +1100,14 @@ MachExceptionHandler::install(JSRuntime* rt)
                                       THREAD_STATE_NONE);
     mach_port_deallocate(mach_task_self(), thread);
     if (kret != KERN_SUCCESS)
-        return false;
+        goto error;
 
     installed_ = true;
-    onFailure.release();
     return true;
+
+  error:
+    uninstall();
+    return false;
 }
 
 #else  // If not Windows or Mac, assume Unix
