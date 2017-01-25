@@ -86,6 +86,10 @@ const kSaveDelayMs = 1500;
  *                      intermediate directories before saving. The file will
  *                      not be saved if the promise rejects or the function
  *                      throws an exception.
+ *        - finalizeAt: An `AsyncShutdown` phase or barrier client that should
+ *                      automatically finalize the file when triggered. Defaults
+ *                      to `profileBeforeChange`; exposed as an option for
+ *                      testing.
  */
 function JSONFile(config) {
   this.path = config.path;
@@ -102,8 +106,10 @@ function JSONFile(config) {
   }
   this._saver = new DeferredTask(() => this._save(), config.saveDelayMs);
 
-  AsyncShutdown.profileBeforeChange.addBlocker("JSON store: writing data",
-                                               () => this._saver.finalize());
+  this._finalizeAt = config.finalizeAt || AsyncShutdown.profileBeforeChange;
+  this._finalizeInternalBound = this._finalizeInternal.bind(this);
+  this._finalizeAt.addBlocker("JSON store: writing data",
+                              this._finalizeInternalBound);
 }
 
 JSONFile.prototype = {
@@ -126,6 +132,13 @@ JSONFile.prototype = {
    * Internal data object.
    */
   _data: null,
+
+  /**
+   * Internal fields used during finalization.
+   */
+  _finalizeAt: null,
+  _finalizePromise: null,
+  _finalizeInternalBound: null,
 
   /**
    * Serializable object containing the data. This is populated directly with
@@ -280,6 +293,45 @@ JSONFile.prototype = {
    * Synchronously work on the data just loaded into memory.
    */
   _processLoadedData(data) {
+    if (this._finalizePromise) {
+      // It's possible for `load` to race with `finalize`. In that case, don't
+      // process or set the loaded data.
+      return;
+    }
     this.data = this._dataPostProcessor ? this._dataPostProcessor(data) : data;
   },
+
+  /**
+   * Finishes persisting data to disk and resets all state for this file.
+   *
+   * @return {Promise}
+   * @resolves When the object is finalized.
+   */
+  _finalizeInternal() {
+    if (this._finalizePromise) {
+      // Finalization already in progress; return the pending promise. This is
+      // possible if `finalize` is called concurrently with shutdown.
+      return this._finalizePromise;
+    }
+    this._finalizePromise = Task.spawn(function* () {
+      yield this._saver.finalize();
+      this._data = null;
+      this.dataReady = false;
+    }.bind(this));
+    return this._finalizePromise;
+  },
+
+  /**
+   * Ensures that all data is persisted to disk, and prevents future calls to
+   * `saveSoon`. This is called automatically on shutdown, but can also be
+   * called explicitly when the file is no longer needed.
+   */
+  finalize: Task.async(function* () {
+    if (this._finalizePromise) {
+      throw new Error(`The file ${this.path} has already been finalized`);
+    }
+    // Wait for finalization before removing the shutdown blocker.
+    yield this._finalizeInternal();
+    this._finalizeAt.removeBlocker(this._finalizeInternalBound);
+  }),
 };
