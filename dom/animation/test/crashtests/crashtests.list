@@ -6,17 +6,17 @@ asserts-if(stylo,3) pref(dom.animations-api.core.enabled,true) load 1216842-3.ht
 asserts-if(stylo,3) pref(dom.animations-api.core.enabled,true) load 1216842-4.html # bug 1324691
 asserts-if(stylo,4-10) pref(dom.animations-api.core.enabled,true) load 1216842-5.html # bug 1324693
 asserts-if(stylo,4-10) pref(dom.animations-api.core.enabled,true) load 1216842-6.html # bug 1324693
-asserts-if(stylo,3-10) pref(dom.animations-api.core.enabled,true) load 1272475-1.html # bug 1324693
-asserts-if(stylo,4-10) pref(dom.animations-api.core.enabled,true) load 1272475-2.html # bug 1324693
+skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1272475-1.html # bug 1324693 and bug 1332657
+skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1272475-2.html # bug 1324693 and bug 1332657
 asserts-if(stylo,5) pref(dom.animations-api.core.enabled,true) load 1278485-1.html # bug 1324691
 asserts-if(stylo,31) pref(dom.animations-api.core.enabled,true) load 1277272-1.html # bug 1324694
 asserts-if(stylo,2) pref(dom.animations-api.core.enabled,true) load 1290535-1.html # bug 1324690
 pref(dom.animations-api.core.enabled,true) load 1304886-1.html
 pref(dom.animations-api.core.enabled,true) load 1322382-1.html
 skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1322291-1.html # bug 1311257
-skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1322291-2.html # bug 1311257
-asserts-if(stylo,0-5) pref(dom.animations-api.core.enabled,true) load 1323114-1.html # bug 1324690
-asserts-if(stylo,0-5) pref(dom.animations-api.core.enabled,true) load 1323114-2.html # bug 1324690
+skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1322291-2.html # bug 1311257 and bug 1311257
+skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1323114-1.html # bug 1324690 and bug 1311257
+skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1323114-2.html # bug 1324690
 skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1325193-1.html # bug 1311257
 skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1330190-1.html # bug 1311257
 skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1330190-2.html # bug 1311257
