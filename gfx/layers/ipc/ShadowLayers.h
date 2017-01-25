@@ -216,9 +216,11 @@ public:
   /**
    * At least one attribute of |aMutant| has changed, and |aMutant|
    * needs to sync to its shadow layer.  This initial implementation
-   * forwards all attributes when any is mutated.
+   * forwards all attributes when any of the appropriate attribute
+   * set is mutated.
    */
   void Mutated(ShadowableLayer* aMutant);
+  void MutatedSimple(ShadowableLayer* aMutant);
 
   void SetRoot(ShadowableLayer* aRoot);
   /**

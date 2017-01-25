@@ -156,13 +156,6 @@ LayerManager::CreatePersistentBufferProvider(const mozilla::gfx::IntSize &aSize,
   return bufferProvider.forget();
 }
 
-#ifdef DEBUG
-void
-LayerManager::Mutated(Layer* aLayer)
-{
-}
-#endif  // DEBUG
-
 already_AddRefed<ImageContainer>
 LayerManager::CreateImageContainer(ImageContainer::Mode flag)
 {
