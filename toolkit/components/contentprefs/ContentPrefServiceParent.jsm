@@ -11,6 +11,8 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+Cu.import("resource://gre/modules/ContentPrefUtils.jsm");
+
 var ContentPrefServiceParent = {
   _cps2: null,
 
@@ -94,6 +96,10 @@ var ContentPrefServiceParent = {
 
   receiveMessage(msg) {
     let data = msg.data;
+
+    if (!_methodsCallableFromChild.some(([method, args]) => method == data.call)) {
+      throw new Error(`Can't call ${data.call} from child!`);
+    }
 
     let args = data.args;
     let requestId = data.requestId;

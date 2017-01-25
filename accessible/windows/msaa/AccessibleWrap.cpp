@@ -1400,7 +1400,7 @@ AccessibleWrap::GetIAccessibleFor(const VARIANT& aVarChild, bool* aIsDefunct)
 
   // If the MSAA ID is not a chrome id then we already know that we won't
   // find it here and should look remotely instead.
-  if (XRE_IsParentProcess() && !sIDGen.IsChromeID(varChild.lVal)) {
+  if (XRE_IsParentProcess() && !IsProxy() && !sIDGen.IsChromeID(varChild.lVal)) {
     return GetRemoteIAccessibleFor(varChild);
   }
   MOZ_ASSERT(XRE_IsParentProcess() ||
@@ -1471,7 +1471,6 @@ AccessibleWrap::GetIAccessibleFor(const VARIANT& aVarChild, bool* aIsDefunct)
 already_AddRefed<IAccessible>
 AccessibleWrap::GetRemoteIAccessibleFor(const VARIANT& aVarChild)
 {
-  DocAccessibleParent* proxyDoc = nullptr;
   DocAccessible* doc = Document();
   const nsTArray<DocAccessibleParent*>* remoteDocs =
     DocManager::TopLevelRemoteDocs();

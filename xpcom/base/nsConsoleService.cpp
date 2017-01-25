@@ -19,12 +19,14 @@
 #include "nsConsoleMessage.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIConsoleListener.h"
+#include "nsIObserverService.h"
 #include "nsPrintfCString.h"
 #include "nsProxyRelease.h"
 #include "nsIScriptError.h"
 #include "nsISupportsPrimitives.h"
 
 #include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
 
 #if defined(ANDROID)
 #include <android/log.h>
