@@ -201,13 +201,17 @@ const Message = createClass({
       collapse,
       dom.span({ className: "message-body-wrapper" },
         dom.span({ className: "message-flex-body" },
-          dom.span({ className: "message-body devtools-monospace" },
+          // Add whitespaces for formatting when copying to the clipboard.
+          " ", dom.span({ className: "message-body devtools-monospace" },
             messageBody,
             learnMore
           ),
-          repeat,
-          location
+          " ", repeat,
+          " ", location
         ),
+        // Add a newline for formatting when copying to the clipboard.
+        "\n",
+        // If an attachment is displayed, the final newline is handled by the attachment.
         attachment
       )
     );

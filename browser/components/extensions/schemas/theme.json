@@ -8,7 +8,33 @@
     "types": [
       {
         "id": "ThemeType",
-        "type": "object"
+        "type": "object",
+        "properties": {
+          "images": {
+            "type": "object",
+            "optional": true,
+            "properties": {
+              "headerURL": {
+                "type": "string",
+                "optional": true
+              }
+            }
+          },
+          "colors": {
+            "type": "object",
+            "optional": true,
+            "properties": {
+              "accentcolor": {
+                "type": "string",
+                "optional": true
+              },
+              "textcolor": {
+                "type": "string",
+                "optional": true
+              }
+            }
+          }
+        }
       },
       {
         "$extend": "WebExtensionManifest",
