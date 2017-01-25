@@ -165,13 +165,12 @@ extensions.registerSchemaAPI("windows", "addon_parent", context => {
         // TODO: focused, type
 
         return new Promise(resolve => {
-          window.addEventListener("load", function listener() {
-            window.removeEventListener("load", listener);
+          window.addEventListener("load", function() {
             if (["maximized", "normal"].includes(createData.state)) {
               window.document.documentElement.setAttribute("sizemode", createData.state);
             }
             resolve(promiseObserved("browser-delayed-startup-finished", win => win == window));
-          });
+          }, {once: true});
         }).then(() => {
           // Some states only work after delayed-startup-finished
           if (["minimized", "fullscreen", "docked"].includes(createData.state)) {

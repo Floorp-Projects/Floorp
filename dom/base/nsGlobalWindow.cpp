@@ -2075,7 +2075,7 @@ nsGlobalWindow::IsBlackForCC(bool aTracingNeeded)
   }
 
   return (nsCCUncollectableMarker::InGeneration(GetMarkedCCGeneration()) ||
-          IsBlack()) &&
+          HasKnownLiveWrapper()) &&
          (!aTracingNeeded ||
           HasNothingToTrace(static_cast<nsIDOMEventTarget*>(this)));
 }
@@ -8552,7 +8552,7 @@ nsGlobalWindow::PostMessageMozOuter(JSContext* aCx, JS::Handle<JS::Value> aMessa
     return;
   }
 
-  aError = Dispatch("PostMessage", TaskCategory::Other, event.forget());
+  aError = Dispatch("PostMessageEvent", TaskCategory::Other, event.forget());
 }
 
 void

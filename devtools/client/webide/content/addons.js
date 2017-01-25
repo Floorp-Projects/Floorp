@@ -9,8 +9,7 @@ const {gDevTools} = require("devtools/client/framework/devtools");
 const {GetAvailableAddons, ForgetAddonsList} = require("devtools/client/webide/modules/addons");
 const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
 
-window.addEventListener("load", function onLoad() {
-  window.removeEventListener("load", onLoad);
+window.addEventListener("load", function () {
   document.querySelector("#aboutaddons").onclick = function () {
     let browserWin = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
     if (browserWin && browserWin.BrowserOpenAddonsMgr) {
@@ -22,12 +21,11 @@ window.addEventListener("load", function onLoad() {
     console.error(e);
     window.alert(Strings.formatStringFromName("error_cantFetchAddonsJSON", [e], 1));
   });
-}, true);
+}, {capture: true, once: true});
 
-window.addEventListener("unload", function onUnload() {
-  window.removeEventListener("unload", onUnload);
+window.addEventListener("unload", function () {
   ForgetAddonsList();
-}, true);
+}, {capture: true, once: true});
 
 function CloseUI() {
   window.parent.UI.openProject();
@@ -67,12 +65,11 @@ function BuildItem(addon, type) {
   for (let e of events) {
     addon.on(e, onAddonUpdate);
   }
-  window.addEventListener("unload", function onUnload() {
-    window.removeEventListener("unload", onUnload);
+  window.addEventListener("unload", function () {
     for (let e of events) {
       addon.off(e, onAddonUpdate);
     }
-  });
+  }, {once: true});
 
   let li = document.createElement("li");
   li.setAttribute("status", addon.status);

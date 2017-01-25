@@ -28,9 +28,8 @@ function test() {
 }
 
 function load(aTab, aUrl, aCallback) {
-  aTab.linkedBrowser.addEventListener("load", function onload(aEvent) {
-    aEvent.currentTarget.removeEventListener("load", onload, true);
+  aTab.linkedBrowser.addEventListener("load", function(aEvent) {
     waitForFocus(aCallback, content);
-  }, true);
+  }, {capture: true, once: true});
   aTab.linkedBrowser.loadURI(aUrl);
 }

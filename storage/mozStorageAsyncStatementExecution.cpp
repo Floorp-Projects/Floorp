@@ -56,7 +56,8 @@ public:
   CallbackResultNotifier(mozIStorageStatementCallback *aCallback,
                          mozIStorageResultSet *aResults,
                          AsyncExecuteStatements *aEventStatus) :
-      mCallback(aCallback)
+      Runnable("storage::CallbackResultNotifier")
+    , mCallback(aCallback)
     , mResults(aResults)
     , mEventStatus(aEventStatus)
   {
@@ -93,7 +94,8 @@ public:
   ErrorNotifier(mozIStorageStatementCallback *aCallback,
                 mozIStorageError *aErrorObj,
                 AsyncExecuteStatements *aEventStatus) :
-      mCallback(aCallback)
+      Runnable("storage::ErrorNotifier")
+    , mCallback(aCallback)
     , mErrorObj(aErrorObj)
     , mEventStatus(aEventStatus)
   {
@@ -133,7 +135,8 @@ public:
    */
   CompletionNotifier(mozIStorageStatementCallback *aCallback,
                      ExecutionState aReason)
-    : mCallback(aCallback)
+    : Runnable("storage::CompletionNotifier")
+    , mCallback(aCallback)
     , mReason(aReason)
   {
   }

@@ -15,8 +15,8 @@
 #include "shared-libraries.h"
 #include "AutoObjectMapper.h"
 
-// Contains miscellaneous helpers that are used to connect SPS and LUL.
-
+// Contains miscellaneous helpers that are used to connect the Gecko Profiler
+// and LUL.
 
 // Find out, in a platform-dependent way, where the code modules got
 // mapped in the process' virtual address space, and get |aLUL| to

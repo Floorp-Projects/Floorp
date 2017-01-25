@@ -62,10 +62,9 @@ function promiseXHR(data) {
   }
 
   let deferred = defer();
-  xhr.addEventListener("loadend", function loadend(event) {
-    xhr.removeEventListener("loadend", loadend);
+  xhr.addEventListener("loadend", function (event) {
     deferred.resolve({ status: xhr.status, response: xhr.response });
-  });
+  }, {once: true});
 
   xhr.open(method, url);
 

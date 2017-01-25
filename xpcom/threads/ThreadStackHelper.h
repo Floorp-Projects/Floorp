@@ -25,7 +25,7 @@
 
 // Support pseudostack on these platforms.
 #if defined(XP_LINUX) || defined(XP_WIN) || defined(XP_MACOSX)
-#  ifdef MOZ_ENABLE_PROFILER_SPS
+#  ifdef MOZ_GECKO_PROFILER
 #    define MOZ_THREADSTACKHELPER_PSEUDO
 #  endif
 #endif

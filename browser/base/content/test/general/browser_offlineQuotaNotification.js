@@ -68,12 +68,11 @@ function test() {
       // tab to open - which we track via an "Initialized" event.
       PopupNotifications.panel.firstElementChild.button.click();
       let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
-      newTabBrowser.addEventListener("Initialized", function PrefInit() {
-        newTabBrowser.removeEventListener("Initialized", PrefInit, true);
+      newTabBrowser.addEventListener("Initialized", function() {
         executeSoon(function() {
           checkInContentPreferences(newTabBrowser.contentWindow);
         })
-      }, true);
+      }, {capture: true, once: true});
     });
     onCachedAttached.then(function() {
       Services.prefs.setIntPref("offline-apps.quota.warn", 1);
@@ -87,9 +86,8 @@ function test() {
 
 function promiseNotification() {
   return new Promise(resolve => {
-    PopupNotifications.panel.addEventListener("popupshown", function onShown() {
-      PopupNotifications.panel.removeEventListener("popupshown", onShown);
+    PopupNotifications.panel.addEventListener("popupshown", function() {
       resolve();
-    });
+    }, {once: true});
   });
 }

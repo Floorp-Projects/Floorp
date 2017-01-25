@@ -36,7 +36,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=930374
       input.focus();
 
       input.addEventListener("input", function (aEvent) {
-          input.removeEventListener("input", arguments.callee);
           ok(gKeyPress,
              "Test1: keypress event must be fired before an input event");
           ok(!gKeyPress.defaultPrevented,
@@ -44,13 +43,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=930374
           gKeyPress.preventDefault();
           ok(gKeyPress.defaultPrevented,
              "Test1: keypress event's defaultPrevented should become true because of a call of preventDefault()");
-        });
+        }, {once: true});
 
       sendChar("a");
       gKeyPress = null;
 
       input.addEventListener("input", function (aEvent) {
-          input.removeEventListener("input", arguments.callee);
           ok(gKeyPress,
              "Test2: keypress event must be fired before an input event");
           ok(!gKeyPress.defaultPrevented,
@@ -60,7 +58,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=930374
                "Test2: keypress event's defaultPrevented should not become true after event dispatching finished");
             SimpleTest.finish();
           }, 0);
-        });
+        }, {once: true});
 
       sendChar("b");
     }

@@ -48,10 +48,9 @@ var navigateTo = Task.async(function* (url) {
   let browser = gBrowser.selectedBrowser;
 
   let navigating = defer();
-  browser.addEventListener("load", function onload() {
-    browser.removeEventListener("load", onload, true);
+  browser.addEventListener("load", function () {
     navigating.resolve();
-  }, true);
+  }, {capture: true, once: true});
 
   browser.loadURI(url);
 

@@ -350,8 +350,7 @@ function addTab() {
   let deferred = Promise.defer();
   let tab = gBrowser.addTab();
   gBrowser.selectedTab = tab;
-  tab.linkedBrowser.addEventListener("load", function load() {
-    tab.linkedBrowser.removeEventListener("load", load, true);
+  tab.linkedBrowser.addEventListener("load", function() {
     let url = getRootDirectory(gTestPath) + TEST_CONTENT_SCRIPT_BASENAME;
     gMsgMan = tab.linkedBrowser.messageManager;
     gMsgMan.sendAsyncMessage(CONTENT_SEARCH_MSG, {
@@ -362,7 +361,7 @@ function addTab() {
       gMsgMan.loadFrameScript(url, false);
       deferred.resolve();
     });
-  }, true);
+  }, {capture: true, once: true});
   registerCleanupFunction(() => gBrowser.removeTab(tab));
   return deferred.promise;
 }

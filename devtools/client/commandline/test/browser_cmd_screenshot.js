@@ -356,10 +356,9 @@ let getImageSizeFromClipboard = Task.async(function* () {
   let img = document.createElementNS("http://www.w3.org/1999/xhtml", "img");
 
   let loaded = new Promise(resolve => {
-    img.addEventListener("load", function onLoad() {
-      img.removeEventListener("load", onLoad);
+    img.addEventListener("load", function () {
       resolve();
-    });
+    }, {once: true});
   });
 
   img.src = dataURI;

@@ -1039,7 +1039,7 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
     NS_WARNING("Component Manager was never created ...");
   }
 
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#ifdef MOZ_GECKO_PROFILER
   // In optimized builds we don't do shutdown collections by default, so
   // uncollected (garbage) objects may keep the nsXPConnect singleton alive,
   // and its XPCJSContext along with it. However, we still destroy various

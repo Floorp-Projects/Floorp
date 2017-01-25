@@ -132,13 +132,12 @@ function runTests() {
     is(touchDownTriggered, 0, "Pointer event must be triggered before touch event!");
   };
   d0.addEventListener("pointercancel", function(ev) {
-    d0.removeEventListener("pointercancel", arguments.callee);
     is(ev.pointerId, 0, "Correct default pointerId");
     is(ev.bubbles, true, "bubbles should be true");
     is(ev.cancelable, false, "pointercancel cancelable should be false ");
     pointerCancelTriggered = 1;
     is(touchCancelTriggered, 0, "Pointer event must be triggered before touch event!");
-  });
+  }, {once: true});
 
   // Test pointer event generated from mouse event
   synthesizeMouse(d1, 3, 3, { type: "mousemove"});

@@ -57,7 +57,11 @@ Runnable::GetName(nsACString& aName)
 #ifdef RELEASE_OR_BETA
   aName.Truncate();
 #else
-  aName.AssignASCII(mName);
+  if (mName) {
+    aName.AssignASCII(mName);
+  } else {
+    aName.Truncate();
+  }
 #endif
   return NS_OK;
 }

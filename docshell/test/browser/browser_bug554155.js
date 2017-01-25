@@ -4,8 +4,6 @@ function test() {
   let tab = gBrowser.addTab("http://example.com");
 
   tab.linkedBrowser.addEventListener("load", function() {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-
     let numLocationChanges = 0;
 
     let listener = {
@@ -29,5 +27,5 @@ function test() {
       finish();
     });
 
-  }, true);
+  }, {capture: true, once: true});
 }

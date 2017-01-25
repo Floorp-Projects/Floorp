@@ -76,8 +76,6 @@ WindowListener.prototype = {
                               .getInterface(Ci.nsIDOMWindow);
     var self = this;
     domwindow.addEventListener("load", function() {
-      domwindow.removeEventListener("load", arguments.callee);
-
       if (domwindow.document.location.href != self.url)
         return;
 
@@ -85,7 +83,7 @@ WindowListener.prototype = {
       executeSoon(function() {
         self.callback(domwindow);
       });
-    });
+    }, {once: true});
   },
   onCloseWindow: function(aXULWindow) {},
   onWindowTitleChange: function(aXULWindow, aNewTitle) {}

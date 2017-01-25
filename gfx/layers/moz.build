@@ -190,6 +190,7 @@ EXPORTS.mozilla.layers += [
     'ipc/UiCompositorControllerParent.h',
     'ipc/VideoBridgeChild.h',
     'ipc/VideoBridgeParent.h',
+    'LayerAttributes.h',
     'LayerMetricsWrapper.h',
     'LayersTypes.h',
     'opengl/CompositingRenderTargetOGL.h',

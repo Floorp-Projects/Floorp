@@ -89,10 +89,9 @@ let prefHelper = Task.async(function*(primary, advanced = null, customFn = null)
 
 function paintPromise(browserWindow) {
   return new Promise((resolve) => {
-    browserWindow.addEventListener("MozAfterPaint", function onPaint() {
-      browserWindow.removeEventListener("MozAfterPaint", onPaint);
+    browserWindow.addEventListener("MozAfterPaint", function() {
       resolve();
-    });
+    }, {once: true});
   });
 }
 

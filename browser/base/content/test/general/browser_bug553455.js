@@ -61,10 +61,9 @@ function waitForProgressNotification(aPanelOpen = false, aExpectedCount = 1) {
       panelEventPromise = Promise.resolve();
     } else {
       panelEventPromise = new Promise(resolve => {
-        PopupNotifications.panel.addEventListener("popupshowing", function eventListener() {
-          PopupNotifications.panel.removeEventListener("popupshowing", eventListener);
+        PopupNotifications.panel.addEventListener("popupshowing", function() {
           resolve();
-        });
+        }, {once: true});
       });
     }
 
@@ -134,10 +133,9 @@ function waitForNotification(aId, aExpectedCount = 1) {
 function waitForNotificationClose() {
   return new Promise(resolve => {
     info("Waiting for notification to close");
-    PopupNotifications.panel.addEventListener("popuphidden", function listener() {
-      PopupNotifications.panel.removeEventListener("popuphidden", listener);
+    PopupNotifications.panel.addEventListener("popuphidden", function() {
       resolve();
-    });
+    }, {once: true});
   });
 }
 

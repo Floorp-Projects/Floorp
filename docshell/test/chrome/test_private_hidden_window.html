@@ -51,11 +51,10 @@ function onHiddenPrivateWindowReady() {
   hidden.document.body.appendChild(iframe);
 
   var win = mainWindow.OpenBrowserWindow({private: true});
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad);
+  win.addEventListener("load", function() {
     win.close();
     win = null;
-  });
+  }, {once: true});
 }
 
 function observer(aSubject, aTopic, aData) {

@@ -8,10 +8,9 @@ add_task(function* () {
       let submit = doc.getElementById("submit");
       let iframe = doc.getElementById("post_iframe");
       let p = new Promise((resolve, reject) => {
-        iframe.addEventListener("load", function onLoad() {
-          iframe.removeEventListener("load", onLoad);
+        iframe.addEventListener("load", function() {
           resolve();
-        });
+        }, {once: true});
       });
       submit.click();
       yield p;

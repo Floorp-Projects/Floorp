@@ -853,10 +853,9 @@ ContentSearchUIController.prototype = {
           "chrome://browser/skin/search-engine-placeholder.png");
       }
       img.setAttribute("src", uri);
-      img.addEventListener("load", function imgLoad() {
-        img.removeEventListener("load", imgLoad);
+      img.addEventListener("load", function() {
         URL.revokeObjectURL(uri);
-      });
+      }, {once: true});
       button.appendChild(img);
       button.style.width = buttonWidth + "px";
       button.setAttribute("title", engine.name);

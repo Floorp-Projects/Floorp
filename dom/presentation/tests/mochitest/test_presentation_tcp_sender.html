@@ -142,11 +142,10 @@ function testIncomingMessage() {
   return new Promise(function(aResolve, aReject) {
     const incomingMessage = "test incoming message";
 
-    connection.addEventListener('message', function messageHandler(aEvent) {
-      connection.removeEventListener('message', messageHandler);
+    connection.addEventListener('message', function(aEvent) {
       is(aEvent.data, incomingMessage, "An incoming message should be received.");
       aResolve();
-    });
+    }, {once: true});
 
     gScript.sendAsyncMessage('trigger-incoming-message', incomingMessage);
   });

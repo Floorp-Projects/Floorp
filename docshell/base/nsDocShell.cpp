@@ -1677,6 +1677,14 @@ nsDocShell::PrepareForNewContentModel()
 NS_IMETHODIMP
 nsDocShell::FirePageHideNotification(bool aIsUnload)
 {
+  FirePageHideNotificationInternal(aIsUnload, false);
+  return NS_OK;
+}
+
+void
+nsDocShell::FirePageHideNotificationInternal(bool aIsUnload,
+                                             bool aSkipCheckingDynEntries)
+{
   if (mContentViewer && !mFiredUnloadEvent) {
     // Keep an explicit reference since calling PageHide could release
     // mContentViewer
@@ -1702,16 +1710,30 @@ nsDocShell::FirePageHideNotification(bool aIsUnload)
 
     n = kids.Length();
     for (uint32_t i = 0; i < n; ++i) {
-      if (kids[i]) {
-        kids[i]->FirePageHideNotification(aIsUnload);
+      RefPtr<nsDocShell> child = static_cast<nsDocShell*>(kids[i].get());
+      if (child) {
+        // Skip checking dynamic subframe entries in our children.
+        child->FirePageHideNotificationInternal(aIsUnload, true);
       }
     }
+
+    // If the document is unloading, remove all dynamic subframe entries.
+    if (aIsUnload && !aSkipCheckingDynEntries) {
+      nsCOMPtr<nsISHistory> rootSH;
+      GetRootSessionHistory(getter_AddRefs(rootSH));
+      nsCOMPtr<nsISHistoryInternal> shPrivate = do_QueryInterface(rootSH);
+      nsCOMPtr<nsISHContainer> container(do_QueryInterface(mOSHE));
+      if (shPrivate && container) {
+        int32_t index = -1;
+        rootSH->GetIndex(&index);
+        shPrivate->RemoveDynEntries(index, container);
+      }
+    }
+
     // Now make sure our editor, if any, is detached before we go
     // any farther.
     DetachEditorFromWindow();
   }
-
-  return NS_OK;
 }
 
 bool
@@ -9906,7 +9928,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                                    EmptyCString(),  // mime guess
                                    extraStr,  // extra
                                    &shouldLoad);
-  
+
     if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
       if (NS_SUCCEEDED(rv) && shouldLoad == nsIContentPolicy::REJECT_TYPE) {
         return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
@@ -11732,26 +11754,12 @@ nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
     } else if (mOSHE) {
       mOSHE->SetCacheKey(cacheKey);
     }
-
-    // Since we're force-reloading, clear all the sub frame history.
-    ClearFrameHistory(mLSHE);
-    ClearFrameHistory(mOSHE);
   }
 
-  if (aLoadType == LOAD_RELOAD_NORMAL) {
-    nsCOMPtr<nsISHEntry> currentSH;
-    bool oshe = false;
-    GetCurrentSHEntry(getter_AddRefs(currentSH), &oshe);
-    bool dynamicallyAddedChild = false;
-    if (currentSH) {
-      currentSH->HasDynamicallyAddedChild(&dynamicallyAddedChild);
-    }
-    if (dynamicallyAddedChild) {
-      ClearFrameHistory(currentSH);
-    }
-  }
-
-  if (aLoadType == LOAD_REFRESH) {
+  // Clear subframe history on refresh or reload.
+  // XXX: history.go(0) won't go this path as aLoadType is LOAD_HISTORY in this
+  // case. One should re-validate after bug 1331865 fixed.
+  if (aLoadType == LOAD_REFRESH || (aLoadType & LOAD_CMD_RELOAD)) {
     ClearFrameHistory(mLSHE);
     ClearFrameHistory(mOSHE);
   }

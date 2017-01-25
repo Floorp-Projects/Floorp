@@ -37,8 +37,6 @@ addLoadEvent(function() {
       t.selectionStart = 5;
       t.selectionEnd = 5;
       t.addEventListener("keydown", function() {
-        t.removeEventListener("keydown", arguments.callee);
-
         SimpleTest.executeSoon(function() {
           t.style.display = 'block';
           document.body.offsetWidth;
@@ -60,7 +58,7 @@ addLoadEvent(function() {
 
           SimpleTest.finish();
         });
-      });
+      }, {once: true});
       synthesizeKey("VK_LEFT", {});
     });
   });

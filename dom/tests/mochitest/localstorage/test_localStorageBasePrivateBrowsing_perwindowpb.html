@@ -30,8 +30,7 @@ var contentPage = "http://mochi.test:8888/chrome/dom/tests/mochitest/localstorag
 
 function testOnWindow(aIsPrivate, aCallback) {
   var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad);
+  win.addEventListener("load", function() {
     win.addEventListener("DOMContentLoaded", function onInnerLoad() {
       if (win.content.location.href == "about:privatebrowsing") {
         win.gBrowser.loadURI(contentPage);
@@ -41,7 +40,7 @@ function testOnWindow(aIsPrivate, aCallback) {
       SimpleTest.executeSoon(function() { aCallback(win); });
     }, true);
     win.gBrowser.loadURI(contentPage);
-  }, true);
+  }, {capture: true, once: true});
 }
 
 function doTest() {

@@ -6,8 +6,7 @@
 <body>
 <script type="application/javascript;version=1.8">
 'use strict';
-window.addEventListener('load', function onload() {
-  window.removeEventListener('load', onload);
+window.addEventListener('load', function() {
   let remotePort = parseInt(window.location.search.substring(1), 10);
   let socket = new UDPSocket();
   socket.addEventListener('message', function () {
@@ -17,7 +16,7 @@ window.addEventListener('load', function onload() {
   socket.opened.then(function() {
     socket.send('ready', '127.0.0.1', remotePort);
   });
-});
+}, {once: true});
 </script>
 </body>
 </html>
