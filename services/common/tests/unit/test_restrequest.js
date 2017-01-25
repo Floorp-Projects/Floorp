@@ -772,7 +772,7 @@ add_test(function test_exception_in_onProgress() {
 
   let request = new RESTRequest(server.baseURI + "/resource");
   request.onProgress = function onProgress() {
-    it.does.not.exist(); // eslint-disable-line no-undef
+    it.does.not.exist();
   };
   request.get(function onComplete(error) {
     do_check_eq(error, "ReferenceError: it is not defined");

@@ -144,7 +144,6 @@ var TPS = {
     // Configure some logging prefs for Sync itself.
     Weave.Svc.Prefs.set("log.appender.dump", "Debug");
     // Import the appropriate authentication module
-    /* global Authentication */
     if (this.fxaccounts_enabled) {
       Cu.import("resource://tps/auth/fxaccounts.jsm", module);
     } else {

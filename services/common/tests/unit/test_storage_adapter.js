@@ -127,7 +127,7 @@ function test_collection_operations() {
       error = e;
     }
     do_check_neq(error, null);
-    let records = yield adapter.list();
+    records = yield adapter.list();
     do_check_eq(records.length, 0);
     yield sqliteHandle.close();
   });
@@ -179,7 +179,7 @@ function test_collection_operations() {
     let sqliteHandle = yield do_get_kinto_connection();
     let adapter = do_get_kinto_adapter(sqliteHandle);
     yield adapter.clear();
-    let records = yield adapter.list();
+    records = yield adapter.list();
     do_check_eq(records.length, 0);
     let impactedRecords = yield adapter.loadDump([
       {id: 1, foo: "bar"},

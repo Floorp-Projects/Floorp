@@ -75,7 +75,7 @@ add_task(function* test_something() {
   yield sqliteHandle.close();
 
   // Test the db is updated when we call again with a later lastModified value
-  yield OneCRLBlocklistClient.maybeSync(4000, Date.now());
+  result = yield OneCRLBlocklistClient.maybeSync(4000, Date.now());
 
   // Open the collection, verify it's been updated:
   // Our test data now has two records; both should be in the local collection

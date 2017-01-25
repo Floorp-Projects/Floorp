@@ -3,16 +3,9 @@
 
 /* import-globals-from head_appinfo.js */
 /* import-globals-from ../../../common/tests/unit/head_helpers.js */
-/* import-globals-from head_helpers.js */
 /* import-globals-from head_http_server.js */
 
-// This file expects Service to be defined in the global scope when EHTestsCommon
-// is used (from service.js).
-/* global Service */
-
 Cu.import("resource://services-sync/engines.js");
-Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/keys.js");
 
 // Common code for test_errorhandler_{1,2}.js -- pulled out to make it less
 // monolithic and take less time to execute.
