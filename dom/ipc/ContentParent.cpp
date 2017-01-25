@@ -1094,6 +1094,12 @@ ContentParent::GetAllEvenIfDead(nsTArray<ContentParent*>& aArray)
   }
 }
 
+const nsAString&
+ContentParent::GetRemoteType() const
+{
+  return mRemoteType;
+}
+
 void
 ContentParent::Init()
 {
