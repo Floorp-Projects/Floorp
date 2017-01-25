@@ -94,70 +94,8 @@
                        data-key="body"/>
             </vbox>
           </vbox>
-          <tabbox id="event-details-pane"
-                  class="devtools-sidebar-tabs"
-                  handleCtrlTab="false">
-            <tabs>
-              <tab id="headers-tab"
-                   crop="end"
-                   data-localization="label=netmonitor.tab.headers"/>
-              <tab id="cookies-tab"
-                   crop="end"
-                   data-localization="label=netmonitor.tab.cookies"/>
-              <tab id="params-tab"
-                   crop="end"
-                   data-localization="label=netmonitor.tab.params"/>
-              <tab id="response-tab"
-                   crop="end"
-                   data-localization="label=netmonitor.tab.response"/>
-              <tab id="timings-tab"
-                   crop="end"
-                   data-localization="label=netmonitor.tab.timings"/>
-              <tab id="security-tab"
-                   crop="end"
-                   data-localization="label=netmonitor.tab.security"/>
-              <tab id="preview-tab"
-                   crop="end"
-                   data-localization="label=netmonitor.tab.preview"/>
-            </tabs>
-            <tabpanels flex="1">
-              <tabpanel id="headers-tabpanel"
-                        class="tabpanel-content">
-                <html:div xmlns="http://www.w3.org/1999/xhtml"
-                          id="react-headers-tabpanel-hook"/>
-              </tabpanel>
-              <tabpanel id="cookies-tabpanel"
-                        class="tabpanel-content">
-                <html:div xmlns="http://www.w3.org/1999/xhtml"
-                    id="react-cookies-tabpanel-hook"/>
-              </tabpanel>
-              <tabpanel id="params-tabpanel"
-                        class="tabpanel-content">
-                <html:div xmlns="http://www.w3.org/1999/xhtml"
-                          id="react-params-tabpanel-hook"/>
-              </tabpanel>
-              <tabpanel id="response-tabpanel"
-                        class="tabpanel-content">
-                <html:div xmlns="http://www.w3.org/1999/xhtml"
-                          id="react-response-tabpanel-hook"/>
-              </tabpanel>
-              <tabpanel id="timings-tabpanel"
-                        class="tabpanel-content">
-                <html:div xmlns="http://www.w3.org/1999/xhtml"
-                          id="react-timings-tabpanel-hook"/>
-              </tabpanel>
-              <tabpanel id="security-tabpanel"
-                        class="tabpanel-content">
-                <html:div xmlns="http://www.w3.org/1999/xhtml"
-                          id="react-security-tabpanel-hook"/>
-              </tabpanel>
-              <tabpanel id="preview-tabpanel"
-                        class="tabpanel-content">
-                <html:div xmlns="http://www.w3.org/1999/xhtml"
-                          id="react-preview-tabpanel-hook"/>
-              </tabpanel>
-            </tabpanels>
-          </tabbox>
+          <html:div xmlns="http://www.w3.org/1999/xhtml"
+                    id="react-details-panel-hook"/>
         </deck>
       </hbox>
 

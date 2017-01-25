@@ -121,8 +121,6 @@ public:
 
   HTMLContentSink();
 
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
-
   nsresult Init(nsIDocument* aDoc, nsIURI* aURI, nsISupports* aContainer,
                 nsIChannel* aChannel);
 
@@ -633,8 +631,12 @@ NS_NewHTMLContentSink(nsIHTMLContentSink** aResult,
 }
 
 HTMLContentSink::HTMLContentSink()
+  : mMaxTextRun(0)
+  , mCurrentContext(nullptr)
+  , mHeadContext(nullptr)
+  , mHaveSeenHead(false)
+  , mNotifiedRootInsertion(false)
 {
-  // Note: operator new zeros our memory
 }
 
 HTMLContentSink::~HTMLContentSink()

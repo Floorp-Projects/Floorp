@@ -37,7 +37,6 @@ class nsPresContext;
 class nsXMLNameSpaceMap;
 
 namespace mozilla {
-struct ChildSheetListBuilder;
 class CSSStyleSheet;
 
 namespace css {
@@ -77,12 +76,6 @@ struct CSSStyleSheetInner : public StyleSheetInfo
   AutoTArray<CSSStyleSheet*, 8> mSheets;
   IncrementalClearCOMRuleArray mOrderedRules;
   nsAutoPtr<nsXMLNameSpaceMap> mNameSpaceMap;
-  // Linked list of child sheets.  This is al fundamentally broken, because
-  // each of the child sheets has a unique parent... We can only hope (and
-  // currently this is the case) that any time page JS can get ts hands on a
-  // child sheet that means we've already ensured unique inners throughout its
-  // parent chain and things are good.
-  RefPtr<CSSStyleSheet> mFirstChild;
 };
 
 
@@ -115,18 +108,11 @@ public:
 
   bool HasRules() const;
 
-  // style sheet owner info
-  CSSStyleSheet* GetParentSheet() const;  // may be null
-  void SetAssociatedDocument(nsIDocument* aDocument,
-                             DocumentAssociationMode aAssociationMode);
-
   // Find the ID of the owner inner window.
   uint64_t FindOwningWindowInnerID() const;
 #ifdef DEBUG
-  void List(FILE* out = stdout, int32_t aIndent = 0) const;
+  void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
-
-  void AppendStyleSheet(CSSStyleSheet* aSheet);
 
   // XXX do these belong here or are they generic?
   void AppendStyleRule(css::Rule* aRule);
@@ -183,7 +169,7 @@ public:
   // list after we clone a unique inner for ourselves.
   static bool RebuildChildList(css::Rule* aRule, void* aBuilder);
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
   dom::Element* GetScopeElement() const { return mScopeElement; }
   void SetScopeElement(dom::Element* aScopeElement)
@@ -235,8 +221,6 @@ protected:
 
   void EnabledStateChangedInternal();
 
-  RefPtr<CSSStyleSheet> mNext;
-  CSSStyleSheet*        mParent;    // weak ref
   css::ImportRule*      mOwnerRule; // weak ref
 
   RefPtr<CSSRuleListImpl> mRuleCollection;
@@ -249,9 +233,8 @@ protected:
   AutoTArray<nsCSSRuleProcessor*, 8>* mRuleProcessors;
   nsTArray<nsStyleSet*> mStyleSets;
 
-  friend class ::nsCSSRuleProcessor;
   friend class mozilla::StyleSheet;
-  friend struct mozilla::ChildSheetListBuilder;
+  friend class ::nsCSSRuleProcessor;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(CSSStyleSheet, NS_CSS_STYLE_SHEET_IMPL_CID)

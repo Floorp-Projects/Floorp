@@ -29,6 +29,8 @@ ServoStyleSheet::ServoStyleSheet(css::SheetParsingMode aParsingMode,
 
 ServoStyleSheet::~ServoStyleSheet()
 {
+  UnparentChildren();
+
   DropSheet();
 }
 
@@ -52,34 +54,6 @@ bool
 ServoStyleSheet::HasRules() const
 {
   return mSheet && Servo_StyleSheet_HasRules(mSheet);
-}
-
-void
-ServoStyleSheet::SetAssociatedDocument(nsIDocument* aDocument,
-                                       DocumentAssociationMode aAssociationMode)
-{
-  MOZ_ASSERT_IF(!aDocument, aAssociationMode == NotOwnedByDocument);
-
-  // XXXheycam: Traverse to child ServoStyleSheets to set this, like
-  // CSSStyleSheet::SetAssociatedDocument does.
-
-  mDocument = aDocument;
-  mDocumentAssociationMode = aAssociationMode;
-}
-
-ServoStyleSheet*
-ServoStyleSheet::GetParentSheet() const
-{
-  // XXXheycam: When we implement support for child sheets, we'll have
-  // to fix SetAssociatedDocument to propagate the associated document down
-  // to the children.
-  MOZ_CRASH("stylo: not implemented");
-}
-
-void
-ServoStyleSheet::AppendStyleSheet(ServoStyleSheet* aSheet)
-{
-  aSheet->mDocument = mDocument;
 }
 
 nsresult
@@ -134,20 +108,6 @@ ServoStyleSheet::DropRuleList()
     mRuleList = nullptr;
   }
 }
-
-size_t
-ServoStyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
-{
-  MOZ_CRASH("stylo: not implemented");
-}
-
-#ifdef DEBUG
-void
-ServoStyleSheet::List(FILE* aOut, int32_t aIndex) const
-{
-  MOZ_CRASH("stylo: not implemented");
-}
-#endif
 
 css::Rule*
 ServoStyleSheet::GetDOMOwnerRule() const

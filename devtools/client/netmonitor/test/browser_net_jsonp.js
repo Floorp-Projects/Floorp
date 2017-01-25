@@ -43,16 +43,15 @@ add_task(function* () {
       time: true
     });
 
-  wait = waitForDOM(document, "#response-tabpanel");
+  wait = waitForDOM(document, "#panel-3");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.getElementById("details-pane-toggle"));
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll("#details-pane tab")[3]);
+  document.querySelector("#tab-3 a").click();
   yield wait;
 
   testResponseTab("$_0123Fun", "\"Hello JSONP!\"");
 
-  wait = waitForDOM(document, "#response-tabpanel .tree-section");
+  wait = waitForDOM(document, "#panel-3 .tree-section");
   RequestsMenu.selectedIndex = 1;
   yield wait;
 
@@ -61,7 +60,7 @@ add_task(function* () {
   yield teardown(monitor);
 
   function testResponseTab(func, greeting) {
-    let tabpanel = document.querySelectorAll("#details-pane tabpanel")[3];
+    let tabpanel = document.querySelector("#panel-3");
 
     is(tabpanel.querySelector(".response-error-header") === null, true,
       "The response error header doesn't have the intended visibility.");

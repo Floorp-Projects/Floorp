@@ -13,10 +13,10 @@
 #include "nsCOMPtr.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <string>
 
 #include "mozilla/FileUtils.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 using namespace mozilla;
 
@@ -395,14 +395,17 @@ GetBootstrap(const char* aXPCOMFile)
     return nullptr;
   }
 
-  std::string file(aXPCOMFile);
-  size_t lastSlash = file.rfind(XPCOM_FILE_PATH_SEPARATOR[0]);
-  if (lastSlash == std::string::npos) {
+  char *lastSlash = strrchr(const_cast<char *>(aXPCOMFile), XPCOM_FILE_PATH_SEPARATOR[0]);
+  if (!lastSlash) {
     return nullptr;
   }
-  file.replace(lastSlash + 1, std::string::npos, XPCOM_DLL);
+  size_t base_len = size_t(lastSlash - aXPCOMFile) + 1;
 
-  if (NS_FAILED(XPCOMGlueLoad(file.c_str()))) {
+  UniqueFreePtr<char> file(reinterpret_cast<char*>(malloc(base_len + sizeof(XPCOM_DLL))));
+  memcpy(file.get(), aXPCOMFile, base_len);
+  memcpy(file.get() + base_len, XPCOM_DLL, sizeof(XPCOM_DLL));
+
+  if (NS_FAILED(XPCOMGlueLoad(file.get()))) {
     return nullptr;
   }
 

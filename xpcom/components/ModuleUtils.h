@@ -70,29 +70,4 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
   return inst->QueryInterface(aIID, aResult);                                 \
 }
 
-#ifndef MOZILLA_INTERNAL_API
-
-#include "nsIModule.h"
-#include "nsISupportsUtils.h"
-
-namespace mozilla {
-
-class GenericModule final : public nsIModule
-{
-  ~GenericModule() {}
-
-public:
-  explicit GenericModule(const mozilla::Module* aData) : mData(aData) {}
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIMODULE
-
-private:
-  const mozilla::Module* mData;
-};
-
-} // namespace mozilla
-
-#endif
-
 #endif // mozilla_GenericModule_h

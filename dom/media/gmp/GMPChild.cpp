@@ -220,7 +220,8 @@ GMPChild::SetMacSandboxInfo(MacSandboxPluginType aPluginType)
 
   MacSandboxInfo info;
   info.type = MacSandboxType_Plugin;
-  info.shouldLog = Preferences::GetBool("security.sandbox.logging.enabled", true);
+  info.shouldLog = Preferences::GetBool("security.sandbox.logging.enabled") ||
+                   PR_GetEnv("MOZ_SANDBOX_LOGGING");
   info.pluginInfo.type = aPluginType;
   info.pluginInfo.pluginPath.assign(pluginDirectoryPath.get());
   info.pluginInfo.pluginBinaryPath.assign(pluginFilePath.get());
@@ -515,15 +516,13 @@ GMPChild::RecvCloseActive()
   return IPC_OK();
 }
 
-PGMPContentChild*
-GMPChild::AllocPGMPContentChild(Transport* aTransport,
-                                ProcessId aOtherPid)
+mozilla::ipc::IPCResult
+GMPChild::RecvInitGMPContentChild(Endpoint<PGMPContentChild>&& aEndpoint)
 {
   GMPContentChild* child =
     mGMPContentChildren.AppendElement(new GMPContentChild(this))->get();
-  child->Open(aTransport, aOtherPid, XRE_GetIOMessageLoop(), ipc::ChildSide);
-
-  return child;
+  aEndpoint.Bind(child);
+  return IPC_OK();
 }
 
 void

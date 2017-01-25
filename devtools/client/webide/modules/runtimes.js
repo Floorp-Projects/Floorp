@@ -545,15 +545,14 @@ WiFiRuntime.prototype = {
       onOpenWindow(xulWindow) {
         let win = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindow);
-        win.addEventListener("load", function listener() {
-          win.removeEventListener("load", listener);
+        win.addEventListener("load", function () {
           if (win.document.documentElement.getAttribute("id") != WINDOW_ID) {
             return;
           }
           // Found the window
           promptWindow = win;
           Services.wm.removeListener(windowListener);
-        });
+        }, {once: true});
       },
       onCloseWindow() {},
       onWindowTitleChange() {}

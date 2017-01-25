@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://notifications.spec.whatwg.org/
+ * https://notifications.spec.whatwg.org/
  *
  * Copyright:
  * To the extent possible under law, the editors have waived all copyright and
@@ -95,11 +95,4 @@ enum NotificationDirection {
   "auto",
   "ltr",
   "rtl"
-};
-
-partial interface ServiceWorkerRegistration {
-  [Throws, Func="mozilla::dom::ServiceWorkerRegistration::NotificationAPIVisible"]
-  Promise<void> showNotification(DOMString title, optional NotificationOptions options);
-  [Throws, Func="mozilla::dom::ServiceWorkerRegistration::NotificationAPIVisible"]
-  Promise<sequence<Notification>> getNotifications(optional GetNotificationOptions filter);
 };

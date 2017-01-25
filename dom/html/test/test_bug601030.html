@@ -25,7 +25,6 @@ addLoadEvent(function() {
   var content = document.getElementById('content');
 
   f.addEventListener("load", function() {
-    f.removeEventListener("load", arguments.callee);
     SimpleTest.executeSoon(function() {
       isnot(document.activeElement, f,
             "autofocus should not work when another frame is inserted in the document");
@@ -34,15 +33,14 @@ addLoadEvent(function() {
       content.removeChild(document.getElementsByTagName('iframe')[0]);
       f = document.createElement('iframe');
       f.addEventListener("load", function() {
-        f.removeEventListener("load", arguments.callee);
         isnot(document.activeElement, f,
               "autofocus should not work in a frame if the top document is already loaded");
         SimpleTest.finish();
-      });
+      }, {once: true});
       f.src = "data:text/html,<input autofocus>";
       content.appendChild(f);
     });
-  });
+  }, {once: true});
 
   f.src = "data:text/html,<input autofocus>";
   content.appendChild(f);

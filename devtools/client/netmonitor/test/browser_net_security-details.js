@@ -22,14 +22,13 @@ add_task(function* () {
   });
   yield wait;
 
-  wait = waitForDOM(document, "#security-tabpanel");
+  wait = waitForDOM(document, "#panel-5");
   EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.getElementById("details-pane-toggle"));
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll("#details-pane tab")[5]);
+    document.querySelector("#details-pane-toggle"));
+  document.querySelector("#tab-5 a").click();
   yield wait;
 
-  let tabpanel = document.querySelector("#security-tabpanel");
+  let tabpanel = document.querySelector("#panel-5");
   let textboxes = tabpanel.querySelectorAll(".textbox-input");
 
   // Connection

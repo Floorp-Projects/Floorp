@@ -326,9 +326,12 @@ interface nsIXMLHttpRequest : nsISupports
 
 [uuid(840d0d00-e83e-4a29-b3c7-67e96e90a499)]
 interface nsIXHRSendable : nsISupports {
+  // contentTypeWithCharset can be set to the contentType or
+  // contentType+charset based on what the spec says.
+  // See: https://fetch.spec.whatwg.org/#concept-bodyinit-extract
   void getSendInfo(out nsIInputStream body,
                    out uint64_t contentLength,
-                   out ACString contentType,
+                   out ACString contentTypeWithCharset,
                    out ACString charset);
 };
 

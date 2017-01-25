@@ -9,12 +9,7 @@ const {
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { L10N } = require("../../l10n");
-const {
-  getSelectedRequestCookies,
-  getSelectedResponseCookies,
-} = require("../../selectors/index");
 
 // Component
 const PropertiesView = createFactory(require("./properties-view"));
@@ -36,20 +31,29 @@ const SECTION_NAMES = [
  */
 function CookiesPanel({
   request,
-  response,
 }) {
-  if (!response.length && !request.length) {
+  let {
+    requestCookies = { cookies: [] },
+    responseCookies = { cookies: [] },
+  } = request;
+
+  requestCookies = requestCookies.cookies || requestCookies;
+  responseCookies = responseCookies.cookies || responseCookies;
+
+  if (!requestCookies.length && !responseCookies.length) {
     return div({ className: "empty-notice" },
       COOKIES_EMPTY_TEXT
     );
   }
 
   let object = {};
-  if (response.length) {
-    object[RESPONSE_COOKIES] = getProperties(response);
+
+  if (responseCookies.length) {
+    object[RESPONSE_COOKIES] = getProperties(responseCookies);
   }
-  if (request.length) {
-    object[REQUEST_COOKIES] = getProperties(request);
+
+  if (requestCookies.length) {
+    object[REQUEST_COOKIES] = getProperties(requestCookies);
   }
 
   return (
@@ -66,8 +70,7 @@ function CookiesPanel({
 CookiesPanel.displayName = "CookiesPanel";
 
 CookiesPanel.propTypes = {
-  request: PropTypes.array.isRequired,
-  response: PropTypes.array.isRequired,
+  request: PropTypes.object.isRequired,
 };
 
 /**
@@ -93,9 +96,4 @@ function getProperties(arr) {
   }, {});
 }
 
-module.exports = connect(
-  state => ({
-    request: getSelectedRequestCookies(state),
-    response: getSelectedResponseCookies(state),
-  })
-)(CookiesPanel);
+module.exports = CookiesPanel;

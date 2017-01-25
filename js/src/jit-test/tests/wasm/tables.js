@@ -16,7 +16,7 @@ wasmFailValidateText(`(module (table 10 anyfunc) (func) (elem (f32.const 0) 0) $
 
 assertErrorMessage(() => wasmEvalText(`(module (table 10 anyfunc) (elem (i32.const 10) $f0) ${callee(0)})`), LinkError, /elem segment does not fit/);
 assertErrorMessage(() => wasmEvalText(`(module (table 10 anyfunc) (elem (i32.const 8) $f0 $f0 $f0) ${callee(0)})`), LinkError, /elem segment does not fit/);
-wasmEvalText(`(module (table 0 anyfunc) (func) (elem (i32.const 0x10001)))`);
+assertErrorMessage(() => wasmEvalText(`(module (table 0 anyfunc) (func) (elem (i32.const 0x10001)))`), LinkError, /elem segment does not fit/);
 
 assertErrorMessage(() => wasmEvalText(`(module (table 10 anyfunc) (import "globals" "a" (global i32)) (elem (get_global 0) $f0) ${callee(0)})`, {globals:{a:10}}), LinkError, /elem segment does not fit/);
 assertErrorMessage(() => wasmEvalText(`(module (table 10 anyfunc) (import "globals" "a" (global i32)) (elem (get_global 0) $f0 $f0 $f0) ${callee(0)})`, {globals:{a:8}}), LinkError, /elem segment does not fit/);

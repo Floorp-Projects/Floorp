@@ -48,8 +48,7 @@ function preparePendingTab(aCallback) {
 }
 
 function whenLoaded(aElement, aCallback) {
-  aElement.addEventListener("load", function onLoad() {
-    aElement.removeEventListener("load", onLoad, true);
+  aElement.addEventListener("load", function() {
     executeSoon(aCallback);
-  }, true);
+  }, {capture: true, once: true});
 }

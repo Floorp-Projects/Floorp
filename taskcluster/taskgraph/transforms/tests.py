@@ -35,6 +35,7 @@ from voluptuous import (
 import copy
 import logging
 import os.path
+import re
 
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 WORKER_TYPE = {
@@ -553,6 +554,19 @@ def set_retry_exit_status(config, tests):
 
 
 @transforms.add
+def remove_linux_pgo_try_talos(config, tests):
+    """linux64-pgo talos tests don't run on try."""
+    def predicate(test):
+        return not(
+            test['test-platform'] == 'linux64-pgo/opt'
+            and test['suite'] == 'talos'
+            and config.params['project'] == 'try'
+        )
+    for test in filter(predicate, tests):
+        yield test
+
+
+@transforms.add
 def make_task_description(config, tests):
     """Convert *test* descriptions to *task* descriptions (input to
     taskgraph.transforms.task)"""
@@ -624,7 +638,6 @@ def make_task_description(config, tests):
 
         # yield only the task description, discarding the test description
         yield taskdesc
-
 
 worker_setup_functions = {}
 
@@ -964,9 +977,15 @@ def buildbot_bridge_setup(config, test, taskdesc):
     taskdesc['worker-type'] = 'buildbot-bridge/buildbot-bridge'
 
     if test.get('suite', '') == 'talos':
-        buildername = '{} {} talos {}'.format(
+        # on linux64-<variant>/<build>, we add the variant to the buildername
+        m = re.match(r'\w+-([^/]+)/.*', test['test-platform'])
+        variant = ''
+        if m and m.group(1):
+            variant = m.group(1) + ' '
+        buildername = '{} {} {}talos {}'.format(
             BUILDER_NAME_PREFIX[platform],
             branch,
+            variant,
             test_name
         )
         if buildername.startswith('Ubuntu'):

@@ -626,22 +626,16 @@ pref("media.decoder.recycle.enabled", true);
 pref("media.android-media-codec.enabled", true);
 pref("media.android-media-codec.preferred", true);
 // Run decoder in seperate process.
-#ifdef NIGHTLY_BUILD
 pref("media.android-remote-codec.enabled", true);
-#else
-pref("media.android-remote-codec.enabled", false);
-#endif
 
 // Enable MSE
 pref("media.mediasource.enabled", true);
 
 pref("media.mediadrm-widevinecdm.visible", true);
 
-#ifdef NIGHTLY_BUILD
 // Enable EME(Encrypted media extensions)
 pref("media.eme.enabled", true);
 pref("media.eme.apiVisible", true);
-#endif
 
 // optimize images memory usage
 pref("image.downscale-during-decode.enabled", true);

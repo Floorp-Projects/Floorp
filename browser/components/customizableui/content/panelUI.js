@@ -152,10 +152,9 @@ const PanelUI = {
           anchor = aEvent.target;
         }
 
-        this.panel.addEventListener("popupshown", function onPopupShown() {
-          this.removeEventListener("popupshown", onPopupShown);
+        this.panel.addEventListener("popupshown", function() {
           resolve();
-        });
+        }, {once: true});
 
         let iconAnchor =
           document.getAnonymousElementByAttribute(anchor, "class",

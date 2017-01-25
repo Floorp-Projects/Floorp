@@ -68,6 +68,10 @@ public:
     return mTextureFactoryIdentifier;
   }
 
+  bool DeviceCanReset() const {
+    return GetCompositorBackendType() != LayersBackend::LAYERS_BASIC;
+  }
+
   int32_t GetSerial() { return mSerial; }
 
   /**

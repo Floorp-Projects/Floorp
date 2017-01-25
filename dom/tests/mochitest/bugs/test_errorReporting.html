@@ -15,8 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1070842
 
   function testErrorReportingHelper(f, rgxp, preventDefault) {
     return new Promise(function(resolve, reject) {
-      window.addEventListener('error', function l(e) {
-        window.removeEventListener('error', l);
+      window.addEventListener('error', function(e) {
         ok(rgxp.test(e.message), "Should get message matching " + rgxp + ". Got: " + e.message);
         var expectedMessages;
         if (preventDefault) {
@@ -27,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1070842
         }
         SimpleTest.monitorConsole(resolve, expectedMessages, /* forbidUnexpectedMsgs = */ true);
         setTimeout(SimpleTest.endMonitorConsole.bind(SimpleTest), 0);
-      });
+      }, {once: true});
 
       // Notify the test harness to avoid treating the next exception as a test failure.
       SimpleTest.expectUncaughtException();

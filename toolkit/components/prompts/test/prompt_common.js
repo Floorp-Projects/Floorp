@@ -21,10 +21,9 @@ SimpleTest.registerCleanupFunction(() => gChromeScript.destroy());
 function onloadPromiseFor(id) {
   var iframe = document.getElementById(id);
   return new Promise(resolve => {
-    iframe.addEventListener("load", function onload(e) {
-      iframe.removeEventListener("load", onload);
+    iframe.addEventListener("load", function(e) {
       resolve(true);
-    });
+    }, {once: true});
   });
 }
 

@@ -8,10 +8,9 @@ function test()
   waitForExplicitFinish();
 
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function browserLoad() {
-    gBrowser.selectedBrowser.removeEventListener("load", browserLoad, true);
+  gBrowser.selectedBrowser.addEventListener("load", function () {
     openScratchpad(runTests, {"state":{"text":""}});
-  }, true);
+  }, {capture: true, once: true});
 
   content.location = "data:text/html,<p>test that exceptions are output as " +
       "comments for 'display' and not sent to the console in Scratchpad";

@@ -17,13 +17,12 @@ add_task(function*() {
     observe(aSubject, aTopic, aData) {
       if (aTopic == "domwindowopened") {
         privateWindow = aSubject.QueryInterface(Components.interfaces.nsIDOMWindow);
-        privateWindow.addEventListener("load", function newWindowHandler() {
-          privateWindow.removeEventListener("load", newWindowHandler);
+        privateWindow.addEventListener("load", function() {
           is(privateWindow.location.href, "chrome://browser/content/browser.xul",
              "A new browser window was opened");
           ok(PrivateBrowsingUtils.isWindowPrivate(privateWindow), "Window is private");
           windowWasHandled = true;
-        });
+        }, {once: true});
       }
     }
   }

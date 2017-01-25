@@ -208,14 +208,8 @@ SpecialPowersObserverAPI.prototype = {
     input.close();
 
     var status;
-    try {
-      channel.QueryInterface(Ci.nsIHttpChannel);
+    if (channel instanceof Ci.nsIHttpChannel) {
       status = channel.responseStatus;
-    } catch(e) {
-      /* The channel is not a nsIHttpCHannel, but that's fine */
-      dump("-*- _readUrlAsString: Got an error while fetching " +
-           "chrome script '" + aUrl + "': (" + e.name + ") " + e.message + ". " +
-           "Ignoring.\n");
     }
 
     if (status == 404) {

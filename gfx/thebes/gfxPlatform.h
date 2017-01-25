@@ -675,10 +675,6 @@ public:
       return false;
     }
 
-    uint64_t GetDeviceCounter() const {
-      return mDeviceCounter;
-    }
-
     /**
      * Check the blocklist for a feature. Returns false if the feature is blocked
      * with an appropriate message and failure ID.
@@ -861,9 +857,6 @@ private:
 
     int32_t mScreenDepth;
     mozilla::gfx::IntSize mScreenSize;
-
-    // Generation number for devices that ClientLayerManagers might depend on.
-    uint64_t mDeviceCounter;
 
     // An instance of gfxSkipChars which is empty. It is used as the
     // basis for error-case iterators.

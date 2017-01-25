@@ -1,3 +1,67 @@
+Changes in version 2.0.22-stable (5 Jan 2015)
+
+SECURITY FIXES (evbuffers)
+ o Avoid integer overflow bugs in evbuffer_add() and related functions.  See CVE-2014-6272 advisory for more information. (20d6d4458bee5d88bda1511c225c25b2d3198d6c)
+
+BUGFIXES (evhttp)
+ o fix #73 and fix http_connection_fail_test to catch it (crash fix) (b618204 Greg Hazel)
+ o Avoid racy bufferevent activation (5eb1788 Nate Rosenblum)
+
+BUGFIXES (compilation and portability)
+ o Fix compilation with WIN32_HAVE_CONDITION_VARIABLES enabled (7e45739)
+ o Fix missing AC_PROG_SED on older Autoconfs (9ab2b3f Tay Ray Chuan)
+ o Backport libevent to vanilla Autoconf 2.59 (as used in RHEL5) (74d4c44 Kevin Bowling)
+ o Use AC_CONFIG_HEADERS in place of AM_CONFIG_HEADERS for autmake 1.13 compat (817ea36)
+ o Rename configure.in to configure.ac to appease newer autoconfs (0c79787)
+ o Avoid using top_srcdir in TESTS: new automakes do not like this (a55514e)
+ o Use windows vsnprintf fixup logic on all windows environments (e826f19)
+ o Fix a compiler warning when checking for arc4random_buf linker breakage. (5cb3865)
+ o Fix another arc4random_buf-related warning (e64a2b0)
+ o Add -Qunused-arguments for clang on macos (b56611d Trond Norbye)
+
+BUGFIXES (resource leaks/lock errors on error)
+ o Avoid leaking fds on evconnlistener with no callback set (69db261)
+ o Avoid double-close on getsockname error in evutil_ersatz_socketpair (0a822a6)
+ o Fix a locking error in bufferevent_socket_get_dns_error. (0a5eb2e)
+ o libevent/win32_dealloc() : fix sizeof(pointer) vs sizeof(*pointer) (b8f5980 Frank Denis)
+
+BUGFIXES: (other stability)
+ o bufferevent_pair: don't call downcast(NULL) (f2428a2)
+ o Consistently check for failure from evbuffer_pullup() (60f8f72)
+ o Fix race caused by event_active (3c7d6fc vjpai)
+
+BUGFIXES (miscellaneous)
+ o Avoid redundant invocations of init_extension_functions for IOCP (3b77d62)
+ o Typo fixes from Linus Nordberg (cec62cb, 8cd695b)
+ o Add a few files created by "make verify" to .gitignore. (1a8295a Pierre Phaneuf)
+ o regress_buffer: fix 'memcmp' compare size (79800df Maks Naumov)
+ o Fix bufferevent setwatermark suspend_read (b34e4ac ufo2243)
+ o Fix evbuffer_peek() with len==-1 and start_at non-NULL. (fb7e76a)
+
+BUFGIXES (evdns)
+ o Checking request nameserver for NULL, before using it. (5c710c0 Belobrov Andrey)
+ o Fix SEGFAULT after evdns_base_resume if no nameservers installed. (f8d7df8 Azat Khuzhin)
+ o Fix a crash in evdns related to shutting down evdns (9f39c88,e8fe749)
+
+BUGFIXES (epoll)
+ o Check does arch have the epoll_create and __NR_epoll_wait syscalls. (dfe1e52 Marcin Juszkiewicz)
+
+BUGFIXES (evutil_secure_random)
+ o Avoid other RNG initialization FS reads when urandom file is specified (9695e9c, bb52471)
+ o When we seed from /proc/sys/kernel/random/uuid, count it as success (e35b540)
+ o Document that arc4random is not a great cryptographic PRNG. (6e49696)
+ o Add evutil_secure_rng_set_urandom_device_file (2bbb5d7)
+ o Really remove RNG seeds from the stack (f5ced88)
+
+
+DOCUMENTATION FIXES
+ o Fix a mistake in evbuffer_remove() arguments in example http server code (c322c20 Gyepi Sam)
+ o Fix a typo in a comment in buffer.h. Spotted by Alt_F4 (773b0a5)
+ o Clarify event_base_loop exit conditions (031a803)
+ o Use FindClose for handle from FindFirstFile in http-server.c (6466e88)
+ o Fix a typo in a doxygen comment. Reported by 亦得. (be1aeff)
+
+
 Changes in version 2.0.21-stable (18 Nov 2012)
 BUGFIXES:
  o ssl: Don't discard SSL read event when timeout and read come close together (576b29f)

@@ -10,12 +10,10 @@ function test() {
 
   let searchPopup = document.getElementById("PopupSearchAutoComplete");
   searchPopup.addEventListener("popupshown", function (aEvent) {
-    searchPopup.removeEventListener("popupshown", arguments.callee);
     setTimeout(function () {
       is(DOMWindowUtils.IMEStatus, DOMWindowUtils.IME_STATUS_ENABLED,
          "IME should be available even when the popup of searchbar is open");
       searchPopup.addEventListener("popuphidden", function (aEvent) {
-        searchPopup.removeEventListener("popuphidden", arguments.callee);
         setTimeout(function () {
           is(DOMWindowUtils.IMEStatus, DOMWindowUtils.IME_STATUS_DISABLED,
              "IME should not be available when menubar is active");
@@ -25,11 +23,11 @@ function test() {
              "IME should be available after focus is back to the searchbar");
           finish();
         }, 0);
-      });
+      }, {once: true});
       // Activate the menubar, then, the popup should be closed
       EventUtils.synthesizeKey("VK_ALT", {});
     }, 0);
-  });
+  }, {once: true});
   // Open popup of the searchbar
   EventUtils.synthesizeKey("VK_F4", {});
 }

@@ -88,13 +88,12 @@ gTests.push({
     var self = this;
 
     this.window.addEventListener("unload", function(event) {
-      self.window.removeEventListener("unload", arguments.callee, true);
       tagsField.popup.removeEventListener("popuphidden", popupListener, true);
       ok(self._cleanShutdown, "Dialog window should not be closed by pressing Enter on the autocomplete popup");
       executeSoon(function() {
         self.finish();
       });
-    }, true);
+    }, {capture: true, once: true});
 
     var popupListener = {
       handleEvent(aEvent) {
@@ -189,13 +188,12 @@ gTests.push({
     var self = this;
 
     this.window.addEventListener("unload", function(event) {
-      self.window.removeEventListener("unload", arguments.callee, true);
       tagsField.popup.removeEventListener("popuphidden", popupListener, true);
       ok(self._cleanShutdown, "Dialog window should not be closed by pressing Escape on the autocomplete popup");
       executeSoon(function() {
         self.finish();
       });
-    }, true);
+    }, {capture: true, once: true});
 
     var popupListener = {
       handleEvent(aEvent) {
@@ -284,12 +282,11 @@ gTests.push({
     var self = this;
 
     this.window.addEventListener("unload", function(event) {
-      self.window.removeEventListener("unload", arguments.callee, true);
       ok(self._cleanShutdown, "Dialog window should not be closed by pressing ESC in folder name textbox");
       executeSoon(function() {
         self.finish();
       });
-    }, true);
+    }, {capture: true, once: true});
 
     folderTree.addEventListener("DOMAttrModified", function onDOMAttrModified(event) {
       if (event.attrName != "place")
@@ -370,10 +367,9 @@ function runNextTest() {
 function execute_test_in_sidebar() {
     var sidebar = document.getElementById("sidebar");
     sidebar.addEventListener("load", function() {
-      sidebar.removeEventListener("load", arguments.callee, true);
       // Need to executeSoon since the tree is initialized on sidebar load.
       executeSoon(open_properties_dialog);
-    }, true);
+    }, {capture: true, once: true});
     SidebarUI.show(gCurrentTest.sidebar);
 }
 

@@ -628,8 +628,7 @@ this.DownloadsCommon = {
       if (topic == "domwindowopened" && subj instanceof Ci.nsIDOMWindow) {
         // Make sure to listen for "DOMContentLoaded" because it is fired
         // before the "load" event.
-        subj.addEventListener("DOMContentLoaded", function onLoad() {
-          subj.removeEventListener("DOMContentLoaded", onLoad);
+        subj.addEventListener("DOMContentLoaded", function() {
           if (subj.document.documentURI ==
               "chrome://global/content/commonDialog.xul") {
             Services.ww.unregisterNotification(onOpen);
@@ -639,7 +638,7 @@ this.DownloadsCommon = {
               dialog.classList.add("alert-dialog");
             }
           }
-        });
+        }, {once: true});
       }
     });
 

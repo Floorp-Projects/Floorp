@@ -262,9 +262,9 @@ module.exports = connect(
      */
     onSecurityIconClick: (e, item) => {
       const { securityState } = item;
+      // Choose the security tab.
       if (securityState && securityState !== "insecure") {
-        // Choose the security tab.
-        NetMonitorView.NetworkDetails.widget.selectedIndex = 5;
+        dispatch(Actions.selectDetailsPanelTab(5));
       }
     },
   })

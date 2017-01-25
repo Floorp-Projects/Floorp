@@ -79,14 +79,10 @@ Rule::IsCCLeaf() const
 bool
 Rule::IsKnownLive() const
 {
-  if (IsBlack()) {
+  if (HasKnownLiveWrapper()) {
     return true;
   }
 
-#if 1
-  return false;
-#else
-  // Disabled pending bug 1332704 getting resolved for now.
   StyleSheet* sheet = GetStyleSheet();
   if (!sheet) {
     return false;
@@ -98,7 +94,6 @@ Rule::IsKnownLive() const
 
   return nsCCUncollectableMarker::InGeneration(
     sheet->GetAssociatedDocument()->GetMarkedCCGeneration());
-#endif
 }
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(Rule)
@@ -276,6 +271,10 @@ ImportRule::ImportRule(const ImportRule& aCopy)
       aCopy.mChildSheet->Clone(nullptr, this, nullptr, nullptr);
     SetSheet(sheet);
     // SetSheet sets mMedia appropriately
+  } else {
+    // We better just copy mMedia from aCopy, since we have nowhere else to get
+    // one.
+    mMedia = aCopy.mMedia;
   }
 }
 

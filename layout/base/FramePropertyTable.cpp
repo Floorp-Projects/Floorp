@@ -6,6 +6,7 @@
 #include "FramePropertyTable.h"
 
 #include "mozilla/MemoryReporting.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 
@@ -13,6 +14,7 @@ void
 FramePropertyTable::SetInternal(
   const nsIFrame* aFrame, UntypedDescriptor aProperty, void* aValue)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ASSERTION(aFrame, "Null frame?");
   NS_ASSERTION(aProperty, "Null property?");
 
@@ -69,11 +71,19 @@ FramePropertyTable::GetInternal(
     *aFoundResult = false;
   }
 
-  if (mLastFrame != aFrame) {
+  // We can end up here during parallel style traversal, in which case the main
+  // thread is blocked. Reading from the cache is fine on any thread, but we
+  // only want to write to it in the main-thread case.
+  //
+  // We order things such that we only need to check TLS in the case of a cache
+  // miss.
+  bool cacheHit = mLastFrame == aFrame;
+  Entry* entry = cacheHit ? mLastEntry : mEntries.GetEntry(aFrame);
+  if (!cacheHit && NS_IsMainThread()) {
     mLastFrame = aFrame;
-    mLastEntry = mEntries.GetEntry(mLastFrame);
+    mLastEntry = entry;
   }
-  Entry* entry = mLastEntry;
+
   if (!entry)
     return nullptr;
 
@@ -105,6 +115,7 @@ void*
 FramePropertyTable::RemoveInternal(
   const nsIFrame* aFrame, UntypedDescriptor aProperty, bool* aFoundResult)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ASSERTION(aFrame, "Null frame?");
   NS_ASSERTION(aProperty, "Null property?");
 
@@ -169,6 +180,7 @@ void
 FramePropertyTable::DeleteInternal(
   const nsIFrame* aFrame, UntypedDescriptor aProperty)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ASSERTION(aFrame, "Null frame?");
   NS_ASSERTION(aProperty, "Null property?");
 

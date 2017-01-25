@@ -156,9 +156,16 @@ nsUrlClassifierPrefixSet::GetPrefixesNative(FallibleTArray<uint32_t>& outArray)
   for (uint32_t i = 0; i < prefixIdxLength; i++) {
     uint32_t prefix = mIndexPrefixes[i];
 
+    if (prefixCnt >= mTotalPrefixes) {
+      return NS_ERROR_FAILURE;
+    }
     outArray[prefixCnt++] = prefix;
+
     for (uint32_t j = 0; j < mIndexDeltas[i].Length(); j++) {
       prefix += mIndexDeltas[i][j];
+      if (prefixCnt >= mTotalPrefixes) {
+        return NS_ERROR_FAILURE;
+      }
       outArray[prefixCnt++] = prefix;
     }
   }

@@ -22,22 +22,46 @@ let Tabbar = createClass({
   displayName: "Tabbar",
 
   propTypes: {
+    children: PropTypes.object,
     onSelect: PropTypes.func,
     showAllTabsMenu: PropTypes.bool,
+    tabActive: PropTypes.number,
     toolbox: PropTypes.object,
   },
 
   getDefaultProps: function () {
     return {
       showAllTabsMenu: false,
+      tabActive: 0,
     };
   },
 
   getInitialState: function () {
+    let { children } = this.props;
     return {
-      tabs: [],
+      tabs: children ? this.createTabs(children) : [],
       activeTab: 0
     };
+  },
+
+  componentWillReceiveProps: function (nextProps) {
+    let { children } = nextProps;
+
+    if (children && children !== this.props.children) {
+      this.setState({ tabs: this.createTabs(children) });
+    }
+  },
+
+  createTabs: function (children) {
+    return children
+      .filter((panel) => panel)
+      .map((panel, index) =>
+        Object.assign({}, children[index], {
+          id: index,
+          panel,
+          title: panel.props.title,
+        })
+      );
   },
 
   // Public API
@@ -145,11 +169,11 @@ let Tabbar = createClass({
     let target = event.target;
 
     // Generate list of menu items from the list of tabs.
-    this.state.tabs.forEach(tab => {
+    this.state.tabs.forEach((tab) => {
       menu.append(new MenuItem({
         label: tab.title,
         type: "checkbox",
-        checked: this.getCurrentTabId() == tab.id,
+        checked: this.getCurrentTabId() === tab.id,
         click: () => this.select(tab.id),
       }));
     });
@@ -183,17 +207,16 @@ let Tabbar = createClass({
   },
 
   render: function () {
-    let tabs = this.state.tabs.map(tab => {
-      return this.renderTab(tab);
-    });
+    let tabs = this.state.tabs.map((tab) => this.renderTab(tab));
 
     return (
       div({className: "devtools-sidebar-tabs"},
         Tabs({
           onAllTabsMenuClick: this.onAllTabsMenuClick,
           showAllTabsMenu: this.props.showAllTabsMenu,
-          tabActive: this.state.activeTab,
-          onAfterChange: this.onTabChanged},
+          tabActive: this.props.tabActive || this.state.activeTab,
+          onAfterChange: this.onTabChanged,
+        },
           tabs
         )
       )

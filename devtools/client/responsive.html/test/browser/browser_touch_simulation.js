@@ -171,18 +171,18 @@ function testTouchButton(ui) {
   let { document } = ui.toolWindow;
   let touchButton = document.querySelector("#global-touch-simulation-button");
 
-  ok(!touchButton.classList.contains("active"),
-    "Touch simulation is not active by default.");
-
-  touchButton.click();
-
   ok(touchButton.classList.contains("active"),
-    "Touch simulation is started on click.");
+    "Touch simulation is active at end of test.");
 
   touchButton.click();
 
   ok(!touchButton.classList.contains("active"),
     "Touch simulation is stopped on click.");
+
+  touchButton.click();
+
+  ok(touchButton.classList.contains("active"),
+    "Touch simulation is started on click.");
 }
 
 function* waitBootstrap(ui) {
@@ -211,10 +211,9 @@ function* injectEventUtils(ui) {
     EventUtils.KeyboardEvent = content.KeyboardEvent;
 
     EventUtils.synthesizeClick = element => new Promise(resolve => {
-      element.addEventListener("click", function onClick() {
-        element.removeEventListener("click", onClick);
+      element.addEventListener("click", function () {
         resolve();
-      });
+      }, {once: true});
 
       EventUtils.synthesizeMouseAtCenter(element,
         { type: "mousedown", isSynthesized: false }, content);
@@ -226,15 +225,3 @@ function* injectEventUtils(ui) {
       "chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
   });
 }
-
-const enableTouchSimulation = ui => new Promise(
-  Task.async(function* (resolve) {
-    let browser = ui.getViewportBrowser();
-
-    browser.addEventListener("mozbrowserloadend", function onLoad() {
-      browser.removeEventListener("mozbrowserloadend", onLoad);
-      resolve();
-    });
-
-    yield ui.updateTouchSimulation(true);
-  }));

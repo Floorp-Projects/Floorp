@@ -12,7 +12,8 @@
 using namespace mozilla;
 
 nsHtml5SVGLoadDispatcher::nsHtml5SVGLoadDispatcher(nsIContent* aElement)
-  : mElement(aElement)
+  : Runnable("nsHtml5SVGLoadDispatcher")
+  , mElement(aElement)
   , mDocument(mElement->OwnerDoc())
 {
   mDocument->BlockOnload();

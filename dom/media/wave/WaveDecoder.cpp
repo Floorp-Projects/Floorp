@@ -37,9 +37,9 @@ WaveDecoder::IsSupportedType(const MediaContainerType& aContainerType)
       || aContainerType.Type() == MEDIAMIMETYPE("audio/wav")
       || aContainerType.Type() == MEDIAMIMETYPE("audio/x-pn-wav")) {
     return (aContainerType.ExtendedType().Codecs().IsEmpty()
-            || aContainerType.ExtendedType().Codecs().AsString().EqualsASCII("1")
-            || aContainerType.ExtendedType().Codecs().AsString().EqualsASCII("6")
-            || aContainerType.ExtendedType().Codecs().AsString().EqualsASCII("7"));
+            || aContainerType.ExtendedType().Codecs() == "1"
+            || aContainerType.ExtendedType().Codecs() == "6"
+            || aContainerType.ExtendedType().Codecs() == "7");
   }
 
   return false;

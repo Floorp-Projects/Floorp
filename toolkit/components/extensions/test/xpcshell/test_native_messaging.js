@@ -256,7 +256,7 @@ while True:
     yield OS.File.writeAtomic(scriptPath, SCRIPT);
 
     let batPath = OS.Path.join(userDir.path, "wontdie.bat");
-    let batBody = `@ECHO OFF\n${PYTHON} -u ${scriptPath} %*\n`;
+    let batBody = `@ECHO OFF\n${PYTHON} -u "${scriptPath}" %*\n`;
     yield OS.File.writeAtomic(batPath, batBody);
     yield OS.File.setPermissions(batPath, {unixMode: 0o755});
 

@@ -11,12 +11,12 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { $, NetMonitorView } = monitor.panelWin;
+  let { document, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
-  let { NETWORK_EVENT, TAB_UPDATED } = monitor.panelWin.EVENTS;
+  let { NETWORK_EVENT } = monitor.panelWin.EVENTS;
   RequestsMenu.lazyUpdate = false;
 
-  let toggleButton = $("#details-pane-toggle");
+  let toggleButton = document.querySelector("#details-pane-toggle");
 
   is(toggleButton.hasAttribute("disabled"), true,
     "The pane toggle button should be disabled when the frontend is opened.");
@@ -42,9 +42,9 @@ add_task(function* () {
   is(RequestsMenu.selectedItem, null,
     "There should still be no selected item in the requests menu.");
 
+  wait = waitForDOM(document, ".panel-container");
   EventUtils.sendMouseEvent({ type: "mousedown" }, toggleButton);
-
-  yield monitor.panelWin.once(TAB_UPDATED);
+  yield wait;
 
   is(toggleButton.hasAttribute("disabled"), false,
     "The pane toggle button should still be enabled after being pressed.");
