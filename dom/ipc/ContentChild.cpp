@@ -1069,13 +1069,6 @@ ContentChild::DeallocPCycleCollectWithLogsChild(PCycleCollectWithLogsChild* /* a
   return true;
 }
 
-mozilla::plugins::PPluginModuleParent*
-ContentChild::AllocPPluginModuleParent(mozilla::ipc::Transport* aTransport,
-                                       base::ProcessId aOtherProcess)
-{
-  return plugins::PluginModuleContentParent::Initialize(aTransport, aOtherProcess);
-}
-
 PContentBridgeChild*
 ContentChild::AllocPContentBridgeChild(mozilla::ipc::Transport* aTransport,
                                        base::ProcessId aOtherProcess)
@@ -2565,10 +2558,13 @@ ContentChild::RecvLoadPluginResult(const uint32_t& aPluginId,
                                    const bool& aResult)
 {
   nsresult rv;
-  bool finalResult = aResult && SendConnectPluginBridge(aPluginId, &rv) &&
+  Endpoint<PPluginModuleParent> endpoint;
+  bool finalResult = aResult &&
+                     SendConnectPluginBridge(aPluginId, &rv, &endpoint) &&
                      NS_SUCCEEDED(rv);
   plugins::PluginModuleContentParent::OnLoadPluginResult(aPluginId,
-                                                         finalResult);
+                                                         finalResult,
+                                                         Move(endpoint));
   return IPC_OK();
 }
 

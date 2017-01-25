@@ -36,8 +36,6 @@ struct PluginSettings
 
 intr protocol PPluginModule
 {
-  bridges PContent, PPluginModule;
-
   manages PPluginInstance;
   manages PCrashReporter;
 
@@ -108,6 +106,8 @@ child:
   async SettingChanged(PluginSettings settings);
 
   async NPP_SetValue_NPNVaudioDeviceChangeDetails(NPAudioDeviceChangeDetailsIPC changeDetails);
+
+  async InitPluginModuleChild(Endpoint<PPluginModuleChild> endpoint);
 
 parent:
   async NP_InitializeResult(NPError aError);

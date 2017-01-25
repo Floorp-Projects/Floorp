@@ -97,17 +97,11 @@ static GetKeyStatePtr sGetKeyStatePtrStub = nullptr;
 #endif
 
 /* static */
-PluginModuleChild*
-PluginModuleChild::CreateForContentProcess(mozilla::ipc::Transport* aTransport,
-                                           base::ProcessId aOtherPid)
+bool
+PluginModuleChild::CreateForContentProcess(Endpoint<PPluginModuleChild>&& aEndpoint)
 {
     auto* child = new PluginModuleChild(false);
-
-    if (!child->InitForContent(aOtherPid, XRE_GetIOMessageLoop(), aTransport)) {
-        return nullptr;
-    }
-
-    return child;
+    return child->InitForContent(Move(aEndpoint));
 }
 
 PluginModuleChild::PluginModuleChild(bool aIsChrome)
@@ -185,13 +179,11 @@ PluginModuleChild::CommonInit()
 }
 
 bool
-PluginModuleChild::InitForContent(base::ProcessId aParentPid,
-                                  MessageLoop* aIOLoop,
-                                  IPC::Channel* aChannel)
+PluginModuleChild::InitForContent(Endpoint<PPluginModuleChild>&& aEndpoint)
 {
     CommonInit();
 
-    if (!Open(aChannel, aParentPid, aIOLoop)) {
+    if (!aEndpoint.Bind(this)) {
         return false;
     }
 
@@ -718,11 +710,13 @@ PluginModuleChild::RecvSetAudioSessionData(const nsID& aId,
 #endif
 }
 
-PPluginModuleChild*
-PluginModuleChild::AllocPPluginModuleChild(mozilla::ipc::Transport* aTransport,
-                                           base::ProcessId aOtherPid)
+mozilla::ipc::IPCResult
+PluginModuleChild::RecvInitPluginModuleChild(Endpoint<PPluginModuleChild>&& aEndpoint)
 {
-    return PluginModuleChild::CreateForContentProcess(aTransport, aOtherPid);
+    if (!CreateForContentProcess(Move(aEndpoint))) {
+        return IPC_FAIL(this, "CreateForContentProcess failed");
+    }
+    return IPC_OK();
 }
 
 PCrashReporterChild*
