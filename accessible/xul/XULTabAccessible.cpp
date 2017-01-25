@@ -24,7 +24,7 @@ using namespace mozilla::a11y;
 
 XULTabAccessible::
   XULTabAccessible(nsIContent* aContent, DocAccessible* aDoc) :
-  AccessibleWrap(aContent, aDoc)
+  HyperTextAccessibleWrap(aContent, aDoc)
 {
 }
 
