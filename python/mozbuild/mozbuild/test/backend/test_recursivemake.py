@@ -749,6 +749,35 @@ class TestRecursiveMakeBackend(BackendTester):
 
         self.assertEqual(lines, expected)
 
+    def test_host_rust_library(self):
+        """Test that a Rust library is written to backend.mk correctly."""
+        env = self._consume('host-rust-library', RecursiveMakeBackend)
+
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        expected = [
+            'HOST_RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libhostrusttool.a',
+            'CARGO_FILE := $(srcdir)/Cargo.toml',
+        ]
+
+        self.assertEqual(lines, expected)
+
+    def test_host_rust_library_with_features(self):
+        """Test that a host Rust library with features is written to backend.mk correctly."""
+        env = self._consume('host-rust-library-features', RecursiveMakeBackend)
+
+        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
+        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+
+        expected = [
+            'HOST_RUST_LIBRARY_FILE := x86_64-unknown-linux-gnu/release/libhostrusttool.a',
+            'CARGO_FILE := $(srcdir)/Cargo.toml',
+            'HOST_RUST_LIBRARY_FEATURES := musthave cantlivewithout',
+        ]
+
+        self.assertEqual(lines, expected)
+
     def test_rust_library_with_features(self):
         """Test that a Rust library with features is written to backend.mk correctly."""
         env = self._consume('rust-library-features', RecursiveMakeBackend)

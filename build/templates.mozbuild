@@ -129,6 +129,16 @@ def HostLibrary(name):
     '''Template for build tools libraries.'''
     HOST_LIBRARY_NAME = name
 
+@template
+def HostRustLibrary(name, features=None):
+    '''Template for host Rust libraries.'''
+    HostLibrary(name)
+
+    IS_RUST_LIBRARY = True
+
+    if features:
+        HOST_RUST_LIBRARY_FEATURES = features
+
 
 include('gecko_templates.mozbuild')
 include('test_templates.mozbuild')

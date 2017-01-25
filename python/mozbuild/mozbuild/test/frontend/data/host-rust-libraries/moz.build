@@ -1,0 +1,19 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+@template
+def HostLibrary(name):
+    '''Template for libraries.'''
+    HOST_LIBRARY_NAME = name
+
+@template
+def HostRustLibrary(name, features=None):
+    '''Template for Rust libraries.'''
+    HostLibrary(name)
+
+    IS_RUST_LIBRARY = True
+
+    if features:
+        RUST_LIBRARY_FEATURES = features
+
+HostRustLibrary('host-lib')
