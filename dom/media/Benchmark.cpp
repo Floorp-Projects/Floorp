@@ -15,10 +15,6 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/ContentChild.h"
 
-#ifndef MOZ_WIDGET_ANDROID
-#include "WebMSample.h"
-#endif
-
 namespace mozilla {
 
 // Update this version number to force re-running the benchmark. Such as when
@@ -44,9 +40,11 @@ VP9Benchmark::IsVP9DecodeFast()
   if (!sHasRunTest && (!hasPref || hadRecentUpdate != sBenchmarkVersionID)) {
     sHasRunTest = true;
 
+#include "WebMSample.h"
+
     RefPtr<WebMDemuxer> demuxer =
       new WebMDemuxer(
-        new BufferMediaResource(sWebMSample, sizeof(sWebMSample), nullptr,
+        new BufferMediaResource(webMSample, sizeof(webMSample), nullptr,
                                 MediaContainerType(MEDIAMIMETYPE("video/webm"))));
     RefPtr<Benchmark> estimiser =
       new Benchmark(demuxer,
