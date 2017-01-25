@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import sys
 
 __all__ = ['read_ini', 'combine_fields']
 
@@ -45,6 +46,23 @@ def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
         # ignore comment lines
         if any(stripped.startswith(c) for c in comments):
             continue
+
+        # strip inline comments (borrowed from configparser)
+        comment_start = sys.maxsize
+        inline_prefixes = {p: -1 for p in comments}
+        while comment_start == sys.maxsize and inline_prefixes:
+            next_prefixes = {}
+            for prefix, index in inline_prefixes.items():
+                index = line.find(prefix, index+1)
+                if index == -1:
+                    continue
+                next_prefixes[prefix] = index
+                if index == 0 or (index > 0 and line[index-1].isspace()):
+                    comment_start = min(comment_start, index)
+            inline_prefixes = next_prefixes
+
+        if comment_start != sys.maxsize:
+            stripped = stripped[:comment_start].rstrip()
 
         # check for a new section
         if len(stripped) > 2 and stripped[0] == '[' and stripped[-1] == ']':
@@ -138,6 +156,5 @@ def combine_fields(global_vars, local_vars):
             continue
         global_value = global_vars[field_name]
         pattern = field_patterns[field_name]
-        final_mapping[field_name] = pattern % (
-            global_value.split('#')[0], value.split('#')[0])
+        final_mapping[field_name] = pattern % (global_value, value)
     return final_mapping
