@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PGMP;
-include protocol PGMPService;
 include protocol PGMPVideoDecoder;
 include protocol PGMPVideoEncoder;
 include protocol PGMPDecryptor;
@@ -14,8 +12,6 @@ namespace gmp {
 
 intr protocol PGMPContent
 {
-  bridges PGMPService, PGMP;
-
   manages PGMPDecryptor;
   manages PGMPVideoDecoder;
   manages PGMPVideoEncoder;

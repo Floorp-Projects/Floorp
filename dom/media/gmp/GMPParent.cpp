@@ -892,19 +892,32 @@ GMPParent::ResolveGetContentParentPromises()
   }
 }
 
-PGMPContentParent*
-GMPParent::AllocPGMPContentParent(Transport* aTransport, ProcessId aOtherPid)
+bool
+GMPParent::OpenPGMPContent()
 {
   MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
   MOZ_ASSERT(!mGMPContentParent);
 
+  Endpoint<PGMPContentParent> parent;
+  Endpoint<PGMPContentChild> child;
+  if (NS_FAILED(PGMPContent::CreateEndpoints(base::GetCurrentProcId(),
+                                             OtherPid(), &parent, &child))) {
+    return false;
+  }
+
   mGMPContentParent = new GMPContentParent(this);
-  mGMPContentParent->Open(aTransport, aOtherPid, XRE_GetIOMessageLoop(),
-                          ipc::ParentSide);
+
+  if (!parent.Bind(mGMPContentParent)) {
+    return false;
+  }
+
+  if (!SendInitGMPContentChild(Move(child))) {
+    return false;
+  }
 
   ResolveGetContentParentPromises();
 
-  return mGMPContentParent;
+  return true;
 }
 
 void
@@ -935,7 +948,7 @@ GMPParent::GetGMPContentParent(UniquePtr<MozPromiseHolder<GetGMPContentParentPro
     // set then we should just store them, so that they get called when we set
     // mGMPContentParent as a result of the PGMPContent::Open call.
     if (mGetContentParentPromises.Length() == 1) {
-      if (!EnsureProcessLoaded() || !PGMPContent::Open(this)) {
+      if (!EnsureProcessLoaded() || !OpenPGMPContent()) {
         RejectGetContentParentPromises();
         return;
       }
@@ -964,14 +977,10 @@ GMPParent::EnsureProcessLoaded(base::ProcessId* aID)
   return true;
 }
 
-bool
-GMPParent::Bridge(GMPServiceParent* aGMPServiceParent)
+void
+GMPParent::IncrementGMPContentChildCount()
 {
-  if (NS_FAILED(PGMPContent::Bridge(aGMPServiceParent, this))) {
-    return false;
-  }
   ++mGMPContentChildCount;
-  return true;
 }
 
 nsString

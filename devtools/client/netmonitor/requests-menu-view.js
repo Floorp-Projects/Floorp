@@ -404,10 +404,7 @@ RequestsMenuView.prototype = {
    * Updates the sidebar status when something about the selection changes
    */
   onSelectionUpdate(newSelected, oldSelected) {
-    if (newSelected && oldSelected && newSelected.id === oldSelected.id) {
-      // The same item is still selected, its data only got updated
-      NetMonitorView.NetworkDetails.populate(newSelected);
-    } else if (newSelected) {
+    if (newSelected) {
       // Another item just got selected
       NetMonitorView.Sidebar.populate(newSelected);
       NetMonitorView.Sidebar.toggle(true);

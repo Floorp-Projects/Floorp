@@ -9527,14 +9527,14 @@
     "description": "Reports results from the graphics sanity test to track which drivers are having problems (0=TEST_PASSED, 1=TEST_FAILED_RENDER, 2=TEST_FAILED_VIDEO, 3=TEST_CRASHED)"
   },
   "READER_MODE_PARSE_RESULT" : {
-    "expires_in_version": "54",
+    "expires_in_version": "58",
     "alert_emails": ["firefox-dev@mozilla.org", "gijs@mozilla.com"],
     "kind": "enumerated",
     "n_values": 5,
     "description": "The result of trying to parse a document to show in reader view (0=Success, 1=Error too many elements, 2=Error in worker, 3=Error no article)"
   },
   "READER_MODE_DOWNLOAD_RESULT" : {
-    "expires_in_version": "54",
+    "expires_in_version": "58",
     "alert_emails": ["firefox-dev@mozilla.org", "gijs@mozilla.com"],
     "kind": "enumerated",
     "n_values": 5,

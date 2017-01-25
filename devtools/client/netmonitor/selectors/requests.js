@@ -97,32 +97,6 @@ const getSelectedRequest = createSelector(
   ({ selectedId, requests }) => selectedId ? requests.get(selectedId) : null
 );
 
-const getSelectedRequestCookies = createSelector(
-  getSelectedRequest,
-  selectedRequest => {
-    // request store cookies in requestCookies or requestCookies.cookies
-    if (selectedRequest && selectedRequest.requestCookies) {
-      return selectedRequest.requestCookies.cookies ?
-        selectedRequest.requestCookies.cookies : selectedRequest.requestCookies;
-    }
-
-    return [];
-  }
-);
-
-const getSelectedResponseCookies = createSelector(
-  getSelectedRequest,
-  selectedRequest => {
-    // response store cookies in responseCookies or responseCookies.cookies
-    if (selectedRequest && selectedRequest.responseCookies) {
-      return selectedRequest.responseCookies.cookies ?
-        selectedRequest.responseCookies.cookies : selectedRequest.responseCookies;
-    }
-
-    return [];
-  }
-);
-
 function getRequestById(state, id) {
   return state.requests.requests.get(id);
 }
@@ -137,7 +111,5 @@ module.exports = {
   getDisplayedRequestsSummary,
   getRequestById,
   getSelectedRequest,
-  getSelectedRequestCookies,
-  getSelectedResponseCookies,
   getSortedRequests,
 };

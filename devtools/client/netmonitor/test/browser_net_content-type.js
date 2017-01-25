@@ -90,11 +90,10 @@ add_task(function* () {
       time: true
     });
 
-  wait = waitForDOM(document, "#response-tabpanel");
+  wait = waitForDOM(document, "#panel-3");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.getElementById("details-pane-toggle"));
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll("#details-pane tab")[3]);
+  document.querySelector("#tab-3 a").click();
   yield wait;
 
   RequestsMenu.selectedIndex = -1;
@@ -123,7 +122,7 @@ add_task(function* () {
   yield teardown(monitor);
 
   function* testResponseTab(type) {
-    let tabpanel = document.querySelectorAll("#details-pane tabpanel")[3];
+    let tabpanel = document.querySelector("#panel-3");
 
     function checkVisibility(box) {
       is(tabpanel.querySelector(".response-error-header") === null,
@@ -233,10 +232,9 @@ add_task(function* () {
   }
 
   function* selectIndexAndWaitForEditor(index) {
-    let tabpanel = document.querySelectorAll("#details-pane tabpanel")[3];
-    let editor = tabpanel.querySelector(".editor-mount iframe");
+    let editor = document.querySelector("#panel-3 .editor-mount iframe");
     if (!editor) {
-      let waitDOM = waitForDOM(tabpanel, ".editor-mount iframe");
+      let waitDOM = waitForDOM(document, ".editor-mount iframe");
       RequestsMenu.selectedIndex = index;
       [editor] = yield waitDOM;
       yield once(editor, "DOMContentLoaded");
@@ -248,14 +246,14 @@ add_task(function* () {
   }
 
   function* selectIndexAndWaitForJSONView(index) {
-    let tabpanel = document.querySelectorAll("#details-pane tabpanel")[3];
+    let tabpanel = document.querySelector("#panel-3");
     let waitDOM = waitForDOM(tabpanel, ".treeTable");
     RequestsMenu.selectedIndex = index;
     yield waitDOM;
   }
 
   function* selectIndexAndWaitForImageView(index) {
-    let tabpanel = document.querySelectorAll("#details-pane tabpanel")[3];
+    let tabpanel = document.querySelector("#panel-3");
     let waitDOM = waitForDOM(tabpanel, ".response-image");
     RequestsMenu.selectedIndex = index;
     let [imageNode] = yield waitDOM;

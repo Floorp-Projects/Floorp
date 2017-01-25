@@ -449,14 +449,17 @@ ResponsiveUI.prototype = {
     }
 
     switch (event.data.type) {
+      case "change-device":
+        this.onChangeDevice(event);
+        break;
       case "change-network-throtting":
         this.onChangeNetworkThrottling(event);
         break;
-      case "change-viewport-device":
-        this.onChangeViewportDevice(event);
+      case "change-pixel-ratio":
+        this.onChangePixelRatio(event);
         break;
-      case "change-viewport-pixel-ratio":
-        this.updateDPPX(event.data.pixelRatio);
+      case "change-touch-simulation":
+        this.onChangeTouchSimulation(event);
         break;
       case "content-resize":
         this.onContentResize(event);
@@ -464,11 +467,20 @@ ResponsiveUI.prototype = {
       case "exit":
         this.onExit();
         break;
-      case "update-touch-simulation":
-        this.onUpdateTouchSimulation(event);
+      case "remove-device":
+        this.onRemoveDevice(event);
         break;
     }
   },
+
+  onChangeDevice: Task.async(function* (event) {
+    let { userAgent, pixelRatio, touch } = event.data.device;
+    yield this.updateUserAgent(userAgent);
+    yield this.updateDPPX(pixelRatio);
+    yield this.updateTouchSimulation(touch);
+    // Used by tests
+    this.emit("device-changed");
+  }),
 
   onChangeNetworkThrottling: Task.async(function* (event) {
     let { enabled, profile } = event.data;
@@ -477,14 +489,15 @@ ResponsiveUI.prototype = {
     this.emit("network-throttling-changed");
   }),
 
-  onChangeViewportDevice: Task.async(function* (event) {
-    let { userAgent, pixelRatio, touch } = event.data.device;
-    yield this.updateUserAgent(userAgent);
-    yield this.updateDPPX(pixelRatio);
-    yield this.updateTouchSimulation(touch);
-    // Used by tests
-    this.emit("viewport-device-changed");
-  }),
+  onChangePixelRatio(event) {
+    let { pixelRatio } = event.data;
+    this.updateDPPX(pixelRatio);
+  },
+
+  onChangeTouchSimulation(event) {
+    let { enabled } = event.data;
+    this.updateTouchSimulation(enabled);
+  },
 
   onContentResize(event) {
     let { width, height } = event.data;
@@ -499,10 +512,13 @@ ResponsiveUI.prototype = {
     ResponsiveUIManager.closeIfNeeded(browserWindow, tab);
   },
 
-  onUpdateTouchSimulation(event) {
-    let { enabled } = event.data;
-    this.updateTouchSimulation(enabled);
-  },
+  onRemoveDevice: Task.async(function* (event) {
+    yield this.updateUserAgent();
+    yield this.updateDPPX();
+    yield this.updateTouchSimulation();
+    // Used by tests
+    this.emit("device-removed");
+  }),
 
   updateDPPX: Task.async(function* (dppx) {
     if (!dppx) {

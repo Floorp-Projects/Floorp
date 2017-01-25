@@ -97,17 +97,24 @@ define(function (require, exports, module) {
       }
     },
 
-    componentWillReceiveProps: function (newProps) {
+    componentWillReceiveProps: function (nextProps) {
+      let { children, tabActive } = nextProps;
+
       // Check type of 'tabActive' props to see if it's valid
       // (it's 0-based index).
-      if (typeof newProps.tabActive == "number") {
-        let created = [...this.state.created];
-        created[newProps.tabActive] = true;
+      if (typeof tabActive === "number") {
+        let panels = children.filter((panel) => panel);
 
-        this.setState(Object.assign({}, this.state, {
-          tabActive: newProps.tabActive,
-          created: created,
-        }));
+        // Reset to index 0 if index larger than number of panels
+        tabActive = tabActive < panels.length ? tabActive : 0;
+
+        let created = [...this.state.created];
+        created[tabActive] = true;
+
+        this.setState({
+          created,
+          tabActive,
+        });
       }
     },
 
@@ -164,12 +171,9 @@ define(function (require, exports, module) {
 
     onClickTab: function (index, event) {
       this.setActive(index);
-      event.preventDefault();
-    },
 
-    onAllTabsMenuClick: function (event) {
-      if (this.props.onAllTabsMenuClick) {
-        this.props.onAllTabsMenuClick(event);
+      if (event) {
+        event.preventDefault();
       }
     },
 
@@ -267,7 +271,7 @@ define(function (require, exports, module) {
       let allTabsMenu = this.state.overflow ? (
         DOM.div({
           className: "all-tabs-menu",
-          onClick: this.props.onAllTabsMenuClick
+          onClick: this.props.onAllTabsMenuClick,
         })
       ) : null;
 

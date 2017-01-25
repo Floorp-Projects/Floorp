@@ -1675,6 +1675,7 @@ GMPServiceParent::RecvLaunchGMP(const nsCString& aNodeId,
                                 uint32_t* aOutPluginId,
                                 ProcessId* aOutProcessId,
                                 nsCString* aOutDisplayName,
+                                Endpoint<PGMPContentParent>* aOutEndpoint,
                                 nsresult* aOutRv)
 {
   if (mService->IsShuttingDown()) {
@@ -1698,10 +1699,27 @@ GMPServiceParent::RecvLaunchGMP(const nsCString& aNodeId,
 
   *aOutDisplayName = gmp->GetDisplayName();
 
-  if (!(aAlreadyBridgedTo.Contains(*aOutProcessId) || gmp->Bridge(this))) {
+  if (aAlreadyBridgedTo.Contains(*aOutProcessId)) {
+    *aOutRv = NS_OK;
+    return IPC_OK();
+  }
+
+  Endpoint<PGMPContentParent> parent;
+  Endpoint<PGMPContentChild> child;
+  if (NS_FAILED(PGMPContent::CreateEndpoints(OtherPid(), *aOutProcessId,
+                                             &parent, &child))) {
     *aOutRv = NS_ERROR_FAILURE;
     return IPC_OK();
   }
+
+  *aOutEndpoint = Move(parent);
+
+  if (!gmp->SendInitGMPContentChild(Move(child))) {
+    *aOutRv = NS_ERROR_FAILURE;
+    return IPC_OK();
+  }
+
+  gmp->IncrementGMPContentChildCount();
 
   *aOutRv = NS_OK;
   return IPC_OK();
@@ -1776,58 +1794,58 @@ class OpenPGMPServiceParent : public mozilla::Runnable
 {
 public:
   OpenPGMPServiceParent(GMPServiceParent* aGMPServiceParent,
-                        mozilla::ipc::Transport* aTransport,
-                        base::ProcessId aOtherPid,
+                        ipc::Endpoint<PGMPServiceParent>&& aEndpoint,
                         bool* aResult)
     : mGMPServiceParent(aGMPServiceParent),
-      mTransport(aTransport),
-      mOtherPid(aOtherPid),
+      mEndpoint(Move(aEndpoint)),
       mResult(aResult)
   {
   }
 
   NS_IMETHOD Run() override
   {
-    *mResult = mGMPServiceParent->Open(mTransport, mOtherPid,
-                                       XRE_GetIOMessageLoop(), ipc::ParentSide);
+    *mResult = mEndpoint.Bind(mGMPServiceParent);
     return NS_OK;
   }
 
 private:
   GMPServiceParent* mGMPServiceParent;
-  mozilla::ipc::Transport* mTransport;
-  base::ProcessId mOtherPid;
+  ipc::Endpoint<PGMPServiceParent> mEndpoint;
   bool* mResult;
 };
 
 /* static */
-PGMPServiceParent*
-GMPServiceParent::Create(Transport* aTransport, ProcessId aOtherPid)
+bool
+GMPServiceParent::Create(Endpoint<PGMPServiceParent>&& aGMPService)
 {
   RefPtr<GeckoMediaPluginServiceParent> gmp =
     GeckoMediaPluginServiceParent::GetSingleton();
 
   if (gmp->mShuttingDown) {
     // Shutdown is initiated. There is no point creating a new actor.
-    return nullptr;
+    return false;
   }
 
   nsCOMPtr<nsIThread> gmpThread;
   nsresult rv = gmp->GetThread(getter_AddRefs(gmpThread));
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  NS_ENSURE_SUCCESS(rv, false);
 
   nsAutoPtr<GMPServiceParent> serviceParent(new GMPServiceParent(gmp));
-
   bool ok;
   rv = gmpThread->Dispatch(new OpenPGMPServiceParent(serviceParent,
-                                                     aTransport,
-                                                     aOtherPid, &ok),
+                                                     Move(aGMPService),
+                                                     &ok),
                            NS_DISPATCH_SYNC);
+
   if (NS_FAILED(rv) || !ok) {
-    return nullptr;
+    return false;
   }
 
-  return serviceParent.forget();
+  // Now that the service parent is set up, it will be destroyed by
+  // ActorDestroy.
+  Unused << serviceParent.forget();
+
+  return true;
 }
 
 } // namespace gmp

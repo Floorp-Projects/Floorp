@@ -39,7 +39,10 @@ createEnum([
   // The pixel ratio of the viewport has changed. This may be triggered by the user
   // when changing the device displayed in the viewport, or when a pixel ratio is
   // selected from the DPR dropdown.
-  "CHANGE_VIEWPORT_PIXEL_RATIO",
+  "CHANGE_PIXEL_RATIO",
+
+  // Change the touch simulation state.
+  "CHANGE_TOUCH_SIMULATION",
 
   // Indicates that the device list is being loaded
   "LOAD_DEVICE_LIST_START",
@@ -49,6 +52,9 @@ createEnum([
 
   // Indicates that the device list has been loaded successfully
   "LOAD_DEVICE_LIST_END",
+
+  // Remove the viewport's device assocation.
+  "REMOVE_DEVICE",
 
   // Resize the viewport.
   "RESIZE_VIEWPORT",
@@ -67,8 +73,5 @@ createEnum([
 
   // Update the device modal open state.
   "UPDATE_DEVICE_MODAL_OPEN",
-
-  // Update the touch simulation enabled state.
-  "UPDATE_TOUCH_SIMULATION_ENABLED",
 
 ], module.exports);

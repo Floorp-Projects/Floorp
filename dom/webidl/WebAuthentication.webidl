@@ -9,7 +9,7 @@
 
 /***** Interfaces to Data *****/
 
-[SecureContext]
+[SecureContext, Pref="security.webauth.webauthn"]
 interface ScopedCredentialInfo {
     readonly attribute ScopedCredential    credential;
     readonly attribute WebAuthnAttestation attestation;
@@ -37,7 +37,7 @@ dictionary ScopedCredentialOptions {
     WebAuthnExtensions                   extensions;
 };
 
-[SecureContext]
+[SecureContext, Pref="security.webauth.webauthn"]
 interface WebAuthnAssertion {
     readonly attribute ScopedCredential credential;
     readonly attribute ArrayBuffer      clientData;
@@ -55,7 +55,7 @@ dictionary AssertionOptions {
 dictionary WebAuthnExtensions {
 };
 
-[SecureContext]
+[SecureContext, Pref="security.webauth.webauthn"]
 interface WebAuthnAttestation {
     readonly    attribute USVString     format;
     readonly    attribute ArrayBuffer   clientData;
@@ -76,7 +76,7 @@ enum ScopedCredentialType {
     "ScopedCred"
 };
 
-[SecureContext]
+[SecureContext, Pref="security.webauth.webauthn"]
 interface ScopedCredential {
     readonly attribute ScopedCredentialType type;
     readonly attribute ArrayBuffer          id;
@@ -97,7 +97,7 @@ enum WebAuthnTransport {
 
 /***** The Main API *****/
 
-[SecureContext]
+[SecureContext, Pref="security.webauth.webauthn"]
 interface WebAuthentication {
     Promise<ScopedCredentialInfo> makeCredential (
         Account                                 accountInformation,

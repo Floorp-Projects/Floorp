@@ -271,8 +271,11 @@ this.AutoCompletePopup = {
   },
 
   /**
-   * Despite its name, handleEnter is what is called when the
-   * user clicks on one of the items in the popup.
+   * Despite its name, this handleEnter is only called when the user clicks on
+   * one of the items in the popup since the popup is rendered in the parent process.
+   * The real controller's handleEnter is called directly in the content process
+   * for other methods of completing a selection (e.g. using the tab or enter
+   * keys) since the field with focus is in that process.
    */
   handleEnter(aIsPopupSelection) {
     if (this.openedPopup) {

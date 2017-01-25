@@ -366,9 +366,21 @@ nsPluginArray::EnsurePlugins()
           nsCString permString;
           nsresult rv = pluginHost->GetPermissionStringForTag(pluginTag, 0, permString);
           if (rv == NS_OK) {
-            nsIPrincipal* principal = mWindow->GetExtantDoc()->NodePrincipal();
-            nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
-            permMgr->TestPermissionFromPrincipal(principal, permString.get(), &permission);
+            nsCOMPtr<nsIDocument> currentDoc = mWindow->GetExtantDoc();
+
+            // The top-level content document gets the final say on whether or not
+            // a plugin is going to be hidden or not, regardless of the origin
+            // that a subframe is hosted at. This is to avoid spamming the user
+            // with the hidden plugin notification bar when third-party iframes
+            // attempt to access navigator.plugins after the user has already
+            // expressed that the top-level document has this permission.
+            nsCOMPtr<nsIDocument> topDoc = currentDoc->GetTopLevelContentDocument();
+
+            if (topDoc) {
+              nsIPrincipal* principal = topDoc->NodePrincipal();
+              nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+              permMgr->TestPermissionFromPrincipal(principal, permString.get(), &permission);
+            }
           }
         }
       }
