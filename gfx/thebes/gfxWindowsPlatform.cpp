@@ -1446,8 +1446,6 @@ gfxWindowsPlatform::RecordContentDeviceFailure(TelemetryDeviceCode aDevice)
 void
 gfxWindowsPlatform::InitializeDevices()
 {
-  MOZ_ASSERT(!InSafeMode());
-
   if (XRE_IsParentProcess()) {
     // If we're the UI process, and the GPU process is enabled, then we don't
     // initialize any DirectX devices. We do leave them enabled in gfxConfig
