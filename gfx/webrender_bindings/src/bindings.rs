@@ -7,7 +7,7 @@ use std::os::raw::{c_void, c_char};
 use gleam::gl;
 use webrender_traits::{BorderSide, BorderStyle, BorderRadius};
 use webrender_traits::{PipelineId, ClipRegion};
-use webrender_traits::{Epoch, ColorF, GlyphInstance};
+use webrender_traits::{Epoch, ColorF, GlyphInstance, ImageDescriptor};
 use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind, MixBlendMode};
 use webrender_traits::{ExternalImageId, RenderApi, FontKey};
 use webrender_traits::{DeviceUintSize, ExternalEvent};
@@ -685,20 +685,20 @@ pub extern fn wr_api_add_image(api: &mut RenderApi, width: u32, height: u32, str
         _ => Some(stride),
     };
 
-    api.add_image(width, height, stride_option, format, ImageData::new(bytes))
+    api.add_image(ImageDescriptor{width: width, height: height, stride: stride_option, format: format, is_opaque: false}, ImageData::new(bytes))
 }
 
 #[no_mangle]
 pub extern fn wr_api_add_external_image_texture(api: &mut RenderApi, width: u32, height: u32, format: ImageFormat, external_image_id: u64) -> ImageKey {
     assert!( unsafe { is_in_compositor_thread() });
-    api.add_image(width, height, None, format, ImageData::External(ExternalImageId(external_image_id)))
+    api.add_image(ImageDescriptor{width:width, height:height, stride:None, format: format, is_opaque: false}, ImageData::External(ExternalImageId(external_image_id)))
 }
 
 #[no_mangle]
 pub extern fn wr_api_update_image(api: &mut RenderApi, key: ImageKey, width: u32, height: u32, format: ImageFormat, bytes: * const u8, size: usize) {
     assert!( unsafe { is_in_compositor_thread() });
     let bytes = unsafe { slice::from_raw_parts(bytes, size).to_owned() };
-    api.update_image(key, width, height, format, bytes);
+    api.update_image(key, ImageDescriptor{width:width, height:height, stride:None, format:format, is_opaque: false}, bytes);
 }
 #[no_mangle]
 pub extern fn wr_api_delete_image(api: &mut RenderApi, key: ImageKey) {

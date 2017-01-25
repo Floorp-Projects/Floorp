@@ -18,6 +18,7 @@ use time;
 use util;
 use webrender_traits::{ImageFormat, DevicePixel, DeviceIntPoint};
 use webrender_traits::{DeviceUintRect, DeviceUintSize, DeviceUintPoint};
+use webrender_traits::ImageDescriptor;
 
 /// The number of bytes we're allowed to use for a texture.
 const MAX_BYTES_PER_TEXTURE: u32 = 1024 * 1024 * 256;  // 256MB
@@ -740,23 +741,20 @@ impl TextureCache {
 
     pub fn update(&mut self,
                   image_id: TextureCacheItemId,
-                  width: u32,
-                  height: u32,
-                  stride: Option<u32>,
-                  _format: ImageFormat,
+                  descriptor: ImageDescriptor,
                   bytes: Arc<Vec<u8>>) {
         let existing_item = self.items.get(image_id);
 
         // TODO(gw): Handle updates to size/format!
-        debug_assert!(existing_item.requested_rect.size.width == width);
-        debug_assert!(existing_item.requested_rect.size.height == height);
+        debug_assert!(existing_item.requested_rect.size.width == descriptor.width);
+        debug_assert!(existing_item.requested_rect.size.height == descriptor.height);
 
         let op = TextureUpdateOp::Update(existing_item.requested_rect.origin.x,
                                          existing_item.requested_rect.origin.y,
-                                         width,
-                                         height,
+                                         descriptor.width,
+                                         descriptor.height,
                                          bytes,
-                                         stride);
+                                         descriptor.stride);
 
         let update_op = TextureUpdate {
             id: existing_item.texture_id,
@@ -768,12 +766,14 @@ impl TextureCache {
 
     pub fn insert(&mut self,
                   image_id: TextureCacheItemId,
-                  width: u32,
-                  height: u32,
-                  stride: Option<u32>,
-                  format: ImageFormat,
+                  descriptor: ImageDescriptor,
                   filter: TextureFilter,
                   bytes: Arc<Vec<u8>>) {
+        let width = descriptor.width;
+        let height = descriptor.height;
+        let format = descriptor.format;
+        let stride = descriptor.stride;
+
         let result = self.allocate(image_id,
                                    width,
                                    height,
@@ -782,12 +782,7 @@ impl TextureCache {
 
         let op = match result.kind {
             AllocationKind::TexturePage => {
-                let bpp = match format {
-                    ImageFormat::A8 => 1,
-                    ImageFormat::RGB8 => 3,
-                    ImageFormat::RGBA8 => 4,
-                    ImageFormat::Invalid | ImageFormat::RGBAF32 => unreachable!(),
-                };
+                let bpp = format.bytes_per_pixel().unwrap();
 
                 let mut top_row_bytes = Vec::new();
                 let mut bottom_row_bytes = Vec::new();

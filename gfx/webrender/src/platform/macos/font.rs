@@ -15,7 +15,7 @@ use core_text::font_descriptor::kCTFontDefaultOrientation;
 use core_text;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
-use webrender_traits::{FontKey, FontRenderMode, GlyphDimensions};
+use webrender_traits::{ColorU, FontKey, FontRenderMode, GlyphDimensions};
 
 pub type NativeFontHandle = CGFont;
 
@@ -178,6 +178,7 @@ impl FontContext {
     pub fn rasterize_glyph(&mut self,
                            font_key: FontKey,
                            size: Au,
+                           color: ColorU,
                            character: u32,
                            render_mode: FontRenderMode) -> Option<RasterizedGlyph> {
         match self.get_ct_font(font_key, size) {

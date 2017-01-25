@@ -30,6 +30,9 @@ threadpool = "1.3.2"
 webrender_traits = {path = "../webrender_traits", default-features = false}
 bitflags = "0.7"
 
+[dev-dependencies]
+angle = {git = "https://github.com/servo/angle", branch = "servo"}
+
 [target.'cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))'.dependencies]
 freetype = { version = "0.2", default-features = false }
 

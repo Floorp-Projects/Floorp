@@ -925,6 +925,27 @@ pub fn is_texture(texture: GLenum) -> GLboolean {
 }
 
 #[inline]
+pub fn is_framebuffer(framebuffer: GLenum) -> GLboolean {
+    unsafe {
+        ffi::IsFramebuffer(framebuffer)
+    }
+}
+
+#[inline]
+pub fn is_renderbuffer(renderbuffer: GLenum) -> GLboolean {
+    unsafe {
+        ffi::IsRenderbuffer(renderbuffer)
+    }
+}
+
+#[inline]
+pub fn check_frame_buffer_status(target: GLenum) -> GLenum {
+    unsafe {
+        ffi::CheckFramebufferStatus(target)
+    }
+}
+
+#[inline]
 pub fn enable_vertex_attrib_array(index: GLuint) {
     unsafe {
         ffi::EnableVertexAttribArray(index);
