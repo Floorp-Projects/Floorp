@@ -27,8 +27,8 @@ static const uint32_t MAX_SUBPROCESS_EXIT_PROFILES = 5;
 
 NS_IMPL_ISUPPORTS(ProfileGatherer, nsIObserver)
 
-ProfileGatherer::ProfileGatherer(GeckoSampler* aTicker)
-  : mTicker(aTicker)
+ProfileGatherer::ProfileGatherer(GeckoSampler* aSampler)
+  : mSampler(aSampler)
   , mSinceTime(0)
   , mPendingProfiles(0)
   , mGathering(false)
@@ -145,13 +145,13 @@ ProfileGatherer::Finish()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!mTicker) {
+  if (!mSampler) {
     // We somehow got called after we were cancelled! This shouldn't
     // be possible, but doing a belt-and-suspenders check to be sure.
     return;
   }
 
-  UniquePtr<char[]> buf = mTicker->ToJSON(mSinceTime);
+  UniquePtr<char[]> buf = mSampler->ToJSON(mSinceTime);
 
   if (mFile) {
     nsCOMPtr<nsIFileOutputStream> of =
@@ -225,7 +225,7 @@ ProfileGatherer::Cancel()
   mFile = nullptr;
 
   // Clear out the GeckoSampler reference, since it's being destroyed.
-  mTicker = nullptr;
+  mSampler = nullptr;
 }
 
 void
