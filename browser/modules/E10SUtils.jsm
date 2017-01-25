@@ -102,9 +102,10 @@ this.E10SUtils = {
         return DEFAULT_REMOTE_TYPE;
       }
 
-      if (flags & Ci.nsIAboutModule.URI_CAN_LOAD_IN_CHILD &&
-          aPreferredRemoteType != NOT_REMOTE) {
-        return DEFAULT_REMOTE_TYPE;
+      // If the about page can load in parent or child, it should be safe to
+      // load in any remote type.
+      if (flags & Ci.nsIAboutModule.URI_CAN_LOAD_IN_CHILD) {
+        return aPreferredRemoteType;
       }
 
       return NOT_REMOTE;
