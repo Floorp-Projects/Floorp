@@ -126,7 +126,7 @@ class SamplerThread : public Thread {
       sampler_->DeleteExpiredMarkers();
 
       if (!sampler_->IsPaused()) {
-        ::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
+        mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
         const std::vector<ThreadInfo*>& threads =
           sampler_->GetRegisteredThreads();
         bool isFirstProfiledThread = true;
