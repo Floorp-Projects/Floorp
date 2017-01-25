@@ -168,10 +168,11 @@ public:
   bool HasKnownLiveWrapper() const;
 
   /**
-   * Returns true if the object has a black wrapper,
-   * and all the GC things it is keeping alive are black too.
+   * Returns true if the object has a known-live wrapper (from the CC point of
+   * view) and all the GC things it is keeping alive are already known-live from
+   * CC's point of view.
    */
-  bool IsBlackAndDoesNotNeedTracing(nsISupports* aThis);
+  bool HasKnownLiveWrapperAndDoesNotNeedTracing(nsISupports* aThis);
 
   bool HasNothingToTrace(nsISupports* aThis);
 
