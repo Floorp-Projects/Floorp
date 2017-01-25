@@ -288,7 +288,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo,
       layer->SetOpacity(common.opacity());
       layer->SetClipRect(common.useClipRect() ? Some(common.clipRect()) : Nothing());
       layer->SetScrolledClip(common.scrolledClip());
-      layer->SetBaseTransform(common.transform().value());
+      layer->SetBaseTransform(common.transform());
       layer->SetTransformIsPerspective(common.transformIsPerspective());
       layer->SetPostScale(common.postXScale(), common.postYScale());
       layer->SetIsFixedPosition(common.isFixedPosition());

@@ -235,7 +235,7 @@ struct CommonLayerAttributes {
   IntRect layerBounds;
   LayerIntRegion visibleRegion;
   EventRegions eventRegions;
-  TransformMatrix transform;
+  Matrix4x4 transform;
   bool transformIsPerspective;
   float postXScale;
   float postYScale;
