@@ -155,7 +155,6 @@ lazilyLoadedBrowserScripts.forEach(function (aScript) {
 var lazilyLoadedObserverScripts = [
   ["MemoryObserver", ["memory-pressure", "Memory:Dump"], "chrome://browser/content/MemoryObserver.js"],
   ["ConsoleAPI", ["console-api-log-event"], "chrome://browser/content/ConsoleAPI.js"],
-  ["FindHelper", ["FindInPage:Opened", "FindInPage:Closed"], "chrome://browser/content/FindHelper.js"],
   ["PermissionsHelper", ["Permissions:Check", "Permissions:Get", "Permissions:Clear"], "chrome://browser/content/PermissionsHelper.js"],
   ["FeedHandler", ["Feeds:Subscribe"], "chrome://browser/content/FeedHandler.js"],
   ["Feedback", ["Feedback:Show"], "chrome://browser/content/Feedback.js"],
@@ -254,6 +253,9 @@ lazilyLoadedObserverScripts.forEach(function (aScript) {
   ["ActionBarHandler", WindowEventDispatcher,
    ["TextSelection:Get", "TextSelection:Action", "TextSelection:End"],
    "chrome://browser/content/ActionBarHandler.js"],
+  ["FindHelper", GlobalEventDispatcher,
+   ["FindInPage:Opened", "FindInPage:Closed"],
+   "chrome://browser/content/FindHelper.js"],
 ].forEach(module => {
   let [name, dispatcher, events, script] = module;
   XPCOMUtils.defineLazyGetter(window, name, function() {
