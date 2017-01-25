@@ -154,7 +154,7 @@ public class HomeBanner extends LinearLayout
      * Sends a message to gecko to request a new banner message. UI is updated in handleMessage.
      */
     public void update() {
-        GeckoAppShell.notifyObservers("HomeBanner:Get", null);
+        EventDispatcher.getInstance().dispatch("HomeBanner:Get", null);
     }
 
     @Override // BundleEventListener

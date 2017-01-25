@@ -10,9 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
@@ -85,24 +83,14 @@ public class PanelInfoManager implements BundleEventListener {
             sCallbacks.put(requestId, callback);
         }
 
-        final JSONObject message = new JSONObject();
-        try {
-            message.put("requestId", requestId);
+        final GeckoBundle message = new GeckoBundle(2);
+        message.putInt("requestId", requestId);
 
-            if (ids != null && ids.size() > 0) {
-                JSONArray idsArray = new JSONArray();
-                for (String id : ids) {
-                    idsArray.put(id);
-                }
-
-                message.put("ids", idsArray);
-            }
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "Failed to build event to request panels by id", e);
-            return;
+        if (ids != null && ids.size() > 0) {
+            message.putStringArray("ids", ids.toArray(new String[ids.size()]));
         }
 
-        GeckoAppShell.notifyObservers("HomePanels:Get", message.toString());
+        EventDispatcher.getInstance().dispatch("HomePanels:Get", message);
     }
 
     /**

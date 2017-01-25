@@ -5,10 +5,11 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.home.HomeConfig.AuthConfig;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -44,7 +45,9 @@ class PanelAuthLayout extends LinearLayout {
         buttonView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                GeckoAppShell.notifyObservers("HomePanels:Authenticate", panelId);
+                final GeckoBundle data = new GeckoBundle(1);
+                data.putString("id", panelId);
+                EventDispatcher.getInstance().dispatch("HomePanels:Authenticate", data);
             }
         });
 
