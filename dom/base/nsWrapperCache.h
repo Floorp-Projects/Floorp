@@ -174,6 +174,11 @@ public:
 
   bool HasNothingToTrace(nsISupports* aThis);
 
+  /**
+   * Mark our wrapper, if any, as live as far as the CC is concerned.
+   */
+  void MarkWrapperLive();
+
   // Only meant to be called by code that preserves a wrapper.
   void SetPreservingWrapper(bool aPreserve)
   {
