@@ -823,48 +823,6 @@ IsCacheableSetPropAddSlot(JSContext* cx, JSObject* obj, Shape* oldShape,
 }
 
 static bool
-IsCacheableSetPropCall(JSContext* cx, JSObject* obj, JSObject* holder, Shape* shape,
-                       bool* isScripted, bool* isTemporarilyUnoptimizable)
-{
-    MOZ_ASSERT(isScripted);
-
-    if (!shape || !IsCacheableProtoChain(obj, holder))
-        return false;
-
-    if (shape->hasSlot() || shape->hasDefaultSetter())
-        return false;
-
-    if (!shape->hasSetterValue())
-        return false;
-
-    if (!shape->setterValue().isObject() || !shape->setterObject()->is<JSFunction>())
-        return false;
-
-    JSFunction* func = &shape->setterObject()->as<JSFunction>();
-
-    if (IsWindow(obj)) {
-        if (!func->isNative())
-            return false;
-
-        if (!func->jitInfo() || func->jitInfo()->needsOuterizedThisObject())
-            return false;
-    }
-
-    if (func->isNative()) {
-        *isScripted = false;
-        return true;
-    }
-
-    if (!func->hasJITCode()) {
-        *isTemporarilyUnoptimizable = true;
-        return false;
-    }
-
-    *isScripted = true;
-    return true;
-}
-
-static bool
 IsOptimizableElementPropertyName(JSContext* cx, HandleValue key, MutableHandleId idp)
 {
     if (!key.isString())
@@ -2662,136 +2620,6 @@ TryAttachSetValuePropStub(JSContext* cx, HandleScript script, jsbytecode* pc, IC
     return true;
 }
 
-// Try to update existing SetProp setter call stubs for the given holder in
-// place with a new shape and setter.
-static bool
-UpdateExistingSetPropCallStubs(ICSetProp_Fallback* fallbackStub,
-                               ICStub::Kind kind,
-                               NativeObject* holder,
-                               JSObject* receiver,
-                               JSFunction* setter)
-{
-    MOZ_ASSERT(kind == ICStub::SetProp_CallScripted ||
-               kind == ICStub::SetProp_CallNative);
-    MOZ_ASSERT(holder);
-    MOZ_ASSERT(receiver);
-
-    bool isOwnSetter = (holder == receiver);
-    bool foundMatchingStub = false;
-    ReceiverGuard receiverGuard(receiver);
-    for (ICStubConstIterator iter = fallbackStub->beginChainConst(); !iter.atEnd(); iter++) {
-        if (iter->kind() == kind) {
-            ICSetPropCallSetter* setPropStub = static_cast<ICSetPropCallSetter*>(*iter);
-            if (setPropStub->holder() == holder && setPropStub->isOwnSetter() == isOwnSetter) {
-                // If this is an own setter, update the receiver guard as well,
-                // since that's the shape we'll be guarding on. Furthermore,
-                // isOwnSetter() relies on holderShape_ and receiverGuard_ being
-                // the same shape.
-                if (isOwnSetter)
-                    setPropStub->receiverGuard().update(receiverGuard);
-
-                MOZ_ASSERT(setPropStub->holderShape() != holder->lastProperty() ||
-                           !setPropStub->receiverGuard().matches(receiverGuard),
-                           "Why didn't we end up using this stub?");
-
-                // We want to update the holder shape to match the new one no
-                // matter what, even if the receiver shape is different.
-                setPropStub->holderShape() = holder->lastProperty();
-
-                // Make sure to update the setter, since a shape change might
-                // have changed which setter we want to use.
-                setPropStub->setter() = setter;
-                if (setPropStub->receiverGuard().matches(receiverGuard))
-                    foundMatchingStub = true;
-            }
-        }
-    }
-
-    return foundMatchingStub;
-}
-
-// Attach an optimized property set stub for a SETPROP/SETGNAME/SETNAME op on
-// an accessor property.
-static bool
-TryAttachSetAccessorPropStub(JSContext* cx, HandleScript script, jsbytecode* pc,
-                             ICSetProp_Fallback* stub,
-                             HandleObject obj, const RootedReceiverGuard& receiverGuard,
-                             HandlePropertyName name,
-                             HandleId id, HandleValue rhs, bool* attached,
-                             bool* isTemporarilyUnoptimizable)
-{
-    MOZ_ASSERT(!*attached);
-    MOZ_ASSERT(!*isTemporarilyUnoptimizable);
-
-    if (obj->watched())
-        return true;
-
-    Rooted<PropertyResult> prop(cx);
-    RootedObject holder(cx);
-    if (!EffectlesslyLookupProperty(cx, obj, id, &holder, &prop))
-        return false;
-
-    if (prop.isNonNativeProperty()) {
-        MOZ_ASSERT(!IsCacheableProtoChain(obj, holder));
-        return true;
-    }
-
-    RootedShape shape(cx, prop.maybeShape());
-    bool isScripted = false;
-    bool cacheableCall = IsCacheableSetPropCall(cx, obj, holder, shape,
-                                                &isScripted, isTemporarilyUnoptimizable);
-
-    // Try handling scripted setters.
-    if (cacheableCall && isScripted) {
-        RootedFunction callee(cx, &shape->setterObject()->as<JSFunction>());
-        MOZ_ASSERT(callee->hasScript());
-
-        if (UpdateExistingSetPropCallStubs(stub, ICStub::SetProp_CallScripted,
-                                           &holder->as<NativeObject>(), obj, callee)) {
-            *attached = true;
-            return true;
-        }
-
-        JitSpew(JitSpew_BaselineIC, "  Generating SetProp(NativeObj/ScriptedSetter %s:%" PRIuSIZE ") stub",
-                    callee->nonLazyScript()->filename(), callee->nonLazyScript()->lineno());
-
-        ICSetProp_CallScripted::Compiler compiler(cx, obj, holder, callee, script->pcToOffset(pc));
-        ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
-        if (!newStub)
-            return false;
-
-        stub->addNewStub(newStub);
-        *attached = true;
-        return true;
-    }
-
-    // Try handling JSNative setters.
-    if (cacheableCall && !isScripted) {
-        RootedFunction callee(cx, &shape->setterObject()->as<JSFunction>());
-        MOZ_ASSERT(callee->isNative());
-
-        if (UpdateExistingSetPropCallStubs(stub, ICStub::SetProp_CallNative,
-                                           &holder->as<NativeObject>(), obj, callee)) {
-            *attached = true;
-            return true;
-        }
-
-        JitSpew(JitSpew_BaselineIC, "  Generating SetProp(NativeObj/NativeSetter %p) stub",
-                    callee->native());
-
-        ICSetProp_CallNative::Compiler compiler(cx, obj, holder, callee, script->pcToOffset(pc));
-        ICStub* newStub = compiler.getStub(compiler.getStubSpace(script));
-        if (!newStub)
-            return false;
-
-        stub->addNewStub(newStub);
-        *attached = true;
-        return true;
-    }
-
-    return true;
-}
-
 static bool
 DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_, Value* stack,
                   HandleValue lhs, HandleValue rhs)
@@ -2839,22 +2667,14 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
             oldShape = expando->lastProperty();
     }
 
-    bool attached = false;
     // There are some reasons we can fail to attach a stub that are temporary.
     // We want to avoid calling noteUnoptimizableAccess() if the reason we
     // failed to attach a stub is one of those temporary reasons, since we might
     // end up attaching a stub for the exact same access later.
     bool isTemporarilyUnoptimizable = false;
-    if (stub->numOptimizedStubs() < ICSetProp_Fallback::MAX_OPTIMIZED_STUBS &&
-        lhs.isObject() &&
-        !TryAttachSetAccessorPropStub(cx, script, pc, stub, obj, oldGuard, name, id,
-                                      rhs, &attached, &isTemporarilyUnoptimizable))
-    {
-        return false;
-    }
 
-    if (!attached &&
-        stub->numOptimizedStubs() < ICSetProp_Fallback::MAX_OPTIMIZED_STUBS &&
+    bool attached = false;
+    if (stub->numOptimizedStubs() < ICSetProp_Fallback::MAX_OPTIMIZED_STUBS &&
         !JitOptions.disableCacheIR)
     {
         RootedValue idVal(cx, StringValue(name));
@@ -2867,8 +2687,10 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
                 JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
                 attached = true;
 
-                newStub->toCacheIR_Updated()->updateStubGroup() = gen.updateStubGroup();
-                newStub->toCacheIR_Updated()->updateStubId() = gen.updateStubId();
+                if (gen.needUpdateStub()) {
+                    newStub->toCacheIR_Updated()->updateStubGroup() = gen.updateStubGroup();
+                    newStub->toCacheIR_Updated()->updateStubId() = gen.updateStubId();
+                }
 
                 if (gen.shouldNotePreliminaryObjectStub())
                     newStub->toCacheIR_Updated()->notePreliminaryObject();
@@ -3186,204 +3008,6 @@ ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler& masm)
     masm.bind(&failureUnstow);
     EmitUnstowICValues(masm, 2);
 
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
-}
-
-bool
-ICSetProp_CallScripted::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
-    Label failure;
-    Label failureUnstow;
-    Label failureLeaveStubFrame;
-
-    // Guard input is an object.
-    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
-
-    // Stow R0 and R1 to free up registers.
-    EmitStowICValues(masm, 2);
-
-    AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
-    Register scratch = regs.takeAnyExcluding(ICTailCallReg);
-
-    // Unbox and shape guard.
-    uint32_t framePushed = masm.framePushed();
-    Register objReg = masm.extractObject(R0, ExtractTemp0);
-    GuardReceiverObject(masm, ReceiverGuard(receiver_), objReg, scratch,
-                        ICSetProp_CallScripted::offsetOfReceiverGuard(), &failureUnstow);
-
-    if (receiver_ != holder_) {
-        Register holderReg = regs.takeAny();
-        masm.loadPtr(Address(ICStubReg, ICSetProp_CallScripted::offsetOfHolder()), holderReg);
-        masm.loadPtr(Address(ICStubReg, ICSetProp_CallScripted::offsetOfHolderShape()), scratch);
-        masm.branchTestObjShape(Assembler::NotEqual, holderReg, scratch, &failureUnstow);
-        regs.add(holderReg);
-    }
-
-    // Push a stub frame so that we can perform a non-tail call.
-    enterStubFrame(masm, scratch);
-
-    // Load callee function and code.  To ensure that |code| doesn't end up being
-    // ArgumentsRectifierReg, if it's available we assign it to |callee| instead.
-    Register callee;
-    if (regs.has(ArgumentsRectifierReg)) {
-        callee = ArgumentsRectifierReg;
-        regs.take(callee);
-    } else {
-        callee = regs.takeAny();
-    }
-    Register code = regs.takeAny();
-    masm.loadPtr(Address(ICStubReg, ICSetProp_CallScripted::offsetOfSetter()), callee);
-    masm.branchIfFunctionHasNoScript(callee, &failureLeaveStubFrame);
-    masm.loadPtr(Address(callee, JSFunction::offsetOfNativeOrScript()), code);
-    masm.loadBaselineOrIonRaw(code, code, &failureLeaveStubFrame);
-
-    // Align the stack such that the JitFrameLayout is aligned on
-    // JitStackAlignment.
-    masm.alignJitStackBasedOnNArgs(1);
-
-    // Setter is called with the new value as the only argument, and |obj| as thisv.
-    // Note that we use Push, not push, so that callJit will align the stack
-    // properly on ARM.
-
-    // To Push R1, read it off of the stowed values on stack.
-    // Stack: [ ..., R0, R1, ..STUBFRAME-HEADER.., padding? ]
-    masm.PushValue(Address(BaselineFrameReg, STUB_FRAME_SIZE));
-    masm.Push(R0);
-    EmitBaselineCreateStubFrameDescriptor(masm, scratch, JitFrameLayout::Size());
-    masm.Push(Imm32(1));  // ActualArgc is 1
-    masm.Push(callee);
-    masm.Push(scratch);
-
-    // Handle arguments underflow.
-    Label noUnderflow;
-    masm.load16ZeroExtend(Address(callee, JSFunction::offsetOfNargs()), scratch);
-    masm.branch32(Assembler::BelowOrEqual, scratch, Imm32(1), &noUnderflow);
-    {
-        // Call the arguments rectifier.
-        MOZ_ASSERT(ArgumentsRectifierReg != code);
-
-        JitCode* argumentsRectifier =
-            cx->runtime()->jitRuntime()->getArgumentsRectifier();
-
-        masm.movePtr(ImmGCPtr(argumentsRectifier), code);
-        masm.loadPtr(Address(code, JitCode::offsetOfCode()), code);
-        masm.movePtr(ImmWord(1), ArgumentsRectifierReg);
-    }
-
-    masm.bind(&noUnderflow);
-    masm.callJit(code);
-
-    uint32_t framePushedAfterCall = masm.framePushed();
-
-    leaveStubFrame(masm, true);
-    // Do not care about return value from function. The original RHS should be returned
-    // as the result of this operation.
-    EmitUnstowICValues(masm, 2);
-    EmitReturnFromIC(masm);
-
-    // Leave stub frame and go to next stub.
-    masm.bind(&failureLeaveStubFrame);
-    masm.setFramePushed(framePushedAfterCall);
-    inStubFrame_ = true;
-    leaveStubFrame(masm, false);
-
-    // Unstow R0 and R1
-    masm.bind(&failureUnstow);
-    masm.setFramePushed(framePushed);
-    EmitUnstowICValues(masm, 2);
-
-    // Failure case - jump to next stub
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
-}
-
-static bool
-DoCallNativeSetter(JSContext* cx, HandleFunction callee, HandleObject obj, HandleValue val)
-{
-    MOZ_ASSERT(callee->isNative());
-    JSNative natfun = callee->native();
-
-    JS::AutoValueArray<3> vp(cx);
-    vp[0].setObject(*callee.get());
-    vp[1].setObject(*obj.get());
-    vp[2].set(val);
-
-    return natfun(cx, 1, vp.begin());
-}
-
-typedef bool (*DoCallNativeSetterFn)(JSContext*, HandleFunction, HandleObject, HandleValue);
-static const VMFunction DoCallNativeSetterInfo =
-    FunctionInfo<DoCallNativeSetterFn>(DoCallNativeSetter, "DoNativeCallSetter");
-
-bool
-ICSetProp_CallNative::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
-    Label failure;
-    Label failureUnstow;
-
-    // Guard input is an object.
-    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
-
-    // Stow R0 and R1 to free up registers.
-    EmitStowICValues(masm, 2);
-
-    AllocatableGeneralRegisterSet regs(availableGeneralRegs(1));
-    Register scratch = regs.takeAnyExcluding(ICTailCallReg);
-
-    // Unbox and shape guard.
-    uint32_t framePushed = masm.framePushed();
-    Register objReg = masm.extractObject(R0, ExtractTemp0);
-    GuardReceiverObject(masm, ReceiverGuard(receiver_), objReg, scratch,
-                        ICSetProp_CallNative::offsetOfReceiverGuard(), &failureUnstow);
-
-    if (receiver_ != holder_) {
-        Register holderReg = regs.takeAny();
-        masm.loadPtr(Address(ICStubReg, ICSetProp_CallNative::offsetOfHolder()), holderReg);
-        masm.loadPtr(Address(ICStubReg, ICSetProp_CallNative::offsetOfHolderShape()), scratch);
-        masm.branchTestObjShape(Assembler::NotEqual, holderReg, scratch, &failureUnstow);
-        regs.add(holderReg);
-    }
-
-    // Push a stub frame so that we can perform a non-tail call.
-    enterStubFrame(masm, scratch);
-
-    // Load callee function and code.  To ensure that |code| doesn't end up being
-    // ArgumentsRectifierReg, if it's available we assign it to |callee| instead.
-    Register callee = regs.takeAny();
-    masm.loadPtr(Address(ICStubReg, ICSetProp_CallNative::offsetOfSetter()), callee);
-
-    // To Push R1, read it off of the stowed values on stack.
-    // Stack: [ ..., R0, R1, ..STUBFRAME-HEADER.. ]
-    masm.moveStackPtrTo(scratch);
-    masm.pushValue(Address(scratch, STUB_FRAME_SIZE));
-    masm.push(objReg);
-    masm.push(callee);
-
-    // Don't need to preserve R0 anymore.
-    regs.add(R0);
-
-    if (!callVM(DoCallNativeSetterInfo, masm))
-        return false;
-    leaveStubFrame(masm);
-
-    // Do not care about return value from function. The original RHS should be returned
-    // as the result of this operation.
-    EmitUnstowICValues(masm, 2);
-    EmitReturnFromIC(masm);
-
-    // Unstow R0 and R1
-    masm.bind(&failureUnstow);
-    masm.setFramePushed(framePushed);
-    EmitUnstowICValues(masm, 2);
-
-    // Failure case - jump to next stub
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
     return true;
@@ -6397,36 +6021,6 @@ ICSetPropNativeAddCompiler::ICSetPropNativeAddCompiler(JSContext* cx, HandleObje
     offset_(offset)
 {
     MOZ_ASSERT(protoChainDepth_ <= ICSetProp_NativeAdd::MAX_PROTO_CHAIN_DEPTH);
-}
-
-ICSetPropCallSetter::ICSetPropCallSetter(Kind kind, JitCode* stubCode, ReceiverGuard receiverGuard,
-                                         JSObject* holder, Shape* holderShape,
-                                         JSFunction* setter, uint32_t pcOffset)
-  : ICStub(kind, stubCode),
-    receiverGuard_(receiverGuard),
-    holder_(holder),
-    holderShape_(holderShape),
-    setter_(setter),
-    pcOffset_(pcOffset)
-{
-    MOZ_ASSERT(kind == ICStub::SetProp_CallScripted || kind == ICStub::SetProp_CallNative);
-}
-
-/* static */ ICSetProp_CallScripted*
-ICSetProp_CallScripted::Clone(JSContext* cx, ICStubSpace* space, ICStub*,
-                              ICSetProp_CallScripted& other)
-{
-    return New<ICSetProp_CallScripted>(cx, space, other.jitCode(), other.receiverGuard(),
-                                       other.holder_, other.holderShape_, other.setter_,
-                                       other.pcOffset_);
-}
-
-/* static */ ICSetProp_CallNative*
-ICSetProp_CallNative::Clone(JSContext* cx, ICStubSpace* space, ICStub*, ICSetProp_CallNative& other)
-{
-    return New<ICSetProp_CallNative>(cx, space, other.jitCode(), other.receiverGuard(),
-                                     other.holder_, other.holderShape_, other.setter_,
-                                     other.pcOffset_);
 }
 
 ICCall_Scripted::ICCall_Scripted(JitCode* stubCode, ICStub* firstMonitorStub,

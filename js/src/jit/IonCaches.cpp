@@ -1311,8 +1311,8 @@ SetPropertyIC::attachSetSlot(JSContext* cx, HandleScript outerScript, IonScript*
                              JS::TrackedOutcome::ICSetPropStub_Slot);
 }
 
-static bool
-IsCacheableSetPropCallNative(HandleObject obj, HandleObject holder, HandleShape shape)
+bool
+jit::IsCacheableSetPropCallNative(JSObject* obj, JSObject* holder, Shape* shape)
 {
     if (!shape || !IsCacheableProtoChainForIonOrCacheIR(obj, holder))
         return false;
@@ -1333,8 +1333,9 @@ IsCacheableSetPropCallNative(HandleObject obj, HandleObject holder, HandleShape 
     return !IsWindow(obj);
 }
 
-static bool
-IsCacheableSetPropCallScripted(HandleObject obj, HandleObject holder, HandleShape shape)
+bool
+jit::IsCacheableSetPropCallScripted(JSObject* obj, JSObject* holder, Shape* shape,
+                                    bool* isTemporarilyUnoptimizable)
 {
     if (!shape || !IsCacheableProtoChainForIonOrCacheIR(obj, holder))
         return false;
@@ -1342,9 +1343,23 @@ IsCacheableSetPropCallScripted(HandleObject obj, HandleObject holder, HandleShap
     if (IsWindow(obj))
         return false;
 
-    return shape->hasSetterValue() && shape->setterObject() &&
-           shape->setterObject()->is<JSFunction>() &&
-           shape->setterObject()->as<JSFunction>().hasJITCode();
+    if (!shape->hasSetterValue())
+        return false;
+
+    if (!shape->setterObject() || !shape->setterObject()->is<JSFunction>())
+        return false;
+
+    JSFunction& setter = shape->setterObject()->as<JSFunction>();
+    if (setter.isNative())
+        return false;
+
+    if (!setter.hasJITCode()) {
+        if (isTemporarilyUnoptimizable)
+            *isTemporarilyUnoptimizable = true;
+        return false;
+    }
+
+    return true;
 }
 
 static bool
