@@ -53,4 +53,12 @@ nsWrapperCache::IsBlackAndDoesNotNeedTracing(nsISupports* aThis)
   return IsBlack() && HasNothingToTrace(aThis);
 }
 
+inline void
+nsWrapperCache::MarkWrapperLive()
+{
+  // Just call GetWrapper and ignore the return value.  It will do the
+  // gray-unmarking for us.
+  GetWrapper();
+}
+
 #endif /* nsWrapperCache_h___ */

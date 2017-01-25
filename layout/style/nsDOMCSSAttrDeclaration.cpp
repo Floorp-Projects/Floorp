@@ -43,8 +43,7 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsDOMCSSAttributeDeclaration, mElement)
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsDOMCSSAttributeDeclaration)
   if (tmp->mElement && Element::CanSkip(tmp->mElement, true)) {
     if (tmp->PreservingWrapper()) {
-      // This marks the wrapper black.
-      tmp->GetWrapper();
+      tmp->MarkWrapperLive();
     }
     return true;
   }
