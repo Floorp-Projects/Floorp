@@ -158,13 +158,18 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
         self.assertTrue(self.marionette.execute_script(
             "return window.visited", sandbox=None))
 
-    @skip_if_mobile("Fennec doesn't support other chrome windows")
+    @skip_if_mobile("Bug 1334095 - Timeout: No new tab has been opened")
     def test_about_blank_for_new_docshell(self):
         """ Bug 1312674 - Hang when loading about:blank for a new docshell."""
-        # Open a window to get a new docshell created for the first tab
-        with self.marionette.using_context("chrome"):
-            tab = self.open_tab(lambda: self.marionette.execute_script(" window.open() "))
-            self.marionette.switch_to_window(tab)
+        def open_with_link():
+            link = self.marionette.find_element(By.ID, "new-blank-tab")
+            link.click()
+
+        # Open a new tab to get a new docshell created
+        self.marionette.navigate(self.marionette.absolute_url("windowHandles.html"))
+        new_tab = self.open_tab(trigger=open_with_link)
+        self.marionette.switch_to_window(new_tab)
+        self.assertEqual(self.marionette.get_url(), "about:blank")
 
         self.marionette.navigate('about:blank')
         self.marionette.close()

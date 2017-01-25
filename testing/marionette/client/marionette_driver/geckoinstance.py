@@ -386,10 +386,8 @@ class DesktopInstance(GeckoInstance):
         # Do not show the EULA notification which can interfer with tests
         "browser.EULA.override": True,
 
-        # Bug 1145668, 1312674
-        # Turn off once Marionette can correctly handle error pages, and doesn't
-        # hang when about:blank gets loaded twice
-        "browser.newtabpage.enabled": True,
+        # Turn off about:newtab and make use of about:blank instead for new opened tabs
+        "browser.newtabpage.enabled": False,
         # Assume the about:newtab page"s intro panels have been shown to not depend on
         # which test runs first and happens to open about:newtab
         "browser.newtabpage.introShown": True,
