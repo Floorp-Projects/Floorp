@@ -43,8 +43,8 @@ class EventSource final : public DOMEventTargetHelper
   friend class EventSourceImpl;
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(
-    EventSource, DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(EventSource, DOMEventTargetHelper)
+  virtual bool IsCertainlyAliveForCC() const override;
 
   // EventTarget
   void DisconnectFromOwner() override
