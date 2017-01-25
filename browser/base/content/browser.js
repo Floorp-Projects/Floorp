@@ -3353,7 +3353,7 @@ var PrintPreviewListener = {
       let browser = gBrowser.selectedBrowser;
       let preferredRemoteType = browser.remoteType;
       this._tabBeforePrintPreview = gBrowser.selectedTab;
-      this._printPreviewTab = gBrowser.loadOneTab("about:printpreview",
+      this._printPreviewTab = gBrowser.loadOneTab("about:blank",
                                                   { inBackground: false,
                                                     preferredRemoteType,
                                                     relatedBrowser: browser });
@@ -3362,7 +3362,7 @@ var PrintPreviewListener = {
     return gBrowser.getBrowserForTab(this._printPreviewTab);
   },
   createSimplifiedBrowser() {
-    this._simplifyPageTab = gBrowser.loadOneTab("about:printpreview",
+    this._simplifyPageTab = gBrowser.loadOneTab("about:blank",
                                                 { inBackground: true });
     return this.getSimplifiedSourceBrowser();
   },
