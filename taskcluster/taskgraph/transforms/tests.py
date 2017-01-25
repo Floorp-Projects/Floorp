@@ -164,7 +164,7 @@ test_description_schema = Schema({
     # test platform.
     Optional('worker-implementation'): Any(
         'docker-worker',
-        'macosx-engine',
+        'native-engine',
         'generic-worker',
         # coming soon:
         'docker-engine',
@@ -196,6 +196,9 @@ test_description_schema = Schema({
 
     # Whether to perform a gecko checkout.
     Required('checkout', default=False): bool,
+
+    # Wheter to perform a machine reboot after test is done
+    Optional('reboot', default=False): bool,
 
     # What to run
     Required('mozharness'): optionally_keyed_by(
@@ -333,6 +336,7 @@ def set_defaults(config, tests):
         test.setdefault('run-on-projects', ['all'])
         test.setdefault('instance-size', 'default')
         test.setdefault('max-run-time', 3600)
+        test.setdefault('reboot', False)
         test['mozharness'].setdefault('extra-options', [])
         yield test
 
@@ -395,7 +399,7 @@ def set_worker_implementation(config, tests):
         elif test['test-platform'].startswith('win'):
             test['worker-implementation'] = 'generic-worker'
         elif test['test-platform'].startswith('macosx'):
-            test['worker-implementation'] = 'macosx-engine'
+            test['worker-implementation'] = 'native-engine'
         else:
             test['worker-implementation'] = 'docker-worker'
         yield test
@@ -891,7 +895,7 @@ def generic_worker_setup(config, test, taskdesc):
     ]
 
 
-@worker_setup_function("macosx-engine")
+@worker_setup_function("native-engine")
 def macosx_engine_setup(config, test, taskdesc):
     mozharness = test['mozharness']
 
@@ -907,6 +911,7 @@ def macosx_engine_setup(config, test, taskdesc):
     worker = taskdesc['worker'] = {}
     worker['implementation'] = test['worker-implementation']
 
+    worker['reboot'] = test['reboot']
     worker['artifacts'] = [{
         'name': prefix.rstrip('/'),
         'path': path.rstrip('/'),
@@ -924,7 +929,7 @@ def macosx_engine_setup(config, test, taskdesc):
 
     # assemble the command line
 
-    worker['link'] = '{}/raw-file/{}/taskcluster/scripts/tester/test-macosx.sh'.format(
+    worker['context'] = '{}/raw-file/{}/taskcluster/scripts/tester/test-macosx.sh'.format(
         config.params['head_repository'], config.params['head_rev']
     )
 
