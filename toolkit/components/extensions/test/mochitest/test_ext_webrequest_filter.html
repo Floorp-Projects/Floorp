@@ -172,6 +172,8 @@ add_task(function* test_webRequest_filter_background() {
 
 add_task(function* teardown() {
   testWindow.close();
+
+  yield new Promise(resolve => setTimeout(resolve, 0));
 });
 </script>
 </head>

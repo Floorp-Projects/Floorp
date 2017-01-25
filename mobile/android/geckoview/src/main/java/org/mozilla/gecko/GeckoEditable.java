@@ -1230,8 +1230,9 @@ final class GeckoEditable extends JNIObject
                 // with Gecko here.
                 mIgnoreSelectionChange = false;
 
-            } else if (indexInText == 0 && text.length() == action.mSequence.length()) {
-                // The new text exactly matches our sequence, so do a direct replace.
+            } else if (indexInText == 0 && text.length() == action.mSequence.length() &&
+                    oldEnd - start == action.mEnd - action.mStart) {
+                // The new change exactly matches our saved change, so do a direct replace.
                 mText.currentReplace(start, oldEnd, action.mSequence);
 
                 // Ignore the next selection change because the selection change is a

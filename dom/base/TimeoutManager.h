@@ -23,6 +23,7 @@ class TimeoutManager final
 {
 public:
   explicit TimeoutManager(nsGlobalWindow& aWindow);
+  ~TimeoutManager();
   TimeoutManager(const TimeoutManager& rhs) = delete;
   void operator=(const TimeoutManager& rhs) = delete;
 

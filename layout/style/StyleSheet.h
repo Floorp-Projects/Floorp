@@ -62,9 +62,6 @@ public:
   css::SheetParsingMode ParsingMode() { return mParsingMode; }
   mozilla::dom::CSSStyleSheetParsingMode ParsingModeDOM();
 
-  // The document this style sheet is associated with.  May be null
-  nsIDocument* GetDocument() const { return mDocument; }
-
   /**
    * Whether the sheet is complete.
    */

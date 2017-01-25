@@ -111,7 +111,11 @@ public:
    */
   void RemoveChildDoc(DocAccessibleParent* aChildDoc)
   {
-    aChildDoc->Parent()->ClearChildDoc(aChildDoc);
+    ProxyAccessible* parent = aChildDoc->Parent();
+    MOZ_ASSERT(parent);
+    if (parent) {
+      aChildDoc->Parent()->ClearChildDoc(aChildDoc);
+    }
     mChildDocs.RemoveElement(aChildDoc);
     aChildDoc->mParentDoc = nullptr;
     MOZ_ASSERT(aChildDoc->mChildDocs.Length() == 0);

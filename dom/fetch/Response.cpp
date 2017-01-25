@@ -198,22 +198,24 @@ Response::Constructor(const GlobalObject& aGlobal,
     }
 
     nsCOMPtr<nsIInputStream> bodyStream;
-    nsCString contentType;
+    nsCString contentTypeWithCharset;
     uint64_t bodySize = 0;
     aRv = ExtractByteStreamFromBody(aBody.Value(),
                                     getter_AddRefs(bodyStream),
-                                    contentType,
+                                    contentTypeWithCharset,
                                     bodySize);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
     internalResponse->SetBody(bodyStream, bodySize);
 
-    if (!contentType.IsVoid() &&
-        !internalResponse->Headers()->Has(NS_LITERAL_CSTRING("Content-Type"), aRv)) {
+    if (!contentTypeWithCharset.IsVoid() &&
+        !internalResponse->Headers()->Has(NS_LITERAL_CSTRING("Content-Type"),
+                                          aRv)) {
       // Ignore Append() failing here.
       ErrorResult error;
-      internalResponse->Headers()->Append(NS_LITERAL_CSTRING("Content-Type"), contentType, error);
+      internalResponse->Headers()->Append(NS_LITERAL_CSTRING("Content-Type"),
+                                          contentTypeWithCharset, error);
       error.SuppressException();
     }
 
