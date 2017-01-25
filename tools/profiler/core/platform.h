@@ -136,53 +136,19 @@ public:
 // ----------------------------------------------------------------------------
 // Thread
 //
-// Thread objects are used for creating and running threads. When the start()
-// method is called the new thread starts running the run() method in the new
-// thread. The Thread object should not be deallocated before the thread has
-// terminated.
+// This class has static methods for the different platform specific
+// functions. Add methods here to cope with differences between the
+// supported platforms.
 
 class Thread {
- public:
-  // Create new thread.
-  explicit Thread(const char* name);
-  virtual ~Thread();
-
-  // Start new thread by calling the Run() method in the new thread.
-  void Start();
-
-  void Join();
-
-  inline const char* name() const {
-    return name_;
-  }
-
-  // Abstract method for run handler.
-  virtual void Run() = 0;
-
-  // The thread name length is limited to 16 based on Linux's implementation of
-  // prctl().
-  static const int kMaxThreadNameLength = 16;
-
+public:
 #ifdef XP_WIN
-  HANDLE thread_;
   typedef DWORD tid_t;
-  tid_t thread_id_;
 #else
   typedef ::pid_t tid_t;
 #endif
-#if defined(XP_MACOSX)
-  pthread_t thread_;
-#endif
 
   static tid_t GetCurrentId();
-
- private:
-  void set_name(const char *name);
-
-  char name_[kMaxThreadNameLength];
-  int stack_size_;
-
-  DISALLOW_COPY_AND_ASSIGN(Thread);
 };
 
 // ----------------------------------------------------------------------------
