@@ -199,7 +199,7 @@ CSSAnimation::QueueEvents()
   nsAnimationManager* manager = presContext->AnimationManager();
   ComputedTiming computedTiming = mEffect->GetComputedTiming();
 
-  ComputedTiming::AnimationPhase currentPhase = computedTiming.mPhase;
+  AnimationPhase currentPhase = computedTiming.mPhase;
   uint64_t currentIteration  = computedTiming.mCurrentIteration;
   if (currentPhase == mPreviousPhase &&
       currentIteration == mPreviousIteration) {

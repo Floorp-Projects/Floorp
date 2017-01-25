@@ -46,8 +46,6 @@ using mozilla::dom::KeyframeEffectReadOnly;
 using namespace mozilla;
 using namespace mozilla::css;
 
-typedef mozilla::ComputedTiming::AnimationPhase AnimationPhase;
-
 namespace {
 struct TransitionEventParams {
   EventMessage mMessage;
