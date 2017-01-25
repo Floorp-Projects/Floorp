@@ -108,14 +108,9 @@ class DependsFunction(object):
 
 class CombinedDependsFunction(DependsFunction):
     def __init__(self, sandbox, func, dependencies):
-        @memoize
-        @wraps(func)
-        def wrapper(*args):
-            return func(args)
-
         flatten_deps = []
         for d in dependencies:
-            if isinstance(d, CombinedDependsFunction) and d._func == wrapper:
+            if isinstance(d, CombinedDependsFunction) and d._func is func:
                 for d2 in d.dependencies:
                     if d2 not in flatten_deps:
                         flatten_deps.append(d2)
@@ -131,7 +126,7 @@ class CombinedDependsFunction(DependsFunction):
                 break
 
         super(CombinedDependsFunction, self).__init__(
-            sandbox, wrapper, flatten_deps)
+            sandbox, func, flatten_deps)
 
     @memoize
     def result(self, need_help_dependency=False):
@@ -141,11 +136,11 @@ class CombinedDependsFunction(DependsFunction):
             deps = deps[1:]
         resolved_args = [self.sandbox._value_for(d, need_help_dependency)
                          for d in deps]
-        return self._func(*resolved_args)
+        return self._func(resolved_args)
 
     def __eq__(self, other):
         return (isinstance(other, self.__class__) and
-                self._func == other._func and
+                self._func is other._func and
                 set(self.dependencies) == set(other.dependencies))
 
     def __ne__(self, other):
