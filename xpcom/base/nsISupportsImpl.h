@@ -543,6 +543,18 @@ NS_INLINE_DECL_THREADSAFE_REFCOUNTING_META(_class, NS_METHOD_, __VA_ARGS__)
 NS_INLINE_DECL_THREADSAFE_REFCOUNTING_META(_class, NS_IMETHOD_, __VA_ARGS__)
 
 /**
+ * Use this macro in interface classes that you want to be able to reference
+ * using RefPtr, but don't want to provide a refcounting implemenation. The
+ * refcounting implementation can be provided by concrete subclasses that
+ * implement the interface.
+ */
+#define NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING                               \
+public:                                                                       \
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) = 0;                      \
+  NS_IMETHOD_(MozExternalRefCountType) Release(void) = 0;                     \
+public:
+
+/**
  * Use this macro to implement the AddRef method for a given <i>_class</i>
  * @param _class The name of the class implementing the method
  */

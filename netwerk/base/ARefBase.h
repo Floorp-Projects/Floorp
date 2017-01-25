@@ -22,8 +22,7 @@ public:
   ARefBase() {}
   virtual ~ARefBase() {}
 
-  NS_IMETHOD_ (MozExternalRefCountType) AddRef() = 0;
-  NS_IMETHOD_ (MozExternalRefCountType) Release() = 0;
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 };
 
 } // namespace net
