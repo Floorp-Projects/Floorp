@@ -664,7 +664,7 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
 #endif
     }
     common.scrollbarTargetContainerId() = mutant->GetScrollbarTargetContainerId();
-    common.scrollbarDirection() = mutant->GetScrollbarDirection();
+    common.scrollbarDirection() = (uint32_t)mutant->GetScrollbarDirection();
     common.scrollbarThumbRatio() = mutant->GetScrollbarThumbRatio();
     common.isScrollbarContainer() = mutant->IsScrollbarContainer();
     common.mixBlendMode() = (int8_t)mutant->GetMixBlendMode();
