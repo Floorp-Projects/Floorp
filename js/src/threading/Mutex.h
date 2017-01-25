@@ -8,13 +8,9 @@
 #define threading_Mutex_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/Move.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/Vector.h"
-
-#include <new>
-#include <string.h>
 
 namespace js {
 
@@ -41,14 +37,27 @@ protected:
 private:
   MutexImpl(const MutexImpl&) = delete;
   void operator=(const MutexImpl&) = delete;
+  MutexImpl(MutexImpl&&) = delete;
+  void operator=(MutexImpl&&) = delete;
+
+  PlatformData* platformData();
+
+// Linux and maybe other platforms define the storage size of pthread_mutex_t in
+// bytes. However, we must define it as an array of void pointers to ensure
+// proper alignment.
+#if defined(__APPLE__) && defined(__MACH__) && defined(__i386__)
+  void* platformData_[11];
+#elif defined(__APPLE__) && defined(__MACH__) && defined(__amd64__)
+  void* platformData_[8];
+#elif defined(__linux__)
+  void* platformData_[40 / sizeof(void*)];
+#elif defined(_WIN32)
+  void* platformData_[6];
+#else
+  void* platformData_[64 / sizeof(void*)];
+#endif
 
   friend class js::ConditionVariable;
-  PlatformData* platformData() {
-    MOZ_ASSERT(platformData_);
-    return platformData_;
-  };
-
-  PlatformData* platformData_;
 };
 
 } // namespace detail
