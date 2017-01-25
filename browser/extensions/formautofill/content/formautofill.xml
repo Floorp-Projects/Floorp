@@ -10,6 +10,11 @@
           xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="autocomplete-profile-listitem" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
+    <resources>
+      <stylesheet src="chrome://formautofill-shared/skin/autocomplete-item.css"/>
+      <stylesheet src="chrome://formautofill/skin/autocomplete-item.css"/>
+    </resources>
+
     <xbl:content xmlns="http://www.w3.org/1999/xhtml">
       <div anonid="profile-item-box" class="profile-item-box">
         <div class="profile-label-col profile-item-col">
@@ -64,6 +69,9 @@
           this._comment.textContent = comment;
           this._label.textContent = value;
 
+          // Make item fit in popup as XUL box could not constrain
+          // item's width
+          this._itemBox.style.width =  outerBoxRect.width + "px";
           // Use two-lines layout when width is smaller than 150px
           if (outerBoxRect.width <= 150) {
             this._itemBox.setAttribute("size", "small");
