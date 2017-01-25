@@ -62,7 +62,7 @@ function test_rsa() {
   do_test_pending();
   function checkRSA(err, kpo) {
     do_check_neq(kpo, undefined);
-    do_print(kpo.serializedPublicKey);
+    log(kpo.serializedPublicKey);
     let pk = JSON.parse(kpo.serializedPublicKey);
     do_check_eq(pk.algorithm, "RS");
 /* TODO
@@ -92,7 +92,7 @@ function test_dsa() {
   do_test_pending();
   function checkDSA(err, kpo) {
     do_check_neq(kpo, undefined);
-    do_print(kpo.serializedPublicKey);
+    log(kpo.serializedPublicKey);
     let pk = JSON.parse(kpo.serializedPublicKey);
     do_check_eq(pk.algorithm, "DS");
 /* TODO
