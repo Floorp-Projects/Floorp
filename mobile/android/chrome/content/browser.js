@@ -3732,6 +3732,15 @@ Tab.prototype = {
     return this.browser.docShellIsActive;
   },
 
+  /**
+   * Restores the tab and reloads its contents if it is unloaded from memory and set for delay
+   * loading ("zombified").
+   */
+  unzombify: function unzombify() {
+    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+    ss.restoreZombieTab(this);
+  },
+
   // These constants are used to prioritize high quality metadata over low quality data, so that
   // we can collect data as we find meta tags, and replace low quality metadata with higher quality
   // matches. For instance a msApplicationTile icon is a better tile image than an og:image tag.
