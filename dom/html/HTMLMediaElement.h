@@ -768,8 +768,12 @@ protected:
   class ShutdownObserver;
 
   MediaDecoderOwner::NextFrameStatus NextFrameStatus();
+
   void SetDecoder(MediaDecoder* aDecoder) {
     MOZ_ASSERT(aDecoder); // Use ShutdownDecoder() to clear.
+    if (mDecoder) {
+      ShutdownDecoder();
+    }
     mDecoder = aDecoder;
   }
 
