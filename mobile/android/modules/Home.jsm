@@ -214,7 +214,7 @@ var HomePanels = (function () {
         }
       }
 
-      Messaging.sendRequest({
+      EventDispatcher.instance.sendRequest({
         type: "HomePanels:Data",
         panels: panels,
         requestId: requestId
