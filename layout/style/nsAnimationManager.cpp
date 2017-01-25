@@ -229,7 +229,7 @@ CSSAnimation::QueueEvents()
 
   AutoTArray<AnimationEventParams, 2> events;
   switch (mPreviousPhase) {
-    case AnimationPhase::Null:
+    case AnimationPhase::Idle:
     case AnimationPhase::Before:
       if (currentPhase == AnimationPhase::Active) {
         events.AppendElement(AnimationEventParams{ eAnimationStart,
