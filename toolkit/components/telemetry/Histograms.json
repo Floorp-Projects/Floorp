@@ -28,6 +28,26 @@
     "n_buckets": 50,
     "description": "time spent updating accessibility (ms)"
   },
+  "ADDON_CONTENT_POLICY_SHIM_BLOCKING_LOADING_MS": {
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 20,
+    "keyed": true,
+    "description": "The amount of time the content process blocked processing shouldLoad shims for an add-on (keyed by add-on ID) prior to the load event, for each document load.",
+    "bug_numbers": [1331684],
+    "alert_emails": ["kmaglione@mozilla.com"]
+  },
+  "ADDON_CONTENT_POLICY_SHIM_BLOCKING_LOADED_MS": {
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "high": 60000,
+    "n_buckets": 20,
+    "keyed": true,
+    "description": "The amount of time the content process blocked processing shouldLoad shims for an add-on (keyed by add-on ID) after the load event, for each document load.",
+    "bug_numbers": [1331684],
+    "alert_emails": ["kmaglione@mozilla.com"]
+  },
   "ADDON_MANAGER_UPGRADE_UI_SHOWN": {
     "expires_in_version": "53",
     "kind": "count",
