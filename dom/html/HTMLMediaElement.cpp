@@ -1471,33 +1471,6 @@ HTMLMediaElement::GetMozDebugReaderData(nsAString& aString)
   }
 }
 
-already_AddRefed<Promise>
-HTMLMediaElement::MozRequestDebugInfo(ErrorResult& aRv)
-{
-  RefPtr<Promise> promise = CreateDOMPromise(aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
-  nsAutoString result;
-  GetMozDebugReaderData(result);
-
-  if (mDecoder) {
-    mDecoder->RequestDebugInfo()->Then(
-      AbstractThread::MainThread(), __func__,
-      [promise, result] (const nsACString& aString) {
-        promise->MaybeResolve(result + NS_ConvertUTF8toUTF16(aString));
-      },
-      [promise, result] () {
-        promise->MaybeResolve(result);
-      });
-  } else {
-    promise->MaybeResolve(result);
-  }
-
-  return promise.forget();
-}
-
 void
 HTMLMediaElement::MozDumpDebugInfo()
 {
