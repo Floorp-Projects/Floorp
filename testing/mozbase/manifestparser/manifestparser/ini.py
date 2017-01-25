@@ -8,7 +8,7 @@ __all__ = ['read_ini', 'combine_fields']
 
 
 def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
-             comments=';#', separators=('=', ':'), strict=True,
+             comments=(';', '#'), separators=('=', ':'), strict=True,
              handle_defaults=True):
     """
     read an .ini file and return a list of [(section, values)]
@@ -42,7 +42,7 @@ def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
             continue
 
         # ignore comment lines
-        if stripped[0] in comments:
+        if any(stripped.startswith(c) for c in comments):
             continue
 
         # check for a new section
