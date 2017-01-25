@@ -451,7 +451,9 @@ RenderLayers(ContainerT* aContainer, LayerManagerComposite* aManager,
 
       // If we are dealing with a nested 3D context, we might need to transform
       // the geometry to the coordinate space of the parent 3D context leaf.
-      if (geometry && !layer->Is3DContextLeaf()) {
+      const bool isLeafLayer = layer->AsContainerLayer() == nullptr;
+
+      if (geometry && isLeafLayer) {
         TransformLayerGeometry(layer, geometry);
       }
 
