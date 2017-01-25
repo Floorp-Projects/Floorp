@@ -60,11 +60,9 @@ class Output(object):
                 subtests = []
                 suite = {
                     'name': test.name(),
-                    'subtests': subtests,
+                    'extraOptions': self.results.extra_options or [],
+                    'subtests': subtests
                 }
-
-                if self.results.extra_options:
-                    suite['extraOptions'] = self.results.extra_options
 
                 suites.append(suite)
                 vals = []
@@ -166,6 +164,7 @@ class Output(object):
                             subtest['value'] = filter.mean(varray)
             if counter_subtests:
                 suites.append({'name': test.name(),
+                               'extraOptions': self.results.extra_options or [],
                                'subtests': counter_subtests})
         return test_results
 
