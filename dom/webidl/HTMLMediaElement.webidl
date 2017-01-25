@@ -104,8 +104,6 @@ partial interface HTMLMediaElement {
   readonly attribute MediaSource? mozMediaSourceObject;
   [ChromeOnly]
   readonly attribute DOMString mozDebugReaderData;
-  [ChromeOnly, NewObject]
-  Promise<DOMString> mozRequestDebugInfo();
 
   [Pref="media.test.dumpDebugInfo"]
   void mozDumpDebugInfo();
