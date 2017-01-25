@@ -47,6 +47,7 @@ protected:
 @interface GeckoNSMenu : NSMenu
 {
 }
+- (BOOL)performSuperKeyEquivalent:(NSEvent*)theEvent;
 @end
 
 // Objective-C class used as action target for menu items
@@ -119,6 +120,7 @@ public:
   static void       ResetNativeApplicationMenu();
   void              SetNeedsRebuild();
   void              ApplicationMenuOpened();
+  bool              PerformKeyEquivalent(NSEvent* theEvent);
 
 protected:
   void              ConstructNativeMenus();
