@@ -32,7 +32,6 @@
 #include "nsIClipboard.h"
 #include "nsIContent.h"
 #include "nsIContentIterator.h"
-#include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEventTarget.h"
@@ -463,43 +462,46 @@ TextEditor::CreateBRImpl(nsCOMPtr<nsIDOMNode>* aInOutParent,
   *outBRNode = nullptr;
 
   // we need to insert a br.  unfortunately, we may have to split a text node to do it.
-  nsCOMPtr<nsIDOMNode> node = *aInOutParent;
+  nsCOMPtr<nsINode> node = do_QueryInterface(*aInOutParent);
   int32_t theOffset = *aInOutOffset;
-  nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(node);
-  NS_NAMED_LITERAL_STRING(brType, "br");
-  nsCOMPtr<nsIDOMNode> brNode;
-  if (nodeAsText) {
+  RefPtr<Element> brNode;
+  if (IsTextNode(node)) {
     int32_t offset;
-    uint32_t len;
-    nodeAsText->GetLength(&len);
-    nsCOMPtr<nsIDOMNode> tmp = GetNodeLocation(node, &offset);
+    nsCOMPtr<nsINode> tmp = GetNodeLocation(node, &offset);
     NS_ENSURE_TRUE(tmp, NS_ERROR_FAILURE);
     if (!theOffset) {
       // we are already set to go
-    } else if (theOffset == (int32_t)len) {
+    } else if (theOffset == static_cast<int32_t>(node->Length())) {
       // update offset to point AFTER the text node
       offset++;
     } else {
       // split the text node
-      nsresult rv = SplitNode(node, theOffset, getter_AddRefs(tmp));
-      NS_ENSURE_SUCCESS(rv, rv);
+      ErrorResult rv;
+      SplitNode(*node->AsContent(), theOffset, rv);
+      if (NS_WARN_IF(rv.Failed())) {
+        return rv.StealNSResult();
+      }
       tmp = GetNodeLocation(node, &offset);
     }
     // create br
-    nsresult rv = CreateNode(brType, tmp, offset, getter_AddRefs(brNode));
-    NS_ENSURE_SUCCESS(rv, rv);
-    *aInOutParent = tmp;
+    brNode = CreateNode(nsGkAtoms::br, tmp, offset);
+    if (NS_WARN_IF(!brNode)) {
+      return NS_ERROR_FAILURE;
+    }
+    *aInOutParent = GetAsDOMNode(tmp);
     *aInOutOffset = offset+1;
   } else {
-    nsresult rv = CreateNode(brType, node, theOffset, getter_AddRefs(brNode));
-    NS_ENSURE_SUCCESS(rv, rv);
+    brNode = CreateNode(nsGkAtoms::br, node, theOffset);
+    if (NS_WARN_IF(!brNode)) {
+      return NS_ERROR_FAILURE;
+    }
     (*aInOutOffset)++;
   }
 
-  *outBRNode = brNode;
+  *outBRNode = GetAsDOMNode(brNode);
   if (*outBRNode && (aSelect != eNone)) {
     int32_t offset;
-    nsCOMPtr<nsIDOMNode> parent = GetNodeLocation(*outBRNode, &offset);
+    nsCOMPtr<nsINode> parent = GetNodeLocation(brNode, &offset);
 
     RefPtr<Selection> selection = GetSelection();
     NS_ENSURE_STATE(selection);
@@ -526,38 +528,6 @@ TextEditor::CreateBR(nsIDOMNode* aNode,
   nsCOMPtr<nsIDOMNode> parent = aNode;
   int32_t offset = aOffset;
   return CreateBRImpl(address_of(parent), &offset, outBRNode, aSelect);
-}
-
-nsresult
-TextEditor::InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode)
-{
-  NS_ENSURE_TRUE(outBRNode, NS_ERROR_NULL_POINTER);
-  *outBRNode = nullptr;
-
-  // calling it text insertion to trigger moz br treatment by rules
-  AutoRules beginRulesSniffing(this, EditAction::insertText, nsIEditor::eNext);
-
-  RefPtr<Selection> selection = GetSelection();
-  NS_ENSURE_STATE(selection);
-
-  if (!selection->Collapsed()) {
-    nsresult rv = DeleteSelection(nsIEditor::eNone, nsIEditor::eStrip);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  nsCOMPtr<nsIDOMNode> selNode;
-  int32_t selOffset;
-  nsresult rv =
-    GetStartNodeAndOffset(selection, getter_AddRefs(selNode), &selOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = CreateBR(selNode, selOffset, outBRNode);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // position selection after br
-  selNode = GetNodeLocation(*outBRNode, &selOffset);
-  selection->SetInterlinePosition(true);
-  return selection->Collapse(selNode, selOffset+1);
 }
 
 nsresult
@@ -598,7 +568,7 @@ TextEditor::ExtendSelectionForDelete(Selection* aSelection,
         // For other cases we don't want to do that, in order
         // to make sure that pressing backspace will only delete the last
         // typed character.
-        nsCOMPtr<nsIDOMNode> node;
+        nsCOMPtr<nsINode> node;
         int32_t offset;
         rv = GetStartNodeAndOffset(aSelection, getter_AddRefs(node), &offset);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -608,19 +578,13 @@ TextEditor::ExtendSelectionForDelete(Selection* aSelection,
         FindBetterInsertionPoint(node, offset);
 
         if (IsTextNode(node)) {
-          nsCOMPtr<nsIDOMCharacterData> charData = do_QueryInterface(node);
-          if (charData) {
-            nsAutoString data;
-            rv = charData->GetData(data);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            if ((offset > 1 &&
-                 NS_IS_LOW_SURROGATE(data[offset - 1]) &&
-                 NS_IS_HIGH_SURROGATE(data[offset - 2])) ||
-                (offset > 0 &&
-                 gfxFontUtils::IsVarSelector(data[offset - 1]))) {
-              rv = selCont->CharacterExtendForBackspace();
-            }
+          const nsTextFragment* data = node->GetAsText()->GetText();
+          if ((offset > 1 &&
+               NS_IS_LOW_SURROGATE(data->CharAt(offset - 1)) &&
+               NS_IS_HIGH_SURROGATE(data->CharAt(offset - 2))) ||
+              (offset > 0 &&
+               gfxFontUtils::IsVarSelector(data->CharAt(offset - 1)))) {
+            rv = selCont->CharacterExtendForBackspace();
           }
         }
         break;
@@ -939,12 +903,9 @@ TextEditor::GetTextLength(int32_t* aCount)
   uint32_t totalLength = 0;
   iter->Init(rootElement);
   for (; !iter->IsDone(); iter->Next()) {
-    nsCOMPtr<nsIDOMNode> currentNode = do_QueryInterface(iter->GetCurrentNode());
-    nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(currentNode);
-    if (textNode && IsEditable(currentNode)) {
-      uint32_t length;
-      textNode->GetLength(&length);
-      totalLength += length;
+    nsCOMPtr<nsINode> currentNode = iter->GetCurrentNode();
+    if (IsTextNode(currentNode) && IsEditable(currentNode)) {
+      totalLength += currentNode->Length();
     }
   }
 

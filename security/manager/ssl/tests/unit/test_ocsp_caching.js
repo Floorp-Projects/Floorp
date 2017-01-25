@@ -295,4 +295,29 @@ function add_tests() {
 
   // Reset state
   add_test(function() { clearOCSPCache(); run_next_test(); });
+
+  // Test that the OCSP cache is not isolated by userContextId.
+
+  // A good OCSP response will be cached.
+  add_ocsp_test("ocsp-stapling-none.example.com", PRErrorCodeSuccess,
+                [respondWithGoodOCSP],
+                "No stapled response (userContextId = 1) -> a fetch " +
+                "should have been attempted", { userContextId: 1 });
+
+  // The cache will prevent a fetch from happening.
+  add_ocsp_test("ocsp-stapling-none.example.com", PRErrorCodeSuccess, [],
+                "Noted OCSP server failure (userContextId = 1) -> a " +
+                "fetch should not have been attempted",
+                { userContextId: 1 });
+
+  // Fetching is prevented even if in a different userContextId.
+  add_ocsp_test("ocsp-stapling-none.example.com", PRErrorCodeSuccess, [],
+                "Noted OCSP server failure (userContextId = 2) -> a " +
+                "fetch should not have been attempted",
+                { userContextId: 2 });
+
+  //---------------------------------------------------------------------------
+
+  // Reset state
+  add_test(function() { clearOCSPCache(); run_next_test(); });
 }

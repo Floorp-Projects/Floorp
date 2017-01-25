@@ -37,8 +37,6 @@ class nsXMLFragmentContentSink : public nsXMLContentSink,
 public:
   nsXMLFragmentContentSink();
 
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
-
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsXMLFragmentContentSink,
@@ -229,8 +227,11 @@ nsXMLFragmentContentSink::CloseElement(nsIContent* aContent)
       (aContent->IsHTMLElement(nsGkAtoms::script),
        aContent->IsSVGElement(nsGkAtoms::script))) {
     nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(aContent);
-    NS_ASSERTION(sele, "script did QI correctly!");
-    sele->PreventExecution();
+    if (sele) {
+      sele->PreventExecution();
+    } else {
+      NS_ASSERTION(nsNameSpaceManager::GetInstance()->mSVGDisabled, "Script did QI correctly, but wasn't a disabled SVG!");
+    }
   }
   return NS_OK;
 }

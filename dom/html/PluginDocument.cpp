@@ -102,9 +102,6 @@ PluginStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
   return MediaDocumentStreamListener::OnStartRequest(request, ctxt);
 }
 
-  // NOTE! nsDocument::operator new() zeroes out all members, so don't
-  // bother initializing members to 0.
-
 PluginDocument::PluginDocument()
 {}
 

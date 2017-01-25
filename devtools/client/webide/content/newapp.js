@@ -28,12 +28,11 @@ console.log = console.log.bind(console);
 console.warn = console.warn.bind(console);
 console.error = console.error.bind(console);
 
-window.addEventListener("load", function onLoad() {
-  window.removeEventListener("load", onLoad);
+window.addEventListener("load", function () {
   let projectNameNode = document.querySelector("#project-name");
   projectNameNode.addEventListener("input", canValidate, true);
   getTemplatesJSON();
-}, true);
+}, {capture: true, once: true});
 
 function getTemplatesJSON() {
   getJSON(TEMPLATES_URL).then(list => {

@@ -31,7 +31,6 @@ class nsHtml5Parser final : public nsIParser,
                             public nsSupportsWeakReference
 {
   public:
-    NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
     NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsHtml5Parser, nsIParser)

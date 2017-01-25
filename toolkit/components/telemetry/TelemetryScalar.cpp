@@ -86,6 +86,7 @@ enum class ScalarResult : uint8_t {
   NotInitialized,
   CannotUnpackVariant,
   CannotRecordInProcess,
+  CannotRecordDataset,
   KeyedTypeMismatch,
   UnknownScalar,
   OperationNotSupported,
@@ -900,6 +901,35 @@ internal_CanRecordForScalarID(mozilla::Telemetry::ScalarID aId)
 }
 
 /**
+ * Check if we are allowed to record the provided scalar.
+ *
+ * @param aId The scalar id.
+ * @param aKeyed Are we attempting to write a keyed scalar?
+ * @return ScalarResult::Ok if we can record, an error code otherwise.
+ */
+ScalarResult
+internal_CanRecordScalar(mozilla::Telemetry::ScalarID aId, bool aKeyed)
+{
+  // Make sure that we have a keyed scalar if we are trying to change one.
+  if (internal_IsKeyedScalar(aId) != aKeyed) {
+    return ScalarResult::KeyedTypeMismatch;
+  }
+
+  // Are we allowed to record this scalar based on the current Telemetry
+  // settings?
+  if (!internal_CanRecordForScalarID(aId)) {
+    return ScalarResult::CannotRecordDataset;
+  }
+
+  // Can we record in this process?
+  if (!internal_CanRecordProcess(aId)) {
+    return ScalarResult::CannotRecordInProcess;
+  }
+
+  return ScalarResult::Ok;
+}
+
+/**
  * Get the scalar enum id from the scalar name.
  *
  * @param aName The scalar name.
@@ -987,35 +1017,6 @@ internal_GetScalarByEnum(mozilla::Telemetry::ScalarID aId, GeckoProcessType aPro
 }
 
 /**
- * Get a scalar object by its enum id, if we're allowed to record it.
- *
- * @param aId The scalar id.
- * @return The ScalarBase instance or nullptr if we're not allowed to record
- *         the scalar.
- */
-ScalarBase*
-internal_GetRecordableScalar(mozilla::Telemetry::ScalarID aId)
-{
-  // Get the scalar by the enum (it also internally checks for aId validity).
-  ScalarBase* scalar = nullptr;
-  nsresult rv = internal_GetScalarByEnum(aId, GeckoProcessType_Default, &scalar);
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  if (internal_IsKeyedScalar(aId)) {
-    return nullptr;
-  }
-
-  // Are we allowed to record this scalar?
-  if (!internal_CanRecordForScalarID(aId) || !internal_CanRecordProcess(aId)) {
-    return nullptr;
-  }
-
-  return scalar;
-}
-
-/**
  * Update the scalar with the provided value. This is used by the JS API.
  *
  * @param aName The scalar name.
@@ -1034,19 +1035,12 @@ internal_UpdateScalar(const nsACString& aName, ScalarActionType aType,
            ScalarResult::NotInitialized : ScalarResult::UnknownScalar;
   }
 
-  // We're trying to set a plain scalar, so make sure this is one.
-  if (internal_IsKeyedScalar(id)) {
-    return ScalarResult::KeyedTypeMismatch;
-  }
-
-  // Are we allowed to record this scalar?
-  if (!internal_CanRecordForScalarID(id)) {
-    return ScalarResult::Ok;
-  }
-
-  // Can we record in this process?
-  if (!internal_CanRecordProcess(id)) {
-    return ScalarResult::CannotRecordInProcess;
+  ScalarResult sr = internal_CanRecordScalar(id, false);
+  if (sr != ScalarResult::Ok) {
+    if (sr == ScalarResult::CannotRecordDataset) {
+      return ScalarResult::Ok;
+    }
+    return sr;
   }
 
   // Accumulate in the child process if needed.
@@ -1156,35 +1150,6 @@ internal_GetKeyedScalarByEnum(mozilla::Telemetry::ScalarID aId, GeckoProcessType
 }
 
 /**
- * Get a keyed scalar object by its enum id, if we're allowed to record it.
- *
- * @param aId The scalar id.
- * @return The KeyedScalar instance or nullptr if we're not allowed to record
- *         the scalar.
- */
-KeyedScalar*
-internal_GetRecordableKeyedScalar(mozilla::Telemetry::ScalarID aId)
-{
-  // Get the scalar by the enum (it also internally checks for aId validity).
-  KeyedScalar* scalar = nullptr;
-  nsresult rv = internal_GetKeyedScalarByEnum(aId, GeckoProcessType_Default, &scalar);
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  if (!internal_IsKeyedScalar(aId)) {
-    return nullptr;
-  }
-
-  // Are we allowed to record this scalar?
-  if (!internal_CanRecordForScalarID(aId) || !internal_CanRecordProcess(aId)) {
-    return nullptr;
-  }
-
-  return scalar;
-}
-
-/**
  * Update the keyed scalar with the provided value. This is used by the JS API.
  *
  * @param aName The scalar name.
@@ -1204,19 +1169,12 @@ internal_UpdateKeyedScalar(const nsACString& aName, const nsAString& aKey,
            ScalarResult::NotInitialized : ScalarResult::UnknownScalar;
   }
 
-  // We're trying to set a keyed scalar, so make sure this is one.
-  if (!internal_IsKeyedScalar(id)) {
-    return ScalarResult::KeyedTypeMismatch;
-  }
-
-  // Are we allowed to record this scalar?
-  if (!internal_CanRecordForScalarID(id)) {
-    return ScalarResult::Ok;
-  }
-
-  // Can we record in this process?
-  if (!internal_CanRecordProcess(id)) {
-    return ScalarResult::CannotRecordInProcess;
+  ScalarResult sr = internal_CanRecordScalar(id, true);
+  if (sr != ScalarResult::Ok) {
+    if (sr == ScalarResult::CannotRecordDataset) {
+      return ScalarResult::Ok;
+    }
+    return sr;
   }
 
   // Accumulate in the child process if needed.
@@ -1397,6 +1355,11 @@ TelemetryScalar::Add(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
 {
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
+  if (internal_CanRecordScalar(aId, false) != ScalarResult::Ok) {
+    // We can't record this scalar. Bail out.
+    return;
+  }
+
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
     nsCOMPtr<nsIVariant> scalarValue;
@@ -1410,8 +1373,9 @@ TelemetryScalar::Add(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
     return;
   }
 
-  ScalarBase* scalar = internal_GetRecordableScalar(aId);
-  if (!scalar) {
+  ScalarBase* scalar = nullptr;
+  nsresult rv = internal_GetScalarByEnum(aId, GeckoProcessType_Default, &scalar);
+  if (NS_FAILED(rv)) {
     return;
   }
 
@@ -1431,6 +1395,11 @@ TelemetryScalar::Add(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
 {
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
+  if (internal_CanRecordScalar(aId, true) != ScalarResult::Ok) {
+    // We can't record this scalar. Bail out.
+    return;
+  }
+
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
     nsCOMPtr<nsIVariant> scalarValue;
@@ -1444,8 +1413,9 @@ TelemetryScalar::Add(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
     return;
   }
 
-  KeyedScalar* scalar = internal_GetRecordableKeyedScalar(aId);
-  if (!scalar) {
+  KeyedScalar* scalar = nullptr;
+  nsresult rv = internal_GetKeyedScalarByEnum(aId, GeckoProcessType_Default, &scalar);
+  if (NS_FAILED(rv)) {
     return;
   }
 
@@ -1535,6 +1505,11 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
 {
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
+  if (internal_CanRecordScalar(aId, false) != ScalarResult::Ok) {
+    // We can't record this scalar. Bail out.
+    return;
+  }
+
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
     nsCOMPtr<nsIVariant> scalarValue;
@@ -1548,8 +1523,9 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
     return;
   }
 
-  ScalarBase* scalar = internal_GetRecordableScalar(aId);
-  if (!scalar) {
+  ScalarBase* scalar = nullptr;
+  nsresult rv = internal_GetScalarByEnum(aId, GeckoProcessType_Default, &scalar);
+  if (NS_FAILED(rv)) {
     return;
   }
 
@@ -1567,6 +1543,11 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aValue)
 {
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
+  if (internal_CanRecordScalar(aId, false) != ScalarResult::Ok) {
+    // We can't record this scalar. Bail out.
+    return;
+  }
+
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
     nsCOMPtr<nsIVariant> scalarValue;
@@ -1580,8 +1561,9 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aValue)
     return;
   }
 
-  ScalarBase* scalar = internal_GetRecordableScalar(aId);
-  if (!scalar) {
+  ScalarBase* scalar = nullptr;
+  nsresult rv = internal_GetScalarByEnum(aId, GeckoProcessType_Default, &scalar);
+  if (NS_FAILED(rv)) {
     return;
   }
 
@@ -1599,6 +1581,11 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, bool aValue)
 {
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
+  if (internal_CanRecordScalar(aId, false) != ScalarResult::Ok) {
+    // We can't record this scalar. Bail out.
+    return;
+  }
+
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
     nsCOMPtr<nsIVariant> scalarValue;
@@ -1612,8 +1599,9 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, bool aValue)
     return;
   }
 
-  ScalarBase* scalar = internal_GetRecordableScalar(aId);
-  if (!scalar) {
+  ScalarBase* scalar = nullptr;
+  nsresult rv = internal_GetScalarByEnum(aId, GeckoProcessType_Default, &scalar);
+  if (NS_FAILED(rv)) {
     return;
   }
 
@@ -1633,6 +1621,11 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
 {
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
+  if (internal_CanRecordScalar(aId, true) != ScalarResult::Ok) {
+    // We can't record this scalar. Bail out.
+    return;
+  }
+
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
     nsCOMPtr<nsIVariant> scalarValue;
@@ -1646,8 +1639,9 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
     return;
   }
 
-  KeyedScalar* scalar = internal_GetRecordableKeyedScalar(aId);
-  if (!scalar) {
+  KeyedScalar* scalar = nullptr;
+  nsresult rv = internal_GetKeyedScalarByEnum(aId, GeckoProcessType_Default, &scalar);
+  if (NS_FAILED(rv)) {
     return;
   }
 
@@ -1667,6 +1661,11 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
 {
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
+  if (internal_CanRecordScalar(aId, true) != ScalarResult::Ok) {
+    // We can't record this scalar. Bail out.
+    return;
+  }
+
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
     nsCOMPtr<nsIVariant> scalarValue;
@@ -1680,8 +1679,9 @@ TelemetryScalar::Set(mozilla::Telemetry::ScalarID aId, const nsAString& aKey,
     return;
   }
 
-  KeyedScalar* scalar = internal_GetRecordableKeyedScalar(aId);
-  if (!scalar) {
+  KeyedScalar* scalar = nullptr;
+  nsresult rv = internal_GetKeyedScalarByEnum(aId, GeckoProcessType_Default, &scalar);
+  if (NS_FAILED(rv)) {
     return;
   }
 
@@ -1771,6 +1771,11 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
 {
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
+  if (internal_CanRecordScalar(aId, false) != ScalarResult::Ok) {
+    // We can't record this scalar. Bail out.
+    return;
+  }
+
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
     nsCOMPtr<nsIVariant> scalarValue;
@@ -1784,8 +1789,9 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, uint32_t aValue)
     return;
   }
 
-  ScalarBase* scalar = internal_GetRecordableScalar(aId);
-  if (!scalar) {
+  ScalarBase* scalar = nullptr;
+  nsresult rv = internal_GetScalarByEnum(aId, GeckoProcessType_Default, &scalar);
+  if (NS_FAILED(rv)) {
     return;
   }
 
@@ -1805,6 +1811,11 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& a
 {
   StaticMutexAutoLock locker(gTelemetryScalarsMutex);
 
+  if (internal_CanRecordScalar(aId, true) != ScalarResult::Ok) {
+    // We can't record this scalar. Bail out.
+    return;
+  }
+
   // Accumulate in the child process if needed.
   if (!XRE_IsParentProcess()) {
     nsCOMPtr<nsIVariant> scalarValue;
@@ -1818,8 +1829,9 @@ TelemetryScalar::SetMaximum(mozilla::Telemetry::ScalarID aId, const nsAString& a
     return;
   }
 
-  KeyedScalar* scalar = internal_GetRecordableKeyedScalar(aId);
-  if (!scalar) {
+  KeyedScalar* scalar = nullptr;
+  nsresult rv = internal_GetKeyedScalarByEnum(aId, GeckoProcessType_Default, &scalar);
+  if (NS_FAILED(rv)) {
     return;
   }
 

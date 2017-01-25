@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -172,7 +173,6 @@ SessionStore.prototype = {
   },
 
   observe: function ss_observe(aSubject, aTopic, aData) {
-    let self = this;
     let observerService = Services.obs;
     switch (aTopic) {
       case "app-startup":
@@ -201,10 +201,11 @@ SessionStore.prototype = {
         break;
       case "domwindowopened": {
         let window = aSubject;
-        window.addEventListener("load", function() {
-          self.onWindowOpen(window);
-          window.removeEventListener("load", arguments.callee);
-        });
+        let onLoad = () => {
+          window.removeEventListener("load", onLoad);
+          this.onWindowOpen(window);
+        };
+        window.addEventListener("load", onLoad);
         break;
       }
       case "domwindowclosed": // catch closed windows
@@ -214,8 +215,8 @@ SessionStore.prototype = {
         log("quit-application-requested");
         // Get a current snapshot of all windows
         if (this._pendingWrite) {
-          this._forEachBrowserWindow(function(aWindow) {
-            self._collectWindowData(aWindow);
+          this._forEachBrowserWindow((aWindow) => {
+            this._collectWindowData(aWindow);
           });
         }
         break;
@@ -1011,9 +1012,8 @@ SessionStore.prototype = {
   },
 
   _getCurrentState: function ss_getCurrentState() {
-    let self = this;
-    this._forEachBrowserWindow(function(aWindow) {
-      self._collectWindowData(aWindow);
+    this._forEachBrowserWindow((aWindow) => {
+      this._collectWindowData(aWindow);
     });
 
     let data = { windows: [] };
@@ -1631,44 +1631,24 @@ SessionStore.prototype = {
     }
 
     let window = Services.wm.getMostRecentWindow("navigator:browser");
-
     let tabs = state.windows[0].tabs;
-    let selected = state.windows[0].selected;
-    log("_restoreWindow() selected tab in aData is " + selected + " of " + tabs.length)
-    if (selected == null || selected > tabs.length) { // Clamp the selected index if it's bogus
-      log("_restoreWindow() resetting selected tab");
-      selected = 1;
-    }
-    log("restoreWindow() window.BrowserApp.selectedTab is " + window.BrowserApp.selectedTab.id);
 
     for (let i = 0; i < tabs.length; i++) {
       let tabData = tabs[i];
       let entry = tabData.entries[tabData.index - 1];
 
-      // Use stubbed tab if we've already created it; otherwise, make a new tab
-      let tab;
-      let parentId = tabData.parentId;
-      if (tabData.tabId == null) {
-        let params = {
-          selected: (selected == i+1),
-          delayLoad: true,
-          title: entry.title,
-          desktopMode: (tabData.desktopMode == true),
-          isPrivate: (tabData.isPrivate == true),
-          parentId: parentId
-        };
-        tab = window.BrowserApp.addTab(entry.url, params);
-      } else {
-        tab = window.BrowserApp.getTabForId(tabData.tabId);
+      // Get the stubbed tab
+      let tab = window.BrowserApp.getTabForId(tabData.tabId);
 
-        // Don't restore tab if user has closed it
-        if (tab == null) {
-          delete tabData.tabId;
-          continue;
-        }
-        if (parentId > -1) {
-          tab.setParentId(parentId);
-        }
+      // Don't restore tab if user has already closed it
+      if (tab == null) {
+        delete tabData.tabId;
+        continue;
+      }
+
+      let parentId = tabData.parentId;
+      if (parentId > -1) {
+        tab.setParentId(parentId);
       }
 
       tab.browser.__SS_data = tabData;

@@ -39,10 +39,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=912103
     });
   }
 
-  window.addEventListener("DOMContentLoaded", function run() {
-    window.removeEventListener("DOMContentLoaded", run);
+  window.addEventListener("DOMContentLoaded", function() {
     runTest();
-  });
+  }, {once: true});
 
   </script>
 </head>

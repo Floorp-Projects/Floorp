@@ -4,6 +4,7 @@
 
 DevToolsModules(
     'cookies-panel.js',
+    'details-panel.js',
     'editor.js',
     'headers-panel.js',
     'params-panel.js',

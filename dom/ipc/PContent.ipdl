@@ -24,11 +24,6 @@ include protocol PImageBridge;
 include protocol PMedia;
 include protocol PMemoryReportRequest;
 include protocol PNecko;
-// FIXME This is pretty ridiculous, but we have to keep the order of the
-//       following 4 includes, or the parser is confused about PGMPContent
-//       bridging PContent and PGMP. As soon as it registers the bridge between
-//       PContent and PPluginModule it seems to think that PContent's parent and
-//       child live in the same process!
 include protocol PGMPContent;
 include protocol PGMPService;
 include protocol PPluginModule;
@@ -361,7 +356,6 @@ nested(upto inside_cpow) sync protocol PContent
 {
     parent spawns PPluginModule;
 
-    parent opens PGMPService;
     child opens PBackground;
 
     manages PBlob;
@@ -428,6 +422,7 @@ both:
                                      uint64_t aOuterWindowID);
 
 child:
+    async InitGMPService(Endpoint<PGMPServiceChild> service);
     async InitProcessHangMonitor(Endpoint<PProcessHangMonitorChild> hangMonitor);
 
     // Give the content process its endpoints to the compositor.

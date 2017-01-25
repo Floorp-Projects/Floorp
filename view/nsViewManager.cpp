@@ -57,20 +57,21 @@ nsTArray<nsViewManager*>* nsViewManager::gViewManagers = nullptr;
 uint32_t nsViewManager::gLastUserEventTime = 0;
 
 nsViewManager::nsViewManager()
-  : mDelayedResize(NSCOORD_NONE, NSCOORD_NONE)
+  : mPresShell(nullptr)
+  , mDelayedResize(NSCOORD_NONE, NSCOORD_NONE)
+  , mRootView(nullptr)
+  , mRootViewManager(this)
+  , mRefreshDisableCount(0)
+  , mPainting(false)
+  , mRecursiveRefreshPending(false)
+  , mHasPendingWidgetGeometryChanges(false)
 {
-  mRootViewManager = this;
   if (gViewManagers == nullptr) {
     // Create an array to hold a list of view managers
     gViewManagers = new nsTArray<nsViewManager*>;
   }
  
   gViewManagers->AppendElement(this);
-
-  // NOTE:  we use a zeroing operator new, so all data members are
-  // assumed to be cleared here.
-  mHasPendingWidgetGeometryChanges = false;
-  mRecursiveRefreshPending = false;
 }
 
 nsViewManager::~nsViewManager()

@@ -22,6 +22,8 @@ NS_IMPL_ADDREF_INHERITED(nsHtml5DocumentBuilder, nsContentSink)
 NS_IMPL_RELEASE_INHERITED(nsHtml5DocumentBuilder, nsContentSink)
 
 nsHtml5DocumentBuilder::nsHtml5DocumentBuilder(bool aRunsToCompletion)
+  : mBroken(NS_OK)
+  , mFlushState(eHtml5FlushState::eNotFlushing)
 {
   mRunsToCompletion = aRunsToCompletion;
 }

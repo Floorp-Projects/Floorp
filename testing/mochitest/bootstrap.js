@@ -26,12 +26,11 @@ var WindowListener = {
   onOpenWindow: function (win) {
     win = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
 
-    win.addEventListener("load", function listener() {
-      win.removeEventListener("load", listener);
+    win.addEventListener("load", function() {
       if (win.document.documentElement.getAttribute("windowtype") == "navigator:browser") {
         WindowListener.setupWindow(win);
       }
-    });
+    }, {once: true});
   }
 }
 

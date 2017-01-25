@@ -331,8 +331,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::EndDocument()
     nsCOMPtr<nsIFile> destFile;
     mPrintSettings->GetToFileName(getter_Copies(targetPath));
 
-    nsresult rv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(targetPath),
-                                        false, getter_AddRefs(destFile));
+    nsresult rv = NS_NewLocalFile(targetPath, false, getter_AddRefs(destFile));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoString destLeafName;

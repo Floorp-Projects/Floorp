@@ -212,12 +212,9 @@ function dragElementBy(selector, x, y, win) {
 function* testViewportResize(ui, selector, moveBy,
                              expectedViewportSize, expectedHandleMove) {
   let win = ui.toolWindow;
-
-  let changed = once(ui, "viewport-device-changed");
   let resized = waitForViewportResizeTo(ui, ...expectedViewportSize);
   let startRect = dragElementBy(selector, ...moveBy, win);
   yield resized;
-  yield changed;
 
   let endRect = getElRect(selector, win);
   is(endRect.left - startRect.left, expectedHandleMove[0],
@@ -272,7 +269,7 @@ function changeSelectValue({ toolWindow }, selector, value) {
 }
 
 const selectDevice = (ui, value) => Promise.all([
-  once(ui, "viewport-device-changed"),
+  once(ui, "device-changed"),
   changeSelectValue(ui, ".viewport-device-selector", value)
 ]);
 
@@ -329,6 +326,15 @@ function waitForPageShow(browser) {
   });
 }
 
+function waitForViewportLoad(ui) {
+  return new Promise(resolve => {
+    let browser = ui.getViewportBrowser();
+    browser.addEventListener("mozbrowserloadend", () => {
+      resolve();
+    }, { once: true });
+  });
+}
+
 function load(browser, url) {
   let loaded = BrowserTestUtils.browserLoaded(browser, false, url);
   browser.loadURI(url, null, null);
@@ -362,4 +368,31 @@ function waitForClientClose(ui) {
     info("RDM's debugger client is now closed");
     ui.client.addOneTimeListener("closed", resolve);
   });
+}
+
+function* testTouchEventsOverride(ui, expected) {
+  let { document } = ui.toolWindow;
+  let touchButton = document.querySelector("#global-touch-simulation-button");
+
+  let flag = yield ui.emulationFront.getTouchEventsOverride();
+  is(flag === Ci.nsIDocShell.TOUCHEVENTS_OVERRIDE_ENABLED, expected,
+    `Touch events override should be ${expected ? "enabled" : "disabled"}`);
+  is(touchButton.classList.contains("active"), expected,
+    `Touch simulation button should be ${expected ? "" : "in"}active.`);
+}
+
+function testViewportDeviceSelectLabel(ui, expected) {
+  info("Test viewport's device select label");
+
+  let select = ui.toolWindow.document.querySelector(".viewport-device-selector");
+  is(select.selectedOptions[0].textContent, expected,
+     `Device Select value should be: ${expected}`);
+}
+
+function* enableTouchSimulation(ui) {
+  let { document } = ui.toolWindow;
+  let touchButton = document.querySelector("#global-touch-simulation-button");
+  let loaded = waitForViewportLoad(ui);
+  touchButton.click();
+  yield loaded;
 }

@@ -210,7 +210,6 @@ toolkit/content/widgets/wizard.xml
 toolkit/components/jsdownloads/src/DownloadIntegration.jsm
 toolkit/components/url-classifier/**
 toolkit/components/urlformatter/nsURLFormatter.js
-toolkit/identity/FirefoxAccounts.jsm
 toolkit/modules/AppConstants.jsm
 toolkit/mozapps/downloads/nsHelperAppDlg.js
 toolkit/mozapps/extensions/internal/AddonConstants.jsm

@@ -70,10 +70,10 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
 
   // request
   [Throws]
-  void open(ByteString method, DOMString url);
+  void open(ByteString method, USVString url);
   [Throws]
-  void open(ByteString method, DOMString url, boolean async,
-            optional DOMString? user=null, optional DOMString? password=null);
+  void open(ByteString method, USVString url, boolean async,
+            optional USVString? user=null, optional USVString? password=null);
   [Throws]
   void setRequestHeader(ByteString header, ByteString value);
 
@@ -97,7 +97,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [Throws]
   void send(Document data);
   [Throws]
-  void send(DOMString? data);
+  void send(USVString? data);
   [Throws]
   void send(FormData data);
   [Throws]
@@ -109,7 +109,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   void abort();
 
   // response
-  readonly attribute DOMString responseURL;
+  readonly attribute USVString responseURL;
 
   [Throws]
   readonly attribute unsigned short status;
@@ -131,7 +131,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [Throws]
   readonly attribute any response;
   [Cached, Pure, Throws]
-  readonly attribute DOMString? responseText;
+  readonly attribute USVString? responseText;
 
   [Throws, Exposed=Window]
   readonly attribute Document? responseXML;

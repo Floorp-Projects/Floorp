@@ -17,8 +17,7 @@ function test_sendMouseEventDefaults() {
   var x = 1, y = 2, button = 1, clickCount = 2,
       modifiers = SpecialPowers.Ci.nsIDOMNSEvent.SHIFT_MASK;
 
-  window.addEventListener("mousedown", function listener(evt) {
-    window.removeEventListener("mousedown", listener);
+  window.addEventListener("mousedown", function(evt) {
     // Mandatory args
     // coordinates may change slightly due to rounding
     ok((evt.clientX <= x+2) && (evt.clientX >= x-2), "check x");
@@ -33,7 +32,7 @@ function test_sendMouseEventDefaults() {
     is(evt.isSynthesized, undefined, "check isSynthesized is undefined in content");
     is(SpecialPowers.wrap(evt).isSynthesized, true, "check isSynthesized is true from chrome");
     SimpleTest.executeSoon(next);
-  });
+  }, {once: true});
 
   // Only pass mandatory arguments and check default values
   utils.sendMouseEvent("mousedown", x, y, button, clickCount, modifiers);
@@ -45,12 +44,11 @@ function test_sendMouseEventOptionals() {
       pressure = 0.5,
       source = SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_KEYBOARD;
 
-  window.addEventListener("mouseup", function listener(evt) {
-    window.removeEventListener("mouseup", listener);
+  window.addEventListener("mouseup", function(evt) {
     is(evt.mozInputSource, source, "explicit input source is valid");
     is(SpecialPowers.wrap(evt).isSynthesized, false, "we can dispatch event that don't look synthesized");
     SimpleTest.executeSoon(next);
-  });
+  }, {once: true});
 
   // Check explicit value for optional args
   utils.sendMouseEvent("mouseup", x, y, button, clickCount, modifiers,

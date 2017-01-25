@@ -51,10 +51,9 @@ window.location = "data:application/vnd.mozilla.xul+xml;charset=utf-8,<window/>"
 // Create a promise that is delivered once add-on window is interactive,
 // used by add-on runner to defer add-on loading until window is ready.
 var { promise, resolve } = defer();
-eventTarget.addEventListener("DOMContentLoaded", function handler(event) {
-  eventTarget.removeEventListener("DOMContentLoaded", handler);
+eventTarget.addEventListener("DOMContentLoaded", function(event) {
   resolve();
-});
+}, {once: true});
 
 exports.ready = promise;
 exports.window = window;

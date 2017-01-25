@@ -4,12 +4,10 @@ function test() {
   var pageInfo;
 
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function loadListener() {
-    gBrowser.selectedBrowser.removeEventListener("load", loadListener, true);
-
+  gBrowser.selectedBrowser.addEventListener("load", function() {
     Services.obs.addObserver(observer, "page-info-dialog-loaded", false);
     pageInfo = BrowserPageInfo();
-  }, true);
+  }, {capture: true, once: true});
   content.location =
     "https://example.com/browser/browser/base/content/test/general/feed_tab.html";
 

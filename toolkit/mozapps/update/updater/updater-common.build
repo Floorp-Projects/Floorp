@@ -116,7 +116,7 @@ for var in ('MAR_CHANNEL_ID', 'MOZ_APP_VERSION'):
 
 LOCAL_INCLUDES += [
     '/toolkit/mozapps/update/common',
-    '/xpcom/glue',
+    '/xpcom/base', # for nsVersionComparator.cpp
 ]
 
 DELAYLOAD_DLLS += [

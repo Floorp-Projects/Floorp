@@ -50,19 +50,17 @@ add_task(function* () {
 
 function onPopupShow(contextMenu) {
   let deferred = defer();
-  contextMenu.addEventListener("popupshown", function onpopupshown() {
-    contextMenu.removeEventListener("popupshown", onpopupshown);
+  contextMenu.addEventListener("popupshown", function () {
     deferred.resolve();
-  });
+  }, {once: true});
   return deferred.promise;
 }
 
 function onPopupHide(contextMenu) {
   let deferred = defer();
-  contextMenu.addEventListener("popuphidden", function popuphidden() {
-    contextMenu.removeEventListener("popuphidden", popuphidden);
+  contextMenu.addEventListener("popuphidden", function () {
     deferred.resolve();
-  });
+  }, {once: true});
   return deferred.promise;
 }
 

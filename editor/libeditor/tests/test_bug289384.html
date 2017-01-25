@@ -20,10 +20,9 @@ SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function() {
   var win = window.open("data:text/html,<a href=\"data:text/html,<body contenteditable onload='opener.continueTest(window);'>foo bar</body>\">link</a>", "", "test-289384");
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad);
+  win.addEventListener("load", function() {
     win.document.querySelector("a").click();
-  });
+  }, {once: true});
 });
 
 function continueTest(win) {

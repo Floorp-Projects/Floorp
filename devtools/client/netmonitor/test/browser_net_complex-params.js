@@ -25,44 +25,43 @@ add_task(function* () {
   });
   yield wait;
 
-  wait = waitForDOM(document, "#params-tabpanel .tree-section", 2);
+  wait = waitForDOM(document, "#panel-2 .tree-section", 2);
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.getElementById("details-pane-toggle"));
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll("#details-pane tab")[2]);
+  document.querySelector("#tab-2 a").click();
   yield wait;
   testParamsTab1("a", '""', '{ "foo": "bar" }', '""');
 
-  wait = waitForDOM(document, "#params-tabpanel .tree-section", 2);
+  wait = waitForDOM(document, "#panel-2 .tree-section", 2);
   RequestsMenu.selectedIndex = 1;
   yield wait;
   testParamsTab1("a", '"b"', '{ "foo": "bar" }', '""');
 
-  wait = waitForDOM(document, "#params-tabpanel .tree-section", 2);
+  wait = waitForDOM(document, "#panel-2 .tree-section", 2);
   RequestsMenu.selectedIndex = 2;
   yield wait;
   testParamsTab1("a", '"b"', "foo", '"bar"');
 
-  wait = waitForDOM(document, "#params-tabpanel tr:not(.tree-section).treeRow", 2);
+  wait = waitForDOM(document, "#panel-2 tr:not(.tree-section).treeRow", 2);
   RequestsMenu.selectedIndex = 3;
   yield wait;
   testParamsTab2("a", '""', '{ "foo": "bar" }', "js");
 
-  wait = waitForDOM(document, "#params-tabpanel tr:not(.tree-section).treeRow", 2);
+  wait = waitForDOM(document, "#panel-2 tr:not(.tree-section).treeRow", 2);
   RequestsMenu.selectedIndex = 4;
   yield wait;
   testParamsTab2("a", '"b"', '{ "foo": "bar" }', "js");
 
   // Wait for all tree sections and editor updated by react
-  let waitSections = waitForDOM(document, "#params-tabpanel .tree-section", 2);
-  let waitEditor = waitForDOM(document, "#params-tabpanel .editor-mount iframe");
+  let waitSections = waitForDOM(document, "#panel-2 .tree-section", 2);
+  let waitEditor = waitForDOM(document, "#panel-2 .editor-mount iframe");
   RequestsMenu.selectedIndex = 5;
   let [, editorFrames] = yield Promise.all([waitSections, waitEditor]);
   yield once(editorFrames[0], "DOMContentLoaded");
   yield waitForDOM(editorFrames[0].contentDocument, ".CodeMirror-code");
   testParamsTab2("a", '"b"', "?foo=bar", "text");
 
-  wait = waitForDOM(document, "#params-tabpanel .empty-notice");
+  wait = waitForDOM(document, "#panel-2 .empty-notice");
   RequestsMenu.selectedIndex = 6;
   yield wait;
   testParamsTab3();
@@ -71,7 +70,7 @@ add_task(function* () {
 
   function testParamsTab1(queryStringParamName, queryStringParamValue,
                           formDataParamName, formDataParamValue) {
-    let tabpanel = document.querySelectorAll("#details-pane tabpanel")[2];
+    let tabpanel = document.querySelector("#panel-2");
 
     is(tabpanel.querySelectorAll(".tree-section").length, 2,
       "The number of param tree sections displayed in this tabpanel is incorrect.");
@@ -112,7 +111,7 @@ add_task(function* () {
   function testParamsTab2(queryStringParamName, queryStringParamValue,
                           requestPayload, editorMode) {
     let isJSON = editorMode === "js";
-    let tabpanel = document.querySelectorAll("#details-pane tabpanel")[2];
+    let tabpanel = document.querySelector("#panel-2");
 
     is(tabpanel.querySelectorAll(".tree-section").length, 2,
       "The number of param tree sections displayed in this tabpanel is incorrect.");
@@ -165,7 +164,7 @@ add_task(function* () {
   }
 
   function testParamsTab3() {
-    let tabpanel = document.querySelectorAll("#details-pane tabpanel")[2];
+    let tabpanel = document.querySelector("#panel-2");
 
     is(tabpanel.querySelectorAll(".tree-section").length, 0,
       "The number of param tree sections displayed in this tabpanel is incorrect.");

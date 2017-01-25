@@ -20,7 +20,6 @@ var windowListener = {
     // Wait for the window to finish loading
     let domWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
     domWindow.addEventListener("load", function() {
-      domWindow.removeEventListener("load", arguments.callee);
       if (domWindow) {
         domWindow.addEventListener("scroll", function(e) {
           let message = {
@@ -32,7 +31,7 @@ var windowListener = {
           _sendMessageToJava(message);
         });
       }
-    });
+    }, {once: true});
   },
   onCloseWindow: function(aWindow) { },
   onWindowTitleChange: function(aWindow, aTitle) { }

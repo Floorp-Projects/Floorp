@@ -45,7 +45,8 @@ class Configuration(DescriptorProvider):
                 # Our build system doesn't support dep build involving
                 # addition/removal of "implements" statements that appear in a
                 # different .webidl file than their LHS interface.  Make sure we
-                # don't have any of those.
+                # don't have any of those.  See similar block below for partial
+                # interfaces!
                 #
                 # But whitelist a RHS that is LegacyQueryInterface,
                 # since people shouldn't be adding any of those.
@@ -66,6 +67,33 @@ class Configuration(DescriptorProvider):
             if not thing.isInterface() and not thing.isNamespace():
                 continue
             iface = thing
+            # Our build system doesn't support dep builds involving
+            # addition/removal of partial interfaces that appear in a different
+            # .webidl file than the interface they are extending.  Make sure we
+            # don't have any of those.  See similar block above for "implements"
+            # statements!
+            if not iface.isExternal():
+                for partialIface in iface.getPartialInterfaces():
+                    if (partialIface.filename() != iface.filename() and
+                        # Unfortunately, NavigatorProperty does exactly the
+                        # thing we're trying to prevent here.  I'm not sure how
+                        # to deal with that, short of effectively requiring a
+                        # clobber when NavigatorProperty is added/removed and
+                        # whitelisting the things it outputs here as
+                        # restrictively as I can.
+                        (partialIface.identifier.name != "Navigator" or
+                         len(partialIface.members) != 1 or
+                         partialIface.members[0].location != partialIface.location or
+                         partialIface.members[0].identifier.location.filename() !=
+                           "<builtin>")):
+                        raise TypeError(
+                            "The binding build system doesn't really support "
+                            "partial interfaces which don't appear in the "
+                            "file in which the interface they are extending is "
+                            "defined.  Don't do this.\n"
+                            "%s\n"
+                            "%s" %
+                            (partialIface.location, iface.location))
             self.interfaces[iface.identifier.name] = iface
             if iface.identifier.name not in config:
                 # Completely skip consequential interfaces with no descriptor

@@ -590,6 +590,28 @@ var EventTargetParent = {
 };
 EventTargetParent.init();
 
+// This function returns a listener that will remove itself the first time
+// it is fired.
+var selfRemovingListeners = new WeakMap();
+function makeSelfRemovingListener(addon, target, type, listener, useCapture) {
+  if (selfRemovingListeners.has(listener)) {
+    return selfRemovingListeners.get(listener);
+  }
+
+  function selfRemovingListener(event) {
+    EventTargetInterposition.methods.removeEventListener(addon, target, type,
+                                                         listener, useCapture);
+    if ("handleEvent" in listener) {
+      listener.handleEvent(event);
+    } else {
+      listener.call(event.target, event);
+    }
+  }
+  selfRemovingListeners.set(listener, selfRemovingListener);
+
+  return selfRemovingListener;
+}
+
 // This function returns a listener that will not fire on events where
 // the target is a remote xul:browser element itself. We'd rather let
 // the child process handle the event and pass it up via
@@ -631,18 +653,33 @@ function makeFilteringListener(eventType, listener) {
 var EventTargetInterposition = new Interposition("EventTargetInterposition");
 
 EventTargetInterposition.methods.addEventListener =
-  function(addon, target, type, listener, useCapture, wantsUntrusted) {
+  function(addon, target, type, listener, options, wantsUntrusted) {
     let delayed = CompatWarning.delayedWarning(
       `Registering a ${type} event listener on content DOM nodes` +
         " needs to happen in the content process.",
       addon, CompatWarning.warnings.DOM_events);
 
-    EventTargetParent.addEventListener(addon, target, type, listener, useCapture, wantsUntrusted, delayed);
-    target.addEventListener(type, makeFilteringListener(type, listener), useCapture, wantsUntrusted);
+    let useCapture =
+      options === true || (typeof options == "object" && options.capture) || false;
+    if (typeof options == "object" && options.once) {
+      listener = makeSelfRemovingListener(addon, target, type, listener, useCapture);
+    }
+
+    EventTargetParent.addEventListener(addon, target, type, listener,
+                                       useCapture, wantsUntrusted, delayed);
+    target.addEventListener(type, makeFilteringListener(type, listener),
+                            useCapture, wantsUntrusted);
   };
 
 EventTargetInterposition.methods.removeEventListener =
-  function(addon, target, type, listener, useCapture) {
+  function(addon, target, type, listener, options) {
+    let useCapture =
+      options === true || (typeof options == "object" && options.capture) || false;
+
+    if (selfRemovingListeners.has(listener)) {
+      listener = selfRemovingListeners.get(listener);
+    }
+
     EventTargetParent.removeEventListener(addon, target, type, listener, useCapture);
     target.removeEventListener(type, makeFilteringListener(type, listener), useCapture);
   };

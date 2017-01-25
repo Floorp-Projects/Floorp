@@ -24,18 +24,16 @@ alert('step 1');
 // Wait for both iframes to load.
 
 var iframe1Loaded = false;
-iframe1.addEventListener('load', function iframe1Load() {
-  iframe1.removeEventListener('load', iframe1Load);
+iframe1.addEventListener('load', function() {
   iframe1Loaded = true;
   waitForBothLoads();
-});
+}, {once: true});
 
 var iframe2Loaded = false;
-iframe2.addEventListener('load', function iframe2Load() {
-  iframe2.removeEventListener('load', iframe2Load);
+iframe2.addEventListener('load', function() {
   iframe2Loaded = true;
   waitForBothLoads();
-});
+}, {once: true});
 
 function waitForBothLoads() {
   if (iframe1Loaded && iframe2Loaded) {

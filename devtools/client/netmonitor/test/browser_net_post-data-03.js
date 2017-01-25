@@ -26,14 +26,13 @@ add_task(function* () {
   yield wait;
 
   // Wait for all tree view updated by react
-  wait = waitForDOM(document, ".properties-view .treeTable");
+  wait = waitForDOM(document, "#panel-0");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.getElementById("details-pane-toggle"));
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll("#details-pane tab")[0]);
+  document.querySelector("#tab-0 a").click();
   yield wait;
 
-  let tabpanel = document.querySelectorAll("#details-pane tabpanel")[0];
+  let tabpanel = document.querySelector("#panel-0");
 
   is(tabpanel.querySelectorAll(".tree-section .treeLabel").length, 3,
     "There should be 3 header sections displayed in this tabpanel.");
@@ -58,12 +57,11 @@ add_task(function* () {
     "The second request header value was incorrect.");
 
   // Wait for all tree sections updated by react
-  wait = waitForDOM(document, "#params-tabpanel .tree-section");
-  EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelectorAll("#details-pane tab")[2]);
+  wait = waitForDOM(document, "#panel-2 .tree-section");
+  document.querySelector("#tab-2 a").click();
   yield wait;
 
-  tabpanel = document.querySelectorAll("#details-pane tabpanel")[2];
+  tabpanel = document.querySelector("#panel-2");
 
   ok(tabpanel.querySelector(".treeTable"),
     "The params tree view should be displayed.");

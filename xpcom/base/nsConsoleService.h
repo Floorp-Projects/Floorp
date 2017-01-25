@@ -18,6 +18,7 @@
 #include "nsHashKeys.h"
 
 #include "nsIConsoleService.h"
+#include "nsIObserver.h"
 
 class nsConsoleService final : public nsIConsoleService,
                                public nsIObserver

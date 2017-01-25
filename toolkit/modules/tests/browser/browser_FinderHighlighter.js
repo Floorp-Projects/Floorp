@@ -199,7 +199,7 @@ add_task(function* testModalResults() {
       rectCount: 2,
       insertCalls: [2, 4],
       removeCalls: [0, 1],
-      animationCalls: [5, 6]
+      animationCalls: [1, 2]
     }],
     ["their law might propagate their kind", {
       rectCount: 2,

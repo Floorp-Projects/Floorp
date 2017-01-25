@@ -8,7 +8,6 @@ DIRS += [
     'components',
     'content',
     'forgetaboutsite',
-    'identity',
     'locales',
     'modules',
     'mozapps/downloads',

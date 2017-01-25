@@ -59,10 +59,9 @@ add_task(function* () {
 
   yield ContentTask.spawn(tab.linkedBrowser, "", function*() {
     return new Promise(resolve => {
-      content.document.addEventListener("selectionchange", function selectionChanged() {
-        content.document.removeEventListener("selectionchange", selectionChanged);
+      content.document.addEventListener("selectionchange", function() {
         resolve();
-      });
+      }, {once: true});
       content.document.getSelection().selectAllChildren(content.document.body);
     });
   });

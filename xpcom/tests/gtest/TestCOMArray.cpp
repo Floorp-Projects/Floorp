@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCOMArray.h"
+#include "nsCOMPtr.h"
+#include "nsISupports.h"
 #include "gtest/gtest.h"
 
 // {9e70a320-be02-11d1-8031-006008159b5a}

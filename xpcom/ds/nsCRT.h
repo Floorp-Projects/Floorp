@@ -24,41 +24,6 @@
 
 extern const char16_t kIsoLatin1ToUCS2[256];
 
-// This macro can be used in a class declaration for classes that want
-// to ensure that their instance memory is zeroed.
-#define NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW   \
-  void* operator new(size_t sz) CPP_THROW_NEW { \
-    void* rv = ::operator new(sz);              \
-    if (rv) {                                   \
-      memset(rv, 0, sz);                        \
-    }                                           \
-    return rv;                                  \
-  }                                             \
-  void operator delete(void* ptr) {             \
-    ::operator delete(ptr);                     \
-  }
-
-// This macro works with the next macro to declare a non-inlined
-// version of the above.
-#define NS_DECL_ZEROING_OPERATOR_NEW           \
-  void* operator new(size_t sz) CPP_THROW_NEW; \
-  void operator delete(void* ptr);
-
-#define NS_IMPL_ZEROING_OPERATOR_NEW(_class)            \
-  void* _class::operator new(size_t sz) CPP_THROW_NEW { \
-    void* rv = ::operator new(sz);                      \
-    if (rv) {                                           \
-      memset(rv, 0, sz);                                \
-    }                                                   \
-    return rv;                                          \
-  }                                                     \
-  void _class::operator delete(void* ptr) {             \
-    ::operator delete(ptr);                             \
-  }
-
-// Freeing helper
-#define CRTFREEIF(x) if (x) { nsCRT::free(x); x = 0; }
-
 /// This is a wrapper class around all the C runtime functions.
 
 class nsCRT

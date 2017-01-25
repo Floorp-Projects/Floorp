@@ -33,15 +33,14 @@ add_test(function setup_browser() {
   // Load our test web page with <video> elements
   let url = "http://mochi.test:8888/tests/robocop/video_controls.html";
   browser = BrowserApp.addTab(url, { selected: true, parentId: BrowserApp.selectedTab.id }).browser;
-  browser.addEventListener("load", function startTests(event) {
-    browser.removeEventListener("load", startTests, true);
+  browser.addEventListener("load", function(event) {
     contentDocument = browser.contentDocument;
 
     video = contentDocument.getElementById("video");
     ok(video, "Found the video element");
 
     Services.tm.mainThread.dispatch(run_next_test, Ci.nsIThread.DISPATCH_NORMAL);
-  }, true);
+  }, {capture: true, once: true});
 });
 
 add_test(function test_webm() {

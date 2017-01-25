@@ -13,10 +13,8 @@ function loadPage(aURL, aCallback, aBackground = false) {
   let browser = tab.linkedBrowser;
   browser.loadURI(aURL);
   browser.addEventListener("AddonDisplayed", function(event) {
-    browser.removeEventListener("AddonDisplayed", arguments.callee);
-
     aCallback(tab);
-  });
+  }, {once: true});
 }
 
 function test() {
