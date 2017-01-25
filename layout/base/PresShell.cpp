@@ -1080,6 +1080,11 @@ LogTextPerfStats(gfxTextPerfMetrics* aTextPerf,
 void
 PresShell::Destroy()
 {
+  // Do not add code before this line please!
+  if (mHaveShutDown) {
+    return;
+  }
+
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
     "destroy called on presshell while scripts not blocked");
 
@@ -1113,9 +1118,6 @@ PresShell::Destroy()
     mReflowCountMgr = nullptr;
   }
 #endif
-
-  if (mHaveShutDown)
-    return;
 
   if (mZoomConstraintsClient) {
     mZoomConstraintsClient->Destroy();
