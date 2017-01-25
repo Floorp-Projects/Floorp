@@ -657,7 +657,7 @@ exports["test Listeners"] = createProxyTest(html, function (helper) {
 
       let addEventListenerCalled = false;
       let expandoCalled = false;
-      input.addEventListener("click", function onclick(event) {
+      input.addEventListener("click", function (event) {
         assert(!addEventListenerCalled, "closure given to addEventListener is called once");
         if (addEventListenerCalled)
           return;
