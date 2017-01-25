@@ -122,8 +122,7 @@ typedef uint8_t* Address;
 // supported platforms.
 
 class OS {
- public:
-
+public:
   // Sleep for a number of milliseconds.
   static void Sleep(const int milliseconds);
 
@@ -132,14 +131,7 @@ class OS {
 
   // Called on startup to initialize platform specific things
   static void Startup();
-
- private:
-  static const int msPerSecond = 1000;
-
 };
-
-
-
 
 // ----------------------------------------------------------------------------
 // Thread
