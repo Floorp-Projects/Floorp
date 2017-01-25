@@ -2415,6 +2415,27 @@ gfxPlatform::GetDefaultFrameRate()
 }
 
 void
+gfxPlatform::GetAzureBackendInfo(mozilla::widget::InfoObject& aObj)
+{
+  if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
+    aObj.DefineProperty("AzureCanvasBackend (UI Process)", GetBackendName(mPreferredCanvasBackend));
+    aObj.DefineProperty("AzureFallbackCanvasBackend (UI Process)", GetBackendName(mFallbackCanvasBackend));
+    aObj.DefineProperty("AzureContentBackend (UI Process)", GetBackendName(mContentBackend));
+
+    if (gfxConfig::IsEnabled(gfx::Feature::DIRECT2D)) {
+      aObj.DefineProperty("AzureCanvasBackend", "Direct2D 1.1");
+      aObj.DefineProperty("AzureContentBackend", "Direct2D 1.1");
+    }
+  } else {
+    aObj.DefineProperty("AzureCanvasBackend", GetBackendName(mPreferredCanvasBackend));
+    aObj.DefineProperty("AzureFallbackCanvasBackend", GetBackendName(mFallbackCanvasBackend));
+    aObj.DefineProperty("AzureContentBackend", GetBackendName(mContentBackend));
+  }
+
+  aObj.DefineProperty("AzureCanvasAccelerated", AllowOpenGLCanvas());
+}
+
+void
 gfxPlatform::GetApzSupportInfo(mozilla::widget::InfoObject& aObj)
 {
   if (!gfxPlatform::AsyncPanZoomEnabled()) {
