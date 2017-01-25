@@ -1,7 +1,5 @@
-/* Any copyright is dedicated to the Public Domain.
+ /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/* import-globals-from head_global.js */
 
 Cu.import("resource://services-common/utils.js");
 

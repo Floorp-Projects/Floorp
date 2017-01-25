@@ -40,8 +40,6 @@ module.exports = {
     "do_throw": false,
     "do_timeout": false,
     "equal": false,
-    // XPCShell specific function, see XPCShellEnvironment.cpp
-    "gczeal": false,
     "greater": false,
     "greaterOrEqual": false,
     "less": false,
