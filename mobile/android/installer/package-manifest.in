@@ -177,6 +177,9 @@
 #endif
 @BINPATH@/components/mimetype.xpt
 @BINPATH@/components/mozfind.xpt
+#ifdef ENABLE_INTL_API
+@BINPATH@/components/mozintl.xpt
+#endif
 @BINPATH@/components/necko_about.xpt
 @BINPATH@/components/necko_cache.xpt
 @BINPATH@/components/necko_cache2.xpt
