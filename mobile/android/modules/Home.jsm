@@ -433,7 +433,7 @@ var HomePanels = (function () {
     install: function(id) {
       _assertPanelExists(id);
 
-      Messaging.sendRequest({
+      EventDispatcher.instance.sendRequest({
         type: "HomePanels:Install",
         panel: _generatePanel(id)
       });
@@ -442,7 +442,7 @@ var HomePanels = (function () {
     uninstall: function(id) {
       _assertPanelExists(id);
 
-      Messaging.sendRequest({
+      EventDispatcher.instance.sendRequest({
         type: "HomePanels:Uninstall",
         id: id
       });
@@ -451,7 +451,7 @@ var HomePanels = (function () {
     update: function(id) {
       _assertPanelExists(id);
 
-      Messaging.sendRequest({
+      EventDispatcher.instance.sendRequest({
         type: "HomePanels:Update",
         panel: _generatePanel(id)
       });
