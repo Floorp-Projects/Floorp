@@ -34,7 +34,7 @@ public class GeckoViewActivity extends Activity {
 
         mGeckoView = (GeckoView) findViewById(R.id.gecko_view);
         mGeckoView.setChromeDelegate(new MyGeckoViewChrome());
-        mGeckoView.setContentDelegate(new MyGeckoViewContent());
+        mGeckoView.setContentListener(new MyGeckoViewContent());
     }
 
     @Override
@@ -89,30 +89,10 @@ public class GeckoViewActivity extends Activity {
         }
     }
 
-    private class MyGeckoViewContent implements GeckoView.ContentDelegate {
+    private class MyGeckoViewContent implements GeckoView.ContentListener {
         @Override
-        public void onPageStart(GeckoView view, String url) {
-
-        }
-
-        @Override
-        public void onPageStop(GeckoView view, boolean success) {
-
-        }
-
-        @Override
-        public void onPageShow(GeckoView view) {
-
-        }
-
-        @Override
-        public void onReceivedTitle(GeckoView view, String title) {
-            Log.i(LOGTAG, "Received a title: " + title);
-        }
-
-        @Override
-        public void onReceivedFavicon(GeckoView view, String url, int size) {
-            Log.i(LOGTAG, "Received a favicon URL: " + url);
+        public void onTitleChanged(GeckoView view, String title) {
+            Log.i(LOGTAG, "Content title changed to " + title);
         }
     }
 }
