@@ -51,7 +51,9 @@ function* freePortal(aSuccess) {
   }, "Waiting for Captive Portal Service to update state after portal freed.");
 }
 
-function* openWindowAndWaitForPortalUI(aLongRecheck) {
+// If a window is provided, it will be focused. Otherwise, a new window
+// will be opened and focused.
+function* focusWindowAndWaitForPortalUI(aLongRecheck, win) {
   // CaptivePortalWatcher triggers a recheck when a window gains focus. If
   // the time taken for the check to complete is under PORTAL_RECHECK_DELAY_MS,
   // a tab with the login page is opened and selected. If it took longer,
@@ -61,7 +63,10 @@ function* openWindowAndWaitForPortalUI(aLongRecheck) {
   // simulate a short recheck.
   Preferences.set("captivedetect.portalRecheckDelayMS", aLongRecheck ? -1 : 1000000);
 
-  let win = yield openWindowAndWaitForFocus();
+  if (!win) {
+    win = yield BrowserTestUtils.openNewBrowserWindow();
+  }
+  yield SimpleTest.promiseFocus(win);
 
   // After a new window is opened, CaptivePortalWatcher asks for a recheck, and
   // waits for it to complete. We need to manually tell it a recheck completed.
@@ -175,11 +180,47 @@ let testCasesForBothSuccessAndAbort = [
    */
   function* test_detectedWithNoBrowserWindow_Open(aSuccess) {
     yield portalDetected();
-    let win = yield openWindowAndWaitForPortalUI();
+    let win = yield focusWindowAndWaitForPortalUI();
     yield freePortal(aSuccess);
     ensureNoPortalTab(win);
     ensureNoPortalNotification(win);
     yield closeWindowAndWaitForXulWindowVisible(win);
+  },
+
+  /**
+   * A portal is detected when multiple browser windows are open but none
+   * have focus. A brower window is focused, then the portal is freed.
+   * The portal tab should be added and focused when the window is
+   * focused, and closed automatically when the success event is fired.
+   * The captive portal notification should be shown in all windows upon
+   * detection, and closed automatically when the success event is fired.
+   */
+  function* test_detectedWithNoBrowserWindow_Focused(aSuccess) {
+    let win1 = yield openWindowAndWaitForFocus();
+    let win2 = yield openWindowAndWaitForFocus();
+    // Defocus both windows.
+    yield SimpleTest.promiseFocus(window);
+
+    yield portalDetected();
+
+    // Notification should be shown in both windows.
+    ensurePortalNotification(win1);
+    ensureNoPortalTab(win1);
+    ensurePortalNotification(win2);
+    ensureNoPortalTab(win2);
+
+    yield focusWindowAndWaitForPortalUI(false, win2);
+
+    yield freePortal(aSuccess);
+
+    ensureNoPortalNotification(win1);
+    ensureNoPortalTab(win2);
+    ensureNoPortalNotification(win2);
+
+    yield closeWindowAndWaitForXulWindowVisible(win2);
+    // No need to wait for xul-window-visible: after win2 is closed, focus
+    // is restored to the default window and win1 remains in the background.
+    yield BrowserTestUtils.closeWindow(win1);
   },
 
   /**
@@ -192,7 +233,7 @@ let testCasesForBothSuccessAndAbort = [
    */
   function* test_detectedWithNoBrowserWindow_LongRecheck(aSuccess) {
     yield portalDetected();
-    let win = yield openWindowAndWaitForPortalUI(true);
+    let win = yield focusWindowAndWaitForPortalUI(true);
     yield freePortal(aSuccess);
     ensureNoPortalTab(win);
     ensureNoPortalNotification(win);
@@ -247,7 +288,7 @@ let singleRunTestCases = [
    */
   function* test_detectedWithNoBrowserWindow_Redirect() {
     yield portalDetected();
-    let win = yield openWindowAndWaitForPortalUI();
+    let win = yield focusWindowAndWaitForPortalUI();
     let browser = win.gBrowser.selectedTab.linkedBrowser;
     let loadPromise =
       BrowserTestUtils.browserLoaded(browser, false, CANONICAL_URL_REDIRECTED);
