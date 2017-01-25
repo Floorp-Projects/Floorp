@@ -126,12 +126,6 @@ child:
    */
   async HideAllPlugins(uintptr_t aParentWidget);
 
-  /**
-   * Drop any buffers that might be retained on the child compositor
-   * side.
-   */
-  async ClearCachedResources(uint64_t id);
-
   async ParentAsyncMessages(AsyncParentMessageData[] aMessages);
 
   async ObserveLayerUpdate(uint64_t aLayersId, uint64_t aEpoch, bool aActive);
