@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import java.io.IOException;
 
 import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.json.JSONObject;
 import org.json.JSONException;
 
@@ -89,15 +90,15 @@ class ChromeCastPlayer implements GeckoMediaPlayer {
 
             switch (mediaStatus.getPlayerState()) {
             case MediaStatus.PLAYER_STATE_PLAYING:
-                GeckoAppShell.notifyObservers("MediaPlayer:Playing", null);
+                EventDispatcher.getInstance().dispatch("MediaPlayer:Playing", null);
                 break;
             case MediaStatus.PLAYER_STATE_PAUSED:
-                GeckoAppShell.notifyObservers("MediaPlayer:Paused", null);
+                EventDispatcher.getInstance().dispatch("MediaPlayer:Paused", null);
                 break;
             case MediaStatus.PLAYER_STATE_IDLE:
                 // TODO: Do we want to shutdown when there are errors?
                 if (mediaStatus.getIdleReason() == MediaStatus.IDLE_REASON_FINISHED) {
-                    GeckoAppShell.notifyObservers("Casting:Stop", null);
+                    EventDispatcher.getInstance().dispatch("Casting:Stop", null);
                 }
                 break;
             default:
@@ -388,7 +389,9 @@ class ChromeCastPlayer implements GeckoMediaPlayer {
         @Override
         public void onMessageReceived(CastDevice castDevice, String namespace,
                                       String message) {
-            GeckoAppShell.notifyObservers("MediaPlayer:Response", message);
+            final GeckoBundle data = new GeckoBundle(1);
+            data.putString("message", message);
+            EventDispatcher.getInstance().dispatch("MediaPlayer:Response", data);
         }
 
         public void sendMessage(String message) {
@@ -437,7 +440,9 @@ class ChromeCastPlayer implements GeckoMediaPlayer {
                     Log.e(LOGTAG, "Exception while creating channel", e);
                 }
 
-                GeckoAppShell.notifyObservers("Casting:Mirror", route.getId());
+                final GeckoBundle message = new GeckoBundle(1);
+                message.putString("id", route.getId());
+                EventDispatcher.getInstance().dispatch("Casting:Mirror", message);
             } else {
                 sendError(callback, status.toString());
             }

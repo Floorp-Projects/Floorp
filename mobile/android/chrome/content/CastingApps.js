@@ -88,10 +88,13 @@ var CastingApps = {
       this.handleContextMenu.bind(this)
     );
 
-    Services.obs.addObserver(this, "Casting:Play", false);
-    Services.obs.addObserver(this, "Casting:Pause", false);
-    Services.obs.addObserver(this, "Casting:Stop", false);
-    Services.obs.addObserver(this, "Casting:Mirror", false);
+    GlobalEventDispatcher.registerListener(this, [
+      "Casting:Play",
+      "Casting:Pause",
+      "Casting:Stop",
+      "Casting:Mirror",
+    ]);
+
     Services.obs.addObserver(this, "ssdp-service-found", false);
     Services.obs.addObserver(this, "ssdp-service-lost", false);
     Services.obs.addObserver(this, "application-background", false);
@@ -172,8 +175,8 @@ var CastingApps = {
     return Services.prefs.getBoolPref("browser.mirroring.enabled");
   },
 
-  observe: function (aSubject, aTopic, aData) {
-    switch (aTopic) {
+  onEvent: function (event, message, callback) {
+    switch (event) {
       case "Casting:Play":
         if (this.session && this.session.remoteMedia.status == "paused") {
           this.session.remoteMedia.play();
@@ -192,11 +195,16 @@ var CastingApps = {
       case "Casting:Mirror":
         {
           Cu.import("resource://gre/modules/TabMirror.jsm");
-          this.tabMirror = new TabMirror(aData, window);
+          this.tabMirror = new TabMirror(message.id, window);
           NativeWindow.menu.update(this.mirrorStartMenuId, { visible: false });
           NativeWindow.menu.update(this.mirrorStopMenuId, { visible: true });
         }
         break;
+    }
+  },
+
+  observe: function (aSubject, aTopic, aData) {
+    switch (aTopic) {
       case "ssdp-service-found":
         this.serviceAdded(SimpleServiceDiscovery.findServiceForID(aData));
         break;
@@ -751,7 +759,10 @@ var CastingApps = {
     }
 
     aRemoteMedia.load(this.session.data);
-    Messaging.sendRequest({ type: "Casting:Started", device: this.session.service.friendlyName });
+    GlobalEventDispatcher.sendRequest({
+        type: "Casting:Started",
+        device: this.session.service.friendlyName,
+    });
 
     let video = this.session.videoRef.get();
     if (video) {
@@ -761,7 +772,7 @@ var CastingApps = {
   },
 
   onRemoteMediaStop: function(aRemoteMedia) {
-    Messaging.sendRequest({ type: "Casting:Stopped" });
+    GlobalEventDispatcher.sendRequest({ type: "Casting:Stopped" });
     this._shutdown();
   },
 
@@ -773,10 +784,10 @@ var CastingApps = {
     let status = aRemoteMedia.status;
     switch (status) {
       case "started":
-        Messaging.sendRequest({ type: "Casting:Playing" });
+        GlobalEventDispatcher.sendRequest({ type: "Casting:Playing" });
         break;
       case "paused":
-        Messaging.sendRequest({ type: "Casting:Paused" });
+        GlobalEventDispatcher.sendRequest({ type: "Casting:Paused" });
         break;
       case "completed":
         this.closeExternal();
