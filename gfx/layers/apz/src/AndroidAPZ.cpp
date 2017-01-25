@@ -89,11 +89,11 @@ AndroidFlingAnimation::AndroidFlingAnimation(AsyncPanZoomController& aApzc,
   // (in this APZC, or an APZC further in the handoff chain).
   // This ensures that we don't take the 'overscroll' path in Sample()
   // on account of one axis which can't scroll having a velocity.
-  if (!mOverscrollHandoffChain->CanScrollInDirection(&mApzc, Layer::HORIZONTAL)) {
+  if (!mOverscrollHandoffChain->CanScrollInDirection(&mApzc, ScrollDirection::HORIZONTAL)) {
     ReentrantMonitorAutoEnter lock(mApzc.mMonitor);
     mApzc.mX.SetVelocity(0);
   }
-  if (!mOverscrollHandoffChain->CanScrollInDirection(&mApzc, Layer::VERTICAL)) {
+  if (!mOverscrollHandoffChain->CanScrollInDirection(&mApzc, ScrollDirection::VERTICAL)) {
     ReentrantMonitorAutoEnter lock(mApzc.mMonitor);
     mApzc.mY.SetVelocity(0);
   }
