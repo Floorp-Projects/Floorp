@@ -473,7 +473,7 @@ _bev_group_random_element(struct bufferevent_rate_limit_group *group)
 #define FOREACH_RANDOM_ORDER(block)			\
 	do {						\
 		first = _bev_group_random_element(g);	\
-		for (bev = first; bev != NULL; \
+		for (bev = first; bev != TAILQ_END(&g->members); \
 		    bev = TAILQ_NEXT(bev, rate_limiting->next_in_group)) { \
 			block ;					 \
 		}						 \

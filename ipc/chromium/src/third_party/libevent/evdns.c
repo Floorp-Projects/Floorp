@@ -727,21 +727,29 @@ request_reissue(struct request *req) {
 
 /* this function looks for space on the inflight queue and promotes */
 /* requests from the waiting queue if it can. */
+/* */
+/* TODO: */
+/* add return code, see at nameserver_pick() and other functions. */
 static void
 evdns_requests_pump_waiting_queue(struct evdns_base *base) {
 	ASSERT_LOCKED(base);
 	while (base->global_requests_inflight < base->global_max_requests_inflight &&
 		   base->global_requests_waiting) {
 		struct request *req;
-		/* move a request from the waiting queue to the inflight queue */
+
 		EVUTIL_ASSERT(base->req_waiting_head);
 		req = base->req_waiting_head;
+
+		req->ns = nameserver_pick(base);
+		if (!req->ns)
+			return;
+
+		/* move a request from the waiting queue to the inflight queue */
 		evdns_request_remove(req, &base->req_waiting_head);
 
 		base->global_requests_waiting--;
 		base->global_requests_inflight++;
 
-		req->ns = nameserver_pick(base);
 		request_trans_id_set(req, transaction_id_pick(base));
 
 		evdns_request_insert(req, &REQ_HEAD(base, req->trans_id));
@@ -2215,6 +2223,12 @@ evdns_request_transmit(struct request *req) {
 	req->transmit_me = 1;
 	EVUTIL_ASSERT(req->trans_id != 0xffff);
 
+	if (!req->ns)
+	{
+		/* unable to transmit request if no nameservers */
+		return 1;
+	}
+
 	if (req->ns->choked) {
 		/* don't bother trying to write to a socket */
 		/* which we have had EAGAIN from */
@@ -2435,6 +2449,7 @@ evdns_base_resume(struct evdns_base *base)
 	EVDNS_LOCK(base);
 	evdns_requests_pump_waiting_queue(base);
 	EVDNS_UNLOCK(base);
+
 	return 0;
 }
 
@@ -3931,6 +3946,10 @@ evdns_nameserver_free(struct nameserver *server)
 	event_debug_unassign(&server->event);
 	if (server->state == 0)
 		(void) event_del(&server->timeout_event);
+	if (server->probe_request) {
+		evdns_cancel_request(server->base, server->probe_request);
+		server->probe_request = NULL;
+	}
 	event_debug_unassign(&server->timeout_event);
 	mm_free(server);
 }
@@ -3946,6 +3965,15 @@ evdns_base_free_and_unlock(struct evdns_base *base, int fail_requests)
 
 	/* TODO(nickm) we might need to refcount here. */
 
+	for (server = base->server_head; server; server = server_next) {
+		server_next = server->next;
+		evdns_nameserver_free(server);
+		if (server_next == base->server_head)
+			break;
+	}
+	base->server_head = NULL;
+	base->global_good_nameservers = 0;
+
 	for (i = 0; i < base->n_req_heads; ++i) {
 		while (base->req_heads[i]) {
 			if (fail_requests)
@@ -3960,14 +3988,6 @@ evdns_base_free_and_unlock(struct evdns_base *base, int fail_requests)
 	}
 	base->global_requests_inflight = base->global_requests_waiting = 0;
 
-	for (server = base->server_head; server; server = server_next) {
-		server_next = server->next;
-		evdns_nameserver_free(server);
-		if (server_next == base->server_head)
-			break;
-	}
-	base->server_head = NULL;
-	base->global_good_nameservers = 0;
 
 	if (base->global_search_state) {
 		for (dom = base->global_search_state->head; dom; dom = dom_next) {

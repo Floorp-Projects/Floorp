@@ -1,17 +1,7 @@
-# HG changeset patch
-# User Landry Breuil <landry@openbsd.org>
-# Date 1384377262 -3600
-#      Wed Nov 13 22:14:22 2013 +0100
-# Node ID 026009b2c94dc564413d48df824fabec98e2c631
-# Parent  f2b602a5ee27b2e05abe84ea7cbd358dadd2ffb5
-Bug 931354: OpenBSD doesn't provide arc4random_addrandom anymore, fix libevent accordingly by #ifndef'ing out its caller evutil_secure_rng_add_bytes() (which isnt called anywhere) r=joshaas
-
-See also bug 1259218 for why we remove it for Android.
-
 diff --git a/ipc/chromium/src/third_party/libevent/evutil_rand.c b/ipc/chromium/src/third_party/libevent/evutil_rand.c
 --- a/ipc/chromium/src/third_party/libevent/evutil_rand.c
 +++ b/ipc/chromium/src/third_party/libevent/evutil_rand.c
-@@ -134,15 +134,16 @@ ev_arc4random_buf(void *buf, size_t n)
+@@ -166,15 +166,16 @@ ev_arc4random_buf(void *buf, size_t n)
  #endif /* } !_EVENT_HAVE_ARC4RANDOM */
  
  void
@@ -32,14 +22,14 @@ diff --git a/ipc/chromium/src/third_party/libevent/evutil_rand.c b/ipc/chromium/
 diff --git a/ipc/chromium/src/third_party/libevent/include/event2/util.h b/ipc/chromium/src/third_party/libevent/include/event2/util.h
 --- a/ipc/chromium/src/third_party/libevent/include/event2/util.h
 +++ b/ipc/chromium/src/third_party/libevent/include/event2/util.h
-@@ -667,29 +667,31 @@ void evutil_secure_rng_get_bytes(void *b
-  * numbers.  You only need to call it if (a) you want to double-check
-  * that one of the seeding methods did succeed, or (b) you plan to drop
-  * the capability to seed (by chrooting, or dropping capabilities, or
-  * whatever), and you want to make sure that seeding happens before your
-  * program loses the ability to do it.
+@@ -685,29 +685,31 @@ int evutil_secure_rng_init(void);
+  * (This string will _NOT_ be copied internally. Do not free it while any
+  * user of the secure RNG might be running. Don't pass anything other than a
+  * real /dev/...random device file here, or you might lose security.)
+  *
+  * This API is unstable, and might change in a future libevent version.
   */
- int evutil_secure_rng_init(void);
+ int evutil_secure_rng_set_urandom_device_file(char *fname);
  
 +#if !defined(__OpenBSD__) && !defined(ANDROID)
  /** Seed the random number generator with extra random bytes.

@@ -1,43 +1,42 @@
-This is a clean copy of libevent-2.0.21-stable with the following
-modifications.
+This is a clean copy of libevent-2.0.22-stable with the following modifications.
 
 1. Add the following files:
 
+- android/event2/event-config.h
+- bsd/event2/event-config.h
 - linux/event2/event-config.h
 - mac/event2/event-config.h
-- bsd/event2/event-config.h
-- android/event2/event-config.h
 
-These files are taken from libevent-2.0.21-stable built on the development
+These files are taken from libevent-2.0.22-stable built on the development
 environment indicated by the first path component. You have to run
 "./configure" and "make" to get all of the pre-processing done. The file can
 then be found in "include/event2/".
 
-You then need to modify the _EVENT_SIZEOF_* constants in the generated linux,
-android, mac and bsd headers to be appropriate for both 32-bit and 64-bit
-platforms. Use __LP64__ to distinguish the two cases. If you get something
-wrong the CHECK_EVENT_SIZEOF static assertions in message_pump_libevent.cc will
-fail.
+You then need to modify the _EVENT_SIZEOF_* constants in the generated Linux,
+Android, and BSD headers to be appropriate for both 32-bit and 64-bit platforms.
+Mac doesn't need this since only 64-bit is supported. Use __LP64__ to
+distinguish the two cases. If you get something wrong, the CHECK_EVENT_SIZEOF
+static assertions in message_pump_libevent.cc will fail. If a new constant is
+added, also add a static assertion for it to message_pump_libevent.cc.
 
-2. This is ugly, prepare yourself. OS X has a weird problem with how the
-"TAILQ_END(head)" is used, causing a linking error. Just replace all use of the
-"TAILQ_END(head)" macro with "NULL".
-
-3. Apply the following patches from
+2. Apply the following patches from
 ipc/chromium/src/third_party/libevent/patches/:
 
-- "mac-arc4random-buf.patch". This removes some bad OS X compatibility code.
-  This will allow libevent to compile on all supported versions of OS X.
+- "avoid-empty-sighandler.patch". Fixes OSX "code -20" crashes.
+  See bug 884471.
 
-- "openbsd-no-arc4random_addrandom.patch". This fixes the build on OpenBSD
-  (which doesn't provide arc4random_addrandom anymore, see #931354).
+- "openbsd-no-arc4random_addrandom.patch". Fixes the build on OpenBSD
+  and Android (which don't provide arc4random_addrandom anymore).
+  See bug 931354 and bug 1259218.
 
-- "use-non-deprecated-syscalls.patch". This fixes the build on AArch64
-  architecture (which does not provide deprecated syscalls).
+- "dont-use-issetugid-on-android.patch". Fixes Android startup crashes.
+  See bug 1030899.
 
-- "dont-use-issetugid-on-android.patch". This fixes the build on Android L
-  preview.
+- "linux-no-sysctl.patch". Fixes the build on Linux systems without sysctl.h.
+  See bug 1263429.
 
-- "avoid-empty-sighandler.patch". This fixes some OS X crashes.
+- "android-arc4random-buf.patch". Fixes the build for clang/android builds.
+  See bug 1281596 and bug 1282141.
 
-- "android64_support.patch". This fixes Android 64-bit support.
+- "fix-kqueue-workaround.patch". Fixes a broken check for an OSX kqueue bug
+  that caused problems on newer OSX releases. See bug 1304266.
