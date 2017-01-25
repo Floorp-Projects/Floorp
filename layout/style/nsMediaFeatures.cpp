@@ -303,8 +303,15 @@ static void
 GetDisplayMode(nsPresContext* aPresContext, const nsMediaFeature*,
                nsCSSValue& aResult)
 {
-  nsCOMPtr<nsISupports> container = aPresContext->GetRootPresContext()->
-    Document()->GetContainer();
+  nsCOMPtr<nsISupports> container;
+  if (aPresContext) {
+    // Calling GetRootPresContext() can be slow, so make sure to call it
+    // just once.
+    nsRootPresContext* root = aPresContext->GetRootPresContext();
+    if (root && root->Document()) {
+      container = root->Document()->GetContainer();
+    }
+  }
   nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(container);
   if (!baseWindow) {
     aResult.SetIntValue(NS_STYLE_DISPLAY_MODE_BROWSER, eCSSUnit_Enumerated);
