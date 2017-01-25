@@ -347,7 +347,7 @@ add_task(async function test_generic_engine_fail() {
       JSON.stringify(engine._tracker.changedIDs)}`);
     let ping = await sync_and_validate_telem(true);
     equal(ping.status.service, SYNC_FAILED_PARTIAL);
-    deepEqual(ping.engines.find(err => err.name === "steam").failureReason, {
+    deepEqual(ping.engines.find(e => e.name === "steam").failureReason, {
       name: "unexpectederror",
       error: String(e)
     });

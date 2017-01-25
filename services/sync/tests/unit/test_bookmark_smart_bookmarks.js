@@ -47,10 +47,10 @@ function clearBookmarks() {
   startCount = smartBookmarkCount();
 }
 
-function serverForFoo(engineData) {
+function serverForFoo(engine) {
   return serverForUsers({"foo": "password"}, {
-    meta: {global: {engines: {bookmarks: {version: engineData.version,
-                                          syncID: engineData.syncID}}}},
+    meta: {global: {engines: {bookmarks: {version: engine.version,
+                                          syncID: engine.syncID}}}},
     bookmarks: {}
   });
 }

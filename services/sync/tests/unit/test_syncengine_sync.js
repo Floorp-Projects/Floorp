@@ -1139,8 +1139,8 @@ add_task(async function test_processIncoming_failed_records() {
   // Keep track of requests made of a collection.
   let count = 0;
   let uris  = [];
-  function recording_handler(recordedCollection) {
-    let h = recordedCollection.handler();
+  function recording_handler(collection) {
+    let h = collection.handler();
     return function(req, res) {
       ++count;
       uris.push(req.path + "?" + req.queryString);
