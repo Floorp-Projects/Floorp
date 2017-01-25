@@ -27,3 +27,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['mscom']
 
 DIRS += ['app']
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "IPC")
