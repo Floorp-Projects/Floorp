@@ -114,6 +114,25 @@ class TestLint(unittest.TestCase):
         self.assertEquals(e.exception.message,
                           "Missing @depends for `foo`: '--help'")
 
+        with self.assertRaises(ConfigureError) as e:
+            with self.moz_configure('''
+                option('--foo', help='foo')
+                @depends('--foo')
+                @imports('os')
+                def foo(value):
+                    return value
+
+                @depends(foo)
+                def bar(value):
+                    return value
+
+                include(bar)
+            '''):
+                self.lint_test()
+
+        self.assertEquals(e.exception.message,
+                          "Missing @depends for `foo`: '--help'")
+
         # There is a default restricted `os` module when there is no explicit
         # @imports, and it's fine to use it without a dependency on --help.
         with self.moz_configure('''

@@ -352,7 +352,7 @@ class TestConfigure(unittest.TestCase):
         )
 
         with self.assertRaises(NameError) as e:
-            sandbox._depends[sandbox['bar']].result
+            sandbox._depends[sandbox['bar']].result()
 
         self.assertEquals(e.exception.message,
                           "global name 'sys' is not defined")

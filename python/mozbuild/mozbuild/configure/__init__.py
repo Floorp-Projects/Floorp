@@ -31,7 +31,6 @@ from mozbuild.configure.util import (
 from mozbuild.util import (
     exec_,
     memoize,
-    memoized_property,
     ReadOnlyDict,
     ReadOnlyNamespace,
 )
@@ -81,12 +80,14 @@ class DependsFunction(object):
             for d in self.dependencies
         ]
 
-    @memoized_property
-    def result(self):
-        if self.when and not self.sandbox._value_for(self.when):
+    @memoize
+    def result(self, need_help_dependency=False):
+        if self.when and not self.sandbox._value_for(self.when,
+                                                     need_help_dependency):
             return None
 
-        resolved_args = [self.sandbox._value_for(d) for d in self.dependencies]
+        resolved_args = [self.sandbox._value_for(d, need_help_dependency)
+                         for d in self.dependencies]
         return self.func(*resolved_args)
 
     def __repr__(self):
@@ -125,13 +126,14 @@ class CombinedDependsFunction(DependsFunction):
         super(CombinedDependsFunction, self).__init__(
             sandbox, wrapper, flatten_deps)
 
-    @memoized_property
-    def result(self):
+    @memoize
+    def result(self, need_help_dependency=False):
         # Ignore --help for the combined result
         deps = self.dependencies
         if deps[0] == self.sandbox._help_option:
             deps = deps[1:]
-        resolved_args = [self.sandbox._value_for(d) for d in deps]
+        resolved_args = [self.sandbox._value_for(d, need_help_dependency)
+                         for d in deps]
         return self.func(*resolved_args)
 
     def __eq__(self, other):
@@ -416,7 +418,7 @@ class ConfigureSandbox(dict):
     @memoize
     def _value_for_depends(self, obj, need_help_dependency=False):
         assert not inspect.isgeneratorfunction(obj.func)
-        return obj.result
+        return obj.result(need_help_dependency)
 
     @memoize
     def _value_for_option(self, option):
