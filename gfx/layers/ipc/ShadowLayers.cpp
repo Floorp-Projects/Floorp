@@ -603,6 +603,8 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
 
   MOZ_LAYERS_LOG(("[LayersForwarder] building transaction..."));
 
+  nsTArray<OpSetLayerAttributes> setAttrs;
+
   // We purposely add attribute-change ops to the final changeset
   // before we add paint ops.  This allows layers to record the
   // attribute changes before new pixels arrive, which can be useful
@@ -618,7 +620,10 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
     Layer* mutant = shadow->AsLayer();
     MOZ_ASSERT(!!mutant, "unshadowable layer?");
 
-    LayerAttributes attrs;
+    OpSetLayerAttributes op;
+    op.layer() = Shadow(shadow);
+
+    LayerAttributes& attrs = op.attrs();
     CommonLayerAttributes& common = attrs.common();
     common.layerBounds() = mutant->GetLayerBounds();
     common.visibleRegion() = mutant->GetVisibleRegion();
@@ -680,11 +685,12 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
 
     MOZ_LAYERS_LOG(("[LayersForwarder] OpSetLayerAttributes(%p)\n", mutant));
 
-    mTxn->AddEdit(OpSetLayerAttributes(Shadow(shadow), attrs));
+    setAttrs.AppendElement(op);
   }
 
   if (mTxn->mCset.IsEmpty() &&
       mTxn->mPaints.IsEmpty() &&
+      setAttrs.IsEmpty() &&
       !mTxn->RotationChanged())
   {
     return true;
@@ -693,6 +699,7 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
   mWindowOverlayChanged = false;
 
   info.cset() = Move(mTxn->mCset);
+  info.setAttrs() = Move(setAttrs);
   info.paints() = Move(mTxn->mPaints);
   info.toDestroy() = mTxn->mDestroyedActors;
   info.fwdTransactionId() = GetFwdTransactionId();
