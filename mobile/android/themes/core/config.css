@@ -129,9 +129,8 @@ ul {
     background-color: #ffffff;
     min-height: 100%;
     width: 100%;
-    padding-top: 0;
     margin: 0;
-    padding-left: 0;
+    padding: 0;
     box-sizing: border-box;
     box-shadow: 0 0 5px #000000;
     overflow-x: hidden;
@@ -189,6 +188,7 @@ li {
     text-overflow: ellipsis;
     overflow: hidden;
     background-image: none;
+    direction: ltr;
 }
 
 .pref-value {
@@ -198,6 +198,7 @@ li {
     -moz-appearance: none;
     background-image: none;
     background-color: transparent;
+    unicode-bidi: plaintext;
 }
 
 .pref-name[locked] {
