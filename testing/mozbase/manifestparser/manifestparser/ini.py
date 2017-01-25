@@ -8,8 +8,7 @@ __all__ = ['read_ini', 'combine_fields']
 
 
 def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
-             comments=(';', '#'), separators=('=', ':'), strict=True,
-             handle_defaults=True):
+             comments=None, separators=None, strict=True, handle_defaults=True):
     """
     read an .ini file and return a list of [(section, values)]
     - fp : file pointer or path to read
@@ -24,6 +23,8 @@ def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
 
     # variables
     variables = variables or {}
+    comments = comments or ('#',)
+    separators = separators or ('=', ':')
     sections = []
     key = value = None
     section_names = set()
