@@ -1277,12 +1277,6 @@ public:
     }
   }
 
-  enum ScrollDirection {
-    NONE,
-    VERTICAL,
-    HORIZONTAL
-  };
-
   /**
    * CONSTRUCTION PHASE ONLY
    * If a layer is a scrollbar layer, |aScrollId| holds the scroll identifier

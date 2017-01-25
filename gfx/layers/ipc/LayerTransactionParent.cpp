@@ -303,7 +303,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo,
                                      common.stickyScrollRangeInner());
       }
       layer->SetScrollbarData(common.scrollbarTargetContainerId(),
-        static_cast<Layer::ScrollDirection>(common.scrollbarDirection()),
+        static_cast<ScrollDirection>(common.scrollbarDirection()),
         common.scrollbarThumbRatio());
       if (common.isScrollbarContainer()) {
         layer->SetIsScrollbarContainer();
