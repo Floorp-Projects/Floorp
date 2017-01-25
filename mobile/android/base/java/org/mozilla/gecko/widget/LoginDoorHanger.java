@@ -23,9 +23,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -86,12 +83,8 @@ public class LoginDoorHanger extends DoorHanger {
                 final String expandedExtra = mType.toString().toLowerCase(Locale.US) + "-" + telemetryExtra;
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.DOORHANGER, expandedExtra);
 
-                final JSONObject response = new JSONObject();
-                try {
-                    response.put("callback", id);
-                } catch (JSONException e) {
-                    Log.e(LOGTAG, "Error making doorhanger response message", e);
-                }
+                final GeckoBundle response = new GeckoBundle(1);
+                response.putInt("callback", id);
                 mOnButtonClickListener.onButtonClick(response, LoginDoorHanger.this);
             }
         };
@@ -100,9 +93,7 @@ public class LoginDoorHanger extends DoorHanger {
     /**
      * Add sub-text to the doorhanger and add the click action.
      *
-     * If the parsing the action from the JSON throws, the text is left visible, but there is no
-     * click action.
-     * @param actionTextObj JSONObject containing blob for making an action.
+     * @param actionTextObj GeckoBundle containing blob for making an action.
      */
     private void addActionText(final GeckoBundle actionTextObj) {
         if (actionTextObj == null) {
@@ -147,18 +138,13 @@ public class LoginDoorHanger extends DoorHanger {
                         mButtonConfig.label, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(final DialogInterface dialog, final int which) {
-                        JSONObject response = new JSONObject();
-                        try {
-                            response.put("callback", mButtonConfig.callback);
-                            final JSONObject inputs = new JSONObject();
-                            inputs.put("username", username.getText());
-                            inputs.put("password", password.getText());
-                            response.put("inputs", inputs);
-                        } catch (JSONException e) {
-                            Log.e(LOGTAG, "Error creating doorhanger reply message");
-                            response = null;
-                            Toast.makeText(mContext, mResources.getString(R.string.doorhanger_login_edit_toast_error), Toast.LENGTH_SHORT).show();
-                        }
+                        final GeckoBundle inputs = new GeckoBundle(2);
+                        inputs.putString("username", username.getText().toString());
+                        inputs.putString("password", password.getText().toString());
+
+                        final GeckoBundle response = new GeckoBundle(2);
+                        response.putInt("callback", mButtonConfig.callback);
+                        response.putBundle("inputs", inputs);
                         mOnButtonClickListener.onButtonClick(response, LoginDoorHanger.this);
                     }
                 });
@@ -199,13 +185,9 @@ public class LoginDoorHanger extends DoorHanger {
                 builder.setItems(usernames, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        final JSONObject response = new JSONObject();
-                        try {
-                            response.put("callback", mButtonConfig.callback);
-                            response.put("password", passwords[which]);
-                        } catch (JSONException e) {
-                            Log.e(LOGTAG, "Error making login select dialog JSON", e);
-                        }
+                        final GeckoBundle response = new GeckoBundle(2);
+                        response.putInt("callback", mButtonConfig.callback);
+                        response.putString("password", passwords[which]);
                         mOnButtonClickListener.onButtonClick(response, LoginDoorHanger.this);
                     }
                 });

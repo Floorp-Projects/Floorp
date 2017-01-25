@@ -219,34 +219,27 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         final OnButtonClickListener buttonClickListener = new OnButtonClickListener() {
             Activity activity = (Activity) mContext;
             @Override
-            public void onButtonClick(JSONObject response, DoorHanger doorhanger) {
-                try {
-                    final int buttonId = response.getInt("callback");
-                    if (buttonId == ButtonType.COPY.ordinal()) {
-                        final ClipboardManager manager = (ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
-                        String password;
-                        if (response.has("password")) {
-                            // Click listener being called from List Dialog.
-                            password = response.optString("password");
-                        } else {
-                            password = login.getString("password");
-                        }
-
-                        manager.setPrimaryClip(ClipData.newPlainText("password", password));
-
-                        SnackbarBuilder.builder(activity)
-                                .message(R.string.doorhanger_login_select_toast_copy)
-                                .duration(Snackbar.LENGTH_SHORT)
-                                .buildAndShow();
+            public void onButtonClick(final GeckoBundle response, final DoorHanger doorhanger) {
+                final int buttonId = response.getInt("callback");
+                if (buttonId == ButtonType.COPY.ordinal()) {
+                    final ClipboardManager manager = (ClipboardManager)
+                            mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+                    final String password;
+                    if (response.containsKey("password")) {
+                        // Click listener being called from List Dialog.
+                        password = response.getString("password");
+                    } else {
+                        password = login.getString("password");
                     }
-                    dismiss();
-                } catch (JSONException e) {
-                    Log.e(LOGTAG, "Error handling Select login button click", e);
+
+                    manager.setPrimaryClip(ClipData.newPlainText("password", password));
+
                     SnackbarBuilder.builder(activity)
-                            .message(R.string.doorhanger_login_select_toast_copy_error)
+                            .message(R.string.doorhanger_login_select_toast_copy)
                             .duration(Snackbar.LENGTH_SHORT)
                             .buildAndShow();
                 }
+                dismiss();
             }
         };
 
@@ -572,7 +565,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
     private class ContentNotificationButtonListener implements OnButtonClickListener {
         @Override
-        public void onButtonClick(JSONObject response, DoorHanger doorhanger) {
+        public void onButtonClick(final GeckoBundle response, final DoorHanger doorhanger) {
             GeckoAppShell.notifyObservers("Session:Reload", response.toString());
             dismiss();
         }
