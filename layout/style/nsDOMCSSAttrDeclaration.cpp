@@ -47,16 +47,16 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsDOMCSSAttributeDeclaration)
     }
     return true;
   }
-  return tmp->IsBlack();
+  return tmp->HasKnownLiveWrapper();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsDOMCSSAttributeDeclaration)
-  return tmp->IsBlack() ||
+  return tmp->HasKnownLiveWrapper() ||
     (tmp->mElement && Element::CanSkipInCC(tmp->mElement));
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsDOMCSSAttributeDeclaration)
-  return tmp->IsBlack() ||
+  return tmp->HasKnownLiveWrapper() ||
     (tmp->mElement && Element::CanSkipThis(tmp->mElement));
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 

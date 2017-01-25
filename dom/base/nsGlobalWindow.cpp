@@ -2075,7 +2075,7 @@ nsGlobalWindow::IsBlackForCC(bool aTracingNeeded)
   }
 
   return (nsCCUncollectableMarker::InGeneration(GetMarkedCCGeneration()) ||
-          IsBlack()) &&
+          HasKnownLiveWrapper()) &&
          (!aTracingNeeded ||
           HasNothingToTrace(static_cast<nsIDOMEventTarget*>(this)));
 }
