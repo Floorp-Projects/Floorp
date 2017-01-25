@@ -69,10 +69,9 @@ function* testClean() {
   SyncedTabs._internal = originalSyncedTabsInternal;
 
   yield new Promise(resolve => {
-    window.SidebarUI.browser.contentWindow.addEventListener("unload", function listener() {
-      window.SidebarUI.browser.contentWindow.removeEventListener("unload", listener);
+    window.SidebarUI.browser.contentWindow.addEventListener("unload", function() {
       resolve();
-    });
+    }, {once: true});
     SidebarUI.hide();
   });
 }

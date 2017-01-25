@@ -11,10 +11,9 @@ add_task(function* clearURLBarAfterParentProcessURL() {
   let tab = yield new Promise(resolve => {
     gBrowser.selectedTab = gBrowser.addTab("about:preferences");
     let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
-    newTabBrowser.addEventListener("Initialized", function onInit() {
-      newTabBrowser.removeEventListener("Initialized", onInit, true);
+    newTabBrowser.addEventListener("Initialized", function() {
       resolve(gBrowser.selectedTab);
-    }, true);
+    }, {capture: true, once: true});
   });
   document.getElementById("home-button").click();
   yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
@@ -31,10 +30,9 @@ add_task(function* clearURLBarAfterParentProcessURLInExistingTab() {
   let tab = yield new Promise(resolve => {
     gBrowser.selectedTab = gBrowser.addTab();
     let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
-    newTabBrowser.addEventListener("Initialized", function onInit() {
-      newTabBrowser.removeEventListener("Initialized", onInit, true);
+    newTabBrowser.addEventListener("Initialized", function() {
       resolve(gBrowser.selectedTab);
-    }, true);
+    }, {capture: true, once: true});
     newTabBrowser.loadURI("about:preferences");
   });
   document.getElementById("home-button").click();

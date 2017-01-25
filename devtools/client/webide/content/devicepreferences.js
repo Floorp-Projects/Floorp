@@ -10,8 +10,7 @@ const ConfigView = require("devtools/client/webide/modules/config-view");
 
 var configView = new ConfigView(window);
 
-window.addEventListener("load", function onLoad() {
-  window.removeEventListener("load", onLoad);
+window.addEventListener("load", function () {
   AppManager.on("app-manager-update", OnAppManagerUpdate);
   document.getElementById("close").onclick = CloseUI;
   document.getElementById("device-fields").onchange = UpdateField;
@@ -21,12 +20,11 @@ window.addEventListener("load", function onLoad() {
   document.getElementById("custom-value-type").onchange = ClearNewFields;
   document.getElementById("add-custom-field").onkeyup = CheckNewFieldSubmit;
   BuildUI();
-}, true);
+}, {capture: true, once: true});
 
-window.addEventListener("unload", function onUnload() {
-  window.removeEventListener("unload", onUnload);
+window.addEventListener("unload", function () {
   AppManager.off("app-manager-update", OnAppManagerUpdate);
-});
+}, {once: true});
 
 function CloseUI() {
   window.parent.UI.openProject();

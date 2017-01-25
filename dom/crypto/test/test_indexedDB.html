@@ -25,10 +25,9 @@
       SpecialPowers.wrap(frame).mozbrowser = true;
       frame.src = TEST_URI;
 
-      frame.addEventListener("mozbrowsershowmodalprompt", function onPrompt(e) {
-        frame.removeEventListener("mozbrowsershowmodalprompt", onPrompt);
+      frame.addEventListener("mozbrowsershowmodalprompt", function(e) {
         cb(frame, e.detail.message);
-      });
+      }, {once: true});
 
       document.body.appendChild(frame);
     }

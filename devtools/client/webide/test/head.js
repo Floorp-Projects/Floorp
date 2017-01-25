@@ -57,11 +57,10 @@ var openWebIDE = Task.async(function* (autoInstallAddons) {
   let win = ww.openWindow(null, "chrome://webide/content/", "webide", "chrome,centerscreen,resizable", null);
 
   yield new Promise(resolve => {
-    win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad);
+    win.addEventListener("load", function () {
       SimpleTest.requestCompleteLog();
       SimpleTest.executeSoon(resolve);
-    });
+    }, {once: true});
   });
 
   info("WebIDE open");
@@ -76,13 +75,12 @@ function closeWebIDE(win) {
 
   Services.prefs.clearUserPref("devtools.webide.widget.enabled");
 
-  win.addEventListener("unload", function onUnload() {
-    win.removeEventListener("unload", onUnload);
+  win.addEventListener("unload", function () {
     info("WebIDE closed");
     SimpleTest.executeSoon(() => {
       deferred.resolve();
     });
-  });
+  }, {once: true});
 
   win.close();
 
@@ -149,10 +147,9 @@ function documentIsLoaded(doc) {
 
 function lazyIframeIsLoaded(iframe) {
   let deferred = promise.defer();
-  iframe.addEventListener("load", function onLoad() {
-    iframe.removeEventListener("load", onLoad, true);
+  iframe.addEventListener("load", function () {
     deferred.resolve(nextTick());
-  }, true);
+  }, {capture: true, once: true});
   return deferred.promise;
 }
 
@@ -183,11 +180,10 @@ function removeTab(aTab, aWindow) {
   let targetBrowser = targetWindow.gBrowser;
   let tabContainer = targetBrowser.tabContainer;
 
-  tabContainer.addEventListener("TabClose", function onClose(aEvent) {
-    tabContainer.removeEventListener("TabClose", onClose);
+  tabContainer.addEventListener("TabClose", function (aEvent) {
     info("Tab removed and finished closing.");
     deferred.resolve();
-  });
+  }, {once: true});
 
   targetBrowser.removeTab(aTab);
   return deferred.promise;

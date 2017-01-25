@@ -69,10 +69,9 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     // Load our test web page with <video> elements
     let url = "http://mochi.test:8888/chrome/mobile/android/tests/browser/chrome/video_discovery.html";
     browser = BrowserApp.addTab(url, { selected: true, parentId: BrowserApp.selectedTab.id }).browser;
-    browser.addEventListener("load", function startTests(event) {
-      browser.removeEventListener("load", startTests, true);
+    browser.addEventListener("load", function(event) {
       Services.tm.mainThread.dispatch(test_video, Ci.nsIThread.DISPATCH_NORMAL);
-    }, true);
+    }, {capture: true, once: true});
   }
 
   let videoDiscoveryTests = [

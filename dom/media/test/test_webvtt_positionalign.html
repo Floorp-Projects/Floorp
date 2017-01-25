@@ -84,9 +84,8 @@ function setupTest() {
   document.getElementById("content").appendChild(video);
   video.appendChild(trackElement);
   video.addEventListener("loadedmetadata", function() {
-    video.removeEventListener("loadedmetadata", runTest);
     isTrackElemenLoaded();
-  });
+  }, {once: true});
 }
 
 onload = setupTest;

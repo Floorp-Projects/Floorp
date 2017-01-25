@@ -68,13 +68,12 @@ function test_paste(aCurrentTest) {
   // Focus the element and wait for focus event.
   info("About to focus " + element.id);
   element.addEventListener("focus", function() {
-    element.removeEventListener("focus", arguments.callee);
     executeSoon(function() {
       // Pasting is async because the Accel+V codepath ends up going through
       // nsDocumentViewer::FireClipboardEvent.
       info("Pasting into " + element.id);
       EventUtils.synthesizeKey("v", { accelKey: true });
     });
-  });
+  }, {once: true});
   element.focus();
 }

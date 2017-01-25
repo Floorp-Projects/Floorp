@@ -30,19 +30,17 @@ add_task(function* () {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   let toolbox = gDevTools.getToolbox(target);
 
-  gBrowser.tabContainer.addEventListener("TabClose", function onTabClose() {
-    gBrowser.tabContainer.removeEventListener("TabClose", onTabClose);
+  gBrowser.tabContainer.addEventListener("TabClose", function () {
     info("tab closed");
     tabClosed.resolve(null);
-  });
+  }, {once: true});
 
-  gBrowser.tabContainer.addEventListener("TabSelect", function onTabSelect() {
-    gBrowser.tabContainer.removeEventListener("TabSelect", onTabSelect);
+  gBrowser.tabContainer.addEventListener("TabSelect", function () {
     if (gBrowser.selectedTab == firstTab) {
       info("tab selected");
       tabSelected.resolve(null);
     }
-  });
+  }, {once: true});
 
   toolbox.once("destroyed", () => {
     info("toolbox destroyed");

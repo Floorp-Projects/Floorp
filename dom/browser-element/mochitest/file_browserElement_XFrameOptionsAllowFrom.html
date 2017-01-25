@@ -20,20 +20,18 @@ var iframe2 = document.createElement('iframe');
 iframe2.height = '300px';
 document.body.appendChild(iframe1);
 
-iframe1.addEventListener('load', function iframe1Load() {
-  iframe1.removeEventListener('load', iframe1Load);
+iframe1.addEventListener('load', function() {
   // This causes our embedder to take a screenshot (and blocks until the
   // screenshot is completed).
   var iframe2Loaded = false;
-  iframe2.addEventListener('load', function iframe2Load() {
-    iframe2.removeEventListener('load', iframe2Load);
+  iframe2.addEventListener('load', function() {
     iframe2Loaded = true;
     alert('finish');
-  });
+  }, {once: true});
 
   document.body.appendChild(iframe2);
   iframe2.src = frame_src;
-});
+}, {once: true});
 
 
 iframe1.src = frame_src + '?iframe1';

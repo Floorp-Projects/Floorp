@@ -20,10 +20,9 @@ SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function() {
   var win = window.open("data:text/html,<input><iframe onload=\"contentDocument.designMode = 'on';\">", "", "test-966155");
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad);
+  win.addEventListener("load", function() {
     runTest(win);
-  });
+  }, {once: true});
 });
 
 function runTest(win) {

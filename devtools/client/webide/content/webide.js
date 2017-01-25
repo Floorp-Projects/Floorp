@@ -56,15 +56,13 @@ console.log = console.log.bind(console);
 console.warn = console.warn.bind(console);
 console.error = console.error.bind(console);
 
-window.addEventListener("load", function onLoad() {
-  window.removeEventListener("load", onLoad);
+window.addEventListener("load", function () {
   UI.init();
-});
+}, {once: true});
 
-window.addEventListener("unload", function onUnload() {
-  window.removeEventListener("unload", onUnload);
+window.addEventListener("unload", function () {
   UI.destroy();
-});
+}, {once: true});
 
 var UI = {
   init: function () {

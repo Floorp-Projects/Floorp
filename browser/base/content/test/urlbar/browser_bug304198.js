@@ -45,9 +45,8 @@ add_task(function* () {
     return new Promise((resolve, reject) => {
       gBrowser.selectedBrowser.focus();
       gURLBar.addEventListener("input", function() {
-        gURLBar.removeEventListener("input", arguments.callee);
         resolve();
-      });
+      }, {once: true});
       gURLBar.focus();
       EventUtils.synthesizeKey("VK_BACK_SPACE", {});
     });

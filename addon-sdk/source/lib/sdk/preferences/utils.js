@@ -19,8 +19,7 @@ const open = ({ id }) => new Promise((resolve, reject) => {
   let browser = getBrowserForTab(tab);
 
   // waiting for the about:addons page to load
-  browser.addEventListener("load", function onPageLoad() {
-    browser.removeEventListener("load", onPageLoad, true);
+  browser.addEventListener("load", function() {
     let window = browser.contentWindow;
 
     // wait for the add-on's "addon-options-displayed"
@@ -37,6 +36,6 @@ const open = ({ id }) => new Promise((resolve, reject) => {
 
     // display the add-on inline preferences page
     window.gViewController.commands.cmd_showItemDetails.doCommand({ id: id }, true);
-  }, true);
+  }, {capture: true, once: true});
 });
 exports.open = open;
