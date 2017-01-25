@@ -906,6 +906,14 @@ TabParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
 {
 #ifdef ACCESSIBILITY
   auto doc = static_cast<a11y::DocAccessibleParent*>(aDoc);
+
+  // If this tab is already shutting down just mark the new actor as shutdown
+  // and ignore it.  When the tab actor is destroyed it will be too.
+  if (mIsDestroyed) {
+    doc->MarkAsShutdown();
+    return IPC_OK();
+  }
+
   if (aParentDoc) {
     // A document should never directly be the parent of another document.
     // There should always be an outer doc accessible child of the outer
