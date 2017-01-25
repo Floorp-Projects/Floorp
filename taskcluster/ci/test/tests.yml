@@ -478,14 +478,11 @@ mochitest-chrome:
             default: default
     chunks:
         by-test-platform:
-            android-4.3-arm7-api-15/debug: 2
-            android.*: 1
+            android-4.3-arm7-api-15/debug: 4
+            android.*: 2
             macosx.*: 1
             default: 3
-    max-run-time:
-        by-test-platform:
-            android.*: 5400
-            default: 3600
+    max-run-time: 3600
     e10s: false
     mozharness:
         by-test-platform:
@@ -1197,8 +1194,7 @@ xpcshell:
     chunks:
         by-test-platform:
             linux64/debug: 10
-            android-4.2-x86/opt: 4
-            android.*: 6
+            android-4.2-x86/opt: 6
             # windows.*: 1
             macosx.*: 1
             default: 8
@@ -1206,10 +1202,7 @@ xpcshell:
         by-test-platform:
             android.*: xlarge
             default: legacy # Bug 1281241: migrating to m3.large instances
-    max-run-time:
-        by-test-platform:
-            android.*: 7200
-            default: 5400
+    max-run-time: 5400
     e10s: false
     allow-software-gl-layers: false
     mozharness:
