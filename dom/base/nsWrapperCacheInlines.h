@@ -22,8 +22,13 @@ nsWrapperCache::GetWrapper() const
 }
 
 inline bool
-nsWrapperCache::IsBlack() const
+nsWrapperCache::HasKnownLiveWrapper() const
 {
+  // If we have a wrapper and it's not gray in the GC-marking sense, that means
+  // that we can't be cycle-collected.  That's because the wrapper is being kept
+  // alive by the JS engine (and not just due to being traced from some
+  // cycle-collectable thing), and the wrapper holds us alive, so we know we're
+  // not collectable.
   JSObject* o = GetWrapperPreserveColor();
   return o && !JS::ObjectIsMarkedGray(o);
 }
@@ -50,7 +55,7 @@ nsWrapperCache::HasNothingToTrace(nsISupports* aThis)
 inline bool
 nsWrapperCache::IsBlackAndDoesNotNeedTracing(nsISupports* aThis)
 {
-  return IsBlack() && HasNothingToTrace(aThis);
+  return HasKnownLiveWrapper() && HasNothingToTrace(aThis);
 }
 
 inline void

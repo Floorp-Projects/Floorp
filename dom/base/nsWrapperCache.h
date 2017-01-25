@@ -162,9 +162,10 @@ public:
   virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) = 0;
 
   /**
-   * Returns true if the object has a non-gray wrapper.
+   * Returns true if the object has a wrapper that is known live from the point
+   * of view of cycle collection.
    */
-  bool IsBlack() const;
+  bool HasKnownLiveWrapper() const;
 
   /**
    * Returns true if the object has a black wrapper,

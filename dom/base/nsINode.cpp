@@ -1433,19 +1433,20 @@ nsINode::Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb)
 
     if (nsCCUncollectableMarker::sGeneration) {
       // If we're black no need to traverse.
-      if (tmp->IsBlack() || tmp->InCCBlackTree()) {
+      if (tmp->HasKnownLiveWrapper() || tmp->InCCBlackTree()) {
         return false;
       }
 
       if (!tmp->UnoptimizableCCNode()) {
         // If we're in a black document, return early.
-        if ((currentDoc && currentDoc->IsBlack())) {
+        if ((currentDoc && currentDoc->HasKnownLiveWrapper())) {
           return false;
         }
         // If we're not in anonymous content and we have a black parent,
         // return early.
         nsIContent* parent = tmp->GetParent();
-        if (parent && !parent->UnoptimizableCCNode() && parent->IsBlack()) {
+        if (parent && !parent->UnoptimizableCCNode() &&
+            parent->HasKnownLiveWrapper()) {
           MOZ_ASSERT(parent->IndexOf(tmp) >= 0, "Parent doesn't own us?");
           return false;
         }
