@@ -148,8 +148,8 @@ class CombinedDependsFunction(DependsFunction):
 
     @memoize
     def result(self, need_help_dependency=False):
-        resolved_args = [self.sandbox._value_for(d, need_help_dependency)
-                         for d in self.dependencies]
+        resolved_args = (self.sandbox._value_for(d, need_help_dependency)
+                         for d in self.dependencies)
         return self._func(resolved_args)
 
     def __eq__(self, other):
