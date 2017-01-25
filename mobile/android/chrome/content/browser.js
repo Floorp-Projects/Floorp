@@ -155,7 +155,6 @@ lazilyLoadedBrowserScripts.forEach(function (aScript) {
 var lazilyLoadedObserverScripts = [
   ["MemoryObserver", ["memory-pressure", "Memory:Dump"], "chrome://browser/content/MemoryObserver.js"],
   ["ConsoleAPI", ["console-api-log-event"], "chrome://browser/content/ConsoleAPI.js"],
-  ["PermissionsHelper", ["Permissions:Check", "Permissions:Get", "Permissions:Clear"], "chrome://browser/content/PermissionsHelper.js"],
   ["FeedHandler", ["Feeds:Subscribe"], "chrome://browser/content/FeedHandler.js"],
   ["Feedback", ["Feedback:Show"], "chrome://browser/content/Feedback.js"],
   ["EmbedRT", ["GeckoView:ImportScript"], "chrome://browser/content/EmbedRT.js"],
@@ -243,6 +242,9 @@ lazilyLoadedObserverScripts.forEach(function (aScript) {
    ["HomeBanner:Get", "HomePanels:Get", "HomePanels:Authenticate",
     "HomePanels:RefreshView", "HomePanels:Installed", "HomePanels:Uninstalled"],
    "resource://gre/modules/Home.jsm"],
+  ["PermissionsHelper", GlobalEventDispatcher,
+   ["Permissions:Check", "Permissions:Get", "Permissions:Clear"],
+   "chrome://browser/content/PermissionsHelper.js"],
 ].forEach(module => {
   let [name, dispatcher, events, script] = module;
   XPCOMUtils.defineLazyGetter(window, name, function() {
@@ -382,6 +384,7 @@ var BrowserApp = {
       "Tab:Selected",
       "Tab:Closed",
       "Browser:LoadManifest",
+      "Session:Reload",
     ]);
 
     Services.obs.addObserver(this, "Locale:OS", false);
@@ -389,7 +392,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Session:Back", false);
     Services.obs.addObserver(this, "Session:Forward", false);
     Services.obs.addObserver(this, "Session:Navigate", false);
-    Services.obs.addObserver(this, "Session:Reload", false);
     Services.obs.addObserver(this, "Session:Stop", false);
     Services.obs.addObserver(this, "SaveAs:PDF", false);
     Services.obs.addObserver(this, "Browser:Quit", false);
@@ -1638,6 +1640,58 @@ var BrowserApp = {
         break;
       }
 
+      case "Session:Reload": {
+        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+
+        // Check to see if this is a message to enable/disable mixed content blocking.
+        if (data) {
+          if (data.bypassCache) {
+            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE |
+                     Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY;
+          }
+
+          if (data.contentType === "tracking") {
+            // Convert document URI into the format used by
+            // nsChannelClassifier::ShouldEnableTrackingProtection
+            // (any scheme turned into https is correct)
+            let normalizedUrl = Services.io.newURI("https://" + browser.currentURI.hostPort);
+            if (data.allowContent) {
+              // Add the current host in the 'trackingprotection' consumer of
+              // the permission manager using a normalized URI. This effectively
+              // places this host on the tracking protection white list.
+              if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
+                PrivateBrowsingUtils.addToTrackingAllowlist(normalizedUrl);
+              } else {
+                Services.perms.add(normalizedUrl, "trackingprotection", Services.perms.ALLOW_ACTION);
+                Telemetry.addData("TRACKING_PROTECTION_EVENTS", 1);
+              }
+            } else {
+              // Remove the current host from the 'trackingprotection' consumer
+              // of the permission manager. This effectively removes this host
+              // from the tracking protection white list (any list actually).
+              if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
+                PrivateBrowsingUtils.removeFromTrackingAllowlist(normalizedUrl);
+              } else {
+                Services.perms.remove(normalizedUrl, "trackingprotection");
+                Telemetry.addData("TRACKING_PROTECTION_EVENTS", 2);
+              }
+            }
+          }
+        }
+
+        // Try to use the session history to reload so that framesets are
+        // handled properly. If the window has no session history, fall back
+        // to using the web navigation's reload method.
+        let webNav = browser.webNavigation;
+        try {
+          let sh = webNav.sessionHistory;
+          if (sh)
+            webNav = sh.QueryInterface(Ci.nsIWebNavigation);
+        } catch (e) {}
+        webNav.reload(flags);
+        break;
+      }
+
       case "Tab:Load": {
         let url = data.url;
         let flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP
@@ -1726,60 +1780,6 @@ var BrowserApp = {
 
           browser.gotoIndex(index);
           break;
-
-      case "Session:Reload": {
-        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-
-        // Check to see if this is a message to enable/disable mixed content blocking.
-        if (aData) {
-          let data = JSON.parse(aData);
-
-          if (data.bypassCache) {
-            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE |
-                     Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY;
-          }
-
-          if (data.contentType === "tracking") {
-            // Convert document URI into the format used by
-            // nsChannelClassifier::ShouldEnableTrackingProtection
-            // (any scheme turned into https is correct)
-            let normalizedUrl = Services.io.newURI("https://" + browser.currentURI.hostPort);
-            if (data.allowContent) {
-              // Add the current host in the 'trackingprotection' consumer of
-              // the permission manager using a normalized URI. This effectively
-              // places this host on the tracking protection white list.
-              if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
-                PrivateBrowsingUtils.addToTrackingAllowlist(normalizedUrl);
-              } else {
-                Services.perms.add(normalizedUrl, "trackingprotection", Services.perms.ALLOW_ACTION);
-                Telemetry.addData("TRACKING_PROTECTION_EVENTS", 1);
-              }
-            } else {
-              // Remove the current host from the 'trackingprotection' consumer
-              // of the permission manager. This effectively removes this host
-              // from the tracking protection white list (any list actually).
-              if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
-                PrivateBrowsingUtils.removeFromTrackingAllowlist(normalizedUrl);
-              } else {
-                Services.perms.remove(normalizedUrl, "trackingprotection");
-                Telemetry.addData("TRACKING_PROTECTION_EVENTS", 2);
-              }
-            }
-          }
-        }
-
-        // Try to use the session history to reload so that framesets are
-        // handled properly. If the window has no session history, fall back
-        // to using the web navigation's reload method.
-        let webNav = browser.webNavigation;
-        try {
-          let sh = webNav.sessionHistory;
-          if (sh)
-            webNav = sh.QueryInterface(Ci.nsIWebNavigation);
-        } catch (e) {}
-        webNav.reload(flags);
-        break;
-      }
 
       case "Session:Stop":
         browser.stop();
@@ -2174,8 +2174,10 @@ var BrowserApp = {
 
 var NativeWindow = {
   init: function() {
+    GlobalEventDispatcher.registerListener(this, [
+      "Doorhanger:Reply",
+    ]);
     Services.obs.addObserver(this, "Menu:Clicked", false);
-    Services.obs.addObserver(this, "Doorhanger:Reply", false);
     this.contextmenus.init();
   },
 
@@ -2307,12 +2309,8 @@ var NativeWindow = {
     }
   },
 
-  observe: function(aSubject, aTopic, aData) {
-    if (aTopic == "Menu:Clicked") {
-      if (this.menu._callbacks[aData])
-        this.menu._callbacks[aData]();
-    } else if (aTopic == "Doorhanger:Reply") {
-      let data = JSON.parse(aData);
+  onEvent: function (event, data, callback) {
+    if (event == "Doorhanger:Reply") {
       let reply_id = data["callback"];
 
       if (this.doorhanger._callbacks[reply_id]) {
@@ -2327,6 +2325,13 @@ var NativeWindow = {
           }
         }
       }
+    }
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == "Menu:Clicked") {
+      if (this.menu._callbacks[aData])
+        this.menu._callbacks[aData]();
     }
   },
 
