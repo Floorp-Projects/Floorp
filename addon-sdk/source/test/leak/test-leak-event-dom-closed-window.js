@@ -13,14 +13,13 @@ exports["test sdk/event/dom does not leak when attached to closed window"] = fun
       let loader = Loader(module);
       let { open } = loader.require('sdk/event/dom');
       let w = openWindow();
-      w.addEventListener("DOMWindowClose", function windowClosed(evt) {
-        w.removeEventListener("DOMWindowClose", windowClosed);
+      w.addEventListener("DOMWindowClose", function(evt) {
         // The sdk/event/dom module tries to clean itself up when DOMWindowClose
         // is fired.  Verify that it doesn't leak if its attached to an
         // already closed window either. (See bug 1268898.)
         open(w.document, "TestEvent1");
         resolve(loader);
-      });
+      }, {once: true});
       w.close();
     });
   });

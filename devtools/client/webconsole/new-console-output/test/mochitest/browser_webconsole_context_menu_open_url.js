@@ -68,13 +68,11 @@ add_task(function* () {
  */
 function listenToTabLoad() {
   return new Promise((resolve) => {
-    gBrowser.tabContainer.addEventListener("TabOpen", function onTabOpen(evt) {
-      gBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen, true);
+    gBrowser.tabContainer.addEventListener("TabOpen", function (evt) {
       let newTab = evt.target;
-      newTab.linkedBrowser.addEventListener("load", function onTabLoad() {
-        newTab.linkedBrowser.removeEventListener("load", onTabLoad, true);
+      newTab.linkedBrowser.addEventListener("load", function () {
         resolve(newTab);
-      }, true);
-    }, true);
+      }, {capture: true, once: true});
+    }, {capture: true, once: true});
   });
 }

@@ -462,14 +462,13 @@ function runTest() {
     case 400:
       // Check that the input event is fired.
       input.addEventListener("input", function(event) {
-        input.removeEventListener("input", arguments.callee);
         ok(true, "oninput should have been received");
         ok(event.bubbles, "input event should bubble");
         ok(event.cancelable, "input event should be cancelable");
         checkForm("Google");
         input.blur();
         SimpleTest.finish();
-      });
+      }, {once: true});
 
       doKey("down");
       checkForm("");

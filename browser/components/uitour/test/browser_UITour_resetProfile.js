@@ -15,8 +15,7 @@ add_UITour_task(function* test_resetFirefox() {
                      getService(Ci.nsIWindowWatcher);
     winWatcher.registerNotification(function onOpen(subj, topic, data) {
       if (topic == "domwindowopened" && subj instanceof Ci.nsIDOMWindow) {
-        subj.addEventListener("load", function onLoad() {
-          subj.removeEventListener("load", onLoad);
+        subj.addEventListener("load", function() {
           if (subj.document.documentURI ==
               "chrome://global/content/resetProfile.xul") {
             winWatcher.unregisterNotification(onOpen);
@@ -26,7 +25,7 @@ add_UITour_task(function* test_resetFirefox() {
             subj.close();
             resolve();
           }
-        });
+        }, {once: true});
       }
     });
   });

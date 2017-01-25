@@ -121,7 +121,10 @@ function nextTest() {
   }
 }
 
-function checkResult() {
+function checkResult(event) {
+  if (event.target.URL == "about:blank")
+    return;
+
   // Sanity check other values, and the value of gIdentityHandler.getEffectiveHost()
   is(gIdentityHandler._uri.spec, gCurrentTest.location, "location matches for test " + gTestDesc);
   // getEffectiveHost can't be called for all modes

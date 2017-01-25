@@ -28,10 +28,9 @@ function runTest() {
   ], function() {
     let iframe = document.createElement('iframe');
     iframe.setAttribute('mozbrowser', 'true');
-    iframe.addEventListener('mozbrowserloadend', function onload() {
-      iframe.removeEventListener('mozbrowserloadend', onload);
+    iframe.addEventListener('mozbrowserloadend', function() {
       onReady(iframe);
-    });
+    }, {once: true});
     iframe.src = url;
     document.body.appendChild(iframe);
   });

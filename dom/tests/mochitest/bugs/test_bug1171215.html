@@ -34,11 +34,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1022869
 
   function waitForLoad() {
     return new Promise((resolve) => {
-      window.addEventListener("message", function received(msg) {
-        window.removeEventListener("message", received);
+      window.addEventListener("message", function(msg) {
         info(`got message ${msg.data}`);
         resolve(msg.data);
-      });
+      }, {once: true});
     });
   }
 

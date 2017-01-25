@@ -48,8 +48,7 @@ function testForceDiscovery() {
 function testDeviceAdd() {
   info('test device add');
   return new Promise(function(resolve, reject) {
-    navigator.mozPresentationDeviceInfo.addEventListener('devicechange', function deviceChangeHandler(e) {
-      navigator.mozPresentationDeviceInfo.removeEventListener('devicechange', deviceChangeHandler);
+    navigator.mozPresentationDeviceInfo.addEventListener('devicechange', function(e) {
       let detail = e.detail;
       is(detail.type, 'add', 'expected update type');
       is(detail.deviceInfo.id, testDevice.id, 'expected device id');
@@ -64,7 +63,7 @@ function testDeviceAdd() {
         is(devices[0].type, testDevice.type, 'expected device type');
         resolve();
       });
-    });
+    }, {once: true});
     gScript.sendAsyncMessage('trigger-device-add', testDevice);
   });
 }
@@ -74,8 +73,7 @@ function testDeviceUpdate() {
   return new Promise(function(resolve, reject) {
     testDevice.name = 'name-update';
 
-    navigator.mozPresentationDeviceInfo.addEventListener('devicechange', function deviceChangeHandler(e) {
-      navigator.mozPresentationDeviceInfo.removeEventListener('devicechange', deviceChangeHandler);
+    navigator.mozPresentationDeviceInfo.addEventListener('devicechange', function(e) {
       let detail = e.detail;
       is(detail.type, 'update', 'expected update type');
       is(detail.deviceInfo.id, testDevice.id, 'expected device id');
@@ -90,7 +88,7 @@ function testDeviceUpdate() {
         is(devices[0].type, testDevice.type, 'expected device type');
         resolve();
       });
-    });
+    }, {once: true});
     gScript.sendAsyncMessage('trigger-device-update', testDevice);
   });
 }
@@ -98,8 +96,7 @@ function testDeviceUpdate() {
 function testDeviceRemove() {
   info('test device remove');
   return new Promise(function(resolve, reject) {
-    navigator.mozPresentationDeviceInfo.addEventListener('devicechange', function deviceChangeHandler(e) {
-      navigator.mozPresentationDeviceInfo.removeEventListener('devicechange', deviceChangeHandler);
+    navigator.mozPresentationDeviceInfo.addEventListener('devicechange', function(e) {
       let detail = e.detail;
       is(detail.type, 'remove', 'expected update type');
       is(detail.deviceInfo.id, testDevice.id, 'expected device id');
@@ -111,7 +108,7 @@ function testDeviceRemove() {
         is(devices.length, 0, 'expected 0 available device');
         resolve();
       });
-    });
+    }, {once: true});
     gScript.sendAsyncMessage('trigger-device-remove');
   });
 }

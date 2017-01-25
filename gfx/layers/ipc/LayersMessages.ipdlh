@@ -50,6 +50,7 @@ using mozilla::layers::BorderCorners from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::BorderWidths from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayerHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::SimpleLayerAttributes from "mozilla/layers/LayerAttributes.h";
 
 namespace mozilla {
 namespace layers {
@@ -232,32 +233,10 @@ struct Animation {
 
 // Change a layer's attributes
 struct CommonLayerAttributes {
-  IntRect layerBounds;
   LayerIntRegion visibleRegion;
   EventRegions eventRegions;
-  TransformMatrix transform;
-  bool transformIsPerspective;
-  float postXScale;
-  float postYScale;
-  uint32_t contentFlags;
-  float opacity;
   bool useClipRect;
   ParentLayerIntRect clipRect;
-  MaybeLayerClip scrolledClip;
-  bool isFixedPosition;
-  uint64_t fixedPositionScrollContainerId;
-  LayerPoint fixedPositionAnchor;
-  int32_t fixedPositionSides;
-  bool isStickyPosition;
-  uint64_t stickyScrollContainerId;
-  LayerRect stickyScrollRangeOuter;
-  LayerRect stickyScrollRangeInner;
-  uint64_t scrollbarTargetContainerId;
-  uint32_t scrollbarDirection;
-  float scrollbarThumbRatio;
-  bool isScrollbarContainer;
-  int8_t mixBlendMode;
-  bool forceIsolatedGroup;
   LayerHandle maskLayer;
   LayerHandle[] ancestorMaskLayers;
   // Animated colors will only honored for ColorLayers.
@@ -328,6 +307,11 @@ struct PluginWindowData {
   LayoutDeviceIntRect[] clip;
   LayoutDeviceIntRect bounds;
   bool visible;
+};
+
+struct OpSetSimpleLayerAttributes {
+  LayerHandle layer;
+  SimpleLayerAttributes attrs;
 };
 
 struct OpSetLayerAttributes {
@@ -486,7 +470,6 @@ union Edit {
   OpCreateCanvasLayer;
   OpCreateRefLayer;
 
-  OpSetLayerAttributes;
   OpSetDiagnosticTypes;
   OpWindowOverlayChanged;
 
@@ -542,6 +525,9 @@ union AsyncParentMessageData {
 struct TransactionInfo
 {
   Edit[] cset;
+  OpSetSimpleLayerAttributes[] setSimpleAttrs;
+  OpSetLayerAttributes[] setAttrs;
+  CompositableOperation[] paints;
   OpDestroy[] toDestroy;
   uint64_t fwdTransactionId;
   uint64_t id;

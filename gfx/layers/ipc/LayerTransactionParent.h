@@ -143,6 +143,8 @@ protected:
   virtual mozilla::ipc::IPCResult RecvSetConfirmedTargetAPZC(const uint64_t& aBlockId,
                                                              nsTArray<ScrollableLayerGuid>&& aTargets) override;
 
+  bool SetLayerAttributes(const OpSetLayerAttributes& aOp);
+
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   template <typename T>

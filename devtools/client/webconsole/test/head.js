@@ -52,10 +52,9 @@ function loadTab(url, preferredRemoteType) {
   let tab = gBrowser.selectedTab = gBrowser.addTab(url, { preferredRemoteType });
   let browser = gBrowser.getBrowserForTab(tab);
 
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
+  browser.addEventListener("load", function () {
     deferred.resolve({tab: tab, browser: browser});
-  }, true);
+  }, {capture: true, once: true});
 
   return deferred.promise;
 }
@@ -69,10 +68,9 @@ function closeTab(tab) {
 
   let container = gBrowser.tabContainer;
 
-  container.addEventListener("TabClose", function onTabClose() {
-    container.removeEventListener("TabClose", onTabClose, true);
+  container.addEventListener("TabClose", function () {
     deferred.resolve(null);
-  }, true);
+  }, {capture: true, once: true});
 
   gBrowser.removeTab(tab);
 

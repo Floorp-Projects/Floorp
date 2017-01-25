@@ -13,14 +13,12 @@ exports["test sdk/tab/events does not leak new window"] = function*(assert) {
       let loader = Loader(module);
       let { events } = loader.require('sdk/tab/events');
       let w = openWindow();
-      w.addEventListener("load", function windowLoaded(evt) {
-        w.removeEventListener("load", windowLoaded);
-        w.addEventListener("DOMWindowClose", function windowClosed(evt) {
-          w.removeEventListener("DOMWindowClose", windowClosed);
+      w.addEventListener("load", function(evt) {
+        w.addEventListener("DOMWindowClose", function(evt) {
           resolve(loader);
-        });
+        }, {once: true});
         w.close();
-      });
+      }, {once: true});
     });
   });
 }
@@ -30,15 +28,13 @@ exports["test sdk/tab/events does not leak when attached to existing window"] = 
     return new Promise(resolve => {
       let loader = Loader(module);
       let w = openWindow();
-      w.addEventListener("load", function windowLoaded(evt) {
-        w.removeEventListener("load", windowLoaded);
+      w.addEventListener("load", function(evt) {
         let { events } = loader.require('sdk/tab/events');
-        w.addEventListener("DOMWindowClose", function windowClosed(evt) {
-          w.removeEventListener("DOMWindowClose", windowClosed);
+        w.addEventListener("DOMWindowClose", function(evt) {
           resolve(loader);
-        });
+        }, {once: true});
         w.close();
-      });
+      }, {once: true});
     });
   });
 }

@@ -19,13 +19,11 @@ const SIMPLETEST_OVERRIDES =
 
 // non-android is bootstrapped by marionette
 if (Services.appinfo.OS == 'Android') {
-  window.addEventListener("load", function testOnLoad() {
-    window.removeEventListener("load", testOnLoad);
-    window.addEventListener("MozAfterPaint", function testOnMozAfterPaint() {
-      window.removeEventListener("MozAfterPaint", testOnMozAfterPaint);
+  window.addEventListener("load", function() {
+    window.addEventListener("MozAfterPaint", function() {
       setTimeout(testInit, 0);
-    });
-  });
+    }, {once: true});
+  }, {once: true});
 } else {
   setTimeout(testInit, 0);
 }

@@ -81,19 +81,17 @@ function openToolbarCustomizationUI(aCallback, aBrowserWin) {
 
   aBrowserWin.gCustomizeMode.enter();
 
-  aBrowserWin.gNavToolbox.addEventListener("customizationready", function UI_loaded() {
-    aBrowserWin.gNavToolbox.removeEventListener("customizationready", UI_loaded);
+  aBrowserWin.gNavToolbox.addEventListener("customizationready", function() {
     executeSoon(function() {
       aCallback(aBrowserWin)
     });
-  });
+  }, {once: true});
 }
 
 function closeToolbarCustomizationUI(aCallback, aBrowserWin) {
-  aBrowserWin.gNavToolbox.addEventListener("aftercustomization", function unloaded() {
-    aBrowserWin.gNavToolbox.removeEventListener("aftercustomization", unloaded);
+  aBrowserWin.gNavToolbox.addEventListener("aftercustomization", function() {
     executeSoon(aCallback);
-  });
+  }, {once: true});
 
   aBrowserWin.gCustomizeMode.exit();
 }

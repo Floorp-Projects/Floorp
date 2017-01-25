@@ -15,7 +15,7 @@ function run_test() {
 	let n = 10000;
 	while (--n); // OSR happens here with the profiler enabled.
 	// An assertion will fail when this function returns, if the
-	// SPS stack was misbalanced.
+	// profiler stack was misbalanced.
     })();
     p.StopProfiler();
 }

@@ -786,15 +786,13 @@ WindowHelper.prototype = {
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
 
       win.addEventListener("load", function onload(event) {
-        win.removeEventListener("load", onload);
-
         if (win.name !== "SanitizeDialog")
           return;
 
         wh.win = win;
         loaded = true;
         executeSoon(() => wh.onload());
-      });
+      }, {once: true});
 
       win.addEventListener("unload", function onunload(event) {
         if (win.name !== "SanitizeDialog") {

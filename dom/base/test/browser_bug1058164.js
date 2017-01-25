@@ -90,10 +90,9 @@ add_task(function* test_swap_frameloader_pagevisibility_events() {
   // and tabs fast enough to attach the event handlers before they were
   // fired.
   yield new Promise((resolve) => {
-    emptyBrowser.addEventListener("pageshow", function onPageShow() {
-      emptyBrowser.removeEventListener("pageshow", onPageShow);
+    emptyBrowser.addEventListener("pageshow", function() {
       resolve();
-    });
+    }, {once: true});
   });
 
   // The empty tab we just added show now fire a pagehide as its replaced,

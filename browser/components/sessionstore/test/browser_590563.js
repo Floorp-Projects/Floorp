@@ -55,20 +55,17 @@ function newWindowWithState(state, callback) {
   let opts = "chrome,all,dialog=no,height=800,width=800";
   let win = window.openDialog(getBrowserURL(), "_blank", opts);
 
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad);
-
+  win.addEventListener("load", function() {
     let tab = win.gBrowser.selectedTab;
 
     // The form data will be restored before SSTabRestored, so we want to listen
     // for that on the currently selected tab (it will be reused)
-    tab.addEventListener("SSTabRestored", function onRestored() {
-      tab.removeEventListener("SSTabRestored", onRestored, true);
+    tab.addEventListener("SSTabRestored", function() {
       callback(win);
-    }, true);
+    }, {capture: true, once: true});
 
     executeSoon(function () {
       ss.setWindowState(win, JSON.stringify(state), true);
     });
-  });
+  }, {once: true});
 }

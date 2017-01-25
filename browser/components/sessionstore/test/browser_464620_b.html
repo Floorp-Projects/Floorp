@@ -29,9 +29,8 @@
 
     var body = frames[0].document.body;
     body.addEventListener("DOMNodeInserted", function() {
-      body.removeEventListener("DOMNodeInserted", arguments.callee, true);
       xss();
-    }, true);
+    }, {capture: true, once: true});
   }
 
   function xss() {
