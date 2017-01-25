@@ -78,7 +78,6 @@ for platform in all_platforms:
         'MOZ_AUTOMATION_UPLOAD_SYMBOLS=1',
         'MOZ_AUTOMATION_UPDATE_PACKAGING=1',
         'fi',
-        'MOZ_AUTOMATION_SDK=${MOZ_AUTOMATION_SDK-1}',
     ]
 whitelist['release']['win32'] += ['mk_add_options MOZ_PGO=1']
 whitelist['release']['win64'] += ['mk_add_options MOZ_PGO=1']
