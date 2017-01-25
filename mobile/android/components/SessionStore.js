@@ -1002,10 +1002,12 @@ SessionStore.prototype = {
     // If we have private data, send it to Java; otherwise, send null to
     // indicate that there is no private data
     let window = Services.wm.getMostRecentWindow("navigator:browser");
-    window.WindowEventDispatcher.sendRequest({
-      type: "PrivateBrowsing:Data",
-      session: (privateData.windows.length > 0 && privateData.windows[0].tabs.length > 0) ? JSON.stringify(privateData) : null
-    });
+    if (window) { // can be null if we're restarting
+      window.WindowEventDispatcher.sendRequest({
+        type: "PrivateBrowsing:Data",
+        session: (privateData.windows.length > 0 && privateData.windows[0].tabs.length > 0) ? JSON.stringify(privateData) : null
+      });
+    }
 
     this._lastSaveTime = Date.now();
   },
