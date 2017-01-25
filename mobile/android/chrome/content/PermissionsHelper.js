@@ -73,7 +73,7 @@ var PermissionsHelper = {
             continue;
 
           if (check) {
-            Messaging.sendRequest({
+            GlobalEventDispatcher.sendRequest({
               type: "Permissions:CheckResult",
               hasPermissions: true
             });
@@ -96,7 +96,7 @@ var PermissionsHelper = {
         }
 
         if (check) {
-          Messaging.sendRequest({
+          GlobalEventDispatcher.sendRequest({
             type: "Permissions:CheckResult",
             hasPermissions: false
           });
