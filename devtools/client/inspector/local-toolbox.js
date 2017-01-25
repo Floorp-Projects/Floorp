@@ -92,9 +92,7 @@ function fixStylesheetsOnMutation() {
   }
 }
 
-window.addEventListener("DOMContentLoaded", function onInspectorDOMLoaded() {
-  window.removeEventListener("DOMContentLoaded", onInspectorDOMLoaded);
-
+window.addEventListener("DOMContentLoaded", function () {
   // Add styling for the main document.
   fixStylesheets(document);
 
@@ -118,4 +116,4 @@ window.addEventListener("DOMContentLoaded", function onInspectorDOMLoaded() {
   // required after DOMContentLoaded.
   const { bootstrap } = require("devtools-launchpad");
   bootstrap(React, ReactDOM).then(onConnect);
-});
+}, {once: true});

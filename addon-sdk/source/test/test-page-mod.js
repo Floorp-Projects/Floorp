@@ -1027,8 +1027,7 @@ exports.testAttachToTabsOnly = function(assert, done) {
     let hiddenFrame = hiddenFrames.add(hiddenFrames.HiddenFrame({
       onReady: function () {
         let element = this.element;
-        element.addEventListener('DOMContentLoaded', function onload() {
-          element.removeEventListener('DOMContentLoaded', onload);
+        element.addEventListener('DOMContentLoaded', function() {
           hiddenFrames.remove(hiddenFrame);
 
           if (!xulApp.is("Fennec")) {
@@ -1037,7 +1036,7 @@ exports.testAttachToTabsOnly = function(assert, done) {
           else {
             openBrowserIframe();
           }
-        });
+        }, {once: true});
         element.setAttribute('src', 'data:text/html;charset=utf-8,foo');
       }
     }));
@@ -1046,11 +1045,10 @@ exports.testAttachToTabsOnly = function(assert, done) {
   function openToplevelWindow() {
     assert.pass('Open toplevel window');
     let win = open('data:text/html;charset=utf-8,bar');
-    win.addEventListener('DOMContentLoaded', function onload() {
-      win.removeEventListener('DOMContentLoaded', onload);
+    win.addEventListener('DOMContentLoaded', function() {
       win.close();
       openBrowserIframe();
-    });
+    }, {once: true});
   }
 
   function openBrowserIframe() {
@@ -1060,11 +1058,10 @@ exports.testAttachToTabsOnly = function(assert, done) {
     let iframe = document.createElement('iframe');
     iframe.setAttribute('type', 'content');
     iframe.setAttribute('src', 'data:text/html;charset=utf-8,foobar');
-    iframe.addEventListener('DOMContentLoaded', function onload() {
-      iframe.removeEventListener('DOMContentLoaded', onload);
+    iframe.addEventListener('DOMContentLoaded', function() {
       iframe.parentNode.removeChild(iframe);
       openTabWithIframes();
-    });
+    }, {once: true});
     document.documentElement.appendChild(iframe);
   }
 

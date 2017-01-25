@@ -17,11 +17,10 @@ function runTest() {
   // SetVisibleFrames.js for an explanation.
   iframe.remote = false;
 
-  iframe.addEventListener('mozbrowserloadend', function loadEnd(e) {
-    iframe.removeEventListener('mozbrowserloadend', loadEnd);
+  iframe.addEventListener('mozbrowserloadend', function(e) {
     iframe.setVisible(false);
     iframe.src = 'file_browserElement_SetVisibleFrames2_Outer.html';
-  });
+  }, {once: true});
 
   iframe.addEventListener('mozbrowsershowmodalprompt', function(e) {
     if (e.detail.message == 'parent:finish') {

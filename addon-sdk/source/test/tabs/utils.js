@@ -13,10 +13,9 @@ function openTab(rawWindow, url) {
       return resolve();
     }
 
-    window.addEventListener("load", function onLoad() {
-      window.removeEventListener("load", onLoad, true);
+    window.addEventListener("load", function() {
       resolve();
-    }, true);
+    }, {capture: true, once: true});
 
     return null;
   })

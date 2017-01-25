@@ -69,10 +69,9 @@ function openSetP12PasswordDialog() {
   let win = window.openDialog("chrome://pippki/content/setp12password.xul", "",
                               "", returnVals);
   return new Promise((resolve, reject) => {
-    win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad);
+    win.addEventListener("load", function() {
       resolve([win, returnVals]);
-    });
+    }, {once: true});
   });
 }
 

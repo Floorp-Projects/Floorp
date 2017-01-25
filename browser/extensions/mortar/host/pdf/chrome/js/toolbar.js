@@ -23,10 +23,9 @@ class ProgressBar {
     if (!waitForTransition) {
       doHide();
     } else {
-      percentage.addEventListener('transitionend', function handler() {
-        percentage.removeEventListener('transitionend', handler);
+      percentage.addEventListener('transitionend', function() {
         doHide();
-      });
+      }, {once: true});
     }
   }
 

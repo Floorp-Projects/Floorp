@@ -144,10 +144,9 @@ function synthesizeNativeWheelAndWaitForObserver(aElement, aX, aY, aDeltaX, aDel
 // subdocument. See synthesizeNativeWheel for details on the other parameters.
 function synthesizeNativeWheelAndWaitForWheelEvent(aElement, aX, aY, aDeltaX, aDeltaY, aCallback) {
   var targetWindow = aElement.ownerDocument.defaultView;
-  targetWindow.addEventListener("wheel", function wheelWaiter(e) {
-    targetWindow.removeEventListener("wheel", wheelWaiter);
+  targetWindow.addEventListener("wheel", function(e) {
     setTimeout(aCallback, 0);
-  });
+  }, {once: true});
   return synthesizeNativeWheel(aElement, aX, aY, aDeltaX, aDeltaY);
 }
 
@@ -182,10 +181,9 @@ function synthesizeNativeMouseMove(aElement, aX, aY) {
 // parameters.
 function synthesizeNativeMouseMoveAndWaitForMoveEvent(aElement, aX, aY, aCallback) {
   var targetWindow = aElement.ownerDocument.defaultView;
-  targetWindow.addEventListener("mousemove", function mousemoveWaiter(e) {
-    targetWindow.removeEventListener("mousemove", mousemoveWaiter);
+  targetWindow.addEventListener("mousemove", function(e) {
     setTimeout(aCallback, 0);
-  });
+  }, {once: true});
   return synthesizeNativeMouseMove(aElement, aX, aY);
 }
 

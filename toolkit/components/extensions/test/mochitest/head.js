@@ -36,10 +36,9 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
 
 function waitForLoad(win) {
   return new Promise(resolve => {
-    win.addEventListener("load", function listener() {
-      win.removeEventListener("load", listener, true);
+    win.addEventListener("load", function() {
       resolve();
-    }, true);
+    }, {capture: true, once: true});
   });
 }
 

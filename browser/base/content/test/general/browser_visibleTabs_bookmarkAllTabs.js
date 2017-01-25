@@ -19,7 +19,6 @@ function test() {
   is(gBrowser.visibleTabs.length, 3, "3 tabs should be open");
   // Wait for tab load, the code checks for currentURI.
   testTab2.linkedBrowser.addEventListener("load", function() {
-    testTab2.linkedBrowser.removeEventListener("load", arguments.callee, true);
     is(Disabled(), false, "Bookmark All Tabs should be enabled since there are two tabs with different addresses");
 
     // Hide the original tab
@@ -52,7 +51,7 @@ function test() {
     is(gBrowser.selectedTab, origTab, "got the orig tab");
     is(origTab.hidden, false, "and it's not hidden -- visible!");
     finish();
-  }, true);
+  }, {capture: true, once: true});
 }
 
 function Disabled() {

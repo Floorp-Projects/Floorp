@@ -36,10 +36,9 @@ var AppProjectEditor = Class({
       let iframe = this.iframe = this.elt.ownerDocument.createElement("iframe");
       let iframeLoaded = this.iframeLoaded = promise.defer();
 
-      iframe.addEventListener("load", function onLoad() {
-        iframe.removeEventListener("load", onLoad);
+      iframe.addEventListener("load", function () {
         iframeLoaded.resolve();
-      });
+      }, {once: true});
 
       iframe.setAttribute("flex", "1");
       iframe.setAttribute("src", appManagerOpts.projectOverviewURL);

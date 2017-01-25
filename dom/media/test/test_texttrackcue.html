@@ -83,10 +83,9 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
       is(cue.endTime, 0.71, "Cue's end time should be 0.71.");
       cue.pauseOnExit = true;
       is(cue.pauseOnExit, true, "Cue's pause on exit flag should be true.");
-      video.addEventListener("pause", function pauseOnExit() {
-        video.removeEventListener("pause", pauseOnExit);
+      video.addEventListener("pause", function() {
         video.play();
-      });
+      }, {once: true});
 
       var exceptionHappened;
       function checkPercentageValue(prop, initialVal) {

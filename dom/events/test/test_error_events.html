@@ -12,10 +12,9 @@
   var msg;
   var column;
   var error;
-  window.addEventListener("error", function errorListener(e) {
-    window.removeEventListener("error", errorListener);
+  window.addEventListener("error", function(e) {
     errorEvent = e;
-  });
+  }, {once: true});
   var oldOnerror = window.onerror;
   window.onerror = function(message, filename, lineno, columnno, errorObject) {
     window.onerror = oldOnerror;

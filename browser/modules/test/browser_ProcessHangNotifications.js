@@ -8,11 +8,10 @@ function getNotificationBox(aWindow) {
 function promiseNotificationShown(aWindow, aName) {
   return new Promise((resolve) => {
     let notification = getNotificationBox(aWindow);
-    notification.addEventListener("AlertActive", function active() {
-      notification.removeEventListener("AlertActive", active, true);
+    notification.addEventListener("AlertActive", function() {
       is(notification.allNotifications.length, 1, "Notification Displayed.");
       resolve(notification);
-    });
+    }, {once: true});
   });
 }
 

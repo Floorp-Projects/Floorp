@@ -51,12 +51,11 @@ exports.testLocalXhr = function(assert, done) {
       assert.equal(req.responseText, '{}\n', 'XMLHttpRequest should get local files');
     }
   };
-  req.addEventListener('load', function onload() {
-    req.removeEventListener('load', onload);
+  req.addEventListener('load', function() {
     assert.pass('addEventListener for load event worked');
     assert.ok(ready, 'onreadystatechange listener worked');
     done();
-  });
+  }, {once: true});
   req.send(null);
 };
 
