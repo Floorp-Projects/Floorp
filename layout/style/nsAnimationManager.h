@@ -76,7 +76,7 @@ public:
     , mIsStylePaused(false)
     , mPauseShouldStick(false)
     , mNeedsNewAnimationIndexWhenRun(false)
-    , mPreviousPhase(ComputedTiming::AnimationPhase::Null)
+    , mPreviousPhase(ComputedTiming::AnimationPhase::Idle)
     , mPreviousIteration(0)
   {
     // We might need to drop this assertion once we add a script-accessible

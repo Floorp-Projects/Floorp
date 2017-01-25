@@ -64,12 +64,12 @@ struct ComputedTiming
   }
 
   enum class AnimationPhase {
-    Null,   // Not sampled (null sample time)
+    Idle,   // Not sampled (null sample time)
     Before, // Sampled prior to the start of the active interval
     Active, // Sampled within the active interval
     After   // Sampled after (or at) the end of the active interval
   };
-  AnimationPhase      mPhase = AnimationPhase::Null;
+  AnimationPhase      mPhase = AnimationPhase::Idle;
 
   ComputedTimingFunction::BeforeFlag mBeforeFlag =
     ComputedTimingFunction::BeforeFlag::Unset;
