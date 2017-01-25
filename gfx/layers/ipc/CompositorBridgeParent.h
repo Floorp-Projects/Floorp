@@ -177,7 +177,6 @@ public:
                          bool* aResult,
                          TextureFactoryIdentifier* aOutIdentifier) override;
   virtual mozilla::ipc::IPCResult RecvGetFrameUniformity(FrameUniformityData* aOutData) override;
-  virtual mozilla::ipc::IPCResult RecvRequestOverfill() override;
   virtual mozilla::ipc::IPCResult RecvWillClose() override;
   virtual mozilla::ipc::IPCResult RecvPause() override;
   virtual mozilla::ipc::IPCResult RecvResume() override;

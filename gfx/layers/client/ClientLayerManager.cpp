@@ -26,7 +26,6 @@
 #include "nsTArray.h"                   // for AutoTArray
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
 #include "TiledLayerBuffer.h"
-#include "mozilla/dom/WindowBinding.h"  // for Overfill Callback
 #include "FrameLayerBuilder.h"          // for FrameLayerbuilder
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
@@ -543,35 +542,6 @@ ClientLayerManager::GetFrameUniformity(FrameUniformityData* aOutData)
   }
 
   return LayerManager::GetFrameUniformity(aOutData);
-}
-
-bool
-ClientLayerManager::RequestOverfill(mozilla::dom::OverfillCallback* aCallback)
-{
-  MOZ_ASSERT(aCallback != nullptr);
-  MOZ_ASSERT(HasShadowManager(), "Request Overfill only supported on b2g for now");
-
-  if (HasShadowManager()) {
-    CompositorBridgeChild* child = GetRemoteRenderer();
-    NS_ASSERTION(child, "Could not get CompositorBridgeChild");
-
-    child->AddOverfillObserver(this);
-    child->SendRequestOverfill();
-    mOverfillCallbacks.AppendElement(aCallback);
-  }
-
-  return true;
-}
-
-void
-ClientLayerManager::RunOverfillCallback(const uint32_t aOverfill)
-{
-  for (size_t i = 0; i < mOverfillCallbacks.Length(); i++) {
-    ErrorResult error;
-    mOverfillCallbacks[i]->Call(aOverfill, error);
-  }
-
-  mOverfillCallbacks.Clear();
 }
 
 void
