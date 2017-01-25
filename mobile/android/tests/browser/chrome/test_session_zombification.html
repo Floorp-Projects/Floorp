@@ -97,8 +97,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1044556
     // Check that the test tab is actually zombified
     ok(tabTest.browser.__SS_restore, "Test tab is set for delay loading.");
 
-    // Switch back to the test tab and wait for it to reload
-    BrowserApp.selectTab(tabTest);
+    // Test that the tab's own function for unzombifying works as well
+    tabTest.unzombify();
     yield promiseBrowserEvent(tabTest.browser, "DOMContentLoaded");
 
     // Check that the test tab has loaded the correct url

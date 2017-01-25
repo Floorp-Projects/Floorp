@@ -362,10 +362,7 @@ SessionStore.prototype = {
         // we might have to do it now instead.
         let window = Services.wm.getMostRecentWindow("navigator:browser");
         let tab = window.BrowserApp.selectedTab;
-
-        if (tab.browser.__SS_restore) {
-          this._restoreZombieTab(tab.browser, tab.id);
-        }
+        this.restoreZombieTab(tab);
         break;
       case "ClosedTabs:StartNotifications":
         this._notifyClosedTabs = true;
@@ -735,15 +732,14 @@ SessionStore.prototype = {
     let index = browsers.selectedIndex;
     this._windows[aWindow.__SSID].selected = parseInt(index) + 1; // 1-based
 
-    let tabId = aWindow.BrowserApp.getTabForBrowser(aBrowser).id;
+    let tab = aWindow.BrowserApp.getTabForBrowser(aBrowser);
+    let tabId = tab.id;
 
     // Restore the resurrected browser
-    if (aBrowser.__SS_restore) {
-      if (tabId != this._keepAsZombieTabId) {
-        this._restoreZombieTab(aBrowser, tabId);
-      } else {
-        log("keeping as zombie tab " + tabId);
-      }
+    if (tabId != this._keepAsZombieTabId) {
+      this.restoreZombieTab(tab);
+    } else {
+      log("keeping as zombie tab " + tabId);
     }
     // The tab id passed through Tab:KeepZombified is valid for one TabSelect only.
     this._keepAsZombieTabId = -1;
@@ -760,13 +756,18 @@ SessionStore.prototype = {
     }
   },
 
-  _restoreZombieTab: function ss_restoreZombieTab(aBrowser, aTabId) {
-    let data = aBrowser.__SS_data;
-    this._restoreTab(data, aBrowser);
+  restoreZombieTab: function ss_restoreZombieTab(aTab) {
+    if (!aTab.browser.__SS_restore) {
+      return;
+    }
 
-    delete aBrowser.__SS_restore;
-    aBrowser.removeAttribute("pending");
-    log("restoring zombie tab " + aTabId);
+    let browser = aTab.browser;
+    let data = browser.__SS_data;
+    this._restoreTab(data, browser);
+
+    delete browser.__SS_restore;
+    browser.removeAttribute("pending");
+    log("restoring zombie tab " + aTab.id);
   },
 
   onTabInput: function ss_onTabInput(aWindow, aBrowser) {
