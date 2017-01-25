@@ -503,8 +503,13 @@ WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture)
   MOZ_ASSERT((uint32_t)(size.width * 4) == stride);
 
   MOZ_ASSERT(mBuilder.isSome());
-  mGLContext->MakeCurrent();
-  wr_readback_into_buffer(mWRWindowState, size.width, size.height, buffer, buffer_size);
+  if (MOZ_USE_RENDER_THREAD) {
+    mApi->Readback(size, buffer, buffer_size);
+  } else {
+    mGLContext->MakeCurrent();
+    wr_composite_window(mWRWindowState);
+    wr_readback_into_buffer(size.width, size.height, buffer, buffer_size);
+  }
 
   return IPC_OK();
 }

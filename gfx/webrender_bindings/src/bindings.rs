@@ -959,12 +959,8 @@ pub extern fn wr_window_remove_pipeline(window: &mut WrWindowState, state: &WrSt
 
 // TODO: Remove.
 #[no_mangle]
-pub extern fn wr_readback_into_buffer(window: &mut WrWindowState, width: u32, height: u32,
+pub extern fn wr_readback_into_buffer(width: u32, height: u32,
                                       dst_buffer: *mut u8, buffer_size: usize) {
-    assert!( unsafe { is_in_compositor_thread() });
-    wr_composite_window(window);
-    gl::flush();
-
     unsafe {
         let mut slice = slice::from_raw_parts_mut(dst_buffer, buffer_size);
         gl::read_pixels_into_buffer(0, 0,
