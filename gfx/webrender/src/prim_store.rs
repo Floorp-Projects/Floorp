@@ -737,9 +737,9 @@ impl PrimitiveStore {
 
                     let dest_rects = self.gpu_resource_rects.get_slice_mut(text.resource_address,
                                                                            text.glyph_range.length);
-
                     let texture_id = resource_cache.get_glyphs(text.font_key,
                                                                font_size_dp,
+                                                               text.color,
                                                                &text.glyph_indices,
                                                                text.render_mode, |index, uv0, uv1| {
                         let dest_rect = &mut dest_rects[index];
@@ -933,6 +933,7 @@ impl PrimitiveStore {
                                                                     text.glyph_range.length);
                     let mut glyph_key = GlyphKey::new(text.font_key,
                                                       font_size_dp,
+                                                      text.color,
                                                       src_glyphs[0].index);
                     let mut local_rect = LayerRect::zero();
                     let mut actual_glyph_count = 0;
@@ -998,6 +999,7 @@ impl PrimitiveStore {
 
                 resource_cache.request_glyphs(text.font_key,
                                               font_size_dp,
+                                              text.color,
                                               &text.glyph_indices,
                                               text.render_mode);
             }
@@ -1014,7 +1016,7 @@ impl PrimitiveStore {
                         // right now, but if we introduce a cache for images for some other
                         // reason then we might as well cache this with it.
                         let image_properties = resource_cache.get_image_properties(image_key);
-                        metadata.is_opaque = image_properties.is_opaque &&
+                        metadata.is_opaque = image_properties.descriptor.is_opaque &&
                                              tile_spacing.width == 0.0 &&
                                              tile_spacing.height == 0.0;
                     }

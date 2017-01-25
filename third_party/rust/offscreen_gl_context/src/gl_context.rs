@@ -1,6 +1,6 @@
 use euclid::Size2D;
 use gleam::gl;
-use gleam::gl::types::{GLint, GLuint};
+use gleam::gl::types::{GLuint};
 
 use NativeGLContextMethods;
 use GLContextAttributes;
@@ -141,11 +141,8 @@ impl<Native> GLContext<Native>
             return db.get_framebuffer();
         }
 
-        unsafe {
-            let mut ret : GLint = 0;
-            gl::GetIntegerv(gl::FRAMEBUFFER_BINDING, &mut ret);
-            ret as GLuint
-        }
+        let ret = gl::get_integer_v(gl::FRAMEBUFFER_BINDING);
+        ret as GLuint
     }
 
     pub fn draw_buffer_size(&self) -> Option<Size2D<i32>> {
@@ -183,12 +180,10 @@ impl<T: NativeGLContextMethods> GLContextPrivateMethods for GLContext<T> {
 
         debug_assert!(self.is_current());
 
-        unsafe {
-            gl::ClearColor(0.0, 0.0, 0.0, 0.0);
-            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT | gl::STENCIL_BUFFER_BIT);
-            gl::Scissor(0, 0, size.width, size.height);
-            gl::Viewport(0, 0, size.width, size.height);
-        }
+        gl::clear_color(0.0, 0.0, 0.0, 0.0);
+        gl::clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT | gl::STENCIL_BUFFER_BIT);
+        gl::scissor(0, 0, size.width, size.height);
+        gl::viewport(0, 0, size.width, size.height);
 
         Ok(())
     }

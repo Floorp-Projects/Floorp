@@ -21,7 +21,7 @@ use std::thread;
 use texture_cache::{TextureCache, TextureCacheItemId};
 use webrender_traits::{Epoch, FontKey, GlyphKey, ImageKey, ImageFormat, ImageRendering};
 use webrender_traits::{FontRenderMode, ImageData, GlyphDimensions, WebGLContextId};
-use webrender_traits::{DevicePoint, DeviceIntSize};
+use webrender_traits::{DevicePoint, DeviceIntSize, ImageDescriptor, ColorF};
 use webrender_traits::ExternalImageId;
 use threadpool::ThreadPool;
 
@@ -36,7 +36,7 @@ enum GlyphCacheMsg {
     /// Add a new font.
     AddFont(FontKey, FontTemplate),
     /// Request glyphs for a text run.
-    RequestGlyphs(FontKey, Au, Vec<u32>, FontRenderMode),
+    RequestGlyphs(FontKey, Au, ColorF, Vec<u32>, FontRenderMode),
     /// Finished requesting glyphs. Reply with new glyphs.
     EndFrame,
 }
@@ -71,22 +71,19 @@ pub struct RenderedGlyphKey {
 impl RenderedGlyphKey {
     pub fn new(font_key: FontKey,
                size: Au,
+               color: ColorF,
                index: u32,
                render_mode: FontRenderMode) -> RenderedGlyphKey {
         RenderedGlyphKey {
-            key: GlyphKey::new(font_key, size, index),
+            key: GlyphKey::new(font_key, size, color, index),
             render_mode: render_mode,
         }
     }
 }
 
 pub struct ImageProperties {
-    pub format: ImageFormat,
-    pub is_opaque: bool,
+    pub descriptor: ImageDescriptor,
     pub external_id: Option<ExternalImageId>,
-    pub width: u32,
-    pub height: u32,
-    pub stride: Option<u32>,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -98,12 +95,8 @@ enum State {
 
 struct ImageResource {
     data: ImageData,
-    width: u32,
-    height: u32,
-    stride: Option<u32>,
-    format: ImageFormat,
+    descriptor: ImageDescriptor,
     epoch: Epoch,
-    is_opaque: bool,
 }
 
 struct CachedImageInfo {
@@ -245,21 +238,10 @@ impl ResourceCache {
 
     pub fn add_image_template(&mut self,
                               image_key: ImageKey,
-                              width: u32,
-                              height: u32,
-                              stride: Option<u32>,
-                              format: ImageFormat,
+                              descriptor: ImageDescriptor,
                               data: ImageData) {
-        let is_opaque = match data {
-            ImageData::Raw(ref bytes) => is_image_opaque(format, bytes),
-            ImageData::External(..) => false,           // TODO: Allow providing this through API.
-        };
         let resource = ImageResource {
-            is_opaque: is_opaque,
-            width: width,
-            height: height,
-            stride: stride,
-            format: format,
+            descriptor: descriptor,
             data: data,
             epoch: Epoch(0),
         };
@@ -269,9 +251,7 @@ impl ResourceCache {
 
     pub fn update_image_template(&mut self,
                                  image_key: ImageKey,
-                                 width: u32,
-                                 height: u32,
-                                 format: ImageFormat,
+                                 descriptor: ImageDescriptor,
                                  bytes: Vec<u8>) {
         let next_epoch = match self.image_templates.get(&image_key) {
             Some(image) => {
@@ -292,11 +272,7 @@ impl ResourceCache {
         };
 
         let resource = ImageResource {
-            is_opaque: is_image_opaque(format, &bytes),
-            width: width,
-            height: height,
-            stride: None,
-            format: format,
+            descriptor: descriptor,
             data: ImageData::new(bytes),
             epoch: next_epoch,
         };
@@ -350,6 +326,7 @@ impl ResourceCache {
     pub fn request_glyphs(&mut self,
                           key: FontKey,
                           size: Au,
+                          color: ColorF,
                           glyph_indices: &[u32],
                           render_mode: FontRenderMode) {
         debug_assert!(self.state == State::AddResources);
@@ -359,6 +336,7 @@ impl ResourceCache {
         // already cached.
         let msg = GlyphCacheMsg::RequestGlyphs(key,
                                                size,
+                                               color,
                                                glyph_indices.to_vec(),
                                                render_mode);
         self.glyph_cache_tx.send(msg).unwrap();
@@ -375,6 +353,7 @@ impl ResourceCache {
     pub fn get_glyphs<F>(&self,
                          font_key: FontKey,
                          size: Au,
+                         color: ColorF,
                          glyph_indices: &[u32],
                          render_mode: FontRenderMode,
                          mut f: F) -> SourceTexture where F: FnMut(usize, DevicePoint, DevicePoint) {
@@ -383,6 +362,7 @@ impl ResourceCache {
         let render_mode = self.get_glyph_render_mode(render_mode);
         let mut glyph_key = RenderedGlyphKey::new(font_key,
                                                   size,
+                                                  color,
                                                   0,
                                                   render_mode);
         let mut texture_id = None;
@@ -463,12 +443,8 @@ impl ResourceCache {
         };
 
         ImageProperties {
-            format: image_template.format,
-            is_opaque: image_template.is_opaque,
+            descriptor: image_template.descriptor,
             external_id: external_id,
-            width: image_template.width,
-            height: image_template.height,
-            stride: image_template.stride,
         }
     }
 
@@ -523,10 +499,13 @@ impl ResourceCache {
                             if glyph.width > 0 && glyph.height > 0 {
                                 let image_id = self.texture_cache.new_item_id();
                                 self.texture_cache.insert(image_id,
-                                                          glyph.width,
-                                                          glyph.height,
-                                                          None,
-                                                          ImageFormat::RGBA8,
+                                                          ImageDescriptor {
+                                                              width: glyph.width,
+                                                              height: glyph.height,
+                                                              stride: None,
+                                                              format: ImageFormat::RGBA8,
+                                                              is_opaque: false,
+                                                          },
                                                           TextureFilter::Linear,
                                                           Arc::new(glyph.bytes));
                                 Some(image_id)
@@ -558,10 +537,7 @@ impl ResourceCache {
                             if entry.get().epoch != image_template.epoch {
                                 // TODO: Can we avoid the clone of the bytes here?
                                 self.texture_cache.update(image_id,
-                                                          image_template.width,
-                                                          image_template.height,
-                                                          image_template.stride,
-                                                          image_template.format,
+                                                          image_template.descriptor,
                                                           bytes.clone());
 
                                 // Update the cached epoch
@@ -581,10 +557,7 @@ impl ResourceCache {
 
                             // TODO: Can we avoid the clone of the bytes here?
                             self.texture_cache.insert(image_id,
-                                                      image_template.width,
-                                                      image_template.height,
-                                                      image_template.stride,
-                                                      image_template.format,
+                                                      image_template.descriptor,
                                                       filter,
                                                       bytes.clone());
 
@@ -632,30 +605,6 @@ impl Resource for Option<TextureCacheItemId> {
 impl Resource for CachedImageInfo {
     fn texture_cache_item_id(&self) -> Option<TextureCacheItemId> {
         Some(self.texture_cache_id)
-    }
-}
-
-// TODO(gw): If this ever shows up in profiles, consider calculating
-// this lazily on demand, possibly via the resource cache thread.
-// It can probably be made a lot faster with SIMD too!
-// This assumes that A8 textures are never opaque, since they are
-// typically used for alpha masks. We could revisit that if it
-// ever becomes an issue in real world usage.
-fn is_image_opaque(format: ImageFormat, bytes: &[u8]) -> bool {
-    match format {
-        ImageFormat::RGBA8 => {
-            let mut is_opaque = true;
-            for i in 0..(bytes.len() / 4) {
-                if bytes[i * 4 + 3] != 255 {
-                    is_opaque = false;
-                    break;
-                }
-            }
-            is_opaque
-        }
-        ImageFormat::RGB8 => true,
-        ImageFormat::A8 => false,
-        ImageFormat::Invalid | ImageFormat::RGBAF32 => unreachable!(),
     }
 }
 
@@ -719,7 +668,7 @@ fn spawn_glyph_cache_thread() -> (Sender<GlyphCacheMsg>, Receiver<GlyphCacheResu
                         });
                     }
                 }
-                GlyphCacheMsg::RequestGlyphs(key, size, indices, render_mode) => {
+                GlyphCacheMsg::RequestGlyphs(key, size, color, indices, render_mode) => {
                     // Request some glyphs for a text run.
                     // For any glyph that isn't currently in the cache,
                     // immeediately push a job to the worker thread pool
@@ -729,6 +678,7 @@ fn spawn_glyph_cache_thread() -> (Sender<GlyphCacheMsg>, Receiver<GlyphCacheResu
                     for glyph_index in indices {
                         let glyph_key = RenderedGlyphKey::new(key,
                                                               size,
+                                                              color,
                                                               glyph_index,
                                                               render_mode);
 
@@ -742,6 +692,7 @@ fn spawn_glyph_cache_thread() -> (Sender<GlyphCacheMsg>, Receiver<GlyphCacheResu
                                     let mut font_context = font_context.borrow_mut();
                                     let result = font_context.rasterize_glyph(glyph_key.key.font_key,
                                                                               glyph_key.key.size,
+                                                                              glyph_key.key.color,
                                                                               glyph_key.key.index,
                                                                               render_mode);
                                     glyph_tx.send((glyph_key, result)).unwrap();

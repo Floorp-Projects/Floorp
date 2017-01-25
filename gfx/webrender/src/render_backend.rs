@@ -125,23 +125,14 @@ impl RenderBackend {
                             };
                             tx.send(glyph_dimensions).unwrap();
                         }
-                        ApiMsg::AddImage(id, width, height, stride, format, data) => {
+                        ApiMsg::AddImage(id, descriptor, data) => {
                             if let ImageData::Raw(ref bytes) = data {
                                 profile_counters.image_templates.inc(bytes.len());
                             }
-                            self.resource_cache.add_image_template(id,
-                                                                   width,
-                                                                   height,
-                                                                   stride,
-                                                                   format,
-                                                                   data);
+                            self.resource_cache.add_image_template(id, descriptor, data);
                         }
-                        ApiMsg::UpdateImage(id, width, height, format, bytes) => {
-                            self.resource_cache.update_image_template(id,
-                                                                      width,
-                                                                      height,
-                                                                      format,
-                                                                      bytes);
+                        ApiMsg::UpdateImage(id, descriptor, bytes) => {
+                            self.resource_cache.update_image_template(id, descriptor, bytes);
                         }
                         ApiMsg::DeleteImage(id) => {
                             self.resource_cache.delete_image_template(id);

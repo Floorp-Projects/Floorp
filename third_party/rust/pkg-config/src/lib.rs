@@ -30,7 +30,18 @@
 //!
 //! # Example
 //!
-//! Find the system library named `foo`.
+//! Find the system library named `foo`, with minimum version 1.2.3:
+//!
+//! ```no_run
+//! extern crate pkg_config;
+//!
+//! fn main() {
+//!     pkg_config::Config::new().atleast_version("1.2.3").probe("foo").unwrap();
+//! }
+//! ```
+//!
+//! Find the system library named `foo`, with no version requirement (not
+//! recommended):
 //!
 //! ```no_run
 //! extern crate pkg_config;
@@ -46,11 +57,11 @@
 //! extern crate pkg_config;
 //!
 //! fn main() {
-//!     pkg_config::Config::new().statik(true).probe("foo").unwrap();
+//!     pkg_config::Config::new().atleast_version("1.2.3").statik(true).probe("foo").unwrap();
 //! }
 //! ```
 
-#![doc(html_root_url = "http://alexcrichton.com/pkg-config-rs")]
+#![doc(html_root_url = "https://docs.rs/pkg-config/0.3")]
 #![cfg_attr(test, deny(warnings))]
 
 use std::ascii::AsciiExt;
@@ -82,6 +93,7 @@ pub struct Config {
     atleast_version: Option<String>,
     extra_args: Vec<OsString>,
     cargo_metadata: bool,
+    print_system_libs: bool,
 }
 
 #[derive(Debug)]
@@ -107,6 +119,9 @@ pub enum Error {
     /// Override with `PKG_CONFIG_ALLOW_CROSS=1`.
     CrossCompilation,
 
+    /// Attempted to compile using the MSVC ABI build
+    MSVC,
+
     /// Failed to run `pkg-config`.
     ///
     /// Contains the command and the cause.
@@ -130,6 +145,7 @@ impl error::Error for Error {
                 "pkg-config doesn't handle cross compilation. \
                  Use PKG_CONFIG_ALLOW_CROSS=1 to override"
             }
+            Error::MSVC => "pkg-config is incompatible with the MSVC ABI build.",
             Error::Command { .. } => "failed to run pkg-config",
             Error::Failure { .. } => "pkg-config did not exit sucessfully",
             Error::__Nonexhaustive => panic!(),
@@ -180,6 +196,7 @@ impl fmt::Debug for Error {
                  .finish()
             }
             Error::CrossCompilation => write!(f, "CrossCompilation"),
+            Error::MSVC => write!(f, "MSVC"),
             Error::Command { ref command, ref cause } => {
                 f.debug_struct("Command")
                  .field("command", command)
@@ -207,6 +224,10 @@ impl fmt::Display for Error {
                 write!(f, "Cross compilation detected. \
                        Use PKG_CONFIG_ALLOW_CROSS=1 to override")
             }
+            Error::MSVC => {
+                write!(f, "MSVC target detected. If you are using the MSVC ABI \
+                       rust build, please use the GNU ABI build instead.")
+            }
             Error::Command { ref command, ref cause } => {
                 write!(f, "Failed to run `{}`: {}", command, cause)
             }
@@ -218,7 +239,7 @@ impl fmt::Display for Error {
                     try!(write!(f, "\n--- stdout\n{}", stdout));
                 }
                 if !stderr.is_empty() {
-                    try!(write!(f, "\n--- stdout\n{}", stderr));
+                    try!(write!(f, "\n--- stderr\n{}", stderr));
                 }
                 Ok(())
             }
@@ -254,6 +275,7 @@ impl Config {
             statik: None,
             atleast_version: None,
             extra_args: vec![],
+            print_system_libs: true,
             cargo_metadata: true,
         }
     }
@@ -288,6 +310,15 @@ impl Config {
         self
     }
 
+    /// Enable or disable the `PKG_CONFIG_ALLOW_SYSTEM_LIBS` environment
+    /// variable.
+    ///
+    /// This env var is enabled by default.
+    pub fn print_system_libs(&mut self, print: bool) -> &mut Config {
+        self.print_system_libs = print;
+        self
+    }
+
     /// Deprecated in favor fo the `probe` function
     #[doc(hidden)]
     pub fn find(&self, name: &str) -> Result<Library, String> {
@@ -303,7 +334,12 @@ impl Config {
         if env::var_os(&abort_var_name).is_some() {
             return Err(Error::EnvNoPkgConfig(abort_var_name))
         } else if !target_supported() {
-            return Err(Error::CrossCompilation);
+            if env::var("TARGET").unwrap_or(String::new()).contains("msvc") {
+                return Err(Error::MSVC);
+            }
+            else {
+                return Err(Error::CrossCompilation);
+            }
         }
 
         let mut library = Library::new();
@@ -334,8 +370,11 @@ impl Config {
             cmd.arg("--static");
         }
         cmd.args(args)
-           .args(&self.extra_args)
-           .env("PKG_CONFIG_ALLOW_SYSTEM_LIBS", "1");
+           .args(&self.extra_args);
+
+        if self.print_system_libs {
+            cmd.env("PKG_CONFIG_ALLOW_SYSTEM_LIBS", "1");
+        }
         if let Some(ref version) = self.atleast_version {
             cmd.arg(&format!("{} >= {}", name, version));
         } else {

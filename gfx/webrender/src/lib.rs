@@ -67,6 +67,7 @@ mod record;
 mod render_backend;
 mod resource_cache;
 mod scene;
+mod scroll_tree;
 mod spring;
 mod texture_cache;
 mod tiling;

@@ -28,9 +28,9 @@ pub enum ApiMsg {
     /// Gets the glyph dimensions
     GetGlyphDimensions(Vec<GlyphKey>, MsgSender<Vec<Option<GlyphDimensions>>>),
     /// Adds an image from the resource cache.
-    AddImage(ImageKey, u32, u32, Option<u32>, ImageFormat, ImageData),
+    AddImage(ImageKey, ImageDescriptor, ImageData),
     /// Updates the the resource cache with the new image data.
-    UpdateImage(ImageKey, u32, u32, ImageFormat, Vec<u8>),
+    UpdateImage(ImageKey, ImageDescriptor, Vec<u8>),
     /// Drops an image from the resource cache.
     DeleteImage(ImageKey),
     CloneApi(MsgSender<IdNamespace>),
@@ -191,6 +191,64 @@ pub struct ColorF {
 }
 known_heap_size!(0, ColorF);
 
+#[derive(Clone, Copy, Hash, Eq, Debug, Deserialize, PartialEq, PartialOrd, Ord, Serialize)]
+pub struct ColorU {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+    pub a: u8,
+}
+
+impl From<ColorF> for ColorU {
+    fn from(color: ColorF) -> ColorU {
+        ColorU {
+            r: ColorU::round_to_int(color.r),
+            g: ColorU::round_to_int(color.g),
+            b: ColorU::round_to_int(color.b),
+            a: ColorU::round_to_int(color.a),
+        }
+    }
+}
+
+impl Into<ColorF> for ColorU {
+    fn into(self) -> ColorF {
+        ColorF {
+            r: self.r as f32 / 255.0,
+            g: self.g as f32 / 255.0,
+            b: self.b as f32 / 255.0,
+            a: self.a as f32 / 255.0,
+        }
+    }
+}
+
+impl ColorU {
+    fn round_to_int(x: f32) -> u8 {
+        debug_assert!((0.0 <= x) && (x <= 1.0));
+        let f = (255.0 * x) + 0.5;
+        let val = f.floor();
+        debug_assert!(val <= 255.0);
+        val as u8
+    }
+
+    pub fn new(r: u8, g: u8, b: u8, a: u8) -> ColorU {
+        ColorU {
+            r: r,
+            g: g,
+            b: b,
+            a: a,
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug, Deserialize, PartialEq, Serialize)]
+pub struct ImageDescriptor {
+    pub format: ImageFormat,
+    pub width: u32,
+    pub height: u32,
+    pub stride: Option<u32>,
+    pub is_opaque: bool,
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ImageMask {
     pub image: ImageKey,
@@ -263,15 +321,18 @@ pub struct GlyphKey {
     //           or something similar to that.
     pub size: Au,
     pub index: u32,
+    pub color: ColorU,
 }
 
 impl GlyphKey {
     pub fn new(font_key: FontKey,
                size: Au,
+               color: ColorF,
                index: u32) -> GlyphKey {
         GlyphKey {
             font_key: font_key,
             size: size,
+            color: ColorU::from(color),
             index: index,
         }
     }
@@ -356,6 +417,18 @@ pub enum ImageFormat {
     RGB8,
     RGBA8,
     RGBAF32,
+}
+
+impl ImageFormat {
+    pub fn bytes_per_pixel(self) -> Option<u32> {
+        match self {
+            ImageFormat::A8 => Some(1),
+            ImageFormat::RGB8 => Some(3),
+            ImageFormat::RGBA8 => Some(4),
+            ImageFormat::RGBAF32 => Some(16),
+            ImageFormat::Invalid => None,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]

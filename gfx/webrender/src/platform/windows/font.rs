@@ -4,7 +4,7 @@
 
 use app_units::Au;
 use std::collections::HashMap;
-use webrender_traits::{FontKey, FontRenderMode, GlyphDimensions};
+use webrender_traits::{FontKey, ColorU, FontRenderMode, GlyphDimensions};
 
 use dwrote;
 
@@ -182,6 +182,7 @@ impl FontContext {
     pub fn rasterize_glyph(&mut self,
                            font_key: FontKey,
                            size: Au,
+                           color: ColorU,
                            glyph: u32,
                            render_mode: FontRenderMode) -> Option<RasterizedGlyph> {
         let (_, maybe_glyph) =
