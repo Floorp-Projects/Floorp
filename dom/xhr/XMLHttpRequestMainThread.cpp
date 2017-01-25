@@ -2303,175 +2303,6 @@ XMLHttpRequestMainThread::ChangeStateToDone()
   }
 }
 
-template<> nsresult
-XMLHttpRequestMainThread::RequestBody<nsIDocument>::GetAsStream(
-   nsIInputStream** aResult, uint64_t* aContentLength,
-   nsACString& aContentType, nsACString& aCharset) const
-{
-  nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(mBody));
-  NS_ENSURE_STATE(domdoc);
-  aCharset.AssignLiteral("UTF-8");
-
-  nsresult rv;
-  nsCOMPtr<nsIStorageStream> storStream;
-  rv = NS_NewStorageStream(4096, UINT32_MAX, getter_AddRefs(storStream));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIOutputStream> output;
-  rv = storStream->GetOutputStream(0, getter_AddRefs(output));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (mBody->IsHTMLDocument()) {
-    aContentType.AssignLiteral("text/html");
-
-    nsString serialized;
-    if (!nsContentUtils::SerializeNodeToMarkup(mBody, true, serialized)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    nsAutoCString utf8Serialized;
-    if (!AppendUTF16toUTF8(serialized, utf8Serialized, fallible)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    uint32_t written;
-    rv = output->Write(utf8Serialized.get(), utf8Serialized.Length(), &written);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    MOZ_ASSERT(written == utf8Serialized.Length());
-  } else {
-    aContentType.AssignLiteral("application/xml");
-
-    nsCOMPtr<nsIDOMSerializer> serializer =
-      do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Make sure to use the encoding we'll send
-    rv = serializer->SerializeToStream(domdoc, output, aCharset);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  output->Close();
-
-  uint32_t length;
-  rv = storStream->GetLength(&length);
-  NS_ENSURE_SUCCESS(rv, rv);
-  *aContentLength = length;
-
-  rv = storStream->NewInputStream(0, aResult);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-
-template<> nsresult
-XMLHttpRequestMainThread::RequestBody<const nsAString>::GetAsStream(
-   nsIInputStream** aResult, uint64_t* aContentLength,
-   nsACString& aContentType, nsACString& aCharset) const
-{
-  aContentType.AssignLiteral("text/plain");
-  aCharset.AssignLiteral("UTF-8");
-
-  nsAutoCString converted;
-  if (!AppendUTF16toUTF8(*mBody, converted, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  *aContentLength = converted.Length();
-  nsresult rv = NS_NewCStringInputStream(aResult, converted);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
-}
-
-template<> nsresult
-XMLHttpRequestMainThread::RequestBody<nsIInputStream>::GetAsStream(
-   nsIInputStream** aResult, uint64_t* aContentLength,
-   nsACString& aContentType, nsACString& aCharset) const
-{
-  aContentType.AssignLiteral("text/plain");
-  aCharset.Truncate();
-
-  nsresult rv = mBody->Available(aContentLength);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIInputStream> stream(mBody);
-  stream.forget(aResult);
-  return NS_OK;
-}
-
-template<> nsresult
-XMLHttpRequestMainThread::RequestBody<Blob>::GetAsStream(
-   nsIInputStream** aResult, uint64_t* aContentLength,
-   nsACString& aContentType, nsACString& aCharset) const
-{
-  return mBody->GetSendInfo(aResult, aContentLength, aContentType, aCharset);
-}
-
-template<> nsresult
-XMLHttpRequestMainThread::RequestBody<FormData>::GetAsStream(
-   nsIInputStream** aResult, uint64_t* aContentLength,
-   nsACString& aContentType, nsACString& aCharset) const
-{
-  return mBody->GetSendInfo(aResult, aContentLength, aContentType, aCharset);
-}
-
-template<> nsresult
-XMLHttpRequestMainThread::RequestBody<URLSearchParams>::GetAsStream(
-   nsIInputStream** aResult, uint64_t* aContentLength,
-   nsACString& aContentType, nsACString& aCharset) const
-{
-  return mBody->GetSendInfo(aResult, aContentLength, aContentType, aCharset);
-}
-
-template<> nsresult
-XMLHttpRequestMainThread::RequestBody<nsIXHRSendable>::GetAsStream(
-   nsIInputStream** aResult, uint64_t* aContentLength,
-   nsACString& aContentType, nsACString& aCharset) const
-{
-  return mBody->GetSendInfo(aResult, aContentLength, aContentType, aCharset);
-}
-
-static nsresult
-GetBufferDataAsStream(const uint8_t* aData, uint32_t aDataLength,
-                      nsIInputStream** aResult, uint64_t* aContentLength,
-                      nsACString& aContentType, nsACString& aCharset)
-{
-  aContentType.SetIsVoid(true);
-  aCharset.Truncate();
-
-  *aContentLength = aDataLength;
-  const char* data = reinterpret_cast<const char*>(aData);
-
-  nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream), data, aDataLength,
-                                      NS_ASSIGNMENT_COPY);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  stream.forget(aResult);
-
-  return NS_OK;
-}
-
-template<> nsresult
-XMLHttpRequestMainThread::RequestBody<const ArrayBuffer>::GetAsStream(
-   nsIInputStream** aResult, uint64_t* aContentLength,
-   nsACString& aContentType, nsACString& aCharset) const
-{
-  mBody->ComputeLengthAndData();
-  return GetBufferDataAsStream(mBody->Data(), mBody->Length(),
-                               aResult, aContentLength, aContentType, aCharset);
-}
-
-template<> nsresult
-XMLHttpRequestMainThread::RequestBody<const ArrayBufferView>::GetAsStream(
-   nsIInputStream** aResult, uint64_t* aContentLength,
-   nsACString& aContentType, nsACString& aCharset) const
-{
-  mBody->ComputeLengthAndData();
-  return GetBufferDataAsStream(mBody->Data(), mBody->Length(),
-                               aResult, aContentLength, aContentType, aCharset);
-}
-
-
 nsresult
 XMLHttpRequestMainThread::CreateChannel()
 {
@@ -2799,7 +2630,7 @@ XMLHttpRequestMainThread::Send(nsIVariant* aVariant)
     // document?
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(supports);
     if (doc) {
-      RequestBody<nsIDocument> body(doc);
+      BodyExtractor<nsIDocument> body(doc);
       return SendInternal(&body);
     }
 
@@ -2808,21 +2639,21 @@ XMLHttpRequestMainThread::Send(nsIVariant* aVariant)
     if (wstr) {
       nsAutoString string;
       wstr->GetData(string);
-      RequestBody<const nsAString> body(&string);
+      BodyExtractor<const nsAString> body(&string);
       return SendInternal(&body);
     }
 
     // nsIInputStream?
     nsCOMPtr<nsIInputStream> stream = do_QueryInterface(supports);
     if (stream) {
-      RequestBody<nsIInputStream> body(stream);
+      BodyExtractor<nsIInputStream> body(stream);
       return SendInternal(&body);
     }
 
     // nsIXHRSendable?
     nsCOMPtr<nsIXHRSendable> sendable = do_QueryInterface(supports);
     if (sendable) {
-      RequestBody<nsIXHRSendable> body(sendable);
+      BodyExtractor<nsIXHRSendable> body(sendable);
       return SendInternal(&body);
     }
 
@@ -2835,7 +2666,7 @@ XMLHttpRequestMainThread::Send(nsIVariant* aVariant)
       JS::Rooted<JSObject*> obj(rootingCx, realVal.toObjectOrNull());
       RootedTypedArray<ArrayBuffer> buf(rootingCx);
       if (buf.Init(obj)) {
-        RequestBody<const ArrayBuffer> body(&buf);
+        BodyExtractor<const ArrayBuffer> body(&buf);
         return SendInternal(&body);
       }
     }
@@ -2852,12 +2683,12 @@ XMLHttpRequestMainThread::Send(nsIVariant* aVariant)
   nsString string;
   string.Adopt(data, len);
 
-  RequestBody<const nsAString> body(&string);
+  BodyExtractor<const nsAString> body(&string);
   return SendInternal(&body);
 }
 
 nsresult
-XMLHttpRequestMainThread::SendInternal(const RequestBodyBase* aBody)
+XMLHttpRequestMainThread::SendInternal(const BodyExtractorBase* aBody)
 {
   NS_ENSURE_TRUE(mPrincipal, NS_ERROR_NOT_INITIALIZED);
 
@@ -2918,13 +2749,6 @@ XMLHttpRequestMainThread::SendInternal(const RequestBodyBase* aBody)
       mAuthorRequestHeaders.Get("content-type", uploadContentType);
       if (uploadContentType.IsVoid()) {
         uploadContentType = defaultContentType;
-
-        if (!charset.IsEmpty()) {
-          // If we are providing the default content type, then we also need to
-          // provide a charset declaration.
-          uploadContentType.Append(NS_LITERAL_CSTRING(";charset="));
-          uploadContentType.Append(charset);
-        }
       }
 
       // We don't want to set a charset for streams.

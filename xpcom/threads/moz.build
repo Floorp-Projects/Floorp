@@ -22,22 +22,31 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'xpcom_threads'
 
 EXPORTS += [
+    'MainThreadUtils.h',
     'nsEventQueue.h',
     'nsICancelableRunnable.h',
     'nsIIncrementalRunnable.h',
     'nsMemoryPressure.h',
     'nsProcess.h',
+    'nsProxyRelease.h',
     'nsThread.h',
+    'nsThreadUtils.h',
 ]
 
 EXPORTS.mozilla += [
     'AbstractThread.h',
     'BackgroundHangMonitor.h',
+    'BlockingResourceBase.h',
+    'CondVar.h',
+    'DeadlockDetector.h',
     'HangAnnotations.h',
     'HangMonitor.h',
     'LazyIdleThread.h',
     'MainThreadIdlePeriod.h',
+    'Monitor.h',
     'MozPromise.h',
+    'Mutex.h',
+    'ReentrantMonitor.h',
     'SharedThreadPool.h',
     'StateMirroring.h',
     'StateWatching.h',
@@ -50,6 +59,7 @@ EXPORTS.mozilla += [
 UNIFIED_SOURCES += [
     'AbstractThread.cpp',
     'BackgroundHangMonitor.cpp',
+    'BlockingResourceBase.cpp',
     'HangAnnotations.cpp',
     'HangMonitor.cpp',
     'LazyIdleThread.cpp',
@@ -58,9 +68,11 @@ UNIFIED_SOURCES += [
     'nsEventQueue.cpp',
     'nsMemoryPressure.cpp',
     'nsProcessCommon.cpp',
+    'nsProxyRelease.cpp',
     'nsThread.cpp',
     'nsThreadManager.cpp',
     'nsThreadPool.cpp',
+    'nsThreadUtils.cpp',
     'nsTimerImpl.cpp',
     'SharedThreadPool.cpp',
     'TaskQueue.cpp',

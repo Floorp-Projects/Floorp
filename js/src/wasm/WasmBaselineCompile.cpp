@@ -28,7 +28,6 @@
  * Unimplemented functionality:
  *
  *  - Tiered compilation (bug 1277562)
- *  - profiler support / devtools (bug 1286948)
  *  - SIMD
  *  - Atomics
  *
@@ -48,10 +47,6 @@
  *
  *
  * High-value code generation improvements:
- *
- * - (Bug 1316803) Opportunities for cheaply folding in a constant rhs to
- *   arithmetic operations, we do this already for I32 add and shift operators,
- *   this reduces register pressure and instruction count.
  *
  * - (Bug 1316804) brTable pessimizes by always dispatching to code that pops
  *   the stack and then jumps to the code for the target case.  If no cleanup is
@@ -2241,7 +2236,7 @@ class BaseCompiler
         GenerateFunctionEpilogue(masm, localSize_, &offsets_);
 
 #if defined(JS_ION_PERF)
-        // FIXME - profiling code missing.  Bug 1286948.
+        // FIXME - profiling code missing.  No bug for this.
 
         // Note the end of the inline code and start of the OOL code.
         //gen->perfSpewer().noteEndInlineCode(masm);
@@ -4096,7 +4091,6 @@ BaseCompiler::emitSubtractF64()
 void
 BaseCompiler::emitMultiplyI32()
 {
-    // TODO / OPTIMIZE: Multiplication by constant is common (Bug 1275442, 1316803)
     RegI32 r0, r1;
     pop2xI32ForIntMulDiv(&r0, &r1);
     masm.mul32(r1, r0);
@@ -4107,7 +4101,6 @@ BaseCompiler::emitMultiplyI32()
 void
 BaseCompiler::emitMultiplyI64()
 {
-    // TODO / OPTIMIZE: Multiplication by constant is common (Bug 1275442, 1316803)
     RegI64 r0, r1;
     RegI32 temp;
 #if defined(JS_CODEGEN_X64)
