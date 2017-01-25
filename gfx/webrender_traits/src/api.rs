@@ -6,8 +6,8 @@ use byteorder::{LittleEndian, WriteBytesExt};
 use channel::{self, MsgSender, PayloadHelperMethods, PayloadSender};
 use offscreen_gl_context::{GLContextAttributes, GLLimits};
 use std::cell::Cell;
-use {ApiMsg, ColorF, DisplayListBuilder, Epoch};
-use {FontKey, IdNamespace, ImageFormat, ImageKey, NativeFontHandle, PipelineId};
+use {ApiMsg, ColorF, DisplayListBuilder, Epoch, ImageDescriptor};
+use {FontKey, IdNamespace, ImageKey, NativeFontHandle, PipelineId};
 use {RenderApiSender, ResourceId, ScrollEventPhase, ScrollLayerState, ScrollLocation, ServoScrollRootId};
 use {GlyphKey, GlyphDimensions, ImageData, WebGLContextId, WebGLCommand};
 use {DeviceIntSize, LayoutPoint, LayoutSize, WorldPoint};
@@ -90,13 +90,10 @@ impl RenderApi {
 
     /// Adds an image and returns the corresponding `ImageKey`.
     pub fn add_image(&self,
-                     width: u32,
-                     height: u32,
-                     stride: Option<u32>,
-                     format: ImageFormat,
+                     descriptor: ImageDescriptor,
                      data: ImageData) -> ImageKey {
         let key = self.alloc_image();
-        let msg = ApiMsg::AddImage(key, width, height, stride, format, data);
+        let msg = ApiMsg::AddImage(key, descriptor, data);
         self.api_sender.send(msg).unwrap();
         key
     }
@@ -107,11 +104,9 @@ impl RenderApi {
     // TODO: Support changing dimensions (and format) during image update?
     pub fn update_image(&self,
                         key: ImageKey,
-                        width: u32,
-                        height: u32,
-                        format: ImageFormat,
+                        descriptor: ImageDescriptor,
                         bytes: Vec<u8>) {
-        let msg = ApiMsg::UpdateImage(key, width, height, format, bytes);
+        let msg = ApiMsg::UpdateImage(key, descriptor, bytes);
         self.api_sender.send(msg).unwrap();
     }
 
