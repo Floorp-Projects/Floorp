@@ -4548,6 +4548,7 @@ nsresult HTMLMediaElement::InitializeDecoderAsClone(MediaDecoder* aOriginal)
     originalResource->CloneData(decoder->GetResourceCallback());
 
   if (!resource) {
+    decoder->Shutdown();
     LOG(LogLevel::Debug, ("%p Failed to cloned stream for decoder %p", this, decoder.get()));
     return NS_ERROR_FAILURE;
   }
@@ -4587,8 +4588,10 @@ nsresult HTMLMediaElement::InitializeDecoderForChannel(nsIChannel* aChannel,
   RefPtr<MediaResource> resource =
     MediaResource::Create(decoder->GetResourceCallback(), aChannel);
 
-  if (!resource)
+  if (!resource) {
+    decoder->Shutdown();
     return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   if (mChannelLoader) {
     mChannelLoader->Done();
