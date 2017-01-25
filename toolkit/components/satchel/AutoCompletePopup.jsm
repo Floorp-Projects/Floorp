@@ -155,6 +155,8 @@ this.AutoCompletePopup = {
 
     this.weakBrowser = Cu.getWeakReference(browser);
     this.openedPopup = browser.autoCompletePopup;
+    // the layout varies according to different result type
+    this.openedPopup.setAttribute("firstresultstyle", results[0].style);
     this.openedPopup.hidden = false;
     // don't allow the popup to become overly narrow
     this.openedPopup.setAttribute("width", Math.max(100, rect.width));
