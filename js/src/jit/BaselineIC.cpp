@@ -2078,7 +2078,26 @@ DoInFallback(JSContext* cx, BaselineFrame* frame, ICIn_Fallback* stub_,
         return false;
     }
 
+    bool attached = false;
+
+    if (stub->numOptimizedStubs() >= ICIn_Fallback::MAX_OPTIMIZED_STUBS)
+        attached = true;
+
     RootedObject obj(cx, &objValue.toObject());
+    jsbytecode* pc = stub->icEntry()->pc(frame->script());
+
+    if (!attached && !JitOptions.disableCacheIR) {
+        ICStubEngine engine = ICStubEngine::Baseline;
+        InIRGenerator gen(cx, pc, key, obj);
+        if (gen.tryAttachStub()) {
+            ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
+                                                        engine, frame->script(), stub);
+            if (newStub) {
+                JitSpew(JitSpew_BaselineIC, "  Attached CacheIR stub");
+                attached = true;
+            }
+        }
+    }
 
     bool cond = false;
     if (!OperatorIn(cx, key, obj, &cond))
@@ -2088,7 +2107,7 @@ DoInFallback(JSContext* cx, BaselineFrame* frame, ICIn_Fallback* stub_,
     if (stub.invalid())
         return true;
 
-    if (stub->numOptimizedStubs() >= ICIn_Fallback::MAX_OPTIMIZED_STUBS)
+    if (attached)
         return true;
 
     if (obj->isNative()) {

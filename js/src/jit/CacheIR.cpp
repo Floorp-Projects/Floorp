@@ -1563,6 +1563,19 @@ GetNameIRGenerator::tryAttachEnvironmentName(ObjOperandId objId, HandleId id)
     return true;
 }
 
+InIRGenerator::InIRGenerator(JSContext* cx, jsbytecode* pc, HandleValue key, HandleObject obj)
+  : IRGenerator(cx, pc, CacheKind::In),
+    key_(key), obj_(obj)
+{ }
+
+bool
+InIRGenerator::tryAttachStub()
+{
+    MOZ_ASSERT(cacheKind_ == CacheKind::In);
+
+    return false;
+}
+
 bool
 IRGenerator::maybeGuardInt32Index(const Value& index, ValOperandId indexId,
                                   uint32_t* int32Index, Int32OperandId* int32IndexId)
