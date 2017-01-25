@@ -8,11 +8,10 @@
 var windowsToClose = [];
 function testOnWindow(options, callback) {
   var win = OpenBrowserWindow(options);
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad);
+  win.addEventListener("load", function() {
     windowsToClose.push(win);
     executeSoon(() => callback(win));
-  });
+  }, {once: true});
 }
 
 registerCleanupFunction(function() {

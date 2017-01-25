@@ -31,10 +31,9 @@
               if (sw.controller) {
                 resolve();
               } else {
-                sw.addEventListener('controllerchange', function onControllerChange() {
-                  sw.removeEventListener('controllerchange', onControllerChange);
+                sw.addEventListener('controllerchange', function () {
                   resolve();
-                });
+                }, {once: true});
               }
             });
           }).catch(err => {

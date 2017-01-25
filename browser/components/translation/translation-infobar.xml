@@ -232,9 +232,7 @@
                 this.translation.browser != gBrowser.selectedBrowser)
               return;
 
-            this.addEventListener("transitionend", function onShown() {
-              this.removeEventListener("transitionend", onShown);
-
+            this.addEventListener("transitionend", function() {
               // These strings are hardcoded because they need to reach beta
               // without riding the trains.
               let localizedStrings = {
@@ -281,7 +279,7 @@
                               "bottomcenter topleft");
 
               Services.prefs.setBoolPref(kWelcomePref, true);
-            });
+            }, {once: true});
           ]]>
         </body>
       </method>

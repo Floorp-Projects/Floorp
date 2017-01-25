@@ -37,19 +37,16 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
       Services.ww.unregisterNotification(windowObserver);
 
       var win = aSubject.QueryInterface(Components.interfaces.nsIDOMWindow);
-      win.addEventListener("pageshow", function onPageShow() {
-        win.removeEventListener("pageshow", onPageShow);
-
+      win.addEventListener("pageshow", function() {
         var x = win.screenX;
         var y = win.screenY;
 
-        win.addEventListener("pagehide", function onPageHide() {
-          win.removeEventListener("pagehide", onPageHide);
+        win.addEventListener("pagehide", function() {
           sendAsyncMessage("waitedForPosition", { x, y });
-        });
+        }, {once: true});
 
         alertService.closeAlert();
-      });
+      }, {once: true});
     };
 
     Services.ww.registerNotification(windowObserver);

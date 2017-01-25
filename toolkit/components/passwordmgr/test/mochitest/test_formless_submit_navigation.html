@@ -140,10 +140,9 @@ add_task(function* test() {
     for (let scriptName of Object.keys(SCRIPTS)) {
       info("Starting testcase with script " + scriptName + ": " + JSON.stringify(tc));
       let loadedPromise = new Promise((resolve) => {
-        loginFrame.addEventListener("load", function frameLoaded() {
-          loginFrame.removeEventListener("load", frameLoaded);
+        loginFrame.addEventListener("load", function() {
           resolve();
-        });
+        }, {once: true});
       });
       loginFrame.src = DEFAULT_ORIGIN + "/tests/toolkit/components/passwordmgr/test/mochitest/blank.html";
       yield loadedPromise;

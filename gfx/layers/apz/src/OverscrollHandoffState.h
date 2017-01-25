@@ -11,7 +11,7 @@
 #include "mozilla/RefPtr.h"   // for RefPtr
 #include "nsISupportsImpl.h"  // for NS_INLINE_DECL_THREADSAFE_REFCOUNTING
 #include "APZUtils.h"         // for CancelAnimationFlags
-#include "Layers.h"           // for Layer::ScrollDirection
+#include "mozilla/layers/LayersTypes.h" // for Layer::ScrollDirection
 #include "Units.h"            // for ScreenPoint
 
 namespace mozilla {
@@ -81,7 +81,7 @@ public:
   // Determine whether the given APZC, or any APZC further in the chain,
   // can scroll in the given direction.
   bool CanScrollInDirection(const AsyncPanZoomController* aApzc,
-                            Layer::ScrollDirection aDirection) const;
+                            ScrollDirection aDirection) const;
 
   // Determine whether any APZC along this handoff chain is overscrolled.
   bool HasOverscrolledApzc() const;

@@ -25,10 +25,9 @@ function test()
   waitForExplicitFinish();
 
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function browserLoad() {
-    gBrowser.selectedBrowser.removeEventListener("load", browserLoad, true);
+  gBrowser.selectedBrowser.addEventListener("load", function () {
     openScratchpad(runTests);
-  }, true);
+  }, {capture: true, once: true});
 
   content.location = "data:text/html,<p>test that undo get's reset after file load in Scratchpad";
 }

@@ -10,6 +10,7 @@ def WebIDLTest(parser, harness):
           setter boolean (DOMString name, boolean value);
           creator boolean (DOMString name, boolean value);
           deleter boolean (DOMString name);
+          readonly attribute unsigned long length;
         };
 
         interface SpecialMethodsCombination {
@@ -39,7 +40,7 @@ def WebIDLTest(parser, harness):
     harness.check(len(results), 2, "Expect 2 interfaces")
 
     iface = results[0]
-    harness.check(len(iface.members), 7, "Expect 7 members")
+    harness.check(len(iface.members), 8, "Expect 8 members")
 
     checkMethod(iface.members[0], "::SpecialMethods::__indexedgetter", "__indexedgetter",
                 getter=True)

@@ -36,19 +36,44 @@ module.exports = function(context) {
   var removedListeners = [];
 
   function addAddedListener(node) {
+    var capture = false;
+    let options = node.arguments[2];
+    if (options) {
+      if (options.type == "ObjectExpression") {
+        if (options.properties.some(p => p.key.name == "once" &&
+                                         p.value.value === true)) {
+          // No point in adding listeners using the 'once' option.
+          return;
+        }
+        capture = options.properties.some(p => p.key.name == "capture" &&
+                                               p.value.value === true);
+      } else {
+        capture = options.value;
+      }
+    }
     addedListeners.push({
       functionName: node.callee.property.name,
       type: node.arguments[0].value,
       node: node.callee.property,
-      useCapture: node.arguments[2] ? node.arguments[2].value : null
+      useCapture: capture
     });
   }
 
   function addRemovedListener(node) {
+    var capture = false;
+    let options = node.arguments[2];
+    if (options) {
+      if (options.type == "ObjectExpression") {
+        capture = options.properties.some(p => p.key.name == "capture" &&
+                                               p.value.value === true);
+      } else {
+        capture = options.value;
+      }
+    }
     removedListeners.push({
       functionName: node.callee.property.name,
       type: node.arguments[0].value,
-      useCapture: node.arguments[2] ? node.arguments[2].value : null
+      useCapture: capture
     });
   }
 

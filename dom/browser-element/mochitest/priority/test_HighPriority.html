@@ -91,10 +91,9 @@ function runTest() {
 
     return Promise.all([
       new Promise(function(resolve, reject) {
-        iframe.addEventListener('mozbrowsershowmodalprompt', function check(e) {
-          iframe.removeEventListener('mozbrowsershowmodalprompt', check);
+        iframe.addEventListener('mozbrowsershowmodalprompt', function(e) {
           resolve(checkAlertInfo(e));
-        });
+        }, {once: true});
       }),
       expectPriorityChange(childID, priority).then(checkGracePeriod)
     ]).then(function(results) {

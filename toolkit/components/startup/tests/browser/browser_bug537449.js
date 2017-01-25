@@ -37,8 +37,7 @@ function test() {
 
     let win2 = window.openDialog(location, "", "chrome,all,dialog=no", "about:blank");
     ok(win2 != null, "Should have been able to open a new window");
-    win2.addEventListener("load", function onLoad() {
-      win2.removeEventListener("load", onLoad);
+    win2.addEventListener("load", function() {
       win2.close();
 
       // Leave the page the second time.
@@ -48,6 +47,6 @@ function test() {
 
       gBrowser.removeTab(gBrowser.selectedTab);
       executeSoon(finish);
-    });
+    }, {once: true});
   });
 }

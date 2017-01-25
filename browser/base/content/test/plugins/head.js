@@ -363,10 +363,9 @@ function waitForNotificationShown(notification, callback) {
     executeSoon(callback);
     return;
   }
-  PopupNotifications.panel.addEventListener("popupshown", function onShown(e) {
-    PopupNotifications.panel.removeEventListener("popupshown", onShown);
+  PopupNotifications.panel.addEventListener("popupshown", function(e) {
     callback();
-  });
+  }, {once: true});
   notification.reshow();
 }
 

@@ -1213,6 +1213,8 @@ class URLLoader extends PP_Resource {
     super(instance);
     this.responseReadCallback = null;
     this.responseUnreadChunks = [];
+    this.bytes_received = 0;
+    this.total_bytes_to_be_received = -1;
   }
 
   openURL(method, url, callback) {

@@ -312,19 +312,12 @@ function checkNotResetableAndFormSubmission(aElement)
   aElement.max = 100.0;
 
   document.getElementsByName('submit_frame')[0].addEventListener("load", function() {
-    document.getElementsByName('submit_frame')[0].removeEventListener("load", arguments.callee);
-
-    /**
-     * All elements values have been set just before the submission.
-     * The input element value should be in the submit url but the meter
-     * element value should not appear.
-     */
     is(frames['submit_frame'].location.href,
       'http://mochi.test:8888/tests/dom/html/test/forms/foo?a=tulip',
        "The meter element value should not be submitted");
 
     checkNotResetable();
-  });
+  }, {once: true});
 
   form.submit();
 }

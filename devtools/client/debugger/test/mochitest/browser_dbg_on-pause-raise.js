@@ -50,10 +50,9 @@ add_task(function *() {
     let onFocus, onTabSelect;
     if (toolbox.hostType == Toolbox.HostType.WINDOW) {
       onFocus = new Promise(done => {
-        toolbox.win.parent.addEventListener("focus", function onFocus() {
-          toolbox.win.parent.removeEventListener("focus", onFocus, true);
+        toolbox.win.parent.addEventListener("focus", function () {
           done();
-        }, true);
+        }, {capture: true, once: true});
       });
     } else {
       onTabSelect = new Promise(done => {

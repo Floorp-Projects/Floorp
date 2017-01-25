@@ -213,10 +213,9 @@ function onFocus(window) {
     resolve(window);
   }
   else {
-    window.addEventListener("focus", function focusListener() {
-      window.removeEventListener("focus", focusListener, true);
+    window.addEventListener("focus", function() {
       resolve(window);
-    }, true);
+    }, {capture: true, once: true});
   }
 
   return promise;

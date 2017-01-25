@@ -94,8 +94,7 @@ function executeTest(test) {
   var win = mainWindow.OpenBrowserWindow({private: test.setting.pbMode});
 
   return new Promise(function(resolve, reject) {
-    win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad);
+    win.addEventListener("load", function() {
       whenDelayedStartupFinished(win, function() {
         win.addEventListener("DOMContentLoaded", function onInnerLoad() {
           if (win.content.location.href != contentPage) {
@@ -122,7 +121,7 @@ function executeTest(test) {
         }, true);
         SimpleTest.executeSoon(function() { win.gBrowser.loadURI(contentPage); });
       });
-    }, true);
+    }, {capture: true, once: true});
   });
 }
 

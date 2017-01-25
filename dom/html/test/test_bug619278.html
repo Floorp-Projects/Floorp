@@ -40,12 +40,10 @@ e.addEventListener("invalid", function(event) {
 });
 
 e.addEventListener("focus", function() {
-  e.removeEventListener("focus", arguments.callee);
-
   SimpleTest.executeSoon(function() {
     synthesizeKey("VK_RETURN", {});
   });
-});
+}, {once: true});
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {

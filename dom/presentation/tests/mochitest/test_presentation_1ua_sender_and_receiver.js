@@ -159,13 +159,12 @@ function testSendMessage() {
 function testIncomingMessage() {
   return new Promise(function(aResolve, aReject) {
     info('Sender: --- testIncomingMessage ---');
-    connection.addEventListener('message', function messageHandler(evt) {
-      connection.removeEventListener('message', messageHandler);
+    connection.addEventListener('message', function(evt) {
       let msg = evt.data;
       is(msg, "msg-receiver-to-sender", "Sender: Sender should receive message from Receiver");
       postMessageToIframe('message-from-receiver-received');
       aResolve();
-    });
+    }, {once: true});
     postMessageToIframe('trigger-message-from-receiver');
   });
 }
@@ -173,40 +172,37 @@ function testIncomingMessage() {
 function testSendBlobMessage() {
   return new Promise(function(aResolve, aReject) {
     info('Sender: --- testSendBlobMessage ---');
-    connection.addEventListener('message', function messageHandler(evt) {
-      connection.removeEventListener('message', messageHandler);
+    connection.addEventListener('message', function(evt) {
       let msg = evt.data;
       is(msg, "testIncomingBlobMessage", "Sender: Sender should receive message from Receiver");
       let blob = new Blob(["Hello World"], {type : 'text/plain'});
       connection.send(blob);
       aResolve();
-    });
+    }, {once: true});
   });
 }
 
 function testSendArrayBuffer() {
   return new Promise(function(aResolve, aReject) {
     info('Sender: --- testSendArrayBuffer ---');
-    connection.addEventListener('message', function messageHandler(evt) {
-      connection.removeEventListener('message', messageHandler);
+    connection.addEventListener('message', function(evt) {
       let msg = evt.data;
       is(msg, "testIncomingArrayBuffer", "Sender: Sender should receive message from Receiver");
       connection.send(DATA_ARRAY_BUFFER);
       aResolve();
-    });
+    }, {once: true});
   });
 }
 
 function testSendArrayBufferView() {
   return new Promise(function(aResolve, aReject) {
     info('Sender: --- testSendArrayBufferView ---');
-    connection.addEventListener('message', function messageHandler(evt) {
-      connection.removeEventListener('message', messageHandler);
+    connection.addEventListener('message', function(evt) {
       let msg = evt.data;
       is(msg, "testIncomingArrayBufferView", "Sender: Sender should receive message from Receiver");
       connection.send(TYPED_DATA_ARRAY);
       aResolve();
-    });
+    }, {once: true});
   });
 }
 

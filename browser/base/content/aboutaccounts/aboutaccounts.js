@@ -497,8 +497,7 @@ function getDefaultProfilePath() {
   return defaultProfile.rootDir.path;
 }
 
-document.addEventListener("DOMContentLoaded", function onload() {
-  document.removeEventListener("DOMContentLoaded", onload, true);
+document.addEventListener("DOMContentLoaded", function() {
   init();
   var buttonGetStarted = document.getElementById("buttonGetStarted");
   buttonGetStarted.addEventListener("click", getStarted);
@@ -511,7 +510,7 @@ document.addEventListener("DOMContentLoaded", function onload() {
 
   var buttonOpenPrefs = document.getElementById("buttonOpenPrefs")
   buttonOpenPrefs.addEventListener("click", openPrefs);
-}, true);
+}, {capture: true, once: true});
 
 function initObservers() {
   function observe(subject, topic, data) {

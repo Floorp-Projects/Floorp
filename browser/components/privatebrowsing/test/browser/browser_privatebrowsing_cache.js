@@ -114,9 +114,7 @@ function get_cache_for_private_window () {
       win.gBrowser.selectedTab = tab;
       let newTabBrowser = win.gBrowser.getBrowserForTab(tab);
 
-      newTabBrowser.addEventListener("load", function eventHandler() {
-        newTabBrowser.removeEventListener("load", eventHandler, true);
-
+      newTabBrowser.addEventListener("load", function() {
         executeSoon(function() {
 
           getStorageEntryCount("private", function(nrEntriesP) {
@@ -132,7 +130,7 @@ function get_cache_for_private_window () {
             });
           });
         });
-      }, true);
+      }, {capture: true, once: true});
     });
   });
 }

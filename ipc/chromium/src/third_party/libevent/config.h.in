@@ -1,4 +1,4 @@
-/* config.h.in.  Generated from configure.in by autoheader.  */
+/* config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Define if libevent should build without support for a debug mode */
 #undef DISABLE_DEBUG_MODE
@@ -392,6 +392,9 @@
 
 /* The size of `long long', as computed by sizeof. */
 #undef SIZEOF_LONG_LONG
+
+/* The size of `off_t', as computed by sizeof. */
+#undef SIZEOF_OFF_T
 
 /* The size of `pthread_t', as computed by sizeof. */
 #undef SIZEOF_PTHREAD_T

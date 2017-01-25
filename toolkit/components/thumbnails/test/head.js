@@ -112,10 +112,9 @@ function navigateTo(aURI) {
  * @param aCallback The function to call when the load event was dispatched.
  */
 function whenLoaded(aElement, aCallback = next) {
-  aElement.addEventListener("load", function onLoad() {
-    aElement.removeEventListener("load", onLoad, true);
+  aElement.addEventListener("load", function() {
     executeSoon(aCallback);
-  }, true);
+  }, {capture: true, once: true});
 }
 
 /**

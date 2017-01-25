@@ -50,10 +50,9 @@
         document.body.appendChild(e);
 
         return new Promise(resolve => {
-          $('testframe').addEventListener("load", function loaded() {
-            $('testframe').removeEventListener("load", loaded);
+          $('testframe').addEventListener("load", function() {
             resolve();
-          });
+          }, {once: true});
         });
       }
 

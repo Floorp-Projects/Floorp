@@ -42,9 +42,7 @@ function trackScratchpadWindows() {
     Services.ww.registerNotification(function observer(subject, topic) {
       if (topic == "domwindowopened") {
         let win = subject.QueryInterface(Ci.nsIDOMWindow);
-        win.addEventListener("load", function onLoad() {
-          win.removeEventListener("load", onLoad);
-
+        win.addEventListener("load", function () {
           if (win.Scratchpad) {
             win.Scratchpad.addObserver({
               onReady: function () {
@@ -63,7 +61,7 @@ function trackScratchpadWindows() {
               },
             });
           }
-        });
+        }, {once: true});
       }
     });
   });

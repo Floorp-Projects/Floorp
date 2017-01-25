@@ -12,11 +12,10 @@ function runTest() {
   var iframe1 = document.createElement('iframe');
   iframe1.setAttribute('mozbrowser', 'true');
   iframe1.id = 'iframe1';
-  iframe1.addEventListener('mozbrowserloadend', function if1_loadend() {
-    iframe1.removeEventListener('mozbrowserloadend', if1_loadend);
+  iframe1.addEventListener('mozbrowserloadend', function() {
     ok(true, 'Got first loadend event.');
     SimpleTest.executeSoon(runTest2);
-  });
+  }, {once: true});
   iframe1.src = browserElementTestHelpers.emptyPage1;
   document.body.appendChild(iframe1);
 

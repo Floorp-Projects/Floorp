@@ -40,7 +40,7 @@ function test() {
     let argVar = outerScope.get("arg");
     is(argVar.target.querySelector(".name").getAttribute("value"), "arg",
       "Should have the right property name for |arg|.");
-    is(argVar.target.querySelector(".value").getAttribute("value"), 42,
+    is(argVar.target.querySelector(".value").getAttribute("value"), 44,
       "Should have the right property value for |arg|.");
 
     yield resumeDebuggerThenCloseAndFinish(panel);

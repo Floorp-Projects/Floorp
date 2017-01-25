@@ -44,10 +44,9 @@ add_task(function* () {
         },
       };
 
-      browser.addEventListener("BrowserChangedProcess", function bcp(e) {
-        browser.removeEventListener("BrowserChangedProcess", bcp);
+      browser.addEventListener("BrowserChangedProcess", function(e) {
         gBrowser.addProgressListener(locChangeListener);
-      });
+      }, {once: true});
     });
   }
 

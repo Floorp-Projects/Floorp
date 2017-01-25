@@ -83,8 +83,7 @@ function openNewTab(aWindow, aCallback) {
     return;
   }
 
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
+  browser.addEventListener("load", function() {
     executeSoon(aCallback);
-  }, true);
+  }, {capture: true, once: true});
 }

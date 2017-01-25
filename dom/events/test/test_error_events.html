@@ -12,10 +12,9 @@
   var msg;
   var column;
   var error;
-  window.addEventListener("error", function errorListener(e) {
-    window.removeEventListener("error", errorListener);
+  window.addEventListener("error", function(e) {
     errorEvent = e;
-  });
+  }, {once: true});
   var oldOnerror = window.onerror;
   window.onerror = function(message, filename, lineno, columnno, errorObject) {
     window.onerror = oldOnerror;
@@ -32,8 +31,8 @@
   generate_tests(assert_equals, [
     [ "Event filename", errorEvent.filename, location.href ],
     [ "Callback filename", file, location.href ],
-    [ "Event line number", errorEvent.lineno, 28 ],
-    [ "Callback line number", line, 28 ],
+    [ "Event line number", errorEvent.lineno, 27 ],
+    [ "Callback line number", line, 27 ],
     [ "Event message", errorEvent.message, "Error: hello" ],
     [ "Callback message", msg, "Error: hello" ],
     [ "Event error-object", errorEvent.error, thrown],

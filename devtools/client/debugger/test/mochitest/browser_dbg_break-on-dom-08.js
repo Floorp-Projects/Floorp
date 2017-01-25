@@ -40,7 +40,7 @@ function test() {
       yield updated;
       yield ensureThreadClientState(aPanel, "attached");
 
-      let paused = waitForCaretAndScopes(aPanel, 48);
+      let paused = waitForCaretAndScopes(aPanel, 47);
       generateMouseClickInTab(gTab, "content.document.body");
       yield paused;
       yield ensureThreadClientState(aPanel, "paused");

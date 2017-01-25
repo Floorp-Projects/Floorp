@@ -49,9 +49,7 @@ function promiseWindow(url) {
   return new Promise(resolve => {
     Services.obs.addObserver(function obs(win) {
       win.QueryInterface(Ci.nsIDOMWindow);
-      win.addEventListener("load", function loadHandler() {
-        win.removeEventListener("load", loadHandler);
-
+      win.addEventListener("load", function() {
         if (win.location.href !== url) {
           info("ignoring a window with this url: " + win.location.href);
           return;
@@ -59,7 +57,7 @@ function promiseWindow(url) {
 
         Services.obs.removeObserver(obs, "domwindowopened");
         resolve(win);
-      });
+      }, {once: true});
     }, "domwindowopened", false);
   });
 }
@@ -275,15 +273,13 @@ function promiseMessage(aMessage, aAction) {
 function promisePopupNotificationShown(aName, aAction) {
   let deferred = Promise.defer();
 
-  PopupNotifications.panel.addEventListener("popupshown", function popupNotifShown() {
-    PopupNotifications.panel.removeEventListener("popupshown", popupNotifShown);
-
+  PopupNotifications.panel.addEventListener("popupshown", function() {
     ok(!!PopupNotifications.getNotification(aName), aName + " notification shown");
     ok(PopupNotifications.isPanelOpen, "notification panel open");
     ok(!!PopupNotifications.panel.firstChild, "notification panel populated");
 
     deferred.resolve();
-  });
+  }, {once: true});
 
   if (aAction)
     aAction();

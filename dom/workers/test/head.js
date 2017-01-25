@@ -16,10 +16,9 @@ function addTab(url) {
   let linkedBrowser = tab.linkedBrowser;
   linkedBrowser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
   return new Promise(function (resolve) {
-    linkedBrowser.addEventListener("load", function onload() {
-      linkedBrowser.removeEventListener("load", onload, true);
+    linkedBrowser.addEventListener("load", function() {
       resolve(tab);
-    }, true);
+    }, {capture: true, once: true});
   });
 }
 

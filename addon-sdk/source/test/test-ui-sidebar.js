@@ -1095,10 +1095,9 @@ exports.testSidebarLeakCheckDestroyAfterAttach = function*(assert) {
 
   yield new Promise(resolve => {
     let panelBrowser = window.document.getElementById('sidebar').contentDocument.getElementById('web-panels-browser');
-    panelBrowser.contentWindow.addEventListener('unload', function onUnload() {
-      panelBrowser.contentWindow.removeEventListener('unload', onUnload);
+    panelBrowser.contentWindow.addEventListener('unload', function() {
       resolve();
-    });
+    }, {once: true});
     sidebar.destroy();
   });
 
@@ -1137,10 +1136,9 @@ exports.testSidebarLeakCheckUnloadAfterAttach = function*(assert) {
 
   let panelBrowser = window.document.getElementById('sidebar').contentDocument.getElementById('web-panels-browser');
   yield new Promise(resolve => {
-    panelBrowser.contentWindow.addEventListener('unload', function onUnload() {
-      panelBrowser.contentWindow.removeEventListener('unload', onUnload);
+    panelBrowser.contentWindow.addEventListener('unload', function() {
       resolve();
-    });
+    }, {once: true});
     loader.unload();
   });
 

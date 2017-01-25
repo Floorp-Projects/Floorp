@@ -26,19 +26,17 @@ var input = document.getElementsByTagName('input')[0];
 var gotInputEvent = false;
 
 input.addEventListener("input", function() {
-  input.removeEventListener("input", arguments.callee);
   gotInputEvent = true;
-});
+}, {once: true});
 
 input.addEventListener("focus", function() {
-  input.removeEventListener("focus", arguments.callee);
   synthesizeKey("VK_ESCAPE", {});
 
   setTimeout(function() {
     ok(!gotInputEvent, "No input event should have been sent.");
     SimpleTest.finish();
   });
-});
+}, {once: true});
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {

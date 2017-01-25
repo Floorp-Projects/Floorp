@@ -44,10 +44,9 @@ function test() {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
-    gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
+  gBrowser.selectedBrowser.addEventListener("load", function() {
     waitForStarChange(false, initTest);
-  }, true);
+  }, {capture: true, once: true});
 
   content.location = testURL;
 }

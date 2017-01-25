@@ -60,10 +60,9 @@ var OrientationChangeHandler = {
       return;
     }
 
-    window.addEventListener("resize", function waitForResize(e) {
-      window.removeEventListener("resize", waitForResize);
+    window.addEventListener("resize", function(e) {
       trigger();
-    });
+    }, {once: true});
   }
 };
 

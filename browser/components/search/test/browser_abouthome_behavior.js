@@ -136,9 +136,8 @@ function test() {
       gMutationObserver.disconnect();
   });
 
-  tab.linkedBrowser.addEventListener("load", function load() {
-    tab.linkedBrowser.removeEventListener("load", load, true);
+  tab.linkedBrowser.addEventListener("load", function() {
     gBrowser.addProgressListener(listener);
     nextTest();
-  }, true);
+  }, {capture: true, once: true});
 }

@@ -394,7 +394,7 @@ public:
 
   // Return whether or not there is room to scroll this APZC
   // in the given direction.
-  bool CanScroll(Layer::ScrollDirection aDirection) const;
+  bool CanScroll(ScrollDirection aDirection) const;
 
   void NotifyMozMouseScrollEvent(const nsString& aString) const;
 

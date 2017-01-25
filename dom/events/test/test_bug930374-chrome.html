@@ -36,7 +36,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=930374
       input.focus();
 
       input.addEventListener("input", function (aEvent) {
-          input.removeEventListener("input", arguments.callee);
           ok(gKeyPress,
              "Test1: keypress event must be fired before an input event");
           ok(gKeyPress.defaultPrevented,
@@ -46,7 +45,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=930374
                "Test2: keypress event's defaultPrevented should be true after event dispatching finished");
             SimpleTest.finish();
           }, 0);
-        });
+        }, {once: true});
 
       sendChar("a");
     }

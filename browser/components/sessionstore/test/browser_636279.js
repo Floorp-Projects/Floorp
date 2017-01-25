@@ -25,9 +25,7 @@ function test() {
 
   TabsProgressListener.init();
 
-  window.addEventListener("SSWindowStateReady", function onReady() {
-    window.removeEventListener("SSWindowStateReady", onReady);
-
+  window.addEventListener("SSWindowStateReady", function() {
     let firstProgress = true;
 
     TabsProgressListener.setCallback(function (needsRestore, isRestoring) {
@@ -45,7 +43,7 @@ function test() {
     });
 
     ss.setBrowserState(JSON.stringify(state));
-  });
+  }, {once: true});
 
   ss.setBrowserState(JSON.stringify(statePinned));
 }

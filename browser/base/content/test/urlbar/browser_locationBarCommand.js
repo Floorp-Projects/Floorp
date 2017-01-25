@@ -196,10 +196,9 @@ function* promiseOpenNewTab(url = "about:blank") {
 
 function promiseNewTabSwitched() {
   return new Promise(resolve => {
-    gBrowser.addEventListener("TabSwitchDone", function onSwitch() {
-      gBrowser.removeEventListener("TabSwitchDone", onSwitch);
+    gBrowser.addEventListener("TabSwitchDone", function() {
       executeSoon(resolve);
-    });
+    }, {once: true});
   });
 }
 

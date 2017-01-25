@@ -49,10 +49,9 @@
       frame.setAttribute('src', url);
       content.appendChild(frame);
 
-      frame.addEventListener('load', function loadCallback(evt) {
-        frame.removeEventListener('load', loadCallback);
+      frame.addEventListener('load', function(evt) {
         resolve(frame);
-      });
+      }, {once: true});
     });
   }
 

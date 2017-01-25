@@ -309,6 +309,12 @@ private:
   uint64_t mHandle;
 };
 
+enum class ScrollDirection : uint32_t {
+  NONE,
+  VERTICAL,
+  HORIZONTAL
+};
+
 } // namespace layers
 } // namespace mozilla
 

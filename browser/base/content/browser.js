@@ -1943,10 +1943,9 @@ function focusAndSelectUrlBar() {
   // We can't focus it when it's disabled, so we need to re-run ourselves when
   // we've finished leaving customize mode.
   if (CustomizationHandler.isExitingCustomizeMode) {
-    gNavToolbox.addEventListener("aftercustomization", function afterCustomize() {
-      gNavToolbox.removeEventListener("aftercustomization", afterCustomize);
+    gNavToolbox.addEventListener("aftercustomization", function() {
       focusAndSelectUrlBar();
-    });
+    }, {once: true});
 
     return true;
   }

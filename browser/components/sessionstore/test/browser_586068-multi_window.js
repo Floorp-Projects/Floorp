@@ -52,11 +52,10 @@ add_task(function* test() {
   Services.ww.registerNotification(function observer(aSubject, aTopic, aData) {
     if (aTopic == "domwindowopened") {
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      win.addEventListener("load", function onLoad() {
-        win.removeEventListener("load", onLoad);
+      win.addEventListener("load", function() {
         Services.ww.unregisterNotification(observer);
         win.gBrowser.addTabsProgressListener(gProgressListener);
-      });
+      }, {once: true});
     }
   });
 

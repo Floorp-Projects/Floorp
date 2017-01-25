@@ -504,8 +504,10 @@ public:
 
   void SetRequestObserver(nsIRequestObserver* aObserver);
 
-  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_INHERITED(XMLHttpRequestMainThread,
-                                                                   XMLHttpRequest)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(XMLHttpRequestMainThread,
+                                                         XMLHttpRequest)
+  virtual bool IsCertainlyAliveForCC() const override;
+
   bool AllowUploadProgress();
 
   virtual void DisconnectFromOwner() override;

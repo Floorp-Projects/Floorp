@@ -259,14 +259,13 @@ is(div.id, "div_id", "div still has id set");
 var mutateFired = false;
 root.appendChild(div);
 div.addEventListener("DOMAttrModified", function(e) {
-  div.removeEventListener("DOMAttrModified", arguments.callee);
   is(e.target, div, "target is div");
   is(div.id, "", "div no longer has id");
   is(div.getAttribute("id"), null, "div no longer has id attr");
   removeNode(div);
   is(div.parentNode, null, "div was removed");
   mutateFired = true;
-});
+}, {once: true});
 div.removeAttribute("id");
 ok(mutateFired, "mutation event fired");
 
@@ -275,13 +274,12 @@ is(nsx.getAttribute("id"), "ns_id", "nsx still has id set");
 mutateFired = false;
 root.appendChild(nsx);
 nsx.addEventListener("DOMAttrModified", function(e) {
-  nsx.removeEventListener("DOMAttrModified", arguments.callee);
   is(e.target, nsx, "target is nsx");
   is(nsx.getAttribute("id"), null, "nsx no longer has id attr");
   removeNode(nsx);
   is(nsx.parentNode, null, "nsx was removed");
   mutateFired = true;
-});
+}, {once: true});
 nsx.removeAttribute("id");
 ok(mutateFired, "mutation event fired");
 
@@ -295,12 +293,11 @@ root.appendChild(nsx);
 is($("ns_id"), nsx, "new nsx is set up");
 mutateFired = false;
 nsx.addEventListener("DOMAttrModified", function(e) {
-  nsx.removeEventListener("DOMAttrModified", arguments.callee);
   is(e.target, nsx, "target is nsx");
   is(nsx.getAttribute("id"), null, "nsx no longer has id attr");
   nsx.setAttribute("id", "other_id");
   mutateFired = true;
-});
+}, {once: true});
 nsx.removeAttribute("id");
 ok(mutateFired, "mutation event fired");
 is($("ns_id"), null, "ns_id was removed from table");
@@ -316,13 +313,12 @@ root.appendChild(div);
 is($("div_id"), div, "new div is set up");
 mutateFired = false;
 div.addEventListener("DOMAttrModified", function(e) {
-  div.removeEventListener("DOMAttrModified", arguments.callee);
   is(e.target, div, "target is div");
   is(div.getAttribute("id"), null, "div no longer has id attr");
   is(div.id, "", "div no longer has id");
   div.id = "other_div_id";
   mutateFired = true;
-});
+}, {once: true});
 div.removeAttribute("id");
 ok(mutateFired, "mutation event fired");
 is($("div_id"), null, "div_id was removed from table");
@@ -338,13 +334,12 @@ root.appendChild(xul);
 is($("xul_id"), xul, "new xul is set up");
 mutateFired = false;
 xul.addEventListener("DOMAttrModified", function(e) {
-  xul.removeEventListener("DOMAttrModified", arguments.callee);
   is(e.target, xul, "target is xul");
   is(xul.getAttribute("id"), "", "xul no longer has id attr");
   is(xul.id, "", "xul no longer has id");
   xul.id = "other_xul_id";
   mutateFired = true;
-});
+}, {once: true});
 xul.removeAttribute("id");
 ok(mutateFired, "mutation event fired");
 is($("xul_id"), null, "xul_id was removed from table");

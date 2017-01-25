@@ -28,12 +28,11 @@ function runTests()
   document.getElementById('i').checked = false;
 
   document.getElementById('i').addEventListener('click', function(aEvent) {
-    aEvent.target.removeEventListener('click', arguments.callee);
     SimpleTest.executeSoon(function() {
       ok(!aEvent.target.checked, "the input should not be checked");
       SimpleTest.finish();
     });
-    });
+    }, {once: true});
 
   sendMouseEvent({type: 'click'}, 'i');
 }

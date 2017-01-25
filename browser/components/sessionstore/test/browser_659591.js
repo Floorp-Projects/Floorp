@@ -11,10 +11,9 @@ function test() {
   });
 
   newWindow(function (win) {
-    win.addEventListener("SSWindowClosing", function onWindowClosing() {
-      win.removeEventListener("SSWindowClosing", onWindowClosing);
+    win.addEventListener("SSWindowClosing", function() {
       eventReceived = true;
-    });
+    }, {once: true});
 
     BrowserTestUtils.closeWindow(win).then(() => {
       waitForFocus(finish);
@@ -26,8 +25,7 @@ function newWindow(callback) {
   let opts = "chrome,all,dialog=no,height=800,width=800";
   let win = window.openDialog(getBrowserURL(), "_blank", opts);
 
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad);
+  win.addEventListener("load", function() {
     executeSoon(() => callback(win));
-  });
+  }, {once: true});
 }

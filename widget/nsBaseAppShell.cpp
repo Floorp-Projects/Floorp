@@ -308,7 +308,7 @@ nsBaseAppShell::DispatchDummyEvent(nsIThread* aTarget)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!mDummyEvent)
-    mDummyEvent = new mozilla::Runnable();
+    mDummyEvent = new mozilla::Runnable("DummyEvent");
 
   return NS_SUCCEEDED(aTarget->Dispatch(mDummyEvent, NS_DISPATCH_NORMAL));
 }

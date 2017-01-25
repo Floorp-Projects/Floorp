@@ -10,7 +10,6 @@
 
 <script>
   window.addEventListener("DOMContentLoaded", function() {
-    window.removeEventListener("DOMContentLoaded", arguments.callee);
     if (!document.location.hash) {
       document.location.hash = "#ready";
     }
@@ -18,5 +17,5 @@
       document.getElementById("thief").type = "file";
       document.getElementById("reverse_thief").type = "text";
     }
-  });
+  }, {once: true});
 </script>

@@ -77,8 +77,7 @@ TalosPowersService.prototype = {
   },
 
   /**
-   * Enable the SPS profiler with some settings and then pause
-   * immediately.
+   * Enable the Gecko Profiler with some settings and then pause immediately.
    *
    * @param data (object)
    *        A JavaScript object with the following properties:

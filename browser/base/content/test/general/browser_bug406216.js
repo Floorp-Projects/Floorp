@@ -25,10 +25,9 @@ function addTab(aURI, aIndex) {
     gBrowser.removeTab(gBrowser.tabs[0], {skipPermitUnload: true});
 
   tab.linkedBrowser.addEventListener("load", function(event) {
-    event.currentTarget.removeEventListener("load", arguments.callee, true);
     if (++count == URIS.length)
       executeSoon(doTabsTest);
-  }, true);
+  }, {capture: true, once: true});
 }
 
 function doTabsTest() {
@@ -36,14 +35,13 @@ function doTabsTest() {
 
   // sample of "close related tabs" feature
   gBrowser.tabContainer.addEventListener("TabClose", function(event) {
-    event.currentTarget.removeEventListener("TabClose", arguments.callee, true);
     var closedTab = event.originalTarget;
     var scheme = closedTab.linkedBrowser.currentURI.scheme;
     Array.slice(gBrowser.tabs).forEach(function(aTab) {
       if (aTab != closedTab && aTab.linkedBrowser.currentURI.scheme == scheme)
         gBrowser.removeTab(aTab, {skipPermitUnload: true});
     });
-  }, true);
+  }, {capture: true, once: true});
 
   gBrowser.removeTab(gBrowser.tabs[0], {skipPermitUnload: true});
   is(gBrowser.tabs.length, 1, "Related tabs are not closed unexpectedly");

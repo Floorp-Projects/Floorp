@@ -71,11 +71,10 @@ function setup() {
 
     var promise = new Promise(function(aResolve, aReject) {
       document.body.appendChild(receiverIframe);
-      receiverIframe.addEventListener("mozbrowserloadstart", function onLoadEnd() {
-        receiverIframe.removeEventListener("mozbrowserloadstart", onLoadEnd);
+      receiverIframe.addEventListener("mozbrowserloadstart", function() {
         var mm = SpecialPowers.getBrowserFrameMessageManager(receiverIframe);
         mm.loadFrameScript("data:,(" + loadPrivilegedScriptTest.toString() + ")();", false);
-      });
+      }, {once: true});
 
       aResolve(receiverIframe);
     });

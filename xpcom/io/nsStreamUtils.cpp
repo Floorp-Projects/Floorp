@@ -38,7 +38,8 @@ public:
 
   nsInputStreamReadyEvent(nsIInputStreamCallback* aCallback,
                           nsIEventTarget* aTarget)
-    : mCallback(aCallback)
+    : CancelableRunnable("nsInputStreamReadyEvent")
+    , mCallback(aCallback)
     , mTarget(aTarget)
   {
   }
@@ -128,7 +129,8 @@ public:
 
   nsOutputStreamReadyEvent(nsIOutputStreamCallback* aCallback,
                            nsIEventTarget* aTarget)
-    : mCallback(aCallback)
+    : CancelableRunnable("nsOutputStreamReadyEvent")
+    , mCallback(aCallback)
     , mTarget(aTarget)
   {
   }
@@ -241,7 +243,8 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   nsAStreamCopier()
-    : mLock("nsAStreamCopier.mLock")
+    : CancelableRunnable("nsAStreamCopier")
+    , mLock("nsAStreamCopier.mLock")
     , mCallback(nullptr)
     , mProgressCallback(nullptr)
     , mClosure(nullptr)

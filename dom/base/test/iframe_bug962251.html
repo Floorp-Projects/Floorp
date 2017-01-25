@@ -15,12 +15,11 @@
   var finish = SimpleTest.finish.bind(SimpleTest);
 
   var input = document.getElementById("textinput");
-  input.addEventListener("focus", function onFocus(aEvent) {
-    input.removeEventListener("focus", onFocus);
+  input.addEventListener("focus", function(aEvent) {
     is(aEvent.target.id, "textinput", "Input should be focused.");
     ok(aEvent.relatedTarget === null, "The relatedTarget should be null.");
     parent.postMessage("runNextTest", "*");
-  });
+  }, {once: true});
   input.focus();
 </script>
 </html>

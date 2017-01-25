@@ -66,16 +66,14 @@ function assertEvent(event, data) {
 }
 
 function waitForOnBeforeUnloadDialog(browser, callback) {
-  browser.addEventListener("DOMWillOpenModalDialog", function onModalDialog() {
-    browser.removeEventListener("DOMWillOpenModalDialog", onModalDialog, true);
-
+  browser.addEventListener("DOMWillOpenModalDialog", function () {
     executeSoon(() => {
       let stack = browser.parentNode;
       let dialogs = stack.getElementsByTagName("tabmodalprompt");
       let {button0, button1} = dialogs[0].ui;
       callback(button0, button1);
     });
-  }, true);
+  }, {capture: true, once: true});
 }
 
 var httpObserver = function (subject, topic, state) {

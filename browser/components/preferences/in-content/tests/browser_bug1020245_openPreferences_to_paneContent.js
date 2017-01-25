@@ -28,16 +28,14 @@ function openPreferencesViaHash(aPane) {
   gBrowser.selectedTab = gBrowser.addTab("about:preferences" + (aPane ? "#" + aPane : ""));
   let newTabBrowser = gBrowser.selectedBrowser;
 
-  newTabBrowser.addEventListener("Initialized", function PrefInit() {
-    newTabBrowser.removeEventListener("Initialized", PrefInit, true);
-    newTabBrowser.contentWindow.addEventListener("load", function prefLoad() {
-      newTabBrowser.contentWindow.removeEventListener("load", prefLoad);
+  newTabBrowser.addEventListener("Initialized", function() {
+    newTabBrowser.contentWindow.addEventListener("load", function() {
       let win = gBrowser.contentWindow;
       let selectedPane = win.history.state;
       gBrowser.removeCurrentTab();
       deferred.resolve({selectedPane});
-    });
-  }, true);
+    }, {once: true});
+  }, {capture: true, once: true});
 
   return deferred.promise;
 }

@@ -370,15 +370,14 @@ var tests = {
           EventUtils.sendKey("i");
           EventUtils.sendKey("l");
 
-          SocialShare.panel.addEventListener("popuphidden", function hidden(evt) {
-            SocialShare.panel.removeEventListener("popuphidden", hidden);
+          SocialShare.panel.addEventListener("popuphidden", function(evt) {
             let topwin = Services.wm.getMostRecentWindow(null);
             is(topwin, window, "no dialog is open");
 
             BrowserTestUtils.removeTab(testTab).then(() => {
               SocialService.disableProvider(manifest.origin, next);
             });
-          });
+          }, {once: true});
           SocialShare.iframe.messageManager.sendAsyncMessage("closeself", {});
         });
 

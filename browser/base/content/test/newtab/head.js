@@ -428,10 +428,9 @@ function* simulateExternalDrop(aDestIndex) {
         resolve();
       }
 
-      iframe.addEventListener("load", function onLoad() {
-        iframe.removeEventListener("load", onLoad);
+      iframe.addEventListener("load", function() {
         content.setTimeout(iframeLoaded, 0);
-      });
+      }, {once: true});
 
       iframe.setAttribute("src", url);
       iframe.style.width = "50px";

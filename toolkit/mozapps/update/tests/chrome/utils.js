@@ -190,8 +190,7 @@ const gWindowObserver = {
       return;
     }
 
-    win.addEventListener("load", function WO_observe_onLoad() {
-      win.removeEventListener("load", WO_observe_onLoad);
+    win.addEventListener("load", function() {
       // Ignore windows other than the update UI window.
       if (win.location != URI_UPDATE_PROMPT_DIALOG) {
         debugDump("load event for window not being tested - location: " +
@@ -212,7 +211,7 @@ const gWindowObserver = {
       gWin = win;
       gDocElem = gWin.document.documentElement;
       gDocElem.addEventListener("pageshow", onPageShowDefault);
-    });
+    }, {once: true});
   }
 };
 

@@ -14,13 +14,12 @@ function test() {
   // and verify it doesn't get remembered for restoring
   whenNewWindowLoaded({private: true}, function (win) {
     info("The private window got loaded");
-    win.addEventListener("SSWindowClosing", function onclosing() {
-      win.removeEventListener("SSWindowClosing", onclosing);
+    win.addEventListener("SSWindowClosing", function() {
       executeSoon(function () {
         is(ss.getClosedWindowCount(), 0,
             "The private window should not have been stored");
       });
-    });
+    }, {once: true});
     BrowserTestUtils.closeWindow(win).then(finish);
   });
 }

@@ -144,10 +144,9 @@ this.BrowserTestUtils = {
    */
   switchTab(tabbrowser, tab) {
     let promise = new Promise(resolve => {
-      tabbrowser.addEventListener("TabSwitchDone", function onSwitch() {
-        tabbrowser.removeEventListener("TabSwitchDone", onSwitch);
+      tabbrowser.addEventListener("TabSwitchDone", function() {
         TestUtils.executeSoon(() => resolve(tabbrowser.selectedTab));
-      });
+      }, {once: true});
     });
 
     if (typeof tab == "function") {
@@ -279,9 +278,7 @@ this.BrowserTestUtils = {
    */
   waitForNewTab(tabbrowser, url) {
     return new Promise((resolve, reject) => {
-      tabbrowser.tabContainer.addEventListener("TabOpen", function onTabOpen(openEvent) {
-        tabbrowser.tabContainer.removeEventListener("TabOpen", onTabOpen);
-
+      tabbrowser.tabContainer.addEventListener("TabOpen", function(openEvent) {
         let progressListener = {
           onLocationChange(aBrowser) {
             if (aBrowser != openEvent.target.linkedBrowser ||
@@ -296,7 +293,7 @@ this.BrowserTestUtils = {
         };
         tabbrowser.addTabsProgressListener(progressListener);
 
-      });
+      }, {once: true});
     });
   },
 
@@ -703,10 +700,9 @@ this.BrowserTestUtils = {
     // quite careful in order to make sure we're adding the listener in time to
     // get this event:
     return new Promise((resolve, reject) => {
-      tab.addEventListener("TabRemotenessChange", function onTRC() {
-        tab.removeEventListener("TabRemotenessChange", onTRC);
+      tab.addEventListener("TabRemotenessChange", function() {
         waitForLoad().then(resolve, reject);
-      });
+      }, {once: true});
     });
   },
 

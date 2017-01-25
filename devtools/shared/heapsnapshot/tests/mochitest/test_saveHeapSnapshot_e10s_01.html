@@ -51,8 +51,7 @@ Bug 1201597 - Sanity test that we can take a heap snapshot in an e10s child proc
              iframe.src = childFrameURL;
 
 
-             iframe.addEventListener("mozbrowserloadend", function onLoadEnd() {
-                 iframe.removeEventListener("mozbrowserloadend", onLoadEnd);
+             iframe.addEventListener("mozbrowserloadend", function () {
                  info("iframe done loading");
 
                  var mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
@@ -72,7 +71,7 @@ Bug 1201597 - Sanity test that we can take a heap snapshot in an e10s child proc
                  info("Loading frame script to save heap snapshot");
                  mm.loadFrameScript("data:,(" + encodeURI(childFrameScript.toString()) + ")();",
                                     false);
-             });
+             }, {once: true});
 
              info("Loading iframe");
              document.body.appendChild(iframe);
