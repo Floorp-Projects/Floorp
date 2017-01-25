@@ -32,7 +32,7 @@
 
 /* Same order as the feature array below */
 enum {
-  NONE,
+  _JMO,
 
   LJMO,
   VJMO,
