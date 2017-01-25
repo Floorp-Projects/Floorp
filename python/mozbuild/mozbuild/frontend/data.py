@@ -420,7 +420,7 @@ class HostSimpleProgram(HostMixin, BaseProgram):
     KIND = 'host'
 
 
-def cargo_target_directory(context, target_var='RUST_TARGET'):
+def cargo_target_directory(context, target_var):
     # cargo creates several directories and places its build artifacts
     # in those directories.  The directory structure depends not only
     # on the target, but also what sort of build we are doing.
@@ -526,6 +526,9 @@ class RustLibrary(StaticLibrary):
         'deps_path',
         'features',
     )
+    TARGET_SUBST_VAR = 'RUST_TARGET'
+    FEATURES_VAR = 'RUST_LIBRARY_FEATURES'
+    LIB_FILE_VAR = 'RUST_LIBRARY_FILE'
 
     def __init__(self, context, basename, cargo_file, crate_type, dependencies,
                  features, **args):
@@ -541,7 +544,7 @@ class RustLibrary(StaticLibrary):
                                      basename.replace('-', '_'),
                                      context.config.lib_suffix)
         self.dependencies = dependencies
-        build_dir = cargo_target_directory(context)
+        build_dir = cargo_target_directory(context, self.TARGET_SUBST_VAR)
         self.import_name = mozpath.join(build_dir, self.lib_name)
         self.deps_path = mozpath.join(build_dir, 'deps')
         self.features = features
@@ -630,6 +633,14 @@ class ExternalSharedLibrary(SharedLibrary, ExternalLibrary):
 class HostLibrary(HostMixin, BaseLibrary):
     """Context derived container object for a host library"""
     KIND = 'host'
+
+
+class HostRustLibrary(HostMixin, RustLibrary):
+    """Context derived container object for a host rust library"""
+    KIND = 'host'
+    TARGET_SUBST_VAR = 'RUST_HOST_TARGET'
+    FEATURES_VAR = 'HOST_RUST_LIBRARY_FEATURES'
+    LIB_FILE_VAR = 'HOST_RUST_LIBRARY_FILE'
 
 
 class TestManifest(ContextDerived):

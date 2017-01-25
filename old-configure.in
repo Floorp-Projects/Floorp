@@ -4419,7 +4419,7 @@ MOZ_ARG_ENABLE_BOOL(stdcxx-compat,
 [  --enable-stdcxx-compat  Enable compatibility with older libstdc++],
     STDCXX_COMPAT=1)
 
-if test -n "$STDCXX_COMPAT"; then
+if test -n "$STDCXX_COMPAT" -a -n "$COMPILE_ENVIRONMENT"; then
    eval $(CXX="$CXX" HOST_CXX="$HOST_CXX" $PYTHON -m mozbuild.configure.libstdcxx)
    AC_SUBST(MOZ_LIBSTDCXX_TARGET_VERSION)
    AC_SUBST(MOZ_LIBSTDCXX_HOST_VERSION)
