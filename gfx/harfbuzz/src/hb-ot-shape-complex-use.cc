@@ -572,28 +572,6 @@ decompose_use (const hb_ot_shape_normalize_context_t *c,
      */
     case 0x1112Eu : *a = 0x11127u; *b= 0x11131u; return true;
     case 0x1112Fu : *a = 0x11127u; *b= 0x11132u; return true;
-
-    /*
-     * Decompose split matras that don't have Unicode decompositions.
-     */
-
-    /* Limbu */
-    case 0x1925u  : *a = 0x1920u; *b= 0x1923u; return true;
-    case 0x1926u  : *a = 0x1920u; *b= 0x1924u; return true;
-
-    /* Balinese */
-    case 0x1B3Cu  : *a = 0x1B42u; *b= 0x1B3Cu; return true;
-
-#if 0
-    /* Lepcha */
-    case 0x1C29u  : *a = no decomp, -> LEFT; return true;
-
-    /* Javanese */
-    case 0xA9C0u  : *a = no decomp, -> RIGHT; return true;
-
-    /* Sharada */
-    case 0x111BFu  : *a = no decomp, -> ABOVE; return true;
-#endif
   }
 
   return (bool) c->unicode->decompose (ab, a, b);
