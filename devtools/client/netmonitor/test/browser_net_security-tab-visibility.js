@@ -61,9 +61,6 @@ add_task(function* () {
     is(!!document.querySelector("#security-tab"), testcase.visibleOnNewEvent,
       "Security tab is " + (testcase.visibleOnNewEvent ? "visible" : "hidden") +
       " after new request was added to the menu.");
-    is(!!document.querySelector("#security-panel"), testcase.visibleOnNewEvent,
-      "Security panel is " + (testcase.visibleOnNewEvent ? "visible" : "hidden") +
-      " after new request was added to the menu.");
 
     info("Waiting for security information to arrive.");
     yield onSecurityInfo;
@@ -73,9 +70,6 @@ add_task(function* () {
     is(!!document.querySelector("#security-tab"), testcase.visibleOnSecurityInfo,
        "Security tab is " + (testcase.visibleOnSecurityInfo ? "visible" : "hidden") +
        " after security information arrived.");
-    is(!!document.querySelector("#security-panel"), testcase.visibleOnSecurityInfo,
-      "Security panel is " + (testcase.visibleOnSecurityInfo? "visible" : "hidden") +
-      " after security information arrived.");
 
     info("Waiting for request to complete.");
     yield onComplete;
@@ -83,9 +77,6 @@ add_task(function* () {
     is(!!document.querySelector("#security-tab"), testcase.visibleOnceComplete,
        "Security tab is " + (testcase.visibleOnceComplete ? "visible" : "hidden") +
        " after request has been completed.");
-    is(!!document.querySelector("#security-panel"), testcase.visibleOnceComplete,
-      "Security panel is " + (testcase.visibleOnceComplete? "visible" : "hidden") +
-      " after request has been completed.");
 
     info("Clearing requests.");
     RequestsMenu.clear();
