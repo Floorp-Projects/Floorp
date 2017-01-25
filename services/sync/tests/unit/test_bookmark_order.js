@@ -58,22 +58,22 @@ add_task(async function test_bookmark_order() {
   }], "clean slate");
 
   function bookmark(name, parent) {
-    let bm = new Bookmark("http://weave.server/my-bookmark");
-    bm.id = name;
-    bm.title = name;
-    bm.bmkUri = "http://uri/";
-    bm.parentid = parent || "unfiled";
-    bm.tags = [];
-    return bm;
+    let bookmark = new Bookmark("http://weave.server/my-bookmark");
+    bookmark.id = name;
+    bookmark.title = name;
+    bookmark.bmkUri = "http://uri/";
+    bookmark.parentid = parent || "unfiled";
+    bookmark.tags = [];
+    return bookmark;
   }
 
   function folder(name, parent, children) {
-    let bmFolder = new BookmarkFolder("http://weave.server/my-bookmark-folder");
-    bmFolder.id = name;
-    bmFolder.title = name;
-    bmFolder.parentid = parent || "unfiled";
-    bmFolder.children = children;
-    return bmFolder;
+    let folder = new BookmarkFolder("http://weave.server/my-bookmark-folder");
+    folder.id = name;
+    folder.title = name;
+    folder.parentid = parent || "unfiled";
+    folder.children = children;
+    return folder;
   }
 
   function apply(record) {

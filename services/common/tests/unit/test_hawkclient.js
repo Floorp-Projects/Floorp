@@ -222,6 +222,7 @@ add_task(function* test_offset_in_hawk_header() {
     "/second": function(request, response) {
       // We see a better date now in the ts component of the header
       let delta = getTimestampDelta(request.getHeader("Authorization"));
+      let message = "Delta: " + delta;
 
       // We're now within HAWK's one-minute window.
       // I hope this isn't a recipe for intermittent oranges ...
@@ -499,3 +500,4 @@ function run_test() {
   initTestLogging("Trace");
   run_next_test();
 }
+

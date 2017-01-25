@@ -22,9 +22,9 @@ const SECOND_MS = 1000;
 const MINUTE_MS = SECOND_MS * 60;
 const HOUR_MS = MINUTE_MS * 60;
 
-var globalIdentityConfig = makeIdentityConfig();
-var globalBrowseridManager = new BrowserIDManager();
-configureFxAccountIdentity(globalBrowseridManager, globalIdentityConfig);
+var identityConfig = makeIdentityConfig();
+var browseridManager = new BrowserIDManager();
+configureFxAccountIdentity(browseridManager, identityConfig);
 
 /**
  * Mock client clock and skew vs server in FxAccounts signed-in user module and
@@ -71,19 +71,19 @@ function run_test() {
 
 add_test(function test_initial_state() {
     _("Verify initial state");
-    do_check_false(!!globalBrowseridManager._token);
-    do_check_false(globalBrowseridManager.hasValidToken());
+    do_check_false(!!browseridManager._token);
+    do_check_false(browseridManager.hasValidToken());
     run_next_test();
   }
 );
 
 add_task(async function test_initialializeWithCurrentIdentity() {
     _("Verify start after initializeWithCurrentIdentity");
-    globalBrowseridManager.initializeWithCurrentIdentity();
-    await globalBrowseridManager.whenReadyToAuthenticate.promise;
-    do_check_true(!!globalBrowseridManager._token);
-    do_check_true(globalBrowseridManager.hasValidToken());
-    do_check_eq(globalBrowseridManager.account, globalIdentityConfig.fxaccount.user.email);
+    browseridManager.initializeWithCurrentIdentity();
+    await browseridManager.whenReadyToAuthenticate.promise;
+    do_check_true(!!browseridManager._token);
+    do_check_true(browseridManager.hasValidToken());
+    do_check_eq(browseridManager.account, identityConfig.fxaccount.user.email);
   }
 );
 
@@ -104,10 +104,10 @@ add_task(async function test_initialializeWithAuthErrorAndDeletedAccount() {
     let signCertificateCalled = false;
     let accountStatusCalled = false;
 
-    let AuthErrorMockFxAClient = function() {
+    let MockFxAccountsClient = function() {
       FxAccountsClient.apply(this);
     };
-    AuthErrorMockFxAClient.prototype = {
+    MockFxAccountsClient.prototype = {
       __proto__: FxAccountsClient.prototype,
       signCertificate() {
         signCertificateCalled = true;
@@ -122,7 +122,7 @@ add_task(async function test_initialializeWithAuthErrorAndDeletedAccount() {
       }
     };
 
-    let mockFxAClient = new AuthErrorMockFxAClient();
+    let mockFxAClient = new MockFxAccountsClient();
     browseridManager._fxaService.internal._fxAccountsClient = mockFxAClient;
 
     await browseridManager.initializeWithCurrentIdentity();
@@ -143,19 +143,19 @@ add_task(async function test_initialializeWithNoKeys() {
     delete identityConfig.fxaccount.user.kA;
     delete identityConfig.fxaccount.user.kB;
     // there's no keyFetchToken by default, so the initialize should fail.
-    configureFxAccountIdentity(globalBrowseridManager, identityConfig);
+    configureFxAccountIdentity(browseridManager, identityConfig);
 
-    await globalBrowseridManager.initializeWithCurrentIdentity();
-    await globalBrowseridManager.whenReadyToAuthenticate.promise;
+    await browseridManager.initializeWithCurrentIdentity();
+    await browseridManager.whenReadyToAuthenticate.promise;
     do_check_eq(Status.login, LOGIN_SUCCEEDED, "login succeeded even without keys");
-    do_check_false(globalBrowseridManager._canFetchKeys(), "_canFetchKeys reflects lack of keys");
-    do_check_eq(globalBrowseridManager._token, null, "we don't have a token");
+    do_check_false(browseridManager._canFetchKeys(), "_canFetchKeys reflects lack of keys");
+    do_check_eq(browseridManager._token, null, "we don't have a token");
 });
 
 add_test(function test_getResourceAuthenticator() {
     _("BrowserIDManager supplies a Resource Authenticator callback which returns a Hawk header.");
-    configureFxAccountIdentity(globalBrowseridManager);
-    let authenticator = globalBrowseridManager.getResourceAuthenticator();
+    configureFxAccountIdentity(browseridManager);
+    let authenticator = browseridManager.getResourceAuthenticator();
     do_check_true(!!authenticator);
     let req = {uri: CommonUtils.makeURI(
       "https://example.net/somewhere/over/the/rainbow"),
@@ -165,7 +165,7 @@ add_test(function test_getResourceAuthenticator() {
     do_check_true("authorization" in output.headers);
     do_check_true(output.headers.authorization.startsWith("Hawk"));
     _("Expected internal state after successful call.");
-    do_check_eq(globalBrowseridManager._token.uid, globalIdentityConfig.fxaccount.token.uid);
+    do_check_eq(browseridManager._token.uid, identityConfig.fxaccount.token.uid);
     run_next_test();
   }
 );
@@ -174,13 +174,13 @@ add_test(function test_getRESTRequestAuthenticator() {
     _("BrowserIDManager supplies a REST Request Authenticator callback which sets a Hawk header on a request object.");
     let request = new SyncStorageRequest(
       "https://example.net/somewhere/over/the/rainbow");
-    let authenticator = globalBrowseridManager.getRESTRequestAuthenticator();
+    let authenticator = browseridManager.getRESTRequestAuthenticator();
     do_check_true(!!authenticator);
     let output = authenticator(request, "GET");
     do_check_eq(request.uri, output.uri);
     do_check_true(output._headers.authorization.startsWith("Hawk"));
     do_check_true(output._headers.authorization.includes("nonce"));
-    do_check_true(globalBrowseridManager.hasValidToken());
+    do_check_true(browseridManager.hasValidToken());
     run_next_test();
   }
 );
@@ -228,7 +228,7 @@ add_test(function test_resourceAuthenticatorSkew() {
   do_check_eq(fxa.localtimeOffsetMsec, localtimeOffsetMsec);
 
   // Mocks within mocks...
-  configureFxAccountIdentity(browseridManager, globalIdentityConfig);
+  configureFxAccountIdentity(browseridManager, identityConfig);
 
   // Ensure the new FxAccounts mock has a signed-in user.
   fxa.internal.currentAccountState.signedInUser = browseridManager._fxaService.internal.currentAccountState.signedInUser;
@@ -281,7 +281,7 @@ add_test(function test_RESTResourceAuthenticatorSkew() {
   fxa.internal._now_is = now;
   fxa.internal.fxAccountsClient = fxaClient;
 
-  configureFxAccountIdentity(browseridManager, globalIdentityConfig);
+  configureFxAccountIdentity(browseridManager, identityConfig);
 
   // Ensure the new FxAccounts mock has a signed-in user.
   fxa.internal.currentAccountState.signedInUser = browseridManager._fxaService.internal.currentAccountState.signedInUser;
@@ -307,42 +307,42 @@ add_test(function test_RESTResourceAuthenticatorSkew() {
 });
 
 add_task(async function test_ensureLoggedIn() {
-  configureFxAccountIdentity(globalBrowseridManager);
-  await globalBrowseridManager.initializeWithCurrentIdentity();
-  await globalBrowseridManager.whenReadyToAuthenticate.promise;
+  configureFxAccountIdentity(browseridManager);
+  await browseridManager.initializeWithCurrentIdentity();
+  await browseridManager.whenReadyToAuthenticate.promise;
   Assert.equal(Status.login, LOGIN_SUCCEEDED, "original initialize worked");
-  await globalBrowseridManager.ensureLoggedIn();
+  await browseridManager.ensureLoggedIn();
   Assert.equal(Status.login, LOGIN_SUCCEEDED, "original ensureLoggedIn worked");
-  Assert.ok(globalBrowseridManager._shouldHaveSyncKeyBundle,
+  Assert.ok(browseridManager._shouldHaveSyncKeyBundle,
             "_shouldHaveSyncKeyBundle should always be true after ensureLogin completes.");
 
   // arrange for no logged in user.
-  let fxa = globalBrowseridManager._fxaService
+  let fxa = browseridManager._fxaService
   let signedInUser = fxa.internal.currentAccountState.storageManager.accountData;
   fxa.internal.currentAccountState.storageManager.accountData = null;
-  globalBrowseridManager.initializeWithCurrentIdentity();
-  Assert.ok(!globalBrowseridManager._shouldHaveSyncKeyBundle,
+  browseridManager.initializeWithCurrentIdentity();
+  Assert.ok(!browseridManager._shouldHaveSyncKeyBundle,
             "_shouldHaveSyncKeyBundle should be false so we know we are testing what we think we are.");
   Status.login = LOGIN_FAILED_NO_USERNAME;
-  await Assert.rejects(globalBrowseridManager.ensureLoggedIn(), "expecting rejection due to no user");
-  Assert.ok(globalBrowseridManager._shouldHaveSyncKeyBundle,
+  await Assert.rejects(browseridManager.ensureLoggedIn(), "expecting rejection due to no user");
+  Assert.ok(browseridManager._shouldHaveSyncKeyBundle,
             "_shouldHaveSyncKeyBundle should always be true after ensureLogin completes.");
   // Restore the logged in user to what it was.
   fxa.internal.currentAccountState.storageManager.accountData = signedInUser;
   Status.login = LOGIN_FAILED_LOGIN_REJECTED;
-  await Assert.rejects(globalBrowseridManager.ensureLoggedIn(),
+  await Assert.rejects(browseridManager.ensureLoggedIn(),
                        "LOGIN_FAILED_LOGIN_REJECTED should have caused immediate rejection");
   Assert.equal(Status.login, LOGIN_FAILED_LOGIN_REJECTED,
                "status should remain LOGIN_FAILED_LOGIN_REJECTED");
   Status.login = LOGIN_FAILED_NETWORK_ERROR;
-  await globalBrowseridManager.ensureLoggedIn();
+  await browseridManager.ensureLoggedIn();
   Assert.equal(Status.login, LOGIN_SUCCEEDED, "final ensureLoggedIn worked");
 });
 
 add_test(function test_tokenExpiration() {
     _("BrowserIDManager notices token expiration:");
     let bimExp = new BrowserIDManager();
-    configureFxAccountIdentity(bimExp, globalIdentityConfig);
+    configureFxAccountIdentity(bimExp, identityConfig);
 
     let authenticator = bimExp.getResourceAuthenticator();
     do_check_true(!!authenticator);
@@ -450,17 +450,17 @@ add_task(async function test_refreshCertificateOn401() {
 
   let getCertCount = 0;
 
-  let CheckSignMockFxAClient = function() {
+  let MockFxAccountsClient = function() {
     FxAccountsClient.apply(this);
   };
-  CheckSignMockFxAClient.prototype = {
+  MockFxAccountsClient.prototype = {
     __proto__: FxAccountsClient.prototype,
     signCertificate() {
       ++getCertCount;
     }
   };
 
-  let mockFxAClient = new CheckSignMockFxAClient();
+  let mockFxAClient = new MockFxAccountsClient();
   browseridManager._fxaService.internal._fxAccountsClient = mockFxAClient;
 
   let didReturn401 = false;
@@ -747,12 +747,13 @@ add_task(async function test_signedInUserMissing() {
   _("BrowserIDManager detects getSignedInUser returning incomplete account data");
 
   let browseridManager = new BrowserIDManager();
+  makeIdentityConfig();
   // Delete stored keys and the key fetch token.
-  delete globalIdentityConfig.fxaccount.user.kA;
-  delete globalIdentityConfig.fxaccount.user.kB;
-  delete globalIdentityConfig.fxaccount.user.keyFetchToken;
+  delete identityConfig.fxaccount.user.kA;
+  delete identityConfig.fxaccount.user.kB;
+  delete identityConfig.fxaccount.user.keyFetchToken;
 
-  configureFxAccountIdentity(browseridManager, globalIdentityConfig);
+  configureFxAccountIdentity(browseridManager, identityConfig);
 
   let fxa = new FxAccounts({
     fetchAndUnwrapKeys() {
@@ -766,7 +767,7 @@ add_task(async function test_signedInUserMissing() {
         throw new Error("Not expecting to have credentials passed");
       }
       let storageManager = new MockFxaStorageManager();
-      storageManager.initialize(globalIdentityConfig.fxaccount.user);
+      storageManager.initialize(identityConfig.fxaccount.user);
       return new AccountState(storageManager);
     },
   });
@@ -844,10 +845,10 @@ async function initializeIdentityWithHAWKResponseFactory(config, cbGetResponse) 
   }
   let fxa = new FxAccounts(internal);
 
-  globalBrowseridManager._fxaService = fxa;
-  globalBrowseridManager._signedInUser = null;
-  await globalBrowseridManager.initializeWithCurrentIdentity();
-  await Assert.rejects(globalBrowseridManager.whenReadyToAuthenticate.promise,
+  browseridManager._fxaService = fxa;
+  browseridManager._signedInUser = null;
+  await browseridManager.initializeWithCurrentIdentity();
+  await Assert.rejects(browseridManager.whenReadyToAuthenticate.promise,
                        "expecting rejection due to hawk error");
 }
 
