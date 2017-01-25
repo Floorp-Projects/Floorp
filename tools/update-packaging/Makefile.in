@@ -60,6 +60,7 @@ ifeq ($(OS_TARGET), WINNT)
 	cd $(PACKAGE_BASE_DIR) && $(INNER_UNMAKE_PACKAGE)
 endif
 	MAR=$(MAR_BIN) \
+	MOZ_PRODUCT_VERSION=$(MOZ_APP_VERSION) \
 	  $(srcdir)/make_full_update.sh \
 	  '$(DIST)/$(COMPLETE_MAR)' \
 	  '$(PACKAGE_DIR)'
@@ -70,6 +71,7 @@ endif
 partial-patch:: $(dir-stage)
 	MAR=$(MAR_BIN) \
 	MBSDIFF=$(MBSDIFF_BIN) \
+	MOZ_PRODUCT_VERSION=$(MOZ_APP_VERSION) \
 	  $(srcdir)/make_incremental_update.sh \
 	  '$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).partial.$(SRC_BUILD_ID)-$(DST_BUILD_ID).mar' \
 	  '$(SRC_BUILD)' \
