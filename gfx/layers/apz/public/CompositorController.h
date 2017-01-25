@@ -7,8 +7,7 @@
 #ifndef mozilla_layers_CompositorController_h
 #define mozilla_layers_CompositorController_h
 
-#include "mozilla/RefCountType.h" // for MozExternalRefCountType
-#include "nscore.h" // for NS_IMETHOD_
+#include "nsISupportsImpl.h" // for NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
 namespace mozilla {
 namespace layers {
@@ -16,8 +15,7 @@ namespace layers {
 class CompositorController
 {
 public:
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() = 0;
-  NS_IMETHOD_(MozExternalRefCountType) Release() = 0;
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   virtual void ScheduleRenderOnCompositorThread() = 0;
   virtual void ScheduleHideAllPluginWindows() = 0;

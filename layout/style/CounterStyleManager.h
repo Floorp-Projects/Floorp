@@ -96,8 +96,7 @@ public:
 
   virtual AnonymousCounterStyle* AsAnonymous() { return nullptr; }
 
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() = 0;
-  NS_IMETHOD_(MozExternalRefCountType) Release() = 0;
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
 protected:
   int32_t mStyle;

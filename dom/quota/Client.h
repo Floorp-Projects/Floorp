@@ -30,11 +30,7 @@ class UsageInfo;
 class Client
 {
 public:
-  NS_IMETHOD_(MozExternalRefCountType)
-  AddRef() = 0;
-
-  NS_IMETHOD_(MozExternalRefCountType)
-  Release() = 0;
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   enum Type {
     IDB = 0,

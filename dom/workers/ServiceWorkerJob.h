@@ -33,11 +33,7 @@ public:
     // on the main thread asynchronously after Start() completes.
     virtual void JobFinished(ServiceWorkerJob* aJob, ErrorResult& aStatus) = 0;
 
-    NS_IMETHOD_(MozExternalRefCountType)
-    AddRef(void) = 0;
-
-    NS_IMETHOD_(MozExternalRefCountType)
-    Release(void) = 0;
+    NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
   };
 
   enum class Type
