@@ -3632,22 +3632,6 @@ nsLocalFile::MoveToNative(nsIFile* aNewParentDir, const nsACString& aNewName)
   return rv;
 }
 
-NS_IMETHODIMP
-nsLocalFile::GetNativeTarget(nsACString& aResult)
-{
-  // Check we are correctly initialized.
-  CHECK_mWorkingPath();
-
-  NS_WARNING("This API is lossy. Use GetTarget !");
-  nsAutoString tmp;
-  nsresult rv = GetTarget(tmp);
-  if (NS_SUCCEEDED(rv)) {
-    rv = NS_CopyUnicodeToNative(tmp, aResult);
-  }
-
-  return rv;
-}
-
 nsresult
 NS_NewNativeLocalFile(const nsACString& aPath, bool aFollowLinks,
                       nsIFile** aResult)
