@@ -90,7 +90,7 @@ public:
   nsIDocument* GetDocument() const
   {
     StyleSheet* sheet = GetStyleSheet();
-    return sheet ? sheet->GetDocument() : nullptr;
+    return sheet ? sheet->GetAssociatedDocument() : nullptr;
   }
 
   virtual void SetStyleSheet(StyleSheet* aSheet);

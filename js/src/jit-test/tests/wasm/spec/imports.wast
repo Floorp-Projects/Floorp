@@ -28,9 +28,11 @@
   (type $func_f64 (func (param f64)))
 
   (import "spectest" "print" (func (param i32)))
-  (func (import "spectest" "print") (param i64))
+  ;; JavaScript can't handle i64 yet.
+  ;; (func (import "spectest" "print") (param i64))
   (import "spectest" "print" (func $print_i32 (param i32)))
-  (import "spectest" "print" (func $print_i64 (param i64)))
+  ;; JavaScript can't handle i64 yet.
+  ;; (import "spectest" "print" (func $print_i64 (param i64)))
   (import "spectest" "print" (func $print_f32 (param f32)))
   (import "spectest" "print" (func $print_f64 (param f64)))
   (import "spectest" "print" (func $print_i32_f32 (param i32 f32)))
@@ -58,7 +60,8 @@
   (func (export "print64") (param $i i64)
     (local $x f64)
     (set_local $x (f64.convert_s/i64 (call $i64->i64 (get_local $i))))
-    (call 1 (get_local $i))
+    ;; JavaScript can't handle i64 yet.
+    ;; (call 1 (get_local $i))
     (call $print_f64_f64
       (f64.add (get_local $x) (f64.const 1))
       (f64.const 53)
@@ -191,8 +194,8 @@
   (import "spectest" "global" (global $x i32))
   (global $y (import "spectest" "global") i32)
 
-  ;; limitation of the spidermonkey testing mode (an imported global can't be both a number and i64).
-  ;;(import "spectest" "global" (global i64))
+  ;; JavaScript can't handle i64 yet.
+  ;; (import "spectest" "global" (global i64))
   (import "spectest" "global" (global f32))
   (import "spectest" "global" (global f64))
 

@@ -219,8 +219,8 @@
 (assert_return (invoke "odd" (i32.const 200)) (i32.const 99))
 (assert_return (invoke "odd" (i32.const 77)) (i32.const 44))
 
-(assert_trap (invoke "runaway") "call stack exhausted")
-(assert_trap (invoke "mutual-runaway") "call stack exhausted")
+(assert_exhaustion (invoke "runaway") "call stack exhausted")
+(assert_exhaustion (invoke "mutual-runaway") "call stack exhausted")
 
 
 ;; Invalid typing

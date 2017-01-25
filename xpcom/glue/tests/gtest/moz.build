@@ -5,11 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'TestArray.cpp',
     'TestFileUtils.cpp',
-    'TestGCPostBarriers.cpp',
-    'TestNsDeque.cpp',
-    'TestThreadUtils.cpp',
 ]
 
 LOCAL_INCLUDES = [

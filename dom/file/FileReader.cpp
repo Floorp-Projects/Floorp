@@ -202,72 +202,57 @@ ReadFuncBinaryString(nsIInputStream* in,
   return NS_OK;
 }
 
-nsresult
-FileReader::DoOnLoadEnd(nsresult aStatus)
+void
+FileReader::OnLoadEndArrayBuffer()
 {
-  // Make sure we drop all the objects that could hold files open now.
-  nsCOMPtr<nsIAsyncInputStream> stream;
-  mAsyncStream.swap(stream);
-
-  RefPtr<Blob> blob;
-  mBlob.swap(blob);
-
-  // Clear out the data if necessary
-  if (NS_FAILED(aStatus)) {
-    FreeFileData();
-    return NS_OK;
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(GetParentObject())) {
+    FreeDataAndDispatchError(NS_ERROR_FAILURE);
+    return;
   }
 
-  // In case we read a different number of bytes, we can assume that the
-  // underlying storage has changed. We should not continue.
-  if (mDataLen != mTotal) {
-    FreeFileData();
-    return NS_ERROR_FAILURE;
+  RootResultArrayBuffer();
+
+  JSContext* cx = jsapi.cx();
+
+  mResultArrayBuffer = JS_NewArrayBufferWithContents(cx, mDataLen, mFileData);
+  if (mResultArrayBuffer) {
+    mFileData = nullptr; // Transfer ownership
+    FreeDataAndDispatchSuccess();
+    return;
   }
 
-  nsresult rv = NS_OK;
-  switch (mDataFormat) {
-    case FILE_AS_ARRAYBUFFER: {
-      AutoJSAPI jsapi;
-      if (!jsapi.Init(GetParentObject())) {
-        FreeFileData();
-        return NS_ERROR_FAILURE;
-      }
+  // Let's handle the error status.
 
-      RootResultArrayBuffer();
-      mResultArrayBuffer =
-        JS_NewArrayBufferWithContents(jsapi.cx(), mDataLen, mFileData);
-      if (!mResultArrayBuffer) {
-        JS_ClearPendingException(jsapi.cx());
-        rv = NS_ERROR_OUT_OF_MEMORY;
-      } else {
-        mFileData = nullptr; // Transfer ownership
-      }
-      break;
-    }
-    case FILE_AS_BINARY:
-      break; //Already accumulated mResult
-    case FILE_AS_TEXT:
-      if (!mFileData) {
-        if (mDataLen) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          break;
-        }
-        rv = GetAsText(blob, mCharset, "", mDataLen, mResult);
-        break;
-      }
-      rv = GetAsText(blob, mCharset, mFileData, mDataLen, mResult);
-      break;
-    case FILE_AS_DATAURL:
-      rv = GetAsDataURL(blob, mFileData, mDataLen, mResult);
-      break;
+  JS::Rooted<JS::Value> exceptionValue(cx);
+  if (!JS_GetPendingException(cx, &exceptionValue) ||
+      // This should not really happen, exception should always be an object.
+      !exceptionValue.isObject()) {
+    JS_ClearPendingException(jsapi.cx());
+    FreeDataAndDispatchError(NS_ERROR_OUT_OF_MEMORY);
+    return;
   }
 
-  mResult.SetIsVoid(false);
+  JS_ClearPendingException(jsapi.cx());
 
-  FreeFileData();
+  JS::Rooted<JSObject*> exceptionObject(cx, &exceptionValue.toObject());
+  JSErrorReport* er = JS_ErrorFromException(cx, exceptionObject);
+  if (!er || er->message()) {
+    FreeDataAndDispatchError(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
 
-  return rv;
+  nsAutoString errorName;
+  JSFlatString* name = js::GetErrorTypeName(cx, er->exnType);
+  if (name) {
+    AssignJSFlatString(errorName, name);
+  }
+
+  mError =
+    new DOMError(GetOwner(), errorName,
+                 NS_ConvertUTF8toUTF16(er->message().c_str()));
+
+  FreeDataAndDispatchError();
 }
 
 nsresult
@@ -530,7 +515,35 @@ FileReader::ClearProgressEventTimer()
 }
 
 void
-FileReader::DispatchError(nsresult aRv)
+FileReader::FreeDataAndDispatchSuccess()
+{
+  FreeFileData();
+  mResult.SetIsVoid(false);
+  mAsyncStream = nullptr;
+  mBlob = nullptr;
+
+  // Dispatch event to signify end of a successful operation
+  DispatchProgressEvent(NS_LITERAL_STRING(LOAD_STR));
+  DispatchProgressEvent(NS_LITERAL_STRING(LOADEND_STR));
+}
+
+void
+FileReader::FreeDataAndDispatchError()
+{
+  MOZ_ASSERT(mError);
+
+  FreeFileData();
+  mResult.SetIsVoid(true);
+  mAsyncStream = nullptr;
+  mBlob = nullptr;
+
+  // Dispatch error event to signify load failure
+  DispatchProgressEvent(NS_LITERAL_STRING(ERROR_STR));
+  DispatchProgressEvent(NS_LITERAL_STRING(LOADEND_STR));
+}
+
+void
+FileReader::FreeDataAndDispatchError(nsresult aRv)
 {
   // Set the status attribute, and dispatch the error event
   switch (aRv) {
@@ -545,9 +558,7 @@ FileReader::DispatchError(nsresult aRv)
     break;
   }
 
-  // Dispatch error event to signify load failure
-  DispatchProgressEvent(NS_LITERAL_STRING(ERROR_STR));
-  DispatchProgressEvent(NS_LITERAL_STRING(LOADEND_STR));
+  FreeDataAndDispatchError();
 }
 
 nsresult
@@ -644,22 +655,47 @@ FileReader::OnLoadEnd(nsresult aStatus)
   // FileReader must be in DONE stage after an operation
   mReadyState = DONE;
 
-  nsresult rv = DoOnLoadEnd(aStatus);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    DispatchError(rv);
-    return NS_OK;
-  }
-
-  // Set the status field as appropriate
+  // Quick return, if failed.
   if (NS_FAILED(aStatus)) {
-    DispatchError(aStatus);
+    FreeDataAndDispatchError(aStatus);
     return NS_OK;
   }
 
-  // Dispatch event to signify end of a successful operation
-  DispatchProgressEvent(NS_LITERAL_STRING(LOAD_STR));
-  DispatchProgressEvent(NS_LITERAL_STRING(LOADEND_STR));
+  // In case we read a different number of bytes, we can assume that the
+  // underlying storage has changed. We should not continue.
+  if (mDataLen != mTotal) {
+    FreeDataAndDispatchError(NS_ERROR_FAILURE);
+    return NS_OK;
+  }
 
+  // ArrayBuffer needs a custom handling.
+  if (mDataFormat == FILE_AS_ARRAYBUFFER) {
+    OnLoadEndArrayBuffer();
+    return NS_OK;
+  }
+
+  nsresult rv = NS_OK;
+
+  // We don't do anything special for Binary format.
+
+  if (mDataFormat == FILE_AS_DATAURL) {
+    rv = GetAsDataURL(mBlob, mFileData, mDataLen, mResult);
+  } else if (mDataFormat == FILE_AS_TEXT) {
+    if (!mFileData && mDataLen) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    } else if (!mFileData) {
+      rv = GetAsText(mBlob, mCharset, "", mDataLen, mResult);
+    } else {
+      rv = GetAsText(mBlob, mCharset, mFileData, mDataLen, mResult);
+    }
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    FreeDataAndDispatchError(rv);
+    return NS_OK;
+  }
+
+  FreeDataAndDispatchSuccess();
   return NS_OK;
 }
 

@@ -35,7 +35,11 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/dom/MutableBlobStorage.h"
+#include "mozilla/dom/BodyExtractor.h"
 #include "mozilla/dom/TypedArray.h"
+#include "mozilla/dom/File.h"
+#include "mozilla/dom/FormData.h"
+#include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/XMLHttpRequest.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "mozilla/dom/XMLHttpRequestEventTarget.h"
@@ -55,11 +59,8 @@ class nsIJSID;
 namespace mozilla {
 namespace dom {
 
-class Blob;
 class BlobSet;
 class DOMString;
-class FormData;
-class URLSearchParams;
 class XMLHttpRequestUpload;
 struct OriginAttributesDictionary;
 
@@ -293,34 +294,7 @@ public:
 private:
   virtual ~XMLHttpRequestMainThread();
 
-  class RequestBodyBase
-  {
-  public:
-    virtual nsresult GetAsStream(nsIInputStream** aResult,
-                                 uint64_t* aContentLength,
-                                 nsACString& aContentType,
-                                 nsACString& aCharset) const
-    {
-      NS_ASSERTION(false, "RequestBodyBase should not be used directly.");
-      return NS_ERROR_FAILURE;
-    }
-  };
-
-  template<typename Type>
-  class RequestBody final : public RequestBodyBase
-  {
-    Type* mBody;
-  public:
-    explicit RequestBody(Type* aBody) : mBody(aBody)
-    {
-    }
-    nsresult GetAsStream(nsIInputStream** aResult,
-                         uint64_t* aContentLength,
-                         nsACString& aContentType,
-                         nsACString& aCharset) const override;
-  };
-
-  nsresult SendInternal(const RequestBodyBase* aBody);
+  nsresult SendInternal(const BodyExtractorBase* aBody);
 
   bool IsCrossSiteCORSRequest() const;
   bool IsDeniedCrossSiteCORSRequest();
@@ -341,7 +315,7 @@ public:
   Send(JSContext* /*aCx*/, const ArrayBuffer& aArrayBuffer,
        ErrorResult& aRv) override
   {
-    RequestBody<const ArrayBuffer> body(&aArrayBuffer);
+    BodyExtractor<const ArrayBuffer> body(&aArrayBuffer);
     aRv = SendInternal(&body);
   }
 
@@ -349,28 +323,28 @@ public:
   Send(JSContext* /*aCx*/, const ArrayBufferView& aArrayBufferView,
        ErrorResult& aRv) override
   {
-    RequestBody<const ArrayBufferView> body(&aArrayBufferView);
+    BodyExtractor<const ArrayBufferView> body(&aArrayBufferView);
     aRv = SendInternal(&body);
   }
 
   virtual void
   Send(JSContext* /*aCx*/, Blob& aBlob, ErrorResult& aRv) override
   {
-    RequestBody<Blob> body(&aBlob);
+    BodyExtractor<nsIXHRSendable> body(&aBlob);
     aRv = SendInternal(&body);
   }
 
   virtual void Send(JSContext* /*aCx*/, URLSearchParams& aURLSearchParams,
                     ErrorResult& aRv) override
   {
-    RequestBody<URLSearchParams> body(&aURLSearchParams);
+    BodyExtractor<nsIXHRSendable> body(&aURLSearchParams);
     aRv = SendInternal(&body);
   }
 
   virtual void
   Send(JSContext* /*aCx*/, nsIDocument& aDoc, ErrorResult& aRv) override
   {
-    RequestBody<nsIDocument> body(&aDoc);
+    BodyExtractor<nsIDocument> body(&aDoc);
     aRv = SendInternal(&body);
   }
 
@@ -380,7 +354,7 @@ public:
     if (DOMStringIsNull(aString)) {
       Send(aCx, aRv);
     } else {
-      RequestBody<const nsAString> body(&aString);
+      BodyExtractor<const nsAString> body(&aString);
       aRv = SendInternal(&body);
     }
   }
@@ -388,7 +362,7 @@ public:
   virtual void
   Send(JSContext* /*aCx*/, FormData& aFormData, ErrorResult& aRv) override
   {
-    RequestBody<FormData> body(&aFormData);
+    BodyExtractor<nsIXHRSendable> body(&aFormData);
     aRv = SendInternal(&body);
   }
 
@@ -396,7 +370,7 @@ public:
   Send(JSContext* aCx, nsIInputStream* aStream, ErrorResult& aRv) override
   {
     NS_ASSERTION(aStream, "Null should go to string version");
-    RequestBody<nsIInputStream> body(aStream);
+    BodyExtractor<nsIInputStream> body(aStream);
     aRv = SendInternal(&body);
   }
 

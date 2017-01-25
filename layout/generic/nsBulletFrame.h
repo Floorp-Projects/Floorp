@@ -19,6 +19,7 @@ class imgIContainer;
 class imgRequestProxy;
 
 class nsBulletFrame;
+class BulletRenderer;
 
 class nsBulletListener final : public imgINotificationObserver,
                                public imgIOnloadBlocker
@@ -96,11 +97,13 @@ public:
   void GetListItemText(nsAString& aResult);
 
   void GetSpokenText(nsAString& aText);
-                         
+
+  Maybe<BulletRenderer>
+  CreateBulletRenderer(nsRenderingContext& aRenderingContext, nsPoint aPt);
   DrawResult PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                          const nsRect& aDirtyRect, uint32_t aFlags,
                          bool aDisableSubpixelAA);
-  
+
   virtual bool IsEmpty() override;
   virtual bool IsSelfEmpty() override;
   virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
