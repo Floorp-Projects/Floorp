@@ -14300,9 +14300,16 @@ nsDocShell::GetPrintPreview(nsIWebBrowserPrint** aPrintPreview)
   nsCOMPtr<nsIDocumentViewerPrint> print = do_QueryInterface(mContentViewer);
   if (!print || !print->IsInitializedForPrintPreview()) {
     Stop(nsIWebNavigation::STOP_ALL);
-    nsCOMPtr<nsIPrincipal> principal = nsNullPrincipal::CreateWithInheritedAttributes(this);
-    nsresult rv = CreateAboutBlankContentViewer(principal, nullptr);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // Check if current content viewer is blank. If so, we skip ahead to where
+    // we QI the mContentViewer using it to host print preview, instead of
+    // creating a brand new one.
+    if (!IsContentViewerBlankForPrintPreview()) {
+      nsCOMPtr<nsIPrincipal> principal = nsNullPrincipal::CreateWithInheritedAttributes(this);
+      nsCOMPtr<nsIURI> uri;
+      NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("about:printpreview"));
+      nsresult rv = CreateAboutBlankContentViewer(principal, uri);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
     print = do_QueryInterface(mContentViewer);
     NS_ENSURE_STATE(print);
     print->InitializeForPrintPreview();
@@ -14425,6 +14432,19 @@ nsDocShell::GetOriginAttributes(JSContext* aCx,
   bool ok = ToJSValue(aCx, mOriginAttributes, aVal);
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
   return NS_OK;
+}
+
+bool
+nsDocShell::IsContentViewerBlankForPrintPreview()
+{
+  MOZ_ASSERT(mCurrentURI);
+  if (!mCurrentURI) {
+    return false;
+  }
+
+  nsCString spec = mCurrentURI->GetSpecOrDefault();
+  return (spec.EqualsLiteral("about:printpreview") ||
+          spec.EqualsLiteral("about:blank"));
 }
 
 bool
