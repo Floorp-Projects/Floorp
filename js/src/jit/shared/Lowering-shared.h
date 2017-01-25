@@ -197,6 +197,7 @@ class LIRGeneratorShared : public MDefinitionVisitor
     // Returns a box allocation. The use is either typed, a Value, or
     // a constant (if useConstant is true).
     inline LBoxAllocation useBoxOrTypedOrConstant(MDefinition* mir, bool useConstant);
+    inline LBoxAllocation useBoxOrTyped(MDefinition* mir);
 
     // Returns an int64 allocation for an Int64-typed instruction.
     inline LInt64Allocation useInt64(MDefinition* mir, LUse::Policy policy, bool useAtStart);

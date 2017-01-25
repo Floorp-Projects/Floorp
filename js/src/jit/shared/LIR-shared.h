@@ -6648,16 +6648,17 @@ class LCallGetIntrinsicValue : public LCallInstructionHelper<BOX_PIECES, 0, 0>
 
 // Patchable jump to stubs generated for a GetProperty cache, which loads a
 // boxed value.
-class LGetPropertyCacheV : public LInstructionHelper<BOX_PIECES, 1 + BOX_PIECES, 1>
+class LGetPropertyCacheV : public LInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 1>
 {
   public:
     LIR_HEADER(GetPropertyCacheV)
 
-    static const size_t Id = 1;
+    static const size_t Value = 0;
+    static const size_t Id = BOX_PIECES;
 
-    LGetPropertyCacheV(const LAllocation& object, const LBoxAllocation& id,
+    LGetPropertyCacheV(const LBoxAllocation& value, const LBoxAllocation& id,
                        const LDefinition& temp) {
-        setOperand(0, object);
+        setBoxOperand(Value, value);
         setBoxOperand(Id, id);
         setTemp(0, temp);
     }
@@ -6671,16 +6672,17 @@ class LGetPropertyCacheV : public LInstructionHelper<BOX_PIECES, 1 + BOX_PIECES,
 
 // Patchable jump to stubs generated for a GetProperty cache, which loads a
 // value of a known type, possibly into an FP register.
-class LGetPropertyCacheT : public LInstructionHelper<1, 1 + BOX_PIECES, 1>
+class LGetPropertyCacheT : public LInstructionHelper<1, 2 * BOX_PIECES, 1>
 {
   public:
     LIR_HEADER(GetPropertyCacheT)
 
-    static const size_t Id = 1;
+    static const size_t Value = 0;
+    static const size_t Id = BOX_PIECES;
 
-    LGetPropertyCacheT(const LAllocation& object, const LBoxAllocation& id,
+    LGetPropertyCacheT(const LBoxAllocation& value, const LBoxAllocation& id,
                        const LDefinition& temp) {
-        setOperand(0, object);
+        setBoxOperand(Value, value);
         setBoxOperand(Id, id);
         setTemp(0, temp);
     }
