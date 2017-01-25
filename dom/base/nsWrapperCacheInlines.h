@@ -53,7 +53,7 @@ nsWrapperCache::HasNothingToTrace(nsISupports* aThis)
 }
 
 inline bool
-nsWrapperCache::IsBlackAndDoesNotNeedTracing(nsISupports* aThis)
+nsWrapperCache::HasKnownLiveWrapperAndDoesNotNeedTracing(nsISupports* aThis)
 {
   return HasKnownLiveWrapper() && HasNothingToTrace(aThis);
 }
