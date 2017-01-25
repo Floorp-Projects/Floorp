@@ -948,7 +948,7 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
     }
 
     if (!isOptimizedArgs) {
-        if (!GetElementOperation(cx, op, &lhsCopy, rhs, res))
+        if (!GetElementOperation(cx, op, lhsCopy, rhs, res))
             return false;
         TypeScript::Monitor(cx, frame->script(), pc, res);
     }
