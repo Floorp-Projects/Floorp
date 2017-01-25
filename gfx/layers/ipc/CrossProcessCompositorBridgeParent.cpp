@@ -87,7 +87,9 @@ CrossProcessCompositorBridgeParent::AllocPLayerTransactionParent(
     LayerTransactionParent* p = new LayerTransactionParent(lm, this, aId);
     p->AddIPDLReference();
     sIndirectLayerTrees[aId].mLayerTree = p;
-    p->SetPendingCompositorUpdates(state->mPendingCompositorUpdates);
+    if (state->mPendingCompositorUpdate) {
+      p->SetPendingCompositorUpdate(state->mPendingCompositorUpdate.value());
+    }
     return p;
   }
 
@@ -410,16 +412,18 @@ CrossProcessCompositorBridgeParent::GetCompositionManager(LayerTransactionParent
 }
 
 mozilla::ipc::IPCResult
-CrossProcessCompositorBridgeParent::RecvAcknowledgeCompositorUpdate(const uint64_t& aLayersId)
+CrossProcessCompositorBridgeParent::RecvAcknowledgeCompositorUpdate(const uint64_t& aLayersId,
+                                                                    const uint64_t& aSeqNo)
 {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   CompositorBridgeParent::LayerTreeState& state = sIndirectLayerTrees[aLayersId];
 
   if (LayerTransactionParent* ltp = state.mLayerTree) {
-    ltp->AcknowledgeCompositorUpdate();
+    ltp->AcknowledgeCompositorUpdate(aSeqNo);
   }
-  MOZ_ASSERT(state.mPendingCompositorUpdates > 0);
-  state.mPendingCompositorUpdates--;
+  if (state.mPendingCompositorUpdate == Some(aSeqNo)) {
+    state.mPendingCompositorUpdate = Nothing();
+  }
   return IPC_OK();
 }
 
@@ -452,7 +456,7 @@ CrossProcessCompositorBridgeParent::AllocPTextureParent(const SurfaceDescriptor&
 
   TextureFlags flags = aFlags;
 
-  if (!state || state->mPendingCompositorUpdates) {
+  if (!state || state->mPendingCompositorUpdate) {
     // The compositor was recreated, and we're receiving layers updates for a
     // a layer manager that will soon be discarded or invalidated. We can't
     // return null because this will mess up deserialization later and we'll

@@ -264,9 +264,11 @@ StorageObserver::Observe(nsISupports* aSubject,
     } else {
       // In case the IDN service is not available, this is the best we can come
       // up with!
-      NS_EscapeURL(NS_ConvertUTF16toUTF8(aData),
-                   esc_OnlyNonASCII | esc_AlwaysCopy,
-                   aceDomain);
+      rv = NS_EscapeURL(NS_ConvertUTF16toUTF8(aData),
+                        esc_OnlyNonASCII | esc_AlwaysCopy,
+                        aceDomain,
+                        fallible);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     nsAutoCString originScope;

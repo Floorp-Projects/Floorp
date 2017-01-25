@@ -3,9 +3,7 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/identity/LogUtils.jsm");
+Cu.import("resource://gre/modules/services-crypto/LogUtils.jsm");
 
 const idService = Cc["@mozilla.org/identity/crypto-service;1"]
                     .getService(Ci.nsIIdentityCryptoService);
@@ -35,6 +33,10 @@ const BASE64_URL_ENCODINGS = [
 // When the output of an operation is a
 function do_check_eq_or_slightly_less(x, y) {
   do_check_true(x >= y - (3 * 8));
+}
+
+function log(...aMessageArgs) {
+  Logger.log.apply(Logger, ["test"].concat(aMessageArgs));
 }
 
 function test_base64_roundtrip() {

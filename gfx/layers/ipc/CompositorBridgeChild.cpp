@@ -78,6 +78,7 @@ CompositorBridgeChild::CompositorBridgeChild(LayerManager *aLayerManager)
   : mLayerManager(aLayerManager)
   , mCanSend(false)
   , mFwdTransactionId(0)
+  , mDeviceResetSequenceNumber(0)
   , mMessageLoop(MessageLoop::current())
   , mSectionAllocator(nullptr)
 {
@@ -365,10 +366,9 @@ CompositorBridgeChild::RecvCompositorUpdated(const uint64_t& aLayersId,
   } else if (aLayersId != 0) {
     // Update gfxPlatform if this is the first time we're seeing this compositor
     // update (we will get an update for each connected tab).
-    static uint64_t sLastSeqNo = 0;
-    if (sLastSeqNo != aSeqNo) {
+    if (mDeviceResetSequenceNumber != aSeqNo) {
       gfxPlatform::GetPlatform()->CompositorUpdated();
-      sLastSeqNo = aSeqNo;
+      mDeviceResetSequenceNumber = aSeqNo;
 
       // If we still get device reset here, something must wrong when creating
       // d3d11 devices.
@@ -379,12 +379,12 @@ CompositorBridgeChild::RecvCompositorUpdated(const uint64_t& aLayersId,
     }
 
     if (dom::TabChild* child = dom::TabChild::GetFrom(aLayersId)) {
-      child->CompositorUpdated(aNewIdentifier);
+      child->CompositorUpdated(aNewIdentifier, aSeqNo);
     }
     if (!mCanSend) {
       return IPC_OK();
     }
-    SendAcknowledgeCompositorUpdate(aLayersId);
+    SendAcknowledgeCompositorUpdate(aLayersId, aSeqNo);
   }
   return IPC_OK();
 }
