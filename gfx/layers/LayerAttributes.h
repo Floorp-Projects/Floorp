@@ -10,6 +10,10 @@
 #include "mozilla/gfx/Types.h"
 #include "mozilla/layers/LayersTypes.h"
 
+namespace IPC {
+template <typename T> struct ParamTraits;
+} // namespace IPC
+
 namespace mozilla {
 namespace layers {
 
@@ -17,6 +21,7 @@ namespace layers {
 // serialization work.
 class SimpleLayerAttributes final
 {
+  friend struct IPC::ParamTraits<mozilla::layers::SimpleLayerAttributes>;
 public:
   SimpleLayerAttributes()
    : mTransformIsPerspective(false),

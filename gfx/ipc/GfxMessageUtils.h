@@ -23,6 +23,7 @@
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/GeckoContentController.h"
+#include "mozilla/layers/LayerAttributes.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "nsRect.h"
 #include "nsRegion.h"
@@ -1343,6 +1344,20 @@ struct ParamTraits<mozilla::layers::CompositorOptions>
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
     return ReadParam(aMsg, aIter, &aResult->mUseAPZ);
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::layers::SimpleLayerAttributes>
+{
+  typedef mozilla::layers::SimpleLayerAttributes paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    aMsg->WriteBytes(&aParam, sizeof(aParam));
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
+    return aMsg->ReadBytesInto(aIter, aResult, sizeof(paramType));
   }
 };
 
