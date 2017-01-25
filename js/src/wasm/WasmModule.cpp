@@ -489,8 +489,6 @@ Module::initSegments(JSContext* cx,
 
     for (const ElemSegment& seg : elemSegments_) {
         uint32_t numElems = seg.elemCodeRangeIndices.length();
-        if (!numElems)
-            continue;
 
         uint32_t tableLength = tables[seg.tableIndex]->length();
         uint32_t offset = EvaluateInitExpr(globalImports, seg.offset);
@@ -504,9 +502,6 @@ Module::initSegments(JSContext* cx,
 
     if (memoryObj) {
         for (const DataSegment& seg : dataSegments_) {
-            if (!seg.length)
-                continue;
-
             uint32_t memoryLength = memoryObj->buffer().byteLength();
             uint32_t offset = EvaluateInitExpr(globalImports, seg.offset);
 

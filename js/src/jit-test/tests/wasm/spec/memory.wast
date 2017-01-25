@@ -79,7 +79,19 @@
   "data segment does not fit"
 )
 (assert_unlinkable
+  (module (memory 0 1) (data (i32.const 0) "a"))
+  "data segment does not fit"
+)
+(assert_unlinkable
   (module (memory 1 2) (data (i32.const 0) "a") (data (i32.const 98304) "b"))
+  "data segment does not fit"
+)
+(assert_unlinkable
+  (module (memory 0 0) (data (i32.const 1) ""))
+  "data segment does not fit"
+)
+(assert_unlinkable
+  (module (memory 1) (data (i32.const 0x12000) ""))
   "data segment does not fit"
 )
 ;; This seems to cause a time-out on Travis.
@@ -93,7 +105,7 @@
 )
 
 (module (memory 0 0) (data (i32.const 0) ""))
-(module (memory 0 0) (data (i32.const 1) ""))
+(module (memory 1 1) (data (i32.const 0x10000) ""))
 (module (memory 1 2) (data (i32.const 0) "abc") (data (i32.const 0) "def"))
 (module (memory 1 2) (data (i32.const 3) "ab") (data (i32.const 0) "de"))
 (module

@@ -10,6 +10,7 @@ cppunit:
     suite: cppunittest
     treeherder-symbol: tc(Cpp)
     e10s: false
+    docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
@@ -94,6 +95,7 @@ external-media-tests:
     e10s: false
     tier: 2
     max-run-time: 5400
+    docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
@@ -146,6 +148,7 @@ gtest:
     treeherder-symbol: tc(GTest)
     e10s: false
     instance-size: xlarge
+    docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
@@ -167,6 +170,7 @@ jittest:
     suite: jittest/jittest-chunked
     treeherder-symbol: tc(Jit)
     e10s: false
+    docker-image: {"in-tree": "desktop1604-test"}
     chunks:
         by-test-platform:
             windows.*: 1
@@ -191,6 +195,7 @@ jsreftest:
     description: "JS Reftest run"
     suite: reftest/jsreftest
     treeherder-symbol: tc-R(J)
+    docker-image: {"in-tree": "desktop1604-test"}
     instance-size:
         by-test-platform:
             android.*: xlarge
@@ -903,6 +908,10 @@ reftest-stylo:
     suite: reftest/reftest-stylo
     treeherder-symbol: tc-R(Rs)
     chunks: 16
+    run-on-projects:
+        by-test-platform:
+            linux64-stylo/opt: []
+            linux64-stylo/debug: []
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true

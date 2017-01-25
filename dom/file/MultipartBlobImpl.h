@@ -60,10 +60,6 @@ public:
                       bool aNativeEOL,
                       ErrorResult& aRv);
 
-  void InitializeChromeFile(Blob& aData,
-                            const ChromeFilePropertyBag& aBag,
-                            ErrorResult& aRv);
-
   void InitializeChromeFile(nsPIDOMWindowInner* aWindow,
                             const nsAString& aData,
                             const ChromeFilePropertyBag& aBag,

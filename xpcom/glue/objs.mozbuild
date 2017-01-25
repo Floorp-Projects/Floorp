@@ -6,29 +6,6 @@
 
 xpcom_glue_src_lcppsrcs = [
     'FileUtils.cpp',
-    'nsArrayEnumerator.cpp',
-    'nsArrayUtils.cpp',
-    'nsCategoryCache.cpp',
-    'nsClassInfoImpl.cpp',
-    'nsCOMArray.cpp',
-    'nsComponentManagerUtils.cpp',
-    'nsCOMPtr.cpp',
-    'nsCRTGlue.cpp',
-    'nsCycleCollectionParticipant.cpp',
-    'nsDeque.cpp',
-    'nsEnumeratorUtils.cpp',
-    'nsID.cpp',
-    'nsIInterfaceRequestorUtils.cpp',
-    'nsINIParser.cpp',
-    'nsISupportsImpl.cpp',
-    'nsMemory.cpp',
-    'nsQuickSort.cpp',
-    'nsTArray.cpp',
-    'nsThreadUtils.cpp',
-    'nsTObserverArray.cpp',
-    'nsVersionComparator.cpp',
-    'nsWeakReference.cpp',
-    'PLDHashTable.cpp',
     'XREAppData.cpp',
 ]
 
@@ -37,10 +14,6 @@ xpcom_glue_src_cppsrcs = [
 ]
 
 xpcom_gluens_src_lcppsrcs = [
-    'BlockingResourceBase.cpp',
-    'GenericFactory.cpp',
-    'nsProxyRelease.cpp',
-    'nsTextFormatter.cpp',
 ]
 
 xpcom_gluens_src_cppsrcs = [

@@ -12,7 +12,9 @@
 #include "nsPluginArray.h"
 #include "nsMimeTypeArray.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/dom/BodyExtractor.h"
 #include "mozilla/dom/DesktopNotification.h"
+#include "mozilla/dom/FetchBinding.h"
 #include "mozilla/dom/File.h"
 #include "nsGeolocation.h"
 #include "nsIClassOfService.h"
@@ -43,6 +45,7 @@
 #include "mozilla/dom/ServiceWorkerContainer.h"
 #include "mozilla/dom/StorageManager.h"
 #include "mozilla/dom/TCPSocket.h"
+#include "mozilla/dom/URLSearchParams.h"
 #include "mozilla/dom/VRDisplay.h"
 #include "mozilla/dom/WebAuthentication.h"
 #include "mozilla/dom/workers/RuntimeService.h"
@@ -1226,8 +1229,52 @@ BeaconStreamListener::OnDataAvailable(nsIRequest *aRequest,
 
 bool
 Navigator::SendBeacon(const nsAString& aUrl,
-                      const Nullable<ArrayBufferViewOrBlobOrStringOrFormData>& aData,
+                      const Nullable<ArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams>& aData,
                       ErrorResult& aRv)
+{
+  if (aData.IsNull()) {
+    return SendBeaconInternal(aUrl, nullptr, eBeaconTypeOther, aRv);
+  }
+
+  if (aData.Value().IsArrayBuffer()) {
+    BodyExtractor<const ArrayBuffer> body(&aData.Value().GetAsArrayBuffer());
+    return SendBeaconInternal(aUrl, &body, eBeaconTypeArrayBuffer, aRv);
+  }
+
+  if (aData.Value().IsArrayBufferView()) {
+    BodyExtractor<const ArrayBufferView> body(&aData.Value().GetAsArrayBufferView());
+    return SendBeaconInternal(aUrl, &body, eBeaconTypeArrayBuffer, aRv);
+  }
+
+  if (aData.Value().IsBlob()) {
+    BodyExtractor<nsIXHRSendable> body(&aData.Value().GetAsBlob());
+    return SendBeaconInternal(aUrl, &body, eBeaconTypeBlob, aRv);
+  }
+
+  if (aData.Value().IsFormData()) {
+    BodyExtractor<nsIXHRSendable> body(&aData.Value().GetAsFormData());
+    return SendBeaconInternal(aUrl, &body, eBeaconTypeOther, aRv);
+  }
+
+  if (aData.Value().IsUSVString()) {
+    BodyExtractor<const nsAString> body(&aData.Value().GetAsUSVString());
+    return SendBeaconInternal(aUrl, &body, eBeaconTypeOther, aRv);
+  }
+
+  if (aData.Value().IsURLSearchParams()) {
+    BodyExtractor<nsIXHRSendable> body(&aData.Value().GetAsURLSearchParams());
+    return SendBeaconInternal(aUrl, &body, eBeaconTypeOther, aRv);
+  }
+
+  MOZ_CRASH("Invalid data type.");
+  return false;
+}
+
+bool
+Navigator::SendBeaconInternal(const nsAString& aUrl,
+                              BodyExtractorBase* aBody,
+                              BeaconType aType,
+                              ErrorResult& aRv)
 {
   if (!mWindow) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -1269,9 +1316,9 @@ Navigator::SendBeacon(const nsAString& aUrl,
     nsIChannel::LOAD_CLASSIFY_URI;
 
   // No need to use CORS for sendBeacon unless it's a BLOB
-  nsSecurityFlags securityFlags = (!aData.IsNull() && aData.Value().IsBlob())
-   ? nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS
-   : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
+  nsSecurityFlags securityFlags = aType == eBeaconTypeBlob
+    ? nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS
+    : nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;
   securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
 
   nsCOMPtr<nsIChannel> channel;
@@ -1297,68 +1344,22 @@ Navigator::SendBeacon(const nsAString& aUrl,
   }
   httpChannel->SetReferrer(documentURI);
 
-  nsCString mimeType;
-  if (!aData.IsNull()) {
-    nsCOMPtr<nsIInputStream> in;
+  nsCOMPtr<nsIInputStream> in;
+  nsAutoCString contentTypeWithCharset;
+  nsAutoCString charset;
+  uint64_t length = 0;
 
-    if (aData.Value().IsString()) {
-      nsCString stringData = NS_ConvertUTF16toUTF8(aData.Value().GetAsString());
-      nsCOMPtr<nsIStringInputStream> strStream = do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
-      if (NS_FAILED(rv)) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return false;
-      }
-      rv = strStream->SetData(stringData.BeginReading(), stringData.Length());
-      if (NS_FAILED(rv)) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return false;
-      }
-      mimeType.AssignLiteral("text/plain;charset=UTF-8");
-      in = strStream;
-
-    } else if (aData.Value().IsArrayBufferView()) {
-
-      nsCOMPtr<nsIStringInputStream> strStream = do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
-      if (NS_FAILED(rv)) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return false;
-      }
-
-      const ArrayBufferView& view = aData.Value().GetAsArrayBufferView();
-      view.ComputeLengthAndData();
-      rv = strStream->SetData(reinterpret_cast<char*>(view.Data()),
-                              view.Length());
-
-      if (NS_FAILED(rv)) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return false;
-      }
-      mimeType.AssignLiteral("application/octet-stream");
-      in = strStream;
-
-    } else if (aData.Value().IsBlob()) {
-      Blob& blob = aData.Value().GetAsBlob();
-      blob.GetInternalStream(getter_AddRefs(in), aRv);
-      if (NS_WARN_IF(aRv.Failed())) {
-        return false;
-      }
-
-      nsAutoString type;
-      blob.GetType(type);
-      mimeType = NS_ConvertUTF16toUTF8(type);
-
-    } else if (aData.Value().IsFormData()) {
-      FormData& form = aData.Value().GetAsFormData();
-      uint64_t len;
-      nsAutoCString charset;
-      form.GetSendInfo(getter_AddRefs(in),
-                       &len,
-                       mimeType,
-                       charset);
-    } else {
-      MOZ_ASSERT(false, "switch statements not in sync");
-      aRv.Throw(NS_ERROR_FAILURE);
+  if (aBody) {
+    aRv = aBody->GetAsStream(getter_AddRefs(in), &length,
+                             contentTypeWithCharset, charset);
+    if (NS_WARN_IF(aRv.Failed())) {
       return false;
+    }
+
+    if (aType == eBeaconTypeArrayBuffer) {
+      MOZ_ASSERT(contentTypeWithCharset.IsEmpty());
+      MOZ_ASSERT(charset.IsEmpty());
+      contentTypeWithCharset.Assign("application/octet-stream");
     }
 
     nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(channel);
@@ -1366,7 +1367,8 @@ Navigator::SendBeacon(const nsAString& aUrl,
       aRv.Throw(NS_ERROR_FAILURE);
       return false;
     }
-    uploadChannel->ExplicitSetUploadStream(in, mimeType, -1,
+
+    uploadChannel->ExplicitSetUploadStream(in, contentTypeWithCharset, length,
                                            NS_LITERAL_CSTRING("POST"),
                                            false);
   } else {
