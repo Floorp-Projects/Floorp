@@ -2732,11 +2732,7 @@ TabChild::MakeHidden()
     return;
   }
 
-  CompositorBridgeChild* compositor = CompositorBridgeChild::Get();
-
-  // Clear cached resources directly. This avoids one extra IPC
-  // round-trip from CompositorBridgeChild to CompositorBridgeParent.
-  compositor->RecvClearCachedResources(mLayersId);
+  ClearCachedResources();
 
   // Hide all plugins in this tab.
   if (nsCOMPtr<nsIPresShell> shell = GetPresShell()) {
