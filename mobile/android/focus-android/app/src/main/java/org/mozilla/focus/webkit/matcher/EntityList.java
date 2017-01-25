@@ -25,7 +25,8 @@ import java.net.URL;
 
     public boolean isWhiteListed(final String site, final String resource) {
         if (site.length() == 0 ||
-                resource.length() == 0) {
+                resource.length() == 0 ||
+                site.startsWith("data:")) {
             return true;
         }
 
