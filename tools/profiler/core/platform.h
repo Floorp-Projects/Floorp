@@ -115,43 +115,6 @@ extern mozilla::TimeStamp sStartTime;
 typedef uint8_t* Address;
 
 // ----------------------------------------------------------------------------
-// Mutex
-//
-// Mutexes are used for serializing access to non-reentrant sections of code.
-// The implementations of mutex should allow for nested/recursive locking.
-
-class Mutex {
- public:
-  virtual ~Mutex() {}
-
-  // Locks the given mutex. If the mutex is currently unlocked, it becomes
-  // locked and owned by the calling thread, and immediately. If the mutex
-  // is already locked by another thread, suspends the calling thread until
-  // the mutex is unlocked.
-  virtual int Lock() = 0;
-
-  // Unlocks the given mutex. The mutex is assumed to be locked and owned by
-  // the calling thread on entrance.
-  virtual int Unlock() = 0;
-};
-
-class MutexAutoLock {
- public:
-  explicit MutexAutoLock(::Mutex& aMutex)
-    : mMutex(&aMutex)
-  {
-    mMutex->Lock();
-  }
-
-  ~MutexAutoLock() {
-    mMutex->Unlock();
-  }
-
- private:
-  Mutex* mMutex;
-};
-
-// ----------------------------------------------------------------------------
 // OS
 //
 // This class has static methods for the different platform specific
@@ -169,8 +132,6 @@ class OS {
 
   // Called on startup to initialize platform specific things
   static void Startup();
-
-  static mozilla::UniquePtr< ::Mutex> CreateMutex(const char* aDesc);
 
  private:
   static const int msPerSecond = 1000;
@@ -392,7 +353,7 @@ class Sampler {
   static GeckoSampler* GetActiveSampler() { return sActiveSampler; }
   static void SetActiveSampler(GeckoSampler* sampler) { sActiveSampler = sampler; }
 
-  static mozilla::UniquePtr<Mutex> sRegisteredThreadsMutex;
+  static mozilla::UniquePtr<mozilla::Mutex> sRegisteredThreadsMutex;
 
   static bool CanNotifyObservers() {
 #ifdef MOZ_WIDGET_GONK
