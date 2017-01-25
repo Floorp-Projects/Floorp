@@ -30,19 +30,6 @@ public:
   MutexImpl();
   ~MutexImpl();
 
-  MutexImpl(MutexImpl&& rhs)
-    : platformData_(rhs.platformData_)
-  {
-    MOZ_ASSERT(this != &rhs, "self move disallowed!");
-    rhs.platformData_ = nullptr;
-  }
-
-  MutexImpl& operator=(MutexImpl&& rhs) {
-    this->~MutexImpl();
-    new (this) MutexImpl(mozilla::Move(rhs));
-    return *this;
-  }
-
   bool operator==(const MutexImpl& rhs) {
     return platformData_ == rhs.platformData_;
   }
