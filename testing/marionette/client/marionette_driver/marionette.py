@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import base64
+import copy
 import datetime
 import json
 import os
@@ -1278,7 +1279,25 @@ class Marionette(object):
         self.wait_for_port(timeout=timeout)
         self.protocol, _ = self.client.connect()
 
-        body = {"capabilities": capabilities, "sessionId": session_id}
+        if capabilities is not None:
+            caps = copy.deepcopy(capabilities)
+        else:
+            caps = {}
+
+        # Bug 1322277 - Override some default capabilities which are defined by
+        # the Webdriver spec but which don't really apply to tests executed with
+        # the Marionette client. Using "desiredCapabilities" here will allow tests
+        # to override the settings via "desiredCapabilities" and requiredCapabilities".
+        if "desiredCapabilities" not in caps:
+            caps.update({
+                "desiredCapabilities": {
+                    "timeouts": {
+                        "page load": 60000,  # webdriver specifies 300000ms
+                    }
+                }
+            })
+
+        body = {"capabilities": caps, "sessionId": session_id}
         resp = self._send_message("newSession", body)
 
         self.session_id = resp["sessionId"]
