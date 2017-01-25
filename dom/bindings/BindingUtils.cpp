@@ -1338,6 +1338,7 @@ XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
             desc.setSetter(nullptr);
           }
           desc.object().set(wrapper);
+          desc.value().setUndefined();
           return true;
         }
       }
