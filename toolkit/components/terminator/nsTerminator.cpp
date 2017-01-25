@@ -548,7 +548,7 @@ nsTerminator::UpdateCrashReport(const char* aTopic)
 
   Unused << CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ShutdownProgress"),
                                                report);
-#endif // defined(MOZ_CRASH_REPORTER)
+#endif // defined(MOZ_CRASHREPORTER)
 }
 
 

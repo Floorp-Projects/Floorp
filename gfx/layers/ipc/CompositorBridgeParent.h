@@ -189,7 +189,7 @@ public:
   virtual mozilla::ipc::IPCResult RecvFlushRendering() override;
   virtual mozilla::ipc::IPCResult RecvForcePresent() override;
 
-  virtual mozilla::ipc::IPCResult RecvAcknowledgeCompositorUpdate(const uint64_t& aLayersId) override {
+  virtual mozilla::ipc::IPCResult RecvAcknowledgeCompositorUpdate(const uint64_t&, const uint64_t&) override {
     MOZ_ASSERT_UNREACHABLE("This message is only sent cross-process");
     return IPC_OK();
   }
@@ -357,9 +357,11 @@ public:
     nsTArray<PluginWindowData> mPluginData;
     bool mUpdatedPluginDataAvailable;
 
-    // Number of times the compositor has been reset without having been
-    // acknowledged by the child.
-    uint32_t mPendingCompositorUpdates;
+    // Most recent device reset sequence number that has not been acknowledged;
+    // this is needed in case a device reset occurs in between allocating a
+    // RefLayer id on the parent, and allocating a PLayerTransaction on the
+    // child.
+    Maybe<uint64_t> mPendingCompositorUpdate;
 
     CompositorController* GetCompositorController() const;
     MetricsSharingController* CrossProcessSharingController() const;

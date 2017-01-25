@@ -625,6 +625,7 @@ private:
   nsresult
   OpenWindow(nsPIDOMWindowOuter** aWindow)
   {
+    MOZ_DIAGNOSTIC_ASSERT(aWindow);
     WorkerPrivate* workerPrivate = mPromiseProxy->GetWorkerPrivate();
 
     // [[1. Let url be the result of parsing url with entry settings object's API
@@ -661,24 +662,31 @@ private:
       NS_ENSURE_STATE(pwwatch);
 
       nsCString spec;
-      uri->GetSpec(spec);
+      rv = uri->GetSpec(spec);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
 
       nsCOMPtr<mozIDOMWindowProxy> newWindow;
-      pwwatch->OpenWindow2(nullptr,
-                           spec.get(),
-                           nullptr,
-                           nullptr,
-                           false, false, true, nullptr,
-                           // Not a spammy popup; we got permission, we swear!
-                           /* aIsPopupSpam = */ false,
-                           // Don't force noopener.  We're not passing in an
-                           // opener anyway, and we _do_ want the returned
-                           // window.
-                           /* aForceNoOpener = */ false,
-                           /* aLoadInfp = */ nullptr,
-                           getter_AddRefs(newWindow));
+      rv = pwwatch->OpenWindow2(nullptr,
+                                spec.get(),
+                                nullptr,
+                                nullptr,
+                                false, false, true, nullptr,
+                                // Not a spammy popup; we got permission, we swear!
+                                /* aIsPopupSpam = */ false,
+                                // Don't force noopener.  We're not passing in an
+                                // opener anyway, and we _do_ want the returned
+                                // window.
+                                /* aForceNoOpener = */ false,
+                                /* aLoadInfp = */ nullptr,
+                                getter_AddRefs(newWindow));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
       nsCOMPtr<nsPIDOMWindowOuter> pwindow = nsPIDOMWindowOuter::From(newWindow);
       pwindow.forget(aWindow);
+      MOZ_DIAGNOSTIC_ASSERT(*aWindow);
       return NS_OK;
     }
 
@@ -716,6 +724,7 @@ private:
 
     nsCOMPtr<nsPIDOMWindowOuter> pWin = nsPIDOMWindowOuter::From(win);
     pWin.forget(aWindow);
+    MOZ_DIAGNOSTIC_ASSERT(*aWindow);
 
     return NS_OK;
   }

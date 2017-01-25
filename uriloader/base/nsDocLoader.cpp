@@ -105,6 +105,7 @@ class nsDefaultComparator <nsDocLoader::nsListenerInfo, nsIWebProgressListener*>
 
 nsDocLoader::nsDocLoader()
   : mParent(nullptr),
+    mProgressStateFlags(0),
     mCurrentSelfProgress(0),
     mMaxSelfProgress(0),
     mCurrentTotalProgress(0),

@@ -120,6 +120,11 @@ DocAccessibleWrap::GetNativeWindow() const
 {
   if (XRE_IsContentProcess()) {
     DocAccessibleChild* ipcDoc = IPCDoc();
+    HWND hWnd = ipcDoc->GetEmulatedWindowHandle();
+    if (hWnd) {
+      return hWnd;
+    }
+
     auto tab = static_cast<dom::TabChild*>(ipcDoc->Manager());
     MOZ_ASSERT(tab);
     return reinterpret_cast<HWND>(tab->GetNativeWindowHandle());

@@ -38,7 +38,6 @@ class nsHtml5TreeOpExecutor final : public nsHtml5DocumentBuilder,
   typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
 
   public:
-    NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
     NS_DECL_ISUPPORTS_INHERITED
 
   private:
