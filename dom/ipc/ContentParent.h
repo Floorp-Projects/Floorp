@@ -162,6 +162,8 @@ public:
 
   static void GetAllEvenIfDead(nsTArray<ContentParent*>& aArray);
 
+  const nsAString& GetRemoteType() const;
+
   enum CPIteratorPolicy {
     eLive,
     eAll
