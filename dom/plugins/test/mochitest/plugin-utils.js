@@ -99,10 +99,9 @@ function crashAndGetCrashServiceRecord(crashMethodName, callback) {
  */
 function promiseFullScreenChange(){
   return new Promise(resolve => {
-    document.addEventListener("fullscreenchange", function onFullScreen(e) {
-      document.removeEventListener("fullscreenchange", onFullScreen);
+    document.addEventListener("fullscreenchange", function(e) {
       resolve();
-    });
+    }, {once: true});
   });
 }
 

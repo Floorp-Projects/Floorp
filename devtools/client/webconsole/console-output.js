@@ -2520,11 +2520,10 @@ Widgets.JSObject.prototype = extend(Widgets.BaseWidget.prototype, {
     let openVarView = this.openObjectInVariablesView.bind(this);
     openInVarViewCmd.addEventListener("command", openVarView);
     openInVarViewCmd.removeAttribute("disabled");
-    cmPopup.addEventListener("popuphiding", function onPopupHiding() {
-      cmPopup.removeEventListener("popuphiding", onPopupHiding);
+    cmPopup.addEventListener("popuphiding", function () {
       openInVarViewCmd.removeEventListener("command", openVarView);
       openInVarViewCmd.setAttribute("disabled", "true");
-    });
+    }, {once: true});
 
     // 'Store as global variable' command isn't supported on pre-44 servers,
     // so remove it from the menu in that case.
@@ -2535,11 +2534,10 @@ Widgets.JSObject.prototype = extend(Widgets.BaseWidget.prototype, {
       let storeObjectInWindow = this.storeObjectInWindow.bind(this);
       storeInGlobalCmd.addEventListener("command", storeObjectInWindow);
       storeInGlobalCmd.removeAttribute("disabled");
-      cmPopup.addEventListener("popuphiding", function onPopupHiding() {
-        cmPopup.removeEventListener("popuphiding", onPopupHiding);
+      cmPopup.addEventListener("popuphiding", function () {
         storeInGlobalCmd.removeEventListener("command", storeObjectInWindow);
         storeInGlobalCmd.setAttribute("disabled", "true");
-      });
+      }, {once: true});
     }
   },
 

@@ -13,10 +13,9 @@ function test()
   waitForExplicitFinish();
   gBrowser.selectedTab = gBrowser.addTab();
   Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, false);
-  gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
-    gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
+  gBrowser.selectedBrowser.addEventListener("load", function () {
     openScratchpad(runTests);
-  }, true);
+  }, {capture: true, once: true});
 
   content.location = "data:text/html,test Edit menu updates Scratchpad - bug 699130";
 }
@@ -76,10 +75,9 @@ function runTests()
 
   let openMenu = function (aX, aY, aCallback) {
     if (!editMenu || OS != "Darwin") {
-      menuPopup.addEventListener("popupshown", function onPopupShown() {
-        menuPopup.removeEventListener("popupshown", onPopupShown);
+      menuPopup.addEventListener("popupshown", function () {
         executeSoon(aCallback);
-      });
+      }, {once: true});
     }
 
     executeSoon(function () {
@@ -98,10 +96,9 @@ function runTests()
 
   let closeMenu = function (aCallback) {
     if (!editMenu || OS != "Darwin") {
-      menuPopup.addEventListener("popuphidden", function onPopupHidden() {
-        menuPopup.removeEventListener("popuphidden", onPopupHidden);
+      menuPopup.addEventListener("popuphidden", function () {
         executeSoon(aCallback);
-      });
+      }, {once: true});
     }
 
     executeSoon(function () {

@@ -41,7 +41,6 @@ function testSetFocus(aEventType, aCallback)
   iframe.contentWindow.focus();
 
   window.addEventListener("message", function (aEvent) {
-    window.removeEventListener("message", arguments.callee);
     is(aEvent.data, "input-value: focus",
        description + "<input> in the iframe should get focus");
 
@@ -63,7 +62,6 @@ function testSetFocus(aEventType, aCallback)
     synthesizeMouseAtCenter(button, {});
 
     window.addEventListener("message", function (aEvent) {
-      window.removeEventListener("message", arguments.callee);
       if (movingFocus) {
         is(aEvent.data, "input-value: blur",
            description + "<input> in the iframe should get blur");
@@ -75,10 +73,10 @@ function testSetFocus(aEventType, aCallback)
       }
 
       setTimeout(aCallback, 0);
-    });
+    }, {once: true});
 
     iframe.contentWindow.postMessage("check", "*");
-  });
+  }, {once: true});
 
   iframe.contentWindow.postMessage("init", "*");
 }

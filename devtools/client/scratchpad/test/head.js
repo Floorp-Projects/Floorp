@@ -91,10 +91,9 @@ function openTabAndScratchpad(aOptions = {})
   return new promise(resolve => {
     gBrowser.selectedTab = gBrowser.addTab();
     let {selectedBrowser} = gBrowser;
-    selectedBrowser.addEventListener("load", function onLoad() {
-      selectedBrowser.removeEventListener("load", onLoad, true);
+    selectedBrowser.addEventListener("load", function () {
       openScratchpad((win, sp) => resolve([win, sp]), aOptions);
-    }, true);
+    }, {capture: true, once: true});
     content.location = "data:text/html;charset=utf8," + (aOptions.tabContent || "");
   });
 }

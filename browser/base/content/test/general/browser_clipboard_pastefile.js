@@ -10,14 +10,13 @@ add_task(function*() {
   textbox.select();
 
   yield new Promise((resolve, reject) => {
-    textbox.addEventListener("copy", function copyEvent(event) {
-      textbox.removeEventListener("copy", copyEvent, true);
+    textbox.addEventListener("copy", function(event) {
       event.clipboardData.setData("text/plain", "Alternate");
       // For this test, it doesn't matter that the file isn't actually a file.
       event.clipboardData.setData("application/x-moz-file", "Sample");
       event.preventDefault();
       resolve();
-    }, true)
+    }, {capture: true, once: true})
 
     EventUtils.synthesizeKey("c", { accelKey: true });
   });
@@ -40,9 +39,7 @@ add_task(function*() {
   textbox.focus();
 
   yield new Promise((resolve, reject) => {
-    textbox.addEventListener("paste", function copyEvent(event) {
-      textbox.removeEventListener("paste", copyEvent, true);
-
+    textbox.addEventListener("paste", function(event) {
       let dt = event.clipboardData;
       is(dt.types.length, 3, "number of types");
       ok(dt.types.includes("text/plain"), "text/plain exists in types");
@@ -51,7 +48,7 @@ add_task(function*() {
       is(dt.mozGetDataAt("text/plain", 0), "Alternate", "text/plain returned in mozGetDataAt");
 
       resolve();
-    }, true);
+    }, {capture: true, once: true});
 
     EventUtils.synthesizeKey("v", { accelKey: true });
   });
