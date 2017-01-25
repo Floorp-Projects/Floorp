@@ -1287,6 +1287,40 @@ class TestConfigure(unittest.TestCase):
         ''' + moz_configure):
             self.get_config(['--enable-when'])
 
+    def test_depends_or(self):
+        with self.moz_configure('''
+            option('--foo', nargs=1, help='foo')
+            @depends('--foo')
+            def foo(value):
+                return value or None
+
+            option('--bar', nargs=1, help='bar')
+            @depends('--bar')
+            def bar(value):
+                return value
+
+            set_config('FOOBAR', foo | bar)
+        '''):
+            config = self.get_config()
+            self.assertEqual(config, {
+                'FOOBAR': NegativeOptionValue(),
+            })
+
+            config = self.get_config(['--foo=foo'])
+            self.assertEqual(config, {
+                'FOOBAR': PositiveOptionValue(('foo',)),
+            })
+
+            config = self.get_config(['--bar=bar'])
+            self.assertEqual(config, {
+                'FOOBAR': PositiveOptionValue(('bar',)),
+            })
+
+            config = self.get_config(['--foo=foo', '--bar=bar'])
+            self.assertEqual(config, {
+                'FOOBAR': PositiveOptionValue(('foo',)),
+            })
+
 
 if __name__ == '__main__':
     main()

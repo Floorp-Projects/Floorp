@@ -44,9 +44,18 @@ class ConfigureError(Exception):
 
 class SandboxDependsFunction(object):
     '''Sandbox-visible representation of @depends functions.'''
+    def __init__(self, unsandboxed):
+        self._or = unsandboxed.__or__
+
     def __call__(self, *arg, **kwargs):
         raise ConfigureError('The `%s` function may not be called'
                              % self.__name__)
+
+    def __or__(self, other):
+        if not isinstance(other, SandboxDependsFunction):
+            raise ConfigureError('Can only do binary arithmetic operations '
+                                 'with another @depends function.')
+        return self._or(other).sandboxed
 
 
 class DependsFunction(object):
@@ -60,7 +69,7 @@ class DependsFunction(object):
         self._func = func
         self._name = func.__name__
         self.dependencies = dependencies
-        self.sandboxed = wraps(func)(SandboxDependsFunction())
+        self.sandboxed = wraps(func)(SandboxDependsFunction(self))
         self.sandbox = sandbox
         self.when = when
         sandbox._depends[self.sandboxed] = self
@@ -104,6 +113,23 @@ class DependsFunction(object):
             self.name,
             ', '.join(repr(d) for d in self.dependencies),
         )
+
+    def __or__(self, other):
+        if isinstance(other, SandboxDependsFunction):
+            other = self.sandbox._depends.get(other)
+        assert isinstance(other, DependsFunction)
+        assert self.sandbox is other.sandbox
+        return CombinedDependsFunction(self.sandbox, self.first_true,
+                                       (self, other))
+
+    @staticmethod
+    def first_true(iterable):
+        # Like the builtin any(), but returns the first element that is true,
+        # instead of True. If none are true, returns the last element.
+        for i in iterable:
+            if i:
+                return i
+        return i
 
 
 class CombinedDependsFunction(DependsFunction):
