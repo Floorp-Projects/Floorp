@@ -214,8 +214,7 @@ function whenDelayedStartupFinished(aWindow, aCallback) {
 
 function testOnWindow(aIsPrivate, aCallback) {
   var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad);
+  win.addEventListener("load", function() {
     whenDelayedStartupFinished(win, function() {
       win.addEventListener("DOMContentLoaded", function onInnerLoad() {
         if (win.content.location.href != contentPage) {
@@ -232,7 +231,7 @@ function testOnWindow(aIsPrivate, aCallback) {
       }, true);
       SimpleTest.executeSoon(function() { win.gBrowser.loadURI(contentPage); });
     });
-  }, true);
+  }, {capture: true, once: true});
 }
 
 var ignoreLoad = false;

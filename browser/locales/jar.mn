@@ -99,6 +99,7 @@
     locale/browser/searchplugins/               (.deps/generated_@AB_CD@/*.xml)
     locale/browser/searchplugins/list.json      (.deps/generated_@AB_CD@/list.json)
 #endif
+    locale/browser/searchplugins/images/wikipedia.ico  (searchplugins/images/wikipedia.ico)
 % locale browser-region @AB_CD@ %locale/browser-region/
     locale/browser-region/region.properties        (%chrome/browser-region/region.properties)
 # the following files are browser-specific overrides

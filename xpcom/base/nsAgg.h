@@ -78,6 +78,9 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                        \
  : public nsXPCOMCycleCollectionParticipant                                 \
 {                                                                           \
 public:                                                                     \
+  constexpr explicit NS_CYCLE_COLLECTION_INNERCLASS (bool aSkip = false)    \
+    : nsXPCOMCycleCollectionParticipant(aSkip) {}                           \
+                                                                            \
   NS_IMETHOD_(void) Unlink(void *p) override;                               \
   NS_IMETHOD TraverseNative(void *p, nsCycleCollectionTraversalCallback &cb)\
     override;                                                               \

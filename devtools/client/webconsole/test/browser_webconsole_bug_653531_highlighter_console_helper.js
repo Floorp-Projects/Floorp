@@ -99,10 +99,9 @@ function test() {
   waitForExplicitFinish();
 
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onLoad() {
-    gBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
+  gBrowser.selectedBrowser.addEventListener("load", function () {
     waitForFocus(createDocument, content);
-  }, true);
+  }, {capture: true, once: true});
 
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser,
     "data:text/html;charset=utf-8,test for highlighter helper in web console");

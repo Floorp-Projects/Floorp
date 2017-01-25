@@ -7,12 +7,14 @@
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 XPIDL_SOURCES += [
+    'nsIIdentityCryptoService.idl',
     'nsISyncJPAKE.idl',
 ]
 
 XPIDL_MODULE = 'services-crypto-component'
 
 SOURCES += [
+    'IdentityCryptoService.cpp',
     'nsSyncJPAKE.cpp',
 ]
 

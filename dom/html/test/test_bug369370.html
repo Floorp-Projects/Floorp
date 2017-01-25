@@ -102,15 +102,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369370
         // ========== test 6 ==========
         // Now try resizing the window so the image fits vertically.
         function test6() {
-          kidWin.addEventListener("resize", function resizeListener() {
-            kidWin.removeEventListener("resize", resizeListener);
+          kidWin.addEventListener("resize", function() {
             // Give the image document time to respond
             SimpleTest.executeSoon(function() {
               is(img.height, 600, "image height");
               is(img.getBoundingClientRect().top, 25, "Image is vertically centered");
               test7();
             });
-          });
+          }, {once: true});
 
           var decorationSize = kidWin.outerHeight - kidWin.innerHeight;
           kidWin.resizeTo(400, 600 + 50 + decorationSize);
@@ -119,8 +118,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369370
         // ========== test 7 ==========
         // Now try resizing the window so the image no longer fits vertically.
         function test7() {
-          kidWin.addEventListener("resize", function resizeListener() {
-            kidWin.removeEventListener("resize", resizeListener);
+          kidWin.addEventListener("resize", function() {
             // Give the image document time to respond
             SimpleTest.executeSoon(function() {
               is(img.height, 600, "image height");
@@ -128,7 +126,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369370
               kidWin.close();
               SimpleTest.finish();
             });
-          });
+          }, {once: true});
 
           var decorationSize = kidWin.outerHeight - kidWin.innerHeight;
           kidWin.resizeTo(400, 300 + decorationSize);

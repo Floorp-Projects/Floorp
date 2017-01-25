@@ -48,9 +48,7 @@ function* expectFocusOnF6(backward, expectedDocument, expectedElement, onContent
         return;
       }
 
-      contentExpectedElement.addEventListener("focus", function focusReceived() {
-        contentExpectedElement.removeEventListener("focus", focusReceived, true);
-
+      contentExpectedElement.addEventListener("focus", function() {
         const contentFM = Components.classes["@mozilla.org/focus-manager;1"].
                             getService(Components.interfaces.nsIFocusManager);
         let details = contentFM.focusedWindow.document.documentElement.id;
@@ -59,7 +57,7 @@ function* expectFocusOnF6(backward, expectedDocument, expectedElement, onContent
         }
 
         sendSyncMessage("BrowserTest:FocusChanged", { details });
-      }, true);
+      }, {capture: true, once: true});
     });
   }
 

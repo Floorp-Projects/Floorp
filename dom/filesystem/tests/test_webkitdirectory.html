@@ -26,12 +26,11 @@ function populateInputFile(aInputFile) {
 
     var input = document.getElementById(aInputFile);
     input.setAttribute('data-name', message.name);
-    input.addEventListener('change', function change() {
-      input.removeEventListener('change', change);
+    input.addEventListener('change', function() {
       MockFilePicker.cleanup();
       script.destroy();
       next();
-    });
+    }, {once: true});
 
     input.click();
   }

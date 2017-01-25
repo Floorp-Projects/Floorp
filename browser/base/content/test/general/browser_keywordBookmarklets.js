@@ -46,9 +46,8 @@ add_task(function* test_keyword_bookmarklet() {
 
 function* promisePageShow() {
   return new Promise(resolve => {
-    gBrowser.selectedBrowser.addEventListener("pageshow", function listen() {
-      gBrowser.selectedBrowser.removeEventListener("pageshow", listen);
+    gBrowser.selectedBrowser.addEventListener("pageshow", function() {
       resolve();
-    });
+    }, {once: true});
   });
 }

@@ -1240,11 +1240,13 @@ ContentChild::AllocPContentBridgeParent(mozilla::ipc::Transport* aTransport,
   return mLastBridge;
 }
 
-PGMPServiceChild*
-ContentChild::AllocPGMPServiceChild(mozilla::ipc::Transport* aTransport,
-                                    base::ProcessId aOtherProcess)
+mozilla::ipc::IPCResult
+ContentChild::RecvInitGMPService(Endpoint<PGMPServiceChild>&& aGMPService)
 {
-  return GMPServiceChild::Create(aTransport, aOtherProcess);
+  if (!GMPServiceChild::Create(Move(aGMPService))) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
@@ -1441,7 +1443,8 @@ StartMacOSContentSandbox()
   MacSandboxInfo info;
   info.type = MacSandboxType_Content;
   info.level = info.level = sandboxLevel;
-  info.shouldLog = Preferences::GetBool("security.sandbox.logging.enabled", true);
+  info.shouldLog = Preferences::GetBool("security.sandbox.logging.enabled") ||
+                   PR_GetEnv("MOZ_SANDBOX_LOGGING");
   info.appPath.assign(appPath.get());
   info.appBinaryPath.assign(appBinaryPath.get());
   info.appDir.assign(appDir.get());
@@ -1575,6 +1578,10 @@ ContentChild::SendPBrowserConstructor(PBrowserChild* aActor,
                                       const ContentParentId& aCpID,
                                       const bool& aIsForBrowser)
 {
+  if (IsShuttingDown()) {
+    return false;
+  }
+
   return PContentChild::SendPBrowserConstructor(aActor,
                                                 aTabId,
                                                 aContext,
@@ -1591,6 +1598,8 @@ ContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
                                       const ContentParentId& aCpID,
                                       const bool& aIsForBrowser)
 {
+  MOZ_ASSERT(!IsShuttingDown());
+
   return nsIContentChild::RecvPBrowserConstructor(aActor, aTabId, aContext,
                                                   aChromeFlags, aCpID, aIsForBrowser);
 }
@@ -1604,6 +1613,10 @@ ContentChild::GetAvailableDictionaries(InfallibleTArray<nsString>& aDictionaries
 PFileDescriptorSetChild*
 ContentChild::SendPFileDescriptorSetConstructor(const FileDescriptor& aFD)
 {
+  if (IsShuttingDown()) {
+    return nullptr;
+  }
+
   return PContentChild::SendPFileDescriptorSetConstructor(aFD);
 }
 
@@ -1655,6 +1668,10 @@ PBlobChild*
 ContentChild::SendPBlobConstructor(PBlobChild* aActor,
                                    const BlobConstructorParams& aParams)
 {
+  if (IsShuttingDown()) {
+    return nullptr;
+  }
+
   return PContentChild::SendPBlobConstructor(aActor, aParams);
 }
 
@@ -1845,6 +1862,10 @@ ContentChild::DeallocPPrintingChild(PPrintingChild* printing)
 PSendStreamChild*
 ContentChild::SendPSendStreamConstructor(PSendStreamChild* aActor)
 {
+  if (IsShuttingDown()) {
+    return nullptr;
+  }
+
   return PContentChild::SendPSendStreamConstructor(aActor);
 }
 
@@ -2271,12 +2292,12 @@ ContentChild::RecvAsyncMessage(const nsString& aMsg,
                                const IPC::Principal& aPrincipal,
                                const ClonedMessageData& aData)
 {
+  CrossProcessCpowHolder cpows(this, aCpows);
   RefPtr<nsFrameMessageManager> cpm =
     nsFrameMessageManager::GetChildProcessManager();
   if (cpm) {
     StructuredCloneData data;
     ipc::UnpackClonedMessageDataForChild(aData, data);
-    CrossProcessCpowHolder cpows(this, aCpows);
     cpm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(cpm.get()),
                         nullptr, aMsg, false, &data, &cpows, aPrincipal,
                         nullptr);
@@ -2836,7 +2857,7 @@ ContentChild::RecvShutdown()
 
   GetIPCChannel()->SetAbortOnError(false);
 
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#ifdef MOZ_GECKO_PROFILER
   if (profiler_is_active()) {
     // We're shutting down while we were profiling. Send the
     // profile up to the parent so that we don't lose this

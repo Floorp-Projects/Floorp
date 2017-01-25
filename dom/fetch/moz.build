@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
+    'BodyExtractor.h',
     'ChannelInfo.h',
     'Fetch.h',
     'FetchDriver.h',
@@ -19,6 +20,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    'BodyExtractor.cpp',
     'ChannelInfo.cpp',
     'Fetch.cpp',
     'FetchDriver.cpp',

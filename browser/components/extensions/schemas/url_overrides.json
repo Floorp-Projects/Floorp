@@ -1,0 +1,35 @@
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "WebExtensionManifest",
+        "properties": {
+          "chrome_url_overrides": {
+            "type": "object",
+            "optional": true,
+            "properties": {
+              "newtab": {
+                "$ref": "ExtensionURL",
+                "optional": true,
+                "preprocess": "localize"
+              },
+              "bookmarks": {
+                "unsupported": true,
+                "$ref": "ExtensionURL",
+                "optional": true,
+                "preprocess": "localize"
+              },
+              "history": {
+                "unsupported": true,
+                "$ref": "ExtensionURL",
+                "optional": true,
+                "preprocess": "localize"
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+]

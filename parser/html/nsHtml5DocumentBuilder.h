@@ -119,9 +119,6 @@ protected:
    * parser needs to be marked as broken, because some input has been lost
    * and parsing more input could lead to a DOM where pieces of HTML source
    * that weren't supposed to become scripts become scripts.
-   *
-   * Since NS_OK is actually 0, zeroing operator new takes care of
-   * initializing this.
    */
   nsresult                             mBroken;
   eHtml5FlushState                     mFlushState;

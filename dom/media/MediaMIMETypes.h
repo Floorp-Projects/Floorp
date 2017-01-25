@@ -135,6 +135,12 @@ public:
   bool Contains(const nsAString& aCodec) const;
   bool ContainsAll(const MediaCodecs& aCodecs) const;
 
+  template <size_t N>
+  bool operator==(const char (&aType)[N]) const
+  {
+    return mCodecs.EqualsASCII(aType, N - 1);
+  }
+
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:

@@ -25,4 +25,9 @@ UNIFIED_SOURCES += [
     'TestVariableLengthPrefixSet.cpp',
 ]
 
+# Required to have the same MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES
+# as non-testing code.
+if CONFIG['NIGHTLY_BUILD'] or CONFIG['MOZ_DEBUG']:
+    DEFINES['MOZ_SAFEBROWSING_DUMP_FAILED_UPDATES'] = True
+
 FINAL_LIBRARY = 'xul-gtest'

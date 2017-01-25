@@ -34,10 +34,10 @@ module.exports = createClass({
 
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
-    displayPixelRatio: PropTypes.number.isRequired,
+    displayPixelRatio: Types.pixelRatio.value.isRequired,
     selectedDevice: PropTypes.string.isRequired,
-    selectedPixelRatio: PropTypes.number.isRequired,
-    onChangeViewportPixelRatio: PropTypes.func.isRequired,
+    selectedPixelRatio: PropTypes.shape(Types.pixelRatio).isRequired,
+    onChangePixelRatio: PropTypes.func.isRequired,
   },
 
   mixins: [ addons.PureRenderMixin ],
@@ -55,7 +55,7 @@ module.exports = createClass({
   },
 
   onSelectChange({ target }) {
-    this.props.onChangeViewportPixelRatio(+target.value);
+    this.props.onChangePixelRatio(+target.value);
   },
 
   render() {
@@ -93,7 +93,7 @@ module.exports = createClass({
     } else {
       title = getStr("responsive.devicePixelRatio");
 
-      if (selectedPixelRatio) {
+      if (selectedPixelRatio.value) {
         selectorClass += " selected";
       }
     }
@@ -117,7 +117,7 @@ module.exports = createClass({
       "DPR",
       dom.select(
         {
-          value: selectedPixelRatio || displayPixelRatio,
+          value: selectedPixelRatio.value || displayPixelRatio,
           disabled: isDisabled,
           onChange: this.onSelectChange,
           onFocus: this.onFocusChange,

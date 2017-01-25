@@ -111,7 +111,8 @@ public:
                             const mozilla::TimeStamp& aCompositeEnd) override;
 
   virtual void ClearCachedResources(Layer* aSubtree = nullptr) override;
-  virtual void UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier) override;
+  virtual void UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier,
+                                              uint64_t aDeviceResetSeqNo) override;
   virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() override;
 
   virtual void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) override

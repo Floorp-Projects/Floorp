@@ -37,9 +37,6 @@ class TypeVisitor:
     def visitVoidType(self, v, *args):
         pass
 
-    def visitBuiltinCxxType(self, t, *args):
-        pass
-
     def visitImportedCxxType(self, t, *args):
         pass
 
@@ -108,11 +105,6 @@ class Type:
     # Is this type neither compound nor an array?
     def isAtom(self):
         return False
-    # Can this type appear in IPDL programs?
-    def isVisible(self):
-        return False
-    def isVoid(self):
-        return False
     def typename(self):
         return self.__class__.__name__
 
@@ -132,10 +124,6 @@ class VoidType(Type):
         return False
     def isAtom(self):
         return True
-    def isVisible(self):
-        return False
-    def isVoid(self):
-        return True
 
     def name(self): return 'void'
     def fullname(self): return 'void'
@@ -143,38 +131,15 @@ class VoidType(Type):
 VOID = VoidType()
 
 ##--------------------
-class CxxType(Type):
+class ImportedCxxType(Type):
+    def __init__(self, qname):
+        assert isinstance(qname, QualifiedId)
+        self.loc = qname.loc
+        self.qname = qname
     def isCxx(self):
         return True
     def isAtom(self):
         return True
-    def isBuiltin(self):
-        return False
-    def isImported(self):
-        return False
-    def isGenerated(self):
-        return False
-    def isVisible(self):
-        return True
-
-class BuiltinCxxType(CxxType):
-    def __init__(self, qname):
-        assert isinstance(qname, QualifiedId)
-        self.loc = qname.loc
-        self.qname = qname
-    def isBuiltin(self):  return True
-
-    def name(self):
-        return self.qname.baseid
-    def fullname(self):
-        return str(self.qname)
-
-class ImportedCxxType(CxxType):
-    def __init__(self, qname):
-        assert isinstance(qname, QualifiedId)
-        self.loc = qname.loc
-        self.qname = qname
-    def isImported(self): return True
 
     def name(self):
         return self.qname.baseid
@@ -184,7 +149,6 @@ class ImportedCxxType(CxxType):
 ##--------------------
 class IPDLType(Type):
     def isIPDL(self):  return True
-    def isVisible(self): return True
     def isMessage(self): return False
     def isProtocol(self): return False
     def isActor(self): return False
@@ -526,13 +490,11 @@ class SymbolTable:
     def __init__(self, errors):
         self.errors = errors
         self.scopes = [ { } ]   # stack({})
-        self.globalScope = self.scopes[0]
-        self.currentScope = self.globalScope
+        self.currentScope = self.scopes[0]
 
     def enterScope(self, node):
-        assert (isinstance(self.scopes[0], dict)
-                and self.globalScope is self.scopes[0])
-        assert (isinstance(self.currentScope, dict))
+        assert isinstance(self.scopes[0], dict)
+        assert isinstance(self.currentScope, dict)
 
         if not hasattr(node, 'symtab'):
             node.symtab = { }
@@ -546,8 +508,7 @@ class SymbolTable:
 
         self.currentScope = self.scopes[-1]
 
-        assert (isinstance(self.scopes[0], dict)
-                and self.globalScope is self.scopes[0])
+        assert isinstance(self.scopes[0], dict)
         assert isinstance(self.currentScope, dict)
 
     def lookup(self, sym):

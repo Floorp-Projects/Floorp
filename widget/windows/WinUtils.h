@@ -40,7 +40,7 @@
 /**
  * NS_INLINE_DECL_IUNKNOWN_REFCOUNTING should be used for defining and
  * implementing AddRef() and Release() of IUnknown interface.
- * This depends on xpcom/glue/nsISupportsImpl.h.
+ * This depends on xpcom/base/nsISupportsImpl.h.
  */
 
 #define NS_INLINE_DECL_IUNKNOWN_REFCOUNTING(_class)                           \

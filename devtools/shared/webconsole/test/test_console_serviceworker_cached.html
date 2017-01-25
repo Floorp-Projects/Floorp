@@ -104,11 +104,10 @@ function addTab(url) {
   info("Adding a new tab with URL: '" + url + "'");
   return new Promise(resolve => {
     let tab = gBrowser.selectedTab = gBrowser.addTab(url);
-    gBrowser.selectedBrowser.addEventListener("load", function onload() {
-      gBrowser.selectedBrowser.removeEventListener("load", onload, true);
+    gBrowser.selectedBrowser.addEventListener("load", function () {
       info("URL '" + url + "' loading complete");
       resolve(tab);
-    }, true);
+    }, {capture: true, once: true});
   });
 }
 

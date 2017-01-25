@@ -33,6 +33,15 @@ GPUVideoTextureHost::Lock()
   return mWrappedTextureHost->Lock();
 }
 
+void
+GPUVideoTextureHost::Unlock()
+{
+  if (!mWrappedTextureHost) {
+    return;
+  }
+  mWrappedTextureHost->Unlock();
+}
+
 bool
 GPUVideoTextureHost::BindTextureSource(CompositableTextureSourceRef& aTexture)
 {

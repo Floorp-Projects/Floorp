@@ -88,10 +88,9 @@ function* do_test(test) {
                       "remoteBrowserTooltip" :
                       "aHTMLTooltip";
     let tooltip = document.getElementById(tooltipId);
-    tooltip.addEventListener("popupshown", function onpopupshown(event) {
-      tooltip.removeEventListener("popupshown", onpopupshown);
+    tooltip.addEventListener("popupshown", function(event) {
       resolve(event.target);
-    });
+    }, {once: true});
   });
   info("Initial mouse move");
   yield new Promise(resolve => {

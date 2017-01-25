@@ -46,8 +46,7 @@ function requestManifest(url) {
   iframe.src = url;
   document.body.appendChild(iframe);
   return new Promise((resolve, reject) => {
-    iframe.addEventListener('mozbrowserloadend', function loadend() {
-      iframe.removeEventListener('mozbrowserloadend', loadend);
+    iframe.addEventListener('mozbrowserloadend', function() {
       SimpleTest.executeSoon(() => {
         var req = iframe.getWebManifest();
         req.onsuccess = () => {
@@ -59,6 +58,6 @@ function requestManifest(url) {
           reject(new Error(req.error));
         };
       });
-    });
+    }, {once: true});
   });
 }

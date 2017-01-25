@@ -307,8 +307,7 @@ addTest(function() {
 }, "Same-origin observers get different accessors for cross-origin Location");
 
 function doDocumentDomainTest(cb) {
-  window.addEventListener('message', function onmessage(evt) {
-    window.removeEventListener('message', onmessage);
+  window.addEventListener('message', function(evt) {
     test(function() {
       var results = evt.data;
       assert_true(results.length > 0, 'Need results');
@@ -316,7 +315,7 @@ function doDocumentDomainTest(cb) {
     }, "Cross-origin object identity preserved across document.domain");
     win.close();
     cb();
-  });
+  }, {once: true});
   var win = window.open('file_crossOriginObjects_documentDomain.html');
 }
 

@@ -5,7 +5,7 @@
 
 #include "ContextStateTracker.h"
 #include "GLContext.h"
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#ifdef MOZ_GECKO_PROFILER
 #include "ProfilerMarkers.h"
 #endif
 
@@ -110,7 +110,7 @@ ContextStateTrackerOGL::Flush(GLContext* aGL)
 
     aGL->fDeleteQueries(1, &handle);
 
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#ifdef MOZ_GECKO_PROFILER
     PROFILER_MARKER_PAYLOAD("gpu_timer_query", new GPUMarkerPayload(
       mCompletedSections[0].mCpuTimeStart,
       mCompletedSections[0].mCpuTimeEnd,

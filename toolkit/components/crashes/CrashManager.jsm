@@ -654,7 +654,6 @@ this.CrashManager.prototype = Object.freeze({
         hasCrashEnvironment: (crashEnvironment !== null),
       },
       {
-        retentionDays: 180,
         addClientId: true,
         addEnvironment: true,
         overrideEnvironment: crashEnvironment,

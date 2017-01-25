@@ -278,6 +278,14 @@ function getModuleAndField(e) {
     return [module, fieldName, rest];
 }
 
+let StackOverflowError = (function() {
+    try {
+        (function f() { f(); })();
+    } catch(e) {
+        return e.constructor;
+    }
+})();
+
 // Recursively execute the expression.
 function exec(e) {
     var exprName = e.list[0].str;
@@ -477,6 +485,18 @@ function exec(e) {
                 warn(`expected error message "${errMsg}", got "${err}"`);
         }
         assert(caught, "assert_unlinkable exception not caught");
+        return;
+    }
+
+    if (exprName === 'assert_exhaustion') {
+        let caught = false;
+        try {
+            exec(e.list[1]);
+        } catch(err) {
+            caught = true;
+            assert(err instanceof StackOverflowError, "not a StackOverflowError");
+        }
+        assert(caught, "assert_exhaustion exception not caught");
         return;
     }
 

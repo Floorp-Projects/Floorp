@@ -31,9 +31,10 @@ module.exports = function(context) {
 
   return {
     Program: function(node) {
+      let rootDir = helpers.getRootDir(context.getFilename());
       for (let file of simpleTestFiles) {
         let newGlobals =
-          globals.getGlobalsForFile(path.join(simpleTestPath, file));
+          globals.getGlobalsForFile(path.join(rootDir, simpleTestPath, file));
         helpers.addGlobals(newGlobals, context.getScope());
       }
     }

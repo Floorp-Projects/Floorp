@@ -17,11 +17,10 @@ const TEST_CASES = [
 
 add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
-  let { $, EVENTS, NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu, NetworkDetails } = NetMonitorView;
-  RequestsMenu.lazyUpdate = false;
+  let { document, NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
-  let cipher = $("#security-warning-cipher");
+  RequestsMenu.lazyUpdate = false;
 
   for (let test of TEST_CASES) {
     info("Testing site with " + test.desc);
@@ -34,20 +33,21 @@ add_task(function* () {
     yield wait;
 
     info("Selecting the request.");
-    RequestsMenu.selectedIndex = 0;
+    wait = waitForDOM(document, ".tabs");
+    EventUtils.sendMouseEvent({ type: "mousedown" },
+      document.querySelectorAll(".request-list-item")[0]);
+    yield wait;
 
-    info("Waiting for details pane to be updated.");
-    yield monitor.panelWin.once(EVENTS.TAB_UPDATED);
-
-    if (NetworkDetails.widget.selectedIndex !== 5) {
+    if (!document.querySelector("#tab-5.is-active")) {
       info("Selecting security tab.");
-      NetworkDetails.widget.selectedIndex = 5;
-
-      info("Waiting for details pane to be updated.");
-      yield monitor.panelWin.once(EVENTS.TAB_UPDATED);
+      wait = waitForDOM(document, "#panel-5 .properties-view");
+      document.querySelector("#tab-5 a").click();
+      yield wait;
     }
 
-    is(cipher, test.warnCipher, "Cipher suite warning is hidden.");
+    is(document.querySelector("#security-warning-cipher"),
+      test.warnCipher,
+      "Cipher suite warning is hidden.");
 
     RequestsMenu.clear();
   }

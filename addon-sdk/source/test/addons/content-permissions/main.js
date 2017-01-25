@@ -21,10 +21,9 @@ exports.testCrossDomainIframe = function(assert, done) {
     contentScript: "new " + function ContentScriptScope() {
       self.on("message", function (url) {
         let iframe = document.createElement("iframe");
-        iframe.addEventListener("load", function onload() {
-          iframe.removeEventListener("load", onload);
+        iframe.addEventListener("load", function() {
           self.postMessage(iframe.contentWindow.document.body.innerHTML);
-        });
+        }, {once: true});
         iframe.setAttribute("src", url);
         document.documentElement.appendChild(iframe);
       });

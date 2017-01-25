@@ -306,9 +306,7 @@ const gTests = {
     is(frameCurrentFontSize, "32px",
       "frame's font size has the expected value.");
 
-    frameWindow.frameElement.addEventListener("load", function listener() {
-      this.removeEventListener("load", listener);
-
+    frameWindow.frameElement.addEventListener("load", function() {
       frameStyle = createFontStyleForDPPX(frameWindow.document, dppx, "32");
 
       frameCurrentFontSize = getBodyFontSize(frameWindow);
@@ -325,7 +323,7 @@ const gTests = {
       setOverrideDPPX(0);
 
       done();
-    });
+    }, {once: true});
 
     frameWindow.location.reload(true);
   }

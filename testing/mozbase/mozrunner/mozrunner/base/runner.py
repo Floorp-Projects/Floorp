@@ -7,6 +7,7 @@ from abc import ABCMeta, abstractproperty
 import os
 import subprocess
 import traceback
+import sys
 
 from mozlog import get_default_logger
 from mozprocess import ProcessHandler
@@ -17,6 +18,11 @@ except ImportError:
 
 from ..application import DefaultContext
 from ..errors import RunnerNotStartedError
+
+if sys.version_info[0] < 3:
+    unicode_type = unicode
+else:
+    unicode_type = str
 
 
 class BaseRunner(object):
@@ -104,7 +110,16 @@ class BaseRunner(object):
         if self.logger:
             self.logger.info('Application command: %s' % ' '.join(cmd))
         if interactive:
-            self.process_handler = subprocess.Popen(cmd, env=self.env)
+            filtered_env = {}
+            for k in self.env:
+                v = self.env[k]
+                if isinstance(v, unicode_type):
+                    v = v.encode('utf-8')
+                if isinstance(k, unicode_type):
+                    k = k.encode('utf-8')
+                filtered_env[k] = v
+
+            self.process_handler = subprocess.Popen(cmd, env=filtered_env)
             # TODO: other arguments
         else:
             # this run uses the managed processhandler

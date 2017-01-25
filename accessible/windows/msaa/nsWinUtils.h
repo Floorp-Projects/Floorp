@@ -23,6 +23,7 @@ class DocAccessible;
 const LPCWSTR kClassNameRoot = L"MozillaUIWindowClass";
 const LPCWSTR kClassNameTabContent = L"MozillaContentWindowClass";
 const LPCWSTR kPropNameDocAcc = L"MozDocAccessible";
+const LPCWSTR kPropNameDocAccParent = L"MozDocAccessibleParent";
 
 class nsWinUtils
 {

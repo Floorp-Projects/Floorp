@@ -528,9 +528,10 @@ URLSearchParams::ReadStructuredClone(JSStructuredCloneReader* aReader)
 
 NS_IMETHODIMP
 URLSearchParams::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
-                             nsACString& aContentType, nsACString& aCharset)
+                             nsACString& aContentTypeWithCharset,
+                             nsACString& aCharset)
 {
-  aContentType.AssignLiteral("application/x-www-form-urlencoded");
+  aContentTypeWithCharset.AssignLiteral("application/x-www-form-urlencoded;charset=UTF-8");
   aCharset.AssignLiteral("UTF-8");
 
   nsAutoString serialized;

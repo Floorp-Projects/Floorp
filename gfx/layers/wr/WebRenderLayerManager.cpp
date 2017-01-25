@@ -451,7 +451,8 @@ WebRenderLayerManager::ClearCachedResources(Layer* aSubtree)
 }
 
 void
-WebRenderLayerManager::UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier)
+WebRenderLayerManager::UpdateTextureFactoryIdentifier(const TextureFactoryIdentifier& aNewIdentifier,
+                                                      uint64_t aDeviceResetSeqNo)
 {
   WrBridge()->IdentifyTextureHost(aNewIdentifier);
 }

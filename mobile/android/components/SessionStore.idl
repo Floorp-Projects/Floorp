@@ -71,13 +71,6 @@ interface nsISessionStore : nsISupports
   void deleteTabValue(in jsval aTab, in AString aKey);
 
   /**
-   * Restores the previous browser session using a fast, lightweight strategy
-   * @param aSessionString The session string to restore from. If null, the
-   *                       backup session file is read from.
-   */
-  void restoreLastSession(in AString aSessionString);
-
-  /**
    * Removes a window from the current session history. Data from this window
    * won't be saved when its closed.
    * @param aWindow The window to remove

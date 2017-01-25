@@ -42,9 +42,7 @@ add_task(function* () {
     let item = RequestsMenu.getItemAtIndex(i);
 
     info(`Selecting the ${method} request (at index ${i})`);
-    let onUpdate = monitor.panelWin.once(EVENTS.TAB_UPDATED);
     RequestsMenu.selectedItem = item;
-    yield onUpdate;
 
     info("Cloning the selected request into a custom clone");
     let onPopulate = monitor.panelWin.once(EVENTS.CUSTOMREQUESTVIEW_POPULATED);

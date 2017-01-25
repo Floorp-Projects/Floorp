@@ -3665,9 +3665,11 @@ nsCSSRuleProcessor::CascadeSheet(CSSStyleSheet* aSheet, CascadeEnumData* aData)
   if (aSheet->IsApplicable() &&
       aSheet->UseForPresentation(aData->mPresContext, aData->mCacheKey) &&
       aSheet->mInner) {
-    CSSStyleSheet* child = aSheet->mInner->mFirstChild;
+
+    StyleSheet* child = aSheet->GetFirstChild();
     while (child) {
-      CascadeSheet(child, aData);
+      CascadeSheet(child->AsGecko(), aData);
+
       child = child->mNext;
     }
 

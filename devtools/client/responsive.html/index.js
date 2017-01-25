@@ -82,10 +82,9 @@ message.wait(window, "init").then(() => bootstrap.init());
 // startup work that shouldn't block initial load
 message.wait(window, "post-init").then(() => bootstrap.dispatch(loadDevices()));
 
-window.addEventListener("unload", function onUnload() {
-  window.removeEventListener("unload", onUnload);
+window.addEventListener("unload", function () {
   bootstrap.destroy();
-});
+}, {once: true});
 
 // Allows quick testing of actions from the console
 window.dispatch = action => bootstrap.dispatch(action);
@@ -99,6 +98,9 @@ Object.defineProperty(window, "store", {
 // Dispatch a `changeDisplayPixelRatio` action when the browser's pixel ratio is changing.
 // This is usually triggered when the user changes the monitor resolution, or when the
 // browser's window is dragged to a different display with a different pixel ratio.
+// TODO: It would be better to move this watching into the actor, so that it can be
+// better synchronized with any overrides that might be applied.  Also, reading a single
+// value like this makes less sense with multiple viewports.
 function onDPRChange() {
   let dpr = window.devicePixelRatio;
   let mql = window.matchMedia(`(resolution: ${dpr}dppx)`);

@@ -476,8 +476,12 @@ nsXMLContentSink::CreateElement(const char16_t** aAtts, uint32_t aAttsCount,
       || aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_SVG)
     ) {
     nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
-    sele->SetScriptLineNumber(aLineNumber);
-    sele->SetCreatorParser(GetParser());
+    if (sele) {
+      sele->SetScriptLineNumber(aLineNumber);
+      sele->SetCreatorParser(GetParser());
+    } else {
+      MOZ_ASSERT(nsNameSpaceManager::GetInstance()->mSVGDisabled, "Node didn't QI to script, but SVG wasn't disabled.");
+    }
   }
 
   // XHTML needs some special attention
@@ -555,6 +559,10 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
       || nodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_SVG)
     ) {
     nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(aContent);
+    if (!sele) {
+      MOZ_ASSERT(nsNameSpaceManager::GetInstance()->mSVGDisabled, "Node didn't QI to script, but SVG wasn't disabled.");
+      return NS_OK;
+    }
 
     if (mPreventScriptExecution) {
       sele->PreventExecution();

@@ -52,10 +52,9 @@ WebConsolePanel.prototype = {
         doc.readyState == "complete") {
       deferredIframe.resolve(null);
     } else {
-      iframe.addEventListener("load", function onIframeLoad() {
-        iframe.removeEventListener("load", onIframeLoad, true);
+      iframe.addEventListener("load", function () {
         deferredIframe.resolve(null);
-      }, true);
+      }, {capture: true, once: true});
     }
 
     // Local debugging needs to make the target remote.

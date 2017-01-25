@@ -10,9 +10,8 @@ var LightweightThemeManager = tempScope.LightweightThemeManager;
 
 function wait_for_notification(aCallback) {
   PopupNotifications.panel.addEventListener("popupshown", function() {
-    PopupNotifications.panel.removeEventListener("popupshown", arguments.callee);
     aCallback(PopupNotifications.panel);
-  });
+  }, {once: true});
 }
 
 var TESTS = [

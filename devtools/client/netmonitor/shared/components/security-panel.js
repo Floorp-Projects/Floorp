@@ -4,12 +4,16 @@
 
 "use strict";
 
-const { DOM, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
-const PropertiesView = createFactory(require("./properties-view"));
+const {
+  createFactory,
+  DOM,
+  PropTypes,
+} = require("devtools/client/shared/vendor/react");
 const { L10N } = require("../../l10n");
 const { getUrlHost } = require("../../request-utils");
-const { getSelectedRequest } = require("../../selectors/index");
+
+// Components
+const PropertiesView = createFactory(require("./properties-view"));
 
 const { div, input, span } = DOM;
 
@@ -20,17 +24,18 @@ const { div, input, span } = DOM;
  * the cipher suite, and certificate details
  */
 function SecurityPanel({
-  securityInfo,
-  url,
+  request,
 }) {
+  const { securityInfo, url } = request;
+
   if (!securityInfo || !url) {
-    return div();
+    return null;
   }
 
   const notAvailable = L10N.getStr("netmonitor.security.notAvailable");
   let object;
 
-  if ((securityInfo.state === "secure" || securityInfo.state === "weak")) {
+  if (securityInfo.state === "secure" || securityInfo.state === "weak") {
     const { subject, issuer, validity, fingerprint } = securityInfo.cert;
     const enabledLabel = L10N.getStr("netmonitor.security.enabled");
     const disabledLabel = L10N.getStr("netmonitor.security.disabled");
@@ -87,7 +92,7 @@ function SecurityPanel({
     };
   }
 
-  return div({ className: "panel-container" },
+  return div({ className: "panel-container security-panel" },
     PropertiesView({
       object,
       renderValue: (props) => renderValue(props, securityInfo.weaknessReasons),
@@ -100,8 +105,7 @@ function SecurityPanel({
 SecurityPanel.displayName = "SecurityPanel";
 
 SecurityPanel.propTypes = {
-  securityInfo: PropTypes.object,
-  url: PropTypes.string,
+  request: PropTypes.object.isRequired,
 };
 
 function renderValue(props, weaknessReasons = []) {
@@ -155,18 +159,4 @@ function getExpandedNodes(object, path = "", level = 0) {
   return expandedNodes;
 }
 
-module.exports = connect(
-  (state) => {
-    const selectedRequest = getSelectedRequest(state);
-
-    if (selectedRequest) {
-      const { securityInfo, url} = selectedRequest;
-      return {
-        securityInfo,
-        url,
-      };
-    }
-
-    return {};
-  }
-)(SecurityPanel);
+module.exports = SecurityPanel;

@@ -493,7 +493,6 @@ class CodeGeneratorShared : public LElementVisitor
     void addCache(LInstruction* lir, size_t cacheIndex);
     void addIC(LInstruction* lir, size_t cacheIndex);
 
-    bool addCacheLocations(const CacheLocationList& locs, size_t* numLocs, size_t* offset);
     ReciprocalMulConstants computeDivisionConstants(uint32_t d, int maxLog);
 
   protected:

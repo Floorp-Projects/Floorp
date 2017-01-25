@@ -17,10 +17,14 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'xpcom_components'
 
 EXPORTS += [
+    'nsCategoryCache.h',
     'nsCategoryManagerUtils.h',
+    'nsComponentManagerUtils.h',
+    'nsServiceManagerUtils.h',
 ]
 
 EXPORTS.mozilla += [
+    'GenericFactory.h',
     'Module.h',
     'ModuleLoader.h',
     'ModuleUtils.h',
@@ -35,7 +39,10 @@ SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
+    'GenericFactory.cpp',
     'ManifestParser.cpp',
+    'nsCategoryCache.cpp',
+    'nsComponentManagerUtils.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'

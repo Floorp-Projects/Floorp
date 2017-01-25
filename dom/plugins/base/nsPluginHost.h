@@ -85,8 +85,6 @@ public:
 
   static already_AddRefed<nsPluginHost> GetInst();
 
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPLUGINHOST
   NS_DECL_NSIOBSERVER

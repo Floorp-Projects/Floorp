@@ -14,7 +14,7 @@
 #include "nsIURI.h"
 
 namespace mozilla {
-class CSSStyleSheet;
+class StyleSheet;
 } // namespace mozilla
 class nsCSSRuleProcessor;
 class nsIPrincipal;
@@ -42,6 +42,13 @@ struct StyleSheetInfo
   ReferrerPolicy         mReferrerPolicy;
   dom::SRIMetadata       mIntegrity;
   bool                   mComplete;
+
+  // Pointer to start of linked list of child sheets. This is all fundamentally
+  // broken, because each of the child sheets has a unique parent... We can
+  // only hope (and currently this is the case) that any time page JS can get
+  // its hands on a child sheet that means we've already ensured unique infos
+  // throughout its parent chain and things are good.
+  RefPtr<StyleSheet>     mFirstChild;
 #ifdef DEBUG
   bool                   mPrincipalSet;
 #endif

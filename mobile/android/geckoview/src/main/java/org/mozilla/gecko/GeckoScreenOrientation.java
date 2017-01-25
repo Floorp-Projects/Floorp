@@ -71,6 +71,10 @@ public class GeckoScreenOrientation {
         return sInstance;
     }
 
+    private GeckoScreenOrientation() {
+        update();
+    }
+
     /*
      * Enable Gecko screen orientation events on update.
      */

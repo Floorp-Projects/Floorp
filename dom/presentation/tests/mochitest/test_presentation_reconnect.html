@@ -318,11 +318,10 @@ function testReconnect() {
           is(aConnection.state, "connected", "Connection should be connected.");
 
           const incomingMessage = "test incoming message";
-          aConnection.addEventListener('message', function messageHandler(aEvent) {
-            aConnection.removeEventListener('message', messageHandler);
+          aConnection.addEventListener('message', function(aEvent) {
             is(aEvent.data, incomingMessage, "An incoming message should be received.");
             aResolve();
-          });
+          }, {once: true});
 
           frameScript.sendAsyncMessage('trigger-incoming-message', incomingMessage);
         };

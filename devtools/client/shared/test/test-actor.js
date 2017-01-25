@@ -692,12 +692,10 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
     }
 
     let deferred = defer();
-    this.content.addEventListener("scroll", function onScroll(event) {
-      this.removeEventListener("scroll", onScroll);
-
+    this.content.addEventListener("scroll", function (event) {
       let data = {x: this.content.scrollX, y: this.content.scrollY};
       deferred.resolve(data);
-    });
+    }, {once: true});
 
     this.content[relative ? "scrollBy" : "scrollTo"](x, y);
 

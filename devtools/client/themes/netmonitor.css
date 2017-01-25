@@ -3,6 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @import "resource://devtools/client/shared/components/tree/tree-view.css";
+@import "resource://devtools/client/shared/components/tabs/tabs.css";
+@import "resource://devtools/client/shared/components/tabs/tabbar.css";
+
+* {
+  box-sizing: border-box;
+}
 
 #toolbar-labels {
   overflow: hidden;
@@ -20,6 +26,11 @@
   flex: 0 0 auto;
   flex-wrap: nowrap;
   align-items: center;
+}
+
+#details-pane {
+  /* Make details-pane's width adjustable by splitter */
+  min-width: 50px;
 }
 
 /**
@@ -693,7 +704,7 @@
 
 /* Headers tabpanel */
 
-#headers-tabpanel .summary {
+.headers-overview {
   background: var(--theme-toolbar-background);
 }
 
@@ -725,38 +736,38 @@
 
 /* Timings tabpanel */
 
-#timings-tabpanel .tabpanel-summary-container {
+.timings-container {
   display: flex;
 }
 
-#timings-tabpanel .tabpanel-summary-label {
+.timings-label {
   width: 10em;
 }
 
-#timings-tabpanel .requests-menu-timings-container {
+.requests-menu-timings-container {
   display: flex;
   flex: 1;
   align-items: center;
 }
 
-#timings-tabpanel .requests-menu-timings-offset {
+.requests-menu-timings-offset {
   transition: width 0.2s ease-out;
 }
 
-#timings-tabpanel .requests-menu-timings-box {
+.requests-menu-timings-box {
   border: none;
   min-width: 1px;
   transition: width 0.2s ease-out;
 }
 
-.theme-firebug #timings-tabpanel .requests-menu-timings-total {
+.theme-firebug .requests-menu-timings-total {
   color: var(--theme-body-color);
 }
 
 /* Security tabpanel */
 
 /* Overwrite tree-view cell colon `:` for security panel and tree section */
-#security-tabpanel .treeTable .treeLabelCell::after,
+.security-panel .treeTable .treeLabelCell::after,
 .treeTable .tree-section .treeLabelCell::after {
   content: "";
 }
@@ -1084,6 +1095,7 @@
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  height: 100%;
 }
 
 .properties-view .searchbox-section {
@@ -1278,16 +1290,10 @@
  * FIXME: normal html block element cannot fill outer XUL element
  * This workaround should be removed after netmonitor is migrated to react
  */
-#react-cookies-tabpanel-hook,
-#react-headers-tabpanel-hook,
-#react-params-tabpanel-hook,
-#react-preview-tabpanel-hook,
-#react-response-tabpanel-hook,
-#react-security-tabpanel-hook,
-#react-timings-tabpanel-hook {
+
+#react-details-panel-hook {
   display: flex;
-  -moz-box-flex: 1;
-  -moz-box-orient: vertical;
+  flex-direction: column;
 }
 
 #network-statistics-charts,
@@ -1295,9 +1301,4 @@
 #empty-cache-chart {
   display: -moz-box;
   -moz-box-flex: 1;
-}
-
-#primed-cache-chart,
-#empty-cache-chart {
-  -moz-box-pack: center;
 }

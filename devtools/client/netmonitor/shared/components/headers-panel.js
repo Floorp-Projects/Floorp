@@ -12,10 +12,7 @@ const {
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { L10N } = require("../../l10n");
-const Actions = require("../../actions/index");
-const { getSelectedRequest } = require("../../selectors/index");
 const { writeHeaderText } = require("../../request-utils");
 const { getFormattedSize } = require("../../utils/format-utils");
 
@@ -47,7 +44,7 @@ const HeadersPanel = createClass({
 
   propTypes: {
     cloneSelectedRequest: PropTypes.func.isRequired,
-    request: PropTypes.object,
+    request: PropTypes.object.isRequired,
   },
 
   getInitialState() {
@@ -134,6 +131,7 @@ const HeadersPanel = createClass({
         remotePort ? `${remoteAddress}:${remotePort}` : remoteAddress) : null;
 
     let summaryStatus;
+
     if (status) {
       let code;
       if (fromCache) {
@@ -203,7 +201,7 @@ const HeadersPanel = createClass({
 
     return (
       div({ className: "panel-container" },
-        div({ className: "summary" },
+        div({ className: "headers-overview" },
           summaryUrl,
           summaryMethod,
           summaryAddress,
@@ -221,11 +219,4 @@ const HeadersPanel = createClass({
   }
 });
 
-module.exports = connect(
-  (state) => ({
-    request: getSelectedRequest(state) || {},
-  }),
-  (dispatch) => ({
-    cloneSelectedRequest: () => dispatch(Actions.cloneSelectedRequest()),
-  }),
-)(HeadersPanel);
+module.exports = HeadersPanel;
