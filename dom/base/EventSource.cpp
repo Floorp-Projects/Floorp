@@ -2052,12 +2052,12 @@ EventSource::UpdateDontKeepAlive()
 NS_IMPL_CYCLE_COLLECTION_CLASS(EventSource)
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(EventSource)
-  bool isBlack = tmp->IsBlack();
-  if (isBlack || tmp->mKeepingAlive) {
+  bool hasLiveWrapper = tmp->HasKnownLiveWrapper();
+  if (hasLiveWrapper || tmp->mKeepingAlive) {
     if (tmp->mListenerManager) {
       tmp->mListenerManager->MarkForCC();
     }
-    if (!isBlack && tmp->PreservingWrapper()) {
+    if (!hasLiveWrapper && tmp->PreservingWrapper()) {
       tmp->MarkWrapperLive();
     }
     return true;
@@ -2065,11 +2065,11 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(EventSource)
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(EventSource)
-  return tmp->IsBlack();
+  return tmp->HasKnownLiveWrapper();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(EventSource)
-  return tmp->IsBlack();
+  return tmp->HasKnownLiveWrapper();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(EventSource,
