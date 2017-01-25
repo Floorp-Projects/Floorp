@@ -237,14 +237,37 @@ public:
   
 protected:
   nsMutationReceiverBase(nsINode* aTarget, nsDOMMutationObserver* aObserver)
-  : mTarget(aTarget), mObserver(aObserver), mRegisterTarget(aTarget)
+    : mTarget(aTarget)
+    , mObserver(aObserver)
+    , mRegisterTarget(aTarget)
+    , mSubtree(false)
+    , mChildList(false)
+    , mCharacterData(false)
+    , mCharacterDataOldValue(false)
+    , mNativeAnonymousChildList(false)
+    , mAttributes(false)
+    , mAllAttributes(false)
+    , mAttributeOldValue(false)
+    , mAnimations(false)
   {
   }
 
   nsMutationReceiverBase(nsINode* aRegisterTarget,
                          nsMutationReceiverBase* aParent)
-  : mTarget(nullptr), mObserver(nullptr), mParent(aParent),
-    mRegisterTarget(aRegisterTarget), mKungFuDeathGrip(aParent->Target())
+    : mTarget(nullptr)
+    , mObserver(nullptr)
+    , mParent(aParent)
+    , mRegisterTarget(aRegisterTarget)
+    , mKungFuDeathGrip(aParent->Target())
+    , mSubtree(false)
+    , mChildList(false)
+    , mCharacterData(false)
+    , mCharacterDataOldValue(false)
+    , mNativeAnonymousChildList(false)
+    , mAttributes(false)
+    , mAllAttributes(false)
+    , mAttributeOldValue(false)
+    , mAnimations(false)
   {
     NS_ASSERTION(mParent->Subtree(), "Should clone a non-subtree observer!");
   }
@@ -369,7 +392,6 @@ public:
 
   void Disconnect(bool aRemoveFromObserver);
 
-  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE

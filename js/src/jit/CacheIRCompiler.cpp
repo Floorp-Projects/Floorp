@@ -1228,6 +1228,9 @@ CacheIRCompiler::emitGuardClass()
       case GuardClassKind::WindowProxy:
         clasp = cx_->maybeWindowProxyClass();
         break;
+      case GuardClassKind::JSFunction:
+        clasp = &JSFunction::class_;
+        break;
     }
 
     MOZ_ASSERT(clasp);
@@ -1510,6 +1513,55 @@ CacheIRCompiler::emitLoadArgumentsObjectLengthResult()
     // Shift out arguments length and return it. No need to type monitor
     // because this stub always returns int32.
     masm.rshiftPtr(Imm32(ArgumentsObject::PACKED_BITS_COUNT), scratch);
+    EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
+    return true;
+}
+
+bool
+CacheIRCompiler::emitLoadFunctionLengthResult()
+{
+    AutoOutputRegister output(*this);
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    // Get the JSFunction flags.
+    masm.load16ZeroExtend(Address(obj, JSFunction::offsetOfFlags()), scratch);
+
+    // Functions with lazy scripts don't store their length.
+    // If the length was resolved before the length property might be shadowed.
+    masm.branchTest32(Assembler::NonZero,
+                      scratch,
+                      Imm32(JSFunction::INTERPRETED_LAZY |
+                            JSFunction::RESOLVED_LENGTH),
+                      failure->label());
+
+    Label boundFunction;
+    masm.branchTest32(Assembler::NonZero, scratch, Imm32(JSFunction::BOUND_FUN), &boundFunction);
+    Label interpreted;
+    masm.branchTest32(Assembler::NonZero, scratch, Imm32(JSFunction::INTERPRETED), &interpreted);
+
+    // Load the length of the native function.
+    masm.load16ZeroExtend(Address(obj, JSFunction::offsetOfNargs()), scratch);
+    Label done;
+    masm.jump(&done);
+
+    masm.bind(&boundFunction);
+    // Bound functions might have a non-int32 length.
+    Address boundLength(obj, FunctionExtended::offsetOfExtendedSlot(BOUND_FUN_LENGTH_SLOT));
+    masm.branchTestInt32(Assembler::NotEqual, boundLength, failure->label());
+    masm.unboxInt32(boundLength, scratch);
+    masm.jump(&done);
+
+    masm.bind(&interpreted);
+    // Load the length from the function's script.
+    masm.loadPtr(Address(obj, JSFunction::offsetOfNativeOrScript()), scratch);
+    masm.load16ZeroExtend(Address(scratch, JSScript::offsetOfFunLength()), scratch);
+
+    masm.bind(&done);
     EmitStoreResult(masm, scratch, JSVAL_TYPE_INT32, output);
     return true;
 }
