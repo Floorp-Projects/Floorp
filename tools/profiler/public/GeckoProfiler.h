@@ -312,7 +312,7 @@ class nsISupports;
 class ProfilerMarkerPayload;
 
 extern MOZ_THREAD_LOCAL(PseudoStack *) tlsPseudoStack;
-extern MOZ_THREAD_LOCAL(GeckoSampler *) tlsTicker;
+extern GeckoSampler* gSampler;
 extern bool stack_key_initialized;
 
 #ifndef SAMPLE_FUNCTION_NAME

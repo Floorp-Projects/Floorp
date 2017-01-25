@@ -605,9 +605,15 @@ void GeckoSampler::FlushOnJSShutdown(JSContext* aContext)
 void PseudoStack::flushSamplerOnJSShutdown()
 {
   MOZ_ASSERT(mContext);
-  GeckoSampler* t = tlsTicker.get();
-  if (t) {
-    t->FlushOnJSShutdown(mContext);
+
+  // XXX: this function should handle being called by any thread, but it
+  // currently doesn't because it accesses gSampler, which is main-thread-only.
+  if (!NS_IsMainThread()) {
+    return;
+  }
+
+  if (gSampler) {
+    gSampler->FlushOnJSShutdown(mContext);
   }
 }
 
