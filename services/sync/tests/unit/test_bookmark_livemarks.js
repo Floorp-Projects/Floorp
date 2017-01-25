@@ -110,7 +110,7 @@ add_test(function test_livemark_invalid() {
   do_check_eq(-1, store.idForGUID(parentGUID));
 
   store.create(lateParentRec);
-  let recID = store.idForGUID(lateParentRec.id, true);
+  recID = store.idForGUID(lateParentRec.id, true);
   do_check_true(recID > 0);
   do_check_eq(PlacesUtils.bookmarks.getFolderIdForItem(recID),
               PlacesUtils.bookmarks.unfiledBookmarksFolder);

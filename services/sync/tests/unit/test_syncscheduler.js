@@ -699,7 +699,7 @@ add_identity_test(this, async function test_no_sync_node() {
   let server = sync_httpd_setup();
   await setUp(server);
 
-  let oldfc = Service._clusterManager._findCluster;
+  oldfc = Service._clusterManager._findCluster;
   Service._clusterManager._findCluster = () => null;
   Service.clusterURL = "";
   try {
