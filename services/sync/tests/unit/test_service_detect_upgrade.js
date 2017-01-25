@@ -241,7 +241,7 @@ add_test(function v5_upgrade() {
     _("Testing v4 -> v5 (or similar) upgrade.");
     function update_server_keys(syncKeyBundle, wboName, collWBO) {
       generateNewKeys(Service.collectionKeys);
-      let serverKeys = Service.collectionKeys.asWBO("crypto", wboName);
+      serverKeys = Service.collectionKeys.asWBO("crypto", wboName);
       serverKeys.encrypt(syncKeyBundle);
       let res = Service.resource(Service.storageURL + collWBO);
       do_check_true(serverKeys.upload(res).success);

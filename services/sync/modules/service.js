@@ -1734,4 +1734,4 @@ Sync11Service.prototype = {
 };
 
 this.Service = new Sync11Service();
-this.Service.onStartup();
+Service.onStartup();

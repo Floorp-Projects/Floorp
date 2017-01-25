@@ -176,7 +176,6 @@ add_test(function test_weave_quota_error() {
 });
 
 add_test(function test_abort() {
-  const TIMESTAMP = 1274380462;
   function handler(request, response) {
     response.setHeader("X-Weave-Timestamp", "" + TIMESTAMP, false);
     response.setHeader("X-Weave-Quota-Remaining", "1048576", false);

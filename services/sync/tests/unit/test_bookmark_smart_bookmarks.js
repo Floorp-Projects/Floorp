@@ -44,6 +44,7 @@ function clearBookmarks() {
   PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.bookmarks.tagsFolder);
   PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.bookmarks.toolbarFolder);
   PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.bookmarks.unfiledBookmarksFolder);
+  startCount = smartBookmarkCount();
 }
 
 function serverForFoo(engineData) {

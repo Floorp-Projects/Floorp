@@ -12,10 +12,6 @@
  *   $ make storage-server
  */
 
-// Disable eslint no-undef rule for this file, as it is simple and is complicated
-// to check all the imports.
-/* eslint no-undef:off */
-
 Cu.import("resource://testing-common/services/common/storageserver.js");
 
 initTestLogging();

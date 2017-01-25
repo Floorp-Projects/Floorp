@@ -742,7 +742,6 @@ add_task(function* test_updateDevice() {
 add_task(function* test_signOutAndDestroyDevice() {
   const DEVICE_ID = "device id";
   const ERROR_ID = "test that the client promise rejects";
-  let emptyMessage = "{}";
 
   const server = httpd_setup({
     "/account/device/destroy": function(request, response) {
@@ -836,7 +835,7 @@ add_task(function* test_client_metrics() {
 
   let client = new FxAccountsClient(server.baseURI);
 
-  yield Assert.rejects(client.signOut(FAKE_SESSION_TOKEN, {
+  yield rejects(client.signOut(FAKE_SESSION_TOKEN, {
     service: "sync",
   }), function(err) {
     return err.errno == 111;
