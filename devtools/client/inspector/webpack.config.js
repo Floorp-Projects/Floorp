@@ -13,7 +13,7 @@ const webpack = require("webpack");
 
 module.exports = envConfig => {
   let webpackConfig = {
-    bail: true,
+    bail: false,
     entry: [
       path.join(__dirname, "local-toolbox.js")
     ],
@@ -98,6 +98,22 @@ module.exports = envConfig => {
                     }`,
         "dump": "console.log",
       }),
+      function () {
+        this.plugin("done", function (stats) {
+          // Log a verbose error message if the bundle creation failed.
+          if (stats.compilation.errors && stats.compilation.errors.length) {
+            console.error("\nError: Failed to create inspector bundle. Details below.\n");
+            stats.compilation.errors.forEach(e => {
+              console.error(`Error in [${e.module.userRequest}]`);
+              console.error(`Loaders: ${e.module.loaders.join(", ")}`);
+              console.error(e.error);
+            });
+
+            // Exit after failure.
+            process.exit(-1);
+          }
+        });
+      }
     ]
   };
 
