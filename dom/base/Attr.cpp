@@ -89,7 +89,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(Attr)
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(Attr)
-  return tmp->IsBlackAndDoesNotNeedTracing(static_cast<nsIAttribute*>(tmp));
+  return tmp->HasKnownLiveWrapperAndDoesNotNeedTracing(static_cast<nsIAttribute*>(tmp));
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(Attr)
