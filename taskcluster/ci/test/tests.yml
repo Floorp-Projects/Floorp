@@ -655,6 +655,7 @@ mochitest-jetpack:
     loopback-video: true
     e10s: false
     max-run-time: 5400
+    docker-image: {"in-tree": "desktop1604-test"}
     run-on-projects:
         by-test-platform:
             windows.*: ['mozilla-central', 'try']
