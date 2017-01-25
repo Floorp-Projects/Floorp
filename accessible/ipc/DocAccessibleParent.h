@@ -46,6 +46,18 @@ public:
 
   bool IsShutdown() const { return mShutdown; }
 
+  /**
+   * Mark this actor as shutdown without doing any cleanup.  This should only
+   * be called on actors that have just been initialized, so probably only from
+   * RecvPDocAccessibleConstructor.
+   */
+  void MarkAsShutdown()
+  {
+    MOZ_ASSERT(mChildDocs.IsEmpty());
+    MOZ_ASSERT(mAccessibles.Count() == 0);
+    mShutdown = true;
+  }
+
   /*
    * Called when a message from a document in a child process notifies the main
    * process it is firing an event.
