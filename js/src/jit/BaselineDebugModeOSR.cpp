@@ -691,6 +691,7 @@ RecompileBaselineScriptForDebugMode(JSContext* cx, JSScript* script,
 
 #define PATCHABLE_ICSTUB_KIND_LIST(_)           \
     _(CacheIR_Monitored)                        \
+    _(CacheIR_Updated)                          \
     _(Call_Scripted)                            \
     _(Call_AnyScripted)                         \
     _(Call_Native)                              \
@@ -698,9 +699,7 @@ RecompileBaselineScriptForDebugMode(JSContext* cx, JSScript* script,
     _(Call_ScriptedApplyArray)                  \
     _(Call_ScriptedApplyArguments)              \
     _(Call_ScriptedFunCall)                     \
-    _(GetProp_Generic)                          \
-    _(SetProp_CallScripted)                     \
-    _(SetProp_CallNative)
+    _(GetProp_Generic)
 
 static bool
 CloneOldBaselineStub(JSContext* cx, DebugModeOSREntryVector& entries, size_t entryIndex)

@@ -868,6 +868,18 @@ IonCacheIRCompiler::emitStoreTypedObjectScalarProperty()
 }
 
 bool
+IonCacheIRCompiler::emitCallNativeSetter()
+{
+    MOZ_CRASH("Baseline-specific op");
+}
+
+bool
+IonCacheIRCompiler::emitCallScriptedSetter()
+{
+    MOZ_CRASH("Baseline-specific op");
+}
+
+bool
 IonCacheIRCompiler::emitLoadTypedObjectResult()
 {
     AutoOutputRegister output(*this);

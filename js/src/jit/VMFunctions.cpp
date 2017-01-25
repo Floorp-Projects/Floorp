@@ -1383,6 +1383,20 @@ CallNativeGetter(JSContext* cx, HandleFunction callee, HandleObject obj,
 }
 
 bool
+CallNativeSetter(JSContext* cx, HandleFunction callee, HandleObject obj, HandleValue rhs)
+{
+    MOZ_ASSERT(callee->isNative());
+    JSNative natfun = callee->native();
+
+    JS::AutoValueArray<3> vp(cx);
+    vp[0].setObject(*callee.get());
+    vp[1].setObject(*obj.get());
+    vp[2].set(rhs);
+
+    return natfun(cx, 1, vp.begin());
+}
+
+bool
 EqualStringsHelper(JSString* str1, JSString* str2)
 {
     MOZ_ASSERT(str1->isAtom());
