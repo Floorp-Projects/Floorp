@@ -1480,6 +1480,10 @@ class IDLInterfaceOrNamespace(IDLObjectWithScope, IDLExposureMixins):
         assert self.identifier.name == partial.identifier.name
         self._partialInterfaces.append(partial)
 
+    def getPartialInterfaces(self):
+        # Don't let people mutate our guts.
+        return list(self._partialInterfaces)
+
     def getJSImplementation(self):
         classId = self.getExtendedAttribute("JSImplementation")
         if not classId:

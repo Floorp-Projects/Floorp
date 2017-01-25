@@ -265,8 +265,10 @@ static bool UnloadPluginsASAP()
 }
 
 nsPluginHost::nsPluginHost()
-  // No need to initialize members to nullptr, false etc because this class
-  // has a zeroing operator new.
+  : mPluginsLoaded(false)
+  , mOverrideInternalTypes(false)
+  , mPluginsDisabled(false)
+  , mPluginEpoch(0)
 {
   // Bump the pluginchanged epoch on startup. This insures content gets a
   // good plugin list the first time it requests it. Normally we'd just

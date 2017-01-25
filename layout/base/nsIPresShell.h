@@ -194,6 +194,8 @@ protected:
   typedef uint8_t RenderFlags; // for storing the above flags
 
 public:
+  nsIPresShell();
+
   /**
    * All callers are responsible for calling |Destroy| after calling
    * |EndObservingDocument|.  It needs to be separate only because form

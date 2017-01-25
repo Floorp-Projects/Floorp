@@ -182,7 +182,6 @@ CompositorBridgeParent::LayerTreeState::LayerTreeState()
   , mCrossProcessParent(nullptr)
   , mLayerTree(nullptr)
   , mUpdatedPluginDataAvailable(false)
-  , mPendingCompositorUpdates(0)
 {
 }
 
@@ -1824,9 +1823,9 @@ CompositorBridgeParent::ResetCompositorTask(const nsTArray<LayersBackend>& aBack
       Unused << cpcp->SendCompositorUpdated(layersId, newIdentifier.value(), aSeqNo);
 
       if (LayerTransactionParent* ltp = lts->mLayerTree) {
-        ltp->AddPendingCompositorUpdate();
+        ltp->SetPendingCompositorUpdate(aSeqNo);
       }
-      lts->mPendingCompositorUpdates++;
+      lts->mPendingCompositorUpdate = Some(aSeqNo);
     }
   });
 }
