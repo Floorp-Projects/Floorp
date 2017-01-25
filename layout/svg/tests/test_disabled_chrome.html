@@ -37,12 +37,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=744830
     yield loadPromise;
 
     const contentBR = iframeEl.contentDocument.body.getBoundingClientRect();
-
-yield new Promise(_ => setTimeout(_, 1000));
     ok(chromeBR.height > contentBR.height, "Chrome content height should be bigger than content due to layout");
 
     ok(!("hasExtension" in iframeEl.contentDocument.getElementById('svgel')), 'SVG is disabled so no hasExtension support is available in content iframe');
     ok(chromeIframeEl.contentDocument.getElementById('svgel').hasExtension("http://www.w3.org/1998/Math/MathML"), 'SVG namespace support is enabled in chrome iframe');
+
+    url = "http://mochi.test:8888/chrome/layout/svg/tests/svg_example_script.svg";
+    const iframeElScript = document.createElement("iframe");
+    let loadPromiseScript = ContentTaskUtils.waitForEvent(iframeElScript, "load", false);
+    iframeElScript.src = url;
+    t.appendChild(iframeElScript);
+    yield loadPromiseScript;
+    ok(!iframeElScript.contentDocument.documentElement.style, "Content should not be styled");
 
     SpecialPowers.setBoolPref("svg.disabled", initialPrefValue);
   });

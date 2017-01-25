@@ -39,12 +39,6 @@ public:
 
   bool HasRules() const;
 
-  void SetAssociatedDocument(nsIDocument* aDocument,
-                             DocumentAssociationMode aAssociationMode);
-
-  ServoStyleSheet* GetParentSheet() const;
-  void AppendStyleSheet(ServoStyleSheet* aSheet);
-
   MOZ_MUST_USE nsresult ParseSheet(css::Loader* aLoader,
                                    const nsAString& aInput,
                                    nsIURI* aSheetURI,
@@ -58,12 +52,6 @@ public:
    * adding a ServoStyleSheet to a ServoStyleSet.
    */
   void LoadFailed();
-
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
-
-#ifdef DEBUG
-  void List(FILE* aOut = stdout, int32_t aIndex = 0) const;
-#endif
 
   RawServoStyleSheet* RawSheet() const { return mSheet; }
   void SetSheetForImport(RawServoStyleSheet* aSheet) {

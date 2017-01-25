@@ -278,6 +278,30 @@ class MachCommands(MachCommandBase):
             traceback.print_exc()
             sys.exit(1)
 
+    @SubCommand('taskgraph', 'add-talos',
+                description="Run the add-talos task")
+    @CommandArgument('--root', '-r',
+                     default='taskcluster/ci',
+                     help="root of the taskgraph definition relative to topsrcdir")
+    @CommandArgument('--decision-task-id',
+                     required=True,
+                     help="Id of the decision task that is part of the push to be talos'd")
+    @CommandArgument('--times',
+                     required=False,
+                     default=1,
+                     type=int,
+                     help="Number of times to add each job.")
+    def taskgraph_add_talos(self, **options):
+        """Add all talos jobs for a push."""
+
+        import taskgraph.action
+        try:
+            self.setup_logging()
+            return taskgraph.action.add_talos(options['decision_task_id'], options['times'])
+        except Exception:
+            traceback.print_exc()
+            sys.exit(1)
+
     def setup_logging(self, quiet=False, verbose=True):
         """
         Set up Python logging for all loggers, sending results to stderr (so

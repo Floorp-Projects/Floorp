@@ -197,14 +197,27 @@ this.ForgetAboutSite = {
     }));
 
     // HSTS and HPKP
-    // TODO (bug 1290529): also remove HSTS/HPKP information for subdomains.
-    // Since we can't enumerate the information in the site security service
-    // (bug 1115712), we can't implement this right now.
     try {
       let sss = Cc["@mozilla.org/ssservice;1"].
                 getService(Ci.nsISiteSecurityService);
-      sss.removeState(Ci.nsISiteSecurityService.HEADER_HSTS, httpsURI, 0);
-      sss.removeState(Ci.nsISiteSecurityService.HEADER_HPKP, httpsURI, 0);
+      for (let type of [Ci.nsISiteSecurityService.HEADER_HSTS,
+                        Ci.nsISiteSecurityService.HEADER_HPKP]) {
+        sss.removeState(type, httpsURI, 0);
+
+        // Also remove HSTS/HPKP information for subdomains by enumerating the
+        // information in the site security service.
+        let enumerator = sss.enumerate(type);
+        while (enumerator.hasMoreElements()) {
+          let entry = enumerator.getNext();
+          let hostname = entry.QueryInterface(Ci.nsISiteSecurityState).hostname;
+          // If the hostname is aDomain's subdomain, we remove its state.
+          if (hostname.endsWith("." + aDomain)) {
+            // This uri is used as a key to remove the state.
+            let uri = caUtils.makeURI("https://" + hostname);
+            sss.removeState(type, uri, 0);
+          }
+        }
+      }
     } catch (e) {
       Cu.reportError("Exception thrown while clearing HSTS/HPKP: " +
                      e.toString());

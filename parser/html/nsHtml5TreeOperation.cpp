@@ -596,8 +596,11 @@ void
 nsHtml5TreeOperation::PreventScriptExecution(nsIContent* aNode)
 {
   nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(aNode);
-  MOZ_ASSERT(sele);
-  sele->PreventExecution();
+  if (sele) {
+    sele->PreventExecution();
+  } else {
+    MOZ_ASSERT(nsNameSpaceManager::GetInstance()->mSVGDisabled, "Node didn't QI to script, but SVG wasn't disabled.");
+  }
 }
 
 void
@@ -834,9 +837,12 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     case eTreeOpSetScriptLineNumberAndFreeze: {
       nsIContent* node = *(mOne.node);
       nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(node);
-      NS_ASSERTION(sele, "Node didn't QI to script.");
-      sele->SetScriptLineNumber(mFour.integer);
-      sele->FreezeUriAsyncDefer();
+      if (sele) {
+        sele->SetScriptLineNumber(mFour.integer);
+        sele->FreezeUriAsyncDefer();
+      } else {
+        MOZ_ASSERT(nsNameSpaceManager::GetInstance()->mSVGDisabled, "Node didn't QI to script, but SVG wasn't disabled.");
+      }
       return NS_OK;
     }
     case eTreeOpSvgLoad: {

@@ -100,6 +100,19 @@ def backfill(project, job_id):
         add_tasks(decision, [job["job_type_name"]], '{}-'.format(decision))
 
 
+def add_talos(decision_task_id, times=1):
+    """
+    Run the add-talos task.  This function implements `mach taskgraph add-talos`,
+    and is responsible for
+
+     * Adding all talos jobs to a push.
+    """
+    full_task_json = get_artifact(decision_task_id, "public/full-task-graph.json")
+    task_labels = [label for label in full_task_json if "talos" in label]
+    for time in xrange(times):
+        add_tasks(decision_task_id, task_labels, '{}-'.format(time))
+
+
 def load_decisions(s, project, resultsets, filters):
     """
     Given a project, a list of revisions, and a dict of filters, return

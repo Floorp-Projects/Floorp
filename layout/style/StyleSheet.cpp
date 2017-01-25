@@ -19,7 +19,8 @@
 namespace mozilla {
 
 StyleSheet::StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMode)
-  : mDocument(nullptr)
+  : mParent(nullptr)
+  , mDocument(nullptr)
   , mOwningNode(nullptr)
   , mParsingMode(aParsingMode)
   , mType(aType)
@@ -31,7 +32,8 @@ StyleSheet::StyleSheet(StyleBackendType aType, css::SheetParsingMode aParsingMod
 StyleSheet::StyleSheet(const StyleSheet& aCopy,
                        nsIDocument* aDocumentToUse,
                        nsINode* aOwningNodeToUse)
-  : mTitle(aCopy.mTitle)
+  : mParent(nullptr)
+  , mTitle(aCopy.mTitle)
   , mDocument(aDocumentToUse)
   , mOwningNode(aOwningNodeToUse)
   , mParsingMode(aCopy.mParsingMode)
@@ -307,6 +309,21 @@ StyleSheet::EnabledStateChanged()
 #undef FORWARD_INTERNAL
 
 void
+StyleSheet::UnparentChildren()
+{
+  // XXXbz this is a little bogus; see the XXX comment where we
+  // declare mFirstChild in StyleSheetInfo.
+  for (StyleSheet* child = GetFirstChild();
+       child;
+       child = child->mNext) {
+    if (child->mParent == this) {
+      child->mParent = nullptr;
+      child->mDocument = nullptr;
+    }
+  }
+}
+
+void
 StyleSheet::SubjectSubsumesInnerPrincipal(nsIPrincipal& aSubjectPrincipal,
                                           ErrorResult& aRv)
 {
@@ -362,6 +379,112 @@ StyleSheet::AreRulesAvailable(nsIPrincipal& aSubjectPrincipal,
   }
   return true;
 }
+
+StyleSheet*
+StyleSheet::GetFirstChild() const
+{
+  return SheetInfo().mFirstChild;
+}
+
+void
+StyleSheet::SetAssociatedDocument(nsIDocument* aDocument,
+                                  DocumentAssociationMode aAssociationMode)
+{
+  MOZ_ASSERT_IF(!aDocument, aAssociationMode == NotOwnedByDocument);
+
+  // not ref counted
+  mDocument = aDocument;
+  mDocumentAssociationMode = aAssociationMode;
+
+  // Now set the same document on all our child sheets....
+  // XXXbz this is a little bogus; see the XXX comment where we
+  // declare mFirstChild.
+  for (StyleSheet* child = GetFirstChild();
+       child; child = child->mNext) {
+    if (child->mParent == this) {
+      child->SetAssociatedDocument(aDocument, aAssociationMode);
+    }
+  }
+}
+
+void
+StyleSheet::ClearAssociatedDocument()
+{
+  SetAssociatedDocument(nullptr, NotOwnedByDocument);
+}
+
+void
+StyleSheet::AppendStyleSheet(StyleSheet* aSheet)
+{
+  NS_PRECONDITION(nullptr != aSheet, "null arg");
+
+  WillDirty();
+  RefPtr<StyleSheet>* tail = &SheetInfo().mFirstChild;
+  while (*tail) {
+    tail = &(*tail)->mNext;
+  }
+  *tail = aSheet;
+
+  // This is not reference counted. Our parent tells us when
+  // it's going away.
+  aSheet->mParent = this;
+  aSheet->mDocument = mDocument;
+  DidDirty();
+}
+
+size_t
+StyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = 0;
+  const StyleSheet* s = this;
+  while (s) {
+    n += aMallocSizeOf(s);
+
+    // Measurement of the following members may be added later if DMD finds it
+    // is worthwhile:
+    // - s->mTitle
+    // - s->mMedia
+
+    s = s->mNext;
+  }
+  return n;
+}
+
+#ifdef DEBUG
+void
+StyleSheet::List(FILE* out, int32_t aIndent) const
+{
+  int32_t index;
+
+  // Indent
+  nsAutoCString str;
+  for (index = aIndent; --index >= 0; ) {
+    str.AppendLiteral("  ");
+  }
+
+  str.AppendLiteral("CSS Style Sheet: ");
+  nsAutoCString urlSpec;
+  nsresult rv = GetSheetURI()->GetSpec(urlSpec);
+  if (NS_SUCCEEDED(rv) && !urlSpec.IsEmpty()) {
+    str.Append(urlSpec);
+  }
+
+  if (mMedia) {
+    str.AppendLiteral(" media: ");
+    nsAutoString  buffer;
+    mMedia->GetText(buffer);
+    AppendUTF16toUTF8(buffer, str);
+  }
+  str.Append('\n');
+  fprintf_stderr(out, "%s", str.get());
+
+  for (const StyleSheet* child = GetFirstChild();
+       child;
+       child = child->mNext) {
+    child->List(out, aIndent + 1);
+  }
+}
+#endif
 
 void
 StyleSheet::SetMedia(nsMediaList* aMedia)

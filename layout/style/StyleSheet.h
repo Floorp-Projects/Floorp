@@ -21,9 +21,11 @@ class nsIDocument;
 class nsINode;
 class nsIPrincipal;
 class nsMediaList;
+class nsCSSRuleProcessor;
 
 namespace mozilla {
 
+struct ChildSheetListBuilder;
 class CSSStyleSheet;
 class ServoStyleSheet;
 struct StyleSheetInfo;
@@ -120,13 +122,15 @@ public:
     return mDocumentAssociationMode == OwnedByDocument;
   }
   // aDocument must not be null.
-  inline void SetAssociatedDocument(nsIDocument* aDocument,
-                                    DocumentAssociationMode aMode);
-  inline void ClearAssociatedDocument();
+  void SetAssociatedDocument(nsIDocument* aDocument,
+                             DocumentAssociationMode aMode);
+  void ClearAssociatedDocument();
   nsINode* GetOwnerNode() const { return mOwningNode; }
-  inline StyleSheet* GetParentSheet() const;
+  inline StyleSheet* GetParentSheet() const { return mParent; }
 
-  inline void AppendStyleSheet(StyleSheet* aSheet);
+  void AppendStyleSheet(StyleSheet* aSheet);
+
+  StyleSheet* GetFirstChild() const;
 
   // Principal() never returns a null pointer.
   inline nsIPrincipal* Principal() const;
@@ -147,9 +151,9 @@ public:
   // Get this style sheet's integrity metadata
   inline void GetIntegrity(dom::SRIMetadata& aResult) const;
 
-  inline size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 #ifdef DEBUG
-  inline void List(FILE* aOut = stdout, int32_t aIndex = 0) const;
+  virtual void List(FILE* aOut = stdout, int32_t aIndex = 0) const;
 #endif
 
   // WebIDL StyleSheet API
@@ -214,6 +218,8 @@ private:
                          ErrorResult& aRv);
 
 protected:
+  void UnparentChildren();
+
   // Return success if the subject principal subsumes the principal of our
   // inner, error otherwise.  This will also succeed if the subject has
   // UniversalXPConnect or if access is allowed by CORS.  In the latter case,
@@ -227,11 +233,15 @@ protected:
   // Called from SetEnabled when the enabled state changed.
   void EnabledStateChanged();
 
+  StyleSheet*           mParent;    // weak ref
+
   nsString              mTitle;
   nsIDocument*          mDocument; // weak ref; parents maintain this for their children
   nsINode*              mOwningNode; // weak ref
 
   RefPtr<nsMediaList> mMedia;
+
+  RefPtr<StyleSheet> mNext;
 
   // mParsingMode controls access to nonstandard style constructs that
   // are not safe for use on the public Web but necessary in UA sheets
@@ -245,6 +255,15 @@ protected:
   // the sense that if it's known-live then we're known-live).  Always
   // NotOwnedByDocument when mDocument is null.
   DocumentAssociationMode mDocumentAssociationMode;
+
+  friend class ::nsCSSRuleProcessor;
+  friend struct mozilla::ChildSheetListBuilder;
+
+  // Make CSSStyleSheet and ServoStyleSheet friends so they can access
+  // protected members of other StyleSheet objects (useful for iterating
+  // through children).
+  friend class mozilla::CSSStyleSheet;
+  friend class mozilla::ServoStyleSheet;
 };
 
 } // namespace mozilla
