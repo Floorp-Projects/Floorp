@@ -589,8 +589,7 @@ class MarionetteWdspecExecutor(WdspecExecutor):
 
     def do_wdspec(self, session, path, timeout):
         harness_result = ("OK", None)
-        subtest_results = pytestrunner.run(
-            path, session, self.server_url, timeout=timeout)
+        subtest_results = pytestrunner.run(path, session, timeout=timeout)
         return (harness_result, subtest_results)
 
     def do_delayed_imports(self):
