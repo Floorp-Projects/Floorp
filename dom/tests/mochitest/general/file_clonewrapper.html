@@ -5,10 +5,9 @@
 
   function waitForMessage() {
     return new Promise(function(resolve) {
-      window.addEventListener('message', function l(evt) {
-        window.removeEventListener('message', l);
+      window.addEventListener('message', function(evt) {
         resolve(evt.data);
-      });
+      }, {once: true});
     });
   }
 

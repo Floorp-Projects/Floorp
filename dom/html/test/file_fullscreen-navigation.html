@@ -31,11 +31,10 @@ function begin()
 {
   frameWin = document.getElementById("f").contentWindow;
   e1 = frameWin.document.body;
-  document.addEventListener("fullscreenchange", function onfullscreen() {
-    document.removeEventListener("fullscreenchange", onfullscreen);
+  document.addEventListener("fullscreenchange", function() {
     opener.ok(document.fullscreenElement, "[navigation] Request should be granted");
     frameWin.location = "data:text/html,<body text=blue onload='parent.b2()'>2";
-  });
+  }, {once: true});
 
   e1.requestFullscreen();
 }

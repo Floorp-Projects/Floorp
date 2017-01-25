@@ -26,16 +26,13 @@ function newWindowWithState(state, callback) {
   let opts = "chrome,all,dialog=no,height=800,width=800";
   let win = window.openDialog(getBrowserURL(), "_blank", opts);
 
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad);
-
+  win.addEventListener("load", function() {
     executeSoon(function () {
-      win.addEventListener("SSWindowStateReady", function onReady() {
-        win.removeEventListener("SSWindowStateReady", onReady);
+      win.addEventListener("SSWindowStateReady", function() {
         promiseTabRestored(win.gBrowser.tabs[0]).then(() => callback(win));
-      });
+      }, {once: true});
 
       ss.setWindowState(win, JSON.stringify(state), true);
     });
-  });
+  }, {once: true});
 }

@@ -20,8 +20,7 @@ var gSteps = [
     gWin = gBrowser.getBrowserForTab(gTab).contentWindow;
     let browser = gBrowser.getBrowserForTab(gTab);
 
-    browser.addEventListener("load", function onLoad(e) {
-      browser.removeEventListener("load", onLoad, true);
+    browser.addEventListener("load", function(e) {
       let nav = gWin.navigator;
       let power = nav.mozPower;
       gLock = nav.requestWakeLock("test");
@@ -51,15 +50,14 @@ var gSteps = [
       gBrowser.removeTab(gTab);
 
       executeSoon(runNextStep);
-    }, true);
+    }, {capture: true, once: true});
   },
   function multiWakeLock() {
     gTab = gBrowser.addTab(kUrlSource);
     gWin = gBrowser.getBrowserForTab(gTab).contentWindow;
     let browser = gBrowser.getBrowserForTab(gTab);
 
-    browser.addEventListener("load", function onLoad(e) {
-      browser.removeEventListener("load", onLoad, true);
+    browser.addEventListener("load", function(e) {
       let nav = gWin.navigator;
       let power = nav.mozPower;
       let count = 0;
@@ -100,7 +98,7 @@ var gSteps = [
             "topic is locked");
 
       gLock2.unlock();
-    }, true);
+    }, {capture: true, once: true});
   },
   function crossTabWakeLock1() {
     gTab1 = gBrowser.addTab(kUrlSource);
@@ -111,8 +109,7 @@ var gSteps = [
     gBrowser.selectedTab = gTab1;
     let browser = gBrowser.getBrowserForTab(gTab2);
 
-    browser.addEventListener("load", function onLoad(e) {
-      browser.removeEventListener("load", onLoad, true);
+    browser.addEventListener("load", function(e) {
       gLock2 = gWin2.navigator.requestWakeLock("test");
       is(gWin2.document.hidden, true,
          "window is background")
@@ -126,21 +123,19 @@ var gSteps = [
         }
       });
       gBrowser.selectedTab = gTab2;
-    }, true);
+    }, {capture: true, once: true});
   },
   function crossTabWakeLock2() {
     is(gWin2.document.hidden, false,
        "window is foreground")
     is(gWin2.navigator.mozPower.getWakeLockState("test"), "locked-foreground",
       "wake lock is foreground");
-    gWin2.addEventListener("pagehide", function onPageHide(e) {
-      gWin2.removeEventListener("pagehide", onPageHide, true);
+    gWin2.addEventListener("pagehide", function(e) {
       executeSoon(runNextStep);
-    }, true);
-    gWin2.addEventListener("pageshow", function onPageShow(e) {
-      gWin2.removeEventListener("pageshow", onPageShow, true);
+    }, {capture: true, once: true});
+    gWin2.addEventListener("pageshow", function(e) {
       executeSoon(runNextStep);
-    }, true);
+    }, {capture: true, once: true});
     gWin2.location = kDataSource;
   },
   function crossTabWakeLock3() {
@@ -161,14 +156,12 @@ var gSteps = [
        "window is background")
     is(gWin2.navigator.mozPower.getWakeLockState("test"), "locked-background",
       "wake lock is background");
-    gWin2.addEventListener("pagehide", function onPageHide(e) {
-      gWin2.removeEventListener("pagehide", onPageHide, true);
+    gWin2.addEventListener("pagehide", function(e) {
       executeSoon(runNextStep);
-    }, true);
-    gWin2.addEventListener("pageshow", function onPageShow(e) {
-      gWin2.removeEventListener("pageshow", onPageShow, true);
+    }, {capture: true, once: true});
+    gWin2.addEventListener("pageshow", function(e) {
       executeSoon(runNextStep);
-    }, true);
+    }, {capture: true, once: true});
     gWin2.location = kDataSource;
   },
   function crossTabWakeLock6() {

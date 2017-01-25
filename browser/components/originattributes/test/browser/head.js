@@ -142,10 +142,9 @@ function* openTabInFirstParty(aURL, aFirstPartyDomain,
 
       // Wait for the frame to be loaded.
       yield new Promise(done => {
-        frameElement.addEventListener("load", function loadEnd() {
-          frameElement.removeEventListener("load", loadEnd, true);
+        frameElement.addEventListener("load", function() {
           done();
-        }, true);
+        }, {capture: true, once: true});
 
         // If it is the deepest layer, we load the target URL. Otherwise, we
         // load a basic page.

@@ -44,10 +44,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=998893
         Components.utils.import("resource://gre/modules/Services.jsm");
         let window = Services.wm.getMostRecentWindow("navigator:browser");
         let popup = window.document.getElementById("PopupAutoComplete");
-        popup.addEventListener("popupshown", function popupShown() {
-          popup.removeEventListener("popupshown", popupShown);
+        popup.addEventListener("popupshown", function() {
           sendAsyncMessage("Test:Resume");
-        });
+        }, {once: true});
       });
 
       chromeScript.addMessageListener("Test:Resume", function resumeListener() {

@@ -50,9 +50,7 @@ function setup(cb, additionalOpts = {}) {
     opts[o] = additionalOpts[o];
   }
 
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad);
-
+  win.addEventListener("load", function () {
     waitForFocus(function () {
       let box = win.document.querySelector("box");
       let editor = new Editor(opts);
@@ -67,7 +65,7 @@ function setup(cb, additionalOpts = {}) {
           cb(editor, win);
         }, err => ok(false, err.message));
     }, win);
-  });
+  }, {once: true});
 
   return def.promise;
 }

@@ -2,10 +2,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 #include "nsISupports.idl"
 
 interface nsIBFCacheEntry;
+interface nsISHContainer;
 interface nsISHEntry;
 interface nsISHistoryListener;
 interface nsISHTransaction;
@@ -46,7 +47,7 @@ interface nsISHistoryInternal: nsISupports
    */
    void setRootDocShell(in nsIDocShell rootDocShell);
 
-  /** 
+  /**
    * Update the index maintained by sessionHistory
    */
    void updateIndex();
@@ -83,7 +84,7 @@ interface nsISHistoryInternal: nsISupports
     *   history was navigated to.
     */
    void evictOutOfRangeContentViewers(in long aIndex);
-   
+
    /**
     * Evict the content viewer associated with a bfcache entry
     * that has timed out.
@@ -96,9 +97,23 @@ interface nsISHistoryInternal: nsISupports
    void evictAllContentViewers();
 
    /**
+    * Remove dynamic entries found at given index.
+    *
+    * @param aIndex
+    *        Index to remove dynamic entries from. It will be passed to
+    *        RemoveEntries as aStartIndex.
+    * @param aContainer (optional)
+    *        The container to start looking for dynamic entries. Only the
+    *        dynamic descendants of the container will be removed. If not given,
+    *        all dynamic entries at the index will be removed.
+    */
+   [noscript, notxpcom] void RemoveDynEntries(in long aIndex,
+                                              in nsISHContainer aContainer);
+
+   /**
     * Removes entries from the history if their docshellID is in
     * aIDs array.
     */
-  [noscript, notxpcom] void RemoveEntries(in nsDocshellIDArray aIDs,
-                                          in long aStartIndex);
+   [noscript, notxpcom] void RemoveEntries(in nsDocshellIDArray aIDs,
+                                           in long aStartIndex);
 };

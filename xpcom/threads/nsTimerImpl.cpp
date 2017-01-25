@@ -548,7 +548,7 @@ nsTimerImpl::LogFiring(CallbackType aCallbackType, CallbackUnion aCallback)
         name = mName.as<NameString>();
 
       } else if (mName.is<NameFunc>()) {
-        mName.as<NameFunc>()(mITimer, mClosure, buf, buflen);
+        mName.as<NameFunc>()(mITimer, /* aAnonymize = */ false, mClosure, buf, buflen);
         name = buf;
 
       } else {
@@ -659,28 +659,32 @@ nsTimerImpl::GetName(nsACString& aName)
       } else if (mName.is<NameFunc>()) {
         static const size_t buflen = 1024;
         char buf[buflen];
-        mName.as<NameFunc>()(mITimer, mClosure, buf, buflen);
+        mName.as<NameFunc>()(mITimer, /* aAnonymize = */ true, mClosure, buf, buflen);
         aName.Assign(buf);
       } else {
         MOZ_ASSERT(mName.is<NameNothing>());
-        aName.Truncate();
+        aName.AssignLiteral("Anonymous callback timer");
       }
       break;
 
     case CallbackType::Interface:
       if (nsCOMPtr<nsINamed> named = do_QueryInterface(mCallback.i)) {
         named->GetName(aName);
+      } else {
+        aName.AssignLiteral("Anonymous interface timer");
       }
       break;
 
     case CallbackType::Observer:
       if (nsCOMPtr<nsINamed> named = do_QueryInterface(mCallback.o)) {
         named->GetName(aName);
+      } else {
+        aName.AssignLiteral("Anonymous observer timer");
       }
       break;
 
     case CallbackType::Unknown:
-      aName.Truncate();
+      aName.AssignLiteral("Anonymous timer");
       break;
   }
 }

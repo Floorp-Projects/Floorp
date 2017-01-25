@@ -63,10 +63,9 @@ let windowListener = {
   onOpenWindow: function(aWindow) {
     // Wait for the window to finish loading
     let domWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowInternal || Ci.nsIDOMWindow);
-    domWindow.addEventListener("UIReady", function onLoad() {
-      domWindow.removeEventListener("UIReady", onLoad);
+    domWindow.addEventListener("UIReady", function() {
       loadIntoWindow(domWindow);
-    });
+    }, {once: true});
   },
 
   onCloseWindow: function(aWindow) {},

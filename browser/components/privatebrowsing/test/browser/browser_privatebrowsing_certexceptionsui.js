@@ -14,10 +14,9 @@ function test() {
 
   // open a private browsing window
   var pbWin = OpenBrowserWindow({private: true});
-  pbWin.addEventListener("load", function onLoad() {
-    pbWin.removeEventListener("load", onLoad);
+  pbWin.addEventListener("load", function() {
     doTest();
-  });
+  }, {once: true});
 
   // Test the certificate exceptions dialog
   function doTest() {

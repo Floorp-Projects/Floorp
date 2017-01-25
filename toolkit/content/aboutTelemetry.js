@@ -1800,10 +1800,9 @@ function setupListeners() {
 
   // Clean up observers when page is closed
   window.addEventListener("unload",
-    function unloadHandler(aEvent) {
-      window.removeEventListener("unload", unloadHandler);
+    function(aEvent) {
       Settings.detachObservers();
-  });
+  }, {once: true});
 
   document.getElementById("chrome-hangs-fetch-symbols").addEventListener("click",
     function() {

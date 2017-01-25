@@ -86,11 +86,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1265279
   function checkAddEventListenerFires(ifrWindow) {
     const customEv = new CustomEvent("appinstalled");
     return new Promise((resolve) => {
-      ifrWindow.addEventListener("appinstalled", function handler(ev) {
-        ifrWindow.removeEventListener("appinstalled", handler);
+      ifrWindow.addEventListener("appinstalled", function(ev) {
         is(ev, customEv, "The events should be the same");
         resolve(ifrWindow);
-      });
+      }, {once: true});
       ifrWindow.dispatchEvent(customEv);
     });
   }

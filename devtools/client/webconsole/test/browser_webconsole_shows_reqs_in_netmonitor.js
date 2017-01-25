@@ -52,10 +52,9 @@ add_task(function* () {
 function loadDocument(browser) {
   let deferred = promise.defer();
 
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
+  browser.addEventListener("load", function () {
     deferred.resolve();
-  }, true);
+  }, {capture: true, once: true});
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_PATH);
 
   return deferred.promise;

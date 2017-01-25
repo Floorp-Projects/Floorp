@@ -23,14 +23,13 @@ function runTest() {
 
   // Wait for the initial load to finish, then navigate the page, then start test
   // by loading SJS with http 401 response.
-  iframe.addEventListener('mozbrowserloadend', function loadend() {
-    iframe.removeEventListener('mozbrowserloadend', loadend);
+  iframe.addEventListener('mozbrowserloadend', function() {
     iframe.addEventListener('mozbrowserusernameandpasswordrequired', testHttpAuthCancel);
     SimpleTest.executeSoon(function() {
       // Use absolute path because we need to specify host.
       iframe.src = 'http://test/tests/dom/browser-element/mochitest/file_http_401_response.sjs';
     });
-  });
+  }, {once: true});
 }
 
 function testHttpAuthCancel(e) {
@@ -38,8 +37,7 @@ function testHttpAuthCancel(e) {
   // Will cancel authentication, but prompt should not be shown again. Instead,
   // we will be led to fail message
   iframe.addEventListener("mozbrowserusernameandpasswordrequired", testFail);
-  iframe.addEventListener("mozbrowsertitlechange", function onTitleChange(e) {
-    iframe.removeEventListener("mozbrowsertitlechange", onTitleChange);
+  iframe.addEventListener("mozbrowsertitlechange", function(e) {
     iframe.removeEventListener("mozbrowserusernameandpasswordrequired", testFail);
     is(e.detail, 'http auth failed', 'expected authentication to fail');
     iframe.addEventListener('mozbrowserusernameandpasswordrequired', testHttpAuth);
@@ -47,7 +45,7 @@ function testHttpAuthCancel(e) {
       // Use absolute path because we need to specify host.
       iframe.src = 'http://test/tests/dom/browser-element/mochitest/file_http_401_response.sjs';
     });
-  });
+  }, {once: true});
 
   is(e.detail.realm, 'http_realm', 'expected realm matches');
   is(e.detail.host, 'http://test', 'expected host matches');
@@ -67,12 +65,11 @@ function testHttpAuth(e) {
   // Will authenticate with correct password, prompt should not be
   // called again.
   iframe.addEventListener("mozbrowserusernameandpasswordrequired", testFail);
-  iframe.addEventListener("mozbrowsertitlechange", function onTitleChange(e) {
-    iframe.removeEventListener("mozbrowsertitlechange", onTitleChange);
+  iframe.addEventListener("mozbrowsertitlechange", function(e) {
     iframe.removeEventListener("mozbrowserusernameandpasswordrequired", testFail);
     is(e.detail, 'http auth success', 'expect authentication to succeed');
     SimpleTest.executeSoon(testProxyAuth);
-  });
+  }, {once: true});
 
   is(e.detail.realm, 'http_realm', 'expected realm matches');
   is(e.detail.host, 'http://test', 'expected host matches');
@@ -97,12 +94,11 @@ function testProxyAuth(e) {
   function onUserNameAndPasswordRequired(e) {
     iframe.removeEventListener("mozbrowserusernameandpasswordrequired",
                                onUserNameAndPasswordRequired);
-    iframe.addEventListener("mozbrowsertitlechange", function onTitleChange(e) {
-      iframe.removeEventListener("mozbrowsertitlechange", onTitleChange);
+    iframe.addEventListener("mozbrowsertitlechange", function(e) {
       iframe.removeEventListener("mozbrowserusernameandpasswordrequired", testFail);
       is(e.detail, 'http auth success', 'expect authentication to succeed');
       SimpleTest.executeSoon(testAuthJarNoInterfere);
-    });
+    }, {once: true});
 
     is(e.detail.realm, 'http_realm', 'expected realm matches');
     is(e.detail.host, mozproxy, 'expected host matches');
@@ -181,12 +177,11 @@ function testAuthJarNoInterfere(e) {
   // Will authenticate with correct password, prompt should not be
   // called again.
   iframe.addEventListener("mozbrowserusernameandpasswordrequired", testFail);
-  iframe.addEventListener("mozbrowsertitlechange", function onTitleChange(e) {
-    iframe.removeEventListener("mozbrowsertitlechange", onTitleChange);
+  iframe.addEventListener("mozbrowsertitlechange", function(e) {
     iframe.removeEventListener("mozbrowserusernameandpasswordrequired", testFail);
     is(e.detail, 'http auth success', 'expected authentication success');
     SimpleTest.executeSoon(testAuthJarInterfere);
-  });
+  }, {once: true});
 
   // Once more with feeling. Ensure that our new auth data doesn't interfere with this mozbrowser's
   // auth data.
@@ -216,14 +211,13 @@ function testAuthJarInterfere(e) {
   }
   iframe.addEventListener("mozbrowserusernameandpasswordrequired",
                           onUserNameAndPasswordRequired);
-  iframe.addEventListener("mozbrowsertitlechange", function onTitleChange(e) {
-    iframe.removeEventListener("mozbrowsertitlechange", onTitleChange);
+  iframe.addEventListener("mozbrowsertitlechange", function(e) {
     iframe.removeEventListener("mozbrowserusernameandpasswordrequired",
                                onUserNameAndPasswordRequired);
     ok(gotusernamepasswordrequired,
        "Should have dispatched mozbrowserusernameandpasswordrequired event");
     testFinish();
-  });
+  }, {once: true});
 
   // Once more with feeling. Ensure that our new auth data interferes with this mozbrowser's
   // auth data.

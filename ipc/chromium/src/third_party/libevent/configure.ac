@@ -6,14 +6,14 @@ dnl See LICENSE for copying information.
 dnl
 dnl Original version Dug Song <dugsong@monkey.org>
 
-AC_PREREQ(2.59c)
+AC_PREREQ(2.59)
 AC_INIT(event.c)
 
 AC_CONFIG_MACRO_DIR([m4])
 
-AM_INIT_AUTOMAKE(libevent,2.0.21-stable)
-AM_CONFIG_HEADER(config.h)
-AC_DEFINE(NUMERIC_VERSION, 0x02001500, [Numeric representation of the version])
+AM_INIT_AUTOMAKE(libevent,2.0.22-stable)
+AC_CONFIG_HEADERS(config.h)
+AC_DEFINE(NUMERIC_VERSION, 0x02001600, [Numeric representation of the version])
 
 dnl Initialize prefix.
 if test "$prefix" = "NONE"; then
@@ -35,10 +35,15 @@ esac
 dnl Checks for programs.
 AC_PROG_CC
 AM_PROG_CC_C_O
-AC_PROG_SED
 AC_PROG_INSTALL
 AC_PROG_LN_S
-AC_PROG_MKDIR_P
+# AC_PROG_MKDIR_P - $(MKDIR_P) should be defined by AM_INIT_AUTOMAKE
+
+# AC_PROG_SED is only available in Autoconf >= 2.59b; workaround for older
+# versions
+ifdef([AC_PROG_SED], [AC_PROG_SED], [
+AC_CHECK_PROGS(SED, [gsed sed])
+])
 
 AC_PROG_GCC_TRADITIONAL
 
@@ -553,6 +558,7 @@ AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(short)
 AC_CHECK_SIZEOF(size_t)
 AC_CHECK_SIZEOF(void *)
+AC_CHECK_SIZEOF(off_t)
 
 AC_CHECK_TYPES([struct in6_addr, struct sockaddr_in6, sa_family_t, struct addrinfo, struct sockaddr_storage], , ,
 [#define _GNU_SOURCE
@@ -720,6 +726,15 @@ if test x$enable_gcc_warnings = xyes && test "$GCC" = "yes"; then
     # Disable the unused-function warnings, because these trigger
     # for minheap-internal.h related code.
     CFLAGS="$CFLAGS -Wno-unused-function"
+
+    # clang on macosx emits warnigns for each directory specified which
+    # isn't "used" generating a lot of build noise (typically 3 warnings
+    # per file
+    case "$host_os" in
+        darwin*)
+            CFLAGS="$CFLAGS -Qunused-arguments"
+        ;;
+    esac
   fi
 
 ##This will break the world on some 64-bit architectures

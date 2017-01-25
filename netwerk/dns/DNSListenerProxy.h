@@ -43,7 +43,8 @@ public:
                              nsICancelable* aRequest,
                              nsIDNSRecord* aRecord,
                              nsresult aStatus)
-      : mListener(aListener)
+      : Runnable("DNSListenerProxy::OnLookupCompleteRunnable")
+      , mListener(aListener)
       , mRequest(aRequest)
       , mRecord(aRecord)
       , mStatus(aStatus)

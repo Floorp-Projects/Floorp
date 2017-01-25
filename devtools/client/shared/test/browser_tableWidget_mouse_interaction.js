@@ -27,9 +27,7 @@ function test() {
   waitForExplicitFinish();
   let win = Services.ww.openWindow(null, TEST_URI, "_blank", TEST_OPT, null);
 
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad);
-
+  win.addEventListener("load", function () {
     waitForFocus(function () {
       doc = win.document;
       table = new TableWidget(doc.querySelector("box"), {
@@ -47,7 +45,7 @@ function test() {
       });
       startTests();
     });
-  });
+  }, {once: true});
 }
 
 function endTests() {

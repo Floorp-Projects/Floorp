@@ -54,9 +54,8 @@ SimpleTest.waitForFocus(function() {
   var b2 = document.getElementById('b2');
   b2.focus(); // Be sure the element is visible.
   document.getElementById('b2').addEventListener("change", function(aEvent) {
-    aEvent.target.removeEventListener("change", arguments.callee);
     ok(false, "When cancel is received, change should not fire");
-  });
+  }, {once: true});
   b2.click();
 
   // Now, we can launch tests when file picker isn't canceled.

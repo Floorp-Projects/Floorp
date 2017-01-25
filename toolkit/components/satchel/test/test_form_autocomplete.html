@@ -989,11 +989,10 @@ function runTest() {
     // Check that the input event is fired.
     case 500:
       input.addEventListener("input", function(event) {
-        input.removeEventListener("input", arguments.callee);
         ok(true, testNum + " oninput should have been received");
         ok(event.bubbles, testNum + " input event should bubble");
         ok(event.cancelable, testNum + " input event should be cancelable");
-      });
+      }, {once: true});
 
       doKey("down");
       checkForm("");

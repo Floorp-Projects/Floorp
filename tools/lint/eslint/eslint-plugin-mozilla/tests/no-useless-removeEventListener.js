@@ -1,0 +1,69 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+//------------------------------------------------------------------------------
+// Requirements
+//------------------------------------------------------------------------------
+
+var rule = require("../lib/rules/no-useless-removeEventListener");
+
+//------------------------------------------------------------------------------
+// Tests
+//------------------------------------------------------------------------------
+
+function invalidCode(code) {
+  let message = "use {once: true} instead of removeEventListener " +
+                "as the first instruction of the listener";
+  return {code: code, errors: [{message: message, type: "CallExpression"}]};
+}
+
+exports.runTest = function(ruleTester) {
+  ruleTester.run("no-useless-removeEventListener", rule, {
+    valid: [
+      // Listeners that aren't a function are always valid.
+      "elt.addEventListener('click', handler);",
+      "elt.addEventListener('click', handler, true);",
+      "elt.addEventListener('click', handler, {once: true});",
+
+      // Should not fail on empty functions.
+      "elt.addEventListener('click', function() {});",
+
+      // Should not reject when removing a listener for another event.
+      "elt.addEventListener('click', function listener() {" +
+      "  elt.removeEventListener('keypress', listener);" +
+      "});",
+
+      // Should not reject when there's another instruction before
+      // removeEventListener.
+      "elt.addEventListener('click', function listener() {" +
+      "  elt.focus();" +
+      "  elt.removeEventListener('click', listener);" +
+      "});",
+
+      // Should not reject when wantsUntrusted is true.
+      "elt.addEventListener('click', function listener() {" +
+      "  elt.removeEventListener('click', listener);" +
+      "}, false, true);",
+    ],
+    invalid: [
+      invalidCode("elt.addEventListener('click', function listener() {" +
+                  "  elt.removeEventListener('click', listener);" +
+                  "});"),
+      invalidCode("elt.addEventListener('click', function listener() {" +
+                  "  elt.removeEventListener('click', listener, true);" +
+                  "}, true);"),
+      invalidCode("elt.addEventListener('click', function listener() {" +
+                  "  elt.removeEventListener('click', listener);" +
+                  "}, {once: true});"),
+      invalidCode("elt.addEventListener('click', function listener() {" +
+                  "  /* Comment */" +
+                  "  elt.removeEventListener('click', listener);" +
+                  "});"),
+      invalidCode("elt.addEventListener('click', function() {" +
+                  "  elt.removeEventListener('click', arguments.callee);" +
+                  "});"),
+    ]
+  });
+};

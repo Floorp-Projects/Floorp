@@ -10,14 +10,13 @@ const notificationID = "indexedDB-permissions-prompt";
 function promiseMessage(aMessage, browser) {
   return ContentTask.spawn(browser.selectedBrowser, aMessage, function* (aMessage) {
     yield new Promise((resolve, reject) => {
-      content.addEventListener("message", function messageListener(event) {
-        content.removeEventListener("message", messageListener);
+      content.addEventListener("message", function(event) {
         is(event.data, aMessage, "received " + aMessage);
         if (event.data == aMessage)
           resolve();
         else
           reject();
-      });
+      }, {once: true});
     });
   });
 }

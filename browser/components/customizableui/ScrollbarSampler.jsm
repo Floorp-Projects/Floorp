@@ -44,8 +44,7 @@ this.ScrollbarSampler = {
                        .getInterface(Ci.nsIDOMWindowUtils);
 
     return new Promise(resolve => {
-      cwindow.addEventListener("load", function onLoad(aEvent) {
-        cwindow.removeEventListener("load", onLoad);
+      cwindow.addEventListener("load", function(aEvent) {
         let sbWidth = {};
         try {
           utils.getScrollbarSize(true, sbWidth, {});
@@ -58,7 +57,7 @@ this.ScrollbarSampler = {
         sbWidth.value = Math.max(sbWidth.value, 10);
         resolve(sbWidth.value);
         iframe.remove();
-      });
+      }, {once: true});
     });
   }
 };

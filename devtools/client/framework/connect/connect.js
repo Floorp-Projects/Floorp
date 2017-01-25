@@ -24,8 +24,7 @@ var gConnectionTimeout;
  * Once DOM is ready, we prefil the host/port inputs with
  * pref-stored values.
  */
-window.addEventListener("DOMContentLoaded", function onDOMReady() {
-  window.removeEventListener("DOMContentLoaded", onDOMReady, true);
+window.addEventListener("DOMContentLoaded", function () {
   let host = Services.prefs.getCharPref("devtools.debugger.remote-host");
   let port = Services.prefs.getIntPref("devtools.debugger.remote-port");
 
@@ -45,7 +44,7 @@ window.addEventListener("DOMContentLoaded", function onDOMReady() {
       showError("unexpected");
     });
   });
-}, true);
+}, {capture: true, once: true});
 
 /**
  * Called when the "connect" button is clicked.

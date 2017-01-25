@@ -556,6 +556,49 @@ public:
   BorderWidths mWidths;
 };
 
+struct TextLayerProperties : public LayerPropertiesBase
+{
+  explicit TextLayerProperties(TextLayer *aLayer)
+    : LayerPropertiesBase(aLayer)
+    , mBounds(aLayer->GetBounds())
+    , mGlyphs(aLayer->GetGlyphs())
+    , mFont(aLayer->GetScaledFont())
+  { }
+
+protected:
+  TextLayerProperties(const TextLayerProperties& a) = delete;
+  TextLayerProperties& operator=(const TextLayerProperties& a) = delete;
+
+public:
+  nsIntRegion ComputeChangeInternal(const char* aPrefix,
+                                    NotifySubDocInvalidationFunc aCallback,
+                                    bool& aGeometryChanged) override
+  {
+    TextLayer* text = static_cast<TextLayer*>(mLayer.get());
+
+    if (!text->GetLocalVisibleRegion().ToUnknownRegion().IsEqual(mVisibleRegion)) {
+      aGeometryChanged = true;
+      IntRect result = NewTransformedBounds();
+      result = result.Union(OldTransformedBounds());
+      return result;
+    }
+
+    if (!mBounds.IsEqualEdges(text->GetBounds()) ||
+        mGlyphs != text->GetGlyphs() ||
+        mFont != text->GetScaledFont()) {
+      aGeometryChanged = true;
+      LTI_DUMP(NewTransformedBounds(), "bounds");
+      return NewTransformedBounds();
+    }
+
+    return nsIntRegion();
+  }
+
+  gfx::IntRect mBounds;
+  nsTArray<GlyphArray> mGlyphs;
+  gfx::ScaledFont* mFont;
+};
+
 static ImageHost* GetImageHost(Layer* aLayer)
 {
   HostLayer* compositor = aLayer->AsHostLayer();
@@ -690,12 +733,13 @@ CloneLayerTreePropertiesInternal(Layer* aRoot, bool aIsMask /* = false */)
       return MakeUnique<ImageLayerProperties>(static_cast<ImageLayer*>(aRoot), aIsMask);
     case Layer::TYPE_CANVAS:
       return MakeUnique<CanvasLayerProperties>(static_cast<CanvasLayer*>(aRoot));
-  case Layer::TYPE_BORDER:
+    case Layer::TYPE_BORDER:
       return MakeUnique<BorderLayerProperties>(static_cast<BorderLayer*>(aRoot));
+    case Layer::TYPE_TEXT:
+      return MakeUnique<TextLayerProperties>(static_cast<TextLayer*>(aRoot));
     case Layer::TYPE_READBACK:
     case Layer::TYPE_SHADOW:
     case Layer::TYPE_PAINTED:
-    case Layer::TYPE_TEXT:
       return MakeUnique<LayerPropertiesBase>(aRoot);
   }
 

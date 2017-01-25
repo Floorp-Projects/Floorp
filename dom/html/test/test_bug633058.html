@@ -49,8 +49,6 @@ function startTest() {
   });
 
   input.addEventListener('focus', function() {
-    input.removeEventListener('focus', arguments.callee);
-
     synthesizeKey('VK_UP', {});
     synthesizeKey('VK_LEFT', {});
     synthesizeKey('VK_RIGHT', {});
@@ -59,7 +57,7 @@ function startTest() {
     synthesizeKey('VK_DELETE', {});
     synthesizeKey('VK_ESCAPE', {});
     synthesizeKey('VK_RETURN', {});
-  });
+  }, {once: true});
   input.focus();
 }
 </script>

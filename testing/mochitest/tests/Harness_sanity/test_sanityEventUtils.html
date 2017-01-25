@@ -64,7 +64,6 @@ function starttest() {
       /* test synthesizeMouse* */
       //focus trick enables us to run this in iframes
       $("radioTarget1").addEventListener('focus', function (aEvent) {
-        $("radioTarget1").removeEventListener('focus', arguments.callee);
         synthesizeMouse($("radioTarget1"), 1, 1, {});
         is($("radioTarget1").checked, true, "synthesizeMouse should work")
         $("radioTarget1").checked = false;
@@ -73,12 +72,11 @@ function starttest() {
         is($("radioTarget1").checked, true, "synthesizeMouse should still work with non-test mouse events disabled");
         $("radioTarget1").checked = false;
         disableNonTestMouseEvents(false);
-      });
+      }, {once: true});
       $("radioTarget1").focus();
 
       //focus trick enables us to run this in iframes
       $("textBoxA").addEventListener("focus", function (aEvent) {
-        $("textBoxA").removeEventListener("focus", arguments.callee);
         check = false;
         $("textBoxA").addEventListener("click", function() { check = true; });
         synthesizeMouseAtCenter($("textBoxA"), {});
@@ -87,7 +85,7 @@ function starttest() {
         check = false;
         synthesizeMouseExpectEvent($("textBoxA"), 1, 1, {}, $("textBoxA"), "click", "synthesizeMouseExpectEvent should fire click event");
         is(check, true, 'synthesizeMouse should dispatch mouse event');
-      });
+      }, {once: true});
       $("textBoxA").focus();
     
       /**

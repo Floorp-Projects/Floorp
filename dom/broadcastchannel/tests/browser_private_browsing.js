@@ -6,19 +6,17 @@ const URL = "http://mochi.test:8888/browser/dom/broadcastchannel/tests/blank.htm
 add_task(function*() {
   var win1 = OpenBrowserWindow({private: true});
   var win1Promise = new win1.Promise(resolve => {
-    win1.addEventListener("load", function onLoad() {
-      win1.removeEventListener("load", onLoad);
+    win1.addEventListener("load", function() {
       resolve();
-    });
+    }, {once: true});
   });
   yield win1Promise;
 
   var win2 = OpenBrowserWindow({private: false});
   var win2Promise = new win2.Promise(resolve => {
-    win2.addEventListener("load", function onLoad() {
-      win2.removeEventListener("load", onLoad);
+    win2.addEventListener("load", function() {
       resolve();
-    });
+    }, {once: true});
   });
   yield win2Promise;
 

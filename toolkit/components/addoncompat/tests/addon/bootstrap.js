@@ -22,10 +22,9 @@ function forEachWindow(f) {
 }
 
 function addLoadListener(target, listener) {
-  target.addEventListener("load", function handler(event) {
-    target.removeEventListener("load", handler, true);
+  target.addEventListener("load", function(event) {
     return listener(event);
-  }, true);
+  }, {capture: true, once: true});
 }
 
 var gWin;
@@ -208,9 +207,7 @@ function testSandbox() {
     const url = baseURL + "browser_addonShims_testpage.html";
     let tab = gBrowser.addTab(url);
     let browser = tab.linkedBrowser;
-    browser.addEventListener("load", function handler() {
-      browser.removeEventListener("load", handler);
-
+    browser.addEventListener("load", function() {
       let sandbox = Cu.Sandbox(browser.contentWindow,
                                {sandboxPrototype: browser.contentWindow,
                                 wantXrays: false});
@@ -231,7 +228,7 @@ function testSandbox() {
          "EP sandbox code ran successfully");
 
       removeTab(tab, resolve);
-    }, true);
+    }, {capture: true, once: true});
   });
 }
 

@@ -29,8 +29,7 @@ window.addEventListener("load", () => {
 
   // We need to wait for MozAfterPaint instead of requestAnimationFrame to
   // ensure the stacking context has been updated on the compositor.
-  window.addEventListener("MozAfterPaint", function firstPaint() {
-    window.removeEventListener("MozAfterPaint", firstPaint);
+  window.addEventListener("MozAfterPaint", function() {
     // Here we have CSS animation on transform:none style element, so
     // there should be a stacking context.
 
@@ -42,6 +41,6 @@ window.addEventListener("load", () => {
       // stacking context.
       document.documentElement.classList.remove("reftest-wait");
     });
-  });
+  }, {once: true});
 });
 </script>

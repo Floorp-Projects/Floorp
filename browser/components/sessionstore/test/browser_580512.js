@@ -56,7 +56,6 @@ function openWinWithCb(cb, argURIs, expectedURIs) {
                        "chrome,all,dialog=no", argURIs.join("|"));
 
   win.addEventListener("load", function () {
-    win.removeEventListener("load", arguments.callee);
     info("the window loaded");
 
     var expectedLoads = expectedURIs.length;
@@ -77,5 +76,5 @@ function openWinWithCb(cb, argURIs, expectedURIs) {
         }
       }
     });
-  });
+  }, {once: true});
 }

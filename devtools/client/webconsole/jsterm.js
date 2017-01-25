@@ -612,11 +612,10 @@ JSTerm.prototype = {
       let document = options.targetElement.ownerDocument;
       let iframe = document.createElementNS(XHTML_NS, "iframe");
 
-      iframe.addEventListener("load", function onIframeLoad() {
-        iframe.removeEventListener("load", onIframeLoad, true);
+      iframe.addEventListener("load", function () {
         iframe.style.visibility = "visible";
         deferred.resolve(iframe.contentWindow);
-      }, true);
+      }, {capture: true, once: true});
 
       iframe.flex = 1;
       iframe.style.visibility = "hidden";

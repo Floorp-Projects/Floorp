@@ -226,10 +226,9 @@ function setupSearch() {
   // immediately when the element is first drawn, so the
   // attribute is also used for styling when the page first loads.
   searchText = document.getElementById("searchText");
-  searchText.addEventListener("blur", function searchText_onBlur() {
-    searchText.removeEventListener("blur", searchText_onBlur);
+  searchText.addEventListener("blur", function() {
     searchText.removeAttribute("autofocus");
-  });
+  }, {once: true});
 
   if (!gContentSearchController) {
     gContentSearchController =

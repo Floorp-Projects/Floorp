@@ -23,10 +23,9 @@ function promiseNewWindow() {
       if (topic == "domwindowopened") {
         Services.ww.unregisterNotification(observer);
         let win = subject.QueryInterface(Ci.nsIDOMWindow);
-        win.addEventListener("load", function onLoad() {
-          win.removeEventListener("load", onLoad);
+        win.addEventListener("load", function() {
           resolve(win);
-        });
+        }, {once: true});
       }
     };
 

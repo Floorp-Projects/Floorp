@@ -333,10 +333,9 @@ GlobalSearchView.prototype = Heritage.extend(WidgetMethods, {
    */
   _bounceMatch: function (aMatch) {
     Services.tm.currentThread.dispatch({ run: () => {
-      aMatch.addEventListener("transitionend", function onEvent() {
-        aMatch.removeEventListener("transitionend", onEvent);
+      aMatch.addEventListener("transitionend", function () {
         aMatch.removeAttribute("focused");
-      });
+      }, {once: true});
       aMatch.setAttribute("focused", "");
     }}, 0);
     aMatch.setAttribute("focusing", "");

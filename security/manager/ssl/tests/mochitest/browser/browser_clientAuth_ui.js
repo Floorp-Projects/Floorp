@@ -39,10 +39,9 @@ function openClientAuthDialog(cert) {
                               "", TEST_HOSTNAME, TEST_ORG, TEST_ISSUER_ORG,
                               TEST_PORT, certList, returnVals);
   return new Promise((resolve, reject) => {
-    win.addEventListener("load", function onLoad() {
-      win.removeEventListener("load", onLoad);
+    win.addEventListener("load", function() {
       resolve([win, returnVals]);
-    });
+    }, {once: true});
   });
 }
 

@@ -113,8 +113,7 @@ var steps = [
     SystemAppProxy.registerFrame(frame);
     assert.ok(true, "Frame created and registered");
 
-    frame.contentWindow.addEventListener("load", function onload() {
-      frame.contentWindow.removeEventListener("load", onload);
+    frame.contentWindow.addEventListener("load", function() {
       assert.ok(true, "Frame document loaded");
 
       // Declare that the iframe is now loaded.
@@ -128,7 +127,7 @@ var steps = [
 
       // Once pending events are received,
       // we will run checkEventDispatching from `listener` function
-    });
+    }, {once: true});
 
     frame.setAttribute("src", "data:text/html,system app");
   },

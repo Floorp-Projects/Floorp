@@ -74,7 +74,7 @@ function parseLocation(location, fallbackLine, fallbackColumn) {
   // For 2) and 3), there can be no occurences of ' (' since ' ' characters
   // are urlencoded in the resource string.
   //
-  // XXX: Note that 3) is ambiguous with SPS marker locations like
+  // XXX: Note that 3) is ambiguous with Gecko Profiler marker locations like
   // "EnterJIT". We can't distinguish the two, so we treat 3) like a function
   // name.
   let parenIndex = -1;

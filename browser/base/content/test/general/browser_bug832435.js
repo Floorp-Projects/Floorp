@@ -7,8 +7,7 @@ function test() {
   ok(true, "Starting up");
 
   gBrowser.selectedBrowser.focus();
-  gURLBar.addEventListener("focus", function onFocus() {
-    gURLBar.removeEventListener("focus", onFocus);
+  gURLBar.addEventListener("focus", function() {
     ok(true, "Invoked onfocus handler");
     EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true });
 
@@ -17,7 +16,7 @@ function test() {
       ok(true, "Evaluated without crashing");
       finish();
     });
-  });
+  }, {once: true});
   gURLBar.inputField.value = "javascript: var foo = '11111111'; ";
   gURLBar.focus();
 }

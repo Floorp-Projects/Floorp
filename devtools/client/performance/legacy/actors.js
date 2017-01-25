@@ -46,7 +46,7 @@ LegacyProfilerFront.prototype = {
     let target = this._target;
     this._front = new ProfilerFront(target.client, target.form);
 
-    // Fetch and store information about the SPS profiler and
+    // Fetch and store information about the Gecko Profiler and
     // server profiler.
     this.traits = {};
     this.traits.filterable = target.getTrait("profilerDataFilterable");

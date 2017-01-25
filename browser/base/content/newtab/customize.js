@@ -32,10 +32,9 @@ var gCustomize = {
   },
 
   hidePanel: function() {
-    this._nodes.overlay.addEventListener("transitionend", function onTransitionEnd() {
-      gCustomize._nodes.overlay.removeEventListener("transitionend", onTransitionEnd);
+    this._nodes.overlay.addEventListener("transitionend", function() {
       gCustomize._nodes.overlay.style.display = "none";
-    });
+    }, {once: true});
     this._nodes.overlay.style.opacity = 0;
     this._nodes.button.removeAttribute("active");
     this._nodes.panel.removeAttribute("open");

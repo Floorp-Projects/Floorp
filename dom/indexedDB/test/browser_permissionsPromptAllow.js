@@ -22,8 +22,6 @@ function test1()
   gBrowser.selectedTab = gBrowser.addTab();
 
   gBrowser.selectedBrowser.addEventListener("load", function () {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-
     setFinishedCallback(function(isIDBDatabase, exception) {
       ok(isIDBDatabase,
          "First database creation was successful");
@@ -46,7 +44,7 @@ function test1()
       ok(true, "prompt hidden");
     });
 
-  }, true);
+  }, {capture: true, once: true});
 
   info("loading test page: " + testPageURL);
   content.location = testPageURL;
@@ -58,8 +56,6 @@ function test2()
   gBrowser.selectedTab = gBrowser.addTab();
 
   gBrowser.selectedBrowser.addEventListener("load", function () {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-
     setFinishedCallback(function(isIDBDatabase, exception) {
       ok(isIDBDatabase,
          "First database creation was successful");
@@ -83,7 +79,7 @@ function test2()
       ok(false, "Shouldn't show a popup this time");
     });
 
-  }, true);
+  }, {capture: true, once: true});
 
   info("loading test page: " + testPageURL);
   content.location = testPageURL;

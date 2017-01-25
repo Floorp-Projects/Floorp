@@ -818,10 +818,9 @@ function promiseDocumentLoaded(doc) {
   }
 
   return new Promise(resolve => {
-    doc.defaultView.addEventListener("load", function onReady(event) {
-      doc.defaultView.removeEventListener("load", onReady);
+    doc.defaultView.addEventListener("load", function(event) {
       resolve(doc);
-    });
+    }, {once: true});
   });
 }
 

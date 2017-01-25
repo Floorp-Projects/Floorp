@@ -49,15 +49,13 @@ exports["test window/events for leaks with existing window"] = function*(assert)
     return new Promise((resolve, reject) => {
       let loader = Loader(module);
       let w = open();
-      w.addEventListener("load", function windowLoaded(evt) {
-        w.removeEventListener("load", windowLoaded);
+      w.addEventListener("load", function(evt) {
         let { events } = loader.require("sdk/window/events");
-        w.addEventListener("DOMWindowClose", function windowClosed(evt) {
-          w.removeEventListener("DOMWindowClose", windowClosed);
+        w.addEventListener("DOMWindowClose", function(evt) {
           resolve(loader);
-        });
+        }, {once: true});
         w.close();
-      });
+      }, {once: true});
     });
   });
 };

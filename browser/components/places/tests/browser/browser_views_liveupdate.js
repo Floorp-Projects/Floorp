@@ -33,10 +33,9 @@ function openBookmarksSidebar() {
   // Open bookmarks sidebar.
   var sidebar = document.getElementById("sidebar");
   sidebar.addEventListener("load", function() {
-    sidebar.removeEventListener("load", arguments.callee, true);
     // Need to executeSoon since the tree is initialized on sidebar load.
     executeSoon(startTest);
-  }, true);
+  }, {capture: true, once: true});
   SidebarUI.show("viewBookmarksSidebar");
 }
 

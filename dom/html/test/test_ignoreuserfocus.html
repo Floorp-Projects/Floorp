@@ -48,9 +48,7 @@
           // Get privileged iframe because mozbrowser iframe is not same origin
           // with the parent. We need to access its content through the wrapper.
           var privilegedIframe = SpecialPowers.wrap(iframe);
-          privilegedIframe.contentWindow.addEventListener("MozAfterPaint", function afterPaint(e) {
-            privilegedIframe.contentWindow.removeEventListener("MozAfterPaint", afterPaint);
-            
+          privilegedIframe.contentWindow.addEventListener("MozAfterPaint", function(e) {
             privilegedIframe.contentWindow.addEventListener("focus",
               function(e) {
                 ok(!iframe.hasAttribute("ignoreuserfocus"), "Shouldn't get a focus event in ignoreuserfocus iframe!");
@@ -106,8 +104,7 @@
             // Wait for paint to setup frame for area. Currently the area frame
             // map is reset for each paint. If we are in the middle of a paint
             // then the area will not be focusable.
-            privilegedIframe.contentWindow.addEventListener("MozAfterPaint", function afterPaintArea(e) {
-              privilegedIframe.contentWindow.removeEventListener("MozAfterPaint", afterPaintArea);
+            privilegedIframe.contentWindow.addEventListener("MozAfterPaint", function(e) {
               var innerArea = privilegedIframe.contentDocument.getElementsByTagName("area")[0];
               innerArea.focus();
               isnot(document.activeElement, iframe, "[explicit innerArea.focus()] iframe should not have the focus");
@@ -124,11 +121,11 @@
               is(document.activeElement, witness2, "witness2 should have the focus");
 
               SimpleTest.finish();
-            });
+            }, {once: true});
             witness.focus();
             // force reflow
             iframe.setAttribute("height", "298px");
-          });
+          }, {once: true});
           // force reflow
           iframe.setAttribute("height", "299px");
         });

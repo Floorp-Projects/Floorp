@@ -34,7 +34,7 @@ class nsIProfileSaveEvent;
 class nsPluginTag;
 
 namespace mozilla {
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#ifdef MOZ_GECKO_PROFILER
 class ProfileGatherer;
 #endif
 namespace dom {
@@ -494,7 +494,7 @@ class PluginModuleChromeParent
 
     void CachedSettingChanged();
 
-#ifdef  MOZ_ENABLE_PROFILER_SPS
+#ifdef  MOZ_GECKO_PROFILER
     void GatherAsyncProfile();
     void GatheredAsyncProfile(nsIProfileSaveEvent* aSaveEvent);
     void StartProfiler(nsIProfilerStartParams* aParams);
@@ -559,7 +559,7 @@ private:
 
     virtual void UpdatePluginTimeout() override;
 
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#ifdef MOZ_GECKO_PROFILER
     void InitPluginProfiling();
     void ShutdownPluginProfiling();
 #endif
@@ -672,7 +672,7 @@ private:
     // processes in existence!
     dom::ContentParent* mContentParent;
     nsCOMPtr<nsIObserver> mPluginOfflineObserver;
-#ifdef MOZ_ENABLE_PROFILER_SPS
+#ifdef MOZ_GECKO_PROFILER
     RefPtr<mozilla::ProfileGatherer> mGatherer;
 #endif
     nsCString mProfile;

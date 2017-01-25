@@ -381,10 +381,9 @@ function setAutoRefreshInterval(checkBox) {
   }, REFRESH_INTERVAL_MS);
 }
 
-window.addEventListener("DOMContentLoaded", function load() {
-  window.removeEventListener("DOMContentLoaded", load);
+window.addEventListener("DOMContentLoaded", function() {
   init();
-});
+}, {once: true});
 
 function doLookup() {
   let host = document.getElementById("host").value;

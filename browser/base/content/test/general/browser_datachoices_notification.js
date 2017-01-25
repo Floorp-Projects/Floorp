@@ -45,10 +45,9 @@ function promiseNextTick() {
  */
 function promiseWaitForAlertActive(aNotificationBox) {
   let deferred = PromiseUtils.defer();
-  aNotificationBox.addEventListener("AlertActive", function onActive() {
-    aNotificationBox.removeEventListener("AlertActive", onActive, true);
+  aNotificationBox.addEventListener("AlertActive", function() {
     deferred.resolve();
-  });
+  }, {once: true});
   return deferred.promise;
 }
 

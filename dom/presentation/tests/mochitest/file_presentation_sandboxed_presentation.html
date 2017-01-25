@@ -96,12 +96,11 @@ function runTest() {
   .then(finish);
 }
 
-window.addEventListener("message", function onMessage(evt) {
-  window.removeEventListener("message", onMessage);
+window.addEventListener("message", function(evt) {
   if (evt.data === "start") {
     runTest();
   }
-});
+}, {once: true});
 
 window.setTimeout(function() {
   command("ready-to-start");

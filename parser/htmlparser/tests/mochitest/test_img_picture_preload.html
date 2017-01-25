@@ -64,8 +64,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1067345
         // To avoid spurious image loads being reported when the resolution changes,
         // load an intermediate iframe.
         iframe.src = "about:blank";
-        iframe.addEventListener('load', function on_iframe_load() {
-          iframe.removeEventListener('load', on_iframe_load);
+        iframe.addEventListener('load', function() {
           SpecialPowers.pushPrefEnv({'set': [ [ "layout.css.devPixelsPerPx", currentDPI ]] },
                                     function() {
             // Clear image cache for next run (we don't try to validate cached items
@@ -76,7 +75,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1067345
                          .clearCache(false);
             iframe.src = "./file_img_picture_preload.html?" + currentDPI;
           });
-        });
+        }, {once: true});
       } else {
         SimpleTest.finish();
       }

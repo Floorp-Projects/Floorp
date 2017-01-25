@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html><head>
+<title>Test for bug 1306532</title>
+<style src="/tests/SimpleTest/test.css" type="text/css"></style>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+
+<script class="testbody" type="application/javascript">
+
+function runTest() {
+  // Copy content from table.
+  var selection = getSelection();
+  var startRange = document.createRange();
+  startRange.setStart(headingone, 0);
+  startRange.setEnd(celltwo, 0);
+  selection.removeAllRanges();
+  selection.addRange(startRange);
+  SpecialPowers.wrap(document).execCommand("copy", false, null);
+
+  // Paste content into "pasteframe"
+  var pasteContainer = pasteframe.contentDocument.body;
+  var pasteRange = pasteframe.contentDocument.createRange();
+  pasteRange.selectNodeContents(pasteContainer);
+  pasteRange.collapse(false);
+  selection.removeAllRanges();
+  selection.addRange(pasteRange);
+  SpecialPowers.wrap(pasteframe.contentDocument).execCommand("paste", false, null);
+
+  is(pasteContainer.querySelector("#headingone").textContent, "Month", "First heading should be 'Month'.");
+  is(pasteContainer.querySelector("#headingtwo").textContent, "Savings", "Second heading should be 'Savings'.");
+  is(pasteContainer.querySelector("#cellone").textContent, "January", "First cell should be 'January'.");
+  is(pasteContainer.querySelector("#celltwo").textContent, "$100", "Second cell should be '$100'.");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1306532">Mozilla Bug 1306532</a>
+<p id="display"></p>
+
+<pre id="test">
+</pre>
+
+<div id="container">
+<table border="1">
+  <tr>
+    <th id="headingone">Month</th>
+    <th id="headingtwo">Savings</th>
+  </tr>
+  <tr>
+    <td id="cellone">January</td>
+    <td id="celltwo">$100</td>
+  </tr>
+</table>
+</div>
+
+<iframe onload="runTest();" id="pasteframe" src="data:text/html,<html><body contenteditable='true'>"></iframe>
+
+</body>
+</html>

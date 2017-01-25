@@ -30,8 +30,6 @@ function runTest()
   var select = document.getElementsByTagName('select')[0];
 
   select.addEventListener("focus", function() {
-    select.removeEventListener("focus", arguments.callee);
-
     isnot(select.selectedIndex, -1, "Something should have been selected");
 
     ok(!select.matches(":-moz-ui-invalid"),
@@ -40,7 +38,7 @@ function runTest()
          ":-moz-ui-valid should not apply");
 
     SimpleTest.finish();
-  });
+  }, {once: true});
 
   synthesizeMouse(select, 5, 5, {});
 }

@@ -55,15 +55,14 @@
         info("Invoked constructor for " + this.id);
 
         var t = this;
-        window.addEventListener('load', function loadListener() {
-          window.removeEventListener('load', loadListener);
+        window.addEventListener('load', function() {
           // Wait two refresh-driver ticks to make sure that the constructor runs
           // for both |allow| and |deny| if it's ever going to.
           //
           // See bug 944407 comment 37.
           info("Invoked load listener for " + t.id);
           window.requestAnimationFrame(function() { window.requestAnimationFrame(t.startTest.bind(t)); });
-        });
+        }, {once: true});
       ]]>
       </constructor>
     </implementation>

@@ -42,8 +42,7 @@ function whenDelayedStartupFinished(aWindow, aCallback) {
 
 function testOnWindow(contentPage, aCallback) {
   var win = mainWindow.OpenBrowserWindow();
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad);
+  win.addEventListener("load", function() {
     whenDelayedStartupFinished(win, function() {
       win.addEventListener("DOMContentLoaded", function onInnerLoad() {
         if (win.content.location.href != contentPage) {
@@ -59,7 +58,7 @@ function testOnWindow(contentPage, aCallback) {
       }, true);
       SimpleTest.executeSoon(function() { win.gBrowser.loadURI(contentPage); });
     });
-  }, true);
+  }, {capture: true, once: true});
 }
 
 var alwaysbadids = [
