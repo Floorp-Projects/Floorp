@@ -8,6 +8,7 @@ from twisted.internet.task import LoopingCall
 import txws
 import psutil
 
+import argparse
 import sys
 import os
 
@@ -89,12 +90,17 @@ def check_parent():
         reactor.stop()
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Starts websocket/process bridge.')
+    parser.add_argument("--port", type=str, dest="port", default="8191",
+                    help="Port for websocket/process bridge. Default 8191.")
+    args = parser.parse_args()
+
     parent_checker = LoopingCall(check_parent)
     parent_checker.start(1)
 
     bridgeFactory = ProcessSocketBridgeFactory()
-    reactor.listenTCP(8191, txws.WebSocketFactory(bridgeFactory))
-    print("websocket/process bridge listening on port 8191")
+    reactor.listenTCP(int(args.port), txws.WebSocketFactory(bridgeFactory))
+    print("websocket/process bridge listening on port %s" % args.port)
     reactor.run()
 
 

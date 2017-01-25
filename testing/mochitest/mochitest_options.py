@@ -588,6 +588,11 @@ class MochitestArguments(ArgumentContainer):
           "help": "Delete pending crash reports before running tests.",
           "suppress": True,
           }],
+        [["--websocket-process-bridge-port"],
+         {"default": "8191",
+          "dest": "websocket_process_bridge_port",
+          "help": "Port for websocket/process bridge. Default 8191.",
+          }],
     ]
 
     defaults = {
