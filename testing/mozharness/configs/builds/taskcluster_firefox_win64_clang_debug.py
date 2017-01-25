@@ -61,7 +61,7 @@ config = {
      ###### 64 bit specific ######
     'base_name': 'WINNT_6.1_x86-64_%(branch)s',
     'platform': 'win64',
-    'stage_platform': 'win64-debug',
+    'stage_platform': 'win64-st-an-debug',
     'debug_build': True,
     'publish_nightly_en_US_routes': True,
     'env': {
