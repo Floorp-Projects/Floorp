@@ -128,9 +128,11 @@ WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
     case WebGLExtensionID::WEBGL_compressed_texture_atc:
         return gl->IsExtensionSupported(gl::GLContext::AMD_compressed_ATC_texture);
     case WebGLExtensionID::WEBGL_compressed_texture_etc:
-        return gl->IsSupported(gl::GLFeature::ES3_compatibility);
+        return gl->IsSupported(gl::GLFeature::ES3_compatibility) &&
+               !gl->IsANGLE();
     case WebGLExtensionID::WEBGL_compressed_texture_etc1:
-        return gl->IsExtensionSupported(gl::GLContext::OES_compressed_ETC1_RGB8_texture);
+        return gl->IsExtensionSupported(gl::GLContext::OES_compressed_ETC1_RGB8_texture) &&
+               !gl->IsANGLE();
     case WebGLExtensionID::WEBGL_compressed_texture_pvrtc:
         return gl->IsExtensionSupported(gl::GLContext::IMG_texture_compression_pvrtc);
     case WebGLExtensionID::WEBGL_compressed_texture_s3tc:
