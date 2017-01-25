@@ -5,10 +5,18 @@
 
 "use strict";
 
+// RegExp that validates copied text for log lines.
+const LOG_FORMAT = /^[\d:.]+ .+ \d+ .+:\d+$/;
+// RegExp that validates copied text for stacktrace lines.
+const TRACE_FORMAT = /^\t.+ .+:\d+:\d+$/;
+
 const TEST_URI = `data:text/html;charset=utf-8,<script>
   window.logStuff = function () {
     console.log("simple text message");
-    console.trace();
+    function wrapper() {
+      console.trace();
+    }
+    wrapper();
   };
 </script>`;
 
@@ -19,47 +27,52 @@ add_task(function* () {
   let hud = yield openNewTabAndConsole(TEST_URI);
   hud.jsterm.clearOutput();
 
+  info("Call the log function defined in the test page");
   yield ContentTask.spawn(gBrowser.selectedBrowser, null, () => {
     content.wrappedJSObject.logStuff();
   });
 
-  let messages = [];
-  for (let s of ["simple text message", "console.trace()"]) {
-    messages.push(yield waitFor(() => findMessage(hud, s)));
-  }
+  info("Test copy menu item for the simple log");
+  let message = yield waitFor(() => findMessage(hud, "simple text message"));
+  let clipboardText = yield copyMessageContent(hud, message);
+  ok(true, "Clipboard text was found and saved");
 
-  for (let message of messages) {
-    let menuPopup = yield openContextMenu(hud, message);
-    let copyMenuItem = menuPopup.querySelector("#console-menu-copy");
-    ok(copyMenuItem, "copy menu item is enabled");
+  info("Check copied text for simple log message");
+  let lines = clipboardText.split("\n");
+  ok(lines.length, 2, "There are 2 lines in the copied text");
+  is(lines[1], "", "The last line is an empty new line");
+  ok(LOG_FORMAT.test(lines[0]), "Log line has the right format:\n" + lines[0]);
 
-    yield waitForClipboardPromise(
-      () => copyMenuItem.click(),
-      data => data === message.textContent
-    );
+  info("Test copy menu item for the stack trace message");
+  message = yield waitFor(() => findMessage(hud, "console.trace"));
+  clipboardText = yield copyMessageContent(hud, message);
+  ok(true, "Clipboard text was found and saved");
 
-    ok(true, "Clipboard text was found and saved");
-
-    // TODO: The copy menu item & this test should be improved for the new console.
-    // This is tracked by https://bugzilla.mozilla.org/show_bug.cgi?id=1329606 .
-
-    // The rest of this test was copied from the old console frontend. The copy menu item
-    // logic is not on par with the one from the old console yet.
-
-    // let lines = clipboardText.split("\n");
-    // ok(lines.length > 0, "There is at least one newline in the message");
-    // is(lines.pop(), "", "There is a newline at the end");
-    // is(lines.length, result.lines, `There are ${result.lines} lines in the message`);
-
-    // // Test the first line for "timestamp message repeat file:line"
-    // let firstLine = lines.shift();
-    // ok(/^[\d:.]+ .+ \d+ .+:\d+$/.test(firstLine),
-    //   "The message's first line has the right format:\n" + firstLine);
-
-    // // Test the remaining lines (stack trace) for "TABfunctionName sourceURL:line:col"
-    // for (let line of lines) {
-    //   ok(/^\t.+ .+:\d+:\d+$/.test(line),
-    //     "The stack trace line has the right format:\n" + line);
-    // }
-  }
+  info("Check copied text for stack trace message");
+  lines = clipboardText.split("\n");
+  ok(lines.length, 4, "There are 4 lines in the copied text");
+  is(lines[3], "", "The last line is an empty new line");
+  ok(LOG_FORMAT.test(lines[0]), "Log line has the right format:\n" + lines[0]);
+  ok(TRACE_FORMAT.test(lines[1]), "Stacktrace line has the right format:\n" + lines[1]);
+  ok(TRACE_FORMAT.test(lines[2]), "Stacktrace line has the right format:\n" + lines[2]);
 });
+
+/**
+ * Simple helper method to open the context menu on a given message, and click on the copy
+ * menu item.
+ */
+function* copyMessageContent(hud, message) {
+  let menuPopup = yield openContextMenu(hud, message);
+  let copyMenuItem = menuPopup.querySelector("#console-menu-copy");
+  ok(copyMenuItem, "copy menu item is enabled");
+
+  let clipboardText;
+  yield waitForClipboardPromise(
+    () => copyMenuItem.click(),
+    data => {
+      clipboardText = data;
+      return data === message.textContent;
+    }
+  );
+  return clipboardText;
+}
