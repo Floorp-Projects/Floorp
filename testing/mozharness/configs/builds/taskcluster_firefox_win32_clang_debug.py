@@ -61,7 +61,7 @@ config = {
      ###### 32 bit specific ######
     'base_name': 'WINNT_5.2_%(branch)s',
     'platform': 'win32',
-    'stage_platform': 'win32-debug',
+    'stage_platform': 'win32-st-an-debug',
     'debug_build': True,
     'publish_nightly_en_US_routes': True,
     'env': {
