@@ -436,6 +436,17 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo,
     }
   }
 
+  // Process simple attribute updates.
+  for (const auto& op : aInfo.setSimpleAttrs()) {
+    MOZ_LAYERS_LOG(("[ParentSide] SetSimpleLayerAttributes"));
+    Layer* layer = AsLayer(op.layer());
+    if (!layer) {
+      return IPC_FAIL_NO_REASON(this);
+    }
+    layer->SetSimpleAttributes(op.attrs());
+    updateHitTestingTree = true;
+  }
+
   // Process attribute updates.
   for (const auto& op : aInfo.setAttrs()) {
     MOZ_LAYERS_LOG(("[ParentSide] SetLayerAttributes"));
@@ -512,35 +523,9 @@ LayerTransactionParent::SetLayerAttributes(const OpSetLayerAttributes& aOp)
 
   const LayerAttributes& attrs = aOp.attrs();
   const CommonLayerAttributes& common = attrs.common();
-  layer->SetLayerBounds(common.layerBounds());
   layer->SetVisibleRegion(common.visibleRegion());
   layer->SetEventRegions(common.eventRegions());
-  layer->SetContentFlags(common.contentFlags());
-  layer->SetOpacity(common.opacity());
   layer->SetClipRect(common.useClipRect() ? Some(common.clipRect()) : Nothing());
-  layer->SetScrolledClip(common.scrolledClip());
-  layer->SetBaseTransform(common.transform());
-  layer->SetTransformIsPerspective(common.transformIsPerspective());
-  layer->SetPostScale(common.postXScale(), common.postYScale());
-  layer->SetIsFixedPosition(common.isFixedPosition());
-  if (common.isFixedPosition()) {
-    layer->SetFixedPositionData(common.fixedPositionScrollContainerId(),
-                                common.fixedPositionAnchor(),
-                                common.fixedPositionSides());
-  }
-  if (common.isStickyPosition()) {
-    layer->SetStickyPositionData(common.stickyScrollContainerId(),
-                                 common.stickyScrollRangeOuter(),
-                                 common.stickyScrollRangeInner());
-  }
-  layer->SetScrollbarData(common.scrollbarTargetContainerId(),
-    static_cast<ScrollDirection>(common.scrollbarDirection()),
-    common.scrollbarThumbRatio());
-  if (common.isScrollbarContainer()) {
-    layer->SetIsScrollbarContainer();
-  }
-  layer->SetMixBlendMode((gfx::CompositionOp)common.mixBlendMode());
-  layer->SetForceIsolatedGroup(common.forceIsolatedGroup());
   if (LayerHandle maskLayer = common.maskLayer()) {
     layer->SetMaskLayer(AsLayer(maskLayer));
   } else {

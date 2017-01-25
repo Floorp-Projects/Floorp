@@ -194,6 +194,15 @@ ClientLayerManager::Mutated(Layer* aLayer)
   mForwarder->Mutated(Hold(aLayer));
 }
 
+void
+ClientLayerManager::MutatedSimple(Layer* aLayer)
+{
+  LayerManager::MutatedSimple(aLayer);
+
+  NS_ASSERTION(InConstruction() || InDrawing(), "wrong phase");
+  mForwarder->MutatedSimple(Hold(aLayer));
+}
+
 already_AddRefed<ReadbackLayer>
 ClientLayerManager::CreateReadbackLayer()
 {
