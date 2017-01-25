@@ -117,25 +117,13 @@ class CombinedDependsFunction(DependsFunction):
             elif d not in flatten_deps:
                 flatten_deps.append(d)
 
-        # Automatically add a --help dependency if one of the dependencies
-        # depends on it.
-        for d in flatten_deps:
-            if (isinstance(d, DependsFunction) and
-                sandbox._help_option in d.dependencies):
-                flatten_deps.insert(0, sandbox._help_option)
-                break
-
         super(CombinedDependsFunction, self).__init__(
             sandbox, func, flatten_deps)
 
     @memoize
     def result(self, need_help_dependency=False):
-        # Ignore --help for the combined result
-        deps = self.dependencies
-        if deps[0] == self.sandbox._help_option:
-            deps = deps[1:]
         resolved_args = [self.sandbox._value_for(d, need_help_dependency)
-                         for d in deps]
+                         for d in self.dependencies]
         return self._func(resolved_args)
 
     def __eq__(self, other):
