@@ -201,11 +201,9 @@ SessionStore.prototype = {
         break;
       case "domwindowopened": {
         let window = aSubject;
-        let onLoad = () => {
-          window.removeEventListener("load", onLoad);
+        window.addEventListener("load", () => {
           this.onWindowOpen(window);
-        };
-        window.addEventListener("load", onLoad);
+        }, { once: true });
         break;
       }
       case "domwindowclosed": // catch closed windows
