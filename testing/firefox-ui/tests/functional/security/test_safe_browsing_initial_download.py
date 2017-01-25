@@ -56,15 +56,12 @@ class TestSafeBrowsingInitialDownload(PuppeteerMixin, MarionetteTestCase):
         if is_v4:
             my_file_extensions = self.v4_file_extensions
         else:  # v2
-            # safebrowsing dir should have a 'google4' directory where
-            # v4 databases exist.
-            files.append('google4')
             my_file_extensions = self.v2_file_extensions
 
         for pref_name in self.prefs_download_lists:
             base_names = self.marionette.get_pref(pref_name).split(',')
             for ext in my_file_extensions:
-                files.extend(['{file}.{ext}'.format(file=f, ext=ext)
+                files.extend(['{name}.{ext}'.format(name=f, ext=ext)
                               for f in base_names if f and f.endswith('-proto') == is_v4])
 
         return set(sorted(files))
@@ -80,7 +77,10 @@ class TestSafeBrowsingInitialDownload(PuppeteerMixin, MarionetteTestCase):
         self.safebrowsing_path = os.path.join(self.marionette.instance.profile.profile,
                                               'safebrowsing')
         self.safebrowsing_v2_files = self.get_safebrowsing_files(False)
-        self.safebrowsing_v4_files = self.get_safebrowsing_files(True)
+        # Bug 1330253 - Leave the next line disabled until we have google API key
+        #               on the CI machines.
+        # self.safebrowsing_v4_files = self.get_safebrowsing_files(True)
+        self.safebrowsing_v4_files = []
 
     def tearDown(self):
         try:
@@ -98,9 +98,11 @@ class TestSafeBrowsingInitialDownload(PuppeteerMixin, MarionetteTestCase):
             Wait(self.marionette, timeout=60).until(
                 check_downloaded, message='Not all safebrowsing files have been downloaded')
         finally:
-            self.assertSetEqual(self.safebrowsing_v2_files,
-                                set(os.listdir(self.safebrowsing_path)))
-            # Bug 1330253 - Leave the next test disabled until we have google api key
-            #               on the CI machines.
-            # self.assertSetEqual(self.safebrowsing_v4_files,
-            #                     set(os.listdir(os.path.join(self.safebrowsing_path, 'google4'))))
+            files_on_disk_toplevel = os.listdir(self.safebrowsing_path)
+            for f in self.safebrowsing_v2_files:
+                self.assertIn(f, files_on_disk_toplevel)
+
+            if len(self.safebrowsing_v4_files) > 0:
+                files_on_disk_google4 = os.listdir(os.path.join(self.safebrowsing_path, 'google4'))
+                for f in self.safebrowsing_v4_files:
+                    self.assertIn(f, files_on_disk_google4)
