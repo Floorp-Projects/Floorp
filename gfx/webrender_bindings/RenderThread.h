@@ -97,13 +97,13 @@ public:
   /// Automatically forwarded to the render thread.
   void RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aCallBack);
 
+  /// Can only be called from the render thread.
+  void UpdateAndRender(wr::WindowId aWindowId);
 private:
   explicit RenderThread(base::Thread* aThread);
 
   ~RenderThread();
 
-  /// Can only be called from the render thread.
-  void UpdateAndRender(wr::WindowId aWindowId);
 
   base::Thread* const mThread;
 

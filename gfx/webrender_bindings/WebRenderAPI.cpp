@@ -171,6 +171,49 @@ WebRenderAPI::SetRootDisplayList(gfx::Color aBgColor,
 }
 
 void
+WebRenderAPI::Readback(gfx::IntSize size,
+                       uint8_t *buffer,
+                       uint32_t buffer_size)
+{
+    class Readback : public RendererEvent
+    {
+        public:
+            explicit Readback(layers::SynchronousTask* aTask,
+                              gfx::IntSize aSize, uint8_t *aBuffer, uint32_t aBufferSize)
+                : mTask(aTask)
+                , mSize(aSize)
+                , mBuffer(aBuffer)
+                , mBufferSize(aBufferSize)
+            {
+                MOZ_COUNT_CTOR(Readback);
+            }
+
+            ~Readback()
+            {
+                MOZ_COUNT_DTOR(Readback);
+            }
+
+            virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override
+            {
+                aRenderThread.UpdateAndRender(aWindowId);
+                wr_readback_into_buffer(mSize.width, mSize.height, mBuffer, mBufferSize);
+                layers::AutoCompleteTask complete(mTask);
+            }
+
+            layers::SynchronousTask* mTask;
+            gfx::IntSize mSize;
+            uint8_t *mBuffer;
+            uint32_t mBufferSize;
+    };
+
+    layers::SynchronousTask task("Readback");
+    auto event = MakeUnique<Readback>(&task, size, buffer, buffer_size);
+    RunOnRenderThread(Move(event));
+
+    task.Wait();
+}
+
+void
 WebRenderAPI::SetRootPipeline(PipelineId aPipeline)
 {
   wr_api_set_root_pipeline(mWrApi, aPipeline.mHandle);
