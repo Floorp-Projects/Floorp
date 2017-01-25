@@ -970,6 +970,9 @@ class ICCacheIR_Updated : public ICUpdatedStub
         updateStubId_(JSID_EMPTY)
     {}
 
+    static ICCacheIR_Updated* Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
+                                    ICCacheIR_Updated& other);
+
     GCPtrObjectGroup& updateStubGroup() {
         return updateStubGroup_;
     }

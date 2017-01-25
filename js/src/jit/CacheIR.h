@@ -175,6 +175,8 @@ enum class CacheKind : uint8_t
     _(StoreTypedObjectReferenceProperty)  \
     _(StoreTypedObjectScalarProperty)     \
     _(StoreUnboxedProperty)               \
+    _(CallNativeSetter)                   \
+    _(CallScriptedSetter)                 \
                                           \
     /* The *Result ops load a value into the cache's result register. */ \
     _(LoadFixedSlotResult)                \
@@ -598,6 +600,16 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         addStubField(offset, StubField::Type::RawWord);
         writeOperandId(rhs);
     }
+    void callScriptedSetter(ObjOperandId obj, JSFunction* setter, ValOperandId rhs) {
+        writeOpWithOperandId(CacheOp::CallScriptedSetter, obj);
+        addStubField(uintptr_t(setter), StubField::Type::JSObject);
+        writeOperandId(rhs);
+    }
+    void callNativeSetter(ObjOperandId obj, JSFunction* setter, ValOperandId rhs) {
+        writeOpWithOperandId(CacheOp::CallNativeSetter, obj);
+        addStubField(uintptr_t(setter), StubField::Type::JSObject);
+        writeOperandId(rhs);
+    }
 
     void loadUndefinedResult() {
         writeOp(CacheOp::LoadUndefinedResult);
@@ -915,6 +927,8 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator
                                   ValOperandId rhsId);
     bool tryAttachTypedObjectProperty(HandleObject obj, ObjOperandId objId, HandleId id,
                                       ValOperandId rhsId);
+    bool tryAttachSetter(HandleObject obj, ObjOperandId objId, HandleId id,
+                         ValOperandId rhsId);
 
   public:
     SetPropIRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind,
@@ -929,6 +943,9 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator
     bool shouldNotePreliminaryObjectStub() const {
         return preliminaryObjectAction_ == PreliminaryObjectAction::NotePreliminary;
     }
+
+    bool needUpdateStub() const { return needUpdateStub_; }
+
     ObjectGroup* updateStubGroup() const {
         MOZ_ASSERT(updateStubGroup_);
         return updateStubGroup_;
