@@ -52,6 +52,7 @@ function DetailsPanel({
     Tabbar({
       activeTabId,
       onSelect: selectTab,
+      renderOnlySelected: true,
       showAllTabsMenu: true,
       toolbox,
     },
