@@ -298,7 +298,7 @@ add_test(function test_ignore_hotfixes() {
 
   // A hotfix extension is one that has the id the same as the
   // extensions.hotfix.id pref.
-  let extensionPrefs = new Preferences("extensions.");
+  let prefs = new Preferences("extensions.");
 
   let addon = installAddon("test_bootstrap1_1");
   do_check_true(store.isAddonSyncable(addon));
@@ -312,7 +312,7 @@ add_test(function test_ignore_hotfixes() {
   // Basic sanity check.
   do_check_true(store.isAddonSyncable(dummy));
 
-  extensionPrefs.set("hotfix.id", dummy.id);
+  prefs.set("hotfix.id", dummy.id);
   do_check_false(store.isAddonSyncable(dummy));
 
   // Verify that int values don't throw off checking.
@@ -327,7 +327,7 @@ add_test(function test_ignore_hotfixes() {
 
   uninstallAddon(addon);
 
-  extensionPrefs.reset("hotfix.id");
+  prefs.reset("hotfix.id");
 
   run_next_test();
 });
@@ -536,3 +536,4 @@ add_test(function cleanup() {
   reconciler.stopListening();
   run_next_test();
 });
+

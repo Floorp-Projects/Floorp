@@ -18,13 +18,8 @@ let mockResponse = function(response) {
   let Request = function(requestUri) {
     // Store the request uri so tests can inspect it
     Request._requestUri = requestUri;
-    Request.ifNoneMatchSet = false;
     return {
-      setHeader(header, value) {
-        if (header == "If-None-Match" && value == "bogusETag") {
-          Request.ifNoneMatchSet = true;
-        }
-      },
+      setHeader() {},
       get() {
         this.response = response;
         this.onComplete();
@@ -98,6 +93,28 @@ add_test(function setsIfNoneMatchETagHeader() {
     body: "{\"email\":\"someone@restmail.net\",\"uid\":\"0d5c1a89b8c54580b8e3e8adadae864a\"}",
   };
 
+  let ifNoneMatchSet = false;
+
+  let mockResponse = function(response) {
+    let Request = function(requestUri) {
+      // Store the request uri so tests can inspect it
+      Request._requestUri = requestUri;
+      return {
+        setHeader(header, value) {
+          if (header == "If-None-Match" && value == "bogusETag") {
+            ifNoneMatchSet = true;
+          }
+        },
+        get() {
+          this.response = response;
+          this.onComplete();
+        }
+      };
+    };
+
+    return Request;
+  };
+
   let req = new mockResponse(response);
   client._Request = req;
   client.fetchProfile("bogusETag")
@@ -106,7 +123,7 @@ add_test(function setsIfNoneMatchETagHeader() {
         do_check_eq(client._Request._requestUri, "http://127.0.0.1:1111/v1/profile");
         do_check_eq(result.body.email, "someone@restmail.net");
         do_check_eq(result.body.uid, "0d5c1a89b8c54580b8e3e8adadae864a");
-        do_check_true(req.ifNoneMatchSet);
+        do_check_true(ifNoneMatchSet);
         run_next_test();
       }
     );
@@ -165,7 +182,7 @@ add_test(function server401ResponseThenSuccess() {
   // The number of times our removeCachedOAuthToken function was called.
   let numTokensRemoved = 0;
 
-  let mockFxaWithRemove = {
+  let mockFxa = {
     getOAuthToken(options) {
       do_check_eq(options.scope, "profile");
       return "" + ++lastToken; // tokens are strings.
@@ -179,7 +196,7 @@ add_test(function server401ResponseThenSuccess() {
   }
   let profileOptions = {
     serverURL: "http://127.0.0.1:1111/v1",
-    fxa: mockFxaWithRemove,
+    fxa: mockFxa,
   };
   let client = new FxAccountsProfileClient(profileOptions);
 
@@ -239,7 +256,7 @@ add_test(function server401ResponsePersists() {
   // The number of times our removeCachedOAuthToken function was called.
   let numTokensRemoved = 0;
 
-  let mockFxaWithRemove = {
+  let mockFxa = {
     getOAuthToken(options) {
       do_check_eq(options.scope, "profile");
       return "" + ++lastToken; // tokens are strings.
@@ -253,7 +270,7 @@ add_test(function server401ResponsePersists() {
   }
   let profileOptions = {
     serverURL: "http://127.0.0.1:1111/v1",
-    fxa: mockFxaWithRemove,
+    fxa: mockFxa,
   };
   let client = new FxAccountsProfileClient(profileOptions);
 
