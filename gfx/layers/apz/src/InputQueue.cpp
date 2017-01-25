@@ -241,7 +241,7 @@ InputQueue::ReceiveScrollWheelInput(const RefPtr<AsyncPanZoomController>& aTarge
 
     mActiveWheelBlock = block;
 
-    CancelAnimationsForNewBlock(block);
+    CancelAnimationsForNewBlock(block, ExcludeWheel);
     MaybeRequestContentResponse(aTarget, block);
   } else {
     INPQ_LOG("received new event in block %p\n", block);
@@ -349,7 +349,8 @@ InputQueue::ReceivePanGestureInput(const RefPtr<AsyncPanZoomController>& aTarget
 }
 
 void
-InputQueue::CancelAnimationsForNewBlock(CancelableBlockState* aBlock)
+InputQueue::CancelAnimationsForNewBlock(CancelableBlockState* aBlock,
+                                        CancelAnimationFlags aExtraFlags)
 {
   // We want to cancel animations here as soon as possible (i.e. without waiting for
   // content responses) because a finger has gone down and we don't want to keep moving
@@ -358,7 +359,8 @@ InputQueue::CancelAnimationsForNewBlock(CancelableBlockState* aBlock)
   // being processed) we only do this animation-cancellation if there are no older
   // touch blocks still in the queue.
   if (mQueuedInputs.IsEmpty()) {
-    aBlock->GetOverscrollHandoffChain()->CancelAnimations(ExcludeOverscroll | ScrollSnap);
+    aBlock->GetOverscrollHandoffChain()->CancelAnimations(
+        aExtraFlags | ExcludeOverscroll | ScrollSnap);
   }
 }
 
