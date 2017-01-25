@@ -136,17 +136,25 @@ section, without adding possible included tests.
 Manifests are included relative to the directory of the manifest with
 the `[include:]` directive unless they are absolute paths.
 
-By default you can use '#' as a comment character. Comments must start on
-a new line, inline comments are not supported.
+By default you can use '#' as a comment character. Comments can start a
+new line, or be inline.
 
 .. code-block:: text
 
     [roses.js]
     # a valid comment
-    color = red # not a valid comment
+    color = red # another valid comment
 
-In the example above, the 'color' property will have the value 'red #
-not a valid comment'.
+Comment characters must be preceded by a space, or they will not be
+treated as comments.
+
+.. code-block:: text
+
+    [test1.js]
+    url = https://foo.com/bar#baz
+
+The '#baz' anchor will not be stripped off, as it wasn't preceded by
+a space.
 
 Special variable server-root
 ````````````````````````````
