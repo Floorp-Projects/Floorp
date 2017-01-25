@@ -273,7 +273,6 @@ public:
   bool InFrameSwap();
 
 private:
-  bool IsContentViewerBlankForPrintPreview();
   bool CanSetOriginAttributes();
 
 public:
