@@ -73,7 +73,7 @@
 #include "mozilla/DebugOnly.h"
 #include "ProfileEntry.h"
 #include "nsThreadUtils.h"
-#include "GeckoSampler.h"
+#include "ThreadProfile.h"
 #include "ThreadResponsiveness.h"
 
 #if defined(__ARM_EABI__) && defined(ANDROID)
