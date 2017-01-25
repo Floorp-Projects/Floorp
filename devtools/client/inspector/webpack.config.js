@@ -82,6 +82,8 @@ module.exports = envConfig => {
         "Services": path.join(__dirname, "../shared/shim/Services.js"),
         "toolkit/locales":
           path.join(__dirname, "../../../toolkit/locales/en-US/chrome/global"),
+        "react": "devtools/client/shared/vendor/react",
+        "react-dom": "devtools/client/shared/vendor/react-dom",
       },
     },
 
