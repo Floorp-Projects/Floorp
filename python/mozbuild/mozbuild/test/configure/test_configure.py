@@ -872,6 +872,25 @@ class TestConfigure(unittest.TestCase):
                               '@depends function needs the same `when` as '
                               'options it depends on')
 
+        with self.moz_configure('''
+            @depends(when=True)
+            def always():
+                return True
+            @depends(when=True)
+            def always2():
+                return True
+            with only_when(always2):
+                option('--with-foo', help='foo', when=always)
+                # include() triggers resolution of its dependencies, and their
+                # side effects.
+                include(depends('--with-foo', when=always)(lambda x: x))
+                # The sandbox should figure that the `when` here is
+                # appropriate. Bad behavior in CombinedDependsFunction.__eq__
+                # made this fail in the past.
+                set_config('FOO', depends('--with-foo', when=always)(lambda x: x))
+        '''):
+            self.get_config()
+
     def test_include_failures(self):
         with self.assertRaises(ConfigureError) as e:
             with self.moz_configure('include("../foo.configure")'):
