@@ -93,22 +93,12 @@ public:
   {
     AddEdit(Edit(aEdit));
   }
-  void AddPaint(const Edit& aPaint)
-  {
-    AddNoSwapPaint(aPaint);
-    mSwapRequired = true;
-  }
   void AddPaint(const CompositableOperation& aPaint)
   {
     AddNoSwapPaint(Edit(aPaint));
     mSwapRequired = true;
   }
 
-  void AddNoSwapPaint(const Edit& aPaint)
-  {
-    MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
-    mPaints.AppendElement(aPaint);
-  }
   void AddNoSwapPaint(const CompositableOperation& aPaint)
   {
     MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
@@ -142,7 +132,7 @@ public:
   bool Opened() const { return mOpen; }
 
   EditVector mCset;
-  EditVector mPaints;
+  nsTArray<CompositableOperation> mPaints;
   OpDestroyVector mDestroyedActors;
   ShadowableLayerSet mMutants;
   gfx::IntRect mTargetBounds;
@@ -700,15 +690,10 @@ ShadowLayerForwarder::EndTransaction(const nsIntRegion& aRegionToClear,
     return true;
   }
 
-  // Paints after non-paint ops, including attribute changes.  See
-  // above.
-  if (!mTxn->mPaints.IsEmpty()) {
-    mTxn->mCset.AppendElements(mTxn->mPaints);
-  }
-
   mWindowOverlayChanged = false;
 
   info.cset() = Move(mTxn->mCset);
+  info.paints() = Move(mTxn->mPaints);
   info.toDestroy() = mTxn->mDestroyedActors;
   info.fwdTransactionId() = GetFwdTransactionId();
   info.id() = aId;
