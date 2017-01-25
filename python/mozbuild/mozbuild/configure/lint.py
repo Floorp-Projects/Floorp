@@ -114,6 +114,13 @@ class LintSandbox(ConfigureSandbox):
         return super(LintSandbox, self)._value_for_depends(
             obj, need_help_dependency)
 
+    def option_impl(self, *args, **kwargs):
+        result = super(LintSandbox, self).option_impl(*args, **kwargs)
+        when = self._conditions.get(result)
+        if when:
+            self._value_for(when, need_help_dependency=True)
+        return result
+
     def unwrap(self, func):
         glob = func.func_globals
         while func in self._wrapped:
