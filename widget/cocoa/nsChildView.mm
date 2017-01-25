@@ -151,6 +151,8 @@ uint32_t nsChildView::sLastInputEventCount = 0;
 
 static uint32_t gNumberOfWidgetsNeedingEventThread = 0;
 
+static bool sIsTabletPointerActivated = false;
+
 @interface ChildView(Private)
 
 // sets up our view, attaching it to its owning gecko view
@@ -162,7 +164,8 @@ static uint32_t gNumberOfWidgetsNeedingEventThread = 0;
                         toGeckoEvent:(WidgetWheelEvent*)outWheelEvent;
 - (void) convertCocoaMouseEvent:(NSEvent*)aMouseEvent
                    toGeckoEvent:(WidgetInputEvent*)outGeckoEvent;
-
+- (void) convertCocoaTabletPointerEvent:(NSEvent*)aMouseEvent
+                           toGeckoEvent:(WidgetMouseEvent*)outGeckoEvent;
 - (NSMenu*)contextMenu;
 
 - (BOOL)isRectObscuredBySubview:(NSRect)inRect;
@@ -5183,9 +5186,10 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
     case NSOtherMouseDown:
     case NSOtherMouseUp:
     case NSOtherMouseDragged:
+    case NSMouseMoved:
       if ([aMouseEvent subtype] == NSTabletPointEventSubtype) {
-        mouseEvent->pressure = [aMouseEvent pressure];
-        MOZ_ASSERT(mouseEvent->pressure >= 0.0 && mouseEvent->pressure <= 1.0);
+        [self convertCocoaTabletPointerEvent:aMouseEvent
+                                toGeckoEvent:mouseEvent->AsMouseEvent()];
       }
       break;
 
@@ -5195,6 +5199,32 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+- (void) convertCocoaTabletPointerEvent:(NSEvent*)aPointerEvent
+                           toGeckoEvent:(WidgetMouseEvent*)aOutGeckoEvent
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN
+  if (!aOutGeckoEvent || !sIsTabletPointerActivated) {
+    return;
+  }
+  if ([aPointerEvent type] != NSMouseMoved) {
+    aOutGeckoEvent->pressure = [aPointerEvent pressure];
+    MOZ_ASSERT(aOutGeckoEvent->pressure >= 0.0 &&
+               aOutGeckoEvent->pressure <= 1.0);
+  }
+  aOutGeckoEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_PEN;
+  aOutGeckoEvent->tiltX = lround([aPointerEvent tilt].x * 90);
+  aOutGeckoEvent->tiltY = lround([aPointerEvent tilt].y * 90);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+- (void)tabletProximity:(NSEvent *)theEvent
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN
+  sIsTabletPointerActivated = [theEvent isEnteringProximity];
+  NS_OBJC_END_TRY_ABORT_BLOCK
 }
 
 - (BOOL)shouldZoomOnDoubleClick

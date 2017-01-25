@@ -663,22 +663,36 @@ Statistics::formatJsonMessage(uint64_t timestamp)
     return Join(fragments);
 }
 
+// JSON requires decimals to be separated by periods, but the LC_NUMERIC
+// setting may cause printf to use commas in some locales. Split a duration
+// into whole and fractional parts of milliseconds, for use in passing to
+// %llu.%03llu.
+static lldiv_t
+SplitDurationMS(TimeDuration d)
+{
+    return lldiv(static_cast<int64_t>(d.ToMicroseconds()), 1000);
+}
+
 UniqueChars
 Statistics::formatJsonDescription(uint64_t timestamp)
 {
     TimeDuration total, longest;
     gcDuration(&total, &longest);
+    lldiv_t totalParts = SplitDurationMS(total);
+    lldiv_t longestParts = SplitDurationMS(longest);
 
     TimeDuration sccTotal, sccLongest;
     sccDurations(&sccTotal, &sccLongest);
+    lldiv_t sccTotalParts = SplitDurationMS(sccTotal);
+    lldiv_t sccLongestParts = SplitDurationMS(sccLongest);
 
     const double mmu20 = computeMMU(TimeDuration::FromMilliseconds(20));
     const double mmu50 = computeMMU(TimeDuration::FromMilliseconds(50));
 
     const char *format =
         "\"timestamp\":%llu,"
-        "\"max_pause\":%.3f,"
-        "\"total_time\":%.3f,"
+        "\"max_pause\":%llu.%03llu,"
+        "\"total_time\":%llu.%03llu,"
         "\"zones_collected\":%d,"
         "\"total_zones\":%d,"
         "\"total_compartments\":%d,"
@@ -686,8 +700,8 @@ Statistics::formatJsonDescription(uint64_t timestamp)
         "\"store_buffer_overflows\":%d,"
         "\"mmu_20ms\":%d,"
         "\"mmu_50ms\":%d,"
-        "\"scc_sweep_total\":%.3f,"
-        "\"scc_sweep_max_pause\":%.3f,"
+        "\"scc_sweep_total\":%llu.%03llu,"
+        "\"scc_sweep_max_pause\":%llu.%03llu,"
         "\"nonincremental_reason\":\"%s\","
         "\"allocated\":%u,"
         "\"added_chunks\":%d,"
@@ -695,8 +709,8 @@ Statistics::formatJsonDescription(uint64_t timestamp)
     char buffer[1024];
     SprintfLiteral(buffer, format,
                    (unsigned long long)timestamp,
-                   longest.ToMilliseconds(),
-                   total.ToMilliseconds(),
+                   longestParts.quot, longestParts.rem,
+                   totalParts.quot, totalParts.rem,
                    zoneStats.collectedZoneCount,
                    zoneStats.zoneCount,
                    zoneStats.compartmentCount,
@@ -704,8 +718,8 @@ Statistics::formatJsonDescription(uint64_t timestamp)
                    counts[STAT_STOREBUFFER_OVERFLOW],
                    int(mmu20 * 100),
                    int(mmu50 * 100),
-                   sccTotal.ToMilliseconds(),
-                   sccLongest.ToMilliseconds(),
+                   sccTotalParts.quot, sccTotalParts.rem,
+                   sccLongestParts.quot, sccLongestParts.rem,
                    ExplainAbortReason(nonincrementalReason_),
                    unsigned(preBytes / 1024 / 1024),
                    counts[STAT_NEW_CHUNK],
@@ -717,7 +731,9 @@ UniqueChars
 Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice)
 {
     TimeDuration duration = slice.duration();
+    lldiv_t durationParts = SplitDurationMS(duration);
     TimeDuration when = slice.start - slices[0].start;
+    lldiv_t whenParts = SplitDurationMS(when);
     char budgetDescription[200];
     slice.budget.describe(budgetDescription, sizeof(budgetDescription) - 1);
     int64_t pageFaults = slice.endFaults - slice.startFaults;
@@ -726,20 +742,20 @@ Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice)
 
     const char* format =
         "\"slice\":%d,"
-        "\"pause\":%.3f,"
-        "\"when\":%.3f,"
+        "\"pause\":%llu.%03llu,"
+        "\"when\":%llu.%03llu,"
         "\"reason\":\"%s\","
         "\"initial_state\":\"%s\","
         "\"final_state\":\"%s\","
         "\"budget\":\"%s\","
         "\"page_faults\":%llu,"
-        "\"start_timestamp\":%.3f,"
-        "\"end_timestamp\":%.3f,";
+        "\"start_timestamp\":%llu,"
+        "\"end_timestamp\":%llu,";
     char buffer[1024];
     SprintfLiteral(buffer, format,
                    i,
-                   duration.ToMilliseconds(),
-                   when.ToMilliseconds(),
+                   durationParts.quot, durationParts.rem,
+                   whenParts.quot, whenParts.rem,
                    ExplainReason(slice.reason),
                    gc::StateName(slice.initialState),
                    gc::StateName(slice.finalState),
@@ -778,7 +794,9 @@ Statistics::formatJsonPhaseTimes(const PhaseTimeTable phaseTimes)
         UniqueChars name = FilterJsonKey(phases[phase].name);
         TimeDuration ownTime = phaseTimes[dagSlot][phase];
         if (!ownTime.IsZero()) {
-            SprintfLiteral(buffer, "\"%s\":%.3f", name.get(), ownTime.ToMilliseconds());
+            lldiv_t ownParts = SplitDurationMS(ownTime);
+            SprintfLiteral(buffer, "\"%s\":%llu.%03llu",
+                           name.get(), ownParts.quot, ownParts.rem);
 
             if (!fragments.append(DuplicateString(buffer)))
                 return UniqueChars(nullptr);
@@ -1393,7 +1411,7 @@ FOR_EACH_GC_PROFILE_TIME(PRINT_PROFILE_HEADER)
 Statistics::printProfileTimes(const ProfileDurations& times)
 {
     for (auto time : times)
-        fprintf(stderr, " %6.0f", time.ToMilliseconds());
+        fprintf(stderr, " %6" PRIi64, static_cast<int64_t>(time.ToMilliseconds()));
     fprintf(stderr, "\n");
 }
 

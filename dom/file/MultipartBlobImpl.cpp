@@ -324,38 +324,6 @@ MultipartBlobImpl::SetMutable(bool aMutable)
 }
 
 void
-MultipartBlobImpl::InitializeChromeFile(Blob& aBlob,
-                                        const ChromeFilePropertyBag& aBag,
-                                        ErrorResult& aRv)
-{
-  MOZ_ASSERT(!mImmutable, "Something went wrong ...");
-
-  if (mImmutable) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
-  }
-
-  MOZ_ASSERT(nsContentUtils::ThreadsafeIsCallerChrome());
-
-  mName = aBag.mName;
-  mContentType = aBag.mType;
-  mIsFromNsIFile = true;
-
-  // XXXkhuey this is terrible
-  if (mContentType.IsEmpty()) {
-    aBlob.GetType(mContentType);
-  }
-
-
-  BlobSet blobSet;
-  blobSet.AppendBlobImpl(aBlob.Impl());
-  mBlobImpls = blobSet.GetBlobImpls();
-
-  SetLengthAndModifiedDate(aRv);
-  NS_WARNING_ASSERTION(!aRv.Failed(), "SetLengthAndModifiedDate failed");
-}
-
-void
 MultipartBlobImpl::InitializeChromeFile(nsPIDOMWindowInner* aWindow,
                                         nsIFile* aFile,
                                         const ChromeFilePropertyBag& aBag,
@@ -400,7 +368,7 @@ MultipartBlobImpl::InitializeChromeFile(nsPIDOMWindowInner* aWindow,
     aFile->GetLeafName(mName);
   }
 
-  RefPtr<File> blob = File::CreateFromFile(aWindow, aFile, aBag.mTemporary);
+  RefPtr<File> blob = File::CreateFromFile(aWindow, aFile);
 
   // Pre-cache size.
   blob->GetSize(aRv);

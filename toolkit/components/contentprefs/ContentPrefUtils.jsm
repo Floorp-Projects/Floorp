@@ -11,6 +11,7 @@ this.EXPORTED_SYMBOLS = [
   "cbHandleError",
   "cbHandleCompletion",
   "safeCallback",
+  "_methodsCallableFromChild",
 ];
 
 const { interfaces: Ci, classes: Cc, results: Cr, utils: Cu } = Components;
@@ -49,3 +50,20 @@ function safeCallback(callbackObj, methodName, args) {
     Cu.reportError(err);
   }
 }
+
+const _methodsCallableFromChild = Object.freeze([
+  ["getByName", ["name", "context", "callback"]],
+  ["getByDomainAndName", ["domain", "name", "context", "callback"]],
+  ["getBySubdomainAndName", ["domain", "name", "context", "callback"]],
+  ["getGlobal", ["name", "context", "callback"]],
+  ["set", ["domain", "name", "value", "context", "callback"]],
+  ["setGlobal", ["name", "value", "context", "callback"]],
+  ["removeByDomainAndName", ["domain", "name", "context", "callback"]],
+  ["removeBySubdomainAndName", ["domain", "name", "context", "callback"]],
+  ["removeGlobal", ["name", "context", "callback"]],
+  ["removeByDomain", ["domain", "context", "callback"]],
+  ["removeBySubdomain", ["domain", "context", "callback"]],
+  ["removeByName", ["name", "context", "callback"]],
+  ["removeAllDomains", ["context", "callback"]],
+  ["removeAllGlobals", ["context", "callback"]],
+]);
