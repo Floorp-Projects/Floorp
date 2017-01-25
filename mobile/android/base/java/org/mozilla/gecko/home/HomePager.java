@@ -225,8 +225,9 @@ public class HomePager extends ViewPager implements HomeScreen {
         // list of panels in place.
         mTabStrip.setVisibility(View.INVISIBLE);
 
-        // If HomeConfigLoader already exist, force load to select the current item
-        if (lm.getLoader(LOADER_ID_CONFIG) != null) {
+        // If HomeConfigLoader already exist and there's no restoreData(for bookmark's parentStack),
+        // call forceLoad() to trigger updateUiFromConfigState() and reset HomePager's adapter.
+        if (lm.getLoader(LOADER_ID_CONFIG) != null && restoreData == null) {
             lm.getLoader(LOADER_ID_CONFIG).forceLoad();
         } else {
             // Load list of panels from configuration
