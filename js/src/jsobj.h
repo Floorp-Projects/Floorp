@@ -1380,6 +1380,17 @@ SpeciesConstructor(JSContext* cx, HandleObject obj, JSProtoKey ctorKey, MutableH
 extern bool
 GetObjectFromIncumbentGlobal(JSContext* cx, MutableHandleObject obj);
 
+
+#ifdef DEBUG
+inline bool
+IsObjectValueInCompartment(const Value& v, JSCompartment* comp)
+{
+    if (!v.isObject())
+        return true;
+    return v.toObject().compartment() == comp;
+}
+#endif
+
 }  /* namespace js */
 
 #endif /* jsobj_h */
