@@ -58,7 +58,6 @@ extern uint8_t gLayerManagerLayerBuilder;
 
 namespace mozilla {
 
-class ComputedTimingFunction;
 class FrameLayerBuilder;
 class StyleAnimationValue;
 
@@ -99,6 +98,7 @@ class Compositor;
 class FrameUniformityData;
 class PersistentBufferProvider;
 class GlyphArray;
+struct AnimData;
 
 namespace layerscope {
 class LayersPacket;
@@ -728,20 +728,14 @@ private:
   std::map<FrameMetrics::ViewID,ScrollUpdateInfo> mPendingScrollUpdates;
 };
 
-typedef InfallibleTArray<Animation> AnimationArray;
-
-struct AnimData {
-  InfallibleTArray<mozilla::StyleAnimationValue> mStartValues;
-  InfallibleTArray<mozilla::StyleAnimationValue> mEndValues;
-  InfallibleTArray<Maybe<mozilla::ComputedTimingFunction>> mFunctions;
-};
-
 /**
  * A Layer represents anything that can be rendered onto a destination
  * surface.
  */
 class Layer {
   NS_INLINE_DECL_REFCOUNTING(Layer)
+
+  typedef InfallibleTArray<Animation> AnimationArray;
 
 public:
   // Keep these in alphabetical order

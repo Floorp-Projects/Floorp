@@ -21,6 +21,7 @@
 #include "mozilla/gfx/Point.h"          // for RoundedToInt, PointTyped
 #include "mozilla/gfx/Rect.h"           // for RoundedToInt, RectTyped
 #include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
+#include "mozilla/layers/AnimationHelper.h"
 #include "mozilla/layers/APZUtils.h"    // for CompleteAsyncTransform
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/CompositorBridgeParent.h" // for CompositorBridgeParent, etc
