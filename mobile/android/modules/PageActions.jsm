@@ -39,26 +39,30 @@ var PageActions = {
   _maybeInit: function() {
     if (!this._inited && Object.keys(this._items).length > 0) {
       this._inited = true;
-      Services.obs.addObserver(this, "PageActions:Clicked", false);
-      Services.obs.addObserver(this, "PageActions:LongClicked", false);
+      EventDispatcher.instance.registerListener(this, [
+        "PageActions:Clicked",
+        "PageActions:LongClicked",
+      ]);
     }
   },
 
   _maybeUninit: function() {
     if (this._inited && Object.keys(this._items).length == 0) {
       this._inited = false;
-      Services.obs.removeObserver(this, "PageActions:Clicked");
-      Services.obs.removeObserver(this, "PageActions:LongClicked");
+      EventDispatcher.instance.unregisterListener(this, [
+        "PageActions:Clicked",
+        "PageActions:LongClicked",
+      ]);
     }
   },
 
-  observe: function(aSubject, aTopic, aData) {
-    let item = this._items[aData];
-    if (aTopic == "PageActions:Clicked") {
+  onEvent: function(event, data, callback) {
+    let item = this._items[data.id];
+    if (event == "PageActions:Clicked") {
       if (item.clickCallback) {
         item.clickCallback();
       }
-    } else if (aTopic == "PageActions:LongClicked") {
+    } else if (event == "PageActions:LongClicked") {
       if (item.longClickCallback) {
         item.longClickCallback();
       }
@@ -79,7 +83,7 @@ var PageActions = {
   add: function(aOptions) {
     let id = aOptions.id || uuidgen.generateUUID().toString()
 
-    Messaging.sendRequest({
+    EventDispatcher.instance.sendRequest({
       type: "PageActions:Add",
       id: id,
       title: aOptions.title,
@@ -102,7 +106,7 @@ var PageActions = {
   },
 
   remove: function(id) {
-    Messaging.sendRequest({
+    EventDispatcher.instance.sendRequest({
       type: "PageActions:Remove",
       id: id
     });
