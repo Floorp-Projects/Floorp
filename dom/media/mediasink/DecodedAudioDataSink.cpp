@@ -197,7 +197,13 @@ nsresult
 DecodedAudioDataSink::InitializeAudioStream(const PlaybackParams& aParams)
 {
   mAudioStream = new AudioStream(*this);
-  nsresult rv = mAudioStream->Init(mOutputChannels, mOutputRate, mChannel);
+  // The layout map used here is already processed by mConverter with
+  // mOutputChannels into SMPTE format, so there is no need to worry if
+  // MediaPrefs::MonoAudio() or MediaPrefs::AudioSinkForceStereo() is applied.
+  nsresult rv = mAudioStream->Init(mOutputChannels,
+                                   mConverter->OutputConfig().Layout().Map(),
+                                   mOutputRate,
+                                   mChannel);
   if (NS_FAILED(rv)) {
     mAudioStream->Shutdown();
     mAudioStream = nullptr;

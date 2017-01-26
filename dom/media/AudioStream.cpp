@@ -318,7 +318,7 @@ int AudioStream::InvokeCubeb(Function aFunction, Args&&... aArgs)
 }
 
 nsresult
-AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
+AudioStream::Init(uint32_t aNumChannels, uint32_t aChannelMap, uint32_t aRate,
                   const dom::AudioChannel aAudioChannel)
 {
   auto startTime = TimeStamp::Now();
@@ -332,6 +332,7 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
   cubeb_stream_params params;
   params.rate = aRate;
   params.channels = mOutChannels;
+  params.layout = CubebUtils::ConvertChannelMapToCubebLayout(aChannelMap);
 #if defined(__ANDROID__)
 #if defined(MOZ_B2G)
   params.stream_type = CubebUtils::ConvertChannelToCubebType(aAudioChannel);
@@ -353,10 +354,6 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
     CubebUtils::ReportCubebStreamInitFailure(true);
     return NS_ERROR_DOM_MEDIA_CUBEB_INITIALIZATION_ERR;
   }
-
-  // The DecodedAudioDataSink forces mono or stereo for now.
-  params.layout = params.channels == 1 ? CUBEB_LAYOUT_MONO
-                                       : CUBEB_LAYOUT_STEREO;
 
   return OpenCubeb(cubebContext, params, startTime, CubebUtils::GetFirstStream());
 }
