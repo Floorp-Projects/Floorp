@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Prompt",
                                   "resource://gre/modules/Prompt.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Messaging",
+XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
                                   "resource://gre/modules/Messaging.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "ContentAreaUtils", function() {
@@ -118,13 +118,12 @@ var HelperApps =  {
 
     // Query for apps that can/can't handle the mimetype
     let msg = this._getMessage("Intent:GetHandlers", uri, flags);
-    let parseData = (d) => {
-      let apps = []
-      if (!d) {
-        return apps;
+    let parseData = (apps) => {
+      if (!apps) {
+        return [];
       }
 
-      apps = this._parseApps(d.apps);
+      apps = this._parseApps(apps);
 
       if (flags.filterBrowsers) {
         apps = apps.filter((app) => {
@@ -149,10 +148,15 @@ var HelperApps =  {
     };
 
     if (!callback) {
-      let data = this._sendMessageSync(msg);
+      let data = [];
+      // Use dispatch to enable synchronous callback for Gecko thread event.
+      EventDispatcher.instance.dispatch(msg, {
+        onSuccess: (result) => { data = result; },
+        onError: () => { throw new Error("Intent:GetHandler callback failed"); },
+      });
       return parseData(data);
     } else {
-      Messaging.sendRequestForResult(msg).then(function(data) {
+      EventDispatcher.instance.sendRequestForResult(msg).then(function(data) {
         callback(parseData(data));
       });
     }
@@ -160,7 +164,7 @@ var HelperApps =  {
 
   launchUri: function launchUri(uri) {
     let msg = this._getMessage("Intent:Open", uri);
-    Messaging.sendRequest(msg);
+    EventDispatcher.instance.sendRequest(msg);
   },
 
   _parseApps: function _parseApps(appInfo) {
@@ -202,28 +206,14 @@ var HelperApps =  {
             className: app.activityName
         });
 
-        Messaging.sendRequestForResult(msg).then(callback);
+        EventDispatcher.instance.sendRequestForResult(msg).then(callback);
     } else {
         let msg = this._getMessage("Intent:Open", uri, {
             packageName: app.packageName,
             className: app.activityName
         });
 
-        Messaging.sendRequest(msg);
+        EventDispatcher.instance.sendRequest(msg);
     }
-  },
-
-  _sendMessageSync: function(msg) {
-    let res = null;
-    Messaging.sendRequestForResult(msg).then(function(data) {
-      res = data;
-    });
-
-    let thread = Services.tm.currentThread;
-    while (res == null) {
-      thread.processNextEvent(true);
-    }
-
-    return res;
   },
 };

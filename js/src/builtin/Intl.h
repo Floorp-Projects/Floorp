@@ -13,12 +13,16 @@
 #include "jsalloc.h"
 #include "NamespaceImports.h"
 
+#include "builtin/SelfHostingDefines.h"
+#include "js/Class.h"
 #include "js/GCAPI.h"
 #include "js/GCHashTable.h"
 
 #if ENABLE_INTL_API
 #include "unicode/utypes.h"
 #endif
+
+#include "vm/NativeObject.h"
 
 class JSLinearString;
 
@@ -28,6 +32,8 @@ class JSLinearString;
  */
 
 namespace js {
+
+class FreeOp;
 
 /**
  * Initializes the Intl Object and its standard built-in properties.
@@ -177,6 +183,24 @@ class SharedIntlData
 
 /******************** Collator ********************/
 
+class CollatorObject : public NativeObject
+{
+  public:
+    static const Class class_;
+
+    static constexpr uint32_t INTERNALS_SLOT = 0;
+    static constexpr uint32_t UCOLLATOR_SLOT = 1;
+    static constexpr uint32_t SLOT_COUNT = 2;
+
+    static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
+                  "INTERNALS_SLOT must match self-hosting define for internals object slot");
+
+  private:
+    static const ClassOps classOps_;
+
+    static void finalize(FreeOp* fop, JSObject* obj);
+};
+
 /**
  * Returns a new instance of the standard built-in Collator constructor.
  * Self-hosted code cannot cache this constructor (as it does for others in
@@ -225,6 +249,24 @@ intl_CompareStrings(JSContext* cx, unsigned argc, Value* vp);
 
 /******************** NumberFormat ********************/
 
+class NumberFormatObject : public NativeObject
+{
+  public:
+    static const Class class_;
+
+    static constexpr uint32_t INTERNALS_SLOT = 0;
+    static constexpr uint32_t UNUMBER_FORMAT_SLOT = 1;
+    static constexpr uint32_t SLOT_COUNT = 2;
+
+    static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
+                  "INTERNALS_SLOT must match self-hosting define for internals object slot");
+
+  private:
+    static const ClassOps classOps_;
+
+    static void finalize(FreeOp* fop, JSObject* obj);
+};
+
 /**
  * Returns a new instance of the standard built-in NumberFormat constructor.
  * Self-hosted code cannot cache this constructor (as it does for others in
@@ -262,13 +304,31 @@ intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp);
  *
  * Spec: ECMAScript Internationalization API Specification, 11.3.2.
  *
- * Usage: formatted = intl_FormatNumber(numberFormat, x)
+ * Usage: formatted = intl_FormatNumber(numberFormat, x, formatToParts)
  */
 extern MOZ_MUST_USE bool
 intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp);
 
 
 /******************** DateTimeFormat ********************/
+
+class DateTimeFormatObject : public NativeObject
+{
+  public:
+    static const Class class_;
+
+    static constexpr uint32_t INTERNALS_SLOT = 0;
+    static constexpr uint32_t UDATE_FORMAT_SLOT = 1;
+    static constexpr uint32_t SLOT_COUNT = 2;
+
+    static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
+                  "INTERNALS_SLOT must match self-hosting define for internals object slot");
+
+  private:
+    static const ClassOps classOps_;
+
+    static void finalize(FreeOp* fop, JSObject* obj);
+};
 
 /**
  * Returns a new instance of the standard built-in DateTimeFormat constructor.
@@ -358,12 +418,31 @@ intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp);
  *
  * Spec: ECMAScript Internationalization API Specification, 12.3.2.
  *
- * Usage: formatted = intl_FormatDateTime(dateTimeFormat, x)
+ * Usage: formatted = intl_FormatDateTime(dateTimeFormat, x, formatToParts)
  */
 extern MOZ_MUST_USE bool
 intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp);
 
+
 /******************** PluralRules ********************/
+
+class PluralRulesObject : public NativeObject
+{
+  public:
+    static const Class class_;
+
+    static constexpr uint32_t INTERNALS_SLOT = 0;
+    static constexpr uint32_t UPLURAL_RULES_SLOT = 1;
+    static constexpr uint32_t SLOT_COUNT = 2;
+
+    static_assert(INTERNALS_SLOT == INTL_INTERNALS_OBJECT_SLOT,
+                  "INTERNALS_SLOT must match self-hosting define for internals object slot");
+
+  private:
+    static const ClassOps classOps_;
+
+    static void finalize(FreeOp* fop, JSObject* obj);
+};
 
 /**
  * Returns an object indicating the supported locales for plural rules
@@ -400,6 +479,9 @@ intl_SelectPluralRule(JSContext* cx, unsigned argc, Value* vp);
  */
 extern MOZ_MUST_USE bool
 intl_GetPluralCategories(JSContext* cx, unsigned argc, Value* vp);
+
+
+/******************** Intl ********************/
 
 /**
  * Returns a plain object with calendar information for a single valid locale

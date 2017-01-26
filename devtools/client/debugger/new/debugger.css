@@ -206,40 +206,6 @@ body {
   font-size: 14px;
   color: var(--theme-comment);
 }
-/* vim:set ts=2 sw=2 sts=2 et: */
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-:root.theme-light,
-:root .theme-light {
-  --theme-search-overlays-semitransparent: rgba(221, 225, 228, 0.66);
-  --theme-faded-tab-color: #7e7e7e;
-}
-
-:root.theme-dark,
-:root .theme-dark {
-  --theme-faded-tab-color: #6e7d8c;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html,
-body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  width: 100%;
-}
-
-#mount {
-  display: flex;
-  height: 100%;
-}
-
 .debugger {
   display: flex;
   flex: 1;
@@ -894,6 +860,7 @@ html .arrow.expanded svg {
 .tree .node {
   padding: 2px 5px;
   position: relative;
+  cursor: pointer;
 }
 
 .tree .node.focused {
@@ -960,48 +927,653 @@ html[dir="rtl"] .tree .node > div {
   display: flex;
   overflow: hidden;
 }
+/* BASICS */
 
-.tree {
+.CodeMirror {
+  /* Set height, width, borders, and global font properties here */
+  font-family: monospace;
+  height: 300px;
+  color: black;
+}
+
+/* PADDING */
+
+.CodeMirror-lines {
+  padding: 4px 0; /* Vertical padding around content */
+}
+.CodeMirror pre {
+  padding: 0 4px; /* Horizontal padding of content */
+}
+
+.CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {
+  background-color: white; /* The little square between H and V scrollbars */
+}
+
+/* GUTTER */
+
+.CodeMirror-gutters {
+  border-right: 1px solid #ddd;
+  background-color: #f7f7f7;
+  white-space: nowrap;
+}
+.CodeMirror-linenumbers {}
+.CodeMirror-linenumber {
+  padding: 0 3px 0 5px;
+  min-width: 20px;
+  text-align: right;
+  color: #999;
+  white-space: nowrap;
+}
+
+.CodeMirror-guttermarker { color: black; }
+.CodeMirror-guttermarker-subtle { color: #999; }
+
+/* CURSOR */
+
+.CodeMirror-cursor {
+  border-left: 1px solid black;
+  border-right: none;
+  width: 0;
+}
+/* Shown when moving in bi-directional text */
+.CodeMirror div.CodeMirror-secondarycursor {
+  border-left: 1px solid silver;
+}
+.cm-fat-cursor .CodeMirror-cursor {
+  width: auto;
+  border: 0 !important;
+  background: #7e7;
+}
+.cm-fat-cursor div.CodeMirror-cursors {
+  z-index: 1;
+}
+
+.cm-animate-fat-cursor {
+  width: auto;
+  border: 0;
+  -webkit-animation: blink 1.06s steps(1) infinite;
+  -moz-animation: blink 1.06s steps(1) infinite;
+  animation: blink 1.06s steps(1) infinite;
+  background-color: #7e7;
+}
+@-moz-keyframes blink {
+  0% {}
+  50% { background-color: transparent; }
+  100% {}
+}
+@-webkit-keyframes blink {
+  0% {}
+  50% { background-color: transparent; }
+  100% {}
+}
+@keyframes blink {
+  0% {}
+  50% { background-color: transparent; }
+  100% {}
+}
+
+/* Can style cursor different in overwrite (non-insert) mode */
+.CodeMirror-overwrite .CodeMirror-cursor {}
+
+.cm-tab { display: inline-block; text-decoration: inherit; }
+
+.CodeMirror-rulers {
+  position: absolute;
+  left: 0; right: 0; top: -50px; bottom: -20px;
+  overflow: hidden;
+}
+.CodeMirror-ruler {
+  border-left: 1px solid #ccc;
+  top: 0; bottom: 0;
+  position: absolute;
+}
+
+/* DEFAULT THEME */
+
+.cm-s-default .cm-header {color: blue;}
+.cm-s-default .cm-quote {color: #090;}
+.cm-negative {color: #d44;}
+.cm-positive {color: #292;}
+.cm-header, .cm-strong {font-weight: bold;}
+.cm-em {font-style: italic;}
+.cm-link {text-decoration: underline;}
+.cm-strikethrough {text-decoration: line-through;}
+
+.cm-s-default .cm-keyword {color: #708;}
+.cm-s-default .cm-atom {color: #219;}
+.cm-s-default .cm-number {color: #164;}
+.cm-s-default .cm-def {color: #00f;}
+.cm-s-default .cm-variable,
+.cm-s-default .cm-punctuation,
+.cm-s-default .cm-property,
+.cm-s-default .cm-operator {}
+.cm-s-default .cm-variable-2 {color: #05a;}
+.cm-s-default .cm-variable-3 {color: #085;}
+.cm-s-default .cm-comment {color: #a50;}
+.cm-s-default .cm-string {color: #a11;}
+.cm-s-default .cm-string-2 {color: #f50;}
+.cm-s-default .cm-meta {color: #555;}
+.cm-s-default .cm-qualifier {color: #555;}
+.cm-s-default .cm-builtin {color: #30a;}
+.cm-s-default .cm-bracket {color: #997;}
+.cm-s-default .cm-tag {color: #170;}
+.cm-s-default .cm-attribute {color: #00c;}
+.cm-s-default .cm-hr {color: #999;}
+.cm-s-default .cm-link {color: #00c;}
+
+.cm-s-default .cm-error {color: #f00;}
+.cm-invalidchar {color: #f00;}
+
+.CodeMirror-composing { border-bottom: 2px solid; }
+
+/* Default styles for common addons */
+
+div.CodeMirror span.CodeMirror-matchingbracket {color: #0f0;}
+div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
+.CodeMirror-matchingtag { background: rgba(255, 150, 0, .3); }
+.CodeMirror-activeline-background {background: #e8f2ff;}
+
+/* STOP */
+
+/* The rest of this file contains styles related to the mechanics of
+   the editor. You probably shouldn't touch them. */
+
+.CodeMirror {
+  position: relative;
+  overflow: hidden;
+  background: white;
+}
+
+.CodeMirror-scroll {
+  overflow: scroll !important; /* Things will break if this is overridden */
+  /* 30px is the magic margin used to hide the element's real scrollbars */
+  /* See overflow: hidden in .CodeMirror */
+  margin-bottom: -30px; margin-right: -30px;
+  padding-bottom: 30px;
+  height: 100%;
+  outline: none; /* Prevent dragging from highlighting the element */
+  position: relative;
+}
+.CodeMirror-sizer {
+  position: relative;
+  border-right: 30px solid transparent;
+}
+
+/* The fake, visible scrollbars. Used to force redraw during scrolling
+   before actual scrolling happens, thus preventing shaking and
+   flickering artifacts. */
+.CodeMirror-vscrollbar, .CodeMirror-hscrollbar, .CodeMirror-scrollbar-filler, .CodeMirror-gutter-filler {
+  position: absolute;
+  z-index: 6;
+  display: none;
+}
+.CodeMirror-vscrollbar {
+  right: 0; top: 0;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+.CodeMirror-hscrollbar {
+  bottom: 0; left: 0;
+  overflow-y: hidden;
+  overflow-x: scroll;
+}
+.CodeMirror-scrollbar-filler {
+  right: 0; bottom: 0;
+}
+.CodeMirror-gutter-filler {
+  left: 0; bottom: 0;
+}
+
+.CodeMirror-gutters {
+  position: absolute; left: 0; top: 0;
+  min-height: 100%;
+  z-index: 3;
+}
+.CodeMirror-gutter {
+  white-space: normal;
+  height: 100%;
+  display: inline-block;
+  vertical-align: top;
+  margin-bottom: -30px;
+}
+.CodeMirror-gutter-wrapper {
+  position: absolute;
+  z-index: 4;
+  background: none !important;
+  border: none !important;
+}
+.CodeMirror-gutter-background {
+  position: absolute;
+  top: 0; bottom: 0;
+  z-index: 4;
+}
+.CodeMirror-gutter-elt {
+  position: absolute;
+  cursor: default;
+  z-index: 4;
+}
+.CodeMirror-gutter-wrapper {
   -webkit-user-select: none;
   -moz-user-select: none;
-  -ms-user-select: none;
-  -o-user-select: none;
   user-select: none;
+}
 
-  flex: 1;
-  white-space: nowrap;
+.CodeMirror-lines {
+  cursor: text;
+  min-height: 1px; /* prevents collapsing before first draw */
+}
+.CodeMirror pre {
+  /* Reset some styles that the rest of the page might have set */
+  -moz-border-radius: 0; -webkit-border-radius: 0; border-radius: 0;
+  border-width: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  margin: 0;
+  white-space: pre;
+  word-wrap: normal;
+  line-height: inherit;
+  color: inherit;
+  z-index: 2;
+  position: relative;
+  overflow: visible;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-variant-ligatures: contextual;
+  font-variant-ligatures: contextual;
+}
+.CodeMirror-wrap pre {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  word-break: normal;
+}
+
+.CodeMirror-linebackground {
+  position: absolute;
+  left: 0; right: 0; top: 0; bottom: 0;
+  z-index: 0;
+}
+
+.CodeMirror-linewidget {
+  position: relative;
+  z-index: 2;
   overflow: auto;
 }
 
-.tree button {
-  display: block;
+.CodeMirror-widget {}
+
+.CodeMirror-code {
+  outline: none;
 }
 
-.tree .node {
-  padding: 2px 5px;
+/* Force content-box sizing for the elements where we expect it */
+.CodeMirror-scroll,
+.CodeMirror-sizer,
+.CodeMirror-gutter,
+.CodeMirror-gutters,
+.CodeMirror-linenumber {
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+}
+
+.CodeMirror-measure {
+  position: absolute;
+  width: 100%;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+
+.CodeMirror-cursor {
+  position: absolute;
+  pointer-events: none;
+}
+.CodeMirror-measure pre { position: static; }
+
+div.CodeMirror-cursors {
+  visibility: hidden;
   position: relative;
+  z-index: 3;
+}
+div.CodeMirror-dragcursors {
+  visibility: visible;
+}
+
+.CodeMirror-focused div.CodeMirror-cursors {
+  visibility: visible;
+}
+
+.CodeMirror-selected { background: #d9d9d9; }
+.CodeMirror-focused .CodeMirror-selected { background: #d7d4f0; }
+.CodeMirror-crosshair { cursor: crosshair; }
+.CodeMirror-line::selection, .CodeMirror-line > span::selection, .CodeMirror-line > span > span::selection { background: #d7d4f0; }
+.CodeMirror-line::-moz-selection, .CodeMirror-line > span::-moz-selection, .CodeMirror-line > span > span::-moz-selection { background: #d7d4f0; }
+
+.cm-searching {
+  background: #ffa;
+  background: rgba(255, 255, 0, .4);
+}
+
+/* Used to force a border model for a node */
+.cm-force-border { padding-right: .1px; }
+
+@media print {
+  /* Hide the cursor when printing */
+  .CodeMirror div.CodeMirror-cursors {
+    visibility: hidden;
+  }
+}
+
+/* See issue #2901 */
+.cm-tab-wrap-hack:after { content: ''; }
+
+/* Help users use markselection to safely style text background */
+span.CodeMirror-selectedtext { background: none; }
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  /* --breakpoint-background: url("chrome://devtools/skin/images/breakpoint.svg#light"); */
+  /* --breakpoint-hover-background: url("chrome://devtools/skin/images/breakpoint.svg#light-hover"); */
+  --breakpoint-active-color: rgba(44,187,15,.2);
+  --breakpoint-active-color-hover: rgba(44,187,15,.5);
+  /* --breakpoint-conditional-background: url("chrome://devtools/skin/images/breakpoint.svg#light-conditional"); */
+}
+
+.theme-dark:root {
+  /* --breakpoint-background: url("chrome://devtools/skin/images/breakpoint.svg#dark"); */
+  /* --breakpoint-hover-background: url("chrome://devtools/skin/images/breakpoint.svg#dark-hover"); */
+  --breakpoint-active-color: rgba(0,255,175,.4);
+  --breakpoint-active-color-hover: rgba(0,255,175,.7);
+  /* --breakpoint-conditional-background: url("chrome://devtools/skin/images/breakpoint.svg#dark-conditional"); */
+}
+
+.CodeMirror .errors {
+  width: 16px;
+}
+
+.CodeMirror .error {
+  display: inline-block;
+  margin-left: 5px;
+  width: 12px;
+  height: 12px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  /* background-image: url("chrome://devtools/skin/images/editor-error.png"); */
+  opacity: 0.75;
+}
+
+.CodeMirror .hit-counts {
+  width: 6px;
+}
+
+.CodeMirror .hit-count {
+  display: inline-block;
+  height: 12px;
+  border: solid rgba(0,0,0,0.2);
+  border-width: 1px 1px 1px 0;
+  border-radius: 0 3px 3px 0;
+  padding: 0 3px;
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.CodeMirror-linenumber:before {
+  content: " ";
+  display: block;
+  width: calc(100% - 3px);
+  position: absolute;
+  top: 1px;
+  left: 0;
+  height: 12px;
+  z-index: -1;
+  background-size: calc(100% - 2px) 12px;
+  background-repeat: no-repeat;
+  background-position: right center;
+  padding-inline-end: 9px;
+}
+
+.breakpoint .CodeMirror-linenumber {
+  color: var(--theme-body-background);
+}
+
+.breakpoint .CodeMirror-linenumber:before {
+  background-image: var(--breakpoint-background) !important;
+}
+
+.conditional .CodeMirror-linenumber:before {
+  background-image: var(--breakpoint-conditional-background) !important;
+}
+
+.debug-line .CodeMirror-linenumber {
+  background-color: var(--breakpoint-active-color);
+}
+
+.theme-dark .debug-line .CodeMirror-linenumber {
+  color: #c0c0c0;
+}
+
+.debug-line .CodeMirror-line {
+  background-color: var(--breakpoint-active-color) !important;
+}
+
+/* Don't display the highlight color since the debug line
+   is already highlighted */
+.debug-line .CodeMirror-activeline-background {
+  display: none;
+}
+
+.CodeMirror {
+  cursor: text;
+  height: 100%;
+}
+
+.CodeMirror-gutters {
+  cursor: default;
+}
+
+/* This is to avoid the fake horizontal scrollbar div of codemirror to go 0
+height when floating scrollbars are active. Make sure that this value is equal
+to the maximum of `min-height` specific to the `scrollbar[orient="horizontal"]`
+selector in floating-scrollbar-light.css across all platforms. */
+.CodeMirror-hscrollbar {
+  min-height: 10px;
+}
+
+/* This is to avoid the fake vertical scrollbar div of codemirror to go 0
+width when floating scrollbars are active. Make sure that this value is equal
+to the maximum of `min-width` specific to the `scrollbar[orient="vertical"]`
+selector in floating-scrollbar-light.css across all platforms. */
+.CodeMirror-vscrollbar {
+  min-width: 10px;
+}
+
+.cm-trailingspace {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAACCAYAAAB/qH1jAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3QUXCToH00Y1UgAAACFJREFUCNdjPMDBUc/AwNDAAAFMTAwMDA0OP34wQgX/AQBYgwYEx4f9lQAAAABJRU5ErkJggg==");
+  opacity: 0.75;
+  background-position: left bottom;
+  background-repeat: repeat-x;
+}
+
+.cm-highlight {
+  position: relative;
+}
+
+.cm-highlight:before {
+  position: absolute;
+  border-top-style: solid;
+  border-bottom-style: solid;
+  border-top-color: var(--theme-comment-alt);
+  border-bottom-color: var(--theme-comment-alt);
+  border-top-width: 1px;
+  border-bottom-width: 1px;
+  top: -1px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  content: "";
+  margin-bottom: -1px;
+}
+
+.cm-highlight-full:before {
+  border: 1px solid var(--theme-comment-alt);
+}
+
+.cm-highlight-start:before {
+  border-left-width: 1px;
+  border-left-style: solid;
+  border-left-color: var(--theme-comment-alt);
+  margin: 0 0 -1px -1px;
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
+.cm-highlight-end:before {
+  border-right-width: 1px;
+  border-right-style: solid;
+  border-right-color: var(--theme-comment-alt);
+  margin: 0 -1px -1px 0;
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+}
+
+/* CodeMirror dialogs styling */
+
+.CodeMirror-dialog {
+  padding: 4px 3px;
+}
+
+.CodeMirror-dialog,
+.CodeMirror-dialog input {
+  font: message-box;
+}
+
+/* Fold addon */
+
+.CodeMirror-foldmarker {
+  color: blue;
+  text-shadow: #b9f 1px 1px 2px, #b9f -1px -1px 2px, #b9f 1px -1px 2px, #b9f -1px 1px 2px;
+  font-family: sans-serif;
+  line-height: .3;
   cursor: pointer;
 }
 
-.tree-node:hover {
-  background: var(--theme-tab-toolbar-background);
+.CodeMirror-foldgutter {
+  width: 16px; /* Same as breakpoints gutter above */
 }
 
-.tree .node.focused {
-  color: white;
-  background-color: var(--theme-selection-background);
+.CodeMirror-foldgutter-open,
+.CodeMirror-foldgutter-folded {
+  color: #555;
+  cursor: pointer;
 }
 
-.tree .node > div {
-  margin-left: 10px;
+.CodeMirror-foldgutter-open:after {
+  font-size: 120%;
+  content: "\25BE";
 }
 
-.tree .node.focused svg {
-  fill: white;
+.CodeMirror-foldgutter-folded:after {
+  font-size: 120%;
+  content: "\25B8";
 }
 
-.sources-list .tree-node button {
-  position: fixed;
+.CodeMirror-hints {
+  position: absolute;
+  z-index: 10;
+  overflow: hidden;
+  list-style: none;
+  margin: 0;
+  padding: 2px;
+  border-radius: 3px;
+  font-size: 90%;
+  max-height: 20em;
+  overflow-y: auto;
+}
+
+.CodeMirror-hint {
+  margin: 0;
+  padding: 0 4px;
+  border-radius: 2px;
+  max-width: 19em;
+  overflow: hidden;
+  white-space: pre;
+  cursor: pointer;
+}
+
+.CodeMirror-Tern-completion {
+  padding-inline-start: 22px;
+  position: relative;
+  line-height: 18px;
+}
+
+.CodeMirror-Tern-completion:before {
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  height: 15px;
+  width: 15px;
+  line-height: 16px;
+  text-align: center;
+  color: #ffffff;
+  box-sizing: border-box;
+}
+
+.CodeMirror-Tern-completion-unknown:before {
+  content: "?";
+}
+
+.CodeMirror-Tern-completion-object:before {
+  content: "O";
+}
+
+.CodeMirror-Tern-completion-fn:before {
+  content: "F";
+}
+
+.CodeMirror-Tern-completion-array:before {
+  content: "A";
+}
+
+.CodeMirror-Tern-completion-number:before {
+  content: "N";
+}
+
+.CodeMirror-Tern-completion-string:before {
+  content: "S";
+}
+
+.CodeMirror-Tern-completion-bool:before {
+  content: "B";
+}
+
+.CodeMirror-Tern-completion-guess {
+  color: #999;
+}
+
+.CodeMirror-Tern-tooltip {
+  border-radius: 3px;
+  padding: 2px 5px;
+  white-space: pre-wrap;
+  max-width: 40em;
+  position: absolute;
+  z-index: 10;
+}
+
+.CodeMirror-Tern-hint-doc {
+  max-width: 25em;
+}
+
+.CodeMirror-Tern-farg-current {
+  text-decoration: underline;
+}
+
+.CodeMirror-Tern-fhint-guess {
+  opacity: .7;
 }
 .toggle-button-start,
 .toggle-button-end {
@@ -1010,6 +1582,7 @@ html[dir="rtl"] .tree .node > div {
   height: 16px;
   transition: transform 0.25s ease-in-out;
   margin: 0 4px;
+  cursor: pointer;
 }
 
 .toggle-button-start svg,
@@ -1017,26 +1590,23 @@ html[dir="rtl"] .tree .node > div {
   fill: var(--theme-comment);
 }
 
-.toggle-button-end svg {
+html:not([dir="rtl"]) .toggle-button-end svg,
+html[dir="rtl"] .toggle-button-start svg {
   transform: rotate(180deg);
 }
 
-.toggle-button-start.vertical svg {
-  transform: rotate(-90deg);
-}
-
 .toggle-button-end.vertical svg {
-  transform: rotate(90deg);
+  transform: rotate(-90deg);
 }
 
 .toggle-button-start {
   top: 7px;
-  left: 0;
+  offset-inline-start: 0;
 }
 
 .toggle-button-end {
   top: 7px;
-  right: 0;
+  offset-inline-end: 0;
 }
 
 .toggle-button-start.collapsed,
@@ -1325,7 +1895,6 @@ html[dir="rtl"] .editor-mount {
   white-space: normal;
   opacity: 0.9;
   font-size: 12px;
-  text-align: center;
   font-weight: bold;
 }
 
@@ -1411,7 +1980,10 @@ html .breakpoints-list .breakpoint.paused {
 }
 
 .breakpoint-snippet {
+  overflow: hidden;
+  text-overflow: ellipsis;
   padding-inline-start: 18px;
+  padding-inline-end: 18px;
 }
 
 .breakpoint .close-btn {
@@ -1502,7 +2074,7 @@ html .breakpoints-list .breakpoint.paused {
   color: var(--theme-highlight-red);
 }
 
-.object-node.not-enumerable {
+.object-node.default-property {
   opacity: 0.6;
 }
 
@@ -1805,6 +2377,61 @@ html .breakpoints-list .breakpoint.paused {
   position: absolute;
   top: auto;
 }
+.dropdown {
+  background: var(--theme-body-background);
+  border: 1px solid var(--theme-splitter-color);
+  box-shadow: 0 4px 4px 0 var(--theme-search-overlays-semitransparent);
+  max-height: 300px;
+  position: absolute;
+  offset-inline-end: 8px;
+  top: 35px;
+  width: 150px;
+  z-index: 1000;
+}
+
+.dropdown-button {
+  position: absolute;
+  offset-inline-end: 18px;
+  top: 4px;
+  font-size: 18px;
+  color: var(--theme-comment);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0 5px;
+  font-weight: 100;
+}
+
+.dropdown li {
+  transition: all 0.25s ease;
+  padding: 2px 10px 10px 5px;
+  overflow: hidden;
+  height: 30px;
+  text-overflow: ellipsis;
+}
+
+.dropdown li:hover {
+  background-color: var(--theme-search-overlays-semitransparent);
+  cursor: pointer;
+}
+
+.dropdown ul {
+  list-style: none;
+  line-height: 2em;
+  font-size: 1em;
+  margin: 0;
+  padding: 0;
+}
+
+.dropdown-mask {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  z-index: 999;
+  left: 0;
+  top: 0;
+}
 .source-header {
   border-bottom: 1px solid var(--theme-splitter-color);
   height: 30px;
@@ -1831,7 +2458,7 @@ html .breakpoints-list .breakpoint.paused {
   height: 14px;
   display: inline-block;
   position: relative;
-  top: 5px;
+  top: 4px;
   margin: 4px;
   margin-inline-start: 8px;
   line-height: 0;
@@ -1924,93 +2551,6 @@ html .breakpoints-list .breakpoint.paused {
 
 .source-tab:hover .close {
   display: block;
-}
-
-.toggle-button-start,
-.toggle-button-end {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  margin: 0 4px;
-  cursor: pointer;
-}
-
-.toggle-button-start svg,
-.toggle-button-end svg {
-  fill: var(--theme-comment);
-}
-
-.toggle-button-end svg {
-  transform: rotate(180deg);
-}
-
-.toggle-button-start {
-  top: 8px;
-  left: 0;
-}
-
-.toggle-button-end {
-  top: 8px;
-  right: 0;
-}
-
-.toggle-button-start.collapsed,
-.toggle-button-end.collapsed {
-  transform: rotate(180deg);
-  flex: 1;
-}
-.dropdown {
-  background: var(--theme-body-background);
-  border: 1px solid var(--theme-splitter-color);
-  box-shadow: 0 4px 4px 0 var(--theme-search-overlays-semitransparent);
-  max-height: 300px;
-  position: absolute;
-  right: 8px;
-  top: 35px;
-  width: 150px;
-  z-index: 1000;
-}
-
-.dropdown-button {
-  position: absolute;
-  right: 18px;
-  top: 4px;
-  font-size: 18px;
-  color: var(--theme-body-color);
-  cursor: pointer;
-  background: none;
-  border: none;
-}
-
-.dropdown li {
-  transition: all 0.25s ease;
-  padding: 2px 10px 10px 5px;
-  overflow: hidden;
-  height: 30px;
-  text-overflow: ellipsis;
-}
-
-.dropdown li:hover {
-  background-color: var(--theme-search-overlays-semitransparent);
-  cursor: pointer;
-}
-
-.dropdown ul {
-  list-style: none;
-  line-height: 2em;
-  font-size: 1em;
-  margin: 0;
-  padding: 0;
-}
-
-.dropdown-mask {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-  z-index: 999;
-  left: 0;
-  top: 0;
 }
 
 /*# sourceMappingURL=debugger.css.map*/

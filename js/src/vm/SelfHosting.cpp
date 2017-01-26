@@ -1856,6 +1856,23 @@ intrinsic_RuntimeDefaultLocale(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+using GetOrCreateIntlConstructor = JSFunction* (*)(JSContext*, Handle<GlobalObject*>);
+
+template <GetOrCreateIntlConstructor getOrCreateIntlConstructor>
+static bool
+intrinsic_GetBuiltinIntlConstructor(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 0);
+
+    JSFunction* constructor = getOrCreateIntlConstructor(cx, cx->global());
+    if (!constructor)
+        return false;
+
+    args.rval().setObject(*constructor);
+    return true;
+}
+
 static bool
 intrinsic_AddContentTelemetry(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -2481,6 +2498,25 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_PluralRules_availableLocales", intl_PluralRules_availableLocales, 0,0),
     JS_FN("intl_GetPluralCategories", intl_GetPluralCategories, 2, 0),
     JS_FN("intl_SelectPluralRule", intl_SelectPluralRule, 2,0),
+
+    JS_INLINABLE_FN("IsCollator",
+                    intrinsic_IsInstanceOfBuiltin<CollatorObject>, 1,0,
+                    IntlIsCollator),
+    JS_INLINABLE_FN("IsDateTimeFormat",
+                    intrinsic_IsInstanceOfBuiltin<DateTimeFormatObject>, 1,0,
+                    IntlIsDateTimeFormat),
+    JS_INLINABLE_FN("IsNumberFormat",
+                    intrinsic_IsInstanceOfBuiltin<NumberFormatObject>, 1,0,
+                    IntlIsNumberFormat),
+    JS_INLINABLE_FN("IsPluralRules",
+                    intrinsic_IsInstanceOfBuiltin<PluralRulesObject>, 1,0,
+                    IntlIsPluralRules),
+    JS_FN("GetDateTimeFormatConstructor",
+          intrinsic_GetBuiltinIntlConstructor<GlobalObject::getOrCreateDateTimeFormatConstructor>,
+          0,0),
+    JS_FN("GetNumberFormatConstructor",
+          intrinsic_GetBuiltinIntlConstructor<GlobalObject::getOrCreateNumberFormatConstructor>,
+          0,0),
 
     JS_INLINABLE_FN("IsRegExpObject",
                     intrinsic_IsInstanceOfBuiltin<RegExpObject>, 1,0,

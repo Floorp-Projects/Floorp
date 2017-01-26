@@ -1152,6 +1152,11 @@ LogTextPerfStats(gfxTextPerfMetrics* aTextPerf,
 void
 PresShell::Destroy()
 {
+  // Do not add code before this line please!
+  if (mHaveShutDown) {
+    return;
+  }
+
   NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
     "destroy called on presshell while scripts not blocked");
 
@@ -1164,7 +1169,8 @@ PresShell::Destroy()
     }
   }
   if (mPresContext) {
-    gfxUserFontSet* fs = mPresContext->GetUserFontSet();
+    const bool mayFlushUserFontSet = false;
+    gfxUserFontSet* fs = mPresContext->GetUserFontSet(mayFlushUserFontSet);
     if (fs) {
       uint32_t fontCount;
       uint64_t fontSize;
@@ -1185,9 +1191,6 @@ PresShell::Destroy()
     mReflowCountMgr = nullptr;
   }
 #endif
-
-  if (mHaveShutDown)
-    return;
 
   if (mZoomConstraintsClient) {
     mZoomConstraintsClient->Destroy();
@@ -10111,11 +10114,21 @@ PresShell::VerifyIncrementalReflow()
 
 // Layout debugging hooks
 void
-PresShell::ListStyleContexts(nsIFrame *aRootFrame, FILE *out, int32_t aIndent)
+PresShell::ListStyleContexts(FILE *out, int32_t aIndent)
 {
-  nsStyleContext *sc = aRootFrame->StyleContext();
-  if (sc)
-    sc->List(out, aIndent);
+  nsIFrame* rootFrame = GetRootFrame();
+  if (rootFrame) {
+    rootFrame->StyleContext()->List(out, aIndent);
+  }
+
+  // The root element's frame's style context is the root of a separate tree.
+  Element* rootElement = mDocument->GetRootElement();
+  if (rootElement) {
+    nsIFrame* rootElementFrame = rootElement->GetPrimaryFrame();
+    if (rootElementFrame) {
+      rootElementFrame->StyleContext()->List(out, aIndent);
+    }
+  }
 }
 
 void

@@ -9,12 +9,13 @@ var Ci = Components.interfaces;
 var Cu = Components.utils;
 var Cr = Components.results;
 
-Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/AsyncPrefs.jsm");
 Cu.import("resource://gre/modules/DelayedInit.jsm");
+Cu.import("resource://gre/modules/Messaging.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 if (AppConstants.ACCESSIBILITY) {
   XPCOMUtils.defineLazyModuleGetter(this, "AccessFu",
@@ -44,12 +45,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
 
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher",
-                                  "resource://gre/modules/Messaging.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "Messaging",
-                                  "resource://gre/modules/Messaging.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "UserAgentOverrides",
                                   "resource://gre/modules/UserAgentOverrides.jsm");
@@ -130,6 +125,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "FontEnumerator",
   "@mozilla.org/gfx/fontenumerator;1",
   "nsIFontEnumerator");
 
+var GlobalEventDispatcher = EventDispatcher.instance;
+var WindowEventDispatcher = EventDispatcher.for(window);
+
 var lazilyLoadedBrowserScripts = [
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
   ["InputWidgetHelper", "chrome://browser/content/InputWidgetHelper.js"],
@@ -157,19 +155,12 @@ lazilyLoadedBrowserScripts.forEach(function (aScript) {
 var lazilyLoadedObserverScripts = [
   ["MemoryObserver", ["memory-pressure", "Memory:Dump"], "chrome://browser/content/MemoryObserver.js"],
   ["ConsoleAPI", ["console-api-log-event"], "chrome://browser/content/ConsoleAPI.js"],
-  ["FindHelper", ["FindInPage:Opened", "FindInPage:Closed"], "chrome://browser/content/FindHelper.js"],
-  ["PermissionsHelper", ["Permissions:Check", "Permissions:Get", "Permissions:Clear"], "chrome://browser/content/PermissionsHelper.js"],
   ["FeedHandler", ["Feeds:Subscribe"], "chrome://browser/content/FeedHandler.js"],
   ["Feedback", ["Feedback:Show"], "chrome://browser/content/Feedback.js"],
   ["EmbedRT", ["GeckoView:ImportScript"], "chrome://browser/content/EmbedRT.js"],
   ["Reader", ["Reader:AddToCache", "Reader:RemoveFromCache"], "chrome://browser/content/Reader.js"],
   ["PrintHelper", ["Print:PDF"], "chrome://browser/content/PrintHelper.js"],
 ];
-
-lazilyLoadedObserverScripts.push(
-["ActionBarHandler", ["TextSelection:Get", "TextSelection:Action", "TextSelection:End"],
-  "chrome://browser/content/ActionBarHandler.js"]
-);
 
 if (AppConstants.MOZ_WEBRTC) {
   lazilyLoadedObserverScripts.push(
@@ -239,21 +230,38 @@ lazilyLoadedObserverScripts.forEach(function (aScript) {
   });
 });
 
-// Lazily-loaded JS modules that use observer notifications
+// Lazily-loaded JS subscripts and modules that use global/window EventDispatcher.
 [
-  ["Home", ["HomeBanner:Get", "HomePanels:Get", "HomePanels:Authenticate", "HomePanels:RefreshView",
-            "HomePanels:Installed", "HomePanels:Uninstalled"], "resource://gre/modules/Home.jsm"],
+  ["ActionBarHandler", WindowEventDispatcher,
+   ["TextSelection:Get", "TextSelection:Action", "TextSelection:End"],
+   "chrome://browser/content/ActionBarHandler.js"],
+  ["FindHelper", GlobalEventDispatcher,
+   ["FindInPage:Opened", "FindInPage:Closed"],
+   "chrome://browser/content/FindHelper.js"],
+  ["Home", GlobalEventDispatcher,
+   ["HomeBanner:Get", "HomePanels:Get", "HomePanels:Authenticate",
+    "HomePanels:RefreshView", "HomePanels:Installed", "HomePanels:Uninstalled"],
+   "resource://gre/modules/Home.jsm"],
+  ["PermissionsHelper", GlobalEventDispatcher,
+   ["Permissions:Check", "Permissions:Get", "Permissions:Clear"],
+   "chrome://browser/content/PermissionsHelper.js"],
 ].forEach(module => {
-  let [name, notifications, resource] = module;
-  XPCOMUtils.defineLazyModuleGetter(this, name, resource);
-  let observer = (s, t, d) => {
-    Services.obs.removeObserver(observer, t);
-    Services.obs.addObserver(this[name], t, false);
-    this[name].observe(s, t, d); // Explicitly notify new observer
-  };
-  notifications.forEach(notification => {
-    Services.obs.addObserver(observer, notification, false);
+  let [name, dispatcher, events, script] = module;
+  XPCOMUtils.defineLazyGetter(window, name, function() {
+    let sandbox = {};
+    if (script.endsWith(".jsm")) {
+      Cu.import(script, sandbox);
+    } else {
+      Services.scriptloader.loadSubScript(script, sandbox);
+    }
+    return sandbox[name];
   });
+  let listener = (event, message, callback) => {
+    dispatcher.unregisterListener(listener, event);
+    dispatcher.registerListener(window[name], event);
+    window[name].onEvent(event, message, callback); // Explicitly notify new listener
+  };
+  dispatcher.registerListener(listener, events);
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "Haptic",
@@ -340,9 +348,6 @@ function InitLater(fn, object, name) {
   return DelayedInit.schedule(fn, object, name, 15000 /* 15s max wait */);
 }
 
-XPCOMUtils.defineLazyGetter(this, "GlobalEventDispatcher", () => EventDispatcher.instance);
-XPCOMUtils.defineLazyGetter(this, "WindowEventDispatcher", () => EventDispatcher.for(window));
-
 var BrowserApp = {
   _tabs: [],
   _selectedTab: null,
@@ -379,6 +384,7 @@ var BrowserApp = {
       "Tab:Selected",
       "Tab:Closed",
       "Browser:LoadManifest",
+      "Session:Reload",
     ]);
 
     Services.obs.addObserver(this, "Locale:OS", false);
@@ -386,7 +392,6 @@ var BrowserApp = {
     Services.obs.addObserver(this, "Session:Back", false);
     Services.obs.addObserver(this, "Session:Forward", false);
     Services.obs.addObserver(this, "Session:Navigate", false);
-    Services.obs.addObserver(this, "Session:Reload", false);
     Services.obs.addObserver(this, "Session:Stop", false);
     Services.obs.addObserver(this, "SaveAs:PDF", false);
     Services.obs.addObserver(this, "Browser:Quit", false);
@@ -1635,6 +1640,58 @@ var BrowserApp = {
         break;
       }
 
+      case "Session:Reload": {
+        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+
+        // Check to see if this is a message to enable/disable mixed content blocking.
+        if (data) {
+          if (data.bypassCache) {
+            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE |
+                     Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY;
+          }
+
+          if (data.contentType === "tracking") {
+            // Convert document URI into the format used by
+            // nsChannelClassifier::ShouldEnableTrackingProtection
+            // (any scheme turned into https is correct)
+            let normalizedUrl = Services.io.newURI("https://" + browser.currentURI.hostPort);
+            if (data.allowContent) {
+              // Add the current host in the 'trackingprotection' consumer of
+              // the permission manager using a normalized URI. This effectively
+              // places this host on the tracking protection white list.
+              if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
+                PrivateBrowsingUtils.addToTrackingAllowlist(normalizedUrl);
+              } else {
+                Services.perms.add(normalizedUrl, "trackingprotection", Services.perms.ALLOW_ACTION);
+                Telemetry.addData("TRACKING_PROTECTION_EVENTS", 1);
+              }
+            } else {
+              // Remove the current host from the 'trackingprotection' consumer
+              // of the permission manager. This effectively removes this host
+              // from the tracking protection white list (any list actually).
+              if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
+                PrivateBrowsingUtils.removeFromTrackingAllowlist(normalizedUrl);
+              } else {
+                Services.perms.remove(normalizedUrl, "trackingprotection");
+                Telemetry.addData("TRACKING_PROTECTION_EVENTS", 2);
+              }
+            }
+          }
+        }
+
+        // Try to use the session history to reload so that framesets are
+        // handled properly. If the window has no session history, fall back
+        // to using the web navigation's reload method.
+        let webNav = browser.webNavigation;
+        try {
+          let sh = webNav.sessionHistory;
+          if (sh)
+            webNav = sh.QueryInterface(Ci.nsIWebNavigation);
+        } catch (e) {}
+        webNav.reload(flags);
+        break;
+      }
+
       case "Tab:Load": {
         let url = data.url;
         let flags = Ci.nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP
@@ -1723,60 +1780,6 @@ var BrowserApp = {
 
           browser.gotoIndex(index);
           break;
-
-      case "Session:Reload": {
-        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-
-        // Check to see if this is a message to enable/disable mixed content blocking.
-        if (aData) {
-          let data = JSON.parse(aData);
-
-          if (data.bypassCache) {
-            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE |
-                     Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY;
-          }
-
-          if (data.contentType === "tracking") {
-            // Convert document URI into the format used by
-            // nsChannelClassifier::ShouldEnableTrackingProtection
-            // (any scheme turned into https is correct)
-            let normalizedUrl = Services.io.newURI("https://" + browser.currentURI.hostPort);
-            if (data.allowContent) {
-              // Add the current host in the 'trackingprotection' consumer of
-              // the permission manager using a normalized URI. This effectively
-              // places this host on the tracking protection white list.
-              if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
-                PrivateBrowsingUtils.addToTrackingAllowlist(normalizedUrl);
-              } else {
-                Services.perms.add(normalizedUrl, "trackingprotection", Services.perms.ALLOW_ACTION);
-                Telemetry.addData("TRACKING_PROTECTION_EVENTS", 1);
-              }
-            } else {
-              // Remove the current host from the 'trackingprotection' consumer
-              // of the permission manager. This effectively removes this host
-              // from the tracking protection white list (any list actually).
-              if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {
-                PrivateBrowsingUtils.removeFromTrackingAllowlist(normalizedUrl);
-              } else {
-                Services.perms.remove(normalizedUrl, "trackingprotection");
-                Telemetry.addData("TRACKING_PROTECTION_EVENTS", 2);
-              }
-            }
-          }
-        }
-
-        // Try to use the session history to reload so that framesets are
-        // handled properly. If the window has no session history, fall back
-        // to using the web navigation's reload method.
-        let webNav = browser.webNavigation;
-        try {
-          let sh = webNav.sessionHistory;
-          if (sh)
-            webNav = sh.QueryInterface(Ci.nsIWebNavigation);
-        } catch (e) {}
-        webNav.reload(flags);
-        break;
-      }
 
       case "Session:Stop":
         browser.stop();
@@ -2171,8 +2174,10 @@ var BrowserApp = {
 
 var NativeWindow = {
   init: function() {
+    GlobalEventDispatcher.registerListener(this, [
+      "Doorhanger:Reply",
+    ]);
     Services.obs.addObserver(this, "Menu:Clicked", false);
-    Services.obs.addObserver(this, "Doorhanger:Reply", false);
     this.contextmenus.init();
   },
 
@@ -2304,12 +2309,8 @@ var NativeWindow = {
     }
   },
 
-  observe: function(aSubject, aTopic, aData) {
-    if (aTopic == "Menu:Clicked") {
-      if (this.menu._callbacks[aData])
-        this.menu._callbacks[aData]();
-    } else if (aTopic == "Doorhanger:Reply") {
-      let data = JSON.parse(aData);
+  onEvent: function (event, data, callback) {
+    if (event == "Doorhanger:Reply") {
       let reply_id = data["callback"];
 
       if (this.doorhanger._callbacks[reply_id]) {
@@ -2324,6 +2325,13 @@ var NativeWindow = {
           }
         }
       }
+    }
+  },
+
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == "Menu:Clicked") {
+      if (this.menu._callbacks[aData])
+        this.menu._callbacks[aData]();
     }
   },
 
@@ -4029,7 +4037,10 @@ Tab.prototype = {
           let displayHost = IdentityHandler.getEffectiveHost();
           let title = { text: displayHost, resource: hostname };
           let selectObj = { title: title, logins: foundLogins };
-          Messaging.sendRequest({ type: "Doorhanger:Logins", data: selectObj });
+          GlobalEventDispatcher.sendRequest({
+            type: "Doorhanger:Logins",
+            data: selectObj
+          });
         }
         break;
       }

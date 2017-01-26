@@ -28,6 +28,11 @@
     _(AtomicsXor)                   \
     _(AtomicsIsLockFree)            \
                                     \
+    _(IntlIsCollator)               \
+    _(IntlIsDateTimeFormat)         \
+    _(IntlIsNumberFormat)           \
+    _(IntlIsPluralRules)            \
+                                    \
     _(MathAbs)                      \
     _(MathFloor)                    \
     _(MathCeil)                     \

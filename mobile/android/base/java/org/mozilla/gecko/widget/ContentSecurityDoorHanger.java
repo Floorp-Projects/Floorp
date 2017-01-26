@@ -10,9 +10,7 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import org.mozilla.gecko.R;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import android.content.Context;
 import android.view.View;
@@ -107,21 +105,17 @@ public class ContentSecurityDoorHanger extends DoorHanger {
                 final String expandedExtra = mType.toString().toLowerCase(Locale.US) + "-" + telemetryExtra;
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.DOORHANGER, expandedExtra);
 
-                final JSONObject response = new JSONObject();
-                try {
-                    switch (mType) {
-                        case TRACKING:
-                            response.put("allowContent", (id == SiteIdentityPopup.ButtonType.DISABLE.ordinal()));
-                            response.put("contentType", ("tracking"));
-                            break;
-                        default:
-                            Log.w(LOGTAG, "Unknown doorhanger type " + mType.toString());
-                    }
-                } catch (JSONException e) {
-                    Log.e(LOGTAG, "Error creating onClick response", e);
+                final GeckoBundle response = new GeckoBundle(2);
+                if (mType == Type.TRACKING) {
+                    response.putBoolean("allowContent",
+                                        id == SiteIdentityPopup.ButtonType.DISABLE.ordinal());
+                    response.putString("contentType", "tracking");
+                } else {
+                    Log.w(LOGTAG, "Unknown doorhanger type " + mType.toString());
                 }
 
-                mOnButtonClickListener.onButtonClick(response, ContentSecurityDoorHanger.this);
+                mOnButtonClickListener.onButtonClick(
+                        response, ContentSecurityDoorHanger.this);
             }
         };
     }
