@@ -1609,6 +1609,138 @@ TimerThreadEventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread)
 
 NS_IMPL_ISUPPORTS(TimerThreadEventTarget, nsIEventTarget)
 
+namespace {
+
+class WrappedControlRunnable final : public WorkerControlRunnable
+{
+  nsCOMPtr<nsIRunnable> mInner;
+
+  ~WrappedControlRunnable()
+  {
+  }
+
+public:
+  WrappedControlRunnable(WorkerPrivate* aWorkerPrivate,
+                         already_AddRefed<nsIRunnable>&& aInner)
+    : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
+    , mInner(aInner)
+  {
+  }
+
+  virtual bool
+  PreDispatch(WorkerPrivate* aWorkerPrivate) override
+  {
+    // Silence bad assertions, this can be dispatched from any thread.
+    return true;
+  }
+
+  virtual void
+  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
+  {
+    // Silence bad assertions, this can be dispatched from any thread.
+  }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    mInner->Run();
+    return true;
+  }
+
+  nsresult
+  Cancel() override
+  {
+    // First run the default cancelation code
+    WorkerControlRunnable::Cancel();
+
+    // Attempt to cancel the inner runnable as well
+    nsCOMPtr<nsICancelableRunnable> cr = do_QueryInterface(mInner);
+    if (cr) {
+      return cr->Cancel();
+    }
+    return NS_OK;
+  }
+};
+
+} // anonymous namespace
+
+BEGIN_WORKERS_NAMESPACE
+
+class WorkerControlEventTarget final : public nsIEventTarget
+{
+  mozilla::Mutex mMutex;
+  WorkerPrivate* mWorkerPrivate;
+
+  ~WorkerControlEventTarget() = default;
+
+public:
+  explicit WorkerControlEventTarget(WorkerPrivate* aWorkerPrivate)
+    : mMutex("WorkerControlEventTarget")
+    , mWorkerPrivate(aWorkerPrivate)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate);
+  }
+
+  void
+  ForgetWorkerPrivate(WorkerPrivate* aWorkerPrivate)
+  {
+    MutexAutoLock lock(mMutex);
+    MOZ_DIAGNOSTIC_ASSERT(mWorkerPrivate == aWorkerPrivate);
+    mWorkerPrivate = nullptr;
+  }
+
+  NS_IMETHOD
+  DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags) override
+  {
+    nsCOMPtr<nsIRunnable> runnable(aRunnable);
+    return Dispatch(runnable.forget(), aFlags);
+  }
+
+  NS_IMETHOD
+  Dispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_t aFlags) override
+  {
+    MutexAutoLock lock(mMutex);
+
+    if (!mWorkerPrivate) {
+      return NS_ERROR_FAILURE;
+    }
+
+    RefPtr<WorkerControlRunnable> r = new WrappedControlRunnable(mWorkerPrivate,
+                                                                 Move(aRunnable));
+    if (!r->Dispatch()) {
+      return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) override
+  {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  NS_IMETHOD
+  IsOnCurrentThread(bool* aIsOnCurrentThread) override
+  {
+    MOZ_ASSERT(aIsOnCurrentThread);
+    MutexAutoLock lock(mMutex);
+
+    if (!mWorkerPrivate) {
+      *aIsOnCurrentThread = false;
+      return NS_OK;
+    }
+
+    return mWorkerPrivate->IsOnCurrentThread(aIsOnCurrentThread);
+  }
+
+  NS_DECL_THREADSAFE_ISUPPORTS
+};
+
+NS_IMPL_ISUPPORTS(WorkerControlEventTarget, nsIEventTarget)
+
+END_WORKERS_NAMESPACE
+
 WorkerLoadInfo::WorkerLoadInfo()
   : mLoadFlags(nsIRequest::LOAD_NORMAL)
   , mWindowID(UINT64_MAX)
