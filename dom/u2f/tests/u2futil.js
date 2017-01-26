@@ -1,6 +1,11 @@
 // Used by local_addTest() / local_completeTest()
 var _countCompletions = 0;
 var _expectedCompletions = 0;
+var _parentOrigin = "http://mochi.test:8888";
+
+function local_setParentOrigin(aOrigin) {
+  _parentOrigin = aOrigin;
+}
 
 function handleEventMessage(event) {
   if ("test" in event.data) {
@@ -40,7 +45,7 @@ function local_isnot(value, expected, message) {
 
 function local_ok(expression, message) {
   let body = {"test": this.location.pathname, "status":expression, "msg": message}
-  parent.postMessage(body, "http://mochi.test:8888");
+  parent.postMessage(body, _parentOrigin);
 }
 
 function local_doesThrow(fn, name) {
@@ -70,7 +75,7 @@ function local_completeTest() {
 }
 
 function local_finished() {
-  parent.postMessage({"done":true}, "http://mochi.test:8888");
+  parent.postMessage({"done":true}, _parentOrigin);
 }
 
 function string2buffer(str) {
