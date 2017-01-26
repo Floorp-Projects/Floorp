@@ -192,6 +192,8 @@ bool
 ICStub::makesGCCalls() const
 {
     switch (kind()) {
+      case CacheIR_Regular:
+        return toCacheIR_Regular()->stubInfo()->makesGCCalls();
       case CacheIR_Monitored:
         return toCacheIR_Monitored()->stubInfo()->makesGCCalls();
       case CacheIR_Updated:
@@ -376,6 +378,9 @@ ICStub::trace(JSTracer* trc)
         TraceEdge(trc, &stub->templateObject(), "baseline-rest-template");
         break;
       }
+      case ICStub::CacheIR_Regular:
+        TraceCacheIRStub(trc, this, toCacheIR_Regular()->stubInfo());
+        break;
       case ICStub::CacheIR_Monitored:
         TraceCacheIRStub(trc, this, toCacheIR_Monitored()->stubInfo());
         break;
@@ -1935,7 +1940,9 @@ StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub)
     // stub which isn't on a preliminary object.
 
     for (ICStubIterator iter = stub->beginChain(); !iter.atEnd(); iter++) {
-        if (iter->isCacheIR_Monitored() && iter->toCacheIR_Monitored()->hasPreliminaryObject())
+        if (iter->isCacheIR_Regular() && iter->toCacheIR_Regular()->hasPreliminaryObject())
+            iter.unlink(cx);
+        else if (iter->isCacheIR_Monitored() && iter->toCacheIR_Monitored()->hasPreliminaryObject())
             iter.unlink(cx);
         else if (iter->isCacheIR_Updated() && iter->toCacheIR_Updated()->hasPreliminaryObject())
             iter.unlink(cx);
