@@ -1392,6 +1392,12 @@ public:
   DispatchToMainThread(already_AddRefed<nsIRunnable> aRunnable,
                        uint32_t aFlags = NS_DISPATCH_NORMAL);
 
+  // Get an event target that will dispatch runnables as control runnables on
+  // the worker thread.  Implement nsICancelableRunnable if you wish to take
+  // action on cancelation.
+  nsIEventTarget*
+  ControlEventTarget();
+
 private:
   WorkerPrivate(WorkerPrivate* aParent,
                 const nsAString& aScriptURL, bool aIsChromeWorker,
