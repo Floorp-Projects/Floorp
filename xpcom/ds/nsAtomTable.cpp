@@ -10,6 +10,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/Unused.h"
 
 #include "nsAtomTable.h"
@@ -618,11 +619,20 @@ RegisterStaticAtoms(const nsStaticAtom* aAtoms, uint32_t aAtomCount)
 
     nsIAtom* atom = he->mAtom;
     if (atom) {
+      // Disallow creating a dynamic atom, and then later, while the
+      // dynamic atom is still alive, registering that same atom as a
+      // static atom.  It causes subtle bugs, and we're programming in
+      // C++ here, not Smalltalk.
       if (!atom->IsStaticAtom()) {
-        // A rare case: we're creating a StaticAtom but there is already a
-        // DynamicAtom of the same name. Transmute the DynamicAtom into a
-        // StaticAtom.
-        static_cast<DynamicAtom*>(atom)->TransmuteToStatic(stringBuffer);
+        nsAutoCString name;
+        atom->ToUTF8String(name);
+
+        static char sCrashReason[1024];
+        SprintfLiteral(sCrashReason,
+                       "static atom registration for %s should be pushed back",
+                       name.get());
+        MOZ_CRASH_ANNOTATE(sCrashReason);
+        MOZ_REALLY_CRASH();
       }
     } else {
       atom = new StaticAtom(stringBuffer, stringLen, hash);
