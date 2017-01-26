@@ -18,7 +18,8 @@ namespace mozilla {
 // H264Converter will monitor the input data, and will delay creation of the
 // MediaDataDecoder until a SPS and PPS NALs have been extracted.
 
-class H264Converter : public MediaDataDecoder {
+class H264Converter : public MediaDataDecoder
+{
 public:
 
   H264Converter(PlatformDecoderModule* aPDM,
@@ -26,10 +27,10 @@ public:
   virtual ~H264Converter();
 
   RefPtr<InitPromise> Init() override;
-  void Input(MediaRawData* aSample) override;
-  void Flush() override;
-  void Drain() override;
-  void Shutdown() override;
+  RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
+  RefPtr<DecodePromise> Drain() override;
+  RefPtr<FlushPromise> Flush() override;
+  RefPtr<ShutdownPromise> Shutdown() override;
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
   const char* GetDescriptionName() const override
   {
@@ -67,9 +68,10 @@ private:
   RefPtr<layers::ImageContainer> mImageContainer;
   const RefPtr<TaskQueue> mTaskQueue;
   RefPtr<MediaRawData> mPendingSample;
-  MediaDataDecoderCallback* mCallback;
   RefPtr<MediaDataDecoder> mDecoder;
   MozPromiseRequestHolder<InitPromise> mInitPromiseRequest;
+  MozPromiseRequestHolder<DecodePromise> mDecodePromiseRequest;
+  MozPromiseHolder<DecodePromise> mDecodePromise;
   RefPtr<GMPCrashHelper> mGMPCrashHelper;
   bool mNeedAVCC;
   nsresult mLastError;

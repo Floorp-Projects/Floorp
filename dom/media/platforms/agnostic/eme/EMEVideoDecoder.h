@@ -8,23 +8,12 @@
 #define EMEVideoDecoder_h_
 
 #include "GMPVideoDecoder.h"
-#include "PlatformDecoderModule.h"
 
 namespace mozilla {
 
 class CDMProxy;
+class MediaRawData;
 class TaskQueue;
-
-class EMEVideoCallbackAdapter : public VideoCallbackAdapter {
-public:
-  EMEVideoCallbackAdapter(MediaDataDecoderCallbackProxy* aCallback,
-                          VideoInfo aVideoInfo,
-                          layers::ImageContainer* aImageContainer)
-   : VideoCallbackAdapter(aCallback, aVideoInfo, aImageContainer)
-  {}
-
-  void Error(GMPErr aErr) override;
-};
 
 class EMEVideoDecoder : public GMPVideoDecoder {
 public:

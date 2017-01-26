@@ -32,7 +32,7 @@ GMPDecoderModule::~GMPDecoderModule()
 }
 
 static already_AddRefed<MediaDataDecoderProxy>
-CreateDecoderWrapper(MediaDataDecoderCallback* aCallback)
+CreateDecoderWrapper()
 {
   RefPtr<gmp::GeckoMediaPluginService> s(gmp::GeckoMediaPluginService::GetGeckoMediaPluginService());
   if (!s) {
@@ -42,7 +42,7 @@ CreateDecoderWrapper(MediaDataDecoderCallback* aCallback)
   if (!thread) {
     return nullptr;
   }
-  RefPtr<MediaDataDecoderProxy> decoder(new MediaDataDecoderProxy(thread.forget(), aCallback));
+  RefPtr<MediaDataDecoderProxy> decoder(new MediaDataDecoderProxy(thread.forget()));
   return decoder.forget();
 }
 
@@ -55,8 +55,8 @@ GMPDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
     return nullptr;
   }
 
-  RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aParams.mCallback);
-  auto params = GMPVideoDecoderParams(aParams).WithCallback(wrapper);
+  RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper();
+  auto params = GMPVideoDecoderParams(aParams);
   wrapper->SetProxyTarget(new GMPVideoDecoder(params));
   return wrapper.forget();
 }

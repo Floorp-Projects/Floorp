@@ -10,6 +10,7 @@
 #include "MediaDataDemuxer.h"
 #include "QueueObject.h"
 #include "PlatformDecoderModule.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/TimeStamp.h"
@@ -20,7 +21,7 @@ namespace mozilla {
 class TaskQueue;
 class Benchmark;
 
-class BenchmarkPlayback : public QueueObject, private MediaDataDecoderCallback
+class BenchmarkPlayback : public QueueObject
 {
   friend class Benchmark;
   explicit BenchmarkPlayback(Benchmark* aMainThreadState, MediaDataDemuxer* aDemuxer);
@@ -29,13 +30,8 @@ class BenchmarkPlayback : public QueueObject, private MediaDataDecoderCallback
   void MainThreadShutdown();
   void InitDecoder(TrackInfo&& aInfo);
 
-  // MediaDataDecoderCallback
-  // Those methods are called on the MediaDataDecoder's task queue.
-  void Output(MediaData* aData) override;
-  void Error(const MediaResult& aError) override;
-  void InputExhausted() override;
-  void DrainComplete() override;
-  bool OnReaderTaskQueue() override;
+  void Output(const MediaDataDecoder::DecodedData& aResults);
+  void InputExhausted();
 
   Atomic<Benchmark*> mMainThreadState;
 
@@ -47,9 +43,10 @@ class BenchmarkPlayback : public QueueObject, private MediaDataDecoderCallback
   RefPtr<MediaTrackDemuxer> mTrackDemuxer;
   nsTArray<RefPtr<MediaRawData>> mSamples;
   size_t mSampleIndex;
-  TimeStamp mDecodeStartTime;
+  Maybe<TimeStamp> mDecodeStartTime;
   uint32_t mFrameCount;
   bool mFinished;
+  bool mDrained;
 };
 
 // Init() must have been called at least once prior on the

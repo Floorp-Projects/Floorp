@@ -24,10 +24,10 @@ public:
   ~OpusDataDecoder();
 
   RefPtr<InitPromise> Init() override;
-  void Input(MediaRawData* aSample) override;
-  void Flush() override;
-  void Drain() override;
-  void Shutdown() override;
+  RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
+  RefPtr<DecodePromise> Drain() override;
+  RefPtr<FlushPromise> Flush() override;
+  RefPtr<ShutdownPromise> Shutdown() override;
   const char* GetDescriptionName() const override
   {
     return "opus audio decoder";
@@ -46,13 +46,10 @@ public:
 private:
   nsresult DecodeHeader(const unsigned char* aData, size_t aLength);
 
-  void ProcessDecode(MediaRawData* aSample);
-  MediaResult DoDecode(MediaRawData* aSample);
-  void ProcessDrain();
+  RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample);
 
   const AudioInfo& mInfo;
   const RefPtr<TaskQueue> mTaskQueue;
-  MediaDataDecoderCallback* mCallback;
 
   // Opus decoder state
   nsAutoPtr<OpusParser> mOpusParser;
@@ -68,8 +65,6 @@ private:
   int64_t mFrames;
   Maybe<int64_t> mLastFrameTime;
   uint8_t mMappingTable[MAX_AUDIO_CHANNELS]; // Channel mapping table.
-
-  Atomic<bool> mIsFlushing;
 };
 
 } // namespace mozilla
