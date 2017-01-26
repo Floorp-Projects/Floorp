@@ -67,6 +67,7 @@ private:
   class GumRejecter;
 
   virtual ~MediaDevices();
+  nsCOMPtr<nsITimer> mFuzzTimer;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(MediaDevices,
