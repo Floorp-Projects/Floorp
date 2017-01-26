@@ -50,6 +50,7 @@
 #include "nsCSSRuleProcessor.h"
 #include "nsCORSListenerProxy.h"
 #include "nsHTMLDNSPrefetch.h"
+#include "nsHtml5Atoms.h"
 #include "nsHtml5Module.h"
 #include "mozilla/dom/FallbackEncoding.h"
 #include "nsFocusManager.h"
@@ -159,6 +160,7 @@ nsLayoutStatics::Initialize()
   nsCSSProps::AddRefTable();
   nsColorNames::AddRefTable();
   nsGkAtoms::AddRefAtoms();
+  nsHtml5Atoms::AddRefAtoms();
 
   StartupJSEnvironment();
   rv = nsRegion::InitStatic();
