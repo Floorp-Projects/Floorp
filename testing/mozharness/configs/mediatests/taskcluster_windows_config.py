@@ -36,15 +36,4 @@ config = {
         'install',
         'run-media-tests',
     ],
-
-    "suite_definitions": {
-        "media-tests": {
-            "options": [],
-        },
-        "media-youtube-tests": {
-            "options": [
-                "{test_manifest}"
-            ],
-        },
-    },
 }

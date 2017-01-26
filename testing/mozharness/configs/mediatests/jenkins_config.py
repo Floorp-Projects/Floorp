@@ -22,20 +22,6 @@ config = {
     'download_symbols': 'ondemand',
     'download_tooltool': True,
 
-    # Default test suite
-    'test_suite': 'media-tests',
-
-    'suite_definitions': {
-        'media-tests': {
-            'options': [],
-        },
-        'media-youtube-tests': {
-            'options': [
-                '{test_manifest}'
-            ],
-        },
-    },
-
     'default_actions': [
         'clobber',
         'download-and-extract',
