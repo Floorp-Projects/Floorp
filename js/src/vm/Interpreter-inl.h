@@ -543,7 +543,7 @@ GetElemOptimizedArguments(JSContext* cx, AbstractFramePtr frame, MutableHandleVa
 }
 
 static MOZ_ALWAYS_INLINE bool
-GetElementOperation(JSContext* cx, JSOp op, MutableHandleValue lref, HandleValue rref,
+GetElementOperation(JSContext* cx, JSOp op, HandleValue lref, HandleValue rref,
                     MutableHandleValue res)
 {
     MOZ_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);

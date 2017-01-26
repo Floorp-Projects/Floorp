@@ -1624,6 +1624,8 @@ SetPropIRGenerator::tryAttachStub()
                 return true;
             if (tryAttachUnboxedProperty(obj, objId, id, rhsValId))
                 return true;
+            if (tryAttachSetter(obj, objId, id, rhsValId))
+                return true;
             if (tryAttachTypedObjectProperty(obj, objId, id, rhsValId))
                 return true;
         }
@@ -1816,5 +1818,59 @@ SetPropIRGenerator::tryAttachTypedObjectProperty(HandleObject obj, ObjOperandId 
 
     writer.storeTypedObjectReferenceProperty(objId, fieldOffset, layout, type, rhsId);
     writer.returnFromIC();
+    return true;
+}
+
+static void
+EmitCallSetterResultNoGuards(CacheIRWriter& writer, JSObject* obj, JSObject* holder,
+                             Shape* shape, ObjOperandId objId, ValOperandId rhsId)
+{
+    if (IsCacheableSetPropCallNative(obj, holder, shape)) {
+        JSFunction* target = &shape->setterValue().toObject().as<JSFunction>();
+        MOZ_ASSERT(target->isNative());
+        writer.callNativeSetter(objId, target, rhsId);
+        writer.returnFromIC();
+        return;
+    }
+
+    MOZ_ASSERT(IsCacheableSetPropCallScripted(obj, holder, shape));
+
+    JSFunction* target = &shape->setterValue().toObject().as<JSFunction>();
+    MOZ_ASSERT(target->hasJITCode());
+    writer.callScriptedSetter(objId, target, rhsId);
+    writer.returnFromIC();
+}
+
+bool
+SetPropIRGenerator::tryAttachSetter(HandleObject obj, ObjOperandId objId, HandleId id,
+                                    ValOperandId rhsId)
+{
+    PropertyResult prop;
+    JSObject* holder;
+    if (!LookupPropertyPure(cx_, obj, id, &holder, &prop))
+        return false;
+
+    if (prop.isNonNativeProperty())
+        return false;
+
+    Shape* shape = prop.maybeShape();
+    if (!IsCacheableSetPropCallScripted(obj, holder, shape, isTemporarilyUnoptimizable_) &&
+        !IsCacheableSetPropCallNative(obj, holder, shape))
+    {
+        return false;
+    }
+
+    Maybe<ObjOperandId> expandoId;
+    TestMatchingReceiver(writer, obj, shape, objId, &expandoId);
+
+    if (obj != holder) {
+        GeneratePrototypeGuards(writer, obj, holder, objId);
+
+        // Guard on the holder's shape.
+        ObjOperandId holderId = writer.loadObject(holder);
+        writer.guardShape(holderId, holder->as<NativeObject>().lastProperty());
+    }
+
+    EmitCallSetterResultNoGuards(writer, obj, holder, shape, objId, rhsId);
     return true;
 }

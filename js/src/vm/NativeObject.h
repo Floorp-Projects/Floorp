@@ -333,11 +333,6 @@ class Shape;
 
 class NewObjectCache;
 
-#ifdef DEBUG
-static inline bool
-IsObjectValueInCompartment(const Value& v, JSCompartment* comp);
-#endif
-
 // Operations which change an object's dense elements can either succeed, fail,
 // or be unable to complete. For native objects, the latter is used when the
 // object's elements must become sparse instead. The enum below is used for
@@ -934,11 +929,13 @@ class NativeObject : public ShapedObject
 
     void setFixedSlot(uint32_t slot, const Value& value) {
         MOZ_ASSERT(slot < numFixedSlots());
+        MOZ_ASSERT(IsObjectValueInCompartment(value, compartment()));
         fixedSlots()[slot].set(this, HeapSlot::Slot, slot, value);
     }
 
     void initFixedSlot(uint32_t slot, const Value& value) {
         MOZ_ASSERT(slot < numFixedSlots());
+        MOZ_ASSERT(IsObjectValueInCompartment(value, compartment()));
         fixedSlots()[slot].init(this, HeapSlot::Slot, slot, value);
     }
 
@@ -1339,16 +1336,6 @@ NativeObject::privateWriteBarrierPre(void** oldval)
     if (shadowZone->needsIncrementalBarrier() && *oldval && getClass()->hasTrace())
         getClass()->doTrace(shadowZone->barrierTracer(), this);
 }
-
-#ifdef DEBUG
-static inline bool
-IsObjectValueInCompartment(const Value& v, JSCompartment* comp)
-{
-    if (!v.isObject())
-        return true;
-    return v.toObject().compartment() == comp;
-}
-#endif
 
 
 /*** Standard internal methods *******************************************************************/

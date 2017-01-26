@@ -5474,10 +5474,23 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
     handled = mTextInputHandler->HandleKeyDownEvent(theEvent);
   }
 
-  // We always allow keyboard events to propagate to keyDown: but if they are not
-  // handled we give special Application menu items a chance to act.
+  // We always allow keyboard events to propagate to keyDown: but if they are
+  // not handled we give menu items a chance to act. This allows for handling of
+  // custom shortcuts. Note that existing shortcuts cannot be reassigned yet and
+  // will have been handled by keyDown: before we get here.
+  if (!handled && mGeckoChild) {
+    nsCocoaWindow* widget = mGeckoChild->GetXULWindowWidget();
+    if (widget) {
+      nsMenuBarX* mb = widget->GetMenuBar();
+      if (mb) {
+        // Check if main menu wants to handle the event.
+        handled = mb->PerformKeyEquivalent(theEvent);
+      }
+    }
+  }
   if (!handled && sApplicationMenu) {
-    [sApplicationMenu performKeyEquivalent:theEvent];
+    // Check if application menu wants to handle the event.
+    handled = [sApplicationMenu performKeyEquivalent:theEvent];
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
