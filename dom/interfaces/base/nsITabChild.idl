@@ -34,7 +34,5 @@ interface nsITabChild : nsISupports
                                   [array, size_is(linksCount)] in nsIDroppedLinkItem links);
 
   readonly attribute uint64_t tabId;
-
-  readonly attribute bool isInFreshProcess;
 };
 
