@@ -40,7 +40,7 @@ function finish() {
 if (OfflineTest.setup()) {
   obs.notifyObservers(updateService, "disk-space-watcher", "full");
 
-  var updateObserver = {
+  var updateObserver = SpecialPowers.wrapCallbackObject({
     updateStateChanged: function (aUpdate, aState) {
       switch(aState) {
         case Ci.nsIOfflineCacheUpdateObserver.STATE_ERROR:
@@ -68,7 +68,7 @@ if (OfflineTest.setup()) {
       }
     },
     applicationCacheAvailable: function() {}
-  };
+  });
 
   var manifest = "http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/simpleManifest.cacheManifest";
   var ioService = Cc["@mozilla.org/network/io-service;1"]
