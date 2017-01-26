@@ -138,7 +138,7 @@ this.PageThumbs = {
   init: function PageThumbs_init() {
     if (!this._initialized) {
       this._initialized = true;
-      PlacesUtils.history.addObserver(PageThumbsHistoryObserver, false);
+      PlacesUtils.history.addObserver(PageThumbsHistoryObserver, true);
 
       // Migrate the underlying storage, if needed.
       PageThumbsStorageMigrator.migrate();
@@ -149,7 +149,6 @@ this.PageThumbs = {
   uninit: function PageThumbs_uninit() {
     if (this._initialized) {
       this._initialized = false;
-      PlacesUtils.history.removeObserver(PageThumbsHistoryObserver);
     }
   },
 
@@ -882,11 +881,11 @@ var PageThumbsWorker = new BasePromiseWorker("resource://gre/modules/PageThumbsW
 PageThumbsWorker.ExceptionHandlers["OS.File.Error"] = OS.File.Error.fromMsg;
 
 var PageThumbsHistoryObserver = {
-  onDeleteURI: function Thumbnails_onDeleteURI(aURI, aGUID) {
+  onDeleteURI(aURI, aGUID) {
     PageThumbsStorage.remove(aURI.spec);
   },
 
-  onClearHistory: function Thumbnails_onClearHistory() {
+  onClearHistory() {
     PageThumbsStorage.wipe();
   },
 
@@ -897,5 +896,6 @@ var PageThumbsHistoryObserver = {
   onPageChanged: function () {},
   onDeleteVisits: function () {},
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver,
+                                         Ci.nsISupportsWeakReference])
 };
