@@ -9725,8 +9725,8 @@ nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel)
   TabChild* tabChild = TabChild::GetFrom(outer->AsOuter());
   NS_ENSURE_TRUE(tabChild, false);
 
-  if (tabChild->TakeIsFreshProcess())  {
-    NS_WARNING("Already in a fresh process, ignoring Large-Allocation header!");
+  if (tabChild->TakeAwaitingLargeAlloc())  {
+    NS_WARNING("In a Large-Allocation TabChild, ignoring Large-Allocation header!");
     outer->SetLargeAllocStatus(LargeAllocStatus::SUCCESS);
     return false;
   }

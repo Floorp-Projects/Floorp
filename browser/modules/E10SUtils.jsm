@@ -156,10 +156,12 @@ this.E10SUtils = {
     if (aDocShell.QueryInterface(Ci.nsIDocShellTreeItem).sameTypeParent)
       return true;
 
-    // If we are in a fresh process, and it wouldn't be content visible to
-    // change processes, we want to load into a new process so that we can throw
+    // If we are in a Large-Allocation process, and it wouldn't be content visible
+    // to change processes, we want to load into a new process so that we can throw
     // this one out.
-    if (aDocShell.inFreshProcess && aDocShell.isOnlyToplevelInTabGroup) {
+    if (aDocShell.inLargeAllocProcess &&
+        !aDocShell.awaitingLargeAlloc &&
+        aDocShell.isOnlyToplevelInTabGroup) {
       return false;
     }
 
