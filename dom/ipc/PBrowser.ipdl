@@ -908,7 +908,7 @@ child:
      * Tell the child that it is a fresh process created for a Large-Allocation
      * load.
      */
-    async SetFreshProcess();
+    async SetIsLargeAllocation(bool aIsLA, bool aNewProcess);
 
 /*
  * FIXME: write protocol!
