@@ -6,6 +6,8 @@
     .ball {
       width: 80px;
       height: 80px;
+      /* Add a border here to avoid layout warnings in Linux debug builds: Bug 1329784 */
+      border: 1px solid transparent;
       border-radius: 50%;
       background: #f06;
 

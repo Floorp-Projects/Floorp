@@ -143,8 +143,12 @@ this.ExtensionsUI = {
       this.updates.add(subject.wrappedJSObject);
       this.emit("change");
     } else if (topic == "webextension-install-notify") {
-      let {target, addon} = subject.wrappedJSObject;
-      this.showInstallNotification(target, addon);
+      let {target, addon, callback} = subject.wrappedJSObject;
+      this.showInstallNotification(target, addon).then(() => {
+        if (callback) {
+          callback();
+        }
+      });
     }
   },
 
@@ -330,28 +334,32 @@ this.ExtensionsUI = {
     let msg2 = bundle.getFormattedString("addonPostInstall.message2",
                                          [addonLabel, addonIcon, toolbarIcon]);
 
-    let action = {
-      label: bundle.getString("addonPostInstall.okay.label"),
-      accessKey: bundle.getString("addonPostInstall.okay.key"),
-      callback: () => {},
-    };
+    return new Promise(resolve => {
+      let action = {
+        label: bundle.getString("addonPostInstall.okay.label"),
+        accessKey: bundle.getString("addonPostInstall.okay.key"),
+        callback: resolve,
+      };
 
-    let options = {
-      hideClose: true,
-      popupIconURL: addon.iconURL || DEFAULT_EXTENSION_ICON,
-      eventCallback(topic) {
-        if (topic == "showing") {
-          let doc = this.browser.ownerDocument;
-          doc.getElementById("addon-installed-notification-header")
-             .innerHTML = msg1;
-          doc.getElementById("addon-installed-notification-message")
-             .innerHTML = msg2;
+      let options = {
+        hideClose: true,
+        popupIconURL: addon.iconURL || DEFAULT_EXTENSION_ICON,
+        eventCallback(topic) {
+          if (topic == "showing") {
+            let doc = this.browser.ownerDocument;
+            doc.getElementById("addon-installed-notification-header")
+               .innerHTML = msg1;
+            doc.getElementById("addon-installed-notification-message")
+               .innerHTML = msg2;
+          } else if (topic == "dismissed") {
+            resolve();
+          }
         }
-      }
-    };
+      };
 
-    popups.show(target, "addon-installed", "", "addons-notification-icon",
-                action, null, options);
+      popups.show(target, "addon-installed", "", "addons-notification-icon",
+                  action, null, options);
+    });
   },
 };
 
