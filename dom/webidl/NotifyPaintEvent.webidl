@@ -15,4 +15,6 @@ interface NotifyPaintEvent : Event
   readonly attribute PaintRequestList paintRequests;
 
   readonly attribute unsigned long long transactionId;
+
+  readonly attribute DOMHighResTimeStamp paintTimeStamp;
 };
