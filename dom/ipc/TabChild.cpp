@@ -3107,6 +3107,14 @@ TabChild::RecvSetFreshProcess()
   return IPC_OK();
 }
 
+NS_IMETHODIMP
+TabChild::GetIsInFreshProcess(bool* aResult)
+{
+  MOZ_ASSERT(aResult);
+  *aResult = mIsFreshProcess || sWasFreshProcess;
+  return NS_OK;
+}
+
 mozilla::plugins::PPluginWidgetChild*
 TabChild::AllocPPluginWidgetChild()
 {
