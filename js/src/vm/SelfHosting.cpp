@@ -1011,9 +1011,9 @@ static bool
 intrinsic_ArrayBufferCopyData(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 5);
+    MOZ_ASSERT(args.length() == 6);
 
-    bool isWrapped = args[4].toBoolean();
+    bool isWrapped = args[5].toBoolean();
     Rooted<T*> toBuffer(cx);
     if (!isWrapped) {
         toBuffer = &args[0].toObject().as<T>();
@@ -1027,11 +1027,12 @@ intrinsic_ArrayBufferCopyData(JSContext* cx, unsigned argc, Value* vp)
         }
         toBuffer = toBufferObj.as<T>();
     }
-    Rooted<T*> fromBuffer(cx, &args[1].toObject().as<T>());
-    uint32_t fromIndex = uint32_t(args[2].toInt32());
-    uint32_t count = uint32_t(args[3].toInt32());
+    uint32_t toIndex = uint32_t(args[1].toInt32());
+    Rooted<T*> fromBuffer(cx, &args[2].toObject().as<T>());
+    uint32_t fromIndex = uint32_t(args[3].toInt32());
+    uint32_t count = uint32_t(args[4].toInt32());
 
-    T::copyData(toBuffer, fromBuffer, fromIndex, count);
+    T::copyData(toBuffer, toIndex, fromBuffer, fromIndex, count);
 
     args.rval().setUndefined();
     return true;
@@ -2499,14 +2500,14 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     intrinsic_PossiblyWrappedArrayBufferByteLength<ArrayBufferObject>, 1,0,
                     IntrinsicPossiblyWrappedArrayBufferByteLength),
     JS_FN("ArrayBufferCopyData",
-          intrinsic_ArrayBufferCopyData<ArrayBufferObject>,             5,0),
+          intrinsic_ArrayBufferCopyData<ArrayBufferObject>,             6,0),
 
     JS_FN("SharedArrayBufferByteLength",
           intrinsic_ArrayBufferByteLength<SharedArrayBufferObject>,     1,0),
     JS_FN("PossiblyWrappedSharedArrayBufferByteLength",
           intrinsic_PossiblyWrappedArrayBufferByteLength<SharedArrayBufferObject>, 1,0),
     JS_FN("SharedArrayBufferCopyData",
-          intrinsic_ArrayBufferCopyData<SharedArrayBufferObject>,       5,0),
+          intrinsic_ArrayBufferCopyData<SharedArrayBufferObject>,       6,0),
     JS_FN("SharedArrayBuffersMemorySame",
           intrinsic_SharedArrayBuffersMemorySame,                       2,0),
 
