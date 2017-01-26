@@ -189,14 +189,15 @@ Object.defineProperty(GeckoDriver.prototype, "windowHandles", {
 
     while (winEn.hasMoreElements()) {
       let win = winEn.getNext();
-      if (win.gBrowser) {
-        let tabbrowser = win.gBrowser;
-        for (let i = 0; i < tabbrowser.browsers.length; ++i) {
-          let winId = this.getIdForBrowser(tabbrowser.getBrowserAtIndex(i));
+      let tabBrowser = browser.getTabBrowser(win);
+
+      if (tabBrowser) {
+        tabBrowser.tabs.forEach(tab => {
+          let winId = this.getIdForBrowser(browser.getBrowserForTab(tab));
           if (winId !== null) {
             hs.push(winId);
           }
-        }
+        });
       } else {
         // For other chrome windows beside the browser window, only count the window itself.
         let winId = win.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -647,7 +648,9 @@ GeckoDriver.prototype.newSession = function*(cmd, resp) {
   yield registerBrowsers;
   yield browserListening;
 
-  this.curBrowser.browserForTab.focus();
+  if (this.curBrowser.tab) {
+    browser.getBrowserForTab(this.curBrowser.tab).focus();
+  }
 
   return {
     sessionId: this.sessionId,
@@ -806,7 +809,7 @@ GeckoDriver.prototype.executeScript = function*(cmd, resp) {
  * @param {string=} sandbox
  *     Name of the sandbox to evaluate the script in.  The sandbox is
  *     cached for later re-use on the same Window object if
- *     {@code newSandbox} is false.  If he parameter is undefined,
+ *     {@code newSandbox} is false.  If the parameter is undefined,
  *     the script is evaluated in a mutable sandbox.  If the parameter
  *     is "system", it will be evaluted in a sandbox with elevated system
  *     privileges, equivalent to chrome space.
@@ -964,7 +967,7 @@ GeckoDriver.prototype.get = function*(cmd, resp) {
   });
 
   yield get;
-  this.curBrowser.browserForTab.focus();
+  browser.getBrowserForTab(this.curBrowser.tab).focus();
 };
 
 /**
@@ -1191,7 +1194,6 @@ GeckoDriver.prototype.setWindowPosition = function (cmd, resp) {
  */
 GeckoDriver.prototype.switchToWindow = function* (cmd, resp) {
   let switchTo = cmd.parameters.name;
-  let isMobile = this.appName == "Fennec";
   let found;
 
   let getOuterWindowId = function (win) {
@@ -1211,12 +1213,13 @@ GeckoDriver.prototype.switchToWindow = function* (cmd, resp) {
   while (winEn.hasMoreElements()) {
     let win = winEn.getNext();
     let outerId = getOuterWindowId(win);
+    let tabbrowser = browser.getTabBrowser(win);
 
-    if (win.gBrowser && !isMobile) {
-      let tabbrowser = win.gBrowser;
-      for (let i = 0; i < tabbrowser.browsers.length; ++i) {
-        let browser = tabbrowser.getBrowserAtIndex(i);
-        let contentWindowId = this.getIdForBrowser(browser);
+    if (tabbrowser) {
+      for (let i = 0; i < tabbrowser.tabs.length; ++i) {
+        let contentBrowser = browser.getBrowserForTab(tabbrowser.tabs[i]);
+        let contentWindowId = this.getIdForBrowser(contentBrowser);
+
         if (byNameOrId(win.name, contentWindowId, outerId)) {
           found = {
             win: win,
@@ -2106,8 +2109,9 @@ GeckoDriver.prototype.close = function (cmd, resp) {
     let win = winEn.getNext();
 
     // For browser windows count the tabs. Otherwise take the window itself.
-    if (win.gBrowser) {
-      nwins += win.gBrowser.browsers.length;
+    let tabbrowser = browser.getTabBrowser(win);
+    if (tabbrowser) {
+      nwins += tabbrowser.tabs.length;
     } else {
       nwins++;
     }
