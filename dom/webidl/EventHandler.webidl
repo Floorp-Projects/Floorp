@@ -15,11 +15,13 @@ callback EventHandlerNonNull = any (Event event);
 typedef EventHandlerNonNull? EventHandler;
 
 [TreatNonObjectAsNull]
+// https://www.w3.org/Bugs/Public/show_bug.cgi?id=23489
+//callback OnBeforeUnloadEventHandlerNonNull = DOMString (Event event);
 callback OnBeforeUnloadEventHandlerNonNull = DOMString? (Event event);
 typedef OnBeforeUnloadEventHandlerNonNull? OnBeforeUnloadEventHandler;
 
 [TreatNonObjectAsNull]
-callback OnErrorEventHandlerNonNull = any ((Event or DOMString) event, optional DOMString source, optional unsigned long lineno, optional unsigned long column, optional any error);
+callback OnErrorEventHandlerNonNull = boolean ((Event or DOMString) event, optional DOMString source, optional unsigned long lineno, optional unsigned long column, optional any error);
 typedef OnErrorEventHandlerNonNull? OnErrorEventHandler;
 
 [NoInterfaceObject]
