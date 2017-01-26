@@ -5,7 +5,6 @@ var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 "use strict";
 
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 (function initFxAccountsTestingInfrastructure() {

@@ -28,11 +28,12 @@ function run_test() {
   run_next_test();
 }
 
-add_task(async function test_resetLocalData() {
+add_identity_test(this, async function test_resetLocalData() {
   await configureIdentity();
   Service.status.enforceBackoff = true;
   Service.status.backoffInterval = 42;
   Service.status.minimumNextSync = 23;
+  Service.persistLogin();
 
   // Verify set up.
   do_check_eq(Service.status.checkSetup(), STATUS_OK);
@@ -51,6 +52,8 @@ add_task(async function test_resetLocalData() {
 
   // Verify the site was nuked from orbit.
   do_check_eq(Svc.Prefs.get("username"), undefined);
+  do_check_eq(Service.identity.basicPassword, null);
+  do_check_eq(Service.identity.syncKey, null);
 
   do_check_eq(Service.status.service, CLIENT_NOT_CONFIGURED);
   do_check_false(Service.status.enforceBackoff);
@@ -66,7 +69,8 @@ add_test(function test_removeClientData() {
   Service.startOver();
   do_check_false(engine.removed);
 
-  Service.clusterURL = "https://localhost/";
+  Service.serverURL = "https://localhost/";
+  Service.clusterURL = Service.serverURL;
 
   do_check_false(engine.removed);
   Service.startOver();

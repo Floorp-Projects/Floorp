@@ -16,6 +16,8 @@ const modules = [
   "engines/prefs.js",
   "engines/tabs.js",
   "engines.js",
+  "identity.js",
+  "jpakeclient.js",
   "keys.js",
   "main.js",
   "policies.js",
@@ -23,9 +25,11 @@ const modules = [
   "resource.js",
   "rest.js",
   "service.js",
+  "stages/cluster.js",
   "stages/declined.js",
   "stages/enginesync.js",
   "status.js",
+  "userapi.js",
   "util.js",
 ];
 

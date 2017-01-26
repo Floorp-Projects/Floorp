@@ -9,7 +9,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/fakeservices.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-add_task(async function run_test() {
+function run_test() {
   validate_all_future_pings();
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
@@ -74,14 +74,27 @@ add_task(async function run_test() {
   let server = httpd_setup(handlers);
 
   try {
+    _("Log in.");
+    ensureLegacyIdentityManager();
+    Service.serverURL = server.baseURI;
+
     _("Checking Status.sync with no credentials.");
     Service.verifyAndFetchSymmetricKeys();
     do_check_eq(Service.status.sync, CREDENTIALS_CHANGED);
     do_check_eq(Service.status.login, LOGIN_FAILED_NO_PASSPHRASE);
 
-    await configureIdentity({ username: "johndoe" }, server);
+    _("Log in with an old secret phrase, is upgraded to Sync Key.");
+    Service.login("johndoe", "ilovejane", "my old secret phrase!!1!");
+    _("End of login");
+    do_check_true(Service.isLoggedIn);
+    do_check_true(Utils.isPassphrase(Service.identity.syncKey));
+    let syncKey = Service.identity.syncKey;
+    Service.startOver();
 
-    Service.login();
+    Service.serverURL = server.baseURI;
+    Service.login("johndoe", "ilovejane", syncKey);
+    do_check_true(Service.isLoggedIn);
+
     _("Checking that remoteSetup returns true when credentials have changed.");
     Service.recordManager.get(Service.metaURL).payload.syncID = "foobar";
     do_check_true(Service._remoteSetup());
@@ -100,7 +113,7 @@ add_task(async function run_test() {
     do_check_false(Service._remoteSetup());
     mock.restore();
 
-    Service.login();
+    Service.login("johndoe", "ilovejane", syncKey);
     mock = mockHandler(GLOBAL_PATH, returnStatusCode("GET", 503));
     Service.recordManager.del(Service.metaURL);
     _("Checking that remoteSetup returns false on 503 on first get /meta/global.");
@@ -108,7 +121,6 @@ add_task(async function run_test() {
     do_check_eq(Service.status.sync, METARECORD_DOWNLOAD_FAIL);
     mock.restore();
 
-    Service.login();
     mock = mockHandler(GLOBAL_PATH, returnStatusCode("GET", 404));
     Service.recordManager.del(Service.metaURL);
     _("Checking that remoteSetup recovers on 404 on first get /meta/global.");
@@ -176,6 +188,31 @@ add_task(async function run_test() {
     do_check_true(meta_global.wasCalled);
     do_check_eq(metaModified, meta_global.modified);
 
+    _("Checking bad passphrases.");
+    let pp = Service.identity.syncKey;
+    Service.identity.syncKey = "notvalid";
+    do_check_false(Service.verifyAndFetchSymmetricKeys());
+    do_check_eq(Service.status.sync, CREDENTIALS_CHANGED);
+    do_check_eq(Service.status.login, LOGIN_FAILED_INVALID_PASSPHRASE);
+    Service.identity.syncKey = pp;
+    do_check_true(Service.verifyAndFetchSymmetricKeys());
+
+    // changePassphrase wipes our keys, and they're regenerated on next sync.
+    _("Checking changed passphrase.");
+    let existingDefault = Service.collectionKeys.keyForCollection();
+    let existingKeysPayload = keysWBO.payload;
+    let newPassphrase = "bbbbbabcdeabcdeabcdeabcdea";
+    Service.changePassphrase(newPassphrase);
+
+    _("Local key cache is full, but different.");
+    do_check_true(!!Service.collectionKeys._default);
+    do_check_false(Service.collectionKeys._default.equals(existingDefault));
+
+    _("Server has new keys.");
+    do_check_true(!!keysWBO.payload);
+    do_check_true(!!keysWBO.modified);
+    do_check_neq(keysWBO.payload, existingKeysPayload);
+
     // Try to screw up HMAC calculation.
     // Re-encrypt keys with a new random keybundle, and upload them to the
     // server, just as might happen with a second client.
@@ -193,4 +230,4 @@ add_task(async function run_test() {
     Svc.Prefs.resetBranch("");
     server.stop(do_test_finished);
   }
-});
+}

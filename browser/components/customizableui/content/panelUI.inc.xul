@@ -138,7 +138,7 @@
                 <hbox pack="center">
                   <toolbarbutton class="PanelUI-remotetabs-prefs-button"
                                  label="&appMenuRemoteTabs.openprefs.label;"
-                                 oncommand="gSyncUI.openPrefs('synced-tabs');"/>
+                                 oncommand="gSyncUI.openSetup(null, 'synced-tabs');"/>
                 </hbox>
               </vbox>
             </hbox>
@@ -172,7 +172,7 @@
             <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.notsignedin.label;</label>
             <toolbarbutton class="PanelUI-remotetabs-prefs-button"
                            label="&appMenuRemoteTabs.signin.label;"
-                           oncommand="gSyncUI.openPrefs('synced-tabs');"/>
+                           oncommand="gSyncUI.openSetup(null, 'synced-tabs');"/>
           </vbox>
           <!-- When Sync needs re-authentication. This uses the exact same messaging
                as "Sync is not configured" but remains a separate box so we get
@@ -186,7 +186,7 @@
             <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.notsignedin.label;</label>
             <toolbarbutton class="PanelUI-remotetabs-prefs-button"
                            label="&appMenuRemoteTabs.signin.label;"
-                           oncommand="gSyncUI.openPrefs('synced-tabs');"/>
+                           oncommand="gSyncUI.openSetup(null, 'synced-tabs');"/>
           </vbox>
         </hbox>
       </vbox>
