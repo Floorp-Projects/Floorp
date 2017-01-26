@@ -80,7 +80,12 @@ class SandboxBroker final
     // added after creation (the dir itself must exist).
     void AddDir(int aPerms, const char* aPath);
     // All files in a directory with a given prefix; useful for devices.
-    void AddPrefix(int aPerms, const char* aDir, const char* aPrefix);
+    void AddFilePrefix(int aPerms, const char* aDir, const char* aPrefix);
+    // Everything starting with the given path, even those files/dirs
+    // added after creation. The file or directory may or may not exist.
+    void AddPrefix(int aPerms, const char* aPath);
+    // Adds a file or dir (end with /) if it exists, and a prefix otherwhise.
+    void AddDynamic(int aPerms, const char* aPath);
     // Default: add file if it exists when creating policy or if we're
     // conferring permission to create it (log files, etc.).
     void AddPath(int aPerms, const char* aPath) {
@@ -98,6 +103,7 @@ class SandboxBroker final
     // * No trailing slash
     // * No /../ path traversal
     bool ValidatePath(const char* path) const;
+    void AddPrefixInternal(int aPerms, const nsACString& aPath);
   };
 
   // Constructing a broker involves creating a socketpair and a

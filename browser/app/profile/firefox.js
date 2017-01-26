@@ -1015,6 +1015,8 @@ pref("security.sandbox.content.level", 1);
 // This setting may not be required anymore once we decide to permanently
 // enable the content sandbox.
 pref("security.sandbox.content.level", 2);
+pref("security.sandbox.content.write_path_whitelist", "");
+pref("security.sandbox.content.syscall_whitelist", "");
 #endif
 
 #if defined(XP_MACOSX) || defined(XP_WIN)

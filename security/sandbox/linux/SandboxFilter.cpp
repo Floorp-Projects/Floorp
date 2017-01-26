@@ -11,7 +11,6 @@
 #include "SandboxInfo.h"
 #include "SandboxInternal.h"
 #include "SandboxLogging.h"
-
 #include "mozilla/UniquePtr.h"
 
 #include <errno.h>
@@ -26,6 +25,8 @@
 #include <sys/syscall.h>
 #include <time.h>
 #include <unistd.h>
+#include <vector>
+#include <algorithm>
 
 #include "sandbox/linux/bpf_dsl/bpf_dsl.h"
 #include "sandbox/linux/system_headers/linux_seccomp.h"
@@ -347,7 +348,9 @@ public:
 // this is the Android process permission model; on desktop,
 // namespaces and chroot() will be used.
 class ContentSandboxPolicy : public SandboxPolicyCommon {
+private:
   SandboxBrokerClient* mBroker;
+  std::vector<int> mSyscallWhitelist;
 
   // Trap handlers for filesystem brokering.
   // (The amount of code duplication here could be improved....)
@@ -497,7 +500,10 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
   }
 
 public:
-  explicit ContentSandboxPolicy(SandboxBrokerClient* aBroker):mBroker(aBroker) { }
+  explicit ContentSandboxPolicy(SandboxBrokerClient* aBroker,
+                                const std::vector<int>& aSyscallWhitelist)
+    : mBroker(aBroker),
+      mSyscallWhitelist(aSyscallWhitelist) {}
   virtual ~ContentSandboxPolicy() { }
   virtual ResultExpr PrctlPolicy() const override {
     // Ideally this should be restricted to a whitelist, but content
@@ -570,6 +576,14 @@ public:
 #endif
 
   virtual ResultExpr EvaluateSyscall(int sysno) const override {
+    // Straight allow for anything that got overriden via prefs
+    if (std::find(mSyscallWhitelist.begin(), mSyscallWhitelist.end(), sysno)
+        != mSyscallWhitelist.end()) {
+      if (SandboxInfo::Get().Test(SandboxInfo::kVerbose)) {
+        SANDBOX_LOG_ERROR("Allowing syscall nr %d via whitelist", sysno);
+      }
+      return Allow();
+    }
     if (mBroker) {
       // Have broker; route the appropriate syscalls to it.
       switch (sysno) {
@@ -834,9 +848,10 @@ public:
 };
 
 UniquePtr<sandbox::bpf_dsl::Policy>
-GetContentSandboxPolicy(SandboxBrokerClient* aMaybeBroker)
+GetContentSandboxPolicy(SandboxBrokerClient* aMaybeBroker,
+                        const std::vector<int>& aSyscallWhitelist)
 {
-  return UniquePtr<sandbox::bpf_dsl::Policy>(new ContentSandboxPolicy(aMaybeBroker));
+  return MakeUnique<ContentSandboxPolicy>(aMaybeBroker, aSyscallWhitelist);
 }
 #endif // MOZ_CONTENT_SANDBOX
 
