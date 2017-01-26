@@ -22,6 +22,7 @@ using namespace mozilla;
 using namespace mozilla::a11y;
 using namespace mozilla::mscom;
 
+static StaticAutoPtr<RegisteredProxy> gRegCustomProxy;
 static StaticAutoPtr<RegisteredProxy> gRegProxy;
 static StaticAutoPtr<RegisteredProxy> gRegAccTlb;
 static StaticAutoPtr<RegisteredProxy> gRegMiscTlb;
@@ -35,6 +36,9 @@ a11y::PlatformInit()
   ia2AccessibleText::InitTextChangeData();
   if (BrowserTabsRemoteAutostart()) {
     mscom::InterceptorLog::Init();
+    UniquePtr<RegisteredProxy> regCustomProxy(
+        mscom::RegisterProxy());
+    gRegCustomProxy = regCustomProxy.release();
     UniquePtr<RegisteredProxy> regProxy(
         mscom::RegisterProxy(L"ia2marshal.dll"));
     gRegProxy = regProxy.release();
@@ -54,6 +58,7 @@ a11y::PlatformShutdown()
   ::DestroyCaret();
 
   nsWinUtils::ShutdownWindowEmulation();
+  gRegCustomProxy = nullptr;
   gRegProxy = nullptr;
   gRegAccTlb = nullptr;
   gRegMiscTlb = nullptr;

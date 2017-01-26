@@ -295,7 +295,7 @@ struct MarkGlyphSetsFormat1
 
   protected:
   USHORT	format;			/* Format identifier--format = 1 */
-  ArrayOf<OffsetTo<Coverage, ULONG> >
+  ArrayOf<LOffsetTo<Coverage> >
 		coverage;		/* Array of long offsets to mark set
 					 * coverage tables */
   public:
@@ -443,7 +443,7 @@ struct GDEF
 					 * definitions--from beginning of GDEF
 					 * header (may be NULL).  Introduced
 					 * in version 0x00010002. */
-  OffsetTo<VariationStore, ULONG>
+  LOffsetTo<VariationStore>
 		varStore;		/* Offset to the table of Item Variation
 					 * Store--from beginning of GDEF
 					 * header (may be NULL).  Introduced
