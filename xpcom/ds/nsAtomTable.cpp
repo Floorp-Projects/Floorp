@@ -121,45 +121,11 @@ private:
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIATOM
-
-  void TransmuteToStatic(nsStringBuffer* aStringBuffer);
 };
 
 class StaticAtom final : public nsIAtom
 {
-  // This is the function that calls the private constructor.
-  friend void DynamicAtom::TransmuteToStatic(nsStringBuffer*);
-
-  // This constructor must only be used in conjunction with placement new on an
-  // existing DynamicAtom (in DynamicAtom::TransmuteToStatic()) in order to
-  // transmute that DynamicAtom into a StaticAtom. The constructor does four
-  // notable things.
-  // - Overwrites the vtable pointer (implicitly).
-  // - Inverts mIsStatic.
-  // - Zeroes the refcount (via the nsIAtom constructor). Having a zero refcount
-  //   doesn't matter because StaticAtom's AddRef/Release methods don't consult
-  //   the refcount.
-  // - Releases the existing heap-allocated string buffer (explicitly),
-  //   replacing it with the static string buffer (which must contain identical
-  //   chars).
-  explicit StaticAtom(nsStringBuffer* aStaticBuffer)
-  {
-    static_assert(sizeof(DynamicAtom) >= sizeof(StaticAtom),
-                  "can't safely transmute a smaller object to a bigger one");
-
-    // We must be transmuting an existing DynamicAtom.
-    MOZ_ASSERT(!mIsStatic);
-    mIsStatic = true;
-
-    char16_t* staticString = static_cast<char16_t*>(aStaticBuffer->Data());
-    MOZ_ASSERT(nsCRT::strcmp(staticString, mString) == 0);
-    nsStringBuffer* dynamicBuffer = nsStringBuffer::FromData(mString);
-    mString = staticString;
-    dynamicBuffer->Release();
-  }
-
 public:
-  // This is the normal constructor.
   StaticAtom(nsStringBuffer* aStringBuffer, uint32_t aLength, uint32_t aHash)
   {
     mLength = aLength;
@@ -258,14 +224,6 @@ StaticAtom::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
   // Don't measure the string buffer pointed to by the StaticAtom because it's
   // in static memory.
   return n;
-}
-
-// See the comment on the private StaticAtom constructor for details of how
-// this works.
-void
-DynamicAtom::TransmuteToStatic(nsStringBuffer* aStringBuffer)
-{
-  new (this) StaticAtom(aStringBuffer);
 }
 
 //----------------------------------------------------------------------
