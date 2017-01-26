@@ -23,6 +23,7 @@
 */
 
 #include "SelfHostingDefines.h"
+#include "TypedObjectConstants.h"
 
 // Assertions and debug printing, defined here instead of in the header above
 // to make `assert` invisible to C++.

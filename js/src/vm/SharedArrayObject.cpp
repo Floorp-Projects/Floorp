@@ -328,15 +328,16 @@ SharedArrayBufferObject::addSizeOfExcludingThis(JSObject* obj, mozilla::MallocSi
 }
 
 /* static */ void
-SharedArrayBufferObject::copyData(Handle<SharedArrayBufferObject*> toBuffer,
-                                  Handle<SharedArrayBufferObject*> fromBuffer,
-                                  uint32_t fromIndex, uint32_t count)
+SharedArrayBufferObject::copyData(Handle<SharedArrayBufferObject*> toBuffer, uint32_t toIndex,
+                                  Handle<SharedArrayBufferObject*> fromBuffer, uint32_t fromIndex,
+                                  uint32_t count)
 {
     MOZ_ASSERT(toBuffer->byteLength() >= count);
+    MOZ_ASSERT(toBuffer->byteLength() >= toIndex + count);
     MOZ_ASSERT(fromBuffer->byteLength() >= fromIndex);
     MOZ_ASSERT(fromBuffer->byteLength() >= fromIndex + count);
 
-    jit::AtomicOperations::memcpySafeWhenRacy(toBuffer->dataPointerShared(),
+    jit::AtomicOperations::memcpySafeWhenRacy(toBuffer->dataPointerShared() + toIndex,
                                               fromBuffer->dataPointerShared() + fromIndex,
                                               count);
 }

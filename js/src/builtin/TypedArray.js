@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TypedObjectConstants.h"
-
 function ViewedArrayBufferIfReified(tarray) {
     assert(IsTypedArray(tarray), "non-typed array asked for its buffer");
 
@@ -1650,7 +1648,7 @@ function ArrayBufferSlice(start, end) {
         ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
 
     // Steps 19-21.
-    ArrayBufferCopyData(new_, O, first | 0, newLen | 0, isWrapped);
+    ArrayBufferCopyData(new_, 0, O, first | 0, newLen | 0, isWrapped);
 
     // Step 22.
     return new_;
@@ -1736,7 +1734,7 @@ function SharedArrayBufferSlice(start, end) {
         ThrowTypeError(JSMSG_SHORT_SHARED_ARRAY_BUFFER_RETURNED, newLen, actualLen);
 
     // Steps 16-18.
-    SharedArrayBufferCopyData(new_, O, first | 0, newLen | 0, isWrapped);
+    SharedArrayBufferCopyData(new_, 0, O, first | 0, newLen | 0, isWrapped);
 
     // Step 19.
     return new_;
