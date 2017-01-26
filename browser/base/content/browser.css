@@ -565,13 +565,8 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   visibility: collapse;
 }
 
-#identity-box {
-  -moz-user-focus: normal;
-}
-
 #urlbar[pageproxystate="invalid"] > #identity-box {
   pointer-events: none;
-  -moz-user-focus: ignore;
 }
 
 #identity-icon-labels {
