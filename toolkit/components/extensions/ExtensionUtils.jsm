@@ -580,10 +580,10 @@ LocaleData.prototype = {
 
 // This is a generic class for managing event listeners. Example usage:
 //
-// new EventManager(context, "api.subAPI", fire => {
+// new SingletonEventManager(context, "api.subAPI", fire => {
 //   let listener = (...) => {
 //     // Fire any listeners registered with addListener.
-//     fire(arg1, arg2);
+//     fire.async(arg1, arg2);
 //   };
 //   // Register the listener.
 //   SomehowRegisterListener(listener);
@@ -597,100 +597,8 @@ LocaleData.prototype = {
 // hasListener methods. |context| is an add-on scope (either an
 // ExtensionContext in the chrome process or ExtensionContext in a
 // content process). |name| is for debugging. |register| is a function
-// to register the listener. |register| is only called once, even if
-// multiple listeners are registered. |register| should return an
+// to register the listener. |register| should return an
 // unregister function that will unregister the listener.
-function EventManager(context, name, register) {
-  this.context = context;
-  this.name = name;
-  this.register = register;
-  this.unregister = null;
-  this.callbacks = new Set();
-}
-
-EventManager.prototype = {
-  addListener(callback) {
-    if (typeof(callback) != "function") {
-      dump(`Expected function\n${Error().stack}`);
-      return;
-    }
-    if (this.context.unloaded) {
-      dump(`Cannot add listener to ${this.name} after context unloaded`);
-      return;
-    }
-
-    if (!this.callbacks.size) {
-      this.context.callOnClose(this);
-
-      let fireFunc = this.fire.bind(this);
-      let fireWithoutClone = this.fireWithoutClone.bind(this);
-      fireFunc.withoutClone = fireWithoutClone;
-      this.unregister = this.register(fireFunc);
-    }
-    this.callbacks.add(callback);
-  },
-
-  removeListener(callback) {
-    if (!this.callbacks.size) {
-      return;
-    }
-
-    this.callbacks.delete(callback);
-    if (this.callbacks.size == 0) {
-      this.unregister();
-      this.unregister = null;
-
-      this.context.forgetOnClose(this);
-    }
-  },
-
-  hasListener(callback) {
-    return this.callbacks.has(callback);
-  },
-
-  fire(...args) {
-    this._fireCommon("runSafe", args);
-  },
-
-  fireWithoutClone(...args) {
-    this._fireCommon("runSafeWithoutClone", args);
-  },
-
-  _fireCommon(runSafeMethod, args) {
-    for (let callback of this.callbacks) {
-      Promise.resolve(callback).then(callback => {
-        if (this.context.unloaded) {
-          dump(`${this.name} event fired after context unloaded.\n`);
-        } else if (!this.context.active) {
-          dump(`${this.name} event fired while context is inactive.\n`);
-        } else if (this.callbacks.has(callback)) {
-          this.context[runSafeMethod](callback, ...args);
-        }
-      });
-    }
-  },
-
-  close() {
-    if (this.callbacks.size) {
-      this.unregister();
-    }
-    this.callbacks.clear();
-    this.register = null;
-    this.unregister = null;
-  },
-
-  api() {
-    return {
-      addListener: callback => this.addListener(callback),
-      removeListener: callback => this.removeListener(callback),
-      hasListener: callback => this.hasListener(callback),
-    };
-  },
-};
-
-// Similar to EventManager, but it doesn't try to consolidate event
-// notifications. Each addListener call causes us to register once. It
-// allows extra arguments to be passed to addListener.
 function SingletonEventManager(context, name, register) {
   this.context = context;
   this.name = name;
@@ -1242,7 +1150,6 @@ this.ExtensionUtils = {
   DefaultMap,
   DefaultWeakMap,
   EventEmitter,
-  EventManager,
   ExtensionError,
   IconDetails,
   LocaleData,
