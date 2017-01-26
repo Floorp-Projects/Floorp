@@ -106,12 +106,12 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  *  | JSRope                    leftChild, rightChild / -
  *  |
  * JSLinearString (abstract)    latin1Chars, twoByteChars / might be null-terminated
- *  | \
- *  | JSDependentString         base / -
- *  |
- * JSFlatString                 - / null terminated
+ *  |  |
+ *  |  +-- JSDependentString    base / -
  *  |  |
  *  |  +-- JSExternalString     - / char array memory managed by embedding
+ *  |
+ * JSFlatString                 - / null terminated
  *  |  |
  *  |  +-- JSExtensibleString   tracks total buffer capacity (including current text)
  *  |  |
@@ -221,12 +221,12 @@ class JSString : public js::gc::TenuredCell
      *   Linear        -           !000000
      *   HasBase       -            xxxx1x
      *   Dependent     000010       000010
+     *   External      100000       100000
      *   Flat          -            xxxxx1
      *   Undepended    000011       000011
      *   Extensible    010001       010001
      *   Inline        000101       xxx1xx
      *   FatInline     010101       x1x1xx
-     *   External      100001       100001
      *   Atom          001001       xx1xxx
      *   PermanentAtom 101001       1x1xxx
      *   InlineAtom    -            xx11xx
@@ -257,7 +257,7 @@ class JSString : public js::gc::TenuredCell
     static const uint32_t DEPENDENT_FLAGS        = HAS_BASE_BIT;
     static const uint32_t UNDEPENDED_FLAGS       = FLAT_BIT | HAS_BASE_BIT;
     static const uint32_t EXTENSIBLE_FLAGS       = FLAT_BIT | JS_BIT(4);
-    static const uint32_t EXTERNAL_FLAGS         = FLAT_BIT | JS_BIT(5);
+    static const uint32_t EXTERNAL_FLAGS         = JS_BIT(5);
 
     static const uint32_t FAT_INLINE_MASK        = INLINE_CHARS_BIT | JS_BIT(4);
     static const uint32_t PERMANENT_ATOM_MASK    = ATOM_BIT | JS_BIT(5);
@@ -352,7 +352,7 @@ class JSString : public js::gc::TenuredCell
     /* Fallible conversions to more-derived string types. */
 
     inline JSLinearString* ensureLinear(js::ExclusiveContext* cx);
-    inline JSFlatString* ensureFlat(js::ExclusiveContext* cx);
+    JSFlatString* ensureFlat(JSContext* cx);
 
     static bool ensureLinear(js::ExclusiveContext* cx, JSString* str) {
         return str->ensureLinear(cx) != nullptr;
@@ -605,7 +605,7 @@ class JSLinearString : public JSString
     friend class js::AutoStableStringChars;
 
     /* Vacuous and therefore unimplemented. */
-    JSLinearString* ensureLinear(JSContext* cx) = delete;
+    JSLinearString* ensureLinear(js::ExclusiveContext* cx) = delete;
     bool isLinear() const = delete;
     JSLinearString& asLinear() const = delete;
 
@@ -685,10 +685,10 @@ static_assert(sizeof(JSLinearString) == sizeof(JSString),
 class JSDependentString : public JSLinearString
 {
     friend class JSString;
-    JSFlatString* undepend(js::ExclusiveContext* cx);
+    JSFlatString* undepend(JSContext* cx);
 
     template <typename CharT>
-    JSFlatString* undependInternal(js::ExclusiveContext* cx);
+    JSFlatString* undependInternal(JSContext* cx);
 
     void init(js::ExclusiveContext* cx, JSLinearString* base, size_t start,
               size_t length);
@@ -913,7 +913,7 @@ static_assert(sizeof(JSFatInlineString) % js::gc::CellSize == 0,
               "fat inline strings shouldn't waste space up to the next cell "
               "boundary");
 
-class JSExternalString : public JSFlatString
+class JSExternalString : public JSLinearString
 {
     void init(const char16_t* chars, size_t length, const JSStringFinalizer* fin);
 
@@ -941,6 +941,8 @@ class JSExternalString : public JSFlatString
     /* Only called by the GC for strings with the AllocKind::EXTERNAL_STRING kind. */
 
     inline void finalize(js::FreeOp* fop);
+
+    JSFlatString* ensureFlat(JSContext* cx);
 
 #ifdef DEBUG
     void dumpRepresentation(FILE* fp, int indent) const;
@@ -1347,16 +1349,6 @@ JSString::ensureLinear(js::ExclusiveContext* cx)
     return isLinear()
            ? &asLinear()
            : asRope().flatten(cx);
-}
-
-MOZ_ALWAYS_INLINE JSFlatString*
-JSString::ensureFlat(js::ExclusiveContext* cx)
-{
-    return isFlat()
-           ? &asFlat()
-           : isDependent()
-             ? asDependent().undepend(cx)
-             : asRope().flatten(cx);
 }
 
 inline JSLinearString*
