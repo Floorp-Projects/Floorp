@@ -18,7 +18,7 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 var {
-  EventManager,
+  SingletonEventManager,
   IconDetails,
 } = ExtensionUtils;
 
@@ -446,10 +446,10 @@ extensions.registerSchemaAPI("browserAction", "addon_parent", context => {
   let {extension} = context;
   return {
     browserAction: {
-      onClicked: new EventManager(context, "browserAction.onClicked", fire => {
+      onClicked: new SingletonEventManager(context, "browserAction.onClicked", fire => {
         let listener = () => {
           let tab = TabManager.activeTab;
-          fire(TabManager.convert(extension, tab));
+          fire.async(TabManager.convert(extension, tab));
         };
         BrowserAction.for(extension).on("click", listener);
         return () => {
