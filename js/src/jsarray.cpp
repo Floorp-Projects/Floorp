@@ -379,20 +379,12 @@ js::GetElements(JSContext* cx, HandleObject aobj, uint32_t length, Value* vp)
     return true;
 }
 
-// Set the value of the property at the given index to v. The behavior of this
-// function is currently incoherent and it sometimes defines the property
-// instead. See bug 1163091.
-static bool
-SetArrayElement(JSContext* cx, HandleObject obj, double index, HandleValue v)
+// Set the value of the property at the given index to v.
+static inline bool
+SetElement(JSContext* cx, HandleObject obj, double index, HandleValue v)
 {
     MOZ_ASSERT(index >= 0);
-
-    if ((obj->is<ArrayObject>() || obj->is<UnboxedArrayObject>()) && !obj->isIndexed() && index <= UINT32_MAX) {
-        DenseElementResult result =
-            SetOrExtendAnyBoxedOrUnboxedDenseElements(cx, obj, uint32_t(index), v.address(), 1);
-        if (result != DenseElementResult::Incomplete)
-            return result == DenseElementResult::Success;
-    }
+    MOZ_ASSERT(floor(index) == index);
 
     RootedId id(cx);
     if (!ToId(cx, index, &id))
@@ -1327,7 +1319,8 @@ SetArrayElements(JSContext* cx, HandleObject obj, uint32_t start,
     const Value* end = vector + count;
     while (vector < end && start <= MAX_ARRAY_INDEX) {
         if (!CheckForInterrupt(cx) ||
-            !SetArrayElement(cx, obj, start++, HandleValue::fromMarkedLocation(vector++))) {
+            !SetElement(cx, obj, start++, HandleValue::fromMarkedLocation(vector++)))
+        {
             return false;
         }
     }
@@ -1452,19 +1445,19 @@ js::array_reverse(JSContext* cx, unsigned argc, Value* vp)
         }
 
         if (!hole && !hole2) {
-            if (!SetArrayElement(cx, obj, i, hival))
+            if (!SetElement(cx, obj, i, hival))
                 return false;
-            if (!SetArrayElement(cx, obj, len - i - 1, lowval))
+            if (!SetElement(cx, obj, len - i - 1, lowval))
                 return false;
         } else if (hole && !hole2) {
-            if (!SetArrayElement(cx, obj, i, hival))
+            if (!SetElement(cx, obj, i, hival))
                 return false;
             if (!DeletePropertyOrThrow(cx, obj, len - i - 1))
                 return false;
         } else if (!hole && hole2) {
             if (!DeletePropertyOrThrow(cx, obj, i))
                 return false;
-            if (!SetArrayElement(cx, obj, len - i - 1, lowval))
+            if (!SetElement(cx, obj, len - i - 1, lowval))
                 return false;
         } else {
             // No action required.
@@ -1854,6 +1847,55 @@ SortNumerically(JSContext* cx, MutableHandle<GCVector<Value>> vec, size_t len,
                           SortComparatorNumerics[comp], vec);
 }
 
+static bool
+FillWithUndefined(JSContext* cx, HandleObject obj, uint32_t start, uint32_t count)
+{
+    MOZ_ASSERT(start < start + count, "count > 0 and start + count doesn't overflow");
+
+    do {
+        // Unboxed arrays can't store undefined values, so don't try to
+        // optimize them here.
+        if (!obj->is<NativeObject>())
+            break;
+        if (ObjectMayHaveExtraIndexedProperties(obj))
+            break;
+
+        NativeObject* nobj = &obj->as<NativeObject>();
+        if (nobj->denseElementsAreFrozen())
+            break;
+
+        if (obj->is<ArrayObject>() &&
+            !obj->as<ArrayObject>().lengthIsWritable() &&
+            start + count >= obj->as<ArrayObject>().length())
+        {
+            break;
+        }
+
+        DenseElementResult result = nobj->ensureDenseElements(cx, start, count);
+        if (result != DenseElementResult::Success) {
+            if (result == DenseElementResult::Failure)
+                return false;
+            MOZ_ASSERT(result == DenseElementResult::Incomplete);
+            break;
+        }
+
+        if (obj->is<ArrayObject>() && start + count >= obj->as<ArrayObject>().length())
+            obj->as<ArrayObject>().setLengthInt32(start + count);
+
+        for (uint32_t i = 0; i < count; i++)
+            nobj->setDenseElementWithType(cx, start + i, UndefinedHandleValue);
+
+        return true;
+    } while (false);
+
+    for (uint32_t i = 0; i < count; i++) {
+        if (!CheckForInterrupt(cx) || !SetElement(cx, obj, start + i, UndefinedHandleValue))
+            return false;
+    }
+
+    return true;
+}
+
 bool
 js::array_sort(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -1995,10 +2037,10 @@ js::array_sort(JSContext* cx, unsigned argc, Value* vp)
     }
 
     /* Set undefs that sorted after the rest of elements. */
-    while (undefs != 0) {
-        --undefs;
-        if (!CheckForInterrupt(cx) || !SetArrayElement(cx, obj, n++, UndefinedHandleValue))
+    if (undefs > 0) {
+        if (!FillWithUndefined(cx, obj, n, undefs))
             return false;
+        n += undefs;
     }
 
     /* Re-create any holes that sorted to the end of the array. */
@@ -2242,7 +2284,7 @@ js::array_shift(JSContext* cx, unsigned argc, Value* vp)
             if (!DeletePropertyOrThrow(cx, obj, i))
                 return false;
         } else {
-            if (!SetArrayElement(cx, obj, i, value))
+            if (!SetElement(cx, obj, i, value))
                 return false;
         }
     }
@@ -2275,6 +2317,9 @@ js::array_unshift(JSContext* cx, unsigned argc, Value* vp)
             // Only include a fast path for boxed arrays. Unboxed arrays can't
             // be optimized here because unshifting temporarily places holes at
             // the start of the array.
+            // TODO: Implement unboxed array optimization similar to the one in
+            // array_splice_impl(), unshift() is a special version of splice():
+            // arr.unshift(...values) ~= arr.splice(0, 0, ...values).
             bool optimized = false;
             do {
                 if (!obj->is<ArrayObject>())
@@ -2312,7 +2357,7 @@ js::array_unshift(JSContext* cx, unsigned argc, Value* vp)
                         if (!DeletePropertyOrThrow(cx, obj, upperIndex))
                             return false;
                     } else {
-                        if (!SetArrayElement(cx, obj, upperIndex, value))
+                        if (!SetElement(cx, obj, upperIndex, value))
                             return false;
                     }
                 } while (last != 0);
@@ -2558,7 +2603,7 @@ js::array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueI
                         return false;
                 } else {
                     /* Step 15.b.iv.2. */
-                    if (!SetArrayElement(cx, obj, to, fromValue))
+                    if (!SetElement(cx, obj, to, fromValue))
                         return false;
                 }
             }
@@ -2642,7 +2687,7 @@ js::array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueI
                         return false;
                 } else {
                     /* Step 16.b.iv.2. */
-                    if (!SetArrayElement(cx, obj, to, fromValue))
+                    if (!SetElement(cx, obj, to, fromValue))
                         return false;
                 }
             }
@@ -2653,13 +2698,8 @@ js::array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueI
     Value* items = args.array() + 2;
 
     /* Steps 17-18. */
-    for (uint32_t k = actualStart, i = 0; i < itemCount; i++, k++) {
-        /* Step 18.a (implicit). */
-
-        /* Step 18.b. */
-        if (!SetArrayElement(cx, obj, k, HandleValue::fromMarkedLocation(&items[i])))
-            return false;
-    }
+    if (!SetArrayElements(cx, obj, actualStart, itemCount, items))
+        return false;
 
     /* Step 19. */
     double finalLength = double(len) - actualDeleteCount + itemCount;
