@@ -49,6 +49,10 @@ RectTextureImage::BeginUpdate(const LayoutDeviceIntSize& aNewSize,
     DeleteTexture();
     mIOSurface = MacIOSurface::CreateIOSurface(mBufferSize.width,
                                                mBufferSize.height);
+
+    if (!mIOSurface) {
+      return nullptr;
+    }
   }
 
   mInUpdate = true;
