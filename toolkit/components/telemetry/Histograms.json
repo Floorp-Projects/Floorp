@@ -5173,6 +5173,39 @@
     "releaseChannelCollection": "opt-out",
     "description": "Indicates we showed a 'would you like to undo this automatic migration?' notification bar. The bucket indicates which nth day we're on (1st/2nd/3rd, by default - 0 would be indicative the pref didn't get set which shouldn't happen). After 3 days on which the notification gets shown, it will get disabled and never shown again."
   },
+  "FX_STARTUP_MIGRATION_UNDO_BOOKMARKS_ERRORCOUNT": {
+    "bug_numbers": [1333233],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "58",
+    "keyed": true,
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "Indicates how many errors we find when trying to 'undo' bookmarks import. Keys are internal ids of browsers we import from, e.g. 'chrome' or 'ie', etc."
+  },
+  "FX_STARTUP_MIGRATION_UNDO_LOGINS_ERRORCOUNT": {
+    "bug_numbers": [1333233],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "58",
+    "keyed": true,
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "Indicates how many errors we find when trying to 'undo' login (password) import. Keys are internal ids of browsers we import from, e.g. 'chrome' or 'ie', etc."
+  },
+  "FX_STARTUP_MIGRATION_UNDO_VISITS_ERRORCOUNT": {
+    "bug_numbers": [1333233],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "58",
+    "keyed": true,
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "Indicates how many errors we find when trying to 'undo' history import. Keys are internal ids of browsers we import from, e.g. 'chrome' or 'ie', etc."
+  },
   "FX_STARTUP_MIGRATION_DATA_RECENCY": {
     "bug_numbers": [1276694],
     "alert_emails": ["gijs@mozilla.com"],
