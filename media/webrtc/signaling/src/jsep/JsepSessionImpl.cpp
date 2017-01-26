@@ -322,11 +322,6 @@ JsepSessionImpl::SetParameters(const std::string& streamId,
                                                                       | it->mTrack->GetDirection());
           break;
         }
-        case SdpMediaSection::kApplication:
-        case SdpMediaSection::kMessage:
-        case SdpMediaSection::kText:
-          MOZ_ASSERT_UNREACHABLE("Unexpected track MediaType");
-          break;
       }
     }
   }
