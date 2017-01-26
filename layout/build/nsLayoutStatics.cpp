@@ -161,6 +161,7 @@ nsLayoutStatics::Initialize()
   nsColorNames::AddRefTable();
   nsGkAtoms::AddRefAtoms();
   nsHtml5Atoms::AddRefAtoms();
+  nsTextServicesDocument::RegisterAtoms();
 
   StartupJSEnvironment();
   rv = nsRegion::InitStatic();
@@ -212,8 +213,6 @@ nsLayoutStatics::Initialize()
 #endif
 
   nsMathMLOperators::AddRefTable();
-
-  nsTextServicesDocument::RegisterAtoms();
 
 #ifdef DEBUG
   nsFrame::DisplayReflowStartup();
