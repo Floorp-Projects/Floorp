@@ -4143,6 +4143,7 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
   , mPRThread(nullptr)
   , mDebuggerEventLoopLevel(0)
   , mMainThreadEventTarget(do_GetMainThread())
+  , mWorkerControlEventTarget(new WorkerControlEventTarget(this))
   , mErrorHandlerRecursionCount(0)
   , mNextTimeoutId(1)
   , mStatus(Pending)
@@ -4209,6 +4210,7 @@ WorkerPrivate::WorkerPrivate(WorkerPrivate* aParent,
 
 WorkerPrivate::~WorkerPrivate()
 {
+  mWorkerControlEventTarget->ForgetWorkerPrivate(this);
 }
 
 // static
