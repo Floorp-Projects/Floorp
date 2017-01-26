@@ -26,13 +26,13 @@ add_task(function* () {
   yield wait;
 
   // Wait for all tree view updated by react
-  wait = waitForDOM(document, "#params-panel .tree-section");
+  wait = waitForDOM(document, "#panel-2 .tree-section");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.getElementById("details-pane-toggle"));
-  document.querySelector("#params-tab").click();
+  document.querySelector("#tab-2 a").click();
   yield wait;
 
-  let tabpanel = document.querySelector("#params-panel");
+  let tabpanel = document.querySelector("#panel-2");
 
   ok(tabpanel.querySelector(".treeTable"),
     "The request params doesn't have the indended visibility.");

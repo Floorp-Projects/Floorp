@@ -264,7 +264,7 @@ module.exports = connect(
       const { securityState } = item;
       // Choose the security tab.
       if (securityState && securityState !== "insecure") {
-        dispatch(Actions.selectDetailsPanelTab("security"));
+        dispatch(Actions.selectDetailsPanelTab(5));
       }
     },
   })

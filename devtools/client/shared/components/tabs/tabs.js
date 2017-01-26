@@ -105,9 +105,8 @@ define(function (require, exports, module) {
       if (typeof tabActive === "number") {
         let panels = children.filter((panel) => panel);
 
-        // Reset to index 0 if index overflows the range of panel array
-        tabActive = (tabActive < panels.length && tabActive >= 0) ?
-          tabActive : 0;
+        // Reset to index 0 if index larger than number of panels
+        tabActive = tabActive < panels.length ? tabActive : 0;
 
         let created = [...this.state.created];
         created[tabActive] = true;
@@ -225,16 +224,17 @@ define(function (require, exports, module) {
       }
 
       let tabs = this.props.children
-        .map((tab) => typeof tab === "function" ? tab() : tab)
-        .filter((tab) => tab)
-        .map((tab, index) => {
-          let id = tab.props.id;
-          let ref = "tab-menu-" + index;
+        .map(tab => {
+          return typeof tab === "function" ? tab() : tab;
+        }).filter(tab => {
+          return tab;
+        }).map((tab, index) => {
+          let ref = ("tab-menu-" + index);
           let title = tab.props.title;
           let tabClassName = tab.props.className;
           let isTabSelected = this.state.tabActive === index;
 
-          let className = [
+          let classes = [
             "tabs-menu-item",
             tabClassName,
             isTabSelected ? "is-active" : ""
@@ -247,15 +247,15 @@ define(function (require, exports, module) {
           // See also `onKeyDown()` event handler.
           return (
             DOM.li({
-              className,
+              ref: ref,
               key: index,
-              ref,
+              id: "tab-" + index,
+              className: classes,
               role: "presentation",
             },
               DOM.a({
-                id: id ? id + "-tab" : "tab-" + index,
-                tabIndex: isTabSelected ? 0 : -1,
-                "aria-controls": id ? id + "-panel" : "panel-" + index,
+                tabIndex: this.state.tabActive === index ? 0 : -1,
+                "aria-controls": "panel-" + index,
                 "aria-selected": isTabSelected,
                 role: "tab",
                 onClick: this.onClickTab.bind(this, index),
@@ -297,11 +297,12 @@ define(function (require, exports, module) {
       let selectedIndex = this.state.tabActive;
 
       let panels = this.props.children
-        .map((tab) => typeof tab === "function" ? tab() : tab)
-        .filter((tab) => tab)
-        .map((tab, index) => {
-          let selected = selectedIndex === index;
-          let id = tab.props.id;
+        .map(tab => {
+          return typeof tab === "function" ? tab() : tab;
+        }).filter(tab => {
+          return tab;
+        }).map((tab, index) => {
+          let selected = selectedIndex == index;
 
           // Use 'visibility:hidden' + 'width/height:0' for hiding
           // content of non-selected tab. It's faster (not sure why)
@@ -314,12 +315,12 @@ define(function (require, exports, module) {
 
           return (
             DOM.div({
-              id: id ? id + "-panel" : "panel-" + index,
               key: index,
+              id: "panel-" + index,
               style: style,
               className: "tab-panel-box",
               role: "tabpanel",
-              "aria-labelledby": id ? id + "-tab" : "tab-" + index,
+              "aria-labelledby": "tab-" + index,
             },
               (selected || this.state.created[index]) ? tab : null
             )
@@ -334,10 +335,12 @@ define(function (require, exports, module) {
     },
 
     render: function () {
+      let classNames = ["tabs", this.props.className].join(" ");
+
       return (
-        DOM.div({ className: ["tabs", this.props.className].join(" ") },
+        DOM.div({className: classNames},
           this.renderMenuItems(),
-          this.renderPanels(),
+          this.renderPanels()
         )
       );
     },

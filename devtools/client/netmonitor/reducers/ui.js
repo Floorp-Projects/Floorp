@@ -13,7 +13,7 @@ const {
 } = require("../constants");
 
 const UI = I.Record({
-  detailsPanelSelectedTab: "headers",
+  detailsPanelSelectedTab: 0,
   sidebarOpen: false,
   statisticsOpen: false,
   waterfallWidth: null,
@@ -35,7 +35,7 @@ function openStatistics(state, action) {
 }
 
 function setDetailsPanelTab(state, action) {
-  return state.set("detailsPanelSelectedTab", action.id);
+  return state.set("detailsPanelSelectedTab", action.index);
 }
 
 function ui(state = new UI(), action) {

@@ -24,7 +24,7 @@ add_task(function* () {
 
   info("Selecting headers panel again.");
   EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelector("#headers-tab"));
+    document.querySelector("#tab-0 a"));
 
   info("Sorting the items by filename.");
   EventUtils.sendMouseEvent({ type: "click" },
@@ -47,11 +47,10 @@ add_task(function* () {
     let item = RequestsMenu.getItemAtIndex(0);
     let icon = document.querySelector(".requests-security-state-icon");
 
-    let wait = waitForDOM(document, "#security-panel");
+    let wait = waitForDOM(document, "#panel-5");
     info("Clicking security icon of the first request and waiting for panel update.");
     EventUtils.synthesizeMouseAtCenter(icon, {}, monitor.panelWin);
     yield wait;
-
-    ok(document.querySelector("#security-tab[aria-selected=true]"), "Security tab is selected.");
+    ok(document.querySelector("#tab-5.is-active"), "Security tab is selected.");
   }
 });

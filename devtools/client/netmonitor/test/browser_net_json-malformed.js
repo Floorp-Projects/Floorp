@@ -31,15 +31,15 @@ add_task(function* () {
       fullMimeType: "text/json; charset=utf-8"
     });
 
-  wait = waitForDOM(document, "#response-panel .editor-mount iframe");
+  wait = waitForDOM(document, "#panel-3 .editor-mount iframe");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.getElementById("details-pane-toggle"));
-  document.querySelector("#response-tab").click();
+  document.querySelector("#tab-3 a").click();
   let [editor] = yield wait;
   yield once(editor, "DOMContentLoaded");
   yield waitForDOM(editor.contentDocument, ".CodeMirror-code");
 
-  let tabpanel = document.querySelector("#response-panel");
+  let tabpanel = document.querySelector("#panel-3");
   is(tabpanel.querySelector(".response-error-header") === null, false,
     "The response error header doesn't have the intended visibility.");
   is(tabpanel.querySelector(".response-error-header").textContent,
