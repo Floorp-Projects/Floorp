@@ -69,7 +69,11 @@ const ResponsePanel = createClass({
     try {
       json = JSON.parse(response);
     } catch (err) {
-      error = err;
+      try {
+        json = JSON.parse(atob(response));
+      } catch (err64) {
+        error = err;
+      }
     }
 
     if (/\bjson/.test(mimeType) || json) {
