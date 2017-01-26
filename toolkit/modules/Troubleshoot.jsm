@@ -352,12 +352,6 @@ var dataProviders = {
     let winUtils = Services.wm.getMostRecentWindow("").
                    QueryInterface(Ci.nsIInterfaceRequestor).
                    getInterface(Ci.nsIDOMWindowUtils)
-    data.supportsHardwareH264 = "Unknown";
-    let promise = winUtils.supportsHardwareH264Decoding;
-    promise.then(function(v) {
-      data.supportsHardwareH264 = v;
-    });
-    promises.push(promise);
 
     data.currentAudioBackend = winUtils.currentAudioBackend;
 
