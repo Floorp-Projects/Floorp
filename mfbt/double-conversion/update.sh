@@ -71,3 +71,6 @@ hg addremove "$DEST"
 
 # Note the revision used in this update.
 git -C "$LOCAL_CLONE" show > ./GIT-INFO
+
+# Delete the tmpdir.
+rm -rf "$TMPDIR"
