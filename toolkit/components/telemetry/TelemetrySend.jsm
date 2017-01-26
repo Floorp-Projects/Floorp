@@ -46,6 +46,7 @@ const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_SERVER = PREF_BRANCH + "server";
 const PREF_UNIFIED = PREF_BRANCH + "unified";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
+const PREF_OVERRIDE_OFFICIAL_CHECK = PREF_BRANCH + "send.overrideOfficialCheck";
 
 const TOPIC_IDLE_DAILY = "idle-daily";
 const TOPIC_QUIT_APPLICATION = "quit-application";
@@ -548,6 +549,10 @@ var TelemetrySendImpl = {
   // Count of pending pings that were overdue.
   _overduePingCount: 0,
 
+  // Whether sending pings has been overridden. We have it here instead
+  // of the top of the file to ease testing.
+  _overrideOfficialCheck: false,
+
   OBSERVER_TOPICS: [
     TOPIC_IDLE_DAILY,
   ],
@@ -581,6 +586,7 @@ var TelemetrySendImpl = {
 
     this._testMode = testing;
     this._sendingEnabled = true;
+    this._overrideOfficialCheck = Preferences.get(PREF_OVERRIDE_OFFICIAL_CHECK, false);
 
     Services.obs.addObserver(this, TOPIC_IDLE_DAILY, false);
 
@@ -662,6 +668,7 @@ var TelemetrySendImpl = {
     this._shutdown = false;
     this._currentPings = new Map();
     this._overduePingCount = 0;
+    this._overrideOfficialCheck = Preferences.get(PREF_OVERRIDE_OFFICIAL_CHECK, false);
 
     const histograms = [
       "TELEMETRY_SUCCESS",
@@ -1037,7 +1044,9 @@ var TelemetrySendImpl = {
    */
   sendingEnabled(ping = null) {
     // We only send pings from official builds, but allow overriding this for tests.
-    if (!Telemetry.isOfficialTelemetry && !this._testMode) {
+    if (!Telemetry.isOfficialTelemetry &&
+        !this._testMode &&
+        !this._overrideOfficialCheck) {
       return false;
     }
 

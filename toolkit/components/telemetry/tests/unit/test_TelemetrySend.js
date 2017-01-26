@@ -9,6 +9,7 @@
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
+Cu.import("resource://gre/modules/TelemetryStorage.jsm", this);
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm", this);
@@ -424,4 +425,49 @@ add_task(function* test_persistCurrentPingsOnShutdown() {
   // After a restart the pings should have been found when scanning.
   yield TelemetrySend.reset();
   Assert.equal(TelemetrySend.pendingPingCount, PING_COUNT, "Should have the correct pending ping count");
+});
+
+add_task(function* test_sendCheckOverride() {
+  const TEST_PING_TYPE = "test-sendCheckOverride";
+  const PREF_OVERRIDE_OFFICIAL_CHECK = "toolkit.telemetry.send.overrideOfficialCheck";
+
+  // Clear any pending pings.
+  yield TelemetryController.testShutdown();
+  yield TelemetryStorage.testClearPendingPings();
+
+  // Enable the ping server.
+  PingServer.start();
+  Preferences.set(PREF_TELEMETRY_SERVER, "http://localhost:" + PingServer.port);
+
+  // Start Telemetry and disable the test-mode so pings don't get
+  // sent unless we enable the override.
+  yield TelemetryController.testReset();
+
+  // Submit a test ping and make sure it doesn't get sent. We only do
+  // that if we're on unofficial builds: pings will always get sent otherwise.
+  if (!Services.telemetry.isOfficialTelemetry) {
+    TelemetrySend.setTestModeEnabled(false);
+    PingServer.registerPingHandler(() => Assert.ok(false, "Should not have received any pings now"));
+
+    yield TelemetryController.submitExternalPing(TEST_PING_TYPE, { test: "test" });
+    Assert.equal(TelemetrySend.pendingPingCount, 0, "Should have no pending pings");
+  }
+
+  // Enable the override and try to send again.
+  Preferences.set(PREF_OVERRIDE_OFFICIAL_CHECK, true);
+  PingServer.resetPingHandler();
+  yield TelemetrySend.reset();
+  yield TelemetryController.submitExternalPing(TEST_PING_TYPE, { test: "test" });
+
+  // Make sure we received the ping.
+  const ping = yield PingServer.promiseNextPing();
+  Assert.equal(ping.type, TEST_PING_TYPE, "Must receive a ping of the expected type");
+
+  // Restore the test mode and disable the override.
+  TelemetrySend.setTestModeEnabled(true);
+  Preferences.reset(PREF_OVERRIDE_OFFICIAL_CHECK);
+});
+
+add_task(function* cleanup() {
+  yield PingServer.stop();
 });
