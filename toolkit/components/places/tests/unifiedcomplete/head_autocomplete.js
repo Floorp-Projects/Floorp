@@ -218,7 +218,7 @@ function* check_autocomplete(test) {
           style: controller.getStyleAt(i),
           image: controller.getImageAt(i),
         }
-        do_print(`Looking for "${result.value}", "${result.comment}" in expected results...`);
+        do_print(`Found value: "${result.value}", comment: "${result.comment}", style: "${result.style}" in results...`);
         let lowerBound = test.checkSorting ? i : firstIndexToCheck;
         let upperBound = test.checkSorting ? i + 1 : matches.length;
         let found = false;
@@ -374,7 +374,7 @@ function makeSearchMatch(input, extra = {}) {
     params.alias = extra.alias;
   }
   let style = [ "action", "searchengine" ];
-  if (Array.isArray(extra.style)) {
+  if ("style" in extra && Array.isArray(extra.style)) {
     style.push(...extra.style);
   }
   if (extra.heuristic) {

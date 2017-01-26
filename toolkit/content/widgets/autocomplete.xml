@@ -2044,7 +2044,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             action = {
               type: "visiturl",
               params: {
-                url: originalUrl,
+                url: this.getAttribute("title"),
               },
             };
           }
