@@ -166,7 +166,8 @@
            orient="vertical"
            noautofocus="true"
            consumeoutsideclicks="false"
-           level="parent">
+           level="parent"
+           tabspecific="true">
       <iframe id="dateTimePopupFrame"/>
     </panel>
 
