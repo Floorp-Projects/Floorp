@@ -10114,11 +10114,21 @@ PresShell::VerifyIncrementalReflow()
 
 // Layout debugging hooks
 void
-PresShell::ListStyleContexts(nsIFrame *aRootFrame, FILE *out, int32_t aIndent)
+PresShell::ListStyleContexts(FILE *out, int32_t aIndent)
 {
-  nsStyleContext *sc = aRootFrame->StyleContext();
-  if (sc)
-    sc->List(out, aIndent);
+  nsIFrame* rootFrame = GetRootFrame();
+  if (rootFrame) {
+    rootFrame->StyleContext()->List(out, aIndent);
+  }
+
+  // The root element's frame's style context is the root of a separate tree.
+  Element* rootElement = mDocument->GetRootElement();
+  if (rootElement) {
+    nsIFrame* rootElementFrame = rootElement->GetPrimaryFrame();
+    if (rootElementFrame) {
+      rootElementFrame->StyleContext()->List(out, aIndent);
+    }
+  }
 }
 
 void
