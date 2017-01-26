@@ -1,16 +1,15 @@
 package org.mozilla.gecko.widget;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.mozilla.gecko.util.GeckoBundle;
 
 public class SiteLogins {
-    private final JSONArray logins;
+    private final GeckoBundle[] logins;
 
-    public SiteLogins(JSONArray logins) {
+    public SiteLogins(GeckoBundle[] logins) {
         this.logins = logins;
     }
 
-    public JSONArray getLogins() {
+    public GeckoBundle[] getLogins() {
         return logins;
     }
 }

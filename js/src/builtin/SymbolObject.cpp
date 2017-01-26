@@ -50,7 +50,7 @@ const JSFunctionSpec SymbolObject::staticMethods[] = {
 };
 
 JSObject*
-SymbolObject::initClass(JSContext* cx, HandleObject obj)
+SymbolObject::initClass(JSContext* cx, HandleObject obj, bool defineMembers)
 {
     Handle<GlobalObject*> global = obj.as<GlobalObject>();
 
@@ -66,25 +66,33 @@ SymbolObject::initClass(JSContext* cx, HandleObject obj)
     if (!ctor)
         return nullptr;
 
-    // Define the well-known symbol properties, such as Symbol.iterator.
-    ImmutablePropertyNamePtr* names = cx->names().wellKnownSymbolNames();
-    RootedValue value(cx);
-    unsigned attrs = JSPROP_READONLY | JSPROP_PERMANENT;
-    WellKnownSymbols* wks = cx->runtime()->wellKnownSymbols;
-    for (size_t i = 0; i < JS::WellKnownSymbolLimit; i++) {
-        value.setSymbol(wks->get(i));
-        if (!NativeDefineProperty(cx, ctor, names[i], value, nullptr, nullptr, attrs))
-            return nullptr;
+    if (defineMembers) {
+        // Define the well-known symbol properties, such as Symbol.iterator.
+        ImmutablePropertyNamePtr* names = cx->names().wellKnownSymbolNames();
+        RootedValue value(cx);
+        unsigned attrs = JSPROP_READONLY | JSPROP_PERMANENT;
+        WellKnownSymbols* wks = cx->runtime()->wellKnownSymbols;
+        for (size_t i = 0; i < JS::WellKnownSymbolLimit; i++) {
+            value.setSymbol(wks->get(i));
+            if (!NativeDefineProperty(cx, ctor, names[i], value, nullptr, nullptr, attrs))
+                return nullptr;
+        }
     }
 
-    if (!LinkConstructorAndPrototype(cx, ctor, proto) ||
-        !DefinePropertiesAndFunctions(cx, proto, properties, methods) ||
-        !DefineToStringTag(cx, proto, cx->names().Symbol) ||
-        !DefinePropertiesAndFunctions(cx, ctor, nullptr, staticMethods) ||
-        !GlobalObject::initBuiltinConstructor(cx, global, JSProto_Symbol, ctor, proto))
-    {
+    if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
+
+    if (defineMembers) {
+        if (!DefinePropertiesAndFunctions(cx, proto, properties, methods) ||
+            !DefineToStringTag(cx, proto, cx->names().Symbol) ||
+            !DefinePropertiesAndFunctions(cx, ctor, nullptr, staticMethods))
+        {
+            return nullptr;
+        }
     }
+
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_Symbol, ctor, proto))
+        return nullptr;
     return proto;
 }
 
@@ -230,5 +238,11 @@ SymbolObject::toPrimitive(JSContext* cx, unsigned argc, Value* vp)
 JSObject*
 js::InitSymbolClass(JSContext* cx, HandleObject obj)
 {
-    return SymbolObject::initClass(cx, obj);
+    return SymbolObject::initClass(cx, obj, true);
+}
+
+JSObject*
+js::InitBareSymbolCtor(JSContext* cx, HandleObject obj)
+{
+    return SymbolObject::initClass(cx, obj, false);
 }

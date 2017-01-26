@@ -16,7 +16,6 @@ import android.content.Intent;
 import android.util.Log;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
@@ -28,9 +27,10 @@ import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.NativeEventListener;
-import org.mozilla.gecko.util.NativeJSObject;
+import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -42,8 +42,8 @@ import java.util.Map;
 /**
  * Helper class to manage Android Accounts corresponding to Firefox Accounts.
  */
-public class AccountsHelper implements NativeEventListener {
-    public static final String LOGTAG = "GeckoAccounts";
+public class AccountsHelper implements BundleEventListener {
+    private static final String LOGTAG = "GeckoAccounts";
 
     protected final Context mContext;
     protected final GeckoProfile mProfile;
@@ -55,10 +55,11 @@ public class AccountsHelper implements NativeEventListener {
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
                 "Accounts:CreateFirefoxAccountFromJSON",
                 "Accounts:UpdateFirefoxAccountFromJSON",
-                "Accounts:Create",
                 "Accounts:DeleteFirefoxAccount",
                 "Accounts:Exist",
-                "Accounts:ProfileUpdated",
+                "Accounts:ProfileUpdated");
+        EventDispatcher.getInstance().registerUiThreadListener(this,
+                "Accounts:Create",
                 "Accounts:ShowSyncPreferences");
     }
 
@@ -66,15 +67,17 @@ public class AccountsHelper implements NativeEventListener {
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
                 "Accounts:CreateFirefoxAccountFromJSON",
                 "Accounts:UpdateFirefoxAccountFromJSON",
-                "Accounts:Create",
                 "Accounts:DeleteFirefoxAccount",
                 "Accounts:Exist",
-                "Accounts:ProfileUpdated",
+                "Accounts:ProfileUpdated");
+        EventDispatcher.getInstance().unregisterUiThreadListener(this,
+                "Accounts:Create",
                 "Accounts:ShowSyncPreferences");
     }
 
-    @Override
-    public void handleMessage(String event, NativeJSObject message, final EventCallback callback) {
+    @Override // BundleEventListener
+    public void handleMessage(final String event, final GeckoBundle message,
+                              final EventCallback callback) {
         if (!Restrictions.isAllowed(mContext, Restrictable.MODIFY_ACCOUNTS)) {
             // We register for messages in all contexts; we drop, with a log and an error to JavaScript,
             // when the profile is restricted.  It's better to return errors than silently ignore messages.
@@ -88,19 +91,19 @@ public class AccountsHelper implements NativeEventListener {
         if ("Accounts:CreateFirefoxAccountFromJSON".equals(event)) {
             AndroidFxAccount fxAccount = null;
             try {
-                final NativeJSObject json = message.getObject("json");
+                final GeckoBundle json = message.getBundle("json");
                 final String email = json.getString("email");
                 final String uid = json.getString("uid");
-                final boolean verified = json.optBoolean("verified", false);
+                final boolean verified = json.getBoolean("verified", false);
                 final byte[] unwrapkB = Utils.hex2Byte(json.getString("unwrapBKey"));
                 final byte[] sessionToken = Utils.hex2Byte(json.getString("sessionToken"));
                 final byte[] keyFetchToken = Utils.hex2Byte(json.getString("keyFetchToken"));
-                final String authServerEndpoint =
-                        json.optString("authServerEndpoint", FxAccountConstants.DEFAULT_AUTH_SERVER_ENDPOINT);
-                final String tokenServerEndpoint =
-                        json.optString("tokenServerEndpoint", FxAccountConstants.DEFAULT_TOKEN_SERVER_ENDPOINT);
-                final String profileServerEndpoint =
-                        json.optString("profileServerEndpoint", FxAccountConstants.DEFAULT_PROFILE_SERVER_ENDPOINT);
+                final String authServerEndpoint = json.getString("authServerEndpoint",
+                        FxAccountConstants.DEFAULT_AUTH_SERVER_ENDPOINT);
+                final String tokenServerEndpoint = json.getString("tokenServerEndpoint",
+                        FxAccountConstants.DEFAULT_TOKEN_SERVER_ENDPOINT);
+                final String profileServerEndpoint = json.getString("profileServerEndpoint",
+                        FxAccountConstants.DEFAULT_PROFILE_SERVER_ENDPOINT);
                 // TODO: handle choose what to Sync.
                 State state = new Engaged(email, uid, verified, unwrapkB, sessionToken, keyFetchToken);
                 fxAccount = AndroidFxAccount.addAndroidAccount(mContext,
@@ -112,7 +115,7 @@ public class AccountsHelper implements NativeEventListener {
                         state,
                         AndroidFxAccount.DEFAULT_AUTHORITIES_TO_SYNC_AUTOMATICALLY_MAP);
 
-                final String[] declinedSyncEngines = json.optStringArray("declinedSyncEngines", null);
+                final String[] declinedSyncEngines = json.getStringArray("declinedSyncEngines");
                 if (declinedSyncEngines != null) {
                     Log.i(LOGTAG, "User has selected engines; storing to prefs.");
                     final Map<String, Boolean> selectedEngines = new HashMap<String, Boolean>();
@@ -124,17 +127,21 @@ public class AccountsHelper implements NativeEventListener {
                     }
                     // The "forms" engine has the same state as the "history" engine.
                     selectedEngines.put("forms", selectedEngines.get("history"));
-                    FxAccountUtils.pii(LOGTAG, "User selected engines: " + selectedEngines.toString());
+                    FxAccountUtils.pii(LOGTAG, "User selected engines: " +
+                                               selectedEngines.toString());
                     try {
-                        SyncConfiguration.storeSelectedEnginesToPrefs(fxAccount.getSyncPrefs(), selectedEngines);
+                        SyncConfiguration.storeSelectedEnginesToPrefs(
+                                fxAccount.getSyncPrefs(), selectedEngines);
                     } catch (UnsupportedEncodingException | GeneralSecurityException e) {
                         Log.e(LOGTAG, "Got exception storing selected engines; ignoring.", e);
                     }
                 }
-            } catch (URISyntaxException | GeneralSecurityException | UnsupportedEncodingException e) {
+            } catch (URISyntaxException | GeneralSecurityException |
+                     UnsupportedEncodingException e) {
                 Log.w(LOGTAG, "Got exception creating Firefox Account from JSON; ignoring.", e);
                 if (callback != null) {
-                    callback.sendError("Could not create Firefox Account from JSON: " + e.toString());
+                    callback.sendError("Could not create Firefox Account from JSON: " +
+                                       e.toString());
                     return;
                 }
             }
@@ -143,56 +150,54 @@ public class AccountsHelper implements NativeEventListener {
             }
 
         } else if ("Accounts:UpdateFirefoxAccountFromJSON".equals(event)) {
-            try {
-                final Account account = FirefoxAccounts.getFirefoxAccount(mContext);
-                if (account == null) {
-                    if (callback != null) {
-                        callback.sendError("Could not update Firefox Account since none exists");
-                    }
-                    return;
-                }
-
-                final NativeJSObject json = message.getObject("json");
-                final String email = json.getString("email");
-                final String uid = json.getString("uid");
-
-                // Protect against cross-connecting accounts.
-                if (account.name == null || !account.name.equals(email)) {
-                    final String errorMessage = "Cannot update Firefox Account from JSON: datum has different email address!";
-                    Log.e(LOGTAG, errorMessage);
-                    if (callback != null) {
-                        callback.sendError(errorMessage);
-                    }
-                    return;
-                }
-
-                final boolean verified = json.optBoolean("verified", false);
-                final byte[] unwrapkB = Utils.hex2Byte(json.getString("unwrapBKey"));
-                final byte[] sessionToken = Utils.hex2Byte(json.getString("sessionToken"));
-                final byte[] keyFetchToken = Utils.hex2Byte(json.getString("keyFetchToken"));
-                final State state = new Engaged(email, uid, verified, unwrapkB, sessionToken, keyFetchToken);
-
-                final AndroidFxAccount fxAccount = new AndroidFxAccount(mContext, account);
-                fxAccount.setState(state);
-
+            final Account account = FirefoxAccounts.getFirefoxAccount(mContext);
+            if (account == null) {
                 if (callback != null) {
-                    callback.sendSuccess(true);
+                    callback.sendError("Could not update Firefox Account since none exists");
                 }
-            } catch (NativeJSObject.InvalidPropertyException e) {
-                Log.w(LOGTAG, "Got exception updating Firefox Account from JSON; ignoring.", e);
+                return;
+            }
+
+            final GeckoBundle json = message.getBundle("json");
+            final String email = json.getString("email");
+            final String uid = json.getString("uid");
+
+            // Protect against cross-connecting accounts.
+            if (account.name == null || !account.name.equals(email)) {
+                final String errorMessage = "Cannot update Firefox Account from JSON: " +
+                        "datum has different email address!";
+                Log.e(LOGTAG, errorMessage);
                 if (callback != null) {
-                    callback.sendError("Could not update Firefox Account from JSON: " + e.toString());
-                    return;
+                    callback.sendError(errorMessage);
                 }
+                return;
+            }
+
+            final boolean verified = json.getBoolean("verified", false);
+            final byte[] unwrapkB = Utils.hex2Byte(json.getString("unwrapBKey"));
+            final byte[] sessionToken = Utils.hex2Byte(json.getString("sessionToken"));
+            final byte[] keyFetchToken = Utils.hex2Byte(json.getString("keyFetchToken"));
+            final State state = new Engaged(email, uid, verified, unwrapkB,
+                                            sessionToken, keyFetchToken);
+
+            final AndroidFxAccount fxAccount = new AndroidFxAccount(mContext, account);
+            fxAccount.setState(state);
+
+            if (callback != null) {
+                callback.sendSuccess(true);
             }
 
         } else if ("Accounts:Create".equals(event)) {
             // Do exactly the same thing as if you tapped 'Sync' in Settings.
             final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            final NativeJSObject extras = message.optObject("extras", null);
+            final GeckoBundle extras = message.getBundle("extras");
             if (extras != null) {
-                intent.putExtra("extras", extras.toString());
+                try {
+                    intent.putExtra("extras", extras.toJSONObject().toString());
+                } catch (final JSONException e) {
+                    Log.e(LOGTAG, "Cannot convert extras", e);
+                }
             }
             mContext.startActivity(intent);
 
@@ -207,28 +212,35 @@ public class AccountsHelper implements NativeEventListener {
                     return;
                 }
 
-                final AccountManagerCallback<Boolean> accountManagerCallback = new AccountManagerCallback<Boolean>() {
+                final AccountManagerCallback<Boolean> accountManagerCallback =
+                        new AccountManagerCallback<Boolean>() {
                     @Override
                     public void run(AccountManagerFuture<Boolean> future) {
                         try {
                             final boolean result = future.getResult();
-                            Log.i(LOGTAG, "Account named like " + Utils.obfuscateEmail(account.name) + " removed: " + result);
+                            Log.i(LOGTAG, "Account named like " +
+                                          Utils.obfuscateEmail(account.name) + " removed: " +
+                                          result);
                             if (callback != null) {
                                 callback.sendSuccess(result);
                             }
-                        } catch (OperationCanceledException | IOException | AuthenticatorException e) {
+                        } catch (OperationCanceledException | IOException |
+                                 AuthenticatorException e) {
                             if (callback != null) {
-                                callback.sendError("Could not delete Firefox Account: " + e.toString());
+                                callback.sendError("Could not delete Firefox Account: " +
+                                                   e.toString());
                             }
                         }
                     }
                 };
 
-                AccountManager.get(mContext).removeAccount(account, accountManagerCallback, null);
+                AccountManager.get(mContext).removeAccount(
+                        account, accountManagerCallback, ThreadUtils.getBackgroundHandler());
             } catch (Exception e) {
                 Log.w(LOGTAG, "Got exception updating Firefox Account from JSON; ignoring.", e);
                 if (callback != null) {
-                    callback.sendError("Could not update Firefox Account from JSON: " + e.toString());
+                    callback.sendError("Could not update Firefox Account from JSON: " +
+                                       e.toString());
                     return;
                 }
             }
@@ -239,43 +251,38 @@ public class AccountsHelper implements NativeEventListener {
                 return;
             }
 
-            final String kind = message.optString("kind", null);
-            final JSONObject response = new JSONObject();
+            final String kind = message.getString("kind", null);
+            final GeckoBundle response = new GeckoBundle();
 
-            try {
-                if ("any".equals(kind)) {
-                    response.put("exists", FirefoxAccounts.firefoxAccountsExist(mContext));
-                    callback.sendSuccess(response);
-                } else if ("fxa".equals(kind)) {
-                    final Account account = FirefoxAccounts.getFirefoxAccount(mContext);
-                    response.put("exists", account != null);
-                    if (account != null) {
-                        response.put("email", account.name);
-                        // We should always be able to extract the server endpoints.
-                        final AndroidFxAccount fxAccount = new AndroidFxAccount(mContext, account);
-                        response.put("authServerEndpoint", fxAccount.getAccountServerURI());
-                        response.put("profileServerEndpoint", fxAccount.getProfileServerURI());
-                        response.put("tokenServerEndpoint", fxAccount.getTokenServerURI());
-                        try {
-                            // It is possible for the state fetch to fail and us to not be able to provide a UID.
-                            // Long term, the UID (and verification flag) will be attached to the Android account
-                            // user data and not the internal state representation.
-                            final State state = fxAccount.getState();
-                            response.put("uid", state.uid);
-                        } catch (Exception e) {
-                            Log.w(LOGTAG, "Got exception extracting account UID; ignoring.", e);
-                        }
+            if ("any".equals(kind)) {
+                response.putBoolean("exists", FirefoxAccounts.firefoxAccountsExist(mContext));
+                callback.sendSuccess(response);
+            } else if ("fxa".equals(kind)) {
+                final Account account = FirefoxAccounts.getFirefoxAccount(mContext);
+                response.putBoolean("exists", account != null);
+                if (account != null) {
+                    response.putString("email", account.name);
+                    // We should always be able to extract the server endpoints.
+                    final AndroidFxAccount fxAccount = new AndroidFxAccount(mContext, account);
+                    response.putString("authServerEndpoint", fxAccount.getAccountServerURI());
+                    response.putString("profileServerEndpoint", fxAccount.getProfileServerURI());
+                    response.putString("tokenServerEndpoint", fxAccount.getTokenServerURI());
+                    try {
+                        // It is possible for the state fetch to fail and us to not be
+                        // able to provide a UID.  Long term, the UID (and verification
+                        // flag) will be attached to the Android account user data and not
+                        // the internal state representation.
+                        final State state = fxAccount.getState();
+                        response.putString("uid", state.uid);
+                    } catch (Exception e) {
+                        Log.w(LOGTAG, "Got exception extracting account UID; ignoring.", e);
                     }
-
-                    callback.sendSuccess(response);
-                } else {
-                    callback.sendError("Could not query account existence: unknown kind.");
                 }
-            } catch (JSONException e) {
-                Log.w(LOGTAG, "Got exception querying account existence; ignoring.", e);
-                callback.sendError("Could not query account existence: " + e.toString());
-                return;
+                callback.sendSuccess(response);
+            } else {
+                callback.sendError("Could not query account existence: unknown kind.");
             }
+
         } else if ("Accounts:ProfileUpdated".equals(event)) {
             final Account account = FirefoxAccounts.getFirefoxAccount(mContext);
             if (account == null) {
@@ -284,10 +291,12 @@ public class AccountsHelper implements NativeEventListener {
             }
             final AndroidFxAccount androidFxAccount = new AndroidFxAccount(mContext, account);
             androidFxAccount.fetchProfileJSON();
+
         } else if ("Accounts:ShowSyncPreferences".equals(event)) {
             final Account account = FirefoxAccounts.getFirefoxAccount(mContext);
             if (account == null) {
-                Log.w(LOGTAG, "Can't change show Sync preferences of non-existent Firefox Account!; ignored");
+                Log.w(LOGTAG, "Can't change show Sync preferences of " +
+                              "non-existent Firefox Account!; ignored");
                 return;
             }
             // We don't necessarily have an Activity context here, so we always start in a new task.

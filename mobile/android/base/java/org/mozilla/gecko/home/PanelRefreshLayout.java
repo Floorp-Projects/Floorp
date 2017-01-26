@@ -7,12 +7,10 @@ package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.R;
 
-import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.home.PanelLayout.DatasetBacked;
 import org.mozilla.gecko.home.PanelLayout.FilterManager;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -30,8 +28,8 @@ import android.view.View;
 class PanelRefreshLayout extends SwipeRefreshLayout implements DatasetBacked {
     private static final String LOGTAG = "GeckoPanelRefreshLayout";
 
-    private static final String JSON_KEY_PANEL_ID = "panelId";
-    private static final String JSON_KEY_VIEW_INDEX = "viewIndex";
+    private static final String BUNDLE_KEY_PANEL_ID = "panelId";
+    private static final String BUNDLE_KEY_VIEW_INDEX = "viewIndex";
 
     private final String panelId;
     private final int viewIndex;
@@ -75,16 +73,10 @@ class PanelRefreshLayout extends SwipeRefreshLayout implements DatasetBacked {
     private class RefreshListener implements OnRefreshListener {
         @Override
         public void onRefresh() {
-            final JSONObject response = new JSONObject();
-            try {
-                response.put(JSON_KEY_PANEL_ID, panelId);
-                response.put(JSON_KEY_VIEW_INDEX, viewIndex);
-            } catch (JSONException e) {
-                Log.e(LOGTAG, "Could not create refresh message", e);
-                return;
-            }
-
-            GeckoAppShell.notifyObservers("HomePanels:RefreshView", response.toString());
+            final GeckoBundle response = new GeckoBundle(2);
+            response.putString(BUNDLE_KEY_PANEL_ID, panelId);
+            response.putInt(BUNDLE_KEY_VIEW_INDEX, viewIndex);
+            EventDispatcher.getInstance().dispatch("HomePanels:RefreshView", response);
         }
     }
 }

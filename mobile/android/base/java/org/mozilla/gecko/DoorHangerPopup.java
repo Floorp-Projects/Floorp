@@ -9,7 +9,6 @@ import java.util.HashSet;
 
 import android.text.TextUtils;
 import android.widget.PopupWindow;
-import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
@@ -189,8 +188,8 @@ public class DoorHangerPopup extends AnchoredPopup
      * DoorHanger.OnButtonClickListener implementation
      */
     @Override
-    public void onButtonClick(JSONObject response, DoorHanger doorhanger) {
-        GeckoAppShell.notifyObservers("Doorhanger:Reply", response.toString());
+    public void onButtonClick(final GeckoBundle response, DoorHanger doorhanger) {
+        EventDispatcher.getInstance().dispatch("Doorhanger:Reply", response);
         removeDoorHanger(doorhanger);
         updatePopup();
     }

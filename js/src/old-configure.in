@@ -736,11 +736,6 @@ case "$target" in
             # We use offsetof on non-POD objects all the time.
             # We also suppress this warning on other platforms.
             CXXFLAGS="$CXXFLAGS -Wno-invalid-offsetof"
-            # MFBT thinks clang-cl supports constexpr, which it does, but
-            # not everything in Windows C++ headers supports constexpr
-            # as we might expect until MSVC 2015, so turn off this warning
-            # for now.
-            CXXFLAGS="$CXXFLAGS -Wno-invalid-constexpr"
             # This warns for reasonable things like:
             #   enum { X = 0xffffffffU };
             # which is annoying for IDL headers.
@@ -787,10 +782,8 @@ case "$target" in
             # At least one MSVC header and several headers in-tree have
             # unused typedefs, so turn this on.
             CXXFLAGS="$CXXFLAGS -Wno-unused-local-typedef"
-            # Several JS engine header files use __declspec(dllimport) on
-            # classes, and clang-cl helpfully warns about its non-support
-            # for such cases.  We're not particularly worried about that,
-            # so ignore that warning.
+            # jemalloc uses __declspec(allocator) as a profiler hint,
+            # which clang-cl doesn't understand.
             CXXFLAGS="$CXXFLAGS -Wno-ignored-attributes"
         fi
         # make 'foo == bar;' error out

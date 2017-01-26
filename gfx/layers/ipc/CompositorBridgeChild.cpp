@@ -586,23 +586,6 @@ CompositorBridgeChild::RecvDidComposite(const uint64_t& aId, const uint64_t& aTr
 }
 
 mozilla::ipc::IPCResult
-CompositorBridgeChild::RecvOverfill(const uint32_t &aOverfill)
-{
-  for (size_t i = 0; i < mOverfillObservers.Length(); i++) {
-    mOverfillObservers[i]->RunOverfillCallback(aOverfill);
-  }
-  mOverfillObservers.Clear();
-  return IPC_OK();
-}
-
-void
-CompositorBridgeChild::AddOverfillObserver(ClientLayerManager* aLayerManager)
-{
-  MOZ_ASSERT(aLayerManager);
-  mOverfillObservers.AppendElement(aLayerManager);
-}
-
-mozilla::ipc::IPCResult
 CompositorBridgeChild::RecvClearCachedResources(const uint64_t& aId)
 {
   dom::TabChild* child = dom::TabChild::GetFrom(aId);

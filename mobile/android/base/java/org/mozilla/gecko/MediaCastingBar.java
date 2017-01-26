@@ -5,10 +5,10 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.GeckoApp;
-import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
-
-import org.json.JSONObject;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -20,7 +20,7 @@ import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-public class MediaCastingBar extends RelativeLayout implements View.OnClickListener, GeckoEventListener  {
+public class MediaCastingBar extends RelativeLayout implements View.OnClickListener, BundleEventListener  {
     private static final String LOGTAG = "GeckoMediaCastingBar";
 
     private TextView mCastingTo;
@@ -33,7 +33,7 @@ public class MediaCastingBar extends RelativeLayout implements View.OnClickListe
     public MediaCastingBar(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+        EventDispatcher.getInstance().registerUiThreadListener(this,
             "Casting:Started",
             "Casting:Paused",
             "Casting:Playing",
@@ -72,7 +72,7 @@ public class MediaCastingBar extends RelativeLayout implements View.OnClickListe
     }
 
     public void onDestroy() {
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+        EventDispatcher.getInstance().unregisterUiThreadListener(this,
             "Casting:Started",
             "Casting:Paused",
             "Casting:Playing",
@@ -85,47 +85,37 @@ public class MediaCastingBar extends RelativeLayout implements View.OnClickListe
         final int viewId = v.getId();
 
         if (viewId == R.id.media_play) {
-            GeckoAppShell.notifyObservers("Casting:Play", "");
+            EventDispatcher.getInstance().dispatch("Casting:Play", null);
             mMediaPlay.setVisibility(GONE);
             mMediaPause.setVisibility(VISIBLE);
         } else if (viewId == R.id.media_pause) {
-            GeckoAppShell.notifyObservers("Casting:Pause", "");
+            EventDispatcher.getInstance().dispatch("Casting:Pause", null);
             mMediaPause.setVisibility(GONE);
             mMediaPlay.setVisibility(VISIBLE);
         } else if (viewId == R.id.media_stop) {
-            GeckoAppShell.notifyObservers("Casting:Stop", "");
+            EventDispatcher.getInstance().dispatch("Casting:Stop", null);
         }
     }
 
-    // GeckoEventListener implementation
-    @Override
-    public void handleMessage(final String event, final JSONObject message) {
-        final String device = message.optString("device");
+    @Override // BundleEventListener
+    public void handleMessage(final String event, final GeckoBundle message,
+                              final EventCallback callback) {
+        if ("Casting:Started".equals(event)) {
+            show();
+            mCastingTo.setText(message.getString("device", ""));
+            mMediaPlay.setVisibility(GONE);
+            mMediaPause.setVisibility(VISIBLE);
 
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (event.equals("Casting:Started")) {
-                    show();
-                    if (!TextUtils.isEmpty(device)) {
-                        mCastingTo.setText(device);
-                    } else {
-                        // Should not happen
-                        mCastingTo.setText("");
-                        Log.d(LOGTAG, "Device name is empty.");
-                    }
-                    mMediaPlay.setVisibility(GONE);
-                    mMediaPause.setVisibility(VISIBLE);
-                } else if (event.equals("Casting:Paused")) {
-                    mMediaPause.setVisibility(GONE);
-                    mMediaPlay.setVisibility(VISIBLE);
-                } else if (event.equals("Casting:Playing")) {
-                    mMediaPlay.setVisibility(GONE);
-                    mMediaPause.setVisibility(VISIBLE);
-                } else if (event.equals("Casting:Stopped")) {
-                    hide();
-                }
-            }
-        });
+        } else if ("Casting:Paused".equals(event)) {
+            mMediaPause.setVisibility(GONE);
+            mMediaPlay.setVisibility(VISIBLE);
+
+        } else if ("Casting:Playing".equals(event)) {
+            mMediaPlay.setVisibility(GONE);
+            mMediaPause.setVisibility(VISIBLE);
+
+        } else if ("Casting:Stopped".equals(event)) {
+            hide();
+        }
     }
 }

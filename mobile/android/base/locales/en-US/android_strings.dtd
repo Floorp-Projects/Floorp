@@ -520,10 +520,8 @@ size. -->
 <!ENTITY doorhanger_login_edit_username_hint "Username">
 <!ENTITY doorhanger_login_edit_password_hint "Password">
 <!ENTITY doorhanger_login_edit_toggle "Show password">
-<!ENTITY doorhanger_login_edit_toast_error "Failed to save login">
 <!ENTITY doorhanger_login_select_message "Copy password from &formatS;?">
 <!ENTITY doorhanger_login_select_toast_copy "Password copied to clipboard">
-<!ENTITY doorhanger_login_select_toast_copy_error "Couldn\'t copy password">
 <!ENTITY doorhanger_login_select_action_text "Select another login">
 <!ENTITY doorhanger_login_select_title "Copy password from">
 

@@ -12,9 +12,6 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.ActionMode;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
@@ -73,15 +70,9 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
             return;
         }
 
-        final JSONObject args = new JSONObject();
-        try {
-            args.put("selectionID", selectionID);
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "Error building JSON arguments for TextSelection:End", e);
-            return;
-        }
-
-        GeckoAppShell.notifyObservers("TextSelection:End", args.toString());
+        final GeckoBundle data = new GeckoBundle(1);
+        data.putInt("selectionID", selectionID);
+        GeckoApp.getEventDispatcher().dispatch("TextSelection:End", data);
     }
 
     @Override

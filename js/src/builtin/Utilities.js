@@ -43,6 +43,8 @@
 // Do not create an alias to a self-hosted builtin, otherwise it will be cloned
 // twice.
 //
+// Symbol is a bare constructor without properties or methods.
+var std_Symbol = Symbol;
 // WeakMap is a bare constructor without properties or methods.
 var std_WeakMap = WeakMap;
 // StopIteration is a bare constructor without properties or methods.

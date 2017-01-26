@@ -95,9 +95,6 @@ child:
   async DidComposite(uint64_t id, uint64_t transactionId,
                      TimeStamp compositeStart, TimeStamp compositeEnd);
 
-  // The parent sends the child the requested fill ratio numbers.
-  async Overfill(uint32_t aOverfill);
-
   /**
    * Parent informs the child that the graphics objects are ready for
    * compositing.  This usually means that the graphics objects (textures
@@ -163,9 +160,6 @@ parent:
   // Confirmation that the child has invalidated all its layers, and will not
   // request layers against an old compositor.
   async AcknowledgeCompositorUpdate(uint64_t aLayersId, uint64_t aSeqNo);
-
-  // Child sends the parent a request for fill ratio numbers.
-  async RequestOverfill();
 
   // Child requests frame uniformity measurements
   sync GetFrameUniformity() returns (FrameUniformityData data);

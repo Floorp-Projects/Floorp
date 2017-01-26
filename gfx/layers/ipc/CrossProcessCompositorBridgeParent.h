@@ -50,7 +50,6 @@ public:
                          bool* aResult,
                          TextureFactoryIdentifier* aOutIdentifier) override
   { return IPC_FAIL_NO_REASON(this); }
-  virtual mozilla::ipc::IPCResult RecvRequestOverfill() override { return IPC_OK(); }
   virtual mozilla::ipc::IPCResult RecvWillClose() override { return IPC_OK(); }
   virtual mozilla::ipc::IPCResult RecvPause() override { return IPC_OK(); }
   virtual mozilla::ipc::IPCResult RecvResume() override { return IPC_OK(); }
