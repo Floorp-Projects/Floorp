@@ -1241,6 +1241,63 @@ DisableTrackAllocations(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static void
+FinalizeExternalString(Zone* zone, const JSStringFinalizer* fin, char16_t* chars);
+
+static const JSStringFinalizer ExternalStringFinalizer =
+    { FinalizeExternalString };
+
+static void
+FinalizeExternalString(Zone* zone, const JSStringFinalizer* fin, char16_t* chars)
+{
+    MOZ_ASSERT(fin == &ExternalStringFinalizer);
+    js_free(chars);
+}
+
+static bool
+NewExternalString(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() != 1 || !args[0].isString()) {
+        JS_ReportErrorASCII(cx, "newExternalString takes exactly one string argument.");
+        return false;
+    }
+
+    RootedString str(cx, args[0].toString());
+    size_t len = str->length();
+
+    UniqueTwoByteChars buf(js_pod_malloc<char16_t>(len));
+    if (!JS_CopyStringChars(cx, mozilla::Range<char16_t>(buf.get(), len), str))
+        return false;
+
+    JSString* res = JS_NewExternalString(cx, buf.get(), len, &ExternalStringFinalizer);
+    if (!res)
+        return false;
+
+    mozilla::Unused << buf.release();
+    args.rval().setString(res);
+    return true;
+}
+
+static bool
+EnsureFlatString(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() != 1 || !args[0].isString()) {
+        JS_ReportErrorASCII(cx, "ensureFlatString takes exactly one string argument.");
+        return false;
+    }
+
+    JSFlatString* flat = args[0].toString()->ensureFlat(cx);
+    if (!flat)
+        return false;
+
+    args.rval().setString(flat);
+    return true;
+}
+
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
 static bool
 OOMThreadTypes(JSContext* cx, unsigned argc, Value* vp)
@@ -4211,6 +4268,14 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("disableTrackAllocations", DisableTrackAllocations, 0, 0,
 "disableTrackAllocations()",
 "  Stop capturing the JS stack at every allocation."),
+
+    JS_FN_HELP("newExternalString", NewExternalString, 1, 0,
+"newExternalString(str)",
+"  Copies str's chars and returns a new external string."),
+
+    JS_FN_HELP("ensureFlatString", EnsureFlatString, 1, 0,
+"ensureFlatString(str)",
+"  Ensures str is a flat (null-terminated) string and returns it."),
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
     JS_FN_HELP("oomThreadTypes", OOMThreadTypes, 0, 0,
