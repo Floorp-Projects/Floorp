@@ -41,6 +41,7 @@ var list = $("list");
 let expectCommandEvent;
 
 var iswin = (navigator.platform.indexOf("Win") == 0);
+var ismac = (navigator.platform.indexOf("Mac") == 0);
 
 function runTests()
 {
