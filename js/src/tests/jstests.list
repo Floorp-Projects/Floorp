@@ -63,6 +63,17 @@ skip script test262/intl402/ch10/10.1/10.1.2_a.js
 skip script test262/intl402/ch11/11.1/11.1.1_1.js
 skip script test262/intl402/ch12/12.1/12.1.1_1.js
 
+# Intl.{Collator,DateTimeFormat,NumberFormat}.prototype are now plain objects.
+skip script test262/intl402/ch10/10.3/10.3_a.js
+skip script test262/intl402/ch11/11.3/11.3_a.js
+skip script test262/intl402/ch12/12.3/12.3_a.js
+
+# Tests already removed upstream (https://github.com/tc39/test262/pull/807/files),
+# but apparently for the wrong reason.
+skip script test262/intl402/ch10/10.1/10.1.2.1_4.js
+skip script test262/intl402/ch11/11.1/11.1.2.1_4.js
+skip script test262/intl402/ch12/12.1/12.1.2.1_4.js
+
 #######################################################################
 # Tests disabled due to jstest limitations wrt imported test262 tests #
 #######################################################################
