@@ -1070,21 +1070,11 @@ ContentChild::DeallocPCycleCollectWithLogsChild(PCycleCollectWithLogsChild* /* a
   return true;
 }
 
-PContentBridgeChild*
-ContentChild::AllocPContentBridgeChild(mozilla::ipc::Transport* aTransport,
-                                       base::ProcessId aOtherProcess)
+mozilla::ipc::IPCResult
+ContentChild::RecvInitContentBridgeChild(Endpoint<PContentBridgeChild>&& aEndpoint)
 {
-  return ContentBridgeChild::Create(aTransport, aOtherProcess);
-}
-
-PContentBridgeParent*
-ContentChild::AllocPContentBridgeParent(mozilla::ipc::Transport* aTransport,
-                                        base::ProcessId aOtherProcess)
-{
-  MOZ_ASSERT(!mLastBridge);
-  mLastBridge = static_cast<ContentBridgeParent*>(
-    ContentBridgeParent::Create(aTransport, aOtherProcess));
-  return mLastBridge;
+  ContentBridgeChild::Create(Move(aEndpoint));
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult

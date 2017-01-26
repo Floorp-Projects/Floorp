@@ -413,6 +413,7 @@ both:
 child:
     async InitGMPService(Endpoint<PGMPServiceChild> service);
     async InitProcessHangMonitor(Endpoint<PProcessHangMonitorChild> hangMonitor);
+    async InitContentBridgeChild(Endpoint<PContentBridgeChild> endpoint);
 
     // Give the content process its endpoints to the compositor.
     async InitRendering(
@@ -683,7 +684,8 @@ parent:
                             ProcessPriority priority,
                             TabId openerTabId)
         returns (ContentParentId cpId, bool isForBrowser, TabId tabId);
-    sync BridgeToChildProcess(ContentParentId cpId);
+    sync BridgeToChildProcess(ContentParentId cpId)
+        returns (Endpoint<PContentBridgeParent> endpoint);
 
     async CreateGMPService();
 
