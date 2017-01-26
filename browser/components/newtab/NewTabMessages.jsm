@@ -235,7 +235,6 @@ let NewTabMessages = {
       }
     }
 
-    PlacesProvider.links.uninit();
     NewTabPrefsProvider.prefs.uninit();
     NewTabSearchProvider.search.uninit();
     NewTabWebChannel.uninit();
