@@ -22,7 +22,8 @@ function test2() {
     for (var i=0; i<40; i++)
 	arr.splice(0, 2);
     assertEq(arr.length, 20);
-    assertEq(arr[0], 80);
+    assertEq(arr[0], undefined);
+    assertEq(arr[1], 81);
 }
 test2();
 
