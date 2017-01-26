@@ -224,7 +224,7 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
 
         test_suite = self.config.get('test_suite')
         if test_suite not in self.config["suite_definitions"]:
-            self.fatal("%s is not defined in the config!" % test_suite)
+            self.fatal("{} is not defined in the config!".format(test_suite))
 
         test_manifest = None if test_suite != 'media-youtube-tests' else \
             os.path.join(dirs['external-media-tests'],
@@ -235,7 +235,7 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
         }
 
         for s in self.config["suite_definitions"][test_suite]["options"]:
-            cmd.append(s % config_fmt_args)
+            cmd.append(s.format(**config_fmt_args))
 
         return cmd
 
@@ -260,7 +260,7 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
                 self.download_file(urlparse.urljoin(url_base, tooltool_manifest),
                                    manifest_path)
             except Exception as e:
-                self.fatal('Download of tooltool manifest file failed: %s' % e.message)
+                self.fatal('Download of tooltool manifest file failed: {}'.format(e.message))
 
         return super(FirefoxMediaTestsBase, self).query_minidump_stackwalk(manifest=manifest_path)
 

@@ -40,7 +40,7 @@ config = {
         },
         "media-youtube-tests": {
             "options": [
-                "%(test_manifest)s"
+                "{test_manifest}"
             ],
         },
     },
