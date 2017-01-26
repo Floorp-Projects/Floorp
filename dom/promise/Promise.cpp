@@ -826,16 +826,6 @@ PromiseWorkerProxy::WorkerPromise() const
 }
 
 void
-PromiseWorkerProxy::StoreISupports(nsISupports* aSupports)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsMainThreadPtrHandle<nsISupports> supports(
-    new nsMainThreadPtrHolder<nsISupports>(aSupports));
-  mSupportsArray.AppendElement(supports);
-}
-
-void
 PromiseWorkerProxy::RunCallback(JSContext* aCx,
                                 JS::Handle<JS::Value> aValue,
                                 RunCallbackFunc aFunc)
