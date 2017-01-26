@@ -105,7 +105,7 @@ pub type WebDriverResult<T> = Result<T, WebDriverError>;
 pub struct WebDriverError {
     pub error: ErrorStatus,
     pub message: Cow<'static, str>,
-    delete_session: bool
+    pub delete_session: bool,
 }
 
 impl fmt::Display for WebDriverError {
@@ -121,7 +121,7 @@ impl WebDriverError {
         WebDriverError {
             error: error,
             message: message.into(),
-            delete_session: false
+            delete_session: false,
         }
     }
 
@@ -135,14 +135,6 @@ impl WebDriverError {
 
     pub fn to_json_string(&self) -> String {
         self.to_json().to_string()
-    }
-
-    pub fn set_delete_session(&mut self) {
-        self.delete_session = true
-    }
-
-    pub fn delete_session(&self) -> bool {
-        self.delete_session
     }
 }
 
@@ -167,35 +159,30 @@ impl Error for WebDriverError {
 
 impl From<ParserError> for WebDriverError {
     fn from(err: ParserError) -> WebDriverError {
-        WebDriverError::new(ErrorStatus::UnknownError,
-            err.description().to_string())
+        WebDriverError::new(ErrorStatus::UnknownError, err.description().to_string())
     }
 }
 
 impl From<IoError> for WebDriverError {
     fn from(err: IoError) -> WebDriverError {
-        WebDriverError::new(ErrorStatus::UnknownError,
-            err.description().to_string())
+        WebDriverError::new(ErrorStatus::UnknownError, err.description().to_string())
     }
 }
 
 impl From<DecoderError> for WebDriverError {
     fn from(err: DecoderError) -> WebDriverError {
-        WebDriverError::new(ErrorStatus::UnknownError,
-                            err.description().to_string())
+        WebDriverError::new(ErrorStatus::UnknownError, err.description().to_string())
     }
 }
 
 impl From<FromBase64Error> for WebDriverError {
     fn from(err: FromBase64Error) -> WebDriverError {
-        WebDriverError::new(ErrorStatus::UnknownError,
-                            err.description().to_string())
+        WebDriverError::new(ErrorStatus::UnknownError, err.description().to_string())
     }
 }
 
 impl From<Box<Error>> for WebDriverError {
     fn from(err: Box<Error>) -> WebDriverError {
-        WebDriverError::new(ErrorStatus::UnknownError,
-                            err.description().to_string())
+        WebDriverError::new(ErrorStatus::UnknownError, err.description().to_string())
     }
 }

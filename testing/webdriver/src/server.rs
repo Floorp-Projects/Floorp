@@ -16,7 +16,7 @@ use hyper::uri::RequestUri::AbsolutePath;
 use command::{WebDriverMessage, WebDriverCommand};
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
 use httpapi::{WebDriverHttpApi, WebDriverExtensionRoute, VoidWebDriverExtensionRoute};
-use response::WebDriverResponse;
+use response::{CloseWindowResponse, WebDriverResponse};
 
 enum DispatchMessage<U: WebDriverExtensionRoute> {
     HandleWebDriver(WebDriverMessage<U>, Sender<WebDriverResult<WebDriverResponse>>),
@@ -48,13 +48,12 @@ struct Dispatcher<T: WebDriverHandler<U>,
     extension_type: PhantomData<U>,
 }
 
-impl <T: WebDriverHandler<U>,
-      U: WebDriverExtensionRoute> Dispatcher<T,U> {
-    fn new(handler: T) -> Dispatcher<T,U> {
+impl<T: WebDriverHandler<U>, U: WebDriverExtensionRoute> Dispatcher<T, U> {
+    fn new(handler: T) -> Dispatcher<T, U> {
         Dispatcher {
             handler: handler,
             session: None,
-            extension_type: PhantomData
+            extension_type: PhantomData,
         }
     }
 
@@ -64,30 +63,30 @@ impl <T: WebDriverHandler<U>,
                 Ok(DispatchMessage::HandleWebDriver(msg, resp_chan)) => {
                     let resp = match self.check_session(&msg) {
                         Ok(_) => self.handler.handle_command(&self.session, msg),
-                        Err(e) => Err(e)
+                        Err(e) => Err(e),
                     };
 
                     match resp {
                         Ok(WebDriverResponse::NewSession(ref new_session)) => {
                             self.session = Some(Session::new(new_session.sessionId.clone()));
-                        },
-                        Ok(WebDriverResponse::DeleteSession) => {
-                            self.delete_session();
-                        },
-                        Err(ref x) if x.delete_session() => {
-                            self.delete_session();
                         }
+                        Ok(WebDriverResponse::CloseWindow(CloseWindowResponse { ref window_handles })) => {
+                            if window_handles.len() == 0 {
+                                debug!("Last window was closed, deleting session");
+                                self.delete_session();
+                            }
+                        }
+                        Ok(WebDriverResponse::DeleteSession) => self.delete_session(),
+                        Err(ref x) if x.delete_session => self.delete_session(),
                         _ => {}
                     }
 
                     if resp_chan.send(resp).is_err() {
                         error!("Sending response to the main thread failed");
                     };
-                },
-                Ok(DispatchMessage::Quit) => {
-                    break;
-                },
-                Err(_) => panic!("Error receiving message in handler")
+                }
+                Ok(DispatchMessage::Quit) => break,
+                Err(_) => panic!("Error receiving message in handler"),
             }
         }
     }
