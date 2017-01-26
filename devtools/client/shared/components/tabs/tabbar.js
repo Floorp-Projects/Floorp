@@ -27,7 +27,6 @@ let Tabbar = createClass({
     showAllTabsMenu: PropTypes.bool,
     activeTabId: PropTypes.string,
     toolbox: PropTypes.object,
-    renderOnlySelected: PropTypes.bool,
   },
 
   getDefaultProps: function () {
@@ -222,7 +221,6 @@ let Tabbar = createClass({
       div({className: "devtools-sidebar-tabs"},
         Tabs({
           onAllTabsMenuClick: this.onAllTabsMenuClick,
-          renderOnlySelected: this.props.renderOnlySelected,
           showAllTabsMenu: this.props.showAllTabsMenu,
           tabActive: this.state.activeTab,
           onAfterChange: this.onTabChanged,
