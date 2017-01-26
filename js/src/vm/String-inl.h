@@ -323,8 +323,6 @@ MOZ_ALWAYS_INLINE JSExternalString*
 JSExternalString::new_(JSContext* cx, const char16_t* chars, size_t length,
                        const JSStringFinalizer* fin)
 {
-    MOZ_ASSERT(chars[length] == 0);
-
     if (!validateLength(cx, length))
         return nullptr;
     JSExternalString* str = js::Allocate<JSExternalString>(cx);
@@ -404,8 +402,16 @@ JSAtom::finalize(js::FreeOp* fop)
 inline void
 JSExternalString::finalize(js::FreeOp* fop)
 {
+    if (!JSString::isExternal()) {
+        // This started out as an external string, but was turned into a
+        // non-external string by JSExternalString::ensureFlat.
+        MOZ_ASSERT(isFlat());
+        fop->free_(nonInlineCharsRaw());
+        return;
+    }
+
     const JSStringFinalizer* fin = externalFinalizer();
-    fin->finalize(fin, const_cast<char16_t*>(rawTwoByteChars()));
+    fin->finalize(zone(), fin, const_cast<char16_t*>(rawTwoByteChars()));
 }
 
 #endif /* vm_String_inl_h */
