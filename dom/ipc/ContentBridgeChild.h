@@ -21,8 +21,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  static ContentBridgeChild*
-  Create(Transport* aTransport, ProcessId aOtherProcess);
+  static void
+  Create(Endpoint<PContentBridgeChild>&& aEndpoint);
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
   void DeferredDestroy();
