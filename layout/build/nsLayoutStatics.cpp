@@ -53,6 +53,7 @@
 #include "nsHtml5Atoms.h"
 #include "nsHtml5Module.h"
 #include "nsHTMLTags.h"
+#include "nsIRDFContentSink.h"	// for RDF atom initialization
 #include "mozilla/dom/FallbackEncoding.h"
 #include "nsFocusManager.h"
 #include "nsListControlFrame.h"
@@ -164,6 +165,7 @@ nsLayoutStatics::Initialize()
   nsHtml5Atoms::AddRefAtoms();
   nsTextServicesDocument::RegisterAtoms();
   nsHTMLTags::RegisterAtoms();
+  nsRDFAtoms::RegisterAtoms();
 
   StartupJSEnvironment();
   rv = nsRegion::InitStatic();

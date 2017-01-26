@@ -257,6 +257,13 @@ static const nsStaticAtom rdf_atoms[] = {
 #undef RDF_ATOM
 };
 
+// static
+void
+nsRDFAtoms::RegisterAtoms()
+{
+    NS_RegisterStaticAtoms(rdf_atoms);
+}
+
 RDFContentSinkImpl::RDFContentSinkImpl()
     : mText(nullptr),
       mTextLength(0),
@@ -287,8 +294,6 @@ RDFContentSinkImpl::RDFContentSinkImpl()
 
         NS_DEFINE_CID(kRDFContainerUtilsCID, NS_RDFCONTAINERUTILS_CID);
         rv = CallGetService(kRDFContainerUtilsCID, &gRDFContainerUtils);
-
-        NS_RegisterStaticAtoms(rdf_atoms);
     }
 }
 
