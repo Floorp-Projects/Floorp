@@ -595,7 +595,11 @@ void
 RegisterStaticAtoms(const nsStaticAtom* aAtoms, uint32_t aAtomCount)
 {
   MutexAutoLock lock(*gAtomTableLock);
-  if (!gStaticAtomTable && !gStaticAtomTableSealed) {
+
+  MOZ_RELEASE_ASSERT(!gStaticAtomTableSealed,
+                     "Atom table has already been sealed!");
+
+  if (!gStaticAtomTable) {
     gStaticAtomTable = new StaticAtomTable();
   }
 
