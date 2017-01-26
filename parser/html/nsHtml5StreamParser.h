@@ -545,6 +545,12 @@ class nsHtml5StreamParser : public nsICharsetDetectionObserver {
     nsCOMPtr<nsITimer>            mFlushTimer;
 
     /**
+     * Mutex for protecting access to mFlushTimer (but not for the two
+     * mFlushTimerFoo booleans below).
+     */
+    mozilla::Mutex                mFlushTimerMutex;
+
+    /**
      * Keeps track whether mFlushTimer has been armed. Unfortunately,
      * nsITimer doesn't enable querying this from the timer itself.
      */
