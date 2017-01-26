@@ -5206,6 +5206,50 @@
     "releaseChannelCollection": "opt-out",
     "description": "Indicates how many errors we find when trying to 'undo' history import. Keys are internal ids of browsers we import from, e.g. 'chrome' or 'ie', etc."
   },
+  "FX_STARTUP_MIGRATION_UNDO_BOOKMARKS_MS": {
+    "bug_numbers": [1333233],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "58",
+    "keyed": true,
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 60000,
+    "releaseChannelCollection": "opt-out",
+    "description": "Indicates how long it took to undo the startup import of bookmarks, in ms. Keys are internal ids of browsers we import from, e.g. 'chrome' or 'ie', etc."
+  },
+  "FX_STARTUP_MIGRATION_UNDO_LOGINS_MS": {
+    "bug_numbers": [1333233],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "58",
+    "keyed": true,
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 60000,
+    "releaseChannelCollection": "opt-out",
+    "description": "Indicates how long it took to undo the startup import of logins, in ms. Keys are internal ids of browsers we import from, e.g. 'chrome' or 'ie', etc."
+  },
+  "FX_STARTUP_MIGRATION_UNDO_VISITS_MS": {
+    "bug_numbers": [1333233],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "58",
+    "keyed": true,
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 60000,
+    "releaseChannelCollection": "opt-out",
+    "description": "Indicates how long it took to undo the startup import of visits (history), in ms. Keys are internal ids of browsers we import from, e.g. 'chrome' or 'ie', etc."
+  },
+  "FX_STARTUP_MIGRATION_UNDO_TOTAL_MS": {
+    "bug_numbers": [1333233],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "58",
+    "keyed": true,
+    "kind": "exponential",
+    "n_buckets": 20,
+    "high": 60000,
+    "releaseChannelCollection": "opt-out",
+    "description": "Indicates how long it took to undo the entirety of the startup undo, in ms. Keys are internal ids of browsers we import from, e.g. 'chrome' or 'ie', etc."
+  },
   "FX_STARTUP_MIGRATION_DATA_RECENCY": {
     "bug_numbers": [1276694],
     "alert_emails": ["gijs@mozilla.com"],
