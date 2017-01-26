@@ -73,8 +73,10 @@ qr-tests:
     - cppunit
     - gtest
     - jittest
+    - jsreftest
     - reftest
     - reftest-no-accel
+    - xpcshell
 
 ccov-code-coverage-tests:
     - mochitest
