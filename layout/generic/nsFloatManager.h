@@ -361,6 +361,12 @@ private:
     // Translate the current origin by the specified offsets.
     virtual void Translate(nscoord aLineLeft, nscoord aBlockStart) = 0;
 
+    static mozilla::UniquePtr<ShapeInfo> CreateCircleOrEllipse(
+      mozilla::StyleBasicShape* const aBasicShape,
+      const mozilla::LogicalRect& aShapeBoxRect,
+      mozilla::WritingMode aWM,
+      const nsSize& aContainerSize);
+
   protected:
     // Compute the minimum line-axis difference between the bounding shape
     // box and its rounded corner within the given band (block-axis region).
@@ -420,14 +426,15 @@ private:
     nsIFrame* const mFrame;
   };
 
-  // Implements shape-outside: ellipse().
+  // Implements shape-outside: circle() and shape-outside: ellipse().
   class EllipseShapeInfo : public ShapeInfo
   {
   public:
-    EllipseShapeInfo(mozilla::StyleBasicShape* const aBasicShape,
-                     const mozilla::LogicalRect& aShapeBoxRect,
-                     mozilla::WritingMode aWM,
-                     const nsSize& aContainerSize);
+    EllipseShapeInfo(const nsPoint& aCenter,
+                     const nsSize& aRadii)
+      : mCenter(aCenter)
+      , mRadii(aRadii)
+    {}
 
     nscoord LineLeft(mozilla::WritingMode aWM,
                      const nscoord aBStart,
@@ -445,24 +452,12 @@ private:
     }
 
   protected:
-    EllipseShapeInfo() = default;
-
     // The position of the center of the ellipse. The coordinate space is the
     // same as FloatInfo::mRect.
     nsPoint mCenter;
     // The radii of the ellipse in app units. The width and height represent
     // the line-axis and block-axis radii of the ellipse.
     nsSize mRadii;
-  };
-
-  // Implements shape-outside: circle().
-  class CircleShapeInfo final : public EllipseShapeInfo
-  {
-  public:
-    CircleShapeInfo(mozilla::StyleBasicShape* const aBasicShape,
-                    const mozilla::LogicalRect& aShapeBoxRect,
-                    mozilla::WritingMode aWM,
-                    const nsSize& aContainerSize);
   };
 
   struct FloatInfo {

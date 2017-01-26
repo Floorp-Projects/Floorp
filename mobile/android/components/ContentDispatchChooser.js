@@ -63,7 +63,7 @@ ContentDispatchChooser.prototype =
         uri: aURI.spec,
       };
 
-      Messaging.sendRequestForResult(msg).then(() => {
+      EventDispatcher.instance.sendRequestForResult(msg).then(() => {
         // Java opens an app on success: take no action.
       }, (uri) => {
         // We couldn't open this. If this was from a click, it's likely that we just

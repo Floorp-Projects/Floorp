@@ -865,12 +865,16 @@ public abstract class GeckoApp
                 SparseBooleanArray checkedItemPositions = listView.getCheckedItemPositions();
 
                 // An array of the indices of the permissions we want to clear
-                JSONArray permissionsToClear = new JSONArray();
-                for (int i = 0; i < checkedItemPositions.size(); i++)
-                    if (checkedItemPositions.get(i))
-                        permissionsToClear.put(i);
+                final ArrayList<Integer> permissionsToClear = new ArrayList<>();
+                for (int i = 0; i < checkedItemPositions.size(); i++) {
+                    if (checkedItemPositions.get(i)) {
+                        permissionsToClear.add(i);
+                    }
+                }
 
-                GeckoAppShell.notifyObservers("Permissions:Clear", permissionsToClear.toString());
+                final GeckoBundle data = new GeckoBundle(1);
+                data.putIntArray("permissions", permissionsToClear);
+                EventDispatcher.getInstance().dispatch("Permissions:Clear", data);
             }
         });
 
