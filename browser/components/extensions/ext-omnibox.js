@@ -50,7 +50,7 @@ extensions.registerSchemaAPI("omnibox", "addon_parent", context => {
 
       onInputStarted: new SingletonEventManager(context, "omnibox.onInputStarted", fire => {
         let listener = (eventName) => {
-          fire();
+          fire.sync();
         };
         extension.on(ExtensionSearchHandler.MSG_INPUT_STARTED, listener);
         return () => {
@@ -60,7 +60,7 @@ extensions.registerSchemaAPI("omnibox", "addon_parent", context => {
 
       onInputCancelled: new SingletonEventManager(context, "omnibox.onInputCancelled", fire => {
         let listener = (eventName) => {
-          fire();
+          fire.sync();
         };
         extension.on(ExtensionSearchHandler.MSG_INPUT_CANCELLED, listener);
         return () => {
@@ -70,7 +70,7 @@ extensions.registerSchemaAPI("omnibox", "addon_parent", context => {
 
       onInputEntered: new SingletonEventManager(context, "omnibox.onInputEntered", fire => {
         let listener = (eventName, text, disposition) => {
-          fire(text, disposition);
+          fire.sync(text, disposition);
         };
         extension.on(ExtensionSearchHandler.MSG_INPUT_ENTERED, listener);
         return () => {
@@ -92,7 +92,7 @@ extensions.registerSchemaAPI("omnibox", "addon_parent", context => {
 
       onInputChanged: new SingletonEventManager(context, "omnibox_internal.onInputChanged", fire => {
         let listener = (eventName, text, id) => {
-          fire(text, id);
+          fire.sync(text, id);
         };
         extension.on(ExtensionSearchHandler.MSG_INPUT_CHANGED, listener);
         return () => {
