@@ -12,7 +12,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import java.util.List;
 
@@ -51,7 +52,9 @@ public class FloatingActionModeCallback extends ActionMode.Callback2 {
     public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
         final TextAction action = actions.get(item.getItemId());
 
-        GeckoAppShell.notifyObservers("TextSelection:Action", action.getId());
+        final GeckoBundle data = new GeckoBundle(1);
+        data.putString("id", action.getId());
+        GeckoApp.getEventDispatcher().dispatch("TextSelection:Action", data);
 
         return true;
     }

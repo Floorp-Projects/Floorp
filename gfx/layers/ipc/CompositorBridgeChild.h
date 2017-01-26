@@ -93,8 +93,6 @@ public:
   // process). This may only be called on the main thread.
   static bool CompositorIsInGPUProcess();
 
-  void AddOverfillObserver(ClientLayerManager* aLayerManager);
-
   virtual mozilla::ipc::IPCResult
   RecvClearCachedResources(const uint64_t& id) override;
 
@@ -110,9 +108,6 @@ public:
   RecvCompositorUpdated(const uint64_t& aLayersId,
                         const TextureFactoryIdentifier& aNewIdentifier,
                         const uint64_t& aSequenceNumber) override;
-
-  virtual mozilla::ipc::IPCResult
-  RecvOverfill(const uint32_t &aOverfill) override;
 
   virtual mozilla::ipc::IPCResult
   RecvUpdatePluginConfigurations(const LayoutDeviceIntPoint& aContentOffset,
@@ -307,9 +302,6 @@ private:
   nsWeakPtr mWeakTabChild;      // type is TabChild
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorBridgeChild);
-
-  // When we receive overfill numbers, notify these client layer managers
-  AutoTArray<ClientLayerManager*,0> mOverfillObservers;
 
   // True until the beginning of the two-step shutdown sequence of this actor.
   bool mCanSend;

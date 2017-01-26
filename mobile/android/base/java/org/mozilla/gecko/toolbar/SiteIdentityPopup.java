@@ -15,14 +15,10 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.TextViewCompat;
 import android.widget.ImageView;
 import android.widget.Toast;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.SiteIdentity;
 import org.mozilla.gecko.SiteIdentity.SecurityMode;
 import org.mozilla.gecko.SiteIdentity.MixedMode;
@@ -30,8 +26,9 @@ import org.mozilla.gecko.SiteIdentity.TrackingMode;
 import org.mozilla.gecko.SnackbarBuilder;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
-import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.AnchoredPopup;
 import org.mozilla.gecko.widget.DoorHanger;
@@ -54,7 +51,7 @@ import org.mozilla.gecko.widget.SiteLogins;
  *
  * A site identity icon may be displayed in the url, and is set in <code>ToolbarDisplayLayout</code>.
  */
-public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListener {
+public class SiteIdentityPopup extends AnchoredPopup implements BundleEventListener {
 
     public static enum ButtonType { DISABLE, ENABLE, KEEP_BLOCKING, CANCEL, COPY }
 
@@ -101,9 +98,9 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     }
 
     void registerListeners() {
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
-                                                                  "Doorhanger:Logins",
-                                                                  "Permissions:CheckResult");
+        EventDispatcher.getInstance().registerUiThreadListener(this,
+                "Doorhanger:Logins",
+                "Permissions:CheckResult");
     }
 
     @Override
@@ -156,146 +153,132 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
             updateIdentityInformation(siteIdentity);
         }
 
-        GeckoAppShell.notifyObservers("Permissions:Check", null);
+        EventDispatcher.getInstance().dispatch("Permissions:Check", null);
     }
 
-    @Override
-    public void handleMessage(String event, JSONObject geckoObject) {
+    @Override // BundleEventListener
+    public void handleMessage(final String event, final GeckoBundle geckoObject,
+                              final EventCallback callback) {
         if ("Doorhanger:Logins".equals(event)) {
-            try {
-                final Tab selectedTab = Tabs.getInstance().getSelectedTab();
-                if (selectedTab != null) {
-                    final JSONObject data = geckoObject.getJSONObject("data");
-                    addLoginsToTab(data);
-                }
-                if (isShowing()) {
-                    addSelectLoginDoorhanger(selectedTab);
-                }
-            } catch (JSONException e) {
-                Log.e(LOGTAG, "Error accessing logins in Doorhanger:Logins message", e);
+            final Tab selectedTab = Tabs.getInstance().getSelectedTab();
+            if (selectedTab != null) {
+                final GeckoBundle data = geckoObject.getBundle("data");
+                addLoginsToTab(data);
             }
+            if (isShowing()) {
+                addSelectLoginDoorhanger(selectedTab);
+            }
+
         } else if ("Permissions:CheckResult".equals(event)) {
-            final boolean hasPermissions = geckoObject.optBoolean("hasPermissions", false);
+            final boolean hasPermissions = geckoObject.getBoolean("hasPermissions", false);
             if (hasPermissions) {
                 mSiteSettingsLink.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        GeckoAppShell.notifyObservers("Permissions:Get", null);
+                        EventDispatcher.getInstance().dispatch("Permissions:Get", null);
                         dismiss();
                     }
                 });
             }
-
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mSiteSettingsLink.setVisibility(hasPermissions ? View.VISIBLE : View.GONE);
-                }
-            });
+            mSiteSettingsLink.setVisibility(hasPermissions ? View.VISIBLE : View.GONE);
         }
     }
 
-    private void addLoginsToTab(JSONObject data) throws JSONException {
-        final JSONArray logins = data.getJSONArray("logins");
+    private void addLoginsToTab(final GeckoBundle data) {
+        final GeckoBundle[] logins = data.getBundleArray("logins");
 
         final SiteLogins siteLogins = new SiteLogins(logins);
         Tabs.getInstance().getSelectedTab().setSiteLogins(siteLogins);
     }
 
-    private void addSelectLoginDoorhanger(Tab tab) throws JSONException {
+    private void addSelectLoginDoorhanger(Tab tab) {
+        ThreadUtils.assertOnUiThread();
+
         final SiteLogins siteLogins = tab.getSiteLogins();
         if (siteLogins == null) {
             return;
         }
 
-        final JSONArray logins = siteLogins.getLogins();
-        if (logins.length() == 0) {
+        final GeckoBundle[] logins = siteLogins.getLogins();
+        if (logins == null || logins.length == 0) {
             return;
         }
 
-        final JSONObject login = (JSONObject) logins.get(0);
+        final GeckoBundle login = logins[0];
 
         // Create button click listener for copying a password to the clipboard.
         final OnButtonClickListener buttonClickListener = new OnButtonClickListener() {
             Activity activity = (Activity) mContext;
             @Override
-            public void onButtonClick(JSONObject response, DoorHanger doorhanger) {
-                try {
-                    final int buttonId = response.getInt("callback");
-                    if (buttonId == ButtonType.COPY.ordinal()) {
-                        final ClipboardManager manager = (ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
-                        String password;
-                        if (response.has("password")) {
-                            // Click listener being called from List Dialog.
-                            password = response.optString("password");
-                        } else {
-                            password = login.getString("password");
-                        }
-
-                        manager.setPrimaryClip(ClipData.newPlainText("password", password));
-
-                        SnackbarBuilder.builder(activity)
-                                .message(R.string.doorhanger_login_select_toast_copy)
-                                .duration(Snackbar.LENGTH_SHORT)
-                                .buildAndShow();
+            public void onButtonClick(final GeckoBundle response, final DoorHanger doorhanger) {
+                final int buttonId = response.getInt("callback");
+                if (buttonId == ButtonType.COPY.ordinal()) {
+                    final ClipboardManager manager = (ClipboardManager)
+                            mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+                    final String password;
+                    if (response.containsKey("password")) {
+                        // Click listener being called from List Dialog.
+                        password = response.getString("password");
+                    } else {
+                        password = login.getString("password");
                     }
-                    dismiss();
-                } catch (JSONException e) {
-                    Log.e(LOGTAG, "Error handling Select login button click", e);
+
+                    manager.setPrimaryClip(ClipData.newPlainText("password", password));
+
                     SnackbarBuilder.builder(activity)
-                            .message(R.string.doorhanger_login_select_toast_copy_error)
+                            .message(R.string.doorhanger_login_select_toast_copy)
                             .duration(Snackbar.LENGTH_SHORT)
                             .buildAndShow();
                 }
+                dismiss();
             }
         };
 
-        final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.LOGIN, buttonClickListener);
+        final DoorhangerConfig config = new DoorhangerConfig(
+                DoorHanger.Type.LOGIN, buttonClickListener);
 
         // Set buttons.
-        config.setButton(mContext.getString(R.string.button_cancel), ButtonType.CANCEL.ordinal(), false);
-        config.setButton(mContext.getString(R.string.button_copy), ButtonType.COPY.ordinal(), true);
+        config.setButton(mContext.getString(R.string.button_cancel),
+                         ButtonType.CANCEL.ordinal(), false);
+        config.setButton(mContext.getString(R.string.button_copy),
+                         ButtonType.COPY.ordinal(), true);
 
         // Set message.
-        String username = ((JSONObject) logins.get(0)).getString("username");
+        String username = login.getString("username");
         if (TextUtils.isEmpty(username)) {
             username = mContext.getString(R.string.doorhanger_login_no_username);
         }
 
-        final String message = mContext.getString(R.string.doorhanger_login_select_message).replace(FORMAT_S, username);
+        final String message = mContext.getString(
+                R.string.doorhanger_login_select_message).replace(FORMAT_S, username);
         config.setMessage(message);
 
         // Set options.
-        final GeckoBundle options = new GeckoBundle();
+        final GeckoBundle options = new GeckoBundle(1);
 
         // Add action text only if there are other logins to select.
-        if (logins.length() > 1) {
-            final GeckoBundle actionText = new GeckoBundle();
+        if (logins.length > 1) {
+            final GeckoBundle actionText = new GeckoBundle(1);
             actionText.putString("type", "SELECT");
 
-            final JSONObject bundle = new JSONObject();
-            bundle.put("logins", logins);
+            final GeckoBundle bundle = new GeckoBundle(1);
+            bundle.putBundleArray("logins", logins);
 
-            actionText.putBundle("bundle", GeckoBundle.fromJSONObject(bundle));
+            actionText.putBundle("bundle", bundle);
             options.putBundle("actionText", actionText);
         }
 
         config.setOptions(options);
 
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (!mInflated) {
-                    init();
-                }
+        if (!mInflated) {
+            init();
+        }
 
-                removeSelectLoginDoorhanger();
+        removeSelectLoginDoorhanger();
 
-                mSelectLoginDoorhanger = DoorHanger.Get(mContext, config);
-                mContent.addView(mSelectLoginDoorhanger);
-                mDivider.setVisibility(View.VISIBLE);
-            }
-        });
+        mSelectLoginDoorhanger = DoorHanger.Get(mContext, config);
+        mContent.addView(mSelectLoginDoorhanger);
+        mDivider.setVisibility(View.VISIBLE);
     }
 
     private void removeSelectLoginDoorhanger() {
@@ -467,7 +450,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     }
 
     /*
-     * @param identityData A JSONObject that holds the current tab's identity data.
+     * @param identityData An object that holds the current tab's identity data.
      */
     void setSiteIdentity(SiteIdentity siteIdentity) {
         mSiteIdentity = siteIdentity;
@@ -498,11 +481,7 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
             addTrackingContentNotification(trackingMode == TrackingMode.TRACKING_CONTENT_BLOCKED);
         }
 
-        try {
-            addSelectLoginDoorhanger(selectedTab);
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "Error adding selectLogin doorhanger", e);
-        }
+        addSelectLoginDoorhanger(selectedTab);
 
         if (mSiteIdentity.getSecurityMode() == SecurityMode.CHROMEUI) {
             // For about: pages we display the product icon in place of the verified/globe
@@ -556,9 +535,9 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
     }
 
     void unregisterListeners() {
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
-                                                                    "Doorhanger:Logins",
-                                                                    "Permissions:CheckResult");
+        EventDispatcher.getInstance().unregisterUiThreadListener(this,
+                "Doorhanger:Logins",
+                "Permissions:CheckResult");
     }
 
     @Override
@@ -572,8 +551,8 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
     private class ContentNotificationButtonListener implements OnButtonClickListener {
         @Override
-        public void onButtonClick(JSONObject response, DoorHanger doorhanger) {
-            GeckoAppShell.notifyObservers("Session:Reload", response.toString());
+        public void onButtonClick(final GeckoBundle response, final DoorHanger doorhanger) {
+            EventDispatcher.getInstance().dispatch("Session:Reload", response);
             dismiss();
         }
     }

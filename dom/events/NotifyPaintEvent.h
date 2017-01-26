@@ -30,7 +30,8 @@ public:
                    WidgetEvent* aEvent,
                    EventMessage aEventMessage,
                    nsInvalidateRequestList* aInvalidateRequests,
-                   uint64_t aTransactionId);
+                   uint64_t aTransactionId,
+                   DOMHighResTimeStamp aTimeStamp);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -58,6 +59,8 @@ public:
 
   uint64_t TransactionId();
 
+  DOMHighResTimeStamp PaintTimeStamp();
+
 protected:
   ~NotifyPaintEvent() {}
 
@@ -66,6 +69,7 @@ private:
 
   nsTArray<nsInvalidateRequestList::Request> mInvalidateRequests;
   uint64_t mTransactionId;
+  DOMHighResTimeStamp mTimeStamp;
 };
 
 } // namespace dom
@@ -80,6 +84,7 @@ NS_NewDOMNotifyPaintEvent(mozilla::dom::EventTarget* aOwner,
                             mozilla::eVoidEvent,
                           nsInvalidateRequestList* aInvalidateRequests =
                             nullptr,
-                          uint64_t aTransactionId = 0);
+                          uint64_t aTransactionId = 0,
+                          DOMHighResTimeStamp aTimeStamp = 0);
 
 #endif // mozilla_dom_NotifyPaintEvent_h_

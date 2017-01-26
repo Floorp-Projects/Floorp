@@ -39,7 +39,7 @@ interface nsIAndroidEventCallback : nsISupports
   void onError([optional] in jsval data);
 };
 
-[scriptable, uuid(73569a75-78eb-4c7f-82b9-2d4f5ccf44c3)]
+[scriptable, function, uuid(73569a75-78eb-4c7f-82b9-2d4f5ccf44c3)]
 interface nsIAndroidEventListener : nsISupports
 {
   void onEvent(in AString event,

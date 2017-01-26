@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.home;
 
-import org.json.JSONObject;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
@@ -14,7 +13,9 @@ import org.mozilla.gecko.animation.PropertyAnimator.Property;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.ResourceDrawableUtils;
-import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.EllipsisTextView;
 
@@ -31,7 +32,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 public class HomeBanner extends LinearLayout
-                        implements GeckoEventListener {
+                        implements BundleEventListener {
     private static final String LOGTAG = "GeckoHomeBanner";
 
     // Used for tracking scroll length
@@ -100,7 +101,9 @@ public class HomeBanner extends LinearLayout
                 HomeBanner.this.dismiss();
 
                 // Send the current message id back to JS.
-                GeckoAppShell.notifyObservers("HomeBanner:Dismiss", (String) getTag());
+                final GeckoBundle data = new GeckoBundle(1);
+                data.putString("id", (String) getTag());
+                EventDispatcher.getInstance().dispatch("HomeBanner:Dismiss", data);
             }
         });
 
@@ -110,18 +113,21 @@ public class HomeBanner extends LinearLayout
                 HomeBanner.this.dismiss();
 
                 // Send the current message id back to JS.
-                GeckoAppShell.notifyObservers("HomeBanner:Click", (String) getTag());
+                final GeckoBundle data = new GeckoBundle(1);
+                data.putString("id", (String) getTag());
+                EventDispatcher.getInstance().dispatch("HomeBanner:Click", data);
             }
         });
 
-        EventDispatcher.getInstance().registerGeckoThreadListener(this, "HomeBanner:Data");
+        // Update the banner message on the UI thread.
+        EventDispatcher.getInstance().registerUiThreadListener(this, "HomeBanner:Data");
     }
 
     @Override
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
 
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "HomeBanner:Data");
+        EventDispatcher.getInstance().unregisterUiThreadListener(this, "HomeBanner:Data");
     }
 
     public void setScrollingPages(boolean scrollingPages) {
@@ -148,52 +154,47 @@ public class HomeBanner extends LinearLayout
      * Sends a message to gecko to request a new banner message. UI is updated in handleMessage.
      */
     public void update() {
-        GeckoAppShell.notifyObservers("HomeBanner:Get", null);
+        EventDispatcher.getInstance().dispatch("HomeBanner:Get", null);
     }
 
-    @Override
-    public void handleMessage(String event, JSONObject message) {
-        final String id = message.optString("id");
-        final String text = message.optString("text");
-        final String iconURI = message.optString("iconURI");
+    @Override // BundleEventListener
+    public void handleMessage(final String event, final GeckoBundle message,
+                              final EventCallback callback) {
+        final String id = message.getString("id");
+        final String text = message.getString("text");
+        final String iconURI = message.getString("iconURI");
 
         // Don't update the banner if the message doesn't have valid id and text.
         if (TextUtils.isEmpty(id) || TextUtils.isEmpty(text)) {
             return;
         }
 
-        // Update the banner message on the UI thread.
-        ThreadUtils.postToUiThread(new Runnable() {
+        // Store the current message id to pass back to JS in the view's OnClickListener.
+        setTag(id);
+        mTextView.setOriginalText(Html.fromHtml(text));
+
+        ResourceDrawableUtils.getDrawable(getContext(), iconURI, new ResourceDrawableUtils.BitmapLoader() {
             @Override
-            public void run() {
-                // Store the current message id to pass back to JS in the view's OnClickListener.
-                setTag(id);
-                mTextView.setOriginalText(Html.fromHtml(text));
-
-                ResourceDrawableUtils.getDrawable(getContext(), iconURI, new ResourceDrawableUtils.BitmapLoader() {
-                    @Override
-                    public void onBitmapFound(final Drawable d) {
-                        // Hide the image view if we don't have an icon to show.
-                        if (d == null) {
-                            mIconView.setVisibility(View.GONE);
-                        } else {
-                            mIconView.setImageDrawable(d);
-                            mIconView.setVisibility(View.VISIBLE);
-                        }
-                    }
-                });
-
-                GeckoAppShell.notifyObservers("HomeBanner:Shown", id);
-
-                // Enable the banner after a message is set.
-                setEnabled(true);
-
-                // Animate the banner if it is currently active.
-                if (mActive) {
-                    animateUp();
+            public void onBitmapFound(final Drawable d) {
+                // Hide the image view if we don't have an icon to show.
+                if (d == null) {
+                    mIconView.setVisibility(View.GONE);
+                } else {
+                    mIconView.setImageDrawable(d);
+                    mIconView.setVisibility(View.VISIBLE);
                 }
             }
         });
+
+        callback.sendSuccess(id);
+
+        // Enable the banner after a message is set.
+        setEnabled(true);
+
+        // Animate the banner if it is currently active.
+        if (mActive) {
+            animateUp();
+        }
     }
 
     public void setActive(boolean active) {

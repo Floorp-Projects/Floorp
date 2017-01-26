@@ -437,6 +437,8 @@ PrefBranch.prototype = {
       /* eslint-disable no-eval */
       let devtools = require("raw!prefs!devtools/client/preferences/devtools");
       eval(devtools);
+      const dbg = require("raw!prefs!devtools/client/preferences/debugger");
+      eval(dbg);
       let all = require("raw!prefs!modules/libpref/init/all");
       eval(all);
       /* eslint-enable no-eval */
