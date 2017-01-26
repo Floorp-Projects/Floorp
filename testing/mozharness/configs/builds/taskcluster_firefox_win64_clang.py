@@ -61,7 +61,7 @@ config = {
      ###### 64 bit specific ######
     'base_name': 'WINNT_6.1_x86-64_%(branch)s',
     'platform': 'win64',
-    'stage_platform': 'win64',
+    'stage_platform': 'win64-st-an',
     'publish_nightly_en_US_routes': True,
     'env': {
         'HG_SHARE_BASE_DIR': os.path.join('y:', os.sep, 'hg-shared'),

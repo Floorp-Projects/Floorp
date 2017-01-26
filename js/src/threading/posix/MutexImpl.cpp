@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Assertions.h"
+
 #include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
-
-#include "js/Utility.h"
 
 #include "threading/Mutex.h"
 #include "threading/posix/MutexPlatformData.h"
@@ -25,11 +25,6 @@
 
 js::detail::MutexImpl::MutexImpl()
 {
-  AutoEnterOOMUnsafeRegion oom;
-  platformData_ = js_new<PlatformData>();
-  if (!platformData_)
-    oom.crash("js::detail::MutexImpl::MutexImpl");
-
   pthread_mutexattr_t* attrp = nullptr;
 
 #ifdef DEBUG
@@ -55,13 +50,8 @@ js::detail::MutexImpl::MutexImpl()
 
 js::detail::MutexImpl::~MutexImpl()
 {
-  if (!platformData_)
-    return;
-
   TRY_CALL_PTHREADS(pthread_mutex_destroy(&platformData()->ptMutex),
                     "js::detail::MutexImpl::~MutexImpl: pthread_mutex_destroy failed");
-
-  js_delete(platformData());
 }
 
 void
@@ -79,3 +69,11 @@ js::detail::MutexImpl::unlock()
 }
 
 #undef TRY_CALL_PTHREADS
+
+js::detail::MutexImpl::PlatformData*
+js::detail::MutexImpl::platformData()
+{
+  static_assert(sizeof(platformData_) >= sizeof(PlatformData),
+                "platformData_ is too small");
+  return reinterpret_cast<PlatformData*>(platformData_);
+}

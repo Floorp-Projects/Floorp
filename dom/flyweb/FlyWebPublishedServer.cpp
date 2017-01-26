@@ -170,7 +170,10 @@ FlyWebPublishedServerImpl::FlyWebPublishedServerImpl(nsPIDOMWindowInner* aOwner,
                                                      const nsAString& aName,
                                                      const FlyWebPublishOptions& aOptions)
   : FlyWebPublishedServer(aOwner, aName, aOptions)
-  , mHttpServer(new HttpServer(aOwner->GetDocGroup()->AbstractMainThreadFor(TaskCategory::Other)))
+  , mHttpServer(
+      new HttpServer(aOwner ?
+        aOwner->GetDocGroup()->AbstractMainThreadFor(TaskCategory::Other) :
+        AbstractThread::MainThread()))
 {
   LOG_I("FlyWebPublishedServerImpl::FlyWebPublishedServerImpl(%p)", this);
 }

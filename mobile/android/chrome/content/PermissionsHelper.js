@@ -55,13 +55,15 @@ var PermissionsHelper = {
     }
   },
 
-  observe: function observe(aSubject, aTopic, aData) {
+  onEvent: function onEvent(event, data, callback) {
     let uri = BrowserApp.selectedBrowser.currentURI;
     let check = false;
 
-    switch (aTopic) {
+    switch (event) {
       case "Permissions:Check":
         check = true;
+        // fall-through
+
       case "Permissions:Get":
         let permissions = [];
         for (let i = 0; i < this._permissonTypes.length; i++) {
@@ -73,7 +75,7 @@ var PermissionsHelper = {
             continue;
 
           if (check) {
-            Messaging.sendRequest({
+            GlobalEventDispatcher.sendRequest({
               type: "Permissions:CheckResult",
               hasPermissions: true
             });
@@ -96,7 +98,7 @@ var PermissionsHelper = {
         }
 
         if (check) {
-          Messaging.sendRequest({
+          GlobalEventDispatcher.sendRequest({
             type: "Permissions:CheckResult",
             hasPermissions: false
           });
@@ -114,7 +116,7 @@ var PermissionsHelper = {
  
       case "Permissions:Clear":
         // An array of the indices of the permissions we want to clear
-        let permissionsToClear = JSON.parse(aData);
+        let permissionsToClear = data.permissions;
         let privacyContext = BrowserApp.selectedBrowser.docShell
                                .QueryInterface(Ci.nsILoadContext);
 

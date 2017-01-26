@@ -10,6 +10,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
+                                  "resource://gre/modules/AsyncShutdown.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DownloadPaths",
                                   "resource://gre/modules/DownloadPaths.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
@@ -300,4 +302,59 @@ add_task(function* test_beforeSave_rejects() {
   yield Assert.rejects(promiseSave, function(ex) {
     return ex.message == "oops";
   });
+});
+
+add_task(function* test_finalize() {
+  let path = getTempFile(TEST_STORE_FILE_NAME).path;
+
+  let barrier = new AsyncShutdown.Barrier("test-auto-finalize");
+  let storeForSave = new JSONFile({
+    path,
+    saveDelayMs: 2000,
+    finalizeAt: barrier.client,
+  });
+  yield storeForSave.load();
+  storeForSave.data = TEST_DATA;
+  storeForSave.saveSoon();
+
+  let promiseFinalize = storeForSave.finalize();
+  yield Assert.rejects(storeForSave.finalize(), /has already been finalized$/);
+  yield promiseFinalize;
+  do_check_false(storeForSave.dataReady);
+
+  // Finalization removes the blocker, so waiting should not log an unhandled
+  // error even though the object has been explicitly finalized.
+  yield barrier.wait();
+
+  let storeForLoad = new JSONFile({ path });
+  yield storeForLoad.load();
+  do_check_matches(storeForLoad.data, TEST_DATA);
+});
+
+add_task(function* test_finalize_on_shutdown() {
+  let path = getTempFile(TEST_STORE_FILE_NAME).path;
+
+  let barrier = new AsyncShutdown.Barrier("test-finalize-shutdown");
+  let storeForSave = new JSONFile({
+    path,
+    saveDelayMs: 2000,
+    finalizeAt: barrier.client,
+  });
+  yield storeForSave.load();
+  storeForSave.data = TEST_DATA;
+  // Arm the saver, then simulate shutdown and ensure the file is
+  // automatically finalized.
+  storeForSave.saveSoon();
+
+  yield barrier.wait();
+  // It's possible for `finalize` to reject when called concurrently with
+  // shutdown. We don't distinguish between explicit `finalize` calls and
+  // finalization on shutdown because we expect most consumers to rely on the
+  // latter. However, this behavior can be safely changed if needed.
+  yield Assert.rejects(storeForSave.finalize(), /has already been finalized$/);
+  do_check_false(storeForSave.dataReady);
+
+  let storeForLoad = new JSONFile({ path });
+  yield storeForLoad.load();
+  do_check_matches(storeForLoad.data, TEST_DATA);
 });

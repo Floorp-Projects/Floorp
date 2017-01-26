@@ -299,6 +299,8 @@ test_buffer_serialize_SOURCES = test-buffer-serialize.cc
 test_buffer_serialize_CPPFLAGS = $(HBCFLAGS)
 test_buffer_serialize_LDADD = libharfbuzz.la $(HBLIBS)
 
+check: harfbuzz.def # For check-defs.sh
+
 dist_check_SCRIPTS = \
 	check-c-linkage-decls.sh \
 	check-defs.sh \

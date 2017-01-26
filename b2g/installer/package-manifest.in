@@ -603,6 +603,7 @@
 @RESPATH@/chrome/devtools.manifest
 #ifdef MOZ_GRAPHENE
 @RESPATH@/@PREF_DIR@/devtools.js
+@RESPATH@/@PREF_DIR@/debugger.js
 #endif
 
 ; shell icons

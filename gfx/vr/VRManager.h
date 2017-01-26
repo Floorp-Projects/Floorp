@@ -22,7 +22,6 @@ namespace gfx {
 class VRLayerParent;
 class VRManagerParent;
 class VRDisplayHost;
-class VRControllerManager;
 
 class VRManager
 {
@@ -66,11 +65,8 @@ private:
   typedef nsTHashtable<nsRefPtrHashKey<VRManagerParent>> VRManagerParentSet;
   VRManagerParentSet mVRManagerParents;
 
-  typedef nsTArray<RefPtr<VRDisplayManager>> VRDisplayManagerArray;
-  VRDisplayManagerArray mManagers;
-
-  typedef nsTArray<RefPtr<VRControllerManager>> VRControllerManagerArray;
-  VRControllerManagerArray mControllerManagers;
+  typedef nsTArray<RefPtr<VRSystemManager>> VRSystemManagerArray;
+  VRSystemManagerArray mManagers;
 
   typedef nsRefPtrHashtable<nsUint32HashKey, gfx::VRDisplayHost> VRDisplayHostHashMap;
   VRDisplayHostHashMap mVRDisplays;
