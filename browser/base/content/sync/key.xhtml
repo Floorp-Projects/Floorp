@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+  <!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
+  %syncBrandDTD;
+  <!ENTITY % syncKeyDTD SYSTEM "chrome://browser/locale/syncKey.dtd">
+  %syncKeyDTD;
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd" >
+  %globalDTD;
+]>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>&syncKey.page.title;</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="robots" content="noindex"/>
+  <style type="text/css">
+    #synckey { font-size: 150% }
+    footer { font-size: 70% }
+    /* Bug 575675: Need to have an a:visited rule in a chrome document. */
+    a:visited { color: purple; }
+  </style>
+</head>
+
+<body dir="&locale.dir;">
+<h1>&syncKey.page.title;</h1>
+
+<p id="synckey" dir="ltr">SYNCKEY</p>
+
+<p>&syncKey.page.description2;</p>
+
+<div id="column1">
+  <h2>&syncKey.keepItSecret.heading;</h2>
+  <p>&syncKey.keepItSecret.description;</p>
+</div>
+
+<div id="column2">
+  <h2>&syncKey.keepItSafe.heading;</h2>
+  <p><em>&syncKey.keepItSafe1.description;</em>&syncKey.keepItSafe2.description;<em>&syncKey.keepItSafe3.description;</em>&syncKey.keepItSafe4a.description;</p>
+</div>
+
+<p>&syncKey.findOutMore1.label;<a href="https://services.mozilla.com">https://services.mozilla.com</a>&syncKey.findOutMore2.label;</p>
+
+<footer>
+ &syncKey.footer1.label;<a id="tosLink" href="termsURL">termsURL</a>&syncKey.footer2.label;<a id="ppLink" href="privacyURL">privacyURL</a>&syncKey.footer3.label;
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/syncSetup.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/syncCommon.css" type="text/css"?>
+
+<!DOCTYPE window [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+<!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
+<!ENTITY % syncSetupDTD SYSTEM "chrome://browser/locale/syncSetup.dtd">
+%brandDTD;
+%syncBrandDTD;
+%syncSetupDTD;
+]>
+<wizard xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        id="change-dialog"
+        windowtype="Weave:ChangeSomething"
+        persist="screenX screenY"
+        onwizardnext="Change.onLoad()"
+        onwizardfinish="return Change.onDialogAccept();">
+
+  <script type="application/javascript"
+          src="chrome://browser/content/sync/genericChange.js"/>
+  <script type="application/javascript"
+          src="chrome://browser/content/sync/utils.js"/>
+  <script type="application/javascript"
+          src="chrome://global/content/printUtils.js"/>
+
+  <wizardpage id="change-page"
+              label="">
+
+    <description id="introText">
+    </description>
+
+    <separator class="thin"/>
+
+    <groupbox>
+      <grid>
+        <columns>
+          <column align="right"/>
+          <column flex="3"/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row id="textBox1Row" align="center">
+            <label id="textBox1Label" control="textBox1"/>
+            <textbox id="textBox1" type="password" oninput="Change.validate()"/>
+            <spacer/>
+          </row>
+          <row id="textBox2Row" align="center">
+            <label id="textBox2Label" control="textBox2"/>
+            <textbox id="textBox2" type="password" oninput="Change.validate()"/>
+            <spacer/>
+          </row>
+        </rows>
+      </grid>
+
+      <vbox id="passphraseRow">
+        <hbox flex="1">
+          <label id="passphraseLabel" control="passphraseBox"/>
+          <spacer flex="1"/>
+          <label id="generatePassphraseButton"
+                 hidden="true"
+                 value="&syncGenerateNewKey.label;"
+                 class="text-link"
+                 onclick="event.stopPropagation();
+                          Change.doGeneratePassphrase();"/>
+        </hbox>
+        <textbox id="passphraseBox"
+                 flex="1"
+                 onfocus="this.select()"
+                 oninput="Change.validate()"/>
+      </vbox>
+
+      <vbox id="feedback" pack="center">
+        <hbox id="statusRow" align="center">
+          <image id="statusIcon" class="statusIcon"/>
+          <label id="status" class="status" value=" "/>
+        </hbox>
+      </vbox>
+    </groupbox>
+
+    <separator class="thin"/>
+
+    <hbox id="passphraseBackupButtons"
+          hidden="true"
+          pack="center">
+      <button id="printSyncKeyButton"
+              label="&button.syncKeyBackup.print.label;"
+              accesskey="&button.syncKeyBackup.print.accesskey;"
+              oncommand="gSyncUtils.passphrasePrint('passphraseBox');"/>
+      <button id="saveSyncKeyButton"
+              label="&button.syncKeyBackup.save.label;"
+              accesskey="&button.syncKeyBackup.save.accesskey;"
+              oncommand="gSyncUtils.passphraseSave('passphraseBox');"/>
+    </hbox>
+
+    <vbox id="passphraseHelpBox"
+          hidden="true">
+      <description>
+        &existingRecoveryKey.description;
+        <label class="text-link"
+               href="https://services.mozilla.com/sync/help/manual-setup">
+          &addDevice.showMeHow.label;
+        </label>
+      </description>
+    </vbox>
+
+    <spacer id="passphraseSpacer"
+            flex="1"
+            hidden="true"/>
+
+    <description id="warningText" class="data">
+    </description>
+
+    <spacer flex="1"/>
+  </wizardpage>
+</wizard>

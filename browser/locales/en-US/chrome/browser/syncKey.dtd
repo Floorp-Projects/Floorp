@@ -1,0 +1,18 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!ENTITY syncKey.page.title               "Your &syncBrand.fullName.label; Key">
+<!ENTITY syncKey.page.description2        "This key is used to decode the data in your &syncBrand.fullName.label; account. You will need to enter the key each time you configure &syncBrand.fullName.label; on a new device.">
+<!ENTITY syncKey.keepItSecret.heading     "Keep it secret">
+<!ENTITY syncKey.keepItSecret.description "Your &syncBrand.fullName.label; account is encrypted to protect your privacy. Without this key, it would take years for anyone to decode your personal information. You are the only person who holds this key. This means you’re the only one who can access your &syncBrand.fullName.label; data.">
+<!ENTITY syncKey.keepItSafe.heading       "Keep it safe">
+<!ENTITY syncKey.keepItSafe1.description  "Do not lose this key.">
+<!ENTITY syncKey.keepItSafe2.description  " We don’t keep a copy of your key (that wouldn’t be keeping it secret!) so ">
+<!ENTITY syncKey.keepItSafe3.description  "we can’t help you recover it">
+<!ENTITY syncKey.keepItSafe4a.description " if it’s lost. You’ll need to use this key any time you connect a new device to &syncBrand.fullName.label;.">
+<!ENTITY syncKey.findOutMore1.label       "Find out more about &syncBrand.fullName.label; and your privacy at ">
+<!ENTITY syncKey.findOutMore2.label       ".">
+<!ENTITY syncKey.footer1.label            "&syncBrand.fullName.label; Terms of Service are available at ">
+<!ENTITY syncKey.footer2.label            ". The Privacy Policy is available at ">
+<!ENTITY syncKey.footer3.label            ".">

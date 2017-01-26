@@ -49,6 +49,7 @@ async function setup() {
 
 async function cleanup(server) {
   Svc.Obs.notify("weave:engine:stop-tracking");
+  Services.prefs.setBoolPref("services.sync-testing.startOverKeepIdentity", true);
   let promiseStartOver = promiseOneObserver("weave:service:start-over:finish");
   Service.startOver();
   await promiseStartOver;

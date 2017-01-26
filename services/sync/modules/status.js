@@ -11,6 +11,7 @@ var Cu = Components.utils;
 
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/browserid_identity.js");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-common/async.js");
@@ -24,7 +25,11 @@ this.Status = {
     if (this.__authManager) {
       return this.__authManager;
     }
-    this.__authManager = new BrowserIDManager();
+    let service = Components.classes["@mozilla.org/weave/service;1"]
+                    .getService(Components.interfaces.nsISupports)
+                    .wrappedJSObject;
+    let idClass = service.fxAccountsEnabled ? BrowserIDManager : IdentityManager;
+    this.__authManager = new idClass();
     this.__authManager.initialize();
     return this.__authManager;
   },
@@ -47,6 +52,7 @@ this.Status = {
     this._login = code;
 
     if (code == LOGIN_FAILED_NO_USERNAME ||
+        code == LOGIN_FAILED_NO_PASSWORD ||
         code == LOGIN_FAILED_NO_PASSPHRASE) {
       this.service = CLIENT_NOT_CONFIGURED;
     } else if (code != LOGIN_SUCCEEDED) {
