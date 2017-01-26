@@ -114,7 +114,7 @@ this.DownloadsViewUI.DownloadElementShell.prototype = {
     this.element.setAttribute("state",
                               DownloadsCommon.stateOfDownload(this.download));
 
-    if (this.download.error &&
+    if (!this.download.succeeded && this.download.error &&
         this.download.error.becauseBlockedByReputationCheck) {
       this.element.setAttribute("verdict",
                                 this.download.error.reputationCheckVerdict);

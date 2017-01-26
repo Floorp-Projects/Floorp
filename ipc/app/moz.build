@@ -99,3 +99,6 @@ if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wshadow']
 
 DEFINES['MOZ_PLUGIN_CONTAINER'] = 1;
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "DOM: Content Processes")
