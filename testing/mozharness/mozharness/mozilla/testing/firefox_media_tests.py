@@ -23,6 +23,10 @@ UNKNOWN = 'unknown'
 EXCEPTION = 'exception'
 SUCCESS = 'success'
 
+MEDIA_SUITE = 'media-tests'
+YOUTUBE_SUITE = 'media-youtube-tests'
+TWITCH_SUITE = 'media-twitch-tests'
+
 media_test_config_options = [
     [["--media-urls"],
      {"action": "store",
@@ -59,8 +63,11 @@ media_test_config_options = [
     [["--suite"],
      {"action": "store",
       "dest": "test_suite",
-      "default": "media-tests",
-      "help": "suite name",
+      "default": MEDIA_SUITE,
+      "help": ("Name of test suite to run. Possible values: "
+               "{} (default), {}, {}".format(MEDIA_SUITE,
+                                             YOUTUBE_SUITE,
+                                             TWITCH_SUITE)),
       }],
     [['--browsermob-script'],
      {'help': 'path to the browsermob-proxy shell script or batch file',
@@ -184,7 +191,7 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
         abs_dirs = super(FirefoxMediaTestsBase, self).query_abs_dirs()
         dirs = {
             'abs_test_install_dir' : os.path.join(abs_dirs['abs_work_dir'],
-                                                    'tests')
+                                                  'tests')
         }
         dirs['external-media-tests'] = os.path.join(dirs['abs_test_install_dir'],
                                                     'external-media-tests')
@@ -209,8 +216,6 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
         cmd += ['--binary', self.binary_path]
         if self.symbols_path:
             cmd += ['--symbols-path', self.symbols_path]
-        if self.media_urls:
-            cmd += ['--urls', self.media_urls]
         if self.profile:
             cmd += ['--profile', self.profile]
         if self.tests:
@@ -223,19 +228,37 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
             cmd += ['--browsermob-port', self.browsermob_port]
 
         test_suite = self.config.get('test_suite')
-        if test_suite not in self.config["suite_definitions"]:
-            self.fatal("{} is not defined in the config!".format(test_suite))
+        if test_suite not in [MEDIA_SUITE,
+                              YOUTUBE_SUITE,
+                              TWITCH_SUITE]:
+            self.fatal("{} is not on of the possibele suites! "
+                       "See the --suites arg for more info"
+                       .format(test_suite))
 
-        test_manifest = None if test_suite != 'media-youtube-tests' else \
-            os.path.join(dirs['external-media-tests'],
-                         'external_media_tests',
-                         'playback', 'youtube', 'manifest.ini')
-        config_fmt_args = {
-            'test_manifest': test_manifest,
-        }
+        if test_suite == YOUTUBE_SUITE:
+            test_manifest = os.path.join(dirs['external-media-tests'],
+                                         'external_media_tests',
+                                         'playback', 'youtube',
+                                         'manifest.ini')
+        elif test_suite == TWITCH_SUITE:
+            test_manifest = os.path.join(dirs['external-media-tests'],
+                                         'external_media_tests',
+                                         'playback', 'twitch',
+                                         'manifest.ini')
+            if not self.media_urls:
+                # The default URLs are for youtube and won't play nice with
+                # the twitch tests, so set URLs to the default twitch ones
+                self.media_urls = os.path.join(dirs['external-media-tests'],
+                                               'external_media_tests', 'urls',
+                                               'twitch', 'default.ini')
+        else:
+            test_manifest = None
 
-        for s in self.config["suite_definitions"][test_suite]["options"]:
-            cmd.append(s.format(**config_fmt_args))
+        if test_manifest:
+            cmd.append(test_manifest)
+
+        if self.media_urls:
+            cmd += ['--urls', self.media_urls]
 
         return cmd
 

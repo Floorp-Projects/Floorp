@@ -42,15 +42,4 @@ config = {
     "in_tree_config": "config/mozharness/marionette.py",
     "download_minidump_stackwalk": True,
     "download_symbols": "ondemand",
-
-    "suite_definitions": {
-        "media-tests": {
-            "options": [],
-        },
-        "media-youtube-tests": {
-            "options": [
-                "{test_manifest}"
-            ],
-        },
-    },
 }
