@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=795418
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test #5 for Bug 795418</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=795418">Mozilla Bug 795418</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<div id="copySource">Copy this</div>
+<div id="editable" contenteditable style="display:ruby">AB</div>
+
+<pre id="test">
+
+<script type="application/javascript">
+
+/** Test for Bug 795418 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var div = document.getElementById("copySource");
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+
+  // Select the text from the text node in div.
+  var r = document.createRange();
+  r.setStart(div.firstChild, 0);
+  r.setEnd(div.firstChild, 9);
+  sel.addRange(r);
+
+  SimpleTest.waitForClipboard(
+    function compare(value) {
+      var theEdit = document.getElementById("editable");
+      sel.collapse(theEdit.firstChild, 2);
+
+      SpecialPowers.doCommand(window, "cmd_paste");
+      is(theEdit.innerHTML,
+        "ABCopy this",
+        "unexpected HTML for test");
+      return true;
+    },
+    function setup() {
+      synthesizeKey("C", {accelKey: true});
+    },
+    function onSuccess() {
+      SimpleTest.finish();
+    },
+    function onFailure() {
+      SimpleTest.finish();
+    },
+    "text/html"
+  );
+});
+
+</script>
+
+</pre>
+</body>
+</html>
