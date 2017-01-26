@@ -414,8 +414,11 @@ public:
 
   static void Initialize()
   {
-    MOZ_ASSERT(!sInstance);
     if (!IsWin8OrLater()) {
+      return;
+    }
+
+    if (sInstance) {
       return;
     }
 
@@ -452,7 +455,7 @@ private:
                                ::GetCurrentThreadId());
     MOZ_ASSERT(mHook);
 
-    if (!IsWin10OrLater()) {
+    if (!IsWin10OrLater() && !sProcessCaretEventsStub) {
       // tiptsf loads when STA COM is first initialized, so it should be present
       sTipTsfInterceptor.Init("tiptsf.dll");
       DebugOnly<bool> ok = sTipTsfInterceptor.AddHook("ProcessCaretEvents",
@@ -461,12 +464,13 @@ private:
       MOZ_ASSERT(ok);
     }
 
-    MOZ_ASSERT(!sSendMessageTimeoutWStub);
-    sUser32Intercept.Init("user32.dll");
-    DebugOnly<bool> hooked = sUser32Intercept.AddHook("SendMessageTimeoutW",
-        reinterpret_cast<intptr_t>(&SendMessageTimeoutWHook),
-        (void**) &sSendMessageTimeoutWStub);
-    MOZ_ASSERT(hooked);
+    if (!sSendMessageTimeoutWStub) {
+      sUser32Intercept.Init("user32.dll");
+      DebugOnly<bool> hooked = sUser32Intercept.AddHook("SendMessageTimeoutW",
+          reinterpret_cast<intptr_t>(&SendMessageTimeoutWHook),
+          (void**) &sSendMessageTimeoutWStub);
+      MOZ_ASSERT(hooked);
+    }
   }
 
   class MOZ_RAII A11yInstantiationBlocker
