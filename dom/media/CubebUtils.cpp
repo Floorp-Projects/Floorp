@@ -24,6 +24,23 @@
 #define PREF_CUBEB_LATENCY_MSG "media.cubeb_latency_msg_frames"
 #define PREF_CUBEB_LOG_LEVEL "media.cubeb.log_level"
 
+#define MASK_MONO       (1 << AudioConfig::CHANNEL_MONO)
+#define MASK_MONO_LFE   (MASK_MONO | (1 << AudioConfig::CHANNEL_LFE))
+#define MASK_STEREO     ((1 << AudioConfig::CHANNEL_LEFT) | (1 << AudioConfig::CHANNEL_RIGHT))
+#define MASK_STEREO_LFE (MASK_STEREO | (1 << AudioConfig::CHANNEL_LFE))
+#define MASK_3F         (MASK_STEREO | (1 << AudioConfig::CHANNEL_CENTER))
+#define MASK_3F_LFE     (MASK_3F | (1 << AudioConfig::CHANNEL_LFE))
+#define MASK_2F1        (MASK_STEREO | (1 << AudioConfig::CHANNEL_RCENTER))
+#define MASK_2F1_LFE    (MASK_2F1 | (1 << AudioConfig::CHANNEL_LFE))
+#define MASK_3F1        (MASK_3F | (1 < AudioConfig::CHANNEL_RCENTER))
+#define MASK_3F1_LFE    (MASK_3F1 | (1 << AudioConfig::CHANNEL_LFE))
+#define MASK_2F2        (MASK_STEREO | (1 << AudioConfig::CHANNEL_LS) | (1 << AudioConfig::CHANNEL_RS))
+#define MASK_2F2_LFE    (MASK_2F2 | (1 << AudioConfig::CHANNEL_LFE))
+#define MASK_3F2        (MASK_3F | (1 << AudioConfig::CHANNEL_LS) | (1 << AudioConfig::CHANNEL_RS))
+#define MASK_3F2_LFE    (MASK_3F2 | (1 << AudioConfig::CHANNEL_LFE))
+#define MASK_3F3R_LFE   (MASK_3F2_LFE | (1 << AudioConfig::CHANNEL_RCENTER))
+#define MASK_3F4_LFE    (MASK_3F2_LFE | (1 << AudioConfig::CHANNEL_RLS) | (1 << AudioConfig::CHANNEL_RRS))
+
 namespace mozilla {
 
 namespace {
@@ -357,6 +374,31 @@ uint32_t MaxNumberOfChannels()
   }
 
   return 0;
+}
+
+cubeb_channel_layout ConvertChannelMapToCubebLayout(uint32_t aChannelMap)
+{
+  switch(aChannelMap) {
+    case MASK_MONO: return CUBEB_LAYOUT_MONO;
+    case MASK_MONO_LFE: return CUBEB_LAYOUT_MONO_LFE;
+    case MASK_STEREO: return CUBEB_LAYOUT_STEREO;
+    case MASK_STEREO_LFE: return CUBEB_LAYOUT_STEREO_LFE;
+    case MASK_3F: return CUBEB_LAYOUT_3F;
+    case MASK_3F_LFE: return CUBEB_LAYOUT_3F_LFE;
+    case MASK_2F1: return CUBEB_LAYOUT_2F1;
+    case MASK_2F1_LFE: return CUBEB_LAYOUT_2F1_LFE;
+    case MASK_3F1: return CUBEB_LAYOUT_3F1;
+    case MASK_3F1_LFE: return CUBEB_LAYOUT_3F1_LFE;
+    case MASK_2F2: return CUBEB_LAYOUT_2F2;
+    case MASK_2F2_LFE: return CUBEB_LAYOUT_2F2_LFE;
+    case MASK_3F2: return CUBEB_LAYOUT_3F2;
+    case MASK_3F2_LFE: return CUBEB_LAYOUT_3F2_LFE;
+    case MASK_3F3R_LFE: return CUBEB_LAYOUT_3F3R_LFE;
+    case MASK_3F4_LFE: return CUBEB_LAYOUT_3F4_LFE;
+    default:
+      NS_ERROR("The channel map is unsupported");
+      return CUBEB_LAYOUT_UNDEFINED;
+  }
 }
 
 #if defined(__ANDROID__) && defined(MOZ_B2G)
