@@ -28,14 +28,7 @@
 
 #include "hb-private.hh"
 
-#include "hb-ot-layout-private.hh"
-
 #include "hb-font-private.hh"
-#include "hb-open-file-private.hh"
-#include "hb-ot-head-table.hh"
-#include "hb-ot-maxp-table.hh"
-
-#include <string.h>
 
 
 /*
@@ -1543,30 +1536,112 @@ hb_font_get_ppem (hb_font_t *font,
   if (y_ppem) *y_ppem = font->y_ppem;
 }
 
+/*
+ * Variations
+ */
 
+static void
+_hb_font_adopt_var_coords_normalized (hb_font_t *font,
+				      int *coords, /* 2.14 normalized */
+				      unsigned int coords_length)
+{
+  free (font->coords);
+
+  font->coords = coords;
+  font->num_coords = coords_length;
+}
+
+/**
+ * hb_font_set_variations:
+ *
+ * Since: 1.4.2
+ */
+void
+hb_font_set_variations (hb_font_t *font,
+			const hb_variation_t *variations,
+			unsigned int variations_length)
+{
+  if (font->immutable)
+    return;
+
+  if (!variations_length)
+  {
+    hb_font_set_var_coords_normalized (font, NULL, 0);
+    return;
+  }
+
+  unsigned int coords_length = hb_ot_var_get_axis_count (font->face);
+
+  int *normalized = coords_length ? (int *) calloc (coords_length, sizeof (int)) : NULL;
+  if (unlikely (coords_length && !normalized))
+    return;
+
+  hb_ot_var_normalize_variations (font->face,
+				  variations, variations_length,
+				  normalized, coords_length);
+  _hb_font_adopt_var_coords_normalized (font, normalized, coords_length);
+}
+
+/**
+ * hb_font_set_var_coords_design:
+ *
+ * Since: 1.4.2
+ */
+void
+hb_font_set_var_coords_design (hb_font_t *font,
+			       const float *coords,
+			       unsigned int coords_length)
+{
+  if (font->immutable)
+    return;
+
+  int *normalized = coords_length ? (int *) calloc (coords_length, sizeof (int)) : NULL;
+  if (unlikely (coords_length && !normalized))
+    return;
+
+  hb_ot_var_normalize_coords (font->face, coords_length, coords, normalized);
+  _hb_font_adopt_var_coords_normalized (font, normalized, coords_length);
+}
+
+/**
+ * hb_font_set_var_coords_normalized:
+ *
+ * Since: 1.4.2
+ */
 void
 hb_font_set_var_coords_normalized (hb_font_t *font,
-				   int *coords, /* XXX 2.14 normalized */
+				   const int *coords, /* 2.14 normalized */
 				   unsigned int coords_length)
 {
   if (font->immutable)
     return;
 
-  /* Skip tail zero entries. */
-  while (coords_length && !coords[coords_length - 1])
-    coords_length--;
-
   int *copy = coords_length ? (int *) calloc (coords_length, sizeof (coords[0])) : NULL;
   if (unlikely (coords_length && !copy))
     return;
 
-  free (font->coords);
-
   if (coords_length)
     memcpy (copy, coords, coords_length * sizeof (coords[0]));
 
-  font->coords = copy;
-  font->num_coords = coords_length;
+  _hb_font_adopt_var_coords_normalized (font, copy, coords_length);
+}
+
+/**
+ * hb_font_set_var_coords_normalized:
+ *
+ * Return value is valid as long as variation coordinates of the font
+ * are not modified.
+ *
+ * Since: 1.4.2
+ */
+const int *
+hb_font_get_var_coords_normalized (hb_font_t *font,
+				   unsigned int *length)
+{
+  if (length)
+    *length = font->num_coords;
+
+  return font->coords;
 }
 
 

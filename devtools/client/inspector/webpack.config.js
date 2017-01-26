@@ -13,7 +13,7 @@ const webpack = require("webpack");
 
 module.exports = envConfig => {
   let webpackConfig = {
-    bail: true,
+    bail: false,
     entry: [
       path.join(__dirname, "local-toolbox.js")
     ],
@@ -82,6 +82,8 @@ module.exports = envConfig => {
         "Services": path.join(__dirname, "../shared/shim/Services.js"),
         "toolkit/locales":
           path.join(__dirname, "../../../toolkit/locales/en-US/chrome/global"),
+        "react": "devtools/client/shared/vendor/react",
+        "react-dom": "devtools/client/shared/vendor/react-dom",
       },
     },
 
@@ -95,7 +97,7 @@ module.exports = envConfig => {
                       lazyGetter: () => {}
                     }`,
         "dump": "console.log",
-      }),
+      })
     ]
   };
 

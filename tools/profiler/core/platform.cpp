@@ -114,7 +114,7 @@ static const char * gGeckoThreadName = "GeckoMain";
 
 void Sampler::Startup() {
   sRegisteredThreads = new std::vector<ThreadInfo*>();
-  sRegisteredThreadsMutex = OS::CreateMutex("sRegisteredThreads mutex");
+  sRegisteredThreadsMutex = MakeUnique<Mutex>("sRegisteredThreadsMutex");
 
   // We could create the sLUL object and read unwind info into it at
   // this point.  That would match the lifetime implied by destruction
@@ -155,7 +155,7 @@ Sampler::RegisterCurrentThread(const char* aName,
   if (!sRegisteredThreadsMutex)
     return false;
 
-  ::MutexAutoLock lock(*sRegisteredThreadsMutex);
+  MutexAutoLock lock(*sRegisteredThreadsMutex);
 
   Thread::tid_t id = Thread::GetCurrentId();
 
@@ -187,7 +187,7 @@ Sampler::UnregisterCurrentThread()
   if (!sRegisteredThreadsMutex)
     return;
 
-  ::MutexAutoLock lock(*sRegisteredThreadsMutex);
+  MutexAutoLock lock(*sRegisteredThreadsMutex);
 
   Thread::tid_t id = Thread::GetCurrentId();
 
@@ -833,7 +833,7 @@ profiler_start(int aProfileEntries, double aInterval,
   tlsTicker.set(t);
   t->Start();
   if (t->ProfileJS() || t->InPrivacyMode()) {
-    ::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
+    MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
     const std::vector<ThreadInfo*>& threads = t->GetRegisteredThreads();
 
     for (uint32_t i = 0; i < threads.size(); i++) {
@@ -1281,34 +1281,6 @@ profiler_add_marker(const char *aMarker, ProfilerMarkerPayload *aPayload)
                      aPayload->GetStartTime() : mozilla::TimeStamp::Now();
   mozilla::TimeDuration delta = origin - sStartTime;
   stack->addMarker(aMarker, payload.release(), delta.ToMilliseconds());
-}
-
-#include "mozilla/Mutex.h"
-
-class GeckoMutex : public ::Mutex {
- public:
-  explicit GeckoMutex(const char* aDesc) :
-    mMutex(aDesc)
-  {}
-
-  virtual ~GeckoMutex() {}
-
-  virtual int Lock() {
-    mMutex.Lock();
-    return 0;
-  }
-
-  virtual int Unlock() {
-    mMutex.Unlock();
-    return 0;
-  }
-
- private:
-  mozilla::Mutex mMutex;
-};
-
-mozilla::UniquePtr< ::Mutex> OS::CreateMutex(const char* aDesc) {
-  return mozilla::MakeUnique<GeckoMutex>(aDesc);
 }
 
 // END externally visible functions

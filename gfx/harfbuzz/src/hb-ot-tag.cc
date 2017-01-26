@@ -28,9 +28,6 @@
 
 #include "hb-private.hh"
 
-#include <string.h>
-
-
 
 /* hb_script_t */
 
@@ -201,6 +198,7 @@ static const LangTag ot_languages[] = {
   {"alt",	HB_TAG('A','L','T',' ')},	/* [Southern] Altai */
   {"am",	HB_TAG('A','M','H',' ')},	/* Amharic */
   {"amf",	HB_TAG('H','B','N',' ')},	/* Hammer-Banna */
+  {"amw",	HB_TAG('S','Y','R',' ')},	/* Western Neo-Aramaic */
   {"an",	HB_TAG('A','R','G',' ')},	/* Aragonese */
   {"ang",	HB_TAG('A','N','G',' ')},	/* Old English (ca. 450-1100) */
   {"ar",	HB_TAG('A','R','A',' ')},	/* Arabic [macrolanguage] */
@@ -239,6 +237,7 @@ static const LangTag ot_languages[] = {
   {"bg",	HB_TAG('B','G','R',' ')},	/* Bulgarian */
   {"bgc",	HB_TAG('B','G','C',' ')},	/* Haryanvi */
   {"bgq",	HB_TAG('B','G','Q',' ')},	/* Bagri */
+  {"bgr",	HB_TAG('Q','I','N',' ')},	/* Bawm Chin */
   {"bhb",	HB_TAG('B','H','I',' ')},	/* Bhili */
   {"bhk",	HB_TAG('B','I','K',' ')},	/* Albay Bicolano (retired code) */
   {"bho",	HB_TAG('B','H','O',' ')},	/* Bhojpuri */
@@ -270,8 +269,10 @@ static const LangTag ot_languages[] = {
   {"ca",	HB_TAG('C','A','T',' ')},	/* Catalan */
   {"cak",	HB_TAG('C','A','K',' ')},	/* Kaqchikel */
   {"cbk",	HB_TAG('C','B','K',' ')},	/* Chavacano */
+  {"cbl",	HB_TAG('Q','I','N',' ')},	/* Bualkhaw Chin */
   {"ce",	HB_TAG('C','H','E',' ')},	/* Chechen */
   {"ceb",	HB_TAG('C','E','B',' ')},	/* Cebuano */
+  {"cfm",	HB_TAG('H','A','L',' ')},	/* Halam/Falam Chin */
   {"cgg",	HB_TAG('C','G','G',' ')},	/* Chiga */
   {"ch",	HB_TAG('C','H','A',' ')},	/* Chamorro */
   {"chk",	HB_TAG('C','H','K','0')},	/* Chuukese */
@@ -279,8 +280,17 @@ static const LangTag ot_languages[] = {
   {"chp",	HB_TAG('C','H','P',' ')},	/* Chipewyan */
   {"chr",	HB_TAG('C','H','R',' ')},	/* Cherokee */
   {"chy",	HB_TAG('C','H','Y',' ')},	/* Cheyenne */
+  {"cja",	HB_TAG('C','J','A',' ')},	/* Western Cham */
+  {"cjm",	HB_TAG('C','J','M',' ')},	/* Eastern Cham */
+  {"cka",	HB_TAG('Q','I','N',' ')},	/* Khumi Awa Chin */
   {"ckb",	HB_TAG('K','U','R',' ')},	/* Central Kurdish (Sorani) */
   {"ckt",	HB_TAG('C','H','K',' ')},	/* Chukchi */
+  {"cld",	HB_TAG('S','Y','R',' ')},	/* Chaldean Neo-Aramaic */
+  {"cmr",	HB_TAG('Q','I','N',' ')},	/* Mro-Khimi Chin */
+  {"cnb",	HB_TAG('Q','I','N',' ')},	/* Chinbon Chin */
+  {"cnh",	HB_TAG('Q','I','N',' ')},	/* Hakha Chin */
+  {"cnk",	HB_TAG('Q','I','N',' ')},	/* Khumi Chin */
+  {"cnw",	HB_TAG('Q','I','N',' ')},	/* Ngawn Chin */
   {"cop",	HB_TAG('C','O','P',' ')},	/* Coptic */
   {"cpp",	HB_TAG('C','P','P',' ')},	/* Creoles */
   {"cr",	HB_TAG('C','R','E',' ')},	/* Cree */
@@ -293,6 +303,9 @@ static const LangTag ot_languages[] = {
   {"crx",	HB_TAG('C','R','R',' ')},	/* Carrier */
   {"cs",	HB_TAG('C','S','Y',' ')},	/* Czech */
   {"csb",	HB_TAG('C','S','B',' ')},	/* Kashubian */
+  {"csh",	HB_TAG('Q','I','N',' ')},	/* Asho Chin */
+  {"csy",	HB_TAG('Q','I','N',' ')},	/* Siyin Chin */
+  {"ctd",	HB_TAG('Q','I','N',' ')},	/* Tedim Chin */
   {"ctg",	HB_TAG('C','T','G',' ')},	/* Chittagonian */
   {"cts",	HB_TAG('B','I','K',' ')},	/* Northern Catanduanes Bikol */
   {"cu",	HB_TAG('C','S','L',' ')},	/* Church Slavic */
@@ -300,7 +313,9 @@ static const LangTag ot_languages[] = {
   {"cv",	HB_TAG('C','H','U',' ')},	/* Chuvash */
   {"cwd",	HB_TAG('D','C','R',' ')},	/* Woods Cree */
   {"cy",	HB_TAG('W','E','L',' ')},	/* Welsh */
+  {"czt",	HB_TAG('Q','I','N',' ')},	/* Zotung Chin */
   {"da",	HB_TAG('D','A','N',' ')},	/* Danish */
+  {"dao",	HB_TAG('Q','I','N',' ')},	/* Daai Chin */
   {"dap",	HB_TAG('N','I','S',' ')},	/* Nisi (India) */
   {"dar",	HB_TAG('D','A','R',' ')},	/* Dargwa */
   {"dax",	HB_TAG('D','A','X',' ')},	/* Dayi */
@@ -343,7 +358,7 @@ static const LangTag ot_languages[] = {
   {"fi",	HB_TAG('F','I','N',' ')},	/* Finnish */
   {"fil",	HB_TAG('P','I','L',' ')},	/* Filipino */
   {"fj",	HB_TAG('F','J','I',' ')},	/* Fijian */
-  {"flm",	HB_TAG('H','A','L',' ')},	/* Halam */
+  {"flm",	HB_TAG('H','A','L',' ')},	/* Halam/Falam Chin [retired ISO639 code] */
   {"fo",	HB_TAG('F','O','S',' ')},	/* Faroese */
   {"fon",	HB_TAG('F','O','N',' ')},	/* Fon */
   {"fr",	HB_TAG('F','R','A',' ')},	/* French */
@@ -390,6 +405,7 @@ static const LangTag ot_languages[] = {
   {"he",	HB_TAG('I','W','R',' ')},	/* Hebrew */
   {"hi",	HB_TAG('H','I','N',' ')},	/* Hindi */
   {"hil",	HB_TAG('H','I','L',' ')},	/* Hiligaynon */
+  {"hlt",	HB_TAG('Q','I','N',' ')},	/* Matu Chin */
   {"hmn",	HB_TAG('H','M','N',' ')},	/* Hmong */
   {"hnd",	HB_TAG('H','N','D',' ')},	/* [Southern] Hindko */
   {"hne",	HB_TAG('C','H','H',' ')},	/* Chattisgarhi */
@@ -553,6 +569,7 @@ static const LangTag ot_languages[] = {
   {"mos",	HB_TAG('M','O','S',' ')},	/* Mossi */
   {"mpe",	HB_TAG('M','A','J',' ')},	/* Majang */
   {"mr",	HB_TAG('M','A','R',' ')},	/* Marathi */
+  {"mrh",	HB_TAG('Q','I','N',' ')},	/* Mara Chin */
   {"mrj",	HB_TAG('H','M','A',' ')},	/* High Mari */
   {"ms",	HB_TAG('M','L','Y',' ')},	/* Malay [macrolanguage] */
   {"msc",	HB_TAG('M','N','K',' ')},	/* Sankaran Maninka */
@@ -617,6 +634,7 @@ static const LangTag ot_languages[] = {
   {"pcc",	HB_TAG('P','C','C',' ')},	/* Bouyei */
   {"pcd",	HB_TAG('P','C','D',' ')},	/* Picard */
   {"pce",	HB_TAG('P','L','G',' ')},	/* [Ruching] Palaung */
+  {"pck",	HB_TAG('Q','I','N',' ')},	/* Paite Chin */
   {"pdc",	HB_TAG('P','D','C',' ')},	/* Pennsylvania German */
   {"pes",	HB_TAG('F','A','R',' ')},	/* Iranian Persian */
   {"phk",	HB_TAG('P','H','K',' ')},	/* Phake */
@@ -674,6 +692,7 @@ static const LangTag ot_languages[] = {
   {"se",	HB_TAG('N','S','M',' ')},	/* Northern Sami */
   {"seh",	HB_TAG('S','N','A',' ')},	/* Sena */
   {"sel",	HB_TAG('S','E','L',' ')},	/* Selkup */
+  {"sez",	HB_TAG('Q','I','N',' ')},	/* Senthang Chin */
   {"sg",	HB_TAG('S','G','O',' ')},	/* Sango */
   {"sga",	HB_TAG('S','G','A',' ')},	/* Old Irish (to 900) */
   {"sgs",	HB_TAG('S','G','S',' ')},	/* Samogitian */
@@ -713,12 +732,15 @@ static const LangTag ot_languages[] = {
   {"swh",	HB_TAG('S','W','K',' ')},	/* Kiswahili/Swahili */
   {"swv",	HB_TAG('M','A','W',' ')},	/* Shekhawati */
   {"sxu",	HB_TAG('S','X','U',' ')},	/* Upper Saxon */
+  {"syc",	HB_TAG('S','Y','R',' ')},	/* Classical Syriac */
   {"syl",	HB_TAG('S','Y','L',' ')},	/* Sylheti */
   {"syr",	HB_TAG('S','Y','R',' ')},	/* Syriac [macrolanguage] */
   {"szl",	HB_TAG('S','Z','L',' ')},	/* Silesian */
   {"ta",	HB_TAG('T','A','M',' ')},	/* Tamil */
   {"tab",	HB_TAG('T','A','B',' ')},	/* Tabasaran */
+  {"tcp",	HB_TAG('Q','I','N',' ')},	/* Tawr Chin */
   {"tcy",	HB_TAG('T','U','L',' ')},	/* Tulu */
+  {"tcz",	HB_TAG('Q','I','N',' ')},	/* Thado Chin */
   {"tdd",	HB_TAG('T','D','D',' ')},	/* Tai Nüa */
   {"te",	HB_TAG('T','E','L',' ')},	/* Telugu */
   {"tem",	HB_TAG('T','M','N',' ')},	/* Temne */
@@ -786,11 +808,13 @@ static const LangTag ot_languages[] = {
   {"yap",	HB_TAG('Y','A','P',' ')},	/* Yapese */
   {"yi",	HB_TAG('J','I','I',' ')},	/* Yiddish [macrolanguage] */
   {"yo",	HB_TAG('Y','B','A',' ')},	/* Yoruba */
+  {"yos",	HB_TAG('Q','I','N',' ')},	/* Yos, deprecated by IANA in favor of Zou [zom] */
   {"yso",	HB_TAG('N','I','S',' ')},	/* Nisi (China) */
   {"za",	HB_TAG('Z','H','A',' ')},	/* Chuang/Zhuang [macrolanguage] */
   {"zea",	HB_TAG('Z','E','A',' ')},	/* Zeeuws */
   {"zgh",	HB_TAG('Z','G','H',' ')},	/* Standard Morrocan Tamazigh */
   {"zne",	HB_TAG('Z','N','D',' ')},	/* Zande */
+  {"zom",	HB_TAG('Q','I','N',' ')},	/* Zou */
   {"zu",	HB_TAG('Z','U','L',' ')}, 	/* Zulu */
   {"zum",	HB_TAG('L','R','C',' ')},	/* Kumzari */
   {"zza",	HB_TAG('Z','Z','A',' ')},	/* Zazaki */
@@ -907,6 +931,30 @@ hb_ot_tag_from_language (hb_language_t language)
     return HB_TAG('A','P','P','H');  /* Phonetic transcription—Americanist conventions */
   }
 
+  /*
+   * "Syre" is a BCP-47 script tag, meaning the Estrangela variant of the Syriac script.
+   * It can be applied to any language.
+   */
+  if (strstr (lang_str, "-syre")) {
+    return HB_TAG('S','Y','R','E');  /* Estrangela Syriac */
+  }
+
+  /*
+   * "Syrj" is a BCP-47 script tag, meaning the Western variant of the Syriac script.
+   * It can be applied to any language.
+   */
+  if (strstr (lang_str, "-syrj")) {
+    return HB_TAG('S','Y','R','J');  /* Western Syriac */
+  }
+
+  /*
+   * "Syrn" is a BCP-47 script tag, meaning the Eastern variant of the Syriac script.
+   * It can be applied to any language.
+   */
+  if (strstr (lang_str, "-syrn")) {
+    return HB_TAG('S','Y','R','N');  /* Eastern Syriac */
+  }
+
   /* Find a language matching in the first component */
   {
     const LangTag *lang_tag;
@@ -962,6 +1010,22 @@ hb_ot_tag_to_language (hb_tag_t tag)
   if (tag == HB_OT_TAG_DEFAULT_LANGUAGE)
     return NULL;
 
+  /* struct LangTag has only room for 3-letter language tags. */
+  switch (tag) {
+  case HB_TAG('A','P','P','H'):  /* Phonetic transcription—Americanist conventions */
+    return hb_language_from_string ("und-fonnapa", -1);
+  case HB_TAG('I','P','P','H'):  /* Phonetic transcription—IPA conventions */
+    return hb_language_from_string ("und-fonipa", -1);
+  case HB_TAG('S','Y','R',' '):  /* Syriac [macrolanguage] */
+    return hb_language_from_string ("syr", -1);
+  case HB_TAG('S','Y','R','E'):  /* Estrangela Syriac */
+    return hb_language_from_string ("und-Syre", -1);
+  case HB_TAG('S','Y','R','J'):  /* Western Syriac */
+    return hb_language_from_string ("und-Syrj", -1);
+  case HB_TAG('S','Y','R','N'):  /* Eastern Syriac */
+    return hb_language_from_string ("und-Syrn", -1);
+  }
+
   for (i = 0; i < ARRAY_LENGTH (ot_languages); i++)
     if (ot_languages[i].tag == tag)
       return hb_language_from_string (ot_languages[i].language, -1);
@@ -974,14 +1038,6 @@ hb_ot_tag_to_language (hb_tag_t tag)
       case HB_TAG('Z','H','T',' '): return hb_language_from_string ("zh-Hant", -1); /* Traditional */
       default: break; /* Fall through */
     }
-  }
-
-  /* struct LangTag has only room for 3-letter language tags. */
-  switch (tag) {
-  case HB_TAG('A','P','P','H'):  /* Phonetic transcription—Americanist conventions */
-    return hb_language_from_string ("und-fonnapa", -1);
-  case HB_TAG('I','P','P','H'):  /* Phonetic transcription—IPA conventions */
-    return hb_language_from_string ("und-fonipa", -1);
   }
 
   /* Else return a custom language in the form of "x-hbotABCD" */

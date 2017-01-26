@@ -605,3 +605,347 @@ hb_version_atleast (unsigned int major,
 {
   return HB_VERSION_ATLEAST (major, minor, micro);
 }
+
+
+
+/* hb_feature_t and hb_variation_t */
+
+static bool
+parse_space (const char **pp, const char *end)
+{
+  while (*pp < end && ISSPACE (**pp))
+    (*pp)++;
+  return true;
+}
+
+static bool
+parse_char (const char **pp, const char *end, char c)
+{
+  parse_space (pp, end);
+
+  if (*pp == end || **pp != c)
+    return false;
+
+  (*pp)++;
+  return true;
+}
+
+static bool
+parse_uint (const char **pp, const char *end, unsigned int *pv)
+{
+  char buf[32];
+  unsigned int len = MIN (ARRAY_LENGTH (buf) - 1, (unsigned int) (end - *pp));
+  strncpy (buf, *pp, len);
+  buf[len] = '\0';
+
+  char *p = buf;
+  char *pend = p;
+  unsigned int v;
+
+  /* Intentionally use strtol instead of strtoul, such that
+   * -1 turns into "big number"... */
+  errno = 0;
+  v = strtol (p, &pend, 0);
+  if (errno || p == pend)
+    return false;
+
+  *pv = v;
+  *pp += pend - p;
+  return true;
+}
+
+static bool
+parse_float (const char **pp, const char *end, float *pv)
+{
+  char buf[32];
+  unsigned int len = MIN (ARRAY_LENGTH (buf) - 1, (unsigned int) (end - *pp));
+  strncpy (buf, *pp, len);
+  buf[len] = '\0';
+
+  char *p = buf;
+  char *pend = p;
+  float v;
+
+  errno = 0;
+  v = strtof (p, &pend);
+  if (errno || p == pend)
+    return false;
+
+  *pv = v;
+  *pp += pend - p;
+  return true;
+}
+
+static bool
+parse_bool (const char **pp, const char *end, unsigned int *pv)
+{
+  parse_space (pp, end);
+
+  const char *p = *pp;
+  while (*pp < end && ISALPHA(**pp))
+    (*pp)++;
+
+  /* CSS allows on/off as aliases 1/0. */
+  if (*pp - p == 2 || 0 == strncmp (p, "on", 2))
+    *pv = 1;
+  else if (*pp - p == 3 || 0 == strncmp (p, "off", 2))
+    *pv = 0;
+  else
+    return false;
+
+  return true;
+}
+
+/* hb_feature_t */
+
+static bool
+parse_feature_value_prefix (const char **pp, const char *end, hb_feature_t *feature)
+{
+  if (parse_char (pp, end, '-'))
+    feature->value = 0;
+  else {
+    parse_char (pp, end, '+');
+    feature->value = 1;
+  }
+
+  return true;
+}
+
+static bool
+parse_tag (const char **pp, const char *end, hb_tag_t *tag)
+{
+  parse_space (pp, end);
+
+  char quote = 0;
+
+  if (*pp < end && (**pp == '\'' || **pp == '"'))
+  {
+    quote = **pp;
+    (*pp)++;
+  }
+
+  const char *p = *pp;
+  while (*pp < end && ISALNUM(**pp))
+    (*pp)++;
+
+  if (p == *pp || *pp - p > 4)
+    return false;
+
+  *tag = hb_tag_from_string (p, *pp - p);
+
+  if (quote)
+  {
+    /* CSS expects exactly four bytes.  And we only allow quotations for
+     * CSS compatibility.  So, enforce the length. */
+     if (*pp - p != 4)
+       return false;
+    if (*pp == end || **pp != quote)
+      return false;
+    (*pp)++;
+  }
+
+  return true;
+}
+
+static bool
+parse_feature_indices (const char **pp, const char *end, hb_feature_t *feature)
+{
+  parse_space (pp, end);
+
+  bool has_start;
+
+  feature->start = 0;
+  feature->end = (unsigned int) -1;
+
+  if (!parse_char (pp, end, '['))
+    return true;
+
+  has_start = parse_uint (pp, end, &feature->start);
+
+  if (parse_char (pp, end, ':')) {
+    parse_uint (pp, end, &feature->end);
+  } else {
+    if (has_start)
+      feature->end = feature->start + 1;
+  }
+
+  return parse_char (pp, end, ']');
+}
+
+static bool
+parse_feature_value_postfix (const char **pp, const char *end, hb_feature_t *feature)
+{
+  bool had_equal = parse_char (pp, end, '=');
+  bool had_value = parse_uint (pp, end, &feature->value) ||
+                   parse_bool (pp, end, &feature->value);
+  /* CSS doesn't use equal-sign between tag and value.
+   * If there was an equal-sign, then there *must* be a value.
+   * A value without an eqaul-sign is ok, but not required. */
+  return !had_equal || had_value;
+}
+
+static bool
+parse_one_feature (const char **pp, const char *end, hb_feature_t *feature)
+{
+  return parse_feature_value_prefix (pp, end, feature) &&
+	 parse_tag (pp, end, &feature->tag) &&
+	 parse_feature_indices (pp, end, feature) &&
+	 parse_feature_value_postfix (pp, end, feature) &&
+	 parse_space (pp, end) &&
+	 *pp == end;
+}
+
+/**
+ * hb_feature_from_string:
+ * @str: (array length=len) (element-type uint8_t): a string to parse
+ * @len: length of @str, or -1 if string is %NULL terminated
+ * @feature: (out): the #hb_feature_t to initialize with the parsed values
+ *
+ * Parses a string into a #hb_feature_t.
+ *
+ * TODO: document the syntax here.
+ *
+ * Return value:
+ * %true if @str is successfully parsed, %false otherwise.
+ *
+ * Since: 0.9.5
+ **/
+hb_bool_t
+hb_feature_from_string (const char *str, int len,
+			hb_feature_t *feature)
+{
+  hb_feature_t feat;
+
+  if (len < 0)
+    len = strlen (str);
+
+  if (likely (parse_one_feature (&str, str + len, &feat)))
+  {
+    if (feature)
+      *feature = feat;
+    return true;
+  }
+
+  if (feature)
+    memset (feature, 0, sizeof (*feature));
+  return false;
+}
+
+/**
+ * hb_feature_to_string:
+ * @feature: an #hb_feature_t to convert
+ * @buf: (array length=size) (out): output string
+ * @size: the allocated size of @buf
+ *
+ * Converts a #hb_feature_t into a %NULL-terminated string in the format
+ * understood by hb_feature_from_string(). The client in responsible for
+ * allocating big enough size for @buf, 128 bytes is more than enough.
+ *
+ * Since: 0.9.5
+ **/
+void
+hb_feature_to_string (hb_feature_t *feature,
+		      char *buf, unsigned int size)
+{
+  if (unlikely (!size)) return;
+
+  char s[128];
+  unsigned int len = 0;
+  if (feature->value == 0)
+    s[len++] = '-';
+  hb_tag_to_string (feature->tag, s + len);
+  len += 4;
+  while (len && s[len - 1] == ' ')
+    len--;
+  if (feature->start != 0 || feature->end != (unsigned int) -1)
+  {
+    s[len++] = '[';
+    if (feature->start)
+      len += MAX (0, snprintf (s + len, ARRAY_LENGTH (s) - len, "%u", feature->start));
+    if (feature->end != feature->start + 1) {
+      s[len++] = ':';
+      if (feature->end != (unsigned int) -1)
+	len += MAX (0, snprintf (s + len, ARRAY_LENGTH (s) - len, "%u", feature->end));
+    }
+    s[len++] = ']';
+  }
+  if (feature->value > 1)
+  {
+    s[len++] = '=';
+    len += MAX (0, snprintf (s + len, ARRAY_LENGTH (s) - len, "%u", feature->value));
+  }
+  assert (len < ARRAY_LENGTH (s));
+  len = MIN (len, size - 1);
+  memcpy (buf, s, len);
+  buf[len] = '\0';
+}
+
+/* hb_variation_t */
+
+static bool
+parse_variation_value (const char **pp, const char *end, hb_variation_t *variation)
+{
+  parse_char (pp, end, '='); /* Optional. */
+  return parse_float (pp, end, &variation->value);
+}
+
+static bool
+parse_one_variation (const char **pp, const char *end, hb_variation_t *variation)
+{
+  return parse_tag (pp, end, &variation->tag) &&
+	 parse_variation_value (pp, end, variation) &&
+	 parse_space (pp, end) &&
+	 *pp == end;
+}
+
+/**
+ * hb_variation_from_string:
+ *
+ * Since: 1.4.2
+ */
+hb_bool_t
+hb_variation_from_string (const char *str, int len,
+			  hb_variation_t *variation)
+{
+  hb_variation_t var;
+
+  if (len < 0)
+    len = strlen (str);
+
+  if (likely (parse_one_variation (&str, str + len, &var)))
+  {
+    if (variation)
+      *variation = var;
+    return true;
+  }
+
+  if (variation)
+    memset (variation, 0, sizeof (*variation));
+  return false;
+}
+
+/**
+ * hb_variation_to_string:
+ *
+ * Since: 1.4.2
+ */
+void
+hb_variation_to_string (hb_variation_t *variation,
+			char *buf, unsigned int size)
+{
+  if (unlikely (!size)) return;
+
+  char s[128];
+  unsigned int len = 0;
+  hb_tag_to_string (variation->tag, s + len);
+  len += 4;
+  while (len && s[len - 1] == ' ')
+    len--;
+  s[len++] = '=';
+  len += MAX (0, snprintf (s + len, ARRAY_LENGTH (s) - len, "%g", variation->value));
+
+  assert (len < ARRAY_LENGTH (s));
+  len = MIN (len, size - 1);
+  memcpy (buf, s, len);
+  buf[len] = '\0';
+}
