@@ -70,7 +70,7 @@ protected:
     nsString mRealPath;
   };
   FallibleTArray<FileData> mTargetPathArray;
-  nsTHashtable<nsCStringHashKey> mExploredDirectories;
+  nsTHashtable<nsStringHashKey> mExploredDirectories;
 };
 
 // Retrieving the list of files can be very time/IO consuming. We use this
