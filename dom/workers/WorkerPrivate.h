@@ -960,8 +960,6 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   nsCOMPtr<nsITimerCallback> mTimerRunnable;
 
   nsCOMPtr<nsITimer> mGCTimer;
-  nsCOMPtr<nsIEventTarget> mPeriodicGCTimerTarget;
-  nsCOMPtr<nsIEventTarget> mIdleGCTimerTarget;
 
   RefPtr<MemoryReporter> mMemoryReporter;
 
@@ -1583,33 +1581,6 @@ public:
     // This can be null if CreateNewSyncLoop() fails.
     return mTarget;
   }
-};
-
-class TimerThreadEventTarget final : public nsIEventTarget
-{
-  ~TimerThreadEventTarget();
-
-  WorkerPrivate* mWorkerPrivate;
-  RefPtr<WorkerRunnable> mWorkerRunnable;
-public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-
-  TimerThreadEventTarget(WorkerPrivate* aWorkerPrivate,
-                         WorkerRunnable* aWorkerRunnable);
-
-protected:
-  NS_IMETHOD
-  DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags) override;
-
-
-  NS_IMETHOD
-  Dispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_t aFlags) override;
-
-  NS_IMETHOD
-  DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) override;
-
-  NS_IMETHOD
-  IsOnCurrentThread(bool* aIsOnCurrentThread) override;
 };
 
 END_WORKERS_NAMESPACE
