@@ -210,13 +210,33 @@ const AutoMigrate = {
       compression: "lz4",
     });
     let stateData = this._dejsonifyUndoState(yield readPromise);
-    yield this._removeUnchangedBookmarks(stateData.get("bookmarks"));
+    histogram.add(12);
+
+    this._errorMap = {bookmarks: 0, visits: 0, logins: 0};
+    let browserId = Preferences.get(kAutoMigrateBrowserPref, "unknown");
+    let reportErrorTelemetry = (type) => {
+      let histogramId = `FX_STARTUP_MIGRATION_UNDO_${type.toUpperCase()}_ERRORCOUNT`;
+      Services.telemetry.getKeyedHistogramById(histogramId).add(browserId, this._errorMap[type]);
+    };
+    yield this._removeUnchangedBookmarks(stateData.get("bookmarks")).catch(ex => {
+      Cu.reportError("Uncaught exception when removing unchanged bookmarks!");
+      Cu.reportError(ex);
+    });
+    reportErrorTelemetry("bookmarks");
     histogram.add(15);
 
-    yield this._removeSomeVisits(stateData.get("visits"));
+    yield this._removeSomeVisits(stateData.get("visits")).catch(ex => {
+      Cu.reportError("Uncaught exception when removing history visits!");
+      Cu.reportError(ex);
+    });
+    reportErrorTelemetry("visits");
     histogram.add(20);
 
-    yield this._removeUnchangedLogins(stateData.get("logins"));
+    yield this._removeUnchangedLogins(stateData.get("logins")).catch(ex => {
+      Cu.reportError("Uncaught exception when removing unchanged logins!");
+      Cu.reportError(ex);
+    });
+    reportErrorTelemetry("logins");
     histogram.add(25);
 
     // This is async, but no need to wait for it.
@@ -419,7 +439,12 @@ const AutoMigrate = {
     let bmPromises = Array.from(guidToLMMap.keys()).map(guid => {
       // Ignore bookmarks where the promise doesn't resolve (ie that are missing)
       // Also check that the bookmark fetch returns isn't null before adding it.
-      return PlacesUtils.bookmarks.fetch(guid).then(bm => bm && bookmarksFromDB.push(bm), () => {});
+      try {
+        return PlacesUtils.bookmarks.fetch(guid).then(bm => bm && bookmarksFromDB.push(bm), () => {});
+      } catch (ex) {
+        // Ignore immediate exceptions, too.
+      }
+      return Promise.resolve();
     });
     // We can't use the result of Promise.all because that would include nulls
     // for bookmarks that no longer exist (which we're catching above).
@@ -428,7 +453,7 @@ const AutoMigrate = {
       return bm.lastModified.getTime() == guidToLMMap.get(bm.guid).getTime();
     });
 
-    // We need to remove items with no ancestors first, followed by their
+    // We need to remove items without children first, followed by their
     // parents, etc. In order to do this, find out how many ancestors each item
     // has that also appear in our list of things to remove, and sort the items
     // by those numbers. This ensures that children are always removed before
@@ -448,11 +473,16 @@ const AutoMigrate = {
     unchangedBookmarks.forEach(determineAncestorCount);
     unchangedBookmarks.sort((a, b) => b._ancestorCount - a._ancestorCount);
     for (let {guid} of unchangedBookmarks) {
-      yield PlacesUtils.bookmarks.remove(guid, {preventRemovalOfNonEmptyFolders: true}).catch(err => {
+      // Can't just use a .catch() because Bookmarks.remove() can throw (rather
+      // than returning rejected promises).
+      try {
+        yield PlacesUtils.bookmarks.remove(guid, {preventRemovalOfNonEmptyFolders: true});
+      } catch (err) {
         if (err && err.message != "Cannot remove a non-empty folder.") {
+          this._errorMap.bookmarks++;
           Cu.reportError(err);
         }
-      });
+      }
     }
   }),
 
@@ -468,6 +498,7 @@ const AutoMigrate = {
           } catch (ex) {
             Cu.reportError("Failed to remove a login for " + foundLogins.hostname);
             Cu.reportError(ex);
+            this._errorMap.logins++;
           }
         }
       }
@@ -490,10 +521,11 @@ const AutoMigrate = {
       };
       try {
         yield PlacesUtils.history.removeVisitsByFilter(visitData);
-      } catch(ex) {
+      } catch (ex) {
+        this._errorMap.visits++;
         try {
           visitData.url = visitData.url.href;
-        } catch (ex) {}
+        } catch (ignoredEx) {}
         Cu.reportError("Failed to remove a visit: " + JSON.stringify(visitData));
         Cu.reportError(ex);
       }
