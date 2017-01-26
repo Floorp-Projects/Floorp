@@ -199,6 +199,10 @@ private:
   // Check if clearWatch is already called
   bool IsAlreadyCleared(nsGeolocationRequest* aRequest);
 
+  // Returns whether the Geolocation object should block requests
+  // within a context that is not secure.
+  bool ShouldBlockInsecureRequests() const;
+
   // Two callback arrays.  The first |mPendingCallbacks| holds objects for only
   // one callback and then they are released/removed from the array.  The second
   // |mWatchingCallbacks| holds objects until the object is explictly removed or
