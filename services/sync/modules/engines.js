@@ -614,7 +614,11 @@ EngineManager.prototype = {
     if (val instanceof Engine) {
       name = val.name;
     }
-    delete this._engines[name];
+    if (name in this._engines) {
+      let engine = this._engines[name];
+      delete this._engines[name];
+      engine.finalize();
+    }
   },
 
   clear() {
@@ -727,7 +731,12 @@ Engine.prototype = {
    */
   getValidator() {
     return null;
-  }
+  },
+
+  finalize() {
+    // Ensure the tracker finishes persisting changed IDs to disk.
+    Async.promiseSpinningly(this._tracker._storage.finalize());
+  },
 };
 
 this.SyncEngine = function SyncEngine(name, service) {

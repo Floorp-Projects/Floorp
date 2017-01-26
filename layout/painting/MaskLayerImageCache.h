@@ -115,7 +115,7 @@ public:
     }
 
     gfx::Rect mRect;
-    // Indices into mRadii are the NS_CORNER_* constants in nsStyleConsts.h
+    // Indices into mRadii are the enum HalfCorner constants in gfx/2d/Types.h
     gfxFloat mRadii[8];
 
   private:

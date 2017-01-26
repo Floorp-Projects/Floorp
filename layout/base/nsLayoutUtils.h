@@ -1035,7 +1035,7 @@ public:
   /**
    * Return whether any part of aTestRect is inside of the rounded
    * rectangle formed by aBounds and aRadii (which are indexed by the
-   * NS_CORNER_* constants in nsStyleConsts.h). This is precise.
+   * enum HalfCorner constants in gfx/2d/Types.h). This is precise.
    */
   static bool RoundedRectIntersectsRect(const nsRect& aRoundedRect,
                                         const nscoord aRadii[8],

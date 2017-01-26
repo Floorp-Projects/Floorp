@@ -39,7 +39,7 @@ EffectSet::Traverse(nsCycleCollectionTraversalCallback& aCallback)
 }
 
 /* static */ EffectSet*
-EffectSet::GetEffectSet(dom::Element* aElement,
+EffectSet::GetEffectSet(const dom::Element* aElement,
                         CSSPseudoElementType aPseudoType)
 {
   nsIAtom* propName = GetEffectSetPropertyAtom(aPseudoType);
