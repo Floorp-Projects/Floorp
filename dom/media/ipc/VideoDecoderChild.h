@@ -6,15 +6,10 @@
 #ifndef include_dom_ipc_VideoDecoderChild_h
 #define include_dom_ipc_VideoDecoderChild_h
 
-#include "mozilla/RefPtr.h"
-#include "mozilla/dom/PVideoDecoderChild.h"
-#include "MediaData.h"
 #include "PlatformDecoderModule.h"
+#include "mozilla/dom/PVideoDecoderChild.h"
 
 namespace mozilla {
-namespace layers {
-class SynchronousTask;
-}
 namespace dom {
 
 class RemoteVideoDecoder;
@@ -40,16 +35,15 @@ public:
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   RefPtr<MediaDataDecoder::InitPromise> Init();
-  void Input(MediaRawData* aSample);
-  void Flush(layers::SynchronousTask* Task);
-  void Drain();
+  RefPtr<MediaDataDecoder::DecodePromise> Decode(MediaRawData* aSample);
+  RefPtr<MediaDataDecoder::DecodePromise> Drain();
+  RefPtr<MediaDataDecoder::FlushPromise> Flush();
   void Shutdown();
   bool IsHardwareAccelerated(nsACString& aFailureReason) const;
   void SetSeekThreshold(const media::TimeUnit& aTime);
 
   MOZ_IS_CLASS_INIT
-  bool InitIPDL(MediaDataDecoderCallback* aCallback,
-                const VideoInfo& aVideoInfo,
+  bool InitIPDL(const VideoInfo& aVideoInfo,
                 const layers::TextureFactoryIdentifier& aIdentifier);
   void DestroyIPDL();
 
@@ -66,16 +60,19 @@ private:
   RefPtr<VideoDecoderChild> mIPDLSelfRef;
   RefPtr<nsIThread> mThread;
 
-  MediaDataDecoderCallback* mCallback;
-
   MozPromiseHolder<MediaDataDecoder::InitPromise> mInitPromise;
-
-  layers::SynchronousTask* mFlushTask;
+  MozPromiseHolder<MediaDataDecoder::DecodePromise> mDecodePromise;
+  MozPromiseHolder<MediaDataDecoder::DecodePromise> mDrainPromise;
+  MozPromiseHolder<MediaDataDecoder::FlushPromise> mFlushPromise;
 
   nsCString mHardwareAcceleratedReason;
   bool mCanSend;
   bool mInitialized;
   bool mIsHardwareAccelerated;
+  // Set to true if the actor got destroyed and we haven't yet notified the
+  // caller.
+  bool mNeedNewDecoder;
+  MediaDataDecoder::DecodedData mDecodedData;
 };
 
 } // namespace dom

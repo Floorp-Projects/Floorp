@@ -53,7 +53,8 @@ GetFeatureStatus(int32_t aFeature)
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
   int32_t status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
   nsCString discardFailureId;
-  if (!gfxInfo || NS_FAILED(gfxInfo->GetFeatureStatus(aFeature, discardFailureId, &status))) {
+  if (!gfxInfo || NS_FAILED(gfxInfo->GetFeatureStatus(
+                    aFeature, discardFailureId, &status))) {
     return false;
   }
   return status == nsIGfxInfo::FEATURE_STATUS_OK;
@@ -72,8 +73,8 @@ GetCryptoInfoFromSample(const MediaRawData* aSample)
   nsresult rv = CryptoInfo::New(&cryptoInfo);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  uint32_t numSubSamples =
-    std::min<uint32_t>(cryptoObj.mPlainSizes.Length(), cryptoObj.mEncryptedSizes.Length());
+  uint32_t numSubSamples = std::min<uint32_t>(
+    cryptoObj.mPlainSizes.Length(), cryptoObj.mEncryptedSizes.Length());
 
   uint32_t totalSubSamplesSize = 0;
   for (auto& size : cryptoObj.mEncryptedSizes) {
@@ -105,19 +106,16 @@ GetCryptoInfoFromSample(const MediaRawData* aSample)
                               reinterpret_cast<int32_t*>(&plainSizes[0]),
                               plainSizes.Length());
 
-  auto numBytesOfEncryptedData =
-    mozilla::jni::IntArray::New(reinterpret_cast<const int32_t*>(&cryptoObj.mEncryptedSizes[0]),
-                                cryptoObj.mEncryptedSizes.Length());
+  auto numBytesOfEncryptedData = mozilla::jni::IntArray::New(
+    reinterpret_cast<const int32_t*>(&cryptoObj.mEncryptedSizes[0]),
+    cryptoObj.mEncryptedSizes.Length());
   auto iv = mozilla::jni::ByteArray::New(reinterpret_cast<int8_t*>(&tempIV[0]),
-                                        tempIV.Length());
-  auto keyId = mozilla::jni::ByteArray::New(reinterpret_cast<const int8_t*>(&cryptoObj.mKeyId[0]),
-                                            cryptoObj.mKeyId.Length());
-  cryptoInfo->Set(numSubSamples,
-                  numBytesOfPlainData,
-                  numBytesOfEncryptedData,
-                  keyId,
-                  iv,
-                  MediaCodec::CRYPTO_MODE_AES_CTR);
+                                         tempIV.Length());
+  auto keyId = mozilla::jni::ByteArray::New(
+    reinterpret_cast<const int8_t*>(&cryptoObj.mKeyId[0]),
+    cryptoObj.mKeyId.Length());
+  cryptoInfo->Set(numSubSamples, numBytesOfPlainData, numBytesOfEncryptedData,
+                  keyId, iv, MediaCodec::CRYPTO_MODE_AES_CTR);
 
   return cryptoInfo;
 }
@@ -168,7 +166,7 @@ AndroidDecoderModule::SupportsMimeType(const nsACString& aMimeType,
   }
 
   return java::HardwareCodecCapabilityUtils::FindDecoderCodecInfoForMimeType(
-      nsCString(TranslateMimeType(aMimeType)));
+    nsCString(TranslateMimeType(aMimeType)));
 }
 
 already_AddRefed<MediaDataDecoder>
@@ -195,21 +193,13 @@ AndroidDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
     drmStubId = mProxy->GetMediaDrmStubId();
   }
 
-  RefPtr<MediaDataDecoder> decoder = MediaPrefs::PDMAndroidRemoteCodecEnabled() ?
-    RemoteDataDecoder::CreateVideoDecoder(config,
-                                          format,
-                                          aParams.mCallback,
-                                          aParams.mImageContainer,
-                                          drmStubId,
-                                          mProxy,
-                                          aParams.mTaskQueue) :
-    MediaCodecDataDecoder::CreateVideoDecoder(config,
-                                              format,
-                                              aParams.mCallback,
-                                              aParams.mImageContainer,
-                                              drmStubId,
-                                              mProxy,
-                                              aParams.mTaskQueue);
+  RefPtr<MediaDataDecoder> decoder =
+    MediaPrefs::PDMAndroidRemoteCodecEnabled()
+    ? RemoteDataDecoder::CreateVideoDecoder(
+        config, format, aParams.mImageContainer, drmStubId, mProxy,
+        aParams.mTaskQueue)
+    : MediaCodecDataDecoder::CreateVideoDecoder(
+        config, format, aParams.mImageContainer, drmStubId, mProxy);
   return decoder.forget();
 }
 
@@ -237,19 +227,12 @@ AndroidDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
   if (mProxy) {
     drmStubId = mProxy->GetMediaDrmStubId();
   }
-  RefPtr<MediaDataDecoder> decoder = MediaPrefs::PDMAndroidRemoteCodecEnabled() ?
-      RemoteDataDecoder::CreateAudioDecoder(config,
-                                            format,
-                                            aParams.mCallback,
-                                            drmStubId,
-                                            mProxy,
-                                            aParams.mTaskQueue) :
-      MediaCodecDataDecoder::CreateAudioDecoder(config,
-                                                format,
-                                                aParams.mCallback,
-                                                drmStubId,
-                                                mProxy,
-                                                aParams.mTaskQueue);
+  RefPtr<MediaDataDecoder> decoder =
+    MediaPrefs::PDMAndroidRemoteCodecEnabled()
+    ? RemoteDataDecoder::CreateAudioDecoder(config, format, drmStubId, mProxy,
+                                            aParams.mTaskQueue)
+    : MediaCodecDataDecoder::CreateAudioDecoder(config, format, drmStubId,
+                                                mProxy);
   return decoder.forget();
 }
 

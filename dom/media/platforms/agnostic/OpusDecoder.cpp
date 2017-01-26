@@ -28,13 +28,11 @@ namespace mozilla {
 OpusDataDecoder::OpusDataDecoder(const CreateDecoderParams& aParams)
   : mInfo(aParams.AudioConfig())
   , mTaskQueue(aParams.mTaskQueue)
-  , mCallback(aParams.mCallback)
   , mOpusDecoder(nullptr)
   , mSkip(0)
   , mDecodedHeader(false)
   , mPaddingDiscarded(false)
   , mFrames(0)
-  , mIsFlushing(false)
 {
 }
 
@@ -46,9 +44,13 @@ OpusDataDecoder::~OpusDataDecoder()
   }
 }
 
-void
+RefPtr<ShutdownPromise>
 OpusDataDecoder::Shutdown()
 {
+  RefPtr<OpusDataDecoder> self = this;
+  return InvokeAsync(mTaskQueue, __func__, [self]() {
+    return ShutdownPromise::CreateAndResolve(true, __func__);
+  });
 }
 
 void
@@ -142,30 +144,15 @@ OpusDataDecoder::DecodeHeader(const unsigned char* aData, size_t aLength)
   return NS_OK;
 }
 
-void
-OpusDataDecoder::Input(MediaRawData* aSample)
+RefPtr<MediaDataDecoder::DecodePromise>
+OpusDataDecoder::Decode(MediaRawData* aSample)
 {
-  mTaskQueue->Dispatch(NewRunnableMethod<RefPtr<MediaRawData>>(
-                       this, &OpusDataDecoder::ProcessDecode, aSample));
+  return InvokeAsync<MediaRawData*>(mTaskQueue, this, __func__,
+                                    &OpusDataDecoder::ProcessDecode, aSample);
 }
 
-void
+RefPtr<MediaDataDecoder::DecodePromise>
 OpusDataDecoder::ProcessDecode(MediaRawData* aSample)
-{
-  if (mIsFlushing) {
-    return;
-  }
-
-  MediaResult rv = DoDecode(aSample);
-  if (NS_FAILED(rv)) {
-    mCallback->Error(rv);
-    return;
-  }
-  mCallback->InputExhausted();
-}
-
-MediaResult
-OpusDataDecoder::DoDecode(MediaRawData* aSample)
 {
   uint32_t channels = mOpusParser->mChannels;
 
@@ -173,9 +160,10 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
     // Discard padding should be used only on the final packet, so
     // decoding after a padding discard is invalid.
     OPUS_DEBUG("Opus error, discard padding on interstitial packet");
-    return MediaResult(
-      NS_ERROR_DOM_MEDIA_FATAL_ERR,
-      RESULT_DETAIL("Discard padding on interstitial packet"));
+    return DecodePromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                  RESULT_DETAIL("Discard padding on interstitial packet")),
+      __func__);
   }
 
   if (!mLastFrameTime || mLastFrameTime.ref() != aSample->mTime) {
@@ -188,28 +176,32 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
   uint32_t frames_number = opus_packet_get_nb_frames(aSample->Data(),
                                                     aSample->Size());
   if (frames_number <= 0) {
-    OPUS_DEBUG("Invalid packet header: r=%ld length=%ld",
-               frames_number, aSample->Size());
-    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                       RESULT_DETAIL("Invalid packet header: r=%d length=%u",
-                                     frames_number, uint32_t(aSample->Size())));
+    OPUS_DEBUG("Invalid packet header: r=%ld length=%ld", frames_number,
+               aSample->Size());
+    return DecodePromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                  RESULT_DETAIL("Invalid packet header: r=%d length=%u",
+                                frames_number, uint32_t(aSample->Size()))),
+      __func__);
   }
 
   uint32_t samples = opus_packet_get_samples_per_frame(
     aSample->Data(), opus_int32(mOpusParser->mRate));
 
-
   // A valid Opus packet must be between 2.5 and 120 ms long (48kHz).
   uint32_t frames = frames_number*samples;
   if (frames < 120 || frames > 5760) {
     OPUS_DEBUG("Invalid packet frames: %u", frames);
-    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                       RESULT_DETAIL("Invalid packet frames:%u", frames));
+    return DecodePromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                  RESULT_DETAIL("Invalid packet frames:%u", frames)),
+      __func__);
   }
 
   AlignedAudioBuffer buffer(frames * channels);
   if (!buffer) {
-    return MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__);
+    return DecodePromise::CreateAndReject(
+      MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__), __func__);
   }
 
   // Decode to the appropriate sample type.
@@ -223,8 +215,10 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
                                     buffer.get(), frames, false);
 #endif
   if (ret < 0) {
-    return MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                       RESULT_DETAIL("Opus decoding error:%d", ret));
+    return DecodePromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                  RESULT_DETAIL("Opus decoding error:%d", ret)),
+      __func__);
   }
   NS_ASSERTION(uint32_t(ret) == frames, "Opus decoded too few audio samples");
   CheckedInt64 startTime = aSample->mTime;
@@ -249,10 +243,12 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
     // Record the discard so we can return an error if another packet is
     // decoded.
     if (aSample->mDiscardPadding > frames) {
-    // Discarding more than the entire packet is invalid.
+      // Discarding more than the entire packet is invalid.
       OPUS_DEBUG("Opus error, discard padding larger than packet");
-      return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                         RESULT_DETAIL("Discard padding larger than packet"));
+      return DecodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                    RESULT_DETAIL("Discard padding larger than packet")),
+        __func__);
     }
 
     mPaddingDiscarded = true;
@@ -281,59 +277,59 @@ OpusDataDecoder::DoDecode(MediaRawData* aSample)
 
   CheckedInt64 duration = FramesToUsecs(frames, mOpusParser->mRate);
   if (!duration.isValid()) {
-    return MediaResult(
-      NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
-      RESULT_DETAIL("Overflow converting WebM audio duration"));
+    return DecodePromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+                  RESULT_DETAIL("Overflow converting WebM audio duration")),
+      __func__);
   }
-  CheckedInt64 time =
-    startTime - FramesToUsecs(mOpusParser->mPreSkip, mOpusParser->mRate) +
-    FramesToUsecs(mFrames, mOpusParser->mRate);
+  CheckedInt64 time = startTime -
+                      FramesToUsecs(mOpusParser->mPreSkip, mOpusParser->mRate) +
+                      FramesToUsecs(mFrames, mOpusParser->mRate);
   if (!time.isValid()) {
-    return MediaResult(
-      NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
-      RESULT_DETAIL("Overflow shifting tstamp by codec delay"));
+    return DecodePromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
+                  RESULT_DETAIL("Overflow shifting tstamp by codec delay")),
+      __func__);
   };
 
-  mCallback->Output(new AudioData(aSample->mOffset,
-                                  time.value(),
-                                  duration.value(),
-                                  frames,
-                                  Move(buffer),
-                                  mOpusParser->mChannels,
-                                  mOpusParser->mRate));
+
   mFrames += frames;
-  return NS_OK;
+
+  return DecodePromise::CreateAndResolve(
+    DecodedData{ new AudioData(aSample->mOffset, time.value(), duration.value(),
+                               frames, Move(buffer), mOpusParser->mChannels,
+                               mOpusParser->mRate) },
+    __func__);
 }
 
-void
-OpusDataDecoder::ProcessDrain()
-{
-  mCallback->DrainComplete();
-}
-
-void
+RefPtr<MediaDataDecoder::DecodePromise>
 OpusDataDecoder::Drain()
 {
-  mTaskQueue->Dispatch(NewRunnableMethod(this, &OpusDataDecoder::ProcessDrain));
+  RefPtr<OpusDataDecoder> self = this;
+  // InvokeAsync dispatches a task that will be run after any pending decode
+  // completes. As such, once the drain task run, there's nothing more to do.
+  return InvokeAsync(mTaskQueue, __func__, [] {
+    return DecodePromise::CreateAndResolve(DecodedData(), __func__);
+  });
 }
 
-void
+RefPtr<MediaDataDecoder::FlushPromise>
 OpusDataDecoder::Flush()
 {
   if (!mOpusDecoder) {
-    return;
+    return FlushPromise::CreateAndResolve(true, __func__);
   }
-  mIsFlushing = true;
-  nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([this] () {
+
+  RefPtr<OpusDataDecoder> self = this;
+  return InvokeAsync(mTaskQueue, __func__, [self, this]() {
     MOZ_ASSERT(mOpusDecoder);
     // Reset the decoder.
     opus_multistream_decoder_ctl(mOpusDecoder, OPUS_RESET_STATE);
     mSkip = mOpusParser->mPreSkip;
     mPaddingDiscarded = false;
     mLastFrameTime.reset();
+    return FlushPromise::CreateAndResolve(true, __func__);
   });
-  SyncRunnable::DispatchToThread(mTaskQueue, runnable);
-  mIsFlushing = false;
 }
 
 /* static */

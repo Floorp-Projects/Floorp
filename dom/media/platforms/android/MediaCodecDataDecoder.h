@@ -10,6 +10,7 @@
 #include "MediaCodec.h"
 #include "SurfaceTexture.h"
 #include "TimeUnits.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Maybe.h"
 
@@ -19,37 +20,33 @@ namespace mozilla {
 
 typedef std::deque<RefPtr<MediaRawData>> SampleQueue;
 
-class MediaCodecDataDecoder : public MediaDataDecoder {
+class MediaCodecDataDecoder : public MediaDataDecoder
+{
 public:
-  static MediaDataDecoder* CreateAudioDecoder(const AudioInfo& aConfig,
-                                              java::sdk::MediaFormat::Param aFormat,
-                                              MediaDataDecoderCallback* aCallback,
-                                              const nsString& aDrmStubId,
-                                              CDMProxy* aProxy,
-                                              TaskQueue* aTaskQueue);
+  static already_AddRefed<MediaDataDecoder> CreateAudioDecoder(
+    const AudioInfo& aConfig, java::sdk::MediaFormat::Param aFormat,
+    const nsString& aDrmStubId, CDMProxy* aProxy);
 
-  static MediaDataDecoder* CreateVideoDecoder(const VideoInfo& aConfig,
-                                              java::sdk::MediaFormat::Param aFormat,
-                                              MediaDataDecoderCallback* aCallback,
-                                              layers::ImageContainer* aImageContainer,
-                                              const nsString& aDrmStubId,
-                                              CDMProxy* aProxy,
-                                              TaskQueue* aTaskQueue);
+  static already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
+    const VideoInfo& aConfig, java::sdk::MediaFormat::Param aFormat,
+    layers::ImageContainer* aImageContainer, const nsString& aDrmStubId,
+    CDMProxy* aProxy);
 
-  virtual ~MediaCodecDataDecoder();
+  ~MediaCodecDataDecoder();
 
-  RefPtr<MediaDataDecoder::InitPromise> Init() override;
-  void Flush() override;
-  void Drain() override;
-  void Shutdown() override;
-  void Input(MediaRawData* aSample) override;
+  RefPtr<InitPromise> Init() override;
+  RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
+  RefPtr<DecodePromise> Drain() override;
+  RefPtr<FlushPromise> Flush() override;
+  RefPtr<ShutdownPromise> Shutdown() override;
   const char* GetDescriptionName() const override
   {
     return "Android MediaCodec decoder";
   }
 
 protected:
-  enum class ModuleState : uint8_t {
+  enum class ModuleState : uint8_t
+  {
     kDecoding = 0,
     kFlushing,
     kDrainQueue,
@@ -64,7 +61,6 @@ protected:
   MediaCodecDataDecoder(MediaData::Type aType,
                         const nsACString& aMimeType,
                         java::sdk::MediaFormat::Param aFormat,
-                        MediaDataDecoderCallback* aCallback,
                         const nsString& aDrmStubId);
 
   static const char* ModuleStateStr(ModuleState aState);
@@ -99,6 +95,7 @@ protected:
                          java::sdk::MediaFormat::Param aFormat,
                          int32_t aStatus);
   // Sets decoder state and returns whether the new state has become effective.
+  // Must hold the monitor.
   bool SetState(ModuleState aState);
   void DecoderLoop();
 
@@ -109,14 +106,14 @@ protected:
   nsAutoCString mMimeType;
   java::sdk::MediaFormat::GlobalRef mFormat;
 
-  MediaDataDecoderCallback* mCallback;
-
   java::sdk::MediaCodec::GlobalRef mDecoder;
 
   jni::ObjectArray::GlobalRef mInputBuffers;
   jni::ObjectArray::GlobalRef mOutputBuffers;
 
   nsCOMPtr<nsIThread> mThread;
+
+  Atomic<bool> mError;
 
   // Only these members are protected by mMonitor.
   Monitor mMonitor;
@@ -130,6 +127,10 @@ protected:
   nsString mDrmStubId;
 
   bool mIsCodecSupportAdaptivePlayback = false;
+
+  MozPromiseHolder<DecodePromise> mDecodePromise;
+  MozPromiseHolder<DecodePromise> mDrainPromise;
+  DecodedData mDecodedData;
 };
 
 } // namespace mozilla

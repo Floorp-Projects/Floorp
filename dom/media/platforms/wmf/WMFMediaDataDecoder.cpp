@@ -18,12 +18,9 @@
 namespace mozilla {
 
 WMFMediaDataDecoder::WMFMediaDataDecoder(MFTManager* aMFTManager,
-                                         TaskQueue* aTaskQueue,
-                                         MediaDataDecoderCallback* aCallback)
+                                         TaskQueue* aTaskQueue)
   : mTaskQueue(aTaskQueue)
-  , mCallback(aCallback)
   , mMFTManager(aMFTManager)
-  , mIsFlushing(false)
   , mIsShutDown(false)
 {
 }
@@ -72,20 +69,21 @@ SendTelemetry(unsigned long hr)
   NS_DispatchToMainThread(runnable);
 }
 
-void
+RefPtr<ShutdownPromise>
 WMFMediaDataDecoder::Shutdown()
 {
   MOZ_DIAGNOSTIC_ASSERT(!mIsShutDown);
 
-  if (mTaskQueue) {
-    mTaskQueue->Dispatch(NewRunnableMethod(this, &WMFMediaDataDecoder::ProcessShutdown));
-  } else {
-    ProcessShutdown();
-  }
   mIsShutDown = true;
+
+  if (mTaskQueue) {
+    return InvokeAsync(mTaskQueue, this, __func__,
+                       &WMFMediaDataDecoder::ProcessShutdown);
+  }
+  return ProcessShutdown();
 }
 
-void
+RefPtr<ShutdownPromise>
 WMFMediaDataDecoder::ProcessShutdown()
 {
   if (mMFTManager) {
@@ -95,31 +93,23 @@ WMFMediaDataDecoder::ProcessShutdown()
       SendTelemetry(S_OK);
     }
   }
+  return ShutdownPromise::CreateAndResolve(true, __func__);
 }
 
 // Inserts data into the decoder's pipeline.
-void
-WMFMediaDataDecoder::Input(MediaRawData* aSample)
+RefPtr<MediaDataDecoder::DecodePromise>
+WMFMediaDataDecoder::Decode(MediaRawData* aSample)
 {
-  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   MOZ_DIAGNOSTIC_ASSERT(!mIsShutDown);
 
-  nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod<RefPtr<MediaRawData>>(
-      this,
-      &WMFMediaDataDecoder::ProcessDecode,
-      RefPtr<MediaRawData>(aSample));
-  mTaskQueue->Dispatch(runnable.forget());
+  return InvokeAsync<MediaRawData*>(mTaskQueue, this, __func__,
+                                    &WMFMediaDataDecoder::ProcessDecode,
+                                    aSample);
 }
 
-void
+RefPtr<MediaDataDecoder::DecodePromise>
 WMFMediaDataDecoder::ProcessDecode(MediaRawData* aSample)
 {
-  if (mIsFlushing) {
-    // Skip sample, to be released by runnable.
-    return;
-  }
-
   HRESULT hr = mMFTManager->Input(aSample);
   if (hr == MF_E_NOTACCEPTING) {
     ProcessOutput();
@@ -128,18 +118,21 @@ WMFMediaDataDecoder::ProcessDecode(MediaRawData* aSample)
 
   if (FAILED(hr)) {
     NS_WARNING("MFTManager rejected sample");
-    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                                 RESULT_DETAIL("MFTManager::Input:%x", hr)));
     if (!mRecordedError) {
       SendTelemetry(hr);
       mRecordedError = true;
     }
-    return;
+    return DecodePromise::CreateAndReject(
+      MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                  RESULT_DETAIL("MFTManager::Input:%x", hr)),
+      __func__);
   }
 
   mLastStreamOffset = aSample->mOffset;
 
+  RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
   ProcessOutput();
+  return p;
 }
 
 void
@@ -147,17 +140,31 @@ WMFMediaDataDecoder::ProcessOutput()
 {
   RefPtr<MediaData> output;
   HRESULT hr = S_OK;
+  DecodedData results;
   while (SUCCEEDED(hr = mMFTManager->Output(mLastStreamOffset, output)) &&
          output) {
     mHasSuccessfulOutput = true;
-    mCallback->Output(output);
+    results.AppendElement(Move(output));
   }
   if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
-    mCallback->InputExhausted();
-  } else if (FAILED(hr)) {
+    if (!mDecodePromise.IsEmpty()) {
+      mDecodePromise.Resolve(Move(results), __func__);
+    } else {
+      mDrainPromise.Resolve(Move(results), __func__);
+    }
+    return;
+  }
+  if (FAILED(hr)) {
     NS_WARNING("WMFMediaDataDecoder failed to output data");
-    mCallback->Error(MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
-                                 RESULT_DETAIL("MFTManager::Output:%x", hr)));
+    const auto error = MediaResult(NS_ERROR_DOM_MEDIA_DECODE_ERR,
+                                   RESULT_DETAIL("MFTManager::Output:%x", hr));
+    if (!mDecodePromise.IsEmpty()) {
+      mDecodePromise.Reject(error, __func__);
+    }
+    else {
+      mDrainPromise.Reject(error, __func__);
+    }
+
     if (!mRecordedError) {
       SendTelemetry(hr);
       mRecordedError = true;
@@ -165,46 +172,45 @@ WMFMediaDataDecoder::ProcessOutput()
   }
 }
 
-void
+RefPtr<MediaDataDecoder::FlushPromise>
 WMFMediaDataDecoder::ProcessFlush()
 {
   if (mMFTManager) {
     mMFTManager->Flush();
   }
+  return FlushPromise::CreateAndResolve(true, __func__);
 }
 
-void
+RefPtr<MediaDataDecoder::FlushPromise>
 WMFMediaDataDecoder::Flush()
 {
-  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   MOZ_DIAGNOSTIC_ASSERT(!mIsShutDown);
 
-  mIsFlushing = true;
-  nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod(this, &WMFMediaDataDecoder::ProcessFlush);
-  SyncRunnable::DispatchToThread(mTaskQueue, runnable);
-  mIsFlushing = false;
+  return InvokeAsync(mTaskQueue, this, __func__,
+                     &WMFMediaDataDecoder::ProcessFlush);
 }
 
-void
+RefPtr<MediaDataDecoder::DecodePromise>
 WMFMediaDataDecoder::ProcessDrain()
 {
-  if (!mIsFlushing && mMFTManager) {
-    // Order the decoder to drain...
-    mMFTManager->Drain();
-    // Then extract all available output.
-    ProcessOutput();
+  if (!mMFTManager) {
+    return DecodePromise::CreateAndResolve(DecodedData(), __func__);
   }
-  mCallback->DrainComplete();
+  // Order the decoder to drain...
+  mMFTManager->Drain();
+  // Then extract all available output.
+  RefPtr<DecodePromise> p = mDrainPromise.Ensure(__func__);
+  ProcessOutput();
+  return p;
 }
 
-void
+RefPtr<MediaDataDecoder::DecodePromise>
 WMFMediaDataDecoder::Drain()
 {
-  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   MOZ_DIAGNOSTIC_ASSERT(!mIsShutDown);
 
-  mTaskQueue->Dispatch(NewRunnableMethod(this, &WMFMediaDataDecoder::ProcessDrain));
+  return InvokeAsync(mTaskQueue, this, __func__,
+                     &WMFMediaDataDecoder::ProcessDrain);
 }
 
 bool
@@ -217,7 +223,6 @@ WMFMediaDataDecoder::IsHardwareAccelerated(nsACString& aFailureReason) const {
 void
 WMFMediaDataDecoder::SetSeekThreshold(const media::TimeUnit& aTime)
 {
-  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
   MOZ_DIAGNOSTIC_ASSERT(!mIsShutDown);
 
   RefPtr<WMFMediaDataDecoder> self = this;
