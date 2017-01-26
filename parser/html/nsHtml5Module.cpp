@@ -30,7 +30,6 @@ void
 nsHtml5Module::InitializeStatics()
 {
   Preferences::AddBoolVarCache(&sOffMainThread, "html5.offmainthread");
-  nsHtml5Atoms::AddRefAtoms();
   nsHtml5AttributeName::initializeStatics();
   nsHtml5ElementName::initializeStatics();
   nsHtml5HtmlAttributes::initializeStatics();
