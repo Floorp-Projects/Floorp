@@ -38,10 +38,10 @@ add_task(function* () {
       document.querySelectorAll(".request-list-item")[0]);
     yield wait;
 
-    if (!document.querySelector("#security-tab[aria-selected=true]")) {
+    if (!document.querySelector("#tab-5.is-active")) {
       info("Selecting security tab.");
-      wait = waitForDOM(document, "#security-panel .properties-view");
-      document.querySelector("#security-tab").click();
+      wait = waitForDOM(document, "#panel-5 .properties-view");
+      document.querySelector("#tab-5 a").click();
       yield wait;
     }
 

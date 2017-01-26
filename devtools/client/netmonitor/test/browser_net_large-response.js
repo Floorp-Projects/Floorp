@@ -34,10 +34,10 @@ add_task(function* () {
       statusText: "OK"
     });
 
-  let waitDOM = waitForDOM(document, "#response-panel .editor-mount iframe");
+  let waitDOM = waitForDOM(document, "#panel-3 .editor-mount iframe");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.getElementById("details-pane-toggle"));
-  document.querySelector("#response-tab").click();
+  document.querySelector("#tab-3 a").click();
   let [editor] = yield waitDOM;
   yield once(editor, "DOMContentLoaded");
   yield waitForDOM(editor.contentDocument, ".CodeMirror-code");

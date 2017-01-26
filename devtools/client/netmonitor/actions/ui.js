@@ -48,12 +48,12 @@ function resizeWaterfall(width) {
 /**
  * Change the selected tab for details panel.
  *
- * @param {string} id - tab id to be selected
+ * @param {number} index - tab index to be selected
  */
-function selectDetailsPanelTab(id) {
+function selectDetailsPanelTab(index) {
   return {
     type: SELECT_DETAILS_PANEL_TAB,
-    id,
+    index,
   };
 }
 
