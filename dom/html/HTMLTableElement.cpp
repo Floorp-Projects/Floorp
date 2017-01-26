@@ -707,8 +707,9 @@ HTMLTableElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                        nsRuleData* aData)
+                                        GenericSpecifiedValues* aGenericData)
 {
+  nsRuleData* aData = aGenericData->AsRuleData();
   // XXX Bug 211636:  This function is used by a single style rule
   // that's used to match two different type of elements -- tables, and
   // table cells.  (nsHTMLTableCellElement overrides
@@ -841,8 +842,8 @@ HTMLTableElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
         borderBottomWidth->SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
     }
   }
-  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aGenericData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aGenericData);
 }
 
 NS_IMETHODIMP_(bool)
@@ -880,8 +881,9 @@ HTMLTableElement::GetAttributeMappingFunction() const
 
 static void
 MapInheritedTableAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                    nsRuleData* aData)
+                                    GenericSpecifiedValues* aGenericData)
 {
+  nsRuleData* aData = aGenericData->AsRuleData();
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Padding)) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::cellpadding);
     if (value && value->Type() == nsAttrValue::eInteger) {

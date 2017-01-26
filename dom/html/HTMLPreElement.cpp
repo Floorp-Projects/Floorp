@@ -47,8 +47,9 @@ HTMLPreElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLPreElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                      nsRuleData* aData)
+                                      GenericSpecifiedValues* aGenericData)
 {
+  nsRuleData* aData = aGenericData->AsRuleData();
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Text)) {
     nsCSSValue* whiteSpace = aData->ValueForWhiteSpace();
     if (whiteSpace->GetUnit() == eCSSUnit_Null) {
@@ -58,7 +59,7 @@ HTMLPreElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     }
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aGenericData);
 }
 
 NS_IMETHODIMP_(bool)

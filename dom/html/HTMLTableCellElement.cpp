@@ -440,8 +440,9 @@ HTMLTableCellElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLTableCellElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                            nsRuleData* aData)
+                                            GenericSpecifiedValues* aGenericData)
 {
+  nsRuleData* aData = aGenericData->AsRuleData();
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Position)) {
     // width: value
     nsCSSValue* width = aData->ValueForWidth();
@@ -509,8 +510,8 @@ HTMLTableCellElement::MapAttributesIntoRule(const nsMappedAttributes* aAttribute
     }
   }
   
-  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aGenericData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aGenericData);
 }
 
 NS_IMETHODIMP_(bool)

@@ -67,8 +67,9 @@ HTMLHRElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                     nsRuleData* aData)
+                                     GenericSpecifiedValues* aGenericData)
 {
+  nsRuleData* aData = aGenericData->AsRuleData();
   bool noshade = false;
 
   const nsAttrValue* colorValue = aAttributes->GetAttr(nsGkAtoms::color);
@@ -227,7 +228,7 @@ HTMLHRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     }
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aGenericData);
 }
 
 NS_IMETHODIMP_(bool)
