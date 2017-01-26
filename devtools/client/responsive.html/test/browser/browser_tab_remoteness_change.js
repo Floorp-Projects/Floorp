@@ -41,4 +41,5 @@ add_task(function* () {
   is(ui.destroyed, true, "RDM closed synchronously");
 
   yield clientClosed;
+  yield removeTab(tab);
 });
