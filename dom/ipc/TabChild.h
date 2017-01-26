@@ -661,29 +661,22 @@ public:
   uintptr_t GetNativeWindowHandle() const { return mNativeWindowHandle; }
 #endif
 
-  bool TakeIsFreshProcess()
+  // These methods return `true` if this TabChild is currently awaiting a
+  // Large-Allocation header.
+  bool TakeAwaitingLargeAlloc();
+  bool IsAwaitingLargeAlloc();
+
+  // Returns `true` if this this process was created to load a docshell in a
+  // "Fresh Process". This value is initialized to `false`, and is set to `true`
+  // in RecvSetFreshProcess.
+  static bool InLargeAllocProcess()
   {
-    if (mIsFreshProcess) {
-      MOZ_ASSERT(!sWasFreshProcess,
-                 "At most one tabGroup may be a fresh process per process");
-      sWasFreshProcess = true;
-      mIsFreshProcess = false;
-      return true;
-    }
-    return false;
+    return sInLargeAllocProcess;
   }
 
   already_AddRefed<nsISHistory> GetRelatedSHistory();
 
   mozilla::dom::TabGroup* TabGroup();
-
-  // Returns `true` if this this process was created to load a docshell in a
-  // "Fresh Process". This value is initialized to `false`, and is set to `true`
-  // in RecvSetFreshProcess.
-  static bool GetWasFreshProcess()
-  {
-    return sWasFreshProcess;
-  }
 
 protected:
   virtual ~TabChild();
@@ -722,7 +715,8 @@ protected:
 
   virtual mozilla::ipc::IPCResult RecvNotifyPartialSHistoryDeactive() override;
 
-  virtual mozilla::ipc::IPCResult RecvSetFreshProcess() override;
+  virtual mozilla::ipc::IPCResult RecvSetIsLargeAllocation(const bool& aIsLA,
+                                                           const bool& aNewProcess) override;
 
 private:
   void HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
@@ -813,7 +807,7 @@ private:
   CSSSize mUnscaledInnerSize;
   bool mDidSetRealShowInfo;
   bool mDidLoadURLInit;
-  bool mIsFreshProcess;
+  bool mAwaitingLA;
 
   bool mSkipKeyPress;
 
@@ -834,7 +828,7 @@ private:
   uintptr_t mNativeWindowHandle;
 #endif // defined(XP_WIN)
 
-  static bool sWasFreshProcess;
+  static bool sInLargeAllocProcess;
 
   DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };

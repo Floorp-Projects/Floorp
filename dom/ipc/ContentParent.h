@@ -148,7 +148,8 @@ public:
                              hal::ProcessPriority aPriority =
                              hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
                              ContentParent* aOpener = nullptr,
-                             bool aLargeAllocationProcess = false);
+                             bool aLargeAllocationProcess = false,
+                             bool* anew = nullptr);
 
   /**
    * Get or create a content process for the given TabContext.  aFrameElement
