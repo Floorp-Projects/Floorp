@@ -6312,8 +6312,12 @@ PresShell::Paint(nsView*        aViewToPaint,
                  const nsRegion& aDirtyRegion,
                  uint32_t        aFlags)
 {
-  PROFILER_LABEL("PresShell", "Paint",
-    js::ProfileEntry::Category::GRAPHICS);
+#ifdef MOZ_GECKO_PROFILER
+  nsIURI* uri = mDocument->GetDocumentURI();
+  PROFILER_LABEL_PRINTF("PresShell", "Paint",
+    js::ProfileEntry::Category::GRAPHICS, "(%s)",
+    uri ? uri->GetSpecOrDefault().get() : "N/A");
+#endif
 
   Maybe<js::AutoAssertNoContentJS> nojs;
 
@@ -9120,7 +9124,7 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   }
 
 #ifdef MOZ_GECKO_PROFILER
-  nsIURI *uri = mDocument->GetDocumentURI();
+  nsIURI* uri = mDocument->GetDocumentURI();
   PROFILER_LABEL_PRINTF("PresShell", "DoReflow",
     js::ProfileEntry::Category::GRAPHICS, "(%s)",
     uri ? uri->GetSpecOrDefault().get() : "N/A");
