@@ -383,4 +383,7 @@ add_task(function*() {
       is(false, yield getInLAProc(aBrowser));
     });
   });
+
+  // XXX: Make sure to reset dom.ipc.processCount.webLargeAllocation if adding a
+  // test after the above test.
 });
