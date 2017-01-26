@@ -701,8 +701,9 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
     // If no new frame for this element is created by the end of the
     // restyling process, stop animations and transitions for this frame
     if (presContext->RestyleManager()->IsGecko()) {
-      RestyleManager::AnimationsWithDestroyedFrame* adf =
-        presContext->RestyleManager()->AsGecko()->GetAnimationsWithDestroyedFrame();
+      RestyleManagerBase::AnimationsWithDestroyedFrame* adf =
+        presContext->RestyleManager()->AsGecko()
+                   ->GetAnimationsWithDestroyedFrame();
       // AnimationsWithDestroyedFrame only lives during the restyling process.
       if (adf) {
         adf->Put(mContent, mStyleContext);
