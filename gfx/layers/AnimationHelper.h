@@ -27,6 +27,14 @@ struct AnimData {
 class AnimationHelper
 {
 public:
+
+  static bool
+  SampleAnimationForEachNode(TimeStamp aPoint,
+                             AnimationArray& aAnimations,
+                             InfallibleTArray<AnimData>& aAnimationData,
+                             StyleAnimationValue& aAnimationValue,
+                             bool& aHasInEffectAnimations);
+
   static void
   SetAnimations(AnimationArray& aAnimations,
                 InfallibleTArray<AnimData>& aAnimData,
