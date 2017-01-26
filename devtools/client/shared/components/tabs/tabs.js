@@ -50,18 +50,12 @@ define(function (require, exports, module) {
       ]).isRequired,
       showAllTabsMenu: React.PropTypes.bool,
       onAllTabsMenuClick: React.PropTypes.func,
-
-      // Set true will only render selected panel on DOM. It's complete
-      // opposite of the created array, and it's useful if panels content
-      // is unpredictable and update frequently.
-      renderOnlySelected: React.PropTypes.bool,
     },
 
     getDefaultProps: function () {
       return {
         tabActive: 0,
         showAllTabsMenu: false,
-        renderOnlySelected: false,
       };
     },
 
@@ -292,27 +286,21 @@ define(function (require, exports, module) {
     },
 
     renderPanels: function () {
-      let { children, renderOnlySelected } = this.props;
-
-      if (!children) {
+      if (!this.props.children) {
         throw new Error("There must be at least one Tab");
       }
 
-      if (!Array.isArray(children)) {
-        children = [children];
+      if (!Array.isArray(this.props.children)) {
+        this.props.children = [this.props.children];
       }
 
       let selectedIndex = this.state.tabActive;
 
-      let panels = children
+      let panels = this.props.children
         .map((tab) => typeof tab === "function" ? tab() : tab)
         .filter((tab) => tab)
         .map((tab, index) => {
           let selected = selectedIndex === index;
-          if (renderOnlySelected && !selected) {
-            return null;
-          }
-
           let id = tab.props.id;
 
           // Use 'visibility:hidden' + 'width/height:0' for hiding
