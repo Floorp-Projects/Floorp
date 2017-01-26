@@ -252,6 +252,10 @@ private:
                          int32_t aEndIndex,
                          int32_t aDelta);
 
+  nsresult AdjustSeparatorsSyncCounter(int64_t aFolderId,
+                                       int32_t aStartIndex,
+                                       int64_t aSyncChangeDelta);
+
   /**
    * Fetches properties of a folder.
    *
