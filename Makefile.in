@@ -96,36 +96,10 @@ ifndef TEST_MOZBUILD
 .PHONY: backend
 backend: $(BUILD_BACKEND_FILES)
 
-# A traditional rule would look like this:
-#    backend.%:
-#        @echo do stuff
-#
-# But with -j<n>, and multiple items in BUILD_BACKEND_FILES, the command would
-# run multiple times in parallel.
-#
-# "Fortunately", make has some weird semantics for pattern rules: if there are
-# multiple targets in a pattern rule and each of them is matched at most once,
-# the command will only run once. So:
-#     backend%RecursiveMakeBackend backend%FasterMakeBackend:
-#         @echo do stuff
-#     backend: backend.RecursiveMakeBackend backend.FasterMakeBackend
-# would only execute the command once.
-#
-# Credit where due: http://stackoverflow.com/questions/2973445/gnu-makefile-rule-generating-a-few-targets-from-a-single-source-file/3077254#3077254
-$(subst .,%,$(BUILD_BACKEND_FILES)):
-	@echo 'Build configuration changed. Regenerating backend.'
-	$(PYTHON) config.status
+include $(topsrcdir)/build/rebuild-backend.mk
 
 Makefile: $(BUILD_BACKEND_FILES)
 	@$(TOUCH) $@
-
-define build_backend_rule
-$(1)_files := $$(shell cat $(1).in)
-$(1): $$($(1)_files)
-$$($(1)_files):
-
-endef
-$(foreach file,$(BUILD_BACKEND_FILES),$(eval $(call build_backend_rule,$(file))))
 
 default:: $(BUILD_BACKEND_FILES)
 endif
