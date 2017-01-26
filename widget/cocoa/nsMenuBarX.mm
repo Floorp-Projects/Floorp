@@ -527,6 +527,11 @@ void nsMenuBarX::ApplicationMenuOpened()
   }
 }
 
+bool nsMenuBarX::PerformKeyEquivalent(NSEvent* theEvent)
+{
+  return [mNativeMenu performSuperKeyEquivalent:theEvent];
+}
+
 // Hide the item in the menu by setting the 'hidden' attribute. Returns it in |outHiddenNode| so
 // the caller can hang onto it if they so choose. It is acceptable to pass nsull
 // for |outHiddenNode| if the caller doesn't care about the hidden node.
@@ -874,6 +879,11 @@ static BOOL gMenuItemsExecuteCommands = YES;
 
   // Return NO so that we can handle the event via NSView's "keyDown:".
   return NO;
+}
+
+- (BOOL)performSuperKeyEquivalent:(NSEvent*)theEvent
+{
+  return [super performKeyEquivalent:theEvent];
 }
 
 @end

@@ -1479,7 +1479,7 @@ NS_IMETHODIMP CacheEntry::Recreate(bool aMemoryOnly,
   }
 
   BackgroundOp(Ops::CALLBACKS, true);
-  return NS_OK;
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP CacheEntry::GetDataSize(int64_t *aDataSize)

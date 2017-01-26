@@ -34,17 +34,3 @@ BEGIN_TEST(testThreadingUnlockGuard)
     return true;
 }
 END_TEST(testThreadingUnlockGuard)
-
-BEGIN_TEST(testThreadingMoveMutex)
-{
-    js::Mutex mutex(js::mutexid::TestMutex);
-    mutex.lock();
-    mutex.unlock();
-
-    js::Mutex another(mozilla::Move(mutex));
-    another.lock();
-    another.unlock();
-
-    return true;
-}
-END_TEST(testThreadingMoveMutex)

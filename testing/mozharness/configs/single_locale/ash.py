@@ -16,6 +16,8 @@
 # * "repo": "https://hg.mozilla.org/projects/ash",
 #
 
+import os
+
 config = {
     "nightly_build": True,
     "branch": "ash",
@@ -27,7 +29,11 @@ config = {
     "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
 
     # mar
-    "mar_tools_url": "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-central/mar-tools/%(platform)s",
+    "mar_tools_url": os.environ.get(
+        "MAR_TOOLS_URL",
+        # Buildbot l10n fetches from ftp rather than setting an environ var
+        "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-central/mar-tools/%(platform)s"
+    ),
 
     # repositories
     "mozilla_dir": "ash",

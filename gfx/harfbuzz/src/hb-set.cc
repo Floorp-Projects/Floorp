@@ -105,7 +105,7 @@ hb_set_destroy (hb_set_t *set)
  * @set: a set.
  * @key:
  * @data:
- * @destroy (closure data):
+ * @destroy:
  * @replace:
  *
  * Return value:

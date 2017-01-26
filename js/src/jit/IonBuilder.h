@@ -261,10 +261,8 @@ class IonBuilder
                                                          size_t fieldIndex);
     AbortReasonOr<Ok> getPropTryInnerize(bool* emitted, MDefinition* obj, PropertyName* name,
                                          TemporaryTypeSet* types);
-    AbortReasonOr<Ok> getPropTryCache(bool* emitted, MDefinition* obj, PropertyName* name,
+    AbortReasonOr<Ok> getPropAddCache(MDefinition* obj, PropertyName* name,
                                       BarrierKind barrier, TemporaryTypeSet* types);
-    AbortReasonOr<Ok> getPropTrySharedStub(bool* emitted, MDefinition* obj,
-                                           TemporaryTypeSet* types);
 
     // jsop_setprop() helpers.
     AbortReasonOr<Ok> setPropTryCommonSetter(bool* emitted, MDefinition* obj,
