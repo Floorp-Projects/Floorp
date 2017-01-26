@@ -41,7 +41,6 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 const {
   DefaultMap,
-  EventManager,
   SingletonEventManager,
   SpreadArgs,
   defineLazyGetter,
@@ -119,17 +118,17 @@ class Port {
         this.postMessage(json);
       },
 
-      onDisconnect: new EventManager(this.context, "Port.onDisconnect", fire => {
+      onDisconnect: new SingletonEventManager(this.context, "Port.onDisconnect", fire => {
         return this.registerOnDisconnect(error => {
           portError = error && this.context.normalizeError(error);
-          fire.withoutClone(portObj);
+          fire.asyncWithoutClone(portObj);
         });
       }).api(),
 
-      onMessage: new EventManager(this.context, "Port.onMessage", fire => {
+      onMessage: new SingletonEventManager(this.context, "Port.onMessage", fire => {
         return this.registerOnMessage(msg => {
           msg = Cu.cloneInto(msg, this.context.cloneScope);
-          fire.withoutClone(msg, portObj);
+          fire.asyncWithoutClone(msg, portObj);
         });
       }).api(),
 

@@ -6,7 +6,7 @@ Cu.import("resource://devtools/shared/event-emitter.js");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
-  EventManager,
+  SingletonEventManager,
   PlatformInfo,
 } = ExtensionUtils;
 
@@ -245,9 +245,9 @@ extensions.registerSchemaAPI("commands", "addon_parent", context => {
           });
         }));
       },
-      onCommand: new EventManager(context, "commands.onCommand", fire => {
+      onCommand: new SingletonEventManager(context, "commands.onCommand", fire => {
         let listener = (eventName, commandName) => {
-          fire(commandName);
+          fire.async(commandName);
         };
         commandsMap.get(extension).on("command", listener);
         return () => {

@@ -8,9 +8,9 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var {
-  EventManager,
   ExtensionError,
   IconDetails,
+  SingletonEventManager,
 } = ExtensionUtils;
 
 const ACTION_MENU_TOP_LEVEL_LIMIT = 6;
@@ -625,9 +625,9 @@ extensions.registerSchemaAPI("contextMenus", "addon_parent", context => {
         }
       },
 
-      onClicked: new EventManager(context, "contextMenus.onClicked", fire => {
+      onClicked: new SingletonEventManager(context, "contextMenus.onClicked", fire => {
         let listener = (event, info, tab) => {
-          fire(info, tab);
+          fire.async(info, tab);
         };
 
         extension.on("webext-contextmenu-menuitem-click", listener);
