@@ -21,8 +21,7 @@ NS_IMPL_ISUPPORTS(ContentBridgeParent,
                   nsIContentParent,
                   nsIObserver)
 
-ContentBridgeParent::ContentBridgeParent(Transport* aTransport)
-  : mTransport(aTransport)
+ContentBridgeParent::ContentBridgeParent()
 {}
 
 ContentBridgeParent::~ContentBridgeParent()
@@ -42,8 +41,7 @@ ContentBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 /*static*/ ContentBridgeParent*
 ContentBridgeParent::Create(Transport* aTransport, ProcessId aOtherPid)
 {
-  RefPtr<ContentBridgeParent> bridge =
-    new ContentBridgeParent(aTransport);
+  RefPtr<ContentBridgeParent> bridge = new ContentBridgeParent();
   bridge->mSelfRef = bridge;
 
   DebugOnly<bool> ok = bridge->Open(aTransport, aOtherPid,
