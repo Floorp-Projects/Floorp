@@ -269,6 +269,16 @@ add_task(function* checkUndoRemoval() {
     Assert.equal(histogramData.sum, 0, `Should have reported 0 errors to ${histogramId}.`);
     Assert.greaterOrEqual(histogramData.counts[0], 1, `Should have reported value of 0 one time to ${histogramId}.`);
   }
+  histograms = [
+    "FX_STARTUP_MIGRATION_UNDO_BOOKMARKS_MS",
+    "FX_STARTUP_MIGRATION_UNDO_LOGINS_MS",
+    "FX_STARTUP_MIGRATION_UNDO_VISITS_MS",
+    "FX_STARTUP_MIGRATION_UNDO_TOTAL_MS",
+  ];
+  for (let histogramId of histograms) {
+    Assert.greater(Services.telemetry.getKeyedHistogramById(histogramId).snapshot().automationbrowser.sum, 0,
+                   `Should have reported non-zero time spent using undo for ${histogramId}`);
+  }
 
   // Check that the undo removed the history visits:
   visits = PlacesUtils.history.executeQuery(query, opts);
