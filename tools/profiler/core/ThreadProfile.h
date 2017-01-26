@@ -24,7 +24,7 @@ public:
    */
   void addStoredMarker(ProfilerMarker *aStoredMarker);
   PseudoStack* GetPseudoStack();
-  ::Mutex& GetMutex();
+  mozilla::Mutex& GetMutex();
   void StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime = 0);
 
   /**
@@ -83,7 +83,7 @@ private:
   mozilla::Maybe<UniqueStacks> mUniqueStacks;
 
   PseudoStack*   mPseudoStack;
-  mozilla::UniquePtr<Mutex>  mMutex;
+  mozilla::UniquePtr<mozilla::Mutex> mMutex;
   int            mThreadId;
   bool           mIsMainThread;
   PlatformData*  mPlatformData;  // Platform specific data.

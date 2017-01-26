@@ -614,57 +614,31 @@ nsFloatManager::BoxShapeInfo::LineRight(WritingMode aWM,
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// CircleShapeInfo
-
-nsFloatManager::CircleShapeInfo::CircleShapeInfo(
-  StyleBasicShape* const aBasicShape,
-  nscoord aLineLeft,
-  nscoord aBlockStart,
-  const LogicalRect& aShapeBoxRect,
-  WritingMode aWM,
-  const nsSize& aContainerSize)
-{
-  // Use physical coordinates to compute the center of the circle() since
-  // the <position> keywords such as 'left', 'top', etc. are physical.
-  // https://drafts.csswg.org/css-shapes-1/#funcdef-circle
-  nsRect physicalShapeBoxRect =
-    aShapeBoxRect.GetPhysicalRect(aWM, aContainerSize);
-  nsPoint physicalCenter =
-    ShapeUtils::ComputeCircleOrEllipseCenter(aBasicShape, physicalShapeBoxRect);
-  mRadius =
-    ShapeUtils::ComputeCircleRadius(aBasicShape, physicalCenter,
-                                    physicalShapeBoxRect);
-
-  // Convert the coordinate space back to the same as FloatInfo::mRect.
-  // mCenter.x is in the line-axis of the frame manager and mCenter.y are in
-  // the frame manager's real block-axis.
-  LogicalPoint logicalCenter(aWM, physicalCenter, aContainerSize);
-  mCenter = nsPoint(logicalCenter.LineRelative(aWM, aContainerSize) + aLineLeft,
-                    logicalCenter.B(aWM) + aBlockStart);
-}
-
+// EllipseShapeInfo
 nscoord
-nsFloatManager::CircleShapeInfo::LineLeft(WritingMode aWM,
-                                          const nscoord aBStart,
-                                          const nscoord aBEnd) const
-{
-  nscoord lineLeftDiff =
-    ComputeEllipseLineInterceptDiff(BStart(), BEnd(),
-                                    mRadius, mRadius, mRadius, mRadius,
-                                    aBStart, aBEnd);
-  return mCenter.x - mRadius + lineLeftDiff;
-}
-
-nscoord
-nsFloatManager::CircleShapeInfo::LineRight(WritingMode aWM,
+nsFloatManager::EllipseShapeInfo::LineLeft(WritingMode aWM,
                                            const nscoord aBStart,
                                            const nscoord aBEnd) const
 {
+  nscoord lineLeftDiff =
+    ComputeEllipseLineInterceptDiff(BStart(), BEnd(),
+                                    mRadii.width, mRadii.height,
+                                    mRadii.width, mRadii.height,
+                                    aBStart, aBEnd);
+  return mCenter.x - mRadii.width + lineLeftDiff;
+}
+
+nscoord
+nsFloatManager::EllipseShapeInfo::LineRight(WritingMode aWM,
+                                            const nscoord aBStart,
+                                            const nscoord aBEnd) const
+{
   nscoord lineRightDiff =
     ComputeEllipseLineInterceptDiff(BStart(), BEnd(),
-                                    mRadius, mRadius, mRadius, mRadius,
+                                    mRadii.width, mRadii.height,
+                                    mRadii.width, mRadii.height,
                                     aBStart, aBEnd);
-  return mCenter.x + mRadius - lineRightDiff;
+  return mCenter.x + mRadii.width - lineRightDiff;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -719,20 +693,33 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
   }
 
   if (shapeOutside.GetType() == StyleShapeSourceType::Box) {
-    nsRect shapeBoxRect(rect.LineLeft(aWM, aContainerSize) + aLineLeft,
-                        rect.BStart(aWM) + aBlockStart,
+    nsRect shapeBoxRect(rect.LineLeft(aWM, aContainerSize), rect.BStart(aWM),
                         rect.ISize(aWM), rect.BSize(aWM));
     mShapeInfo = MakeUnique<BoxShapeInfo>(shapeBoxRect, mFrame);
   } else if (shapeOutside.GetType() == StyleShapeSourceType::Shape) {
     StyleBasicShape* const basicShape = shapeOutside.GetBasicShape();
 
-    if (basicShape->GetShapeType() == StyleBasicShapeType::Circle) {
-      mShapeInfo = MakeUnique<CircleShapeInfo>(basicShape, aLineLeft, aBlockStart,
-                                               rect, aWM, aContainerSize);
+    switch (basicShape->GetShapeType()) {
+      case StyleBasicShapeType::Polygon:
+        // Bug 1326409 - Implement the rendering of basic shape polygon()
+        // for CSS shape-outside.
+        break;
+      case StyleBasicShapeType::Circle:
+      case StyleBasicShapeType::Ellipse:
+        mShapeInfo =
+          ShapeInfo::CreateCircleOrEllipse(basicShape, rect, aWM, aContainerSize);
+        break;
+      case StyleBasicShapeType::Inset:
+        // Bug 1326407 - Implement the rendering of basic shape inset() for
+        // CSS shape-outside.
+        break;
     }
   } else {
     MOZ_ASSERT_UNREACHABLE("Unknown StyleShapeSourceType!");
   }
+
+  // Translate the shape to the same origin as nsFloatManager.
+  mShapeInfo->Translate(aLineLeft, aBlockStart);
 }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -835,6 +822,46 @@ nsFloatManager::FloatInfo::IsEmpty(ShapeType aShapeType) const
   return mShapeInfo->IsEmpty();
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// ShapeInfo
+
+/* static */ UniquePtr<nsFloatManager::ShapeInfo>
+nsFloatManager::ShapeInfo::CreateCircleOrEllipse(
+  StyleBasicShape* const aBasicShape,
+  const LogicalRect& aShapeBoxRect,
+  WritingMode aWM,
+  const nsSize& aContainerSize)
+{
+  // Use physical coordinates to compute the center of circle() or ellipse()
+  // since the <position> keywords such as 'left', 'top', etc. are physical.
+  // https://drafts.csswg.org/css-shapes-1/#funcdef-ellipse
+  nsRect physicalShapeBoxRect =
+    aShapeBoxRect.GetPhysicalRect(aWM, aContainerSize);
+  nsPoint physicalCenter =
+    ShapeUtils::ComputeCircleOrEllipseCenter(aBasicShape, physicalShapeBoxRect);
+  nsPoint center =
+    ConvertPhysicalToLogical(aWM, physicalCenter, aContainerSize);
+
+  // Compute the circle or ellipse radii.
+  nsSize radii;
+  StyleBasicShapeType type = aBasicShape->GetShapeType();
+  if (type == StyleBasicShapeType::Circle) {
+    nscoord radius = ShapeUtils::ComputeCircleRadius(aBasicShape, physicalCenter,
+                                                     physicalShapeBoxRect);
+    radii = nsSize(radius, radius);
+  } else {
+    MOZ_ASSERT(type == StyleBasicShapeType::Ellipse);
+    nsSize physicalRadii =
+      ShapeUtils::ComputeEllipseRadii(aBasicShape, physicalCenter,
+                                      physicalShapeBoxRect);
+    LogicalSize logicalRadii(aWM, physicalRadii);
+    radii = nsSize(logicalRadii.ISize(aWM), logicalRadii.BSize(aWM));
+  }
+
+  return MakeUnique<EllipseShapeInfo>(center, radii);
+}
+
+
 /* static */ nscoord
 nsFloatManager::ShapeInfo::ComputeEllipseLineInterceptDiff(
   const nscoord aShapeBoxBStart, const nscoord aShapeBoxBEnd,
@@ -913,6 +940,17 @@ nsFloatManager::ShapeInfo::XInterceptAtY(const nscoord aY,
   // Solve for x in the ellipse equation (x/radiusX)^2 + (y/radiusY)^2 = 1.
   MOZ_ASSERT(aRadiusY > 0);
   return aRadiusX * std::sqrt(1 - (aY * aY) / double(aRadiusY * aRadiusY));
+}
+
+/* static */ nsPoint
+nsFloatManager::ShapeInfo::ConvertPhysicalToLogical(
+  WritingMode aWM,
+  const nsPoint& aPoint,
+  const nsSize& aContainerSize)
+{
+  LogicalPoint logicalPoint(aWM, aPoint, aContainerSize);
+  return nsPoint(logicalPoint.LineRelative(aWM, aContainerSize),
+                 logicalPoint.B(aWM));
 }
 
 //----------------------------------------------------------------------

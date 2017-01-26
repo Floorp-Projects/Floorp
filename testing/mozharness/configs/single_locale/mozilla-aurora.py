@@ -1,3 +1,5 @@
+import os
+
 config = {
     "nightly_build": True,
     "branch": "mozilla-aurora",
@@ -9,7 +11,11 @@ config = {
     "hg_l10n_base": "https://hg.mozilla.org/releases/l10n/mozilla-aurora",
 
     # mar
-    "mar_tools_url": "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-aurora/mar-tools/%(platform)s",
+    "mar_tools_url": os.environ.get(
+        "MAR_TOOLS_URL",
+        # Buildbot l10n fetches from ftp rather than setting an environ var
+        "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-mozilla-aurora/mar-tools/%(platform)s"
+    ),
 
     # repositories
     "mozilla_dir": "mozilla-aurora",

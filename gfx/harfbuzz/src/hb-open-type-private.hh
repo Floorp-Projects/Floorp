@@ -30,6 +30,7 @@
 #define HB_OPEN_TYPE_PRIVATE_HH
 
 #include "hb-private.hh"
+#include "hb-face-private.hh"
 
 
 namespace OT {
@@ -829,6 +830,7 @@ struct OffsetTo : Offset<OffsetType>
   }
   DEFINE_SIZE_STATIC (sizeof(OffsetType));
 };
+template <typename Type> struct LOffsetTo : OffsetTo<Type, ULONG> {};
 template <typename Base, typename OffsetType, typename Type>
 static inline const Type& operator + (const Base &base, const OffsetTo<Type, OffsetType> &offset) { return offset (base); }
 template <typename Base, typename OffsetType, typename Type>
@@ -950,6 +952,7 @@ struct ArrayOf
   public:
   DEFINE_SIZE_ARRAY (sizeof (LenType), array);
 };
+template <typename Type> struct LArrayOf : ArrayOf<Type, ULONG> {};
 
 /* Array of Offset's */
 template <typename Type, typename OffsetType=USHORT>
@@ -1058,6 +1061,104 @@ struct SortedArrayOf : ArrayOf<Type, LenType>
     }
     return -1;
   }
+};
+
+
+/* Lazy struct and blob loaders. */
+
+/* Logic is shared between hb_lazy_loader_t and hb_lazy_table_loader_t */
+template <typename T>
+struct hb_lazy_loader_t
+{
+  inline void init (hb_face_t *face_)
+  {
+    face = face_;
+    instance = NULL;
+  }
+
+  inline void fini (void)
+  {
+    if (instance && instance != &OT::Null(T))
+    {
+      instance->fini();
+      free (instance);
+    }
+  }
+
+  inline const T* get (void) const
+  {
+  retry:
+    T *p = (T *) hb_atomic_ptr_get (&instance);
+    if (unlikely (!p))
+    {
+      p = (T *) calloc (1, sizeof (T));
+      if (unlikely (!p))
+        p = const_cast<T *> (&OT::Null(T));
+      else
+	p->init (face);
+      if (unlikely (!hb_atomic_ptr_cmpexch (const_cast<T **>(&instance), NULL, p)))
+      {
+	if (p != &OT::Null(T))
+	  p->fini ();
+	goto retry;
+      }
+    }
+    return p;
+  }
+
+  inline const T* operator-> (void) const
+  {
+    return get ();
+  }
+
+  private:
+  hb_face_t *face;
+  T *instance;
+};
+
+/* Logic is shared between hb_lazy_loader_t and hb_lazy_table_loader_t */
+template <typename T>
+struct hb_lazy_table_loader_t
+{
+  inline void init (hb_face_t *face_)
+  {
+    face = face_;
+    instance = NULL;
+    blob = NULL;
+  }
+
+  inline void fini (void)
+  {
+    hb_blob_destroy (blob);
+  }
+
+  inline const T* get (void) const
+  {
+  retry:
+    T *p = (T *) hb_atomic_ptr_get (&instance);
+    if (unlikely (!p))
+    {
+      hb_blob_t *blob_ = OT::Sanitizer<T>::sanitize (face->reference_table (T::tableTag));
+      p = const_cast<T *>(OT::Sanitizer<T>::lock_instance (blob_));
+      if (!hb_atomic_ptr_cmpexch (const_cast<T **>(&instance), NULL, p))
+      {
+	hb_blob_destroy (blob_);
+	goto retry;
+      }
+      blob = blob_;
+    }
+    return p;
+  }
+
+  inline const T* operator-> (void) const
+  {
+    return get();
+  }
+
+  private:
+  hb_face_t *face;
+  T *instance;
+  mutable hb_blob_t *blob;
 };
 
 

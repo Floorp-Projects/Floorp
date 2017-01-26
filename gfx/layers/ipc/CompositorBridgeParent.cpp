@@ -403,7 +403,7 @@ CompositorBridgeParent::RecvReset(nsTArray<LayersBackend>&& aBackendHints,
 {
   Maybe<TextureFactoryIdentifier> newIdentifier;
   ResetCompositorTask(aBackendHints, aSeqNo, &newIdentifier);
-  
+
   if (newIdentifier) {
     *aResult = true;
     *aOutIdentifier = newIdentifier.value();
@@ -1305,17 +1305,6 @@ mozilla::ipc::IPCResult
 CompositorBridgeParent::RecvGetFrameUniformity(FrameUniformityData* aOutData)
 {
   mCompositionManager->GetFrameUniformity(aOutData);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
-CompositorBridgeParent::RecvRequestOverfill()
-{
-  uint32_t overfillRatio = 0;
-  if (mCompositor) {
-    overfillRatio = mCompositor->GetFillRatio();
-  }
-  Unused << SendOverfill(overfillRatio);
   return IPC_OK();
 }
 

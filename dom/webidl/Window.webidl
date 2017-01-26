@@ -207,17 +207,6 @@ partial interface Window {
   [Throws, NeedsCallerType] attribute any outerHeight;
 };
 
-/**
- * Special function that gets the fill ratio from the compositor used for testing
- * and is an indicator that we're layerizing correctly.
- * This function will call the given callback current fill ratio for a
- * composited frame. We don't guarantee which frame fill ratios will be returned.
- */
-partial interface Window {
-  [ChromeOnly, Throws] void mozRequestOverfill(OverfillCallback callback);
-};
-callback OverfillCallback = void (unsigned long overfill);
-
 // https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/RequestAnimationFrame/Overview.html
 partial interface Window {
   [Throws] long requestAnimationFrame(FrameRequestCallback callback);
@@ -514,3 +503,16 @@ dictionary IdleRequestOptions {
 };
 
 callback IdleRequestCallback = void (IdleDeadline deadline);
+
+/**
+ * Similar to |isSecureContext|, but doesn't pay attention to whether the
+ * window's opener (if any) is a secure context or not.
+ *
+ * WARNING: Do not use this unless you are familiar with the issues that
+ * taking opener state into account is designed to address (or else you may
+ * introduce security issues).  If in doubt, use |isSecureContext|.  In
+ * particular do not use this to gate access to JavaScript APIs.
+ */
+partial interface Window {
+  [ChromeOnly] readonly attribute boolean isSecureContextIfOpenerIgnored;
+};

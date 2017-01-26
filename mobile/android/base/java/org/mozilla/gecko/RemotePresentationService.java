@@ -6,10 +6,6 @@
 
 package org.mozilla.gecko;
 
-import org.json.JSONObject;
-import org.json.JSONException;
-
-import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.PresentationView;
@@ -19,9 +15,6 @@ import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.LayerView;
-import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.NativeEventListener;
-import org.mozilla.gecko.util.NativeJSObject;
 
 import com.google.android.gms.cast.CastMediaControlIntent;
 import com.google.android.gms.cast.CastPresentation;

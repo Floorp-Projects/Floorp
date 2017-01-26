@@ -362,6 +362,42 @@ typedef struct hb_user_data_key_t {
 typedef void (*hb_destroy_func_t) (void *user_data);
 
 
+/* Font features and variations. */
+
+typedef struct hb_feature_t {
+  hb_tag_t      tag;
+  uint32_t      value;
+  unsigned int  start;
+  unsigned int  end;
+} hb_feature_t;
+
+HB_EXTERN hb_bool_t
+hb_feature_from_string (const char *str, int len,
+			hb_feature_t *feature);
+
+HB_EXTERN void
+hb_feature_to_string (hb_feature_t *feature,
+		      char *buf, unsigned int size);
+
+/**
+ * hb_variation_t:
+ *
+ * Since: 1.4.2
+ */
+typedef struct hb_variation_t {
+  hb_tag_t tag;
+  float    value;
+} hb_variation_t;
+
+HB_EXTERN hb_bool_t
+hb_variation_from_string (const char *str, int len,
+			  hb_variation_t *variation);
+
+HB_EXTERN void
+hb_variation_to_string (hb_variation_t *variation,
+			char *buf, unsigned int size);
+
+
 HB_END_DECLS
 
 #endif /* HB_COMMON_H */

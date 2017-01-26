@@ -1245,7 +1245,13 @@ gfxAlphaBoxBlur::BlurInsetBox(gfxContext* aDestinationCtx,
     GetInsetBoxShadowRects(blurMargin, innerMargin, aShadowClipRect,
                            aDestinationRect, whitespaceRect, outerRect);
 
-  bool mirrorCorners = !aInnerClipRadii || aInnerClipRadii->AreRadiiSame();
+  // Check that the inset margin between the outer and whitespace rects is symmetric,
+  // and that all corner radii are the same, in which case the blur can be mirrored.
+  Margin checkMargin = outerRect - whitespaceRect;
+  bool mirrorCorners =
+    checkMargin.left == checkMargin.right &&
+    checkMargin.top == checkMargin.bottom &&
+    (!aInnerClipRadii || aInnerClipRadii->AreRadiiSame());
   RefPtr<SourceSurface> minBlur =
     GetInsetBlur(outerRect, whitespaceRect, useDestRect, aShadowColor,
                  aBlurRadius, aInnerClipRadii, destDrawTarget, mirrorCorners);

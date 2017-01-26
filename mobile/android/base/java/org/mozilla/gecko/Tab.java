@@ -572,7 +572,9 @@ public class Tab {
     }
 
     public void doReload(boolean bypassCache) {
-        GeckoAppShell.notifyObservers("Session:Reload", "{\"bypassCache\":" + String.valueOf(bypassCache) + "}");
+        final GeckoBundle data = new GeckoBundle(1);
+        data.putBoolean("bypassCache", bypassCache);
+        EventDispatcher.getInstance().dispatch("Session:Reload", data);
     }
 
     // Our version of nsSHistory::GetCanGoBack

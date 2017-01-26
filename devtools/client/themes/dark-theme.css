@@ -208,11 +208,11 @@ body {
 }
 
 .cm-s-mozilla.CodeMirror-focused .CodeMirror-selected { /* selected text (focused) */
-  background: rgb(185, 215, 253);
+  background: rgb(77, 86, 103);
 }
 
 .cm-s-mozilla .CodeMirror-selected { /* selected text (unfocused) */
-  background: rgb(176, 176, 176);
+  background: rgb(77, 86, 103);
 }
 
 .cm-s-mozilla .CodeMirror-activeline-background { /* selected color with alpha */

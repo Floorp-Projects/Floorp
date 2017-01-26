@@ -50,6 +50,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
 
 #include "jsapi.h"
@@ -972,6 +973,11 @@ js::FutexRuntime::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
         return false;
     }
 
+    // Go back to Idle after returning.
+    auto onFinish = mozilla::MakeScopeExit([&] {
+        state_ = Idle;
+    });
+
     const bool isTimed = timeout.isSome();
 
     auto finalEnd = timeout.map([](mozilla::TimeDuration& timeout) {
@@ -982,8 +988,6 @@ js::FutexRuntime::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
     // 4000s is about the longest timeout slice that is guaranteed to
     // work cross-platform.
     auto maxSlice = mozilla::TimeDuration::FromSeconds(4000.0);
-
-    bool retval = true;
 
     for (;;) {
         // If we are doing a timed wait, calculate the end time for this wait
@@ -1010,14 +1014,14 @@ js::FutexRuntime::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
                 auto now = mozilla::TimeStamp::Now();
                 if (now >= *finalEnd) {
                     *result = FutexTimedOut;
-                    goto finished;
+                    return true;
                 }
             }
             break;
 
           case FutexRuntime::Woken:
             *result = FutexOK;
-            goto finished;
+            return true;
 
           case FutexRuntime::WaitingNotifiedForInterrupt:
             // The interrupt handler may reenter the engine.  In that case
@@ -1052,13 +1056,12 @@ js::FutexRuntime::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
             state_ = WaitingInterrupted;
             {
                 UnlockGuard<Mutex> unlock(locked);
-                retval = cx->runtime()->handleInterrupt(cx);
+                if (!cx->runtime()->handleInterrupt(cx))
+                    return false;
             }
-            if (!retval)
-                goto finished;
             if (state_ == Woken) {
                 *result = FutexOK;
-                goto finished;
+                return true;
             }
             break;
 
@@ -1066,9 +1069,6 @@ js::FutexRuntime::wait(JSContext* cx, js::UniqueLock<js::Mutex>& locked,
             MOZ_CRASH("Bad FutexState in wait()");
         }
     }
-finished:
-    state_ = Idle;
-    return retval;
 }
 
 void

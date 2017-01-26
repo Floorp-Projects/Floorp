@@ -70,10 +70,6 @@ namespace gfx {
 class DrawTarget;
 } // namespace gfx
 
-namespace dom {
-class OverfillCallback;
-} // namespace dom
-
 namespace layers {
 
 class Animation;
@@ -656,8 +652,6 @@ public:
 
   bool IsInTransaction() const { return mInTransaction; }
   virtual void GetFrameUniformity(FrameUniformityData* aOutData) { }
-  virtual bool RequestOverfill(mozilla::dom::OverfillCallback* aCallback) { return true; }
-  virtual void RunOverfillCallback(const uint32_t aOverfill) { }
 
   virtual void SetRegionToClear(const nsIntRegion& aRegion)
   {

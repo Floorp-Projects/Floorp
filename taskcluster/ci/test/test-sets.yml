@@ -79,9 +79,12 @@ qr-tests:
     - xpcshell
 
 ccov-code-coverage-tests:
+    - crashtest
+    - jsreftest
     - mochitest
     - mochitest-browser-chrome
     - mochitest-devtools-chrome
+    - reftest
     - xpcshell
 
 jsdcov-code-coverage-tests:
@@ -119,16 +122,6 @@ windows-vm-tests:
 #    - mochitest-clipboard
 #    - mochitest-gpu
 #    - mochitest-other
-
-ccov-code-coverage-tests:
-    - mochitest
-    - mochitest-browser-chrome
-    - mochitest-devtools-chrome
-    - xpcshell
-
-jsdcov-code-coverage-tests:
-    - mochitest-browser-chrome
-    - mochitest-devtools-chrome
 
 macosx64-tests-debug:
     - cppunit
