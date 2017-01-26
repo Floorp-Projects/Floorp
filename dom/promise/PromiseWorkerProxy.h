@@ -147,8 +147,6 @@ public:
   // worker thread! Do not call this after calling CleanUp().
   Promise* WorkerPromise() const;
 
-  void StoreISupports(nsISupports* aSupports);
-
   // Worker thread only. Calling this invalidates several assumptions, so be
   // sure this is the last thing you do.
   // 1. WorkerPrivate() will no longer return a valid worker.
@@ -216,10 +214,6 @@ private:
   bool mCleanedUp; // To specify if the cleanUp() has been done.
 
   const PromiseWorkerProxyStructuredCloneCallbacks* mCallbacks;
-
-  // Aimed to keep objects alive when doing the structured-clone read/write,
-  // which can be added by calling StoreISupports() on the main thread.
-  nsTArray<nsMainThreadPtrHandle<nsISupports>> mSupportsArray;
 
   // Ensure the worker and the main thread won't race to access |mCleanedUp|.
   Mutex mCleanUpLock;
