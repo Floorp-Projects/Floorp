@@ -217,16 +217,28 @@ add_task(function* test_order() {
     deepEqual(childSyncIds, order, "New bookmarks should be reordered according to array");
   }
 
-  do_print("Reorder with unspecified children");
+  do_print("Same order with unspecified children");
   {
     yield PlacesSyncUtils.bookmarks.order(PlacesUtils.bookmarks.menuGuid, [
       guids.siblingSep, guids.siblingBmk,
     ]);
     let childSyncIds = yield PlacesSyncUtils.bookmarks.fetchChildSyncIds(
       PlacesUtils.bookmarks.menuGuid);
-    deepEqual(childSyncIds, [guids.siblingSep, guids.siblingBmk,
+    deepEqual(childSyncIds, [guids.siblingFolder, guids.siblingSep,
+      guids.childBmk, guids.siblingBmk],
+      "Current order should be respected if possible");
+  }
+
+  do_print("New order with unspecified children");
+  {
+    yield PlacesSyncUtils.bookmarks.order(PlacesUtils.bookmarks.menuGuid, [
+      guids.siblingBmk, guids.siblingSep,
+    ]);
+    let childSyncIds = yield PlacesSyncUtils.bookmarks.fetchChildSyncIds(
+      PlacesUtils.bookmarks.menuGuid);
+    deepEqual(childSyncIds, [guids.siblingBmk, guids.siblingSep,
       guids.siblingFolder, guids.childBmk],
-      "Unordered children should be moved to end");
+      "Unordered children should be moved to end if current order can't be respected");
   }
 
   do_print("Reorder with nonexistent children");
