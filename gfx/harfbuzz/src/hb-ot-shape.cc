@@ -362,6 +362,18 @@ hb_ot_shape_setup_masks_fraction (hb_ot_shape_context_t *c)
 
   hb_buffer_t *buffer = c->buffer;
 
+  hb_mask_t pre_mask, post_mask;
+  if (HB_DIRECTION_IS_FORWARD (buffer->props.direction))
+  {
+    pre_mask = c->plan->numr_mask | c->plan->frac_mask;
+    post_mask = c->plan->frac_mask | c->plan->dnom_mask;
+  }
+  else
+  {
+    pre_mask = c->plan->frac_mask | c->plan->dnom_mask;
+    post_mask = c->plan->numr_mask | c->plan->frac_mask;
+  }
+
   /* TODO look in pre/post context text also. */
   unsigned int count = buffer->len;
   hb_glyph_info_t *info = buffer->info;
@@ -380,10 +392,10 @@ hb_ot_shape_setup_masks_fraction (hb_ot_shape_context_t *c)
         end++;
 
       for (unsigned int j = start; j < i; j++)
-        info[j].mask |= c->plan->numr_mask | c->plan->frac_mask;
+        info[j].mask |= pre_mask;
       info[i].mask |= c->plan->frac_mask;
       for (unsigned int j = i + 1; j < end; j++)
-        info[j].mask |= c->plan->frac_mask | c->plan->dnom_mask;
+        info[j].mask |= post_mask;
 
       i = end - 1;
     }

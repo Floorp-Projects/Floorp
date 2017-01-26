@@ -124,4 +124,6 @@
 #define STRING_GENERICS_TRIM_RIGHT            23
 #define STRING_GENERICS_METHODS_LIMIT         24
 
+#define INTL_INTERNALS_OBJECT_SLOT 0
+
 #endif

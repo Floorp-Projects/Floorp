@@ -68,26 +68,6 @@ protected:
   void UpdateStageParameters();
 };
 
-} // namespace impl
-
-class VRDisplayManagerOpenVR : public VRDisplayManager
-{
-public:
-  static already_AddRefed<VRDisplayManagerOpenVR> Create();
-
-  virtual bool Init() override;
-  virtual void Destroy() override;
-  virtual void GetHMDs(nsTArray<RefPtr<VRDisplayHost> >& aHMDResult) override;
-protected:
-  VRDisplayManagerOpenVR();
-
-  // there can only be one
-  RefPtr<impl::VRDisplayOpenVR> mOpenVRHMD;
-  bool mOpenVRInstalled;
-};
-
-namespace impl {
-
 class VRControllerOpenVR : public VRControllerHost
 {
 public:
@@ -104,23 +84,24 @@ protected:
 
 } // namespace impl
 
-class VRControllerManagerOpenVR : public VRControllerManager
+class VRSystemManagerOpenVR : public VRSystemManager
 {
 public:
-  static already_AddRefed<VRControllerManagerOpenVR> Create();
+  static already_AddRefed<VRSystemManagerOpenVR> Create();
 
   virtual bool Init() override;
   virtual void Destroy() override;
+  virtual void GetHMDs(nsTArray<RefPtr<VRDisplayHost> >& aHMDResult) override;
   virtual void HandleInput() override;
   virtual void GetControllers(nsTArray<RefPtr<VRControllerHost>>&
                               aControllerResult) override;
-  virtual void ScanForDevices() override;
-  virtual void RemoveDevices() override;
+  virtual void ScanForControllers() override;
+  virtual void RemoveControllers() override;
+
+protected:
+  VRSystemManagerOpenVR();
 
 private:
-  VRControllerManagerOpenVR();
-  ~VRControllerManagerOpenVR();
-
   virtual void HandleButtonPress(uint32_t aControllerIdx,
                                  uint64_t aButtonPressed) override;
   virtual void HandleAxisMove(uint32_t aControllerIdx, uint32_t aAxis,
@@ -129,9 +110,11 @@ private:
                                   const dom::GamepadPoseState& aPose,
                                   VRControllerHost* aController) override;
 
-  bool mOpenVRInstalled;
+  // there can only be one
+  RefPtr<impl::VRDisplayOpenVR> mOpenVRHMD;
   nsTArray<RefPtr<impl::VRControllerOpenVR>> mOpenVRController;
   vr::IVRSystem *mVRSystem;
+  bool mOpenVRInstalled;
 };
 
 } // namespace gfx

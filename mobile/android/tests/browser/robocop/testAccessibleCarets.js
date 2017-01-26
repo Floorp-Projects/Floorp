@@ -144,8 +144,8 @@ function UIhasActionByID(expectedActionID) {
  * Messages the ActionBarHandler to close the Selection UI.
  */
 function closeSelectionUI() {
-  Services.obs.notifyObservers(null, "TextSelection:End",
-    JSON.stringify({selectionID: gChromeWin.ActionBarHandler._selectionID}));
+  gChromeWin.WindowEventDispatcher.dispatch("TextSelection:End",
+    {selectionID: gChromeWin.ActionBarHandler._selectionID});
 }
 
 /**

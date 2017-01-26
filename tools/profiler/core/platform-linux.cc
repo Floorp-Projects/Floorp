@@ -316,7 +316,7 @@ static void* SignalSender(void* arg) {
     SamplerRegistry::sampler->DeleteExpiredMarkers();
 
     if (!SamplerRegistry::sampler->IsPaused()) {
-      ::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
+      MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
       const std::vector<ThreadInfo*>& threads =
         SamplerRegistry::sampler->GetRegisteredThreads();
 

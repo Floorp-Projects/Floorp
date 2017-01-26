@@ -952,7 +952,7 @@ public:
 
   bool             SuppressingResizeReflow() const { return mSuppressResizeReflow; }
 
-  gfxUserFontSet* GetUserFontSet();
+  gfxUserFontSet* GetUserFontSet(bool aFlushUserFontSet = true);
 
   // Should be called whenever the set of fonts available in the user
   // font set changes (e.g., because a new font loads, or because the
@@ -977,7 +977,8 @@ public:
   // aFlags are nsIPresShell::PAINT_ flags
   void NotifyDidPaintForSubtree(uint32_t aFlags, uint64_t aTransactionId = 0,
                                 const mozilla::TimeStamp& aTimeStamp = mozilla::TimeStamp());
-  void FireDOMPaintEvent(nsInvalidateRequestList* aList, uint64_t aTransactionId);
+  void FireDOMPaintEvent(nsInvalidateRequestList* aList, uint64_t aTransactionId,
+                         mozilla::TimeStamp aTimeStamp = mozilla::TimeStamp());
 
   // Callback for catching invalidations in ContainerLayers
   // Passed to LayerProperties::ComputeDifference

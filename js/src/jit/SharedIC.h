@@ -970,6 +970,9 @@ class ICCacheIR_Updated : public ICUpdatedStub
         updateStubId_(JSID_EMPTY)
     {}
 
+    static ICCacheIR_Updated* Clone(JSContext* cx, ICStubSpace* space, ICStub* firstMonitorStub,
+                                    ICCacheIR_Updated& other);
+
     GCPtrObjectGroup& updateStubGroup() {
         return updateStubGroup_;
     }
@@ -2250,14 +2253,6 @@ IsPreliminaryObject(JSObject* obj);
 
 void
 StripPreliminaryObjectStubs(JSContext* cx, ICFallbackStub* stub);
-
-MOZ_MUST_USE bool
-EffectlesslyLookupProperty(JSContext* cx, HandleObject obj, HandleId name,
-                           MutableHandleObject holder, MutableHandleShape shape);
-
-MOZ_MUST_USE bool
-EffectlesslyLookupProperty(JSContext* cx, HandleObject obj, HandleId name,
-                           MutableHandleObject holder, MutableHandle<PropertyResult> prop);
 
 JSObject*
 GetDOMProxyProto(JSObject* obj);

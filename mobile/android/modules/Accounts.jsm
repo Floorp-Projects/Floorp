@@ -34,7 +34,7 @@ Cu.import("resource://gre/modules/Services.jsm"); /*global Services */
  */
 var Accounts = Object.freeze({
   _accountsExist: function (kind) {
-    return Messaging.sendRequestForResult({
+    return EventDispatcher.instance.sendRequestForResult({
       type: "Accounts:Exist",
       kind: kind
     }).then(data => data.exists);
@@ -66,7 +66,7 @@ var Accounts = Object.freeze({
    * There is no return value from this method.
    */
   launchSetup: function (extras) {
-    Messaging.sendRequest({
+    EventDispatcher.instance.sendRequest({
       type: "Accounts:Create",
       extras: extras
     });
@@ -95,7 +95,7 @@ var Accounts = Object.freeze({
    * Returns a Promise that resolves to a boolean indicating success.
    */
   createFirefoxAccountFromJSON: function (json) {
-    return Messaging.sendRequestForResult({
+    return EventDispatcher.instance.sendRequestForResult({
       type: "Accounts:CreateFirefoxAccountFromJSON",
       json: this._addDefaultEndpoints(json)
     });
@@ -112,7 +112,7 @@ var Accounts = Object.freeze({
    * Returns a Promise that resolves to a boolean indicating success.
    */
   updateFirefoxAccountFromJSON: function (json) {
-    return Messaging.sendRequestForResult({
+    return EventDispatcher.instance.sendRequestForResult({
       type: "Accounts:UpdateFirefoxAccountFromJSON",
       json: this._addDefaultEndpoints(json)
     });
@@ -127,7 +127,7 @@ var Accounts = Object.freeze({
    * There is no return value from this method.
    */
   notifyFirefoxAccountProfileChanged: function () {
-    Messaging.sendRequest({
+    EventDispatcher.instance.sendRequest({
       type: "Accounts:ProfileUpdated",
     });
   },
@@ -139,7 +139,7 @@ var Accounts = Object.freeze({
    * exists, or an object including at least a string-valued 'email' key.
    */
   getFirefoxAccount: function () {
-    return Messaging.sendRequestForResult({
+    return EventDispatcher.instance.sendRequestForResult({
       type: "Accounts:Exist",
       kind: "fxa",
     }).then(data => {
@@ -159,7 +159,7 @@ var Accounts = Object.freeze({
    * Returns a Promise that resolves to a boolean indicating success.
    */
   deleteFirefoxAccount: function () {
-    return Messaging.sendRequestForResult({
+    return EventDispatcher.instance.sendRequestForResult({
       type: "Accounts:DeleteFirefoxAccount",
     });
   },
@@ -170,7 +170,7 @@ var Accounts = Object.freeze({
       if (!account) {
         throw new Error("Can't show Sync preferences of non-existent Firefox Account!");
       }
-      return Messaging.sendRequestForResult({
+      return EventDispatcher.instance.sendRequestForResult({
         type: "Accounts:ShowSyncPreferences"
       });
     });
