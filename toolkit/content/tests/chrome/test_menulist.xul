@@ -363,6 +363,15 @@ function dragScroll()
     is(popup.scrollBox.scrollTop, scrollPos, "scroll position at mousemove after mouseup should not change");
 
     menulist.open = false;
+
+    let mouseMoveTarget = null;
+    popup.childNodes[4].click();
+    addEventListener("mousemove", function checkMouseMove(event) {
+      mouseMoveTarget = event.target;
+    }, {once: true});
+    synthesizeMouseAtPoint(popupRect.left + 20, popupRect.bottom + 20, { type: "mousemove" });
+    isnot(mouseMoveTarget, popup, "clicking on item when popup closed doesn't start dragging");
+
     SimpleTest.finish();
   });
 
