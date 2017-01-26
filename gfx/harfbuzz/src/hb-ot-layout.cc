@@ -114,6 +114,8 @@ _hb_ot_layout_create (hb_face_t *face)
       || (832 == gdef_len && 47162 == gpos_len && 7324 == gsub_len)
       /* sha1sum:12fc4538e84d461771b30c18b5eb6bd434e30fba  Tahoma Bold.ttf from Mac OS X 10.9 */
       || (844 == gdef_len && 45474 == gpos_len && 7302 == gsub_len)
+      /* sha1sum:eb8afadd28e9cf963e886b23a30b44ab4fd83acc  himalaya.ttf from Windows 7 */
+      || (180 == gdef_len && 7254 == gpos_len && 13054 == gsub_len)
       /* sha1sum:73da7f025b238a3f737aa1fde22577a6370f77b0  himalaya.ttf from Windows 8 */
       || (192 == gdef_len && 7254 == gpos_len && 12638 == gsub_len)
       /* sha1sum:6e80fd1c0b059bbee49272401583160dc1e6a427  himalaya.ttf from Windows 8.1 */
