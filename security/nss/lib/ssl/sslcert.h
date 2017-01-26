@@ -13,26 +13,21 @@
 #include "secitem.h"
 #include "keyhi.h"
 
-/* The following struct identifies a single slot into which a certificate can be
-** loaded.  The authType field determines the basic slot, then additional
-** parameters further narrow the slot.
-**
-** An EC key (ssl_auth_ecdsa or ssl_auth_ecdh_*) is assigned to a slot based on
-** the named curve of the key.
-*/
-typedef struct sslServerCertTypeStr {
-    SSLAuthType authType;
+/* This type is a bitvector that is indexed by SSLAuthType values.  Note that
+ * the bit for ssl_auth_null(0) - the least significant bit - isn't used. */
+typedef PRUint16 sslAuthTypeMask;
+PR_STATIC_ASSERT(sizeof(sslAuthTypeMask) * 8 >= ssl_auth_size);
+
+typedef struct sslServerCertStr {
+    PRCList link; /* The linked list link */
+
+    /* The auth types that this certificate provides. */
+    sslAuthTypeMask authTypes;
     /* For ssl_auth_ecdsa and ssl_auth_ecdh_*.  This is only the named curve
      * of the end-entity certificate key.  The keys in other certificates in
      * the chain aren't directly relevant to the operation of TLS (though it
      * might make certificate validation difficult, libssl doesn't care). */
     const sslNamedGroupDef *namedCurve;
-} sslServerCertType;
-
-typedef struct sslServerCertStr {
-    PRCList link; /* The linked list link */
-
-    sslServerCertType certType; /* The certificate slot this occupies */
 
     /* Configuration state for server sockets */
     CERTCertificate *serverCert;
@@ -48,12 +43,18 @@ typedef struct sslServerCertStr {
     SECItem signedCertTimestamps;
 } sslServerCert;
 
-extern sslServerCert *ssl_NewServerCert(const sslServerCertType *slot);
+#define SSL_CERT_IS(c, t) ((c)->authTypes & (1 << (t)))
+#define SSL_CERT_IS_ONLY(c, t) ((c)->authTypes == (1 << (t)))
+#define SSL_CERT_IS_EC(c)                         \
+    ((c)->authTypes & ((1 << ssl_auth_ecdsa) |    \
+                       (1 << ssl_auth_ecdh_rsa) | \
+                       (1 << ssl_auth_ecdh_ecdsa)))
+
+extern sslServerCert *ssl_NewServerCert();
 extern sslServerCert *ssl_CopyServerCert(const sslServerCert *oc);
-extern sslServerCert *ssl_FindServerCert(const sslSocket *ss,
-                                         const sslServerCertType *slot);
-extern sslServerCert *ssl_FindServerCertByAuthType(const sslSocket *ss,
-                                                   SSLAuthType authType);
+extern const sslServerCert *ssl_FindServerCert(
+    const sslSocket *ss, SSLAuthType authType,
+    const sslNamedGroupDef *namedCurve);
 extern void ssl_FreeServerCert(sslServerCert *sc);
 
 #endif /* __sslcert_h_ */

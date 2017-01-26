@@ -102,22 +102,34 @@ void TlsAgent::SetState(State state) {
   state_ = state;
 }
 
+/*static*/ bool TlsAgent::LoadCertificate(const std::string& name,
+                                          ScopedCERTCertificate* cert,
+                                          ScopedSECKEYPrivateKey* priv) {
+  cert->reset(PK11_FindCertFromNickname(name.c_str(), nullptr));
+  EXPECT_NE(nullptr, cert->get());
+  if (!cert->get()) return false;
+
+  priv->reset(PK11_FindKeyByAnyCert(cert->get(), nullptr));
+  EXPECT_NE(nullptr, priv->get());
+  if (!priv->get()) return false;
+
+  return true;
+}
+
 bool TlsAgent::ConfigServerCert(const std::string& name, bool updateKeyBits,
                                 const SSLExtraServerCertData* serverCertData) {
-  ScopedCERTCertificate cert(PK11_FindCertFromNickname(name.c_str(), nullptr));
-  EXPECT_NE(nullptr, cert.get());
-  if (!cert.get()) return false;
-
-  ScopedSECKEYPublicKey pub(CERT_ExtractPublicKey(cert.get()));
-  EXPECT_NE(nullptr, pub.get());
-  if (!pub.get()) return false;
-  if (updateKeyBits) {
-    server_key_bits_ = SECKEY_PublicKeyStrengthInBits(pub.get());
+  ScopedCERTCertificate cert;
+  ScopedSECKEYPrivateKey priv;
+  if (!TlsAgent::LoadCertificate(name, &cert, &priv)) {
+    return false;
   }
 
-  ScopedSECKEYPrivateKey priv(PK11_FindKeyByAnyCert(cert.get(), nullptr));
-  EXPECT_NE(nullptr, priv.get());
-  if (!priv.get()) return false;
+  if (updateKeyBits) {
+    ScopedSECKEYPublicKey pub(CERT_ExtractPublicKey(cert.get()));
+    EXPECT_NE(nullptr, pub.get());
+    if (!pub.get()) return false;
+    server_key_bits_ = SECKEY_PublicKeyStrengthInBits(pub.get());
+  }
 
   SECStatus rv =
       SSL_ConfigSecureServer(ssl_fd_, nullptr, nullptr, ssl_kea_null);
@@ -181,30 +193,23 @@ void TlsAgent::SetupClientAuth() {
                                       reinterpret_cast<void*>(this)));
 }
 
-bool TlsAgent::GetClientAuthCredentials(CERTCertificate** cert,
-                                        SECKEYPrivateKey** priv) const {
-  *cert = PK11_FindCertFromNickname(name_.c_str(), nullptr);
-  EXPECT_NE(nullptr, *cert);
-  if (!*cert) return false;
-
-  *priv = PK11_FindKeyByAnyCert(*cert, nullptr);
-  EXPECT_NE(nullptr, *priv);
-  if (!*priv) return false;  // Leak cert.
-
-  return true;
-}
-
 SECStatus TlsAgent::GetClientAuthDataHook(void* self, PRFileDesc* fd,
                                           CERTDistNames* caNames,
-                                          CERTCertificate** cert,
-                                          SECKEYPrivateKey** privKey) {
+                                          CERTCertificate** clientCert,
+                                          SECKEYPrivateKey** clientKey) {
   TlsAgent* agent = reinterpret_cast<TlsAgent*>(self);
   ScopedCERTCertificate peerCert(SSL_PeerCertificate(agent->ssl_fd()));
   EXPECT_TRUE(peerCert) << "Client should be able to see the server cert";
-  if (agent->GetClientAuthCredentials(cert, privKey)) {
-    return SECSuccess;
+
+  ScopedCERTCertificate cert;
+  ScopedSECKEYPrivateKey priv;
+  if (!TlsAgent::LoadCertificate(agent->name(), &cert, &priv)) {
+    return SECFailure;
   }
-  return SECFailure;
+
+  *clientCert = cert.release();
+  *clientKey = priv.release();
+  return SECSuccess;
 }
 
 bool TlsAgent::GetPeerChainLength(size_t* count) {
