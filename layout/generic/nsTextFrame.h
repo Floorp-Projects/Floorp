@@ -82,10 +82,11 @@ public:
 
   nsresult GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor) override;
 
-  nsresult CharacterDataChanged(CharacterDataChangeInfo* aInfo) override;
+  nsresult CharacterDataChanged(CharacterDataChangeInfo* aInfo) final;
 
-  nsIFrame* GetNextContinuation() const override { return mNextContinuation; }
-  void SetNextContinuation(nsIFrame* aNextContinuation) override
+  nsTextFrame* GetPrevContinuation() const override { return nullptr; }
+  nsTextFrame* GetNextContinuation() const final { return mNextContinuation; }
+  void SetNextContinuation(nsIFrame* aNextContinuation) final
   {
     NS_ASSERTION(!aNextContinuation ||
                    GetType() == aNextContinuation->GetType(),
@@ -93,12 +94,12 @@ public:
     NS_ASSERTION(
       !nsSplittableFrame::IsInNextContinuationChain(aNextContinuation, this),
       "creating a loop in continuation chain!");
-    mNextContinuation = aNextContinuation;
+    mNextContinuation = static_cast<nsTextFrame*>(aNextContinuation);
     if (aNextContinuation)
       aNextContinuation->RemoveStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
   }
   nsIFrame* GetNextInFlowVirtual() const override { return GetNextInFlow(); }
-  nsIFrame* GetNextInFlow() const
+  nsTextFrame* GetNextInFlow() const
   {
     return mNextContinuation &&
                (mNextContinuation->GetStateBits() &
@@ -106,21 +107,21 @@ public:
              ? mNextContinuation
              : nullptr;
   }
-  void SetNextInFlow(nsIFrame* aNextInFlow) override
+  void SetNextInFlow(nsIFrame* aNextInFlow) final
   {
     NS_ASSERTION(!aNextInFlow || GetType() == aNextInFlow->GetType(),
                  "setting a next in flow with incorrect type!");
     NS_ASSERTION(
       !nsSplittableFrame::IsInNextContinuationChain(aNextInFlow, this),
       "creating a loop in continuation chain!");
-    mNextContinuation = aNextInFlow;
+    mNextContinuation = static_cast<nsTextFrame*>(aNextInFlow);
     if (aNextInFlow)
       aNextInFlow->AddStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
   }
-  nsIFrame* LastInFlow() const override;
-  nsIFrame* LastContinuation() const override;
+  nsTextFrame* LastInFlow() const final;
+  nsTextFrame* LastContinuation() const final;
 
-  nsSplittableType GetSplittableType() const override
+  nsSplittableType GetSplittableType() const final
   {
     return NS_FRAME_SPLITTABLE;
   }
@@ -130,9 +131,9 @@ public:
    *
    * @see nsGkAtoms::textFrame
    */
-  nsIAtom* GetType() const override;
+  nsIAtom* GetType() const final;
 
-  bool IsFrameOfType(uint32_t aFlags) const override
+  bool IsFrameOfType(uint32_t aFlags) const final
   {
     // Set the frame state bit for text frames to mark them as replaced.
     // XXX kipp: temporary
@@ -654,7 +655,7 @@ protected:
   virtual ~nsTextFrame();
 
   RefPtr<gfxTextRun> mTextRun;
-  nsIFrame* mNextContinuation;
+  nsTextFrame* mNextContinuation;
   // The key invariant here is that mContentOffset never decreases along
   // a next-continuation chain. And of course mContentOffset is always <= the
   // the text node's content length, and the mContentOffset for the first frame
