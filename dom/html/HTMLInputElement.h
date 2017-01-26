@@ -1622,7 +1622,7 @@ protected:
 
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                    nsRuleData* aData);
+                                    GenericSpecifiedValues* aGenericData);
 
   /**
    * Returns true if this input's type will fire a DOM "change" event when it

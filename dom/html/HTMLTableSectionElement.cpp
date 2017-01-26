@@ -167,8 +167,9 @@ HTMLTableSectionElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLTableSectionElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                               nsRuleData* aData)
+                                               GenericSpecifiedValues* aGenericData)
 {
+  nsRuleData* aData = aGenericData->AsRuleData();
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Position)) {
     // height: value
     nsCSSValue* height = aData->ValueForHeight();
@@ -197,8 +198,8 @@ HTMLTableSectionElement::MapAttributesIntoRule(const nsMappedAttributes* aAttrib
     }
   }
 
-  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aGenericData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aGenericData);
 }
 
 NS_IMETHODIMP_(bool)

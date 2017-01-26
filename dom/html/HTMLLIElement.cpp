@@ -72,8 +72,9 @@ HTMLLIElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLLIElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                     nsRuleData* aData)
+                                     GenericSpecifiedValues* aGenericData)
 {
+  nsRuleData* aData = aGenericData->AsRuleData();
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(List)) {
     nsCSSValue* listStyleType = aData->ValueForListStyleType();
     if (listStyleType->GetUnit() == eCSSUnit_Null) {
@@ -84,7 +85,7 @@ HTMLLIElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     }
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aGenericData);
 }
 
 NS_IMETHODIMP_(bool)

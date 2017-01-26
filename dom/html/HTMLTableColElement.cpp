@@ -64,8 +64,9 @@ HTMLTableColElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLTableColElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                           nsRuleData* aData)
+                                           GenericSpecifiedValues* aGenericData)
 {
+  nsRuleData* aData = aGenericData->AsRuleData();
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Table)) {
     nsCSSValue *span = aData->ValueForSpan();
     if (span->GetUnit() == eCSSUnit_Null) {
@@ -122,7 +123,7 @@ HTMLTableColElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes
     }
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aGenericData);
 }
 
 NS_IMETHODIMP_(bool)

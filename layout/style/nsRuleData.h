@@ -12,6 +12,7 @@
 #define nsRuleData_h_
 
 #include "mozilla/CSSVariableDeclarations.h"
+#include "mozilla/GenericSpecifiedValues.h"
 #include "mozilla/RuleNodeCacheConditions.h"
 #include "mozilla/SheetType.h"
 #include "nsAutoPtr.h"
@@ -25,7 +26,7 @@ struct nsRuleData;
 
 typedef void (*nsPostResolveFunc)(void* aStyleStruct, nsRuleData* aData);
 
-struct nsRuleData
+struct nsRuleData final: GenericSpecifiedValues
 {
   const uint32_t mSIDs;
   mozilla::RuleNodeCacheConditions mConditions;
@@ -119,6 +120,15 @@ struct nsRuleData
   #undef CSS_PROP_LIST_EXCLUDE_LOGICAL
   #undef CSS_PROP
   #undef CSS_PROP_PUBLIC_OR_PRIVATE
+
+  // GenericSpecifiedValues overrides
+  bool PropertyIsSet(nsCSSPropertyID aId) override {
+    return ValueFor(aId)->GetUnit() != eCSSUnit_Null;
+  }
+
+  nsRuleData* AsRuleData() override {
+    return this;
+  }
 
 private:
   inline size_t GetPoisonOffset();

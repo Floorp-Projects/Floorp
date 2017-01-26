@@ -60,19 +60,21 @@ HTMLDivElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLDivElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                      nsRuleData* aData)
+                                      GenericSpecifiedValues* aGenericData)
 {
-  nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsRuleData* aData = aGenericData->AsRuleData();
+  nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aGenericData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aGenericData);
 }
 
 static void
-MapMarqueeAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aData)
+MapMarqueeAttributesIntoRule(const nsMappedAttributes* aAttributes, GenericSpecifiedValues* aGenericData)
 {
-  nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
-  nsGenericHTMLElement::MapBGColorInto(aAttributes, aData);
+  nsRuleData* aData = aGenericData->AsRuleData();
+  nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aGenericData);
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aGenericData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aGenericData);
+  nsGenericHTMLElement::MapBGColorInto(aAttributes, aGenericData);
 }
 
 NS_IMETHODIMP_(bool)
