@@ -65,7 +65,7 @@ protected:
 
   // We populate this array in the I/O thread with the BlobImpl.
   FallibleTArray<RefPtr<BlobImpl>> mTargetBlobImplArray;
-  nsTHashtable<nsCStringHashKey> mExploredDirectories;
+  nsTHashtable<nsStringHashKey> mExploredDirectories;
 };
 
 // Retrieving the list of files can be very time/IO consuming. We use this
