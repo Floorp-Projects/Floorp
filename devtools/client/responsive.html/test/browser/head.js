@@ -365,8 +365,11 @@ function addDeviceForTest(device) {
 
 function waitForClientClose(ui) {
   return new Promise(resolve => {
-    info("RDM's debugger client is now closed");
-    ui.client.addOneTimeListener("closed", resolve);
+    info("Waiting for RDM debugger client to close");
+    ui.client.addOneTimeListener("closed", () => {
+      info("RDM's debugger client is now closed");
+      resolve();
+    });
   });
 }
 
