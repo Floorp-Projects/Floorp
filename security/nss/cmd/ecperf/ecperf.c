@@ -9,7 +9,6 @@
 #include "basicutil.h"
 #include "pkcs11.h"
 #include "nspr.h"
-#include "secutil.h"
 #include <stdio.h>
 
 #define __PASTE(x, y) x##y
@@ -105,6 +104,8 @@ typedef struct ThreadDataStr {
     SECStatus status;
     int isSign;
 } ThreadData;
+
+typedef SECItem SECKEYECParams;
 
 void
 PKCS11Thread(void *data)

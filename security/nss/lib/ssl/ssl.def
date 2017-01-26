@@ -221,3 +221,9 @@ SSL_SignatureSchemePrefGet;
 ;+    local:
 ;+*;
 ;+};
+;+NSS_3.30 {    # NSS 3.30 release
+;+    global:
+SSL_SetSessionTicketKeyPair;
+;+    local:
+;+*;
+;+};

@@ -13,6 +13,7 @@ extern "C" {
 
 #include "databuffer.h"
 #include "gtest_utils.h"
+#include "scoped_ptrs.h"
 #include "sslproto.h"
 
 extern std::string g_working_dir_path;
@@ -345,6 +346,13 @@ void TlsConnectTestBase::CheckKeys(SSLKEAType kea_type,
       scheme = ssl_sig_none;
       break;
     case ssl_auth_rsa_sign:
+      if (version_ >= SSL_LIBRARY_VERSION_TLS_1_2) {
+        scheme = ssl_sig_rsa_pss_sha256;
+      } else {
+        scheme = ssl_sig_rsa_pkcs1_sha256;
+      }
+      break;
+    case ssl_auth_rsa_pss:
       scheme = ssl_sig_rsa_pss_sha256;
       break;
     case ssl_auth_ecdsa:
@@ -390,6 +398,7 @@ void TlsConnectTestBase::ConnectExpectFailOneSide(TlsAgent::Role failing_side) {
 }
 
 void TlsConnectTestBase::ConfigureVersion(uint16_t version) {
+  version_ = version;
   client_->SetVersionRange(version, version);
   server_->SetVersionRange(version, version);
 }
@@ -440,10 +449,16 @@ void TlsConnectTestBase::ConfigureSessionCache(SessionResumptionMode client,
   client_->ConfigureSessionCache(client);
   server_->ConfigureSessionCache(server);
   if ((server & RESUME_TICKET) != 0) {
-    // This is an abomination.  NSS encrypts session tickets with the server's
-    // RSA public key.  That means we need the server to have an RSA certificate
-    // even if it won't be used for the connection.
-    server_->ConfigServerCert(TlsAgent::kServerRsaDecrypt);
+    ScopedCERTCertificate cert;
+    ScopedSECKEYPrivateKey privKey;
+    ASSERT_TRUE(TlsAgent::LoadCertificate(TlsAgent::kServerRsaDecrypt, &cert,
+                                          &privKey));
+
+    ScopedSECKEYPublicKey pubKey(CERT_ExtractPublicKey(cert.get()));
+    ASSERT_TRUE(pubKey);
+
+    EXPECT_EQ(SECSuccess,
+              SSL_SetSessionTicketKeyPair(pubKey.get(), privKey.get()));
   }
 }
 
