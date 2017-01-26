@@ -18,7 +18,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import org.json.JSONObject;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
@@ -44,7 +43,7 @@ public abstract class DoorHanger extends LinearLayout {
     public static enum Type { DEFAULT, LOGIN, TRACKING, GEOLOCATION, DESKTOPNOTIFICATION2, WEBRTC, VIBRATION }
 
     public interface OnButtonClickListener {
-        public void onButtonClick(JSONObject response, DoorHanger doorhanger);
+        public void onButtonClick(GeckoBundle response, DoorHanger doorhanger);
     }
 
     private static final String LOGTAG = "GeckoDoorHanger";

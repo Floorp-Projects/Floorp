@@ -9,9 +9,9 @@ import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.ResourceDrawableUtils;
+import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.NativeEventListener;
-import org.mozilla.gecko.util.NativeJSObject;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
 
@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.ArrayList;
 
-public class PageActionLayout extends LinearLayout implements NativeEventListener,
+public class PageActionLayout extends LinearLayout implements BundleEventListener,
                                                               View.OnClickListener,
                                                               View.OnLongClickListener {
     private static final String MENU_BUTTON_KEY = "MENU_BUTTON_KEY";
@@ -61,14 +61,14 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
 
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+        EventDispatcher.getInstance().registerUiThreadListener(this,
             "PageActions:Add",
             "PageActions:Remove");
     }
 
     @Override
     protected void onDetachedFromWindow() {
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+        EventDispatcher.getInstance().unregisterUiThreadListener(this,
             "PageActions:Add",
             "PageActions:Remove");
 
@@ -87,23 +87,12 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
         }
     }
 
-    @Override
-    public void handleMessage(final String event, final NativeJSObject message, final EventCallback callback) {
-        // NativeJSObject cannot be used off of the Gecko thread, so convert it to a Bundle.
-        final Bundle bundle = message.toBundle();
-
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                handleUiMessage(event, bundle);
-            }
-        });
-    }
-
-    private void handleUiMessage(final String event, final Bundle message) {
+    @Override // BundleEventListener
+    public void handleMessage(final String event, final GeckoBundle message,
+                              final EventCallback callback) {
         ThreadUtils.assertOnUiThread();
 
-        if (event.equals("PageActions:Add")) {
+        if ("PageActions:Add".equals(event)) {
             final String id = message.getString("id");
             final String title = message.getString("title");
             final String imageURL = message.getString("icon");
@@ -111,20 +100,23 @@ public class PageActionLayout extends LinearLayout implements NativeEventListene
 
             addPageAction(id, title, imageURL, new OnPageActionClickListeners() {
                 @Override
-                public void onClick(String id) {
-                    GeckoAppShell.notifyObservers("PageActions:Clicked", id);
+                public void onClick(final String id) {
+                    final GeckoBundle data = new GeckoBundle(1);
+                    data.putString("id", id);
+                    EventDispatcher.getInstance().dispatch("PageActions:Clicked", data);
                 }
 
                 @Override
                 public boolean onLongClick(String id) {
-                    GeckoAppShell.notifyObservers("PageActions:LongClicked", id);
+                    final GeckoBundle data = new GeckoBundle(1);
+                    data.putString("id", id);
+                    EventDispatcher.getInstance().dispatch("PageActions:LongClicked", data);
                     return true;
                 }
             }, important);
-        } else if (event.equals("PageActions:Remove")) {
-            final String id = message.getString("id");
 
-            removePageAction(id);
+        } else if ("PageActions:Remove".equals(event)) {
+            removePageAction(message.getString("id"));
         }
     }
 

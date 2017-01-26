@@ -1045,11 +1045,6 @@ case "$target" in
             # We use offsetof on non-POD objects all the time.
             # We also suppress this warning on other platforms.
             CXXFLAGS="$CXXFLAGS -Wno-invalid-offsetof"
-            # MFBT thinks clang-cl supports constexpr, which it does, but
-            # not everything in Windows C++ headers supports constexpr
-            # as we might expect until MSVC 2015, so turn off this warning
-            # for now.
-            CXXFLAGS="$CXXFLAGS -Wno-invalid-constexpr"
             # This warns for reasonable things like:
             #   enum { X = 0xffffffffU };
             # which is annoying for IDL headers.
@@ -1096,10 +1091,8 @@ case "$target" in
             # At least one MSVC header and several headers in-tree have
             # unused typedefs, so turn this on.
             CXXFLAGS="$CXXFLAGS -Wno-unused-local-typedef"
-            # Several JS engine header files use __declspec(dllimport) on
-            # classes, and clang-cl helpfully warns about its non-support
-            # for such cases.  We're not particularly worried about that,
-            # so ignore that warning.
+            # jemalloc uses __declspec(allocator) as a profiler hint,
+            # which clang-cl doesn't understand.
             CXXFLAGS="$CXXFLAGS -Wno-ignored-attributes"
         fi
         # make 'foo == bar;' error out
@@ -1132,16 +1125,11 @@ case "$target" in
         PROFILE_USE_LDFLAGS="-LTCG:PGUPDATE $cgthreads"
         LDFLAGS="$LDFLAGS -DYNAMICBASE"
         RCFLAGS="-nologo"
-        if test "$CC_VERSION" = "18.00.31101"; then
-            dnl Use MaxILKSize as a workaround for LNK1248 in VS2013update4
-            dnl See https://connect.microsoft.com/VisualStudio/feedback/details/1044914/fatal-error-lnk1248
-            LDFLAGS="$LDFLAGS -MaxILKSize:0x7FF00000"
-        fi
-        dnl Minimum reqiurement of Gecko is VS2010 or later which supports
+        dnl Minimum reqiurement of Gecko is VS2015 or later which supports
         dnl both SSSE3 and SSE4.1.
         HAVE_TOOLCHAIN_SUPPORT_MSSSE3=1
         HAVE_TOOLCHAIN_SUPPORT_MSSE4_1=1
-        dnl allow AVX2 code from VS2012
+        dnl allow AVX2 code from VS2015
         HAVE_X86_AVX2=1
     fi
     AC_DEFINE(WIN32_LEAN_AND_MEAN)

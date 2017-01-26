@@ -23,7 +23,9 @@ var TabMirror = function(deviceId, window) {
   this.RTCSessionDescription = window.RTCSessionDescription;
   this.RTCIceCandidate = window.RTCIceCandidate;
 
-  Services.obs.addObserver((aSubject, aTopic, aData) => this._processMessage(aData), "MediaPlayer:Response", false);
+  EventDispatcher.instance.registerListener(
+      (event, data, callback) => this._processMessage(data.message), "MediaPlayer:Response");
+
   this._sendMessage({ start: true });
   this._window = window;
   this._pc = new window.RTCPeerConnection(CONFIG, {});
@@ -58,13 +60,7 @@ TabMirror.prototype = {
     this._window.navigator.mozGetUserMedia(constraints, this._onGumSuccess.bind(this), this._onGumFailure.bind(this));
   },
 
-  _processMessage: function(data) {
-    if (!data) {
-      return;
-    }
-
-    let msg = JSON.parse(data);
-
+  _processMessage: function(msg) {
     if (!msg) {
       return;
     }
@@ -144,7 +140,7 @@ TabMirror.prototype = {
         type: "MediaPlayer:End",
         id: this.deviceId
       };
-      Services.androidBridge.handleGeckoMessage(obj);
+      EventDispatcher.instance.sendRequest(obj);
     }
   },
 };

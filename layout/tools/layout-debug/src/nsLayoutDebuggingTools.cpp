@@ -482,12 +482,7 @@ nsLayoutDebuggingTools::DumpStyleContexts()
     FILE *out = stdout;
     nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell)); 
     if (shell) {
-        nsIFrame* root = shell->GetRootFrame();
-        if (!root) {
-            fputs("null root frame\n", out);
-        } else {
-            shell->ListStyleContexts(root, out);
-        }
+        shell->ListStyleContexts(out);
     } else {
         fputs("null pres shell\n", out);
     }

@@ -330,8 +330,7 @@ public:
 #endif
 
 #ifdef DEBUG
-  virtual void ListStyleContexts(nsIFrame *aRootFrame, FILE *out,
-                                 int32_t aIndent = 0) override;
+  virtual void ListStyleContexts(FILE *out, int32_t aIndent = 0) override;
 
   virtual void ListStyleSheets(FILE *out, int32_t aIndent = 0) override;
   virtual void VerifyStyleTree() override;

@@ -78,6 +78,8 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/ServoRestyleManagerInlines.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/dom/Performance.h"
+#include "mozilla/dom/PerformanceTiming.h"
 
 #if defined(MOZ_WIDGET_GTK)
 #include "gfxPlatformGtk.h" // xxx - for UseFcFontList
@@ -2212,9 +2214,9 @@ nsPresContext::HasAuthorSpecifiedRules(const nsIFrame *aFrame,
 }
 
 gfxUserFontSet*
-nsPresContext::GetUserFontSet()
+nsPresContext::GetUserFontSet(bool aFlushUserFontSet)
 {
-  return mDocument->GetUserFontSet();
+  return mDocument->GetUserFontSet(aFlushUserFontSet);
 }
 
 void
@@ -2328,7 +2330,8 @@ nsPresContext::EnsureSafeToHandOutCSSRules()
 }
 
 void
-nsPresContext::FireDOMPaintEvent(nsInvalidateRequestList* aList, uint64_t aTransactionId)
+nsPresContext::FireDOMPaintEvent(nsInvalidateRequestList* aList, uint64_t aTransactionId,
+                                 mozilla::TimeStamp aTimeStamp /* = mozilla::TimeStamp() */)
 {
   nsPIDOMWindowInner* ourWindow = mDocument->GetInnerWindow();
   if (!ourWindow)
@@ -2346,6 +2349,18 @@ nsPresContext::FireDOMPaintEvent(nsInvalidateRequestList* aList, uint64_t aTrans
       return;
     }
   }
+
+  if (aTimeStamp.IsNull()) {
+    aTimeStamp = mozilla::TimeStamp::Now();
+  }
+  DOMHighResTimeStamp timeStamp = 0;
+  if (ourWindow && ourWindow->IsInnerWindow()) {
+    mozilla::dom::Performance* perf = ourWindow->GetPerformance();
+    if (perf) {
+      timeStamp = perf->GetDOMTiming()->TimeStampToDOMHighRes(aTimeStamp);
+    }
+  }
+
   // Events sent to the window get propagated to the chrome event handler
   // automatically.
   //
@@ -2353,7 +2368,8 @@ nsPresContext::FireDOMPaintEvent(nsInvalidateRequestList* aList, uint64_t aTrans
   // (hopefully it won't, or we're likely to get an infinite loop! At least
   // it won't be blocking app execution though).
   RefPtr<NotifyPaintEvent> event =
-    NS_NewDOMNotifyPaintEvent(eventTarget, this, nullptr, eAfterPaint, aList, aTransactionId);
+    NS_NewDOMNotifyPaintEvent(eventTarget, this, nullptr, eAfterPaint, aList,
+                              aTransactionId, timeStamp);
 
   // Even if we're not telling the window about the event (so eventTarget is
   // the chrome event handler, not the window), the window is still
@@ -2551,6 +2567,7 @@ nsPresContext::ClearNotifySubDocInvalidationData(ContainerLayer* aContainer)
 struct NotifyDidPaintSubdocumentCallbackClosure {
   uint32_t mFlags;
   uint64_t mTransactionId;
+  const mozilla::TimeStamp& mTimeStamp;
   bool mNeedsAnotherDidPaintNotification;
 };
 static bool
@@ -2562,7 +2579,8 @@ NotifyDidPaintSubdocumentCallback(nsIDocument* aDocument, void* aData)
   if (shell) {
     nsPresContext* pc = shell->GetPresContext();
     if (pc) {
-      pc->NotifyDidPaintForSubtree(closure->mFlags, closure->mTransactionId);
+      pc->NotifyDidPaintForSubtree(closure->mFlags, closure->mTransactionId,
+                                   closure->mTimeStamp);
       if (pc->IsDOMPaintEventPending()) {
         closure->mNeedsAnotherDidPaintNotification = true;
       }
@@ -2575,9 +2593,11 @@ class DelayedFireDOMPaintEvent : public Runnable {
 public:
   DelayedFireDOMPaintEvent(nsPresContext* aPresContext,
                            nsInvalidateRequestList* aList,
-                           uint64_t aTransactionId)
+                           uint64_t aTransactionId,
+                           const mozilla::TimeStamp& aTimeStamp = mozilla::TimeStamp())
     : mPresContext(aPresContext)
     , mTransactionId(aTransactionId)
+    , mTimeStamp(aTimeStamp)
   {
     MOZ_ASSERT(mPresContext->GetContainerWeak(),
                "DOMPaintEvent requested for a detached pres context");
@@ -2588,13 +2608,14 @@ public:
     // The pres context might have been detached during the delay -
     // that's fine, just don't fire the event.
     if (mPresContext->GetContainerWeak()) {
-      mPresContext->FireDOMPaintEvent(&mList, mTransactionId);
+      mPresContext->FireDOMPaintEvent(&mList, mTransactionId, mTimeStamp);
     }
     return NS_OK;
   }
 
   RefPtr<nsPresContext> mPresContext;
   uint64_t mTransactionId;
+  const mozilla::TimeStamp mTimeStamp;
   nsInvalidateRequestList mList;
 };
 
@@ -2628,7 +2649,7 @@ nsPresContext::NotifyDidPaintForSubtree(uint32_t aFlags, uint64_t aTransactionId
   if (aFlags & nsIPresShell::PAINT_COMPOSITE) {
     nsCOMPtr<nsIRunnable> ev =
       new DelayedFireDOMPaintEvent(this, &mUndeliveredInvalidateRequestsBeforeLastPaint,
-                                   aTransactionId);
+                                   aTransactionId, aTimeStamp);
     nsContentUtils::AddScriptRunner(ev);
 
     if (mFirstPaintTime.IsNull()) {
@@ -2636,7 +2657,7 @@ nsPresContext::NotifyDidPaintForSubtree(uint32_t aFlags, uint64_t aTransactionId
     }
   }
 
-  NotifyDidPaintSubdocumentCallbackClosure closure = { aFlags, aTransactionId, false };
+  NotifyDidPaintSubdocumentCallbackClosure closure = { aFlags, aTransactionId, aTimeStamp, false };
   mDocument->EnumerateSubDocuments(NotifyDidPaintSubdocumentCallback, &closure);
 
   if (!closure.mNeedsAnotherDidPaintNotification &&

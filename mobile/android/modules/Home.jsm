@@ -94,12 +94,12 @@ var HomeBanner = (function () {
     for (let key in _messages) {
       let message = _messages[key];
       if (threshold < message.totalWeight) {
-        Messaging.sendRequest({
+        EventDispatcher.instance.sendRequestForResult({
           type: "HomeBanner:Data",
           id: message.id,
           text: message.text,
           iconURI: message.iconURI
-        });
+        }).then(id => _handleShown(id));
         return;
       }
     }
@@ -124,18 +124,14 @@ var HomeBanner = (function () {
   };
 
   return Object.freeze({
-    observe: function(subject, topic, data) {
-      switch(topic) {
-        case "HomeBanner:Shown":
-          _handleShown(data);
-          break;
-
+    onEvent: function(event, data, callback) {
+      switch(event) {
         case "HomeBanner:Click":
-          _handleClick(data);
+          _handleClick(data.id);
           break;
 
         case "HomeBanner:Dismiss":
-          _handleDismiss(data);
+          _handleDismiss(data.id);
           break;
       }
     },
@@ -152,9 +148,10 @@ var HomeBanner = (function () {
       // If this is the first message we're adding, add
       // observers to listen for requests from the Java UI.
       if (Object.keys(_messages).length == 1) {
-        Services.obs.addObserver(this, "HomeBanner:Shown", false);
-        Services.obs.addObserver(this, "HomeBanner:Click", false);
-        Services.obs.addObserver(this, "HomeBanner:Dismiss", false);
+        EventDispatcher.instance.registerListener(this, [
+          "HomeBanner:Click",
+          "HomeBanner:Dismiss",
+        ]);
 
         // Send a message to Java if there's a pending "HomeBanner:Get" request.
         if (_pendingRequest) {
@@ -180,9 +177,10 @@ var HomeBanner = (function () {
 
       // If there are no more messages, remove the observers.
       if (Object.keys(_messages).length == 0) {
-        Services.obs.removeObserver(this, "HomeBanner:Shown");
-        Services.obs.removeObserver(this, "HomeBanner:Click");
-        Services.obs.removeObserver(this, "HomeBanner:Dismiss");
+        EventDispatcher.instance.unregisterListener(this, [
+          "HomeBanner:Click",
+          "HomeBanner:Dismiss",
+        ]);
       }
     }
   });
@@ -197,8 +195,6 @@ var HomePanels = (function () {
   HomePanelsMessageHandlers = {
 
     "HomePanels:Get": function handlePanelsGet(data) {
-      data = JSON.parse(data);
-
       let requestId = data.requestId;
       let ids = data.ids || null;
 
@@ -214,15 +210,16 @@ var HomePanels = (function () {
         }
       }
 
-      Messaging.sendRequest({
+      EventDispatcher.instance.sendRequest({
         type: "HomePanels:Data",
         panels: panels,
         requestId: requestId
       });
     },
 
-    "HomePanels:Authenticate": function handlePanelsAuthenticate(id) {
+    "HomePanels:Authenticate": function handlePanelsAuthenticate(data) {
       // Generate panel options to get auth handler.
+      let id = data.id;
       let options = _registeredPanels[id]();
       if (!options.auth) {
         throw "Home.panels: Invalid auth for panel.id = " + id;
@@ -234,8 +231,6 @@ var HomePanels = (function () {
     },
 
     "HomePanels:RefreshView": function handlePanelsRefreshView(data) {
-      data = JSON.parse(data);
-
       let options = _registeredPanels[data.panelId]();
       let view = options.views[data.viewIndex];
 
@@ -252,7 +247,8 @@ var HomePanels = (function () {
       view.onrefresh();
     },
 
-    "HomePanels:Installed": function handlePanelsInstalled(id) {
+    "HomePanels:Installed": function handlePanelsInstalled(data) {
+      let id = data.id;
       _assertPanelExists(id);
 
       let options = _registeredPanels[id]();
@@ -265,7 +261,8 @@ var HomePanels = (function () {
       options.oninstall();
     },
 
-    "HomePanels:Uninstalled": function handlePanelsUninstalled(id) {
+    "HomePanels:Uninstalled": function handlePanelsUninstalled(data) {
+      let id = data.id;
       _assertPanelExists(id);
 
       let options = _registeredPanels[id]();
@@ -435,7 +432,7 @@ var HomePanels = (function () {
     install: function(id) {
       _assertPanelExists(id);
 
-      Messaging.sendRequest({
+      EventDispatcher.instance.sendRequest({
         type: "HomePanels:Install",
         panel: _generatePanel(id)
       });
@@ -444,7 +441,7 @@ var HomePanels = (function () {
     uninstall: function(id) {
       _assertPanelExists(id);
 
-      Messaging.sendRequest({
+      EventDispatcher.instance.sendRequest({
         type: "HomePanels:Uninstall",
         id: id
       });
@@ -453,7 +450,7 @@ var HomePanels = (function () {
     update: function(id) {
       _assertPanelExists(id);
 
-      Messaging.sendRequest({
+      EventDispatcher.instance.sendRequest({
         type: "HomePanels:Update",
         panel: _generatePanel(id)
       });
@@ -475,13 +472,13 @@ this.Home = Object.freeze({
   panels: HomePanels,
 
   // Lazy notification observer registered in browser.js
-  observe: function(subject, topic, data) {
-    if (topic in HomeBannerMessageHandlers) {
-      HomeBannerMessageHandlers[topic](data);
-    } else if (topic in HomePanelsMessageHandlers) {
-      HomePanelsMessageHandlers[topic](data);
+  onEvent: function (event, data, callback) {
+    if (event in HomeBannerMessageHandlers) {
+      HomeBannerMessageHandlers[event](data);
+    } else if (event in HomePanelsMessageHandlers) {
+      HomePanelsMessageHandlers[event](data);
     } else {
-      Cu.reportError("Home.observe: message handler not found for topic: " + topic);
+      Cu.reportError("Home.observe: message handler not found for event: " + event);
     }
   }
 });

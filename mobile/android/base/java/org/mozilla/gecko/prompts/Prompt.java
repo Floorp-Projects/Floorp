@@ -253,25 +253,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
             if (input == null) {
                 continue;
             }
-
-            final String id = input.getId();
-            final Object value = input.getValue();
-
-            if (value == null) {
-                result.putBundle(id, null);
-            } else if (value instanceof Boolean) {
-                result.putBoolean(id, (Boolean) value);
-            } else if (value instanceof Double) {
-                result.putDouble(id, (Double) value);
-            } else if (value instanceof Integer) {
-                result.putInt(id, (Integer) value);
-            } else if (value instanceof CharSequence) {
-                result.putString(id, value.toString());
-            } else if (value instanceof GeckoBundle) {
-                result.putBundle(id, (GeckoBundle) value);
-            } else {
-                throw new UnsupportedOperationException(value.getClass().toString());
-            }
+            input.putInBundle(result);
         }
     }
 

@@ -111,13 +111,19 @@ add_task(function* test_tracking_pb() {
   // Simulate a click on the "Disable protection" button in the site identity popup.
   // We need to wait for a "load" event because "Session:Reload" will cause a full page reload.
   yield promiseLoadEvent(browser, undefined, undefined, () => {
-    Services.obs.notifyObservers(null, "Session:Reload", "{\"allowContent\":true,\"contentType\":\"tracking\"}");
+    EventDispatcher.instance.dispatch("Session:Reload", {
+      allowContent: true,
+      contentType: "tracking",
+    });
   });
   Messaging.sendRequest({ type: "Test:Expected", expected: "tracking_content_loaded" });
 
   // Simulate a click on the "Enable protection" button in the site identity popup.
   yield promiseLoadEvent(browser, undefined, undefined, () => {
-    Services.obs.notifyObservers(null, "Session:Reload", "{\"allowContent\":false,\"contentType\":\"tracking\"}");
+    EventDispatcher.instance.dispatch("Session:Reload", {
+      allowContent: false,
+      contentType: "tracking",
+    });
   });
   Messaging.sendRequest({ type: "Test:Expected", expected: "tracking_content_blocked" });
 
