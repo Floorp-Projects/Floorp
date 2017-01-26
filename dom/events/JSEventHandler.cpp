@@ -162,14 +162,13 @@ JSEventHandler::HandleEvent(nsIDOMEvent* aEvent)
     RefPtr<OnErrorEventHandlerNonNull> handler =
       mTypedHandler.OnErrorEventHandler();
     ErrorResult rv;
-    JS::Rooted<JS::Value> retval(RootingCx());
-    handler->Call(mTarget, msgOrEvent, fileName, lineNumber,
-                  columnNumber, error, &retval, rv);
+    bool handled = handler->Call(mTarget, msgOrEvent, fileName, lineNumber,
+                                 columnNumber, error, rv);
     if (rv.Failed()) {
       return rv.StealNSResult();
     }
 
-    if (retval.isBoolean() && retval.toBoolean()) {
+    if (handled) {
       event->PreventDefaultInternal(isChromeHandler);
     }
     return NS_OK;
