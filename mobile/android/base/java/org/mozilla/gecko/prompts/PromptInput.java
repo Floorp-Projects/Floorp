@@ -340,6 +340,27 @@ public abstract class PromptInput {
         mMinValue = obj.getString("min");
     }
 
+    public void putInBundle(final GeckoBundle bundle) {
+        final String id = getId();
+        final Object value = getValue();
+
+        if (value == null) {
+            bundle.putBundle(id, null);
+        } else if (value instanceof Boolean) {
+            bundle.putBoolean(id, (Boolean) value);
+        } else if (value instanceof Double) {
+            bundle.putDouble(id, (Double) value);
+        } else if (value instanceof Integer) {
+            bundle.putInt(id, (Integer) value);
+        } else if (value instanceof CharSequence) {
+            bundle.putString(id, value.toString());
+        } else if (value instanceof GeckoBundle) {
+            bundle.putBundle(id, (GeckoBundle) value);
+        } else {
+            throw new UnsupportedOperationException(value.getClass().toString());
+        }
+    }
+
     public static PromptInput getInput(GeckoBundle obj) {
         String type = obj.getString("type");
         switch (type) {

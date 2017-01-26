@@ -20,7 +20,8 @@ NotifyPaintEvent::NotifyPaintEvent(EventTarget* aOwner,
                                    WidgetEvent* aEvent,
                                    EventMessage aEventMessage,
                                    nsInvalidateRequestList* aInvalidateRequests,
-                                   uint64_t aTransactionId)
+                                   uint64_t aTransactionId,
+                                   DOMHighResTimeStamp aTimeStamp)
   : Event(aOwner, aPresContext, aEvent)
 {
   if (mEvent) {
@@ -31,6 +32,7 @@ NotifyPaintEvent::NotifyPaintEvent(EventTarget* aOwner,
   }
 
   mTransactionId = aTransactionId;
+  mTimeStamp = aTimeStamp;
 }
 
 NS_INTERFACE_MAP_BEGIN(NotifyPaintEvent)
@@ -170,6 +172,12 @@ NotifyPaintEvent::TransactionId()
   return mTransactionId;
 }
 
+DOMHighResTimeStamp
+NotifyPaintEvent::PaintTimeStamp()
+{
+  return mTimeStamp;
+}
+
 } // namespace dom
 } // namespace mozilla
 
@@ -182,10 +190,11 @@ NS_NewDOMNotifyPaintEvent(EventTarget* aOwner,
                           WidgetEvent* aEvent,
                           EventMessage aEventMessage,
                           nsInvalidateRequestList* aInvalidateRequests,
-                          uint64_t aTransactionId)
+                          uint64_t aTransactionId,
+                          DOMHighResTimeStamp aTimeStamp)
 {
   RefPtr<NotifyPaintEvent> it =
     new NotifyPaintEvent(aOwner, aPresContext, aEvent, aEventMessage,
-                         aInvalidateRequests, aTransactionId);
+                         aInvalidateRequests, aTransactionId, aTimeStamp);
   return it.forget();
 }

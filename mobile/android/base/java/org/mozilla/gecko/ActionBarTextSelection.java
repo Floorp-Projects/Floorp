@@ -18,9 +18,6 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.view.MenuItem;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -213,7 +210,9 @@ class ActionBarTextSelection implements TextSelection, BundleEventListener {
         @Override
         public boolean onActionItemClicked(ActionModeCompat mode, MenuItem item) {
             final GeckoBundle obj = mItems[item.getItemId()];
-            GeckoAppShell.notifyObservers("TextSelection:Action", obj.getString("id"));
+            final GeckoBundle data = new GeckoBundle(1);
+            data.putString("id", obj.getString("id"));
+            GeckoApp.getEventDispatcher().dispatch("TextSelection:Action", data);
             return true;
         }
 
@@ -222,15 +221,10 @@ class ActionBarTextSelection implements TextSelection, BundleEventListener {
         public void onDestroyActionMode(ActionModeCompat mode) {
             mActionMode = null;
             mCallback = null;
-            final JSONObject args = new JSONObject();
-            try {
-                args.put("selectionID", selectionID);
-            } catch (JSONException e) {
-                Log.e(LOGTAG, "Error building JSON arguments for TextSelection:End", e);
-                return;
-            }
 
-            GeckoAppShell.notifyObservers("TextSelection:End", args.toString());
+            final GeckoBundle data = new GeckoBundle(1);
+            data.putInt("selectionID", selectionID);
+            GeckoApp.getEventDispatcher().dispatch("TextSelection:End", data);
         }
     }
 }

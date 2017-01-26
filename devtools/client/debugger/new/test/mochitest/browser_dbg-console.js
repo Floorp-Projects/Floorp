@@ -37,6 +37,9 @@ add_task(function* () {
 
   // close the console
   clickElement(dbg, "codeMirror");
+  // First time to focus out of text area
+  pressKey(dbg, "Escape");
+  // Second time to hide console
   pressKey(dbg, "Escape");
   ok(!dbg.toolbox.splitConsole, "Split console is hidden.");
 });
