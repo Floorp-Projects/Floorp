@@ -6,13 +6,190 @@
 
 #include "AnimationHelper.h"
 #include "mozilla/ComputedTimingFunction.h" // for ComputedTimingFunction
-#include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for FillMode
-#include "mozilla/layers/LayerAnimationUtils.h"  // for TimingFunctionToComputedTimingFunction
-#include "mozilla/layers/LayersMessages.h"  // for TransformFunction, etc
+#include "mozilla/dom/AnimationEffectReadOnlyBinding.h" // for dom::FillMode
+#include "mozilla/dom/KeyframeEffectBinding.h" // for dom::IterationComposite
+#include "mozilla/dom/KeyframeEffectReadOnly.h" // for dom::KeyFrameEffectReadOnly
+#include "mozilla/layers/LayerAnimationUtils.h" // for TimingFunctionToComputedTimingFunction
+#include "mozilla/layers/LayersMessages.h" // for TransformFunction, etc
 #include "mozilla/StyleAnimationValue.h" // for StyleAnimationValue, etc
 
 namespace mozilla {
 namespace layers {
+
+struct StyleAnimationValueCompositePair {
+  StyleAnimationValue mValue;
+  dom::CompositeOperation mComposite;
+};
+
+static StyleAnimationValue
+SampleValue(float aPortion, const layers::Animation& aAnimation,
+            const StyleAnimationValueCompositePair& aStart,
+            const StyleAnimationValueCompositePair& aEnd,
+            const StyleAnimationValue& aLastValue,
+            uint64_t aCurrentIteration,
+            const StyleAnimationValue& aUnderlyingValue)
+{
+  NS_ASSERTION(aStart.mValue.IsNull() || aEnd.mValue.IsNull() ||
+               aStart.mValue.GetUnit() == aEnd.mValue.GetUnit(),
+               "Must have same unit");
+
+  StyleAnimationValue startValue =
+    dom::KeyframeEffectReadOnly::CompositeValue(aAnimation.property(),
+                                                aStart.mValue,
+                                                aUnderlyingValue,
+                                                aStart.mComposite);
+  StyleAnimationValue endValue =
+    dom::KeyframeEffectReadOnly::CompositeValue(aAnimation.property(),
+                                                aEnd.mValue,
+                                                aUnderlyingValue,
+                                                aEnd.mComposite);
+
+  // Iteration composition for accumulate
+  if (static_cast<dom::IterationCompositeOperation>
+        (aAnimation.iterationComposite()) ==
+          dom::IterationCompositeOperation::Accumulate &&
+      aCurrentIteration > 0) {
+    // FIXME: Bug 1293492: Add a utility function to calculate both of
+    // below StyleAnimationValues.
+    startValue =
+      StyleAnimationValue::Accumulate(aAnimation.property(),
+                                      aLastValue.IsNull()
+                                        ? aUnderlyingValue
+                                        : aLastValue,
+                                      Move(startValue),
+                                      aCurrentIteration);
+    endValue =
+      StyleAnimationValue::Accumulate(aAnimation.property(),
+                                      aLastValue.IsNull()
+                                        ? aUnderlyingValue
+                                        : aLastValue,
+                                      Move(endValue),
+                                      aCurrentIteration);
+  }
+
+  StyleAnimationValue interpolatedValue;
+  // This should never fail because we only pass transform and opacity values
+  // to the compositor and they should never fail to interpolate.
+  DebugOnly<bool> uncomputeResult =
+    StyleAnimationValue::Interpolate(aAnimation.property(),
+                                     startValue, endValue,
+                                     aPortion, interpolatedValue);
+  MOZ_ASSERT(uncomputeResult, "could not uncompute value");
+  return interpolatedValue;
+}
+
+bool
+AnimationHelper::SampleAnimationForEachNode(TimeStamp aPoint,
+                           AnimationArray& aAnimations,
+                           InfallibleTArray<AnimData>& aAnimationData,
+                           StyleAnimationValue& aAnimationValue,
+                           bool& aHasInEffectAnimations)
+{
+  bool activeAnimations = false;
+
+  if (aAnimations.IsEmpty()) {
+    return activeAnimations;
+  }
+
+  // Process in order, since later aAnimations override earlier ones.
+  for (size_t i = 0, iEnd = aAnimations.Length(); i < iEnd; ++i) {
+    Animation& animation = aAnimations[i];
+    AnimData& animData = aAnimationData[i];
+
+    activeAnimations = true;
+
+    MOZ_ASSERT(!animation.startTime().IsNull() ||
+               animation.isNotPlaying(),
+               "Failed to resolve start time of play-pending animations");
+    // If the animation is not currently playing , e.g. paused or
+    // finished, then use the hold time to stay at the same position.
+    TimeDuration elapsedDuration = animation.isNotPlaying()
+      ? animation.holdTime()
+      : (aPoint - animation.startTime())
+          .MultDouble(animation.playbackRate());
+    TimingParams timing;
+    timing.mDuration.emplace(animation.duration());
+    timing.mDelay = animation.delay();
+    timing.mEndDelay = animation.endDelay();
+    timing.mIterations = animation.iterations();
+    timing.mIterationStart = animation.iterationStart();
+    timing.mDirection =
+      static_cast<dom::PlaybackDirection>(animation.direction());
+    timing.mFill = static_cast<dom::FillMode>(animation.fillMode());
+    timing.mFunction =
+      AnimationUtils::TimingFunctionToComputedTimingFunction(
+        animation.easingFunction());
+
+    ComputedTiming computedTiming =
+      dom::AnimationEffectReadOnly::GetComputedTimingAt(
+        Nullable<TimeDuration>(elapsedDuration), timing,
+        animation.playbackRate());
+
+    if (computedTiming.mProgress.IsNull()) {
+      continue;
+    }
+
+    uint32_t segmentIndex = 0;
+    size_t segmentSize = animation.segments().Length();
+    AnimationSegment* segment = animation.segments().Elements();
+    while (segment->endPortion() < computedTiming.mProgress.Value() &&
+           segmentIndex < segmentSize - 1) {
+      ++segment;
+      ++segmentIndex;
+    }
+
+    double positionInSegment =
+      (computedTiming.mProgress.Value() - segment->startPortion()) /
+      (segment->endPortion() - segment->startPortion());
+
+    double portion =
+      ComputedTimingFunction::GetPortion(animData.mFunctions[segmentIndex],
+                                         positionInSegment,
+                                     computedTiming.mBeforeFlag);
+
+    StyleAnimationValueCompositePair from {
+      animData.mStartValues[segmentIndex],
+      static_cast<dom::CompositeOperation>(segment->startComposite())
+    };
+    StyleAnimationValueCompositePair to {
+      animData.mEndValues[segmentIndex],
+      static_cast<dom::CompositeOperation>(segment->endComposite())
+    };
+    // interpolate the property
+    aAnimationValue = SampleValue(portion,
+                                 animation,
+                                 from, to,
+                                 animData.mEndValues.LastElement(),
+                                 computedTiming.mCurrentIteration,
+                                 aAnimationValue);
+    aHasInEffectAnimations = true;
+  }
+
+#ifdef DEBUG
+  // Sanity check that all of animation data are the same.
+  const AnimationData& lastData = aAnimations.LastElement().data();
+  for (const Animation& animation : aAnimations) {
+    const AnimationData& data = animation.data();
+    MOZ_ASSERT(data.type() == lastData.type(),
+               "The type of AnimationData should be the same");
+    if (data.type() == AnimationData::Tnull_t) {
+      continue;
+    }
+
+    MOZ_ASSERT(data.type() == AnimationData::TTransformData);
+    const TransformData& transformData = data.get_TransformData();
+    const TransformData& lastTransformData = lastData.get_TransformData();
+    MOZ_ASSERT(transformData.origin() == lastTransformData.origin() &&
+               transformData.transformOrigin() ==
+                 lastTransformData.transformOrigin() &&
+               transformData.bounds() == lastTransformData.bounds() &&
+               transformData.appUnitsPerDevPixel() ==
+                 lastTransformData.appUnitsPerDevPixel(),
+               "All of members of TransformData should be the same");
+  }
+#endif
+  return activeAnimations;
+}
 
 static inline void
 SetCSSAngle(const CSSAngle& aAngle, nsCSSValue& aValue)
