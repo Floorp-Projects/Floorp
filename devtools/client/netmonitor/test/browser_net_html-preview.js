@@ -25,26 +25,26 @@ add_task(function* () {
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.getElementById("details-pane-toggle"));
 
-  ok(document.querySelector("#headers-tab[aria-selected=true]"),
+  ok(document.querySelector("#tab-0.is-active"),
     "The headers tab in the details panel should be selected.");
-  ok(!document.querySelector("#preview-tab"),
+  ok(!document.querySelector("#tab-5"),
     "The preview tab should be hidden for non html responses.");
-  ok(!document.querySelector("#preview-panel"),
+  ok(!document.querySelector("#panel-5"),
     "The preview panel is hidden for non html responses.");
 
-  wait = waitForDOM(document, ".tabs");
+  wait = waitForDOM(document, "#tab-5");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[4]);
   yield wait;
 
-  document.querySelector("#preview-tab").click();
+  document.querySelector("#tab-5 a").click();
 
-  ok(document.querySelector("#preview-tab[aria-selected=true]"),
+  ok(document.querySelector("#tab-5.is-active"),
     "The preview tab in the details panel should be selected.");
-  ok(document.querySelector("#preview-panel"),
+  ok(document.querySelector("#panel-5"),
     "The preview panel should be visible now.");
 
-  let iframe = document.querySelector("#preview-panel iframe");
+  let iframe = document.querySelector("#panel-5 iframe");
   yield once(iframe, "DOMContentLoaded");
 
   ok(iframe,
@@ -57,11 +57,11 @@ add_task(function* () {
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll(".request-list-item")[5]);
 
-  ok(document.querySelector("#headers-tab[aria-selected=true]"),
+  ok(document.querySelector("#tab-0.is-active"),
     "The headers tab in the details panel should be selected again.");
-  ok(!document.querySelector("#preview-tab"),
+  ok(!document.querySelector("#tab-5"),
     "The preview tab should be hidden again for non html responses.");
-  ok(!document.querySelector("#preview-panel"),
+  ok(!document.querySelector("#panel-5"),
     "The preview panel is hidden again for non html responses.");
 
   yield teardown(monitor);

@@ -38,10 +38,10 @@ const PREVIEW_TITLE = L10N.getStr("netmonitor.tab.preview");
  * Display the network request details
  */
 function DetailsPanel({
-  activeTabId,
   cloneSelectedRequest,
   request,
-  selectTab,
+  setTabIndex,
+  tabIndex,
   toolbox,
 }) {
   if (!request) {
@@ -50,9 +50,9 @@ function DetailsPanel({
 
   return (
     Tabbar({
-      activeTabId,
-      onSelect: selectTab,
+      onSelect: setTabIndex,
       showAllTabsMenu: true,
+      tabActive: tabIndex,
       toolbox,
     },
       TabPanel({
@@ -109,17 +109,17 @@ DetailsPanel.propTypes = {
   cloneSelectedRequest: PropTypes.func.isRequired,
   request: PropTypes.object,
   setTabIndex: PropTypes.func.isRequired,
-  selectedTab: PropTypes.number.isRequired,
+  tabIndex: PropTypes.number.isRequired,
   toolbox: PropTypes.object.isRequired,
 };
 
 module.exports = connect(
   (state) => ({
-    activeTabId: state.ui.detailsPanelSelectedTab,
     request: getSelectedRequest(state),
+    tabIndex: state.ui.detailsPanelSelectedTab,
   }),
   (dispatch) => ({
     cloneSelectedRequest: () => dispatch(Actions.cloneSelectedRequest()),
-    selectTab: (tabId) => dispatch(Actions.selectDetailsPanelTab(tabId)),
+    setTabIndex: (index) => dispatch(Actions.selectDetailsPanelTab(index)),
   }),
 )(DetailsPanel);

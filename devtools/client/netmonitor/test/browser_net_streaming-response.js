@@ -40,10 +40,10 @@ add_task(function* () {
       });
   });
 
-  wait = waitForDOM(document, "#response-panel");
+  wait = waitForDOM(document, "#panel-3");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.getElementById("details-pane-toggle"));
-  document.querySelector("#response-tab").click();
+  document.querySelector("#tab-3 a").click();
   yield wait;
 
   RequestsMenu.selectedIndex = -1;
@@ -59,11 +59,10 @@ add_task(function* () {
   return teardown(monitor);
 
   function* selectIndexAndWaitForEditor(index) {
-    let editor = document.querySelector("#response-panel .editor-mount iframe");
+    let editor = document.querySelector("#panel-3 .editor-mount iframe");
     if (!editor) {
-      let waitDOM = waitForDOM(document, "#response-panel .editor-mount iframe");
+      let waitDOM = waitForDOM(document, "#panel-3 .editor-mount iframe");
       RequestsMenu.selectedIndex = index;
-      document.querySelector("#response-tab").click();
       [editor] = yield waitDOM;
       yield once(editor, "DOMContentLoaded");
     } else {
@@ -74,7 +73,7 @@ add_task(function* () {
   }
 
   function testEditorContent([ fmt, textRe ]) {
-    let editor = document.querySelector("#response-panel .editor-mount iframe");
+    let editor = document.querySelector("#panel-3 .editor-mount iframe");
     let text = editor.contentDocument
           .querySelector(".CodeMirror-line").textContent;
 

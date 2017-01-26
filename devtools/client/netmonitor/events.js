@@ -59,8 +59,14 @@ const EVENTS = {
   RESPONSE_IMAGE_THUMBNAIL_DISPLAYED:
     "NetMonitor:ResponseImageThumbnailAvailable",
 
+  // When a tab is selected in the NetworkDetailsView and subsequently rendered.
+  TAB_UPDATED: "NetMonitor:TabUpdated",
+
   // Fired when Sidebar has finished being populated.
   SIDEBAR_POPULATED: "NetMonitor:SidebarPopulated",
+
+  // Fired when NetworkDetailsView has finished being populated.
+  NETWORKDETAILSVIEW_POPULATED: "NetMonitor:NetworkDetailsViewPopulated",
 
   // Fired when CustomRequestView has finished being populated.
   CUSTOMREQUESTVIEW_POPULATED: "NetMonitor:CustomRequestViewPopulated",
