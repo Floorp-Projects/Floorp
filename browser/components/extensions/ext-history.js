@@ -222,7 +222,7 @@ extensions.registerSchemaAPI("history", "addon_parent", context => {
 
       onVisited: new SingletonEventManager(context, "history.onVisited", fire => {
         let listener = (event, data) => {
-          context.runSafe(fire, data);
+          fire.sync(data);
         };
 
         getObserver().on("visited", listener);
@@ -233,7 +233,7 @@ extensions.registerSchemaAPI("history", "addon_parent", context => {
 
       onVisitRemoved: new SingletonEventManager(context, "history.onVisitRemoved", fire => {
         let listener = (event, data) => {
-          context.runSafe(fire, data);
+          fire.sync(data);
         };
 
         getObserver().on("visitRemoved", listener);
