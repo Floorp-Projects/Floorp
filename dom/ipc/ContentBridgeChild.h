@@ -17,7 +17,7 @@ class ContentBridgeChild final : public PContentBridgeChild
                                , public nsIContentChild
 {
 public:
-  explicit ContentBridgeChild(Transport* aTransport);
+  explicit ContentBridgeChild();
 
   NS_DECL_ISUPPORTS
 
@@ -90,7 +90,6 @@ protected:
 
 protected: // members
   RefPtr<ContentBridgeChild> mSelfRef;
-  Transport* mTransport; // owned
 };
 
 } // namespace dom
