@@ -32,7 +32,6 @@ public:
   BlankMediaDataDecoder(BlankMediaDataCreator* aCreator,
                         const CreateDecoderParams& aParams)
     : mCreator(aCreator)
-    , mCallback(aParams.mCallback)
     , mMaxRefFrames(aParams.mConfig.GetType() == TrackInfo::kVideoTrack &&
                     MP4Decoder::IsH264(aParams.mConfig.mMimeType)
                     ? mp4_demuxer::AnnexB::HasSPS(aParams.VideoConfig().mExtraData)
@@ -47,30 +46,45 @@ public:
     return InitPromise::CreateAndResolve(mType, __func__);
   }
 
-  void Shutdown() override {}
+  RefPtr<ShutdownPromise> Shutdown() override
+  {
+    return ShutdownPromise::CreateAndResolve(true, __func__);
+  }
 
-  void Input(MediaRawData* aSample) override
+  RefPtr<DecodePromise> Decode(MediaRawData* aSample) override
   {
     RefPtr<MediaData> data =
       mCreator->Create(media::TimeUnit::FromMicroseconds(aSample->mTime),
                        media::TimeUnit::FromMicroseconds(aSample->mDuration),
                        aSample->mOffset);
 
-    OutputFrame(data);
-  }
-
-  void Flush() override
-  {
-    mReorderQueue.Clear();
-  }
-
-  void Drain() override
-  {
-    while (!mReorderQueue.IsEmpty()) {
-      mCallback->Output(mReorderQueue.Pop().get());
+    if (!data) {
+      return DecodePromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
     }
 
-    mCallback->DrainComplete();
+    // Frames come out in DTS order but we need to output them in PTS order.
+    mReorderQueue.Push(data);
+
+    if (mReorderQueue.Length() > mMaxRefFrames) {
+      return DecodePromise::CreateAndResolve(
+        DecodedData{ mReorderQueue.Pop().get() }, __func__);
+    }
+    return DecodePromise::CreateAndResolve(DecodedData(), __func__);
+  }
+
+  RefPtr<DecodePromise> Drain() override
+  {
+    DecodedData samples;
+    while (!mReorderQueue.IsEmpty()) {
+      samples.AppendElement(mReorderQueue.Pop().get());
+    }
+    return DecodePromise::CreateAndResolve(samples, __func__);
+  }
+
+  RefPtr<FlushPromise> Flush() override
+  {
+    mReorderQueue.Clear();
+    return FlushPromise::CreateAndResolve(true, __func__);
   }
 
   const char* GetDescriptionName() const override
@@ -79,25 +93,7 @@ public:
   }
 
 private:
-  void OutputFrame(MediaData* aData)
-  {
-    if (!aData) {
-      mCallback->Error(MediaResult(NS_ERROR_OUT_OF_MEMORY, __func__));
-      return;
-    }
-
-    // Frames come out in DTS order but we need to output them in PTS order.
-    mReorderQueue.Push(aData);
-
-    while (mReorderQueue.Length() > mMaxRefFrames) {
-      mCallback->Output(mReorderQueue.Pop().get());
-    }
-    mCallback->InputExhausted();
-  }
-
-private:
   nsAutoPtr<BlankMediaDataCreator> mCreator;
-  MediaDataDecoderCallback* mCallback;
   const uint32_t mMaxRefFrames;
   ReorderQueue mReorderQueue;
   TrackInfo::TrackType mType;

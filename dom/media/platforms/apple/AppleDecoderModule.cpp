@@ -74,7 +74,6 @@ AppleDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
   RefPtr<MediaDataDecoder> decoder =
     new AppleVTDecoder(aParams.VideoConfig(),
                        aParams.mTaskQueue,
-                       aParams.mCallback,
                        aParams.mImageContainer);
   return decoder.forget();
 }
@@ -83,9 +82,7 @@ already_AddRefed<MediaDataDecoder>
 AppleDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
 {
   RefPtr<MediaDataDecoder> decoder =
-    new AppleATDecoder(aParams.AudioConfig(),
-                       aParams.mTaskQueue,
-                       aParams.mCallback);
+    new AppleATDecoder(aParams.AudioConfig(), aParams.mTaskQueue);
   return decoder.forget();
 }
 

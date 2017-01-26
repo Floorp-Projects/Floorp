@@ -21,20 +21,19 @@ public:
   static bool IsWave(const nsACString& aMimeType);
 
   RefPtr<InitPromise> Init() override;
-  void Input(MediaRawData* aSample) override;
-  void Flush() override;
-  void Drain() override;
-  void Shutdown() override;
+  RefPtr<DecodePromise> Decode(MediaRawData* aSample) override;
+  RefPtr<DecodePromise> Drain() override;
+  RefPtr<FlushPromise> Flush() override;
+  RefPtr<ShutdownPromise> Shutdown() override;
   const char* GetDescriptionName() const override
   {
     return "wave audio decoder";
   }
 
 private:
-  MediaResult DoDecode(MediaRawData* aSample);
-
+  RefPtr<DecodePromise> ProcessDecode(MediaRawData* aSample);
   const AudioInfo& mInfo;
-  MediaDataDecoderCallback* mCallback;
+  const RefPtr<TaskQueue> mTaskQueue;
 };
 
 } // namespace mozilla

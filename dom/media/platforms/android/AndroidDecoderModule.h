@@ -10,7 +10,8 @@
 
 namespace mozilla {
 
-class AndroidDecoderModule : public PlatformDecoderModule {
+class AndroidDecoderModule : public PlatformDecoderModule
+{
 public:
   already_AddRefed<MediaDataDecoder>
   CreateVideoDecoder(const CreateDecoderParams& aParams) override;

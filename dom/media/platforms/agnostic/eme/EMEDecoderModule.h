@@ -15,9 +15,8 @@ namespace mozilla {
 
 class CDMProxy;
 
-class EMEDecoderModule : public PlatformDecoderModule {
-private:
-
+class EMEDecoderModule : public PlatformDecoderModule
+{
 public:
   EMEDecoderModule(CDMProxy* aProxy, PDMFactory* aPDM);
 
@@ -43,8 +42,6 @@ private:
   RefPtr<CDMProxy> mProxy;
   // Will be null if CDM has decoding capability.
   RefPtr<PDMFactory> mPDM;
-  // We run the PDM on its own task queue.
-  RefPtr<TaskQueue> mTaskQueue;
 };
 
 } // namespace mozilla
