@@ -15,10 +15,13 @@ add_task(function* setup() {
   Services.prefs.setBoolPref(PREF_AUTOFILL, true);
 
   // Adding a tab would hit switch-to-tab, so it's safer to just add a visit.
-  yield PlacesTestUtils.addVisits({
+  yield PlacesTestUtils.addVisits([{
     uri: "http://www.autofilltrimurl.com/whatever",
     transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
-  });
+  }, {
+    uri: "https://www.secureautofillurl.com/whatever",
+    transition: Ci.nsINavHistoryService.TRANSITION_TYPED,
+  }]);
 });
 
 function* promiseSearch(searchtext) {
@@ -28,17 +31,81 @@ function* promiseSearch(searchtext) {
   yield promiseSearchComplete();
 }
 
-add_task(function* () {
-  yield promiseSearch("http://");
-  is(gURLBar.inputField.value, "http://", "Autofilled value is as expected");
+function* promiseTestResult(test) {
+  info("Searching for '${test.search}'");
+
+  yield promiseSearch(test.search);
+
+  is(gURLBar.inputField.value, test.autofilledValue,
+     `Autofilled value is as expected for search '${test.search}'`);
+
+  let result = gURLBar.popup.richlistbox.getItemAtIndex(0);
+
+  is(result._titleText.textContent, test.resultListDisplayTitle,
+     `Autocomplete result should have displayed title as expected for search '${test.search}'`);
+
+  is(result._actionText.textContent, test.resultListActionText,
+     `Autocomplete action text should be as expected for search '${test.search}'`);
+
+  is(result.getAttribute("type"), test.resultListType,
+     `Autocomplete result should have searchengine for the type for search '${test.search}'`);
+
+  is(gURLBar.mController.getFinalCompleteValueAt(0), test.finalCompleteValue,
+     `Autocomplete item should go to the expected final value for search '${test.search}'`);
+}
+
+const tests = [{
+    search: "http://",
+    autofilledValue: "http://",
+    resultListDisplayTitle: "http://",
+    resultListActionText: "Search with Google",
+    resultListType: "searchengine",
+    finalCompleteValue: 'moz-action:searchengine,{"engineName":"Google","input":"http%3A%2F%2F","searchQuery":"http%3A%2F%2F"}'
+  }, {
+    search: "https://",
+    autofilledValue: "https://",
+    resultListDisplayTitle: "https://",
+    resultListActionText: "Search with Google",
+    resultListType: "searchengine",
+    finalCompleteValue: 'moz-action:searchengine,{"engineName":"Google","input":"https%3A%2F%2F","searchQuery":"https%3A%2F%2F"}'
+  }, {
+    search: "au",
+    autofilledValue: "autofilltrimurl.com/",
+    resultListDisplayTitle: "www.autofilltrimurl.com",
+    resultListActionText: "Visit",
+    resultListType: "",
+    finalCompleteValue: "www.autofilltrimurl.com/"
+  }, {
+    search: "http://au",
+    autofilledValue: "http://autofilltrimurl.com/",
+    resultListDisplayTitle: "autofilltrimurl.com",
+    resultListActionText: "Visit",
+    resultListType: "",
+    finalCompleteValue: "http://autofilltrimurl.com/"
+  }, {
+    search: "sec",
+    autofilledValue: "secureautofillurl.com/",
+    resultListDisplayTitle: "https://www.secureautofillurl.com",
+    resultListActionText: "Visit",
+    resultListType: "",
+    finalCompleteValue: "https://www.secureautofillurl.com/"
+  }, {
+    search: "https://sec",
+    autofilledValue: "https://secureautofillurl.com/",
+    resultListDisplayTitle: "https://secureautofillurl.com",
+    resultListActionText: "Visit",
+    resultListType: "",
+    finalCompleteValue: "https://secureautofillurl.com/"
+  },
+];
+
+add_task(function* autofill_tests() {
+  for (let test of tests) {
+    yield promiseTestResult(test);
+  }
 });
 
-add_task(function* () {
-  yield promiseSearch("http://au");
-  is(gURLBar.inputField.value, "http://autofilltrimurl.com/", "Autofilled value is as expected");
-});
-
-add_task(function* () {
+add_task(function* autofill_complete_domain() {
   yield promiseSearch("http://www.autofilltrimurl.com");
   is(gURLBar.inputField.value, "http://www.autofilltrimurl.com/", "Autofilled value is as expected");
 
