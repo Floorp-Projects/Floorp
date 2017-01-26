@@ -16,12 +16,6 @@
 #include "ssl3exthandle.h"
 #include "tls13exthandle.h" /* For tls13_ServerSendStatusRequestXtn. */
 
-static unsigned char key_name[SESS_TICKET_KEY_NAME_LEN];
-static PK11SymKey *session_ticket_enc_key = NULL;
-static PK11SymKey *session_ticket_mac_key = NULL;
-
-static PRCallOnceType generate_session_keys_once;
-
 static SECStatus ssl3_ParseEncryptedSessionTicket(sslSocket *ss,
                                                   SECItem *data, EncryptedSessionTicket *enc_session_ticket);
 static SECStatus ssl3_AppendToItem(SECItem *item, const unsigned char *buf,
@@ -29,8 +23,6 @@ static SECStatus ssl3_AppendToItem(SECItem *item, const unsigned char *buf,
 static SECStatus ssl3_ConsumeFromItem(SECItem *item, unsigned char **buf, PRUint32 bytes);
 static SECStatus ssl3_AppendNumberToItem(SECItem *item, PRUint32 num,
                                          PRInt32 lenSize);
-static SECStatus ssl3_GetSessionTicketKeys(sslSocket *ss,
-                                           PK11SymKey **aes_key, PK11SymKey **mac_key);
 static SECStatus ssl3_ConsumeFromItem(SECItem *item, unsigned char **buf, PRUint32 bytes);
 
 /*
@@ -74,83 +66,6 @@ ssl3_AppendNumberToItem(SECItem *item, PRUint32 num, PRInt32 lenSize)
     }
     rv = ssl3_AppendToItem(item, &b[0], lenSize);
     return rv;
-}
-
-SECStatus
-ssl3_SessionTicketShutdown(void *appData, void *nssData)
-{
-    if (session_ticket_enc_key) {
-        PK11_FreeSymKey(session_ticket_enc_key);
-        session_ticket_enc_key = NULL;
-    }
-    if (session_ticket_mac_key) {
-        PK11_FreeSymKey(session_ticket_mac_key);
-        session_ticket_mac_key = NULL;
-    }
-    PORT_Memset(&generate_session_keys_once, 0,
-                sizeof(generate_session_keys_once));
-    return SECSuccess;
-}
-
-static PRStatus
-ssl3_GenerateSessionTicketKeys(void *data)
-{
-    SECStatus rv;
-    sslSocket *ss = (sslSocket *)data;
-    sslServerCertType certType = { ssl_auth_rsa_decrypt, NULL };
-    const sslServerCert *sc;
-    SECKEYPrivateKey *svrPrivKey;
-    SECKEYPublicKey *svrPubKey;
-
-    sc = ssl_FindServerCert(ss, &certType);
-    if (!sc || !sc->serverKeyPair) {
-        SSL_DBG(("%d: SSL[%d]: No ssl_auth_rsa_decrypt cert and key pair",
-                 SSL_GETPID(), ss->fd));
-        goto loser;
-    }
-    svrPrivKey = sc->serverKeyPair->privKey;
-    svrPubKey = sc->serverKeyPair->pubKey;
-    if (svrPrivKey == NULL || svrPubKey == NULL) {
-        SSL_DBG(("%d: SSL[%d]: Pub or priv key(s) is NULL.",
-                 SSL_GETPID(), ss->fd));
-        goto loser;
-    }
-
-    /* Get a copy of the session keys from shared memory. */
-    PORT_Memcpy(key_name, SESS_TICKET_KEY_NAME_PREFIX,
-                sizeof(SESS_TICKET_KEY_NAME_PREFIX));
-    if (!ssl_GetSessionTicketKeys(svrPrivKey, svrPubKey, ss->pkcs11PinArg,
-                                  &key_name[SESS_TICKET_KEY_NAME_PREFIX_LEN],
-                                  &session_ticket_enc_key, &session_ticket_mac_key))
-        return PR_FAILURE;
-
-    rv = NSS_RegisterShutdown(ssl3_SessionTicketShutdown, NULL);
-    if (rv != SECSuccess)
-        goto loser;
-
-    return PR_SUCCESS;
-
-loser:
-    ssl3_SessionTicketShutdown(NULL, NULL);
-    return PR_FAILURE;
-}
-
-static SECStatus
-ssl3_GetSessionTicketKeys(sslSocket *ss, PK11SymKey **aes_key,
-                          PK11SymKey **mac_key)
-{
-    if (PR_CallOnceWithArg(&generate_session_keys_once,
-                           ssl3_GenerateSessionTicketKeys, ss) !=
-        PR_SUCCESS)
-        return SECFailure;
-
-    if (session_ticket_enc_key == NULL ||
-        session_ticket_mac_key == NULL)
-        return SECFailure;
-
-    *aes_key = session_ticket_enc_key;
-    *mac_key = session_ticket_mac_key;
-    return SECSuccess;
 }
 
 /* Format an SNI extension, using the name from the socket's URL,
@@ -960,6 +875,7 @@ ssl3_EncodeSessionTicket(sslSocket *ss,
     PRUint32 cert_length = 0;
     PRUint8 length_buf[4];
     PRUint32 now;
+    unsigned char key_name[SESS_TICKET_KEY_NAME_LEN];
     PK11SymKey *aes_key = NULL;
     PK11SymKey *mac_key = NULL;
     CK_MECHANISM_TYPE cipherMech = CKM_AES_CBC;
@@ -975,7 +891,6 @@ ssl3_EncodeSessionTicket(sslSocket *ss,
     CK_MECHANISM_TYPE msWrapMech = 0; /* dummy default value,
                                           * must be >= 0 */
     ssl3CipherSpec *spec;
-    const sslServerCertType *certType;
     SECItem alpnSelection = { siBuffer, NULL, 0 };
 
     SSL_TRC(3, ("%d: SSL3[%d]: send session_ticket handshake",
@@ -995,7 +910,7 @@ ssl3_EncodeSessionTicket(sslSocket *ss,
     if (rv != SECSuccess)
         goto loser;
 
-    rv = ssl3_GetSessionTicketKeys(ss, &aes_key, &mac_key);
+    rv = ssl_GetSessionTicketKeys(ss, key_name, &aes_key, &mac_key);
     if (rv != SECSuccess)
         goto loser;
 
@@ -1014,8 +929,7 @@ ssl3_EncodeSessionTicket(sslSocket *ss,
         sslSessionID sid;
         PORT_Memset(&sid, 0, sizeof(sslSessionID));
 
-        rv = ssl3_CacheWrappedMasterSecret(ss, &sid, spec,
-                                           ss->ssl3.hs.kea_def->authKeyType);
+        rv = ssl3_CacheWrappedMasterSecret(ss, &sid, spec);
         if (rv == SECSuccess) {
             if (sid.u.ssl3.keys.wrapped_master_secret_len > sizeof(wrapped_ms))
                 goto loser;
@@ -1108,22 +1022,15 @@ ssl3_EncodeSessionTicket(sslSocket *ss,
         goto loser;
 
     /* certificate type */
-    certType = &ss->sec.serverCert->certType;
-    PORT_Assert(certType->authType == ss->sec.authType);
-    switch (ss->sec.authType) {
-        case ssl_auth_ecdsa:
-        case ssl_auth_ecdh_rsa:
-        case ssl_auth_ecdh_ecdsa:
-            PORT_Assert(certType->namedCurve);
-            PORT_Assert(certType->namedCurve->keaType == ssl_kea_ecdh);
-            /* EC curves only use the second of the two bytes. */
-            PORT_Assert(certType->namedCurve->name < 256);
-            rv = ssl3_AppendNumberToItem(&plaintext,
-                                         certType->namedCurve->name, 1);
-            break;
-        default:
-            rv = ssl3_AppendNumberToItem(&plaintext, 0, 1);
-            break;
+    PORT_Assert(SSL_CERT_IS(ss->sec.serverCert, ss->sec.authType));
+    if (SSL_CERT_IS_EC(ss->sec.serverCert)) {
+        const sslServerCert *cert = ss->sec.serverCert;
+        PORT_Assert(cert->namedCurve);
+        /* EC curves only use the second of the two bytes. */
+        PORT_Assert(cert->namedCurve->name < 256);
+        rv = ssl3_AppendNumberToItem(&plaintext, cert->namedCurve->name, 1);
+    } else {
+        rv = ssl3_AppendNumberToItem(&plaintext, 0, 1);
     }
     if (rv != SECSuccess)
         goto loser;
@@ -1350,6 +1257,7 @@ ssl3_ProcessSessionTicketCommon(sslSocket *ss, SECItem *data)
     EncryptedSessionTicket enc_session_ticket;
     unsigned char computed_mac[TLS_EX_SESS_TICKET_MAC_LENGTH];
     unsigned int computed_mac_length;
+    unsigned char key_name[SESS_TICKET_KEY_NAME_LEN];
     PK11SymKey *aes_key = NULL;
     PK11SymKey *mac_key = NULL;
     PK11Context *hmac_ctx;
@@ -1387,7 +1295,7 @@ ssl3_ProcessSessionTicketCommon(sslSocket *ss, SECItem *data)
     }
 
     /* Get session ticket keys. */
-    rv = ssl3_GetSessionTicketKeys(ss, &aes_key, &mac_key);
+    rv = ssl_GetSessionTicketKeys(ss, key_name, &aes_key, &mac_key);
     if (rv != SECSuccess) {
         SSL_DBG(("%d: SSL[%d]: Unable to get/generate session ticket keys.",
                  SSL_GETPID(), ss->fd));
@@ -1538,24 +1446,19 @@ ssl3_ProcessSessionTicketCommon(sslSocket *ss, SECItem *data)
         goto no_ticket;
     parsed_session_ticket->keaKeyBits = temp;
 
-    /* Read certificate slot */
-    parsed_session_ticket->certType.authType = parsed_session_ticket->authType;
+    /* Read the optional named curve. */
     rv = ssl3_ExtConsumeHandshakeNumber(ss, &temp, 1, &buffer, &buffer_len);
     if (rv != SECSuccess)
         goto no_ticket;
-    switch (parsed_session_ticket->authType) {
-        case ssl_auth_ecdsa:
-        case ssl_auth_ecdh_rsa:
-        case ssl_auth_ecdh_ecdsa: {
-            const sslNamedGroupDef *group =
-                ssl_LookupNamedGroup((SSLNamedGroup)temp);
-            if (!group || group->keaType != ssl_kea_ecdh) {
-                goto no_ticket;
-            }
-            parsed_session_ticket->certType.namedCurve = group;
-        } break;
-        default:
-            break;
+    if (parsed_session_ticket->authType == ssl_auth_ecdsa ||
+        parsed_session_ticket->authType == ssl_auth_ecdh_rsa ||
+        parsed_session_ticket->authType == ssl_auth_ecdh_ecdsa) {
+        const sslNamedGroupDef *group =
+            ssl_LookupNamedGroup((SSLNamedGroup)temp);
+        if (!group || group->keaType != ssl_kea_ecdh) {
+            goto no_ticket;
+        }
+        parsed_session_ticket->namedCurve = group;
     }
 
     /* Read wrapped master_secret. */
@@ -1682,8 +1585,7 @@ ssl3_ProcessSessionTicketCommon(sslSocket *ss, SECItem *data)
         sid->authKeyBits = parsed_session_ticket->authKeyBits;
         sid->keaType = parsed_session_ticket->keaType;
         sid->keaKeyBits = parsed_session_ticket->keaKeyBits;
-        memcpy(&sid->certType, &parsed_session_ticket->certType,
-               sizeof(sslServerCertType));
+        sid->namedCurve = parsed_session_ticket->namedCurve;
 
         if (SECITEM_CopyItem(NULL, &sid->u.ssl3.locked.sessionTicket.ticket,
                              &extension_data) != SECSuccess)

@@ -7,33 +7,63 @@
   ],
   'targets': [
     {
-      'target_name': 'softokn',
+      'target_name': 'softokn_static',
       'type': 'static_library',
-      'sources': [
-        'fipsaudt.c',
-        'fipstest.c',
-        'fipstokn.c',
-        'jpakesftk.c',
-        'lgglue.c',
-        'lowkey.c',
-        'lowpbe.c',
-        'padbuf.c',
-        'pkcs11.c',
-        'pkcs11c.c',
-        'pkcs11u.c',
-        'sdb.c',
-        'sftkdb.c',
-        'sftkhmac.c',
-        'sftkpars.c',
-        'sftkpwd.c',
-        'softkver.c',
-        'tlsprf.c'
+      'defines': [
+        'NSS_TEST_BUILD',
       ],
       'dependencies': [
+        'softokn_base',
+        '<(DEPTH)/exports.gyp:nss_exports',
+        '<(DEPTH)/lib/freebl/freebl.gyp:freebl_static',
+      ],
+      'conditions': [
+        [ 'use_system_sqlite==1', {
+          'dependencies': [
+            '<(DEPTH)/lib/sqlite/sqlite.gyp:sqlite3',
+          ],
+        }, {
+          'dependencies': [
+            '<(DEPTH)/lib/sqlite/sqlite.gyp:sqlite',
+          ],
+        }],
+      ],
+    },
+    {
+      'target_name': 'softokn',
+      'type': 'static_library',
+      'dependencies': [
+        'softokn_base',
         '<(DEPTH)/exports.gyp:nss_exports',
         '<(DEPTH)/lib/sqlite/sqlite.gyp:sqlite3',
         '<(DEPTH)/lib/freebl/freebl.gyp:freebl',
       ]
+    },
+    {
+      'target_name': 'softokn_base',
+      'type': 'none',
+      'direct_dependent_settings': {
+        'sources': [
+          'fipsaudt.c',
+          'fipstest.c',
+          'fipstokn.c',
+          'jpakesftk.c',
+          'lgglue.c',
+          'lowkey.c',
+          'lowpbe.c',
+          'padbuf.c',
+          'pkcs11.c',
+          'pkcs11c.c',
+          'pkcs11u.c',
+          'sdb.c',
+          'sftkdb.c',
+          'sftkhmac.c',
+          'sftkpars.c',
+          'sftkpwd.c',
+          'softkver.c',
+          'tlsprf.c'
+        ],
+      },
     },
     {
       'target_name': 'softokn3',

@@ -125,7 +125,6 @@ export default async function main() {
       "bin/checkout.sh && nss/automation/taskcluster/scripts/build_gyp.sh -g -v --ubsan --asan"
     ],
     env: {
-      ASAN_OPTIONS: "detect_odr_violation=0", // bug 1316276
       UBSAN_OPTIONS: "print_stacktrace=1",
       NSS_DISABLE_ARENA_FREE_LIST: "1",
       NSS_DISABLE_UNLOAD: "1",
@@ -258,6 +257,12 @@ async function scheduleLinux(name, base) {
     symbol: "noLibpkix"
   }));
 
+  queue.scheduleTask(merge(extra_base, {
+    name: `${name} w/ modular builds`,
+    env: {NSS_BUILD_MODULAR: "1"},
+    symbol: "modular"
+  }));
+
   return queue.submit();
 }
 
@@ -266,8 +271,7 @@ async function scheduleLinux(name, base) {
 async function scheduleFuzzing() {
   let base = {
     env: {
-       // bug 1316276
-      ASAN_OPTIONS: "allocator_may_return_null=1:detect_odr_violation=0",
+      ASAN_OPTIONS: "allocator_may_return_null=1",
       UBSAN_OPTIONS: "print_stacktrace=1",
       NSS_DISABLE_ARENA_FREE_LIST: "1",
       NSS_DISABLE_UNLOAD: "1",
@@ -321,16 +325,69 @@ async function scheduleFuzzing() {
 
   queue.scheduleTask(merge(base, {
     parent: task_build,
+    name: "Hash",
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/fuzz.sh " +
+        "hash nss/fuzz/corpus/hash -max_total_time=300 -max_len=4096"
+    ],
+    // Need a privileged docker container to remove detect_leaks=0.
+    env: {
+      ASAN_OPTIONS: "allocator_may_return_null=1:detect_leaks=0",
+    },
+    symbol: "Hash",
+    kind: "test"
+  }));
+
+  queue.scheduleTask(merge(base, {
+    parent: task_build,
     name: "QuickDER",
     command: [
       "/bin/bash",
       "-c",
       "bin/checkout.sh && nss/automation/taskcluster/scripts/fuzz.sh " +
-        "quickder nss/fuzz/corpus/quickder -max_total_time=300"
+        "quickder nss/fuzz/corpus/quickder -max_total_time=300 -max_len=10000"
     ],
-    // Need a privileged docker container to remove this.
-    env: {ASAN_OPTIONS: "detect_leaks=0"},
+    // Need a privileged docker container to remove detect_leaks=0.
+    env: {
+      ASAN_OPTIONS: "allocator_may_return_null=1:detect_leaks=0",
+    },
     symbol: "QuickDER",
+    kind: "test"
+  }));
+
+  queue.scheduleTask(merge(base, {
+    parent: task_build,
+    name: "MPI",
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/fuzz.sh " +
+        "mpi nss/fuzz/corpus/mpi -max_total_time=300 -max_len=2048"
+    ],
+    // Need a privileged docker container to remove detect_leaks=0.
+    env: {
+      ASAN_OPTIONS: "allocator_may_return_null=1:detect_leaks=0",
+    },
+    symbol: "MPI",
+    kind: "test"
+  }));
+
+  queue.scheduleTask(merge(base, {
+    parent: task_build,
+    name: "CertDN",
+    command: [
+      "/bin/bash",
+      "-c",
+      "bin/checkout.sh && nss/automation/taskcluster/scripts/fuzz.sh " +
+        "certDN nss/fuzz/corpus/quickder -max_total_time=300 -max_len=4096"
+    ],
+    // Need a privileged docker container to remove detect_leaks=0.
+    env: {
+      ASAN_OPTIONS: "allocator_may_return_null=1:detect_leaks=0",
+    },
+    symbol: "CertDN",
     kind: "test"
   }));
 

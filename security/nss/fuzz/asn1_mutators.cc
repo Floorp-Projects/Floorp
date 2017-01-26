@@ -4,9 +4,9 @@
 
 #include <assert.h>
 #include <string.h>
+#include <random>
 #include <tuple>
 
-#include "FuzzerRandom.h"
 #include "asn1_mutators.h"
 
 using namespace std;
@@ -94,9 +94,11 @@ static vector<uint8_t *> ParseItems(uint8_t *Data, size_t Size) {
 
 size_t ASN1MutatorFlipConstructed(uint8_t *Data, size_t Size, size_t MaxSize,
                                   unsigned int Seed) {
-  fuzzer::Random R(Seed);
   auto items = ParseItems(Data, Size);
-  uint8_t *item = items.at(R(items.size()));
+
+  std::mt19937 rng(Seed);
+  std::uniform_int_distribution<size_t> dist(0, items.size() - 1);
+  uint8_t *item = items.at(dist(rng));
 
   // Flip "constructed" type bit.
   item[0] ^= 0x20;
@@ -106,12 +108,15 @@ size_t ASN1MutatorFlipConstructed(uint8_t *Data, size_t Size, size_t MaxSize,
 
 size_t ASN1MutatorChangeType(uint8_t *Data, size_t Size, size_t MaxSize,
                              unsigned int Seed) {
-  fuzzer::Random R(Seed);
   auto items = ParseItems(Data, Size);
-  uint8_t *item = items.at(R(items.size()));
 
-  // Change type to a random int [0, 31).
-  item[0] = R(31);
+  std::mt19937 rng(Seed);
+  std::uniform_int_distribution<size_t> dist(0, items.size() - 1);
+  uint8_t *item = items.at(dist(rng));
+
+  // Change type to a random int [0, 30].
+  static std::uniform_int_distribution<size_t> tdist(0, 30);
+  item[0] = tdist(rng);
 
   return Size;
 }
