@@ -24,6 +24,7 @@
 #include "nsHashKeys.h"
 #include "nsAutoPtr.h"
 #include "nsUnicharUtils.h"
+#include "nsPrintfCString.h"
 
 // There are two kinds of atoms handled by this module.
 //
@@ -78,6 +79,14 @@ public:
   }
 
   static void GCAtomTable();
+
+  enum class GCKind {
+    RegularOperation,
+    Shutdown,
+  };
+
+  static void GCAtomTableLocked(const MutexAutoLock& aProofOfLock,
+                                GCKind aKind);
 
 private:
   DynamicAtom(const nsAString& aString, uint32_t aHash)
@@ -359,16 +368,33 @@ void
 DynamicAtom::GCAtomTable()
 {
   MutexAutoLock lock(*gAtomTableLock);
+  GCAtomTableLocked(lock, GCKind::RegularOperation);
+}
+
+void
+DynamicAtom::GCAtomTableLocked(const MutexAutoLock& aProofOfLock,
+                               GCKind aKind)
+{
   uint32_t removedCount = 0; // Use a non-atomic temporary for cheaper increments.
   for (auto i = gAtomTable->Iter(); !i.Done(); i.Next()) {
     auto entry = static_cast<AtomTableEntry*>(i.Get());
-    if (!entry->mAtom->IsStaticAtom()) {
-      auto atom = static_cast<DynamicAtom*>(entry->mAtom);
-      if (atom->mRefCnt == 0) {
-        i.Remove();
-        delete atom;
-        ++removedCount;
-      }
+    if (entry->mAtom->IsStaticAtom()) {
+      continue;
+    }
+
+    auto atom = static_cast<DynamicAtom*>(entry->mAtom);
+    if (atom->mRefCnt == 0) {
+      i.Remove();
+      delete atom;
+      ++removedCount;
+    } else if (aKind == GCKind::Shutdown) {
+      // We only perform these kind of GCs in leak-checking builds.  If
+      // something is anomalous, then we'll report an error here, and crash
+      // later on in this function.
+      nsAutoCString name;
+      atom->ToUTF8String(name);
+      nsPrintfCString msg("dynamic atom with non-zero refcount %s!", name.get());
+      NS_ASSERTION(false, msg.get());
     }
   }
 
@@ -379,9 +405,16 @@ DynamicAtom::GCAtomTable()
   // This means that we cannot assert that gUnusedAtomCount == removedCount, and
   // thus that there are no unused atoms at the end of a GC. We can and do,
   // however, assert this after the last GC at shutdown.
-  MOZ_ASSERT(removedCount <= gUnusedAtomCount);
-  gUnusedAtomCount -= removedCount;
+  if (aKind == GCKind::RegularOperation) {
+    MOZ_ASSERT(removedCount <= gUnusedAtomCount);
+  } else {
+    // Complain if somebody adds new GCKind enums.
+    MOZ_ASSERT(aKind == GCKind::Shutdown);
+    // Our unused atom count should be accurate.
+    MOZ_ASSERT(removedCount == gUnusedAtomCount);
+  }
 
+  gUnusedAtomCount -= removedCount;
 }
 
 NS_IMPL_QUERY_INTERFACE(DynamicAtom, nsIAtom)
@@ -501,13 +534,12 @@ NS_ShutdownAtomTable()
 #ifdef NS_FREE_PERMANENT_DATA
   // Do a final GC to satisfy leak checking. We skip this step in release
   // builds.
-  DynamicAtom::GCAtomTable();
-  MOZ_ASSERT(gUnusedAtomCount == 0);
+  {
+    MutexAutoLock lock(*gAtomTableLock);
+    DynamicAtom::GCAtomTableLocked(lock, DynamicAtom::GCKind::Shutdown);
+  }
 #endif
 
-  // XXXbholley: it would be good to assert gAtomTable->EntryCount() == 0
-  // here, but that currently fails. Probably just a few things that need
-  // to be fixed up.
   delete gAtomTable;
   gAtomTable = nullptr;
   delete gAtomTableLock;
