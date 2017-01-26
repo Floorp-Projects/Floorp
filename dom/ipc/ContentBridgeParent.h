@@ -31,7 +31,7 @@ public:
   void NotifyTabDestroyed();
 
   static ContentBridgeParent*
-  Create(Transport* aTransport, ProcessId aOtherProcess);
+  Create(Endpoint<PContentBridgeParent>&& aEndpoint);
 
   virtual PBlobParent*
   SendPBlobConstructor(PBlobParent* actor,
