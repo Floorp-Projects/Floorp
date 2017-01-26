@@ -694,9 +694,10 @@
 
       <handler event="mousedown" button="0">
       <![CDATA[
-        if (event.target.localName == "menuitem" ||
-            event.target.localName == "menu" ||
-            event.target.localName == "menucaption") {
+        if (this.state == "open" &&
+            (event.target.localName == "menuitem" ||
+             event.target.localName == "menu" ||
+             event.target.localName == "menucaption")) {
           this.enableDragScrolling(true);
         }
       ]]>
