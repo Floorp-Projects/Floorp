@@ -7,9 +7,8 @@
 <body>
 <script type="text/javascript">
 function installMozAM(url) {
-  return navigator.mozAddonManager.createInstall({url}).then(install => {
-    install.install();
-  });
+  return navigator.mozAddonManager.createInstall({url})
+                  .then(install => install.install());
 }
 
 function installTrigger(url) {

@@ -143,7 +143,7 @@ class LintRoller(object):
 
         # ignore SIGINT in parent so we can still get partial results
         # from child processes. These should shutdown quickly anyway.
-        signal.signal(signal.SIGINT, signal.SIG_IGN)
+        orig_sigint = signal.signal(signal.SIGINT, signal.SIG_IGN)
         self.failed = []
         for worker in workers:
             # parent process blocks on worker.get()
@@ -152,4 +152,7 @@ class LintRoller(object):
                 self.failed.extend(failed)
             for k, v in results.iteritems():
                 all_results[k].extend(v)
+
+        signal.signal(signal.SIGINT, orig_sigint)
+        m.shutdown()
         return all_results

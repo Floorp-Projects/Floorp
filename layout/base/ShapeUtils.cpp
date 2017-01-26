@@ -77,4 +77,32 @@ ShapeUtils::ComputeCircleRadius(StyleBasicShape* const aBasicShape,
   return r;
 }
 
+nsSize
+ShapeUtils::ComputeEllipseRadii(StyleBasicShape* const aBasicShape,
+                                const nsPoint& aCenter,
+                                const nsRect& aRefBox)
+{
+  const nsTArray<nsStyleCoord>& coords = aBasicShape->Coordinates();
+  MOZ_ASSERT(coords.Length() == 2, "wrong number of arguments");
+  nsSize radii;
+
+  if (coords[0].GetUnit() == eStyleUnit_Enumerated) {
+    const StyleShapeRadius radiusX = coords[0].GetEnumValue<StyleShapeRadius>();
+    radii.width = ComputeShapeRadius(radiusX, aCenter.x, aRefBox.x,
+                                     aRefBox.XMost());
+  } else {
+    radii.width = nsRuleNode::ComputeCoordPercentCalc(coords[0], aRefBox.width);
+  }
+
+  if (coords[1].GetUnit() == eStyleUnit_Enumerated) {
+    const StyleShapeRadius radiusY = coords[1].GetEnumValue<StyleShapeRadius>();
+    radii.height = ComputeShapeRadius(radiusY, aCenter.y, aRefBox.y,
+                                      aRefBox.YMost());
+  } else {
+    radii.height = nsRuleNode::ComputeCoordPercentCalc(coords[1], aRefBox.height);
+  }
+
+  return radii;
+}
+
 } // namespace mozilla

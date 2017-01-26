@@ -11,6 +11,7 @@
 #define nsMenuPopupFrame_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/gfx/Types.h"
 #include "nsIAtom.h"
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
@@ -385,17 +386,16 @@ public:
                     nsPopupLevel aPopupLevel);
 
   // Determines whether the given edges of the popup may be moved, where
-  // aHorizontalSide and aVerticalSide are one of the NS_SIDE_* constants, or
-  // 0 for no movement in that direction. aChange is the distance to move on
-  // those sides. If will be reset to 0 if the side cannot be adjusted at all
-  // in that direction. For example, a popup cannot be moved if it is anchored
-  // on a particular side.
+  // aHorizontalSide and aVerticalSide are one of the enum Side constants.
+  // aChange is the distance to move on those sides. If will be reset to 0
+  // if the side cannot be adjusted at all in that direction. For example, a
+  // popup cannot be moved if it is anchored on a particular side.
   //
   // Later, when bug 357725 is implemented, we can make this adjust aChange by
   // the amount that the side can be resized, so that minimums and maximums
   // can be taken into account.
-  void CanAdjustEdges(int8_t aHorizontalSide,
-                      int8_t aVerticalSide,
+  void CanAdjustEdges(mozilla::Side aHorizontalSide,
+                      mozilla::Side aVerticalSide,
                       mozilla::LayoutDeviceIntPoint& aChange);
 
   // Return true if the popup is positioned relative to an anchor.

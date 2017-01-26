@@ -1037,11 +1037,18 @@ class RTCPeerConnection {
           "Invalid candidate (both sdpMid and sdpMLineIndex are null).",
           "TypeError");
     }
-    return await this._chain(() => new Promise((resolve, reject) => {
-      this._onAddIceCandidateSuccess = resolve;
-      this._onAddIceCandidateError = reject;
-      this._impl.addIceCandidate(candidate, sdpMid || "", sdpMLineIndex);
-    }));
+    return await this._chain(() => {
+      if (!this.remoteDescription) {
+        throw new this._win.DOMException(
+            "setRemoteDescription needs to called before addIceCandidate",
+            "InvalidStateError");
+      }
+      return new Promise((resolve, reject) => {
+        this._onAddIceCandidateSuccess = resolve;
+        this._onAddIceCandidateError = reject;
+        this._impl.addIceCandidate(candidate, sdpMid || "", sdpMLineIndex);
+      });
+    });
   }
 
   addStream(stream) {

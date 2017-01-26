@@ -381,7 +381,7 @@ public:
   bool           operator==(const nsStyleCorners& aOther) const;
   bool           operator!=(const nsStyleCorners& aOther) const;
 
-  // aCorner is always one of NS_CORNER_* defined in nsStyleConsts.h
+  // aHalfCorner is always one of enum HalfCorner in gfx/2d/Types.h.
   inline nsStyleUnit GetUnit(uint8_t aHalfCorner) const;
 
   inline nsStyleCoord Get(uint8_t aHalfCorner) const;
