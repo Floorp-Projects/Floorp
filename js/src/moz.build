@@ -587,6 +587,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'jit/ExecutableAllocatorWin.cpp',
         'threading/windows/ConditionVariable.cpp',
+        'threading/windows/CpuCount.cpp',
         'threading/windows/MutexImpl.cpp',
         'threading/windows/Thread.cpp',
     ]
@@ -596,6 +597,7 @@ else:
     SOURCES += [
         'jit/ExecutableAllocatorPosix.cpp',
         'threading/posix/ConditionVariable.cpp',
+        'threading/posix/CpuCount.cpp',
         'threading/posix/MutexImpl.cpp',
         'threading/posix/Thread.cpp',
     ]

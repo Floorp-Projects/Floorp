@@ -37,6 +37,7 @@
 #include "hb-ot-hhea-table.hh"
 #include "hb-ot-hmtx-table.hh"
 #include "hb-ot-os2-table.hh"
+#include "hb-ot-var-hvar-table.hh"
 //#include "hb-ot-post-table.hh"
 
 
@@ -50,12 +51,16 @@ struct hb_ot_face_metrics_accelerator_t
   unsigned short line_gap;
   bool has_font_extents;
 
-  const OT::_mtx *table;
+  const OT::hmtxvmtx *table;
   hb_blob_t *blob;
+
+  const OT::HVARVVAR *var;
+  hb_blob_t *var_blob;
 
   inline void init (hb_face_t *face,
 		    hb_tag_t _hea_tag,
 		    hb_tag_t _mtx_tag,
+		    hb_tag_t _var_tag,
 		    hb_tag_t os2_tag,
 		    unsigned int default_advance = 0)
   {
@@ -91,7 +96,7 @@ struct hb_ot_face_metrics_accelerator_t
 
     this->has_font_extents = got_font_extents;
 
-    this->blob = OT::Sanitizer<OT::_mtx>::sanitize (face->reference_table (_mtx_tag));
+    this->blob = OT::Sanitizer<OT::hmtxvmtx>::sanitize (face->reference_table (_mtx_tag));
 
     /* Cap num_metrics() and num_advances() based on table length. */
     unsigned int len = hb_blob_get_length (this->blob);
@@ -107,15 +112,20 @@ struct hb_ot_face_metrics_accelerator_t
       hb_blob_destroy (this->blob);
       this->blob = hb_blob_get_empty ();
     }
-    this->table = OT::Sanitizer<OT::_mtx>::lock_instance (this->blob);
+    this->table = OT::Sanitizer<OT::hmtxvmtx>::lock_instance (this->blob);
+
+    this->var_blob = OT::Sanitizer<OT::HVARVVAR>::sanitize (face->reference_table (_var_tag));
+    this->var = OT::Sanitizer<OT::HVARVVAR>::lock_instance (this->var_blob);
   }
 
   inline void fini (void)
   {
     hb_blob_destroy (this->blob);
+    hb_blob_destroy (this->var_blob);
   }
 
-  inline unsigned int get_advance (hb_codepoint_t glyph) const
+  inline unsigned int get_advance (hb_codepoint_t  glyph,
+				   hb_font_t      *font) const
   {
     if (unlikely (glyph >= this->num_metrics))
     {
@@ -128,10 +138,8 @@ struct hb_ot_face_metrics_accelerator_t
 	return this->default_advance;
     }
 
-    if (glyph >= this->num_advances)
-      glyph = this->num_advances - 1;
-
-    return this->table->longMetric[glyph].advance;
+    return this->table->longMetric[MIN (glyph, this->num_advances - 1)].advance
+	 + this->var->get_advance_var (glyph, font->coords, font->num_coords); // TODO Optimize?!
   }
 };
 
@@ -421,55 +429,13 @@ struct hb_ot_face_cmap_accelerator_t
   }
 };
 
-template <typename T>
-struct hb_lazy_loader_t
-{
-  inline void init (hb_face_t *face_)
-  {
-    face = face_;
-    instance = NULL;
-  }
-
-  inline void fini (void)
-  {
-    if (instance && instance != &OT::Null(T))
-    {
-      instance->fini();
-      free (instance);
-    }
-  }
-
-  inline const T* operator-> (void) const
-  {
-  retry:
-    T *p = (T *) hb_atomic_ptr_get (&instance);
-    if (unlikely (!p))
-    {
-      p = (T *) calloc (1, sizeof (T));
-      if (unlikely (!p))
-        return &OT::Null(T);
-      p->init (face);
-      if (unlikely (!hb_atomic_ptr_cmpexch (const_cast<T **>(&instance), NULL, p)))
-      {
-	p->fini ();
-	goto retry;
-      }
-    }
-    return p;
-  }
-
-  private:
-  hb_face_t *face;
-  T *instance;
-};
-
 struct hb_ot_font_t
 {
   hb_ot_face_cmap_accelerator_t cmap;
   hb_ot_face_metrics_accelerator_t h_metrics;
   hb_ot_face_metrics_accelerator_t v_metrics;
-  hb_lazy_loader_t<hb_ot_face_glyf_accelerator_t> glyf;
-  hb_lazy_loader_t<hb_ot_face_cbdt_accelerator_t> cbdt;
+  OT::hb_lazy_loader_t<hb_ot_face_glyf_accelerator_t> glyf;
+  OT::hb_lazy_loader_t<hb_ot_face_cbdt_accelerator_t> cbdt;
 };
 
 
@@ -482,8 +448,8 @@ _hb_ot_font_create (hb_face_t *face)
     return NULL;
 
   ot_font->cmap.init (face);
-  ot_font->h_metrics.init (face, HB_OT_TAG_hhea, HB_OT_TAG_hmtx, HB_OT_TAG_os2);
-  ot_font->v_metrics.init (face, HB_OT_TAG_vhea, HB_OT_TAG_vmtx, HB_TAG_NONE,
+  ot_font->h_metrics.init (face, HB_OT_TAG_hhea, HB_OT_TAG_hmtx, HB_OT_TAG_HVAR, HB_OT_TAG_os2);
+  ot_font->v_metrics.init (face, HB_OT_TAG_vhea, HB_OT_TAG_vmtx, HB_OT_TAG_VVAR, HB_TAG_NONE,
 			   ot_font->h_metrics.ascender - ot_font->h_metrics.descender); /* TODO Can we do this lazily? */
   ot_font->glyf.init (face);
   ot_font->cbdt.init (face);
@@ -529,23 +495,23 @@ hb_ot_get_variation_glyph (hb_font_t *font HB_UNUSED,
 }
 
 static hb_position_t
-hb_ot_get_glyph_h_advance (hb_font_t *font HB_UNUSED,
+hb_ot_get_glyph_h_advance (hb_font_t *font,
 			   void *font_data,
 			   hb_codepoint_t glyph,
 			   void *user_data HB_UNUSED)
 {
   const hb_ot_font_t *ot_font = (const hb_ot_font_t *) font_data;
-  return font->em_scale_x (ot_font->h_metrics.get_advance (glyph));
+  return font->em_scale_x (ot_font->h_metrics.get_advance (glyph, font));
 }
 
 static hb_position_t
-hb_ot_get_glyph_v_advance (hb_font_t *font HB_UNUSED,
+hb_ot_get_glyph_v_advance (hb_font_t *font,
 			   void *font_data,
 			   hb_codepoint_t glyph,
 			   void *user_data HB_UNUSED)
 {
   const hb_ot_font_t *ot_font = (const hb_ot_font_t *) font_data;
-  return font->em_scale_y (-(int) ot_font->v_metrics.get_advance (glyph));
+  return font->em_scale_y (-(int) ot_font->v_metrics.get_advance (glyph, font));
 }
 
 static hb_bool_t
@@ -559,6 +525,7 @@ hb_ot_get_glyph_extents (hb_font_t *font HB_UNUSED,
   bool ret = ot_font->glyf->get_extents (glyph, extents);
   if (!ret)
     ret = ot_font->cbdt->get_extents (glyph, extents);
+  // TODO Hook up side-bearings variations.
   extents->x_bearing = font->em_scale_x (extents->x_bearing);
   extents->y_bearing = font->em_scale_y (extents->y_bearing);
   extents->width     = font->em_scale_x (extents->width);
@@ -576,6 +543,7 @@ hb_ot_get_font_h_extents (hb_font_t *font HB_UNUSED,
   metrics->ascender = font->em_scale_y (ot_font->h_metrics.ascender);
   metrics->descender = font->em_scale_y (ot_font->h_metrics.descender);
   metrics->line_gap = font->em_scale_y (ot_font->h_metrics.line_gap);
+  // TODO Hook up variations.
   return ot_font->h_metrics.has_font_extents;
 }
 
@@ -589,6 +557,7 @@ hb_ot_get_font_v_extents (hb_font_t *font HB_UNUSED,
   metrics->ascender = font->em_scale_x (ot_font->v_metrics.ascender);
   metrics->descender = font->em_scale_x (ot_font->v_metrics.descender);
   metrics->line_gap = font->em_scale_x (ot_font->v_metrics.line_gap);
+  // TODO Hook up variations.
   return ot_font->v_metrics.has_font_extents;
 }
 

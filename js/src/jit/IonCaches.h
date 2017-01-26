@@ -630,6 +630,10 @@ bool IsCacheableGetPropCallScripted(JSObject* obj, JSObject* holder, Shape* shap
                                     bool* isTemporarilyUnoptimizable = nullptr);
 bool IsCacheableGetPropCallNative(JSObject* obj, JSObject* holder, Shape* shape);
 
+bool IsCacheableSetPropCallScripted(JSObject* obj, JSObject* holder, Shape* shape,
+                                    bool* isTemporarilyUnoptimizable = nullptr);
+bool IsCacheableSetPropCallNative(JSObject* obj, JSObject* holder, Shape* shape);
+
 bool ValueToNameOrSymbolId(JSContext* cx, HandleValue idval, MutableHandleId id,
                            bool* nameOrSymbol);
 

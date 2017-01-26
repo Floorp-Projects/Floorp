@@ -5,7 +5,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files('*'):
-    BUG_COMPONENT = ('Core', 'Video/Audio')
+    BUG_COMPONENT = ('Core', 'Audio/Video')
+
+with Files('test/**'):
+    BUG_COMPONENT = ('Core', 'Audio/Video: Playback')
+
+with Files('gtest/TestGMP*'):
+    BUG_COMPONENT = ('Core', 'Audio/Video: GMP')
+
+with Files('tests/**'):
+    BUG_COMPONENT = ('Core', 'WebRTC')
 
 component_signaling = ('Core', 'WebRTC: Signaling')
 with Files('IdpSandbox.jsm'):

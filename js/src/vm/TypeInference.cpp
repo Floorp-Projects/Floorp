@@ -794,16 +794,16 @@ TypeSet::readBarrier(const TypeSet* types)
 }
 
 /* static */ bool
-TypeSet::IsTypeMarked(TypeSet::Type* v)
+TypeSet::IsTypeMarked(JSRuntime* rt, TypeSet::Type* v)
 {
     bool rv;
     if (v->isSingletonUnchecked()) {
         JSObject* obj = v->singletonNoBarrier();
-        rv = IsMarkedUnbarriered(&obj);
+        rv = IsMarkedUnbarriered(rt, &obj);
         *v = TypeSet::ObjectType(obj);
     } else if (v->isGroupUnchecked()) {
         ObjectGroup* group = v->groupNoBarrier();
-        rv = IsMarkedUnbarriered(&group);
+        rv = IsMarkedUnbarriered(rt, &group);
         *v = TypeSet::ObjectType(group);
     } else {
         rv = true;

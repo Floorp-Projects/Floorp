@@ -671,7 +671,7 @@ retry_getglyphs:
   DWRITE_SHAPING_GLYPH_PROPERTIES* glyphProperties = (DWRITE_SHAPING_GLYPH_PROPERTIES*)
     malloc (maxGlyphCount * sizeof (DWRITE_SHAPING_GLYPH_PROPERTIES));
 
-  hr = analyzer->GetGlyphs (textString, textLength, fontFace, FALSE,
+  hr = analyzer->GetGlyphs (textString, textLength, fontFace, false,
     isRightToLeft, &runHead->mScript, localeName, NULL, &dwFeatures,
     featureRangeLengths, 1, maxGlyphCount, clusterMap, textProperties, glyphIndices,
     glyphProperties, &glyphCount);
@@ -719,7 +719,7 @@ retry_getglyphs:
   hr = analyzer->GetGlyphPlacements (textString,
     clusterMap, textProperties, textLength, glyphIndices,
     glyphProperties, glyphCount, fontFace, fontEmSize,
-    FALSE, isRightToLeft, &runHead->mScript, localeName,
+    false, isRightToLeft, &runHead->mScript, localeName,
     &dwFeatures, featureRangeLengths, 1,
     glyphAdvances, glyphOffsets);
 
@@ -915,7 +915,7 @@ _hb_directwrite_shape(hb_shape_plan_t    *shape_plan,
  */
 
 hb_bool_t
-hb_shape_dwrite_experimental_width(hb_font_t          *font,
+hb_directwrite_shape_experimental_width(hb_font_t          *font,
   hb_buffer_t        *buffer,
   const hb_feature_t *features,
   unsigned int        num_features,
