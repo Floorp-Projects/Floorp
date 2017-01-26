@@ -170,6 +170,7 @@ class U2FStatus
 {
 public:
   U2FStatus();
+  U2FStatus(const U2FStatus&) = delete;
 
   void WaitGroupAdd();
   void WaitGroupDone();
