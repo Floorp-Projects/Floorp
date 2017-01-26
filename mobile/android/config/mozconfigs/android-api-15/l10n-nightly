@@ -24,4 +24,9 @@ ac_add_options --disable-stdcxx-compat
 # Bug 1283438
 mk_add_options AUTOCLOBBER=
 
+# Disable Keyfile Loading (and checks) since l10n doesn't need these keys
+# This overrides the settings in the common android mozconfig
+ac_add_options --without-mozilla-api-keyfile
+ac_add_options --without-adjust-sdk-keyfile
+
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"
