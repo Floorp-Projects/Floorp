@@ -129,6 +129,12 @@ var TPS = {
   shouldValidateForms: false,
 
   _init: function TPS__init() {
+    // Check if Firefox Accounts is enabled
+    let service = Cc["@mozilla.org/weave/service;1"]
+                  .getService(Components.interfaces.nsISupports)
+                  .wrappedJSObject;
+    this.fxaccounts_enabled = service.fxAccountsEnabled;
+
     this.delayAutoSync();
 
     OBSERVER_TOPICS.forEach(function(aTopic) {
@@ -137,7 +143,12 @@ var TPS = {
 
     // Configure some logging prefs for Sync itself.
     Weave.Svc.Prefs.set("log.appender.dump", "Debug");
-    Cu.import("resource://tps/auth/fxaccounts.jsm", module);
+    // Import the appropriate authentication module
+    if (this.fxaccounts_enabled) {
+      Cu.import("resource://tps/auth/fxaccounts.jsm", module);
+    } else {
+      Cu.import("resource://tps/auth/sync.jsm", module);
+    }
   },
 
   DumpError(msg, exc = null) {
@@ -849,6 +860,7 @@ var TPS = {
       Logger.logInfo("Firefox version: " + Services.appinfo.version);
       Logger.logInfo("Firefox source revision: " + (AppConstants.SOURCE_REVISION_URL || "unknown"));
       Logger.logInfo("Firefox platform: " + AppConstants.platform);
+      Logger.logInfo("Firefox Accounts enabled: " + this.fxaccounts_enabled);
 
       // do some sync housekeeping
       if (Weave.Service.isLoggedIn) {
@@ -1124,13 +1136,18 @@ var TPS = {
     }
 
     Logger.logInfo("Setting client credentials and login.");
-    Authentication.signIn(this.config.fx_account);
+    let account = this.fxaccounts_enabled ? this.config.fx_account
+                                          : this.config.sync_account;
+    Authentication.signIn(account);
     this.waitForSetupComplete();
     Logger.AssertEqual(Weave.Status.service, Weave.STATUS_OK, "Weave status OK");
     this.waitForTracking();
-    // We get an initial sync at login time - let that complete.
-    this._triggeredSync = true;
-    this.waitForSyncFinished();
+    // If fxaccounts is enabled we get an initial sync at login time - let
+    // that complete.
+    if (this.fxaccounts_enabled) {
+      this._triggeredSync = true;
+      this.waitForSyncFinished();
+    }
   },
 
   /**

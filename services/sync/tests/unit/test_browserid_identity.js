@@ -83,6 +83,7 @@ add_task(async function test_initialializeWithCurrentIdentity() {
     await browseridManager.whenReadyToAuthenticate.promise;
     do_check_true(!!browseridManager._token);
     do_check_true(browseridManager.hasValidToken());
+    do_check_eq(browseridManager.account, identityConfig.fxaccount.user.email);
   }
 );
 
@@ -130,8 +131,10 @@ add_task(async function test_initialializeWithAuthErrorAndDeletedAccount() {
 
     do_check_true(signCertificateCalled);
     do_check_true(accountStatusCalled);
+    do_check_false(browseridManager.account);
     do_check_false(browseridManager._token);
     do_check_false(browseridManager.hasValidToken());
+    do_check_false(browseridManager.account);
 });
 
 add_task(async function test_initialializeWithNoKeys() {
@@ -493,8 +496,10 @@ add_task(async function test_refreshCertificateOn401() {
   do_check_eq(getCertCount, 2);
   do_check_true(didReturn401);
   do_check_true(didReturn200);
+  do_check_true(browseridManager.account);
   do_check_true(browseridManager._token);
   do_check_true(browseridManager.hasValidToken());
+  do_check_true(browseridManager.account);
 });
 
 

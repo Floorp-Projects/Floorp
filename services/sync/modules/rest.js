@@ -39,12 +39,7 @@ SyncStorageRequest.prototype = {
     }
 
     if (this.authenticator) {
-      let result = this.authenticator(this, method);
-      if (result && result.headers) {
-        for (let [k, v] of Object.entries(result.headers)) {
-          setHeader(k, v);
-        }
-      }
+      this.authenticator(this);
     } else {
       this._log.debug("No authenticator found.");
     }

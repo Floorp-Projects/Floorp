@@ -27,6 +27,8 @@
 
 <script type="application/javascript"
         src="chrome://browser/content/preferences/in-content/sync.js"/>
+<script type="application/javascript"
+        src="chrome://browser/content/sync/utils.js"/>
 
 <hbox id="header-sync"
       class="header"
@@ -37,6 +39,138 @@
 </hbox>
 
 <deck id="weavePrefsDeck" data-category="paneSync" hidden="true">
+  <!-- These panels are for the "legacy" sync provider -->
+  <vbox id="noAccount" align="center">
+    <spacer flex="1"/>
+    <description id="syncDesc">
+      &weaveDesc.label;
+    </description>
+    <separator/>
+    <label id="noAccountSetup" class="text-link">
+      &setupButton.label;
+    </label>
+    <vbox id="pairDevice">
+      <separator/>
+      <label id="noAccountPair" class="text-link">
+        &pairDevice.label;
+      </label>
+    </vbox>
+    <spacer flex="3"/>
+  </vbox>
+
+  <vbox id="hasAccount">
+    <groupbox class="syncGroupBox">
+      <!-- label is set to account name -->
+      <caption id="accountCaption" align="center">
+        <image id="accountCaptionImage"/>
+        <label id="accountName"/>
+      </caption>
+
+      <hbox>
+        <button type="menu"
+                label="&manageAccount.label;"
+                accesskey="&manageAccount.accesskey;">
+          <menupopup>
+            <menuitem id="syncChangePassword" label="&changePassword2.label;"/>
+            <menuitem id="syncResetPassphrase" label="&myRecoveryKey.label;"/>
+            <menuseparator/>
+            <menuitem id="syncReset" label="&resetSync2.label;"/>
+          </menupopup>
+        </button>
+      </hbox>
+
+      <hbox>
+        <label id="syncAddDeviceLabel"
+               class="text-link">
+          &pairDevice.label;
+        </label>
+      </hbox>
+
+      <vbox>
+        <label>&syncMy.label;</label>
+        <richlistbox id="syncEnginesList"
+                     orient="vertical">
+          <richlistitem>
+            <checkbox label="&engine.addons.label;"
+                      accesskey="&engine.addons.accesskey;"
+                      preference="engine.addons"/>
+          </richlistitem>
+          <richlistitem>
+            <checkbox label="&engine.bookmarks.label;"
+                      accesskey="&engine.bookmarks.accesskey;"
+                      preference="engine.bookmarks"/>
+          </richlistitem>
+          <richlistitem>
+            <checkbox label="&engine.passwords.label;"
+                      accesskey="&engine.passwords.accesskey;"
+                      preference="engine.passwords"/>
+          </richlistitem>
+          <richlistitem>
+            <checkbox label="&engine.prefs.label;"
+                      accesskey="&engine.prefs.accesskey;"
+                      preference="engine.prefs"/>
+          </richlistitem>
+          <richlistitem>
+            <checkbox label="&engine.history.label;"
+                      accesskey="&engine.history.accesskey;"
+                      preference="engine.history"/>
+          </richlistitem>
+          <richlistitem>
+            <checkbox label="&engine.tabs.label2;"
+                      accesskey="&engine.tabs.accesskey;"
+                      preference="engine.tabs"/>
+          </richlistitem>
+        </richlistbox>
+      </vbox>
+    </groupbox>
+
+    <groupbox class="syncGroupBox">
+      <grid>
+        <columns>
+          <column/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row align="center">
+            <label control="syncComputerName">
+              &syncDeviceName.label;
+            </label>
+            <textbox id="syncComputerName"/>
+          </row>
+        </rows>
+      </grid>
+      <hbox>
+        <label id="unlinkDevice" class="text-link">
+          &unlinkDevice.label;
+        </label>
+      </hbox>
+    </groupbox>
+    <vbox id="tosPP-normal">
+      <label id="tosPP-normal-ToS" class="text-link">
+        &prefs.tosLink.label;
+      </label>
+      <label id="tosPP-normal-PP" class="text-link">
+        &prefs.ppLink.label;
+      </label>
+    </vbox>
+  </vbox>
+
+  <vbox id="needsUpdate" align="center" pack="center">
+    <hbox>
+      <label id="loginError"/>
+      <label id="loginErrorUpdatePass" class="text-link">
+        &updatePass.label;
+      </label>
+      <label id="loginErrorResetPass" class="text-link">
+        &resetPass.label;
+      </label>
+    </hbox>
+    <label id="loginErrorStartOver" class="text-link">
+      &unlinkDevice.label;
+    </label>
+  </vbox>
+
+  <!-- These panels are for the Firefox Accounts identity provider -->
   <vbox id="noFxaAccount">
     <hbox>
       <vbox id="fxaContentWrapper">

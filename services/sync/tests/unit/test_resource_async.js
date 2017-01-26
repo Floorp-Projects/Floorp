@@ -3,10 +3,9 @@
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/observers.js");
+Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
-Cu.import("resource://services-sync/browserid_identity.js");
-Cu.import("resource://testing-common/services/sync/utils.js");
 
 var logger;
 
@@ -27,7 +26,7 @@ function server_open(metadata, response) {
 function server_protected(metadata, response) {
   let body;
 
-  if (has_hawk_header(metadata, "guest", "guest")) {
+  if (basic_auth_matches(metadata, "guest", "guest")) {
     body = "This path exists and is protected";
     response.setStatusLine(metadata.httpVersion, 200, "OK, authorized");
     response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
@@ -321,10 +320,8 @@ add_test(function test_get_protected_fail() {
 
 add_test(function test_get_protected_success() {
   _("GET a password protected resource");
-  let identityConfig = makeIdentityConfig();
-  let browseridManager = new BrowserIDManager();
-  configureFxAccountIdentity(browseridManager, identityConfig);
-  let auth = browseridManager.getResourceAuthenticator();
+  let identity = new IdentityManager();
+  let auth = identity.getBasicResourceAuthenticator("guest", "guest");
   let res3 = new AsyncResource(server.baseURI + "/protected");
   res3.authenticator = auth;
   do_check_eq(res3.authenticator, auth);

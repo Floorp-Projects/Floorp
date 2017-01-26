@@ -166,7 +166,7 @@ SyncedTabsDeckComponent.prototype = {
   },
 
   openSyncPrefs() {
-    this._getChromeWindow(this._window).gSyncUI.openPrefs("tabs-sidebar");
+    this._getChromeWindow(this._window).gSyncUI.openSetup(null, "tabs-sidebar");
   }
 };
 
