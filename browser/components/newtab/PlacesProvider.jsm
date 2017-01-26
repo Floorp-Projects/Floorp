@@ -94,7 +94,7 @@ Links.prototype = {
     },
 
     QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver,
-                        Ci.nsISupportsWeakReference])
+                                           Ci.nsISupportsWeakReference])
   },
 
   /**
@@ -104,17 +104,6 @@ Links.prototype = {
   init: function PlacesProvider_init() {
     try {
       PlacesUtils.history.addObserver(this.historyObserver, true);
-    } catch (e) {
-      Cu.reportError(e);
-    }
-  },
-
-  /**
-   * Must be called before the provider is unloaded.
-   */
-  uninit: function PlacesProvider_uninit() {
-    try {
-      PlacesUtils.history.removeObserver(this.historyObserver);
     } catch (e) {
       Cu.reportError(e);
     }
