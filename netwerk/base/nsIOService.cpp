@@ -171,7 +171,6 @@ static const char kProfileDoChange[] = "profile-do-change";
 uint32_t   nsIOService::gDefaultSegmentSize = 4096;
 uint32_t   nsIOService::gDefaultSegmentCount = 24;
 
-bool nsIOService::sTelemetryEnabled = false;
 bool nsIOService::sDataURIInheritSecurityContext = true;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -251,7 +250,6 @@ nsIOService::Init()
     else
         NS_WARNING("failed to get observer service");
 
-    Preferences::AddBoolVarCache(&sTelemetryEnabled, "toolkit.telemetry.enabled", false);
     Preferences::AddBoolVarCache(&sDataURIInheritSecurityContext,
                                  "security.data_uri.inherit_security_context", true);
     Preferences::AddBoolVarCache(&mOfflineMirrorsConnectivity, OFFLINE_MIRRORS_CONNECTIVITY, true);
