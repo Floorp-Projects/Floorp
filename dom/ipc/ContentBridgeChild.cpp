@@ -22,8 +22,7 @@ namespace dom {
 NS_IMPL_ISUPPORTS(ContentBridgeChild,
                   nsIContentChild)
 
-ContentBridgeChild::ContentBridgeChild(Transport* aTransport)
-  : mTransport(aTransport)
+ContentBridgeChild::ContentBridgeChild()
 {}
 
 ContentBridgeChild::~ContentBridgeChild()
@@ -39,8 +38,7 @@ ContentBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
 /*static*/ ContentBridgeChild*
 ContentBridgeChild::Create(Transport* aTransport, ProcessId aOtherPid)
 {
-  RefPtr<ContentBridgeChild> bridge =
-    new ContentBridgeChild(aTransport);
+  RefPtr<ContentBridgeChild> bridge = new ContentBridgeChild();
   bridge->mSelfRef = bridge;
 
   DebugOnly<bool> ok = bridge->Open(aTransport, aOtherPid, XRE_GetIOMessageLoop());
