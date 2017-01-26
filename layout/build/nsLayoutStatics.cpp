@@ -167,6 +167,8 @@ nsLayoutStatics::Initialize()
   nsHTMLTags::RegisterAtoms();
   nsRDFAtoms::RegisterAtoms();
 
+  NS_SealStaticAtomTable();
+
   StartupJSEnvironment();
   rv = nsRegion::InitStatic();
   if (NS_FAILED(rv)) {
@@ -271,8 +273,6 @@ nsLayoutStatics::Initialize()
   nsPrincipal::InitializeStatics();
 
   nsCORSListenerProxy::Startup();
-
-  NS_SealStaticAtomTable();
 
   nsWindowMemoryReporter::Init();
 
