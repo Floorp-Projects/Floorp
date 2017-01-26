@@ -1563,68 +1563,6 @@ NS_IMPL_ISUPPORTS_INHERITED0(MainThreadReleaseRunnable, Runnable)
 
 NS_IMPL_ISUPPORTS_INHERITED0(TopLevelWorkerFinishedRunnable, Runnable)
 
-TimerThreadEventTarget::TimerThreadEventTarget(WorkerPrivate* aWorkerPrivate,
-                                               WorkerRunnable* aWorkerRunnable)
-  : mWorkerPrivate(aWorkerPrivate), mWorkerRunnable(aWorkerRunnable)
-{
-  MOZ_ASSERT(aWorkerPrivate);
-  MOZ_ASSERT(aWorkerRunnable);
-}
-
-TimerThreadEventTarget::~TimerThreadEventTarget()
-{
-}
-
-NS_IMETHODIMP
-TimerThreadEventTarget::DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags)
-{
-  nsCOMPtr<nsIRunnable> runnable(aRunnable);
-  return Dispatch(runnable.forget(), aFlags);
-}
-
-NS_IMETHODIMP
-TimerThreadEventTarget::Dispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_t aFlags)
-{
-  // This should only happen on the timer thread.
-  MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(aFlags == nsIEventTarget::DISPATCH_NORMAL);
-
-  RefPtr<TimerThreadEventTarget> kungFuDeathGrip = this;
-
-  // Run the runnable we're given now (should just call DummyCallback()),
-  // otherwise the timer thread will leak it...  If we run this after
-  // dispatch running the event can race against resetting the timer.
-  nsCOMPtr<nsIRunnable> runnable(aRunnable);
-  runnable->Run();
-
-  // This can fail if we're racing to terminate or cancel, should be handled
-  // by the terminate or cancel code.
-  mWorkerRunnable->Dispatch();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-TimerThreadEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-TimerThreadEventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread)
-{
-  MOZ_ASSERT(aIsOnCurrentThread);
-
-  nsresult rv = mWorkerPrivate->IsOnCurrentThread(aIsOnCurrentThread);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS(TimerThreadEventTarget, nsIEventTarget)
-
 namespace {
 
 class WrappedControlRunnable final : public WorkerControlRunnable
@@ -4923,13 +4861,6 @@ WorkerPrivate::InitializeGCTimers()
   mGCTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   MOZ_ASSERT(mGCTimer);
 
-  RefPtr<GarbageCollectRunnable> runnable =
-    new GarbageCollectRunnable(this, false, false);
-  mPeriodicGCTimerTarget = new TimerThreadEventTarget(this, runnable);
-
-  runnable = new GarbageCollectRunnable(this, true, false);
-  mIdleGCTimerTarget = new TimerThreadEventTarget(this, runnable);
-
   mPeriodicGCTimerRunning = false;
   mIdleGCTimerRunning = false;
 }
@@ -4939,8 +4870,6 @@ WorkerPrivate::SetGCTimerMode(GCTimerMode aMode)
 {
   AssertIsOnWorkerThread();
   MOZ_ASSERT(mGCTimer);
-  MOZ_ASSERT(mPeriodicGCTimerTarget);
-  MOZ_ASSERT(mIdleGCTimerTarget);
 
   if ((aMode == PeriodicTimer && mPeriodicGCTimerRunning) ||
       (aMode == IdleTimer && mIdleGCTimerRunning)) {
@@ -5008,8 +4937,6 @@ WorkerPrivate::ShutdownGCTimers()
   LOG(WorkerLog(), ("Worker %p killed the GC timer\n", this));
 
   mGCTimer = nullptr;
-  mPeriodicGCTimerTarget = nullptr;
-  mIdleGCTimerTarget = nullptr;
   mPeriodicGCTimerRunning = false;
   mIdleGCTimerRunning = false;
 }
