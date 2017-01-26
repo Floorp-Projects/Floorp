@@ -483,15 +483,21 @@ public:
   ~DemuxerProxy()
   {
     MOZ_COUNT_DTOR(DemuxerProxy);
+  }
+
+  RefPtr<ShutdownPromise> Shutdown()
+  {
     mData->mAudioDemuxer = nullptr;
     mData->mVideoDemuxer = nullptr;
     RefPtr<Data> data = mData.forget();
-    mTaskQueue->Dispatch(
+    return InvokeAsync(mTaskQueue, __func__, [data]() {
       // We need to clear our reference to the demuxer now. So that in the event
       // the init promise wasn't resolved, such as what can happen with the
       // mediasource demuxer that is waiting on more data, it will force the
       // init promise to be rejected.
-      NS_NewRunnableFunction([data]() { data->mDemuxer = nullptr; }));
+      data->mDemuxer = nullptr;
+      return ShutdownPromise::CreateAndResolve(true, __func__);
+    });
   }
 
   RefPtr<MediaDataDemuxer::InitPromise> Init();
@@ -885,13 +891,10 @@ MediaFormatReader::Shutdown()
     promises.AppendElement(ShutdownDecoderWithPromise(TrackInfo::kVideoTrack));
   }
 
+  promises.AppendElement(mDemuxer->Shutdown());
   mDemuxer = nullptr;
-  mCompositorUpdatedListener.DisconnectIfExists();
 
-  if (promises.IsEmpty()) {
-    TearDownDecoders();
-    return MediaDecoderReader::Shutdown();
-  }
+  mCompositorUpdatedListener.DisconnectIfExists();
 
   RefPtr<ShutdownPromise> p = mShutdownPromise.Ensure(__func__);
   ShutdownPromise::All(OwnerThread(), promises)
