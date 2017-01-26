@@ -5,4 +5,4 @@
 
 [features/webcompat-reporter@mozilla.org] @AB_CD@.jar:
 % locale webcompat-reporter @AB_CD@ %locale/@AB_CD@/
-  locale/@AB_CD@/                    (en-US/*)
+  locale/@AB_CD@/webcompat.properties (%webcompat.properties)

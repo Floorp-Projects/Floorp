@@ -61,7 +61,7 @@ config = {
      ###### 32 bit specific ######
     'base_name': 'WINNT_5.2_%(branch)s',
     'platform': 'win32',
-    'stage_platform': 'win32',
+    'stage_platform': 'win32-st-an',
     'publish_nightly_en_US_routes': True,
     'env': {
         'BINSCOPE': os.path.join(

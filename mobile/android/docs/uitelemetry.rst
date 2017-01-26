@@ -54,6 +54,38 @@ To stop a session, call ``Telemetry.stopUISession(String sessionName, String rea
     ``exit``
       The user left for an entirely different element.
 
+Experiments
+===========
+
+**Experiment** is a special type of a session. Experiments denote an "experiment scope".
+Just like sessions, multiple experiments might be active at the same time. Experiments are recorded
+by tagging events with an ``experiment.1:varying_experiment_name`` session. However, on the data
+pipeline side, experiment's name is parsed and stored separately (in the ``experiments`` column).
+Original ``experiment.1`` substring of the session name is stripped away.
+
+For example, the following telemetry data:
+
+.. code-block:: js
+
+    ...
+    sessions: ["awesomebar.1", "experiment.1:onboarding_a"]
+    ...
+
+Will be stored as:
+
+.. code-block:: js
+
+    ...
+    experiments: ["onboarding_a"],
+    sessions: ["awesomebar.1"]
+    ...
+
+Consider a case of A/B testing different variations of Activity Stream. We might want to run two
+experimental cohorts, each of them seeing a unique variation of the functionality. Depending on which
+cohort the user is in, their events while interacting with the experiments will be tagged accordingly
+with a current experiment name, while also retaining session information.
+On the analytics side it's then possible to compare performance of various metrics between cohorts.
+
 Events
 ======
 
@@ -246,8 +278,15 @@ Methods
 
 Sessions
 --------
+``activitystream.1``
+  Activity Stream is active.
+
 ``awesomescreen.1``
   Awesomescreen (including frecency search) is active.
+
+``experiment.1``
+  Special, non-recorded session which is used to denote experiments. See ``Experiments`` section above.
+  Must be used in conjunction with an experiment's name, e.g. ``experiment.1:varying_experiment_name``.
 
 ``firstrun.1``
   Started the very first time we believe the application has been launched.

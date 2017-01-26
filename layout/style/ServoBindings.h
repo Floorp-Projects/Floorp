@@ -13,6 +13,7 @@
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/css/SheetParsingMode.h"
+#include "mozilla/EffectCompositor.h"
 #include "nsChangeHint.h"
 #include "nsCSSPseudoClasses.h"
 #include "nsStyleStruct.h"
@@ -157,6 +158,12 @@ SERVO_DECLARE_ELEMENT_ATTR_MATCHING_FUNCTIONS(Gecko_Snapshot,
 // Style attributes.
 RawServoDeclarationBlockStrongBorrowedOrNull
 Gecko_GetServoDeclarationBlock(RawGeckoElementBorrowed element);
+
+// Animations
+RawServoDeclarationBlockStrong
+Gecko_GetAnimationRule(RawGeckoElementBorrowed aElement,
+                       nsIAtom* aPseudoTag,
+                       mozilla::EffectCompositor::CascadeLevel aCascadeLevel);
 
 // Atoms.
 nsIAtom* Gecko_Atomize(const char* aString, uint32_t aLength);
