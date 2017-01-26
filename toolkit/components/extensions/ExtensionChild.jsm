@@ -330,7 +330,7 @@ class Messenger {
   }
 
   onMessage(name) {
-    return new SingletonEventManager(this.context, name, callback => {
+    return new SingletonEventManager(this.context, name, fire => {
       let listener = {
         messageFilterPermissive: this.optionalFilter,
         messageFilterStrict: this.filter,
@@ -360,7 +360,7 @@ class Messenger {
 
           // Note: We intentionally do not use runSafe here so that any
           // errors are propagated to the message sender.
-          let result = callback(message, sender, sendResponse);
+          let result = fire.raw(message, sender, sendResponse);
           if (result instanceof this.context.cloneScope.Promise) {
             return result;
           } else if (result === true) {
@@ -412,7 +412,7 @@ class Messenger {
   }
 
   onConnect(name) {
-    return new SingletonEventManager(this.context, name, callback => {
+    return new SingletonEventManager(this.context, name, fire => {
       let listener = {
         messageFilterPermissive: this.optionalFilter,
         messageFilterStrict: this.filter,
@@ -431,7 +431,7 @@ class Messenger {
             delete recipient.tab;
           }
           let port = new Port(this.context, mm, this.messageManagers, name, portId, sender, recipient);
-          this.context.runSafeWithoutClone(callback, port.api());
+          fire.asyncWithoutClone(port.api());
           return true;
         },
       };

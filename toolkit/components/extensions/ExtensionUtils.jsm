@@ -700,15 +700,51 @@ function SingletonEventManager(context, name, register) {
 
 SingletonEventManager.prototype = {
   addListener(callback, ...args) {
-    let wrappedCallback = (...args) => {
+    if (this.unregister.has(callback)) {
+      return;
+    }
+
+    let shouldFire = () => {
       if (this.context.unloaded) {
         dump(`${this.name} event fired after context unloaded.\n`);
+      } else if (!this.context.active) {
+        dump(`${this.name} event fired while context is inactive.\n`);
       } else if (this.unregister.has(callback)) {
-        return callback(...args);
+        return true;
       }
+      return false;
     };
 
-    let unregister = this.register(wrappedCallback, ...args);
+    let fire = {
+      sync: (...args) => {
+        if (shouldFire()) {
+          return this.context.runSafe(callback, ...args);
+        }
+      },
+      async: (...args) => {
+        return Promise.resolve().then(() => {
+          if (shouldFire()) {
+            return this.context.runSafe(callback, ...args);
+          }
+        });
+      },
+      raw: (...args) => {
+        if (!shouldFire()) {
+          throw new Error("Called raw() on unloaded/inactive context");
+        }
+        return callback(...args);
+      },
+      asyncWithoutClone: (...args) => {
+        return Promise.resolve().then(() => {
+          if (shouldFire()) {
+            return this.context.runSafeWithoutClone(callback, ...args);
+          }
+        });
+      },
+    };
+
+
+    let unregister = this.register(fire, ...args);
     this.unregister.set(callback, unregister);
     this.context.callOnClose(this);
   },
@@ -721,6 +757,9 @@ SingletonEventManager.prototype = {
     let unregister = this.unregister.get(callback);
     this.unregister.delete(callback);
     unregister();
+    if (this.unregister.size == 0) {
+      this.context.forgetOnClose(this);
+    }
   },
 
   hasListener(callback) {

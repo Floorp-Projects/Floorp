@@ -72,9 +72,9 @@ add_task(function* test_post_unload_listeners() {
   });
 
   let fireSingleton;
-  let onSingleton = new SingletonEventManager(context, "onSingleton", callback => {
+  let onSingleton = new SingletonEventManager(context, "onSingleton", fire => {
     fireSingleton = () => {
-      Promise.resolve().then(callback);
+      fire.async();
     };
     return () => {};
   });
