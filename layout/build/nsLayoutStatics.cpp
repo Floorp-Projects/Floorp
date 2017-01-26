@@ -52,6 +52,7 @@
 #include "nsHTMLDNSPrefetch.h"
 #include "nsHtml5Atoms.h"
 #include "nsHtml5Module.h"
+#include "nsHTMLTags.h"
 #include "mozilla/dom/FallbackEncoding.h"
 #include "nsFocusManager.h"
 #include "nsListControlFrame.h"
@@ -162,6 +163,7 @@ nsLayoutStatics::Initialize()
   nsGkAtoms::AddRefAtoms();
   nsHtml5Atoms::AddRefAtoms();
   nsTextServicesDocument::RegisterAtoms();
+  nsHTMLTags::RegisterAtoms();
 
   StartupJSEnvironment();
   rv = nsRegion::InitStatic();
