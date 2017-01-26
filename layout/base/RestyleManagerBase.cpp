@@ -1374,4 +1374,54 @@ RestyleManagerBase::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
   return NS_OK;
 }
 
+RestyleManagerBase::AnimationsWithDestroyedFrame
+                  ::AnimationsWithDestroyedFrame(
+                      RestyleManagerBase* aRestyleManager)
+  : mRestyleManager(aRestyleManager)
+  , mRestorePointer(mRestyleManager->mAnimationsWithDestroyedFrame)
+{
+  MOZ_ASSERT(!mRestyleManager->mAnimationsWithDestroyedFrame,
+             "shouldn't construct recursively");
+  mRestyleManager->mAnimationsWithDestroyedFrame = this;
+}
+
+void
+RestyleManagerBase::AnimationsWithDestroyedFrame
+                  ::StopAnimationsForElementsWithoutFrames()
+{
+  StopAnimationsWithoutFrame(mContents, CSSPseudoElementType::NotPseudo);
+  StopAnimationsWithoutFrame(mBeforeContents, CSSPseudoElementType::before);
+  StopAnimationsWithoutFrame(mAfterContents, CSSPseudoElementType::after);
+}
+
+void
+RestyleManagerBase::AnimationsWithDestroyedFrame
+                  ::StopAnimationsWithoutFrame(
+                      nsTArray<RefPtr<nsIContent>>& aArray,
+                      CSSPseudoElementType aPseudoType)
+{
+  nsAnimationManager* animationManager =
+    mRestyleManager->PresContext()->AnimationManager();
+  nsTransitionManager* transitionManager =
+    mRestyleManager->PresContext()->TransitionManager();
+  for (nsIContent* content : aArray) {
+    if (content->GetPrimaryFrame()) {
+      continue;
+    }
+    dom::Element* element = content->AsElement();
+
+    animationManager->StopAnimationsForElement(element, aPseudoType);
+    transitionManager->StopTransitionsForElement(element, aPseudoType);
+
+    // All other animations should keep running but not running on the
+    // *compositor* at this point.
+    EffectSet* effectSet = EffectSet::GetEffectSet(element, aPseudoType);
+    if (effectSet) {
+      for (KeyframeEffectReadOnly* effect : *effectSet) {
+        effect->ResetIsRunningOnCompositor();
+      }
+    }
+  }
+}
+
 } // namespace mozilla
