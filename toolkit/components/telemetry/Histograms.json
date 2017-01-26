@@ -282,6 +282,13 @@
     "kind": "count",
     "bug_numbers": [1295588, 1251198]
   },
+  "CREATE_EVENT_ERROREVENT" : {
+    "alert_emails": ["ayg@aryeh.name"],
+    "description": "Was document.createEvent(\"errorevent\") ever called",
+    "expires_in_version": "56",
+    "kind": "count",
+    "bug_numbers": [1295588, 1251198, 1333901]
+  },
   "CREATE_EVENT_EVENT" : {
     "alert_emails": ["ayg@aryeh.name"],
     "description": "Was document.createEvent(\"event\") ever called",
