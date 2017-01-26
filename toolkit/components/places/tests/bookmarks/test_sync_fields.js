@@ -74,6 +74,14 @@ class TestCases {
       do_print("Reset sync fields after test 2");
       await PlacesTestUtils.markBookmarksAsSynced();
     }
+
+    do_print("Test 3: separators");
+    try {
+      await this.testSeparators();
+    } finally {
+      do_print("Reset sync fields after test 3");
+      await PlacesTestUtils.markBookmarksAsSynced();
+    }
   }
 
   async testChanges() {
@@ -116,6 +124,28 @@ class TestCases {
     await this.removeKeyword(guid, "keyword");
     do_print(`Removed keyword from bookmark ${guid}`);
     await checkSyncFields(guid, { syncChangeCounter: 6 });
+  }
+
+  async testSeparators() {
+    let insertSyncedBookmark = async function(uri) {
+      return await this.insertBookmark(PlacesUtils.bookmarks.unfiledGuid,
+                                           NetUtil.newURI(uri),
+                                           PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                           "A bookmark name");
+    }.bind(this);
+
+    await insertSyncedBookmark("http://foo.bar");
+    let secondBmk = await insertSyncedBookmark("http://bar.foo");
+    let sepGuid = await this.insertSeparator(PlacesUtils.bookmarks.unfiledGuid, PlacesUtils.bookmarks.DEFAULT_INDEX);
+    await insertSyncedBookmark("http://barbar.foo");
+
+    do_print("Move a bookmark around the separator");
+    await this.moveItem(secondBmk, PlacesUtils.bookmarks.unfiledGuid, 4);
+    await checkSyncFields(sepGuid, { syncChangeCounter: 2 });
+
+    do_print("Move a separator around directly");
+    await this.moveItem(sepGuid, PlacesUtils.bookmarks.unfiledGuid, 0);
+    await checkSyncFields(sepGuid, { syncChangeCounter: 3 });
   }
 
   async testReparenting() {
@@ -232,6 +262,12 @@ class SyncTestCases extends TestCases {
     return await PlacesUtils.promiseItemGuid(id);
   }
 
+  async insertSeparator(parentGuid, index) {
+    let parentId = await PlacesUtils.promiseItemId(parentGuid);
+    let id = PlacesUtils.bookmarks.insertSeparator(parentId, index);
+    return await PlacesUtils.promiseItemGuid(id);
+  }
+
   async moveItem(guid, newParentGuid, index) {
     let id = await PlacesUtils.promiseItemId(guid);
     let newParentId = await PlacesUtils.promiseItemId(newParentGuid);
@@ -305,6 +341,15 @@ class AsyncTestCases extends TestCases {
       url: uri,
       index,
       title,
+    });
+    return item.guid;
+  }
+
+  async insertSeparator(parentGuid, index) {
+    let item = await PlacesUtils.bookmarks.insert({
+      type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+      parentGuid,
+      index
     });
     return item.guid;
   }
