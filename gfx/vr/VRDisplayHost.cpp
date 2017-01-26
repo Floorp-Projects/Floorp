@@ -24,7 +24,7 @@ VRDisplayHost::VRDisplayHost(VRDeviceType aType)
 {
   MOZ_COUNT_CTOR(VRDisplayHost);
   mDisplayInfo.mType = aType;
-  mDisplayInfo.mDisplayID = VRDisplayManager::AllocateDisplayID();
+  mDisplayInfo.mDisplayID = VRSystemManager::AllocateDisplayID();
   mDisplayInfo.mIsPresenting = false;
 
   for (int i = 0; i < kMaxLatencyFrames; i++) {
@@ -149,7 +149,7 @@ VRControllerHost::VRControllerHost(VRDeviceType aType)
 {
   MOZ_COUNT_CTOR(VRControllerHost);
   mControllerInfo.mType = aType;
-  mControllerInfo.mControllerID = VRDisplayManager::AllocateDisplayID();
+  mControllerInfo.mControllerID = VRSystemManager::AllocateDisplayID();
 }
 
 VRControllerHost::~VRControllerHost()
