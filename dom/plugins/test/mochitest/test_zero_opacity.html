@@ -34,8 +34,9 @@
 
   function doTest() {
     is(p.getClipRegionRectCount(), 1, "getClipRegionRectCount should be a single rect");
-    is(p.getClipRegionRectEdge(0,2) - p.getClipRegionRectEdge(0,0), 100, "width of clip region rect");
-    is(p.getClipRegionRectEdge(0,3) - p.getClipRegionRectEdge(0,1), 50, "height of clip region rect");
+    var dpr = window.devicePixelRatio;
+    is(p.getClipRegionRectEdge(0,2) - p.getClipRegionRectEdge(0,0), 100 * dpr, "width of clip region rect");
+    is(p.getClipRegionRectEdge(0,3) - p.getClipRegionRectEdge(0,1), 50 * dpr, "height of clip region rect");
   }
   </script>
 
