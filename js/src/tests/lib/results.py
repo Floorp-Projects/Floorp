@@ -94,6 +94,11 @@ class TestResult:
 
         return cls(test, result, results)
 
+class TestDuration:
+    def __init__(self, test, duration):
+        self.test = test
+        self.duration = duration
+
 class ResultsSink:
     def __init__(self, options, testcount):
         self.options = options
@@ -102,6 +107,7 @@ class ResultsSink:
         self.groups = {}
         self.output_dict = {}
         self.counts = {'PASS': 0, 'FAIL': 0, 'TIMEOUT': 0, 'SKIP': 0}
+        self.slow_tests = []
         self.n = 0
 
         if options.hide_progress:
@@ -116,6 +122,8 @@ class ResultsSink:
             self.pb = ProgressBar(testcount, fmt)
 
     def push(self, output):
+        if self.options.show_slow and output.dt >= self.options.slow_test_threshold:
+            self.slow_tests.append(TestDuration(output.test, output.dt))
         if output.timed_out:
             self.counts['TIMEOUT'] += 1
         if isinstance(output, NullTestOutput):
@@ -256,6 +264,17 @@ class ResultsSink:
             print('PASS' + suffix)
         else:
             print('FAIL' + suffix)
+
+        if self.options.show_slow:
+            min_duration = self.options.slow_test_threshold
+            print('Slow tests (duration > {}s)'.format(min_duration))
+            slow_tests = sorted(self.slow_tests, key=lambda x: x.duration, reverse=True)
+            any = False
+            for test in slow_tests:
+                print('{:>5} {}'.format(round(test.duration, 2), test.test))
+                any = True
+            if not any:
+                print('None')
 
     def all_passed(self):
         return 'REGRESSIONS' not in self.groups and 'TIMEOUTS' not in self.groups
