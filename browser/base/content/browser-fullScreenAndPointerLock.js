@@ -299,6 +299,7 @@ var FullScreen = {
       this._fullScrToggler = document.getElementById("fullscr-toggler");
       this._fullScrToggler.addEventListener("mouseover", this._expandCallback, false);
       this._fullScrToggler.addEventListener("dragenter", this._expandCallback, false);
+      this._fullScrToggler.addEventListener("touchmove", this._expandCallback, {passive: true});
     }
 
     if (enterFS) {
