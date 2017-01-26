@@ -51,8 +51,9 @@ HTMLTableCaptionElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLTableCaptionElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                               nsRuleData* aData)
+                                               GenericSpecifiedValues* aGenericData)
 {
+  nsRuleData* aData = aGenericData->AsRuleData();
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(TableBorder)) {
     nsCSSValue* captionSide = aData->ValueForCaptionSide();
     if (captionSide->GetUnit() == eCSSUnit_Null) {
@@ -62,7 +63,7 @@ HTMLTableCaptionElement::MapAttributesIntoRule(const nsMappedAttributes* aAttrib
     }
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aGenericData);
 }
 
 NS_IMETHODIMP_(bool)

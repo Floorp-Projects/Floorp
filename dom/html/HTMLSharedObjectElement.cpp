@@ -259,28 +259,28 @@ HTMLSharedObjectElement::ParseAttribute(int32_t aNamespaceID,
 
 static void
 MapAttributesIntoRuleBase(const nsMappedAttributes *aAttributes,
-                          nsRuleData *aData)
+                          GenericSpecifiedValues* aGenericData)
 {
-  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
-  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aGenericData);
+  nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aGenericData);
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aGenericData);
+  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aGenericData);
 }
 
 static void
 MapAttributesIntoRuleExceptHidden(const nsMappedAttributes *aAttributes,
-                                  nsRuleData *aData)
+                                  GenericSpecifiedValues* aGenericData)
 {
-  MapAttributesIntoRuleBase(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesIntoExceptHidden(aAttributes, aData);
+  MapAttributesIntoRuleBase(aAttributes, aGenericData);
+  nsGenericHTMLElement::MapCommonAttributesIntoExceptHidden(aAttributes, aGenericData);
 }
 
 void
 HTMLSharedObjectElement::MapAttributesIntoRule(const nsMappedAttributes *aAttributes,
-                                               nsRuleData *aData)
+                                               GenericSpecifiedValues* aGenericData)
 {
-  MapAttributesIntoRuleBase(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  MapAttributesIntoRuleBase(aAttributes, aGenericData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aGenericData);
 }
 
 NS_IMETHODIMP_(bool)

@@ -37,6 +37,6 @@ nsMappedAttributeElement::GetAttributeMappingFunction() const
 
 void
 nsMappedAttributeElement::MapNoAttributesInto(const nsMappedAttributes* aAttributes,
-                                              nsRuleData* aData)
+                                              GenericSpecifiedValues* aGenericData)
 {
 }

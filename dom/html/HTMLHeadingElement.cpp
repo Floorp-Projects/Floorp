@@ -46,10 +46,11 @@ HTMLHeadingElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLHeadingElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                          nsRuleData* aData)
+                                          GenericSpecifiedValues* aGenericData)
 {
-  nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsRuleData* aData = aGenericData->AsRuleData();
+  nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aGenericData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aGenericData);
 }
 
 NS_IMETHODIMP_(bool)

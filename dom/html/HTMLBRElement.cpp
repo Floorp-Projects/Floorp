@@ -53,8 +53,9 @@ HTMLBRElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLBRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                     nsRuleData* aData)
+                                     GenericSpecifiedValues* aGenericData)
 {
+  nsRuleData* aData = aGenericData->AsRuleData();
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
     nsCSSValue* clear = aData->ValueForClear();
     if (clear->GetUnit() == eCSSUnit_Null) {
@@ -64,7 +65,7 @@ HTMLBRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     }
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aGenericData);
 }
 
 NS_IMETHODIMP_(bool)

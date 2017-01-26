@@ -487,8 +487,9 @@ nsMathMLElement::ParseNumericValue(const nsString& aString,
 
 void
 nsMathMLElement::MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
-                                         nsRuleData* aData)
+                                         GenericSpecifiedValues* aGenericData)
 {
+  nsRuleData* aData = aGenericData->AsRuleData();
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Font)) {
     // scriptsizemultiplier
     //
