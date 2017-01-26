@@ -67,14 +67,12 @@
 
 #endif  // COMPILER_MSVC
 
-// Annotate a function indicating the caller must examine the return value.
-// Use like:
-//   int foo() WARN_UNUSED_RESULT;
-// To explicitly ignore a result, see |ignore_result()| in base/macros.h.
-#undef WARN_UNUSED_RESULT
-#if defined(COMPILER_GCC) || defined(__clang__)
+
+#if defined(COMPILER_GCC)
+#define ALLOW_UNUSED __attribute__((unused))
 #define WARN_UNUSED_RESULT __attribute__((warn_unused_result))
-#else
+#else  // Not GCC
+#define ALLOW_UNUSED
 #define WARN_UNUSED_RESULT
 #endif
 
