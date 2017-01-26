@@ -150,9 +150,7 @@ public:
     explicit PluginModuleChild(bool aIsChrome);
     virtual ~PluginModuleChild();
 
-    bool CommonInit(base::ProcessId aParentPid,
-                    MessageLoop* aIOLoop,
-                    IPC::Channel* aChannel);
+    void CommonInit();
 
     // aPluginFilename is UTF8, not native-charset!
     bool InitForChrome(const std::string& aPluginFilename,
