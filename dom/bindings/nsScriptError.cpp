@@ -5,15 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * nsIScriptError implementation.  Defined here, lacking a JS-specific
- * place to put XPCOM things.
+ * nsIScriptError implementation.
  */
 
-#include "xpcprivate.h"
+#include "nsScriptError.h"
 #include "jsprf.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
 #include "nsGlobalWindow.h"
+#include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "nsILoadContext.h"
 #include "nsIDocShell.h"

@@ -11,6 +11,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/XPTInterfaceInfoManager.h"
+#include "nsIScriptError.h"
 #include "nsPrintfCString.h"
 
 using namespace JS;

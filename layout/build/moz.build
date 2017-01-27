@@ -32,6 +32,7 @@ LOCAL_INCLUDES += [
     '/docshell/base',
     '/dom/audiochannel',
     '/dom/base',
+    '/dom/bindings',
     '/dom/canvas',
     '/dom/filesystem',
     '/dom/geolocation',
