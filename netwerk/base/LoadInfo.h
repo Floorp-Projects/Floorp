@@ -128,6 +128,7 @@ private:
   nsCOMPtr<nsIPrincipal>           mTriggeringPrincipal;
   nsCOMPtr<nsIPrincipal>           mPrincipalToInherit;
   nsCOMPtr<nsIPrincipal>           mSandboxedLoadingPrincipal;
+  nsCOMPtr<nsIURI>                 mResultPrincipalURI;
   nsWeakPtr                        mLoadingContext;
   nsSecurityFlags                  mSecurityFlags;
   nsContentPolicyType              mInternalContentPolicyType;
