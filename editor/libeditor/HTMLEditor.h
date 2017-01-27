@@ -161,92 +161,18 @@ public:
   NS_IMETHOD GetHTMLBackgroundColorState(bool* aMixed, nsAString& outColor);
 
   // nsIEditorStyleSheets methods
-  NS_IMETHOD AddStyleSheet(const nsAString& aURL) override;
-  NS_IMETHOD ReplaceStyleSheet(const nsAString& aURL) override;
-  NS_IMETHOD RemoveStyleSheet(const nsAString &aURL) override;
-
-  NS_IMETHOD AddOverrideStyleSheet(const nsAString& aURL) override;
-  NS_IMETHOD ReplaceOverrideStyleSheet(const nsAString& aURL) override;
-  NS_IMETHOD RemoveOverrideStyleSheet(const nsAString &aURL) override;
-
-  NS_IMETHOD EnableStyleSheet(const nsAString& aURL, bool aEnable) override;
+  NS_DECL_NSIEDITORSTYLESHEETS
 
   // nsIEditorMailSupport methods
   NS_DECL_NSIEDITORMAILSUPPORT
 
   // nsITableEditor methods
-  NS_IMETHOD InsertTableCell(int32_t aNumber, bool aAfter) override;
-  NS_IMETHOD InsertTableColumn(int32_t aNumber, bool aAfter) override;
-  NS_IMETHOD InsertTableRow(int32_t aNumber, bool aAfter) override;
-  NS_IMETHOD DeleteTable() override;
-  NS_IMETHOD DeleteTableCell(int32_t aNumber) override;
-  NS_IMETHOD DeleteTableCellContents() override;
-  NS_IMETHOD DeleteTableColumn(int32_t aNumber) override;
-  NS_IMETHOD DeleteTableRow(int32_t aNumber) override;
-  NS_IMETHOD SelectTableCell() override;
-  NS_IMETHOD SelectBlockOfCells(nsIDOMElement* aStartCell,
-                                nsIDOMElement* aEndCell) override;
-  NS_IMETHOD SelectTableRow() override;
-  NS_IMETHOD SelectTableColumn() override;
-  NS_IMETHOD SelectTable() override;
-  NS_IMETHOD SelectAllTableCells() override;
-  NS_IMETHOD SwitchTableCellHeaderType(nsIDOMElement* aSourceCell,
-                                       nsIDOMElement** aNewCell) override;
-  NS_IMETHOD JoinTableCells(bool aMergeNonContiguousContents) override;
-  NS_IMETHOD SplitTableCell() override;
-  NS_IMETHOD NormalizeTable(nsIDOMElement* aTable) override;
-  NS_IMETHOD GetCellIndexes(nsIDOMElement* aCell,
-                            int32_t* aRowIndex, int32_t* aColIndex) override;
-  NS_IMETHOD GetTableSize(nsIDOMElement* aTable,
-                          int32_t* aRowCount, int32_t* aColCount) override;
-  NS_IMETHOD GetCellAt(nsIDOMElement* aTable, int32_t aRowIndex,
-                       int32_t aColIndex, nsIDOMElement **aCell) override;
-  NS_IMETHOD GetCellDataAt(nsIDOMElement* aTable,
-                           int32_t aRowIndex, int32_t aColIndex,
-                           nsIDOMElement** aCell,
-                           int32_t* aStartRowIndex, int32_t* aStartColIndex,
-                           int32_t* aRowSpan, int32_t* aColSpan,
-                           int32_t* aActualRowSpan, int32_t* aActualColSpan,
-                           bool* aIsSelected) override;
-  NS_IMETHOD GetFirstRow(nsIDOMElement* aTableElement,
-                         nsIDOMNode** aRowNode) override;
-  NS_IMETHOD GetNextRow(nsIDOMNode* aCurrentRowNode,
-                        nsIDOMNode** aRowNode) override;
+  NS_DECL_NSITABLEEDITOR
+
   nsresult GetLastCellInRow(nsIDOMNode* aRowNode,
                             nsIDOMNode** aCellNode);
 
-  NS_IMETHOD SetSelectionAfterTableEdit(nsIDOMElement* aTable, int32_t aRow,
-                                        int32_t aCol, int32_t aDirection,
-                                        bool aSelected) override;
-  NS_IMETHOD GetSelectedOrParentTableElement(
-               nsAString& aTagName, int32_t* aSelectedCount,
-               nsIDOMElement** aTableElement) override;
-  NS_IMETHOD GetSelectedCellsType(nsIDOMElement* aElement,
-                                  uint32_t* aSelectionType) override;
-
   nsresult GetCellFromRange(nsRange* aRange, nsIDOMElement** aCell);
-
-  /**
-   * Finds the first selected cell in first range of selection
-   * This is in the *order of selection*, not order in the table
-   * (i.e., each cell added to selection is added in another range
-   *  in the selection's rangelist, independent of location in table)
-   * aRange is optional: returns the range around the cell.
-   */
-  NS_IMETHOD GetFirstSelectedCell(nsIDOMRange** aRange,
-                                  nsIDOMElement** aCell) override;
-  /**
-   * Get next cell until no more are found. Always use GetFirstSelected cell
-   * first aRange is optional: returns the range around the cell.
-   */
-  NS_IMETHOD GetNextSelectedCell(nsIDOMRange** aRange,
-                                 nsIDOMElement** aCell) override;
-
-  /**
-   * Upper-left-most selected cell in table.
-   */
-  NS_IMETHOD GetFirstSelectedCellInTable(int32_t* aRowIndex, int32_t* aColIndex,
-                                         nsIDOMElement** aCell) override;
 
   // Miscellaneous
 
