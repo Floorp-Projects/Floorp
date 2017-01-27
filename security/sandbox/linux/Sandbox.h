@@ -24,8 +24,7 @@ MOZ_EXPORT void SandboxEarlyInit(GeckoProcessType aType);
 // (No-op if MOZ_DISABLE_CONTENT_SANDBOX is set.)
 // aBrokerFd is the filesystem broker client file descriptor,
 // or -1 to allow direct filesystem access.
-MOZ_EXPORT bool SetContentProcessSandbox(int aBrokerFd,
-                                         std::vector<int>& aSyscallWhitelist);
+MOZ_EXPORT bool SetContentProcessSandbox(int aBrokerFd);
 #endif
 
 #ifdef MOZ_GMP_SANDBOX
