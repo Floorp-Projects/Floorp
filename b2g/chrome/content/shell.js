@@ -560,7 +560,7 @@ var shell = {
       case 'mozbrowsercaretstatechanged':
         {
           let elt = evt.target;
-          let win = elt.ownerDocument.defaultView;
+          let win = elt.ownerGlobal;
           let offsetX = win.mozInnerScreenX - window.mozInnerScreenX;
           let offsetY = win.mozInnerScreenY - window.mozInnerScreenY;
 

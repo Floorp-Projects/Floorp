@@ -1782,7 +1782,7 @@ WebConsoleActor.prototype =
     try {
       window = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
              .getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsIDocShell)
-             .chromeEventHandler.ownerDocument.defaultView;
+             .chromeEventHandler.ownerGlobal;
     }
     catch (ex) {
       // The above can fail because chromeEventHandler is not available for all

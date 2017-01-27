@@ -263,7 +263,7 @@
             let anchorRect = aAnchor.getBoundingClientRect();
             let mainViewRect = this._mainViewContainer.getBoundingClientRect();
             let center = aAnchor.clientWidth / 2;
-            let direction = aAnchor.ownerDocument.defaultView.getComputedStyle(aAnchor).direction;
+            let direction = aAnchor.ownerGlobal.getComputedStyle(aAnchor).direction;
             let edge;
             if (direction == "ltr") {
               edge = anchorRect.left - mainViewRect.left;
@@ -473,7 +473,7 @@
             }
             return height;
           }
-          let win = aSubview.ownerDocument.defaultView;
+          let win = aSubview.ownerGlobal;
           let body = aSubview.querySelector(".panel-subview-body");
           let height = getFullHeight(body || aSubview);
           if (body) {

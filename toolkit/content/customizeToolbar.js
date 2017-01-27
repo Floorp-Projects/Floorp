@@ -797,7 +797,7 @@ function isUnwantedDragEvent(aEvent) {
   if (!mozSourceNode) {
     return true;
   }
-  let sourceWindow = mozSourceNode.ownerDocument.defaultView;
+  let sourceWindow = mozSourceNode.ownerGlobal;
   return sourceWindow != window && sourceWindow != gToolboxDocument.defaultView;
 }
 

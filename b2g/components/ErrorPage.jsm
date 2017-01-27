@@ -135,7 +135,7 @@ SSLExceptions.prototype = {
 var ErrorPage = {
   _addCertException: function(aMessage) {
     let frameLoaderOwner = aMessage.target.QueryInterface(Ci.nsIFrameLoaderOwner);
-    let win = frameLoaderOwner.ownerDocument.defaultView;
+    let win = frameLoaderOwner.ownerGlobal;
     let mm = frameLoaderOwner.frameLoader.messageManager;
 
     let uri = Services.io.newURI(aMessage.data.url);

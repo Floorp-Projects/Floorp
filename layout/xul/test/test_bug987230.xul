@@ -66,7 +66,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=987230
 
   function synthesizeNativeMouseClick(aElement, aOffsetX, aOffsetY) {
     let rect = aElement.getBoundingClientRect();
-    let win = aElement.ownerDocument.defaultView;
+    let win = aElement.ownerGlobal;
     let x = aOffsetX + win.mozInnerScreenX + rect.left;
     let y = aOffsetY + win.mozInnerScreenY + rect.top;
 

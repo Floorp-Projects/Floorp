@@ -92,7 +92,7 @@ function clearInfobars()
   var browser = window.top.QueryInterface(Ci.nsIInterfaceRequestor)
                   .getInterface(Ci.nsIWebNavigation)
                   .QueryInterface(Ci.nsIDocShell).chromeEventHandler;
-  var chromeWin = browser.ownerDocument.defaultView;
+  var chromeWin = browser.ownerGlobal;
   var nb = chromeWin.gBrowser.getNotificationBox(browser);
   for (let n of nb.allNotifications) {
     nb.removeNotification(n, true);

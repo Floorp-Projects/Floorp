@@ -24,7 +24,7 @@ var InputWidgetHelper = {
   show: function(aElement) {
     let type = aElement.getAttribute('type');
     let p = new Prompt({
-      window: aElement.ownerDocument.defaultView,
+      window: aElement.ownerGlobal,
       title: Strings.browser.GetStringFromName("inputWidgetHelper." + aElement.getAttribute('type')),
       buttons: [
         Strings.browser.GetStringFromName("inputWidgetHelper.set"),

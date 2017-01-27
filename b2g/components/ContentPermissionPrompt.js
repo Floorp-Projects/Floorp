@@ -297,10 +297,10 @@ ContentPermissionPrompt.prototype = {
     // window.realFrameElement will be |null| if the code try to cross
     // content -> chrome boundaries.
     let targetElement = request.element;
-    let targetWindow = request.window || targetElement.ownerDocument.defaultView;
+    let targetWindow = request.window || targetElement.ownerGlobal;
     while (targetWindow.realFrameElement) {
       targetElement = targetWindow.realFrameElement;
-      targetWindow = targetElement.ownerDocument.defaultView;
+      targetWindow = targetElement.ownerGlobal;
     }
 
     SystemAppProxy.dispatchEvent(details, targetElement);

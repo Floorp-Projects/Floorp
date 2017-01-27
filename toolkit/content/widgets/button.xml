@@ -82,7 +82,7 @@
         <body>
         <![CDATA[
           // if the node isn't visible, don't descend into it.
-          var cs = node.ownerDocument.defaultView.getComputedStyle(node);
+          var cs = node.ownerGlobal.getComputedStyle(node);
           if (cs.visibility != "visible" || cs.display == "none") {
             return NodeFilter.FILTER_REJECT;
           }

@@ -159,7 +159,7 @@ this.BrowserUtils = {
    */
   getElementBoundingRect(aElement, aInScreenCoords) {
     let rect = aElement.getBoundingClientRect();
-    let win = aElement.ownerDocument.defaultView;
+    let win = aElement.ownerGlobal;
 
     let x = rect.left, y = rect.top;
 
@@ -167,7 +167,7 @@ this.BrowserUtils = {
     // over. We also need to compensate for zooming.
     let parentFrame = win.frameElement;
     while (parentFrame) {
-      win = parentFrame.ownerDocument.defaultView;
+      win = parentFrame.ownerGlobal;
       let cstyle = win.getComputedStyle(parentFrame);
 
       let framerect = parentFrame.getBoundingClientRect();
