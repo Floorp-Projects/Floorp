@@ -164,6 +164,8 @@ public:
     /* Notify content that the repaint flush is complete. */
     static void NotifyFlushComplete(nsIPresShell* aShell);
 
+    static void NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID& aScrollId);
+
     /* Temporarily ignore the Displayport for better paint performance. If at
      * all possible, pass in a presShell if you have one at the call site, we
      * use it to trigger a repaint once suppression is disabled. Without that

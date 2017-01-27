@@ -245,6 +245,21 @@ RemoteContentController::NotifyFlushComplete()
 }
 
 void
+RemoteContentController::NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID& aScrollId)
+{
+  if (MessageLoop::current() != mCompositorThread) {
+    // We have to send messages from the compositor thread
+    mCompositorThread->PostTask(NewRunnableMethod<FrameMetrics::ViewID>(this,
+        &RemoteContentController::NotifyAsyncScrollbarDragRejected, aScrollId));
+    return;
+  }
+
+  if (mCanSend) {
+    Unused << SendNotifyAsyncScrollbarDragRejected(aScrollId);
+  }
+}
+
+void
 RemoteContentController::ActorDestroy(ActorDestroyReason aWhy)
 {
   // This controller could possibly be kept alive longer after this

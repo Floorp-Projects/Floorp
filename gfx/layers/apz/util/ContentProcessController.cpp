@@ -86,6 +86,12 @@ ContentProcessController::NotifyFlushComplete()
 }
 
 void
+ContentProcessController::NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID& aScrollId)
+{
+  APZCCallbackHelper::NotifyAsyncScrollbarDragRejected(aScrollId);
+}
+
+void
 ContentProcessController::PostDelayedTask(already_AddRefed<Runnable> aRunnable, int aDelayMs)
 {
   MOZ_ASSERT_UNREACHABLE("ContentProcessController should only be used remotely.");
