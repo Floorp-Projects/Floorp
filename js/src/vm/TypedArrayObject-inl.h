@@ -627,40 +627,6 @@ class ElementSpecific
     }
 };
 
-template<typename T>
-class TypedArrayMethods
-{
-  public:
-    static bool
-    setFromTypedArray(JSContext* cx, Handle<TypedArrayObject*> target,
-                      Handle<TypedArrayObject*> source, uint32_t offset = 0)
-    {
-        if (target->isSharedMemory() || source->isSharedMemory())
-            return ElementSpecific<T, SharedOps>::setFromTypedArray(cx, target, source, offset);
-        return ElementSpecific<T, UnsharedOps>::setFromTypedArray(cx, target, source, offset);
-    }
-
-    static bool
-    setFromNonTypedArray(JSContext* cx, Handle<TypedArrayObject*> target, HandleObject source,
-                         uint32_t len, uint32_t offset = 0)
-    {
-        MOZ_ASSERT(!source->is<TypedArrayObject>(), "use setFromTypedArray");
-
-        if (target->isSharedMemory())
-            return ElementSpecific<T, SharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-        return ElementSpecific<T, UnsharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-    }
-
-    static bool
-    initFromIterablePackedArray(JSContext* cx, Handle<TypedArrayObject*> target,
-                                HandleArrayObject source)
-    {
-        if (target->isSharedMemory())
-            return ElementSpecific<T, SharedOps>::initFromIterablePackedArray(cx, target, source);
-        return ElementSpecific<T, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
-    }
-};
-
 } // namespace js
 
 #endif // vm_TypedArrayObject_inl_h
