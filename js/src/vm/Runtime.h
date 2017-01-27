@@ -275,7 +275,7 @@ class PerThreadData
 
   public:
 #ifdef JS_TRACE_LOGGING
-    TraceLoggerThread*  traceLogger;
+    TraceLoggerMainThread*  traceLogger;
 #endif
 
     /* Pointer to the current AutoFlushICache. */

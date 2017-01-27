@@ -8,6 +8,7 @@
 #define TraceLogging_h
 
 #include "mozilla/GuardObjects.h"
+#include "mozilla/LinkedList.h"
 
 #include "jsalloc.h"
 
@@ -309,6 +310,15 @@ class TraceLoggerThread
 #endif
 };
 
+#ifdef JS_TRACE_LOGGING
+class TraceLoggerMainThread
+  : public TraceLoggerThread,
+    public mozilla::LinkedListElement<TraceLoggerMainThread>
+{
+
+};
+#endif
+
 class TraceLoggerThreadState
 {
 #ifdef JS_TRACE_LOGGING
@@ -316,7 +326,6 @@ class TraceLoggerThreadState
                     TraceLoggerThread*,
                     Thread::Hasher,
                     SystemAllocPolicy> ThreadLoggerHashMap;
-    typedef Vector<TraceLoggerThread*, 1, js::SystemAllocPolicy > MainThreadLoggers;
 
 #ifdef DEBUG
     bool initialized;
@@ -328,7 +337,7 @@ class TraceLoggerThreadState
     bool graphSpewingEnabled;
     bool spewErrors;
     ThreadLoggerHashMap threadLoggers;
-    MainThreadLoggers mainThreadLoggers;
+    mozilla::LinkedList<TraceLoggerMainThread> traceLoggerMainThreadList;
 
   public:
     uint64_t startupTime;
@@ -352,6 +361,7 @@ class TraceLoggerThreadState
     TraceLoggerThread* forMainThread(JSRuntime* runtime);
     TraceLoggerThread* forMainThread(jit::CompileRuntime* runtime);
     TraceLoggerThread* forThread(const Thread::Id& thread);
+    void destroyMainThread(JSRuntime* runtime);
 
     bool isTextIdEnabled(uint32_t textId) {
         if (textId < TraceLogger_Last)
@@ -367,12 +377,12 @@ class TraceLoggerThreadState
 
   private:
     TraceLoggerThread* forMainThread(PerThreadData* mainThread);
-    TraceLoggerThread* create();
 #endif
 };
 
 #ifdef JS_TRACE_LOGGING
 void DestroyTraceLoggerThreadState();
+void DestroyTraceLoggerMainThread(JSRuntime* runtime);
 
 TraceLoggerThread* TraceLoggerForMainThread(JSRuntime* runtime);
 TraceLoggerThread* TraceLoggerForMainThread(jit::CompileRuntime* runtime);
