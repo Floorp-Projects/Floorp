@@ -1563,6 +1563,7 @@ class BreakpointSite {
   public:
     BreakpointSite(Type type);
     Breakpoint* firstBreakpoint() const;
+    virtual ~BreakpointSite() {}
     bool hasBreakpoint(Breakpoint* bp);
     inline Type type() const { return type_; }
 
