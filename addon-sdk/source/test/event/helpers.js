@@ -39,10 +39,9 @@ const wait = function(target, type, capture) {
     target.once(type, resolve);
   }
   else if (typeof(target.addEventListener) === "function") {
-    target.addEventListener(type, function listener(...args) {
-      this.removeEventListener(type, listener, capture);
+    target.addEventListener(type, function(...args) {
       resolve(...args);
-    }, capture);
+    }, {capture, once: true});
   }
   else if (typeof(target) === "object" && target !== null) {
     once(target, type, resolve);
