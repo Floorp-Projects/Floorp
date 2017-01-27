@@ -87,6 +87,7 @@ EXPORTS.mozilla += [
     'DeclarationBlockInlines.h',
     'DocumentStyleRootIterator.h',
     'GenericSpecifiedValues.h',
+    'GenericSpecifiedValuesInlines.h',
     'HandleRefPtr.h',
     'IncrementalClearCOMRuleArray.h',
     'LayerAnimationInfo.h',

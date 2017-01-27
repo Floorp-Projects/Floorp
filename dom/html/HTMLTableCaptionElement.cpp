@@ -5,9 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLTableCaptionElement.h"
+
+#include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "nsAttrValueInlines.h"
 #include "nsMappedAttributes.h"
-#include "nsRuleData.h"
 #include "mozilla/dom/HTMLTableCaptionElementBinding.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(TableCaption)

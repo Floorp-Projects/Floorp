@@ -37,6 +37,6 @@ nsMappedAttributeElement::GetAttributeMappingFunction() const
 
 void
 nsMappedAttributeElement::MapNoAttributesInto(const nsMappedAttributes* aAttributes,
-                                              GenericSpecifiedValues* aGenericData)
+                                              mozilla::GenericSpecifiedValues* aGenericData)
 {
 }

@@ -69,11 +69,11 @@
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 
-#include "nsRuleData.h"
 #include <algorithm>
 
 // input type=radio

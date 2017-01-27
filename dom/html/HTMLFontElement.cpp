@@ -6,9 +6,9 @@
 
 #include "HTMLFontElement.h"
 #include "mozilla/dom/HTMLFontElementBinding.h"
+#include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "nsAttrValueInlines.h"
 #include "nsMappedAttributes.h"
-#include "nsRuleData.h"
 #include "nsContentUtils.h"
 #include "nsCSSParser.h"
 

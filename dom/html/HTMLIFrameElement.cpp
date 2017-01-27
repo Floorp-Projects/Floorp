@@ -6,10 +6,10 @@
 
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/HTMLIFrameElementBinding.h"
+#include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "nsMappedAttributes.h"
 #include "nsAttrValueInlines.h"
 #include "nsError.h"
-#include "nsRuleData.h"
 #include "nsStyleConsts.h"
 #include "nsContentUtils.h"
 #include "nsSandboxFlags.h"
