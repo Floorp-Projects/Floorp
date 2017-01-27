@@ -283,9 +283,6 @@ public:
   void Start();
   void Stop();
 
-  // Is the sampler used for profiling?
-  bool IsProfiling() const { return profiling_; }
-
   // Whether the sampler is running (that is, consumes resources).
   bool IsActive() const { return active_; }
 
@@ -387,7 +384,6 @@ private:
   static std::vector<ThreadInfo*>* sRegisteredThreads;
 
   const double interval_;
-  const bool profiling_;
   Atomic32 paused_;
   Atomic32 active_;
   const int entrySize_;
