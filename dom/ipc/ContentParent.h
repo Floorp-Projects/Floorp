@@ -16,6 +16,7 @@
 #include "mozilla/FileUtils.h"
 #include "mozilla/HalTypes.h"
 #include "mozilla/LinkedList.h"
+#include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -105,6 +106,7 @@ class ContentParent final : public PContentParent
                           , public gfx::gfxVarReceiver
                           , public mozilla::LinkedListElement<ContentParent>
                           , public gfx::GPUProcessListener
+                          , public mozilla::MemoryReportingProcess
 {
   typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
   typedef mozilla::ipc::OptionalURIParams OptionalURIParams;
@@ -323,7 +325,7 @@ public:
 
   bool RequestRunToCompletion();
 
-  bool IsAlive() const;
+  bool IsAlive() const override;
 
   virtual bool IsForBrowser() const override
   {
@@ -1086,7 +1088,7 @@ public:
   bool SendRequestMemoryReport(const uint32_t& aGeneration,
                                const bool& aAnonymize,
                                const bool& aMinimizeMemoryUsage,
-                               const MaybeFileDesc& aDMDFile);
+                               const MaybeFileDesc& aDMDFile) override;
 
 private:
 
