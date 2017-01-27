@@ -13,33 +13,45 @@
 #ifndef mozilla_GenericSpecifiedValues_h
 #define mozilla_GenericSpecifiedValues_h
 
+#include "mozilla/ServoUtils.h"
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
 #include "nsPresContext.h"
 
 struct nsRuleData;
-
+namespace mozilla {
 // This provides a common interface for attribute mappers (MapAttributesIntoRule)
 // to use regardless of the style backend. If the style backend is Gecko,
 // this will contain an nsRuleData. If it is Servo, it will be a PropertyDeclarationBlock.
 class GenericSpecifiedValues {
+protected:
+    explicit GenericSpecifiedValues(StyleBackendType aType, nsPresContext* aPresContext,
+                                    uint32_t aSIDs)
+        : mType(aType), mPresContext(aPresContext), mSIDs(aSIDs) {}
+
 public:
+    MOZ_DECL_STYLO_METHODS(nsRuleData, nsRuleData)
+
     // Check if we already contain a certain longhand
-    virtual bool PropertyIsSet(nsCSSPropertyID aId) = 0;
+    inline bool PropertyIsSet(nsCSSPropertyID aId);
     // Check if we are able to hold longhands from a given
     // style struct. Pass the result of NS_STYLE_INHERIT_BIT to this
     // function. Can accept multiple inherit bits or'd together.
-    virtual bool ShouldComputeStyleStruct(uint64_t aInheritBits) = 0;
+    inline bool ShouldComputeStyleStruct(uint64_t aInheritBits) {
+        return aInheritBits & mSIDs;
+    }
 
-    virtual nsPresContext* PresContext() = 0;
+    inline nsPresContext* PresContext() {
+        return mPresContext;
+    }
 
     // Set a property to an identifier (string)
-    virtual void SetIdentStringValue(nsCSSPropertyID aId, const nsString& aValue) = 0;
-    virtual void SetIdentStringValueIfUnset(nsCSSPropertyID aId, const nsString& aValue) = 0;
+    inline void SetIdentStringValue(nsCSSPropertyID aId, const nsString& aValue);
+    inline void SetIdentStringValueIfUnset(nsCSSPropertyID aId, const nsString& aValue);
 
     // Set a property to a keyword (usually NS_STYLE_* or StyleFoo::*)
-    virtual void SetKeywordValue(nsCSSPropertyID aId, int32_t aValue) = 0;
-    virtual void SetKeywordValueIfUnset(nsCSSPropertyID aId, int32_t aValue) = 0;
+    inline void SetKeywordValue(nsCSSPropertyID aId, int32_t aValue);
+    inline void SetKeywordValueIfUnset(nsCSSPropertyID aId, int32_t aValue);
 
     template<typename T,
              typename = typename std::enable_if<std::is_enum<T>::value>::type>
@@ -57,33 +69,37 @@ public:
     }
 
     // Set a property to an integer value
-    virtual void SetIntValue(nsCSSPropertyID aId, int32_t aValue) = 0;
+    inline void SetIntValue(nsCSSPropertyID aId, int32_t aValue);
     // Set a property to a pixel value
-    virtual void SetPixelValue(nsCSSPropertyID aId, float aValue) = 0;
-    virtual void SetPixelValueIfUnset(nsCSSPropertyID aId, float aValue) = 0;
+    inline void SetPixelValue(nsCSSPropertyID aId, float aValue);
+    inline void SetPixelValueIfUnset(nsCSSPropertyID aId, float aValue);
 
     // Set a property to a percent value
-    virtual void SetPercentValue(nsCSSPropertyID aId, float aValue) = 0;
-    virtual void SetPercentValueIfUnset(nsCSSPropertyID aId, float aValue) = 0;
+    inline void SetPercentValue(nsCSSPropertyID aId, float aValue);
+    inline void SetPercentValueIfUnset(nsCSSPropertyID aId, float aValue);
 
     // Set a property to `auto`
-    virtual void SetAutoValue(nsCSSPropertyID aId) = 0;
-    virtual void SetAutoValueIfUnset(nsCSSPropertyID aId) = 0;
+    inline void SetAutoValue(nsCSSPropertyID aId);
+    inline void SetAutoValueIfUnset(nsCSSPropertyID aId);
 
     // Set a property to `currentcolor`
-    virtual void SetCurrentColor(nsCSSPropertyID aId) = 0;
-    virtual void SetCurrentColorIfUnset(nsCSSPropertyID aId) = 0;
+    inline void SetCurrentColor(nsCSSPropertyID aId);
+    inline void SetCurrentColorIfUnset(nsCSSPropertyID aId);
 
     // Set a property to an RGBA nscolor value
-    virtual void SetColorValue(nsCSSPropertyID aId, nscolor aValue) = 0;
-    virtual void SetColorValueIfUnset(nsCSSPropertyID aId, nscolor aValue) = 0;
+    inline void SetColorValue(nsCSSPropertyID aId, nscolor aValue);
+    inline void SetColorValueIfUnset(nsCSSPropertyID aId, nscolor aValue);
 
     // Set font-family to a string
-    virtual void SetFontFamily(const nsString& aValue) = 0;
+    inline void SetFontFamily(const nsString& aValue);
     // Add a quirks-mode override to the decoration color of elements nested in <a>
-    virtual void SetTextDecorationColorOverride() = 0;
+    inline void SetTextDecorationColorOverride();
 
-    virtual nsRuleData* AsRuleData() = 0;
+    const mozilla::StyleBackendType mType;
+    nsPresContext* const mPresContext;
+    const uint32_t mSIDs;
 };
+
+} // namespace mozilla
 
 #endif // mozilla_GenericSpecifiedValues_h

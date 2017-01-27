@@ -12,9 +12,9 @@
 #include "mozilla/dom/HTMLParamElementBinding.h"
 #include "mozilla/dom/HTMLQuoteElementBinding.h"
 
+#include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "nsAttrValueInlines.h"
 #include "nsStyleConsts.h"
-#include "nsRuleData.h"
 #include "nsMappedAttributes.h"
 #include "nsContentUtils.h"
 #include "nsIContentSecurityPolicy.h"
