@@ -9,6 +9,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsJSUtils.h"
+#include "nsIScriptError.h"
 #include "jsfriendapi.h"
 #include "jswrapper.h"
 #include "js/Proxy.h"

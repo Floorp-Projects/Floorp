@@ -34,9 +34,11 @@
 #include "nsDOMClassInfo.h"
 #include "ShimInterfaceInfo.h"
 #include "nsIAddonInterposition.h"
+#include "nsIScriptError.h"
 #include "nsISimpleEnumerator.h"
 #include "nsPIDOMWindow.h"
 #include "nsGlobalWindow.h"
+#include "nsScriptError.h"
 
 using namespace mozilla;
 using namespace JS;

@@ -10,6 +10,7 @@
 #include "jsprf.h"
 #include "nsArrayEnumerator.h"
 #include "nsContentUtils.h"
+#include "nsIScriptError.h"
 #include "nsWrapperCache.h"
 #include "AccessCheck.h"
 #include "nsJSUtils.h"
