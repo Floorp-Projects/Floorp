@@ -9,7 +9,6 @@ namespace _ipdltest {
 
 
 protocol PTestEndpointBridgeMain {
-  child spawns PTestEndpointBridgeSub;
 
 child:
   async Start();
