@@ -112,7 +112,7 @@ const PropertiesView = createClass({
     // 2. the `value` object has a `value` property, only happend in Cookies panel
     // Put 2 here to not dup this method
     if (member.level === 0 ||
-      (typeof member.value === "object" && member.value.value)) {
+      (typeof member.value === "object" && member.value && member.value.value)) {
       return null;
     }
 
