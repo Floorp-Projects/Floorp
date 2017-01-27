@@ -220,6 +220,9 @@ struct nsRuleData final: GenericSpecifiedValues
     }
   }
 
+  void SetFontFamily(const nsString& aValue) override;
+  void SetTextDecorationColorOverride() override;
+
   nsRuleData* AsRuleData() override {
     return this;
   }
