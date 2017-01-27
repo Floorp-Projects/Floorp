@@ -24,7 +24,7 @@ class Benchmark;
 class BenchmarkPlayback : public QueueObject
 {
   friend class Benchmark;
-  explicit BenchmarkPlayback(Benchmark* aMainThreadState, MediaDataDemuxer* aDemuxer);
+  BenchmarkPlayback(Benchmark* aMainThreadState, MediaDataDemuxer* aDemuxer);
   void DemuxSamples();
   void DemuxNextSample();
   void MainThreadShutdown();
@@ -61,7 +61,9 @@ public:
     Parameters()
       : mFramesToMeasure(-1)
       , mStartupFrame(1)
-      , mTimeout(TimeDuration::Forever()) {}
+      , mTimeout(TimeDuration::Forever())
+    {
+    }
 
     Parameters(int32_t aFramesToMeasure,
                uint32_t aStartupFrame,
@@ -70,7 +72,9 @@ public:
       : mFramesToMeasure(aFramesToMeasure)
       , mStartupFrame(aStartupFrame)
       , mStopAtFrame(Some(aStopAtFrame))
-      , mTimeout(aTimeout) {}
+      , mTimeout(aTimeout)
+    {
+    }
 
     const int32_t mFramesToMeasure;
     const uint32_t mStartupFrame;
@@ -80,7 +84,8 @@ public:
 
   typedef MozPromise<uint32_t, bool, /* IsExclusive = */ true> BenchmarkPromise;
 
-  explicit Benchmark(MediaDataDemuxer* aDemuxer, const Parameters& aParameters = Parameters());
+  explicit Benchmark(MediaDataDemuxer* aDemuxer,
+                     const Parameters& aParameters = Parameters());
   RefPtr<BenchmarkPromise> Run();
 
   static void Init();

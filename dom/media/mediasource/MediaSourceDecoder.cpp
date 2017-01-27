@@ -284,8 +284,8 @@ MediaSourceDecoder::NextFrameBufferedStatus()
     currentPosition
     + media::TimeUnit::FromMicroseconds(DEFAULT_NEXT_FRAME_AVAILABLE_BUFFERED));
   return buffered.ContainsStrict(ClampIntervalToEnd(interval))
-    ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE
-    : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
+         ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE
+         : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
 }
 
 bool

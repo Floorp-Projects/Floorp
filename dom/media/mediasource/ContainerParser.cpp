@@ -310,7 +310,8 @@ public:
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    uint64_t frameDuration = (completeIdx + 1u < mapping.Length())
+    uint64_t frameDuration =
+      (completeIdx + 1u < mapping.Length())
       ? mapping[completeIdx + 1].mTimecode - mapping[completeIdx].mTimecode
       : mapping[completeIdx].mTimecode - previousMapping.ref().mTimecode;
     aStart = mapping[0].mTimecode / NS_PER_USEC;
