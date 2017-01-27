@@ -33,19 +33,18 @@
         <splitter id="network-inspector-view-splitter"
                   class="devtools-side-splitter"/>
 
-        <deck id="details-pane"
-              hidden="true">
+        <box id="splitter-adjustable-box"
+             hidden="true">
           <html:div xmlns="http://www.w3.org/1999/xhtml"
-                    id="react-custom-request-panel-hook"/>
-          <html:div xmlns="http://www.w3.org/1999/xhtml"
-                    id="react-details-panel-hook"/>
-        </deck>
+                    id="react-network-details-panel-hook">
+          </html:div>
+        </box>
       </hbox>
 
     </vbox>
 
     <html:div xmlns="http://www.w3.org/1999/xhtml"
-              id="statistics-panel">
+              id="react-statistics-panel-hook">
     </html:div>
   </deck>
 

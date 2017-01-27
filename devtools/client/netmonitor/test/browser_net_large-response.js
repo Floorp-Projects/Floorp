@@ -36,7 +36,7 @@ add_task(function* () {
 
   let waitDOM = waitForDOM(document, "#response-panel .editor-mount iframe");
   EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.getElementById("details-pane-toggle"));
+    document.querySelector(".network-details-panel-toggle"));
   document.querySelector("#response-tab").click();
   let [editor] = yield waitDOM;
   yield once(editor, "DOMContentLoaded");
