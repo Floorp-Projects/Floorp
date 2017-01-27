@@ -707,6 +707,8 @@ struct TypeHashSet
         unsigned capacity = Capacity(count);
         unsigned insertpos = HashKey<T,KEY>(key) & (capacity - 1);
 
+        MOZ_RELEASE_ASSERT(uintptr_t(values[-1]) == capacity);
+
         // Whether we are converting from a fixed array to hashtable.
         bool converting = (count == SET_ARRAY_SIZE);
 
@@ -729,10 +731,15 @@ struct TypeHashSet
             return &values[insertpos];
         }
 
-        U** newValues = alloc.newArray<U*>(newCapacity);
+        // Allocate an extra word right before the array storing the capacity,
+        // for sanity checks.
+        U** newValues = alloc.newArray<U*>(newCapacity + 1);
         if (!newValues)
             return nullptr;
-        mozilla::PodZero(newValues, newCapacity);
+        mozilla::PodZero(newValues, newCapacity + 1);
+
+        newValues[0] = (U*)uintptr_t(newCapacity);
+        newValues++;
 
         for (unsigned i = 0; i < capacity; i++) {
             if (values[i]) {
@@ -768,12 +775,18 @@ struct TypeHashSet
             if (KEY::getKey(oldData) == key)
                 return (U**) &values;
 
-            values = alloc.newArray<U*>(SET_ARRAY_SIZE);
+            // Allocate an extra word right before the array storing the
+            // capacity, for sanity checks.
+            values = alloc.newArray<U*>(SET_ARRAY_SIZE + 1);
             if (!values) {
                 values = (U**) oldData;
                 return nullptr;
             }
-            mozilla::PodZero(values, SET_ARRAY_SIZE);
+            mozilla::PodZero(values, SET_ARRAY_SIZE + 1);
+
+            values[0] = (U*)uintptr_t(SET_ARRAY_SIZE);
+            values++;
+
             count++;
 
             values[0] = oldData;
@@ -781,6 +794,8 @@ struct TypeHashSet
         }
 
         if (count <= SET_ARRAY_SIZE) {
+            MOZ_RELEASE_ASSERT(uintptr_t(values[-1]) == SET_ARRAY_SIZE);
+
             for (unsigned i = 0; i < count; i++) {
                 if (KEY::getKey(values[i]) == key)
                     return &values[i];
@@ -807,6 +822,7 @@ struct TypeHashSet
             return (KEY::getKey((U*) values) == key) ? (U*) values : nullptr;
 
         if (count <= SET_ARRAY_SIZE) {
+            MOZ_RELEASE_ASSERT(uintptr_t(values[-1]) == SET_ARRAY_SIZE);
             for (unsigned i = 0; i < count; i++) {
                 if (KEY::getKey(values[i]) == key)
                     return values[i];
@@ -816,6 +832,8 @@ struct TypeHashSet
 
         unsigned capacity = Capacity(count);
         unsigned pos = HashKey<T,KEY>(key) & (capacity - 1);
+
+        MOZ_RELEASE_ASSERT(uintptr_t(values[-1]) == capacity);
 
         while (values[pos] != nullptr) {
             if (KEY::getKey(values[pos]) == key)
