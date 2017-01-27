@@ -206,7 +206,7 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
                 if symbols_url:
                     self._urlopen(symbols_url, timeout=120)
                     self.symbols_url = symbols_url
-            except (urllib2.HTTPError, urllib2.URLError, socket.error, socket.timeout) as ex:
+            except Exception as ex:
                 self.warning("Cannot open symbols url %s (installer url: %s): %s" %
                     (symbols_url, self.installer_url, ex))
                 if raise_on_failure:
