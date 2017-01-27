@@ -702,19 +702,10 @@ nsFormFillController::StartSearch(const nsAString &aSearchString, const nsAStrin
                                   nsIAutoCompleteResult *aPreviousResult, nsIAutoCompleteObserver *aListener)
 {
   nsresult rv;
-  nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(mFocusedInputNode);
 
   // If the login manager has indicated it's responsible for this field, let it
   // handle the autocomplete. Otherwise, handle with form history.
-  if (mPwmgrInputs.Get(mFocusedInputNode) ||
-      formControl->GetType() == NS_FORM_INPUT_PASSWORD) {
-
-    // Handle the case where a password field is focused but
-    // MarkAsLoginManagerField wasn't called because password manager is disabled.
-    if (!mLoginManager) {
-      mLoginManager = do_GetService("@mozilla.org/login-manager;1");
-    }
-
+  if (mPwmgrInputs.Get(mFocusedInputNode)) {
     // XXX aPreviousResult shouldn't ever be a historyResult type, since we're not letting
     // satchel manage the field?
     mLastListener = aListener;
@@ -995,6 +986,14 @@ nsFormFillController::MaybeStartControllingInput(nsIDOMHTMLInputElement* aInput)
   if (mPwmgrInputs.Get(inputNode))
       isPwmgrInput = true;
 
+  // Don't show autocomplete on password fields regardless of datalist or
+  // autocomplete being enabled as we don't want to show form history on them.
+  // The GetType() check was more readable than !formControl->IsSingleLineTextControl(true)
+  // but this logic should be kept in-sync with that.
+  if (formControl->GetType() == NS_FORM_INPUT_PASSWORD && !isPwmgrInput) {
+    return;
+  }
+
   if (isPwmgrInput || hasList || autocomplete) {
     StartControllingInput(aInput);
   }
@@ -1007,20 +1006,9 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
     aEvent->InternalDOMEvent()->GetTarget());
   MaybeStartControllingInput(input);
 
-  // Bail if we didn't start controlling the input.
-  if (!mFocusedInputNode) {
-    mContextMenuFiredBeforeFocus = false;
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(mFocusedInputNode);
-  MOZ_ASSERT(formControl);
-
   // If this focus doesn't immediately follow a contextmenu event then show
   // the autocomplete popup
-  if (!mContextMenuFiredBeforeFocus &&
-      (mPwmgrInputs.Get(mFocusedInputNode) ||
-       formControl->GetType() == NS_FORM_INPUT_PASSWORD)) {
+  if (!mContextMenuFiredBeforeFocus && mPwmgrInputs.Get(mFocusedInputNode)) {
     ShowPopup();
   }
 
