@@ -908,9 +908,9 @@ Gecko_ClearPODTArray(void* aArray, size_t aElementSize, size_t aElementAlign)
 }
 
 void
-Gecko_ClearStyleContents(nsStyleContent* aContent)
+Gecko_ClearAndResizeStyleContents(nsStyleContent* aContent, uint32_t aHowMany)
 {
-  aContent->AllocateContents(0);
+  aContent->AllocateContents(aHowMany);
 }
 
 void
