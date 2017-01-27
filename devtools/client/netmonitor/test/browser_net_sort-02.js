@@ -17,7 +17,7 @@ add_task(function* () {
   // of the heavy dom manipulation associated with sorting.
   requestLongerTimeout(2);
 
-  let { $, $all, NetMonitorView } = monitor.panelWin;
+  let { document, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
 
   // Loading the frame script and preparing the xhr request URLs so we can
@@ -46,120 +46,142 @@ add_task(function* () {
   yield performRequestsInContent(requests);
   yield wait;
 
-  EventUtils.sendMouseEvent({ type: "mousedown" }, $("#details-pane-toggle"));
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelector(".network-details-panel-toggle"));
 
   isnot(RequestsMenu.selectedItem, null,
     "There should be a selected item in the requests menu.");
   is(RequestsMenu.selectedIndex, 0,
     "The first item should be selected in the requests menu.");
-  is(NetMonitorView.detailsPaneHidden, false,
-    "The details pane should not be hidden after toggle button was pressed.");
+  is(!!document.querySelector(".network-details-panel"), true,
+    "The network details panel should be visible after toggle button was pressed.");
 
   testHeaders();
   testContents([0, 2, 4, 3, 1]);
 
   info("Testing status sort, ascending.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-status-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-status-button"));
   testHeaders("status", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing status sort, descending.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-status-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-status-button"));
   testHeaders("status", "descending");
   testContents([4, 3, 2, 1, 0]);
 
   info("Testing status sort, ascending. Checking sort loops correctly.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-status-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-status-button"));
   testHeaders("status", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing method sort, ascending.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-method-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-method-button"));
   testHeaders("method", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing method sort, descending.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-method-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-method-button"));
   testHeaders("method", "descending");
   testContents([4, 3, 2, 1, 0]);
 
   info("Testing method sort, ascending. Checking sort loops correctly.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-method-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-method-button"));
   testHeaders("method", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing file sort, ascending.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-file-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-file-button"));
   testHeaders("file", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing file sort, descending.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-file-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-file-button"));
   testHeaders("file", "descending");
   testContents([4, 3, 2, 1, 0]);
 
   info("Testing file sort, ascending. Checking sort loops correctly.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-file-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-file-button"));
   testHeaders("file", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing type sort, ascending.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-type-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-type-button"));
   testHeaders("type", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing type sort, descending.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-type-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-type-button"));
   testHeaders("type", "descending");
   testContents([4, 3, 2, 1, 0]);
 
   info("Testing type sort, ascending. Checking sort loops correctly.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-type-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-type-button"));
   testHeaders("type", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing transferred sort, ascending.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-transferred-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-transferred-button"));
   testHeaders("transferred", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing transferred sort, descending.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-transferred-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-transferred-button"));
   testHeaders("transferred", "descending");
   testContents([4, 3, 2, 1, 0]);
 
   info("Testing transferred sort, ascending. Checking sort loops correctly.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-transferred-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-transferred-button"));
   testHeaders("transferred", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing size sort, ascending.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-size-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-size-button"));
   testHeaders("size", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing size sort, descending.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-size-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-size-button"));
   testHeaders("size", "descending");
   testContents([4, 3, 2, 1, 0]);
 
   info("Testing size sort, ascending. Checking sort loops correctly.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-size-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-size-button"));
   testHeaders("size", "ascending");
   testContents([0, 1, 2, 3, 4]);
 
   info("Testing waterfall sort, ascending.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-waterfall-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-waterfall-button"));
   testHeaders("waterfall", "ascending");
   testContents([0, 2, 4, 3, 1]);
 
   info("Testing waterfall sort, descending.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-waterfall-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-waterfall-button"));
   testHeaders("waterfall", "descending");
   testContents([4, 2, 0, 1, 3]);
 
   info("Testing waterfall sort, ascending. Checking sort loops correctly.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-waterfall-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-waterfall-button"));
   testHeaders("waterfall", "ascending");
   testContents([0, 2, 4, 3, 1]);
 
@@ -192,14 +214,14 @@ add_task(function* () {
       "There should still be a selected item after sorting.");
     is(RequestsMenu.selectedIndex, a,
       "The first item should be still selected after sorting.");
-    is(NetMonitorView.detailsPaneHidden, false,
-      "The details pane should still be visible after sorting.");
+    is(!!document.querySelector(".network-details-panel"), true,
+      "The network details panel should still be visible after sorting.");
 
     is(RequestsMenu.items.length, 5,
       "There should be a total of 5 items in the requests menu.");
     is(RequestsMenu.visibleItems.length, 5,
       "There should be a total of 5 visible items in the requests menu.");
-    is($all(".request-list-item").length, 5,
+    is(document.querySelectorAll(".request-list-item").length, 5,
       "The visible items in the requests menu are, in fact, visible!");
 
     verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(a),

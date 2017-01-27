@@ -24,7 +24,7 @@ add_task(function* () {
 
   wait = waitForDOM(document, "#security-panel");
   EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelector("#details-pane-toggle"));
+    document.querySelector(".network-details-panel-toggle"));
   document.querySelector("#security-tab").click();
   yield wait;
 

@@ -67,12 +67,12 @@ function checkResponsePanelDisplaysJSON(doc) {
  * Open the netmonitor details panel and switch to the response tab.
  * Returns a promise that will resolve when the response panel DOM element is available.
  */
-function openResponsePanel(doc) {
-  let onReponsePanelReady = waitForDOM(doc, "#response-panel");
+function openResponsePanel(document) {
+  let onReponsePanelReady = waitForDOM(document, "#response-panel");
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
-    doc.getElementById("details-pane-toggle")
+    document.querySelector(".network-details-panel-toggle")
   );
-  doc.querySelector("#response-tab").click();
+  document.querySelector("#response-tab").click();
   return onReponsePanelReady;
 }

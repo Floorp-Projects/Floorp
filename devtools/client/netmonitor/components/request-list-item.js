@@ -23,7 +23,7 @@ function propertiesEqual(props, item1, item2) {
  * Used by shouldComponentUpdate: compare two items, and compare only properties
  * relevant for rendering the RequestListItem. Other properties (like request and
  * response headers, cookies, bodies) are ignored. These are very useful for the
- * sidebar details, but not here.
+ * network details, but not here.
  */
 const UPDATED_REQ_ITEM_PROPS = [
   "mimeType",
