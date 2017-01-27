@@ -959,8 +959,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsITimerCallback> mTimerRunnable;
 
-  nsCOMPtr<nsITimer> mPeriodicGCTimer;
-  nsCOMPtr<nsITimer> mIdleGCTimer;
+  nsCOMPtr<nsITimer> mGCTimer;
 
   RefPtr<MemoryReporter> mMemoryReporter;
 
@@ -1396,12 +1395,6 @@ public:
   // action on cancelation.
   nsIEventTarget*
   ControlEventTarget();
-
-  void
-  CancelGCTimers()
-  {
-    SetGCTimerMode(NoTimer);
-  }
 
 private:
   WorkerPrivate(WorkerPrivate* aParent,
