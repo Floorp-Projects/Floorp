@@ -37,8 +37,7 @@ class ISurfaceProvider
 public:
   // Subclasses may or may not be XPCOM classes, so we just require that they
   // implement AddRef and Release.
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() = 0;
-  NS_IMETHOD_(MozExternalRefCountType) Release() = 0;
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   /// @return key data used for identifying which image this ISurfaceProvider is
   /// associated with in the surface cache.

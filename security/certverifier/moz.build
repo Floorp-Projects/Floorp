@@ -8,6 +8,7 @@ EXPORTS += [
     'BRNameMatchingPolicy.h',
     'CertVerifier.h',
     'CTLog.h',
+    'CTPolicyEnforcer.h',
     'CTVerifyResult.h',
     'OCSPCache.h',
     'SignedCertificateTimestamp.h',
@@ -17,8 +18,10 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     'BRNameMatchingPolicy.cpp',
     'CertVerifier.cpp',
+    'CTDiversityPolicy.cpp',
     'CTLogVerifier.cpp',
     'CTObjectsExtractor.cpp',
+    'CTPolicyEnforcer.cpp',
     'CTSerialization.cpp',
     'CTVerifyResult.cpp',
     'MultiLogCTVerifier.cpp',
