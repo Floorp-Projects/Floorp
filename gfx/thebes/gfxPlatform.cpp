@@ -2220,25 +2220,25 @@ gfxPlatform::InitGPUProcessPrefs()
 
   FeatureState& gpuProc = gfxConfig::GetFeature(Feature::GPU_PROCESS);
 
-  gpuProc.SetDefaultFromPref(
-    gfxPrefs::GetGPUProcessEnabledPrefName(),
-    true,
-    gfxPrefs::GetGPUProcessEnabledPrefDefault());
+  // We require E10S - otherwise, there is very little benefit to the GPU
+  // process, since the UI process must still use acceleration for
+  // performance.
+  if (!BrowserTabsRemoteAutostart()) {
+    gpuProc.DisableByDefault(
+      FeatureStatus::Unavailable,
+      "Multi-process mode is not enabled",
+      NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_E10S"));
+  } else {
+    gpuProc.SetDefaultFromPref(
+      gfxPrefs::GetGPUProcessEnabledPrefName(),
+      true,
+      gfxPrefs::GetGPUProcessEnabledPrefDefault());
+  }
 
   if (gfxPrefs::GPUProcessForceEnabled()) {
     gpuProc.UserForceEnable("User force-enabled via pref");
   }
 
-  // We require E10S - otherwise, there is very little benefit to the GPU
-  // process, since the UI process must still use acceleration for
-  // performance.
-  if (!BrowserTabsRemoteAutostart()) {
-    gpuProc.ForceDisable(
-      FeatureStatus::Unavailable,
-      "Multi-process mode is not enabled",
-      NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_E10S"));
-    return;
-  }
   if (InSafeMode()) {
     gpuProc.ForceDisable(
       FeatureStatus::Blocked,
