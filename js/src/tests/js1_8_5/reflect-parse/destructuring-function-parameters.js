@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell)
+// |reftest| slow skip-if(!xulRuntime.shell)
 function test() {
 
 var JS_HAS_EXPR_CLOSURES = true;
