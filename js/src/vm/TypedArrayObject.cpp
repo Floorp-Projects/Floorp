@@ -1272,8 +1272,14 @@ TypedArrayObjectTemplate<T>::fromTypedArray(JSContext* cx, HandleObject other, b
         return nullptr;
 
     // Step 18.d-g or 24.1.1.4 step 11.
-    if (!TypedArrayMethods<T>::setFromTypedArray(cx, obj, srcArray))
-        return nullptr;
+    MOZ_ASSERT(!obj->isSharedMemory());
+    if (isShared) {
+        if (!ElementSpecific<T, SharedOps>::setFromTypedArray(cx, obj, srcArray, 0))
+            return nullptr;
+    } else {
+        if (!ElementSpecific<T, UnsharedOps>::setFromTypedArray(cx, obj, srcArray, 0))
+            return nullptr;
+    }
 
     // Step 23.
     return obj;
@@ -1329,7 +1335,8 @@ TypedArrayObjectTemplate<T>::fromObject(JSContext* cx, HandleObject other, Handl
             return nullptr;
 
         // Steps 6.d-e.
-        if (!TypedArrayMethods<T>::initFromIterablePackedArray(cx, obj, array))
+        MOZ_ASSERT(!obj->isSharedMemory());
+        if (!ElementSpecific<T, UnsharedOps>::initFromIterablePackedArray(cx, obj, array))
             return nullptr;
 
         // Step 6.f (The assertion isn't applicable for the fast path).
@@ -1395,7 +1402,8 @@ TypedArrayObjectTemplate<T>::fromObject(JSContext* cx, HandleObject other, Handl
         return nullptr;
 
     // Steps 11-12.
-    if (!TypedArrayMethods<T>::setFromNonTypedArray(cx, obj, arrayLike, len))
+    MOZ_ASSERT(!obj->isSharedMemory());
+    if (!ElementSpecific<T, UnsharedOps>::setFromNonTypedArray(cx, obj, arrayLike, len))
         return nullptr;
 
     // Step 13.
@@ -1490,6 +1498,28 @@ TypedArrayObject::protoAccessors[] = {
     JS_PS_END
 };
 
+template<typename T>
+static inline bool
+SetFromTypedArray(JSContext* cx, Handle<TypedArrayObject*> target,
+                  Handle<TypedArrayObject*> source, uint32_t offset)
+{
+    if (target->isSharedMemory() || source->isSharedMemory())
+        return ElementSpecific<T, SharedOps>::setFromTypedArray(cx, target, source, offset);
+    return ElementSpecific<T, UnsharedOps>::setFromTypedArray(cx, target, source, offset);
+}
+
+template<typename T>
+static inline bool
+SetFromNonTypedArray(JSContext* cx, Handle<TypedArrayObject*> target, HandleObject source,
+                     uint32_t len, uint32_t offset)
+{
+    MOZ_ASSERT(!source->is<TypedArrayObject>(), "use SetFromTypedArray");
+
+    if (target->isSharedMemory())
+        return ElementSpecific<T, SharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
+    return ElementSpecific<T, UnsharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
+}
+
 /* set(array[, offset]) */
 /* static */ bool
 TypedArrayObject::set_impl(JSContext* cx, const CallArgs& args)
@@ -1527,7 +1557,7 @@ TypedArrayObject::set_impl(JSContext* cx, const CallArgs& args)
         switch (target->type()) {
 #define SET_FROM_TYPED_ARRAY(T, N) \
           case Scalar::N: \
-            if (!TypedArrayMethods<T>::setFromTypedArray(cx, target, source, offset)) \
+            if (!SetFromTypedArray<T>(cx, target, source, offset)) \
                 return false; \
             break;
 JS_FOR_EACH_TYPED_ARRAY(SET_FROM_TYPED_ARRAY)
@@ -1548,7 +1578,7 @@ JS_FOR_EACH_TYPED_ARRAY(SET_FROM_TYPED_ARRAY)
         switch (target->type()) {
 #define SET_FROM_NON_TYPED_ARRAY(T, N) \
           case Scalar::N: \
-            if (!TypedArrayMethods<T>::setFromNonTypedArray(cx, target, arg0, len, offset)) \
+            if (!SetFromNonTypedArray<T>(cx, target, arg0, len, offset)) \
                 return false; \
             break;
 JS_FOR_EACH_TYPED_ARRAY(SET_FROM_NON_TYPED_ARRAY)
