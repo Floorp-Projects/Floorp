@@ -498,8 +498,10 @@ Classifier::Check(const nsACString& aSpec,
 
         if (LookupCache::Cast<LookupCacheV4>(cache)) {
           matchingStatistics |= PrefixMatch::eMatchV4Prefix;
+          result->mProtocolV2 = false;
         } else {
           matchingStatistics |= PrefixMatch::eMatchV2Prefix;
+          result->mProtocolV2 = true;
         }
       }
     }

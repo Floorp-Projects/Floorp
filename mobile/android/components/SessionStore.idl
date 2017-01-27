@@ -71,6 +71,12 @@ interface nsISessionStore : nsISupports
   void deleteTabValue(in jsval aTab, in AString aKey);
 
   /**
+   * Restores the passed tab if it is currently zombified and set to be delay loaded.
+   * @param aTab The browser tab to be restored.
+   */
+  void restoreZombieTab(in jsval aTab);
+
+  /**
    * Removes a window from the current session history. Data from this window
    * won't be saved when its closed.
    * @param aWindow The window to remove

@@ -58581,7 +58581,7 @@ var Debugger =
 	      onFocus: e => this.setState({ focused: true }),
 	      onBlur: e => this.setState({ focused: false }),
 	      onKeyDown: this.onKeyDown,
-	      placeholder: L10N.getStr("sourceSearch.search1")
+	      placeholder: L10N.getStr("sourceSearch.search")
 	    });
 	  },
 	
@@ -58600,7 +58600,7 @@ var Debugger =
 	
 	    var resultCountSummary = "";
 	    if (this.state.inputValue) {
-	      resultCountSummary = L10N.getFormatStr("sourceSearch1.resultsSummary", searchResults.length, this.state.inputValue);
+	      resultCountSummary = L10N.getFormatStr("sourceSearch.resultsSummary", searchResults.length, this.state.inputValue);
 	    }
 	    return dom.div({ className: "results-summary" }, resultCountSummary);
 	  },
@@ -82185,7 +82185,7 @@ var Debugger =
 	
 	  renderStepButtons() {
 	    var className = this.props.pause ? "active" : "disabled";
-	    return [debugBtn(this.props.stepOver, "stepOver", className, L10N.getFormatStr("stepOverTooltip1", formatKey("stepOver"))), debugBtn(this.props.stepIn, "stepIn", className, L10N.getFormatStr("stepInTooltip1", formatKey("stepIn"))), debugBtn(this.props.stepOut, "stepOut", className, L10N.getFormatStr("stepOutTooltip1", formatKey("stepOut")))];
+	    return [debugBtn(this.props.stepOver, "stepOver", className, L10N.getFormatStr("stepOverTooltip", formatKey("stepOver"))), debugBtn(this.props.stepIn, "stepIn", className, L10N.getFormatStr("stepInTooltip", formatKey("stepIn"))), debugBtn(this.props.stepOut, "stepOut", className, L10N.getFormatStr("stepOutTooltip", formatKey("stepOut")))];
 	  },
 	
 	  renderPauseButton() {
@@ -82196,14 +82196,14 @@ var Debugger =
 	
 	
 	    if (pause) {
-	      return debugBtn(this.props.resume, "resume", "active", L10N.getFormatStr("resumeButtonTooltip1", formatKey("resume")));
+	      return debugBtn(this.props.resume, "resume", "active", L10N.getFormatStr("resumeButtonTooltip", formatKey("resume")));
 	    }
 	
 	    if (isWaitingOnBreak) {
 	      return debugBtn(null, "pause", "disabled", L10N.getStr("pausePendingButtonTooltip"));
 	    }
 	
-	    return debugBtn(breakOnNext, "pause", "active", L10N.getFormatStr("pauseButtonTooltip1", formatKey("pause")));
+	    return debugBtn(breakOnNext, "pause", "active", L10N.getFormatStr("pauseButtonTooltip", formatKey("pause")));
 	  },
 	
 	  /*
@@ -82308,7 +82308,7 @@ var Debugger =
 	  },
 	
 	  render() {
-	    var searchLabel = L10N.getFormatStr("welcome.search1", formatKeyShortcut(`CmdOrCtrl+${ L10N.getStr("sources.search.key") }`));
+	    var searchLabel = L10N.getFormatStr("welcome.search", formatKeyShortcut(`CmdOrCtrl+${ L10N.getStr("sources.search.key") }`));
 	    return dom.div({ className: "welcomebox" }, searchLabel, this.renderToggleButton());
 	  }
 	});
@@ -82786,22 +82786,22 @@ var Debugger =
 		"sources.search.key": "P",
 		"watchExpressions.header": "Watch Expressions",
 		"watchExpressions.refreshButton": "Refresh",
-		"welcome.search1": "%S to search for sources",
-		"sourceSearch.search1": "Search Sources...",
+		"welcome.search": "%S to search for sources",
+		"sourceSearch.search": "Search Sources...",
 		"sourceSearch.search.key": "F",
 		"sourceSearch.search.again.key": "G",
-		"sourceSearch1.resultsSummary": "%d instances of \"%S\"",
+		"sourceSearch.resultsSummary": "%d instances of \"%S\"",
 		"sourceSearch.noResults": "No files matching %S found",
 		"sourceFooter.debugBtnTooltip": "Prettify Source",
 		"ignoreExceptions": "Ignore exceptions. Click to pause on uncaught exceptions",
 		"pauseOnUncaughtExceptions": "Pause on uncaught exceptions. Click to pause on all exceptions",
 		"pauseOnExceptions": "Pause on all exceptions. Click to ignore exceptions",
-		"stepOutTooltip1": "Step Out %S",
-		"stepInTooltip1": "Step In %S",
-		"stepOverTooltip1": "Step Over %S",
-		"resumeButtonTooltip1": "Resume %S",
+		"stepOutTooltip": "Step Out %S",
+		"stepInTooltip": "Step In %S",
+		"stepOverTooltip": "Step Over %S",
+		"resumeButtonTooltip": "Resume %S",
 		"pausePendingButtonTooltip": "Waiting for next execution",
-		"pauseButtonTooltip1": "Pause %S",
+		"pauseButtonTooltip": "Pause %S",
 		"sourceTabs.closeTab": "Close tab",
 		"sourceTabs.closeOtherTabs": "Close others",
 		"sourceTabs.closeTabsToRight": "Close tabs to the right",
