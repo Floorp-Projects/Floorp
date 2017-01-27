@@ -1051,8 +1051,9 @@ void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
   // to objects on the stack, so we need to clone the chain.
   const DisplayItemClipChain* clipChain =
     CopyWholeChain(mClipState.GetClipChainForContainingBlockDescendants());
+  const DisplayItemClipChain* combinedClipChain = mClipState.GetCurrentCombinedClipChain(this);
   const ActiveScrolledRoot* asr = mCurrentActiveScrolledRoot;
-  OutOfFlowDisplayData* data = new OutOfFlowDisplayData(clipChain, asr, dirty);
+  OutOfFlowDisplayData* data = new OutOfFlowDisplayData(clipChain, combinedClipChain, asr, dirty);
   aFrame->Properties().Set(nsDisplayListBuilder::OutOfFlowDisplayDataProperty(), data);
 
   MarkFrameForDisplay(aFrame, aDirtyFrame);
@@ -1275,9 +1276,10 @@ nsDisplayListBuilder::MarkFramesForDisplayList(nsIFrame* aDirtyFrame,
 
     const DisplayItemClipChain* clipChain =
       CopyWholeChain(mClipState.GetClipChainForContainingBlockDescendants());
+    const DisplayItemClipChain* combinedClipChain = mClipState.GetCurrentCombinedClipChain(this);
     const ActiveScrolledRoot* asr = mCurrentActiveScrolledRoot;
     CurrentPresShellState()->mFixedBackgroundDisplayData.emplace(
-      clipChain, asr, aDirtyRect);
+      clipChain, combinedClipChain, asr, aDirtyRect);
   }
 }
 
