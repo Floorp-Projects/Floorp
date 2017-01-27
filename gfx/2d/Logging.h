@@ -465,9 +465,6 @@ public:
         case SurfaceType::TILED:
           mMessage << "SurfaceType::TILED";
           break;
-        case SurfaceType::DATA_SHARED:
-          mMessage << "SurfaceType::DATA_SHARED";
-          break;
         default:
           mMessage << "Invalid SurfaceType (" << (int)aType << ")";
           break;

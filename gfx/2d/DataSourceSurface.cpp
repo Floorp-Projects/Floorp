@@ -13,7 +13,7 @@ already_AddRefed<DataSourceSurface>
 DataSourceSurface::GetDataSurface()
 {
   RefPtr<DataSourceSurface> surface =
-    IsDataSourceSurface() ? this : new DataSourceSurfaceWrapper(this);
+    (GetType() == SurfaceType::DATA) ? this : new DataSourceSurfaceWrapper(this);
   return surface.forget();
 }
 
