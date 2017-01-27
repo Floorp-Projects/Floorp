@@ -872,10 +872,13 @@ TypeSet::clone(LifoAlloc* alloc, TemporaryTypeSet* result) const
 
     ObjectKey** newSet;
     if (capacity) {
-        newSet = alloc->newArray<ObjectKey*>(capacity);
+        // We allocate an extra word right before the array that stores the
+        // capacity, so make sure we clone that as well.
+        newSet = alloc->newArray<ObjectKey*>(capacity + 1);
         if (!newSet)
             return false;
-        PodCopy(newSet, objectSet, capacity);
+        newSet++;
+        PodCopy(newSet - 1, objectSet - 1, capacity + 1);
     }
 
     new(result) TemporaryTypeSet(flags, capacity ? newSet : objectSet);
