@@ -64,12 +64,10 @@ HTMLTableColElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLTableColElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                           GenericSpecifiedValues* aGenericData)
+                                           GenericSpecifiedValues* aData)
 {
-  nsRuleData* aData = aGenericData->AsRuleData();
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Table)) {
-    nsCSSValue *span = aData->ValueForSpan();
-    if (span->GetUnit() == eCSSUnit_Null) {
+  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Table))) {
+    if (!aData->PropertyIsSet(eCSSProperty__x_span)) {
       // span: int
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::span);
       if (value && value->Type() == nsAttrValue::eInteger) {
@@ -78,52 +76,16 @@ HTMLTableColElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes
         // means something special for colspan and rowspan, but for <col
         // span> and <colgroup span> it's just disallowed.
         if (val > 0) {
-          span->SetIntValue(value->GetIntegerValue(), eCSSUnit_Integer);
+          aData->SetIntValue(eCSSProperty__x_span, value->GetIntegerValue());
         }
       }
-    }
-  }
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Position)) {
-    nsCSSValue* width = aData->ValueForWidth();
-    if (width->GetUnit() == eCSSUnit_Null) {
-      // width
-      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);
-      if (value) {
-        switch (value->Type()) {
-        case nsAttrValue::ePercent: {
-          width->SetPercentValue(value->GetPercentValue());
-          break;
-        }
-        case nsAttrValue::eInteger: {
-          width->SetFloatValue((float)value->GetIntegerValue(), eCSSUnit_Pixel);
-          break;
-        }
-        default:
-          break;
-        }
-      }
-    }
-  }
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Text)) {
-    nsCSSValue* textAlign = aData->ValueForTextAlign();
-    if (textAlign->GetUnit() == eCSSUnit_Null) {
-      // align: enum
-      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
-      if (value && value->Type() == nsAttrValue::eEnum)
-        textAlign->SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
-    }
-  }
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
-    nsCSSValue* verticalAlign = aData->ValueForVerticalAlign();
-    if (verticalAlign->GetUnit() == eCSSUnit_Null) {
-      // valign: enum
-      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::valign);
-      if (value && value->Type() == nsAttrValue::eEnum)
-        verticalAlign->SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aGenericData);
+  nsGenericHTMLElement::MapWidthAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapVAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
 NS_IMETHODIMP_(bool)
