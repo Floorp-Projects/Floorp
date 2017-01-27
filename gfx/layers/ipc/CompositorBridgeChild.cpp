@@ -585,16 +585,6 @@ CompositorBridgeChild::RecvDidComposite(const uint64_t& aId, const uint64_t& aTr
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-CompositorBridgeChild::RecvClearCachedResources(const uint64_t& aId)
-{
-  dom::TabChild* child = dom::TabChild::GetFrom(aId);
-  if (child) {
-    child->ClearCachedResources();
-  }
-  return IPC_OK();
-}
-
 void
 CompositorBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
 {

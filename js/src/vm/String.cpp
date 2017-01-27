@@ -17,7 +17,7 @@
 #include "gc/Marking.h"
 #include "js/GCAPI.h"
 #include "js/UbiNode.h"
-#include "vm/SPSProfiler.h"
+#include "vm/GeckoProfiler.h"
 
 #include "jscntxtinlines.h"
 #include "jscompartmentinlines.h"
@@ -580,9 +580,9 @@ JSRope::flattenInternal(ExclusiveContext* maybecx)
 JSFlatString*
 JSRope::flatten(ExclusiveContext* maybecx)
 {
-    mozilla::Maybe<AutoSPSEntry> sps;
+    mozilla::Maybe<AutoGeckoProfilerEntry> entry;
     if (maybecx && maybecx->isJSContext())
-        sps.emplace(maybecx->asJSContext()->runtime(), "JSRope::flatten");
+        entry.emplace(maybecx->asJSContext()->runtime(), "JSRope::flatten");
 
     if (zone()->needsIncrementalBarrier())
         return flattenInternal<WithIncrementalBarrier>(maybecx);

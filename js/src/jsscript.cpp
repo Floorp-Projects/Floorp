@@ -2863,7 +2863,7 @@ JSScript::finalize(FreeOp* fop)
     if (fop->runtime()->lcovOutput.isEnabled())
         compartment()->lcovOutput.collectCodeCoverageInfo(compartment(), sourceObject(), this);
 
-    fop->runtime()->spsProfiler.onScriptFinalized(this);
+    fop->runtime()->geckoProfiler.onScriptFinalized(this);
 
     if (types_)
         types_->destroy();

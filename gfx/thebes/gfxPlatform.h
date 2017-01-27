@@ -282,12 +282,7 @@ public:
 
     static bool AsyncPanZoomEnabled();
 
-    virtual void GetAzureBackendInfo(mozilla::widget::InfoObject &aObj) {
-      aObj.DefineProperty("AzureCanvasBackend", GetBackendName(mPreferredCanvasBackend));
-      aObj.DefineProperty("AzureCanvasAccelerated", AllowOpenGLCanvas());
-      aObj.DefineProperty("AzureFallbackCanvasBackend", GetBackendName(mFallbackCanvasBackend));
-      aObj.DefineProperty("AzureContentBackend", GetBackendName(mContentBackend));
-    }
+    virtual void GetAzureBackendInfo(mozilla::widget::InfoObject &aObj);
     void GetApzSupportInfo(mozilla::widget::InfoObject& aObj);
     void GetTilesSupportInfo(mozilla::widget::InfoObject& aObj);
 

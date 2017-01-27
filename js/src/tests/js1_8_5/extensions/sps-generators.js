@@ -5,7 +5,7 @@
 
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 822041;
-var summary = "Live generators should not cache SPS state";
+var summary = "Live generators should not cache Gecko Profiler state";
 
 print(BUGNUMBER + ": " + summary);
 
@@ -17,16 +17,16 @@ function gen() {
 
 function turnoff() {
   print("Turning off profiler\n");
-  disableSPSProfiling();
+  disableGeckoProfiling();
   return 'hi';
 }
 
 for (var slowAsserts of [ true, false ]) {
   // The slowAssertions setting is not expected to matter
   if (slowAsserts)
-    enableSPSProfilingWithSlowAssertions();
+    enableGeckoProfilingWithSlowAssertions();
   else
-    enableSPSProfiling();
+    enableGeckoProfiling();
 
   g = gen();
   assertEq(g.next(), 'hi');

@@ -1473,6 +1473,26 @@ GfxInfoBase::GetUsingGPUProcess(bool *aOutValue)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+GfxInfoBase::ControlGPUProcessForXPCShell(bool aEnable, bool *_retval)
+{
+  gfxPlatform::GetPlatform();
+
+  GPUProcessManager* gpm = GPUProcessManager::Get();
+  if (aEnable) {
+    if (!gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
+      gfxConfig::UserForceEnable(Feature::GPU_PROCESS, "xpcshell-test");
+    }
+    gpm->LaunchGPUProcess();
+    gpm->EnsureGPUReady();
+  } else {
+    gpm->KillProcess();
+  }
+
+  *_retval = true;
+  return NS_OK;
+}
+
 GfxInfoCollectorBase::GfxInfoCollectorBase()
 {
   GfxInfoBase::AddCollector(this);

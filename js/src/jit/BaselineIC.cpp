@@ -152,7 +152,7 @@ DoWarmUpCounterFallbackOSR(JSContext* cx, BaselineFrame* frame, ICWarmUpCounter_
     }
 
     IonScript* ion = script->ionScript();
-    MOZ_ASSERT(cx->runtime()->spsProfiler.enabled() == ion->hasProfilingInstrumentation());
+    MOZ_ASSERT(cx->runtime()->geckoProfiler.enabled() == ion->hasProfilingInstrumentation());
     MOZ_ASSERT(ion->osrPc() == pc);
 
     JitSpew(JitSpew_BaselineOSR, "  OSR possible!");
@@ -234,7 +234,7 @@ ICWarmUpCounter_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     // the frame currently being OSR-ed
     {
         Label checkOk;
-        AbsoluteAddress addressOfEnabled(cx->runtime()->spsProfiler.addressOfEnabled());
+        AbsoluteAddress addressOfEnabled(cx->runtime()->geckoProfiler.addressOfEnabled());
         masm.branch32(Assembler::Equal, addressOfEnabled, Imm32(0), &checkOk);
         masm.loadPtr(AbsoluteAddress((void*)&cx->runtime()->jitActivation), scratchReg);
         masm.loadPtr(Address(scratchReg, JitActivation::offsetOfLastProfilingFrame()), scratchReg);
