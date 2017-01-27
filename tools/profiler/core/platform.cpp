@@ -104,8 +104,6 @@ static int sProfileEntries;   /* how many entries do we store? */
 std::vector<ThreadInfo*>* Sampler::sRegisteredThreads = nullptr;
 mozilla::UniquePtr< ::Mutex> Sampler::sRegisteredThreadsMutex;
 
-GeckoSampler* Sampler::sActiveSampler;
-
 static mozilla::StaticAutoPtr<mozilla::ProfilerIOInterposeObserver>
                                                             sInterposeObserver;
 
@@ -173,8 +171,9 @@ Sampler::RegisterCurrentThread(const char* aName,
   ThreadInfo* info = new StackOwningThreadInfo(aName, id,
     aIsMainThread, aPseudoStack, stackTop);
 
-  if (sActiveSampler) {
-    sActiveSampler->RegisterThread(info);
+  // XXX: this is an off-main-thread use of gSampler
+  if (gSampler) {
+    gSampler->RegisterThread(info);
   }
 
   sRegisteredThreads->push_back(info);
@@ -970,22 +969,29 @@ profiler_stop()
 bool
 profiler_is_paused()
 {
-  if (Sampler::GetActiveSampler()) {
-    return Sampler::GetActiveSampler()->IsPaused();
-  } else {
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (!gSampler) {
     return false;
   }
+
+  return gSampler->IsPaused();
 }
 
 void
 profiler_pause()
 {
-  if (Sampler::GetActiveSampler()) {
-    Sampler::GetActiveSampler()->SetPaused(true);
-    if (Sampler::CanNotifyObservers()) {
-      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-      if (os)
-        os->NotifyObservers(nullptr, "profiler-paused", nullptr);
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (!gSampler) {
+    return;
+  }
+
+  gSampler->SetPaused(true);
+  if (Sampler::CanNotifyObservers()) {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      os->NotifyObservers(nullptr, "profiler-paused", nullptr);
     }
   }
 }
@@ -993,12 +999,17 @@ profiler_pause()
 void
 profiler_resume()
 {
-  if (Sampler::GetActiveSampler()) {
-    Sampler::GetActiveSampler()->SetPaused(false);
-    if (Sampler::CanNotifyObservers()) {
-      nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
-      if (os)
-        os->NotifyObservers(nullptr, "profiler-resumed", nullptr);
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (!gSampler) {
+    return;
+  }
+
+  gSampler->SetPaused(false);
+  if (Sampler::CanNotifyObservers()) {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os) {
+      os->NotifyObservers(nullptr, "profiler-resumed", nullptr);
     }
   }
 }
