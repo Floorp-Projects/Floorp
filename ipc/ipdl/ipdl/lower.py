@@ -9,7 +9,7 @@ from collections import OrderedDict
 import ipdl.ast
 import ipdl.builtin
 from ipdl.cxx.ast import *
-from ipdl.type import Actor, ActorType, ProcessGraph, TypeVisitor, builtinHeaderIncludes
+from ipdl.type import ActorType, ProcessGraph, TypeVisitor, builtinHeaderIncludes
 
 ##-----------------------------------------------------------------------------
 ## "Public" interface to lowering
@@ -574,10 +574,10 @@ def _cxxConstPtrToType(ipdltype, side):
     return t
 
 def _allocMethod(ptype, side):
-    return ExprVar('Alloc'+ str(Actor(ptype, side)))
+    return ExprVar('Alloc' + ptype.name() + side.title())
 
 def _deallocMethod(ptype, side):
-    return ExprVar('Dealloc'+ str(Actor(ptype, side)))
+    return ExprVar('Dealloc' + ptype.name() + side.title())
 
 ##
 ## A _HybridDecl straddles IPDL and C++ decls.  It knows which C++
