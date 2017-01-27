@@ -248,6 +248,9 @@ def chunk_locales(config, jobs):
         chunks = job.get('chunks')
         all_locales = job['attributes']['all_locales']
         if chunks:
+            if chunks > len(all_locales):
+                # Reduce chunks down to the number of locales
+                chunks = len(all_locales)
             for this_chunk in range(1, chunks + 1):
                 chunked = copy.deepcopy(job)
                 chunked['name'] = chunked['name'].replace(
