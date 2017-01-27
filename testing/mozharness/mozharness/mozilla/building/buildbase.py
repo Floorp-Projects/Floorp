@@ -1866,10 +1866,14 @@ or run without that action (ie: --no-{action})"
             self.info('resource usage lacks duration; ignoring')
             return None
 
+        extra_options = self.perfherder_resource_options()
+        if self.query_is_nightly():
+            extra_options = ['nightly'] + extra_options
+
         data = {
             'name': 'build times',
             'value': resources['duration'],
-            'extraOptions': self.perfherder_resource_options(),
+            'extraOptions': extra_options,
             'subtests': [],
         }
 
