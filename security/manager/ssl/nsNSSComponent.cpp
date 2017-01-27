@@ -1753,16 +1753,27 @@ nsNSSComponent::InitializeNSS()
   }
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("inSafeMode: %u\n", inSafeMode));
 
+#ifdef ANDROID
+  PRErrorCode savedPRErrorCode1 = 0;
+  PRErrorCode savedPRErrorCode2 = 0;
+#endif // ANDROID
+
   if (!nocertdb && !profileStr.IsEmpty()) {
     // First try to initialize the NSS DB in read/write mode.
     // Only load PKCS11 modules if we're not in safe mode.
     init_rv = ::mozilla::psm::InitializeNSS(profileStr.get(), false, !inSafeMode);
     // If that fails, attempt read-only mode.
     if (init_rv != SECSuccess) {
+#ifdef ANDROID
+      savedPRErrorCode1 = PR_GetError();
+#endif // ANDROID
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("could not init NSS r/w in %s\n", profileStr.get()));
       init_rv = ::mozilla::psm::InitializeNSS(profileStr.get(), true, !inSafeMode);
     }
     if (init_rv != SECSuccess) {
+#ifdef ANDROID
+      savedPRErrorCode2 = PR_GetError();
+#endif // ANDROID
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("could not init in r/o either\n"));
     }
   }
@@ -1773,8 +1784,10 @@ nsNSSComponent::InitializeNSS()
     init_rv = NSS_NoDB_Init(nullptr);
 #ifdef ANDROID
     if (init_rv != SECSuccess) {
-      nsPrintfCString message("NSS_NoDB_Init failed with PRErrorCode %d",
-                              PR_GetError());
+      PRErrorCode savedPRErrorCode3 = PR_GetError();
+      nsPrintfCString message("NSS initialization failed PRErrorCodes %d %d %d",
+                              savedPRErrorCode1, savedPRErrorCode2,
+                              savedPRErrorCode3);
       mozilla::PodArrayZero(sCrashReasonBuffer);
       strncpy(sCrashReasonBuffer, message.get(),
               sizeof(sCrashReasonBuffer) - 1);

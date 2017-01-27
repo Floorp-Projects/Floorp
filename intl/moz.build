@@ -18,3 +18,15 @@ DIRS += [
     'uconv',
     'build',
 ]
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Internationalization")
+
+with Files("icu/**"):
+    BUG_COMPONENT = ("Core", "JavaScript: Internationalization API")
+
+with Files("icu-patches/**"):
+    BUG_COMPONENT = ("Core", "JavaScript: Internationalization API")
+
+with Files("tzdata/**"):
+    BUG_COMPONENT = ("Core", "JavaScript: Internationalization API")

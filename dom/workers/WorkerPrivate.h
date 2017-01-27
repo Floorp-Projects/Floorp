@@ -85,6 +85,7 @@ BEGIN_WORKERS_NAMESPACE
 class AutoSyncLoopHolder;
 class SharedWorker;
 class ServiceWorkerClientInfo;
+class WorkerControlEventTarget;
 class WorkerControlRunnable;
 class WorkerDebugger;
 class WorkerPrivate;
@@ -936,6 +937,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   uint32_t mDebuggerEventLoopLevel;
   RefPtr<ThrottledEventQueue> mMainThreadThrottledEventQueue;
   nsCOMPtr<nsIEventTarget> mMainThreadEventTarget;
+  RefPtr<WorkerControlEventTarget> mWorkerControlEventTarget;
 
   struct SyncLoopInfo
   {
@@ -958,8 +960,6 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   nsCOMPtr<nsITimerCallback> mTimerRunnable;
 
   nsCOMPtr<nsITimer> mGCTimer;
-  nsCOMPtr<nsIEventTarget> mPeriodicGCTimerTarget;
-  nsCOMPtr<nsIEventTarget> mIdleGCTimerTarget;
 
   RefPtr<MemoryReporter> mMemoryReporter;
 
@@ -1390,6 +1390,12 @@ public:
   DispatchToMainThread(already_AddRefed<nsIRunnable> aRunnable,
                        uint32_t aFlags = NS_DISPATCH_NORMAL);
 
+  // Get an event target that will dispatch runnables as control runnables on
+  // the worker thread.  Implement nsICancelableRunnable if you wish to take
+  // action on cancelation.
+  nsIEventTarget*
+  ControlEventTarget();
+
 private:
   WorkerPrivate(WorkerPrivate* aParent,
                 const nsAString& aScriptURL, bool aIsChromeWorker,
@@ -1575,33 +1581,6 @@ public:
     // This can be null if CreateNewSyncLoop() fails.
     return mTarget;
   }
-};
-
-class TimerThreadEventTarget final : public nsIEventTarget
-{
-  ~TimerThreadEventTarget();
-
-  WorkerPrivate* mWorkerPrivate;
-  RefPtr<WorkerRunnable> mWorkerRunnable;
-public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-
-  TimerThreadEventTarget(WorkerPrivate* aWorkerPrivate,
-                         WorkerRunnable* aWorkerRunnable);
-
-protected:
-  NS_IMETHOD
-  DispatchFromScript(nsIRunnable* aRunnable, uint32_t aFlags) override;
-
-
-  NS_IMETHOD
-  Dispatch(already_AddRefed<nsIRunnable> aRunnable, uint32_t aFlags) override;
-
-  NS_IMETHOD
-  DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t) override;
-
-  NS_IMETHOD
-  IsOnCurrentThread(bool* aIsOnCurrentThread) override;
 };
 
 END_WORKERS_NAMESPACE

@@ -95,6 +95,8 @@ public:
 
     bool IsLinkUp();
 
+    static bool IsInheritSecurityContextForDataURIEnabled();
+
     // Used to trigger a recheck of the captive portal status
     nsresult RecheckCaptivePortal();
 private:
@@ -174,7 +176,7 @@ private:
 
     bool                                 mNetworkNotifyChanged;
 
-    static bool                          sTelemetryEnabled;
+    static bool                          sDataURIInheritSecurityContext;
 
     // These timestamps are needed for collecting telemetry on PR_Connect,
     // PR_ConnectContinue and PR_Close blocking time.  If we spend very long

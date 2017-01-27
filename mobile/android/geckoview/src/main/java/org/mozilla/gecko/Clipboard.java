@@ -7,28 +7,18 @@ package org.mozilla.gecko.util;
 import java.util.concurrent.SynchronousQueue;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.GeckoAppShell;
 
+import android.content.ClipboardManager;
 import android.content.ClipData;
 import android.content.Context;
 import android.util.Log;
 
 public final class Clipboard {
-    // Volatile but not synchronized: we don't care about the race condition in
-    // init, because both app contexts will be the same, but we do care about a
-    // thread having a stale null value of mContext.
-    volatile static Context mContext;
     private final static String LOGTAG = "GeckoClipboard";
     private final static SynchronousQueue<String> sClipboardQueue = new SynchronousQueue<String>();
 
     private Clipboard() {
-    }
-
-    public static void init(final Context c) {
-        if (mContext != null) {
-            Log.w(LOGTAG, "Clipboard.init() called twice!");
-            return;
-        }
-        mContext = c.getApplicationContext();
     }
 
     @WrapForJNI(calledFrom = "gecko")
@@ -65,7 +55,11 @@ public final class Clipboard {
             public void run() {
                 // In API Level 11 and above, CLIPBOARD_SERVICE returns android.content.ClipboardManager,
                 // which is a subclass of android.text.ClipboardManager.
-                final android.content.ClipboardManager cm = (android.content.ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+                final Context context = GeckoAppShell.getApplicationContext();
+                if (context == null) {
+                    return;
+                }
+                final ClipboardManager cm = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
                 final ClipData clip = ClipData.newPlainText("Text", text);
                 try {
                     cm.setPrimaryClip(clip);
@@ -84,7 +78,11 @@ public final class Clipboard {
      */
     @WrapForJNI(calledFrom = "gecko")
     public static boolean hasText() {
-        android.content.ClipboardManager cm = (android.content.ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+        final Context context = GeckoAppShell.getApplicationContext();
+        if (context == null) {
+            return false;
+        }
+        final ClipboardManager cm = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
         return cm.hasPrimaryClip();
     }
 
@@ -103,12 +101,16 @@ public final class Clipboard {
      */
     @SuppressWarnings("deprecation")
     static String getClipboardTextImpl() {
-        android.content.ClipboardManager cm = (android.content.ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+        final Context context = GeckoAppShell.getApplicationContext();
+        if (context == null) {
+            return null;
+        }
+        final ClipboardManager cm = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
         if (cm.hasPrimaryClip()) {
             ClipData clip = cm.getPrimaryClip();
             if (clip != null) {
                 ClipData.Item item = clip.getItemAt(0);
-                return item.coerceToText(mContext).toString();
+                return item.coerceToText(context).toString();
             }
         }
         return null;
