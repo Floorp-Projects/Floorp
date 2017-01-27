@@ -310,7 +310,7 @@ def HybridBackend(*backends):
                     files |= getattr(b, attr)
 
     name = '+'.join(itertools.chain(
-        (b.__name__.replace('Backend', '') for b in backends[:1]),
+        (b.__name__.replace('Backend', '') for b in backends[:-1]),
         (b.__name__ for b in backends[-1:])
     ))
 
