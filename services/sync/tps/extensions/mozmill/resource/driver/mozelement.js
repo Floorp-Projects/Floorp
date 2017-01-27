@@ -166,12 +166,8 @@ MozMillElement.prototype.dragToElement = function(aElement, aOffsetX, aOffsetY,
 
   var srcNode = this.element;
   var destNode = aElement.getNode();
-  var srcWindow = aSourceWindow ||
-                  (srcNode.ownerDocument ? srcNode.ownerDocument.defaultView
-                                         : srcNode);
-  var destWindow = aDestWindow ||
-                  (destNode.ownerDocument ? destNode.ownerDocument.defaultView
-                                          : destNode);
+  var srcWindow = aSourceWindow || srcNode.ownerGlobal || srcNode;
+  var destWindow = aDestWindow || destNode.ownerGlobal || destNode;
 
   var srcRect = srcNode.getBoundingClientRect();
   var srcCoords = {
@@ -288,8 +284,7 @@ MozMillElement.prototype.keypress = function (aKey, aModifiers, aExpectedEvent) 
     throw new Error("Could not find element " + this.getInfo());
   }
 
-  var win = this.element.ownerDocument ? this.element.ownerDocument.defaultView
-                                       : this.element;
+  var win = this.element.ownerGlobal || this.element;
   this.element.focus();
 
   if (aExpectedEvent) {
@@ -1121,8 +1116,7 @@ MozMillTextBox.prototype = Object.create(MozMillElement.prototype, {
 
       var element = this.element;
       Array.forEach(aText, function (letter) {
-        var win = element.ownerDocument ? element.ownerDocument.defaultView
-          : element;
+        var win = element.ownerGlobal || element;
         element.focus();
 
         if (aExpectedEvent) {
