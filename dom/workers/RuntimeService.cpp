@@ -309,6 +309,9 @@ LoadContextOptions(const char* aPrefName, void* /* aClosure */)
                 .setNativeRegExp(GetWorkerPref<bool>(NS_LITERAL_CSTRING("native_regexp")))
                 .setAsyncStack(GetWorkerPref<bool>(NS_LITERAL_CSTRING("asyncstack")))
                 .setWerror(GetWorkerPref<bool>(NS_LITERAL_CSTRING("werror")))
+#ifdef FUZZING
+                .setFuzzing(GetWorkerPref<bool>(NS_LITERAL_CSTRING("fuzzing.enabled")))
+#endif
                 .setExtraWarnings(GetWorkerPref<bool>(NS_LITERAL_CSTRING("strict")));
 
   RuntimeService::SetDefaultContextOptions(contextOptions);
