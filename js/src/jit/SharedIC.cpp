@@ -2288,44 +2288,6 @@ ICGetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<
     }
 }
 
-void
-GuardReceiverObject(MacroAssembler& masm, ReceiverGuard guard,
-                    Register object, Register scratch,
-                    size_t receiverGuardOffset, Label* failure)
-{
-    Address groupAddress(ICStubReg, receiverGuardOffset + HeapReceiverGuard::offsetOfGroup());
-    Address shapeAddress(ICStubReg, receiverGuardOffset + HeapReceiverGuard::offsetOfShape());
-    Address expandoAddress(object, UnboxedPlainObject::offsetOfExpando());
-
-    if (guard.group) {
-        masm.loadPtr(groupAddress, scratch);
-        masm.branchTestObjGroup(Assembler::NotEqual, object, scratch, failure);
-
-        if (guard.group->clasp() == &UnboxedPlainObject::class_ && !guard.shape) {
-            // Guard the unboxed object has no expando object.
-            masm.branchPtr(Assembler::NotEqual, expandoAddress, ImmWord(0), failure);
-        }
-    }
-
-    if (guard.shape) {
-        masm.loadPtr(shapeAddress, scratch);
-        if (guard.group && guard.group->clasp() == &UnboxedPlainObject::class_) {
-            // Guard the unboxed object has a matching expando object.
-            masm.branchPtr(Assembler::Equal, expandoAddress, ImmWord(0), failure);
-            Label done;
-            masm.push(object);
-            masm.loadPtr(expandoAddress, object);
-            masm.branchTestObjShape(Assembler::Equal, object, scratch, &done);
-            masm.pop(object);
-            masm.jump(failure);
-            masm.bind(&done);
-            masm.pop(object);
-        } else {
-            masm.branchTestObjShape(Assembler::NotEqual, object, scratch, failure);
-        }
-    }
-}
-
 bool
 GetProtoShapes(JSObject* obj, size_t protoChainDepth, MutableHandle<ShapeVector> shapes)
 {
