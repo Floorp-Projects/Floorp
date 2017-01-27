@@ -6,3 +6,6 @@
 
 
 DIRS += ['autoconfig']
+
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'AutoConfig (Mission Control Desktop)')
