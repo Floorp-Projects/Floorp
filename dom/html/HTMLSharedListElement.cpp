@@ -9,12 +9,12 @@
 #include "mozilla/dom/HTMLOListElementBinding.h"
 #include "mozilla/dom/HTMLUListElementBinding.h"
 
+#include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsMappedAttributes.h"
-#include "nsRuleData.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(SharedList)
 

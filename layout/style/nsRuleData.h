@@ -26,13 +26,11 @@ struct nsRuleData;
 
 typedef void (*nsPostResolveFunc)(void* aStyleStruct, nsRuleData* aData);
 
-struct nsRuleData final: GenericSpecifiedValues
+struct nsRuleData final: mozilla::GenericSpecifiedValues
 {
-  const uint32_t mSIDs;
   mozilla::RuleNodeCacheConditions mConditions;
   bool mIsImportantRule;
   mozilla::SheetType mLevel;
-  nsPresContext* const mPresContext;
   nsStyleContext* const mStyleContext;
 
   // We store nsCSSValues needed to compute the data for one or more
@@ -122,37 +120,29 @@ struct nsRuleData final: GenericSpecifiedValues
   #undef CSS_PROP_PUBLIC_OR_PRIVATE
 
   // GenericSpecifiedValues overrides
-  bool PropertyIsSet(nsCSSPropertyID aId) override {
+  bool PropertyIsSet(nsCSSPropertyID aId) {
     return ValueFor(aId)->GetUnit() != eCSSUnit_Null;
   }
 
-  bool ShouldComputeStyleStruct(uint64_t aInheritBits) override {
-    return mSIDs & aInheritBits;
-  }
-
-  nsPresContext* PresContext() override {
-    return mPresContext;
-  }
-
   void SetIdentStringValue(nsCSSPropertyID aId,
-                           const nsString& aValue) override {
+                           const nsString& aValue) {
     ValueFor(aId)->SetStringValue(aValue, eCSSUnit_Ident);
   }
 
   void SetIdentStringValueIfUnset(nsCSSPropertyID aId,
-                                const nsString& aValue) override {
+                                const nsString& aValue) {
     if (!PropertyIsSet(aId)) {
       SetIdentStringValue(aId, aValue);
     }
   }
 
   void SetKeywordValue(nsCSSPropertyID aId,
-                       int32_t aValue) override {
+                       int32_t aValue) {
     ValueFor(aId)->SetIntValue(aValue, eCSSUnit_Enumerated);
   }
 
   void SetKeywordValueIfUnset(nsCSSPropertyID aId,
-                              int32_t aValue) override {
+                              int32_t aValue) {
     if (!PropertyIsSet(aId)) {
       SetKeywordValue(aId, aValue);
     }
@@ -160,70 +150,70 @@ struct nsRuleData final: GenericSpecifiedValues
 
 
   void SetIntValue(nsCSSPropertyID aId,
-                   int32_t aValue) override {
+                   int32_t aValue) {
     ValueFor(aId)->SetIntValue(aValue, eCSSUnit_Integer);
   }
 
   void SetPixelValue(nsCSSPropertyID aId,
-                     float aValue) override {
+                     float aValue) {
     ValueFor(aId)->SetFloatValue(aValue, eCSSUnit_Pixel);
   }
 
   void SetPixelValueIfUnset(nsCSSPropertyID aId,
-                            float aValue) override {
+                            float aValue) {
     if (!PropertyIsSet(aId)) {
       SetPixelValue(aId, aValue);
     }
   }
 
   void SetPercentValue(nsCSSPropertyID aId,
-                       float aValue) override {
+                       float aValue) {
     ValueFor(aId)->SetPercentValue(aValue);
   }
 
-  void SetAutoValue(nsCSSPropertyID aId) override {
+  void SetAutoValue(nsCSSPropertyID aId) {
     ValueFor(aId)->SetAutoValue();
   }
 
-  void SetAutoValueIfUnset(nsCSSPropertyID aId) override {
+  void SetAutoValueIfUnset(nsCSSPropertyID aId) {
     if (!PropertyIsSet(aId)) {
       SetAutoValue(aId);
     }
   }
 
   void SetPercentValueIfUnset(nsCSSPropertyID aId,
-                              float aValue) override {
+                              float aValue) {
     if (!PropertyIsSet(aId)) {
       SetPercentValue(aId, aValue);
     }
   }
 
-  void SetCurrentColor(nsCSSPropertyID aId) override {
+  void SetCurrentColor(nsCSSPropertyID aId) {
     ValueFor(aId)->SetIntValue(NS_COLOR_CURRENTCOLOR, eCSSUnit_EnumColor);
   }
 
-  void SetCurrentColorIfUnset(nsCSSPropertyID aId) override {
+  void SetCurrentColorIfUnset(nsCSSPropertyID aId) {
     if (!PropertyIsSet(aId)) {
       SetCurrentColor(aId);
     }
   }
 
   void SetColorValue(nsCSSPropertyID aId,
-                     nscolor aValue) override {
+                     nscolor aValue) {
     ValueFor(aId)->SetColorValue(aValue);
   }
 
   void SetColorValueIfUnset(nsCSSPropertyID aId,
-                            nscolor aValue) override {
+                            nscolor aValue) {
     if (!PropertyIsSet(aId)) {
       SetColorValue(aId, aValue);
     }
   }
 
-  void SetFontFamily(const nsString& aValue) override;
-  void SetTextDecorationColorOverride() override;
+  void SetFontFamily(const nsString& aValue);
+  void SetTextDecorationColorOverride();
 
-  nsRuleData* AsRuleData() override {
+  nsRuleData* AsRuleData() {
     return this;
   }
 

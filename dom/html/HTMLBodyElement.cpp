@@ -6,6 +6,7 @@
 
 #include "HTMLBodyElement.h"
 #include "mozilla/dom/HTMLBodyElementBinding.h"
+#include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
@@ -15,7 +16,6 @@
 #include "nsHTMLStyleSheet.h"
 #include "nsIEditor.h"
 #include "nsMappedAttributes.h"
-#include "nsRuleData.h"
 #include "nsIDocShell.h"
 #include "nsRuleWalker.h"
 #include "nsGlobalWindow.h"

@@ -7,11 +7,11 @@
 #include "mozilla/dom/HTMLPreElement.h"
 #include "mozilla/dom/HTMLPreElementBinding.h"
 
+#include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsMappedAttributes.h"
-#include "nsRuleData.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Pre)
 

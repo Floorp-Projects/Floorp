@@ -10,6 +10,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Likely.h"
 
@@ -49,7 +50,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsError.h"
 #include "nsScriptLoader.h"
-#include "nsRuleData.h"
 #include "nsIPrincipal.h"
 #include "nsContainerFrame.h"
 #include "nsStyleUtil.h"
@@ -1530,7 +1530,7 @@ nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
     nsAttrValue* value =
       const_cast<nsAttrValue*>(aAttributes->GetAttr(nsGkAtoms::background));
     if (value) {
-      nsRuleData* aRuleData = aData->AsRuleData();
+      nsRuleData* aRuleData = aData->AsGecko();
       // Gecko-specific code
       // Gecko caches the image on the attr directly, but we need not
       // do the same thing for Servo.

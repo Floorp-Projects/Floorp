@@ -6,9 +6,9 @@
 
 #include "mozilla/dom/HTMLTableRowElement.h"
 #include "mozilla/dom/HTMLTableElement.h"
+#include "mozilla/GenericSpecifiedValuesInlines.h"
 #include "nsMappedAttributes.h"
 #include "nsAttrValueInlines.h"
-#include "nsRuleData.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/HTMLTableRowElementBinding.h"
 #include "nsContentList.h"
