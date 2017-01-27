@@ -1015,16 +1015,9 @@ function* loadBadCertPage(url) {
                              "cert-exception-ui-ready", false);
   });
 
-  // Sometimes clearing the cert override is not immediately picked up,
-  // so we reload until we are on an actual cert error page.
-  yield BrowserTestUtils.waitForCondition(function*() {
-    yield BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
-    yield promiseErrorPageLoaded(gBrowser.selectedBrowser);
-    let isErrorPage = yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
-      return content.document.documentURI.startsWith("about:certerror");
-    });
-    return isErrorPage;
-  }, "Could not load error page", 1000);
+  let loaded = BrowserTestUtils.waitForErrorPage(gBrowser.selectedBrowser);
+  yield BrowserTestUtils.loadURI(gBrowser.selectedBrowser, url);
+  yield loaded;
 
   yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
     content.document.getElementById("exceptionDialogButton").click();

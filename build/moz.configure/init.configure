@@ -417,6 +417,23 @@ def split_triplet(triplet):
     )
 
 
+# This defines a fake target/host namespace for when running with --help
+@depends('--help')
+def help_host_target(help):
+    if help:
+        return namespace(
+            alias='unknown-unknown-unknown',
+            cpu='unknown',
+            bitness='unknown',
+            kernel='unknown',
+            os='unknown',
+            endianness='unknown',
+            raw_cpu='unknown',
+            raw_os='unknown',
+            toolchain='unknown-unknown',
+        )
+
+
 @imports('subprocess')
 def config_sub(shell, triplet):
     config_sub = os.path.join(os.path.dirname(__file__), '..',
@@ -437,6 +454,8 @@ def host(value, shell):
 
     return split_triplet(config_sub(shell, host))
 
+host = help_host_target | host
+
 
 @depends('--target', host, shell)
 @checking('for target system type', lambda t: t.alias)
@@ -444,6 +463,8 @@ def target(value, host, shell):
     if not value:
         return host
     return split_triplet(config_sub(shell, value[0]))
+
+target = help_host_target | target
 
 
 @depends(host, target)

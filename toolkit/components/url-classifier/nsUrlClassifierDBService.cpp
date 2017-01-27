@@ -281,8 +281,12 @@ nsUrlClassifierDBServiceWorker::DoLookup(const nsACString& spec,
   nsAutoPtr<LookupResultArray> completes(new LookupResultArray());
 
   for (uint32_t i = 0; i < results->Length(); i++) {
-    if (!mMissCache.Contains(results->ElementAt(i).hash.fixedLengthPrefix)) {
-      completes->AppendElement(results->ElementAt(i));
+    const LookupResult& lookupResult = results->ElementAt(i);
+
+    // mMissCache should only be used in V2.
+    if (!lookupResult.mProtocolV2 ||
+        !mMissCache.Contains(lookupResult.hash.fixedLengthPrefix)) {
+      completes->AppendElement(lookupResult);
     }
   }
 
@@ -1141,6 +1145,7 @@ nsUrlClassifierLookupCallback::HandleResults()
     }
   }
 
+  // TODO: Bug 1333328, Refactor cache miss mechanism for v2.
   // Some parts of this gethash request generated no hits at all.
   // Prefixes must have been removed from the database since our last update.
   // Save the prefixes we checked to prevent repeated requests
@@ -1149,7 +1154,7 @@ nsUrlClassifierLookupCallback::HandleResults()
   if (cacheMisses) {
     for (uint32_t i = 0; i < mResults->Length(); i++) {
       LookupResult &result = mResults->ElementAt(i);
-      if (!result.Confirmed() && !result.mNoise) {
+      if (result.mProtocolV2 && !result.Confirmed() && !result.mNoise) {
         cacheMisses->AppendElement(result.hash.fixedLengthPrefix);
       }
     }

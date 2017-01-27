@@ -11,8 +11,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
-  EventManager,
   ExtensionError,
+  SingletonEventManager,
 } = ExtensionUtils;
 
 function enforceNoTemporaryAddon(extensionId) {
@@ -63,12 +63,12 @@ function storageApiFactory(context) {
         },
       },
 
-      onChanged: new EventManager(context, "storage.onChanged", fire => {
+      onChanged: new SingletonEventManager(context, "storage.onChanged", fire => {
         let listenerLocal = changes => {
-          fire(changes, "local");
+          fire.async(changes, "local");
         };
         let listenerSync = changes => {
-          fire(changes, "sync");
+          fire.async(changes, "sync");
         };
 
         ExtensionStorage.addOnChangedListener(extension.id, listenerLocal);

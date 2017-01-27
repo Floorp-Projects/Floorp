@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include GraphicsMessages;
+include MemoryReportTypes;
 include protocol PCompositorBridge;
 include protocol PImageBridge;
 include protocol PVRManager;
@@ -85,6 +86,11 @@ parent:
   // observer service.
   async NotifyGpuObservers(nsCString aTopic);
 
+  async RequestMemoryReport(uint32_t generation,
+                            bool anonymize,
+                            bool minimizeMemoryUsage,
+                            MaybeFileDesc DMDFile);
+
 child:
   // Sent when the GPU process has initialized devices. This occurs once, after
   // Init().
@@ -109,6 +115,9 @@ child:
   async UpdateChildKeyedScalars(KeyedScalarAction[] actions);
 
   async NotifyDeviceReset();
+
+  async AddMemoryReport(MemoryReport aReport);
+  async FinishMemoryReport(uint32_t aGeneration);
 };
 
 } // namespace gfx

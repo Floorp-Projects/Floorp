@@ -87,6 +87,12 @@ function Object_toLocaleString() {
     return callContentFunction(O.toString, O);
 }
 
+// ES 2017 draft bb96899bb0d9ef9be08164a26efae2ee5f25e875 19.1.3.7
+function Object_valueOf() {
+    // Step 1.
+    return ToObject(this);
+}
+
 // ES7 draft (2016 March 8) B.2.2.3
 function ObjectDefineSetter(name, setter) {
     // Step 1.

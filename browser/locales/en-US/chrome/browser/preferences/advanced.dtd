@@ -36,7 +36,7 @@
 <!ENTITY healthReportLearnMore.label     "Learn More">
 
 <!ENTITY telemetryDesc.label             "Shares performance, usage, hardware and customization data about your browser with &vendorShortName; to help us make &brandShortName; better">
-<!ENTITY enableTelemetryData.label       "Share additional data (i.e., Telemetry)">
+<!ENTITY enableTelemetryData.label       "Share Additional Data (i.e., Telemetry)">
 <!ENTITY enableTelemetryData.accesskey   "T">
 <!ENTITY telemetryLearnMore.label        "Learn More">
 
@@ -83,7 +83,7 @@
 
 <!ENTITY updateTab.label                 "Update">
 
-<!ENTITY updateApplication.label         "&brandShortName; updates">
+<!ENTITY updateApplication.label         "&brandShortName; Updates">
 <!ENTITY updateAuto1.label               "Automatically install updates (recommended: improved security)">
 <!ENTITY updateAuto1.accesskey           "A">
 <!ENTITY updateCheckChoose.label         "Check for updates, but let you choose whether to install them">
@@ -97,7 +97,7 @@
 <!ENTITY useService.label                "Use a background service to install updates">
 <!ENTITY useService.accesskey            "b">
 
-<!ENTITY autoUpdateOthers.label          "Automatically update">
+<!ENTITY autoUpdateOthers.label          "Automatically Update">
 <!ENTITY enableSearchUpdate.label        "Search Engines">
 <!ENTITY enableSearchUpdate.accesskey    "E">
 

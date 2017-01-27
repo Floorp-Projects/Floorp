@@ -1,2 +1,2 @@
-enableSPSProfiling();
+enableGeckoProfiling();
 Object.getOwnPropertyNames(this);

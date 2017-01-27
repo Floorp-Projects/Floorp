@@ -13,7 +13,7 @@
 <!ENTITY showURLBarSuggestions.accesskey       "l">
 <!ENTITY urlBarSuggestionsPermanentPB.label    "Search suggestions will not be shown in location bar results because you have configured &brandShortName; to never remember history.">
 
-<!ENTITY oneClickSearchEngines.label           "One-click search engines">
+<!ENTITY oneClickSearchEngines.label           "One-click Search Engines">
 
 <!ENTITY chooseWhichOneToDisplay.label         "The search bar lets you search alternate engines directly. Choose which ones to display.">
 

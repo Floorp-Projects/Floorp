@@ -37,8 +37,7 @@ public:
 class LayersIPCChannel : public LayersIPCActor
                        , public mozilla::ipc::IShmemAllocator {
 public:
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) = 0;
-  NS_IMETHOD_(MozExternalRefCountType) Release(void) = 0;
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   virtual bool IsSameProcess() const = 0;
 

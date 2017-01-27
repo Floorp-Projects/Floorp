@@ -4,7 +4,7 @@ var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
-  EventManager,
+  SingletonEventManager,
 } = ExtensionUtils;
 
 // WeakMap[Extension -> Map[name -> Alarm]]
@@ -140,9 +140,9 @@ extensions.registerSchemaAPI("alarms", "addon_parent", context => {
         return Promise.resolve(cleared);
       },
 
-      onAlarm: new EventManager(context, "alarms.onAlarm", fire => {
+      onAlarm: new SingletonEventManager(context, "alarms.onAlarm", fire => {
         let callback = alarm => {
-          fire(alarm.data);
+          fire.sync(alarm.data);
         };
 
         alarmCallbacksMap.get(extension).add(callback);

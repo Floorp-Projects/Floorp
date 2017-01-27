@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 [Constructor(DOMString type, optional ErrorEventInit eventInitDict),
- Exposed=(Window,System)]
+ Exposed=(Window,Worker,System)]
 interface ErrorEvent : Event
 {
   readonly attribute DOMString message;

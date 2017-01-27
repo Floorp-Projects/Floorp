@@ -554,6 +554,8 @@ function runTests() {
     testIsLockFree();
     testIsLockFree2();
     testWeirdIndices();
+
+    assertEq(Atomics[Symbol.toStringTag], "Atomics");
 }
 
 if (this.Atomics && this.SharedArrayBuffer)
