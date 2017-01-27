@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/mscom/EnsureMTA.h"
 #include "mozilla/mscom/ProxyStream.h"
 #include "mozilla/mscom/Utils.h"
@@ -74,13 +73,7 @@ ProxyStream::ProxyStream(const BYTE* aInitBuf, const int aInitBufSize)
 already_AddRefed<IStream>
 ProxyStream::InitStream(const BYTE* aInitBuf, const UINT aInitBufSize)
 {
-  // Need to link to this as ordinal 12 for Windows XP
-  static DynamicallyLinkedFunctionPtr<decltype(&::SHCreateMemStream)>
-    pSHCreateMemStream(L"shlwapi.dll", reinterpret_cast<const char*>(12));
-  if (!pSHCreateMemStream) {
-    return nullptr;
-  }
-  return already_AddRefed<IStream>(pSHCreateMemStream(aInitBuf, aInitBufSize));
+  return already_AddRefed<IStream>(::SHCreateMemStream(aInitBuf, aInitBufSize));
 }
 
 ProxyStream::ProxyStream(ProxyStream&& aOther)
