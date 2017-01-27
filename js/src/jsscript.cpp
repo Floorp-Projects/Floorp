@@ -3589,7 +3589,7 @@ JSScript::getOrCreateBreakpointSite(JSContext* cx, jsbytecode* pc)
     BreakpointSite*& site = debug->breakpoints[pcToOffset(pc)];
 
     if (!site) {
-        site = cx->runtime()->new_<BreakpointSite>(this, pc);
+        site = cx->runtime()->new_<JSBreakpointSite>(this, pc);
         if (!site) {
             ReportOutOfMemory(cx);
             return nullptr;
