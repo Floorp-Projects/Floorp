@@ -505,13 +505,13 @@ HTMLObjectElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLObjectElement::MapAttributesIntoRule(const nsMappedAttributes *aAttributes,
-                                         GenericSpecifiedValues *aGenericData)
+                                         GenericSpecifiedValues *aData)
 {
-  nsGenericHTMLFormElement::MapImageAlignAttributeInto(aAttributes, aGenericData);
-  nsGenericHTMLFormElement::MapImageBorderAttributeInto(aAttributes, aGenericData);
-  nsGenericHTMLFormElement::MapImageMarginAttributeInto(aAttributes, aGenericData);
-  nsGenericHTMLFormElement::MapImageSizeAttributesInto(aAttributes, aGenericData);
-  nsGenericHTMLFormElement::MapCommonAttributesInto(aAttributes, aGenericData);
+  nsGenericHTMLFormElement::MapImageAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLFormElement::MapImageBorderAttributeInto(aAttributes, aData);
+  nsGenericHTMLFormElement::MapImageMarginAttributeInto(aAttributes, aData);
+  nsGenericHTMLFormElement::MapImageSizeAttributesInto(aAttributes, aData);
+  nsGenericHTMLFormElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
 NS_IMETHODIMP_(bool)

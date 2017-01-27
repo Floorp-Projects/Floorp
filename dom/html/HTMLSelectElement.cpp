@@ -1412,11 +1412,10 @@ HTMLSelectElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLSelectElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                         GenericSpecifiedValues* aGenericData)
+                                         GenericSpecifiedValues* aData)
 {
-  nsRuleData* aData = aGenericData->AsRuleData();
-  nsGenericHTMLFormElementWithState::MapImageAlignAttributeInto(aAttributes, aGenericData);
-  nsGenericHTMLFormElementWithState::MapCommonAttributesInto(aAttributes, aGenericData);
+  nsGenericHTMLFormElementWithState::MapImageAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLFormElementWithState::MapCommonAttributesInto(aAttributes, aData);
 }
 
 nsChangeHint
