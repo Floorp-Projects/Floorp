@@ -135,13 +135,9 @@ from its prototype:
     which this script's code starts, within the file or document named by
     `url`.
 
-    **If the instance refers to WebAssembly code**, throw a `TypeError`.
-
 `lineCount`
 :   **If the instance refers to a `JSScript`**, the number of lines this
     script's code occupies, within the file or document named by `url`.
-
-    **If the instance refers to WebAssembly code**, throw a `TypeError`.
 
 `source`
 :   **If the instance refers to a `JSScript`**, the
@@ -267,8 +263,6 @@ methods of other kinds of objects.
     <i>line</i>. If the script contains no executable code at that line, the
     array returned is empty.
 
-    **If the instance refers to WebAssembly code**, throw a `TypeError`.
-
 <code>getOffsetLocation(<i>offset</i>)</code>
 :   **If the instance refers to a `JSScript`**, return an object describing the
     source code location responsible for the bytecode at <i>offset</i> in this
@@ -280,8 +274,6 @@ methods of other kinds of objects.
 
     * isEntryPoint: true if the offset is a column entry point, as
       would be reported by getAllColumnOffsets(); otherwise false.
-
-    **If the instance refers to WebAssembly code**, throw a `TypeError`.
 
 `getOffsetsCoverage()`:
 :   **If the instance refers to a `JSScript`**, return `null` or an array which

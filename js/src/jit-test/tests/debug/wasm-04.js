@@ -18,8 +18,6 @@ assertEq(s.format, "wasm");
 
 assertThrowsInstanceOf(() => s.displayName, Error);
 assertThrowsInstanceOf(() => s.url, Error);
-assertThrowsInstanceOf(() => s.startLine, Error);
-assertThrowsInstanceOf(() => s.lineCount, Error);
 assertThrowsInstanceOf(() => s.sourceStart, Error);
 assertThrowsInstanceOf(() => s.sourceLength, Error);
 assertThrowsInstanceOf(() => s.global, Error);
