@@ -865,6 +865,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mDirtyRect(-1,-1,-1,-1),
       mGlassDisplayItem(nullptr),
       mScrollInfoItemsForHoisting(nullptr),
+      mActiveScrolledRootForRootScrollframe(nullptr),
       mMode(aMode),
       mCurrentScrollParentId(FrameMetrics::NULL_SCROLL_ID),
       mCurrentScrollbarTarget(FrameMetrics::NULL_SCROLL_ID),
@@ -1842,7 +1843,12 @@ nsDisplayList::GetClippedBoundsWithRespectToASR(nsDisplayListBuilder* aBuilder,
     nsRect r = i->GetClippedBounds(aBuilder);
     if (aASR != i->GetActiveScrolledRoot() && !r.IsEmpty()) {
       const DisplayItemClip* clip = DisplayItemClipChain::ClipForASR(i->GetClipChain(), aASR);
-      MOZ_ASSERT(clip, "Need to be clipped wrt aASR. Do not call this function with an ASR that our child items don't have finite bounds wrt.");
+#ifdef DEBUG
+      if (!gfxPrefs::LayoutUseContainersForRootFrames()) {
+        MOZ_ASSERT(clip,
+                   "Need to be clipped wrt aASR. Do not call this function with an ASR that our child items don't have finite bounds wrt.");
+      }
+#endif
       if (clip) {
         r = clip->GetClipRect();
       }
@@ -1868,7 +1874,11 @@ nsDisplayList::ComputeVisibilityForRoot(nsDisplayListBuilder* aBuilder,
     js::ProfileEntry::Category::GRAPHICS);
 
   nsRegion r;
-  r.And(*aVisibleRegion, GetClippedBoundsWithRespectToASR(aBuilder, nullptr));
+  const ActiveScrolledRoot* rootASR = nullptr;
+  if (gfxPrefs::LayoutUseContainersForRootFrames()) {
+    rootASR = aBuilder->ActiveScrolledRootForRootScrollframe();
+  }
+  r.And(*aVisibleRegion, GetClippedBoundsWithRespectToASR(aBuilder, rootASR));
   return ComputeVisibilityForSublist(aBuilder, aVisibleRegion, r.GetBounds());
 }
 
