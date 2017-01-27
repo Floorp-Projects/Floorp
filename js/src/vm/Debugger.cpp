@@ -5088,60 +5088,6 @@ Debugger::endTraceLogger(JSContext* cx, unsigned argc, Value* vp)
 }
 
 bool
-Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (!args.requireAtLeast(cx, "Debugger.isCompilableUnit", 1))
-        return false;
-
-    if (!args[0].isString()) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                                  "Debugger.isCompilableUnit", "string",
-                                  InformalValueTypeName(args[0]));
-        return false;
-    }
-
-    JSString* str = args[0].toString();
-    size_t length = GetStringLength(str);
-
-    AutoStableStringChars chars(cx);
-    if (!chars.initTwoByte(cx, str))
-        return false;
-
-    bool result = true;
-
-    CompileOptions options(cx);
-    frontend::UsedNameTracker usedNames(cx);
-    if (!usedNames.init())
-        return false;
-    frontend::Parser<frontend::FullParseHandler> parser(cx, cx->tempLifoAlloc(),
-                                                        options, chars.twoByteChars(),
-                                                        length, /* foldConstants = */ true,
-                                                        usedNames, nullptr, nullptr);
-    JS::WarningReporter older = JS::SetWarningReporter(cx, nullptr);
-    if (!parser.checkOptions() || !parser.parse()) {
-        // We ran into an error. If it was because we ran out of memory we report
-        // it in the usual way.
-        if (cx->isThrowingOutOfMemory()) {
-            JS::SetWarningReporter(cx, older);
-            return false;
-        }
-
-        // If it was because we ran out of source, we return false so our caller
-        // knows to try to collect more [source].
-        if (parser.isUnexpectedEOF())
-            result = false;
-
-        cx->clearPendingException();
-    }
-    JS::SetWarningReporter(cx, older);
-    args.rval().setBoolean(result);
-    return true;
-}
-
-
-bool
 Debugger::drainTraceLoggerScriptCalls(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "drainTraceLoggerScriptCalls", args, dbg);
@@ -5224,6 +5170,59 @@ Debugger::drainTraceLoggerScriptCalls(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 #endif
+
+bool
+Debugger::isCompilableUnit(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!args.requireAtLeast(cx, "Debugger.isCompilableUnit", 1))
+        return false;
+
+    if (!args[0].isString()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
+                                  "Debugger.isCompilableUnit", "string",
+                                  InformalValueTypeName(args[0]));
+        return false;
+    }
+
+    JSString* str = args[0].toString();
+    size_t length = GetStringLength(str);
+
+    AutoStableStringChars chars(cx);
+    if (!chars.initTwoByte(cx, str))
+        return false;
+
+    bool result = true;
+
+    CompileOptions options(cx);
+    frontend::UsedNameTracker usedNames(cx);
+    if (!usedNames.init())
+        return false;
+    frontend::Parser<frontend::FullParseHandler> parser(cx, cx->tempLifoAlloc(),
+                                                        options, chars.twoByteChars(),
+                                                        length, /* foldConstants = */ true,
+                                                        usedNames, nullptr, nullptr);
+    JS::WarningReporter older = JS::SetWarningReporter(cx, nullptr);
+    if (!parser.checkOptions() || !parser.parse()) {
+        // We ran into an error. If it was because we ran out of memory we report
+        // it in the usual way.
+        if (cx->isThrowingOutOfMemory()) {
+            JS::SetWarningReporter(cx, older);
+            return false;
+        }
+
+        // If it was because we ran out of source, we return false so our caller
+        // knows to try to collect more [source].
+        if (parser.isUnexpectedEOF())
+            result = false;
+
+        cx->clearPendingException();
+    }
+    JS::SetWarningReporter(cx, older);
+    args.rval().setBoolean(result);
+    return true;
+}
 
 bool
 Debugger::adoptDebuggeeValue(JSContext* cx, unsigned argc, Value* vp)

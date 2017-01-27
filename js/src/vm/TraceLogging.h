@@ -103,7 +103,7 @@ class TraceLoggerEvent {
                       const JS::ReadOnlyCompileOptions& compileOptions) {}
     TraceLoggerEvent (TraceLoggerThread* logger, const char* text) {}
     TraceLoggerEvent(const TraceLoggerEvent& event) {}
-    TraceLoggerEvent& operator=(const TraceLoggerEvent& other) {};
+    TraceLoggerEvent& operator=(const TraceLoggerEvent& other) { return *this; };
     ~TraceLoggerEvent() {}
 #endif
 
