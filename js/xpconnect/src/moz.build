@@ -14,8 +14,6 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'ExportHelpers.cpp',
-    'nsScriptError.cpp',
-    'nsScriptErrorWithStack.cpp',
     'nsXPConnect.cpp',
     'Sandbox.cpp',
     'XPCCallContext.cpp',
@@ -58,6 +56,7 @@ LOCAL_INCLUDES += [
     '../wrappers',
     '/caps',
     '/dom/base',
+    '/dom/bindings',
     '/dom/html',
     '/dom/svg',
     '/dom/workers',
