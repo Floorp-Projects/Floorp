@@ -90,6 +90,16 @@
 #include "mozilla/SandboxInfo.h"
 #endif
 
+#if defined(XP_LINUX)
+#include <sys/prctl.h>
+#ifndef PR_SET_PTRACER
+#define PR_SET_PTRACER 0x59616d61
+#endif
+#ifndef PR_SET_PTRACER_ANY
+#define PR_SET_PTRACER_ANY ((unsigned long)-1)
+#endif
+#endif
+
 #ifdef MOZ_IPDL_TESTS
 #include "mozilla/_ipdltest/IPDLUnitTests.h"
 #include "mozilla/_ipdltest/IPDLUnitTestProcessChild.h"
@@ -515,6 +525,11 @@ XRE_InitChildProcess(int aArgc,
 #ifdef OS_POSIX
   if (PR_GetEnv("MOZ_DEBUG_CHILD_PROCESS") ||
       PR_GetEnv("MOZ_DEBUG_CHILD_PAUSE")) {
+#if defined(XP_LINUX) && defined(DEBUG)
+    if (prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY, 0, 0, 0) != 0) {
+      printf_stderr("Could not allow ptrace from any process.\n");
+    }
+#endif
     printf_stderr("\n\nCHILDCHILDCHILDCHILD\n  debug me @ %d\n\n",
                   base::GetCurrentProcId());
     sleep(30);
