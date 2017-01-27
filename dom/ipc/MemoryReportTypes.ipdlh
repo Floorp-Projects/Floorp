@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+
 namespace mozilla {
 namespace dom {
 
@@ -14,6 +16,11 @@ struct MemoryReport {
   int64_t amount;
   uint32_t generation;
   nsCString desc;
+};
+
+union MaybeFileDesc {
+    FileDescriptor;
+    void_t;
 };
 
 }
