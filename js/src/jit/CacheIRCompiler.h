@@ -44,6 +44,7 @@ namespace jit {
     _(LoadArgumentsObjectArgResult)       \
     _(LoadDenseElementResult)             \
     _(LoadDenseElementHoleResult)         \
+    _(LoadDenseElementExistsResult)       \
     _(LoadUnboxedArrayElementResult)      \
     _(LoadTypedElementResult)
 

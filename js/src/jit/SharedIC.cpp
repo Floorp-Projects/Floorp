@@ -346,11 +346,6 @@ ICStub::trace(JSTracer* trc)
         }
         break;
       }
-      case ICStub::In_Dense: {
-        ICIn_Dense* inStub = toIn_Dense();
-        TraceEdge(trc, &inStub->shape(), "baseline-in-dense-shape");
-        break;
-      }
       case ICStub::GetIntrinsic_Constant: {
         ICGetIntrinsic_Constant* constantStub = toGetIntrinsic_Constant();
         TraceEdge(trc, &constantStub->value(), "baseline-getintrinsic-constant-value");

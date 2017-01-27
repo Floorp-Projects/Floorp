@@ -790,14 +790,6 @@ TypedThingRequiresFloatingPoint(JSObject* obj)
 }
 
 static bool
-IsNativeDenseElementAccess(HandleObject obj, HandleValue key)
-{
-    if (obj->isNative() && key.isInt32() && key.toInt32() >= 0 && !obj->is<TypedArrayObject>())
-        return true;
-    return false;
-}
-
-static bool
 IsNativeOrUnboxedDenseElementAccess(HandleObject obj, HandleValue key)
 {
     if (!obj->isNative() && !obj->is<UnboxedArrayObject>())
@@ -1971,26 +1963,6 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler& masm)
 //
 
 static bool
-TryAttachDenseInStub(JSContext* cx, HandleScript outerScript, ICIn_Fallback* stub,
-                     HandleValue key, HandleObject obj, bool* attached)
-{
-    MOZ_ASSERT(!*attached);
-
-    if (!IsNativeDenseElementAccess(obj, key))
-        return true;
-
-    JitSpew(JitSpew_BaselineIC, "  Generating In(Native[Int32] dense) stub");
-    ICIn_Dense::Compiler compiler(cx, obj->as<NativeObject>().lastProperty());
-    ICStub* denseStub = compiler.getStub(compiler.getStubSpace(outerScript));
-    if (!denseStub)
-        return false;
-
-    *attached = true;
-    stub->addNewStub(denseStub);
-    return true;
-}
-
-static bool
 TryAttachNativeInStub(JSContext* cx, HandleScript outerScript, ICIn_Fallback* stub,
                       HandleValue key, HandleObject obj, bool* attached)
 {
@@ -2114,10 +2086,6 @@ DoInFallback(JSContext* cx, BaselineFrame* frame, ICIn_Fallback* stub_,
         RootedScript script(cx, frame->script());
         bool attached = false;
         if (cond) {
-            if (!TryAttachDenseInStub(cx, script, stub, key, obj, &attached))
-                return false;
-            if (attached)
-                return true;
             if (!TryAttachNativeInStub(cx, script, stub, key, obj, &attached))
                 return false;
             if (attached)
@@ -2289,47 +2257,6 @@ ICInNativeDoesNotExistCompiler::generateStubCode(MacroAssembler& masm)
 
     masm.bind(&failurePopR0Scratch);
     masm.pop(R0.scratchReg());
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
-}
-
-bool
-ICIn_Dense::Compiler::generateStubCode(MacroAssembler& masm)
-{
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
-    Label failure;
-
-    masm.branchTestInt32(Assembler::NotEqual, R0, &failure);
-    masm.branchTestObject(Assembler::NotEqual, R1, &failure);
-
-    AllocatableGeneralRegisterSet regs(availableGeneralRegs(2));
-    Register scratch = regs.takeAny();
-
-    // Unbox and shape guard object.
-    Register obj = masm.extractObject(R1, ExtractTemp0);
-    masm.loadPtr(Address(ICStubReg, ICIn_Dense::offsetOfShape()), scratch);
-    masm.branchTestObjShape(Assembler::NotEqual, obj, scratch, &failure);
-
-    // Load obj->elements.
-    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
-
-    // Unbox key and bounds check.
-    Address initLength(scratch, ObjectElements::offsetOfInitializedLength());
-    Register key = masm.extractInt32(R0, ExtractTemp0);
-    masm.branch32(Assembler::BelowOrEqual, initLength, key, &failure);
-
-    // Hole check.
-    JS_STATIC_ASSERT(sizeof(Value) == 8);
-    BaseIndex element(scratch, key, TimesEight);
-    masm.branchTestMagic(Assembler::Equal, element, &failure);
-
-    masm.moveValue(BooleanValue(true), R0);
-
-    EmitReturnFromIC(masm);
-
-    // Failure case - jump to next stub
     masm.bind(&failure);
     EmitStubGuardFailure(masm);
     return true;
@@ -5686,11 +5613,6 @@ ICInNativeDoesNotExistCompiler::ICInNativeDoesNotExistCompiler(
 {
     MOZ_ASSERT(protoChainDepth_ <= ICIn_NativeDoesNotExist::MAX_PROTO_CHAIN_DEPTH);
 }
-
-ICIn_Dense::ICIn_Dense(JitCode* stubCode, HandleShape shape)
-  : ICStub(In_Dense, stubCode),
-    shape_(shape)
-{ }
 
 
 ICGetIntrinsic_Constant::ICGetIntrinsic_Constant(JitCode* stubCode, const Value& value)
