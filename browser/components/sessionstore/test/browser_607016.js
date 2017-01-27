@@ -11,12 +11,12 @@ add_task(function* () {
   Services.prefs.setBoolPref("browser.sessionstore.restore_on_demand", true);
 
   let state = { windows: [{ tabs: [
-    { entries: [{ url: "http://example.org#1" }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.org#2" }], extData: { "uniq": r() } }, // overwriting
-    { entries: [{ url: "http://example.org#3" }], extData: { "uniq": r() } }, // hiding
-    { entries: [{ url: "http://example.org#4" }], extData: { "uniq": r() } }, // adding
-    { entries: [{ url: "http://example.org#5" }], extData: { "uniq": r() } }, // deleting
-    { entries: [{ url: "http://example.org#6" }] } // creating
+    { entries: [{ url: "http://example.org#1", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+    { entries: [{ url: "http://example.org#2", triggeringPrincipal_base64 }], extData: { "uniq": r() } }, // overwriting
+    { entries: [{ url: "http://example.org#3", triggeringPrincipal_base64 }], extData: { "uniq": r() } }, // hiding
+    { entries: [{ url: "http://example.org#4", triggeringPrincipal_base64 }], extData: { "uniq": r() } }, // adding
+    { entries: [{ url: "http://example.org#5", triggeringPrincipal_base64 }], extData: { "uniq": r() } }, // deleting
+    { entries: [{ url: "http://example.org#6", triggeringPrincipal_base64 }] } // creating
   ], selected: 1 }] };
 
   function* progressCallback() {

@@ -11,114 +11,117 @@ const COOKIE =
   value: "yes1",
   path: "/browser/browser/components/sessionstore/test/"
 };
-const SESSION_DATA = `
+const SESSION_DATA = JSON.stringify(
 {
-  "version": ["sessionrestore", 1],
-  "windows": [{
-    "tabs": [{
-      "entries": [],
-      "lastAccessed": 1463893009797,
-      "hidden": false,
-      "attributes": {},
-      "image": null
+  version: ["sessionrestore", 1],
+  windows: [{
+    tabs: [{
+      entries: [],
+      lastAccessed: 1463893009797,
+      hidden: false,
+      attributes: {},
+      image: null
     }, {
-      "entries": [{
-        "url": "http://www.example.com/browser/browser/components/sessionstore/test/browser_1267910_page.html",
-        \"charset": "UTF-8",
-        "ID": 0,
-        "docshellID": 2,
-        "originalURI": "http://www.example.com/browser/browser/components/sessionstore/test/browser_1267910_page.html",
-        \"docIdentifier": 0,
-        "persist": true
+      entries: [{
+        url: "http://www.example.com/browser/browser/components/sessionstore/test/browser_1267910_page.html",
+        triggeringPrincipal_base64: triggeringPrincipal_base64,
+        charset: "UTF-8",
+        ID: 0,
+        docshellID: 2,
+        originalURI: "http://www.example.com/browser/browser/components/sessionstore/test/browser_1267910_page.html",
+        docIdentifier: 0,
+        persist: true
       }],
-      "lastAccessed": 1463893009321,
-      "hidden": false,
-      "attributes": {},
-      "userContextId": 0,
-      "index": 1,
-      "image": "http://www.example.com/favicon.ico"
+      lastAccessed: 1463893009321,
+      hidden: false,
+      attributes: {},
+      userContextId: 0,
+      index: 1,
+      image: "http://www.example.com/favicon.ico"
     }],
-    "selected": 1,
-    "_closedTabs": [],
-    "busy": false,
-    "width": 1024,
-    "height": 768,
-    "screenX": 4,
-    "screenY": 23,
-    "sizemode": "normal",
-    "cookies": [{
-      "host": "www.example.com",
-      "value": "yes1",
-      "path": "/browser/browser/components/sessionstore/test/",
-      "name": "test1"
+    selected: 1,
+    _closedTabs: [],
+    busy: false,
+    width: 1024,
+    height: 768,
+    screenX: 4,
+    screenY: 23,
+    sizemode: "normal",
+    cookies: [{
+      host: "www.example.com",
+      value: "yes1",
+      path: "/browser/browser/components/sessionstore/test/",
+      name: "test1"
     }]
   }],
-  "selectedWindow": 1,
-  "_closedWindows": [],
-  "session": {
-    "lastUpdate": 1463893009801,
-    "startTime": 1463893007134,
-    "recentCrashes": 0
+  selectedWindow: 1,
+  _closedWindows: [],
+  session: {
+    lastUpdate: 1463893009801,
+    startTime: 1463893007134,
+    recentCrashes: 0
   },
-  "global": {}
-}`;
-const SESSION_DATA_OA = `
+  global: {}
+});
+
+const SESSION_DATA_OA = JSON.stringify(
 {
-  "version": ["sessionrestore", 1],
-  "windows": [{
-    "tabs": [{
-      "entries": [],
-      "lastAccessed": 1463893009797,
-      "hidden": false,
-      "attributes": {},
-      "image": null
+  version: ["sessionrestore", 1],
+  windows: [{
+    tabs: [{
+      entries: [],
+      lastAccessed: 1463893009797,
+      hidden: false,
+      attributes: {},
+      image: null
     }, {
-      "entries": [{
-        "url": "http://www.example.com/browser/browser/components/sessionstore/test/browser_1267910_page.html",
-        \"charset": "UTF-8",
-        "ID": 0,
-        "docshellID": 2,
-        "originalURI": "http://www.example.com/browser/browser/components/sessionstore/test/browser_1267910_page.html",
-        \"docIdentifier": 0,
-        "persist": true
+      entries: [{
+        url: "http://www.example.com/browser/browser/components/sessionstore/test/browser_1267910_page.html",
+        triggeringPrincipal_base64: triggeringPrincipal_base64,
+        charset: "UTF-8",
+        ID: 0,
+        docshellID: 2,
+        originalURI: "http://www.example.com/browser/browser/components/sessionstore/test/browser_1267910_page.html",
+        docIdentifier: 0,
+        persist: true
       }],
-      "lastAccessed": 1463893009321,
-      "hidden": false,
-      "attributes": {},
-      "userContextId": 0,
-      "index": 1,
-      "image": "http://www.example.com/favicon.ico"
+      lastAccessed: 1463893009321,
+      hidden: false,
+      attributes: {},
+      userContextId: 0,
+      index: 1,
+      image: "http://www.example.com/favicon.ico"
     }],
-    "selected": 1,
-    "_closedTabs": [],
-    "busy": false,
-    "width": 1024,
-    "height": 768,
-    "screenX": 4,
-    "screenY": 23,
-    "sizemode": "normal",
-    "cookies": [{
-      "host": "www.example.com",
-      "value": "yes1",
-      "path": "/browser/browser/components/sessionstore/test/",
-      "name": "test1",
-      "originAttributes": {
-        "addonId": "",
-        "appId": 0,
-        "inIsolatedMozBrowser": false,
-        "userContextId": 0
+    selected: 1,
+    _closedTabs: [],
+    busy: false,
+    width: 1024,
+    height: 768,
+    screenX: 4,
+    screenY: 23,
+    sizemode: "normal",
+    cookies: [{
+      host: "www.example.com",
+      value: "yes1",
+      path: "/browser/browser/components/sessionstore/test/",
+      name: "test1",
+      originAttributes: {
+        addonId: "",
+        appId: 0,
+        inIsolatedMozBrowser: false,
+        userContextId: 0
       }
     }]
   }],
-  "selectedWindow": 1,
-  "_closedWindows": [],
-  "session": {
-    "lastUpdate": 1463893009801,
-    "startTime": 1463893007134,
-    "recentCrashes": 0
+  selectedWindow: 1,
+  _closedWindows: [],
+  session: {
+    lastUpdate: 1463893009801,
+    startTime: 1463893007134,
+    recentCrashes: 0
   },
-  "global": {}
-}`;
+  global: {}
+});
 
 add_task(function* run_test() {
   // Wait until initialization is complete.

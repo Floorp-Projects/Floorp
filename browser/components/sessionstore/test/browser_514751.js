@@ -11,7 +11,7 @@ function test() {
     windows: [{
       tabs: [{
         entries: [
-          { url: "about:mozilla", title: "Mozilla" },
+          { url: "about:mozilla", triggeringPrincipal_base64, title: "Mozilla" },
           {}
         ]
       }]

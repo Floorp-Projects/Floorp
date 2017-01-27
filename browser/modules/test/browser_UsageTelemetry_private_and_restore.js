@@ -1,5 +1,8 @@
 "use strict";
 
+const {Utils} = Cu.import("resource://gre/modules/sessionstore/Utils.jsm", {});
+const triggeringPrincipal_base64 = Utils.SERIALIZED_SYSTEMPRINCIPAL;
+
 const MAX_CONCURRENT_TABS = "browser.engagement.max_concurrent_tab_count";
 const TAB_EVENT_COUNT = "browser.engagement.tab_open_event_count";
 const MAX_CONCURRENT_WINDOWS = "browser.engagement.max_concurrent_window_count";
@@ -57,7 +60,8 @@ add_task(function* test_sessionRestore() {
     windows: [
       {
         tabs: [
-          { entries: [{ url: "http://example.org" }], extData: { "uniq": 3785 } }
+          { entries: [{ url: "http://example.org", triggeringPrincipal_base64}],
+            extData: { "uniq": 3785 } }
         ],
         selected: 1
       }

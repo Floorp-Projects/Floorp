@@ -44,7 +44,7 @@ add_task(function* test() {
 
   // Make sure we're backwards compatible and restore old 'image' attributes.
   let state = {
-    entries: [{url: "about:mozilla"}],
+    entries: [{url: "about:mozilla", triggeringPrincipal_base64 }],
     attributes: {custom: "foobaz"},
     image: gBrowser.getIcon(tab)
   };

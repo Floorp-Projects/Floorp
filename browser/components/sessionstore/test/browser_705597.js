@@ -2,7 +2,10 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 var tabState = {
-  entries: [{url: "about:robots", children: [{url: "about:mozilla"}]}]
+  entries: [{
+    url: "about:robots",
+    triggeringPrincipal_base64,
+    children: [{url: "about:mozilla", triggeringPrincipal_base64}]}]
 };
 
 function test() {
@@ -33,7 +36,8 @@ function test() {
           ok(!entries[0].children, "history entry has no subframes");
 
           // Make sure that we reset the state.
-          let blankState = { windows: [{ tabs: [{ entries: [{ url: "about:blank" }] }]}]};
+          let blankState = { windows: [{ tabs: [{ entries: [{ url: "about:blank",
+                                                              triggeringPrincipal_base64}] }]}]};
           waitForBrowserState(blankState, finish);
         });
 

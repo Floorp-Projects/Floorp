@@ -6,8 +6,8 @@ const stateBackup = ss.getBrowserState();
 const testState = {
   windows: [{
     tabs: [
-      { entries: [{ url: "about:blank" }] },
-      { entries: [{ url: "about:mozilla" }] }
+      { entries: [{ url: "about:blank", triggeringPrincipal_base64 }] },
+      { entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }] }
     ]
   }]
 };
@@ -55,7 +55,7 @@ function test_setup() {
 
   gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored);
   ss.setTabState(gBrowser.tabs[1], JSON.stringify({
-    entries: [{ url: "http://example.org" }],
+    entries: [{ url: "http://example.org", triggeringPrincipal_base64 }],
     extData: { foo: "bar" } }));
 }
 

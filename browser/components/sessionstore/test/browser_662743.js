@@ -63,7 +63,7 @@ function testTabRestoreData(aFormData, aExpectedValue, aCallback) {
   let tab = gBrowser.addTab(testURL);
 
   aFormData.url = testURL;
-  let tabState = { entries: [{ url: testURL, }], formdata: aFormData };
+  let tabState = { entries: [{ url: testURL, triggeringPrincipal_base64 }], formdata: aFormData };
 
   promiseBrowserLoaded(tab.linkedBrowser).then(() => {
     promiseTabState(tab, tabState).then(() => {

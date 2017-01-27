@@ -10,13 +10,13 @@ function test() {
 
   const REMEMBER = Date.now(), FORGET = Math.random();
   let test_state = {
-    windows: [ { tabs: [{ entries: [{ url: "http://example.com/" }] }], selected: 1 } ],
+    windows: [ { tabs: [{ entries: [{ url: "http://example.com/", triggeringPrincipal_base64 }] }], selected: 1 } ],
     _closedWindows : [
       // _closedWindows[0]
       {
         tabs: [
-          { entries: [{ url: "http://example.com/", title: "title" }] },
-          { entries: [{ url: "http://mozilla.org/", title: "title" }] }
+          { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: "title" }] },
+          { entries: [{ url: "http://mozilla.org/", triggeringPrincipal_base64, title: "title" }] }
         ],
         selected: 2,
         title: FORGET,
@@ -25,9 +25,9 @@ function test() {
       // _closedWindows[1]
       {
         tabs: [
-         { entries: [{ url: "http://mozilla.org/", title: "title" }] },
-         { entries: [{ url: "http://example.com/", title: "title" }] },
-         { entries: [{ url: "http://mozilla.org/", title: "title" }] },
+         { entries: [{ url: "http://mozilla.org/", triggeringPrincipal_base64, title: "title" }] },
+         { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: "title" }] },
+         { entries: [{ url: "http://mozilla.org/", triggeringPrincipal_base64, title: "title" }] },
         ],
         selected: 3,
         title: REMEMBER,
@@ -36,7 +36,7 @@ function test() {
       // _closedWindows[2]
       {
         tabs: [
-          { entries: [{ url: "http://example.com/", title: "title" }] }
+          { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: "title" }] }
         ],
         selected: 1,
         title: FORGET,
@@ -44,8 +44,8 @@ function test() {
           {
             state: {
               entries: [
-                { url: "http://mozilla.org/", title: "title" },
-                { url: "http://mozilla.org/again", title: "title" }
+                { url: "http://mozilla.org/", triggeringPrincipal_base64, title: "title" },
+                { url: "http://mozilla.org/again", triggeringPrincipal_base64, title: "title" }
               ]
             },
             pos: 1,
@@ -54,7 +54,7 @@ function test() {
           {
             state: {
               entries: [
-                { url: "http://example.com", title: "title" }
+                { url: "http://example.com", triggeringPrincipal_base64, title: "title" }
               ]
             },
             title: "title"
