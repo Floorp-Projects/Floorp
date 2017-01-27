@@ -113,7 +113,6 @@ browser.jar:
   skin/classic/browser/sync-horizontalbar.png
   skin/classic/browser/sync-horizontalbar@2x.png
   skin/classic/browser/sync-mobileIcon.svg  (../shared/sync-mobileIcon.svg)
-  skin/classic/browser/sync-notification-24.png
   skin/classic/browser/syncSetup.css
   skin/classic/browser/syncCommon.css
   skin/classic/browser/syncQuota.css
