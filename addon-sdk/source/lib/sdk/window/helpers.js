@@ -71,10 +71,9 @@ function promise(target, evt, capture) {
   let deferred = defer();
   capture = !!capture;
 
-  target.addEventListener(evt, function eventHandler() {
-    target.removeEventListener(evt, eventHandler, capture);
+  target.addEventListener(evt, function() {
     deferred.resolve(target);
-  }, capture);
+  }, {capture, once: true});
 
   return deferred.promise;
 }
