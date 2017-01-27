@@ -284,6 +284,7 @@ struct WrExternalImageIdHandler
 #endif
 
 // Structs defined in Rust, but opaque to C++ code.
+struct WrRenderedEpochs;
 struct WrWindowState;
 struct WrRenderer;
 struct WrState;
@@ -309,6 +310,17 @@ WR_FUNC;
 WR_INLINE void
 wr_renderer_delete(WrRenderer* renderer)
 WR_DESTRUCTOR_SAFE_FUNC;
+
+WR_INLINE WrRenderedEpochs*
+wr_renderer_flush_rendered_epochs(WrRenderer* renderer) WR_FUNC;
+
+WR_INLINE bool
+wr_rendered_epochs_next(WrRenderedEpochs* pipeline_epochs,
+                        WrPipelineId* out_pipeline,
+                        WrEpoch* out_epoch) WR_FUNC;
+
+WR_INLINE void
+wr_rendered_epochs_delete(WrRenderedEpochs* pipeline_epochs) WR_DESTRUCTOR_SAFE_FUNC;
 
 WR_INLINE void
 wr_gl_init(void* aGLContext)

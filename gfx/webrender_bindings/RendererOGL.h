@@ -43,7 +43,7 @@ public:
   void Update();
 
   /// This can be called on the render thread only.
-  bool Render(uint64_t aTransactionId);
+  bool Render();
 
   /// This can be called on the render thread only.
   bool RenderToTarget(gfx::DrawTarget& aTarget);
@@ -61,6 +61,10 @@ public:
               wr::WindowId aWindowId,
               WrRenderer* aWrRenderer,
               layers::CompositorBridgeParentBase* aBridge);
+
+  layers::CompositorBridgeParentBase* GetCompositorBridge() { return mBridge; }
+
+  WrRenderedEpochs* FlushRenderedEpochs();
 
 protected:
 

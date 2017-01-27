@@ -100,7 +100,8 @@ pub unsafe extern fn wr_renderer_delete(renderer: *mut Renderer) {
 
 #[no_mangle]
 pub unsafe extern fn wr_api_delete(api: *mut RenderApi) {
-    Box::from_raw(api);
+    api.shut_down();
+    let api = Box::from_raw(api);
 }
 
 #[no_mangle]
@@ -223,6 +224,30 @@ pub extern fn wr_dp_end(state: &mut WrState, api: &mut RenderApi, epoch: u32) {
                               LayoutSize::new(width as f32, height as f32),
                               fb.dl_builder);
     api.generate_frame();
+}
+
+#[no_mangle]
+pub unsafe extern fn wr_renderer_flush_rendered_epochs(renderer: &mut Renderer) -> *mut Vec<(PipelineId, Epoch)> {
+    let map = renderer.flush_rendered_epochs();
+    let pipeline_epochs = Box::new(map.into_iter().collect());
+    return Box::into_raw(pipeline_epochs);
+}
+
+#[no_mangle]
+pub unsafe extern fn wr_rendered_epochs_next(pipeline_epochs: &mut Vec<(PipelineId, Epoch)>,
+                                         out_pipeline: &mut u64,
+                                         out_epoch: &mut u32) -> bool {
+    if let Some((pipeline, epoch)) = pipeline_epochs.pop() {
+        *out_pipeline = mem::transmute(pipeline);
+        *out_epoch = mem::transmute(epoch);
+        return true;
+    }
+    return false;
+}
+
+#[no_mangle]
+pub unsafe extern fn wr_rendered_epochs_delete(pipeline_epochs: *mut Vec<(PipelineId, Epoch)>) {
+    Box::from_raw(pipeline_epochs);
 }
 
 
