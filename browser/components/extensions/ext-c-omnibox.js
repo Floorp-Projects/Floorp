@@ -5,6 +5,7 @@
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
+  runSafeSyncWithoutClone,
   SingletonEventManager,
 } = ExtensionUtils;
 
@@ -13,7 +14,7 @@ extensions.registerSchemaAPI("omnibox", "addon_child", context => {
     omnibox: {
       onInputChanged: new SingletonEventManager(context, "omnibox.onInputChanged", fire => {
         let listener = (text, id) => {
-          fire.asyncWithoutClone(text, suggestions => {
+          runSafeSyncWithoutClone(fire, text, suggestions => {
             // TODO: Switch to using callParentFunctionNoReturn once bug 1314903 is fixed.
             context.childManager.callParentAsyncFunction("omnibox_internal.addSuggestions", [
               id,
