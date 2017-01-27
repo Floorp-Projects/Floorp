@@ -1023,8 +1023,12 @@ ContentChild::AllocPMemoryReportRequestChild(const uint32_t& aGeneration,
                                              const bool &aMinimizeMemoryUsage,
                                              const MaybeFileDesc& aDMDFile)
 {
+  nsCString process;
+  GetProcessName(process);
+  AppendProcessId(process);
+
   auto *actor =
-    new MemoryReportRequestChild(aAnonymize, aDMDFile);
+    new MemoryReportRequestChild(aAnonymize, aDMDFile, process);
   actor->AddRef();
   return actor;
 }

@@ -41,7 +41,8 @@ public:
   NS_DECL_ISUPPORTS
 
   MemoryReportRequestChild(bool aAnonymize,
-                           const MaybeFileDesc& aDMDFile);
+                           const MaybeFileDesc& aDMDFile,
+                           const nsACString& aProcessString);
   NS_IMETHOD Run() override;
 
 private:
@@ -49,6 +50,7 @@ private:
 
   bool     mAnonymize;
   FileDescriptor mDMDFile;
+  nsCString mProcessString;
 };
 
 } // namespace dom
