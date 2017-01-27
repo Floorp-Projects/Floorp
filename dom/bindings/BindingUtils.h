@@ -2998,6 +2998,9 @@ bool
 GenericBindingGetter(JSContext* cx, unsigned argc, JS::Value* vp);
 
 bool
+GenericPromiseReturningBindingGetter(JSContext* cx, unsigned argc, JS::Value* vp);
+
+bool
 GenericBindingSetter(JSContext* cx, unsigned argc, JS::Value* vp);
 
 bool
