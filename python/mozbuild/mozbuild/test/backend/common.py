@@ -105,6 +105,15 @@ CONFIGS = defaultdict(lambda: {
             'HOST_BIN_SUFFIX': '.exe',
         },
     },
+    'test-support-binaries-tracked': {
+        'defines': {},
+        'non_global_defines': [],
+        'substs': {
+            'COMPILE_ENVIRONMENT': '1',
+            'LIB_SUFFIX': 'dll',
+            'BIN_SUFFIX': '.exe',
+        },
+    },
     'sources': {
         'defines': {},
         'non_global_defines': [],
