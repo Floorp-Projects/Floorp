@@ -268,7 +268,7 @@ WebRenderBridgeParent::HandleDPEnd(InfallibleTArray<WebRenderCommand>&& aCommand
   // to early-return from RecvDPEnd without doing so.
   AutoWebRenderBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
 
-  ProcessWebrenderCommands(aCommands);
+  ProcessWebrenderCommands(aCommands, wr::Epoch(aTransactionId));
 
   // The transaction ID might get reset to 1 if the page gets reloaded, see
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1145295#c41
@@ -298,7 +298,7 @@ WebRenderBridgeParent::RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& aComma
 }
 
 void
-WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderCommand>& aCommands)
+WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderCommand>& aCommands, const wr::Epoch& aEpoch)
 {
   MOZ_ASSERT(mBuilder.isSome());
   wr::DisplayListBuilder& builder = mBuilder.ref();
@@ -440,9 +440,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
     }
   }
   if (MOZ_USE_RENDER_THREAD) {
-    static uint32_t sTodoReplaceMeWithATransactionId = 0;
-    auto epoch = wr::Epoch(++sTodoReplaceMeWithATransactionId);
-    builder.End(*mApi, epoch);
+    builder.End(*mApi, aEpoch);
   } else {
     wr_window_dp_end(mWRWindowState, mBuilder.ref().Raw());
   }
@@ -728,6 +726,8 @@ WebRenderBridgeParent::ClearResources()
     mCompositorScheduler->Destroy();
     mCompositorScheduler = nullptr;
   }
+
+  mApi = nullptr;
   mGLContext = nullptr;
   mCompositorBridge = nullptr;
 }
