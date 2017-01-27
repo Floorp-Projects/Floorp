@@ -55,8 +55,8 @@ DirectMediaStreamTrackListener::NotifyRealtimeTrackDataAndApplyTrackDisabling(Me
   }
 
   DisabledTrackMode mode = mDisabledBlackCount > 0
-                         ? DisabledTrackMode::SILENCE_BLACK
-                         : DisabledTrackMode::SILENCE_FREEZE;
+                           ? DisabledTrackMode::SILENCE_BLACK
+                           : DisabledTrackMode::SILENCE_FREEZE;
   if (!mMedia) {
     mMedia = aMedia.CreateEmptyClone();
   }
