@@ -4269,14 +4269,12 @@ NS_IMETHODIMP
 EditorBase::CreateTxnForAddStyleSheet(StyleSheet* aSheet,
                                       AddStyleSheetTransaction** aTransaction)
 {
-  RefPtr<AddStyleSheetTransaction> transaction = new AddStyleSheetTransaction();
+  RefPtr<AddStyleSheetTransaction> transaction =
+    new AddStyleSheetTransaction(*this, aSheet);
 
-  nsresult rv = transaction->Init(this, aSheet);
-  if (NS_SUCCEEDED(rv)) {
-    transaction.forget(aTransaction);
-  }
+  transaction.forget(aTransaction);
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -4285,14 +4283,11 @@ EditorBase::CreateTxnForRemoveStyleSheet(
               RemoveStyleSheetTransaction** aTransaction)
 {
   RefPtr<RemoveStyleSheetTransaction> transaction =
-    new RemoveStyleSheetTransaction();
+    new RemoveStyleSheetTransaction(*this, aSheet);
 
-  nsresult rv = transaction->Init(this, aSheet);
-  if (NS_SUCCEEDED(rv)) {
-    transaction.forget(aTransaction);
-  }
+  transaction.forget(aTransaction);
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
