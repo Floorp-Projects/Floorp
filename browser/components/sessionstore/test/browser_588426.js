@@ -3,8 +3,8 @@
 
 function test() {
   let state = { windows: [{ tabs: [
-      {entries: [{url: "about:mozilla"}], hidden: true},
-      {entries: [{url: "about:rights"}], hidden: true}
+      {entries: [{url: "about:mozilla", triggeringPrincipal_base64}], hidden: true},
+      {entries: [{url: "about:rights", triggeringPrincipal_base64}], hidden: true}
   ] }] };
 
   waitForExplicitFinish();
