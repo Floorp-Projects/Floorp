@@ -209,6 +209,14 @@ TraceLoggerThread::fail(JSContext* cx, const char* error)
     return false;
 }
 
+void
+TraceLoggerThread::silentFail(const char* error)
+{
+    traceLoggerState->maybeSpewError(error);
+    failed = true;
+    enabled_ = 0;
+}
+
 bool
 TraceLoggerThread::enable(JSContext* cx)
 {

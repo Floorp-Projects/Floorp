@@ -9859,6 +9859,8 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
                                                ImmPtr(logger),
                                                ImmPtr(nullptr));
         }
+    } else {
+        TraceLoggerSilentFail(logger, "OOM when trying to patch ion log events.");
     }
 #endif
 
