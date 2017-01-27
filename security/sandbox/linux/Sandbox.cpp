@@ -30,7 +30,6 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#include <vector>
 #include "mozilla/Atomics.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/SandboxInfo.h"
@@ -635,7 +634,7 @@ SandboxEarlyInit(GeckoProcessType aType)
  * Will normally make the process exit on failure.
 */
 bool
-SetContentProcessSandbox(int aBrokerFd, std::vector<int>& aSyscallWhitelist)
+SetContentProcessSandbox(int aBrokerFd)
 {
   if (!SandboxInfo::Get().Test(SandboxInfo::kEnabledForContent)) {
     if (aBrokerFd >= 0) {
@@ -650,8 +649,7 @@ SetContentProcessSandbox(int aBrokerFd, std::vector<int>& aSyscallWhitelist)
     sBroker.emplace(aBrokerFd);
   }
 
-  SetCurrentProcessSandbox(GetContentSandboxPolicy(sBroker.ptrOr(nullptr),
-                                                   aSyscallWhitelist));
+  SetCurrentProcessSandbox(GetContentSandboxPolicy(sBroker.ptrOr(nullptr)));
   return true;
 }
 #endif // MOZ_CONTENT_SANDBOX

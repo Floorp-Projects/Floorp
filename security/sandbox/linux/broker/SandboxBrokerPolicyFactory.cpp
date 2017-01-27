@@ -6,7 +6,6 @@
 
 #include "SandboxBrokerPolicyFactory.h"
 #include "SandboxInfo.h"
-#include "SandboxLogging.h"
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
@@ -68,7 +67,7 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   // Graphics devices are a significant source of attack surface, but
   // there's not much we can do about it without proxying (which is
   // very difficult and a perforamnce hit).
-  policy->AddFilePrefix(rdwr, "/dev", "kgsl");  // bug 995072
+  policy->AddPrefix(rdwr, "/dev", "kgsl");  // bug 995072
   policy->AddPath(rdwr, "/dev/qemu_pipe"); // but 1198410: goldfish gralloc.
 
   // Bug 1198475: mochitest logs.  (This is actually passed in via URL
@@ -139,9 +138,9 @@ SandboxBrokerPolicyFactory::SandboxBrokerPolicyFactory()
   }
 
   // Bug 1308851: NVIDIA proprietary driver when using WebGL
-  policy->AddFilePrefix(rdwr, "/dev", "nvidia");
+  policy->AddPrefix(rdwr, "/dev", "nvidia");
 
-  // Bug 1312678: radeonsi/Intel with DRI when using WebGL
+    // Bug 1312678: radeonsi/Intel with DRI when using WebGL
   policy->AddDir(rdwr, "/dev/dri");
 
 #ifdef MOZ_ALSA
@@ -191,20 +190,6 @@ SandboxBrokerPolicyFactory::GetContentPolicy(int aPid)
 #else
   UniquePtr<SandboxBroker::Policy>
     policy(new SandboxBroker::Policy(*mCommonContentPolicy));
-
-  // Now read any extra paths, this requires accessing user preferences
-  // so we can only do it now. Our constructor is initialized before
-  // user preferences are read in.
-  nsAdoptingCString extraPathString =
-    Preferences::GetCString("security.sandbox.content.write_path_whitelist");
-  if (extraPathString) {
-    for (const nsCSubstring& path : extraPathString.Split(',')) {
-      nsCString trimPath(path);
-      trimPath.Trim(" ", true, true);
-      policy->AddDynamic(rdwr, trimPath.get());
-    }
-  }
-
   // Return the common policy.
   return policy;
 #endif
