@@ -458,13 +458,23 @@ var gPopupBlockerObserver = {
   _reportButton: null,
 
   onReportButtonMousedown(aEvent) {
-    // If this method is called on the same event tick as the popup gets
-    // hidden, do nothing to avoid re-opening the popup.
+    // The button is part of the textbox that is considered the popup's anchor,
+    // thus consumeoutsideclicks="false" is ignored. Moreover On OS X the popup
+    // is hidden well before mousedown gets dispatched.
+    // Thus, if the popup is open and the user clicks on the button, it gets
+    // hidden before mousedown, and may then be unexpectedly reopened by click.
+    // To avoid this, we check if mousedown is in the same tick as popupHidden,
+    // and, in such a case, we don't handle the click event.
+    // Note we can't just openPopup in mousedown, cause this popup is shared by
+    // multiple anchors, and we could end up opening it just before the other
+    // anchor tries to hide it.
     if (aEvent.button != 0 || aEvent.target != this._reportButton || this.isPopupHidingTick)
       return;
 
-    document.getElementById("blockedPopupOptions")
-            .openPopup(this._reportButton, "after_end", 0, 2, false, false, aEvent);
+    this._reportButton.addEventListener("click", event => {
+      document.getElementById("blockedPopupOptions")
+              .openPopup(event.target, "after_end", 0, 2, false, false, event);
+    }, { once: true });
   },
 
   handleEvent(aEvent) {
@@ -649,11 +659,12 @@ var gPopupBlockerObserver = {
   },
 
   onPopupHiding(aEvent) {
-    if (aEvent.target.anchorNode.id == "page-report-button")
+    if (aEvent.target.anchorNode.id == "page-report-button") {
       aEvent.target.anchorNode.removeAttribute("open");
 
-    this.isPopupHidingTick = true;
-    setTimeout(() => this.isPopupHidingTick = false, 0);
+      this.isPopupHidingTick = true;
+      setTimeout(() => this.isPopupHidingTick = false, 0);
+    }
 
     let item = aEvent.target.lastChild;
     while (item && item.getAttribute("observes") != "blockedPopupsSeparator") {
