@@ -7,6 +7,7 @@
 #define DISPLAYLISTCLIPSTATE_H_
 
 #include "DisplayItemClip.h"
+#include "DisplayItemClipChain.h"
 #include "DisplayItemScrollClip.h"
 
 #include "mozilla/DebugOnly.h"
