@@ -1,9 +1,0 @@
-include protocol content;
-
-sync protocol compositor {
-    bridges compositor, content;
-
-child:
-    async __delete__();
-
-};
