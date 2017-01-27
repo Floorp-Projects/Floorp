@@ -387,7 +387,7 @@ SessionStore.prototype = {
   },
 
   handleEvent: function ss_handleEvent(aEvent) {
-    let window = aEvent.currentTarget.ownerDocument.defaultView;
+    let window = aEvent.currentTarget.ownerGlobal;
     switch (aEvent.type) {
       case "TabOpen": {
         let browser = aEvent.target;

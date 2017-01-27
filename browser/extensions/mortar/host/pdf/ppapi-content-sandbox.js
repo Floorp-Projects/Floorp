@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                              "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 let mm = pluginElement.frameLoader.messageManager;
-let containerWindow = pluginElement.ownerDocument.defaultView;
+let containerWindow = pluginElement.ownerGlobal;
 // Prevent the drag event's default action on the element, to avoid dragging of
 // that element while the user selects text.
 pluginElement.addEventListener("dragstart",

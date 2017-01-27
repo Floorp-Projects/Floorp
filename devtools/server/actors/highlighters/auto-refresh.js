@@ -192,7 +192,7 @@ AutoRefreshHighlighter.prototype = {
   },
 
   _startRefreshLoop: function () {
-    let win = this.currentNode.ownerDocument.defaultView;
+    let win = this.currentNode.ownerGlobal;
     this.rafID = win.requestAnimationFrame(this._startRefreshLoop.bind(this));
     this.rafWin = win;
     this.update();

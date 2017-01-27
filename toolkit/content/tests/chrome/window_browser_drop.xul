@@ -72,7 +72,7 @@ function* expectLink(browser, expectedLinks, data, testid, onbody=false) {
 
   function dropOnBrowserSync() {
     let dropEl = onbody ? browser.contentDocument.body : browser;
-    synthesizeDrop(dropEl, dropEl, data, "", dropEl.ownerDocument.defaultView);
+    synthesizeDrop(dropEl, dropEl, data, "", dropEl.ownerGlobal);
   }
   let links;
   if (browser.isRemoteBrowser) {

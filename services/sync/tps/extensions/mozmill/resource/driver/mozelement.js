@@ -378,10 +378,10 @@ MozMillElement.prototype.mouseEvent = function (aOffsetX, aOffsetY, aEvent, aExp
     EventUtils.synthesizeMouseExpectEvent(this.element, aOffsetX, aOffsetY, aEvent,
                                           target, aExpectedEvent.type,
                                           "MozMillElement.mouseEvent()",
-                                          this.element.ownerDocument.defaultView);
+                                          this.element.ownerGlobal);
   } else {
     EventUtils.synthesizeMouse(this.element, aOffsetX, aOffsetY, aEvent,
-                               this.element.ownerDocument.defaultView);
+                               this.element.ownerGlobal);
   }
 
   // Bug 555347
@@ -569,7 +569,7 @@ MozMillElement.prototype.touchEvent = function (aOffsetX, aOffsetY, aEvent) {
   }
 
   EventUtils.synthesizeTouch(this.element, aOffsetX, aOffsetY, aEvent,
-                             this.element.ownerDocument.defaultView);
+                             this.element.ownerGlobal);
 
   return true;
 };

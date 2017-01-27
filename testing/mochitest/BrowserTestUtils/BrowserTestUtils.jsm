@@ -75,9 +75,9 @@ this.BrowserTestUtils = {
       }
     }
     let tab = yield BrowserTestUtils.openNewForegroundTab(options.gBrowser, options.url);
-    let originalWindow = tab.ownerDocument.defaultView;
+    let originalWindow = tab.ownerGlobal;
     let result = yield taskFn(tab.linkedBrowser);
-    let finalWindow = tab.ownerDocument.defaultView;
+    let finalWindow = tab.ownerGlobal;
     if (originalWindow == finalWindow && !tab.closing && tab.linkedBrowser) {
       yield BrowserTestUtils.removeTab(tab);
     } else {
@@ -192,7 +192,7 @@ this.BrowserTestUtils = {
     }
 
     return new Promise(resolve => {
-      let mm = browser.ownerDocument.defaultView.messageManager;
+      let mm = browser.ownerGlobal.messageManager;
       mm.addMessageListener("browser-test-utils:loadEvent", function onLoad(msg) {
         if (msg.target == browser && (!msg.data.subframe || includeSubFrames) &&
             isWanted(msg.data.url)) {
@@ -390,7 +390,7 @@ this.BrowserTestUtils = {
     browser.loadURI(uri);
 
     // Nothing to do in non-e10s mode.
-    if (!browser.ownerDocument.defaultView.gMultiProcessBrowser) {
+    if (!browser.ownerGlobal.gMultiProcessBrowser) {
       return;
     }
 
@@ -690,7 +690,7 @@ this.BrowserTestUtils = {
     let waitForLoad = () =>
       this.waitForContentEvent(browser, "AboutNetErrorLoad", false, null, true);
 
-    let win = browser.ownerDocument.defaultView;
+    let win = browser.ownerGlobal;
     let tab = win.gBrowser.getTabForBrowser(browser);
     if (!tab || browser.isRemoteBrowser || !win.gMultiProcessBrowser) {
       return waitForLoad();
@@ -820,7 +820,7 @@ this.BrowserTestUtils = {
       }, true);
 
       if (!dontRemove && !tab.closing) {
-        tab.ownerDocument.defaultView.gBrowser.removeTab(tab);
+        tab.ownerGlobal.gBrowser.removeTab(tab);
       }
     });
   },
@@ -979,7 +979,7 @@ this.BrowserTestUtils = {
     yield Promise.all(expectedPromises);
 
     if (shouldShowTabCrashPage) {
-      let gBrowser = browser.ownerDocument.defaultView.gBrowser;
+      let gBrowser = browser.ownerGlobal.gBrowser;
       let tab = gBrowser.getTabForBrowser(browser);
       if (tab.getAttribute("crashed") != "true") {
         throw new Error("Tab should be marked as crashed");
@@ -1002,7 +1002,7 @@ this.BrowserTestUtils = {
    * @returns {Promise}
    */
   waitForAttribute(attr, element, value) {
-    let MutationObserver = element.ownerDocument.defaultView.MutationObserver;
+    let MutationObserver = element.ownerGlobal.MutationObserver;
     return new Promise(resolve => {
       let mut = new MutationObserver(mutations => {
         if ((!value && element.getAttribute(attr)) ||

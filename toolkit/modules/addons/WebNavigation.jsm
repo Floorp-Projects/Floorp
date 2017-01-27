@@ -266,7 +266,7 @@ var Manager = {
   onContentClick(target, data) {
     // We are interested only on clicks to links which are not "add to bookmark" commands
     if (data.href && !data.bookmark) {
-      let ownerWin = target.ownerDocument.defaultView;
+      let ownerWin = target.ownerGlobal;
       let where = ownerWin.whereToOpenLink(data);
       if (where == "current") {
         this.setRecentTabTransitionData({link: true});

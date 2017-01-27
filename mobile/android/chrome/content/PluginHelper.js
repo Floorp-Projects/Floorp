@@ -177,7 +177,7 @@ var PluginHelper = {
           if (!e.isTrusted)
             return;
           e.preventDefault();
-          let win = e.target.ownerDocument.defaultView.top;
+          let win = e.target.ownerGlobal.top;
           let tab = BrowserApp.getTabForWindow(win);
           tab.clickToPlayPluginsActivated = true;
           PluginHelper.playAllPlugins(win);

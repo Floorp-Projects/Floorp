@@ -20,7 +20,7 @@ var URLBarZoom = {
 }
 
 function updateZoomButton(aSubject, aTopic) {
-  let win = aSubject.ownerDocument.defaultView;
+  let win = aSubject.ownerGlobal;
   let customizableZoomControls = win.document.getElementById("zoom-controls");
   let zoomResetButton = win.document.getElementById("urlbar-zoom-button");
   let zoomFactor = Math.round(win.ZoomManager.zoom * 100);

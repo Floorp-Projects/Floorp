@@ -48,7 +48,7 @@ SimpleOutlineHighlighter.prototype = {
     if (isNodeValid(node) && (!this.currentNode || node !== this.currentNode)) {
       this.hide();
       this.currentNode = node;
-      installHelperSheet(node.ownerDocument.defaultView, SIMPLE_OUTLINE_SHEET);
+      installHelperSheet(node.ownerGlobal, SIMPLE_OUTLINE_SHEET);
       addPseudoClassLock(node, HIGHLIGHTED_PSEUDO_CLASS);
     }
     return true;

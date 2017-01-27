@@ -344,7 +344,7 @@ LoginManagerPrompter.prototype = {
     var chromeWin = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIWebNavigation)
       .QueryInterface(Ci.nsIDocShell)
-      .chromeEventHandler.ownerDocument.defaultView;
+      .chromeEventHandler.ownerGlobal;
     return chromeWin;
   },
 
