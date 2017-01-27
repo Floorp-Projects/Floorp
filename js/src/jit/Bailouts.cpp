@@ -62,7 +62,7 @@ jit::Bailout(BailoutStack* sp, BaselineBailoutInfo** bailoutInfo)
     if (retval != BAILOUT_RETURN_OK) {
         JSScript* script = iter.script();
         probes::ExitScript(cx, script, script->functionNonDelazifying(),
-                           /* popSPSFrame = */ false);
+                           /* popProfilerFrame = */ false);
     }
 
     // This condition was wrong when we entered this bailout function, but it
@@ -136,18 +136,18 @@ jit::InvalidationBailout(InvalidationBailoutStack* sp, size_t* frameSizeOut,
     if (retval != BAILOUT_RETURN_OK) {
         // If the bailout failed, then bailout trampoline will pop the
         // current frame and jump straight to exception handling code when
-        // this function returns.  Any SPS entry pushed for this frame will
-        // be silently forgotten.
+        // this function returns.  Any Gecko Profiler entry pushed for this
+        // frame will be silently forgotten.
         //
-        // We call ExitScript here to ensure that if the ionScript had SPS
-        // instrumentation, then the SPS entry for it is popped.
+        // We call ExitScript here to ensure that if the ionScript had Gecko
+        // Profiler instrumentation, then the entry for it is popped.
         //
         // However, if the bailout was during argument check, then a
         // pseudostack frame would not have been pushed in the first
         // place, so don't pop anything in that case.
         JSScript* script = iter.script();
         probes::ExitScript(cx, script, script->functionNonDelazifying(),
-                           /* popSPSFrame = */ false);
+                           /* popProfilerFrame = */ false);
 
 #ifdef JS_JITSPEW
         JitFrameLayout* frame = iter.jsFrame();

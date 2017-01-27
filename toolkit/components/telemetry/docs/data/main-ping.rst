@@ -86,12 +86,22 @@ are not monotonic like calculations based on ``Date.now()``.
 
 If the monotonic clock failed, this will be ``-1``.
 
+Note that this currently does not behave consistently over our supported platforms:
+
+* On Windows this uses ``GetTickCount64()``, which does increase over sleep periods
+* On OS X this uses ``mach_absolute_time()``, which does not increase over sleep periods
+* On POSIX/Linux this uses ``clock_gettime(CLOCK_MONOTONIC, &ts)``, which should not increase over sleep time
+
+See `bug 1204823 <https://bugzilla.mozilla.org/show_bug.cgi?id=1204823>`_ for details.
+
 subsessionLength
 ~~~~~~~~~~~~~~~~
 The length of this subsession in seconds.
-This uses a monotonic clock, so this may mismatch with other measurements that are not monotonic (e.g. based on Date.now()).
+This uses a monotonic clock, so this may mismatch with other measurements that are not monotonic (e.g. based on ``Date.now()`).
 
 If ``sessionLength`` is ``-1``, the monotonic clock is not working.
+
+Also see the remarks for ``sessionLength`` on platform consistency.
 
 processes
 ---------

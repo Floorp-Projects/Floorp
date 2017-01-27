@@ -4,9 +4,9 @@ setJitCompilerOption("ion.warmup.trigger", 20);
 (function() {
    var n = 50;
    while (n--) {
-       enableSPSProfilingWithSlowAssertions();
+       enableGeckoProfilingWithSlowAssertions();
        if (!n)
 	   return;
-       disableSPSProfiling();
+       disableGeckoProfiling();
    }
 })();

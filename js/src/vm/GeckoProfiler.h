@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_SPSProfiler_h
-#define vm_SPSProfiler_h
+#ifndef vm_GeckoProfiler_h
+#define vm_GeckoProfiler_h
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/GuardObjects.h"
@@ -19,36 +19,37 @@
 #include "vm/MutexIDs.h"
 
 /*
- * SPS Profiler integration with the JS Engine
+ * Gecko Profiler integration with the JS Engine
  * https://developer.mozilla.org/en/Performance/Profiling_with_the_Built-in_Profiler
  *
- * The SPS profiler (found in tools/profiler) is an implementation of a profiler
- * which has the ability to walk the C++ stack as well as use instrumentation to
- * gather information. When dealing with JS, however, SPS needs integration
- * with the engine because otherwise it is very difficult to figure out what
- * javascript is executing.
+ * The Gecko Profiler (found in tools/profiler) is an implementation of a
+ * profiler which has the ability to walk the C++ stack as well as use
+ * instrumentation to gather information. When dealing with JS, however, the
+ * profiler needs integration with the engine because otherwise it is very
+ * difficult to figure out what javascript is executing.
  *
- * The current method of integration with SPS is a form of instrumentation:
- * every time a JS function is entered, a bit of information is pushed onto a
- * stack that SPS owns and maintains. This information is then popped at the end
- * of the JS function. SPS informs the JS engine of this stack at runtime, and
- * it can by turned on/off dynamically.
+ * The current method of integration with the profiler is a form of
+ * instrumentation: every time a JS function is entered, a bit of information
+ * is pushed onto a stack that the profiler owns and maintains. This
+ * information is then popped at the end of the JS function. The profiler
+ * informs the JS engine of this stack at runtime, and it can by turned on/off
+ * dynamically.
  *
- * The SPS stack has three parameters: a base pointer, a size, and a maximum
- * size. The stack is the ProfileEntry stack which will have information written
- * to it. The size location is a pointer to an integer which represents the
- * current size of the stack (number of valid frames). This size will be
- * modified when JS functions are called. The maximum specified is the maximum
- * capacity of the ProfileEntry stack.
+ * The profiler stack has three parameters: a base pointer, a size, and a
+ * maximum size. The stack is the ProfileEntry stack which will have
+ * information written to it. The size location is a pointer to an integer
+ * which represents the current size of the stack (number of valid frames).
+ * This size will be modified when JS functions are called. The maximum
+ * specified is the maximum capacity of the ProfileEntry stack.
  *
  * Throughout execution, the size of the stack recorded in memory may exceed the
  * maximum. The JS engine will not write any information past the maximum limit,
- * but it will still maintain the size of the stack. SPS code is aware of this
- * and iterates the stack accordingly.
+ * but it will still maintain the size of the stack. Profiler code is aware of
+ * this and iterates the stack accordingly.
  *
- * There is some information pushed on the SPS stack for every JS function that
- * is entered. First is a char* pointer of a description of what function was
- * entered. Currently this string is of the form "function (file:line)" if
+ * There is some information pushed on the profiler stack for every JS function
+ * that is entered. First is a char* pointer of a description of what function
+ * was entered. Currently this string is of the form "function (file:line)" if
  * there's a function name, or just "file:line" if there's no function name
  * available. The other bit of information is the relevant C++ (native) stack
  * pointer. This stack pointer is what enables the interleaving of the C++ and
@@ -64,10 +65,10 @@
  * JSScript* pair. A JSScript will destroy its corresponding profile string when
  * the script is finalized.
  *
- * For this reason, a char* pointer pushed on the SPS stack is valid only while
- * it is on the SPS stack. SPS uses sampling to read off information from this
- * instrumented stack, and it therefore copies the string byte for byte when a
- * JS function is encountered during sampling.
+ * For this reason, a char* pointer pushed on the profiler stack is valid only
+ * while it is on the profiler stack. The profiler uses sampling to read off
+ * information from this instrumented stack, and it therefore copies the string
+ * byte for byte when a JS function is encountered during sampling.
  *
  * = Native Stack Pointer
  *
@@ -79,10 +80,11 @@
  *
  * To alleviate this problem, all JS functions push nullptr as their "native
  * stack pointer" to indicate that it's a JS function call. The function
- * RunScript(), however, pushes an actual C++ stack pointer onto the SPS stack.
- * This way when interleaving C++ and JS, if SPS sees a nullptr native stack
- * pointer on the SPS stack, it looks backwards for the first non-nullptr
- * pointer and uses that for all subsequent nullptr native stack pointers.
+ * RunScript(), however, pushes an actual C++ stack pointer onto the profiler
+ * stack. This way when interleaving C++ and JS, if the Gecko Profiler sees a
+ * nullptr native stack pointer on the profiler stack, it looks backwards for
+ * the first non-nullptr pointer and uses that for all subsequent nullptr
+ * native stack pointers.
  *
  * = Line Numbers
  *
@@ -109,21 +111,21 @@ namespace js {
 
 // The `ProfileStringMap` weakly holds its `JSScript*` keys and owns its string
 // values. Entries are removed when the `JSScript` is finalized; see
-// `SPSProfiler::onScriptFinalized`.
+// `GeckoProfiler::onScriptFinalized`.
 using ProfileStringMap = HashMap<JSScript*,
                                  UniqueChars,
                                  DefaultHasher<JSScript*>,
                                  SystemAllocPolicy>;
 
-class AutoSPSEntry;
-class SPSEntryMarker;
-class SPSBaselineOSRMarker;
+class AutoGeckoProfilerEntry;
+class GeckoProfilerEntryMarker;
+class GeckoProfilerBaselineOSRMarker;
 
-class SPSProfiler
+class GeckoProfiler
 {
-    friend class AutoSPSEntry;
-    friend class SPSEntryMarker;
-    friend class SPSBaselineOSRMarker;
+    friend class AutoGeckoProfilerEntry;
+    friend class GeckoProfilerEntryMarker;
+    friend class GeckoProfilerBaselineOSRMarker;
 
     JSRuntime*           rt;
     ExclusiveData<ProfileStringMap> strings;
@@ -140,7 +142,7 @@ class SPSProfiler
     void pop();
 
   public:
-    explicit SPSProfiler(JSRuntime* rt);
+    explicit GeckoProfiler(JSRuntime* rt);
 
     bool init();
 
@@ -234,13 +236,13 @@ class MOZ_RAII AutoSuppressProfilerSampling
 };
 
 inline size_t
-SPSProfiler::stringsCount()
+GeckoProfiler::stringsCount()
 {
     return strings.lock()->count();
 }
 
 inline void
-SPSProfiler::stringsReset()
+GeckoProfiler::stringsReset()
 {
     strings.lock()->clear();
 }
@@ -250,35 +252,35 @@ SPSProfiler::stringsReset()
  * that we're about to enter JS function calls. This is the only time in which a
  * valid stack pointer is pushed to the sampling stack.
  */
-class MOZ_RAII SPSEntryMarker
+class MOZ_RAII GeckoProfilerEntryMarker
 {
   public:
-    explicit SPSEntryMarker(JSRuntime* rt,
-                            JSScript* script
-                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~SPSEntryMarker();
+    explicit GeckoProfilerEntryMarker(JSRuntime* rt,
+                                      JSScript* script
+                                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~GeckoProfilerEntryMarker();
 
   private:
-    SPSProfiler* profiler;
+    GeckoProfiler* profiler;
     mozilla::DebugOnly<uint32_t> size_before;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /*
- * RAII class to automatically add SPS psuedo frame entries.
+ * RAII class to automatically add Gecko Profiler pseudo frame entries.
  *
  * NB: The `label` string must be statically allocated.
  */
-class MOZ_NONHEAP_CLASS AutoSPSEntry
+class MOZ_NONHEAP_CLASS AutoGeckoProfilerEntry
 {
   public:
-    explicit AutoSPSEntry(JSRuntime* rt, const char* label,
-                          ProfileEntry::Category category = ProfileEntry::Category::JS
-                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~AutoSPSEntry();
+    explicit AutoGeckoProfilerEntry(JSRuntime* rt, const char* label,
+                                    ProfileEntry::Category category = ProfileEntry::Category::JS
+                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~AutoGeckoProfilerEntry();
 
   private:
-    SPSProfiler* profiler_;
+    GeckoProfiler* profiler_;
     mozilla::DebugOnly<uint32_t> sizeBefore_;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
@@ -288,23 +290,22 @@ class MOZ_NONHEAP_CLASS AutoSPSEntry
  * being entered via OSR.  It marks the current top pseudostack entry as
  * OSR-ed
  */
-class MOZ_RAII SPSBaselineOSRMarker
+class MOZ_RAII GeckoProfilerBaselineOSRMarker
 {
   public:
-    explicit SPSBaselineOSRMarker(JSRuntime* rt, bool hasSPSFrame
-                                  MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~SPSBaselineOSRMarker();
+    explicit GeckoProfilerBaselineOSRMarker(JSRuntime* rt, bool hasProfilerFrame
+                                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    ~GeckoProfilerBaselineOSRMarker();
 
   private:
-    SPSProfiler* profiler;
+    GeckoProfiler* profiler;
     mozilla::DebugOnly<uint32_t> size_before;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /*
- * SPS is the profiling backend used by the JS engine to enable time profiling.
- * More information can be found in vm/SPSProfiler.{h,cpp}. This class manages
- * the instrumentation portion of the profiling for JIT code.
+ * This class manages the instrumentation portion of the profiling for JIT
+ * code.
  *
  * The instrumentation tracks entry into functions, leaving those functions via
  * a function call, reentering the functions from a function call, and exiting
@@ -315,20 +316,20 @@ class MOZ_RAII SPSBaselineOSRMarker
  * and the management functions are all described in the middle.
  */
 template<class Assembler, class Register>
-class SPSInstrumentation
+class GeckoProfilerInstrumentation
 {
-    SPSProfiler* profiler_; // Instrumentation location management
+    GeckoProfiler* profiler_; // Instrumentation location management
 
   public:
     /*
      * Creates instrumentation which writes information out the the specified
      * profiler's stack and constituent fields.
      */
-    explicit SPSInstrumentation(SPSProfiler* profiler) : profiler_(profiler) {}
+    explicit GeckoProfilerInstrumentation(GeckoProfiler* profiler) : profiler_(profiler) {}
 
-    /* Small proxies around SPSProfiler */
+    /* Small proxies around GeckoProfiler */
     bool enabled() { return profiler_ && profiler_->enabled(); }
-    SPSProfiler* profiler() { MOZ_ASSERT(enabled()); return profiler_; }
+    GeckoProfiler* profiler() { MOZ_ASSERT(enabled()); return profiler_; }
     void disable() { profiler_ = nullptr; }
 };
 
@@ -338,4 +339,4 @@ void* GetTopProfilingJitFrame(uint8_t* exitFramePtr);
 
 } /* namespace js */
 
-#endif /* vm_SPSProfiler_h */
+#endif /* vm_GeckoProfiler_h */
