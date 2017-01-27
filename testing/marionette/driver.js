@@ -199,11 +199,8 @@ Object.defineProperty(GeckoDriver.prototype, "windowHandles", {
           }
         });
       } else {
-        // For other chrome windows beside the browser window, only count the window itself.
-        let winId = win.QueryInterface(Ci.nsIInterfaceRequestor)
-            .getInterface(Ci.nsIDOMWindowUtils)
-            .outerWindowID;
-        hs.push(winId.toString());
+        // For other chrome windows beside the browser window, only add the window itself.
+        hs.push(getOuterWindowId(win));
       }
     }
 
@@ -217,11 +214,7 @@ Object.defineProperty(GeckoDriver.prototype, "chromeWindowHandles", {
     let winEn = Services.wm.getEnumerator(null);
 
     while (winEn.hasMoreElements()) {
-      let foundWin = winEn.getNext();
-      let winId = foundWin.QueryInterface(Ci.nsIInterfaceRequestor)
-          .getInterface(Ci.nsIDOMWindowUtils)
-          .outerWindowID;
-      hs.push(winId.toString());
+      hs.push(getOuterWindowId(winEn.getNext()));
     }
 
     return hs;
@@ -357,9 +350,8 @@ GeckoDriver.prototype.addFrameCloseListener = function (action) {
  */
 GeckoDriver.prototype.addBrowser = function (win) {
   let bc = new browser.Context(win, this);
-  let winId = win.QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
-  winId = winId + ((this.appName == "B2G") ? "-b2g" : "");
+  let winId = getOuterWindowId(win);
+
   this.browsers[winId] = bc;
   this.curBrowser = this.browsers[winId];
   if (!this.wins.has(winId)) {
@@ -1195,13 +1187,6 @@ GeckoDriver.prototype.setWindowPosition = function (cmd, resp) {
 GeckoDriver.prototype.switchToWindow = function* (cmd, resp) {
   let switchTo = cmd.parameters.name;
   let found;
-
-  let getOuterWindowId = function (win) {
-    let rv = win.QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindowUtils)
-        .outerWindowID;
-    return rv;
-  };
 
   let byNameOrId = function (name, outerId, contentWindowId) {
     return switchTo == name ||
@@ -2847,4 +2832,21 @@ function copy (obj) {
     return Object.assign({}, obj);
   }
   return obj;
+}
+
+/**
+ * Get the outer window ID for the specified window.
+ *
+ * @param {nsIDOMWindow} win
+ *     Window whose browser we need to access.
+ *
+ * @return {string}
+ *     Returns the unique window ID.
+ */
+function getOuterWindowId(win) {
+  let id = win.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils)
+      .outerWindowID;
+
+  return id.toString();
 }
