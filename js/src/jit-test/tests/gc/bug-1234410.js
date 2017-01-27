@@ -1,7 +1,7 @@
 if (!('oomTest' in this))
     quit();
 
-enableSPSProfiling();
+enableGeckoProfiling();
 oomTest(() => {
     try {
         for (var quit of oomTest.gcparam("//").ArrayBuffer(1)) {}

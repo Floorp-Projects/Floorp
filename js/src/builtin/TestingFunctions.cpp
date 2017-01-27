@@ -1241,6 +1241,63 @@ DisableTrackAllocations(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static void
+FinalizeExternalString(Zone* zone, const JSStringFinalizer* fin, char16_t* chars);
+
+static const JSStringFinalizer ExternalStringFinalizer =
+    { FinalizeExternalString };
+
+static void
+FinalizeExternalString(Zone* zone, const JSStringFinalizer* fin, char16_t* chars)
+{
+    MOZ_ASSERT(fin == &ExternalStringFinalizer);
+    js_free(chars);
+}
+
+static bool
+NewExternalString(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() != 1 || !args[0].isString()) {
+        JS_ReportErrorASCII(cx, "newExternalString takes exactly one string argument.");
+        return false;
+    }
+
+    RootedString str(cx, args[0].toString());
+    size_t len = str->length();
+
+    UniqueTwoByteChars buf(js_pod_malloc<char16_t>(len));
+    if (!JS_CopyStringChars(cx, mozilla::Range<char16_t>(buf.get(), len), str))
+        return false;
+
+    JSString* res = JS_NewExternalString(cx, buf.get(), len, &ExternalStringFinalizer);
+    if (!res)
+        return false;
+
+    mozilla::Unused << buf.release();
+    args.rval().setString(res);
+    return true;
+}
+
+static bool
+EnsureFlatString(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() != 1 || !args[0].isString()) {
+        JS_ReportErrorASCII(cx, "ensureFlatString takes exactly one string argument.");
+        return false;
+    }
+
+    JSFlatString* flat = args[0].toString()->ensureFlat(cx);
+    if (!flat)
+        return false;
+
+    args.rval().setString(flat);
+    return true;
+}
+
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
 static bool
 OOMThreadTypes(JSContext* cx, unsigned argc, Value* vp)
@@ -1688,13 +1745,13 @@ Terminate(JSContext* cx, unsigned arg, Value* vp)
 }
 
 static bool
-ReadSPSProfilingStack(JSContext* cx, unsigned argc, Value* vp)
+ReadGeckoProfilingStack(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setUndefined();
 
     // Return boolean 'false' if profiler is not enabled.
-    if (!cx->runtime()->spsProfiler.enabled()) {
+    if (!cx->runtime()->geckoProfiler.enabled()) {
         args.rval().setBoolean(false);
         return true;
     }
@@ -4079,6 +4136,21 @@ DisableForEach(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+#if defined(FUZZING) && defined(__AFL_COMPILER)
+static bool
+AflLoop(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    uint32_t max_cnt;
+    if (!ToUint32(cx, args.get(0), &max_cnt))
+        return false;
+
+    args.rval().setBoolean(!!__AFL_LOOP(max_cnt));
+    return true;
+}
+#endif
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'zone' [, 'shrinking'])",
@@ -4154,6 +4226,14 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("disableTrackAllocations", DisableTrackAllocations, 0, 0,
 "disableTrackAllocations()",
 "  Stop capturing the JS stack at every allocation."),
+
+    JS_FN_HELP("newExternalString", NewExternalString, 1, 0,
+"newExternalString(str)",
+"  Copies str's chars and returns a new external string."),
+
+    JS_FN_HELP("ensureFlatString", EnsureFlatString, 1, 0,
+"ensureFlatString(str)",
+"  Ensures str is a flat (null-terminated) string and returns it."),
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
     JS_FN_HELP("oomThreadTypes", OOMThreadTypes, 0, 0,
@@ -4298,8 +4378,8 @@ gc::ZealModeHelpText),
 "  Terminate JavaScript execution, as if we had run out of\n"
 "  memory or been terminated by the slow script dialog."),
 
-    JS_FN_HELP("readSPSProfilingStack", ReadSPSProfilingStack, 0, 0,
-"readSPSProfilingStack()",
+    JS_FN_HELP("readGeckoProfilingStack", ReadGeckoProfilingStack, 0, 0,
+"readGeckoProfilingStack()",
 "  Reads the jit stack using ProfilingFrameIterator."),
 
     JS_FN_HELP("enableOsiPointRegisterChecks", EnableOsiPointRegisterChecks, 0, 0,
@@ -4602,6 +4682,12 @@ gc::ZealModeHelpText),
     JS_FN_HELP("disableForEach", DisableForEach, 0, 0,
 "disableForEach()",
 "  Disables the deprecated, non-standard for-each.\n"),
+
+#if defined(FUZZING) && defined(__AFL_COMPILER)
+    JS_FN_HELP("aflloop", AflLoop, 1, 0,
+"aflloop(max_cnt)",
+"  Call the __AFL_LOOP() runtime function (see AFL docs)\n"),
+#endif
 
     JS_FS_HELP_END
 };

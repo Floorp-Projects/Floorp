@@ -40,10 +40,11 @@ function runTests() {
   function verify(test,x,y,next) {
     var p = $("plugin1").getLastMouseX();
     const delta = 2;
-    ok(p-delta <= x && x <= p+delta, "test"+test+" LastMouseX got " + p + " expected " + x + 
+    var dpr = window.devicePixelRatio / SpecialPowers.getFullZoom(window);
+    ok(p-delta <= x * dpr && x * dpr <= p+delta, "test"+test+" LastMouseX got " + p + " expected " + x + 
                                      " with fullZoom="+SpecialPowers.getFullZoom(window)+" MozTransform='"+$("container").style.MozTransform+"'");
     p = $("plugin1").getLastMouseY();
-    ok(p-delta <= y && y <= p+delta, "test"+test+" LastMouseY got " + p + " expected " + y +
+    ok(p-delta <= y * dpr && y * dpr <= p+delta, "test"+test+" LastMouseY got " + p + " expected " + y +
                                      " with fullZoom="+SpecialPowers.getFullZoom(window)+" MozTransform='"+$("container").style.MozTransform+"'");
     if (next) next();
   }

@@ -1179,7 +1179,7 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
             JitSpew(JitSpew_BaselineBailouts, "      Set resumeAddr=%p", opReturnAddr);
         }
 
-        if (cx->runtime()->spsProfiler.enabled()) {
+        if (cx->runtime()->geckoProfiler.enabled()) {
             // Register bailout with profiler.
             const char* filename = script->filename();
             if (filename == nullptr)
@@ -1197,7 +1197,7 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
                      PCToLineNumber(script, pc),
                      filename,
                      script->lineno());
-            cx->runtime()->spsProfiler.markEvent(buf);
+            cx->runtime()->geckoProfiler.markEvent(buf);
             js_free(buf);
         }
 

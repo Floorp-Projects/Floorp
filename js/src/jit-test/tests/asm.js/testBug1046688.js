@@ -1,4 +1,4 @@
-enableSPSProfiling();
+enableGeckoProfiling();
 for (var j = 0; j < 1000; ++j) {
   (function(stdlib) {
     "use asm";

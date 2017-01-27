@@ -11,6 +11,7 @@
 #include "GPUProcessManager.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/CheckerboardReportService.h"
+#include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/gfx/gfxVars.h"
 #if defined(XP_WIN)
 # include "mozilla/gfx/DeviceManagerDx.h"
@@ -174,6 +175,40 @@ GPUChild::RecvNotifyDeviceReset()
   return IPC_OK();
 }
 
+bool
+GPUChild::SendRequestMemoryReport(const uint32_t& aGeneration,
+                                  const bool& aAnonymize,
+                                  const bool& aMinimizeMemoryUsage,
+                                  const MaybeFileDesc& aDMDFile)
+{
+  mMemoryReportRequest = MakeUnique<MemoryReportRequestHost>(aGeneration);
+  Unused << PGPUChild::SendRequestMemoryReport(
+    aGeneration,
+    aAnonymize,
+    aMinimizeMemoryUsage,
+    aDMDFile);
+  return true;
+}
+
+mozilla::ipc::IPCResult
+GPUChild::RecvAddMemoryReport(const MemoryReport& aReport)
+{
+  if (mMemoryReportRequest) {
+    mMemoryReportRequest->RecvReport(aReport);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+GPUChild::RecvFinishMemoryReport(const uint32_t& aGeneration)
+{
+  if (mMemoryReportRequest) {
+    mMemoryReportRequest->Finish(aGeneration);
+    mMemoryReportRequest = nullptr;
+  }
+  return IPC_OK();
+}
+
 void
 GPUChild::ActorDestroy(ActorDestroyReason aWhy)
 {
@@ -184,8 +219,9 @@ GPUChild::ActorDestroy(ActorDestroyReason aWhy)
       mCrashReporter = nullptr;
     }
 #endif
+
     Telemetry::Accumulate(Telemetry::SUBPROCESS_ABNORMAL_ABORT,
-        nsDependentCString(XRE_ChildProcessTypeToString(GeckoProcessType_GPU), 1));
+        nsDependentCString(XRE_ChildProcessTypeToString(GeckoProcessType_GPU)), 1);
 
     // Notify the Telemetry environment so that we can refresh and do a subsession split
     if (nsCOMPtr<nsIObserverService> obsvc = services::GetObserverService()) {

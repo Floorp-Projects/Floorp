@@ -58,11 +58,8 @@ add_task(function* () {
 
     is(RequestsMenu.selectedItem.securityState, undefined,
        "Security state has not yet arrived.");
-    is(!!document.querySelector("#tab-5"), testcase.visibleOnNewEvent,
+    is(!!document.querySelector("#security-tab"), testcase.visibleOnNewEvent,
       "Security tab is " + (testcase.visibleOnNewEvent ? "visible" : "hidden") +
-      " after new request was added to the menu.");
-    is(!!document.querySelector("#panel-5"), testcase.visibleOnNewEvent,
-      "Security panel is " + (testcase.visibleOnNewEvent ? "visible" : "hidden") +
       " after new request was added to the menu.");
 
     info("Waiting for security information to arrive.");
@@ -70,22 +67,16 @@ add_task(function* () {
 
     ok(RequestsMenu.selectedItem.securityState,
        "Security state arrived.");
-    is(!!document.querySelector("#tab-5"), testcase.visibleOnSecurityInfo,
+    is(!!document.querySelector("#security-tab"), testcase.visibleOnSecurityInfo,
        "Security tab is " + (testcase.visibleOnSecurityInfo ? "visible" : "hidden") +
        " after security information arrived.");
-    is(!!document.querySelector("#panel-5"), testcase.visibleOnSecurityInfo,
-      "Security panel is " + (testcase.visibleOnSecurityInfo? "visible" : "hidden") +
-      " after security information arrived.");
 
     info("Waiting for request to complete.");
     yield onComplete;
 
-    is(!!document.querySelector("#tab-5"), testcase.visibleOnceComplete,
+    is(!!document.querySelector("#security-tab"), testcase.visibleOnceComplete,
        "Security tab is " + (testcase.visibleOnceComplete ? "visible" : "hidden") +
        " after request has been completed.");
-    is(!!document.querySelector("#panel-5"), testcase.visibleOnceComplete,
-      "Security panel is " + (testcase.visibleOnceComplete? "visible" : "hidden") +
-      " after request has been completed.");
 
     info("Clearing requests.");
     RequestsMenu.clear();
