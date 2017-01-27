@@ -330,51 +330,31 @@ void
 nsSSLStatus::SetCertificateTransparencyInfo(
   const mozilla::psm::CertificateTransparencyInfo& info)
 {
-  using mozilla::ct::VerifiedSCT;
+  using mozilla::ct::CTPolicyCompliance;
+
+  mCertificateTransparencyStatus =
+    nsISSLStatus::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE;
 
   if (!info.enabled) {
     // CT disabled.
-    mCertificateTransparencyStatus =
-      nsISSLStatus::CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE;
     return;
   }
 
-  if (!info.processedSCTs) {
-    // No SCTs processed on the connection.
-    mCertificateTransparencyStatus =
-      nsISSLStatus::CERTIFICATE_TRANSPARENCY_NONE;
-    return;
-  }
-
-  bool hasValidSCTs = false;
-  bool hasUnknownLogSCTs = false;
-  bool hasInvalidSCTs = false;
-  for (const VerifiedSCT& verifiedSct : info.verifyResult.verifiedScts) {
-    switch (verifiedSct.status) {
-      case VerifiedSCT::Status::Valid:
-        hasValidSCTs = true;
-        break;
-      case VerifiedSCT::Status::UnknownLog:
-      case VerifiedSCT::Status::ValidFromDisqualifiedLog:
-        hasUnknownLogSCTs = true;
-        break;
-      case VerifiedSCT::Status::InvalidSignature:
-      case VerifiedSCT::Status::InvalidTimestamp:
-        hasInvalidSCTs = true;
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Unexpected VerifiedSCT::Status type");
-    }
-  }
-
-  if (hasValidSCTs) {
-    mCertificateTransparencyStatus =
-      nsISSLStatus::CERTIFICATE_TRANSPARENCY_OK;
-  } else if (hasUnknownLogSCTs) {
-    mCertificateTransparencyStatus =
-      nsISSLStatus::CERTIFICATE_TRANSPARENCY_UNKNOWN_LOG;
-  } else if (hasInvalidSCTs) {
-    mCertificateTransparencyStatus =
-      nsISSLStatus::CERTIFICATE_TRANSPARENCY_INVALID;
+  switch (info.policyCompliance) {
+    case CTPolicyCompliance::Compliant:
+      mCertificateTransparencyStatus =
+        nsISSLStatus::CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT;
+      break;
+    case CTPolicyCompliance::NotEnoughScts:
+      mCertificateTransparencyStatus =
+        nsISSLStatus::CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS;
+      break;
+    case CTPolicyCompliance::NotDiverseScts:
+      mCertificateTransparencyStatus =
+        nsISSLStatus::CERTIFICATE_TRANSPARENCY_POLICY_NOT_DIVERSE_SCTS;
+      break;
+    case CTPolicyCompliance::Unknown:
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected CTPolicyCompliance type");
   }
 }

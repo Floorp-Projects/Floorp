@@ -4418,7 +4418,7 @@ BaselineCompiler::emit_JSOP_RESUME()
     {
         Register scratchReg = scratch2;
         Label skip;
-        AbsoluteAddress addressOfEnabled(cx->runtime()->spsProfiler.addressOfEnabled());
+        AbsoluteAddress addressOfEnabled(cx->runtime()->geckoProfiler.addressOfEnabled());
         masm.branch32(Assembler::Equal, addressOfEnabled, Imm32(0), &skip);
         masm.loadPtr(AbsoluteAddress(cx->runtime()->addressOfProfilingActivation()), scratchReg);
         masm.storePtr(masm.getStackPointer(),

@@ -252,7 +252,7 @@ assert.in = function (prop, obj, msg = "") {
  */
 assert.array = function (obj, msg = "") {
   msg = msg || error.pprint`Expected ${obj} to be an Array`;
-  return assert.that(o => Array.isArray(o), msg)(obj);
+  return assert.that(Array.isArray, msg)(obj);
 };
 
 /**

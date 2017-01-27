@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 var {
-  EventManager,
+  SingletonEventManager,
   ignoreEvent,
 } = ExtensionUtils;
 
@@ -283,12 +283,12 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
         let tab = event.originalTarget;
         let tabId = TabManager.getId(tab);
         let windowId = WindowManager.getId(tab.ownerGlobal);
-        fire({tabId, windowId});
+        fire.async({tabId, windowId});
       }).api(),
 
-      onCreated: new EventManager(context, "tabs.onCreated", fire => {
+      onCreated: new SingletonEventManager(context, "tabs.onCreated", fire => {
         let listener = (eventName, event) => {
-          fire(TabManager.convert(extension, event.tab));
+          fire.async(TabManager.convert(extension, event.tab));
         };
 
         tabListener.on("tab-created", listener);
@@ -307,12 +307,12 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
         let tab = event.originalTarget;
         let tabIds = [TabManager.getId(tab)];
         let windowId = WindowManager.getId(tab.ownerGlobal);
-        fire({tabIds, windowId});
+        fire.async({tabIds, windowId});
       }).api(),
 
-      onAttached: new EventManager(context, "tabs.onAttached", fire => {
+      onAttached: new SingletonEventManager(context, "tabs.onAttached", fire => {
         let listener = (eventName, event) => {
-          fire(event.tabId, {newWindowId: event.newWindowId, newPosition: event.newPosition});
+          fire.async(event.tabId, {newWindowId: event.newWindowId, newPosition: event.newPosition});
         };
 
         tabListener.on("tab-attached", listener);
@@ -321,9 +321,9 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
         };
       }).api(),
 
-      onDetached: new EventManager(context, "tabs.onDetached", fire => {
+      onDetached: new SingletonEventManager(context, "tabs.onDetached", fire => {
         let listener = (eventName, event) => {
-          fire(event.tabId, {oldWindowId: event.oldWindowId, oldPosition: event.oldPosition});
+          fire.async(event.tabId, {oldWindowId: event.oldWindowId, oldPosition: event.oldPosition});
         };
 
         tabListener.on("tab-detached", listener);
@@ -332,9 +332,9 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
         };
       }).api(),
 
-      onRemoved: new EventManager(context, "tabs.onRemoved", fire => {
+      onRemoved: new SingletonEventManager(context, "tabs.onRemoved", fire => {
         let listener = (eventName, event) => {
-          fire(event.tabId, {windowId: event.windowId, isWindowClosing: event.isWindowClosing});
+          fire.async(event.tabId, {windowId: event.windowId, isWindowClosing: event.isWindowClosing});
         };
 
         tabListener.on("tab-removed", listener);
@@ -345,7 +345,7 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
 
       onReplaced: ignoreEvent(context, "tabs.onReplaced"),
 
-      onMoved: new EventManager(context, "tabs.onMoved", fire => {
+      onMoved: new SingletonEventManager(context, "tabs.onMoved", fire => {
         // There are certain circumstances where we need to ignore a move event.
         //
         // Namely, the first time the tab is moved after it's created, we need
@@ -373,7 +373,7 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
             return;
           }
 
-          fire(TabManager.getId(tab), {
+          fire.async(TabManager.getId(tab), {
             windowId: WindowManager.getId(tab.ownerGlobal),
             fromIndex: event.detail,
             toIndex: tab._tPos,
@@ -388,7 +388,7 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
         };
       }).api(),
 
-      onUpdated: new EventManager(context, "tabs.onUpdated", fire => {
+      onUpdated: new SingletonEventManager(context, "tabs.onUpdated", fire => {
         const restricted = ["url", "favIconUrl", "title"];
 
         function sanitize(extension, changeInfo) {
@@ -410,7 +410,7 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
             let tabElem = gBrowser.getTabForBrowser(browser);
 
             let tab = TabManager.convert(extension, tabElem);
-            fire(tab.id, changeInfo, tab);
+            fire.async(tab.id, changeInfo, tab);
           }
         };
 
@@ -447,7 +447,7 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
             for (let prop of needed) {
               changeInfo[prop] = tab[prop];
             }
-            fire(tab.id, changeInfo, tab);
+            fire.async(tab.id, changeInfo, tab);
           }
         };
         let progressListener = {
@@ -1025,7 +1025,7 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
         return Promise.resolve();
       },
 
-      onZoomChange: new EventManager(context, "tabs.onZoomChange", fire => {
+      onZoomChange: new SingletonEventManager(context, "tabs.onZoomChange", fire => {
         let getZoomLevel = browser => {
           let {ZoomManager} = browser.ownerGlobal;
 
@@ -1075,7 +1075,7 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
             zoomLevels.set(browser, newZoomFactor);
 
             let tabId = TabManager.getId(tab);
-            fire({
+            fire.async({
               tabId,
               oldZoomFactor,
               newZoomFactor,

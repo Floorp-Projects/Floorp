@@ -162,7 +162,8 @@ RegisterExecutableMemory(void* p, size_t bytes, size_t pageSize)
         return false;
 
     // XXX NB: The profiler believes this function is only called from the main
-    // thread. If that ever becomes untrue, SPS must be updated immediately.
+    // thread. If that ever becomes untrue, the profiler must be updated
+    // immediately.
     AcquireStackWalkWorkaroundLock();
 
     bool success = RtlAddFunctionTable(&r->runtimeFunction, 1, reinterpret_cast<DWORD64>(p));
@@ -178,7 +179,8 @@ UnregisterExecutableMemory(void* p, size_t bytes, size_t pageSize)
     ExceptionHandlerRecord* r = reinterpret_cast<ExceptionHandlerRecord*>(p);
 
     // XXX NB: The profiler believes this function is only called from the main
-    // thread. If that ever becomes untrue, SPS must be updated immediately.
+    // thread. If that ever becomes untrue, the profiler must be updated
+    // immediately.
     AcquireStackWalkWorkaroundLock();
 
     RtlDeleteFunctionTable(&r->runtimeFunction);

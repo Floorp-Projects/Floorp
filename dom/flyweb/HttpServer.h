@@ -35,9 +35,7 @@ class InternalResponse;
 class HttpServerListener
 {
 public:
-  // switch to NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING when that lands
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) = 0;
-  NS_IMETHOD_(MozExternalRefCountType) Release(void) = 0;
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   virtual void OnServerStarted(nsresult aStatus) = 0;
   virtual void OnRequest(InternalRequest* aRequest) = 0;

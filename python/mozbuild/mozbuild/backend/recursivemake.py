@@ -1433,7 +1433,7 @@ class RecursiveMakeBackend(CommonBackend):
     def _write_master_test_manifest(self, path, manifests):
         with self._write_file(path) as master:
             master.write(
-                '; THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.\n\n')
+                '# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.\n\n')
 
             for manifest in sorted(manifests):
                 master.write('[include:%s]\n' % manifest)

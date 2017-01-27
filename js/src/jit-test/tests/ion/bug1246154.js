@@ -1,5 +1,5 @@
 setJitCompilerOption('ion.forceinlineCaches', 1);
-enableSPSProfiling();
+enableGeckoProfiling();
 (function() {
     -[];
 })();

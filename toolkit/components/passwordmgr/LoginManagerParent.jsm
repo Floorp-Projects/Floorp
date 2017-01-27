@@ -11,8 +11,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "UserAutoCompleteResult",
-                                  "resource://gre/modules/LoginManagerContent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AutoCompletePopup",
                                   "resource://gre/modules/AutoCompletePopup.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredTask",
@@ -226,9 +224,9 @@ var LoginManagerParent = {
   }),
 
   doAutocompleteSearch({ formOrigin, actionOrigin,
-                                   searchString, previousResult,
-                                   rect, requestId, isSecure, isPasswordField,
-                                   remote }, target) {
+                         searchString, previousResult,
+                         rect, requestId, isSecure, isPasswordField,
+                       }, target) {
     // Note: previousResult is a regular object, not an
     // nsIAutoCompleteResult.
 
@@ -268,16 +266,6 @@ var LoginManagerParent = {
       }
       return match && match.toLowerCase().startsWith(searchStringLower);
     });
-
-    // XXX In the E10S case, we're responsible for showing our own
-    // autocomplete popup here because the autocomplete protocol hasn't
-    // been e10s-ized yet. In the non-e10s case, our caller is responsible
-    // for showing the autocomplete popup (via the regular
-    // nsAutoCompleteController).
-    if (remote) {
-      let results = new UserAutoCompleteResult(searchString, matchingLogins, {isSecure});
-      AutoCompletePopup.showPopupWithResults({ browser: target.ownerDocument.defaultView, rect, results });
-    }
 
     // Convert the array of nsILoginInfo to vanilla JS objects since nsILoginInfo
     // doesn't support structured cloning.

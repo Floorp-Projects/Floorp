@@ -1125,6 +1125,8 @@ AtomicsObject::initClass(JSContext* cx, Handle<GlobalObject*> global)
 
     if (!JS_DefineFunctions(cx, Atomics, AtomicsMethods))
         return nullptr;
+    if (!DefineToStringTag(cx, Atomics, cx->names().Atomics))
+        return nullptr;
 
     RootedValue AtomicsValue(cx, ObjectValue(*Atomics));
 

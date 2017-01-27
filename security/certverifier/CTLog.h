@@ -9,6 +9,8 @@
 
 #include <stdint.h>
 
+#include "mozilla/Vector.h"
+
 namespace mozilla { namespace ct {
 
 // Signed integer sufficient to store the numeric ID of CT log operators
@@ -16,6 +18,8 @@ namespace mozilla { namespace ct {
 // The assigned IDs are 0-based positive integers, so you can use special
 // values (such as -1) to indicate a "null" or unknown log ID.
 typedef int16_t CTLogOperatorId;
+
+typedef Vector<CTLogOperatorId, 8> CTLogOperatorList;
 
 // Current status of a CT log in regard to its inclusion in the
 // Known Logs List such as https://www.certificate-transparency.org/known-logs

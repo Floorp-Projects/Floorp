@@ -36,20 +36,20 @@ set_define('MOZ_JPROF', jprof)
 imply_option('--enable-profiling', jprof)
 
 @depends(target)
-def sps_profiler(target):
+def gecko_profiler(target):
     if target.os == 'Android':
         return target.cpu in ('arm', 'x86')
     elif target.kernel == 'Linux':
         return target.cpu in ('x86', 'x86_64')
     return target.os in ('OSX', 'WINNT')
 
-@depends(sps_profiler)
-def sps_profiler_define(value):
+@depends(gecko_profiler)
+def gecko_profiler_define(value):
     if value:
         return True
 
-set_config('MOZ_GECKO_PROFILER', sps_profiler_define)
-set_define('MOZ_GECKO_PROFILER', sps_profiler_define)
+set_config('MOZ_GECKO_PROFILER', gecko_profiler_define)
+set_define('MOZ_GECKO_PROFILER', gecko_profiler_define)
 
 
 option('--enable-dmd', env='MOZ_DMD',

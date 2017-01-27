@@ -273,9 +273,9 @@ this.ExtensionsUI = {
           let doc = this.browser.ownerDocument;
           doc.getElementById("addon-webext-perm-header").innerHTML = header;
 
-          if (text) {
-            doc.getElementById("addon-webext-perm-text").innerHTML = text;
-          }
+          let textEl = doc.getElementById("addon-webext-perm-text");
+          textEl.innerHTML = text;
+          textEl.hidden = !text;
 
           let listIntroEl = doc.getElementById("addon-webext-perm-intro");
           listIntroEl.value = listIntro;

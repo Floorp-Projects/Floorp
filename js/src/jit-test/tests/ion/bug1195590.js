@@ -3,5 +3,5 @@ function f(x) {
         eval(x);
     } catch (e) {}
 };
-f("enableSPSProfilingWithSlowAssertions();");
+f("enableGeckoProfilingWithSlowAssertions();");
 f("enableTrackAllocations(); throw Error();");
