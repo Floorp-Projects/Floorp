@@ -13,6 +13,25 @@ transforms = TransformSequence()
 
 
 @transforms.add
+def add_signed_routes(config, jobs):
+    """Add routes corresponding to the routes of the build task
+       this corresponds to, with .signed inserted, for all gecko.v2 routes"""
+
+    for job in jobs:
+        dep_job = job['dependent-task']
+
+        job['routes'] = []
+        for dep_route in dep_job.task.get('routes', []):
+            if not dep_route.startswith('index.gecko.v2'):
+                continue
+            branch = dep_route.split(".")[3]
+            rest = ".".join(dep_route.split(".")[4:])
+            job['routes'].append(
+                'index.gecko.v2.{}.signed-nightly.{}'.format(branch, rest))
+        yield job
+
+
+@transforms.add
 def make_signing_description(config, jobs):
     for job in jobs:
         dep_job = job['dependent-task']
