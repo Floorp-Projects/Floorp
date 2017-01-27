@@ -34,6 +34,8 @@ from ..frontend.data import (
     AndroidExtraResDirs,
     AndroidExtraPackages,
     AndroidEclipseProjectData,
+    BaseLibrary,
+    BaseProgram,
     ChromeManifestEntry,
     ConfigFileSubstitution,
     ContextDerived,
@@ -55,6 +57,7 @@ from ..frontend.data import (
     JARManifest,
     JavaJarData,
     Library,
+    Linkable,
     LocalInclude,
     ObjdirFiles,
     ObjdirPreprocessedFiles,
@@ -446,6 +449,9 @@ class RecursiveMakeBackend(CommonBackend):
 
         if not isinstance(obj, Defines):
             self.consume_object(obj.defines)
+
+        if isinstance(obj, Linkable):
+            self._process_test_support_file(obj)
 
         if isinstance(obj, DirectoryTraversal):
             self._process_directory_traversal(obj, backend_file)
@@ -1075,6 +1081,24 @@ class RecursiveMakeBackend(CommonBackend):
 
     def _process_host_simple_program(self, program, backend_file):
         backend_file.write('HOST_SIMPLE_PROGRAMS += %s\n' % program)
+
+    def _process_test_support_file(self, obj):
+        # Ensure test support programs and libraries are tracked by an
+        # install manifest for the benefit of the test packager.
+        if not obj.install_target.startswith('_tests'):
+            return
+
+        dest_basename = None
+        if isinstance(obj, BaseLibrary):
+            dest_basename = obj.lib_name
+        elif isinstance(obj, BaseProgram):
+            dest_basename = obj.program
+        if dest_basename is None:
+            return
+
+        self._install_manifests['_tests'].add_optional_exists(
+            mozpath.join(obj.install_target[len('_tests') + 1:],
+                         dest_basename))
 
     def _process_test_manifest(self, obj, backend_file):
         # Much of the logic in this function could be moved to CommonBackend.
