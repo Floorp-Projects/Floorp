@@ -523,18 +523,10 @@ RequireGlobalObject(JSContext* cx, HandleValue dbgobj, HandleObject referent)
 
 /*** Breakpoints *********************************************************************************/
 
-BreakpointSite::BreakpointSite(JSScript* script, jsbytecode* pc)
-  : script(script), pc(pc), enabledCount(0)
+BreakpointSite::BreakpointSite(Type type)
+  : type_(type), enabledCount(0)
 {
-    MOZ_ASSERT(!script->hasBreakpointsAt(pc));
     JS_INIT_CLIST(&breakpoints);
-}
-
-void
-BreakpointSite::recompile(FreeOp* fop)
-{
-    if (script->hasBaselineScript())
-        script->baselineScript()->toggleDebugTraps(script, pc);
 }
 
 void
@@ -554,11 +546,10 @@ BreakpointSite::dec(FreeOp* fop)
         recompile(fop);
 }
 
-void
-BreakpointSite::destroyIfEmpty(FreeOp* fop)
+bool
+BreakpointSite::isEmpty() const
 {
-    if (JS_CLIST_IS_EMPTY(&breakpoints))
-        script->destroyBreakpointSite(fop, pc);
+    return JS_CLIST_IS_EMPTY(&breakpoints);
 }
 
 Breakpoint*
@@ -623,7 +614,28 @@ Breakpoint::nextInSite()
     return (link == &site->breakpoints) ? nullptr : fromSiteLinks(link);
 }
 
-
+JSBreakpointSite::JSBreakpointSite(JSScript* script, jsbytecode* pc)
+  : BreakpointSite(Type::JS),
+    script(script),
+    pc(pc)
+{
+    MOZ_ASSERT(!script->hasBreakpointsAt(pc));
+}
+
+void
+JSBreakpointSite::recompile(FreeOp* fop)
+{
+    if (script->hasBaselineScript())
+        script->baselineScript()->toggleDebugTraps(script, pc);
+}
+
+void
+JSBreakpointSite::destroyIfEmpty(FreeOp* fop)
+{
+    if (isEmpty())
+        script->destroyBreakpointSite(fop, pc);
+}
+
 /*** Debugger hook dispatch **********************************************************************/
 
 Debugger::Debugger(JSContext* cx, NativeObject* dbg)
@@ -821,8 +833,12 @@ Debugger::hasAnyLiveHooks(JSRuntime* rt) const
 
     /* If any breakpoints are in live scripts, return true. */
     for (Breakpoint* bp = firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
-        if (IsMarkedUnbarriered(rt, &bp->site->script))
-            return true;
+        switch (bp->site->type()) {
+          case BreakpointSite::Type::JS:
+            if (IsMarkedUnbarriered(rt, &bp->site->asJS()->script))
+                return true;
+            break;
+        }
     }
 
     for (FrameMap::Range r = frames.all(); !r.empty(); r.popFront()) {
@@ -3040,15 +3056,19 @@ Debugger::markIteratively(GCMarker* marker)
                 if (dbgMarked) {
                     /* Search for breakpoints to mark. */
                     for (Breakpoint* bp = dbg->firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
-                        if (IsMarkedUnbarriered(rt, &bp->site->script)) {
-                            /*
-                             * The debugger and the script are both live.
-                             * Therefore the breakpoint handler is live.
-                             */
-                            if (!IsMarked(rt, &bp->getHandlerRef())) {
-                                TraceEdge(marker, &bp->getHandlerRef(), "breakpoint handler");
-                                markedAny = true;
+                        switch (bp->site->type()) {
+                          case BreakpointSite::Type::JS:
+                            if (IsMarkedUnbarriered(rt, &bp->site->asJS()->script)) {
+                               /*
+                                * The debugger and the script are both live.
+                                * Therefore the breakpoint handler is live.
+                                */
+                               if (!IsMarked(rt, &bp->getHandlerRef())) {
+                                   TraceEdge(marker, &bp->getHandlerRef(), "breakpoint handler");
+                                   markedAny = true;
+                               }
                             }
+                            break;
                         }
                     }
                 }
@@ -3082,7 +3102,12 @@ Debugger::traceAll(JSTracer* trc)
         dbg->wasmInstanceSources.trace(trc);
 
         for (Breakpoint* bp = dbg->firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
-            TraceManuallyBarrieredEdge(trc, &bp->site->script, "breakpoint script");
+            switch (bp->site->type()) {
+              case BreakpointSite::Type::JS:
+                TraceManuallyBarrieredEdge(trc, &bp->site->asJS()->script,
+                                           "breakpoint script");
+                break;
+            }
             TraceEdge(trc, &bp->getHandlerRef(), "breakpoint handler");
         }
     }
@@ -4072,8 +4097,12 @@ Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
     Breakpoint* nextbp;
     for (Breakpoint* bp = firstBreakpoint(); bp; bp = nextbp) {
         nextbp = bp->nextInDebugger();
-        if (bp->site->script->compartment() == global->compartment())
-            bp->destroy(fop);
+        switch (bp->site->type()) {
+          case BreakpointSite::Type::JS:
+            if (bp->site->asJS()->script->compartment() == global->compartment())
+                bp->destroy(fop);
+            break;
+        }
     }
     MOZ_ASSERT_IF(debuggees.empty(), !firstBreakpoint());
 
@@ -6668,7 +6697,10 @@ DebuggerScript_getBreakpoints(JSContext* cx, unsigned argc, Value* vp)
 
     for (unsigned i = 0; i < script->length(); i++) {
         BreakpointSite* site = script->getBreakpointSite(script->offsetToPC(i));
-        if (site && (!pc || site->pc == pc)) {
+        if (!site)
+            continue;
+        MOZ_ASSERT(site->type() == BreakpointSite::Type::JS);
+        if (!pc || site->asJS()->pc == pc) {
             for (Breakpoint* bp = site->firstBreakpoint(); bp; bp = bp->nextInSite()) {
                 if (bp->debugger == dbg &&
                     !NewbornArrayPush(cx, arr, ObjectValue(*bp->getHandler())))
