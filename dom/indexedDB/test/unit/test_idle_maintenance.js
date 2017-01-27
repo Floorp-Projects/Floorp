@@ -9,7 +9,7 @@ function testSteps()
 {
   let uri = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService).
-            newURI("https://www.example.com", null, null);
+            newURI("https://www.example.com");
   let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
               .getService(Ci.nsIScriptSecurityManager);
   let principal = ssm.createCodebasePrincipal(uri, {});
