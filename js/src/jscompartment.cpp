@@ -117,6 +117,13 @@ JSCompartment::~JSCompartment()
     js_delete(nonSyntacticLexicalEnvironments_),
     js_free(enumerators);
 
+#ifdef DEBUG
+    // Avoid assertion destroying the unboxed layouts list if the embedding
+    // leaked GC things.
+    if (!rt->gc.shutdownCollectedEverything())
+        unboxedLayouts.clear();
+#endif
+
     runtime_->numCompartments--;
 }
 
