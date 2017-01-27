@@ -60,6 +60,9 @@ signing_description_schema = Schema({
     # below transforms for defaults of various values.
     Optional('treeherder'): task_description_schema['treeherder'],
 
+    # Routes specific to this task, if defined
+    Optional('routes'): [basestring],
+
     # If True, adds a route which funsize uses to schedule generation of partial mar
     # files for updates. Expected to be added on nightly builds only.
     Optional('use-funsize-route'): bool,
@@ -120,10 +123,11 @@ def make_task_description(config, jobs):
             'attributes': attributes,
             'run-on-projects': dep_job.attributes.get('run_on_projects'),
             'treeherder': treeherder,
+            'routes': job.get('routes', []),
         }
 
         if job.get('use-funsize-route', False):
-            task['routes'] = ["index.project.releng.funsize.level-{level}.{project}".format(
-                project=config.params['project'], level=config.params['level'])]
+            task['routes'].append("index.project.releng.funsize.level-{level}.{project}".format(
+                project=config.params['project'], level=config.params['level']))
 
         yield task
