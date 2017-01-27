@@ -7,11 +7,11 @@
 #ifndef jit_none_Architecture_none_h
 #define jit_none_Architecture_none_h
 
-#include "jit/shared/Architecture-shared.h"
-
 // JitSpewer.h is included through MacroAssembler implementations for other
 // platforms, so include it here to avoid inadvertent build bustage.
 #include "jit/JitSpewer.h"
+
+#include "jit/shared/Architecture-shared.h"
 
 namespace js {
 namespace jit {
