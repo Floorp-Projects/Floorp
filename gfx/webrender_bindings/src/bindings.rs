@@ -100,8 +100,8 @@ pub unsafe extern fn wr_renderer_delete(renderer: *mut Renderer) {
 
 #[no_mangle]
 pub unsafe extern fn wr_api_delete(api: *mut RenderApi) {
-    api.shut_down();
     let api = Box::from_raw(api);
+    api.shut_down();
 }
 
 #[no_mangle]
