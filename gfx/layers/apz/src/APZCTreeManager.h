@@ -477,6 +477,8 @@ private:
   void PrintAPZCInfo(const LayerMetricsWrapper& aLayer,
                      const AsyncPanZoomController* apzc);
 
+  void NotifyScrollbarDragRejected(const ScrollableLayerGuid& aGuid) const;
+
 protected:
   /* The input queue where input events are held until we know enough to
    * figure out where they're going. Protected so gtests can access it.

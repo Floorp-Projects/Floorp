@@ -274,3 +274,16 @@ ChromeProcessController::NotifyFlushComplete()
 
   APZCCallbackHelper::NotifyFlushComplete(GetPresShell());
 }
+
+void
+ChromeProcessController::NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID& aScrollId)
+{
+  if (MessageLoop::current() != mUILoop) {
+    mUILoop->PostTask(NewRunnableMethod<FrameMetrics::ViewID>(this,
+                        &ChromeProcessController::NotifyAsyncScrollbarDragRejected,
+                        aScrollId));
+    return;
+  }
+
+  APZCCallbackHelper::NotifyAsyncScrollbarDragRejected(aScrollId);
+}

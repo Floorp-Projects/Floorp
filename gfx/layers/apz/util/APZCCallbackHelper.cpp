@@ -913,6 +913,15 @@ APZCCallbackHelper::IsScrollInProgress(nsIScrollableFrame* aFrame)
 }
 
 /* static */ void
+APZCCallbackHelper::NotifyAsyncScrollbarDragRejected(const FrameMetrics::ViewID& aScrollId)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (nsIScrollableFrame* scrollFrame = nsLayoutUtils::FindScrollableFrameFor(aScrollId)) {
+    scrollFrame->AsyncScrollbarDragRejected();
+  }
+}
+
+/* static */ void
 APZCCallbackHelper::NotifyPinchGesture(PinchGestureInput::PinchGestureType aType,
                                        LayoutDeviceCoord aSpanChange,
                                        Modifiers aModifiers,
