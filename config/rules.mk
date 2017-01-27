@@ -919,7 +919,9 @@ cargo_build_flags += --frozen
 endif
 
 cargo_build_flags += --manifest-path $(CARGO_FILE)
+ifdef BUILD_VERBOSE_LOG
 cargo_build_flags += --verbose
+endif
 
 # Enable color output if original stdout was a TTY and color settings
 # aren't already present. This essentially restores the default behavior
