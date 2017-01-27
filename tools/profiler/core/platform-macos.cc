@@ -78,7 +78,6 @@ class PlatformData {
  public:
   PlatformData() : profiled_thread_(mach_thread_self())
   {
-    profiled_pthread_ = pthread_from_mach_thread_np(profiled_thread_);
   }
 
   ~PlatformData() {
@@ -87,17 +86,12 @@ class PlatformData {
   }
 
   thread_act_t profiled_thread() { return profiled_thread_; }
-  pthread_t profiled_pthread() { return profiled_pthread_; }
 
  private:
   // Note: for profiled_thread_ Mach primitives are used instead of PThread's
   // because the latter doesn't provide thread manipulation primitives required.
   // For details, consult "Mac OS X Internals" book, Section 7.3.
   thread_act_t profiled_thread_;
-  // we also store the pthread because Mach threads have no concept of stack
-  // and we want to be able to get the stack size when we need to unwind the
-  // stack using frame pointers.
-  pthread_t profiled_pthread_;
 };
 
 /* static */ auto
@@ -304,12 +298,6 @@ void Sampler::Stop() {
   ASSERT(IsActive());
   SetActive(false);
   SamplerThread::RemoveActiveSampler(this);
-}
-
-pthread_t
-Sampler::GetProfiledThread(PlatformData* aData)
-{
-  return aData->profiled_pthread();
 }
 
 /* static */ Thread::tid_t
