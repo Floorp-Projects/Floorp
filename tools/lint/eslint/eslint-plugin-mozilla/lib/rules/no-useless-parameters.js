@@ -54,6 +54,15 @@ module.exports = function(context) {
         }
       }
 
+      if (callee.property.name === "getComputedStyle" &&
+          node.arguments.length === 2) {
+        let arg = node.arguments[1];
+        if (arg.type === "Literal" && !arg.value) {
+          context.report(node,
+                         "getComputedStyle's second parameter can be omitted.");
+        }
+      }
+
       if (callee.property.name === "newURI" &&
           node.arguments.length === 3) {
         let arg = node.arguments[2];

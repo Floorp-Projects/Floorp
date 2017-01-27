@@ -23,6 +23,6 @@ add_task(function* () {
   ok(!container.editor.elt.classList.contains("void-element"),
     "br element does not have void-element class");
   let closeElement = container.editor.elt.querySelector(".close");
-  let computedStyle = win.getComputedStyle(closeElement, null);
+  let computedStyle = win.getComputedStyle(closeElement);
   ok(computedStyle.display !== "none", "br closing tag is not hidden");
 });
