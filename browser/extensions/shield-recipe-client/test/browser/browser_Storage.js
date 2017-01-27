@@ -34,4 +34,14 @@ add_task(function* () {
   const complex = {a: 1, b: [2, 3], c: {d: 4}};
   yield store1.setItem("complex", complex);
   Assert.deepEqual(yield store1.getItem("complex"), complex);
+
+  // Check that clearing the storage removes data from multiple
+  // prefixes.
+  yield store1.setItem("removeTest", 1);
+  yield store2.setItem("removeTest", 2);
+  Assert.equal(yield store1.getItem("removeTest"), 1);
+  Assert.equal(yield store2.getItem("removeTest"), 2);
+  yield Storage.clearAllStorage();
+  Assert.equal(yield store1.getItem("removeTest"), null);
+  Assert.equal(yield store2.getItem("removeTest"), null);
 });

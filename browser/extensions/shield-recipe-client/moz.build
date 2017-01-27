@@ -15,8 +15,8 @@ FINAL_TARGET_PP_FILES.features['shield-recipe-client@mozilla.org'] += [
   'install.rdf.in'
 ]
 
-BROWSER_CHROME_MANIFESTS += [
-    'test/browser.ini',
-]
+BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 JAR_MANIFESTS += ['jar.mn']
