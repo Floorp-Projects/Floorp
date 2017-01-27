@@ -57,13 +57,20 @@ function getInLAProc(aBrowser) {
   });
 }
 
-add_task(function*() {
+function* largeAllocSuccessTests() {
   // I'm terrible and put this set of tests into a single file, so I need a longer timeout
   requestLongerTimeout(2);
 
+  // Check if we are on win32
+  let isWin32 = /Windows/.test(navigator.userAgent) && !/x64/.test(navigator.userAgent);
+
   yield SpecialPowers.pushPrefEnv({
     set: [
+      // Enable the header if it is disabled
       ["dom.largeAllocationHeader.enabled", true],
+      // Force-enable process creation with large-allocation, such that non
+      // win32 builds can test the behavior.
+      ["dom.largeAllocation.forceEnable", !isWin32],
       // Increase processCount.webLargeAllocation to avoid any races where
       // processes aren't being cleaned up quickly enough.
       ["dom.ipc.processCount.webLargeAllocation", 20]
@@ -386,4 +393,28 @@ add_task(function*() {
 
   // XXX: Make sure to reset dom.ipc.processCount.webLargeAllocation if adding a
   // test after the above test.
-});
+}
+
+function* largeAllocFailTests() {
+  yield BrowserTestUtils.withNewTab("http://example.com", function*(aBrowser) {
+    info("Starting test 1");
+    let pid1 = yield getPID(aBrowser);
+    is(false, yield getInLAProc(aBrowser));
+
+    // Fail the test if we create a process
+    let stopExpectNoProcess = expectNoProcess();
+
+    yield ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
+      content.document.location = TEST_URI;
+    });
+
+    yield BrowserTestUtils.browserLoaded(aBrowser);
+
+    let pid2 = yield getPID(aBrowser);
+
+    is(pid1, pid2, "The PID should not have changed");
+    is(false, yield getInLAProc(aBrowser));
+
+    stopExpectNoProcess();
+  });
+}

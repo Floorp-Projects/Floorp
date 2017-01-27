@@ -107,7 +107,8 @@ enum class LargeAllocStatus : uint8_t
   // to it.
   NON_GET,
   NON_E10S,
-  NOT_ONLY_TOPLEVEL_IN_TABGROUP
+  NOT_ONLY_TOPLEVEL_IN_TABGROUP,
+  NON_WIN32
 };
 } // namespace dom
 } // namespace mozilla
