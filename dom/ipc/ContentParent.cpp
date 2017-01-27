@@ -2770,22 +2770,39 @@ ContentParent::DeallocPHeapSnapshotTempFileHelperParent(
   return true;
 }
 
-PMemoryReportRequestParent*
-ContentParent::AllocPMemoryReportRequestParent(const uint32_t& aGeneration,
-                                               const bool &aAnonymize,
-                                               const bool &aMinimizeMemoryUsage,
-                                               const MaybeFileDesc &aDMDFile)
+bool
+ContentParent::SendRequestMemoryReport(const uint32_t& aGeneration,
+                                       const bool& aAnonymize,
+                                       const bool& aMinimizeMemoryUsage,
+                                       const MaybeFileDesc& aDMDFile)
 {
-  MemoryReportRequestParent* parent =
-    new MemoryReportRequestParent(aGeneration);
-  return parent;
+  // This automatically cancels the previous request.
+  mMemoryReportRequest = MakeUnique<MemoryReportRequestHost>(aGeneration);
+  Unused << PContentParent::SendRequestMemoryReport(
+    aGeneration,
+    aAnonymize,
+    aMinimizeMemoryUsage,
+    aDMDFile);
+  return IPC_OK();
 }
 
-bool
-ContentParent::DeallocPMemoryReportRequestParent(PMemoryReportRequestParent* actor)
+mozilla::ipc::IPCResult
+ContentParent::RecvAddMemoryReport(const MemoryReport& aReport)
 {
-  delete actor;
-  return true;
+  if (mMemoryReportRequest) {
+    mMemoryReportRequest->RecvReport(aReport);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+ContentParent::RecvFinishMemoryReport(const uint32_t& aGeneration)
+{
+  if (mMemoryReportRequest) {
+    mMemoryReportRequest->Finish(aGeneration);
+    mMemoryReportRequest = nullptr;
+  }
+  return IPC_OK();
 }
 
 PCycleCollectWithLogsParent*

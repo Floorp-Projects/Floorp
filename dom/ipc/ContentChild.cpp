@@ -1017,53 +1017,19 @@ ContentChild::InitXPCOM()
   mozilla::dom::time::InitializeDateCacheCleaner();
 }
 
-PMemoryReportRequestChild*
-ContentChild::AllocPMemoryReportRequestChild(const uint32_t& aGeneration,
-                                             const bool &aAnonymize,
-                                             const bool &aMinimizeMemoryUsage,
-                                             const MaybeFileDesc& aDMDFile)
+mozilla::ipc::IPCResult
+ContentChild::RecvRequestMemoryReport(const uint32_t& aGeneration,
+                                      const bool& aAnonymize,
+                                      const bool& aMinimizeMemoryUsage,
+                                      const MaybeFileDesc& aDMDFile)
 {
   nsCString process;
   GetProcessName(process);
   AppendProcessId(process);
 
-  auto *actor =
-    new MemoryReportRequestChild(aAnonymize, aDMDFile, process);
-  actor->AddRef();
-  return actor;
-}
-
-mozilla::ipc::IPCResult
-ContentChild::RecvPMemoryReportRequestConstructor(
-  PMemoryReportRequestChild* aChild,
-  const uint32_t& aGeneration,
-  const bool& aAnonymize,
-  const bool& aMinimizeMemoryUsage,
-  const MaybeFileDesc& aDMDFile)
-{
-  MemoryReportRequestChild *actor =
-    static_cast<MemoryReportRequestChild*>(aChild);
-  DebugOnly<nsresult> rv;
-
-  if (aMinimizeMemoryUsage) {
-    nsCOMPtr<nsIMemoryReporterManager> mgr =
-      do_GetService("@mozilla.org/memory-reporter-manager;1");
-    rv = mgr->MinimizeMemoryUsage(actor);
-    // mgr will eventually call actor->Run()
-  } else {
-    rv = actor->Run();
-  }
-
-  // Bug 1295622: don't kill the process just because this failed.
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "actor operation failed");
+  MemoryReportRequestClient::Start(
+    aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile, process);
   return IPC_OK();
-}
-
-bool
-ContentChild::DeallocPMemoryReportRequestChild(PMemoryReportRequestChild* actor)
-{
-  static_cast<MemoryReportRequestChild*>(actor)->Release();
-  return true;
 }
 
 PCycleCollectWithLogsChild*
