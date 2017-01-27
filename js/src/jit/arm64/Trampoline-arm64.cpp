@@ -118,7 +118,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
 
         // sp -= 8
         // Since we're using PostIndex Str below, this is necessary to avoid overwriting
-        // the SPS mark pushed above.
+        // the Gecko Profiler mark pushed above.
         masm.subFromStackPtr(Imm32(8));
 
         // sp -= 8 * argc

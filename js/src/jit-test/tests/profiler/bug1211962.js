@@ -2,7 +2,7 @@
 if (!('oomTest' in this))
     quit();
 
-enableSPSProfiling();
+enableGeckoProfiling();
 var lfGlobal = newGlobal();
 for (lfLocal in this) {
     lfGlobal[lfLocal] = this[lfLocal];

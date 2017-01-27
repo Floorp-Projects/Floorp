@@ -1,19 +1,19 @@
-// Ensure readSPSProfilingStack() doesn't crash with Ion
+// Ensure readGeckoProfilingStack() doesn't crash with Ion
 // getter/setter ICs on the stack.
 function getObjects() {
     var objs = [];
     objs.push({x: 0, get prop() {
-	readSPSProfilingStack();
+	readGeckoProfilingStack();
 	return ++this.x;
     }, set prop(v) {
-	readSPSProfilingStack();
+	readGeckoProfilingStack();
 	this.x = v + 2;
     }});
     objs.push({x: 0, y: 0, get prop() {
-	readSPSProfilingStack();
+	readGeckoProfilingStack();
 	return this.y;
     }, set prop(v) {
-	readSPSProfilingStack();
+	readGeckoProfilingStack();
 	this.y = v;
     }});
     return objs;
@@ -28,5 +28,5 @@ function f() {
     }
     assertEq(res, 4901);
 }
-enableSPSProfiling();
+enableGeckoProfiling();
 f();

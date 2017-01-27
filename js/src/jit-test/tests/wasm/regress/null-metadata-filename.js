@@ -1,7 +1,7 @@
-if (typeof enableSPSProfiling === 'undefined' || !isAsmJSCompilationAvailable())
+if (typeof enableGeckoProfiling === 'undefined' || !isAsmJSCompilationAvailable())
     quit();
 
-enableSPSProfiling();
+enableGeckoProfiling();
 var code = evaluate("(function() { 'use asm'; function g() { return 43 } return g })", {
     fileName: null
 });

@@ -28,7 +28,7 @@
   _(SharedImmutableStringsCache, 500) \
   _(FutexRuntime,                500) \
   _(PromiseTaskPtrVector,        500) \
-  _(SPSProfilerStrings,          500) \
+  _(GeckoProfilerStrings,        500) \
   _(ProtectedRegionTree,         500) \
   _(WasmSigIdSet,                500) \
   _(ShellOffThreadState,         500) \

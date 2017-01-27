@@ -23,8 +23,8 @@
  }
 }(this, function (exports) {
  'use strict';
- var pdfjsVersion = '1.6.467';
- var pdfjsBuild = '54d55e8b';
+ var pdfjsVersion = '1.7.227';
+ var pdfjsBuild = 'e132fa97';
  var pdfjsFilePath = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src : null;
  var pdfjsLibs = {};
  (function pdfjsWrapper() {
@@ -38197,7 +38197,7 @@
          var stackDelta = op <= 0x8E ? TTOpsStackDeltas[op] : op >= 0xC0 && op <= 0xDF ? -1 : op >= 0xE0 ? -2 : 0;
          if (op >= 0x71 && op <= 0x75) {
           n = stack.pop();
-          if (n === n) {
+          if (!isNaN(n)) {
            stackDelta = -n * 2;
           }
          }

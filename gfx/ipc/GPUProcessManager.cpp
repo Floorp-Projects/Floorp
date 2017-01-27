@@ -6,6 +6,7 @@
 #include "GPUProcessManager.h"
 #include "GPUProcessHost.h"
 #include "GPUProcessListener.h"
+#include "mozilla/MemoryReportingProcess.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/ContentParent.h"
@@ -904,6 +905,62 @@ GPUProcessManager::NotifyGpuObservers(const char* aTopic)
   nsCString topic(aTopic);
   mGPUChild->SendNotifyGpuObservers(topic);
   return true;
+}
+
+class GPUMemoryReporter : public MemoryReportingProcess
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GPUMemoryReporter, override)
+
+  bool IsAlive() const override {
+    if (GPUProcessManager* gpm = GPUProcessManager::Get()) {
+      return !!gpm->GetGPUChild();
+    }
+    return false;
+  }
+
+  bool SendRequestMemoryReport(const uint32_t& aGeneration,
+                               const bool& aAnonymize,
+                               const bool& aMinimizeMemoryUsage,
+                               const dom::MaybeFileDesc& aDMDFile) override
+  {
+    GPUChild* child = GetChild();
+    if (!child) {
+      return false;
+    }
+
+    return child->SendRequestMemoryReport(
+      aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile);
+  }
+
+  int32_t Pid() const override {
+    if (GPUChild* child = GetChild()) {
+      return (int32_t)child->OtherPid();
+    }
+    return 0;
+  }
+
+private:
+  GPUChild* GetChild() const {
+    if (GPUProcessManager* gpm = GPUProcessManager::Get()) {
+      if (GPUChild* child = gpm->GetGPUChild()) {
+        return child;
+      }
+    }
+    return nullptr;
+  }
+
+protected:
+  ~GPUMemoryReporter() = default;
+};
+
+RefPtr<MemoryReportingProcess>
+GPUProcessManager::GetProcessMemoryReporter()
+{
+  if (!mGPUChild) {
+    return nullptr;
+  }
+  return new GPUMemoryReporter();
 }
 
 } // namespace gfx

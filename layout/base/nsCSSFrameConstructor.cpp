@@ -43,6 +43,7 @@
 #include "nsContainerFrame.h"
 #include "nsNameSpaceManager.h"
 #include "nsIComboboxControlFrame.h"
+#include "nsComboboxControlFrame.h"
 #include "nsIListControlFrame.h"
 #include "nsIDOMCharacterData.h"
 #include "nsPlaceholderFrame.h"
@@ -4124,10 +4125,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
     ancestorPusher.PushStyleScope(aParent->AsElement());
   }
 
-  nsIAnonymousContentCreator* creator = do_QueryFrame(aParentFrame);
-  NS_ASSERTION(creator,
-               "How can that happen if we have nodes to construct frames for?");
-
+  nsComboboxControlFrame* comboboxFrame = do_QueryFrame(aParentFrame);
   InsertionPoint insertion(aParentFrame, aParent);
   for (uint32_t i=0; i < count; i++) {
     nsIContent* content = newAnonymousItems[i].mContent;
@@ -4138,12 +4136,15 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
                  "nsIAnonymousContentCreator::CreateAnonymousContent to "
                  "output a list where the items have their own children");
 
-    nsIFrame* newFrame = creator->CreateFrameFor(content);
-    if (newFrame) {
-      NS_ASSERTION(content->GetPrimaryFrame(),
-                   "Content must have a primary frame now");
-      newFrame->AddStateBits(NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT);
-      aChildItems.AddChild(newFrame);
+    if (comboboxFrame && comboboxFrame->GetDisplayNode() == content) {
+      // Combo box frames have a custom hook to create frames for the anonymous
+      // text node. This is the last vestigial trace of an old custom hook that
+      // allowed arbitrary custom frame creation by any nsIAnonymousContentCreator
+      // implementation. It's possible that this could all be refactored away.
+      nsIFrame* customFrame = comboboxFrame->CreateFrameForDisplayNode();
+      MOZ_ASSERT(customFrame);
+      customFrame->AddStateBits(NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT);
+      aChildItems.AddChild(customFrame);
     } else {
       FrameConstructionItemList items;
       {
@@ -10706,13 +10707,6 @@ nsCSSFrameConstructor::AddFCItemsForAnonymousContent(
 {
   for (uint32_t i = 0; i < aAnonymousItems.Length(); ++i) {
     nsIContent* content = aAnonymousItems[i].mContent;
-#ifdef DEBUG
-    nsIAnonymousContentCreator* creator = do_QueryFrame(aFrame);
-    NS_ASSERTION(!creator || !creator->CreateFrameFor(content),
-                 "If you need to use CreateFrameFor, you need to call "
-                 "CreateAnonymousFrames manually and not follow the standard "
-                 "ProcessChildren() codepath for this frame");
-#endif
     // Gecko-styled nodes should have no pending restyle flags.
     MOZ_ASSERT_IF(!content->IsStyledByServo(),
                   !content->IsElement() ||

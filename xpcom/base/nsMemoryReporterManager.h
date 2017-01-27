@@ -15,8 +15,8 @@
 #include "nsTHashtable.h"
 
 namespace mozilla {
+class MemoryReportingProcess;
 namespace dom {
-class ContentParent;
 class MemoryReport;
 } // namespace dom
 } // namespace mozilla
@@ -222,7 +222,7 @@ private:
     bool                                 mAnonymize;
     bool                                 mMinimize;
     nsCOMPtr<nsITimer>                   mTimer;
-    nsTArray<RefPtr<mozilla::dom::ContentParent>> mChildrenPending;
+    nsTArray<RefPtr<mozilla::MemoryReportingProcess>> mChildrenPending;
     uint32_t                             mNumProcessesRunning;
     uint32_t                             mNumProcessesCompleted;
     uint32_t                             mConcurrencyLimit;
@@ -277,7 +277,7 @@ private:
 
   PendingProcessesState* GetStateForGeneration(uint32_t aGeneration);
   static MOZ_MUST_USE bool
-  StartChildReport(mozilla::dom::ContentParent* aChild,
+  StartChildReport(mozilla::MemoryReportingProcess* aChild,
                    const PendingProcessesState* aState);
 };
 

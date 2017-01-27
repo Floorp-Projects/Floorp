@@ -15,7 +15,7 @@ TestCase();
 var g = newGlobal();
 g.parent = this;
 g.eval("new Debugger(parent).onExceptionUnwind = function () {};");
-enableSPSProfiling();
+enableGeckoProfiling();
 if (getBuildConfiguration()["arm-simulator"])
     enableSingleStepProfiling(1);
 loadFile("jsTestDriverEnd();");

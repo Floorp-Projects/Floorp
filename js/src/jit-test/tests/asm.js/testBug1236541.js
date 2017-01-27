@@ -1,4 +1,4 @@
-enableSPSProfiling();
+enableGeckoProfiling();
 
 function mod() {
     "use asm";

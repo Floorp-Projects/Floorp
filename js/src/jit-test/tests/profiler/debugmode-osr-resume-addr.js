@@ -1,4 +1,4 @@
-enableSPSProfiling();
+enableGeckoProfiling();
 try {
   // Only the ARM simulator supports single step profiling.
   enableSingleStepProfiling();

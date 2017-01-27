@@ -443,7 +443,7 @@ PatchBaselineFramesForDebugMode(JSContext* cx, const Debugger::ExecutionObservab
                 MOZ_ASSERT(iter.baselineFrame()->isHandlingException());
                 MOZ_ASSERT(iter.baselineFrame()->overridePc() == pc);
                 uint8_t* retAddr;
-                if (cx->runtime()->spsProfiler.enabled())
+                if (cx->runtime()->geckoProfiler.enabled())
                     retAddr = bl->nativeCodeForPC(script, pc);
                 else
                     retAddr = nullptr;

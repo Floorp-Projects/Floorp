@@ -243,6 +243,7 @@
     macro(other, other, "other") \
     macro(outOfMemory, outOfMemory, "out of memory") \
     macro(ownKeys, ownKeys, "ownKeys") \
+    macro(Object_valueOf, Object_valueOf, "Object_valueOf") \
     macro(parseFloat, parseFloat, "parseFloat") \
     macro(parseInt, parseInt, "parseInt") \
     macro(pattern, pattern, "pattern") \
