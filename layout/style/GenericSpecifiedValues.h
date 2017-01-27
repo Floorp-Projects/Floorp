@@ -56,6 +56,8 @@ public:
         SetKeywordValueIfUnset(aId, static_cast<int32_t>(aValue));
     }
 
+    // Set a property to an integer value
+    virtual void SetIntValue(nsCSSPropertyID aId, int32_t aValue) = 0;
     // Set a property to a pixel value
     virtual void SetPixelValue(nsCSSPropertyID aId, float aValue) = 0;
     virtual void SetPixelValueIfUnset(nsCSSPropertyID aId, float aValue) = 0;
@@ -64,12 +66,17 @@ public:
     virtual void SetPercentValue(nsCSSPropertyID aId, float aValue) = 0;
     virtual void SetPercentValueIfUnset(nsCSSPropertyID aId, float aValue) = 0;
 
+    // Set a property to `auto`
+    virtual void SetAutoValue(nsCSSPropertyID aId) = 0;
+    virtual void SetAutoValueIfUnset(nsCSSPropertyID aId) = 0;
+
     // Set a property to `currentcolor`
     virtual void SetCurrentColor(nsCSSPropertyID aId) = 0;
     virtual void SetCurrentColorIfUnset(nsCSSPropertyID aId) = 0;
 
     // Set a property to an RGBA nscolor value
     virtual void SetColorValue(nsCSSPropertyID aId, nscolor aValue) = 0;
+    virtual void SetColorValueIfUnset(nsCSSPropertyID aId, nscolor aValue) = 0;
 
     virtual nsRuleData* AsRuleData() = 0;
 };

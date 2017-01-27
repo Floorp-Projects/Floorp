@@ -158,6 +158,12 @@ struct nsRuleData final: GenericSpecifiedValues
     }
   }
 
+
+  void SetIntValue(nsCSSPropertyID aId,
+                   int32_t aValue) override {
+    ValueFor(aId)->SetIntValue(aValue, eCSSUnit_Integer);
+  }
+
   void SetPixelValue(nsCSSPropertyID aId,
                      float aValue) override {
     ValueFor(aId)->SetFloatValue(aValue, eCSSUnit_Pixel);
@@ -173,6 +179,16 @@ struct nsRuleData final: GenericSpecifiedValues
   void SetPercentValue(nsCSSPropertyID aId,
                        float aValue) override {
     ValueFor(aId)->SetPercentValue(aValue);
+  }
+
+  void SetAutoValue(nsCSSPropertyID aId) override {
+    ValueFor(aId)->SetAutoValue();
+  }
+
+  void SetAutoValueIfUnset(nsCSSPropertyID aId) override {
+    if (!PropertyIsSet(aId)) {
+      SetAutoValue(aId);
+    }
   }
 
   void SetPercentValueIfUnset(nsCSSPropertyID aId,
@@ -195,6 +211,13 @@ struct nsRuleData final: GenericSpecifiedValues
   void SetColorValue(nsCSSPropertyID aId,
                      nscolor aValue) override {
     ValueFor(aId)->SetColorValue(aValue);
+  }
+
+  void SetColorValueIfUnset(nsCSSPropertyID aId,
+                            nscolor aValue) override {
+    if (!PropertyIsSet(aId)) {
+      SetColorValue(aId, aValue);
+    }
   }
 
   nsRuleData* AsRuleData() override {
