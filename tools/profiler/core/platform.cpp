@@ -100,113 +100,12 @@ static int sUnwindInterval;   /* in milliseconds */
 static int sUnwindStackScan;  /* max # of dubious frames allowed */
 static int sProfileEntries;   /* how many entries do we store? */
 
-std::vector<ThreadInfo*>* Sampler::sRegisteredThreads = nullptr;
-mozilla::UniquePtr< ::Mutex> Sampler::sRegisteredThreadsMutex;
-
 static mozilla::StaticAutoPtr<mozilla::ProfilerIOInterposeObserver>
                                                             sInterposeObserver;
 
 // The name that identifies the gecko thread for calls to
 // profiler_register_thread.
 static const char * gGeckoThreadName = "GeckoMain";
-
-void Sampler::Startup() {
-  sRegisteredThreads = new std::vector<ThreadInfo*>();
-  sRegisteredThreadsMutex = MakeUnique<Mutex>("sRegisteredThreadsMutex");
-
-  // We could create the sLUL object and read unwind info into it at
-  // this point.  That would match the lifetime implied by destruction
-  // of it in Sampler::Shutdown just below.  However, that gives a big
-  // delay on startup, even if no profiling is actually to be done.
-  // So, instead, sLUL is created on demand at the first call to
-  // Sampler::Start.
-}
-
-void Sampler::Shutdown() {
-  while (sRegisteredThreads->size() > 0) {
-    delete sRegisteredThreads->back();
-    sRegisteredThreads->pop_back();
-  }
-
-  sRegisteredThreadsMutex = nullptr;
-  delete sRegisteredThreads;
-
-  // UnregisterThread can be called after shutdown in XPCShell. Thus
-  // we need to point to null to ignore such a call after shutdown.
-  sRegisteredThreadsMutex = nullptr;
-  sRegisteredThreads = nullptr;
-
-#if defined(USE_LUL_STACKWALK)
-  // Delete the sLUL object, if it actually got created.
-  if (sLUL) {
-    delete sLUL;
-    sLUL = nullptr;
-  }
-#endif
-}
-
-bool
-Sampler::RegisterCurrentThread(const char* aName,
-                               PseudoStack* aPseudoStack,
-                               bool aIsMainThread, void* stackTop)
-{
-  if (!sRegisteredThreadsMutex)
-    return false;
-
-  MutexAutoLock lock(*sRegisteredThreadsMutex);
-
-  Thread::tid_t id = Thread::GetCurrentId();
-
-  for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-    ThreadInfo* info = sRegisteredThreads->at(i);
-    if (info->ThreadId() == id && !info->IsPendingDelete()) {
-      // Thread already registered. This means the first unregister will be
-      // too early.
-      ASSERT(false);
-      return false;
-    }
-  }
-
-  ThreadInfo* info = new StackOwningThreadInfo(aName, id,
-    aIsMainThread, aPseudoStack, stackTop);
-
-  // XXX: this is an off-main-thread use of gSampler
-  if (gSampler) {
-    gSampler->RegisterThread(info);
-  }
-
-  sRegisteredThreads->push_back(info);
-
-  return true;
-}
-
-void
-Sampler::UnregisterCurrentThread()
-{
-  if (!sRegisteredThreadsMutex)
-    return;
-
-  MutexAutoLock lock(*sRegisteredThreadsMutex);
-
-  Thread::tid_t id = Thread::GetCurrentId();
-
-  for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-    ThreadInfo* info = sRegisteredThreads->at(i);
-    if (info->ThreadId() == id && !info->IsPendingDelete()) {
-      if (profiler_is_active()) {
-        // We still want to show the results of this thread if you
-        // save the profile shortly after a thread is terminated.
-        // For now we will defer the delete to profile stop.
-        info->SetPendingDelete();
-        break;
-      } else {
-        delete info;
-        sRegisteredThreads->erase(sRegisteredThreads->begin() + i);
-        break;
-      }
-    }
-  }
-}
 
 StackOwningThreadInfo::StackOwningThreadInfo(const char* aName, int aThreadId,
                                              bool aIsMainThread,
