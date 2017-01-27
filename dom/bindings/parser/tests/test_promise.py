@@ -85,3 +85,59 @@ def WebIDLTest(parser, harness):
     harness.ok(True,
                "Should allow overloads which only have Promise and return "
                "types.")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface A {
+              attribute Promise<any> attr;
+            };
+        """)
+        results = parser.finish();
+    except:
+        threw = True
+    harness.ok(threw,
+               "Should not allow writable Promise-typed attributes.")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface A {
+              [LenientSetter] readonly attribute Promise<any> attr;
+            };
+        """)
+        results = parser.finish();
+    except:
+        threw = True
+    harness.ok(threw,
+               "Should not allow [LenientSetter] Promise-typed attributes.")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface A {
+              [PutForwards=bar] readonly attribute Promise<any> attr;
+            };
+        """)
+        results = parser.finish();
+    except:
+        threw = True
+    harness.ok(threw,
+               "Should not allow [PutForwards] Promise-typed attributes.")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface A {
+              [Replaceable] readonly attribute Promise<any> attr;
+            };
+        """)
+        results = parser.finish();
+    except:
+        threw = True
+    harness.ok(threw,
+               "Should not allow [Replaceable] Promise-typed attributes.")
