@@ -249,6 +249,10 @@ typedef mozilla::Variant<JSScript*, WasmInstanceObject*> DebuggerScriptReferent;
 // denoting the synthesized source of a wasm module.
 typedef mozilla::Variant<ScriptSourceObject*, WasmInstanceObject*> DebuggerSourceReferent;
 
+// Either a AbstractFramePtr, for ordinary JS, or a wasm::DebugFrame,
+// for synthesized frame of a wasm code.
+typedef mozilla::Variant<AbstractFramePtr, wasm::DebugFrame*> DebuggerFrameReferent;
+
 class Debugger : private mozilla::LinkedListElement<Debugger>
 {
     friend class Breakpoint;
@@ -1533,6 +1537,8 @@ class DebuggerObject : public NativeObject
 };
 
 class JSBreakpointSite;
+class WasmBreakpoint;
+class WasmBreakpointSite;
 
 class BreakpointSite {
     friend class Breakpoint;
@@ -1541,7 +1547,7 @@ class BreakpointSite {
     friend class Debugger;
 
   public:
-    enum class Type { JS };
+    enum class Type { JS, Wasm };
 
   private:
     Type type_;
@@ -1552,6 +1558,7 @@ class BreakpointSite {
   protected:
     virtual void recompile(FreeOp* fop) = 0;
     bool isEmpty() const;
+    inline bool isEnabled() const { return enabledCount > 0; }
 
   public:
     BreakpointSite(Type type);
@@ -1564,6 +1571,7 @@ class BreakpointSite {
     virtual void destroyIfEmpty(FreeOp* fop) = 0;
 
     inline JSBreakpointSite* asJS();
+    inline WasmBreakpointSite* asWasm();
 };
 
 /*
@@ -1606,6 +1614,8 @@ class Breakpoint {
     Breakpoint* nextInSite();
     const PreBarrieredObject& getHandler() const { return handler; }
     PreBarrieredObject& getHandlerRef() { return handler; }
+
+    inline WasmBreakpoint* asWasm();
 };
 
 class JSBreakpointSite : public BreakpointSite
@@ -1629,6 +1639,48 @@ BreakpointSite::asJS()
     MOZ_ASSERT(type() == Type::JS);
     return static_cast<JSBreakpointSite*>(this);
 }
+
+class WasmBreakpointSite : public BreakpointSite
+{
+  public:
+    wasm::Code* code;
+    uint32_t offset;
+
+  protected:
+    void recompile(FreeOp* fop) override;
+
+  public:
+    WasmBreakpointSite(wasm::Code* code, uint32_t offset);
+
+    void destroyIfEmpty(FreeOp* fop) override;
+};
+
+inline WasmBreakpointSite*
+BreakpointSite::asWasm()
+{
+    MOZ_ASSERT(type() == Type::Wasm);
+    return static_cast<WasmBreakpointSite*>(this);
+}
+
+class WasmBreakpoint : public Breakpoint
+{
+  public:
+    WasmInstanceObject* wasmInstance;
+
+    WasmBreakpoint(Debugger* debugger, WasmBreakpointSite* site, JSObject* handler,
+                   WasmInstanceObject* wasmInstance_)
+      : Breakpoint(debugger, site, handler),
+        wasmInstance(wasmInstance_)
+    {}
+};
+
+inline WasmBreakpoint*
+Breakpoint::asWasm()
+{
+    MOZ_ASSERT(site && site->type() == BreakpointSite::Type::Wasm);
+    return static_cast<WasmBreakpoint*>(this);
+}
+
 
 Breakpoint*
 Debugger::firstBreakpoint() const

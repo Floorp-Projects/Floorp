@@ -2041,7 +2041,7 @@ class BaseCompiler
     // Labels
 
     void insertBreakablePoint(CallSiteDesc::Kind kind) {
-        const uint32_t offset = iter_.currentOffset();
+        const uint32_t offset = trapOffset().bytecodeOffset;
         masm.nopPatchableToCall(CallSiteDesc(offset, kind));
     }
 
@@ -2214,6 +2214,7 @@ class BaseCompiler
             // Store and reload the return value from DebugFrame::return so that
             // it can be clobbered, and/or modified by the debug trap.
             saveResult();
+            insertBreakablePoint(CallSiteDesc::Breakpoint);
             insertBreakablePoint(CallSiteDesc::LeaveFrame);
             restoreResult();
         }
@@ -6837,6 +6838,16 @@ BaseCompiler::emitBody()
 
         uint16_t op;
         CHECK(iter_.readOp(&op));
+
+        // When debugEnabled_, every operator has breakpoint site but Op::End.
+        if (debugEnabled_ && op != (uint16_t)Op::End) {
+            // TODO sync only registers that can be clobbered by the exit
+            // prologue/epilogue or disable these registers for use in
+            // baseline compiler when debugEnabled_ is set.
+            sync();
+
+            insertBreakablePoint(CallSiteDesc::Breakpoint);
+        }
 
         switch (op) {
           // Control opcodes
