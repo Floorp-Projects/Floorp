@@ -1117,10 +1117,12 @@ IdlInterface.prototype.test_member_const = function(member)
 //@}
 IdlInterface.prototype.test_member_attribute = function(member)
 //@{
-{
-    test(function()
+  {
+    var a_test = async_test(this.name + " interface: attribute " + member.name);
+    a_test.step(function()
     {
         if (this.is_callback() && !this.has_constants()) {
+            a_test.done()
             return;
         }
 
@@ -1133,6 +1135,7 @@ IdlInterface.prototype.test_member_attribute = function(member)
             assert_own_property(self[this.name], member.name,
                 "The interface object must have a property " +
                 format_value(member.name));
+            a_test.done();
         } else if (this.is_global()) {
             assert_own_property(self, member.name,
                 "The global object must have a property " +
@@ -1161,23 +1164,42 @@ IdlInterface.prototype.test_member_attribute = function(member)
                               "Gets on a global should not require an explicit this");
             }
 
-            this.do_interface_attribute_asserts(self, member);
+            // do_interface_attribute_asserts must be the last thing we do,
+            // since it will call done() on a_test.
+            this.do_interface_attribute_asserts(self, member, a_test);
         } else {
             assert_true(member.name in self[this.name].prototype,
                 "The prototype object must have a property " +
                 format_value(member.name));
 
             if (!member.has_extended_attribute("LenientThis")) {
-                assert_throws(new TypeError(), function() {
-                    self[this.name].prototype[member.name];
-                }.bind(this), "getting property on prototype object must throw TypeError");
+                if (member.idlType.generic !== "Promise") {
+                    assert_throws(new TypeError(), function() {
+                        self[this.name].prototype[member.name];
+                    }.bind(this), "getting property on prototype object must throw TypeError");
+                    // do_interface_attribute_asserts must be the last thing we
+                    // do, since it will call done() on a_test.
+                    this.do_interface_attribute_asserts(self[this.name].prototype, member, a_test);
+                } else {
+                    promise_rejects(a_test, new TypeError(),
+                                    self[this.name].prototype[member.name])
+                        .then(function() {
+                            // do_interface_attribute_asserts must be the last
+                            // thing we do, since it will call done() on a_test.
+                            this.do_interface_attribute_asserts(self[this.name].prototype,
+                                                                member, a_test);
+                        }.bind(this));
+                }
             } else {
                 assert_equals(self[this.name].prototype[member.name], undefined,
                               "getting property on prototype object must return undefined");
+              // do_interface_attribute_asserts must be the last thing we do,
+              // since it will call done() on a_test.
+              this.do_interface_attribute_asserts(self[this.name].prototype, member, a_test);
             }
-            this.do_interface_attribute_asserts(self[this.name].prototype, member);
+
         }
-    }.bind(this), this.name + " interface: attribute " + member.name);
+    }.bind(this));
 };
 
 //@}
@@ -1522,12 +1544,13 @@ IdlInterface.prototype.test_interface_of = function(desc, obj, exception, expect
         var member = this.members[i];
         if (member.type == "attribute" && member.isUnforgeable)
         {
-            test(function()
-            {
+            var a_test = async_test(this.name + " interface: " + desc + ' must have own property "' + member.name + '"');
+            a_test.step(function() {
                 assert_equals(exception, null, "Unexpected exception when evaluating object");
                 assert_equals(typeof obj, expected_typeof, "wrong typeof object");
-                this.do_interface_attribute_asserts(obj, member);
-            }.bind(this), this.name + " interface: " + desc + ' must have own property "' + member.name + '"');
+                // Call do_interface_attribute_asserts last, since it will call a_test.done()
+                this.do_interface_attribute_asserts(obj, member, a_test);
+            }.bind(this));
         }
         else if (member.type == "operation" &&
                  member.name &&
@@ -1646,7 +1669,7 @@ IdlInterface.prototype.has_stringifier = function()
 };
 
 //@}
-IdlInterface.prototype.do_interface_attribute_asserts = function(obj, member)
+IdlInterface.prototype.do_interface_attribute_asserts = function(obj, member, a_test)
 //@{
 {
     // This function tests WebIDL as of 2015-01-27.
@@ -1655,6 +1678,8 @@ IdlInterface.prototype.do_interface_attribute_asserts = function(obj, member)
     // This is called by test_member_attribute() with the prototype as obj if
     // it is not a global, and the global otherwise, and by test_interface_of()
     // with the object as obj.
+
+    var pendingPromises = [];
 
     // "For each exposed attribute of the interface, whether it was declared on
     // the interface itself or one of its consequential interfaces, there MUST
@@ -1695,9 +1720,15 @@ IdlInterface.prototype.do_interface_attribute_asserts = function(obj, member)
         // attribute, then return undefined.
         // "Otherwise, throw a TypeError."
         if (!member.has_extended_attribute("LenientThis")) {
-            assert_throws(new TypeError(), function() {
-                desc.get.call({});
-            }.bind(this), "calling getter on wrong object type must throw TypeError");
+            if (member.idlType.generic !== "Promise") {
+                assert_throws(new TypeError(), function() {
+                    desc.get.call({});
+                }.bind(this), "calling getter on wrong object type must throw TypeError");
+            } else {
+                pendingPromises.push(
+                    promise_rejects(a_test, new TypeError(), desc.get.call({}),
+                                    "calling getter on wrong object type must reject the return promise with TypeError"));
+            }
         } else {
             assert_equals(desc.get.call({}), undefined,
                           "calling getter on wrong object type must return undefined");
@@ -1748,6 +1779,8 @@ IdlInterface.prototype.do_interface_attribute_asserts = function(obj, member)
         // value 1."
         assert_equals(desc.set.length, 1, "setter length must be 1");
     }
+
+    Promise.all(pendingPromises).then(a_test.done.bind(a_test));
 }
 //@}
 
