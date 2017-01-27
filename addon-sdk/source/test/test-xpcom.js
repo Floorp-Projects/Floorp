@@ -145,6 +145,7 @@ function testRegister(assert, text) {
         var channel = ios.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
 
         channel.originalURI = aURI;
+        aLoadInfo.resultPrincipalURI = aURI;
         return channel;
       },
       getURIFlags: function(aURI) {

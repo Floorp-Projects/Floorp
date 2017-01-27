@@ -24,6 +24,7 @@ var CustomChromeProtocol = {
     let url = Services.io.newURI("chrome:" + aURI.path);
     let ch = Services.io.newChannelFromURIWithLoadInfo(url, aLoadInfo);
     ch.originalURI = aURI;
+    aLoadInfo.resultPrincipalURI = aURI;
     return ch;
   },
 
