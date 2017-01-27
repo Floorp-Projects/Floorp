@@ -22,6 +22,10 @@ interface URLSearchParams {
   sequence<USVString> getAll(USVString name);
   boolean has(USVString name);
   void set(USVString name, USVString value);
+
+  [Throws]
+  void sort();
+
   iterable<USVString, USVString>;
   stringifier;
 };
