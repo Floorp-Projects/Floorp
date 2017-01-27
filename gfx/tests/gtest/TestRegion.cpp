@@ -12,6 +12,7 @@
 #include "nsRegion.h"
 #include "RegionBuilder.h"
 #include "mozilla/gfx/TiledRegion.h"
+#include "mozilla/UniquePtr.h"
 
 using namespace std;
 using namespace mozilla::gfx;
@@ -452,10 +453,10 @@ void VisitEdge(void *closure, VisitSide side, int x1, int y1, int x2, int y2)
 
 void TestVisit(nsRegion &r)
 {
-  unsigned char reference[600 * 600];
-  unsigned char result[600 * 600];
-  RegionBitmap ref(reference, 600, 600);
-  RegionBitmap res(result, 600, 600);
+  auto reference = mozilla::MakeUnique<unsigned char[]>(600 * 600);
+  auto result = mozilla::MakeUnique<unsigned char[]>(600 * 600);
+  RegionBitmap ref(reference.get(), 600, 600);
+  RegionBitmap res(result.get(), 600, 600);
 
   ref.set(r);
   ref.dilate();
