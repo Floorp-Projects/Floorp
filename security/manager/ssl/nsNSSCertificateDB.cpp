@@ -32,7 +32,6 @@
 #include "nsNSSComponent.h"
 #include "nsNSSHelper.h"
 #include "nsNSSShutDown.h"
-#include "nsPK11TokenDB.h"
 #include "nsPKCS12Blob.h"
 #include "nsPromiseFlatString.h"
 #include "nsProxyRelease.h"
@@ -965,7 +964,7 @@ nsNSSCertificateDB::ImportCertsFromFile(nsIFile* aFile, uint32_t aType)
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::ImportPKCS12File(nsISupports* aToken, nsIFile* aFile)
+nsNSSCertificateDB::ImportPKCS12File(nsIFile* aFile)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -974,17 +973,11 @@ nsNSSCertificateDB::ImportPKCS12File(nsISupports* aToken, nsIFile* aFile)
 
   NS_ENSURE_ARG(aFile);
   nsPKCS12Blob blob;
-  nsCOMPtr<nsIPK11Token> token = do_QueryInterface(aToken);
-  if (token) {
-    blob.SetToken(token);
-  }
   return blob.ImportFromFile(aFile);
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::ExportPKCS12File(nsISupports* aToken,
-                                     nsIFile* aFile,
-                                     uint32_t count,
+nsNSSCertificateDB::ExportPKCS12File(nsIFile* aFile, uint32_t count,
                                      nsIX509Cert** certs)
 {
   nsNSSShutDownPreventionLock locker;
@@ -993,19 +986,10 @@ nsNSSCertificateDB::ExportPKCS12File(nsISupports* aToken,
   }
 
   NS_ENSURE_ARG(aFile);
-  nsPKCS12Blob blob;
-  if (count == 0) return NS_OK;
-  nsCOMPtr<nsIPK11Token> localRef;
-  if (!aToken) {
-    UniquePK11SlotInfo keySlot(PK11_GetInternalKeySlot());
-    if (!keySlot) {
-      return NS_ERROR_FAILURE;
-    }
-    localRef = new nsPK11Token(keySlot.get());
-  } else {
-    localRef = do_QueryInterface(aToken);
+  if (count == 0) {
+    return NS_OK;
   }
-  blob.SetToken(localRef);
+  nsPKCS12Blob blob;
   return blob.ExportToFile(aFile, certs, count);
 }
 
