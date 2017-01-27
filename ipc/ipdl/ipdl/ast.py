@@ -56,12 +56,6 @@ class Visitor:
     def visitProtocol(self, p):
         for namespace in p.namespaces:
             namespace.accept(self)
-        for spawns in p.spawnsStmts:
-            spawns.accept(self)
-        for bridges in p.bridgesStmts:
-            bridges.accept(self)
-        for opens in p.opensStmts:
-            opens.accept(self)
         for mgr in p.managers:
             mgr.accept(self)
         for managed in p.managesStmts:
@@ -70,15 +64,6 @@ class Visitor:
             msgDecl.accept(self)
 
     def visitNamespace(self, ns):
-        pass
-
-    def visitSpawnsStmt(self, spawns):
-        pass
-
-    def visitBridgesStmt(self, bridges):
-        pass
-
-    def visitOpensStmt(self, opens):
         pass
 
     def visitManager(self, mgr):
@@ -226,9 +211,6 @@ class Protocol(NamespacedNode):
         NamespacedNode.__init__(self, loc)
         self.sendSemantics = ASYNC
         self.nested = NOT_NESTED
-        self.spawnsStmts = [ ]
-        self.bridgesStmts = [ ]
-        self.opensStmts = [ ]
         self.managers = [ ]
         self.managesStmts = [ ]
         self.messageDecls = [ ]
@@ -248,25 +230,6 @@ class UnionDecl(NamespacedNode):
     def __init__(self, loc, name, components):
         NamespacedNode.__init__(self, loc, name)
         self.components = components
-
-class SpawnsStmt(Node):
-    def __init__(self, loc, side, proto, spawnedAs):
-        Node.__init__(self, loc)
-        self.side = side
-        self.proto = proto
-        self.spawnedAs = spawnedAs
-
-class BridgesStmt(Node):
-    def __init__(self, loc, parentSide, childSide):
-        Node.__init__(self, loc)
-        self.parentSide = parentSide
-        self.childSide = childSide
-
-class OpensStmt(Node):
-    def __init__(self, loc, side, proto):
-        Node.__init__(self, loc)
-        self.side = side
-        self.proto = proto
 
 class Manager(Node):
     def __init__(self, loc, managerName):
