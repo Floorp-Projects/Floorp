@@ -442,6 +442,15 @@ URLSearchParams::GetValueAtIndex(uint32_t aIndex) const
   return mParams->GetValueAtIndex(aIndex);
 }
 
+void
+URLSearchParams::Sort(ErrorResult& aRv)
+{
+  aRv = mParams->Sort();
+  if (!aRv.Failed()) {
+    NotifyObserver();
+  }
+}
+
 // Helper functions for structured cloning
 inline bool
 ReadString(JSStructuredCloneReader* aReader, nsString& aString)
@@ -464,6 +473,39 @@ ReadString(JSStructuredCloneReader* aReader, nsString& aString)
   }
 
   return true;
+}
+
+nsresult
+URLParams::Sort()
+{
+  // Unfortunately we cannot use nsTArray<>.Sort() because it doesn't keep the
+  // correct order of the values for equal keys.
+
+  // Let's sort the keys, without duplicates.
+  FallibleTArray<nsString> keys;
+  for (const Param& param : mParams) {
+    if (!keys.Contains(param.mKey) &&
+        !keys.InsertElementSorted(param.mKey, fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  FallibleTArray<Param> params;
+
+  // Here we recreate the array starting from the sorted keys.
+  for (uint32_t keyId = 0, keysLength = keys.Length(); keyId < keysLength;
+       ++keyId) {
+    const nsString& key = keys[keyId];
+    for (const Param& param : mParams) {
+      if (param.mKey.Equals(key) &&
+          !params.AppendElement(param, fallible)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
+
+  mParams.SwapElements(params);
+  return NS_OK;
 }
 
 inline bool
