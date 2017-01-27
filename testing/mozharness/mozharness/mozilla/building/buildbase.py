@@ -1866,14 +1866,10 @@ or run without that action (ie: --no-{action})"
             self.info('resource usage lacks duration; ignoring')
             return None
 
-        extra_options = self.perfherder_resource_options()
-        if self.query_is_nightly():
-            extra_options = ['nightly'] + extra_options
-
         data = {
             'name': 'build times',
             'value': resources['duration'],
-            'extraOptions': extra_options,
+            'extraOptions': self.perfherder_resource_options(),
             'subtests': [],
         }
 
@@ -2001,6 +1997,13 @@ or run without that action (ie: --no-{action})"
         build_metrics = self._load_build_resources()
         if build_metrics:
             perfherder_data['suites'].append(build_metrics)
+
+        if self.query_is_nightly:
+            for suite in perfherder_data['suites']:
+                if 'extraOptions' in suite:
+                    suite['extraOptions'] = ['nightly'] + suite['extraOptions']
+                else:
+                    suite['extraOptions'] = ['nightly']
 
         if perfherder_data["suites"]:
             self.info('PERFHERDER_DATA: %s' % json.dumps(perfherder_data))
