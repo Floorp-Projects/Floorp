@@ -510,23 +510,6 @@ GetDocumentFromNPP(NPP npp)
   return doc;
 }
 
-static already_AddRefed<nsIChannel>
-GetChannelFromNPP(NPP npp)
-{
-  nsCOMPtr<nsIDocument> doc = GetDocumentFromNPP(npp);
-  if (!doc)
-    return nullptr;
-  nsCOMPtr<nsPIDOMWindowOuter> domwindow = doc->GetWindow();
-  nsCOMPtr<nsIChannel> channel;
-  if (domwindow) {
-    nsCOMPtr<nsIDocShell> docShell = domwindow->GetDocShell();
-    if (docShell) {
-      docShell->GetCurrentDocumentChannel(getter_AddRefs(channel));
-    }
-  }
-  return channel.forget();
-}
-
 static NPIdentifier
 doGetIdentifier(JSContext *cx, const NPUTF8* name)
 {
@@ -2490,29 +2473,9 @@ _getvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
       break;
     }
   case NPNURLVCookie:
-    {
-      nsCOMPtr<nsICookieService> cookieService =
-        do_GetService(NS_COOKIESERVICE_CONTRACTID);
-
-      if (!cookieService)
-        return NPERR_GENERIC_ERROR;
-
-      // Make an nsURI from the url argument
-      nsCOMPtr<nsIURI> uri;
-      if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), nsDependentCString(url)))) {
-        return NPERR_GENERIC_ERROR;
-      }
-
-      nsCOMPtr<nsIChannel> channel = GetChannelFromNPP(instance);
-
-      if (NS_FAILED(cookieService->GetCookieString(uri, channel, value)) ||
-          !*value) {
-        return NPERR_GENERIC_ERROR;
-      }
-
-      *len = strlen(*value);
-      return NPERR_NO_ERROR;
-    }
+    // NPNURLVCookie is no longer supported.
+    *value = nullptr;
+    return NPERR_GENERIC_ERROR;
 
   default:
     // Fall through and return an error...
@@ -2541,36 +2504,9 @@ _setvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
 
   switch (variable) {
   case NPNURLVCookie:
-    {
-      if (!value || 0 == len)
-        return NPERR_INVALID_PARAM;
+    // NPNURLVCookie is no longer supported.
+    return NPERR_GENERIC_ERROR;
 
-      nsresult rv = NS_ERROR_FAILURE;
-      nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
-      if (NS_FAILED(rv))
-        return NPERR_GENERIC_ERROR;
-
-      nsCOMPtr<nsICookieService> cookieService = do_GetService(NS_COOKIESERVICE_CONTRACTID, &rv);
-      if (NS_FAILED(rv))
-        return NPERR_GENERIC_ERROR;
-
-      nsCOMPtr<nsIURI> uriIn;
-      rv = ioService->NewURI(nsDependentCString(url), nullptr, nullptr, getter_AddRefs(uriIn));
-      if (NS_FAILED(rv))
-        return NPERR_GENERIC_ERROR;
-
-      nsCOMPtr<nsIChannel> channel = GetChannelFromNPP(instance);
-
-      char *cookie = (char*)value;
-      char c = cookie[len];
-      cookie[len] = '\0';
-      rv = cookieService->SetCookieString(uriIn, nullptr, cookie, channel);
-      cookie[len] = c;
-      if (NS_SUCCEEDED(rv))
-        return NPERR_NO_ERROR;
-    }
-
-    break;
   case NPNURLVProxy:
     // We don't support setting proxy values, fall through...
   default:
