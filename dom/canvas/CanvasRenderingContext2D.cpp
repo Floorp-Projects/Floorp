@@ -5006,7 +5006,7 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
   }
 
   if (!IsTargetValid()) {
-    gfxCriticalError() << "Unexpected invalid target in a Canvas2d.";
+    aError.Throw(NS_ERROR_FAILURE);
     return;
   }
 
