@@ -72,7 +72,7 @@ add_task(function* test_url_check() {
 
   // Restore a tab state with a given form data url.
   function restoreStateWithURL(url) {
-    let state = {entries: [{url: URL}], formdata: {id: {input: VALUE}}};
+    let state = {entries: [{url: URL, triggeringPrincipal_base64}], formdata: {id: {input: VALUE}}};
 
     if (url) {
       state.formdata.url = url;

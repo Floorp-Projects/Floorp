@@ -11,12 +11,12 @@ add_task(function* test() {
   });
 
   let state = { windows: [{ tabs: [
-    { entries: [{ url: "http://example.com" }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.com" }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.com" }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.com" }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.com" }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.com" }], extData: { "uniq": r() } }
+    { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+    { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+    { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+    { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+    { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+    { entries: [{ url: "http://example.com", triggeringPrincipal_base64 }], extData: { "uniq": r() } }
   ] }] };
 
   let expectedCounts = [

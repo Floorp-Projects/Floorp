@@ -68,7 +68,7 @@ async function testTabRestoreData(aFormData, aExpectedValue) {
   let browser = tab.linkedBrowser;
 
   aFormData.url = URL;
-  let tabState = { entries: [{ url: URL }], formdata: aFormData };
+  let tabState = { entries: [{ url: URL, triggeringPrincipal_base64 }], formdata: aFormData };
 
   await promiseBrowserLoaded(tab.linkedBrowser);
   await promiseTabState(tab, tabState);

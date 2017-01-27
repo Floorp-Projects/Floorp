@@ -31,18 +31,18 @@ function testBug600545() {
   let state = { windows: [
     {
       tabs: [
-        { entries: [{ url: "http://example.org#0" }], pinned:true },
-        { entries: [{ url: "http://example.com#1" }] },
-        { entries: [{ url: "http://example.com#2" }] },
+        { entries: [{ url: "http://example.org#0", triggeringPrincipal_base64 }], pinned:true },
+        { entries: [{ url: "http://example.com#1", triggeringPrincipal_base64 }] },
+        { entries: [{ url: "http://example.com#2", triggeringPrincipal_base64 }] },
       ],
       selected: 2
     },
     {
       tabs: [
-        { entries: [{ url: "http://example.com#3" }] },
-        { entries: [{ url: "http://example.com#4" }] },
-        { entries: [{ url: "http://example.com#5" }] },
-        { entries: [{ url: "http://example.com#6" }] }
+        { entries: [{ url: "http://example.com#3", triggeringPrincipal_base64 }] },
+        { entries: [{ url: "http://example.com#4", triggeringPrincipal_base64 }] },
+        { entries: [{ url: "http://example.com#5", triggeringPrincipal_base64 }] },
+        { entries: [{ url: "http://example.com#6", triggeringPrincipal_base64 }] }
       ],
       selected: 3
     }

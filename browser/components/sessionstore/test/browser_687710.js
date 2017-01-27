@@ -14,20 +14,24 @@ var state = {windows:[{tabs:[{entries:[
   {
     docIdentifier: 1,
     url: "http://example.com",
+    triggeringPrincipal_base64,
     children: [
       {
         docIdentifier: 2,
-        url: "http://example.com"
+        url: "http://example.com",
+        triggeringPrincipal_base64,
       }
     ]
   },
   {
     docIdentifier: 2,
     url: "http://example.com",
+    triggeringPrincipal_base64,
     children: [
       {
         docIdentifier: 1,
-        url: "http://example.com"
+        url: "http://example.com",
+        triggeringPrincipal_base64,
       }
     ]
   }

@@ -8,7 +8,7 @@ const STATES = [{
     shouldBeAdded: true,
     windowState: {
       windows: [{
-        tabs: [{ entries: [{ url: "http://example.com", title: "example.com" }] }],
+        tabs: [{ entries: [{ url: "http://example.com", triggeringPrincipal_base64, title: "example.com" }] }],
         selected: 1,
         _closedTabs: []
       }]
@@ -26,7 +26,7 @@ const STATES = [{
     windowState: {
       windows: [{
         tabs: [{ entries: [] }],
-        _closedTabs: [{ state: { entries: [{ url: "http://example.com", index: 1 }] } }]
+        _closedTabs: [{ state: { entries: [{ url: "http://example.com", triggeringPrincipal_base64, index: 1 }] } }]
       }]
     }
   }, {

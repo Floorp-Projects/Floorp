@@ -15,7 +15,7 @@ function test() {
     let state = {
       windows: [{
         tabs: [
-          { entries: [{ url: "about:mozilla" }] },
+          { entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }] },
           { entries: [], userTypedValue: "example.com", userTypedClear: 0 }
         ],
         selected: 2
@@ -47,7 +47,7 @@ function test() {
     let state = {
       windows: [{
         tabs: [
-          { entries: [{ url: "about:mozilla" }] },
+          { entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }] },
           { entries: [], userTypedValue: "example.org", userTypedClear: 0 }
         ],
         selected: 1
@@ -79,7 +79,8 @@ function test() {
     let state = {
       windows: [{
         tabs: [{
-          entries: [{ url: "about:mozilla" }, { url: "about:config" }],
+          entries: [{ url: "about:mozilla", triggeringPrincipal_base64},
+                    { url: "about:config", triggeringPrincipal_base64 }],
           index: 2,
           userTypedValue: "example.com",
           userTypedClear: 0
@@ -108,7 +109,8 @@ function test() {
     let state = {
       windows: [{
         tabs: [{
-          entries: [{ url: "about:mozilla" }, { url: "about:config" }],
+          entries: [{ url: "about:mozilla", triggeringPrincipal_base64 },
+                    { url: "about:config", triggeringPrincipal_base64 }],
           index: 1,
           userTypedValue: "example.org",
           userTypedClear: 0
@@ -245,7 +247,7 @@ function test() {
   let originalState = JSON.parse(ss.getBrowserState());
   let state = {
     windows: [{
-      tabs: [{ entries: [{ url: "about:blank" }] }]
+      tabs: [{ entries: [{ url: "about:blank", triggeringPrincipal_base64 }] }]
     }]
   };
   function runNextTest() {

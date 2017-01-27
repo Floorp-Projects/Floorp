@@ -11,15 +11,15 @@ add_task(function* test() {
   });
 
   let state = { windows: [{ tabs: [
-    { entries: [{ url: "http://example.org/#1" }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.org/#2" }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.org/#3" }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.org/#4" }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.org/#5" }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.org/#6" }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.org/#7" }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.org/#8" }], extData: { "uniq": r() } },
-    { entries: [{ url: "http://example.org/#9" }], extData: { "uniq": r() } },
+    { entries: [{ url: "http://example.org/#1", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+    { entries: [{ url: "http://example.org/#2", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+    { entries: [{ url: "http://example.org/#3", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+    { entries: [{ url: "http://example.org/#4", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+    { entries: [{ url: "http://example.org/#5", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+    { entries: [{ url: "http://example.org/#6", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+    { entries: [{ url: "http://example.org/#7", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+    { entries: [{ url: "http://example.org/#8", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+    { entries: [{ url: "http://example.org/#9", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
   ], selected: 1 }] };
 
   let loadCount = 0;

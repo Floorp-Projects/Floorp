@@ -10,14 +10,18 @@ var state = {entries:[
   {
     docIdentifier: 1,
     url: "http://example.com?1",
+    triggeringPrincipal_base64,
     children: [{ docIdentifier: 10,
-                 url: "http://example.com?10" }]
+                 url: "http://example.com?10",
+                 triggeringPrincipal_base64 }]
   },
   {
     docIdentifier: 1,
     url: "http://example.com?1#a",
+    triggeringPrincipal_base64,
     children: [{ docIdentifier: 10,
-                 url: "http://example.com?10#aa" }]
+                 url: "http://example.com?10#aa",
+                 triggeringPrincipal_base64 }]
   }
 ]};
 

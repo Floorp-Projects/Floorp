@@ -102,7 +102,7 @@ add_task(function*() {
   // Start with an empty history
     let blankState = JSON.stringify({
       windows: [{
-        tabs: [{ entries: [{ url: "about:blank" }] }],
+        tabs: [{ entries: [{ url: "about:blank", triggeringPrincipal_base64 }] }],
         _closedTabs: []
       }],
       _closedWindows: []

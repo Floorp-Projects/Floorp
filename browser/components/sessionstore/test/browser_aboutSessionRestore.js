@@ -5,13 +5,13 @@
 
 const CRASH_URL = "about:mozilla";
 const CRASH_FAVICON = "chrome://branding/content/icon32.png";
-const CRASH_SHENTRY = {url: CRASH_URL};
+const CRASH_SHENTRY = {url: CRASH_URL, triggeringPrincipal_base64};
 const CRASH_TAB = {entries: [CRASH_SHENTRY], image: CRASH_FAVICON};
 const CRASH_STATE = {windows: [{tabs: [CRASH_TAB]}]};
 
 const TAB_URL = "about:sessionrestore";
 const TAB_FORMDATA = {url: TAB_URL, id: {sessionData: CRASH_STATE}};
-const TAB_SHENTRY = {url: TAB_URL};
+const TAB_SHENTRY = {url: TAB_URL, triggeringPrincipal_base64};
 const TAB_STATE = {entries: [TAB_SHENTRY], formdata: TAB_FORMDATA};
 
 const FRAME_SCRIPT = "data:," +

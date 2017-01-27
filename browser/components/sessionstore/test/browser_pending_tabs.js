@@ -1,7 +1,9 @@
 "use strict";
 
 const TAB_STATE = {
-  entries: [{ url: "about:mozilla" }, { url: "about:robots" }],
+  entries: [
+  { url: "about:mozilla", triggeringPrincipal_base64 },
+  { url: "about:robots", triggeringPrincipal_base64 }],
   index: 1,
 };
 
