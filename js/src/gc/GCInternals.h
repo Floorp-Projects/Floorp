@@ -46,7 +46,7 @@ class MOZ_RAII AutoTraceSession
     void operator=(const AutoTraceSession&) = delete;
 
     JS::HeapState prevState;
-    AutoSPSEntry pseudoFrame;
+    AutoGeckoProfilerEntry pseudoFrame;
 };
 
 class MOZ_RAII AutoPrepareForTracing

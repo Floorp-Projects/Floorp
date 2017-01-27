@@ -225,9 +225,6 @@ const SNAPSHOT_SCHEMA = {
         windowLayerManagerRemote: {
           type: "boolean",
         },
-        supportsHardwareH264: {
-          type: "string",
-        },
         currentAudioBackend: {
           type: "string",
         },

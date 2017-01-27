@@ -8,7 +8,7 @@ function addDebug(g, id) {\
     var debuggerGlobal = newGlobal();\
     debuggerGlobal.debuggee = g;\
     debuggerGlobal.id = id;\
-    debuggerGlobal.print = function (s) { (g) += s; };\
+    debuggerGlobal.print = function (s) { print(s); };\
     debuggerGlobal.eval('var dbg = new Debugger(debuggee);dbg.onDebuggerStatement = function () { print(id); debugger; };');\
     return debuggerGlobal;\
 }\

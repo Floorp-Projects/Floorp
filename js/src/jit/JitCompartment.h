@@ -373,7 +373,7 @@ class JitRuntime
     }
 
     bool isProfilerInstrumentationEnabled(JSRuntime* rt) {
-        return rt->spsProfiler.enabled();
+        return rt->geckoProfiler.enabled();
     }
 
     bool isOptimizationTrackingEnabled(JSRuntime* rt) {

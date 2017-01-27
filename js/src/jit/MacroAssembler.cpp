@@ -2366,7 +2366,7 @@ MacroAssembler::MacroAssembler(JSContext* cx, IonScript* ion,
 #endif
     if (ion) {
         setFramePushed(ion->frameSize());
-        if (pc && cx->runtime()->spsProfiler.enabled())
+        if (pc && cx->runtime()->geckoProfiler.enabled())
             enableProfilingInstrumentation();
     }
 }

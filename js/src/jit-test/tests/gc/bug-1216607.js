@@ -1,7 +1,7 @@
 if (!('oomTest' in this))
     quit();
 
-enableSPSProfilingWithSlowAssertions();
+enableGeckoProfilingWithSlowAssertions();
 try {
 (function() {
    while (n--) {

@@ -361,8 +361,8 @@ js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc, TraceOrMarkRuntime traceOrM
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
         c->traceRoots(trc, traceOrMark);
 
-    // Trace SPS.
-    rt->spsProfiler.trace(trc);
+    // Trace the Gecko Profiler.
+    rt->geckoProfiler.trace(trc);
 
     // Trace helper thread roots.
     HelperThreadState().trace(trc);

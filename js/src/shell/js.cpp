@@ -286,9 +286,9 @@ struct ShellContext
     UniqueChars readLineBuf;
     size_t readLineBufPos;
 
-    static const uint32_t SpsProfilingMaxStackSize = 1000;
-    ProfileEntry spsProfilingStack[SpsProfilingMaxStackSize];
-    uint32_t spsProfilingStackSize;
+    static const uint32_t GeckoProfilingMaxStackSize = 1000;
+    ProfileEntry geckoProfilingStack[GeckoProfilingMaxStackSize];
+    uint32_t geckoProfilingStackSize;
 
     OffThreadState offThreadState;
 };
@@ -437,7 +437,7 @@ ShellContext::ShellContext(JSContext* cx)
     exitCode(0),
     quitting(false),
     readLineBufPos(0),
-    spsProfilingStackSize(0)
+    geckoProfilingStackSize(0)
 {}
 
 static ShellContext*
@@ -4844,7 +4844,7 @@ static bool
 PrintProfilerEvents(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (cx->runtime()->spsProfiler.enabled())
+    if (cx->runtime()->geckoProfiler.enabled())
         js::RegisterContextProfilingEventMarker(cx, &PrintProfilerEvents_Callback);
     args.rval().setUndefined();
     return true;
@@ -4860,7 +4860,7 @@ SingleStepCallback(void* arg, jit::Simulator* sim, void* pc)
     JSContext* cx = reinterpret_cast<JSContext*>(arg);
 
     // If profiling is not enabled, don't do anything.
-    if (!cx->spsProfiler.enabled())
+    if (!cx->geckoProfiler.enabled())
         return;
 
     JS::ProfilingFrameIterator::RegisterState state;
@@ -4963,62 +4963,62 @@ IsLatin1(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-EnableSPSProfiling(JSContext* cx, unsigned argc, Value* vp)
+EnableGeckoProfiling(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
     ShellContext* sc = GetShellContext(cx);
 
-    // Disable before re-enabling; see the assertion in |SPSProfiler::setProfilingStack|.
-    if (cx->spsProfiler.installed())
-        cx->spsProfiler.enable(false);
+    // Disable before re-enabling; see the assertion in |GeckoProfiler::setProfilingStack|.
+    if (cx->geckoProfiler.installed())
+        cx->geckoProfiler.enable(false);
 
-    SetContextProfilingStack(cx, sc->spsProfilingStack, &sc->spsProfilingStackSize,
-                             ShellContext::SpsProfilingMaxStackSize);
-    cx->spsProfiler.enableSlowAssertions(false);
-    cx->spsProfiler.enable(true);
+    SetContextProfilingStack(cx, sc->geckoProfilingStack, &sc->geckoProfilingStackSize,
+                             ShellContext::GeckoProfilingMaxStackSize);
+    cx->geckoProfiler.enableSlowAssertions(false);
+    cx->geckoProfiler.enable(true);
 
     args.rval().setUndefined();
     return true;
 }
 
 static bool
-EnableSPSProfilingWithSlowAssertions(JSContext* cx, unsigned argc, Value* vp)
+EnableGeckoProfilingWithSlowAssertions(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setUndefined();
 
     ShellContext* sc = GetShellContext(cx);
 
-    if (cx->spsProfiler.enabled()) {
+    if (cx->geckoProfiler.enabled()) {
         // If profiling already enabled with slow assertions disabled,
         // this is a no-op.
-        if (cx->spsProfiler.slowAssertionsEnabled())
+        if (cx->geckoProfiler.slowAssertionsEnabled())
             return true;
 
         // Slow assertions are off.  Disable profiling before re-enabling
         // with slow assertions on.
-        cx->spsProfiler.enable(false);
+        cx->geckoProfiler.enable(false);
     }
 
-    // Disable before re-enabling; see the assertion in |SPSProfiler::setProfilingStack|.
-    if (cx->spsProfiler.installed())
-        cx->spsProfiler.enable(false);
+    // Disable before re-enabling; see the assertion in |GeckoProfiler::setProfilingStack|.
+    if (cx->geckoProfiler.installed())
+        cx->geckoProfiler.enable(false);
 
-    SetContextProfilingStack(cx, sc->spsProfilingStack, &sc->spsProfilingStackSize,
-                             ShellContext::SpsProfilingMaxStackSize);
-    cx->spsProfiler.enableSlowAssertions(true);
-    cx->spsProfiler.enable(true);
+    SetContextProfilingStack(cx, sc->geckoProfilingStack, &sc->geckoProfilingStackSize,
+                             ShellContext::GeckoProfilingMaxStackSize);
+    cx->geckoProfiler.enableSlowAssertions(true);
+    cx->geckoProfiler.enable(true);
 
     return true;
 }
 
 static bool
-DisableSPSProfiling(JSContext* cx, unsigned argc, Value* vp)
+DisableGeckoProfiling(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (cx->runtime()->spsProfiler.installed())
-        cx->runtime()->spsProfiler.enable(false);
+    if (cx->runtime()->geckoProfiler.installed())
+        cx->runtime()->geckoProfiler.enable(false);
     args.rval().setUndefined();
     return true;
 }
@@ -6057,19 +6057,19 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "disableSingleStepProfiling()",
 "  Return the array of backtraces recorded by enableSingleStepProfiling."),
 
-    JS_FN_HELP("enableSPSProfiling", EnableSPSProfiling, 0, 0,
-"enableSPSProfiling()",
-"  Enables SPS instrumentation and corresponding assertions, with slow\n"
+    JS_FN_HELP("enableGeckoProfiling", EnableGeckoProfiling, 0, 0,
+"enableGeckoProfiling()",
+"  Enables Gecko Profiler instrumentation and corresponding assertions, with slow\n"
 "  assertions disabled.\n"),
 
-    JS_FN_HELP("enableSPSProfilingWithSlowAssertions", EnableSPSProfilingWithSlowAssertions, 0, 0,
-"enableSPSProfilingWithSlowAssertions()",
-"  Enables SPS instrumentation and corresponding assertions, with slow\n"
+    JS_FN_HELP("enableGeckoProfilingWithSlowAssertions", EnableGeckoProfilingWithSlowAssertions, 0, 0,
+"enableGeckoProfilingWithSlowAssertions()",
+"  Enables Gecko Profiler instrumentation and corresponding assertions, with slow\n"
 "  assertions enabled.\n"),
 
-    JS_FN_HELP("disableSPSProfiling", DisableSPSProfiling, 0, 0,
-"disableSPSProfiling()",
-"  Disables SPS instrumentation"),
+    JS_FN_HELP("disableGeckoProfiling", DisableGeckoProfiling, 0, 0,
+"disableGeckoProfiling()",
+"  Disables Gecko Profiler instrumentation"),
 
     JS_FN_HELP("isLatin1", IsLatin1, 1, 0,
 "isLatin1(s)",

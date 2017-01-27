@@ -21,7 +21,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/JitSpewer.h"
 #include "js/Vector.h"
-#include "vm/SPSProfiler.h"
+#include "vm/GeckoProfiler.h"
 
 #include "jsscriptinlines.h"
 
@@ -733,7 +733,7 @@ JitcodeGlobalTable::trace(JSTracer* trc)
     // Trace all entries unconditionally. This is done during minor collection
     // to tenure and update object pointers.
 
-    MOZ_ASSERT(trc->runtime()->spsProfiler.enabled());
+    MOZ_ASSERT(trc->runtime()->geckoProfiler.enabled());
 
     AutoSuppressProfilerSampling suppressSampling(trc->runtime());
     for (Range r(*this); !r.empty(); r.popFront())
@@ -784,7 +784,7 @@ JitcodeGlobalTable::markIteratively(GCMarker* marker)
     uint32_t lapCount = marker->runtime()->profilerSampleBufferLapCount();
 
     // If the profiler is off, all entries are considered to be expired.
-    if (!marker->runtime()->spsProfiler.enabled())
+    if (!marker->runtime()->geckoProfiler.enabled())
         gen = UINT32_MAX;
 
     bool markedAny = false;

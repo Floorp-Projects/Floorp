@@ -63,7 +63,7 @@ bool CallTrackingActive(JSContext*);
 bool EnterScript(JSContext*, JSScript*, JSFunction*, InterpreterFrame*);
 
 /* About to leave a JS function */
-void ExitScript(JSContext*, JSScript*, JSFunction*, bool popSPSFrame);
+void ExitScript(JSContext*, JSScript*, JSFunction*, bool popProfilerFrame);
 
 /* Executing a script */
 bool StartExecution(JSScript* script);

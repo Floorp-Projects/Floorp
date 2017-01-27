@@ -22,3 +22,12 @@ fuzzy(2,30150) == opacity-blending.html opacity-blending-ref.html
 fuzzy(16,5) == mask-layer-transform.html mask-layer-transform-ref.html
 fuzzy-if(gtkWidget,1,17) == forced-bg-color-outside-visible-region.html forced-bg-color-outside-visible-region-ref.html
 != layerize-over-fixed-bg-1.html about:blank
+
+# These tests check whether the GPU process is working. We expect it to work if:
+#   E10S is enabled, and
+#   Direct2D 1.1 works (as a proxy for Windows 7 SP1 + Platform Update or higher), OR
+#   The GPU process has been forced on.
+# If these conditions are met, but the GPU process is not on, these tests will turn on
+# and compare false.
+skip-if(!browserIsRemote||!d2d||gpuProcess) == data:text/plain,FAIL about:blank
+skip-if(!gpuProcessForceEnabled||gpuProcess) == data:text/plain,FAIL about:blank
