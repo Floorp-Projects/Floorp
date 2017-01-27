@@ -10,6 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
+[Exposed=(Window,Worker)]
 interface FileList {
   getter File? item(unsigned long index);
   readonly attribute unsigned long length;

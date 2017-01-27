@@ -834,16 +834,6 @@ LegacyIntlInitialize(JSContext* cx, HandleObject obj, Handle<PropertyName*> init
     return true;
 }
 
-static bool
-CreateDefaultOptions(JSContext* cx, MutableHandleValue defaultOptions)
-{
-    RootedObject options(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
-    if (!options)
-        return false;
-    defaultOptions.setObject(*options);
-    return true;
-}
-
 // CountAvailable and GetAvailable describe the signatures used for ICU API
 // to determine available locales for various functionality.
 typedef int32_t
@@ -1057,15 +1047,9 @@ CollatorObject::finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(fop->onMainThread());
 
-    // This is-undefined check shouldn't be necessary, but for internal
-    // brokenness in object allocation code.  For the moment, hack around it by
-    // explicitly guarding against the possibility of the reserved slot not
-    // containing a private.  See bug 949220.
     const Value& slot = obj->as<CollatorObject>().getReservedSlot(CollatorObject::UCOLLATOR_SLOT);
-    if (!slot.isUndefined()) {
-        if (UCollator* coll = static_cast<UCollator*>(slot.toPrivate()))
-            ucol_close(coll);
-    }
+    if (UCollator* coll = static_cast<UCollator*>(slot.toPrivate()))
+        ucol_close(coll);
 }
 
 static JSObject*
@@ -1076,12 +1060,9 @@ CreateCollatorPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> 
     if (!ctor)
         return nullptr;
 
-    Rooted<CollatorObject*> proto(cx);
-    proto = GlobalObject::createBlankPrototype<CollatorObject>(cx, global);
+    RootedObject proto(cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
     if (!proto)
         return nullptr;
-    proto->setReservedSlot(CollatorObject::INTERNALS_SLOT, NullValue());
-    proto->setReservedSlot(CollatorObject::UCOLLATOR_SLOT, PrivateValue(nullptr));
 
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
@@ -1096,14 +1077,6 @@ CreateCollatorPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> 
 
     // 10.3.2 and 10.3.3
     if (!JS_DefineProperties(cx, proto, collator_properties))
-        return nullptr;
-
-    RootedValue options(cx);
-    if (!CreateDefaultOptions(cx, &options))
-        return nullptr;
-
-    // 10.2.1 and 10.3
-    if (!IntlInitialize(cx, proto, cx->names().InitializeCollator, UndefinedHandleValue, options))
         return nullptr;
 
     // 8.1
@@ -1507,16 +1480,10 @@ NumberFormatObject::finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(fop->onMainThread());
 
-    // This is-undefined check shouldn't be necessary, but for internal
-    // brokenness in object allocation code.  For the moment, hack around it by
-    // explicitly guarding against the possibility of the reserved slot not
-    // containing a private.  See bug 949220.
     const Value& slot =
         obj->as<NumberFormatObject>().getReservedSlot(NumberFormatObject::UNUMBER_FORMAT_SLOT);
-    if (!slot.isUndefined()) {
-        if (UNumberFormat* nf = static_cast<UNumberFormat*>(slot.toPrivate()))
-            unum_close(nf);
-    }
+    if (UNumberFormat* nf = static_cast<UNumberFormat*>(slot.toPrivate()))
+        unum_close(nf);
 }
 
 static JSObject*
@@ -1528,12 +1495,9 @@ CreateNumberFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObjec
     if (!ctor)
         return nullptr;
 
-    RootedNativeObject proto(cx);
-    proto = GlobalObject::createBlankPrototype<NumberFormatObject>(cx, global);
+    RootedObject proto(cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
     if (!proto)
         return nullptr;
-    proto->setReservedSlot(NumberFormatObject::INTERNALS_SLOT, NullValue());
-    proto->setReservedSlot(NumberFormatObject::UNUMBER_FORMAT_SLOT, PrivateValue(nullptr));
 
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
@@ -1567,19 +1531,6 @@ CreateNumberFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObjec
             return nullptr;
     }
 #endif // defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
-
-    RootedValue options(cx);
-    if (!CreateDefaultOptions(cx, &options))
-        return nullptr;
-
-    // 11.2.1 and 11.3
-    RootedValue thisOrResult(cx, ObjectValue(*proto));
-    if (!LegacyIntlInitialize(cx, proto, cx->names().InitializeNumberFormat, thisOrResult,
-                              UndefinedHandleValue, options, &thisOrResult))
-    {
-        return nullptr;
-    }
-    MOZ_ASSERT(&thisOrResult.toObject() == proto);
 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));
@@ -2468,16 +2419,10 @@ DateTimeFormatObject::finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(fop->onMainThread());
 
-    // This is-undefined check shouldn't be necessary, but for internal
-    // brokenness in object allocation code.  For the moment, hack around it by
-    // explicitly guarding against the possibility of the reserved slot not
-    // containing a private.  See bug 949220.
     const Value& slot =
         obj->as<DateTimeFormatObject>().getReservedSlot(DateTimeFormatObject::UDATE_FORMAT_SLOT);
-    if (!slot.isUndefined()) {
-        if (UDateFormat* df = static_cast<UDateFormat*>(slot.toPrivate()))
-            udat_close(df);
-    }
+    if (UDateFormat* df = static_cast<UDateFormat*>(slot.toPrivate()))
+        udat_close(df);
 }
 
 static JSObject*
@@ -2489,12 +2434,9 @@ CreateDateTimeFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObj
     if (!ctor)
         return nullptr;
 
-    Rooted<DateTimeFormatObject*> proto(cx);
-    proto = GlobalObject::createBlankPrototype<DateTimeFormatObject>(cx, global);
+    RootedObject proto(cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
     if (!proto)
         return nullptr;
-    proto->setReservedSlot(DateTimeFormatObject::INTERNALS_SLOT, NullValue());
-    proto->setReservedSlot(DateTimeFormatObject::UDATE_FORMAT_SLOT, PrivateValue(nullptr));
 
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
@@ -2510,19 +2452,6 @@ CreateDateTimeFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObj
     // 12.4.2 and 12.4.3
     if (!JS_DefineProperties(cx, proto, dateTimeFormat_properties))
         return nullptr;
-
-    RootedValue options(cx);
-    if (!CreateDefaultOptions(cx, &options))
-        return nullptr;
-
-    // 12.2.1 and 12.3
-    RootedValue thisOrResult(cx, ObjectValue(*proto));
-    if (!LegacyIntlInitialize(cx, proto, cx->names().InitializeDateTimeFormat, thisOrResult,
-                              UndefinedHandleValue, options, &thisOrResult))
-    {
-        return nullptr;
-    }
-    MOZ_ASSERT(&thisOrResult.toObject() == proto);
 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));
@@ -3529,16 +3458,10 @@ PluralRulesObject::finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(fop->onMainThread());
 
-    // This is-undefined check shouldn't be necessary, but for internal
-    // brokenness in object allocation code.  For the moment, hack around it by
-    // explicitly guarding against the possibility of the reserved slot not
-    // containing a private.  See bug 949220.
     const Value& slot =
         obj->as<PluralRulesObject>().getReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT);
-    if (!slot.isUndefined()) {
-        if (UPluralRules* pr = static_cast<UPluralRules*>(slot.toPrivate()))
-            uplrules_close(pr);
-    }
+    if (UPluralRules* pr = static_cast<UPluralRules*>(slot.toPrivate()))
+        uplrules_close(pr);
 }
 
 static JSObject*
@@ -3549,12 +3472,9 @@ CreatePluralRulesPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObject
     if (!ctor)
         return nullptr;
 
-    Rooted<PluralRulesObject*> proto(cx);
-    proto = GlobalObject::createBlankPrototype<PluralRulesObject>(cx, global);
+    RootedObject proto(cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
     if (!proto)
         return nullptr;
-    proto->setReservedSlot(PluralRulesObject::INTERNALS_SLOT, NullValue());
-    proto->setReservedSlot(PluralRulesObject::UPLURAL_RULES_SLOT, PrivateValue(nullptr));
 
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
@@ -3564,16 +3484,6 @@ CreatePluralRulesPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObject
 
     if (!JS_DefineFunctions(cx, proto, pluralRules_methods))
         return nullptr;
-
-    RootedValue options(cx);
-    if (!CreateDefaultOptions(cx, &options))
-        return nullptr;
-
-    if (!IntlInitialize(cx, proto, cx->names().InitializePluralRules, UndefinedHandleValue,
-                        options))
-    {
-        return nullptr;
-    }
 
     RootedValue ctorValue(cx, ObjectValue(*ctor));
     if (!DefineProperty(cx, Intl, cx->names().PluralRules, ctorValue, nullptr, nullptr, 0))
