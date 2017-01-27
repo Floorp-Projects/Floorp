@@ -308,7 +308,7 @@ WebRenderAPI::SetProfilerEnabled(bool aEnabled)
 }
 
 void
-WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent>&& aEvent)
+WebRenderAPI::RunOnRenderThread(UniquePtr<RendererEvent> aEvent)
 {
   auto event = reinterpret_cast<uintptr_t>(aEvent.release());
   wr_api_send_external_event(mWrApi, event);

@@ -70,7 +70,7 @@ public:
 
   void SetProfilerEnabled(bool aEnabled);
 
-  void RunOnRenderThread(UniquePtr<RendererEvent>&& aEvent);
+  void RunOnRenderThread(UniquePtr<RendererEvent> aEvent);
   void Readback(gfx::IntSize aSize, uint8_t *aBuffer, uint32_t aBufferSize);
 
   GLint GetMaxTextureSize() const { return mMaxTextureSize; }
