@@ -8,13 +8,18 @@
 #include "mozilla/CDMCaps.h"
 #include "mozilla/TaskQueue.h"
 #include "MediaData.h"
+#include "MediaEventSource.h"
 #include "SamplesWaitingForKey.h"
 
 namespace mozilla {
 
-SamplesWaitingForKey::SamplesWaitingForKey(CDMProxy* aProxy)
+SamplesWaitingForKey::SamplesWaitingForKey(
+  CDMProxy* aProxy, TrackInfo::TrackType aType,
+  MediaEventProducer<TrackInfo::TrackType>* aOnWaitingForKey)
   : mMutex("SamplesWaitingForKey")
   , mProxy(aProxy)
+  , mType(aType)
+  , mOnWaitingForKeyEvent(aOnWaitingForKey)
 {
 }
 
@@ -40,6 +45,9 @@ SamplesWaitingForKey::WaitIfKeyNotUsable(MediaRawData* aSample)
   {
     MutexAutoLock lock(mMutex);
     mSamples.AppendElement(Move(entry));
+  }
+  if (mOnWaitingForKeyEvent) {
+    mOnWaitingForKeyEvent->Notify(mType);
   }
   caps.NotifyWhenKeyIdUsable(aSample->mCrypto.mKeyId, this);
   return p;
