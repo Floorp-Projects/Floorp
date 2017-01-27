@@ -111,6 +111,21 @@ static mozilla::StaticAutoPtr<mozilla::ProfilerIOInterposeObserver>
 // profiler_register_thread.
 static const char * gGeckoThreadName = "GeckoMain";
 
+Sampler::Sampler(double interval, bool profiling, int entrySize)
+  : interval_(interval)
+  , profiling_(profiling)
+  , paused_(false)
+  , active_(false)
+  , entrySize_(entrySize)
+{
+  MOZ_COUNT_CTOR(Sampler);
+}
+
+Sampler::~Sampler()
+{
+  MOZ_COUNT_DTOR(Sampler);
+}
+
 void Sampler::Startup() {
   sRegisteredThreads = new std::vector<ThreadInfo*>();
   sRegisteredThreadsMutex = MakeUnique<Mutex>("sRegisteredThreadsMutex");
