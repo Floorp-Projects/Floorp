@@ -1278,12 +1278,6 @@ GatherCertificateTransparencyTelemetry(const UniqueCERTCertList& certList,
     return;
   }
 
-  if (!info.processedSCTs) {
-    // We didn't receive any SCT data for this connection.
-    Telemetry::Accumulate(Telemetry::SSL_SCTS_PER_CONNECTION, 0);
-    return;
-  }
-
   for (const ct::VerifiedSCT& sct : info.verifyResult.verifiedScts) {
     GatherTelemetryForSingleSCT(sct);
   }
@@ -1297,7 +1291,7 @@ GatherCertificateTransparencyTelemetry(const UniqueCERTCertList& certList,
   // Handle the histogram of SCTs counts.
   uint32_t sctsCount =
     static_cast<uint32_t>(info.verifyResult.verifiedScts.length());
-  // Note that sctsCount can be 0 in case we've received SCT binary data,
+  // Note that sctsCount can also be 0 in case we've received SCT binary data,
   // but it failed to parse (e.g. due to unsupported CT protocol version).
   Telemetry::Accumulate(Telemetry::SSL_SCTS_PER_CONNECTION, sctsCount);
 }
