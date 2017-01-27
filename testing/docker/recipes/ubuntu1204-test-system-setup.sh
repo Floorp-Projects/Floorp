@@ -170,16 +170,17 @@ node -v  # verify
 cp /etc/apt/sources.list sources.list.orig
 
 # Install a slightly newer version of libxcb
-# See bug 975216 for the original build of these packages
+# See bugs 975216 and 1334641 for the original build of these packages
 # NOTE: if you're re-creating this, the tarball contains an `update.sh` which will rebuild the repository.
 tooltool_fetch <<'EOF'
 [
-{
-    "size": 9708011, 
-    "digest": "45005c7e1fdb4839f3bb96bfdb5e448672e7e40fa3cfc22ef646e2996a541f151e88c61b8a568cc00b7fcf5cb5e98e00c4e603acb0b73f85125582fa00aae76e", 
-    "algorithm": "sha512", 
-    "filename": "xcb-repo-1.8.1-2ubuntu2.1mozilla1.tgz"
-}
+  {
+    "size": 9711517,
+    "visibility": "public",
+    "digest": "ecbcebfb409ad9f7f2a9b6b058e20d49e45b3fd5d94dac59e94ff9a54844611f715230468af506a10a5cd62df6df74fdf0e126d43f6bec743eb803ded0740da7",
+    "algorithm": "sha512",
+    "filename": "xcb-repo-1.8.1-2ubuntu2.1mozilla2.tgz"
+  }
 ]
 EOF
 tar -zxf xcb-repo-*.tgz
@@ -242,7 +243,7 @@ apt-get -q -y --force-yes install \
     libxcb-glx0 \
     libxcb-shape0 libxcb-glx0:i386
 libxcb1_version=$(dpkg-query -s libxcb1 | grep ^Version | awk '{ print $2 }')
-[ "$libxcb1_version" = "1.8.1-2ubuntu2.1mozilla1" ] || exit 1
+[ "$libxcb1_version" = "1.8.1-2ubuntu2.1mozilla2" ] || exit 1
 
 apt-get -q -y --force-yes install \
     libgl1-mesa-dev-lts-saucy:i386 \
