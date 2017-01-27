@@ -29,6 +29,7 @@
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/MemoryReportTypes.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 
 #ifdef XP_WIN
@@ -1715,7 +1716,15 @@ nsMemoryReporterManager::StartGettingReports()
     for (size_t i = 0; i < childWeakRefs.Length(); ++i) {
       s->mChildrenPending.AppendElement(childWeakRefs[i]);
     }
+  }
 
+  if (gfx::GPUProcessManager* gpu = gfx::GPUProcessManager::Get()) {
+    if (RefPtr<MemoryReportingProcess> proc = gpu->GetProcessMemoryReporter()) {
+      s->mChildrenPending.AppendElement(proc.forget());
+    }
+  }
+
+  if (!s->mChildrenPending.IsEmpty()) {
     nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
     // Don't use NS_ENSURE_* here; can't return until the report is finished.
     if (NS_WARN_IF(!timer)) {
