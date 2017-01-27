@@ -81,7 +81,7 @@ extensions.registerSchemaAPI("idle", "addon_parent", context => {
       },
       onStateChanged: new SingletonEventManager(context, "idle.onStateChanged", fire => {
         let listener = (event, data) => {
-          fire.sync(data);
+          context.runSafe(fire, data);
         };
 
         getObserver(extension, context).on("stateChanged", listener);

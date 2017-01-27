@@ -28,7 +28,7 @@ extensions.registerSchemaAPI("runtime", "addon_parent", context => {
         }
         let listener = () => {
           if (extension.startupReason === "APP_STARTUP") {
-            fire.async();
+            fire();
           }
         };
         extension.on("startup", listener);
@@ -42,14 +42,14 @@ extensions.registerSchemaAPI("runtime", "addon_parent", context => {
           switch (extension.startupReason) {
             case "APP_STARTUP":
               if (Extension.browserUpdated) {
-                fire.async({reason: "browser_update"});
+                fire({reason: "browser_update"});
               }
               break;
             case "ADDON_INSTALL":
-              fire.async({reason: "install"});
+              fire({reason: "install"});
               break;
             case "ADDON_UPGRADE":
-              fire.async({reason: "update"});
+              fire({reason: "update"});
               break;
           }
         };
@@ -66,7 +66,7 @@ extensions.registerSchemaAPI("runtime", "addon_parent", context => {
           let details = {
             version: upgrade.version,
           };
-          fire.async(details);
+          context.runSafe(fire, details);
         });
         return () => {
           AddonManager.removeUpgradeListener(instanceID);

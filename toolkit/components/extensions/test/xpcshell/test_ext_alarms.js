@@ -52,12 +52,9 @@ add_task(function* test_alarm_fires() {
 
   yield extension.startup();
   yield extension.awaitFinish("alarm-fires");
-
-  // Defer unloading the extension so the asynchronous event listener
-  // reply finishes.
-  yield new Promise(resolve => setTimeout(resolve, 0));
   yield extension.unload();
 });
+
 
 add_task(function* test_alarm_fires_with_when() {
   function backgroundScript() {
@@ -89,12 +86,9 @@ add_task(function* test_alarm_fires_with_when() {
 
   yield extension.startup();
   yield extension.awaitFinish("alarm-when");
-
-  // Defer unloading the extension so the asynchronous event listener
-  // reply finishes.
-  yield new Promise(resolve => setTimeout(resolve, 0));
   yield extension.unload();
 });
+
 
 add_task(function* test_alarm_clear_non_matching_name() {
   async function backgroundScript() {
@@ -121,6 +115,7 @@ add_task(function* test_alarm_clear_non_matching_name() {
   yield extension.awaitFinish("alarm-clear");
   yield extension.unload();
 });
+
 
 add_task(function* test_alarm_get_and_clear_single_argument() {
   async function backgroundScript() {
