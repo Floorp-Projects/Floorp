@@ -120,6 +120,40 @@ AnimatedGeometryRoot::operator new(size_t aSize, nsDisplayListBuilder* aBuilder)
   return aBuilder->Allocate(aSize);
 }
 
+/* static */ bool
+ActiveScrolledRoot::IsAncestor(const ActiveScrolledRoot* aAncestor,
+                               const ActiveScrolledRoot* aDescendant)
+{
+  if (!aAncestor) {
+    // nullptr is the root
+    return true;
+  }
+  if (Depth(aAncestor) > Depth(aDescendant)) {
+    return false;
+  }
+  const ActiveScrolledRoot* asr = aDescendant;
+  while (asr) {
+    if (asr == aAncestor) {
+      return true;
+    }
+    asr = asr->mParent;
+  }
+  return false;
+}
+
+/* static */ nsCString
+ActiveScrolledRoot::ToString(const ActiveScrolledRoot* aActiveScrolledRoot)
+{
+  nsAutoCString str;
+  for (auto* asr = aActiveScrolledRoot; asr; asr = asr->mParent) {
+    str.AppendPrintf("<0x%p>", asr->mScrollableFrame);
+    if (asr->mParent) {
+      str.Append(", ");
+    }
+  }
+  return str;
+}
+
 static inline CSSAngle
 MakeCSSAngle(const nsCSSValue& aValue)
 {
@@ -791,12 +825,38 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
                            aLayer, data, pending);
 }
 
+void
+nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter::InsertScrollFrame(nsIScrollableFrame* aScrollableFrame)
+{
+  MOZ_ASSERT(!mUsed);
+  size_t descendantsEndIndex = mBuilder->mActiveScrolledRoots.Length();
+  const ActiveScrolledRoot* parentASR = mBuilder->mCurrentActiveScrolledRoot;
+  const ActiveScrolledRoot* asr = mBuilder->AllocateActiveScrolledRoot(parentASR, aScrollableFrame);
+  mBuilder->mCurrentActiveScrolledRoot = asr;
+
+  // All child ASRs of parentASR that were created while this
+  // AutoCurrentActiveScrolledRootSetter object was on the stack belong to us
+  // now. Reparent them to asr.
+  for (size_t i = mDescendantsStartIndex; i < descendantsEndIndex; i++) {
+    ActiveScrolledRoot* descendantASR = mBuilder->mActiveScrolledRoots[i];
+    if (ActiveScrolledRoot::IsAncestor(parentASR, descendantASR)) {
+      descendantASR->IncrementDepth();
+      if (descendantASR->mParent == parentASR) {
+        descendantASR->mParent = asr;
+      }
+    }
+  }
+
+  mUsed = true;
+}
+
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     nsDisplayListBuilderMode aMode, bool aBuildCaret)
     : mReferenceFrame(aReferenceFrame),
       mIgnoreScrollFrame(nullptr),
       mLayerEventRegions(nullptr),
       mCurrentTableItem(nullptr),
+      mCurrentActiveScrolledRoot(nullptr),
       mCurrentFrame(aReferenceFrame),
       mCurrentReferenceFrame(aReferenceFrame),
       mCurrentAGR(&mRootAGR),
@@ -1013,6 +1073,9 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
   for (DisplayItemScrollClip* c : mScrollClipsToDestroy) {
     c->DisplayItemScrollClip::~DisplayItemScrollClip();
   }
+  for (ActiveScrolledRoot* asr : mActiveScrolledRoots) {
+    asr->ActiveScrolledRoot::~ActiveScrolledRoot();
+  }
 
   PL_FinishArenaPool(&mPool);
   MOZ_COUNT_DTOR(nsDisplayListBuilder);
@@ -1226,6 +1289,17 @@ nsDisplayListBuilder::Allocate(size_t aSize)
     NS_ABORT_OOM(aSize);
   }
   return tmp;
+}
+
+ActiveScrolledRoot*
+nsDisplayListBuilder::AllocateActiveScrolledRoot(const ActiveScrolledRoot* aParent,
+                                                 nsIScrollableFrame* aScrollableFrame)
+{
+  void* p = Allocate(sizeof(ActiveScrolledRoot));
+  ActiveScrolledRoot* asr =
+    new (KnownNotNull, p) ActiveScrolledRoot(aParent, aScrollableFrame);
+  mActiveScrolledRoots.AppendElement(asr);
+  return asr;
 }
 
 const DisplayItemClip*
