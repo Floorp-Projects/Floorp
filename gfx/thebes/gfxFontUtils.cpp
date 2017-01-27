@@ -25,6 +25,10 @@
 #include "plbase64.h"
 #include "mozilla/Logging.h"
 
+#ifdef XP_MACOSX
+#include <CoreFoundation/CoreFoundation.h>
+#endif
+
 #define LOG(log, args) MOZ_LOG(gfxPlatform::GetLog(log), \
                                LogLevel::Debug, args)
 
@@ -1476,6 +1480,24 @@ gfxFontUtils::DecodeFontName(const char *aNameData, int32_t aByteLen,
     nsCOMPtr<nsIUnicodeDecoder> decoder =
         mozilla::dom::EncodingUtils::DecoderForEncoding(csName);
     if (!decoder) {
+#ifdef XP_MACOSX
+        // Special case for macOS only: support legacy Mac encodings
+        // that DecoderForEncoding didn't handle.
+        if (aPlatformCode == PLATFORM_ID_MAC) {
+            CFStringRef str =
+                CFStringCreateWithBytes(kCFAllocatorDefault,
+                                        (const UInt8*)aNameData, aByteLen,
+                                        aScriptCode, false);
+            if (str) {
+                CFIndex length = CFStringGetLength(str);
+                aName.SetLength(length);
+                CFStringGetCharacters(str, CFRangeMake(0, length),
+                                      (UniChar*)aName.BeginWriting());
+                CFRelease(str);
+                return true;
+            }
+        }
+#endif
         NS_WARNING("failed to get the decoder for a font name string");
         return false;
     }
