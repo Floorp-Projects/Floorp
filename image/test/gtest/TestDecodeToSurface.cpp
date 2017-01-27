@@ -47,7 +47,7 @@ public:
                                 imgIContainer::DECODE_FLAGS_DEFAULT);
     ASSERT_TRUE(mSurface != nullptr);
 
-    EXPECT_TRUE(mSurface->IsDataSourceSurface());
+    EXPECT_EQ(SurfaceType::DATA, mSurface->GetType());
     EXPECT_TRUE(mSurface->GetFormat() == SurfaceFormat::B8G8R8X8 ||
                 mSurface->GetFormat() == SurfaceFormat::B8G8R8A8);
     EXPECT_EQ(mTestCase.mSize, mSurface->GetSize());
