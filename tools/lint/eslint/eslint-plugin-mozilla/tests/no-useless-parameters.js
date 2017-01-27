@@ -62,11 +62,23 @@ exports.runTest = function(ruleTester) {
       },
       {
         code: "Services.io.newURI('http://example.com', null, null);",
-        errors: callError("newURI's optional parameters passed as null.")
+        errors: callError("newURI's last parameters are optional.")
       },
       {
         code: "Services.io.newURI('http://example.com', 'utf8', null);",
-        errors: callError("newURI's optional parameters passed as null.")
+        errors: callError("newURI's last parameters are optional.")
+      },
+      {
+        code: "Services.io.newURI('http://example.com', null);",
+        errors: callError("newURI's last parameters are optional.")
+      },
+      {
+        code: "Services.io.newURI('http://example.com', '', '');",
+        errors: callError("newURI's last parameters are optional.")
+      },
+      {
+        code: "Services.io.newURI('http://example.com', '');",
+        errors: callError("newURI's last parameters are optional.")
       },
       {
         code: "elt.addEventListener('click', handler, false);",

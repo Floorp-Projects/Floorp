@@ -64,10 +64,10 @@ module.exports = function(context) {
       }
 
       if (callee.property.name === "newURI" &&
-          node.arguments.length === 3) {
-        let arg = node.arguments[2];
-        if (arg.type === "Literal" && arg.value === null) {
-          context.report(node, "newURI's optional parameters passed as null.");
+          node.arguments.length > 1) {
+        let arg = node.arguments[node.arguments.length - 1];
+        if (arg.type === "Literal" && !arg.value) {
+          context.report(node, "newURI's last parameters are optional.");
         }
       }
     }
