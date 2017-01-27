@@ -545,17 +545,6 @@ class TestRecursiveMakeBackend(BackendTester):
             '[include:xpcshell.ini]',
         ])
 
-        all_tests_path = mozpath.join(env.topobjdir, 'all-tests.pkl')
-        self.assertTrue(os.path.exists(all_tests_path))
-
-        with open(all_tests_path, 'rb') as fh:
-            o = pickle.load(fh)
-
-            self.assertIn('xpcshell.js', o)
-            self.assertIn('dir1/test_bar.js', o)
-
-            self.assertEqual(len(o['xpcshell.js']), 1)
-
     def test_test_manifest_pattern_matches_recorded(self):
         """Pattern matches in test manifests' support-files should be recorded."""
         env = self._consume('test-manifests-written', RecursiveMakeBackend)
@@ -571,19 +560,10 @@ class TestRecursiveMakeBackend(BackendTester):
     def test_test_manifest_deffered_installs_written(self):
         """Shared support files are written to their own data file by the backend."""
         env = self._consume('test-manifest-shared-support', RecursiveMakeBackend)
-        all_tests_path = mozpath.join(env.topobjdir, 'all-tests.pkl')
-        self.assertTrue(os.path.exists(all_tests_path))
         test_installs_path = mozpath.join(env.topobjdir, 'test-installs.pkl')
 
         with open(test_installs_path, 'r') as fh:
             test_installs = pickle.load(fh)
-
-        self.assertEqual(set(test_installs.keys()),
-                         set(['child/test_sub.js',
-                              'child/data/**',
-                              'child/another-file.sjs']))
-        for key in test_installs.keys():
-            self.assertIn(key, test_installs)
 
         test_files_manifest = mozpath.join(env.topobjdir,
                                            '_build_manifests',
