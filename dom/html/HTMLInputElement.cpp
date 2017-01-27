@@ -5912,20 +5912,19 @@ HTMLInputElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLInputElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                        GenericSpecifiedValues* aGenericData)
+                                        GenericSpecifiedValues* aData)
 {
-  nsRuleData* aData = aGenericData->AsRuleData();
   const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::type);
   if (value && value->Type() == nsAttrValue::eEnum &&
       value->GetEnumValue() == NS_FORM_INPUT_IMAGE) {
-    nsGenericHTMLFormElementWithState::MapImageBorderAttributeInto(aAttributes, aGenericData);
-    nsGenericHTMLFormElementWithState::MapImageMarginAttributeInto(aAttributes, aGenericData);
-    nsGenericHTMLFormElementWithState::MapImageSizeAttributesInto(aAttributes, aGenericData);
+    nsGenericHTMLFormElementWithState::MapImageBorderAttributeInto(aAttributes, aData);
+    nsGenericHTMLFormElementWithState::MapImageMarginAttributeInto(aAttributes, aData);
+    nsGenericHTMLFormElementWithState::MapImageSizeAttributesInto(aAttributes, aData);
     // Images treat align as "float"
-    nsGenericHTMLFormElementWithState::MapImageAlignAttributeInto(aAttributes, aGenericData);
+    nsGenericHTMLFormElementWithState::MapImageAlignAttributeInto(aAttributes, aData);
   }
 
-  nsGenericHTMLFormElementWithState::MapCommonAttributesInto(aAttributes, aGenericData);
+  nsGenericHTMLFormElementWithState::MapCommonAttributesInto(aAttributes, aData);
 }
 
 nsChangeHint

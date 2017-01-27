@@ -319,14 +319,13 @@ HTMLImageElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLImageElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                        GenericSpecifiedValues* aGenericData)
+                                        GenericSpecifiedValues* aData)
 {
-  nsRuleData* aData = aGenericData->AsRuleData();
-  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aGenericData);
-  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aGenericData);
-  nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aGenericData);
-  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aGenericData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aGenericData);
+  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
 nsChangeHint
