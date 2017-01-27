@@ -389,7 +389,9 @@ MediaFormatReader::DecoderFactory::DoCreateDecoder(TrackType aTrack)
         ownerData.mTaskQueue,
         mOwner->mCrashHelper,
         ownerData.mIsBlankDecode,
-        &result
+        &result,
+        aTrack,
+        &mOwner->OnTrackWaitingForKeyProducer()
       });
       break;
     }
@@ -406,7 +408,9 @@ MediaFormatReader::DecoderFactory::DoCreateDecoder(TrackType aTrack)
         mOwner->GetImageContainer(),
         mOwner->mCrashHelper,
         ownerData.mIsBlankDecode,
-        &result
+        &result,
+        aTrack,
+        &mOwner->OnTrackWaitingForKeyProducer()
       });
       break;
     }
@@ -847,6 +851,8 @@ MediaFormatReader::MediaFormatReader(AbstractMediaDecoder* aDecoder,
       aDecoder->CompositorUpdatedEvent()->Connect(
         mTaskQueue, this, &MediaFormatReader::NotifyCompositorUpdated);
   }
+  mOnTrackWaitingForKeyListener = OnTrackWaitingForKey().Connect(
+    mTaskQueue, this, &MediaFormatReader::NotifyWaitingForKey);
 }
 
 MediaFormatReader::~MediaFormatReader()
@@ -895,6 +901,7 @@ MediaFormatReader::Shutdown()
   mDemuxer = nullptr;
 
   mCompositorUpdatedListener.DisconnectIfExists();
+  mOnTrackWaitingForKeyListener.Disconnect();
 
   RefPtr<ShutdownPromise> p = mShutdownPromise.Ensure(__func__);
   ShutdownPromise::All(OwnerThread(), promises)
@@ -1524,6 +1531,21 @@ MediaFormatReader::NotifyWaitingForData(TrackType aTrack)
 }
 
 void
+MediaFormatReader::NotifyWaitingForKey(TrackType aTrack)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  auto& decoder = GetDecoderData(aTrack);
+  if (mDecoder) {
+    mDecoder->NotifyWaitingForKey();
+  }
+  if (!decoder.mDecodeRequest.Exists()) {
+    LOGV("WaitingForKey received while no pending decode. Ignoring");
+  }
+  decoder.mWaitingForKey = true;
+  ScheduleUpdate(aTrack);
+}
+
+void
 MediaFormatReader::NotifyEndOfStream(TrackType aTrack)
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -2013,6 +2035,10 @@ MediaFormatReader::Update(TrackType aTrack)
       // EOS state. We can immediately reject the data promise.
       LOG("Rejecting %s promise: EOS", TrackTypeToStr(aTrack));
       decoder.RejectPromise(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
+    } else if (decoder.mWaitingForKey) {
+      LOG("Rejecting %s promise: WAITING_FOR_DATA due to waiting for key",
+          TrackTypeToStr(aTrack));
+      decoder.RejectPromise(NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA, __func__);
     }
   }
 
@@ -2054,11 +2080,21 @@ MediaFormatReader::Update(TrackType aTrack)
        decoder.mWaitingForData, decoder.HasPromise(),
        decoder.mLastStreamSourceID);
 
-  if ((decoder.mWaitingForData &&
-       (!decoder.mTimeThreshold || decoder.mTimeThreshold.ref().mWaiting))) {
+  if ((decoder.mWaitingForData
+       && (!decoder.mTimeThreshold || decoder.mTimeThreshold.ref().mWaiting))
+      || (decoder.mWaitingForKey && decoder.mDecodeRequest.Exists())) {
     // Nothing more we can do at present.
     LOGV("Still waiting for data or key.");
     return;
+  }
+
+  if (decoder.mWaitingForKey) {
+    decoder.mWaitingForKey = false;
+    if (decoder.HasWaitingPromise() && !decoder.IsWaiting()) {
+      LOGV("No longer waiting for key. Resolving waiting promise");
+      decoder.mWaitingPromise.Resolve(decoder.mType, __func__);
+      return;
+    }
   }
 
   if (!needInput) {

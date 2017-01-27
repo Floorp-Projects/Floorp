@@ -76,6 +76,8 @@ private:
   bool mNeedAVCC;
   nsresult mLastError;
   bool mNeedKeyframe = true;
+  const TrackInfo::TrackType mType;
+  MediaEventProducer<TrackInfo::TrackType>* const mOnWaitingForKeyEvent;
 };
 
 } // namespace mozilla

@@ -27,13 +27,14 @@ extern already_AddRefed<PlatformDecoderModule> CreateBlankDecoderModule();
 class EMEDecryptor : public MediaDataDecoder
 {
 public:
-  EMEDecryptor(MediaDataDecoder* aDecoder,
-               CDMProxy* aProxy,
-               TaskQueue* aDecodeTaskQueue)
+  EMEDecryptor(MediaDataDecoder* aDecoder, CDMProxy* aProxy,
+               TaskQueue* aDecodeTaskQueue, TrackInfo::TrackType aType,
+               MediaEventProducer<TrackInfo::TrackType>* aOnWaitingForKey)
     : mDecoder(aDecoder)
     , mTaskQueue(aDecodeTaskQueue)
     , mProxy(aProxy)
-    , mSamplesWaitingForKey(new SamplesWaitingForKey(mProxy))
+    , mSamplesWaitingForKey(
+        new SamplesWaitingForKey(mProxy, aType, aOnWaitingForKey))
     , mIsShutdown(false)
   {
   }
@@ -204,12 +205,15 @@ private:
 class EMEMediaDataDecoderProxy : public MediaDataDecoderProxy
 {
 public:
-  EMEMediaDataDecoderProxy(already_AddRefed<AbstractThread> aProxyThread,
-                           CDMProxy* aProxy)
-   : MediaDataDecoderProxy(Move(aProxyThread))
-   , mTaskQueue(AbstractThread::GetCurrent()->AsTaskQueue())
-   , mSamplesWaitingForKey(new SamplesWaitingForKey(aProxy))
-   , mProxy(aProxy)
+  EMEMediaDataDecoderProxy(
+    already_AddRefed<AbstractThread> aProxyThread, CDMProxy* aProxy,
+    TrackInfo::TrackType aType,
+    MediaEventProducer<TrackInfo::TrackType>* aOnWaitingForKey)
+    : MediaDataDecoderProxy(Move(aProxyThread))
+    , mTaskQueue(AbstractThread::GetCurrent()->AsTaskQueue())
+    , mSamplesWaitingForKey(
+        new SamplesWaitingForKey(aProxy, aType, aOnWaitingForKey))
+    , mProxy(aProxy)
   {
   }
 
@@ -289,7 +293,7 @@ EMEDecoderModule::~EMEDecoderModule()
 }
 
 static already_AddRefed<MediaDataDecoderProxy>
-CreateDecoderWrapper(CDMProxy* aProxy)
+CreateDecoderWrapper(CDMProxy* aProxy, const CreateDecoderParams& aParams)
 {
   RefPtr<gmp::GeckoMediaPluginService> s(gmp::GeckoMediaPluginService::GetGeckoMediaPluginService());
   if (!s) {
@@ -299,8 +303,8 @@ CreateDecoderWrapper(CDMProxy* aProxy)
   if (!thread) {
     return nullptr;
   }
-  RefPtr<MediaDataDecoderProxy> decoder(
-    new EMEMediaDataDecoderProxy(thread.forget(), aProxy));
+  RefPtr<MediaDataDecoderProxy> decoder(new EMEMediaDataDecoderProxy(
+    thread.forget(), aProxy, aParams.mType, aParams.mOnWaitingForKeyEvent));
   return decoder.forget();
 }
 
@@ -317,7 +321,8 @@ EMEDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 
   if (SupportsMimeType(aParams.mConfig.mMimeType, nullptr)) {
     // GMP decodes. Assume that means it can decrypt too.
-    RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(mProxy);
+    RefPtr<MediaDataDecoderProxy> wrapper =
+      CreateDecoderWrapper(mProxy, aParams);
     auto params = GMPVideoDecoderParams(aParams);
     wrapper->SetProxyTarget(new EMEVideoDecoder(mProxy, params));
     return wrapper.forget();
@@ -330,7 +335,8 @@ EMEDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
   }
 
   RefPtr<MediaDataDecoder> emeDecoder(new EMEDecryptor(
-    decoder, mProxy, AbstractThread::GetCurrent()->AsTaskQueue()));
+    decoder, mProxy, AbstractThread::GetCurrent()->AsTaskQueue(),
+    aParams.mType, aParams.mOnWaitingForKeyEvent));
   return emeDecoder.forget();
 }
 
@@ -355,7 +361,8 @@ EMEDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
   }
 
   RefPtr<MediaDataDecoder> emeDecoder(new EMEDecryptor(
-    decoder, mProxy, AbstractThread::GetCurrent()->AsTaskQueue()));
+    decoder, mProxy, AbstractThread::GetCurrent()->AsTaskQueue(),
+    aParams.mType, aParams.mOnWaitingForKeyEvent));
   return emeDecoder.forget();
 }
 
