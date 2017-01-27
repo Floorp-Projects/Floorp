@@ -6,6 +6,7 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 Cu.import("resource://gre/modules/MatchPattern.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 var {
   ExtensionError,
@@ -232,6 +233,13 @@ var gMenuBuilder = {
 
       let tab = item.tabManager.convert(contextData.tab);
       let info = item.getClickInfo(contextData, wasChecked);
+
+      const map = {shiftKey: "Shift", altKey: "Alt", metaKey: "Command", ctrlKey: "Ctrl"};
+      info.modifiers = Object.keys(map).filter(key => event[key]).map(key => map[key]);
+      if (event.ctrlKey && AppConstants.platform === "macosx") {
+        info.modifiers.push("MacCtrl");
+      }
+
       item.extension.emit("webext-contextmenu-menuitem-click", info, tab);
     });
 
