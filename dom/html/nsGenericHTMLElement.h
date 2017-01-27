@@ -692,7 +692,18 @@ public:
    * @see GetAttributeMappingFunction
    */
   static void MapDivAlignAttributeInto(const nsMappedAttributes* aAttributes,
-                                       GenericSpecifiedValues* aGenericData);
+                                    GenericSpecifiedValues* aGenericData);
+
+  /**
+   * Helper to map the valign attribute into a style struct for things
+   * like <col>, <tr>, <section>, etc.
+   *
+   * @param aAttributes the list of attributes to map
+   * @param aData the returned rule data [INOUT]
+   * @see GetAttributeMappingFunction
+   */
+  static void MapVAlignAttributeInto(const nsMappedAttributes* aAttributes,
+                                    GenericSpecifiedValues* aGenericData);
 
   /**
    * Helper to map the image border attribute into a style struct.
@@ -721,6 +732,25 @@ public:
    */
   static void MapImageSizeAttributesInto(const nsMappedAttributes* aAttributes,
                                          GenericSpecifiedValues* aGenericData);
+
+  /**
+   * Helper to map `width` attribute into a style struct.
+   *
+   * @param aAttributes the list of attributes to map
+   * @param aData the returned rule data [INOUT]
+   * @see GetAttributeMappingFunction
+   */
+  static void MapWidthAttributeInto(const nsMappedAttributes* aAttributes,
+                                    GenericSpecifiedValues* aGenericData);
+  /**
+   * Helper to map `height` attribute into a style struct.
+   *
+   * @param aAttributes the list of attributes to map
+   * @param aData the returned rule data [INOUT]
+   * @see GetAttributeMappingFunction
+   */
+  static void MapHeightAttributeInto(const nsMappedAttributes* aAttributes,
+                                     GenericSpecifiedValues* aGenericData);
   /**
    * Helper to map the background attribute
    * into a style struct.
