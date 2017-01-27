@@ -1569,9 +1569,38 @@ InIRGenerator::InIRGenerator(JSContext* cx, jsbytecode* pc, HandleValue key, Han
 { }
 
 bool
+InIRGenerator::tryAttachDenseIn(uint32_t index, Int32OperandId indexId,
+                                HandleObject obj, ObjOperandId objId)
+{
+    if (!obj->isNative())
+        return false;
+    if (!obj->as<NativeObject>().containsDenseElement(index))
+        return false;
+
+    writer.guardShape(objId, obj->as<NativeObject>().lastProperty());
+    writer.loadDenseElementExistsResult(objId, indexId);
+    writer.returnFromIC();
+    return true;
+}
+
+bool
 InIRGenerator::tryAttachStub()
 {
     MOZ_ASSERT(cacheKind_ == CacheKind::In);
+
+    AutoAssertNoPendingException aanpe(cx_);
+
+    ValOperandId keyId(writer.setInputOperandId(0));
+    ValOperandId valId(writer.setInputOperandId(1));
+    ObjOperandId objId = writer.guardIsObject(valId);
+
+    uint32_t index;
+    Int32OperandId indexId;
+    if (maybeGuardInt32Index(key_, keyId, &index, &indexId)) {
+        if (tryAttachDenseIn(index, indexId, obj_, objId))
+            return true;
+        return false;
+    }
 
     return false;
 }

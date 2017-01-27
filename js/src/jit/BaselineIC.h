@@ -899,40 +899,6 @@ class ICInNativeDoesNotExistCompiler : public ICStubCompiler
     ICStub* getStub(ICStubSpace* space);
 };
 
-class ICIn_Dense : public ICStub
-{
-    friend class ICStubSpace;
-
-    GCPtrShape shape_;
-
-    ICIn_Dense(JitCode* stubCode, HandleShape shape);
-
-  public:
-    GCPtrShape& shape() {
-        return shape_;
-    }
-    static size_t offsetOfShape() {
-        return offsetof(ICIn_Dense, shape_);
-    }
-
-    class Compiler : public ICStubCompiler {
-      RootedShape shape_;
-
-      protected:
-        MOZ_MUST_USE bool generateStubCode(MacroAssembler& masm);
-
-      public:
-        Compiler(JSContext* cx, Shape* shape)
-          : ICStubCompiler(cx, ICStub::In_Dense, Engine::Baseline),
-            shape_(cx, shape)
-        {}
-
-        ICStub* getStub(ICStubSpace* space) {
-            return newStub<ICIn_Dense>(space, getStubCode(), shape_);
-        }
-    };
-};
-
 // GetName
 //      JSOP_GETNAME
 //      JSOP_GETGNAME

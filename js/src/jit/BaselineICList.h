@@ -59,7 +59,6 @@ namespace jit {
     _(In_Native)                                 \
     _(In_NativePrototype)                        \
     _(In_NativeDoesNotExist)                     \
-    _(In_Dense)                                  \
                                                  \
     _(GetName_Fallback)                          \
                                                  \
