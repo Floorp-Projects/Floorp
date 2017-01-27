@@ -1005,11 +1005,6 @@ JsepSessionImpl::CreateAnswerMSection(const JsepAnswerOptions& options,
     BindMatchingRemoteTrackToAnswer(&msection);
   }
 
-  if (!msection.IsReceiving() && !msection.IsSending()) {
-    mSdpHelper.DisableMsection(sdp, &msection);
-    return NS_OK;
-  }
-
   // Add extmap attributes.
   AddCommonExtmaps(remoteMsection, &msection);
 

@@ -6,6 +6,7 @@
 #define mozilla_dom_FileHandleCommon_h
 
 #include "nscore.h"
+#include "nsISupportsImpl.h"
 
 #ifdef DEBUG
 #define DEBUGONLY(...)  __VA_ARGS__
@@ -21,11 +22,7 @@ namespace dom {
 class RefCountedObject
 {
 public:
-  NS_IMETHOD_(MozExternalRefCountType)
-  AddRef() = 0;
-
-  NS_IMETHOD_(MozExternalRefCountType)
-  Release() = 0;
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
 protected:
   virtual ~RefCountedObject()

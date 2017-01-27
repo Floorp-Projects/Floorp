@@ -689,11 +689,11 @@ EventSourceImpl::StreamReaderFunc(nsIInputStream* aInputStream,
                                   uint32_t* aWriteCount)
 {
   EventSourceImpl* thisObject = static_cast<EventSourceImpl*>(aClosure);
-  thisObject->AssertIsOnTargetThread();
   if (!thisObject || !aWriteCount) {
     NS_WARNING("EventSource cannot read from stream: no aClosure or aWriteCount");
     return NS_ERROR_FAILURE;
   }
+  thisObject->AssertIsOnTargetThread();
   thisObject->ParseSegment((const char*)aFromRawSegment, aCount);
   *aWriteCount = aCount;
   return NS_OK;

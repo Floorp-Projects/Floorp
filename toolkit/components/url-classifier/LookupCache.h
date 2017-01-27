@@ -26,7 +26,8 @@ namespace safebrowsing {
 class LookupResult {
 public:
   LookupResult() : mNoise(false), mProtocolConfirmed(false),
-                   mPartialHashLength(0), mConfirmed(false) {}
+                   mPartialHashLength(0), mConfirmed(false),
+                   mProtocolV2(true) {}
 
   // The fragment that matched in the LookupCache
   union {
@@ -72,6 +73,8 @@ public:
 
   // True as long as this lookup is complete and hasn't expired.
   bool mConfirmed;
+
+  bool mProtocolV2;
 };
 
 typedef nsTArray<LookupResult> LookupResultArray;

@@ -92,24 +92,18 @@ var security = {
           break;
       }
 
-      // Select status text to display for Certificate Transparency.
+      // Select the status text to display for Certificate Transparency.
+      // Since we do not yet enforce the CT Policy on secure connections,
+      // we must not complain on policy discompliance (it might be viewed
+      // as a security issue by the user).
       switch (status.certificateTransparencyStatus) {
         case nsISSLStatus.CERTIFICATE_TRANSPARENCY_NOT_APPLICABLE:
-          // CT compliance checks were not performed,
-          // do not display any status text.
+        case nsISSLStatus.CERTIFICATE_TRANSPARENCY_POLICY_NOT_ENOUGH_SCTS:
+        case nsISSLStatus.CERTIFICATE_TRANSPARENCY_POLICY_NOT_DIVERSE_SCTS:
           retval.certificateTransparency = null;
           break;
-        case nsISSLStatus.CERTIFICATE_TRANSPARENCY_NONE:
-          retval.certificateTransparency = "None";
-          break;
-        case nsISSLStatus.CERTIFICATE_TRANSPARENCY_OK:
-          retval.certificateTransparency = "OK";
-          break;
-        case nsISSLStatus.CERTIFICATE_TRANSPARENCY_UNKNOWN_LOG:
-          retval.certificateTransparency = "UnknownLog";
-          break;
-        case nsISSLStatus.CERTIFICATE_TRANSPARENCY_INVALID:
-          retval.certificateTransparency = "Invalid";
+        case nsISSLStatus.CERTIFICATE_TRANSPARENCY_POLICY_COMPLIANT:
+          retval.certificateTransparency = "Compliant";
           break;
       }
 

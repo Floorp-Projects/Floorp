@@ -32,8 +32,7 @@ public:
 
   // Subclasses may or may not be XPCOM classes, so we just require that they
   // implement AddRef and Release.
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) = 0;
-  NS_IMETHOD_(MozExternalRefCountType) Release(void) = 0;
+  NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
 
   // imgINotificationObserver methods:
   virtual void Notify(int32_t aType, const nsIntRect* aRect = nullptr) = 0;
