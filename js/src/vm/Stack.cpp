@@ -1037,6 +1037,22 @@ FrameIter::updatePcQuadratic()
     MOZ_CRASH("Unexpected state");
 }
 
+void
+FrameIter::wasmUpdateBytecodeOffset()
+{
+    MOZ_RELEASE_ASSERT(data_.state_ == WASM, "Unexpected state");
+
+    wasm::DebugFrame* frame = data_.wasmFrames_.debugFrame();
+    WasmActivation* activation = data_.activations_->asWasm();
+
+    // Relookup the current frame, updating the bytecode offset in the process.
+    data_.wasmFrames_ = wasm::FrameIterator(activation);
+    while (data_.wasmFrames_.debugFrame() != frame)
+        ++data_.wasmFrames_;
+
+    MOZ_ASSERT(data_.wasmFrames_.debugFrame() == frame);
+}
+
 JSFunction*
 FrameIter::calleeTemplate() const
 {

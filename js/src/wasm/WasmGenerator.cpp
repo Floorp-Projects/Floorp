@@ -385,6 +385,7 @@ ModuleGenerator::patchCallSites(TrapExitOffsetArray* maybeTrapExits)
             masm_.patchCall(callerOffset, *existingTrapFarJumps[cs.trap()]);
             break;
           }
+          case CallSiteDesc::Breakpoint:
           case CallSiteDesc::EnterFrame:
           case CallSiteDesc::LeaveFrame: {
             Uint32Vector& jumps = metadata_->debugTrapFarJumpOffsets;

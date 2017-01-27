@@ -252,7 +252,8 @@ const CallSite*
 FrameIterator::debugTrapCallsite() const
 {
     MOZ_ASSERT(!done() && debugEnabled());
-    MOZ_ASSERT(callsite_->kind() == CallSite::EnterFrame || callsite_->kind() == CallSite::LeaveFrame);
+    MOZ_ASSERT(callsite_->kind() == CallSite::EnterFrame || callsite_->kind() == CallSite::LeaveFrame ||
+               callsite_->kind() == CallSite::Breakpoint);
     return callsite_;
 }
 
