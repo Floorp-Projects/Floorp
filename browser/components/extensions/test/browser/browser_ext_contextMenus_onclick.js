@@ -2,6 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+const PAGE = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html";
+
 // Loaded both as a background script and a tab page.
 function testScript() {
   let page = location.pathname.includes("tab.html") ? "tab" : "background";
@@ -76,8 +78,7 @@ function testScript() {
 }
 
 add_task(function* () {
-  let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser,
-    "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html");
+  let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
 
   gBrowser.selectedTab = tab1;
 
@@ -193,4 +194,53 @@ add_task(function* () {
   }
   yield extension.unload();
   yield BrowserTestUtils.removeTab(tab1);
+});
+
+add_task(function* test_onclick_modifiers() {
+  const manifest = {
+    permissions: ["contextMenus"],
+  };
+
+  function background() {
+    function onclick(info) {
+      browser.test.sendMessage("click", info);
+    }
+    browser.contextMenus.create({contexts: ["all"], title: "modify", onclick});
+    browser.test.sendMessage("ready");
+  }
+
+  const extension = ExtensionTestUtils.loadExtension({manifest, background});
+  const tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
+
+  yield extension.startup();
+  yield extension.awaitMessage("ready");
+
+  function* click(modifiers = {}) {
+    const menu = yield openContextMenu();
+    const items = menu.getElementsByAttribute("label", "modify");
+    yield closeExtensionContextMenu(items[0], modifiers);
+    return extension.awaitMessage("click");
+  }
+
+  const plain = yield click();
+  is(plain.modifiers.length, 0, "modifiers array empty with a plain click");
+
+  const shift = yield click({shiftKey: true});
+  is(shift.modifiers.join(), "Shift", "Correct modifier: Shift");
+
+  const ctrl = yield click({ctrlKey: true});
+  if (AppConstants.platform !== "macosx") {
+    is(ctrl.modifiers.join(), "Ctrl", "Correct modifier: Ctrl");
+  } else {
+    is(ctrl.modifiers.sort().join(), "Ctrl,MacCtrl", "Correct modifier: Ctrl (and MacCtrl)");
+
+    const meta = yield click({metaKey: true});
+    is(meta.modifiers.join(), "Command", "Correct modifier: Command");
+  }
+
+  const altShift = yield click({altKey: true, shiftKey: true});
+  is(altShift.modifiers.sort().join(), "Alt,Shift", "Correct modifiers: Shift+Alt");
+
+  yield BrowserTestUtils.removeTab(tab);
+  yield extension.unload();
 });
