@@ -279,7 +279,9 @@ nsUrlClassifierUtils::GetProvider(const nsACString& aTableName,
 {
   MutexAutoLock lock(mProviderDictLock);
   nsCString* provider = nullptr;
-  if (mProviderDict.Get(aTableName, &provider)) {
+  if (StringBeginsWith(aTableName, NS_LITERAL_CSTRING("test"))) {
+    aProvider = NS_LITERAL_CSTRING(TESTING_TABLE_PROVIDER_NAME);
+  } else if (mProviderDict.Get(aTableName, &provider)) {
     aProvider = provider ? *provider : EmptyCString();
   } else {
     aProvider = EmptyCString();
@@ -296,7 +298,8 @@ nsUrlClassifierUtils::GetTelemetryProvider(const nsACString& aTableName,
   // Empty provider is filtered as "other"
   if (!NS_LITERAL_CSTRING("mozilla").Equals(aProvider) &&
       !NS_LITERAL_CSTRING("google").Equals(aProvider) &&
-      !NS_LITERAL_CSTRING("google4").Equals(aProvider)) {
+      !NS_LITERAL_CSTRING("google4").Equals(aProvider) &&
+      !NS_LITERAL_CSTRING(TESTING_TABLE_PROVIDER_NAME).Equals(aProvider)) {
     aProvider.Assign(NS_LITERAL_CSTRING("other"));
   }
 
