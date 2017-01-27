@@ -141,6 +141,7 @@ private:
   void NotifyDrainComplete(TrackType aTrack);
   void NotifyError(TrackType aTrack, const MediaResult& aError);
   void NotifyWaitingForData(TrackType aTrack);
+  void NotifyWaitingForKey(TrackType aTrack);
   void NotifyEndOfStream(TrackType aTrack);
 
   void ExtractCryptoInitData(nsTArray<uint8_t>& aInitData);
@@ -170,6 +171,7 @@ private:
       , mUpdateScheduled(false)
       , mDemuxEOS(false)
       , mWaitingForData(false)
+      , mWaitingForKey(false)
       , mReceivedNewData(false)
       , mNeedDraining(false)
       , mDraining(false)
@@ -226,6 +228,7 @@ private:
     bool mUpdateScheduled;
     bool mDemuxEOS;
     bool mWaitingForData;
+    bool mWaitingForKey;
     bool mReceivedNewData;
 
     // Pending seek.
@@ -245,7 +248,7 @@ private:
     bool IsWaiting() const
     {
       MOZ_ASSERT(mOwner->OnTaskQueue());
-      return mWaitingForData;
+      return mWaitingForData || mWaitingForKey;
     }
 
     // MediaDataDecoder handler's variables.
@@ -373,6 +376,7 @@ private:
       MOZ_ASSERT(mOwner->OnTaskQueue());
       mDemuxEOS = false;
       mWaitingForData = false;
+      mWaitingForKey = false;
       mQueuedSamples.Clear();
       mNeedDraining = false;
       mDecodeRequest.DisconnectIfExists();
@@ -560,6 +564,7 @@ private:
   UniquePtr<DecoderFactory> mDecoderFactory;
 
   MediaEventListener mCompositorUpdatedListener;
+  MediaEventListener mOnTrackWaitingForKeyListener;
 
   void OnFirstDemuxCompleted(TrackInfo::TrackType aType,
                              RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples);

@@ -243,6 +243,18 @@ public:
     return mOnMediaNotSeekable;
   }
 
+  // Notified if the reader can't decode a sample due to a missing decryption
+  // key.
+  MediaEventSource<TrackInfo::TrackType>& OnTrackWaitingForKey()
+  {
+    return mOnTrackWaitingForKey;
+  }
+
+  MediaEventProducer<TrackInfo::TrackType>& OnTrackWaitingForKeyProducer()
+  {
+    return mOnTrackWaitingForKey;
+  }
+
   // Switch the video decoder to BlankDecoderModule. It might takes effective
   // since a few samples later depends on how much demuxed samples are already
   // queued in the original video decoder.
@@ -305,6 +317,9 @@ protected:
 
   // Notify if this media is not seekable.
   MediaEventProducer<void> mOnMediaNotSeekable;
+
+  // Notify if we are waiting for a decryption key.
+  MediaEventProducer<TrackInfo::TrackType> mOnTrackWaitingForKey;
 
 private:
   virtual nsresult InitInternal() { return NS_OK; }

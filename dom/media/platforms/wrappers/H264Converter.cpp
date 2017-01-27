@@ -28,6 +28,8 @@ H264Converter::H264Converter(PlatformDecoderModule* aPDM,
   , mNeedAVCC(aPDM->DecoderNeedsConversion(aParams.mConfig)
       == PlatformDecoderModule::ConversionRequired::kNeedAVCC)
   , mLastError(NS_OK)
+  , mType(aParams.mType)
+  , mOnWaitingForKeyEvent(aParams.mOnWaitingForKeyEvent)
 {
   CreateDecoder(aParams.mDiagnostics);
 }
@@ -194,7 +196,9 @@ H264Converter::CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics)
     aDiagnostics,
     mImageContainer,
     mKnowsCompositor,
-    mGMPCrashHelper
+    mGMPCrashHelper,
+    mType,
+    mOnWaitingForKeyEvent
   });
 
   if (!mDecoder) {

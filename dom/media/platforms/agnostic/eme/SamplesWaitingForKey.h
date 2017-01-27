@@ -10,12 +10,14 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
+#include "MediaInfo.h"
 
 namespace mozilla {
 
 typedef nsTArray<uint8_t> CencKeyId;
 
 class CDMProxy;
+template <typename... Es> class MediaEventProducer;
 class MediaRawData;
 
 // Encapsulates the task of waiting for the CDMProxy to have the necessary
@@ -28,7 +30,8 @@ public:
   typedef MozPromise<RefPtr<MediaRawData>, bool, /* IsExclusive = */ true>
     WaitForKeyPromise;
 
-  explicit SamplesWaitingForKey(CDMProxy* aProxy);
+  SamplesWaitingForKey(CDMProxy* aProxy, TrackInfo::TrackType aType,
+                       MediaEventProducer<TrackInfo::TrackType>* aOnWaitingForKey);
 
   // Returns a promise that will be resolved if or when a key for decoding the
   // sample becomes usable.
@@ -50,6 +53,8 @@ private:
     MozPromiseHolder<WaitForKeyPromise> mPromise;
   };
   nsTArray<SampleEntry> mSamples;
+  const TrackInfo::TrackType mType;
+  MediaEventProducer<TrackInfo::TrackType>* const mOnWaitingForKeyEvent;
 };
 
 } // namespace mozilla
