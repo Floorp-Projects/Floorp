@@ -8,7 +8,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
                                   "resource://devtools/shared/event-emitter.js");
 
 var {
-  SingletonEventManager,
+  EventManager,
   ignoreEvent,
 } = ExtensionUtils;
 
@@ -131,10 +131,10 @@ extensions.registerSchemaAPI("notifications", "addon_parent", context => {
         return Promise.resolve(result);
       },
 
-      onClosed: new SingletonEventManager(context, "notifications.onClosed", fire => {
+      onClosed: new EventManager(context, "notifications.onClosed", fire => {
         let listener = (event, notificationId) => {
           // FIXME: Support the byUser argument.
-          fire.async(notificationId, true);
+          fire(notificationId, true);
         };
 
         notificationsMap.get(extension).on("closed", listener);
@@ -143,9 +143,9 @@ extensions.registerSchemaAPI("notifications", "addon_parent", context => {
         };
       }).api(),
 
-      onClicked: new SingletonEventManager(context, "notifications.onClicked", fire => {
+      onClicked: new EventManager(context, "notifications.onClicked", fire => {
         let listener = (event, notificationId) => {
-          fire.async(notificationId, true);
+          fire(notificationId, true);
         };
 
         notificationsMap.get(extension).on("clicked", listener);

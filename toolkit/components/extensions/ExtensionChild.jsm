@@ -41,6 +41,7 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 
 const {
   DefaultMap,
+  EventManager,
   SingletonEventManager,
   SpreadArgs,
   defineLazyGetter,
@@ -118,17 +119,17 @@ class Port {
         this.postMessage(json);
       },
 
-      onDisconnect: new SingletonEventManager(this.context, "Port.onDisconnect", fire => {
+      onDisconnect: new EventManager(this.context, "Port.onDisconnect", fire => {
         return this.registerOnDisconnect(error => {
           portError = error && this.context.normalizeError(error);
-          fire.asyncWithoutClone(portObj);
+          fire.withoutClone(portObj);
         });
       }).api(),
 
-      onMessage: new SingletonEventManager(this.context, "Port.onMessage", fire => {
+      onMessage: new EventManager(this.context, "Port.onMessage", fire => {
         return this.registerOnMessage(msg => {
           msg = Cu.cloneInto(msg, this.context.cloneScope);
-          fire.asyncWithoutClone(msg, portObj);
+          fire.withoutClone(msg, portObj);
         });
       }).api(),
 
@@ -329,7 +330,7 @@ class Messenger {
   }
 
   onMessage(name) {
-    return new SingletonEventManager(this.context, name, fire => {
+    return new SingletonEventManager(this.context, name, callback => {
       let listener = {
         messageFilterPermissive: this.optionalFilter,
         messageFilterStrict: this.filter,
@@ -359,7 +360,7 @@ class Messenger {
 
           // Note: We intentionally do not use runSafe here so that any
           // errors are propagated to the message sender.
-          let result = fire.raw(message, sender, sendResponse);
+          let result = callback(message, sender, sendResponse);
           if (result instanceof this.context.cloneScope.Promise) {
             return result;
           } else if (result === true) {
@@ -411,7 +412,7 @@ class Messenger {
   }
 
   onConnect(name) {
-    return new SingletonEventManager(this.context, name, fire => {
+    return new SingletonEventManager(this.context, name, callback => {
       let listener = {
         messageFilterPermissive: this.optionalFilter,
         messageFilterStrict: this.filter,
@@ -430,7 +431,7 @@ class Messenger {
             delete recipient.tab;
           }
           let port = new Port(this.context, mm, this.messageManagers, name, portId, sender, recipient);
-          fire.asyncWithoutClone(port.api());
+          this.context.runSafeWithoutClone(callback, port.api());
           return true;
         },
       };
