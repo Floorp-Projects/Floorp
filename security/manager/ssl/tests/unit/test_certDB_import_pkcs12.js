@@ -64,7 +64,7 @@ function testImportPKCS12Cert() {
 
   // Import and check for success.
   let certFile = do_get_file("test_certDB_import/cert_from_windows.pfx");
-  gCertDB.importPKCS12File(null, certFile);
+  gCertDB.importPKCS12File(certFile);
 
   ok(gGetPKCS12Password, "PKCS12 password should be asked");
 
