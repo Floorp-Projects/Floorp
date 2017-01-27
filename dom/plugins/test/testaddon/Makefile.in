@@ -14,10 +14,8 @@ endif
 testdir = $(topobjdir)/_tests/xpcshell/dom/plugins/test/unit/
 addonpath = $(testdir)/testaddon.xpi
 
-ifdef COMPILE_ENVIRONMENT
 libs::
 	$(NSINSTALL) -D $(testdir)
 	rm -f $(addonpath)
 	cd $(srcdir) && zip -rD $(addonpath) install.rdf
 	cd $(DIST) && zip -rD $(addonpath) $(foreach name,$(plugin_file_names),plugins/$(name))
-endif
