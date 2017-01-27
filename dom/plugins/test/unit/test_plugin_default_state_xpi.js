@@ -10,7 +10,6 @@ const XRE_EXTENSIONS_DIR_LIST = "XREExtDL";
 const NS_APP_PLUGINS_DIR_LIST = "APluginsDL";
 
 const gPluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-const gXPCOMABI = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).XPCOMABI;
 var gProfileDir = null;
 
 function getAddonRoot(profileDir, id) {
@@ -19,14 +18,6 @@ function getAddonRoot(profileDir, id) {
   Assert.ok(dir.exists(), "Extensions dir should exist: " + dir.path);
   dir.append(id);
   return dir;
-}
-
-function getTestaddonFilename() {
-  let abiPart = "";
-  if (gIsOSX) {
-    abiPart = "_" + gXPCOMABI;
-  }
-  return "testaddon" + abiPart + ".xpi";
 }
 
 function run_test() {
@@ -48,7 +39,7 @@ add_task(function* test_state() {
   Services.prefs.setIntPref("plugin.default.state", Ci.nsIPluginTag.STATE_CLICKTOPLAY);
   Services.prefs.setIntPref("plugin.defaultXpi.state", Ci.nsIPluginTag.STATE_ENABLED);
 
-  let success = yield installAddon(getTestaddonFilename());
+  let success = yield installAddon("testaddon.xpi");
   Assert.ok(success, "Should have installed addon.");
   let addonDir = getAddonRoot(gProfileDir, ADDON_ID);
 
