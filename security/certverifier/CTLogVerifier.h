@@ -10,6 +10,7 @@
 #include "CTLog.h"
 #include "pkix/Input.h"
 #include "pkix/pkix.h"
+#include "pkix/Result.h"
 #include "SignedCertificateTimestamp.h"
 #include "SignedTreeHead.h"
 
