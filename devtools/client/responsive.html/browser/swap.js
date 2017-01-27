@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { Ci } = require("chrome");
 const promise = require("promise");
 const { Task } = require("devtools/shared/task");
 const { tunnelToInnerBrowser } = require("./tunnel");
@@ -58,11 +59,16 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       freezeNavigationState(tab);
 
       // 1. Create a temporary, hidden tab to load the tool UI.
-      let containerTab = gBrowser.addTab(containerURL, {
+      let containerTab = gBrowser.addTab("about:blank", {
         skipAnimation: true,
+        forceNotRemote: true,
       });
       gBrowser.hideTab(containerTab);
       let containerBrowser = containerTab.linkedBrowser;
+      // Prevent the `containerURL` from ending up in the tab's history.
+      containerBrowser.loadURIWithFlags(containerURL, {
+        flags: Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY,
+      });
 
       // Copy tab listener state flags to container tab.  Each tab gets its own tab
       // listener and state flags which cache document loading progress.  The state flags
