@@ -148,7 +148,6 @@ public class GeckoApplication extends Application
         final Context context = getApplicationContext();
         GeckoAppShell.setApplicationContext(context);
         HardwareUtils.init(context);
-        Clipboard.init(context);
         FilePicker.init(context);
         DownloadsIntegration.init();
         HomePanelsManager.getInstance().init(context);
