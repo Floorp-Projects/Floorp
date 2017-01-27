@@ -126,6 +126,77 @@ struct nsRuleData final: GenericSpecifiedValues
     return ValueFor(aId)->GetUnit() != eCSSUnit_Null;
   }
 
+  bool ShouldComputeStyleStruct(uint64_t aInheritBits) override {
+    return mSIDs & aInheritBits;
+  }
+
+  nsPresContext* PresContext() override {
+    return mPresContext;
+  }
+
+  void SetIdentStringValue(nsCSSPropertyID aId,
+                           const nsString& aValue) override {
+    ValueFor(aId)->SetStringValue(aValue, eCSSUnit_Ident);
+  }
+
+  void SetIdentStringValueIfUnset(nsCSSPropertyID aId,
+                                const nsString& aValue) override {
+    if (!PropertyIsSet(aId)) {
+      SetIdentStringValue(aId, aValue);
+    }
+  }
+
+  void SetKeywordValue(nsCSSPropertyID aId,
+                       int32_t aValue) override {
+    ValueFor(aId)->SetIntValue(aValue, eCSSUnit_Enumerated);
+  }
+
+  void SetKeywordValueIfUnset(nsCSSPropertyID aId,
+                              int32_t aValue) override {
+    if (!PropertyIsSet(aId)) {
+      SetKeywordValue(aId, aValue);
+    }
+  }
+
+  void SetPixelValue(nsCSSPropertyID aId,
+                     float aValue) override {
+    ValueFor(aId)->SetFloatValue(aValue, eCSSUnit_Pixel);
+  }
+
+  void SetPixelValueIfUnset(nsCSSPropertyID aId,
+                            float aValue) override {
+    if (!PropertyIsSet(aId)) {
+      SetPixelValue(aId, aValue);
+    }
+  }
+
+  void SetPercentValue(nsCSSPropertyID aId,
+                       float aValue) override {
+    ValueFor(aId)->SetPercentValue(aValue);
+  }
+
+  void SetPercentValueIfUnset(nsCSSPropertyID aId,
+                              float aValue) override {
+    if (!PropertyIsSet(aId)) {
+      SetPercentValue(aId, aValue);
+    }
+  }
+
+  void SetCurrentColor(nsCSSPropertyID aId) override {
+    ValueFor(aId)->SetIntValue(NS_COLOR_CURRENTCOLOR, eCSSUnit_EnumColor);
+  }
+
+  void SetCurrentColorIfUnset(nsCSSPropertyID aId) override {
+    if (!PropertyIsSet(aId)) {
+      SetCurrentColor(aId);
+    }
+  }
+
+  void SetColorValue(nsCSSPropertyID aId,
+                     nscolor aValue) override {
+    ValueFor(aId)->SetColorValue(aValue);
+  }
+
   nsRuleData* AsRuleData() override {
     return this;
   }
