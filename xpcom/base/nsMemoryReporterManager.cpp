@@ -26,7 +26,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtrExtensions.h"
-#include "mozilla/dom/PMemoryReportRequestParent.h" // for dom::MemoryReport
+#include "mozilla/dom/MemoryReportTypes.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 
@@ -1924,7 +1924,7 @@ nsMemoryReporterManager::StartChildReport(mozilla::dom::ContentParent* aChild,
     }
   }
 #endif
-  return aChild->SendPMemoryReportRequestConstructor(
+  return aChild->SendRequestMemoryReport(
     aState->mGeneration, aState->mAnonymize, aState->mMinimize, dmdFileDesc);
 }
 

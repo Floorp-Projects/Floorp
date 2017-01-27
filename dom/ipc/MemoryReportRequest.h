@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_MemoryReportRequest_h_
 #define mozilla_dom_MemoryReportRequest_h_
 
-#include "mozilla/dom/PMemoryReportRequestChild.h"
-#include "mozilla/dom/PMemoryReportRequestParent.h"
+#include "mozilla/dom/MemoryReportTypes.h"
+#include "mozilla/ipc/FileDescriptor.h"
 #include "nsISupports.h"
 
 class nsMemoryReporterManager;
@@ -16,40 +16,49 @@ class nsMemoryReporterManager;
 namespace mozilla {
 namespace dom {
 
-class MemoryReportRequestParent : public PMemoryReportRequestParent
+class MaybeFileDesc;
+
+class MemoryReportRequestHost final
 {
 public:
-  explicit MemoryReportRequestParent(uint32_t aGeneration);
+  explicit MemoryReportRequestHost(uint32_t aGeneration);
+  ~MemoryReportRequestHost();
 
-  virtual ~MemoryReportRequestParent();
-
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
-
-  virtual mozilla::ipc::IPCResult RecvReport(const MemoryReport& aReport) override;
-  virtual mozilla::ipc::IPCResult Recv__delete__() override;
+  void RecvReport(const MemoryReport& aReport);
+  void Finish(uint32_t aGeneration);
 
 private:
   const uint32_t mGeneration;
   // Non-null if we haven't yet called EndProcessReport() on it.
   RefPtr<nsMemoryReporterManager> mReporterManager;
+  bool mSuccess;
 };
 
-class MemoryReportRequestChild : public PMemoryReportRequestChild,
-                                 public nsIRunnable
+class MemoryReportRequestClient final : public nsIRunnable
 {
 public:
   NS_DECL_ISUPPORTS
 
-  MemoryReportRequestChild(bool aAnonymize,
-                           const MaybeFileDesc& aDMDFile,
-                           const nsACString& aProcessString);
+  static void Start(uint32_t aGeneration,
+                    bool aAnonymize,
+                    bool aMinimizeMemoryUsage,
+                    const MaybeFileDesc& aDMDFile,
+                    const nsACString& aProcessString);
+
   NS_IMETHOD Run() override;
 
 private:
-  ~MemoryReportRequestChild() override;
+  MemoryReportRequestClient(uint32_t aGeneration,
+                            bool aAnonymize,
+                            const MaybeFileDesc& aDMDFile,
+                            const nsACString& aProcessString);
 
-  bool     mAnonymize;
-  FileDescriptor mDMDFile;
+private:
+  ~MemoryReportRequestClient();
+
+  uint32_t mGeneration;
+  bool mAnonymize;
+  mozilla::ipc::FileDescriptor mDMDFile;
   nsCString mProcessString;
 };
 
