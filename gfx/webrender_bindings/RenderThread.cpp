@@ -7,7 +7,10 @@
 #include "nsThreadUtils.h"
 #include "mozilla/webrender/RendererOGL.h"
 #include "mozilla/widget/CompositorWidget.h"
+#include "mozilla/layers/CompositorThread.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/StaticPtr.h"
+#include "base/task.h"
 
 namespace mozilla {
 namespace wr {
@@ -162,6 +165,22 @@ RenderThread::RunEvent(wr::WindowId aWindowId, UniquePtr<RendererEvent> aEvent)
   aEvent = nullptr;
 }
 
+static void
+NotifyDidRender(layers::CompositorBridgeParentBase* aBridge,
+                WrRenderedEpochs* aEpochs,
+                TimeStamp aStart,
+                TimeStamp aEnd)
+{
+  WrPipelineId pipeline;
+  WrEpoch epoch;
+  while (wr_rendered_epochs_next(aEpochs, &pipeline, &epoch)) {
+    // TODO - Currently each bridge seems to  only have one pipeline but at some
+    // point we should pass make sure we only notify bridges that have the
+    // corresponding pipeline id.
+    aBridge->NotifyDidComposite(epoch, aStart, aEnd);
+  }
+  wr_rendered_epochs_delete(aEpochs);
+}
 
 void
 RenderThread::UpdateAndRender(wr::WindowId aWindowId)
@@ -175,15 +194,21 @@ RenderThread::UpdateAndRender(wr::WindowId aWindowId)
   }
 
   auto& renderer = it->second;
-
-  // TODO: WebRender has the notion of epoch and gecko has transaction ids.
-  // They mostly mean the same thing but I'm not sure they are produced the same
-  // way. We need to merge the two or have a way to associate transaction ids with
-  // epochs to wire everything up properly.
-  auto transactionId = 0;
-
   renderer->Update();
-  renderer->Render(transactionId);
+
+  TimeStamp start = TimeStamp::Now();
+
+  renderer->Render();
+
+  TimeStamp end = TimeStamp::Now();
+
+  auto epochs = renderer->FlushRenderedEpochs();
+  layers::CompositorThreadHolder::Loop()->PostTask(NewRunnableFunction(
+    &NotifyDidRender,
+    renderer->GetCompositorBridge(),
+    epochs,
+    start, end
+  ));
 }
 
 } // namespace wr

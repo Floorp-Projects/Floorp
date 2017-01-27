@@ -10,7 +10,6 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/widget/CompositorWidget.h"
-#include "base/task.h"
 
 namespace mozilla {
 namespace wr {
@@ -48,17 +47,9 @@ RendererOGL::Update()
   wr_renderer_update(mWrRenderer);
 }
 
-static void
-NotifyDidRender(layers::CompositorBridgeParentBase* aBridge, uint64_t aTransactionId, TimeStamp aStart, TimeStamp aEnd)
-{
-
-}
-
 bool
-RendererOGL::Render(uint64_t aTransactionId)
+RendererOGL::Render()
 {
-  TimeStamp start = TimeStamp::Now();
-
   if (!mGL->MakeCurrent()) {
     gfxCriticalNote << "Failed to make render context current, can't draw.";
     return false;
@@ -89,13 +80,6 @@ RendererOGL::Render(uint64_t aTransactionId)
 
   // TODO: Flush pending actions such as texture deletions/unlocks.
 
-  TimeStamp end = TimeStamp::Now();
-
-  layers::CompositorThreadHolder::Loop()->PostTask(NewRunnableFunction(
-    &NotifyDidRender,
-    mBridge, aTransactionId, start, end
-  ));
-
   return true;
 }
 
@@ -103,6 +87,12 @@ void
 RendererOGL::SetProfilerEnabled(bool aEnabled)
 {
   wr_renderer_set_profiler_enabled(mWrRenderer, aEnabled);
+}
+
+WrRenderedEpochs*
+RendererOGL::FlushRenderedEpochs()
+{
+  return wr_renderer_flush_rendered_epochs(mWrRenderer);
 }
 
 } // namespace wr

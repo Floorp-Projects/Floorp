@@ -129,7 +129,7 @@ private:
   virtual ~WebRenderBridgeParent();
 
   void DeleteOldImages();
-  void ProcessWebrenderCommands(InfallibleTArray<WebRenderCommand>& commands);
+  void ProcessWebrenderCommands(InfallibleTArray<WebRenderCommand>& commands, const wr::Epoch& aEpoch);
   void ScheduleComposition();
   void ClearResources();
   uint64_t GetChildLayerObserverEpoch() const { return mChildLayerObserverEpoch; }
