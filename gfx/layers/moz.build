@@ -201,7 +201,6 @@ EXPORTS.mozilla.layers += [
     'opengl/TextureHostOGL.h',
     'PersistentBufferProvider.h',
     'RenderTrace.h',
-    'SourceSurfaceVolatileData.h',
     'TextureWrapperImage.h',
     'TransactionIdAllocator.h',
 ]
@@ -374,7 +373,6 @@ UNIFIED_SOURCES += [
     'RenderTrace.cpp',
     'RotatedBuffer.cpp',
     'ShareableCanvasLayer.cpp',
-    'SourceSurfaceVolatileData.cpp',
     'TextureWrapperImage.cpp',
 ]
 
