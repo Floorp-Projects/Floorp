@@ -40,11 +40,11 @@ window.onload = Task.async(function* () {
     is(tabAnchors[0].parentElement.getAttribute("role"), "presentation", "li role is set correctly");
     is(tabAnchors[0].getAttribute("role"), "tab", "Anchor role is set correctly");
     is(tabAnchors[0].getAttribute("aria-selected"), "true", "Anchor aria-selected is set correctly by default");
-    is(tabAnchors[0].getAttribute("aria-controls"), "panel-0", "Anchor aria-controls is set correctly");
+    is(tabAnchors[0].getAttribute("aria-controls"), "sidebar-0-panel", "Anchor aria-controls is set correctly");
     is(tabAnchors[1].parentElement.getAttribute("role"), "presentation", "li role is set correctly");
     is(tabAnchors[1].getAttribute("role"), "tab", "Anchor role is set correctly");
     is(tabAnchors[1].getAttribute("aria-selected"), "false", "Anchor aria-selected is set correctly by default");
-    is(tabAnchors[1].getAttribute("aria-controls"), "panel-1", "Anchor aria-controls is set correctly");
+    is(tabAnchors[1].getAttribute("aria-controls"), "sidebar-1-panel", "Anchor aria-controls is set correctly");
 
     yield setState(tabbarReact, Object.assign({}, tabbarReact.state, {
       activeTab: 1
@@ -56,12 +56,12 @@ window.onload = Task.async(function* () {
     function addTabWithPanel(tabId) {
       // Setup for InspectorTabPanel
       let panel = document.createElement("div");
-      panel.id = `sidebar-panel-${tabId}`;
+      panel.id = `sidebar-${tabId}`;
       document.body.appendChild(panel);
 
       return setState(tabbarReact, Object.assign({}, tabbarReact.state, {
         tabs: tabbarReact.state.tabs.concat({
-          id: `sidebar-panel-${tabId}`,
+          id: `sidebar-${tabId}`,
           title: `tab-${tabId}`,
           panel: InspectorTabPanel
         }),

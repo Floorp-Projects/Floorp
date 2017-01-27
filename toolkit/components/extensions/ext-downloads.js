@@ -21,7 +21,6 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 const {
   ignoreEvent,
   normalizeTime,
-  runSafeSync,
   SingletonEventManager,
   PlatformInfo,
 } = ExtensionUtils;
@@ -751,7 +750,7 @@ extensions.registerSchemaAPI("downloads", "addon_parent", context => {
           });
           if (Object.keys(changes).length > 0) {
             changes.id = item.id;
-            runSafeSync(context, fire, changes);
+            fire.async(changes);
           }
         };
 
@@ -767,7 +766,7 @@ extensions.registerSchemaAPI("downloads", "addon_parent", context => {
 
       onCreated: new SingletonEventManager(context, "downloads.onCreated", fire => {
         const handler = (what, item) => {
-          runSafeSync(context, fire, item.serialize());
+          fire.async(item.serialize());
         };
         let registerPromise = DownloadMap.getDownloadList().then(() => {
           DownloadMap.on("create", handler);
@@ -781,7 +780,7 @@ extensions.registerSchemaAPI("downloads", "addon_parent", context => {
 
       onErased: new SingletonEventManager(context, "downloads.onErased", fire => {
         const handler = (what, item) => {
-          runSafeSync(context, fire, item.id);
+          fire.async(item.id);
         };
         let registerPromise = DownloadMap.getDownloadList().then(() => {
           DownloadMap.on("erase", handler);

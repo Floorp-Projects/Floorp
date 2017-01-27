@@ -50,12 +50,18 @@ define(function (require, exports, module) {
       ]).isRequired,
       showAllTabsMenu: React.PropTypes.bool,
       onAllTabsMenuClick: React.PropTypes.func,
+
+      // Set true will only render selected panel on DOM. It's complete
+      // opposite of the created array, and it's useful if panels content
+      // is unpredictable and update frequently.
+      renderOnlySelected: React.PropTypes.bool,
     },
 
     getDefaultProps: function () {
       return {
         tabActive: 0,
         showAllTabsMenu: false,
+        renderOnlySelected: false,
       };
     },
 
@@ -105,8 +111,9 @@ define(function (require, exports, module) {
       if (typeof tabActive === "number") {
         let panels = children.filter((panel) => panel);
 
-        // Reset to index 0 if index larger than number of panels
-        tabActive = tabActive < panels.length ? tabActive : 0;
+        // Reset to index 0 if index overflows the range of panel array
+        tabActive = (tabActive < panels.length && tabActive >= 0) ?
+          tabActive : 0;
 
         let created = [...this.state.created];
         created[tabActive] = true;
@@ -224,17 +231,16 @@ define(function (require, exports, module) {
       }
 
       let tabs = this.props.children
-        .map(tab => {
-          return typeof tab === "function" ? tab() : tab;
-        }).filter(tab => {
-          return tab;
-        }).map((tab, index) => {
-          let ref = ("tab-menu-" + index);
+        .map((tab) => typeof tab === "function" ? tab() : tab)
+        .filter((tab) => tab)
+        .map((tab, index) => {
+          let id = tab.props.id;
+          let ref = "tab-menu-" + index;
           let title = tab.props.title;
           let tabClassName = tab.props.className;
           let isTabSelected = this.state.tabActive === index;
 
-          let classes = [
+          let className = [
             "tabs-menu-item",
             tabClassName,
             isTabSelected ? "is-active" : ""
@@ -247,15 +253,15 @@ define(function (require, exports, module) {
           // See also `onKeyDown()` event handler.
           return (
             DOM.li({
-              ref: ref,
+              className,
               key: index,
-              id: "tab-" + index,
-              className: classes,
+              ref,
               role: "presentation",
             },
               DOM.a({
-                tabIndex: this.state.tabActive === index ? 0 : -1,
-                "aria-controls": "panel-" + index,
+                id: id ? id + "-tab" : "tab-" + index,
+                tabIndex: isTabSelected ? 0 : -1,
+                "aria-controls": id ? id + "-panel" : "panel-" + index,
                 "aria-selected": isTabSelected,
                 role: "tab",
                 onClick: this.onClickTab.bind(this, index),
@@ -286,23 +292,28 @@ define(function (require, exports, module) {
     },
 
     renderPanels: function () {
-      if (!this.props.children) {
+      let { children, renderOnlySelected } = this.props;
+
+      if (!children) {
         throw new Error("There must be at least one Tab");
       }
 
-      if (!Array.isArray(this.props.children)) {
-        this.props.children = [this.props.children];
+      if (!Array.isArray(children)) {
+        children = [children];
       }
 
       let selectedIndex = this.state.tabActive;
 
-      let panels = this.props.children
-        .map(tab => {
-          return typeof tab === "function" ? tab() : tab;
-        }).filter(tab => {
-          return tab;
-        }).map((tab, index) => {
-          let selected = selectedIndex == index;
+      let panels = children
+        .map((tab) => typeof tab === "function" ? tab() : tab)
+        .filter((tab) => tab)
+        .map((tab, index) => {
+          let selected = selectedIndex === index;
+          if (renderOnlySelected && !selected) {
+            return null;
+          }
+
+          let id = tab.props.id;
 
           // Use 'visibility:hidden' + 'width/height:0' for hiding
           // content of non-selected tab. It's faster (not sure why)
@@ -315,12 +326,12 @@ define(function (require, exports, module) {
 
           return (
             DOM.div({
+              id: id ? id + "-panel" : "panel-" + index,
               key: index,
-              id: "panel-" + index,
               style: style,
               className: "tab-panel-box",
               role: "tabpanel",
-              "aria-labelledby": "tab-" + index,
+              "aria-labelledby": id ? id + "-tab" : "tab-" + index,
             },
               (selected || this.state.created[index]) ? tab : null
             )
@@ -335,12 +346,10 @@ define(function (require, exports, module) {
     },
 
     render: function () {
-      let classNames = ["tabs", this.props.className].join(" ");
-
       return (
-        DOM.div({className: classNames},
+        DOM.div({ className: ["tabs", this.props.className].join(" ") },
           this.renderMenuItems(),
-          this.renderPanels()
+          this.renderPanels(),
         )
       );
     },
