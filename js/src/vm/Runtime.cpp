@@ -451,6 +451,10 @@ JSRuntime::destroyRuntime()
     DebugOnly<size_t> oldCount = liveRuntimesCount--;
     MOZ_ASSERT(oldCount > 0);
 
+#ifdef JS_TRACE_LOGGING
+    DestroyTraceLoggerMainThread(this);
+#endif
+
     js::TlsPerThreadData.set(nullptr);
 
 #ifdef XP_WIN
