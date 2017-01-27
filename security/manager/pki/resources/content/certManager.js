@@ -334,8 +334,7 @@ function backupCerts()
   fp.appendFilters(nsIFilePicker.filterAll);
   var rv = fp.show();
   if (rv == nsIFilePicker.returnOK || rv == nsIFilePicker.returnReplace) {
-    certdb.exportPKCS12File(null, fp.file, selected_certs.length,
-                            selected_certs);
+    certdb.exportPKCS12File(fp.file, selected_certs.length, selected_certs);
   }
 }
 
@@ -399,7 +398,7 @@ function restoreCerts()
       certdb.importUserCertificate(dataArray, dataArray.length, interfaceRequestor);
     } else {
       // Otherwise, assume it's a PKCS12 file and import it that way.
-      certdb.importPKCS12File(null, fp.file);
+      certdb.importPKCS12File(fp.file);
     }
 
     var certcache = certdb.getCerts();
