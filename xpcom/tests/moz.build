@@ -15,13 +15,14 @@ EXPORTS.testing += [
     'TestHarness.h',
 ]
 
-SimplePrograms([
+test_progs = [
     'TestArguments',
     'TestBlockingProcess',
     'TestPRIntN',
     'TestQuickReturn',
     'TestUnicodeArguments',
-])
+]
+SimplePrograms(test_progs)
 
 USE_LIBS += ['mfbt']
 
@@ -30,6 +31,9 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 if CONFIG['COMPILE_ENVIRONMENT']:
     TEST_HARNESS_FILES.xpcshell.xpcom.tests.unit += [
         '!/dist/bin/components/xpcomtest.xpt',
+    ]
+    TEST_HARNESS_FILES.xpcshell.xpcom.tests.unit += [
+        '!%s%s' % (f, CONFIG['BIN_SUFFIX']) for f in test_progs
     ]
 
 XPIDL_MODULE = 'xpcomtest'
