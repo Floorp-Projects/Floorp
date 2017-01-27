@@ -39,7 +39,7 @@ add_task(function* () {
 
   info("Select .node-1 and click on the .node-1 selector icon");
   yield selectNode(".node-1", inspector);
-  let icon = getRuleViewSelectorHighlighterIcon(view, ".node-1");
+  let icon = yield getRuleViewSelectorHighlighterIcon(view, ".node-1");
   yield clickSelectorIcon(icon, view);
   ok(HighlighterFront.isShown, "The highlighter is shown");
 
@@ -48,12 +48,12 @@ add_task(function* () {
   ok(!HighlighterFront.isShown, "The highlighter is now hidden");
 
   info("With .node-1 still selected, click on the div selector icon");
-  icon = getRuleViewSelectorHighlighterIcon(view, "div");
+  icon = yield getRuleViewSelectorHighlighterIcon(view, "div");
   yield clickSelectorIcon(icon, view);
   ok(HighlighterFront.isShown, "The highlighter is shown again");
 
   info("With .node-1 still selected, click again on the .node-1 selector icon");
-  icon = getRuleViewSelectorHighlighterIcon(view, ".node-1");
+  icon = yield getRuleViewSelectorHighlighterIcon(view, ".node-1");
   yield clickSelectorIcon(icon, view);
   ok(HighlighterFront.isShown,
     "The highlighter is shown again since the clicked selector was different");
@@ -64,14 +64,14 @@ add_task(function* () {
     "The highlighter is still shown after selection");
 
   info("With .node-2 selected, click on the div selector icon");
-  icon = getRuleViewSelectorHighlighterIcon(view, "div");
+  icon = yield getRuleViewSelectorHighlighterIcon(view, "div");
   yield clickSelectorIcon(icon, view);
   ok(HighlighterFront.isShown,
     "The highlighter is shown still since the selected was different");
 
   info("Switching back to .node-1 and clicking on the div selector");
   yield selectNode(".node-1", inspector);
-  icon = getRuleViewSelectorHighlighterIcon(view, "div");
+  icon = yield getRuleViewSelectorHighlighterIcon(view, "div");
   yield clickSelectorIcon(icon, view);
   ok(!HighlighterFront.isShown,
     "The highlighter is hidden now that the same selector was clicked");
