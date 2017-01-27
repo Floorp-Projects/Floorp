@@ -152,7 +152,7 @@ let URICountListener = {
 
     // Don't count about:blank and similar pages, as they would artificially
     // inflate the counts.
-    if (browser.ownerDocument.defaultView.gInitialPages.includes(uriSpec)) {
+    if (browser.ownerGlobal.gInitialPages.includes(uriSpec)) {
       return;
     }
 

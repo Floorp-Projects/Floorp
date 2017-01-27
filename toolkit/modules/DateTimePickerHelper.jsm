@@ -119,7 +119,7 @@ this.DateTimePickerHelper = {
 
     debug("Opening picker with details: " + JSON.stringify(detail));
 
-    let window = aBrowser.ownerDocument.defaultView;
+    let window = aBrowser.ownerGlobal;
     let tabbrowser = window.gBrowser;
     if (Services.focus.activeWindow != window ||
         tabbrowser.selectedBrowser != aBrowser) {

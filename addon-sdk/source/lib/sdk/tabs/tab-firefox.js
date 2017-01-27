@@ -67,7 +67,7 @@ const Tab = Class({
 
     getURL.implement(this, tab => tab.url);
     isPrivate.implement(this, tab => {
-      return isWindowPrivate(viewsFor.get(tab).ownerDocument.defaultView);
+      return isWindowPrivate(viewsFor.get(tab).ownerGlobal);
     });
   },
 
@@ -123,7 +123,7 @@ const Tab = Class({
     // TODO: Remove the dependency on the windows module, see bug 792670
     require('../windows');
     let tabElement = viewsFor.get(this);
-    let domWindow = tabElement.ownerDocument.defaultView;
+    let domWindow = tabElement.ownerGlobal;
     return modelFor(domWindow);
   },
 
@@ -256,7 +256,7 @@ function tabEmit(tab, event, ...args) {
   // If the windows module was never loaded this will return null. We don't need
   // to emit to the window.tabs object in this case as nothing can be listening.
   let tabElement = viewsFor.get(tab);
-  let window = maybeWindowFor(tabElement.ownerDocument.defaultView);
+  let window = maybeWindowFor(tabElement.ownerGlobal);
   if (window)
     emit(window.tabs, event, tab, ...args);
 
@@ -281,7 +281,7 @@ when(_ => {
 
 // Listen for tabbrowser events
 function tabEventListener(event, tabElement, ...args) {
-  let domWindow = tabElement.ownerDocument.defaultView;
+  let domWindow = tabElement.ownerGlobal;
 
   if (ignoreWindow(domWindow))
     return;

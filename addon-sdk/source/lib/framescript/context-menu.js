@@ -62,11 +62,11 @@ const isVideoLoadingAudio = node =>
     (node.videoWidth == 0 || node.videoHeight == 0)
 
 const isVideo = node =>
-  node instanceof node.ownerDocument.defaultView.HTMLVideoElement &&
+  node instanceof node.ownerGlobal.HTMLVideoElement &&
   !isVideoLoadingAudio(node);
 
 const isAudio = node => {
-  const {HTMLVideoElement, HTMLAudioElement} = node.ownerDocument.defaultView;
+  const {HTMLVideoElement, HTMLAudioElement} = node.ownerGlobal;
   return node instanceof HTMLAudioElement ? true :
          node instanceof HTMLVideoElement ? isVideoLoadingAudio(node) :
          false;
@@ -165,12 +165,12 @@ const nonPageSelector = nonPageElements.
 // but old implementation was also checked for collapsed selection there for to keep
 // the behavior same we end up implementing a new reader.
 parsers["reader/isPage()"] = constant(node =>
-  node.ownerDocument.defaultView.getSelection().isCollapsed &&
+  node.ownerGlobal.getSelection().isCollapsed &&
   !node.matches(nonPageSelector));
 
 // Reads `true` if node is in an iframe otherwise returns true.
 parsers["reader/isFrame()"] = constant(node =>
-  !!node.ownerDocument.defaultView.frameElement);
+  !!node.ownerGlobal.frameElement);
 
 parsers["reader/isEditable()"] = constant(node => {
   const selection = getInputSelection(node);

@@ -357,7 +357,7 @@ Finder.prototype = {
     switch (aEvent.keyCode) {
       case Ci.nsIDOMKeyEvent.DOM_VK_RETURN:
         if (this._fastFind.foundLink) {
-          let view = this._fastFind.foundLink.ownerDocument.defaultView;
+          let view = this._fastFind.foundLink.ownerGlobal;
           this._fastFind.foundLink.dispatchEvent(new view.MouseEvent("click", {
             view,
             cancelable: true,

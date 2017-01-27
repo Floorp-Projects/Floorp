@@ -69,7 +69,7 @@ let img = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWNgYGBgAAAAB
 var imageBuffer = Uint8Array.from(atob(img), byte => byte.charCodeAt(0)).buffer;
 
 function getListStyleImage(button) {
-  let style = button.ownerDocument.defaultView.getComputedStyle(button);
+  let style = button.ownerGlobal.getComputedStyle(button);
 
   let match = /^url\("(.*)"\)$/.exec(style.listStyleImage);
 

@@ -78,7 +78,7 @@ event.sendMouseEvent = function (mouseEvent, target, window = undefined) {
   if (!target.nodeType) {
     target = window.document.getElementById(target);
   } else {
-    window = window || target.ownerDocument.defaultView;
+    window = window || target.ownerGlobal;
   }
 
   let ev = window.document.createEvent("MouseEvent");

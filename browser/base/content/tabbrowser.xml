@@ -2836,7 +2836,7 @@
             // Do not allow transfering a private tab to a non-private window
             // and vice versa.
             if (PrivateBrowsingUtils.isWindowPrivate(window) !=
-                PrivateBrowsingUtils.isWindowPrivate(aOtherTab.ownerDocument.defaultView))
+                PrivateBrowsingUtils.isWindowPrivate(aOtherTab.ownerGlobal))
               return;
 
             let ourBrowser = this.getBrowserForTab(aOurTab);
@@ -2852,7 +2852,7 @@
             }
 
             // That's gBrowser for the other window, not the tab's browser!
-            var remoteBrowser = aOtherTab.ownerDocument.defaultView.gBrowser;
+            var remoteBrowser = aOtherTab.ownerGlobal.gBrowser;
             var isPending = aOtherTab.hasAttribute("pending");
 
             let otherTabListener = remoteBrowser._tabListeners.get(aOtherTab);
@@ -3005,7 +3005,7 @@
 
             // Unmap old outerWindowIDs.
             this._outerWindowIDBrowserMap.delete(ourBrowser.outerWindowID);
-            let remoteBrowser = aOtherBrowser.ownerDocument.defaultView.gBrowser;
+            let remoteBrowser = aOtherBrowser.ownerGlobal.gBrowser;
             if (remoteBrowser) {
               remoteBrowser._outerWindowIDBrowserMap.delete(aOtherBrowser.outerWindowID);
             }
@@ -4120,7 +4120,7 @@
               // our window. We save the state of otherBrowser since ourBrowser
               // needs to take on that state at the end of the swap.
 
-              let otherTabbrowser = otherBrowser.ownerDocument.defaultView.gBrowser;
+              let otherTabbrowser = otherBrowser.ownerGlobal.gBrowser;
               let otherState;
               if (otherTabbrowser && otherTabbrowser._switcher) {
                 let otherTab = otherTabbrowser.getTabForBrowser(otherBrowser);
@@ -6169,17 +6169,17 @@
               let sourceNode = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
               if (sourceNode instanceof XULElement &&
                   sourceNode.localName == "tab" &&
-                  sourceNode.ownerDocument.defaultView instanceof ChromeWindow &&
+                  sourceNode.ownerGlobal instanceof ChromeWindow &&
                   sourceNode.ownerDocument.documentElement.getAttribute("windowtype") == "navigator:browser" &&
-                  sourceNode.ownerDocument.defaultView.gBrowser.tabContainer == sourceNode.parentNode) {
+                  sourceNode.ownerGlobal.gBrowser.tabContainer == sourceNode.parentNode) {
                 // Do not allow transfering a private tab to a non-private window
                 // and vice versa.
                 if (PrivateBrowsingUtils.isWindowPrivate(window) !=
-                    PrivateBrowsingUtils.isWindowPrivate(sourceNode.ownerDocument.defaultView))
+                    PrivateBrowsingUtils.isWindowPrivate(sourceNode.ownerGlobal))
                   return "none";
 
                 if (window.gMultiProcessBrowser !=
-                    sourceNode.ownerDocument.defaultView.gMultiProcessBrowser)
+                    sourceNode.ownerGlobal.gMultiProcessBrowser)
                   return "none";
 
                 return dt.dropEffect == "copy" ? "copy" : "move";
