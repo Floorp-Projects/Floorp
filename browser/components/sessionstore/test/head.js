@@ -465,10 +465,9 @@ function promiseDelayedStartupFinished(aWindow) {
 
 function promiseEvent(element, eventType, isCapturing = false) {
   return new Promise(resolve => {
-    element.addEventListener(eventType, function listener(event) {
-      element.removeEventListener(eventType, listener, isCapturing);
+    element.addEventListener(eventType, function(event) {
       resolve(event);
-    }, isCapturing);
+    }, {capture: isCapturing, once: true});
   });
 }
 
