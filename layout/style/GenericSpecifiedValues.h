@@ -26,6 +26,50 @@ class GenericSpecifiedValues {
 public:
     // Check if we already contain a certain longhand
     virtual bool PropertyIsSet(nsCSSPropertyID aId) = 0;
+    // Check if we are able to hold longhands from a given
+    // style struct. Pass the result of NS_STYLE_INHERIT_BIT to this
+    // function. Can accept multiple inherit bits or'd together.
+    virtual bool ShouldComputeStyleStruct(uint64_t aInheritBits) = 0;
+
+    virtual nsPresContext* PresContext() = 0;
+
+    // Set a property to an identifier (string)
+    virtual void SetIdentStringValue(nsCSSPropertyID aId, const nsString& aValue) = 0;
+    virtual void SetIdentStringValueIfUnset(nsCSSPropertyID aId, const nsString& aValue) = 0;
+
+    // Set a property to a keyword (usually NS_STYLE_* or StyleFoo::*)
+    virtual void SetKeywordValue(nsCSSPropertyID aId, int32_t aValue) = 0;
+    virtual void SetKeywordValueIfUnset(nsCSSPropertyID aId, int32_t aValue) = 0;
+
+    template<typename T,
+             typename = typename std::enable_if<std::is_enum<T>::value>::type>
+    void SetKeywordValue(nsCSSPropertyID aId, T aValue) {
+        static_assert(mozilla::EnumTypeFitsWithin<T, int32_t>::value,
+                      "aValue must be an enum that fits within 32 bits");
+        SetKeywordValue(aId, static_cast<int32_t>(aValue));
+    }
+    template<typename T,
+             typename = typename std::enable_if<std::is_enum<T>::value>::type>
+    void SetKeywordValueIfUnset(nsCSSPropertyID aId, T aValue) {
+        static_assert(mozilla::EnumTypeFitsWithin<T, int32_t>::value,
+                      "aValue must be an enum that fits within 32 bits");
+        SetKeywordValueIfUnset(aId, static_cast<int32_t>(aValue));
+    }
+
+    // Set a property to a pixel value
+    virtual void SetPixelValue(nsCSSPropertyID aId, float aValue) = 0;
+    virtual void SetPixelValueIfUnset(nsCSSPropertyID aId, float aValue) = 0;
+
+    // Set a property to a percent value
+    virtual void SetPercentValue(nsCSSPropertyID aId, float aValue) = 0;
+    virtual void SetPercentValueIfUnset(nsCSSPropertyID aId, float aValue) = 0;
+
+    // Set a property to `currentcolor`
+    virtual void SetCurrentColor(nsCSSPropertyID aId) = 0;
+    virtual void SetCurrentColorIfUnset(nsCSSPropertyID aId) = 0;
+
+    // Set a property to an RGBA nscolor value
+    virtual void SetColorValue(nsCSSPropertyID aId, nscolor aValue) = 0;
 
     virtual nsRuleData* AsRuleData() = 0;
 };
