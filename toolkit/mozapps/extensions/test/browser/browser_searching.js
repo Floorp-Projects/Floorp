@@ -163,7 +163,7 @@ function get_actual_results() {
   for (var item of rows) {
 
     // Only consider items that are currently showing
-    var style = gManagerWindow.document.defaultView.getComputedStyle(item, "");
+    var style = gManagerWindow.document.defaultView.getComputedStyle(item);
     if (style.display == "none" || style.visibility != "visible")
       continue;
 

@@ -168,7 +168,7 @@ this.BrowserUtils = {
     let parentFrame = win.frameElement;
     while (parentFrame) {
       win = parentFrame.ownerDocument.defaultView;
-      let cstyle = win.getComputedStyle(parentFrame, "");
+      let cstyle = win.getComputedStyle(parentFrame);
 
       let framerect = parentFrame.getBoundingClientRect();
       x += framerect.left + parseFloat(cstyle.borderLeftWidth) + parseFloat(cstyle.paddingLeft);

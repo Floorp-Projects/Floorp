@@ -263,7 +263,7 @@
             let anchorRect = aAnchor.getBoundingClientRect();
             let mainViewRect = this._mainViewContainer.getBoundingClientRect();
             let center = aAnchor.clientWidth / 2;
-            let direction = aAnchor.ownerDocument.defaultView.getComputedStyle(aAnchor, null).direction;
+            let direction = aAnchor.ownerDocument.defaultView.getComputedStyle(aAnchor).direction;
             let edge;
             if (direction == "ltr") {
               edge = anchorRect.left - mainViewRect.left;
@@ -274,7 +274,7 @@
             // If the anchor is an element on the far end of the mainView we
             // don't want to shift the mainView too far, we would reveal empty
             // space otherwise.
-            let cstyle = window.getComputedStyle(document.documentElement, null);
+            let cstyle = window.getComputedStyle(document.documentElement);
             let exitSubViewGutterWidth =
               cstyle.getPropertyValue("--panel-ui-exit-subview-gutter-width");
             let maxShift = mainViewRect.width - parseInt(exitSubViewGutterWidth);

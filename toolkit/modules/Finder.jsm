@@ -520,8 +520,8 @@ Finder.prototype = {
 
     for (let frame = win; frame != topWin; frame = frame.parent) {
       let rect = frame.frameElement.getBoundingClientRect();
-      let left = frame.getComputedStyle(frame.frameElement, "").borderLeftWidth;
-      let top = frame.getComputedStyle(frame.frameElement, "").borderTopWidth;
+      let left = frame.getComputedStyle(frame.frameElement).borderLeftWidth;
+      let top = frame.getComputedStyle(frame.frameElement).borderTopWidth;
       scrollX.value += rect.left + parseInt(left, 10);
       scrollY.value += rect.top + parseInt(top, 10);
     }

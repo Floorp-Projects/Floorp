@@ -44,7 +44,7 @@ function checkCoords(event)
   var mod = (gTestIndex == 5) ? 4 : 6;
 
   var rect = gButton.getBoundingClientRect();
-  var popupstyle = window.getComputedStyle(gButton, "");
+  var popupstyle = window.getComputedStyle(gButton);
   is(event.clientX, Math.round(rect.left + mod),
      "step " + (gTestIndex + 1) + " clientX");
   is(event.clientY, Math.round(rect.top + mod),
@@ -118,7 +118,7 @@ var popupTests = [
 
     var buttonrect = document.getElementById("withtooltip").getBoundingClientRect();
     var rect = tooltip.getBoundingClientRect();
-    var popupstyle = window.getComputedStyle(document.getElementById("thetooltip"), "");
+    var popupstyle = window.getComputedStyle(document.getElementById("thetooltip"));
 
     is(Math.round(rect.left),
        Math.round(buttonrect.left + parseFloat(popupstyle.marginLeft) + 6),
@@ -167,8 +167,8 @@ var popupTests = [
   result: function(testname) {
     var buttonrect = document.getElementById("withtooltip").getBoundingClientRect();
     var rect = document.getElementById("thetooltip").getBoundingClientRect();
-    var popupstyle = window.getComputedStyle(document.getElementById("thetooltip"), "");
-    var buttonstyle = window.getComputedStyle(document.getElementById("withtooltip"), "");
+    var popupstyle = window.getComputedStyle(document.getElementById("thetooltip"));
+    var buttonstyle = window.getComputedStyle(document.getElementById("withtooltip"));
 
     is(Math.round(rect.left),
        Math.round(buttonrect.left + parseFloat(popupstyle.marginLeft) + 4),
@@ -212,8 +212,8 @@ var popupTests = [
   result: function(testname) {
     var buttonrect = document.getElementById("withtooltip").getBoundingClientRect();
     var rect = document.getElementById("thetooltip").getBoundingClientRect();
-    var popupstyle = window.getComputedStyle(document.getElementById("thetooltip"), "");
-    var buttonstyle = window.getComputedStyle(document.getElementById("withtooltip"), "");
+    var popupstyle = window.getComputedStyle(document.getElementById("thetooltip"));
+    var buttonstyle = window.getComputedStyle(document.getElementById("withtooltip"));
 
     is(Math.round(rect.left),
        Math.round(buttonrect.left + parseFloat(popupstyle.marginLeft) + 6),
@@ -257,7 +257,7 @@ var popupTests = [
   result: function(testname) {
     var buttonrect = document.getElementById("withtooltip").getBoundingClientRect();
     var rect = document.getElementById("thetooltip").getBoundingClientRect();
-    var popupstyle = window.getComputedStyle(document.getElementById("thetooltip"), "");
+    var popupstyle = window.getComputedStyle(document.getElementById("thetooltip"));
 
     is(Math.round(rect.y + rect.height),
        Math.round(buttonrect.top + 4 - parseFloat(popupstyle.marginTop)),

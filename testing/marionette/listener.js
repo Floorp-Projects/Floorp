@@ -1281,7 +1281,7 @@ function isElementDisplayed(id) {
  */
 function getElementValueOfCssProperty(id, prop) {
   let el = seenEls.get(id, curContainer);
-  let st = curContainer.frame.document.defaultView.getComputedStyle(el, null);
+  let st = curContainer.frame.document.defaultView.getComputedStyle(el);
   return st.getPropertyValue(prop);
 }
 

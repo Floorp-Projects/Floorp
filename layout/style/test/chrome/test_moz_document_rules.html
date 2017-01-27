@@ -36,7 +36,7 @@ function run()
     var iframe = document.getElementById("iframe");
     var subdoc = iframe.contentDocument;
     var subwin = iframe.contentWindow;
-    var cs = subwin.getComputedStyle(subdoc.getElementById("display"), "");
+    var cs = subwin.getComputedStyle(subdoc.getElementById("display"));
     var zIndexCounter = 0;
 
     function test_document_rule(urltests, shouldapply)

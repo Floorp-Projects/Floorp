@@ -29,13 +29,13 @@ function checkStyles(evt) {
 
   // black means the style wasn't applied.  green colors are used for styles
   //expected to be applied.  A color is red if a style is erroneously applied
-  color = window.getComputedStyle(cspframe.contentDocument.getElementById('linkstylediv'),null)['color'];
+  color = window.getComputedStyle(cspframe.contentDocument.getElementById('linkstylediv'))['color'];
   ok('rgb(0, 255, 0)' === color, 'External Stylesheet (' + color + ')');
-  color = window.getComputedStyle(cspframe.contentDocument.getElementById('inlinestylediv'),null)['color'];
+  color = window.getComputedStyle(cspframe.contentDocument.getElementById('inlinestylediv'))['color'];
   ok('rgb(0, 0, 0)' === color, 'Inline Style TAG (' + color + ')');
-  color = window.getComputedStyle(cspframe.contentDocument.getElementById('attrstylediv'),null)['color'];
+  color = window.getComputedStyle(cspframe.contentDocument.getElementById('attrstylediv'))['color'];
   ok('rgb(0, 0, 0)' === color, 'Style Attribute (' + color + ')');
-  color = window.getComputedStyle(cspframe.contentDocument.getElementById('csstextstylediv'),null)['color'];
+  color = window.getComputedStyle(cspframe.contentDocument.getElementById('csstextstylediv'))['color'];
   ok('rgb(0, 255, 0)' === color, 'cssText (' + color + ')');
   // SMIL tests
   color = window.getComputedStyle(cspframe.contentDocument.getElementById('xmlTest',null))['fill'];
@@ -47,7 +47,7 @@ function checkStyles(evt) {
   color = window.getComputedStyle(cspframe.contentDocument.getElementById('cssSetTestById',null))['fill'];
   ok('rgb(0, 0, 0)' === color, 'CSS Set Element styling via ID lookup (SMIL) (' + color + ')');
 
-  color = window.getComputedStyle(cspframe.contentDocument.getElementById('modifycsstextdiv'),null)['color'];
+  color = window.getComputedStyle(cspframe.contentDocument.getElementById('modifycsstextdiv'))['color'];
   ok('rgb(0, 255, 0)' === color, 'Modify loaded style sheet via cssText (' + color + ')');
 
   checkIfDone();
@@ -61,16 +61,16 @@ function checkStylesAllowed(evt) {
 
   // black means the style wasn't applied.  green colors are used for styles
   // expected to be applied.  A color is red if a style is erroneously applied
-  color = window.getComputedStyle(cspframe.contentDocument.getElementById('linkstylediv'),null)['color'];
+  color = window.getComputedStyle(cspframe.contentDocument.getElementById('linkstylediv'))['color'];
   ok('rgb(0, 255, 0)' === color, 'External Stylesheet (' + color + ')');
-  color = window.getComputedStyle(cspframe.contentDocument.getElementById('inlinestylediv'),null)['color'];
+  color = window.getComputedStyle(cspframe.contentDocument.getElementById('inlinestylediv'))['color'];
   ok('rgb(0, 255, 0)' === color, 'Inline Style TAG (' + color + ')');
-  color = window.getComputedStyle(cspframe.contentDocument.getElementById('attrstylediv'),null)['color'];
+  color = window.getComputedStyle(cspframe.contentDocument.getElementById('attrstylediv'))['color'];
   ok('rgb(0, 255, 0)' === color, 'Style Attribute (' + color + ')');
 
   // Note that the below test will fail if "script-src: 'unsafe-inline'" breaks,
   // since it relies on executing script to set .cssText
-  color = window.getComputedStyle(cspframe.contentDocument.getElementById('csstextstylediv'),null)['color'];
+  color = window.getComputedStyle(cspframe.contentDocument.getElementById('csstextstylediv'))['color'];
   ok('rgb(0, 255, 0)' === color, 'style.cssText (' + color + ')');
   // SMIL tests
   color = window.getComputedStyle(cspframe.contentDocument.getElementById('xmlTest',null))['fill'];
@@ -82,7 +82,7 @@ function checkStylesAllowed(evt) {
   color = window.getComputedStyle(cspframe.contentDocument.getElementById('cssSetTestById',null))['fill'];
   ok('rgb(0, 255, 0)' === color, 'CSS Set Element styling via ID lookup (SMIL) (' + color + ')');
 
-  color = window.getComputedStyle(cspframe.contentDocument.getElementById('modifycsstextdiv'),null)['color'];
+  color = window.getComputedStyle(cspframe.contentDocument.getElementById('modifycsstextdiv'))['color'];
   ok('rgb(0, 255, 0)' === color, 'Modify loaded style sheet via cssText (' + color + ')');
 
   checkIfDone();

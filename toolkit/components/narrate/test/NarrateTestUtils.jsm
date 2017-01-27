@@ -25,7 +25,7 @@ this.NarrateTestUtils = {
   FORWARD: "#narrate-skip-next",
 
   isVisible(element) {
-    let style = element.ownerDocument.defaultView.getComputedStyle(element, "");
+    let style = element.ownerDocument.defaultView.getComputedStyle(element);
     if (style.display == "none") {
       return false;
     } else if (style.visibility != "visible") {

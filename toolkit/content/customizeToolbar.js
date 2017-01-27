@@ -415,7 +415,7 @@ function setWrapperType(aItem, aWrapper) {
 
 function setDragActive(aItem, aValue) {
   var node = aItem;
-  var direction = window.getComputedStyle(aItem, null).direction;
+  var direction = window.getComputedStyle(aItem).direction;
   var value = direction == "ltr" ? "left" : "right";
   if (aItem.localName == "toolbar") {
     node = aItem.lastChild;
@@ -644,7 +644,7 @@ function onToolbarDragOver(aEvent) {
   } else {
     gCurrentDragOverItem = null;
 
-    var direction = window.getComputedStyle(dropTarget.parentNode, null).direction;
+    var direction = window.getComputedStyle(dropTarget.parentNode).direction;
     var dropTargetCenter = dropTarget.boxObject.x + (dropTarget.boxObject.width / 2);
     var dragAfter;
     if (direction == "ltr")

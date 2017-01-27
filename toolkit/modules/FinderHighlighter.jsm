@@ -642,7 +642,7 @@ FinderHighlighter.prototype = {
     let node = range.startContainer;
     while (node.nodeType != 1)
       node = node.parentNode;
-    let style = node.ownerDocument.defaultView.getComputedStyle(node, "");
+    let style = node.ownerDocument.defaultView.getComputedStyle(node);
     let props = {};
     for (let prop of kFontPropsCamelCase) {
       if (prop in style && style[prop])
@@ -771,7 +771,7 @@ FinderHighlighter.prototype = {
     }
 
     do {
-      let style = window.getComputedStyle(node, null);
+      let style = window.getComputedStyle(node);
       if (kFixed.has(style.position) || kFixed.has(style.overflow) ||
           kFixed.has(style.overflowX) || kFixed.has(style.overflowY)) {
         return true;

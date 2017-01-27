@@ -71,7 +71,7 @@ function checkInline () {
   var black = "rgb(0, 0, 0)";
 
   var getElementColorById = function (id) {
-    return window.getComputedStyle(cspframe.getElementById(id), null).color;
+    return window.getComputedStyle(cspframe.getElementById(id)).color;
   };
 
   var inlineStyleTests = {
