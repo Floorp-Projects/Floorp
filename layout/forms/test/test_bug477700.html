@@ -33,11 +33,11 @@ addLoadEvent(function() {
 
   $("i").style.display = "none";
   document.body.offsetWidth;
-  is(document.defaultView.getComputedStyle($("i"), "").display, "none",
+  is(document.defaultView.getComputedStyle($("i")).display, "none",
      "toggling display failed");
   $("i").style.display = "";
   document.body.offsetWidth;
-  is(document.defaultView.getComputedStyle($("i"), "").display, "inline",
+  is(document.defaultView.getComputedStyle($("i")).display, "inline",
      "toggling display back failed");
 
   $("i").contentWindow.postMessage("start", "*");

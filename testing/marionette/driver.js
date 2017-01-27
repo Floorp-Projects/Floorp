@@ -1869,7 +1869,7 @@ GeckoDriver.prototype.getElementValueOfCssProperty = function*(cmd, resp) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
       let el = this.curBrowser.seenEls.get(id, {frame: win});
-      let sty = win.document.defaultView.getComputedStyle(el, null);
+      let sty = win.document.defaultView.getComputedStyle(el);
       resp.body.value = sty.getPropertyValue(prop);
       break;
 

@@ -13,7 +13,7 @@ function run(test_window)
   var subwin = document.getElementById("subdoc").contentWindow;
   var style = subdoc.getElementById("style");
   var iframe_style = document.getElementById("subdoc").style;
-  var body_cs = subdoc.defaultView.getComputedStyle(subdoc.body, "");
+  var body_cs = subdoc.defaultView.getComputedStyle(subdoc.body);
 
   function query_applies(q) {
     style.setAttribute("media", q);

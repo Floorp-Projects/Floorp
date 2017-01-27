@@ -195,7 +195,7 @@ function loadAndCheck(win, firstType, secondType, swap, result1, result2)
   firstType.addRules(win, firstStyle);
   secondType.addRules(win, secondStyle);
 
-  var cs = win.getComputedStyle(win.document.body, null);
+  var cs = win.getComputedStyle(win.document.body);
   is(cs.getPropertyValue('color'), result1,
     firstType.type + "(normal)" + " vs " + secondType.type + (swap ? "(important)" : "(normal)" ) + " 1");
   is(cs.getPropertyValue('background-color'), result2,

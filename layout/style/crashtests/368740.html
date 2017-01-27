@@ -16,7 +16,7 @@ This page should not crash Mozilla<br>
 <script>
 function getComputedStyles(){
 var x=document.getElementById('content').contentDocument.getElementsByTagName('button')[0];
-var style = document.defaultView.getComputedStyle(x, null).getPropertyValue('border-left-width');
+var style = document.defaultView.getComputedStyle(x).getPropertyValue('border-left-width');
 }
 setTimeout(getComputedStyles,300);
 </script>
