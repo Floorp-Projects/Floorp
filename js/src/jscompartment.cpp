@@ -935,8 +935,8 @@ JSCompartment::checkScriptMapsAfterMovingGC()
             DebugScript* ds = r.front().value();
             for (uint32_t i = 0; i < ds->numSites; i++) {
                 BreakpointSite* site = ds->breakpoints[i];
-                if (site)
-                    CheckGCThingAfterMovingGC(site->script);
+                if (site && site->type() == BreakpointSite::Type::JS)
+                    CheckGCThingAfterMovingGC(site->asJS()->script);
             }
             auto ptr = debugScriptMap->lookup(script);
             MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &r.front());
