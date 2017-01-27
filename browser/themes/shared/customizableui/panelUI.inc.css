@@ -157,7 +157,7 @@
 
 #PanelUI-menu-button[badge-status="addon-alert"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   height: 13px;
-  background: transparent url(chrome://browser/skin/addons/addon-badge.svg) no-repeat center;
+  background: #FFBF00 url(chrome://browser/skin/update-badge-failed.svg) no-repeat center;
 }
 
 .panel-subviews {
@@ -589,12 +589,20 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 #PanelUI-footer-addons > toolbarbutton {
-  background-color: #C7F5FF;
+  background-color: #FFEFBF;
   display: flex;
   flex: 1 1 0%;
   width: calc(@menuPanelWidth@ + 30px);
   padding-inline-start: 15px;
   border-inline-start-style: none;
+}
+
+#PanelUI-footer-addons > toolbarbutton:hover {
+  background-color: #FFE8A2;
+}
+
+#PanelUI-footer-addons > toolbarbutton:active {
+  background-color: #FFE38F;
 }
 
 #PanelUI-footer-addons > toolbarbutton > .toolbarbutton-icon {
@@ -603,7 +611,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 }
 
 #PanelUI-footer-addons > toolbarbutton::after {
-  background-image: url(chrome://browser/skin/addons/addon-badge.svg);
+  background: #FFBF00 url(chrome://browser/skin/update-badge-failed.svg) no-repeat center;
 }
 
 #PanelUI-fxa-status {
