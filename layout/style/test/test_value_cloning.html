@@ -118,7 +118,7 @@ function iframe_loaded(event)
     var info = gCSSProperties[current_item.prop];
 
     var test = ifdoc.getElementById("test" + idx);
-    var cur_cs = iframe.contentWindow.getComputedStyle(test, "");
+    var cur_cs = iframe.contentWindow.getComputedStyle(test);
     test_cs.push(cur_cs);
     var cur_ser = ifdoc.styleSheets[0].cssRules[3*idx+2].style.getPropertyValue(current_item.prop);
     if (cur_ser == "") {

@@ -258,7 +258,7 @@ function runFlexShorthandTest(aFlexShorthandTestcase)
      gFlexShorthandDefaults[aSubPropName];
 
     // Compare computed value against expected computed value (from testcase)
-    is(window.getComputedStyle(elem, null).getPropertyValue(aSubPropName),
+    is(window.getComputedStyle(elem).getPropertyValue(aSubPropName),
        expectedVal,
        "Computed value of subproperty \"" + aSubPropName + "\" when we set \"" +
        gFlexPropName + ": " + aFlexShorthandTestcase[gFlexPropName] + "\"");

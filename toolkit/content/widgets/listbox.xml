@@ -516,7 +516,7 @@
         <parameter name="aItem"/>
         <body>
         <![CDATA[
-          var style = document.defaultView.getComputedStyle(aItem, "");
+          var style = document.defaultView.getComputedStyle(aItem);
           return style.display != "none" && style.visibility == "visible";
         ]]>
         </body>

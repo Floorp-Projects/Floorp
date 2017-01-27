@@ -85,10 +85,10 @@ var ClickEventHandler = {
       }
 
       var overflowx = this._scrollable.ownerDocument.defaultView
-                          .getComputedStyle(this._scrollable, "")
+                          .getComputedStyle(this._scrollable)
                           .getPropertyValue("overflow-x");
       var overflowy = this._scrollable.ownerDocument.defaultView
-                          .getComputedStyle(this._scrollable, "")
+                          .getComputedStyle(this._scrollable)
                           .getPropertyValue("overflow-y");
       // we already discarded non-multiline selects so allow vertical
       // scroll for multiline ones directly without checking for a

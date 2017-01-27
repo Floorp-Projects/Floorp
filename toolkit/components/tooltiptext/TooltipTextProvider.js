@@ -121,7 +121,7 @@ TooltipTextProvider.prototype = {
           }
         }
 
-        direction = defView.getComputedStyle(tipElement, "")
+        direction = defView.getComputedStyle(tipElement)
                            .getPropertyValue("direction");
       }
 

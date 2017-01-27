@@ -53,7 +53,7 @@
       testTextAttrs(ID, 7, attrs, defAttrs, 7, 12);
 
       var tempElem = getNode(ID).firstChild.nextSibling.firstChild.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = {"font-style": gComputedStyle.fontStyle,
                "font-weight": kBoldFontWeight };
       testTextAttrs(ID, 13, attrs, defAttrs, 12, 19);
@@ -71,22 +71,22 @@
       testDefaultTextAttrs(ID, defAttrs);
 
       tempElem = getNode(ID).firstChild.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 6);
 
       tempElem = tempElem.firstChild.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 6, attrs, defAttrs, 6, 26);
 
       tempElem = tempElem.parentNode;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 26, attrs, defAttrs, 26, 27);
 
       tempElem = tempElem.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = {"color": gComputedStyle.color,
                "background-color": gComputedStyle.backgroundColor};
       testTextAttrs(ID, 27, attrs, defAttrs, 27, 50);
@@ -98,17 +98,17 @@
       testDefaultTextAttrs(ID, defAttrs);
 
       tempElem = getNode(ID).firstChild.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 16);
 
       tempElem = tempElem.nextSibling.firstChild.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 16, attrs, defAttrs, 16, 33);
 
       tempElem = tempElem.parentNode;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 34, attrs, defAttrs, 33, 46);
 
@@ -120,7 +120,7 @@
 
       // Green
       tempElem = getNode(ID).firstChild.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 5);
 
@@ -138,7 +138,7 @@
 
       // Red
       tempElem = tempElem.nextSibling.nextSibling.nextSibling.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 9, attrs, defAttrs, 8, 11);
 
@@ -215,7 +215,7 @@
       testTextAttrs(ID, 6, attrs, defAttrs, 6, 7);
 
       tempElem = getNode(ID).firstChild.nextSibling.nextSibling.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = { "background-color": gComputedStyle.backgroundColor};
       testTextAttrs(ID, 13, attrs, defAttrs, 7, 20);
 
@@ -232,18 +232,18 @@
       testTextAttrs(ID, 37, attrs, defAttrs, 36, 44);
 
       tempElem = tempElem.nextSibling.nextSibling.nextSibling.nextSibling.firstChild.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 44, attrs, defAttrs, 44, 51);
 
       tempElem = tempElem.firstChild.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = {"font-weight": kBoldFontWeight,
                "color": gComputedStyle.color};
       testTextAttrs(ID, 51, attrs, defAttrs, 51, 55);
 
       tempElem = tempElem.parentNode;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = {"color": gComputedStyle.color};
       testTextAttrs(ID, 55, attrs, defAttrs, 55, 62);
 
@@ -264,7 +264,7 @@
 
       // Walk to the span with the different background color
       tempElem = getNode(ID).firstChild.nextSibling.nextSibling.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = { "background-color": gComputedStyle.backgroundColor };
       testTextAttrs(ID, 22, attrs, defAttrs, 21, 36);
 
@@ -273,7 +273,7 @@
 
       // Walk from the background color span to the one with font-style
       tempElem = tempElem.nextSibling.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = { "font-style": gComputedStyle.fontStyle };
       testTextAttrs(ID, 45, attrs, defAttrs, 44, 61);
 
@@ -282,7 +282,7 @@
 
       // Walk from span with font-style to the one with font-family.
       tempElem = tempElem.nextSibling.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = { "font-family": kMonospaceFontFamily };
       testTextAttrs(ID, 70, attrs, defAttrs, 69, 83);
 
@@ -342,7 +342,7 @@
 
       // Walk to the span with the different background color
       tempElem = getNode(ID).firstChild.nextSibling.nextSibling.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = { "background-color": gComputedStyle.backgroundColor };
       testTextAttrs(ID, 23, attrs, defAttrs, 22, 37);
 
@@ -351,7 +351,7 @@
 
       // Walk from the background color span to the one with font-style
       tempElem = tempElem.nextSibling.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = {"font-style": gComputedStyle.fontStyle};
       testTextAttrs(ID, 46, attrs, defAttrs, 45, 62);
 
@@ -360,7 +360,7 @@
 
       // Walk from span with font-style to the one with font-family.
       tempElem = tempElem.nextSibling.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = { "font-family": kMonospaceFontFamily };
       testTextAttrs(ID, 71, attrs, defAttrs, 70, 84);
 
@@ -555,7 +555,7 @@
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 10);
       
       tempElem = getNode(ID).firstChild.nextSibling;
-      gComputedStyle = document.defaultView.getComputedStyle(tempElem, "");
+      gComputedStyle = document.defaultView.getComputedStyle(tempElem);
       attrs = { "background-color": gComputedStyle.backgroundColor };
       testTextAttrs(ID, 11, attrs, defAttrs, 10, 17);
 

@@ -82,7 +82,7 @@
         <body>
         <![CDATA[
           // if the node isn't visible, don't descend into it.
-          var cs = node.ownerDocument.defaultView.getComputedStyle(node, null);
+          var cs = node.ownerDocument.defaultView.getComputedStyle(node);
           if (cs.visibility != "visible" || cs.display == "none") {
             return NodeFilter.FILTER_REJECT;
           }
@@ -159,10 +159,10 @@
         } else {
           if (event.keyCode == KeyEvent.DOM_VK_UP ||
               (event.keyCode == KeyEvent.DOM_VK_LEFT &&
-                document.defaultView.getComputedStyle(this.parentNode, "")
+                document.defaultView.getComputedStyle(this.parentNode)
                         .direction == "ltr") ||
               (event.keyCode == KeyEvent.DOM_VK_RIGHT &&
-                document.defaultView.getComputedStyle(this.parentNode, "")
+                document.defaultView.getComputedStyle(this.parentNode)
                         .direction == "rtl")) {
             event.preventDefault();
             window.document.commandDispatcher.rewindFocus();
@@ -171,10 +171,10 @@
 
           if (event.keyCode == KeyEvent.DOM_VK_DOWN ||
               (event.keyCode == KeyEvent.DOM_VK_RIGHT &&
-                document.defaultView.getComputedStyle(this.parentNode, "")
+                document.defaultView.getComputedStyle(this.parentNode)
                         .direction == "ltr") ||
               (event.keyCode == KeyEvent.DOM_VK_LEFT &&
-                document.defaultView.getComputedStyle(this.parentNode, "")
+                document.defaultView.getComputedStyle(this.parentNode)
                         .direction == "rtl")) {
             event.preventDefault();
             window.document.commandDispatcher.advanceFocus();

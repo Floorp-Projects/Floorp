@@ -32,10 +32,10 @@ root.appendChild(divToStyle);
 // Make sure the styles are applied in tree order.
 root.appendChild(tallShadowStyle);
 is(root.styleSheets.length, 1, "ShadowRoot should have one style sheet.");
-is(window.getComputedStyle(divToStyle, null).getPropertyValue("height"), "100px", "Style in ShadowRoot should apply to elements in ShadowRoot.");
+is(window.getComputedStyle(divToStyle).getPropertyValue("height"), "100px", "Style in ShadowRoot should apply to elements in ShadowRoot.");
 root.appendChild(veryTallShadowStyle);
 is(root.styleSheets.length, 2, "ShadowRoot should have two style sheets.");
-is(window.getComputedStyle(divToStyle, null).getPropertyValue("height"), "200px", "Style in ShadowRoot should apply to elements in ShadowRoot in tree order.");
+is(window.getComputedStyle(divToStyle).getPropertyValue("height"), "200px", "Style in ShadowRoot should apply to elements in ShadowRoot in tree order.");
 
 </script>
 </body>

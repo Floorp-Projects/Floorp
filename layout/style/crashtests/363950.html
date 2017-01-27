@@ -10,7 +10,7 @@ var properties = ['margin-left','margin-right','margin-top','padding-bottom','pa
 function removestyles(i, j){
 if (j>=properties.length)
    j = 0;
-document.defaultView.getComputedStyle(document.getElementsByTagName('head')[0], null).getPropertyValue(properties[j]);
+document.defaultView.getComputedStyle(document.getElementsByTagName('head')[0]).getPropertyValue(properties[j]);
 j++;
 setTimeout(removestyles,50,j);
 }

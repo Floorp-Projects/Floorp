@@ -81,7 +81,7 @@ function check_iframe(ifr) {
     var doc = ifr.contentDocument;
     var cases = doc.getElementsByTagName("p");
     for (var i = 0; i < cases.length; i++) {
-	var color = doc.defaultView.getComputedStyle(cases[i], "")
+	var color = doc.defaultView.getComputedStyle(cases[i])
 	    .getPropertyValue("background-color");
 
 	is(color, "rgb(0, 255, 0)", ifr.id + " " + cases[i].id);

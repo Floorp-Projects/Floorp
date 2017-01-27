@@ -76,7 +76,7 @@ function ranTests(num) {
 function checkInlineScriptsAndStyles () {
   var cspframe = document.getElementById('cspframe');
   var getElementColorById = function (id) {
-    return window.getComputedStyle(cspframe.contentDocument.getElementById(id), null).color;
+    return window.getComputedStyle(cspframe.contentDocument.getElementById(id)).color;
   };
   // Inline style tries to change an element's color to green. If blocked, the
   // element's color will be the (unchanged) default black.
