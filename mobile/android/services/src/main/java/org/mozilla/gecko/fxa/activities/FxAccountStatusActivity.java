@@ -151,7 +151,7 @@ public class FxAccountStatusActivity extends LocaleAwareAppCompatActivity {
       .setTitle(R.string.fxaccount_remove_account_dialog_title)
       .setIcon(icon)
       .setMessage(R.string.fxaccount_remove_account_dialog_message)
-      .setPositiveButton(android.R.string.ok, new Dialog.OnClickListener() {
+      .setPositiveButton(R.string.fxaccount_remove_account_dialog_action_confirm, new Dialog.OnClickListener() {
         @Override
         public void onClick(DialogInterface dialog, int which) {
           AccountManager.get(activity).removeAccount(account, callback, null);
