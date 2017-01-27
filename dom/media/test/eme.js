@@ -488,10 +488,9 @@ function fetchWithXHR(uri, onLoadFunction) {
 
 function once(target, name, cb) {
   var p = new Promise(function(resolve, reject) {
-    target.addEventListener(name, function onceEvent(arg) {
-      target.removeEventListener(name, onceEvent);
+    target.addEventListener(name, function(arg) {
       resolve(arg);
-    });
+    }, {once: true});
   });
   if (cb) {
     p.then(cb);

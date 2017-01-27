@@ -75,10 +75,9 @@ function debug(str) {
 const once = event => {
   let target = shell.contentBrowser;
   return new Promise((resolve, reject) => {
-    target.addEventListener(event, function gotEvent(evt) {
-      target.removeEventListener(event, gotEvent);
+    target.addEventListener(event, function(evt) {
       resolve(evt);
-    });
+    }, {once: true});
   });
 }
 
