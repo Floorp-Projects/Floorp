@@ -396,21 +396,6 @@ static void* SignalSender(void* arg) {
   return 0;
 }
 
-Sampler::Sampler(double interval, bool profiling, int entrySize)
-    : interval_(interval),
-      profiling_(profiling),
-      paused_(false),
-      active_(false),
-      entrySize_(entrySize) {
-  MOZ_COUNT_CTOR(Sampler);
-}
-
-Sampler::~Sampler() {
-  MOZ_COUNT_DTOR(Sampler);
-  ASSERT(!signal_sender_launched_);
-}
-
-
 void Sampler::Start() {
   LOG("Sampler started");
 
