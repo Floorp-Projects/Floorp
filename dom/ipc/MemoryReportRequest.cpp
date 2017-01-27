@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MemoryReportRequest.h"
+#include "mozilla/Unused.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/gfx/GPUParent.h"
 
 namespace mozilla {
 namespace dom {
@@ -121,6 +123,9 @@ public:
       case GeckoProcessType_Content:
         ContentChild::GetSingleton()->SendAddMemoryReport(memreport);
         break;
+      case GeckoProcessType_GPU:
+        Unused << gfx::GPUParent::GetSingleton()->SendAddMemoryReport(memreport);
+        break;
       default:
         MOZ_ASSERT_UNREACHABLE("Unhandled process type");
     }
@@ -154,6 +159,9 @@ public:
     switch (XRE_GetProcessType()) {
       case GeckoProcessType_Content:
         sent = ContentChild::GetSingleton()->SendFinishMemoryReport(mGeneration);
+        break;
+      case GeckoProcessType_GPU:
+        sent = gfx::GPUParent::GetSingleton()->SendFinishMemoryReport(mGeneration);
         break;
       default:
         MOZ_ASSERT_UNREACHABLE("Unhandled process type");
