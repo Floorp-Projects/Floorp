@@ -355,6 +355,14 @@ static_assert(sizeof(nsStringContainer_base) == sizeof(nsSubstring),
 // Provide rust bindings to the nsA[C]String types
 extern "C" {
 
+#ifdef DEBUG
+// This is a no-op on release, let's ensure it gives a linker error.
+void Gecko_IncrementStringAdoptCount(void* aData)
+{
+  MOZ_LOG_CTOR(aData, "StringAdopt", 1);
+}
+#endif
+
 void Gecko_FinalizeCString(nsACString* aThis)
 {
   aThis->~nsACString();
