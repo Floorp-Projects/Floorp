@@ -303,6 +303,30 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
               attrs.StripAttributes(OriginAttributes::STRIP_ADDON_ID);
               prin = nsNullPrincipal::Create(attrs);
             }
+            // if the new NullPrincipal (above) loads an iframe[srcdoc], we
+            // need to inherit an existing CSP to avoid bypasses (bug 1073952).
+            // We continue inheriting for nested frames with e.g., data: URLs.
+            if (loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_SUBDOCUMENT) {
+              nsCOMPtr<nsIURI> uri;
+              aChannel->GetURI(getter_AddRefs(uri));
+              nsAutoCString URISpec;
+              uri->GetSpec(URISpec);
+              bool isData = (NS_SUCCEEDED(uri->SchemeIs("data", &isData)) && isData);
+              if (URISpec.EqualsLiteral("about:srcdoc") || isData) {
+                nsCOMPtr<nsIPrincipal> principalToInherit = loadInfo->PrincipalToInherit();
+                if (!principalToInherit) {
+                  principalToInherit = loadInfo->TriggeringPrincipal();
+                }
+                nsCOMPtr<nsIContentSecurityPolicy> originalCsp;
+                principalToInherit->GetCsp(getter_AddRefs(originalCsp));
+                // if the principalToInherit had a CSP,
+                // add it to the newly created NullPrincipal.
+                if (originalCsp) {
+                  nsresult rv = prin->SetCsp(originalCsp);
+                  NS_ENSURE_SUCCESS(rv, rv);
+                }
+              }
+            }
             prin.forget(aPrincipal);
             return NS_OK;
         }
@@ -335,7 +359,7 @@ nsScriptSecurityManager::GetChannelResultPrincipal(nsIChannel* aChannel,
 
             nsCOMPtr<nsIURI> uri;
             nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
-            NS_ENSURE_SUCCESS(rv, rv); 
+            NS_ENSURE_SUCCESS(rv, rv);
             nsCOMPtr<nsIPrincipal> principalToInherit = loadInfo->PrincipalToInherit();
             if (!principalToInherit) {
               principalToInherit = loadInfo->TriggeringPrincipal();
