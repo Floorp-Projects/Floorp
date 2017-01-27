@@ -436,23 +436,21 @@ HTMLTextAreaElement::ParseAttribute(int32_t aNamespaceID,
 
 void
 HTMLTextAreaElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                           GenericSpecifiedValues* aGenericData)
+                                           GenericSpecifiedValues* aData)
 {
-  nsRuleData* aData = aGenericData->AsRuleData();
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Text)) {
+  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Text))) {
     // wrap=off
-    nsCSSValue* whiteSpace = aData->ValueForWhiteSpace();
-    if (whiteSpace->GetUnit() == eCSSUnit_Null) {
+    if (!aData->PropertyIsSet(eCSSProperty_white_space)) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::wrap);
       if (value && value->Type() == nsAttrValue::eString &&
           value->Equals(nsGkAtoms::OFF, eIgnoreCase)) {
-        whiteSpace->SetIntValue(NS_STYLE_WHITESPACE_PRE, eCSSUnit_Enumerated);
+        aData->SetKeywordValue(eCSSProperty_white_space, NS_STYLE_WHITESPACE_PRE);
       }
     }
   }
 
-  nsGenericHTMLFormElementWithState::MapDivAlignAttributeInto(aAttributes, aGenericData);
-  nsGenericHTMLFormElementWithState::MapCommonAttributesInto(aAttributes, aGenericData);
+  nsGenericHTMLFormElementWithState::MapDivAlignAttributeInto(aAttributes, aData);
+  nsGenericHTMLFormElementWithState::MapCommonAttributesInto(aAttributes, aData);
 }
 
 nsChangeHint
