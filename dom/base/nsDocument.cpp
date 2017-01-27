@@ -4399,13 +4399,8 @@ nsDocument::SetScopeObject(nsIGlobalObject* aGlobal)
       // We should already have the principal, and now that we have been added to a
       // window, we should be able to join a DocGroup!
       nsAutoCString docGroupKey;
-      nsresult rv =
-        mozilla::dom::DocGroup::GetKey(NodePrincipal(), docGroupKey);
-      if (mDocGroup) {
-        if (NS_SUCCEEDED(rv)) {
-          MOZ_RELEASE_ASSERT(mDocGroup->MatchesKey(docGroupKey));
-        }
-      } else {
+      mozilla::dom::DocGroup::GetKey(NodePrincipal(), docGroupKey);
+      if (!mDocGroup) {
         mDocGroup = tabgroup->AddDocument(docGroupKey, this);
         MOZ_ASSERT(mDocGroup);
       }
