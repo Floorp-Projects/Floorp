@@ -149,12 +149,14 @@ txMozillaTextOutput::createResultDocument(nsIDOMDocument* aSourceDocument,
     nsIScriptGlobalObject* sgo =
       source->GetScriptHandlingObject(hasHadScriptObject);
     NS_ENSURE_STATE(sgo || !hasHadScriptObject);
-    mDocument->SetScriptHandlingObject(sgo);
 
     NS_ASSERTION(mDocument, "Need document");
 
     // Reset and set up document
     URIUtils::ResetWithSource(mDocument, aSourceDocument);
+    // Only do this after resetting the document to ensure we have the
+    // correct principal.
+    mDocument->SetScriptHandlingObject(sgo);
 
     // Set the charset
     if (!mOutputFormat.mEncoding.IsEmpty()) {
