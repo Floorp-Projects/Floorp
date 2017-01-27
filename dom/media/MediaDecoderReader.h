@@ -230,7 +230,7 @@ public:
     return mTimedMetadataEvent;
   }
 
-  // Notified by the OggReader during playback when chained ogg is detected.
+  // Notified by the OggDemuxer during playback when chained ogg is detected.
   MediaEventSource<void>& OnMediaNotSeekable() { return mOnMediaNotSeekable; }
 
   TimedMetadataEventProducer& TimedMetadataProducer()
