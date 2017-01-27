@@ -459,6 +459,8 @@ def build_docker_worker_payload(config, task, task_def):
                 level=config.params['level'])
         )
         worker['env']['USE_SCCACHE'] = '1'
+    else:
+        worker['env']['SCCACHE_DISABLE'] = '1'
 
     capabilities = {}
 
