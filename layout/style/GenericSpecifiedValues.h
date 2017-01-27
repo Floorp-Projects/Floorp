@@ -78,6 +78,11 @@ public:
     virtual void SetColorValue(nsCSSPropertyID aId, nscolor aValue) = 0;
     virtual void SetColorValueIfUnset(nsCSSPropertyID aId, nscolor aValue) = 0;
 
+    // Set font-family to a string
+    virtual void SetFontFamily(const nsString& aValue) = 0;
+    // Add a quirks-mode override to the decoration color of elements nested in <a>
+    virtual void SetTextDecorationColorOverride() = 0;
+
     virtual nsRuleData* AsRuleData() = 0;
 };
 
