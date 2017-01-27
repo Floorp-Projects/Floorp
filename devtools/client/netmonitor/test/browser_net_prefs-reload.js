@@ -12,6 +12,7 @@ add_task(function* () {
   let { getActiveFilters } = require("devtools/client/netmonitor/selectors/index");
 
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
+  let { document, gStore, Prefs } = monitor.panelWin;
   info("Starting test... ");
 
   // This test reopens the network monitor a bunch of times, for different
@@ -21,7 +22,7 @@ add_task(function* () {
   // Use these getters instead of caching instances inside the panel win,
   // since the tool is reopened a bunch of times during this test
   // and the instances will differ.
-  let getStore = () => monitor.panelWin.gStore;
+  let getStore = () => gStore;
   let getState = () => getStore().getState();
 
   let prefsToCheck = {
@@ -30,21 +31,25 @@ add_task(function* () {
       newValue: ["html", "css"],
       // Getter used to retrieve the current value from the frontend, in order
       // to verify that the pref was applied properly.
-      validateValue: ($) => getActiveFilters(getState()),
+      validateValue: () => getActiveFilters(getState()),
       // Predicate used to modify the frontend when setting the new pref value,
       // before trying to validate the changes.
-      modifyFrontend: ($, value) => value.forEach(e =>
+      modifyFrontend: (value) => value.forEach(e =>
         getStore().dispatch(Actions.toggleRequestFilterType(e)))
     },
     networkDetailsWidth: {
       newValue: ~~(Math.random() * 200 + 100),
-      validateValue: ($) => ~~$("#details-pane").getAttribute("width"),
-      modifyFrontend: ($, value) => $("#details-pane").setAttribute("width", value)
+      validateValue: () =>
+        ~~document.querySelector(".network-details-panel").getAttribute("width"),
+      modifyFrontend: (value) =>
+        document.querySelector(".network-details-panel").setAttribute("width", value)
     },
     networkDetailsHeight: {
       newValue: ~~(Math.random() * 300 + 100),
-      validateValue: ($) => ~~$("#details-pane").getAttribute("height"),
-      modifyFrontend: ($, value) => $("#details-pane").setAttribute("height", value)
+      validateValue: () =>
+        ~~document.querySelector(".network-details-panel").getAttribute("height"),
+      modifyFrontend: (value) =>
+        document.querySelector(".network-details-panel").setAttribute("height", value)
     }
     /* add more prefs here... */
   };
@@ -61,7 +66,7 @@ add_task(function* () {
     info("Caching initial pref values.");
 
     for (let name in prefsToCheck) {
-      let currentValue = monitor.panelWin.Prefs[name];
+      let currentValue = Prefs[name];
       prefsToCheck[name].firstValue = currentValue;
     }
   }
@@ -70,13 +75,13 @@ add_task(function* () {
     info("Validating current pref values to the UI elements.");
 
     for (let name in prefsToCheck) {
-      let currentValue = monitor.panelWin.Prefs[name];
+      let currentValue = Prefs[name];
       let firstValue = prefsToCheck[name].firstValue;
       let validateValue = prefsToCheck[name].validateValue;
 
       is(currentValue.toSource(), firstValue.toSource(),
         "Pref " + name + " should be equal to first value: " + firstValue);
-      is(currentValue.toSource(), validateValue(monitor.panelWin.$).toSource(),
+      is(currentValue.toSource(), validateValue().toSource(),
         "Pref " + name + " should validate: " + currentValue);
     }
   }
@@ -85,20 +90,20 @@ add_task(function* () {
     info("Modifying UI elements to the specified new values.");
 
     for (let name in prefsToCheck) {
-      let currentValue = monitor.panelWin.Prefs[name];
+      let currentValue = Prefs[name];
       let firstValue = prefsToCheck[name].firstValue;
       let newValue = prefsToCheck[name].newValue;
       let validateValue = prefsToCheck[name].validateValue;
       let modFrontend = prefsToCheck[name].modifyFrontend;
 
-      modFrontend(monitor.panelWin.$, newValue);
+      modFrontend(newValue);
       info("Modified UI element affecting " + name + " to: " + newValue);
 
       is(currentValue.toSource(), firstValue.toSource(),
         "Pref " + name + " should still be equal to first value: " + firstValue);
       isnot(currentValue.toSource(), newValue.toSource(),
         "Pref " + name + " should't yet be equal to second value: " + newValue);
-      is(newValue.toSource(), validateValue(monitor.panelWin.$).toSource(),
+      is(newValue.toSource(), validateValue().toSource(),
         "The UI element affecting " + name + " should validate: " + newValue);
     }
   }
@@ -107,7 +112,7 @@ add_task(function* () {
     info("Invalidating old pref values to the modified UI elements.");
 
     for (let name in prefsToCheck) {
-      let currentValue = monitor.panelWin.Prefs[name];
+      let currentValue = Prefs[name];
       let firstValue = prefsToCheck[name].firstValue;
       let newValue = prefsToCheck[name].newValue;
       let validateValue = prefsToCheck[name].validateValue;
@@ -116,7 +121,7 @@ add_task(function* () {
         "Pref " + name + " should't be equal to first value: " + firstValue);
       is(currentValue.toSource(), newValue.toSource(),
         "Pref " + name + " should now be equal to second value: " + newValue);
-      is(newValue.toSource(), validateValue(monitor.panelWin.$).toSource(),
+      is(newValue.toSource(), validateValue().toSource(),
         "The UI element affecting " + name + " should validate: " + newValue);
     }
   }
@@ -125,20 +130,20 @@ add_task(function* () {
     info("Resetting UI elements to the cached initial pref values.");
 
     for (let name in prefsToCheck) {
-      let currentValue = monitor.panelWin.Prefs[name];
+      let currentValue = Prefs[name];
       let firstValue = prefsToCheck[name].firstValue;
       let newValue = prefsToCheck[name].newValue;
       let validateValue = prefsToCheck[name].validateValue;
       let modFrontend = prefsToCheck[name].modifyFrontend;
 
-      modFrontend(monitor.panelWin.$, firstValue);
+      modFrontend(firstValue);
       info("Modified UI element affecting " + name + " to: " + firstValue);
 
       isnot(currentValue.toSource(), firstValue.toSource(),
         "Pref " + name + " should't yet be equal to first value: " + firstValue);
       is(currentValue.toSource(), newValue.toSource(),
         "Pref " + name + " should still be equal to second value: " + newValue);
-      is(firstValue.toSource(), validateValue(monitor.panelWin.$).toSource(),
+      is(firstValue.toSource(), validateValue().toSource(),
         "The UI element affecting " + name + " should validate: " + firstValue);
     }
   }

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals window, dumpn, $, gNetwork, NetMonitorController, NetMonitorView */
+/* globals window, dumpn, $, gNetwork, NetMonitorController */
 
 "use strict";
 
@@ -81,10 +81,10 @@ RequestsMenuView.prototype = {
       (newSelected, oldSelected) => this.onSelectionUpdate(newSelected, oldSelected)
     ));
 
-    // Watch the sidebar status and resize the waterfall column on change
+    // Watch the network details panel toggle and resize the waterfall column on change
     this.store.subscribe(storeWatcher(
       false,
-      () => this.store.getState().ui.sidebarOpen,
+      () => this.store.getState().ui.networkDetailsOpen,
       () => this.onResize()
     ));
 
@@ -181,7 +181,7 @@ RequestsMenuView.prototype = {
   },
 
   /**
-   * Removes all network requests and closes the sidebar if open.
+   * Removes all network requests and closes the network details panel if open.
    */
   clear() {
     this.store.dispatch(Actions.clearRequests());
@@ -380,16 +380,15 @@ RequestsMenuView.prototype = {
   },
 
   /**
-   * Updates the sidebar status when something about the selection changes
+   * Updates the network details panel state when something about the selection changes
    */
   onSelectionUpdate(newSelected, oldSelected) {
     if (newSelected) {
       // Another item just got selected
-      NetMonitorView.Sidebar.populate(newSelected);
-      NetMonitorView.Sidebar.toggle(true);
+      this.store.dispatch(Actions.openNetworkDetails(true));
     } else {
       // Selection just got empty
-      NetMonitorView.Sidebar.toggle(false);
+      this.store.dispatch(Actions.openNetworkDetails(false));
     }
   },
 

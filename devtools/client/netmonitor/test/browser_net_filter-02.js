@@ -136,7 +136,7 @@ add_task(function* () {
   // It seems that this test may be slow on Ubuntu builds running on ec2.
   requestLongerTimeout(2);
 
-  let { $, NetMonitorView } = monitor.panelWin;
+  let { document, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
 
   RequestsMenu.lazyUpdate = false;
@@ -146,20 +146,22 @@ add_task(function* () {
   yield performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
   yield wait;
 
-  EventUtils.sendMouseEvent({ type: "mousedown" }, $("#details-pane-toggle"));
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelector(".network-details-panel-toggle"));
 
   isnot(RequestsMenu.selectedItem, null,
     "There should be a selected item in the requests menu.");
   is(RequestsMenu.selectedIndex, 0,
     "The first item should be selected in the requests menu.");
-  is(NetMonitorView.detailsPaneHidden, false,
-    "The details pane should not be hidden after toggle button was pressed.");
+  is(!!document.querySelector(".network-details-panel"), true,
+    "The network details panel should be visible after toggle button was pressed.");
 
   testFilterButtons(monitor, "all");
   testContents([1, 1, 1, 1, 1, 1, 1, 1, 1]);
 
   info("Testing html filtering.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-html-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-filter-html-button"));
   testFilterButtons(monitor, "html");
   testContents([1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
@@ -183,7 +185,8 @@ add_task(function* () {
                 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]);
 
   info("Resetting filters.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-filter-all-button"));
   testFilterButtons(monitor, "all");
   testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
@@ -195,8 +198,8 @@ add_task(function* () {
       "There should still be a selected item after filtering.");
     is(RequestsMenu.selectedIndex, 0,
       "The first item should be still selected after filtering.");
-    is(NetMonitorView.detailsPaneHidden, false,
-      "The details pane should still be visible after filtering.");
+    is(!!document.querySelector(".network-details-panel"), true,
+      "The network details panel should still be visible after filtering.");
 
     const items = RequestsMenu.items;
     const visibleItems = RequestsMenu.visibleItems;

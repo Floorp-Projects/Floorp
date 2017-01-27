@@ -10,7 +10,7 @@ const {
   ADD_REQUEST,
   CLEAR_REQUESTS,
   CLONE_SELECTED_REQUEST,
-  OPEN_SIDEBAR,
+  OPEN_NETWORK_DETAILS,
   REMOVE_SELECTED_CUSTOM_REQUEST,
   SELECT_REQUEST,
   SEND_CUSTOM_REQUEST,
@@ -228,7 +228,7 @@ function requestsReducer(state = new Requests(), action) {
       // wasn't sent yet.
       return closeCustomRequest(state.set("preselectedId", action.id));
     }
-    case OPEN_SIDEBAR: {
+    case OPEN_NETWORK_DETAILS: {
       if (!action.open) {
         return state.set("selectedId", null);
       }
