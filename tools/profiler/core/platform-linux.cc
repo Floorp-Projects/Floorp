@@ -138,9 +138,10 @@ static bool was_paused = false;
 // In the parent, just before the fork, record the pausedness state,
 // and then pause.
 static void paf_prepare(void) {
-  if (Sampler::GetActiveSampler()) {
-    was_paused = Sampler::GetActiveSampler()->IsPaused();
-    Sampler::GetActiveSampler()->SetPaused(true);
+  // XXX: this is an off-main-thread(?) use of gSampler
+  if (gSampler) {
+    was_paused = gSampler->IsPaused();
+    gSampler->SetPaused(true);
   } else {
     was_paused = false;
   }
@@ -149,8 +150,10 @@ static void paf_prepare(void) {
 // In the parent, just after the fork, return pausedness to the
 // pre-fork state.
 static void paf_parent(void) {
-  if (Sampler::GetActiveSampler())
-    Sampler::GetActiveSampler()->SetPaused(was_paused);
+  // XXX: this is an off-main-thread(?) use of gSampler
+  if (gSampler) {
+    gSampler->SetPaused(was_paused);
+  }
 }
 
 // Set up the fork handlers.
@@ -177,7 +180,8 @@ static mozilla::Atomic<ThreadProfile*> sCurrentThreadProfile;
 static sem_t sSignalHandlingDone;
 
 static void ProfilerSaveSignalHandler(int signal, siginfo_t* info, void* context) {
-  Sampler::GetActiveSampler()->RequestSave();
+  // XXX: this is an off-main-thread(?) use of gSampler
+  gSampler->RequestSave();
 }
 
 static void SetSampleContext(TickSample* sample, void* context)
@@ -230,7 +234,8 @@ void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
   // Avoid TSan warning about clobbering errno.
   int savedErrno = errno;
 
-  if (!Sampler::GetActiveSampler()) {
+  // XXX: this is an off-main-thread(?) use of gSampler
+  if (!gSampler) {
     sem_post(&sSignalHandlingDone);
     errno = savedErrno;
     return;
@@ -241,7 +246,8 @@ void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
   sample->context = context;
 
   // If profiling, we extract the current pc and sp.
-  if (Sampler::GetActiveSampler()->IsProfiling()) {
+  // XXX: this is an off-main-thread(?) use of gSampler
+  if (gSampler->IsProfiling()) {
     SetSampleContext(sample, context);
   }
   sample->threadProfile = sCurrentThreadProfile;
@@ -249,7 +255,8 @@ void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
   sample->rssMemory = sample->threadProfile->mRssMemory;
   sample->ussMemory = sample->threadProfile->mUssMemory;
 
-  Sampler::GetActiveSampler()->Tick(sample);
+  // XXX: this is an off-main-thread(?) use of gSampler
+  gSampler->Tick(sample);
 
   sCurrentThreadProfile = NULL;
   sem_post(&sSignalHandlingDone);
@@ -261,7 +268,8 @@ void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
 static void ProfilerSignalThread(ThreadProfile *profile,
                                  bool isFirstProfiledThread)
 {
-  if (isFirstProfiledThread && Sampler::GetActiveSampler()->ProfileMemory()) {
+  // XXX: this is an off-main-thread(?) use of gSampler
+  if (isFirstProfiledThread && gSampler->ProfileMemory()) {
     profile->mRssMemory = nsMemoryReporterManager::ResidentFast();
     profile->mUssMemory = nsMemoryReporterManager::ResidentUnique();
   } else {

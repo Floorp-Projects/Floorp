@@ -220,8 +220,6 @@ GeckoSampler::GeckoSampler(double aInterval, int aEntrySize,
 
       RegisterThread(info);
     }
-
-    SetActiveSampler(this);
   }
 
 #ifdef MOZ_TASK_TRACER
@@ -237,8 +235,6 @@ GeckoSampler::~GeckoSampler()
 {
   if (IsActive())
     Stop();
-
-  SetActiveSampler(nullptr);
 
   // Destroy ThreadProfile for all threads
   {
