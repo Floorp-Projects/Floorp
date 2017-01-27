@@ -22,12 +22,12 @@ var [gStyleSheetService, gIOService] = (function() {
 })();
 function set_user_sheet(sheeturi)
 {
-    var uri = gIOService.newURI(sheeturi, null, null);
+    var uri = gIOService.newURI(sheeturi);
     gStyleSheetService.loadAndRegisterSheet(uri, gStyleSheetService.USER_SHEET);
 }
 function remove_user_sheet(sheeturi)
 {
-    var uri = gIOService.newURI(sheeturi, null, null);
+    var uri = gIOService.newURI(sheeturi);
     gStyleSheetService.unregisterSheet(uri, gStyleSheetService.USER_SHEET);
 }
 

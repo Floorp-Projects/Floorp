@@ -54,7 +54,7 @@ function startTest()
     let gIOService = Cc["@mozilla.org/network/io-service;1"]
                        .getService(Ci.nsIIOService);
     for (let {url} of TEST_CASES) {
-      let uri = gIOService.newURI(url, null, null);
+      let uri = gIOService.newURI(url);
       gSSService.removeState(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0);
     }
   });

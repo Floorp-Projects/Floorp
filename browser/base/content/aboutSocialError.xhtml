@@ -54,7 +54,7 @@
       // directory does not have origin set, in that case use the url origin for
       // the error message.
       if (!config.origin) {
-        let URI = Services.io.newURI(url, null, null);
+        let URI = Services.io.newURI(url);
         config.origin =
           Services.scriptSecurityManager.createCodebasePrincipal(URI, {}).origin;
       }

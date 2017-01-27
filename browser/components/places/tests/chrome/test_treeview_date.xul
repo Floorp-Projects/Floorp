@@ -54,7 +54,7 @@
       SimpleTest.waitForExplicitFinish();
 
       function uri(spec) {
-        return Services.io.newURI(spec, null, null);
+        return Services.io.newURI(spec);
       }
 
       Task.spawn(function* () {

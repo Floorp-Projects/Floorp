@@ -1,7 +1,7 @@
 function makeURL(spec) {
   return Cc["@mozilla.org/network/io-service;1"].
            getService(Components.interfaces.nsIIOService).
-           newURI(spec, null, null).
+           newURI(spec).
            QueryInterface(Components.interfaces.nsIURL);
 }
 

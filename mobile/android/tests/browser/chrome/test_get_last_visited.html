@@ -66,8 +66,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1214366
     var v = yield get_last_visited("https://random.com/");
     is(v, 0, `Last visited timestamp is 0 for unknown prePath: ${v}`);
 
-    let prePath = Services.io.newURI(url1, null, null).prePath + "/";
-    is(prePath, Services.io.newURI(url2, null, null).prePath + "/", "url1 and url2 have the same prePath");
+    let prePath = Services.io.newURI(url1).prePath + "/";
+    is(prePath, Services.io.newURI(url2).prePath + "/", "url1 and url2 have the same prePath");
 
     let t0 = Date.now();
     yield add_history_visit(url1);

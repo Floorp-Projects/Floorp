@@ -50,7 +50,7 @@
                     "h", "i", "l", "m", "n", "o", "p"];
 
         // Add a bookmark and tag it.
-        let uri1 = Services.io.newURI("http://www1.mozilla.org/", null, null);
+        let uri1 = Services.io.newURI("http://www1.mozilla.org/");
         let bm1 = yield bs.insert({
           parentGuid: bs.toolbarGuid,
           index: bs.DEFAULT_INDEX,
@@ -61,7 +61,7 @@
         PlacesUtils.tagging.tagURI(uri1, tags);
 
         // Add a second bookmark so that tags won't disappear when unchecked.
-        let uri2 = Services.io.newURI("http://www2.mozilla.org/", null, null);
+        let uri2 = Services.io.newURI("http://www2.mozilla.org/");
         let bm2 = yield bs.insert({
           parentGuid: bs.toolbarGuid,
           index: bs.DEFAULT_INDEX,
