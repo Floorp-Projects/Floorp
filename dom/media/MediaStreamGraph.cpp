@@ -207,8 +207,10 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
 
       // The logic is different from the manipulating of aStream->mTracks part.
       // So it is not combined with the manipulating of aStream->mTracks part.
-      StreamTime offset = (data->mCommands & SourceMediaStream::TRACK_CREATE)
-          ? data->mStart : aStream->mTracks.FindTrack(data->mID)->GetSegment()->GetDuration();
+      StreamTime offset =
+        (data->mCommands & SourceMediaStream::TRACK_CREATE)
+        ? data->mStart
+        : aStream->mTracks.FindTrack(data->mID)->GetSegment()->GetDuration();
 
       // Audio case.
       if (data->mData->GetType() == MediaSegment::AUDIO) {
@@ -395,13 +397,14 @@ MediaStreamGraphImpl::ProcessChunkMetadataForInterval(MediaStream* aStream,
     PrincipalHandle principalHandle = chunk->GetPrincipalHandle();
     if (principalHandle != aSegment.GetLastPrincipalHandle()) {
       aSegment.SetLastPrincipalHandle(principalHandle);
-      STREAM_LOG(LogLevel::Debug, ("MediaStream %p track %d, principalHandle "
-                                   "changed in %sChunk with duration %lld",
-                                   aStream, aTrackID,
-                                   aSegment.GetType() == MediaSegment::AUDIO
-                                       ? "Audio" : "Video",
-                                   (long long) chunk->GetDuration()));
-      for (const TrackBound<MediaStreamTrackListener>& listener : aStream->mTrackListeners) {
+      STREAM_LOG(LogLevel::Debug,
+                 ("MediaStream %p track %d, principalHandle "
+                  "changed in %sChunk with duration %lld",
+                  aStream, aTrackID,
+                  aSegment.GetType() == MediaSegment::AUDIO ? "Audio" : "Video",
+                  (long long)chunk->GetDuration()));
+      for (const TrackBound<MediaStreamTrackListener>& listener :
+           aStream->mTrackListeners) {
         if (listener.mTrackID == aTrackID) {
           listener.mListener->NotifyPrincipalHandleChanged(this, principalHandle);
         }

@@ -291,10 +291,9 @@ MediaSourceTrackDemuxer::MediaSourceTrackDemuxer(MediaSourceDemuxer* aParent,
   , mType(aType)
   , mMonitor("MediaSourceTrackDemuxer")
   , mReset(true)
-  , mPreRoll(
-      TimeUnit::FromMicroseconds(
-        OpusDataDecoder::IsOpus(mParent->GetTrackInfo(mType)->mMimeType)
-          ? 80000 : 0))
+  , mPreRoll(TimeUnit::FromMicroseconds(
+      OpusDataDecoder::IsOpus(mParent->GetTrackInfo(mType)->mMimeType) ? 80000
+                                                                       : 0))
 {
 }
 

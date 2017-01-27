@@ -109,13 +109,15 @@ private:
   void DecodeDemuxedSamples(TrackType aTrack,
                             MediaRawData* aSample);
 
-  struct InternalSeekTarget {
+  struct InternalSeekTarget
+  {
     InternalSeekTarget(const media::TimeInterval& aTime, bool aDropTarget)
       : mTime(aTime)
       , mDropTarget(aDropTarget)
       , mWaiting(false)
       , mHasSeeked(false)
-    {}
+    {
+    }
 
     media::TimeUnit Time() const { return mTime.mStart; }
     media::TimeUnit EndTime() const { return mTime.mEnd; }
@@ -160,7 +162,8 @@ private:
 
   RefPtr<PDMFactory> mPlatform;
 
-  struct DecoderData {
+  struct DecoderData
+  {
     DecoderData(MediaFormatReader* aOwner,
                 MediaData::Type aType,
                 uint32_t aNumOfMaxError)
@@ -187,7 +190,8 @@ private:
       , mIsHardwareAccelerated(false)
       , mLastStreamSourceID(UINT32_MAX)
       , mIsBlankDecode(false)
-    {}
+    {
+    }
 
     MediaFormatReader* mOwner;
     // Disambiguate Audio vs Video.
@@ -208,8 +212,8 @@ private:
       if (mDecoder) {
         RefPtr<MediaFormatReader> owner = mOwner;
         TrackType type = mType == MediaData::AUDIO_DATA
-                           ? TrackType::kAudioTrack
-                           : TrackType::kVideoTrack;
+                         ? TrackType::kAudioTrack
+                         : TrackType::kVideoTrack;
         mDecoder->Shutdown()
           ->Then(mOwner->OwnerThread(), __func__,
                  [owner, this, type]() {
@@ -343,8 +347,8 @@ private:
       if (mDecoder && !mFlushed) {
         RefPtr<MediaFormatReader> owner = mOwner;
         TrackType type = mType == MediaData::AUDIO_DATA
-                           ? TrackType::kAudioTrack
-                           : TrackType::kVideoTrack;
+                         ? TrackType::kAudioTrack
+                         : TrackType::kVideoTrack;
         mDecoder->Flush()
           ->Then(mOwner->OwnerThread(), __func__,
                  [owner, type, this]() {
@@ -419,15 +423,16 @@ private:
 
   };
 
-  class DecoderDataWithPromise : public DecoderData {
+  class DecoderDataWithPromise : public DecoderData
+  {
   public:
     DecoderDataWithPromise(MediaFormatReader* aOwner,
                            MediaData::Type aType,
                            uint32_t aNumOfMaxError)
       : DecoderData(aOwner, aType, aNumOfMaxError)
       , mHasPromise(false)
-
-    {}
+    {
+    }
 
     bool HasPromise() const override
     {

@@ -71,8 +71,10 @@ DecodedAudioDataSink::DecodedAudioDataSink(AbstractThread* aThread,
 
   bool monoAudioEnabled = MediaPrefs::MonoAudio();
 
-  mOutputChannels = monoAudioEnabled
-    ? 1 : (MediaPrefs::AudioSinkForceStereo() ? 2 : mInfo.mChannels);
+  mOutputChannels =
+    monoAudioEnabled
+    ? 1
+    : (MediaPrefs::AudioSinkForceStereo() ? 2 : mInfo.mChannels);
 }
 
 DecodedAudioDataSink::~DecodedAudioDataSink()
