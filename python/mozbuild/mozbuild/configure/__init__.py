@@ -31,7 +31,6 @@ from mozbuild.configure.util import (
 from mozbuild.util import (
     exec_,
     memoize,
-    memoized_property,
     ReadOnlyDict,
     ReadOnlyNamespace,
 )
@@ -45,20 +44,32 @@ class ConfigureError(Exception):
 
 class SandboxDependsFunction(object):
     '''Sandbox-visible representation of @depends functions.'''
+    def __init__(self, unsandboxed):
+        self._or = unsandboxed.__or__
+
     def __call__(self, *arg, **kwargs):
         raise ConfigureError('The `%s` function may not be called'
                              % self.__name__)
 
+    def __or__(self, other):
+        if not isinstance(other, SandboxDependsFunction):
+            raise ConfigureError('Can only do binary arithmetic operations '
+                                 'with another @depends function.')
+        return self._or(other).sandboxed
+
 
 class DependsFunction(object):
     __slots__ = (
-        'func', 'dependencies', 'when', 'sandboxed', 'sandbox', '_result')
+        '_func', '_name', 'dependencies', 'when', 'sandboxed', 'sandbox',
+        '_result')
 
     def __init__(self, sandbox, func, dependencies, when=None):
         assert isinstance(sandbox, ConfigureSandbox)
-        self.func = func
+        assert not inspect.isgeneratorfunction(func)
+        self._func = func
+        self._name = func.__name__
         self.dependencies = dependencies
-        self.sandboxed = wraps(func)(SandboxDependsFunction())
+        self.sandboxed = wraps(func)(SandboxDependsFunction(self))
         self.sandbox = sandbox
         self.when = when
         sandbox._depends[self.sandboxed] = self
@@ -72,7 +83,11 @@ class DependsFunction(object):
 
     @property
     def name(self):
-        return self.func.__name__
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
 
     @property
     def sandboxed_dependencies(self):
@@ -81,13 +96,15 @@ class DependsFunction(object):
             for d in self.dependencies
         ]
 
-    @memoized_property
-    def result(self):
-        if self.when and not self.sandbox._value_for(self.when):
+    @memoize
+    def result(self, need_help_dependency=False):
+        if self.when and not self.sandbox._value_for(self.when,
+                                                     need_help_dependency):
             return None
 
-        resolved_args = [self.sandbox._value_for(d) for d in self.dependencies]
-        return self.func(*resolved_args)
+        resolved_args = [self.sandbox._value_for(d, need_help_dependency)
+                         for d in self.dependencies]
+        return self._func(*resolved_args)
 
     def __repr__(self):
         return '<%s.%s %s(%s)>' % (
@@ -97,46 +114,47 @@ class DependsFunction(object):
             ', '.join(repr(d) for d in self.dependencies),
         )
 
+    def __or__(self, other):
+        if isinstance(other, SandboxDependsFunction):
+            other = self.sandbox._depends.get(other)
+        assert isinstance(other, DependsFunction)
+        assert self.sandbox is other.sandbox
+        return CombinedDependsFunction(self.sandbox, self.first_true,
+                                       (self, other))
+
+    @staticmethod
+    def first_true(iterable):
+        # Like the builtin any(), but returns the first element that is true,
+        # instead of True. If none are true, returns the last element.
+        for i in iterable:
+            if i:
+                return i
+        return i
+
 
 class CombinedDependsFunction(DependsFunction):
     def __init__(self, sandbox, func, dependencies):
-        @memoize
-        @wraps(func)
-        def wrapper(*args):
-            return func(args)
-
         flatten_deps = []
         for d in dependencies:
-            if isinstance(d, CombinedDependsFunction) and d.func == wrapper:
+            if isinstance(d, CombinedDependsFunction) and d._func is func:
                 for d2 in d.dependencies:
                     if d2 not in flatten_deps:
                         flatten_deps.append(d2)
             elif d not in flatten_deps:
                 flatten_deps.append(d)
 
-        # Automatically add a --help dependency if one of the dependencies
-        # depends on it.
-        for d in flatten_deps:
-            if (isinstance(d, DependsFunction) and
-                sandbox._help_option in d.dependencies):
-                flatten_deps.insert(0, sandbox._help_option)
-                break
-
         super(CombinedDependsFunction, self).__init__(
-            sandbox, wrapper, flatten_deps)
+            sandbox, func, flatten_deps)
 
-    @memoized_property
-    def result(self):
-        # Ignore --help for the combined result
-        deps = self.dependencies
-        if deps[0] == self.sandbox._help_option:
-            deps = deps[1:]
-        resolved_args = [self.sandbox._value_for(d) for d in deps]
-        return self.func(*resolved_args)
+    @memoize
+    def result(self, need_help_dependency=False):
+        resolved_args = (self.sandbox._value_for(d, need_help_dependency)
+                         for d in self.dependencies)
+        return self._func(resolved_args)
 
     def __eq__(self, other):
         return (isinstance(other, self.__class__) and
-                self.func == other.func and
+                self._func is other._func and
                 set(self.dependencies) == set(other.dependencies))
 
     def __ne__(self, other):
@@ -389,7 +407,7 @@ class ConfigureSandbox(dict):
                            '@depends nor a @template' % key)
 
         if isinstance(value, SandboxDependsFunction):
-            self._depends[value].func.__name__ = key
+            self._depends[value].name = key
 
         return super(ConfigureSandbox, self).__setitem__(key, value)
 
@@ -415,8 +433,7 @@ class ConfigureSandbox(dict):
 
     @memoize
     def _value_for_depends(self, obj, need_help_dependency=False):
-        assert not inspect.isgeneratorfunction(obj.func)
-        return obj.result
+        return obj.result(need_help_dependency)
 
     @memoize
     def _value_for_option(self, option):

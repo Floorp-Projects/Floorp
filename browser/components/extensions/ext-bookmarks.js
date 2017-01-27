@@ -320,7 +320,7 @@ extensions.registerSchemaAPI("bookmarks", "addon_parent", context => {
 
       onCreated: new SingletonEventManager(context, "bookmarks.onCreated", fire => {
         let listener = (event, bookmark) => {
-          context.runSafe(fire, bookmark.id, bookmark);
+          fire.sync(bookmark.id, bookmark);
         };
 
         observer.on("created", listener);
@@ -333,7 +333,7 @@ extensions.registerSchemaAPI("bookmarks", "addon_parent", context => {
 
       onRemoved: new SingletonEventManager(context, "bookmarks.onRemoved", fire => {
         let listener = (event, data) => {
-          context.runSafe(fire, data.guid, data.info);
+          fire.sync(data.guid, data.info);
         };
 
         observer.on("removed", listener);
@@ -346,7 +346,7 @@ extensions.registerSchemaAPI("bookmarks", "addon_parent", context => {
 
       onChanged: new SingletonEventManager(context, "bookmarks.onChanged", fire => {
         let listener = (event, data) => {
-          context.runSafe(fire, data.guid, data.info);
+          fire.sync(data.guid, data.info);
         };
 
         observer.on("changed", listener);
@@ -359,7 +359,7 @@ extensions.registerSchemaAPI("bookmarks", "addon_parent", context => {
 
       onMoved: new SingletonEventManager(context, "bookmarks.onMoved", fire => {
         let listener = (event, data) => {
-          context.runSafe(fire, data.guid, data.info);
+          fire.sync(data.guid, data.info);
         };
 
         observer.on("moved", listener);

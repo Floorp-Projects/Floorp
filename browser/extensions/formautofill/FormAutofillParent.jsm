@@ -56,6 +56,7 @@ let FormAutofillParent = {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"]
                .getService(Ci.nsIMessageListenerManager);
     mm.addMessageListener("FormAutofill:PopulateFieldValues", this);
+    mm.addMessageListener("FormAutofill:GetProfiles", this);
   },
 
   /**
@@ -69,6 +70,9 @@ let FormAutofillParent = {
     switch (name) {
       case "FormAutofill:PopulateFieldValues":
         this._populateFieldValues(data, target);
+        break;
+      case "FormAutofill:GetProfiles":
+        this._getProfiles(data, target);
         break;
     }
   },
@@ -98,6 +102,7 @@ let FormAutofillParent = {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"]
                .getService(Ci.nsIMessageListenerManager);
     mm.removeMessageListener("FormAutofill:PopulateFieldValues", this);
+    mm.removeMessageListener("FormAutofill:GetProfiles", this);
   },
 
   /**
@@ -116,6 +121,29 @@ let FormAutofillParent = {
     this._profileStore.notifyUsed(guid);
     this._fillInFields(this._profileStore.get(guid), fields);
     target.sendAsyncMessage("FormAutofill:fillForm", {fields});
+  },
+
+  /**
+   * Get the profile data from profile store and return profiles back to content process.
+   *
+   * @private
+   * @param  {string} data.searchString
+   *         The typed string for filtering out the matched profile.
+   * @param  {string} data.info
+   *         The input autocomplete property's information.
+   * @param  {nsIFrameMessageManager} target
+   *         Content's message manager.
+   */
+  _getProfiles({searchString, info}, target) {
+    let profiles = [];
+
+    if (info && info.fieldName) {
+      profiles = this._profileStore.getByFilter({searchString, info});
+    } else {
+      profiles = this._profileStore.getAll();
+    }
+
+    target.messageManager.sendAsyncMessage("FormAutofill:Profiles", profiles);
   },
 
   /**

@@ -51,4 +51,11 @@ interface nsIFormFillController : nsISupports
    * @param aInput - The HTML <input> element to mark
    */
   void markAsAutofillField(in nsIDOMHTMLInputElement aInput);
+
+  /**
+   * Return the focused input which is cached in form fill controller.
+   *
+   * @returns The focused input.
+   */
+  nsIDOMHTMLInputElement getFocusedInput();
 };

@@ -132,7 +132,7 @@ extensions.registerSchemaAPI("pageAction", "addon_parent", context => {
     pageAction: {
       onClicked: new SingletonEventManager(context, "pageAction.onClicked", fire => {
         let listener = (event) => {
-          fire();
+          fire.async();
         };
         pageActionMap.get(extension).on("click", listener);
         return () => {

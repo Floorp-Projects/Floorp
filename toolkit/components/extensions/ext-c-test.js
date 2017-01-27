@@ -171,7 +171,7 @@ function makeTestAPI(context) {
 
       onMessage: new SingletonEventManager(context, "test.onMessage", fire => {
         let handler = (event, ...args) => {
-          context.runSafe(fire, ...args);
+          fire.async(...args);
         };
 
         extension.on("test-harness-message", handler);

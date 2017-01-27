@@ -53,7 +53,7 @@
 <!ENTITY translation.options.attribution.beforeLogo "Translations by">
 <!ENTITY translation.options.attribution.afterLogo "">
 
-<!ENTITY  drmContent.label             "DRM content">
+<!ENTITY  drmContent.label             "DRM Content">
 
 <!ENTITY  playDRMContent.label         "Play DRM content">
 <!ENTITY  playDRMContent.accesskey     "P">

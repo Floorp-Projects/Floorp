@@ -20,7 +20,7 @@ var {
 // when invoking listeners.
 function WebRequestEventManager(context, eventName) {
   let name = `webRequest.${eventName}`;
-  let register = (callback, filter, info) => {
+  let register = (fire, filter, info) => {
     let listener = data => {
       // Prevent listening in on requests originating from system principal to
       // prevent tinkering with OCSP, app and addon updates, etc.
@@ -65,7 +65,7 @@ function WebRequestEventManager(context, eventName) {
         }
       }
 
-      return context.runSafe(callback, data2);
+      return fire.sync(data2);
     };
 
     let filter2 = {};

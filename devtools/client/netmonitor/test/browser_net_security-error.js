@@ -21,10 +21,10 @@ add_task(function* () {
   });
   yield wait;
 
-  wait = waitForDOM(document, "#panel-5");
+  wait = waitForDOM(document, "#security-panel");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelector("#details-pane-toggle"));
-  document.querySelector("#tab-5 a").click();
+  document.querySelector("#security-tab").click();
   yield wait;
 
   let errormsg = document.querySelector(".security-info-value");

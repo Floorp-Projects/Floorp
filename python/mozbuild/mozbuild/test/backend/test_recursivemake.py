@@ -519,7 +519,7 @@ class TestRecursiveMakeBackend(BackendTester):
 
         lines = [l.strip() for l in open(x_master, 'rt').readlines()]
         self.assertEqual(lines, [
-            '; THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.',
+            '# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.',
             '',
             '[include:dir1/xpcshell.ini]',
             '[include:xpcshell.ini]',
