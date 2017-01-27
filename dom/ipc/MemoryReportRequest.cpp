@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MemoryReportRequest.h"
-#include "mozilla/dom/ContentChild.h"
 
 namespace mozilla {
 namespace dom {
@@ -55,8 +54,10 @@ MemoryReportRequestParent::~MemoryReportRequestParent()
 NS_IMPL_ISUPPORTS(MemoryReportRequestChild, nsIRunnable)
 
 MemoryReportRequestChild::MemoryReportRequestChild(
-  bool aAnonymize, const MaybeFileDesc& aDMDFile)
-: mAnonymize(aAnonymize)
+  bool aAnonymize, const MaybeFileDesc& aDMDFile,
+  const nsACString& aProcessString)
+ : mAnonymize(aAnonymize),
+   mProcessString(aProcessString)
 {
   if (aDMDFile.type() == MaybeFileDesc::TFileDescriptor) {
     mDMDFile = aDMDFile.get_FileDescriptor();
@@ -127,21 +128,15 @@ NS_IMPL_ISUPPORTS(
 , nsIFinishReportingCallback
 )
 
-
 NS_IMETHODIMP MemoryReportRequestChild::Run()
 {
-  ContentChild *child = static_cast<ContentChild*>(Manager());
   nsCOMPtr<nsIMemoryReporterManager> mgr =
     do_GetService("@mozilla.org/memory-reporter-manager;1");
-
-  nsCString process;
-  child->GetProcessName(process);
-  child->AppendProcessId(process);
 
   // Run the reporters.  The callback will turn each measurement into a
   // MemoryReport.
   RefPtr<HandleReportCallback> handleReport =
-    new HandleReportCallback(this, process);
+    new HandleReportCallback(this, mProcessString);
   RefPtr<FinishReportingCallback> finishReporting =
     new FinishReportingCallback(this);
 
