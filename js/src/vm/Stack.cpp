@@ -265,7 +265,7 @@ void
 InterpreterFrame::epilogue(JSContext* cx, jsbytecode* pc)
 {
     RootedScript script(cx, this->script());
-    probes::ExitScript(cx, script, script->functionNonDelazifying(), hasPushedSPSFrame());
+    probes::ExitScript(cx, script, script->functionNonDelazifying(), hasPushedGeckoProfilerFrame());
 
     // Check that the scope matches the environment at the point of leaving
     // the frame.
@@ -1728,8 +1728,8 @@ JS::ProfilingFrameIterator::ProfilingFrameIterator(JSContext* cx, const Register
     activation_(nullptr),
     savedPrevJitTop_(nullptr)
 {
-    if (!cx->spsProfiler.enabled())
-        MOZ_CRASH("ProfilingFrameIterator called when spsProfiler not enabled for runtime.");
+    if (!cx->geckoProfiler.enabled())
+        MOZ_CRASH("ProfilingFrameIterator called when geckoProfiler not enabled for runtime.");
 
     if (!cx->profilingActivation())
         return;

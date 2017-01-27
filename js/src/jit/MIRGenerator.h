@@ -91,7 +91,7 @@ class MIRGenerator
 
     MOZ_MUST_USE bool instrumentedProfiling() {
         if (!instrumentedProfilingIsCached_) {
-            instrumentedProfiling_ = GetJitContext()->runtime->spsProfiler().enabled();
+            instrumentedProfiling_ = GetJitContext()->runtime->geckoProfiler().enabled();
             instrumentedProfilingIsCached_ = true;
         }
         return instrumentedProfiling_;

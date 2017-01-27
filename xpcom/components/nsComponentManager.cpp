@@ -1766,7 +1766,9 @@ nsComponentManagerImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   }
 
   n += sStaticModules->ShallowSizeOfIncludingThis(aMallocSizeOf);
-  n += sModuleLocations->ShallowSizeOfIncludingThis(aMallocSizeOf);
+  if (sModuleLocations) {
+    n += sModuleLocations->ShallowSizeOfIncludingThis(aMallocSizeOf);
+  }
 
   n += mKnownStaticModules.ShallowSizeOfExcludingThis(aMallocSizeOf);
   n += mKnownModules.ShallowSizeOfExcludingThis(aMallocSizeOf);

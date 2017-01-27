@@ -38,26 +38,26 @@ probes::EnterScript(JSContext* cx, JSScript* script, JSFunction* maybeFun,
 #endif
 
     JSRuntime* rt = cx->runtime();
-    if (rt->spsProfiler.enabled()) {
-        if (!rt->spsProfiler.enter(cx, script, maybeFun))
+    if (rt->geckoProfiler.enabled()) {
+        if (!rt->geckoProfiler.enter(cx, script, maybeFun))
             return false;
-        MOZ_ASSERT_IF(!fp->script()->isGenerator(), !fp->hasPushedSPSFrame());
-        fp->setPushedSPSFrame();
+        MOZ_ASSERT_IF(!fp->script()->isGenerator(), !fp->hasPushedGeckoProfilerFrame());
+        fp->setPushedGeckoProfilerFrame();
     }
 
     return true;
 }
 
 inline void
-probes::ExitScript(JSContext* cx, JSScript* script, JSFunction* maybeFun, bool popSPSFrame)
+probes::ExitScript(JSContext* cx, JSScript* script, JSFunction* maybeFun, bool popProfilerFrame)
 {
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_FUNCTION_RETURN_ENABLED())
         DTraceExitJSFun(cx, maybeFun, script);
 #endif
 
-    if (popSPSFrame)
-        cx->runtime()->spsProfiler.exit(script, maybeFun);
+    if (popProfilerFrame)
+        cx->runtime()->geckoProfiler.exit(script, maybeFun);
 }
 
 inline bool

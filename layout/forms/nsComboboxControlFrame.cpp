@@ -249,6 +249,7 @@ nsComboboxControlFrame::~nsComboboxControlFrame()
 //--------------------------------------------------------------
 
 NS_QUERYFRAME_HEAD(nsComboboxControlFrame)
+  NS_QUERYFRAME_ENTRY(nsComboboxControlFrame)
   NS_QUERYFRAME_ENTRY(nsIComboboxControlFrame)
   NS_QUERYFRAME_ENTRY(nsIFormControlFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
@@ -1347,16 +1348,9 @@ nsComboboxDisplayFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 nsIFrame*
-nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
+nsComboboxControlFrame::CreateFrameForDisplayNode()
 {
-  NS_PRECONDITION(nullptr != aContent, "null ptr");
-
-  NS_ASSERTION(mDisplayContent, "mDisplayContent can't be null!");
-
-  if (mDisplayContent != aContent) {
-    // We only handle the frames for mDisplayContent here
-    return nullptr;
-  }
+  MOZ_ASSERT(mDisplayContent);
 
   // Get PresShell
   nsIPresShell *shell = PresContext()->PresShell();
@@ -1381,7 +1375,7 @@ nsComboboxControlFrame::CreateFrameFor(nsIContent*      aContent)
   nsIFrame* textFrame = NS_NewTextFrame(shell, textStyleContext);
 
   // initialize the text frame
-  textFrame->Init(aContent, mDisplayFrame, nullptr);
+  textFrame->Init(mDisplayContent, mDisplayFrame, nullptr);
   mDisplayContent->SetPrimaryFrame(textFrame);
 
   nsFrameList textList(textFrame, textFrame);

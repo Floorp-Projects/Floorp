@@ -380,7 +380,7 @@ JitCode*
 IonCacheIRCompiler::compile()
 {
     masm.setFramePushed(ionScript_->frameSize());
-    if (cx_->spsProfiler.enabled())
+    if (cx_->geckoProfiler.enabled())
         masm.enableProfilingInstrumentation();
 
     do {

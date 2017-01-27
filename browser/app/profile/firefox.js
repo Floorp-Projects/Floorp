@@ -1029,7 +1029,11 @@ pref("security.sandbox.content.tempDirSuffix", "");
 #if defined(MOZ_SANDBOX)
 // This pref determines if messages relevant to sandbox violations are
 // logged.
+#if defined(XP_WIN)
+pref("security.sandbox.logging.enabled", false);
+#else
 pref("security.sandbox.logging.enabled", true);
+#endif
 #endif
 
 // This pref governs whether we attempt to work around problems caused by

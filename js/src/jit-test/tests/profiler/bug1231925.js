@@ -1,7 +1,7 @@
 if (!('oomTest' in this))
   quit();
 
-enableSPSProfiling();
+enableGeckoProfiling();
 oomTest(function() {
     eval("(function() {})()")
 });

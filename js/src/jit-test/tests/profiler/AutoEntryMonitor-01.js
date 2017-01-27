@@ -31,7 +31,7 @@ cold_and_warm(Object.prototype.toString, { ToString: {} }, []);
 var toS = { toString: function myToString() { return "string"; } };
 cold_and_warm(toS.toString, { ToString: toS }, [ "myToString" ]);
 
-cold_and_warm(undefined, { ToNumber: {} }, []);
+cold_and_warm(undefined, { ToNumber: 5 }, []);
 
 var vOf = { valueOf: function myValueOf() { return 42; } };
 cold_and_warm(vOf.valueOf, { ToNumber: vOf }, [ "myValueOf" ]);
