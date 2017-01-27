@@ -360,12 +360,11 @@ HTMLBodyElement::UnbindFromTree(bool aDeep, bool aNullParent)
 
 void
 HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                       GenericSpecifiedValues* aGenericData)
+                                       GenericSpecifiedValues* aData)
 {
-  nsRuleData* aData = aGenericData->AsRuleData();
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
+  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Display))) {
     // When display if first asked for, go ahead and get our colors set up.
-    nsIPresShell *presShell = aData->mPresContext->GetPresShell();
+    nsIPresShell *presShell = aData->PresContext()->GetPresShell();
     if (presShell) {
       nsIDocument *doc = presShell->GetDocument();
       if (doc) {
@@ -392,20 +391,19 @@ HTMLBodyElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     }
   }
 
-  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Color)) {
-    nsCSSValue *colorValue = aData->ValueForColor();
-    if (colorValue->GetUnit() == eCSSUnit_Null &&
-        aData->mPresContext->UseDocumentColors()) {
+  if (aData->ShouldComputeStyleStruct(NS_STYLE_INHERIT_BIT(Color))) {
+    if (!aData->PropertyIsSet(eCSSProperty_color) &&
+        aData->PresContext()->UseDocumentColors()) {
       // color: color
       nscolor color;
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::text);
       if (value && value->GetColorValue(color))
-        colorValue->SetColorValue(color);
+        aData->SetColorValue(eCSSProperty_color, color);
     }
   }
 
-  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aGenericData);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aGenericData);
+  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
 nsMapRuleToAttributesFunc
