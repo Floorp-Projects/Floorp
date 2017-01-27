@@ -1076,6 +1076,9 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
   for (ActiveScrolledRoot* asr : mActiveScrolledRoots) {
     asr->ActiveScrolledRoot::~ActiveScrolledRoot();
   }
+  for (DisplayItemClipChain* c : mClipChainsToDestroy) {
+    c->DisplayItemClipChain::~DisplayItemClipChain();
+  }
 
   PL_FinishArenaPool(&mPool);
   MOZ_COUNT_DTOR(nsDisplayListBuilder);
@@ -1300,6 +1303,78 @@ nsDisplayListBuilder::AllocateActiveScrolledRoot(const ActiveScrolledRoot* aPare
     new (KnownNotNull, p) ActiveScrolledRoot(aParent, aScrollableFrame);
   mActiveScrolledRoots.AppendElement(asr);
   return asr;
+}
+
+const DisplayItemClipChain*
+nsDisplayListBuilder::AllocateDisplayItemClipChain(const DisplayItemClip& aClip,
+                                                   const ActiveScrolledRoot* aASR,
+                                                   const DisplayItemClipChain* aParent)
+{
+  void* p = Allocate(sizeof(DisplayItemClipChain));
+  DisplayItemClipChain* c = new (KnownNotNull, p) DisplayItemClipChain{ aClip, aASR, aParent };
+  mClipChainsToDestroy.AppendElement(c);
+  return c;
+}
+
+struct ClipChainItem {
+  DisplayItemClip clip;
+  const ActiveScrolledRoot* asr;
+};
+
+const DisplayItemClipChain*
+nsDisplayListBuilder::CreateClipChainIntersection(const DisplayItemClipChain* aAncestor,
+                                                  const DisplayItemClipChain* aLeafClip1,
+                                                  const DisplayItemClipChain* aLeafClip2)
+{
+  AutoTArray<ClipChainItem,8> intersectedClips;
+
+  const DisplayItemClipChain* clip1 = aLeafClip1;
+  const DisplayItemClipChain* clip2 = aLeafClip2;
+
+  const ActiveScrolledRoot* asr =
+    ActiveScrolledRoot::PickDescendant(clip1 ? clip1->mASR : nullptr,
+                                       clip2 ? clip2->mASR : nullptr);
+
+  // Build up the intersection from the leaf to the root and put it into
+  // intersectedClips. The loop below will convert intersectedClips into an
+  // actual DisplayItemClipChain.
+  // (We need to do this in two passes because we need the parent clip in order
+  // to create the DisplayItemClipChain object, but the parent clip has not
+  // been created at that point.)
+  while (!aAncestor || asr != aAncestor->mASR) {
+    if (clip1 && clip1->mASR == asr) {
+      if (clip2 && clip2->mASR == asr) {
+        DisplayItemClip intersection = clip1->mClip;
+        intersection.IntersectWith(clip2->mClip);
+        intersectedClips.AppendElement(ClipChainItem{ intersection, asr });
+        clip2 = clip2->mParent;
+      } else {
+        intersectedClips.AppendElement(ClipChainItem{ clip1->mClip, asr });
+      }
+      clip1 = clip1->mParent;
+    } else if (clip2 && clip2->mASR == asr) {
+      intersectedClips.AppendElement(ClipChainItem{ clip2->mClip, asr });
+      clip2 = clip2->mParent;
+    }
+    if (!asr) {
+      MOZ_ASSERT(!aAncestor, "We should have exited this loop earlier");
+      break;
+    }
+    asr = asr->mParent;
+  }
+
+  // Convert intersectedClips into a DisplayItemClipChain.
+  const DisplayItemClipChain* parentSC = aAncestor;
+  for (auto& sc : Reversed(intersectedClips)) {
+    parentSC = AllocateDisplayItemClipChain(sc.clip, sc.asr, parentSC);
+  }
+  return parentSC;
+}
+
+const DisplayItemClipChain*
+nsDisplayListBuilder::CopyWholeChain(const DisplayItemClipChain* aClipChain)
+{
+  return CreateClipChainIntersection(nullptr, aClipChain, nullptr);
 }
 
 const DisplayItemClip*

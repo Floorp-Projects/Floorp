@@ -279,6 +279,7 @@ class nsDisplayListBuilder {
 public:
   typedef mozilla::FrameLayerBuilder FrameLayerBuilder;
   typedef mozilla::DisplayItemClip DisplayItemClip;
+  typedef mozilla::DisplayItemClipChain DisplayItemClipChain;
   typedef mozilla::DisplayListClipState DisplayListClipState;
   typedef mozilla::DisplayItemScrollClip DisplayItemScrollClip;
   typedef mozilla::ActiveScrolledRoot ActiveScrolledRoot;
@@ -732,6 +733,32 @@ public:
    */
   ActiveScrolledRoot* AllocateActiveScrolledRoot(const ActiveScrolledRoot* aParent,
                                                  nsIScrollableFrame* aScrollableFrame);
+
+  /**
+   * Allocate a new DisplayItemClipChain object in the arena. Will be cleaned
+   * up automatically when the arena goes away.
+   */
+  const DisplayItemClipChain* AllocateDisplayItemClipChain(const DisplayItemClip& aClip,
+                                                           const ActiveScrolledRoot* aASR,
+                                                           const DisplayItemClipChain* aParent);
+
+  /**
+   * Intersect two clip chains, allocating the new clip chain items in this
+   * builder's arena. The result is parented to aAncestor, and no intersections
+   * happen past aAncestor's ASR.
+   * That means aAncestor has to be living in this builder's arena already.
+   * aLeafClip1 and aLeafClip2 only need to outlive the call to this function,
+   * their values are copied into the newly-allocated intersected clip chain
+   * and this function does not hold on to any pointers to them.
+   */
+  const DisplayItemClipChain* CreateClipChainIntersection(const DisplayItemClipChain* aAncestor,
+                                                          const DisplayItemClipChain* aLeafClip1,
+                                                          const DisplayItemClipChain* aLeafClip2);
+
+  /**
+   * Clone the supplied clip chain's chain items into this builder's arena.
+   */
+  const DisplayItemClipChain* CopyWholeChain(const DisplayItemClipChain* aClipChain);
 
   /**
    * Allocate a new DisplayItemClip in the arena. Will be cleaned up
@@ -1414,6 +1441,7 @@ private:
   nsTArray<DisplayItemScrollClip*> mScrollClipsToDestroy;
   nsTArray<DisplayItemClip*>     mDisplayItemClipsToDestroy;
   nsTArray<ActiveScrolledRoot*>  mActiveScrolledRoots;
+  nsTArray<DisplayItemClipChain*> mClipChainsToDestroy;
   nsDisplayListBuilderMode       mMode;
   ViewID                         mCurrentScrollParentId;
   ViewID                         mCurrentScrollbarTarget;
@@ -1491,6 +1519,7 @@ public:
   typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
   typedef mozilla::DisplayItemClip DisplayItemClip;
   typedef mozilla::DisplayItemScrollClip DisplayItemScrollClip;
+  typedef mozilla::DisplayItemClipChain DisplayItemClipChain;
   typedef mozilla::ActiveScrolledRoot ActiveScrolledRoot;
   typedef mozilla::layers::FrameMetrics FrameMetrics;
   typedef mozilla::layers::ScrollMetadata ScrollMetadata;
