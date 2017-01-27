@@ -210,22 +210,22 @@ WMFDecoderModule::Supports(const TrackInfo& aTrackInfo,
        WMFDecoderModule::HasAAC()) {
     return true;
   }
-  if (MP4Decoder::IsH264(aTrackInfo.mMimeType) &&
-      WMFDecoderModule::HasH264() &&
-      !MediaPrefs::PDMWMFAllowUnsupportedResolutions()) {
-    const VideoInfo* videoInfo = aTrackInfo.GetAsVideoInfo();
-    MOZ_ASSERT(videoInfo);
-    // Check Windows format constraints, based on:
-    // https://msdn.microsoft.com/en-us/library/windows/desktop/dd797815(v=vs.85).aspx
-    if (IsWin8OrLater()) {
-      // Windows >7 supports at most 4096x2304.
-      if (videoInfo->mImage.width > 4096 || videoInfo->mImage.height > 2304) {
-        return false;
-      }
-    } else {
-      // Windows <=7 supports at most 1920x1088.
-      if (videoInfo->mImage.width > 1920 || videoInfo->mImage.height > 1088) {
-        return false;
+  if (MP4Decoder::IsH264(aTrackInfo.mMimeType) && WMFDecoderModule::HasH264()) {
+    if (!MediaPrefs::PDMWMFAllowUnsupportedResolutions()) {
+      const VideoInfo* videoInfo = aTrackInfo.GetAsVideoInfo();
+      MOZ_ASSERT(videoInfo);
+      // Check Windows format constraints, based on:
+      // https://msdn.microsoft.com/en-us/library/windows/desktop/dd797815(v=vs.85).aspx
+      if (IsWin8OrLater()) {
+        // Windows >7 supports at most 4096x2304.
+        if (videoInfo->mImage.width > 4096 || videoInfo->mImage.height > 2304) {
+          return false;
+        }
+      } else {
+        // Windows <=7 supports at most 1920x1088.
+        if (videoInfo->mImage.width > 1920 || videoInfo->mImage.height > 1088) {
+          return false;
+        }
       }
     }
     return true;

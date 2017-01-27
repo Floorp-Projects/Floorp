@@ -66,6 +66,20 @@ const VALID_FIELDS = [
   "email",
 ];
 
+// TODO: Remove this once we can add profile from preference.
+const MOCK_MODE = false;
+const MOCK_STORAGE = [{
+  guid: "test-guid-1",
+  organization: "Sesame Street",
+  streetAddress: "123 Sesame Street.",
+  tel: "1-345-345-3456",
+}, {
+  guid: "test-guid-2",
+  organization: "Mozilla",
+  streetAddress: "331 E. Evelyn Avenue",
+  tel: "1-650-903-0800",
+}];
+
 function ProfileStorage(path) {
   this._path = path;
 }
@@ -210,12 +224,42 @@ ProfileStorage.prototype = {
     return this._store.data.profiles.map(this._clone);
   },
 
+  /**
+   * Returns the filtered profiles based on input's information and searchString.
+   *
+   * @returns {Array.<Profile>}
+   *          An array containing clones of matched profiles.
+   */
+  getByFilter({info, searchString}) {
+    this._store.ensureDataReady();
+
+    // Profiles are cloned to avoid accidental modifications from outside.
+    return this._findByFilter({info, searchString}).map(this._clone);
+  },
+
   _clone(profile) {
     return Object.assign({}, profile);
   },
 
   _findByGUID(guid) {
     return this._store.data.profiles.find(profile => profile.guid == guid);
+  },
+
+  _findByFilter({info, searchString}) {
+    let profiles = MOCK_MODE ? MOCK_STORAGE : this._store.data.profiles;
+    let lcSearchString = searchString.toLowerCase();
+
+    return profiles.filter(profile => {
+      // Return true if string is not provided and field exists.
+      // TODO: We'll need to check if the address is for billing or shipping.
+      let name = profile[info.fieldName];
+
+      if (!searchString) {
+        return !!name;
+      }
+
+      return name.toLowerCase().startsWith(lcSearchString);
+    });
   },
 
   _normalizeProfile(profile) {

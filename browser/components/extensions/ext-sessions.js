@@ -94,7 +94,7 @@ extensions.registerSchemaAPI("sessions", "addon_parent", context => {
 
       onChanged: new SingletonEventManager(context, "sessions.onChanged", fire => {
         let observer = () => {
-          context.runSafe(fire);
+          fire.async();
         };
 
         Services.obs.addObserver(observer, SS_ON_CLOSED_OBJECTS_CHANGED, false);

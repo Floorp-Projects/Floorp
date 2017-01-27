@@ -40,7 +40,6 @@ fn main() {
 
     if target.contains("windows") {
         println!("cargo:rustc-link-lib=winmm");
-        println!("cargo:rustc-link-lib=psapi");
         if target.contains("gnu") {
             println!("cargo:rustc-link-lib=stdc++");
         }
