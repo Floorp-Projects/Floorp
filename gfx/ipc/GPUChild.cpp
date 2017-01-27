@@ -11,6 +11,7 @@
 #include "GPUProcessManager.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/CheckerboardReportService.h"
+#include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/gfx/gfxVars.h"
 #if defined(XP_WIN)
 # include "mozilla/gfx/DeviceManagerDx.h"
@@ -171,6 +172,40 @@ mozilla::ipc::IPCResult
 GPUChild::RecvNotifyDeviceReset()
 {
   mHost->mListener->OnProcessDeviceReset(mHost);
+  return IPC_OK();
+}
+
+bool
+GPUChild::SendRequestMemoryReport(const uint32_t& aGeneration,
+                                  const bool& aAnonymize,
+                                  const bool& aMinimizeMemoryUsage,
+                                  const MaybeFileDesc& aDMDFile)
+{
+  mMemoryReportRequest = MakeUnique<MemoryReportRequestHost>(aGeneration);
+  Unused << PGPUChild::SendRequestMemoryReport(
+    aGeneration,
+    aAnonymize,
+    aMinimizeMemoryUsage,
+    aDMDFile);
+  return true;
+}
+
+mozilla::ipc::IPCResult
+GPUChild::RecvAddMemoryReport(const MemoryReport& aReport)
+{
+  if (mMemoryReportRequest) {
+    mMemoryReportRequest->RecvReport(aReport);
+  }
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
+GPUChild::RecvFinishMemoryReport(const uint32_t& aGeneration)
+{
+  if (mMemoryReportRequest) {
+    mMemoryReportRequest->Finish(aGeneration);
+    mMemoryReportRequest = nullptr;
+  }
   return IPC_OK();
 }
 
