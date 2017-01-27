@@ -44,7 +44,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   // The proxy setting
   let proxyPrefValue;
 
-  const kUniqueURI = Services.io.newURI("http://mochi.test:8888/chrome/mobile/android/tests/browser/chrome/video_controls.html", null, null);
+  const kUniqueURI = Services.io.newURI("http://mochi.test:8888/chrome/mobile/android/tests/browser/chrome/video_controls.html");
 
   add_task(function* test_offline() {
     // Tests always connect to localhost, and per bug 87717, localhost is now

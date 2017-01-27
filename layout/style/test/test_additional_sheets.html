@@ -60,7 +60,7 @@ function removeAuthorSheet(win, style)
 
 function loadSheet(win, style, type)
 {
-  var uri = gIOService.newURI(getUri(style), null, null);
+  var uri = gIOService.newURI(getUri(style));
   var windowUtils = SpecialPowers.wrap(win)
     .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
     .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
@@ -69,7 +69,7 @@ function loadSheet(win, style, type)
 
 function removeSheet(win, style, type)
 {
-  var uri = gIOService.newURI(getUri(style), null, null);
+  var uri = gIOService.newURI(getUri(style));
   var windowUtils = SpecialPowers.wrap(win)
     .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
     .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
@@ -108,14 +108,14 @@ function unregisterAuthorSheet(win, style)
 
 function loadAndRegisterSheet(win, style, type)
 {
-  uri = gIOService.newURI(getUri(style), null, null);
+  uri = gIOService.newURI(getUri(style));
   gSSService.loadAndRegisterSheet(uri, gSSService[type]);
   is(gSSService.sheetRegistered(uri, gSSService[type]), true);
 }
 
 function unregisterSheet(win, style, type)
 {
-  var uri = gIOService.newURI(getUri(style), null, null);
+  var uri = gIOService.newURI(getUri(style));
   gSSService.unregisterSheet(uri, gSSService[type]);
   is(gSSService.sheetRegistered(uri, gSSService[type]), false);
 }

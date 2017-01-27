@@ -39,11 +39,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1180921
     return p;
   }
 
-  let exampleCom_addonA = new Cu.Sandbox(ssm.createCodebasePrincipal(Services.io.newURI('http://example.com', null, null), {addonId: 'addonA'}),
+  let exampleCom_addonA = new Cu.Sandbox(ssm.createCodebasePrincipal(Services.io.newURI('http://example.com'), {addonId: 'addonA'}),
                                          {wantGlobalProperties: ['XMLHttpRequest']});
   let nullPrin_addonA = new Cu.Sandbox(ssm.createNullPrincipal({addonId: 'addonA'}),
                                        {wantGlobalProperties: ['XMLHttpRequest']});
-  let exampleCom_addonB = new Cu.Sandbox(ssm.createCodebasePrincipal(Services.io.newURI('http://example.com', null, null), {addonId: 'addonB'}),
+  let exampleCom_addonB = new Cu.Sandbox(ssm.createCodebasePrincipal(Services.io.newURI('http://example.com'), {addonId: 'addonB'}),
                                          {wantGlobalProperties: ['XMLHttpRequest']});
 
   function uriForDomain(d) { return d + '/tests/caps/tests/mochitest/file_data.txt' }

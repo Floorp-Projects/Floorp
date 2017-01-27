@@ -21,7 +21,7 @@ SimpleTest.waitForExplicitFinish();
 var chromeURI = location.href;
 var io = Components.classes['@mozilla.org/network/io-service;1']
            .getService(Components.interfaces.nsIIOService);
-chromeURI = io.newURI(chromeURI, null, null);
+chromeURI = io.newURI(chromeURI);
 var chromeReg = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                   .getService(Components.interfaces.nsIChromeRegistry);
 fileURI = chromeReg.convertChromeURL(chromeURI);
