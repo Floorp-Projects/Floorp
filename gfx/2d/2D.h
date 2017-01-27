@@ -353,16 +353,6 @@ public:
   virtual bool IsValid() const { return true; }
 
   /**
-   * This function will return true if the surface type matches that of a
-   * DataSourceSurface and if GetDataSurface will return the same object.
-   */
-  bool IsDataSourceSurface() const {
-    SurfaceType type = GetType();
-    return type == SurfaceType::DATA ||
-           type == SurfaceType::DATA_SHARED;
-  }
-
-  /**
    * This function will get a DataSourceSurface for this surface, a
    * DataSourceSurface's data can be accessed directly.
    */
