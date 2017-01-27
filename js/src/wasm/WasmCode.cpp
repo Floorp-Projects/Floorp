@@ -24,6 +24,7 @@
 
 #include "jsprf.h"
 
+#include "ds/Sort.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/MacroAssembler.h"
 #ifdef JS_ION_PERF
@@ -37,6 +38,8 @@
 #include "wasm/WasmModule.h"
 #include "wasm/WasmSerialize.h"
 
+#include "jsobjinlines.h"
+
 #include "jit/MacroAssembler-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
 
@@ -45,6 +48,7 @@ using namespace js::jit;
 using namespace js::wasm;
 using mozilla::Atomic;
 using mozilla::BinarySearch;
+using mozilla::BinarySearchIf;
 using mozilla::MakeEnumeratedRange;
 using JS::GenericNaN;
 
@@ -574,6 +578,47 @@ Metadata::getFuncName(const Bytes* maybeBytecode, uint32_t funcIndex, UTF8Bytes*
            name->append(afterFuncIndex, strlen(afterFuncIndex));
 }
 
+bool
+GeneratedSourceMap::searchLineByOffset(JSContext* cx, uint32_t offset, size_t* exprlocIndex)
+{
+    MOZ_ASSERT(!exprlocs_.empty());
+    size_t exprlocsLength = exprlocs_.length();
+
+    // Lazily build sorted array for fast log(n) lookup.
+    if (!sortedByOffsetExprLocIndices_) {
+        ExprLocIndexVector scratch;
+        auto indices = MakeUnique<ExprLocIndexVector>();
+        if (!indices || !indices->resize(exprlocsLength) || !scratch.resize(exprlocsLength)) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
+        sortedByOffsetExprLocIndices_ = Move(indices);
+
+        for (size_t i = 0; i < exprlocsLength; i++)
+            (*sortedByOffsetExprLocIndices_)[i] = i;
+
+        auto compareExprLocViaIndex = [&](uint32_t i, uint32_t j, bool* lessOrEqualp) -> bool {
+            *lessOrEqualp = exprlocs_[i].offset <= exprlocs_[j].offset;
+            return true;
+        };
+        MOZ_ALWAYS_TRUE(MergeSort(sortedByOffsetExprLocIndices_->begin(), exprlocsLength,
+                                  scratch.begin(), compareExprLocViaIndex));
+    }
+
+    // Allowing non-exact search and if BinarySearchIf returns out-of-bound
+    // index, moving the index to the last index.
+    auto lookupFn = [&](uint32_t i) -> int {
+        const ExprLoc& loc = exprlocs_[i];
+        return offset == loc.offset ? 0 : offset < loc.offset ? -1 : 1;
+    };
+    size_t match;
+    Unused << BinarySearchIf(sortedByOffsetExprLocIndices_->begin(), 0, exprlocsLength, lookupFn, &match);
+    if (match >= exprlocsLength)
+        match = exprlocsLength - 1;
+    *exprlocIndex = (*sortedByOffsetExprLocIndices_)[match];
+    return true;
+}
+
 Code::Code(UniqueCodeSegment segment,
            const Metadata& metadata,
            const ShareableBytes* maybeBytecode)
@@ -702,9 +747,12 @@ Code::createText(JSContext* cx)
         if (!buffer.append(experimentalWarning))
             return nullptr;
 
-        maybeSourceMap_.reset(cx->runtime()->new_<GeneratedSourceMap>(cx));
-        if (!maybeSourceMap_)
+        auto sourceMap = MakeUnique<GeneratedSourceMap>();
+        if (!sourceMap) {
+            ReportOutOfMemory(cx);
             return nullptr;
+        }
+        maybeSourceMap_ = Move(sourceMap);
 
         if (!BinaryToText(cx, bytes.begin(), bytes.length(), buffer, maybeSourceMap_.get()))
             return nullptr;
@@ -732,11 +780,26 @@ Code::createText(JSContext* cx)
 }
 
 bool
-Code::getLineOffsets(size_t lineno, Vector<uint32_t>& offsets) const
+Code::ensureSourceMap(JSContext* cx)
 {
-    // TODO Ensure text was generated?
-    if (!maybeSourceMap_)
+    if (maybeSourceMap_ || !maybeBytecode_)
+        return true;
+
+    // We just need to cache maybeSourceMap_, ignoring the text result.
+    return createText(cx);
+}
+
+bool
+Code::getLineOffsets(JSContext* cx, size_t lineno, Vector<uint32_t>* offsets)
+{
+    if (!metadata_->debugEnabled)
+        return true;
+
+    if (!ensureSourceMap(cx))
         return false;
+
+    if (!maybeSourceMap_)
+        return true; // no source text available, keep offsets empty.
 
     if (lineno < experimentalWarningLinesCount)
         return true;
@@ -756,10 +819,47 @@ Code::getLineOffsets(size_t lineno, Vector<uint32_t>& offsets) const
 
     // Return all expression offsets that were printed on the specified line.
     for (size_t i = match; i < exprlocs.length() && exprlocs[i].lineno == lineno; i++) {
-        if (!offsets.append(exprlocs[i].offset))
+        if (!offsets->append(exprlocs[i].offset))
             return false;
     }
 
+    return true;
+}
+
+bool
+Code::getOffsetLocation(JSContext* cx, uint32_t offset, bool* found, size_t* lineno, size_t* column)
+{
+    *found = false;
+    if (!metadata_->debugEnabled)
+        return true;
+
+    if (!ensureSourceMap(cx))
+        return false;
+
+    if (!maybeSourceMap_ || maybeSourceMap_->exprlocs().empty())
+        return true; // no source text available
+
+    size_t foundAt;
+    if (!maybeSourceMap_->searchLineByOffset(cx, offset, &foundAt))
+        return false;
+
+    const ExprLoc& loc = maybeSourceMap_->exprlocs()[foundAt];
+    *found = true;
+    *lineno = loc.lineno + experimentalWarningLinesCount;
+    *column = loc.column;
+    return true;
+}
+
+bool
+Code::totalSourceLines(JSContext* cx, uint32_t* count)
+{
+    if (!ensureSourceMap(cx))
+        return false;
+
+    if (!maybeSourceMap_)
+        *count = 0;
+    else
+        *count = maybeSourceMap_->totalLines() + experimentalWarningLinesCount;
     return true;
 }
 

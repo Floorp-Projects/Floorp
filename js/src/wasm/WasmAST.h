@@ -594,6 +594,7 @@ class AstFunc : public AstNode
     AstValTypeVector vars_;
     AstNameVector localNames_;
     AstExprVector body_;
+    uint32_t endOffset_; // if applicable, offset in the binary format file
 
   public:
     AstFunc(AstName name, AstRef sig, AstValTypeVector&& vars,
@@ -602,13 +603,16 @@ class AstFunc : public AstNode
         sig_(sig),
         vars_(Move(vars)),
         localNames_(Move(locals)),
-        body_(Move(body))
+        body_(Move(body)),
+        endOffset_(AstNodeUnknownOffset)
     {}
     AstRef& sig() { return sig_; }
     const AstValTypeVector& vars() const { return vars_; }
     const AstNameVector& locals() const { return localNames_; }
     const AstExprVector& body() const { return body_; }
     AstName name() const { return name_; }
+    uint32_t endOffset() const { return endOffset_; }
+    void setEndOffset(uint32_t offset) { endOffset_ = offset; }
 };
 
 class AstGlobal : public AstNode

@@ -5543,21 +5543,56 @@ DebuggerScript_getUrl(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+struct DebuggerScriptGetStartLineMatcher
+{
+    using ReturnType = uint32_t;
+
+    ReturnType match(HandleScript script) {
+        return uint32_t(script->lineno());
+    }
+    ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
+        return 1;
+    }
+};
+
 static bool
 DebuggerScript_getStartLine(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get startLine)", args, obj, script);
-    args.rval().setNumber(uint32_t(script->lineno()));
+    THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "(get startLine)", args, obj, referent);
+    DebuggerScriptGetStartLineMatcher matcher;
+    args.rval().setNumber(referent.match(matcher));
     return true;
 }
+
+struct DebuggerScriptGetLineCountMatcher
+{
+    JSContext* cx_;
+    double totalLines;
+
+    explicit DebuggerScriptGetLineCountMatcher(JSContext* cx) : cx_(cx) {}
+    using ReturnType = bool;
+
+    ReturnType match(HandleScript script) {
+        totalLines = double(GetScriptLineExtent(script));
+        return true;
+    }
+    ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
+        uint32_t result;
+        if (wasmInstance->instance().code().totalSourceLines(cx_, &result))
+            return false;
+        totalLines = double(result);
+        return true;
+    }
+};
 
 static bool
 DebuggerScript_getLineCount(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "(get lineCount)", args, obj, script);
-
-    unsigned maxLine = GetScriptLineExtent(script);
-    args.rval().setNumber(double(maxLine));
+    THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "(get lineCount)", args, obj, referent);
+    DebuggerScriptGetLineCountMatcher matcher(cx);
+    if (!referent.match(matcher))
+        return false;
+    args.rval().setNumber(matcher.totalLines);
     return true;
 }
 
@@ -5684,6 +5719,25 @@ DebuggerScript_getChildScripts(JSContext* cx, unsigned argc, Value* vp)
         }
     }
     args.rval().setObject(*result);
+    return true;
+}
+
+static bool
+ScriptOffset(JSContext* cx, const Value& v, size_t* offsetp)
+{
+    double d;
+    size_t off;
+
+    bool ok = v.isNumber();
+    if (ok) {
+        d = v.toNumber();
+        off = size_t(d);
+    }
+    if (!ok || off != d) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_OFFSET);
+        return false;
+    }
+    *offsetp = off;
     return true;
 }
 
@@ -5996,69 +6050,127 @@ class FlowGraphSummary {
 
 } /* anonymous namespace */
 
+class DebuggerScriptGetOffsetLocationMatcher
+{
+    JSContext* cx_;
+    size_t offset_;
+    MutableHandlePlainObject result_;
+
+  public:
+    explicit DebuggerScriptGetOffsetLocationMatcher(JSContext* cx, size_t offset,
+                                                    MutableHandlePlainObject result)
+      : cx_(cx), offset_(offset), result_(result) { }
+    using ReturnType = bool;
+    ReturnType match(HandleScript script) {
+        if (!IsValidBytecodeOffset(cx_, script, offset_)) {
+            JS_ReportErrorNumberASCII(cx_, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_OFFSET);
+            return false;
+        }
+
+        FlowGraphSummary flowData(cx_);
+        if (!flowData.populate(cx_, script))
+            return false;
+
+        result_.set(NewBuiltinClassInstance<PlainObject>(cx_));
+        if (!result_)
+            return false;
+
+        BytecodeRangeWithPosition r(cx_, script);
+        while (!r.empty() && r.frontOffset() < offset_)
+            r.popFront();
+
+        size_t offset = r.frontOffset();
+        bool isEntryPoint = r.frontIsEntryPoint();
+
+        // Line numbers are only correctly defined on entry points. Thus looks
+        // either for the next valid offset in the flowData, being the last entry
+        // point flowing into the current offset, or for the next valid entry point.
+        while (!r.frontIsEntryPoint() && !flowData[r.frontOffset()].hasSingleEdge()) {
+            r.popFront();
+            MOZ_ASSERT(!r.empty());
+        }
+
+        // If this is an entry point, take the line number associated with the entry
+        // point, otherwise settle on the next instruction and take the incoming
+        // edge position.
+        size_t lineno;
+        size_t column;
+        if (r.frontIsEntryPoint()) {
+            lineno = r.frontLineNumber();
+            column = r.frontColumnNumber();
+        } else {
+            MOZ_ASSERT(flowData[r.frontOffset()].hasSingleEdge());
+            lineno = flowData[r.frontOffset()].lineno();
+            column = flowData[r.frontOffset()].column();
+        }
+
+        RootedId id(cx_, NameToId(cx_->names().lineNumber));
+        RootedValue value(cx_, NumberValue(lineno));
+        if (!DefineProperty(cx_, result_, id, value))
+            return false;
+
+        value = NumberValue(column);
+        if (!DefineProperty(cx_, result_, cx_->names().columnNumber, value))
+            return false;
+
+        // The same entry point test that is used by getAllColumnOffsets.
+        isEntryPoint = (isEntryPoint &&
+                        !flowData[offset].hasNoEdges() &&
+                        (flowData[offset].lineno() != r.frontLineNumber() ||
+                         flowData[offset].column() != r.frontColumnNumber()));
+        value.setBoolean(isEntryPoint);
+        if (!DefineProperty(cx_, result_, cx_->names().isEntryPoint, value))
+            return false;
+
+        return true;
+    }
+
+    ReturnType match(Handle<WasmInstanceObject*> instance) {
+        size_t lineno;
+        size_t column;
+        bool found;
+        if (!instance->instance().code().getOffsetLocation(cx_, offset_, &found, &lineno, &column))
+            return false;
+
+        if (!found) {
+            JS_ReportErrorNumberASCII(cx_, GetErrorMessage, nullptr, JSMSG_DEBUG_BAD_OFFSET);
+            return false;
+        }
+
+        result_.set(NewBuiltinClassInstance<PlainObject>(cx_));
+        if (!result_)
+            return false;
+
+        RootedId id(cx_, NameToId(cx_->names().lineNumber));
+        RootedValue value(cx_, NumberValue(lineno));
+        if (!DefineProperty(cx_, result_, id, value))
+            return false;
+
+        value = NumberValue(column);
+        if (!DefineProperty(cx_, result_, cx_->names().columnNumber, value))
+            return false;
+
+        value.setBoolean(true);
+        if (!DefineProperty(cx_, result_, cx_->names().isEntryPoint, value))
+            return false;
+
+        return true;
+    }
+};
+
 static bool
 DebuggerScript_getOffsetLocation(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGSCRIPT_SCRIPT(cx, argc, vp, "getOffsetLocation", args, obj, script);
+    THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "getOffsetLocation", args, obj, referent);
     if (!args.requireAtLeast(cx, "Debugger.Script.getOffsetLocation", 1))
         return false;
     size_t offset;
-    if (!ScriptOffset(cx, script, args[0], &offset))
+    if (!ScriptOffset(cx, args[0], &offset))
         return false;
 
-    FlowGraphSummary flowData(cx);
-    if (!flowData.populate(cx, script))
-        return false;
-
-    RootedPlainObject result(cx, NewBuiltinClassInstance<PlainObject>(cx));
-    if (!result)
-        return false;
-
-    BytecodeRangeWithPosition r(cx, script);
-    while (!r.empty() && r.frontOffset() < offset)
-        r.popFront();
-
-    offset = r.frontOffset();
-    bool isEntryPoint = r.frontIsEntryPoint();
-
-    // Line numbers are only correctly defined on entry points. Thus looks
-    // either for the next valid offset in the flowData, being the last entry
-    // point flowing into the current offset, or for the next valid entry point.
-    while (!r.frontIsEntryPoint() && !flowData[r.frontOffset()].hasSingleEdge()) {
-        r.popFront();
-        MOZ_ASSERT(!r.empty());
-    }
-
-    // If this is an entry point, take the line number associated with the entry
-    // point, otherwise settle on the next instruction and take the incoming
-    // edge position.
-    size_t lineno;
-    size_t column;
-    if (r.frontIsEntryPoint()) {
-        lineno = r.frontLineNumber();
-        column = r.frontColumnNumber();
-    } else {
-        MOZ_ASSERT(flowData[r.frontOffset()].hasSingleEdge());
-        lineno = flowData[r.frontOffset()].lineno();
-        column = flowData[r.frontOffset()].column();
-    }
-
-    RootedId id(cx, NameToId(cx->names().lineNumber));
-    RootedValue value(cx, NumberValue(lineno));
-    if (!DefineProperty(cx, result, id, value))
-        return false;
-
-    value = NumberValue(column);
-    if (!DefineProperty(cx, result, cx->names().columnNumber, value))
-        return false;
-
-    // The same entry point test that is used by getAllColumnOffsets.
-    isEntryPoint = (isEntryPoint &&
-                    !flowData[offset].hasNoEdges() &&
-                    (flowData[offset].lineno() != r.frontLineNumber() ||
-                     flowData[offset].column() != r.frontColumnNumber()));
-    value.setBoolean(isEntryPoint);
-    if (!DefineProperty(cx, result, cx->names().isEntryPoint, value))
+    RootedPlainObject result(cx);
+    DebuggerScriptGetOffsetLocationMatcher matcher(cx, offset, &result);
+    if (!referent.match(matcher))
         return false;
 
     args.rval().setObject(*result);
@@ -6194,22 +6306,23 @@ class DebuggerScriptGetLineOffsetsMatcher
 {
     JSContext* cx_;
     size_t lineno_;
-    RootedObject result_;
+    MutableHandleObject result_;
 
   public:
-    explicit DebuggerScriptGetLineOffsetsMatcher(JSContext* cx, size_t lineno)
-      : cx_(cx), lineno_(lineno), result_(cx, NewDenseEmptyArray(cx)) { }
+    explicit DebuggerScriptGetLineOffsetsMatcher(JSContext* cx, size_t lineno, MutableHandleObject result)
+      : cx_(cx), lineno_(lineno), result_(result) { }
     using ReturnType = bool;
     ReturnType match(HandleScript script) {
-        if (!result_)
-            return false;
-
         /*
          * First pass: determine which offsets in this script are jump targets and
          * which line numbers jump to them.
          */
         FlowGraphSummary flowData(cx_);
         if (!flowData.populate(cx_, script))
+            return false;
+
+        result_.set(NewDenseEmptyArray(cx_));
+        if (!result_)
             return false;
 
         /* Second pass: build the result array. */
@@ -6233,20 +6346,20 @@ class DebuggerScriptGetLineOffsetsMatcher
     }
 
     ReturnType match(Handle<WasmInstanceObject*> instance) {
+        Vector<uint32_t> offsets(cx_);
+        if (!instance->instance().code().getLineOffsets(cx_, lineno_, &offsets))
+            return false;
+
+        result_.set(NewDenseEmptyArray(cx_));
         if (!result_)
             return false;
 
-        Vector<uint32_t> offsets(cx_);
-        if (!instance->instance().code().getLineOffsets(lineno_, offsets))
-            return false;
         for (uint32_t i = 0; i < offsets.length(); i++) {
             if (!NewbornArrayPush(cx_, result_, NumberValue(offsets[i])))
                 return false;
         }
         return true;
     }
-
-    RootedObject& result() { return result_; }
 };
 
 static bool
@@ -6270,11 +6383,12 @@ DebuggerScript_getLineOffsets(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    DebuggerScriptGetLineOffsetsMatcher matcher(cx, lineno);
+    RootedObject result(cx);
+    DebuggerScriptGetLineOffsetsMatcher matcher(cx, lineno, &result);
     if (!referent.match(matcher))
         return false;
 
-    args.rval().setObject(*matcher.result());
+    args.rval().setObject(*result);
     return true;
 }
 
