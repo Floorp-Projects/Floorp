@@ -1310,9 +1310,9 @@
 
       <property name="contentHeight">
         <getter>
-          var targetHeight = parseInt(window.getComputedStyle(this._content, "").height);
-          targetHeight += parseInt(window.getComputedStyle(this._content, "").marginTop);
-          targetHeight += parseInt(window.getComputedStyle(this._content, "").marginBottom);
+          var targetHeight = parseInt(window.getComputedStyle(this._content).height);
+          targetHeight += parseInt(window.getComputedStyle(this._content).marginTop);
+          targetHeight += parseInt(window.getComputedStyle(this._content).marginBottom);
           return targetHeight;
         </getter>
       </property>

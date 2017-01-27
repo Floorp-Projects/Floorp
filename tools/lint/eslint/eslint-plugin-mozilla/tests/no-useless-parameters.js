@@ -32,6 +32,8 @@ exports.runTest = function(ruleTester) {
       "elt.addEventListener('click', handler, {once: true});",
       "elt.removeEventListener('click', handler);",
       "elt.removeEventListener('click', handler, true);",
+      "window.getComputedStyle(elt);",
+      "window.getComputedStyle(elt, ':before');",
     ],
     invalid: [
       {
@@ -73,6 +75,14 @@ exports.runTest = function(ruleTester) {
       {
         code: "elt.removeEventListener('click', handler, false);",
         errors: callError("removeEventListener's third parameter can be omitted when it's false.")
+      },
+      {
+        code: "window.getComputedStyle(elt, null);",
+        errors: callError("getComputedStyle's second parameter can be omitted.")
+      },
+      {
+        code: "window.getComputedStyle(elt, '');",
+        errors: callError("getComputedStyle's second parameter can be omitted.")
       }
     ]
   });
