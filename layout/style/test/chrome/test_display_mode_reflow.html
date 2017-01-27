@@ -19,10 +19,9 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 function waitOneEvent(element, name) {
   return new Promise(function(resolve, reject) {
-    element.addEventListener(name, function listener() {
-      element.removeEventListener(name, listener);
+    element.addEventListener(name, function() {
       resolve();
-    });
+    }, {once: true});
   });
 }
 

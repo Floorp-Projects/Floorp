@@ -36,10 +36,9 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps)
       let win = opt_custom_window || window;
       let replyEvent = "TalosPowers:ParentExec:ReplyEvent:" + this.replyId++;
       if (callback) {
-        win.addEventListener(replyEvent, function rvhandler(e) {
-          win.removeEventListener(replyEvent, rvhandler);
+        win.addEventListener(replyEvent, function(e) {
           callback(e.detail);
-        });
+        }, {once: true});
       }
       win.dispatchEvent(
         new win.CustomEvent("TalosPowers:ParentExec:QueryEvent", {

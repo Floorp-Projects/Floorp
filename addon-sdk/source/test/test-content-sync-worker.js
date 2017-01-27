@@ -49,10 +49,9 @@ function makeWindow() {
 
 // Listen for only first one occurence of DOM event
 function listenOnce(node, eventName, callback) {
-  node.addEventListener(eventName, function onevent(event) {
-    node.removeEventListener(eventName, onevent, true);
+  node.addEventListener(eventName, function(event) {
     callback(node);
-  }, true);
+  }, {capture: true, once: true});
 }
 
 // Load a given url in a given browser and fires the callback when it is loaded
