@@ -13,6 +13,6 @@ interface PresentationReceiver {
    * Get a list which contains all connected presentation connections
    * in a receiving browsing context.
    */
-  [SameObject, Throws]
+  [Throws]
   readonly attribute Promise<PresentationConnectionList> connectionList;
 };

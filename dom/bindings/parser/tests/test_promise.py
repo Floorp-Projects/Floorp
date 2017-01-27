@@ -141,3 +141,17 @@ def WebIDLTest(parser, harness):
         threw = True
     harness.ok(threw,
                "Should not allow [Replaceable] Promise-typed attributes.")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            interface A {
+              [SameObject] readonly attribute Promise<any> attr;
+            };
+        """)
+        results = parser.finish();
+    except:
+        threw = True
+    harness.ok(threw,
+               "Should not allow [SameObject] Promise-typed attributes.")
