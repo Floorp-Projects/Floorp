@@ -245,11 +245,8 @@ void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
   TickSample* sample = &sample_obj;
   sample->context = context;
 
-  // If profiling, we extract the current pc and sp.
-  // XXX: this is an off-main-thread(?) use of gSampler
-  if (gSampler->IsProfiling()) {
-    SetSampleContext(sample, context);
-  }
+  // Extract the current pc and sp.
+  SetSampleContext(sample, context);
   sample->threadProfile = sCurrentThreadProfile;
   sample->timestamp = mozilla::TimeStamp::Now();
   sample->rssMemory = sample->threadProfile->mRssMemory;

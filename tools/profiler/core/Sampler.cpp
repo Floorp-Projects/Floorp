@@ -172,7 +172,6 @@ Sampler::Sampler(double aInterval, int aEntrySize,
                  const char** aFeatures, uint32_t aFeatureCount,
                  const char** aThreadNameFilters, uint32_t aFilterCount)
   : interval_(aInterval)
-  , profiling_(true)
   , paused_(false)
   , active_(false)
   , entrySize_(aEntrySize)
