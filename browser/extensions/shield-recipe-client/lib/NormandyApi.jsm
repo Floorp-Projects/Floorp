@@ -9,12 +9,12 @@ const {utils: Cu, classes: Cc, interfaces: Ci} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/CanonicalJSON.jsm");
-Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://shield-recipe-client/lib/LogManager.jsm");
 Cu.importGlobalProperties(["fetch"]); /* globals fetch */
 
 this.EXPORTED_SYMBOLS = ["NormandyApi"];
 
-const log = Log.repository.getLogger("extensions.shield-recipe-client");
+const log = LogManager.getLogger("normandy-api");
 const prefs = Services.prefs.getBranch("extensions.shield-recipe-client.");
 
 this.NormandyApi = {
