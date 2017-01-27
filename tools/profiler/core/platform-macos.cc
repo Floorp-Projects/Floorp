@@ -295,20 +295,6 @@ private:
 
 SamplerThread* SamplerThread::mInstance = NULL;
 
-Sampler::Sampler(double interval, bool profiling, int entrySize)
-    : // isolate_(isolate),
-      interval_(interval),
-      profiling_(profiling),
-      paused_(false),
-      active_(false),
-      entrySize_(entrySize) /*,
-      samples_taken_(0)*/ {
-}
-
-Sampler::~Sampler() {
-  ASSERT(!IsActive());
-}
-
 void Sampler::Start() {
   ASSERT(!IsActive());
   SetActive(true);
