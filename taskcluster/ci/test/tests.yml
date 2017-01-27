@@ -352,6 +352,7 @@ mochitest-a11y:
     treeherder-symbol: tc-M(a11y)
     loopback-video: true
     e10s: false
+    docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
         script: desktop_unittest.py
         no-read-buildbot-config: true
