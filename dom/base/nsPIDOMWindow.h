@@ -604,7 +604,7 @@ public:
   mozilla::dom::DocGroup* GetDocGroup() const;
 
   virtual nsIEventTarget*
-  EventTargetFor(mozilla::dom::TaskCategory aCategory) const = 0;
+  EventTargetFor(mozilla::TaskCategory aCategory) const = 0;
 
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should

@@ -1,2 +1,2 @@
 
-for(var i = 0; i < 100; enableSPSProfiling(), i++) {}
+for(var i = 0; i < 100; enableGeckoProfiling(), i++) {}

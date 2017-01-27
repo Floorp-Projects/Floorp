@@ -10,6 +10,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/Unused.h"
 
 #include "nsAtomTable.h"
@@ -23,6 +24,7 @@
 #include "nsHashKeys.h"
 #include "nsAutoPtr.h"
 #include "nsUnicharUtils.h"
+#include "nsPrintfCString.h"
 
 // There are two kinds of atoms handled by this module.
 //
@@ -78,6 +80,14 @@ public:
 
   static void GCAtomTable();
 
+  enum class GCKind {
+    RegularOperation,
+    Shutdown,
+  };
+
+  static void GCAtomTableLocked(const MutexAutoLock& aProofOfLock,
+                                GCKind aKind);
+
 private:
   DynamicAtom(const nsAString& aString, uint32_t aHash)
     : mRefCnt(1)
@@ -120,45 +130,11 @@ private:
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIATOM
-
-  void TransmuteToStatic(nsStringBuffer* aStringBuffer);
 };
 
 class StaticAtom final : public nsIAtom
 {
-  // This is the function that calls the private constructor.
-  friend void DynamicAtom::TransmuteToStatic(nsStringBuffer*);
-
-  // This constructor must only be used in conjunction with placement new on an
-  // existing DynamicAtom (in DynamicAtom::TransmuteToStatic()) in order to
-  // transmute that DynamicAtom into a StaticAtom. The constructor does four
-  // notable things.
-  // - Overwrites the vtable pointer (implicitly).
-  // - Inverts mIsStatic.
-  // - Zeroes the refcount (via the nsIAtom constructor). Having a zero refcount
-  //   doesn't matter because StaticAtom's AddRef/Release methods don't consult
-  //   the refcount.
-  // - Releases the existing heap-allocated string buffer (explicitly),
-  //   replacing it with the static string buffer (which must contain identical
-  //   chars).
-  explicit StaticAtom(nsStringBuffer* aStaticBuffer)
-  {
-    static_assert(sizeof(DynamicAtom) >= sizeof(StaticAtom),
-                  "can't safely transmute a smaller object to a bigger one");
-
-    // We must be transmuting an existing DynamicAtom.
-    MOZ_ASSERT(!mIsStatic);
-    mIsStatic = true;
-
-    char16_t* staticString = static_cast<char16_t*>(aStaticBuffer->Data());
-    MOZ_ASSERT(nsCRT::strcmp(staticString, mString) == 0);
-    nsStringBuffer* dynamicBuffer = nsStringBuffer::FromData(mString);
-    mString = staticString;
-    dynamicBuffer->Release();
-  }
-
 public:
-  // This is the normal constructor.
   StaticAtom(nsStringBuffer* aStringBuffer, uint32_t aLength, uint32_t aHash)
   {
     mLength = aLength;
@@ -257,14 +233,6 @@ StaticAtom::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
   // Don't measure the string buffer pointed to by the StaticAtom because it's
   // in static memory.
   return n;
-}
-
-// See the comment on the private StaticAtom constructor for details of how
-// this works.
-void
-DynamicAtom::TransmuteToStatic(nsStringBuffer* aStringBuffer)
-{
-  new (this) StaticAtom(aStringBuffer);
 }
 
 //----------------------------------------------------------------------
@@ -400,16 +368,33 @@ void
 DynamicAtom::GCAtomTable()
 {
   MutexAutoLock lock(*gAtomTableLock);
+  GCAtomTableLocked(lock, GCKind::RegularOperation);
+}
+
+void
+DynamicAtom::GCAtomTableLocked(const MutexAutoLock& aProofOfLock,
+                               GCKind aKind)
+{
   uint32_t removedCount = 0; // Use a non-atomic temporary for cheaper increments.
   for (auto i = gAtomTable->Iter(); !i.Done(); i.Next()) {
     auto entry = static_cast<AtomTableEntry*>(i.Get());
-    if (!entry->mAtom->IsStaticAtom()) {
-      auto atom = static_cast<DynamicAtom*>(entry->mAtom);
-      if (atom->mRefCnt == 0) {
-        i.Remove();
-        delete atom;
-        ++removedCount;
-      }
+    if (entry->mAtom->IsStaticAtom()) {
+      continue;
+    }
+
+    auto atom = static_cast<DynamicAtom*>(entry->mAtom);
+    if (atom->mRefCnt == 0) {
+      i.Remove();
+      delete atom;
+      ++removedCount;
+    } else if (aKind == GCKind::Shutdown) {
+      // We only perform these kind of GCs in leak-checking builds.  If
+      // something is anomalous, then we'll report an error here, and crash
+      // later on in this function.
+      nsAutoCString name;
+      atom->ToUTF8String(name);
+      nsPrintfCString msg("dynamic atom with non-zero refcount %s!", name.get());
+      NS_ASSERTION(false, msg.get());
     }
   }
 
@@ -420,9 +405,16 @@ DynamicAtom::GCAtomTable()
   // This means that we cannot assert that gUnusedAtomCount == removedCount, and
   // thus that there are no unused atoms at the end of a GC. We can and do,
   // however, assert this after the last GC at shutdown.
-  MOZ_ASSERT(removedCount <= gUnusedAtomCount);
-  gUnusedAtomCount -= removedCount;
+  if (aKind == GCKind::RegularOperation) {
+    MOZ_ASSERT(removedCount <= gUnusedAtomCount);
+  } else {
+    // Complain if somebody adds new GCKind enums.
+    MOZ_ASSERT(aKind == GCKind::Shutdown);
+    // Our unused atom count should be accurate.
+    MOZ_ASSERT(removedCount == gUnusedAtomCount);
+  }
 
+  gUnusedAtomCount -= removedCount;
 }
 
 NS_IMPL_QUERY_INTERFACE(DynamicAtom, nsIAtom)
@@ -542,13 +534,12 @@ NS_ShutdownAtomTable()
 #ifdef NS_FREE_PERMANENT_DATA
   // Do a final GC to satisfy leak checking. We skip this step in release
   // builds.
-  DynamicAtom::GCAtomTable();
-  MOZ_ASSERT(gUnusedAtomCount == 0);
+  {
+    MutexAutoLock lock(*gAtomTableLock);
+    DynamicAtom::GCAtomTableLocked(lock, DynamicAtom::GCKind::Shutdown);
+  }
 #endif
 
-  // XXXbholley: it would be good to assert gAtomTable->EntryCount() == 0
-  // here, but that currently fails. Probably just a few things that need
-  // to be fixed up.
   delete gAtomTable;
   gAtomTable = nullptr;
   delete gAtomTableLock;
@@ -595,7 +586,11 @@ void
 RegisterStaticAtoms(const nsStaticAtom* aAtoms, uint32_t aAtomCount)
 {
   MutexAutoLock lock(*gAtomTableLock);
-  if (!gStaticAtomTable && !gStaticAtomTableSealed) {
+
+  MOZ_RELEASE_ASSERT(!gStaticAtomTableSealed,
+                     "Atom table has already been sealed!");
+
+  if (!gStaticAtomTable) {
     gStaticAtomTable = new StaticAtomTable();
   }
 
@@ -614,11 +609,20 @@ RegisterStaticAtoms(const nsStaticAtom* aAtoms, uint32_t aAtomCount)
 
     nsIAtom* atom = he->mAtom;
     if (atom) {
+      // Disallow creating a dynamic atom, and then later, while the
+      // dynamic atom is still alive, registering that same atom as a
+      // static atom.  It causes subtle bugs, and we're programming in
+      // C++ here, not Smalltalk.
       if (!atom->IsStaticAtom()) {
-        // A rare case: we're creating a StaticAtom but there is already a
-        // DynamicAtom of the same name. Transmute the DynamicAtom into a
-        // StaticAtom.
-        static_cast<DynamicAtom*>(atom)->TransmuteToStatic(stringBuffer);
+        nsAutoCString name;
+        atom->ToUTF8String(name);
+
+        static char sCrashReason[1024];
+        SprintfLiteral(sCrashReason,
+                       "static atom registration for %s should be pushed back",
+                       name.get());
+        MOZ_CRASH_ANNOTATE(sCrashReason);
+        MOZ_REALLY_CRASH();
       }
     } else {
       atom = new StaticAtom(stringBuffer, stringLen, hash);

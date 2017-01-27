@@ -9,7 +9,7 @@ if (!wasmIsSupported())
 if (!getBuildConfiguration()["arm-simulator"])
     throw "TestComplete";
 
-enableSPSProfiling();
+enableGeckoProfiling();
 enableSingleStepProfiling();
 
 var g = newGlobal();
@@ -40,5 +40,5 @@ try {
     assertEq(e, "test");
 }
 
-disableSPSProfiling();
+disableGeckoProfiling();
 throw "TestComplete";

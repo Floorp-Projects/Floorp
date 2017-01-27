@@ -59,11 +59,11 @@ function assertStackContainsSeq(got, expect)
 var stacks;
 var ffi = function(enable) {
     if (enable == +1)
-        enableSPSProfiling();
+        enableGeckoProfiling();
     enableSingleStepProfiling();
     stacks = disableSingleStepProfiling();
     if (enable == -1)
-        disableSPSProfiling();
+        disableGeckoProfiling();
 }
 var f = asmLink(asmCompile('global','ffis',USE_ASM + "var ffi=ffis.ffi; function g(i) { i=i|0; ffi(i|0) } function f(i) { i=i|0; g(i|0) } return f"), null, {ffi});
 f(0);
@@ -78,7 +78,7 @@ f(0);
 assertStackContainsSeq(stacks, "");
 
 // Enable profiling for the rest of the tests.
-enableSPSProfiling();
+enableGeckoProfiling();
 
 var f = asmLink(asmCompile(USE_ASM + "function f() { return 42 } return f"));
 enableSingleStepProfiling();

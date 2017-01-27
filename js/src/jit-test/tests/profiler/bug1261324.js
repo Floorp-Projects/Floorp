@@ -1,7 +1,7 @@
 g = newGlobal()
 g.parent = this
 g.eval("new Debugger(parent).onExceptionUnwind = function () {}")
-enableSPSProfiling()
+enableGeckoProfiling()
 
 try {
   // Only the ARM simulator supports single step profiling.

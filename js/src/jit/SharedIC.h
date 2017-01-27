@@ -1052,7 +1052,7 @@ class ICStubCompiler
     void enterStubFrame(MacroAssembler& masm, Register scratch);
     void leaveStubFrame(MacroAssembler& masm, bool calledIntoIon = false);
 
-    // Some stubs need to emit SPS profiler updates.  This emits the guarding
+    // Some stubs need to emit Gecko Profiler updates.  This emits the guarding
     // jitcode for those stubs.  If profiling is not enabled, jumps to the
     // given label.
     void guardProfilingEnabled(MacroAssembler& masm, Register scratch, Label* skip);

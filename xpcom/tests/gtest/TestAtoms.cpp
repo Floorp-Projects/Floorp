@@ -122,18 +122,6 @@ TEST(Atoms, Invalid)
 #define SECOND_ATOM_STR "second static atom. @World!"
 #define THIRD_ATOM_STR "third static atom?!"
 
-static nsIAtom* sAtom1 = 0;
-static nsIAtom* sAtom2 = 0;
-static nsIAtom* sAtom3 = 0;
-NS_STATIC_ATOM_BUFFER(sAtom1_buffer, FIRST_ATOM_STR)
-NS_STATIC_ATOM_BUFFER(sAtom2_buffer, SECOND_ATOM_STR)
-NS_STATIC_ATOM_BUFFER(sAtom3_buffer, THIRD_ATOM_STR)
-static const nsStaticAtom sAtoms_info[] = {
-  NS_STATIC_ATOM(sAtom1_buffer, &sAtom1),
-  NS_STATIC_ATOM(sAtom2_buffer, &sAtom2),
-  NS_STATIC_ATOM(sAtom3_buffer, &sAtom3),
-};
-
 bool
 isStaticAtom(nsIAtom* atom)
 {
@@ -160,20 +148,6 @@ TEST(Atoms, Table)
 
   EXPECT_TRUE(thirdDynamic);
   EXPECT_EQ(NS_GetNumberOfAtoms(), count + 1);
-
-  NS_RegisterStaticAtoms(sAtoms_info);
-
-  EXPECT_TRUE(sAtom1);
-  EXPECT_TRUE(sAtom1->Equals(NS_LITERAL_STRING(FIRST_ATOM_STR)));
-  EXPECT_TRUE(isStaticAtom(sAtom1));
-  EXPECT_TRUE(sAtom2);
-  EXPECT_TRUE(sAtom2->Equals(NS_LITERAL_STRING(SECOND_ATOM_STR)));
-  EXPECT_TRUE(isStaticAtom(sAtom2));
-  EXPECT_TRUE(sAtom3);
-  EXPECT_TRUE(sAtom3->Equals(NS_LITERAL_STRING(THIRD_ATOM_STR)));
-  EXPECT_TRUE(isStaticAtom(sAtom3));
-  EXPECT_EQ(NS_GetNumberOfAtoms(), count + 3);
-  EXPECT_EQ(thirdDynamic, sAtom3);
 }
 
 }

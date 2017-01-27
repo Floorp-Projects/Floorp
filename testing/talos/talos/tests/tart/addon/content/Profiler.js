@@ -66,21 +66,21 @@ var Profiler;
     /**
      * Initialize the profiler using profiler settings supplied in a JS object.
      * The following properties on the object are respected:
-     *  - sps_profile_interval
-     *  - sps_profile_entries
-     *  - sps_profile_threads
-     *  - sps_profile_dir
+     *  - gecko_profile_interval
+     *  - gecko_profile_entries
+     *  - gecko_profile_threads
+     *  - gecko_profile_dir
      */
     initFromObject: function Profiler__initFromObject (obj) {
       if (obj &&
-          ("sps_profile_dir" in obj) && typeof obj.sps_profile_dir == "string" &&
-          ("sps_profile_interval" in obj) && Number.isFinite(obj.sps_profile_interval * 1) &&
-          ("sps_profile_entries" in obj) && Number.isFinite(obj.sps_profile_entries * 1) &&
-          ("sps_profile_threads" in obj) && typeof obj.sps_profile_threads == "string") {
-        profiler_interval = obj.sps_profile_interval;
-        profiler_entries = obj.sps_profile_entries;
-        profiler_threadsArray = obj.sps_profile_threads.split(",");
-        profiler_dir = obj.sps_profile_dir;
+          ("gecko_profile_dir" in obj) && typeof obj.gecko_profile_dir == "string" &&
+          ("gecko_profile_interval" in obj) && Number.isFinite(obj.gecko_profile_interval * 1) &&
+          ("gecko_profile_entries" in obj) && Number.isFinite(obj.gecko_profile_entries * 1) &&
+          ("gecko_profile_threads" in obj) && typeof obj.gecko_profile_threads == "string") {
+        profiler_interval = obj.gecko_profile_interval;
+        profiler_entries = obj.gecko_profile_entries;
+        profiler_threadsArray = obj.gecko_profile_threads.split(",");
+        profiler_dir = obj.gecko_profile_dir;
         enabled = true;
       }
     },

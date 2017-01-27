@@ -27,11 +27,6 @@ USE_LIBS += ['mfbt']
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
-# FIXME: bug 577500 TestStaticAtoms fails when run in dist/bin
-#CPP_UNIT_TESTS += [
-#    'TestStaticAtoms',
-#]
-
 if CONFIG['COMPILE_ENVIRONMENT']:
     TEST_HARNESS_FILES.xpcshell.xpcom.tests.unit += [
         '!/dist/bin/components/xpcomtest.xpt',

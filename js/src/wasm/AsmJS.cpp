@@ -34,6 +34,7 @@
 #include "frontend/Parser.h"
 #include "gc/Policy.h"
 #include "js/MemoryMetrics.h"
+#include "vm/SelfHosting.h"
 #include "vm/StringBuffer.h"
 #include "vm/Time.h"
 #include "vm/TypedArrayObject.h"
@@ -7450,6 +7451,20 @@ GetDataProperty(JSContext* cx, HandleValue objVal, ImmutablePropertyNamePtr fiel
 }
 
 static bool
+HasObjectValueOfMethodPure(JSObject* obj, JSContext* cx)
+{
+    Value v;
+    if (!GetPropertyPure(cx, obj, NameToId(cx->names().valueOf), &v))
+        return false;
+
+    JSFunction* fun;
+    if (!IsFunctionObject(v, &fun))
+        return false;
+
+    return IsSelfHostedFunctionWithName(fun, cx->names().Object_valueOf);
+}
+
+static bool
 HasPureCoercion(JSContext* cx, HandleValue v)
 {
     // Unsigned SIMD types are not allowed in function signatures.
@@ -7465,7 +7480,7 @@ HasPureCoercion(JSContext* cx, HandleValue v)
     // most apps have been built with newer Emscripten.
     if (v.toObject().is<JSFunction>() &&
         HasNoToPrimitiveMethodPure(&v.toObject(), cx) &&
-        HasNativeMethodPure(&v.toObject(), cx->names().valueOf, obj_valueOf, cx) &&
+        HasObjectValueOfMethodPure(&v.toObject(), cx) &&
         HasNativeMethodPure(&v.toObject(), cx->names().toString, fun_toString, cx))
     {
         return true;

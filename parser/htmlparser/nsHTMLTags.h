@@ -41,6 +41,7 @@ enum nsHTMLTag {
 
 class nsHTMLTags {
 public:
+  static void RegisterAtoms(void);
   static nsresult AddRefTable(void);
   static void ReleaseTable(void);
 

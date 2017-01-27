@@ -72,7 +72,7 @@
 #endif
 
     COMPONENT(SYSTEMINFO, nsSystemInfoConstructor)
-    COMPONENT(MEMORY_REPORTER_MANAGER, nsMemoryReporterManagerConstructor)
+    COMPONENT_M(MEMORY_REPORTER_MANAGER, nsMemoryReporterManagerConstructor, Module::ALLOW_IN_GPU_PROCESS)
     COMPONENT(MEMORY_INFO_DUMPER, nsMemoryInfoDumperConstructor)
     COMPONENT(IOUTIL, nsIOUtilConstructor)
     COMPONENT(CYCLE_COLLECTOR_LOGGER, nsCycleCollectorLoggerConstructor)

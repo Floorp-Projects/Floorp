@@ -1,5 +1,5 @@
 // |jit-test| allow-oom
-enableSPSProfiling();
+enableGeckoProfiling();
 loadFile('\
 for (var i = 0; i < 2; i++) {\
     obj = { m: function () {} };\

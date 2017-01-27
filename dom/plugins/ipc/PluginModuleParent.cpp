@@ -2753,7 +2753,7 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
     if (nsCOMPtr<nsINode> node = do_QueryInterface(elt)) {
         nsCOMPtr<nsIDocument> doc = node->OwnerDoc();
         if (doc) {
-            nsCOMPtr<nsIEventTarget> eventTarget = doc->EventTargetFor(dom::TaskCategory::Other);
+            nsCOMPtr<nsIEventTarget> eventTarget = doc->EventTargetFor(TaskCategory::Other);
             SetEventTargetForActor(parentInstance, eventTarget);
         }
     }

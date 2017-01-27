@@ -1745,13 +1745,13 @@ Terminate(JSContext* cx, unsigned arg, Value* vp)
 }
 
 static bool
-ReadSPSProfilingStack(JSContext* cx, unsigned argc, Value* vp)
+ReadGeckoProfilingStack(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setUndefined();
 
     // Return boolean 'false' if profiler is not enabled.
-    if (!cx->runtime()->spsProfiler.enabled()) {
+    if (!cx->runtime()->geckoProfiler.enabled()) {
         args.rval().setBoolean(false);
         return true;
     }
@@ -4378,8 +4378,8 @@ gc::ZealModeHelpText),
 "  Terminate JavaScript execution, as if we had run out of\n"
 "  memory or been terminated by the slow script dialog."),
 
-    JS_FN_HELP("readSPSProfilingStack", ReadSPSProfilingStack, 0, 0,
-"readSPSProfilingStack()",
+    JS_FN_HELP("readGeckoProfilingStack", ReadGeckoProfilingStack, 0, 0,
+"readGeckoProfilingStack()",
 "  Reads the jit stack using ProfilingFrameIterator."),
 
     JS_FN_HELP("enableOsiPointRegisterChecks", EnableOsiPointRegisterChecks, 0, 0,

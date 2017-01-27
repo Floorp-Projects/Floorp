@@ -197,7 +197,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     negativeInfinityValue(DoubleValue(NegativeInfinity<double>())),
     positiveInfinityValue(DoubleValue(PositiveInfinity<double>())),
     emptyString(nullptr),
-    spsProfiler(thisFromCtor()),
+    geckoProfiler(thisFromCtor()),
     profilingScripts(false),
     suppressProfilerSampling(false),
     hadOutOfMemory(false),
@@ -350,7 +350,7 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
     if (!wasm::EnsureSignalHandlers(this))
         return false;
 
-    if (!spsProfiler.init())
+    if (!geckoProfiler.init())
         return false;
 
     if (!fx.initInstance())
@@ -927,7 +927,7 @@ JS_FRIEND_API(bool)
 JS::IsProfilingEnabledForContext(JSContext* cx)
 {
     MOZ_ASSERT(cx);
-    return cx->spsProfiler.enabled();
+    return cx->geckoProfiler.enabled();
 }
 
 JSRuntime::IonBuilderList&
