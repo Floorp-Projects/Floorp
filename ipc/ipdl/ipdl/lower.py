@@ -419,10 +419,6 @@ def _killProcess(pid):
                ExprVar('base::PROCESS_END_KILLED_BY_USER'),
                ExprLiteral.FALSE ])
 
-def _badTransition():
-    # FIXME: make this a FatalError()
-    return [ _printWarningMessage('bad state transition!') ]
-
 # Results that IPDL-generated code returns back to *Channel code.
 # Users never see these
 class _Result:
