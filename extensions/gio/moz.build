@@ -11,3 +11,7 @@ SOURCES += [
 FINAL_LIBRARY = 'xul'
 
 CXXFLAGS += CONFIG['MOZ_GIO_CFLAGS']
+
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Widget: Gtk')
+
