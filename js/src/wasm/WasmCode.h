@@ -524,7 +524,7 @@ struct ExprLoc
     {}
 };
 
-typedef Vector<ExprLoc, 0, TempAllocPolicy> ExprLocVector;
+typedef Vector<ExprLoc, 0, SystemAllocPolicy> ExprLocVector;
 
 // The generated source WebAssembly function lines and expressions ranges.
 
@@ -542,7 +542,9 @@ struct FunctionLoc
     {}
 };
 
-typedef Vector<FunctionLoc, 0, TempAllocPolicy> FunctionLocVector;
+typedef Vector<FunctionLoc, 0, SystemAllocPolicy> FunctionLocVector;
+
+typedef Vector<uint32_t, 0, SystemAllocPolicy> ExprLocIndexVector;
 
 // The generated source map for WebAssembly binary file. This map is generated during
 // building the text buffer (see BinaryToExperimentalText).
@@ -551,12 +553,13 @@ class GeneratedSourceMap
 {
     ExprLocVector exprlocs_;
     FunctionLocVector functionlocs_;
+    UniquePtr<ExprLocIndexVector> sortedByOffsetExprLocIndices_;
     uint32_t totalLines_;
 
   public:
-    explicit GeneratedSourceMap(JSContext* cx)
-     : exprlocs_(cx),
-       functionlocs_(cx),
+    explicit GeneratedSourceMap()
+     : exprlocs_(),
+       functionlocs_(),
        totalLines_(0)
     {}
     ExprLocVector& exprlocs() { return exprlocs_; }
@@ -564,6 +567,8 @@ class GeneratedSourceMap
 
     uint32_t totalLines() { return totalLines_; }
     void setTotalLines(uint32_t val) { totalLines_ = val; }
+
+    bool searchLineByOffset(JSContext* cx, uint32_t offset, size_t* exprlocIndex);
 };
 
 typedef UniquePtr<GeneratedSourceMap> UniqueGeneratedSourceMap;
@@ -584,6 +589,7 @@ class Code
     bool                     profilingEnabled_;
 
     void toggleDebugTrap(uint32_t offset, bool enabled);
+    bool ensureSourceMap(JSContext* cx);
 
   public:
     Code(UniqueCodeSegment segment,
@@ -611,7 +617,9 @@ class Code
     // will be returned.
 
     JSString* createText(JSContext* cx);
-    bool getLineOffsets(size_t lineno, Vector<uint32_t>& offsets) const;
+    bool getLineOffsets(JSContext* cx, size_t lineno, Vector<uint32_t>* offsets);
+    bool getOffsetLocation(JSContext* cx, uint32_t offset, bool* found, size_t* lineno, size_t* column);
+    bool totalSourceLines(JSContext* cx, uint32_t* count);
 
     // Each Code has a profiling mode that is updated to match the runtime's
     // profiling mode when there are no other activations of the code live on
