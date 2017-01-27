@@ -628,12 +628,14 @@ var SessionStoreInternal = {
               // replace the crashed session with a restore-page-only session
               let url = "about:sessionrestore";
               let formdata = {id: {sessionData: state}, url};
-              state = { windows: [{ tabs: [{ entries: [{url}], formdata }] }] };
+              let entry = {url, triggeringPrincipal_base64: Utils.SERIALIZED_SYSTEMPRINCIPAL };
+              state = { windows: [{ tabs: [{ entries: [entry], formdata }] }] };
             } else if (this._hasSingleTabWithURL(state.windows,
                                                  "about:welcomeback")) {
               // On a single about:welcomeback URL that crashed, replace about:welcomeback
               // with about:sessionrestore, to make clear to the user that we crashed.
               state.windows[0].tabs[0].entries[0].url = "about:sessionrestore";
+              state.windows[0].tabs[0].entries[0].triggeringPrincipal_base64 = Utils.SERIALIZED_SYSTEMPRINCIPAL;
             }
           }
 
