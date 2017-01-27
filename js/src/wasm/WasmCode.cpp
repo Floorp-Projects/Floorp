@@ -30,6 +30,7 @@
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
+#include "vm/Debugger.h"
 #include "vm/StringBuffer.h"
 #ifdef MOZ_VTUNE
 # include "vtune/VTuneWrapper.h"
@@ -625,8 +626,8 @@ Code::Code(UniqueCodeSegment segment,
   : segment_(Move(segment)),
     metadata_(&metadata),
     maybeBytecode_(maybeBytecode),
-    enterAndLeaveFrameTrapsCounter_(0),
-    profilingEnabled_(false)
+    profilingEnabled_(false),
+    enterAndLeaveFrameTrapsCounter_(0)
 {
     MOZ_ASSERT_IF(metadata_->debugEnabled, maybeBytecode);
 }
@@ -666,6 +667,16 @@ Code::lookupRange(void* pc) const
         return nullptr;
 
     return &metadata_->codeRanges[match];
+}
+
+const CodeRange*
+Code::lookupRangeByFuncIndexSlow(uint32_t funcIndex) const
+{
+    for (const CodeRange& r : metadata_->codeRanges) {
+        if (r.kind() == CodeRange::Function && r.funcIndex() == funcIndex)
+            return &r;
+    }
+    return nullptr;
 }
 
 struct MemoryAccessOffset
@@ -862,6 +873,190 @@ Code::totalSourceLines(JSContext* cx, uint32_t* count)
         *count = maybeSourceMap_->totalLines() + experimentalWarningLinesCount;
     return true;
 }
+
+bool
+Code::stepModeEnabled(uint32_t funcIndex) const
+{
+    return stepModeCounters_.initialized() && stepModeCounters_.lookup(funcIndex);
+}
+
+bool
+Code::incrementStepModeCount(JSContext* cx, uint32_t funcIndex)
+{
+    MOZ_ASSERT(metadata_->debugEnabled);
+    const CodeRange* codeRange = lookupRangeByFuncIndexSlow(funcIndex);
+    MOZ_ASSERT(codeRange && codeRange->isFunction());
+
+    if (!stepModeCounters_.initialized() && !stepModeCounters_.init()) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    StepModeCounters::AddPtr p = stepModeCounters_.lookupForAdd(funcIndex);
+    if (p) {
+        MOZ_ASSERT(p->value() > 0);
+        p->value()++;
+        return true;
+    }
+    if (!stepModeCounters_.add(p, funcIndex, 1)) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    AutoWritableJitCode awjc(cx->runtime(), segment_->base() + codeRange->begin(),
+                             codeRange->end() - codeRange->begin());
+    AutoFlushICache afc("Code::incrementStepModeCount");
+
+    for (const CallSite& callSite : metadata_->callSites) {
+        if (callSite.kind() != CallSite::Breakpoint)
+            continue;
+        uint32_t offset = callSite.returnAddressOffset();
+        if (codeRange->begin() <= offset && offset <= codeRange->end())
+            toggleDebugTrap(offset, true);
+    }
+    return true;
+}
+
+bool
+Code::decrementStepModeCount(JSContext* cx, uint32_t funcIndex)
+{
+    MOZ_ASSERT(metadata_->debugEnabled);
+    const CodeRange* codeRange = lookupRangeByFuncIndexSlow(funcIndex);
+    MOZ_ASSERT(codeRange && codeRange->isFunction());
+
+    MOZ_ASSERT(stepModeCounters_.initialized() && !stepModeCounters_.empty());
+    StepModeCounters::Ptr p = stepModeCounters_.lookup(funcIndex);
+    MOZ_ASSERT(p);
+    if (--p->value())
+        return true;
+
+    stepModeCounters_.remove(p);
+
+    AutoWritableJitCode awjc(cx->runtime(), segment_->base() + codeRange->begin(),
+                             codeRange->end() - codeRange->begin());
+    AutoFlushICache afc("Code::decrementStepModeCount");
+
+    for (const CallSite& callSite : metadata_->callSites) {
+        if (callSite.kind() != CallSite::Breakpoint)
+            continue;
+        uint32_t offset = callSite.returnAddressOffset();
+        if (codeRange->begin() <= offset && offset <= codeRange->end()) {
+            bool enabled = breakpointSites_.initialized() && breakpointSites_.has(offset);
+            toggleDebugTrap(offset, enabled);
+        }
+    }
+    return true;
+}
+
+static const CallSite*
+SlowCallSiteSearchByOffset(const Metadata& metadata, uint32_t offset)
+{
+    for (const CallSite& callSite : metadata.callSites) {
+        if (callSite.lineOrBytecode() == offset && callSite.kind() == CallSiteDesc::Breakpoint)
+            return &callSite;
+    }
+    return nullptr;
+}
+
+bool
+Code::hasBreakpointTrapAtOffset(uint32_t offset)
+{
+    if (!metadata_->debugEnabled)
+        return false;
+    return SlowCallSiteSearchByOffset(*metadata_, offset);
+}
+
+void
+Code::toggleBreakpointTrap(JSRuntime* rt, uint32_t offset, bool enabled)
+{
+    MOZ_ASSERT(metadata_->debugEnabled);
+    const CallSite* callSite = SlowCallSiteSearchByOffset(*metadata_, offset);
+    if (!callSite)
+        return;
+    size_t debugTrapOffset = callSite->returnAddressOffset();
+
+    const CodeRange* codeRange = lookupRange(segment_->base() + debugTrapOffset);
+    MOZ_ASSERT(codeRange && codeRange->isFunction());
+
+    if (stepModeCounters_.initialized() && stepModeCounters_.lookup(codeRange->funcIndex()))
+        return; // no need to toggle when step mode is enabled
+
+    AutoWritableJitCode awjc(rt, segment_->base(), segment_->codeLength());
+    AutoFlushICache afc("Code::toggleBreakpointTrap");
+    AutoFlushICache::setRange(uintptr_t(segment_->base()), segment_->codeLength());
+    toggleDebugTrap(debugTrapOffset, enabled);
+}
+
+WasmBreakpointSite*
+Code::getOrCreateBreakpointSite(JSContext* cx, uint32_t offset)
+{
+    WasmBreakpointSite* site;
+    if (!breakpointSites_.initialized() && !breakpointSites_.init()) {
+        ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
+    WasmBreakpointSiteMap::AddPtr p = breakpointSites_.lookupForAdd(offset);
+    if (!p) {
+        site = cx->runtime()->new_<WasmBreakpointSite>(this, offset);
+        if (!site || !breakpointSites_.add(p, offset, site)) {
+            js_delete(site);
+            ReportOutOfMemory(cx);
+            return nullptr;
+        }
+    } else {
+        site = p->value();
+    }
+    return site;
+}
+
+bool
+Code::hasBreakpointSite(uint32_t offset)
+{
+    return breakpointSites_.initialized() && breakpointSites_.has(offset);
+}
+
+void
+Code::destroyBreakpointSite(FreeOp* fop, uint32_t offset)
+{
+    MOZ_ASSERT(breakpointSites_.initialized());
+    WasmBreakpointSiteMap::Ptr p = breakpointSites_.lookup(offset);
+    MOZ_ASSERT(p);
+    fop->delete_(p->value());
+    breakpointSites_.remove(p);
+}
+
+bool
+Code::clearBreakpointsIn(JSContext* cx, WasmInstanceObject* instance, js::Debugger* dbg, JSObject* handler)
+{
+    MOZ_ASSERT(instance);
+    if (!breakpointSites_.initialized())
+        return true;
+
+    // Make copy of all sites list, so breakpointSites_ can be modified by
+    // destroyBreakpointSite calls.
+    Vector<WasmBreakpointSite*> sites(cx);
+    if (!sites.resize(breakpointSites_.count()))
+        return false;
+    size_t i = 0;
+    for (WasmBreakpointSiteMap::Range r = breakpointSites_.all(); !r.empty(); r.popFront())
+        sites[i++] = r.front().value();
+
+    for (WasmBreakpointSite* site : sites) {
+        Breakpoint* nextbp;
+        for (Breakpoint* bp = site->firstBreakpoint(); bp; bp = nextbp) {
+            nextbp = bp->nextInSite();
+            if (bp->asWasm()->wasmInstance == instance &&
+                (!dbg || bp->debugger == dbg) &&
+                (!handler || bp->getHandler() == handler))
+            {
+                bp->destroy(cx->runtime()->defaultFreeOp());
+            }
+        }
+    }
+    return true;
+}
+
 
 bool
 Code::ensureProfilingState(JSRuntime* rt, bool newProfilingEnabled)

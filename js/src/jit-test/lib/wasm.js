@@ -146,3 +146,37 @@ function wasmFullPass(text, expected, maybeImports, ...args) {
 function wasmFullPassI64(text, expected, maybeImports, ...args) {
     _wasmFullPassInternal(assertEqI64, text, expected, maybeImports, ...args);
 }
+
+function wasmRunWithDebugger(wast, lib, init, done) {
+    let g = newGlobal('');
+    let dbg = new Debugger(g);
+
+    g.eval(`
+var wasm = wasmTextToBinary('${wast}');
+var lib = ${lib || 'undefined'};
+var m = new WebAssembly.Instance(new WebAssembly.Module(wasm), lib);`);
+
+    var wasmScript = dbg.findScripts().filter(s => s.format == 'wasm')[0];
+
+    init({dbg, wasmScript, g,});
+    let result = undefined, error = undefined;
+    try {
+        result = g.eval("m.exports.test()");
+    } catch (ex) {
+        error = ex;
+    }
+    done({dbg, result, error, wasmScript, g,});
+}
+
+function wasmGetScriptBreakpoints(wasmScript) {
+    var result = [];
+    var sourceText = wasmScript.source.text;
+    sourceText.split('\n').forEach(function (line, i) {
+        var lineOffsets = wasmScript.getLineOffsets(i + 1);
+        if (lineOffsets.length === 0)
+            return;
+        assertEq(lineOffsets.length, 1);
+        result.push({str: line.trim(), line: i + 1, offset: lineOffsets[0]});
+    });
+    return result;
+}

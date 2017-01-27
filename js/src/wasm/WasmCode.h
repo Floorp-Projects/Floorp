@@ -25,7 +25,11 @@
 namespace js {
 
 struct AsmJSMetadata;
+class Debugger;
 class WasmActivation;
+class WasmBreakpoint;
+class WasmBreakpointSite;
+class WasmInstanceObject;
 
 namespace wasm {
 
@@ -573,6 +577,10 @@ class GeneratedSourceMap
 
 typedef UniquePtr<GeneratedSourceMap> UniqueGeneratedSourceMap;
 
+typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy> StepModeCounters;
+
+typedef HashMap<uint32_t, WasmBreakpointSite*, DefaultHasher<uint32_t>, SystemAllocPolicy> WasmBreakpointSiteMap;
+
 // Code objects own executable code and the metadata that describes it. At the
 // moment, Code objects are owned uniquely by instances since CodeSegments are
 // not shareable. However, once this restriction is removed, a single Code
@@ -585,8 +593,13 @@ class Code
     const SharedBytes        maybeBytecode_;
     UniqueGeneratedSourceMap maybeSourceMap_;
     CacheableCharsVector     funcLabels_;
-    uint32_t                 enterAndLeaveFrameTrapsCounter_;
     bool                     profilingEnabled_;
+
+    // State maintained when debugging is enabled:
+
+    uint32_t                 enterAndLeaveFrameTrapsCounter_;
+    WasmBreakpointSiteMap    breakpointSites_;
+    StepModeCounters         stepModeCounters_;
 
     void toggleDebugTrap(uint32_t offset, bool enabled);
     bool ensureSourceMap(JSContext* cx);
@@ -604,6 +617,7 @@ class Code
 
     const CallSite* lookupCallSite(void* returnAddress) const;
     const CodeRange* lookupRange(void* pc) const;
+    const CodeRange* lookupRangeByFuncIndexSlow(uint32_t funcIndex) const;
     const MemoryAccess* lookupMemoryAccess(void* pc) const;
 
     // Return the name associated with a given function index, or generate one
@@ -632,10 +646,28 @@ class Code
     const char* profilingLabel(uint32_t funcIndex) const { return funcLabels_[funcIndex].get(); }
 
     // The Code can track enter/leave frame events. Any such event triggers
-    // debug trap. The enter frame events enabled across all functions, but
-    // the leave frame events only for particular function.
+    // debug trap. The enter/leave frame events enabled or disabled across
+    // all functions.
 
     void adjustEnterAndLeaveFrameTrapsState(JSContext* cx, bool enabled);
+
+    // When the Code is debugEnabled, individual breakpoints can be enabled or
+    // disabled at instruction offsets.
+
+    bool hasBreakpointTrapAtOffset(uint32_t offset);
+    void toggleBreakpointTrap(JSRuntime* rt, uint32_t offset, bool enabled);
+    WasmBreakpointSite* getOrCreateBreakpointSite(JSContext* cx, uint32_t offset);
+    bool hasBreakpointSite(uint32_t offset);
+    void destroyBreakpointSite(FreeOp* fop, uint32_t offset);
+    bool clearBreakpointsIn(JSContext* cx, WasmInstanceObject* instance,
+                            js::Debugger* dbg, JSObject* handler);
+
+    // When the Code is debug-enabled, single-stepping mode can be toggled on
+    // the granularity of individual functions.
+
+    bool stepModeEnabled(uint32_t funcIndex) const;
+    bool incrementStepModeCount(JSContext* cx, uint32_t funcIndex);
+    bool decrementStepModeCount(JSContext* cx, uint32_t funcIndex);
 
     // about:memory reporting:
 
