@@ -95,6 +95,7 @@ class MemoryReport;
 class TabContext;
 class ContentBridgeParent;
 class GetFilesHelper;
+class MemoryReportRequestHost;
 
 class ContentParent final : public PContentParent
                           , public nsIContentParent
@@ -728,6 +729,10 @@ private:
                                 OptionalURIParams* aUserContentSheetURL,
                                 nsTArray<LookAndFeelInt>* aLookAndFeelIntCache) override;
 
+
+  mozilla::ipc::IPCResult RecvAddMemoryReport(const MemoryReport& aReport) override;
+  mozilla::ipc::IPCResult RecvFinishMemoryReport(const uint32_t& aGeneration) override;
+
   virtual bool
   DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*) override;
 
@@ -786,15 +791,6 @@ private:
 
   virtual bool
   DeallocPHeapSnapshotTempFileHelperParent(PHeapSnapshotTempFileHelperParent*) override;
-
-  virtual PMemoryReportRequestParent*
-  AllocPMemoryReportRequestParent(const uint32_t& aGeneration,
-                                  const bool &aAnonymize,
-                                  const bool &aMinimizeMemoryUsage,
-                                  const MaybeFileDesc &aDMDFile) override;
-
-  virtual bool
-  DeallocPMemoryReportRequestParent(PMemoryReportRequestParent* actor) override;
 
   virtual PCycleCollectWithLogsParent*
   AllocPCycleCollectWithLogsParent(const bool& aDumpAllTraces,
@@ -1087,6 +1083,11 @@ public:
   void SendGetFilesResponseAndForget(const nsID& aID,
                                      const GetFilesResponseResult& aResult);
 
+  bool SendRequestMemoryReport(const uint32_t& aGeneration,
+                               const bool& aAnonymize,
+                               const bool& aMinimizeMemoryUsage,
+                               const MaybeFileDesc& aDMDFile);
+
 private:
 
   // If you add strong pointers to cycle collected objects here, be sure to
@@ -1151,6 +1152,7 @@ private:
   nsCString mProfile;
 
   UniquePtr<gfx::DriverCrashGuard> mDriverCrashGuard;
+  UniquePtr<MemoryReportRequestHost> mMemoryReportRequest;
 
 #if defined(XP_LINUX) && defined(MOZ_CONTENT_SANDBOX)
   mozilla::UniquePtr<SandboxBroker> mSandboxBroker;

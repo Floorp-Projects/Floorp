@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PContent;
-
 namespace mozilla {
 namespace dom {
 
@@ -14,15 +12,8 @@ struct MemoryReport {
   int32_t kind;
   int32_t units;
   int64_t amount;
+  uint32_t generation;
   nsCString desc;
-};
-
-protocol PMemoryReportRequest {
-  manager PContent;
-
-parent:
-  async Report(MemoryReport aReport);
-  async __delete__();
 };
 
 }
