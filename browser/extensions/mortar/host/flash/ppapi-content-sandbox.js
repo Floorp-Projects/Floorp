@@ -12,7 +12,7 @@
 const { utils: Cu } = Components;
 
 let mm = pluginElement.frameLoader.messageManager;
-let containerWindow = pluginElement.ownerDocument.defaultView;
+let containerWindow = pluginElement.ownerGlobal;
 
 function mapValue(v, instance) {
   return instance.rt.toPP_Var(v, instance);

@@ -51,7 +51,7 @@ let observer = {
 function countReflows(testfn, expected) {
   let deferred = Promise.defer();
   observer.reflows = [];
-  let docShell = panel.ownerDocument.defaultView
+  let docShell = panel.ownerGlobal
                   .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                   .getInterface(Components.interfaces.nsIWebNavigation)
                   .QueryInterface(Components.interfaces.nsIDocShell);

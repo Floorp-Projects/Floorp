@@ -21,5 +21,5 @@ const windowToMessageManager = window =>
 exports.windowToMessageManager = windowToMessageManager;
 
 const nodeToMessageManager = node =>
-  windowToMessageManager(node.ownerDocument.defaultView);
+  windowToMessageManager(node.ownerGlobal);
 exports.nodeToMessageManager = nodeToMessageManager;

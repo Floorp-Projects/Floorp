@@ -186,7 +186,7 @@ BrowserAction.prototype = {
 
   handleEvent(event) {
     let button = event.target;
-    let window = button.ownerDocument.defaultView;
+    let window = button.ownerGlobal;
 
     switch (event.type) {
       case "mousedown":

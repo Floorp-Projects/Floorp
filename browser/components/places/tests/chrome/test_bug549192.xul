@@ -58,11 +58,11 @@
         let vtime = Date.now() * 1000;
         const ttype = PlacesUtils.history.TRANSITION_TYPED;
         let places =
-          [{ uri: Services.io.newURI("http://example.tld/", null, null),
+          [{ uri: Services.io.newURI("http://example.tld/"),
              visitDate: newTimeInMicroseconds(), transition: ttype },
-           { uri: Services.io.newURI("http://example2.tld/", null, null),
+           { uri: Services.io.newURI("http://example2.tld/"),
              visitDate: newTimeInMicroseconds(), transition: ttype },
-           { uri: Services.io.newURI("http://example3.tld/", null, null),
+           { uri: Services.io.newURI("http://example3.tld/"),
              visitDate: newTimeInMicroseconds(), transition: ttype }];
 
         yield PlacesTestUtils.addVisits(places);

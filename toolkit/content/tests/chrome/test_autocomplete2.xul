@@ -130,7 +130,7 @@ function check() {
 
 function checkResult() {
   var autocomplete = $("autocomplete");
-  var style = window.getComputedStyle(autocomplete, "");
+  var style = window.getComputedStyle(autocomplete);
 
   if (returnResult) {
     // Result was returned, so there should not be a nomatch attribute

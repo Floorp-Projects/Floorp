@@ -1496,9 +1496,7 @@
             this.maxRows = aInput.maxRows;
             this.invalidate();
 
-            var viewer = aElement
-                .ownerDocument
-                .defaultView
+            var viewer = aElement.ownerGlobal
                 .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                 .getInterface(Components.interfaces.nsIWebNavigation)
                 .QueryInterface(Components.interfaces.nsIDocShell)
@@ -1508,7 +1506,7 @@
             this.setAttribute("width", width > 100 ? width : 100);
             // Adjust the direction (which is not inherited) of the autocomplete
             // popup list, based on the textbox direction. (Bug 707039)
-            this.style.direction = aElement.ownerDocument.defaultView
+            this.style.direction = aElement.ownerGlobal
                                            .getComputedStyle(aElement)
                                            .direction;
             this.popupBoxObject.setConsumeRollupEvent(aInput.consumeRollupEvent

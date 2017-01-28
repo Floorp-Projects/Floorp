@@ -52,7 +52,7 @@ MainProcessSingleton.prototype = {
       var title = searchBundle.GetStringFromName("error_invalid_engine_title");
       var msg = searchBundle.formatStringFromName("error_invalid_engine_msg",
                                                   [brandName], 1);
-      Services.ww.getNewPrompter(browser.ownerDocument.defaultView).alert(title, msg);
+      Services.ww.getNewPrompter(browser.ownerGlobal).alert(title, msg);
       return;
     }
 

@@ -502,7 +502,7 @@ var REGEXP_PRECEDER_PATTERN = '(?:^^\\.?|[+-]|\\!|\\!=|\\!==|\\#|\\%|\\%=|&|&&|&
     if (node.currentStyle) {
       whitespace = node.currentStyle.whiteSpace;
     } else if (window.getComputedStyle) {
-      whitespace = document.defaultView.getComputedStyle(node, null)
+      whitespace = document.defaultView.getComputedStyle(node)
           .getPropertyValue('white-space');
     }
     var isPreformatted = whitespace && 'pre' === whitespace.substring(0, 3);
@@ -917,7 +917,7 @@ var REGEXP_PRECEDER_PATTERN = '(?:^^\\.?|[+-]|\\!|\\!=|\\!==|\\#|\\%|\\%=|&|&&|&
     if (node.currentStyle) {
       whitespace = node.currentStyle.whiteSpace;
     } else if (window.getComputedStyle) {
-      whitespace = document.defaultView.getComputedStyle(node, null)
+      whitespace = document.defaultView.getComputedStyle(node)
           .getPropertyValue('white-space');
     }
     // If it's preformatted, then we need to split lines on line breaks

@@ -62,7 +62,7 @@ function doTest() {
   if (++curTest == tests.length) {
     var ss = document.getElementsByTagName("span");
     for (var i = 0; i < ss.length; i++) {
-      is(window.getComputedStyle(ss[i], "").color, "rgb(0, 0, 0)",
+      is(window.getComputedStyle(ss[i]).color, "rgb(0, 0, 0)",
          "recovery | " + ss[i].id);
     }
     SimpleTest.finish();

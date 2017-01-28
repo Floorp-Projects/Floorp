@@ -63,7 +63,7 @@ function triggerShortTransition(node) {
   // Flush style, so that the above assignment value actually takes effect
   // in the computed style, so that a transition will get triggered when it
   // changes.
-  window.getComputedStyle(node, "").color;
+  window.getComputedStyle(node).color;
   node.style.color = "teal";
 }
 

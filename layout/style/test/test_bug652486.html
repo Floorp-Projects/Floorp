@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1039488
 /** Test for Bug 652486 and Bug 1039488 **/
 
 function c() {
-  return document.defaultView.getComputedStyle($('t'), "").
+  return document.defaultView.getComputedStyle($('t')).
            getPropertyValue("text-decoration");
 }
 
@@ -153,7 +153,7 @@ function clearStyleObject()
 }
 
 function testCSSValue(testname, test, dec) {
-  var val = document.defaultView.getComputedStyle($('t'), "").
+  var val = document.defaultView.getComputedStyle($('t')).
               getPropertyCSSValue("text-decoration");
   isnot(val, null, testname + " (CSS value): " + dec);
 

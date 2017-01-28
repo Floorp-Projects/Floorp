@@ -24,7 +24,7 @@ var SidebarUtils = {
       // respectively.)  Therefore, we make sure to exclude the blank area
       // before the tree item icon (that is, to the left or right of it in
       // LTR and RTL modes, respectively) from the click target area.
-      var isRTL = window.getComputedStyle(aTree, null).direction == "rtl";
+      var isRTL = window.getComputedStyle(aTree).direction == "rtl";
       if (isRTL)
         mouseInGutter = aEvent.clientX > rect.x;
       else

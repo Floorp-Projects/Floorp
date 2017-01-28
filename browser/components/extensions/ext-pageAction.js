@@ -154,7 +154,7 @@ PageAction.prototype = {
   },
 
   handleEvent(event) {
-    const window = event.target.ownerDocument.defaultView;
+    const window = event.target.ownerGlobal;
 
     switch (event.type) {
       case "click":

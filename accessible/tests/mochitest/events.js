@@ -112,7 +112,7 @@ function waveOverImageMap(aImageMapID)
 {
   var imageMapNode = getNode(aImageMapID);
   synthesizeMouse(imageMapNode, 10, 10, { type: "mousemove" },
-                  imageMapNode.ownerDocument.defaultView);
+                  imageMapNode.ownerGlobal);
 }
 
 /**
@@ -1597,7 +1597,7 @@ function moveCaretToDOMPoint(aID, aDOMPointNodeID, aDOMPointOffset,
     if (this.focusNode)
       this.focusNode.focus();
 
-    var selection = this.DOMPointNode.ownerDocument.defaultView.getSelection();
+    var selection = this.DOMPointNode.ownerGlobal.getSelection();
     var selRange = selection.getRangeAt(0);
     selRange.setStart(this.DOMPointNode, aDOMPointOffset);
     selRange.collapse(true);

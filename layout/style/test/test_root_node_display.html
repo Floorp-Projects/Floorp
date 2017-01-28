@@ -26,13 +26,13 @@ function test_display_value(val)
 {
   var floatElem = document.getElementById("float");
   floatElem.style.display = val;
-  var floatConversion = window.getComputedStyle(floatElem, null).display;
+  var floatConversion = window.getComputedStyle(floatElem).display;
   floatElem.style.display = "";
 
   var rootNode = document.documentElement;
   rootNode.style.display = val;
   rootNode.offsetHeight; // (Flush layout, to be sure layout can handle 'val')
-  var rootConversion = window.getComputedStyle(rootNode, null).display;
+  var rootConversion = window.getComputedStyle(rootNode).display;
   rootNode.style.display = "";
 
   // Special case: "display:list-item" does not get modified by 'float',

@@ -47,9 +47,6 @@ struct DBSStr {
     char *blobdir;
     int mode;
     PRBool readOnly;
-    PRFileMap *dbs_mapfile;
-    unsigned char *dbs_addr;
-    PRUint32 dbs_len;
     char staticBlobArea[BLOB_BUF_LEN];
 };
 
@@ -244,43 +241,6 @@ loser:
 }
 
 /*
- * we need to keep a address map in memory between calls to DBM.
- * remember what we have mapped can close it when we get another dbm
- * call.
- *
- * NOTE: Not all platforms support mapped files. This code is designed to
- * detect this at runtime. If map files aren't supported the OS will indicate
- * this by failing the PR_Memmap call. In this case we emulate mapped files
- * by just reading in the file into regular memory. We signal this state by
- * making dbs_mapfile NULL and dbs_addr non-NULL.
- */
-
-static void
-dbs_freemap(DBS *dbsp)
-{
-    if (dbsp->dbs_mapfile) {
-        PR_MemUnmap(dbsp->dbs_addr, dbsp->dbs_len);
-        PR_CloseFileMap(dbsp->dbs_mapfile);
-        dbsp->dbs_mapfile = NULL;
-        dbsp->dbs_addr = NULL;
-        dbsp->dbs_len = 0;
-    } else if (dbsp->dbs_addr) {
-        PORT_Free(dbsp->dbs_addr);
-        dbsp->dbs_addr = NULL;
-        dbsp->dbs_len = 0;
-    }
-    return;
-}
-
-static void
-dbs_setmap(DBS *dbsp, PRFileMap *mapfile, unsigned char *addr, PRUint32 len)
-{
-    dbsp->dbs_mapfile = mapfile;
-    dbsp->dbs_addr = addr;
-    dbsp->dbs_len = len;
-}
-
-/*
  * platforms that cannot map the file need to read it into a temp buffer.
  */
 static unsigned char *
@@ -317,7 +277,6 @@ dbs_readBlob(DBS *dbsp, DBT *data)
 {
     char *file = NULL;
     PRFileDesc *filed = NULL;
-    PRFileMap *mapfile = NULL;
     unsigned char *addr = NULL;
     int error;
     int len = -1;
@@ -344,7 +303,6 @@ dbs_readBlob(DBS *dbsp, DBT *data)
         goto loser;
     }
     PR_Close(filed);
-    dbs_setmap(dbsp, mapfile, addr, len);
 
     data->data = addr;
     data->size = len;
@@ -353,9 +311,6 @@ dbs_readBlob(DBS *dbsp, DBT *data)
 loser:
     /* preserve the error code */
     error = PR_GetError();
-    if (mapfile) {
-        PR_CloseFileMap(mapfile);
-    }
     if (filed) {
         PR_Close(filed);
     }
@@ -373,8 +328,6 @@ dbs_get(const DB *dbs, const DBT *key, DBT *data, unsigned int flags)
     DBS *dbsp = (DBS *)dbs;
     DB *db = (DB *)dbs->internal;
 
-    dbs_freemap(dbsp);
-
     ret = (*db->get)(db, key, data, flags);
     if ((ret == 0) && dbs_IsBlob(data)) {
         ret = dbs_readBlob(dbsp, data);
@@ -390,8 +343,6 @@ dbs_put(const DB *dbs, DBT *key, const DBT *data, unsigned int flags)
     int ret = 0;
     DBS *dbsp = (DBS *)dbs;
     DB *db = (DB *)dbs->internal;
-
-    dbs_freemap(dbsp);
 
     /* If the db is readonly, just pass the data down to rdb and let it fail */
     if (!dbsp->readOnly) {
@@ -425,10 +376,6 @@ static int
 dbs_sync(const DB *dbs, unsigned int flags)
 {
     DB *db = (DB *)dbs->internal;
-    DBS *dbsp = (DBS *)dbs;
-
-    dbs_freemap(dbsp);
-
     return (*db->sync)(db, flags);
 }
 
@@ -438,8 +385,6 @@ dbs_del(const DB *dbs, const DBT *key, unsigned int flags)
     int ret;
     DBS *dbsp = (DBS *)dbs;
     DB *db = (DB *)dbs->internal;
-
-    dbs_freemap(dbsp);
 
     if (!dbsp->readOnly) {
         DBT oldData;
@@ -459,8 +404,6 @@ dbs_seq(const DB *dbs, DBT *key, DBT *data, unsigned int flags)
     DBS *dbsp = (DBS *)dbs;
     DB *db = (DB *)dbs->internal;
 
-    dbs_freemap(dbsp);
-
     ret = (*db->seq)(db, key, data, flags);
     if ((ret == 0) && dbs_IsBlob(data)) {
         /* don't return a blob read as an error so traversals keep going */
@@ -477,7 +420,6 @@ dbs_close(DB *dbs)
     DB *db = (DB *)dbs->internal;
     int ret;
 
-    dbs_freemap(dbsp);
     ret = (*db->close)(db);
     PORT_Free(dbsp->blobdir);
     PORT_Free(dbsp);
@@ -568,9 +510,6 @@ dbsopen(const char *dbname, int flags, int mode, DBTYPE type,
     }
     dbsp->mode = mode;
     dbsp->readOnly = (PRBool)(flags == NO_RDONLY);
-    dbsp->dbs_mapfile = NULL;
-    dbsp->dbs_addr = NULL;
-    dbsp->dbs_len = 0;
 
     /* the real dbm call */
     db = dbopen(dbname, flags, mode, type, &dbs_hashInfo);

@@ -42,8 +42,7 @@
   var d = document;
   for (var i = 1; i <= 12; ++i) {
     d.getElementById("test" + i).style.height =
-      d.defaultView.getComputedStyle(d.getElementById("source" + i),
-                                     "").lineHeight;
+      d.defaultView.getComputedStyle(d.getElementById("source" + i)).lineHeight;
   }
 </script>
 </html>

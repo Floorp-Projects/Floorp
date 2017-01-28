@@ -340,16 +340,14 @@ protected:
   /**
    * Create a transaction for adding a style sheet.
    */
-  NS_IMETHOD CreateTxnForAddStyleSheet(
-               StyleSheet* aSheet,
-               AddStyleSheetTransaction** aTransaction);
+  already_AddRefed<mozilla::AddStyleSheetTransaction>
+    CreateTxnForAddStyleSheet(StyleSheet* aSheet);
 
   /**
    * Create a transaction for removing a style sheet.
    */
-  NS_IMETHOD CreateTxnForRemoveStyleSheet(
-               StyleSheet* aSheet,
-               RemoveStyleSheetTransaction** aTransaction);
+  already_AddRefed<mozilla::RemoveStyleSheetTransaction>
+    CreateTxnForRemoveStyleSheet(StyleSheet* aSheet);
 
   nsresult DeleteText(nsGenericDOMDataNode& aElement,
                       uint32_t aOffset, uint32_t aLength);

@@ -9,7 +9,6 @@
 #include "basicutil.h"
 #include "secder.h"
 #include "secitem.h"
-#include "secutil.h"
 #include "nspr.h"
 #include <stdio.h>
 

@@ -140,7 +140,7 @@ function testHTMLElements(list, isMac, expectedNoRingsOnWin)
 
     synthesizeMouse(elem, 8, 8, { }, childwin);
     is(childdoc.activeElement, shouldFocus ? elem : childdoc.body, "mouse click on " + list[e]);
-    is(childwin.getComputedStyle(elem, "").outlineWidth, ringSize, "mouse click on " + list[e] + " ring");
+    is(childwin.getComputedStyle(elem).outlineWidth, ringSize, "mouse click on " + list[e] + " ring");
 
     if (childdoc.activeElement)
       childdoc.activeElement.blur();
@@ -149,7 +149,7 @@ function testHTMLElements(list, isMac, expectedNoRingsOnWin)
 
     elem.focus();
     is(childdoc.activeElement, elem, "focus() on " + list[e]);
-    is(childwin.getComputedStyle(elem, "").outlineWidth, ringSize,
+    is(childwin.getComputedStyle(elem).outlineWidth, ringSize,
        "focus() on " + list[e] + " ring");
 
     childdoc.activeElement.blur();

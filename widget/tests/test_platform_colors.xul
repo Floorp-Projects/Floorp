@@ -96,7 +96,7 @@ var colorbox = document.getElementById('colorbox');
 for (var c in colors) {
   dump("testing color " + c + "\n");
   colorbox.style.backgroundColor = c;
-  var rgb = document.defaultView.getComputedStyle(colorbox, null).getPropertyValue('background-color');
+  var rgb = document.defaultView.getComputedStyle(colorbox).getPropertyValue('background-color');
   ok(colors[c].indexOf(rgb) != -1 || colors[c].length == 8, 'platform color ' + c + ' is wrong: ' + rgb);
 }
 

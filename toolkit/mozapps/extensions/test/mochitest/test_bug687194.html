@@ -30,7 +30,7 @@
         let result;
         let threw = false;
         try {
-            let uri = ios.newURI(message.data.URI, null, null);
+            let uri = ios.newURI(message.data.URI);
             result = cr.convertChromeURL(uri).spec;
         } catch (e) {
             threw = true;

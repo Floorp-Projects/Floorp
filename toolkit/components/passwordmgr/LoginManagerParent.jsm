@@ -283,7 +283,7 @@ var LoginManagerParent = {
     function getPrompter() {
       var prompterSvc = Cc["@mozilla.org/login-manager/prompter;1"].
                         createInstance(Ci.nsILoginManagerPrompter);
-      prompterSvc.init(target.ownerDocument.defaultView);
+      prompterSvc.init(target.ownerGlobal);
       prompterSvc.browser = target;
       prompterSvc.opener = openerTopWindow;
       return prompterSvc;
@@ -472,7 +472,7 @@ var LoginManagerParent = {
     state.hasInsecureLoginForms = hasInsecureLoginForms;
 
     // Report the insecure login form state immediately.
-    browser.dispatchEvent(new browser.ownerDocument.defaultView
+    browser.dispatchEvent(new browser.ownerGlobal
                                  .CustomEvent("InsecureLoginFormsStateChange"));
   },
 };
