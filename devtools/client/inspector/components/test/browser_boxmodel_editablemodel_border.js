@@ -24,7 +24,7 @@ add_task(function* () {
      "Should have the right border");
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".old-boxmodel-border.old-boxmodel-top > span");
+  let span = view.doc.querySelector(".boxmodel-border.boxmodel-top > span");
   is(span.textContent, 0, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);

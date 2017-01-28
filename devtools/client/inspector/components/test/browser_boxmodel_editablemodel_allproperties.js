@@ -32,7 +32,7 @@ function* testEditing(inspector, view, testActor) {
 
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".old-boxmodel-padding.old-boxmodel-bottom > span");
+  let span = view.doc.querySelector(".boxmodel-padding.boxmodel-bottom > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -63,7 +63,7 @@ function* testEditingAndCanceling(inspector, view, testActor) {
 
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".old-boxmodel-padding.old-boxmodel-left > span");
+  let span = view.doc.querySelector(".boxmodel-padding.boxmodel-left > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -91,7 +91,7 @@ function* testDeleting(inspector, view, testActor) {
 
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".old-boxmodel-padding.old-boxmodel-left > span");
+  let span = view.doc.querySelector(".boxmodel-padding.boxmodel-left > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -122,7 +122,7 @@ function* testDeletingAndCanceling(inspector, view, testActor) {
 
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".old-boxmodel-padding.old-boxmodel-left > span");
+  let span = view.doc.querySelector(".boxmodel-padding.boxmodel-left > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);

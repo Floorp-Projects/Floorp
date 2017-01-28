@@ -36,7 +36,7 @@ function* testEditingMargins(inspector, view, testActor) {
      "Should be no margin-top on the element.");
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".old-boxmodel-margin.old-boxmodel-top > span");
+  let span = view.doc.querySelector(".boxmodel-margin.boxmodel-top > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -66,7 +66,7 @@ function* testKeyBindings(inspector, view, testActor) {
      "Should be no margin-top on the element.");
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".old-boxmodel-margin.old-boxmodel-left > span");
+  let span = view.doc.querySelector(".boxmodel-margin.boxmodel-left > span");
   is(span.textContent, 10, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -109,7 +109,7 @@ function* testEscapeToUndo(inspector, view, testActor) {
      "Should be the right margin-top on the element.");
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".old-boxmodel-margin.old-boxmodel-left > span");
+  let span = view.doc.querySelector(".boxmodel-margin.boxmodel-left > span");
   is(span.textContent, 20, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -140,7 +140,7 @@ function* testDeletingValue(inspector, view, testActor) {
 
   yield selectNode("#div1", inspector);
 
-  let span = view.doc.querySelector(".old-boxmodel-margin.old-boxmodel-right > span");
+  let span = view.doc.querySelector(".boxmodel-margin.boxmodel-right > span");
   is(span.textContent, 15, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
@@ -167,7 +167,7 @@ function* testRefocusingOnClick(inspector, view, testActor) {
 
   yield selectNode("#div4", inspector);
 
-  let span = view.doc.querySelector(".old-boxmodel-margin.old-boxmodel-top > span");
+  let span = view.doc.querySelector(".boxmodel-margin.boxmodel-top > span");
   is(span.textContent, 1, "Should have the right value in the box model.");
 
   EventUtils.synthesizeMouseAtCenter(span, {}, view.doc.defaultView);
