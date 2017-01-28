@@ -402,17 +402,8 @@ Event::Constructor(const GlobalObject& aGlobal,
                    ErrorResult& aRv)
 {
   nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  return Constructor(t, aType, aParam);
-}
-
-// static
-already_AddRefed<Event>
-Event::Constructor(EventTarget* aEventTarget,
-                   const nsAString& aType,
-                   const EventInit& aParam)
-{
-  RefPtr<Event> e = new Event(aEventTarget, nullptr, nullptr);
-  bool trusted = e->Init(aEventTarget);
+  RefPtr<Event> e = new Event(t, nullptr, nullptr);
+  bool trusted = e->Init(t);
   e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
   e->SetTrusted(trusted);
   e->SetComposed(aParam.mComposed);
@@ -1216,7 +1207,7 @@ Event::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter)
 }
 
 NS_IMETHODIMP_(void)
-Event::SetOwner(EventTarget* aOwner)
+Event::SetOwner(mozilla::dom::EventTarget* aOwner)
 {
   mOwner = nullptr;
 
