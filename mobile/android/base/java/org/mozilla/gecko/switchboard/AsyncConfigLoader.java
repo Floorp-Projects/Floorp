@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-package com.keepsafe.switchboard;
+package org.mozilla.gecko.switchboard;
 
 
 import android.content.Context;
@@ -21,10 +21,10 @@ import android.os.AsyncTask;
 
 /**
  * An async loader to load user config in background thread based on internal generated UUID.
- * 
- * Call <code>AsyncConfigLoader.execute()</code> to load SwitchBoard.loadConfig() with own ID. 
+ *
+ * Call <code>AsyncConfigLoader.execute()</code> to load SwitchBoard.loadConfig() with own ID.
  * To use your custom UUID call <code>AsyncConfigLoader.execute(uuid)</code> with uuid being your unique user id
- * as a String 
+ * as a String
  *
  * @author Philipp Berner
  *

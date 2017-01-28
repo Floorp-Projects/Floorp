@@ -9,8 +9,8 @@ import android.content.Context;
 import android.util.Log;
 import android.text.TextUtils;
 
-import com.keepsafe.switchboard.Preferences;
-import com.keepsafe.switchboard.SwitchBoard;
+import org.mozilla.gecko.switchboard.Preferences;
+import org.mozilla.gecko.switchboard.SwitchBoard;
 
 import java.util.LinkedList;
 import java.util.List;

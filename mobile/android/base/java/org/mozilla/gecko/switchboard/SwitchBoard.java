@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-package com.keepsafe.switchboard;
+package org.mozilla.gecko.switchboard;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -23,7 +23,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.MissingResourceException;
@@ -43,18 +42,18 @@ import android.util.Log;
 
 /**
  * SwitchBoard is the core class of the KeepSafe Switchboard mobile A/B testing framework.
- * This class provides a bunch of static methods that can be used in your app to run A/B tests. 
- * 
- * The SwitchBoard supports production and staging environment. 
- * 
+ * This class provides a bunch of static methods that can be used in your app to run A/B tests.
+ *
+ * The SwitchBoard supports production and staging environment.
+ *
  * For usage <code>initDefaultServerUrls</code> for first time usage. Server URLs can be updates from
  * a remote location with <code>initConfigServerUrl</code>.
- * 
- * To run a experiment use <code>isInExperiment()</code>. The experiment name has to match the one you 
+ *
+ * To run a experiment use <code>isInExperiment()</code>. The experiment name has to match the one you
  * setup on the server.
- * All functions are design to be safe for programming mistakes and network connection issues. If the 
+ * All functions are design to be safe for programming mistakes and network connection issues. If the
  * experiment does not exists it will return false and pretend the user is not part of it.
- * 
+ *
  * @author Philipp Berner
  *
  */
@@ -223,7 +222,7 @@ public class SwitchBoard {
                 if (!country.matches(matchKeys.getString(KEY_COUNTRY))) {
                     return false;
                 }
-            } catch (MissingResourceException|JSONException e) {
+            } catch (MissingResourceException | JSONException e) {
                 Log.e(TAG, "Exception matching country", e);
             }
         }
@@ -245,7 +244,7 @@ public class SwitchBoard {
                 if (!lang.matches(matchKeys.getString(KEY_LANG))) {
                     return false;
                 }
-            } catch (MissingResourceException|JSONException e) {
+            } catch (MissingResourceException | JSONException e) {
                 Log.e(TAG, "Exception matching lang", e);
             }
         }
@@ -266,7 +265,7 @@ public class SwitchBoard {
                 if (!version.matches(matchKeys.getString(KEY_VERSION))) {
                     return false;
                 }
-            } catch (NameNotFoundException|JSONException e) {
+            } catch (NameNotFoundException | JSONException e) {
                 Log.e(TAG, "Exception matching version", e);
             }
         }

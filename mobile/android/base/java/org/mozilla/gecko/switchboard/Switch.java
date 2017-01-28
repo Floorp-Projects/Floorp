@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-package com.keepsafe.switchboard;
+package org.mozilla.gecko.switchboard;
 
 import org.json.JSONObject;
 
@@ -21,7 +21,7 @@ import android.content.Context;
 
 /**
  * Single instance of an existing experiment for easier and cleaner code.
- * 
+ *
  * @author Philipp Berner
  *
  */
@@ -64,7 +64,7 @@ public class Switch {
      * @return Values in JSONObject or null if non
      */
     public JSONObject getValues() {
-        if(hasValues())
+        if (hasValues())
             return SwitchBoard.getExperimentValuesFromJson(context, experimentName);
         else
             return null;
