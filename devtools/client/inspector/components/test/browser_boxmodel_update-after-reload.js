@@ -26,7 +26,8 @@ function* assertBoxModelView(inspector, view, testActor) {
   yield selectNode("p", inspector);
 
   info("Checking that the box model view shows the right value");
-  let paddingElt = view.doc.querySelector(".boxmodel-padding.boxmodel-top > span");
+  let paddingElt = view.doc.querySelector(
+    ".old-boxmodel-padding.old-boxmodel-top > span");
   is(paddingElt.textContent, "50");
 
   info("Listening for box model view changes and modifying the padding");
