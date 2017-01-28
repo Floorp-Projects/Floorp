@@ -23,11 +23,8 @@
           );
 
       worker.onerror = function(error) {
-        var msg = error.message;
-        if (msg.match(/^NetworkError/) || msg.match(/Failed to load worker script/)) {
-          // this means CSP blocked it
-          msg = "blocked";
-        }
+        // this means CSP blocked it
+        var msg = !("message" in error) ? "blocked" : e.message;
         window.parent.postMessage({id:page_id, message:msg}, 'http://mochi.test:8888');
         error.preventDefault();
       };
