@@ -48,6 +48,16 @@ extensions.registerSchemaAPI("devtools.inspectedWindow", "devtools_parent", cont
             return new SpreadArgs([evalResult.value, evalResult.exceptionInfo]);
           });
         },
+        async reload(options) {
+          const {ignoreCache, userAgent, injectedScript} = options || {};
+
+          if (!waitForInspectedWindowFront) {
+            waitForInspectedWindowFront = getInspectedWindowFront();
+          }
+
+          const front = await waitForInspectedWindowFront;
+          front.reload(callerInfo, {ignoreCache, userAgent, injectedScript});
+        },
       },
     },
   };
