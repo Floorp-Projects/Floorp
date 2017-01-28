@@ -28,7 +28,7 @@ class TestTargetTasks(unittest.TestCase):
             }
         }
         index_paths = ["{}.level-{}.<image>.hash.<hash>".format(INDEX_PREFIX, level)
-                       for level in range(1, 4)]
+                       for level in reversed(range(1, 4))]
         graph = TaskGraph(tasks={
             'a': TransformTask(
                 kind='fancy',

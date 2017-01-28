@@ -1052,8 +1052,6 @@ ContentParent::Init()
     obs->NotifyObservers(static_cast<nsIObserver*>(this), "ipc:content-created", cpId.get());
   }
 
-  Unused << SendRemoteType(mRemoteType);
-
 #ifdef ACCESSIBILITY
   // If accessibility is running in chrome process then start it in content
   // process.
@@ -1823,6 +1821,11 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
   // have established communications with the child.
   mMessageManager->InitWithCallback(this);
 
+  // Send the child its remote type. On Mac, this needs to be sent prior
+  // to the message we send to enable the Sandbox (SendStartProcessSandbox)
+  // because different remote types require different sandbox privileges.
+  Unused << SendRemoteType(mRemoteType);
+
   // Set the subprocess's priority.  We do this early on because we're likely
   // /lowering/ the process's CPU and memory priority, which it has inherited
   // from this process.
@@ -2424,11 +2427,14 @@ ContentParent::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-PBackgroundParent*
-ContentParent::AllocPBackgroundParent(Transport* aTransport,
-                                      ProcessId aOtherProcess)
+mozilla::ipc::IPCResult
+ContentParent::RecvInitBackground(Endpoint<PBackgroundParent>&& aEndpoint)
 {
-  return BackgroundParent::Alloc(this, aTransport, aOtherProcess);
+  if (!BackgroundParent::Alloc(this, Move(aEndpoint))) {
+    return IPC_FAIL(this, "BackgroundParent::Alloc failed");
+  }
+
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult

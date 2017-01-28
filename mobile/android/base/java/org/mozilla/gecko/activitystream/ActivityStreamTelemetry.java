@@ -12,6 +12,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.home.activitystream.model.TopSite;
 
 import java.util.HashMap;
 
@@ -27,6 +28,7 @@ public class ActivityStreamTelemetry {
         public final static String SOURCE_SUBTYPE = "source_subtype";
         public final static String ACTION_POSITION = "action_position";
         public final static String COUNT = "count";
+        public final static String PAGE_NUMBER = "page_number";
 
         // Values
         public final static String TYPE_TOPSITES = "topsites";
@@ -144,8 +146,13 @@ public class ActivityStreamTelemetry {
                 return this;
             }
 
-            public Builder forTopSiteType(@BrowserContract.TopSites.TopSiteType int type) {
-                switch (type) {
+            public Builder forTopSite(final TopSite topSite) {
+                this.set(
+                        ActivityStreamTelemetry.Contract.SOURCE_TYPE,
+                        ActivityStreamTelemetry.Contract.TYPE_TOPSITES
+                );
+
+                switch (topSite.getType()) {
                     case BrowserContract.TopSites.TYPE_PINNED:
                         this.set(Contract.SOURCE_SUBTYPE, Contract.SUBTYPE_PINNED);
                         break;
@@ -158,8 +165,9 @@ public class ActivityStreamTelemetry {
                     // While we also have a "blank" type, it is not used by Activity Stream.
                     case BrowserContract.TopSites.TYPE_BLANK:
                     default:
-                        throw new IllegalStateException("Unknown top site type: " + type);
+                        throw new IllegalStateException("Unknown top site type: " + topSite.getType());
                 }
+
                 return this;
             }
 
