@@ -36,8 +36,7 @@ function* testFirstPage(inspector, view, testActor) {
   yield selectNode("p", inspector);
 
   info("Checking that the box model view shows the right value");
-  let paddingElt = view.doc.querySelector(
-    ".old-boxmodel-padding.old-boxmodel-top > span");
+  let paddingElt = view.doc.querySelector(".boxmodel-padding.boxmodel-top > span");
   is(paddingElt.textContent, "50");
 
   info("Listening for box model view changes and modifying the padding");
@@ -57,7 +56,7 @@ function* testSecondPage(inspector, view, testActor) {
   yield selectNode("p", inspector);
 
   info("Checking that the box model view shows the right value");
-  let sizeElt = view.doc.querySelector(".old-boxmodel-size > span");
+  let sizeElt = view.doc.querySelector(".boxmodel-size > span");
   is(sizeElt.textContent, "100" + "\u00D7" + "100");
 
   info("Listening for box model view changes and modifying the size");
@@ -78,8 +77,7 @@ function* testBackToFirstPage(inspector, view, testActor) {
 
   info("Checking that the box model view shows the right value, which is the" +
     "modified value from step one because of the bfcache");
-  let paddingElt = view.doc.querySelector(
-    ".old-boxmodel-padding.old-boxmodel-top > span");
+  let paddingElt = view.doc.querySelector(".boxmodel-padding.boxmodel-top > span");
   is(paddingElt.textContent, "20");
 
   info("Listening for box model view changes and modifying the padding");

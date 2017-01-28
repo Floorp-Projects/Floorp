@@ -193,11 +193,11 @@ EditingSession.prototype = {
 function BoxModelView(inspector, document) {
   this.inspector = inspector;
   this.doc = document;
-  this.wrapper = this.doc.getElementById("old-boxmodel-wrapper");
-  this.container = this.doc.getElementById("old-boxmodel-container");
-  this.expander = this.doc.getElementById("old-boxmodel-expander");
-  this.sizeLabel = this.doc.querySelector(".old-boxmodel-size > span");
-  this.sizeHeadingLabel = this.doc.getElementById("old-boxmodel-element-size");
+  this.wrapper = this.doc.getElementById("boxmodel-wrapper");
+  this.container = this.doc.getElementById("boxmodel-container");
+  this.expander = this.doc.getElementById("boxmodel-expander");
+  this.sizeLabel = this.doc.querySelector(".boxmodel-size > span");
+  this.sizeHeadingLabel = this.doc.getElementById("boxmodel-element-size");
   this._geometryEditorHighlighter = null;
   this._cssProperties = getCssProperties(inspector.toolbox);
 
@@ -219,7 +219,7 @@ BoxModelView.prototype = {
 
     this.onToggleExpander = this.onToggleExpander.bind(this);
     this.expander.addEventListener("click", this.onToggleExpander);
-    let header = this.doc.getElementById("old-boxmodel-header");
+    let header = this.doc.getElementById("boxmodel-header");
     header.addEventListener("dblclick", this.onToggleExpander);
 
     this.onFilterComputedView = this.onFilterComputedView.bind(this);
@@ -239,10 +239,10 @@ BoxModelView.prototype = {
     this.moveFocus = this.moveFocus.bind(this);
     this.onFocus = this.onFocus.bind(this);
 
-    this.borderLayout = this.doc.getElementById("old-boxmodel-borders");
-    this.boxModel = this.doc.getElementById("old-boxmodel-wrapper");
-    this.marginLayout = this.doc.getElementById("old-boxmodel-margins");
-    this.paddingLayout = this.doc.getElementById("old-boxmodel-padding");
+    this.borderLayout = this.doc.getElementById("boxmodel-borders");
+    this.boxModel = this.doc.getElementById("boxmodel-wrapper");
+    this.marginLayout = this.doc.getElementById("boxmodel-margins");
+    this.paddingLayout = this.doc.getElementById("boxmodel-padding");
 
     this.layouts = {
       "margin": new Map([
@@ -277,67 +277,67 @@ BoxModelView.prototype = {
     // 'value' is the computed dimension, computed in update().
     this.map = {
       position: {
-        selector: "#old-boxmodel-element-position",
+        selector: "#boxmodel-element-position",
         property: "position",
         value: undefined
       },
       marginTop: {
-        selector: ".old-boxmodel-margin.old-boxmodel-top > span",
+        selector: ".boxmodel-margin.boxmodel-top > span",
         property: "margin-top",
         value: undefined
       },
       marginBottom: {
-        selector: ".old-boxmodel-margin.old-boxmodel-bottom > span",
+        selector: ".boxmodel-margin.boxmodel-bottom > span",
         property: "margin-bottom",
         value: undefined
       },
       marginLeft: {
-        selector: ".old-boxmodel-margin.old-boxmodel-left > span",
+        selector: ".boxmodel-margin.boxmodel-left > span",
         property: "margin-left",
         value: undefined
       },
       marginRight: {
-        selector: ".old-boxmodel-margin.old-boxmodel-right > span",
+        selector: ".boxmodel-margin.boxmodel-right > span",
         property: "margin-right",
         value: undefined
       },
       paddingTop: {
-        selector: ".old-boxmodel-padding.old-boxmodel-top > span",
+        selector: ".boxmodel-padding.boxmodel-top > span",
         property: "padding-top",
         value: undefined
       },
       paddingBottom: {
-        selector: ".old-boxmodel-padding.old-boxmodel-bottom > span",
+        selector: ".boxmodel-padding.boxmodel-bottom > span",
         property: "padding-bottom",
         value: undefined
       },
       paddingLeft: {
-        selector: ".old-boxmodel-padding.old-boxmodel-left > span",
+        selector: ".boxmodel-padding.boxmodel-left > span",
         property: "padding-left",
         value: undefined
       },
       paddingRight: {
-        selector: ".old-boxmodel-padding.old-boxmodel-right > span",
+        selector: ".boxmodel-padding.boxmodel-right > span",
         property: "padding-right",
         value: undefined
       },
       borderTop: {
-        selector: ".old-boxmodel-border.old-boxmodel-top > span",
+        selector: ".boxmodel-border.boxmodel-top > span",
         property: "border-top-width",
         value: undefined
       },
       borderBottom: {
-        selector: ".old-boxmodel-border.old-boxmodel-bottom > span",
+        selector: ".boxmodel-border.boxmodel-bottom > span",
         property: "border-bottom-width",
         value: undefined
       },
       borderLeft: {
-        selector: ".old-boxmodel-border.old-boxmodel-left > span",
+        selector: ".boxmodel-border.boxmodel-left > span",
         property: "border-left-width",
         value: undefined
       },
       borderRight: {
-        selector: ".old-boxmodel-border.old-boxmodel-right > span",
+        selector: ".boxmodel-border.boxmodel-right > span",
         property: "border-right-width",
         value: undefined
       }
@@ -359,13 +359,13 @@ BoxModelView.prototype = {
 
     this.onNewNode();
 
-    let nodeGeometry = this.doc.getElementById("old-layout-geometry-editor");
+    let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
     this.onGeometryButtonClick = this.onGeometryButtonClick.bind(this);
     nodeGeometry.addEventListener("click", this.onGeometryButtonClick);
   },
 
   initBoxModelHighlighter: function () {
-    let highlightElts = this.doc.querySelectorAll("#old-boxmodel-container *[title]");
+    let highlightElts = this.doc.querySelectorAll("#boxmodel-container *[title]");
     this.onHighlightMouseOver = this.onHighlightMouseOver.bind(this);
     this.onHighlightMouseOut = this.onHighlightMouseOut.bind(this);
 
@@ -421,7 +421,7 @@ BoxModelView.prototype = {
         name: dimension.property
       },
       start: self => {
-        self.elt.parentNode.classList.add("old-boxmodel-editing");
+        self.elt.parentNode.classList.add("boxmodel-editing");
       },
       change: value => {
         if (NUMERIC.test(value)) {
@@ -443,7 +443,7 @@ BoxModelView.prototype = {
         session.setProperties(properties).catch(e => console.error(e));
       },
       done: (value, commit) => {
-        editor.elt.parentNode.classList.remove("old-boxmodel-editing");
+        editor.elt.parentNode.classList.remove("boxmodel-editing");
         if (!commit) {
           session.revert().then(() => {
             session.destroy();
@@ -479,7 +479,7 @@ BoxModelView.prototype = {
    * Destroy the nodes. Remove listeners.
    */
   destroy: function () {
-    let highlightElts = this.doc.querySelectorAll("#old-boxmodel-container *[title]");
+    let highlightElts = this.doc.querySelectorAll("#boxmodel-container *[title]");
 
     for (let element of highlightElts) {
       element.removeEventListener("mouseover", this.onHighlightMouseOver, true);
@@ -487,10 +487,10 @@ BoxModelView.prototype = {
     }
 
     this.expander.removeEventListener("click", this.onToggleExpander);
-    let header = this.doc.getElementById("old-boxmodel-header");
+    let header = this.doc.getElementById("boxmodel-header");
     header.removeEventListener("dblclick", this.onToggleExpander);
 
-    let nodeGeometry = this.doc.getElementById("old-layout-geometry-editor");
+    let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
     nodeGeometry.removeEventListener("click", this.onGeometryButtonClick);
 
     this.boxModel.removeEventListener("click", this.onLevelClick, true);
@@ -706,8 +706,7 @@ BoxModelView.prototype = {
    */
   getEditBoxes: function (editLevel) {
     let dataLevel = this.doc.getElementById(editLevel).getAttribute("data-box");
-    return [...this.doc.querySelectorAll(
-      `[data-box="${dataLevel}"].old-boxmodel-editable`)];
+    return [...this.doc.querySelectorAll(`[data-box="${dataLevel}"].boxmodel-editable`)];
   },
 
   onSidebarSelect: function (e, sidebar) {
@@ -990,7 +989,7 @@ BoxModelView.prototype = {
   showGeometryEditor: function (showOnlyIfActive = false) {
     let toolbox = this.inspector.toolbox;
     let nodeFront = this.inspector.selection.nodeFront;
-    let nodeGeometry = this.doc.getElementById("old-layout-geometry-editor");
+    let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
     let isActive = nodeGeometry.hasAttribute("checked");
 
     if (showOnlyIfActive && !isActive) {
@@ -1031,7 +1030,7 @@ BoxModelView.prototype = {
     }
 
     if (updateButton) {
-      let nodeGeometry = this.doc.getElementById("old-layout-geometry-editor");
+      let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
       nodeGeometry.removeAttribute("checked");
     }
   },
@@ -1048,17 +1047,17 @@ BoxModelView.prototype = {
       isEditable = yield this.inspector.pageStyle.isPositionEditable(node);
     }
 
-    let nodeGeometry = this.doc.getElementById("old-layout-geometry-editor");
+    let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
     nodeGeometry.style.visibility = isEditable ? "visible" : "hidden";
   }),
 
   manageOverflowingText: function (span) {
     let classList = span.parentNode.classList;
 
-    if (classList.contains("old-boxmodel-left") ||
-        classList.contains("old-boxmodel-right")) {
+    if (classList.contains("boxmodel-left") ||
+        classList.contains("boxmodel-right")) {
       let force = span.textContent.length > LONG_TEXT_ROTATE_LIMIT;
-      classList.toggle("old-boxmodel-rotate", force);
+      classList.toggle("boxmodel-rotate", force);
     }
   }
 };
