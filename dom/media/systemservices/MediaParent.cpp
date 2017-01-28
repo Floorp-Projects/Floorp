@@ -62,17 +62,21 @@ class OriginKeyStore : public nsISupports
     OriginKeysTable() : mPersistCount(0) {}
 
     nsresult
-    GetOriginKey(const nsACString& aOrigin, nsCString& aResult, bool aPersist = false)
+    GetPrincipalKey(const ipc::PrincipalInfo& aPrincipalInfo, nsCString& aResult,
+                    bool aPersist = false)
     {
+      nsAutoCString principalString;
+      PrincipalInfoToString(aPrincipalInfo, principalString);
+
       OriginKey* key;
-      if (!mKeys.Get(aOrigin, &key)) {
+      if (!mKeys.Get(principalString, &key)) {
         nsCString salt; // Make a new one
         nsresult rv = GenerateRandomName(salt, key->EncodedLength);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
         key = new OriginKey(salt);
-        mKeys.Put(aOrigin, key);
+        mKeys.Put(principalString, key);
       }
       if (aPersist && !key->mSecondsStamp) {
         key->mSecondsStamp = PR_Now() / PR_USEC_PER_SEC;
@@ -100,6 +104,60 @@ class OriginKeyStore : public nsISupports
       mPersistCount = 0;
     }
 
+  private:
+    void
+    PrincipalInfoToString(const ipc::PrincipalInfo& aPrincipalInfo,
+                          nsAutoCString aString)
+    {
+      switch (aPrincipalInfo.type()) {
+        case ipc::PrincipalInfo::TSystemPrincipalInfo:
+          aString.Assign("[System Principal]");
+          return;
+
+        case ipc::PrincipalInfo::TNullPrincipalInfo: {
+          const ipc::NullPrincipalInfo& info =
+            aPrincipalInfo.get_NullPrincipalInfo();
+          aString.Assign(info.spec());
+          return;
+        }
+
+        case ipc::PrincipalInfo::TContentPrincipalInfo: {
+          const ipc::ContentPrincipalInfo& info =
+            aPrincipalInfo.get_ContentPrincipalInfo();
+          aString.Assign(info.spec());
+
+          nsAutoCString suffix;
+          info.attrs().CreateSuffix(suffix);
+          suffix.Append(suffix);
+          return;
+        }
+
+        case ipc::PrincipalInfo::TExpandedPrincipalInfo: {
+          const ipc::ExpandedPrincipalInfo& info =
+            aPrincipalInfo.get_ExpandedPrincipalInfo();
+
+          aString.Assign("[Expanded Principal [");
+
+          for (uint32_t i = 0; i < info.whitelist().Length(); i++) {
+            nsAutoCString str;
+            PrincipalInfoToString(info.whitelist()[i], str);
+
+            if (i != 0) {
+              aString.Append(", ");
+            }
+
+            aString.Append(str);
+          }
+
+          aString.Append("]]");
+          return;
+        }
+
+        default:
+          MOZ_CRASH("Unknown PrincipalInfo type!");
+      }
+    }
+
   protected:
     nsClassHashtable<nsCStringHashKey, OriginKey> mKeys;
     size_t mPersistCount;
@@ -111,10 +169,11 @@ class OriginKeyStore : public nsISupports
     OriginKeysLoader() {}
 
     nsresult
-    GetOriginKey(const nsACString& aOrigin, nsCString& aResult, bool aPersist)
+    GetPrincipalKey(const ipc::PrincipalInfo& aPrincipalInfo,
+                    nsCString& aResult, bool aPersist = false)
     {
       auto before = mPersistCount;
-      OriginKeysTable::GetOriginKey(aOrigin, aResult, aPersist);
+      OriginKeysTable::GetPrincipalKey(aPrincipalInfo, aResult, aPersist);
       if (mPersistCount != before) {
         Save();
       }
@@ -353,13 +412,13 @@ public:
 
 NS_IMPL_ISUPPORTS0(OriginKeyStore)
 
-bool NonE10s::SendGetOriginKeyResponse(const uint32_t& aRequestId,
-                                       nsCString aKey) {
+bool NonE10s::SendGetPrincipalKeyResponse(const uint32_t& aRequestId,
+                                          nsCString aKey) {
   MediaManager* mgr = MediaManager::GetIfExists();
   if (!mgr) {
     return false;
   }
-  RefPtr<Pledge<nsCString>> pledge = mgr->mGetOriginKeyPledges.Remove(aRequestId);
+  RefPtr<Pledge<nsCString>> pledge = mgr->mGetPrincipalKeyPledges.Remove(aRequestId);
   if (pledge) {
     pledge->Resolve(aKey);
   }
@@ -367,9 +426,9 @@ bool NonE10s::SendGetOriginKeyResponse(const uint32_t& aRequestId,
 }
 
 template<class Super> mozilla::ipc::IPCResult
-Parent<Super>::RecvGetOriginKey(const uint32_t& aRequestId,
-                                const nsCString& aOrigin,
-                                const bool& aPersist)
+Parent<Super>::RecvGetPrincipalKey(const uint32_t& aRequestId,
+                                   const ipc::PrincipalInfo& aPrincipalInfo,
+                                   const bool& aPersist)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -393,16 +452,16 @@ Parent<Super>::RecvGetOriginKey(const uint32_t& aRequestId,
   MOZ_ASSERT(sts);
   RefPtr<Parent<Super>> that(this);
 
-  rv = sts->Dispatch(NewRunnableFrom([this, that, id, profileDir, aOrigin,
-                                      aPersist]() -> nsresult {
+  rv = sts->Dispatch(NewRunnableFrom([this, that, id, profileDir,
+                                      aPrincipalInfo, aPersist]() -> nsresult {
     MOZ_ASSERT(!NS_IsMainThread());
     mOriginKeyStore->mOriginKeys.SetProfileDir(profileDir);
 
     nsAutoCString result;
-    if (OriginAttributes::IsPrivateBrowsing(aOrigin)) {
-      mOriginKeyStore->mPrivateBrowsingOriginKeys.GetOriginKey(aOrigin, result);
+    if (IsPincipalInfoPrivate(aPrincipalInfo)) {
+      mOriginKeyStore->mPrivateBrowsingOriginKeys.GetPrincipalKey(aPrincipalInfo, result);
     } else {
-      mOriginKeyStore->mOriginKeys.GetOriginKey(aOrigin, result, aPersist);
+      mOriginKeyStore->mOriginKeys.GetPrincipalKey(aPrincipalInfo, result, aPersist);
     }
 
     // Pass result back to main thread.
@@ -433,7 +492,7 @@ Parent<Super>::RecvGetOriginKey(const uint32_t& aRequestId,
     if (mDestroyed) {
       return NS_OK;
     }
-    Unused << this->SendGetOriginKeyResponse(aRequestId, aKey);
+    Unused << this->SendGetPrincipalKeyResponse(aRequestId, aKey);
     return NS_OK;
   });
   return IPC_OK();
