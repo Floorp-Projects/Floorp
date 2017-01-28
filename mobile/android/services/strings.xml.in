@@ -75,9 +75,10 @@
 <string name="fxaccount_sync_sign_in_error_notification_text">&fxaccount_sync_sign_in_error_notification_text2;</string>
 
 <!-- Remove Account -->
-<string name="fxaccount_remove_account_dialog_title">&fxaccount_remove_account_dialog_title;</string>
-<string name="fxaccount_remove_account_dialog_message">&fxaccount_remove_account_dialog_message;</string>
-<string name="fxaccount_remove_account_toast">&fxaccount_remove_account_toast;</string>
+<string name="fxaccount_remove_account_dialog_title">&fxaccount_remove_account_dialog_title2;</string>
+<string name="fxaccount_remove_account_dialog_message">&fxaccount_remove_account_dialog_message2;</string>
+<string name="fxaccount_remove_account_dialog_action_confirm">&fxaccount_remove_account_dialog_action_confirm;</string>
+<string name="fxaccount_remove_account_toast">&fxaccount_remove_account_toast2;</string>
 
 <string name="fxaccount_sync_finish_migrating_notification_title">&fxaccount_sync_finish_migrating_notification_title;</string>
 <string name="fxaccount_sync_finish_migrating_notification_text">&fxaccount_sync_finish_migrating_notification_text;</string>
