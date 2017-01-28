@@ -29,6 +29,10 @@ public:
   virtual void virtualDestroyNSSReference() override;
   void destructorSafeDestroyNSSReference();
 
+  // Initializes the token and constructs and persists keys, if needed. Asserts
+  // that it is only called by the main thread.
+  nsresult Init();
+
 private:
   bool mInitialized;
   mozilla::UniquePK11SymKey mWrappingKey;
