@@ -914,10 +914,10 @@ DecodeGlobalType(Decoder& d, ValType* type, bool* isMutable)
     if (!d.readVarU32(&flags))
         return d.fail("expected global flags");
 
-    if (flags & ~uint32_t(GlobalFlags::AllowedMask))
+    if (flags & ~uint32_t(GlobalTypeImmediate::AllowedMask))
         return d.fail("unexpected bits set in global flags");
 
-    *isMutable = flags & uint32_t(GlobalFlags::IsMutable);
+    *isMutable = flags & uint32_t(GlobalTypeImmediate::IsMutable);
     return true;
 }
 

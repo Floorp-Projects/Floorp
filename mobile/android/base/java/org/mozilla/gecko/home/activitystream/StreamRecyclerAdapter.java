@@ -103,7 +103,7 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
             final int cursorPosition = translatePositionToCursor(position);
 
             highlightsCursor.moveToPosition(cursorPosition);
-            ((HighlightItem) holder).bind(highlightsCursor, tilesWidth,  tilesHeight);
+            ((HighlightItem) holder).bind(highlightsCursor, cursorPosition, tilesWidth,  tilesHeight);
         } else if (type == TopPanel.LAYOUT_ID) {
             ((TopPanel) holder).bind(topSitesCursor, tiles, tilesWidth, tilesHeight);
         }
