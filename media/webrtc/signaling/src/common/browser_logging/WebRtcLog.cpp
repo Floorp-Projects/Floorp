@@ -25,7 +25,6 @@ using mozilla::LogLevel;
 
 static int gWebRtcTraceLoggingOn = 0;
 
-
 #if defined(ANDROID)
 static const char *default_tmp_dir = "/dev/null";
 static const char *default_log_name = "nspr";
@@ -33,20 +32,13 @@ static const char *default_log_name = "nspr";
 NS_NAMED_LITERAL_CSTRING(default_log_name, "WebRTC.log");
 #endif
 
+static mozilla::LazyLogModule sLogAEC("AEC");
+
 static PRLogModuleInfo* GetWebRtcTraceLog()
 {
   static PRLogModuleInfo *sLog;
   if (!sLog) {
     sLog = PR_NewLogModule("webrtc_trace");
-  }
-  return sLog;
-}
-
-static PRLogModuleInfo* GetWebRtcAECLog()
-{
-  static PRLogModuleInfo *sLog;
-  if (!sLog) {
-    sLog = PR_NewLogModule("AEC");
   }
   return sLog;
 }
@@ -93,8 +85,7 @@ void CheckOverrides(uint32_t *aTraceMask, nsACString *aLogFile, bool *aMultiLog)
     *aTraceMask = log_info->level;
   }
 
-  log_info = GetWebRtcAECLog();
-  if (log_info && (log_info->level != 0)) {
+    if (sLogAEC && ((int)(static_cast<mozilla::LogModule*>(sLogAEC)->Level()) != 0)) {
     webrtc::Trace::set_aec_debug(true);
   }
 
