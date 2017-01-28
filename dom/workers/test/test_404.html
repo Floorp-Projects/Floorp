@@ -25,6 +25,7 @@ Tests of DOM Worker Threads
 
   worker.onerror = function(event) {
     is(event.target, worker);
+    is(event.message, 'NetworkError: Failed to load worker script at "nonexistent_worker.js"');
     event.preventDefault();
     SimpleTest.finish();
   };
@@ -37,3 +38,4 @@ Tests of DOM Worker Threads
 </pre>
 </body>
 </html>
+

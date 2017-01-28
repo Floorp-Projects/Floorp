@@ -403,8 +403,7 @@ public:
                                 const nsAString& aLine,
                                 uint32_t aLineNumber,
                                 uint32_t aColumnNumber,
-                                uint32_t aFlags,
-                                bool aIsErrorEvent);
+                                uint32_t aFlags);
 
   void
   WorkerScriptLoaded();
