@@ -50,6 +50,10 @@ struct MediaTrackConstraints;
 struct MediaTrackConstraintSet;
 } // namespace dom
 
+namespace ipc {
+class PrincipalInfo;
+}
+
 class MediaManager;
 class GetUserMediaCallbackMediaStreamListener;
 class GetUserMediaTask;
@@ -73,7 +77,7 @@ public:
   virtual Source* GetSource() = 0;
   nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                     const MediaEnginePrefs &aPrefs,
-                    const nsACString& aOrigin,
+                    const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint);
   nsresult Restart(const dom::MediaTrackConstraints &aConstraints,
                    const MediaEnginePrefs &aPrefs,
@@ -331,7 +335,7 @@ private:
   media::CoatCheck<PledgeChar> mOutstandingCharPledges;
   media::CoatCheck<PledgeVoid> mOutstandingVoidPledges;
 public:
-  media::CoatCheck<media::Pledge<nsCString>> mGetOriginKeyPledges;
+  media::CoatCheck<media::Pledge<nsCString>> mGetPrincipalKeyPledges;
   RefPtr<media::Parent<media::NonE10s>> mNonE10sParent;
 };
 
