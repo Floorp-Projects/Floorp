@@ -4,6 +4,24 @@ var summary =
 
 print(BUGNUMBER + ": " + summary);
 
+var called = 0;
+function reset() {
+  called = 0;
+}
+var obj = {
+  [Symbol.iterator]() {
+    return {
+      next() {
+        return { value: 10, done: false };
+      },
+      return() {
+        called++;
+        return {};
+      }
+    };
+  }
+};
+
 var a = (function () {
     for (var x in [0]) {
         try {} finally {
@@ -13,32 +31,37 @@ var a = (function () {
 })();
 assertEq(a, 11);
 
+reset();
 var b = (function () {
-    for (var x of [0]) {
+    for (var x of obj) {
         try {} finally {
             return 12;
         }
     }
 })();
+assertEq(called, 1);
 assertEq(b, 12);
 
+reset();
 var c = (function () {
     for (var x in [0]) {
-        for (var y of [0]) {
+        for (var y of obj) {
             try {} finally {
                 return 13;
             }
         }
     }
 })();
+assertEq(called, 1);
 assertEq(c, 13);
 
+reset();
 var d = (function () {
     for (var x in [0]) {
-        for (var y of [0]) {
+        for (var y of obj) {
             try {} finally {
                 for (var z in [0]) {
-                    for (var w of [0]) {
+                    for (var w of obj) {
                         try {} finally {
                             return 14;
                         }
@@ -48,6 +71,7 @@ var d = (function () {
         }
     }
 })();
+assertEq(called, 2);
 assertEq(d, 14);
 
 if (typeof reportCompare === "function")
