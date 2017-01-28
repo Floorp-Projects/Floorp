@@ -8,11 +8,13 @@ package org.mozilla.gecko.util;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
+import org.mockito.Matchers;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.util.FileUtils.FileLastModifiedComparator;
 import org.mozilla.gecko.util.FileUtils.FilenameRegexFilter;
@@ -32,6 +34,11 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import static junit.framework.Assert.*;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.notNull;
 import static org.mockito.Mockito.*;
 
 /**
@@ -335,5 +342,19 @@ public class TestFileUtils {
         assertTrue("Old file is less than new file", testComparator.compare(oldFile, newFile) < 0);
         assertTrue("New file is greater than old file", testComparator.compare(newFile, oldFile) > 0);
         assertTrue("New files are equal", testComparator.compare(newFile, equallyNewFile) == 0);
+    }
+
+    @Test
+    public void testCreateTempDir() throws Exception {
+        String prefix = "tmp";
+        File directory = tempDir.newFolder();
+        File tempDir1 = FileUtils.createTempDir(directory, prefix);
+        File tempDir2 = FileUtils.createTempDir(directory, prefix);
+
+        assertThat(tempDir1, not(nullValue()));
+        assertThat(tempDir1.isDirectory(), is(true));
+        assertThat(tempDir2, not(nullValue()));
+        assertThat(tempDir2.isDirectory(), is(true));
+        assertThat(tempDir1.getAbsolutePath(), is(not(tempDir2.getAbsolutePath())));
     }
 }
