@@ -8,6 +8,18 @@ import sys
 __all__ = ['read_ini', 'combine_fields']
 
 
+class IniParseError(Exception):
+    def __init__(self, fp, linenum, msg):
+        if isinstance(fp, basestring):
+            path = fp
+        elif hasattr(fp, 'name'):
+            path = fp.name
+        else:
+            path = getattr(fp, 'path', 'unknown')
+        msg = "Error parsing manifest file '{}', line {}: {}".format(path, linenum, msg)
+        super(IniParseError, self).__init__(msg)
+
+
 def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
              comments=None, separators=None, strict=True, handle_defaults=True):
     """
@@ -89,8 +101,8 @@ def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
 
         # if there aren't any sections yet, something bad happen
         if not section_names:
-            raise Exception("Error parsing manifest file '%s', line %s: No sections found" %
-                            (getattr(fp, 'name', 'unknown'), linenum))
+            raise IniParseError(fp, linenum, "Expected a comment or section, "
+                                             "instead found '{}'".format(stripped))
 
         # (key, value) pair
         for separator in separators:
@@ -114,8 +126,7 @@ def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
                 current_section[key] = value
             else:
                 # something bad happened!
-                raise Exception("Error parsing manifest file '%s', line %s" %
-                                (getattr(fp, 'name', 'unknown'), linenum))
+                raise IniParseError(fp, linenum, "Unexpected line '{}'".format(stripped))
 
     # server-root is a special os path declared relative to the manifest file.
     # inheritance demands we expand it as absolute

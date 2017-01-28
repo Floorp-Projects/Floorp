@@ -10,8 +10,7 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 
 function login_handling(handler) {
   return function(request, response) {
-    if (basic_auth_matches(request, "johndoe", "ilovejane") ||
-        basic_auth_matches(request, "janedoe", "ilovejohn")) {
+    if (has_hawk_header(request)) {
       handler(request, response);
     } else {
       let body = "Unauthorized";
@@ -60,16 +59,14 @@ function setup() {
     "/1.1/janedoe/storage/meta/global": janeU("meta", new ServerWBO("global").handler())
   });
 
-  Service.serverURL = server.baseURI;
   return server;
 }
 
-add_test(function test_login_logout() {
+add_task(async function test_login_logout() {
   let server = setup();
 
   try {
     _("Force the initial state.");
-    ensureLegacyIdentityManager();
     Service.status.service = STATUS_OK;
     do_check_eq(Service.status.service, STATUS_OK);
 
@@ -79,42 +76,9 @@ add_test(function test_login_logout() {
     do_check_eq(Service.status.login, LOGIN_FAILED_NO_USERNAME);
     do_check_false(Service.isLoggedIn);
 
-    _("Try again with username and password set.");
-    Service.identity.account = "johndoe";
-    Service.identity.basicPassword = "ilovejane";
+    _("Try again with a configured account");
+    await configureIdentity({ username: "johndoe" }, server);
     Service.login();
-    do_check_eq(Service.status.service, CLIENT_NOT_CONFIGURED);
-    do_check_eq(Service.status.login, LOGIN_FAILED_NO_PASSPHRASE);
-    do_check_false(Service.isLoggedIn);
-
-    _("Success if passphrase is set.");
-    Service.identity.syncKey = "foo";
-    Service.login();
-    do_check_eq(Service.status.service, STATUS_OK);
-    do_check_eq(Service.status.login, LOGIN_SUCCEEDED);
-    do_check_true(Service.isLoggedIn);
-
-    _("We can also pass username, password and passphrase to login().");
-    Service.login("janedoe", "incorrectpassword", "bar");
-    setBasicCredentials("janedoe", "incorrectpassword", "bar");
-    do_check_eq(Service.status.service, LOGIN_FAILED);
-    do_check_eq(Service.status.login, LOGIN_FAILED_LOGIN_REJECTED);
-    do_check_false(Service.isLoggedIn);
-
-    _("Try again with correct password.");
-    Service.login("janedoe", "ilovejohn");
-    do_check_eq(Service.status.service, STATUS_OK);
-    do_check_eq(Service.status.login, LOGIN_SUCCEEDED);
-    do_check_true(Service.isLoggedIn);
-
-    _("Calling login() with parameters when the client is unconfigured sends notification.");
-    let notified = false;
-    Svc.Obs.add("weave:service:setup-complete", function() {
-      notified = true;
-    });
-    setBasicCredentials(null, null, null);
-    Service.login("janedoe", "ilovejohn", "bar");
-    do_check_true(notified);
     do_check_eq(Service.status.service, STATUS_OK);
     do_check_eq(Service.status.login, LOGIN_SUCCEEDED);
     do_check_true(Service.isLoggedIn);
@@ -129,13 +93,13 @@ add_test(function test_login_logout() {
 
   } finally {
     Svc.Prefs.resetBranch("");
-    server.stop(run_next_test);
+    await promiseStopServer(server);
   }
 });
 
-add_test(function test_login_on_sync() {
+add_task(async function test_login_on_sync() {
   let server = setup();
-  setBasicCredentials("johndoe", "ilovejane", "bar");
+  await configureIdentity({ username: "johndoe" }, server);
 
   try {
     _("Sync calls login.");
@@ -197,13 +161,7 @@ add_test(function test_login_on_sync() {
 
     // Testing exception handling if master password dialog is canceled.
     // Do this by monkeypatching.
-    let oldGetter = Service.identity.__lookupGetter__("syncKey");
-    let oldSetter = Service.identity.__lookupSetter__("syncKey");
-    _("Old passphrase function is " + oldGetter);
-    Service.identity.__defineGetter__("syncKey",
-                           function() {
-                             throw "User canceled Master Password entry";
-                           });
+    Service.identity.unlockAndVerifyAuthState = () => Promise.resolve(MASTER_PASSWORD_LOCKED);
 
     let cSTCalled = false;
     let lockedSyncCalled = false;
@@ -225,14 +183,11 @@ add_test(function test_login_on_sync() {
     do_check_true(cSTCalled);
     do_check_false(lockedSyncCalled);
 
-    Service.identity.__defineGetter__("syncKey", oldGetter);
-    Service.identity.__defineSetter__("syncKey", oldSetter);
-
     // N.B., a bunch of methods are stubbed at this point. Be careful putting
     // new tests after this point!
 
   } finally {
     Svc.Prefs.resetBranch("");
-    server.stop(run_next_test);
+    await promiseStopServer(server);
   }
 });

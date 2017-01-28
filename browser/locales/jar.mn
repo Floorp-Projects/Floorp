@@ -20,7 +20,6 @@
     locale/browser/aboutSearchReset.dtd            (%chrome/browser/aboutSearchReset.dtd)
     locale/browser/aboutSessionRestore.dtd         (%chrome/browser/aboutSessionRestore.dtd)
     locale/browser/aboutTabCrashed.dtd             (%chrome/browser/aboutTabCrashed.dtd)
-    locale/browser/syncCustomize.dtd               (%chrome/browser/syncCustomize.dtd)
     locale/browser/aboutSyncTabs.dtd               (%chrome/browser/aboutSyncTabs.dtd)
     locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
     locale/browser/baseMenuOverlay.dtd             (%chrome/browser/baseMenuOverlay.dtd)
@@ -85,12 +84,7 @@
     locale/browser/preferences/siteDataSettings.dtd   (%chrome/browser/preferences/siteDataSettings.dtd)
     locale/browser/preferences/translation.dtd        (%chrome/browser/preferences/translation.dtd)
     locale/browser/syncBrand.dtd                (%chrome/browser/syncBrand.dtd)
-    locale/browser/syncSetup.dtd                (%chrome/browser/syncSetup.dtd)
     locale/browser/syncSetup.properties         (%chrome/browser/syncSetup.properties)
-    locale/browser/syncGenericChange.properties         (%chrome/browser/syncGenericChange.properties)
-    locale/browser/syncKey.dtd                  (%chrome/browser/syncKey.dtd)
-    locale/browser/syncQuota.dtd                (%chrome/browser/syncQuota.dtd)
-    locale/browser/syncQuota.properties         (%chrome/browser/syncQuota.properties)
 % resource search-plugins chrome://browser/locale/searchplugins/
 #if BUILD_FASTER
     locale/browser/searchplugins/               (searchplugins/*.xml)

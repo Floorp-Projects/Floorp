@@ -55,11 +55,6 @@ let headers = {
 };
 
 add_task(function* setup() {
-  // SelfSupport has a tendency to fire when running this test alone, without
-  // a good way to turn it off we just set the url to ""
-  yield SpecialPowers.pushPrefEnv({
-    set: [["browser.selfsupport.url", ""]],
-  });
   extension = makeExtension();
   yield extension.startup();
 });

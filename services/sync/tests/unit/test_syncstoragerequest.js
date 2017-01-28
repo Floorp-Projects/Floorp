@@ -15,8 +15,6 @@ function run_test() {
   Log.repository.getLogger("Sync.RESTRequest").level = Log.Level.Trace;
   initTestLogging();
 
-  ensureLegacyIdentityManager();
-
   run_next_test();
 }
 
@@ -59,17 +57,16 @@ add_test(function test_user_agent_mobile() {
   });
 });
 
-add_test(function test_auth() {
+add_task(async function test_auth() {
   let handler = httpd_handler(200, "OK");
   let server = httpd_setup({"/resource": handler});
-
-  setBasicCredentials("johndoe", "ilovejane", "XXXXXXXXX");
+  await configureIdentity({ username: "foo" }, server);
 
   let request = Service.getStorageRequest(server.baseURI + "/resource");
   request.get(function(error) {
     do_check_eq(error, null);
     do_check_eq(this.response.status, 200);
-    do_check_true(basic_auth_matches(handler.request, "johndoe", "ilovejane"));
+    do_check_true(has_hawk_header(handler.request));
 
     Svc.Prefs.reset("");
 

@@ -16,9 +16,9 @@ const TEST_ROOT = "http://example.com/browser/browser/base/content/test/general/
 
   // The stub functions.
   let stubs = {
-    updateAppMenuItem() {
-      return unstubs["updateAppMenuItem"].call(gFxAccounts).then(() => {
-        Services.obs.notifyObservers(null, "test:browser_fxaccounts:updateAppMenuItem", null);
+    updateUI() {
+      return unstubs["updateUI"].call(gFxAccounts).then(() => {
+        Services.obs.notifyObservers(null, "test:browser_fxaccounts:updateUI", null);
       });
     },
     // Opening preferences is trickier than it should be as leaks are reported
@@ -72,7 +72,7 @@ var panelUIFooter = document.getElementById("PanelUI-footer-fxa");
 add_task(function* test_nouser() {
   let user = yield fxAccounts.getSignedInUser();
   Assert.strictEqual(user, null, "start with no user signed in");
-  let promiseUpdateDone = promiseObserver("test:browser_fxaccounts:updateAppMenuItem");
+  let promiseUpdateDone = promiseObserver("test:browser_fxaccounts:updateUI");
   Services.obs.notifyObservers(null, this.FxAccountsCommon.ONLOGOUT_NOTIFICATION, null);
   yield promiseUpdateDone;
 
@@ -93,7 +93,7 @@ add_task(function* test_nouser() {
 XXX - Bug 1191162 - need a better hawk mock story or this will leak in debug builds.
 
 add_task(function* test_unverifiedUser() {
-  let promiseUpdateDone = promiseObserver("test:browser_fxaccounts:updateAppMenuItem");
+  let promiseUpdateDone = promiseObserver("test:browser_fxaccounts:updateUI");
   yield setSignedInUser(false); // this will fire the observer that does the update.
   yield promiseUpdateDone;
 
@@ -112,10 +112,10 @@ add_task(function* test_unverifiedUser() {
 */
 
 add_task(function* test_verifiedUserEmptyProfile() {
-  // We see 2 updateAppMenuItem() calls - one for the signedInUser and one after
+  // We see 2 updateUI() calls - one for the signedInUser and one after
   // we first fetch the profile. We want them both to fire or we aren't testing
   // the state we think we are testing.
-  let promiseUpdateDone = promiseObserver("test:browser_fxaccounts:updateAppMenuItem", 2);
+  let promiseUpdateDone = promiseObserver("test:browser_fxaccounts:updateUI", 2);
   configureProfileURL({}); // successful but empty profile.
   yield setSignedInUser(true); // this will fire the observer that does the update.
   yield promiseUpdateDone;
@@ -134,7 +134,7 @@ add_task(function* test_verifiedUserEmptyProfile() {
 });
 
 add_task(function* test_verifiedUserDisplayName() {
-  let promiseUpdateDone = promiseObserver("test:browser_fxaccounts:updateAppMenuItem", 2);
+  let promiseUpdateDone = promiseObserver("test:browser_fxaccounts:updateUI", 2);
   configureProfileURL({ displayName: "Test User Display Name" });
   yield setSignedInUser(true); // this will fire the observer that does the update.
   yield promiseUpdateDone;
@@ -149,7 +149,7 @@ add_task(function* test_verifiedUserDisplayName() {
 
 add_task(function* test_verifiedUserProfileFailure() {
   // profile failure means only one observer fires.
-  let promiseUpdateDone = promiseObserver("test:browser_fxaccounts:updateAppMenuItem", 1);
+  let promiseUpdateDone = promiseObserver("test:browser_fxaccounts:updateUI", 1);
   configureProfileURL(null, 500);
   yield setSignedInUser(true); // this will fire the observer that does the update.
   yield promiseUpdateDone;
@@ -240,7 +240,7 @@ var signOut = Task.async(function* () {
   // This test needs to make sure that any updates for the logout have
   // completed before starting the next test, or we see the observer
   // notifications get out of sync.
-  let promiseUpdateDone = promiseObserver("test:browser_fxaccounts:updateAppMenuItem");
+  let promiseUpdateDone = promiseObserver("test:browser_fxaccounts:updateUI");
   // we always want a "localOnly" signout here...
   yield fxAccounts.signOut(true);
   yield promiseUpdateDone;

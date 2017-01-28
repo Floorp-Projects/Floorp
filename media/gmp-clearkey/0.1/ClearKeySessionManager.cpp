@@ -141,6 +141,7 @@ ClearKeySessionManager::CreateSession(uint32_t aPromiseId,
                            0,
                            message,
                            strlen(message));
+    delete session;
 
     return;
   }

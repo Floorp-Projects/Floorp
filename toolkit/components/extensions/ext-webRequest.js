@@ -58,7 +58,7 @@ function WebRequestEventManager(context, eventName) {
       }
 
       let optional = ["requestHeaders", "responseHeaders", "statusCode", "statusLine", "error", "redirectUrl",
-                      "requestBody"];
+                      "requestBody", "scheme", "realm", "isProxy", "challenger"];
       for (let opt of optional) {
         if (opt in data) {
           data2[opt] = data[opt];
@@ -110,6 +110,7 @@ extensions.registerSchemaAPI("webRequest", "addon_parent", context => {
       onBeforeSendHeaders: new WebRequestEventManager(context, "onBeforeSendHeaders").api(),
       onSendHeaders: new WebRequestEventManager(context, "onSendHeaders").api(),
       onHeadersReceived: new WebRequestEventManager(context, "onHeadersReceived").api(),
+      onAuthRequired: new WebRequestEventManager(context, "onAuthRequired").api(),
       onBeforeRedirect: new WebRequestEventManager(context, "onBeforeRedirect").api(),
       onResponseStarted: new WebRequestEventManager(context, "onResponseStarted").api(),
       onErrorOccurred: new WebRequestEventManager(context, "onErrorOccurred").api(),

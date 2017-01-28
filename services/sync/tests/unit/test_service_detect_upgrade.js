@@ -13,9 +13,7 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 
 Service.engineManager.register(TabEngine);
 
-add_test(function v4_upgrade() {
-  let passphrase = "abcdeabcdeabcdeabcdeabcdea";
-
+add_task(async function v4_upgrade() {
   let clients = new ServerCollection();
   let meta_global = new ServerWBO("global");
 
@@ -43,8 +41,6 @@ add_test(function v4_upgrade() {
     "/1.1/johndoe/storage/prefs": new ServerCollection().handler()
   });
 
-  ensureLegacyIdentityManager();
-
   try {
 
     _("Set up some tabs.");
@@ -66,9 +62,10 @@ add_test(function v4_upgrade() {
     Service.status.resetSync();
 
     _("Logging in.");
-    Service.serverURL = server.baseURI;
 
-    Service.login("johndoe", "ilovejane", passphrase);
+    await configureIdentity({ "username": "johndoe" }, server);
+
+    Service.login();
     do_check_true(Service.isLoggedIn);
     Service.verifyAndFetchSymmetricKeys();
     do_check_true(Service._remoteSetup());
@@ -100,12 +97,11 @@ add_test(function v4_upgrade() {
     _("Syncing afresh...");
     Service.logout();
     Service.collectionKeys.clear();
-    Service.serverURL = server.baseURI;
     meta_global.payload = JSON.stringify({"syncID": "foooooooooooooobbbbbbbbbbbb",
                                           "storageVersion": STORAGE_VERSION});
     collections.meta = Date.now() / 1000;
     Service.recordManager.set(Service.metaURL, meta_global);
-    Service.login("johndoe", "ilovejane", passphrase);
+    Service.login();
     do_check_true(Service.isLoggedIn);
     Service.sync();
     do_check_true(Service.isLoggedIn);
@@ -168,7 +164,7 @@ add_test(function v4_upgrade() {
     let oldClientsModified = collections.clients;
     let oldTabsModified = collections.tabs;
 
-    Service.login("johndoe", "ilovejane", passphrase);
+    Service.login();
     Service.sync();
     _("New key should have forced upload of data.");
     _("Tabs: " + oldTabsModified + " < " + collections.tabs);
@@ -184,13 +180,11 @@ add_test(function v4_upgrade() {
 
   } finally {
     Svc.Prefs.resetBranch("");
-    server.stop(run_next_test);
+    await promiseStopServer(server);
   }
 });
 
-add_test(function v5_upgrade() {
-  let passphrase = "abcdeabcdeabcdeabcdeabcdea";
-
+add_task(async function v5_upgrade() {
   // Tracking info/collections.
   let collectionsHelper = track_collections_helper();
   let upd = collectionsHelper.with_updated_collection;
@@ -232,16 +226,16 @@ add_test(function v5_upgrade() {
 
     Service.status.resetSync();
 
-    setBasicCredentials("johndoe", "ilovejane", passphrase);
-    Service.serverURL = server.baseURI + "/";
     Service.clusterURL = server.baseURI + "/";
+
+    await configureIdentity({ "username": "johndoe" }, server);
 
     // Test an upgrade where the contents of the server would cause us to error
     // -- keys decrypted with a different sync key, for example.
     _("Testing v4 -> v5 (or similar) upgrade.");
     function update_server_keys(syncKeyBundle, wboName, collWBO) {
       generateNewKeys(Service.collectionKeys);
-      serverKeys = Service.collectionKeys.asWBO("crypto", wboName);
+      let serverKeys = Service.collectionKeys.asWBO("crypto", wboName);
       serverKeys.encrypt(syncKeyBundle);
       let res = Service.resource(Service.storageURL + collWBO);
       do_check_true(serverKeys.upload(res).success);
@@ -269,7 +263,7 @@ add_test(function v5_upgrade() {
 
     _("Logging in.");
     try {
-      Service.login("johndoe", "ilovejane", passphrase);
+      Service.login();
     } catch (e) {
       _("Exception: " + e);
     }
@@ -282,7 +276,7 @@ add_test(function v5_upgrade() {
 
   } finally {
     Svc.Prefs.resetBranch("");
-    server.stop(run_next_test);
+    await promiseStopServer(server);
   }
 });
 

@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-sync/identity.js");
+Cu.import("resource://services-sync/browserid_identity.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/service.js");
@@ -74,33 +74,6 @@ add_test(function test_startOver_clears_keys() {
   do_check_true(!!Service.collectionKeys.keyForCollection());
   Service.startOver();
   do_check_false(!!Service.collectionKeys.keyForCollection());
-
-  run_next_test();
-});
-
-add_test(function test_credentials_preserved() {
-  _("Ensure that credentials are preserved if client is wiped.");
-
-  // Required for wipeClient().
-  ensureLegacyIdentityManager();
-  Service.identity.account = "testaccount";
-  Service.identity.basicPassword = "testpassword";
-  Service.clusterURL = "http://dummy:9000/";
-  let key = Utils.generatePassphrase();
-  Service.identity.syncKey = key;
-  Service.identity.persistCredentials();
-
-  // Simulate passwords engine wipe without all the overhead. To do this
-  // properly would require extra test infrastructure.
-  Services.logins.removeAllLogins();
-  Service.wipeClient();
-
-  let id = new IdentityManager();
-  do_check_eq(id.account, "testaccount");
-  do_check_eq(id.basicPassword, "testpassword");
-  do_check_eq(id.syncKey, key);
-
-  Service.startOver();
 
   run_next_test();
 });

@@ -714,11 +714,10 @@ function checkState(actualState, expectedInputVal, expectedSuggestions,
 
 var gMsgMan;
 
-function promiseTab() {
+function* promiseTab() {
   let deferred = Promise.defer();
-  let tab = gBrowser.addTab();
-  registerCleanupFunction(() => gBrowser.removeTab(tab));
-  gBrowser.selectedTab = tab;
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser);
+  registerCleanupFunction(() => BrowserTestUtils.removeTab(tab));
   let pageURL = getRootDirectory(gTestPath) + TEST_PAGE_BASENAME;
   tab.linkedBrowser.addEventListener("load", function onLoad(event) {
     tab.linkedBrowser.removeEventListener("load", onLoad, true);
