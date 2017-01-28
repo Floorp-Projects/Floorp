@@ -6,10 +6,8 @@ module.exports = {  // eslint-disable-line no-undef
   "globals": {
     "EventEmitter": true,
     "IconDetails": true,
-    "PanelPopup": true,
     "Tab": true,
     "TabContext": true,
-    "ViewPopup": true,
     "Window": true,
     "WindowEventManager": true,
     "browserActionFor": true,
