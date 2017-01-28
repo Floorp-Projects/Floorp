@@ -26,7 +26,7 @@ const {
 const StyleInspectorMenu = require("devtools/client/inspector/shared/style-inspector-menu");
 const TooltipsOverlay = require("devtools/client/inspector/shared/tooltips-overlay");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
-const BoxModelView = require("devtools/client/inspector/components/box-model");
+const BoxModelView = require("devtools/client/inspector/components/deprecated-box-model");
 const clipboardHelper = require("devtools/shared/platform/clipboard");
 
 const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
