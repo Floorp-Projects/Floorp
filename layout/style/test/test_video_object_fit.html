@@ -30,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1065766
  */
 
 function checkStyle(elem, expectedVal, message) {
-  is(window.getComputedStyle(elem, "").objectFit, expectedVal, message);
+  is(window.getComputedStyle(elem).objectFit, expectedVal, message);
 }
 
 function main() {

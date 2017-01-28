@@ -20,12 +20,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319381
 /** Test for Bug 319381 **/
 
 function c() {
-  return document.defaultView.getComputedStyle($('t'), "").
+  return document.defaultView.getComputedStyle($('t')).
     getPropertyValue("overflow");
 }
 
 function cval() {
-  return document.defaultView.getComputedStyle($('t'), "").
+  return document.defaultView.getComputedStyle($('t')).
     getPropertyCSSValue("overflow");
 }
 

@@ -73,7 +73,7 @@
           var spacer =
             document.getAnonymousElementByAttribute(this, "anonid", "spacer");
           var isLTR =
-           document.defaultView.getComputedStyle(this, null).direction == "ltr";
+           document.defaultView.getComputedStyle(this).direction == "ltr";
           var startTime = performance.now();
           var self = this;
 

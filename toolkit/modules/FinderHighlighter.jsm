@@ -281,7 +281,7 @@ FinderHighlighter.prototype = {
   highlightRange(range) {
     let node = range.startContainer;
     let editableNode = this._getEditableNode(node);
-    let window = node.ownerDocument.defaultView;
+    let window = node.ownerGlobal;
     let controller = this.finder._getSelectionController(window);
     if (editableNode) {
       controller = editableNode.editor.selectionController;
@@ -642,7 +642,7 @@ FinderHighlighter.prototype = {
     let node = range.startContainer;
     while (node.nodeType != 1)
       node = node.parentNode;
-    let style = node.ownerDocument.defaultView.getComputedStyle(node, "");
+    let style = node.ownerGlobal.getComputedStyle(node);
     let props = {};
     for (let prop of kFontPropsCamelCase) {
       if (prop in style && style[prop])
@@ -771,7 +771,7 @@ FinderHighlighter.prototype = {
     }
 
     do {
-      let style = window.getComputedStyle(node, null);
+      let style = window.getComputedStyle(node);
       if (kFixed.has(style.position) || kFixed.has(style.overflow) ||
           kFixed.has(style.overflowX) || kFixed.has(style.overflowY)) {
         return true;
@@ -792,7 +792,7 @@ FinderHighlighter.prototype = {
    * @return {Set}         Set of rects that were found for the range
    */
   _getRangeRectsAndTexts(range, dict = null) {
-    let window = range.startContainer.ownerDocument.defaultView;
+    let window = range.startContainer.ownerGlobal;
     let bounds;
     // If the window is part of a frameset, try to cache the bounds query.
     if (dict && dict.frames.has(window)) {
@@ -836,7 +836,7 @@ FinderHighlighter.prototype = {
    * @return {Set}         Set of rects that were found for the range
    */
   _updateRangeRects(range, checkIfDynamic = true, dict = null) {
-    let window = range.startContainer.ownerDocument.defaultView;
+    let window = range.startContainer.ownerGlobal;
     let rectsAndTexts = this._getRangeRectsAndTexts(range, dict);
 
     // Only fetch the rect at this point, if not passed in as argument.
@@ -899,7 +899,7 @@ FinderHighlighter.prototype = {
       rectCount != 1);
     dict.previousRangeRectsAndTexts = rectsAndTexts;
 
-    let window = range.startContainer.ownerDocument.defaultView.top;
+    let window = range.startContainer.ownerGlobal.top;
     let document = window.document;
     // First see if we need to and can remove the previous outline nodes.
     if (rebuildOutline)

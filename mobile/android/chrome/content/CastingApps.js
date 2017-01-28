@@ -607,7 +607,7 @@ var CastingApps = {
     }
 
     // We only show pageactions if the <video> is from the selected tab
-    if (BrowserApp.selectedTab != BrowserApp.getTabForWindow(aVideo.ownerDocument.defaultView.top)) {
+    if (BrowserApp.selectedTab != BrowserApp.getTabForWindow(aVideo.ownerGlobal.top)) {
       return;
     }
 
@@ -690,7 +690,7 @@ var CastingApps = {
         return;
 
       if (aVideo.element) {
-        aVideo.title = aVideo.element.ownerDocument.defaultView.top.document.title;
+        aVideo.title = aVideo.element.ownerGlobal.top.document.title;
 
         // If the video is currently playing on the device, pause it
         if (!aVideo.element.paused) {

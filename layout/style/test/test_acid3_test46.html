@@ -86,7 +86,7 @@ function runTest() {
   var check = function (c, e) {
 	count += 1;
 	var p = doc.getElementById(c);
-	is(doc.defaultView.getComputedStyle(p, '').textTransform, e ? 'uppercase' : 'none', "case " + c + " failed (index " + count + ")");
+	is(doc.defaultView.getComputedStyle(p).textTransform, e ? 'uppercase' : 'none', "case " + c + " failed (index " + count + ")");
   }
   check('a', true); // 1
   check('b', false);

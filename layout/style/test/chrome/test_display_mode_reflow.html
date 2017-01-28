@@ -19,10 +19,9 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 function waitOneEvent(element, name) {
   return new Promise(function(resolve, reject) {
-    element.addEventListener(name, function listener() {
-      element.removeEventListener(name, listener);
+    element.addEventListener(name, function() {
       resolve();
-    });
+    }, {once: true});
   });
 }
 
@@ -32,7 +31,7 @@ add_task(function* () {
   var iframe = document.getElementById("subdoc");
   var subdoc = iframe.contentDocument;
   var style = subdoc.getElementById("style");
-  var bodyComputedStyled = subdoc.defaultView.getComputedStyle(subdoc.body, "");
+  var bodyComputedStyled = subdoc.defaultView.getComputedStyle(subdoc.body);
   var win = Services.wm.getMostRecentWindow("navigator:browser");
 
   var secondDiv = subdoc.getElementById("b");

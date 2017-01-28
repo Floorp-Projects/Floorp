@@ -6,27 +6,27 @@ const stateBackup = JSON.parse(ss.getBrowserState());
 const testState = {
   windows: [{
     tabs: [
-      { entries: [{ url: "about:blank" }] },
-      { entries: [{ url: "about:rights" }] }
+      { entries: [{ url: "about:blank", triggeringPrincipal_base64 }] },
+      { entries: [{ url: "about:rights", triggeringPrincipal_base64 }] }
     ]
   }]
 };
 const lameMultiWindowState = { windows: [
     {
       tabs: [
-        { entries: [{ url: "http://example.org#1" }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.org#2" }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.org#3" }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.org#4" }], extData: { "uniq": r() } }
+        { entries: [{ url: "http://example.org#1", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.org#2", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.org#3", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.org#4", triggeringPrincipal_base64 }], extData: { "uniq": r() } }
       ],
       selected: 1
     },
     {
       tabs: [
-        { entries: [{ url: "http://example.com#1" }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#2" }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#3" }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#4" }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#1", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#2", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#3", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#4", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
       ],
       selected: 3
     }
@@ -84,7 +84,7 @@ function runNextTest() {
 
 function test_setTabState() {
   let tab = gBrowser.tabs[1];
-  let newTabState = JSON.stringify({ entries: [{ url: "http://example.org" }], extData: { foo: "bar" } });
+  let newTabState = JSON.stringify({ entries: [{ url: "http://example.org", triggeringPrincipal_base64 }], extData: { foo: "bar" } });
   let busyEventCount = 0;
   let readyEventCount = 0;
 
@@ -204,8 +204,8 @@ function test_setWindowState() {
   let testState = {
     windows: [{
       tabs: [
-        { entries: [{ url: "about:mozilla" }], extData: { "foo": "bar" } },
-        { entries: [{ url: "http://example.org" }], extData: { "baz": "qux" } }
+        { entries: [{ url: "about:mozilla", triggeringPrincipal_base64 }], extData: { "foo": "bar" } },
+        { entries: [{ url: "http://example.org", triggeringPrincipal_base64 }], extData: { "baz": "qux" } }
       ]
     }]
   };

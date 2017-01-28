@@ -66,22 +66,22 @@ function test_display_value(val)
 {
   var floatLeftElem = document.getElementById("float-left");
   floatLeftElem.style.display = val;
-  var floatLeftConversion = window.getComputedStyle(floatLeftElem, null).display;
+  var floatLeftConversion = window.getComputedStyle(floatLeftElem).display;
   floatLeftElem.style.display = "";
 
   var floatRightElem = document.getElementById("float-right");
   floatRightElem.style.display = val;
-  var floatRightConversion = window.getComputedStyle(floatRightElem, null).display;
+  var floatRightConversion = window.getComputedStyle(floatRightElem).display;
   floatRightElem.style.display = "";
 
   var posAbsoluteElem = document.getElementById("position-absolute");
   posAbsoluteElem.style.display = val;
-  var posAbsoluteConversion = window.getComputedStyle(posAbsoluteElem, null).display;
+  var posAbsoluteConversion = window.getComputedStyle(posAbsoluteElem).display;
   posAbsoluteElem.style.display = "";
 
   var posFixedElem = document.getElementById("position-fixed");
   posFixedElem.style.display = val;
-  var posFixedConversion = window.getComputedStyle(posFixedElem, null).display;
+  var posFixedConversion = window.getComputedStyle(posFixedElem).display;
   posFixedElem.style.display = "";
 
   if (mapping[val]) {

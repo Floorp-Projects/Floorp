@@ -537,7 +537,7 @@ var gGestureSupport = {
       return;
 
     let contentElement = content.document.body.firstElementChild;
-    let transformValue = content.window.getComputedStyle(contentElement, null)
+    let transformValue = content.window.getComputedStyle(contentElement)
                                        .transform;
 
     if (transformValue == "none") {

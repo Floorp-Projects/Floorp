@@ -4,7 +4,7 @@ function check_clear_visible(browser, aVisible) {
     let visible = false;
     let button = doc.getElementById("clear-reports");
     if (button) {
-      let style = doc.defaultView.getComputedStyle(button, "");
+      let style = doc.defaultView.getComputedStyle(button);
       if (style.display != "none" &&
           style.visibility == "visible")
         visible = true;

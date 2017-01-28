@@ -26,8 +26,8 @@
   window.addEventListener("load",
     function() {
       var n = document.getElementById("t");
-      var w = document.defaultView.getComputedStyle(n, "").width;
-      var h = document.defaultView.getComputedStyle(n, "").height;
+      var w = document.defaultView.getComputedStyle(n).width;
+      var h = document.defaultView.getComputedStyle(n).height;
       var d = document.createElement("div");
       d.style.width = w;
       d.style.height = h;

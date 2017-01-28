@@ -50,8 +50,8 @@
     (async function testBody() {
       let frame1 = document.getElementById("frame1");
       let frame2 = document.getElementById("frame2");
-      let uri1 = Services.io.newURI("http://www.example.com/1", null, null);
-      let uri2 = Services.io.newURI("http://www.example.com/2", null, null);
+      let uri1 = Services.io.newURI("http://www.example.com/1");
+      let uri2 = Services.io.newURI("http://www.example.com/2");
 
       let errorPageReady = waitForErrorPage(frame1);
       frame1.docShell.chromeEventHandler.setAttribute("crashedPageTitle", "pageTitle");

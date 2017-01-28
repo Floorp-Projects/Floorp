@@ -843,7 +843,7 @@
             this.showImageColumn = this.mInput.showImageColumn;
 
             var rect = aElement.getBoundingClientRect();
-            var nav = aElement.ownerDocument.defaultView.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+            var nav = aElement.ownerGlobal.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                               .getInterface(Components.interfaces.nsIWebNavigation);
             var docShell = nav.QueryInterface(Components.interfaces.nsIDocShell);
             var docViewer = docShell.contentViewer;
@@ -851,7 +851,7 @@
             this.setAttribute("width", width > 100 ? width : 100);
 
             // Adjust the direction of the autocomplete popup list based on the textbox direction, bug 649840
-            var popupDirection = aElement.ownerDocument.defaultView.getComputedStyle(aElement).direction;
+            var popupDirection = aElement.ownerGlobal.getComputedStyle(aElement).direction;
             this.style.direction = popupDirection;
 
             this.openPopup(aElement, "after_start", 0, 0, false, false);

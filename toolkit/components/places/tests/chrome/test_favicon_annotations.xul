@@ -111,7 +111,7 @@ function test()
   let ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
   let uri = function(aSpec) {
-    return ios.newURI(aSpec, null, null);
+    return ios.newURI(aSpec);
   };
 
   let pageURI = uri("http://example.com/favicon_annotations");

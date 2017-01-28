@@ -30,7 +30,7 @@
     var direction = frame.contentDocument
                          .defaultView
                          .window
-                         .getComputedStyle(frame.contentDocument.getElementById("target"), "")
+                         .getComputedStyle(frame.contentDocument.getElementById("target"))
                          .getPropertyValue("direction");
     document.body.removeChild(frame);
     document.dir = direction;

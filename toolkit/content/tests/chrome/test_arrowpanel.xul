@@ -228,7 +228,7 @@ function checkPanelPosition(panel)
   let anchor = panel.anchorNode;
   let adj = 0, hwinpos = 0, vwinpos = 0;
   if (anchor.ownerDocument != document) {
-    var framerect = anchor.ownerDocument.defaultView.frameElement.getBoundingClientRect();
+    var framerect = anchor.ownerGlobal.frameElement.getBoundingClientRect();
     hwinpos = framerect.left;
     vwinpos = framerect.top;
   }

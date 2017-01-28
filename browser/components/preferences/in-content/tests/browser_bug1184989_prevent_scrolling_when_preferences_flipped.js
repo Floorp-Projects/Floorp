@@ -1,5 +1,8 @@
 const ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
+const {Utils} = Cu.import("resource://gre/modules/sessionstore/Utils.jsm", {});
+const triggeringPrincipal_base64 = Utils.SERIALIZED_SYSTEMPRINCIPAL;
+
 add_task(function* () {
   waitForExplicitFinish();
 
@@ -59,7 +62,7 @@ add_task(function* () {
 
   const TAB_URL = "about:sessionrestore";
   const TAB_FORMDATA = {url: TAB_URL, id: {sessionData: CRASH_STATE}};
-  const TAB_SHENTRY = {url: TAB_URL};
+  const TAB_SHENTRY = {url: TAB_URL, triggeringPrincipal_base64};
   const TAB_STATE = {entries: [TAB_SHENTRY], formdata: TAB_FORMDATA};
 
   let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");

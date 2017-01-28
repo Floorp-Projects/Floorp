@@ -127,7 +127,7 @@ function testXHRLoad(aEvent) {
 
   var mockChannel = { originalURI: Cc["@mozilla.org/network/io-service;1"].
                                    getService(Ci.nsIIOService).
-                                   newURI("http://example.com/", null, null) };
+                                   newURI("http://example.com/") };
 
   certs = [ ];
   is(getCheckCertResult(mockChannel, false, certs), Cr.NS_ERROR_UNEXPECTED,

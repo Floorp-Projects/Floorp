@@ -69,7 +69,7 @@ function test_2() {
 }
 
 function test_3() {
-  window.getComputedStyle(testDiv, null).width; // force style resolution
+  window.getComputedStyle(testDiv).width; // force style resolution
   e_new = "width: inherit;";
   testDiv.style.width = "inherit";
 }

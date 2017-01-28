@@ -56,9 +56,9 @@
 
 <script>
   var elem = document.querySelector('.test5 p');
-  var a = window.getComputedStyle(elem,null).getPropertyValue("text-align");
+  var a = window.getComputedStyle(elem).getPropertyValue("text-align");
   document.body.appendChild(document.createTextNode(a +"|"));
-  a = window.getComputedStyle(elem,null).getPropertyValue("text-align-last");
+  a = window.getComputedStyle(elem).getPropertyValue("text-align-last");
   document.body.appendChild(document.createTextNode(a));
 
   document.documentElement.removeAttribute('class');
