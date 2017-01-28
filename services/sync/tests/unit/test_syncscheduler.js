@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+Cu.import("resource://services-sync/browserid_identity.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
@@ -48,17 +49,16 @@ function sync_httpd_setup() {
   let upd = collectionsHelper.with_updated_collection;
 
   return httpd_setup({
-    "/1.1/johndoe/storage/meta/global": upd("meta", global.handler()),
-    "/1.1/johndoe/info/collections": collectionsHelper.handler,
-    "/1.1/johndoe/storage/crypto/keys":
+    "/1.1/johndoe@mozilla.com/storage/meta/global": upd("meta", global.handler()),
+    "/1.1/johndoe@mozilla.com/info/collections": collectionsHelper.handler,
+    "/1.1/johndoe@mozilla.com/storage/crypto/keys":
       upd("crypto", (new ServerWBO("keys")).handler()),
-    "/1.1/johndoe/storage/clients": upd("clients", clientsColl.handler()),
-    "/user/1.0/johndoe/node/weave": httpd_handler(200, "OK", "null")
+    "/1.1/johndoe@mozilla.com/storage/clients": upd("clients", clientsColl.handler())
   });
 }
 
 async function setUp(server) {
-  await configureIdentity({username: "johndoe"}, server);
+  await configureIdentity({username: "johndoe@mozilla.com"}, server);
 
   generateNewKeys(Service.collectionKeys);
   let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
@@ -83,11 +83,6 @@ function run_test() {
   Log.repository.getLogger("Sync.scheduler").level = Log.Level.Trace;
   validate_all_future_pings();
 
-  // The scheduler checks Weave.fxaEnabled to determine whether to use
-  // FxA defaults or legacy defaults.  As .fxaEnabled checks the username, we
-  // set a username here then reset the default to ensure they are used.
-  ensureLegacyIdentityManager();
-  setBasicCredentials("johndoe");
   scheduler.setDefaults();
 
   run_next_test();
@@ -130,7 +125,7 @@ add_test(function test_prefAttributes() {
 
   _("Intervals correspond to default preferences.");
   do_check_eq(scheduler.singleDeviceInterval,
-              Svc.Prefs.get("scheduler.sync11.singleDeviceInterval") * 1000);
+              Svc.Prefs.get("scheduler.fxa.singleDeviceInterval") * 1000);
   do_check_eq(scheduler.idleInterval,
               Svc.Prefs.get("scheduler.idleInterval") * 1000);
   do_check_eq(scheduler.activeInterval,
@@ -139,7 +134,7 @@ add_test(function test_prefAttributes() {
               Svc.Prefs.get("scheduler.immediateInterval") * 1000);
 
   _("Custom values for prefs will take effect after a restart.");
-  Svc.Prefs.set("scheduler.sync11.singleDeviceInterval", 420);
+  Svc.Prefs.set("scheduler.fxa.singleDeviceInterval", 420);
   Svc.Prefs.set("scheduler.idleInterval", 230);
   Svc.Prefs.set("scheduler.activeInterval", 180);
   Svc.Prefs.set("scheduler.immediateInterval", 31415);
@@ -150,7 +145,7 @@ add_test(function test_prefAttributes() {
   do_check_eq(scheduler.immediateInterval, 31415000);
 
   _("Custom values for interval prefs can't be less than 60 seconds.");
-  Svc.Prefs.set("scheduler.sync11.singleDeviceInterval", 42);
+  Svc.Prefs.set("scheduler.fxa.singleDeviceInterval", 42);
   Svc.Prefs.set("scheduler.idleInterval", 50);
   Svc.Prefs.set("scheduler.activeInterval", 50);
   Svc.Prefs.set("scheduler.immediateInterval", 10);
@@ -165,7 +160,7 @@ add_test(function test_prefAttributes() {
   run_next_test();
 });
 
-add_identity_test(this, async function test_updateClientMode() {
+add_task(async function test_updateClientMode() {
   _("Test updateClientMode adjusts scheduling attributes based on # of clients appropriately");
   do_check_eq(scheduler.syncThreshold, SINGLE_USER_THRESHOLD);
   do_check_eq(scheduler.syncInterval, scheduler.singleDeviceInterval);
@@ -197,7 +192,7 @@ add_identity_test(this, async function test_updateClientMode() {
   await cleanUpAndGo();
 });
 
-add_identity_test(this, async function test_masterpassword_locked_retry_interval() {
+add_task(async function test_masterpassword_locked_retry_interval() {
   _("Test Status.login = MASTER_PASSWORD_LOCKED results in reschedule at MASTER_PASSWORD interval");
   let loginFailed = false;
   Svc.Obs.add("weave:service:login:error", function onLoginError() {
@@ -234,7 +229,7 @@ add_identity_test(this, async function test_masterpassword_locked_retry_interval
   await cleanUpAndGo(server);
 });
 
-add_identity_test(this, async function test_calculateBackoff() {
+add_task(async function test_calculateBackoff() {
   do_check_eq(Status.backoffInterval, 0);
 
   // Test no interval larger than the maximum backoff is used if
@@ -256,7 +251,7 @@ add_identity_test(this, async function test_calculateBackoff() {
   await cleanUpAndGo();
 });
 
-add_identity_test(this, async function test_scheduleNextSync_nowOrPast() {
+add_task(async function test_scheduleNextSync_nowOrPast() {
   let promiseObserved = promiseOneObserver("weave:service:sync:finish");
 
   let server = sync_httpd_setup();
@@ -268,7 +263,7 @@ add_identity_test(this, async function test_scheduleNextSync_nowOrPast() {
   await cleanUpAndGo(server);
 });
 
-add_identity_test(this, async function test_scheduleNextSync_future_noBackoff() {
+add_task(async function test_scheduleNextSync_future_noBackoff() {
   _("scheduleNextSync() uses the current syncInterval if no interval is provided.");
   // Test backoffInterval is 0 as expected.
   do_check_eq(Status.backoffInterval, 0);
@@ -317,7 +312,7 @@ add_identity_test(this, async function test_scheduleNextSync_future_noBackoff() 
   await cleanUpAndGo();
 });
 
-add_identity_test(this, async function test_scheduleNextSync_future_backoff() {
+add_task(async function test_scheduleNextSync_future_backoff() {
  _("scheduleNextSync() will honour backoff in all scheduling requests.");
   // Let's take a backoff interval that's bigger than the default sync interval.
   const BACKOFF = 7337;
@@ -367,7 +362,7 @@ add_identity_test(this, async function test_scheduleNextSync_future_backoff() {
   await cleanUpAndGo();
 });
 
-add_identity_test(this, async function test_handleSyncError() {
+add_task(async function test_handleSyncError() {
   let server = sync_httpd_setup();
   await setUp(server);
 
@@ -430,7 +425,7 @@ add_identity_test(this, async function test_handleSyncError() {
   await cleanUpAndGo(server);
 });
 
-add_identity_test(this, async function test_client_sync_finish_updateClientMode() {
+add_task(async function test_client_sync_finish_updateClientMode() {
   let server = sync_httpd_setup();
   await setUp(server);
 
@@ -469,7 +464,7 @@ add_identity_test(this, async function test_client_sync_finish_updateClientMode(
   await cleanUpAndGo(server);
 });
 
-add_identity_test(this, async function test_autoconnect_nextSync_past() {
+add_task(async function test_autoconnect_nextSync_past() {
   let promiseObserved = promiseOneObserver("weave:service:sync:finish");
   // nextSync will be 0 by default, so it's way in the past.
 
@@ -481,7 +476,7 @@ add_identity_test(this, async function test_autoconnect_nextSync_past() {
   await cleanUpAndGo(server);
 });
 
-add_identity_test(this, async function test_autoconnect_nextSync_future() {
+add_task(async function test_autoconnect_nextSync_future() {
   let previousSync = Date.now() + scheduler.syncInterval / 2;
   scheduler.nextSync = previousSync;
   // nextSync rounds to the nearest second.
@@ -494,7 +489,7 @@ add_identity_test(this, async function test_autoconnect_nextSync_future() {
   }
   Svc.Obs.add("weave:service:login:start", onLoginStart);
 
-  await configureIdentity({username: "johndoe"});
+  await configureIdentity({username: "johndoe@mozilla.com"});
   scheduler.delayedAutoConnect(0);
   await promiseZeroTimer();
 
@@ -505,8 +500,6 @@ add_identity_test(this, async function test_autoconnect_nextSync_future() {
   await cleanUpAndGo();
 });
 
-// XXX - this test can't be run with the browserid identity as it relies
-// on the syncKey getter behaving in a certain way...
 add_task(async function test_autoconnect_mp_locked() {
   let server = sync_httpd_setup();
   await setUp(server);
@@ -515,13 +508,14 @@ add_task(async function test_autoconnect_mp_locked() {
   let origLocked = Utils.mpLocked;
   Utils.mpLocked = () => true;
 
-  let origGetter = Service.identity.__lookupGetter__("syncKey");
-  let origSetter = Service.identity.__lookupSetter__("syncKey");
-  delete Service.identity.syncKey;
-  Service.identity.__defineGetter__("syncKey", function() {
+
+  let origEnsureMPUnlocked = Utils.ensureMPUnlocked;
+  Utils.ensureMPUnlocked = () => {
     _("Faking Master Password entry cancelation.");
-    throw "User canceled Master Password entry";
-  });
+    return false;
+  }
+  let origCanFetchKeys = Service.identity._canFetchKeys;
+  Service.identity._canFetchKeys = () => false;
 
   // A locked master password will still trigger a sync, but then we'll hit
   // MASTER_PASSWORD_LOCKED and hence MASTER_PASSWORD_LOCKED_RETRY_INTERVAL.
@@ -535,14 +529,13 @@ add_task(async function test_autoconnect_mp_locked() {
   do_check_eq(Status.login, MASTER_PASSWORD_LOCKED);
 
   Utils.mpLocked = origLocked;
-  delete Service.identity.syncKey;
-  Service.identity.__defineGetter__("syncKey", origGetter);
-  Service.identity.__defineSetter__("syncKey", origSetter);
+  Utils.ensureMPUnlocked = origEnsureMPUnlocked;
+  Service.identity._canFetchKeys = origCanFetchKeys;
 
   await cleanUpAndGo(server);
 });
 
-add_identity_test(this, async function test_no_autoconnect_during_wizard() {
+add_task(async function test_no_autoconnect_during_wizard() {
   let server = sync_httpd_setup();
   await setUp(server);
 
@@ -561,8 +554,9 @@ add_identity_test(this, async function test_no_autoconnect_during_wizard() {
   await cleanUpAndGo(server);
 });
 
-add_identity_test(this, async function test_no_autoconnect_status_not_ok() {
+add_task(async function test_no_autoconnect_status_not_ok() {
   let server = sync_httpd_setup();
+  Status.__authManager = Service.identity = new BrowserIDManager();
 
   // Ensure we don't actually try to sync (or log in for that matter).
   function onLoginStart() {
@@ -580,7 +574,7 @@ add_identity_test(this, async function test_no_autoconnect_status_not_ok() {
   await cleanUpAndGo(server);
 });
 
-add_identity_test(this, async function test_autoconnectDelay_pref() {
+add_task(async function test_autoconnectDelay_pref() {
   let promiseObserved = promiseOneObserver("weave:service:sync:finish");
 
   Svc.Prefs.set("autoconnectDelay", 1);
@@ -597,7 +591,7 @@ add_identity_test(this, async function test_autoconnectDelay_pref() {
   await cleanUpAndGo(server);
 });
 
-add_identity_test(this, async function test_idle_adjustSyncInterval() {
+add_task(async function test_idle_adjustSyncInterval() {
   // Confirm defaults.
   do_check_eq(scheduler.idle, false);
 
@@ -619,7 +613,7 @@ add_identity_test(this, async function test_idle_adjustSyncInterval() {
   await cleanUpAndGo();
 });
 
-add_identity_test(this, async function test_back_triggersSync() {
+add_task(async function test_back_triggersSync() {
   // Confirm defaults.
   do_check_false(scheduler.idle);
   do_check_eq(Status.backoffInterval, 0);
@@ -639,7 +633,7 @@ add_identity_test(this, async function test_back_triggersSync() {
   await cleanUpAndGo();
 });
 
-add_identity_test(this, async function test_active_triggersSync_observesBackoff() {
+add_task(async function test_active_triggersSync_observesBackoff() {
   // Confirm defaults.
   do_check_false(scheduler.idle);
 
@@ -668,7 +662,7 @@ add_identity_test(this, async function test_active_triggersSync_observesBackoff(
   await cleanUpAndGo();
 });
 
-add_identity_test(this, async function test_back_debouncing() {
+add_task(async function test_back_debouncing() {
   _("Ensure spurious back-then-idle events, as observed on OS X, don't trigger a sync.");
 
   // Confirm defaults.
@@ -693,7 +687,7 @@ add_identity_test(this, async function test_back_debouncing() {
   await cleanUpAndGo();
 });
 
-add_identity_test(this, async function test_no_sync_node() {
+add_task(async function test_no_sync_node() {
   // Test when Status.sync == NO_SYNC_NODE_FOUND
   // it is not overwritten on sync:finish
   let server = sync_httpd_setup();
@@ -713,7 +707,7 @@ add_identity_test(this, async function test_no_sync_node() {
   }
 });
 
-add_identity_test(this, async function test_sync_failed_partial_500s() {
+add_task(async function test_sync_failed_partial_500s() {
   _("Test a 5xx status calls handleSyncError.");
   scheduler._syncErrors = MAX_ERROR_COUNT_BEFORE_BACKOFF;
   let server = sync_httpd_setup();
@@ -740,7 +734,7 @@ add_identity_test(this, async function test_sync_failed_partial_500s() {
   await cleanUpAndGo(server);
 });
 
-add_identity_test(this, async function test_sync_failed_partial_400s() {
+add_task(async function test_sync_failed_partial_400s() {
   _("Test a non-5xx status doesn't call handleSyncError.");
   scheduler._syncErrors = MAX_ERROR_COUNT_BEFORE_BACKOFF;
   let server = sync_httpd_setup();
@@ -772,7 +766,7 @@ add_identity_test(this, async function test_sync_failed_partial_400s() {
   await cleanUpAndGo(server);
 });
 
-add_identity_test(this, async function test_sync_X_Weave_Backoff() {
+add_task(async function test_sync_X_Weave_Backoff() {
   let server = sync_httpd_setup();
   await setUp(server);
 
@@ -781,7 +775,7 @@ add_identity_test(this, async function test_sync_X_Weave_Backoff() {
   const BACKOFF = 7337;
 
   // Extend info/collections so that we can put it into server maintenance mode.
-  const INFO_COLLECTIONS = "/1.1/johndoe/info/collections";
+  const INFO_COLLECTIONS = "/1.1/johndoe@mozilla.com/info/collections";
   let infoColl = server._handler._overridePaths[INFO_COLLECTIONS];
   let serverBackoff = false;
   function infoCollWithBackoff(request, response) {
@@ -829,7 +823,7 @@ add_identity_test(this, async function test_sync_X_Weave_Backoff() {
   await cleanUpAndGo(server);
 });
 
-add_identity_test(this, async function test_sync_503_Retry_After() {
+add_task(async function test_sync_503_Retry_After() {
   let server = sync_httpd_setup();
   await setUp(server);
 
@@ -838,7 +832,7 @@ add_identity_test(this, async function test_sync_503_Retry_After() {
   const BACKOFF = 7337;
 
   // Extend info/collections so that we can put it into server maintenance mode.
-  const INFO_COLLECTIONS = "/1.1/johndoe/info/collections";
+  const INFO_COLLECTIONS = "/1.1/johndoe@mozilla.com/info/collections";
   let infoColl = server._handler._overridePaths[INFO_COLLECTIONS];
   let serverMaintenance = false;
   function infoCollWithMaintenance(request, response) {
@@ -890,12 +884,10 @@ add_identity_test(this, async function test_sync_503_Retry_After() {
   await cleanUpAndGo(server);
 });
 
-add_identity_test(this, async function test_loginError_recoverable_reschedules() {
+add_task(async function test_loginError_recoverable_reschedules() {
   _("Verify that a recoverable login error schedules a new sync.");
-  await configureIdentity({username: "johndoe"});
-  Service.serverURL = "http://localhost:1234/";
-  Service.clusterURL = Service.serverURL;
-  Service.persistLogin();
+  await configureIdentity({username: "johndoe@mozilla.com"});
+  Service.clusterURL = "http://localhost:1234/";
   Status.resetSync(); // reset Status.login
 
   let promiseObserved = promiseOneObserver("weave:service:login:error");
@@ -931,17 +923,15 @@ add_identity_test(this, async function test_loginError_recoverable_reschedules()
   await cleanUpAndGo()
 });
 
-add_identity_test(this, async function test_loginError_fatal_clearsTriggers() {
+add_task(async function test_loginError_fatal_clearsTriggers() {
   _("Verify that a fatal login error clears sync triggers.");
-  await configureIdentity({username: "johndoe"});
+  await configureIdentity({username: "johndoe@mozilla.com"});
 
   let server = httpd_setup({
-    "/1.1/johndoe/info/collections": httpd_handler(401, "Unauthorized")
+    "/1.1/johndoe@mozilla.com/info/collections": httpd_handler(401, "Unauthorized")
   });
 
-  Service.serverURL = server.baseURI + "/";
-  Service.clusterURL = Service.serverURL;
-  Service.persistLogin();
+  Service.clusterURL = server.baseURI + "/";
   Status.resetSync(); // reset Status.login
 
   let promiseObserved = promiseOneObserver("weave:service:login:error");
@@ -956,25 +946,17 @@ add_identity_test(this, async function test_loginError_fatal_clearsTriggers() {
   await promiseObserved;
   await promiseNextTick();
 
-  if (isConfiguredWithLegacyIdentity()) {
-    // for the "legacy" identity, a 401 on info/collections means the
-    // password is wrong, so we enter a "login rejected" state.
-    do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
+  // For the FxA identity, a 401 on info/collections means a transient
+  // error, probably due to an inability to fetch a token.
+  do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
+  // syncs should still be scheduled.
+  do_check_true(scheduler.nextSync > Date.now());
+  do_check_true(scheduler.syncTimer.delay > 0);
 
-    do_check_eq(scheduler.nextSync, 0);
-    do_check_eq(scheduler.syncTimer, null);
-  } else {
-    // For the FxA identity, a 401 on info/collections means a transient
-    // error, probably due to an inability to fetch a token.
-    do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
-    // syncs should still be scheduled.
-    do_check_true(scheduler.nextSync > Date.now());
-    do_check_true(scheduler.syncTimer.delay > 0);
-  }
   await cleanUpAndGo(server);
 });
 
-add_identity_test(this, async function test_proper_interval_on_only_failing() {
+add_task(async function test_proper_interval_on_only_failing() {
   _("Ensure proper behavior when only failed records are applied.");
 
   // If an engine reports that no records succeeded, we shouldn't decrease the

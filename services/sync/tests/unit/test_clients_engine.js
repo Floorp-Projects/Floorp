@@ -102,7 +102,7 @@ add_task(async function test_bad_hmac() {
 
   try {
     await configureIdentity({username: "foo"}, server);
-    Service.login("foo");
+    Service.login();
 
     generateNewKeys(Service.collectionKeys);
 

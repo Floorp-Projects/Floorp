@@ -72,11 +72,6 @@ WeaveService.prototype = {
                                          Ci.nsISupportsWeakReference]),
 
   ensureLoaded() {
-    // If we are loaded and not using FxA, load the migration module.
-    if (!this.fxAccountsEnabled) {
-      Cu.import("resource://services-sync/FxaMigrator.jsm");
-    }
-
     Components.utils.import("resource://services-sync/main.js");
 
     // Side-effect of accessing the service is that it is instantiated.
@@ -98,26 +93,9 @@ WeaveService.prototype = {
   },
 
   /**
-   * Whether Firefox Accounts is enabled.
-   *
-   * @return bool
-   */
-  get fxAccountsEnabled() {
-    try {
-      // Old sync guarantees '@' will never appear in the username while FxA
-      // uses the FxA email address - so '@' is the flag we use.
-      let username = Services.prefs.getCharPref(SYNC_PREFS_BRANCH + "username");
-      return !username || username.includes("@");
-    } catch (_) {
-      return true; // No username == only allow FxA to be configured.
-    }
-  },
-
-  /**
    * Whether Sync appears to be enabled.
    *
-   * This returns true if all the Sync preferences for storing account
-   * and server configuration are populated.
+   * This returns true if we have an associated FxA account
    *
    * It does *not* perform a robust check to see if the client is working.
    * For that, you'll want to check Weave.Status.checkSetup().
@@ -142,10 +120,9 @@ WeaveService.prototype = {
         notify: function() {
           let isConfigured = false;
           // We only load more if it looks like Sync is configured.
-          let prefs = Services.prefs.getBranch(SYNC_PREFS_BRANCH);
-          if (prefs.prefHasUserValue("username")) {
-            // We have a username. So, do a more thorough check. This will
-            // import a number of modules and thus increase memory
+          if (this.enabled) {
+            // We have an associated FxAccount. So, do a more thorough check.
+            // This will import a number of modules and thus increase memory
             // accordingly. We could potentially copy code performed by
             // this check into this file if our above code is yielding too
             // many false positives.

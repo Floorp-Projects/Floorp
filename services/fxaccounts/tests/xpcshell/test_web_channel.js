@@ -287,9 +287,6 @@ add_task(function* test_helpers_login_without_customize_sync() {
           // verifiedCanLinkAccount should be stripped in the data.
           do_check_false("verifiedCanLinkAccount" in accountData);
 
-          // the customizeSync pref should not update
-          do_check_false(helpers.getShowCustomizeSyncPref());
-
           // previously signed in user preference is updated.
           do_check_eq(helpers.getPreviousAccountNameHashPref(), helpers.sha256("testuser@testuser.com"));
 
@@ -298,9 +295,6 @@ add_task(function* test_helpers_login_without_customize_sync() {
       }
     }
   });
-
-  // the show customize sync pref should stay the same
-  helpers.setShowCustomizeSyncPref(false);
 
   // ensure the previous account pref is overwritten.
   helpers.setPreviousAccountNameHashPref("lastuser@testuser.com");
@@ -323,17 +317,11 @@ add_task(function* test_helpers_login_with_customize_sync() {
           // customizeSync should be stripped in the data.
           do_check_false("customizeSync" in accountData);
 
-          // the customizeSync pref should not update
-          do_check_true(helpers.getShowCustomizeSyncPref());
-
           resolve();
         });
       }
     }
   });
-
-  // the customize sync pref should be overwritten
-  helpers.setShowCustomizeSyncPref(false);
 
   yield helpers.login({
     email: "testuser@testuser.com",
@@ -360,17 +348,11 @@ add_task(function* test_helpers_login_with_customize_sync_and_declined_engines()
           do_check_eq(Services.prefs.getBoolPref("services.sync.engine.prefs"), false);
           do_check_eq(Services.prefs.getBoolPref("services.sync.engine.tabs"), true);
 
-          // the customizeSync pref should be disabled
-          do_check_false(helpers.getShowCustomizeSyncPref());
-
           resolve();
         });
       }
     }
   });
-
-  // the customize sync pref should be overwritten
-  helpers.setShowCustomizeSyncPref(true);
 
   do_check_eq(Services.prefs.getBoolPref("services.sync.engine.addons"), true);
   do_check_eq(Services.prefs.getBoolPref("services.sync.engine.bookmarks"), true);

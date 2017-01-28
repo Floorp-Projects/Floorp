@@ -1,11 +1,20 @@
 "use strict";
 
+// SelfSupport has a tendency to fire when running a test alone (it would
+// fire in some earlier test otherwise), without a good way to turn it off
+// we just set the url to "".
+SpecialPowers.pushPrefEnv({
+  set: [["browser.selfsupport.url", ""]],
+});
+
 let commonEvents = {
   "onBeforeRequest":     [{urls: ["<all_urls>"]}, ["blocking"]],
   "onBeforeSendHeaders": [{urls: ["<all_urls>"]}, ["blocking", "requestHeaders"]],
   "onSendHeaders":       [{urls: ["<all_urls>"]}, ["requestHeaders"]],
   "onBeforeRedirect":    [{urls: ["<all_urls>"]}],
   "onHeadersReceived":   [{urls: ["<all_urls>"]}, ["blocking", "responseHeaders"]],
+  // Auth tests will need to set their own events object
+  // "onAuthRequired":      [{urls: ["<all_urls>"]}, ["blocking", "responseHeaders"]],
   "onResponseStarted":   [{urls: ["<all_urls>"]}],
   "onCompleted":         [{urls: ["<all_urls>"]}, ["responseHeaders"]],
   "onErrorOccurred":     [{urls: ["<all_urls>"]}],
@@ -15,6 +24,7 @@ function background(events) {
   let expect;
   let ignore;
   let defaultOrigin;
+  let watchAuth = Object.keys(events).includes("onAuthRequired");
 
   browser.test.onMessage.addListener((msg, expected) => {
     if (msg !== "set-expected") {
@@ -152,6 +162,76 @@ function background(events) {
     }
   }
 
+  let listeners = {
+    onBeforeRequest(expected, details, result) {
+      // Save some values to test request consistency in later events.
+      browser.test.assertTrue(details.tabId !== undefined, `tabId ${details.tabId}`);
+      browser.test.assertTrue(details.requestId !== undefined, `requestId ${details.requestId}`);
+      // Validate requestId if it's already set, this happens with redirects.
+      if (expected.test.requestId !== undefined) {
+        browser.test.assertEq("string", typeof expected.test.requestId, `requestid ${expected.test.requestId} is string`);
+        browser.test.assertEq("string", typeof details.requestId, `requestid ${details.requestId} is string`);
+        browser.test.assertEq("number", typeof parseInt(details.requestId, 10), "parsed requestid is number");
+        browser.test.assertEq(expected.test.requestId, details.requestId, "redirects will keep the same requestId");
+      } else {
+        // Save any values we want to validate in later events.
+        expected.test.requestId = details.requestId;
+        expected.test.tabId = details.tabId;
+      }
+      // Tests we don't need to do every event.
+      browser.test.assertTrue(details.type.toUpperCase() in browser.webRequest.ResourceType, `valid resource type ${details.type}`);
+      if (details.type == "main_frame") {
+        browser.test.assertEq(0, details.frameId, "frameId is zero when type is main_frame bug 1329299");
+      }
+    },
+    onBeforeSendHeaders(expected, details, result) {
+      if (expected.headers && expected.headers.request) {
+        result.requestHeaders = processHeaders("request", expected, details);
+      }
+      if (expected.redirect) {
+        browser.test.log(`${name} redirect request`);
+        result.redirectUrl = details.url.replace(expected.test.filename, expected.redirect);
+      }
+    },
+    onBeforeRedirect() {},
+    onSendHeaders(expected, details, result) {
+      if (expected.headers && expected.headers.request) {
+        checkHeaders("request", expected, details);
+      }
+    },
+    onResponseStarted() {},
+    onHeadersReceived(expected, details, result) {
+      let expectedStatus = expected.status || 200;
+      // If authentication is being requested we don't fail on the status code.
+      if (watchAuth && [401, 407].includes(details.statusCode)) {
+        expectedStatus = details.statusCode;
+      }
+      browser.test.assertEq(expectedStatus, details.statusCode,
+                            `expected HTTP status received for ${details.url} ${details.statusLine}`);
+      if (expected.headers && expected.headers.response) {
+        result.responseHeaders = processHeaders("response", expected, details);
+      }
+    },
+    onAuthRequired(expected, details, result) {
+      result.authCredentials = expected.authInfo;
+    },
+    onCompleted(expected, details, result) {
+      // If we have already completed a GET request for this url,
+      // and it was found, we expect for the response to come fromCache.
+      // expected.cached may be undefined, force boolean.
+      let expectCached = !!expected.cached && details.method === "GET" && details.statusCode != 404;
+      browser.test.assertEq(expectCached, details.fromCache, "fromCache is correct");
+      // We can only tell IPs for non-cached HTTP requests.
+      if (!details.fromCache && /^https?:/.test(details.url)) {
+        browser.test.assertEq("127.0.0.1", details.ip, `correct ip for ${details.url}`);
+      }
+      if (expected.headers && expected.headers.response) {
+        checkHeaders("response", expected, details);
+      }
+    },
+    onErrorOccurred() {},
+  };
+
   function getListener(name) {
     return details => {
       let result = {};
@@ -170,66 +250,20 @@ function background(events) {
       browser.test.assertTrue(expectedEvent, `received ${name}`);
       browser.test.assertEq(expected.type, details.type, "resource type is correct");
       browser.test.assertEq(expected.origin || defaultOrigin, details.originUrl, "origin is correct");
+      // ignore origin test for generated background page
+      if (!details.originUrl || !details.originUrl.endsWith("_generated_background_page.html")) {
+        browser.test.assertEq(expected.origin || defaultOrigin, details.originUrl, "origin is correct");
+      }
 
-      if (name == "onBeforeRequest") {
-        // Save some values to test request consistency in later events.
-        browser.test.assertTrue(details.tabId !== undefined, `tabId ${details.tabId}`);
-        browser.test.assertTrue(details.requestId !== undefined, `requestId ${details.requestId}`);
-        // Validate requestId if it's already set, this happens with redirects.
-        if (expected.test.requestId !== undefined) {
-          browser.test.assertEq("string", typeof expected.test.requestId, `requestid ${expected.test.requestId} is string`);
-          browser.test.assertEq("string", typeof details.requestId, `requestid ${details.requestId} is string`);
-          browser.test.assertEq("number", typeof parseInt(details.requestId, 10), "parsed requestid is number");
-          browser.test.assertEq(expected.test.requestId, details.requestId, "redirects will keep the same requestId");
-        } else {
-          // Save any values we want to validate in later events.
-          expected.test.requestId = details.requestId;
-          expected.test.tabId = details.tabId;
-        }
-        // Tests we don't need to do every event.
-        browser.test.assertTrue(details.type.toUpperCase() in browser.webRequest.ResourceType, `valid resource type ${details.type}`);
-        if (details.type == "main_frame") {
-          browser.test.assertEq(0, details.frameId, "frameId is zero when type is main_frame bug 1329299");
-        }
-      } else {
+      if (name != "onBeforeRequest") {
         // On events after onBeforeRequest, check the previous values.
         browser.test.assertEq(expected.test.requestId, details.requestId, "correct requestId");
         browser.test.assertEq(expected.test.tabId, details.tabId, "correct tabId");
       }
-      if (name == "onBeforeSendHeaders") {
-        if (expected.headers && expected.headers.request) {
-          result.requestHeaders = processHeaders("request", expected, details);
-        }
-        if (expected.redirect) {
-          browser.test.log(`${name} redirect request`);
-          result.redirectUrl = details.url.replace(expected.test.filename, expected.redirect);
-        }
-      }
-      if (name == "onSendHeaders") {
-        if (expected.headers && expected.headers.request) {
-          checkHeaders("request", expected, details);
-        }
-      }
-      if (name == "onHeadersReceived") {
-        browser.test.assertEq(expected.status || 200, details.statusCode,
-                              `expected HTTP status received for ${details.url}`);
-        if (expected.headers && expected.headers.response) {
-          result.responseHeaders = processHeaders("response", expected, details);
-        }
-      }
-      if (name == "onCompleted") {
-        // If we have already completed a GET request for this url,
-        // and it was found, we expect for the response to come fromCache.
-        // expected.cached may be undefined, force boolean.
-        let expectCached = !!expected.cached && details.method === "GET" && details.statusCode != 404;
-        browser.test.assertEq(expectCached, details.fromCache, "fromCache is correct");
-        // We can only tell IPs for non-cached HTTP requests.
-        if (!details.fromCache && /^https?:/.test(details.url)) {
-          browser.test.assertEq("127.0.0.1", details.ip, `correct ip for ${details.url}`);
-        }
-        if (expected.headers && expected.headers.response) {
-          checkHeaders("response", expected, details);
-        }
+      try {
+        listeners[name](expected, details, result);
+      } catch (e) {
+        browser.test.fail(`unexpected webrequest failure ${name} ${e}`);
       }
 
       if (expected.cancel && expected.cancel == name) {

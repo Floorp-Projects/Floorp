@@ -19,26 +19,20 @@ function run_test() {
   Log.repository.getLogger("Sync.StorageRequest").level = Log.Level.Trace;
   initTestLogging();
 
-  ensureLegacyIdentityManager();
-  setBasicCredentials("johndoe", "ilovejane");
-
   run_next_test();
 }
 
-add_test(function test_success() {
+add_task(async function test_success() {
   let handler = httpd_handler(200, "OK", JSON.stringify(collections));
   let server = httpd_setup({"/1.1/johndoe/info/collections": handler});
-  Service.serverURL = server.baseURI + "/";
-  Service.clusterURL = server.baseURI + "/";
+  await configureIdentity({ username: "johndoe" }, server);
 
   let request = Service.getStorageInfo("collections", function(error, info) {
     do_check_eq(error, null);
     do_check_true(Utils.deepEquals(info, collections));
 
     // Ensure that the request is sent off with the right bits.
-    do_check_true(basic_auth_matches(handler.request,
-                                     Service.identity.username,
-                                     Service.identity.basicPassword));
+    do_check_true(has_hawk_header(handler.request));
     let expectedUA = Services.appinfo.name + "/" + Services.appinfo.version +
                      " (" + httpProtocolHandler.oscpu + ")" +
                      " FxSync/" + WEAVE_VERSION + "." +
@@ -67,11 +61,10 @@ add_test(function test_network_error() {
   });
 });
 
-add_test(function test_http_error() {
+add_task(async function test_http_error() {
   let handler = httpd_handler(500, "Oh noez", "Something went wrong!");
   let server = httpd_setup({"/1.1/johndoe/info/collections": handler});
-  Service.serverURL = server.baseURI + "/";
-  Service.clusterURL = server.baseURI + "/";
+  await configureIdentity({ username: "johndoe" }, server);
 
   Service.getStorageInfo(INFO_COLLECTIONS, function(error, info) {
     do_check_eq(error.status, 500);
@@ -80,11 +73,10 @@ add_test(function test_http_error() {
   });
 });
 
-add_test(function test_invalid_json() {
+add_task(async function test_invalid_json() {
   let handler = httpd_handler(200, "OK", "Invalid JSON");
   let server = httpd_setup({"/1.1/johndoe/info/collections": handler});
-  Service.serverURL = server.baseURI + "/";
-  Service.clusterURL = server.baseURI + "/";
+  await configureIdentity({ username: "johndoe" }, server);
 
   Service.getStorageInfo(INFO_COLLECTIONS, function(error, info) {
     do_check_eq(error.name, "SyntaxError");

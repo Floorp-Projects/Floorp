@@ -99,6 +99,27 @@
   border-radius: 2px;
 }
 
+/* GRID */
+body.compact #newtab-grid {
+  /* Allow #topsites-heading to use position:absolute such that it doesn't
+     affect how many cells we can fit into the grid. */
+  position: relative;
+  padding-top: 1em;
+  margin-top: -1em;
+}
+
+#topsites-heading {
+  color: #7A7A7A;
+  font-size: 1em;
+  font-weight: normal;
+  /* Position the heading such that it doesn't affect how many cells we
+     can fit into the grid. */
+  position: absolute;
+  top: 0;
+  /* The horizontal margin aligns the heading with the cells. */
+  margin: 0 10px;
+}
+
 /* CELLS */
 .newtab-cell {
   --cell-corner-radius: 8px;

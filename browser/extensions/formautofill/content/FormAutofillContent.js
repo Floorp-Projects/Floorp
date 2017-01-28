@@ -182,10 +182,12 @@ AutocompleteFactory.prototype = {
     this._factory = factory;
 
     let registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
-    registrar.registerFactory(proto.classID, proto.classDescription,
-                              proto.contractID, factory);
+    if (proto.classID && !registrar.isCIDRegistered(proto.classID)) {
+      registrar.registerFactory(proto.classID, proto.classDescription,
+                                proto.contractID, factory);
+    }
 
-    if (proto.classID2) {
+    if (proto.classID2 && !registrar.isCIDRegistered(proto.classID2)) {
       this._classID2 = proto.classID2;
       registrar.registerFactory(proto.classID2, proto.classDescription,
                                 proto.contractID2, factory);
@@ -194,10 +196,14 @@ AutocompleteFactory.prototype = {
 
   unregister() {
     let registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
-    registrar.unregisterFactory(this._classID, this._factory);
-    if (this._classID2) {
+    if (this._classID && registrar.isCIDRegistered(this._classID)) {
+      registrar.unregisterFactory(this._classID, this._factory);
+    }
+
+    if (this._classID2 && registrar.isCIDRegistered(this._classID2)) {
       registrar.unregisterFactory(this._classID2, this._factory);
     }
+
     this._factory = null;
   },
 };
