@@ -142,6 +142,7 @@ use std::fmt;
 use std::cmp;
 use std::str;
 use std::u32;
+use std::os::raw::c_void;
 
 //////////////////////////////////
 // Internal Implemenation Flags //
@@ -362,6 +363,9 @@ macro_rules! define_string_types {
                 let length = s.len() as u32;
                 let ptr = s.as_ptr();
                 mem::forget(s);
+                unsafe {
+                    Gecko_IncrementStringAdoptCount(ptr as *mut _);
+                }
                 $String {
                     hdr: $StringRepr {
                         data: ptr,
@@ -762,9 +766,16 @@ macro_rules! ns_auto_string {
     }
 }
 
+#[cfg(not(debug_assertions))]
+#[allow(non_snake_case)]
+unsafe fn Gecko_IncrementStringAdoptCount(_: *mut c_void) {}
+
 // NOTE: These bindings currently only expose infallible operations. Perhaps
 // consider allowing for fallible methods?
 extern "C" {
+    #[cfg(debug_assertions)]
+    fn Gecko_IncrementStringAdoptCount(data: *mut c_void);
+
     // Gecko implementation in nsSubstring.cpp
     fn Gecko_FinalizeCString(this: *mut nsACString);
     fn Gecko_AssignCString(this: *mut nsACString, other: *const nsACString);

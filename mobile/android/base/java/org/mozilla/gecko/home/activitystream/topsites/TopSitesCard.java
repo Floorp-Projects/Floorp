@@ -5,7 +5,6 @@
 package org.mozilla.gecko.home.activitystream.topsites;
 
 import android.graphics.Color;
-import android.support.annotation.Nullable;
 import android.support.v4.widget.TextViewCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -18,7 +17,6 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
-import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.activitystream.menu.ActivityStreamContextMenu;
 import org.mozilla.gecko.home.activitystream.model.TopSite;
@@ -30,11 +28,10 @@ import org.mozilla.gecko.util.ViewUtil;
 import org.mozilla.gecko.util.TouchTargetUtil;
 import org.mozilla.gecko.widget.FaviconView;
 
-import java.util.EnumSet;
 import java.util.concurrent.Future;
 
-class TopSitesCard extends RecyclerView.ViewHolder
-        implements IconCallback, View.OnClickListener {
+/* package-local */ class TopSitesCard extends RecyclerView.ViewHolder
+        implements IconCallback {
     private final FaviconView faviconView;
 
     private final TextView title;
@@ -42,11 +39,12 @@ class TopSitesCard extends RecyclerView.ViewHolder
     private Future<IconResponse> ongoingIconLoad;
 
     private TopSite topSite;
+    private int absolutePosition;
 
     private final HomePager.OnUrlOpenListener onUrlOpenListener;
     private final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
 
-    public TopSitesCard(FrameLayout card, final HomePager.OnUrlOpenListener onUrlOpenListener, final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
+    /* package-local */ TopSitesCard(FrameLayout card, final HomePager.OnUrlOpenListener onUrlOpenListener, final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         super(card);
 
         faviconView = (FaviconView) card.findViewById(R.id.favicon);
@@ -57,16 +55,36 @@ class TopSitesCard extends RecyclerView.ViewHolder
         this.onUrlOpenListener = onUrlOpenListener;
         this.onUrlOpenInBackgroundListener = onUrlOpenInBackgroundListener;
 
-        card.setOnClickListener(this);
-
         TouchTargetUtil.ensureTargetHitArea(menuButton, card);
-        menuButton.setOnClickListener(this);
+        menuButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
+                        .forTopSite(topSite)
+                        .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, absolutePosition);
+
+                ActivityStreamContextMenu.show(v.getContext(),
+                        menuButton,
+                        extras,
+                        ActivityStreamContextMenu.MenuMode.TOPSITE,
+                        topSite,
+                        onUrlOpenListener, onUrlOpenInBackgroundListener,
+                        faviconView.getWidth(), faviconView.getHeight());
+
+                Telemetry.sendUIEvent(
+                        TelemetryContract.Event.SHOW,
+                        TelemetryContract.Method.CONTEXT_MENU,
+                        extras.build()
+                );
+            }
+        });
 
         ViewUtil.enableTouchRipple(menuButton);
     }
 
-    void bind(final TopSite topSite) {
+    void bind(final TopSite topSite, final int absolutePosition) {
         this.topSite = topSite;
+        this.absolutePosition = absolutePosition;
 
         ActivityStream.extractLabel(itemView.getContext(), topSite.getUrl(), true, new ActivityStream.LabelCallback() {
             @Override
@@ -97,36 +115,5 @@ class TopSitesCard extends RecyclerView.ViewHolder
 
         menuButton.setImageDrawable(
                 DrawableUtil.tintDrawable(menuButton.getContext(), R.drawable.menu, tintColor));
-    }
-
-    @Override
-    public void onClick(View clickedView) {
-        ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
-                .set(ActivityStreamTelemetry.Contract.SOURCE_TYPE, ActivityStreamTelemetry.Contract.TYPE_TOPSITES)
-                .forTopSiteType(topSite.getType());
-
-        if (clickedView == itemView) {
-            onUrlOpenListener.onUrlOpen(topSite.getUrl(), EnumSet.noneOf(HomePager.OnUrlOpenListener.Flags.class));
-
-            Telemetry.sendUIEvent(
-                    TelemetryContract.Event.LOAD_URL,
-                    TelemetryContract.Method.LIST_ITEM,
-                    extras.build()
-            );
-        } else if (clickedView == menuButton) {
-            ActivityStreamContextMenu.show(clickedView.getContext(),
-                    menuButton,
-                    extras,
-                    ActivityStreamContextMenu.MenuMode.TOPSITE,
-                    topSite,
-                    onUrlOpenListener, onUrlOpenInBackgroundListener,
-                    faviconView.getWidth(), faviconView.getHeight());
-
-            Telemetry.sendUIEvent(
-                    TelemetryContract.Event.SHOW,
-                    TelemetryContract.Method.CONTEXT_MENU,
-                    extras.build()
-            );
-        }
     }
 }

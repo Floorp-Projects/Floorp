@@ -20,6 +20,17 @@ Indicates if Firefox Account is currently enabled.
 
 Extra information available for various event types
 ===================================================
+Action position
+---------------
+Common to most recorded events is the 0-based ``action_position`` extra. For non-menu interactions it
+indicates position of an item being interacted with. For example, click on a third top site of a
+second page will have ``action_position = 6``, given that the first page had 4 top sites.
+
+Additionally for Top Site interactions, 0-based ``page_number`` is also recorded.
+
+For menu interactions, or interactions with menu items, it will indicate position of a top site or a
+highlight for which the menu is being displayed.
+
 Top Site interactions
 ---------------------
 Two event types are recorded:
@@ -34,7 +45,9 @@ For each event, in addition to global extras, the following information is recor
     extras: {
         ...
         "source_type": "topsites",
-        "source_subtype": "pinned"/"suggested"/"top"
+        "source_subtype": "pinned"/"suggested"/"top",
+        "action_position": number, /* 0-based index of a top site being interacted with */
+        "page_number": number, /* 0-based index of a page on which top site appears */
     }
 
 Subtype indicates a reason an item which is being interacted with appeared in the Top Sites:
@@ -87,6 +100,7 @@ For all interactions, in addition to global extras, the following information is
         "item": string, /* name of a menu item */
         "source_type": "topsites"/"highlights",
         "source_subtype": string, /* depending on type, one of: "pinned", "suggested", "top", "visited", "bookmarked" */
+        "action_position": number, /* 0-based index of a top site or highlight item which owns this menu */
     }
 
 Possible values for "item" key (names of menu items), in no particular order:
@@ -106,7 +120,7 @@ Full Examples
 =============
 Following examples of events are here to provide a better feel for the overall shape of telemetry data being recorded.
 
-1) User with an active Firefox Account clicked on a menu item for a "visited highlight":
+1) User with an active Firefox Account clicked on a menu item for a third highlight ("visited"):
     ::
 
         session="activitystream.1"
@@ -115,7 +129,8 @@ Following examples of events are here to provide a better feel for the overall s
         extras="{
             'fx_account_present': true,
             'source_type': 'highlights',
-            'source_subtype': 'visited'
+            'source_subtype': 'visited',
+            'action_position': 2
         }"
 
 2) User with no active Firefox Account clicked on a second highlight (recent bookmark), with total of 7 highlights being displayed:
@@ -132,7 +147,7 @@ Following examples of events are here to provide a better feel for the overall s
             'count': 7
         }"
 
-3) User with an active Firefox Account clicked on a pinned top site:
+3) User with an active Firefox Account clicked on a third pinned top site:
     ::
 
         session="activitystream.1"
@@ -141,10 +156,12 @@ Following examples of events are here to provide a better feel for the overall s
         extras="{
             'fx_account_present': true,
             'source_type': 'topsites',
-            'source_subtype': 'pinned'
+            'source_subtype': 'pinned',
+            'action_position': 2,
+            'page_number': 0
         }"
 
-4) User with an active Firefox Account clicked on a "share" context menu item, which was displayed for a regular top site:
+4) User with an active Firefox Account clicked on a "share" context menu item, which was displayed for a regular top site number 6:
     ::
 
         session="activitystream.1"
@@ -154,5 +171,6 @@ Following examples of events are here to provide a better feel for the overall s
             'fx_account_present': true,
             'source_type': 'topsites',
             'source_subtype': 'top',
-            'item': 'share'
+            'item': 'share',
+            'action_position': 5
         }"
