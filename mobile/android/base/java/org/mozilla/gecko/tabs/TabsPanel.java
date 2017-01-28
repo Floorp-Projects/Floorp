@@ -6,7 +6,7 @@
 package org.mozilla.gecko.tabs;
 
 import android.support.v4.content.ContextCompat;
-import org.mozilla.gecko.AppConstants.Versions;
+
 import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoApplication;
@@ -44,7 +44,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
-import com.keepsafe.switchboard.SwitchBoard;
+import org.mozilla.gecko.switchboard.SwitchBoard;
 
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
 
