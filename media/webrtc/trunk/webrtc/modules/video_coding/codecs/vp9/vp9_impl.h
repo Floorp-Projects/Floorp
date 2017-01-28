@@ -17,7 +17,7 @@
 #include "webrtc/modules/video_coding/codecs/vp9/include/vp9.h"
 #include "webrtc/modules/video_coding/codecs/vp9/vp9_frame_buffer_pool.h"
 
-#include "vpx/svc_context.h"
+#include "vpx/vp8cx.h"
 #include "vpx/vpx_decoder.h"
 #include "vpx/vpx_encoder.h"
 
@@ -116,7 +116,7 @@ class VP9EncoderImpl : public VP9Encoder {
   vpx_codec_ctx_t* encoder_;
   vpx_codec_enc_cfg_t* config_;
   vpx_image_t* raw_;
-  SvcInternal_t svc_internal_;
+  vpx_svc_extra_cfg_t svc_params_;
   const VideoFrame* input_image_;
   GofInfoVP9 gof_;       // Contains each frame's temporal information for
                          // non-flexible mode.
