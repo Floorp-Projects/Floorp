@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 LONG_OPTIONS = ["shard=", "shards="]
-BASE_COMMAND = "./configure --enable-internal-stats --enable-experimental"
+BASE_COMMAND = "./configure --enable-internal-stats"
 
 def RunCommand(command):
   run = subprocess.Popen(command, shell=True)
