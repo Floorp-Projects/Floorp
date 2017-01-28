@@ -393,7 +393,7 @@
             switch (this._direction)
             {
               case "up":
-                var height = document.defaultView.getComputedStyle(this, "").height;
+                var height = document.defaultView.getComputedStyle(this).height;
                 this.outerDiv.style.height = height;
                 if (this.originalHeight > this.outerDiv.offsetHeight) {
                     corrvalue = this.originalHeight - this.outerDiv.offsetHeight;
@@ -406,7 +406,7 @@
               break;
 
               case "down":
-                var height = document.defaultView.getComputedStyle(this, "").height;
+                var height = document.defaultView.getComputedStyle(this).height;
                 this.outerDiv.style.height = height;
                 if (this.originalHeight > this.outerDiv.offsetHeight) {
                     corrvalue = this.originalHeight - this.outerDiv.offsetHeight;
@@ -528,15 +528,15 @@
           this.stop();
 
           if ((this._direction != "up") && (this._direction != "down")) {
-            var width = window.getComputedStyle(this, "").width;
+            var width = window.getComputedStyle(this).width;
             this.innerDiv.parentNode.style.margin = '0 ' + width;
 
             //XXX Adding the margin sometimes causes the marquee to widen, 
             // see testcase from bug bug 364434: 
             // https://bugzilla.mozilla.org/attachment.cgi?id=249233
             // Just add a fixed width with current marquee's width for now
-            if (width != window.getComputedStyle(this, "").width) {
-              var width = window.getComputedStyle(this, "").width;
+            if (width != window.getComputedStyle(this).width) {
+              var width = window.getComputedStyle(this).width;
               this.outerDiv.style.width = width;
               this.innerDiv.parentNode.style.margin = '0 ' + width;
             }

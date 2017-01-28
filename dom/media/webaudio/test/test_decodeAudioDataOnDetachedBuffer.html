@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+  <meta charset=utf-8>
+<head>
+  <title>Bug 1308434 - Test DecodeAudioData on detached buffer</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script type="text/javascript">
+var testDecodeAudioDataOnDetachedBuffer = function(buffer) {
+  var context = new AudioContext();
+
+  // make the buffer detached
+  context.decodeAudioData(buffer);
+
+  // check that the buffer is detached
+  is(buffer.byteLength, 0, "Buffer should be detached");
+
+  // call decodeAudioData on detached buffer
+  context.decodeAudioData(buffer).then(function(b) {
+    ok(false, "We should not be able to decode the detached buffer but we do");
+    SimpleTest.finish();
+  }, function(r) {
+    SimpleTest.isa(r, TypeError);
+    is(r.message, "Argument of AudioContext.decodeAudioData can't be a detached buffer", "Incorrect message");
+    SimpleTest.finish();
+  });
+};
+
+var filename = "small-shot.mp3";
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", filename);
+  xhr.responseType = "arraybuffer";
+
+  xhr.onload = function() {
+    testDecodeAudioDataOnDetachedBuffer(xhr.response);
+  };
+
+  xhr.send();
+});
+</script>
+</pre>
+</body>
+</html>

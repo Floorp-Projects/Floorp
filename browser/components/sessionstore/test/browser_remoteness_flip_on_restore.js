@@ -37,9 +37,9 @@ function prepareState(state, selected) {
 
 const SIMPLE_STATE = {
   tabs: [
-    { entries: [{ url: "http://example.com/", title: "title" }] },
-    { entries: [{ url: "http://example.com/", title: "title" }] },
-    { entries: [{ url: "http://example.com/", title: "title" }] },
+    { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: "title" }] },
+    { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: "title" }] },
+    { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: "title" }] },
   ],
   title: "",
   _closedTabs: [],
@@ -47,9 +47,9 @@ const SIMPLE_STATE = {
 
 const PINNED_STATE = {
   tabs: [
-    { entries: [{ url: "http://example.com/", title: "title" }], pinned: true },
-    { entries: [{ url: "http://example.com/", title: "title" }], pinned: true },
-    { entries: [{ url: "http://example.com/", title: "title" }] },
+    { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: "title" }], pinned: true },
+    { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: "title" }], pinned: true },
+    { entries: [{ url: "http://example.com/", triggeringPrincipal_base64, title: "title" }] },
   ],
   title: "",
   _closedTabs: [],

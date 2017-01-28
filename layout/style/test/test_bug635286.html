@@ -34,7 +34,7 @@ window.addEventListener("load", function() {
   });
   window.setTimeout(function() {
     cases.forEach(function(aCase, aIndex) {
-      is(window.getComputedStyle(aCase, null)
+      is(window.getComputedStyle(aCase)
            .getPropertyValue("background-color"),
          "transparent",
          aCase.textContent);

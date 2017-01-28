@@ -56,8 +56,8 @@
       SimpleTest.waitForExplicitFinish();
 
       Task.spawn(function* () {
-        const TEST_URI = Services.io.newURI("http://www.test.me/", null, null);
-        const TEST_URI2 = Services.io.newURI("http://www.test.again.me/", null, null);
+        const TEST_URI = Services.io.newURI("http://www.test.me/");
+        const TEST_URI2 = Services.io.newURI("http://www.test.again.me/");
         const TEST_TAG = "test-tag";
 
         ok(gEditItemOverlay, "Sanity check: gEditItemOverlay is in context");

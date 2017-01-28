@@ -40,7 +40,7 @@ function run() {
     var e = subdoc.createElement("div");
     e.id = "e" + i;
     subdoc.body.appendChild(e);
-    var cs = subdoc.defaultView.getComputedStyle(e, "");
+    var cs = subdoc.defaultView.getComputedStyle(e);
     cs._originalQueryText = q;
     return cs;
   }

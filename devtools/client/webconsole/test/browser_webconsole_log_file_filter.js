@@ -67,7 +67,7 @@ function countMessageNodes() {
   let displayedMessageNodes = 0;
   let view = hud.iframeWindow;
   for (let i = 0; i < messageNodes.length; i++) {
-    let computedStyle = view.getComputedStyle(messageNodes[i], null);
+    let computedStyle = view.getComputedStyle(messageNodes[i]);
     if (computedStyle.display !== "none") {
       displayedMessageNodes++;
     }

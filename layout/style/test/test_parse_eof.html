@@ -50,18 +50,18 @@ test(function() {
 }, "test backslash before EOF inside a string");
 
 test(function() {
-  assert_equals(window.getComputedStyle(b, "").backgroundImage,
-                window.getComputedStyle(b_ref, "").backgroundImage);
+  assert_equals(window.getComputedStyle(b).backgroundImage,
+                window.getComputedStyle(b_ref).backgroundImage);
 }, "test backslash before EOF inside a url(\"\")");
 
 test(function() {
-  assert_equals(window.getComputedStyle(c, "").backgroundImage,
-                window.getComputedStyle(c_ref, "").backgroundImage);
+  assert_equals(window.getComputedStyle(c).backgroundImage,
+                window.getComputedStyle(c_ref).backgroundImage);
 }, "test backslash before EOF inside a url()");
 
 test(function() {
-  assert_equals(window.getComputedStyle(d, "").counterReset,
-                window.getComputedStyle(d_ref, "").counterReset);
+  assert_equals(window.getComputedStyle(d).counterReset,
+                window.getComputedStyle(d_ref).counterReset);
 }, "test backslash before EOF outside a string");
 </script>
 

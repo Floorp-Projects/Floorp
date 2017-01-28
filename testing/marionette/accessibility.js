@@ -329,7 +329,7 @@ accessibility.Checks = class {
       return;
     }
 
-    let win = element.ownerDocument.defaultView;
+    let win = element.ownerGlobal;
     let disabledAccessibility = this.matchState(
         accessible, accessibility.State.Unavailable);
     let explorable = win.getComputedStyle(element)

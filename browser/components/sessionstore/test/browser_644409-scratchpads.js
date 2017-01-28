@@ -4,7 +4,7 @@
 const testState = {
   windows: [{
     tabs: [
-      { entries: [{ url: "about:blank" }] },
+      { entries: [{ url: "about:blank", triggeringPrincipal_base64 }] },
     ]
   }],
   scratchpads: [

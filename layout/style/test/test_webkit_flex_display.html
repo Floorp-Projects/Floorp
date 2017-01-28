@@ -38,7 +38,7 @@ function testValue(propName, specifiedVal, serializedVal) {
 
   is(testElem.style[propName], serializedVal,
      `CSS '${propName}:${specifiedVal} should serialize as '${serializedVal}'`);
-  is(window.getComputedStyle(testElem, "")[propName], serializedVal,
+  is(window.getComputedStyle(testElem)[propName], serializedVal,
      `CSS 'display:${specifiedVal} should compute to '${serializedVal}'`);
 }
 

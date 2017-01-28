@@ -116,7 +116,7 @@ this.EventManager.prototype = {
         else if (aEvent.target instanceof Ci.nsIDOMDocument)
           window = aEvent.target.defaultView;
         else if (aEvent.target instanceof Ci.nsIDOMElement)
-          window = aEvent.target.ownerDocument.defaultView;
+          window = aEvent.target.ownerGlobal;
         this.present(Presentation.viewportChanged(window));
         break;
       }

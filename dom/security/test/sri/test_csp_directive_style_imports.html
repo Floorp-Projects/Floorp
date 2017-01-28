@@ -24,7 +24,7 @@
         // need finish message from iframe_require-sri-for_main onload event and
         // from iframe_require-sri-for_no_csp, which spawns a Worker
         var importText = frame.contentDocument.getElementById('text-for-import-test');
-        var importColor = frame.contentWindow.getComputedStyle(importText, null).getPropertyValue('color');
+        var importColor = frame.contentWindow.getComputedStyle(importText).getPropertyValue('color');
         ok(importColor == 'rgb(0, 0, 255)', "The import should not work without integrity. The text is now red, but should not.");
         removeEventListener('message', handler);
         SimpleTest.finish();

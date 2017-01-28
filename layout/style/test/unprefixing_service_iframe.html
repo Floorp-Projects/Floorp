@@ -252,7 +252,7 @@ const gTestcases = [
 
 function getComputedStyleWrapper(elem, prop)
 {
-  return window.getComputedStyle(elem, null).getPropertyValue(prop);
+  return window.getComputedStyle(elem).getPropertyValue(prop);
 }
 
 // Shims for "is()" and "ok()", which defer to parent window using postMessage:

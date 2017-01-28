@@ -682,14 +682,12 @@ CssLogic.getComputedStyle = function (node) {
   if (!node ||
       Cu.isDeadWrapper(node) ||
       node.nodeType !== nodeConstants.ELEMENT_NODE ||
-      !node.ownerDocument ||
-      !node.ownerDocument.defaultView) {
+      !node.ownerGlobal) {
     return null;
   }
 
   let {bindingElement, pseudo} = CssLogic.getBindingElementAndPseudo(node);
-  return node.ownerDocument.defaultView.getComputedStyle(bindingElement,
-                                                         pseudo);
+  return node.ownerGlobal.getComputedStyle(bindingElement, pseudo);
 };
 
 /**

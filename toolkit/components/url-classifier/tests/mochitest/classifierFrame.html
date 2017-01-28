@@ -12,15 +12,15 @@ function checkLoads() {
 
   // Make sure the css did not load.
   var elt = document.getElementById("styleCheck");
-  var style = document.defaultView.getComputedStyle(elt, "");
+  var style = document.defaultView.getComputedStyle(elt);
   window.parent.isnot(style.visibility, "hidden", "Should not load bad css");
 
   elt = document.getElementById("styleBad");
-  style = document.defaultView.getComputedStyle(elt, "");
+  style = document.defaultView.getComputedStyle(elt);
   window.parent.isnot(style.visibility, "hidden", "Should not load bad css");
 
   elt = document.getElementById("styleImport");
-  style = document.defaultView.getComputedStyle(elt, "");
+  style = document.defaultView.getComputedStyle(elt);
   window.parent.isnot(style.visibility, "visible", "Should import clean css");
 
   // Call parent.loadTestFrame again to test classification metadata in HTTP

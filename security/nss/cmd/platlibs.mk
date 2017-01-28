@@ -231,9 +231,6 @@ endif
 # $(EXTRA_SHARED_LIBS) come before $(OS_LIBS), except on AIX.
 EXTRA_SHARED_LIBS += \
 	-L$(DIST)/lib \
-	-lssl3 \
-	-lsmime3 \
-	-lnss3 \
 	-L$(NSSUTIL_LIB_DIR) \
 	-lnssutil3 \
 	-L$(NSPR_LIB_DIR) \
@@ -241,6 +238,12 @@ EXTRA_SHARED_LIBS += \
 	-lplds4 \
 	-lnspr4 \
 	$(NULL)
+ifndef NSS_BUILD_SOFTOKEN_ONLY
+EXTRA_SHARED_LIBS += \
+	-lssl3 \
+	-lsmime3 \
+	-lnss3
+endif
 endif
 
 ifdef SOFTOKEN_LIB_DIR

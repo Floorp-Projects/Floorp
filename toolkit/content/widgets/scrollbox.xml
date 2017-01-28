@@ -195,9 +195,9 @@
       </property>
       <property name="scrollboxPaddingStart" readonly="true">
         <getter><![CDATA[
-          var ltr = (window.getComputedStyle(this, null).direction == "ltr");
+          var ltr = (window.getComputedStyle(this).direction == "ltr");
           var paddingStartName = ltr ? "padding-left" : "padding-right";
-          var scrollboxStyle = window.getComputedStyle(this._scrollbox, null);
+          var scrollboxStyle = window.getComputedStyle(this._scrollbox);
           return parseFloat(scrollboxStyle.getPropertyValue(paddingStartName));
         ]]></getter>
       </property>
@@ -225,7 +225,7 @@
 
       <field name="_isRTLScrollbox"><![CDATA[
         this.orient != "vertical" &&
-        document.defaultView.getComputedStyle(this._scrollbox, "").direction == "rtl";
+        document.defaultView.getComputedStyle(this._scrollbox).direction == "rtl";
       ]]></field>
 
       <field name="_scrollTarget">null</field>
@@ -253,7 +253,7 @@
           var elementEnd = vertical ? rect.bottom : rect.right;
 
           var scrollPaddingRect = this.scrollPaddingRect;
-          let style = window.getComputedStyle(this._scrollbox, null);
+          let style = window.getComputedStyle(this._scrollbox);
           var scrollContentRect = {
             left: scrollPaddingRect.left + parseFloat(style.paddingLeft),
             top: scrollPaddingRect.top + parseFloat(style.paddingTop),

@@ -232,7 +232,7 @@ function run_next_test() {
 }
 
 var get_tooltip_info = Task.async(function*(addon) {
-  let managerWindow = addon.ownerDocument.defaultView;
+  let managerWindow = addon.ownerGlobal;
 
   // The popup code uses a triggering event's target to set the
   // document.tooltipNode property.
@@ -510,7 +510,7 @@ function formatDate(aDate) {
 }
 
 function is_hidden(aElement) {
-  var style = aElement.ownerDocument.defaultView.getComputedStyle(aElement, "");
+  var style = aElement.ownerGlobal.getComputedStyle(aElement);
   if (style.display == "none")
     return true;
   if (style.visibility != "visible")

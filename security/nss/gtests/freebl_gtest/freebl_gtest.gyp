@@ -16,8 +16,17 @@
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
-        '<(DEPTH)/lib/freebl/freebl.gyp:<(freebl_name)',
+        '<(DEPTH)/lib/util/util.gyp:nssutil3',
         '<(DEPTH)/gtests/google_test/google_test.gyp:gtest',
+        '<(DEPTH)/lib/nss/nss.gyp:nss_static',
+        '<(DEPTH)/lib/pk11wrap/pk11wrap.gyp:pk11wrap_static',
+        '<(DEPTH)/lib/cryptohi/cryptohi.gyp:cryptohi',
+        '<(DEPTH)/lib/certhigh/certhigh.gyp:certhi',
+        '<(DEPTH)/lib/certdb/certdb.gyp:certdb',
+        '<(DEPTH)/lib/base/base.gyp:nssb',
+        '<(DEPTH)/lib/dev/dev.gyp:nssdev',
+        '<(DEPTH)/lib/pki/pki.gyp:nsspki',
+        '<(DEPTH)/lib/ssl/ssl.gyp:ssl',
       ],
       'conditions': [
         [ 'ct_verif==1', {

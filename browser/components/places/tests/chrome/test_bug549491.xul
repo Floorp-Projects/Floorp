@@ -51,7 +51,7 @@
         yield PlacesTestUtils.clearHistory();
 
         yield PlacesTestUtils.addVisits({
-          uri: Services.io.newURI("http://example.tld/", null, null),
+          uri: Services.io.newURI("http://example.tld/"),
           transition: PlacesUtils.history.TRANSITION_TYPED
         });
 

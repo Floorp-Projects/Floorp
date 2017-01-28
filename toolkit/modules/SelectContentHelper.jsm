@@ -56,7 +56,7 @@ this.SelectContentHelper.prototype = {
     this.global.addMessageListener("Forms:MouseUp", this);
     this.global.addEventListener("pagehide", this);
     this.global.addEventListener("mozhidedropdown", this);
-    let MutationObserver = this.element.ownerDocument.defaultView.MutationObserver;
+    let MutationObserver = this.element.ownerGlobal.MutationObserver;
     this.mut = new MutationObserver(mutations => {
       // Something changed the <select> while it was open, so
       // we'll poke a DeferredTask to update the parent sometime
@@ -132,7 +132,7 @@ this.SelectContentHelper.prototype = {
       case "Forms:DismissedDropDown":
         let selectedOption = this.element.item(this.element.selectedIndex);
         if (this.initialSelection != selectedOption) {
-          let win = this.element.ownerDocument.defaultView;
+          let win = this.element.ownerGlobal;
           // For ordering of events, we're using non-e10s as our guide here,
           // since the spec isn't exactly clear. In non-e10s, we fire:
           // mousedown, mouseup, input, change, click if the user clicks
@@ -172,7 +172,7 @@ this.SelectContentHelper.prototype = {
         break;
 
       case "Forms:MouseUp":
-        let win = this.element.ownerDocument.defaultView;
+        let win = this.element.ownerGlobal;
         if (message.data.onAnchor) {
           this.dispatchMouseEvent(win, this.element, "mouseup");
         }
@@ -204,7 +204,7 @@ this.SelectContentHelper.prototype = {
 }
 
 function getComputedStyles(element) {
-  return element.ownerDocument.defaultView.getComputedStyle(element);
+  return element.ownerGlobal.getComputedStyle(element);
 }
 
 function buildOptionListForChildren(node) {

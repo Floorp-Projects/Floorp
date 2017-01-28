@@ -896,15 +896,13 @@ nsContextMenu.prototype = {
 
   // Returns the computed style attribute for the given element.
   getComputedStyle: function(aElem, aProp) {
-    return aElem.ownerDocument
-                .defaultView
-                .getComputedStyle(aElem, "").getPropertyValue(aProp);
+    return aElem.ownerGlobal
+                .getComputedStyle(aElem).getPropertyValue(aProp);
   },
 
   // Returns a "url"-type computed style attribute value, with the url() stripped.
   getComputedURL: function(aElem, aProp) {
-    var url = aElem.ownerDocument
-                   .defaultView.getComputedStyle(aElem, "")
+    var url = aElem.ownerGlobal.getComputedStyle(aElem)
                    .getPropertyCSSValue(aProp);
     if (url instanceof CSSValueList) {
       if (url.length != 1)

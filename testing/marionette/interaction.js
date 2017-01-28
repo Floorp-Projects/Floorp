@@ -395,5 +395,5 @@ interaction.isElementSelected = function (el, strict = false) {
 };
 
 function getWindow(el) {
-  return el.ownerDocument.defaultView;
+  return el.ownerGlobal;
 }

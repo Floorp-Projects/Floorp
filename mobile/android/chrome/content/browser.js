@@ -1538,7 +1538,7 @@ var BrowserApp = {
         // we are putting focus into a contentEditable frame. scroll the frame into
         // view instead of the contentEditable document contained within, because that
         // results in a better user experience
-        focused = focused.ownerDocument.defaultView.frameElement;
+        focused = focused.ownerGlobal.frameElement;
       }
       return focused;
     }
@@ -2924,7 +2924,7 @@ var NativeWindow = {
 
       let useTabs = Object.keys(this.menus).length > 1;
       let prompt = new Prompt({
-        window: target.ownerDocument.defaultView,
+        window: target.ownerGlobal,
         title: useTabs ? undefined : title
       });
 
@@ -3081,7 +3081,7 @@ var LightWeightThemeWebInstaller = {
       case "PreviewBrowserTheme":
       case "ResetBrowserThemePreview":
         // ignore requests from background tabs
-        if (event.target.ownerDocument.defaultView.top != content)
+        if (event.target.ownerGlobal.top != content)
           return;
     }
 
@@ -3158,7 +3158,7 @@ var LightWeightThemeWebInstaller = {
       return;
     this._resetPreview();
 
-    this._previewWindow = event.target.ownerDocument.defaultView;
+    this._previewWindow = event.target.ownerGlobal;
     this._previewWindow.addEventListener("pagehide", this, true);
     BrowserApp.deck.addEventListener("TabSelect", this);
     this._manager.previewTheme(data);
@@ -4807,11 +4807,11 @@ const ElementTouchHelper = {
     let r = aElement.getBoundingClientRect();
 
     // step out of iframes and frames, offsetting scroll values
-    for (let frame = aElement.ownerDocument.defaultView; frame.frameElement && frame != content; frame = frame.parent) {
+    for (let frame = aElement.ownerGlobal; frame.frameElement && frame != content; frame = frame.parent) {
       // adjust client coordinates' origin to be top left of iframe viewport
       let rect = frame.frameElement.getBoundingClientRect();
-      let left = frame.getComputedStyle(frame.frameElement, "").borderLeftWidth;
-      let top = frame.getComputedStyle(frame.frameElement, "").borderTopWidth;
+      let left = frame.getComputedStyle(frame.frameElement).borderLeftWidth;
+      let top = frame.getComputedStyle(frame.frameElement).borderTopWidth;
       scrollX.value += rect.left + parseInt(left);
       scrollY.value += rect.top + parseInt(top);
     }
@@ -5032,7 +5032,7 @@ var FormAssistant = {
     // Ignore this notificaiton if the current tab doesn't contain the invalid element
     let currentElement = aInvalidElements.queryElementAt(0, Ci.nsISupports);
     if (BrowserApp.selectedBrowser.contentDocument !=
-        currentElement.ownerDocument.defaultView.top.document)
+        currentElement.ownerGlobal.top.document)
       return;
 
     this._invalidSubmit = true;

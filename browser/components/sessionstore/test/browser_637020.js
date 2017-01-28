@@ -7,13 +7,13 @@ const TEST_URL = "http://mochi.test:8888/browser/browser/components/" +
 const TEST_STATE = {
   windows: [{
     tabs: [
-      { entries: [{ url: "about:mozilla" }] },
-      { entries: [{ url: "about:robots" }] }
+      { entries: [{ url: "about:mozilla", triggeringPrincipal_base64}] },
+      { entries: [{ url: "about:robots", triggeringPrincipal_base64}] }
     ]
   }, {
     tabs: [
-      { entries: [{ url: TEST_URL }] },
-      { entries: [{ url: TEST_URL }] }
+      { entries: [{ url: TEST_URL, triggeringPrincipal_base64}] },
+      { entries: [{ url: TEST_URL, triggeringPrincipal_base64}] }
     ]
   }]
 };

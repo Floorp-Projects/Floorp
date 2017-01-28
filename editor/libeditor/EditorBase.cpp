@@ -4265,34 +4265,22 @@ EditorBase::CreateTxnForComposition(const nsAString& aStringToInsert)
   return transaction.forget();
 }
 
-NS_IMETHODIMP
-EditorBase::CreateTxnForAddStyleSheet(StyleSheet* aSheet,
-                                      AddStyleSheetTransaction** aTransaction)
+already_AddRefed<AddStyleSheetTransaction>
+EditorBase::CreateTxnForAddStyleSheet(StyleSheet* aSheet)
 {
-  RefPtr<AddStyleSheetTransaction> transaction = new AddStyleSheetTransaction();
+  RefPtr<AddStyleSheetTransaction> transaction =
+    new AddStyleSheetTransaction(*this, aSheet);
 
-  nsresult rv = transaction->Init(this, aSheet);
-  if (NS_SUCCEEDED(rv)) {
-    transaction.forget(aTransaction);
-  }
-
-  return rv;
+  return transaction.forget();
 }
 
-NS_IMETHODIMP
-EditorBase::CreateTxnForRemoveStyleSheet(
-              StyleSheet* aSheet,
-              RemoveStyleSheetTransaction** aTransaction)
+already_AddRefed<RemoveStyleSheetTransaction>
+EditorBase::CreateTxnForRemoveStyleSheet(StyleSheet* aSheet)
 {
   RefPtr<RemoveStyleSheetTransaction> transaction =
-    new RemoveStyleSheetTransaction();
+    new RemoveStyleSheetTransaction(*this, aSheet);
 
-  nsresult rv = transaction->Init(this, aSheet);
-  if (NS_SUCCEEDED(rv)) {
-    transaction.forget(aTransaction);
-  }
-
-  return rv;
+  return transaction.forget();
 }
 
 nsresult

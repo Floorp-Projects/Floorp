@@ -20,12 +20,12 @@ function checkLoads() {
   }
 
   var elt = document.getElementById("styleImport");
-  var style = document.defaultView.getComputedStyle(elt, "");
+  var style = document.defaultView.getComputedStyle(elt);
   window.parent.isnot(style.visibility, "visible", "Should load clean css");
 
   // Make sure the css did not load.
   elt = document.getElementById("styleCheck");
-  style = document.defaultView.getComputedStyle(elt, "");
+  style = document.defaultView.getComputedStyle(elt);
   if (window.parent.shouldLoad) {
     window.parent.isnot(style.visibility, "visible", "Should load bad css");
   } else {
@@ -33,7 +33,7 @@ function checkLoads() {
   }
 
   elt = document.getElementById("styleBad");
-  style = document.defaultView.getComputedStyle(elt, "");
+  style = document.defaultView.getComputedStyle(elt);
   if (window.parent.shouldLoad) {
     window.parent.isnot(style.visibility, "visible", "Should import bad css");
   } else {

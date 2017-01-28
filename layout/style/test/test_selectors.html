@@ -75,12 +75,12 @@ function run() {
 
         for (var i = 0; i < should_match.length; ++i) {
             var e = should_match[i];
-            is(ifwin.getComputedStyle(e, "").zIndex, String(zi),
+            is(ifwin.getComputedStyle(e).zIndex, String(zi),
                "element in " + body_contents + " matched " + selector);
         }
         for (var i = 0; i < should_not_match.length; ++i) {
             var e = should_not_match[i];
-            is(ifwin.getComputedStyle(e, "").zIndex, "auto",
+            is(ifwin.getComputedStyle(e).zIndex, "auto",
                "element in " + body_contents + " did not match " + selector);
         }
 
@@ -93,13 +93,13 @@ function run() {
         style_text.data = namespaces + ser1 + "{ z-index: " + zi + " }";
         for (var i = 0; i < should_match.length; ++i) {
             var e = should_match[i];
-            is(ifwin.getComputedStyle(e, "").zIndex, String(zi),
+            is(ifwin.getComputedStyle(e).zIndex, String(zi),
                "element in " + body_contents + " matched " + ser1 +
                " which is the reserialization of " + selector);
         }
         for (var i = 0; i < should_not_match.length; ++i) {
             var e = should_not_match[i];
-            is(ifwin.getComputedStyle(e, "").zIndex, "auto",
+            is(ifwin.getComputedStyle(e).zIndex, "auto",
                "element in " + body_contents + " did not match " + ser1 +
                " which is the reserialization of " + selector);
         }
@@ -151,13 +151,13 @@ function run() {
 
             for (var i = 0; i < should_match.length; ++i) {
                 var e = should_match[i];
-                is(clonewin.getComputedStyle(e, "").zIndex, String(zi),
+                is(clonewin.getComputedStyle(e).zIndex, String(zi),
                    "element in " + body_contents + " matched clone of " +
                    selector);
             }
             for (var i = 0; i < should_not_match.length; ++i) {
                 var e = should_not_match[i];
-                is(clonewin.getComputedStyle(e, "").zIndex, "auto",
+                is(clonewin.getComputedStyle(e).zIndex, "auto",
                    "element in " + body_contents + " did not match clone of " +
                    selector);
             }
@@ -184,7 +184,7 @@ function run() {
         var zi = ++gCounter;
         style_text.data = "p, " + selector + "{ z-index: " + zi + " }";
         var should_match = ifdoc.getElementsByTagName("p")[0];
-        var parsed = ifwin.getComputedStyle(should_match, "").zIndex == zi;
+        var parsed = ifwin.getComputedStyle(should_match).zIndex == zi;
         ok(parsed, "selector " + selector + " was parsed");
         if (!parsed) {
             return;
@@ -194,7 +194,7 @@ function run() {
         var ser1 = style_elem.sheet.cssRules[0].selectorText;
         zi = ++gCounter;
         style_text.data = ser1 + "{ z-index: " + zi + " }";
-        is(ifwin.getComputedStyle(should_match, "").zIndex, String(zi),
+        is(ifwin.getComputedStyle(should_match).zIndex, String(zi),
            "serialization " + ser1 + " of selector p, " + selector +
            " was parsed");
         var ser2 = style_elem.sheet.cssRules[0].selectorText;
@@ -225,7 +225,7 @@ function run() {
             links[0].parentNode.removeChild(links[0]);
 
             should_match = clonedoc.getElementsByTagName("p")[0];
-            is(clonewin.getComputedStyle(should_match, "").zIndex, String(zi),
+            is(clonewin.getComputedStyle(should_match).zIndex, String(zi),
                "selector " + selector + " was cloned correctly");
             var ser3 = links[0].sheet.cssRules[1].selectorText;
             is(ser3, ser1,
@@ -268,9 +268,9 @@ function run() {
                           "div { z-index: " + zi2 + " }";
         var should_not_match = ifdoc.getElementsByTagName("p")[0];
         var should_match = ifdoc.getElementsByTagName("div")[0];
-        is(ifwin.getComputedStyle(should_not_match, "").zIndex, "auto",
+        is(ifwin.getComputedStyle(should_not_match).zIndex, "auto",
            "selector " + selector + " was a parser error");
-        is(ifwin.getComputedStyle(should_match, "").zIndex, String(zi2),
+        is(ifwin.getComputedStyle(should_match).zIndex, String(zi2),
            "selector " + selector + " error was recovered from");
         ifdoc.body.innerHTML = "";
         style_text.data = "";
@@ -284,7 +284,7 @@ function run() {
         ifdoc.body.innerHTML = "<p></p>";
         style_text.data = "p, " + selector + "{ z-index: " + zi1 + " }";
         var should_not_match = ifdoc.getElementsByTagName("p")[0];
-        is(ifwin.getComputedStyle(should_not_match, "").zIndex, "auto",
+        is(ifwin.getComputedStyle(should_not_match).zIndex, "auto",
            "selector " + selector + " was a parser error");
         is(style_text.parentNode.sheet.cssRules.length, 0,
            "sheet should have no rules since " + selector + " is parse error");

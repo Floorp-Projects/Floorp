@@ -277,7 +277,7 @@ doATest("height", "minmaxheight10-", 600, 0, true);
 doATest("height", "minmaxheight11-", 600, 0, true);
 
 function style(id) {
-  return document.defaultView.getComputedStyle($(id), "");
+  return document.defaultView.getComputedStyle($(id));
 }
 
 function round(num, decimals) {

@@ -2162,7 +2162,7 @@ var AddonManagerInternal = {
     // main tab's browser). Check this by seeing if the browser we've been
     // passed is in a content type docshell and if so get the outer-browser.
     let topBrowser = aBrowser;
-    let docShell = aBrowser.ownerDocument.defaultView
+    let docShell = aBrowser.ownerGlobal
                            .QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDocShell)
                            .QueryInterface(Ci.nsIDocShellTreeItem);
@@ -2918,14 +2918,14 @@ var AddonManagerInternal = {
           let parentWindow = null;
           if (browser) {
             // Find the outer browser
-            let docShell = browser.ownerDocument.defaultView
+            let docShell = browser.ownerGlobal
                                   .QueryInterface(Ci.nsIInterfaceRequestor)
                                   .getInterface(Ci.nsIDocShell)
                                   .QueryInterface(Ci.nsIDocShellTreeItem);
             if (docShell.itemType == Ci.nsIDocShellTreeItem.typeContent)
               browser = docShell.chromeEventHandler;
 
-            parentWindow = browser.ownerDocument.defaultView;
+            parentWindow = browser.ownerGlobal;
             PromptUtils.fireDialogEvent(parentWindow, "DOMWillOpenModalDialog", browser);
           }
 

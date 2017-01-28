@@ -15,18 +15,18 @@ add_task(function* test() {
   let state = { windows: [
     {
       tabs: [
-        { entries: [{ url: "http://example.org#0" }], extData: { "uniq": r() } }
+        { entries: [{ url: "http://example.org#0", triggeringPrincipal_base64 }], extData: { "uniq": r() } }
       ],
       selected: 1
     },
     {
       tabs: [
-        { entries: [{ url: "http://example.com#1" }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#2" }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#3" }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#4" }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#5" }], extData: { "uniq": r() } },
-        { entries: [{ url: "http://example.com#6" }], extData: { "uniq": r() } }
+        { entries: [{ url: "http://example.com#1", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#2", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#3", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#4", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#5", triggeringPrincipal_base64 }], extData: { "uniq": r() } },
+        { entries: [{ url: "http://example.com#6", triggeringPrincipal_base64 }], extData: { "uniq": r() } }
       ],
       selected: 4
     }

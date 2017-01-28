@@ -58,7 +58,7 @@ function values_for(set) {
 
 var e = document.getElementById("display");
 var s = e.style;
-var c = window.getComputedStyle(e, "");
+var c = window.getComputedStyle(e);
 
 for (var set of gProps) {
   var values = values_for(set);

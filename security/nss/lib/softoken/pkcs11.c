@@ -3149,9 +3149,11 @@ nsc_CommonFinalize(CK_VOID_PTR pReserved, PRBool isFIPS)
      * this call doesn't force freebl to be reloaded. */
     BL_SetForkState(PR_FALSE);
 
+#ifndef NSS_TEST_BUILD
     /* unload freeBL shared library from memory. This may only decrement the
      * OS refcount if it's been loaded multiple times, eg. by libssl */
     BL_Unload();
+#endif
 
     /* clean up the default OID table */
     SECOID_Shutdown();

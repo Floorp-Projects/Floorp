@@ -25,7 +25,7 @@ function test() {
   for (let i = 0; i < NUM_TABS; i++) {
     let uniq = r();
     let tabData = {
-      entries: [{ url: "http://example.com/#" + i }],
+      entries: [{ url: "http://example.com/#" + i, triggeringPrincipal_base64}],
       extData: { "uniq": uniq, "baz": "qux" }
     };
     state.windows[0].tabs.push(tabData);
