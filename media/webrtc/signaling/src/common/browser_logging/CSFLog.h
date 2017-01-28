@@ -7,8 +7,6 @@
 
 #include <stdarg.h>
 
-struct PRLogModuleInfo;
-
 typedef enum{
     CSF_LOG_ERROR = 1,
     CSF_LOG_WARNING,
@@ -39,8 +37,6 @@ void CSFLog( CSFLogLevel priority, const char* sourceFile, int sourceLine, const
 ;
 
 void CSFLogV( CSFLogLevel priority, const char* sourceFile, int sourceLine, const char* tag , const char* format, va_list args);
-
-struct PRLogModuleInfo *GetSignalingLogInfo();
 
 #ifdef __cplusplus
 }
