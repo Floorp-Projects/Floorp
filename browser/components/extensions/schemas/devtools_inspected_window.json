@@ -178,7 +178,6 @@
       },
       {
         "name": "reload",
-        "unsupported": true,
         "type": "function",
         "description": "Reloads the inspected page.",
         "parameters": [
