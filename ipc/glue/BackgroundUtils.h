@@ -76,6 +76,13 @@ PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
                          PrincipalInfo* aPrincipalInfo);
 
 /**
+ * Return true if this PrincipalInfo is a content principal and it has
+ * a privateBrowsing id in its OriginAttributes
+ */
+bool
+IsPincipalInfoPrivate(const PrincipalInfo& aPrincipalInfo);
+
+/**
  * Convert a LoadInfo to LoadInfoArgs struct.
  */
 nsresult

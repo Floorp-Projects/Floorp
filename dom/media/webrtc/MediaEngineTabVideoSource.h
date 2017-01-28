@@ -29,7 +29,7 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
     nsresult Allocate(const dom::MediaTrackConstraints &,
                       const mozilla::MediaEnginePrefs&,
                       const nsString& aDeviceId,
-                      const nsACString& aOrigin,
+                      const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                       AllocationHandle** aOutHandle,
                       const char** aOutBadConstraint) override;
     nsresult Deallocate(AllocationHandle* aHandle) override;

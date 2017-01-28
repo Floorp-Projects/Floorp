@@ -5,6 +5,8 @@
 include protocol PContent;
 include protocol PBackground;
 
+include PBackgroundSharedTypes;
+
 using mozilla::camera::CaptureEngine from "mozilla/media/CamerasTypes.h";
 
 namespace mozilla {
@@ -75,7 +77,8 @@ parent:
                              int capability_number);
   async GetCaptureDevice(CaptureEngine engine, int num);
 
-  async AllocateCaptureDevice(CaptureEngine engine, nsCString unique_idUTF8, nsCString origin);
+  async AllocateCaptureDevice(CaptureEngine engine, nsCString unique_idUTF8,
+                              PrincipalInfo principal);
   async ReleaseCaptureDevice(CaptureEngine engine, int numdev);
   async StartCapture(CaptureEngine engine, int numdev, VideoCaptureCapability capability);
   async StopCapture(CaptureEngine engine, int numdev);

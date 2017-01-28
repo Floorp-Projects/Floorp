@@ -636,74 +636,66 @@ CamerasParent::RecvGetCaptureDevice(const CaptureEngine& aCapEngine,
   return IPC_OK();
 }
 
-static nsresult
-GetPrincipalFromOrigin(const nsACString& aOrigin, nsIPrincipal** aPrincipal)
-{
-  nsAutoCString originNoSuffix;
-  mozilla::OriginAttributes attrs;
-  if (!attrs.PopulateFromOrigin(aOrigin, originNoSuffix)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), originNoSuffix);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIPrincipal> principal = mozilla::BasePrincipal::CreateCodebasePrincipal(uri, attrs);
-  principal.forget(aPrincipal);
-  return NS_OK;
-}
-
-// Find out whether the given origin has permission to use the
+// Find out whether the given principal has permission to use the
 // camera. If the permission is not persistent, we'll make it
 // a one-shot by removing the (session) permission.
 static bool
-HasCameraPermission(const nsCString& aOrigin)
+HasCameraPermission(const ipc::PrincipalInfo& aPrincipalInfo)
 {
+  if (aPrincipalInfo.type() == ipc::PrincipalInfo::TNullPrincipalInfo) {
+    return false;
+  }
+
+  if (aPrincipalInfo.type() == ipc::PrincipalInfo::TSystemPrincipalInfo) {
+    return true;
+  }
+
+  MOZ_ASSERT(aPrincipalInfo.type() == ipc::PrincipalInfo::TContentPrincipalInfo);
+
+  nsresult rv;
+  nsCOMPtr<nsIPrincipal> principal =
+    PrincipalInfoToPrincipal(aPrincipalInfo, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
   // Name used with nsIPermissionManager
   static const char* cameraPermission = "MediaManagerVideo";
-  bool allowed = false;
-  nsresult rv;
   nsCOMPtr<nsIPermissionManager> mgr =
     do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIIOService> ioServ(do_GetIOService());
-    nsCOMPtr<nsIURI> uri;
-    rv = ioServ->NewURI(aOrigin, nullptr, nullptr, getter_AddRefs(uri));
-    if (NS_SUCCEEDED(rv)) {
-      // Permanent permissions are only retrievable via principal, not uri
-      nsCOMPtr<nsIPrincipal> principal;
-      rv = GetPrincipalFromOrigin(aOrigin, getter_AddRefs(principal));
-      if (NS_SUCCEEDED(rv)) {
-        uint32_t video = nsIPermissionManager::UNKNOWN_ACTION;
-        rv = mgr->TestExactPermissionFromPrincipal(principal,
-                                                   cameraPermission,
-                                                   &video);
-        if (NS_SUCCEEDED(rv)) {
-          allowed = (video == nsIPermissionManager::ALLOW_ACTION);
-        }
-        // Session permissions are removed after one use.
-        if (allowed) {
-          mgr->RemoveFromPrincipal(principal, cameraPermission);
-        }
-      }
-    }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
   }
+
+  uint32_t video = nsIPermissionManager::UNKNOWN_ACTION;
+  rv = mgr->TestExactPermissionFromPrincipal(principal, cameraPermission,
+                                             &video);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  bool allowed = (video == nsIPermissionManager::ALLOW_ACTION);
+
+  // Session permissions are removed after one use.
+  if (allowed) {
+    mgr->RemoveFromPrincipal(principal, cameraPermission);
+  }
+
   return allowed;
 }
 
 mozilla::ipc::IPCResult
 CamerasParent::RecvAllocateCaptureDevice(const CaptureEngine& aCapEngine,
                                          const nsCString& unique_id,
-                                         const nsCString& aOrigin)
+                                         const PrincipalInfo& aPrincipalInfo)
 {
-  LOG(("%s: Verifying permissions for %s", __PRETTY_FUNCTION__, aOrigin.get()));
+  LOG(("%s: Verifying permissions", __PRETTY_FUNCTION__));
   RefPtr<CamerasParent> self(this);
   RefPtr<Runnable> mainthread_runnable =
-    media::NewRunnableFrom([self, aCapEngine, unique_id, aOrigin]() -> nsresult {
+    media::NewRunnableFrom([self, aCapEngine, unique_id, aPrincipalInfo]() -> nsresult {
       // Verify whether the claimed origin has received permission
       // to use the camera, either persistently or this session (one shot).
-      bool allowed = HasCameraPermission(aOrigin);
+      bool allowed = HasCameraPermission(aPrincipalInfo);
       if (!allowed) {
         // Developer preference for turning off permission check.
         if (Preferences::GetBool("media.navigator.permission.disabled", false)

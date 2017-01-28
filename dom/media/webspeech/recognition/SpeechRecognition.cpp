@@ -20,6 +20,7 @@
 #include "mozilla/Services.h"
 
 #include "AudioSegment.h"
+#include "DOMMediaStream.h"
 #include "endpointer.h"
 
 #include "mozilla/dom/SpeechRecognitionEvent.h"

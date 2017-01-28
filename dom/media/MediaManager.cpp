@@ -875,9 +875,9 @@ AudioDevice::GetSource()
 
 nsresult MediaDevice::Allocate(const dom::MediaTrackConstraints &aConstraints,
                                const MediaEnginePrefs &aPrefs,
-                               const nsACString& aOrigin,
+                               const ipc::PrincipalInfo& aPrincipalInfo,
                                const char** aOutBadConstraint) {
-  return GetSource()->Allocate(aConstraints, aPrefs, mID, aOrigin,
+  return GetSource()->Allocate(aConstraints, aPrefs, mID, aPrincipalInfo,
                                getter_AddRefs(mAllocationHandle),
                                aOutBadConstraint);
 }
@@ -987,7 +987,7 @@ public:
     nsCOMPtr<nsIDOMGetUserMediaErrorCallback>& aOnFailure,
     uint64_t aWindowID,
     GetUserMediaCallbackMediaStreamListener* aListener,
-    const nsCString& aOrigin,
+    const ipc::PrincipalInfo& aPrincipalInfo,
     const MediaStreamConstraints& aConstraints,
     AudioDevice* aAudioDevice,
     VideoDevice* aVideoDevice,
@@ -997,7 +997,7 @@ public:
     , mVideoDevice(aVideoDevice)
     , mWindowID(aWindowID)
     , mListener(aListener)
-    , mOrigin(aOrigin)
+    , mPrincipalInfo(aPrincipalInfo)
     , mPeerIdentity(aPeerIdentity)
     , mManager(MediaManager::GetInstance())
   {
@@ -1232,10 +1232,11 @@ public:
     // We won't need mOnFailure now.
     mOnFailure = nullptr;
 
-    if (!OriginAttributes::IsPrivateBrowsing(mOrigin)) {
-      // Call GetOriginKey again, this time w/persist = true, to promote
+    if (!IsPincipalInfoPrivate(mPrincipalInfo)) {
+      // Call GetPrincipalKey again, this time w/persist = true, to promote
       // deviceIds to persistent, in case they're not already. Fire'n'forget.
-      RefPtr<Pledge<nsCString>> p = media::GetOriginKey(mOrigin, true);
+      RefPtr<Pledge<nsCString>> p =
+        media::GetPrincipalKey(mPrincipalInfo, true);
     }
     return NS_OK;
   }
@@ -1248,7 +1249,7 @@ private:
   RefPtr<VideoDevice> mVideoDevice;
   uint64_t mWindowID;
   RefPtr<GetUserMediaCallbackMediaStreamListener> mListener;
-  nsCString mOrigin;
+  ipc::PrincipalInfo mPrincipalInfo;
   RefPtr<PeerIdentity> mPeerIdentity;
   RefPtr<MediaManager> mManager; // get ref to this when creating the runnable
 };
@@ -1382,7 +1383,7 @@ public:
     already_AddRefed<nsIDOMGetUserMediaErrorCallback> aOnFailure,
     uint64_t aWindowID, GetUserMediaCallbackMediaStreamListener *aListener,
     MediaEnginePrefs &aPrefs,
-    const nsCString& aOrigin,
+    const ipc::PrincipalInfo& aPrincipalInfo,
     bool aIsChrome,
     MediaManager::SourceSet* aSourceSet)
     : mConstraints(aConstraints)
@@ -1391,7 +1392,7 @@ public:
     , mWindowID(aWindowID)
     , mListener(aListener)
     , mPrefs(aPrefs)
-    , mOrigin(aOrigin)
+    , mPrincipalInfo(aPrincipalInfo)
     , mIsChrome(aIsChrome)
     , mDeviceChosen(false)
     , mSourceSet(aSourceSet)
@@ -1437,7 +1438,8 @@ public:
 
     if (mAudioDevice) {
       auto& constraints = GetInvariant(mConstraints.mAudio);
-      rv = mAudioDevice->Allocate(constraints, mPrefs, mOrigin, &badConstraint);
+      rv = mAudioDevice->Allocate(constraints, mPrefs, mPrincipalInfo,
+                                  &badConstraint);
       if (NS_FAILED(rv)) {
         errorMsg = "Failed to allocate audiosource";
         if (rv == NS_ERROR_NOT_AVAILABLE && !badConstraint) {
@@ -1450,7 +1452,8 @@ public:
     }
     if (!errorMsg && mVideoDevice) {
       auto& constraints = GetInvariant(mConstraints.mVideo);
-      rv = mVideoDevice->Allocate(constraints, mPrefs, mOrigin, &badConstraint);
+      rv = mVideoDevice->Allocate(constraints, mPrefs, mPrincipalInfo,
+                                  &badConstraint);
       if (NS_FAILED(rv)) {
         errorMsg = "Failed to allocate videosource";
         if (rv == NS_ERROR_NOT_AVAILABLE && !badConstraint) {
@@ -1483,7 +1486,7 @@ public:
 
     NS_DispatchToMainThread(do_AddRef(
         new GetUserMediaStreamRunnable(mOnSuccess, mOnFailure, mWindowID,
-                                       mListener, mOrigin,
+                                       mListener, mPrincipalInfo,
                                        mConstraints, mAudioDevice, mVideoDevice,
                                        peerIdentity)));
     MOZ_ASSERT(!mOnSuccess);
@@ -1565,7 +1568,7 @@ private:
   RefPtr<AudioDevice> mAudioDevice;
   RefPtr<VideoDevice> mVideoDevice;
   MediaEnginePrefs mPrefs;
-  nsCString mOrigin;
+  ipc::PrincipalInfo mPrincipalInfo;
   bool mIsChrome;
 
   bool mDeviceChosen;
@@ -2080,8 +2083,10 @@ if (privileged) {
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoCString origin;
-  rv = principal->GetOrigin(origin);
+  // This principal needs to be sent to different threads and so via IPC.
+  // For this reason it's better to convert it to PrincipalInfo right now.
+  ipc::PrincipalInfo principalInfo;
+  rv = PrincipalToPrincipalInfo(principal, &principalInfo);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2286,7 +2291,8 @@ if (privileged) {
   RefPtr<PledgeSourceSet> p = EnumerateDevicesImpl(windowID, videoType,
                                                    audioType, fake);
   p->Then([this, onSuccess, onFailure, windowID, c, listener, askPermission,
-           prefs, isHTTPS, callID, origin, isChrome](SourceSet*& aDevices) mutable {
+           prefs, isHTTPS, callID, principalInfo,
+           isChrome](SourceSet*& aDevices) mutable {
 
     RefPtr<Refcountable<UniquePtr<SourceSet>>> devices(
          new Refcountable<UniquePtr<SourceSet>>(aDevices)); // grab result
@@ -2301,8 +2307,8 @@ if (privileged) {
     RefPtr<PledgeChar> p2 = SelectSettings(c, isChrome, devices);
 
     p2->Then([this, onSuccess, onFailure, windowID, c,
-              listener, askPermission, prefs, isHTTPS, callID,
-              origin, isChrome, devices](const char*& badConstraint) mutable {
+              listener, askPermission, prefs, isHTTPS, callID, principalInfo,
+              isChrome, devices](const char*& badConstraint) mutable {
 
       // Ensure that the captured 'this' pointer and our windowID are still good.
       auto* globalWindow = nsGlobalWindow::GetInnerWindowWithId(windowID);
@@ -2344,7 +2350,7 @@ if (privileged) {
       RefPtr<GetUserMediaTask> task (new GetUserMediaTask(c, onSuccess.forget(),
                                                           onFailure.forget(),
                                                           windowID, listener,
-                                                          prefs, origin,
+                                                          prefs, principalInfo,
                                                           isChrome,
                                                           devices->release()));
       // Store the task w/callbacks.
@@ -2488,17 +2494,24 @@ MediaManager::EnumerateDevicesImpl(uint64_t aWindowId,
     nsGlobalWindow::Cast(window)->GetPrincipal();
   MOZ_ASSERT(principal);
 
-  nsAutoCString origin;
-  principal->GetOrigin(origin);
+  ipc::PrincipalInfo principalInfo;
+  nsresult rv = PrincipalToPrincipalInfo(principal, &principalInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    RefPtr<PledgeSourceSet> p = new PledgeSourceSet();
+    RefPtr<MediaStreamError> error =
+      new MediaStreamError(window, NS_LITERAL_STRING("NotAllowedError"));
+    p->Reject(error);
+    return p.forget();
+  }
 
   bool persist = IsActivelyCapturingOrHasAPermission(aWindowId);
 
-  // GetOriginKey is an async API that returns a pledge (a promise-like
+  // GetPrincipalKey is an async API that returns a pledge (a promise-like
   // pattern). We use .Then() to pass in a lambda to run back on this same
-  // thread later once GetOriginKey resolves. Needed variables are "captured"
+  // thread later once GetPrincipalKey resolves. Needed variables are "captured"
   // (passed by value) safely into the lambda.
 
-  RefPtr<Pledge<nsCString>> p = media::GetOriginKey(origin, persist);
+  RefPtr<Pledge<nsCString>> p = media::GetPrincipalKey(principalInfo, persist);
   p->Then([id, aWindowId, aVideoType, aAudioType,
            aFake](const nsCString& aOriginKey) mutable {
     MOZ_ASSERT(NS_IsMainThread());
@@ -2552,9 +2565,9 @@ MediaManager::EnumerateDevices(nsPIDOMWindowInner* aWindow,
   bool fake = Preferences::GetBool("media.navigator.streams.fake");
 
   RefPtr<PledgeSourceSet> p = EnumerateDevicesImpl(windowId,
-                                                     MediaSourceEnum::Camera,
-                                                     MediaSourceEnum::Microphone,
-                                                     fake);
+                                                   MediaSourceEnum::Camera,
+                                                   MediaSourceEnum::Microphone,
+                                                   fake);
   p->Then([onSuccess, windowId, listener](SourceSet*& aDevices) mutable {
     UniquePtr<SourceSet> devices(aDevices); // grab result
     RefPtr<MediaManager> mgr = MediaManager_GetInstance();
