@@ -8,29 +8,19 @@ const { addons, createClass, createFactory, DOM: dom, PropTypes } =
   require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const { LocalizationHelper } = require("devtools/shared/l10n");
-
 const Accordion = createFactory(require("./Accordion"));
-const BoxModel = createFactory(require("./BoxModel"));
 const Grid = createFactory(require("./Grid"));
 
 const Types = require("../types");
 const { getStr } = require("../utils/l10n");
-
-const BOXMODEL_STRINGS_URI = "devtools/client/locales/boxmodel.properties";
-const BOXMODEL_L10N = new LocalizationHelper(BOXMODEL_STRINGS_URI);
 
 const App = createClass({
 
   displayName: "App",
 
   propTypes: {
-    boxModel: PropTypes.shape(Types.boxModel).isRequired,
     grids: PropTypes.arrayOf(PropTypes.shape(Types.grid)).isRequired,
     highlighterSettings: PropTypes.shape(Types.highlighterSettings).isRequired,
-    onShowBoxModelEditor: PropTypes.func.isRequired,
-    onHideBoxModelHighlighter: PropTypes.func.isRequired,
-    onShowBoxModelHighlighter: PropTypes.func.isRequired,
     onToggleGridHighlighter: PropTypes.func.isRequired,
     onToggleShowGridLineNumbers: PropTypes.func.isRequired,
     onToggleShowInfiniteLines: PropTypes.func.isRequired,
@@ -46,17 +36,11 @@ const App = createClass({
       Accordion({
         items: [
           {
-            header: BOXMODEL_L10N.getStr("boxmodel.title"),
-            component: BoxModel,
-            componentProps: this.props,
-            opened: true,
-          },
-          {
             header: getStr("layout.header"),
             component: Grid,
             componentProps: this.props,
-            opened: true,
-          },
+            opened: true
+          }
         ]
       })
     );
