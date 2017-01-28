@@ -125,6 +125,13 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
     return false;
   }
 
+  // FIXME: Bug 1334036: stylo: Implement off-main-thread animations.
+  if (aFrame->StyleContext()->StyleSource().IsServoComputedValues()) {
+    NS_WARNING("stylo: return false in FindAnimationsForCompositor because "
+               "haven't supported compositor-driven animations yet");
+    return false;
+  }
+
   // First check for newly-started transform animations that should be
   // synchronized with geometric animations. We need to do this before any
   // other early returns (the one above is ok) since we can only check this
@@ -146,11 +153,6 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
   }
 
   if (aFrame->RefusedAsyncAnimation()) {
-    return false;
-  }
-
-  if (aFrame->StyleContext()->StyleSource().IsServoComputedValues()) {
-    NS_ERROR("stylo: cannot handle compositor-driven animations yet");
     return false;
   }
 
@@ -273,14 +275,14 @@ EffectCompositor::RequestRestyle(dom::Element* aElement,
   }
 
   if (aRestyleType == RestyleType::Layer) {
-    // FIXME: we call RequestRestyle for both stylo and gecko, so we
-    // should fix this after supporting animations on the compositor.
-    // Prompt layers to re-sync their animations.
+    // FIXME: Bug 1334036: we call RequestRestyle for both stylo and gecko,
+    // so we should fix this after supporting animations on the compositor.
     if (mPresContext->RestyleManager()->IsServo()) {
-      NS_ERROR("stylo: Servo-backed style system should not be using "
-               "EffectCompositor");
+      NS_WARNING("stylo: RequestRestyle to layer, but Servo-backed style "
+                 "system haven't supported compositor-driven animations yet");
       return;
     }
+    // Prompt layers to re-sync their animations.
     mPresContext->RestyleManager()->AsGecko()->IncrementAnimationGeneration();
     EffectSet* effectSet =
       EffectSet::GetEffectSet(aElement, aPseudoType);

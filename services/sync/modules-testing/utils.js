@@ -7,9 +7,6 @@
 this.EXPORTED_SYMBOLS = [
   "btoa", // It comes from a module import.
   "encryptPayload",
-  "isConfiguredWithLegacyIdentity",
-  "ensureLegacyIdentityManager",
-  "setBasicCredentials",
   "makeIdentityConfig",
   "makeFxAccountsInternalMock",
   "configureFxAccountIdentity",
@@ -18,7 +15,6 @@ this.EXPORTED_SYMBOLS = [
   "waitForZeroTimer",
   "promiseZeroTimer",
   "promiseNamedTimer",
-  "add_identity_test",
   "MockFxaStorageManager",
   "AccountState", // from a module import
   "sumHistogram",
@@ -27,7 +23,6 @@ this.EXPORTED_SYMBOLS = [
 var {utils: Cu} = Components;
 
 Cu.import("resource://services-sync/status.js");
-Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://services-sync/util.js");
@@ -108,40 +103,6 @@ this.promiseNamedTimer = function(wait, thisObj, name) {
   });
 }
 
-/**
- * Return true if Sync is configured with the "legacy" identity provider.
- */
-this.isConfiguredWithLegacyIdentity = function() {
-  let ns = {};
-  Cu.import("resource://services-sync/service.js", ns);
-
-  // We can't use instanceof as BrowserIDManager (the "other" identity) inherits
-  // from IdentityManager so that would return true - so check the prototype.
-  return Object.getPrototypeOf(ns.Service.identity) === IdentityManager.prototype;
-}
-
-/**
-  * Ensure Sync is configured with the "legacy" identity provider.
-  */
-this.ensureLegacyIdentityManager = function() {
-  let ns = {};
-  Cu.import("resource://services-sync/service.js", ns);
-
-  Status.__authManager = ns.Service.identity = new IdentityManager();
-  ns.Service._clusterManager = ns.Service.identity.createClusterManager(ns.Service);
-}
-
-this.setBasicCredentials =
- function setBasicCredentials(username, password, syncKey) {
-  let ns = {};
-  Cu.import("resource://services-sync/service.js", ns);
-
-  let auth = ns.Service.identity;
-  auth.username = username;
-  auth.basicPassword = password;
-  auth.syncKey = syncKey;
-}
-
 // Return an identity configuration suitable for testing with our identity
 // providers.  |overrides| can specify overrides for any default values.
 // |server| is optional, but if specified, will be used to form the cluster
@@ -170,11 +131,6 @@ this.makeIdentityConfig = function(overrides) {
         hashed_fxa_uid: "f".repeat(32), // used during telemetry validation
         // uid will be set to the username.
       }
-    },
-    sync: {
-      // username will come from the top-level username
-      password: "whatever",
-      syncKey: "abcdeabcdeabcdeabcdeabcdea",
     }
   };
 
@@ -182,10 +138,6 @@ this.makeIdentityConfig = function(overrides) {
   if (overrides) {
     if (overrides.username) {
       result.username = overrides.username;
-    }
-    if (overrides.sync) {
-      // TODO: allow just some attributes to be specified
-      result.sync = overrides.sync;
     }
     if (overrides.fxaccount) {
       // TODO: allow just some attributes to be specified
@@ -256,48 +208,30 @@ this.configureIdentity = async function(identityOverrides, server) {
   let ns = {};
   Cu.import("resource://services-sync/service.js", ns);
 
-  if (server) {
-    ns.Service.serverURL = server.baseURI;
-  }
-
-  ns.Service._clusterManager = ns.Service.identity.createClusterManager(ns.Service);
-
-  if (ns.Service.identity instanceof BrowserIDManager) {
-    // do the FxAccounts thang...
-
-    // If a server was specified, ensure FxA has a correct cluster URL available.
-    if (server && !config.fxaccount.token.endpoint) {
-      let ep = server.baseURI;
-      if (!ep.endsWith("/")) {
-        ep += "/";
-      }
-      ep += "1.1/" + config.username + "/";
-      config.fxaccount.token.endpoint = ep;
+  // If a server was specified, ensure FxA has a correct cluster URL available.
+  if (server && !config.fxaccount.token.endpoint) {
+    let ep = server.baseURI;
+    if (!ep.endsWith("/")) {
+      ep += "/";
     }
+    ep += "1.1/" + config.username + "/";
+    config.fxaccount.token.endpoint = ep;
+  }
 
-    configureFxAccountIdentity(ns.Service.identity, config);
-    await ns.Service.identity.initializeWithCurrentIdentity();
-    // and cheat to avoid requiring each test do an explicit login - give it
-    // a cluster URL.
-    if (config.fxaccount.token.endpoint) {
-      ns.Service.clusterURL = config.fxaccount.token.endpoint;
-    }
-    return;
+  configureFxAccountIdentity(ns.Service.identity, config);
+  await ns.Service.identity.initializeWithCurrentIdentity();
+  // and cheat to avoid requiring each test do an explicit login - give it
+  // a cluster URL.
+  if (config.fxaccount.token.endpoint) {
+    ns.Service.clusterURL = config.fxaccount.token.endpoint;
   }
-  // old style identity provider.
-  if (server) {
-    ns.Service.clusterURL = server.baseURI + "/";
-  }
-  ns.Service.identity.username = config.username;
-  ns.Service._updateCachedURLs();
-  setBasicCredentials(config.username, config.sync.password, config.sync.syncKey);
 }
 
-this.SyncTestingInfrastructure = async function(server, username, password) {
+this.SyncTestingInfrastructure = async function(server, username) {
   let ns = {};
   Cu.import("resource://services-sync/service.js", ns);
 
-  let config = makeIdentityConfig({ username, password });
+  let config = makeIdentityConfig({ username });
   await configureIdentity(config, server);
   return {
     logStats: initTestLogging(),
@@ -320,41 +254,6 @@ this.encryptPayload = function encryptPayload(cleartext) {
     IV: "irrelevant",
     hmac: fakeSHA256HMAC(cleartext, CryptoUtils.makeHMACKey("")),
   };
-}
-
-// This helper can be used instead of 'add_test' or 'add_task' to run the
-// specified test function twice - once with the old-style sync identity
-// manager and once with the new-style BrowserID identity manager, to ensure
-// it works in both cases.
-//
-// * The test itself should be passed as 'test' - ie, test code will generally
-//   pass |this|.
-// * The test function is a regular test function - although note that it must
-//   be a generator - async operations should yield them, and run_next_test
-//   mustn't be called.
-this.add_identity_test = function(test, testFunction) {
-  function note(what) {
-    let msg = "running test " + testFunction.name + " with " + what + " identity manager";
-    test.do_print(msg);
-  }
-  let ns = {};
-  Cu.import("resource://services-sync/service.js", ns);
-  // one task for the "old" identity manager.
-  test.add_task(async function() {
-    note("sync");
-    let oldIdentity = Status._authManager;
-    ensureLegacyIdentityManager();
-    await testFunction();
-    Status.__authManager = ns.Service.identity = oldIdentity;
-  });
-  // another task for the FxAccounts identity manager.
-  test.add_task(async function() {
-    note("FxAccounts");
-    let oldIdentity = Status._authManager;
-    Status.__authManager = ns.Service.identity = new BrowserIDManager();
-    await testFunction();
-    Status.__authManager = ns.Service.identity = oldIdentity;
-  });
 }
 
 this.sumHistogram = function(name, options = {}) {

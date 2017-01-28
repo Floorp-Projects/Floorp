@@ -23,6 +23,11 @@ function return_timestamp(request, response, timestamp) {
   return timestamp;
 }
 
+function has_hawk_header(req) {
+  return req.hasHeader("Authorization") &&
+         req.getHeader("Authorization").startsWith("Hawk");
+}
+
 function basic_auth_header(user, password) {
   return "Basic " + btoa(user + ":" + Utils.encodeUTF8(password));
 }

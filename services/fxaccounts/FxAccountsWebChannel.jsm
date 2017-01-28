@@ -36,7 +36,6 @@ const COMMAND_SYNC_PREFERENCES     = "fxaccounts:sync_preferences";
 const COMMAND_CHANGE_PASSWORD      = "fxaccounts:change_password";
 
 const PREF_LAST_FXA_USER           = "identity.fxaccounts.lastSignedInUserHash";
-const PREF_SYNC_SHOW_CUSTOMIZATION = "services.sync-setup.ui.showCustomizationDialog";
 
 /**
  * A helper function that extracts the message and stack from an error object.
@@ -252,31 +251,15 @@ this.FxAccountsWebChannelHelpers.prototype = {
   },
 
   /**
-   * New users are asked in the content server whether they want to
-   * customize which data should be synced. The user is only shown
-   * the dialog listing the possible data types upon verification.
-   *
-   * Save a bit into prefs that is read on verification to see whether
-   * to show the list of data types that can be saved.
-   */
-  setShowCustomizeSyncPref(showCustomizeSyncPref) {
-    Services.prefs.setBoolPref(PREF_SYNC_SHOW_CUSTOMIZATION, showCustomizeSyncPref);
-  },
-
-  getShowCustomizeSyncPref() {
-    return Services.prefs.getBoolPref(PREF_SYNC_SHOW_CUSTOMIZATION);
-  },
-
-  /**
    * stores sync login info it in the fxaccounts service
    *
    * @param accountData the user's account data and credentials
    */
   login(accountData) {
-    if (accountData.customizeSync) {
-      this.setShowCustomizeSyncPref(true);
-      delete accountData.customizeSync;
-    }
+
+    // We don't act on customizeSync anymore, it used to open a dialog inside
+    // the browser to selecte the engines to sync but we do it on the web now.
+    delete accountData.customizeSync;
 
     if (accountData.declinedSyncEngines) {
       let declinedSyncEngines = accountData.declinedSyncEngines;
@@ -285,9 +268,6 @@ this.FxAccountsWebChannelHelpers.prototype = {
       declinedSyncEngines.forEach(engine => {
         Services.prefs.setBoolPref("services.sync.engine." + engine, false);
       });
-
-      // if we got declinedSyncEngines that means we do not need to show the customize screen.
-      this.setShowCustomizeSyncPref(false);
       delete accountData.declinedSyncEngines;
     }
 
