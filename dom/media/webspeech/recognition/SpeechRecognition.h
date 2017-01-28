@@ -17,7 +17,6 @@
 
 #include "nsIDOMNavigatorUserMedia.h"
 #include "nsITimer.h"
-#include "MediaEngine.h"
 #include "MediaStreamGraph.h"
 #include "AudioSegment.h"
 #include "mozilla/WeakPtr.h"
@@ -31,6 +30,8 @@
 #include "mozilla/dom/SpeechRecognitionError.h"
 
 namespace mozilla {
+
+class DOMMediaStream;
 
 namespace dom {
 
