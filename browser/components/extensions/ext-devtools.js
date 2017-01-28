@@ -78,7 +78,7 @@ global.getTargetTabIdForToolbox = (toolbox) => {
     throw new Error("Unexpected target type: only local tabs are currently supported.");
   }
 
-  let parentWindow = target.tab.linkedBrowser.ownerDocument.defaultView;
+  let parentWindow = target.tab.linkedBrowser.ownerGlobal;
   let tab = parentWindow.gBrowser.getTabForBrowser(target.tab.linkedBrowser);
 
   return TabManager.getId(tab);

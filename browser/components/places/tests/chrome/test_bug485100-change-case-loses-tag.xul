@@ -42,7 +42,7 @@
       Task.spawn(function* () {
         let testTag = "foo";
         let testTagUpper = "Foo";
-        let testURI = Services.io.newURI("http://www.example.com/", null, null);
+        let testURI = Services.io.newURI("http://www.example.com/");
 
         // Add a bookmark.
         let bm = yield PlacesUtils.bookmarks.insert({

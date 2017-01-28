@@ -42,7 +42,7 @@ addLoadEvent( function() {
   // Verify that legacy color properties applied before BODY are really ignored when rendering.
   // Save current computed style colors for later use.
   for (i = 0; i < idPropList.length; i++) {
-    var style = window.getComputedStyle(document.getElementById(idPropList[i].id), null);
+    var style = window.getComputedStyle(document.getElementById(idPropList[i].id));
     var color = style.getPropertyValue(idPropList[i].prop);
     idPropList[i].initialComputedColor = color;
     isnot(color, rgbTestColors[i], "element rendered using before-body style");
@@ -61,7 +61,7 @@ addLoadEvent( function() {
   // Verify that setting legacy color props to undefined led to result
   // of parsing undefined as a color.
   for (i = 0; i < idPropList.length; i++) {
-    var style = window.getComputedStyle(document.getElementById(idPropList[i].id), null);
+    var style = window.getComputedStyle(document.getElementById(idPropList[i].id));
     var color = style.getPropertyValue(idPropList[i].prop);
     is(color, "rgb(0, 239, 14)", 
       "element's style should get result of parsing undefined as a color");

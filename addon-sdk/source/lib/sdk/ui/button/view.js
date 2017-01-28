@@ -51,7 +51,7 @@ const buttonListener = {
   onWidgetAfterDOMChange: (node, nextNode, container) => {
     let { id } = node;
     let view = views.get(id);
-    let window = node.ownerDocument.defaultView;
+    let window = node.ownerGlobal;
 
     if (view) {
       emit(viewEvents, 'data', { type: 'update', target: id, window: window });

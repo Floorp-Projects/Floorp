@@ -138,7 +138,7 @@ function display(panel, options, anchor) {
     // The XUL Panel has an arrow, so the margin needs to be reset
     // to the default value.
     panel.style.margin = "";
-    let { CustomizableUI, window } = anchor.ownerDocument.defaultView;
+    let { CustomizableUI, window } = anchor.ownerGlobal;
 
     // In Australis, widgets may be positioned in an overflow panel or the
     // menu panel.

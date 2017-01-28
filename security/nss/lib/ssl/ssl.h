@@ -914,6 +914,19 @@ SSL_ConfigSecureServerWithCertChain(PRFileDesc *fd, CERTCertificate *cert,
                                     SECKEYPrivateKey *key, SSLKEAType kea);
 
 /*
+** SSL_SetSessionTicketKeyPair configures an asymmetric key pair for use in
+** wrapping session ticket keys, used by the server.  This function currently
+** only accepts an RSA public/private key pair.
+**
+** Prior to the existence of this function, NSS used an RSA private key
+** associated with a configured certificate to perform session ticket
+** encryption.  If this function isn't used, the keys provided with a configured
+** RSA certificate are used for wrapping session ticket keys.
+*/
+SSL_IMPORT SECStatus
+SSL_SetSessionTicketKeyPair(SECKEYPublicKey *pubKey, SECKEYPrivateKey *privKey);
+
+/*
 ** Configure a secure server's session-id cache. Define the maximum number
 ** of entries in the cache, the longevity of the entires, and the directory
 ** where the cache files will be placed.  These values can be zero, and

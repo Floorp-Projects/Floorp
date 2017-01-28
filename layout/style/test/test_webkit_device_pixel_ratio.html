@@ -35,7 +35,7 @@ function run() {
   }
 
   function isVisible(divName) {
-    return window.getComputedStyle(document.getElementById(divName), null).visibility == "visible";
+    return window.getComputedStyle(document.getElementById(divName)).visibility == "visible";
   }
 
   function getScreenPixelsPerCSSPixel() {

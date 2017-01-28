@@ -39,7 +39,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
       run: function* () {
         return new Promise(function(resolve, reject) {
           let tab;
-          let channel = new WebChannel("generic", Services.io.newURI(HTTP_PATH, null, null));
+          let channel = new WebChannel("generic", Services.io.newURI(HTTP_PATH));
           channel.listen(function (id, message, target) {
             is(id, "generic");
             is(message.something.nested, "hello");
@@ -57,7 +57,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
       run: function* () {
         return new Promise(function(resolve, reject) {
           let tab;
-          let channel = new WebChannel("twoway", Services.io.newURI(HTTP_PATH, null, null));
+          let channel = new WebChannel("twoway", Services.io.newURI(HTTP_PATH));
 
           channel.listen(function (id, message, sender) {
             is(id, "twoway");
@@ -84,7 +84,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
       run: function* () {
         return new Promise(function(resolve, reject) {
           let tab;
-          let channel = new WebChannel("multichannel", Services.io.newURI(HTTP_PATH, null, null));
+          let channel = new WebChannel("multichannel", Services.io.newURI(HTTP_PATH));
 
           channel.listen(function (id, message, sender) {
             is(id, "multichannel");

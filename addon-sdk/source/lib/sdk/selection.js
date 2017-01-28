@@ -145,7 +145,7 @@ function getFocusedWindow() {
 function getFocusedElement() {
   let element = winUtils.getFocusedElement();
 
-  if (!element || ignoreWindow(element.ownerDocument.defaultView))
+  if (!element || ignoreWindow(element.ownerGlobal))
     return null;
 
   return element;

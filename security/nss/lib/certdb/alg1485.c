@@ -341,13 +341,16 @@ hexToBin(PLArenaPool* pool, SECItem* destItem, const char* src, int len)
         goto loser;
     }
     len >>= 1;
-    if (!SECITEM_AllocItem(pool, destItem, len))
+    if (!SECITEM_AllocItem(pool, destItem, len)) {
         goto loser;
+    }
     dest = destItem->data;
     for (; len > 0; len--, src += 2) {
-        PRInt16 bin = (x2b[(PRUint8)src[0]] << 4) | x2b[(PRUint8)src[1]];
-        if (bin < 0)
+        PRUint16 bin = ((PRUint16)x2b[(PRUint8)src[0]] << 4);
+        bin |= (PRUint16)x2b[(PRUint8)src[1]];
+        if (bin >> 15) { /* is negative */
             goto loser;
+        }
         *dest++ = (PRUint8)bin;
     }
     return SECSuccess;

@@ -144,7 +144,7 @@ this.AutoCompletePopup = {
       return;
     }
 
-    let window = browser.ownerDocument.defaultView;
+    let window = browser.ownerGlobal;
     let tabbrowser = window.gBrowser;
     if (Services.focus.activeWindow != window ||
         tabbrowser.selectedBrowser != browser) {

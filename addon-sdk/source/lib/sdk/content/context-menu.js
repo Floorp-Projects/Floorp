@@ -132,7 +132,7 @@ CONTEXTS.PageContext = Class({
 
   getState: function(popupNode) {
     // If there is a selection in the window then this context does not match
-    if (!popupNode.ownerDocument.defaultView.getSelection().isCollapsed)
+    if (!popupNode.ownerGlobal.getSelection().isCollapsed)
       return false;
 
     // If the clicked node or any of its ancestors is one of the blocked
@@ -153,7 +153,7 @@ CONTEXTS.SelectionContext = Class({
   extends: Context,
 
   getState: function(popupNode) {
-    if (!popupNode.ownerDocument.defaultView.getSelection().isCollapsed)
+    if (!popupNode.ownerGlobal.getSelection().isCollapsed)
       return true;
 
     try {
@@ -211,7 +211,7 @@ CONTEXTS.PredicateContext = Class({
   extends: Context,
 
   getState: function(node) {
-    let window = node.ownerDocument.defaultView;
+    let window = node.ownerGlobal;
     let data = {};
 
     data.documentType = node.ownerDocument.contentType;
@@ -325,7 +325,7 @@ var RemoteItem = Class({
   },
 
   activate: function(popupNode, data) {
-    let worker = getItemWorkerForWindow(this, popupNode.ownerDocument.defaultView);
+    let worker = getItemWorkerForWindow(this, popupNode.ownerGlobal);
     if (!worker)
       return;
 
@@ -344,7 +344,7 @@ var RemoteItem = Class({
       };
     }
 
-    let worker = getItemWorkerForWindow(this, popupNode.ownerDocument.defaultView);
+    let worker = getItemWorkerForWindow(this, popupNode.ownerGlobal);
     let contextStates = {};
     for (let context of this.contexts)
       contextStates[context.id] = context.getState(popupNode);

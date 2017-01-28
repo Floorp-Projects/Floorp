@@ -193,16 +193,6 @@ function promiseObserver(topic, count = 1) {
   });
 }
 
-// Stolen from browser_aboutHome.js
-function promiseWaitForEvent(node, type, capturing) {
-  return new Promise((resolve) => {
-    node.addEventListener(type, function listener(event) {
-      node.removeEventListener(type, listener, capturing);
-      resolve(event);
-    }, capturing);
-  });
-}
-
 var promiseTabOpen = Task.async(function*(urlBase) {
   info("Waiting for tab to open...");
   let event = yield promiseWaitForEvent(gBrowser.tabContainer, "TabOpen", true);

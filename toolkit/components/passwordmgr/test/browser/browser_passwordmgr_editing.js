@@ -28,7 +28,7 @@ function synthesizeDblClickOnCell(aTree, column, row) {
   let y = rect.y + rect.height / 2;
   // Simulate the double click.
   EventUtils.synthesizeMouse(aTree.body, x, y, { clickCount: 2 },
-                             aTree.ownerDocument.defaultView);
+                             aTree.ownerGlobal);
 }
 
 function* togglePasswords() {

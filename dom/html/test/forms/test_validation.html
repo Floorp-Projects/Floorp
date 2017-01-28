@@ -90,35 +90,35 @@ function checkConstraintValidationAPIDefaultValues(element)
 
 function checkDefaultPseudoClass()
 {
-  is(window.getComputedStyle(document.getElementById('f'), null)
+  is(window.getComputedStyle(document.getElementById('f'))
        .getPropertyValue('background-color'), "rgb(0, 255, 0)",
      ":valid should apply");
 
-  is(window.getComputedStyle(document.getElementById('o'), null)
+  is(window.getComputedStyle(document.getElementById('o'))
        .getPropertyValue('background-color'), "rgb(0, 255, 0)",
      ":valid should apply");
 
-  is(window.getComputedStyle(document.getElementById('obj'), null)
+  is(window.getComputedStyle(document.getElementById('obj'))
        .getPropertyValue('background-color'), "rgb(0, 0, 0)",
      "Nor :valid and :invalid should apply");
 
-  todo_is(window.getComputedStyle(document.getElementById('k'), null)
+  todo_is(window.getComputedStyle(document.getElementById('k'))
        .getPropertyValue('background-color'), "rgb(0, 0, 0)",
      "Nor :valid and :invalid should apply");
 
-  is(window.getComputedStyle(document.getElementById('s'), null)
+  is(window.getComputedStyle(document.getElementById('s'))
        .getPropertyValue('background-color'), "rgb(0, 255, 0)",
      ":valid pseudo-class should apply");
 
-  is(window.getComputedStyle(document.getElementById('i'), null)
+  is(window.getComputedStyle(document.getElementById('i'))
        .getPropertyValue('background-color'), "rgb(0, 255, 0)",
      ":valid pseudo-class should apply");
 
-  is(window.getComputedStyle(document.getElementById('t'), null)
+  is(window.getComputedStyle(document.getElementById('t'))
        .getPropertyValue('background-color'), "rgb(0, 255, 0)",
      ":valid pseudo-class should apply");
 
-  is(window.getComputedStyle(document.getElementById('b'), null)
+  is(window.getComputedStyle(document.getElementById('b'))
        .getPropertyValue('background-color'), "rgb(0, 255, 0)",
      ":valid pseudo-class should apply");
 }
@@ -136,66 +136,66 @@ function checkSpecificWillValidate()
   i = document.getElementById('i');
   i.type = "hidden";
   ok(!i.willValidate, "Hidden state input should be barred from constraint validation");
-  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(i).getPropertyValue('background-color'),
      "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
   i.type = "reset";
   ok(!i.willValidate, "Reset button state input should be barred from constraint validation");
-  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(i).getPropertyValue('background-color'),
      "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
   i.type = "button";
   ok(!i.willValidate, "Button state input should be barred from constraint validation");
-  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(i).getPropertyValue('background-color'),
      "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
   i.type = "image";
   ok(i.willValidate, "Image state input should not be barred from constraint validation");
-  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(i).getPropertyValue('background-color'),
      "rgb(0, 255, 0)", ":valid and :invalid should apply");
   i.type = "submit";
   ok(i.willValidate, "Submit state input should not be barred from constraint validation");
-  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(i).getPropertyValue('background-color'),
      "rgb(0, 255, 0)", ":valid and :invalid should apply");
   i.type = "number";
   ok(i.willValidate, "Number state input should not be barred from constraint validation");
-  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(i).getPropertyValue('background-color'),
      "rgb(0, 255, 0)", ":valid pseudo-class should apply");
   i.type = "";
   i.readOnly = 'true';
   ok(!i.willValidate, "Readonly input should be barred from constraint validation");
-  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(i).getPropertyValue('background-color'),
      "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
   i.removeAttribute('readOnly');
   ok(i.willValidate, "Default input element should not be barred from constraint validation");
-  is(window.getComputedStyle(i, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(i).getPropertyValue('background-color'),
      "rgb(0, 255, 0)", ":valid pseudo-class should apply");
 
   // button element
   b = document.getElementById('b');
   b.type = "reset";
   ok(!b.willValidate, "Reset state button should be barred from constraint validation");
-  is(window.getComputedStyle(b, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(b).getPropertyValue('background-color'),
      "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
   b.type = "button";
   ok(!b.willValidate, "Button state button should be barred from constraint validation");
-  is(window.getComputedStyle(b, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(b).getPropertyValue('background-color'),
      "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
   b.type = "submit";
   ok(b.willValidate, "Submit state button should not be barred from constraint validation");
-  is(window.getComputedStyle(b, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(b).getPropertyValue('background-color'),
      "rgb(0, 255, 0)", ":valid and :invalid should apply");
   b.type = "";
   ok(b.willValidate, "Default button element should not be barred from constraint validation");
-  is(window.getComputedStyle(b, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(b).getPropertyValue('background-color'),
      "rgb(0, 255, 0)", ":valid pseudo-class should apply");
 
   // textarea element
   t = document.getElementById('t');
   t.readOnly = true;
   ok(!t.willValidate, "Readonly textarea should be barred from constraint validation");
-  is(window.getComputedStyle(t, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(t).getPropertyValue('background-color'),
      "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
   t.removeAttribute('readOnly');
   ok(t.willValidate, "Default textarea element should not be barred from constraint validation");
-  is(window.getComputedStyle(t, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(t).getPropertyValue('background-color'),
      "rgb(0, 255, 0)", ":valid pseudo-class should apply");
 
   // TODO: PROGRESS
@@ -211,7 +211,7 @@ function checkCommonWillValidate(element)
     element.disabled = true;
     ok(!element.willValidate, "Disabled element should be barred from constraint validation");
 
-    is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+    is(window.getComputedStyle(element).getPropertyValue('background-color'),
        "rgb(0, 0, 0)", "Nor :valid and :invalid should apply");
 
     element.removeAttribute('disabled');
@@ -234,12 +234,12 @@ function checkCustomError(element, isBarred)
   ok(!element.validity.valid, "The element should not be valid with a custom error");
 
   if (element.tagName == "FIELDSET") {
-    is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+    is(window.getComputedStyle(element).getPropertyValue('background-color'),
        isBarred ? "rgb(0, 255, 0)" : "rgb(255, 0, 0)",
        ":invalid pseudo-classs should apply" + element.tagName);
   }
   else {
-    is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+    is(window.getComputedStyle(element).getPropertyValue('background-color'),
        isBarred ? "rgb(0, 0, 0)" : "rgb(255, 0, 0)",
        ":invalid pseudo-classs should apply" + element.tagName);
   }
@@ -249,7 +249,7 @@ function checkCustomError(element, isBarred)
   ok(!element.validity.customError, "The element should not suffer anymore from a custom error");
   ok(element.validity.valid, "The element should now be valid");
 
-  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(element).getPropertyValue('background-color'),
      isBarred && element.tagName != "FIELDSET" ? "rgb(0, 0, 0)" : "rgb(0, 255, 0)",
      ":valid pseudo-classs should apply");
 }

@@ -56,7 +56,7 @@ var SelectHelper = {
   show: function(element) {
     let list = this.getListForElement(element);
     let p = new Prompt({
-      window: element.ownerDocument.defaultView
+      window: element.ownerGlobal
     });
 
     if (element.multiple) {
@@ -116,7 +116,7 @@ var SelectHelper = {
 
     for (let i = 0; i < numChildren; i++) {
       let child = children[i];
-      let style = window.getComputedStyle(child, null);
+      let style = window.getComputedStyle(child);
       if (style.display !== "none") {
         if (child instanceof HTMLOptionElement ||
             child instanceof Ci.nsIDOMXULSelectControlItemElement) {

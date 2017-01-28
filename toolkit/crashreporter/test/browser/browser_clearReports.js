@@ -12,7 +12,7 @@ function clickClearReports(browser) {
     return Promise.resolve();
   }
 
-  let style = doc.defaultView.getComputedStyle(button, "");
+  let style = doc.defaultView.getComputedStyle(button);
 
   Assert.notEqual(style.display, "none", "Clear reports button visible");
 

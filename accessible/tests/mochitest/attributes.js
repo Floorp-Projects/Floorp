@@ -33,7 +33,7 @@ function testAbsentAttrs(aAccOrElmOrID, aAbsentAttrs)
 function testCSSAttrs(aID)
 {
   var node = document.getElementById(aID);
-  var computedStyle = document.defaultView.getComputedStyle(node, "");
+  var computedStyle = document.defaultView.getComputedStyle(node);
 
   var attrs = {
     "display": computedStyle.display,
@@ -268,7 +268,7 @@ function fontFamily(aComputedStyle)
 function buildDefaultTextAttrs(aID, aFontSize, aFontWeight, aFontFamily)
 {
   var elm = getNode(aID);
-  var computedStyle = document.defaultView.getComputedStyle(elm, "");
+  var computedStyle = document.defaultView.getComputedStyle(elm);
   var bgColor = computedStyle.backgroundColor == "transparent" ?
     "rgb(255, 255, 255)" : computedStyle.backgroundColor;
 

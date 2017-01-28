@@ -88,7 +88,7 @@ function Notification(id, message, anchorID, mainAction, secondaryActions,
   this.wasDismissed = false;
   this.recordedTelemetryStats = new Set();
   this.isPrivate = PrivateBrowsingUtils.isWindowPrivate(
-                                        this.browser.ownerDocument.defaultView);
+                                        this.browser.ownerGlobal);
   this.timeCreated = this.owner.window.performance.now();
 }
 
@@ -211,7 +211,7 @@ this.PopupNotifications = function PopupNotifications(tabbrowser, panel, iconBox
   if (!(panel instanceof Ci.nsIDOMXULElement))
     throw "Invalid panel";
 
-  this.window = tabbrowser.ownerDocument.defaultView;
+  this.window = tabbrowser.ownerGlobal;
   this.panel = panel;
   this.tabbrowser = tabbrowser;
   this.iconBox = iconBox;
@@ -1231,7 +1231,7 @@ PopupNotifications.prototype = {
     // to update our notification map.
 
     let ourNotifications = this._getNotificationsForBrowser(ourBrowser);
-    let other = otherBrowser.ownerDocument.defaultView.PopupNotifications;
+    let other = otherBrowser.ownerGlobal.PopupNotifications;
     if (!other) {
       if (ourNotifications.length > 0)
         Cu.reportError("unable to swap notifications: otherBrowser doesn't support notifications");

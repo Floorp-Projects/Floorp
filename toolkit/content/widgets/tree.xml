@@ -196,7 +196,7 @@
         <parameter name="aThresh"/>
         <parameter name="aPos"/>
         <body><![CDATA[
-          var isRTL = document.defaultView.getComputedStyle(this, "")
+          var isRTL = document.defaultView.getComputedStyle(this)
                               .direction == "rtl";
 
           if (aPos)
@@ -355,7 +355,7 @@
             var cellRect = box.getCoordsForCellItem(row, column, "cell");
 
             // Calculate the top offset of the textbox.
-            var style = window.getComputedStyle(input, "");
+            var style = window.getComputedStyle(input);
             var topadj = parseInt(style.borderTopWidth) + parseInt(style.paddingTop);
             input.top = textRect.y - topadj;
 

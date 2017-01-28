@@ -25,7 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391034
 
 /** Test for Bug 391034 **/
 function getComp(id) {
- return document.defaultView.getComputedStyle($(id), "");
+ return document.defaultView.getComputedStyle($(id));
 }
 
 is(getComp("one").top, "-" + getComp("width-ref2").width,
