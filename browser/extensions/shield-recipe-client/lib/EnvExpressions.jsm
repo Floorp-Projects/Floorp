@@ -4,14 +4,18 @@
 
 "use strict";
 
-const {utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/TelemetryArchive.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://shield-recipe-client/lib/Sampling.jsm");
-Cu.import("resource://gre/modules/Log.jsm");
+
+const {generateUUID} = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
 this.EXPORTED_SYMBOLS = ["EnvExpressions"];
+
+const prefs = Services.prefs.getBranch("extensions.shield-recipe-client.");
 
 XPCOMUtils.defineLazyGetter(this, "nodeRequire", () => {
   const {Loader, Require} = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
@@ -29,37 +33,55 @@ XPCOMUtils.defineLazyGetter(this, "jexl", () => {
   jexl.addTransforms({
     date: dateString => new Date(dateString),
     stableSample: Sampling.stableSample,
+    bucketSample: Sampling.bucketSample,
   });
   return jexl;
 });
 
-const getLatestTelemetry = Task.async(function *() {
-  const pings = yield TelemetryArchive.promiseArchivedPingList();
+this.EnvExpressions = {
+  getLatestTelemetry: Task.async(function *() {
+    const pings = yield TelemetryArchive.promiseArchivedPingList();
 
-  // get most recent ping per type
-  const mostRecentPings = {};
-  for (const ping of pings) {
-    if (ping.type in mostRecentPings) {
-      if (mostRecentPings[ping.type].timeStampCreated < ping.timeStampCreated) {
+    // get most recent ping per type
+    const mostRecentPings = {};
+    for (const ping of pings) {
+      if (ping.type in mostRecentPings) {
+        if (mostRecentPings[ping.type].timeStampCreated < ping.timeStampCreated) {
+          mostRecentPings[ping.type] = ping;
+        }
+      } else {
         mostRecentPings[ping.type] = ping;
       }
-    } else {
-      mostRecentPings[ping.type] = ping;
     }
-  }
 
-  const telemetry = {};
-  for (const key in mostRecentPings) {
-    const ping = mostRecentPings[key];
-    telemetry[ping.type] = yield TelemetryArchive.promiseArchivedPingById(ping.id);
-  }
-  return telemetry;
-});
+    const telemetry = {};
+    for (const key in mostRecentPings) {
+      const ping = mostRecentPings[key];
+      telemetry[ping.type] = yield TelemetryArchive.promiseArchivedPingById(ping.id);
+    }
+    return telemetry;
+  }),
 
-this.EnvExpressions = {
+  getUserId() {
+    let id = prefs.getCharPref("user_id");
+    if (id === "") {
+      // generateUUID adds leading and trailing "{" and "}". strip them off.
+      id = generateUUID().toString().slice(1, -1);
+      prefs.setCharPref("user_id", id);
+    }
+    return id;
+  },
+
   eval(expr, extraContext = {}) {
-    const context = Object.assign({telemetry: getLatestTelemetry()}, extraContext);
+    // First clone the extra context
+    const context = Object.assign({}, extraContext);
+    // jexl handles promises, so it is fine to include them in this data.
+    context.telemetry = EnvExpressions.getLatestTelemetry();
+    context.normandy = context.normandy || {};
+    context.normandy.userId = EnvExpressions.getUserId();
+
     const onelineExpr = expr.replace(/[\t\n\r]/g, " ");
+
     return jexl.eval(onelineExpr, context);
   },
 };

@@ -23,7 +23,6 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSID)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIXPConnect,
                                          nsXPConnect::GetSingleton)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptError)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSComponentLoader)
 NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSSubScriptLoader)
@@ -31,14 +30,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSSubScriptLoader)
 NS_DEFINE_NAMED_CID(NS_JS_ID_CID);
 NS_DEFINE_NAMED_CID(NS_XPCONNECT_CID);
 NS_DEFINE_NAMED_CID(NS_XPCEXCEPTION_CID);
-NS_DEFINE_NAMED_CID(NS_SCRIPTERROR_CID);
 NS_DEFINE_NAMED_CID(MOZJSCOMPONENTLOADER_CID);
 NS_DEFINE_NAMED_CID(MOZ_JSSUBSCRIPTLOADER_CID);
 
 #define XPCONNECT_CIDENTRIES                                                  \
   { &kNS_JS_ID_CID, false, nullptr,  nsJSIDConstructor },                     \
   { &kNS_XPCONNECT_CID, false, nullptr,  nsIXPConnectConstructor },           \
-  { &kNS_SCRIPTERROR_CID, false, nullptr, nsScriptErrorConstructor },         \
   { &kMOZJSCOMPONENTLOADER_CID, false, nullptr, mozJSComponentLoaderConstructor },\
   { &kMOZ_JSSUBSCRIPTLOADER_CID, false, nullptr, mozJSSubScriptLoaderConstructor },
 
@@ -46,7 +43,6 @@ NS_DEFINE_NAMED_CID(MOZ_JSSUBSCRIPTLOADER_CID);
   { XPC_ID_CONTRACTID, &kNS_JS_ID_CID },                                      \
   { XPC_XPCONNECT_CONTRACTID, &kNS_XPCONNECT_CID },                           \
   { XPC_CONTEXT_STACK_CONTRACTID, &kNS_XPCONNECT_CID },                       \
-  { NS_SCRIPTERROR_CONTRACTID, &kNS_SCRIPTERROR_CID },                        \
   { MOZJSCOMPONENTLOADER_CONTRACTID, &kMOZJSCOMPONENTLOADER_CID },            \
   { MOZJSSUBSCRIPTLOADER_CONTRACTID, &kMOZ_JSSUBSCRIPTLOADER_CID },
 
