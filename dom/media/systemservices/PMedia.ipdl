@@ -4,6 +4,8 @@
 
 include protocol PContent;
 
+include PBackgroundSharedTypes;
+
 namespace mozilla {
 namespace media {
 
@@ -13,12 +15,11 @@ protocol PMedia
 
 parent:
   /**
-   * Requests a potentially persistent unique secret key for each origin.
+   * Requests a potentially persistent unique secret key for each principal.
    * Has no expiry, but is cleared by age along with cookies.
    * This is needed by mediaDevices.enumerateDevices() to produce persistent
    * deviceIds that wont work cross-origin.
    *
-   * The origin string must contain the OriginAttributes suffix.
    * If this OriginAttributes dictionary has the privateBrowsing flag set to
    * false, a key for this origin is returned from a primary pool of temporal
    * in-memory keys and persistent keys read from disk. If no key exists, a
@@ -30,7 +31,8 @@ parent:
    * true, a different key for this origin is returned from a secondary pool
    * that is never persisted to disk, and aPersist is ignored.
    */
-  async GetOriginKey(uint32_t aRequestId, nsCString aOrigin, bool aPersist);
+  async GetPrincipalKey(uint32_t aRequestId, PrincipalInfo aPrincipal,
+                        bool aPersist);
 
   /**
    * Clear per-orgin list of persistent deviceIds stored for enumerateDevices
@@ -44,7 +46,7 @@ parent:
   async SanitizeOriginKeys(uint64_t aSinceWhen, bool aOnlyPrivateBrowsing);
 
 child:
-  async GetOriginKeyResponse(uint32_t aRequestId, nsCString key);
+  async GetPrincipalKeyResponse(uint32_t aRequestId, nsCString key);
   async __delete__();
 };
 

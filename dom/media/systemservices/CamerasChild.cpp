@@ -429,14 +429,13 @@ CamerasChild::AllocateCaptureDevice(CaptureEngine aCapEngine,
                                     const char* unique_idUTF8,
                                     const unsigned int unique_idUTF8Length,
                                     int& aStreamId,
-                                    const nsACString& aOrigin)
+                                    const mozilla::ipc::PrincipalInfo& aPrincipalInfo)
 {
   LOG((__PRETTY_FUNCTION__));
   nsCString unique_id(unique_idUTF8);
-  nsCString origin(aOrigin);
   nsCOMPtr<nsIRunnable> runnable =
-    media::NewRunnableFrom([this, aCapEngine, unique_id, origin]() -> nsresult {
-      if (this->SendAllocateCaptureDevice(aCapEngine, unique_id, origin)) {
+    media::NewRunnableFrom([this, aCapEngine, unique_id, aPrincipalInfo]() -> nsresult {
+      if (this->SendAllocateCaptureDevice(aCapEngine, unique_id, aPrincipalInfo)) {
         return NS_OK;
       }
       return NS_ERROR_FAILURE;

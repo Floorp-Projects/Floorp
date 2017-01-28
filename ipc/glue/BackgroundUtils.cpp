@@ -225,6 +225,17 @@ PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
+bool
+IsPincipalInfoPrivate(const PrincipalInfo& aPrincipalInfo)
+{
+  if (aPrincipalInfo.type() != ipc::PrincipalInfo::TContentPrincipalInfo) {
+    return false;
+  }
+
+  const ContentPrincipalInfo& info = aPrincipalInfo.get_ContentPrincipalInfo();
+  return !!info.attrs().mPrivateBrowsingId;
+}
+
 nsresult
 LoadInfoToLoadInfoArgs(nsILoadInfo *aLoadInfo,
                        OptionalLoadInfoArgs* aOptionalLoadInfoArgs)
