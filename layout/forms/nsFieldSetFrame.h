@@ -7,7 +7,7 @@
 #define nsFieldSetFrame_h___
 
 #include "mozilla/Attributes.h"
-#include "imgIContainer.h"
+#include "DrawResult.h"
 #include "nsContainerFrame.h"
 
 class nsFieldSetFrame final : public nsContainerFrame
