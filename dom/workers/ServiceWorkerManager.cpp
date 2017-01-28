@@ -2560,7 +2560,7 @@ ServiceWorkerManager::IsControlled(nsIDocument* aDoc, ErrorResult& aRv)
 {
   MOZ_ASSERT(aDoc);
 
-  if (nsContentUtils::IsInPrivateBrowsing(aDoc)) {
+  if (aDoc->NodePrincipal()->OriginAttributesRef().mPrivateBrowsingId) {
     // Handle the case where a service worker was previously registered in
     // a non-private window (bug 1255621).
     return false;

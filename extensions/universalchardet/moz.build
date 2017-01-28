@@ -7,3 +7,5 @@
 DIRS += ['src']
 TEST_DIRS += ['tests']
 
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Internationalization')

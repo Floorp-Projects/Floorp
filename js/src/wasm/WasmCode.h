@@ -25,7 +25,11 @@
 namespace js {
 
 struct AsmJSMetadata;
+class Debugger;
 class WasmActivation;
+class WasmBreakpoint;
+class WasmBreakpointSite;
+class WasmInstanceObject;
 
 namespace wasm {
 
@@ -524,7 +528,7 @@ struct ExprLoc
     {}
 };
 
-typedef Vector<ExprLoc, 0, TempAllocPolicy> ExprLocVector;
+typedef Vector<ExprLoc, 0, SystemAllocPolicy> ExprLocVector;
 
 // The generated source WebAssembly function lines and expressions ranges.
 
@@ -542,7 +546,9 @@ struct FunctionLoc
     {}
 };
 
-typedef Vector<FunctionLoc, 0, TempAllocPolicy> FunctionLocVector;
+typedef Vector<FunctionLoc, 0, SystemAllocPolicy> FunctionLocVector;
+
+typedef Vector<uint32_t, 0, SystemAllocPolicy> ExprLocIndexVector;
 
 // The generated source map for WebAssembly binary file. This map is generated during
 // building the text buffer (see BinaryToExperimentalText).
@@ -551,12 +557,13 @@ class GeneratedSourceMap
 {
     ExprLocVector exprlocs_;
     FunctionLocVector functionlocs_;
+    UniquePtr<ExprLocIndexVector> sortedByOffsetExprLocIndices_;
     uint32_t totalLines_;
 
   public:
-    explicit GeneratedSourceMap(JSContext* cx)
-     : exprlocs_(cx),
-       functionlocs_(cx),
+    explicit GeneratedSourceMap()
+     : exprlocs_(),
+       functionlocs_(),
        totalLines_(0)
     {}
     ExprLocVector& exprlocs() { return exprlocs_; }
@@ -564,9 +571,15 @@ class GeneratedSourceMap
 
     uint32_t totalLines() { return totalLines_; }
     void setTotalLines(uint32_t val) { totalLines_ = val; }
+
+    bool searchLineByOffset(JSContext* cx, uint32_t offset, size_t* exprlocIndex);
 };
 
 typedef UniquePtr<GeneratedSourceMap> UniqueGeneratedSourceMap;
+
+typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy> StepModeCounters;
+
+typedef HashMap<uint32_t, WasmBreakpointSite*, DefaultHasher<uint32_t>, SystemAllocPolicy> WasmBreakpointSiteMap;
 
 // Code objects own executable code and the metadata that describes it. At the
 // moment, Code objects are owned uniquely by instances since CodeSegments are
@@ -580,10 +593,16 @@ class Code
     const SharedBytes        maybeBytecode_;
     UniqueGeneratedSourceMap maybeSourceMap_;
     CacheableCharsVector     funcLabels_;
-    uint32_t                 enterAndLeaveFrameTrapsCounter_;
     bool                     profilingEnabled_;
 
+    // State maintained when debugging is enabled:
+
+    uint32_t                 enterAndLeaveFrameTrapsCounter_;
+    WasmBreakpointSiteMap    breakpointSites_;
+    StepModeCounters         stepModeCounters_;
+
     void toggleDebugTrap(uint32_t offset, bool enabled);
+    bool ensureSourceMap(JSContext* cx);
 
   public:
     Code(UniqueCodeSegment segment,
@@ -598,6 +617,7 @@ class Code
 
     const CallSite* lookupCallSite(void* returnAddress) const;
     const CodeRange* lookupRange(void* pc) const;
+    const CodeRange* lookupRangeByFuncIndexSlow(uint32_t funcIndex) const;
     const MemoryAccess* lookupMemoryAccess(void* pc) const;
 
     // Return the name associated with a given function index, or generate one
@@ -611,7 +631,9 @@ class Code
     // will be returned.
 
     JSString* createText(JSContext* cx);
-    bool getLineOffsets(size_t lineno, Vector<uint32_t>& offsets) const;
+    bool getLineOffsets(JSContext* cx, size_t lineno, Vector<uint32_t>* offsets);
+    bool getOffsetLocation(JSContext* cx, uint32_t offset, bool* found, size_t* lineno, size_t* column);
+    bool totalSourceLines(JSContext* cx, uint32_t* count);
 
     // Each Code has a profiling mode that is updated to match the runtime's
     // profiling mode when there are no other activations of the code live on
@@ -624,10 +646,28 @@ class Code
     const char* profilingLabel(uint32_t funcIndex) const { return funcLabels_[funcIndex].get(); }
 
     // The Code can track enter/leave frame events. Any such event triggers
-    // debug trap. The enter frame events enabled across all functions, but
-    // the leave frame events only for particular function.
+    // debug trap. The enter/leave frame events enabled or disabled across
+    // all functions.
 
     void adjustEnterAndLeaveFrameTrapsState(JSContext* cx, bool enabled);
+
+    // When the Code is debugEnabled, individual breakpoints can be enabled or
+    // disabled at instruction offsets.
+
+    bool hasBreakpointTrapAtOffset(uint32_t offset);
+    void toggleBreakpointTrap(JSRuntime* rt, uint32_t offset, bool enabled);
+    WasmBreakpointSite* getOrCreateBreakpointSite(JSContext* cx, uint32_t offset);
+    bool hasBreakpointSite(uint32_t offset);
+    void destroyBreakpointSite(FreeOp* fop, uint32_t offset);
+    bool clearBreakpointsIn(JSContext* cx, WasmInstanceObject* instance,
+                            js::Debugger* dbg, JSObject* handler);
+
+    // When the Code is debug-enabled, single-stepping mode can be toggled on
+    // the granularity of individual functions.
+
+    bool stepModeEnabled(uint32_t funcIndex) const;
+    bool incrementStepModeCount(JSContext* cx, uint32_t funcIndex);
+    bool decrementStepModeCount(JSContext* cx, uint32_t funcIndex);
 
     // about:memory reporting:
 

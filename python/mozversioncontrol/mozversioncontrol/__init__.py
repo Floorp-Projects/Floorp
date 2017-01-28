@@ -87,8 +87,7 @@ class GitRepository(Repository):
         super(GitRepository, self).__init__(path, 'git')
 
     def get_modified_files(self):
-        # This is a little wonky, but it's good enough for this purpose.
-        return [bits[1] for bits in map(lambda line: line.strip().split(), self._run('status', '--porcelain').splitlines()) if 'M' in bits[0]]
+        return self._run('diff', '--diff-filter=M', '--name-only').splitlines()
 
     def add_remove_files(self, path):
         self._run('add', path)

@@ -12,48 +12,16 @@
 #include "threading/Mutex.h"
 #include "threading/windows/MutexPlatformData.h"
 
-namespace {
-
-// We build with a toolkit that supports WinXP, so we have to probe
-// for modern features at runtime. This is necessary because Vista and
-// later automatically allocate and subsequently leak a debug info
-// object for each critical section that we allocate unless we tell it
-// not to. In order to tell it not to, we need the extra flags field
-// provided by the Ex version of InitializeCriticalSection.
-struct MutexNativeImports
-{
-  using InitializeCriticalSectionExT = BOOL (WINAPI*)(CRITICAL_SECTION*, DWORD, DWORD);
-  InitializeCriticalSectionExT InitializeCriticalSectionEx;
-
-  MutexNativeImports() {
-    HMODULE kernel32_dll = GetModuleHandle("kernel32.dll");
-    MOZ_RELEASE_ASSERT(kernel32_dll != NULL);
-    InitializeCriticalSectionEx = reinterpret_cast<InitializeCriticalSectionExT>(
-      GetProcAddress(kernel32_dll, "InitializeCriticalSectionEx"));
-  }
-
-  bool hasInitializeCriticalSectionEx() const {
-    return InitializeCriticalSectionEx;
-  }
-};
-
-static MutexNativeImports NativeImports;
-
-} // (anonymous namespace)
-
 js::detail::MutexImpl::MutexImpl()
 {
   // This number was adopted from NSPR.
   const static DWORD LockSpinCount = 1500;
-  BOOL r;
-  if (NativeImports.hasInitializeCriticalSectionEx()) {
-    r = NativeImports.InitializeCriticalSectionEx(&platformData()->criticalSection,
-                                                  LockSpinCount,
-                                                  CRITICAL_SECTION_NO_DEBUG_INFO);
-  } else {
-    r = InitializeCriticalSectionAndSpinCount(&platformData()->criticalSection,
-                                              LockSpinCount);
-  }
+  // Vista and later automatically allocate and subsequently leak a debug info
+  // object for each critical section that we allocate unless we tell the
+  // system not to do that.
+  BOOL r = InitializeCriticalSectionEx(&platformData()->criticalSection,
+                                       LockSpinCount,
+                                       CRITICAL_SECTION_NO_DEBUG_INFO);
   MOZ_RELEASE_ASSERT(r);
 }
 
