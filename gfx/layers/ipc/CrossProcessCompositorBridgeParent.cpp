@@ -94,9 +94,7 @@ CrossProcessCompositorBridgeParent::AllocPLayerTransactionParent(
   }
 
   NS_WARNING("Created child without a matching parent?");
-  // XXX: should be false, but that causes us to fail some tests on Mac w/ OMTC.
-  // Bug 900745. change *aSuccess to false to see test failures.
-  *aSuccess = true;
+  *aSuccess = false;
   LayerTransactionParent* p = new LayerTransactionParent(nullptr, this, aId);
   p->AddIPDLReference();
   return p;
