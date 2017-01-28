@@ -37,9 +37,11 @@ typedef struct _MacSandboxPluginInfo {
 
 typedef struct _MacSandboxInfo {
   _MacSandboxInfo()
-    : type(MacSandboxType_Default), level(0), shouldLog(true) {}
+    : type(MacSandboxType_Default), level(0), hasFilePrivileges(false),
+      shouldLog(true) {}
   _MacSandboxInfo(const struct _MacSandboxInfo& other)
     : type(other.type), level(other.level),
+      hasFilePrivileges(other.hasFilePrivileges),
       hasSandboxedProfile(other.hasSandboxedProfile),
       pluginInfo(other.pluginInfo),
       appPath(other.appPath), appBinaryPath(other.appBinaryPath),
@@ -47,6 +49,7 @@ typedef struct _MacSandboxInfo {
       profileDir(other.profileDir), shouldLog(other.shouldLog) {}
   MacSandboxType type;
   int32_t level;
+  bool hasFilePrivileges;
   bool hasSandboxedProfile;
   MacSandboxPluginInfo pluginInfo;
   std::string appPath;
