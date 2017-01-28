@@ -5,26 +5,22 @@
 
 #include "nsFieldSetFrame.h"
 
-#include "mozilla/gfx/2D.h"
-#include "nsCSSAnonBoxes.h"
-#include "nsLayoutUtils.h"
-#include "nsLegendFrame.h"
-#include "nsCSSRendering.h"
 #include <algorithm>
-#include "nsIFrameInlines.h"
-#include "nsPresContext.h"
-#include "mozilla/RestyleManager.h"
-#include "nsGkAtoms.h"
-#include "nsStyleConsts.h"
-#include "nsDisplayList.h"
-#include "nsRenderingContext.h"
-#include "nsIScrollableFrame.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
+#include "nsCSSAnonBoxes.h"
+#include "nsCSSRendering.h"
+#include "nsDisplayList.h"
+#include "nsGkAtoms.h"
+#include "nsIFrameInlines.h"
+#include "nsLayoutUtils.h"
+#include "nsLegendFrame.h"
+#include "nsRenderingContext.h"
+#include "nsStyleConsts.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
-using namespace mozilla::image;
 using namespace mozilla::layout;
 
 nsContainerFrame*
@@ -115,7 +111,7 @@ void
 nsDisplayFieldSetBorder::Paint(nsDisplayListBuilder* aBuilder,
                                nsRenderingContext* aCtx)
 {
-  DrawResult result = static_cast<nsFieldSetFrame*>(mFrame)->
+  image::DrawResult result = static_cast<nsFieldSetFrame*>(mFrame)->
     PaintBorder(aBuilder, *aCtx, ToReferenceFrame(), mVisibleRect);
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
@@ -212,7 +208,7 @@ nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   contentDisplayItems.MoveTo(aLists);
 }
 
-DrawResult
+image::DrawResult
 nsFieldSetFrame::PaintBorder(
   nsDisplayListBuilder* aBuilder,
   nsRenderingContext& aRenderingContext,
