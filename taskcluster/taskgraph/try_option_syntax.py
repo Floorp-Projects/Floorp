@@ -227,7 +227,7 @@ class TryOptionSyntax(object):
                             dest='platforms', const='all', default='all')
         parser.add_argument('-u', '--unittests', nargs='?',
                             dest='unittests', const='all', default='all')
-        parser.add_argument('-t', '--talos', nargs='?', dest='talos', const='all', default='all')
+        parser.add_argument('-t', '--talos', nargs='?', dest='talos', default='none')
         parser.add_argument('-i', '--interactive',
                             dest='interactive', action='store_true', default=False)
         parser.add_argument('-e', '--all-emails',
