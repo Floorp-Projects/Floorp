@@ -105,7 +105,6 @@ private:
 
 nsTextControlFrame::nsTextControlFrame(nsStyleContext* aContext)
   : nsContainerFrame(aContext)
-  , mFirstBaseline(NS_INTRINSIC_WIDTH_UNKNOWN)
   , mEditorHasBeenInitialized(false)
   , mIsProcessing(false)
   , mUsePlaceholder(false)
@@ -534,20 +533,20 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
               aReflowInput.ComputedLogicalBorderPadding().BStartEnd(wm));
   aDesiredSize.SetSize(wm, finalSize);
 
-  // Calculate the baseline and store it in mFirstBaseline.
+  // computation of the ascent wrt the input height
   nscoord lineHeight = aReflowInput.ComputedBSize();
   float inflation = nsLayoutUtils::FontSizeInflationFor(this);
   if (!IsSingleLineTextControl()) {
     lineHeight = ReflowInput::CalcLineHeight(GetContent(), StyleContext(),
-                                             NS_AUTOHEIGHT, inflation);
+                                                   NS_AUTOHEIGHT, inflation);
   }
   RefPtr<nsFontMetrics> fontMet =
     nsLayoutUtils::GetFontMetricsForFrame(this, inflation);
-  mFirstBaseline =
+  // now adjust for our borders and padding
+  aDesiredSize.SetBlockStartAscent(
     nsLayoutUtils::GetCenteredFontBaseline(fontMet, lineHeight,
                                            wm.IsLineInverted()) +
-    aReflowInput.ComputedLogicalBorderPadding().BStart(wm);
-  aDesiredSize.SetBlockStartAscent(mFirstBaseline);
+    aReflowInput.ComputedLogicalBorderPadding().BStart(wm));
 
   // overflow handling
   aDesiredSize.SetOverflowAreasToDesiredBounds();

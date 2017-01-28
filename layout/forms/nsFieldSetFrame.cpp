@@ -5,22 +5,26 @@
 
 #include "nsFieldSetFrame.h"
 
-#include <algorithm>
 #include "mozilla/gfx/2D.h"
-#include "mozilla/Likely.h"
-#include "mozilla/Maybe.h"
 #include "nsCSSAnonBoxes.h"
-#include "nsCSSRendering.h"
-#include "nsDisplayList.h"
-#include "nsGkAtoms.h"
-#include "nsIFrameInlines.h"
 #include "nsLayoutUtils.h"
 #include "nsLegendFrame.h"
-#include "nsRenderingContext.h"
+#include "nsCSSRendering.h"
+#include <algorithm>
+#include "nsIFrame.h"
+#include "nsPresContext.h"
+#include "mozilla/RestyleManager.h"
+#include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
+#include "nsDisplayList.h"
+#include "nsRenderingContext.h"
+#include "nsIScrollableFrame.h"
+#include "mozilla/Likely.h"
+#include "mozilla/Maybe.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
+using namespace mozilla::image;
 using namespace mozilla::layout;
 
 nsContainerFrame*
@@ -111,7 +115,7 @@ void
 nsDisplayFieldSetBorder::Paint(nsDisplayListBuilder* aBuilder,
                                nsRenderingContext* aCtx)
 {
-  image::DrawResult result = static_cast<nsFieldSetFrame*>(mFrame)->
+  DrawResult result = static_cast<nsFieldSetFrame*>(mFrame)->
     PaintBorder(aBuilder, *aCtx, ToReferenceFrame(), mVisibleRect);
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, result);
@@ -208,7 +212,7 @@ nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   contentDisplayItems.MoveTo(aLists);
 }
 
-image::DrawResult
+DrawResult
 nsFieldSetFrame::PaintBorder(
   nsDisplayListBuilder* aBuilder,
   nsRenderingContext& aRenderingContext,
@@ -624,50 +628,9 @@ nsFieldSetFrame::AccessibleType()
 #endif
 
 nscoord
-nsFieldSetFrame::GetLogicalBaseline(WritingMode aWM) const
-{
-  switch (StyleDisplay()->mDisplay) {
-    case mozilla::StyleDisplay::Grid:
-    case mozilla::StyleDisplay::InlineGrid:
-    case mozilla::StyleDisplay::Flex:
-    case mozilla::StyleDisplay::InlineFlex:
-      return BaselineBOffset(aWM, BaselineSharingGroup::eFirst,
-                             AlignmentContext::eInline);
-    default:
-      return BSize(aWM) - BaselineBOffset(aWM, BaselineSharingGroup::eLast,
-                                          AlignmentContext::eInline);
-  }
-}
-
-bool
-nsFieldSetFrame::GetVerticalAlignBaseline(WritingMode aWM,
-                                          nscoord* aBaseline) const
+nsFieldSetFrame::GetLogicalBaseline(WritingMode aWritingMode) const
 {
   nsIFrame* inner = GetInner();
-  MOZ_ASSERT(!inner->GetWritingMode().IsOrthogonalTo(aWM));
-  if (!inner->GetVerticalAlignBaseline(aWM, aBaseline)) {
-    return false;
-  }
-  nscoord innerBStart = inner->BStart(aWM, GetSize());
-  *aBaseline += innerBStart;
-  return true;
-}
-
-bool
-nsFieldSetFrame::GetNaturalBaselineBOffset(WritingMode          aWM,
-                                           BaselineSharingGroup aBaselineGroup,
-                                           nscoord*             aBaseline) const
-{
-  nsIFrame* inner = GetInner();
-  MOZ_ASSERT(!inner->GetWritingMode().IsOrthogonalTo(aWM));
-  if (!inner->GetNaturalBaselineBOffset(aWM, aBaselineGroup, aBaseline)) {
-    return false;
-  }
-  nscoord innerBStart = inner->BStart(aWM, GetSize());
-  if (aBaselineGroup == BaselineSharingGroup::eFirst) {
-    *aBaseline += innerBStart;
-  } else {
-    *aBaseline += BSize(aWM) - (innerBStart + inner->BSize(aWM));
-  }
-  return true;
+  return inner->BStart(aWritingMode, GetParent()->GetSize()) +
+    inner->GetLogicalBaseline(aWritingMode);
 }
