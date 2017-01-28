@@ -18,6 +18,13 @@
 #define ML_INFO             mozilla::LogLevel::Debug
 #define ML_DEBUG            mozilla::LogLevel::Verbose
 
+#ifdef MOZILLA_INTERNAL_API
+#define MOZ_MTLOG_MODULE(n) \
+  static mozilla::LogModule* getLogModule() {   \
+    static mozilla::LazyLogModule log(n);       \
+    return static_cast<mozilla::LogModule*>(log);      \
+  }
+#else
 #define MOZ_MTLOG_MODULE(n) \
   static PRLogModuleInfo* getLogModule() {      \
     static PRLogModuleInfo* log;                \
@@ -25,6 +32,7 @@
       log = PR_NewLogModule(n);                 \
     return log;                                 \
   }
+#endif
 
 #define MOZ_MTLOG(level, b) \
   do {                                                                  \

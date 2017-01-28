@@ -35,7 +35,6 @@ namespace js {
 //   properties except those stored in the expando's dense elements.
 
 class HeapReceiverGuard;
-class RootedReceiverGuard;
 
 class ReceiverGuard
 {
@@ -48,7 +47,6 @@ class ReceiverGuard
     {}
 
     inline MOZ_IMPLICIT ReceiverGuard(const HeapReceiverGuard& guard);
-    inline MOZ_IMPLICIT ReceiverGuard(const RootedReceiverGuard& guard);
 
     explicit ReceiverGuard(JSObject* obj);
     ReceiverGuard(ObjectGroup* group, Shape* shape);
@@ -76,15 +74,6 @@ class HeapReceiverGuard
       : group_(guard.group), shape_(guard.shape)
     {}
 
-    bool matches(const ReceiverGuard& guard) {
-        return group_ == guard.group && shape_ == guard.shape;
-    }
-
-    void update(const ReceiverGuard& other) {
-        group_ = other.group;
-        shape_ = other.shape;
-    }
-
     void init(const ReceiverGuard& other) {
         group_.init(other.group);
         shape_.init(other.shape);
@@ -98,38 +87,11 @@ class HeapReceiverGuard
     ObjectGroup* group() const {
         return group_;
     }
-
-    static size_t offsetOfShape() {
-        return offsetof(HeapReceiverGuard, shape_);
-    }
-    static size_t offsetOfGroup() {
-        return offsetof(HeapReceiverGuard, group_);
-    }
-
-    // Bits to munge into Baseline IC compiler keys when that IC has a
-    // HeapReceiverGuard. This uses at most two bits for data.
-    static int32_t keyBits(JSObject* obj);
-};
-
-class RootedReceiverGuard
-{
-  public:
-    RootedObjectGroup group;
-    RootedShape shape;
-
-    RootedReceiverGuard(JSContext* cx, const ReceiverGuard& guard)
-      : group(cx, guard.group), shape(cx, guard.shape)
-    {}
 };
 
 inline
 ReceiverGuard::ReceiverGuard(const HeapReceiverGuard& guard)
   : group(guard.group()), shape(guard.shape())
-{}
-
-inline
-ReceiverGuard::ReceiverGuard(const RootedReceiverGuard& guard)
-  : group(guard.group), shape(guard.shape)
 {}
 
 } // namespace js

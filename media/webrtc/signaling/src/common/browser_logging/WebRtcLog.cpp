@@ -5,8 +5,11 @@
 #include "WebRtcLog.h"
 
 #include "mozilla/Logging.h"
+#include "mozilla/StaticPtr.h"
 #include "prenv.h"
 #include "webrtc/system_wrappers/include/trace.h"
+#include "webrtc/common_types.h"
+#include "webrtc/base/logging.h"
 
 #include "nscore.h"
 #ifdef MOZILLA_INTERNAL_API
@@ -25,7 +28,6 @@ using mozilla::LogLevel;
 
 static int gWebRtcTraceLoggingOn = 0;
 
-
 #if defined(ANDROID)
 static const char *default_tmp_dir = "/dev/null";
 static const char *default_log_name = "nspr";
@@ -33,35 +35,33 @@ static const char *default_log_name = "nspr";
 NS_NAMED_LITERAL_CSTRING(default_log_name, "WebRTC.log");
 #endif
 
-static PRLogModuleInfo* GetWebRtcTraceLog()
-{
-  static PRLogModuleInfo *sLog;
-  if (!sLog) {
-    sLog = PR_NewLogModule("webrtc_trace");
-  }
-  return sLog;
-}
-
-static PRLogModuleInfo* GetWebRtcAECLog()
-{
-  static PRLogModuleInfo *sLog;
-  if (!sLog) {
-    sLog = PR_NewLogModule("AEC");
-  }
-  return sLog;
-}
+static mozilla::LazyLogModule sWebRtcLog("webrtc_trace");
+static mozilla::LazyLogModule sLogAEC("AEC");
 
 class WebRtcTraceCallback: public webrtc::TraceCallback
 {
 public:
   void Print(webrtc::TraceLevel level, const char* message, int length)
   {
-    PRLogModuleInfo *log = GetWebRtcTraceLog();
-    MOZ_LOG(log, LogLevel::Debug, ("%s", message));
+    MOZ_LOG(sWebRtcLog, LogLevel::Debug, ("%s", message));
   }
 };
 
+class LogSinkImpl : public rtc::LogSink
+{
+public:
+  LogSinkImpl() {}
+
+private:
+  void OnLogMessage(const std::string& message) override {
+    MOZ_LOG(sWebRtcLog, LogLevel::Debug, ("%s", message.data()));
+  }
+};
+
+// For WEBRTC_TRACE()
 static WebRtcTraceCallback gWebRtcCallback;
+// For LOG()
+static mozilla::StaticAutoPtr<LogSinkImpl> sSink;
 
 #ifdef MOZILLA_INTERNAL_API
 void GetWebRtcLogPrefs(uint32_t *aTraceMask, nsACString* aLogFile, nsACString *aAECLogDir, bool *aMultiLog)
@@ -74,27 +74,48 @@ void GetWebRtcLogPrefs(uint32_t *aTraceMask, nsACString* aLogFile, nsACString *a
 }
 #endif
 
-void CheckOverrides(uint32_t *aTraceMask, nsACString *aLogFile, bool *aMultiLog)
+mozilla::LogLevel
+CheckOverrides(uint32_t *aTraceMask, nsACString *aLogFile, bool *aMultiLog)
 {
+  mozilla::LogModule *log_info = sWebRtcLog;
+  mozilla::LogLevel log_level = log_info->Level();
+
   if (!aTraceMask || !aLogFile || !aMultiLog) {
-    return;
+    return log_level;
   }
 
   // Override or fill in attributes from the environment if possible.
-
-  PRLogModuleInfo *log_info = GetWebRtcTraceLog();
-  /* When webrtc_trace:x is not part of the NSPR_LOG_MODULES var the structure returned from
-     the GetWebRTCLogInfo call will be non-null and show a level of 0. This cannot
-     be reliably used to turn off the trace and override a log level from about:config as
-     there is no way to differentiate between NSPR_LOG_MODULES=webrtc_trace:0 and the complete
-     absense of the webrtc_trace in the environment string at all.
-  */
-  if (log_info && (log_info->level != 0)) {
-    *aTraceMask = log_info->level;
+  switch (log_level) {
+    case mozilla::LogLevel::Verbose:
+      *aTraceMask = webrtc::TraceLevel::kTraceAll;
+      break;
+    case mozilla::LogLevel::Debug:
+      *aTraceMask = 0x1fff; // kTraceInfo and below
+      break;
+    case mozilla::LogLevel::Info:
+      *aTraceMask = 0x07ff; // kTraceStream and below;
+      break;
+    case mozilla::LogLevel::Warning:
+      *aTraceMask = webrtc::TraceLevel::kTraceDefault; // ktraceModule and below
+      break;
+    case mozilla::LogLevel::Error:
+      *aTraceMask = webrtc::TraceLevel::kTraceWarning |
+                    webrtc::TraceLevel::kTraceError |
+                    webrtc::TraceLevel::kTraceStateInfo;
+      break;
+    case mozilla::LogLevel::Disabled:
+    default:
+      *aTraceMask = 0;
   }
 
-  log_info = GetWebRtcAECLog();
-  if (log_info && (log_info->level != 0)) {
+  // Allow it to be overridden
+  char *trace_level = getenv("WEBRTC_TRACE_LEVEL");
+  if (trace_level && *trace_level) {
+    *aTraceMask = atoi(trace_level);
+  }
+
+  log_info = sLogAEC;
+  if (sLogAEC && (log_info->Level() != mozilla::LogLevel::Disabled)) {
     webrtc::Trace::set_aec_debug(true);
   }
 
@@ -102,9 +123,11 @@ void CheckOverrides(uint32_t *aTraceMask, nsACString *aLogFile, bool *aMultiLog)
   if (file_name) {
     aLogFile->Assign(file_name);
   }
+  return log_level;
 }
 
-void ConfigWebRtcLog(uint32_t trace_mask, nsCString &aLogFile, nsCString &aAECLogDir, bool multi_log)
+void ConfigWebRtcLog(mozilla::LogLevel level, uint32_t trace_mask,
+                     nsCString &aLogFile, nsCString &aAECLogDir, bool multi_log)
 {
   if (gWebRtcTraceLoggingOn) {
     return;
@@ -115,9 +138,38 @@ void ConfigWebRtcLog(uint32_t trace_mask, nsCString &aLogFile, nsCString &aAECLo
   aLogFile.Assign(default_log_name);
 #else
 
-  webrtc::Trace::set_level_filter(trace_mask);
+  // always capture LOG(...) << ... logging in webrtc.org code to nspr logs
+  if (!sSink) {
+    sSink = new LogSinkImpl();
+  }
+  rtc::LoggingSeverity log_level;
+  switch (level) {
+    case mozilla::LogLevel::Verbose:
+      log_level = rtc::LoggingSeverity::LS_VERBOSE;
+      break;
+    case mozilla::LogLevel::Debug:
+    case mozilla::LogLevel::Info:
+      log_level = rtc::LoggingSeverity::LS_INFO;
+      break;
+    case mozilla::LogLevel::Warning:
+      log_level = rtc::LoggingSeverity::LS_WARNING;
+      break;
+    case mozilla::LogLevel::Error:
+      log_level = rtc::LoggingSeverity::LS_ERROR;
+      break;
+    case mozilla::LogLevel::Disabled:
+      log_level = rtc::LoggingSeverity::LS_NONE;
+      break;
+    default:
+      MOZ_ASSERT(false);
+      break;
+  }
+  rtc::LogMessage::AddLogToStream(sSink, log_level);
 
+  webrtc::Trace::set_level_filter(trace_mask);
   if (trace_mask != 0) {
+    // default WEBRTC_TRACE logs to a rotating file, but allow redirecting to nspr
+    // XXX always redirect in e10s if the sandbox blocks file access, or somehow proxy
     if (aLogFile.EqualsLiteral("nspr")) {
       webrtc::Trace::SetTraceCallback(&gWebRtcCallback);
     } else {
@@ -166,13 +218,13 @@ void StartWebRtcLog(uint32_t log_level)
 #ifdef MOZILLA_INTERNAL_API
   GetWebRtcLogPrefs(&trace_mask, &log_file, &aec_log_dir, &multi_log);
 #endif
-  CheckOverrides(&trace_mask, &log_file, &multi_log);
+  mozilla::LogLevel level = CheckOverrides(&trace_mask, &log_file, &multi_log);
 
   if (trace_mask == 0) {
     trace_mask = log_level;
   }
 
-  ConfigWebRtcLog(trace_mask, log_file, aec_log_dir, multi_log);
+  ConfigWebRtcLog(level, trace_mask, log_file, aec_log_dir, multi_log);
   return;
 
 }
@@ -191,8 +243,8 @@ void EnableWebRtcLog()
 #ifdef MOZILLA_INTERNAL_API
   GetWebRtcLogPrefs(&trace_mask, &log_file, &aec_log_dir, &multi_log);
 #endif
-  CheckOverrides(&trace_mask, &log_file, &multi_log);
-  ConfigWebRtcLog(trace_mask, log_file, aec_log_dir, multi_log);
+  mozilla::LogLevel level = CheckOverrides(&trace_mask, &log_file, &multi_log);
+  ConfigWebRtcLog(level, trace_mask, log_file, aec_log_dir, multi_log);
   return;
 }
 
@@ -202,6 +254,10 @@ void StopWebRtcLog()
   webrtc::Trace::set_level_filter(webrtc::kTraceNone);
   webrtc::Trace::SetTraceCallback(nullptr);
   webrtc::Trace::SetTraceFile(nullptr);
+  if (sSink) {
+    rtc::LogMessage::RemoveLogToStream(sSink);
+    sSink = nullptr;
+  }
 }
 
 void ConfigAecLog(nsCString &aAECLogDir) {

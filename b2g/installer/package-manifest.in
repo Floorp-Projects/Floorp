@@ -149,6 +149,7 @@
 @RESPATH@/components/dom_activities.xpt
 @RESPATH@/components/dom_audiochannel.xpt
 @RESPATH@/components/dom_base.xpt
+@RESPATH@/components/dom_bindings.xpt
 @RESPATH@/components/dom_file.xpt
 @RESPATH@/components/dom_system.xpt
 @RESPATH@/components/dom_workers.xpt

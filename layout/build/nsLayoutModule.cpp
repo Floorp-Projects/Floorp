@@ -35,6 +35,7 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIScriptNameSpaceManager.h"
+#include "nsIScriptError.h"
 #include "nsISelection.h"
 #include "nsCaret.h"
 #include "nsPlainTextSerializer.h"
@@ -209,6 +210,8 @@ static void Shutdown();
 
 #include "mozilla/dom/PresentationDeviceManager.h"
 #include "mozilla/dom/PresentationTCPSessionTransport.h"
+
+#include "nsScriptError.h"
 
 #include "mozilla/TextInputProcessor.h"
 
@@ -602,6 +605,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(UDPSocketChild)
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(GeckoMediaPluginService, GeckoMediaPluginService::GetGeckoMediaPluginService)
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptError)
+
 #ifdef ACCESSIBILITY
 #include "xpcAccessibilityService.h"
 
@@ -780,6 +785,8 @@ NS_DEFINE_NAMED_CID(TEXT_INPUT_PROCESSOR_CID);
 #ifdef MOZ_B2G
 NS_DEFINE_NAMED_CID(NS_HARDWARE_KEY_HANDLER_CID);
 #endif
+
+NS_DEFINE_NAMED_CID(NS_SCRIPTERROR_CID);
 
 static nsresult
 CreateWindowCommandTableConstructor(nsISupports *aOuter,
@@ -1052,6 +1059,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kPRESENTATION_DEVICE_MANAGER_CID, false, nullptr, PresentationDeviceManagerConstructor },
   { &kPRESENTATION_TCP_SESSION_TRANSPORT_CID, false, nullptr, PresentationTCPSessionTransportConstructor },
   { &kTEXT_INPUT_PROCESSOR_CID, false, nullptr, TextInputProcessorConstructor },
+  { &kNS_SCRIPTERROR_CID, false, nullptr, nsScriptErrorConstructor },
   { nullptr }
 };
 
@@ -1199,6 +1207,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
 #ifdef MOZ_B2G
   { NS_HARDWARE_KEY_HANDLER_CONTRACTID, &kNS_HARDWARE_KEY_HANDLER_CID },
 #endif
+  { NS_SCRIPTERROR_CONTRACTID, &kNS_SCRIPTERROR_CID },
   { nullptr }
 };
 

@@ -12,7 +12,7 @@
   <script type="application/javascript">
     setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
   </script>
-<body xmlns="http://www.w3.org/1999/xhtml" onload="runTests()">
+<body xmlns="http://www.w3.org/1999/xhtml" onload="runTestsCallback()">
 <embed id="plugin1" type="application/x-test" width="200" height="200"></embed>
 <embed id="plugin2" type="application/x-test" width="200" height="200"></embed>
 </body>
@@ -22,11 +22,6 @@ SimpleTest.waitForExplicitFinish();
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;
-
-function runTests() {
-  // Allow all cookies, then run the actual tests
-  SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0]]}, runTestsCallback);
-}
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -57,9 +52,6 @@ function runTestsCallback() {
   is(exceptionThrown, false, "Exception thrown getting private mode state.");
   is(state1, false, "Browser returned incorrect private mode state.");
   is(state2, false, "Browser returned incorrect private mode state.");
-
-  pluginElement1.setCookie("foo");
-  is(pluginElement1.getCookie(), "foo", "Cookie was set and retrieved correctly in public mode.");
 
   // open a window with private mode and get the references of the elements.
   var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -101,16 +93,9 @@ function runTestsCallback() {
     is(officialState1, true, "Querying private mode reported incorrectly");
     is(officialState2, true, "Querying private mode reported incorrectly");
 
-    // It would be nice to assert that we don't see the public cookie in private mode,
-    // but the NPAPI complains when the resulting string is empty.
-    // is(pluginElement1.getCookie(), "", "Public cookie was not retrieved in private mode.");
-    pluginElement1.setCookie("bar");
-    is(pluginElement1.getCookie(), "bar", "Cookie was set and retrieved correctly in private mode.");
-
     aWin.close();
 
     pluginElement1 = document.getElementById("plugin1");
-    is(pluginElement1.getCookie(), "foo", "Private cookie was not retrieved in public mode.");
 
     SimpleTest.finish();
   });

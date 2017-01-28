@@ -2856,6 +2856,50 @@ GenericBindingGetter(JSContext* cx, unsigned argc, JS::Value* vp)
 }
 
 bool
+GenericPromiseReturningBindingGetter(JSContext* cx, unsigned argc, JS::Value* vp)
+{
+  // Make sure to save the callee before someone maybe messes with rval().
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  JS::Rooted<JSObject*> callee(cx, &args.callee());
+
+  // We could invoke GenericBindingGetter here, but that involves an
+  // extra call.  Manually inline it instead.
+  const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(args.calleev());
+  prototypes::ID protoID = static_cast<prototypes::ID>(info->protoID);
+  if (!args.thisv().isObject()) {
+    ThrowInvalidThis(cx, args, false, protoID);
+    return ConvertExceptionToPromise(cx, xpc::XrayAwareCalleeGlobal(callee),
+                                     args.rval());
+  }
+  JS::Rooted<JSObject*> obj(cx, &args.thisv().toObject());
+
+  void* self;
+  {
+    nsresult rv = UnwrapObject<void>(obj, self, protoID, info->depth);
+    if (NS_FAILED(rv)) {
+      ThrowInvalidThis(cx, args, rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO,
+                       protoID);
+      return ConvertExceptionToPromise(cx, xpc::XrayAwareCalleeGlobal(callee),
+                                       args.rval());
+    }
+  }
+  MOZ_ASSERT(info->type() == JSJitInfo::Getter);
+  JSJitGetterOp getter = info->getter;
+  bool ok = getter(cx, obj, self, JSJitGetterCallArgs(args));
+  if (ok) {
+#ifdef DEBUG
+    AssertReturnTypeMatchesJitinfo(info, args.rval());
+#endif
+    return true;
+  }
+
+  // Promise-returning getters always return objects
+  MOZ_ASSERT(info->returnType() == JSVAL_TYPE_OBJECT);
+  return ConvertExceptionToPromise(cx, xpc::XrayAwareCalleeGlobal(callee),
+                                   args.rval());
+}
+
+bool
 GenericBindingSetter(JSContext* cx, unsigned argc, JS::Value* vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);

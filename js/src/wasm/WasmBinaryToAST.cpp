@@ -1414,8 +1414,14 @@ AstDecodeExpr(AstDecodeContext& c)
     }
 
     AstExpr* lastExpr = c.top().expr;
-    if (lastExpr)
-        lastExpr->setOffset(exprOffset);
+    if (lastExpr) {
+        // If last node is a 'first' node, the offset must assigned to it
+        // last child.
+        if (lastExpr->kind() == AstExprKind::First)
+            lastExpr->as<AstFirst>().exprs().back()->setOffset(exprOffset);
+        else
+            lastExpr->setOffset(exprOffset);
+    }
     return true;
 }
 
@@ -1473,6 +1479,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcIndex, AstFunc** func)
     if (!c.depths().append(c.exprs().length()))
         return false;
 
+    uint32_t endOffset = offset;
     while (c.d.currentPosition() < bodyEnd) {
         if (!AstDecodeExpr(c))
             return false;
@@ -1482,6 +1489,8 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcIndex, AstFunc** func)
             c.popBack();
             break;
         }
+
+        endOffset = c.d.currentOffset();
     }
 
     AstExprVector body(c.lifo);
@@ -1509,6 +1518,7 @@ AstDecodeFunctionBody(AstDecodeContext &c, uint32_t funcIndex, AstFunc** func)
     if (!*func)
         return false;
     (*func)->setOffset(offset);
+    (*func)->setEndOffset(endOffset);
 
     return true;
 }

@@ -422,7 +422,7 @@ function* runKeyEventTests()
     SpecialPowers.removeSystemEventListener(document, "keypress", consumer, true);
   }
 
-  function testKeysOnMac()
+  function* testKeysOnMac()
   {
     // On Mac, you can produce event records for any desired keyboard input
     // by running with NSPR_LOG_MODULES=TextInputHandlerWidgets:5 and typing
@@ -1924,7 +1924,7 @@ function* runKeyEventTests()
     cleanup();
   }
 
-  function testKeysOnWindows()
+  function* testKeysOnWindows()
   {
     // On Windows, you can use Spy++ or Winspector (free) to watch window messages.
     // The keyCode is given by the wParam of the last WM_KEYDOWN message. The
