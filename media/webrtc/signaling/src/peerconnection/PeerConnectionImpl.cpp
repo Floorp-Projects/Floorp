@@ -139,6 +139,7 @@ using namespace mozilla::dom;
 typedef PCObserverString ObString;
 
 static const char* logTag = "PeerConnectionImpl";
+static mozilla::LazyLogModule logModuleInfo("signaling");
 
 // Getting exceptions back down from PCObserver is generally not harmful.
 namespace {
@@ -231,14 +232,6 @@ namespace mozilla {
 
 class nsIDOMDataChannel;
 
-PRLogModuleInfo *signalingLogInfo() {
-  static PRLogModuleInfo *logModuleInfo = nullptr;
-  if (!logModuleInfo) {
-    logModuleInfo = PR_NewLogModule("signaling");
-  }
-  return logModuleInfo;
-}
-
 // XXX Workaround for bug 998092 to maintain the existing broken semantics
 template<>
 struct nsISupportsWeakReference::COMTypeInfo<nsSupportsWeakReference, void> {
@@ -318,7 +311,7 @@ bool IsPrivateBrowsing(nsPIDOMWindowInner* aWindow)
 }
 
 PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
-: mTimeCard(MOZ_LOG_TEST(signalingLogInfo(),LogLevel::Error) ?
+: mTimeCard(MOZ_LOG_TEST(logModuleInfo,LogLevel::Error) ?
             create_timecard() : nullptr)
   , mSignalingState(PCImplSignalingState::SignalingStable)
   , mIceConnectionState(PCImplIceConnectionState::New)

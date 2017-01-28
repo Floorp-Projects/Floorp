@@ -27,17 +27,6 @@ PRLogModuleInfo *GetSignalingLogInfo()
   return gLogModuleInfo;
 }
 
-static PRLogModuleInfo *gWebRTCLogModuleInfo = nullptr;
-
-PRLogModuleInfo *GetWebRTCLogInfo()
-{
-  if (gWebRTCLogModuleInfo == nullptr)
-    gWebRTCLogModuleInfo = PR_NewLogModule("webrtc_trace");
-
-  return gWebRTCLogModuleInfo;
-}
-
-
 void CSFLogV(CSFLogLevel priority, const char* sourceFile, int sourceLine, const char* tag , const char* format, va_list args)
 {
 #ifdef STDOUT_LOGGING
