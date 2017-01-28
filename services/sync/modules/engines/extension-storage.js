@@ -139,9 +139,16 @@ class EncryptionRemoteTransformer {
                                           keyBundle.encryptionKeyB64, IV);
       let hmac = ciphertextHMAC(keyBundle, id, IV, ciphertext);
       const encryptedResult = {ciphertext, IV, hmac, id};
+
+      // Copy over the _status field, so that we handle concurrency
+      // headers (If-Match, If-None-Match) correctly.
+      // DON'T copy over "deleted" status, because then we'd leak
+      // plaintext deletes.
+      encryptedResult._status = record._status == "deleted" ? "updated" : record._status;
       if (record.hasOwnProperty("last_modified")) {
         encryptedResult.last_modified = record.last_modified;
       }
+
       return encryptedResult;
     });
   }
@@ -181,6 +188,13 @@ class EncryptionRemoteTransformer {
 
       if (record.hasOwnProperty("last_modified")) {
         jsonResult.last_modified = record.last_modified;
+      }
+
+      // _status: deleted records were deleted on a client, but
+      // uploaded as an encrypted blob so we don't leak deletions.
+      // If we get such a record, flag it as deleted.
+      if (jsonResult._status == "deleted") {
+        jsonResult.deleted = true;
       }
 
       return jsonResult;
