@@ -62,29 +62,6 @@ public:
                       const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
 
-  bool GetVerticalAlignBaseline(mozilla::WritingMode aWM,
-                                nscoord* aBaseline) const override
-  {
-    return GetNaturalBaselineBOffset(aWM, BaselineSharingGroup::eFirst, aBaseline);
-  }
-
-  bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
-                                 BaselineSharingGroup aBaselineGroup,
-                                 nscoord* aBaseline) const override
-  {
-    if (!IsSingleLineTextControl()) {
-      return false;
-    }
-    NS_ASSERTION(mFirstBaseline != NS_INTRINSIC_WIDTH_UNKNOWN,
-                 "please call Reflow before asking for the baseline");
-    if (aBaselineGroup == BaselineSharingGroup::eFirst) {
-      *aBaseline = mFirstBaseline;
-    } else {
-      *aBaseline = BSize(aWM) - mFirstBaseline;
-    }
-    return true;
-  }
-
   virtual nsSize GetXULMinSize(nsBoxLayoutState& aBoxLayoutState) override;
   virtual bool IsXULCollapsed() override;
 
@@ -109,14 +86,6 @@ public:
     return nsContainerFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
-
-#ifdef DEBUG
-  void MarkIntrinsicISizesDirty() override
-  {
-    // Need another Reflow to have a correct baseline value again.
-    mFirstBaseline = NS_INTRINSIC_WIDTH_UNKNOWN;
-  }
-#endif
 
   // nsIAnonymousContentCreator
   virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
@@ -331,10 +300,6 @@ private:
   }
 
 private:
-  // Our first baseline, or NS_INTRINSIC_WIDTH_UNKNOWN if we have a pending
-  // Reflow.
-  nscoord mFirstBaseline;
-
   // these packed bools could instead use the high order bits on mState, saving 4 bytes 
   bool mEditorHasBeenInitialized;
   bool mIsProcessing;
