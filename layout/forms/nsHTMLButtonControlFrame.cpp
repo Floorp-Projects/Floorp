@@ -337,6 +337,47 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   aButtonDesiredSize.SetOverflowAreasToDesiredBounds();
 }
 
+bool
+nsHTMLButtonControlFrame::GetVerticalAlignBaseline(mozilla::WritingMode aWM,
+                                                   nscoord* aBaseline) const
+{
+  nsIFrame* inner = mFrames.FirstChild();
+  if (MOZ_UNLIKELY(inner->GetWritingMode().IsOrthogonalTo(aWM))) {
+    return false;
+  }
+  if (!inner->GetVerticalAlignBaseline(aWM, aBaseline)) {
+    // <input type=color> has an empty block frame as inner frame
+    *aBaseline = inner->
+      SynthesizeBaselineBOffsetFromBorderBox(aWM, BaselineSharingGroup::eFirst);
+  }
+  nscoord innerBStart = inner->BStart(aWM, GetSize());
+  *aBaseline += innerBStart;
+  return true;
+}
+
+bool
+nsHTMLButtonControlFrame::GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
+                                         BaselineSharingGroup aBaselineGroup,
+                                         nscoord* aBaseline) const
+{
+  nsIFrame* inner = mFrames.FirstChild();
+  if (MOZ_UNLIKELY(inner->GetWritingMode().IsOrthogonalTo(aWM))) {
+    return false;
+  }
+  if (!inner->GetNaturalBaselineBOffset(aWM, aBaselineGroup, aBaseline)) {
+    // <input type=color> has an empty block frame as inner frame
+    *aBaseline = inner->
+      SynthesizeBaselineBOffsetFromBorderBox(aWM, aBaselineGroup);
+  }
+  nscoord innerBStart = inner->BStart(aWM, GetSize());
+  if (aBaselineGroup == BaselineSharingGroup::eFirst) {
+    *aBaseline += innerBStart;
+  } else {
+    *aBaseline += BSize(aWM) - (innerBStart + inner->BSize(aWM));
+  }
+  return true;
+}
+
 nsresult nsHTMLButtonControlFrame::SetFormProperty(nsIAtom* aName, const nsAString& aValue)
 {
   if (nsGkAtoms::value == aName) {
