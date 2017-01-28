@@ -995,9 +995,10 @@ add_task(function* test_storage_sync_pulls_deletes() {
         calls.push(arguments);
       }, context);
 
-      yield server.addRecord(collectionId, {
+      yield server.encryptAndAddRecord(new CollectionKeyEncryptionRemoteTransformer(extension.id), collectionId, {
         "id": "key-my_2D_key",
-        "deleted": true,
+        "data": 6,
+        "_status": "deleted",
       });
 
       yield ExtensionStorageSync.syncAll();
@@ -1061,9 +1062,14 @@ add_task(function* test_storage_sync_pushes_deletes() {
       assertPostedUpdatedRecord(post, 1000);
       equal(post.path, collectionRecordsPath(collectionId) + "/key-my_2D_key",
             "pushing a deleted value should go to the same path");
-      ok(post.method, "DELETE");
-      ok(!post.body,
-         "deleting a value shouldn't have a body");
+      ok(post.method, "PUT");
+      ok(post.body.data.ciphertext,
+         "deleting a value should have an encrypted body");
+      const decoded = yield new CollectionKeyEncryptionRemoteTransformer(extensionId).decode(post.body.data);
+      equal(decoded._status, "deleted");
+      // Ideally, we'd check that decoded.deleted is not true, because
+      // the encrypted record shouldn't have it, but the decoder will
+      // add it when it sees _status == deleted
     });
   });
 });
