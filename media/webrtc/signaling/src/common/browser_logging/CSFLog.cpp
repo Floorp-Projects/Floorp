@@ -17,15 +17,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Sprintf.h"
 
-static PRLogModuleInfo *gLogModuleInfo = nullptr;
-
-PRLogModuleInfo *GetSignalingLogInfo()
-{
-  if (gLogModuleInfo == nullptr)
-    gLogModuleInfo = PR_NewLogModule("signaling");
-
-  return gLogModuleInfo;
-}
+mozilla::LazyLogModule gSignalingLog("signaling");
 
 void CSFLogV(CSFLogLevel priority, const char* sourceFile, int sourceLine, const char* tag , const char* format, va_list args)
 {
@@ -36,10 +28,8 @@ void CSFLogV(CSFLogLevel priority, const char* sourceFile, int sourceLine, const
 
   mozilla::LogLevel level = static_cast<mozilla::LogLevel>(priority);
 
-  GetSignalingLogInfo();
-
   // Skip doing any of this work if we're not logging the indicated level...
-  if (!MOZ_LOG_TEST(gLogModuleInfo,level)) {
+  if (!MOZ_LOG_TEST(gSignalingLog, level)) {
     return;
   }
 
@@ -74,9 +64,9 @@ void CSFLogV(CSFLogLevel priority, const char* sourceFile, int sourceLine, const
   }
 
   VsprintfLiteral(message, format, args);
-  MOZ_LOG(gLogModuleInfo, level, ("[%s|%s] %s:%d: %s",
-                                  threadName, tag, sourceFile, sourceLine,
-                                  message));
+  MOZ_LOG(gSignalingLog, level, ("[%s|%s] %s:%d: %s",
+                                 threadName, tag, sourceFile, sourceLine,
+                                 message));
 #endif
 
 }
