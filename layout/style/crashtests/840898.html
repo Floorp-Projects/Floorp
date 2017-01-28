@@ -5,7 +5,7 @@
 
 function boom()
 {
-  var styleDeclaration = window.getComputedStyle(document.createElement('div'), null);
+  var styleDeclaration = window.getComputedStyle(document.createElement('div'));
   var cursorValue = styleDeclaration.getPropertyCSSValue('cursor');
   cursorValue.item(1000);
 }

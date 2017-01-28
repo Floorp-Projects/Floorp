@@ -22,7 +22,7 @@ var InlineSpellCheckerContent = {
     let spellChecker;
     if (!(editFlags & (SpellCheckHelper.TEXTAREA | SpellCheckHelper.INPUT))) {
       // Get the editor off the window.
-      let win = event.target.ownerDocument.defaultView;
+      let win = event.target.ownerGlobal;
       let editingSession = win.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebNavigation)
                               .QueryInterface(Ci.nsIInterfaceRequestor)

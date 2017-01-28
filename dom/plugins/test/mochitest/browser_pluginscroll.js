@@ -5,7 +5,7 @@ var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content
  */
 
 function coordinatesRelativeToWindow(aX, aY, aElement) {
-  var targetWindow = aElement.ownerDocument.defaultView;
+  var targetWindow = aElement.ownerGlobal;
   var scale = targetWindow.devicePixelRatio;
   var rect = aElement.getBoundingClientRect();
   return {

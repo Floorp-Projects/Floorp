@@ -74,10 +74,10 @@ function checkElemMinSizes(aElemId,
                            aExpectedMinHeight)
 {
   var elem = document.getElementById(aElemId);
-  is(window.getComputedStyle(elem, "").minWidth,  aExpectedMinWidth,
+  is(window.getComputedStyle(elem).minWidth,  aExpectedMinWidth,
      "checking min-width of " + aElemId);
 
-  is(window.getComputedStyle(elem, "").minHeight, aExpectedMinHeight,
+  is(window.getComputedStyle(elem).minHeight, aExpectedMinHeight,
      "checking min-height of " + aElemId);
 }
 

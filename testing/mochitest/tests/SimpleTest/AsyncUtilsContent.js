@@ -41,7 +41,7 @@ addMessageListener("Test:SynthesizeMouse", (message) => {
       // Account for nodes found in iframes.
       let cur = target;
       do {
-        let frame = cur.ownerDocument.defaultView.frameElement;
+        let frame = cur.ownerGlobal.frameElement;
         let rect = frame.getBoundingClientRect();
 
         left += rect.left;

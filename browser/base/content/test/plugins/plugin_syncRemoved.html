@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -10,6 +10,6 @@
   embed.setAttribute("type", "application/x-test");
   embed.setAttribute("style", "width: 0px; height: 0px;");
   document.body.appendChild(embed);
-  window.getComputedStyle(embed, null).top;
+  window.getComputedStyle(embed).top;
   document.body.remove(embed);
 </script>

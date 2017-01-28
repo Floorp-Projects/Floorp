@@ -229,7 +229,7 @@ InlineSpellChecker.prototype = {
             me.selectDictionary(val);
             // Notify change of dictionary, especially for Thunderbird,
             // which is otherwise not notified any more.
-            var view = menu.ownerDocument.defaultView;
+            var view = menu.ownerGlobal;
             var spellcheckChangeEvent = new view.CustomEvent(
                   "spellcheck-changed", {detail: { dictionary: dictName}});
             menu.ownerDocument.dispatchEvent(spellcheckChangeEvent);
@@ -435,9 +435,8 @@ var SpellCheckHelper = {
 
   // Returns the computed style attribute for the given element.
   getComputedStyle(aElem, aProp) {
-    return aElem.ownerDocument
-                .defaultView
-                .getComputedStyle(aElem, "").getPropertyValue(aProp);
+    return aElem.ownerGlobal
+                .getComputedStyle(aElem).getPropertyValue(aProp);
   },
 
   isEditable(element, window) {
@@ -471,7 +470,7 @@ var SpellCheckHelper = {
     }
 
     if (!(flags & this.EDITABLE)) {
-      var win = element.ownerDocument.defaultView;
+      var win = element.ownerGlobal;
       if (win) {
         var isEditable = false;
         try {

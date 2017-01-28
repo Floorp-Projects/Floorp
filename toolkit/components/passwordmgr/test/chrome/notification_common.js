@@ -26,7 +26,7 @@ function getPopupNotifications(aWindow) {
                                  .QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsIWebNavigation)
                                  .QueryInterface(Ci.nsIDocShell)
-                                 .chromeEventHandler.ownerDocument.defaultView;
+                                 .chromeEventHandler.ownerGlobal;
 
     var popupNotifications = chromeWin.PopupNotifications;
     return popupNotifications;
@@ -100,7 +100,7 @@ function dumpNotifications() {
                            .QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIWebNavigation)
                            .QueryInterface(Ci.nsIDocShell)
-                           .chromeEventHandler.ownerDocument.defaultView;
+                           .chromeEventHandler.ownerGlobal;
     var nb = chromeWin.getNotificationBox(window.top);
     notes = nb.allNotifications;
     ok(true, "Found " + notes.length + " notification bars.");

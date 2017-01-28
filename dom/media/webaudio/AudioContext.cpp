@@ -521,6 +521,12 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
     return nullptr;
   }
 
+  if (!aBuffer.Data()) {
+    // Throw if the buffer is detached
+    aRv.ThrowTypeError<MSG_TYPEDARRAY_IS_DETACHED>(NS_LITERAL_STRING("Argument of AudioContext.decodeAudioData"));
+    return nullptr;
+  }
+
   // Detach the array buffer
   size_t length = aBuffer.Length();
   JS::RootedObject obj(cx, aBuffer.Obj());

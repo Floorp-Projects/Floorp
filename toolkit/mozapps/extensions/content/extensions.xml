@@ -396,7 +396,7 @@
           if (aItem.hasAttribute("disabled") &&
               aItem.getAttribute("disabled") == "true")
             return false;
-          var style = document.defaultView.getComputedStyle(aItem, "");
+          var style = document.defaultView.getComputedStyle(aItem);
           return style.display != "none" && style.visibility == "visible";
         ]]>
         </body>

@@ -378,7 +378,7 @@ function checkLineCapSample(anim, expectedValue, sampleTime, caseDescr)
     "t=" + sampleTime +
     ": Unexpected sample value:";
   var actualValue =
-    window.getComputedStyle(anim.targetElement, null).
+    window.getComputedStyle(anim.targetElement).
     getPropertyValue('stroke-linecap');
   is(actualValue, expectedValue, msg);
 }

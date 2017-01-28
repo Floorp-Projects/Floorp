@@ -2083,7 +2083,7 @@ var gHeader = {
     // If the back-button or any of its parents are hidden then make the buttons
     // visible
     while (node != outerDoc) {
-      var style = outerWin.getComputedStyle(node, "");
+      var style = outerWin.getComputedStyle(node);
       if (style.display == "none")
         return true;
       if (style.visibility != "visible")
@@ -3120,7 +3120,7 @@ var gDetailView = {
     var gridRows = document.querySelectorAll("#detail-grid rows row");
     let first = true;
     for (let gridRow of gridRows) {
-      if (first && window.getComputedStyle(gridRow, null).getPropertyValue("display") != "none") {
+      if (first && window.getComputedStyle(gridRow).getPropertyValue("display") != "none") {
         gridRow.setAttribute("first-row", true);
         first = false;
       } else {
@@ -3476,7 +3476,7 @@ var gDetailView = {
             }
 
             rows.appendChild(setting);
-            var visible = window.getComputedStyle(setting, null).getPropertyValue("display") != "none";
+            var visible = window.getComputedStyle(setting).getPropertyValue("display") != "none";
             if (!firstSetting && visible) {
               setting.setAttribute("first-row", true);
               firstSetting = setting;
@@ -3509,7 +3509,7 @@ var gDetailView = {
     let firstRow = gDetailView.node.querySelector('setting[first-row="true"]');
     if (firstRow) {
       let top = firstRow.boxObject.y;
-      top -= parseInt(window.getComputedStyle(firstRow, null).getPropertyValue("margin-top"));
+      top -= parseInt(window.getComputedStyle(firstRow).getPropertyValue("margin-top"));
 
       let detailViewBoxObject = gDetailView.node.boxObject;
       top -= detailViewBoxObject.y;

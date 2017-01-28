@@ -307,7 +307,7 @@ function openTab(uri) {
 
   // select tab and make sure its browser is focused
   gBrowser.selectedTab = tab;
-  tab.ownerDocument.defaultView.focus();
+  tab.ownerGlobal.focus();
 
   return tab;
 }

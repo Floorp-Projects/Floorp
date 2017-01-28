@@ -62,10 +62,7 @@ PRBool SSLInt_ExtensionNegotiated(PRFileDesc *fd, PRUint16 ext) {
   return (PRBool)(ss && ssl3_ExtensionNegotiated(ss, ext));
 }
 
-void SSLInt_ClearSessionTicketKey() {
-  ssl3_SessionTicketShutdown(NULL, NULL);
-  NSS_UnregisterShutdown(ssl3_SessionTicketShutdown, NULL);
-}
+void SSLInt_ClearSessionTicketKey() { ssl_ResetSessionTicketKeys(); }
 
 SECStatus SSLInt_SetMTU(PRFileDesc *fd, PRUint16 mtu) {
   sslSocket *ss = ssl_FindSocket(fd);
@@ -209,7 +206,7 @@ PRBool SSLInt_HasCertWithAuthType(PRFileDesc *fd, SSLAuthType authType) {
     return PR_FALSE;
   }
 
-  return (PRBool)(!!ssl_FindServerCertByAuthType(ss, authType));
+  return (PRBool)(!!ssl_FindServerCert(ss, authType, NULL));
 }
 
 PRBool SSLInt_SendAlert(PRFileDesc *fd, uint8_t level, uint8_t type) {

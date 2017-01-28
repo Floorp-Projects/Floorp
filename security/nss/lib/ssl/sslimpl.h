@@ -125,7 +125,8 @@ typedef enum { SSLAppOpRead = 0,
 #define SSL3_MASTER_SECRET_LENGTH 48
 
 /* number of wrap mechanisms potentially used to wrap master secrets. */
-#define SSL_NUM_WRAP_MECHS 16
+#define SSL_NUM_WRAP_MECHS 15
+#define SSL_NUM_WRAP_KEYS 6
 
 /* This makes the cert cache entry exactly 4k. */
 #define SSL_MAX_CACHED_CERT_LEN 4060
@@ -530,10 +531,10 @@ struct sslSessionIDStr {
      */
 
     CERTCertificate *peerCert;
-    SECItemArray peerCertStatus; /* client only */
-    const char *peerID;          /* client only */
-    const char *urlSvrName;      /* client only */
-    sslServerCertType certType;
+    SECItemArray peerCertStatus;        /* client only */
+    const char *peerID;                 /* client only */
+    const char *urlSvrName;             /* client only */
+    const sslNamedGroupDef *namedCurve; /* (server) for certificate lookup */
     CERTCertificate *localCert;
 
     PRIPv6Addr addr;
@@ -983,8 +984,8 @@ typedef struct SSLWrappedSymWrappingKeyStr {
     CK_MECHANISM_TYPE asymWrapMechanism;
     /* mechanism used to wrap the SymmetricWrappingKey using
      * server's public and/or private keys. */
-    SSLAuthType authType; /* type of keys used to wrap SymWrapKey*/
-    PRInt32 symWrapMechIndex;
+    PRInt16 wrapMechIndex;
+    PRUint16 wrapKeyIndex;
     PRUint16 wrappedSymKeyLen;
 } SSLWrappedSymWrappingKey;
 
@@ -997,7 +998,8 @@ typedef struct SessionTicketStr {
     PRUint32 authKeyBits;
     SSLKEAType keaType;
     PRUint32 keaKeyBits;
-    sslServerCertType certType;
+    const sslNamedGroupDef *namedCurve; /* For certificate lookup. */
+
     /*
      * msWrapMech contains a meaningful value only if ms_is_wrapped is true.
      */
@@ -1228,7 +1230,6 @@ extern char ssl_debug;
 extern char ssl_trace;
 extern FILE *ssl_trace_iob;
 extern FILE *ssl_keylog_iob;
-extern CERTDistNames *ssl3_server_ca_list;
 extern PRUint32 ssl_sid_timeout;
 extern PRUint32 ssl3_sid_timeout;
 
@@ -1684,8 +1685,7 @@ extern SECStatus ssl3_SignHashes(sslSocket *ss, SSL3Hashes *hash,
 extern SECStatus ssl3_VerifySignedHashes(sslSocket *ss, SSLSignatureScheme scheme,
                                          SSL3Hashes *hash, SECItem *buf);
 extern SECStatus ssl3_CacheWrappedMasterSecret(
-    sslSocket *ss, sslSessionID *sid,
-    ssl3CipherSpec *spec, SSLAuthType authType);
+    sslSocket *ss, sslSessionID *sid, ssl3CipherSpec *spec);
 extern void ssl3_FreeSniNameArray(TLSExtensionData *xtnData);
 
 /* Hello Extension related routines. */
@@ -1694,11 +1694,10 @@ extern void ssl3_SetSIDSessionTicket(sslSessionID *sid,
 SECStatus ssl3_EncodeSessionTicket(sslSocket *ss,
                                    const NewSessionTicket *ticket_input,
                                    SECItem *ticket_data);
-extern PRBool ssl_GetSessionTicketKeys(SECKEYPrivateKey *svrPrivKey,
-                                       SECKEYPublicKey *svrPubKey, void *pwArg,
-                                       unsigned char *keyName, PK11SymKey **aesKey,
-                                       PK11SymKey **macKey);
-extern SECStatus ssl3_SessionTicketShutdown(void *appData, void *nssData);
+SECStatus ssl_MaybeSetSessionTicketKeyPair(const sslKeyPair *keyPair);
+SECStatus ssl_GetSessionTicketKeys(sslSocket *ss, unsigned char *keyName,
+                                   PK11SymKey **encKey, PK11SymKey **macKey);
+void ssl_ResetSessionTicketKeys();
 
 /* Tell clients to consider tickets valid for this long. */
 #define TLS_EX_SESS_TICKET_LIFETIME_HINT (2 * 24 * 60 * 60) /* 2 days */
@@ -1716,8 +1715,8 @@ extern void ssl_FreePRSocket(PRFileDesc *fd);
 extern int ssl3_config_match_init(sslSocket *);
 
 /* calls for accessing wrapping keys across processes. */
-extern PRBool
-ssl_GetWrappingKey(PRInt32 symWrapMechIndex, SSLAuthType authType,
+extern SECStatus
+ssl_GetWrappingKey(unsigned int symWrapMechIndex, unsigned int wrapKeyIndex,
                    SSLWrappedSymWrappingKey *wswk);
 
 /* The caller passes in the new value it wants
@@ -1729,7 +1728,7 @@ ssl_GetWrappingKey(PRInt32 symWrapMechIndex, SSLAuthType authType,
  * This is all done while holding the locks/semaphores necessary to make
  * the operation atomic.
  */
-extern PRBool
+extern SECStatus
 ssl_SetWrappingKey(SSLWrappedSymWrappingKey *wswk);
 
 /* get rid of the symmetric wrapping key references. */
@@ -1794,8 +1793,8 @@ SECStatus ssl_ReadCertificateStatus(sslSocket *ss, SSL3Opaque *b,
                                     PRUint32 length);
 SECStatus ssl3_EncodeSigAlgs(const sslSocket *ss, PRUint8 *buf,
                              unsigned maxLen, PRUint32 *len);
-void ssl3_GetCertificateRequestCAs(sslSocket *ss, int *calenp, SECItem **namesp,
-                                   int *nnamesp);
+SECStatus ssl_GetCertificateRequestCAs(sslSocket *ss, unsigned int *calenp,
+                                       SECItem **namesp, unsigned int *nnamesp);
 SECStatus ssl3_ParseCertificateRequestCAs(sslSocket *ss, SSL3Opaque **b,
                                           PRUint32 *length, PLArenaPool *arena,
                                           CERTDistNames *ca_list);
@@ -1815,7 +1814,6 @@ SECStatus ssl_CreateStaticECDHEKey(sslSocket *ss,
 SECStatus ssl3_FlushHandshake(sslSocket *ss, PRInt32 flags);
 PK11SymKey *ssl3_GetWrappingKey(sslSocket *ss,
                                 PK11SlotInfo *masterSecretSlot,
-                                const sslServerCert *serverCert,
                                 CK_MECHANISM_TYPE masterWrapMech,
                                 void *pwArg);
 SECStatus ssl3_FillInCachedSID(sslSocket *ss, sslSessionID *sid);

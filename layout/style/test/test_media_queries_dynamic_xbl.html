@@ -24,10 +24,10 @@ function run() {
   var p = subdoc.getElementById("para");
 
   iframe.setAttribute("style", "height: 300px; width: 100px");
-  is(subwin.getComputedStyle(p, "").color, "rgb(128, 0, 128)",
+  is(subwin.getComputedStyle(p).color, "rgb(128, 0, 128)",
      "should be purple when portait");
   iframe.setAttribute("style", "height: 100px; width: 300px");
-  is(subwin.getComputedStyle(p, "").color, "rgb(0, 0, 255)",
+  is(subwin.getComputedStyle(p).color, "rgb(0, 0, 255)",
      "should be blue when landscape");
   SimpleTest.finish();
 }

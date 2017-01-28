@@ -26,8 +26,8 @@ addLoadEvent(function() {
   var doc = $("f").contentDocument;
   var b = doc.body;
   doc.removeChild(doc.documentElement);
-  is(doc.defaultView.getComputedStyle(b, "").outlineOffset,
-     doc.defaultView.getComputedStyle(b, "").fontSize,
+  is(doc.defaultView.getComputedStyle(b).outlineOffset,
+     doc.defaultView.getComputedStyle(b).fontSize,
      "1rem did not compute correctly");
   SimpleTest.finish();
 });

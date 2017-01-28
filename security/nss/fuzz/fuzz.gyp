@@ -5,9 +5,6 @@
   'includes': [
     '../coreconf/config.gypi',
   ],
-  'variables': {
-    'use_fuzzing_engine': '<!(test -f /usr/lib/libFuzzingEngine.a && echo 1 || echo 0)',
-  },
   'target_defaults': {
     'variables': {
       'debug_optimization_level': '2',
@@ -37,11 +34,12 @@
         '<(DEPTH)/lib/pki/pki.gyp:nsspki',
         '<(DEPTH)/lib/util/util.gyp:nssutil',
         '<(DEPTH)/lib/nss/nss.gyp:nss_static',
-        '<(DEPTH)/lib/pk11wrap/pk11wrap.gyp:pk11wrap',
         '<(DEPTH)/lib/pkcs7/pkcs7.gyp:pkcs7',
+        # This is a static build of pk11wrap, softoken, and freebl.
+        '<(DEPTH)/lib/pk11wrap/pk11wrap.gyp:pk11wrap_static',
       ],
       'conditions': [
-        ['use_fuzzing_engine==0', {
+        ['fuzz_oss==0', {
           'type': 'static_library',
           'sources': [
             'libFuzzer/FuzzerCrossOver.cpp',
@@ -91,7 +89,6 @@
       'type': 'executable',
       'sources': [
         'asn1_mutators.cc',
-        'initialize.cc',
         'pkcs8_target.cc',
       ],
       'dependencies': [
@@ -104,7 +101,6 @@
       'type': 'executable',
       'sources': [
         'asn1_mutators.cc',
-        'initialize.cc',
         'quickder_target.cc',
       ],
       'dependencies': [
@@ -117,7 +113,42 @@
       'type': 'executable',
       'sources': [
         'hash_target.cc',
-        'initialize.cc',
+      ],
+      'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports',
+        'fuzz_base',
+      ],
+    },
+    {
+      'target_name': 'nssfuzz-mpi',
+      'type': 'executable',
+      'sources': [
+        'mpi_target.cc',
+      ],
+      'dependencies': [
+        '<(DEPTH)/exports.gyp:nss_exports',
+        'fuzz_base',
+      ],
+      'conditions': [
+        [ 'fuzz_oss==1', {
+          'libraries': [
+            '/usr/lib/x86_64-linux-gnu/libcrypto.a',
+          ],
+        }, {
+          'libraries': [
+            '-lcrypto',
+          ],
+        }],
+      ],
+      'include_dirs': [
+        '<(DEPTH)/lib/freebl/mpi',
+      ],
+    },
+    {
+      'target_name': 'nssfuzz-certDN',
+      'type': 'executable',
+      'sources': [
+        'certDN_target.cc',
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
@@ -128,7 +159,9 @@
       'target_name': 'nssfuzz',
       'type': 'none',
       'dependencies': [
+        'nssfuzz-certDN',
         'nssfuzz-hash',
+        'nssfuzz-mpi',
         'nssfuzz-pkcs8',
         'nssfuzz-quickder',
       ],

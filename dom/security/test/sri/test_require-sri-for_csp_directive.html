@@ -53,7 +53,7 @@
           // need finish message from iframe_require-sri-for_main onload event and
           // from iframe_require-sri-for_no_csp, which spawns a Worker
           var blackText = frame.contentDocument.getElementById('black-text');
-          var blackTextColor = frame.contentWindow.getComputedStyle(blackText, null).getPropertyValue('color');
+          var blackTextColor = frame.contentWindow.getComputedStyle(blackText).getPropertyValue('color');
           ok(blackTextColor == 'rgb(0, 0, 0)', "The second part should not be black.");
           removeEventListener('message', handler);
           SimpleTest.finish();

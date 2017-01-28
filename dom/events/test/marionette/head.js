@@ -102,12 +102,10 @@ function setEmulatorOrientationValues(aAzimuth, aPitch, aRoll) {
 function waitForWindowEvent(aEventName) {
   let deferred = Promise.defer();
 
-  window.addEventListener(aEventName, function onevent(aEvent) {
-    window.removeEventListener(aEventName, onevent);
-
+  window.addEventListener(aEventName, function(aEvent) {
     ok(true, "Window event '" + aEventName + "' got.");
     deferred.resolve(aEvent);
-  });
+  }, {once: true});
 
   return deferred.promise;
 }

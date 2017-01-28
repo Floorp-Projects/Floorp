@@ -21,7 +21,7 @@ let gSSService = SpecialPowers.Cc["@mozilla.org/content/style-sheet-service;1"]
   .getService(SpecialPowers.Ci.nsIStyleSheetService);
 
 function test(win, sheet) {
-    let cs = win.getComputedStyle(win.document.body, null);
+    let cs = win.getComputedStyle(win.document.body);
     is(cs.getPropertyValue('color'), "rgb(0, 0, 0)", "should have default color");
     var windowUtils = SpecialPowers.wrap(win)
       .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
@@ -31,7 +31,7 @@ function test(win, sheet) {
 }
 
 function run() {
-    var uri = gIOService.newURI("data:text/css,body{color:red;}", null, null);
+    var uri = gIOService.newURI("data:text/css,body{color:red;}");
     let sheet = gSSService.preloadSheet(uri, SpecialPowers.Ci.nsIStyleSheetService.USER_SHEET);
 
     test(document.getElementById("iframe1").contentWindow, sheet);
