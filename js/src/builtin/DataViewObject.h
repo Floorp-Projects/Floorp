@@ -19,9 +19,6 @@
 
 namespace js {
 
-extern JSObject*
-InitDataViewClass(JSContext* cx, HandleObject obj);
-
 // In the DataViewObject, the private slot contains a raw pointer into
 // the buffer.  The buffer may be shared memory and the raw pointer
 // should not be exposed without sharedness information accompanying
@@ -30,7 +27,10 @@ InitDataViewClass(JSContext* cx, HandleObject obj);
 class DataViewObject : public NativeObject
 {
   private:
-    static const Class protoClass;
+    static const Class protoClass_;
+    static const ClassSpec classSpec_;
+
+    static JSObject* CreatePrototype(JSContext* cx, JSProtoKey key);
 
     static bool is(HandleValue v) {
         return v.isObject() && v.toObject().hasClass(&class_);
@@ -40,17 +40,14 @@ class DataViewObject : public NativeObject
     static SharedMem<uint8_t*>
     getDataPointer(JSContext* cx, Handle<DataViewObject*> obj, uint64_t offset, bool* isSharedMemory);
 
-    template<Value ValueGetter(DataViewObject* view)>
-    static bool
-    getterImpl(JSContext* cx, const CallArgs& args);
+    static bool bufferGetterImpl(JSContext* cx, const CallArgs& args);
+    static bool bufferGetter(JSContext* cx, unsigned argc, Value* vp);
 
-    template<Value ValueGetter(DataViewObject* view)>
-    static bool
-    getter(JSContext* cx, unsigned argc, Value* vp);
+    static bool byteLengthGetterImpl(JSContext* cx, const CallArgs& args);
+    static bool byteLengthGetter(JSContext* cx, unsigned argc, Value* vp);
 
-    template<Value ValueGetter(DataViewObject* view)>
-    static bool
-    defineGetter(JSContext* cx, PropertyName* name, HandleNativeObject proto);
+    static bool byteOffsetGetterImpl(JSContext* cx, const CallArgs& args);
+    static bool byteOffsetGetter(JSContext* cx, unsigned argc, Value* vp);
 
     static bool
     getAndCheckConstructorArgs(JSContext* cx, HandleObject bufobj, const CallArgs& args,
@@ -111,7 +108,7 @@ class DataViewObject : public NativeObject
         return getPrivate();
     }
 
-    static bool class_constructor(JSContext* cx, unsigned argc, Value* vp);
+    static bool construct(JSContext* cx, unsigned argc, Value* vp);
 
     static bool getInt8Impl(JSContext* cx, const CallArgs& args);
     static bool fun_getInt8(JSContext* cx, unsigned argc, Value* vp);
@@ -173,7 +170,8 @@ class DataViewObject : public NativeObject
     void notifyBufferDetached(void* newData);
 
   private:
-    static const JSFunctionSpec jsfuncs[];
+    static const JSFunctionSpec methods[];
+    static const JSPropertySpec properties[];
 };
 
 } // namespace js

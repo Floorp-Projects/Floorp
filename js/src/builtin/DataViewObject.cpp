@@ -304,7 +304,7 @@ DataViewObject::constructWrapped(JSContext* cx, HandleObject bufobj, const CallA
 }
 
 bool
-DataViewObject::class_constructor(JSContext* cx, unsigned argc, Value* vp)
+DataViewObject::construct(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -882,12 +882,64 @@ DataViewObject::fun_setFloat64(JSContext* cx, unsigned argc, Value* vp)
     return CallNonGenericMethod<is, setFloat64Impl>(cx, args);
 }
 
-const Class DataViewObject::protoClass = {
-    "DataViewPrototype",
-    JSCLASS_HAS_PRIVATE |
-    JSCLASS_HAS_RESERVED_SLOTS(TypedArrayObject::RESERVED_SLOTS) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_DataView)
+
+bool
+DataViewObject::bufferGetterImpl(JSContext* cx, const CallArgs& args)
+{
+    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
+    args.rval().set(DataViewObject::bufferValue(thisView));
+    return true;
+}
+
+bool
+DataViewObject::bufferGetter(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<is, bufferGetterImpl>(cx, args);
+}
+
+bool
+DataViewObject::byteLengthGetterImpl(JSContext* cx, const CallArgs& args)
+{
+    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
+    args.rval().set(DataViewObject::byteLengthValue(thisView));
+    return true;
+}
+
+bool
+DataViewObject::byteLengthGetter(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<is, byteLengthGetterImpl>(cx, args);
+}
+
+bool
+DataViewObject::byteOffsetGetterImpl(JSContext* cx, const CallArgs& args)
+{
+    Rooted<DataViewObject*> thisView(cx, &args.thisv().toObject().as<DataViewObject>());
+    args.rval().set(DataViewObject::byteOffsetValue(thisView));
+    return true;
+}
+
+bool
+DataViewObject::byteOffsetGetter(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<is, byteOffsetGetterImpl>(cx, args);
+}
+
+const Class DataViewObject::protoClass_ = {
+    js_Object_str,
+    JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
+    JS_NULL_CLASS_OPS,
+    &DataViewObject::classSpec_
 };
+
+JSObject*
+DataViewObject::CreatePrototype(JSContext* cx, JSProtoKey key)
+{
+    return GlobalObject::createBlankPrototype(cx, cx->global(), &DataViewObject::protoClass_);
+}
 
 static const ClassOps DataViewObjectClassOps = {
     nullptr, /* addProperty */
@@ -904,15 +956,25 @@ static const ClassOps DataViewObjectClassOps = {
     ArrayBufferViewObject::trace
 };
 
+const ClassSpec DataViewObject::classSpec_ = {
+    GenericCreateConstructor<DataViewObject::construct, 3, gc::AllocKind::FUNCTION>,
+    DataViewObject::CreatePrototype,
+    nullptr,
+    nullptr,
+    DataViewObject::methods,
+    DataViewObject::properties,
+};
+
 const Class DataViewObject::class_ = {
     "DataView",
     JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_RESERVED_SLOTS(TypedArrayObject::RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_DataView),
-    &DataViewObjectClassOps
+    &DataViewObjectClassOps,
+    &DataViewObject::classSpec_
 };
 
-const JSFunctionSpec DataViewObject::jsfuncs[] = {
+const JSFunctionSpec DataViewObject::methods[] = {
     JS_FN("getInt8",    DataViewObject::fun_getInt8,      1,0),
     JS_FN("getUint8",   DataViewObject::fun_getUint8,     1,0),
     JS_FN("getInt16",   DataViewObject::fun_getInt16,     1,0),
@@ -932,79 +994,13 @@ const JSFunctionSpec DataViewObject::jsfuncs[] = {
     JS_FS_END
 };
 
-template<Value ValueGetter(DataViewObject* view)>
-bool
-DataViewObject::getterImpl(JSContext* cx, const CallArgs& args)
-{
-    args.rval().set(ValueGetter(&args.thisv().toObject().as<DataViewObject>()));
-    return true;
-}
-
-template<Value ValueGetter(DataViewObject* view)>
-bool
-DataViewObject::getter(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<is, getterImpl<ValueGetter> >(cx, args);
-}
-
-template<Value ValueGetter(DataViewObject* view)>
-bool
-DataViewObject::defineGetter(JSContext* cx, PropertyName* name, HandleNativeObject proto)
-{
-    RootedId id(cx, NameToId(name));
-    RootedAtom atom(cx, IdToFunctionName(cx, id, FunctionPrefixKind::Get));
-    if (!atom)
-        return false;
-    unsigned attrs = JSPROP_SHARED | JSPROP_GETTER;
-
-    Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
-    JSObject* getter =
-        NewNativeFunction(cx, DataViewObject::getter<ValueGetter>, 0, atom);
-    if (!getter)
-        return false;
-
-    return NativeDefineProperty(cx, proto, id, UndefinedHandleValue,
-                                JS_DATA_TO_FUNC_PTR(GetterOp, getter), nullptr, attrs);
-}
-
-/* static */ bool
-DataViewObject::initClass(JSContext* cx)
-{
-    Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
-    if (global->isStandardClassResolved(JSProto_DataView))
-        return true;
-
-    RootedNativeObject proto(cx, GlobalObject::createBlankPrototype(cx, global,
-                                                                    &DataViewObject::protoClass));
-    if (!proto)
-        return false;
-
-    RootedFunction ctor(cx, GlobalObject::createConstructor(cx, DataViewObject::class_constructor,
-                                                            cx->names().DataView, 3));
-    if (!ctor)
-        return false;
-
-    if (!LinkConstructorAndPrototype(cx, ctor, proto))
-        return false;
-
-    if (!defineGetter<bufferValue>(cx, cx->names().buffer, proto))
-        return false;
-
-    if (!defineGetter<byteLengthValue>(cx, cx->names().byteLength, proto))
-        return false;
-
-    if (!defineGetter<byteOffsetValue>(cx, cx->names().byteOffset, proto))
-        return false;
-
-    if (!JS_DefineFunctions(cx, proto, DataViewObject::jsfuncs))
-        return false;
-
-    if (!DefineToStringTag(cx, proto, cx->names().DataView))
-        return false;
-
-    return GlobalObject::initBuiltinConstructor(cx, global, JSProto_DataView, ctor, proto);
-}
+const JSPropertySpec DataViewObject::properties[] = {
+    JS_PSG("buffer", DataViewObject::bufferGetter, 0),
+    JS_PSG("byteLength", DataViewObject::byteLengthGetter, 0),
+    JS_PSG("byteOffset", DataViewObject::byteOffsetGetter, 0),
+    JS_STRING_SYM_PS(toStringTag, "DataView", JSPROP_READONLY),
+    JS_PS_END
+};
 
 void
 DataViewObject::notifyBufferDetached(void* newData)
@@ -1012,14 +1008,6 @@ DataViewObject::notifyBufferDetached(void* newData)
     setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(0));
     setFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT, Int32Value(0));
     setPrivate(newData);
-}
-
-JSObject*
-js::InitDataViewClass(JSContext* cx, HandleObject obj)
-{
-    if (!DataViewObject::initClass(cx))
-        return nullptr;
-    return &cx->global()->getPrototype(JSProto_DataView).toObject();
 }
 
 JS_FRIEND_API(bool)
