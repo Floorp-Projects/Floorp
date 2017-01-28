@@ -20,7 +20,7 @@
 this.EXPORTED_SYMBOLS = ["Kinto"];
 
 /*
- * Version 7.1.0 - a6f42f1
+ * Version 8.0.0 - 57d2836
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Kinto = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
@@ -63,7 +63,7 @@ const { EventEmitter } = Cu.import("resource://devtools/shared/event-emitter.js"
 const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
 // Use standalone kinto-http module landed in FFx.
-const { KintoHttpClient } = Cu.import("resource://services-common/kinto-http-client.js", {});
+const { KintoHttpClient } = Cu.import("resource://services-common/kinto-http-client.js");
 
 class Kinto extends _KintoBase2.default {
   constructor(options = {}) {
@@ -1070,7 +1070,7 @@ class Collection {
       throw new Error("No adapter provided");
     }
     const dbPrefix = options.dbPrefix || "";
-    const db = new DBAdapter(`${ dbPrefix }${ bucket }/${ name }`, options.adapterOptions);
+    const db = new DBAdapter(`${dbPrefix}${bucket}/${name}`, options.adapterOptions);
     if (!(db instanceof _base2.default)) {
       throw new Error("Unsupported adapter.");
     }
@@ -1268,10 +1268,10 @@ class Collection {
    * @return {Promise}
    */
   _encodeRecord(type, record) {
-    if (!this[`${ type }Transformers`].length) {
+    if (!this[`${type}Transformers`].length) {
       return Promise.resolve(record);
     }
-    return (0, _utils.waterfall)(this[`${ type }Transformers`].map(transformer => {
+    return (0, _utils.waterfall)(this[`${type}Transformers`].map(transformer => {
       return record => transformer.encode(record);
     }), record);
   }
@@ -1284,10 +1284,10 @@ class Collection {
    * @return {Promise}
    */
   _decodeRecord(type, record) {
-    if (!this[`${ type }Transformers`].length) {
+    if (!this[`${type}Transformers`].length) {
       return Promise.resolve(record);
     }
-    return (0, _utils.waterfall)(this[`${ type }Transformers`].reverse().map(transformer => {
+    return (0, _utils.waterfall)(this[`${type}Transformers`].reverse().map(transformer => {
       return record => transformer.decode(record);
     }), record);
   }
@@ -1330,7 +1330,7 @@ class Collection {
       _status: options.synced ? "synced" : "created"
     });
     if (!this.idSchema.validate(newRecord.id)) {
-      return reject(`Invalid Id: ${ newRecord.id }`);
+      return reject(`Invalid Id: ${newRecord.id}`);
     }
     return this.execute(txn => txn.create(newRecord), { preloadIds: [newRecord.id] }).catch(err => {
       if (options.useRecordId) {
@@ -1363,7 +1363,7 @@ class Collection {
       return Promise.reject(new Error("Cannot update a record missing id."));
     }
     if (!this.idSchema.validate(record.id)) {
-      return Promise.reject(new Error(`Invalid Id: ${ record.id }`));
+      return Promise.reject(new Error(`Invalid Id: ${record.id}`));
     }
 
     return this.execute(txn => txn.update(record, options), { preloadIds: [record.id] });
@@ -1386,7 +1386,7 @@ class Collection {
       return Promise.reject(new Error("Cannot update a record missing id."));
     }
     if (!this.idSchema.validate(record.id)) {
-      return Promise.reject(new Error(`Invalid Id: ${ record.id }`));
+      return Promise.reject(new Error(`Invalid Id: ${record.id}`));
     }
 
     return this.execute(txn => txn.upsert(record), { preloadIds: [record.id] });
@@ -1619,7 +1619,7 @@ class Collection {
   execute(doOperations, { preloadIds = [] } = {}) {
     for (let id of preloadIds) {
       if (!this.idSchema.validate(id)) {
-        return Promise.reject(Error(`Invalid Id: ${ id }`));
+        return Promise.reject(Error(`Invalid Id: ${id}`));
       }
     }
 
@@ -1680,10 +1680,7 @@ class Collection {
       const unsynced = yield _this6.list({ filters: { _status: ["created", "updated"] }, order: "" });
       const deleted = yield _this6.list({ filters: { _status: "deleted" }, order: "" }, { includeDeleted: true });
 
-      const toSync = yield Promise.all(unsynced.data.map(_this6._encodeRecord.bind(_this6, "remote")));
-      const toDelete = yield Promise.all(deleted.data.map(_this6._encodeRecord.bind(_this6, "remote")));
-
-      return { toSync, toDelete };
+      return yield Promise.all(unsynced.data.concat(deleted.data).map(_this6._encodeRecord.bind(_this6, "remote")));
     })();
   }
 
@@ -1731,7 +1728,7 @@ class Collection {
       // First fetch remote changes from the server
       const { data, last_modified } = yield client.listRecords({
         // Since should be ETag (see https://github.com/Kinto/kinto.js/issues/356)
-        since: options.lastModified ? `${ options.lastModified }` : undefined,
+        since: options.lastModified ? `${options.lastModified}` : undefined,
         headers: options.headers,
         retry: options.retry,
         filters
@@ -1780,7 +1777,7 @@ class Collection {
         const resultThenable = result && typeof result.then === "function";
         const resultChanges = result && result.hasOwnProperty("changes");
         if (!(resultThenable || resultChanges)) {
-          throw new Error(`Invalid return value for hook: ${ JSON.stringify(result) } has no 'then()' or 'changes' properties`);
+          throw new Error(`Invalid return value for hook: ${JSON.stringify(result)} has no 'then()' or 'changes' properties`);
         }
         return result;
       };
@@ -1799,7 +1796,7 @@ class Collection {
    * @param  {Object}                 options          The options object.
    * @return {Promise}
    */
-  pushChanges(client, { toDelete = [], toSync }, syncResultObject, options = {}) {
+  pushChanges(client, changes, syncResultObject, options = {}) {
     var _this8 = this;
 
     return _asyncToGenerator(function* () {
@@ -1807,6 +1804,12 @@ class Collection {
         return syncResultObject;
       }
       const safe = !options.strategy || options.strategy !== Collection.CLIENT_WINS;
+      const toDelete = changes.filter(function (r) {
+        return r._status == "deleted";
+      });
+      const toSync = changes.filter(function (r) {
+        return r._status != "deleted";
+      });
 
       // Perform a batch request with every changes.
       const synced = yield client.batch(function (batch) {
@@ -1970,7 +1973,7 @@ class Collection {
       }
       if (!options.ignoreBackoff && _this9.api.backoff > 0) {
         const seconds = Math.ceil(_this9.api.backoff / 1000);
-        return Promise.reject(new Error(`Server is asking clients to back off; retry in ${ seconds }s or use the ignoreBackoff option.`));
+        return Promise.reject(new Error(`Server is asking clients to back off; retry in ${seconds}s or use the ignoreBackoff option.`));
       }
 
       const client = _this9.api.bucket(options.bucket).collection(options.collection);
@@ -1982,10 +1985,10 @@ class Collection {
         const { lastModified } = result;
 
         // Fetch local changes
-        const { toDelete, toSync } = yield _this9.gatherLocalChanges();
+        const toSync = yield _this9.gatherLocalChanges();
 
         // Publish local changes and pull local resolutions
-        yield _this9.pushChanges(client, { toDelete, toSync }, result, options);
+        yield _this9.pushChanges(client, toSync, result, options);
 
         // Publish local resolution of push conflicts to server (on CLIENT_WINS)
         const resolvedUnsynced = result.resolved.filter(function (r) {
@@ -1993,7 +1996,7 @@ class Collection {
         });
         if (resolvedUnsynced.length > 0) {
           const resolvedEncoded = yield Promise.all(resolvedUnsynced.map(_this9._encodeRecord.bind(_this9, "remote")));
-          yield _this9.pushChanges(client, { toSync: resolvedEncoded }, result, options);
+          yield _this9.pushChanges(client, resolvedEncoded, result, options);
         }
         // Perform a last pull to catch changes that occured after the last pull,
         // while local changes were pushed. Do not do it nothing was pushed.
@@ -2141,7 +2144,7 @@ class CollectionTransaction {
   get(id, options = { includeDeleted: false }) {
     const res = this.getAny(id);
     if (!res.data || !options.includeDeleted && res.data._status === "deleted") {
-      throw new Error(`Record with id=${ id } not found.`);
+      throw new Error(`Record with id=${id} not found.`);
     }
 
     return res;
@@ -2163,7 +2166,7 @@ class CollectionTransaction {
     const existing = this.adapterTransaction.get(id);
     const alreadyDeleted = existing && existing._status == "deleted";
     if (!existing || alreadyDeleted && options.virtual) {
-      throw new Error(`Record with id=${ id } not found.`);
+      throw new Error(`Record with id=${id} not found.`);
     }
     // Virtual updates status.
     if (options.virtual) {
@@ -2207,7 +2210,7 @@ class CollectionTransaction {
       throw new Error("Cannot create a record missing id");
     }
     if (!this.collection.idSchema.validate(record.id)) {
-      throw new Error(`Invalid Id: ${ record.id }`);
+      throw new Error(`Invalid Id: ${record.id}`);
     }
 
     this.adapterTransaction.create(record);
@@ -2235,12 +2238,12 @@ class CollectionTransaction {
       throw new Error("Cannot update a record missing id.");
     }
     if (!this.collection.idSchema.validate(record.id)) {
-      throw new Error(`Invalid Id: ${ record.id }`);
+      throw new Error(`Invalid Id: ${record.id}`);
     }
 
     const oldRecord = this.adapterTransaction.get(record.id);
     if (!oldRecord) {
-      throw new Error(`Record with id=${ record.id } not found.`);
+      throw new Error(`Record with id=${record.id} not found.`);
     }
     const newRecord = options.patch ? _extends({}, oldRecord, record) : record;
     const updated = this._updateRaw(oldRecord, newRecord, options);
@@ -2292,7 +2295,7 @@ class CollectionTransaction {
       throw new Error("Cannot update a record missing id.");
     }
     if (!this.collection.idSchema.validate(record.id)) {
-      throw new Error(`Invalid Id: ${ record.id }`);
+      throw new Error(`Invalid Id: ${record.id}`);
     }
     let oldRecord = this.adapterTransaction.get(record.id);
     const updated = this._updateRaw(oldRecord, record);
