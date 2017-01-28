@@ -30,7 +30,7 @@ var rule = sheet.cssRules[1];
 var a = document.getElementById("a");
 
 function stylesApplied() {
-  return window.getComputedStyle(a, "").textTransform == "lowercase";
+  return window.getComputedStyle(a).textTransform == "lowercase";
 }
 
 is(rule.type, CSSRule.MEDIA_RULE, "initial @media rule type");

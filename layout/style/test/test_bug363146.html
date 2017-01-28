@@ -36,7 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=363146
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var c = window.getComputedStyle(document.getElementById("t1"), "");
+var c = window.getComputedStyle(document.getElementById("t1"));
 is(c.width, "420px");
 is(c.height, "120px");
 is(c.left, "50px");
@@ -50,7 +50,7 @@ is(c.marginRight, "20px");
 is(c.marginTop, "20px");
 is(c.marginBottom, "20px");
 
-var c2 = window.getComputedStyle(document.getElementById("t2"), "");
+var c2 = window.getComputedStyle(document.getElementById("t2"));
 is(c2.marginLeft, "20px");
 is(c2.marginRight, "20px");
 is(c2.marginTop, "20px");

@@ -132,7 +132,7 @@ function checkNext() {
 
 function checkResult() {
   var autocomplete = $("autocomplete");
-  var style = window.getComputedStyle(autocomplete, "");
+  var style = window.getComputedStyle(autocomplete);
 
   is(autocomplete.value, tests[currentTest].result,
      "Test " + currentTest + ": autocomplete.value should equal '" +

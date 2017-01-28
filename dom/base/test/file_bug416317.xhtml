@@ -476,7 +476,7 @@
             // make sure it kicks in immediately
             document.body.offsetWidth;
           }
-          var view = document.defaultView.getComputedStyle(div, null);
+          var view = document.defaultView.getComputedStyle(div);
           var bg = view.getPropertyValue("background-color") || div.style.backgroundColor;
           if (needToggle) {
             window.frameElement.style.display = "none";

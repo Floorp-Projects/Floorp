@@ -29,7 +29,7 @@
         break;
       case 'finish':
         var blackText = frame.contentDocument.getElementById('black-text');
-        var blackTextColor = frame.contentWindow.getComputedStyle(blackText, null).getPropertyValue('color');
+        var blackTextColor = frame.contentWindow.getComputedStyle(blackText).getPropertyValue('color');
         ok(blackTextColor != 'rgb(0, 0, 0)', "The second part should still be black.");
         removeEventListener('message', handler);
         SimpleTest.finish();

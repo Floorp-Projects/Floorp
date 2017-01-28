@@ -755,7 +755,7 @@ PlacesViewBase.prototype = {
       return this._isRTL;
 
     return this._isRTL = document.defaultView
-                                 .getComputedStyle(this.viewElt, "")
+                                 .getComputedStyle(this.viewElt)
                                  .direction == "rtl";
   },
 

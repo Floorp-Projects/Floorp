@@ -52,7 +52,7 @@ function testCancelPrefetchNotCrash(url) {
 
   // Not actually verifying any value, just to ensure cancelPrefetch
   // won't cause crash.
-  prefetch.cancelPrefetchURI(ios.newURI(url, null, null), link);
+  prefetch.cancelPrefetchURI(ios.newURI(url), link);
 }
 
 const SJS_PATH = window.location.pathname.replace(/[^/]+$/, "file_bug1268962.sjs");

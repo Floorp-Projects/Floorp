@@ -10,9 +10,9 @@
       var redText = document.getElementById('red-text');
       var greenText = document.getElementById('green-text');
       var blueText = document.getElementById('blue-text');
-      var redTextColor = window.getComputedStyle(redText, null).getPropertyValue('color');
-      var greenTextColor = window.getComputedStyle(greenText, null).getPropertyValue('color');
-      var blueTextColor = window.getComputedStyle(blueText, null).getPropertyValue('color');
+      var redTextColor = window.getComputedStyle(redText).getPropertyValue('color');
+      var greenTextColor = window.getComputedStyle(greenText).getPropertyValue('color');
+      var blueTextColor = window.getComputedStyle(blueText).getPropertyValue('color');
       ok(redTextColor == 'rgb(255, 0, 0)', "The first part should be red.");
       ok(greenTextColor == 'rgb(0, 255, 0)', "The second part should be green.");
       ok(blueTextColor == 'rgb(0, 0, 255)', "The third part should be blue.");

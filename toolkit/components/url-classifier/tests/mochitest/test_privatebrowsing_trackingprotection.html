@@ -73,7 +73,7 @@ function checkLoads(aWindow, aBlocked) {
   is(win.document.getElementById("goodscript").dataset.touched, "yes", "Should load whitelisted tracking javascript");
 
   var elt = win.document.getElementById("styleCheck");
-  var style = win.document.defaultView.getComputedStyle(elt, "");
+  var style = win.document.defaultView.getComputedStyle(elt);
   isnot(style.visibility, aBlocked ? "hidden" : "", "Should not load tracking css");
 
   is(win.document.blockedTrackingNodeCount, aBlocked ? badids.length : 0, "Should identify all tracking elements");

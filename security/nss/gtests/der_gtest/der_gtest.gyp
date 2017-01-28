@@ -18,6 +18,9 @@
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
         '<(DEPTH)/gtests/google_test/google_test.gyp:gtest',
+        '<(DEPTH)/lib/util/util.gyp:nssutil3',
+        '<(DEPTH)/lib/ssl/ssl.gyp:ssl3',
+        '<(DEPTH)/lib/nss/nss.gyp:nss3',
       ]
     }
   ],

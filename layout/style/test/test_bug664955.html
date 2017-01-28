@@ -23,9 +23,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664955
 <pre id="test">
 <script class="testbody" type="text/javascript">
 /** Test for Bug 664955 **/
-var parentSize = document.defaultView.getComputedStyle($('display'), "").fontSize;
-var largerSize = document.defaultView.getComputedStyle($('larger'), "").fontSize;
-var largerAgainSize = document.defaultView.getComputedStyle($('larger-again'), "").fontSize;
+var parentSize = document.defaultView.getComputedStyle($('display')).fontSize;
+var largerSize = document.defaultView.getComputedStyle($('larger')).fontSize;
+var largerAgainSize = document.defaultView.getComputedStyle($('larger-again')).fontSize;
 
 is(parentSize, largerSize, "font size is larger than max font size");
 is(parentSize, largerAgainSize, "font size is larger than max font size");

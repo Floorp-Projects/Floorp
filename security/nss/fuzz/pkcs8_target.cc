@@ -8,12 +8,8 @@
 #include "keyhi.h"
 #include "pk11pub.h"
 
-#include "FuzzerInternal.h"
 #include "asn1_mutators.h"
-#include "assert.h"
 #include "shared.h"
-
-extern const uint16_t DEFAULT_MAX_LENGTH = 2048U;
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
   SECItem data = {siBuffer, (unsigned char *)Data, (unsigned int)Size};
@@ -35,4 +31,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
   return 0;
 }
 
-ADD_CUSTOM_MUTATORS({&ASN1MutatorFlipConstructed, &ASN1MutatorChangeType})
+extern "C" size_t LLVMFuzzerCustomMutator(uint8_t *Data, size_t Size,
+                                          size_t MaxSize, unsigned int Seed) {
+  static Mutators mutators = {&ASN1MutatorFlipConstructed,
+                              &ASN1MutatorChangeType};
+  return CustomMutate(mutators, Data, Size, MaxSize, Seed);
+}

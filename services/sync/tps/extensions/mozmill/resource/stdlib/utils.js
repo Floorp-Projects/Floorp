@@ -269,7 +269,7 @@ function waitFor(callback, message, timeout, interval, thisObject) {
  * Note this function will not work if the user has custom toolbars (via extension) at the bottom or left/right of the screen
  */
 function getChromeOffset(elem) {
-  var win = elem.ownerDocument.defaultView;
+  var win = elem.ownerGlobal;
   // Calculate x offset
   var chromeWidth = 0;
 
@@ -304,7 +304,7 @@ function takeScreenshot(node, highlights) {
   // node can be either a window or an arbitrary DOM node
   try {
     // node is an arbitrary DOM node
-    win = node.ownerDocument.defaultView;
+    win = node.ownerGlobal;
     rect = node.getBoundingClientRect();
     width = rect.width;
     height = rect.height;

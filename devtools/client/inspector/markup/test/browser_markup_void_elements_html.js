@@ -23,7 +23,7 @@ add_task(function* () {
   ok(container.editor.elt.classList.contains("void-element"),
     "img element has the expected class");
   let closeElement = container.editor.elt.querySelector(".close");
-  let computedStyle = win.getComputedStyle(closeElement, null);
+  let computedStyle = win.getComputedStyle(closeElement);
   ok(computedStyle.display === "none", "img closing tag is hidden");
 
   info("check void element with pseudo element");
@@ -32,13 +32,13 @@ add_task(function* () {
   ok(container.editor.elt.classList.contains("void-element"),
     "hr element has the expected class");
   closeElement = container.editor.elt.querySelector(".close");
-  computedStyle = win.getComputedStyle(closeElement, null);
+  computedStyle = win.getComputedStyle(closeElement);
   ok(computedStyle.display === "none", "hr closing tag is hidden");
 
   info("check expanded void element closing tag is not hidden");
   yield inspector.markup.expandNode(hrNodeFront);
   yield waitForMultipleChildrenUpdates(inspector);
   ok(container.expanded, "hr container is expanded");
-  computedStyle = win.getComputedStyle(closeElement, null);
+  computedStyle = win.getComputedStyle(closeElement);
   ok(computedStyle.display === "none", "hr closing tag is not hidden anymore");
 });

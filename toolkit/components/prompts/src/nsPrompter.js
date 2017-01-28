@@ -299,8 +299,7 @@ var PromptUtilsTemp = {
             var chromeWin = promptWin.QueryInterface(Ci.nsIInterfaceRequestor)
                                      .getInterface(Ci.nsIWebNavigation)
                                      .QueryInterface(Ci.nsIDocShell)
-                                     .chromeEventHandler.ownerDocument
-                                     .defaultView.wrappedJSObject;
+                                     .chromeEventHandler.ownerGlobal.wrappedJSObject;
 
             if (chromeWin.getTabModalPromptBox)
                 promptBox = chromeWin.getTabModalPromptBox(promptWin);

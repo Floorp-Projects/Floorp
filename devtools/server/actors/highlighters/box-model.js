@@ -295,7 +295,7 @@ BoxModelHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
    */
   _trackMutations: function () {
     if (isNodeValid(this.currentNode)) {
-      let win = this.currentNode.ownerDocument.defaultView;
+      let win = this.currentNode.ownerGlobal;
       this.currentNodeObserver = new win.MutationObserver(this.update);
       this.currentNodeObserver.observe(this.currentNode, {attributes: true});
     }

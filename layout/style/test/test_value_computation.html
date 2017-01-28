@@ -119,7 +119,7 @@ var gInitialPrereqsRuleF;
 function setup_initial_values(id, ivalprop, prereqprop) {
   var iframe = document.getElementById(id);
   window[ivalprop] = iframe.contentWindow.getComputedStyle(
-                       iframe.contentDocument.documentElement.firstChild, "");
+                       iframe.contentDocument.documentElement.firstChild);
   var sheet = iframe.contentDocument.styleSheets[0];
   // For 'width', 'height', etc., need a constant size container.
   sheet.insertRule(":root { height: 200px; width: 500px }", sheet.cssRules.length);

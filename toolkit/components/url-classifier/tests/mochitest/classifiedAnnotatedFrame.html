@@ -50,7 +50,7 @@ function checkLoads() {
     fetchItem, "error", "Should not fetch from tracking URLs");
 
   var elt = document.getElementById("styleCheck");
-  var style = document.defaultView.getComputedStyle(elt, "");
+  var style = document.defaultView.getComputedStyle(elt);
   window.parent.isnot(
     style.visibility, "hidden", "Should not load tracking css");
 

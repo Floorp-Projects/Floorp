@@ -580,7 +580,7 @@ BrowserElementChild.prototype = {
 
   // Processes the "rel" field in <link> tags and forward to specific handlers.
   _linkAddedHandler: function(e) {
-    let win = e.target.ownerDocument.defaultView;
+    let win = e.target.ownerGlobal;
     // Ignore links which don't come from the top-level
     // <iframe mozbrowser> window.
     if (win != content) {
@@ -606,7 +606,7 @@ BrowserElementChild.prototype = {
   },
 
   _metaChangedHandler: function(e) {
-    let win = e.target.ownerDocument.defaultView;
+    let win = e.target.ownerGlobal;
     // Ignore metas which don't come from the top-level
     // <iframe mozbrowser> window.
     if (win != content) {

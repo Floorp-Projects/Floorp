@@ -431,10 +431,9 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
   waitForEventOnNode: function (eventName, selector) {
     return new Promise(resolve => {
       let node = selector ? this._querySelector(selector) : this.content;
-      node.addEventListener(eventName, function onEvent() {
-        node.removeEventListener(eventName, onEvent);
+      node.addEventListener(eventName, function () {
         resolve();
-      });
+      }, {once: true});
     });
   },
 

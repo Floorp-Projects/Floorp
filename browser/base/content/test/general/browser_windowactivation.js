@@ -169,7 +169,7 @@ function childFunction() {
       return; /* hasn't loaded yet */
     }
 
-    let color = content.getComputedStyle(area, "").backgroundColor;
+    let color = content.getComputedStyle(area).backgroundColor;
     if (oldColor != color || !ifChanged) {
       expectingResponse = false;
       oldColor = color;
