@@ -11,7 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
 
-import com.keepsafe.switchboard.SwitchBoard;
+import org.mozilla.gecko.switchboard.SwitchBoard;
 
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.feeds.FeedAlarmReceiver;
