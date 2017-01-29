@@ -22,10 +22,10 @@ function test() {
   Services.prefs.setBoolPref("browser.sessionstore.restore_on_demand", true);
 
   let state = { windows: [{ tabs: [
-    { entries: [{ url: "http://example.org/#1" }] },
-    { entries: [{ url: "http://example.org/#2" }] },
-    { entries: [{ url: "http://example.org/#3" }] },
-    { entries: [{ url: "http://example.org/#4" }] }
+    { entries: [{ url: "http://example.org/#1", triggeringPrincipal_base64 }] },
+    { entries: [{ url: "http://example.org/#2", triggeringPrincipal_base64 }] },
+    { entries: [{ url: "http://example.org/#3", triggeringPrincipal_base64 }] },
+    { entries: [{ url: "http://example.org/#4", triggeringPrincipal_base64 }] }
   ], selected: 1 }] };
 
   let tabsForEnsure = {};

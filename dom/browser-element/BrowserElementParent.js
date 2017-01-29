@@ -224,11 +224,11 @@ BrowserElementParent.prototype = {
   _isAlive: function() {
     return !Cu.isDeadWrapper(this._frameElement) &&
            !Cu.isDeadWrapper(this._frameElement.ownerDocument) &&
-           !Cu.isDeadWrapper(this._frameElement.ownerDocument.defaultView);
+           !Cu.isDeadWrapper(this._frameElement.ownerGlobal);
   },
 
   get _window() {
-    return this._frameElement.ownerDocument.defaultView;
+    return this._frameElement.ownerGlobal;
   },
 
   get _windowUtils() {

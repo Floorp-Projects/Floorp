@@ -74,9 +74,8 @@ function* chooseWithInspectElementContextMenu(selector, tab) {
 
 function waitForLinkedBrowserEvent(tab, event) {
   let def = defer();
-  tab.linkedBrowser.addEventListener(event, function cb() {
-    tab.linkedBrowser.removeEventListener(event, cb, true);
+  tab.linkedBrowser.addEventListener(event, function () {
     def.resolve();
-  }, true);
+  }, {capture: true, once: true});
   return def.promise;
 }

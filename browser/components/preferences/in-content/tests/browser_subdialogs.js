@@ -42,7 +42,7 @@ function* open_subdialog_and_test_generic_start_state(browser, domcontentloadedF
     Assert.ok(!!subdialog._frame.contentWindow, "The dialog should be non-null");
     Assert.notEqual(subdialog._frame.contentWindow.location.toString(), "about:blank",
       "Subdialog URL should not be about:blank");
-    Assert.equal(win.getComputedStyle(subdialog._overlay, "").visibility, "visible",
+    Assert.equal(win.getComputedStyle(subdialog._overlay).visibility, "visible",
       "Overlay should be visible");
     Assert.equal(expectedStyleSheetURLs.length, 0,
       "No stylesheets that were expected are missing");
@@ -65,7 +65,7 @@ function* close_subdialog_and_test_generic_end_state(browser, closingFn, closing
     info("waiting for about:blank load");
     yield ContentTaskUtils.waitForEvent(frame, "load");
 
-    Assert.notEqual(win.getComputedStyle(subdialog._overlay, "").visibility, "visible",
+    Assert.notEqual(win.getComputedStyle(subdialog._overlay).visibility, "visible",
       "overlay is not visible");
     Assert.equal(frame.getAttribute("style"), "", "inline styles should be cleared");
     Assert.equal(frame.contentWindow.location.href.toString(), "about:blank",

@@ -31,7 +31,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 function onSpellCheck(editableElement, callback) {
   let editor = editableElement.editor;
   if (!editor) {
-    let win = editableElement.ownerDocument.defaultView;
+    let win = editableElement.ownerGlobal;
     editor = win.QueryInterface(Ci.nsIInterfaceRequestor).
                  getInterface(Ci.nsIWebNavigation).
                  QueryInterface(Ci.nsIInterfaceRequestor).

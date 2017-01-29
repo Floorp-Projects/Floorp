@@ -23,7 +23,7 @@ function px_to_num(str)
 
 function width(elt)
 {
-    return px_to_num(elt.ownerDocument.defaultView.getComputedStyle(elt, "").width);
+    return px_to_num(elt.ownerDocument.defaultView.getComputedStyle(elt).width);
 }
 
 SimpleTest.waitForExplicitFinish();

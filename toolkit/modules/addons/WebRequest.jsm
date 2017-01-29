@@ -398,6 +398,138 @@ var ChannelEventSink = {
 
 ChannelEventSink.init();
 
+// nsIAuthPrompt2 implementation for onAuthRequired
+class AuthRequestor {
+  constructor(channel, httpObserver) {
+    this.notificationCallbacks = channel.notificationCallbacks;
+    this.loadGroupCallbacks = channel.loadGroup && channel.loadGroup.notificationCallbacks;
+    this.httpObserver = httpObserver;
+  }
+
+  QueryInterface(iid) {
+    if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIInterfaceRequestor) ||
+        iid.equals(Ci.nsIAuthPromptProvider) ||
+        iid.equals(Ci.nsIAuthPrompt2)) {
+      return this;
+    }
+    try {
+      return this.notificationCallbacks.QueryInterface(iid);
+    } catch (e) {}
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  }
+
+  getInterface(iid) {
+    if (iid.equals(Ci.nsIAuthPromptProvider) || iid.equals(Ci.nsIAuthPrompt2)) {
+      return this;
+    }
+    try {
+      return this.notificationCallbacks.getInterface(iid);
+    } catch (e) {}
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  }
+
+  _getForwardedInterface(iid) {
+    try {
+      return this.notificationCallbacks.getInterface(iid);
+    } catch (e) {
+      return this.loadGroupCallbacks.getInterface(iid);
+    }
+  }
+
+  // nsIAuthPromptProvider getAuthPrompt
+  getAuthPrompt(reason, iid) {
+    // This should never get called without getInterface having been called first.
+    if (iid.equals(Ci.nsIAuthPrompt2)) {
+      return this;
+    }
+    return this._getForwardedInterface(Ci.nsIAuthPromptProvider).getAuthPrompt(reason, iid);
+  }
+
+  // nsIAuthPrompt2 promptAuth
+  promptAuth(channel, level, authInfo) {
+    this._getForwardedInterface(Ci.nsIAuthPrompt2).promptAuth(channel, level, authInfo);
+  }
+
+  _getForwardPrompt(data) {
+    let reason = data.isProxy ? Ci.nsIAuthPromptProvider.PROMPT_PROXY : Ci.nsIAuthPromptProvider.PROMPT_NORMAL;
+    for (let callbacks of [this.notificationCallbacks, this.loadGroupCallbacks]) {
+      try {
+        return callbacks.getInterface(Ci.nsIAuthPromptProvider).getAuthPrompt(reason, Ci.nsIAuthPrompt2);
+      } catch (e) {}
+      try {
+        return callbacks.getInterface(Ci.nsIAuthPrompt2);
+      } catch (e) {}
+    }
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  }
+
+  // nsIAuthPrompt2 asyncPromptAuth
+  asyncPromptAuth(channel, callback, context, level, authInfo) {
+    let uri = channel.URI;
+    let data = {
+      scheme: authInfo.authenticationScheme,
+      realm: authInfo.realm,
+      isProxy: !!(authInfo.flags & authInfo.AUTH_PROXY),
+      challenger: {
+        host: uri.host,
+        port: uri.port,
+      },
+    };
+
+    let channelData = getData(channel);
+    // In the case that no listener provides credentials, we fallback to the
+    // previously set callback class for authentication.
+    channelData.authPromptForward = () => {
+      try {
+        let prompt = this._getForwardPrompt(data);
+        prompt.asyncPromptAuth(channel, callback, context, level, authInfo);
+      } catch (e) {
+        Cu.reportError(`webRequest asyncPromptAuth failure ${e}`);
+        callback.onAuthCancelled(context, false);
+      }
+      channelData.authPromptForward = null;
+      channelData.authPromptCallback = null;
+    };
+    channelData.authPromptCallback = (authCredentials) => {
+      // The API allows for canceling the request, providing credentials or
+      // doing nothing, so we do not provide a way to call onAuthCanceled.
+      // Canceling the request will result in canceling the authentication.
+      if (authCredentials &&
+          typeof authCredentials.username === "string" &&
+          typeof authCredentials.password === "string") {
+        authInfo.username = authCredentials.username;
+        authInfo.password = authCredentials.password;
+        try {
+          callback.onAuthAvailable(context, authInfo);
+        } catch (e) {
+          Cu.reportError(`webRequest onAuthAvailable failure ${e}`);
+        }
+        // At least one addon has responded, so we wont forward to the regular
+        // prompt handlers.
+        channelData.authPromptForward = null;
+        channelData.authPromptCallback = null;
+      }
+    };
+
+    let loadContext = this.httpObserver.getLoadContext(channel);
+    this.httpObserver.runChannelListener(channel, loadContext, "authRequired", data);
+
+    return {
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsICancelable]),
+      cancel() {
+        try {
+          callback.onAuthCancelled(context, false);
+        } catch (e) {
+          Cu.reportError(`webRequest onAuthCancelled failure ${e}`);
+        }
+        channelData.authPromptForward = null;
+        channelData.authPromptCallback = null;
+      },
+    };
+  }
+}
+
 HttpObserverManager = {
   modifyInitialized: false,
   examineInitialized: false,
@@ -410,6 +542,7 @@ HttpObserverManager = {
     modify: new Map(),
     afterModify: new Map(),
     headersReceived: new Map(),
+    authRequired: new Map(),
     onRedirect: new Map(),
     onStart: new Map(),
     onError: new Map(),
@@ -434,7 +567,8 @@ HttpObserverManager = {
                        this.listeners.onStop.size;
 
     let needExamine = this.needTracing ||
-                      this.listeners.headersReceived.size;
+                      this.listeners.headersReceived.size ||
+                      this.listeners.authRequired.size;
 
     if (needExamine && !this.examineInitialized) {
       this.examineInitialized = true;
@@ -697,7 +831,7 @@ HttpObserverManager = {
       let policyType = (loadInfo ? loadInfo.externalContentPolicyType
                                  : Ci.nsIContentPolicy.TYPE_OTHER);
 
-      let includeStatus = (["headersReceived", "onRedirect", "onStart", "onStop"].includes(kind) &&
+      let includeStatus = (["headersReceived", "authRequired", "onRedirect", "onStart", "onStop"].includes(kind) &&
                            channel instanceof Ci.nsIHttpChannel);
 
       let canModify = this.canModify(channel);
@@ -801,6 +935,21 @@ HttpObserverManager = {
         if (opts.responseHeaders && result.responseHeaders && responseHeaders) {
           responseHeaders.applyChanges(result.responseHeaders);
         }
+
+        if (kind === "authRequired" && opts.blocking && result.authCredentials) {
+          let channelData = getData(channel);
+          if (channelData.authPromptCallback) {
+            channelData.authPromptCallback(result.authCredentials);
+          }
+        }
+      }
+      // If a listener did not cancel the request or provide credentials, we
+      // forward the auth request to the base handler.
+      if (kind === "authRequired") {
+        let channelData = getData(channel);
+        if (channelData.authPromptForward) {
+          channelData.authPromptForward();
+        }
       }
 
       if (kind === "opening") {
@@ -818,13 +967,30 @@ HttpObserverManager = {
     }
   }),
 
+  shouldHookListener(listener, channel) {
+    if (listener.size == 0) {
+      return false;
+    }
+
+    let {loadInfo} = channel;
+    let policyType = (loadInfo ? loadInfo.externalContentPolicyType
+                               : Ci.nsIContentPolicy.TYPE_OTHER);
+    let uri = channel.URI;
+    for (let opts of listener.values()) {
+      if (this.shouldRunListener(policyType, uri, opts.filter)) {
+        return true;
+      }
+    }
+    return false;
+  },
+
   examine(channel, topic, data) {
     let loadContext = this.getLoadContext(channel);
 
+    let channelData = getData(channel);
     if (this.needTracing) {
       // Check whether we've already added a listener to this channel,
       // so we don't wind up chaining multiple listeners.
-      let channelData = getData(channel);
       if (!channelData.hasListener && channel instanceof Ci.nsITraceableChannel) {
         let responseStatus = channel.responseStatus;
         // skip redirections, https://bugzilla.mozilla.org/show_bug.cgi?id=728901#c8
@@ -837,7 +1003,14 @@ HttpObserverManager = {
       }
     }
 
-    this.runChannelListener(channel, loadContext, "headersReceived");
+    if (this.listeners.headersReceived.size) {
+      this.runChannelListener(channel, loadContext, "headersReceived");
+    }
+
+    if (!channelData.hasAuthRequestor && this.shouldHookListener(this.listeners.authRequired, channel)) {
+      channel.notificationCallbacks = new AuthRequestor(channel, this);
+      channelData.hasAuthRequestor = true;
+    }
   },
 
   onChannelReplaced(oldChannel, newChannel) {
@@ -890,6 +1063,7 @@ HttpEvent.prototype = {
 var onBeforeSendHeaders = new HttpEvent("modify", ["requestHeaders", "blocking"]);
 var onSendHeaders = new HttpEvent("afterModify", ["requestHeaders"]);
 var onHeadersReceived = new HttpEvent("headersReceived", ["blocking", "responseHeaders"]);
+var onAuthRequired = new HttpEvent("authRequired", ["blocking", "responseHeaders"]); // TODO asyncBlocking
 var onBeforeRedirect = new HttpEvent("onRedirect", ["responseHeaders"]);
 var onResponseStarted = new HttpEvent("onStart", ["responseHeaders"]);
 var onCompleted = new HttpEvent("onStop", ["responseHeaders"]);
@@ -907,6 +1081,9 @@ var WebRequest = {
 
   // http-on-examine-*observer.
   onHeadersReceived: onHeadersReceived,
+
+  // http-on-examine-*observer.
+  onAuthRequired: onAuthRequired,
 
   // nsIChannelEventSink.
   onBeforeRedirect: onBeforeRedirect,

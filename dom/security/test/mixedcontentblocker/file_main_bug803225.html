@@ -139,7 +139,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=803225
 
     Services.ppmm.loadProcessScript(pScript, true);
 
-    var uri = ioService.newURI("mailto:foo@bar.com", null, null);
+    var uri = ioService.newURI("mailto:foo@bar.com");
     webHandler.launchWithURI(uri);
   });
 

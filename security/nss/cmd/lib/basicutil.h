@@ -13,7 +13,6 @@
 #include "base64.h"
 #include "secasn1.h"
 #include "secder.h"
-#include "sslt.h"
 #include <stdio.h>
 
 #ifdef SECUTIL_NEW
@@ -82,6 +81,12 @@ SECStatus
 SECU_SECItemHexStringToBinary(SECItem *srcdest);
 
 /*
+** Read a hex string into a SecItem.
+*/
+extern SECItem *SECU_HexString2SECItem(PLArenaPool *arena, SECItem *item,
+                                       const char *str);
+
+/*
  *
  *  Utilities for parsing security tools command lines
  *
@@ -112,10 +117,6 @@ SECU_ParseCommandLine(int argc, char **argv, char *progName,
                       const secuCommand *cmd);
 char *
 SECU_GetOptionArg(const secuCommand *cmd, int optionNum);
-
-SECStatus parseGroupList(const char *arg, SSLNamedGroup **enabledGroups,
-                         unsigned int *enabledGroupsCount);
-SSLNamedGroup groupNameToNamedGroup(char *name);
 
 /*
  *

@@ -6,9 +6,11 @@
 #include "argparse.h"
 #include "scoped_ptrs.h"
 
+#include <dirent.h>
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <regex>
 #include <sstream>
 
 #include <cert.h>
@@ -50,7 +52,8 @@ static std::string PrintFlags(unsigned int flags) {
 }
 
 void DBTool::Usage() {
-  std::cerr << "Usage: nss db [--path <directory>] --list-certs" << std::endl;
+  std::cerr << "Usage: nss db [--path <directory>] [--create] --list-certs"
+            << std::endl;
 }
 
 bool DBTool::Run(const std::vector<std::string> &arguments) {
@@ -61,17 +64,32 @@ bool DBTool::Run(const std::vector<std::string> &arguments) {
     initDir = parser.Get("--path");
     if (PR_Access(initDir.c_str(), PR_ACCESS_READ_OK) != PR_SUCCESS) {
       std::cerr << "Directory '" << initDir
-                << "' does not exists or you don't have permissions!"
+                << "' does not exist or you don't have permissions!"
                 << std::endl;
       return false;
     }
   }
 
-  if (!parser.Has("--list-certs")) {
+  if (!parser.Has("--list-certs") && !parser.Has("--create")) {
     return false;
   }
   std::cout << "Using database directory: " << initDir << std::endl
             << std::endl;
+
+  bool dbFilesExist = PathHasDBFiles(initDir);
+  if (parser.Has("--create") && dbFilesExist) {
+    std::cerr << "Trying to create database files in a directory where they "
+                 "already exists. Delete the db files before creating new ones."
+              << std::endl;
+    return false;
+  }
+  if (!parser.Has("--create") && !dbFilesExist) {
+    std::cerr << "No db files found." << std::endl;
+    std::cerr << "Create them using 'nss db --create [--path /foo/bar]' before "
+                 "continuing."
+              << std::endl;
+    return false;
+  }
 
   // init NSS
   const char *certPrefix = "";  // certutil -P option  --- can leave this empty
@@ -82,7 +100,13 @@ bool DBTool::Run(const std::vector<std::string> &arguments) {
     return false;
   }
 
-  ListCertificates();
+  if (parser.Has("--list-certs")) {
+    ListCertificates();
+  }
+
+  if (parser.Has("--create")) {
+    std::cout << "DB files created successfully." << std::endl;
+  }
 
   // shutdown nss
   if (NSS_Shutdown() != SECSuccess) {
@@ -91,6 +115,31 @@ bool DBTool::Run(const std::vector<std::string> &arguments) {
   }
 
   return true;
+}
+
+bool DBTool::PathHasDBFiles(std::string path) {
+  std::regex certDBPattern("cert.*\\.db");
+  std::regex keyDBPattern("key.*\\.db");
+
+  DIR *dir;
+  if (!(dir = opendir(path.c_str()))) {
+    std::cerr << "Directory " << path << " could not be accessed!" << std::endl;
+    return false;
+  }
+
+  struct dirent *ent;
+  bool dbFileExists = false;
+  while ((ent = readdir(dir))) {
+    if (std::regex_match(ent->d_name, certDBPattern) ||
+        std::regex_match(ent->d_name, keyDBPattern) ||
+        "secmod.db" == std::string(ent->d_name)) {
+      dbFileExists = true;
+      break;
+    }
+  }
+
+  closedir(dir);
+  return dbFileExists;
 }
 
 void DBTool::ListCertificates() {

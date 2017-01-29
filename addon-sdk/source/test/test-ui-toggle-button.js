@@ -815,7 +815,7 @@ exports['test button icon set'] = function(assert) {
   });
 
   let { node, id: widgetId } = getWidget(button.id);
-  let { devicePixelRatio } = node.ownerDocument.defaultView;
+  let { devicePixelRatio } = node.ownerGlobal;
 
   let size = 16 * devicePixelRatio;
 
@@ -1104,7 +1104,7 @@ exports['test button badge property'] = function(assert) {
     'badge color is not set');
 
   let { node } = getWidget(button.id);
-  let { getComputedStyle } = node.ownerDocument.defaultView;
+  let { getComputedStyle } = node.ownerGlobal;
   let badgeNode = badgeNodeFor(node);
 
   assert.equal('1234', node.getAttribute('badge'),
@@ -1147,7 +1147,7 @@ exports['test button badge color'] = function(assert) {
     'badge color is set');
 
   let { node } = getWidget(button.id);
-  let { getComputedStyle } = node.ownerDocument.defaultView;
+  let { getComputedStyle } = node.ownerGlobal;
   let badgeNode = badgeNodeFor(node);
 
   assert.equal(badgeNodeFor(node).style.backgroundColor, 'blue',

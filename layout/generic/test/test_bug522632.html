@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=522632
 <script type="application/javascript">
 
 /** Test for Bug 522632 **/
-is(document.defaultView.getComputedStyle($("foo"), "").height, "100px",
+is(document.defaultView.getComputedStyle($("foo")).height, "100px",
    "Unexpected computed height");
 </script>
 </pre>

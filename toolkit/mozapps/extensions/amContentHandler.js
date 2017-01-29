@@ -68,7 +68,7 @@ amContentHandler.prototype = {
       let element = window.frameElement;
       let ssm = Services.scriptSecurityManager;
       while (element && !ssm.isSystemPrincipal(element.ownerDocument.nodePrincipal))
-        element = element.ownerDocument.defaultView.frameElement;
+        element = element.ownerGlobal.frameElement;
 
       if (element) {
         let listener = Cc["@mozilla.org/addons/integration;1"].

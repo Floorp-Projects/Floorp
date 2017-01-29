@@ -40,7 +40,7 @@ this.SelectParentHelper = {
     selectRect = rect;
     this._registerListeners(browser, menulist.menupopup);
 
-    let win = browser.ownerDocument.defaultView;
+    let win = browser.ownerGlobal;
 
     // Set the maximum height to show exactly MAX_ROWS items.
     let menupopup = menulist.menupopup;
@@ -148,9 +148,9 @@ this.SelectParentHelper = {
     popup.addEventListener("popuphidden", this);
     popup.addEventListener("mouseover", this);
     popup.addEventListener("mouseout", this);
-    browser.ownerDocument.defaultView.addEventListener("mouseup", this, true);
-    browser.ownerDocument.defaultView.addEventListener("keydown", this, true);
-    browser.ownerDocument.defaultView.addEventListener("fullscreen", this, true);
+    browser.ownerGlobal.addEventListener("mouseup", this, true);
+    browser.ownerGlobal.addEventListener("keydown", this, true);
+    browser.ownerGlobal.addEventListener("fullscreen", this, true);
     browser.messageManager.addMessageListener("Forms:UpdateDropDown", this);
   },
 
@@ -159,9 +159,9 @@ this.SelectParentHelper = {
     popup.removeEventListener("popuphidden", this);
     popup.removeEventListener("mouseover", this);
     popup.removeEventListener("mouseout", this);
-    browser.ownerDocument.defaultView.removeEventListener("mouseup", this, true);
-    browser.ownerDocument.defaultView.removeEventListener("keydown", this, true);
-    browser.ownerDocument.defaultView.removeEventListener("fullscreen", this, true);
+    browser.ownerGlobal.removeEventListener("mouseup", this, true);
+    browser.ownerGlobal.removeEventListener("keydown", this, true);
+    browser.ownerGlobal.removeEventListener("fullscreen", this, true);
     browser.messageManager.removeMessageListener("Forms:UpdateDropDown", this);
   },
 
@@ -175,7 +175,7 @@ function populateChildren(menulist, options, selectedIndex, zoom,
   // -1 just means we haven't calculated it yet. When we recurse through this function
   // we will pass in adjustedTextSize to save on recalculations.
   if (adjustedTextSize == -1) {
-    let win = element.ownerDocument.defaultView;
+    let win = element.ownerGlobal;
 
     // Grab the computed text size and multiply it by the remote browser's fullZoom to ensure
     // the popup's text size is matched with the content's. We can't just apply a CSS transform

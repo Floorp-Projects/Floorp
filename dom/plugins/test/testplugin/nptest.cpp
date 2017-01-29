@@ -140,8 +140,6 @@ static bool getObjectValue(NPObject* npobj, const NPVariant* args, uint32_t argC
 static bool getJavaCodebase(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool checkObjectValue(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool enableFPExceptions(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
-static bool setCookie(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
-static bool getCookie(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getAuthInfo(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool asyncCallbackTest(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool checkGCRace(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
@@ -215,8 +213,6 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getJavaCodebase",
   "checkObjectValue",
   "enableFPExceptions",
-  "setCookie",
-  "getCookie",
   "getAuthInfo",
   "asyncCallbackTest",
   "checkGCRace",
@@ -291,8 +287,6 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   getJavaCodebase,
   checkObjectValue,
   enableFPExceptions,
-  setCookie,
-  getCookie,
   getAuthInfo,
   asyncCallbackTest,
   checkGCRace,
@@ -3010,84 +3004,6 @@ static bool enableFPExceptions(NPObject* npobj, const NPVariant* args, uint32_t 
 #else
   return false;
 #endif
-}
-
-// caller is responsible for freeing return buffer
-static char* URLForInstanceWindow(NPP instance) {
-  char *outString = nullptr;
-
-  NPObject* windowObject = nullptr;
-  NPError err = NPN_GetValue(instance, NPNVWindowNPObject, &windowObject);
-  if (err != NPERR_NO_ERROR || !windowObject)
-    return nullptr;
-
-  NPIdentifier locationIdentifier = NPN_GetStringIdentifier("location");
-  NPVariant locationVariant;
-  if (NPN_GetProperty(instance, windowObject, locationIdentifier, &locationVariant)) {
-    NPObject *locationObject = locationVariant.value.objectValue;
-    if (locationObject) {
-      NPIdentifier hrefIdentifier = NPN_GetStringIdentifier("href");
-      NPVariant hrefVariant;
-      if (NPN_GetProperty(instance, locationObject, hrefIdentifier, &hrefVariant)) {
-        const NPString* hrefString = &NPVARIANT_TO_STRING(hrefVariant);
-        if (hrefString) {
-          outString = (char *)malloc(hrefString->UTF8Length + 1);
-          if (outString) {
-            strcpy(outString, hrefString->UTF8Characters);
-            outString[hrefString->UTF8Length] = '\0';
-          }
-        }
-        NPN_ReleaseVariantValue(&hrefVariant);
-      }
-    }
-    NPN_ReleaseVariantValue(&locationVariant);
-  }
-
-  NPN_ReleaseObject(windowObject);
-
-  return outString;
-}
-
-static bool
-setCookie(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
-{
-  if (argCount != 1)
-    return false;
-  if (!NPVARIANT_IS_STRING(args[0]))
-    return false;
-  const NPString* cookie = &NPVARIANT_TO_STRING(args[0]);
-
-  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
-
-  char* url = URLForInstanceWindow(npp);
-  if (!url)
-    return false;
-  NPError err = NPN_SetValueForURL(npp, NPNURLVCookie, url, cookie->UTF8Characters, cookie->UTF8Length);
-  free(url);
-
-  return (err == NPERR_NO_ERROR);
-}
-
-static bool
-getCookie(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
-{
-  if (argCount != 0)
-    return false;
-
-  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
-
-  char* url = URLForInstanceWindow(npp);
-  if (!url)
-    return false;
-  char* cookie = nullptr;
-  unsigned int length = 0;
-  NPError err = NPN_GetValueForURL(npp, NPNURLVCookie, url, &cookie, &length);
-  free(url);
-  if (err != NPERR_NO_ERROR || !cookie)
-    return false;
-
-  STRINGZ_TO_NPVARIANT(cookie, *result);
-  return true;
 }
 
 static bool

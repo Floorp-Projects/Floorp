@@ -87,7 +87,7 @@ class DockerImageTask(base.Task):
             # the same image per branch.
             index_paths = ['{}.level-{}.{}.hash.{}'.format(
                                 INDEX_PREFIX, level, image_name, context_hash)
-                           for level in range(int(params['level']), 4)]
+                           for level in reversed(range(int(params['level']), 4))]
 
             tasks.append(cls(kind, 'build-docker-image-' + image_name,
                              task=image_task['task'], attributes=attributes,
@@ -128,7 +128,7 @@ class DockerImageTask(base.Task):
         context_hash = imgMeta['contextHash']
         index_paths = ['{}.level-{}.{}.hash.{}'.format(
                             INDEX_PREFIX, level, image_name, context_hash)
-                       for level in range(int(imgMeta['level']), 4)]
+                       for level in reversed(range(int(imgMeta['level']), 4))]
         docker_image_task = cls(kind='docker-image',
                                 label=task_dict['label'],
                                 attributes=task_dict['attributes'],

@@ -5,13 +5,10 @@
 #include <memory>
 #include <vector>
 
-#include "FuzzerInternal.h"
 #include "hasht.h"
 #include "pk11pub.h"
 #include "secoidt.h"
 #include "shared.h"
-
-extern const uint16_t DEFAULT_MAX_LENGTH = 4096U;
 
 const std::vector<SECOidTag> algos = {SEC_OID_MD5, SEC_OID_SHA1, SEC_OID_SHA256,
                                       SEC_OID_SHA384, SEC_OID_SHA512};

@@ -114,11 +114,11 @@ protected:
 
     struct Glyf { // we only need the bounding-box at the beginning
                   // of the glyph record, not the actual outline data
-        AutoSwap_PRInt16 numberOfContours;
-        AutoSwap_PRInt16 xMin;
-        AutoSwap_PRInt16 yMin;
-        AutoSwap_PRInt16 xMax;
-        AutoSwap_PRInt16 yMax;
+        mozilla::AutoSwap_PRInt16 numberOfContours;
+        mozilla::AutoSwap_PRInt16 xMin;
+        mozilla::AutoSwap_PRInt16 yMin;
+        mozilla::AutoSwap_PRInt16 xMax;
+        mozilla::AutoSwap_PRInt16 yMax;
     };
 
     const Glyf *FindGlyf(hb_codepoint_t aGlyph, bool *aEmptyGlyf) const;

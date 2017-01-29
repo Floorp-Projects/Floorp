@@ -20,7 +20,7 @@ SimpleTest.waitForExplicitFinish();
 function runTest()
 {
   var object = document.querySelector("object");
-  var cs = document.defaultView.getComputedStyle(object, "");
+  var cs = document.defaultView.getComputedStyle(object);
   var width = cs.getPropertyValue("width");
   is(width, "70px", "Check that the &lt;object&gt; size updated");
   SimpleTest.finish();

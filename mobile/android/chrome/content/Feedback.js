@@ -52,7 +52,7 @@ var Feedback = {
         break;
     }
 
-    let win = event.target.ownerDocument.defaultView.top;
+    let win = event.target.ownerGlobal.top;
     BrowserApp.closeTab(BrowserApp.getTabForWindow(win));
   },
 

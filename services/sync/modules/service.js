@@ -21,10 +21,10 @@ const KEYS_WBO = "keys";
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
-Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
@@ -33,7 +33,6 @@ Cu.import("resource://services-sync/stages/enginesync.js");
 Cu.import("resource://services-sync/stages/declined.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/telemetry.js");
-Cu.import("resource://services-sync/userapi.js");
 Cu.import("resource://services-sync/util.js");
 
 const ENGINE_MODULES = {
@@ -69,24 +68,6 @@ Sync11Service.prototype = {
   // world is ebbedded in the token returned from the token server.
   _clusterURL: null,
 
-  get serverURL() {
-    return Svc.Prefs.get("serverURL");
-  },
-  set serverURL(value) {
-    if (!value.endsWith("/")) {
-      value += "/";
-    }
-
-    // Only do work if it's actually changing
-    if (value == this.serverURL)
-      return;
-
-    Svc.Prefs.set("serverURL", value);
-
-    // A new server most likely uses a different cluster, so clear that.
-    this._clusterURL = null;
-  },
-
   get clusterURL() {
     return this._clusterURL || "";
   },
@@ -96,35 +77,6 @@ Sync11Service.prototype = {
     }
     this._clusterURL = value;
     this._updateCachedURLs();
-  },
-
-  get miscAPI() {
-    // Append to the serverURL if it's a relative fragment
-    let misc = Svc.Prefs.get("miscURL");
-    if (misc.indexOf(":") == -1)
-      misc = this.serverURL + misc;
-    return misc + MISC_API_VERSION + "/";
-  },
-
-  /**
-   * The URI of the User API service.
-   *
-   * This is the base URI of the service as applicable to all users up to
-   * and including the server version path component, complete with trailing
-   * forward slash.
-   */
-  get userAPIURI() {
-    // Append to the serverURL if it's a relative fragment.
-    let url = Svc.Prefs.get("userURL");
-    if (!url.includes(":")) {
-      url = this.serverURL + url;
-    }
-
-    return url + USER_API_VERSION + "/";
-  },
-
-  get pwResetURL() {
-    return this.serverURL + "weave-password-reset";
   },
 
   get syncID() {
@@ -172,7 +124,7 @@ Sync11Service.prototype = {
 
   _updateCachedURLs: function _updateCachedURLs() {
     // Nothing to cache yet if we don't have the building blocks
-    if (!this.clusterURL || !this.identity.username) {
+    if (!this.clusterURL) {
       // Also reset all other URLs used by Sync to ensure we aren't accidentally
       // using one cached earlier - if there's no cluster URL any cached ones
       // are invalid.
@@ -320,14 +272,6 @@ Sync11Service.prototype = {
    */
   onStartup: function onStartup() {
     this._migratePrefs();
-
-    // Status is instantiated before us and is the first to grab an instance of
-    // the IdentityManager. We use that instance because IdentityManager really
-    // needs to be a singleton. Ideally, the longer-lived object would spawn
-    // this service instance.
-    if (!Status || !Status._authManager) {
-      throw new Error("Status or Status._authManager not initialized.");
-    }
 
     this.status = Status;
     this.identity = Status._authManager;
@@ -567,21 +511,9 @@ Sync11Service.prototype = {
 
     this._log.debug("Fetching and verifying -- or generating -- symmetric keys.");
 
-    // Don't allow empty/missing passphrase.
-    // Furthermore, we assume that our sync key is already upgraded,
-    // and fail if that assumption is invalidated.
-
-    if (!this.identity.syncKey) {
-      this.status.login = LOGIN_FAILED_NO_PASSPHRASE;
-      this.status.sync = CREDENTIALS_CHANGED;
-      return false;
-    }
-
     let syncKeyBundle = this.identity.syncKeyBundle;
     if (!syncKeyBundle) {
-      this._log.error("Sync Key Bundle not set. Invalid Sync Key?");
-
-      this.status.login = LOGIN_FAILED_INVALID_PASSPHRASE;
+      this.status.login = LOGIN_FAILED_NO_PASSPHRASE;
       this.status.sync = CREDENTIALS_CHANGED;
       return false;
     }
@@ -717,7 +649,7 @@ Sync11Service.prototype = {
           // We have no way of verifying the passphrase right now,
           // so wait until remoteSetup to do so.
           // Just make the most trivial checks.
-          if (!this.identity.syncKey) {
+          if (!this.identity.syncKeyBundle) {
             this._log.warn("No passphrase in verifyLogin.");
             this.status.login = LOGIN_FAILED_NO_PASSPHRASE;
             return false;
@@ -825,49 +757,6 @@ Sync11Service.prototype = {
     }
   },
 
-  changePassword: function changePassword(newPassword) {
-    let client = new UserAPI10Client(this.userAPIURI);
-    let cb = Async.makeSpinningCallback();
-    client.changePassword(this.identity.username,
-                          this.identity.basicPassword, newPassword, cb);
-
-    try {
-      cb.wait();
-    } catch (ex) {
-      this._log.debug("Password change failed", ex);
-      return false;
-    }
-
-    // Save the new password for requests and login manager.
-    this.identity.basicPassword = newPassword;
-    this.persistLogin();
-    return true;
-  },
-
-  changePassphrase: function changePassphrase(newphrase) {
-    return this._catch(function doChangePasphrase() {
-      /* Wipe. */
-      this.wipeServer();
-
-      this.logout();
-
-      /* Set this so UI is updated on next run. */
-      this.identity.syncKey = newphrase;
-      this.persistLogin();
-
-      /* We need to re-encrypt everything, so reset. */
-      this.resetClient();
-      this.collectionKeys.clear();
-
-      /* Login and sync. This also generates new keys. */
-      this.sync();
-
-      Svc.Obs.notify("weave:service:change-passphrase", true);
-
-      return true;
-    })();
-  },
-
   startOver: function startOver() {
     this._log.trace("Invoking Service.startOver.");
     Svc.Obs.notify("weave:engine:stop-tracking");
@@ -892,7 +781,7 @@ Sync11Service.prototype = {
     // possible, so let's fake for the CLIENT_NOT_CONFIGURED status for now
     // by emptying the passphrase (we still need the password).
     this._log.info("Service.startOver dropping sync key and logging out.");
-    this.identity.resetSyncKey();
+    this.identity.resetSyncKeyBundle();
     this.status.login = LOGIN_FAILED_NO_PASSPHRASE;
     this.logout();
     Svc.Obs.notify("weave:service:start-over");
@@ -912,23 +801,8 @@ Sync11Service.prototype = {
 
     this.identity.deleteSyncCredentials();
 
-    // If necessary, reset the identity manager, then re-initialize it so the
-    // FxA manager is used.  This is configurable via a pref - mainly for tests.
-    let keepIdentity = false;
-    try {
-      keepIdentity = Services.prefs.getBoolPref("services.sync-testing.startOverKeepIdentity");
-    } catch (_) { /* no such pref */ }
-    if (keepIdentity) {
-      Svc.Obs.notify("weave:service:start-over:finish");
-      return;
-    }
-
     try {
       this.identity.finalize();
-      // an observer so the FxA migration code can take some action before
-      // the new identity is created.
-      Svc.Obs.notify("weave:service:start-over:init-identity");
-      this.identity.username = "";
       this.status.__authManager = null;
       this.identity = Status._authManager;
       this._clusterManager = this.identity.createClusterManager(this);
@@ -941,31 +815,12 @@ Sync11Service.prototype = {
     }
   },
 
-  persistLogin: function persistLogin() {
-    try {
-      this.identity.persistCredentials(true);
-    } catch (ex) {
-      this._log.info("Unable to persist credentials: " + ex);
-    }
-  },
-
-  login: function login(username, password, passphrase) {
+  login: function login() {
     function onNotify() {
       this._loggedIn = false;
       if (Services.io.offline) {
         this.status.login = LOGIN_FAILED_NETWORK_ERROR;
         throw "Application is offline, login should not be called";
-      }
-
-      let initialStatus = this._checkSetup();
-      if (username) {
-        this.identity.username = username;
-      }
-      if (password) {
-        this.identity.basicPassword = password;
-      }
-      if (passphrase) {
-        this.identity.syncKey = passphrase;
       }
 
       if (this._checkSetup() == CLIENT_NOT_CONFIGURED) {
@@ -983,12 +838,6 @@ Sync11Service.prototype = {
       // Just let any errors bubble up - they've more context than we do!
       cb.wait();
 
-      // Calling login() with parameters when the client was
-      // previously not configured means setup was completed.
-      if (initialStatus == CLIENT_NOT_CONFIGURED
-          && (username || password || passphrase)) {
-        Svc.Obs.notify("weave:service:setup-complete");
-      }
       this._updateCachedURLs();
 
       this._log.info("User logged in successfully - verifying login.");
@@ -1015,45 +864,6 @@ Sync11Service.prototype = {
     this._loggedIn = false;
 
     Svc.Obs.notify("weave:service:logout:finish");
-  },
-
-  checkAccount: function checkAccount(account) {
-    let client = new UserAPI10Client(this.userAPIURI);
-    let cb = Async.makeSpinningCallback();
-
-    let username = this.identity.usernameFromAccount(account);
-    client.usernameExists(username, cb);
-
-    try {
-      let exists = cb.wait();
-      return exists ? "notAvailable" : "available";
-    } catch (ex) {
-      // TODO fix API convention.
-      return this.errorHandler.errorStr(ex);
-    }
-  },
-
-  createAccount: function createAccount(email, password,
-                                        captchaChallenge, captchaResponse) {
-    let client = new UserAPI10Client(this.userAPIURI);
-
-    // Hint to server to allow scripted user creation or otherwise
-    // ignore captcha.
-    if (Svc.Prefs.isSet("admin-secret")) {
-      client.adminSecret = Svc.Prefs.get("admin-secret", "");
-    }
-
-    let cb = Async.makeSpinningCallback();
-
-    client.createAccount(email, password, captchaChallenge, captchaResponse,
-                         cb);
-
-    try {
-      cb.wait();
-      return null;
-    } catch (ex) {
-      return this.errorHandler.errorStr(ex.body);
-    }
   },
 
   // Note: returns false if we failed for a reason other than the server not yet
@@ -1201,11 +1011,6 @@ Sync11Service.prototype = {
       this.syncID = meta.payload.syncID;
       this._log.debug("Clear cached values and take syncId: " + this.syncID);
 
-      if (!this.upgradeSyncKey(meta.payload.syncID)) {
-        this._log.warn("Failed to upgrade sync key. Failing remote setup.");
-        return false;
-      }
-
       if (!this.verifyAndFetchSymmetricKeys(infoResponse)) {
         this._log.warn("Failed to fetch symmetric keys. Failing remote setup.");
         return false;
@@ -1220,11 +1025,6 @@ Sync11Service.prototype = {
 
       return true;
     }
-    if (!this.upgradeSyncKey(meta.payload.syncID)) {
-      this._log.warn("Failed to upgrade sync key. Failing remote setup.");
-      return false;
-    }
-
     if (!this.verifyAndFetchSymmetricKeys(infoResponse)) {
       this._log.warn("Failed to fetch symmetric keys. Failing remote setup.");
       return false;
@@ -1363,139 +1163,10 @@ Sync11Service.prototype = {
     this.recordManager.set(this.metaURL, meta);
   },
 
-  /**
-   * Get a migration sentinel for the Firefox Accounts migration.
-   * Returns a JSON blob - it is up to callers of this to make sense of the
-   * data.
-   *
-   * Returns a promise that resolves with the sentinel, or null.
-   */
-  getFxAMigrationSentinel() {
-    if (this._shouldLogin()) {
-      this._log.debug("In getFxAMigrationSentinel: should login.");
-      if (!this.login()) {
-        this._log.debug("Can't get migration sentinel: login returned false.");
-        return Promise.resolve(null);
-      }
-    }
-    if (!this.identity.syncKeyBundle) {
-      this._log.error("Can't get migration sentinel: no syncKeyBundle.");
-      return Promise.resolve(null);
-    }
-    try {
-      let collectionURL = this.storageURL + "meta/fxa_credentials";
-      let cryptoWrapper = this.recordManager.get(collectionURL);
-      if (!cryptoWrapper || !cryptoWrapper.payload) {
-        // nothing to decrypt - .decrypt is noisy in that case, so just bail
-        // now.
-        return Promise.resolve(null);
-      }
-      // If the payload has a sentinel it means we must have put back the
-      // decrypted version last time we were called.
-      if (cryptoWrapper.payload.sentinel) {
-        return Promise.resolve(cryptoWrapper.payload.sentinel);
-      }
-      // If decryption fails it almost certainly means the key is wrong - but
-      // it's not clear if we need to take special action for that case?
-      let payload = cryptoWrapper.decrypt(this.identity.syncKeyBundle);
-      // After decrypting the ciphertext is lost, so we just stash the
-      // decrypted payload back into the wrapper.
-      cryptoWrapper.payload = payload;
-      return Promise.resolve(payload.sentinel);
-    } catch (ex) {
-      this._log.error("Failed to fetch the migration sentinel: ${}", ex);
-      return Promise.resolve(null);
-    }
-  },
-
-  /**
-   * Set a migration sentinel for the Firefox Accounts migration.
-   * Accepts a JSON blob - it is up to callers of this to make sense of the
-   * data.
-   *
-   * Returns a promise that resolves with a boolean which indicates if the
-   * sentinel was successfully written.
-   */
-  setFxAMigrationSentinel(sentinel) {
-    if (this._shouldLogin()) {
-      this._log.debug("In setFxAMigrationSentinel: should login.");
-      if (!this.login()) {
-        this._log.debug("Can't set migration sentinel: login returned false.");
-        return Promise.resolve(false);
-      }
-    }
-    if (!this.identity.syncKeyBundle) {
-      this._log.error("Can't set migration sentinel: no syncKeyBundle.");
-      return Promise.resolve(false);
-    }
-    try {
-      let collectionURL = this.storageURL + "meta/fxa_credentials";
-      let cryptoWrapper = new CryptoWrapper("meta", "fxa_credentials");
-      cryptoWrapper.cleartext.sentinel = sentinel;
-
-      cryptoWrapper.encrypt(this.identity.syncKeyBundle);
-
-      let res = this.resource(collectionURL);
-      let response = res.put(cryptoWrapper.toJSON());
-
-      if (!response.success) {
-        throw response;
-      }
-      this.recordManager.set(collectionURL, cryptoWrapper);
-    } catch (ex) {
-      this._log.error("Failed to set the migration sentinel: ${}", ex);
-      return Promise.resolve(false);
-    }
-    return Promise.resolve(true);
-  },
-
-  /**
-   * If we have a passphrase, rather than a 25-alphadigit sync key,
-   * use the provided sync ID to bootstrap it using PBKDF2.
-   *
-   * Store the new 'passphrase' back into the identity manager.
-   *
-   * We can check this as often as we want, because once it's done the
-   * check will no longer succeed. It only matters that it happens after
-   * we decide to bump the server storage version.
-   */
-  upgradeSyncKey: function upgradeSyncKey(syncID) {
-    let p = this.identity.syncKey;
-
-    if (!p) {
-      return false;
-    }
-
-    // Check whether it's already a key that we generated.
-    if (Utils.isPassphrase(p)) {
-      this._log.info("Sync key is up-to-date: no need to upgrade.");
-      return true;
-    }
-
-    // Otherwise, let's upgrade it.
-    // N.B., we persist the sync key without testing it first...
-
-    let s = btoa(syncID);        // It's what WeaveCrypto expects. *sigh*
-    let k = Utils.derivePresentableKeyFromPassphrase(p, s, PBKDF2_KEY_BYTES);   // Base 32.
-
-    if (!k) {
-      this._log.error("No key resulted from derivePresentableKeyFromPassphrase. Failing upgrade.");
-      return false;
-    }
-
-    this._log.info("Upgrading sync key...");
-    this.identity.syncKey = k;
-    this._log.info("Saving upgraded sync key...");
-    this.persistLogin();
-    this._log.info("Done saving.");
-    return true;
-  },
-
   _freshStart: function _freshStart() {
-    this._log.info("Fresh start. Resetting client and considering key upgrade.");
+    this._log.info("Fresh start. Resetting client.");
     this.resetClient();
     this.collectionKeys.clear();
-    this.upgradeSyncKey(this.syncID);
 
     // Wipe the server.
     this.wipeServer();
@@ -1604,9 +1275,6 @@ Sync11Service.prototype = {
         engine.wipeClient();
       }
     }
-
-    // Save the password/passphrase just in-case they aren't restored by sync
-    this.persistLogin();
   },
 
   /**

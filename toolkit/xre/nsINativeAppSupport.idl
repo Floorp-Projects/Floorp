@@ -89,7 +89,6 @@
  */
 
 interface nsIXULWindow;
-interface nsICmdLineService;
 
 [scriptable, uuid(5fdf8480-1f98-11d4-8077-00600811a9c3)]
 interface nsINativeAppSupport : nsISupports {

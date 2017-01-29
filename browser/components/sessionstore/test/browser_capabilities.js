@@ -41,7 +41,7 @@ add_task(function* docshell_capabilities() {
   is(disallow.size, 2, "two capabilities disallowed");
 
   // Reuse the tab to restore a new, clean state into it.
-  yield promiseTabState(tab, {entries: [{url: "about:robots"}]});
+  yield promiseTabState(tab, {entries: [{url: "about:robots", triggeringPrincipal_base64}]});
 
   // Flush to make sure chrome received all data.
   yield TabStateFlusher.flush(browser);

@@ -171,7 +171,7 @@
             case event.DOM_VK_LEFT:
               if (event.metaKey && event.altKey && !event.shiftKey && !event.ctrlKey)
                 if (this.tabs && this._handleMetaAltArrows) {
-                  var offset = window.getComputedStyle(this, "")
+                  var offset = window.getComputedStyle(this)
                                      .direction == "ltr" ? -1 : 1;
                   this.tabs.advanceSelectedTab(offset, true);
                   event.preventDefault();
@@ -180,7 +180,7 @@
             case event.DOM_VK_RIGHT:
               if (event.metaKey && event.altKey && !event.shiftKey && !event.ctrlKey)
                 if (this.tabs && this._handleMetaAltArrows) {
-                  offset = window.getComputedStyle(this, "")
+                  offset = window.getComputedStyle(this)
                                      .direction == "ltr" ? 1 : -1;
                   this.tabs.advanceSelectedTab(offset, true);
                   event.preventDefault();
@@ -846,14 +846,14 @@
 
       <handler event="keydown" keycode="VK_LEFT" group="system" preventdefault="true">
       <![CDATA[
-        var direction = window.getComputedStyle(this.parentNode, null).direction;
+        var direction = window.getComputedStyle(this.parentNode).direction;
         this.parentNode.advanceSelectedTab(direction == "ltr" ? -1 : 1, this.arrowKeysShouldWrap);
       ]]>
       </handler>
 
       <handler event="keydown" keycode="VK_RIGHT" group="system" preventdefault="true">
       <![CDATA[
-        var direction = window.getComputedStyle(this.parentNode, null).direction;
+        var direction = window.getComputedStyle(this.parentNode).direction;
         this.parentNode.advanceSelectedTab(direction == "ltr" ? 1 : -1, this.arrowKeysShouldWrap);
       ]]>
       </handler>

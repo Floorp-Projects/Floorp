@@ -34,7 +34,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=666041
 
 function getComputedStyleWrapper(elem, prop)
 {
-  return window.getComputedStyle(elem, null).getPropertyValue(prop);
+  return window.getComputedStyle(elem).getPropertyValue(prop);
 }
 
 function setPossiblyAliasedProperty(aElem, aPropertyName, aPropertyValue,

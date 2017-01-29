@@ -93,7 +93,7 @@ function expectFocusShift(callback, expectedWindow, expectedElement, focusChange
 {
   if (expectedWindow == null)
     expectedWindow = expectedElement ?
-                     expectedElement.ownerDocument.defaultView :
+                     expectedElement.ownerGlobal :
                      gLastFocusWindow;
 
   var expectedEvents = "";
@@ -308,20 +308,20 @@ function mouseWillTriggerFocus(element)
 
 function mouseOnElement(element, expectedElement, focusChanged, testid)
 {
-  var expectedWindow = (element.ownerDocument.defaultView == gChildWindow) ? gChildWindow : window;
+  var expectedWindow = (element.ownerGlobal == gChildWindow) ? gChildWindow : window;
   // on Mac, form elements are not focused when clicking, except for lists and textboxes.
   var noFocusOnMouse = !mouseWillTriggerFocus(element)
 
   if (noFocusOnMouse) {
     // no focus so the last focus method will be 0
     gLastFocusMethod = 0;
-    expectFocusShift(() => synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView),
+    expectFocusShift(() => synthesizeMouse(element, 4, 4, { }, element.ownerGlobal),
                      expectedWindow, null, true, testid);
     gLastFocusMethod = fm.FLAG_BYMOUSE;
   }
   else {
-    expectFocusShift(() => synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView),
-                     element.ownerDocument.defaultView,
+    expectFocusShift(() => synthesizeMouse(element, 4, 4, { }, element.ownerGlobal),
+                     element.ownerGlobal,
                      expectedElement, focusChanged, testid);
   }
 }
@@ -456,7 +456,7 @@ function startTest()
       continue;
 
     mouseOnElement(element, getById("t" + idx), true, "mouse on element t" + idx);
-    var expectedWindow = (element.ownerDocument.defaultView == gChildWindow) ? gChildWindow : window;
+    var expectedWindow = (element.ownerGlobal == gChildWindow) ? gChildWindow : window;
     if (element.localName == "listbox" && expectedWindow == window &&
         navigator.platform.indexOf("Mac") == 0) {
       // after focusing a listbox on Mac, clear the focus before continuing.
@@ -487,7 +487,7 @@ function startTest()
   if (idx == kOverflowElementIndex) {
     gLastFocusMethod = fm.FLAG_BYMOUSE;
     var element = getById("t" + idx);
-    expectFocusShift(() => synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView),
+    expectFocusShift(() => synthesizeMouse(element, 4, 4, { }, element.ownerGlobal),
                      window, null, true, "mouse on scrollable element");
   }
 
@@ -512,7 +512,7 @@ function startTest()
   for (idx = 1; idx <= kFocusSteps; idx++) {
     var expected = getById("o" + (idx % 2 ? idx : idx - 1));
     expectFocusShift(() => getById("o" + idx).focus(),
-                     expected.ownerDocument.defaultView,
+                     expected.ownerGlobal,
                      expected, idx % 2, "focus method on non-tabbable element o" + idx);
   }
 
@@ -521,7 +521,7 @@ function startTest()
   for (idx = 1; idx <= kNoFocusSteps; idx++) {
     var expected = getById("o" + (idx % 2 ? idx : idx - 1));
     expectFocusShift(() => getById("o" + idx).focus(),
-                     expected.ownerDocument.defaultView,
+                     expected.ownerGlobal,
                      expected, idx % 2, "focus method on unfocusable element n" + idx);
   }
 
@@ -553,7 +553,7 @@ function startTest()
 
     // on Windows and Linux, the shift key must be pressed for content area access keys
     // and on Mac, the alt key must be pressed for content area access keys
-    var isContent = (getById(keys[k]).ownerDocument.defaultView == gChildWindow);
+    var isContent = (getById(keys[k]).ownerGlobal == gChildWindow);
     if (navigator.platform.indexOf("Mac") == -1) {
       accessKeyDetails.shiftKey = isContent;
     } else {
@@ -629,7 +629,7 @@ function startTest()
 
   var functions = [
     element => element.focus(),
-    element => synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView)
+    element => synthesizeMouse(element, 4, 4, { }, element.ownerGlobal)
   ];
 
   // first, check cases where the focus is adjusted during the blur event. Iterate twice,
@@ -1117,7 +1117,7 @@ function otherWindowFocused(otherWindow)
     is(fm.focusedElement.id, "other", "when lowered focusedElement t" + idx);
     is(fm.focusedWindow, otherWindow, "when lowered focusedWindow t" + idx);
 
-    var checkWindow = expectedElement.ownerDocument.defaultView;
+    var checkWindow = expectedElement.ownerGlobal;
     is(fm.getFocusedElementForWindow(checkWindow, false, {}).id, expectedElement.id,
        "when lowered getFocusedElementForWindow t" + idx);
     is(checkWindow.document.activeElement.id, expectedElement.id, "when lowered activeElement t" + idx);

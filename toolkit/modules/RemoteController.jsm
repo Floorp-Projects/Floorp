@@ -50,7 +50,7 @@ RemoteController.prototype = {
       // x and y parameter of cmd_lookUpDictionary are device pixel.
       // So we need calculate child process's coordinate using correct unit.
       let rect = this._browser.getBoundingClientRect();
-      let scale = this._browser.ownerDocument.defaultView.devicePixelRatio;
+      let scale = this._browser.ownerGlobal.devicePixelRatio;
       cmd.params = {
         x:  {
           type: "long",
@@ -90,6 +90,6 @@ RemoteController.prototype = {
       this._supportedCommands[aDisabledCommands[c]] = false;
     }
 
-    this._browser.ownerDocument.defaultView.updateCommands(aAction);
+    this._browser.ownerGlobal.updateCommands(aAction);
   }
 };

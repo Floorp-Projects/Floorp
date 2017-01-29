@@ -92,7 +92,7 @@ var GeoProp = {
  * @return {Object}
  */
 function getOffsetParent(node) {
-  let win = node.ownerDocument.defaultView;
+  let win = node.ownerGlobal;
 
   let offsetParent = node.offsetParent;
   if (offsetParent &&
@@ -643,7 +643,7 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       if (GeoProp.isInverted(side)) {
         return this.offsetParent.dimension[GeoProp.mainAxisSize(side)];
       }
-      return -1 * this.currentNode.ownerDocument.defaultView["scroll" +
+      return -1 * this.currentNode.ownerGlobal["scroll" +
                                               GeoProp.axis(side).toUpperCase()];
     };
 

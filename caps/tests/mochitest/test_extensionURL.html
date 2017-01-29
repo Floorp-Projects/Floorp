@@ -33,16 +33,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
 
     // First, get a file:// URI to something - open to suggestions on how to do
     //  this more easily.
-    var resURI = SpecialPowers.Services.io.newURI('resource://testing-common/resource_test_file.html', null, null);
+    var resURI = SpecialPowers.Services.io.newURI('resource://testing-common/resource_test_file.html');
     var filePath = resourceHandler.resolveURI(resURI);
     ok(filePath.startsWith('file://'), 'resource:// URI resolves where we expect: ' + filePath);
-    var fileURI = SpecialPowers.Services.io.newURI(filePath, null, null);
+    var fileURI = SpecialPowers.Services.io.newURI(filePath);
 
     // Register a moz-extension:// URI.
     extensionHandler.setSubstitution('cherise', fileURI);
 
     // Alias the above.
-    extensionHandler.setSubstitution('liebchen', SpecialPowers.Services.io.newURI('moz-extension://cherise', null, null));
+    extensionHandler.setSubstitution('liebchen', SpecialPowers.Services.io.newURI('moz-extension://cherise'));
 
     //
     // Make sure that non-file:// URIs don't work.
@@ -58,7 +58,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
 
     // chrome://
     try {
-      var chromeURI = SpecialPowers.Services.io.newURI('chrome://global/content/mozilla.xhtml', null, null);
+      var chromeURI = SpecialPowers.Services.io.newURI('chrome://global/content/mozilla.xhtml');
       extensionHandler.setSubstitution('verboten', chromeURI);
       ok(false, "Should have thrown for mapping moz-extension to chrome");
     } catch (e) {

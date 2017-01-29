@@ -84,11 +84,11 @@ var ClickEventHandler = {
         continue;
       }
 
-      var overflowx = this._scrollable.ownerDocument.defaultView
-                          .getComputedStyle(this._scrollable, "")
+      var overflowx = this._scrollable.ownerGlobal
+                          .getComputedStyle(this._scrollable)
                           .getPropertyValue("overflow-x");
-      var overflowy = this._scrollable.ownerDocument.defaultView
-                          .getComputedStyle(this._scrollable, "")
+      var overflowy = this._scrollable.ownerGlobal
+                          .getComputedStyle(this._scrollable)
                           .getPropertyValue("overflow-y");
       // we already discarded non-multiline selects so allow vertical
       // scroll for multiline ones directly without checking for a
@@ -111,7 +111,7 @@ var ClickEventHandler = {
     }
 
     if (!this._scrollable) {
-      this._scrollable = aNode.ownerDocument.defaultView;
+      this._scrollable = aNode.ownerGlobal;
       if (this._scrollable.scrollMaxX != this._scrollable.scrollMinX) {
         this._scrolldir = this._scrollable.scrollMaxY !=
                           this._scrollable.scrollMinY ? "NSEW" : "EW";
@@ -936,7 +936,7 @@ addMessageListener("WebChannelMessageToContent", function(e) {
     if (e.principal.subsumes(targetPrincipal)) {
       // If eventTarget is a window, use it as the targetWindow, otherwise
       // find the window that owns the eventTarget.
-      let targetWindow = eventTarget instanceof Ci.nsIDOMWindow ? eventTarget : eventTarget.ownerDocument.defaultView;
+      let targetWindow = eventTarget instanceof Ci.nsIDOMWindow ? eventTarget : eventTarget.ownerGlobal;
 
       eventTarget.dispatchEvent(new targetWindow.CustomEvent("WebChannelMessageToContent", {
         detail: Cu.cloneInto({
@@ -1240,7 +1240,7 @@ var ViewSelectionSource = {
    *        Some element within the fragment of interest.
    */
   getMathMLSelection(node) {
-    var Node = node.ownerDocument.defaultView.Node;
+    var Node = node.ownerGlobal.Node;
     this._lineCount = 0;
     this._startTargetLine = 0;
     this._endTargetLine = 0;
@@ -1297,7 +1297,7 @@ var ViewSelectionSource = {
   },
 
   getOuterMarkup(node, indent) {
-    var Node = node.ownerDocument.defaultView.Node;
+    var Node = node.ownerGlobal.Node;
     var newline = "";
     var padding = "";
     var str = "";
@@ -1546,7 +1546,7 @@ let AutoCompletePopup = {
     }
 
     let rect = BrowserUtils.getElementBoundingScreenRect(element);
-    let window = element.ownerDocument.defaultView;
+    let window = element.ownerGlobal;
     let dir = window.getComputedStyle(element).direction;
     let results = this.getResultsFromController(input);
 
@@ -1667,7 +1667,7 @@ let DateTimePickerListener = {
    * Helper function that returns the CSS direction property of the element.
    */
   getComputedDirection(aElement) {
-    return aElement.ownerDocument.defaultView.getComputedStyle(aElement)
+    return aElement.ownerGlobal.getComputedStyle(aElement)
       .getPropertyValue("direction");
   },
 

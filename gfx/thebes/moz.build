@@ -179,7 +179,8 @@ SOURCES += [
     # we could consider removing soon (affects Ubuntus older than 10.04 LTS)
     # which currently prevent it from joining UNIFIED_SOURCES.
     'gfxDrawable.cpp',
-    # gfxPlatform.cpp includes mac system header conflicting with point/size
+    # gfxFontUtils.cpp and gfxPlatform.cpp include mac system header conflicting with point/size
+    'gfxFontUtils.cpp',
     'gfxPlatform.cpp',
     'gfxPrefs.cpp',
     'PrintTarget.cpp',
@@ -198,7 +199,6 @@ UNIFIED_SOURCES += [
     'gfxFontInfoLoader.cpp',
     'gfxFontMissingGlyphs.cpp',
     'gfxFontTest.cpp',
-    'gfxFontUtils.cpp',
     'gfxGlyphExtents.cpp',
     'gfxGradientCache.cpp',
     'gfxGraphiteShaper.cpp',

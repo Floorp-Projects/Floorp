@@ -21,7 +21,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   Cu.import("resource://gre/modules/Services.jsm");
 
   // Load a custom sjs script that echos our "User-Agent" header back at us
-  const TestURI = Services.io.newURI("http://mochi.test:8888/chrome/mobile/android/tests/browser/chrome/desktopmode_user_agent.sjs", null, null);
+  const TestURI = Services.io.newURI("http://mochi.test:8888/chrome/mobile/android/tests/browser/chrome/desktopmode_user_agent.sjs");
 
   add_task(function* test_desktopmode() {
     let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");

@@ -72,7 +72,7 @@ add_test(function() {
 
     ok(settings[0].hasAttribute("first-row"), "First visible row should have first-row attribute");
 
-    var style = window.getComputedStyle(settings[0], null);
+    var style = window.getComputedStyle(settings[0]);
     is(style.getPropertyValue("background-color"), "rgb(0, 0, 255)", "Background color should be set");
     is(style.getPropertyValue("display"), "-moz-grid-line", "Display should be set");
     is(style.getPropertyValue("-moz-binding"), 'url("chrome://inlinesettings/content/binding.xml#custom")', "Binding should be set");

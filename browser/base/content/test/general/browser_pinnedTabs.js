@@ -17,17 +17,13 @@ function PinUnpinHandler(tab, eventName) {
   this.eventCount = 0;
   var self = this;
   tab.addEventListener(eventName, function() {
-    tab.removeEventListener(eventName, arguments.callee, true);
-
     self.eventCount++;
-  }, true);
+  }, {capture: true, once: true});
   gBrowser.tabContainer.addEventListener(eventName, function(e) {
-    gBrowser.tabContainer.removeEventListener(eventName, arguments.callee, true);
-
     if (e.originalTarget == tab) {
       self.eventCount++;
     }
-  }, true);
+  }, {capture: true, once: true});
 }
 
 function test() {

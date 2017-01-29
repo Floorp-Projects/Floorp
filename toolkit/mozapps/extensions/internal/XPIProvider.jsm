@@ -6452,7 +6452,7 @@ class DownloadAddonInstall extends AddonInstall {
     if (iid.equals(Ci.nsIAuthPrompt2)) {
       let win = null;
       if (this.browser) {
-        win = this.browser.contentWindow || this.browser.ownerDocument.defaultView;
+        win = this.browser.contentWindow || this.browser.ownerGlobal;
       }
 
       let factory = Cc["@mozilla.org/prompter;1"].

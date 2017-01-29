@@ -13,19 +13,15 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE
 #include "nsError.h"                    // for NS_OK, etc.
-#include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDocument.h"                // for nsIDocument
 #include "nsIDocumentObserver.h"        // for UPDATE_STYLE
-#include "nsIEditor.h"                  // for nsIEditor
 
 namespace mozilla {
 
 static void
-AddStyleSheet(nsIEditor* aEditor, StyleSheet* aSheet)
+AddStyleSheet(EditorBase& aEditor, StyleSheet* aSheet)
 {
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  aEditor->GetDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  nsCOMPtr<nsIDocument> doc = aEditor.GetDocument();
   if (doc) {
     doc->BeginUpdate(UPDATE_STYLE);
     doc->AddStyleSheet(aSheet);
@@ -34,11 +30,9 @@ AddStyleSheet(nsIEditor* aEditor, StyleSheet* aSheet)
 }
 
 static void
-RemoveStyleSheet(nsIEditor* aEditor, StyleSheet* aSheet)
+RemoveStyleSheet(EditorBase& aEditor, StyleSheet* aSheet)
 {
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  aEditor->GetDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  nsCOMPtr<nsIDocument> doc = aEditor.GetDocument();
   if (doc) {
     doc->BeginUpdate(UPDATE_STYLE);
     doc->RemoveStyleSheet(aSheet);
@@ -50,9 +44,12 @@ RemoveStyleSheet(nsIEditor* aEditor, StyleSheet* aSheet)
  * AddStyleSheetTransaction
  ******************************************************************************/
 
-AddStyleSheetTransaction::AddStyleSheetTransaction()
-  : mEditor(nullptr)
+AddStyleSheetTransaction::AddStyleSheetTransaction(EditorBase& aEditor,
+                                                   StyleSheet* aSheet)
+  : mEditor(aEditor)
+  , mSheet(aSheet)
 {
+  MOZ_ASSERT(aSheet);
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(AddStyleSheetTransaction,
@@ -63,22 +60,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AddStyleSheetTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 NS_IMETHODIMP
-AddStyleSheetTransaction::Init(nsIEditor* aEditor,
-                               StyleSheet* aSheet)
-{
-  NS_ENSURE_TRUE(aEditor && aSheet, NS_ERROR_INVALID_ARG);
-
-  mEditor = aEditor;
-  mSheet = aSheet;
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
 AddStyleSheetTransaction::DoTransaction()
 {
-  NS_ENSURE_TRUE(mEditor && mSheet, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mSheet, NS_ERROR_NOT_INITIALIZED);
 
   AddStyleSheet(mEditor, mSheet);
   return NS_OK;
@@ -87,7 +71,7 @@ AddStyleSheetTransaction::DoTransaction()
 NS_IMETHODIMP
 AddStyleSheetTransaction::UndoTransaction()
 {
-  NS_ENSURE_TRUE(mEditor && mSheet, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mSheet, NS_ERROR_NOT_INITIALIZED);
 
   RemoveStyleSheet(mEditor, mSheet);
   return NS_OK;
@@ -104,9 +88,12 @@ AddStyleSheetTransaction::GetTxnDescription(nsAString& aString)
  * RemoveStyleSheetTransaction
  ******************************************************************************/
 
-RemoveStyleSheetTransaction::RemoveStyleSheetTransaction()
-  : mEditor(nullptr)
+RemoveStyleSheetTransaction::RemoveStyleSheetTransaction(EditorBase& aEditor,
+                                                         StyleSheet* aSheet)
+  : mEditor(aEditor)
+  , mSheet(aSheet)
 {
+  MOZ_ASSERT(aSheet);
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(RemoveStyleSheetTransaction,
@@ -117,22 +104,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RemoveStyleSheetTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 NS_IMETHODIMP
-RemoveStyleSheetTransaction::Init(nsIEditor* aEditor,
-                                  StyleSheet* aSheet)
-{
-  NS_ENSURE_TRUE(aEditor && aSheet, NS_ERROR_INVALID_ARG);
-
-  mEditor = aEditor;
-  mSheet = aSheet;
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
 RemoveStyleSheetTransaction::DoTransaction()
 {
-  NS_ENSURE_TRUE(mEditor && mSheet, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mSheet, NS_ERROR_NOT_INITIALIZED);
 
   RemoveStyleSheet(mEditor, mSheet);
   return NS_OK;
@@ -141,7 +115,7 @@ RemoveStyleSheetTransaction::DoTransaction()
 NS_IMETHODIMP
 RemoveStyleSheetTransaction::UndoTransaction()
 {
-  NS_ENSURE_TRUE(mEditor && mSheet, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mSheet, NS_ERROR_NOT_INITIALIZED);
 
   AddStyleSheet(mEditor, mSheet);
   return NS_OK;

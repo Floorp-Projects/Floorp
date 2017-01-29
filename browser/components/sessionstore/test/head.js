@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const {Utils} = Cu.import("resource://gre/modules/sessionstore/Utils.jsm", {});
+const triggeringPrincipal_base64 = Utils.SERIALIZED_SYSTEMPRINCIPAL;
+
 const TAB_STATE_NEEDS_RESTORE = 1;
 const TAB_STATE_RESTORING = 2;
 
@@ -465,10 +468,9 @@ function promiseDelayedStartupFinished(aWindow) {
 
 function promiseEvent(element, eventType, isCapturing = false) {
   return new Promise(resolve => {
-    element.addEventListener(eventType, function listener(event) {
-      element.removeEventListener(eventType, listener, isCapturing);
+    element.addEventListener(eventType, function(event) {
       resolve(event);
-    }, isCapturing);
+    }, {capture: isCapturing, once: true});
   });
 }
 

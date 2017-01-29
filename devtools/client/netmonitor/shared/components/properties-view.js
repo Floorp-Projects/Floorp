@@ -26,6 +26,7 @@ const TreeRow = createFactory(require("devtools/client/shared/components/tree/tr
 
 const { div, tr, td } = DOM;
 const AUTO_EXPAND_MAX_LEVEL = 7;
+const AUTO_EXPAND_MAX_NODES = 50;
 const EDITOR_CONFIG_ID = "EDITOR_CONFIG";
 
 /*
@@ -146,12 +147,22 @@ const PropertiesView = createClass({
 
     let expandedNodes = new Set();
     for (let prop in object) {
+      if (expandedNodes.size > AUTO_EXPAND_MAX_NODES) {
+        // If we reached the limit of expandable nodes, bail out to avoid performance
+        // issues.
+        break;
+      }
+
       let nodePath = path + "/" + prop;
       expandedNodes.add(nodePath);
 
       let nodes = this.getExpandedNodes(object[prop], nodePath, level + 1);
       if (nodes) {
-        expandedNodes = new Set([...expandedNodes, ...nodes]);
+        let newSize = expandedNodes.size + nodes.size;
+        if (newSize < AUTO_EXPAND_MAX_NODES) {
+          // Avoid having a subtree half expanded.
+          expandedNodes = new Set([...expandedNodes, ...nodes]);
+        }
       }
     }
     return expandedNodes;

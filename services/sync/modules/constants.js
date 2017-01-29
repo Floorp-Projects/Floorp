@@ -11,8 +11,6 @@ WEAVE_VERSION:                         "@weave_version@",
 
 // Sync Server API version that the client supports.
 SYNC_API_VERSION:                      "1.1",
-USER_API_VERSION:                      "1.0",
-MISC_API_VERSION:                      "1.0",
 
 // Version of the data format this client supports. The data format describes
 // how records are packaged; this is separate from the Server API version and
@@ -124,7 +122,6 @@ ENGINE_SUCCEEDED:                      "success.engine",
 
 // login failure status codes:
 LOGIN_FAILED_NO_USERNAME:              "error.login.reason.no_username",
-LOGIN_FAILED_NO_PASSWORD:              "error.login.reason.no_password2",
 LOGIN_FAILED_NO_PASSPHRASE:            "error.login.reason.no_recoverykey",
 LOGIN_FAILED_NETWORK_ERROR:            "error.login.reason.network",
 LOGIN_FAILED_SERVER_ERROR:             "error.login.reason.server",
@@ -154,18 +151,6 @@ ENGINE_METARECORD_DOWNLOAD_FAIL:       "error.engine.reason.metarecord_download_
 ENGINE_METARECORD_UPLOAD_FAIL:         "error.engine.reason.metarecord_upload_fail",
 // an upload failure where the batch was interrupted with a 412
 ENGINE_BATCH_INTERRUPTED:              "error.engine.reason.batch_interrupted",
-
-JPAKE_ERROR_CHANNEL:                   "jpake.error.channel",
-JPAKE_ERROR_NETWORK:                   "jpake.error.network",
-JPAKE_ERROR_SERVER:                    "jpake.error.server",
-JPAKE_ERROR_TIMEOUT:                   "jpake.error.timeout",
-JPAKE_ERROR_INTERNAL:                  "jpake.error.internal",
-JPAKE_ERROR_INVALID:                   "jpake.error.invalid",
-JPAKE_ERROR_NODATA:                    "jpake.error.nodata",
-JPAKE_ERROR_KEYMISMATCH:               "jpake.error.keymismatch",
-JPAKE_ERROR_WRONGMESSAGE:              "jpake.error.wrongmessage",
-JPAKE_ERROR_USERABORT:                 "jpake.error.userabort",
-JPAKE_ERROR_DELAYUNSUPPORTED:          "jpake.error.delayunsupported",
 
 // info types for Service.getStorageInfo
 INFO_COLLECTIONS:                      "collections",

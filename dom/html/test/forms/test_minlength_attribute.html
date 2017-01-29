@@ -36,7 +36,7 @@ function checkTooShortValidity(element)
   element.value = "foo";
   ok(!element.validity.tooShort,
     "Element should not be too short when minlength is not set");
-  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(element).getPropertyValue('background-color'),
      "rgb(0, 255, 0)", ":valid pseudo-class should apply");
   ok(element.validity.valid, "Element should be valid");
   ok(element.checkValidity(), "The element should be valid");
@@ -44,7 +44,7 @@ function checkTooShortValidity(element)
   element.minLength = 5;
   ok(!element.validity.tooShort,
     "Element should not be too short unless the user edits it");
-  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(element).getPropertyValue('background-color'),
      "rgb(0, 255, 0)", ":valid pseudo-class should apply");
   ok(element.validity.valid, "Element should be valid");
   ok(element.checkValidity(), "The element should be valid");
@@ -55,7 +55,7 @@ function checkTooShortValidity(element)
   is(element.value, "fooo", "value should have changed");
   ok(element.validity.tooShort,
     "Element should be too short after a user edit that does not make it short enough");
-  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(element).getPropertyValue('background-color'),
      "rgb(255, 0, 0)", ":invalid pseudo-class should apply");
   ok(!element.validity.valid, "Element should be invalid");
   ok(!element.checkValidity(), "The element should not be valid");
@@ -67,21 +67,21 @@ function checkTooShortValidity(element)
   is(element.value, "foooo", "value should have changed");
   ok(!element.validity.tooShort,
     "Element should not be too short after a user edit makes it long enough");
-  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(element).getPropertyValue('background-color'),
      "rgb(0, 255, 0)", ":valid pseudo-class should apply");
   ok(element.validity.valid, "Element should be valid");
 
   element.minLength = 2;
   ok(!element.validity.tooShort,
     "Element should remain valid if minlength changes but minlength < length");
-  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(element).getPropertyValue('background-color'),
      "rgb(0, 255, 0)", ":valid pseudo-class should apply");
   ok(element.validity.valid, "Element should be valid");
 
   element.minLength = 1;
   ok(!element.validity.tooShort,
     "Element should remain valid if minlength changes but minlength = length");
-  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(element).getPropertyValue('background-color'),
      "rgb(0, 255, 0)", ":valid pseudo-class should apply");
   ok(element.validity.valid, "Element should be valid");
   ok(element.checkValidity(), "The element should be valid");
@@ -89,7 +89,7 @@ function checkTooShortValidity(element)
   element.minLength = 6;
   ok(element.validity.tooShort,
     "Element should become invalid if minlength changes and minlength > length");
-  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(element).getPropertyValue('background-color'),
      "rgb(255, 0, 0)", ":invalid pseudo-class should apply");
   ok(!element.validity.valid, "Element should be invalid");
   ok(!element.checkValidity(), "The element should not be valid");
@@ -100,7 +100,7 @@ function checkTooShortValidity(element)
   element.minLength = 5;
   ok(!element.validity.tooShort,
     "Element should become valid if minlength changes and minlength = length");
-  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(element).getPropertyValue('background-color'),
      "rgb(0, 255, 0)", ":valid pseudo-class should apply");
   ok(element.validity.valid, "Element should be valid");
   ok(element.checkValidity(), "The element should be valid");
@@ -108,13 +108,13 @@ function checkTooShortValidity(element)
   element.value = "test";
   ok(!element.validity.tooShort,
     "Element should stay valid after programmatic edit (even if value is too short)");
-  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(element).getPropertyValue('background-color'),
      "rgb(0, 255, 0)", ":valid pseudo-class should apply");
   ok(element.validity.valid, "Element should be valid");
   ok(element.checkValidity(), "The element should be valid");
 
   element.setCustomValidity("custom message");
-  is(window.getComputedStyle(element, null).getPropertyValue('background-color'),
+  is(window.getComputedStyle(element).getPropertyValue('background-color'),
      "rgb(255, 0, 0)", ":invalid pseudo-class should apply");
   is(element.validationMessage, "custom message",
     "Custom message should be shown instead of too short one");
