@@ -145,9 +145,6 @@ public:
 
 NS_IMPL_ISUPPORTS(GfxD2DVramReporter, nsIMemoryReporter)
 
-#define GFX_USE_CLEARTYPE_ALWAYS "gfx.font_rendering.cleartype.always_use_for_content"
-#define GFX_DOWNLOADABLE_FONTS_USE_CLEARTYPE "gfx.font_rendering.cleartype.use_for_downloadable_fonts"
-
 #define GFX_CLEARTYPE_PARAMS           "gfx.font_rendering.cleartype_params."
 #define GFX_CLEARTYPE_PARAMS_GAMMA     "gfx.font_rendering.cleartype_params.gamma"
 #define GFX_CLEARTYPE_PARAMS_CONTRAST  "gfx.font_rendering.cleartype_params.enhanced_contrast"
@@ -315,9 +312,6 @@ NS_IMPL_ISUPPORTS(D3DSharedTexturesReporter, nsIMemoryReporter)
 gfxWindowsPlatform::gfxWindowsPlatform()
   : mRenderMode(RENDER_GDI)
 {
-  mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
-  mUseClearTypeAlways = UNINITIALIZED_VALUE;
-
   /*
    * Initialize COM
    */
@@ -977,26 +971,6 @@ gfxWindowsPlatform::GetPlatformCMSOutputProfile(void* &mem, size_t &mem_size)
 #endif // _WIN32
 }
 
-bool
-gfxWindowsPlatform::UseClearTypeForDownloadableFonts()
-{
-    if (mUseClearTypeForDownloadableFonts == UNINITIALIZED_VALUE) {
-        mUseClearTypeForDownloadableFonts = Preferences::GetBool(GFX_DOWNLOADABLE_FONTS_USE_CLEARTYPE, true);
-    }
-
-    return mUseClearTypeForDownloadableFonts;
-}
-
-bool
-gfxWindowsPlatform::UseClearTypeAlways()
-{
-    if (mUseClearTypeAlways == UNINITIALIZED_VALUE) {
-        mUseClearTypeAlways = Preferences::GetBool(GFX_USE_CLEARTYPE_ALWAYS, false);
-    }
-
-    return mUseClearTypeAlways;
-}
-
 void
 gfxWindowsPlatform::GetDLLVersion(char16ptr_t aDLLPath, nsAString& aVersion)
 {
@@ -1140,14 +1114,7 @@ gfxWindowsPlatform::FontsPrefsChanged(const char *aPref)
 
     gfxPlatform::FontsPrefsChanged(aPref);
 
-    if (!aPref) {
-        mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
-        mUseClearTypeAlways = UNINITIALIZED_VALUE;
-    } else if (!strcmp(GFX_DOWNLOADABLE_FONTS_USE_CLEARTYPE, aPref)) {
-        mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
-    } else if (!strcmp(GFX_USE_CLEARTYPE_ALWAYS, aPref)) {
-        mUseClearTypeAlways = UNINITIALIZED_VALUE;
-    } else if (!strncmp(GFX_CLEARTYPE_PARAMS, aPref, strlen(GFX_CLEARTYPE_PARAMS))) {
+    if (aPref && !strncmp(GFX_CLEARTYPE_PARAMS, aPref, strlen(GFX_CLEARTYPE_PARAMS))) {
         SetupClearTypeParams();
     } else {
         clearTextFontCaches = false;
