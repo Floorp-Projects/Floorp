@@ -82,82 +82,82 @@ fails == 40596-1j.html 40596-1j.html
 == 68061-1.xml 68061-1.xml
 == 68061-2.xml 68061-2.xml
 == 76331-1.html 76331-1.html
-fails == 81947-1.html 81947-1.html
-fails == 82711-1.html 82711-1.html
-fails == 82711-2.html 82711-2.html
-fails == 82711-3.html 82711-3.html
+== 81947-1.html 81947-1.html
+== 82711-1.html 82711-1.html
+== 82711-2.html 82711-2.html
+== 82711-3.html 82711-3.html
 # == 82711-1-ref.html 82711-1-ref.html
 # == 82711-1-ref.html 82711-1-ref.html
-fails == 82711-2-ref.html 82711-2-ref.html
-fails == 84400-1.html 84400-1.html
-fails == 84400-2.html 84400-2.html
+== 82711-2-ref.html 82711-2-ref.html
+== 84400-1.html 84400-1.html
+== 84400-2.html 84400-2.html
 == 97777-1.html 97777-1.html
-fails == 97777-2.html 97777-2.html
+== 97777-2.html 97777-2.html
 == 98223-1.html 98223-1.html
 == 98223-2.html 98223-2.html
-fails == 99850-1a.html 99850-1a.html
+== 99850-1a.html 99850-1a.html
 random == 99850-1b.html 99850-1b.html
-fails == 99850-1c.html 99850-1c.html
-fails == 99850-1d.html 99850-1d.html
+== 99850-1c.html 99850-1c.html
+== 99850-1d.html 99850-1d.html
 == 105030-1.html 105030-1.html
 == 109735-1.html 109735-1.html
 == 116882-1.html 116882-1.html
 == 120834-1a.html 120834-1a.html
 == 120834-2a.html 120834-2a.html
 # == 120834-2b.html 120834-2b.html
-fails == 120834-2c.html 120834-2c.html
-fails == 120834-2d.html 120834-2d.html
-fails == 120834-2e.html 120834-2e.html
-fails == 120834-2f.html 120834-2f.html
-fails == 120834-2g.html 120834-2g.html
-fails == 120834-2h.html 120834-2h.html
-fails == 120834-2i.html 120834-2i.html
-fails == 120834-2j.html 120834-2j.html
-fails == 124903-1.html 124903-1.html
+== 120834-2c.html 120834-2c.html
+== 120834-2d.html 120834-2d.html
+== 120834-2e.html 120834-2e.html
+== 120834-2f.html 120834-2f.html
+== 120834-2g.html 120834-2g.html
+== 120834-2h.html 120834-2h.html
+== 120834-2i.html 120834-2i.html
+== 120834-2j.html 120834-2j.html
+== 124903-1.html 124903-1.html
 == 128896.html 128896.html
 == 130767-1.html 130767-1.html
-fails == 134706-1-left-scrollframe.html 134706-1-left-scrollframe.html
-fails == 134706-1-left-table.html 134706-1-left-table.html
-fails == 134706-1-right-scrollframe.html 134706-1-right-scrollframe.html
-fails == 134706-1-right-table.html 134706-1-right-table.html
-fails == 134706-2-left-scrollframe.html 134706-2-left-scrollframe.html
-fails == 134706-2-left-table.html 134706-2-left-table.html
-fails == 134706-2-right-scrollframe.html 134706-2-right-scrollframe.html
-fails == 134706-2-right-table.html 134706-2-right-table.html
-fails == 134706-3-left-scrollframe.html 134706-3-left-scrollframe.html
-fails == 134706-3-left-table.html 134706-3-left-table.html
-fails == 134706-3-right-scrollframe.html 134706-3-right-scrollframe.html
-fails == 134706-3-right-table.html 134706-3-right-table.html
-fails == 134706-4.html 134706-4.html
-fails == 134706-5.html 134706-5.html
-fails == 134706-6.html 134706-6.html
-fails == 134706-6b.html 134706-6b.html
-fails == 134706-6c.html 134706-6c.html
-fails == 134706-7.html 134706-7.html
-fails == 139550-1a.html 139550-1a.html
-fails == 139550-1b.html 139550-1b.html
-fails == 142233-1.html 142233-1.html
+== 134706-1-left-scrollframe.html 134706-1-left-scrollframe.html
+== 134706-1-left-table.html 134706-1-left-table.html
+== 134706-1-right-scrollframe.html 134706-1-right-scrollframe.html
+== 134706-1-right-table.html 134706-1-right-table.html
+== 134706-2-left-scrollframe.html 134706-2-left-scrollframe.html
+== 134706-2-left-table.html 134706-2-left-table.html
+== 134706-2-right-scrollframe.html 134706-2-right-scrollframe.html
+== 134706-2-right-table.html 134706-2-right-table.html
+== 134706-3-left-scrollframe.html 134706-3-left-scrollframe.html
+== 134706-3-left-table.html 134706-3-left-table.html
+== 134706-3-right-scrollframe.html 134706-3-right-scrollframe.html
+== 134706-3-right-table.html 134706-3-right-table.html
+== 134706-4.html 134706-4.html
+== 134706-5.html 134706-5.html
+== 134706-6.html 134706-6.html
+== 134706-6b.html 134706-6b.html
+== 134706-6c.html 134706-6c.html
+== 134706-7.html 134706-7.html
+== 139550-1a.html 139550-1a.html
+== 139550-1b.html 139550-1b.html
+== 142233-1.html 142233-1.html
 == 144004-1.html 144004-1.html
 == 144004-2.html 144004-2.html
 == 144004-3.html 144004-3.html
-fails == 163504-1a.html 163504-1a.html
-fails == 163504-1b.html 163504-1b.html
-fails == 163504-2a.html 163504-2a.html
-fails == 163504-2b.html 163504-2b.html
+== 163504-1a.html 163504-1a.html
+== 163504-1b.html 163504-1b.html
+== 163504-2a.html 163504-2a.html
+== 163504-2b.html 163504-2b.html
 == 167496-1.html 167496-1.html
 == 169749-1.html 169749-1.html
 == 172073-1.html 172073-1.html
-fails == 175190-1.html 175190-1.html
-fails == 179596-1a.html 179596-1a.html
-fails == 179596-1b.html 179596-1b.html
+== 175190-1.html 175190-1.html
+== 179596-1a.html 179596-1a.html
+== 179596-1b.html 179596-1b.html
 # == 179596-2.html 179596-2.html
 # == 179596-2.html 179596-2.html
 # == 179596-2.html 179596-2.html
-fails == 180085-1.html 180085-1.html
-fails == 180085-2.html 180085-2.html
-fails == 185388-1.html 185388-1.html
-fails == 186317-1.html 186317-1.html
-fails == 192902-1.html 192902-1.html
+== 180085-1.html 180085-1.html
+== 180085-2.html 180085-2.html
+== 185388-1.html 185388-1.html
+== 186317-1.html 186317-1.html
+== 192902-1.html 192902-1.html
 == 192767-01.xul 192767-01.xul
 == 192767-02.xul 192767-02.xul
 == 192767-03.xul 192767-03.xul
@@ -186,39 +186,39 @@ fails-if(Android&&!asyncPan) == 192767-13.xul 192767-13.xul
 == 192767-15.xul 192767-15.xul
 fails-if(Android&&!asyncPan) == 192767-16.xul 192767-16.xul
 fails-if(Android&&!asyncPan) == 192767-17.xul 192767-17.xul
-fails == 200774-1.html 200774-1.html
+== 200774-1.html 200774-1.html
 == 201215-1.html 201215-1.html
-fails == 201293-1a.html 201293-1a.html
-fails == 201293-1b.html 201293-1b.html
-fails == 201293-1c.html 201293-1c.html
-fails == 201293-1d.html 201293-1d.html
+== 201293-1a.html 201293-1a.html
+== 201293-1b.html 201293-1b.html
+== 201293-1c.html 201293-1c.html
+== 201293-1d.html 201293-1d.html
 == 203727.html 203727.html
-fails == 206516-1.html 206516-1.html
+== 206516-1.html 206516-1.html
 == 206631-1.html 206631-1.html
 == 206802.html 206802.html
-fails == 210094-1a.html 210094-1a.html
-fails == 210094-1b.html 210094-1b.html
-fails == 210094-1c.html 210094-1c.html
-fails == 210876-1.html 210876-1.html
+== 210094-1a.html 210094-1a.html
+== 210094-1b.html 210094-1b.html
+== 210094-1c.html 210094-1c.html
+== 210876-1.html 210876-1.html
 == 211931-1.html 211931-1.html
-fails == 212563-1.html 212563-1.html
+== 212563-1.html 212563-1.html
 == 212563-2.html 212563-2.html
-fails == 213834-1.html 213834-1.html
-fails == 214077-1a.html 214077-1a.html
-fails == 214077-1b.html 214077-1b.html
+== 213834-1.html 213834-1.html
+== 214077-1a.html 214077-1a.html
+== 214077-1b.html 214077-1b.html
 == 218473-1.html 218473-1.html
 fuzzy-if(skiaContent,1,4) == 220165-1.svg 220165-1.svg
-fails == 223809-1.html 223809-1.html
+== 223809-1.html 223809-1.html
 == 228856-1.html 228856-1.html
 == 228856-2.html 228856-2.html
 == 229591-1.html 229591-1.html
 # == 231823-1.html 231823-1.html
 == 232990-1a.xhtml 232990-1a.xhtml
 == 232990-1b.xhtml 232990-1b.xhtml
-fails == 233094-1.html 233094-1.html
-fails == 233094-2a.html 233094-2a.html
-fails == 233094-2b.html 233094-2b.html
-fails == 233094-2c.html 233094-2c.html
+== 233094-1.html 233094-1.html
+== 233094-2a.html 233094-2a.html
+== 233094-2b.html 233094-2b.html
+== 233094-2c.html 233094-2c.html
 == 234686-1.html 234686-1.html
 == 234686-2.html 234686-2.html
 == 234686-3.html 234686-3.html
@@ -238,17 +238,17 @@ fails == 233094-2c.html 233094-2c.html
 == 234686-17.html 234686-17.html
 == 234686-18.html 234686-18.html
 == 234686-19.html 234686-19.html
-fails == 234964-1.html 234964-1.html
-fails == 234964-2.html 234964-2.html
+== 234964-1.html 234964-1.html
+== 234964-2.html 234964-2.html
 == 235593-1.html 235593-1.html
-fails == 236539-1.html 236539-1.html
-fails == 240029-1.html 240029-1.html
-fails == 240470-1.html 240470-1.html
-fails == 240933-1.html 240933-1.html
-fails == 240933-2.html 240933-2.html
+== 236539-1.html 236539-1.html
+== 240029-1.html 240029-1.html
+== 240470-1.html 240470-1.html
+== 240933-1.html 240933-1.html
+== 240933-2.html 240933-2.html
 == 243266-1.html 243266-1.html
 == 243302-1.html 243302-1.html
-fails == 243519-1.html 243519-1.html
+== 243519-1.html 243519-1.html
 == 243519-2.html 243519-2.html
 == 243519-3.html 243519-3.html
 == 243519-4a.html 243519-4a.html
@@ -262,7 +262,7 @@ fails == 243519-1.html 243519-1.html
 == 243519-5c.html 243519-5c.html
 == 243519-5d.html 243519-5d.html
 == 243519-6.html 243519-6.html
-fails == 243519-7.html 243519-7.html
+== 243519-7.html 243519-7.html
 == 243519-8.svg 243519-8.svg
 == 243519-9a.html 243519-9a.html
 == 243519-9b.html 243519-9b.html
@@ -270,38 +270,38 @@ fails == 243519-7.html 243519-7.html
 == 243519-9d.html 243519-9d.html
 == 243519-9e.html 243519-9e.html
 == 243519-9f.html 243519-9f.html
-fails == 244135-1.html 244135-1.html
-fails == 244135-2.html 244135-2.html
+== 244135-1.html 244135-1.html
+== 244135-2.html 244135-2.html
 == 244932-1.html 244932-1.html
 == 246669-1.html 246669-1.html
 == 249141.xul 249141.xul
 == 249982-1.html 249982-1.html
 == 252920-1.html 252920-1.html
-fails == 253701-1.html 253701-1.html
-fails == 255820-1.html 255820-1.html
-fails == 260406-1.html 260406-1.html
+== 253701-1.html 253701-1.html
+== 255820-1.html 255820-1.html
+== 260406-1.html 260406-1.html
 == 261826-1.xul 261826-1.xul
-fails == 262151-1.html 262151-1.html
-fails == 262998-1.html 262998-1.html
+== 262151-1.html 262151-1.html
+== 262998-1.html 262998-1.html
 == 267353-1.html 267353-1.html
-fails == 269908-1.html 269908-1.html
-fails == 269908-2.html 269908-2.html
-fails == 269908-3.html 269908-3.html
-fails == 269908-4.html 269908-4.html
-fails == 269908-5.html 269908-5.html
-fails == 271747-1a.html 271747-1a.html
-fails == 271747-1b.html 271747-1b.html
+== 269908-1.html 269908-1.html
+== 269908-2.html 269908-2.html
+== 269908-3.html 269908-3.html
+== 269908-4.html 269908-4.html
+== 269908-5.html 269908-5.html
+== 271747-1a.html 271747-1a.html
+== 271747-1b.html 271747-1b.html
 == 272646-1.xul 272646-1.xul
 == 272646-2a.xul 272646-2a.xul
 == 272646-2b.xul 272646-2b.xul
 == 272646-2c.xul 272646-2c.xul
-fails == 273681-1.html 273681-1.html
+== 273681-1.html 273681-1.html
 == 278266-1a.html 278266-1a.html
 == 278266-1b.html 278266-1b.html
-fails == 280708-1a.html 280708-1a.html
-fails == 280708-1b.html 280708-1b.html
-fails == 281241-1.html 281241-1.html
-fails == 281241-2.xhtml 281241-2.xhtml
+== 280708-1a.html 280708-1a.html
+== 280708-1b.html 280708-1b.html
+== 281241-1.html 281241-1.html
+== 281241-2.xhtml 281241-2.xhtml
 # == 283686-1.html 283686-1.html
 == 283686-2.html 283686-2.html
 # == 283686-3.html 283686-3.html
@@ -939,21 +939,21 @@ fails == 409084-1b.html 409084-1b.html
 == 409089-3.html 409089-3.html
 fuzzy-if(winWidget,123,1600) == 409659-1a.html 409659-1a.html
 == 409659-1b.html 409659-1b.html
-fails == 409659-1c.html 409659-1c.html
+== 409659-1c.html 409659-1c.html
 fuzzy-if(winWidget,123,1900) == 409659-1d.html 409659-1d.html
-fails == 410621-1.html 410621-1.html
-fails == 411059-1.html 411059-1.html
+== 410621-1.html 410621-1.html
+== 411059-1.html 411059-1.html
 == 411334-1.xml 411334-1.xml
 == 411367-1.html 411367-1.html
 == 411367-2.html 411367-2.html
 == 411367-3.html 411367-3.html
-fails == 411585-1.html 411585-1.html
-fails == 411585-2.html 411585-2.html
-fails == 411585-3.html 411585-3.html
+== 411585-1.html 411585-1.html
+== 411585-2.html 411585-2.html
+== 411585-3.html 411585-3.html
 == 411792-1.html 411792-1.html
 == 412093-1.html 412093-1.html
-fails == 412352-1.html 412352-1.html
-fails == 412352-2.html 412352-2.html
+== 412352-1.html 412352-1.html
+== 412352-2.html 412352-2.html
 == 412607-1a.html 412607-1a.html
 == 412607-1b.html 412607-1b.html
 == 412679-1.html 412679-1.html
@@ -961,44 +961,44 @@ fails == 412352-2.html 412352-2.html
 == 413027-1.html 413027-1.html
 == 413027-2.html 413027-2.html
 == 413027-3.html 413027-3.html
-fails == 413286-1a.html 413286-1a.html
-fails == 413286-1b.html 413286-1b.html
-fails == 413286-1c.html 413286-1c.html
-fails == 413286-2a.html 413286-2a.html
-fails == 413286-2b.html 413286-2b.html
-fails == 413286-2c.html 413286-2c.html
-fails == 413286-3.html 413286-3.html
-fails == 413286-4a.html 413286-4a.html
-fails == 413286-4b.html 413286-4b.html
-fails == 413286-5.html 413286-5.html
-fails == 413286-6.html 413286-6.html
+== 413286-1a.html 413286-1a.html
+== 413286-1b.html 413286-1b.html
+== 413286-1c.html 413286-1c.html
+== 413286-2a.html 413286-2a.html
+== 413286-2b.html 413286-2b.html
+== 413286-2c.html 413286-2c.html
+== 413286-3.html 413286-3.html
+== 413286-4a.html 413286-4a.html
+== 413286-4b.html 413286-4b.html
+== 413286-5.html 413286-5.html
+== 413286-6.html 413286-6.html
 == 413292-1.html 413292-1.html
 == 413361-1.html 413361-1.html
 == 413840-background-unchanged.html 413840-background-unchanged.html
 == 413840-ltr-offsets.html 413840-ltr-offsets.html
 == 413840-rtl-offsets.html 413840-rtl-offsets.html
-fails == 413840-pushed-line-bullet.html 413840-pushed-line-bullet.html
+== 413840-pushed-line-bullet.html 413840-pushed-line-bullet.html
 == 413840-bullet-first-line.html 413840-bullet-first-line.html
 == 413982.html 413982.html
-fails == 414123.xhtml 414123.xhtml
+== 414123.xhtml 414123.xhtml
 == 414638.html 414638.html
-fails == 414851-1.html 414851-1.html
-fails == 416106-1.xhtml 416106-1.xhtml
+== 414851-1.html 414851-1.html
+== 416106-1.xhtml 416106-1.xhtml
 == 416752-1.html 416752-1.html
 == 417178-1.html 417178-1.html
 == 417246-1.html 417246-1.html
-fails == 417676.html 417676.html
-fails asserts(1) == 418574-1.html 418574-1.html
-fails asserts(1) == 418574-2.html 418574-2.html
+== 417676.html 417676.html
+asserts(2) == 418574-1.html 418574-1.html
+asserts(2) == 418574-2.html 418574-2.html
 == 418766-1a.html 418766-1a.html
 == 418766-1b.html 418766-1b.html
 == 419060.html 419060.html
 == 419285-1.html 419285-1.html
-fails == 419531-1.html 419531-1.html
+== 419531-1.html 419531-1.html
 == 420069-1.html 420069-1.html
 == 420069-2.html 420069-2.html
 == 420351-1.html 420351-1.html
-fails == 420790-1.xhtml 420790-1.xhtml
+== 420790-1.xhtml 420790-1.xhtml
 == 421069.html 421069.html
 == 421069.html 421069.html
 == 421069-ref.html 421069-ref.html
@@ -1014,54 +1014,54 @@ fails == 420790-1.xhtml 420790-1.xhtml
 == 421419-1.html 421419-1.html
 == 421436-1a.html 421436-1a.html
 == 421436-1b.html 421436-1b.html
-fails == 421632-1.html 421632-1.html
-fails == 421710-1.html 421710-1.html
+== 421632-1.html 421632-1.html
+== 421710-1.html 421710-1.html
 fails-if(Android) fails-if(usesRepeatResampling) == 421885-1.xml 421885-1.xml
 == 421955-1.html 421955-1.html
-fails == 422249-1.html 422249-1.html
-fails == 422394-1.html 422394-1.html
-fails == 422678-1.html 422678-1.html
+== 422249-1.html 422249-1.html
+== 422394-1.html 422394-1.html
+== 422678-1.html 422678-1.html
 == 423130-1.html 423130-1.html
 == 423385-1.html 423385-1.html
-fails == 423599-1.html 423599-1.html
-fails == 423676-1.html 423676-1.html
-fails == 423823-1.html 423823-1.html
+== 423599-1.html 423599-1.html
+== 423676-1.html 423676-1.html
+== 423823-1.html 423823-1.html
 == 424074-1.xul 424074-1.xul
 fails-if(Android) == 424074-1.xul 424074-1.xul
 random-if(gtkWidget) == 424074-1-ref2.xul 424074-1-ref2.xul
 == 424236-1.html 424236-1.html
 == 424236-2.html 424236-2.html
-fails == 424236-3.html 424236-3.html
+== 424236-3.html 424236-3.html
 == 424236-4.html 424236-4.html
-fails == 424236-5.html 424236-5.html
+== 424236-5.html 424236-5.html
 == 424236-6.html 424236-6.html
 == 424236-7.html 424236-7.html
-fails == 424236-8.html 424236-8.html
-fails == 424236-9.html 424236-9.html
+== 424236-8.html 424236-8.html
+== 424236-9.html 424236-9.html
 == 424236-10.html 424236-10.html
-fails == 424236-11.html 424236-11.html
+== 424236-11.html 424236-11.html
 == 424434-1.html 424434-1.html
-fails == 424465-1.html 424465-1.html
+== 424465-1.html 424465-1.html
 == 424631-1.html 424631-1.html
 == 424710-1.html 424710-1.html
-fails == 424766-1.html 424766-1.html
+== 424766-1.html 424766-1.html
 # == 425972-1.html 425972-1.html
-fails == 425972-2.html 425972-2.html
+== 425972-2.html 425972-2.html
 # == 425972-1.html 425972-1.html
-fails == 426629-1.html 426629-1.html
-fails asserts(3) == 427017-1.xhtml 427017-1.xhtml
+== 426629-1.html 426629-1.html
+asserts(6) == 427017-1.xhtml 427017-1.xhtml
 == 427129-scrollframe.html 427129-scrollframe.html
 == 427129-table.html 427129-table.html
 == 427129-image.html 427129-image.html
 == 427129-table-caption.html 427129-table-caption.html
 == 427370-1.html 427370-1.html
-fails == 427730-1.html 427730-1.html
+== 427730-1.html 427730-1.html
 == 428278.html 428278.html
 == 428423-1a.html 428423-1a.html
 == 428423-1b.html 428423-1b.html
-fails == 428521-1a.html 428521-1a.html
-fails == 428521-1b.html 428521-1b.html
-fails == 428521-1c.html 428521-1c.html
+== 428521-1a.html 428521-1a.html
+== 428521-1b.html 428521-1b.html
+== 428521-1c.html 428521-1c.html
 # == 428810-1a-ltr.html 428810-1a-ltr.html
 # == 428810-1b-ltr.html 428810-1b-ltr.html
 # == 428810-1c-ltr.html 428810-1c-ltr.html
@@ -1128,18 +1128,18 @@ fails == 428521-1c.html 428521-1c.html
 == 428810-3f-rtl-insets.html 428810-3f-rtl-insets.html
 # == 428810-3-rtl-insets-ref.html 428810-3-rtl-insets-ref.html
 # == 428810-3-rtl-insets-ref.html 428810-3-rtl-insets-ref.html
-fails == 430412-1.html 430412-1.html
+== 430412-1.html 430412-1.html
 == 430813-1.html 430813-1.html
 == 430813-2.html 430813-2.html
 == 430813-3.html 430813-3.html
 == 431341-1.html 431341-1.html
 == 431341-2.html 431341-2.html
-fails == 431520-1.html 431520-1.html
+== 431520-1.html 431520-1.html
 == 431948-1.html 431948-1.html
 == 433640-1.html 433640-1.html
-fails == 433700.html 433700.html
-fails == 436356-1.html 436356-1.html
-fails == 436356-2.html 436356-2.html
+== 433700.html 433700.html
+== 436356-1.html 436356-1.html
+== 436356-2.html 436356-2.html
 == 438537-1.html 438537-1.html
 == 438981-1.xhtml 438981-1.xhtml
 == 438987-1.html 438987-1.html
@@ -1150,16 +1150,16 @@ fuzzy-if(skiaContent,1,3280) == 438987-2c.html 438987-2c.html
 == 439004-1.html 439004-1.html
 == 439639-1.html 439639-1.html
 == 439910.html 439910.html
-fails == 440112.html 440112.html
-fails == 440149-1.html 440149-1.html
+== 440112.html 440112.html
+== 440149-1.html 440149-1.html
 == 441259-1.html 441259-1.html
 == 441259-2.html 441259-2.html
-fails == 442542-1.html 442542-1.html
-fails == 444015-1.html 444015-1.html
+== 442542-1.html 442542-1.html
+== 444015-1.html 444015-1.html
 == 444375-1.html 444375-1.html
-fails == 444928-1.html 444928-1.html
-fails == 444928-2.html 444928-2.html
-fails == 444928-3.html 444928-3.html
+== 444928-1.html 444928-1.html
+== 444928-2.html 444928-2.html
+== 444928-3.html 444928-3.html
 fails random == 445004-1.html 445004-1.html
 == 445142-1a.html 445142-1a.html
 == 445142-1b.html 445142-1b.html
@@ -1174,19 +1174,19 @@ fails-if(usesRepeatResampling) == 446100-1e.html 446100-1e.html
 == 446100-1f.html 446100-1f.html
 fails-if(usesRepeatResampling) fails-if(Android) == 446100-1g.html 446100-1g.html
 == 446100-1h.html 446100-1h.html
-fails == 447749-1.html 447749-1.html
+== 447749-1.html 447749-1.html
 fuzzy(127,2) == 448193.html 448193.html
-fails == 449149-1a.html 449149-1a.html
-fails == 449149-1b.html 449149-1b.html
+== 449149-1a.html 449149-1a.html
+== 449149-1b.html 449149-1b.html
 # Retry the above with XBL scopes
-fails test-pref(dom.use_xbl_scopes_for_remote_xul,true) == 449149-1a.html 449149-1a.html
-fails test-pref(dom.use_xbl_scopes_for_remote_xul,true) == 449149-1b.html 449149-1b.html
+test-pref(dom.use_xbl_scopes_for_remote_xul,true) == 449149-1a.html 449149-1a.html
+test-pref(dom.use_xbl_scopes_for_remote_xul,true) == 449149-1b.html 449149-1b.html
 == 449149-2.html 449149-2.html
 == 449171-1.html 449171-1.html
-fails == 449362-1.html 449362-1.html
+== 449362-1.html 449362-1.html
 == 449519-1.html 449519-1.html
 == 450670-1.html 450670-1.html
-fails == 451168-1.html 451168-1.html
+== 451168-1.html 451168-1.html
 == 451876-1.html 451876-1.html
 == 451876-2.html 451876-2.html
 == 452915-1.html 452915-1.html
@@ -1194,37 +1194,37 @@ fails == 451168-1.html 451168-1.html
 # == 454361.html 454361.html
 == 455105-1.html 455105-1.html
 == 455105-2.html 455105-2.html
-fails == 455171-5.html 455171-5.html
-fails == 455280-1.xhtml 455280-1.xhtml
-fails == 455826-1.html 455826-1.html
+== 455171-5.html 455171-5.html
+== 455280-1.xhtml 455280-1.xhtml
+== 455826-1.html 455826-1.html
 fails-if(cocoaWidget) fails-if(Android) == 456147.xul 456147.xul
 == 456219-1a.html 456219-1a.html
 == 456219-1b.html 456219-1b.html
 == 456219-1c.html 456219-1c.html
 == 456219-2.html 456219-2.html
-fails == 456330-1.gif 456330-1.gif
+== 456330-1.gif 456330-1.gif
 == 456484-1.html 456484-1.html
 == 457398-1.html 457398-1.html
 == 457398-2.html 457398-2.html
 == 458296-1a.html 458296-1a.html
-fails == 458296-1b.html 458296-1b.html
-fails == 458296-1c.html 458296-1c.html
-fails == 458296-1d.html 458296-1d.html
-fails == 458487-1a.html 458487-1a.html
-fails == 458487-1b.html 458487-1b.html
-fails == 458487-1c.html 458487-1c.html
-fails == 458487-1d.html 458487-1d.html
-fails == 458487-1e.html 458487-1e.html
-fails == 458487-1f.html 458487-1f.html
-fails == 458487-1g.html 458487-1g.html
-fails == 458487-1h.html 458487-1h.html
+== 458296-1b.html 458296-1b.html
+== 458296-1c.html 458296-1c.html
+== 458296-1d.html 458296-1d.html
+== 458487-1a.html 458487-1a.html
+== 458487-1b.html 458487-1b.html
+== 458487-1c.html 458487-1c.html
+== 458487-1d.html 458487-1d.html
+== 458487-1e.html 458487-1e.html
+== 458487-1f.html 458487-1f.html
+== 458487-1g.html 458487-1g.html
+== 458487-1h.html 458487-1h.html
 == 458487-2.html 458487-2.html
 == 458487-3.html 458487-3.html
-fails == 458487-4a.html 458487-4a.html
-fails == 458487-4b.html 458487-4b.html
-fails == 458487-4c.html 458487-4c.html
-fails == 458487-5a.html 458487-5a.html
-fails == 458487-5b.html 458487-5b.html
+== 458487-4a.html 458487-4a.html
+== 458487-4b.html 458487-4b.html
+== 458487-4c.html 458487-4c.html
+== 458487-5a.html 458487-5a.html
+== 458487-5b.html 458487-5b.html
 == 459443-1.html 459443-1.html
 == 459613-1.html 459613-1.html
 == 460012-1.html 460012-1.html
@@ -1236,25 +1236,25 @@ fails == 458487-5b.html 458487-5b.html
 == 462844-4.html 462844-4.html
 == 463204-1.html 463204-1.html
 == 463217-1.xul 463217-1.xul
-fails == 463952-1.html 463952-1.html
-fails == 464811-1.html 464811-1.html
+== 463952-1.html 463952-1.html
+== 464811-1.html 464811-1.html
 == 465574-1.html 465574-1.html
-fails == 466258-1.html 466258-1.html
+== 466258-1.html 466258-1.html
 == 466395-1.html 466395-1.html
 == 466395-2.html 466395-2.html
-fails == 467084-1.html 467084-1.html
-fails == 467084-2.html 467084-2.html
+== 467084-1.html 467084-1.html
+== 467084-2.html 467084-2.html
 == 467444-1.html 467444-1.html
-fails == 467460-1.html 467460-1.html
+== 467460-1.html 467460-1.html
 == 468473-1.xul 468473-1.xul
-fails == 468546-1.xhtml 468546-1.xhtml
+== 468546-1.xhtml 468546-1.xhtml
 == 471356-1.html 471356-1.html
 == 471594-1.xhtml 471594-1.xhtml
 fuzzy(255,15) == 472020-1a.xul 472020-1a.xul
 == 472020-1b.xul 472020-1b.xul
 == 472020-2.xul 472020-2.xul
 == 472500-1.xul 472500-1.xul
-fails == 472769-1a.html 472769-1a.html
+== 472769-1a.html 472769-1a.html
 == 472769-1b.html 472769-1b.html
 fails == 472769-2.html 472769-2.html
 fails == 472769-3.html 472769-3.html
@@ -1828,51 +1828,51 @@ fails == 992447.html 992447.html
 == 1005405-1.html 1005405-1.html
 fails == 1012640-1.html 1012640-1.html
 == 1013054-1.html 1013054-1.html
-fails == 1018522-1.html 1018522-1.html
+== 1018522-1.html 1018522-1.html
 == 1021564-1.html 1021564-1.html
-fails == 1021564-2.html 1021564-2.html
+== 1021564-2.html 1021564-2.html
 == 1021564-3.html 1021564-3.html
-fails == 1021564-4.html 1021564-4.html
-fails pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1.html
+== 1021564-4.html 1021564-4.html
+pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1.html
 == 1022612-1.html 1022612-1.html
 == 1024473-1.html 1024473-1.html
 == 1025914-1.html 1025914-1.html
-fails == 1042104-1.html 1042104-1.html
+== 1042104-1.html 1042104-1.html
 == 1043537-1.html 1043537-1.html
 == 1044198-1.html 1044198-1.html
 == 1049499-1.html 1049499-1.html
 == 1050493-1.html 1050493-1.html
 == 1050788-1.html 1050788-1.html
-fails == 1053035-1-flex.html 1053035-1-flex.html
-fails test-pref(layout.css.grid.enabled,true) == 1053035-1-grid.html 1053035-1-grid.html
+== 1053035-1-flex.html 1053035-1-flex.html
+test-pref(layout.css.grid.enabled,true) == 1053035-1-grid.html 1053035-1-grid.html
 == 1059167-1.html 1059167-1.html
-fails == 1059498-1.html 1059498-1.html
-fails == 1059498-2.html 1059498-2.html
-fails == 1059498-3.html 1059498-3.html
+== 1059498-1.html 1059498-1.html
+== 1059498-2.html 1059498-2.html
+== 1059498-3.html 1059498-3.html
 == 1062108-1.html 1062108-1.html
-fails == 1062792-1.html 1062792-1.html
-fails == 1062963-floatmanager-reflow.html 1062963-floatmanager-reflow.html
+== 1062792-1.html 1062792-1.html
+== 1062963-floatmanager-reflow.html 1062963-floatmanager-reflow.html
 # test-pref(dom.webcomponents.enabled,true) == 1066554-1.html 1066554-1.html
-fails == 1069716-1.html 1069716-1.html
+== 1069716-1.html 1069716-1.html
 == 1078262-1.html 1078262-1.html
 test-pref(layout.testing.overlay-scrollbars.always-visible,false) == 1081072-1.html 1081072-1.html
 == 1081185-1.html 1081185-1.html
 == 1097437-1.html 1097437-1.html
 == 1103258-1.html 1103258-1.html
-fails == 1105137-1.html 1105137-1.html
-fails == 1116480-1-fakeitalic-overflow.html 1116480-1-fakeitalic-overflow.html
+== 1105137-1.html 1105137-1.html
+== 1116480-1-fakeitalic-overflow.html 1116480-1-fakeitalic-overflow.html
 # == 1111753-1.html 1111753-1.html
-fails == 1114526-1.html 1114526-1.html
+== 1114526-1.html 1114526-1.html
 fuzzy-if(skiaContent,1,800000) == 1119117-1a.html 1119117-1a.html
 fuzzy-if(skiaContent,1,800000) == 1119117-1b.html 1119117-1b.html
-fails == 1120431-1.html 1120431-1.html
-fails == 1120431-2.html 1120431-2.html
+== 1120431-1.html 1120431-1.html
+== 1120431-2.html 1120431-2.html
 == 1121748-1.html 1121748-1.html
-fails == 1121748-2.html 1121748-2.html
+== 1121748-2.html 1121748-2.html
 == 1127107-1a-nowrap.html 1127107-1a-nowrap.html
 == 1127107-1b-pre.html 1127107-1b-pre.html
 == 1127107-2-capitalize.html 1127107-2-capitalize.html
-fails == 1127679-1a-inline-flex-relpos.html 1127679-1a-inline-flex-relpos.html
+== 1127679-1a-inline-flex-relpos.html 1127679-1a-inline-flex-relpos.html
 == 1128354-1.html 1128354-1.html
 # == 1130231-1-button-padding-rtl.html 1130231-1-button-padding-rtl.html
 # == 1130231-2-button-padding-rtl.html 1130231-2-button-padding-rtl.html
@@ -1928,33 +1928,33 @@ skip-if(!Android) fails-if(Android) == 1133905-6-vh.html 1133905-6-vh.html
 # == 1133905-5-vh-rtl.html 1133905-5-vh-rtl.html
 # == 1133905-6-vh-rtl.html 1133905-6-vh-rtl.html
 == 1150021-1.xul 1150021-1.xul
-fails == 1151145-1.html 1151145-1.html
+== 1151145-1.html 1151145-1.html
 == 1151306-1.html 1151306-1.html
 == 1153845-1.html 1153845-1.html
-fails == 1155828-1.html 1155828-1.html
+== 1155828-1.html 1155828-1.html
 == 1156129-1.html 1156129-1.html
 pref(dom.use_xbl_scopes_for_remote_xul,true) HTTP(..) == 1157127-1.html 1157127-1.html
-fails == 1169331-1.html 1169331-1.html
-fails == 1174332-1.html 1174332-1.html
+== 1169331-1.html 1169331-1.html
+== 1174332-1.html 1174332-1.html
 == 1179078-1.html 1179078-1.html
 == 1179288-1.html 1179288-1.html
 == 1190635-1.html 1190635-1.html
-fails == 1202512-1.html 1202512-1.html
-fails == 1202512-2.html 1202512-2.html
+== 1202512-1.html 1202512-1.html
+== 1202512-2.html 1202512-2.html
 == 1207326-1.html 1207326-1.html
 == 1209603-1.html 1209603-1.html
 == 1209994-1.html 1209994-1.html
-fails == 1209994-2.html 1209994-2.html
+== 1209994-2.html 1209994-2.html
 == 1209994-3.html 1209994-3.html
-fails == 1209994-4.html 1209994-4.html
-fails == 1222226-1.html 1222226-1.html
-fails pref(layout.css.overflow-clip-box.enabled,true) == 1226278.html 1226278.html
+== 1209994-4.html 1209994-4.html
+== 1222226-1.html 1222226-1.html
+pref(layout.css.overflow-clip-box.enabled,true) == 1226278.html 1226278.html
 == 1230466.html 1230466.html
 == 1238243-1.html 1238243-1.html
 == 1238243-2.html 1238243-2.html
-fails == 1239564.html 1239564.html
-fails == 1242172-1.html 1242172-1.html
-fails == 1242172-2.html 1242172-2.html
+== 1239564.html 1239564.html
+== 1242172-1.html 1242172-1.html
+== 1242172-2.html 1242172-2.html
 == 1242781.html 1242781.html
 == 1263845.html 1263845.html
 == 1260543-1.html 1260543-1.html
@@ -1962,30 +1962,30 @@ fails == 1242172-2.html 1242172-2.html
 == 1272997-1.html 1272997-1.html
 == 1273154-1.html 1273154-1.html
 == 1273154-2.html 1273154-2.html
-fails == 1274368-1.html 1274368-1.html
+== 1274368-1.html 1274368-1.html
 == 1276161-1a.html 1276161-1a.html
 == 1276161-1b.html 1276161-1b.html
 == 1276161-1a.html 1276161-1a.html
 == 1275411-1.html 1275411-1.html
-fails == 1288255.html 1288255.html
+== 1288255.html 1288255.html
 fuzzy(8,1900) == 1291528.html 1291528.html
 # Buttons in 2 pages have different position and the rendering result can be
 # different, but they should use the same button style and the background color
 # should be same.  |fuzzy()| here allows the difference in border, but not
 # background color.
-fails == 1294102-1.html 1294102-1.html
+== 1294102-1.html 1294102-1.html
 == 1295466-1.xhtml 1295466-1.xhtml
-fails == 1315113-1.html 1315113-1.html
-fails == 1315113-2.html 1315113-2.html
+== 1315113-1.html 1315113-1.html
+== 1315113-2.html 1315113-2.html
 == 1315632-1.html 1315632-1.html
-fails == 1316719-1a.html 1316719-1a.html
-fails == 1316719-1b.html 1316719-1b.html
-fails == 1316719-1c.html 1316719-1c.html
+== 1316719-1a.html 1316719-1a.html
+== 1316719-1b.html 1316719-1b.html
+== 1316719-1c.html 1316719-1c.html
 
-fails HTTP == 652991-1a.html 652991-1a.html
-fails HTTP == 652991-1b.html 652991-1b.html
-fails HTTP == 652991-2.html 652991-2.html
-fails HTTP == 652991-3.html 652991-3.html
-fails HTTP == 652991-4.html 652991-4.html
+HTTP == 652991-1a.html 652991-1a.html
+HTTP == 652991-1b.html 652991-1b.html
+HTTP == 652991-2.html 652991-2.html
+HTTP == 652991-3.html 652991-3.html
+HTTP == 652991-4.html 652991-4.html
 
 
