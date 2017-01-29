@@ -278,6 +278,8 @@ static bool isSafeToDump = false;
 // OOP crash reporting
 static CrashGenerationServer* crashServer; // chrome process has this
 
+static std::terminate_handler oldTerminateHandler = nullptr;
+
 #if (defined(XP_MACOSX) || defined(XP_WIN))
 // This field is valid in both chrome and content processes.
 static xpstring* childProcessTmpDir = nullptr;
@@ -1514,6 +1516,11 @@ ChildFilter(void* context)
   return result;
 }
 
+void TerminateHandler()
+{
+  MOZ_CRASH("Unhandled exception");
+}
+
 nsresult SetExceptionHandler(nsIFile* aXREDirectory,
                              bool force/*=false*/)
 {
@@ -1752,6 +1759,8 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 #endif
 
   mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
+
+  oldTerminateHandler = std::set_terminate(&TerminateHandler);
 
   return NS_OK;
 }
@@ -2089,6 +2098,8 @@ nsresult UnsetExceptionHandler()
 
   delete dumpSafetyLock;
   dumpSafetyLock = nullptr;
+
+  std::set_terminate(oldTerminateHandler);
 
   return NS_OK;
 }
@@ -3702,6 +3713,8 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
 
   mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
 
+  oldTerminateHandler = std::set_terminate(&TerminateHandler);
+
   // we either do remote or nothing, no fallback to regular crash reporting
   return gExceptionHandler->IsOutOfProcess();
 }
@@ -3753,6 +3766,8 @@ SetRemoteExceptionHandler()
 
   mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
 
+  oldTerminateHandler = std::set_terminate(&TerminateHandler);
+
   // we either do remote or nothing, no fallback to regular crash reporting
   return gExceptionHandler->IsOutOfProcess();
 }
@@ -3778,6 +3793,8 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
                      crashPipe.BeginReading());
 
   mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
+
+  oldTerminateHandler = std::set_terminate(&TerminateHandler);
 
   // we either do remote or nothing, no fallback to regular crash reporting
   return gExceptionHandler->IsOutOfProcess();
@@ -4094,6 +4111,7 @@ CreateAdditionalChildMinidump(ProcessHandle childPid,
 bool
 UnsetRemoteExceptionHandler()
 {
+  std::set_terminate(oldTerminateHandler);
   delete gExceptionHandler;
   gExceptionHandler = nullptr;
   return true;
