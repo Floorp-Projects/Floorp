@@ -186,5 +186,5 @@ add_task(function* reorder_empty_folder_invalid_children() {
   });
   // Specifying a child that doesn't exist should cause that to be ignored.
   // However, before bug 1333304, doing this on an empty folder threw.
-  yield PlacesUtils.bookmarks.reorder(f1.guid, ['123456789012']);
+  yield PlacesUtils.bookmarks.reorder(f1.guid, ["123456789012"]);
 });
