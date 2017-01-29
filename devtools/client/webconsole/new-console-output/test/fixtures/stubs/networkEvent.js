@@ -14,8 +14,8 @@ const { NetworkEventMessage } =
 let stubPreparedMessages = new Map();
 let stubPackets = new Map();
 stubPreparedMessages.set("GET request", new NetworkEventMessage({
-  "id": "1",
-  "actor": "server1.conn0.child1/netEvent29",
+  "id": "server1.conn0.child1/netEvent30",
+  "actor": "server1.conn0.child1/netEvent30",
   "level": "log",
   "isXHR": false,
   "request": {
@@ -25,13 +25,38 @@ stubPreparedMessages.set("GET request", new NetworkEventMessage({
   "response": {},
   "source": "network",
   "type": "log",
-  "timeStamp": 1479159937660,
-  "groupId": null
+  "groupId": null,
+  "timeStamp": 1485777989897
+}));
+
+stubPreparedMessages.set("GET request eventTimings", new NetworkEventMessage({
+  "id": "server1.conn0.child1/netEvent30",
+  "actor": "server1.conn0.child1/netEvent30",
+  "level": "log",
+  "isXHR": false,
+  "request": {
+    "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
+    "method": "GET",
+    "headersSize": 489
+  },
+  "response": {
+    "httpVersion": "HTTP/1.1",
+    "status": "404",
+    "statusText": "Not Found",
+    "headersSize": 160,
+    "remoteAddress": "127.0.0.1",
+    "remotePort": 8888
+  },
+  "source": "network",
+  "type": "log",
+  "groupId": null,
+  "timeStamp": 1485777989897,
+  "totalTime": 7
 }));
 
 stubPreparedMessages.set("XHR GET request", new NetworkEventMessage({
-  "id": "1",
-  "actor": "server1.conn1.child1/netEvent29",
+  "id": "server1.conn1.child1/netEvent30",
+  "actor": "server1.conn1.child1/netEvent30",
   "level": "log",
   "isXHR": true,
   "request": {
@@ -41,13 +66,38 @@ stubPreparedMessages.set("XHR GET request", new NetworkEventMessage({
   "response": {},
   "source": "network",
   "type": "log",
-  "timeStamp": 1479159938522,
-  "groupId": null
+  "groupId": null,
+  "timeStamp": 1485777990639
+}));
+
+stubPreparedMessages.set("XHR GET request eventTimings", new NetworkEventMessage({
+  "id": "server1.conn1.child1/netEvent30",
+  "actor": "server1.conn1.child1/netEvent30",
+  "level": "log",
+  "isXHR": true,
+  "request": {
+    "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
+    "method": "GET",
+    "headersSize": 489
+  },
+  "response": {
+    "httpVersion": "HTTP/1.1",
+    "status": "404",
+    "statusText": "Not Found",
+    "headersSize": 160,
+    "remoteAddress": "127.0.0.1",
+    "remotePort": 8888
+  },
+  "source": "network",
+  "type": "log",
+  "groupId": null,
+  "timeStamp": 1485777990639,
+  "totalTime": 10
 }));
 
 stubPreparedMessages.set("XHR POST request", new NetworkEventMessage({
-  "id": "1",
-  "actor": "server1.conn2.child1/netEvent29",
+  "id": "server1.conn2.child1/netEvent30",
+  "actor": "server1.conn2.child1/netEvent30",
   "level": "log",
   "isXHR": true,
   "request": {
@@ -57,131 +107,174 @@ stubPreparedMessages.set("XHR POST request", new NetworkEventMessage({
   "response": {},
   "source": "network",
   "type": "log",
-  "timeStamp": 1479159939328,
-  "groupId": null
+  "groupId": null,
+  "timeStamp": 1485777991739
+}));
+
+stubPreparedMessages.set("XHR POST request eventTimings", new NetworkEventMessage({
+  "id": "server1.conn2.child1/netEvent30",
+  "actor": "server1.conn2.child1/netEvent30",
+  "level": "log",
+  "isXHR": true,
+  "request": {
+    "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
+    "method": "POST",
+    "headersSize": 509
+  },
+  "response": {
+    "httpVersion": "HTTP/1.1",
+    "status": "404",
+    "statusText": "Not Found",
+    "headersSize": 160,
+    "remoteAddress": "127.0.0.1",
+    "remotePort": 8888
+  },
+  "source": "network",
+  "type": "log",
+  "groupId": null,
+  "timeStamp": 1485777991739,
+  "totalTime": 9
 }));
 
 stubPackets.set("GET request", {
-  "from": "server1.conn0.child1/consoleActor2",
-  "type": "networkEvent",
-  "eventActor": {
-    "actor": "server1.conn0.child1/netEvent29",
-    "startedDateTime": "2016-10-15T23:12:04.196Z",
-    "timeStamp": 1479159937660,
+  "_type": "NetworkEvent",
+  "timeStamp": 1485777989897,
+  "node": null,
+  "actor": "server1.conn0.child1/netEvent30",
+  "discardRequestBody": true,
+  "discardResponseBody": true,
+  "startedDateTime": "2017-01-30T12:06:29.897Z",
+  "request": {
     "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
-    "method": "GET",
-    "isXHR": false,
-    "cause": {
-      "type": 3,
-      "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-      "stacktrace": [
-        {
-          "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
-          "lineNumber": 3,
-          "columnNumber": 1,
-          "functionName": "triggerPacket",
-          "asyncCause": null
-        },
-        {
-          "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js line 52 > eval",
-          "lineNumber": 4,
-          "columnNumber": 7,
-          "functionName": null,
-          "asyncCause": null
-        },
-        {
-          "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js",
-          "lineNumber": 53,
-          "columnNumber": 20,
-          "functionName": null,
-          "asyncCause": null
-        }
-      ]
-    },
-    "private": false
-  }
+    "method": "GET"
+  },
+  "isXHR": false,
+  "cause": {
+    "type": "img",
+    "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
+        "lineNumber": 3,
+        "columnNumber": 1,
+        "functionName": "triggerPacket",
+        "asyncCause": null
+      },
+      {
+        "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js line 52 > eval",
+        "lineNumber": 4,
+        "columnNumber": 7,
+        "functionName": null,
+        "asyncCause": null
+      },
+      {
+        "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js",
+        "lineNumber": 53,
+        "columnNumber": 20,
+        "functionName": null,
+        "asyncCause": null
+      }
+    ]
+  },
+  "response": {},
+  "timings": {},
+  "updates": [],
+  "private": false,
+  "from": "server1.conn0.child1/consoleActor2"
 });
 
 stubPackets.set("XHR GET request", {
-  "from": "server1.conn1.child1/consoleActor2",
-  "type": "networkEvent",
-  "eventActor": {
-    "actor": "server1.conn1.child1/netEvent29",
-    "startedDateTime": "2016-10-15T23:12:05.690Z",
-    "timeStamp": 1479159938522,
+  "_type": "NetworkEvent",
+  "timeStamp": 1485777990639,
+  "node": null,
+  "actor": "server1.conn1.child1/netEvent30",
+  "discardRequestBody": true,
+  "discardResponseBody": true,
+  "startedDateTime": "2017-01-30T12:06:30.639Z",
+  "request": {
     "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
-    "method": "GET",
-    "isXHR": true,
-    "cause": {
-      "type": 11,
-      "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-      "stacktrace": [
-        {
-          "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
-          "lineNumber": 4,
-          "columnNumber": 1,
-          "functionName": "triggerPacket",
-          "asyncCause": null
-        },
-        {
-          "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js line 52 > eval",
-          "lineNumber": 4,
-          "columnNumber": 7,
-          "functionName": null,
-          "asyncCause": null
-        },
-        {
-          "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js",
-          "lineNumber": 53,
-          "columnNumber": 20,
-          "functionName": null,
-          "asyncCause": null
-        }
-      ]
-    },
-    "private": false
-  }
+    "method": "GET"
+  },
+  "isXHR": true,
+  "cause": {
+    "type": "xhr",
+    "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
+        "lineNumber": 4,
+        "columnNumber": 1,
+        "functionName": "triggerPacket",
+        "asyncCause": null
+      },
+      {
+        "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js line 52 > eval",
+        "lineNumber": 4,
+        "columnNumber": 7,
+        "functionName": null,
+        "asyncCause": null
+      },
+      {
+        "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js",
+        "lineNumber": 53,
+        "columnNumber": 20,
+        "functionName": null,
+        "asyncCause": null
+      }
+    ]
+  },
+  "response": {},
+  "timings": {},
+  "updates": [],
+  "private": false,
+  "from": "server1.conn1.child1/consoleActor2"
 });
 
 stubPackets.set("XHR POST request", {
-  "from": "server1.conn2.child1/consoleActor2",
-  "type": "networkEvent",
-  "eventActor": {
-    "actor": "server1.conn2.child1/netEvent29",
-    "startedDateTime": "2016-10-15T23:12:07.158Z",
-    "timeStamp": 1479159939328,
+  "_type": "NetworkEvent",
+  "timeStamp": 1485777991739,
+  "node": null,
+  "actor": "server1.conn2.child1/netEvent30",
+  "discardRequestBody": true,
+  "discardResponseBody": true,
+  "startedDateTime": "2017-01-30T12:06:31.739Z",
+  "request": {
     "url": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html",
-    "method": "POST",
-    "isXHR": true,
-    "cause": {
-      "type": 11,
-      "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
-      "stacktrace": [
-        {
-          "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
-          "lineNumber": 4,
-          "columnNumber": 1,
-          "functionName": "triggerPacket",
-          "asyncCause": null
-        },
-        {
-          "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js line 52 > eval",
-          "lineNumber": 4,
-          "columnNumber": 7,
-          "functionName": null,
-          "asyncCause": null
-        },
-        {
-          "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js",
-          "lineNumber": 53,
-          "columnNumber": 20,
-          "functionName": null,
-          "asyncCause": null
-        }
-      ]
-    },
-    "private": false
-  }
+    "method": "POST"
+  },
+  "isXHR": true,
+  "cause": {
+    "type": "xhr",
+    "loadingDocumentUri": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-network-event.html",
+    "stacktrace": [
+      {
+        "filename": "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/test-tempfile.js",
+        "lineNumber": 4,
+        "columnNumber": 1,
+        "functionName": "triggerPacket",
+        "asyncCause": null
+      },
+      {
+        "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js line 52 > eval",
+        "lineNumber": 4,
+        "columnNumber": 7,
+        "functionName": null,
+        "asyncCause": null
+      },
+      {
+        "filename": "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js",
+        "lineNumber": 53,
+        "columnNumber": 20,
+        "functionName": null,
+        "asyncCause": null
+      }
+    ]
+  },
+  "response": {},
+  "timings": {},
+  "updates": [],
+  "private": false,
+  "from": "server1.conn2.child1/consoleActor2"
 });
 
 module.exports = {
