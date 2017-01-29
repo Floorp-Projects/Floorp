@@ -48,7 +48,6 @@
 #ifdef XP_WIN
 #include <windows.h>
 #include <shlobj.h>
-#include "mozilla/WindowsVersion.h"
 #endif
 #ifdef XP_MACOSX
 #include "nsILocalFileMac.h"
@@ -765,10 +764,7 @@ IsContentSandboxDisabled()
   if (!BrowserTabsRemoteAutostart()) {
     return false;
   }
-#if defined(XP_WIN)
-  const bool isSandboxDisabled = !mozilla::IsVistaOrLater() ||
-    (Preferences::GetInt("security.sandbox.content.level") < 1);
-#elif defined(XP_MACOSX)
+#if defined(XP_WIN) || defined(XP_MACOSX)
   const bool isSandboxDisabled =
     Preferences::GetInt("security.sandbox.content.level") < 1;
 #endif
