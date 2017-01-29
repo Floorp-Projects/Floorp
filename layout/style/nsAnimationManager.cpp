@@ -10,6 +10,7 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/KeyframeEffectReadOnly.h"
@@ -601,16 +602,30 @@ CSSAnimationBuilder::Build(nsPresContext* aPresContext,
 {
   MOZ_ASSERT(aPresContext);
 
-  nsCSSKeyframesRule* rule =
-    aPresContext->StyleSet()->AsGecko()->KeyframesRuleForName(aSrc.GetName());
-  if (!rule) {
-    return nullptr;
+  nsTArray<Keyframe> keyframes;
+  if (aPresContext->StyleSet()->IsServo()) {
+    ServoStyleSet* styleSet = aPresContext->StyleSet()->AsServo();
+    MOZ_ASSERT(styleSet);
+    const ServoComputedValues* computedValues =
+      mStyleContext->StyleSource().AsServoComputedValues();
+    const nsTimingFunction& timingFunction = aSrc.GetTimingFunction();
+    if (!styleSet->FillKeyframesForName(aSrc.GetName(),
+                                        timingFunction,
+                                        computedValues,
+                                        keyframes)) {
+      return nullptr;
+    }
+  } else {
+    nsCSSKeyframesRule* rule =
+      aPresContext->StyleSet()->AsGecko()->KeyframesRuleForName(aSrc.GetName());
+    if (!rule) {
+      return nullptr;
+    }
+
+    keyframes = BuildAnimationFrames(aPresContext, aSrc, rule);
   }
 
   TimingParams timing = TimingParamsFrom(aSrc);
-
-  nsTArray<Keyframe> keyframes =
-    BuildAnimationFrames(aPresContext, aSrc, rule);
 
   bool isStylePaused =
     aSrc.GetPlayState() == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
@@ -1088,10 +1103,6 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     if (src.GetName().IsEmpty()) {
       continue;
     }
-
-    MOZ_ASSERT(mPresContext->StyleSet()->IsGecko(),
-               "ServoStyleSet should not use nsAnimationManager for "
-               "animations");
 
     RefPtr<CSSAnimation> dest =
       builder.Build(mPresContext, src);
