@@ -190,7 +190,8 @@ private:
   already_AddRefed<nsStyleContext> GetContext(already_AddRefed<ServoComputedValues>,
                                               nsStyleContext* aParentContext,
                                               nsIAtom* aPseudoTag,
-                                              CSSPseudoElementType aPseudoType);
+                                              CSSPseudoElementType aPseudoType,
+                                              dom::Element* aElementForAnimation);
 
   already_AddRefed<nsStyleContext> GetContext(nsIContent* aContent,
                                               nsStyleContext* aParentContext,
