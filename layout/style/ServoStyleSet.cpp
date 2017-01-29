@@ -11,6 +11,7 @@
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ElementInlines.h"
+#include "nsAnimationManager.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 #include "nsIDocumentInlines.h"
@@ -135,14 +136,16 @@ ServoStyleSet::GetContext(nsIContent* aContent,
   }
 
   MOZ_ASSERT(computedValues);
-  return GetContext(computedValues.forget(), aParentContext, aPseudoTag, aPseudoType);
+  return GetContext(computedValues.forget(), aParentContext, aPseudoTag, aPseudoType,
+                    element);
 }
 
 already_AddRefed<nsStyleContext>
 ServoStyleSet::GetContext(already_AddRefed<ServoComputedValues> aComputedValues,
                           nsStyleContext* aParentContext,
                           nsIAtom* aPseudoTag,
-                          CSSPseudoElementType aPseudoType)
+                          CSSPseudoElementType aPseudoType,
+                          Element* aElementForAnimation)
 {
   // XXXbholley: nsStyleSet does visited handling here.
 
@@ -150,8 +153,27 @@ ServoStyleSet::GetContext(already_AddRefed<ServoComputedValues> aComputedValues,
   // duplicate something that servo already does?
   bool skipFixup = false;
 
-  return NS_NewStyleContext(aParentContext, mPresContext, aPseudoTag,
-                            aPseudoType, Move(aComputedValues), skipFixup);
+  RefPtr<nsStyleContext> result =
+    NS_NewStyleContext(aParentContext, mPresContext, aPseudoTag,
+                       aPseudoType, Move(aComputedValues), skipFixup);
+
+  // Ignore animations for print or print preview, and for elements
+  // that are not attached to the document tree.
+  if (mPresContext->IsDynamic() &&
+      aElementForAnimation &&
+      aElementForAnimation->IsInComposedDoc()) {
+    // Update/build CSS animations in the case where animation properties are
+    // changed.
+    // FIXME: This isn't right place to update CSS animations. We should do it
+    // , presumably, in cascade_node() in servo side and process the initial
+    // restyle there too.
+    // To do that we need to make updating CSS animations process independent
+    // from nsStyleContext. Also we need to make the process thread safe.
+    mPresContext->AnimationManager()->UpdateAnimations(result,
+                                                       aElementForAnimation);
+  }
+
+  return result.forget();
 }
 
 already_AddRefed<nsStyleContext>
@@ -184,7 +206,8 @@ ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
     Servo_ComputedValues_Inherit(mRawSet.get(), parentComputedValues).Consume();
 
   return GetContext(computedValues.forget(), aParentContext,
-                    nsCSSAnonBoxes::mozText, CSSPseudoElementType::AnonBox);
+                    nsCSSAnonBoxes::mozText, CSSPseudoElementType::AnonBox,
+                    nullptr);
 }
 
 already_AddRefed<nsStyleContext>
@@ -200,7 +223,8 @@ ServoStyleSet::ResolveStyleForOtherNonElement(nsStyleContext* aParentContext)
 
   return GetContext(computedValues.forget(), aParentContext,
                     nsCSSAnonBoxes::mozOtherNonElement,
-                    CSSPseudoElementType::AnonBox);
+                    CSSPseudoElementType::AnonBox,
+                    nullptr);
 }
 
 already_AddRefed<nsStyleContext>
@@ -224,7 +248,10 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
                              /* is_probe = */ false, mRawSet.get()).Consume();
   MOZ_ASSERT(computedValues);
 
-  return GetContext(computedValues.forget(), aParentContext, pseudoTag, aType);
+  bool isBeforeOrAfter = aType == CSSPseudoElementType::before ||
+                         aType == CSSPseudoElementType::after;
+  return GetContext(computedValues.forget(), aParentContext, pseudoTag, aType,
+                    isBeforeOrAfter ? aOriginatingElement : nullptr);
 }
 
 already_AddRefed<nsStyleContext>
@@ -238,7 +265,8 @@ ServoStyleSet::ResolveTransientStyle(Element* aElement, CSSPseudoElementType aTy
   RefPtr<ServoComputedValues> computedValues =
     Servo_ResolveStyleLazily(aElement, pseudoTag, mRawSet.get()).Consume();
 
-  return GetContext(computedValues.forget(), nullptr, pseudoTag, aType);
+  return GetContext(computedValues.forget(), nullptr, pseudoTag, aType,
+                    nullptr);
 }
 
 // aFlags is an nsStyleSet flags bitfield
@@ -458,9 +486,9 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aOriginatingElement,
   // For :before and :after pseudo-elements, having display: none or no
   // 'content' property is equivalent to not having the pseudo-element
   // at all.
-  if (computedValues &&
-      (pseudoTag == nsCSSPseudoElements::before ||
-       pseudoTag == nsCSSPseudoElements::after)) {
+  bool isBeforeOrAfter = pseudoTag == nsCSSPseudoElements::before ||
+                         pseudoTag == nsCSSPseudoElements::after;
+  if (isBeforeOrAfter) {
     const nsStyleDisplay *display = Servo_GetStyleDisplay(computedValues);
     const nsStyleContent *content = Servo_GetStyleContent(computedValues);
     // XXXldb What is contentCount for |content: ""|?
@@ -470,7 +498,8 @@ ServoStyleSet::ProbePseudoElementStyle(Element* aOriginatingElement,
     }
   }
 
-  return GetContext(computedValues.forget(), aParentContext, pseudoTag, aType);
+  return GetContext(computedValues.forget(), aParentContext, pseudoTag, aType,
+                    isBeforeOrAfter ? aOriginatingElement : nullptr);
 }
 
 already_AddRefed<nsStyleContext>
@@ -547,6 +576,20 @@ ServoStyleSet::AssertTreeIsClean()
   }
 }
 #endif
+
+bool
+ServoStyleSet::FillKeyframesForName(const nsString& aName,
+                                    const nsTimingFunction& aTimingFunction,
+                                    const ServoComputedValues* aComputedValues,
+                                    nsTArray<Keyframe>& aKeyframes)
+{
+  NS_ConvertUTF16toUTF8 name(aName);
+  return Servo_StyleSet_FillKeyframesForName(mRawSet.get(),
+                                             &name,
+                                             &aTimingFunction,
+                                             aComputedValues,
+                                             &aKeyframes);
+}
 
 void
 ServoStyleSet::RebuildData()

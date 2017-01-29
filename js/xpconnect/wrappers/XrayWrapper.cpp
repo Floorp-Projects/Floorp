@@ -80,6 +80,7 @@ IsJSXraySupported(JSProtoKey key)
         return true;
     switch (key) {
       case JSProto_Date:
+      case JSProto_DataView:
       case JSProto_Object:
       case JSProto_Array:
       case JSProto_Function:

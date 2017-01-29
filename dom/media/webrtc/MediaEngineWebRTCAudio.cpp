@@ -329,8 +329,7 @@ MediaEngineWebRTCMicrophoneSource::UpdateSingleSource(
       break;
 
     default:
-      LOG(("Audio device %d %s in ignored state %d", mCapIndex,
-           (aHandle? aHandle->mOrigin.get() : ""), mState));
+      LOG(("Audio device %d in ignored state %d", mCapIndex, mState));
       break;
   }
 

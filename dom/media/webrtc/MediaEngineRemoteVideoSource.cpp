@@ -107,7 +107,7 @@ MediaEngineRemoteVideoSource::Allocate(
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs& aPrefs,
     const nsString& aDeviceId,
-    const nsACString& aOrigin,
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
     AllocationHandle** aOutHandle,
     const char** aOutBadConstraint)
 {
@@ -119,7 +119,7 @@ MediaEngineRemoteVideoSource::Allocate(
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = Super::Allocate(aConstraints, aPrefs, aDeviceId, aOrigin,
+  nsresult rv = Super::Allocate(aConstraints, aPrefs, aDeviceId, aPrincipalInfo,
                                 aOutHandle, aOutBadConstraint);
   if (NS_FAILED(rv)) {
     return rv;
@@ -278,13 +278,12 @@ MediaEngineRemoteVideoSource::UpdateSingleSource(
       if (camera::GetChildAndCall(&camera::CamerasChild::AllocateCaptureDevice,
                                   mCapEngine, GetUUID().get(),
                                   kMaxUniqueIdLength, mCaptureIndex,
-                                  aHandle->mOrigin)) {
+                                  aHandle->mPrincipalInfo)) {
         return NS_ERROR_FAILURE;
       }
       mState = kAllocated;
       SetLastCapability(mCapability);
-      LOG(("Video device %d allocated for %s", mCaptureIndex,
-           aHandle->mOrigin.get()));
+      LOG(("Video device %d allocated", mCaptureIndex));
       break;
 
     case kStarted:
@@ -302,8 +301,7 @@ MediaEngineRemoteVideoSource::UpdateSingleSource(
       break;
 
     default:
-      LOG(("Video device %d %s in ignored state %d", mCaptureIndex,
-             (aHandle? aHandle->mOrigin.get() : ""), mState));
+      LOG(("Video device %d in ignored state %d", mCaptureIndex, mState));
       break;
   }
   return NS_OK;

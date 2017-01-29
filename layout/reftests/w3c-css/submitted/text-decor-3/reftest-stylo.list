@@ -129,4 +129,4 @@ fails == text-emphasis-line-height-004b.html text-emphasis-line-height-004b.html
 fails == text-emphasis-line-height-004c.html text-emphasis-line-height-004c.html
 fails == text-emphasis-line-height-004d.html text-emphasis-line-height-004d.html
 # END tests from support/generate-text-emphasis-line-height-tests.py
-fails == text-emphasis-line-height-001z.html text-emphasis-line-height-001z.html
+== text-emphasis-line-height-001z.html text-emphasis-line-height-001z.html

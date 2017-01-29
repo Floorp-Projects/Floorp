@@ -4,6 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * THIS MODULE IS DEPRECATED.
+ *
+ * To continue any work related to the box model view, see the new react/redux
+ * implementation in devtools/client/inspector/layout/.
+ */
+
 "use strict";
 
 const {Task} = require("devtools/shared/task");
@@ -13,6 +20,7 @@ const {ReflowFront} = require("devtools/shared/fronts/reflow");
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 const {KeyCodes} = require("devtools/client/shared/keycodes");
+const EditingSession = require("devtools/client/inspector/layout/utils/editing-session");
 
 const STRINGS_URI = "devtools/client/locales/shared.properties";
 const STRINGS_INSPECTOR = "devtools/shared/locales/styleinspector.properties";
@@ -20,168 +28,6 @@ const SHARED_L10N = new LocalizationHelper(STRINGS_URI);
 const INSPECTOR_L10N = new LocalizationHelper(STRINGS_INSPECTOR);
 const NUMERIC = /^-?[\d\.]+$/;
 const LONG_TEXT_ROTATE_LIMIT = 3;
-
-/**
- * An instance of EditingSession tracks changes that have been made during the
- * modification of box model values. All of these changes can be reverted by
- * calling revert. The main parameter is the BoxModelView that created it.
- *
- * @param inspector The inspector panel.
- * @param doc       A DOM document that can be used to test style rules.
- * @param rules     An array of the style rules defined for the node being
- *                  edited. These should be in order of priority, least
- *                  important first.
- */
-function EditingSession({inspector, doc, elementRules}) {
-  this._doc = doc;
-  this._rules = elementRules;
-  this._modifications = new Map();
-  this._cssProperties = getCssProperties(inspector.toolbox);
-}
-
-EditingSession.prototype = {
-  /**
-   * Gets the value of a single property from the CSS rule.
-   *
-   * @param {StyleRuleFront} rule The CSS rule.
-   * @param {String} property The name of the property.
-   * @return {String} The value.
-   */
-  getPropertyFromRule: function (rule, property) {
-    // Use the parsed declarations in the StyleRuleFront object if available.
-    let index = this.getPropertyIndex(property, rule);
-    if (index !== -1) {
-      return rule.declarations[index].value;
-    }
-
-    // Fallback to parsing the cssText locally otherwise.
-    let dummyStyle = this._element.style;
-    dummyStyle.cssText = rule.cssText;
-    return dummyStyle.getPropertyValue(property);
-  },
-
-  /**
-   * Returns the current value for a property as a string or the empty string if
-   * no style rules affect the property.
-   *
-   * @param property  The name of the property as a string
-   */
-  getProperty: function (property) {
-    // Create a hidden element for getPropertyFromRule to use
-    let div = this._doc.createElement("div");
-    div.setAttribute("style", "display: none");
-    this._doc.getElementById("sidebar-panel-computedview").appendChild(div);
-    this._element = this._doc.createElement("p");
-    div.appendChild(this._element);
-
-    // As the rules are in order of priority we can just iterate until we find
-    // the first that defines a value for the property and return that.
-    for (let rule of this._rules) {
-      let value = this.getPropertyFromRule(rule, property);
-      if (value !== "") {
-        div.remove();
-        return value;
-      }
-    }
-    div.remove();
-    return "";
-  },
-
-  /**
-   * Get the index of a given css property name in a CSS rule.
-   * Or -1, if there are no properties in the rule yet.
-   * @param {String} name The property name.
-   * @param {StyleRuleFront} rule Optional, defaults to the element style rule.
-   * @return {Number} The property index in the rule.
-   */
-  getPropertyIndex: function (name, rule = this._rules[0]) {
-    let elementStyleRule = this._rules[0];
-    if (!elementStyleRule.declarations.length) {
-      return -1;
-    }
-
-    return elementStyleRule.declarations.findIndex(p => p.name === name);
-  },
-
-  /**
-   * Sets a number of properties on the node.
-   * @param properties  An array of properties, each is an object with name and
-   *                    value properties. If the value is "" then the property
-   *                    is removed.
-   * @return {Promise} Resolves when the modifications are complete.
-   */
-  setProperties: Task.async(function* (properties) {
-    for (let property of properties) {
-      // Get a RuleModificationList or RuleRewriter helper object from the
-      // StyleRuleActor to make changes to CSS properties.
-      // Note that RuleRewriter doesn't support modifying several properties at
-      // once, so we do this in a sequence here.
-      let modifications = this._rules[0].startModifyingProperties(
-        this._cssProperties);
-
-      // Remember the property so it can be reverted.
-      if (!this._modifications.has(property.name)) {
-        this._modifications.set(property.name,
-          this.getPropertyFromRule(this._rules[0], property.name));
-      }
-
-      // Find the index of the property to be changed, or get the next index to
-      // insert the new property at.
-      let index = this.getPropertyIndex(property.name);
-      if (index === -1) {
-        index = this._rules[0].declarations.length;
-      }
-
-      if (property.value == "") {
-        modifications.removeProperty(index, property.name);
-      } else {
-        modifications.setProperty(index, property.name, property.value, "");
-      }
-
-      yield modifications.apply();
-    }
-  }),
-
-  /**
-   * Reverts all of the property changes made by this instance.
-   * @return {Promise} Resolves when all properties have been reverted.
-   */
-  revert: Task.async(function* () {
-    // Revert each property that we modified previously, one by one. See
-    // setProperties for information about why.
-    for (let [property, value] of this._modifications) {
-      let modifications = this._rules[0].startModifyingProperties(
-        this._cssProperties);
-
-      // Find the index of the property to be reverted.
-      let index = this.getPropertyIndex(property);
-
-      if (value != "") {
-        // If the property doesn't exist anymore, insert at the beginning of the
-        // rule.
-        if (index === -1) {
-          index = 0;
-        }
-        modifications.setProperty(index, property, value, "");
-      } else {
-        // If the property doesn't exist anymore, no need to remove it. It had
-        // not been added after all.
-        if (index === -1) {
-          continue;
-        }
-        modifications.removeProperty(index, property);
-      }
-
-      yield modifications.apply();
-    }
-  }),
-
-  destroy: function () {
-    this._doc = null;
-    this._rules = null;
-    this._modifications.clear();
-  }
-};
 
 /**
  * The box model view
@@ -193,11 +39,11 @@ EditingSession.prototype = {
 function BoxModelView(inspector, document) {
   this.inspector = inspector;
   this.doc = document;
-  this.wrapper = this.doc.getElementById("boxmodel-wrapper");
-  this.container = this.doc.getElementById("boxmodel-container");
-  this.expander = this.doc.getElementById("boxmodel-expander");
-  this.sizeLabel = this.doc.querySelector(".boxmodel-size > span");
-  this.sizeHeadingLabel = this.doc.getElementById("boxmodel-element-size");
+  this.wrapper = this.doc.getElementById("old-boxmodel-wrapper");
+  this.container = this.doc.getElementById("old-boxmodel-container");
+  this.expander = this.doc.getElementById("old-boxmodel-expander");
+  this.sizeLabel = this.doc.querySelector(".old-boxmodel-size > span");
+  this.sizeHeadingLabel = this.doc.getElementById("old-boxmodel-element-size");
   this._geometryEditorHighlighter = null;
   this._cssProperties = getCssProperties(inspector.toolbox);
 
@@ -219,7 +65,7 @@ BoxModelView.prototype = {
 
     this.onToggleExpander = this.onToggleExpander.bind(this);
     this.expander.addEventListener("click", this.onToggleExpander);
-    let header = this.doc.getElementById("boxmodel-header");
+    let header = this.doc.getElementById("old-boxmodel-header");
     header.addEventListener("dblclick", this.onToggleExpander);
 
     this.onFilterComputedView = this.onFilterComputedView.bind(this);
@@ -239,10 +85,10 @@ BoxModelView.prototype = {
     this.moveFocus = this.moveFocus.bind(this);
     this.onFocus = this.onFocus.bind(this);
 
-    this.borderLayout = this.doc.getElementById("boxmodel-borders");
-    this.boxModel = this.doc.getElementById("boxmodel-wrapper");
-    this.marginLayout = this.doc.getElementById("boxmodel-margins");
-    this.paddingLayout = this.doc.getElementById("boxmodel-padding");
+    this.borderLayout = this.doc.getElementById("old-boxmodel-borders");
+    this.boxModel = this.doc.getElementById("old-boxmodel-wrapper");
+    this.marginLayout = this.doc.getElementById("old-boxmodel-margins");
+    this.paddingLayout = this.doc.getElementById("old-boxmodel-padding");
 
     this.layouts = {
       "margin": new Map([
@@ -277,67 +123,67 @@ BoxModelView.prototype = {
     // 'value' is the computed dimension, computed in update().
     this.map = {
       position: {
-        selector: "#boxmodel-element-position",
+        selector: "#old-boxmodel-element-position",
         property: "position",
         value: undefined
       },
       marginTop: {
-        selector: ".boxmodel-margin.boxmodel-top > span",
+        selector: ".old-boxmodel-margin.old-boxmodel-top > span",
         property: "margin-top",
         value: undefined
       },
       marginBottom: {
-        selector: ".boxmodel-margin.boxmodel-bottom > span",
+        selector: ".old-boxmodel-margin.old-boxmodel-bottom > span",
         property: "margin-bottom",
         value: undefined
       },
       marginLeft: {
-        selector: ".boxmodel-margin.boxmodel-left > span",
+        selector: ".old-boxmodel-margin.old-boxmodel-left > span",
         property: "margin-left",
         value: undefined
       },
       marginRight: {
-        selector: ".boxmodel-margin.boxmodel-right > span",
+        selector: ".old-boxmodel-margin.old-boxmodel-right > span",
         property: "margin-right",
         value: undefined
       },
       paddingTop: {
-        selector: ".boxmodel-padding.boxmodel-top > span",
+        selector: ".old-boxmodel-padding.old-boxmodel-top > span",
         property: "padding-top",
         value: undefined
       },
       paddingBottom: {
-        selector: ".boxmodel-padding.boxmodel-bottom > span",
+        selector: ".old-boxmodel-padding.old-boxmodel-bottom > span",
         property: "padding-bottom",
         value: undefined
       },
       paddingLeft: {
-        selector: ".boxmodel-padding.boxmodel-left > span",
+        selector: ".old-boxmodel-padding.old-boxmodel-left > span",
         property: "padding-left",
         value: undefined
       },
       paddingRight: {
-        selector: ".boxmodel-padding.boxmodel-right > span",
+        selector: ".old-boxmodel-padding.old-boxmodel-right > span",
         property: "padding-right",
         value: undefined
       },
       borderTop: {
-        selector: ".boxmodel-border.boxmodel-top > span",
+        selector: ".old-boxmodel-border.old-boxmodel-top > span",
         property: "border-top-width",
         value: undefined
       },
       borderBottom: {
-        selector: ".boxmodel-border.boxmodel-bottom > span",
+        selector: ".old-boxmodel-border.old-boxmodel-bottom > span",
         property: "border-bottom-width",
         value: undefined
       },
       borderLeft: {
-        selector: ".boxmodel-border.boxmodel-left > span",
+        selector: ".old-boxmodel-border.old-boxmodel-left > span",
         property: "border-left-width",
         value: undefined
       },
       borderRight: {
-        selector: ".boxmodel-border.boxmodel-right > span",
+        selector: ".old-boxmodel-border.old-boxmodel-right > span",
         property: "border-right-width",
         value: undefined
       }
@@ -359,13 +205,13 @@ BoxModelView.prototype = {
 
     this.onNewNode();
 
-    let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
+    let nodeGeometry = this.doc.getElementById("old-layout-geometry-editor");
     this.onGeometryButtonClick = this.onGeometryButtonClick.bind(this);
     nodeGeometry.addEventListener("click", this.onGeometryButtonClick);
   },
 
   initBoxModelHighlighter: function () {
-    let highlightElts = this.doc.querySelectorAll("#boxmodel-container *[title]");
+    let highlightElts = this.doc.querySelectorAll("#old-boxmodel-container *[title]");
     this.onHighlightMouseOver = this.onHighlightMouseOver.bind(this);
     this.onHighlightMouseOut = this.onHighlightMouseOut.bind(this);
 
@@ -421,7 +267,7 @@ BoxModelView.prototype = {
         name: dimension.property
       },
       start: self => {
-        self.elt.parentNode.classList.add("boxmodel-editing");
+        self.elt.parentNode.classList.add("old-boxmodel-editing");
       },
       change: value => {
         if (NUMERIC.test(value)) {
@@ -443,7 +289,7 @@ BoxModelView.prototype = {
         session.setProperties(properties).catch(e => console.error(e));
       },
       done: (value, commit) => {
-        editor.elt.parentNode.classList.remove("boxmodel-editing");
+        editor.elt.parentNode.classList.remove("old-boxmodel-editing");
         if (!commit) {
           session.revert().then(() => {
             session.destroy();
@@ -479,7 +325,7 @@ BoxModelView.prototype = {
    * Destroy the nodes. Remove listeners.
    */
   destroy: function () {
-    let highlightElts = this.doc.querySelectorAll("#boxmodel-container *[title]");
+    let highlightElts = this.doc.querySelectorAll("#old-boxmodel-container *[title]");
 
     for (let element of highlightElts) {
       element.removeEventListener("mouseover", this.onHighlightMouseOver, true);
@@ -487,10 +333,10 @@ BoxModelView.prototype = {
     }
 
     this.expander.removeEventListener("click", this.onToggleExpander);
-    let header = this.doc.getElementById("boxmodel-header");
+    let header = this.doc.getElementById("old-boxmodel-header");
     header.removeEventListener("dblclick", this.onToggleExpander);
 
-    let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
+    let nodeGeometry = this.doc.getElementById("old-layout-geometry-editor");
     nodeGeometry.removeEventListener("click", this.onGeometryButtonClick);
 
     this.boxModel.removeEventListener("click", this.onLevelClick, true);
@@ -706,7 +552,8 @@ BoxModelView.prototype = {
    */
   getEditBoxes: function (editLevel) {
     let dataLevel = this.doc.getElementById(editLevel).getAttribute("data-box");
-    return [...this.doc.querySelectorAll(`[data-box="${dataLevel}"].boxmodel-editable`)];
+    return [...this.doc.querySelectorAll(
+      `[data-box="${dataLevel}"].old-boxmodel-editable`)];
   },
 
   onSidebarSelect: function (e, sidebar) {
@@ -989,7 +836,7 @@ BoxModelView.prototype = {
   showGeometryEditor: function (showOnlyIfActive = false) {
     let toolbox = this.inspector.toolbox;
     let nodeFront = this.inspector.selection.nodeFront;
-    let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
+    let nodeGeometry = this.doc.getElementById("old-layout-geometry-editor");
     let isActive = nodeGeometry.hasAttribute("checked");
 
     if (showOnlyIfActive && !isActive) {
@@ -1030,7 +877,7 @@ BoxModelView.prototype = {
     }
 
     if (updateButton) {
-      let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
+      let nodeGeometry = this.doc.getElementById("old-layout-geometry-editor");
       nodeGeometry.removeAttribute("checked");
     }
   },
@@ -1047,17 +894,17 @@ BoxModelView.prototype = {
       isEditable = yield this.inspector.pageStyle.isPositionEditable(node);
     }
 
-    let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
+    let nodeGeometry = this.doc.getElementById("old-layout-geometry-editor");
     nodeGeometry.style.visibility = isEditable ? "visible" : "hidden";
   }),
 
   manageOverflowingText: function (span) {
     let classList = span.parentNode.classList;
 
-    if (classList.contains("boxmodel-left") ||
-        classList.contains("boxmodel-right")) {
+    if (classList.contains("old-boxmodel-left") ||
+        classList.contains("old-boxmodel-right")) {
       let force = span.textContent.length > LONG_TEXT_ROTATE_LIMIT;
-      classList.toggle("boxmodel-rotate", force);
+      classList.toggle("old-boxmodel-rotate", force);
     }
   }
 };

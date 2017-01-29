@@ -101,7 +101,7 @@
     real(WeakMap,               36,     InitWeakMapClass,       OCLASP(WeakMap)) \
     real(Map,                   37,     InitViaClassSpec,       OCLASP(Map)) \
     real(Set,                   38,     InitViaClassSpec,       OCLASP(Set)) \
-    real(DataView,              39,     InitDataViewClass,      OCLASP(DataView)) \
+    real(DataView,              39,     InitViaClassSpec,       OCLASP(DataView)) \
     real(Symbol,                40,     InitSymbolClass,        OCLASP(Symbol)) \
 IF_SAB(real,imaginary)(SharedArrayBuffer,       41,     InitViaClassSpec, OCLASP(SharedArrayBuffer)) \
 IF_INTL(real,imaginary) (Intl,                  42,     InitIntlClass,          CLASP(Intl)) \

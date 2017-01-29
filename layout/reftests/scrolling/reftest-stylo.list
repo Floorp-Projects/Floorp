@@ -86,4 +86,4 @@ fails == move-item.html move-item.html
 == fractional-scroll-area.html?top=-0.4&outerBottom=100.4&innerBottom=200.4&scrollBefore=999 fractional-scroll-area.html?top=-0.4&outerBottom=100.4&innerBottom=200.4&scrollBefore=999
 == fractional-scroll-area.html?top=0.4&outerBottom=99.6&innerBottom=200.4&scrollBefore=999 fractional-scroll-area.html?top=0.4&outerBottom=99.6&innerBottom=200.4&scrollBefore=999
 == fractional-scroll-area.html?top=0.4&outerBottom=100.4&innerBottom=200.4&scrollBefore=999 fractional-scroll-area.html?top=0.4&outerBottom=100.4&innerBottom=200.4&scrollBefore=999
-fails == fractional-scroll-area-invalidation.html fractional-scroll-area-invalidation.html
+== fractional-scroll-area-invalidation.html fractional-scroll-area-invalidation.html
