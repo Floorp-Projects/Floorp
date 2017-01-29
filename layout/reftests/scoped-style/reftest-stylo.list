@@ -1,9 +1,9 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails == scoped-style-001.html scoped-style-001.html
-fails == scoped-style-002.html scoped-style-002.html
-fails == scoped-style-003.html scoped-style-003.html
-fails == scoped-style-004.html scoped-style-004.html
-fails == scoped-style-005.html scoped-style-005.html
+== scoped-style-001.html scoped-style-001.html
+== scoped-style-002.html scoped-style-002.html
+== scoped-style-003.html scoped-style-003.html
+== scoped-style-004.html scoped-style-004.html
+== scoped-style-005.html scoped-style-005.html
 == scoped-style-006.html scoped-style-006.html
 == scoped-style-007.html scoped-style-007.html
 fails == scoped-style-008.html scoped-style-008.html

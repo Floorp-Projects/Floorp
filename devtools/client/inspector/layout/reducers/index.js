@@ -4,5 +4,6 @@
 
 "use strict";
 
+exports.boxModel = require("./box-model");
 exports.grids = require("./grids");
 exports.highlighterSettings = require("./highlighter-settings");
