@@ -134,7 +134,7 @@ NewConsoleOutputWrapper.prototype = {
         let jsterm = this.jsterm;
         jsterm.hud.on("new-messages", function onThisMessage(e, messages) {
           for (let m of messages) {
-            if (m.messageId == messageId) {
+            if (m.messageId === messageId) {
               resolve(m.node);
               jsterm.hud.off("new-messages", onThisMessage);
               return;
@@ -158,6 +158,16 @@ NewConsoleOutputWrapper.prototype = {
 
   dispatchTimestampsToggle: function (enabled) {
     store.dispatch(actions.timestampsToggle(enabled));
+  },
+
+  dispatchMessageUpdate: function (message, res) {
+    batchedMessageAdd(actions.networkMessageUpdate(message));
+
+    // network-message-updated will emit when eventTimings message arrives
+    // which is the last one of 8 updates happening on network message update.
+    if (res.packet.updateType === "eventTimings") {
+      this.jsterm.hud.emit("network-message-updated", res);
+    }
   },
 
   // Should be used for test purpose only.
