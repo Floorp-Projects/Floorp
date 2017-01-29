@@ -1,49 +1,49 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 default-preferences pref(layout.css.grid.enabled,true)
 
-fails == grid-whitespace-handling-1a.xhtml grid-whitespace-handling-1a.xhtml
-fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1b.xhtml
-fails == grid-whitespace-handling-2.xhtml grid-whitespace-handling-2.xhtml
-fails == grid-placement-definite-001.html grid-placement-definite-001.html
-fails == grid-placement-definite-002.html grid-placement-definite-002.html
-fails == grid-placement-definite-003.html grid-placement-definite-003.html
-fails == grid-placement-negative-lines-001.html grid-placement-negative-lines-001.html
-fails == grid-placement-auto-row-sparse-001.html grid-placement-auto-row-sparse-001.html
-fails == grid-placement-auto-row-dense-001.html grid-placement-auto-row-dense-001.html
-fails == grid-placement-auto-col-sparse-001.html grid-placement-auto-col-sparse-001.html
-fails == grid-placement-auto-col-dense-001.html grid-placement-auto-col-dense-001.html
-fails == grid-placement-implicit-named-areas-001.html grid-placement-implicit-named-areas-001.html
-fails == grid-placement-named-lines-001.html grid-placement-named-lines-001.html
-fails == grid-placement-named-lines-002.html grid-placement-named-lines-002.html
-fails == grid-placement-named-lines-003.html grid-placement-named-lines-003.html
-fails == grid-track-sizing-001.html grid-track-sizing-001.html
-fails == grid-track-sizing-002.html grid-track-sizing-002.html
-fails == grid-abspos-items-001.html grid-abspos-items-001.html
-fails == grid-abspos-items-002.html grid-abspos-items-002.html
-fails == grid-abspos-items-003.html grid-abspos-items-003.html
-fails == grid-abspos-items-004.html grid-abspos-items-004.html
-fails == grid-abspos-items-005.html grid-abspos-items-005.html
-fails == grid-abspos-items-006.html grid-abspos-items-006.html
-fails == grid-abspos-items-007.html grid-abspos-items-007.html
-fails == grid-abspos-items-008.html grid-abspos-items-008.html
-fails == grid-abspos-items-009.html grid-abspos-items-009.html
-fails == grid-abspos-items-010.html grid-abspos-items-010.html
-fails == grid-abspos-items-011.html grid-abspos-items-011.html
+== grid-whitespace-handling-1a.xhtml grid-whitespace-handling-1a.xhtml
+== grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1b.xhtml
+== grid-whitespace-handling-2.xhtml grid-whitespace-handling-2.xhtml
+== grid-placement-definite-001.html grid-placement-definite-001.html
+== grid-placement-definite-002.html grid-placement-definite-002.html
+== grid-placement-definite-003.html grid-placement-definite-003.html
+== grid-placement-negative-lines-001.html grid-placement-negative-lines-001.html
+== grid-placement-auto-row-sparse-001.html grid-placement-auto-row-sparse-001.html
+== grid-placement-auto-row-dense-001.html grid-placement-auto-row-dense-001.html
+== grid-placement-auto-col-sparse-001.html grid-placement-auto-col-sparse-001.html
+== grid-placement-auto-col-dense-001.html grid-placement-auto-col-dense-001.html
+== grid-placement-implicit-named-areas-001.html grid-placement-implicit-named-areas-001.html
+== grid-placement-named-lines-001.html grid-placement-named-lines-001.html
+== grid-placement-named-lines-002.html grid-placement-named-lines-002.html
+== grid-placement-named-lines-003.html grid-placement-named-lines-003.html
+== grid-track-sizing-001.html grid-track-sizing-001.html
+== grid-track-sizing-002.html grid-track-sizing-002.html
+== grid-abspos-items-001.html grid-abspos-items-001.html
+== grid-abspos-items-002.html grid-abspos-items-002.html
+== grid-abspos-items-003.html grid-abspos-items-003.html
+== grid-abspos-items-004.html grid-abspos-items-004.html
+== grid-abspos-items-005.html grid-abspos-items-005.html
+== grid-abspos-items-006.html grid-abspos-items-006.html
+== grid-abspos-items-007.html grid-abspos-items-007.html
+== grid-abspos-items-008.html grid-abspos-items-008.html
+== grid-abspos-items-009.html grid-abspos-items-009.html
+== grid-abspos-items-010.html grid-abspos-items-010.html
+== grid-abspos-items-011.html grid-abspos-items-011.html
 == grid-abspos-items-012.html grid-abspos-items-012.html
-fails == grid-abspos-items-013.html grid-abspos-items-013.html
-fails == grid-abspos-items-014.html grid-abspos-items-014.html
-fails == grid-abspos-items-015.html grid-abspos-items-015.html
-fails == grid-order-abspos-items-001.html grid-order-abspos-items-001.html
-fails == grid-order-placement-auto-001.html grid-order-placement-auto-001.html
-fails == grid-order-placement-definite-001.html grid-order-placement-definite-001.html
+== grid-abspos-items-013.html grid-abspos-items-013.html
+== grid-abspos-items-014.html grid-abspos-items-014.html
+== grid-abspos-items-015.html grid-abspos-items-015.html
+== grid-order-abspos-items-001.html grid-order-abspos-items-001.html
+== grid-order-placement-auto-001.html grid-order-placement-auto-001.html
+== grid-order-placement-definite-001.html grid-order-placement-definite-001.html
 # skip-if(Android) == grid-placement-definite-implicit-001.html grid-placement-definite-implicit-001.html
-fails == grid-placement-definite-implicit-002.html grid-placement-definite-implicit-002.html
+== grid-placement-definite-implicit-002.html grid-placement-definite-implicit-002.html
 # skip-if(Android) fuzzy-if(winWidget,1,32) == grid-placement-auto-implicit-001.html grid-placement-auto-implicit-001.html
-fails == grid-placement-abspos-implicit-001.html grid-placement-abspos-implicit-001.html
-fails == rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001.html
-fails == rtl-grid-placement-auto-row-sparse-001.html rtl-grid-placement-auto-row-sparse-001.html
-fails == vlr-grid-placement-auto-row-sparse-001.html vlr-grid-placement-auto-row-sparse-001.html
-fails == vrl-grid-placement-auto-row-sparse-001.html vrl-grid-placement-auto-row-sparse-001.html
+== grid-placement-abspos-implicit-001.html grid-placement-abspos-implicit-001.html
+== rtl-grid-placement-definite-001.html rtl-grid-placement-definite-001.html
+== rtl-grid-placement-auto-row-sparse-001.html rtl-grid-placement-auto-row-sparse-001.html
+== vlr-grid-placement-auto-row-sparse-001.html vlr-grid-placement-auto-row-sparse-001.html
+== vrl-grid-placement-auto-row-sparse-001.html vrl-grid-placement-auto-row-sparse-001.html
 fails == grid-relpos-items-001.html grid-relpos-items-001.html
 fails == grid-item-sizing-percent-001.html grid-item-sizing-percent-001.html
 fails == grid-item-sizing-px-001.html grid-item-sizing-px-001.html

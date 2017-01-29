@@ -26,13 +26,13 @@ load stress-7.html
 load stress-10.html
 == stress-11.xhtml stress-11.xhtml
 
-fails == border-not-apply.html border-not-apply.html
-fails == 287088-1.html 287088-1.html
-fails == 287088-2.html 287088-2.html
-fails == 403177-1.html 403177-1.html
-fails == 469227-2.html 469227-2.html
-fails == 469227-3.html 469227-3.html
+== border-not-apply.html border-not-apply.html
+== 287088-1.html 287088-1.html
+== 287088-2.html 287088-2.html
+== 403177-1.html 403177-1.html
+== 469227-2.html 469227-2.html
+== 469227-3.html 469227-3.html
 
-fails == restyle-inside-first-line.html restyle-inside-first-line.html
-fails == font-styles.html font-styles.html
-fails == font-styles-nooverflow.html font-styles-nooverflow.html
+== restyle-inside-first-line.html restyle-inside-first-line.html
+== font-styles.html font-styles.html
+== font-styles-nooverflow.html font-styles-nooverflow.html
