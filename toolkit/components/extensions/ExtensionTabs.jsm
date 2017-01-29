@@ -312,6 +312,41 @@ class TabTrackerBase extends EventEmitter {
   }
 }
 
+class StatusListener {
+  constructor(listener) {
+    this.listener = listener;
+  }
+
+  onStateChange(browser, webProgress, request, stateFlags, statusCode) {
+    if (!webProgress.isTopLevel) {
+      return;
+    }
+
+    let status;
+    if (stateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
+      if (stateFlags & Ci.nsIWebProgressListener.STATE_START) {
+        status = "loading";
+      } else if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+        status = "complete";
+      }
+    } else if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+               statusCode == Cr.NS_BINDING_ABORTED) {
+      status = "complete";
+    }
+
+    if (status) {
+      this.listener({browser, status});
+    }
+  }
+
+  onLocationChange(browser, webProgress, request, locationURI, flags) {
+    if (webProgress.isTopLevel) {
+      let status = webProgress.isLoadingDocument ? "loading" : "complete";
+      this.listener({browser, status, url: locationURI.spec});
+    }
+  }
+}
+
 class WindowTrackerBase extends EventEmitter {
   constructor() {
     super();
@@ -322,6 +357,10 @@ class WindowTrackerBase extends EventEmitter {
     this._closeListeners = new Set();
 
     this._listeners = new DefaultMap(() => new Set());
+
+    this._statusListeners = new DefaultWeakMap(listener => {
+      return new StatusListener(listener);
+    });
 
     this._windowIds = new DefaultWeakMap(window => {
       window.QueryInterface(Ci.nsIInterfaceRequestor);
@@ -486,6 +525,11 @@ class WindowTrackerBase extends EventEmitter {
       this.addOpenListener(this._handleWindowOpened);
     }
 
+    if (type === "status") {
+      listener = this._statusListeners.get(listener);
+      type = "progress";
+    }
+
     this._listeners.get(type).add(listener);
 
     // Register listener on all existing windows.
@@ -499,6 +543,11 @@ class WindowTrackerBase extends EventEmitter {
       return this.removeOpenListener(listener);
     } else if (eventType === "domwindowclosed") {
       return this.removeCloseListener(listener);
+    }
+
+    if (eventType === "status") {
+      listener = this._statusListeners.get(listener);
+      eventType = "progress";
     }
 
     let listeners = this._listeners.get(eventType);

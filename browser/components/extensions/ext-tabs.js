@@ -284,14 +284,10 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
           return [nonempty, result];
         }
 
-        let fireForBrowser = (browser, changed) => {
+        let fireForTab = (tab, changed) => {
           let [needed, changeInfo] = sanitize(extension, changed);
           if (needed) {
-            let gBrowser = browser.ownerGlobal.gBrowser;
-            let tabElem = gBrowser.getTabForBrowser(browser);
-
-            let tab = tabManager.convert(tabElem);
-            fire.async(tab.id, changeInfo, tab);
+            fire.async(tab.id, changeInfo, tab.convert());
           }
         };
 
@@ -317,60 +313,35 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
             needed.push("pinned");
           }
 
-          if (needed.length && !extension.hasPermission("tabs")) {
-            needed = needed.filter(attr => !restricted.includes(attr));
+          let tab = tabManager.getWrapper(event.originalTarget);
+          let changeInfo = {};
+          for (let prop of needed) {
+            changeInfo[prop] = tab[prop];
           }
 
-          if (needed.length) {
-            let tab = tabManager.convert(event.originalTarget);
+          fireForTab(tab, changeInfo);
+        };
 
-            let changeInfo = {};
-            for (let prop of needed) {
-              changeInfo[prop] = tab[prop];
+        let statusListener = ({browser, status, url}) => {
+          let {gBrowser} = browser.ownerGlobal;
+          let tabElem = gBrowser.getTabForBrowser(browser);
+          if (tabElem) {
+            let changed = {status};
+            if (url) {
+              changed.url = url;
             }
-            fire.async(tab.id, changeInfo, tab);
+
+            fireForTab(tabManager.wrapTab(tabElem), changed);
           }
         };
-        let progressListener = {
-          onStateChange(browser, webProgress, request, stateFlags, statusCode) {
-            if (!webProgress.isTopLevel) {
-              return;
-            }
 
-            let status;
-            if (stateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
-              if (stateFlags & Ci.nsIWebProgressListener.STATE_START) {
-                status = "loading";
-              } else if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-                status = "complete";
-              }
-            } else if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-                       statusCode == Cr.NS_BINDING_ABORTED) {
-              status = "complete";
-            }
-
-            fireForBrowser(browser, {status});
-          },
-
-          onLocationChange(browser, webProgress, request, locationURI, flags) {
-            if (!webProgress.isTopLevel) {
-              return;
-            }
-
-            fireForBrowser(browser, {
-              status: webProgress.isLoadingDocument ? "loading" : "complete",
-              url: locationURI.spec,
-            });
-          },
-        };
-
-        windowTracker.addListener("progress", progressListener);
+        windowTracker.addListener("status", statusListener);
         windowTracker.addListener("TabAttrModified", listener);
         windowTracker.addListener("TabPinned", listener);
         windowTracker.addListener("TabUnpinned", listener);
 
         return () => {
-          windowTracker.removeListener("progress", progressListener);
+          windowTracker.removeListener("status", statusListener);
           windowTracker.removeListener("TabAttrModified", listener);
           windowTracker.removeListener("TabPinned", listener);
           windowTracker.removeListener("TabUnpinned", listener);
