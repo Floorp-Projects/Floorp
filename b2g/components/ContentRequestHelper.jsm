@@ -33,16 +33,11 @@ ContentRequestHelper.prototype = {
 
     let id = uuidgen.generateUUID().toString();
 
-    SystemAppProxy.addEventListener(aContentEventName,
-                                    function onContentEvent(result) {
-      SystemAppProxy.removeEventListener(aContentEventName,
-                                         onContentEvent);
+    SystemAppProxy.addEventListener(aContentEventName, function(result) {
       let msg = result.detail;
       if (!msg || !msg.id || msg.id != id) {
         deferred.reject("InternalErrorWrongContentEvent " +
                         JSON.stringify(msg));
-        SystemAppProxy.removeEventListener(aContentEventName,
-                                           onContentEvent);
         return;
       }
 
@@ -53,7 +48,7 @@ ContentRequestHelper.prototype = {
       } else {
         deferred.resolve(msg.result);
       }
-    });
+    }, {once: true});
 
     let detail = {
        eventName: aInternalEventName,

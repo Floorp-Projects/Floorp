@@ -433,18 +433,6 @@ class BaseCompiler
             masm.setFramePushed(framePushed_);
         }
 
-        // Save volatile registers but not ReturnReg.
-
-        void saveVolatileReturnGPR(MacroAssembler& masm) {
-            masm.PushRegsInMask(BaseCompiler::VolatileReturnGPR);
-        }
-
-        // Restore volatile registers but not ReturnReg.
-
-        void restoreVolatileReturnGPR(MacroAssembler& masm) {
-            masm.PopRegsInMask(BaseCompiler::VolatileReturnGPR);
-        }
-
         // The generate() method must be careful about register use
         // because it will be invoked when there is a register
         // assignment in the BaseCompiler that does not correspond
@@ -2053,7 +2041,7 @@ class BaseCompiler
     // Labels
 
     void insertBreakablePoint(CallSiteDesc::Kind kind) {
-        const uint32_t offset = iter_.currentOffset();
+        const uint32_t offset = trapOffset().bytecodeOffset;
         masm.nopPatchableToCall(CallSiteDesc(offset, kind));
     }
 
@@ -2226,6 +2214,7 @@ class BaseCompiler
             // Store and reload the return value from DebugFrame::return so that
             // it can be clobbered, and/or modified by the debug trap.
             saveResult();
+            insertBreakablePoint(CallSiteDesc::Breakpoint);
             insertBreakablePoint(CallSiteDesc::LeaveFrame);
             restoreResult();
         }
@@ -2478,28 +2467,16 @@ class BaseCompiler
 
     void callIndirect(uint32_t sigIndex, Stk& indexVal, const FunctionCall& call)
     {
+        const SigWithId& sig = env_.sigs[sigIndex];
+        MOZ_ASSERT(sig.id.kind() != SigIdDesc::Kind::None);
+
+        MOZ_ASSERT(env_.tables.length() == 1);
+        const TableDesc& table = env_.tables[0];
+
         loadI32(WasmTableCallIndexReg, indexVal);
 
-        const SigWithId& sig = env_.sigs[sigIndex];
-
-        CalleeDesc callee;
-        if (isCompilingAsmJS()) {
-            MOZ_ASSERT(sig.id.kind() == SigIdDesc::Kind::None);
-            const TableDesc& table = env_.tables[env_.asmJSSigToTableIndex[sigIndex]];
-
-            MOZ_ASSERT(IsPowerOfTwo(table.limits.initial));
-            masm.andPtr(Imm32((table.limits.initial - 1)), WasmTableCallIndexReg);
-
-            callee = CalleeDesc::asmJSTable(table);
-        } else {
-            MOZ_ASSERT(sig.id.kind() != SigIdDesc::Kind::None);
-            MOZ_ASSERT(env_.tables.length() == 1);
-            const TableDesc& table = env_.tables[0];
-
-            callee = CalleeDesc::wasmTable(table, sig.id);
-        }
-
         CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Dynamic);
+        CalleeDesc callee = CalleeDesc::wasmTable(table, sig.id);
         masm.wasmCallIndirect(desc, callee);
     }
 
@@ -2683,20 +2660,10 @@ class BaseCompiler
     }
 
     void checkDivideByZeroI32(RegI32 rhs, RegI32 srcDest, Label* done) {
-        if (isCompilingAsmJS()) {
-            // Truncated division by zero is zero (Infinity|0 == 0)
-            Label notDivByZero;
-            masm.branchTest32(Assembler::NonZero, rhs, rhs, &notDivByZero);
-            masm.move32(Imm32(0), srcDest);
-            masm.jump(done);
-            masm.bind(&notDivByZero);
-        } else {
-            masm.branchTest32(Assembler::Zero, rhs, rhs, trap(Trap::IntegerDivideByZero));
-        }
+        masm.branchTest32(Assembler::Zero, rhs, rhs, trap(Trap::IntegerDivideByZero));
     }
 
     void checkDivideByZeroI64(RegI64 r) {
-        MOZ_ASSERT(!isCompilingAsmJS());
         ScratchI32 scratch(*this);
         masm.branchTest64(Assembler::Zero, r, r, scratch, trap(Trap::IntegerDivideByZero));
     }
@@ -2708,9 +2675,6 @@ class BaseCompiler
             masm.branch32(Assembler::NotEqual, rhs, Imm32(-1), &notMin);
             masm.move32(Imm32(0), srcDest);
             masm.jump(done);
-        } else if (isCompilingAsmJS()) {
-            // (-INT32_MIN)|0 == INT32_MIN and INT32_MIN is already in srcDest.
-            masm.branch32(Assembler::Equal, rhs, Imm32(-1), done);
         } else {
             masm.branch32(Assembler::Equal, rhs, Imm32(-1), trap(Trap::IntegerOverflow));
         }
@@ -2718,7 +2682,6 @@ class BaseCompiler
     }
 
     void checkDivideSignedOverflowI64(RegI64 rhs, RegI64 srcDest, Label* done, bool zeroOnOverflow) {
-        MOZ_ASSERT(!isCompilingAsmJS());
         Label notmin;
         masm.branch64(Assembler::NotEqual, srcDest, Imm64(INT64_MIN), &notmin);
         masm.branch64(Assembler::NotEqual, rhs, Imm64(-1), &notmin);
@@ -2930,74 +2893,56 @@ class BaseCompiler
     {
         AnyReg src;
         RegI32 dest;
-        bool isAsmJS;
         bool isUnsigned;
         TrapOffset off;
 
       public:
-        OutOfLineTruncateF32OrF64ToI32(AnyReg src, RegI32 dest, bool isAsmJS, bool isUnsigned,
-                                       TrapOffset off)
+        OutOfLineTruncateF32OrF64ToI32(AnyReg src, RegI32 dest, bool isUnsigned, TrapOffset off)
           : src(src),
             dest(dest),
-            isAsmJS(isAsmJS),
             isUnsigned(isUnsigned),
             off(off)
-        {
-            MOZ_ASSERT_IF(isAsmJS, !isUnsigned);
-        }
+        {}
 
         virtual void generate(MacroAssembler& masm) {
             bool isFloat = src.tag == AnyReg::F32;
             FloatRegister fsrc = isFloat ? static_cast<FloatRegister>(src.f32())
                                          : static_cast<FloatRegister>(src.f64());
-            if (isAsmJS) {
-                saveVolatileReturnGPR(masm);
-                masm.outOfLineTruncateSlow(fsrc, dest, isFloat, /* isAsmJS */ true);
-                restoreVolatileReturnGPR(masm);
-                masm.jump(rejoin());
-            } else {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-                if (isFloat)
-                    masm.outOfLineWasmTruncateFloat32ToInt32(fsrc, isUnsigned, off, rejoin());
-                else
-                    masm.outOfLineWasmTruncateDoubleToInt32(fsrc, isUnsigned, off, rejoin());
+            if (isFloat)
+                masm.outOfLineWasmTruncateFloat32ToInt32(fsrc, isUnsigned, off, rejoin());
+            else
+                masm.outOfLineWasmTruncateDoubleToInt32(fsrc, isUnsigned, off, rejoin());
 #elif defined(JS_CODEGEN_ARM)
-                masm.outOfLineWasmTruncateToIntCheck(fsrc,
-                                                     isFloat ? MIRType::Float32 : MIRType::Double,
-                                                     MIRType::Int32, isUnsigned, rejoin(), off);
+            masm.outOfLineWasmTruncateToIntCheck(fsrc,
+                                                 isFloat ? MIRType::Float32 : MIRType::Double,
+                                                 MIRType::Int32, isUnsigned, rejoin(), off);
 #else
-                (void)isUnsigned; // Suppress warnings
-                (void)off;        //  for unused private
-                MOZ_CRASH("BaseCompiler platform hook: OutOfLineTruncateF32OrF64ToI32 wasm");
+            (void)isUnsigned;
+            (void)off;
+            (void)isFloat;
+            (void)fsrc;
+            MOZ_CRASH("BaseCompiler platform hook: OutOfLineTruncateF32OrF64ToI32 wasm");
 #endif
-            }
         }
     };
 
     MOZ_MUST_USE bool truncateF32ToI32(RegF32 src, RegI32 dest, bool isUnsigned) {
         TrapOffset off = trapOffset();
         OutOfLineCode* ool;
-        if (isCompilingAsmJS()) {
-            ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, true, false, off);
-            ool = addOutOfLineCode(ool);
-            if (!ool)
-                return false;
-            masm.branchTruncateFloat32ToInt32(src, dest, ool->entry());
-        } else {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
-            ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, false, isUnsigned,
-                                                             off);
-            ool = addOutOfLineCode(ool);
-            if (!ool)
-                return false;
-            if (isUnsigned)
-                masm.wasmTruncateFloat32ToUInt32(src, dest, ool->entry());
-            else
-                masm.wasmTruncateFloat32ToInt32(src, dest, ool->entry());
+        ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, isUnsigned, off);
+        ool = addOutOfLineCode(ool);
+        if (!ool)
+            return false;
+        if (isUnsigned)
+            masm.wasmTruncateFloat32ToUInt32(src, dest, ool->entry());
+        else
+            masm.wasmTruncateFloat32ToInt32(src, dest, ool->entry());
 #else
-            MOZ_CRASH("BaseCompiler platform hook: truncateF32ToI32 wasm");
+        (void)off;
+        MOZ_CRASH("BaseCompiler platform hook: truncateF32ToI32 wasm");
 #endif
-        }
         masm.bind(ool->rejoin());
         return true;
     }
@@ -3005,27 +2950,19 @@ class BaseCompiler
     MOZ_MUST_USE bool truncateF64ToI32(RegF64 src, RegI32 dest, bool isUnsigned) {
         TrapOffset off = trapOffset();
         OutOfLineCode* ool;
-        if (isCompilingAsmJS()) {
-            ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, true, false, off);
-            ool = addOutOfLineCode(ool);
-            if (!ool)
-                return false;
-            masm.branchTruncateDoubleToInt32(src, dest, ool->entry());
-        } else {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
-            ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, false, isUnsigned,
-                                                             off);
-            ool = addOutOfLineCode(ool);
-            if (!ool)
-                return false;
-            if (isUnsigned)
-                masm.wasmTruncateDoubleToUInt32(src, dest, ool->entry());
-            else
-                masm.wasmTruncateDoubleToInt32(src, dest, ool->entry());
+        ool = new(alloc_) OutOfLineTruncateF32OrF64ToI32(AnyReg(src), dest, isUnsigned, off);
+        ool = addOutOfLineCode(ool);
+        if (!ool)
+            return false;
+        if (isUnsigned)
+            masm.wasmTruncateDoubleToUInt32(src, dest, ool->entry());
+        else
+            masm.wasmTruncateDoubleToInt32(src, dest, ool->entry());
 #else
-            MOZ_CRASH("BaseCompiler platform hook: truncateF64ToI32 wasm");
+        (void)off;
+        MOZ_CRASH("BaseCompiler platform hook: truncateF64ToI32 wasm");
 #endif
-        }
         masm.bind(ool->rejoin());
         return true;
     }
@@ -3339,55 +3276,6 @@ class BaseCompiler
     //
     // Heap access.
 
-#ifndef WASM_HUGE_MEMORY
-    class AsmJSLoadOOB : public OutOfLineCode
-    {
-        Scalar::Type viewType;
-        AnyRegister dest;
-
-      public:
-        AsmJSLoadOOB(Scalar::Type viewType, AnyRegister dest)
-          : viewType(viewType),
-            dest(dest)
-        {}
-
-        void generate(MacroAssembler& masm) {
-# if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
-            switch (viewType) {
-              case Scalar::Float32x4:
-              case Scalar::Int32x4:
-              case Scalar::Int8x16:
-              case Scalar::Int16x8:
-              case Scalar::MaxTypedArrayViewType:
-                MOZ_CRASH("unexpected array type");
-              case Scalar::Float32:
-                masm.loadConstantFloat32(float(GenericNaN()), dest.fpu());
-                break;
-              case Scalar::Float64:
-                masm.loadConstantDouble(GenericNaN(), dest.fpu());
-                break;
-              case Scalar::Int8:
-              case Scalar::Uint8:
-              case Scalar::Int16:
-              case Scalar::Uint16:
-              case Scalar::Int32:
-              case Scalar::Uint32:
-              case Scalar::Uint8Clamped:
-                masm.movePtr(ImmWord(0), dest.gpr());
-                break;
-              case Scalar::Int64:
-                MOZ_CRASH("unexpected array type");
-            }
-            masm.jump(rejoin());
-# else
-            Unused << viewType;
-            Unused << dest;
-            MOZ_CRASH("Compiler bug: Unexpected platform.");
-# endif
-        }
-    };
-#endif
-
     void checkOffset(MemoryAccessDesc* access, RegI32 ptr) {
         if (access->offset() >= OffsetGuardLimit) {
             masm.branchAdd32(Assembler::CarrySet, Imm32(access->offset()), ptr,
@@ -3424,17 +3312,8 @@ class BaseCompiler
 
         OutOfLineCode* ool = nullptr;
 #ifndef WASM_HUGE_MEMORY
-        if (!omitBoundsCheck) {
-            if (access.isPlainAsmJS()) {
-                ool = new (alloc_) AsmJSLoadOOB(access.type(), dest.any());
-                if (!addOutOfLineCode(ool))
-                    return false;
-
-                masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, ool->entry());
-            } else {
-                masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, trap(Trap::OutOfBounds));
-            }
-        }
+        if (!omitBoundsCheck)
+            masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, trap(Trap::OutOfBounds));
 #endif
 
 #if defined(JS_CODEGEN_X64)
@@ -3510,12 +3389,8 @@ class BaseCompiler
 
         Label rejoin;
 #ifndef WASM_HUGE_MEMORY
-        if (!omitBoundsCheck) {
-            if (access.isPlainAsmJS())
-                masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, &rejoin);
-            else
-                masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, trap(Trap::OutOfBounds));
-        }
+        if (!omitBoundsCheck)
+            masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, trap(Trap::OutOfBounds));
 #endif
 
         // Emit the store
@@ -3675,16 +3550,8 @@ class BaseCompiler
         return iter_.done();
     }
 
-    bool isCompilingAsmJS() const {
-        return env_.kind == ModuleKind::AsmJS;
-    }
-
     TrapOffset trapOffset() const {
         return iter_.trapOffset();
-    }
-
-    Maybe<TrapOffset> trapIfNotAsmJS() const {
-        return isCompilingAsmJS() ? Nothing() : Some(trapOffset());
     }
 
     TrapDesc trap(Trap t) const {
@@ -4438,16 +4305,14 @@ BaseCompiler::emitMinF32()
 {
     RegF32 r0, r1;
     pop2xF32(&r0, &r1);
-    if (!isCompilingAsmJS()) {
-        // Convert signaling NaN to quiet NaNs.
-        //
-        // TODO / OPTIMIZE (bug 1316824): Don't do this if one of the operands
-        // is known to be a constant.
-        ScratchF32 zero(*this);
-        masm.loadConstantFloat32(0.f, zero);
-        masm.subFloat32(zero, r0);
-        masm.subFloat32(zero, r1);
-    }
+    // Convert signaling NaN to quiet NaNs.
+    //
+    // TODO / OPTIMIZE (bug 1316824): Don't do this if one of the operands
+    // is known to be a constant.
+    ScratchF32 zero(*this);
+    masm.loadConstantFloat32(0.f, zero);
+    masm.subFloat32(zero, r0);
+    masm.subFloat32(zero, r1);
     masm.minFloat32(r1, r0, HandleNaNSpecially(true));
     freeF32(r1);
     pushF32(r0);
@@ -4458,15 +4323,13 @@ BaseCompiler::emitMaxF32()
 {
     RegF32 r0, r1;
     pop2xF32(&r0, &r1);
-    if (!isCompilingAsmJS()) {
-        // Convert signaling NaN to quiet NaNs.
-        //
-        // TODO / OPTIMIZE (bug 1316824): see comment in emitMinF32.
-        ScratchF32 zero(*this);
-        masm.loadConstantFloat32(0.f, zero);
-        masm.subFloat32(zero, r0);
-        masm.subFloat32(zero, r1);
-    }
+    // Convert signaling NaN to quiet NaNs.
+    //
+    // TODO / OPTIMIZE (bug 1316824): see comment in emitMinF32.
+    ScratchF32 zero(*this);
+    masm.loadConstantFloat32(0.f, zero);
+    masm.subFloat32(zero, r0);
+    masm.subFloat32(zero, r1);
     masm.maxFloat32(r1, r0, HandleNaNSpecially(true));
     freeF32(r1);
     pushF32(r0);
@@ -4477,15 +4340,13 @@ BaseCompiler::emitMinF64()
 {
     RegF64 r0, r1;
     pop2xF64(&r0, &r1);
-    if (!isCompilingAsmJS()) {
-        // Convert signaling NaN to quiet NaNs.
-        //
-        // TODO / OPTIMIZE (bug 1316824): see comment in emitMinF32.
-        ScratchF64 zero(*this);
-        masm.loadConstantDouble(0, zero);
-        masm.subDouble(zero, r0);
-        masm.subDouble(zero, r1);
-    }
+    // Convert signaling NaN to quiet NaNs.
+    //
+    // TODO / OPTIMIZE (bug 1316824): see comment in emitMinF32.
+    ScratchF64 zero(*this);
+    masm.loadConstantDouble(0, zero);
+    masm.subDouble(zero, r0);
+    masm.subDouble(zero, r1);
     masm.minDouble(r1, r0, HandleNaNSpecially(true));
     freeF64(r1);
     pushF64(r0);
@@ -4496,15 +4357,13 @@ BaseCompiler::emitMaxF64()
 {
     RegF64 r0, r1;
     pop2xF64(&r0, &r1);
-    if (!isCompilingAsmJS()) {
-        // Convert signaling NaN to quiet NaNs.
-        //
-        // TODO / OPTIMIZE (bug 1316824): see comment in emitMinF32.
-        ScratchF64 zero(*this);
-        masm.loadConstantDouble(0, zero);
-        masm.subDouble(zero, r0);
-        masm.subDouble(zero, r1);
-    }
+    // Convert signaling NaN to quiet NaNs.
+    //
+    // TODO / OPTIMIZE (bug 1316824): see comment in emitMinF32.
+    ScratchF64 zero(*this);
+    masm.loadConstantDouble(0, zero);
+    masm.subDouble(zero, r0);
+    masm.subDouble(zero, r1);
     masm.maxDouble(r1, r0, HandleNaNSpecially(true));
     freeF64(r1);
     pushF64(r0);
@@ -6459,9 +6318,6 @@ BaseCompiler::popMemoryAccess(MemoryAccessDesc* access, bool* omitBoundsCheck)
     // Caller must initialize.
     MOZ_ASSERT(!*omitBoundsCheck);
 
-    if (isCompilingAsmJS())
-        return popI32();
-
     int32_t addrTmp;
     if (popConstI32(addrTmp)) {
         uint32_t addr = addrTmp;
@@ -6502,7 +6358,7 @@ BaseCompiler::emitLoad(ValType type, Scalar::Type viewType)
         return true;
 
     bool omitBoundsCheck = false;
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, trapIfNotAsmJS());
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(trapOffset()));
 
     size_t temps = loadTemps(access);
     RegI32 tmp1 = temps >= 1 ? needI32() : invalidI32();
@@ -6583,7 +6439,7 @@ BaseCompiler::emitStoreOrTeeStore(ValType resultType, Scalar::Type viewType,
         return true;
 
     bool omitBoundsCheck = false;
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, trapIfNotAsmJS());
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(trapOffset()));
 
     size_t temps = storeTemps(access);
     RegI32 tmp1 = temps >= 1 ? needI32() : invalidI32();
@@ -6824,7 +6680,7 @@ BaseCompiler::emitTeeStoreWithCoercion(ValType resultType, Scalar::Type viewType
     // accesses below the minimum heap length.
 
     bool omitBoundsCheck = false;
-    MemoryAccessDesc access(viewType, addr.align, addr.offset, trapIfNotAsmJS());
+    MemoryAccessDesc access(viewType, addr.align, addr.offset, Some(trapOffset()));
 
     size_t temps = storeTemps(access);
     RegI32 tmp1 = temps >= 1 ? needI32() : invalidI32();
@@ -6982,6 +6838,16 @@ BaseCompiler::emitBody()
 
         uint16_t op;
         CHECK(iter_.readOp(&op));
+
+        // When debugEnabled_, every operator has breakpoint site but Op::End.
+        if (debugEnabled_ && op != (uint16_t)Op::End) {
+            // TODO sync only registers that can be clobbered by the exit
+            // prologue/epilogue or disable these registers for use in
+            // baseline compiler when debugEnabled_ is set.
+            sync();
+
+            insertBreakablePoint(CallSiteDesc::Breakpoint);
+        }
 
         switch (op) {
           // Control opcodes
@@ -7801,23 +7667,13 @@ BaseCompiler::finish()
     return offsets_;
 }
 
-static LiveRegisterSet
-volatileReturnGPR()
-{
-    GeneralRegisterSet rtn;
-    rtn.addAllocatable(ReturnReg);
-    return LiveRegisterSet(RegisterSet::VolatileNot(RegisterSet(rtn, FloatRegisterSet())));
-}
-
-LiveRegisterSet BaseCompiler::VolatileReturnGPR = volatileReturnGPR();
-
 } // wasm
 } // js
 
 bool
 js::wasm::BaselineCanCompile()
 {
-    // On all platforms we require signals for AsmJS/Wasm.
+    // On all platforms we require signals for Wasm.
     // If we made it this far we must have signals.
     MOZ_RELEASE_ASSERT(wasm::HaveSignalHandlers());
 
@@ -7843,6 +7699,7 @@ bool
 js::wasm::BaselineCompileFunction(CompileTask* task, FuncCompileUnit* unit, UniqueChars *error)
 {
     MOZ_ASSERT(task->mode() == CompileMode::Baseline);
+    MOZ_ASSERT(task->env().kind == ModuleKind::Wasm);
 
     const FuncBytes& func = unit->func();
     uint32_t bodySize = func.bytes().length();

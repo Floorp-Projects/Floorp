@@ -2002,6 +2002,13 @@ or run without that action (ie: --no-{action})"
         if build_metrics:
             perfherder_data['suites'].append(build_metrics)
 
+        if self.query_is_nightly:
+            for suite in perfherder_data['suites']:
+                if 'extraOptions' in suite:
+                    suite['extraOptions'] = ['nightly'] + suite['extraOptions']
+                else:
+                    suite['extraOptions'] = ['nightly']
+
         if perfherder_data["suites"]:
             self.info('PERFHERDER_DATA: %s' % json.dumps(perfherder_data))
 

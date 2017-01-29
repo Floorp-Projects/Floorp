@@ -204,7 +204,7 @@ if (typeof(computedStyle) == 'undefined') {
         if (typeof(document.defaultView) == 'undefined' || document === null) {
             return undefined;
         }
-        var style = document.defaultView.getComputedStyle(elem, null);
+        var style = document.defaultView.getComputedStyle(elem);
         if (typeof(style) == 'undefined' || style === null) {
             return undefined;
         }

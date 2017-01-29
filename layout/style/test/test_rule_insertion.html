@@ -78,7 +78,7 @@ var innerRuleInfo = [
   ["#test { text-decoration: underline; }",
    function(aApplied, aParent, aException) {
      return !aException &&
-            window.getComputedStyle(test, "").textDecoration ==
+            window.getComputedStyle(test).textDecoration ==
                (aApplied ? "underline" : "none");
    }],
   ["@page { margin: 4cm; }",
@@ -89,7 +89,7 @@ var innerRuleInfo = [
   ["@keyframes test { from { font-size: 100px; } to { font-size: 100px; } }",
    function(aApplied, aParent, aException) {
      return !aException &&
-            window.getComputedStyle(test, "").fontSize ==
+            window.getComputedStyle(test).fontSize ==
                 (aApplied ? "100px" : "16px")
    }],
   ["@font-face { font-family: UnlikelyFontName; src: " +

@@ -41,13 +41,17 @@ private:
   /// The information necessary to create a frame.
   struct FrameInfo
   {
-    gfx::SurfaceFormat mFormat;
     gfx::IntRect mFrameRect;
     bool mIsInterlaced;
   };
 
   nsresult CreateFrame(const FrameInfo& aFrameInfo);
   void EndImageFrame();
+
+  bool HasAlphaChannel() const
+  {
+    return mChannels == 2 || mChannels == 4;
+  }
 
   enum class TransparencyType
   {
@@ -56,8 +60,7 @@ private:
     eFrameRect
   };
 
-  TransparencyType GetTransparencyType(gfx::SurfaceFormat aFormat,
-                                       const gfx::IntRect& aFrameRect);
+  TransparencyType GetTransparencyType(const gfx::IntRect& aFrameRect);
   void PostHasTransparencyIfNeeded(TransparencyType aTransparencyType);
 
   void PostInvalidationIfNeeded();
@@ -102,8 +105,7 @@ public:
   uint8_t* interlacebuf;
   qcms_profile* mInProfile;
   qcms_transform* mTransform;
-
-  gfx::SurfaceFormat format;
+  gfx::SurfaceFormat mFormat;
 
   // whether CMS or premultiplied alpha are forced off
   uint32_t mCMSMode;

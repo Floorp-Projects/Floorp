@@ -43,21 +43,6 @@ ReceiverGuard::ReceiverGuard(ObjectGroup* group, Shape* shape)
     }
 }
 
-/* static */ int32_t
-HeapReceiverGuard::keyBits(JSObject* obj)
-{
-    if (obj->is<UnboxedPlainObject>()) {
-        // Both the group and shape need to be guarded for unboxed plain objects.
-        return obj->as<UnboxedPlainObject>().maybeExpando() ? 0 : 1;
-    }
-    if (obj->is<UnboxedArrayObject>() || obj->is<TypedObject>()) {
-        // Only the group needs to be guarded for unboxed arrays and typed objects.
-        return 2;
-    }
-    // Other objects only need the shape to be guarded.
-    return 3;
-}
-
 void
 HeapReceiverGuard::trace(JSTracer* trc)
 {

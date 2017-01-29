@@ -1701,7 +1701,7 @@ CustomizeMode.prototype = {
         } else {
           // Check if the aDraggedItem is hovered past the first half of dragOverItem
           let window = dragOverItem.ownerGlobal;
-          let direction = window.getComputedStyle(dragOverItem, null).direction;
+          let direction = window.getComputedStyle(dragOverItem).direction;
           let itemRect = dragOverItem.getBoundingClientRect();
           let dropTargetCenter = itemRect.left + (itemRect.width / 2);
           let existingDir = dragOverItem.getAttribute("dragover");

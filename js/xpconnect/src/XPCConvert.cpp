@@ -11,9 +11,11 @@
 
 #include "xpcprivate.h"
 #include "nsIAtom.h"
+#include "nsIScriptError.h"
 #include "nsWrapperCache.h"
 #include "nsJSUtils.h"
 #include "nsQueryObject.h"
+#include "nsScriptError.h"
 #include "WrapperFactory.h"
 
 #include "nsWrapperCacheInlines.h"

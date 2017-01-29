@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.home.HomePager;
+import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
 import java.util.LinkedList;
 
@@ -96,9 +97,11 @@ public class TopSitesPagerAdapter extends PagerAdapter {
                 final TopSitesPage page = (TopSitesPage) inflater.inflate(R.layout.activity_stream_topsites_page, null, false);
 
                 page.setTiles(tiles);
-                final TopSitesPageAdapter adapter = new TopSitesPageAdapter(context, tiles, tilesWidth, tilesHeight,
+                final TopSitesPageAdapter adapter = new TopSitesPageAdapter(
+                        context, i, tiles, tilesWidth, tilesHeight,
                         onUrlOpenListener, onUrlOpenInBackgroundListener);
                 page.setAdapter(adapter);
+                RecyclerViewClickSupport.addTo(page).setOnItemClickListener(adapter);
                 pages.add(page);
             }
         } else if (pageDelta < 0) {

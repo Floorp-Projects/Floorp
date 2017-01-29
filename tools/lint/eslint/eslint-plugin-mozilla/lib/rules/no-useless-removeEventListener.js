@@ -44,8 +44,10 @@ module.exports = function(context) {
       if (call.callee.type == "MemberExpression" &&
           call.callee.property.type == "Identifier" &&
           call.callee.property.name == "removeEventListener" &&
-          call.arguments[0].type == "Literal" &&
-          call.arguments[0].value == node.arguments[0].value) {
+          ((call.arguments[0].type == "Literal" &&
+            call.arguments[0].value == node.arguments[0].value) ||
+           (call.arguments[0].type == "Identifier" &&
+            call.arguments[0].name == node.arguments[0].name))) {
         context.report(call,
                        "use {once: true} instead of removeEventListener as " +
                        "the first instruction of the listener");

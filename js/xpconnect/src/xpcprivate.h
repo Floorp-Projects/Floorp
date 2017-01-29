@@ -127,7 +127,6 @@
 #include "MainThreadUtils.h"
 
 #include "nsIConsoleService.h"
-#include "nsIScriptError.h"
 #include "nsIException.h"
 
 #include "nsVariant.h"
@@ -2407,77 +2406,6 @@ xpc_DumpJSStack(bool showArgs, bool showLocals, bool showThisProps);
 extern char*
 xpc_PrintJSStack(JSContext* cx, bool showArgs, bool showLocals,
                  bool showThisProps);
-
-/***************************************************************************/
-
-// Definition of nsScriptError, defined here because we lack a place to put
-// XPCOM objects associated with the JavaScript engine.
-class nsScriptErrorBase : public nsIScriptError {
-public:
-    nsScriptErrorBase();
-
-  // TODO - do something reasonable on getting null from these babies.
-
-    NS_DECL_NSICONSOLEMESSAGE
-    NS_DECL_NSISCRIPTERROR
-
-protected:
-    virtual ~nsScriptErrorBase();
-
-    void
-    InitializeOnMainThread();
-
-    nsString mMessage;
-    nsString mMessageName;
-    nsString mSourceName;
-    uint32_t mLineNumber;
-    nsString mSourceLine;
-    uint32_t mColumnNumber;
-    uint32_t mFlags;
-    nsCString mCategory;
-    // mOuterWindowID is set on the main thread from InitializeOnMainThread().
-    uint64_t mOuterWindowID;
-    uint64_t mInnerWindowID;
-    int64_t mTimeStamp;
-    // mInitializedOnMainThread and mIsFromPrivateWindow are set on the main
-    // thread from InitializeOnMainThread().
-    mozilla::Atomic<bool> mInitializedOnMainThread;
-    bool mIsFromPrivateWindow;
-};
-
-class nsScriptError final : public nsScriptErrorBase {
-public:
-    nsScriptError() {}
-    NS_DECL_THREADSAFE_ISUPPORTS
-
-private:
-    virtual ~nsScriptError() {}
-};
-
-class nsScriptErrorWithStack : public nsScriptErrorBase {
-public:
-    explicit nsScriptErrorWithStack(JS::HandleObject);
-
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsScriptErrorWithStack)
-
-    NS_IMETHOD Init(const nsAString& message,
-                    const nsAString& sourceName,
-                    const nsAString& sourceLine,
-                    uint32_t lineNumber,
-                    uint32_t columnNumber,
-                    uint32_t flags,
-                    const char* category) override;
-
-    NS_IMETHOD GetStack(JS::MutableHandleValue) override;
-    NS_IMETHOD ToString(nsACString& aResult) override;
-
-private:
-    virtual ~nsScriptErrorWithStack();
-    // Complete stackframe where the error happened.
-    // Must be SavedFrame object.
-    JS::Heap<JSObject*>  mStack;
-};
 
 /******************************************************************************
  * Handles pre/post script processing.

@@ -62,10 +62,22 @@ static const uint8_t kSctValue[] = {0x01, 0x23, 0x45, 0x67, 0x89};
 static const SECItem kSctItem = {siBuffer, const_cast<uint8_t*>(kSctValue),
                                  sizeof(kSctValue)};
 static const DataBuffer kSctBuffer(kSctValue, sizeof(kSctValue));
+static const SSLExtraServerCertData kExtraSctData = {ssl_auth_null, nullptr,
+                                                     nullptr, &kSctItem};
 
 // Test timestamps extraction during a successful handshake.
-TEST_P(TlsConnectGeneric, SignedCertificateTimestampsHandshake) {
+TEST_P(TlsConnectGenericPre13, SignedCertificateTimestampsLegacy) {
   EnsureTlsSetup();
+
+  // We have to use the legacy API consistently here for configuring certs.
+  // Also, this doesn't work in TLS 1.3 because this only configures the SCT for
+  // RSA decrypt and PKCS#1 signing, not PSS.
+  ScopedCERTCertificate cert;
+  ScopedSECKEYPrivateKey priv;
+  ASSERT_TRUE(TlsAgent::LoadCertificate(TlsAgent::kServerRsa, &cert, &priv));
+  EXPECT_EQ(SECSuccess, SSL_ConfigSecureServerWithCertChain(
+                            server_->ssl_fd(), cert.get(), nullptr, priv.get(),
+                            ssl_kea_rsa));
   EXPECT_EQ(SECSuccess, SSL_SetSignedCertTimestamps(server_->ssl_fd(),
                                                     &kSctItem, ssl_kea_rsa));
   EXPECT_EQ(SECSuccess,
@@ -78,13 +90,10 @@ TEST_P(TlsConnectGeneric, SignedCertificateTimestampsHandshake) {
   timestamps_extractor.assertTimestamps(kSctBuffer);
 }
 
-TEST_P(TlsConnectGeneric, SignedCertificateTimestampsConfig) {
-  static const SSLExtraServerCertData kExtraData = {ssl_auth_rsa_sign, nullptr,
-                                                    nullptr, &kSctItem};
-
+TEST_P(TlsConnectGeneric, SignedCertificateTimestampsSuccess) {
   EnsureTlsSetup();
   EXPECT_TRUE(
-      server_->ConfigServerCert(TlsAgent::kServerRsa, true, &kExtraData));
+      server_->ConfigServerCert(TlsAgent::kServerRsa, true, &kExtraSctData));
   EXPECT_EQ(SECSuccess,
             SSL_OptionSet(client_->ssl_fd(), SSL_ENABLE_SIGNED_CERT_TIMESTAMPS,
                           PR_TRUE));
@@ -99,8 +108,8 @@ TEST_P(TlsConnectGeneric, SignedCertificateTimestampsConfig) {
 // when the client / the server / both have not enabled the feature.
 TEST_P(TlsConnectGeneric, SignedCertificateTimestampsInactiveClient) {
   EnsureTlsSetup();
-  EXPECT_EQ(SECSuccess, SSL_SetSignedCertTimestamps(server_->ssl_fd(),
-                                                    &kSctItem, ssl_kea_rsa));
+  EXPECT_TRUE(
+      server_->ConfigServerCert(TlsAgent::kServerRsa, true, &kExtraSctData));
   SignedCertificateTimestampsExtractor timestamps_extractor(client_);
 
   Connect();
@@ -141,8 +150,8 @@ static const SECItem kOcspItems[] = {
     {siBuffer, const_cast<uint8_t*>(kOcspValue2), sizeof(kOcspValue2)}};
 static const SECItemArray kOcspResponses = {const_cast<SECItem*>(kOcspItems),
                                             PR_ARRAY_SIZE(kOcspItems)};
-const static SSLExtraServerCertData kOcspExtraData = {
-    ssl_auth_rsa_sign, nullptr, &kOcspResponses, nullptr};
+const static SSLExtraServerCertData kOcspExtraData = {ssl_auth_null, nullptr,
+                                                      &kOcspResponses, nullptr};
 
 TEST_P(TlsConnectGeneric, NoOcsp) {
   EnsureTlsSetup();

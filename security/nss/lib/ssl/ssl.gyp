@@ -76,7 +76,6 @@
       ],
       'dependencies': [
         '<(DEPTH)/exports.gyp:nss_exports',
-        '<(DEPTH)/lib/freebl/freebl.gyp:freebl',
       ],
     },
     {
@@ -86,6 +85,7 @@
         'ssl',
         '<(DEPTH)/lib/nss/nss.gyp:nss3',
         '<(DEPTH)/lib/util/util.gyp:nssutil3',
+        '<(DEPTH)/lib/freebl/freebl.gyp:freebl',
       ],
       'variables': {
         'mapfile': 'ssl.def'

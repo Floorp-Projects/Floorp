@@ -62,10 +62,9 @@ function range(start, end) {
 
 function once(target, name, cb) {
   var p = new Promise(function(resolve, reject) {
-    target.addEventListener(name, function onceEvent() {
-      target.removeEventListener(name, onceEvent);
+    target.addEventListener(name, function() {
       resolve();
-    });
+    }, {once: true});
   });
   if (cb) {
     p.then(cb);

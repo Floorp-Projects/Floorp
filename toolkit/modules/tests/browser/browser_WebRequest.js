@@ -185,7 +185,7 @@ function* test_once() {
         is(win.failure, undefined, "Failure script didn't run");
 
         let style =
-          content.getComputedStyle(content.document.getElementById("test"), null);
+          content.getComputedStyle(content.document.getElementById("test"));
         is(style.getPropertyValue("color"), "rgb(255, 0, 0)", "Good CSS loaded");
       });
     });

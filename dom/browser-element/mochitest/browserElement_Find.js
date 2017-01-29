@@ -16,10 +16,9 @@ function runTest() {
 
   const once = (eventName) => {
     return new Promise((resolve) => {
-      iframe.addEventListener(eventName, function onEvent(...args) {
-        iframe.removeEventListener(eventName, onEvent);
+      iframe.addEventListener(eventName, function(...args) {
         resolve(...args);
-      });
+      }, {once: true});
     });
   }
 

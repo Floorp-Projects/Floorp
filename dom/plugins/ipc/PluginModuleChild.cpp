@@ -1617,9 +1617,7 @@ _getvalueforurl(NPP npp, NPNURLVariable variable, const char *url,
     if (!npp || !value || !len)
         return NPERR_INVALID_PARAM;
 
-    switch (variable) {
-    case NPNURLVCookie:
-    case NPNURLVProxy:
+    if (variable == NPNURLVProxy) {
         nsCString v;
         NPError result;
         InstCast(npp)->
@@ -1647,9 +1645,7 @@ _setvalueforurl(NPP npp, NPNURLVariable variable, const char *url,
     if (!url)
         return NPERR_INVALID_URL;
 
-    switch (variable) {
-    case NPNURLVCookie:
-    case NPNURLVProxy:
+    if (variable == NPNURLVProxy) {
         NPError result;
         InstCast(npp)->CallNPN_SetValueForURL(variable, nsCString(url),
                                               nsDependentCString(value, len),

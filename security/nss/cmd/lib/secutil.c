@@ -3833,45 +3833,97 @@ SECU_ParseSSLVersionRangeString(const char *input,
     return SECSuccess;
 }
 
-SECItem *
-SECU_HexString2SECItem(PLArenaPool *arena, SECItem *item, const char *str)
+SSLNamedGroup
+groupNameToNamedGroup(char *name)
 {
-    int i = 0;
-    int byteval = 0;
-    int tmp = PORT_Strlen(str);
-
-    PORT_Assert(arena);
-    PORT_Assert(item);
-
-    if ((tmp % 2) != 0) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        return NULL;
-    }
-
-    item = SECITEM_AllocItem(arena, item, tmp / 2);
-    if (item == NULL) {
-        return NULL;
-    }
-
-    while (str[i]) {
-        if ((str[i] >= '0') && (str[i] <= '9')) {
-            tmp = str[i] - '0';
-        } else if ((str[i] >= 'a') && (str[i] <= 'f')) {
-            tmp = str[i] - 'a' + 10;
-        } else if ((str[i] >= 'A') && (str[i] <= 'F')) {
-            tmp = str[i] - 'A' + 10;
-        } else {
-            /* item is in arena and gets freed by the caller */
-            return NULL;
+    if (PL_strlen(name) == 4) {
+        if (!strncmp(name, "P256", 4)) {
+            return ssl_grp_ec_secp256r1;
         }
-
-        byteval = byteval * 16 + tmp;
-        if ((i % 2) != 0) {
-            item->data[i / 2] = byteval;
-            byteval = 0;
+        if (!strncmp(name, "P384", 4)) {
+            return ssl_grp_ec_secp384r1;
         }
-        i++;
+        if (!strncmp(name, "P521", 4)) {
+            return ssl_grp_ec_secp521r1;
+        }
+    }
+    if (PL_strlen(name) == 6) {
+        if (!strncmp(name, "x25519", 6)) {
+            return ssl_grp_ec_curve25519;
+        }
+        if (!strncmp(name, "FF2048", 6)) {
+            return ssl_grp_ffdhe_2048;
+        }
+        if (!strncmp(name, "FF3072", 6)) {
+            return ssl_grp_ffdhe_3072;
+        }
+        if (!strncmp(name, "FF4096", 6)) {
+            return ssl_grp_ffdhe_4096;
+        }
+        if (!strncmp(name, "FF6144", 6)) {
+            return ssl_grp_ffdhe_6144;
+        }
+        if (!strncmp(name, "FF8192", 6)) {
+            return ssl_grp_ffdhe_8192;
+        }
     }
 
-    return item;
+    return ssl_grp_none;
+}
+
+SECStatus
+parseGroupList(const char *arg, SSLNamedGroup **enabledGroups,
+               unsigned int *enabledGroupsCount)
+{
+    SSLNamedGroup *groups;
+    char *str;
+    char *p;
+    unsigned int numValues = 0;
+    unsigned int count = 0;
+
+    /* Count the number of groups. */
+    str = PORT_Strdup(arg);
+    if (!str) {
+        return SECFailure;
+    }
+    p = strtok(str, ",");
+    while (p) {
+        ++numValues;
+        p = strtok(NULL, ",");
+    }
+    PORT_Free(str);
+    str = NULL;
+    groups = PORT_ZNewArray(SSLNamedGroup, numValues);
+    if (!groups) {
+        goto done;
+    }
+
+    /* Get group names. */
+    str = PORT_Strdup(arg);
+    if (!str) {
+        goto done;
+    }
+    p = strtok(str, ",");
+    while (p) {
+        SSLNamedGroup group = groupNameToNamedGroup(p);
+        if (group == ssl_grp_none) {
+            count = 0;
+            goto done;
+        }
+        groups[count++] = group;
+        p = strtok(NULL, ",");
+    }
+
+done:
+    if (str) {
+        PORT_Free(str);
+    }
+    if (!count) {
+        PORT_Free(groups);
+        return SECFailure;
+    }
+
+    *enabledGroupsCount = count;
+    *enabledGroups = groups;
+    return SECSuccess;
 }

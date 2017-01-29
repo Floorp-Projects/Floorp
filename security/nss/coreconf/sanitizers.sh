@@ -21,8 +21,8 @@ enable_sanitizer()
 
 enable_sancov()
 {
-    local clang_version=$($CC --version | grep -oE 'clang version (3\.9\.|4\.)')
-    if [ -z "$clang_version" ]; then
+    local clang_version=$($CC --version | grep -oE '([0-9]{1,}\.)+[0-9]{1,}')
+    if [[ ${clang_version:0:1} -lt 4 && ${clang_version:0:1} -eq 3 && ${clang_version:2:1} -lt 9 ]]; then
         echo "Need at least clang-3.9 (better 4.0) for sancov." 1>&2
         exit 1
     fi
@@ -30,7 +30,7 @@ enable_sancov()
     local sancov
     if [ -n "$1" ]; then
         sancov="$1"
-    elif [ "$clang_version" = "clang version 3.9." ]; then
+    elif [ "${clang_version:0:3}" = "3.9" ]; then
         sancov=edge,indirect-calls,8bit-counters
     else
         sancov=trace-pc-guard,trace-cmp

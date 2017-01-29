@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=412901
 /** Test for Bug 412901 **/
 
 var div = document.getElementById("testDiv");
-var computedStyle = document.defaultView.getComputedStyle(div, "");
+var computedStyle = document.defaultView.getComputedStyle(div);
 // we never round down to 0px, very small widths are rounded up to 1px
 is(computedStyle.borderLeftWidth, "1px");
 is(computedStyle.borderRightWidth, "0px");
@@ -31,7 +31,7 @@ is(computedStyle.borderTopWidth, "2px");
 is(computedStyle.borderBottomWidth, "5px");
 
 var div2 = document.getElementById("testDiv2");
-var computedStyle2 = document.defaultView.getComputedStyle(div2, "");
+var computedStyle2 = document.defaultView.getComputedStyle(div2);
 is(computedStyle2.borderLeftWidth, "0px");
 is(computedStyle2.borderRightWidth, "0px");
 is(computedStyle2.borderTopWidth, "0px");

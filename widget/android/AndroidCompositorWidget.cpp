@@ -59,5 +59,29 @@ AndroidCompositorWidget::SyncFrameMetrics(const ParentLayerPoint& aScrollOffset,
     aFixedLayerMargins.left = viewTransform->FixedLayerMarginLeft();
 }
 
+EGLNativeWindowType
+AndroidCompositorWidget::GetEGLNativeWindow()
+{
+  return (EGLNativeWindowType)mWidget->GetNativeData(NS_JAVA_SURFACE);
+}
+
+EGLNativeWindowType
+AndroidCompositorWidget::GetPresentationEGLSurface()
+{
+  return (EGLNativeWindowType)mWidget->GetNativeData(NS_PRESENTATION_SURFACE);
+}
+
+void
+AndroidCompositorWidget::SetPresentationEGLSurface(EGLSurface aVal)
+{
+  mWidget->SetNativeData(NS_PRESENTATION_SURFACE, (uintptr_t)aVal);
+}
+
+ANativeWindow*
+AndroidCompositorWidget::GetPresentationANativeWindow()
+{
+  return (ANativeWindow*)mWidget->GetNativeData(NS_PRESENTATION_WINDOW);
+}
+
 } // namespace widget
 } // namespace mozilla

@@ -1817,6 +1817,8 @@ class FrameIter
 
     inline bool wasmDebugEnabled() const;
     inline wasm::Instance* wasmInstance() const;
+    inline unsigned wasmBytecodeOffset() const;
+    void wasmUpdateBytecodeOffset();
 
     // -----------------------------------------------------------
     // The following functions can only be called when hasScript()
@@ -2075,6 +2077,14 @@ FrameIter::wasmInstance() const
     MOZ_ASSERT(!done());
     MOZ_ASSERT(data_.state_ == WASM && wasmDebugEnabled());
     return data_.wasmFrames_.instance();
+}
+
+inline unsigned
+FrameIter::wasmBytecodeOffset() const
+{
+    MOZ_ASSERT(!done());
+    MOZ_ASSERT(data_.state_ == WASM);
+    return data_.wasmFrames_.lineOrBytecode();
 }
 
 inline bool

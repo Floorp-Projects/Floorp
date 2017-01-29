@@ -651,13 +651,10 @@ struct ParamTraits<NPNURLVariable>
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     int intval;
-    if (ReadParam(aMsg, aIter, &intval)) {
-      switch (intval) {
-      case NPNURLVCookie:
-      case NPNURLVProxy:
-        *aResult = paramType(intval);
-        return true;
-      }
+    if (ReadParam(aMsg, aIter, &intval) &&
+        intval == NPNURLVProxy) {
+      *aResult = paramType(intval);
+      return true;
     }
     return false;
   }

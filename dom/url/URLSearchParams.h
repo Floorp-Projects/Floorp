@@ -70,7 +70,7 @@ public:
 
   void Get(const nsAString& aName, nsString& aRetval);
 
-  void GetAll(const nsAString& aName, nsTArray<nsString >& aRetval);
+  void GetAll(const nsAString& aName, nsTArray<nsString>& aRetval);
 
   void Set(const nsAString& aName, const nsAString& aValue);
 
@@ -102,6 +102,8 @@ public:
     MOZ_ASSERT(aIndex < mParams.Length());
     return mParams[aIndex].mValue;
   }
+
+  nsresult Sort();
 
   bool
   ReadStructuredClone(JSStructuredCloneReader* aReader);
@@ -170,6 +172,8 @@ public:
   uint32_t GetIterableLength() const;
   const nsAString& GetKeyAtIndex(uint32_t aIndex) const;
   const nsAString& GetValueAtIndex(uint32_t aIndex) const;
+
+  void Sort(ErrorResult& aRv);
 
   void Stringify(nsString& aRetval) const
   {

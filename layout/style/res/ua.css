@@ -255,6 +255,7 @@
   display: block !important;
   background: white;
   box-shadow: 5px 5px 8px #202020;
+  box-decoration-break: clone;
   margin: 0.125in 0.25in;
 }
 

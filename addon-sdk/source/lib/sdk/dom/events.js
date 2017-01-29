@@ -157,7 +157,7 @@ exports.emit = emit;
 // when given element is removed from it's parent node.
 const removed = element => {
   return new Promise(resolve => {
-    const { MutationObserver } = element.ownerDocument.defaultView;
+    const { MutationObserver } = element.ownerGlobal;
     const observer = new MutationObserver(mutations => {
       for (let mutation of mutations) {
         for (let node of mutation.removedNodes || []) {

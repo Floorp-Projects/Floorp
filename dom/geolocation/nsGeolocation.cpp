@@ -4,28 +4,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsXULAppAPI.h"
+#include "nsGeolocation.h"
 
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/PermissionMessageUtils.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
-
-#include "nsGeolocation.h"
-#include "nsDOMClassInfoID.h"
+#include "mozilla/Unused.h"
+#include "mozilla/WeakPtr.h"
 #include "nsComponentManagerUtils.h"
-#include "nsServiceManagerUtils.h"
-#include "nsContentUtils.h"
 #include "nsContentPermissionHelper.h"
+#include "nsContentUtils.h"
+#include "nsDOMClassInfoID.h"
+#include "nsGlobalWindow.h"
 #include "nsIDocument.h"
 #include "nsIObserverService.h"
+#include "nsIScriptError.h"
 #include "nsPIDOMWindow.h"
+#include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
-#include "mozilla/Services.h"
-#include "mozilla/Unused.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/ClearOnShutdown.h"
-#include "mozilla/WeakPtr.h"
-#include "mozilla/dom/PermissionMessageUtils.h"
+#include "nsXULAppAPI.h"
 
 class nsIPrincipal;
 
@@ -53,6 +54,10 @@ class nsIPrincipal;
 // Some limit to the number of get or watch geolocation requests
 // that a window can make.
 #define MAX_GEO_REQUESTS_PER_WINDOW  1500
+
+// This preference allows to override the "secure context" by
+// default policy.
+#define PREF_GEO_SECURITY_ALLOWINSECURE "geo.security.allowinsecure"
 
 using mozilla::Unused;          // <snicker>
 using namespace mozilla;
@@ -728,11 +733,11 @@ nsresult nsGeolocationService::Init()
   // "geo.provider.testing" is always set for all plain and browser chrome
   // mochitests, and also for xpcshell tests.
   if (!mProvider || Preferences::GetBool("geo.provider.testing", false)) {
-    nsCOMPtr<nsIGeolocationProvider> override =
+    nsCOMPtr<nsIGeolocationProvider> geo_net_provider =
       do_GetService(NS_GEOLOCATION_PROVIDER_CONTRACTID);
 
-    if (override) {
-      mProvider = override;
+    if (geo_net_provider) {
+      mProvider = geo_net_provider;
     }
   }
 
@@ -1174,6 +1179,36 @@ Geolocation::IsAlreadyCleared(nsGeolocationRequest* aRequest)
 }
 
 bool
+Geolocation::ShouldBlockInsecureRequests() const
+{
+  // TODO: Also remove all the *_SECURE_ORIGIN Telemetry probes before
+  // landing the patch for #1072859. Also default to false.
+  if (Preferences::GetBool(PREF_GEO_SECURITY_ALLOWINSECURE, true)) {
+    return false;
+  }
+
+  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryReferent(mOwner);
+  if (!win) {
+    return false;
+  }
+
+  nsCOMPtr<nsIDocument> doc = win->GetDoc();
+  if (!doc) {
+    return false;
+  }
+
+  if (!nsGlobalWindow::Cast(win)->IsSecureContext()) {
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_LITERAL_CSTRING("DOM"), doc,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "GeolocationInsecureRequestIsForbidden");
+    return true;
+  }
+
+  return false;
+}
+
+bool
 Geolocation::ClearPendingRequest(nsGeolocationRequest* aRequest)
 {
   if (aRequest->IsWatch() && this->IsAlreadyCleared(aRequest)) {
@@ -1225,7 +1260,7 @@ Geolocation::GetCurrentPosition(GeoPositionCallback callback,
                              Move(options), static_cast<uint8_t>(mProtocolType),
                              false);
 
-  if (!sGeoEnabled) {
+  if (!sGeoEnabled || ShouldBlockInsecureRequests()) {
     nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(false, request);
     NS_DispatchToMainThread(ev);
     return NS_OK;
@@ -1311,7 +1346,7 @@ Geolocation::WatchPosition(GeoPositionCallback aCallback,
                              Move(aOptions),
                              static_cast<uint8_t>(mProtocolType), true, *aRv);
 
-  if (!sGeoEnabled) {
+  if (!sGeoEnabled || ShouldBlockInsecureRequests()) {
     nsCOMPtr<nsIRunnable> ev = new RequestAllowEvent(false, request);
     NS_DispatchToMainThread(ev);
     return NS_OK;

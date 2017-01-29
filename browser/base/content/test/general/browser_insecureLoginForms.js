@@ -43,13 +43,13 @@ add_task(function* test_simple() {
     if (expectWarning) {
       is_element_visible(document.getElementById("connection-icon"));
       let connectionIconImage = gBrowser.ownerGlobal
-            .getComputedStyle(document.getElementById("connection-icon"), "")
+            .getComputedStyle(document.getElementById("connection-icon"))
             .getPropertyValue("list-style-image");
       let securityViewBG = gBrowser.ownerGlobal
-            .getComputedStyle(document.getElementById("identity-popup-securityView"), "")
+            .getComputedStyle(document.getElementById("identity-popup-securityView"))
             .getPropertyValue("background-image");
       let securityContentBG = gBrowser.ownerGlobal
-            .getComputedStyle(document.getElementById("identity-popup-security-content"), "")
+            .getComputedStyle(document.getElementById("identity-popup-security-content"))
             .getPropertyValue("background-image");
       is(connectionIconImage,
          "url(\"chrome://browser/skin/connection-mixed-active-loaded.svg#icon\")",

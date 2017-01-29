@@ -11,10 +11,10 @@
       var blueText = document.getElementById('blue-text-element');
       var blackText1 = document.getElementById('black-text');
       var blackText2 = document.getElementById('black-text-2');
-      var redTextColor = window.getComputedStyle(redText, null).getPropertyValue('color');
-      var blueTextColor = window.getComputedStyle(blueText, null).getPropertyValue('color');
-      var blackTextColor1 = window.getComputedStyle(blackText1, null).getPropertyValue('color');
-      var blackTextColor2 = window.getComputedStyle(blackText2, null).getPropertyValue('color');
+      var redTextColor = window.getComputedStyle(redText).getPropertyValue('color');
+      var blueTextColor = window.getComputedStyle(blueText).getPropertyValue('color');
+      var blackTextColor1 = window.getComputedStyle(blackText1).getPropertyValue('color');
+      var blackTextColor2 = window.getComputedStyle(blackText2).getPropertyValue('color');
       ok(redTextColor == 'rgb(255, 0, 0)', "The first part should be red.");
       ok(blueTextColor == 'rgb(0, 0, 255)', "The second part should be blue.");
       ok(blackTextColor1 == 'rgb(0, 0, 0)', "The second last part should still be black.");

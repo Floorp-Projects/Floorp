@@ -374,7 +374,7 @@ class OffscreenCanvas {
     return this._canvas.getContext(contextId, contextOptions);
   }
   transferToImageBitmap() {
-    let window = this._canvas.ownerDocument.defaultView;
+    let window = this._canvas.ownerGlobal;
     return window.createImageBitmap(this._canvas);
   }
 }

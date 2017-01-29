@@ -899,7 +899,8 @@ class CallSiteDesc
         Symbolic,  // call to a single symbolic callee
         TrapExit,   // call to a trap exit
         EnterFrame, // call to a enter frame handler
-        LeaveFrame  // call to a leave frame handler
+        LeaveFrame, // call to a leave frame handler
+        Breakpoint  // call to instruction breakpoint
     };
     CallSiteDesc() {}
     explicit CallSiteDesc(Kind kind)

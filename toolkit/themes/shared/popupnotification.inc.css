@@ -78,9 +78,6 @@
 .popup-notification-button[disabled] {
   background-color: var(--arrowpanel-dimmed-further);
   color: graytext;
-  /* the !important is to override the button[disabled] settings in
-   * windows/linux button.css */
-  -moz-border-top-colors: var(--panel-separator-color) !important;
 }
 
 .popup-notification-button[default] {

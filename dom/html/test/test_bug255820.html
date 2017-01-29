@@ -55,7 +55,7 @@ function f2Continue() {
 
 function f3Continue() {
   var doc = $("f3").contentDocument;
-  is(doc.defaultView.getComputedStyle(doc.body, "").color, "rgb(0, 180, 0)",
+  is(doc.defaultView.getComputedStyle(doc.body).color, "rgb(0, 180, 0)",
      "Wrong color before reload");
   $("f3").
     setAttribute("onload",

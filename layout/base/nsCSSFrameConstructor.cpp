@@ -3079,7 +3079,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
     // The drop-down list's frame is created explicitly. The combobox frame shares its content
     // with the drop-down list.
     nsFrameState flags = NS_BLOCK_FLOAT_MGR;
-    nsContainerFrame* comboboxFrame =
+    nsComboboxControlFrame* comboboxFrame =
       NS_NewComboboxControlFrame(mPresShell, styleContext, flags);
 
     // Save the history state so we don't restore during construction
@@ -3093,10 +3093,6 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
 
     aState.AddChild(comboboxFrame, aFrameItems, content, styleContext,
                     aParentFrame);
-
-    nsIComboboxControlFrame* comboBox = do_QueryFrame(comboboxFrame);
-    NS_ASSERTION(comboBox, "NS_NewComboboxControlFrame returned frame that "
-                 "doesn't implement nsIComboboxControlFrame");
 
     // Resolve pseudo element style for the dropdown list
     RefPtr<nsStyleContext> listStyle;
@@ -3112,7 +3108,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
       listControlFrame->SetComboboxFrame(comboboxFrame);
     }
     // Notify combobox that it should use the listbox as it's popup
-    comboBox->SetDropDown(listFrame);
+    comboboxFrame->SetDropDown(listFrame);
 
     NS_ASSERTION(!listFrame->IsAbsPosContainingBlock(),
                  "Ended up with positioned dropdown list somehow.");
@@ -3133,10 +3129,29 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsFrameConstructorState& aState,
     // Create display and button frames from the combobox's anonymous content.
     // The anonymous content is appended to existing anonymous content for this
     // element (the scrollbars).
-
     nsFrameItems childItems;
-    CreateAnonymousFrames(aState, content, comboboxFrame,
-                          aItem.mPendingBinding, childItems);
+
+    // nsComboboxControlFrame needs special frame creation behavior for its first
+    // piece of anonymous content, which means that we can't take the normal
+    // ProcessChildren path.
+    AutoTArray<nsIAnonymousContentCreator::ContentInfo, 2> newAnonymousItems;
+    DebugOnly<nsresult> rv = GetAnonymousContent(content, comboboxFrame, newAnonymousItems);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    MOZ_ASSERT(newAnonymousItems.Length() == 2);
+
+    // Manually create a frame for the special NAC.
+    MOZ_ASSERT(newAnonymousItems[0].mContent == comboboxFrame->GetDisplayNode());
+    newAnonymousItems.RemoveElementAt(0);
+    nsIFrame* customFrame = comboboxFrame->CreateFrameForDisplayNode();
+    MOZ_ASSERT(customFrame);
+    customFrame->AddStateBits(NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT);
+    childItems.AddChild(customFrame);
+
+    // The other piece of NAC can take the normal path.
+    FrameConstructionItemList fcItems;
+    AddFCItemsForAnonymousContent(aState, comboboxFrame, newAnonymousItems,
+                                  fcItems);
+    ConstructFramesFromItemList(aState, fcItems, comboboxFrame, childItems);
 
     comboboxFrame->SetInitialChildList(kPrincipalList, childItems);
 
@@ -4098,70 +4113,6 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   }
 }
 
-// after the node has been constructed and initialized create any
-// anonymous content a node needs.
-nsresult
-nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
-                                             nsIContent*              aParent,
-                                             nsContainerFrame*        aParentFrame,
-                                             PendingBinding*          aPendingBinding,
-                                             nsFrameItems&            aChildItems)
-{
-  AutoTArray<nsIAnonymousContentCreator::ContentInfo, 4> newAnonymousItems;
-  nsresult rv = GetAnonymousContent(aParent, aParentFrame, newAnonymousItems);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  uint32_t count = newAnonymousItems.Length();
-  if (count == 0) {
-    return NS_OK;
-  }
-
-  nsFrameConstructorState::PendingBindingAutoPusher pusher(aState,
-                                                           aPendingBinding);
-  TreeMatchContext::AutoAncestorPusher ancestorPusher(aState.mTreeMatchContext);
-  if (aState.mTreeMatchContext.mAncestorFilter.HasFilter()) {
-    ancestorPusher.PushAncestorAndStyleScope(aParent->AsElement());
-  } else {
-    ancestorPusher.PushStyleScope(aParent->AsElement());
-  }
-
-  nsComboboxControlFrame* comboboxFrame = do_QueryFrame(aParentFrame);
-  InsertionPoint insertion(aParentFrame, aParent);
-  for (uint32_t i=0; i < count; i++) {
-    nsIContent* content = newAnonymousItems[i].mContent;
-    NS_ASSERTION(content, "null anonymous content?");
-    NS_ASSERTION(!newAnonymousItems[i].mStyleContext, "Unexpected style context");
-    NS_ASSERTION(newAnonymousItems[i].mChildren.IsEmpty(),
-                 "This method is not currently used with frames that implement "
-                 "nsIAnonymousContentCreator::CreateAnonymousContent to "
-                 "output a list where the items have their own children");
-
-    if (comboboxFrame && comboboxFrame->GetDisplayNode() == content) {
-      // Combo box frames have a custom hook to create frames for the anonymous
-      // text node. This is the last vestigial trace of an old custom hook that
-      // allowed arbitrary custom frame creation by any nsIAnonymousContentCreator
-      // implementation. It's possible that this could all be refactored away.
-      nsIFrame* customFrame = comboboxFrame->CreateFrameForDisplayNode();
-      MOZ_ASSERT(customFrame);
-      customFrame->AddStateBits(NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT);
-      aChildItems.AddChild(customFrame);
-    } else {
-      FrameConstructionItemList items;
-      {
-        // Skip parent display based style-fixup during our
-        // AddFrameConstructionItems() call:
-        TreeMatchContext::AutoParentDisplayBasedStyleFixupSkipper
-          parentDisplayBasedStyleFixupSkipper(aState.mTreeMatchContext);
-
-        AddFrameConstructionItems(aState, content, true, insertion, items);
-      }
-      ConstructFramesFromItemList(aState, items, aParentFrame, aChildItems);
-    }
-  }
-
-  return NS_OK;
-}
-
 static void
 SetFlagsOnSubtree(nsIContent *aNode, uintptr_t aFlagsToSet)
 {
@@ -4578,11 +4529,25 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsFrameConstructorState& aState,
 
   // if there are any anonymous children for the scroll frame, create
   // frames for them.
-  // Pass a null pending binding: we don't care how constructors for any of
-  // this anonymous content order with anything else.  It's never been
-  // consistent anyway.
-  CreateAnonymousFrames(aState, aContent, gfxScrollFrame, nullptr,
-                        anonymousItems);
+  //
+  // We can't take the normal ProcessChildren path, because the NAC needs to
+  // be parented to the scrollframe, and everything else needs to be parented
+  // to the scrolledframe.
+  AutoTArray<nsIAnonymousContentCreator::ContentInfo, 4> scrollNAC;
+  DebugOnly<nsresult> rv = GetAnonymousContent(aContent, gfxScrollFrame, scrollNAC);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  if (scrollNAC.Length() > 0) {
+    TreeMatchContext::AutoAncestorPusher ancestorPusher(aState.mTreeMatchContext);
+    if (aState.mTreeMatchContext.mAncestorFilter.HasFilter()) {
+      ancestorPusher.PushAncestorAndStyleScope(aContent->AsElement());
+    } else {
+      ancestorPusher.PushStyleScope(aContent->AsElement());
+    }
+
+    FrameConstructionItemList items;
+    AddFCItemsForAnonymousContent(aState, gfxScrollFrame, scrollNAC, items);
+    ConstructFramesFromItemList(aState, items, gfxScrollFrame, anonymousItems);
+  }
 
   aNewFrame = gfxScrollFrame;
 

@@ -11,6 +11,9 @@
 #include "GLLibraryEGL.h"
 
 namespace mozilla {
+namespace widget {
+class CompositorWidget;
+} // namespace widget
 namespace gl {
 
 class GLContextEGL : public GLContext
@@ -45,10 +48,6 @@ public:
         return static_cast<GLContextEGL*>(gl);
     }
 
-    static EGLSurface CreateSurfaceForWindow(nsIWidget* aWidget);
-
-    static void DestroySurface(EGLSurface aSurface);
-
     bool Init() override;
 
     virtual bool IsDoubleBuffered() const override {
@@ -81,7 +80,7 @@ public:
 
     virtual bool IsCurrent() override;
 
-    virtual bool RenewSurface(nsIWidget* aWidget) override;
+    virtual bool RenewSurface(widget::CompositorWidget* aWidget) override;
 
     virtual void ReleaseSurface() override;
 
@@ -113,6 +112,7 @@ public:
 
 protected:
     friend class GLContextProviderEGL;
+    friend class GLContextEGLFactory;
 
 public:
     const EGLConfig  mConfig;

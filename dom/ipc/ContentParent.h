@@ -710,9 +710,7 @@ private:
                                   TabParent* aTopLevel, const TabId& aTabId,
                                   uint64_t* aId);
 
-  PBackgroundParent*
-  AllocPBackgroundParent(Transport* aTransport, ProcessId aOtherProcess)
-                         override;
+  virtual mozilla::ipc::IPCResult RecvInitBackground(Endpoint<mozilla::ipc::PBackgroundParent>&& aEndpoint) override;
 
   virtual mozilla::ipc::IPCResult RecvGetProcessAttributes(ContentParentId* aCpId,
                                                            bool* aIsForBrowser) override;

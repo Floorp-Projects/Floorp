@@ -35,7 +35,7 @@ capture.Format = {
  *     The canvas element where the element has been painted on.
  */
 capture.element = function (node, highlights = []) {
-  let win = node.ownerDocument.defaultView;
+  let win = node.ownerGlobal;
   let rect = node.getBoundingClientRect();
 
   return capture.canvas(

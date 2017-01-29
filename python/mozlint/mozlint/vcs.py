@@ -54,6 +54,19 @@ class VCSFiles(object):
             return self._run(['git', 'diff', '--name-only', rev])
         return []
 
+    def outgoing(self, destination='default'):
+        if self.is_hg:
+            return self._run(['hg', 'outgoing', '--quiet', '-r .',
+                              destination, '--template',
+                              '{files % "\n{file}"}'])
+        elif self.is_git:
+            if destination == 'default':
+                comparing = 'origin/master..HEAD'
+            else:
+                comparing = '{}..HEAD'.format(destination)
+            return self._run(['git', 'log', '--name-only', comparing])
+        return []
+
     def by_workdir(self):
         if self.is_hg:
             return self._run(['hg', 'status', '-amn'])

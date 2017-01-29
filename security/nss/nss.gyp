@@ -177,7 +177,6 @@
             'cmd/tstclnt/tstclnt.gyp:tstclnt',
             'cmd/vfychain/vfychain.gyp:vfychain',
             'cmd/vfyserv/vfyserv.gyp:vfyserv',
-            'gtests/google_test/google_test.gyp:gtest1',
             'gtests/der_gtest/der_gtest.gyp:der_gtest',
             'gtests/pk11_gtest/pk11_gtest.gyp:pk11_gtest',
             'gtests/ssl_gtest/ssl_gtest.gyp:ssl_gtest',

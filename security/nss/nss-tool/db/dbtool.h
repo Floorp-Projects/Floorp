@@ -15,6 +15,7 @@ class DBTool {
   void Usage();
 
  private:
+  bool PathHasDBFiles(std::string path);
   void ListCertificates();
 };
 
