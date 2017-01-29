@@ -34,6 +34,7 @@ namespace mozilla {
   class ServoStyleSheet;
   class FontFamilyList;
   enum FontFamilyType : uint32_t;
+  struct Keyframe;
 }
 using mozilla::FontFamilyList;
 using mozilla::FontFamilyType;
@@ -267,6 +268,10 @@ void Gecko_EnsureImageLayersLength(nsStyleImageLayers* layers, size_t len,
                                    nsStyleImageLayers::LayerType layer_type);
 
 void Gecko_EnsureStyleAnimationArrayLength(void* array, size_t len);
+
+mozilla::Keyframe* Gecko_AnimationAppendKeyframe(RawGeckoKeyframeListBorrowedMut keyframes,
+                                                 float offset,
+                                                 const nsTimingFunction* timingFunction);
 
 // Clean up pointer-based coordinates
 void Gecko_ResetStyleCoord(nsStyleUnit* unit, nsStyleUnion* value);
