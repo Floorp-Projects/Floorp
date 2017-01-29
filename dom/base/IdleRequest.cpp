@@ -8,6 +8,7 @@
 
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/IdleDeadline.h"
+#include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PerformanceTiming.h"
 #include "mozilla/dom/TimeoutManager.h"
 #include "mozilla/dom/WindowBinding.h"
@@ -19,48 +20,137 @@
 namespace mozilla {
 namespace dom {
 
-IdleRequest::IdleRequest(IdleRequestCallback* aCallback, uint32_t aHandle)
-  : mCallback(aCallback)
+IdleRequest::IdleRequest(JSContext* aCx, nsPIDOMWindowInner* aWindow,
+                         IdleRequestCallback& aCallback, uint32_t aHandle)
+  : mWindow(aWindow)
+  , mCallback(&aCallback)
   , mHandle(aHandle)
   , mTimeoutHandle(Nothing())
 {
-  MOZ_DIAGNOSTIC_ASSERT(mCallback);
+  MOZ_ASSERT(aWindow);
+
+  // Get the calling location.
+  nsJSUtils::GetCallingLocation(aCx, mFileName, &mLineNo, &mColumn);
 }
 
 IdleRequest::~IdleRequest()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION(IdleRequest, mCallback)
+NS_IMPL_CYCLE_COLLECTION_CLASS(IdleRequest)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(IdleRequest)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(IdleRequest)
 
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IdleRequest)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IdleRequest)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallback)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(IdleRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIRunnable)
+  NS_INTERFACE_MAP_ENTRY(nsICancelableRunnable)
+  NS_INTERFACE_MAP_ENTRY(nsIIncrementalRunnable)
+  NS_INTERFACE_MAP_ENTRY(nsITimeoutHandler)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITimeoutHandler)
 NS_INTERFACE_MAP_END
 
-void
-IdleRequest::SetTimeoutHandle(int32_t aHandle)
+nsresult
+IdleRequest::SetTimeout(uint32_t aTimeout)
 {
-  mTimeoutHandle = Some(aHandle);
+  int32_t handle;
+  nsresult rv = mWindow->TimeoutManager().SetTimeout(
+    this, aTimeout, false, Timeout::Reason::eIdleCallbackTimeout, &handle);
+  mTimeoutHandle = Some(handle);
+
+  return rv;
 }
 
 nsresult
-IdleRequest::IdleRun(nsPIDOMWindowInner* aWindow,
-                     DOMHighResTimeStamp aDeadline,
-                     bool aDidTimeout)
+IdleRequest::Run()
+{
+  if (mCallback) {
+    RunIdleRequestCallback(false);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+IdleRequest::Cancel()
+{
+  mCallback = nullptr;
+  CancelTimeout();
+  if (isInList()) {
+    remove();
+  }
+  Release();
+
+  return NS_OK;
+}
+
+void
+IdleRequest::SetDeadline(TimeStamp aDeadline)
+{
+  mozilla::dom::Performance* perf = mWindow->GetPerformance();
+  mDeadline =
+    perf ? perf->GetDOMTiming()->TimeStampToDOMHighRes(aDeadline) : 0.0;
+}
+
+nsresult
+IdleRequest::RunIdleRequestCallback(bool aDidTimeout)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_DIAGNOSTIC_ASSERT(mCallback);
 
+  if (!aDidTimeout) {
+    CancelTimeout();
+  }
+
+  remove();
   ErrorResult error;
   RefPtr<IdleDeadline> deadline =
-    new IdleDeadline(aWindow, aDidTimeout, aDeadline);
+    new IdleDeadline(mWindow, aDidTimeout, mDeadline);
   mCallback->Call(*deadline, error, "requestIdleCallback handler");
-
   mCallback = nullptr;
-  error.SuppressException();
+  Release();
+
   return error.StealNSResult();
+}
+
+void
+IdleRequest::CancelTimeout()
+{
+  if (mTimeoutHandle.isSome()) {
+    mWindow->TimeoutManager().ClearTimeout(
+      mTimeoutHandle.value(), Timeout::Reason::eIdleCallbackTimeout);
+  }
+}
+
+nsresult
+IdleRequest::Call()
+{
+  SetDeadline(TimeStamp::Now());
+  return RunIdleRequestCallback(true);
+}
+
+void
+IdleRequest::GetLocation(const char** aFileName, uint32_t* aLineNo,
+                         uint32_t* aColumn)
+{
+  *aFileName = mFileName.get();
+  *aLineNo = mLineNo;
+  *aColumn = mColumn;
+}
+
+void
+IdleRequest::MarkForCC()
+{
+  mCallback->MarkForCC();
 }
 
 } // namespace dom
