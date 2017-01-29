@@ -15,6 +15,7 @@
 #include "nsICancelableRunnable.h"
 #include "nsIIncrementalRunnable.h"
 #include "nsIRunnable.h"
+#include "nsITimeoutHandler.h"
 #include "nsString.h"
 
 class nsPIDOMWindowInner;
@@ -24,18 +25,28 @@ namespace dom {
 
 class IdleRequestCallback;
 
-class IdleRequest final : public nsISupports,
-                          public LinkedListElement<IdleRequest>
+class IdleRequest final : public nsITimeoutHandler
+                        , public nsIRunnable
+                        , public nsICancelableRunnable
+                        , public nsIIncrementalRunnable
+                        , public LinkedListElement<IdleRequest>
 {
 public:
-  IdleRequest(IdleRequestCallback* aCallback, uint32_t aHandle);
+  IdleRequest(JSContext* aCx, nsPIDOMWindowInner* aWindow,
+              IdleRequestCallback& aCallback, uint32_t aHandle);
 
-  nsresult IdleRun(nsPIDOMWindowInner* aWindow,
-                   DOMHighResTimeStamp aDeadline,
-                   bool aDidTimeout);
+  virtual nsresult Call() override;
+  virtual void GetLocation(const char** aFileName, uint32_t* aLineNo,
+                           uint32_t* aColumn) override;
+  virtual void MarkForCC() override;
 
-  void SetTimeoutHandle(int32_t aHandle);
-  bool HasTimeout() const { return mTimeoutHandle.isSome(); }
+  nsresult SetTimeout(uint32_t aTimout);
+  nsresult RunIdleRequestCallback(bool aDidTimeout);
+  void CancelTimeout();
+
+  NS_DECL_NSIRUNNABLE;
+  virtual nsresult Cancel() override;
+  virtual void SetDeadline(mozilla::TimeStamp aDeadline) override;
 
   uint32_t Handle() const
   {
@@ -43,14 +54,22 @@ public:
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(IdleRequest)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(IdleRequest, nsITimeoutHandler)
 
 private:
   ~IdleRequest();
 
+  // filename, line number and JS language version string of the
+  // caller of setTimeout()
+  nsCString mFileName;
+  uint32_t mLineNo;
+  uint32_t mColumn;
+
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
   RefPtr<IdleRequestCallback> mCallback;
-  const uint32_t mHandle;
+  uint32_t mHandle;
   mozilla::Maybe<int32_t> mTimeoutHandle;
+  DOMHighResTimeStamp mDeadline;
 };
 
 } // namespace dom

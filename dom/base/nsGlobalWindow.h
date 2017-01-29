@@ -102,8 +102,6 @@ struct nsRect;
 
 class nsWindowSizes;
 
-class IdleRequestExecutor;
-
 namespace mozilla {
 class AbstractThread;
 class DOMEventTargetHelper;
@@ -121,7 +119,6 @@ class Gamepad;
 enum class ImageBitmapFormat : uint8_t;
 class IdleRequest;
 class IdleRequestCallback;
-class IncrementalRunnable;
 class Location;
 class MediaQueryList;
 class MozSelfSupport;
@@ -1109,6 +1106,7 @@ public:
                                mozilla::ErrorResult& aError);
   void CancelIdleCallback(uint32_t aHandle);
 
+
 #ifdef MOZ_WEBSPEECH
   mozilla::dom::SpeechSynthesis*
     GetSpeechSynthesis(mozilla::ErrorResult& aError);
@@ -1788,18 +1786,6 @@ public:
   virtual mozilla::AbstractThread*
   AbstractMainThreadFor(mozilla::TaskCategory aCategory) override;
 
-  void DisableIdleCallbackRequests();
-  uint32_t IdleRequestHandle() const { return mIdleRequestCallbackCounter; }
-  nsresult RunIdleRequest(mozilla::dom::IdleRequest* aRequest,
-                          DOMHighResTimeStamp aDeadline, bool aDidTimeout);
-  nsresult ExecuteIdleRequest(TimeStamp aDeadline);
-  void ScheduleIdleRequestDispatch();
-
-  typedef mozilla::LinkedList<mozilla::dom::IdleRequest> IdleRequests;
-  void InsertIdleCallback(mozilla::dom::IdleRequest* aRequest);
-
-  void RemoveIdleCallback(mozilla::dom::IdleRequest* aRequest);
-
 protected:
   // These members are only used on outer window objects. Make sure
   // you never set any of these on an inner object!
@@ -1937,10 +1923,19 @@ protected:
 
   uint32_t mSerial;
 
+  void DisableIdleCallbackRequests();
+  void UnthrottleIdleCallbackRequests();
+
+  void PostThrottledIdleCallback();
+
+  typedef mozilla::LinkedList<mozilla::dom::IdleRequest> IdleRequests;
+  static void InsertIdleCallbackIntoList(mozilla::dom::IdleRequest* aRequest,
+                                         IdleRequests& aList);
+
   // The current idle request callback handle
   uint32_t mIdleRequestCallbackCounter;
   IdleRequests mIdleRequestCallbacks;
-  RefPtr<IdleRequestExecutor> mIdleRequestExecutor;
+  IdleRequests mThrottledIdleRequestCallbacks;
 
 #ifdef DEBUG
   bool mSetOpenerWindowCalled;
@@ -2017,7 +2012,6 @@ protected:
   friend class mozilla::dom::PostMessageEvent;
   friend class DesktopNotification;
   friend class mozilla::dom::TimeoutManager;
-  friend class IdleRequestExecutor;
 
   static WindowByIdTable* sWindowsById;
   static bool sWarnedAboutWindowInternal;
