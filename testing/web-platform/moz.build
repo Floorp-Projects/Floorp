@@ -36,3 +36,16 @@ with Files("mach*"):
 
 with Files("*.py"):
     BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("tests/media/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
+with Files("tests/media-source/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
+with Files("tests/mediacapture-record/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Recording")
+
+with Files("tests/mediacapture-streams/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: MediaStreamGraph")
+
