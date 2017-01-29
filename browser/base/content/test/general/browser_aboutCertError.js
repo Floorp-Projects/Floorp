@@ -208,7 +208,7 @@ add_task(function* checkWrongSystemTimeWarning() {
 });
 
 add_task(function* checkAdvancedDetails() {
-  info("Loading a bad cert page and verifying the advanced details section");
+  info("Loading a bad cert page and verifying the main error and advanced details section");
   let browser;
   let certErrorLoaded;
   yield BrowserTestUtils.openNewForegroundTab(gBrowser, () => {
@@ -222,6 +222,11 @@ add_task(function* checkAdvancedDetails() {
 
   let message = yield ContentTask.spawn(browser, null, function* () {
     let doc = content.document;
+    let shortDescText = doc.getElementById("errorShortDescText");
+    info("Main error text: " + shortDescText.textContent);
+    ok(shortDescText.textContent.includes("expired.example.com"),
+       "Should list hostname in error message.");
+
     let advancedButton = doc.getElementById("advancedButton");
     advancedButton.click();
     let el = doc.getElementById("errorCode");
