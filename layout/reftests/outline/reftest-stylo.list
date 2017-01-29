@@ -7,7 +7,7 @@
 == outline-overflow-block-float.html outline-overflow-block-float.html
 == outline-overflow-inlineblock-abspos.html outline-overflow-inlineblock-abspos.html
 == outline-overflow-inlineblock-float.html outline-overflow-inlineblock-float.html
-fails == outline-auto-001.html outline-auto-001.html
-fails pref(layout.css.outline-style-auto.enabled,false) == outline-auto-001.html outline-auto-001.html
+== outline-auto-001.html outline-auto-001.html
+pref(layout.css.outline-style-auto.enabled,false) == outline-auto-001.html outline-auto-001.html
 == outline-initial-1a.html outline-initial-1a.html
 == outline-initial-1b.html outline-initial-1b.html
