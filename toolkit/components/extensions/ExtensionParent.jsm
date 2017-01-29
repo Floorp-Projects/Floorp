@@ -571,7 +571,8 @@ ParentAPIManager = {
 
     let reply = result => {
       if (!context.parentMessageManager) {
-        Cu.reportError("Cannot send function call result: other side closed connection");
+        Services.console.logStringMessage("Cannot send function call result: other side closed connection " +
+                                          `(call data: ${uneval({path: data.path, args: data.args})})`);
         return;
       }
 
