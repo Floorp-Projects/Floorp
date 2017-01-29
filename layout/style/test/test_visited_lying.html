@@ -73,9 +73,9 @@ function run_tests()
 
   // Test getComputedStyle.
   var subwin = iframe.contentWindow;
-  is(subwin.getComputedStyle(unvisitedlink, "").color, "rgb(0, 0, 255)",
+  is(subwin.getComputedStyle(unvisitedlink).color, "rgb(0, 0, 255)",
      "getComputedStyle on unvisited link should report color is blue");
-  is(subwin.getComputedStyle(visitedlink, "").color, "rgb(0, 0, 255)",
+  is(subwin.getComputedStyle(visitedlink).color, "rgb(0, 0, 255)",
      "getComputedStyle on visited link should report color is blue");
 
   // Test matches.

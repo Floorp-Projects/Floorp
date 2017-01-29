@@ -851,7 +851,7 @@ MozMillController.prototype.mouseMove = function (doc, start, dest) {
 
     var evt = element.ownerDocument.createEvent('MouseEvents');
     if (evt.initMouseEvent) {
-      evt.initMouseEvent('mousemove', true, true, element.ownerDocument.defaultView,
+      evt.initMouseEvent('mousemove', true, true, element.ownerGlobal,
                          1, screenX, screenY, clientX, clientY);
     } else {
       evt.initEvent('mousemove', true, true);

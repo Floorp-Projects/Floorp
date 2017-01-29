@@ -9,16 +9,12 @@ import signal
 import sys
 import traceback
 from collections import defaultdict
+from multiprocessing import Manager, Pool, cpu_count
 from Queue import Empty
-from multiprocessing import (
-    Manager,
-    Pool,
-    cpu_count,
-)
 
 from .errors import LintersNotConfigured
-from .types import supported_types
 from .parser import Parser
+from .types import supported_types
 from .vcs import VCSFiles
 
 
@@ -98,11 +94,12 @@ class LintRoller(object):
         for path in paths:
             self.linters.append(self.parse(path))
 
-    def roll(self, paths=None, rev=None, workdir=None, num_procs=None):
+    def roll(self, paths=None, rev=None, outgoing=None, workdir=None, num_procs=None):
         """Run all of the registered linters against the specified file paths.
 
         :param paths: An iterable of files and/or directories to lint.
         :param rev: Lint all files touched by the specified revision.
+        :param outgoing: Lint files touched by commits that are not on the remote repository.
         :param workdir: Lint all files touched in the working directory.
         :param num_procs: The number of processes to use. Default: cpu count
         :return: A dictionary with file names as the key, and a list of
@@ -120,6 +117,9 @@ class LintRoller(object):
             paths.extend(self.vcs.by_rev(rev))
         if workdir:
             paths.extend(self.vcs.by_workdir())
+        if outgoing:
+            paths.extend(self.vcs.outgoing(outgoing))
+
         paths = paths or ['.']
         paths = map(os.path.abspath, paths)
 

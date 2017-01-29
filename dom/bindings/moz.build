@@ -6,6 +6,12 @@
 
 TEST_DIRS += ['test']
 
+XPIDL_SOURCES += [
+    'nsIScriptError.idl'
+]
+
+XPIDL_MODULE = 'dom_bindings'
+
 EXPORTS.ipc += [
     'ErrorIPCUtils.h',
 ]
@@ -91,6 +97,8 @@ UNIFIED_SOURCES += [
     'DOMJSProxyHandler.cpp',
     'Exceptions.cpp',
     'IterableIterator.cpp',
+    'nsScriptError.cpp',
+    'nsScriptErrorWithStack.cpp',
     'SimpleGlobalObject.cpp',
     'ToJSValue.cpp',
     'WebIDLGlobalNameHash.cpp',

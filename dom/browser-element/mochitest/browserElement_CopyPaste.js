@@ -187,14 +187,13 @@ function testSelectAll(e) {
   // Skip mozbrowser test if we're at child process.
   if (!isChildProcess()) {
     let eventName = "mozbrowsercaretstatechanged";
-    iframeOuter.addEventListener(eventName, function caretchangeforselectall(e) {
-      iframeOuter.removeEventListener(eventName, caretchangeforselectall, true);
+    iframeOuter.addEventListener(eventName, function(e) {
       ok(true, "got mozbrowsercaretstatechanged event." + stateMeaning);
       ok(e.detail, "event.detail is not null." + stateMeaning);
       ok(e.detail.width != 0, "event.detail.width is not zero" + stateMeaning);
       ok(e.detail.height != 0, "event.detail.height is not zero" + stateMeaning);
       SimpleTest.executeSoon(function() { testCopy1(e); });
-    }, true);
+    }, {capture: true, once: true});
   }
 
   mm.addMessageListener('content-focus', function messageforfocus(msg) {

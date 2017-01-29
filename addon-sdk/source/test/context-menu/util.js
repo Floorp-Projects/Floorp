@@ -42,13 +42,13 @@ const openContextMenu = (selector, tab=getActiveTab()) => {
     sendAsyncMessage("sdk/test/context-menu/open",
                      {target: selector});
 
-  return when(tab.ownerDocument.defaultView, "popupshown").
+  return when(tab.ownerGlobal, "popupshown").
           then(_target);
 };
 exports.openContextMenu = openContextMenu;
 
 const closeContextMenu = (menu) => {
-  const result = when(menu.ownerDocument.defaultView, "popuphidden").
+  const result = when(menu.ownerGlobal, "popuphidden").
                   then(_target);
 
   menu.hidePopup();

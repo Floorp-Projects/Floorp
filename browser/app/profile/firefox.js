@@ -1259,6 +1259,8 @@ pref("plain_text.wrap_long_lines", true);
 // before content.
 pref("dom.debug.propagate_gesture_events_through_content", false);
 
+// All the Geolocation preferences are here.
+//
 // The request URL of the GeoLocation backend.
 #ifdef RELEASE_OR_BETA
 pref("geo.wifi.uri", "https://www.googleapis.com/geolocation/v1/geolocate?key=%GOOGLE_API_KEY%");
@@ -1287,6 +1289,11 @@ pref("geo.provider.use_gpsd", true);
 #endif
 #endif
 #endif
+
+// We keep allowing non-HTTPS geo requests on all the release
+// channels, for now.
+// TODO: default to false (or remove altogether) for #1072859.
+pref("geo.security.allowinsecure", true);
 
 // Necko IPC security checks only needed for app isolation for cookies/cache/etc:
 // currently irrelevant for desktop e10s

@@ -118,8 +118,7 @@ function test() {
 function promiseNewTabLoadEvent(aUrl, aEventType = "load") {
   let deferred = Promise.defer();
   let tab = gBrowser.selectedTab = gBrowser.addTab(aUrl);
-  tab.linkedBrowser.addEventListener(aEventType, function load(event) {
-    tab.linkedBrowser.removeEventListener(aEventType, load, true);
+  tab.linkedBrowser.addEventListener(aEventType, function(event) {
     let iframe = tab.linkedBrowser.contentDocument.getElementById("remote-report");
       iframe.addEventListener("load", function frameLoad(e) {
         if (iframe.contentWindow.location.href == "about:blank" ||
@@ -129,6 +128,6 @@ function promiseNewTabLoadEvent(aUrl, aEventType = "load") {
         iframe.removeEventListener("load", frameLoad);
         deferred.resolve(iframe);
       });
-    }, true);
+    }, {capture: true, once: true});
   return deferred.promise;
 }

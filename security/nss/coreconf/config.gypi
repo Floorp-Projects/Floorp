@@ -102,6 +102,7 @@
     'no_zdefs%': 0,
     'fuzz%': 0,
     'fuzz_tls%': 0,
+    'fuzz_oss%': 0,
     'sign_libs%': 1,
     'use_pprof%': 0,
     'ct_verif%': 0,
@@ -152,7 +153,7 @@
         'product_dir': '<(nss_dist_obj_dir)/lib'
       }],
       # mapfile handling
-      [ 'test_build==0 and mapfile!=""', {
+      [ 'mapfile!=""', {
         # Work around a gyp bug. Fixed upstream but not in Ubuntu packages:
         # https://chromium.googlesource.com/external/gyp/+/b85ad3e578da830377dbc1843aa4fbc5af17a192%5E%21/
         'sources': [
@@ -350,11 +351,21 @@
             'cflags': [
               '<!@(<(python) <(DEPTH)/coreconf/werror.py)',
             ],
+            'xcode_settings': {
+              'OTHER_CFLAGS': [
+                '<!@(<(python) <(DEPTH)/coreconf/werror.py)',
+              ],
+            },
           }],
           [ 'fuzz_tls==1', {
             'cflags': [
               '-Wno-unused-function',
             ],
+            'xcode_settings': {
+              'OTHER_CFLAGS': [
+                '-Wno-unused-function',
+              ],
+            },
           }],
           [ 'sanitizer_flags!=0', {
             'cflags': ['<@(sanitizer_flags)'],

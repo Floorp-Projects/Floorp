@@ -395,7 +395,7 @@ VRDisplayOpenVR::NotifyVSync()
 }
 
 VRSystemManagerOpenVR::VRSystemManagerOpenVR()
-  : mOpenVRInstalled(false)
+  : mVRSystem(nullptr), mOpenVRInstalled(false)
 {
 }
 
@@ -627,8 +627,11 @@ VRSystemManagerOpenVR::GetControllers(nsTArray<RefPtr<VRControllerHost>>& aContr
 void
 VRSystemManagerOpenVR::ScanForControllers()
 {
-  if (!mVRSystem)
+  if (!mOpenVRInstalled) {
     return;
+  }
+
+  MOZ_ASSERT(mVRSystem);
 
   vr::TrackedDeviceIndex_t trackedIndexArray[vr::k_unMaxTrackedDeviceCount];
   uint32_t newControllerCount = 0;

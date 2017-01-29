@@ -30,31 +30,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=477531
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 477531 **/
-is(document.defaultView.getComputedStyle($("s"), null).getPropertyValue("margin-left"),
+is(document.defaultView.getComputedStyle($("s")).getPropertyValue("margin-left"),
    "10px",
    "Non-indeterminate checkbox should have a margin of 10px");
 
 $("s").indeterminate = true;
 
-is(document.defaultView.getComputedStyle($("s"), null).getPropertyValue("margin-left"),
+is(document.defaultView.getComputedStyle($("s")).getPropertyValue("margin-left"),
    "30px",
    "Indeterminate checkbox should have a margin of 30px");
 
 $("s").setAttribute("type", "radio");
 
-is(document.defaultView.getComputedStyle($("s"), null).getPropertyValue("margin-left"),
+is(document.defaultView.getComputedStyle($("s")).getPropertyValue("margin-left"),
    "30px",
    "Setting an indeterminate element to type radio should give it indeterminate styles");
 
 $("s").setAttribute("type", "checkbox");
 
-is(document.defaultView.getComputedStyle($("s"), null).getPropertyValue("margin-left"),
+is(document.defaultView.getComputedStyle($("s")).getPropertyValue("margin-left"),
    "30px",
    "Setting an indeterminate element to type checkbox should give it indeterminate styles");
 
 $("s").indeterminate = false;
 
-is(document.defaultView.getComputedStyle($("s"), null).getPropertyValue("margin-left"),
+is(document.defaultView.getComputedStyle($("s")).getPropertyValue("margin-left"),
    "10px",
    "Newly non-indeterminate checkbox should have a margin of 10px");
 

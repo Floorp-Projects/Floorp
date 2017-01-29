@@ -38,10 +38,9 @@ window.
      */
     function promiseEvent(target, eventName) {
       return new Promise(resolve => {
-        target.addEventListener(eventName, function onEvent(e) {
-          target.removeEventListener(eventName, onEvent, true);
+        target.addEventListener(eventName, function(e) {
           resolve(e);
-        }, true);
+        }, {capture: true, once: true});
       });
     }
 

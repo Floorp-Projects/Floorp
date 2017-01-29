@@ -117,7 +117,7 @@ function simulateClick(aMenuItem) {
 var checkStyle = Task.async(function* (win, styleProperty, expected) {
   let browser = win.gBrowser;
   let value = yield ContentTask.spawn(browser, styleProperty, function* (styleProperty) {
-    let style = content.getComputedStyle(content.document.body, null);
+    let style = content.getComputedStyle(content.document.body);
     return style.getPropertyValue(styleProperty);
   });
   is(value, expected, "Correct value of " + styleProperty);
@@ -128,7 +128,7 @@ var checkHighlight = Task.async(function* (win, expected) {
   let highlighted = yield ContentTask.spawn(browser, {}, function* () {
     let spans = content.document.getElementsByTagName("span");
     return Array.some(spans, (span) => {
-      let style = content.getComputedStyle(span, null);
+      let style = content.getComputedStyle(span);
       return style.getPropertyValue("color") !== "rgb(0, 0, 0)";
     });
   });

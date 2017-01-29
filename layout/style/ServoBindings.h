@@ -259,7 +259,8 @@ void Gecko_ClearPODTArray(void* array, size_t elem_size, size_t elem_align);
 // Clear the mContents field in nsStyleContent. This is needed to run the
 // destructors, otherwise we'd leak the images (though we still don't support
 // those), strings, and whatnot.
-void Gecko_ClearStyleContents(nsStyleContent* content);
+void Gecko_ClearAndResizeStyleContents(nsStyleContent* content,
+                                       uint32_t how_many);
 void Gecko_CopyStyleContentsFrom(nsStyleContent* content, const nsStyleContent* other);
 
 void Gecko_EnsureImageLayersLength(nsStyleImageLayers* layers, size_t len,

@@ -66,7 +66,7 @@ add_task(function* test_webRequest_links() {
   addStylesheet("file_style_redirect.css");
   yield extension.awaitMessage("done");
 
-  let style = window.getComputedStyle(document.getElementById("test"), null);
+  let style = window.getComputedStyle(document.getElementById("test"));
   is(style.getPropertyValue("color"), "rgb(255, 0, 0)", "Good CSS loaded");
 });
 

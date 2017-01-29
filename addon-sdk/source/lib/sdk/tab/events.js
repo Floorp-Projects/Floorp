@@ -68,7 +68,7 @@ function makeEvents() {
 exports.events = map(makeEvents(), function (event) {
   return !isFennec ? event : {
     type: event.type,
-    target: event.target.ownerDocument.defaultView.BrowserApp
+    target: event.target.ownerGlobal.BrowserApp
             .getTabForBrowser(event.target)
   };
 });

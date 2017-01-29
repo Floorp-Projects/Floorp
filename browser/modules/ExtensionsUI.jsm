@@ -92,7 +92,7 @@ this.ExtensionsUI = {
     let info = {
       addon,
       permissions: addon.userPermissions,
-      icon: addon.iconURL,
+      icon: addon.iconURL || DEFAULT_EXTENSION_ICON,
       type: "sideload",
     };
     this.showAddonsManager(browser, info).then(answer => {

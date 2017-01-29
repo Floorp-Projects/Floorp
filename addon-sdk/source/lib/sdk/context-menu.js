@@ -996,7 +996,7 @@ var MenuWrapper = Class({
         this.populate(this.items);
       }
 
-      let mainWindow = event.target.ownerDocument.defaultView;
+      let mainWindow = event.target.ownerGlobal;
       this.contextMenuContentData = mainWindow.gContextMenuContentData
       if (!(self.id in this.contextMenuContentData.addonInfo)) {
         console.warn("No context menu state data was provided.");

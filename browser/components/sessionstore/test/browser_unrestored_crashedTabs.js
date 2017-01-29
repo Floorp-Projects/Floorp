@@ -32,7 +32,7 @@ add_task(function* test() {
     });
 
     let state = {
-      entries: [{url: PAGE}],
+      entries: [{url: PAGE, triggeringPrincipal_base64}],
     };
 
     ss.setTabState(unrestoredTab, JSON.stringify(state));

@@ -133,8 +133,32 @@ WasmHandleDebugTrap()
         frame->leaveFrame(cx);
         return ok;
     }
-    // TODO baseline debug traps
-    MOZ_CRASH();
+
+    DebugFrame* frame = iter.debugFrame();
+    Code& code = iter.instance()->code();
+    MOZ_ASSERT(code.hasBreakpointTrapAtOffset(site->lineOrBytecode()));
+    if (code.stepModeEnabled(frame->funcIndex())) {
+        RootedValue result(cx, UndefinedValue());
+        JSTrapStatus status = Debugger::onSingleStep(cx, &result);
+        if (status == JSTRAP_RETURN) {
+            // TODO properly handle JSTRAP_RETURN.
+            JS_ReportErrorASCII(cx, "Unexpected resumption value from onSingleStep");
+            return false;
+        }
+        if (status != JSTRAP_CONTINUE)
+            return false;
+    }
+    if (code.hasBreakpointSite(site->lineOrBytecode())) {
+        RootedValue result(cx, UndefinedValue());
+        JSTrapStatus status = Debugger::onTrap(cx, &result);
+        if (status == JSTRAP_RETURN) {
+            // TODO properly handle JSTRAP_RETURN.
+            JS_ReportErrorASCII(cx, "Unexpected resumption value from breakpoint handler");
+            return false;
+        }
+        if (status != JSTRAP_CONTINUE)
+            return false;
+    }
     return true;
 }
 

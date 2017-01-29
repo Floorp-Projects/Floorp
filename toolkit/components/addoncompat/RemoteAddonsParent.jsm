@@ -442,7 +442,7 @@ var EventTargetParent = {
 
       // Check if |target| is somewhere on the patch from the
       // <tabbrowser> up to the root element.
-      let window = target.ownerDocument.defaultView;
+      let window = target.ownerGlobal;
       if (window && target.contains(window.gBrowser)) {
         return window;
       }
@@ -455,7 +455,7 @@ var EventTargetParent = {
   // <browser> element and the window since those are the two possible
   // results of redirectEventTarget.
   getTargets(browser) {
-    let window = browser.ownerDocument.defaultView;
+    let window = browser.ownerGlobal;
     return [browser, window];
   },
 
@@ -706,7 +706,7 @@ ContentDocShellTreeItemInterposition.getters.rootTreeItem =
       return null;
     }
 
-    let chromeWin = browser.ownerDocument.defaultView;
+    let chromeWin = browser.ownerGlobal;
 
     // Return that window's docshell.
     return chromeWin.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -981,7 +981,7 @@ function wrapProgressListener(kind, listener) {
 }
 
 TabBrowserElementInterposition.methods.addProgressListener = function(addon, target, listener) {
-  if (!target.ownerDocument.defaultView.gMultiProcessBrowser) {
+  if (!target.ownerGlobal.gMultiProcessBrowser) {
     return target.addProgressListener(listener);
   }
 
@@ -990,7 +990,7 @@ TabBrowserElementInterposition.methods.addProgressListener = function(addon, tar
 };
 
 TabBrowserElementInterposition.methods.removeProgressListener = function(addon, target, listener) {
-  if (!target.ownerDocument.defaultView.gMultiProcessBrowser) {
+  if (!target.ownerGlobal.gMultiProcessBrowser) {
     return target.removeProgressListener(listener);
   }
 
@@ -999,7 +999,7 @@ TabBrowserElementInterposition.methods.removeProgressListener = function(addon, 
 };
 
 TabBrowserElementInterposition.methods.addTabsProgressListener = function(addon, target, listener) {
-  if (!target.ownerDocument.defaultView.gMultiProcessBrowser) {
+  if (!target.ownerGlobal.gMultiProcessBrowser) {
     return target.addTabsProgressListener(listener);
   }
 
@@ -1008,7 +1008,7 @@ TabBrowserElementInterposition.methods.addTabsProgressListener = function(addon,
 };
 
 TabBrowserElementInterposition.methods.removeTabsProgressListener = function(addon, target, listener) {
-  if (!target.ownerDocument.defaultView.gMultiProcessBrowser) {
+  if (!target.ownerGlobal.gMultiProcessBrowser) {
     return target.removeTabsProgressListener(listener);
   }
 

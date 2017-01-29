@@ -206,7 +206,7 @@ FormSubmitObserver.prototype =
       panelData.position = "bottomcenter topleft";
     } else {
       let win = aElement.ownerGlobal;
-      let style = win.getComputedStyle(aElement, null);
+      let style = win.getComputedStyle(aElement);
       if (style.direction == "rtl") {
         offset = parseInt(style.paddingRight) + parseInt(style.borderRightWidth);
       } else {

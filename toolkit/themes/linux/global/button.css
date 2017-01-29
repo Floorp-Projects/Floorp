@@ -14,12 +14,6 @@ button {
   -moz-appearance: button;
   margin: 1px 5px 2px 5px;
   min-width: 6.3em;
-  border: 3px solid;
-  -moz-border-top-colors: transparent ThreeDHighlight ThreeDLightShadow;
-  -moz-border-right-colors: transparent ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: transparent ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: transparent ThreeDHighlight ThreeDLightShadow;
-  background-color: ThreeDFace;
   color: ButtonText;
   text-shadow: none;
 }
@@ -44,31 +38,14 @@ button {
 
 /* .......... focused state .......... */
 
-button:focus {
-  -moz-border-top-colors: ThreeDDarkShadow ThreeDHighlight transparent;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight transparent;
-}
-
 button:focus > .button-box {
   border: 1px dotted ThreeDDarkShadow;
-}
-
-/* .......... default state .......... */
-
-button[default="true"] {
-  -moz-border-top-colors: ThreeDDarkShadow ThreeDHighlight ThreeDLightShadow;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight ThreeDLightShadow;
 }
 
 /* .......... hover state .......... */
 
 button:hover {
   color: -moz-buttonhovertext;
-  background-color: -moz-buttonhoverface;
 }
 
 /* .......... active/open/checked state .......... */
@@ -76,10 +53,6 @@ button:hover {
 button:hover:active,
 button[open="true"],
 button[checked="true"] {
-  -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow transparent;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow transparent;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow transparent;
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow transparent;
   color: ButtonText;
 }
 
@@ -96,10 +69,6 @@ button[checked="true"] > .button-box {
 
 button[disabled="true"],
 button[disabled="true"]:hover:active {
-  -moz-border-top-colors: transparent ThreeDHighlight ThreeDLightShadow !important;
-  -moz-border-right-colors: transparent ThreeDDarkShadow ThreeDShadow !important;
-  -moz-border-bottom-colors: transparent ThreeDDarkShadow ThreeDShadow !important;
-  -moz-border-left-colors: transparent ThreeDHighlight ThreeDLightShadow !important;
   color: GrayText;
 }
 
@@ -132,19 +101,15 @@ button[type="menu-button"] {
 /* ::::: plain buttons ::::: */
 
 button.plain {
-  border: 0px !important;
-  margin: 0px !important;
-  padding: 0px !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 button[type="disclosure"] {
-  border: 0px !important;
-  margin: 0px !important;
-  padding: 0px !important;
+  margin: 0;
   -moz-appearance: none;
   list-style-image: url("chrome://global/skin/tree/twisty-clsd.png");
-  min-width: 0px !important;
-  background-color: transparent;
+  min-width: 0;
 }
 
 button[type="disclosure"][open="true"] {

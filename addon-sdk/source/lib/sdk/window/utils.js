@@ -415,7 +415,7 @@ function getOwnerBrowserWindow(node) {
   /**
   Takes DOM node and returns browser window that contains it.
   **/
-  let window = getToplevelWindow(node.ownerDocument.defaultView);
+  let window = getToplevelWindow(node.ownerGlobal);
   // If anchored window is browser then it's target browser window.
   return isBrowser(window) ? window : null;
 }

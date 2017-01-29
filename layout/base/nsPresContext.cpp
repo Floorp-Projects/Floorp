@@ -208,7 +208,8 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   : mType(aType),
     mShell(nullptr),
     mDocument(aDocument),
-    mMedium(nullptr),
+    mMedium(aType == eContext_Galley ? nsGkAtoms::screen : nsGkAtoms::print),
+    mMediaEmulated(mMedium),
     mLinkHandler(nullptr),
     mInflationDisabledForShrinkWrap(false),
     mBaseMinFontSize(0),
@@ -222,40 +223,40 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mPageScale(0.0),
     mPPScale(1.0f),
     mDefaultColor(NS_RGBA(0,0,0,0)),
-    mBackgroundColor(NS_RGBA(0,0,0,0)),
-    mLinkColor(NS_RGBA(0,0,0,0)),
-    mActiveLinkColor(NS_RGBA(0,0,0,0)),
-    mVisitedLinkColor(NS_RGBA(0,0,0,0)),
-    mFocusBackgroundColor(NS_RGBA(0,0,0,0)),
-    mFocusTextColor(NS_RGBA(0,0,0,0)),
-    mBodyTextColor(NS_RGBA(0,0,0,0)),
+    mBackgroundColor(NS_RGB(0xFF, 0xFF, 0xFF)),
+    mLinkColor(NS_RGB(0x00, 0x00, 0xEE)),
+    mActiveLinkColor(NS_RGB(0xEE, 0x00, 0x00)),
+    mVisitedLinkColor(NS_RGB(0x55, 0x1A, 0x8B)),
+    mFocusBackgroundColor(mBackgroundColor),
+    mFocusTextColor(mDefaultColor),
+    mBodyTextColor(mDefaultColor),
     mViewportStyleScrollbar(NS_STYLE_OVERFLOW_AUTO, NS_STYLE_OVERFLOW_AUTO),
-    mFocusRingWidth(0),
+    mFocusRingWidth(1),
     mExistThrottledUpdates(false),
-    mImageAnimationMode(0),
+    // mImageAnimationMode is initialised below, in constructor body
     mImageAnimationModePref(imgIContainer::kNormalAnimMode),
     mInterruptChecksToSkip(0),
     mElementsRestyled(0),
     mFramesConstructed(0),
     mFramesReflowed(0),
-    mInteractionTimeEnabled(false),
+    mInteractionTimeEnabled(true),
     mHasPendingInterrupt(false),
     mPendingInterruptFromTest(false),
     mInterruptsEnabled(false),
-    mUseDocumentFonts(false),
-    mUseDocumentColors(false),
-    mUnderlineLinks(false),
+    mUseDocumentFonts(true),
+    mUseDocumentColors(true),
+    mUnderlineLinks(true),
     mSendAfterPaintToContent(false),
     mUseFocusColors(false),
     mFocusRingOnAnything(false),
     mFocusRingStyle(false),
-    mDrawImageBackground(false),
-    mDrawColorBackground(false),
-    mNeverAnimate(false),
+    mDrawImageBackground(true), // always draw the background
+    mDrawColorBackground(true),
+    // mNeverAnimate is initialised below, in constructor body
     mIsRenderingOnlySelection(false),
-    mPaginated(false),
+    mPaginated(aType != eContext_Galley),
     mCanPaginatedScroll(false),
-    mDoScaledTwips(false),
+    mDoScaledTwips(true),
     mIsRootPaginatedDocument(false),
     mPrefBidiDirection(false),
     mPrefScrollbarSide(0),
@@ -271,7 +272,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mUsesExChUnits(false),
     mUsesViewportUnits(false),
     mPendingViewportChange(false),
-    mCounterStylesDirty(false),
+    mCounterStylesDirty(true),
     mPostedFlushCounterStyles(false),
     mSuppressResizeReflow(false),
     mIsVisual(false),
@@ -297,38 +298,6 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   PodZero(&mLayoutPhaseCount);
 #endif
 
-  mDoScaledTwips = true;
-
-  SetBackgroundImageDraw(true);		// always draw the background
-  SetBackgroundColorDraw(true);
-
-  mBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
-
-  mUseDocumentColors = true;
-  mUseDocumentFonts = true;
-
-  // the minimum font-size is unconstrained by default
-
-  mLinkColor = NS_RGB(0x00, 0x00, 0xEE);
-  mActiveLinkColor = NS_RGB(0xEE, 0x00, 0x00);
-  mVisitedLinkColor = NS_RGB(0x55, 0x1A, 0x8B);
-  mUnderlineLinks = true;
-  mSendAfterPaintToContent = false;
-
-  mFocusTextColor = mDefaultColor;
-  mFocusBackgroundColor = mBackgroundColor;
-  mFocusRingWidth = 1;
-
-  mBodyTextColor = mDefaultColor;
-
-  if (aType == eContext_Galley) {
-    mMedium = nsGkAtoms::screen;
-  } else {
-    mMedium = nsGkAtoms::print;
-    mPaginated = true;
-  }
-  mMediaEmulated = mMedium;
-
   if (!IsDynamic()) {
     mImageAnimationMode = imgIContainer::kDontAnimMode;
     mNeverAnimate = true;
@@ -337,10 +306,6 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mNeverAnimate = false;
   }
   NS_ASSERTION(mDocument, "Null document");
-
-  mCounterStylesDirty = true;
-
-  mInteractionTimeEnabled = true;
 
   // if text perf logging enabled, init stats struct
   if (MOZ_LOG_TEST(gfxPlatform::GetLog(eGfxLog_textperf), LogLevel::Warning)) {

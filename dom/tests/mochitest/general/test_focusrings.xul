@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
-<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/javascript"
@@ -140,7 +140,7 @@ function testHTMLElements(list, isMac, expectedNoRingsOnWin)
 
     synthesizeMouse(elem, 8, 8, { }, childwin);
     is(childdoc.activeElement, shouldFocus ? elem : childdoc.body, "mouse click on " + list[e]);
-    is(childwin.getComputedStyle(elem, "").outlineWidth, ringSize, "mouse click on " + list[e] + " ring");
+    is(childwin.getComputedStyle(elem).outlineWidth, ringSize, "mouse click on " + list[e] + " ring");
 
     if (childdoc.activeElement)
       childdoc.activeElement.blur();
@@ -149,7 +149,7 @@ function testHTMLElements(list, isMac, expectedNoRingsOnWin)
 
     elem.focus();
     is(childdoc.activeElement, elem, "focus() on " + list[e]);
-    is(childwin.getComputedStyle(elem, "").outlineWidth, ringSize,
+    is(childwin.getComputedStyle(elem).outlineWidth, ringSize,
        "focus() on " + list[e] + " ring");
 
     childdoc.activeElement.blur();

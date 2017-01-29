@@ -75,10 +75,9 @@ function debug(str) {
 const once = event => {
   let target = shell.contentBrowser;
   return new Promise((resolve, reject) => {
-    target.addEventListener(event, function gotEvent(evt) {
-      target.removeEventListener(event, gotEvent);
+    target.addEventListener(event, function(evt) {
       resolve(evt);
-    });
+    }, {once: true});
   });
 }
 
@@ -561,7 +560,7 @@ var shell = {
       case 'mozbrowsercaretstatechanged':
         {
           let elt = evt.target;
-          let win = elt.ownerDocument.defaultView;
+          let win = elt.ownerGlobal;
           let offsetX = win.mozInnerScreenX - window.mozInnerScreenX;
           let offsetY = win.mozInnerScreenY - window.mozInnerScreenY;
 

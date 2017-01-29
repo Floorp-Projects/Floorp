@@ -106,7 +106,7 @@ exports.getActiveTab = getActiveTab;
 function getOwnerWindow(tab) {
   // normal case
   if (tab.ownerDocument)
-    return tab.ownerDocument.defaultView;
+    return tab.ownerGlobal;
 
   // try fennec case
   return getWindowHoldingTab(tab);

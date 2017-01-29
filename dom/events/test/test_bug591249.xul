@@ -29,7 +29,7 @@ function completeTest(aBox) {
 }
 
 function fireEvent(target, event) {
-  var win = target.ownerDocument.defaultView;
+  var win = target.ownerGlobal;
   var utils =
     win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
         getInterface(Components.interfaces.nsIDOMWindowUtils);
@@ -61,7 +61,7 @@ function RunTest() {
   synthesizeMouse(image, 20, 20, { type: "mouseup" });
 
   var event = document.createEvent("DragEvent");
-  event.initDragEvent("dragover", true, true, iBox.ownerDocument.defaultView, 0, 0, 0, 0, 0, false, false, false, false, 0, iBox, dataTransfer);
+  event.initDragEvent("dragover", true, true, iBox.ownerGlobal, 0, 0, 0, 0, 0, false, false, false, false, 0, iBox, dataTransfer);
   fireEvent(iBox, event);
   synthesizeMouse(image, 3, 3, { type: "mousedown" });
   synthesizeMouse(image, 23, 23, { type: "mousemove" });

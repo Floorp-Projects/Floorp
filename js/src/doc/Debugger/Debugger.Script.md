@@ -135,13 +135,9 @@ from its prototype:
     which this script's code starts, within the file or document named by
     `url`.
 
-    **If the instance refers to WebAssembly code**, throw a `TypeError`.
-
 `lineCount`
 :   **If the instance refers to a `JSScript`**, the number of lines this
     script's code occupies, within the file or document named by `url`.
-
-    **If the instance refers to WebAssembly code**, throw a `TypeError`.
 
 `source`
 :   **If the instance refers to a `JSScript`**, the
@@ -267,8 +263,6 @@ methods of other kinds of objects.
     <i>line</i>. If the script contains no executable code at that line, the
     array returned is empty.
 
-    **If the instance refers to WebAssembly code**, throw a `TypeError`.
-
 <code>getOffsetLocation(<i>offset</i>)</code>
 :   **If the instance refers to a `JSScript`**, return an object describing the
     source code location responsible for the bytecode at <i>offset</i> in this
@@ -280,8 +274,6 @@ methods of other kinds of objects.
 
     * isEntryPoint: true if the offset is a column entry point, as
       would be reported by getAllColumnOffsets(); otherwise false.
-
-    **If the instance refers to WebAssembly code**, throw a `TypeError`.
 
 `getOffsetsCoverage()`:
 :   **If the instance refers to a `JSScript`**, return `null` or an array which
@@ -341,8 +333,6 @@ methods of other kinds of objects.
     breakpoints belonging to that [`Debugger`][debugger-object] instance in that
     global's scripts.
 
-    **If the instance refers to WebAssembly code**, throw a `TypeError`.
-
 <code>getBreakpoints([<i>offset</i>])</code>
 :   **If the instance refers to a `JSScript`**, return an array containing the
     handler objects for all the breakpoints set at <i>offset</i> in this
@@ -362,15 +352,11 @@ methods of other kinds of objects.
     Note that, if breakpoints using other handler objects are set at the
     same location(s) as <i>handler</i>, they remain in place.
 
-    **If the instance refers to WebAssembly code**, throw a `TypeError`.
-
 <code>clearAllBreakpoints([<i>offset</i>])</code>
 :   **If the instance refers to a `JSScript`**, remove all breakpoints set in
     this script. If <i>offset</i> is present, remove all breakpoints set at
     that offset in this script; if <i>offset</i> is not a valid bytecode
     offset in this script, throw an error.
-
-    **If the instance refers to WebAssembly code**, throw a `TypeError`.
 
 <code>isInCatchScope([<i>offset</i>])</code>
 :   **If the instance refers to a `JSScript`**, this is `true` if this offset

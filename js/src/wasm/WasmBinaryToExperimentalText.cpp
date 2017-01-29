@@ -1750,6 +1750,8 @@ PrintFunctionBody(WasmPrintContext& c, AstFunc& func, const AstModule::SigVector
     uint32_t endLineno = c.buffer.lineno();
 
     if (c.maybeSourceMap) {
+        if (!c.maybeSourceMap->exprlocs().emplaceBack(endLineno, c.buffer.column(), func.endOffset()))
+            return false;
         if (!c.maybeSourceMap->functionlocs().emplaceBack(startExprIndex, endExprIndex, startLineno, endLineno))
             return false;
     }

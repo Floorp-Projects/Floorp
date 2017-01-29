@@ -32,7 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=535806
 
   function xulLoaded() {
     var doc = $("f").contentDocument;
-    is(doc.defaultView.getComputedStyle(doc.getElementById("s"), null).color,
+    is(doc.defaultView.getComputedStyle(doc.getElementById("s")).color,
        "rgb(0, 128, 0)");
     SimpleTest.finish();
   }

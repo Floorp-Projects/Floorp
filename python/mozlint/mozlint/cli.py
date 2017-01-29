@@ -6,8 +6,7 @@ from __future__ import print_function, unicode_literals
 
 import os
 import sys
-from argparse import ArgumentParser, REMAINDER
-
+from argparse import REMAINDER, ArgumentParser
 
 SEARCH_PATHS = []
 
@@ -45,6 +44,13 @@ class MozlintParser(ArgumentParser):
          {'default': None,
           'help': "Lint files touched by the given revision(s). Works with "
                   "mercurial or git."
+          }],
+        [['-o', '--outgoing'],
+         {'const': 'default',
+          'nargs': '?',
+          'help': "Lint files touched by commits that are not on the remote repository."
+                  "If you are using git please specify which remote you want to compare to."
+                  "Works with mercurial or git."
           }],
         [['-w', '--workdir'],
          {'default': False,
@@ -91,14 +97,15 @@ def find_linters(linters=None):
     return lints
 
 
-def run(paths, linters, fmt, rev, workdir, **lintargs):
+def run(paths, linters, fmt, rev, outgoing, workdir, **lintargs):
     from mozlint import LintRoller, formatters
 
     lint = LintRoller(**lintargs)
     lint.read(find_linters(linters))
 
     # run all linters
-    results = lint.roll(paths, rev=rev, workdir=workdir)
+    results = lint.roll(paths, rev=rev, outgoing=outgoing,
+                        workdir=workdir)
 
     formatter = formatters.get(fmt)
 
