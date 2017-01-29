@@ -456,8 +456,6 @@ StartupCache::WriteToDisk()
 
   // Our reader's view of the archive is outdated now, reload it.
   LoadArchive();
-  
-  return;
 }
 
 void
