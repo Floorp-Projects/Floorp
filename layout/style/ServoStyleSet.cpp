@@ -548,6 +548,20 @@ ServoStyleSet::AssertTreeIsClean()
 }
 #endif
 
+bool
+ServoStyleSet::FillKeyframesForName(const nsString& aName,
+                                    const nsTimingFunction& aTimingFunction,
+                                    const ServoComputedValues* aComputedValues,
+                                    nsTArray<Keyframe>& aKeyframes)
+{
+  NS_ConvertUTF16toUTF8 name(aName);
+  return Servo_StyleSet_FillKeyframesForName(mRawSet.get(),
+                                             &name,
+                                             &aTimingFunction,
+                                             aComputedValues,
+                                             &aKeyframes);
+}
+
 void
 ServoStyleSet::RebuildData()
 {
