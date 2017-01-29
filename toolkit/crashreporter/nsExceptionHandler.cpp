@@ -1552,6 +1552,11 @@ ChildFilter(void* context)
   return result;
 }
 
+void TerminateHandler()
+{
+  MOZ_CRASH("Unhandled exception");
+}
+
 #if !defined(MOZ_WIDGET_ANDROID)
 
 // Locate the specified executable and store its path as a native string in
@@ -1819,6 +1824,8 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
 #endif
 
   mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
+
+  std::set_terminate(&TerminateHandler);
 
   return NS_OK;
 }
@@ -3775,6 +3782,8 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
 
   mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
 
+  std::set_terminate(&TerminateHandler);
+
   // we either do remote or nothing, no fallback to regular crash reporting
   return gExceptionHandler->IsOutOfProcess();
 }
@@ -3826,6 +3835,8 @@ SetRemoteExceptionHandler()
 
   mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
 
+  std::set_terminate(&TerminateHandler);
+
   // we either do remote or nothing, no fallback to regular crash reporting
   return gExceptionHandler->IsOutOfProcess();
 }
@@ -3851,6 +3862,8 @@ SetRemoteExceptionHandler(const nsACString& crashPipe)
                      crashPipe.BeginReading());
 
   mozalloc_set_oom_abort_handler(AnnotateOOMAllocationSize);
+
+  std::set_terminate(&TerminateHandler);
 
   // we either do remote or nothing, no fallback to regular crash reporting
   return gExceptionHandler->IsOutOfProcess();
