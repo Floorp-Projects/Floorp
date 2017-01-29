@@ -7,8 +7,8 @@
 == flexbox-anonymous-items-001.html flexbox-anonymous-items-001.html
 
 # Tests for alignment of flex lines (align-content property)
-fails == flexbox-align-content-horiz-001a.xhtml flexbox-align-content-horiz-001a.xhtml
-fails == flexbox-align-content-horiz-001b.xhtml flexbox-align-content-horiz-001b.xhtml
+== flexbox-align-content-horiz-001a.xhtml flexbox-align-content-horiz-001a.xhtml
+== flexbox-align-content-horiz-001b.xhtml flexbox-align-content-horiz-001b.xhtml
 fails == flexbox-align-content-vert-001a.xhtml flexbox-align-content-vert-001a.xhtml
 fails == flexbox-align-content-vert-001b.xhtml flexbox-align-content-vert-001b.xhtml
 

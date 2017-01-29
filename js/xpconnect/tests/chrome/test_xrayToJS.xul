@@ -152,6 +152,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
     testSet();
 
+    testDataView();
+
     // We could also test DataView and Iterator here for completeness, but it's
     // more trouble than it's worth.
 
@@ -270,6 +272,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
      "keys", "values", "clear", "forEach", "entries", Symbol.iterator];
   gConstructorProperties['Set'] =
     constructorProps([Symbol.species]);
+
+  gPrototypeProperties['DataView'] =
+    ["constructor", "buffer", "byteLength", "byteOffset", Symbol.toStringTag,
+     "getInt8", "getUint8", "getInt16", "getUint16",
+     "getInt32", "getUint32", "getFloat32", "getFloat64",
+     "setInt8", "setUint8", "setInt16", "setUint16",
+     "setInt32", "setUint32", "setFloat32", "setFloat64"];
+  gConstructorProperties['DataView'] = constructorProps([]);
 
   // Sort an array that may contain symbols as well as strings.
   function sortProperties(arr) {
@@ -976,6 +986,36 @@ for (var prop of props) {
 
     t.clear();
     is(t.size, 0, "Set is empty after calling clear");
+  }
+
+  function testDataView() {
+    testXray('DataView', new iwin.DataView(new iwin.ArrayBuffer(4)),
+             new iwin.DataView(new iwin.ArrayBuffer(8)));
+
+    const versions = [() => iwin.eval(`new DataView(new ArrayBuffer(8))`),
+                      () => new DataView(new iwin.ArrayBuffer(8))];
+
+    for (const constructor of versions) {
+      let t = constructor();
+      is(t.byteLength, 8, `byteLength correct for "${constructor}"`);
+      is(t.byteOffset, 0, `byteOffset correct for "${constructor}"`);
+      is(t.buffer.byteLength, 8, `buffer works for "${constructor}"`);
+
+      const get = ["getInt8", "getUint8", "getInt16", "getUint16",
+                   "getInt32", "getUint32", "getFloat32", "getFloat64"];
+
+      const set = ["setInt8", "setUint8", "setInt16", "setUint16",
+                   "setInt32", "setUint32", "setFloat32", "setFloat64"];
+
+      for (const f of get) {
+        is(t[f](0), 0, `${f} is 0 for "${constructor}"`);
+      }
+
+      for (let i = 0; i < set.length; i++) {
+        t[set[i]](0, 13);
+        is(t[get[i]](0), 13, `${get[i]}(0) afer ${set[i]}(0, 13) is 13 for "${constructor}"`);
+      }
+    }
   }
 
   ]]>

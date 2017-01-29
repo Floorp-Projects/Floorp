@@ -10,6 +10,7 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/KeyframeEffectReadOnly.h"
@@ -532,14 +533,12 @@ public:
     mTimeline = mTarget->OwnerDoc()->Timeline();
   }
 
-  // Returns a new animation set up with given StyleAnimation and
-  // keyframe rules.
+  // Returns a new animation set up with given StyleAnimation.
   // Or returns an existing animation matching StyleAnimation's name updated
-  // with the new StyleAnimation and keyframe rules.
+  // with the new StyleAnimation.
   already_AddRefed<CSSAnimation>
   Build(nsPresContext* aPresContext,
-        const StyleAnimation& aSrc,
-        const nsCSSKeyframesRule* aRule);
+        const StyleAnimation& aSrc);
 
 private:
   nsTArray<Keyframe> BuildAnimationFrames(nsPresContext* aPresContext,
@@ -599,16 +598,34 @@ ConvertTimingFunction(const nsTimingFunction& aTimingFunction);
 
 already_AddRefed<CSSAnimation>
 CSSAnimationBuilder::Build(nsPresContext* aPresContext,
-                           const StyleAnimation& aSrc,
-                           const nsCSSKeyframesRule* aRule)
+                           const StyleAnimation& aSrc)
 {
   MOZ_ASSERT(aPresContext);
-  MOZ_ASSERT(aRule);
+
+  nsTArray<Keyframe> keyframes;
+  if (aPresContext->StyleSet()->IsServo()) {
+    ServoStyleSet* styleSet = aPresContext->StyleSet()->AsServo();
+    MOZ_ASSERT(styleSet);
+    const ServoComputedValues* computedValues =
+      mStyleContext->StyleSource().AsServoComputedValues();
+    const nsTimingFunction& timingFunction = aSrc.GetTimingFunction();
+    if (!styleSet->FillKeyframesForName(aSrc.GetName(),
+                                        timingFunction,
+                                        computedValues,
+                                        keyframes)) {
+      return nullptr;
+    }
+  } else {
+    nsCSSKeyframesRule* rule =
+      aPresContext->StyleSet()->AsGecko()->KeyframesRuleForName(aSrc.GetName());
+    if (!rule) {
+      return nullptr;
+    }
+
+    keyframes = BuildAnimationFrames(aPresContext, aSrc, rule);
+  }
 
   TimingParams timing = TimingParamsFrom(aSrc);
-
-  nsTArray<Keyframe> keyframes =
-    BuildAnimationFrames(aPresContext, aSrc, aRule);
 
   bool isStylePaused =
     aSrc.GetPlayState() == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
@@ -1083,18 +1100,16 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     // "none" which is represented by an empty name in the StyleAnimation.
     // Since such animations neither affect style nor dispatch events, we do
     // not generate a corresponding CSSAnimation for them.
-    MOZ_ASSERT(mPresContext->StyleSet()->IsGecko(),
-               "ServoStyleSet should not use nsAnimationManager for "
-               "animations");
-    nsCSSKeyframesRule* rule =
-      src.GetName().IsEmpty()
-      ? nullptr
-      : mPresContext->StyleSet()->AsGecko()->KeyframesRuleForName(src.GetName());
-    if (!rule) {
+    if (src.GetName().IsEmpty()) {
       continue;
     }
 
-    RefPtr<CSSAnimation> dest = builder.Build(mPresContext, src, rule);
+    RefPtr<CSSAnimation> dest =
+      builder.Build(mPresContext, src);
+    if (!dest) {
+      continue;
+    }
+
     dest->SetAnimationIndex(static_cast<uint64_t>(animIdx));
     aAnimations.AppendElement(dest);
   }

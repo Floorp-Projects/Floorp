@@ -27,16 +27,17 @@ class NonE10s
 public:
   virtual ~NonE10s() {}
 protected:
-  virtual mozilla::ipc::IPCResult RecvGetOriginKey(const uint32_t& aRequestId,
-                                                   const nsCString& aOrigin,
-                                                   const bool& aPersist) = 0;
+  virtual mozilla::ipc::IPCResult
+  RecvGetPrincipalKey(const uint32_t& aRequestId,
+                      const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+                      const bool& aPersist) = 0;
   virtual mozilla::ipc::IPCResult RecvSanitizeOriginKeys(const uint64_t& aSinceWhen,
                                                          const bool& aOnlyPrivateBrowsing) = 0;
   virtual void
   ActorDestroy(ActorDestroyReason aWhy) = 0;
 
-  bool SendGetOriginKeyResponse(const uint32_t& aRequestId,
-                                nsCString aKey);
+  bool SendGetPrincipalKeyResponse(const uint32_t& aRequestId,
+                                   nsCString aKey);
 };
 
 // Super = PMediaParent or NonE10s
@@ -49,9 +50,10 @@ class Parent : public Super
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Parent<Super>)
 
-  virtual mozilla::ipc::IPCResult RecvGetOriginKey(const uint32_t& aRequestId,
-                                                   const nsCString& aOrigin,
-                                                   const bool& aPersist) override;
+  virtual mozilla::ipc::IPCResult
+  RecvGetPrincipalKey(const uint32_t& aRequestId,
+                      const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+                      const bool& aPersist) override;
   virtual mozilla::ipc::IPCResult RecvSanitizeOriginKeys(const uint64_t& aSinceWhen,
                                                          const bool& aOnlyPrivateBrowsing) override;
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
