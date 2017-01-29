@@ -2631,7 +2631,7 @@ exports.testItemNoLabel = function (assert, done) {
   test.done();
 }
 
-
+/* bug 1302854 - disabled this subtest as it is intermittent
 // Tests that items can have an empty data property
 exports.testItemNoData = function (assert, done) {
   let test = new TestHelper(assert, done);
@@ -2686,6 +2686,7 @@ exports.testItemNoData = function (assert, done) {
     });
   });
 }
+*/
 
 
 exports.testItemNoAccessKey = function (assert, done) {
