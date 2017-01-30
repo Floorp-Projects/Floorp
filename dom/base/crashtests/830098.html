@@ -8,7 +8,7 @@ nt/b|+K	 E:</p>
 var docElement = document.body ? document.body : document.documentElement;
 document.addEventListener("DOMContentLoaded", CFcrash);
 function CFcrash() {
-try { test1.parentNode.removeChild(test1); } catch(e) {}
+try { test1.remove(); } catch(e) {}
 try { test2.innerHTML = ''; } catch(e) {}
 try { test3.outerHTML = test4.outerHTML; } catch(e) {}
 }</script>

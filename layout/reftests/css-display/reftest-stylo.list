@@ -2,14 +2,14 @@
 # Tests for CSS Display spec features.
 # http://dev.w3.org/csswg/css-display
 
-fails == display-contents-acid.html display-contents-acid.html
+== display-contents-acid.html display-contents-acid.html
 # fuzzy-if(Android,8,604) == display-contents-acid-dyn-1.html display-contents-acid-dyn-1.html
-fails == display-contents-acid-dyn-2.html display-contents-acid-dyn-2.html
-fails == display-contents-acid-dyn-3.html display-contents-acid-dyn-3.html
+== display-contents-acid-dyn-2.html display-contents-acid-dyn-2.html
+== display-contents-acid-dyn-3.html display-contents-acid-dyn-3.html
 # == display-contents-generated-content.html display-contents-generated-content.html
 # == display-contents-generated-content-2.html display-contents-generated-content-2.html
-fails == display-contents-style-inheritance-1.html display-contents-style-inheritance-1.html
-fails == display-contents-style-inheritance-1-stylechange.html display-contents-style-inheritance-1-stylechange.html
+== display-contents-style-inheritance-1.html display-contents-style-inheritance-1.html
+== display-contents-style-inheritance-1-stylechange.html display-contents-style-inheritance-1-stylechange.html
 # == display-contents-style-inheritance-1-dom-mutations.html display-contents-style-inheritance-1-dom-mutations.html
 == display-contents-tables.xhtml display-contents-tables.xhtml
 == display-contents-tables-2.xhtml display-contents-tables-2.xhtml
@@ -17,13 +17,13 @@ fails == display-contents-style-inheritance-1-stylechange.html display-contents-
 == display-contents-visibility-hidden.html display-contents-visibility-hidden.html
 == display-contents-visibility-hidden-2.html display-contents-visibility-hidden-2.html
 # == display-contents-495385-2d.html display-contents-495385-2d.html
-fails == display-contents-xbl.xhtml display-contents-xbl.xhtml
+== display-contents-xbl.xhtml display-contents-xbl.xhtml
 # fuzzy-if(Android,7,1186) pref(dom.webcomponents.enabled,true) == display-contents-shadow-dom-1.html display-contents-shadow-dom-1.html
 == display-contents-xbl-2.xul display-contents-xbl-2.xul
-asserts(1) == display-contents-xbl-3.xul display-contents-xbl-3.xul
+asserts(1-2) == display-contents-xbl-3.xul display-contents-xbl-3.xul
 # == display-contents-xbl-4.xul display-contents-xbl-4.xul
 # == display-contents-fieldset.html display-contents-fieldset.html
-asserts(1) == display-contents-xbl-5.xul display-contents-xbl-5.xul
+asserts(1-2) == display-contents-xbl-5.xul display-contents-xbl-5.xul
 == display-contents-list-item-child.html display-contents-list-item-child.html
 == display-contents-writing-mode-1.html display-contents-writing-mode-1.html
-fails == display-contents-writing-mode-2.html display-contents-writing-mode-2.html
+== display-contents-writing-mode-2.html display-contents-writing-mode-2.html

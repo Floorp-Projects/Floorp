@@ -44,7 +44,7 @@ function create(window, details) {
 exports.create = create;
 
 function dispose(menuitem) {
-  menuitem.parentNode.removeChild(menuitem);
+  menuitem.remove();
 }
 exports.dispose = dispose;
 

@@ -17,6 +17,7 @@ module.exports = {
     ".xml": require("../lib/processors/xbl-bindings"),
   },
   rules: {
+    "avoid-removeChild": require("../lib/rules/avoid-removeChild"),
     "balanced-listeners": require("../lib/rules/balanced-listeners"),
     "import-browserjs-globals": require("../lib/rules/import-browserjs-globals"),
     "import-globals": require("../lib/rules/import-globals"),
@@ -34,6 +35,7 @@ module.exports = {
     "var-only-at-top-level": require("../lib/rules/var-only-at-top-level")
   },
   rulesConfig: {
+    "avoid-removeChild": 0,
     "balanced-listeners": 0,
     "import-browserjs-globals": 0,
     "import-globals": 0,

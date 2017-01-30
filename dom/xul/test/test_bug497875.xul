@@ -32,7 +32,7 @@ SimpleTest.waitForExplicitFinish();
 function done_test() {
   var f = document.getElementById('iframe')
   f.src="about:blank"
-  f.parentNode.removeChild(f)
+  f.remove()
   ok(true, "this is a crashtest");
   SimpleTest.finish();
 }

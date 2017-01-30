@@ -96,7 +96,7 @@ runWithMSE(function () {
     ok(updateendCount == 1 || updateendCount == 2, "updateend event received");
     ok(updatestartCount == 1 || updatestartCount == 2, "updatestart event received");
     is(loadedmetadataCount, 1, "loadedmetadata event received");
-    v.parentNode.removeChild(v);
+    v.remove();
     SimpleTest.finish();
   });
 });

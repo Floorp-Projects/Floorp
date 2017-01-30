@@ -169,7 +169,7 @@ exports.items = [
           }
         }
         if (!args.ifEmptyOnly || !element.hasChildNodes()) {
-          element.parentNode.removeChild(element);
+          element.remove();
           removed++;
         }
       }

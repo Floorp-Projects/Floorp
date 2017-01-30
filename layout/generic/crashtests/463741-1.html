@@ -8,7 +8,7 @@ function boom()
   document.documentElement.appendChild(document.body);
   document.documentElement.offsetHeight;
   var v = document.getElementById("v");
-  v.parentNode.removeChild(v);
+  v.remove();
   var w = document.createElement("span");
   document.body.insertBefore(w, document.body.lastChild);
 }

@@ -4,7 +4,7 @@
         onload = function() {
           var el;
           while (el = document.querySelector("br")) {
-            el.parentNode.removeChild(el);
+            el.remove();
           }
           focus();
           document.body.focus();

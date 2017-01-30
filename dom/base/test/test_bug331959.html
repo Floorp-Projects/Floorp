@@ -58,7 +58,7 @@ function generateLinkInLink(id, desc) {
     is(this.contentDocument.documentElement.textContent, "PASS", desc);
     // Have to remove the iframe we used from the DOM, because the harness is
     // stupid and doesn't have enough space for more than one iframe.
-    $(id).parentNode.removeChild($(id));
+    $(id).remove();
     doNextTest();
   };
   return [innerA, $(id).contentWindow];
@@ -88,7 +88,7 @@ function generateInputInLink(id, desc) {
     is(this.contentDocument.documentElement.textContent, "PASS?", desc);
     // Have to remove the iframe we used from the DOM, because the harness is
     // stupid and doesn't have enough space for more than one iframe.
-    $(id).parentNode.removeChild($(id));
+    $(id).remove();
     doNextTest();
   };
   var input = doc.getElementById("submit");
@@ -120,7 +120,7 @@ function generateButtonInLink(id, desc) {
     is(this.contentDocument.documentElement.textContent, "PASS?", desc);
     // Have to remove the iframe we used from the DOM, because the harness is
     // stupid and doesn't have enough space for more than one iframe.
-    $(id).parentNode.removeChild($(id));
+    $(id).remove();
     doNextTest();
   };
   var button = doc.getElementById("submit");

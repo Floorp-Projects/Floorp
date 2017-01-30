@@ -783,8 +783,8 @@ limitations under the License.
 
       it('handles root/target elements not yet in the DOM', function(done) {
 
-        rootEl.parentNode.removeChild(rootEl);
-        targetEl1.parentNode.removeChild(targetEl1);
+        rootEl.remove();
+        targetEl1.remove();
 
         var spy = sinon.spy();
         io = new IntersectionObserver(spy, {root: rootEl});
@@ -813,7 +813,7 @@ limitations under the License.
             }, ASYNC_TIMEOUT);
           },
           function(done) {
-            grandParentEl.parentNode.removeChild(grandParentEl);
+            grandParentEl.remove();
             spy.waitForNotification(function() {
               expect(spy.callCount).to.be(2);
               var records = sortRecords(spy.lastCall.args[0]);
@@ -835,7 +835,7 @@ limitations under the License.
             }, ASYNC_TIMEOUT);
           },
           function(done) {
-            rootEl.parentNode.removeChild(rootEl);
+            rootEl.remove();
             spy.waitForNotification(function() {
               expect(spy.callCount).to.be(4);
               var records = sortRecords(spy.lastCall.args[0]);
@@ -1198,7 +1198,7 @@ limitations under the License.
    */
   function removeStyles() {
     var styles = document.getElementById('styles');
-    styles.parentNode.removeChild(styles);
+    styles.remove();
   }
 
 
@@ -1207,7 +1207,7 @@ limitations under the License.
    */
   function removeFixtures() {
     var fixtures = document.getElementById('fixtures');
-    fixtures.parentNode.removeChild(fixtures);
+    fixtures.remove();
 
     rootEl = null;
     grandParentEl = null;

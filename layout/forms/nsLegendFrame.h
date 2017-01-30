@@ -9,7 +9,8 @@
 #include "mozilla/Attributes.h"
 #include "nsBlockFrame.h"
 
-class nsLegendFrame : public nsBlockFrame {
+class nsLegendFrame final : public nsBlockFrame
+{
 public:
   NS_DECL_QUERYFRAME_TARGET(nsLegendFrame)
   NS_DECL_QUERYFRAME
@@ -30,7 +31,7 @@ public:
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  int32_t GetLogicalAlign(WritingMode aCBWM);
+  int32_t GetLogicalAlign(mozilla::WritingMode aCBWM);
 };
 
 

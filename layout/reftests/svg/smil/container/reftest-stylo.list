@@ -13,7 +13,7 @@ random == moved-tree-1.xhtml moved-tree-1.xhtml
 == deferred-tree-3a.xhtml deferred-tree-3a.xhtml
 == deferred-tree-3b.xhtml deferred-tree-3b.xhtml
 == deferred-tree-3c.xhtml deferred-tree-3c.xhtml
-fails == deferred-tree-3d.xhtml deferred-tree-3d.xhtml
+== deferred-tree-3d.xhtml deferred-tree-3d.xhtml
 # this will occasionally fail until we correctly clear animation effects from
 # no-longer-targeted elements
 random == invalid-elem-1.xhtml invalid-elem-1.xhtml

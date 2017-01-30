@@ -703,7 +703,7 @@ CssRuleView.prototype = {
     this.styleWindow = null;
 
     if (this.element.parentNode) {
-      this.element.parentNode.removeChild(this.element);
+      this.element.remove();
     }
 
     if (this._elementStyle) {

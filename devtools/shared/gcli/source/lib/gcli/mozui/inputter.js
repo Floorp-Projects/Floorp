@@ -109,7 +109,7 @@ Inputter.prototype.destroy = function() {
   this.history.destroy();
 
   if (this.style) {
-    this.style.parentNode.removeChild(this.style);
+    this.style.remove();
     this.style = undefined;
   }
 

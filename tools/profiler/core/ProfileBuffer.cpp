@@ -6,7 +6,7 @@
 #include "ProfileBuffer.h"
 
 ProfileBuffer::ProfileBuffer(int aEntrySize)
-  : mEntries(MakeUnique<ProfileEntry[]>(aEntrySize))
+  : mEntries(mozilla::MakeUnique<ProfileEntry[]>(aEntrySize))
   , mWritePos(0)
   , mReadPos(0)
   , mEntrySize(aEntrySize)

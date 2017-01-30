@@ -133,7 +133,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   function finish() {
     opener.setTimeout("done()", 0);
     var i = document.getElementById("ifr");
-    i.parentNode.removeChild(i); // This is a crash test!
+    i.remove(); // This is a crash test!
     window.close();
   }
 

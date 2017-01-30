@@ -7,9 +7,9 @@
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "nsIProfileSaveEvent.h"
-#include "GeckoSampler.h"
 #include "nsLocalFile.h"
 #include "nsIFileStreams.h"
+#include "platform.h"
 
 using mozilla::dom::AutoJSAPI;
 using mozilla::dom::Promise;
@@ -27,8 +27,8 @@ static const uint32_t MAX_SUBPROCESS_EXIT_PROFILES = 5;
 
 NS_IMPL_ISUPPORTS(ProfileGatherer, nsIObserver)
 
-ProfileGatherer::ProfileGatherer(GeckoSampler* aTicker)
-  : mTicker(aTicker)
+ProfileGatherer::ProfileGatherer(Sampler* aSampler)
+  : mSampler(aSampler)
   , mSinceTime(0)
   , mPendingProfiles(0)
   , mGathering(false)
@@ -145,13 +145,13 @@ ProfileGatherer::Finish()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!mTicker) {
+  if (!mSampler) {
     // We somehow got called after we were cancelled! This shouldn't
     // be possible, but doing a belt-and-suspenders check to be sure.
     return;
   }
 
-  UniquePtr<char[]> buf = mTicker->ToJSON(mSinceTime);
+  UniquePtr<char[]> buf = mSampler->ToJSON(mSinceTime);
 
   if (mFile) {
     nsCOMPtr<nsIFileOutputStream> of =
@@ -216,16 +216,16 @@ ProfileGatherer::Reset()
 void
 ProfileGatherer::Cancel()
 {
-  // The GeckoSampler is going away. If we have a Promise in flight, we
-  // should reject it.
+  // The Sampler is going away. If we have a Promise in flight, we should
+  // reject it.
   if (mPromise) {
     mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
   }
   mPromise = nullptr;
   mFile = nullptr;
 
-  // Clear out the GeckoSampler reference, since it's being destroyed.
-  mTicker = nullptr;
+  // Clear out the Sampler reference, since it's being destroyed.
+  mSampler = nullptr;
 }
 
 void

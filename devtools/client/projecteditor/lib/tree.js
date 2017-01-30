@@ -289,7 +289,7 @@ var TreeView = Class({
         parentContainer.line.focus();
       },
       destroy: () => {
-        item.parentNode.removeChild(item);
+        item.remove();
       },
     });
 

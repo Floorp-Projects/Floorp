@@ -38,7 +38,7 @@ whole tree, |mTree| is being set to null. Then we have |null->Invalidate()|.
 var tree = null;
 
 function listener() {
-  tree.parentNode.removeChild(tree);
+  tree.remove();
 }
 
 function run() {

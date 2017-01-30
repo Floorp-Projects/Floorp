@@ -966,14 +966,14 @@ var MenuWrapper = Class({
       if (toplevel.length == 0) {
         let separator = this.separator;
         if (separator)
-          separator.parentNode.removeChild(separator);
+          separator.remove();
       }
     }
     else if (parent == this.overflowPopup) {
       // If there are no more items then remove the overflow menu and separator
       if (parent.childNodes.length == 0) {
         let separator = this.separator;
-        separator.parentNode.removeChild(separator);
+        separator.remove();
         this.contextMenu.removeChild(parent.parentNode);
       }
     }

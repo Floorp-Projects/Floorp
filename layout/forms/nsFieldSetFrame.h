@@ -7,7 +7,7 @@
 #define nsFieldSetFrame_h___
 
 #include "mozilla/Attributes.h"
-#include "imgIContainer.h"
+#include "DrawResult.h"
 #include "nsContainerFrame.h"
 
 class nsFieldSetFrame final : public nsContainerFrame
@@ -24,7 +24,6 @@ public:
                       nsLayoutUtils::IntrinsicISizeType);
   virtual nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
   virtual nscoord GetPrefISize(nsRenderingContext* aRenderingContext) override;
-  virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
 
   /**
    * The area to paint box-shadows around.  It's the border rect except
@@ -37,6 +36,13 @@ public:
                       const ReflowInput& aReflowInput,
                       nsReflowStatus&          aStatus) override;
                                
+  nscoord GetLogicalBaseline(mozilla::WritingMode aWM) const override;
+  bool GetVerticalAlignBaseline(mozilla::WritingMode aWM,
+                                nscoord* aBaseline) const override;
+  bool GetNaturalBaselineBOffset(mozilla::WritingMode aWM,
+                                 BaselineSharingGroup aBaselineGroup,
+                                 nscoord* aBaseline) const override;
+
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;

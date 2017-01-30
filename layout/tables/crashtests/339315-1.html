@@ -8,7 +8,7 @@ function boom() {
   var table = document.getElementById("table");
 
   var doomed = document.getElementById("doomed"); 
-  doomed.parentNode.removeChild(doomed);
+  doomed.remove();
 
   var colgroup1 = document.createElement("colgroup");
   table.appendChild(colgroup1);
@@ -21,7 +21,7 @@ function boom() {
   thead.appendChild(tr);
   table.insertBefore(thead, colgroup1);
 
-  colgroup1.parentNode.removeChild(colgroup1);
+  colgroup1.remove();
 
   var colgroup2 = document.createElement("colgroup");
   table.appendChild(colgroup2);

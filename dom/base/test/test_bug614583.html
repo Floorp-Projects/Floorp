@@ -253,7 +253,7 @@ for (i = 0; i < spans.length; ++i) {
   is(spans[i].attributes.length, attrCount, "didn't have maxed out attrs");
 }
 while (spans.length) {
-  spans[0].parentNode.removeChild(spans[0]);
+  spans[0].remove();
 }
 </script>
 </pre>

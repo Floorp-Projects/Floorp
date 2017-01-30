@@ -30,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1080360
       logger("Listener receive event: " + event.type);
       if(event.type == "gotpointercapture") {
         test_listener_got = true;
-        listener.parentNode.removeChild(listener);
+        listener.remove();
       }
       if(event.type == "lostpointercapture")
         test_listener_lost = true;

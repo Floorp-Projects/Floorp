@@ -65673,7 +65673,7 @@ var Debugger =
 	  if (cls) { cls += " CodeMirror-linebackground" }
 	  if (lineView.background) {
 	    if (cls) { lineView.background.className = cls }
-	    else { lineView.background.parentNode.removeChild(lineView.background); lineView.background = null }
+	    else { lineView.background.remove(); lineView.background = null }
 	  } else if (cls) {
 	    var wrap = ensureLineWrapped(lineView)
 	    lineView.background = wrap.insertBefore(elt("div", null, cls), wrap.firstChild)
@@ -67689,7 +67689,7 @@ var Debugger =
 	    if (webkit && mac && cm.display.currentWheelTarget == node)
 	      { node.style.display = "none" }
 	    else
-	      { node.parentNode.removeChild(node) }
+	      { node.remove() }
 	    return next
 	  }
 	
@@ -69761,7 +69761,7 @@ var Debugger =
 	      img._top = img.offsetTop
 	    }
 	    e.dataTransfer.setDragImage(img, 0, 0)
-	    if (presto) { img.parentNode.removeChild(img) }
+	    if (presto) { img.remove() }
 	  }
 	}
 	

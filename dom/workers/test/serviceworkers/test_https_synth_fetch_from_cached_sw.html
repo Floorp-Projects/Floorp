@@ -36,7 +36,7 @@
         // load synth.html for the second time, we will first recreate the
         // service worker from the cache.  This is intended to test that we
         // properly store and retrieve the security info from the cache.
-        iframe.parentNode.removeChild(iframe);
+        iframe.remove();
         iframe = null;
         SpecialPowers.exactGC(function() {
           iframe = document.createElement("iframe");

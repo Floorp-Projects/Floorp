@@ -55,7 +55,7 @@ var onended = function(event) {
 
   v.src = "";
   if (v.parentNode) {
-    v.parentNode.removeChild(v);
+    v.remove();
   }
 
   // Verify that none of the seeks we did in timeupdate actually seeked.

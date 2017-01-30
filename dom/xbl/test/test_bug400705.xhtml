@@ -36,7 +36,7 @@ addLoadEvent(function() {
   d.a;
   is(window.countera, 1, "Should have evaluated field");
 
-  d.parentNode.removeChild(d);
+  d.remove();
   is(window.counterb, 0, "Should not evaluate field on binding teardown");
   SimpleTest.finish();
 });

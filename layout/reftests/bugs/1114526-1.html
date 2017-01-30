@@ -32,8 +32,8 @@ function finishFail() {
 function cleanup() {
   var src = document.getElementById("src");
   var dest = document.getElementById("dest");
-  src.parentNode.removeChild(src);
-  dest.parentNode.removeChild(dest);
+  src.remove();
+  dest.remove();
 }
 </script>
 <style>

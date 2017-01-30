@@ -4,7 +4,7 @@
     <script>
       function tweak() {
         var b = document.getElementsByTagName("span")[0];
-        b.parentNode.removeChild(b);
+        b.remove();
         document.documentElement.removeAttribute("class");
       }
       window.addEventListener("MozReftestInvalidate", tweak);

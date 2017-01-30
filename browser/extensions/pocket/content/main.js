@@ -620,7 +620,7 @@ var pktUIMessaging = (function() {
             callback(panelId, data, nodePrincipal);
 
             // Cleanup the element
-            e.target.parentNode.removeChild(e.target);
+            e.target.remove();
 
         }, false, true);
     }

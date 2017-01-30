@@ -115,7 +115,7 @@ addTest(function testWinRace() {
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#a").then(node => {
     front = node;
     let contentNode = gInspectee.querySelector("#a");
-    contentNode.parentNode.removeChild(contentNode);
+    contentNode.remove();
     // Now wait for that mutation and retain response to come in.
     return promise.all([
       gWalker.retainNode(front),
@@ -143,7 +143,7 @@ addTest(function testLoseRace() {
     front = node;
     gInspectee.querySelector("#z").parentNode = null;
     let contentNode = gInspectee.querySelector("#a");
-    contentNode.parentNode.removeChild(contentNode);
+    contentNode.remove();
     return promiseOnce(gWalker, "new-mutations");
   }).then(() => {
     // Verify that we have an outstanding request (no good way to tell that it's a

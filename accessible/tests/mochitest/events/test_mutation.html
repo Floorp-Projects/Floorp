@@ -202,7 +202,7 @@
 
       this.invoke = function removeFromDOM_invoke()
       {
-        this.DOMNode.parentNode.removeChild(this.DOMNode);
+        this.DOMNode.remove();
       }
 
       this.getID = function removeFromDOM_getID()
@@ -387,12 +387,12 @@
       this.invoke = function hideNDestroyDoc_invoke()
       {
         this.txt = getAccessible('c5').firstChild.firstChild;
-        this.txt.DOMNode.parentNode.removeChild(this.txt.DOMNode);
+        this.txt.DOMNode.remove();
       }
 
       this.check = function hideNDestroyDoc_check()
       {
-        getNode('c5').parentNode.removeChild(getNode('c5'));
+        getNode('c5').remove();
       }
 
       this.getID = function hideNDestroyDoc_getID()
@@ -420,7 +420,7 @@
 
       this.check = function hideHideNDestroyDoc_check()
       {
-        getNode('c6').parentNode.removeChild(getNode('c6'));
+        getNode('c6').remove();
       }
 
       this.getID = function hideHideNDestroyDoc_getID()

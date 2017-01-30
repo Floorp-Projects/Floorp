@@ -5,7 +5,7 @@
         onload = function() {
           var el;
           while (el = document.querySelector("br")) {
-            el.parentNode.removeChild(el);
+            el.remove();
           }
           focus();
           document.body.focus();
@@ -14,7 +14,7 @@
           var range = window.getSelection().getRangeAt(0);
           var el = document.createTextNode(" ");
           range.insertNode(el);
-          el.parentNode.removeChild(el);
+          el.remove();
 
           synthesizeKey("VK_UP", {});
         }

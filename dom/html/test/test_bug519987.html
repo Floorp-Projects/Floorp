@@ -23,7 +23,7 @@ is((new Image()).namespaceURI, xmlns, "Unexpected namespace for new Image()");
 is((new Audio()).namespaceURI, xmlns, "Unexpected namespace for new Audio()");
 var titles = document.getElementsByTagName("title");
 var t = titles[0];
-t.parentNode.removeChild(t);
+t.remove();
 document.title = "abcdefg";
 is(titles[0].namespaceURI, xmlns, "Unexpected namespace for new <title>");
 

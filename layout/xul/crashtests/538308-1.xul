@@ -21,7 +21,7 @@
         group.appendChild(tc);
 
         v = document.getElementById("victim");
-        v.parentNode.removeChild(v);
+        v.remove();
         v = null;
 
         tree = document.getElementById("tr");

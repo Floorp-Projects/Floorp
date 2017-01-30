@@ -940,7 +940,7 @@ var REGEXP_PRECEDER_PATTERN = '(?:^^\\.?|[+-]|\\!|\\!=|\\!==|\\#|\\%|\\%=|&|&&|&
             breakAfter(node);
             // Discard the <BR> since it is now flush against a </LI>.
             if (node.parentNode) {
-              node.parentNode.removeChild(node);
+              node.remove();
             }
           } else {
             for (var child = node.firstChild; child; child = child.nextSibling) {
@@ -964,7 +964,7 @@ var REGEXP_PRECEDER_PATTERN = '(?:^^\\.?|[+-]|\\!|\\!=|\\!==|\\#|\\%|\\%=|&|&&|&
               breakAfter(node);
               if (!firstLine) {
                 // Don't leave blank text nodes in the DOM.
-                node.parentNode.removeChild(node);
+                node.remove();
               }
             }
           }

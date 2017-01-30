@@ -255,7 +255,7 @@ ConfigView.prototype = {
           input.checked = boolean;
         }, () => {
           input.checked = false;
-          tr.parentNode.removeChild(tr);
+          tr.remove();
         });
         break;
       case "number":
@@ -263,7 +263,7 @@ ConfigView.prototype = {
         this._defaultField.then(number => {
           input.value = number;
         }, () => {
-          tr.parentNode.removeChild(tr);
+          tr.remove();
         });
         break;
       case "object":
@@ -271,7 +271,7 @@ ConfigView.prototype = {
         this._defaultField.then(object => {
           input.value = JSON.stringify(object);
         }, () => {
-          tr.parentNode.removeChild(tr);
+          tr.remove();
         });
         break;
       default:
@@ -279,7 +279,7 @@ ConfigView.prototype = {
         this._defaultField.then(string => {
           input.value = string;
         }, () => {
-          tr.parentNode.removeChild(tr);
+          tr.remove();
         });
         break;
     }

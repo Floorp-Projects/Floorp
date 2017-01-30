@@ -1,9 +1,9 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 # these could be moved to crashtests
-fails == backgr_border-table-cell.html backgr_border-table-cell.html
-== backgr_border-table-column-group.html backgr_border-table-column-group.html
+# == backgr_border-table-cell.html backgr_border-table-cell.html
+# == backgr_border-table-column-group.html backgr_border-table-column-group.html
 # This seems to be caused by bug 527825
-== backgr_border-table-column.html backgr_border-table-column.html
+# == backgr_border-table-column.html backgr_border-table-column.html
 == backgr_border-table-quirks.html backgr_border-table-quirks.html
 == backgr_border-table-row-group.html backgr_border-table-row-group.html
 == backgr_border-table-row.html backgr_border-table-row.html
@@ -20,11 +20,11 @@ fails == backgr_border-table-cell.html backgr_border-table-cell.html
 == backgr_position-table-row.html backgr_position-table-row.html
 == backgr_position-table.html backgr_position-table.html
 == backgr_simple-table-cell.html backgr_simple-table-cell.html
-fails == backgr_simple-table-column-group.html backgr_simple-table-column-group.html
-fails == backgr_simple-table-column.html backgr_simple-table-column.html
-fails == backgr_simple-table-row-group.html backgr_simple-table-row-group.html
-fails == backgr_simple-table-row.html backgr_simple-table-row.html
-fails == backgr_simple-table.html backgr_simple-table.html
+== backgr_simple-table-column-group.html backgr_simple-table-column-group.html
+== backgr_simple-table-column.html backgr_simple-table-column.html
+== backgr_simple-table-row-group.html backgr_simple-table-row-group.html
+== backgr_simple-table-row.html backgr_simple-table-row.html
+== backgr_simple-table.html backgr_simple-table.html
 
 # would also be good to test table-header-group and table-footer-group
 # (and rows and row groups in the presence of their reordering)

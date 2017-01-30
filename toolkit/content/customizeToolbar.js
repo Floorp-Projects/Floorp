@@ -703,7 +703,7 @@ function onToolbarDrop(aEvent) {
       return;
 
     // Remove the item from its place in the toolbar.
-    wrapper.parentNode.removeChild(wrapper);
+    wrapper.remove();
 
     // Determine which toolbar we are dropping on.
     var dropToolbar = null;
@@ -775,7 +775,7 @@ function onPaletteDrop(aEvent) {
     }
 
     // The item was dragged out of the toolbar.
-    wrapper.parentNode.removeChild(wrapper);
+    wrapper.remove();
   }
 
   toolboxChanged();
