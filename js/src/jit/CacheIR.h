@@ -172,11 +172,14 @@ enum class CacheKind : uint8_t
                                           \
     _(StoreFixedSlot)                     \
     _(StoreDynamicSlot)                   \
+    _(AddAndStoreFixedSlot)               \
+    _(AddAndStoreDynamicSlot)             \
     _(StoreTypedObjectReferenceProperty)  \
     _(StoreTypedObjectScalarProperty)     \
     _(StoreUnboxedProperty)               \
     _(CallNativeSetter)                   \
     _(CallScriptedSetter)                 \
+    _(CallSetArrayLength)                 \
                                           \
     /* The *Result ops load a value into the cache's result register. */ \
     _(LoadFixedSlotResult)                \
@@ -573,6 +576,27 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         addStubField(offset, StubField::Type::RawWord);
         writeOperandId(rhs);
     }
+    void addAndStoreFixedSlot(ObjOperandId obj, size_t offset, ValOperandId rhs,
+                              Shape* newShape, bool changeGroup, ObjectGroup* newGroup)
+    {
+        writeOpWithOperandId(CacheOp::AddAndStoreFixedSlot, obj);
+        addStubField(offset, StubField::Type::RawWord);
+        writeOperandId(rhs);
+        buffer_.writeByte(changeGroup);
+        addStubField(uintptr_t(newGroup), StubField::Type::ObjectGroup);
+        addStubField(uintptr_t(newShape), StubField::Type::Shape);
+    }
+    void addAndStoreDynamicSlot(ObjOperandId obj, size_t offset, ValOperandId rhs,
+                                Shape* newShape, bool changeGroup, ObjectGroup* newGroup)
+    {
+        writeOpWithOperandId(CacheOp::AddAndStoreDynamicSlot, obj);
+        addStubField(offset, StubField::Type::RawWord);
+        writeOperandId(rhs);
+        buffer_.writeByte(changeGroup);
+        addStubField(uintptr_t(newGroup), StubField::Type::ObjectGroup);
+        addStubField(uintptr_t(newShape), StubField::Type::Shape);
+    }
+
     void storeTypedObjectReferenceProperty(ObjOperandId obj, uint32_t offset,
                                            TypedThingLayout layout, ReferenceTypeDescr::Type type,
                                            ValOperandId rhs)
@@ -608,6 +632,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void callNativeSetter(ObjOperandId obj, JSFunction* setter, ValOperandId rhs) {
         writeOpWithOperandId(CacheOp::CallNativeSetter, obj);
         addStubField(uintptr_t(setter), StubField::Type::JSObject);
+        writeOperandId(rhs);
+    }
+    void callSetArrayLength(ObjOperandId obj, bool strict, ValOperandId rhs) {
+        writeOpWithOperandId(CacheOp::CallSetArrayLength, obj);
+        buffer_.writeByte(uint32_t(strict));
         writeOperandId(rhs);
     }
 
@@ -753,6 +782,12 @@ class MOZ_RAII CacheIRReader
 
     ReferenceTypeDescr::Type referenceTypeDescrType() {
         return ReferenceTypeDescr::Type(buffer_.readByte());
+    }
+
+    bool readBool() {
+        uint8_t b = buffer_.readByte();
+        MOZ_ASSERT(b <= 1);
+        return bool(b);
     }
 
     bool matchOp(CacheOp op) {
@@ -929,6 +964,8 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator
                                       ValOperandId rhsId);
     bool tryAttachSetter(HandleObject obj, ObjOperandId objId, HandleId id,
                          ValOperandId rhsId);
+    bool tryAttachSetArrayLength(HandleObject obj, ObjOperandId objId, HandleId id,
+                                 ValOperandId rhsId);
 
   public:
     SetPropIRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind,
@@ -936,6 +973,7 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator
                        HandleValue rhsVal);
 
     bool tryAttachStub();
+    bool tryAttachAddSlotStub(HandleObjectGroup oldGroup, HandleShape oldShape);
 
     bool shouldUnlinkPreliminaryObjectStubs() const {
         return preliminaryObjectAction_ == PreliminaryObjectAction::Unlink;

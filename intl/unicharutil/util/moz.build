@@ -29,8 +29,6 @@ Library('unicharutil_external_s')
 
 FORCE_STATIC_LIB = True
 
-SDK_LIBRARY = True
-
 USE_STATIC_LIBS = True
 
 if CONFIG['_MSC_VER']:

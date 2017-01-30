@@ -71,4 +71,15 @@ js::Mutex::unlock()
   stack.popBack();
 }
 
+bool
+js::Mutex::ownedByCurrentThread() const
+{
+  auto& stack = heldMutexStack();
+  for (size_t i = 0; i < stack.length(); i++) {
+    if (stack[i] == this)
+      return true;
+  }
+  return false;
+}
+
 #endif

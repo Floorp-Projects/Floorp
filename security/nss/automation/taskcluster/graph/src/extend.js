@@ -381,7 +381,7 @@ async function scheduleFuzzing() {
       "/bin/bash",
       "-c",
       "bin/checkout.sh && nss/automation/taskcluster/scripts/fuzz.sh " +
-        "certDN nss/fuzz/corpus/quickder -max_total_time=300 -max_len=4096"
+        "certDN nss/fuzz/corpus/certDN -max_total_time=300 -max_len=4096"
     ],
     // Need a privileged docker container to remove detect_leaks=0.
     env: {

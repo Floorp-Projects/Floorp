@@ -1,18 +1,18 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 default-preferences pref(layout.css.text-combine-upright.enabled,true)
 
-== text-combine-upright-break-inside-001.html text-combine-upright-break-inside-001.html
-== text-combine-upright-break-inside-001a.html text-combine-upright-break-inside-001a.html
-== text-combine-upright-compression-001.html text-combine-upright-compression-001.html
-== text-combine-upright-compression-002.html text-combine-upright-compression-002.html
-== text-combine-upright-compression-003.html text-combine-upright-compression-003.html
-== text-combine-upright-compression-004.html text-combine-upright-compression-004.html
-== text-combine-upright-compression-005.html text-combine-upright-compression-005.html
-== text-combine-upright-compression-005a.html text-combine-upright-compression-005a.html
-== text-combine-upright-compression-006.html text-combine-upright-compression-006.html
-== text-combine-upright-compression-006a.html text-combine-upright-compression-006a.html
-== text-combine-upright-compression-007.html text-combine-upright-compression-007.html
+fails == text-combine-upright-break-inside-001.html text-combine-upright-break-inside-001.html
+fails == text-combine-upright-break-inside-001a.html text-combine-upright-break-inside-001a.html
+fails == text-combine-upright-compression-001.html text-combine-upright-compression-001.html
+fails == text-combine-upright-compression-002.html text-combine-upright-compression-002.html
+fails == text-combine-upright-compression-003.html text-combine-upright-compression-003.html
+fails == text-combine-upright-compression-004.html text-combine-upright-compression-004.html
+fails == text-combine-upright-compression-005.html text-combine-upright-compression-005.html
+fails == text-combine-upright-compression-005a.html text-combine-upright-compression-005a.html
+fails == text-combine-upright-compression-006.html text-combine-upright-compression-006.html
+fails == text-combine-upright-compression-006a.html text-combine-upright-compression-006a.html
+fails == text-combine-upright-compression-007.html text-combine-upright-compression-007.html
 
-== text-orientation-upright-directionality-001.html text-orientation-upright-directionality-001.html
+fails == text-orientation-upright-directionality-001.html text-orientation-upright-directionality-001.html
 
-== logical-physical-mapping-001.html logical-physical-mapping-001.html
+fails == logical-physical-mapping-001.html logical-physical-mapping-001.html
