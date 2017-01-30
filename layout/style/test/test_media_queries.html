@@ -165,7 +165,7 @@ function run() {
       var clonedsheet = links[1].sheet;
       clonedsheet.insertRule("#nonexistent { color: purple}", 1);
       // remove the uncloned sheet
-      links[0].parentNode.removeChild(links[0]);
+      links[0].remove();
 
       var ser3 = clonedsheet.cssRules[0].media.mediaText;
       is(ser3, ser1, "cloning query '" + q + "' should not change " +

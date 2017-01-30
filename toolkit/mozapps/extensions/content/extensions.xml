@@ -759,7 +759,7 @@
 
       <method name="onUninstalled">
         <body><![CDATA[
-          this.parentNode.removeChild(this);
+          this.remove();
         ]]></body>
       </method>
     </implementation>

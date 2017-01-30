@@ -1,8 +1,8 @@
 <treerow xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="zebra">
 <script xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
 function doe(){
-  document.getElementById('b').parentNode.removeChild(document.getElementById('b'));
-  document.getElementById('c').parentNode.removeChild(document.getElementById('c'));
+  document.getElementById('b').remove();
+  document.getElementById('c').remove();
 }
 
 setTimeout(doe, 200);

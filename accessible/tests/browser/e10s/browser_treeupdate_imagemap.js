@@ -119,7 +119,7 @@ function* testContainer(browser) {
   onReorder = waitForEvent(EVENT_REORDER, id);
   yield ContentTask.spawn(browser, {}, () => {
     let mapNode = content.document.getElementById('map');
-    mapNode.parentNode.removeChild(mapNode);
+    mapNode.remove();
   });
   yield onReorder;
 

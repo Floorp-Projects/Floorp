@@ -35,8 +35,8 @@
 	function deleteSpans() {
 	    var n = document.getElementById('delete1');
 	    var n2 = document.getElementById('delete2');
-	    n.parentNode.removeChild(n);
-	    n2.parentNode.removeChild(n2);
+	    n.remove();
+	    n2.remove();
             document.documentElement.removeAttribute("class");
         }
         document.addEventListener("MozReftestInvalidate", deleteSpans);

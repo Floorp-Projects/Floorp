@@ -21,49 +21,49 @@ fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == height-constraint-percent-2.html height-constraint-percent-2.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == height-constraint-percent-3.html height-constraint-percent-3.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == height-constraint-percent-4.html height-constraint-percent-4.html
-fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == height-constraint-percent-5.html height-constraint-percent-5.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == height-constraint-percent-5.html height-constraint-percent-5.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == height-constraint-percent-6.html height-constraint-percent-6.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == height-constraint-percent-7.html height-constraint-percent-7.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == height-constraint-percent-8.html height-constraint-percent-8.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == decoration-1.html decoration-1.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == bullet-1.html bullet-1.html
-fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == input-text-1-height.html input-text-1-height.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == input-text-1-height.html input-text-1-height.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == input-text-1-noheight.html input-text-1-noheight.html
-fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == input-text-2-height.html input-text-2-height.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == input-text-2-height.html input-text-2-height.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == input-text-2-noheight.html input-text-2-noheight.html
-fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == input-text-3-height.html input-text-3-height.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == input-text-3-height.html input-text-3-height.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == input-text-3-noheight.html input-text-3-noheight.html
-fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == textarea-1.html textarea-1.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == textarea-1.html textarea-1.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == textarea-2.html textarea-2.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == textarea-3.html textarea-3.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == css-transform-1.html css-transform-1.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == css-transform-2.html css-transform-2.html
-fails == container-with-clamping.html container-with-clamping.html
+== container-with-clamping.html container-with-clamping.html
 skip test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) load video-1.html
-fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-min-1.html intrinsic-min-1.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-min-1.html intrinsic-min-1.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-max-1.html intrinsic-max-1.html
-fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-1a.html intrinsic-fit-1a.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-1a.html intrinsic-fit-1a.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-1b.html intrinsic-fit-1b.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-1c.html intrinsic-fit-1c.html
-fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-2a.html intrinsic-fit-2a.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-2a.html intrinsic-fit-2a.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-2b.html intrinsic-fit-2b.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) HTTP(..) == intrinsic-fit-2c.html intrinsic-fit-2c.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == select-listbox-1.html select-listbox-1.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == select-listbox-1.html select-listbox-1.html
-fails == select-combobox-1.html select-combobox-1.html
+== select-combobox-1.html select-combobox-1.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == select-combobox-1.html select-combobox-1.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == select-listbox-2.html select-listbox-2.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == select-listbox-2.html select-listbox-2.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == select-combobox-2.html select-combobox-2.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == select-combobox-2.html select-combobox-2.html
-fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == select-combobox-3.html select-combobox-3.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == select-combobox-3.html select-combobox-3.html
 == input-checkbox.html input-checkbox.html
 == input-radio.html input-radio.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == disable-fontinfl-on-mobile.html disable-fontinfl-on-mobile.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == disable-fontinfl-on-mobile-2.html disable-fontinfl-on-mobile-2.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == disable-fontinfl-on-mobile-3.html disable-fontinfl-on-mobile-3.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == disable-fontinfl-on-mobile-5.html disable-fontinfl-on-mobile-5.html
-fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == preformatted-text.html preformatted-text.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == preformatted-text.html preformatted-text.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == fixed-height-body.html fixed-height-body.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == fixed-height-body-child.html fixed-height-body-child.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == consecutive-inline.html consecutive-inline.html
@@ -84,29 +84,29 @@ fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-cell-2.html threshold-scope-cell-2.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-scope-cell-3.html threshold-scope-cell-3.html
 
-fails == threshold-textarea-contents-under-1.html threshold-textarea-contents-under-1.html
-fails == threshold-textarea-contents-under-2.html threshold-textarea-contents-under-2.html
-fails == threshold-textarea-contents-at-1.html threshold-textarea-contents-at-1.html
-fails == threshold-textarea-contents-at-2.html threshold-textarea-contents-at-2.html
-fails == threshold-input-text-contents-under-1.html threshold-input-text-contents-under-1.html
-fails == threshold-input-text-contents-under-2.html threshold-input-text-contents-under-2.html
-fails == threshold-input-text-contents-at-1.html threshold-input-text-contents-at-1.html
-fails == threshold-input-text-contents-at-2.html threshold-input-text-contents-at-2.html
-fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-listbox-contents-under-1.html threshold-select-listbox-contents-under-1.html
-fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-listbox-contents-under-2.html threshold-select-listbox-contents-under-2.html
+== threshold-textarea-contents-under-1.html threshold-textarea-contents-under-1.html
+== threshold-textarea-contents-under-2.html threshold-textarea-contents-under-2.html
+== threshold-textarea-contents-at-1.html threshold-textarea-contents-at-1.html
+== threshold-textarea-contents-at-2.html threshold-textarea-contents-at-2.html
+== threshold-input-text-contents-under-1.html threshold-input-text-contents-under-1.html
+== threshold-input-text-contents-under-2.html threshold-input-text-contents-under-2.html
+== threshold-input-text-contents-at-1.html threshold-input-text-contents-at-1.html
+== threshold-input-text-contents-at-2.html threshold-input-text-contents-at-2.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-listbox-contents-under-1.html threshold-select-listbox-contents-under-1.html
+test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-listbox-contents-under-2.html threshold-select-listbox-contents-under-2.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-listbox-contents-at-1.html threshold-select-listbox-contents-at-1.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,100) == threshold-select-listbox-contents-at-2.html threshold-select-listbox-contents-at-2.html
-fails == threshold-select-combobox-contents-under-1.html threshold-select-combobox-contents-under-1.html
-fails == threshold-select-combobox-contents-under-2.html threshold-select-combobox-contents-under-2.html
-fails == threshold-select-combobox-contents-at-1.html threshold-select-combobox-contents-at-1.html
-fails == threshold-select-combobox-contents-at-2.html threshold-select-combobox-contents-at-2.html
+== threshold-select-combobox-contents-under-1.html threshold-select-combobox-contents-under-1.html
+== threshold-select-combobox-contents-under-2.html threshold-select-combobox-contents-under-2.html
+== threshold-select-combobox-contents-at-1.html threshold-select-combobox-contents-at-1.html
+== threshold-select-combobox-contents-at-2.html threshold-select-combobox-contents-at-2.html
 
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == relevant-width-1.html relevant-width-1.html
 fails test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.forceEnabled,true) test-pref(font.size.inflation.lineThreshold,0) == relevant-width-overflow-1.html relevant-width-overflow-1.html
 
-fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == min-width-passes-1.html min-width-passes-1.html
+pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) pref(font.size.inflation.lineThreshold,0) == min-width-passes-1.html min-width-passes-1.html
 
-fails pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) == xul-reflow-1.html xul-reflow-1.html
+pref(font.size.inflation.emPerLine,15) pref(font.size.inflation.forceEnabled,true) == xul-reflow-1.html xul-reflow-1.html
 
 # reset the default preferences
 default-preferences

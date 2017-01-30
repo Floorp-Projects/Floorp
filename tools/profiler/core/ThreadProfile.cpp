@@ -8,7 +8,7 @@ ThreadProfile::ThreadProfile(ThreadInfo* aInfo, ProfileBuffer* aBuffer)
   : mThreadInfo(aInfo)
   , mBuffer(aBuffer)
   , mPseudoStack(aInfo->Stack())
-  , mMutex(MakeUnique<Mutex>("ThreadProfile::mMutex"))
+  , mMutex(MakeUnique<mozilla::Mutex>("ThreadProfile::mMutex"))
   , mThreadId(int(aInfo->ThreadId()))
   , mIsMainThread(aInfo->IsMainThread())
   , mPlatformData(aInfo->GetPlatformData())
@@ -214,7 +214,7 @@ void ThreadProfile::EndUnwind()
   mMutex->Unlock();
 }
 
-::Mutex& ThreadProfile::GetMutex()
+mozilla::Mutex& ThreadProfile::GetMutex()
 {
   return *mMutex.get();
 }

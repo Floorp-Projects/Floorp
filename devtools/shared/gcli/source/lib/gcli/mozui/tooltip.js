@@ -86,7 +86,7 @@ Tooltip.prototype.destroy = function() {
   this.focusManager.removeMonitoredElement(this.element, 'tooltip');
 
   if (this.style) {
-    this.style.parentNode.removeChild(this.style);
+    this.style.remove();
     this.style = undefined;
   }
 

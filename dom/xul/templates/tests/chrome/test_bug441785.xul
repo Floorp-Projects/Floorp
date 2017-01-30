@@ -135,8 +135,8 @@ function continueTest() {
 
   // Hit the bug, crash 
   // (not exactly the same kind of crash as 441785, but from the same cause)
-  tree.parentNode.removeChild(tree);
-  treec.parentNode.removeChild(treec);
+  tree.remove();
+  treec.remove();
 
   SimpleTest.finish();
 }

@@ -861,7 +861,7 @@ WebConsoleFrame.prototype = {
     tempLabel.textContent = "x";
     doc.documentElement.appendChild(tempLabel);
     this._inputCharWidth = tempLabel.offsetWidth;
-    tempLabel.parentNode.removeChild(tempLabel);
+    tempLabel.remove();
     // Calculate the width of the chevron placed at the beginning of the input
     // box. Remove 4 more pixels to accomodate the padding of the popup.
     this._chevronWidth = +doc.defaultView.getComputedStyle(this.inputNode)

@@ -23,7 +23,7 @@
        ok(testPlugin, "Should have Test Plug-in");
        is(testPlugin.loaded, true, "Test plugin should be loaded");
        var pluginNode = document.getElementById("theplugin");
-       pluginNode.parentNode.removeChild(pluginNode);
+       pluginNode.remove();
        // Poll for plugin to unload.
        function testContentUnload() {
          if (!testPlugin.loaded) {

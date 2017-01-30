@@ -126,7 +126,7 @@
 
         // remove undisplayed errors to avoid bug 39098
         var errContainer = document.getElementById("errorContainer");
-        errContainer.parentNode.removeChild(errContainer);
+        errContainer.remove();
 
         var className = getCSSClass();
         if (className && className != "expertBadCert") {
@@ -170,7 +170,7 @@
           // Remove the override block for non-certificate errors.  CSS-hiding
           // isn't good enough here, because of bug 39098
           var secOverride = document.getElementById("securityOverrideDiv");
-          secOverride.parentNode.removeChild(secOverride);
+          secOverride.remove();
         }
 
         if (err == "inadequateSecurityError") {
