@@ -1209,10 +1209,10 @@ public:
   }
 
   mozilla::StyleBackendType GetStyleBackendType() const {
-    if (mStyleBackendType == mozilla::StyleBackendType(0)) {
+    if (mStyleBackendType == mozilla::StyleBackendType::None) {
       const_cast<nsIDocument*>(this)->UpdateStyleBackendType();
     }
-    MOZ_ASSERT(mStyleBackendType != mozilla::StyleBackendType(0));
+    MOZ_ASSERT(mStyleBackendType != mozilla::StyleBackendType::None);
     return mStyleBackendType;
   }
 
