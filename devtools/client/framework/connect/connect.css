@@ -42,7 +42,11 @@ label > span {
 }
 
 #submit {
-  float: inline-end;
+  float: right;
+}
+
+#submit:dir(rtl) {
+  float: left;
 }
 
 input {
