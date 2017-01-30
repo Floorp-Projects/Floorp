@@ -3,14 +3,23 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FakeIPC.h"
+
+#ifdef WEBRTC_WIN
+#include <Windows.h>
+#else
 #include <unistd.h>
+#endif
 
 // The implementations can't be in the .h file for some annoying reason
 
 /* static */ void
 PlatformThread:: YieldCurrentThread()
 {
+#ifdef WEBRTC_WIN
+  Sleep(1);
+#else
   sleep(1);
+#endif
 }
 
 namespace base {
