@@ -1624,15 +1624,15 @@ fuzzy-if(Android,8,20) == 602200-3.html 602200-3-ref.html
 == 608756-1b.html 608756-1-ref.html
 == 608756-2.html 608756-2-ref.html
 fuzzy-if(Android,4,196) == 609272-1.html 609272-1-ref.html
-needs-focus == 613433-1.html 613433-1-ref.html
-needs-focus == 613433-1.html 613433-2-ref.html
-needs-focus == 613433-1.html 613433-3-ref.html
-needs-focus == 613433-2.html 613433-1-ref.html
-needs-focus == 613433-2.html 613433-2-ref.html
-needs-focus == 613433-2.html 613433-3-ref.html
-needs-focus == 613433-3.html 613433-1-ref.html
-needs-focus == 613433-3.html 613433-2-ref.html
-needs-focus == 613433-3.html 613433-3-ref.html
+needs-focus skip-if(/^Linux\x20i686/.test(http.oscpu)) == 613433-1.html 613433-1-ref.html # bug 1292460 - doesn't get the focus it needs if it's first in a chunk
+needs-focus skip-if(/^Linux\x20i686/.test(http.oscpu)) == 613433-1.html 613433-2-ref.html # bug 1292460 - doesn't get the focus it needs if it's first in a chunk
+needs-focus skip-if(/^Linux\x20i686/.test(http.oscpu)) == 613433-1.html 613433-3-ref.html # bug 1292460 - doesn't get the focus it needs if it's first in a chunk
+needs-focus skip-if(/^Linux\x20i686/.test(http.oscpu)) == 613433-2.html 613433-1-ref.html # bug 1292460 - doesn't get the focus it needs if it's first in a chunk
+needs-focus skip-if(/^Linux\x20i686/.test(http.oscpu)) == 613433-2.html 613433-2-ref.html # bug 1292460 - doesn't get the focus it needs if it's first in a chunk
+needs-focus skip-if(/^Linux\x20i686/.test(http.oscpu)) == 613433-2.html 613433-3-ref.html # bug 1292460 - doesn't get the focus it needs if it's first in a chunk
+needs-focus skip-if(/^Linux\x20i686/.test(http.oscpu)) == 613433-3.html 613433-1-ref.html # bug 1292460 - doesn't get the focus it needs if it's first in a chunk
+needs-focus skip-if(/^Linux\x20i686/.test(http.oscpu)) == 613433-3.html 613433-2-ref.html # bug 1292460 - doesn't get the focus it needs if it's first in a chunk
+needs-focus skip-if(/^Linux\x20i686/.test(http.oscpu)) == 613433-3.html 613433-3-ref.html # bug 1292460 - doesn't get the focus it needs if it's first in a chunk
 == 614272-1.svg  614272-1-ref.svg
 HTTP(..) == 615121-1.html 615121-1-ref.html
 HTTP(..) != 615121-2.html 615121-2-notref.html
