@@ -25,58 +25,58 @@ test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-posit
 # reproduce blocks of solid color, even at maximum quality):
 fuzzy(2,5) == image-orientation-from-image.html?none image-orientation-from-image.html?none
 fuzzy(1,1) == image-orientation-from-image.html?0 image-orientation-from-image.html?0
-fails == image-orientation-from-image.html?90 image-orientation-from-image.html?90
-fails == image-orientation-from-image.html?180 image-orientation-from-image.html?180
-fails == image-orientation-from-image.html?270 image-orientation-from-image.html?270
-fails == image-orientation-from-image.html?0&flip image-orientation-from-image.html?0&flip
-fails == image-orientation-from-image.html?90&flip image-orientation-from-image.html?90&flip
-fails == image-orientation-from-image.html?180&flip image-orientation-from-image.html?180&flip
-fails == image-orientation-from-image.html?270&flip image-orientation-from-image.html?270&flip
+== image-orientation-from-image.html?90 image-orientation-from-image.html?90
+== image-orientation-from-image.html?180 image-orientation-from-image.html?180
+== image-orientation-from-image.html?270 image-orientation-from-image.html?270
+== image-orientation-from-image.html?0&flip image-orientation-from-image.html?0&flip
+== image-orientation-from-image.html?90&flip image-orientation-from-image.html?90&flip
+== image-orientation-from-image.html?180&flip image-orientation-from-image.html?180&flip
+== image-orientation-from-image.html?270&flip image-orientation-from-image.html?270&flip
 
 # Tests for image-orientation used with an explicit orientation:
 fuzzy(1,1) == image-orientation-explicit.html?0 image-orientation-explicit.html?0
-fails == image-orientation-explicit.html?90 image-orientation-explicit.html?90
-fails == image-orientation-explicit.html?180 image-orientation-explicit.html?180
-fails == image-orientation-explicit.html?270 image-orientation-explicit.html?270
-fails == image-orientation-explicit.html?0&flip image-orientation-explicit.html?0&flip
-fails == image-orientation-explicit.html?90&flip image-orientation-explicit.html?90&flip
-fails == image-orientation-explicit.html?180&flip image-orientation-explicit.html?180&flip
-fails == image-orientation-explicit.html?270&flip image-orientation-explicit.html?270&flip
+== image-orientation-explicit.html?90 image-orientation-explicit.html?90
+== image-orientation-explicit.html?180 image-orientation-explicit.html?180
+== image-orientation-explicit.html?270 image-orientation-explicit.html?270
+== image-orientation-explicit.html?0&flip image-orientation-explicit.html?0&flip
+== image-orientation-explicit.html?90&flip image-orientation-explicit.html?90&flip
+== image-orientation-explicit.html?180&flip image-orientation-explicit.html?180&flip
+== image-orientation-explicit.html?270&flip image-orientation-explicit.html?270&flip
 
 # Tests for image-orientation used with non-axis-aligned angles:
 fuzzy(1,1) == image-orientation-explicit.html?-45 image-orientation-explicit.html?-45
 fuzzy(1,1) == image-orientation-explicit.html?-15 image-orientation-explicit.html?-15
 fuzzy(1,1) == image-orientation-explicit.html?15 image-orientation-explicit.html?15
-fails == image-orientation-explicit.html?45 image-orientation-explicit.html?45
-fails == image-orientation-explicit.html?75 image-orientation-explicit.html?75
-fails == image-orientation-explicit.html?105 image-orientation-explicit.html?105
-fails == image-orientation-explicit.html?135 image-orientation-explicit.html?135
-fails == image-orientation-explicit.html?165 image-orientation-explicit.html?165
-fails == image-orientation-explicit.html?195 image-orientation-explicit.html?195
-fails == image-orientation-explicit.html?225 image-orientation-explicit.html?225
-fails == image-orientation-explicit.html?255 image-orientation-explicit.html?255
-fails == image-orientation-explicit.html?285 image-orientation-explicit.html?285
+== image-orientation-explicit.html?45 image-orientation-explicit.html?45
+== image-orientation-explicit.html?75 image-orientation-explicit.html?75
+== image-orientation-explicit.html?105 image-orientation-explicit.html?105
+== image-orientation-explicit.html?135 image-orientation-explicit.html?135
+== image-orientation-explicit.html?165 image-orientation-explicit.html?165
+== image-orientation-explicit.html?195 image-orientation-explicit.html?195
+== image-orientation-explicit.html?225 image-orientation-explicit.html?225
+== image-orientation-explicit.html?255 image-orientation-explicit.html?255
+== image-orientation-explicit.html?285 image-orientation-explicit.html?285
 fuzzy(1,1) == image-orientation-explicit.html?315 image-orientation-explicit.html?315
 fuzzy(1,1) == image-orientation-explicit.html?345 image-orientation-explicit.html?345
 
 # Tests for image-orientation used on generated content:
-fails == image-orientation-generated-content.html?from-image image-orientation-generated-content.html?from-image
-fails == image-orientation-generated-content.html?0 image-orientation-generated-content.html?0
-fails == image-orientation-generated-content.html?90 image-orientation-generated-content.html?90
-fails == image-orientation-generated-content.html?180 image-orientation-generated-content.html?180
-fails == image-orientation-generated-content.html?270 image-orientation-generated-content.html?270
-fails == image-orientation-generated-content.html?0&flip image-orientation-generated-content.html?0&flip
-fails == image-orientation-generated-content.html?90&flip image-orientation-generated-content.html?90&flip
-fails == image-orientation-generated-content.html?180&flip image-orientation-generated-content.html?180&flip
-fails == image-orientation-generated-content.html?270&flip image-orientation-generated-content.html?270&flip
+== image-orientation-generated-content.html?from-image image-orientation-generated-content.html?from-image
+== image-orientation-generated-content.html?0 image-orientation-generated-content.html?0
+== image-orientation-generated-content.html?90 image-orientation-generated-content.html?90
+== image-orientation-generated-content.html?180 image-orientation-generated-content.html?180
+== image-orientation-generated-content.html?270 image-orientation-generated-content.html?270
+== image-orientation-generated-content.html?0&flip image-orientation-generated-content.html?0&flip
+== image-orientation-generated-content.html?90&flip image-orientation-generated-content.html?90&flip
+== image-orientation-generated-content.html?180&flip image-orientation-generated-content.html?180&flip
+== image-orientation-generated-content.html?270&flip image-orientation-generated-content.html?270&flip
 
 # Tests that image-orientation does not apply to decorative images:
 # == image-orientation-background.html?from-image image-orientation-background.html?from-image
 # == image-orientation-background.html?90&flip image-orientation-background.html?90&flip
-fails == image-orientation-border-image.html?from-image image-orientation-border-image.html?from-image
-fails == image-orientation-border-image.html?90&flip image-orientation-border-image.html?90&flip
-fails == image-orientation-list-style-image.html?from-image image-orientation-list-style-image.html?from-image
-fails == image-orientation-list-style-image.html?90&flip image-orientation-list-style-image.html?90&flip
+== image-orientation-border-image.html?from-image image-orientation-border-image.html?from-image
+== image-orientation-border-image.html?90&flip image-orientation-border-image.html?90&flip
+== image-orientation-list-style-image.html?from-image image-orientation-list-style-image.html?from-image
+== image-orientation-list-style-image.html?90&flip image-orientation-list-style-image.html?90&flip
 
 # Sanity checks for the image-orientation tests. Ensures that the various
 # combinations of rotations and flips actually look different from each other.

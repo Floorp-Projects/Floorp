@@ -11,8 +11,8 @@ fuzzy-if(Android,3,5) skip-if(!Android) pref(apz.allow_zooming,true) == async-sc
 # Different async zoom levels. Since the scrollthumb gets async-scaled in the
 # compositor, the border-radius ends of the scrollthumb are going to be a little
 # off, hence the fuzzy-if clauses.
-fails == async-scrollbar-zoom-1.html async-scrollbar-zoom-1.html
-fails == async-scrollbar-zoom-2.html async-scrollbar-zoom-2.html
+== async-scrollbar-zoom-1.html async-scrollbar-zoom-1.html
+== async-scrollbar-zoom-2.html async-scrollbar-zoom-2.html
 
 # Meta-viewport tag support
 # == initial-scale-1.html initial-scale-1.html
