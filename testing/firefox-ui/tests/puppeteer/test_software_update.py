@@ -17,14 +17,11 @@ class TestSoftwareUpdate(PuppeteerMixin, MarionetteTestCase):
         self.software_update = SoftwareUpdate(self.marionette)
 
         self.saved_mar_channels = self.software_update.mar_channels.channels
-        self.saved_update_channel = self.software_update.update_channel
-
         self.software_update.mar_channels.channels = set(['expected', 'channels'])
 
     def tearDown(self):
         try:
             self.software_update.mar_channels.channels = self.saved_mar_channels
-            self.software_update.update_channel = self.saved_update_channel
         finally:
             super(TestSoftwareUpdate, self).tearDown()
 
@@ -71,10 +68,36 @@ class TestSoftwareUpdate(PuppeteerMixin, MarionetteTestCase):
     def test_staging_directory(self):
         self.assertTrue(self.software_update.staging_directory)
 
-    def test_set_update_channel(self):
-        self.software_update.update_channel = 'new_channel'
-        self.assertEqual(self.marionette.get_pref('app.update.channel', default_branch=True),
-                         'new_channel')
+
+class TestUpdateChannel(PuppeteerMixin, MarionetteTestCase):
+
+    def setUp(self):
+        super(TestUpdateChannel, self).setUp()
+
+        self.software_update = SoftwareUpdate(self.marionette)
+
+        self.saved_channel = self.software_update.update_channel
+        self.software_update.update_channel = 'expected_channel'
+
+    def tearDown(self):
+        try:
+            self.software_update.update_channel = self.saved_channel
+        finally:
+            super(TestUpdateChannel, self).tearDown()
+
+    def test_update_channel_default_channel(self):
+        # Without a restart the update channel will not change.
+        self.assertEqual(self.software_update.update_channel, self.saved_channel)
+
+    def test_update_channel_set_channel(self):
+        try:
+            # Use the clean option to force a non in_app restart, which would allow
+            # Firefox to dump the logs to the console.
+            self.restart(clean=True)
+            self.assertEqual(self.software_update.update_channel, 'expected_channel')
+        finally:
+            self.software_update.update_channel = self.saved_channel
+            self.restart(clean=True)
 
 
 class TestMARChannels(PuppeteerMixin, MarionetteTestCase):
