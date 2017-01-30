@@ -789,7 +789,7 @@ var gTests = [
                             value(0.5, '5px',       'replace', 'linear'),
                             value(1,   undefined, 'add') ] } ]
   },
-  { desc:     'missing propertes in both of initial and final keyframe along'
+  { desc:     'missing propertes in both of initial and final keyframe along '
               + 'with other values',
     frames:   [ { left:  '5px',  offset: 0 },
                 { right: '5px',  offset: 0.5 },
@@ -801,6 +801,36 @@ var gTests = [
                   values: [ value(0,   undefined, 'add',     'linear'),
                             value(0.5, '5px',     'replace', 'linear'),
                             value(1,   undefined, 'add') ] } ]
+  },
+
+  { desc:     'a missing property in final keyframe with duplicate offset ' +
+              + 'along with other values',
+    frames:   [ { left: '5px',  right: '5px', offset: 0 },
+                { left: '8px',  right: '8px', offset: 0 },
+                { left: '10px',               offset: 1 } ],
+    expected: [ { property: 'left',
+                  values: [ value(0, '5px',  'replace'),
+                            value(0, '8px',  'replace', 'linear'),
+                            value(1, '10px', 'replace') ] },
+                { property: 'right',
+                  values: [ value(0, '5px',     'replace'),
+                            value(0, '8px',     'replace', 'linear'),
+                            value(1, undefined, 'add') ] } ]
+  },
+
+  { desc:     'a missing property in initial keyframe with duplicate offset '
+              + 'along with other values',
+    frames:   [ { left: '10px',              offset: 0 },
+                { left: '8px', right: '8px', offset: 1 },
+                { left: '5px', right: '5px', offset: 1 } ],
+    expected: [ { property: 'left',
+                  values: [ value(0, '10px', 'replace', 'linear'),
+                            value(1, '8px',  'replace'),
+                            value(1, '5px',  'replace') ] },
+                { property: 'right',
+                  values: [ value(0, undefined, 'add', 'linear'),
+                            value(1, '8px',     'replace'),
+                            value(1, '5px',     'replace') ] } ]
   },
 ];
 

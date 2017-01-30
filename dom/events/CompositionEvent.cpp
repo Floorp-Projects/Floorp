@@ -56,10 +56,13 @@ CompositionEvent::Constructor(const GlobalObject& aGlobal,
   return e.forget();
 }
 
+NS_IMPL_CYCLE_COLLECTION_INHERITED(CompositionEvent, UIEvent,
+                                   mRanges)
+
 NS_IMPL_ADDREF_INHERITED(CompositionEvent, UIEvent)
 NS_IMPL_RELEASE_INHERITED(CompositionEvent, UIEvent)
 
-NS_INTERFACE_MAP_BEGIN(CompositionEvent)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(CompositionEvent)
 NS_INTERFACE_MAP_END_INHERITING(UIEvent)
 
 void

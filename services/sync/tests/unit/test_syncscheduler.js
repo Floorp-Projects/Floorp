@@ -693,7 +693,7 @@ add_task(async function test_no_sync_node() {
   let server = sync_httpd_setup();
   await setUp(server);
 
-  oldfc = Service._clusterManager._findCluster;
+  let oldfc = Service._clusterManager._findCluster;
   Service._clusterManager._findCluster = () => null;
   Service.clusterURL = "";
   try {

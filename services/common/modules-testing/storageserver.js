@@ -928,12 +928,12 @@ StorageServer.prototype = {
         cb();
       }
     } catch (ex) {
-      _("==========================================");
-      _("Got exception starting Storage HTTP server on port " + this.port);
-      _("Error: " + Log.exceptionStr(ex));
-      _("Is there a process already listening on port " + this.port + "?");
-      _("==========================================");
-      do_throw(ex);
+      this._log.error("==========================================");
+      this._log.error("Got exception starting Storage HTTP server on port " + this.port);
+      this._log.error("Error: " + Log.exceptionStr(ex));
+      this._log.error("Is there a process already listening on port " + this.port + "?");
+      this._log.error("==========================================");
+      throw ex;
     }
   },
 

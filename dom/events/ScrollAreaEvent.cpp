@@ -22,10 +22,13 @@ ScrollAreaEvent::ScrollAreaEvent(EventTarget* aOwner,
   mClientArea->SetLayoutRect(aEvent ? aEvent->mArea : nsRect());
 }
 
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ScrollAreaEvent, UIEvent,
+                                   mClientArea)
+
 NS_IMPL_ADDREF_INHERITED(ScrollAreaEvent, UIEvent)
 NS_IMPL_RELEASE_INHERITED(ScrollAreaEvent, UIEvent)
 
-NS_INTERFACE_MAP_BEGIN(ScrollAreaEvent)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ScrollAreaEvent)
 NS_INTERFACE_MAP_END_INHERITING(UIEvent)
 
 void

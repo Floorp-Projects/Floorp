@@ -35,7 +35,7 @@ add_task(async function test_findCluster() {
   await Assert.rejects(Service.identity.whenReadyToAuthenticate.promise,
                        "should reject due to 401");
 
-  cluster = Service._clusterManager._findCluster();
+  let cluster = Service._clusterManager._findCluster();
   Assert.strictEqual(cluster, null);
 
   _("_findCluster() works with correct tokenserver response.");

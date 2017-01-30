@@ -2,6 +2,7 @@ import hashlib
 import re
 import os
 import re
+from six import binary_type
 from six.moves.urllib.parse import urljoin
 from fnmatch import fnmatch
 try:
@@ -53,7 +54,14 @@ class SourceFile(object):
         """
 
         self.tests_root = tests_root
-        self.rel_path = os.path.normcase(rel_path)  # does slash normalization on Windows
+        if os.name == "nt":
+            # do slash normalization on Windows
+            if isinstance(rel_path, binary_type):
+                self.rel_path = rel_path.replace(b"/", b"\\")
+            else:
+                self.rel_path = rel_path.replace(u"/", u"\\")
+        else:
+            self.rel_path = rel_path
         self.url_base = url_base
         self.contents = contents
 
