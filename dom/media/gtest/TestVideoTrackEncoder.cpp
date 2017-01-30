@@ -699,6 +699,43 @@ TEST(VP8VideoTrackEncoder, SuspendedUntilEnd)
   EXPECT_EQ(pointOne, totalDuration);
 }
 
+// Test that ending a track that was always suspended works.
+TEST(VP8VideoTrackEncoder, AlwaysSuspended)
+{
+  // Initiate VP8 encoder
+  TestVP8TrackEncoder encoder;
+  InitParam param = {true, 640, 480};
+  encoder.TestInit(param);
+
+  // Suspend and then pass a frame with duration 2s.
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+
+  encoder.Suspend();
+
+  VideoSegment segment;
+  segment.AppendFrame(generator.GenerateI420Image(),
+                      mozilla::StreamTime(180000), // 2s
+                      generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE,
+                      false,
+                      TimeStamp::Now());
+
+  encoder.AppendVideoSegment(Move(segment));
+  encoder.NotifyCurrentTime(180000);
+
+  encoder.NotifyEndOfStream();
+
+  EncodedFrameContainer container;
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  // Verify that we have one encoded frames and a total duration of 0.1s.
+  const uint64_t none = 0;
+  EXPECT_EQ(none, container.GetEncodedFrames().Length());
+}
+
 // EOS test
 TEST(VP8VideoTrackEncoder, EncodeComplete)
 {
