@@ -331,8 +331,8 @@ this.ExtensionsUI = {
     let bundle = win.gNavigatorBundle;
     let msg1 = bundle.getFormattedString("addonPostInstall.message1",
                                          [addonLabel, appName]);
-    let msg2 = bundle.getFormattedString("addonPostInstall.message2",
-                                         [addonLabel, addonIcon, toolbarIcon]);
+    let msg2 = bundle.getFormattedString("addonPostInstall.messageDetail",
+                                         [addonIcon, toolbarIcon]);
 
     return new Promise(resolve => {
       let action = {

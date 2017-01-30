@@ -36,6 +36,28 @@ loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
  */
 var CommandUtils = {
   /**
+   * Caches requisitions created when calling executeOnTarget:
+   * Target => Requisition Promise
+   */
+  _requisitions: new WeakMap(),
+
+  /**
+   * Utility to execute a command string on a given target
+   */
+  executeOnTarget: Task.async(function* (target, command) {
+    let requisitionPromise = this._requisitions.get(target);
+    if (!requisitionPromise) {
+      requisitionPromise = this.createRequisition(target, {
+        environment: CommandUtils.createEnvironment({ target }, "target")
+      });
+      // Store the promise to avoid races by storing the promise immediately
+      this._requisitions.set(target, requisitionPromise);
+    }
+    let requisition = yield requisitionPromise;
+    requisition.updateExec(command);
+  }),
+
+  /**
    * Utility to ensure that things are loaded in the correct order
    */
   createRequisition: function (target, options) {

@@ -13,6 +13,7 @@ const { IdGenerator } = require("devtools/client/webconsole/new-console-output/u
 const { batchActions } = require("devtools/client/webconsole/new-console-output/actions/enhancers");
 const {
   MESSAGE_ADD,
+  NETWORK_MESSAGE_UPDATE,
   MESSAGES_CLEAR,
   MESSAGE_OPEN,
   MESSAGE_CLOSE,
@@ -90,10 +91,25 @@ function messageTableDataReceive(id, data) {
   };
 }
 
+function networkMessageUpdate(packet, idGenerator = null) {
+  if (idGenerator == null) {
+    idGenerator = defaultIdGenerator;
+  }
+
+  let message = prepareMessage(packet, idGenerator);
+
+  return {
+    type: NETWORK_MESSAGE_UPDATE,
+    message,
+  };
+}
+
 module.exports = {
   messageAdd,
   messagesClear,
   messageOpen,
   messageClose,
   messageTableDataGet,
+  networkMessageUpdate,
 };
+

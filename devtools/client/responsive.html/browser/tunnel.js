@@ -7,7 +7,6 @@
 const { Ci } = require("chrome");
 const Services = require("Services");
 const { Task } = require("devtools/shared/task");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { BrowserElementWebNavigation } = require("./web-navigation");
 const { getStack } = require("devtools/shared/platform/stack");
 
@@ -127,7 +126,8 @@ function tunnelToInnerBrowser(outer, inner) {
       // This means the key that matches the content is on the inner browser.  Since we
       // want the browser UI to believe the page content is part of the outer browser, we
       // copy the content's `permanentKey` up to the outer browser.
-      copyPermanentKey(outer, inner);
+      debug("Copy inner permanentKey to outer browser");
+      outer.permanentKey = inner.permanentKey;
 
       // Replace the outer browser's native messageManager with a message manager tunnel
       // which we can use to route messages of interest to the inner browser instead.
@@ -303,33 +303,6 @@ function tunnelToInnerBrowser(outer, inner) {
 }
 
 exports.tunnelToInnerBrowser = tunnelToInnerBrowser;
-
-function copyPermanentKey(outer, inner) {
-  // When we're in the process of swapping content around, we end up receiving a
-  // SessionStore:update message which lists the container page that is loaded into the
-  // outer browser (that we're hiding the inner browser within) as part of its history.
-  // We want SessionStore's view of the history for our tab to only have the page content
-  // of the inner browser, so we want to hide this message from SessionStore, but we have
-  // no direct mechanism to do so.  As a workaround, we wait until the one errant message
-  // has gone by, and then we copy the permanentKey after that, since the permanentKey is
-  // what SessionStore uses to identify each browser.
-  let outerMM = outer[FRAME_LOADER].messageManager;
-  let onHistoryEntry = message => {
-    let data = message.data.data;
-    let history = data.history || data.historychange;
-    if (!history || !history.entries) {
-      // Wait for a message that contains history data
-      return;
-    }
-    outerMM.removeMessageListener("SessionStore:update", onHistoryEntry);
-    debug("Got session update for outer browser");
-    DevToolsUtils.executeSoon(() => {
-      debug("Copy inner permanentKey to outer browser");
-      outer.permanentKey = inner.permanentKey;
-    });
-  };
-  outerMM.addMessageListener("SessionStore:update", onHistoryEntry);
-}
 
 /**
  * This module allows specific messages of interest to be directed from the

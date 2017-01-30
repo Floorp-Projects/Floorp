@@ -13,7 +13,7 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-package com.keepsafe.switchboard;
+package org.mozilla.gecko.switchboard;
 
 import java.util.UUID;
 
@@ -22,7 +22,7 @@ import android.content.SharedPreferences;
 
 /**
  * Generates a UUID and stores is persistent as in the apps shared preferences.
- * 
+ *
  * @author Philipp Berner
  */
 public class DeviceUuidFactory {

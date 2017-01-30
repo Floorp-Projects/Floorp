@@ -24,6 +24,11 @@ loader.lazyGetter(this, "StoragePanel", () => require("devtools/client/storage/p
 loader.lazyGetter(this, "ScratchpadPanel", () => require("devtools/client/scratchpad/scratchpad-panel").ScratchpadPanel);
 loader.lazyGetter(this, "DomPanel", () => require("devtools/client/dom/dom-panel").DomPanel);
 
+// Other dependencies
+loader.lazyRequireGetter(this, "CommandUtils", "devtools/client/shared/developer-toolbar", true);
+loader.lazyImporter(this, "ResponsiveUIManager", "resource://devtools/client/responsivedesign/responsivedesign.jsm");
+loader.lazyImporter(this, "ScratchpadManager", "resource://devtools/client/scratchpad/scratchpad-manager.jsm");
+
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/startup.properties");
 
@@ -470,26 +475,93 @@ exports.defaultThemes = [
 // addons that have manually inserted toolbarbuttons into DOM.
 // (By default, supported target is only local tab)
 exports.ToolboxButtons = [
-  { id: "command-button-pick",
-    isTargetSupported: target => {
-      return target.activeTab && target.activeTab.traits.frames;
-    }
-  },
-  { id: "command-button-frames",
-    isTargetSupported: target => {
-      return target.activeTab && target.activeTab.traits.frames;
-    }
-  },
   { id: "command-button-splitconsole",
-    isTargetSupported: target => !target.isAddon },
-  { id: "command-button-responsive" },
-  { id: "command-button-paintflashing" },
-  { id: "command-button-scratchpad" },
-  { id: "command-button-screenshot" },
-  { id: "command-button-rulers" },
-  { id: "command-button-measure" },
-  { id: "command-button-noautohide",
-    isTargetSupported: target => target.chrome },
+    description: l10n("toolbox.buttons.splitconsole"),
+    isTargetSupported: target => !target.isAddon,
+    onClick(event, toolbox) {
+      toolbox.toggleSplitConsole();
+    },
+    isChecked(toolbox) {
+      return toolbox.splitConsole;
+    },
+    setup(toolbox, onChange) {
+      toolbox.on("split-console", onChange);
+    },
+    teardown(toolbox, onChange) {
+      toolbox.off("split-console", onChange);
+    }
+  },
+  { id: "command-button-paintflashing",
+    description: l10n("toolbox.buttons.paintflashing"),
+    isTargetSupported: target => target.isLocalTab,
+    onClick(event, toolbox) {
+      CommandUtils.executeOnTarget(toolbox.target, "paintflashing toggle");
+    },
+    autoToggle: true
+  },
+  { id: "command-button-scratchpad",
+    description: l10n("toolbox.buttons.scratchpad"),
+    isTargetSupported: target => target.isLocalTab,
+    onClick(event, toolbox) {
+      ScratchpadManager.openScratchpad();
+    }
+  },
+  { id: "command-button-responsive",
+    description: l10n("toolbox.buttons.responsive",
+                      osString == "Darwin" ? "Cmd+Opt+M" : "Ctrl+Shift+M"),
+    isTargetSupported: target => target.isLocalTab,
+    onClick(event, toolbox) {
+      let browserWindow = toolbox.win.top;
+      ResponsiveUIManager.handleGcliCommand(browserWindow,
+        browserWindow.gBrowser.selectedTab,
+        "resize toggle",
+        null);
+    },
+    isChecked(toolbox) {
+      if (!toolbox.target.tab) {
+        return false;
+      }
+      return ResponsiveUIManager.isActiveForTab(toolbox.target.tab);
+    },
+    setup(toolbox, onChange) {
+      ResponsiveUIManager.on("on", onChange);
+      ResponsiveUIManager.on("off", onChange);
+    },
+    teardown(toolbox, onChange) {
+      ResponsiveUIManager.off("on", onChange);
+      ResponsiveUIManager.off("off", onChange);
+    }
+  },
+  { id: "command-button-screenshot",
+    description: l10n("toolbox.buttons.screenshot"),
+    isTargetSupported: target => target.isLocalTab,
+    onClick(event, toolbox) {
+      // Special case for screenshot button to check for clipboard preference
+      const clipboardEnabled = Services.prefs
+        .getBoolPref("devtools.screenshot.clipboard.enabled");
+      let args = "--fullpage --file";
+      if (clipboardEnabled) {
+        args += " --clipboard";
+      }
+      CommandUtils.executeOnTarget(toolbox.target, "screenshot " + args);
+    }
+  },
+  { id: "command-button-rulers",
+    description: l10n("toolbox.buttons.rulers"),
+    isTargetSupported: target => target.isLocalTab,
+    onClick(event, toolbox) {
+      CommandUtils.executeOnTarget(toolbox.target, "rulers");
+    },
+    autoToggle: true
+  },
+  { id: "command-button-measure",
+    description: l10n("toolbox.buttons.measure"),
+    isTargetSupported: target => target.isLocalTab,
+    onClick(event, toolbox) {
+      CommandUtils.executeOnTarget(toolbox.target, "measure");
+    },
+    autoToggle: true
+  },
 ];
 
 /**
