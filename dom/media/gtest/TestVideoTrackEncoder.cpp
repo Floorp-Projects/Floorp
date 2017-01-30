@@ -791,6 +791,63 @@ TEST(VP8VideoTrackEncoder, SuspendedBeginning)
   EXPECT_EQ(oneAndAHalf, totalDuration);
 }
 
+// Test that suspending and resuming in the middle of already pushed data
+// works.
+TEST(VP8VideoTrackEncoder, SuspendedOverlap)
+{
+  // Initiate VP8 encoder
+  TestVP8TrackEncoder encoder;
+  InitParam param = {true, 640, 480};
+  encoder.TestInit(param);
+
+  // Pass a 1s frame and suspend after 0.5s.
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  TimeStamp now = TimeStamp::Now();
+  VideoSegment segment;
+  segment.AppendFrame(generator.GenerateI420Image(),
+                      mozilla::StreamTime(90000), // 1s
+                      generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE,
+                      false,
+                      now);
+
+  encoder.AppendVideoSegment(Move(segment));
+
+  encoder.NotifyCurrentTime(45000);
+  encoder.Suspend();
+
+  // Pass another 1s frame and resume after 0.3 of this new frame.
+  segment.AppendFrame(generator.GenerateI420Image(),
+                      mozilla::StreamTime(90000), // 1s
+                      generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE,
+                      false,
+                      now + TimeDuration::FromSeconds(1));
+  encoder.AppendVideoSegment(Move(segment));
+  encoder.NotifyCurrentTime(117000);
+  encoder.Resume();
+  encoder.NotifyCurrentTime(180000);
+
+  encoder.NotifyEndOfStream();
+
+  EncodedFrameContainer container;
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  // Verify that we have two encoded frames and a total duration of 0.1s.
+  const uint64_t two= 2;
+  EXPECT_EQ(two, container.GetEncodedFrames().Length());
+
+  uint64_t totalDuration = 0;
+  for (auto& frame : container.GetEncodedFrames()) {
+    totalDuration += frame->GetDuration();
+  }
+  const uint64_t onePointTwo = (PR_USEC_PER_SEC / 10) * 12;
+  EXPECT_EQ(onePointTwo, totalDuration);
+}
+
 // EOS test
 TEST(VP8VideoTrackEncoder, EncodeComplete)
 {
