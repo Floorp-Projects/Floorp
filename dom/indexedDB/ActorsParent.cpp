@@ -79,6 +79,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsInterfaceHashtable.h"
 #include "nsIOutputStream.h"
+#include "nsIPipe.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISupports.h"
@@ -6635,6 +6636,36 @@ private:
   Cleanup() override;
 };
 
+/**
+ * In coordination with IDBDatabase's mFileActors weak-map on the child side, a
+ * long-lived mapping from a child process's live Blobs to their corresponding
+ * FileInfo in our owning database.  Assists in avoiding redundant IPC traffic
+ * and disk storage.  This includes both:
+ * - Blobs retrieved from this database and sent to the child that do not need
+ *   to be written to disk because they already exist on disk in this database's
+ *   files directory.
+ * - Blobs retrieved from other databases (that are therefore !IsShareable())
+ *   or from anywhere else that will need to be written to this database's files
+ *   directory.  In this case we will hold a reference to its BlobImpl in
+ *   mBlobImpl until we have successfully written the Blob to disk.
+ *
+ * Relevant Blob context: Blobs sent from the parent process to child processes
+ * are automatically linked back to their source BlobImpl when the child process
+ * references the Blob via IPC.  (This is true even when a new "KnownBlob" actor
+ * must be created because the reference is occurring on a different thread than
+ * the PBlob actor created when the blob was sent to the child.)  However, when
+ * getting an actor in the child process for sending an in-child-created Blob to
+ * the parent process, there is (currently) no Blob machinery to automatically
+ * establish and reuse a long-lived Actor.  As a result, without IDB's weak-map
+ * cleverness, a memory-backed Blob repeatedly sent from the child to the parent
+ * would appear as a different Blob each time, requiring the Blob data to be
+ * sent over IPC each time as well as potentially needing to be written to disk
+ * each time.
+ *
+ * This object remains alive as long as there is an active child actor or an
+ * ObjectStoreAddOrPutRequestOp::StoredFileInfo for a queued or active add/put
+ * op is holding a reference to us.
+ */
 class DatabaseFile final
   : public PBackgroundIDBDatabaseFileParent
 {
@@ -6654,20 +6685,54 @@ public:
     return mFileInfo;
   }
 
-  already_AddRefed<nsIInputStream>
-  GetInputStream() const
+  /**
+   * Is there a blob available to provide an input stream?  This may be called
+   * on any thread under current lifecycle constraints.
+   */
+  bool
+  HasBlobImpl() const
   {
-    AssertIsOnBackgroundThread();
-
-    nsCOMPtr<nsIInputStream> inputStream;
-    if (mBlobImpl) {
-      ErrorResult rv;
-      mBlobImpl->GetInternalStream(getter_AddRefs(inputStream), rv);
-      MOZ_ALWAYS_TRUE(!rv.Failed());
-    }
-
-    return inputStream.forget();
+    return (bool)mBlobImpl;
   }
+
+  /**
+   * If mBlobImpl is non-null (implying the contents of this file have not yet
+   * been written to disk), then return an input stream that is guaranteed to
+   * block on reads and never return NS_BASE_STREAM_WOULD_BLOCK.  If mBlobImpl
+   * is null (because the contents have been written to disk), returns null.
+   *
+   * Because this method does I/O, it should only be called on a database I/O
+   * thread, not on PBackground.  Note that we actually open the stream on this
+   * thread, where previously it was opened on PBackground.  This is safe and
+   * equally efficient because blob implementations are thread-safe and blobs in
+   * the parent are fully populated.  (This would not be efficient in the child
+   * where the open request would have to be dispatched back to the PBackground
+   * thread because of the need to potentially interact with actors.)
+   *
+   * We enforce this guarantee by wrapping the stream in a blocking pipe unless
+   * either is true:
+   * - The stream is already a blocking stream.  (AKA it's not non-blocking.)
+   *   This is the case for nsFileStreamBase-derived implementations and
+   *   appropriately configured nsPipes (but not PSendStream-generated pipes).
+   * - The stream already contains the entire contents of the Blob.  For
+   *   example, nsStringInputStreams report as non-blocking, but also have their
+   *   entire contents synchronously available, so they will never return
+   *   NS_BASE_STREAM_WOULD_BLOCK.  There is no need to wrap these in a pipe.
+   *   (It's also very common for SendStream-based Blobs to have their contents
+   *   entirely streamed into the parent process by the time this call is
+   *   issued.)
+   *
+   * This additional logic is necessary because our database operations all
+   * are written in such a way that the operation is assumed to have completed
+   * when they yield control-flow, and:
+   * - When memory-backed blobs cross a certain threshold (1MiB at the time of
+   *   writing), they will be sent up from the child via PSendStream in chunks
+   *   to a non-blocking pipe that will return NS_BASE_STREAM_WOULD_BLOCK.
+   * - Other Blob types could potentially be non-blocking.  (We're not making
+   *   any assumptions.)
+   */
+  already_AddRefed<nsIInputStream>
+  GetBlockingInputStream(ErrorResult &rv) const;
 
   void
   ClearInputStream()
@@ -6702,11 +6767,83 @@ private:
   ActorDestroy(ActorDestroyReason aWhy) override
   {
     AssertIsOnBackgroundThread();
-
-    mBlobImpl = nullptr;
-    mFileInfo = nullptr;
   }
 };
+
+already_AddRefed<nsIInputStream>
+DatabaseFile::GetBlockingInputStream(ErrorResult &rv) const
+{
+  // We should only be called from a database I/O thread, not the background
+  // thread.  The background thread should call HasBlobImpl().
+  MOZ_ASSERT(!IsOnBackgroundThread());
+
+  if (!mBlobImpl) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIInputStream> inputStream;
+  mBlobImpl->GetInternalStream(getter_AddRefs(inputStream), rv);
+  if (rv.Failed()) {
+    return nullptr;
+  }
+
+  // If it's non-blocking we may need a pipe.
+  bool pipeNeeded;
+  rv = inputStream->IsNonBlocking(&pipeNeeded);
+  if (rv.Failed()) {
+    return nullptr;
+  }
+
+  // We don't need a pipe if all the bytes might already be available.
+  if (pipeNeeded) {
+    uint64_t available;
+    rv = inputStream->Available(&available);
+    if (rv.Failed()) {
+      return nullptr;
+    }
+
+    uint64_t blobSize = mBlobImpl->GetSize(rv);
+    if (rv.Failed()) {
+      return nullptr;
+    }
+
+    if (available == blobSize) {
+      pipeNeeded = false;
+    }
+  }
+
+  if (pipeNeeded) {
+    nsCOMPtr<nsIEventTarget> target =
+      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+    if (!target) {
+      rv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+
+    nsCOMPtr<nsIInputStream> pipeInputStream;
+    nsCOMPtr<nsIOutputStream> pipeOutputStream;
+
+    rv = NS_NewPipe(
+      getter_AddRefs(pipeInputStream),
+      getter_AddRefs(pipeOutputStream),
+      0, 0, // default buffering is fine;
+      false, // we absolutely want a blocking input stream
+      true); // we don't need the writer to block
+    if (rv.Failed()) {
+      return nullptr;
+    }
+
+    rv = NS_AsyncCopy(inputStream, pipeOutputStream, target);
+    if (rv.Failed()) {
+      return nullptr;
+    }
+
+    inputStream = pipeInputStream;
+  }
+
+  return inputStream.forget();
+}
+
 
 class TransactionBase
 {
@@ -8220,6 +8357,8 @@ struct ObjectStoreAddOrPutRequestOp::StoredFileInfo final
 {
   RefPtr<DatabaseFile> mFileActor;
   RefPtr<FileInfo> mFileInfo;
+  // A non-Blob-backed inputstream to write to disk.  If null, mFileActor may
+  // still have a stream for us to write.
   nsCOMPtr<nsIInputStream> mInputStream;
   StructuredCloneFile::FileType mType;
   bool mCopiedSuccessfully;
@@ -8451,7 +8590,7 @@ protected:
     , mMetadata(IndexMetadataForParams(aTransaction, aParams))
   { }
 
-  
+
   ~IndexRequestOpBase() override = default;
 
 private:
@@ -8660,7 +8799,7 @@ protected:
     MOZ_ASSERT(aCursor);
   }
 
-  
+
   ~CursorOpBase() override = default;
 
   bool
@@ -26046,9 +26185,7 @@ ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction)
           storedFileInfo->mFileInfo = storedFileInfo->mFileActor->GetFileInfo();
           MOZ_ASSERT(storedFileInfo->mFileInfo);
 
-          storedFileInfo->mInputStream =
-            storedFileInfo->mFileActor->GetInputStream();
-          if (storedFileInfo->mInputStream && !mFileManager) {
+          if (storedFileInfo->mFileActor->HasBlobImpl() && !mFileManager) {
             mFileManager = fileManager;
           }
 
@@ -26085,9 +26222,7 @@ ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction)
           storedFileInfo->mFileInfo = storedFileInfo->mFileActor->GetFileInfo();
           MOZ_ASSERT(storedFileInfo->mFileInfo);
 
-          storedFileInfo->mInputStream =
-            storedFileInfo->mFileActor->GetInputStream();
-          if (storedFileInfo->mInputStream && !mFileManager) {
+          if (storedFileInfo->mFileActor->HasBlobImpl() && !mFileManager) {
             mFileManager = fileManager;
           }
 
@@ -26325,8 +26460,29 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
       StoredFileInfo& storedFileInfo = mStoredFileInfos[index];
       MOZ_ASSERT(storedFileInfo.mFileInfo);
 
+      // If there is a StoredFileInfo, then one of the following is true:
+      // - This was an overflow structured clone and storedFileInfo.mInputStream
+      //   MUST be non-null.
+      // - This is a reference to a Blob that may or may not have already been
+      //   written to disk.  storedFileInfo.mFileActor MUST be non-null, but
+      //   its HasBlobImpl() may return false and so GetBlockingInputStream may
+      //   return null (so don't assert on them).
+      // - It's a mutable file.  No writing will be performed.
+      MOZ_ASSERT(storedFileInfo.mInputStream || storedFileInfo.mFileActor ||
+                 storedFileInfo.mType == StructuredCloneFile::eMutableFile);
+
       nsCOMPtr<nsIInputStream> inputStream;
+      // Check for an explicit stream, like a structured clone stream.
       storedFileInfo.mInputStream.swap(inputStream);
+      // Check for a blob-backed stream otherwise.
+      if (!inputStream && storedFileInfo.mFileActor) {
+        ErrorResult streamRv;
+        inputStream =
+          storedFileInfo.mFileActor->GetBlockingInputStream(streamRv);
+        if (NS_WARN_IF(streamRv.Failed())) {
+          return streamRv.StealNSResult();
+        }
+      }
 
       if (inputStream) {
         RefPtr<FileInfo>& fileInfo = storedFileInfo.mFileInfo;

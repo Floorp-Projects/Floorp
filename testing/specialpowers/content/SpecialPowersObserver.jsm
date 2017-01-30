@@ -257,7 +257,7 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
           const filePerms = 0666;
           let testFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
           if (request.name) {
-            testFile.append(request.name);
+            testFile.appendRelativePath(request.name);
           } else {
             testFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, filePerms);
           }
@@ -266,8 +266,8 @@ SpecialPowersObserver.prototype.receiveMessage = function(aMessage) {
                          filePerms, 0);
           if (request.data) {
             outStream.write(request.data, request.data.length);
-            outStream.close();
           }
+          outStream.close();
           filePaths.push(File.createFromFileName(testFile.path, request.options));
           createdFiles.push(testFile);
         });

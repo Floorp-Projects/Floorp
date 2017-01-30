@@ -258,6 +258,13 @@ function errorHandler(event)
   finishTest();
 }
 
+// For error callbacks where the argument is not an event object.
+function errorCallbackHandler(err)
+{
+  ok(false, "got unexpected error callback: " + err);
+  finishTest();
+}
+
 function expectUncaughtException(expecting)
 {
   SimpleTest.expectUncaughtException(expecting);
