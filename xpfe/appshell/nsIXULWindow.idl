@@ -13,18 +13,11 @@
  * notification through the global observer service.
  */
 
-%{C++
-#include "LiveResizeListener.h"
-#include "nsTArray.h"
-%}
-
 interface nsIDocShell;
 interface nsIDocShellTreeItem;
 interface nsIXULBrowserWindow;
 interface nsITabParent;
 interface mozIDOMWindowProxy;
-
-native LiveResizeListenerArray(nsTArray<RefPtr<mozilla::LiveResizeListener>>);
 
 [scriptable, uuid(d6d7a014-e28d-4c9d-8727-1cf6d870619b)]
 interface nsIXULWindow : nsISupports
@@ -57,8 +50,6 @@ interface nsIXULWindow : nsISupports
 
   void tabParentAdded(in nsITabParent aTab, in boolean aPrimary);
   void tabParentRemoved(in nsITabParent aTab);
-
-  [noscript,notxpcom] LiveResizeListenerArray getLiveResizeListeners();
 
   /**
    * Tell this window that it has picked up a child XUL window

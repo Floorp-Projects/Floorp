@@ -3653,20 +3653,24 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)viewWillStartLiveResize
 {
-  nsCocoaWindow* windowWidget = mGeckoChild ? mGeckoChild->GetXULWindowWidget() : nullptr;
-  if (windowWidget) {
-    windowWidget->NotifyLiveResizeStarted();
+  nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+
+  if (!observerService) {
+    return;
   }
+
+  observerService->NotifyObservers(nullptr, "live-resize-start", nullptr);
 }
 
 - (void)viewDidEndLiveResize
 {
-  // If windowWidget is null here then we need to find some other way to
-  // unsuppress the displayport, or we might get stuck with a content process
-  // that has the displayport permanently suppressed, which would be bad.
-  nsCocoaWindow* windowWidget = mGeckoChild ? mGeckoChild->GetXULWindowWidget() : nullptr;
-  MOZ_ASSERT(windowWidget);
-  windowWidget->NotifyLiveResizeStopped();
+  nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+
+  if (!observerService) {
+    return;
+  }
+
+  observerService->NotifyObservers(nullptr, "live-resize-end", nullptr);
 }
 
 - (NSColor*)vibrancyFillColorForThemeGeometryType:(nsITheme::ThemeGeometryType)aThemeGeometryType
