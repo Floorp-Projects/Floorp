@@ -50,14 +50,14 @@ fails == resize-reflow-001.html resize-reflow-001.html
 == table-page-break-before-always-1.html table-page-break-before-always-1.html
 == table-page-break-before-left-1.html table-page-break-before-left-1.html
 == table-page-break-before-right-1.html table-page-break-before-right-1.html
-fails == table-page-break-after-always-1.html table-page-break-after-always-1.html
-fails == table-page-break-after-left-1.html table-page-break-after-left-1.html
-fails == table-page-break-after-right-1.html table-page-break-after-right-1.html
-fails == rowgroup-page-break-after-always-1.html rowgroup-page-break-after-always-1.html
-fails == row-page-break-after-always-1.html row-page-break-after-always-1.html
-fails == row-page-break-after-always-2.html row-page-break-after-always-2.html
-fails == rowgroup-thead-page-break-after-always-1.html rowgroup-thead-page-break-after-always-1.html
-fails == rowgroup-tfoot-page-break-after-always-1.html rowgroup-tfoot-page-break-after-always-1.html
+== table-page-break-after-always-1.html table-page-break-after-always-1.html
+== table-page-break-after-left-1.html table-page-break-after-left-1.html
+== table-page-break-after-right-1.html table-page-break-after-right-1.html
+== rowgroup-page-break-after-always-1.html rowgroup-page-break-after-always-1.html
+== row-page-break-after-always-1.html row-page-break-after-always-1.html
+== row-page-break-after-always-2.html row-page-break-after-always-2.html
+== rowgroup-thead-page-break-after-always-1.html rowgroup-thead-page-break-after-always-1.html
+== rowgroup-tfoot-page-break-after-always-1.html rowgroup-tfoot-page-break-after-always-1.html
 fails == table-tfoot-thead-1.html table-tfoot-thead-1.html
 fails == table-caption-splitrowgroup-1.html table-caption-splitrowgroup-1.html
 fails == table-caption-splitaftercaption-1.html table-caption-splitaftercaption-1.html

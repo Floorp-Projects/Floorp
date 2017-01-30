@@ -98,7 +98,7 @@ load 827591-1.html
 load 829817.html
 load 840898.html
 load 842134.html
-load 861489-1.html
+skip-if(stylo) load 861489-1.html # bug 1334982
 load 862113.html
 asserts-if(stylo,5) load 867487.html # bug 1324634
 load 873222.html
@@ -137,7 +137,7 @@ load 1227501-1.html
 skip-if(stylo) load 1230408-1.html # bug 1323716
 skip-if(stylo) load 1233135-1.html # bug 1323716
 skip-if(stylo) load 1233135-2.html # bug 1323716
-load 1238660-1.html
+skip-if(stylo) load 1238660-1.html # bug 1334982
 load 1245260-1.html
 load 1247865-1.html
 asserts-if(stylo,0-1) load 1264396-1.html # bug 1324677
@@ -153,7 +153,7 @@ pref(layout.css.background-clip-text.enabled,true) load 1270795.html
 pref(layout.css.background-clip-text.enabled,true) load 1275026.html
 load 1278463-1.html
 skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1277908-1.html # bug 1323652
-load 1277908-2.html
+skip-if(stylo) load 1277908-2.html # bug 1323652
 asserts-if(stylo,2-62) load 1282076-1.html # bug 1324669
 asserts-if(stylo,2) pref(dom.animations-api.core.enabled,true) load 1282076-2.html # bug 1324686
 pref(dom.animations-api.core.enabled,true) load 1290994-1.html
@@ -166,6 +166,6 @@ load 1315894-1.html
 skip-if(stylo) load 1319072-1.html # bug 1323733
 HTTP load 1320423-1.html
 asserts-if(stylo,5-28) load 1321357-1.html # bug 1324669
-load 1328535-1.html
+skip-if(stylo) load 1328535-1.html # bug 1334982
 load 1331272.html
 HTTP load 1333001-1.html
