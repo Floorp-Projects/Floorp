@@ -86,14 +86,19 @@ nsSimplePageSequenceFrame::SetDesiredSize(ReflowOutput& aDesiredSize,
                                           nscoord aWidth,
                                           nscoord aHeight)
 {
-    // Aim to fill the whole size of the document, not only so we
-    // can act as a background in print preview but also handle overflow
-    // in child page frames correctly.
-    // Use availableWidth so we don't cause a needless horizontal scrollbar.
-    aDesiredSize.Width() = std::max(aReflowInput.AvailableWidth(),
-                                nscoord(aWidth * PresContext()->GetPrintPreviewScale()));
-    aDesiredSize.Height() = std::max(aReflowInput.ComputedHeight(),
-                                 nscoord(aHeight * PresContext()->GetPrintPreviewScale()));
+  // Aim to fill the whole size of the document, not only so we
+  // can act as a background in print preview but also handle overflow
+  // in child page frames correctly.
+  // Use availableISize so we don't cause a needless horizontal scrollbar.
+  WritingMode wm = aReflowInput.GetWritingMode();
+  nscoord scaledWidth = aWidth * PresContext()->GetPrintPreviewScale();
+  nscoord scaledHeight = aHeight * PresContext()->GetPrintPreviewScale();
+
+  nscoord scaledISize = (wm.IsVertical() ? scaledHeight : scaledWidth);
+  nscoord scaledBSize = (wm.IsVertical() ? scaledWidth : scaledHeight);
+
+  aDesiredSize.ISize(wm) = std::max(scaledISize, aReflowInput.AvailableISize());
+  aDesiredSize.BSize(wm) = std::max(scaledBSize, aReflowInput.ComputedBSize());
 }
 
 // Helper function to compute the offset needed to center a child
@@ -133,11 +138,16 @@ nsSimplePageSequenceFrame::ComputeCenteringMargin(
   return NSToCoordRound(scaledExtraSpace * 0.5 / ppScale);
 }
 
+/*
+ * Note: we largely position/size out our children (page frames) using
+ * \*physical\* x/y/width/height values, because the print preview UI is always
+ * arranged in the same orientation, regardless of writing mode.
+ */
 void
-nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
-                                  ReflowOutput&     aDesiredSize,
+nsSimplePageSequenceFrame::Reflow(nsPresContext*     aPresContext,
+                                  ReflowOutput&      aDesiredSize,
                                   const ReflowInput& aReflowInput,
-                                  nsReflowStatus&          aStatus)
+                                  nsReflowStatus&    aStatus)
 {
   MarkInReflow();
   NS_PRECONDITION(aPresContext->IsRootPaginatedDocument(),
@@ -163,7 +173,7 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
         nsMargin pageCSSMargin = child->GetUsedMargin();
         nscoord centeringMargin =
           ComputeCenteringMargin(aReflowInput.ComputedWidth(),
-                                 child->GetRect().width,
+                                 child->GetRect().Width(),
                                  pageCSSMargin);
         nscoord newX = pageCSSMargin.left + centeringMargin;
 
@@ -242,13 +252,15 @@ nsSimplePageSequenceFrame::Reflow(nsPresContext*          aPresContext,
 
     // Reflow the page
     ReflowInput kidReflowInput(aPresContext, aReflowInput, kidFrame,
-                                     LogicalSize(kidFrame->GetWritingMode(),
+                               LogicalSize(kidFrame->GetWritingMode(),
                                                  pageSize));
     nsReflowStatus  status;
 
-    kidReflowInput.SetComputedWidth(kidReflowInput.AvailableWidth());
+    kidReflowInput.SetComputedISize(kidReflowInput.AvailableISize());
     //kidReflowInput.SetComputedHeight(kidReflowInput.AvailableHeight());
-    PR_PL(("AV W: %d   H: %d\n", kidReflowInput.AvailableWidth(), kidReflowInput.AvailableHeight()));
+    PR_PL(("AV ISize: %d   BSize: %d\n",
+           kidReflowInput.AvailableISize(),
+           kidReflowInput.AvailableBSize()));
 
     nsMargin pageCSSMargin = kidReflowInput.ComputedPhysicalMargin();
     y += pageCSSMargin.top;
