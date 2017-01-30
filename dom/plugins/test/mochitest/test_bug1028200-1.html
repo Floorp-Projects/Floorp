@@ -45,8 +45,12 @@
          * fullscreen  (has been deemed a security issue otherwise and therefore
          * disabled by default)
          */
-        yield SpecialPowers.pushPrefEnv(
-            { "set": [ ["full-screen-api.allow-trusted-requests-only", false] ] });
+        yield SpecialPowers.pushPrefEnv({
+          "set": [
+            ["full-screen-api.allow-trusted-requests-only", false],
+            ["full-screen-api.unprefix.enabled", true],
+          ],
+        });
       });
 
       add_task(function* () {
