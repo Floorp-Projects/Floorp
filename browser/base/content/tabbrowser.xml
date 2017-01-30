@@ -1706,8 +1706,9 @@
             }
 
             // Abort if we're not going to change anything
+            let currentRemoteType = aBrowser.getAttribute("remoteType");
             if (isRemote == aShouldBeRemote && !aOptions.newFrameloader && !aOptions.freshProcess &&
-                (!isRemote || aBrowser.getAttribute("remoteType") == aOptions.remoteType) &&
+                (!isRemote || currentRemoteType == aOptions.remoteType) &&
                 !aBrowser.frameLoader.isFreshProcess) {
               return false;
             }
@@ -1754,8 +1755,12 @@
             }
 
             // NB: This works with the hack in the browser constructor that
-            // turns this normal property into a field.
-            aBrowser.relatedBrowser = relatedBrowser;
+            // turns this normal property into a field. When switching remote
+            // type copying related browser would stop the switch and the
+            // previously related browser will no longer be relevant.
+            if (!aShouldBeRemote || currentRemoteType == aOptions.remoteType) {
+              aBrowser.relatedBrowser = relatedBrowser;
+            }
 
             if (aOptions.opener) {
               // Set the opener window on the browser, such that when the frame
