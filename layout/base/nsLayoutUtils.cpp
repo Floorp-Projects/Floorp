@@ -6541,7 +6541,7 @@ DrawImageInternal(gfxContext&            aContext,
     Maybe<const SVGImageContext> fallbackContext;
     if (!aSVGContext) {
       // Use the default viewport.
-      fallbackContext.emplace(params.svgViewportSize);
+      fallbackContext.emplace(Some(params.svgViewportSize));
     }
 
     result = aImage->Draw(destCtx, params.size, params.region,
@@ -6726,7 +6726,7 @@ nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
   PROFILER_LABEL("layout", "nsLayoutUtils::DrawBackgroundImage",
                  js::ProfileEntry::Category::GRAPHICS);
 
-  const Maybe<const SVGImageContext> svgContext(Some(SVGImageContext(aImageSize)));
+  const Maybe<SVGImageContext> svgContext(Some(SVGImageContext(Some(aImageSize))));
 
   /* Fast path when there is no need for image spacing */
   if (aRepeatSize.width == aDest.width && aRepeatSize.height == aDest.height) {
