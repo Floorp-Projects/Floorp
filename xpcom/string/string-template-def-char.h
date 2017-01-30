@@ -23,3 +23,4 @@
 #define nsTAdoptingString_CharT             nsAdoptingCString
 #define nsTPromiseFlatString_CharT          nsPromiseFlatCString
 #define TPromiseFlatString_CharT            PromiseFlatCString
+#define nsTSubstringSplitter_CharT          nsCSubstringSplitter

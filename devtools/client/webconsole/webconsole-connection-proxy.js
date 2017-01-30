@@ -228,15 +228,22 @@ WebConsoleConnectionProxy.prototype = {
   /**
    * Dispatch a message add on the new frontend and emit an event for tests.
    */
-  dispatchMessageAdd: function(packet) {
+  dispatchMessageAdd: function (packet) {
     this.webConsoleFrame.newConsoleOutput.dispatchMessageAdd(packet);
   },
 
   /**
    * Batched dispatch of messages.
    */
-  dispatchMessagesAdd: function(packets) {
+  dispatchMessagesAdd: function (packets) {
     this.webConsoleFrame.newConsoleOutput.dispatchMessagesAdd(packets);
+  },
+
+  /**
+   * Dispatch a message event on the new frontend and emit an event for tests.
+   */
+  dispatchMessageUpdate: function (networkInfo, response) {
+    this.webConsoleFrame.newConsoleOutput.dispatchMessageUpdate(networkInfo, response);
   },
 
   /**
@@ -360,13 +367,15 @@ WebConsoleConnectionProxy.prototype = {
    * @private
    * @param string type
    *        Message type.
-   * @param object packet
-   *        The message received from the server.
-   * @param object networkInfo
-   *        The network request information.
+   * @param object response
+   *        The update response received from the server.
    */
-  _onNetworkEventUpdate: function (type, { packet, networkInfo }) {
+  _onNetworkEventUpdate: function (type, response) {
+    let { packet, networkInfo } = response;
     if (this.webConsoleFrame) {
+      if (this.webConsoleFrame.NEW_CONSOLE_OUTPUT_ENABLED) {
+        this.dispatchMessageUpdate(networkInfo, response);
+      }
       this.webConsoleFrame.handleNetworkEventUpdate(networkInfo, packet);
     }
   },

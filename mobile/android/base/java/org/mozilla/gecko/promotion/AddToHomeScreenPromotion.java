@@ -12,7 +12,7 @@ import android.os.Bundle;
 import android.support.annotation.CallSuper;
 import android.util.Log;
 
-import com.keepsafe.switchboard.SwitchBoard;
+import org.mozilla.gecko.switchboard.SwitchBoard;
 
 import org.json.JSONException;
 import org.json.JSONObject;

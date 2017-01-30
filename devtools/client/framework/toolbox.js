@@ -558,23 +558,54 @@ Toolbox.prototype = {
    * @property {String} description - The value that will display as a tooltip and in
    *                    the options panel for enabling/disabling.
    * @property {Function} onClick - The function to run when the button is activated by
-   *                      click or keyboard shortcut.
+   *                      click or keyboard shortcut. First argument will be the 'click'
+   *                      event, and second argument is the toolbox instance.
    * @property {Boolean} isInStartContainer - Buttons can either be placed at the start
    *                     of the toolbar, or at the end.
+   * @property {Function} setup - Function run immediately to listen for events changing
+   *                      whenever the button is checked or unchecked. The toolbox object
+   *                      is passed as first argument and a callback is passed as second
+   *                       argument, to be called whenever the checked state changes.
+   * @property {Function} teardown - Function run on toolbox close to let a chance to
+   *                      unregister listeners set when `setup` was called and avoid
+   *                      memory leaks. The same arguments than `setup` function are
+   *                      passed to `teardown`.
+   * @property {Function} isTargetSupported - Function to automatically enable/disable
+   *                      the button based on the target. If the target don't support
+   *                      the button feature, this method should return false.
+   * @property {Function} isChecked - Optional function called to known if the button
+   *                      is toggled or not. The function should return true when
+   *                      the button should be displayed as toggled on.
+   * @property {Boolean}  autoToggle - If true, the checked state is going to be
+   *                      automatically toggled on click.
    */
   _createButtonState: function (options) {
-    let isChecked = false;
-    const {id, className, description, onClick, isInStartContainer} = options;
+    let isCheckedValue = false;
+    const { id, className, description, onClick, isInStartContainer, setup, teardown,
+            isTargetSupported, isChecked, autoToggle } = options;
+    const toolbox = this;
     const button = {
       id,
       className,
       description,
-      onClick,
+      onClick(event) {
+        if (typeof onClick == "function") {
+          onClick(event, toolbox);
+        }
+        if (autoToggle) {
+          button.isChecked = !button.isChecked;
+        }
+      },
+      isTargetSupported,
       get isChecked() {
-        return isChecked;
+        if (typeof isChecked == "function") {
+          return isChecked(toolbox);
+        }
+        return isCheckedValue;
       },
       set isChecked(value) {
-        isChecked = value;
+        // Note that if options.isChecked is given, this is ignored
+        isCheckedValue = value;
         this.emit("updatechecked");
       },
       // The preference for having this button visible.
@@ -583,6 +614,17 @@ Toolbox.prototype = {
       // holding buttons. By default the buttons are placed in the end container.
       isInStartContainer: !!isInStartContainer
     };
+    if (typeof setup == "function") {
+      let onChange = () => {
+        button.emit("updatechecked");
+      };
+      setup(this, onChange);
+      // Save a reference to the cleanup method that will unregister the onChange
+      // callback. Immediately bind the function argument so that we don't have to
+      // also save a reference to them.
+      button.teardown = teardown.bind(options, this, onChange);
+    }
+    button.isVisible = this._commandIsVisible(button);
 
     EventEmitter.decorate(button);
 
@@ -1030,7 +1072,7 @@ Toolbox.prototype = {
   },
 
   /**
-   * Add buttons to the UI as specified in the devtools.toolbox.toolbarSpec pref
+   * Add buttons to the UI as specified in devtools/client/definitions.js
    */
   _buildButtons: Task.async(function* () {
     // Beyond the normal preference filtering
@@ -1040,27 +1082,9 @@ Toolbox.prototype = {
       yield this._buildNoAutoHideButton()
     ];
 
-    // Build buttons from the GCLI commands only if the GCLI actor is supported and the
-    // target isn't chrome.
-    if (this.target.hasActor("gcli") && !this.target.chrome) {
-      const options = {
-        environment: CommandUtils.createEnvironment(this, "_target")
-      };
-
-      this._requisition = yield CommandUtils.createRequisition(this.target, options);
-      const spec = this.getToolbarSpec();
-      const commandButtons = yield CommandUtils.createCommandButtons(
-        spec, this.target, this.doc, this._requisition, this._createButtonState);
-      this.toolbarButtons = [...this.toolbarButtons, ...commandButtons];
-    }
-
-    // Mutate the objects here with their visibility.
-    this.toolbarButtons.forEach(command => {
-      const definition = ToolboxButtons.find(t => t.id === command.id);
-      command.isTargetSupported = definition.isTargetSupported
-        ? definition.isTargetSupported
-        : target => target.isLocalTab;
-      command.isVisible = this._commandIsVisible(command.id);
+    ToolboxButtons.forEach(definition => {
+      let button = this._createButtonState(definition);
+      this.toolbarButtons.push(button);
     });
 
     this.component.setToolboxButtons(this.toolbarButtons);
@@ -1073,7 +1097,10 @@ Toolbox.prototype = {
     this.frameButton = this._createButtonState({
       id: "command-button-frames",
       description: L10N.getStr("toolbox.frames.tooltip"),
-      onClick: this.showFramesMenu
+      onClick: this.showFramesMenu,
+      isTargetSupported: target => {
+        return target.activeTab && target.activeTab.traits.frames;
+      }
     });
 
     return this.frameButton;
@@ -1087,7 +1114,8 @@ Toolbox.prototype = {
     this.autohideButton = this._createButtonState({
       id: "command-button-noautohide",
       description: L10N.getStr("toolbox.noautohide.tooltip"),
-      onClick: this._toggleNoAutohide
+      onClick: this._toggleNoAutohide,
+      isTargetSupported: target => target.chrome
     });
 
     this._isDisableAutohideEnabled().then(enabled => {
@@ -1138,7 +1166,10 @@ Toolbox.prototype = {
       id: "command-button-pick",
       description: L10N.getStr("pickButton.tooltip"),
       onClick: this._onPickerClick,
-      isInStartContainer: true
+      isInStartContainer: true,
+      isTargetSupported: target => {
+        return target.activeTab && target.activeTab.traits.frames;
+      }
     });
 
     return this.pickerButton;
@@ -1178,16 +1209,7 @@ Toolbox.prototype = {
   */
   getToolbarSpec: function () {
     let spec = CommandUtils.getCommandbarSpec("devtools.toolbox.toolbarSpec");
-    // Special case for screenshot command button to check for clipboard preference
-    const clipboardEnabled = Services.prefs
-      .getBoolPref("devtools.screenshot.clipboard.enabled");
-    if (clipboardEnabled) {
-      for (let i = 0; i < spec.length; i++) {
-        if (spec[i] == "screenshot --fullpage --file") {
-          spec[i] += " --clipboard";
-        }
-      }
-    }
+
     return spec;
   },
 
@@ -1199,8 +1221,8 @@ Toolbox.prototype = {
    * Update the visibility of the buttons.
    */
   updateToolboxButtonsVisibility() {
-    this.toolbarButtons.forEach(command => {
-      command.isVisible = this._commandIsVisible(command.id);
+    this.toolbarButtons.forEach(button => {
+      button.isVisible = this._commandIsVisible(button);
     });
     this.component.setToolboxButtons(this.toolbarButtons);
   },
@@ -1208,11 +1230,11 @@ Toolbox.prototype = {
   /**
    * Ensure the visibility of each toolbox button matches the preference value.
    */
-  _commandIsVisible: function (id) {
+  _commandIsVisible: function (button) {
     const {
       isTargetSupported,
       visibilityswitch
-    } = this.toolbarButtons.find(btn => btn.id === id);
+    } = button;
 
     let visible = true;
     try {
@@ -2318,12 +2340,17 @@ Toolbox.prototype = {
     detachThread(this._threadClient);
     this._threadClient = null;
 
+    // Unregister buttons listeners
+    this.toolbarButtons.forEach(button => {
+      if (typeof button.teardown == "function") {
+        // teardown arguments have already been bound in _createButtonState
+        button.teardown();
+      }
+    });
+
     // We need to grab a reference to win before this._host is destroyed.
     let win = this.win;
 
-    if (this._requisition) {
-      CommandUtils.destroyRequisition(this._requisition, this.target);
-    }
     this._telemetry.toolClosed("toolbox");
     this._telemetry.destroy();
 
