@@ -36,7 +36,7 @@ function runTest() {
   var anon = SpecialPowers.wrap(document).getAnonymousNodes(document.getElementById('grandparent'));
   var child = SpecialPowers.wrap(document).getElementById('child');
   var insertionPoint = anon[0].childNodes[0];
-  insertionPoint.parentNode.removeChild(insertionPoint);
+  insertionPoint.remove();
   child.appendChild(insertionPoint);
 
   var e = document.createEvent("Event");

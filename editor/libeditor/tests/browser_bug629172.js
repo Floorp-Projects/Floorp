@@ -28,11 +28,11 @@ add_task(function*() {
       LTRRef.style.display = "";
       document.body.clientWidth;
       window.Screenshots.ltr = window.snapshotWindow(window);
-      LTRRef.parentNode.removeChild(LTRRef);
+      LTRRef.remove();
       RTLRef.style.display = "";
       document.body.clientWidth;
       window.Screenshots.rtl = window.snapshotWindow(window);
-      RTLRef.parentNode.removeChild(RTLRef);
+      RTLRef.remove();
       window.Screenshots.get = function(dir) {
         return this[dir];
       };
@@ -108,7 +108,7 @@ add_task(function*() {
                           "Textarea after switching back the direction to " +
                             initialDir,
                           "Reference " + initialDir + " textarea");
-        window.t.parentNode.removeChild(window.t);
+        window.t.remove();
       });
     }
 

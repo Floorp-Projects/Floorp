@@ -96,7 +96,7 @@ function runTests() {
   // Bug 862673 - nuke all content so assertions in this test are attributed to
   // this test rather than the one which happens to follow.
   var content = document.getElementById("content");
-  content.parentNode.removeChild(content);
+  content.remove();
   SimpleTest.finish();
 }
 

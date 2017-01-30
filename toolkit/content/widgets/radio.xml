@@ -345,7 +345,7 @@
         <![CDATA[
           var remove = this.getItemAtIndex(index);
           if (remove) {
-            remove.parentNode.removeChild(remove);
+            remove.remove();
             this._radioChildren = null;
           }
           return remove;

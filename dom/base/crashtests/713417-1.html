@@ -12,7 +12,7 @@ function boom()
   var r = d.documentElement;
   d.removeChild(r);
   document.adoptNode(r);
-  f.parentNode.removeChild(f);
+  f.remove();
 }
 
 </script>

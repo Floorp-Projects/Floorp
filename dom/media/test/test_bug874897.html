@@ -34,7 +34,7 @@ function loadeddata(e) {
   }
 
   v._finished = true;
-  v.parentNode.removeChild(v);
+  v.remove();
   manager.finished(v.token);
 }
 

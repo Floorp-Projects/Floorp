@@ -21,7 +21,7 @@ function startTest(test, token) {
     if (v._ignore)
       return;
     v._ignore = true;
-    v.parentNode.removeChild(v);
+    v.remove();
     manager.finished(token);
   }
   var checkError = function(test, v) { return function(evt) {

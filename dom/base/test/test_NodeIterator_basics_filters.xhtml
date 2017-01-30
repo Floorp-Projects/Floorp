@@ -148,7 +148,7 @@
 
       iterator.detach();
 
-      n.parentNode.parentNode.removeChild(n.parentNode);
+      n.parentNode.remove();
       // Drop any node references passed into this function.
       for (var i = 0; i < arguments.length; ++i)
         arguments[i] = null;

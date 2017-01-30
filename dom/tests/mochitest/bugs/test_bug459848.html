@@ -46,7 +46,7 @@ function startTest() {
   is(doc1.documentElement.getAttribute("didRun"), "true",
      "Should have run an event listener");
 
-  ifr2.parentNode.removeChild(ifr2);
+  ifr2.remove();
   setTimeout(testDoc2, 0);
 }
 SimpleTest.waitForExplicitFinish();

@@ -1017,7 +1017,7 @@
 
           if (this._autoScrollNeedsCleanup) {
             // we polluted the global scope, so clean it up
-            this._autoScrollPopup.parentNode.removeChild(this._autoScrollPopup);
+            this._autoScrollPopup.remove();
           }
           ]]>
         </body>

@@ -48,7 +48,7 @@ function startTest(test) {
     if (test.type.match(/^video/)) {
       checkDrawImage(vout);
     }
-    vout.parentNode.removeChild(vout);
+    vout.remove();
     removeNodeAndSource(v);
     SimpleTest.finish();
   };

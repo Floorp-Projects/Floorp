@@ -19,7 +19,6 @@
 #include "platform.h"
 #include "shared-libraries.h"
 #include "mozilla/StackWalk.h"
-#include "GeckoSampler.h"
 
 // JSON
 #include "ProfileJSONWriter.h"
@@ -166,13 +165,21 @@ hasFeature(const char** aFeatures, uint32_t aFeatureCount, const char* aFeature)
   return false;
 }
 
-GeckoSampler::GeckoSampler(double aInterval, int aEntrySize,
-                         const char** aFeatures, uint32_t aFeatureCount,
-                         const char** aThreadNameFilters, uint32_t aFilterCount)
-  : Sampler(aInterval, true, aEntrySize)
+std::vector<ThreadInfo*>* Sampler::sRegisteredThreads = nullptr;
+mozilla::UniquePtr<mozilla::Mutex> Sampler::sRegisteredThreadsMutex;
+
+Sampler::Sampler(double aInterval, int aEntrySize,
+                 const char** aFeatures, uint32_t aFeatureCount,
+                 const char** aThreadNameFilters, uint32_t aFilterCount)
+  : interval_(aInterval)
+  , paused_(false)
+  , active_(false)
+  , entrySize_(aEntrySize)
   , mBuffer(new ProfileBuffer(aEntrySize))
   , mSaveRequested(false)
 {
+  MOZ_COUNT_CTOR(Sampler);
+
   mUseStackWalk = hasFeature(aFeatures, aFeatureCount, "stackwalk");
 
   mProfileJS = hasFeature(aFeatures, aFeatureCount, "js");
@@ -220,8 +227,6 @@ GeckoSampler::GeckoSampler(double aInterval, int aEntrySize,
 
       RegisterThread(info);
     }
-
-    SetActiveSampler(this);
   }
 
 #ifdef MOZ_TASK_TRACER
@@ -233,12 +238,12 @@ GeckoSampler::GeckoSampler(double aInterval, int aEntrySize,
   mGatherer = new mozilla::ProfileGatherer(this);
 }
 
-GeckoSampler::~GeckoSampler()
+Sampler::~Sampler()
 {
+  MOZ_COUNT_DTOR(Sampler);
+
   if (IsActive())
     Stop();
-
-  SetActiveSampler(nullptr);
 
   // Destroy ThreadProfile for all threads
   {
@@ -267,7 +272,112 @@ GeckoSampler::~GeckoSampler()
 #endif
 }
 
-void GeckoSampler::HandleSaveRequest()
+void
+Sampler::Startup()
+{
+  sRegisteredThreads = new std::vector<ThreadInfo*>();
+  sRegisteredThreadsMutex = MakeUnique<Mutex>("sRegisteredThreadsMutex");
+
+  // We could create the sLUL object and read unwind info into it at
+  // this point.  That would match the lifetime implied by destruction
+  // of it in Sampler::Shutdown just below.  However, that gives a big
+  // delay on startup, even if no profiling is actually to be done.
+  // So, instead, sLUL is created on demand at the first call to
+  // Sampler::Start.
+}
+
+void
+Sampler::Shutdown()
+{
+  while (sRegisteredThreads->size() > 0) {
+    delete sRegisteredThreads->back();
+    sRegisteredThreads->pop_back();
+  }
+
+  sRegisteredThreadsMutex = nullptr;
+  delete sRegisteredThreads;
+
+  // UnregisterThread can be called after shutdown in XPCShell. Thus
+  // we need to point to null to ignore such a call after shutdown.
+  sRegisteredThreadsMutex = nullptr;
+  sRegisteredThreads = nullptr;
+
+#if defined(USE_LUL_STACKWALK)
+  // Delete the sLUL object, if it actually got created.
+  if (sLUL) {
+    delete sLUL;
+    sLUL = nullptr;
+  }
+#endif
+}
+
+bool
+Sampler::RegisterCurrentThread(const char* aName,
+                               PseudoStack* aPseudoStack,
+                               bool aIsMainThread, void* stackTop)
+{
+  if (!sRegisteredThreadsMutex) {
+    return false;
+  }
+
+  MutexAutoLock lock(*sRegisteredThreadsMutex);
+
+  Thread::tid_t id = Thread::GetCurrentId();
+
+  for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
+    ThreadInfo* info = sRegisteredThreads->at(i);
+    if (info->ThreadId() == id && !info->IsPendingDelete()) {
+      // Thread already registered. This means the first unregister will be
+      // too early.
+      ASSERT(false);
+      return false;
+    }
+  }
+
+  ThreadInfo* info = new StackOwningThreadInfo(aName, id,
+    aIsMainThread, aPseudoStack, stackTop);
+
+  // XXX: this is an off-main-thread use of gSampler
+  if (gSampler) {
+    gSampler->RegisterThread(info);
+  }
+
+  sRegisteredThreads->push_back(info);
+
+  return true;
+}
+
+void
+Sampler::UnregisterCurrentThread()
+{
+  if (!sRegisteredThreadsMutex) {
+    return;
+  }
+
+  MutexAutoLock lock(*sRegisteredThreadsMutex);
+
+  Thread::tid_t id = Thread::GetCurrentId();
+
+  for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
+    ThreadInfo* info = sRegisteredThreads->at(i);
+    if (info->ThreadId() == id && !info->IsPendingDelete()) {
+      if (profiler_is_active()) {
+        // We still want to show the results of this thread if you
+        // save the profile shortly after a thread is terminated.
+        // For now we will defer the delete to profile stop.
+        info->SetPendingDelete();
+        break;
+      } else {
+        delete info;
+        sRegisteredThreads->erase(sRegisteredThreads->begin() + i);
+        break;
+      }
+    }
+  }
+}
+
+void
+Sampler::HandleSaveRequest()
 {
   if (!mSaveRequested)
     return;
@@ -279,12 +389,14 @@ void GeckoSampler::HandleSaveRequest()
   NS_DispatchToMainThread(runnable);
 }
 
-void GeckoSampler::DeleteExpiredMarkers()
+void
+Sampler::DeleteExpiredMarkers()
 {
   mBuffer->deleteExpiredStoredMarkers();
 }
 
-void GeckoSampler::StreamTaskTracer(SpliceableJSONWriter& aWriter)
+void
+Sampler::StreamTaskTracer(SpliceableJSONWriter& aWriter)
 {
 #ifdef MOZ_TASK_TRACER
   aWriter.StartArrayProperty("data");
@@ -316,7 +428,8 @@ void GeckoSampler::StreamTaskTracer(SpliceableJSONWriter& aWriter)
 }
 
 
-void GeckoSampler::StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter)
+void
+Sampler::StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter)
 {
   aWriter.IntProperty("version", 3);
   aWriter.DoubleProperty("interval", interval());
@@ -379,13 +492,15 @@ void GeckoSampler::StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter)
   }
 }
 
-void GeckoSampler::ToStreamAsJSON(std::ostream& stream, double aSinceTime)
+void
+Sampler::ToStreamAsJSON(std::ostream& stream, double aSinceTime)
 {
   SpliceableJSONWriter b(mozilla::MakeUnique<OStreamJSONWriteFunc>(stream));
   StreamJSON(b, aSinceTime);
 }
 
-JSObject* GeckoSampler::ToJSObject(JSContext *aCx, double aSinceTime)
+JSObject*
+Sampler::ToJSObject(JSContext *aCx, double aSinceTime)
 {
   JS::RootedValue val(aCx);
   {
@@ -397,7 +512,8 @@ JSObject* GeckoSampler::ToJSObject(JSContext *aCx, double aSinceTime)
   return &val.toObject();
 }
 
-void GeckoSampler::GetGatherer(nsISupports** aRetVal)
+void
+Sampler::GetGatherer(nsISupports** aRetVal)
 {
   if (!aRetVal || NS_WARN_IF(!mGatherer)) {
     return;
@@ -405,15 +521,16 @@ void GeckoSampler::GetGatherer(nsISupports** aRetVal)
   NS_ADDREF(*aRetVal = mGatherer);
 }
 
-UniquePtr<char[]> GeckoSampler::ToJSON(double aSinceTime)
+UniquePtr<char[]>
+Sampler::ToJSON(double aSinceTime)
 {
   SpliceableChunkedJSONWriter b;
   StreamJSON(b, aSinceTime);
   return b.WriteFunc()->CopyData();
 }
 
-void GeckoSampler::ToJSObjectAsync(double aSinceTime,
-                                  mozilla::dom::Promise* aPromise)
+void
+Sampler::ToJSObjectAsync(double aSinceTime, mozilla::dom::Promise* aPromise)
 {
   if (NS_WARN_IF(!mGatherer)) {
     return;
@@ -422,7 +539,8 @@ void GeckoSampler::ToJSObjectAsync(double aSinceTime,
   mGatherer->Start(aSinceTime, aPromise);
 }
 
-void GeckoSampler::ToFileAsync(const nsACString& aFileName, double aSinceTime)
+void
+Sampler::ToFileAsync(const nsACString& aFileName, double aSinceTime)
 {
   if (NS_WARN_IF(!mGatherer)) {
     return;
@@ -502,7 +620,8 @@ void BuildJavaThreadJSObject(SpliceableJSONWriter& aWriter)
 }
 #endif
 
-void GeckoSampler::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
+void
+Sampler::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
 {
   aWriter.Start(SpliceableJSONWriter::SingleLineStyle);
   {
@@ -575,7 +694,8 @@ void GeckoSampler::StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime)
   aWriter.End();
 }
 
-void GeckoSampler::FlushOnJSShutdown(JSContext* aContext)
+void
+Sampler::FlushOnJSShutdown(JSContext* aContext)
 {
   SetPaused(true);
 
@@ -605,9 +725,15 @@ void GeckoSampler::FlushOnJSShutdown(JSContext* aContext)
 void PseudoStack::flushSamplerOnJSShutdown()
 {
   MOZ_ASSERT(mContext);
-  GeckoSampler* t = tlsTicker.get();
-  if (t) {
-    t->FlushOnJSShutdown(mContext);
+
+  // XXX: this function should handle being called by any thread, but it
+  // currently doesn't because it accesses gSampler, which is main-thread-only.
+  if (!NS_IsMainThread()) {
+    return;
+  }
+
+  if (gSampler) {
+    gSampler->FlushOnJSShutdown(mContext);
   }
 }
 
@@ -922,7 +1048,8 @@ void StackWalkCallback(uint32_t aFrameNumber, void* aPC, void* aSP,
   nativeStack->count++;
 }
 
-void GeckoSampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
+void
+Sampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 {
   void* pc_array[1000];
   void* sp_array[1000];
@@ -964,7 +1091,8 @@ void GeckoSampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSampl
 
 
 #ifdef USE_EHABI_STACKWALK
-void GeckoSampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
+void
+Sampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 {
   void *pc_array[1000];
   void *sp_array[1000];
@@ -1032,7 +1160,8 @@ void GeckoSampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSampl
 
 
 #ifdef USE_LUL_STACKWALK
-void GeckoSampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
+void
+Sampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 {
   const mcontext_t* mc
     = &reinterpret_cast<ucontext_t *>(aSample->context)->uc_mcontext;
@@ -1152,13 +1281,15 @@ void doSampleStackTrace(ThreadProfile &aProfile, TickSample *aSample, bool aAddL
 #endif
 }
 
-void GeckoSampler::Tick(TickSample* sample)
+void
+Sampler::Tick(TickSample* sample)
 {
   // Don't allow for ticks to happen within other ticks.
   InplaceTick(sample);
 }
 
-void GeckoSampler::InplaceTick(TickSample* sample)
+void
+Sampler::InplaceTick(TickSample* sample)
 {
   ThreadProfile& currThreadProfile = *sample->threadProfile;
 
@@ -1232,7 +1363,8 @@ SyncProfile* NewSyncProfile()
 
 } // namespace
 
-SyncProfile* GeckoSampler::GetBacktrace()
+SyncProfile*
+Sampler::GetBacktrace()
 {
   SyncProfile* profile = NewSyncProfile();
 
@@ -1259,9 +1391,49 @@ SyncProfile* GeckoSampler::GetBacktrace()
 }
 
 void
-GeckoSampler::GetBufferInfo(uint32_t *aCurrentPosition, uint32_t *aTotalSize, uint32_t *aGeneration)
+Sampler::GetBufferInfo(uint32_t *aCurrentPosition, uint32_t *aTotalSize,
+                       uint32_t *aGeneration)
 {
   *aCurrentPosition = mBuffer->mWritePos;
   *aTotalSize = mBuffer->mEntrySize;
   *aGeneration = mBuffer->mGeneration;
 }
+
+static bool
+ThreadSelected(ThreadInfo* aInfo,
+               const ThreadNameFilterList &aThreadNameFilters)
+{
+  if (aThreadNameFilters.empty()) {
+    return true;
+  }
+
+  std::string name = aInfo->Name();
+  std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+
+  for (uint32_t i = 0; i < aThreadNameFilters.length(); ++i) {
+    std::string filter = aThreadNameFilters[i];
+    std::transform(filter.begin(), filter.end(), filter.begin(), ::tolower);
+
+    // Crude, non UTF-8 compatible, case insensitive substring search
+    if (name.find(filter) != std::string::npos) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void
+Sampler::RegisterThread(ThreadInfo* aInfo)
+{
+  if (!aInfo->IsMainThread() && !mProfileThreads) {
+    return;
+  }
+
+  if (!ThreadSelected(aInfo, mThreadNameFilters)) {
+    return;
+  }
+
+  aInfo->SetProfile(mozilla::MakeUnique<ThreadProfile>(aInfo, mBuffer));
+}
+

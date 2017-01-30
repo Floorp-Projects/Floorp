@@ -38,7 +38,7 @@ addLoadEvent(SimpleTest.finish);
 <script> 
 function doe() {
 window.addEventListener('DOMAttrModified', function()
-{window.frameElement.parentNode.removeChild(window.frameElement);}, true);
+{window.frameElement.remove();}, true);
 document.documentElement.appendChild(document.getElementsByTagName('box')[0]);
 }
 setTimeout(doe,0);

@@ -34,9 +34,9 @@ add_task(function* () {
   let pluginRemovedPromise = waitForEvent(gBrowser.selectedBrowser, "PluginRemoved", null, true, true);
   yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
     let plugin = content.document.getElementById("secondtestA");
-    plugin.parentNode.removeChild(plugin);
+    plugin.remove();
     plugin = content.document.getElementById("secondtestB");
-    plugin.parentNode.removeChild(plugin);
+    plugin.remove();
 
     let image = content.document.createElement("object");
     image.type = "image/png";
@@ -50,7 +50,7 @@ add_task(function* () {
 
   yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
     let plugin = content.document.getElementById("test");
-    plugin.parentNode.removeChild(plugin);
+    plugin.remove();
   });
 
   popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser);

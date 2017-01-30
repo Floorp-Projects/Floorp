@@ -138,7 +138,7 @@ var gUpdater = {
           let node = aSite.node;
 
           // Remove the site from the DOM.
-          node.parentNode.removeChild(node);
+          node.remove();
           resolve();
         });
       }));

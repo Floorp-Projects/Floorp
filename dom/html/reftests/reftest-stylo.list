@@ -3,11 +3,11 @@
 include autofocus/reftest-stylo.list
 include toblob-todataurl/reftest-stylo.list
 
-fails == 41464-1a.html 41464-1a.html
-fails == 41464-1b.html 41464-1b.html
-fails == 52019-1.html 52019-1.html
-fails == 82711-1.html 82711-1.html
-fails == 82711-2.html 82711-2.html
+== 41464-1a.html 41464-1a.html
+== 41464-1b.html 41464-1b.html
+== 52019-1.html 52019-1.html
+== 82711-1.html 82711-1.html
+== 82711-2.html 82711-2.html
 # == 82711-1-ref.html 82711-1-ref.html
 == 468263-1a.html 468263-1a.html
 == 468263-1b.html 468263-1b.html
@@ -15,20 +15,20 @@ fails == 82711-2.html 82711-2.html
 # == 468263-1d.html 468263-1d.html
 # == 468263-2.html 468263-2.html
 # == 468263-2.html 468263-2.html
-fails == 484200-1.html 484200-1.html
+== 484200-1.html 484200-1.html
 # == 485377.html 485377.html
 == 557840.html 557840.html
 == 560059-video-dimensions.html 560059-video-dimensions.html
-fails == 573322-quirks.html 573322-quirks.html
-fails == 573322-no-quirks.html 573322-no-quirks.html
-fails == 596455-1a.html 596455-1a.html
-fails == 596455-1b.html 596455-1b.html
-fails == 596455-2a.html 596455-2a.html
-fails == 596455-2b.html 596455-2b.html
-fails == 610935.html 610935.html
+== 573322-quirks.html 573322-quirks.html
+== 573322-no-quirks.html 573322-no-quirks.html
+== 596455-1a.html 596455-1a.html
+== 596455-1b.html 596455-1b.html
+== 596455-2a.html 596455-2a.html
+== 596455-2b.html 596455-2b.html
+== 610935.html 610935.html
 == 649134-1.html 649134-1.html
 # == 649134-2.html 649134-2.html
-fails == 741776-1.vtt 741776-1.vtt
+== 741776-1.vtt 741776-1.vtt
 
 # == bug448564-1_malformed.html bug448564-1_malformed.html
 # == bug448564-1_malformed.html bug448564-1_malformed.html
@@ -45,15 +45,15 @@ fails == 741776-1.vtt 741776-1.vtt
 # (Fuzzy necessary due to pixel-wise comparison of different JPEGs.
 # The vast majority of the fuzziness comes from Linux and WinXP.)
 # == bug917595-iframe-1.html bug917595-iframe-1.html
-fails == bug917595-exif-rotated.jpg bug917595-exif-rotated.jpg
+== bug917595-exif-rotated.jpg bug917595-exif-rotated.jpg
 
 # Test support for SVG-as-image in <picture> elements.
 == bug1106522-1.html bug1106522-1.html
 == bug1106522-2.html bug1106522-2.html
 
-fails == href-attr-change-restyles.html href-attr-change-restyles.html
+== href-attr-change-restyles.html href-attr-change-restyles.html
 # == figure.html figure.html
-fails == pre-1.html pre-1.html
+== pre-1.html pre-1.html
 # == table-border-1.html table-border-1.html
 # == table-border-2.html table-border-2.html
 # == table-border-2.html table-border-2.html

@@ -107,23 +107,23 @@ random == rotate-1f.html rotate-1f.html
 == scalex-1.html scalex-1.html
 == scaley-1.html scaley-1.html
 == scale-1a.html scale-1a.html
-fails == scale-1b.html scale-1b.html
+== scale-1b.html scale-1b.html
 == scale-percent-1.html scale-percent-1.html
 # Some simple checks that it obeys selector operations
-fails == descendant-1.html descendant-1.html
-fails == propagate-inherit-boolean.html propagate-inherit-boolean.html
+== descendant-1.html descendant-1.html
+== propagate-inherit-boolean.html propagate-inherit-boolean.html
 # Ensure you can't move outside an iframe
 # == iframe-1.html iframe-1.html
 # Bugs
-fails == 601894-1.html 601894-1.html
-fails == 601894-2.html 601894-2.html
+== 601894-1.html 601894-1.html
+== 601894-2.html 601894-2.html
 == 830299-1.html 830299-1.html
 # Bug 722777
-fails == table-1a.html table-1a.html
-fails == table-1b.html table-1b.html
-fails == table-1c.html table-1c.html
-fails == table-2a.html table-2a.html
-fails == table-2b.html table-2b.html
+== table-1a.html table-1a.html
+== table-1b.html table-1b.html
+== table-1c.html table-1c.html
+== table-2a.html table-2a.html
+== table-2b.html table-2b.html
 # Bug 722463
 == inline-1a.html inline-1a.html
 pref(svg.transform-box.enabled,true) == transform-box-svg-1a.svg transform-box-svg-1a.svg
@@ -135,9 +135,9 @@ pref(svg.transform-box.enabled,true) == transform-box-svg-2b.svg transform-box-s
 == transform-origin-svg-2a.svg transform-origin-svg-2a.svg
 == transform-origin-svg-2b.svg transform-origin-svg-2b.svg
 # Bug 1122526
-fails == animate-layer-scale-inherit-1.html animate-layer-scale-inherit-1.html
-fails == animate-layer-scale-inherit-2.html animate-layer-scale-inherit-2.html
+== animate-layer-scale-inherit-1.html animate-layer-scale-inherit-1.html
+== animate-layer-scale-inherit-2.html animate-layer-scale-inherit-2.html
 # == animate-layer-scale-inherit-3.html animate-layer-scale-inherit-3.html
 # Bug 1301500
-fails == dynamic-add-without-change-cb-1.html dynamic-add-without-change-cb-1.html
+== dynamic-add-without-change-cb-1.html dynamic-add-without-change-cb-1.html
 # == table-overflowed-by-animation.html table-overflowed-by-animation.html

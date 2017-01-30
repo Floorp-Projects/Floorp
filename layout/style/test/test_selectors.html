@@ -140,7 +140,7 @@ function run() {
             // cause a clone
             links[1].sheet.insertRule("#nonexistent { color: purple}", idx + 1);
             // remove the uncloned sheet
-            links[0].parentNode.removeChild(links[0]);
+            links[0].remove();
 
             var should_match = match_fn(clonedoc);
             var should_not_match = notmatch_fn(clonedoc);
@@ -222,7 +222,7 @@ function run() {
             // cause a clone
             links[1].sheet.insertRule("#nonexistent { color: purple}", 0);
             // remove the uncloned sheet
-            links[0].parentNode.removeChild(links[0]);
+            links[0].remove();
 
             should_match = clonedoc.getElementsByTagName("p")[0];
             is(clonewin.getComputedStyle(should_match).zIndex, String(zi),

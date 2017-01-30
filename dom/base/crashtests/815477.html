@@ -9,7 +9,7 @@ var docElement = document.body;
 document.addEventListener("DOMContentLoaded", CFcrash);
 function CFcrash() {
 setTimeout('try { test5.appendChild(test4); } catch(e) {}', 50);
-try { test4.parentNode.removeChild(test4); test4 = test1; } catch(e) {}
+try { test4.remove(); test4 = test1; } catch(e) {}
 try { test4.insertBefore(test2, test4.firstChils); } catch(e) { }
 try { test2.textContent = test3.textContent; } catch(e) {}
 }</script>>

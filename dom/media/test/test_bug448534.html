@@ -33,7 +33,7 @@ function started(event) {
   if (v._finished || v.ended)
     return;
   ok(!v.paused, v.token + ": Video should not be paused while playing");
-  v.parentNode.removeChild(v);
+  v.remove();
   v._played = true;
 }
 

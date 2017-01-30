@@ -1,9 +1,9 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails == CSS21-t1502-no-inherited-font-family.xhtml CSS21-t1502-no-inherited-font-family.xhtml
+== CSS21-t1502-no-inherited-font-family.xhtml CSS21-t1502-no-inherited-font-family.xhtml
 
 # basic tests for bug 538730
-fails == synthetic-bold-1.html synthetic-bold-1.html
-fails == synthetic-bold-2.html synthetic-bold-2.html
+== synthetic-bold-1.html synthetic-bold-1.html
+== synthetic-bold-2.html synthetic-bold-2.html
 
 # synthetic bold/italic tests
 == defaultfont-bold.html defaultfont-bold.html
@@ -45,40 +45,40 @@ fails == synthetic-bold-2.html synthetic-bold-2.html
 == arial-variations-6.html arial-variations-6.html
 
 # localized font family names should always match just as English names do
-fails == localized-family-names-001.html localized-family-names-001.html
-fails == localized-family-names-002.html localized-family-names-002.html
-fails == localized-family-names-003.html localized-family-names-003.html
-fails == localized-family-names-004.html localized-family-names-004.html
+== localized-family-names-001.html localized-family-names-001.html
+== localized-family-names-002.html localized-family-names-002.html
+== localized-family-names-003.html localized-family-names-003.html
+== localized-family-names-004.html localized-family-names-004.html
 
 # family names with escaped spaces shouldn't match the names without the spaces
 # fails-if(http.oscpu=="Linux\u0020x86_64") == familyname-escapedidents.html familyname-escapedidents.html
 
 # weight mapping tests
-fails HTTP(..) == normalmedium.html normalmedium.html
-fails HTTP(..) == normalmedium.html normalmedium.html
+HTTP(..) == normalmedium.html normalmedium.html
+HTTP(..) == normalmedium.html normalmedium.html
 
 # Linux fails due to bug 604815
-fails == weightmapping-12.html weightmapping-12.html
-fails HTTP(..) == weightmapping-25.html weightmapping-25.html
-fails HTTP(..) == weightmapping-45.html weightmapping-45.html
-fails HTTP(..) == weightmapping-458.html weightmapping-458.html
-fails HTTP(..) == weightmapping-478.html weightmapping-478.html
-fails HTTP(..) == weightmapping-7.html weightmapping-7.html
-fails == weightmapping-12579.html weightmapping-12579.html
+== weightmapping-12.html weightmapping-12.html
+HTTP(..) == weightmapping-25.html weightmapping-25.html
+HTTP(..) == weightmapping-45.html weightmapping-45.html
+HTTP(..) == weightmapping-458.html weightmapping-458.html
+HTTP(..) == weightmapping-478.html weightmapping-478.html
+HTTP(..) == weightmapping-7.html weightmapping-7.html
+== weightmapping-12579.html weightmapping-12579.html
 
-fails HTTP(..) == stretchmapping-all.html stretchmapping-all.html
-fails HTTP(..) == stretchmapping-reverse.html stretchmapping-reverse.html
-fails == stretchmapping-35.html stretchmapping-35.html
-fails == stretchmapping-137.html stretchmapping-137.html
+HTTP(..) == stretchmapping-all.html stretchmapping-all.html
+HTTP(..) == stretchmapping-reverse.html stretchmapping-reverse.html
+== stretchmapping-35.html stretchmapping-35.html
+== stretchmapping-137.html stretchmapping-137.html
 
 # test for font-stretch using @font-face
-fails HTTP(..) == font-stretch-1.html font-stretch-1.html
-fails HTTP(..) == font-shorthand-stretch-1.html font-shorthand-stretch-1.html
+HTTP(..) == font-stretch-1.html font-stretch-1.html
+HTTP(..) == font-shorthand-stretch-1.html font-shorthand-stretch-1.html
 
 # bug 724231 - applying synthetic styles to a single @font-face font
 # should apply artificial obliquing, not switch to a true styled face
-fails == synthetic-style-1.html synthetic-style-1.html
-fails == synthetic-style-2.html synthetic-style-2.html
+== synthetic-style-1.html synthetic-style-1.html
+== synthetic-style-2.html synthetic-style-2.html
 
 # Bug 765906 - synthetic bold should be used if necessary together with system fallback.
 # **NOTE** we skip these on Linux because of bug 769659.
@@ -91,26 +91,26 @@ fails == synthetic-style-2.html synthetic-style-2.html
 # Expected to pass on MacOSX and Windows; other platforms unknown, depending on font availability.
 random-if(!(cocoaWidget||winWidget)) == arial-arabic.html arial-arabic.html
 
-fails == syntheticbold-rotated.html syntheticbold-rotated.html
+== syntheticbold-rotated.html syntheticbold-rotated.html
 
-fails HTTP(..) == font-synthesis-1.html font-synthesis-1.html
-fails HTTP(..) == font-synthesis-2.html font-synthesis-2.html
+HTTP(..) == font-synthesis-1.html font-synthesis-1.html
+HTTP(..) == font-synthesis-2.html font-synthesis-2.html
 
 # Bug 1060791 - support for format 10 cmap in Apple Symbols;
 # relevant fonts not present on other platforms.
-fails == apple-symbols-1.html apple-symbols-1.html
+== apple-symbols-1.html apple-symbols-1.html
 
 # distinguish between italic and oblique
-fails == simple-oblique.html simple-oblique.html
-fails == italic-oblique-1.html italic-oblique-1.html
-fails == italic-oblique-2.html italic-oblique-2.html
-fails == italic-oblique-3.html italic-oblique-3.html
-fails == italic-oblique-4.html italic-oblique-4.html
-fails == italic-oblique-5.html italic-oblique-5.html
-fails == italic-oblique-6.html italic-oblique-6.html
-fails == italic-oblique-7.html italic-oblique-7.html
-fails == italic-oblique-8.html italic-oblique-8.html
-fails == italic-oblique-9.html italic-oblique-9.html
+== simple-oblique.html simple-oblique.html
+== italic-oblique-1.html italic-oblique-1.html
+== italic-oblique-2.html italic-oblique-2.html
+== italic-oblique-3.html italic-oblique-3.html
+== italic-oblique-4.html italic-oblique-4.html
+== italic-oblique-5.html italic-oblique-5.html
+== italic-oblique-6.html italic-oblique-6.html
+== italic-oblique-7.html italic-oblique-7.html
+== italic-oblique-8.html italic-oblique-8.html
+== italic-oblique-9.html italic-oblique-9.html
 == italic-oblique-kinnari.html italic-oblique-kinnari.html
 
 # system font generic per-language tests, only works under OSX currently

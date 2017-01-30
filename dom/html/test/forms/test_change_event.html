@@ -97,7 +97,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
   function testUserInput2() {
     var input = document.getElementById('fileInput');
     // remove it, otherwise cleanup() opens a native file picker!
-    input.parentNode.removeChild(input);
+    input.remove();
     MockFilePicker.cleanup(); 
 
     //text, email, search, telephone, url & password input tests

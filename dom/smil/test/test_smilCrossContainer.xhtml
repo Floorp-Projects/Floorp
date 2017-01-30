@@ -76,7 +76,7 @@ function main() {
   // Remove animation so that it belongs to no container and check that
   // advancing the second container to the next milestone doesn't cause a crash
   // (when the animation controller goes to run the next milestone sample).
-  anim.parentNode.removeChild(anim);
+  anim.remove();
   svgb.setCurrentTime(3);
 
   // Do likewise with syncbase relationships

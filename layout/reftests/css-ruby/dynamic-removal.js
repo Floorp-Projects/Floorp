@@ -6,7 +6,7 @@ window.onload = function() {
   document.body.clientWidth;
 
   getElements('remove').forEach(function(e) {
-    e.parentNode.removeChild(e);
+    e.remove();
   });
   getElements('remove-after').forEach(function(e) {
     e.parentNode.removeChild(e.nextSibling);

@@ -11,7 +11,7 @@ document.getElementsByTagName('*')[i];
 }
 function doe2() { 
 //alert('t');
-document.getElementById('b').addEventListener('DOMSubtreeModified', function(e) {window.frameElement.parentNode.removeChild(window.frameElement) }, true);
+document.getElementById('b').addEventListener('DOMSubtreeModified', function(e) {window.frameElement.remove() }, true);
 document.body.style.display = 'none';
 document.getElementById('a').style.display = '';
 }

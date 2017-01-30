@@ -367,7 +367,7 @@ function attach(panel, document) {
 exports.attach = attach;
 
 function detach(panel) {
-  if (panel.parentNode) panel.parentNode.removeChild(panel);
+  if (panel.parentNode) panel.remove();
 }
 exports.detach = detach;
 

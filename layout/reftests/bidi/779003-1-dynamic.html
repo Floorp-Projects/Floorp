@@ -44,7 +44,7 @@
 <script type="text/javascript">
 function removePage() {
   var here = document.getElementById("here");
-  here.parentNode.removeChild(here);
+  here.remove();
   document.documentElement.removeAttribute("class");
 }
 document.addEventListener("MozReftestInvalidate", removePage);

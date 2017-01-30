@@ -52,7 +52,7 @@
     }
     p.crashOnDestroy();
     // the child crash should happen here
-    p.parentNode.removeChild(p);
+    p.remove();
 
     window.frameLoaded = reloaded2;
     SimpleTest.executeSoon(function() {

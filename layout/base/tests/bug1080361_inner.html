@@ -36,7 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1080361
       }
       try {
         logger("mediator.setPointerCapture()");
-        mediator.parentNode.removeChild(mediator);
+        mediator.remove();
         mediator.setPointerCapture(event.pointerId);
       } catch(exc) {
         test_second_exc = true;

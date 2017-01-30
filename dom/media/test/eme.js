@@ -296,7 +296,7 @@ function SetupEME(test, token, params)
       () => {
         v.setMediaKeys(null);
         if (v.parentNode) {
-          v.parentNode.removeChild(v);
+          v.remove();
         }
         v.onerror = null;
         v.src = null;

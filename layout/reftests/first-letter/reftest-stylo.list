@@ -4,7 +4,7 @@
 == basic-2.html basic-2.html
 
 # parent style context correct
-fails == parent-style-1.html parent-style-1.html
+== parent-style-1.html parent-style-1.html
 
 # others
 == nested-1a.html nested-1a.html
@@ -23,7 +23,7 @@ fails == parent-style-1.html parent-style-1.html
 == quote-1e.html quote-1e.html
 == quote-1e.html quote-1e.html
 == quote-1f.html quote-1f.html
-fails == dynamic-1.html dynamic-1.html
+== dynamic-1.html dynamic-1.html
 # random-if(d2d) == dynamic-2.html dynamic-2.html
 == dynamic-3a.html dynamic-3a.html
 == dynamic-3b.html dynamic-3b.html
@@ -37,7 +37,7 @@ fails == dynamic-1.html dynamic-1.html
 # == 229764-2.html 229764-2.html
 == 329069-1.html 329069-1.html
 == 329069-2.html 329069-2.html
-fails == 329069-3.html 329069-3.html
+== 329069-3.html 329069-3.html
 == 329069-4.html 329069-4.html
 HTTP(..) == 329069-5.html 329069-5.html
 == 342120-1.xhtml 342120-1.xhtml
@@ -52,7 +52,7 @@ HTTP(..) == 329069-5.html 329069-5.html
 == 399941-8.html 399941-8.html
 == 399941-9.html 399941-9.html
 == 429968-1a.html 429968-1a.html
-fails == 429968-1b.html 429968-1b.html
+== 429968-1b.html 429968-1b.html
 == 429968-2a.html 429968-2a.html
 == 429968-2b.html 429968-2b.html
 == 429968-2c.html 429968-2c.html
@@ -67,7 +67,7 @@ fails == 429968-1b.html 429968-1b.html
 == font-text-styles.html font-text-styles.html
 random-if(gtkWidget) random-if(winWidget&&!d2d) == font-text-styles-floater.html font-text-styles-floater.html
 == inline-height-empty.html inline-height-empty.html
-fails HTTP(..) == indic-clusters-1.html indic-clusters-1.html
+HTTP(..) == indic-clusters-1.html indic-clusters-1.html
 == overflow-float-nooverflow.html overflow-float-nooverflow.html
 == overflow-float-overflow.html overflow-float-overflow.html
 == overflow-inline-nooverflow.html overflow-inline-nooverflow.html

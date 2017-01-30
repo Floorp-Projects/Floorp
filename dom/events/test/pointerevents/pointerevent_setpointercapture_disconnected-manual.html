@@ -16,7 +16,7 @@
                 var target0 = document.getElementById("target0");
                 var target1 = document.getElementById("target1");
 
-                target1.parentNode.removeChild(target1);
+                target1.remove();
 
                 on_event(target0, "pointerdown", function (event) {
                     detected_pointertypes[ event.pointerType ] = true;

@@ -31,7 +31,7 @@
   toRemove.style.height = checkBox.offsetHeight / 2 + 0.2 + "px";
   function boom()
   {
-    toRemove.parentNode.removeChild(toRemove);
+    toRemove.remove();
     document.documentElement.className = "";
   }
   window.addEventListener("MozReftestInvalidate", boom);

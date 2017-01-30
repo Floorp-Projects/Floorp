@@ -1,30 +1,30 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails == ellipsis-font-fallback.html ellipsis-font-fallback.html
-fails == line-clipping.html line-clipping.html
-fails == marker-basic.html marker-basic.html
-fails HTTP(..) == marker-string.html marker-string.html
+== ellipsis-font-fallback.html ellipsis-font-fallback.html
+== line-clipping.html line-clipping.html
+== marker-basic.html marker-basic.html
+HTTP(..) == marker-string.html marker-string.html
 # == bidi-simple.html bidi-simple.html
-fails == bidi-simple-scrolled.html bidi-simple-scrolled.html
-fails == scroll-rounding.html scroll-rounding.html
+== bidi-simple-scrolled.html bidi-simple-scrolled.html
+== scroll-rounding.html scroll-rounding.html
 fuzzy(2,453) fuzzy-if(skiaContent,9,2100) fails-if(gtkWidget) HTTP(..) == anonymous-block.html anonymous-block.html
-fails HTTP(..) == false-marker-overlap.html false-marker-overlap.html
-fails HTTP(..) == visibility-hidden.html visibility-hidden.html
+HTTP(..) == false-marker-overlap.html false-marker-overlap.html
+HTTP(..) == visibility-hidden.html visibility-hidden.html
 # == block-padding.html block-padding.html
-fails HTTP(..) == quirks-decorations.html quirks-decorations.html
-fails HTTP(..) == quirks-line-height.html quirks-line-height.html
-fails HTTP(..) == standards-decorations.html standards-decorations.html
-fails HTTP(..) == standards-line-height.html standards-line-height.html
-fails == selection.html selection.html
-fails HTTP(..) == marker-shadow.html marker-shadow.html
+HTTP(..) == quirks-decorations.html quirks-decorations.html
+HTTP(..) == quirks-line-height.html quirks-line-height.html
+HTTP(..) == standards-decorations.html standards-decorations.html
+HTTP(..) == standards-line-height.html standards-line-height.html
+== selection.html selection.html
+HTTP(..) == marker-shadow.html marker-shadow.html
 == aligned-baseline.html aligned-baseline.html
-fails == clipped-elements.html clipped-elements.html
+== clipped-elements.html clipped-elements.html
 HTTP(..) == theme-overflow.html theme-overflow.html
-fails HTTP(..) == table-cell.html table-cell.html
-fails == two-value-syntax.html two-value-syntax.html
-fails HTTP(..) == single-value.html single-value.html
-fails == atomic-under-marker.html atomic-under-marker.html
-fuzzy(1,2616) skip-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,12352) fails-if(http.oscpu=="Linux\u0020x86_64") HTTP(..) == xulscroll.html xulscroll.html
-fails HTTP(..) == combobox-zoom.html combobox-zoom.html
+HTTP(..) == table-cell.html table-cell.html
+== two-value-syntax.html two-value-syntax.html
+HTTP(..) == single-value.html single-value.html
+== atomic-under-marker.html atomic-under-marker.html
+# fuzzy(1,2616) skip-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,12352) fails-if(http.oscpu=="Linux\u0020x86_64") HTTP(..) == xulscroll.html xulscroll.html
+HTTP(..) == combobox-zoom.html combobox-zoom.html
 
 # The vertical-text pref setting can be removed after bug 1138384 lands
 # == vertical-decorations-1.html vertical-decorations-1.html

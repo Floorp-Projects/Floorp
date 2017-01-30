@@ -35,7 +35,7 @@ function loadDone() {
      "document didn't get bfcached?");
 
   // Remove our node from the DOM
-  window.el.parentNode.removeChild(window.el);
+  window.el.remove();
 
   is(window.el.prop, undefined, "Binding should have been detached");
   is(typeof(window.el.prop), "undefined", "Really undefined");

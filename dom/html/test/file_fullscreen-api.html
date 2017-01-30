@@ -63,7 +63,7 @@ function enter1(event) {
      "FSE should match :fullscreen");
   var fse = fullScreenElement();
   addFullscreenChangeContinuation("exit", exit1);
-  fse.parentNode.removeChild(fse);
+  fse.remove();
   is(document.fullscreenElement, null,
      "Full-screen element should be null after removing.");
   document.body.appendChild(fse);
@@ -157,7 +157,7 @@ function enter4(event) {
 
   // Remove full-screen ancestor element from document, verify it stops being reported as current FSE.
   addFullscreenChangeContinuation("exit", exit_to_arg_test_1);
-  container.parentNode.removeChild(container);
+  container.remove();
   is(document.fullscreenElement, null,
      "Should not have a full-screen element again.");
 }

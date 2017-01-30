@@ -149,6 +149,11 @@ static const TimeDuration MAX_TIMEOUT_INTERVAL = TimeDuration::FromSeconds(1800.
 // SharedArrayBuffer and Atomics are enabled by default (tracking Firefox).
 #define SHARED_MEMORY_DEFAULT 1
 
+// Some platform hooks must be implemented for single-step profiling.
+#if defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS64)
+# define SINGLESTEP_PROFILING
+#endif
+
 using JobQueue = GCVector<JSObject*, 0, SystemAllocPolicy>;
 
 struct ShellAsyncTasks
@@ -252,6 +257,10 @@ class OffThreadState {
     char16_t* source;
 };
 
+#ifdef SINGLESTEP_PROFILING
+typedef Vector<char16_t, 0, SystemAllocPolicy> StackChars;
+#endif
+
 // Per-context shell state.
 struct ShellContext
 {
@@ -269,6 +278,9 @@ struct ShellContext
     JS::PersistentRooted<JobQueue> jobQueue;
     ExclusiveData<ShellAsyncTasks> asyncTasks;
     bool drainingJobQueue;
+#ifdef SINGLESTEP_PROFILING
+    Vector<StackChars, 0, SystemAllocPolicy> stacks;
+#endif
 
     /*
      * Watchdog thread state.
@@ -4850,10 +4862,7 @@ PrintProfilerEvents(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-#if defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS64)
-typedef Vector<char16_t, 0, SystemAllocPolicy> StackChars;
-Vector<StackChars, 0, SystemAllocPolicy> stacks;
-
+#ifdef SINGLESTEP_PROFILING
 static void
 SingleStepCallback(void* arg, jit::Simulator* sim, void* pc)
 {
@@ -4871,6 +4880,8 @@ SingleStepCallback(void* arg, jit::Simulator* sim, void* pc)
 #elif defined(JS_SIMULATOR_MIPS64)
     state.sp = (void*)sim->getRegister(jit::Simulator::sp);
     state.lr = (void*)sim->getRegister(jit::Simulator::ra);
+#else
+#  error "NYI: Single-step profiling support"
 #endif
 
     mozilla::DebugOnly<void*> lastStackAddress = nullptr;
@@ -4894,12 +4905,14 @@ SingleStepCallback(void* arg, jit::Simulator* sim, void* pc)
         }
     }
 
+    ShellContext* sc = GetShellContext(cx);
+
     // Only append the stack if it differs from the last stack.
-    if (stacks.empty() ||
-        stacks.back().length() != stack.length() ||
-        !PodEqual(stacks.back().begin(), stack.begin(), stack.length()))
+    if (sc->stacks.empty() ||
+        sc->stacks.back().length() != stack.length() ||
+        !PodEqual(sc->stacks.back().begin(), stack.begin(), stack.length()))
     {
-        if (!stacks.append(Move(stack)))
+        if (!sc->stacks.append(Move(stack)))
             oomUnsafe.crash("stacks.append");
     }
 }
@@ -4908,7 +4921,7 @@ SingleStepCallback(void* arg, jit::Simulator* sim, void* pc)
 static bool
 EnableSingleStepProfiling(JSContext* cx, unsigned argc, Value* vp)
 {
-#if defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS64)
+#ifdef SINGLESTEP_PROFILING
     CallArgs args = CallArgsFromVp(argc, vp);
 
     jit::Simulator* sim = cx->runtime()->simulator();
@@ -4925,15 +4938,17 @@ EnableSingleStepProfiling(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DisableSingleStepProfiling(JSContext* cx, unsigned argc, Value* vp)
 {
-#if defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS64)
+#ifdef SINGLESTEP_PROFILING
     CallArgs args = CallArgsFromVp(argc, vp);
 
     jit::Simulator* sim = cx->runtime()->simulator();
     sim->disable_single_stepping();
 
+    ShellContext* sc = GetShellContext(cx);
+
     AutoValueVector elems(cx);
-    for (size_t i = 0; i < stacks.length(); i++) {
-        JSString* stack = JS_NewUCStringCopyN(cx, stacks[i].begin(), stacks[i].length());
+    for (size_t i = 0; i < sc->stacks.length(); i++) {
+        JSString* stack = JS_NewUCStringCopyN(cx, sc->stacks[i].begin(), sc->stacks[i].length());
         if (!stack)
             return false;
         if (!elems.append(StringValue(stack)))
@@ -4944,7 +4959,7 @@ DisableSingleStepProfiling(JSContext* cx, unsigned argc, Value* vp)
     if (!array)
         return false;
 
-    stacks.clear();
+    sc->stacks.clear();
     args.rval().setObject(*array);
     return true;
 #else
@@ -6049,7 +6064,7 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("enableSingleStepProfiling", EnableSingleStepProfiling, 0, 0,
 "enableSingleStepProfiling()",
 "  This function will fail on platforms that don't support single-step profiling\n"
-"  (currently everything but ARM-simulator). When enabled, at every instruction a\n"
+"  (currently ARM and MIPS64 support it). When enabled, at every instruction a\n"
 "  backtrace will be recorded and stored in an array. Adjacent duplicate backtraces\n"
 "  are discarded."),
 

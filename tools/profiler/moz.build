@@ -23,13 +23,13 @@ if CONFIG['MOZ_GECKO_PROFILER']:
         'gecko/Profiler.jsm',
     ]
     UNIFIED_SOURCES += [
-        'core/GeckoSampler.cpp',
         'core/platform.cpp',
         'core/ProfileBuffer.cpp',
         'core/ProfileEntry.cpp',
         'core/ProfileJSONWriter.cpp',
         'core/ProfilerBacktrace.cpp',
         'core/ProfilerMarkers.cpp',
+        'core/Sampler.cpp',
         'core/StackTop.cpp',
         'core/SyncProfile.cpp',
         'core/ThreadInfo.cpp',

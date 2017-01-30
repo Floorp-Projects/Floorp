@@ -134,7 +134,7 @@ function mpTestLegacyEventSent(eventInfo) {
       var handler = createHandlerWithTypeCheck(eventInfo.legacy_name,
                                                function() {
         // When event-handler is done, clean up & resolve:
-        div.parentNode.removeChild(div);
+        div.remove();
         resolve();
       });
       div.addEventListener(eventInfo.legacy_name, handler);
@@ -166,7 +166,7 @@ function mpTestModernBeatsLegacy(eventInfo) {
            "' should be invoked when there's a handler registered for " +
            "both modern & legacy event type on the same node");
         // When event-handler is done, clean up & resolve:
-        div.parentNode.removeChild(div);
+        div.remove();
         resolve();
       });
 
@@ -213,7 +213,7 @@ function mpTestDiffListenersEventBubbling(eventInfo) {
         is(e, eventSentToTarget,
            "Same event object should bubble, despite difference in type");
         // Clean up.
-        grandparent.parentNode.removeChild(grandparent);
+        grandparent.remove();
         resolve();
       }));
 
@@ -262,7 +262,7 @@ function mpTestDiffListenersEventCapturing(eventInfo) {
           ok(didEventFireOnParent,
              "Event should have fired on parent");
           // Clean up.
-          grandparent.parentNode.removeChild(grandparent);
+          grandparent.remove();
           resolve();
       }), true);
 
