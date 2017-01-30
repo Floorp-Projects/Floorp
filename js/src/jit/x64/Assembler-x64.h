@@ -362,9 +362,8 @@ class Assembler : public AssemblerX86Shared
 
     // This is for patching during code generation, not after.
     void patchAddq(CodeOffset offset, int32_t n) {
-        unsigned char* code = masm.acquireData();
+        unsigned char* code = masm.data();
         X86Encoding::SetInt32(code + offset.offset(), n);
-        masm.releaseData();
     }
 
     // Load an ImmWord value into a register. Note that this instruction will
