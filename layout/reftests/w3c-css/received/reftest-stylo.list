@@ -230,9 +230,9 @@ fails == css-values-3/vh-calc-support-pct.html css-values-3/vh-calc-support-pct.
 fails == css-values-3/vh-calc-support.html css-values-3/vh-calc-support.html
 fails == css-values-3/vh-em-inherit.html css-values-3/vh-em-inherit.html
 fails == css-values-3/vh-inherit.html css-values-3/vh-inherit.html
-fails == css-values-3/vh-interpolate-pct.html css-values-3/vh-interpolate-pct.html
-fails == css-values-3/vh-interpolate-px.html css-values-3/vh-interpolate-px.html
-fails == css-values-3/vh-interpolate-vh.html css-values-3/vh-interpolate-vh.html
+# == css-values-3/vh-interpolate-pct.html css-values-3/vh-interpolate-pct.html
+# == css-values-3/vh-interpolate-px.html css-values-3/vh-interpolate-px.html
+# == css-values-3/vh-interpolate-vh.html css-values-3/vh-interpolate-vh.html
 fails == css-values-3/vh-support-atviewport.html css-values-3/vh-support-atviewport.html
 == css-values-3/vh-support-margin.html css-values-3/vh-support-margin.html
 == css-values-3/vh-support-transform-origin.html css-values-3/vh-support-transform-origin.html
