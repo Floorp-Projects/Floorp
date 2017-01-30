@@ -4,7 +4,6 @@
 
 #ifndef FAKE_IPC_H_
 #define FAKE_IPC_H_
-#include <unistd.h>
 
 class PlatformThread {
 public:
