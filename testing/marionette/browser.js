@@ -24,22 +24,19 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
  *     The tab whose browser needs to be returned.
  *
  * @return {<xul:browser>}
- *     The linked browser for the tab.
- *
- * @throws UnsupportedOperationError
- *     If tab handling for the current application isn't supported.
+ *     The linked browser for the tab or null if no browser can be found.
  */
 browser.getBrowserForTab = function (tab) {
-  if (tab.hasOwnProperty("browser")) {
+  if ("browser" in tab) {
     // Fennec
     return tab.browser;
 
-  } else if (tab.hasOwnProperty("linkedBrowser")) {
+  } else if ("linkedBrowser" in tab) {
     // Firefox
     return tab.linkedBrowser;
 
   } else {
-      new UnsupportedOperationError("getBrowserForTab() not supported.");
+    return null;
   }
 };
 
@@ -51,21 +48,18 @@ browser.getBrowserForTab = function (tab) {
  *
  * @return {<xul:tabbrowser>}
  *     Tab browser or null if it's not a browser window.
- *
- * @throws UnsupportedOperationError
- *     If tab handling for the current application isn't supported.
  */
 browser.getTabBrowser = function (win) {
-  if (win.hasOwnProperty("BrowserApp")) {
+  if ("BrowserApp" in win) {
     // Fennec
     return win.BrowserApp;
 
-  } else if (win.hasOwnProperty("gBrowser")) {
+  } else if ("gBrowser" in win) {
     // Firefox
     return win.gBrowser;
 
   } else {
-      new UnsupportedOperationError("getBrowserForTab() not supported.");
+    return null;
   }
 };
 
@@ -244,8 +238,14 @@ browser.Context = class {
    *     the currently selected tab will be used.
    * @param {nsIDOMWindow=} win
    *     Switch to this window before selecting the tab.
+   * @param {boolean=} focus
+   *      A boolean value which determins whether to focus
+   *      the window. Defaults to true.
+   *
+   * @throws UnsupportedOperationError
+   *     If tab handling for the current application isn't supported.
    */
-  switchToTab(index, win) {
+  switchToTab(index, win, focus = true) {
     if (win) {
       this.window = win;
       this.tabBrowser = browser.getTabBrowser(win);
@@ -260,13 +260,18 @@ browser.Context = class {
     } else {
       this.tab = this.tabBrowser.tabs[index];
 
-      if (this.tabBrowser.selectTab) {
-        // Fennec
-        this.tabBrowser.selectTab(this.tab);
+      if (focus) {
+        if (this.tabBrowser.selectTab) {
+          // Fennec
+          this.tabBrowser.selectTab(this.tab);
 
-      } else {
-        // Firefox
-        this.tabBrowser.selectedTab = this.tab;
+        } else if ("selectedTab" in this.tabBrowser) {
+          // Firefox
+          this.tabBrowser.selectedTab = this.tab;
+
+        } else {
+          throw new UnsupportedOperationError("switchToTab() not supported");
+        }
       }
     }
 
