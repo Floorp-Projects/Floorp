@@ -322,7 +322,7 @@ HTMLEditRules::BeforeEdit(EditAction action,
     RefPtr<Selection> selection = htmlEditor->GetSelection();
 
     // Get the selection location
-    if (!selection->RangeCount()) {
+    if (NS_WARN_IF(!selection) || !selection->RangeCount()) {
       return NS_ERROR_UNEXPECTED;
     }
     mRangeItem->startNode = selection->GetRangeAt(0)->GetStartParent();
