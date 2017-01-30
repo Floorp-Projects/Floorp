@@ -222,7 +222,6 @@ add_task(function* test_offset_in_hawk_header() {
     "/second": function(request, response) {
       // We see a better date now in the ts component of the header
       let delta = getTimestampDelta(request.getHeader("Authorization"));
-      let message = "Delta: " + delta;
 
       // We're now within HAWK's one-minute window.
       // I hope this isn't a recipe for intermittent oranges ...
@@ -385,7 +384,7 @@ add_task(function* test_500_no_retry() {
   let method = "GET";
 
   let server = httpd_setup({
-    "/no-shutup": function() {
+    "/no-shutup": function(request, response) {
       let message = "Cannot get ye flask.";
       response.setStatusLine(request.httpVersion, 500, "Internal server error");
       response.bodyOutputStream.write(message, message.length);
@@ -500,4 +499,3 @@ function run_test() {
   initTestLogging("Trace");
   run_next_test();
 }
-

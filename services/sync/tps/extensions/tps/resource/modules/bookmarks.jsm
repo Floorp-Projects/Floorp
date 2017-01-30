@@ -263,7 +263,7 @@ PlacesItem.prototype = {
    * @return the folder id if the folder was found or created, otherwise -1
    */
   GetOrCreateFolder(location) {
-    folder_id = this.GetFolder(location);
+    let folder_id = this.GetFolder(location);
     if (folder_id == -1)
       folder_id = this.CreateFolder(location);
     return folder_id;
@@ -784,7 +784,7 @@ Livemark.prototype = {
 
     PlacesUtils.livemarks.addLivemark(livemarkObj).then(
       aLivemark => { spinningCb(null, [Components.results.NS_OK, aLivemark]) },
-      () => { spinningCb(null, [Components.results.NS_ERROR_UNEXPECTED, aLivemark]) }
+      () => { spinningCb(null, [Components.results.NS_ERROR_UNEXPECTED, null]) }
     );
 
     let [status, livemark] = spinningCb.wait();
@@ -933,9 +933,9 @@ Separator.prototype = {
     }
     let expected_pos = -1;
     if (this.props.before) {
-      other_id = this.GetPlacesNodeId(this.props.folder_id,
-                                      null,
-                                      this.props.before);
+      let other_id = this.GetPlacesNodeId(this.props.folder_id,
+                                          null,
+                                          this.props.before);
       if (other_id == -1) {
         Logger.logPotentialError("Can't find places item " + this.props.before +
           " for locating separator");

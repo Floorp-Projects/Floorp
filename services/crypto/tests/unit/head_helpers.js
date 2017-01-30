@@ -3,6 +3,8 @@ var Ci = Components.interfaces;
 var Cr = Components.results;
 var Cu = Components.utils;
 
+/* import-globals-from ../../../common/tests/unit/head_helpers.js */
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 try {
@@ -45,7 +47,7 @@ function base64UrlDecode(s) {
       s += "=";
       break; // One pad char
     default:
-      throw new InputException("Illegal base64url string!");
+      throw new Error("Illegal base64url string!");
   }
 
   // With correct padding restored, apply the standard base64 decoder

@@ -186,9 +186,8 @@ this.CryptoUtils = {
                        hmacAlg = Ci.nsICryptoHMAC.SHA1, hmacLen = 20) {
 
     // We don't have a default in the algo itself, as NSS does.
-    // Use the constant.
     if (!dkLen) {
-      dkLen = SYNC_KEY_DECODED_LENGTH;
+      throw new Error("dkLen should be defined");
     }
 
     function F(S, c, i, h) {

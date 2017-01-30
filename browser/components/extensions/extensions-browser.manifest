@@ -6,6 +6,7 @@ category webextension-scripts commands chrome://browser/content/ext-commands.js
 category webextension-scripts contextMenus chrome://browser/content/ext-contextMenus.js
 category webextension-scripts desktop-runtime chrome://browser/content/ext-desktop-runtime.js
 category webextension-scripts devtools chrome://browser/content/ext-devtools.js
+category webextension-scripts devtools-inspectedWindow chrome://browser/content/ext-devtools-inspectedWindow.js
 category webextension-scripts history chrome://browser/content/ext-history.js
 category webextension-scripts omnibox chrome://browser/content/ext-omnibox.js
 category webextension-scripts pageAction chrome://browser/content/ext-pageAction.js

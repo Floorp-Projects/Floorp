@@ -28,17 +28,17 @@ function run_test() {
 
   let state = 0;
   let makeObs = function(topic) {
-    let obj = {
-      observe(subject, topic, data) {
+    let obj2 = {
+      observe(subject, obsTopic, data) {
         this.state = ++state;
         this.subject = subject;
-        this.topic = topic;
+        this.topic = obsTopic;
         this.data = data;
       }
     };
 
-    Svc.Obs.add(topic, obj);
-    return obj;
+    Svc.Obs.add(topic, obj2);
+    return obj2;
   };
 
   _("Make sure a normal call will call and return with notifications");

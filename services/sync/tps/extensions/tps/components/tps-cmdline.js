@@ -114,7 +114,7 @@ var TPSCmdLineModule = {
     compMgr = compMgr.QueryInterface(nsIComponentRegistrar);
 
     compMgr.unregisterFactoryLocation(TPS_CMDLINE_CLSID, fileSpec);
-    catman = Components.classes[CATMAN_CONTRACTID].getService(nsICategoryManager);
+    let catman = Components.classes[CATMAN_CONTRACTID].getService(nsICategoryManager);
     catman.deleteCategoryEntry("command-line-argument-handlers",
                                "TPS command line handler", true);
     catman.deleteCategoryEntry("command-line-handler",

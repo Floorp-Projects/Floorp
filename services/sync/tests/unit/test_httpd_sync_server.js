@@ -114,15 +114,15 @@ add_test(function test_info_collections() {
         do_check_eq(this.response.body, "{}");
         Utils.nextTick(function() {
           // When we PUT something to crypto/keys, "crypto" appears in the response.
-          function cb(err) {
-            do_check_eq(null, err);
+          function cb(err2) {
+            do_check_eq(null, err2);
             responseHasCorrectHeaders(this.response);
             let putResponseBody = this.response.body;
             _("PUT response body: " + JSON.stringify(putResponseBody));
 
             req = localRequest(server, "/1.1/john/info/collections");
-            req.get(function(err) {
-              do_check_eq(null, err);
+            req.get(function(err3) {
+              do_check_eq(null, err3);
               responseHasCorrectHeaders(this.response);
               let expectedColl = server.getCollection("john", "crypto");
               do_check_true(!!expectedColl);
@@ -275,7 +275,7 @@ add_test(function test_x_weave_records() {
       // WBO fetches don't have one.
       do_check_false("x-weave-records" in this.response.headers);
       let col = localRequest(server, "/1.1/john/storage/crypto");
-      col.get(function(err) {
+      col.get(function(err2) {
         // Collection fetches do.
         do_check_eq(this.response.headers["x-weave-records"], "2");
         server.stop(run_next_test);
