@@ -2124,7 +2124,7 @@
 
       <handler event="mousedown"><![CDATA[
         let target = event.originalTarget;
-        if (!target.classList.contains("searchbar-engine-one-off-item")) {
+        if (target.getAttribute("anonid") == "addengine-menu-button") {
           return;
         }
         // Required to receive click events from the buttons on Linux.
