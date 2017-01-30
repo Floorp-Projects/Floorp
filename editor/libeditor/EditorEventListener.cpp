@@ -667,6 +667,13 @@ EditorEventListener::MouseClick(nsIDOMMouseEvent* aMouseEvent)
     return rv;
   }
 
+  // IMEStateManager::OnClickInEditor() may cause anything because it may
+  // set input context.  For example, it may cause opening VKB, changing focus
+  // or reflow.  So, mEditorBase here might have been gone.
+  if (!mEditorBase) {
+    return NS_OK;
+  }
+
   // If we got a mouse down inside the editing area, we should force the
   // IME to commit before we change the cursor position
   mEditorBase->ForceCompositionEnd();
