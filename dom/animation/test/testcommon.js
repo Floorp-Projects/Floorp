@@ -102,7 +102,7 @@ function addDiv(t, attrs) {
   if (t && typeof t.add_cleanup === 'function') {
     t.add_cleanup(function() {
       if (div.parentNode) {
-        div.parentNode.removeChild(div);
+        div.remove();
       }
     });
   }

@@ -143,7 +143,7 @@ NetRequest.prototype = {
    * Close network inline preview body.
    */
   closeBody: function () {
-    this.netInfoBodyBox.parentNode.removeChild(this.netInfoBodyBox);
+    this.netInfoBodyBox.remove();
   },
 
   /**

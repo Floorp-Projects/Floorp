@@ -20,7 +20,7 @@ function s()
     var newSpan = document.createElement("span");
     newSpan.contentEditable = "true";
     nodes[0].appendChild(newSpan);
-    x.parentNode.removeChild(x);
+    x.remove();
     
     document.documentElement.removeAttribute("class");
   }

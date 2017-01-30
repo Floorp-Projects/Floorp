@@ -27,7 +27,7 @@ var win = f.contentWindow;
 win.location = "data:text/html,1";
 
 // Now try to make the location object go away.
-f.parentNode.removeChild(f);
+f.remove();
 
 // Check that location is now null.  If it's not, the test needs changing
 // (e.g. to use window.close() so that it's null).

@@ -34,7 +34,7 @@ function noChildrenTest()
   // Remove the browser element and test navigation when there are no other documents.
   // The focus should move or stay on the first focusable element.
   let browser = document.getElementById("browser");
-  browser.parentNode.removeChild(browser);
+  browser.remove();
 
   let textbox1 = document.getElementById("textbox1");
   let textbox2 = document.getElementById("textbox2");

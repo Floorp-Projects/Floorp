@@ -60,7 +60,7 @@ function removeFrame(iframe) {
   SpecialPowers.addObserver(outerObserver, "outer-window-destroyed", false);
   SpecialPowers.addObserver(innerObserver, "inner-window-destroyed", false);
 
-  iframe.parentNode.removeChild(iframe);
+  iframe.remove();
 }
 
 removeFrame(i1);

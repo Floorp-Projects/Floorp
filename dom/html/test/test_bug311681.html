@@ -63,7 +63,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=311681
 
     node = testNode.cloneNode(true);
     newParent.appendChild(node);
-    testNode.parentNode.removeChild(testNode);
+    testNode.remove();
 
     // Check what getElementById returns, no flushing
     is(getCont(), node, "Should be getting clone pre-flush");

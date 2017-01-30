@@ -40,7 +40,7 @@
     yield undefined;
 
     info("Kill the iframe, forget about it, trigger a GC.");
-    iframe.parentNode.removeChild(iframe);
+    iframe.remove();
     iframe = null;
     scheduleGC();
     yield undefined;

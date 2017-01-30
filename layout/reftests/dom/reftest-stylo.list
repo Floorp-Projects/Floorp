@@ -32,25 +32,25 @@
 # == insertmultiplemultiple-2.html insertmultiplemultiple-2.html
 
 # testing bindings that have multiple insertion points
-fails == multipleinsertionpoints-ref2.xhtml multipleinsertionpoints-ref2.xhtml
+== multipleinsertionpoints-ref2.xhtml multipleinsertionpoints-ref2.xhtml
 # append a single element
-fails == multipleinsertionpoints-appendsingle-1.xhtml multipleinsertionpoints-appendsingle-1.xhtml
-fails == multipleinsertionpoints-appendsingle-2.xhtml multipleinsertionpoints-appendsingle-2.xhtml
+== multipleinsertionpoints-appendsingle-1.xhtml multipleinsertionpoints-appendsingle-1.xhtml
+== multipleinsertionpoints-appendsingle-2.xhtml multipleinsertionpoints-appendsingle-2.xhtml
 # append several elements
-fails == multipleinsertionpoints-appendmultiple.xhtml multipleinsertionpoints-appendmultiple.xhtml
+== multipleinsertionpoints-appendmultiple.xhtml multipleinsertionpoints-appendmultiple.xhtml
 # insert a single element
-fails == multipleinsertionpoints-insertsingle-1.xhtml multipleinsertionpoints-insertsingle-1.xhtml
-fails == multipleinsertionpoints-insertsingle-2.xhtml multipleinsertionpoints-insertsingle-2.xhtml
+== multipleinsertionpoints-insertsingle-1.xhtml multipleinsertionpoints-insertsingle-1.xhtml
+== multipleinsertionpoints-insertsingle-2.xhtml multipleinsertionpoints-insertsingle-2.xhtml
 # insert several elements
-fails == multipleinsertionpoints-insertmultiple.xhtml multipleinsertionpoints-insertmultiple.xhtml
+== multipleinsertionpoints-insertmultiple.xhtml multipleinsertionpoints-insertmultiple.xhtml
 
 # test appending some nodes whose frame construction should be done lazily
 # followed by appending a node that might not be done lazily
 == multipleappendwithxul.xhtml multipleappendwithxul.xhtml
-fails == multipleappendwithinput.xhtml multipleappendwithinput.xhtml
+== multipleappendwithinput.xhtml multipleappendwithinput.xhtml
 == multipleappendwitheditable.xhtml multipleappendwitheditable.xhtml
 
-fails == xbl-children-1.xhtml xbl-children-1.xhtml
+== xbl-children-1.xhtml xbl-children-1.xhtml
 == xbl-children-2.xhtml xbl-children-2.xhtml
-fails == xbl-children-3.xhtml xbl-children-3.xhtml
+== xbl-children-3.xhtml xbl-children-3.xhtml
 == xbl-children-4.xhtml xbl-children-4.xhtml

@@ -295,7 +295,7 @@
     runTest( ecss, "SyntaxError: Fragment", fragment, false );
     cacheCheck( "Fragment", fragment );
 
-    root.parentNode.removeChild( root );
+    root.remove( );
     
     interfaceCheck(document, "Document");
     runTest( css, "Document", document, true );

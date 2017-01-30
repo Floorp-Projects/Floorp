@@ -9,9 +9,9 @@
     <script>
       function doTest() {
         var t = document.getElementById("t1");
-        t.parentNode.removeChild(t);
+        t.remove();
         t = document.getElementById("t2");
-        t.parentNode.removeChild(t);
+        t.remove();
         document.documentElement.className = "";
       }
     </script>

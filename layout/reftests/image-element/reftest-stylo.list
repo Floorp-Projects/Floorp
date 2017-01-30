@@ -15,34 +15,34 @@ HTTP(..) == element-paint-continuation.html element-paint-continuation.html
 == element-paint-transform-01.html element-paint-transform-01.html
 == element-paint-transform-02.html element-paint-transform-02.html
 == element-paint-background-size-01.html element-paint-background-size-01.html
-fails == element-paint-background-size-02.html element-paint-background-size-02.html
-fails == element-paint-transform-repeated.html element-paint-transform-repeated.html
-fails == element-paint-transform-03.html element-paint-transform-03.html
-fails == element-paint-native-widget.html element-paint-native-widget.html
+== element-paint-background-size-02.html element-paint-background-size-02.html
+== element-paint-transform-repeated.html element-paint-transform-repeated.html
+== element-paint-transform-03.html element-paint-transform-03.html
+== element-paint-native-widget.html element-paint-native-widget.html
 fails-if(usesRepeatResampling) == element-paint-subimage-sampling-restriction.html element-paint-subimage-sampling-restriction.html
-fails == element-paint-clippath.html element-paint-clippath.html
-fails == element-paint-sharpness-01a.html element-paint-sharpness-01a.html
+== element-paint-clippath.html element-paint-clippath.html
+== element-paint-sharpness-01a.html element-paint-sharpness-01a.html
 fuzzy-if(skiaContent,1,326) == element-paint-sharpness-01b.html element-paint-sharpness-01b.html
 == element-paint-sharpness-01c.html element-paint-sharpness-01c.html
-fails == element-paint-sharpness-02a.html element-paint-sharpness-02a.html
-fails == element-paint-sharpness-02b.html element-paint-sharpness-02b.html
-fails == element-paint-paintserversize-rounding-01.html element-paint-paintserversize-rounding-01.html
-fails == element-paint-paintserversize-rounding-02.html element-paint-paintserversize-rounding-02.html
-fails == element-paint-multiple-backgrounds-01a.html element-paint-multiple-backgrounds-01a.html
-fails == element-paint-multiple-backgrounds-01b.html element-paint-multiple-backgrounds-01b.html
-fails == element-paint-multiple-backgrounds-01c.html element-paint-multiple-backgrounds-01c.html
-fails == gradient-html-01.html gradient-html-01.html
-fails == gradient-html-02.html gradient-html-02.html
+== element-paint-sharpness-02a.html element-paint-sharpness-02a.html
+== element-paint-sharpness-02b.html element-paint-sharpness-02b.html
+== element-paint-paintserversize-rounding-01.html element-paint-paintserversize-rounding-01.html
+== element-paint-paintserversize-rounding-02.html element-paint-paintserversize-rounding-02.html
+== element-paint-multiple-backgrounds-01a.html element-paint-multiple-backgrounds-01a.html
+== element-paint-multiple-backgrounds-01b.html element-paint-multiple-backgrounds-01b.html
+== element-paint-multiple-backgrounds-01c.html element-paint-multiple-backgrounds-01c.html
+== gradient-html-01.html gradient-html-01.html
+== gradient-html-02.html gradient-html-02.html
 random-if(!cocoaWidget) == gradient-html-03.html gradient-html-03.html
-fails == gradient-html-04.html gradient-html-04.html
-fails == gradient-html-05.html gradient-html-05.html
+== gradient-html-04.html gradient-html-04.html
+== gradient-html-05.html gradient-html-05.html
 fuzzy(1,9674) random-if(!cocoaWidget) == gradient-html-06a.html gradient-html-06a.html
 fuzzy(1,9674) random-if(!cocoaWidget) == gradient-html-06b.html gradient-html-06b.html
-fails == gradient-html-06c.html gradient-html-06c.html
-fails == gradient-html-06d.html gradient-html-06d.html
+== gradient-html-06c.html gradient-html-06c.html
+== gradient-html-06d.html gradient-html-06d.html
 random-if(!cocoaWidget) fuzzy-if(cocoaWidget,2,42305) == gradient-html-07a.html gradient-html-07a.html
-fails == gradient-html-07c.html gradient-html-07c.html
-fails HTTP == invalidate-1.html invalidate-1.html
-fails == pattern-html-01.html pattern-html-01.html
-fails == pattern-html-02.html pattern-html-02.html
-fails == referenced-from-binding-01.html referenced-from-binding-01.html
+== gradient-html-07c.html gradient-html-07c.html
+HTTP == invalidate-1.html invalidate-1.html
+== pattern-html-01.html pattern-html-01.html
+== pattern-html-02.html pattern-html-02.html
+== referenced-from-binding-01.html referenced-from-binding-01.html

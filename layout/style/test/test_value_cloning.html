@@ -142,7 +142,7 @@ function iframe_loaded(event)
   // remove the first.
   ifdoc.styleSheets[1].insertRule("#nonexistent { color: red }", 0);
   var firstlink = ifdoc.getElementsByTagName("link")[0];
-  firstlink.parentNode.removeChild(firstlink);
+  firstlink.remove();
 
   // Force a flush
   ifdoc.body.style.display="none";

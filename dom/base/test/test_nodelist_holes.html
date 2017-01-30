@@ -31,7 +31,7 @@ document.body.appendChild(testtag);
 is(list[0], testtag, "Should expose elements in the list");
 is(list[1], "PASSProto1", "Should expose proto properties out of range on the list");
 
-testtag.parentNode.removeChild(testtag);
+testtag.remove();
 
 is(list[0], "PASSProto0", "Should expose proto properties on the list after removal");
 is(list[1], "PASSProto1", "Should expose more proto properties on the list after removal");

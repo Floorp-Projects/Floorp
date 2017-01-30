@@ -25,7 +25,7 @@ Tests of DOM Worker Threads XHR(Bug 450452 )
   window.onmessage = function(event) {
     if (event.data == "TERMINATE") {
       ok(true, "Got TERMINATE");
-      ifr.parentNode.removeChild(ifr);
+      ifr.remove();
       SimpleTest.finish();
     } else {
       ok(false, "Unexpected message: " + event.data);

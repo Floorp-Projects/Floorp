@@ -286,7 +286,7 @@ PlacesViewBase.prototype = {
     if (document.popupNode == aChild)
       document.popupNode = null;
 
-    aChild.parentNode.removeChild(aChild);
+    aChild.remove();
   },
 
   _setEmptyPopupStatus:

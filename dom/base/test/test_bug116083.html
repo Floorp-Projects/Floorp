@@ -85,7 +85,7 @@ function nextTest() {
   }, function() {
     ok(true, div.getAttribute("style") + " passed");
     hasExpectedFlavors();
-    div.parentNode.removeChild(div);
+    div.remove();
     nextTest();
   }, function() {
     ok(false, "failed to copy the expected content to the clipboard");

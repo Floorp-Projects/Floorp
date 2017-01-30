@@ -103,35 +103,35 @@
 
         if (error !== "malware") {
           el = document.getElementById("errorTitleText_malware");
-          el.parentNode.removeChild(el);
+          el.remove();
           el = document.getElementById("errorShortDescText_malware");
-          el.parentNode.removeChild(el);
+          el.remove();
           el = document.getElementById("errorLongDescText_malware");
-          el.parentNode.removeChild(el);
+          el.remove();
         }
 
         if (error !== "phishing") {
           el = document.getElementById("errorTitleText_phishing");
-          el.parentNode.removeChild(el);
+          el.remove();
           el = document.getElementById("errorShortDescText_phishing");
-          el.parentNode.removeChild(el);
+          el.remove();
           el = document.getElementById("errorLongDescText_phishing");
-          el.parentNode.removeChild(el);
+          el.remove();
         }
 
         if (error !== "unwanted") {
           el = document.getElementById("errorTitleText_unwanted");
-          el.parentNode.removeChild(el);
+          el.remove();
           el = document.getElementById("errorShortDescText_unwanted");
-          el.parentNode.removeChild(el);
+          el.remove();
           el = document.getElementById("errorLongDescText_unwanted");
-          el.parentNode.removeChild(el);
+          el.remove();
         }
 
         if (!getOverride()) {
           var btn = document.getElementById("ignoreWarningButton");
           if (btn) {
-            btn.parentNode.removeChild(btn);
+            btn.remove();
           }
         }
 

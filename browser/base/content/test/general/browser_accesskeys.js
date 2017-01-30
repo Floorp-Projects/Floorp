@@ -45,7 +45,7 @@ add_task(function *() {
   focusedId = yield performAccessKeyForChrome("z");
   is(focusedId, "chromebutton", "chromebutton accesskey");
 
-  newButton.parentNode.removeChild(newButton);
+  newButton.remove();
 
   gBrowser.removeTab(tab1);
   gBrowser.removeTab(tab2);

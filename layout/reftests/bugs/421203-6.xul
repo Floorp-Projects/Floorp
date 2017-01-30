@@ -6,7 +6,7 @@
       const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
       const HTML_NS = "http://www.w3.org/1999/xhtml";
       var span = document.getElementsByTagNameNS(HTML_NS, "span")[0];
-      span.parentNode.removeChild(span);
+      span.remove();
       setTimeout(finish, 0);
     }
     function finish() {

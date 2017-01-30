@@ -53,7 +53,7 @@
 
   function unloadFrame() {
     frame.src = "about:blank";
-    frame.parentNode.removeChild(frame);
+    frame.remove();
     frame = null;
   }
 

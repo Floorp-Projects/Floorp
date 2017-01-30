@@ -7,7 +7,7 @@
 function boom() {
   document.documentElement.offsetWidth;
   var s = document.getElementById("s");
-  s.parentNode.removeChild(s);
+  s.remove();
   document.documentElement.offsetWidth;
   document.documentElement.removeAttribute("class");
 }

@@ -166,7 +166,7 @@ var tests = [
     },
     onHidden(popup) {
       this.notification.remove();
-      this.box.parentNode.removeChild(this.box);
+      this.box.remove();
     }
   },
   // Test that popupnotifications without popups have anchor icons shown

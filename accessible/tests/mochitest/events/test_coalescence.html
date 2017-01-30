@@ -74,7 +74,7 @@
       {
         switch (aAction) {
           case kRemoveElm:
-            aNode.parentNode.removeChild(aNode);
+            aNode.remove();
             break;
 
           case kHideElm:
@@ -328,8 +328,8 @@
 
       this.invoke = function removeGrandChildrenNHideParent_invoke()
       {
-        this.child1.parentNode.removeChild(this.child1);
-        this.child2.parentNode.removeChild(this.child2);
+        this.child1.remove();
+        this.child2.remove();
         this.parent.hidden = true;
       }
 

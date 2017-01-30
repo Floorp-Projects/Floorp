@@ -1059,7 +1059,7 @@ exports.testAttachToTabsOnly = function(assert, done) {
     iframe.setAttribute('type', 'content');
     iframe.setAttribute('src', 'data:text/html;charset=utf-8,foobar');
     iframe.addEventListener('DOMContentLoaded', function() {
-      iframe.parentNode.removeChild(iframe);
+      iframe.remove();
       openTabWithIframes();
     }, {once: true});
     document.documentElement.appendChild(iframe);

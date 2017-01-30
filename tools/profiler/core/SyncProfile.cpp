@@ -25,7 +25,7 @@ SyncProfile::~SyncProfile()
 bool
 SyncProfile::ShouldDestroy()
 {
-  MutexAutoLock lock(GetMutex());
+  mozilla::MutexAutoLock lock(GetMutex());
   if (mOwnerState == OWNED) {
     mOwnerState = OWNER_DESTROYING;
     return true;

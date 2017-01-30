@@ -21,9 +21,9 @@ function doit()
   tdB.setAttribute('rowspan', 2);
   trB.appendChild(tdB);
   tbA.appendChild(trB);
-  tdB.parentNode.removeChild(tdB);
-  trA.parentNode.removeChild(trA);
-  trB.parentNode.removeChild(trB);
+  tdB.remove();
+  trA.remove();
+  trB.remove();
   var tb =  doc.createElement('tbody');
   trB.appendChild(tdB);
   tb.appendChild(trB);

@@ -462,7 +462,7 @@ for (var name of elementNames) {
 
   // Cleaning-up.
   for (e of elements) {
-    e.parentNode.removeChild(e);
+    e.remove();
     e = null;
   }
 }

@@ -42,11 +42,11 @@ var s4a = createSpan("test1", s1a);
 is(document.getElementById("test1"), s4a,
    "Inserting span with id=test1 at the beginning changes which one is first");
 
-s4a.parentNode.removeChild(s4a);
+s4a.remove();
 is(document.getElementById("test1"), s1a,
    "First-created span with id=test1 is first again");
 
-s1a.parentNode.removeChild(s1a);
+s1a.remove();
 is(document.getElementById("test1"), s3a,
    "Third-created span with id=test1 is first now");
 
@@ -71,11 +71,11 @@ var s4b = createSpan("test2", s1b);
 is(document.getElementById("test2"), s4b,
    "Inserting span with id=test2 at the beginning changes which one is first");
 
-s4b.parentNode.removeChild(s4b);
+s4b.remove();
 is(document.getElementById("test2"), s1b,
    "First-created span with id=test2 is first again");
 
-s1b.parentNode.removeChild(s1b);
+s1b.remove();
 is(document.getElementById("test2"), s3b,
    "Third-created span with id=test2 is first now");
 

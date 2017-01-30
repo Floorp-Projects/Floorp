@@ -18,7 +18,7 @@ function f() {
 try {
   var ifr = document.getElementById('i');
   if (ifr.contentWindow.document.location == 'about:blank') {
-    ifr.parentNode.removeChild(ifr);
+    ifr.remove();
     ok(true, "no crash received");
     SimpleTest.executeSoon(SimpleTest.finish);
   }

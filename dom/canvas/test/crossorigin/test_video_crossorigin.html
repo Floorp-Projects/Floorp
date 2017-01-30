@@ -163,7 +163,7 @@ function startTest(test, token) {
 
 function doneTest(e) {
   var v = e.target;
-  v.parentNode.removeChild(v);
+  v.remove();
   document.manager.finished(v.token);
 }
 

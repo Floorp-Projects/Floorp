@@ -232,7 +232,7 @@
 
         // remove undisplayed errors to avoid bug 39098
         var errContainer = document.getElementById("errorContainer");
-        errContainer.parentNode.removeChild(errContainer);
+        errContainer.remove();
 
         var className = getCSSClass();
         if (className && className != "expertBadCert") {

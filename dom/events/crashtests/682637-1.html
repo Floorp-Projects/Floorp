@@ -8,7 +8,7 @@ function boom()
 {
   var frame = document.getElementById("f");
   var frameWin = frame.contentWindow;
-  frame.parentNode.removeChild(frame);
+  frame.remove();
   frameWin.onmouseover = function(){};
 }
 

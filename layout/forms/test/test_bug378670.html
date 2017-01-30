@@ -23,7 +23,7 @@ Clicking on the select should not crash Mozilla
 
 <pre id="test">
 <script>
-document.body.addEventListener('popupshowing', function(e) {e.target.parentNode.removeChild(e.target) }, true);
+document.body.addEventListener('popupshowing', function(e) {e.target.remove() }, true);
 </script>
 <script type="application/javascript">
 

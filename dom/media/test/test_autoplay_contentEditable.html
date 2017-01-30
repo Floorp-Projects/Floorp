@@ -38,7 +38,7 @@ function gotPlayEvent(event) {
 }
 
 function goToNext(v) {
-  v.parentNode.removeChild(v);
+  v.remove();
   manager.finished(v.token);
 }
 

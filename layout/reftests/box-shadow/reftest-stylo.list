@@ -6,12 +6,12 @@ fails random == boxshadow-blur-2.html boxshadow-blur-2.html
 fails random == boxshadow-blur-2.html boxshadow-blur-2.html
 # == boxshadow-multiple.html boxshadow-multiple.html
 == boxshadow-spread.html boxshadow-spread.html
-fails == tableboxshadow-basic.html tableboxshadow-basic.html
-fails == tableboxshadow-trshadow.html tableboxshadow-trshadow.html
-fails == tableboxshadow-tdshadow.html tableboxshadow-tdshadow.html
+== tableboxshadow-basic.html tableboxshadow-basic.html
+== tableboxshadow-trshadow.html tableboxshadow-trshadow.html
+== tableboxshadow-tdshadow.html tableboxshadow-tdshadow.html
 == boxshadow-rounding.html boxshadow-rounding.html
-fails == boxshadow-button.html boxshadow-button.html
-fails == boxshadow-fileupload.html boxshadow-fileupload.html
+== boxshadow-button.html boxshadow-button.html
+== boxshadow-fileupload.html boxshadow-fileupload.html
 == boxshadow-inner-basic.html boxshadow-inner-basic.html
 random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed.html
 == boxshadow-rounded-spread.html boxshadow-rounded-spread.html
@@ -24,10 +24,10 @@ fuzzy(2,440) == boxshadow-skiprect.html boxshadow-skiprect.html
 == boxshadow-color-rounding.html boxshadow-color-rounding.html
 == boxshadow-color-rounding-middle.html boxshadow-color-rounding-middle.html
 fuzzy-if(OSX==1010,1,24) fuzzy-if(d2d,16,908) == boxshadow-large-border-radius.html boxshadow-large-border-radius.html
-fails == boxshadow-border-radius-int.html boxshadow-border-radius-int.html
+== boxshadow-border-radius-int.html boxshadow-border-radius-int.html
 == boxshadow-inset-neg-spread.html boxshadow-inset-neg-spread.html
 == boxshadow-inset-neg-spread2.html boxshadow-inset-neg-spread2.html
-fails == boxshadow-rotated.html boxshadow-rotated.html
+== boxshadow-rotated.html boxshadow-rotated.html
 == boxshadow-inset-large-border-radius.html boxshadow-inset-large-border-radius.html
 
 # fuzzy due to blur going inside, but as long as it's essentially black instead of a light gray its ok.
@@ -36,11 +36,11 @@ fuzzy(12,9445) fuzzy-if(d2d,13,10926) == boxshadow-inset-large-offset.html boxsh
 # == overflow-not-scrollable-1.html overflow-not-scrollable-1.html
 # == overflow-not-scrollable-1.html overflow-not-scrollable-1.html
 == overflow-not-scrollable-2.html overflow-not-scrollable-2.html
-fails == 611574-1.html 611574-1.html
-fails == 611574-2.html 611574-2.html
+== 611574-1.html 611574-1.html
+== 611574-2.html 611574-2.html
 # == fieldset.html fieldset.html
 fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) == fieldset-inset.html fieldset-inset.html
 == 1178575.html 1178575.html
 == 1178575-2.html 1178575-2.html
-fails == 1212823-1.html 1212823-1.html
-fails == boxshadow-large-offset.html boxshadow-large-offset.html
+== 1212823-1.html 1212823-1.html
+== boxshadow-large-offset.html boxshadow-large-offset.html

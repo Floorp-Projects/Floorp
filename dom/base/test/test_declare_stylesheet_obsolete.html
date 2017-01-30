@@ -39,7 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=713564
 
     var previousBgColor = window.getComputedStyle(content).
                                  getPropertyValue("background-color");
-    var_sheet.parentNode.removeChild(var_sheet);
+    var_sheet.remove();
     insertLinkToVarSSAndRun(function() {
       is(window.getComputedStyle(content).getPropertyValue("background-color"),
          previousBgColor,

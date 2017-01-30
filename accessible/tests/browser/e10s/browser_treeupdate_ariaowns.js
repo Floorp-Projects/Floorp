@@ -117,8 +117,7 @@ function* testContainer1(browser, accDoc) {
   /* ================ Remove element ======================================== */
   onReorder = waitForEvent(EVENT_REORDER, id);
   yield ContentTask.spawn(browser, {}, () =>
-    content.document.getElementById('t1_span').parentNode.removeChild(
-      content.document.getElementById('t1_span')));
+    content.document.getElementById('t1_span').remove());
   yield onReorder;
 
   // subdiv should go away

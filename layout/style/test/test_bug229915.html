@@ -85,7 +85,7 @@ is(bg("replacecolor"), WHITE, "replacing should turn background white");
 is(color("removecolor"), BLACK, "initial state (removal test)");
 is(bg("removecolor"), WHITE, "initial state (removal test; no change)");
 node = document.getElementById("toremove");
-node.parentNode.removeChild(node);
+node.remove();
 is(color("removecolor"), GREEN, "removing should turn node green");
 is(bg("removecolor"), WHITE, "removing should leave background");
 

@@ -658,7 +658,7 @@ var gPopupBlockerObserver = {
     let item = aEvent.target.lastChild;
     while (item && item.getAttribute("observes") != "blockedPopupsSeparator") {
       let next = item.previousSibling;
-      item.parentNode.removeChild(item);
+      item.remove();
       item = next;
     }
   },
@@ -2542,7 +2542,7 @@ function UpdateUrlbarSearchSplitterState() {
     }
     urlbar.parentNode.insertBefore(splitter, ibefore);
   } else if (splitter)
-    splitter.parentNode.removeChild(splitter);
+    splitter.remove();
 }
 
 function UpdatePageProxyState() {

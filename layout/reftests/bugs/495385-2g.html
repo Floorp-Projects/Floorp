@@ -9,7 +9,7 @@ body > div { border:1px solid black; margin:1em;
 <script>
 function remove(id) {
   var e = document.getElementById(id);
-  e.parentNode.removeChild(e);
+  e.remove();
 }
 function loaded() {
   document.body.offsetHeight;

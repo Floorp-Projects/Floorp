@@ -84,7 +84,7 @@
           } ],
         [ "html2", "Foo", "Removing HTML <title>",
           function(doc){
-            var t = doc.getElementById("t"); t.parentNode.removeChild(t);
+            var t = doc.getElementById("t"); t.remove();
           } ],
         [ "html3", "Hello", "Appending HTML <title> element to root element",
           function(doc){
@@ -141,7 +141,7 @@
           } ],
         [ "svg2", "", "Removing SVG <title>",
           function(doc){
-            var t = doc.getElementById("t"); t.parentNode.removeChild(t);
+            var t = doc.getElementById("t"); t.remove();
           } ] ];
 
       var titleWindow = window;

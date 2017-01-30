@@ -472,7 +472,7 @@ function testRemovingElement() {
 
   var touchEvents = 0;  
   var removeTarget = function(aEvent) {
-    aEvent.target.parentNode.removeChild(aEvent.target);
+    aEvent.target.remove();
   };
 
   var checkTarget = function(aEvent) {
