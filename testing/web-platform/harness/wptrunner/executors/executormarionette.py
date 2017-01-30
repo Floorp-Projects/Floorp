@@ -104,11 +104,13 @@ class MarionetteProtocol(Protocol):
 
     def teardown(self):
         try:
-            self.marionette.delete_session()
+            self.marionette._request_in_app_shutdown()
+            self.marionette.delete_session(send_request=False, reset_session_id=True)
         except Exception:
             # This is typically because the session never started
             pass
-        del self.marionette
+        if self.marionette is not None:
+            del self.marionette
 
     @property
     def is_alive(self):
@@ -120,7 +122,7 @@ class MarionetteProtocol(Protocol):
         return True
 
     def after_connect(self):
-        self.load_runner("http")
+        self.load_runner(self.executor.last_environment["protocol"])
 
     def set_timeout(self, timeout):
         """Set the Marionette script timeout.

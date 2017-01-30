@@ -70,8 +70,8 @@ class ChromeBrowser(Browser):
     def start(self):
         self.server.start(block=False)
 
-    def stop(self):
-        self.server.stop()
+    def stop(self, force=False):
+        self.server.stop(force=Force)
 
     def pid(self):
         return self.server.pid
