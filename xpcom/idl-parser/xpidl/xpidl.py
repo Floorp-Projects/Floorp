@@ -12,7 +12,6 @@ import os.path
 import re
 from ply import lex
 from ply import yacc
-from buildconfig import substs
 
 """A type conforms to the following pattern:
 
@@ -717,7 +716,6 @@ class Attribute(object):
     binaryname = None
     null = None
     undefined = None
-    deleted = False
     deprecated = False
     infallible = False
 
@@ -736,14 +734,6 @@ class Attribute(object):
                                    aloc)
 
                 self.binaryname = value
-                continue
-
-            if name == 'deleted':
-                if value is None:
-                    raise IDLError("deleted attribute requires a value",
-                                   aloc)
-
-                self.deleted = substs['MOZ_WIDGET_TOOLKIT'] == value
                 continue
 
             if name == 'Null':
@@ -813,7 +803,7 @@ class Attribute(object):
     def isScriptable(self):
         if not self.iface.attributes.scriptable:
             return False
-        return not (self.noscript or self.deleted)
+        return not self.noscript
 
     def __str__(self):
         return "\t%sattribute %s %s\n" % (self.readonly and 'readonly ' or '',
@@ -828,7 +818,6 @@ class Method(object):
     noscript = False
     notxpcom = False
     binaryname = None
-    deleted = False
     implicit_jscontext = False
     nostdcall = False
     must_use = False
@@ -851,14 +840,6 @@ class Method(object):
                                    aloc)
 
                 self.binaryname = value
-                continue
-
-            if name == 'deleted':
-                if value is None:
-                    raise IDLError("deleted attribute requires a value",
-                                   aloc)
-
-                self.deleted = substs['MOZ_WIDGET_TOOLKIT'] == value
                 continue
 
             if value is not None:
@@ -906,7 +887,7 @@ class Method(object):
     def isScriptable(self):
         if not self.iface.attributes.scriptable:
             return False
-        return not (self.noscript or self.notxpcom or self.deleted)
+        return not (self.noscript or self.notxpcom)
 
     def __str__(self):
         return "\t%s %s(%s)\n" % (self.type, self.name, ", ".join([p.name for p in self.params]))

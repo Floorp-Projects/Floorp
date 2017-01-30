@@ -249,12 +249,7 @@ interface nsIFile : nsISupports
      *
      */
     readonly attribute AString target;
-    /**
-     *  We only provide this API for Unix-like platforms, because
-     *  it would be lossy on Windows.
-     */
-    [noscript, deleted(windows)]
-    readonly attribute ACString nativeTarget;
+    [noscript] readonly attribute ACString nativeTarget;
     readonly attribute AString path;
     [noscript] readonly attribute ACString nativePath;
 
