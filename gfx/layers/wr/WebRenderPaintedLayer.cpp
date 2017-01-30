@@ -5,7 +5,7 @@
 
 #include "WebRenderPaintedLayer.h"
 
-#include "LayersLogging.h"
+#include "WebRenderLayersLogging.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/webrender/WebRenderTypes.h"
@@ -119,6 +119,9 @@ WebRenderPaintedLayer::RenderLayer()
   LayerIntRect bounds = visibleRegion.GetBounds();
   LayerIntSize size = bounds.Size();
   if (size.IsEmpty()) {
+      if (gfxPrefs::LayersDump()) {
+        printf_stderr("PaintedLayer %p skipping\n", this->GetLayer());
+      }
       return;
   }
 
@@ -135,15 +138,25 @@ WebRenderPaintedLayer::RenderLayer()
       clip = rect;
   }
 
-
   Maybe<WrImageMask> mask = buildMaskLayer();
-
-  if (gfxPrefs::LayersDump()) printf_stderr("PaintedLayer %p using rect:%s clip:%s\n", this, Stringify(rect).c_str(), Stringify(clip).c_str());
-
   Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   Rect overflow(0, 0, relBounds.width, relBounds.height);
   Matrix4x4 transform;// = GetTransform();
   WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
+
+  if (gfxPrefs::LayersDump()) {
+    printf_stderr("PaintedLayer %p using bounds=%s, overflow=%s, transform=%s, rect=%s, clip=%s, mix-blend-mode=%s\n",
+                  this->GetLayer(),
+                  Stringify(relBounds).c_str(),
+                  Stringify(overflow).c_str(),
+                  Stringify(transform).c_str(),
+                  Stringify(rect).c_str(),
+                  Stringify(clip).c_str(),
+                  Stringify(mixBlendMode).c_str());
+  }
+
+  ContentClientRemoteBuffer* contentClientRemote = static_cast<ContentClientRemoteBuffer*>(mContentClient.get());
+  visibleRegion.MoveBy(-contentClientRemote->BufferRect().x, -contentClientRemote->BufferRect().y);
 
   WrBridge()->AddWebRenderCommand(
       OpDPPushStackingContext(wr::ToWrRect(relBounds),
@@ -153,12 +166,7 @@ WebRenderPaintedLayer::RenderLayer()
                               transform,
                               mixBlendMode,
                               FrameMetrics::NULL_SCROLL_ID));
-
-  ContentClientRemoteBuffer* contentClientRemote = static_cast<ContentClientRemoteBuffer*>(mContentClient.get());
-  visibleRegion.MoveBy(-contentClientRemote->BufferRect().x, -contentClientRemote->BufferRect().y);
-
   WrBridge()->AddWebRenderCommand(OpDPPushExternalImageId(visibleRegion, wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), WrTextureFilter::Linear, mExternalImageId));
-  if (gfxPrefs::LayersDump()) printf_stderr("PaintedLayer %p using %s as bounds/overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
   WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 }
 
