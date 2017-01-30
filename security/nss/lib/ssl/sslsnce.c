@@ -2041,15 +2041,11 @@ ssl_GenerateSessionTicketKeys(void *pwArg, unsigned char *keyName,
     SECStatus rv;
     cacheDesc *cache = &globalCache;
 
-    if (!cache->cacheMem) {
-        /* cache is uninitialized. Generate keys and return them
-         * without caching. */
-        return GenerateTicketKeys(pwArg, keyName, encKey, macKey);
-    }
-
     rv = ssl_GetSessionTicketKeyPair(&svrPubKey, &svrPrivKey);
-    if (rv != SECSuccess) {
-        return SECFailure;
+    if (rv != SECSuccess || !cache->cacheMem) {
+        /* No key pair for wrapping, or the cache is uninitialized. Generate
+         * keys and return them without caching. */
+        return GenerateTicketKeys(pwArg, keyName, encKey, macKey);
     }
 
     now = LockSidCacheLock(cache->keyCacheLock, 0);
