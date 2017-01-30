@@ -289,7 +289,12 @@ Structure:
 
 capturedStacks
 --------------
-Contains information about stacks captured on demand via Telemetry API. This is similar to `chromeHangs`, but only stacks captured on the main thread of the parent process are reported. It reports precise C++ stacks are reported and is only available on Windows, either in Firefox Nightly or in builds using "--enable-profiling" switch.
+Contains information about stacks captured on demand via Telemetry API. For more
+information see :doc:`stack capture <../collection/stack-capture>`.
+
+This is similar to :ref:`chromeHangs`, but only Precise C++ stacks on the main thread of
+the parent process are reported. This data is only available on Windows, either
+in Firefox Nightly or in builds using ``--enable-profiling`` switch.
 
 Limits for captured stacks are the same as for chromeHangs (see below). Furthermore:
 
@@ -319,6 +324,8 @@ Structure:
       ],
       "captures": [["string-key", stack-index, count], ... ]
     }
+
+.. _chromeHangs:
 
 chromeHangs
 -----------
