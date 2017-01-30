@@ -4401,7 +4401,11 @@ nsDocument::SetScopeObject(nsIGlobalObject* aGlobal)
       nsAutoCString docGroupKey;
       nsresult rv =
         mozilla::dom::DocGroup::GetKey(NodePrincipal(), docGroupKey);
-      if (!mDocGroup) {
+      if (mDocGroup) {
+        if (NS_SUCCEEDED(rv)) {
+          MOZ_RELEASE_ASSERT(mDocGroup->MatchesKey(docGroupKey));
+        }
+      } else {
         mDocGroup = tabgroup->AddDocument(docGroupKey, this);
         MOZ_ASSERT(mDocGroup);
       }
