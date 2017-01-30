@@ -153,7 +153,7 @@ WrScrollFrameStackingContextGenerator::WrScrollFrameStackingContextGenerator(
     // on the scroll offset, we'd fail those checks.
     overflow.MoveBy(bounds.x - scrollPos.x, bounds.y - scrollPos.y);
     if (gfxPrefs::LayersDump()) {
-      printf_stderr("Pushing stacking context id %" PRIu64 " with bounds=%s overflow=%s\n",
+      printf_stderr("Pushing stacking context id %" PRIu64 " with bounds=%s, overflow=%s\n",
         fm.GetScrollId(), Stringify(bounds).c_str(), Stringify(overflow).c_str());
     }
 
