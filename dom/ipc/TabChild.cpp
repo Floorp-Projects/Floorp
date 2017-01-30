@@ -2581,6 +2581,16 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
     Unused << compositorChild->SendGetCompositorOptions(aLayersId, &options);
     mCompositorOptions = Some(options);
 
+    mRemoteFrame = static_cast<RenderFrameChild*>(aRenderFrame);
+    if (aLayersId != 0) {
+      if (!sTabChildren) {
+        sTabChildren = new TabChildMap;
+      }
+      MOZ_ASSERT(!sTabChildren->Get(aLayersId));
+      sTabChildren->Put(aLayersId, this);
+      mLayersId = aLayersId;
+    }
+
     ShadowLayerForwarder* lf =
         mPuppetWidget->GetLayerManager(
             nullptr, mTextureFactoryIdentifier.mParentBackend)
@@ -2601,20 +2611,9 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
         lf->IdentifyTextureHost(mTextureFactoryIdentifier);
         ImageBridgeChild::IdentifyCompositorTextureHost(mTextureFactoryIdentifier);
         gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
+        InitAPZState();
       }
     }
-
-    mRemoteFrame = static_cast<RenderFrameChild*>(aRenderFrame);
-    if (aLayersId != 0) {
-      if (!sTabChildren) {
-        sTabChildren = new TabChildMap;
-      }
-      MOZ_ASSERT(!sTabChildren->Get(aLayersId));
-      sTabChildren->Put(aLayersId, this);
-      mLayersId = aLayersId;
-    }
-
-    InitAPZState();
 
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
