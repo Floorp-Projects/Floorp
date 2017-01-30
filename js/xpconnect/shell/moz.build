@@ -6,11 +6,6 @@
 
 GeckoProgram('xpcshell', linkage='dependent')
 
-if CONFIG['COMPILE_ENVIRONMENT']:
-    SDK_FILES.bin += [
-        '!xpcshell%s' % CONFIG['BIN_SUFFIX'],
-    ]
-
 SOURCES += [
     'xpcshell.cpp',
 ]

@@ -631,6 +631,7 @@ MOZ_MUST_USE bool ArrayPopDense(JSContext* cx, HandleObject obj, MutableHandleVa
 MOZ_MUST_USE bool ArrayPushDense(JSContext* cx, HandleObject obj, HandleValue v, uint32_t* length);
 MOZ_MUST_USE bool ArrayShiftDense(JSContext* cx, HandleObject obj, MutableHandleValue rval);
 JSString* ArrayJoin(JSContext* cx, HandleObject array, HandleString sep);
+MOZ_MUST_USE bool SetArrayLength(JSContext* cx, HandleObject obj, HandleValue value, bool strict);
 
 MOZ_MUST_USE bool
 CharCodeAt(JSContext* cx, HandleString str, int32_t index, uint32_t* code);

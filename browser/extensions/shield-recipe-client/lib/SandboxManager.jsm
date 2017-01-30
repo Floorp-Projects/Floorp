@@ -29,6 +29,24 @@ this.SandboxManager = class {
     this.tryCleanup();
   }
 
+  cloneInto(value, options = {}) {
+    return Cu.cloneInto(value, this.sandbox, options);
+  }
+
+  cloneIntoGlobal(name, value, options = {}) {
+    const clonedValue = Cu.cloneInto(value, this.sandbox, options);
+    this.addGlobal(name, clonedValue);
+    return clonedValue;
+  }
+
+  addGlobal(name, value) {
+    this.sandbox[name] = value;
+  }
+
+  evalInSandbox(script) {
+    return Cu.evalInSandbox(script, this.sandbox);
+  }
+
   tryCleanup() {
     if (this.holds.length === 0) {
       const sandbox = this._sandbox;
@@ -55,9 +73,6 @@ function makeSandbox() {
     wantComponents: false,
     wantGlobalProperties: ["URL", "URLSearchParams"],
   });
-
-  const url = "resource://shield-recipe-client/data/EventEmitter.js";
-  Services.scriptloader.loadSubScript(url, sandbox);
 
   return sandbox;
 }

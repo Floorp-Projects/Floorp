@@ -567,6 +567,7 @@ struct String
     static const uint32_t INLINE_CHARS_BIT = JS_BIT(2);
     static const uint32_t LATIN1_CHARS_BIT = JS_BIT(6);
     static const uint32_t ROPE_FLAGS       = 0;
+    static const uint32_t EXTERNAL_FLAGS   = JS_BIT(5);
     static const uint32_t TYPE_FLAGS_MASK  = JS_BIT(6) - 1;
     uint32_t flags;
     uint32_t length;
@@ -576,6 +577,7 @@ struct String
         JS::Latin1Char inlineStorageLatin1[1];
         char16_t inlineStorageTwoByte[1];
     };
+    const JSStringFinalizer* externalFinalizer;
 };
 
 } /* namespace shadow */
@@ -828,6 +830,21 @@ MOZ_ALWAYS_INLINE const char16_t*
 GetTwoByteAtomChars(const JS::AutoCheckCannotGC& nogc, JSAtom* atom)
 {
     return GetTwoByteLinearStringChars(nogc, AtomToLinearString(atom));
+}
+
+MOZ_ALWAYS_INLINE bool
+IsExternalString(JSString* str, const JSStringFinalizer** fin, const char16_t** chars)
+{
+    using shadow::String;
+    String* s = reinterpret_cast<String*>(str);
+
+    if ((s->flags & String::TYPE_FLAGS_MASK) != String::EXTERNAL_FLAGS)
+        return false;
+
+    MOZ_ASSERT(JS_IsExternalString(str));
+    *fin = s->externalFinalizer;
+    *chars = s->nonInlineCharsTwoByte;
+    return true;
 }
 
 JS_FRIEND_API(JSLinearString*)

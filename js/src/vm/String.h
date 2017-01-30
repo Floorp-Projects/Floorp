@@ -302,6 +302,8 @@ class JSString : public js::gc::TenuredCell
                       "shadow::String nonInlineChars offset must match JSString");
         static_assert(offsetof(JSString, d.s.u2.nonInlineCharsTwoByte) == offsetof(String, nonInlineCharsTwoByte),
                       "shadow::String nonInlineChars offset must match JSString");
+        static_assert(offsetof(JSString, d.s.u3.externalFinalizer) == offsetof(String, externalFinalizer),
+                      "shadow::String externalFinalizer offset must match JSString");
         static_assert(offsetof(JSString, d.inlineStorageLatin1) == offsetof(String, inlineStorageLatin1),
                       "shadow::String inlineStorage offset must match JSString");
         static_assert(offsetof(JSString, d.inlineStorageTwoByte) == offsetof(String, inlineStorageTwoByte),
@@ -314,6 +316,8 @@ class JSString : public js::gc::TenuredCell
                       "shadow::String::TYPE_FLAGS_MASK must match JSString::TYPE_FLAGS_MASK");
         static_assert(ROPE_FLAGS == String::ROPE_FLAGS,
                       "shadow::String::ROPE_FLAGS must match JSString::ROPE_FLAGS");
+        static_assert(EXTERNAL_FLAGS == String::EXTERNAL_FLAGS,
+                      "shadow::String::EXTERNAL_FLAGS must match JSString::EXTERNAL_FLAGS");
     }
 
     /* Avoid lame compile errors in JSRope::flatten */

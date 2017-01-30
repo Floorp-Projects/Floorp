@@ -116,8 +116,8 @@ else
 LIBRARY			:= $(REAL_LIBRARY).$(LIBS_DESC_SUFFIX)
 endif
 else
-# Only build actual library if it is installed in DIST/lib or SDK
-ifeq (,$(SDK_LIBRARY)$(DIST_INSTALL)$(NO_EXPAND_LIBS))
+# Only build actual library if it is installed in DIST/lib
+ifeq (,$(DIST_INSTALL)$(NO_EXPAND_LIBS))
 LIBRARY			:= $(REAL_LIBRARY).$(LIBS_DESC_SUFFIX)
 else
 ifdef NO_EXPAND_LIBS
@@ -249,7 +249,6 @@ SIMPLE_PROGRAMS :=
 HOST_LIBRARY :=
 HOST_PROGRAM :=
 HOST_SIMPLE_PROGRAMS :=
-SDK_LIBRARY :=
 endif
 
 ALL_TRASH = \
@@ -1197,18 +1196,6 @@ PREF_DIR = defaults/pref
 ifneq (,$(DIST_SUBDIR)$(XPI_NAME))
 PREF_DIR = defaults/preferences
 endif
-
-################################################################################
-# SDK
-
-ifneq (,$(SDK_LIBRARY))
-ifndef NO_DIST_INSTALL
-SDK_LIBRARY_FILES := $(SDK_LIBRARY)
-SDK_LIBRARY_DEST := $(SDK_LIB_DIR)
-SDK_LIBRARY_TARGET := target
-INSTALL_TARGETS += SDK_LIBRARY
-endif
-endif # SDK_LIBRARY
 
 ################################################################################
 # CHROME PACKAGING

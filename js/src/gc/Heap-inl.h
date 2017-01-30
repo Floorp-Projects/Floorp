@@ -7,7 +7,10 @@
 #ifndef gc_Heap_inl_h
 #define gc_Heap_inl_h
 
+#include "gc/Heap.h"
+
 #include "gc/StoreBuffer.h"
+#include "gc/Zone.h"
 
 inline void
 js::gc::Arena::init(JS::Zone* zoneArg, AllocKind kind)
@@ -23,7 +26,32 @@ js::gc::Arena::init(JS::Zone* zoneArg, AllocKind kind)
     zone = zoneArg;
     allocKind = size_t(kind);
     setAsFullyUnused();
-    bufferedCells = &ArenaCellSet::Empty;
+    if (zone->isAtomsZone())
+        zone->runtimeFromAnyThread()->gc.atomMarking.registerArena(this);
+    else
+        bufferedCells() = &ArenaCellSet::Empty;
+}
+
+inline void
+js::gc::Arena::release()
+{
+    if (zone->isAtomsZone())
+        zone->runtimeFromAnyThread()->gc.atomMarking.unregisterArena(this);
+    setAsNotAllocated();
+}
+
+inline js::gc::ArenaCellSet*&
+js::gc::Arena::bufferedCells()
+{
+    MOZ_ASSERT(zone && !zone->isAtomsZone());
+    return bufferedCells_;
+}
+
+inline size_t&
+js::gc::Arena::atomBitmapStart()
+{
+    MOZ_ASSERT(zone && zone->isAtomsZone());
+    return atomBitmapStart_;
 }
 
 #endif

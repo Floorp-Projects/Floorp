@@ -111,6 +111,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   padding: 5px;
+  direction: ltr;
 }
 
 .theme-light .font-css-code,
