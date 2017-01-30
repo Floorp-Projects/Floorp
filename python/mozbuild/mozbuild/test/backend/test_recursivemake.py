@@ -618,16 +618,6 @@ class TestRecursiveMakeBackend(BackendTester):
 
         self.assertTrue(os.path.isfile(mozpath.join(p, 'Makefile')))
 
-    def test_test_support_files_tracked(self):
-        env = self._consume('test-support-binaries-tracked', RecursiveMakeBackend)
-        m = InstallManifest(path=mozpath.join(env.topobjdir,
-            '_build_manifests', 'install', '_tests'))
-        self.assertEqual(len(m), 4)
-        self.assertIn('xpcshell/tests/mozbuildtest/test-library.dll', m)
-        self.assertIn('xpcshell/tests/mozbuildtest/test-one.exe', m)
-        self.assertIn('xpcshell/tests/mozbuildtest/test-two.exe', m)
-        self.assertIn('xpcshell/tests/mozbuildtest/host-test-library.dll', m)
-
     def test_old_install_manifest_deleted(self):
         # Simulate an install manifest from a previous backend version. Ensure
         # it is deleted.
