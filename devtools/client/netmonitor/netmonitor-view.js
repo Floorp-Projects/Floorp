@@ -12,7 +12,6 @@ const { Task } = require("devtools/shared/task");
 const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 const { RequestsMenuView } = require("./requests-menu-view");
 const { CustomRequestView } = require("./custom-request-view");
-const { ToolbarView } = require("./toolbar-view");
 const { SidebarView } = require("./sidebar-view");
 const { StatisticsView } = require("./statistics-view");
 const { ACTIVITY_TYPE } = require("./constants");
@@ -21,7 +20,10 @@ const { createFactory } = require("devtools/client/shared/vendor/react");
 const Actions = require("./actions/index");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
+
+// Components
 const DetailsPanel = createFactory(require("./shared/components/details-panel"));
+const Toolbar = createFactory(require("./components/toolbar"));
 
 // ms
 const WDA_DEFAULT_VERIFY_INTERVAL = 50;
@@ -43,17 +45,23 @@ var NetMonitorView = {
   initialize: function () {
     this._initializePanes();
 
-    this.Toolbar.initialize(gStore);
-    this.RequestsMenu.initialize(gStore);
-    this.CustomRequest.initialize();
-    this.Statistics.initialize(gStore);
-
     this.detailsPanel = $("#react-details-panel-hook");
 
     ReactDOM.render(Provider(
       { store: gStore },
       DetailsPanel({ toolbox: NetMonitorController._toolbox }),
     ), this.detailsPanel);
+
+    this.toolbar = $("#react-toolbar-hook");
+
+    ReactDOM.render(Provider(
+      { store: gStore },
+      Toolbar(),
+    ), this.toolbar);
+
+    this.RequestsMenu.initialize(gStore);
+    this.CustomRequest.initialize();
+    this.Statistics.initialize(gStore);
 
     // Store watcher here is for observing the statisticsOpen state change.
     // It should be removed once we migrate to react and apply react/redex binding.
@@ -69,11 +77,11 @@ var NetMonitorView = {
    */
   destroy: function () {
     this._isDestroyed = true;
-    this.Toolbar.destroy();
     this.RequestsMenu.destroy();
     this.CustomRequest.destroy();
     this.Statistics.destroy();
     ReactDOM.unmountComponentAtNode(this.detailsPanel);
+    ReactDOM.unmountComponentAtNode(this.toolbar);
     this.unsubscribeStore();
 
     this._destroyPanes();
@@ -265,7 +273,6 @@ function storeWatcher(initialValue, reduceValue, onChange) {
 /**
  * Preliminary setup for the NetMonitorView object.
  */
-NetMonitorView.Toolbar = new ToolbarView();
 NetMonitorView.Sidebar = new SidebarView();
 NetMonitorView.RequestsMenu = new RequestsMenuView();
 NetMonitorView.CustomRequest = new CustomRequestView();
