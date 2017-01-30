@@ -57,7 +57,7 @@ nsSystemPrincipal::GetHashValue(uint32_t *result)
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsSystemPrincipal::GetURI(nsIURI** aURI)
 {
     *aURI = nullptr;
@@ -76,6 +76,15 @@ nsSystemPrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
 {
   *aCsp = nullptr;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSystemPrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
+{
+  // Never destroy an existing CSP on the principal.
+  // This method should only be called in rare cases.
+
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
