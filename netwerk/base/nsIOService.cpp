@@ -1622,6 +1622,8 @@ nsIOService::OnNetworkLinkEvent(const char *data)
     if (!strcmp(data, NS_NETWORK_LINK_DATA_CHANGED)) {
         mLastNetworkLinkChange = PR_IntervalNow();
         // CHANGED means UP/DOWN didn't change
+        // but the status of the captive portal may have changed.
+        RecheckCaptivePortal();
         return NS_OK;
     } else if (!strcmp(data, NS_NETWORK_LINK_DATA_DOWN)) {
         isUp = false;
