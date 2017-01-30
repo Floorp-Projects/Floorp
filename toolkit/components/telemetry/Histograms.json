@@ -8751,6 +8751,33 @@
     "n_values": 100,
     "description": "If certificate verification failed in a TLS handshake, what was the error? (see MapCertErrorToProbeValue in security/manager/ssl/SSLServerCertVerification.cpp and the values in security/pkix/include/pkix/Result.h)"
   },
+  "SSL_CT_POLICY_COMPLIANCE_OF_EV_CERTS": {
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "expires_in_version": "62",
+    "kind": "enumerated",
+    "n_values": 10,
+    "bug_numbers": [1320567],
+    "releaseChannelCollection": "opt-out",
+    "description": "Certificate Transparency Policy compliance of successfully established SSL connections with EV certificate (1=Compliant, 2=Insufficient number of SCTs, 3=Insufficient diversity of CT Log operators)"
+  },
+  "SSL_CT_POLICY_COMPLIANT_CONNECTIONS_BY_CA": {
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 256,
+    "bug_numbers": [1320567],
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of successfully established TLS connections compliant with the Certificate Transparency Policy, by CA. See https://dxr.mozilla.org/mozilla-central/source/security/manager/ssl/RootHashes.inc for names of CAs. Bucket zero holds CAs not present in the list."
+  },
+  "SSL_CT_POLICY_NON_COMPLIANT_CONNECTIONS_BY_CA": {
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 256,
+    "bug_numbers": [1320567],
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of successfully established TLS connections NOT compliant with the Certificate Transparency Policy, by CA. See https://dxr.mozilla.org/mozilla-central/source/security/manager/ssl/RootHashes.inc for names of CAs. Bucket zero holds CAs not present in the list."
+  },
   "SSL_PERMANENT_CERT_ERROR_OVERRIDES": {
     "alert_emails": ["seceng@mozilla.org"],
     "expires_in_version": "default",
