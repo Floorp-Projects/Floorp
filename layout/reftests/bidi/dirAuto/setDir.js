@@ -242,6 +242,6 @@ function removeElements()
         if (!theElement) {
             break;
         }
-        theElement.parentNode.removeChild(theElement);
+        theElement.remove();
     }
 }

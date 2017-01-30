@@ -297,7 +297,7 @@ function main()
       checkSample(anim, times[1], times[0], i);
     }
 
-    anim.parentNode.removeChild(anim);
+    anim.remove();
   }
 
   // fallback to discrete for non-additive animation
@@ -319,7 +319,7 @@ function main()
     checkLineCapSample(anim, sample[1], sample[0],
       "[non-interpolatable fallback]");
   }
-  anim.parentNode.removeChild(anim);
+  anim.remove();
 
   SimpleTest.finish();
 }

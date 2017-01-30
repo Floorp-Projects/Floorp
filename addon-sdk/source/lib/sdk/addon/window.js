@@ -61,5 +61,5 @@ exports.window = window;
 // Still close window on unload to claim memory back early.
 unload(function() {
   window.close()
-  frame.parentNode.removeChild(frame);
+  frame.remove();
 });

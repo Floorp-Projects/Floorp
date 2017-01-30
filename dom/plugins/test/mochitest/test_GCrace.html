@@ -34,7 +34,7 @@
 
     function removePlugin() {
       var p = document.getElementById('p');
-      p.parentNode.removeChild(p);
+      p.remove();
       p = null;
       SpecialPowers.Cu.forceGC();
       SimpleTest.finish();

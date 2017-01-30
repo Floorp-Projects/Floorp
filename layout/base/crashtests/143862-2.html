@@ -3,7 +3,7 @@
 <style type="text/css" id="one"> html { overflow: hidden; } </style>
 <style type="text/css" id="two"></style>
 <script type="text/javascript">
-function remove(elt) { elt.parentNode.removeChild(elt); }
+function remove(elt) { elt.remove(); }
 function run() {
   remove(document.getElementById("one"));
   remove(document.getElementById("two"));

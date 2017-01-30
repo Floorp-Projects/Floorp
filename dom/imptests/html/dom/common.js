@@ -20,7 +20,7 @@ function setupRangeTests() {
 	selection = getSelection();
 	testDiv = document.querySelector("#test");
 	if (testDiv) {
-		testDiv.parentNode.removeChild(testDiv);
+		testDiv.remove();
 	}
 	testDiv = document.createElement("div");
 	testDiv.id = "test";
@@ -884,7 +884,7 @@ function myInsertNode(range, node) {
 
     // "If node's parent is not null, remove node from its parent."
     if (node.parentNode) {
-        node.parentNode.removeChild(node);
+        node.remove();
     }
 
     // "Let newOffset be parent's length if referenceNode is null, and

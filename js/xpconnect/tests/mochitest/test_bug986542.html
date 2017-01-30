@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=986542
     doc.body.appendChild(scr);
     var target = document.getElementById("target");
     target.onclick = ifr.contentWindow.f;
-    ifr.parentNode.removeChild(ifr);
+    ifr.remove();
     info("Removed frame from document. Waiting for event handler to be called.");
     target.dispatchEvent(new MouseEvent('click'));
   });
