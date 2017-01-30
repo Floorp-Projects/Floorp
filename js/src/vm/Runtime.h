@@ -694,6 +694,13 @@ struct JSRuntime : public JS::shadow::Runtime,
         return numExclusiveThreads > 0;
     }
 
+#ifdef DEBUG
+    bool currentThreadHasExclusiveAccess() const {
+        return (!exclusiveThreadsPresent() && mainThreadHasExclusiveAccess) ||
+            exclusiveAccessLock.ownedByCurrentThread();
+    }
+#endif
+
     // How many compartments there are across all zones. This number includes
     // ExclusiveContext compartments, so it isn't necessarily equal to the
     // number of compartments visited by CompartmentsIter.
@@ -1080,7 +1087,13 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::AtomSet& atoms(js::AutoLockForExclusiveAccess& lock) {
         return *atoms_;
     }
+    js::AtomSet& unsafeAtoms() {
+        return *atoms_;
+    }
     JSCompartment* atomsCompartment(js::AutoLockForExclusiveAccess& lock) {
+        return atomsCompartment_;
+    }
+    JSCompartment* unsafeAtomsCompartment() {
         return atomsCompartment_;
     }
 
@@ -1094,6 +1107,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     bool activeGCInAtomsZone();
 
     js::SymbolRegistry& symbolRegistry(js::AutoLockForExclusiveAccess& lock) {
+        return symbolRegistry_;
+    }
+    js::SymbolRegistry& unsafeSymbolRegistry() {
         return symbolRegistry_;
     }
 

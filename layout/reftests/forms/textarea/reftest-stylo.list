@@ -10,6 +10,6 @@
 # == rtl.html rtl.html
 # == rtl.html rtl.html
 # == rtl.html rtl.html
-== setvalue-framereconstruction-1.html setvalue-framereconstruction-1.html
+fails == setvalue-framereconstruction-1.html setvalue-framereconstruction-1.html
 # == padding-scrollbar-placement.html padding-scrollbar-placement.html
 # == various-cols.html various-cols.html

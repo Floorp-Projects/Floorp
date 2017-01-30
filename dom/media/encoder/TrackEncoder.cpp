@@ -8,14 +8,7 @@
 #include "MediaStreamListener.h"
 #include "mozilla/Logging.h"
 #include "VideoUtils.h"
-
-#undef LOG
-#ifdef MOZ_WIDGET_GONK
-#include <android/log.h>
-#define LOG(args...) __android_log_print(ANDROID_LOG_INFO, "MediaEncoder", ## args);
-#else
-#define LOG(args, ...)
-#endif
+#include "mozilla/Logging.h"
 
 namespace mozilla {
 
@@ -78,7 +71,7 @@ AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
       if (!chunk.IsNull()) {
         nsresult rv = Init(chunk.mChannelData.Length(), aGraph->GraphRate());
         if (NS_FAILED(rv)) {
-          LOG("[AudioTrackEncoder]: Fail to initialize the encoder!");
+          TRACK_LOG(LogLevel::Error, ("[AudioTrackEncoder]: Fail to initialize the encoder!"));
           NotifyCancel();
         }
         break;
@@ -91,7 +84,7 @@ AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
     if (!mInitialized &&
         (mNotInitDuration / aGraph->GraphRate() > INIT_FAILED_DURATION) &&
         mInitCounter > 1) {
-      LOG("[AudioTrackEncoder]: Initialize failed for 30s.");
+      TRACK_LOG(LogLevel::Warning, ("[AudioTrackEncoder]: Initialize failed for 30s."));
       NotifyEndOfStream();
       return;
     }
@@ -103,7 +96,7 @@ AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
 
   // The stream has stopped and reached the end of track.
   if (aTrackEvents == TrackEventCommand::TRACK_EVENT_ENDED) {
-    LOG("[AudioTrackEncoder]: Receive TRACK_EVENT_ENDED .");
+    TRACK_LOG(LogLevel::Info, ("[AudioTrackEncoder]: Receive TRACK_EVENT_ENDED ."));
     NotifyEndOfStream();
   }
 }
@@ -216,7 +209,7 @@ VideoTrackEncoder::Init(const VideoSegment& aSegment)
                         intrinsicSize.width, intrinsicSize.height);
 
      if (NS_FAILED(rv)) {
-       LOG("[VideoTrackEncoder]: Fail to initialize the encoder!");
+       TRACK_LOG(LogLevel::Error, ("[VideoTrackEncoder]: Fail to initialize the encoder!"));
        NotifyCancel();
      }
      break;
@@ -228,7 +221,7 @@ VideoTrackEncoder::Init(const VideoSegment& aSegment)
   mNotInitDuration += aSegment.GetDuration();
   if ((mNotInitDuration / mTrackRate > INIT_FAILED_DURATION) &&
       mInitCounter > 1) {
-    LOG("[VideoTrackEncoder]: Initialize failed for %ds.", INIT_FAILED_DURATION);
+    TRACK_LOG(LogLevel::Debug, ("[VideoTrackEncoder]: Initialize failed for %ds.", INIT_FAILED_DURATION));
     NotifyEndOfStream();
     return;
   }
@@ -274,7 +267,7 @@ VideoTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
 
   // The stream has stopped and reached the end of track.
   if (aTrackEvents == TrackEventCommand::TRACK_EVENT_ENDED) {
-    LOG("[VideoTrackEncoder]: Receive TRACK_EVENT_ENDED .");
+    TRACK_LOG(LogLevel::Info, ("[VideoTrackEncoder]: Receive TRACK_EVENT_ENDED ."));
     NotifyEndOfStream();
   }
 
