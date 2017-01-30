@@ -1259,9 +1259,9 @@ var BrowserApp = {
     evt.initUIEvent("TabClose", true, false, window, tabIndex);
     aTab.browser.dispatchEvent(evt);
 
-    if (aShowUndoSnackbar) {
+    let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+    if (aShowUndoSnackbar && ss.canUndoLastCloseTab) {
       // Get a title for the undo close snackbar. Fall back to the URL if there is no title.
-      let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
       let closedTabData = ss.getClosedTabs(window)[0];
 
       if (closedTabData) {
