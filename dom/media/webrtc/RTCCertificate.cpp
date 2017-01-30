@@ -75,7 +75,7 @@ private:
     char buf[sizeof(randomName) * 2 + 4];
     PL_strncpy(buf, "CN=", 3);
     for (size_t i = 0; i < sizeof(randomName); ++i) {
-      snprintf(&buf[i * 2 + 3], 2, "%.2x", randomName[i]);
+      snprintf(&buf[i * 2 + 3], 3, "%.2x", randomName[i]);
     }
     buf[sizeof(buf) - 1] = '\0';
 
