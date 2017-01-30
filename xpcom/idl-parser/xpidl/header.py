@@ -385,16 +385,14 @@ def write_interface(iface, fd):
         printComments(fd, m.doccomments, '  ')
 
         fd.write("  /* %s */\n" % m.toIDL())
-        suffix = " = delete" if m.deleted else " = 0"
-        fd.write("  %s%s;\n\n" % (methodAsNative(m), suffix))
+        fd.write("  %s = 0;\n\n" % methodAsNative(m))
 
     def write_attr_decl(a):
         printComments(fd, a.doccomments, '  ')
 
         fd.write("  /* %s */\n" % a.toIDL())
 
-        suffix = " = delete" if a.deleted else " = 0"
-        fd.write("  %s%s;\n" % (attributeAsNative(a, True), suffix))
+        fd.write("  %s = 0;\n" % attributeAsNative(a, True))
         if a.infallible:
             fd.write(attr_infallible_tmpl %
                      {'realtype': a.realtype.nativeType('in'),
@@ -403,7 +401,7 @@ def write_interface(iface, fd):
                       'argnames': '' if not a.implicit_jscontext else 'cx, '})
 
         if not a.readonly:
-            fd.write("  %s%s;\n" % (attributeAsNative(a, False), suffix))
+            fd.write("  %s = 0;\n" % attributeAsNative(a, False))
         fd.write("\n")
 
     defname = iface.name.upper()
@@ -466,15 +464,13 @@ def write_interface(iface, fd):
         suffix = " override" if virtual else ""
         for member in iface.members:
             if isinstance(member, xpidl.Attribute):
-                suffix2 = " = delete" if member.deleted else ""
                 if member.infallible:
                     fd.write("\\\n  using %s::%s; " % (iface.name, attributeNativeName(member, True)))
-                fd.write("\\\n  %s%s%s; " % (attributeAsNative(member, True, declType), suffix, suffix2))
+                fd.write("\\\n  %s%s; " % (attributeAsNative(member, True, declType), suffix))
                 if not member.readonly:
-                    fd.write("\\\n  %s%s%s; " % (attributeAsNative(member, False, declType), suffix, suffix2))
+                    fd.write("\\\n  %s%s; " % (attributeAsNative(member, False, declType), suffix))
             elif isinstance(member, xpidl.Method):
-                suffix2 = " = delete" if member.deleted else ""
-                fd.write("\\\n  %s%s%s; " % (methodAsNative(member, declType), suffix, suffix2))
+                fd.write("\\\n  %s%s; " % (methodAsNative(member, declType), suffix))
         if len(iface.members) == 0:
             fd.write('\\\n  /* no methods! */')
         elif not member.kind in ('attribute', 'method'):
@@ -485,14 +481,13 @@ def write_interface(iface, fd):
     writeDeclaration(fd, iface, False);
     fd.write(iface_forward % names)
 
-    def emitTemplate(forward_infallible, tmpl_normal, tmpl_notxpcom=None, tmpl_deleted=None):
+    def emitTemplate(forward_infallible, tmpl, tmpl_notxpcom=None):
         if tmpl_notxpcom is None:
-            tmpl_notxpcom = tmpl_normal
+            tmpl_notxpcom = tmpl
         for member in iface.members:
             if isinstance(member, xpidl.Attribute):
                 if forward_infallible and member.infallible:
                     fd.write("\\\n  using %s::%s; " % (iface.name, attributeNativeName(member, True)))
-                tmpl = tmpl_deleted if member.deleted else tmpl_normal
                 fd.write(tmpl % {'asNative': attributeAsNative(member, True),
                                  'nativeName': attributeNativeName(member, True),
                                  'paramList': attributeParamNames(member)})
@@ -501,7 +496,6 @@ def write_interface(iface, fd):
                                      'nativeName': attributeNativeName(member, False),
                                      'paramList': attributeParamNames(member)})
             elif isinstance(member, xpidl.Method):
-                tmpl = tmpl_deleted if member.deleted else tmpl_normal
                 if member.notxpcom:
                     fd.write(tmpl_notxpcom % {'asNative': methodAsNative(member),
                                               'nativeName': methodNativeName(member),
@@ -516,9 +510,7 @@ def write_interface(iface, fd):
             fd.write('\\')
 
     emitTemplate(True,
-                 "\\\n  %(asNative)s override { return _to %(nativeName)s(%(paramList)s); } ",
-                 None,
-                 "\\\n  %(asNative)s override = delete; ")
+                 "\\\n  %(asNative)s override { return _to %(nativeName)s(%(paramList)s); } ")
 
     fd.write(iface_forward_safe % names)
 
@@ -527,8 +519,7 @@ def write_interface(iface, fd):
     # implement them.
     emitTemplate(False,
                  "\\\n  %(asNative)s override { return !_to ? NS_ERROR_NULL_POINTER : _to->%(nativeName)s(%(paramList)s); } ",
-                 "\\\n  %(asNative)s override; ",
-                 "\\\n  %(asNative)s override = delete; ")
+                 "\\\n  %(asNative)s override; ")
 
     fd.write(iface_template_prolog % names)
 
