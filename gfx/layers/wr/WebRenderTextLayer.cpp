@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebRenderTextLayer.h"
+#include "WebRenderLayersLogging.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 
@@ -65,6 +66,13 @@ WebRenderTextLayer::RenderLayer()
             wr_glyph_instances[j].x = glyphs[j].mPosition.x;
             wr_glyph_instances[j].y = glyphs[j].mPosition.y;
         }
+    }
+
+    if (gfxPrefs::LayersDump()) {
+        printf_stderr("TextLayer %p using rect=%s, clip=%s\n",
+                      this->GetLayer(),
+                      Stringify(rect).c_str(),
+                      Stringify(clip).c_str());
     }
 
     WrBridge()->AddWebRenderCommand(OpDPPushText(

@@ -5,7 +5,7 @@
 
 #include "WebRenderImageLayer.h"
 
-#include "LayersLogging.h"
+#include "WebRenderLayersLogging.h"
 #include "mozilla/layers/ImageClient.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
 #include "mozilla/layers/TextureWrapperImage.h"
@@ -137,14 +137,24 @@ WebRenderImageLayer::RenderLayer()
       clip = rect;
   }
 
-  if (gfxPrefs::LayersDump()) printf_stderr("ImageLayer %p using rect:%s clip:%s\n", this, Stringify(rect).c_str(), Stringify(clip).c_str());
-
   Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   Rect overflow(0, 0, relBounds.width, relBounds.height);
   Matrix4x4 transform;// = GetTransform();
   Maybe<WrImageMask> mask = buildMaskLayer();
   WrTextureFilter filter = (mSamplingFilter == gfx::SamplingFilter::POINT) ? WrTextureFilter::Point : WrTextureFilter::Linear;
   WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
+
+  if (gfxPrefs::LayersDump()) {
+    printf_stderr("ImageLayer %p using bounds=%s, overflow=%s, transform=%s, rect=%s, clip=%s, texture-filter=%s, mix-blend-mode=%s\n",
+                  this->GetLayer(),
+                  Stringify(relBounds).c_str(),
+                  Stringify(overflow).c_str(),
+                  Stringify(transform).c_str(),
+                  Stringify(rect).c_str(),
+                  Stringify(clip).c_str(),
+                  Stringify(filter).c_str(),
+                  Stringify(mixBlendMode).c_str());
+  }
 
   WrBridge()->AddWebRenderCommand(
     OpDPPushStackingContext(wr::ToWrRect(relBounds),
@@ -156,8 +166,6 @@ WebRenderImageLayer::RenderLayer()
                             FrameMetrics::NULL_SCROLL_ID));
   WrBridge()->AddWebRenderCommand(OpDPPushExternalImageId(LayerIntRegion(), wr::ToWrRect(rect), wr::ToWrRect(clip), Nothing(), filter, mExternalImageId));
   WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
-
-  if (gfxPrefs::LayersDump()) printf_stderr("ImageLayer %p using %s as bounds/overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
 
   //mContainer->SetImageFactory(originalIF);
 }

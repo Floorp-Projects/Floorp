@@ -5,7 +5,7 @@
 
 #include "WebRenderColorLayer.h"
 
-#include "LayersLogging.h"
+#include "WebRenderLayersLogging.h"
 #include "mozilla/webrender/webrender_ffi.h"
 #include "mozilla/webrender/WebRenderTypes.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
@@ -27,8 +27,6 @@ WebRenderColorLayer::RenderLayer()
   } else {
       clip = rect;
   }
-  if (gfxPrefs::LayersDump()) printf_stderr("ColorLayer %p using rect:%s clip:%s\n", this, Stringify(rect).c_str(), Stringify(clip).c_str());
-
 
   gfx::Matrix4x4 transform;// = GetTransform();
   gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
@@ -36,6 +34,17 @@ WebRenderColorLayer::RenderLayer()
   WrMixBlendMode mixBlendMode = wr::ToWrMixBlendMode(GetMixBlendMode());
 
   Maybe<WrImageMask> mask = buildMaskLayer();
+
+  if (gfxPrefs::LayersDump()) {
+    printf_stderr("ColorLayer %p using bounds=%s, overflow=%s, transform=%s, rect=%s, clip=%s, mix-blend-mode=%s\n",
+                  this->GetLayer(),
+                  Stringify(relBounds).c_str(),
+                  Stringify(overflow).c_str(),
+                  Stringify(transform).c_str(),
+                  Stringify(rect).c_str(),
+                  Stringify(clip).c_str(),
+                  Stringify(mixBlendMode).c_str());
+  }
 
   WrBridge()->AddWebRenderCommand(
       OpDPPushStackingContext(wr::ToWrRect(relBounds),
@@ -47,8 +56,6 @@ WebRenderColorLayer::RenderLayer()
                               FrameMetrics::NULL_SCROLL_ID));
   WrBridge()->AddWebRenderCommand(
     OpDPPushRect(wr::ToWrRect(rect), wr::ToWrRect(clip), mColor.r, mColor.g, mColor.b, mColor.a));
-
-  if (gfxPrefs::LayersDump()) printf_stderr("ColorLayer %p using %s as bounds, %s as overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(overflow).c_str(), Stringify(transform).c_str());
   WrBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 }
 

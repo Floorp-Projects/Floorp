@@ -208,6 +208,7 @@ EXPORTS.mozilla.layers += [
     'wr/WebRenderCompositableHolder.h',
     'wr/WebRenderCompositorOGL.h',
     'wr/WebRenderLayerManager.h',
+    'wr/WebRenderLayersLogging.h',
     'wr/WebRenderMessageUtils.h',
 ]
 
@@ -390,6 +391,7 @@ UNIFIED_SOURCES += [
     'wr/WebRenderContainerLayer.cpp',
     'wr/WebRenderImageLayer.cpp',
     'wr/WebRenderLayerManager.cpp',
+    'wr/WebRenderLayersLogging.cpp',
     'wr/WebRenderPaintedLayer.cpp',
     'wr/WebRenderTextLayer.cpp',
 ]
