@@ -311,12 +311,12 @@ struct JSContext : public JS::RootingContext,
      * boundary between Result-using and non-Result-using code.
      */
     template <typename V, typename E>
-    bool resultToBool(JS::Result<V, E> result) {
+    bool resultToBool(const JS::Result<V, E>& result) {
         return result.isOk();
     }
 
     template <typename V, typename E>
-    V* resultToPtr(JS::Result<V*, E> result) {
+    V* resultToPtr(const JS::Result<V*, E>& result) {
         return result.isOk() ? result.unwrap() : nullptr;
     }
 
