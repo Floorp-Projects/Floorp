@@ -1347,7 +1347,8 @@ BuildSegmentsFromValueEntries(nsTArray<KeyframeValueEntry>& aEntries,
       // We need to generate an initial zero-length segment.
       MOZ_ASSERT(aEntries[i].mProperty == aEntries[i + 1].mProperty);
       j = i + 1;
-      while (aEntries[j + 1].mOffset == 0.0f &&
+      while (j + 1 < n &&
+             aEntries[j + 1].mOffset == 0.0f &&
              aEntries[j + 1].mProperty == aEntries[j].mProperty) {
         ++j;
       }
