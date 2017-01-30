@@ -332,7 +332,7 @@ HTTP(..) == text-gradient-04.svg text-gradient-04-ref.svg
 # Tests for bug 546813: sanity-check using HTML text, then test SVG behavior.
 != text-language-00.xhtml text-language-00-ref.xhtml
 random-if(gtkWidget) != text-language-01.xhtml text-language-01-ref.xhtml # Fails on Linux tryserver due to lack of CJK fonts.
-fuzzy-if(OSX==1007,6,2) fuzzy-if(OSX==1008,46,26) == text-layout-01.svg text-layout-01-ref.svg
+== text-layout-01.svg text-layout-01-ref.svg
 == text-layout-02.svg text-layout-02-ref.svg
 == text-layout-03.svg text-layout-03-ref.svg
 == text-layout-04.svg text-layout-04-ref.svg
