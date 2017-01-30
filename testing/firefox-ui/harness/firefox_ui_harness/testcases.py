@@ -51,14 +51,28 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
 
         self.software_update = SoftwareUpdate(self.marionette)
 
+        # If a custom update channel has to be set, force a restart of
+        # Firefox to actually get it applied as a default pref. Use the clean
+        # option to force a non in_app restart, which would allow Firefox to
+        # dump the logs to the console.
+        if self.update_channel:
+            self.software_update.update_channel = self.update_channel
+            self.restart(clean=True)
+
+            self.assertEqual(self.software_update.update_channel, self.update_channel)
+
         # If requested modify the list of allowed MAR channels
         if self.update_mar_channels:
             self.software_update.mar_channels.add_channels(self.update_mar_channels)
 
+            self.assertTrue(self.update_mar_channels.issubset(
+                            self.software_update.mar_channels.channels),
+                            'Allowed MAR channels have been set: expected "{}" in "{}"'.format(
+                                ', '.join(self.update_mar_channels),
+                                ', '.join(self.software_update.mar_channels.channels)))
+
         # Ensure that there exists no already partially downloaded update
         self.remove_downloaded_update()
-
-        self.set_preferences_defaults()
 
         # Dictionary which holds the information for each update
         self.updates = [{
@@ -68,12 +82,6 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
             'patch': {},
             'success': False,
         }]
-
-        self.assertTrue(self.update_mar_channels.issubset(
-                        self.software_update.mar_channels.channels),
-                        'Allowed MAR channels have been set: expected "{}" in "{}"'.format(
-                            ', '.join(self.update_mar_channels),
-                            ', '.join(self.software_update.mar_channels.channels)))
 
         # Check if the user has permissions to run the update
         self.assertTrue(self.software_update.allowed,
@@ -338,11 +346,6 @@ class UpdateTestCase(PuppeteerMixin, MarionetteTestCase):
         path = os.path.dirname(self.software_update.staging_directory)
         self.logger.info('Clean-up update staging directory: {}'.format(path))
         mozfile.remove(path)
-
-    def set_preferences_defaults(self):
-        """Set the default value for specific preferences to force its usage."""
-        if self.update_channel:
-            self.software_update.update_channel = self.update_channel
 
     def wait_for_download_finished(self, window, timeout=TIMEOUT_UPDATE_DOWNLOAD):
         """ Waits until download is completed.
