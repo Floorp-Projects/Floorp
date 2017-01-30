@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+extern crate backtrace;
 #[macro_use]
 extern crate log;
 extern crate rustc_serialize;
@@ -15,7 +16,6 @@ pub mod common;
 pub mod error;
 pub mod server;
 pub mod response;
-
 
 #[cfg(test)]
 mod nullable_tests {
