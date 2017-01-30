@@ -170,6 +170,19 @@ comma-seperate list of `pref.name:value` items to set e.g.
                 dom.serviceWorkers.exemptFromPerDomainMax:true,
                 dom.caches.enabled:true]
 
+Disabling Leak Checks
+----------------------
+
+When a test is imported that leaks, it may be necessary to temporarily
+disable leak checking for that test in order to allow the import to
+proceed. This works in basically the same way as disabling a test, but
+with the key 'leaks' e.g.
+
+    [filename.html]
+        type: testharness
+        leaks:
+            if os == "linux": https://bugzilla.mozilla.org/show_bug.cgi?id=1234567
+
 Setting per-Directory Metadata
 ------------------------------
 
