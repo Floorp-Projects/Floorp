@@ -323,7 +323,8 @@ StatsZoneCallback(JSRuntime* rt, void* data, Zone* zone)
                                  &zStats.typePool,
                                  &zStats.baselineStubsOptimized,
                                  &zStats.uniqueIdMap,
-                                 &zStats.shapeTables);
+                                 &zStats.shapeTables,
+                                 &rtStats->runtime.atomsMarkBitmaps);
 }
 
 static void

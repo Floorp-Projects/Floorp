@@ -507,6 +507,7 @@ struct RuntimeSizes
 #define FOR_EACH_SIZE(macro) \
     macro(_, MallocHeap, object) \
     macro(_, MallocHeap, atomsTable) \
+    macro(_, MallocHeap, atomsMarkBitmaps) \
     macro(_, MallocHeap, contexts) \
     macro(_, MallocHeap, temporary) \
     macro(_, MallocHeap, interpreterStack) \

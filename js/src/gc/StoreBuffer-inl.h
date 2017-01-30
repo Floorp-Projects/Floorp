@@ -11,6 +11,8 @@
 
 #include "gc/Heap.h"
 
+#include "gc/Heap-inl.h"
+
 namespace js {
 namespace gc {
 
@@ -48,7 +50,7 @@ ArenaCellSet::check() const
     bool bitsZero = bits.isAllClear();
     MOZ_ASSERT(isEmpty() == bitsZero);
     MOZ_ASSERT(isEmpty() == !arena);
-    MOZ_ASSERT_IF(!isEmpty(), arena->bufferedCells == this);
+    MOZ_ASSERT_IF(!isEmpty(), arena->bufferedCells() == this);
 #endif
 }
 
@@ -58,7 +60,7 @@ StoreBuffer::putWholeCell(Cell* cell)
     MOZ_ASSERT(cell->isTenured());
 
     Arena* arena = cell->asTenured().arena();
-    ArenaCellSet* cells = arena->bufferedCells;
+    ArenaCellSet* cells = arena->bufferedCells();
     if (cells->isEmpty()) {
         cells = AllocateWholeCellSet(arena);
         if (!cells)
