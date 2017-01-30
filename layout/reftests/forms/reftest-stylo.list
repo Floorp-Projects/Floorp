@@ -1,5 +1,5 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails == text-control-baseline-1.html text-control-baseline-1.html
+== text-control-baseline-1.html text-control-baseline-1.html
 
 # button element
 include button/reftest-stylo.list
