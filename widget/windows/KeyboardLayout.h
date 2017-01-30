@@ -382,6 +382,11 @@ private:
   // Please note that the event may not cause any text input even if this
   // is true.  E.g., it might be dead key state or Ctrl key may be pressed.
   bool    mIsPrintableKey;
+  // mCharMessageHasGone is true if the message is a keydown message and
+  // it's followed by at least one char message but it's gone at removing
+  // from the queue.  This could occur if PeekMessage() or something is
+  // hooked by odd tool.
+  bool    mCharMessageHasGone;
   // mIsOverridingKeyboardLayout is true if the instance temporarily overriding
   // keyboard layout with specified by the constructor.
   bool    mIsOverridingKeyboardLayout;
