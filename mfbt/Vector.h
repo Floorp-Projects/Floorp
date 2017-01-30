@@ -278,7 +278,7 @@ struct VectorTesting;
 template<typename T,
          size_t MinInlineCapacity = 0,
          class AllocPolicy = MallocAllocPolicy>
-class Vector final : private AllocPolicy
+class MOZ_NON_PARAM Vector final : private AllocPolicy
 {
   /* utilities */
 
@@ -294,36 +294,40 @@ class Vector final : private AllocPolicy
 
   /* magic constants */
 
-  static const int kMaxInlineBytes = 1024;
-
-  /* compute constants */
-
-  /*
-   * Consider element size to be 1 for buffer sizing if there are 0 inline
-   * elements.  This allows us to compile when the definition of the element
-   * type is not visible here.
+  /**
+   * The maximum space allocated for inline element storage.
    *
-   * Explicit specialization is only allowed at namespace scope, so in order
-   * to keep everything here, we use a dummy template parameter with partial
-   * specialization.
+   * We reduce space by what the AllocPolicy base class and prior Vector member
+   * fields likely consume to attempt to play well with binary size classes.
    */
-  template<int M, int Dummy>
-  struct ElemSize
+  static constexpr size_t kMaxInlineBytes =
+    1024 - (sizeof(AllocPolicy) + sizeof(T*) + sizeof(size_t) + sizeof(size_t));
+
+  /**
+   * The number of T elements of inline capacity built into this Vector.  This
+   * is usually |MinInlineCapacity|, but it may be less (or zero!) for large T.
+   *
+   * We use a partially-specialized template (not explicit specialization, which
+   * is only allowed at namespace scope) to compute this value.  The benefit is
+   * that |sizeof(T)| need not be computed, and |T| doesn't have to be fully
+   * defined at the time |Vector<T>| appears, if no inline storage is requested.
+   */
+  template<size_t MinimumInlineCapacity, size_t Dummy>
+  struct ComputeCapacity
   {
-    static const size_t value = sizeof(T);
-  };
-  template<int Dummy>
-  struct ElemSize<0, Dummy>
-  {
-    static const size_t value = 1;
+    static constexpr size_t value =
+      tl::Min<MinimumInlineCapacity, kMaxInlineBytes / sizeof(T)>::value;
   };
 
-  static const size_t kInlineCapacity =
-    tl::Min<MinInlineCapacity, kMaxInlineBytes / ElemSize<MinInlineCapacity, 0>::value>::value;
+  template<size_t Dummy>
+  struct ComputeCapacity<0, Dummy>
+  {
+    static constexpr size_t value = 0;
+  };
 
-  /* Calculate inline buffer size; avoid 0-sized array. */
-  static const size_t kInlineBytes =
-    tl::Max<1, kInlineCapacity * ElemSize<MinInlineCapacity, 0>::value>::value;
+  /** The actual inline capacity in number of elements T.  This may be zero! */
+  static constexpr size_t kInlineCapacity =
+    ComputeCapacity<MinInlineCapacity, 0>::value;
 
   /* member data */
 
@@ -347,8 +351,34 @@ class Vector final : private AllocPolicy
   size_t mReserved;
 #endif
 
-  /* Memory used for inline storage. */
-  AlignedStorage<kInlineBytes> mStorage;
+  /*
+   * Memory used for inline storage.  We want basically this:
+   *
+   *   alignas(T) unsigned char storage[kInlineCapacity * sizeof(T)];
+   *
+   * but C++ forbids zero-sized arrays that might result if we did this.  We fix
+   * this by (again) using partial specialization, defining an array only if
+   * contains at least one element.
+   */
+  template<size_t Capacity, size_t Dummy>
+  struct InlineStorage
+  {
+    alignas(T) unsigned char mBytes[Capacity * sizeof(T)];
+
+    // GCC fails due to -Werror=strict-aliasing if |mBytes| is directly cast to
+    // T*.  Indirecting through this function addresses the problem.
+    void* data() { return mBytes; }
+
+    T* addr() { return static_cast<T*>(data()); }
+  };
+
+  template<size_t Dummy>
+  struct InlineStorage<0, Dummy>
+  {
+    T* addr() { return nullptr; }
+  };
+
+  InlineStorage<kInlineCapacity, 0> mStorage;
 
 #ifdef DEBUG
   friend class ReentrancyGuard;
@@ -364,7 +394,7 @@ class Vector final : private AllocPolicy
 
   T* inlineStorage()
   {
-    return static_cast<T*>(mStorage.addr());
+    return mStorage.addr();
   }
 
   T* beginNoCheck() const
@@ -772,7 +802,7 @@ Vector<T, N, AP>::Vector(AP aAP)
   , mEntered(false)
 #endif
 {
-  mBegin = static_cast<T*>(mStorage.addr());
+  mBegin = inlineStorage();
 }
 
 /* Move constructor. */
@@ -792,7 +822,7 @@ Vector<T, N, AllocPolicy>::Vector(Vector&& aRhs)
 
   if (aRhs.usingInlineStorage()) {
     /* We can't move the buffer over in this case, so copy elements. */
-    mBegin = static_cast<T*>(mStorage.addr());
+    mBegin = inlineStorage();
     Impl::moveConstruct(mBegin, aRhs.beginNoCheck(), aRhs.endNoCheck());
     /*
      * Leave aRhs's mLength, mBegin, mCapacity, and mReserved as they are.
@@ -804,7 +834,7 @@ Vector<T, N, AllocPolicy>::Vector(Vector&& aRhs)
      * in-line storage.
      */
     mBegin = aRhs.mBegin;
-    aRhs.mBegin = static_cast<T*>(aRhs.mStorage.addr());
+    aRhs.mBegin = aRhs.inlineStorage();
     aRhs.mCapacity = kInlineCapacity;
     aRhs.mLength = 0;
 #ifdef DEBUG
@@ -1143,7 +1173,7 @@ Vector<T, N, AP>::clearAndFree()
     return;
   }
   this->free_(beginNoCheck());
-  mBegin = static_cast<T*>(mStorage.addr());
+  mBegin = inlineStorage();
   mCapacity = kInlineCapacity;
 #ifdef DEBUG
   mReserved = 0;
@@ -1371,7 +1401,7 @@ Vector<T, N, AP>::extractRawBuffer()
   }
 
   T* ret = mBegin;
-  mBegin = static_cast<T*>(mStorage.addr());
+  mBegin = inlineStorage();
   mLength = 0;
   mCapacity = kInlineCapacity;
 #ifdef DEBUG
@@ -1397,7 +1427,7 @@ Vector<T, N, AP>::extractOrCopyRawBuffer()
 
   Impl::moveConstruct(copy, beginNoCheck(), endNoCheck());
   Impl::destroy(beginNoCheck(), endNoCheck());
-  mBegin = static_cast<T*>(mStorage.addr());
+  mBegin = inlineStorage();
   mLength = 0;
   mCapacity = kInlineCapacity;
 #ifdef DEBUG
@@ -1425,7 +1455,7 @@ Vector<T, N, AP>::replaceRawBuffer(T* aP, size_t aLength)
      * otherwise be acceptable.  Maybe this behaviour should be
      * specifiable with an argument to this function.
      */
-    mBegin = static_cast<T*>(mStorage.addr());
+    mBegin = inlineStorage();
     mLength = aLength;
     mCapacity = kInlineCapacity;
     Impl::moveConstruct(mBegin, aP, aP + aLength);
