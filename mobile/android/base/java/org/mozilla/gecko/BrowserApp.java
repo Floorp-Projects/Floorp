@@ -598,6 +598,12 @@ public class BrowserApp extends GeckoApp
         final SafeIntent intent = new SafeIntent(getIntent());
         final boolean isInAutomation = IntentUtils.getIsInAutomationFromEnvironment(intent);
 
+        if (!isInAutomation && AppConstants.MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE) {
+            // Kick off download of app content as early as possible so that in the best case it's
+            // available before the user starts using the browser.
+            DownloadContentService.startStudy(this);
+        }
+
         // This has to be prepared prior to calling GeckoApp.onCreate, because
         // widget code and BrowserToolbar need it, and they're created by the
         // layout, which GeckoApp takes care of.
@@ -1770,8 +1776,9 @@ public class BrowserApp extends GeckoApp
                     GeckoPreferences.broadcastStumblerPref(BrowserApp.this);
                 }
 
-                if (AppConstants.MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE) {
-                    // TODO: Better scheduling of sync action (Bug 1257492)
+                if (AppConstants.MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE &&
+                        !IntentUtils.getIsInAutomationFromEnvironment(new SafeIntent(getIntent()))) {
+                    // TODO: Better scheduling of DLC actions (Bug 1257492)
                     DownloadContentService.startSync(this);
                     DownloadContentService.startVerification(this);
                 }
