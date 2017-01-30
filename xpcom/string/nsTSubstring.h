@@ -6,6 +6,7 @@
 // IWYU pragma: private, include "nsString.h"
 
 #include "mozilla/Casting.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/MemoryReporting.h"
 
 #ifndef MOZILLA_INTERNAL_API
@@ -45,6 +46,8 @@ public:
   virtual int operator()(const char_type*, const char_type*,
                          uint32_t, uint32_t) const override;
 };
+
+class nsTSubstringSplitter_CharT;
 
 /**
  * nsTSubstring is the most abstract class in the string hierarchy. It
@@ -709,6 +712,7 @@ public:
     Replace(aCutStart, aCutLength, char_traits::sEmptyBuffer, 0);
   }
 
+  nsTSubstringSplitter_CharT Split(const char_type aChar);
 
   /**
    * buffer sizing
@@ -907,8 +911,7 @@ protected:
 
   friend class nsTObsoleteAStringThunk_CharT;
   friend class nsTSubstringTuple_CharT;
-
-  // XXX GCC 3.4 needs this :-(
+  friend class nsTSubstringSplitter_CharT;
   friend class nsTPromiseFlatString_CharT;
 
   char_type*  mData;
@@ -1168,3 +1171,92 @@ operator>(const nsTSubstring_CharT::base_string_type& aLhs,
 {
   return Compare(aLhs, aRhs) > 0;
 }
+
+// You should not need to instantiate this class directly.
+// Use nsTSubstring::Split instead.
+class nsTSubstringSplitter_CharT
+{
+  class nsTSubstringSplit_Iter
+  {
+  public:
+    nsTSubstringSplit_Iter(const nsTSubstringSplitter_CharT& aObj,
+                           nsTSubstring_CharT::size_type aPos)
+      : mObj(aObj)
+      , mPos(aPos)
+    {
+    }
+
+    bool operator!=(const nsTSubstringSplit_Iter& other) const
+    {
+      return mPos != other.mPos;
+    }
+
+    const nsTSubstring_CharT& operator*() const;
+
+    const nsTSubstringSplit_Iter& operator++()
+    {
+      ++mPos;
+      return *this;
+    }
+
+  private:
+    const nsTSubstringSplitter_CharT& mObj;
+    nsTSubstring_CharT::size_type mPos;
+  };
+
+private:
+  const nsTSubstring_CharT* mStr;
+  mozilla::UniquePtr<nsTSubstring_CharT[]> mArray;
+  nsTSubstring_CharT::size_type mArraySize;
+  const nsTSubstring_CharT::char_type mDelim;
+
+public:
+  nsTSubstringSplitter_CharT(const nsTSubstring_CharT* aStr,
+                             nsTSubstring_CharT::char_type aDelim)
+    : mStr(aStr)
+    , mArray(nullptr)
+    , mDelim(aDelim)
+  {
+    if (mStr->IsEmpty()) {
+      mArraySize = 0;
+      return;
+    }
+
+    nsTSubstring_CharT::size_type delimCount = mStr->CountChar(aDelim);
+    mArraySize = delimCount + 1;
+    mArray.reset(new nsTSubstring_CharT[mArraySize]);
+
+    size_t seenParts = 0;
+    nsTSubstring_CharT::size_type start = 0;
+    do {
+      MOZ_ASSERT(seenParts < mArraySize);
+      int32_t offset = mStr->FindChar(aDelim, start);
+      if (offset != -1) {
+        nsTSubstring_CharT::size_type length =
+          static_cast<nsTSubstring_CharT::size_type>(offset) - start;
+        mArray[seenParts++].Assign(mStr->Data() + start, length);
+        start = static_cast<nsTSubstring_CharT::size_type>(offset) + 1;
+      } else {
+        // Get the remainder
+        mArray[seenParts++].Assign(mStr->Data() + start, mStr->Length() - start);
+        break;
+      }
+    } while (start < mStr->Length());
+  }
+
+  nsTSubstringSplit_Iter begin() const
+  {
+    return nsTSubstringSplit_Iter(*this, 0);
+  }
+
+  nsTSubstringSplit_Iter end() const
+  {
+    return nsTSubstringSplit_Iter(*this, mArraySize);
+  }
+
+  const nsTSubstring_CharT& Get(const nsTSubstring_CharT::size_type index) const
+  {
+    MOZ_ASSERT(index < mArraySize);
+    return mArray[index];
+  }
+};

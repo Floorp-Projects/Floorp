@@ -8,7 +8,7 @@ package org.mozilla.gecko.promotion;
 import android.content.Intent;
 import android.content.SharedPreferences;
 
-import com.keepsafe.switchboard.SwitchBoard;
+import org.mozilla.gecko.switchboard.SwitchBoard;
 
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoSharedPrefs;

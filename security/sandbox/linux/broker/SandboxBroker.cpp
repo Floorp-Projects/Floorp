@@ -211,22 +211,36 @@ SandboxBroker::Policy::AddDir(int aPerms, const char* aPath)
   if (path[path.Length() - 1] != '/') {
     path.Append('/');
   }
+
+  Policy::AddPrefixInternal(aPerms, path);
+}
+
+void
+SandboxBroker::Policy::AddPrefix(int aPerms, const char* aPath)
+{
+  Policy::AddPrefixInternal(aPerms, nsDependentCString(aPath));
+}
+
+void
+SandboxBroker::Policy::AddPrefixInternal(int aPerms, const nsACString& aPath)
+{
   int origPerms;
-  if (!mMap.Get(path, &origPerms)) {
+  if (!mMap.Get(aPath, &origPerms)) {
     origPerms = MAY_ACCESS;
   } else {
     MOZ_ASSERT(origPerms & MAY_ACCESS);
   }
   int newPerms = origPerms | aPerms | RECURSIVE;
   if (SandboxInfo::Get().Test(SandboxInfo::kVerbose)) {
-    SANDBOX_LOG_ERROR("policy for %s: %d -> %d", aPath, origPerms, newPerms);
+    SANDBOX_LOG_ERROR("policy for %s: %d -> %d", PromiseFlatCString(aPath).get(),
+                      origPerms, newPerms);
   }
-  mMap.Put(path, newPerms);
+  mMap.Put(aPath, newPerms);
 }
 
 void
-SandboxBroker::Policy::AddPrefix(int aPerms, const char* aDir,
-                                 const char* aPrefix)
+SandboxBroker::Policy::AddFilePrefix(int aPerms, const char* aDir,
+                                     const char* aPrefix)
 {
   size_t prefixLen = strlen(aPrefix);
   DIR* dirp = opendir(aDir);
@@ -244,6 +258,25 @@ SandboxBroker::Policy::AddPrefix(int aPerms, const char* aDir,
     }
   }
   closedir(dirp);
+}
+
+void
+SandboxBroker::Policy::AddDynamic(int aPerms, const char* aPath)
+{
+  struct stat statBuf;
+  bool exists = (stat(aPath, &statBuf) == 0);
+
+  if (!exists) {
+    AddPrefix(aPerms, aPath);
+  } else {
+    size_t len = strlen(aPath);
+    if (!len) return;
+    if (aPath[len - 1] == '/') {
+      AddDir(aPerms, aPath);
+    } else {
+      AddPath(aPerms, aPath);
+    }
+  }
 }
 
 int

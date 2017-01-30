@@ -7,6 +7,7 @@
 #ifndef mozilla_SandboxFilter_h
 #define mozilla_SandboxFilter_h
 
+#include <vector>
 #include "mozilla/Atomics.h"
 #include "mozilla/UniquePtr.h"
 
@@ -21,7 +22,8 @@ namespace mozilla {
 #ifdef MOZ_CONTENT_SANDBOX
 class SandboxBrokerClient;
 
-UniquePtr<sandbox::bpf_dsl::Policy> GetContentSandboxPolicy(SandboxBrokerClient* aMaybeBroker);
+UniquePtr<sandbox::bpf_dsl::Policy> GetContentSandboxPolicy(SandboxBrokerClient* aMaybeBroker,
+                                                            const std::vector<int>& aSyscallWhitelist);
 #endif
 
 #ifdef MOZ_GMP_SANDBOX

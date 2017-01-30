@@ -9,7 +9,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
-import com.keepsafe.switchboard.SwitchBoard;
+import org.mozilla.gecko.switchboard.SwitchBoard;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

@@ -8,14 +8,10 @@ package org.mozilla.gecko.activitystream;
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
-import com.keepsafe.switchboard.SwitchBoard;
+import org.mozilla.gecko.switchboard.SwitchBoard;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Experiments;
 import org.mozilla.gecko.GeckoSharedPrefs;
@@ -24,7 +20,6 @@ import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.publicsuffix.PublicSuffix;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 public class ActivityStream {

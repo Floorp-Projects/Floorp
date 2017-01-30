@@ -744,6 +744,10 @@ a.learn-more-link.webconsole-learn-more-link {
   margin-inline-end: 5px;
 }
 
+.network .message-flex-body > .message-body {
+  display: flex;
+}
+
 .webconsole-output-wrapper .message .indent {
   display: inline-block;
   border-inline-end: solid 1px var(--theme-splitter-color);
@@ -757,7 +761,7 @@ a.learn-more-link.webconsole-learn-more-link {
 
 .message.startGroup .icon,
 .message.startGroupCollapsed .icon {
-    display: none;
+  display: none;
 }
 
 /* console.table() */
