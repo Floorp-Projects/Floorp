@@ -49,7 +49,7 @@ addLoadEvent(function() {
 
   function b3()
   {
-    d.parentNode.removeChild(d);
+    d.remove();
     ok(true, "Should not crash");
     // Not needed for the crash
     w.close();

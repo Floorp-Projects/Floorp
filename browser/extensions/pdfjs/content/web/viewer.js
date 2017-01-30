@@ -125,7 +125,7 @@ var pdfjsWebLibs;
      this.document.removeEventListener('mousemove', this._onmousemove, true);
      this.document.removeEventListener('mouseup', this._endPan, true);
      if (this.overlay.parentNode) {
-      this.overlay.parentNode.removeChild(this.overlay);
+      this.overlay.remove();
      }
     }
    };

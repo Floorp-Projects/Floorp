@@ -2213,7 +2213,7 @@ goog.dom.insertSiblingAfter = function(newNode, refNode) {
   }
 };
 goog.dom.removeNode = function(node) {
-  return node && node.parentNode ? node.parentNode.removeChild(node) : null
+  return node && node.parentNode ? node.remove() : null
 };
 goog.dom.replaceNode = function(newNode, oldNode) {
   var parent = oldNode.parentNode;

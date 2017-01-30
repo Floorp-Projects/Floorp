@@ -100,7 +100,7 @@ function run3() {
 
 function run4() {
   var i = document.getElementById("i");
-  i.parentNode.removeChild(i);
+  i.remove();
   var loadhandler = function() {
     document.getElementById("i").removeEventListener("load", loadhandler, true);
     setTimeout(run5, 0);

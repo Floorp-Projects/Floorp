@@ -34,7 +34,7 @@ function doTest() {
   pre.textContent = pre.textContent + pre.textContent;
   ok(eventCounter == 1, "DOMNodeInserted should have been dispatched");
 
-  pre.parentNode.removeChild(pre);
+  pre.remove();
   i2.contentDocument.adoptNode(pre);
   i2.contentDocument.body.appendChild(pre);
   ok(eventCounter == 2, "DOMNodeInserted should have been dispatched in the new document");

@@ -1620,7 +1620,7 @@
     clear: function fontLoaderClear() {
      var styleElement = this.styleElement;
      if (styleElement) {
-      styleElement.parentNode.removeChild(styleElement);
+      styleElement.remove();
       styleElement = this.styleElement = null;
      }
     }

@@ -336,7 +336,7 @@ Site.prototype = {
     let button = this._querySelector(buttonClass);
     if (button.hasAttribute("active")) {
       let explain = this._querySelector(explanationTextClass);
-      explain.parentNode.removeChild(explain);
+      explain.remove();
 
       button.removeAttribute("active");
     }

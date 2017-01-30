@@ -8,9 +8,9 @@ function doit() {
   newNode.setAttribute('id', 'D'); 
   C.insertBefore(newNode, document.getElementById('B')); 
   var D = document.getElementById('D'); 
-  D.parentNode.removeChild(D);  
+  D.remove();  
   var A = document.getElementById('A'); 
-  A.parentNode.removeChild(A);  
+  A.remove();  
   document.documentElement.removeAttribute("class");
 }
 </script>
