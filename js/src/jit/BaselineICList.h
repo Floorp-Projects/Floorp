@@ -69,7 +69,6 @@ namespace jit {
     _(GetIntrinsic_Constant)                     \
                                                  \
     _(SetProp_Fallback)                          \
-    _(SetProp_NativeAdd)                         \
                                                  \
     _(TableSwitch)                               \
                                                  \
