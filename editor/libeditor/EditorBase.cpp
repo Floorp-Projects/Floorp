@@ -927,7 +927,14 @@ EditorBase::BeginPlaceHolderTransaction(nsIAtom* aName)
     if (selection) {
       mSelState = new SelectionState();
       mSelState->SaveSelection(selection);
-      mRangeUpdater.RegisterSelectionState(*mSelState);
+      // Composition transaction can modify multiple nodes and it merges text
+      // node for ime into single text node.
+      // So if current selection is into IME text node, it might be failed
+      // to restore selection by UndoTransaction.
+      // So we need update selection by range updater.
+      if (mPlaceHolderName == nsGkAtoms::IMETxnName) {
+        mRangeUpdater.RegisterSelectionState(*mSelState);
+      }
     }
   }
   mPlaceHolderBatch++;
@@ -979,7 +986,9 @@ EditorBase::EndPlaceHolderTransaction()
     if (mSelState) {
       // we saved the selection state, but never got to hand it to placeholder
       // (else we ould have nulled out this pointer), so destroy it to prevent leaks.
-      mRangeUpdater.DropSelectionState(*mSelState);
+      if (mPlaceHolderName == nsGkAtoms::IMETxnName) {
+        mRangeUpdater.DropSelectionState(*mSelState);
+      }
       delete mSelState;
       mSelState = nullptr;
     }
