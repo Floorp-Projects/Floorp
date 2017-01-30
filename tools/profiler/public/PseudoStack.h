@@ -354,6 +354,22 @@ public:
       js::EnableContextProfilingStack(mContext, false);
   }
 
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+    size_t n = aMallocSizeOf(this);
+
+    // Measurement of the following members may be added later if DMD finds it
+    // is worthwhile:
+    // - things pointed to by mStack elements
+    // - mPendingMarkers
+    //
+    // If these measurements are added, the code must be careful to avoid data
+    // races. (The current code doesn't have any race issues because the
+    // contents of the PseudoStack object aren't accessed; |this| is used only
+    // as an address for lookup by aMallocSizeof).
+
+    return n;
+  }
+
   // Keep a list of active checkpoints
   StackEntry volatile mStack[1024];
  private:

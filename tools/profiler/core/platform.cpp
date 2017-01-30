@@ -400,6 +400,35 @@ profiler_log(const char* fmt, va_list args)
 ////////////////////////////////////////////////////////////////////////
 // BEGIN externally visible functions
 
+MOZ_DEFINE_MALLOC_SIZE_OF(GeckoProfilerMallocSizeOf);
+
+NS_IMETHODIMP
+GeckoProfilerReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
+                                      nsISupports* aData, bool aAnonymize)
+{
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (gSampler) {
+    size_t n = gSampler->SizeOfIncludingThis(GeckoProfilerMallocSizeOf);
+    MOZ_COLLECT_REPORT(
+      "explicit/profiler/sampler", KIND_HEAP, UNITS_BYTES, n,
+      "Memory used by the Gecko Profiler's Sampler object.");
+  }
+
+#if defined(USE_LUL_STACKWALK)
+  {
+    size_t n = sLUL ? sLUL->SizeOfIncludingThis(GeckoProfilerMallocSizeOf) : 0;
+    MOZ_COLLECT_REPORT(
+      "explicit/profiler/lul", KIND_HEAP, UNITS_BYTES, n,
+      "Memory used by LUL, a stack unwinder used by the Gecko Profiler.");
+  }
+#endif
+
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(GeckoProfilerReporter, nsIMemoryReporter)
+
 void
 profiler_init(void* stackTop)
 {

@@ -37,6 +37,7 @@ using std::vector;
 using std::pair;
 using mozilla::CheckedInt;
 using mozilla::DebugOnly;
+using mozilla::MallocSizeOf;
 
 
 // WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
@@ -371,6 +372,18 @@ bool SecMap::IsEmpty() {
   return mRuleSets.empty();
 }
 
+size_t
+SecMap::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+
+  // It's conceivable that these calls would be unsafe with some
+  // implementations of std::vector, but it seems to be working for now...
+  n += aMallocSizeOf(mRuleSets.data());
+  n += aMallocSizeOf(mPfxInstrs.data());
+
+  return n;
+}
 
 ////////////////////////////////////////////////////////////////
 // SegArray                                                   //
@@ -786,6 +799,20 @@ class PriMap {
     return false;
   }
 
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
+    size_t n = aMallocSizeOf(this);
+
+    // It's conceivable that this call would be unsafe with some
+    // implementations of std::vector, but it seems to be working for now...
+    n += aMallocSizeOf(mSecMaps.data());
+
+    for (size_t i = 0; i < mSecMaps.size(); i++) {
+      n += mSecMaps[i]->SizeOfIncludingThis(aMallocSizeOf);
+    }
+
+    return n;
+  }
+
  private:
   // RUNS IN NO-MALLOC CONTEXT
   SecMap* FindSecMap(uintptr_t ia) {
@@ -879,6 +906,21 @@ LUL::MaybeShowStats()
     buf[sizeof(buf)-1] = 0;
     mLog(buf);
   }
+}
+
+
+size_t
+LUL::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t n = aMallocSizeOf(this);
+  n += mPriMap->SizeOfIncludingThis(aMallocSizeOf);
+
+  // Measurement of the following members may be added later if DMD finds it
+  // is worthwhile:
+  // - mSegArray
+  // - mUSU
+
+  return n;
 }
 
 

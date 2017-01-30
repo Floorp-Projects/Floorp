@@ -358,6 +358,8 @@ public:
 
   size_t Size() { return mRuleSets.size(); }
 
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
   // The min and max addresses of the addresses in the contained
   // RuleSets.  See comment above for invariants.
   uintptr_t mSummaryMinAddr;
