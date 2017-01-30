@@ -15,10 +15,10 @@ default-preferences pref(layout.css.variables.enabled,true)
 == variable-declaration-12.html variable-declaration-12.html
 == variable-declaration-13.html variable-declaration-13.html
 == variable-declaration-14.html variable-declaration-14.html
-== variable-declaration-15.html variable-declaration-15.html
-== variable-declaration-16.html variable-declaration-16.html
-== variable-declaration-17.html variable-declaration-17.html
-== variable-declaration-18.html variable-declaration-18.html
+fails == variable-declaration-15.html variable-declaration-15.html
+fails == variable-declaration-16.html variable-declaration-16.html
+fails == variable-declaration-17.html variable-declaration-17.html
+fails == variable-declaration-18.html variable-declaration-18.html
 == variable-declaration-19.html variable-declaration-19.html
 == variable-declaration-20.html variable-declaration-20.html
 == variable-declaration-21.html variable-declaration-21.html
@@ -61,11 +61,11 @@ default-preferences pref(layout.css.variables.enabled,true)
 == variable-declaration-59.html variable-declaration-59.html
 == variable-declaration-60.html variable-declaration-60.html
 == variable-external-declaration-01.html variable-external-declaration-01.html
-== variable-external-font-face-01.html variable-external-font-face-01.html
+fails == variable-external-font-face-01.html variable-external-font-face-01.html
 == variable-external-reference-01.html variable-external-reference-01.html
 == variable-external-supports-01.html variable-external-supports-01.html
-== variable-font-face-01.html variable-font-face-01.html
-== variable-font-face-02.html variable-font-face-02.html
+fails == variable-font-face-01.html variable-font-face-01.html
+fails == variable-font-face-02.html variable-font-face-02.html
 == variable-reference-01.html variable-reference-01.html
 == variable-reference-02.html variable-reference-02.html
 == variable-reference-03.html variable-reference-03.html
@@ -101,9 +101,9 @@ default-preferences pref(layout.css.variables.enabled,true)
 == variable-reference-33.html variable-reference-33.html
 == variable-reference-34.html variable-reference-34.html
 == variable-reference-35.html variable-reference-35.html
-== variable-reference-36.html variable-reference-36.html
+fails == variable-reference-36.html variable-reference-36.html
 == variable-reference-37.html variable-reference-37.html
-== variable-reference-38.html variable-reference-38.html
+fails == variable-reference-38.html variable-reference-38.html
 == variable-reference-39.html variable-reference-39.html
 == variable-reference-40.html variable-reference-40.html
 == variable-supports-01.html variable-supports-01.html

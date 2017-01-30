@@ -1,11 +1,11 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 # Checking if these elements support :optional.
-== css-optional-textarea.html css-optional-textarea.html
-== css-optional-input.html css-optional-input.html
-== css-optional-select.html css-optional-select.html
+fails == css-optional-textarea.html css-optional-textarea.html
+fails == css-optional-input.html css-optional-input.html
+fails == css-optional-select.html css-optional-select.html
 == css-optional-button.html css-optional-button.html
 
 # Checking dynamic behavior.
-== css-optional-dyn-1.html css-optional-dyn-1.html
+fails == css-optional-dyn-1.html css-optional-dyn-1.html
 == css-optional-dyn-2.html css-optional-dyn-2.html
 

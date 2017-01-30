@@ -4,5 +4,5 @@
 # == size.html size.html
 # == background.html background.html
 # == style.html style.html
-== width-clip.html width-clip.html
+fails == width-clip.html width-clip.html
 # == color-inherit.html color-inherit.html

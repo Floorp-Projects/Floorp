@@ -4,9 +4,9 @@ load 780790.html
 load 791270.html
 load 791278.html
 load 791330.html
-load 799419.html
+asserts-if(stylo,16) load 799419.html # bug 1324671
 load 802982.html
-load 812785.html
+asserts-if(stylo,48) load 812785.html # bug 1324671
 load 834100.html
 load 836349.html
 load 837324.html

@@ -18,15 +18,15 @@ fuzzy-if(Android,2,1568) == top-6.html top-6.html
 == right-2.html right-2.html
 fuzzy-if(Android,2,4) == right-3.html right-3.html
 == margin-1.html margin-1.html
-== padding-1.html padding-1.html
+fails == padding-1.html padding-1.html
 == padding-2.html padding-2.html
-== padding-3.html padding-3.html
+fails == padding-3.html padding-3.html
 == overcontain-1.html overcontain-1.html
-== initial-1.html initial-1.html
+fails == initial-1.html initial-1.html
 == initial-scroll-1.html initial-scroll-1.html
 == scrollframe-reflow-1.html scrollframe-reflow-1.html
 == scrollframe-reflow-2.html scrollframe-reflow-2.html
-== scrollframe-auto-1.html scrollframe-auto-1.html
+fails == scrollframe-auto-1.html scrollframe-auto-1.html
 == stacking-context-1.html stacking-context-1.html
 == top-bottom-1.html top-bottom-1.html
 == top-bottom-2.html top-bottom-2.html
@@ -38,15 +38,15 @@ fuzzy-if(Android,2,4) == right-3.html right-3.html
 == overconstrained-1.html overconstrained-1.html
 == overconstrained-2.html overconstrained-2.html
 == overconstrained-3.html overconstrained-3.html
-== inline-1.html inline-1.html
-== inline-2.html inline-2.html
-== inline-3.html inline-3.html
+fails == inline-1.html inline-1.html
+fails == inline-2.html inline-2.html
+fails == inline-3.html inline-3.html
 skip-if(!asyncPan) == inline-4.html inline-4.html
 == column-contain-1a.html column-contain-1a.html
 == column-contain-1b.html column-contain-1b.html
 == column-contain-2.html column-contain-2.html
-== block-in-inline-1.html block-in-inline-1.html
-== block-in-inline-2.html block-in-inline-2.html
-== block-in-inline-3.html block-in-inline-3.html
-== block-in-inline-continuations.html block-in-inline-continuations.html
+fails == block-in-inline-1.html block-in-inline-1.html
+fails == block-in-inline-2.html block-in-inline-2.html
+fails == block-in-inline-3.html block-in-inline-3.html
+fails == block-in-inline-continuations.html block-in-inline-continuations.html
 == inner-table-1.html inner-table-1.html
