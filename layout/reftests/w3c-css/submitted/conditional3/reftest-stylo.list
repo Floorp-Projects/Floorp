@@ -25,8 +25,8 @@
 == css-supports-024.xht css-supports-024.xht
 == css-supports-025.xht css-supports-025.xht
 == css-supports-026.xht css-supports-026.xht
-== css-supports-027.xht css-supports-027.xht
-== css-supports-028.xht css-supports-028.xht
+fails == css-supports-027.xht css-supports-027.xht
+fails == css-supports-028.xht css-supports-028.xht
 == css-supports-029.xht css-supports-029.xht
 == css-supports-030.xht css-supports-030.xht
 == css-supports-031.xht css-supports-031.xht

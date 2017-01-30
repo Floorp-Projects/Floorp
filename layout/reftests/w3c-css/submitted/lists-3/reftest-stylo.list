@@ -1,4 +1,4 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 # Tests for list-style-type
-== list-style-type-string-001a.html list-style-type-string-001a.html
-== list-style-type-string-001b.html list-style-type-string-001b.html
+fails == list-style-type-string-001a.html list-style-type-string-001a.html
+fails == list-style-type-string-001b.html list-style-type-string-001b.html

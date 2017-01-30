@@ -2,8 +2,8 @@
 == simpleHeight100.html simpleHeight100.html
 == simpleAbsHeight.html simpleAbsHeight.html
 random-if(transparentScrollbars) == hScrollSimpleHeight.html hScrollSimpleHeight.html
-== hScrollSimpleHeightQuirks-1.html hScrollSimpleHeightQuirks-1.html
-== hScrollSimpleHeightQuirks-2.html hScrollSimpleHeightQuirks-2.html
+fails == hScrollSimpleHeightQuirks-1.html hScrollSimpleHeightQuirks-1.html
+fails == hScrollSimpleHeightQuirks-2.html hScrollSimpleHeightQuirks-2.html
 random-if(transparentScrollbars) == hScrollSimpleHeightQuirks-3.html hScrollSimpleHeightQuirks-3.html
 random-if(transparentScrollbars) == hScrollAbsHeight.html hScrollAbsHeight.html
 random-if(transparentScrollbars) == hScrollAbsHeightQuirks.html hScrollAbsHeightQuirks.html

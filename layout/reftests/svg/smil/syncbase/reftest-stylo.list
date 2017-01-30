@@ -92,9 +92,9 @@
 == sandwich-priority-12.svg sandwich-priority-12.svg
 
 # Cross-time container dependencies
-== cross-container-1.xhtml cross-container-1.xhtml
-== cross-container-2.xhtml cross-container-2.xhtml
-== cross-container-3.xhtml cross-container-3.xhtml
+fails == cross-container-1.xhtml cross-container-1.xhtml
+fails == cross-container-2.xhtml cross-container-2.xhtml
+fails == cross-container-3.xhtml cross-container-3.xhtml
 
 # Filtering
 == filtered-interval-1.svg filtered-interval-1.svg
