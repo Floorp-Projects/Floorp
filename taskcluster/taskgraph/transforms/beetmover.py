@@ -90,12 +90,8 @@ _MOBILE_UPSTREAM_ARTIFACTS_SIGNED_MULTI = [
 
 
 UPSTREAM_ARTIFACT_UNSIGNED_PATHS = {
-    'linux64-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US + [
-        "target.sdk.tar.bz2"
-    ],
-    'linux-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US + [
-        "target.sdk.tar.bz2"
-    ],
+    'linux64-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
+    'linux-nightly': _DESKTOP_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
     'android-x86-nightly': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
     'android-api-15-nightly': _MOBILE_UPSTREAM_ARTIFACTS_UNSIGNED_EN_US,
     'macosx64-nightly': [],

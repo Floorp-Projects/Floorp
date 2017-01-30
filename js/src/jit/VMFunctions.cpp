@@ -395,6 +395,17 @@ ArrayJoin(JSContext* cx, HandleObject array, HandleString sep)
 }
 
 bool
+SetArrayLength(JSContext* cx, HandleObject obj, HandleValue value, bool strict)
+{
+    Handle<ArrayObject*> array = obj.as<ArrayObject>();
+
+    RootedId id(cx, NameToId(cx->names().length));
+    ObjectOpResult result;
+    return ArraySetLength(cx, array, id, JSPROP_PERMANENT, value, result) &&
+           result.checkStrictErrorOrWarning(cx, obj, id, strict);
+}
+
+bool
 CharCodeAt(JSContext* cx, HandleString str, int32_t index, uint32_t* code)
 {
     char16_t c;

@@ -14,7 +14,7 @@ skip-if(!Android) == number-same-as-text-unthemed.html number-same-as-text-unthe
 == number-similar-to-text-unthemed-vertical-rl.html number-similar-to-text-unthemed-vertical-rl-ref.html
 
 # dynamic type changes:
-fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),64,4) fuzzy-if(cocoaWidget,63,4) fuzzy-if(skiaContent,2,5) == to-number-from-other-type-unthemed-1.html to-number-from-other-type-unthemed-1-ref.html
+fuzzy-if(cocoaWidget,63,4) fuzzy-if(skiaContent,2,5) == to-number-from-other-type-unthemed-1.html to-number-from-other-type-unthemed-1-ref.html
 fuzzy-if(skiaContent,2,5) == from-number-to-other-type-unthemed-1.html from-number-to-other-type-unthemed-1-ref.html
 
 # dynamic value changes:

@@ -26,5 +26,5 @@
 == wrapper.html?xcrn0g04.ico wrapper.html?xcrn0g04.ico
 
 # Test ICO PNG transparency
-== transparent-png.ico transparent-png.ico
+fails == transparent-png.ico transparent-png.ico
 

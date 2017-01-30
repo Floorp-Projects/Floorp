@@ -46,11 +46,11 @@ fuzzy(1,6400) fuzzy-if(skiaContent,1,6404) == feGaussianBlur-1.svg feGaussianBlu
 == feGaussianBlur-4.svg feGaussianBlur-4.svg
 == feGaussianBlur-5.svg feGaussianBlur-5.svg
 == feGaussianBlur-6.svg feGaussianBlur-6.svg
-== feGaussianBlur-cap-large-directional-radius-on-software.html feGaussianBlur-cap-large-directional-radius-on-software.html
+fails == feGaussianBlur-cap-large-directional-radius-on-software.html feGaussianBlur-cap-large-directional-radius-on-software.html
 
 == feImage-1.svg feImage-1.svg
 == feImage-1.svg feImage-1.svg
-== feImage-scale-to-primitive-subregion.html feImage-scale-to-primitive-subregion.html
+fails == feImage-scale-to-primitive-subregion.html feImage-scale-to-primitive-subregion.html
 
 == feMerge-1.svg feMerge-1.svg
 == feMerge-2.svg feMerge-2.svg

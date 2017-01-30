@@ -145,7 +145,6 @@ this.RecipeRunner = {
   executeAction(recipe, extraContext, actionScript) {
     return new Promise((resolve, reject) => {
       const sandboxManager = new SandboxManager();
-      const {sandbox} = sandboxManager;
       const prepScript = `
         function registerAction(name, Action) {
           let a = new Action(sandboxedDriver, sandboxedRecipe);
@@ -161,17 +160,17 @@ this.RecipeRunner = {
       `;
 
       const driver = new NormandyDriver(sandboxManager, extraContext);
-      sandbox.sandboxedDriver = Cu.cloneInto(driver, sandbox, {cloneFunctions: true});
-      sandbox.sandboxedRecipe = Cu.cloneInto(recipe, sandbox);
+      sandboxManager.cloneIntoGlobal("sandboxedDriver", driver, {cloneFunctions: true});
+      sandboxManager.cloneIntoGlobal("sandboxedRecipe", recipe);
 
       // Results are cloned so that they don't become inaccessible when
       // the sandbox they came from is nuked when the hold is removed.
-      sandbox.actionFinished = result => {
+      sandboxManager.addGlobal("actionFinished", result => {
         const clonedResult = Cu.cloneInto(result, {});
         sandboxManager.removeHold("recipeExecution");
         resolve(clonedResult);
-      };
-      sandbox.actionFailed = err => {
+      });
+      sandboxManager.addGlobal("actionFailed", err => {
         Cu.reportError(err);
 
         // Error objects can't be cloned, so we just copy the message
@@ -179,11 +178,11 @@ this.RecipeRunner = {
         const message = err.message;
         sandboxManager.removeHold("recipeExecution");
         reject(new Error(message));
-      };
+      });
 
       sandboxManager.addHold("recipeExecution");
-      Cu.evalInSandbox(prepScript, sandbox);
-      Cu.evalInSandbox(actionScript, sandbox);
+      sandboxManager.evalInSandbox(prepScript);
+      sandboxManager.evalInSandbox(actionScript);
     });
   },
 };

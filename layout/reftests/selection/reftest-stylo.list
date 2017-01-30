@@ -26,13 +26,13 @@ fuzzy-if(skiaContent,1,700) == extend-3i.html extend-3i.html
 == extend-4a.html extend-4a.html
 == extend-4b.html extend-4b.html
 # these 3 random-if(Android) are a difference of Native & Xul, see bug 739714
-== pseudo-element-of-native-anonymous.html pseudo-element-of-native-anonymous.html
+fails == pseudo-element-of-native-anonymous.html pseudo-element-of-native-anonymous.html
 # These tests uses Highlight and HighlightText color keywords, they are not same as text selection color on Mac.
-== non-themed-widget.html non-themed-widget.html
-== themed-widget.html themed-widget.html
+fails == non-themed-widget.html non-themed-widget.html
+fails == themed-widget.html themed-widget.html
 == addrange-1.html addrange-1.html
 == addrange-2.html addrange-2.html
-== splitText-normalize.html splitText-normalize.html
-== modify-range.html modify-range.html
-== dom-mutations.html dom-mutations.html
+fails == splitText-normalize.html splitText-normalize.html
+fails == modify-range.html modify-range.html
+fails == dom-mutations.html dom-mutations.html
 == trailing-space-1.html trailing-space-1.html

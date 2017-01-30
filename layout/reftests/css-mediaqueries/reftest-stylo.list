@@ -7,7 +7,7 @@
 == mq_print_aspectratio.xhtml mq_print_aspectratio.xhtml
 == mq_print_deviceaspectratio.xhtml mq_print_deviceaspectratio.xhtml
 == mq_print_devicewidth.xhtml mq_print_devicewidth.xhtml
-== mq_print_orientation.xhtml mq_print_orientation.xhtml
+fails == mq_print_orientation.xhtml mq_print_orientation.xhtml
 == mq_print_maxheight.xhtml mq_print_maxheight.xhtml
 == mq_print_maxwidth.xhtml mq_print_maxwidth.xhtml
 
@@ -16,5 +16,5 @@
 == mq_print_minheight_updown.xhtml mq_print_minheight_updown.xhtml
 == mq_print_minwidth_updown.xhtml mq_print_minwidth_updown.xhtml
 
-== scoped-mq-update.html scoped-mq-update.html
-== system-metrics-1.html system-metrics-1.html
+fails == scoped-mq-update.html scoped-mq-update.html
+fails == system-metrics-1.html system-metrics-1.html
