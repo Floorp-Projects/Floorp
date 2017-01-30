@@ -1,0 +1,46 @@
+From f82f15635e09aac4f07d2ddac3d53c84b593d911 Mon Sep 17 00:00:00 2001
+From: Paul Adenot <paul@paul.cx>
+Date: Mon, 16 Jan 2017 04:49:41 -0800
+Subject: [PATCH 1/1] Prevent double-free when doing an emergency bailout from
+ the rendering thread.
+
+This caused gecko bug 1326176.
+
+This was caused by the fact that we would null out `stm->thread` when in
+fact it was still running, so we would delete `stm->emergency_bailout`
+twice, because we would return true from `stop_and_join_thread`.
+---
+ src/cubeb_wasapi.cpp | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/src/cubeb_wasapi.cpp b/src/cubeb_wasapi.cpp
+index 63c12ac..2920b5d 100644
+--- a/src/cubeb_wasapi.cpp
++++ b/src/cubeb_wasapi.cpp
+@@ -1230,13 +1230,18 @@ bool stop_and_join_render_thread(cubeb_stream * stm)
+     rv = false;
+   }
+ 
+-  LOG("Closing thread.");
+ 
+-  CloseHandle(stm->thread);
+-  stm->thread = NULL;
++  // Only attempts to close and null out the thread and event if the
++  // WaitForSingleObject above succeeded, so that calling this function again
++  // attemps to clean up the thread and event each time.
++  if (rv) {
++    LOG("Closing thread.");
++    CloseHandle(stm->thread);
++    stm->thread = NULL;
+ 
+-  CloseHandle(stm->shutdown_event);
+-  stm->shutdown_event = 0;
++    CloseHandle(stm->shutdown_event);
++    stm->shutdown_event = 0;
++  }
+ 
+   return rv;
+ }
+-- 
+2.7.4
+
