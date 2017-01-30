@@ -8,8 +8,8 @@ setTimeout("CFcrash()", 231);
 }
 document.addEventListener("DOMContentLoaded", initCF);
 function CFcrash() {
-try { if (test1 != docElement) { test1.parentNode.removeChild(test1); test1 = test4; }} catch(e) {}
-try { if (test1 != docElement) { test1.parentNode.removeChild(test1); }} catch(e) {}
+try { if (test1 != docElement) { test1.remove(); test1 = test4; }} catch(e) {}
+try { if (test1 != docElement) { test1.remove(); }} catch(e) {}
 try { test4.appendChild(test3); } catch(e) {}
 try { test3.appendChild(test2); } catch(e) {}
 try { test4.setAttribute("dir", "invalid"); } catch(e) {}

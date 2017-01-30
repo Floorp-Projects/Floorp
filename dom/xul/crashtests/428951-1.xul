@@ -12,9 +12,9 @@
 <script id="script" xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
 function init() {
     var f = document.getElementsByTagName('mathml:divergence')[0];
-    window.addEventListener('DOMAttrModified',function() { f.parentNode.removeChild(f);}, true);
+    window.addEventListener('DOMAttrModified',function() { f.remove();}, true);
     var x=document.getElementsByTagName('mathml:moment')[0];
-    x.parentNode.removeChild(x);
+    x.remove();
 }
 window.addEventListener("load", init, false);
 ]]></script>

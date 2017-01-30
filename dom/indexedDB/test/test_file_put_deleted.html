@@ -1,0 +1,155 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  /**
+   * Test that a put of a file-backed Blob/File whose backing file has been
+   * deleted results in a failure of that put failure.
+   *
+   * In order to create a file-backed Blob and ensure that we actually try and
+   * copy its contents (rather than triggering a reference-count increment), we
+   * use two separate databases.  This test is derived from
+   * test_file_cross_database_copying.html.
+   */
+  function* testSteps()
+  {
+    const READ_WRITE = "readwrite";
+
+    const databaseInfo = [
+      { name: window.location.pathname + "1", source: true },
+      { name: window.location.pathname + "2", source: false }
+    ];
+
+    const objectStoreName = "Blobs";
+
+    const fileData = { key: 1, file: getRandomFile("random.bin", 10000) };
+
+    SpecialPowers.pushPrefEnv({ set: [["dom.indexedDB.dataThreshold", -1]] },
+                              continueToNextStep);
+    yield undefined;
+
+    // Open both databases, put the File in the source.
+    let databases = [];
+    for (let info of databaseInfo) {
+      let request = indexedDB.open(info.name, 1);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = grabEventAndContinueHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield undefined;
+
+      is(event.type, "upgradeneeded", "Got correct event type");
+
+      let db = event.target.result;
+      // We don't expect any errors yet for either database, but will later on.
+      db.onerror = errorHandler;
+
+      let objectStore = db.createObjectStore(objectStoreName, { });
+      if (info.source) {
+        objectStore.add(fileData.file, fileData.key);
+      }
+
+      event = yield undefined;
+
+      is(event.type, "success", "Got correct event type");
+
+      databases.push(db);
+    }
+
+    // Get a reference to the file-backed File.
+    let fileBackedFile;
+    for (let db of databases.slice(0, 1)) {
+      let request = db.transaction([objectStoreName])
+                      .objectStore(objectStoreName).get(fileData.key);
+      request.onsuccess = grabEventAndContinueHandler;
+      event = yield undefined;
+
+      let result = event.target.result;
+      verifyBlob(result, fileData.file, 1);
+      yield undefined;
+
+      fileBackedFile = result;
+    }
+
+    // Delete the backing file...
+    let fileFullPath = getFilePath(fileBackedFile);
+    // (We want to chop off the profile root and the resulting path component
+    // must not start with a directory separator.)
+    let fileRelPath =
+      fileFullPath.substring(fileFullPath.search(/[/\\]storage[/\\]default[/\\]/) + 1);
+    info("trying to delete: " + fileRelPath);
+    // by using the existing SpecialPowers mechanism to create files and clean
+    // them up.  We clobber our existing content, then trigger deletion to
+    // clean up after it.
+    SpecialPowers.createFiles(
+      [{ name: fileRelPath, data: '' }],
+      grabEventAndContinueHandler, errorCallbackHandler);
+    yield undefined;
+    // This is async without a callback because it's intended for cleanup.
+    // Since IDB is PBackground, we can't depend on serial ordering, so we need
+    // to use another async action.
+    SpecialPowers.removeFiles();
+    SpecialPowers.executeAfterFlushingMessageQueue(grabEventAndContinueHandler);
+    yield undefined;
+    // The file is now deleted!
+
+    // Try and put the file-backed Blob in the database, expect failure on the
+    // request and transaction.
+    info("attempt to store deleted file-backed blob"); // context for NS_WARN_IF
+    for (let i = 1; i < databases.length; i++) {
+      let db = databases[i];
+
+      let trans = db.transaction([objectStoreName], READ_WRITE);
+      let objectStore = trans.objectStore(objectStoreName);
+
+      request = objectStore.add(fileBackedFile, 2);
+      request.onsuccess = unexpectedSuccessHandler;
+      request.onerror = expectedErrorHandler("UnknownError");
+      trans.onsuccess = unexpectedSuccessHandler;
+      trans.onerror = expectedErrorHandler("UnknownError");
+      // the database will also throw an error.
+      db.onerror = expectedErrorHandler("UnknownError");
+      event = yield undefined;
+      event = yield undefined;
+      event = yield undefined;
+      // the database shouldn't throw any more errors now.
+      db.onerror = errorHandler;
+    }
+
+    // Ensure there's nothing with that key in the target database.
+    info("now that the transaction failed, make sure our put got rolled back");
+    for (let i = 1; i < databases.length; i++) {
+      let db = databases[i];
+
+      let objectStore = db.transaction([objectStoreName], "readonly")
+                          .objectStore(objectStoreName);
+
+      // Attempt to fetch the key to verify there's nothing in the DB rather
+      // than the value which could return undefined as a misleading error.
+      request = objectStore.getKey(2);
+      request.onsuccess = grabEventAndContinueHandler;
+      request.onerror = errorHandler;
+      event = yield undefined;
+
+      let result = event.target.result;
+      is(result, undefined, "no key found"); // (the get returns undefined)
+    }
+
+    finishTest();
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="file.js"></script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

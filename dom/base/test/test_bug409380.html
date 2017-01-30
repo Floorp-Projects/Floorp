@@ -27,7 +27,7 @@ function runRangeTest()
   // it must be splitted. But in this case boundary point doesn't have parent,
   // so splitting doesn't work.
   var zz = document.getElementById("connectedDiv").firstChild;
-  zz.parentNode.removeChild(zz);
+  zz.remove();
   var range = document.createRange();
   var hadException = false;
   try {

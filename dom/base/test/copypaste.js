@@ -16,7 +16,7 @@ function modifySelection(s) {
   g.removeAllRanges();
   g.addRange(a);
   window.setTimeout(function () {
-      e.parentNode.removeChild(e);
+      e.remove();
       g.removeAllRanges();
       g.addRange(l);
   }, 0)

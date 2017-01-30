@@ -134,7 +134,7 @@ function removePopups()
   gTriggerMutation = menu3;
   gChangeMutation = $(gKey + "menu4");
   var menu = $(gKey + "menu1");
-  menu.parentNode.removeChild(menu);
+  menu.remove();
 
   if (gKey == "nested") {
     // the 'separate' test checks this during the popup2 hidden event handler

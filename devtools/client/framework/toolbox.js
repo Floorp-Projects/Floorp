@@ -2078,14 +2078,14 @@ Toolbox.prototype = {
     this._combineAndSortPanelDefinitions();
 
     if (panel) {
-      panel.parentNode.removeChild(panel);
+      panel.remove();
     }
 
     if (this.hostType == Toolbox.HostType.WINDOW) {
       let doc = this.win.parent.document;
       let key = doc.getElementById("key_" + toolId);
       if (key) {
-        key.parentNode.removeChild(key);
+        key.remove();
       }
     }
   },

@@ -15,7 +15,7 @@
 == outline-square.html outline-square.html
 == outline-circle.html outline-circle.html
 == border-value-interpret.html border-value-interpret.html
-fails == curved-borders-all-styles.html curved-borders-all-styles.html
+== curved-borders-all-styles.html curved-borders-all-styles.html
 # ridge/groove borders
 
 # percent units
@@ -72,12 +72,12 @@ fuzzy-if(azureQuartz,1,3) fuzzy-if(skiaContent,1,116) == invalidate-1a.html inva
 fuzzy-if(azureQuartz,1,3) fuzzy-if(skiaContent,1,117) == invalidate-1b.html invalidate-1b.html
 
 # test that border-radius is reduced for scrollbars
-fails == scrollbar-clamping-1.html scrollbar-clamping-1.html
-fails == scrollbar-clamping-2.html scrollbar-clamping-2.html
+== scrollbar-clamping-1.html scrollbar-clamping-1.html
+== scrollbar-clamping-2.html scrollbar-clamping-2.html
 
 # Test for bad corner joins.
-fails == corner-joins-1.xhtml corner-joins-1.xhtml
-fails == corner-joins-2.xhtml corner-joins-2.xhtml
+== corner-joins-1.xhtml corner-joins-1.xhtml
+== corner-joins-2.xhtml corner-joins-2.xhtml
 
 == scroll-1.html scroll-1.html
 
@@ -92,4 +92,4 @@ fuzzy-if(gtkWidget,1,9) fuzzy-if(winWidget&&!d2d,1,9) fuzzy-if(d2d,5,40) fuzzy-i
 
 == color-layer-1a.html color-layer-1a.html
 
-fails == corner-split.html corner-split.html
+== corner-split.html corner-split.html

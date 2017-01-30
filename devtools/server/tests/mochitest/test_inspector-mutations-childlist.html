@@ -56,7 +56,7 @@ function setParent(nodeSelector, newParentSelector) {
     let newParent = gInspectee.querySelector(newParentSelector);
     newParent.appendChild(node);
   } else {
-    node.parentNode.removeChild(node);
+    node.remove();
   }
 }
 

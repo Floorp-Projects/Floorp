@@ -218,7 +218,7 @@
             } else {
               element.parentNode.insertBefore(element.firstChild, element);
             }
-            element.parentNode.removeChild(element);
+            element.remove();
           ]]>
         </body>
       </method>

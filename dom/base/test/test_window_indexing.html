@@ -51,7 +51,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=823228
   // set() hook test
   window[1] = "FAIL";
   is(window[1].name, "y", "Second frame is still y");
-  y.parentNode.removeChild(y);
+  y.remove();
   ok(!("1" in window), "We no longer have two subframes");
   is(window[1], undefined, "We should not have a value here");
 
@@ -72,7 +72,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=823228
     Object.defineProperty(window, "1", { value: "FAIL2", configurable: true,
                                          writable: true });
   });
-  y.parentNode.removeChild(y);
+  y.remove();
   ok(!("1" in window), "We no longer have two subframes, again");
   is(window[1], undefined, "We should not have a value here either");
 
@@ -95,7 +95,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=823228
   ok(!desc.writable, "Subframe should not be writable");
   is(desc.value, y.contentWindow, "Subframe should have correct value");
 
-  y.parentNode.removeChild(y);
+  y.remove();
   is(window[1], undefined, "And now we should be back to no [1] property");
 
   // And more defineProperty()
@@ -128,7 +128,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=823228
   // Delete tests
   is(delete window[1], false, "Deleting supported index should return false");
   is(window[1], y.contentWindow, "Shouldn't be able to delete a supported index");
-  y.parentNode.removeChild(y);
+  y.remove();
   is(window[1], undefined,
      "And now we should have no property here");
   is(delete window[1], true, "Deleting unsupported index should return true");

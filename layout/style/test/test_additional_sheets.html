@@ -135,7 +135,7 @@ function removeDocSheet(win)
 {
   var subdoc = win.document;
   var node = subdoc.getElementById('docsheet');
-  node.parentNode.removeChild(node);
+  node.remove();
 }
 
 var agent = {

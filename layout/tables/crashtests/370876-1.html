@@ -9,8 +9,8 @@ function boom()
   var x = document.getElementById("x");
 
   a.parentNode.insertBefore(x, a);
-  x.parentNode.removeChild(x);
-  b.parentNode.removeChild(b);
+  x.remove();
+  b.remove();
   
   document.documentElement.removeAttribute("class");
 }

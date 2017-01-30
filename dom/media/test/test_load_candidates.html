@@ -29,7 +29,7 @@ function finish(evt) {
   // remove error event handler, because this would otherwise
   // cause a failure on Windows 7, see bug 1024535
   v.onerror = null;
-  v.parentNode.removeChild(v);
+  v.remove();
   manager.finished(v.token);
 }
 
