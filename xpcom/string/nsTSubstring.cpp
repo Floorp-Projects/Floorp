@@ -1083,3 +1083,12 @@ nsTSubstring_CharT::SizeOfIncludingThisEvenIfShared(
   return aMallocSizeOf(this) + SizeOfExcludingThisEvenIfShared(aMallocSizeOf);
 }
 
+nsTSubstringSplitter_CharT nsTSubstring_CharT::Split(const nsTSubstring_CharT::char_type aChar)
+{
+  return nsTSubstringSplitter_CharT(this, aChar);
+}
+
+const nsTSubstring_CharT& nsTSubstringSplitter_CharT::nsTSubstringSplit_Iter::operator* () const
+{
+   return mObj.Get(mPos);
+}
