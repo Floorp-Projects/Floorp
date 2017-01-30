@@ -175,7 +175,9 @@ var StarUI = {
           }
           clearTimeout(this._autoCloseTimer);
           this._autoCloseTimer = setTimeout(() => {
-            this.panel.hidePopup();
+            if (!this.panel.mozMatchesSelector(":hover")) {
+              this.panel.hidePopup();
+            }
           }, delay);
         }
         break;
