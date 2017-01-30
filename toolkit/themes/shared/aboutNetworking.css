@@ -15,7 +15,11 @@ body {
 }
 
 #sectionTitle {
-  float: inline-start;
+  float: left;
+}
+
+#sectionTitle:dir(rtl) {
+  float: right;
 }
 
 #refreshDiv {
