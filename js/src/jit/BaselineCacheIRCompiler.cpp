@@ -1092,6 +1092,36 @@ BaselineCacheIRCompiler::emitCallScriptedSetter()
     return true;
 }
 
+typedef bool (*SetArrayLengthFn)(JSContext*, HandleObject, HandleValue, bool);
+static const VMFunction SetArrayLengthInfo =
+    FunctionInfo<SetArrayLengthFn>(SetArrayLength, "SetArrayLength");
+
+bool
+BaselineCacheIRCompiler::emitCallSetArrayLength()
+{
+    AutoStubFrame stubFrame(*this);
+
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    bool strict = reader.readBool();
+    ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
+
+    AutoScratchRegister scratch(allocator, masm);
+
+    allocator.discardStack(masm);
+
+    stubFrame.enter(masm, scratch);
+
+    masm.Push(Imm32(strict));
+    masm.Push(val);
+    masm.Push(obj);
+
+    if (!callVM(masm, SetArrayLengthInfo))
+        return false;
+
+    stubFrame.leave(masm);
+    return true;
+}
+
 bool
 BaselineCacheIRCompiler::emitTypeMonitorResult()
 {
