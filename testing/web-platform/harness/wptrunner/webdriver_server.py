@@ -84,7 +84,7 @@ class WebDriverServer(object):
         if block:
             self._proc.wait()
 
-    def stop(self):
+    def stop(self, force=False):
         if self.is_alive:
             return self._proc.kill()
         return not self.is_alive

@@ -126,7 +126,7 @@ class ServoWebDriverBrowser(Browser):
 
         self.logger.debug("Servo Started")
 
-    def stop(self):
+    def stop(self, force=False):
         self.logger.debug("Stopping browser")
         if self.proc is not None:
             try:
