@@ -352,8 +352,7 @@ IsTypeofKind(ParseNodeKind kind)
  * PNK_NEG
  * PNK_VOID,    unary       pn_kid: UNARY expr
  * PNK_NOT,
- * PNK_BITNOT,
- * PNK_AWAIT
+ * PNK_BITNOT
  * PNK_TYPEOFNAME, unary    pn_kid: UNARY expr
  * PNK_TYPEOFEXPR
  * PNK_PREINCREMENT, unary  pn_kid: MEMBER expr
@@ -418,8 +417,9 @@ IsTypeofKind(ParseNodeKind kind)
  * PNK_LEXICALSCOPE scope   pn_u.scope.bindings: scope bindings
  *                          pn_u.scope.body: scope body
  * PNK_GENERATOR    nullary
- * PNK_YIELD,       binary  pn_left: expr or null; pn_right: generator object
- * PNK_YIELD_STAR
+ * PNK_YIELD,       binary  pn_left: expr or null
+ * PNK_YIELD_STAR,          pn_right: generator object
+ * PNK_AWAIT
  * PNK_ARRAYCOMP    list    pn_count: 1
  *                          pn_head: list of 1 element, which is block
  *                          enclosing for loop(s) and optionally
