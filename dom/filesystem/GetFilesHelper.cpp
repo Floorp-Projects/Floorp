@@ -443,14 +443,18 @@ GetFilesHelperBase::AddExploredDirectory(nsIFile* aDir)
     return rv;
   }
 
-  nsAutoString path;
+  nsAutoCString path;
+
   if (!isLink) {
-    rv = aDir->GetPath(path);
+    nsAutoString path16;
+    rv = aDir->GetPath(path16);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    path = NS_ConvertUTF16toUTF8(path16);
   } else {
-    rv = aDir->GetTarget(path);
+    rv = aDir->GetNativeTarget(path);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -473,8 +477,8 @@ GetFilesHelperBase::ShouldFollowSymLink(nsIFile* aDir)
   MOZ_ASSERT(isLink && isDir, "Why are we here?");
 #endif
 
-  nsAutoString targetPath;
-  if (NS_WARN_IF(NS_FAILED(aDir->GetTarget(targetPath)))) {
+  nsAutoCString targetPath;
+  if (NS_WARN_IF(NS_FAILED(aDir->GetNativeTarget(targetPath)))) {
     return false;
   }
 
