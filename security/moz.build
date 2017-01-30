@@ -14,8 +14,6 @@ else:
         # TODO: The library name can be changed when bug 845217 is fixed.
         SHARED_LIBRARY_NAME = 'nss3'
 
-        SDK_LIBRARY = True
-
         USE_LIBS += [
             'nspr4',
             'nss3_static',

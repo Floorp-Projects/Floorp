@@ -13,10 +13,6 @@ if CONFIG['USE_ELF_HACK']:
 if CONFIG['LLVM_SYMBOLIZER']:
     FINAL_TARGET_FILES += ['/' + CONFIG['LLVM_SYMBOLIZER']]
 
-SDK_FILES.bin += [
-    'run-mozilla.sh',
-]
-
 FINAL_TARGET_FILES += [
     'run-mozilla.sh',
 ]

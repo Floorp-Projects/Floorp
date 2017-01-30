@@ -11,8 +11,6 @@ SOURCES += [
 
 Library('xpcomglue_staticruntime')
 
-SDK_LIBRARY = True
-
 # create a static lib
 FORCE_STATIC_LIB = True
 

@@ -297,9 +297,6 @@ needs to be prefixed with ``static:`` in ``USE_LIBS``
 Miscellaneous
 =============
 
-The ``SDK_LIBRARY`` boolean variable defines whether the library in the current
-directory is going to be installed in the SDK.
-
 The ``SONAME`` variable declares a "shared object name" for the library. It
 defaults to the ``Library`` name or the ``SHARED_LIBRARY_NAME`` if set. When
 linking to a library with a ``SONAME``, the resulting library or program will
