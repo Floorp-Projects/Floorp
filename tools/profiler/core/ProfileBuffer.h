@@ -33,6 +33,8 @@ public:
   void deleteExpiredStoredMarkers();
   void reset();
 
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
 protected:
   char* processDynamicTag(int readPos, int* tagsConsumed, char* tagBuff);
   int FindLastSampleOfThread(int aThreadId);
