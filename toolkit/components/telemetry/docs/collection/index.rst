@@ -19,6 +19,7 @@ The current data collection possibilities include:
 * ``TelemetryLog`` allows collecting ordered event entries (note: this does not have supporting analysis tools)
 * :doc:`measuring elapsed time <measuring-time>`
 * :doc:`custom pings <custom-pings>`
+* :doc:`stack capture <stack-capture>` allow recording application call stacks
 
 .. toctree::
    :maxdepth: 2
@@ -31,6 +32,7 @@ The current data collection possibilities include:
    events
    measuring-time
    custom-pings
+   stack-capture
    *
 
 Browser Usage Telemetry
