@@ -172,6 +172,8 @@ enum class CacheKind : uint8_t
                                           \
     _(StoreFixedSlot)                     \
     _(StoreDynamicSlot)                   \
+    _(AddAndStoreFixedSlot)               \
+    _(AddAndStoreDynamicSlot)             \
     _(StoreTypedObjectReferenceProperty)  \
     _(StoreTypedObjectScalarProperty)     \
     _(StoreUnboxedProperty)               \
@@ -573,6 +575,27 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         addStubField(offset, StubField::Type::RawWord);
         writeOperandId(rhs);
     }
+    void addAndStoreFixedSlot(ObjOperandId obj, size_t offset, ValOperandId rhs,
+                              Shape* newShape, bool changeGroup, ObjectGroup* newGroup)
+    {
+        writeOpWithOperandId(CacheOp::AddAndStoreFixedSlot, obj);
+        addStubField(offset, StubField::Type::RawWord);
+        writeOperandId(rhs);
+        buffer_.writeByte(changeGroup);
+        addStubField(uintptr_t(newGroup), StubField::Type::ObjectGroup);
+        addStubField(uintptr_t(newShape), StubField::Type::Shape);
+    }
+    void addAndStoreDynamicSlot(ObjOperandId obj, size_t offset, ValOperandId rhs,
+                                Shape* newShape, bool changeGroup, ObjectGroup* newGroup)
+    {
+        writeOpWithOperandId(CacheOp::AddAndStoreDynamicSlot, obj);
+        addStubField(offset, StubField::Type::RawWord);
+        writeOperandId(rhs);
+        buffer_.writeByte(changeGroup);
+        addStubField(uintptr_t(newGroup), StubField::Type::ObjectGroup);
+        addStubField(uintptr_t(newShape), StubField::Type::Shape);
+    }
+
     void storeTypedObjectReferenceProperty(ObjOperandId obj, uint32_t offset,
                                            TypedThingLayout layout, ReferenceTypeDescr::Type type,
                                            ValOperandId rhs)
@@ -753,6 +776,12 @@ class MOZ_RAII CacheIRReader
 
     ReferenceTypeDescr::Type referenceTypeDescrType() {
         return ReferenceTypeDescr::Type(buffer_.readByte());
+    }
+
+    bool readBool() {
+        uint8_t b = buffer_.readByte();
+        MOZ_ASSERT(b <= 1);
+        return bool(b);
     }
 
     bool matchOp(CacheOp op) {
@@ -936,6 +965,7 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator
                        HandleValue rhsVal);
 
     bool tryAttachStub();
+    bool tryAttachAddSlotStub(HandleObjectGroup oldGroup, HandleShape oldShape);
 
     bool shouldUnlinkPreliminaryObjectStubs() const {
         return preliminaryObjectAction_ == PreliminaryObjectAction::Unlink;
