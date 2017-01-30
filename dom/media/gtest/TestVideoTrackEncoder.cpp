@@ -736,6 +736,61 @@ TEST(VP8VideoTrackEncoder, AlwaysSuspended)
   EXPECT_EQ(none, container.GetEncodedFrames().Length());
 }
 
+// Test that encoding a track that is suspended in the beginning works.
+TEST(VP8VideoTrackEncoder, SuspendedBeginning)
+{
+  // Initiate VP8 encoder
+  TestVP8TrackEncoder encoder;
+  InitParam param = {true, 640, 480};
+  encoder.TestInit(param);
+
+  // Suspend and pass a frame with duration 1.5s. Then resume and pass one more.
+  encoder.Suspend();
+
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  TimeStamp now = TimeStamp::Now();
+  VideoSegment segment;
+  segment.AppendFrame(generator.GenerateI420Image(),
+                      mozilla::StreamTime(135000), // 1.5s
+                      generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE,
+                      false,
+                      now);
+
+  encoder.AppendVideoSegment(Move(segment));
+  encoder.NotifyCurrentTime(135000);
+
+  encoder.Resume();
+
+  segment.AppendFrame(generator.GenerateI420Image(),
+                      mozilla::StreamTime(135000), // 1.5s
+                      generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE,
+                      false,
+                      now + TimeDuration::FromSeconds(1.5));
+  encoder.AppendVideoSegment(Move(segment));
+  encoder.NotifyCurrentTime(270000);
+
+  encoder.NotifyEndOfStream();
+
+  EncodedFrameContainer container;
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  // Verify that we have one encoded frames and a total duration of 0.1s.
+  const uint64_t one = 1;
+  EXPECT_EQ(one, container.GetEncodedFrames().Length());
+
+  uint64_t totalDuration = 0;
+  for (auto& frame : container.GetEncodedFrames()) {
+    totalDuration += frame->GetDuration();
+  }
+  const uint64_t oneAndAHalf = PR_USEC_PER_SEC / 2 * 3;
+  EXPECT_EQ(oneAndAHalf, totalDuration);
+}
+
 // EOS test
 TEST(VP8VideoTrackEncoder, EncodeComplete)
 {
