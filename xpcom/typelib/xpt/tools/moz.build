@@ -7,7 +7,3 @@
 PYTHON_UNITTEST_MANIFESTS += [
     'python.ini',
 ]
-
-SDK_FILES.bin += [
-    'xpt.py',
-]
