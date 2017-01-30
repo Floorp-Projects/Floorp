@@ -185,6 +185,10 @@ nsHttpPipeline::OnHeadersAvailable(nsAHttpTransaction *trans,
     GetConnectionInfo(getter_AddRefs(ci));
     MOZ_ASSERT(ci);
 
+    if (!ci) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
     bool pipeliningBefore = gHttpHandler->ConnMgr()->SupportsPipelining(ci);
 
     // trans has now received its response headers; forward to the real connection
@@ -193,10 +197,11 @@ nsHttpPipeline::OnHeadersAvailable(nsAHttpTransaction *trans,
                                                   responseHead,
                                                   reset);
 
-    if (!pipeliningBefore && gHttpHandler->ConnMgr()->SupportsPipelining(ci))
+    if (!pipeliningBefore && gHttpHandler->ConnMgr()->SupportsPipelining(ci)) {
         // The received headers have expanded the eligible
         // pipeline depth for this connection
         gHttpHandler->ConnMgr()->ProcessPendingQForEntry(ci);
+    }
 
     return rv;
 }
