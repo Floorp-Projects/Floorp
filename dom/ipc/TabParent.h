@@ -8,7 +8,6 @@
 #define mozilla_tabs_TabParent_h
 
 #include "js/TypeDecls.h"
-#include "LiveResizeListener.h"
 #include "mozilla/ContentCache.h"
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/dom/ipc/IdType.h"
@@ -92,7 +91,6 @@ class TabParent final : public PBrowserParent
                       , public TabContext
                       , public nsAPostRefreshObserver
                       , public nsIWebBrowserPersistable
-                      , public LiveResizeListener
 {
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
 
@@ -594,10 +592,6 @@ public:
                           uint64_t* aLayersId);
 
   mozilla::ipc::IPCResult RecvEnsureLayersConnected() override;
-
-  // LiveResizeListener implementation
-  void LiveResizeStarted() override;
-  void LiveResizeStopped() override;
 
 protected:
   bool ReceiveMessage(const nsString& aMessage,
