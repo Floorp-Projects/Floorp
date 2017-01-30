@@ -21,10 +21,10 @@ function appendElements() {
   window.getSelection().collapse(document.documentElement, 0);
 
   var x=document.getElementById('a');
-  x.parentNode.removeChild(x);
+  x.remove();
 
   var x=document.getElementById('b');
-  x.parentNode.removeChild(x);
+  x.remove();
 
   synthesizeKey("VK_LEFT", {});
   synthesizeKey("VK_RIGHT", {});

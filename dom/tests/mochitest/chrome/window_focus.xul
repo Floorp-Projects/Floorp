@@ -899,7 +899,7 @@ function doRemoveTests()
   // next, some tests which remove elements
   var t19 = getById("t19");
   t19.focus();
-  t19.parentNode.removeChild(t19);
+  t19.remove();
 
   is(fm.focusedElement, null, "removed element focusedElement");
   is(fm.focusedWindow, gChildWindow, "removed element focusedWindow");
@@ -908,7 +908,7 @@ function doRemoveTests()
 
   getById("t15").focus();
   var abs = getById("abs");
-  abs.parentNode.removeChild(abs);
+  abs.remove();
 
   is(fm.focusedElement, null, "removed ancestor focusedElement");
   is(fm.focusedWindow, gChildWindow, "removed ancestor focusedWindow");

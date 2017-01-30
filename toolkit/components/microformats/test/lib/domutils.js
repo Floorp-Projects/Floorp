@@ -412,7 +412,7 @@ var Modules = (function (modules) {
          */
         removeChild: function(childNode){
             if (childNode.parentNode) {
-                return childNode.parentNode.removeChild(childNode);
+                return childNode.remove();
             }else{
                 return null;
             }

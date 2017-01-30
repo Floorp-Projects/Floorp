@@ -268,8 +268,8 @@ SplitView.prototype = {
     }
 
     let binding = bindings.get(aSummary);
-    aSummary.parentNode.removeChild(aSummary);
-    binding._details.parentNode.removeChild(binding._details);
+    aSummary.remove();
+    binding._details.remove();
 
     if (binding.onDestroy) {
       binding.onDestroy(aSummary, binding._details, binding.data);

@@ -55,7 +55,7 @@
       {
         this.lastItem = getAccessible(aID).lastChild;
         this.lastCell = this.lastItem.lastChild;
-        getNode(aID).parentNode.removeChild(getNode(aID));
+        getNode(aID).remove();
       };
 
       this.check = function check(aEvent)

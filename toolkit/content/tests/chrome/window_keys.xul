@@ -71,7 +71,7 @@ function runTest()
   keyset.removeAttribute("disabled");
   iterateKeys(true, "reenabled");
 
-  keyset.parentNode.removeChild(keyset);
+  keyset.remove();
   iterateKeys(false, "removed");
 
   document.documentElement.appendChild(keyset);

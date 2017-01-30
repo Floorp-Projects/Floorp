@@ -42,8 +42,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1197901
 
     // We need a timeout here to check that something does not happen.
     setTimeout(function() {
-      so.parentNode.removeChild(so);
-      xo.parentNode.removeChild(xo);
+      so.remove();
+      xo.remove();
       doWindowTest();
     }, 500);
   }

@@ -42,14 +42,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=445177
     is(o1.getAttribute("value"), b1.getAttribute("value"), "Wrong value (5)");
 
     //After removing listener, changes to broadcaster shouldn't have any effect.
-    o1.parentNode.removeChild(o1);
+    o1.remove();
     b1.setAttribute("value", "foo");
     isnot(o1.getAttribute("value"), b1.getAttribute("value"), "Wrong value (6)");
 
     b1.parentNode.appendChild(o1);
     is(o1.getAttribute("value"), b1.getAttribute("value"), "Wrong value (7)");
 
-    o1.parentNode.removeChild(o1);
+    o1.remove();
     o1.removeAttribute("observes");
     o1.removeAttribute("value");
     b1.parentNode.appendChild(o1);
@@ -58,7 +58,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=445177
     document.addBroadcastListenerFor(b1, o1, "value");
     is(o1.getAttribute("value"), b1.getAttribute("value"), "Wrong value (9)");
 
-    o1.parentNode.removeChild(o1);
+    o1.remove();
     b1.setAttribute("value", "foobar");
     is(o1.getAttribute("value"), b1.getAttribute("value"), "Wrong value (10)");
 
@@ -70,7 +70,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=445177
 
     // When broadcaster isn't in document, changes to its attributes aren't
     // reflected to listener.
-    b1.parentNode.removeChild(b1);
+    b1.remove();
     b1.setAttribute("value", "foo");
     isnot(o1.getAttribute("value"), b1.getAttribute("value"), "Wrong value (13)");
 

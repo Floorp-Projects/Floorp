@@ -223,7 +223,7 @@
       this.invoke = function removeEl_invoke()
       {
         // remove a container of t1_subdiv
-        getNode("t1_span").parentNode.removeChild(getNode("t1_span"));
+        getNode("t1_span").remove();
       }
 
       this.finalCheck = function removeEl_finalCheck()
@@ -523,7 +523,7 @@
       {
         getNode(aChild).setAttribute("aria-owns", "no_id");
         getNode(aParent).removeChild(getNode(aChild));
-        getNode(aParent).parentNode.removeChild(getNode(aParent));
+        getNode(aParent).remove();
       }
 
       this.getID = function setARIAOwnsOnElToRemove_getID()

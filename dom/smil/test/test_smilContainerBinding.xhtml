@@ -41,7 +41,7 @@ function main() {
 
   // Unbind from tree -- the syncbase instance time(s) should become unresolved
   // but the offset time should remain
-  anim.parentNode.removeChild(anim);
+  anim.remove();
   is(anim.getStartTime(), 6);
 
   // Rebind and check everything is re-resolved
@@ -55,7 +55,7 @@ function main() {
   is(anim.getStartTime(), 2);
 
   // Unbind
-  anim.parentNode.removeChild(anim);
+  anim.remove();
   is(anim.getStartTime(), 6);
 
   // Rebind

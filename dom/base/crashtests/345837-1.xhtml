@@ -12,7 +12,7 @@ function foo()
   window.getSelection().addRange(r);
 
   var everything = document.getElementById("everything");
-  everything.parentNode.removeChild(everything);
+  everything.remove();
   
   document.documentElement.removeAttribute("class");
 }

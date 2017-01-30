@@ -36,8 +36,8 @@ function callbackTestIframe(iframe)
 
   // Remove the iframes if the test was successful
   if (passed) {
-    result.parentNode.removeChild(result);
-    reference.parentNode.removeChild(reference);
+    result.remove();
+    reference.remove();
   }
 
   iframes = [];
