@@ -1,6 +1,7 @@
+use backtrace::Backtrace;
 use hyper::status::StatusCode;
 use rustc_serialize::base64::FromBase64Error;
-use rustc_serialize::json::{Json, ToJson, ParserError, DecoderError};
+use rustc_serialize::json::{DecoderError, Json, ParserError, ToJson};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::convert::From;
@@ -105,6 +106,7 @@ pub type WebDriverResult<T> = Result<T, WebDriverError>;
 pub struct WebDriverError {
     pub error: ErrorStatus,
     pub message: Cow<'static, str>,
+    pub backtrace: Backtrace,
     pub delete_session: bool,
 }
 
@@ -121,6 +123,7 @@ impl WebDriverError {
         WebDriverError {
             error: error,
             message: message.into(),
+            backtrace: Backtrace::new(),
             delete_session: false,
         }
     }
@@ -141,8 +144,10 @@ impl WebDriverError {
 impl ToJson for WebDriverError {
     fn to_json(&self) -> Json {
         let mut data = BTreeMap::new();
-        data.insert("error".to_string(), self.status_code().to_json());
-        data.insert("message".to_string(), self.message.to_json());
+        data.insert("error".into(), self.status_code().to_json());
+        data.insert("message".into(), self.message.to_json());
+        data.insert("stacktrace".into(),
+                    format!("{:?}", self.backtrace).to_json());
         Json::Object(data)
     }
 }

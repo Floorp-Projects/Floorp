@@ -8,9 +8,10 @@ repository = "https://github.com/jgraham/webdriver-rust"
 license = "MPL-2.0"
 
 [dependencies]
+backtrace = "0.3"
+cookie = {version = "0.2", default-features = false}
+hyper = {version = "0.9", default-features = false}
 log = "0.3"
 regex = "0.2"
 rustc-serialize = "0.3"
-hyper = {version = "0.9", default-features = false}
-cookie = {version = "0.2", default-features = false}
 time = "0.1"
