@@ -515,7 +515,7 @@ GeckoDriver.prototype.registerBrowser = function (id, be) {
   return [reg, mainContent, this.capabilities.toJSON()];
 };
 
-GeckoDriver.prototype.registerPromise = function() {
+GeckoDriver.prototype.registerPromise = function () {
   const li = "Marionette:register";
 
   return new Promise(resolve => {
@@ -540,7 +540,7 @@ GeckoDriver.prototype.registerPromise = function() {
   });
 };
 
-GeckoDriver.prototype.listeningPromise = function() {
+GeckoDriver.prototype.listeningPromise = function () {
   const li = "Marionette:listenersAttached";
   return new Promise(resolve => {
     let cb = () => {
@@ -552,7 +552,7 @@ GeckoDriver.prototype.listeningPromise = function() {
 };
 
 /** Create a new session. */
-GeckoDriver.prototype.newSession = function*(cmd, resp) {
+GeckoDriver.prototype.newSession = function* (cmd, resp) {
   if (this.sessionId) {
     throw new SessionNotCreatedError("Maximum number of active sessions");
   }
@@ -1191,9 +1191,13 @@ GeckoDriver.prototype.setWindowPosition = function (cmd, resp) {
  *
  * @param {string} name
  *     Target name or ID of the window to switch to.
+ * @param {boolean=} focus
+ *      A boolean value which determines whether to focus
+ *      the window. Defaults to true.
  */
 GeckoDriver.prototype.switchToWindow = function* (cmd, resp) {
   let switchTo = cmd.parameters.name;
+  let focus = (cmd.parameters.focus !== undefined) ? cmd.parameters.focus : true;
   let found;
 
   let byNameOrId = function (name, outerId, contentWindowId) {
@@ -1251,7 +1255,7 @@ GeckoDriver.prototype.switchToWindow = function* (cmd, resp) {
       this.curBrowser = this.browsers[found.outerId];
 
       if ("tabIndex" in found) {
-        this.curBrowser.switchToTab(found.tabIndex, found.win);
+        this.curBrowser.switchToTab(found.tabIndex, found.win, focus);
       }
     }
   } else {
