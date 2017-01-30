@@ -29,6 +29,7 @@ public:
   virtual STDMETHODIMP get_anchorCount(long* aCount);
   virtual STDMETHODIMP get_DOMNodeID(BSTR* aID);
   virtual STDMETHODIMP get_ID(uint64_t* aID);
+  virtual STDMETHODIMP get_minimumIncrement(double* aIncrement);
 
 private:
   GeckoCustom() = delete;
