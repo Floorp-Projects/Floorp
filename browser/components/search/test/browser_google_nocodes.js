@@ -99,7 +99,7 @@ add_task(function* preparation() {
 
     // Geo specific defaults won't be fetched if there's no country code.
     Services.prefs.setCharPref("browser.search.geoip.url",
-                               'data:application/json,{"country_code": "DE"}');
+                               'data:application/json,{"country_code": "US"}');
 
     Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", true);
 
@@ -120,10 +120,7 @@ add_task(function* tests() {
   let engine = Services.search.getEngineByName("Google");
   ok(engine, "Google");
 
-  let base = "https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&client=firefox-b";
-
-  // Keyword uses a slightly different code
-  let keywordBase = base + "-ab";
+  let base = "https://www.google.com/search?q=foo&ie=utf-8&oe=utf-8";
 
   let url;
 
@@ -131,7 +128,7 @@ add_task(function* tests() {
   url = engine.getSubmission("foo", null, "contextmenu").uri.spec;
   is(url, base, "Check context menu search URL for 'foo'");
   url = engine.getSubmission("foo", null, "keyword").uri.spec;
-  is(url, keywordBase, "Check keyword search URL for 'foo'");
+  is(url, base, "Check keyword search URL for 'foo'");
   url = engine.getSubmission("foo", null, "searchbar").uri.spec;
   is(url, base, "Check search bar search URL for 'foo'");
   url = engine.getSubmission("foo", null, "homepage").uri.spec;
