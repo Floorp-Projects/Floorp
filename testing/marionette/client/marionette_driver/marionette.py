@@ -1559,13 +1559,17 @@ class Marionette(object):
         """
         return Alert(self)
 
-    def switch_to_window(self, window_id):
+    def switch_to_window(self, window_id, focus=True):
         """Switch to the specified window; subsequent commands will be
         directed at the new window.
 
         :param window_id: The id or name of the window to switch to.
+
+        :param focus: A boolean value which determins whether to focus
+            the window that we just switched to.
         """
-        self._send_message("switchToWindow", {"name": window_id})
+        body = {"focus": focus, "name": window_id}
+        self._send_message("switchToWindow", body)
         self.window = window_id
 
     def get_active_frame(self):
