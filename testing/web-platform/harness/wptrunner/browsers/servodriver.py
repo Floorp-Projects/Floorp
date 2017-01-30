@@ -90,7 +90,7 @@ class ServoWebDriverBrowser(Browser):
         self.command = None
         self.user_stylesheets = user_stylesheets if user_stylesheets else []
 
-    def start(self):
+    def start(self, **kwargs):
         self.webdriver_port = get_free_port(4444, exclude=self.used_ports)
         self.used_ports.add(self.webdriver_port)
 
