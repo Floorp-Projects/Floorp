@@ -197,6 +197,7 @@ SandboxImport(JSContext* cx, unsigned argc, Value* vp)
             return false;
         }
     }
+    JS_MarkCrossZoneIdValue(cx, StringValue(funname));
 
     RootedId id(cx);
     if (!JS_StringToId(cx, funname, &id))

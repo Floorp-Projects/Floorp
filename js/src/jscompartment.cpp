@@ -322,9 +322,12 @@ JSCompartment::wrap(JSContext* cx, MutableHandleString strp)
     if (str->zoneFromAnyThread() == zone())
         return true;
 
-    /* If the string is an atom, we don't have to copy. */
+    /*
+     * If the string is an atom, we don't have to copy, but we do need to mark
+     * the atom as being in use by the new zone.
+     */
     if (str->isAtom()) {
-        MOZ_ASSERT(str->isPermanentAtom() || str->zone()->isAtomsZone());
+        cx->markAtom(str);
         return true;
     }
 

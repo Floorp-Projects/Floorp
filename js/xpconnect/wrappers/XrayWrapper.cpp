@@ -318,6 +318,7 @@ bool JSXrayTraits::getOwnPropertyFromWrapperIfSafe(JSContext* cx,
     RootedObject target(cx, getTargetObject(wrapper));
     {
         JSAutoCompartment ac(cx, target);
+        JS_MarkCrossZoneId(cx, id);
         if (!getOwnPropertyFromTargetIfSafe(cx, target, wrapper, id, outDesc))
             return false;
     }
@@ -348,6 +349,7 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext* cx,
     // Disallow accessor properties.
     if (desc.hasGetterOrSetter()) {
         JSAutoCompartment ac(cx, wrapper);
+        JS_MarkCrossZoneId(cx, id);
         return ReportWrapperDenial(cx, id, WrapperDenialForXray, "property has accessor");
     }
 
@@ -359,6 +361,7 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext* cx,
         // Disallow non-subsumed objects.
         if (!AccessCheck::subsumes(target, propObj)) {
             JSAutoCompartment ac(cx, wrapper);
+            JS_MarkCrossZoneId(cx, id);
             return ReportWrapperDenial(cx, id, WrapperDenialForXray, "value not same-origin with target");
         }
 
@@ -366,12 +369,14 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext* cx,
         XrayType xrayType = GetXrayType(propObj);
         if (xrayType == NotXray || xrayType == XrayForOpaqueObject) {
             JSAutoCompartment ac(cx, wrapper);
+            JS_MarkCrossZoneId(cx, id);
             return ReportWrapperDenial(cx, id, WrapperDenialForXray, "value not Xrayable");
         }
 
         // Disallow callables.
         if (JS::IsCallable(propObj)) {
             JSAutoCompartment ac(cx, wrapper);
+            JS_MarkCrossZoneId(cx, id);
             return ReportWrapperDenial(cx, id, WrapperDenialForXray, "value is callable");
         }
     }
@@ -379,6 +384,7 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext* cx,
     // Disallow any property that shadows something on its (Xrayed)
     // prototype chain.
     JSAutoCompartment ac2(cx, wrapper);
+    JS_MarkCrossZoneId(cx, id);
     RootedObject proto(cx);
     bool foundOnProto = false;
     if (!JS_GetPrototype(cx, wrapper, &proto) ||
@@ -554,6 +560,7 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
                     Rooted<PropertyDescriptor> innerDesc(cx);
                     {
                         JSAutoCompartment ac(cx, target);
+                        JS_MarkCrossZoneId(cx, id);
                         if (!JS_GetOwnPropertyDescriptorById(cx, target, id, &innerDesc))
                             return false;
                     }
@@ -576,6 +583,8 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
                 return true;
             } else if (id == GetJSIDByIndex(cx, XPCJSContext::IDX_NAME)) {
                 RootedString fname(cx, JS_GetFunctionId(JS_GetObjectFunction(target)));
+                if (fname)
+                    JS_MarkCrossZoneIdValue(cx, StringValue(fname));
                 FillPropertyDescriptor(desc, wrapper, JSPROP_PERMANENT | JSPROP_READONLY,
                                        fname ? StringValue(fname) : JS_GetEmptyStringValue(cx));
             } else {
@@ -706,6 +715,7 @@ JSXrayTraits::delete_(JSContext* cx, HandleObject wrapper, HandleId id, ObjectOp
     if (isObjectOrArrayInstance) {
         RootedObject target(cx, getTargetObject(wrapper));
         JSAutoCompartment ac(cx, target);
+        JS_MarkCrossZoneId(cx, id);
         Rooted<PropertyDescriptor> desc(cx);
         if (!getOwnPropertyFromTargetIfSafe(cx, target, wrapper, id, &desc))
             return false;
@@ -763,6 +773,7 @@ JSXrayTraits::defineProperty(JSContext* cx, HandleObject wrapper, HandleId id,
 
         Rooted<PropertyDescriptor> wrappedDesc(cx, desc);
         JSAutoCompartment ac(cx, target);
+        JS_MarkCrossZoneId(cx, id);
         if (!JS_WrapPropertyDescriptor(cx, &wrappedDesc) ||
             !JS_DefinePropertyById(cx, target, id, wrappedDesc, result))
         {
@@ -781,6 +792,7 @@ JSXrayTraits::defineProperty(JSContext* cx, HandleObject wrapper, HandleId id,
     {
         RootedObject target(cx, getTargetObject(wrapper));
         JSAutoCompartment ac(cx, target);
+        JS_MarkCrossZoneId(cx, id);
         if (!JS_DefinePropertyById(cx, target, id, desc, result))
             return false;
         *defined = true;
@@ -859,6 +871,8 @@ JSXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper, unsigned flags
                         props.infallibleAppend(id);
                 }
             }
+            for (size_t i = 0; i < props.length(); ++i)
+                JS_MarkCrossZoneId(cx, props[i]);
             return true;
         } else if (IsTypedArrayKey(key)) {
             uint32_t length = JS_GetTypedArrayLength(target);
@@ -1491,6 +1505,7 @@ XrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
     bool found = false;
     if (expando) {
         JSAutoCompartment ac(cx, expando);
+        JS_MarkCrossZoneId(cx, id);
         if (!JS_GetOwnPropertyDescriptorById(cx, expando, id, desc))
             return false;
         found = !!desc.object();
@@ -1586,6 +1601,7 @@ XPCWrappedNativeXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper, 
         return false;
     for (size_t n = 0; n < wnProps.length(); ++n) {
         RootedId id(cx, wnProps[n]);
+        JS_MarkCrossZoneId(cx, id);
         bool hasProp;
         if (JS_HasPropertyById(cx, wrapper, id, &hasProp) && hasProp)
             props.infallibleAppend(id);
@@ -2179,6 +2195,7 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext* cx, HandleObject wrapper,
     // compartment, so we need to enter it.
     RootedObject target(cx, Traits::singleton.getTargetObject(wrapper));
     JSAutoCompartment ac(cx, target);
+    JS_MarkCrossZoneId(cx, id);
 
     // Grab the relevant expando object.
     RootedObject expandoObject(cx, Traits::singleton.ensureExpandoObject(cx, wrapper,
@@ -2222,6 +2239,7 @@ XrayWrapper<Base, Traits>::delete_(JSContext* cx, HandleObject wrapper,
 
     if (expando) {
         JSAutoCompartment ac(cx, expando);
+        JS_MarkCrossZoneId(cx, id);
         bool hasProp;
         if (!JS_HasPropertyById(cx, expando, id, &hasProp)) {
             return false;
@@ -2472,6 +2490,8 @@ XrayWrapper<Base, Traits>::getPropertyKeys(JSContext* cx, HandleObject wrapper, 
         if (!js::GetPropertyKeys(cx, expando, flags, &props))
             return false;
     }
+    for (size_t i = 0; i < props.length(); ++i)
+        JS_MarkCrossZoneId(cx, props[i]);
 
     return Traits::singleton.enumerateNames(cx, wrapper, flags, props);
 }

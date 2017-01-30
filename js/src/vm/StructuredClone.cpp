@@ -2250,6 +2250,7 @@ JSStructuredCloneReader::readSavedFrame(uint32_t principalsTag)
         if (!atomName)
             return nullptr;
     }
+
     savedFrame->initFunctionDisplayName(atomName);
 
     RootedValue cause(context());
