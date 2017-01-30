@@ -1127,9 +1127,17 @@ var CapturedStacks = {
 
     let stacks = capturedStacks.stacks;
     let memoryMap = capturedStacks.memoryMap;
+    let captures = capturedStacks.captures;
 
-    StackRenderer.renderStacks("captured-stacks", stacks, memoryMap, () => {});
+    StackRenderer.renderStacks("captured-stacks", stacks, memoryMap,
+                              (index) => this.renderCaptureHeader(index, captures));
   },
+
+  renderCaptureHeader: function CaptureStacks_renderCaptureHeader(index, captures) {
+    let key = captures[index][0];
+    let cardinality = captures[index][2];
+    StackRenderer.renderHeader("captured-stacks", [key, cardinality]);
+  }
 };
 
 var ThreadHangStats = {
@@ -1835,20 +1843,18 @@ function setupListeners() {
       }
       let capturedStacks = gPingData.payload.processes.parent.capturedStacks;
       let req = new SymbolicationRequest("captured-stacks",
-                                         CapturedStacks.render,
+                                         CapturedStacks.renderCaptureHeader,
                                          capturedStacks.memoryMap,
                                          capturedStacks.stacks,
-                                         null);
+                                         capturedStacks.captures);
       req.fetchSymbols();
   });
 
   document.getElementById("captured-stacks-hide-symbols").addEventListener("click",
     function() {
-      if (!gPingData) {
-        return;
+      if (gPingData) {
+        CapturedStacks.render(gPingData.payload);
       }
-
-      CapturedStacks.render(gPingData);
   });
 
   document.getElementById("late-writes-fetch-symbols").addEventListener("click",
