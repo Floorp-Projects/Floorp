@@ -440,24 +440,35 @@ function GetWindowsPasswordsResource(aProfileFolder) {
       let crypto = new OSCrypto();
 
       for (let row of rows) {
-        let loginInfo = {
-          username: row.getResultByName("username_value"),
-          password: crypto.
-                    decryptData(crypto.arrayToString(row.getResultByName("password_value")),
-                                                     null),
-          hostname: NetUtil.newURI(row.getResultByName("origin_url")).prePath,
-          formSubmitURL: null,
-          httpRealm: null,
-          usernameElement: row.getResultByName("username_element"),
-          passwordElement: row.getResultByName("password_element"),
-          timeCreated: chromeTimeToDate(row.getResultByName("date_created") + 0).getTime(),
-          timesUsed: row.getResultByName("times_used") + 0,
-        };
-
         try {
+          let origin_url = NetUtil.newURI(row.getResultByName("origin_url"));
+          // Ignore entries for non-http(s)/ftp URLs because we likely can't
+          // use them anyway.
+          const kValidSchemes = new Set(["https", "http", "ftp"]);
+          if (!kValidSchemes.has(origin_url.scheme)) {
+            continue;
+          }
+          let loginInfo = {
+            username: row.getResultByName("username_value"),
+            password: crypto.
+                      decryptData(crypto.arrayToString(row.getResultByName("password_value")),
+                                                       null),
+            hostname: origin_url.prePath,
+            formSubmitURL: null,
+            httpRealm: null,
+            usernameElement: row.getResultByName("username_element"),
+            passwordElement: row.getResultByName("password_element"),
+            timeCreated: chromeTimeToDate(row.getResultByName("date_created") + 0).getTime(),
+            timesUsed: row.getResultByName("times_used") + 0,
+          };
+
           switch (row.getResultByName("scheme")) {
             case AUTH_TYPE.SCHEME_HTML:
-              loginInfo.formSubmitURL = NetUtil.newURI(row.getResultByName("action_url")).prePath;
+              let action_url = NetUtil.newURI(row.getResultByName("action_url"));
+              if (!kValidSchemes.has(action_url.scheme)) {
+                continue; // This continues the outer for loop.
+              }
+              loginInfo.formSubmitURL = action_url.prePath;
               break;
             case AUTH_TYPE.SCHEME_BASIC:
             case AUTH_TYPE.SCHEME_DIGEST:
