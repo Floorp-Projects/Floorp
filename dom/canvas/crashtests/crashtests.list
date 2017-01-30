@@ -1,40 +1,40 @@
-load 0px-size-font-667225.html
-load 0px-size-font-shadow.html
+asserts-if(stylo,1) load 0px-size-font-667225.html # bug 1324700
+asserts-if(stylo,1) load 0px-size-font-shadow.html # bug 1324700
 load 360293-1.html
 load 421715-1.html
 load 553938-1.html
 load 647480.html
 load 727547.html
 load 729116.html
-load 745699-1.html
+asserts-if(stylo,1) load 745699-1.html # bug 1324700
 load 746813-1.html
 load 743499-negative-size.html
 skip-if(Android) load 745818-large-source.html # Bug XXX - Crashes Android mid-run w/o a stack
 load 767337-1.html
-skip-if(Android) load 780392-1.html
+asserts-if(stylo,1) skip-if(Android) load 780392-1.html # bug 1324700
 skip-if(Android) skip-if(gtkWidget&&isDebugBuild) load 789933-1.html # bug 1155252 for linux
 load 794463-1.html
 load 802926-1.html
 load 896047-1.html
 load 916128-1.html
 load 934939-1.html
-load 1099143-1.html
+asserts-if(stylo,1) load 1099143-1.html # bug 1324700
 load 1161277-1.html
 load 1183363.html
-load 1190705.html
-load 1223740-1.html
-load 1225381-1.html
+asserts-if(stylo,1) load 1190705.html # bug 1324700
+asserts-if(stylo,1) load 1223740-1.html # bug 1324700
+asserts-if(stylo,1) load 1225381-1.html # bug 1324700
 skip-if(azureCairo) load 1229983-1.html
-load 1229932-1.html
+asserts-if(stylo,1) load 1229932-1.html # bug 1324700
 load 1244850-1.html
 load 1246775-1.html
-load 1284356-1.html
+asserts-if(stylo,1) load 1284356-1.html # bug 1324700
 load 1284578-1.html
 skip-if(d2d) load 1287515-1.html
-load 1287652-1.html
-load 1288872-1.html
+asserts-if(stylo,1) load 1287652-1.html # bug 1324700
+asserts-if(stylo,1) load 1288872-1.html # bug 1324700
 load 1290628-1.html
-load 1283113-1.html
+asserts-if(stylo,1) load 1283113-1.html # bug 1324700
 load 1286458-1.html
 load 1299062-1.html
 load 1305312-1.html

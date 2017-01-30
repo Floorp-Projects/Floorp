@@ -39,18 +39,18 @@ load 648206-1.html
 load 705875.html
 load 720305-1.html
 load 723465.html
-load 732870.html
-load 751995.html
-load 761831.html
-asserts(0-1) load 752038.html # We may hit bug 645229 here.
-asserts(1) load 753162.html # We hit bug 675518 or bug 680086 here.
-load 754311.html
-asserts(0-1) load 786142.html # We may hit bug 645229 here.
+asserts-if(stylo,1) load 732870.html # bug 1324683
+asserts-if(stylo,1) load 751995.html # bug 1324683
+asserts-if(stylo,1) load 761831.html # bug 1324683
+asserts(0-1) asserts-if(stylo,10) load 752038.html # We may hit bug 645229 here. # bug 1324683
+asserts(1) asserts-if(stylo,3) load 753162.html # We hit bug 675518 or bug 680086 here. # bug 1324683
+asserts-if(stylo,1) load 754311.html # bug 1324683
+asserts(0-1) asserts-if(stylo,2) load 786142.html # We may hit bug 645229 here. # bug 1324683
 load 797583.html
 load 806751.html
 load 833856.html
-load 851418.html
+asserts-if(stylo,1) load 851418.html # bug 1324683
 load 854139.html
 load 854604.html
 pref(dom.use_xbl_scopes_for_remote_xul,true) load 898939.html
-pref(security.fileuri.strict_origin_policy,false) load 938297.html
+asserts-if(stylo,1) pref(security.fileuri.strict_origin_policy,false) load 938297.html # bug 1324683

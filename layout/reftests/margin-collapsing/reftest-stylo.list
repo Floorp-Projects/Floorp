@@ -590,11 +590,11 @@
 == block-overflow-5d.html block-overflow-5d.html
 == block-overflow-1-dyn.html block-overflow-1-dyn.html
 == block-overflow-2-dyn.html block-overflow-2-dyn.html
-== block-overflow-3-dyn.html block-overflow-3-dyn.html
-== block-overflow-4-dyn.html block-overflow-4-dyn.html
+fails == block-overflow-3-dyn.html block-overflow-3-dyn.html
+fails == block-overflow-4-dyn.html block-overflow-4-dyn.html
 == block-overflow-5a-dyn.html block-overflow-5a-dyn.html
 == block-overflow-5b-dyn.html block-overflow-5b-dyn.html
-== block-overflow-5c-dyn.html block-overflow-5c-dyn.html
+fails == block-overflow-5c-dyn.html block-overflow-5c-dyn.html
 == block-overflow-5d-dyn.html block-overflow-5d-dyn.html
 # * 'fieldset' elements, per HTML5 (Candidate Recommendation 6 August 2013):
 # §10.3.13 (The fieldset and legend elements): "The fieldset element is

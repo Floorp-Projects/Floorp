@@ -18,7 +18,7 @@ skip-if(Android) == webgl-clear-test.html?stencil webgl-clear-test.html?stencil
 skip-if(Android) == webgl-clear-test.html?depth&stencil webgl-clear-test.html?depth&stencil
 
 # Check that resize works:
-== webgl-resize-test.html webgl-resize-test.html
+fails == webgl-resize-test.html webgl-resize-test.html
 
 # Check that captureStream() displays in a local video element
 skip-if(Android) == webgl-capturestream-test.html?preserve webgl-capturestream-test.html?preserve
@@ -155,7 +155,7 @@ skip-if(!winWidget) pref(webgl.disable-angle,true) == webgl-color-test.html?nati
 == clip-multiple-move-2.html clip-multiple-move-2.html
 
 # Bug 815648
-== stroketext-shadow.html stroketext-shadow.html
+fails == stroketext-shadow.html stroketext-shadow.html
 
 # focus rings
 pref(canvas.focusring.enabled,true) skip-if(cocoaWidget) skip-if(winWidget) needs-focus == drawFocusIfNeeded.html drawFocusIfNeeded.html
@@ -164,7 +164,7 @@ pref(canvas.customfocusring.enabled,true) skip-if(Android||cocoaWidget||winWidge
 # Check that captureStream() displays in a local video element
 == capturestream.html capturestream.html
 
-== 1177726-text-stroke-bounds.html 1177726-text-stroke-bounds.html
+fails == 1177726-text-stroke-bounds.html 1177726-text-stroke-bounds.html
 
 # Canvas Filter Reftests
 include filters/reftest-stylo.list

@@ -65,7 +65,7 @@
 == insert-into-split-inline-16a.html insert-into-split-inline-16a.html
 == insert-into-split-inline-16b.html insert-into-split-inline-16b.html
 == insert-into-split-inline-16-ref.html insert-into-split-inline-16-ref.html
-== float-inside-inline-between-blocks-1.html float-inside-inline-between-blocks-1.html
+fails == float-inside-inline-between-blocks-1.html float-inside-inline-between-blocks-1.html
 == table-pseudo-in-part3-1.html table-pseudo-in-part3-1.html
 == emptyspan-1.html emptyspan-1.html
 == emptyspan-2.html emptyspan-2.html
