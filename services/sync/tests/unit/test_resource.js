@@ -9,8 +9,6 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/browserid_identity.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-var logger;
-
 var fetched = false;
 function server_open(metadata, response) {
   let body;
@@ -452,7 +450,7 @@ function run_test() {
     throw "BOO!";
   };
   res18._onProgress = onProgress;
-  oldWarn = res18._log.warn;
+  let oldWarn = res18._log.warn;
   warnings = [];
   res18._log.warn = function(msg) { warnings.push(msg) };
   error = undefined;
@@ -470,6 +468,7 @@ function run_test() {
               "Got exception calling onProgress handler during fetch of " +
               server.baseURI + "/json");
 
+  res18._log.warn = oldWarn;
 
   _("Ensure channel timeouts are thrown appropriately.");
   let res19 = new Resource(server.baseURI + "/json");
