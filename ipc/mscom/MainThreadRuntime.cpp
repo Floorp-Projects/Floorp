@@ -30,6 +30,9 @@ struct LocalFreeDeleter
 
 } // anonymous namespace
 
+// This API from oleaut32.dll is not declared in Windows SDK headers
+extern "C" void __cdecl SetOaNoCache(void);
+
 namespace mozilla {
 namespace mscom {
 
@@ -59,9 +62,13 @@ MainThreadRuntime::MainThreadRuntime()
     return;
   }
 
+  // Disable COM's catch-all exception handler
   mInitResult = globalOpts->Set(COMGLB_EXCEPTION_HANDLING,
                                 COMGLB_EXCEPTION_DONOT_HANDLE_ANY);
   MOZ_ASSERT(SUCCEEDED(mInitResult));
+
+  // Disable the BSTR cache (as it never invalidates, thus leaking memory)
+  ::SetOaNoCache();
 }
 
 HRESULT
