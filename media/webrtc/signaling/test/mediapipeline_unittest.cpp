@@ -666,7 +666,7 @@ TEST_F(MediaPipelineTest, TestAudioSendNoMux) {
   TestAudioSend(false);
 }
 
-TEST_F(MediaPipelineTest, TestAudioSendMux) {
+TEST_F(MediaPipelineTest, DISABLED_TestAudioSendMux) {
   TestAudioSend(true);
 }
 
