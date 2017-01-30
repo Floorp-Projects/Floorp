@@ -124,8 +124,6 @@ MOZBUILD_VARIABLES = [
     b'PREF_JS_EXPORTS',
     b'PROGRAM',
     b'RESOURCE_FILES',
-    b'SDK_HEADERS',
-    b'SDK_LIBRARY',
     b'SHARED_LIBRARY_LIBS',
     b'SHARED_LIBRARY_NAME',
     b'SIMPLE_PROGRAMS',
@@ -394,7 +392,6 @@ class RecursiveMakeBackend(CommonBackend):
         # used for a "magic" rm -rf.
         self._install_manifests['dist_public']
         self._install_manifests['dist_private']
-        self._install_manifests['dist_sdk']
 
         self._traversal = RecursiveMakeTraversal()
         self._compile_graph = OrderedDefaultDict(set)
@@ -1188,8 +1185,6 @@ class RecursiveMakeBackend(CommonBackend):
             backend_file.write('IS_COMPONENT := 1\n')
         if libdef.soname:
             backend_file.write('DSO_SONAME := %s\n' % libdef.soname)
-        if libdef.is_sdk:
-            backend_file.write('SDK_LIBRARY := %s\n' % libdef.import_name)
         if libdef.symbols_file:
             backend_file.write('SYMBOLS_FILE := %s\n' % libdef.symbols_file)
         if not libdef.cxx_link:
@@ -1199,8 +1194,6 @@ class RecursiveMakeBackend(CommonBackend):
         backend_file.write_once('LIBRARY_NAME := %s\n' % libdef.basename)
         backend_file.write('FORCE_STATIC_LIB := 1\n')
         backend_file.write('REAL_LIBRARY := %s\n' % libdef.lib_name)
-        if libdef.is_sdk:
-            backend_file.write('SDK_LIBRARY := %s\n' % libdef.import_name)
         if libdef.no_expand_lib:
             backend_file.write('NO_EXPAND_LIBS := 1\n')
 
@@ -1309,7 +1302,6 @@ class RecursiveMakeBackend(CommonBackend):
             '_tests',
             'dist/include',
             'dist/branding',
-            'dist/sdk',
         ))
         if not path:
             raise Exception("Cannot install to " + target)

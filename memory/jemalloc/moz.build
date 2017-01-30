@@ -55,7 +55,6 @@ else:
     FINAL_LIBRARY = 'replace_jemalloc'
 
 if CONFIG['MOZ_GLUE_IN_PROGRAM']:
-    SDK_LIBRARY = True
     DIST_INSTALL = True
 
 if CONFIG['_MSC_VER']:
