@@ -1173,13 +1173,18 @@ bool stop_and_join_render_thread(cubeb_stream * stm)
     rv = false;
   }
 
-  LOG("Closing thread.");
 
-  CloseHandle(stm->thread);
-  stm->thread = NULL;
+  // Only attempts to close and null out the thread and event if the
+  // WaitForSingleObject above succeeded, so that calling this function again
+  // attemps to clean up the thread and event each time.
+  if (rv) {
+    LOG("Closing thread.");
+    CloseHandle(stm->thread);
+    stm->thread = NULL;
 
-  CloseHandle(stm->shutdown_event);
-  stm->shutdown_event = 0;
+    CloseHandle(stm->shutdown_event);
+    stm->shutdown_event = 0;
+  }
 
   return rv;
 }
