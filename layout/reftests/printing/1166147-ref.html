@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<!--
+This test passes if the pages generated are identical for both vertical-lr and
+horizontal-tb writing-modes by means of making the size of the content we are
+printing equal to exactly the same number of pages being generated in each
+writing mode.
+This sizing is calculated like so:
+
+1. It is important to note that irrespective of the writing-mode, the print
+   UI always lays out printed pages vertically. Therefore, it is possible
+   to equate the printed content of two different writing modes if both
+   cases generate the exact same number of pages (and of course no text on
+   the pages, which is why we use background color since it is independent
+   of writing mode).
+2. To avoid an unnecessary vertical scrollbar (since scrolled content will be
+   clipped anyway in the reftest snapshot), the maximum number of 5X3in pages
+   that we should generate for the reftest snapshot are equal to 3.
+3. Considering a margin of 0.5in on each side of the 5X3in page, we get the
+   size of the page content area to be 4X2in per page and to generate exactly 3
+   printed pages from this in horizontal-tb writing mode, we need a printable
+   area of 4X6in (as used below).
+
+Similarly, the size for the test case printable area is calculated, only
+considering a vertical-rl writing mode.
+
+It is important to note here that when printing this test outside of the test
+harness, the background color will not show since we omit printing and
+previewing of background colors by default via the browser printing path.
+-->
+<html class="reftest-print">
+  <body style="margin:0;">
+    <div style="background: teal; width:4in; height:6in;">
+    </div>
+  </body>
+</html>
