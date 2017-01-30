@@ -174,7 +174,7 @@ fails-if(cocoaWidget||Android) HTTP(..) == arabic-fallback-2.html arabic-fallbac
 fails-if(cocoaWidget||Android) HTTP(..) == arabic-fallback-3.html arabic-fallback-3-ref.html
 fails-if(!cocoaWidget&&!Android) HTTP(..) != arabic-fallback-4.html arabic-fallback-4-notref.html
 == arabic-marks-1.html arabic-marks-1-ref.html
-fails-if(OSX<1008) == arabic-final-ligature-spacing.html arabic-final-ligature-spacing-ref.html
+== arabic-final-ligature-spacing.html arabic-final-ligature-spacing-ref.html
 # harfbuzz fallback mark stacking in the absence of GPOS:
 HTTP(..) != fallback-mark-stacking-1.html fallback-mark-stacking-1-notref.html
 
@@ -198,8 +198,8 @@ HTTP(..) == 1331339-script-extensions-shaping-1.html 1331339-script-extensions-s
 # the next two will fail on OS X 10.6 because no color emoji font is present,
 # and also on Android platforms until we have color emoji fonts there.
 # Tests rely on bundled EmojiOne Mozilla to pass on Windows <8.1 and Linux.
-fails-if(OSX==1006||Android) != emoji-03.html emoji-03-notref.html
-fails-if(OSX==1006||Android) == emoji-04.html emoji-04-ref.html
+fails-if(Android) != emoji-03.html emoji-03-notref.html
+fails-if(Android) == emoji-04.html emoji-04-ref.html
 != emoji-05.html emoji-05-notref.html
 
 # check that Graphite shaping (bug 631479) is working
@@ -317,8 +317,8 @@ HTTP(..) == graphite-surrogate-selection.html graphite-surrogate-selection-ref.h
 == auto-hyphenation-transformed-1.html auto-hyphenation-transformed-1-ref.html
 
 # osx-font-smoothing - with and without subpixel AA, only under OSX
-fails-if(!cocoaWidget||OSX==1006||OSX==1007) != osx-font-smoothing.html osx-font-smoothing-ref.html
-fails-if(!cocoaWidget||OSX==1006||OSX==1007) != osx-font-smoothing-2.html osx-font-smoothing-2-notref.html
+fails-if(!cocoaWidget) != osx-font-smoothing.html osx-font-smoothing-ref.html
+fails-if(!cocoaWidget) != osx-font-smoothing-2.html osx-font-smoothing-2-notref.html
 == osx-font-smoothing-2.html osx-font-smoothing-2-ref.html
 
 pref(layout.css.text-align-unsafe-value.enabled,true) == text-align-unsafe.html text-align-unsafe-ref.html

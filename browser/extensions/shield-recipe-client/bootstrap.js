@@ -73,9 +73,9 @@ this.shutdown = function(data, reason) {
   }
 
   const modules = [
-    "data/EventEmitter.js",
     "lib/CleanupManager.jsm",
     "lib/EnvExpressions.jsm",
+    "lib/EventEmitter.jsm",
     "lib/Heartbeat.jsm",
     "lib/LogManager.jsm",
     "lib/NormandyApi.jsm",

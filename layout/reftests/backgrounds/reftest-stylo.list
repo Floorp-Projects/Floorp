@@ -6,28 +6,28 @@ include vector/reftest-stylo.list
 == layers-layer-count-cascade-1.xhtml layers-layer-count-cascade-1.xhtml
 == layers-layer-count-inheritance-1.xhtml layers-layer-count-inheritance-1.xhtml
 == layers-layer-count-cascade-2.xhtml layers-layer-count-cascade-2.xhtml
-== layers-layer-count-inheritance-2.xhtml layers-layer-count-inheritance-2.xhtml
+fails == layers-layer-count-inheritance-2.xhtml layers-layer-count-inheritance-2.xhtml
 == viewport-translucent-color-1.html viewport-translucent-color-1.html
-== viewport-translucent-color-2.html viewport-translucent-color-2.html
-== viewport-translucent-color-3.html viewport-translucent-color-3.html
+fails == viewport-translucent-color-2.html viewport-translucent-color-2.html
+fails == viewport-translucent-color-3.html viewport-translucent-color-3.html
 == viewport-translucent-color-ref.html viewport-translucent-color-ref.html
 == iframe-translucent-color-1.html iframe-translucent-color-1.html
 == translucent-color-1.html translucent-color-1.html
-== translucent-color-2.html translucent-color-2.html
+fails == translucent-color-2.html translucent-color-2.html
 fuzzy-if(skiaContent,1,1024) == translucent-color-3.html translucent-color-3.html
 == translucent-color-ref.html translucent-color-ref.html
 # == root-element-display-none-1.html root-element-display-none-1.html
-== continuous-inline-1a.html continuous-inline-1a.html
-== continuous-inline-1b.html continuous-inline-1b.html
-== continuous-inline-1c.html continuous-inline-1c.html
-== continuous-inline-1d.html continuous-inline-1d.html
-== continuous-inline-2a.html continuous-inline-2a.html
-== continuous-inline-2b.html continuous-inline-2b.html
-== continuous-inline-3.html continuous-inline-3.html
-== continuous-inline-4a.html continuous-inline-4a.html
-== continuous-inline-4b.html continuous-inline-4b.html
-== continuous-inline-5a.html continuous-inline-5a.html
-== continuous-inline-5b.html continuous-inline-5b.html
+fails == continuous-inline-1a.html continuous-inline-1a.html
+fails == continuous-inline-1b.html continuous-inline-1b.html
+fails == continuous-inline-1c.html continuous-inline-1c.html
+fails == continuous-inline-1d.html continuous-inline-1d.html
+fails == continuous-inline-2a.html continuous-inline-2a.html
+fails == continuous-inline-2b.html continuous-inline-2b.html
+fails == continuous-inline-3.html continuous-inline-3.html
+fails == continuous-inline-4a.html continuous-inline-4a.html
+fails == continuous-inline-4b.html continuous-inline-4b.html
+fails == continuous-inline-5a.html continuous-inline-5a.html
+fails == continuous-inline-5b.html continuous-inline-5b.html
 == background-redraw-237766.html background-redraw-237766.html
 
 == background-clip-1.html background-clip-1.html
@@ -99,28 +99,28 @@ fuzzy-if(skiaContent,1,1024) == translucent-color-3.html translucent-color-3.htm
 # == background-size-contain-clip-padding-origin-border-padding.html background-size-contain-clip-padding-origin-border-padding.html
 
 == background-layers-1a.html background-layers-1a.html
-== background-layers-1b.html background-layers-1b.html
+fails == background-layers-1b.html background-layers-1b.html
 
 # box-decoration-break's effect on backgrounds is touchy and hard to test due to stretching
 # artifacts and the difficulty of covering exact lines, so just make sure
 # background-size results in a different rendering when present.
-pref(layout.css.box-decoration-break.enabled,true) == background-size-cover-slice.html background-size-cover-slice.html
-pref(layout.css.box-decoration-break.enabled,true) == background-size-cover-clone.html background-size-cover-clone.html
+fails pref(layout.css.box-decoration-break.enabled,true) == background-size-cover-slice.html background-size-cover-slice.html
+fails pref(layout.css.box-decoration-break.enabled,true) == background-size-cover-clone.html background-size-cover-clone.html
 
 # ...and make sure each rendering with background-size is different from the
 # other
-pref(layout.css.box-decoration-break.enabled,true) == background-size-cover-slice.html background-size-cover-slice.html
+fails pref(layout.css.box-decoration-break.enabled,true) == background-size-cover-slice.html background-size-cover-slice.html
 
-== background-size-monster-ch.html background-size-monster-ch.html
-== background-size-monster-cm.html background-size-monster-cm.html
-== background-size-monster-em.html background-size-monster-em.html
-== background-size-monster-ex.html background-size-monster-ex.html
-== background-size-monster-inches.html background-size-monster-inches.html
-== background-size-monster-mm.html background-size-monster-mm.html
-== background-size-monster-pc.html background-size-monster-pc.html
-== background-size-monster-pt.html background-size-monster-pt.html
-== background-size-monster-px.html background-size-monster-px.html
-== background-size-monster-rem.html background-size-monster-rem.html
+fails == background-size-monster-ch.html background-size-monster-ch.html
+fails == background-size-monster-cm.html background-size-monster-cm.html
+fails == background-size-monster-em.html background-size-monster-em.html
+fails == background-size-monster-ex.html background-size-monster-ex.html
+fails == background-size-monster-inches.html background-size-monster-inches.html
+fails == background-size-monster-mm.html background-size-monster-mm.html
+fails == background-size-monster-pc.html background-size-monster-pc.html
+fails == background-size-monster-pt.html background-size-monster-pt.html
+fails == background-size-monster-px.html background-size-monster-px.html
+fails == background-size-monster-rem.html background-size-monster-rem.html
 
 # There seems to be a pixel-snapping problem here, where the repeated background
 # image isn't being snapped at its boundaries.  Note that the boundaries within
@@ -130,31 +130,31 @@ pref(layout.css.box-decoration-break.enabled,true) == background-size-cover-slic
 == background-size-zoom-repeat.html background-size-zoom-repeat.html
 
 # -moz-default-background-color and -moz-default-color (bug 591341)
-== background-moz-default-background-color.html background-moz-default-background-color.html
+fails == background-moz-default-background-color.html background-moz-default-background-color.html
 
-== fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-1.html
+fails == fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-1.html
 fuzzy(2,83) == fixed-bg-border-radius.html fixed-bg-border-radius.html
 
-HTTP == root-background-1.html root-background-1.html
-HTTP == root-background-1.html root-background-1.html
+fails HTTP == root-background-1.html root-background-1.html
+fails HTTP == root-background-1.html root-background-1.html
 
 # == really-big-background.html really-big-background.html
 # == body-background.html body-background.html
 # == table-background.html table-background.html
-== table-background-print.html table-background-print.html
+fails == table-background-print.html table-background-print.html
 # == div-background.html div-background.html
 
 == background-repeat-1-ref.html background-repeat-1-ref.html
 
 == multi-background-clip-content-border.html multi-background-clip-content-border.html
 
-HTTP == background-referrer.html background-referrer.html
+fails HTTP == background-referrer.html background-referrer.html
 
 == attachment-scroll-positioning-1.html attachment-scroll-positioning-1.html
 == attachment-local-positioning-1.html attachment-local-positioning-1.html
-== attachment-local-positioning-2.html attachment-local-positioning-2.html
-== attachment-local-positioning-3.html attachment-local-positioning-3.html
-== attachment-local-positioning-4.html attachment-local-positioning-4.html
+fails == attachment-local-positioning-2.html attachment-local-positioning-2.html
+fails == attachment-local-positioning-3.html attachment-local-positioning-3.html
+fails == attachment-local-positioning-4.html attachment-local-positioning-4.html
 == attachment-local-positioning-5.html attachment-local-positioning-5.html
 
 == attachment-local-clipping-color-1.html attachment-local-clipping-color-1.html
@@ -175,7 +175,7 @@ HTTP == background-referrer.html background-referrer.html
 fuzzy-if(skiaContent,1,8) == background-multiple-with-border-radius.html background-multiple-with-border-radius.html
 == background-repeat-large-area.html background-repeat-large-area.html
 
-== background-tiling-zoom-1.html background-tiling-zoom-1.html
+fails == background-tiling-zoom-1.html background-tiling-zoom-1.html
 
 skip-if(!cocoaWidget) == background-repeat-resampling.html background-repeat-resampling.html
 

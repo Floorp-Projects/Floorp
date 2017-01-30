@@ -26,6 +26,6 @@
 == flexbox-unbreakable-child-1b-wrap.html flexbox-unbreakable-child-1b-wrap.html
 == flexbox-unbreakable-child-1c.html flexbox-unbreakable-child-1c.html
 == flexbox-unbreakable-child-1c-wrap.html flexbox-unbreakable-child-1c-wrap.html
-== flexbox-unbreakable-child-1d.html flexbox-unbreakable-child-1d.html
-== flexbox-unbreakable-child-1d-wrap.html flexbox-unbreakable-child-1d-wrap.html
-== flexbox-unbreakable-child-2.html flexbox-unbreakable-child-2.html
+fails == flexbox-unbreakable-child-1d.html flexbox-unbreakable-child-1d.html
+fails == flexbox-unbreakable-child-1d-wrap.html flexbox-unbreakable-child-1d-wrap.html
+fails == flexbox-unbreakable-child-2.html flexbox-unbreakable-child-2.html

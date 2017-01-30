@@ -16,8 +16,6 @@ SOURCES += [
 
 Library('xpcomglue')
 
-SDK_LIBRARY = True
-
 FORCE_STATIC_LIB = True
 
 if CONFIG['_MSC_VER']:

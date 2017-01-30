@@ -4132,6 +4132,11 @@ ConstraintTypeSet::trace(Zone* zone, JSTracer* trc)
         unsigned oldCapacity = TypeHashSet::Capacity(objectCount);
         ObjectKey** oldArray = objectSet;
 
+        MOZ_RELEASE_ASSERT(uintptr_t(oldArray[-1]) == oldCapacity);
+
+        unsigned oldObjectCount = objectCount;
+        unsigned oldObjectsFound = 0;
+
         clearObjects();
         objectCount = 0;
         for (unsigned i = 0; i < oldCapacity; i++) {
@@ -4139,6 +4144,7 @@ ConstraintTypeSet::trace(Zone* zone, JSTracer* trc)
             if (!key)
                 continue;
             TraceObjectKey(trc, &key);
+            oldObjectsFound++;
 
             AutoEnterOOMUnsafeRegion oomUnsafe;
             ObjectKey** pentry =
@@ -4149,11 +4155,14 @@ ConstraintTypeSet::trace(Zone* zone, JSTracer* trc)
 
             *pentry = key;
         }
+        MOZ_RELEASE_ASSERT(oldObjectCount == oldObjectsFound);
         setBaseObjectCount(objectCount);
     } else if (objectCount == 1) {
         ObjectKey* key = (ObjectKey*) objectSet;
         TraceObjectKey(trc, &key);
         objectSet = reinterpret_cast<ObjectKey**>(key);
+    } else {
+        MOZ_RELEASE_ASSERT(!objectSet);
     }
 }
 
@@ -4332,11 +4341,18 @@ ObjectGroup::sweep(AutoClearTypeInferenceStateOnOOM* oom)
         unsigned oldCapacity = TypeHashSet::Capacity(propertyCount);
         Property** oldArray = propertySet;
 
+        MOZ_RELEASE_ASSERT(uintptr_t(oldArray[-1]) == oldCapacity);
+
+        unsigned oldPropertyCount = propertyCount;
+        unsigned oldPropertiesFound = 0;
+
         clearProperties();
         propertyCount = 0;
         for (unsigned i = 0; i < oldCapacity; i++) {
             Property* prop = oldArray[i];
             if (prop) {
+                oldPropertiesFound++;
+                prop->types.checkMagic();
                 if (singleton() && !prop->types.constraintList() && !zone()->isPreservingCode()) {
                     /*
                      * Don't copy over properties of singleton objects when their
@@ -4364,9 +4380,11 @@ ObjectGroup::sweep(AutoClearTypeInferenceStateOnOOM* oom)
                 return;
             }
         }
+        MOZ_RELEASE_ASSERT(oldPropertyCount == oldPropertiesFound);
         setBasePropertyCount(propertyCount);
     } else if (propertyCount == 1) {
         Property* prop = (Property*) propertySet;
+        prop->types.checkMagic();
         if (singleton() && !prop->types.constraintList() && !zone()->isPreservingCode()) {
             // Skip, as above.
             clearProperties();
@@ -4382,6 +4400,8 @@ ObjectGroup::sweep(AutoClearTypeInferenceStateOnOOM* oom)
                 return;
             }
         }
+    } else {
+        MOZ_RELEASE_ASSERT(!propertySet);
     }
 }
 
@@ -4446,7 +4466,8 @@ Zone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                              size_t* typePool,
                              size_t* baselineStubsOptimized,
                              size_t* uniqueIdMap,
-                             size_t* shapeTables)
+                             size_t* shapeTables,
+                             size_t* atomsMarkBitmaps)
 {
     *typePool += types.typeLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
     if (jitZone()) {
@@ -4456,6 +4477,7 @@ Zone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     *uniqueIdMap += uniqueIds_.sizeOfExcludingThis(mallocSizeOf);
     *shapeTables += baseShapes.sizeOfExcludingThis(mallocSizeOf)
                   + initialShapes.sizeOfExcludingThis(mallocSizeOf);
+    *atomsMarkBitmaps += markedAtoms.sizeOfExcludingThis(mallocSizeOf);
 }
 
 TypeZone::TypeZone(Zone* zone)

@@ -10,6 +10,7 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/TelemetryController.jsm");
 Cu.import("resource://gre/modules/Timer.jsm"); /* globals setTimeout, clearTimeout */
 Cu.import("resource://shield-recipe-client/lib/CleanupManager.jsm");
+Cu.import("resource://shield-recipe-client/lib/EventEmitter.jsm");
 Cu.import("resource://shield-recipe-client/lib/LogManager.jsm");
 
 Cu.importGlobalProperties(["URL"]); /* globals URL */
@@ -25,8 +26,6 @@ const NOTIFICATION_TIME = 3000;
  *
  * @param chromeWindow
  *        The chrome window that the heartbeat notification is displayed in.
- * @param eventEmitter
- *        An EventEmitter instance to report status to.
  * @param sandboxManager
  *        The manager for the sandbox this was called from. Heartbeat will
  *        increment the hold counter on the manager.
@@ -56,7 +55,7 @@ const NOTIFICATION_TIME = 3000;
  *        The url to visit after the user answers the question.
  */
 this.Heartbeat = class {
-  constructor(chromeWindow, eventEmitter, sandboxManager, options) {
+  constructor(chromeWindow, sandboxManager, options) {
     if (typeof options.flowId !== "string") {
       throw new Error("flowId must be a string");
     }
@@ -92,7 +91,7 @@ this.Heartbeat = class {
     }
 
     this.chromeWindow = chromeWindow;
-    this.eventEmitter = eventEmitter;
+    this.eventEmitter = new EventEmitter(sandboxManager);
     this.sandboxManager = sandboxManager;
     this.options = options;
     this.surveyResults = {};
@@ -261,7 +260,7 @@ this.Heartbeat = class {
 
     data.timestamp = timestamp;
     data.flowId = this.options.flowId;
-    this.eventEmitter.emit(name, Cu.cloneInto(data, this.sandboxManager.sandbox));
+    this.eventEmitter.emit(name, data);
 
     if (sendPing) {
       // Send the ping to Telemetry
@@ -279,7 +278,7 @@ this.Heartbeat = class {
       });
 
       // only for testing
-      this.eventEmitter.emit("TelemetrySent", Cu.cloneInto(payload, this.sandboxManager.sandbox));
+      this.eventEmitter.emit("TelemetrySent", payload);
 
       // Survey is complete, clear out the expiry timer & survey configuration
       this.endTimerIfPresent("surveyEndTimer");

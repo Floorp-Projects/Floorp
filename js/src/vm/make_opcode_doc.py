@@ -33,6 +33,13 @@ space_star_space_pat = re.compile('^\s*\* ?', re.M)
 def get_comment_body(comment):
     return re.sub(space_star_space_pat, '', comment).split('\n')
 
+def get_stack_count(stack):
+    if stack == "":
+        return 0
+    if '...' in stack:
+        return -1
+    return len(stack.split(','))
+
 def parse_index(comment):
     index = []
     current_types = None
@@ -254,6 +261,28 @@ def get_opcodes(dir):
                 merged.group.append(opcode)
                 if opcode.name < merged.name:
                     merged.sort_key = opcode.name
+
+            # Verify stack notation.
+            nuses = int(merged.nuses)
+            ndefs = int(merged.ndefs)
+
+            stack_nuses = get_stack_count(merged.stack_uses)
+            stack_ndefs = get_stack_count(merged.stack_defs)
+
+            if nuses != -1 and stack_nuses != -1 and nuses != stack_nuses:
+                error("nuses should match stack notation: {name}: "
+                      "{nuses} != {stack_nuses} "
+                      "(stack_nuses)".format(name=name,
+                                             nuses=nuses,
+                                             stack_nuses=stack_nuses,
+                                             stack_uses=merged.stack_uses))
+            if ndefs != -1 and stack_ndefs != -1 and ndefs != stack_ndefs:
+                error("ndefs should match stack notation: {name}: "
+                      "{ndefs} != {stack_ndefs} "
+                      "(stack_ndefs)".format(name=name,
+                                             ndefs=ndefs,
+                                             stack_ndefs=stack_ndefs,
+                                             stack_defs=merged.stack_defs))
 
             opcode = OpcodeInfo()
 

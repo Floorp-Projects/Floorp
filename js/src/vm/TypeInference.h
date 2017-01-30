@@ -535,10 +535,12 @@ class TypeSet
 } JS_HAZ_GC_POINTER;
 
 #if JS_BITS_PER_WORD == 32
-static const uintptr_t TypeInferenceMagic = 0xa1a2b3b4;
+static const uintptr_t BaseTypeInferenceMagic = 0xa1a2b3b4;
 #else
-static const uintptr_t TypeInferenceMagic = 0xa1a2b3b4c5c6d7d8;
+static const uintptr_t BaseTypeInferenceMagic = 0xa1a2b3b4c5c6d7d8;
 #endif
+static const uintptr_t TypeConstraintMagic = BaseTypeInferenceMagic + 1;
+static const uintptr_t ConstraintTypeSetMagic = BaseTypeInferenceMagic + 2;
 
 /*
  * A constraint which listens to additions to a type set and propagates those
@@ -558,13 +560,13 @@ class TypeConstraint
       : next_(nullptr)
     {
 #ifdef JS_CRASH_DIAGNOSTICS
-        magic_ = TypeInferenceMagic;
+        magic_ = TypeConstraintMagic;
 #endif
     }
 
     void checkMagic() const {
 #ifdef JS_CRASH_DIAGNOSTICS
-        MOZ_RELEASE_ASSERT(magic_ == TypeInferenceMagic);
+        MOZ_RELEASE_ASSERT(magic_ == TypeConstraintMagic);
 #endif
     }
 
@@ -653,20 +655,20 @@ class ConstraintTypeSet : public TypeSet
       : constraintList_(nullptr)
     {
 #ifdef JS_CRASH_DIAGNOSTICS
-        magic_ = TypeInferenceMagic;
+        magic_ = ConstraintTypeSetMagic;
 #endif
     }
 
 #ifdef JS_CRASH_DIAGNOSTICS
     void initMagic() {
         MOZ_ASSERT(!magic_);
-        magic_ = TypeInferenceMagic;
+        magic_ = ConstraintTypeSetMagic;
     }
 #endif
 
     void checkMagic() const {
 #ifdef JS_CRASH_DIAGNOSTICS
-        MOZ_RELEASE_ASSERT(magic_ == TypeInferenceMagic);
+        MOZ_RELEASE_ASSERT(magic_ == ConstraintTypeSetMagic);
 #endif
     }
 
@@ -1200,7 +1202,12 @@ class HeapTypeSetKey
 
     TypeSet::ObjectKey* object() const { return object_; }
     jsid id() const { return id_; }
-    HeapTypeSet* maybeTypes() const { return maybeTypes_; }
+
+    HeapTypeSet* maybeTypes() const {
+        if (maybeTypes_)
+            maybeTypes_->checkMagic();
+        return maybeTypes_;
+    }
 
     bool instantiate(JSContext* cx);
 
