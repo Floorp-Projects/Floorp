@@ -15,7 +15,11 @@
 
 .options-vertical-pane {
   display: inline;
-  float: inline-start;
+  float: left;
+}
+
+.options-vertical-pane:dir(rtl) {
+  float: right;
 }
 
 .options-vertical-pane {
