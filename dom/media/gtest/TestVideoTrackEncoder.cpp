@@ -581,6 +581,71 @@ TEST(VP8VideoTrackEncoder, TimestampFrameEncode)
   EXPECT_EQ(pointThree, totalDuration);
 }
 
+// Test that suspending an encoding works.
+TEST(VP8VideoTrackEncoder, Suspended)
+{
+  // Initiate VP8 encoder
+  TestVP8TrackEncoder encoder;
+  InitParam param = {true, 640, 480};
+  encoder.TestInit(param);
+
+  // Pass 3 frames with duration 0.1s. We suspend before and resume after the
+  // second frame.
+  YUVBufferGenerator generator;
+  generator.Init(mozilla::gfx::IntSize(640, 480));
+  TimeStamp now = TimeStamp::Now();
+  VideoSegment segment;
+  segment.AppendFrame(generator.GenerateI420Image(),
+                      mozilla::StreamTime(9000), // 0.1s
+                      generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE,
+                      false,
+                      now);
+
+  encoder.AppendVideoSegment(Move(segment));
+  encoder.NotifyCurrentTime(9000);
+
+  encoder.Suspend();
+
+  segment.AppendFrame(generator.GenerateI420Image(),
+                      mozilla::StreamTime(9000), // 0.1s
+                      generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE,
+                      false,
+                      now + TimeDuration::FromSeconds(0.1));
+  encoder.AppendVideoSegment(Move(segment));
+  encoder.NotifyCurrentTime(2 * 9000);
+
+  encoder.Resume();
+
+  segment.AppendFrame(generator.GenerateI420Image(),
+                      mozilla::StreamTime(9000), // 0.1s
+                      generator.GetSize(),
+                      PRINCIPAL_HANDLE_NONE,
+                      false,
+                      now + TimeDuration::FromSeconds(0.2));
+  encoder.AppendVideoSegment(Move(segment));
+  encoder.NotifyCurrentTime(3 * 9000);
+
+  encoder.NotifyEndOfStream();
+
+  EncodedFrameContainer container;
+  ASSERT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+
+  EXPECT_TRUE(encoder.IsEncodingComplete());
+
+  // Verify that we have two encoded frames and a total duration of 0.2s.
+  const uint64_t two = 2;
+  EXPECT_EQ(two, container.GetEncodedFrames().Length());
+
+  uint64_t totalDuration = 0;
+  for (auto& frame : container.GetEncodedFrames()) {
+    totalDuration += frame->GetDuration();
+  }
+  const uint64_t pointTwo = (PR_USEC_PER_SEC / 10) * 2;
+  EXPECT_EQ(pointTwo, totalDuration);
+}
+
 // EOS test
 TEST(VP8VideoTrackEncoder, EncodeComplete)
 {
