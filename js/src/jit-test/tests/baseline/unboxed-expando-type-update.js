@@ -9,6 +9,10 @@ function f() {
         var v = vals[j % vals.length];
         a[95].y = v;
         assertEq(a[95].y, v);
+        a[j].z1 = v;
+        a[j].z2 = v;
+        assertEq(a[j].z1, v);
+        assertEq(a[j].z2, v);
     }
 }
 f();

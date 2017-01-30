@@ -312,6 +312,20 @@ class ExclusiveContext : public ContextFriendFields,
         return runtime_->scriptDataTable(lock);
     }
 
+    // Methods to access other runtime data that checks locking internally.
+    gc::AtomMarkingRuntime& atomMarking() {
+        return runtime_->gc.atomMarking;
+    }
+    void markAtom(gc::TenuredCell* atom) {
+        atomMarking().markAtom(this, atom);
+    }
+    void markId(jsid id) {
+        atomMarking().markId(this, id);
+    }
+    void markAtomValue(const Value& value) {
+        atomMarking().markAtomValue(this, value);
+    }
+
     // Methods specific to any HelperThread for the context.
     bool addPendingCompileError(frontend::CompileError** err);
     void addPendingOverRecursed();
@@ -369,6 +383,7 @@ struct JSContext : public js::ExclusiveContext,
     using ExclusiveContext::staticStrings;
     using ExclusiveContext::updateMallocCounter;
     using ExclusiveContext::wellKnownSymbols;
+    using ExclusiveContext::atomMarking;
 
     JSRuntime* runtime() { return this; }
     js::PerThreadData& mainThread() { return this->JSRuntime::mainThread; }

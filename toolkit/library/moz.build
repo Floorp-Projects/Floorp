@@ -72,8 +72,6 @@ def Libxul(name):
 
 Libxul('xul')
 
-SDK_LIBRARY = True
-
 FORCE_STATIC_LIB = True
 
 STATIC_LIBRARY_NAME = 'xul_s'
