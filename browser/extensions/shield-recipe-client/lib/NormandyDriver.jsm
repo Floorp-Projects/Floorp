@@ -12,16 +12,17 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource:///modules/ShellService.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/Timer.jsm"); /* globals setTimeout, clearTimeout */
-Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://shield-recipe-client/lib/LogManager.jsm");
 Cu.import("resource://shield-recipe-client/lib/Storage.jsm");
 Cu.import("resource://shield-recipe-client/lib/Heartbeat.jsm");
+Cu.import("resource://shield-recipe-client/lib/EnvExpressions.jsm");
 
 const {generateUUID} = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
 this.EXPORTED_SYMBOLS = ["NormandyDriver"];
 
-const log = Log.repository.getLogger("extensions.shield-recipe-client");
-const actionLog = Log.repository.getLogger("extensions.shield-recipe-client.actions");
+const log = LogManager.getLogger("normandy-driver");
+const actionLog = LogManager.getLogger("normandy-driver.actions");
 
 this.NormandyDriver = function(sandboxManager, extraContext = {}) {
   if (!sandboxManager) {
@@ -36,6 +37,10 @@ this.NormandyDriver = function(sandboxManager, extraContext = {}) {
       return Cc["@mozilla.org/chrome/chrome-registry;1"]
         .getService(Ci.nsIXULChromeRegistry)
         .getSelectedLocale("browser");
+    },
+
+    get userId() {
+      return EnvExpressions.getUserId();
     },
 
     log(message, level = "debug") {
@@ -54,11 +59,9 @@ this.NormandyDriver = function(sandboxManager, extraContext = {}) {
         return sandbox.Promise.reject(new sandbox.Error("No window to show heartbeat in"));
       }
 
-      const sandboxedDriver = Cu.cloneInto(this, sandbox, {cloneFunctions: true});
-      const ee = new sandbox.EventEmitter(sandboxedDriver).wrappedJSObject;
       const internalOptions = Object.assign({}, options, {testing: this.testing});
-      new Heartbeat(aWindow, ee, sandboxManager, internalOptions);
-      return sandbox.Promise.resolve(ee);
+      const heartbeat = new Heartbeat(aWindow, sandboxManager, internalOptions);
+      return sandbox.Promise.resolve(heartbeat.eventEmitter.createSandboxedEmitter());
     },
 
     saveHeartbeatFlow() {
@@ -87,7 +90,11 @@ this.NormandyDriver = function(sandboxManager, extraContext = {}) {
 
       const pluginsPromise = new Promise(resolve => {
         AddonManager.getAddonsByTypes(["plugin"], plugins => {
-          plugins.forEach(plugin => appinfo.plugins[plugin.name] = plugin);
+          plugins.forEach(plugin => appinfo.plugins[plugin.name] = {
+            name: plugin.name,
+            description: plugin.description,
+            version: plugin.version,
+          });
           resolve();
         });
       });

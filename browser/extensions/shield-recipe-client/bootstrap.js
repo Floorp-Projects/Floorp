@@ -6,6 +6,7 @@
 const {utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
 
 const REASONS = {
   APP_STARTUP: 1,      // The application is starting up.
@@ -24,9 +25,12 @@ const DEFAULT_PREFS = {
   dev_mode: false,
   enabled: true,
   startup_delay_seconds: 300,
+  "logging.level": Log.Level.Warn,
+  user_id: "",
 };
 const PREF_DEV_MODE = "extensions.shield-recipe-client.dev_mode";
 const PREF_SELF_SUPPORT_ENABLED = "browser.selfsupport.enabled";
+const PREF_LOGGING_LEVEL = PREF_BRANCH + "logging.level";
 
 let shouldRun = true;
 
@@ -48,11 +52,18 @@ this.startup = function() {
     return;
   }
 
+  // Setup logging and listen for changes to logging prefs
+  Cu.import("resource://shield-recipe-client/lib/LogManager.jsm");
+  LogManager.configure(Services.prefs.getIntPref(PREF_LOGGING_LEVEL));
+  Preferences.observe(PREF_LOGGING_LEVEL, LogManager.configure);
+
   Cu.import("resource://shield-recipe-client/lib/RecipeRunner.jsm");
   RecipeRunner.init();
 };
 
 this.shutdown = function(data, reason) {
+  Preferences.ignore(PREF_LOGGING_LEVEL, LogManager.configure);
+
   Cu.import("resource://shield-recipe-client/lib/CleanupManager.jsm");
 
   CleanupManager.cleanup();
@@ -62,10 +73,11 @@ this.shutdown = function(data, reason) {
   }
 
   const modules = [
-    "data/EventEmitter.js",
     "lib/CleanupManager.jsm",
     "lib/EnvExpressions.jsm",
+    "lib/EventEmitter.jsm",
     "lib/Heartbeat.jsm",
+    "lib/LogManager.jsm",
     "lib/NormandyApi.jsm",
     "lib/NormandyDriver.jsm",
     "lib/RecipeRunner.jsm",

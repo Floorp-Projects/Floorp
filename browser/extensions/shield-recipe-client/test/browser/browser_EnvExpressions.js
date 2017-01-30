@@ -1,11 +1,12 @@
 "use strict";
 
 const {utils: Cu} = Components;
+Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 
 Cu.import("resource://shield-recipe-client/lib/EnvExpressions.jsm", this);
-Cu.import("resource://gre/modules/Log.jsm", this);
+Cu.import("resource://shield-recipe-client/test/browser/Utils.jsm", this);
 
 add_task(function* () {
   // setup
@@ -53,4 +54,32 @@ add_task(function* () {
   // Test stable sample returns true for matching samples
   val = yield EnvExpressions.eval('["test"]|stableSample(0)');
   is(val, false, "Stable sample returns false for 0% sample");
+
+  // Test stable sample for known samples
+  val = yield EnvExpressions.eval('["test-1"]|stableSample(0.5)');
+  is(val, true, "Stable sample returns true for a known sample");
+  val = yield EnvExpressions.eval('["test-4"]|stableSample(0.5)');
+  is(val, false, "Stable sample returns false for a known sample");
+
+  // Test bucket sample for known samples
+  val = yield EnvExpressions.eval('["test-1"]|bucketSample(0, 5, 10)');
+  is(val, true, "Bucket sample returns true for a known sample");
+  val = yield EnvExpressions.eval('["test-4"]|bucketSample(0, 5, 10)');
+  is(val, false, "Bucket sample returns false for a known sample");
+
+  // Test that userId is available
+  val = yield EnvExpressions.eval("normandy.userId");
+  ok(Utils.UUID_REGEX.test(val), "userId available");
+
+  // test that it pulls from the right preference
+  yield SpecialPowers.pushPrefEnv({set: [["extensions.shield-recipe-client.user_id", "fake id"]]});
+  val = yield EnvExpressions.eval("normandy.userId");
+  Assert.equal(val, "fake id", "userId is pulled from preferences");
+
+  // test that it merges context correctly, `userId` comes from the default context, and
+  // `injectedValue` comes from us. Expect both to be on the final `normandy` object.
+  val = yield EnvExpressions.eval(
+    "[normandy.userId, normandy.injectedValue]",
+    {normandy: {injectedValue: "injected"}});
+  Assert.deepEqual(val, ["fake id", "injected"], "context is correctly merged");
 });

@@ -6,7 +6,7 @@
 
 const {utils: Cu} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://shield-recipe-client/lib/LogManager.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "JSONFile", "resource://gre/modules/JSONFile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
@@ -14,7 +14,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm
 
 this.EXPORTED_SYMBOLS = ["Storage"];
 
-const log = Log.repository.getLogger("extensions.shield-recipe-client");
+const log = LogManager.getLogger("storage");
 let storePromise;
 
 function loadStorage() {
@@ -130,5 +130,19 @@ this.Storage = {
     return Cu.cloneInto(storageInterface, sandbox, {
       cloneFunctions: true,
     });
+  },
+
+  /**
+   * Clear ALL storage data and save to the disk.
+   */
+  clearAllStorage() {
+    return loadStorage()
+      .then(store => {
+        store.data = {};
+        store.saveSoon();
+      })
+      .catch(err => {
+        log.error(err);
+      });
   },
 };
