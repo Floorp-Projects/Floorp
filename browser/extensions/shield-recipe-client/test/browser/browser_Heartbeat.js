@@ -5,7 +5,6 @@ const {utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/Heartbeat.jsm", this);
 Cu.import("resource://shield-recipe-client/lib/SandboxManager.jsm", this);
-Cu.import("resource://shield-recipe-client/lib/NormandyDriver.jsm", this);
 
 /**
  * Assert an array is in non-descending order, and that every element is a number
@@ -54,7 +53,7 @@ function closeAllNotifications(targetWindow, notificationBox) {
   });
 }
 
-/* Check that the correct telmetry was sent */
+/* Check that the correct telemetry was sent */
 function assertTelemetrySent(hb, eventNames) {
   return new Promise(resolve => {
     hb.eventEmitter.once("TelemetrySent", payload => {
@@ -73,9 +72,7 @@ function assertTelemetrySent(hb, eventNames) {
 
 
 const sandboxManager = new SandboxManager();
-const driver = new NormandyDriver(sandboxManager);
 sandboxManager.addHold("test running");
-const sandboxedDriver = Cu.cloneInto(driver, sandboxManager.sandbox, {cloneFunctions: true});
 
 
 // Several of the behaviors of heartbeat prompt are mutually exclusive, so checks are broken up
@@ -83,12 +80,11 @@ const sandboxedDriver = Cu.cloneInto(driver, sandboxManager.sandbox, {cloneFunct
 
 /* Batch #1 - General UI, Stars, and telemetry data */
 add_task(function* () {
-  const eventEmitter = new sandboxManager.sandbox.EventEmitter(sandboxedDriver).wrappedJSObject;
   const targetWindow = Services.wm.getMostRecentWindow("navigator:browser");
   const notificationBox = targetWindow.document.querySelector("#high-priority-global-notificationbox");
 
   const preCount = notificationBox.childElementCount;
-  const hb = new Heartbeat(targetWindow, eventEmitter, sandboxManager, {
+  const hb = new Heartbeat(targetWindow, sandboxManager, {
     testing: true,
     flowId: "test",
     message: "test",
@@ -126,10 +122,9 @@ add_task(function* () {
 
 // Batch #2 - Engagement buttons
 add_task(function* () {
-  const eventEmitter = new sandboxManager.sandbox.EventEmitter(sandboxedDriver).wrappedJSObject;
   const targetWindow = Services.wm.getMostRecentWindow("navigator:browser");
   const notificationBox = targetWindow.document.querySelector("#high-priority-global-notificationbox");
-  const hb = new Heartbeat(targetWindow, eventEmitter, sandboxManager, {
+  const hb = new Heartbeat(targetWindow, sandboxManager, {
     testing: true,
     flowId: "test",
     message: "test",
@@ -162,10 +157,9 @@ add_task(function* () {
 
 // Batch 3 - Closing the window while heartbeat is open
 add_task(function* () {
-  const eventEmitter = new sandboxManager.sandbox.EventEmitter(sandboxedDriver).wrappedJSObject;
   const targetWindow = yield BrowserTestUtils.openNewBrowserWindow();
 
-  const hb = new Heartbeat(targetWindow, eventEmitter, sandboxManager, {
+  const hb = new Heartbeat(targetWindow, sandboxManager, {
     testing: true,
     flowId: "test",
     message: "test",
