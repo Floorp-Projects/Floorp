@@ -43,7 +43,11 @@ body {
     overflow: hidden;
     display: flex;
     flex-direction: row;
-    float: inline-end;
+    float: right;
+}
+
+#filter-container:dir(rtl) {
+    float: left;
 }
 
 #filter-input {
@@ -79,7 +83,11 @@ body {
     width: 48px;
     display: inline-block;
     outline-style: none;
-    float: inline-start;
+    float: left;
+}
+
+#new-pref-toggle-button:dir(rtl) {
+    float: right;
 }
 
 #filter-search-button {
