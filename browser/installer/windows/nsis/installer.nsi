@@ -382,28 +382,23 @@ Section "-Application" APP_IDX
 
   ; In Win8, the delegate execute handler picks up the value in FirefoxURL and
   ; FirefoxHTML to launch the desktop browser when it needs to.
-  ${AddDisabledDDEHandlerValues} "FirefoxHTML-$AppUserModelID" "$2" "$8,1" \
+  ${AddDisabledDDEHandlerValues} "FirefoxHTML" "$2" "$8,1" \
                                  "${AppRegName} Document" ""
-  ${AddDisabledDDEHandlerValues} "FirefoxURL-$AppUserModelID" "$2" "$8,1" \
-                                 "${AppRegName} URL" "true"
+  ${AddDisabledDDEHandlerValues} "FirefoxURL" "$2" "$8,1" "${AppRegName} URL" \
+                                 "true"
 
   ; For pre win8, the following keys should only be set if we can write to HKLM.
-  ; For post win8, the keys below can be set in HKCU if needed.
+  ; For post win8, the keys below get set in both HKLM and HKCU.
   ${If} $TmpVal == "HKLM"
     ; Set the Start Menu Internet and Vista Registered App HKLM registry keys.
-    ; If we're upgrading an existing install, replacing the old registry entries
-    ; (without a path hash) would cause the default browser to be reset.
-    ReadRegStr $0 HKLM "Software\Clients\StartMenuInternet\FIREFOX.EXE\DefaultIcon" ""
-    StrCpy $0 $0 -2
-    ${If} $0 != "$INSTDIR\${FileMainEXE}"
-      ${SetStartMenuInternet} "HKLM"
-      ${FixShellIconHandler} "HKLM"
-    ${EndIf}
+    ${SetStartMenuInternet} "HKLM"
+    ${FixShellIconHandler} "HKLM"
 
     ; If we are writing to HKLM and create either the desktop or start menu
     ; shortcuts set IconsVisible to 1 otherwise to 0.
     ; Taskbar shortcuts imply having a start menu shortcut.
-    StrCpy $0 "Software\Clients\StartMenuInternet\${AppRegName}-$AppUserModelID\InstallInfo"
+    ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
+    StrCpy $0 "Software\Clients\StartMenuInternet\$R9\InstallInfo"
     ${If} $AddDesktopSC == 1
     ${OrIf} $AddStartMenuSC == 1
     ${OrIf} $AddTaskbarSC == 1
@@ -411,21 +406,18 @@ Section "-Application" APP_IDX
     ${Else}
       WriteRegDWORD HKLM "$0" "IconsVisible" 0
     ${EndIf}
-  ${ElseIf} ${AtLeastWin8}
+  ${EndIf}
+
+  ${If} ${AtLeastWin8}
     ; Set the Start Menu Internet and Vista Registered App HKCU registry keys.
-    ; If we're upgrading an existing install, replacing the old registry entries
-    ; (without a path hash) would cause the default browser to be reset.
-    ReadRegStr $0 HKCU "Software\Clients\StartMenuInternet\FIREFOX.EXE\DefaultIcon" ""
-    StrCpy $0 $0 -2
-    ${If} $0 != "$INSTDIR\${FileMainEXE}"
-      ${SetStartMenuInternet} "HKCU"
-      ${FixShellIconHandler} "HKCU"
-    ${EndIf}
+    ${SetStartMenuInternet} "HKCU"
+    ${FixShellIconHandler} "HKCU"
 
     ; If we create either the desktop or start menu shortcuts, then
     ; set IconsVisible to 1 otherwise to 0.
     ; Taskbar shortcuts imply having a start menu shortcut.
-    StrCpy $0 "Software\Clients\StartMenuInternet\${AppRegName}-$AppUserModelID\InstallInfo"
+    ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
+    StrCpy $0 "Software\Clients\StartMenuInternet\$R9\InstallInfo"
     ${If} $AddDesktopSC == 1
     ${OrIf} $AddStartMenuSC == 1
     ${OrIf} $AddTaskbarSC == 1
@@ -436,10 +428,10 @@ Section "-Application" APP_IDX
   ${EndIf}
 
 !ifdef MOZ_MAINTENANCE_SERVICE
-  ; If the maintenance service page was displayed then a value was already
-  ; explicitly selected for installing the maintenance service and
+  ; If the maintenance service page was displayed then a value was already 
+  ; explicitly selected for installing the maintenance service and 
   ; and so InstallMaintenanceService will already be 0 or 1.
-  ; If the maintenance service page was not displayed then
+  ; If the maintenance service page was not displayed then 
   ; InstallMaintenanceService will be equal to "".
   ${If} $InstallMaintenanceService == ""
     Call IsUserAdmin
@@ -463,7 +455,7 @@ Section "-Application" APP_IDX
 
   ${If} $InstallMaintenanceService == "1"
     ; The user wants to install the maintenance service, so execute
-    ; the pre-packaged maintenance service installer.
+    ; the pre-packaged maintenance service installer. 
     ; This option can only be turned on if the user is an admin so there
     ; is no need to use ExecShell w/ verb runas to enforce elevated.
     nsExec::Exec "$\"$INSTDIR\maintenanceservice_installer.exe$\""
