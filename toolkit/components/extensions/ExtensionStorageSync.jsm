@@ -26,6 +26,7 @@ const STORAGE_SYNC_SERVER_URL_PREF = "webextensions.storage.sync.serverURL";
 const STORAGE_SYNC_SCOPE = "sync:addon_storage";
 const STORAGE_SYNC_CRYPTO_COLLECTION_NAME = "storage-sync-crypto";
 const STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID = "keys";
+const STORAGE_SYNC_CRYPTO_SALT_LENGTH_BYTES = 32;
 const FXA_OAUTH_OPTIONS = {
   scope: STORAGE_SYNC_SCOPE,
 };
@@ -195,11 +196,31 @@ if (AppConstants.platform != "android") {
     }),
 
     /**
+     * Generate a new salt for use in hashing extension and record
+     * IDs.
+     *
+     * @returns {string} A base64-encoded string of the salt
+     */
+    getNewSalt() {
+      return btoa(CryptoUtils.generateRandomBytes(STORAGE_SYNC_CRYPTO_SALT_LENGTH_BYTES));
+    },
+
+    /**
      * Retrieve the keyring record from the crypto collection.
      *
      * You can use this if you want to check metadata on the keyring
      * record rather than use the keyring itself.
      *
+     * The keyring record, if present, should have the structure:
+     *
+     * - kbHash: a hash of the user's kB. When this changes, we will
+     *   try to sync the collection.
+     * - uuid: a record identifier. This will only change when we wipe
+     *   the collection (due to kB getting reset).
+     * - keys: a "WBO" form of a CollectionKeyManager.
+     * - salts: a normal JS Object with keys being collection IDs and
+     *   values being base64-encoded salts to use when hashing IDs
+     *   for that collection.
      * @returns {Promise<Object>}
      */
     getKeyRingRecord: Task.async(function* () {
@@ -216,6 +237,11 @@ if (AppConstants.platform != "android") {
         data = {uuid};
       }
       return data;
+    }),
+
+    getSalts: Task.async(function* () {
+      const cryptoKeyRecord = yield this.getKeyRingRecord();
+      return cryptoKeyRecord && cryptoKeyRecord.salts;
     }),
 
     /**
@@ -375,7 +401,7 @@ function extensionIdToCollectionId(user, extensionId) {
  */
 function ensureCryptoCollection() {
   if (!cryptoCollection) {
-    throw new Error("Call to ensureKeysFor, but no sync code; are you on Android?");
+    throw new Error("Call to ensureCanSync, but no sync code; are you on Android?");
   }
 }
 
@@ -399,7 +425,7 @@ this.ExtensionStorageSync = {
       // No extensions to sync. Get out.
       return;
     }
-    yield this.ensureKeysFor(extIds);
+    yield this.ensureCanSync(extIds);
     yield this.checkSyncKeyRing();
     const promises = Array.from(extensionContexts.keys(), extension => {
       return openCollection(extension).then(coll => {
@@ -524,6 +550,42 @@ this.ExtensionStorageSync = {
     });
   }),
 
+  ensureSaltsFor: Task.async(function* (keysRecord, extIds) {
+    const newSalts = Object.assign({}, keysRecord.salts);
+    for (let collectionId of extIds) {
+      if (newSalts[collectionId]) {
+        continue;
+      }
+
+      newSalts[collectionId] = cryptoCollection.getNewSalt();
+    }
+
+    return newSalts;
+  }),
+
+  /**
+   * Check whether the keys record (provided) already has salts for
+   * all the extensions given in extIds.
+   *
+   * @param {Object} keysRecord A previously-retrieved keys record.
+   * @param {Array<string>} extIds The IDs of the extensions which
+   *                need salts.
+   * @returns {boolean}
+   */
+  hasSaltsFor(keysRecord, extIds) {
+    if (!keysRecord.salts) {
+      return false;
+    }
+
+    for (let collectionId of extIds) {
+      if (!keysRecord.salts[collectionId]) {
+        return false;
+      }
+    }
+
+    return true;
+  },
+
   /**
    * Recursive promise that terminates when our local collectionKeys,
    * as well as that on the server, have keys for all the extensions
@@ -533,19 +595,22 @@ this.ExtensionStorageSync = {
    *                        The IDs of the extensions which need keys.
    * @returns {Promise<CollectionKeyManager>}
    */
-  ensureKeysFor: Task.async(function* (extIds) {
+  ensureCanSync: Task.async(function* (extIds) {
     ensureCryptoCollection();
 
+    const keysRecord = yield cryptoCollection.getKeyRingRecord();
     const collectionKeys = yield cryptoCollection.getKeyRing();
-    if (collectionKeys.hasKeysFor(extIds)) {
+    if (collectionKeys.hasKeysFor(extIds) && this.hasSaltsFor(keysRecord, extIds)) {
       return collectionKeys;
     }
 
     const kbHash = yield this.getKBHash();
     const newKeys = yield collectionKeys.ensureKeysFor(extIds);
+    const newSalts = yield this.ensureSaltsFor(keysRecord, extIds);
     const newRecord = {
       id: STORAGE_SYNC_CRYPTO_KEYRING_RECORD_ID,
       keys: newKeys.asWBO().cleartext,
+      salts: newSalts,
       uuid: collectionKeys.uuid,
       // Add a field for the current kB hash.
       kbHash: kbHash,
@@ -556,7 +621,7 @@ this.ExtensionStorageSync = {
       // We had a conflict which was automatically resolved. We now
       // have a new keyring which might have keys for the
       // collections. Recurse.
-      return yield this.ensureKeysFor(extIds);
+      return yield this.ensureCanSync(extIds);
     }
 
     // No conflicts. We're good.
