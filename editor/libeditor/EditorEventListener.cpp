@@ -772,7 +772,9 @@ EditorEventListener::MouseDown(nsIDOMMouseEvent* aMouseEvent)
 {
   // FYI: This may be called by HTMLEditorEventListener::MouseDown() even
   //      when the event is not acceptable for committing composition.
-  mEditorBase->ForceCompositionEnd();
+  if (mEditorBase) {
+    mEditorBase->ForceCompositionEnd();
+  }
   return NS_OK;
 }
 
