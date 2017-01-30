@@ -235,9 +235,9 @@ ActorPool.prototype = {
   addActor: function APAddActor(actor) {
     actor.conn = this.conn;
     if (!actor.actorID) {
-      let prefix = actor.actorPrefix;
+      // Older style actors use actorPrefix, while protocol.js-based actors use typeName
+      let prefix = actor.actorPrefix || actor.typeName;
       if (!prefix && typeof actor == "function") {
-        // typeName is a convention used with protocol.js-based actors
         prefix = actor.prototype.actorPrefix || actor.prototype.typeName;
       }
       actor.actorID = this.conn.allocID(prefix || undefined);

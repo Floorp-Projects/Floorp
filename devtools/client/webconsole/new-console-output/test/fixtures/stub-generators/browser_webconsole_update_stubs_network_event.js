@@ -24,12 +24,24 @@ add_task(function* () {
     ok(ui.jsterm, "jsterm exists");
     ok(ui.newConsoleOutput, "newConsoleOutput exists");
 
-    let received = new Promise(resolve => {
+    let networkEvent = new Promise(resolve => {
       let i = 0;
-      toolbox.target.client.addListener(TARGET, (type, res) => {
+      toolbox.target.activeConsole.on(TARGET, (type, res) => {
         stubs.packets.push(formatPacket(keys[i], res));
-        stubs.preparedMessages.push(formatNetworkStub(keys[i], res));
+        stubs.preparedMessages.push(formatNetworkEventStub(keys[i], res));
         if (++i === keys.length) {
+          resolve();
+        }
+      });
+    });
+
+    let networkEventUpdate = new Promise(resolve => {
+      let i = 0;
+      ui.jsterm.hud.on("network-message-updated", function onNetworkUpdated(event, res) {
+        ui.jsterm.hud.off("network-message-updated", onNetworkUpdated);
+        stubs.preparedMessages.push(
+          formatNetworkEventStub(`${keys[i++]} ${res.packet.updateType}`, res));
+        if (i === keys.length) {
           resolve();
         }
       });
@@ -39,7 +51,7 @@ add_task(function* () {
       content.wrappedJSObject.triggerPacket();
     });
 
-    yield received;
+    yield Promise.all([networkEvent, networkEventUpdate]);
   }
   let filePath = OS.Path.join(`${BASE_PATH}/stubs/${TARGET}.js`);
   OS.File.writeAtomic(filePath, formatFile(stubs, "NetworkEventMessage"));

@@ -14,10 +14,9 @@ import android.support.annotation.Nullable;
 import android.support.v4.net.ConnectivityManagerCompat;
 import android.util.Log;
 
-import com.keepsafe.switchboard.SwitchBoard;
+import org.mozilla.gecko.switchboard.SwitchBoard;
 
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.feeds.action.FeedAction;

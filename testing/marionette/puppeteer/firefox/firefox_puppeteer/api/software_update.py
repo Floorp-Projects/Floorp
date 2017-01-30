@@ -4,6 +4,7 @@
 
 import ConfigParser
 import os
+import re
 
 import mozinfo
 
@@ -324,8 +325,8 @@ class SoftwareUpdate(BaseLib):
         :param channel: New update channel to use
 
         """
-        self.marionette.set_pref(self.PREF_APP_UPDATE_CHANNEL, channel,
-                                 default_branch=True)
+        writer = UpdateChannelWriter(self.marionette)
+        writer.set_channel(channel)
 
     @property
     def update_url(self):
@@ -389,3 +390,33 @@ class SoftwareUpdate(BaseLib):
             url += 'force=1'
 
         return url
+
+
+class UpdateChannelWriter(BaseLib):
+    """Class to handle the update channel as listed in channel-prefs.js"""
+    REGEX_UPDATE_CHANNEL = re.compile(r'("app\.update\.channel", ")([^"].*)(?=")')
+
+    def __init__(self, *args, **kwargs):
+        BaseLib.__init__(self, *args, **kwargs)
+
+        self.file_path = self.marionette.execute_script("""
+          Components.utils.import('resource://gre/modules/Services.jsm');
+
+          let file = Services.dirsvc.get('PrfDef', Components.interfaces.nsIFile);
+          file.append('channel-prefs.js');
+
+          return file.path;
+        """)
+
+    def set_channel(self, channel):
+        """Set default update channel.
+
+        :param channel: New default update channel
+        """
+        with open(self.file_path) as f:
+            file_contents = f.read()
+
+        new_content = re.sub(
+            self.REGEX_UPDATE_CHANNEL, r'\g<1>' + channel, file_contents)
+        with open(self.file_path, 'w') as f:
+            f.write(new_content)

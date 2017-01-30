@@ -11,6 +11,7 @@
 #include "nsReadableUtils.h"
 #include "nsCRTGlue.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Unused.h"
 #include "nsTArray.h"
 #include "gtest/gtest.h"
 
@@ -976,6 +977,76 @@ TEST(Strings, todouble)
   test_todouble_helper(NS_LITERAL_STRING(""), 0, false);
   test_todouble_helper(NS_LITERAL_STRING("42foo"), 42, false);
   test_todouble_helper(NS_LITERAL_STRING("foo"), 0, false);
+}
+
+TEST(Strings, Split)
+{
+   nsCString one("one"),
+             two("one;two"),
+             three("one--three"),
+             empty(""),
+             delimStart("-two"),
+             delimEnd("one-");
+
+  size_t counter = 0;
+  for (const nsCSubstring& token : one.Split(',')) {
+    EXPECT_TRUE(token.Equals(NS_LITERAL_CSTRING("one")));
+    counter++;
+  }
+  EXPECT_EQ(counter, (size_t)1);
+
+  counter = 0;
+  for (const nsCSubstring& token : two.Split(';')) {
+    if (counter == 0) {
+      EXPECT_TRUE(token.Equals(NS_LITERAL_CSTRING("one")));
+    } else if (counter == 1) {
+      EXPECT_TRUE(token.Equals(NS_LITERAL_CSTRING("two")));
+    }
+    counter++;
+  }
+  EXPECT_EQ(counter, (size_t)2);
+
+  counter = 0;
+  for (const nsCSubstring& token : three.Split('-')) {
+    if (counter == 0) {
+      EXPECT_TRUE(token.Equals(NS_LITERAL_CSTRING("one")));
+    } else if (counter == 1) {
+      EXPECT_TRUE(token.Equals(NS_LITERAL_CSTRING("")));
+    } else if (counter == 2) {
+      EXPECT_TRUE(token.Equals(NS_LITERAL_CSTRING("three")));
+    }
+    counter++;
+  }
+  EXPECT_EQ(counter, (size_t)3);
+
+  counter = 0;
+  for (const nsCSubstring& token : empty.Split(',')) {
+    mozilla::Unused << token;
+    counter++;
+  }
+  EXPECT_EQ(counter, (size_t)0);
+
+  counter = 0;
+  for (const nsCSubstring& token : delimStart.Split('-')) {
+    if (counter == 0) {
+      EXPECT_TRUE(token.Equals(NS_LITERAL_CSTRING("")));
+    } else if (counter == 1) {
+      EXPECT_TRUE(token.Equals(NS_LITERAL_CSTRING("two")));
+    }
+    counter++;
+  }
+  EXPECT_EQ(counter, (size_t)2);
+
+  counter = 0;
+  for (const nsCSubstring& token : delimEnd.Split('-')) {
+    if (counter == 0) {
+      EXPECT_TRUE(token.Equals(NS_LITERAL_CSTRING("one")));
+    } else if (counter == 1) {
+      EXPECT_TRUE(token.Equals(NS_LITERAL_CSTRING("")));
+    }
+    counter++;
+  }
+  EXPECT_EQ(counter, (size_t)2);
 }
 
 } // namespace TestStrings
