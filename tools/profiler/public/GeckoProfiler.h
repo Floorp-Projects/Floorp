@@ -301,6 +301,7 @@ PROFILER_FUNC_VOID(profiler_log(const char *fmt, va_list args))
 #include "nscore.h"
 #include "PseudoStack.h"
 #include "ProfilerBacktrace.h"
+#include "nsIMemoryReporter.h"
 
 // Make sure that we can use std::min here without the Windows headers messing with us.
 #ifdef min
@@ -509,6 +510,21 @@ profiler_get_pseudo_stack(void)
     return nullptr;
   return tlsPseudoStack.get();
 }
+
+class GeckoProfilerReporter final : public nsIMemoryReporter
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  GeckoProfilerReporter() {}
+
+  NS_IMETHOD
+  CollectReports(nsIHandleReportCallback* aHandleReport,
+                 nsISupports* aData, bool aAnonymize) override;
+
+private:
+  ~GeckoProfilerReporter() {}
+};
 
 #endif  // defined(MOZ_GECKO_PROFILER)
 
