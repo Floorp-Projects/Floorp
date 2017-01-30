@@ -4466,7 +4466,8 @@ Zone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                              size_t* typePool,
                              size_t* baselineStubsOptimized,
                              size_t* uniqueIdMap,
-                             size_t* shapeTables)
+                             size_t* shapeTables,
+                             size_t* atomsMarkBitmaps)
 {
     *typePool += types.typeLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
     if (jitZone()) {
@@ -4476,6 +4477,7 @@ Zone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     *uniqueIdMap += uniqueIds_.sizeOfExcludingThis(mallocSizeOf);
     *shapeTables += baseShapes.sizeOfExcludingThis(mallocSizeOf)
                   + initialShapes.sizeOfExcludingThis(mallocSizeOf);
+    *atomsMarkBitmaps += markedAtoms.sizeOfExcludingThis(mallocSizeOf);
 }
 
 TypeZone::TypeZone(Zone* zone)

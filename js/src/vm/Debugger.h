@@ -1445,8 +1445,8 @@ class DebuggerObject : public NativeObject
     bool isGlobal() const;
     bool isScriptedProxy() const;
     bool isPromise() const;
-    JSAtom* name() const;
-    JSAtom* displayName() const;
+    JSAtom* name(JSContext* cx) const;
+    JSAtom* displayName(JSContext* cx) const;
     JS::PromiseState promiseState() const;
     double promiseLifetime() const;
     double promiseTimeToResolution() const;

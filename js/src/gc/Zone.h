@@ -151,7 +151,8 @@ struct Zone : public JS::shadow::Zone,
                                 size_t* typePool,
                                 size_t* baselineStubsOptimized,
                                 size_t* uniqueIdMap,
-                                size_t* shapeTables);
+                                size_t* shapeTables,
+                                size_t* atomsMarkBitmaps);
 
     void resetGCMallocBytes();
     void setGCMaxMallocBytes(size_t value);
@@ -380,6 +381,9 @@ struct Zone : public JS::shadow::Zone,
     // This should be a bool, but Atomic only supports 32-bit and pointer-sized
     // types.
     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> gcMallocGCTriggered;
+
+    // Bitmap of atoms marked by this zone.
+    js::gc::AtomMarkingRuntime::Bitmap markedAtoms;
 
     // Track heap usage under this Zone.
     js::gc::HeapUsage usage;

@@ -408,9 +408,12 @@ ExportFunction(JSContext* cx, HandleValue vfunction, HandleValue vscope, HandleV
             RootedString funName(cx, JS_GetFunctionId(fun));
             if (!funName)
                 funName = JS_AtomizeAndPinString(cx, "");
+            JS_MarkCrossZoneIdValue(cx, StringValue(funName));
 
             if (!JS_StringToId(cx, funName, &id))
                 return false;
+        } else {
+            JS_MarkCrossZoneId(cx, id);
         }
         MOZ_ASSERT(JSID_IS_STRING(id));
 
@@ -473,6 +476,8 @@ CreateObjectIn(JSContext* cx, HandleValue vobj, CreateObjectInOptions& options,
     RootedObject obj(cx);
     {
         JSAutoCompartment ac(cx, scope);
+        JS_MarkCrossZoneId(cx, options.defineAs);
+
         obj = JS_NewPlainObject(cx);
         if (!obj)
             return false;

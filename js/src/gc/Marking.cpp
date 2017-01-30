@@ -928,6 +928,13 @@ CheckTraversedEdge(S source, T* target)
     MOZ_ASSERT_IF(!ThingIsPermanentAtomOrWellKnownSymbol(target),
                   target->zone()->isAtomsZone() || target->zone() == source->zone());
 
+    // If we are marking an atom, that atom must be marked in the source zone's
+    // atom bitmap.
+    MOZ_ASSERT_IF(!ThingIsPermanentAtomOrWellKnownSymbol(target) &&
+                  target->zone()->isAtomsZone() && !source->zone()->isAtomsZone(),
+                  target->runtimeFromAnyThread()->gc.atomMarking
+                      .atomIsMarked(source->zone(), reinterpret_cast<TenuredCell*>(target)));
+
     // Atoms and Symbols do not have access to a compartment pointer, or we'd need
     // to adjust the subsequent check to catch that case.
     MOZ_ASSERT_IF(ThingIsPermanentAtomOrWellKnownSymbol(target), !target->maybeCompartment());
@@ -2354,8 +2361,8 @@ js::gc::StoreBuffer::traceWholeCells(TenuringTracer& mover)
     for (ArenaCellSet* cells = bufferWholeCell; cells; cells = cells->next) {
         Arena* arena = cells->arena;
 
-        MOZ_ASSERT(arena->bufferedCells == cells);
-        arena->bufferedCells = &ArenaCellSet::Empty;
+        MOZ_ASSERT(arena->bufferedCells() == cells);
+        arena->bufferedCells() = &ArenaCellSet::Empty;
 
         JS::TraceKind kind = MapAllocToTraceKind(arena->getAllocKind());
         switch (kind) {
