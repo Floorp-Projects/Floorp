@@ -1224,6 +1224,7 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
   , mScanCode(0)
   , mIsExtended(false)
   , mIsDeadKey(false)
+  , mCharMessageHasGone(false)
   , mFakeCharMsgs(aFakeCharMsgs && aFakeCharMsgs->Length() ?
                     aFakeCharMsgs : nullptr)
 {
@@ -1261,7 +1262,8 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
      "mCommittedCharsAndModifiers=%s, mInputtingStringAndModifiers=%s, "
      "mShiftedString=%s, mUnshiftedString=%s, mShiftedLatinChar=%s, "
      "mUnshiftedLatinChar=%s, mScanCode=0x%04X, mIsExtended=%s, "
-     "mIsDeadKey=%s, mIsPrintableKey=%s, mIsOverridingKeyboardLayout=%s",
+     "mIsDeadKey=%s, mIsPrintableKey=%s, mCharMessageHasGone=%s, "
+     "mIsOverridingKeyboardLayout=%s",
      this, mKeyboardLayout, mFocusedWndBeforeDispatch,
      GetDOMKeyCodeName(mDOMKeyCode).get(), ToString(mKeyNameIndex).get(),
      ToString(mCodeNameIndex).get(),
@@ -1274,7 +1276,8 @@ NativeKey::NativeKey(nsWindowBase* aWidget,
      GetCharacterCodeName(mShiftedLatinChar).get(),
      GetCharacterCodeName(mUnshiftedLatinChar).get(),
      mScanCode, GetBoolName(mIsExtended), GetBoolName(mIsDeadKey),
-     GetBoolName(mIsPrintableKey), GetBoolName(mIsOverridingKeyboardLayout)));
+     GetBoolName(mIsPrintableKey), GetBoolName(mCharMessageHasGone),
+     GetBoolName(mIsOverridingKeyboardLayout)));
 }
 
 void
@@ -1888,6 +1891,13 @@ NativeKey::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
 
   switch (aKeyEvent.mMessage) {
     case eKeyDown:
+      // If it was followed by a char message but it was consumed by somebody,
+      // we should mark it as consumed because somebody must have handled it
+      // and we should prevent to do "double action" for the key operation.
+      if (mCharMessageHasGone) {
+        aKeyEvent.PreventDefaultBeforeDispatch();
+      }
+      MOZ_FALLTHROUGH;
     case eKeyDownOnPlugin:
       aKeyEvent.mKeyCode = mDOMKeyCode;
       // Unique id for this keydown event and its associated keypress.
@@ -1907,6 +1917,9 @@ NativeKey::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
       }
       break;
     case eKeyPress:
+      MOZ_ASSERT(!mCharMessageHasGone,
+                 "If following char message was consumed by somebody, "
+                 "keydown event should be consumed above");
       aKeyEvent.mUniqueId = sUniqueKeyEventId;
       break;
     default:
@@ -2427,6 +2440,10 @@ NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const
     return true;
   }
 
+  MOZ_ASSERT(!mCharMessageHasGone,
+             "If following char message was consumed by somebody, "
+             "keydown event should have been consumed before dispatch");
+
   // If mCommittedCharsAndModifiers was initialized with following char
   // messages, we should dispatch keypress events with its information.
   if (IsFollowedByPrintableCharOrSysCharMessage()) {
@@ -2907,6 +2924,22 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg)
           doCrash = false;
         }
       }
+      // If we've already removed some WM_NULL messages from the queue and
+      // the found message has already gone from the queue, let's treat the key
+      // as inputting no characters and already consumed.
+      else if (i > 0) {
+        MOZ_LOG(sNativeKeyLogger, LogLevel::Warning,
+          ("%p   NativeKey::GetFollowingCharMessage(), WARNING, failed to "
+           "remove a char message, but removed %d WM_NULL messages",
+           this, i));
+        // If the key is a printable key or a control key but tried to input
+        // a character, mark mCharMessageHasGone true for handling the keydown
+        // event as inputting empty string.
+        MOZ_ASSERT(!mCharMessageHasGone);
+        mFollowingCharMsgs.Clear();
+        mCharMessageHasGone = true;
+        return false;
+      }
       MOZ_LOG(sNativeKeyLogger, LogLevel::Error,
         ("%p   NativeKey::GetFollowingCharMessage(), FAILED, lost target "
          "message to remove, nextKeyMsg=%s",
@@ -3109,7 +3142,8 @@ NativeKey::ComputeInputtingStringWithKeyboardLayout()
 {
   KeyboardLayout* keyboardLayout = KeyboardLayout::GetInstance();
 
-  if (KeyboardLayout::IsPrintableCharKey(mVirtualKeyCode)) {
+  if (KeyboardLayout::IsPrintableCharKey(mVirtualKeyCode) ||
+      mCharMessageHasGone) {
     mInputtingStringAndModifiers = mCommittedCharsAndModifiers;
   } else {
     mInputtingStringAndModifiers.Clear();
@@ -3609,12 +3643,20 @@ KeyboardLayout::InitNativeKey(NativeKey& aNativeKey,
   // information from keyboard layout because respecting WM_(SYS)CHAR messages
   // guarantees that we can always input characters which is expected by
   // the user even if the user uses odd keyboard layout.
-  if (aNativeKey.IsFollowedByPrintableCharOrSysCharMessage()) {
+  // Or, when it was followed by non-dead char message for a printable character
+  // but it's gone at removing the message from the queue, let's treat it
+  // as a key inputting empty string.
+  if (aNativeKey.IsFollowedByPrintableCharOrSysCharMessage() ||
+      aNativeKey.mCharMessageHasGone) {
     MOZ_ASSERT(!aNativeKey.IsCharMessage(aNativeKey.mMsg));
-    // Initialize mCommittedCharsAndModifiers with following char messages.
-    aNativeKey.
-      InitCommittedCharsAndModifiersWithFollowingCharMessages(aModKeyState);
-    MOZ_ASSERT(!aNativeKey.mCommittedCharsAndModifiers.IsEmpty());
+    if (aNativeKey.IsFollowedByPrintableCharOrSysCharMessage()) {
+      // Initialize mCommittedCharsAndModifiers with following char messages.
+      aNativeKey.
+        InitCommittedCharsAndModifiersWithFollowingCharMessages(aModKeyState);
+      MOZ_ASSERT(!aNativeKey.mCommittedCharsAndModifiers.IsEmpty());
+    } else {
+      aNativeKey.mCommittedCharsAndModifiers.Clear();
+    }
     aNativeKey.mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
 
     // If it's not in dead key sequence, we don't need to do anymore here.
