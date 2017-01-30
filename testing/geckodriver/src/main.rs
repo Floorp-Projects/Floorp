@@ -14,7 +14,6 @@ extern crate slog_atomic;
 extern crate slog_stdlog;
 extern crate slog_stream;
 extern crate zip;
-#[macro_use]
 extern crate webdriver;
 
 #[macro_use]
