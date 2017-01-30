@@ -179,6 +179,7 @@ enum class CacheKind : uint8_t
     _(StoreUnboxedProperty)               \
     _(CallNativeSetter)                   \
     _(CallScriptedSetter)                 \
+    _(CallSetArrayLength)                 \
                                           \
     /* The *Result ops load a value into the cache's result register. */ \
     _(LoadFixedSlotResult)                \
@@ -633,6 +634,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         addStubField(uintptr_t(setter), StubField::Type::JSObject);
         writeOperandId(rhs);
     }
+    void callSetArrayLength(ObjOperandId obj, bool strict, ValOperandId rhs) {
+        writeOpWithOperandId(CacheOp::CallSetArrayLength, obj);
+        buffer_.writeByte(uint32_t(strict));
+        writeOperandId(rhs);
+    }
 
     void loadUndefinedResult() {
         writeOp(CacheOp::LoadUndefinedResult);
@@ -958,6 +964,8 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator
                                       ValOperandId rhsId);
     bool tryAttachSetter(HandleObject obj, ObjOperandId objId, HandleId id,
                          ValOperandId rhsId);
+    bool tryAttachSetArrayLength(HandleObject obj, ObjOperandId objId, HandleId id,
+                                 ValOperandId rhsId);
 
   public:
     SetPropIRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind,
