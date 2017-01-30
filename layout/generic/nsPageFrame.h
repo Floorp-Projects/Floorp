@@ -32,13 +32,18 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
+  mozilla::WritingMode GetWritingMode() const override
+  {
+    return nsFrame::GetWritingModeDeferringToRootElem();
+  }
+
   /**
    * Get the "type" of the frame
    *
    * @see nsGkAtoms::pageFrame
    */
   virtual nsIAtom* GetType() const override;
-  
+
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult  GetFrameName(nsAString& aResult) const override;
 #endif
