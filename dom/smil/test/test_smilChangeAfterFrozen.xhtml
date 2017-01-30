@@ -164,7 +164,7 @@ function testBaseValueChange()
   is(gCircle.cx.animVal.value, 70,
      "Checking animated cx after anim ends & after changing base val");
 
-  anim.parentNode.removeChild(anim); // clean up
+  anim.remove(); // clean up
 }
 
 function testCurrentColorChange()

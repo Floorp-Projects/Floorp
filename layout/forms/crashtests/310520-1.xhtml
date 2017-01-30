@@ -6,7 +6,7 @@
 function init()
 {
   var select = document.getElementsByTagName("select")[0];
-  select.parentNode.removeChild(select);
+  select.remove();
 }
 
 window.addEventListener("load", init);

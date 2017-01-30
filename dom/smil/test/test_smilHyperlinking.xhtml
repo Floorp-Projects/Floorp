@@ -41,7 +41,7 @@ function continueTest()
 
   window.location.hash = "";
   if (gAnim) {
-    gAnim.parentNode.removeChild(gAnim);
+    gAnim.remove();
   }
   gAnim = createAnim();
   gSvg.setCurrentTime(0);

@@ -35,7 +35,7 @@ var tests = [
 {
   pre: template => template.insertBefore(document.createElement("queryset"), template.lastChild),
   error: "Error parsing template: unexpected <queryset> element",
-  post: queryset => queryset.parentNode.removeChild(queryset)
+  post: queryset => queryset.remove()
 },
 
 // no member variable found
@@ -76,7 +76,7 @@ var tests = [
                             rule.appendChild(where);
                             return where; },
   error: "Error parsing template: <where> element is missing a subject attribute",
-  post: function(where) { where.parentNode.removeChild(where); }
+  post: function(where) { where.remove(); }
 },
 
 // where condition missing a rel
@@ -89,7 +89,7 @@ var tests = [
                             rule.appendChild(where);
                             return where; },
   error: "Error parsing template: <where> element is missing a rel attribute",
-  post: function(where) { where.parentNode.removeChild(where); }
+  post: function(where) { where.remove(); }
 },
 
 // where condition missing a value
@@ -102,7 +102,7 @@ var tests = [
                             rule.appendChild(where);
                             return where; },
   error: "Error parsing template: <where> element is missing a value attribute",
-  post: function(where) { where.parentNode.removeChild(where); }
+  post: function(where) { where.remove(); }
 },
 
 // where condition missing a variable
@@ -115,7 +115,7 @@ var tests = [
                             rule.appendChild(where);
                             return where; },
   error: "Error parsing template: <where> element must have at least one variable as a subject or value",
-  post: function(where) { where.parentNode.removeChild(where); }
+  post: function(where) { where.remove(); }
 },
 
 // bad member container
@@ -208,7 +208,7 @@ var tests = [
                             query.appendChild(assign);
                             return assign; },
   error: "Error parsing template: XPath expression in <assign> could not be parsed",
-  post: function(assign) { assign.parentNode.removeChild(assign); }
+  post: function(assign) { assign.remove(); }
 },
 
 // could not parse xml binding expression

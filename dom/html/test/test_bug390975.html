@@ -43,16 +43,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=390975
 var form = $("form1");
 is(form.elements.length, 5, "Unexpected elements length");
 
-$("table1").parentNode.removeChild($("table1"));
+$("table1").remove();
 is(form.elements.length, 3, "Should have lost control outside table");
 
-form.parentNode.removeChild(form);
+form.remove();
 is(form.elements.length, 0, "Should have lost control outside form");
 
 form = $("form2");
 is(form.elements.length, 5, "Unexpected elements length");
 
-$("row2").parentNode.removeChild($("row2"));
+$("row2").remove();
 is(form.elements.length, 2, "Should have lost controls inside table row");
 </script>
 </pre>

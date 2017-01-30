@@ -114,7 +114,7 @@ function change6() {
   addFullscreenChangeContinuation("exit", change7);
   var element = e('fse-inner');
   is(document.fullscreenElement, element, "FSE should be e('fse-inner')");
-  element.parentNode.removeChild(element);
+  element.remove();
 }
 
 function change7() {

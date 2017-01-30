@@ -36,7 +36,6 @@
 #include "nsMemoryReporterManager.h"
 
 #include "platform.h"
-#include "GeckoSampler.h"
 #include "mozilla/TimeStamp.h"
 
 using mozilla::TimeStamp;
@@ -75,71 +74,10 @@ void OS::SleepMicro(int microseconds) {
   usleep(microseconds);
 }
 
-Thread::Thread(const char* name)
-    : stack_size_(0) {
-  set_name(name);
-}
-
-
-Thread::~Thread() {
-}
-
-
-static void SetThreadName(const char* name) {
-  // pthread_setname_np is only available in 10.6 or later, so test
-  // for it at runtime.
-  int (*dynamic_pthread_setname_np)(const char*);
-  *reinterpret_cast<void**>(&dynamic_pthread_setname_np) =
-    dlsym(RTLD_DEFAULT, "pthread_setname_np");
-  if (!dynamic_pthread_setname_np)
-    return;
-
-  // Mac OS X does not expose the length limit of the name, so hardcode it.
-  static const int kMaxNameLength = 63;
-  USE(kMaxNameLength);
-  ASSERT(Thread::kMaxThreadNameLength <= kMaxNameLength);
-  dynamic_pthread_setname_np(name);
-}
-
-
-static void* ThreadEntry(void* arg) {
-  Thread* thread = reinterpret_cast<Thread*>(arg);
-
-  thread->thread_ = pthread_self();
-  SetThreadName(thread->name());
-  ASSERT(thread->thread_ != kNoThread);
-  thread->Run();
-  return NULL;
-}
-
-
-void Thread::set_name(const char* name) {
-  strncpy(name_, name, sizeof(name_));
-  name_[sizeof(name_) - 1] = '\0';
-}
-
-
-void Thread::Start() {
-  pthread_attr_t* attr_ptr = NULL;
-  pthread_attr_t attr;
-  if (stack_size_ > 0) {
-    pthread_attr_init(&attr);
-    pthread_attr_setstacksize(&attr, static_cast<size_t>(stack_size_));
-    attr_ptr = &attr;
-  }
-  pthread_create(&thread_, attr_ptr, ThreadEntry, this);
-  ASSERT(thread_ != kNoThread);
-}
-
-void Thread::Join() {
-  pthread_join(thread_, NULL);
-}
-
 class PlatformData {
  public:
   PlatformData() : profiled_thread_(mach_thread_self())
   {
-    profiled_pthread_ = pthread_from_mach_thread_np(profiled_thread_);
   }
 
   ~PlatformData() {
@@ -148,17 +86,12 @@ class PlatformData {
   }
 
   thread_act_t profiled_thread() { return profiled_thread_; }
-  pthread_t profiled_pthread() { return profiled_pthread_; }
 
  private:
   // Note: for profiled_thread_ Mach primitives are used instead of PThread's
   // because the latter doesn't provide thread manipulation primitives required.
   // For details, consult "Mac OS X Internals" book, Section 7.3.
   thread_act_t profiled_thread_;
-  // we also store the pthread because Mach threads have no concept of stack
-  // and we want to be able to get the stack size when we need to unwind the
-  // stack using frame pointers.
-  pthread_t profiled_pthread_;
 };
 
 /* static */ auto
@@ -173,36 +106,71 @@ Sampler::PlatformDataDestructor::operator()(PlatformData* aData)
   delete aData;
 }
 
-class SamplerThread : public Thread {
- public:
+// SamplerThread objects are used for creating and running threads. When the
+// Start() method is called the new thread starts running the Run() method in
+// the new thread. The SamplerThread object should not be deallocated before
+// the thread has terminated.
+class SamplerThread
+{
+public:
   explicit SamplerThread(double interval)
-      : Thread("SamplerThread")
-      , intervalMicro_(floor(interval * 1000 + 0.5))
+    : mIntervalMicro(floor(interval * 1000 + 0.5))
   {
-    if (intervalMicro_ <= 0) {
-      intervalMicro_ = 1;
+    if (mIntervalMicro <= 0) {
+      mIntervalMicro = 1;
     }
+  }
+
+  static void SetThreadName() {
+    // pthread_setname_np is only available in 10.6 or later, so test
+    // for it at runtime.
+    int (*dynamic_pthread_setname_np)(const char*);
+    *reinterpret_cast<void**>(&dynamic_pthread_setname_np) =
+      dlsym(RTLD_DEFAULT, "pthread_setname_np");
+    if (!dynamic_pthread_setname_np)
+      return;
+
+    dynamic_pthread_setname_np("SamplerThread");
+  }
+
+  static void* ThreadEntry(void* aArg) {
+    SamplerThread* thread = reinterpret_cast<SamplerThread*>(aArg);
+
+    thread->mThread = pthread_self();
+    SetThreadName();
+    ASSERT(thread->mThread != kNoThread);
+    thread->Run();
+    return NULL;
+  }
+
+  void Start() {
+    pthread_attr_t* attr_ptr = NULL;
+    pthread_create(&mThread, attr_ptr, ThreadEntry, this);
+    ASSERT(mThread != kNoThread);
+  }
+
+  void Join() {
+    pthread_join(mThread, NULL);
   }
 
   static void AddActiveSampler(Sampler* sampler) {
     SamplerRegistry::AddActiveSampler(sampler);
-    if (instance_ == NULL) {
-      instance_ = new SamplerThread(sampler->interval());
-      instance_->Start();
+    if (mInstance == NULL) {
+      mInstance = new SamplerThread(sampler->interval());
+      mInstance->Start();
     }
   }
 
   static void RemoveActiveSampler(Sampler* sampler) {
-    instance_->Join();
+    mInstance->Join();
     //XXX: unlike v8 we need to remove the active sampler after doing the Join
     // because we drop the sampler immediately
     SamplerRegistry::RemoveActiveSampler(sampler);
-    delete instance_;
-    instance_ = NULL;
+    delete mInstance;
+    mInstance = NULL;
   }
 
-  // Implement Thread::Run().
-  virtual void Run() {
+  void Run() {
     TimeDuration lastSleepOverhead = 0;
     TimeStamp sampleStart = TimeStamp::Now();
     while (SamplerRegistry::sampler->IsActive()) {
@@ -235,7 +203,7 @@ class SamplerThread : public Thread {
         }
       }
 
-      TimeStamp targetSleepEndTime = sampleStart + TimeDuration::FromMicroseconds(intervalMicro_);
+      TimeStamp targetSleepEndTime = sampleStart + TimeDuration::FromMicroseconds(mIntervalMicro);
       TimeStamp beforeSleep = TimeStamp::Now();
       TimeDuration targetSleepDuration = targetSleepEndTime - beforeSleep;
       double sleepTime = std::max(0.0, (targetSleepDuration - lastSleepOverhead).ToMicroseconds());
@@ -258,7 +226,8 @@ class SamplerThread : public Thread {
     sample->ussMemory = 0;
     sample->rssMemory = 0;
 
-    if (isFirstProfiledThread && Sampler::GetActiveSampler()->ProfileMemory()) {
+    // XXX: this is an off-main-thread use of gSampler
+    if (isFirstProfiledThread && gSampler->ProfileMemory()) {
       sample->rssMemory = nsMemoryReporterManager::ResidentFast();
     }
 
@@ -305,33 +274,19 @@ class SamplerThread : public Thread {
     thread_resume(profiled_thread);
   }
 
-  int intervalMicro_;
-  //RuntimeProfilerRateLimiter rate_limiter_;
+private:
+  pthread_t mThread;
 
-  static SamplerThread* instance_;
+  int mIntervalMicro;
+
+  static SamplerThread* mInstance;
 
   DISALLOW_COPY_AND_ASSIGN(SamplerThread);
 };
 
 #undef REGISTER_FIELD
 
-SamplerThread* SamplerThread::instance_ = NULL;
-
-Sampler::Sampler(double interval, bool profiling, int entrySize)
-    : // isolate_(isolate),
-      interval_(interval),
-      profiling_(profiling),
-      paused_(false),
-      active_(false),
-      entrySize_(entrySize) /*,
-      samples_taken_(0)*/ {
-}
-
-
-Sampler::~Sampler() {
-  ASSERT(!IsActive());
-}
-
+SamplerThread* SamplerThread::mInstance = NULL;
 
 void Sampler::Start() {
   ASSERT(!IsActive());
@@ -339,17 +294,10 @@ void Sampler::Start() {
   SamplerThread::AddActiveSampler(this);
 }
 
-
 void Sampler::Stop() {
   ASSERT(IsActive());
   SetActive(false);
   SamplerThread::RemoveActiveSampler(this);
-}
-
-pthread_t
-Sampler::GetProfiledThread(PlatformData* aData)
-{
-  return aData->profiled_pthread();
 }
 
 /* static */ Thread::tid_t

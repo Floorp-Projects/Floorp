@@ -273,7 +273,7 @@
       this.invoke = function removeMap_invoke()
       {
         this.imageMap = getAccessible(aImageMapID);
-        this.mapNode.parentNode.removeChild(this.mapNode);
+        this.mapNode.remove();
       }
 
       this.finalCheck = function removeMap_finalCheck()

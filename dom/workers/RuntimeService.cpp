@@ -2896,6 +2896,9 @@ WorkerThreadPrimaryRunnable::Run()
 
 #ifdef MOZ_GECKO_PROFILER
       if (stack) {
+        // XXX: this is currently a no-op because control ends up
+        // PseudoStack::flushSamplerOnJSShutdown() which is a no-op for any
+        // thread other than the main thread. See the comment in that function.
         stack->sampleContext(nullptr);
       }
 #endif

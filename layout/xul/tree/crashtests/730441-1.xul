@@ -40,7 +40,7 @@ returns null. Then we have |null->SetAttr()|.
 <script type="text/javascript"><![CDATA[
 function listener() {
   var col2 = document.getElementById("col2");
-  col2.parentNode.removeChild(col2);
+  col2.remove();
 }
 
 function run() {

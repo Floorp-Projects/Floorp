@@ -4,12 +4,12 @@
 
 # handling of out-of-flows when ::first-line happens
 == out-of-flow-1a.html out-of-flow-1a.html
-fails == out-of-flow-1b.html out-of-flow-1b.html
+== out-of-flow-1b.html out-of-flow-1b.html
 == out-of-flow-1c.html out-of-flow-1c.html
-fails == out-of-flow-1d.html out-of-flow-1d.html
+== out-of-flow-1d.html out-of-flow-1d.html
 
 # parent style context correct
-fails == parent-style-1.html parent-style-1.html
+== parent-style-1.html parent-style-1.html
 == parent-style-2.html parent-style-2.html
 == parent-style-3.html parent-style-3.html
 

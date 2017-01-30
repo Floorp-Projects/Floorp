@@ -700,7 +700,7 @@ TextPropertyEditor.prototype = {
       }
     }
 
-    this.element.parentNode.removeChild(this.element);
+    this.element.remove();
     this.ruleEditor.rule.editClosestTextProperty(this.prop, direction);
     this.nameSpan.textProperty = null;
     this.valueSpan.textProperty = null;

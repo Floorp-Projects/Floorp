@@ -100,14 +100,14 @@ function run3() {
 
 function run4() {
   var i = document.getElementById("i");
-  var x = i.parentNode.removeChild(i);
+  i.remove();
   var loadhandler = function() {
     document.getElementById("i").removeEventListener("load", loadhandler, true);
     setTimeout(run5, 0);
   };
-  x.addEventListener("load", loadhandler, true);
+  i.addEventListener("load", loadhandler, true);
   document.documentElement.getBoundingClientRect();
-  document.documentElement.appendChild(x);
+  document.documentElement.appendChild(i);
   gWbp = window.frames[1].QueryInterface(Components.interfaces.nsIInterfaceRequestor)
              .getInterface(Components.interfaces.nsIWebBrowserPrint);
   ok(!gWbp.doingPrintPreview, "Should not be doing print preview anymore2");

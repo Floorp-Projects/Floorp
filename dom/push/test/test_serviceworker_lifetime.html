@@ -120,7 +120,7 @@
   }
 
   function closeIframe(ctx) {
-    ctx.iframe.parentNode.removeChild(ctx.iframe);
+    ctx.iframe.remove();
     return new Promise(function(res, rej) {
       // XXXcatalinb: give the worker more time to "notice" it stopped
       // controlling documents
