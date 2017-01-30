@@ -2,6 +2,11 @@
 Mozilla ESLint Plugin
 =====================
 
+avoid-removeChild
+-----------------
+
+Rejects using element.parentNode.removeChild(element) when element.remove()
+can be used instead.
 
 balanced-listeners
 ------------------
