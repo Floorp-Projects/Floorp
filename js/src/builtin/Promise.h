@@ -71,7 +71,7 @@ class PromiseObject : public NativeObject
     static MOZ_MUST_USE bool reject(JSContext* cx, Handle<PromiseObject*> promise,
                                     HandleValue rejectionValue);
 
-    void onSettled(JSContext* cx);
+    static void onSettled(JSContext* cx, Handle<PromiseObject*> promise);
 
     double allocationTime() { return getFixedSlot(PromiseSlot_AllocationTime).toNumber(); }
     double resolutionTime() { return getFixedSlot(PromiseSlot_ResolutionTime).toNumber(); }
