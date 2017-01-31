@@ -348,8 +348,6 @@ struct GfxInfoFeatureStatus
  */
 nested(upto inside_cpow) sync protocol PContent
 {
-    parent spawns PPluginModule;
-
     manages PBlob;
     manages PBrowser;
     manages PContentPermissionRequest;
@@ -684,20 +682,21 @@ parent:
     async CreateGMPService();
 
     /**
-     * This call connects the content process to a plugin process. While this
-     * call runs, a new PluginModuleParent will be created in the ContentChild
-     * via bridging. The corresponding PluginModuleChild will live in the plugin
-     * process.
+     * This call connects the content process to a plugin process. This call
+     * returns an endpoint for a new PluginModuleParent. The corresponding
+     * PluginModuleChild will be started up in the plugin process.
      */
-    sync LoadPlugin(uint32_t aPluginId) returns (nsresult aResult, uint32_t aRunID);
+    sync LoadPlugin(uint32_t aPluginId)
+        returns (nsresult aResult, uint32_t aRunID, Endpoint<PPluginModuleParent> aEndpoint);
 
     /**
      * This call is used by asynchronous plugin instantiation to notify the
      * content parent that it is now safe to initiate the plugin bridge for
-     * the specified plugin id. When this call returns, the requested bridge
-     * connection has been made.
+     * the specified plugin id. The endpoint for the content process part of the
+     * bridge is returned.
      */
-    sync ConnectPluginBridge(uint32_t aPluginId) returns (nsresult rv);
+    sync ConnectPluginBridge(uint32_t aPluginId)
+        returns (nsresult rv, Endpoint<PPluginModuleParent> aEndpoint);
 
     /**
      * Return the current blocklist state for a particular plugin.

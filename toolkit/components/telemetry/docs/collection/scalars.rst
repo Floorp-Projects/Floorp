@@ -99,6 +99,13 @@ Required Fields
 - ``expires``: The version number in which the scalar expires, e.g. "30"; a version number of type "N" and "N.0" is automatically converted to "N.0a1" in order to expire the scalar also in the development channels. A telemetry probe acting on an expired scalar will print a warning into the browser console. For scalars that never expire the value ``never`` can be used.
 - ``kind``: A string representing the scalar type. Allowed values are ``uint``, ``string`` and ``boolean``.
 - ``notification_emails``: A list of email addresses to notify with alerts of expiring probes. More importantly, these are used by the data steward to verify that the probe is still useful.
+- ``record_in_processes``: A list of processes the scalar is allowed to record in. Currently supported values are:
+
+  - ``main``;
+  - ``content``;
+  - ``gpu``;
+  - ``all_child`` (record in all the child processes);
+  - ``all`` (record in all the processes).
 
 Optional Fields
 ---------------
@@ -106,13 +113,6 @@ Optional Fields
 - ``cpp_guard``: A string that gets inserted as an ``#ifdef`` directive around the automatically generated C++ declaration. This is typically used for platform-specific scalars, e.g. ``ANDROID``.
 - ``release_channel_collection``: This can be either ``opt-in`` (default) or ``opt-out``. With the former the scalar is submitted by default on pre-release channels; on the release channel only if the user opted into additional data collection. With the latter the scalar is submitted by default on release and pre-release channels, unless the user opted out.
 - ``keyed``: A boolean that determines whether this is a keyed scalar. It defaults to ``False``.
-- ``record_in_processes``: A list of processes the scalar is allowed to record in. Currently supported values are:
-
-  - ``main`` (the default value);
-  - ``content``;
-  - ``gpu``;
-  - ``all_child`` (record in all the child processes);
-  - ``all`` (record in all the processes).
 
 String type restrictions
 ------------------------
