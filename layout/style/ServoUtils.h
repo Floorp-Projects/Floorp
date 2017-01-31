@@ -79,4 +79,14 @@
 #define MOZ_STYLO_FORWARD(method_, args_) \
   MOZ_STYLO_FORWARD_CONCRETE(method_, args_, args_)
 
+// Warning in MOZ_STYLO builds and non-fatally assert in regular builds.
+#define NS_ASSERTION_STYLO_WARNING_EXPAND(X) X
+#ifdef MOZ_STYLO
+#define NS_ASSERTION_STYLO_WARNING(...) \
+  NS_ASSERTION_STYLO_WARNING_EXPAND(NS_WARNING_ASSERTION(__VA_ARGS__))
+#else
+#define NS_ASSERTION_STYLO_WARNING(...) \
+  NS_ASSERTION_STYLO_WARNING_EXPAND(NS_ASSERTION(__VA_ARGS__))
+#endif
+
 #endif // mozilla_ServoUtils_h
