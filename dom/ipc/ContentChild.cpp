@@ -3061,7 +3061,7 @@ ContentChild::RecvDispatchLocalStorageChange(const nsString& aDocumentURI,
 {
   Storage::DispatchStorageEvent(Storage::LocalStorage,
                                 aDocumentURI, aKey, aOldValue, aNewValue,
-                                aPrincipal, aIsPrivate, nullptr);
+                                aPrincipal, aIsPrivate, nullptr, true);
   return IPC_OK();
 }
 
