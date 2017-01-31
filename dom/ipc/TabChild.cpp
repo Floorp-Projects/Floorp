@@ -2616,6 +2616,7 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
                                                 &mTextureFactoryIdentifier);
       ImageBridgeChild::IdentifyCompositorTextureHost(mTextureFactoryIdentifier);
       gfx::VRManagerChild::IdentifyTextureHost(mTextureFactoryIdentifier);
+      InitAPZState();
     }
 
     if (lf) {
