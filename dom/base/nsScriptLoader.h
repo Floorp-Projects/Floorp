@@ -305,7 +305,7 @@ public:
   }
 
   /**
-   * Process a script element. This will include both loading the 
+   * Process a script element. This will include both loading the
    * source of the element if it is not inline and evaluating
    * the script itself.
    *
@@ -338,7 +338,7 @@ public:
 
   /**
    * Whether the loader is enabled or not.
-   * When disabled, processing of new script elements is disabled. 
+   * When disabled, processing of new script elements is disabled.
    * Any call to ProcessScriptElement() will return false. Note that
    * this DOES NOT disable currently loading or executing scripts.
    */
