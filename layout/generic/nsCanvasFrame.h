@@ -44,16 +44,9 @@ public:
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
-  virtual mozilla::WritingMode GetWritingMode() const override
+  mozilla::WritingMode GetWritingMode() const override
   {
-    nsIContent* rootElem = GetContent();
-    if (rootElem) {
-      nsIFrame* rootElemFrame = rootElem->GetPrimaryFrame();
-      if (rootElemFrame) {
-        return rootElemFrame->GetWritingMode();
-      }
-    }
-    return nsIFrame::GetWritingMode();
+    return nsFrame::GetWritingModeDeferringToRootElem();
   }
 
 #ifdef DEBUG
