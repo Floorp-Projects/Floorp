@@ -119,7 +119,7 @@ VersionCheck(XDRState<mode>* xdr)
 
 template<XDRMode mode>
 bool
-XDRState<mode>::codeFunction(MutableHandleFunction funp)
+XDRState<mode>::codeFunction(MutableHandleFunction funp, HandleScriptSource sourceObject)
 {
     TraceLoggerThread* logger = nullptr;
     if (cx()->isJSContext())
@@ -131,19 +131,23 @@ XDRState<mode>::codeFunction(MutableHandleFunction funp)
     AutoTraceLog tl(logger, event);
 
     RootedScope scope(cx(), &cx()->global()->emptyGlobalScope());
-    if (mode == XDR_DECODE)
+    if (mode == XDR_DECODE) {
+        MOZ_ASSERT(!sourceObject);
         funp.set(nullptr);
-    else if (getTreeKey(funp) != AutoXDRTree::noKey)
+    } else if (getTreeKey(funp) != AutoXDRTree::noKey) {
+        MOZ_ASSERT(sourceObject);
         scope = funp->nonLazyScript()->enclosingScope();
-    else
+    } else {
+        MOZ_ASSERT(!sourceObject);
         MOZ_ASSERT(funp->nonLazyScript()->enclosingScope()->is<GlobalScope>());
+    }
 
     if (!VersionCheck(this)) {
         postProcessContextErrors(cx());
         return false;
     }
 
-    if (!XDRInterpretedFunction(this, scope, nullptr, funp)) {
+    if (!XDRInterpretedFunction(this, scope, sourceObject, funp)) {
         postProcessContextErrors(cx());
         funp.set(nullptr);
         return false;
