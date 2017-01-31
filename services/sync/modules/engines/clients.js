@@ -258,12 +258,6 @@ ClientEngine.prototype = {
     return true;
   },
 
-  _removeClientCommands(clientId) {
-    const allCommands = this._readCommands();
-    delete allCommands[clientId];
-    this._saveCommands(allCommands);
-  },
-
   _syncStartup: function _syncStartup() {
     // Reupload new client record periodically.
     if (Date.now() / 1000 - this.lastRecordUpload > CLIENTS_TTL_REFRESH) {
@@ -673,8 +667,6 @@ ClientEngine.prototype = {
   _removeRemoteClient(id) {
     delete this._store._remoteClients[id];
     this._tracker.removeChangedID(id);
-    this._removeClientCommands(id);
-    this._modified.delete(id);
   },
 };
 
