@@ -136,7 +136,7 @@ function* tests() {
   sendMouseEvent("mousemove", label);
   sendMouseEvent("mousedown", label);
   yield undefined;
-  label.parentNode.removeChild(label);
+  label.remove();
   yield undefined;
   compareSnapshots_(normalButtonCanvas, currentSnapshot, true, "Removing the label should have unpressed the button.");
   sendMouseEvent("mouseup", label);

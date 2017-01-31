@@ -66,4 +66,4 @@ skip-if(stylo) load 1140216.html # bug 1323693
 asserts-if(stylo,11) load 1182414.html # bug 1324687
 load 1212688.html
 load 1228670.xhtml
-asserts-if(stylo,5) load 1279354.html # bug 1324671
+asserts-if(stylo,4-5) load 1279354.html # bug 1324671

@@ -1780,11 +1780,9 @@ private:
          !mJwk.mD.WasPassed())) {
       // Public key import
       if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
-        pubKey = UniqueSECKEYPublicKey(
-          CryptoKey::PublicKeyFromSpki(mKeyData, locker));
+        pubKey = CryptoKey::PublicKeyFromSpki(mKeyData, locker);
       } else {
-        pubKey = UniqueSECKEYPublicKey(
-          CryptoKey::PublicKeyFromJwk(mJwk, locker));
+        pubKey = CryptoKey::PublicKeyFromJwk(mJwk, locker);
       }
 
       if (!pubKey) {
@@ -1801,11 +1799,9 @@ private:
          mJwk.mD.WasPassed())) {
       // Private key import
       if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_PKCS8)) {
-        privKey = UniqueSECKEYPrivateKey(
-          CryptoKey::PrivateKeyFromPkcs8(mKeyData, locker));
+        privKey = CryptoKey::PrivateKeyFromPkcs8(mKeyData, locker);
       } else {
-        privKey = UniqueSECKEYPrivateKey(
-          CryptoKey::PrivateKeyFromJwk(mJwk, locker));
+        privKey = CryptoKey::PrivateKeyFromJwk(mJwk, locker);
       }
 
       if (!privKey) {
@@ -1929,8 +1925,7 @@ private:
     nsNSSShutDownPreventionLock locker;
     if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK) && mJwk.mD.WasPassed()) {
       // Private key import
-      privKey = UniqueSECKEYPrivateKey(
-        CryptoKey::PrivateKeyFromJwk(mJwk, locker));
+      privKey = CryptoKey::PrivateKeyFromJwk(mJwk, locker);
       if (!privKey) {
         return NS_ERROR_DOM_DATA_ERR;
       }
@@ -1946,14 +1941,11 @@ private:
                 !mJwk.mD.WasPassed())) {
       // Public key import
       if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
-        pubKey = UniqueSECKEYPublicKey(
-          CryptoKey::PublicECKeyFromRaw(mKeyData, mNamedCurve, locker));
+        pubKey = CryptoKey::PublicECKeyFromRaw(mKeyData, mNamedCurve, locker);
       } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
-        pubKey = UniqueSECKEYPublicKey(
-          CryptoKey::PublicKeyFromSpki(mKeyData, locker));
+        pubKey = CryptoKey::PublicKeyFromSpki(mKeyData, locker);
       } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
-        pubKey = UniqueSECKEYPublicKey(
-          CryptoKey::PublicKeyFromJwk(mJwk, locker));
+        pubKey = CryptoKey::PublicKeyFromJwk(mJwk, locker);
       } else {
         MOZ_ASSERT(false);
       }
@@ -2087,11 +2079,10 @@ private:
         mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
       // Public key import
       if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW)) {
-        pubKey = UniqueSECKEYPublicKey(
-          CryptoKey::PublicDhKeyFromRaw(mKeyData, mPrime, mGenerator, locker));
+        pubKey = CryptoKey::PublicDhKeyFromRaw(mKeyData, mPrime, mGenerator,
+                                               locker);
       } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
-        pubKey = UniqueSECKEYPublicKey(
-          CryptoKey::PublicKeyFromSpki(mKeyData, locker));
+        pubKey = CryptoKey::PublicKeyFromSpki(mKeyData, locker);
       } else {
         MOZ_ASSERT(false);
       }
@@ -3025,7 +3016,7 @@ public:
     }
 
     CryptoKey* publicKey = params.mPublic;
-    mPubKey = UniqueSECKEYPublicKey(publicKey->GetPublicKey());
+    mPubKey = publicKey->GetPublicKey();
     if (!mPubKey) {
       mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
       return;
@@ -3125,7 +3116,7 @@ public:
     }
 
     CryptoKey* publicKey = params.mPublic;
-    mPubKey = UniqueSECKEYPublicKey(publicKey->GetPublicKey());
+    mPubKey = publicKey->GetPublicKey();
     if (!mPubKey) {
       mEarlyRv = NS_ERROR_DOM_INVALID_ACCESS_ERR;
       return;

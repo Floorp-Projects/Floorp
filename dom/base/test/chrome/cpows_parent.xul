@@ -182,7 +182,7 @@
 
     function recvDoneMessage(message) {
       if (test_state == "remote") {
-        test_node.parentNode.removeChild(test_node);
+        test_node.remove();
         run_tests("inprocess");
         return;
       }

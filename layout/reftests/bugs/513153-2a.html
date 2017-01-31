@@ -9,7 +9,7 @@
     function boom()
     {
       var toRemove = document.getElementById("toremove");
-      toRemove.parentNode.removeChild(toRemove);
+      toRemove.remove();
       document.documentElement.className = "";
     }
     window.addEventListener("MozReftestInvalidate", boom);

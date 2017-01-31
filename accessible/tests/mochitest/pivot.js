@@ -476,7 +476,7 @@ function removeVCPositionInvoker(aDocAcc, aPosNode)
   this.invoke = function removeVCPositionInvoker_invoke()
   {
     aDocAcc.virtualCursor.position = this.accessible;
-    aPosNode.parentNode.removeChild(aPosNode);
+    aPosNode.remove();
   };
 
   this.getID = function removeVCPositionInvoker_getID()
@@ -523,7 +523,7 @@ function removeVCRootInvoker(aRootNode)
   this.invoke = function removeVCRootInvoker_invoke()
   {
     this.pivot.position = this.pivot.root.firstChild;
-    aRootNode.parentNode.removeChild(aRootNode);
+    aRootNode.remove();
   };
 
   this.getID = function removeVCRootInvoker_getID()

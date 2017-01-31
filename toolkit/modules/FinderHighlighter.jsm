@@ -119,7 +119,7 @@ function mockAnonymousContentNode(domNode) {
     },
     remove() {
       try {
-        domNode.parentNode.removeChild(domNode);
+        domNode.remove();
       } catch (ex) {}
     },
     setAnimationForElement(id, keyframes, duration) {

@@ -76,11 +76,11 @@ fails == flexbox-basic-video-vert-001.xhtml flexbox-basic-video-vert-001.xhtml
 
 # Tests for "page-break-before" / "page-break-after" on a flex item
 == flexbox-break-request-horiz-001a.html flexbox-break-request-horiz-001a.html
-fails == flexbox-break-request-horiz-001b.html flexbox-break-request-horiz-001b.html
+== flexbox-break-request-horiz-001b.html flexbox-break-request-horiz-001b.html
 == flexbox-break-request-horiz-002a.html flexbox-break-request-horiz-002a.html
 == flexbox-break-request-horiz-002b.html flexbox-break-request-horiz-002b.html
 == flexbox-break-request-vert-001a.html flexbox-break-request-vert-001a.html
-fails == flexbox-break-request-vert-001b.html flexbox-break-request-vert-001b.html
+== flexbox-break-request-vert-001b.html flexbox-break-request-vert-001b.html
 == flexbox-break-request-vert-002a.html flexbox-break-request-vert-002a.html
 == flexbox-break-request-vert-002b.html flexbox-break-request-vert-002b.html
 

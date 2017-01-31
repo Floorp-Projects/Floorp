@@ -356,7 +356,7 @@
                                    width, height, bgcolor);
               } catch (ex) { }
             } else if (canvas) {
-              canvas.parentNode.removeChild(canvas);
+              canvas.remove();
               this._blockingCanvas = null;
               let content = this.firstChild;
               if (content)

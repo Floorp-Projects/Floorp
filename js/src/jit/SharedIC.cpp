@@ -354,22 +354,6 @@ ICStub::trace(JSTracer* trc)
         TraceEdge(trc, &constantStub->value(), "baseline-getintrinsic-constant-value");
         break;
       }
-      case ICStub::SetProp_NativeAdd: {
-        ICSetProp_NativeAdd* propStub = toSetProp_NativeAdd();
-        TraceEdge(trc, &propStub->group(), "baseline-setpropnativeadd-stub-group");
-        TraceEdge(trc, &propStub->newShape(), "baseline-setpropnativeadd-stub-newshape");
-        TraceNullableEdge(trc, &propStub->newGroup(), "baseline-setpropnativeadd-stub-new-group");
-        JS_STATIC_ASSERT(ICSetProp_NativeAdd::MAX_PROTO_CHAIN_DEPTH == 4);
-        switch (propStub->protoChainDepth()) {
-          case 0: propStub->toImpl<0>()->traceShapes(trc); break;
-          case 1: propStub->toImpl<1>()->traceShapes(trc); break;
-          case 2: propStub->toImpl<2>()->traceShapes(trc); break;
-          case 3: propStub->toImpl<3>()->traceShapes(trc); break;
-          case 4: propStub->toImpl<4>()->traceShapes(trc); break;
-          default: MOZ_CRASH("Invalid proto stub.");
-        }
-        break;
-      }
       case ICStub::InstanceOf_Function: {
         ICInstanceOf_Function* instanceofStub = toInstanceOf_Function();
         TraceEdge(trc, &instanceofStub->shape(), "baseline-instanceof-fun-shape");

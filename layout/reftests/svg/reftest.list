@@ -114,7 +114,7 @@ fuzzy-if(d2d&&layersGPUAccelerated,3,1200) == dynamic-rect-02.svg dynamic-rect-0
 == dynamic-text-01.svg dynamic-text-01-ref.svg
 fuzzy-if(d2d&&layersGPUAccelerated,3,12739) == dynamic-text-02.svg dynamic-text-02-ref.svg # bug 776038 for Win7, Win8
 fuzzy-if(d2d&&layersGPUAccelerated,2,10539) == dynamic-text-03.svg dynamic-text-03-ref.svg # bug 776038 for Win7
-random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),47,89) == dynamic-text-04.svg dynamic-text-04-ref.svg # bug 421587 for WinXP, bug 776038 for Win7
+fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),47,89) == dynamic-text-04.svg dynamic-text-04-ref.svg # bug 776038 for Win7
 == dynamic-text-05.svg pass.svg
 == dynamic-text-06.svg pass.svg
 == dynamic-text-07.svg dynamic-text-07-ref.svg
@@ -332,7 +332,7 @@ HTTP(..) == text-gradient-04.svg text-gradient-04-ref.svg
 # Tests for bug 546813: sanity-check using HTML text, then test SVG behavior.
 != text-language-00.xhtml text-language-00-ref.xhtml
 random-if(gtkWidget) != text-language-01.xhtml text-language-01-ref.xhtml # Fails on Linux tryserver due to lack of CJK fonts.
-fuzzy-if(OSX==1007,6,2) fuzzy-if(OSX==1008,46,26) == text-layout-01.svg text-layout-01-ref.svg
+== text-layout-01.svg text-layout-01-ref.svg
 == text-layout-02.svg text-layout-02-ref.svg
 == text-layout-03.svg text-layout-03-ref.svg
 == text-layout-04.svg text-layout-04-ref.svg
@@ -375,24 +375,24 @@ fuzzy-if(skiaContent,1,610) == textPath-03.svg pass.svg
 == tspan-dxdy-05.svg tspan-dxdy-ref.svg
 == tspan-dxdy-06.svg tspan-dxdy-ref.svg
 == tspan-dxdy-textPath-01.svg tspan-dxdy-textPath-01-ref.svg
-random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-01.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
-random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-02.svg tspan-rotate-02.svg # Bug 629718 for random failure on WinXP # bug 773482
-random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-02.svg tspan-rotate-02-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
-random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-03.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
-random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-04.svg tspan-rotate-04.svg # Bug 629718 for random failure on WinXP # bug 773482
-random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-04.svg tspan-rotate-04-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
-random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-05.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP
-random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-06.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP # bug 773482
+== tspan-rotate-01.svg tspan-rotate-ref.svg
+fuzzy-if(skiaContent,1,550) == tspan-rotate-02.svg tspan-rotate-02.svg
+fuzzy-if(skiaContent,1,550) == tspan-rotate-02.svg tspan-rotate-02-ref.svg
+fuzzy-if(skiaContent,1,550) == tspan-rotate-03.svg tspan-rotate-ref.svg
+fuzzy-if(skiaContent,1,550) == tspan-rotate-04.svg tspan-rotate-04.svg
+fuzzy-if(skiaContent,1,550) == tspan-rotate-04.svg tspan-rotate-04-ref.svg
+fuzzy-if(skiaContent,1,550) == tspan-rotate-05.svg tspan-rotate-ref.svg
+fuzzy-if(skiaContent,1,550) == tspan-rotate-06.svg tspan-rotate-ref.svg
 == tspan-rotate-07.svg tspan-rotate-07-ref.svg
 == tspan-rotate-textPath-01.svg tspan-rotate-textPath-01-ref.svg
-fuzzy-if(skiaContent,1,100) == tspan-xy-01.svg tspan-xy-ref.svg # bug 773482
-== tspan-xy-02.svg tspan-xy-ref.svg # bug 773482
-fuzzy-if(skiaContent,1,300) == tspan-xy-03.svg tspan-xy-ref.svg # bug 773482
-fuzzy-if(skiaContent,1,300) == tspan-xy-04.svg tspan-xy-ref.svg # bug 773482
-fuzzy-if(skiaContent,1,300) == tspan-xy-05.svg tspan-xy-ref.svg # bug 773482
-fuzzy-if(skiaContent,1,300) == tspan-xy-06.svg tspan-xy-ref.svg # bug 773482
-fuzzy-if(skiaContent,1,100) == tspan-xy-anchor-middle-01.svg tspan-xy-anchor-middle-ref.svg # bug 773482
-fuzzy-if(skiaContent,1,100) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-ref.svg # bug 773482
+fuzzy-if(skiaContent,1,100) == tspan-xy-01.svg tspan-xy-ref.svg
+== tspan-xy-02.svg tspan-xy-ref.svg
+fuzzy-if(skiaContent,1,300) == tspan-xy-03.svg tspan-xy-ref.svg
+fuzzy-if(skiaContent,1,300) == tspan-xy-04.svg tspan-xy-ref.svg
+fuzzy-if(skiaContent,1,300) == tspan-xy-05.svg tspan-xy-ref.svg
+fuzzy-if(skiaContent,1,300) == tspan-xy-06.svg tspan-xy-ref.svg
+fuzzy-if(skiaContent,1,100) == tspan-xy-anchor-middle-01.svg tspan-xy-anchor-middle-ref.svg
+fuzzy-if(skiaContent,1,100) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-ref.svg
 == userSpaceOnUse-and-pattern-01.svg userSpaceOnUse-and-pattern-01-ref.svg
 == viewBox-and-pattern-01.svg pass.svg
 == viewBox-and-pattern-02.svg pass.svg

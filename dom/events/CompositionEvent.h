@@ -26,6 +26,7 @@ public:
                    WidgetCompositionEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CompositionEvent, UIEvent)
   NS_FORWARD_TO_UIEVENT
 
   static already_AddRefed<CompositionEvent> Constructor(const GlobalObject& aGlobal,

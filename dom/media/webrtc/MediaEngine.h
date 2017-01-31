@@ -11,6 +11,7 @@
 #include "MediaTrackConstraints.h"
 #include "mozilla/dom/MediaStreamTrackBinding.h"
 #include "mozilla/dom/VideoStreamTrack.h"
+#include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/media/DeviceChangeCallback.h"
 
 namespace mozilla {
@@ -225,16 +226,17 @@ public:
     ~AllocationHandle() {}
   public:
     AllocationHandle(const dom::MediaTrackConstraints& aConstraints,
-                     const nsACString& aOrigin,
+                     const ipc::PrincipalInfo& aPrincipalInfo,
                      const MediaEnginePrefs& aPrefs,
                      const nsString& aDeviceId)
+
     : mConstraints(aConstraints),
-      mOrigin(aOrigin),
+      mPrincipalInfo(aPrincipalInfo),
       mPrefs(aPrefs),
       mDeviceId(aDeviceId) {}
   public:
     NormalizedConstraints mConstraints;
-    nsCString mOrigin;
+    ipc::PrincipalInfo mPrincipalInfo;
     MediaEnginePrefs mPrefs;
     nsString mDeviceId;
   };
@@ -325,14 +327,14 @@ public:
   virtual nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                             const MediaEnginePrefs &aPrefs,
                             const nsString& aDeviceId,
-                            const nsACString& aOrigin,
+                            const ipc::PrincipalInfo& aPrincipalInfo,
                             AllocationHandle** aOutHandle,
                             const char** aOutBadConstraint)
   {
     AssertIsOnOwningThread();
     MOZ_ASSERT(aOutHandle);
-    RefPtr<AllocationHandle> handle = new AllocationHandle(aConstraints, aOrigin,
-                                                           aPrefs, aDeviceId);
+    RefPtr<AllocationHandle> handle =
+      new AllocationHandle(aConstraints, aPrincipalInfo, aPrefs, aDeviceId);
     nsresult rv = ReevaluateAllocation(handle, nullptr, aPrefs, aDeviceId,
                                        aOutBadConstraint);
     if (NS_FAILED(rv)) {

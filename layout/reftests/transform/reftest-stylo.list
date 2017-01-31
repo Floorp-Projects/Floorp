@@ -84,7 +84,7 @@ fails == origin-name-3b.html origin-name-3b.html
 # Snapping still applies after 90 degree rotations.
 == snapping-1.html snapping-1.html
 # SVG effects should work on transforms.
-fails == transform-svg-1a.xhtml transform-svg-1a.xhtml
+# == transform-svg-1a.xhtml transform-svg-1a.xhtml
 # == transform-svg-2a.xhtml transform-svg-2a.xhtml
 # == transform-svg-2a.xhtml transform-svg-2a.xhtml
 # skew should allow a mix of one and two parameters.
@@ -136,7 +136,7 @@ pref(svg.transform-box.enabled,true) == transform-box-svg-2b.svg transform-box-s
 == transform-origin-svg-2b.svg transform-origin-svg-2b.svg
 # Bug 1122526
 fails == animate-layer-scale-inherit-1.html animate-layer-scale-inherit-1.html
-fails == animate-layer-scale-inherit-2.html animate-layer-scale-inherit-2.html
+# == animate-layer-scale-inherit-2.html animate-layer-scale-inherit-2.html
 # == animate-layer-scale-inherit-3.html animate-layer-scale-inherit-3.html
 # Bug 1301500
 fails == dynamic-add-without-change-cb-1.html dynamic-add-without-change-cb-1.html
