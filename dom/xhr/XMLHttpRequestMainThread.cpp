@@ -744,9 +744,9 @@ XMLHttpRequestMainThread::SetResponseType(XMLHttpRequestResponseType aResponseTy
   // We want to get rid of this moz-only types. Bug 1335365.
   if (aResponseType == XMLHttpRequestResponseType::Moz_blob) {
     Telemetry::Accumulate(Telemetry::MOZ_BLOB_IN_XHR, 1);
-  } else if (aResponseType == XMLHttpRequestResponseType::Moz_Chunked_Text) {
+  } else if (aResponseType == XMLHttpRequestResponseType::Moz_chunked_text) {
     Telemetry::Accumulate(Telemetry::MOZ_CHUNKED_TEXT_IN_XHR, 1);
-  } else if (aResponseType == XMLHttpRequestResponseType::Moz_Chunked_Arraybuffer) {
+  } else if (aResponseType == XMLHttpRequestResponseType::Moz_chunked_arraybuffer) {
     Telemetry::Accumulate(Telemetry::MOZ_CHUNKED_ARRAYBUFFER_IN_XHR, 1);
   }
 
