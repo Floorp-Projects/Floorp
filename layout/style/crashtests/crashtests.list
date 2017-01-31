@@ -98,7 +98,7 @@ load 827591-1.html
 load 829817.html
 load 840898.html
 load 842134.html
-skip-if(stylo) load 861489-1.html # bug 1334982
+load 861489-1.html
 load 862113.html
 asserts-if(stylo,5) load 867487.html # bug 1324634
 load 873222.html
@@ -137,7 +137,7 @@ load 1227501-1.html
 skip-if(stylo) load 1230408-1.html # bug 1323716
 skip-if(stylo) load 1233135-1.html # bug 1323716
 skip-if(stylo) load 1233135-2.html # bug 1323716
-skip-if(stylo) load 1238660-1.html # bug 1334982
+load 1238660-1.html
 load 1245260-1.html
 load 1247865-1.html
 asserts-if(stylo,0-1) load 1264396-1.html # bug 1324677
@@ -166,6 +166,6 @@ load 1315894-1.html
 skip-if(stylo) load 1319072-1.html # bug 1323733
 HTTP load 1320423-1.html
 asserts-if(stylo,5-28) load 1321357-1.html # bug 1324669
-skip-if(stylo) load 1328535-1.html # bug 1334982
+load 1328535-1.html
 load 1331272.html
 asserts-if(stylo,4) HTTP load 1333001-1.html

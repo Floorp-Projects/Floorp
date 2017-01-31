@@ -131,8 +131,6 @@
   ${If} $R0 == "true"
   ; Only proceed if we have HKLM write access
   ${AndIf} $TmpVal == "HKLM"
-  ; On Windows 2000 we do not install the maintenance service.
-  ${AndIf} ${AtLeastWinXP}
     ; We check to see if the maintenance service install was already attempted.
     ; Since the Maintenance service can be installed either x86 or x64,
     ; always use the 64-bit registry for checking if an attempt was made.
@@ -444,7 +442,7 @@
   WriteRegStr ${RegKey} "$0\shell\safemode" "" "$(CONTEXT_SAFE_MODE)"
   WriteRegStr ${RegKey} "$0\shell\safemode\command" "" "$\"$8$\" -safe-mode"
 
-  ; Vista Capabilities registry keys
+  ; Capabilities registry keys
   WriteRegStr ${RegKey} "$0\Capabilities" "ApplicationDescription" "$(REG_APP_DESC)"
   WriteRegStr ${RegKey} "$0\Capabilities" "ApplicationIcon" "$8,0"
   WriteRegStr ${RegKey} "$0\Capabilities" "ApplicationName" "${BrandShortName}"
@@ -461,7 +459,7 @@
   WriteRegStr ${RegKey} "$0\Capabilities\URLAssociations" "http"   "FirefoxURL"
   WriteRegStr ${RegKey} "$0\Capabilities\URLAssociations" "https"  "FirefoxURL"
 
-  ; Vista Registered Application
+  ; Registered Application
   WriteRegStr ${RegKey} "Software\RegisteredApplications" "${AppRegName}" "$0\Capabilities"
 !macroend
 !define SetStartMenuInternet "!insertmacro SetStartMenuInternet"
@@ -1201,7 +1199,7 @@
 
   System::Call 'advapi32::OpenSCManagerW(n, n, i ${SC_MANAGER_ALL_ACCESS}) i.R6'
   ${If} $R6 != 0
-    ; MpsSvc is the Firewall service on Windows Vista and above.
+    ; MpsSvc is the Firewall service.
     ; When opening the service with SERVICE_QUERY_CONFIG the return value will
     ; be 0 if the service is not installed.
     System::Call 'advapi32::OpenServiceW(i R6, t "MpsSvc", i ${SERVICE_QUERY_CONFIG}) i.R7'
@@ -1252,7 +1250,7 @@
 
 ; Sets this installation as the default browser by setting the registry keys
 ; under HKEY_CURRENT_USER via registry calls and using the AppAssocReg NSIS
-; plugin for Vista and above. This is a function instead of a macro so it is
+; plugin. This is a function instead of a macro so it is
 ; easily called from an elevated instance of the binary. Since this can be
 ; called by an elevated instance logging is not performed in this function.
 Function SetAsDefaultAppUserHKCU
@@ -1287,19 +1285,17 @@ Function SetAsDefaultAppUserHKCU
 
   ${SetHandlers}
 
-  ${If} ${AtLeastWinVista}
-    ; Only register as the handler on Vista and above if the app registry name
-    ; exists under the RegisteredApplications registry key. The protocol and
-    ; file handlers set previously at the user level will associate this install
-    ; as the default browser.
-    ClearErrors
-    ReadRegStr $0 HKLM "Software\RegisteredApplications" "${AppRegName}"
-    ${Unless} ${Errors}
-      ; This is all protected by a user choice hash in Windows 8 so it won't
-      ; help, but it also won't hurt.
-      AppAssocReg::SetAppAsDefaultAll "${AppRegName}"
-    ${EndUnless}
-  ${EndIf}
+  ; Only register as the handler if the app registry name
+  ; exists under the RegisteredApplications registry key. The protocol and
+  ; file handlers set previously at the user level will associate this install
+  ; as the default browser.
+  ClearErrors
+  ReadRegStr $0 HKLM "Software\RegisteredApplications" "${AppRegName}"
+  ${Unless} ${Errors}
+    ; This is all protected by a user choice hash in Windows 8 so it won't
+    ; help, but it also won't hurt.
+    AppAssocReg::SetAppAsDefaultAll "${AppRegName}"
+  ${EndUnless}
   ${RemoveDeprecatedKeys}
   ${MigrateTaskBarShortcut}
 FunctionEnd
@@ -1381,8 +1377,7 @@ Function SetAsDefaultAppUser
     ${EndIf}
   ${EndUnless}
 
-  ; The code after ElevateUAC won't be executed on Vista and above when the
-  ; user:
+  ; The code after ElevateUAC won't be executed when the user:
   ; a) is a member of the administrators group (e.g. elevation is required)
   ; b) is not a member of the administrators group and chooses to elevate
   ${ElevateUAC}

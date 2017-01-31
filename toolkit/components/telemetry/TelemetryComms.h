@@ -38,21 +38,25 @@ enum class ScalarActionType : uint32_t {
   eSetMaximum = 2
 };
 
+typedef mozilla::Variant<uint32_t, bool, nsString> ScalarVariant;
+
 struct ScalarAction
 {
   ScalarID mId;
-  uint32_t mScalarType;
   ScalarActionType mActionType;
-  nsCOMPtr<nsIVariant> mData;
+  // We need to wrap mData in a Maybe otherwise the IPC system
+  // is unable to instantiate a ScalarAction.
+  Maybe<ScalarVariant> mData;
 };
 
 struct KeyedScalarAction
 {
   ScalarID mId;
-  uint32_t mScalarType;
   ScalarActionType mActionType;
   nsCString mKey;
-  nsCOMPtr<nsIVariant> mData;
+  // We need to wrap mData in a Maybe otherwise the IPC system
+  // is unable to instantiate a ScalarAction.
+  Maybe<ScalarVariant> mData;
 };
 
 } // namespace Telemetry
@@ -121,90 +125,71 @@ ParamTraits<mozilla::Telemetry::ScalarAction>
   {
     // Write the message type
     aMsg->WriteUInt32(static_cast<uint32_t>(aParam.mId));
-    WriteParam(aMsg, aParam.mScalarType);
     WriteParam(aMsg, static_cast<uint32_t>(aParam.mActionType));
 
-    switch(aParam.mScalarType) {
-      case nsITelemetry::SCALAR_COUNT:
-        {
-          uint32_t val = 0;
-          nsresult rv = aParam.mData->GetAsUint32(&val);
-          if (NS_FAILED(rv)) {
-            MOZ_ASSERT(false, "Count Scalar unable to convert variant to bool from child process.");
-            return;
-          }
-          WriteParam(aMsg, val);
-          break;
-        }
-      case nsITelemetry::SCALAR_STRING:
-        {
-          nsAutoString val;
-          nsresult rv = aParam.mData->GetAsAString(val);
-          if (NS_FAILED(rv)) {
-            MOZ_ASSERT(false, "Conversion failed.");
-            return;
-          }
-          WriteParam(aMsg, val);
-          break;
-        }
-      case nsITelemetry::SCALAR_BOOLEAN:
-        {
-          bool val = 0;
-          nsresult rv = aParam.mData->GetAsBool(&val);
-          if (NS_FAILED(rv)) {
-            MOZ_ASSERT(false, "Boolean Scalar unable to convert variant to bool from child process.");
-            return;
-          }
-          WriteParam(aMsg, val);
-          break;
-        }
-      default:
-        MOZ_ASSERT(false, "Unknown scalar type.");
+    if (aParam.mData.isNothing()) {
+      MOZ_CRASH("There is no data in the ScalarAction.");
+      return;
+    }
+
+    if (aParam.mData->is<uint32_t>()) {
+      // That's a nsITelemetry::SCALAR_COUNT.
+      WriteParam(aMsg, static_cast<uint32_t>(nsITelemetry::SCALAR_COUNT));
+      WriteParam(aMsg, aParam.mData->as<uint32_t>());
+    } else if (aParam.mData->is<nsString>()) {
+      // That's a nsITelemetry::SCALAR_STRING.
+      WriteParam(aMsg, static_cast<uint32_t>(nsITelemetry::SCALAR_STRING));
+      WriteParam(aMsg, aParam.mData->as<nsString>());
+    } else if (aParam.mData->is<bool>()) {
+      // That's a nsITelemetry::SCALAR_BOOLEAN.
+      WriteParam(aMsg, static_cast<uint32_t>(nsITelemetry::SCALAR_BOOLEAN));
+      WriteParam(aMsg, aParam.mData->as<bool>());
+    } else {
+      MOZ_CRASH("Unknown scalar type.");
     }
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     // Read the scalar ID and the scalar type.
+    uint32_t scalarType = 0;
     if (!aMsg->ReadUInt32(aIter, reinterpret_cast<uint32_t*>(&(aResult->mId))) ||
-        !ReadParam(aMsg, aIter, &(aResult->mScalarType)) ||
-        !ReadParam(aMsg, aIter, reinterpret_cast<uint32_t*>(&(aResult->mActionType)))) {
+        !ReadParam(aMsg, aIter, reinterpret_cast<uint32_t*>(&(aResult->mActionType))) ||
+        !ReadParam(aMsg, aIter, &scalarType)) {
       return false;
     }
 
     // De-serialize the data based on the scalar type.
-    nsCOMPtr<nsIWritableVariant> outVar(new nsVariant());
-
-    switch (aResult->mScalarType)
+    switch (scalarType)
     {
       case nsITelemetry::SCALAR_COUNT:
         {
           uint32_t data = 0;
           // De-serialize the data.
-          if (!ReadParam(aMsg, aIter, &data) ||
-              NS_FAILED(outVar->SetAsUint32(data))) {
+          if (!ReadParam(aMsg, aIter, &data)) {
             return false;
           }
+          aResult->mData = mozilla::Some(mozilla::AsVariant(data));
           break;
         }
       case nsITelemetry::SCALAR_STRING:
         {
-          nsAutoString data;
+          nsString data;
           // De-serialize the data.
-          if (!ReadParam(aMsg, aIter, &data) ||
-              NS_FAILED(outVar->SetAsAString(data))) {
+          if (!ReadParam(aMsg, aIter, &data)) {
             return false;
           }
+          aResult->mData = mozilla::Some(mozilla::AsVariant(data));
           break;
         }
       case nsITelemetry::SCALAR_BOOLEAN:
         {
           bool data = false;
           // De-serialize the data.
-          if (!ReadParam(aMsg, aIter, &data) ||
-              NS_FAILED(outVar->SetAsBool(data))) {
+          if (!ReadParam(aMsg, aIter, &data)) {
             return false;
           }
+          aResult->mData = mozilla::Some(mozilla::AsVariant(data));
           break;
         }
       default:
@@ -212,7 +197,6 @@ ParamTraits<mozilla::Telemetry::ScalarAction>
         return false;
     }
 
-    aResult->mData = outVar.forget();
     return true;
   }
 };
@@ -230,67 +214,53 @@ ParamTraits<mozilla::Telemetry::KeyedScalarAction>
   {
     // Write the message type
     aMsg->WriteUInt32(static_cast<uint32_t>(aParam.mId));
-    WriteParam(aMsg, aParam.mScalarType);
     WriteParam(aMsg, static_cast<uint32_t>(aParam.mActionType));
     WriteParam(aMsg, aParam.mKey);
 
-    switch(aParam.mScalarType) {
-      case nsITelemetry::SCALAR_COUNT:
-        {
-          uint32_t val = 0;
-          nsresult rv = aParam.mData->GetAsUint32(&val);
-          if (NS_FAILED(rv)) {
-            MOZ_ASSERT(false, "Keyed Count Scalar unable to convert variant to uint from child process.");
-            return;
-          }
-          WriteParam(aMsg, val);
-          break;
-        }
-      case nsITelemetry::SCALAR_STRING:
-        {
-          // Keyed string scalars are not supported.
-          MOZ_ASSERT(false, "Keyed String Scalar unable to be write from child process. Not supported.");
-          break;
-        }
-      case nsITelemetry::SCALAR_BOOLEAN:
-        {
-          bool val = 0;
-          nsresult rv = aParam.mData->GetAsBool(&val);
-          if (NS_FAILED(rv)) {
-            MOZ_ASSERT(false, "Keyed Boolean Scalar unable to convert variant to bool from child process.");
-            return;
-          }
-          WriteParam(aMsg, val);
-          break;
-        }
-      default:
-        MOZ_ASSERT(false, "Unknown keyed scalar type.");
+    if (aParam.mData.isNothing()) {
+      MOZ_CRASH("There is no data in the KeyedScalarAction.");
+      return;
+    }
+
+    if (aParam.mData->is<uint32_t>()) {
+      // That's a nsITelemetry::SCALAR_COUNT.
+      WriteParam(aMsg, static_cast<uint32_t>(nsITelemetry::SCALAR_COUNT));
+      WriteParam(aMsg, aParam.mData->as<uint32_t>());
+    } else if (aParam.mData->is<nsString>()) {
+      // That's a nsITelemetry::SCALAR_STRING.
+      // Keyed string scalars are not supported.
+      MOZ_ASSERT(false, "Keyed String Scalar unable to be write from child process. Not supported.");
+    } else if (aParam.mData->is<bool>()) {
+      // That's a nsITelemetry::SCALAR_BOOLEAN.
+      WriteParam(aMsg, static_cast<uint32_t>(nsITelemetry::SCALAR_BOOLEAN));
+      WriteParam(aMsg, aParam.mData->as<bool>());
+    } else {
+      MOZ_CRASH("Unknown keyed scalar type.");
     }
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     // Read the scalar ID and the scalar type.
+    uint32_t scalarType = 0;
     if (!aMsg->ReadUInt32(aIter, reinterpret_cast<uint32_t*>(&(aResult->mId))) ||
-        !ReadParam(aMsg, aIter, &(aResult->mScalarType)) ||
         !ReadParam(aMsg, aIter, reinterpret_cast<uint32_t*>(&(aResult->mActionType))) ||
-        !ReadParam(aMsg, aIter, &(aResult->mKey))) {
+        !ReadParam(aMsg, aIter, &(aResult->mKey)) ||
+        !ReadParam(aMsg, aIter, &scalarType)) {
       return false;
     }
 
     // De-serialize the data based on the scalar type.
-    nsCOMPtr<nsIWritableVariant> outVar(new nsVariant());
-
-    switch (aResult->mScalarType)
+    switch (scalarType)
     {
       case nsITelemetry::SCALAR_COUNT:
         {
           uint32_t data = 0;
           // De-serialize the data.
-          if (!ReadParam(aMsg, aIter, &data) ||
-              NS_FAILED(outVar->SetAsUint32(data))) {
+          if (!ReadParam(aMsg, aIter, &data)) {
             return false;
           }
+          aResult->mData = mozilla::Some(mozilla::AsVariant(data));
           break;
         }
       case nsITelemetry::SCALAR_STRING:
@@ -303,10 +273,10 @@ ParamTraits<mozilla::Telemetry::KeyedScalarAction>
         {
           bool data = false;
           // De-serialize the data.
-          if (!ReadParam(aMsg, aIter, &data) ||
-              NS_FAILED(outVar->SetAsBool(data))) {
+          if (!ReadParam(aMsg, aIter, &data)) {
             return false;
           }
+          aResult->mData = mozilla::Some(mozilla::AsVariant(data));
           break;
         }
       default:
@@ -314,7 +284,6 @@ ParamTraits<mozilla::Telemetry::KeyedScalarAction>
         return false;
     }
 
-    aResult->mData = outVar.forget();
     return true;
   }
 };
