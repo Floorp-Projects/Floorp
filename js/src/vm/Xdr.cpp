@@ -15,6 +15,7 @@
 
 #include "vm/Debugger.h"
 #include "vm/EnvironmentObject.h"
+#include "vm/TraceLogging.h"
 
 using namespace js;
 using mozilla::PodEqual;
@@ -116,6 +117,11 @@ template<XDRMode mode>
 bool
 XDRState<mode>::codeFunction(MutableHandleFunction funp)
 {
+    TraceLoggerThread* logger = TraceLoggerForMainThread(cx()->runtime());
+    TraceLoggerTextId event =
+        mode == XDR_DECODE ? TraceLogger_DecodeFunction : TraceLogger_EncodeFunction;
+    AutoTraceLog tl(logger, event);
+
     if (mode == XDR_DECODE)
         funp.set(nullptr);
     else
@@ -140,6 +146,11 @@ template<XDRMode mode>
 bool
 XDRState<mode>::codeScript(MutableHandleScript scriptp)
 {
+    TraceLoggerThread* logger = TraceLoggerForMainThread(cx()->runtime());
+    TraceLoggerTextId event =
+        mode == XDR_DECODE ? TraceLogger_DecodeScript : TraceLogger_EncodeScript;
+    AutoTraceLog tl(logger, event);
+
     if (mode == XDR_DECODE)
         scriptp.set(nullptr);
     else
