@@ -20,14 +20,11 @@ add_task(function* () {
   is(getRuleViewPropertyValue(view, "element", "color"), "red",
     "The rule-view shows the properties for test node one");
 
-  let cView = inspector.computedview.computedView;
-  let prop = getComputedViewProperty(cView, "color");
-  ok(!prop, "The computed-view doesn't show the properties for test node one");
-
   info("Switching to the computed-view");
   let onComputedViewReady = inspector.once("computed-view-refreshed");
   selectComputedView(inspector);
   yield onComputedViewReady;
+  let cView = inspector.getPanel("computedview").computedView;
 
   ok(getComputedViewPropertyValue(cView, "color"), "#F00",
     "The computed-view shows the properties for test node one");

@@ -627,7 +627,7 @@ CssComputedView.prototype = {
       onShowBoxModelEditor,
       onShowBoxModelHighlighter,
       onToggleGeometryEditor,
-    } = this.inspector.boxmodel.getComponentProps();
+    } = this.inspector.getPanel("boxmodel").getComponentProps();
 
     let provider = createElement(
       Provider,

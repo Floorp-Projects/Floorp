@@ -23,11 +23,8 @@ const Menu = require("devtools/client/framework/menu");
 const MenuItem = require("devtools/client/framework/menu-item");
 
 const {HTMLBreadcrumbs} = require("devtools/client/inspector/breadcrumbs");
-const BoxModel = require("devtools/client/inspector/boxmodel/box-model");
-const {FontInspector} = require("devtools/client/inspector/fonts/fonts");
 const GridInspector = require("devtools/client/inspector/grids/grid-inspector");
 const {InspectorSearch} = require("devtools/client/inspector/inspector-search");
-const {RuleViewTool} = require("devtools/client/inspector/rules/rules");
 const HighlightersOverlay = require("devtools/client/inspector/shared/highlighters-overlay");
 const ReflowTracker = require("devtools/client/inspector/shared/reflow-tracker");
 const {ToolSidebar} = require("devtools/client/inspector/toolsidebar");
@@ -95,6 +92,10 @@ function Inspector(toolbox) {
   this.panelWin = window;
   this.panelWin.inspector = this;
 
+  // Map [panel id => panel instance]
+  // Stores all the instances of sidebar panels like rule view, computed view, ...
+  this._panels = new Map();
+
   this.highlighters = new HighlightersOverlay(this);
   this.reflowTracker = new ReflowTracker(this._target);
   this.store = Store();
@@ -115,6 +116,7 @@ function Inspector(toolbox) {
   this.onPanelWindowResize = this.onPanelWindowResize.bind(this);
   this.onSidebarShown = this.onSidebarShown.bind(this);
   this.onSidebarHidden = this.onSidebarHidden.bind(this);
+  this.onSidebarSelect = this.onSidebarSelect.bind(this);
   this.onShowBoxModelHighlighterForNode =
     this.onShowBoxModelHighlighterForNode.bind(this);
 
@@ -541,6 +543,51 @@ Inspector.prototype = {
     Services.prefs.setIntPref("devtools.toolsidebar-height.inspector", state.height);
   },
 
+  onSidebarSelect: function (event, toolId) {
+    // Save the currently selected sidebar panel
+    Services.prefs.setCharPref("devtools.inspector.activeSidebar", toolId);
+
+    // Then forces the panel creation by calling getPanel
+    // (This allows lazy loading the panels only once we select them)
+    this.getPanel(toolId);
+  },
+
+  /**
+   * Lazily get and create panel instances displayed in the sidebar
+   */
+  getPanel: function (id) {
+    if (this._panels.has(id)) {
+      return this._panels.get(id);
+    }
+    let panel;
+    switch (id) {
+      case "computedview":
+        const {ComputedViewTool} =
+          this.browserRequire("devtools/client/inspector/computed/computed");
+        panel = new ComputedViewTool(this, this.panelWin);
+        break;
+      case "ruleview":
+        const {RuleViewTool} = require("devtools/client/inspector/rules/rules");
+        panel = new RuleViewTool(this, this.panelWin);
+        break;
+      case "boxmodel":
+        // box-model isn't a panel on its own, it used to, now it is being used by
+        // computed view and layout which retrieves an instance via getPanel.
+        const BoxModel = require("devtools/client/inspector/boxmodel/box-model");
+        panel = new BoxModel(this, this.panelWin);
+        break;
+      case "fontinspector":
+        const {FontInspector} = require("devtools/client/inspector/fonts/fonts");
+        panel = new FontInspector(this, this.panelWin);
+        break;
+      default:
+        // This is a custom panel or a non lazy-loaded one.
+        return null;
+    }
+    this._panels.set(id, panel);
+    return panel;
+  },
+
   /**
    * Build the sidebar.
    */
@@ -549,14 +596,9 @@ Inspector.prototype = {
     this.sidebar = new ToolSidebar(tabbox, this, "inspector", {
       showAllTabsMenu: true
     });
+    this.sidebar.on("select", this.onSidebarSelect);
 
     let defaultTab = Services.prefs.getCharPref("devtools.inspector.activeSidebar");
-
-    this._setDefaultSidebar = (event, toolId) => {
-      Services.prefs.setCharPref("devtools.inspector.activeSidebar", toolId);
-    };
-
-    this.sidebar.on("select", this._setDefaultSidebar);
 
     if (!Services.prefs.getBoolPref("devtools.fontinspector.enabled") &&
        defaultTab == "fontinspector") {
@@ -574,14 +616,9 @@ Inspector.prototype = {
       INSPECTOR_L10N.getStr("inspector.sidebar.computedViewTitle"),
       defaultTab == "computedview");
 
-    this.ruleview = new RuleViewTool(this, this.panelWin);
-    this.boxmodel = new BoxModel(this, this.panelWin);
-
-    const {ComputedViewTool} =
-      this.browserRequire("devtools/client/inspector/computed/computed");
-    this.computedview = new ComputedViewTool(this, this.panelWin);
-
     if (Services.prefs.getBoolPref("devtools.layoutview.enabled")) {
+      // Grid and layout panels aren't lazy-loaded as their module end up
+      // calling inspector.addSidebarTab
       this.gridInspector = new GridInspector(this, this.panelWin);
 
       const LayoutView = this.browserRequire("devtools/client/inspector/layout/layout");
@@ -603,7 +640,6 @@ Inspector.prototype = {
         INSPECTOR_L10N.getStr("inspector.sidebar.fontInspectorTitle"),
         defaultTab == "fontinspector");
 
-      this.fontInspector = new FontInspector(this, this.panelWin);
       this.sidebar.toggleTab(true, "fontinspector");
     }
 
@@ -926,17 +962,10 @@ Inspector.prototype = {
     this.target.off("thread-resumed", this.updateDebuggerPausedWarning);
     this._toolbox.off("select", this.updateDebuggerPausedWarning);
 
-    if (this.ruleview) {
-      this.ruleview.destroy();
+    for (let [, panel] of this._panels) {
+      panel.destroy();
     }
-
-    if (this.boxmodel) {
-      this.boxmodel.destroy();
-    }
-
-    if (this.computedview) {
-      this.computedview.destroy();
-    }
+    this._panels.clear();
 
     if (this.gridInspector) {
       this.gridInspector.destroy();
@@ -946,17 +975,13 @@ Inspector.prototype = {
       this.layoutview.destroy();
     }
 
-    if (this.fontInspector) {
-      this.fontInspector.destroy();
-    }
-
     let cssPropertiesDestroyer = this._cssPropertiesLoaded.then(({front}) => {
       if (front) {
         front.destroy();
       }
     });
 
-    this.sidebar.off("select", this._setDefaultSidebar);
+    this.sidebar.off("select", this.onSidebarSelect);
     let sidebarDestroyer = this.sidebar.destroy();
 
     this.teardownSplitter();
