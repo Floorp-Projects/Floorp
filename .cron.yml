@@ -9,7 +9,7 @@ jobs:
           treeherder-symbol: Nd
           triggered-by: nightly
           target-tasks-method: nightly_linux
-      projects:
+      run-on-projects:
           - mozilla-central
           - date
       when:
@@ -21,7 +21,7 @@ jobs:
           treeherder-symbol: Na
           triggered-by: nightly
           target-tasks-method: nightly_fennec
-      projects:
+      run-on-projects:
           - mozilla-central
           - date
       when:
