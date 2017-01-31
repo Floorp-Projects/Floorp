@@ -2450,14 +2450,13 @@ nsScriptLoader::ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
 
 nsresult
 nsScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
-                                 nsISupports* aContext,
+                                 nsScriptLoadRequest* aRequest,
                                  nsresult aChannelStatus,
                                  nsresult aSRIStatus,
                                  mozilla::dom::SRICheckDataVerifier* aSRIDataVerifier)
 {
-  nsScriptLoadRequest* request = static_cast<nsScriptLoadRequest*>(aContext);
-  NS_ASSERTION(request, "null request in stream complete handler");
-  NS_ENSURE_TRUE(request, NS_ERROR_FAILURE);
+  NS_ASSERTION(aRequest, "null request in stream complete handler");
+  NS_ENSURE_TRUE(aRequest, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIRequest> channelRequest;
   aLoader->GetRequest(getter_AddRefs(channelRequest));
@@ -2465,7 +2464,7 @@ nsScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
   channel = do_QueryInterface(channelRequest);
 
   nsresult rv = NS_OK;
-  if (!request->mIntegrity.IsEmpty() &&
+  if (!aRequest->mIntegrity.IsEmpty() &&
       NS_SUCCEEDED((rv = aSRIStatus))) {
     MOZ_ASSERT(aSRIDataVerifier);
     MOZ_ASSERT(mReporter);
@@ -2474,7 +2473,7 @@ nsScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
     if (mDocument && mDocument->GetDocumentURI()) {
       mDocument->GetDocumentURI()->GetAsciiSpec(sourceUri);
     }
-    rv = aSRIDataVerifier->Verify(request->mIntegrity, channel, sourceUri,
+    rv = aSRIDataVerifier->Verify(aRequest->mIntegrity, channel, sourceUri,
                                   mReporter);
     mReporter->FlushConsoleReports(mDocument);
     if (NS_FAILED(rv)) {
@@ -2490,7 +2489,7 @@ nsScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
       loadInfo->LoadingPrincipal()->GetCsp(getter_AddRefs(csp));
       nsAutoCString violationURISpec;
       mDocument->GetDocumentURI()->GetAsciiSpec(violationURISpec);
-      uint32_t lineNo = request->mElement ? request->mElement->GetScriptLineNumber() : 0;
+      uint32_t lineNo = aRequest->mElement ? aRequest->mElement->GetScriptLineNumber() : 0;
       csp->LogViolationDetails(
         nsIContentSecurityPolicy::VIOLATION_TYPE_REQUIRE_SRI_FOR_SCRIPT,
         NS_ConvertUTF8toUTF16(violationURISpec),
@@ -2500,7 +2499,7 @@ nsScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    rv = PrepareLoadedRequest(request, aLoader, aChannelStatus);
+    rv = PrepareLoadedRequest(aRequest, aLoader, aChannelStatus);
   }
 
   if (NS_FAILED(rv)) {
@@ -2510,57 +2509,57 @@ nsScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
      * array of blocked tracking nodes under its parent document.
      */
     if (rv == NS_ERROR_TRACKING_URI) {
-      nsCOMPtr<nsIContent> cont = do_QueryInterface(request->mElement);
+      nsCOMPtr<nsIContent> cont = do_QueryInterface(aRequest->mElement);
       mDocument->AddBlockedTrackingNode(cont);
     }
 
-    if (request->mIsDefer) {
-      MOZ_ASSERT_IF(request->IsModuleRequest(),
-                    request->AsModuleRequest()->IsTopLevel());
-      if (request->isInList()) {
-        RefPtr<nsScriptLoadRequest> req = mDeferRequests.Steal(request);
+    if (aRequest->mIsDefer) {
+      MOZ_ASSERT_IF(aRequest->IsModuleRequest(),
+                    aRequest->AsModuleRequest()->IsTopLevel());
+      if (aRequest->isInList()) {
+        RefPtr<nsScriptLoadRequest> req = mDeferRequests.Steal(aRequest);
         FireScriptAvailable(rv, req);
       }
-    } else if (request->mIsAsync) {
-      MOZ_ASSERT_IF(request->IsModuleRequest(),
-                    request->AsModuleRequest()->IsTopLevel());
-      if (request->isInList()) {
-        RefPtr<nsScriptLoadRequest> req = mLoadingAsyncRequests.Steal(request);
+    } else if (aRequest->mIsAsync) {
+      MOZ_ASSERT_IF(aRequest->IsModuleRequest(),
+                    aRequest->AsModuleRequest()->IsTopLevel());
+      if (aRequest->isInList()) {
+        RefPtr<nsScriptLoadRequest> req = mLoadingAsyncRequests.Steal(aRequest);
         FireScriptAvailable(rv, req);
       }
-    } else if (request->mIsNonAsyncScriptInserted) {
-      if (request->isInList()) {
+    } else if (aRequest->mIsNonAsyncScriptInserted) {
+      if (aRequest->isInList()) {
         RefPtr<nsScriptLoadRequest> req =
-          mNonAsyncExternalScriptInsertedRequests.Steal(request);
+          mNonAsyncExternalScriptInsertedRequests.Steal(aRequest);
         FireScriptAvailable(rv, req);
       }
-    } else if (request->mIsXSLT) {
-      if (request->isInList()) {
-        RefPtr<nsScriptLoadRequest> req = mXSLTRequests.Steal(request);
+    } else if (aRequest->mIsXSLT) {
+      if (aRequest->isInList()) {
+        RefPtr<nsScriptLoadRequest> req = mXSLTRequests.Steal(aRequest);
         FireScriptAvailable(rv, req);
       }
-    } else if (request->IsModuleRequest()) {
-      nsModuleLoadRequest* modReq = request->AsModuleRequest();
+    } else if (aRequest->IsModuleRequest()) {
+      nsModuleLoadRequest* modReq = aRequest->AsModuleRequest();
       MOZ_ASSERT(!modReq->IsTopLevel());
       MOZ_ASSERT(!modReq->isInList());
       modReq->Cancel();
-      FireScriptAvailable(rv, request);
-    } else if (mParserBlockingRequest == request) {
-      MOZ_ASSERT(!request->isInList());
+      FireScriptAvailable(rv, aRequest);
+    } else if (mParserBlockingRequest == aRequest) {
+      MOZ_ASSERT(!aRequest->isInList());
       mParserBlockingRequest = nullptr;
-      UnblockParser(request);
+      UnblockParser(aRequest);
 
-      // Ensure that we treat request->mElement as our current parser-inserted
+      // Ensure that we treat aRequest->mElement as our current parser-inserted
       // script while firing onerror on it.
-      MOZ_ASSERT(request->mElement->GetParserCreated());
+      MOZ_ASSERT(aRequest->mElement->GetParserCreated());
       nsCOMPtr<nsIScriptElement> oldParserInsertedScript =
         mCurrentParserInsertedScript;
-      mCurrentParserInsertedScript = request->mElement;
-      FireScriptAvailable(rv, request);
-      ContinueParserAsync(request);
+      mCurrentParserInsertedScript = aRequest->mElement;
+      FireScriptAvailable(rv, aRequest);
+      ContinueParserAsync(aRequest);
       mCurrentParserInsertedScript = oldParserInsertedScript;
     } else {
-      mPreloads.RemoveElement(request, PreloadRequestComparator());
+      mPreloads.RemoveElement(aRequest, PreloadRequestComparator());
     }
   }
 
