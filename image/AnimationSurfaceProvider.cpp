@@ -50,7 +50,7 @@ AnimationSurfaceProvider::DropImageReference()
   // get evicted is holding the surface cache lock, causing deadlock.
   RefPtr<RasterImage> image = mImage;
   mImage = nullptr;
-  NS_ReleaseOnMainThread(image.forget(), /* aAlwaysProxy = */ true);
+  NS_ReleaseOnMainThreadSystemGroup(image.forget(), /* aAlwaysProxy = */ true);
 }
 
 DrawableFrameRef
