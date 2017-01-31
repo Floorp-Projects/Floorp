@@ -12,10 +12,10 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(JSON_B64_URL);
   info("Starting test... ");
 
-  let { document, NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
+  let { document, gStore, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
 
-  RequestsMenu.lazyUpdate = false;
+  gStore.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, 1);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
@@ -24,9 +24,10 @@ add_task(function* () {
   yield wait;
 
   wait = waitForDOM(document, "#response-panel");
-  EventUtils.sendMouseEvent({ type: "mousedown" },
+  EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".network-details-panel-toggle"));
-  document.querySelector("#response-tab").click();
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#response-tab"));
   yield wait;
 
   let tabpanel = document.querySelector("#response-panel");

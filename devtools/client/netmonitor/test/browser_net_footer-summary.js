@@ -13,15 +13,14 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(FILTERING_URL);
   info("Starting test... ");
 
-  let { $, NetMonitorView, gStore, windowRequire } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
-
+  let { document, gStore, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
   let { getDisplayedRequestsSummary } =
     windowRequire("devtools/client/netmonitor/selectors/index");
   let { L10N } = windowRequire("devtools/client/netmonitor/l10n");
   let { PluralForm } = windowRequire("devtools/shared/plural-form");
 
-  RequestsMenu.lazyUpdate = false;
+  gStore.dispatch(Actions.batchEnable(false));
   testStatus();
 
   for (let i = 0; i < 2; i++) {
@@ -36,7 +35,7 @@ add_task(function* () {
 
     let buttons = ["html", "css", "js", "xhr", "fonts", "images", "media", "flash"];
     for (let button of buttons) {
-      let buttonEl = $(`#requests-menu-filter-${button}-button`);
+      let buttonEl = document.querySelector(`#requests-menu-filter-${button}-button`);
       EventUtils.sendMouseEvent({ type: "click" }, buttonEl);
       testStatus();
     }
@@ -45,7 +44,7 @@ add_task(function* () {
   yield teardown(monitor);
 
   function testStatus() {
-    let value = $("#requests-menu-network-summary-button").textContent;
+    let value = document.querySelector("#requests-menu-network-summary-button").textContent;
     info("Current summary: " + value);
 
     let state = gStore.getState();
