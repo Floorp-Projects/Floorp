@@ -1254,7 +1254,7 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
   if (cos) {
     if (aScriptFromHead &&
         !(script && (script->GetScriptAsync() || script->GetScriptDeferred()))) {
-      // synchronous head scripts block lading of most other non js/css
+      // synchronous head scripts block loading of most other non js/css
       // content such as images
       cos->AddClassFlags(nsIClassOfService::Leader);
     } else if (!(script && script->GetScriptDeferred())) {
