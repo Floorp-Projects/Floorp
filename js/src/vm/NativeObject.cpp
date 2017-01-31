@@ -718,7 +718,7 @@ NativeObject::maybeDensifySparseElements(js::ExclusiveContext* cx, HandleNativeO
      * flag so that we will not start using sparse indexes again if we need
      * to grow the object.
      */
-    if (!obj->clearFlag(cx, BaseShape::INDEXED))
+    if (!NativeObject::clearFlag(cx, obj, BaseShape::INDEXED))
         return DenseElementResult::Failure;
 
     return DenseElementResult::Success;

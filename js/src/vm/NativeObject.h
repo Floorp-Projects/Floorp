@@ -607,7 +607,7 @@ class NativeObject : public ShapedObject
     }
 
     bool shadowingShapeChange(ExclusiveContext* cx, const Shape& shape);
-    bool clearFlag(ExclusiveContext* cx, BaseShape::Flag flag);
+    static bool clearFlag(ExclusiveContext* cx, HandleNativeObject obj, BaseShape::Flag flag);
 
     // The maximum number of slots in an object.
     // |MAX_SLOTS_COUNT * sizeof(JS::Value)| shouldn't overflow

@@ -1240,21 +1240,20 @@ JSObject::setFlags(ExclusiveContext* cx, HandleObject obj, BaseShape::Flag flags
     return true;
 }
 
-bool
-NativeObject::clearFlag(ExclusiveContext* cx, BaseShape::Flag flag)
+/* static */ bool
+NativeObject::clearFlag(ExclusiveContext* cx, HandleNativeObject obj, BaseShape::Flag flag)
 {
-    MOZ_ASSERT(inDictionaryMode());
+    MOZ_ASSERT(obj->inDictionaryMode());
 
-    RootedNativeObject self(cx, &as<NativeObject>());
-    MOZ_ASSERT(self->lastProperty()->getObjectFlags() & flag);
+    MOZ_ASSERT(obj->lastProperty()->getObjectFlags() & flag);
 
-    StackBaseShape base(self->lastProperty());
+    StackBaseShape base(obj->lastProperty());
     base.flags &= ~flag;
     UnownedBaseShape* nbase = BaseShape::getUnowned(cx, base);
     if (!nbase)
         return false;
 
-    self->lastProperty()->base()->adoptUnowned(nbase);
+    obj->lastProperty()->base()->adoptUnowned(nbase);
     return true;
 }
 
