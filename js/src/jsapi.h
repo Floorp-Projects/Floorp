@@ -5987,8 +5987,10 @@ enum TranscodeResult
     TranscodeResult_Failure_RunOnceNotSupported = TranscodeResult_Failure | 0x2,
     TranscodeResult_Failure_AsmJSNotSupported =   TranscodeResult_Failure | 0x3,
     TranscodeResult_Failure_UnknownClassKind =    TranscodeResult_Failure | 0x4,
+    TranscodeResult_Failure_WrongCompileOption =  TranscodeResult_Failure | 0x5,
+    TranscodeResult_Failure_NotInterpretedFun =   TranscodeResult_Failure | 0x6,
 
-    // A error, the JSContext has a pending exception.
+    // There is a pending exception on the context.
     TranscodeResult_Throw = 0x200
 };
 

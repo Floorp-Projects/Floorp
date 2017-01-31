@@ -1563,6 +1563,14 @@ ConvertTranscodeResultToJSException(JSContext* cx, JS::TranscodeResult rv)
         MOZ_ASSERT(!cx->isExceptionPending());
         JS_ReportErrorASCII(cx, "Unknown class kind, go fix it.");
         return false;
+      case JS::TranscodeResult_Failure_WrongCompileOption:
+        MOZ_ASSERT(!cx->isExceptionPending());
+        JS_ReportErrorASCII(cx, "Compile options differs from Compile options of the encoding");
+        return false;
+      case JS::TranscodeResult_Failure_NotInterpretedFun:
+        MOZ_ASSERT(!cx->isExceptionPending());
+        JS_ReportErrorASCII(cx, "Only interepreted functions are supported by XDR");
+        return false;
 
       case JS::TranscodeResult_Throw:
         MOZ_ASSERT(cx->isExceptionPending());

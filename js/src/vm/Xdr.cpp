@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "jsapi.h"
+#include "jscntxt.h"
 #include "jsscript.h"
 
 #include "vm/Debugger.h"
@@ -21,10 +22,16 @@ using namespace js;
 using mozilla::PodEqual;
 
 template<XDRMode mode>
+LifoAlloc&
+XDRState<mode>::lifoAlloc() const {
+    return buf.cx()->asJSContext()->tempLifoAlloc();
+}
+
+template<XDRMode mode>
 void
-XDRState<mode>::postProcessContextErrors(JSContext* cx)
+XDRState<mode>::postProcessContextErrors(ExclusiveContext* cx)
 {
-    if (cx->isExceptionPending()) {
+    if (cx->isJSContext() && cx->asJSContext()->isExceptionPending()) {
         MOZ_ASSERT(resultCode_ == JS::TranscodeResult_Ok);
         resultCode_ = JS::TranscodeResult_Throw;
     }
@@ -42,7 +49,7 @@ XDRState<mode>::codeChars(const Latin1Char* chars, size_t nchars)
         return true;
     uint8_t* ptr = buf.write(nchars);
     if (!ptr)
-        return false;
+        return fail(JS::TranscodeResult_Throw);
 
     mozilla::PodCopy(ptr, chars, nchars);
     return true;
@@ -58,7 +65,7 @@ XDRState<mode>::codeChars(char16_t* chars, size_t nchars)
     if (mode == XDR_ENCODE) {
         uint8_t* ptr = buf.write(nbytes);
         if (!ptr)
-            return false;
+            return fail(JS::TranscodeResult_Throw);
         mozilla::NativeEndian::copyAndSwapToLittleEndian(ptr, chars, nchars);
     } else {
         const uint8_t* ptr = buf.read(nbytes);
@@ -72,11 +79,8 @@ static bool
 VersionCheck(XDRState<mode>* xdr)
 {
     JS::BuildIdCharVector buildId;
-    if (!xdr->cx()->buildIdOp() || !xdr->cx()->buildIdOp()(&buildId)) {
-        JS_ReportErrorNumberASCII(xdr->cx(), GetErrorMessage, nullptr,
-                                  JSMSG_BUILD_ID_NOT_AVAILABLE);
-        return false;
-    }
+    if (!xdr->cx()->buildIdOp() || !xdr->cx()->buildIdOp()(&buildId))
+        return xdr->fail(JS::TranscodeResult_Failure_BadBuildId);
     MOZ_ASSERT(!buildId.empty());
 
     uint32_t buildIdLength;
@@ -99,7 +103,7 @@ VersionCheck(XDRState<mode>* xdr)
         // buildId.
         if (!decodedBuildId.resize(buildIdLength)) {
             ReportOutOfMemory(xdr->cx());
-            return false;
+            return xdr->fail(JS::TranscodeResult_Throw);
         }
 
         if (!xdr->codeBytes(decodedBuildId.begin(), buildIdLength))
