@@ -38,7 +38,8 @@
 }
 
 #root,
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
 }
@@ -366,6 +367,7 @@ select > option.divider {
 .viewport-dimension-editable.editing,
 .viewport-dimension-input.editing {
   color: var(--viewport-active-color);
+  outline: none;
 }
 
 .viewport-dimension-editable.editing {
@@ -518,4 +520,61 @@ select > option.divider {
 #device-submit-button:hover:active {
   background-color: var(--submit-button-active-background-color);
   color: var(--submit-button-active-color);
+}
+
+/**
+ * Device Adder
+ */
+
+#device-adder {
+  display: flex;
+  flex-direction: column;
+}
+
+#device-adder button {
+  background-color: var(--theme-tab-toolbar-background);
+  border: 1px solid var(--theme-splitter-color);
+  border-radius: 2px;
+  color: var(--theme-body-color);
+  margin: 0 auto;
+}
+
+#device-adder label {
+  display: flex;
+  margin-bottom: 5px;
+  align-items: center;
+}
+
+#device-adder label > input,
+#device-adder label > .viewport-dimension {
+  width: 130px;
+  margin: 0;
+}
+
+#device-adder input {
+  background: transparent;
+  border: none;
+  text-align: center;
+  color: var(--theme-body-color-inactive);
+  transition: all 0.25s ease;
+}
+
+#device-adder input:focus {
+  color: var(--viewport-active-color);
+}
+
+#device-adder label > input:focus,
+#device-adder label > .viewport-dimension:focus  {
+  border-bottom: 1px solid var(--theme-selection-background);
+  outline: none;
+}
+
+.device-adder-label {
+  display: inline-block;
+  margin-right: 5px;
+  width: 35px;
+}
+
+#device-adder #device-adder-save {
+  margin-top: 5px;
 }

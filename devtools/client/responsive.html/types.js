@@ -89,6 +89,9 @@ exports.devices = {
   // Whether or not the device modal is open
   isModalOpen: PropTypes.bool,
 
+  // Viewport id that triggered the modal to open
+  modalOpenedFromViewport: PropTypes.number,
+
   // Device list state, possible values are exported above in an enum
   listState: PropTypes.oneOf(Object.keys(exports.deviceListState)),
 
@@ -139,6 +142,9 @@ exports.viewport = {
 
   // The currently selected device applied to the viewport
   device: PropTypes.string,
+
+  // The currently selected device type applied to the viewport
+  deviceType: PropTypes.string,
 
   // The width of the viewport
   width: PropTypes.number,
