@@ -699,10 +699,10 @@ NativeObject::maybeDensifySparseElements(js::ExclusiveContext* cx, HandleNativeO
              */
             if (shape != obj->lastProperty()) {
                 shape = shape->previous();
-                if (!obj->removeProperty(cx, id))
+                if (!NativeObject::removeProperty(cx, obj, id))
                     return DenseElementResult::Failure;
             } else {
-                if (!obj->removeProperty(cx, id))
+                if (!NativeObject::removeProperty(cx, obj, id))
                     return DenseElementResult::Failure;
                 shape = obj->lastProperty();
             }
@@ -1072,7 +1072,7 @@ CallAddPropertyHook(ExclusiveContext* cx, HandleNativeObject obj, HandleShape sh
 
         RootedId id(cx, shape->propid());
         if (!CallJSAddPropertyOp(cx->asJSContext(), addProperty, obj, id, value)) {
-            obj->removeProperty(cx, shape->propid());
+            NativeObject::removeProperty(cx, obj, shape->propid());
             return false;
         }
     }
@@ -2564,7 +2564,7 @@ js::NativeDeleteProperty(JSContext* cx, HandleNativeObject obj, HandleId id,
 
         obj->setDenseElementHole(cx, JSID_TO_INT(id));
     } else {
-        if (!obj->removeProperty(cx, id))
+        if (!NativeObject::removeProperty(cx, obj, id))
             return false;
     }
 

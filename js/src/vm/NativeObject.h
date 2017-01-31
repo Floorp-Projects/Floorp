@@ -757,7 +757,7 @@ class NativeObject : public ShapedObject
                    unsigned attrs, JSGetterOp getter, JSSetterOp setter);
 
     /* Remove the property named by id from this object. */
-    bool removeProperty(ExclusiveContext* cx, jsid id);
+    static bool removeProperty(ExclusiveContext* cx, HandleNativeObject obj, jsid id);
 
     /* Clear the scope, making it empty. */
     static void clear(ExclusiveContext* cx, HandleNativeObject obj);
