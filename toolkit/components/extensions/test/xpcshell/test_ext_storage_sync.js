@@ -13,7 +13,6 @@ const {
   CollectionKeyEncryptionRemoteTransformer,
   cryptoCollection,
   idToKey,
-  extensionIdToCollectionId,
   keyToId,
 } = Cu.import("resource://gre/modules/ExtensionStorageSync.jsm", {});
 Cu.import("resource://services-sync/engines/extension-storage.js");
@@ -436,7 +435,6 @@ const defaultExtensionId = "{13bdde76-4dc7-11e6-9bdc-54ee758d6342}";
 const defaultExtension = {id: defaultExtensionId};
 
 const BORING_KB = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-const ANOTHER_KB = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcde0";
 const loggedInUser = {
   uid: "0123456789abcdef0123456789abcdef",
   kB: BORING_KB,
@@ -446,7 +444,6 @@ const loggedInUser = {
     },
   },
 };
-const defaultCollectionId = extensionIdToCollectionId(loggedInUser, defaultExtensionId);
 
 function uuid() {
   const uuidgen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
@@ -479,17 +476,13 @@ add_task(function* test_key_to_id() {
 });
 
 add_task(function* test_extension_id_to_collection_id() {
-  const newKBUser = Object.assign(loggedInUser, {kB: ANOTHER_KB});
   const extensionId = "{9419cce6-5435-11e6-84bf-54ee758d6342}";
-  const extensionId2 = "{9419cce6-5435-11e6-84bf-54ee758d6343}";
+  // Fake a static keyring since the server doesn't exist.
+  const salt = "Scgx8RJ8Y0rxMGFYArUiKeawlW+0zJyFmtTDvro9qPo=";
+  yield cryptoCollection._setSalt(extensionId, salt);
 
-  // "random" 32-char hex userid
-  equal(extensionIdToCollectionId(loggedInUser, extensionId),
-        "abf4e257dad0c89027f8f25bd196d4d69c100df375655a0c49f4cea7b791ea7d");
-  equal(extensionIdToCollectionId(loggedInUser, extensionId),
-        extensionIdToCollectionId(newKBUser, extensionId));
-  equal(extensionIdToCollectionId(loggedInUser, extensionId2),
-        "6584b0153336fb274912b31a3225c15a92b703cdc3adfe1917c1aa43122a52b8");
+  equal(yield cryptoCollection.extensionIdToCollectionId(extensionId),
+        "ext-0_QHA1P93_yJoj7ONisrR0lW6uN4PZ3Ii-rT-QOjtvo");
 });
 
 add_task(function* ensureCanSync_posts_new_keys() {
@@ -818,18 +811,19 @@ add_task(function* checkSyncKeyRing_flushes_on_uuid_change() {
   // keyring, so reset sync state and reupload everything.
   const extensionId = uuid();
   const extension = {id: extensionId};
-  const collectionId = extensionIdToCollectionId(loggedInUser, extensionId);
   const transformer = new KeyRingEncryptionRemoteTransformer();
   yield* withSyncContext(function* (context) {
     yield* withServer(function* (server) {
       server.installCollection("storage-sync-crypto");
-      server.installCollection(collectionId);
       server.installDeleteBucket();
       yield* withSignedInUser(loggedInUser, function* () {
         yield cryptoCollection._clear();
 
-        // Do an `ensureCanSync` to get access to keys.
+        // Do an `ensureCanSync` to get access to keys and salt.
         let collectionKeys = yield ExtensionStorageSync.ensureCanSync([extensionId]);
+        const collectionId = yield cryptoCollection.extensionIdToCollectionId(extensionId);
+        server.installCollection(collectionId);
+
         ok(collectionKeys.hasKeysFor([extensionId]),
            `ensureCanSync should always return a keyring that has a key for ${extensionId}`);
         const extensionKey = collectionKeys.keyForCollection(extensionId).keyPairB64;
@@ -916,12 +910,10 @@ add_task(function* checkSyncKeyRing_flushes_on_uuid_change() {
 
 add_task(function* test_storage_sync_pulls_changes() {
   const extensionId = defaultExtensionId;
-  const collectionId = defaultCollectionId;
   const extension = defaultExtension;
   yield* withContextAndServer(function* (context, server) {
     yield* withSignedInUser(loggedInUser, function* () {
       let transformer = new CollectionKeyEncryptionRemoteTransformer(extensionId);
-      server.installCollection(collectionId);
       server.installCollection("storage-sync-crypto");
 
       let calls = [];
@@ -930,6 +922,8 @@ add_task(function* test_storage_sync_pulls_changes() {
       }, context);
 
       yield ExtensionStorageSync.ensureCanSync([extensionId]);
+      const collectionId = yield cryptoCollection.extensionIdToCollectionId(extensionId);
+      server.installCollection(collectionId);
       yield server.encryptAndAddRecord(transformer, collectionId, {
         "id": "key-remote_2D_key",
         "key": "remote-key",
@@ -974,8 +968,10 @@ add_task(function* test_storage_sync_pulls_changes() {
 });
 
 add_task(function* test_storage_sync_pushes_changes() {
+  // FIXME: This test relies on the fact that previous tests pushed
+  // keys and salts for the default extension ID
   const extensionId = defaultExtensionId;
-  const collectionId = defaultCollectionId;
+  const collectionId = yield cryptoCollection.extensionIdToCollectionId(extensionId);
   const extension = defaultExtension;
   yield* withContextAndServer(function* (context, server) {
     yield* withSignedInUser(loggedInUser, function* () {
@@ -998,6 +994,7 @@ add_task(function* test_storage_sync_pushes_changes() {
             "pushing an ExtensionStorageSync value shouldn't change local value");
 
       let posts = server.getPosts();
+      // FIXME: Keys were pushed in a previous test
       equal(posts.length, 1,
             "pushing a value should cause a post to the server");
       const post = posts[0];
@@ -1048,7 +1045,7 @@ add_task(function* test_storage_sync_pushes_changes() {
 });
 
 add_task(function* test_storage_sync_pulls_deletes() {
-  const collectionId = defaultCollectionId;
+  const collectionId = yield cryptoCollection.extensionIdToCollectionId(defaultExtensionId);
   const extension = defaultExtension;
   yield* withContextAndServer(function* (context, server) {
     yield* withSignedInUser(loggedInUser, function* () {
@@ -1094,9 +1091,10 @@ add_task(function* test_storage_sync_pulls_deletes() {
 
 add_task(function* test_storage_sync_pushes_deletes() {
   const extensionId = uuid();
-  const collectionId = extensionIdToCollectionId(loggedInUser, extensionId);
   const extension = {id: extensionId};
   yield cryptoCollection._clear();
+  yield cryptoCollection._setSalt(extensionId, cryptoCollection.getNewSalt());
+  const collectionId = yield cryptoCollection.extensionIdToCollectionId(extensionId);
   yield* withContextAndServer(function* (context, server) {
     yield* withSignedInUser(loggedInUser, function* () {
       server.installCollection(collectionId);
