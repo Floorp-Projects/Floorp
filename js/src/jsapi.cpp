@@ -4915,25 +4915,25 @@ JS::CallOriginalPromiseReject(JSContext* cx, JS::HandleValue rejectionValue)
 }
 
 JS_PUBLIC_API(bool)
-JS::ResolvePromise(JSContext* cx, JS::HandleObject promise, JS::HandleValue resolutionValue)
+JS::ResolvePromise(JSContext* cx, JS::HandleObject promiseObj, JS::HandleValue resolutionValue)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, promise, resolutionValue);
+    assertSameCompartment(cx, promiseObj, resolutionValue);
 
-    MOZ_ASSERT(promise->is<PromiseObject>());
-    return promise->as<PromiseObject>().resolve(cx, resolutionValue);
+    Handle<PromiseObject*> promise = promiseObj.as<PromiseObject>();
+    return PromiseObject::resolve(cx, promise, resolutionValue);
 }
 
 JS_PUBLIC_API(bool)
-JS::RejectPromise(JSContext* cx, JS::HandleObject promise, JS::HandleValue rejectionValue)
+JS::RejectPromise(JSContext* cx, JS::HandleObject promiseObj, JS::HandleValue rejectionValue)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, promise, rejectionValue);
+    assertSameCompartment(cx, promiseObj, rejectionValue);
 
-    MOZ_ASSERT(promise->is<PromiseObject>());
-    return promise->as<PromiseObject>().reject(cx, rejectionValue);
+    Handle<PromiseObject*> promise = promiseObj.as<PromiseObject>();
+    return PromiseObject::reject(cx, promise, rejectionValue);
 }
 
 JS_PUBLIC_API(JSObject*)
