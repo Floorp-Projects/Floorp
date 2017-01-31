@@ -673,6 +673,8 @@ class KeyboardLayout
 public:
   static KeyboardLayout* GetInstance();
   static void Shutdown();
+  static HKL GetActiveLayout();
+  static nsCString GetActiveLayoutName();
   static void NotifyIdleServiceOfUserActivity();
 
   static bool IsPrintableCharKey(uint8_t aVirtualKey);
@@ -846,6 +848,12 @@ private:
    * state.
    */
   void LoadLayout(HKL aLayout);
+
+  /**
+   * Gets the keyboard layout name of aLayout.  Be careful, this may be too
+   * slow to call at handling user input.
+   */
+  nsCString GetLayoutName(HKL aLayout) const;
 
   /**
    * InitNativeKey() must be called when actually widget receives WM_KEYDOWN or
