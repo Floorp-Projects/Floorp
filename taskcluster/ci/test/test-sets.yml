@@ -71,6 +71,7 @@ stylo-tests:
 
 qr-tests:
     - cppunit
+    - crashtest
     - gtest
     - jittest
     - jsreftest
