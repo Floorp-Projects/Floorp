@@ -3200,7 +3200,7 @@ ServiceWorkerManager::GetRegistration(const nsACString& aScopeKey,
   return reg.forget();
 }
 
-ServiceWorkerRegistrationInfo*
+already_AddRefed<ServiceWorkerRegistrationInfo>
 ServiceWorkerManager::CreateNewRegistration(const nsCString& aScope,
                                             nsIPrincipal* aPrincipal,
                                             nsLoadFlags aLoadFlags)
@@ -3216,12 +3216,12 @@ ServiceWorkerManager::CreateNewRegistration(const nsCString& aScope,
   MOZ_ASSERT(!tmp);
 #endif
 
-  ServiceWorkerRegistrationInfo* registration =
+  RefPtr<ServiceWorkerRegistrationInfo> registration =
     new ServiceWorkerRegistrationInfo(aScope, aPrincipal, aLoadFlags);
   // From now on ownership of registration is with
   // mServiceWorkerRegistrationInfos.
   AddScopeAndRegistration(aScope, registration);
-  return registration;
+  return registration.forget();
 }
 
 void
