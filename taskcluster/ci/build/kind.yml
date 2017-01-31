@@ -15,3 +15,5 @@ jobs-from:
     - linux.yml
     - macosx.yml
     - windows.yml
+
+parse-commit: taskgraph.try_option_syntax:parse_message
