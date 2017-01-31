@@ -37,14 +37,12 @@ using namespace mozilla::dom;
 
 BEGIN_WORKERS_NAMESPACE
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(ServiceWorkerPrivate)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(ServiceWorkerPrivate)
+NS_IMPL_CYCLE_COLLECTING_NATIVE_ADDREF(ServiceWorkerPrivate)
+NS_IMPL_CYCLE_COLLECTING_NATIVE_RELEASE(ServiceWorkerPrivate)
 NS_IMPL_CYCLE_COLLECTION(ServiceWorkerPrivate, mSupportsArray)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServiceWorkerPrivate)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ServiceWorkerPrivate, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ServiceWorkerPrivate, Release)
 
 // Tracks the "dom.disable_open_click_delay" preference.  Modified on main
 // thread, read on worker threads.
@@ -1866,7 +1864,7 @@ ServiceWorkerPrivate::TerminateWorker()
     if (Preferences::GetBool("dom.serviceWorkers.testing.enabled")) {
       nsCOMPtr<nsIObserverService> os = services::GetObserverService();
       if (os) {
-        os->NotifyObservers(this, "service-worker-shutdown", nullptr);
+        os->NotifyObservers(nullptr, "service-worker-shutdown", nullptr);
       }
     }
 
@@ -2094,38 +2092,6 @@ ServiceWorkerPrivate::CreateEventKeepAliveToken()
   MOZ_ASSERT(mIdleKeepAliveToken);
   RefPtr<KeepAliveToken> ref = new KeepAliveToken(this);
   return ref.forget();
-}
-
-void
-ServiceWorkerPrivate::AddPendingWindow(Runnable* aPendingWindow)
-{
-  AssertIsOnMainThread();
-  pendingWindows.AppendElement(aPendingWindow);
-}
-
-nsresult
-ServiceWorkerPrivate::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
-{
-  AssertIsOnMainThread();
-
-  nsCString topic(aTopic);
-  if (!topic.Equals(NS_LITERAL_CSTRING("BrowserChrome:Ready"))) {
-    MOZ_ASSERT(false, "Unexpected topic.");
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  NS_ENSURE_STATE(os);
-  os->RemoveObserver(static_cast<nsIObserver*>(this), "BrowserChrome:Ready");
-
-  size_t len = pendingWindows.Length();
-  for (int i = len-1; i >= 0; i--) {
-    RefPtr<Runnable> runnable = pendingWindows[i];
-    MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(runnable));
-    pendingWindows.RemoveElementAt(i);
-  }
-
-  return NS_OK;
 }
 
 void
