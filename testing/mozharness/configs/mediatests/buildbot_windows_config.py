@@ -14,8 +14,8 @@ config = {
         'python': 'c:/mozilla-build/python27/python',
         'virtualenv': ['c:/mozilla-build/python27/python', 'c:/mozilla-build/buildbotve/virtualenv.py'],
         'hg': 'c:/mozilla-build/hg/hg',
-        'mozinstall': ['%s/build/venv/scripts/python' % os.getcwd(),
-                       '%s/build/venv/scripts/mozinstall-script.py' % os.getcwd()],
+        'mozinstall': ['{}/build/venv/scripts/python'.format(os.getcwd()),
+                       '{}/build/venv/scripts/mozinstall-script.py'.format(os.getcwd())],
         'tooltool.py': [sys.executable, 'C:/mozilla-build/tooltool.py'],
     },
 
@@ -42,15 +42,4 @@ config = {
     "in_tree_config": "config/mozharness/marionette.py",
     "download_minidump_stackwalk": True,
     "download_symbols": "ondemand",
-
-    "suite_definitions": {
-        "media-tests": {
-            "options": [],
-        },
-        "media-youtube-tests": {
-            "options": [
-                "%(test_manifest)s"
-            ],
-        },
-    },
 }

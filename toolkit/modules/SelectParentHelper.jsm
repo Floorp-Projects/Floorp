@@ -197,6 +197,21 @@ function populateChildren(menulist, options, selectedIndex, zoom,
     item.hiddenByContent = item.hidden;
     item.setAttribute("tooltiptext", option.tooltip);
 
+    if (option.backgroundColor && option.backgroundColor != "transparent") {
+      item.style.backgroundColor = option.backgroundColor;
+    }
+
+    if (option.color && option.color != "transparent") {
+      item.style.color = option.color;
+    }
+
+    if ((option.backgroundColor && option.backgroundColor != "transparent") ||
+        (option.color && option.color != "rgb(0, 0, 0)")) {
+      item.setAttribute("customoptionstyling", "true");
+    } else {
+      item.removeAttribute("customoptionstyling");
+    }
+
     element.appendChild(item);
 
     // A disabled optgroup disables all of its child options.

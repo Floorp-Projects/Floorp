@@ -225,6 +225,11 @@ function buildOptionListForChildren(node) {
         textContent = "";
       }
 
+      // Selected options have the :checked pseudo-class, which
+      // we want to disable before calculating the computed
+      // styles since the user agent styles alter the styling
+      // based on :checked.
+      DOMUtils.addPseudoClassLock(child, ":checked", false);
       let cs = getComputedStyles(child);
 
       let info = {
@@ -237,15 +242,15 @@ function buildOptionListForChildren(node) {
         // an individual style set for direction
         textDirection: cs.direction,
         tooltip: child.title,
-        // XXX this uses a highlight color when this is the selected element.
-        // We need to suppress such highlighting in the content process to get
-        // the option's correct unhighlighted color here.
-        // We also need to detect default color vs. custom so that a standard
-        // color does not override color: menutext in the parent.
-        // backgroundColor: computedStyle.backgroundColor,
-        // color: computedStyle.color,
+        backgroundColor: cs.backgroundColor,
+        color: cs.color,
         children: tagName == "OPTGROUP" ? buildOptionListForChildren(child) : []
       };
+
+      // We must wait until all computedStyles have been
+      // read before we clear the locks.
+      DOMUtils.clearPseudoClassLocks(child);
+
       result.push(info);
     }
   }

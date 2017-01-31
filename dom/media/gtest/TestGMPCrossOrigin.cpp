@@ -20,7 +20,6 @@
 #include "mozilla/Atomics.h"
 #include "nsNSSComponent.h"
 #include "mozilla/DebugOnly.h"
-#include "GMPDeviceBinding.h"
 #include "mozilla/dom/MediaKeyStatusMapBinding.h" // For MediaKeyStatus
 #include "mozilla/dom/MediaKeyMessageEventBinding.h" // For MediaKeyMessageType
 
@@ -1109,68 +1108,6 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
   }
 #endif
 
-  void TestGetRecordNamesInMemoryStorage() {
-    TestGetRecordNames(true);
-  }
-
-  nsCString mRecordNames;
-
-  void AppendIntPadded(nsACString& aString, uint32_t aInt) {
-    if (aInt > 0 && aInt < 10) {
-      aString.AppendLiteral("0");
-    }
-    aString.AppendInt(aInt);
-  }
-
-  void TestGetRecordNames(bool aPrivateBrowsing) {
-    // Create a number of records of different names.
-    const uint32_t num = 100;
-    nsTArray<nsCString> updates(num);
-    for (uint32_t i = 0; i < num; i++) {
-      nsAutoCString response;
-      response.AppendLiteral("stored data");
-      AppendIntPadded(response, i);
-      response.AppendLiteral(" test-data");
-      AppendIntPadded(response, i);
-
-      if (i != 0) {
-        mRecordNames.AppendLiteral(",");
-      }
-      mRecordNames.AppendLiteral("data");
-      AppendIntPadded(mRecordNames, i);
-
-      nsCString& update = *updates.AppendElement();
-      update.AppendLiteral("store data");
-      AppendIntPadded(update, i);
-      update.AppendLiteral(" test-data");
-      AppendIntPadded(update, i);
-
-      nsCOMPtr<nsIRunnable> continuation;
-      if (i + 1 == num) {
-        continuation =
-          NewRunnableMethod(this, &GMPStorageTest::TestGetRecordNames_QueryNames);
-      }
-      Expect(response, continuation.forget());
-    }
-
-    CreateDecryptor(NS_LITERAL_STRING("http://foo.com"),
-                    NS_LITERAL_STRING("http://bar.com"),
-                    aPrivateBrowsing,
-                    Move(updates));
-  }
-
-  void TestGetRecordNames_QueryNames() {
-    nsCString response("record-names ");
-    response.Append(mRecordNames);
-    Expect(response,
-           NewRunnableMethod(this, &GMPStorageTest::SetFinished));
-    Update(NS_LITERAL_CSTRING("retrieve-record-names"));
-  }
-
-  void GetRecordNamesPersistentStorage() {
-    TestGetRecordNames(false);
-  }
-
   void TestLongRecordNames() {
     NS_NAMED_LITERAL_CSTRING(longRecordName,
       "A_"
@@ -1210,24 +1147,6 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
                     NS_LITERAL_STRING("http://baz.com"),
                     false,
                     update);
-  }
-
-  void TestNodeId() {
-    // Calculate the nodeId, and the device bound nodeId. Start a GMP, and
-    // have it return the device bound nodeId that it's been passed. Assert
-    // they have the same value.
-    const nsString origin = NS_LITERAL_STRING("http://example-fuz-baz.com");
-    nsCString originSalt1 = GetNodeId(origin, origin, false);
-
-    nsCString salt = originSalt1;
-    std::string nodeId;
-    EXPECT_TRUE(CalculateGMPDeviceId(salt.BeginWriting(), salt.Length(), nodeId));
-
-    std::string expected = "node-id " + nodeId;
-    Expect(nsDependentCString(expected.c_str()), NewRunnableMethod(this, &GMPStorageTest::SetFinished));
-
-    CreateDecryptor(originSalt1,
-                    NS_LITERAL_CSTRING("retrieve-node-id"));
   }
 
   void Expect(const nsCString& aMessage, already_AddRefed<nsIRunnable> aContinuation) {
@@ -1425,22 +1344,7 @@ TEST(GeckoMediaPlugins, GMPOutputProtection) {
 }
 #endif
 
-TEST(GeckoMediaPlugins, GMPStorageGetRecordNamesInMemoryStorage) {
-  RefPtr<GMPStorageTest> runner = new GMPStorageTest();
-  runner->DoTest(&GMPStorageTest::TestGetRecordNamesInMemoryStorage);
-}
-
-TEST(GeckoMediaPlugins, GMPStorageGetRecordNamesPersistentStorage) {
-  RefPtr<GMPStorageTest> runner = new GMPStorageTest();
-  runner->DoTest(&GMPStorageTest::GetRecordNamesPersistentStorage);
-}
-
 TEST(GeckoMediaPlugins, GMPStorageLongRecordNames) {
   RefPtr<GMPStorageTest> runner = new GMPStorageTest();
   runner->DoTest(&GMPStorageTest::TestLongRecordNames);
-}
-
-TEST(GeckoMediaPlugins, GMPNodeId) {
-  RefPtr<GMPStorageTest> runner = new GMPStorageTest();
-  runner->DoTest(&GMPStorageTest::TestNodeId);
 }

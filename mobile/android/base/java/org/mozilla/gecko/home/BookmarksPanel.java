@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract;
@@ -30,7 +29,6 @@ import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.MergeCursor;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -55,6 +53,9 @@ public class BookmarksPanel extends HomeFragment {
 
     // Refresh type for folder refreshing loader.
     private static final String BOOKMARKS_REFRESH_TYPE = "refresh_type";
+
+    // Position that the list view should be scrolled to after loading has finished.
+    private static final String BOOKMARKS_SCROLL_POSITION = "listview_position";
 
     // List of bookmarks.
     private BookmarksListView mList;
@@ -139,11 +140,14 @@ public class BookmarksPanel extends HomeFragment {
         mListAdapter = new BookmarksListAdapter(activity, null, mSavedParentStack);
         mListAdapter.setOnRefreshFolderListener(new OnRefreshFolderListener() {
             @Override
-            public void onRefreshFolder(FolderInfo folderInfo, RefreshType refreshType) {
+            public void onRefreshFolder(FolderInfo folderInfo,
+                                        RefreshType refreshType ,
+                                        int targetPosition) {
                 // Restart the loader with folder as the argument.
                 Bundle bundle = new Bundle();
                 bundle.putParcelable(BOOKMARKS_FOLDER_INFO, folderInfo);
                 bundle.putParcelable(BOOKMARKS_REFRESH_TYPE, refreshType);
+                bundle.putInt(BOOKMARKS_SCROLL_POSITION, targetPosition);
                 getLoaderManager().restartLoader(LOADER_ID_BOOKMARKS_LIST, bundle, mLoaderCallbacks);
             }
         });
@@ -209,18 +213,23 @@ public class BookmarksPanel extends HomeFragment {
     private static class BookmarksLoader extends SimpleCursorLoader {
         private final FolderInfo mFolderInfo;
         private final RefreshType mRefreshType;
+        private final int mTargetPosition;
         private final BrowserDB mDB;
 
         public BookmarksLoader(Context context) {
             this(context,
-                 new FolderInfo(Bookmarks.FIXED_ROOT_ID, context.getResources().getString(R.string.bookmarks_title)),
-                 RefreshType.CHILD);
+                 new FolderInfo(Bookmarks.FIXED_ROOT_ID, context.getResources().getString(R.string.bookmarks_title), 0),
+                 RefreshType.CHILD, 0);
         }
 
-        public BookmarksLoader(Context context, FolderInfo folderInfo, RefreshType refreshType) {
+        public BookmarksLoader(Context context,
+                               FolderInfo folderInfo,
+                               RefreshType refreshType,
+                               int targetPosition) {
             super(context);
             mFolderInfo = folderInfo;
             mRefreshType = refreshType;
+            mTargetPosition = targetPosition;
             mDB = BrowserDB.from(context);
         }
 
@@ -269,6 +278,10 @@ public class BookmarksPanel extends HomeFragment {
         public RefreshType getRefreshType() {
             return mRefreshType;
         }
+
+        public int getTargetPosition() {
+            return mTargetPosition;
+        }
     }
 
     /**
@@ -282,7 +295,8 @@ public class BookmarksPanel extends HomeFragment {
             } else {
                 FolderInfo folderInfo = (FolderInfo) args.getParcelable(BOOKMARKS_FOLDER_INFO);
                 RefreshType refreshType = (RefreshType) args.getParcelable(BOOKMARKS_REFRESH_TYPE);
-                return new BookmarksLoader(getActivity(), folderInfo, refreshType);
+                final int targetPosition = args.getInt(BOOKMARKS_SCROLL_POSITION);
+                return new BookmarksLoader(getActivity(), folderInfo, refreshType, targetPosition);
             }
         }
 
@@ -302,6 +316,10 @@ public class BookmarksPanel extends HomeFragment {
                 bundle.putParcelableArrayList("parentStack", new ArrayList<FolderInfo>(parentStack));
 
                 mPanelStateChangeListener.onStateChanged(bundle);
+            }
+
+            if (mList != null) {
+                mList.setSelection(bl.getTargetPosition());
             }
             updateUiFromCursor(c);
         }

@@ -101,8 +101,6 @@ function finishTest()
 
 function finalize()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   var entries = [
     ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/sub-non-existing.html", false],
     ["http://mochi.test:8888/tests/dom/tests/mochitest/ajax/offline/namespace1/sub/non-existing.html", false],

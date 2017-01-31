@@ -17,24 +17,11 @@ class TargetServices;
 }
 #endif
 
-namespace mozilla {
-namespace gmp {
-class GMPLoader;
-}
-}
-
 /**
  * Data needed to start a child process.
  */
 struct XREChildData
 {
-#if !defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_WIDGET_GONK)
-  /**
-   * Used to load the GMP binary.
-   */
-  mozilla::UniquePtr<mozilla::gmp::GMPLoader> gmpLoader;
-#endif
-
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   /**
    * Chromium sandbox TargetServices.
