@@ -32,6 +32,14 @@ toolchain_run_schema = Schema({
 })
 
 
+def add_files_changed(run, taskdesc):
+    files = taskdesc.setdefault('when', {}).setdefault('files-changed', [])
+    # This file
+    files.append('taskcluster/taskgraph/transforms/job/toolchain.py')
+    # The script
+    files.append('taskcluster/scripts/misc/{}'.format(run['script']))
+
+
 @run_job_using("docker-worker", "toolchain-script", schema=toolchain_run_schema)
 def docker_worker_toolchain(config, job, taskdesc):
     run = job['run']
@@ -89,6 +97,8 @@ def docker_worker_toolchain(config, job, taskdesc):
             run['script'])
     ]
 
+    add_files_changed(run, taskdesc)
+
 
 @run_job_using("generic-worker", "toolchain-script", schema=toolchain_run_schema)
 def windows_toolchain(config, job, taskdesc):
@@ -135,3 +145,5 @@ def windows_toolchain(config, job, taskdesc):
         # do something intelligent.
         r'{} -c ./build/src/taskcluster/scripts/misc/{}'.format(bash, run['script'])
     ]
+
+    add_files_changed(run, taskdesc)

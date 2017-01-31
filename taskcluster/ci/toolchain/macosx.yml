@@ -21,8 +21,6 @@ macosx64-clang/opt:
     when:
         files-changed:
             - 'build/build-clang/**'
-            - 'taskcluster/scripts/misc/build-clang-macosx.sh'
-            - 'taskcluster/taskgraph/transforms/job/toolchain.py'
 
 macosx64-clang-tidy/opt:
     description: "Clang-tidy build"
@@ -47,8 +45,6 @@ macosx64-clang-tidy/opt:
         files-changed:
             - 'build/clang-plugin/**'
             - 'build/build-clang/**'
-            - 'taskcluster/scripts/misc/build-clang-tidy-macosx.sh'
-            - 'taskcluster/taskgraph/transforms/job/toolchain.py'
 
 macosx64-cctools-port/opt:
     description: "cctools-port toolchain build"
@@ -66,7 +62,3 @@ macosx64-cctools-port/opt:
         implementation: docker-worker
         docker-image: {in-tree: desktop-build}
         max-run-time: 36000
-    when:
-        files-changed:
-            - 'taskcluster/scripts/misc/build-cctools-port-macosx.sh'
-            - 'taskcluster/taskgraph/transforms/job/toolchain.py'

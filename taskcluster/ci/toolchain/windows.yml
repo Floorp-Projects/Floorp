@@ -19,8 +19,6 @@ win32-clang-cl/opt:
     when:
         files-changed:
             - 'build/build-clang/**'
-            - 'taskcluster/scripts/misc/build-clang32-windows.sh'
-            - 'taskcluster/taskgraph/transforms/job/toolchain.py'
 
 win64-clang-cl/opt:
     description: "Clang-cl toolchain build"
@@ -39,8 +37,6 @@ win64-clang-cl/opt:
     when:
         files-changed:
             - 'build/build-clang/**'
-            - 'taskcluster/scripts/misc/build-clang64-windows.sh'
-            - 'taskcluster/taskgraph/transforms/job/toolchain.py'
 
 win32-clang-tidy/opt:
     description: "Clang-tidy toolchain build"
@@ -62,8 +58,6 @@ win32-clang-tidy/opt:
     when:
         files-changed:
             - 'build/build-clang/**'
-            - 'taskcluster/scripts/misc/build-clang-tidy32-windows.sh'
-            - 'taskcluster/taskgraph/transforms/job/toolchain.py'
 
 win64-clang-tidy/opt:
     description: "Clang-tidy toolchain build"
@@ -85,5 +79,3 @@ win64-clang-tidy/opt:
     when:
         files-changed:
             - 'build/build-clang/**'
-            - 'taskcluster/scripts/misc/build-clang-tidy64-windows.sh'
-            - 'taskcluster/taskgraph/transforms/job/toolchain.py'
