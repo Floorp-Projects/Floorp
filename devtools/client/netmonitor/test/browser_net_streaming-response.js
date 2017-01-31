@@ -12,16 +12,19 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
 
   info("Starting test... ");
-  let { panelWin } = monitor;
-  let { document, NetMonitorView } = panelWin;
-  let { RequestsMenu } = NetMonitorView;
+  let { document, gStore, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let {
+    getDisplayedRequests,
+    getSortedRequests,
+  } = windowRequire("devtools/client/netmonitor/selectors/index");
+
+  gStore.dispatch(Actions.batchEnable(false));
 
   const REQUESTS = [
     [ "hls-m3u8", /^#EXTM3U/ ],
     [ "mpeg-dash", /^<\?xml/ ]
   ];
-
-  RequestsMenu.lazyUpdate = false;
 
   let wait = waitForNetworkEvents(monitor, REQUESTS.length);
   for (let [fmt] of REQUESTS) {
@@ -33,20 +36,26 @@ add_task(function* () {
   yield wait;
 
   REQUESTS.forEach(([ fmt ], i) => {
-    verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(i),
-      "GET", CONTENT_TYPE_SJS + "?fmt=" + fmt, {
+    verifyRequestItemTarget(
+      document,
+      getDisplayedRequests(gStore.getState()),
+      getSortedRequests(gStore.getState()).get(i),
+      "GET",
+      CONTENT_TYPE_SJS + "?fmt=" + fmt,
+      {
         status: 200,
         statusText: "OK"
       });
   });
 
   wait = waitForDOM(document, "#response-panel");
-  EventUtils.sendMouseEvent({ type: "mousedown" },
+  EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".network-details-panel-toggle"));
-  document.querySelector("#response-tab").click();
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#response-tab"));
   yield wait;
 
-  RequestsMenu.selectedIndex = -1;
+  gStore.dispatch(Actions.selectRequest(null));
 
   yield selectIndexAndWaitForEditor(0);
   // the hls-m3u8 part
@@ -62,12 +71,14 @@ add_task(function* () {
     let editor = document.querySelector("#response-panel .editor-mount iframe");
     if (!editor) {
       let waitDOM = waitForDOM(document, "#response-panel .editor-mount iframe");
-      RequestsMenu.selectedIndex = index;
+      EventUtils.sendMouseEvent({ type: "mousedown" },
+        document.querySelectorAll(".request-list-item")[index]);
       document.querySelector("#response-tab").click();
       [editor] = yield waitDOM;
       yield once(editor, "DOMContentLoaded");
     } else {
-      RequestsMenu.selectedIndex = index;
+      EventUtils.sendMouseEvent({ type: "mousedown" },
+        document.querySelectorAll(".request-list-item")[index]);
     }
 
     yield waitForDOM(editor.contentDocument, ".CodeMirror-code");

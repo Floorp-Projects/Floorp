@@ -14,11 +14,16 @@ add_task(function* () {
 
   info("Starting test... ");
 
-  let { document, NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
-  let requestItems = [];
+  let { document, gStore, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let {
+    getDisplayedRequests,
+    getSortedRequests,
+  } = windowRequire("devtools/client/netmonitor/selectors/index");
 
-  RequestsMenu.lazyUpdate = false;
+  gStore.dispatch(Actions.batchEnable(false));
+
+  let requestItems = [];
 
   const REQUEST_DATA = [
     {
@@ -103,18 +108,24 @@ add_task(function* () {
 
   /**
    * A helper that verifies all requests show the correct information and caches
-   * RequestsMenu items to requestItems array.
+   * request list items to requestItems array.
    */
   function* verifyRequests() {
     info("Verifying requests contain correct information.");
     let index = 0;
     for (let request of REQUEST_DATA) {
-      let item = RequestsMenu.getItemAtIndex(index);
+      let item = getSortedRequests(gStore.getState()).get(index);
       requestItems[index] = item;
 
       info("Verifying request #" + index);
-      yield verifyRequestItemTarget(RequestsMenu, item,
-        request.method, request.uri, request.details);
+      yield verifyRequestItemTarget(
+        document,
+        getDisplayedRequests(gStore.getState()),
+        item,
+        request.method,
+        request.uri,
+        request.details
+      );
 
       index++;
     }
@@ -166,7 +177,8 @@ add_task(function* () {
   function* testParams(data, index) {
     EventUtils.sendMouseEvent({ type: "mousedown" },
       document.querySelectorAll(".request-list-item")[index]);
-    document.querySelector("#params-tab").click();
+    EventUtils.sendMouseEvent({ type: "click" },
+      document.querySelector("#params-tab"));
 
     let panel = document.querySelector("#params-panel");
     let statusParamValue = data.uri.split("=").pop();

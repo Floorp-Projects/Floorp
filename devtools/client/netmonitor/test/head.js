@@ -10,6 +10,7 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js",
   this);
 
+const { EVENTS } = require("devtools/client/netmonitor/events");
 var { Toolbox } = require("devtools/client/framework/toolbox");
 const {
   decodeUnicodeUrl,
@@ -176,14 +177,10 @@ function teardown(monitor) {
 
 function waitForNetworkEvents(aMonitor, aGetRequests, aPostRequests = 0) {
   let deferred = promise.defer();
-
   let panel = aMonitor.panelWin;
-  let events = panel.EVENTS;
-
   let progress = {};
   let genericEvents = 0;
   let postEvents = 0;
-
   let awaitedEventsToListeners = [
     ["UPDATING_REQUEST_HEADERS", onGenericEvent],
     ["RECEIVED_REQUEST_HEADERS", onGenericEvent],
@@ -210,7 +207,7 @@ function waitForNetworkEvents(aMonitor, aGetRequests, aPostRequests = 0) {
 
   function updateProgressForURL(url, event) {
     initProgressForURL(url);
-    progress[url][Object.keys(events).find(e => events[e] == event)] = 1;
+    progress[url][Object.keys(EVENTS).find(e => EVENTS[e] == event)] = 1;
   }
 
   function onGenericEvent(event, actor) {
@@ -243,12 +240,12 @@ function waitForNetworkEvents(aMonitor, aGetRequests, aPostRequests = 0) {
     if (genericEvents >= (aGetRequests + aPostRequests) * 13 &&
         postEvents >= aPostRequests * 2) {
 
-      awaitedEventsToListeners.forEach(([e, l]) => panel.off(events[e], l));
+      awaitedEventsToListeners.forEach(([e, l]) => panel.off(EVENTS[e], l));
       executeSoon(deferred.resolve);
     }
   }
 
-  awaitedEventsToListeners.forEach(([e, l]) => panel.on(events[e], l));
+  awaitedEventsToListeners.forEach(([e, l]) => panel.on(EVENTS[e], l));
   return deferred.promise;
 }
 
@@ -262,20 +259,18 @@ function getItemTarget(requestList, requestItem) {
   return [...items].find(el => el.dataset.id == requestItem.id);
 }
 
-function verifyRequestItemTarget(requestList, requestItem, aMethod, aUrl, aData = {}) {
+function verifyRequestItemTarget(document, requestList, requestItem, aMethod,
+                                 aUrl, aData = {}) {
   info("> Verifying: " + aMethod + " " + aUrl + " " + aData.toSource());
-  // This bloats log sizes significantly in automation (bug 992485)
-  // info("> Request: " + requestItem.toSource());
 
-  let visibleIndex = requestList.visibleItems.indexOf(requestItem);
+  let visibleIndex = requestList.indexOf(requestItem);
 
   info("Visible index of item: " + visibleIndex);
 
   let { fuzzyUrl, status, statusText, cause, type, fullMimeType,
         transferred, size, time, displayedStatus } = aData;
 
-  let target = getItemTarget(requestList, requestItem);
-
+  let target = document.querySelectorAll(".request-list-item")[visibleIndex];
   let unicodeUrl = decodeUnicodeUrl(aUrl);
   let name = getUrlBaseName(aUrl);
   let query = getUrlQuery(aUrl);
@@ -364,8 +359,8 @@ function verifyRequestItemTarget(requestList, requestItem, aMethod, aUrl, aData 
     ok(~~(tooltip.match(/[0-9]+/)) >= 0, "The tooltip time is correct.");
   }
 
-  if (visibleIndex != -1) {
-    if (visibleIndex % 2 == 0) {
+  if (visibleIndex !== -1) {
+    if (visibleIndex % 2 === 0) {
       ok(target.classList.contains("even"), "Item should have 'even' class.");
       ok(!target.classList.contains("odd"), "Item shouldn't have 'odd' class.");
     } else {
@@ -377,7 +372,7 @@ function verifyRequestItemTarget(requestList, requestItem, aMethod, aUrl, aData 
 
 /**
  * Helper function for waiting for an event to fire before resolving a promise.
- * Example: waitFor(aMonitor.panelWin, aMonitor.panelWin.EVENTS.TAB_UPDATED);
+ * Example: waitFor(aMonitor.panelWin, EVENT_NAME);
  *
  * @param object subject
  *        The event emitter object that is being listened to.
@@ -509,24 +504,4 @@ function waitForContentMessage(name) {
     def.resolve(msg);
   });
   return def.promise;
-}
-
-/**
- * Open the requestMenu menu and return all of it's items in a flat array
- * @param {netmonitorPanel} netmonitor
- * @param {Event} event mouse event with screenX and screenX coordinates
- * @return An array of MenuItems
- */
-function openContextMenuAndGetAllItems(netmonitor, event) {
-  let menu = netmonitor.RequestsMenu.contextMenu.open(event);
-
-  // Flatten all menu items into a single array to make searching through it easier
-  let allItems = [].concat.apply([], menu.items.map(function addItem(item) {
-    if (item.submenu) {
-      return addItem(item.submenu.items);
-    }
-    return item;
-  }));
-
-  return allItems;
 }

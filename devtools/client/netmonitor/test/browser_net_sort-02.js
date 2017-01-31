@@ -17,8 +17,15 @@ add_task(function* () {
   // of the heavy dom manipulation associated with sorting.
   requestLongerTimeout(2);
 
-  let { document, NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
+  let { document, gStore, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let {
+    getDisplayedRequests,
+    getSelectedRequest,
+    getSortedRequests,
+  } = windowRequire("devtools/client/netmonitor/selectors/index");
+
+  gStore.dispatch(Actions.batchEnable(false));
 
   // Loading the frame script and preparing the xhr request URLs so we can
   // generate some requests later.
@@ -40,18 +47,16 @@ add_task(function* () {
     method: "GET3"
   }];
 
-  RequestsMenu.lazyUpdate = false;
-
   let wait = waitForNetworkEvents(monitor, 5);
   yield performRequestsInContent(requests);
   yield wait;
 
-  EventUtils.sendMouseEvent({ type: "mousedown" },
+  EventUtils.sendMouseEvent({ type: "click" },
     document.querySelector(".network-details-panel-toggle"));
 
-  isnot(RequestsMenu.selectedItem, null,
+  isnot(getSelectedRequest(gStore.getState()), undefined,
     "There should be a selected item in the requests menu.");
-  is(RequestsMenu.selectedIndex, 0,
+  is(getSelectedIndex(gStore.getState()), 0,
     "The first item should be selected in the requests menu.");
   is(!!document.querySelector(".network-details-panel"), true,
     "The network details panel should be visible after toggle button was pressed.");
@@ -187,6 +192,13 @@ add_task(function* () {
 
   return teardown(monitor);
 
+  function getSelectedIndex(state) {
+    if (!state.requests.selectedId) {
+      return -1;
+    }
+    return getSortedRequests(state).findIndex(r => r.id === state.requests.selectedId);
+  }
+
   function testHeaders(sortType, direction) {
     let doc = monitor.panelWin.document;
     let target = doc.querySelector("#requests-menu-" + sortType + "-button");
@@ -210,21 +222,24 @@ add_task(function* () {
   }
 
   function testContents([a, b, c, d, e]) {
-    isnot(RequestsMenu.selectedItem, null,
+    isnot(getSelectedRequest(gStore.getState()), undefined,
       "There should still be a selected item after sorting.");
-    is(RequestsMenu.selectedIndex, a,
+    is(getSelectedIndex(gStore.getState()), a,
       "The first item should be still selected after sorting.");
     is(!!document.querySelector(".network-details-panel"), true,
       "The network details panel should still be visible after sorting.");
 
-    is(RequestsMenu.items.length, 5,
+    is(getSortedRequests(gStore.getState()).length, 5,
       "There should be a total of 5 items in the requests menu.");
-    is(RequestsMenu.visibleItems.length, 5,
+    is(getDisplayedRequests(gStore.getState()).length, 5,
       "There should be a total of 5 visible items in the requests menu.");
     is(document.querySelectorAll(".request-list-item").length, 5,
       "The visible items in the requests menu are, in fact, visible!");
 
-    verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(a),
+    verifyRequestItemTarget(
+      document,
+      getDisplayedRequests(gStore.getState()),
+      getSortedRequests(gStore.getState()).get(a),
       "GET1", SORTING_SJS + "?index=1", {
         fuzzyUrl: true,
         status: 101,
@@ -235,7 +250,10 @@ add_task(function* () {
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 0),
         time: true
       });
-    verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(b),
+    verifyRequestItemTarget(
+      document,
+      getDisplayedRequests(gStore.getState()),
+      getSortedRequests(gStore.getState()).get(b),
       "GET2", SORTING_SJS + "?index=2", {
         fuzzyUrl: true,
         status: 200,
@@ -246,7 +264,10 @@ add_task(function* () {
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 19),
         time: true
       });
-    verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(c),
+    verifyRequestItemTarget(
+      document,
+      getDisplayedRequests(gStore.getState()),
+      getSortedRequests(gStore.getState()).get(c),
       "GET3", SORTING_SJS + "?index=3", {
         fuzzyUrl: true,
         status: 300,
@@ -257,7 +278,10 @@ add_task(function* () {
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 29),
         time: true
       });
-    verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(d),
+    verifyRequestItemTarget(
+      document,
+      getDisplayedRequests(gStore.getState()),
+      getSortedRequests(gStore.getState()).get(d),
       "GET4", SORTING_SJS + "?index=4", {
         fuzzyUrl: true,
         status: 400,
@@ -268,7 +292,10 @@ add_task(function* () {
         size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 39),
         time: true
       });
-    verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(e),
+    verifyRequestItemTarget(
+      document,
+      getDisplayedRequests(gStore.getState()),
+      getSortedRequests(gStore.getState()).get(e),
       "GET5", SORTING_SJS + "?index=5", {
         fuzzyUrl: true,
         status: 500,
