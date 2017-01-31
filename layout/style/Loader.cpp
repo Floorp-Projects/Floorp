@@ -57,7 +57,6 @@
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/ConsoleReportCollector.h"
-#include "mozilla/ServoUtils.h"
 
 #ifdef MOZ_XUL
 #include "nsXULPrototypeCache.h"
@@ -1878,11 +1877,9 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
                                          aLoadData->mSheet->GetReferrerPolicy());
 #ifdef DEBUG
       SheetLoadData *loadingData;
-      // XXXheycam Temporarily downgrade this assertion (bug 1314045).
-      NS_ASSERTION_STYLO_WARNING(
-        mSheets->mLoadingDatas.Get(&key, &loadingData) &&
-        loadingData == aLoadData,
-        "Bad loading table");
+      NS_ASSERTION(mSheets->mLoadingDatas.Get(&key, &loadingData) &&
+                   loadingData == aLoadData,
+                   "Bad loading table");
 #endif
 
       mSheets->mLoadingDatas.Remove(&key);
