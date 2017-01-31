@@ -1,3 +1,30 @@
+1.3.9
+    . Add Collision COLL_ISSPACE to allow for visible spaces in collision avoidance
+    . Add segment and pass direction information to tracing output
+    . Bug fix rule length testing in 32-bit
+    . Increase slanted margin distances for collision avoidance
+    . Change kerning algorithm to simple outline expansion. Seems to make no visible difference.
+    . Add trace2svg to test tools
+
+1.3.8
+    . Various bug fixes arising from fuzzing
+    . Fix regression that stopped piglatin from working
+    . Make collision avoidance kerning give more regular results
+    . Minor modification to clustering algorithm to handle variable width chars
+
+1.3.7
+    . Bug fixes
+    . Start to deprecate SegCache. This will be going away in a later release.
+
+1.3.6
+    . Bug fixes
+
+1.3.5
+    . Bug fixes
+        . Security bug fix
+        . Fix ARM misalignment problem
+        . Track latest cmake
+
 1.3.4
     . Transition from Mercurial to Git
     . Bug fixes

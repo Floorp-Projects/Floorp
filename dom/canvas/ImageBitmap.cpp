@@ -916,7 +916,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLCanvasElement& aCanvas
        aCanvasEl.GetCurrentContextType() == CanvasContextType::WebGL2) &&
       aCropRect.isSome()) {
     // The _surface_ must be a DataSourceSurface.
-    MOZ_ASSERT(surface->GetType() == SurfaceType::DATA,
+    MOZ_ASSERT(surface->IsDataSourceSurface(),
                "The snapshot SourceSurface from WebGL rendering contest is not \
                DataSourceSurface.");
     RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();

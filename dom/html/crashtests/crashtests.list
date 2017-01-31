@@ -56,7 +56,7 @@ load 741250.xhtml
 load 795221-1.html
 asserts-if(stylo,1) load 795221-2.html # bug 1324702
 load 795221-3.html
-asserts-if(stylo,2) load 795221-4.html # bug 1324669
+load 795221-4.html
 load 795221-5.xml
 load 811226.html
 load 819745.html

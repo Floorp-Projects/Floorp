@@ -25,12 +25,13 @@ public:
                            Sequence<RefPtr<File>>& aFiles,
                            already_AddRefed<nsIGlobalObject> aGlobal)
   {
+    nsCOMPtr<nsIGlobalObject> global(aGlobal);
     if (NS_IsMainThread()) {
       return;
     }
 
     RefPtr<ReleaseRunnable> runnable =
-      new ReleaseRunnable(aPromises, aCallbacks, aFiles, Move(aGlobal));
+      new ReleaseRunnable(aPromises, aCallbacks, aFiles, global.forget());
     NS_DispatchToMainThread(runnable);
   }
 

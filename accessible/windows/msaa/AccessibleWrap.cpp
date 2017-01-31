@@ -1255,15 +1255,25 @@ AccessibleWrap::GetHWNDFor(Accessible* aAccessible)
     return nullptr;
   }
 
-  // Accessibles in child processes are said to have the HWND of the window
-  // their tab is within.  Popups are always in the parent process, and so
-  // never proxied, which means this is basically correct.
   if (aAccessible->IsProxy()) {
     ProxyAccessible* proxy = aAccessible->Proxy();
     if (!proxy) {
       return nullptr;
     }
 
+    // If window emulation is enabled, retrieve the emulated window from the
+    // containing document document proxy.
+    if (nsWinUtils::IsWindowEmulationStarted()) {
+      DocAccessibleParent* doc = proxy->Document();
+      HWND hWnd = doc->GetEmulatedWindowHandle();
+      if (hWnd) {
+        return hWnd;
+      }
+    }
+
+    // Accessibles in child processes are said to have the HWND of the window
+    // their tab is within.  Popups are always in the parent process, and so
+    // never proxied, which means this is basically correct.
     Accessible* outerDoc = proxy->OuterDocOfRemoteBrowser();
     NS_ASSERTION(outerDoc, "no outer doc for accessible remote tab!");
     if (!outerDoc) {
