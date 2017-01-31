@@ -63,7 +63,7 @@ import java.util.concurrent.Future;
                         .forTopSite(topSite)
                         .set(ActivityStreamTelemetry.Contract.ACTION_POSITION, absolutePosition);
 
-                ActivityStreamContextMenu.show(v.getContext(),
+                ActivityStreamContextMenu.show(itemView.getContext(),
                         menuButton,
                         extras,
                         ActivityStreamContextMenu.MenuMode.TOPSITE,
