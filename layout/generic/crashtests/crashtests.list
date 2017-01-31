@@ -458,7 +458,7 @@ load 655462-1.html
 load 656130-1.html
 load 656130-2.html
 load 660416.html
-load 665853.html
+asserts-if(stylo,2) load 665853.html # bug 1324634
 load 667025.html
 skip-if(stylo) load 673770.html # bug 1323652
 load 679933-1.html
