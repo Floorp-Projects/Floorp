@@ -2,6 +2,16 @@
 
 All notable changes to this program is documented in this file.
 
+## 0.14.0 (2017-01-31)
+
+### Changed
+- Firefox process is now terminated and session ended when the last window is closed
+- WebDriver library updated to version 0.20.0
+
+### Fixed
+- Stacktraces are now included when the error originates from within the Rust stack
+- HTTPD now returns correct response headers for `Content-Type` and `Cache-Control` thanks to @jugglinmike
+
 ## 0.13.0 (2017-01-06)
 
 ### Changed
