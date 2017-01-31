@@ -110,6 +110,7 @@ if CONFIG['OS_TARGET'] != 'Android':
 DIRS += [
     'broker',
     'glue',
+    'interfaces',
     'reporter',
 ]
 
