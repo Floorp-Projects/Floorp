@@ -1118,6 +1118,12 @@ static const JSFunctionSpec number_methods[] = {
     JS_FS_END
 };
 
+bool
+js::IsInteger(const Value& val)
+{
+    return val.isInt32() ||
+           (mozilla::IsFinite(val.toDouble()) && JS::ToInteger(val.toDouble()) == val.toDouble());
+}
 
 static const JSFunctionSpec number_static_methods[] = {
     JS_SELF_HOSTED_FN("isFinite", "Number_isFinite", 1,0),
