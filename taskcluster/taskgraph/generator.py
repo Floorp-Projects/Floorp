@@ -6,7 +6,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import os
 import yaml
-import copy
 
 from . import filter_tasks
 from .graph import Graph
@@ -39,15 +38,7 @@ class Kind(object):
 
     def load_tasks(self, parameters, loaded_tasks):
         impl_class = self._get_impl_class()
-        config = copy.deepcopy(self.config)
-
-        if 'parse-commit' in self.config:
-            parse_commit = find_object(config['parse-commit'])
-            config['args'] = parse_commit(parameters['message'])
-        else:
-            config['args'] = None
-
-        return impl_class.load_tasks(self.name, self.path, config,
+        return impl_class.load_tasks(self.name, self.path, self.config,
                                      parameters, loaded_tasks)
 
 
