@@ -38,8 +38,10 @@ cron_yml_schema = Schema({
         # when to run it
 
         # Optional set of projects on which this job should run; if omitted, this will
-        # run on all projects for which cron tasks are set up
-        'projects': [basestring],
+        # run on all projects for which cron tasks are set up.  This works just like the
+        # `run_on_projects` attribute, where strings like "release" and "integration" are
+        # expanded to cover multiple repositories.  (taskcluster/docs/attributes.rst)
+        'run-on-projects': [basestring],
 
         # Array of times at which this task should run.  These *must* be a multiple of
         # 15 minutes, the minimum scheduling interval.

@@ -21,6 +21,7 @@ from .util import (
     calculate_head_rev
 )
 from ..create import create_task
+from taskgraph.util.attributes import match_run_on_projects
 
 # Functions to handle each `job.type` in `.cron.yml`.  These are called with
 # the contents of the `job` property from `.cron.yml` and should return a
@@ -50,9 +51,9 @@ def load_jobs():
 
 
 def should_run(job, params):
-    if 'projects' in job:
-        if not any(p == params['project'] for p in job['projects']):
-            return False
+    run_on_projects = job.get('run-on-projects', ['all'])
+    if not match_run_on_projects(params['project'], run_on_projects):
+        return False
     if not any(match_utc(params, hour=sched.get('hour'), minute=sched.get('minute'))
                for sched in job.get('when', [])):
         return False
