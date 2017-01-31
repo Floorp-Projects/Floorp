@@ -1198,7 +1198,7 @@ Geolocation::ShouldBlockInsecureRequests() const
   }
 
   if (!nsGlobalWindow::Cast(win)->IsSecureContext()) {
-    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
                                     NS_LITERAL_CSTRING("DOM"), doc,
                                     nsContentUtils::eDOM_PROPERTIES,
                                     "GeolocationInsecureRequestIsForbidden");
