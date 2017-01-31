@@ -3011,7 +3011,10 @@ js::InitStringClass(JSContext* cx, HandleObject obj)
 
     Rooted<JSString*> empty(cx, cx->runtime()->emptyString);
     RootedObject proto(cx, GlobalObject::createBlankPrototype(cx, global, &StringObject::class_));
-    if (!proto || !proto->as<StringObject>().init(cx, empty))
+    if (!proto)
+        return nullptr;
+    Handle<StringObject*> protoObj = proto.as<StringObject>();
+    if (!StringObject::init(cx, protoObj, empty))
         return nullptr;
 
     /* Now create the String function. */
