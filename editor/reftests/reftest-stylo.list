@@ -102,7 +102,7 @@ fails == dynamic-overflow-change.html dynamic-overflow-change.html
 fails == 694880-1.html 694880-1.html
 fails == 694880-2.html 694880-2.html
 fails == 694880-3.html 694880-3.html
-fails == 388980-1.html 388980-1.html
+fails asserts-if(stylo,1) == 388980-1.html 388980-1.html # bug 1324683
 fails needs-focus == spellcheck-superscript-1.html spellcheck-superscript-1.html
 fails == spellcheck-superscript-2.html spellcheck-superscript-2.html
 == 824080-1.html 824080-1.html
@@ -134,5 +134,5 @@ fails needs-focus pref(layout.accessiblecaret.enabled,false) pref(layout.accessi
 == spellcheck-contenteditable-property-dynamic-override-inherit.html spellcheck-contenteditable-property-dynamic-override-inherit.html
 # == 911201.html 911201.html
 fails needs-focus == 969773.html 969773.html
-fails == 997805.html 997805.html
-fails == 1088158.html 1088158.html
+fails asserts-if(stylo,2) == 997805.html 997805.html # bug 1324671
+fails asserts-if(stylo,1) == 1088158.html 1088158.html # bug 1324671

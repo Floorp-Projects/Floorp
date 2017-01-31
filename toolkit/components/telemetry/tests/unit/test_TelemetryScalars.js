@@ -473,6 +473,9 @@ add_task(function* test_keyed_keys_length() {
   Telemetry.keyedScalarSet(KEYED_UINT_SCALAR, LONG_KEY_STRING, 1);
   Telemetry.keyedScalarSetMaximum(KEYED_UINT_SCALAR, LONG_KEY_STRING, 10);
 
+  // Also attempt to set the value for an empty key.
+  Telemetry.keyedScalarSet(KEYED_UINT_SCALAR, "", 1);
+
   // Make sure the key with the right length contains the expected value.
   let keyedScalars =
     getParentProcessScalars(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
@@ -484,6 +487,8 @@ add_task(function* test_keyed_keys_length() {
                "The key must contain the expected value.");
   Assert.ok(!(LONG_KEY_STRING in keyedScalars[KEYED_UINT_SCALAR]),
             "The data for the long key should not have been recorded.");
+  Assert.ok(!("" in keyedScalars[KEYED_UINT_SCALAR]),
+            "The data for the empty key should not have been recorded.");
 });
 
 add_task(function* test_keyed_max_keys() {

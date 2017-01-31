@@ -734,8 +734,6 @@ var Impl = {
    * @return simple measurements as a dictionary.
    */
   getSimpleMeasurements: function getSimpleMeasurements(forSavedSession, isSubsession, clearSubsession) {
-    this._log.trace("getSimpleMeasurements");
-
     let si = Services.startup.getStartupInfo();
 
     // Measurements common to chrome and content processes.
@@ -889,9 +887,6 @@ var Impl = {
   },
 
   getHistograms: function getHistograms(subsession, clearSubsession) {
-    this._log.trace("getHistograms - subsession: " + subsession +
-                    ", clearSubsession: " + clearSubsession);
-
     let registered =
       Telemetry.registeredHistograms(this.getDatasetType(), []);
     if (this._testing == false) {
@@ -919,8 +914,6 @@ var Impl = {
   },
 
   getAddonHistograms: function getAddonHistograms() {
-    this._log.trace("getAddonHistograms");
-
     let ahs = Telemetry.addonHistogramSnapshots;
     let ret = {};
 
@@ -938,9 +931,6 @@ var Impl = {
   },
 
   getKeyedHistograms(subsession, clearSubsession) {
-    this._log.trace("getKeyedHistograms - subsession: " + subsession +
-                    ", clearSubsession: " + clearSubsession);
-
     let registered =
       Telemetry.registeredKeyedHistograms(this.getDatasetType(), []);
     if (this._testing == false) {
@@ -989,9 +979,6 @@ var Impl = {
    *            {'content': { 'scalarName': ... }, 'gpu': { ... } }
    */
   getScalars(subsession, clearSubsession, keyed) {
-    this._log.trace("getScalars - subsession: " + subsession + ", clearSubsession: " +
-                    clearSubsession + ", keyed: " + keyed);
-
     if (!subsession) {
       // We only support scalars for subsessions.
       this._log.trace("getScalars - We only support scalars in subsessions.");
@@ -1007,7 +994,6 @@ var Impl = {
     for (let processName in scalarsSnapshot) {
       for (let name in scalarsSnapshot[processName]) {
         if (name.startsWith("telemetry.test") && this._testing == false) {
-          this._log.trace("getScalars - Skipping test scalar: " + name);
           continue;
         }
         // Finally arrange the data in the returned object.
@@ -1040,8 +1026,6 @@ var Impl = {
   },
 
   getThreadHangStats: function getThreadHangStats(stats) {
-    this._log.trace("getThreadHangStats");
-
     stats.forEach((thread) => {
       thread.activity = this.packHistogram(thread.activity);
       thread.hangs.forEach((hang) => {
@@ -1060,8 +1044,6 @@ var Impl = {
    * @return The metadata as a JS object
    */
   getMetadata: function getMetadata(reason) {
-    this._log.trace("getMetadata - Reason " + reason);
-
     const sessionStartDate = Utils.toLocalTimeISOString(Utils.truncateToDays(this._sessionStartDate));
     const subsessionStartDate = Utils.toLocalTimeISOString(Utils.truncateToDays(this._subsessionStartDate));
     const monotonicNow = Policy.monotonicNow();
@@ -1112,11 +1094,8 @@ var Impl = {
    */
   gatherMemory: function gatherMemory() {
     if (!Telemetry.canRecordExtended) {
-      this._log.trace("gatherMemory - Extended data recording disabled, skipping.");
       return;
     }
-
-    this._log.trace("gatherMemory");
 
     let mgr;
     try {
@@ -1610,7 +1589,6 @@ var Impl = {
   },
 
   getFlashVersion: function getFlashVersion() {
-    this._log.trace("getFlashVersion");
     let host = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
     let tags = host.getPluginTags();
 
@@ -1780,8 +1758,7 @@ var Impl = {
   },
 
 
-  testSavePendingPing: function testSaveHistograms() {
-    this._log.trace("testSaveHistograms");
+  testSavePendingPing() {
     let payload = this.getSessionPayload(REASON_SAVED_SESSION, false);
     let options = {
       addClientId: true,
