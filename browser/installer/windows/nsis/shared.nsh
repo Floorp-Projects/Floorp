@@ -131,8 +131,6 @@
   ${If} $R0 == "true"
   ; Only proceed if we have HKLM write access
   ${AndIf} $TmpVal == "HKLM"
-  ; On Windows 2000 we do not install the maintenance service.
-  ${AndIf} ${AtLeastWinXP}
     ; We check to see if the maintenance service install was already attempted.
     ; Since the Maintenance service can be installed either x86 or x64,
     ; always use the 64-bit registry for checking if an attempt was made.
