@@ -9,6 +9,7 @@
 
 #include "mozilla/Types.h"
 #include "nsXULAppAPI.h"
+#include <vector>
 
 // This defines the entry points for a content process to start
 // sandboxing itself.  See also SandboxInfo.h for what parts of
