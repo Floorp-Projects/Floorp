@@ -54,10 +54,8 @@ public:
     void disableVEX() { useVEX_ = false; }
 
     size_t size() const { return m_formatter.size(); }
-    const unsigned char* acquireBuffer() const { return m_formatter.acquireBuffer(); }
-    void releaseBuffer() const { m_formatter.releaseBuffer(); }
-    unsigned char* acquireData() { return m_formatter.acquireData(); }
-    void releaseData() const { m_formatter.releaseData(); }
+    const unsigned char* buffer() const { return m_formatter.buffer(); }
+    unsigned char* data() { return m_formatter.data(); }
     bool oom() const { return m_formatter.oom(); }
 
     void disableProtection() { m_formatter.disableProtection(); }
@@ -3814,9 +3812,8 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
 
         assertValidJmpSrc(from);
 
-        const unsigned char* code = m_formatter.acquireData();
+        const unsigned char* code = m_formatter.data();
         int32_t offset = GetInt32(code + from.offset());
-        m_formatter.releaseData();
         if (offset == -1)
             return false;
 
@@ -3859,9 +3856,8 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
         assertValidJmpSrc(from);
         MOZ_RELEASE_ASSERT(to.offset() == -1 || size_t(to.offset()) <= size());
 
-        unsigned char* code = m_formatter.acquireData();
+        unsigned char* code = m_formatter.data();
         SetInt32(code + from.offset(), to.offset());
-        m_formatter.releaseData();
     }
 
     void linkJump(JmpSrc from, JmpDst to)
@@ -3878,22 +3874,19 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
         MOZ_RELEASE_ASSERT(size_t(to.offset()) <= size());
 
         spew(".set .Lfrom%d, .Llabel%d", from.offset(), to.offset());
-        unsigned char* code = m_formatter.acquireData();
+        unsigned char* code = m_formatter.data();
         SetRel32(code + from.offset(), code + to.offset());
-        m_formatter.releaseData();
     }
 
     void executableCopy(void* dst)
     {
-        const unsigned char* src = m_formatter.acquireBuffer();
+        const unsigned char* src = m_formatter.buffer();
         memcpy(dst, src, size());
-        m_formatter.releaseBuffer();
     }
     MOZ_MUST_USE bool appendBuffer(const BaseAssembler& other)
     {
-        const unsigned char* buf = other.m_formatter.acquireBuffer();
+        const unsigned char* buf = other.m_formatter.buffer();
         bool ret = m_formatter.append(buf, other.size());
-        other.m_formatter.releaseBuffer();
         return ret;
     }
 
@@ -5158,10 +5151,8 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
         // Administrative methods:
 
         size_t size() const { return m_buffer.size(); }
-        const unsigned char* acquireBuffer() const { return m_buffer.acquireBuffer(); }
-        void releaseBuffer() const { m_buffer.releaseBuffer(); }
-        unsigned char* acquireData() { return m_buffer.acquireData(); }
-        void releaseData() const { m_buffer.releaseData(); }
+        const unsigned char* buffer() const { return m_buffer.buffer(); }
+        unsigned char* data() { return m_buffer.data(); }
         bool oom() const { return m_buffer.oom(); }
         bool isAligned(int alignment) const { return m_buffer.isAligned(alignment); }
 
