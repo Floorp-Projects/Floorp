@@ -132,7 +132,7 @@ SelectLayerGeometry(const Maybe<gfx::Polygon>& aParentGeometry,
 static void
 TransformLayerGeometry(Layer* aLayer, Maybe<gfx::Polygon>& aGeometry)
 {
-  Layer* parent = aLayer->GetParent();
+  Layer* parent = aLayer;
   gfx::Matrix4x4 transform;
 
   // Collect all parent transforms.
