@@ -131,7 +131,7 @@ function UpdateSessionFunc(test, token, sessionType, resolve, reject) {
           "k":HexToBase64(key)
         });
       } else {
-        bail(token + " couldn't find key for key id " + idHex);
+        bail(token + " couldn't find key for key id " + idHex)("No such key");
       }
     }
 
