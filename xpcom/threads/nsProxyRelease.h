@@ -15,6 +15,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Move.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
@@ -156,6 +157,32 @@ NS_ReleaseOnMainThread(already_AddRefed<T> aDoomed,
   }
 
   NS_ProxyRelease(mainThread, mozilla::Move(aDoomed), aAlwaysProxy);
+}
+
+/**
+ * This is the same as NS_ReleaseOnMainThread, except that the
+ * runnable for the deletion will be dispatched to the system group.
+ */
+template<class T>
+inline NS_HIDDEN_(void)
+NS_ReleaseOnMainThreadSystemGroup(already_AddRefed<T> aDoomed,
+                                  bool aAlwaysProxy = false)
+{
+  // NS_ProxyRelease treats a null event target as "the current thread".  So a
+  // handle on the main thread is only necessary when we're not already on the
+  // main thread or the release must happen asynchronously.
+  nsCOMPtr<nsIEventTarget> systemGroupEventTarget;
+  if (!NS_IsMainThread() || aAlwaysProxy) {
+    systemGroupEventTarget = mozilla::SystemGroup::EventTargetFor(mozilla::TaskCategory::Other);
+
+    if (!systemGroupEventTarget) {
+      MOZ_ASSERT_UNREACHABLE("Could not get main thread; leaking an object!");
+      mozilla::Unused << aDoomed.take();
+      return;
+    }
+  }
+
+  NS_ProxyRelease(systemGroupEventTarget, mozilla::Move(aDoomed), aAlwaysProxy);
 }
 
 /**
