@@ -896,7 +896,8 @@ add_task(function* checkSyncKeyRing_flushes_on_uuid_change() {
                   "newly uploaded keyring should preserve salts from existing salts");
 
         // Confirm that the data got reuploaded
-        equal(reuploadedPost.path, collectionRecordsPath(collectionId) + "/key-my_2D_key",
+        const hashedId = "id-" + (yield cryptoCollection.hashWithExtensionSalt("key-my_2D_key", extensionId));
+        equal(reuploadedPost.path, `${collectionRecordsPath(collectionId)}/${hashedId}`,
               "extension data should be posted to path corresponding to its key");
         let reuploadedData = yield new CollectionKeyEncryptionRemoteTransformer(extensionId).decode(reuploadedPost.body.data);
         equal(reuploadedData.key, "my-key",
@@ -990,6 +991,7 @@ add_task(function* test_storage_sync_pushes_changes() {
 
       yield ExtensionStorageSync.syncAll();
       const localValue = (yield ExtensionStorageSync.get(extension, "my-key", context))["my-key"];
+      const hashedId = "id-" + (yield cryptoCollection.hashWithExtensionSalt("key-my_2D_key", extensionId));
       equal(localValue, 5,
             "pushing an ExtensionStorageSync value shouldn't change local value");
 
@@ -999,7 +1001,7 @@ add_task(function* test_storage_sync_pushes_changes() {
             "pushing a value should cause a post to the server");
       const post = posts[0];
       assertPostedNewRecord(post);
-      equal(post.path, collectionRecordsPath(collectionId) + "/key-my_2D_key",
+      equal(post.path, `${collectionRecordsPath(collectionId)}/${hashedId}`,
             "pushing a value should have a path corresponding to its id");
 
       const encrypted = post.body.data;
@@ -1007,7 +1009,7 @@ add_task(function* test_storage_sync_pushes_changes() {
          "pushing a value should post an encrypted record");
       ok(!encrypted.data,
          "pushing a value should not have any plaintext data");
-      equal(encrypted.id, "key-my_2D_key",
+      equal(encrypted.id, hashedId,
             "pushing a value should use a kinto-friendly record ID");
 
       const record = yield transformer.decode(encrypted);
@@ -1030,7 +1032,7 @@ add_task(function* test_storage_sync_pushes_changes() {
             "updating a value should trigger another push");
       const updatePost = posts[1];
       assertPostedUpdatedRecord(updatePost, 1000);
-      equal(updatePost.path, collectionRecordsPath(collectionId) + "/key-my_2D_key",
+      equal(updatePost.path, `${collectionRecordsPath(collectionId)}/${hashedId}`,
             "pushing an updated value should go to the same path");
 
       const updateEncrypted = updatePost.body.data;
@@ -1038,7 +1040,7 @@ add_task(function* test_storage_sync_pushes_changes() {
          "pushing an updated value should still be encrypted");
       ok(!updateEncrypted.data,
          "pushing an updated value should not have any plaintext visible");
-      equal(updateEncrypted.id, "key-my_2D_key",
+      equal(updateEncrypted.id, hashedId,
             "pushing an updated value should maintain the same ID");
     });
   });
@@ -1122,12 +1124,13 @@ add_task(function* test_storage_sync_pushes_deletes() {
             "pushing a deleted value shouldn't call the on-changed listener");
 
       // Doesn't push keys because keys were pushed by a previous test.
+      const hashedId = "id-" + (yield cryptoCollection.hashWithExtensionSalt("key-my_2D_key", extensionId));
       posts = server.getPosts();
       equal(posts.length, 3,
             "deleting a value should trigger another push");
       const post = posts[2];
       assertPostedUpdatedRecord(post, 1000);
-      equal(post.path, collectionRecordsPath(collectionId) + "/key-my_2D_key",
+      equal(post.path, `${collectionRecordsPath(collectionId)}/${hashedId}`,
             "pushing a deleted value should go to the same path");
       ok(post.method, "PUT");
       ok(post.body.data.ciphertext,
