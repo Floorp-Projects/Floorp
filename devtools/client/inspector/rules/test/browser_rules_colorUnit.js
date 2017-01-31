@@ -39,7 +39,7 @@ add_task(function* () {
 });
 
 function* basicTest(view, name, result) {
-  let cPicker = view.tooltips.colorPicker;
+  let cPicker = view.tooltips.getTooltip("colorPicker");
   let swatch = getRuleViewProperty(view, "#testid", "color").valueSpan
       .querySelector(".ruleview-colorswatch");
   let onColorPickerReady = cPicker.once("ready");

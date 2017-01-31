@@ -483,6 +483,7 @@ HTMLTooltip.prototype = {
     if (this.xulPanelWrapper) {
       this.xulPanelWrapper.remove();
     }
+    this._toggle.destroy();
   },
 
   _createContainer: function () {

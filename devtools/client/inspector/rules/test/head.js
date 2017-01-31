@@ -175,7 +175,7 @@ var openColorPickerAndSelectColor = Task.async(function* (view, ruleIndex,
   let ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
   let propEditor = ruleEditor.rule.textProps[propIndex].editor;
   let swatch = propEditor.valueSpan.querySelector(".ruleview-colorswatch");
-  let cPicker = view.tooltips.colorPicker;
+  let cPicker = view.tooltips.getTooltip("colorPicker");
 
   info("Opening the colorpicker by clicking the color swatch");
   let onColorPickerReady = cPicker.once("ready");
@@ -213,7 +213,7 @@ var openCubicBezierAndChangeCoords = Task.async(function* (view, ruleIndex,
   let ruleEditor = getRuleViewRuleEditor(view, ruleIndex);
   let propEditor = ruleEditor.rule.textProps[propIndex].editor;
   let swatch = propEditor.valueSpan.querySelector(".ruleview-bezierswatch");
-  let bezierTooltip = view.tooltips.cubicBezier;
+  let bezierTooltip = view.tooltips.getTooltip("cubicBezier");
 
   info("Opening the cubicBezier by clicking the swatch");
   let onBezierWidgetReady = bezierTooltip.once("ready");
