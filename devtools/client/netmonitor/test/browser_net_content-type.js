@@ -13,10 +13,14 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
   info("Starting test... ");
 
-  let { document, NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
+  let { document, gStore, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let {
+    getDisplayedRequests,
+    getSortedRequests,
+  } = windowRequire("devtools/client/netmonitor/selectors/index");
 
-  RequestsMenu.lazyUpdate = false;
+  gStore.dispatch(Actions.batchEnable(false));
 
   let wait = waitForNetworkEvents(monitor, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
@@ -24,8 +28,13 @@ add_task(function* () {
   });
   yield wait;
 
-  verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(0),
-    "GET", CONTENT_TYPE_SJS + "?fmt=xml", {
+  verifyRequestItemTarget(
+    document,
+    getDisplayedRequests(gStore.getState()),
+    getSortedRequests(gStore.getState()).get(0),
+    "GET",
+    CONTENT_TYPE_SJS + "?fmt=xml",
+    {
       status: 200,
       statusText: "OK",
       type: "xml",
@@ -33,8 +42,13 @@ add_task(function* () {
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 42),
       time: true
     });
-  verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(1),
-    "GET", CONTENT_TYPE_SJS + "?fmt=css", {
+   verifyRequestItemTarget(
+    document,
+    getDisplayedRequests(gStore.getState()),
+    getSortedRequests(gStore.getState()).get(1),
+    "GET",
+    CONTENT_TYPE_SJS + "?fmt=css",
+    {
       status: 200,
       statusText: "OK",
       type: "css",
@@ -42,8 +56,13 @@ add_task(function* () {
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 34),
       time: true
     });
-  verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(2),
-    "GET", CONTENT_TYPE_SJS + "?fmt=js", {
+   verifyRequestItemTarget(
+    document,
+    getDisplayedRequests(gStore.getState()),
+    getSortedRequests(gStore.getState()).get(2),
+    "GET",
+    CONTENT_TYPE_SJS + "?fmt=js",
+    {
       status: 200,
       statusText: "OK",
       type: "js",
@@ -51,8 +70,13 @@ add_task(function* () {
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 34),
       time: true
     });
-  verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(3),
-    "GET", CONTENT_TYPE_SJS + "?fmt=json", {
+   verifyRequestItemTarget(
+    document,
+    getDisplayedRequests(gStore.getState()),
+    getSortedRequests(gStore.getState()).get(3),
+    "GET",
+    CONTENT_TYPE_SJS + "?fmt=json",
+    {
       status: 200,
       statusText: "OK",
       type: "json",
@@ -60,8 +84,12 @@ add_task(function* () {
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 29),
       time: true
     });
-  verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(4),
-    "GET", CONTENT_TYPE_SJS + "?fmt=bogus", {
+   verifyRequestItemTarget(
+    document,
+    getDisplayedRequests(gStore.getState()),
+    getSortedRequests(gStore.getState()).get(4),
+    "GET",
+    CONTENT_TYPE_SJS + "?fmt=bogus", {
       status: 404,
       statusText: "Not Found",
       type: "html",
@@ -69,8 +97,12 @@ add_task(function* () {
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 24),
       time: true
     });
-  verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(5),
-    "GET", TEST_IMAGE, {
+   verifyRequestItemTarget(
+    document,
+    getDisplayedRequests(gStore.getState()),
+    getSortedRequests(gStore.getState()).get(5),
+    "GET",
+    TEST_IMAGE, {
       fuzzyUrl: true,
       status: 200,
       statusText: "OK",
@@ -79,8 +111,12 @@ add_task(function* () {
       size: L10N.getFormatStrWithNumbers("networkMenu.sizeB", 580),
       time: true
     });
-  verifyRequestItemTarget(RequestsMenu, RequestsMenu.getItemAtIndex(6),
-    "GET", CONTENT_TYPE_SJS + "?fmt=gzip", {
+   verifyRequestItemTarget(
+    document,
+    getDisplayedRequests(gStore.getState()),
+    getSortedRequests(gStore.getState()).get(6),
+    "GET",
+    CONTENT_TYPE_SJS + "?fmt=gzip", {
       status: 200,
       statusText: "OK",
       type: "plain",
@@ -227,12 +263,12 @@ add_task(function* () {
     let editor = document.querySelector("#response-panel .editor-mount iframe");
     if (!editor) {
       let waitDOM = waitForDOM(document, "#response-panel .editor-mount iframe");
-      RequestsMenu.selectedIndex = index;
+      gStore.dispatch(Actions.selectRequestByIndex(index));
       document.querySelector("#response-tab").click();
       [editor] = yield waitDOM;
       yield once(editor, "DOMContentLoaded");
     } else {
-      RequestsMenu.selectedIndex = index;
+      gStore.dispatch(Actions.selectRequestByIndex(index));
     }
 
     yield waitForDOM(editor.contentDocument, ".CodeMirror-code");
@@ -241,14 +277,14 @@ add_task(function* () {
   function* selectIndexAndWaitForJSONView(index) {
     let tabpanel = document.querySelector("#response-panel");
     let waitDOM = waitForDOM(tabpanel, ".treeTable");
-    RequestsMenu.selectedIndex = index;
+    gStore.dispatch(Actions.selectRequestByIndex(index));
     yield waitDOM;
   }
 
   function* selectIndexAndWaitForImageView(index) {
     let tabpanel = document.querySelector("#response-panel");
     let waitDOM = waitForDOM(tabpanel, ".response-image");
-    RequestsMenu.selectedIndex = index;
+    gStore.dispatch(Actions.selectRequestByIndex(index));
     let [imageNode] = yield waitDOM;
     yield once(imageNode, "load");
   }
