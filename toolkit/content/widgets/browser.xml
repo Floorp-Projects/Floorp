@@ -1068,7 +1068,8 @@
 
               let menulist = document.getElementById(this.getAttribute("selectmenulist"));
               menulist.menupopup.style.direction = data.direction;
-              this._selectParentHelper.populate(menulist, data.options, data.selectedIndex, this._fullZoom);
+              this._selectParentHelper.populate(menulist, data.options, data.selectedIndex, this._fullZoom,
+                                                data.uaBackgroundColor, data.uaColor);
               this._selectParentHelper.open(this, menulist, data.rect, data.isOpenedViaTouch);
               break;
             }

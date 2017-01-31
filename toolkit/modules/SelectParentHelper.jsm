@@ -25,12 +25,13 @@ var closedWithEnter = false;
 var selectRect;
 
 this.SelectParentHelper = {
-  populate(menulist, items, selectedIndex, zoom) {
+  populate(menulist, items, selectedIndex, zoom, uaBackgroundColor, uaColor) {
     // Clear the current contents of the popup
     menulist.menupopup.textContent = "";
     currentZoom = zoom;
     currentMenulist = menulist;
-    populateChildren(menulist, items, selectedIndex, zoom);
+    populateChildren(menulist, items, selectedIndex, zoom,
+                     uaBackgroundColor, uaColor);
   },
 
   open(browser, menulist, rect, isOpenedViaTouch) {
@@ -139,7 +140,10 @@ this.SelectParentHelper = {
 
       let options = msg.data.options;
       let selectedIndex = msg.data.selectedIndex;
-      this.populate(currentMenulist, options, selectedIndex, currentZoom);
+      let uaBackgroundColor = msg.data.uaBackgroundColor;
+      let uaColor = msg.data.uaColor;
+      this.populate(currentMenulist, options, selectedIndex,
+                    currentZoom, uaBackgroundColor, uaColor);
     }
   },
 
@@ -168,15 +172,15 @@ this.SelectParentHelper = {
 };
 
 function populateChildren(menulist, options, selectedIndex, zoom,
+                          uaBackgroundColor, uaColor,
                           parentElement = null, isGroupDisabled = false,
                           adjustedTextSize = -1, addSearch = true) {
   let element = menulist.menupopup;
+  let win = element.ownerGlobal;
 
   // -1 just means we haven't calculated it yet. When we recurse through this function
   // we will pass in adjustedTextSize to save on recalculations.
   if (adjustedTextSize == -1) {
-    let win = element.ownerGlobal;
-
     // Grab the computed text size and multiply it by the remote browser's fullZoom to ensure
     // the popup's text size is matched with the content's. We can't just apply a CSS transform
     // here as the popup's preferred size is calculated pre-transform.
@@ -197,16 +201,21 @@ function populateChildren(menulist, options, selectedIndex, zoom,
     item.hiddenByContent = item.hidden;
     item.setAttribute("tooltiptext", option.tooltip);
 
-    if (option.backgroundColor && option.backgroundColor != "transparent") {
+    let customOptionStylingUsed = false;
+    if (option.backgroundColor &&
+        option.backgroundColor != "transparent" &&
+        option.backgroundColor != uaBackgroundColor) {
       item.style.backgroundColor = option.backgroundColor;
+      customOptionStylingUsed = true;
     }
 
-    if (option.color && option.color != "transparent") {
+    if (option.color &&
+        option.color != uaColor) {
       item.style.color = option.color;
+      customOptionStylingUsed = true;
     }
 
-    if ((option.backgroundColor && option.backgroundColor != "transparent") ||
-        (option.color && option.color != "rgb(0, 0, 0)")) {
+    if (customOptionStylingUsed) {
       item.setAttribute("customoptionstyling", "true");
     } else {
       item.removeAttribute("customoptionstyling");
@@ -222,6 +231,7 @@ function populateChildren(menulist, options, selectedIndex, zoom,
 
     if (isOptGroup) {
       populateChildren(menulist, option.children, selectedIndex, zoom,
+                       uaBackgroundColor, uaColor,
                        item, isDisabled, adjustedTextSize, false);
     } else {
       if (option.index == selectedIndex) {
