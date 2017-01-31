@@ -673,10 +673,11 @@ private:
   virtual ~nsScriptLoadHandler();
 
   /*
-   * Try to decode some raw data.
+   * Once the charset is found by the EnsureDecoder function, we can
+   * incrementally convert the charset to the one expected by the JS Parser.
    */
-  nsresult TryDecodeRawData(const uint8_t* aData, uint32_t aDataLength,
-                            bool aEndOfStream);
+  nsresult DecodeRawData(const uint8_t* aData, uint32_t aDataLength,
+                         bool aEndOfStream);
 
   /*
    * Discover the charset by looking at the stream data, the script
