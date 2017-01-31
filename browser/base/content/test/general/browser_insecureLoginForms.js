@@ -103,3 +103,60 @@ add_task(function* test_mixedcontent() {
 
   gBrowser.removeTab(tab);
 });
+
+/**
+ * Checks that insecure window.opener does not trigger a warning.
+ */
+add_task(function* test_ignoring_window_opener() {
+  let newTabURL = "https://example.com" + TEST_URL_PATH + "form_basic.html";
+  let path = getRootDirectory(gTestPath)
+    .replace("chrome://mochitests/content", "http://example.com");
+  let url = path + "insecure_opener.html";
+
+  yield BrowserTestUtils.withNewTab(url, function*(browser) {
+    // Clicking the link will spawn a new tab.
+    let loaded = BrowserTestUtils.waitForNewTab(gBrowser, newTabURL);
+    yield ContentTask.spawn(browser, {}, function() {
+      content.document.getElementById("link").click();
+    });
+    let tab = yield loaded;
+    browser = tab.linkedBrowser;
+    yield waitForInsecureLoginFormsStateChange(browser, 2);
+
+    // Open the identity popup.
+    let { gIdentityHandler } = gBrowser.ownerGlobal;
+    gIdentityHandler._identityBox.click();
+    document.getElementById("identity-popup-security-expander").click();
+
+    ok(is_visible(document.getElementById("connection-icon")),
+       "Connection icon is visible");
+
+    // Assert that the identity indicators are still "secure".
+    let connectionIconImage = gBrowser.ownerGlobal
+          .getComputedStyle(document.getElementById("connection-icon"))
+          .getPropertyValue("list-style-image");
+    let securityViewBG = gBrowser.ownerGlobal
+          .getComputedStyle(document.getElementById("identity-popup-securityView"))
+          .getPropertyValue("background-image");
+    let securityContentBG = gBrowser.ownerGlobal
+          .getComputedStyle(document.getElementById("identity-popup-security-content"))
+          .getPropertyValue("background-image");
+    is(connectionIconImage,
+       "url(\"chrome://browser/skin/connection-secure.svg\")",
+       "Using expected icon image in the identity block");
+    is(securityViewBG,
+       "url(\"chrome://browser/skin/controlcenter/connection.svg#connection-secure\")",
+       "Using expected icon image in the Control Center main view");
+    is(securityContentBG,
+       "url(\"chrome://browser/skin/controlcenter/connection.svg#connection-secure\")",
+       "Using expected icon image in the Control Center subview");
+
+    ok(Array.every(document.querySelectorAll("[when-loginforms=insecure]"),
+                   element => is_hidden(element)),
+       "All messages should be hidden.");
+
+    gIdentityHandler._identityPopup.hidden = true;
+
+    yield BrowserTestUtils.removeTab(tab);
+  });
+});
