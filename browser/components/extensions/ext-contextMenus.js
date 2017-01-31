@@ -90,7 +90,7 @@ var gMenuBuilder = {
   buildActionContextMenu(contextData) {
     const {menu} = contextData;
 
-    contextData.tab = TabManager.activeTab;
+    contextData.tab = tabTracker.activeTab;
     contextData.pageUrl = contextData.tab.linkedBrowser.currentURI.spec;
 
     const root = gRootItems.get(contextData.extension);
@@ -328,7 +328,7 @@ function MenuItem(extension, createProperties, isRoot = false) {
   this.extension = extension;
   this.children = [];
   this.parent = null;
-  this.tabManager = TabManager.for(extension);
+  this.tabManager = extension.tabManager;
 
   this.setDefaults();
   this.setProps(createProperties);
@@ -546,19 +546,19 @@ MenuItem.prototype = {
 const contextMenuTracker = {
   register() {
     Services.obs.addObserver(this, "on-build-contextmenu", false);
-    for (const window of WindowListManager.browserWindows()) {
+    for (const window of windowTracker.browserWindows()) {
       this.onWindowOpen(window);
     }
-    WindowListManager.addOpenListener(this.onWindowOpen);
+    windowTracker.addOpenListener(this.onWindowOpen);
   },
 
   unregister() {
     Services.obs.removeObserver(this, "on-build-contextmenu");
-    for (const window of WindowListManager.browserWindows()) {
+    for (const window of windowTracker.browserWindows()) {
       const menu = window.document.getElementById("tabContextMenu");
       menu.removeEventListener("popupshowing", this);
     }
-    WindowListManager.removeOpenListener(this.onWindowOpen);
+    windowTracker.removeOpenListener(this.onWindowOpen);
   },
 
   observe(subject, topic, data) {
@@ -575,7 +575,7 @@ const contextMenuTracker = {
     const menu = event.target;
     if (menu.id === "tabContextMenu") {
       const trigger = menu.triggerNode;
-      const tab = trigger.localName === "tab" ? trigger : TabManager.activeTab;
+      const tab = trigger.localName === "tab" ? trigger : tabTracker.activeTab;
       const pageUrl = tab.linkedBrowser.currentURI.spec;
       gMenuBuilder.build({menu, tab, pageUrl, onTab: true});
     }
