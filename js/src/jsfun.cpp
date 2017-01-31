@@ -549,7 +549,7 @@ fun_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
 template<XDRMode mode>
 bool
 js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
-                           HandleScript enclosingScript, MutableHandleFunction objp)
+                           HandleScriptSource sourceObject, MutableHandleFunction objp)
 {
     enum FirstWordFlag {
         HasAtom             = 0x1,
@@ -635,10 +635,10 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
     }
 
     if (firstword & IsLazy) {
-        if (!XDRLazyScript(xdr, enclosingScope, enclosingScript, fun, &lazy))
+        if (!XDRLazyScript(xdr, enclosingScope, sourceObject, fun, &lazy))
             return false;
     } else {
-        if (!XDRScript(xdr, enclosingScope, enclosingScript, fun, &script))
+        if (!XDRScript(xdr, enclosingScope, sourceObject, fun, &script))
             return false;
     }
 
@@ -663,10 +663,12 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleScope enclosingScope,
 }
 
 template bool
-js::XDRInterpretedFunction(XDRState<XDR_ENCODE>*, HandleScope, HandleScript, MutableHandleFunction);
+js::XDRInterpretedFunction(XDRState<XDR_ENCODE>*, HandleScope, HandleScriptSource,
+                           MutableHandleFunction);
 
 template bool
-js::XDRInterpretedFunction(XDRState<XDR_DECODE>*, HandleScope, HandleScript, MutableHandleFunction);
+js::XDRInterpretedFunction(XDRState<XDR_DECODE>*, HandleScope, HandleScriptSource,
+                           MutableHandleFunction);
 
 /* ES6 (04-25-16) 19.2.3.6 Function.prototype [ @@hasInstance ] */
 bool
