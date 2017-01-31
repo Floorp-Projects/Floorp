@@ -1515,7 +1515,7 @@ js::XDRScriptRegExpObject(XDRState<mode>* xdr, MutableHandle<RegExpObject*> objp
     if (mode == XDR_DECODE) {
         RegExpFlag flags = RegExpFlag(flagsword);
         RegExpObject* reobj = RegExpObject::create(xdr->cx(), source, flags, nullptr,
-                                                   xdr->cx()->tempLifoAlloc());
+                                                   xdr->lifoAlloc());
         if (!reobj)
             return false;
 

@@ -205,7 +205,7 @@ NewEmptyScopeData(ExclusiveContext* cx, uint32_t length = 0)
 static bool
 XDRBindingName(XDRState<XDR_ENCODE>* xdr, BindingName* bindingName)
 {
-    JSContext* cx = xdr->cx();
+    ExclusiveContext* cx = xdr->cx();
 
     RootedAtom atom(cx, bindingName->name());
     bool hasAtom = !!atom;
@@ -223,7 +223,7 @@ XDRBindingName(XDRState<XDR_ENCODE>* xdr, BindingName* bindingName)
 static bool
 XDRBindingName(XDRState<XDR_DECODE>* xdr, BindingName* bindingName)
 {
-    JSContext* cx = xdr->cx();
+    ExclusiveContext* cx = xdr->cx();
 
     uint8_t u8;
     if (!xdr->codeUint8(&u8))
@@ -248,7 +248,7 @@ Scope::XDRSizedBindingNames(XDRState<mode>* xdr, Handle<ConcreteScope*> scope,
 {
     MOZ_ASSERT(!data);
 
-    JSContext* cx = xdr->cx();
+    ExclusiveContext* cx = xdr->cx();
 
     uint32_t length;
     if (mode == XDR_ENCODE)
@@ -531,7 +531,7 @@ template <XDRMode mode>
 LexicalScope::XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
                   MutableHandleScope scope)
 {
-    JSContext* cx = xdr->cx();
+    ExclusiveContext* cx = xdr->cx();
 
     Rooted<Data*> data(cx);
     if (!XDRSizedBindingNames<LexicalScope>(xdr, scope.as<LexicalScope>(), &data))
@@ -703,7 +703,7 @@ template <XDRMode mode>
 FunctionScope::XDR(XDRState<mode>* xdr, HandleFunction fun, HandleScope enclosing,
                    MutableHandleScope scope)
 {
-    JSContext* cx = xdr->cx();
+    ExclusiveContext* cx = xdr->cx();
     Rooted<Data*> data(cx);
     if (!XDRSizedBindingNames<FunctionScope>(xdr, scope.as<FunctionScope>(), &data))
         return false;
@@ -831,7 +831,7 @@ template <XDRMode mode>
 VarScope::XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
               MutableHandleScope scope)
 {
-    JSContext* cx = xdr->cx();
+    ExclusiveContext* cx = xdr->cx();
     Rooted<Data*> data(cx);
     if (!XDRSizedBindingNames<VarScope>(xdr, scope.as<VarScope>(), &data))
         return false;
@@ -934,7 +934,7 @@ GlobalScope::XDR(XDRState<mode>* xdr, ScopeKind kind, MutableHandleScope scope)
 {
     MOZ_ASSERT((mode == XDR_DECODE) == !scope);
 
-    JSContext* cx = xdr->cx();
+    ExclusiveContext* cx = xdr->cx();
     Rooted<Data*> data(cx);
     if (!XDRSizedBindingNames<GlobalScope>(xdr, scope.as<GlobalScope>(), &data))
         return false;
@@ -1059,7 +1059,7 @@ template <XDRMode mode>
 EvalScope::XDR(XDRState<mode>* xdr, ScopeKind kind, HandleScope enclosing,
                MutableHandleScope scope)
 {
-    JSContext* cx = xdr->cx();
+    ExclusiveContext* cx = xdr->cx();
     Rooted<Data*> data(cx);
 
     {

@@ -73,7 +73,7 @@ template<XDRMode mode>
 bool
 js::XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp)
 {
-    JSContext* cx = xdr->cx();
+    ExclusiveContext* cx = xdr->cx();
 
     /*
      * A script constant can be an arbitrary primitive value as they are used
@@ -197,7 +197,7 @@ template<XDRMode mode>
 static bool
 XDRLazyClosedOverBindings(XDRState<mode>* xdr, MutableHandle<LazyScript*> lazy)
 {
-    JSContext* cx = xdr->cx();
+    ExclusiveContext* cx = xdr->cx();
     RootedAtom atom(cx);
     for (size_t i = 0; i < lazy->numClosedOverBindings(); i++) {
         uint8_t endOfScopeSentinel;
@@ -230,7 +230,7 @@ XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun, HandleScript scri
     MOZ_ASSERT_IF(mode == XDR_ENCODE, script->isRelazifiable() && script->maybeLazyScript());
     MOZ_ASSERT_IF(mode == XDR_ENCODE, !lazy->numInnerFunctions());
 
-    JSContext* cx = xdr->cx();
+    ExclusiveContext* cx = xdr->cx();
 
     uint64_t packedFields;
     {
@@ -341,7 +341,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
     uint32_t scriptBits = 0;
     uint32_t bodyScopeIndex = 0;
 
-    JSContext* cx = xdr->cx();
+    ExclusiveContext* cx = xdr->cx();
     RootedScript script(cx);
     natoms = nsrcnotes = 0;
     nconsts = nobjects = nscopes = nregexps = ntrynotes = nscopenotes = nyieldoffsets = 0;
@@ -489,10 +489,25 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
         JSVersion version_ = JSVersion(version);
         MOZ_ASSERT((version_ & VersionFlags::MASK) == unsigned(version_));
 
-        CompileOptions options(cx);
-        options.setVersion(version_)
-               .setNoScriptRval(!!(scriptBits & (1 << NoScriptRval)))
-               .setSelfHostingMode(!!(scriptBits & (1 << SelfHosted)));
+        // When loading from the bytecode cache, we get the CompileOption from
+        // the document, which specify the version to use. If the version does
+        // not match, then we should fail.
+        mozilla::Maybe<CompileOptions> options;
+        if (xdr->hasOptions()) {
+            options.emplace(xdr->cx(), xdr->options());
+            if (options->version != version_ ||
+                options->noScriptRval != !!(scriptBits & (1 << NoScriptRval)) ||
+                options->selfHostingMode != !!(scriptBits & (1 << SelfHosted)))
+            {
+                return xdr->fail(JS::TranscodeResult_Failure_WrongCompileOption);
+            }
+        } else {
+            options.emplace(xdr->cx()->asJSContext());
+            (*options).setVersion(version_)
+                      .setNoScriptRval(!!(scriptBits & (1 << NoScriptRval)))
+                      .setSelfHostingMode(!!(scriptBits & (1 << SelfHosted)));
+        }
+
         RootedScriptSource sourceObject(cx);
         if (scriptBits & (1 << OwnSource)) {
             ScriptSource* ss = cx->new_<ScriptSource>();
@@ -506,12 +521,19 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
              * ScriptSourceObject, and those that are (element; elementAttributeName)
              * aren't preserved by XDR. So this can be simple.
              */
-            CompileOptions options(cx);
-            ss->initFromOptions(cx, options);
+            ss->initFromOptions(cx, *options);
             sourceObject = ScriptSourceObject::create(cx, ss);
-            if (!sourceObject ||
-                !ScriptSourceObject::initFromOptions(cx, sourceObject, options))
-                return false;
+            if (xdr->hasScriptSourceObjectOut()) {
+                // When the ScriptSourceObjectOut is provided by ParseTask, it
+                // is stored in a location which is traced by the GC.
+                *xdr->scriptSourceObjectOut() = sourceObject;
+            } else {
+                if (!sourceObject ||
+                    !ScriptSourceObject::initFromOptions(cx->asJSContext(), sourceObject, *options))
+                {
+                    return false;
+                }
+            }
         } else {
             MOZ_ASSERT(enclosingScript);
             // When decoding, all the scripts and the script source object
@@ -521,7 +543,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
             sourceObject = &enclosingScript->sourceObject()->as<ScriptSourceObject>();
         }
 
-        script = JSScript::Create(cx, options, sourceObject, 0, 0);
+        script = JSScript::Create(cx, *options, sourceObject, 0, 0);
         if (!script)
             return false;
 
@@ -899,8 +921,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
         scriptp.set(script);
 
         /* see BytecodeEmitter::tellDebuggerAboutCompiledScript */
-        if (!fun)
-            Debugger::onNewScript(cx, script);
+        if (!fun && cx->isJSContext())
+            Debugger::onNewScript(cx->asJSContext(), script);
     }
 
     return true;
@@ -919,7 +941,7 @@ bool
 js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope, HandleScript enclosingScript,
                   HandleFunction fun, MutableHandle<LazyScript*> lazy)
 {
-    JSContext* cx = xdr->cx();
+    ExclusiveContext* cx = xdr->cx();
 
     {
         uint32_t begin;
@@ -2027,7 +2049,10 @@ ScriptSource::performXDR(XDRState<mode>* xdr)
         const char* fn = filename();
         if (!xdr->codeCString(&fn))
             return false;
-        if (mode == XDR_DECODE && !setFilename(xdr->cx(), fn))
+        // Note: If the decoder has an option, then the filename is defined by
+        // the CompileOption from the document.
+        MOZ_ASSERT_IF(mode == XDR_DECODE && xdr->hasOptions(), filename());
+        if (mode == XDR_DECODE && !xdr->hasOptions() && !setFilename(xdr->cx(), fn))
             return false;
     }
 

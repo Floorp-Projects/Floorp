@@ -17,10 +17,10 @@ namespace js {
 
 class XDRBuffer {
   public:
-    XDRBuffer(JSContext* cx, JS::TranscodeBuffer& buffer, size_t cursor = 0)
+    XDRBuffer(ExclusiveContext* cx, JS::TranscodeBuffer& buffer, size_t cursor = 0)
       : context_(cx), buffer_(buffer), cursor_(cursor) { }
 
-    JSContext* cx() const {
+    ExclusiveContext* cx() const {
         return context_;
     }
 
@@ -43,7 +43,7 @@ class XDRBuffer {
     uint8_t* write(size_t n) {
         MOZ_ASSERT(n != 0);
         if (!buffer_.growByUninitialized(n)) {
-            JS_ReportOutOfMemory(cx());
+            ReportOutOfMemory(cx());
             return nullptr;
         }
         uint8_t* ptr = &buffer_[cursor_];
@@ -52,7 +52,7 @@ class XDRBuffer {
     }
 
   private:
-    JSContext* const context_;
+    ExclusiveContext* const context_;
     JS::TranscodeBuffer& buffer_;
     size_t cursor_;
 };
@@ -64,17 +64,34 @@ template <XDRMode mode>
 class XDRState {
   public:
     XDRBuffer buf;
+  private:
     JS::TranscodeResult resultCode_;
 
-    XDRState(JSContext* cx, JS::TranscodeBuffer& buffer, size_t cursor = 0)
-      : buf(cx, buffer, cursor), resultCode_(JS::TranscodeResult_Ok) { }
+  public:
+    XDRState(ExclusiveContext* cx, JS::TranscodeBuffer& buffer, size_t cursor = 0)
+      : buf(cx, buffer, cursor),
+        resultCode_(JS::TranscodeResult_Ok)
+    {
+    }
 
-    JSContext* cx() const {
+    virtual ~XDRState() {};
+
+    ExclusiveContext* cx() const {
         return buf.cx();
+    }
+    virtual LifoAlloc& lifoAlloc() const;
+
+    virtual bool hasOptions() const { return false; }
+    virtual const ReadOnlyCompileOptions& options() {
+        MOZ_CRASH("does not have options");
+    }
+    virtual bool hasScriptSourceObjectOut() const { return false; }
+    virtual ScriptSourceObject** scriptSourceObjectOut() {
+        MOZ_CRASH("does not have scriptSourceObjectOut.");
     }
 
     // Record logical failures of XDR.
-    void postProcessContextErrors(JSContext* cx);
+    void postProcessContextErrors(ExclusiveContext* cx);
     JS::TranscodeResult resultCode() const {
         return resultCode_;
     }
@@ -88,7 +105,7 @@ class XDRState {
         if (mode == XDR_ENCODE) {
             uint8_t* ptr = buf.write(sizeof(*n));
             if (!ptr)
-                return false;
+                return fail(JS::TranscodeResult_Throw);
             *ptr = *n;
         } else {
             *n = *buf.read(sizeof(*n));
@@ -100,7 +117,7 @@ class XDRState {
         if (mode == XDR_ENCODE) {
             uint8_t* ptr = buf.write(sizeof(*n));
             if (!ptr)
-                return false;
+                return fail(JS::TranscodeResult_Throw);
             mozilla::LittleEndian::writeUint16(ptr, *n);
         } else {
             const uint8_t* ptr = buf.read(sizeof(*n));
@@ -113,7 +130,7 @@ class XDRState {
         if (mode == XDR_ENCODE) {
             uint8_t* ptr = buf.write(sizeof(*n));
             if (!ptr)
-                return false;
+                return fail(JS::TranscodeResult_Throw);
             mozilla::LittleEndian::writeUint32(ptr, *n);
         } else {
             const uint8_t* ptr = buf.read(sizeof(*n));
@@ -126,7 +143,7 @@ class XDRState {
         if (mode == XDR_ENCODE) {
             uint8_t* ptr = buf.write(sizeof(*n));
             if (!ptr)
-                return false;
+                return fail(JS::TranscodeResult_Throw);
             mozilla::LittleEndian::writeUint64(ptr, *n);
         } else {
             const uint8_t* ptr = buf.read(sizeof(*n));
@@ -173,7 +190,7 @@ class XDRState {
         if (mode == XDR_ENCODE) {
             uint8_t* ptr = buf.write(len);
             if (!ptr)
-                return false;
+                return fail(JS::TranscodeResult_Throw);
             memcpy(ptr, bytes, len);
         } else {
             memcpy(bytes, buf.read(len), len);
@@ -192,7 +209,7 @@ class XDRState {
             size_t n = strlen(*sp) + 1;
             uint8_t* ptr = buf.write(n);
             if (!ptr)
-                return false;
+                return fail(JS::TranscodeResult_Throw);
             memcpy(ptr, *sp, n);
         } else {
             *sp = buf.readCString();
@@ -210,6 +227,48 @@ class XDRState {
 
 using XDREncoder = XDRState<XDR_ENCODE>;
 using XDRDecoder = XDRState<XDR_DECODE>;
+
+class XDROffThreadDecoder : public XDRDecoder {
+    const ReadOnlyCompileOptions* options_;
+    ScriptSourceObject** sourceObjectOut_;
+    LifoAlloc& alloc_;
+
+  public:
+    // Note, when providing an ExclusiveContext, where isJSContext is false,
+    // then the initialization of the ScriptSourceObject would remain
+    // incomplete. Thus, the sourceObjectOut must be used to finish the
+    // initialization with ScriptSourceObject::initFromOptions after the
+    // decoding.
+    //
+    // When providing a sourceObjectOut pointer, you have to ensure that it is
+    // marked by the GC to avoid dangling pointers.
+    XDROffThreadDecoder(ExclusiveContext* cx, LifoAlloc& alloc,
+                        const ReadOnlyCompileOptions* options,
+                        ScriptSourceObject** sourceObjectOut,
+                        JS::TranscodeBuffer& buffer, size_t cursor = 0)
+      : XDRDecoder(cx, buffer, cursor),
+        options_(options),
+        sourceObjectOut_(sourceObjectOut),
+        alloc_(alloc)
+    {
+        MOZ_ASSERT(options);
+        MOZ_ASSERT(sourceObjectOut);
+        MOZ_ASSERT(*sourceObjectOut == nullptr);
+    }
+
+    LifoAlloc& lifoAlloc() const override {
+        return alloc_;
+    }
+
+    bool hasOptions() const override { return true; }
+    const ReadOnlyCompileOptions& options() override {
+        return *options_;
+    }
+    bool hasScriptSourceObjectOut() const override { return true; }
+    ScriptSourceObject** scriptSourceObjectOut() override {
+        return sourceObjectOut_;
+    }
+};
 
 } /* namespace js */
 
