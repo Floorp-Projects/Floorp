@@ -15,6 +15,8 @@ browser.engagement:
     notification_emails:
       - rweiss@mozilla.com
     release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
 
   tab_open_event_count:
     bug_numbers:
@@ -28,6 +30,8 @@ browser.engagement:
     notification_emails:
       - rweiss@mozilla.com
     release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
 
   max_concurrent_window_count:
     bug_numbers:
@@ -40,6 +44,8 @@ browser.engagement:
     notification_emails:
       - rweiss@mozilla.com
     release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
 
   window_open_event_count:
     bug_numbers:
@@ -53,6 +59,8 @@ browser.engagement:
     notification_emails:
       - rweiss@mozilla.com
     release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
 
   total_uri_count:
     bug_numbers:
@@ -66,6 +74,8 @@ browser.engagement:
     notification_emails:
       - rweiss@mozilla.com
     release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
 
   unfiltered_uri_count:
     bug_numbers:
@@ -80,6 +90,8 @@ browser.engagement:
     notification_emails:
       - bcolloran@mozilla.com
     release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
 
   unique_domains_count:
     bug_numbers:
@@ -95,6 +107,8 @@ browser.engagement:
     notification_emails:
       - rweiss@mozilla.com
     release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
 
 # The following section contains the browser engagement scalars.
 browser.engagement.navigation:
@@ -110,6 +124,8 @@ browser.engagement.navigation:
     notification_emails:
       - bcolloran@mozilla.com
     release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
 
   searchbar:
     bug_numbers:
@@ -123,6 +139,8 @@ browser.engagement.navigation:
     notification_emails:
       - bcolloran@mozilla.com
     release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
 
   about_home:
     bug_numbers:
@@ -136,6 +154,8 @@ browser.engagement.navigation:
     notification_emails:
       - bcolloran@mozilla.com
     release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
 
   about_newtab:
     bug_numbers:
@@ -149,6 +169,8 @@ browser.engagement.navigation:
     notification_emails:
       - bcolloran@mozilla.com
     release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
 
   contextmenu:
     bug_numbers:
@@ -162,6 +184,8 @@ browser.engagement.navigation:
     notification_emails:
       - bcolloran@mozilla.com
     release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
 
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
@@ -176,6 +200,8 @@ telemetry.test:
     kind: uint
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'main'
 
   string_kind:
     bug_numbers:
@@ -185,6 +211,8 @@ telemetry.test:
     kind: string
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'main'
 
   boolean_kind:
     bug_numbers:
@@ -194,6 +222,8 @@ telemetry.test:
     kind: boolean
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'main'
 
   expired:
     bug_numbers:
@@ -203,6 +233,8 @@ telemetry.test:
     kind: uint
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'main'
 
   unexpired:
     bug_numbers:
@@ -212,6 +244,8 @@ telemetry.test:
     kind: uint
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'main'
 
   release_optin:
     bug_numbers:
@@ -222,6 +256,8 @@ telemetry.test:
     notification_emails:
       - telemetry-client-dev@mozilla.com
     release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'
 
   release_optout:
     bug_numbers:
@@ -232,6 +268,8 @@ telemetry.test:
     notification_emails:
       - telemetry-client-dev@mozilla.com
     release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
 
   keyed_release_optin:
     bug_numbers:
@@ -243,6 +281,8 @@ telemetry.test:
     notification_emails:
       - telemetry-client-dev@mozilla.com
     release_channel_collection: opt-in
+    record_in_processes:
+      - 'main'
 
   keyed_release_optout:
     bug_numbers:
@@ -254,6 +294,8 @@ telemetry.test:
     notification_emails:
       - telemetry-client-dev@mozilla.com
     release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
 
   keyed_expired:
     bug_numbers:
@@ -264,6 +306,8 @@ telemetry.test:
     keyed: true
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'main'
 
   keyed_unsigned_int:
     bug_numbers:
@@ -274,6 +318,8 @@ telemetry.test:
     keyed: true
     notification_emails:
       - telemetry-client-dev@mozilla.com
+    record_in_processes:
+      - 'main'
 
   keyed_boolean_kind:
     bug_numbers:

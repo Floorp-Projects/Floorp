@@ -15,11 +15,19 @@ namespace dom {
 class ContentParent;
 } // namespace dom
 
+namespace ipc {
+template<class PFooSide>
+class Endpoint;
+} // namespace ipc
+
 namespace plugins {
+
+class PPluginModuleParent;
 
 bool
 SetupBridge(uint32_t aPluginId, dom::ContentParent* aContentParent,
-            bool aForceBridgeNow, nsresult* aResult, uint32_t* aRunID);
+            bool aForceBridgeNow, nsresult* aResult, uint32_t* aRunID,
+            ipc::Endpoint<PPluginModuleParent>* aEndpoint);
 
 nsresult
 FindPluginsForContent(uint32_t aPluginEpoch,
