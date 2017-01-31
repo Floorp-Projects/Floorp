@@ -18,7 +18,12 @@ class FakeTryOptionSyntax(object):
 
     def __init__(self, message, task_graph):
         self.trigger_tests = 0
+        self.talos_trigger_tests = 0
         self.notifications = None
+        self.env = []
+        self.profile = False
+        self.tag = None
+        self.no_retry = False
 
     def task_matches(self, attributes):
         return 'at-at' in attributes
