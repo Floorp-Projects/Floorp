@@ -21,7 +21,7 @@ add_task(function* () {
   yield selectNode("#scale", inspector);
 
   // Find the color swatch in the rule-view.
-  let ruleView = inspector.ruleview.view;
+  let ruleView = inspector.getPanel("ruleview").view;
   let ruleViewDocument = ruleView.styleDocument;
   let swatchEl = ruleViewDocument.querySelector(".ruleview-colorswatch");
 
@@ -45,7 +45,7 @@ add_task(function* () {
   // Find the color swatch in the rule-view.
   yield selectNode("h1", inspector);
 
-  ruleView = inspector.ruleview.view;
+  ruleView = inspector.getPanel("ruleview").view;
   ruleViewDocument = ruleView.styleDocument;
   swatchEl = ruleViewDocument.querySelector(".ruleview-colorswatch");
 

@@ -80,13 +80,13 @@ function openRuleView() {
   return openInspectorSidebarTab("ruleview").then(data => {
     // Replace the view to use a custom throttle function that can be triggered manually
     // through an additional ".flush()" property.
-    data.inspector.ruleview.view.throttle = manualThrottle();
+    data.inspector.getPanel("ruleview").view.throttle = manualThrottle();
 
     return {
       toolbox: data.toolbox,
       inspector: data.inspector,
       testActor: data.testActor,
-      view: data.inspector.ruleview.view
+      view: data.inspector.getPanel("ruleview").view
     };
   });
 }
@@ -104,7 +104,7 @@ function openComputedView() {
       toolbox: data.toolbox,
       inspector: data.inspector,
       testActor: data.testActor,
-      view: data.inspector.computedview.computedView
+      view: data.inspector.getPanel("computedview").computedView
     };
   });
 }
@@ -118,7 +118,7 @@ function openComputedView() {
  */
 function selectRuleView(inspector) {
   inspector.sidebar.select("ruleview");
-  return inspector.ruleview.view;
+  return inspector.getPanel("ruleview").view;
 }
 
 /**
@@ -130,7 +130,7 @@ function selectRuleView(inspector) {
  */
 function selectComputedView(inspector) {
   inspector.sidebar.select("computedview");
-  return inspector.computedview.computedView;
+  return inspector.getPanel("computedview").computedView;
 }
 
 /**
