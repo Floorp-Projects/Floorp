@@ -5,16 +5,17 @@
 GARBAGE += $(MIDL_GENERATED_FILES) done_gen dlldata.c
 
 MIDL_GENERATED_FILES = \
-	ISimpleDOMNode.h \
-	ISimpleDOMNode_p.c \
-	ISimpleDOMNode_i.c \
-	ISimpleDOMDocument.h \
-	ISimpleDOMDocument_p.c \
-	ISimpleDOMDocument_i.c \
-	ISimpleDOMText.h \
-	ISimpleDOMText_p.c \
-	ISimpleDOMText_i.c \
-	$(NULL)
+  ISimpleDOMNode.h \
+  ISimpleDOMNode_p.c \
+  ISimpleDOMNode_i.c \
+  ISimpleDOMNode.tlb \
+  ISimpleDOMDocument.h \
+  ISimpleDOMDocument_p.c \
+  ISimpleDOMDocument_i.c \
+  ISimpleDOMText.h \
+  ISimpleDOMText_p.c \
+  ISimpleDOMText_i.c \
+  $(NULL)
 
 $(MIDL_GENERATED_FILES): done_gen
 
