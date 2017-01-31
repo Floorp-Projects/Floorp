@@ -32,7 +32,7 @@
 #include "nsClassHashtable.h"
 #include "prclist.h"
 #include "mozilla/CORSMode.h"
-#include "mozilla/dom/Dispatcher.h"
+#include "mozilla/dom/DispatcherTrait.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/StyleBackendType.h"
 #include "mozilla/StyleSheet.h"
