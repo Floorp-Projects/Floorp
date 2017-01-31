@@ -26,7 +26,7 @@
             class="devtools-responsive-container"
             flex="1">
         <html:div xmlns="http://www.w3.org/1999/xhtml"
-                  id="network-table"
+                  id="react-request-list-hook"
                   class="devtools-main-content">
         </html:div>
 

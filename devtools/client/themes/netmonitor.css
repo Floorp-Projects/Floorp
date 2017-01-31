@@ -83,9 +83,8 @@
 }
 
 .request-list-container {
-  display: -moz-box;
-  -moz-box-orient: vertical;
-  -moz-box-flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .request-list-empty-notice {
@@ -135,14 +134,16 @@
 }
 
 .requests-menu-contents {
-  display: -moz-box;
-  -moz-box-orient: vertical;
-  -moz-box-flex: 1;
+  display: flex;
+  flex-direction: column;
   overflow-x: hidden;
   overflow-y: auto;
 
   --timings-scale: 1;
   --timings-rev-scale: 1;
+
+  /* Devtools panel view height - tabbar height - toolbar height */
+  height: calc(100vh - 48px);
 }
 
 .requests-menu-subitem {
@@ -1329,6 +1330,10 @@
 
 #splitter-adjustable-box[hidden=true] {
   display: none;
+}
+
+#react-request-list-hook {
+  -moz-box-flex: 1;
 }
 
 #primed-cache-chart,

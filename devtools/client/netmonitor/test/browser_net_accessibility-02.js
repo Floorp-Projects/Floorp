@@ -14,16 +14,17 @@ add_task(function* () {
   // It seems that this test may be slow on Ubuntu builds running on ec2.
   requestLongerTimeout(2);
 
-  let { window, document, NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
+  let { window, document, gStore, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
 
-  RequestsMenu.lazyUpdate = false;
+  gStore.dispatch(Actions.batchEnable(false));
 
   let count = 0;
   function check(selectedIndex, panelVisibility) {
     info("Performing check " + (count++) + ".");
 
-    is(RequestsMenu.selectedIndex, selectedIndex,
+    let requestItems = Array.from(document.querySelectorAll(".request-list-item"));
+    is(requestItems.findIndex((item) => item.matches(".selected")), selectedIndex,
       "The selected item in the requests menu was incorrect.");
     is(!!document.querySelector(".network-details-panel"), panelVisibility,
       "The network details panel should render correctly.");
