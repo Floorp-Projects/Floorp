@@ -173,7 +173,7 @@ function test(spec, charCode, keyCode, offset, modifiers)
     gotStartTimeOk = false;
   }
 
-  anim.parentNode.removeChild(anim);
+  anim.remove();
 
   return gotStartTimeOk;
 }
@@ -238,7 +238,7 @@ function testOpenEnd()
               "open-ended interval");
   }
 
-  anim.parentNode.removeChild(anim);
+  anim.remove();
 }
 
 function testPreventDefault()
@@ -264,7 +264,7 @@ function testPreventDefault()
   }
 
   circle.removeEventListener('keypress', func);
-  anim.parentNode.removeChild(anim);
+  anim.remove();
 }
 
 function testDispatchToWindow()
@@ -284,7 +284,7 @@ function testDispatchToWindow()
               "accesskey handling");
   }
 
-  anim.parentNode.removeChild(anim);
+  anim.remove();
 }
 
 function testAdoptNode()
@@ -328,7 +328,7 @@ function testAdoptNode()
     ok(false, "Adopted node failed to catch accesskey event");
   }
 
-  anim.parentNode.removeChild(anim);
+  anim.remove();
 }
 
 function testFauxEvent()
@@ -351,7 +351,7 @@ function testFauxEvent()
     // All is well
   }
 
-  anim.parentNode.removeChild(anim);
+  anim.remove();
 }
 
 window.addEventListener("load", main);

@@ -1036,6 +1036,29 @@ intrinsic_ArrayBufferCopyData(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+// Arguments must both be SharedArrayBuffer or wrapped SharedArrayBuffer.
+static bool
+intrinsic_SharedArrayBuffersMemorySame(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 2);
+
+    JSObject* lhs = CheckedUnwrap(&args[0].toObject());
+    if (!lhs) {
+        ReportAccessDenied(cx);
+        return false;
+    }
+    JSObject* rhs = CheckedUnwrap(&args[1].toObject());
+    if (!rhs) {
+        ReportAccessDenied(cx);
+        return false;
+    }
+
+    args.rval().setBoolean(lhs->as<SharedArrayBufferObject>().rawBufferObject() ==
+                           rhs->as<SharedArrayBufferObject>().rawBufferObject());
+    return true;
+}
+
 static bool
 intrinsic_IsSpecificTypedArray(JSContext* cx, unsigned argc, Value* vp, Scalar::Type type)
 {
@@ -2384,6 +2407,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
           intrinsic_PossiblyWrappedArrayBufferByteLength<SharedArrayBufferObject>, 1,0),
     JS_FN("SharedArrayBufferCopyData",
           intrinsic_ArrayBufferCopyData<SharedArrayBufferObject>,       5,0),
+    JS_FN("SharedArrayBuffersMemorySame",
+          intrinsic_SharedArrayBuffersMemorySame,                       2,0),
 
     JS_FN("IsUint8TypedArray",        intrinsic_IsUint8TypedArray,      1,0),
     JS_FN("IsInt8TypedArray",         intrinsic_IsInt8TypedArray,       1,0),

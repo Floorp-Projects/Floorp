@@ -113,7 +113,7 @@ function key_num(col_index) {
 
 function reset_sort_headers() {
     find_all('.sort-icon').forEach(function(elem) {
-        elem.parentNode.removeChild(elem);
+        elem.remove();
     });
     find_all('.sortable').forEach(function(elem) {
         var icon = document.createElement("div");
@@ -150,7 +150,7 @@ function split_debug_onto_two_rows() {
                 new_row.appendChild(td_elem);
                 td_elem.colSpan=5;
             } else {
-                td_elem.parentNode.removeChild(td_elem);
+                td_elem.remove();
             }
         });
     });

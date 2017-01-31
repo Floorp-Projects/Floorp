@@ -11,12 +11,7 @@ exports.IdGenerator = class IdGenerator {
     this.messageId = 1;
   }
 
-  getNextId() {
-    // Return the next message id, as a string.
-    return "" + this.messageId++;
-  }
-
-  getCurrentId() {
-    return this.messageId;
+  getNextId(packet) {
+    return (packet && packet.actor) ? packet.actor : "" + this.messageId++;
   }
 };

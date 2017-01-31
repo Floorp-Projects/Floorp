@@ -79,7 +79,7 @@ DestroyPrivateKeyWithoutDestroyingPKCS11Object(SECKEYPrivateKey* key)
 // generates a random ID for each key. The given template must contain an
 // attribute slot for a key ID, but it must consist of a null pointer and have a
 // length of 0.
-SECKEYPrivateKey*
+UniqueSECKEYPrivateKey
 PrivateKeyFromPrivateKeyTemplate(CK_ATTRIBUTE* aTemplate,
                                  CK_ULONG aTemplateSize)
 {
@@ -147,7 +147,8 @@ PrivateKeyFromPrivateKeyTemplate(CK_ATTRIBUTE* aTemplate,
   }
 
   // Have NSS translate the object to a private key.
-  return PK11_FindKeyByKeyID(slot.get(), objID.get(), nullptr);
+  return UniqueSECKEYPrivateKey(
+    PK11_FindKeyByKeyID(slot.get(), objID.get(), nullptr));
 }
 
 CryptoKey::CryptoKey(nsIGlobalObject* aGlobal)
@@ -364,8 +365,8 @@ CryptoKey::AddPublicKeyData(SECKEYPublicKey* aPublicKey)
     { CKA_VALUE,            value.data,           value.len },
   };
 
-  mPrivateKey = UniqueSECKEYPrivateKey(
-    PrivateKeyFromPrivateKeyTemplate(keyTemplate, ArrayLength(keyTemplate)));
+  mPrivateKey = PrivateKeyFromPrivateKeyTemplate(keyTemplate,
+                                                 ArrayLength(keyTemplate));
   NS_ENSURE_TRUE(mPrivateKey, NS_ERROR_DOM_OPERATION_ERR);
 
   return NS_OK;
@@ -485,24 +486,24 @@ CryptoKey::GetSymKey() const
   return mSymKey;
 }
 
-SECKEYPrivateKey*
+UniqueSECKEYPrivateKey
 CryptoKey::GetPrivateKey() const
 {
   nsNSSShutDownPreventionLock locker;
   if (!mPrivateKey || isAlreadyShutDown()) {
     return nullptr;
   }
-  return SECKEY_CopyPrivateKey(mPrivateKey.get());
+  return UniqueSECKEYPrivateKey(SECKEY_CopyPrivateKey(mPrivateKey.get()));
 }
 
-SECKEYPublicKey*
+UniqueSECKEYPublicKey
 CryptoKey::GetPublicKey() const
 {
   nsNSSShutDownPreventionLock locker;
   if (!mPublicKey || isAlreadyShutDown()) {
     return nullptr;
   }
-  return SECKEY_CopyPublicKey(mPublicKey.get());
+  return UniqueSECKEYPublicKey(SECKEY_CopyPublicKey(mPublicKey.get()));
 }
 
 void CryptoKey::virtualDestroyNSSReference()
@@ -519,11 +520,10 @@ void CryptoKey::destructorSafeDestroyNSSReference()
 
 // Serialization and deserialization convenience methods
 
-SECKEYPrivateKey*
+UniqueSECKEYPrivateKey
 CryptoKey::PrivateKeyFromPkcs8(CryptoBuffer& aKeyData,
                          const nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
-  SECKEYPrivateKey* privKey;
   UniquePK11SlotInfo slot(PK11_GetInternalSlot());
   if (!slot) {
     return nullptr;
@@ -542,6 +542,7 @@ CryptoKey::PrivateKeyFromPkcs8(CryptoBuffer& aKeyData,
   // Allow everything, we enforce usage ourselves
   unsigned int usage = KU_ALL;
 
+  SECKEYPrivateKey* privKey;
   SECStatus rv = PK11_ImportDERPrivateKeyInfoAndReturnKey(
                  slot.get(), &pkcs8Item, nullptr, nullptr, false, false,
                  usage, &privKey, nullptr);
@@ -549,10 +550,11 @@ CryptoKey::PrivateKeyFromPkcs8(CryptoBuffer& aKeyData,
   if (rv == SECFailure) {
     return nullptr;
   }
-  return privKey;
+
+  return UniqueSECKEYPrivateKey(privKey);
 }
 
-SECKEYPublicKey*
+UniqueSECKEYPublicKey
 CryptoKey::PublicKeyFromSpki(CryptoBuffer& aKeyData,
                        const nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
@@ -607,7 +609,7 @@ CryptoKey::PublicKeyFromSpki(CryptoBuffer& aKeyData,
     return nullptr;
   }
 
-  return SECKEY_CopyPublicKey(tmp.get());
+  return UniqueSECKEYPublicKey(SECKEY_CopyPublicKey(tmp.get()));
 }
 
 nsresult
@@ -748,7 +750,7 @@ CreateECPointForCoordinates(const CryptoBuffer& aX,
   return point;
 }
 
-SECKEYPrivateKey*
+UniqueSECKEYPrivateKey
 CryptoKey::PrivateKeyFromJwk(const JsonWebKey& aJwk,
                              const nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
@@ -1000,7 +1002,7 @@ CryptoKey::PrivateKeyToJwk(SECKEYPrivateKey* aPrivKey,
   }
 }
 
-SECKEYPublicKey*
+UniqueSECKEYPublicKey
 CreateECPublicKey(const SECItem* aKeyData, const nsString& aNamedCurve)
 {
   UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
@@ -1037,10 +1039,10 @@ CreateECPublicKey(const SECItem* aKeyData, const nsString& aNamedCurve)
     return nullptr;
   }
 
-  return SECKEY_CopyPublicKey(key.get());
+  return UniqueSECKEYPublicKey(SECKEY_CopyPublicKey(key.get()));
 }
 
-SECKEYPublicKey*
+UniqueSECKEYPublicKey
 CryptoKey::PublicKeyFromJwk(const JsonWebKey& aJwk,
                             const nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
@@ -1074,7 +1076,7 @@ CryptoKey::PublicKeyFromJwk(const JsonWebKey& aJwk,
       return nullptr;
     }
 
-    return SECKEY_ImportDERPublicKey(pkDer.get(), CKK_RSA);
+    return UniqueSECKEYPublicKey(SECKEY_ImportDERPublicKey(pkDer.get(), CKK_RSA));
   }
 
   if (aJwk.mKty.EqualsLiteral(JWK_TYPE_EC)) {
@@ -1140,7 +1142,7 @@ CryptoKey::PublicKeyToJwk(SECKEYPublicKey* aPubKey,
   }
 }
 
-SECKEYPublicKey*
+UniqueSECKEYPublicKey
 CryptoKey::PublicDhKeyFromRaw(CryptoBuffer& aKeyData,
                               const CryptoBuffer& aPrime,
                               const CryptoBuffer& aGenerator,
@@ -1171,7 +1173,7 @@ CryptoKey::PublicDhKeyFromRaw(CryptoBuffer& aKeyData,
   key->u.dh.base.type = siUnsignedInteger;
   key->u.dh.publicValue.type = siUnsignedInteger;
 
-  return SECKEY_CopyPublicKey(key);
+  return UniqueSECKEYPublicKey(SECKEY_CopyPublicKey(key));
 }
 
 nsresult
@@ -1185,7 +1187,7 @@ CryptoKey::PublicDhKeyToRaw(SECKEYPublicKey* aPubKey,
   return NS_OK;
 }
 
-SECKEYPublicKey*
+UniqueSECKEYPublicKey
 CryptoKey::PublicECKeyFromRaw(CryptoBuffer& aKeyData,
                               const nsString& aNamedCurve,
                               const nsNSSShutDownPreventionLock& /*proofOfLock*/)
@@ -1322,12 +1324,10 @@ CryptoKey::ReadStructuredClone(JSStructuredCloneReader* aReader)
     return false;
   }
   if (priv.Length() > 0) {
-    mPrivateKey = UniqueSECKEYPrivateKey(
-      CryptoKey::PrivateKeyFromPkcs8(priv, locker));
+    mPrivateKey = CryptoKey::PrivateKeyFromPkcs8(priv, locker);
   }
   if (pub.Length() > 0)  {
-    mPublicKey = UniqueSECKEYPublicKey(
-      CryptoKey::PublicKeyFromSpki(pub, locker));
+    mPublicKey = CryptoKey::PublicKeyFromSpki(pub, locker);
   }
 
   // Ensure that what we've read is consistent

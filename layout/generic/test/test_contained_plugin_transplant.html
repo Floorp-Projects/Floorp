@@ -27,7 +27,7 @@ SimpleTest.waitForExplicitFinish();
 function run() {
   var iframe1 = document.getElementById("iframe1");
   var iframe2 = document.getElementById("iframe2");
-  iframe1.parentNode.removeChild(iframe1);
+  iframe1.remove();
   iframe1.style.position = "fixed";
   iframe2.contentDocument.body.appendChild(iframe1);
   setTimeout(function() { ok(true, "We didn't crash!"); SimpleTest.finish(); }, 0);

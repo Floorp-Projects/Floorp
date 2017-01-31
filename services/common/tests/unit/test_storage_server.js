@@ -597,7 +597,7 @@ add_test(function test_x_num_records() {
     // BSO fetches don't have one.
     do_check_false("x-num-records" in this.response.headers);
     let col = localRequest(server, "/2.0/123/storage/crypto");
-    col.get(function(err) {
+    col.get(function(err2) {
       // Collection fetches do.
       do_check_eq(this.response.headers["x-num-records"], "2");
       server.stop(run_next_test);

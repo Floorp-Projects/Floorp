@@ -153,7 +153,7 @@ addLoadEvent(function() {
 
 // Utility functions
 function rC(node) {
-  node.parentNode.removeChild(node);
+  node.remove();
 }
 function testArraysSame(a1, a2) {
   return Array.prototype.every.call(a1, function(e, index) {

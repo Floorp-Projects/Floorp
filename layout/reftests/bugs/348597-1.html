@@ -11,7 +11,7 @@
    <script>
    function doTest() {
       var s1 = document.getElementById("screen");
-      s1.parentNode.removeChild(s1); 
+      s1.remove(); 
       document.documentElement.removeAttribute('class');
    }
    document.addEventListener("MozReftestInvalidate", doTest);

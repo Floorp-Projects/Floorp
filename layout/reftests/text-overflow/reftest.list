@@ -13,7 +13,7 @@ HTTP(..) == quirks-decorations.html quirks-decorations-ref.html
 HTTP(..) == quirks-line-height.html quirks-line-height-ref.html
 HTTP(..) == standards-decorations.html standards-decorations-ref.html
 HTTP(..) == standards-line-height.html standards-line-height-ref.html
-random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,4200) HTTP(..) == selection.html selection-ref.html # bug 668849
+fuzzy-if(skiaContent,1,4200) HTTP(..) == selection.html selection-ref.html
 HTTP(..) == marker-shadow.html marker-shadow-ref.html
 == aligned-baseline.html aligned-baseline-ref.html
 skip-if(Android) fuzzy-if(skiaContent,1,5) == clipped-elements.html clipped-elements-ref.html

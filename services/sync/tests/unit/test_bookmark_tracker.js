@@ -97,37 +97,6 @@ async function dumpBookmarks() {
   })
 }
 
-var populateTree = async function populate(parentId, ...items) {
-  let guids = {};
-  for (let item of items) {
-    let itemId;
-    switch (item.type) {
-      case PlacesUtils.bookmarks.TYPE_BOOKMARK:
-        itemId = PlacesUtils.bookmarks.insertBookmark(parentId,
-          Utils.makeURI(item.url),
-          PlacesUtils.bookmarks.DEFAULT_INDEX, item.title);
-        break;
-
-      case PlacesUtils.bookmarks.TYPE_FOLDER: {
-        itemId = PlacesUtils.bookmarks.createFolder(parentId,
-          item.title, PlacesUtils.bookmarks.DEFAULT_INDEX);
-        Object.assign(guids, await populate(itemId, ...item.children));
-        break;
-      }
-
-      default:
-        throw new Error(`Unsupported item type: ${item.type}`);
-    }
-    if (item.exclude) {
-      PlacesUtils.annotations.setItemAnnotation(
-        itemId, BookmarkAnnos.EXCLUDEBACKUP_ANNO, "Don't back this up", 0,
-        PlacesUtils.annotations.EXPIRE_NEVER);
-    }
-    guids[item.title] = await PlacesUtils.promiseItemGuid(itemId);
-  }
-  return guids;
-}
-
 async function insertBookmarksToMigrate() {
   await PlacesUtils.bookmarks.insert({
     guid: "0gtWTOgYcoJD",
@@ -957,7 +926,7 @@ add_task(async function test_onFaviconChanged() {
 
     await new Promise(resolve => {
       PlacesUtils.favicons.setAndFetchFaviconForPage(pageURI, iconURI, true,
-        PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, (iconURI, dataLen, data, mimeType) => {
+        PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, (uri, dataLen, data, mimeType) => {
           resolve();
         },
         Services.scriptSecurityManager.getSystemPrincipal());

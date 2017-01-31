@@ -13,19 +13,28 @@
 #include "MediaUtils.h"
 
 namespace mozilla {
+
+namespace ipc {
+class PrincipalInfo;
+}
+
 namespace media {
 
 // media::Child implements proxying to the chrome process for some media-related
 // functions, for the moment just:
 //
-// GetOriginKey() - get a cookie-like persisted unique key for a given origin.
+// GetPrincipalKey() - get a cookie-like persisted unique key for a given
+// principalInfo.
+//
 // SanitizeOriginKeys() - reset persisted unique keys.
 
-// GetOriginKey and SanitizeOriginKeys are asynchronous APIs that return pledges
-// (promise-like objects) with the future value. Use pledge.Then(func) to access.
+// GetPrincipalKey and SanitizeOriginKeys are asynchronous APIs that return
+// pledges (promise-like objects) with the future value. Use pledge.Then(func)
+// to access.
 
 already_AddRefed<Pledge<nsCString>>
-GetOriginKey(const nsCString& aOrigin, bool aPersist);
+GetPrincipalKey(const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
+                bool aPersist);
 
 void
 SanitizeOriginKeys(const uint64_t& aSinceWhen, bool aOnlyPrivateBrowsing);
@@ -37,7 +46,9 @@ public:
 
   Child();
 
-  mozilla::ipc::IPCResult RecvGetOriginKeyResponse(const uint32_t& aRequestId, const nsCString& aKey) override;
+  mozilla::ipc::IPCResult
+  RecvGetPrincipalKeyResponse(const uint32_t& aRequestId,
+                              const nsCString& aKey) override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   virtual ~Child();

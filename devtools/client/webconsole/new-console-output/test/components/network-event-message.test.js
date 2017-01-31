@@ -18,11 +18,12 @@ const { stubPreparedMessages } = require("devtools/client/webconsole/new-console
 const serviceContainer = require("devtools/client/webconsole/new-console-output/test/fixtures/serviceContainer");
 
 const EXPECTED_URL = "http://example.com/browser/devtools/client/webconsole/new-console-output/test/fixtures/stub-generators/inexistent.html";
+const EXPECTED_STATUS = /\[HTTP\/\d\.\d \d+ [A-Za-z ]+ \d+ms\]/;
 
 describe("NetworkEventMessage component:", () => {
   describe("GET request", () => {
     it("renders as expected", () => {
-      const message = stubPreparedMessages.get("GET request");
+      const message = stubPreparedMessages.get("GET request eventTimings");
       const wrapper = render(NetworkEventMessage({ message, serviceContainer }));
       const L10n = require("devtools/client/webconsole/new-console-output/test/fixtures/L10n");
       const { timestampString } = new L10n();
@@ -32,9 +33,8 @@ describe("NetworkEventMessage component:", () => {
       expect(wrapper.find(".message-body .xhr").length).toBe(0);
       expect(wrapper.find(".message-body .url").length).toBe(1);
       expect(wrapper.find(".message-body .url").text()).toBe(EXPECTED_URL);
-      expect(wrapper
-        .find("div.message.cm-s-mozilla span.message-body.devtools-monospace").length
-      ).toBe(1);
+      expect(wrapper.find(".message-body .status").length).toBe(1);
+      expect(wrapper.find(".message-body .status").text()).toMatch(EXPECTED_STATUS);
     });
 
     it("has the expected indent", () => {
@@ -52,21 +52,20 @@ describe("NetworkEventMessage component:", () => {
 
   describe("XHR GET request", () => {
     it("renders as expected", () => {
-      const message = stubPreparedMessages.get("XHR GET request");
+      const message = stubPreparedMessages.get("XHR GET request eventTimings");
       const wrapper = render(NetworkEventMessage({ message, serviceContainer }));
 
       expect(wrapper.find(".message-body .method").text()).toBe("GET");
       expect(wrapper.find(".message-body .xhr").length).toBe(1);
       expect(wrapper.find(".message-body .xhr").text()).toBe("XHR");
       expect(wrapper.find(".message-body .url").text()).toBe(EXPECTED_URL);
-      let selector = "div.message.cm-s-mozilla span.message-body.devtools-monospace";
-      expect(wrapper.find(selector).length).toBe(1);
+      expect(wrapper.find(".message-body .status").text()).toMatch(EXPECTED_STATUS);
     });
   });
 
   describe("XHR POST request", () => {
     it("renders as expected", () => {
-      const message = stubPreparedMessages.get("XHR POST request");
+      const message = stubPreparedMessages.get("XHR POST request eventTimings");
       const wrapper = render(NetworkEventMessage({ message, serviceContainer }));
 
       expect(wrapper.find(".message-body .method").text()).toBe("POST");
@@ -74,8 +73,8 @@ describe("NetworkEventMessage component:", () => {
       expect(wrapper.find(".message-body .xhr").text()).toBe("XHR");
       expect(wrapper.find(".message-body .url").length).toBe(1);
       expect(wrapper.find(".message-body .url").text()).toBe(EXPECTED_URL);
-      let selector = "div.message.cm-s-mozilla span.message-body.devtools-monospace";
-      expect(wrapper.find(selector).length);
+      expect(wrapper.find(".message-body .status").length).toBe(1);
+      expect(wrapper.find(".message-body .status").text()).toMatch(EXPECTED_STATUS);
     });
   });
 });

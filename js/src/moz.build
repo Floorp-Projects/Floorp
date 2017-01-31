@@ -159,6 +159,7 @@ EXPORTS.js += [
 
 UNIFIED_SOURCES += [
     'builtin/AtomicsObject.cpp',
+    'builtin/DataViewObject.cpp',
     'builtin/Eval.cpp',
     'builtin/Intl.cpp',
     'builtin/MapObject.cpp',
@@ -184,6 +185,7 @@ UNIFIED_SOURCES += [
     'frontend/ParseNode.cpp',
     'frontend/TokenStream.cpp',
     'gc/Allocator.cpp',
+    'gc/AtomMarking.cpp',
     'gc/Barrier.cpp',
     'gc/GCTrace.cpp',
     'gc/Iteration.cpp',
@@ -647,7 +649,6 @@ jsautokw.inputs += [
 if CONFIG['JS_SHARED_LIBRARY']:
     GeckoSharedLibrary('js', linkage=None)
     SHARED_LIBRARY_NAME = CONFIG['JS_LIBRARY_NAME']
-    SDK_LIBRARY = True
 else:
     Library('js')
 
