@@ -58,13 +58,6 @@ def setup():
         os.remove(mach_dest)
     os.symlink(mach_src, mach_dest)
 
-    activate = os.path.join(build_dir, 'venv', 'bin', 'activate')
-    if os.path.isfile(activate):
-        # TODO Support other shells
-        bashrc = os.path.expanduser(os.path.join('~', '.bashrc'))
-        with open(bashrc, 'ab') as f:
-            f.write(". {}".format(activate))
-
     print("""
 Mozharness has finished downloading the build and tests to:
 {}

@@ -88,5 +88,6 @@ class ReftestCommands(object):
              description='Run the reftest harness.',
              parser=setup_argument_parser)
     def reftest(self, **kwargs):
+        self.context.activate_mozharness_venv()
         kwargs['suite'] = 'reftest'
         return run_reftest(self.context, **kwargs)

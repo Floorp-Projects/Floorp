@@ -64,4 +64,5 @@ class MachCommands(object):
                     'using marionette).',
         parser=setup_marionette_argument_parser)
     def run_marionette_test(self, **kwargs):
+        self.context.activate_mozharness_venv()
         return run_marionette(self.context, **kwargs)
