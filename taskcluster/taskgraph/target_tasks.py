@@ -6,18 +6,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph import try_option_syntax
-
-INTEGRATION_PROJECTS = set([
-    'mozilla-inbound',
-    'autoland',
-])
-
-RELEASE_PROJECTS = set([
-    'mozilla-central',
-    'mozilla-aurora',
-    'mozilla-beta',
-    'mozilla-release',
-])
+from taskgraph.util.attributes import match_run_on_projects
 
 _target_task_methods = {}
 
@@ -89,16 +78,7 @@ def target_tasks_default(full_task_graph, parameters):
     via the `run_on_projects` attributes."""
     def filter(task):
         run_on_projects = set(task.attributes.get('run_on_projects', []))
-        if 'all' in run_on_projects:
-            return True
-        project = parameters['project']
-        if 'integration' in run_on_projects:
-            if project in INTEGRATION_PROJECTS:
-                return True
-        if 'release' in run_on_projects:
-            if project in RELEASE_PROJECTS:
-                return True
-        return project in run_on_projects
+        return match_run_on_projects(parameters['project'], run_on_projects)
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
 
 
