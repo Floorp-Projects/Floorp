@@ -32,6 +32,10 @@ menuitem[_moz-menuactive="true"] {
   background-color: -moz-menuhover;
 }
 
+menuitem[customoptionstyling="true"] {
+  -moz-appearance: none;
+}
+
 menuitem[_moz-menuactive="true"][customoptionstyling="true"] {
   filter: invert(100%);
 }
