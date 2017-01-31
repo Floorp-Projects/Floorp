@@ -1083,3 +1083,12 @@ interface EXT_disjoint_timer_query {
     any getQueryEXT(GLenum target, GLenum pname);
     any getQueryObjectEXT(WebGLQuery query, GLenum pname);
 };
+
+[NoInterfaceObject]
+interface MOZ_debug_get {
+    const GLenum EXTENSIONS = 0x1F03;
+    const GLenum WSI_INFO   = 0x10000;
+
+    [Throws]
+    any getParameter(GLenum pname);
+};

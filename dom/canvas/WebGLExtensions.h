@@ -14,6 +14,7 @@
 #include "WebGLTypes.h"
 
 namespace mozilla {
+class ErrorResult;
 
 namespace dom {
 template<typename> struct Nullable;
@@ -399,6 +400,19 @@ public:
                            GLenum pname, JS::MutableHandleValue retval) const;
 
     static bool IsSupported(const WebGLContext*);
+
+    DECL_WEBGL_EXTENSION_GOOP
+};
+
+class WebGLExtensionDebugGet final
+    : public WebGLExtensionBase
+{
+public:
+    explicit WebGLExtensionDebugGet(WebGLContext* webgl);
+    virtual ~WebGLExtensionDebugGet();
+
+    void GetParameter(JSContext* cx, GLenum pname,
+                      JS::MutableHandle<JS::Value> retval, ErrorResult& er) const;
 
     DECL_WEBGL_EXTENSION_GOOP
 };
