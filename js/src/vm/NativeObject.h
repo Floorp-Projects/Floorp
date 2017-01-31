@@ -734,10 +734,10 @@ class NativeObject : public ShapedObject
                               bool allowDictionary = true);
 
     /* Add a data property whose id is not yet in this scope. */
-    Shape* addDataProperty(ExclusiveContext* cx,
-                           jsid id_, uint32_t slot, unsigned attrs);
-    Shape* addDataProperty(ExclusiveContext* cx, HandlePropertyName name,
-                           uint32_t slot, unsigned attrs);
+    static Shape* addDataProperty(ExclusiveContext* cx, HandleNativeObject obj,
+                                  jsid id_, uint32_t slot, unsigned attrs);
+    static Shape* addDataProperty(ExclusiveContext* cx, HandleNativeObject obj,
+                                  HandlePropertyName name, uint32_t slot, unsigned attrs);
 
     /* Add or overwrite a property for id in this scope. */
     static Shape*
