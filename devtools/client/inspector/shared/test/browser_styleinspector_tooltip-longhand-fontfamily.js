@@ -36,7 +36,7 @@ add_task(function* () {
 function* testRuleView(ruleView, nodeFront) {
   info("Testing font-family tooltips in the rule view");
 
-  let tooltip = ruleView.tooltips.previewTooltip;
+  let tooltip = ruleView.tooltips.getTooltip("previewTooltip");
   let panel = tooltip.panel;
 
   // Check that the rule view has a tooltip and that a XUL panel has
@@ -64,7 +64,7 @@ function* testRuleView(ruleView, nodeFront) {
 function* testComputedView(computedView, nodeFront) {
   info("Testing font-family tooltips in the computed view");
 
-  let tooltip = computedView.tooltips.previewTooltip;
+  let tooltip = computedView.tooltips.getTooltip("previewTooltip");
   let panel = tooltip.panel;
   let {valueSpan} = getComputedViewProperty(computedView, "font-family");
 
@@ -92,7 +92,7 @@ function* testExpandedComputedViewProperty(computedView, nodeFront) {
   let valueSpan = propertyView.matchedSelectorsContainer
     .querySelector(".bestmatch .other-property-value");
 
-  let tooltip = computedView.tooltips.previewTooltip;
+  let tooltip = computedView.tooltips.getTooltip("previewTooltip");
   let panel = tooltip.panel;
 
   yield assertHoverTooltipOn(tooltip, valueSpan);

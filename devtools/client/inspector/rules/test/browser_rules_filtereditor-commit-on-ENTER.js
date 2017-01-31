@@ -24,7 +24,7 @@ add_task(function* () {
   yield onRuleViewChanged;
 
   info("Get the cssfilter widget instance");
-  let filterTooltip = view.tooltips.filterEditor;
+  let filterTooltip = view.tooltips.getTooltip("filterEditor");
   let widget = filterTooltip.widget;
 
   info("Set a new value in the cssfilter widget");

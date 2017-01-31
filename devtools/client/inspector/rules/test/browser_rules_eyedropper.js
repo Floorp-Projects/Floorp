@@ -48,7 +48,7 @@ add_task(function* () {
   info("Open the eyedropper from the colorpicker tooltip");
   yield openEyedropper(view, swatch);
 
-  let tooltip = view.tooltips.colorPicker.tooltip;
+  let tooltip = view.tooltips.getTooltip("colorPicker").tooltip;
   ok(!tooltip.isVisible(), "color picker tooltip is closed after opening eyedropper");
 
   info("Test that pressing escape dismisses the eyedropper");
@@ -107,10 +107,10 @@ function* testSelect(view, swatch, inspector, testActor) {
 }
 
 function* openEyedropper(view, swatch) {
-  let tooltip = view.tooltips.colorPicker.tooltip;
+  let tooltip = view.tooltips.getTooltip("colorPicker").tooltip;
 
   info("Click on the swatch");
-  let onColorPickerReady = view.tooltips.colorPicker.once("ready");
+  let onColorPickerReady = view.tooltips.getTooltip("colorPicker").once("ready");
   swatch.click();
   yield onColorPickerReady;
 
