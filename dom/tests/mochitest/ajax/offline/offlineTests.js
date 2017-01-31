@@ -52,7 +52,8 @@ fetch: function(callback)
   var self = this;
 
   var cacheStorage = OfflineTest.getActiveStorage();
-  cacheStorage.asyncOpenURI(CommonUtils.makeURI(url), "", Ci.nsICacheStorage.OPEN_READONLY, this);
+  cacheStorage.asyncOpenURI(CommonUtils.makeURI(url), "", Ci.nsICacheStorage.OPEN_READONLY,
+                            SpecialPowers.wrapCallbackObject(this));
 }
 };
 
@@ -96,8 +97,6 @@ setupChild: function()
  */
 setup: function()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   try {
     this._allowedByDefault = SpecialPowers.getBoolPref("offline-apps.allow_by_default");
   } catch (e) {}
@@ -256,7 +255,7 @@ waitForAdd: function(url, onFinished) {
   // Check every half second for ten seconds.
   var numChecks = 20;
 
-  var waitForAddListener = {
+  var waitForAddListener = SpecialPowers.wrapCallbackObject({
     onCacheEntryCheck: function() { return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED; },
     onCacheEntryAvailable: function(entry, isnew, applicationCache, status) {
       if (entry) {
@@ -272,7 +271,7 @@ waitForAdd: function(url, onFinished) {
 
       setTimeout(OfflineTest.priv(waitFunc), 500);
     }
-  };
+  });
 
   var waitFunc = function() {
     var cacheStorage = OfflineTest.getActiveStorage();
@@ -380,7 +379,7 @@ _checkCache: function(cacheStorage, url, expectEntry, callback)
     return;
   }
 
-  var _checkCacheListener = {
+  var _checkCacheListener = SpecialPowers.wrapCallbackObject({
     onCacheEntryCheck: function() { return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED; },
     onCacheEntryAvailable: function(entry, isnew, applicationCache, status) {
       if (entry) {
@@ -410,7 +409,7 @@ _checkCache: function(cacheStorage, url, expectEntry, callback)
       }
       if (callback) setTimeout(OfflineTest.priv(callback), 0);
     }
-  };
+  });
 
   cacheStorage.asyncOpenURI(CommonUtils.makeURI(url), "", Ci.nsICacheStorage.OPEN_READONLY, _checkCacheListener);
 },

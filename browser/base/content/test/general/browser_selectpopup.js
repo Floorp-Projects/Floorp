@@ -80,6 +80,14 @@ const PAGECONTENT_TRANSLATED =
   "</iframe>" +
   "</div></body></html>";
 
+const PAGECONTENT_COLORS =
+  "<html><head><style>.blue { color: #fff; background-color: #00f; } .green { color: #800080; background-color: green; }</style>" +
+  "<body><select id='one'>" +
+  '  <option value="One" style="color: #fff; background-color: #f00;">{"color": "rgb(255, 255, 255)", "backgroundColor": "rgb(255, 0, 0)"}</option>' +
+  '  <option value="Two" class="blue">{"color": "rgb(255, 255, 255)", "backgroundColor": "rgb(0, 0, 255)"}</option>' +
+  '  <option value="Three" class="green">{"color": "rgb(128, 0, 128)", "backgroundColor": "rgb(0, 128, 0)"}</option>' +
+  "</select></body></html>";
+
 function openSelectPopup(selectPopup, mode = "key", selector = "select", win = window) {
   let popupShownPromise = BrowserTestUtils.waitForEvent(selectPopup, "popupshown");
 
@@ -729,3 +737,82 @@ add_task(function* test_somehidden() {
   yield BrowserTestUtils.removeTab(tab);
 });
 
+add_task(function* test_colors_applied_to_popup() {
+  function inverseRGBString(rgbString) {
+    let [, r, g, b] = rgbString.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+    return `rgb(${255 - r}, ${255 - g}, ${255 - b})`;
+  }
+
+  const pageUrl = "data:text/html," + escape(PAGECONTENT_COLORS);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
+
+  let selectPopup = document.getElementById("ContentSelectDropdown").menupopup;
+
+  let popupShownPromise = BrowserTestUtils.waitForEvent(selectPopup, "popupshown");
+  yield BrowserTestUtils.synthesizeMouseAtCenter("#one", { type: "mousedown" }, gBrowser.selectedBrowser);
+  yield popupShownPromise;
+
+  // The label contains a JSON string of the expected colors for
+  // `color` and `background-color`.
+  is(selectPopup.parentNode.itemCount, 3, "Correct number of items");
+  let child = selectPopup.firstChild;
+  let idx = 1;
+
+  ok(child.selected, "The first child should be selected");
+  while (child) {
+    let expectedColors = JSON.parse(child.label);
+
+    // We need to use Canvas here to get the actual pixel color
+    // because the computedStyle will only tell us the 'color' or
+    // 'backgroundColor' of the element, but not what the displayed
+    // color is due to composition of various CSS rules such as
+    // 'filter' which is applied when elements have custom background
+    // or foreground elements.
+    let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+    canvas = document.documentElement.appendChild(canvas);
+    let rect = child.getBoundingClientRect();
+    canvas.setAttribute("width", rect.width);
+    canvas.setAttribute("height", rect.height);
+    canvas.mozOpaque = true;
+
+    let ctx = canvas.getContext("2d");
+    ctx.drawWindow(window, rect.x + rect.left, rect.y + rect.top, rect.width, rect.height, "#000", ctx.DRAWWINDOW_USE_WIDGET_LAYERS);
+    let frame = ctx.getImageData(0, 0, rect.width, rect.height);
+
+    let pixels = frame.data.length / 4;
+    // Assume the inverse backgroundColor is the color of the first pixel.
+    let [inverseBgR, inverseBgG, inverseBgB] = frame.data;
+    let inverseBackgroundColor = `rgb(${inverseBgR}, ${inverseBgG}, ${inverseBgB})`;
+    // Use the next different pixel color as the foreground color, assuming
+    // no anti-aliasing.
+    let inverseColor = inverseBackgroundColor;
+    for (let i = 0; i < pixels; i++) {
+      if (inverseBgR != frame.data[i * 4 + 0] &&
+          inverseBgG != frame.data[i * 4 + 1] &&
+          inverseBgB != frame.data[i * 4 + 2]) {
+        inverseColor = `rgb(${frame.data[i * 4 + 0]}, ${frame.data[i * 4 + 1]}, ${frame.data[i * 4 + 2]})`;
+      }
+    }
+    // The canvas code above isn't getting the right colors for the pixels,
+    // it always returns rgb(255,255,255).
+    todo_is(inverseColor, inverseRGBString(getComputedStyle(child).color),
+      "Item " + (idx) + " has correct inverse foreground color when selected");
+    todo_is(inverseBackgroundColor, inverseRGBString(getComputedStyle(child).backgroundColor),
+      "Item " + (idx) + " has correct inverse background color when selected");
+
+    canvas.remove();
+
+    // Press Down to move the selected item to the next item in the
+    // list and check the colors of this item when it's not selected.
+    EventUtils.synthesizeKey("KEY_ArrowDown", { code: "ArrowDown" });
+
+    is(getComputedStyle(child).color, expectedColors.color,
+       "Item " + (idx) + " has correct foreground color");
+    is(getComputedStyle(child).backgroundColor, expectedColors.backgroundColor,
+       "Item " + (idx++) + " has correct background color");
+    child = child.nextSibling;
+  }
+
+  yield hideSelectPopup(selectPopup, "escape");
+  yield BrowserTestUtils.removeTab(tab);
+});
