@@ -6,6 +6,9 @@
  * will fail tests in this case, unless the test whitelists itself.
  */
 
+// For this test we allow the global Assert to be modified.
+/* global Assert:true */
+
 "use strict";
 
 this.EXPORTED_SYMBOLS = [

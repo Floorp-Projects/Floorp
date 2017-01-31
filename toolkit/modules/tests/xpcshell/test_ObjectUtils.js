@@ -101,4 +101,13 @@ add_task(function* test_deepEqual() {
   } catch (e) {
     Assert.ok(true, "Didn't recurse infinitely.");
   }
+
+  let e = {a: 3, b: 4};
+  let f = {b: 4, a: 3};
+
+  function checkEquiv() {
+    return arguments;
+  }
+
+  Assert.ok(deepEqual(checkEquiv(e, f), checkEquiv(f, e)));
 });
