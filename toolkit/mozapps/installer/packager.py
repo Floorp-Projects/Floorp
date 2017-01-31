@@ -342,11 +342,14 @@ def main():
                     'js-compare-ast.js')
             ]
         if args.unify:
-            finder = UnifiedBuildFinder(FileFinder(args.source),
-                                        FileFinder(args.unify),
+            finder = UnifiedBuildFinder(FileFinder(args.source,
+                                                   find_executables=True),
+                                        FileFinder(args.unify,
+                                                   find_executables=True),
                                         **finder_args)
         else:
-            finder = FileFinder(args.source, **finder_args)
+            finder = FileFinder(args.source, find_executables=True,
+                                **finder_args)
         if 'NO_PKG_FILES' in os.environ:
             sinkformatter = NoPkgFilesRemover(formatter,
                                               args.manifest is not None)

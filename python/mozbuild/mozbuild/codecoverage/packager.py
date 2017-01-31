@@ -15,7 +15,7 @@ def package_gcno_tree(root, output_file):
     if isinstance(root, unicode):
         root = root.encode('utf-8')
 
-    finder = FileFinder(root)
+    finder = FileFinder(root, find_executables=False)
     jarrer = Jarrer(optimize=False)
     for p, f in finder.find("**/*.gcno"):
         jarrer.add(p, f)

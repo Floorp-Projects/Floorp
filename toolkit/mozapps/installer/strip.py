@@ -15,7 +15,7 @@ def strip(dir):
     # The FileFinder will give use ExecutableFile instances for files
     # that can be stripped, and copying ExecutableFiles defaults to
     # stripping them unless buildconfig.substs['PKG_SKIP_STRIP'] is set.
-    for p, f in FileFinder(dir):
+    for p, f in FileFinder(dir, find_executables=True):
         copier.add(p, f)
     copier.copy(dir)
 
