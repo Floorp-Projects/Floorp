@@ -255,7 +255,8 @@ XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun, HandleScript scri
             return false;
 
         if (mode == XDR_DECODE) {
-            lazy.set(LazyScript::Create(cx, fun, script, enclosingScope, script,
+            RootedScriptSource sourceObject(cx, &script->scriptSourceUnwrap());
+            lazy.set(LazyScript::Create(cx, fun, script, enclosingScope, sourceObject,
                                         packedFields, begin, end, lineno, column));
 
             // As opposed to XDRLazyScript, we need to restore the runtime bits
@@ -297,8 +298,9 @@ enum XDRClassKind {
 
 template<XDRMode mode>
 bool
-js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScript enclosingScript,
-              HandleFunction fun, MutableHandleScript scriptp)
+js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
+              HandleScriptSource sourceObjectArg, HandleFunction fun,
+              MutableHandleScript scriptp)
 {
     /* NB: Keep this in sync with CopyScript. */
 
@@ -348,7 +350,6 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
 
     if (mode == XDR_ENCODE) {
         script = scriptp.get();
-        MOZ_ASSERT_IF(enclosingScript, enclosingScript->compartment() == script->compartment());
         MOZ_ASSERT(script->functionNonDelazifying() == fun);
 
         if (!fun && script->treatAsRunOnce()) {
@@ -424,7 +425,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
             scriptBits |= (1 << FunctionHasThisBinding);
         if (script->functionHasExtraBodyVarScope())
             scriptBits |= (1 << FunctionHasExtraBodyVarScope);
-        if (!enclosingScript || enclosingScript->scriptSource() != script->scriptSource())
+        MOZ_ASSERT_IF(sourceObjectArg, sourceObjectArg->source() == script->scriptSource());
+        if (!sourceObjectArg)
             scriptBits |= (1 << OwnSource);
         if (script->isGeneratorExp())
             scriptBits |= (1 << IsGeneratorExp);
@@ -485,6 +487,9 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
     if (!xdr->codeUint32(&scriptBits))
         return false;
 
+    MOZ_ASSERT(!!(scriptBits & (1 << OwnSource)) == !sourceObjectArg);
+    RootedScriptSource sourceObject(cx, sourceObjectArg);
+
     if (mode == XDR_DECODE) {
         JSVersion version_ = JSVersion(version);
         MOZ_ASSERT((version_ & VersionFlags::MASK) == unsigned(version_));
@@ -508,7 +513,6 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
                       .setSelfHostingMode(!!(scriptBits & (1 << SelfHosted)));
         }
 
-        RootedScriptSource sourceObject(cx);
         if (scriptBits & (1 << OwnSource)) {
             ScriptSource* ss = cx->new_<ScriptSource>();
             if (!ss)
@@ -534,13 +538,6 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
                     return false;
                 }
             }
-        } else {
-            MOZ_ASSERT(enclosingScript);
-            // When decoding, all the scripts and the script source object
-            // are in the same compartment, so the script's source object
-            // should never be a cross-compartment wrapper.
-            MOZ_ASSERT(enclosingScript->sourceObject()->is<ScriptSourceObject>());
-            sourceObject = &enclosingScript->sourceObject()->as<ScriptSourceObject>();
         }
 
         script = JSScript::Create(cx, *options, sourceObject, 0, 0);
@@ -551,6 +548,10 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
         // decoded may iterate the static scope chain.
         if (fun)
             fun->initScript(script);
+    } else {
+        // When encoding, we do not mutate any of the JSScript or LazyScript, so
+        // we can safely unwrap it here.
+        sourceObject = &script->scriptSourceUnwrap();
     }
 
     if (mode == XDR_DECODE) {
@@ -621,7 +622,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
     JS_STATIC_ASSERT(sizeof(jssrcnote) == 1);
 
     if (scriptBits & (1 << OwnSource)) {
-        if (!script->scriptSource()->performXDR<mode>(xdr))
+        if (!sourceObject->source()->performXDR<mode>(xdr))
             return false;
     }
     if (!xdr->codeUint32(&script->sourceStart_))
@@ -851,7 +852,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
             RootedFunction tmp(cx);
             if (mode == XDR_ENCODE)
                 tmp = &(*objp)->as<JSFunction>();
-            if (!XDRInterpretedFunction(xdr, funEnclosingScope, script, &tmp))
+            if (!XDRInterpretedFunction(xdr, funEnclosingScope, sourceObject, &tmp))
                 return false;
             *objp = tmp;
             break;
@@ -929,17 +930,18 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
 }
 
 template bool
-js::XDRScript(XDRState<XDR_ENCODE>*, HandleScope, HandleScript, HandleFunction,
+js::XDRScript(XDRState<XDR_ENCODE>*, HandleScope, HandleScriptSource, HandleFunction,
               MutableHandleScript);
 
 template bool
-js::XDRScript(XDRState<XDR_DECODE>*, HandleScope, HandleScript, HandleFunction,
+js::XDRScript(XDRState<XDR_DECODE>*, HandleScope, HandleScriptSource, HandleFunction,
               MutableHandleScript);
 
 template<XDRMode mode>
 bool
-js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope, HandleScript enclosingScript,
-                  HandleFunction fun, MutableHandle<LazyScript*> lazy)
+js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
+                  HandleScriptSource sourceObject, HandleFunction fun,
+                  MutableHandle<LazyScript*> lazy)
 {
     ExclusiveContext* cx = xdr->cx();
 
@@ -972,7 +974,7 @@ js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope, HandleScript 
         }
 
         if (mode == XDR_DECODE) {
-            lazy.set(LazyScript::Create(cx, fun, nullptr, enclosingScope, enclosingScript,
+            lazy.set(LazyScript::Create(cx, fun, nullptr, enclosingScope, sourceObject,
                                         packedFields, begin, end, lineno, column));
             if (!lazy)
                 return false;
@@ -1005,11 +1007,11 @@ js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope, HandleScript 
 }
 
 template bool
-js::XDRLazyScript(XDRState<XDR_ENCODE>*, HandleScope, HandleScript,
+js::XDRLazyScript(XDRState<XDR_ENCODE>*, HandleScope, HandleScriptSource,
                   HandleFunction, MutableHandle<LazyScript*>);
 
 template bool
-js::XDRLazyScript(XDRState<XDR_DECODE>*, HandleScope, HandleScript,
+js::XDRLazyScript(XDRState<XDR_DECODE>*, HandleScope, HandleScriptSource,
                   HandleFunction, MutableHandle<LazyScript*>);
 
 void
@@ -4096,7 +4098,7 @@ LazyScript::Create(ExclusiveContext* cx, HandleFunction fun,
 /* static */ LazyScript*
 LazyScript::Create(ExclusiveContext* cx, HandleFunction fun,
                    HandleScript script, HandleScope enclosingScope,
-                   HandleScript enclosingScript,
+                   HandleScriptSource sourceObject,
                    uint64_t packedFields, uint32_t begin, uint32_t end,
                    uint32_t lineno, uint32_t column)
 {
@@ -4126,11 +4128,11 @@ LazyScript::Create(ExclusiveContext* cx, HandleFunction fun,
     // values should only be non-null if we have a non-lazy enclosing script.
     // AddLazyFunctionsForCompartment relies on the source object being null
     // if we're nested inside another lazy function.
-    MOZ_ASSERT(!!enclosingScript == !!enclosingScope);
+    MOZ_ASSERT(!!sourceObject == !!enclosingScope);
     MOZ_ASSERT(!res->sourceObject());
     MOZ_ASSERT(!res->enclosingScope());
-    if (enclosingScript)
-        res->setEnclosingScopeAndSource(enclosingScope, &enclosingScript->scriptSourceUnwrap());
+    if (sourceObject)
+        res->setEnclosingScopeAndSource(enclosingScope, sourceObject);
 
     MOZ_ASSERT(!res->hasScript());
     if (script)

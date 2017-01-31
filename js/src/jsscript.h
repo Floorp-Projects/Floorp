@@ -683,12 +683,12 @@ AsyncKindFromBits(unsigned val) {
  */
 template<XDRMode mode>
 bool
-XDRScript(XDRState<mode>* xdr, HandleScope enclosingScope, HandleScript enclosingScript,
+XDRScript(XDRState<mode>* xdr, HandleScope enclosingScope, HandleScriptSource sourceObject,
           HandleFunction fun, MutableHandleScript scriptp);
 
 template<XDRMode mode>
 bool
-XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope, HandleScript enclosingScript,
+XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope, HandleScriptSource sourceObject,
               HandleFunction fun, MutableHandle<LazyScript*> lazy);
 
 /*
@@ -796,7 +796,7 @@ class JSScript : public js::gc::TenuredCell
     friend
     bool
     js::XDRScript(js::XDRState<mode>* xdr, js::HandleScope enclosingScope,
-                  js::HandleScript enclosingScript, js::HandleFunction fun,
+                  js::HandleScriptSource sourceObject, js::HandleFunction fun,
                   js::MutableHandleScript scriptp);
 
     friend bool
@@ -2011,11 +2011,11 @@ class LazyScript : public gc::TenuredCell
     // The "script" argument to this function can be null.  If it's non-null,
     // then this LazyScript should be associated with the given JSScript.
     //
-    // The enclosingScript and enclosingScope arguments may be null if the
+    // The sourceObject and enclosingScope arguments may be null if the
     // enclosing function is also lazy.
     static LazyScript* Create(ExclusiveContext* cx, HandleFunction fun,
                               HandleScript script, HandleScope enclosingScope,
-                              HandleScript enclosingScript,
+                              HandleScriptSource sourceObject,
                               uint64_t packedData, uint32_t begin, uint32_t end,
                               uint32_t lineno, uint32_t column);
 
