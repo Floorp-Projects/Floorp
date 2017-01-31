@@ -1045,14 +1045,6 @@ Function createOptions
   Call IsUserAdmin
   Pop $0
 
-  ; Only show the maintenance service checkbox if we're on XP SP3 or higher;
-  ;  we don't ever want to install it on XP without at least SP3 installed.
-  ${If} $0 == "true"
-  ${AndIf} ${IsWinXP}
-  ${AndIf} ${AtMostServicePack} 2
-    StrCpy $0 "false"
-  ${EndIf}
-
   ${If} $0 == "true"
     ; Only show the maintenance service checkbox if we have write access to HKLM
     DeleteRegValue HKLM "Software\Mozilla" "${BrandShortName}InstallerTest"
