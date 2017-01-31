@@ -26,6 +26,7 @@ static StaticRefPtr<TabGroup> sChromeTabGroup;
 TabGroup::TabGroup(bool aIsChrome)
  : mLastWindowLeft(false)
  , mThrottledQueuesInitialized(false)
+ , mIsChrome(aIsChrome)
 {
   for (size_t i = 0; i < size_t(TaskCategory::Count); i++) {
     TaskCategory category = static_cast<TaskCategory>(i);
@@ -59,7 +60,7 @@ TabGroup::~TabGroup()
 {
   MOZ_ASSERT(mDocGroups.IsEmpty());
   MOZ_ASSERT(mWindows.IsEmpty());
-  MOZ_RELEASE_ASSERT(mLastWindowLeft);
+  MOZ_RELEASE_ASSERT(mLastWindowLeft || mIsChrome);
 }
 
 void
@@ -173,7 +174,7 @@ TabGroup::Leave(nsPIDOMWindowOuter* aWindow)
   // The Chrome TabGroup doesn't have cyclical references through mEventTargets
   // to itself, meaning that we don't have to worry about nulling mEventTargets
   // out after the last window leaves.
-  if (sChromeTabGroup != this && mWindows.IsEmpty()) {
+  if (!mIsChrome && mWindows.IsEmpty()) {
     mLastWindowLeft = true;
 
     // There is a RefPtr cycle TabGroup -> DispatcherEventTarget -> TabGroup. To
@@ -270,7 +271,7 @@ TabGroup::EventTargetFor(TaskCategory aCategory) const
 {
   MOZ_ASSERT(aCategory != TaskCategory::Count);
   if (aCategory == TaskCategory::Worker || aCategory == TaskCategory::Timer) {
-    MOZ_RELEASE_ASSERT(mThrottledQueuesInitialized || this == sChromeTabGroup);
+    MOZ_RELEASE_ASSERT(mThrottledQueuesInitialized || mIsChrome);
   }
 
   if (NS_WARN_IF(mLastWindowLeft)) {
