@@ -29,7 +29,7 @@ RequestExecutionLevel user
 
 !addplugindir ./
 
-; On Vista and above attempt to elevate Standard Users in addition to users that
+; Attempt to elevate Standard Users in addition to users that
 ; are a member of the Administrators group.
 !define NONADMIN_ELEVATE
 
@@ -257,7 +257,7 @@ Section "Uninstall"
     ApplicationID::UninstallJumpLists "$AppUserModelID"
   ${EndIf}
 
-  ; Remove the updates directory for Vista and above
+  ; Remove the updates directory
   ${un.CleanUpdateDirectories} "Mozilla\Firefox" "Mozilla\updates"
 
   ; Remove any app model id's stored in the registry for this install path

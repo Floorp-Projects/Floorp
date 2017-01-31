@@ -46,7 +46,7 @@ Var PreventRebootRequired
 ; StartMenuDir variable can use the common InstallOnInitCommon macro.
 !define NO_STARTMENU_DIR
 
-; On Vista and above attempt to elevate Standard Users in addition to users that
+; Attempt to elevate Standard Users in addition to users that
 ; are a member of the Administrators group.
 !define NONADMIN_ELEVATE
 
@@ -252,7 +252,7 @@ Section "-InstallStartCleanup"
   ; setup the application model id registration value
   ${InitHashAppModelId} "$INSTDIR" "Software\Mozilla\${AppName}\TaskBarIDs"
 
-  ; Remove the updates directory for Vista and above
+  ; Remove the updates directory
   ${CleanUpdateDirectories} "Mozilla\Firefox" "Mozilla\updates"
 
   ${RemoveDeprecatedFiles}
@@ -390,7 +390,7 @@ Section "-Application" APP_IDX
   ; For pre win8, the following keys should only be set if we can write to HKLM.
   ; For post win8, the keys below get set in both HKLM and HKCU.
   ${If} $TmpVal == "HKLM"
-    ; Set the Start Menu Internet and Vista Registered App HKLM registry keys.
+    ; Set the Start Menu Internet and Registered App HKLM registry keys.
     ${SetStartMenuInternet} "HKLM"
     ${FixShellIconHandler} "HKLM"
 
@@ -409,7 +409,7 @@ Section "-Application" APP_IDX
   ${EndIf}
 
   ${If} ${AtLeastWin8}
-    ; Set the Start Menu Internet and Vista Registered App HKCU registry keys.
+    ; Set the Start Menu Internet and Registered App HKCU registry keys.
     ${SetStartMenuInternet} "HKCU"
     ${FixShellIconHandler} "HKCU"
 
@@ -468,7 +468,7 @@ Section "-Application" APP_IDX
   ${CreateRegKey} "$TmpVal" "$0" 0
 
   ${If} $TmpVal == "HKLM"
-    ; Set the permitted LSP Categories for WinVista and above
+    ; Set the permitted LSP Categories
     ${SetAppLSPCategories} ${LSP_CATEGORIES}
   ${EndIf}
 
@@ -595,15 +595,13 @@ Section "-InstallEndCleanup"
       ; value was before we changed it. To do so, we read it here and store it
       ; in our own registry key.
       StrCpy $0 ""
-      ${If} ${AtLeastWinVista}
-        AppAssocReg::QueryCurrentDefault "http" "protocol" "effective"
-        Pop $1
-        ; If the method hasn't failed, $1 will contain the progid. Check:
-        ${If} "$1" != "method failed"
-        ${AndIf} "$1" != "method not available"
-          ; Read the actual command from the progid
-          ReadRegStr $0 HKCR "$1\shell\open\command" ""
-        ${EndIf}
+      AppAssocReg::QueryCurrentDefault "http" "protocol" "effective"
+      Pop $1
+      ; If the method hasn't failed, $1 will contain the progid. Check:
+      ${If} "$1" != "method failed"
+      ${AndIf} "$1" != "method not available"
+        ; Read the actual command from the progid
+        ReadRegStr $0 HKCR "$1\shell\open\command" ""
       ${EndIf}
       ; If using the App Association Registry didn't happen or failed, fall back
       ; to the effective http default:
