@@ -116,7 +116,7 @@ function Toolbar({
           title: networkDetailsOpen ? COLLPASE_DETAILS_PANE : EXPAND_DETAILS_PANE,
           disabled: networkDetailsToggleDisabled,
           tabIndex: "0",
-          onMouseDown: toggleNetworkDetails,
+          onClick: toggleNetworkDetails,
         }),
       )
     )

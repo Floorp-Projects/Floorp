@@ -4,6 +4,7 @@
 
 DevToolsModules(
     'request-list-content.js',
+    'request-list-context-menu.js',
     'request-list-empty.js',
     'request-list-header.js',
     'request-list-item.js',
