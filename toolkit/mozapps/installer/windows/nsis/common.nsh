@@ -1376,10 +1376,7 @@
       ; behaviors depending on the windows version. The following code attempts
       ; to address these differences.
       ;
-      ; On XP (no SP, SP1, SP2), Vista: An empty default string
-      ; must be set under ddeexec. Empty strings propagate to CR.
-      ;
-      ; Win7: IE does not configure ddeexec, so issues with left over ddeexec keys
+      ; IE does not configure ddeexec, so issues with left over ddeexec keys
       ; in LM are reduced. We configure an empty ddeexec key with an empty default
       ; string in CU to be sure.
       ;
