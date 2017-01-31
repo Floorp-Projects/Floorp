@@ -16,11 +16,11 @@ def match_utc(params, hour=None, minute=None):
     specified, then every multiple of fifteen minutes will match.  Times
     not an even multiple of fifteen minutes will result in an exception
     (since they would never run)."""
-    if minute and minute % 15 != 0:
+    if minute is not None and minute % 15 != 0:
         raise Exception("cron jobs only run on multiples of 15 minutes past the hour")
-    if hour and params['time'].hour != hour:
+    if hour is not None and params['time'].hour != hour:
         return False
-    if minute and params['time'].minute != minute:
+    if minute is not None and params['time'].minute != minute:
         return False
     return True
 
