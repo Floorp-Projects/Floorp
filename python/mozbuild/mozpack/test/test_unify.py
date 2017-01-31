@@ -46,8 +46,8 @@ class TestUnifiedFinder(TestUnified):
         self.create_one('b', 'test/foo', 'b\nc\na\n')
         self.create_both('test/bar', 'a\nb\nc\n')
 
-        finder = UnifiedFinder(FileFinder(self.tmppath('a')),
-                               FileFinder(self.tmppath('b')),
+        finder = UnifiedFinder(FileFinder(self.tmppath('a'), find_executables=False),
+                               FileFinder(self.tmppath('b'), find_executables=False),
                                sorted=['test'])
         self.assertEqual(sorted([(f, c.open().read())
                                  for f, c in finder.find('foo')]),
@@ -63,8 +63,8 @@ class TestUnifiedFinder(TestUnified):
 
 class TestUnifiedBuildFinder(TestUnified):
     def test_unified_build_finder(self):
-        finder = UnifiedBuildFinder(FileFinder(self.tmppath('a')),
-                                    FileFinder(self.tmppath('b')))
+        finder = UnifiedBuildFinder(FileFinder(self.tmppath('a'), find_executables=False),
+                                    FileFinder(self.tmppath('b'), find_executables=False))
 
         # Test chrome.manifest unification
         self.create_both('chrome.manifest', 'a\nb\nc\n')
