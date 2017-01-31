@@ -94,6 +94,7 @@ enum class ScalarResult : uint8_t {
   InvalidType,
   InvalidValue,
   // Keyed Scalar Errors
+  KeyIsEmpty,
   KeyTooLong,
   TooManyKeys,
   // String Scalar Errors
@@ -693,6 +694,10 @@ KeyedScalar::GetValue(nsTArray<KeyValuePair>& aValues) const
 ScalarResult
 KeyedScalar::GetScalarForKey(const nsAString& aKey, ScalarBase** aRet)
 {
+  if (aKey.IsEmpty()) {
+    return ScalarResult::KeyIsEmpty;
+  }
+
   if (aKey.Length() >= kMaximumKeyStringLength) {
     return ScalarResult::KeyTooLong;
   }
@@ -820,6 +825,9 @@ internal_LogScalarError(const nsACString& aScalarName, ScalarResult aSr)
       break;
     case ScalarResult::StringTooLong:
       errorMessage.Append(NS_LITERAL_STRING(" - Truncating scalar value to 50 characters."));
+      break;
+    case ScalarResult::KeyIsEmpty:
+      errorMessage.Append(NS_LITERAL_STRING(" - The key must not be empty."));
       break;
     case ScalarResult::KeyTooLong:
       errorMessage.Append(NS_LITERAL_STRING(" - The key length must be limited to 70 characters."));
