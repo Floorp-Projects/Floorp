@@ -254,18 +254,6 @@ GMPChild::Init(const nsAString& aPluginPath,
   return true;
 }
 
-mozilla::ipc::IPCResult
-GMPChild::RecvSetNodeId(const nsCString& aNodeId)
-{
-  LOGD("%s nodeId=%s", __FUNCTION__, aNodeId.Data());
-
-  // Store the per origin salt for the node id. Note: we do this in a
-  // separate message than RecvStartPlugin() so that the string is not
-  // sitting in a string on the IPC code's call stack.
-  mNodeId = aNodeId;
-  return IPC_OK();
-}
-
 GMPErr
 GMPChild::GetAPI(const char* aAPIName,
                  void* aHostAPI,
@@ -349,12 +337,14 @@ GMPChild::AnswerStartPlugin(const nsString& aAdapter)
   auto platformAPI = new GMPPlatformAPI();
   InitPlatformAPI(*platformAPI, this);
 
-  mGMPLoader = GMPProcessChild::GetGMPLoader();
-  if (!mGMPLoader) {
-    NS_WARNING("Failed to get GMPLoader");
+  mGMPLoader = MakeUnique<GMPLoader>();
+#if defined(MOZ_GMP_SANDBOX)
+  if (!mGMPLoader->CanSandbox()) {
+    LOGD("%s Can't sandbox GMP, failing", __FUNCTION__);
     delete platformAPI;
     return IPC_FAIL_NO_REASON(this);
   }
+#endif
 
   bool isWidevine = aAdapter.EqualsLiteral("widevine");
 #if defined(MOZ_GMP_SANDBOX) && defined(XP_MACOSX)
@@ -372,8 +362,6 @@ GMPChild::AnswerStartPlugin(const nsString& aAdapter)
   GMPAdapter* adapter = (isWidevine) ? new WidevineAdapter() : nullptr;
   if (!mGMPLoader->Load(libPath.get(),
                         libPath.Length(),
-                        mNodeId.BeginWriting(),
-                        mNodeId.Length(),
                         platformAPI,
                         adapter)) {
     NS_WARNING("Failed to load GMP");

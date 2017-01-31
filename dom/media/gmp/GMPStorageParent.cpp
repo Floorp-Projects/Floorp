@@ -162,24 +162,6 @@ GMPStorageParent::RecvWrite(const nsCString& aRecordName,
 }
 
 mozilla::ipc::IPCResult
-GMPStorageParent::RecvGetRecordNames()
-{
-  if (mShutdown) {
-    return IPC_OK();
-  }
-
-  nsTArray<nsCString> recordNames;
-  GMPErr status = mStorage->GetRecordNames(recordNames);
-
-  LOGD(("GMPStorageParent[%p]::RecvGetRecordNames() status=%d numRecords=%d",
-        this, status, recordNames.Length()));
-
-  Unused << SendRecordNames(recordNames, status);
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 GMPStorageParent::RecvClose(const nsCString& aRecordName)
 {
   LOGD(("GMPStorageParent[%p]::RecvClose(record='%s')",
