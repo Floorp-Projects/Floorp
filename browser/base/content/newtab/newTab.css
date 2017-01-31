@@ -122,6 +122,10 @@ input[type=button] {
   pointer-events: none;
 }
 
+body:not(.compact) #topsites-heading {
+  display: none;
+}
+
 /*
  * If you change the sizes here, make sure you
  * change the preferences:
