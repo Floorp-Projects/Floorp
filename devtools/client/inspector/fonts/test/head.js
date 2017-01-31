@@ -47,7 +47,7 @@ var openFontInspectorForURL = Task.async(function* (url) {
   return {
     toolbox,
     inspector,
-    view: inspector.fontInspector
+    view: inspector.getPanel("fontinspector")
   };
 });
 
