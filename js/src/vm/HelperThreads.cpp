@@ -1327,7 +1327,7 @@ GlobalHelperThreadState::finishModuleParseTask(JSContext* cx, void* token)
     MOZ_ASSERT(script->module());
 
     RootedModuleObject module(cx, script->module());
-    module->fixEnvironmentsAfterCompartmentMerge(cx);
+    module->fixEnvironmentsAfterCompartmentMerge();
     if (!ModuleObject::Freeze(cx, module))
         return nullptr;
 
