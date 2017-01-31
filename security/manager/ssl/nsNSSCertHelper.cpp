@@ -14,12 +14,11 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
-#include "nsComponentManagerUtils.h"
+#include "nsIStringBundle.h"
 #include "nsNSSASN1Object.h"
 #include "nsNSSCertTrust.h"
 #include "nsNSSCertValidity.h"
 #include "nsNSSCertificate.h"
-#include "nsNSSComponent.h"
 #include "nsServiceManagerUtils.h"
 #include "prerror.h"
 #include "secder.h"
@@ -79,12 +78,59 @@ static SECOidData more_oids[] = {
 static const unsigned int numOids = (sizeof more_oids) / (sizeof more_oids[0]);
 
 static nsresult
-ProcessVersion(SECItem* versionItem,
-               nsINSSComponent* nssComponent,
-               nsIASN1PrintableItem** retItem)
+GetPIPNSSBundle(nsIStringBundle** pipnssBundle)
+{
+  nsCOMPtr<nsIStringBundleService> bundleService(
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+  if (!bundleService) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  return bundleService->CreateBundle("chrome://pipnss/locale/pipnss.properties",
+                                     pipnssBundle);
+}
+
+static nsresult
+GetPIPNSSBundleString(const char* stringName, nsAString& result)
+{
+  MOZ_ASSERT(stringName);
+  if (!stringName) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsCOMPtr<nsIStringBundle> pipnssBundle;
+  nsresult rv = GetPIPNSSBundle(getter_AddRefs(pipnssBundle));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  result.Truncate();
+  return pipnssBundle->GetStringFromName(
+    NS_ConvertASCIItoUTF16(stringName).get(), getter_Copies(result));
+}
+
+static nsresult
+PIPBundleFormatStringFromName(const char* stringName, const char16_t** params,
+                              uint32_t numParams, nsAString& result)
+{
+  MOZ_ASSERT(stringName);
+  MOZ_ASSERT(params);
+  if (!stringName || !params) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsCOMPtr<nsIStringBundle> pipnssBundle;
+  nsresult rv = GetPIPNSSBundle(getter_AddRefs(pipnssBundle));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  result.Truncate();
+  return pipnssBundle->FormatStringFromName(
+    NS_ConvertASCIItoUTF16(stringName).get(), params, numParams,
+    getter_Copies(result));
+}
+
+static nsresult
+ProcessVersion(SECItem* versionItem, nsIASN1PrintableItem** retItem)
 {
   nsAutoString text;
-  nssComponent->GetPIPNSSBundleString("CertDumpVersion", text);
+  GetPIPNSSBundleString("CertDumpVersion", text);
   nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
   nsresult rv = printableItem->SetDisplayName(text);
   if (NS_FAILED(rv)) {
@@ -109,7 +155,7 @@ ProcessVersion(SECItem* versionItem,
   nsAutoString versionString;
   versionString.AppendInt(version + 1);
   const char16_t* params[1] = { versionString.get() };
-  rv = nssComponent->PIPBundleFormatStringFromName(
+  rv = PIPBundleFormatStringFromName(
     "CertDumpVersionValue", params, MOZ_ARRAY_LENGTH(params), text);
   if (NS_FAILED(rv)) {
     return rv;
@@ -126,11 +172,10 @@ ProcessVersion(SECItem* versionItem,
 
 static nsresult
 ProcessSerialNumberDER(const SECItem& serialItem,
-                       NotNull<nsINSSComponent*> nssComponent,
                        /*out*/ nsCOMPtr<nsIASN1PrintableItem>& retItem)
 {
   nsAutoString text;
-  nsresult rv = nssComponent->GetPIPNSSBundleString("CertDumpSerialNo", text);
+  nsresult rv = GetPIPNSSBundleString("CertDumpSerialNo", text);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -158,10 +203,7 @@ ProcessSerialNumberDER(const SECItem& serialItem,
 }
 
 static nsresult
-GetDefaultOIDFormat(SECItem* oid,
-                    nsINSSComponent* nssComponent,
-                    nsAString& outString,
-                    char separator)
+GetDefaultOIDFormat(SECItem* oid, nsAString& outString, char separator)
 {
   char buf[300];
   unsigned int len = 0;
@@ -213,7 +255,7 @@ GetDefaultOIDFormat(SECItem* oid,
       }
     } else {
       nsAutoString unknownText;
-      nssComponent->GetPIPNSSBundleString("CertUnknown", unknownText);
+      GetPIPNSSBundleString("CertUnknown", unknownText);
       if (first) {
         written = snprintf(&buf[len],
                            sizeof(buf) - len,
@@ -249,7 +291,7 @@ GetDefaultOIDFormat(SECItem* oid,
 }
 
 static nsresult
-GetOIDText(SECItem* oid, nsINSSComponent* nssComponent, nsAString& text)
+GetOIDText(SECItem* oid, nsAString& text)
 {
   nsresult rv;
   SECOidTag oidTag = SECOID_FindOIDTag(oid);
@@ -580,16 +622,15 @@ GetOIDText(SECItem* oid, nsINSSComponent* nssComponent, nsAString& text)
   }
 
   if (bundlekey) {
-    rv = nssComponent->GetPIPNSSBundleString(bundlekey, text);
+    rv = GetPIPNSSBundleString(bundlekey, text);
   } else {
     nsAutoString text2;
-    rv = GetDefaultOIDFormat(oid, nssComponent, text2, ' ');
+    rv = GetDefaultOIDFormat(oid, text2, ' ');
     if (NS_FAILED(rv))
       return rv;
 
     const char16_t* params[1] = { text2.get() };
-    rv = nssComponent->PIPBundleFormatStringFromName(
-      "CertDumpDefOID", params, 1, text);
+    rv = PIPBundleFormatStringFromName("CertDumpDefOID", params, 1, text);
   }
   return rv;
 }
@@ -597,10 +638,7 @@ GetOIDText(SECItem* oid, nsINSSComponent* nssComponent, nsAString& text)
 #define SEPARATOR "\n"
 
 static nsresult
-ProcessRawBytes(nsINSSComponent* nssComponent,
-                SECItem* data,
-                nsAString& text,
-                bool wantHeader = true)
+ProcessRawBytes(SECItem* data, nsAString& text, bool wantHeader = true)
 {
   // This function is used to display some DER bytes
   // that we have not added support for decoding.
@@ -623,8 +661,8 @@ ProcessRawBytes(nsINSSComponent* nssComponent,
     bitlen.AppendInt(data->len * 8);
 
     const char16_t* params[2] = { bytelen.get(), bitlen.get() };
-    nsresult rv = nssComponent->PIPBundleFormatStringFromName(
-      "CertDumpRawBytesHeader", params, 2, text);
+    nsresult rv = PIPBundleFormatStringFromName("CertDumpRawBytesHeader",
+                                                params, 2, text);
     if (NS_FAILED(rv))
       return rv;
 
@@ -651,18 +689,16 @@ ProcessRawBytes(nsINSSComponent* nssComponent,
 /**
  * Appends a pipnss bundle string to the given string.
  *
- * @param nssComponent For accessing the string bundle.
  * @param bundleKey Key for the string to append.
  * @param currentText The text to append to, using |SEPARATOR| as the separator.
  */
 template <size_t N>
 void
-AppendBundleString(const NotNull<nsINSSComponent*>& nssComponent,
-                   const char (&bundleKey)[N],
+AppendBundleString(const char (&bundleKey)[N],
                    /*in/out*/ nsAString& currentText)
 {
   nsAutoString bundleString;
-  nsresult rv = nssComponent->GetPIPNSSBundleString(bundleKey, bundleString);
+  nsresult rv = GetPIPNSSBundleString(bundleKey, bundleString);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -672,21 +708,16 @@ AppendBundleString(const NotNull<nsINSSComponent*>& nssComponent,
 }
 
 static nsresult
-ProcessKeyUsageExtension(SECItem* extData,
-                         nsAString& text,
-                         nsINSSComponent* nssComponent)
+ProcessKeyUsageExtension(SECItem* extData, nsAString& text)
 {
   MOZ_ASSERT(extData);
-  MOZ_ASSERT(nssComponent);
   NS_ENSURE_ARG(extData);
-  NS_ENSURE_ARG(nssComponent);
 
-  NotNull<nsINSSComponent*> wrappedNSSComponent = WrapNotNull(nssComponent);
   ScopedAutoSECItem decoded;
   if (SEC_ASN1DecodeItem(
         nullptr, &decoded, SEC_ASN1_GET(SEC_BitStringTemplate), extData) !=
       SECSuccess) {
-    AppendBundleString(wrappedNSSComponent, "CertDumpExtensionFailure", text);
+    AppendBundleString("CertDumpExtensionFailure", text);
     return NS_OK;
   }
   unsigned char keyUsage = 0;
@@ -695,34 +726,32 @@ ProcessKeyUsageExtension(SECItem* extData,
   }
 
   if (keyUsage & KU_DIGITAL_SIGNATURE) {
-    AppendBundleString(wrappedNSSComponent, "CertDumpKUSign", text);
+    AppendBundleString("CertDumpKUSign", text);
   }
   if (keyUsage & KU_NON_REPUDIATION) {
-    AppendBundleString(wrappedNSSComponent, "CertDumpKUNonRep", text);
+    AppendBundleString("CertDumpKUNonRep", text);
   }
   if (keyUsage & KU_KEY_ENCIPHERMENT) {
-    AppendBundleString(wrappedNSSComponent, "CertDumpKUEnc", text);
+    AppendBundleString("CertDumpKUEnc", text);
   }
   if (keyUsage & KU_DATA_ENCIPHERMENT) {
-    AppendBundleString(wrappedNSSComponent, "CertDumpKUDEnc", text);
+    AppendBundleString("CertDumpKUDEnc", text);
   }
   if (keyUsage & KU_KEY_AGREEMENT) {
-    AppendBundleString(wrappedNSSComponent, "CertDumpKUKA", text);
+    AppendBundleString("CertDumpKUKA", text);
   }
   if (keyUsage & KU_KEY_CERT_SIGN) {
-    AppendBundleString(wrappedNSSComponent, "CertDumpKUCertSign", text);
+    AppendBundleString("CertDumpKUCertSign", text);
   }
   if (keyUsage & KU_CRL_SIGN) {
-    AppendBundleString(wrappedNSSComponent, "CertDumpKUCRLSigner", text);
+    AppendBundleString("CertDumpKUCRLSigner", text);
   }
 
   return NS_OK;
 }
 
 static nsresult
-ProcessBasicConstraints(SECItem* extData,
-                        nsAString& text,
-                        nsINSSComponent* nssComponent)
+ProcessBasicConstraints(SECItem* extData, nsAString& text)
 {
   nsAutoString local;
   CERTBasicConstraints value;
@@ -732,25 +761,24 @@ ProcessBasicConstraints(SECItem* extData,
   value.pathLenConstraint = -1;
   rv = CERT_DecodeBasicConstraintValue(&value, extData);
   if (rv != SECSuccess) {
-    ProcessRawBytes(nssComponent, extData, text);
+    ProcessRawBytes(extData, text);
     return NS_OK;
   }
   if (value.isCA)
-    rv2 = nssComponent->GetPIPNSSBundleString("CertDumpIsCA", local);
+    rv2 = GetPIPNSSBundleString("CertDumpIsCA", local);
   else
-    rv2 = nssComponent->GetPIPNSSBundleString("CertDumpIsNotCA", local);
+    rv2 = GetPIPNSSBundleString("CertDumpIsNotCA", local);
   if (NS_FAILED(rv2))
     return rv2;
   text.Append(local.get());
   if (value.pathLenConstraint != -1) {
     nsAutoString depth;
     if (value.pathLenConstraint == CERT_UNLIMITED_PATH_CONSTRAINT)
-      nssComponent->GetPIPNSSBundleString("CertDumpPathLenUnlimited", depth);
+      GetPIPNSSBundleString("CertDumpPathLenUnlimited", depth);
     else
       depth.AppendInt(value.pathLenConstraint);
     const char16_t* params[1] = { depth.get() };
-    rv2 = nssComponent->PIPBundleFormatStringFromName(
-      "CertDumpPathLen", params, 1, local);
+    rv2 = PIPBundleFormatStringFromName("CertDumpPathLen", params, 1, local);
     if (NS_FAILED(rv2))
       return rv2;
     text.AppendLiteral(SEPARATOR);
@@ -760,9 +788,7 @@ ProcessBasicConstraints(SECItem* extData,
 }
 
 static nsresult
-ProcessExtKeyUsage(SECItem* extData,
-                   nsAString& text,
-                   nsINSSComponent* nssComponent)
+ProcessExtKeyUsage(SECItem* extData, nsAString& text)
 {
   nsAutoString local;
   SECItem** oids;
@@ -780,14 +806,14 @@ ProcessExtKeyUsage(SECItem* extData,
     // of the form CertDumpEKU_<underlined-OID>
     nsAutoString oidname;
     oid = *oids;
-    rv = GetDefaultOIDFormat(oid, nssComponent, oidname, '_');
+    rv = GetDefaultOIDFormat(oid, oidname, '_');
     if (NS_FAILED(rv))
       return rv;
     nsAutoString bundlekey = NS_LITERAL_STRING("CertDumpEKU_") + oidname;
     NS_ConvertUTF16toUTF8 bk_ascii(bundlekey);
 
-    rv = nssComponent->GetPIPNSSBundleString(bk_ascii.get(), local);
-    nsresult rv2 = GetDefaultOIDFormat(oid, nssComponent, oidname, '.');
+    rv = GetPIPNSSBundleString(bk_ascii.get(), local);
+    nsresult rv2 = GetDefaultOIDFormat(oid, oidname, '.');
     if (NS_FAILED(rv2))
       return rv2;
     if (NS_SUCCEEDED(rv)) {
@@ -808,7 +834,7 @@ ProcessExtKeyUsage(SECItem* extData,
 }
 
 static nsresult
-ProcessRDN(CERTRDN* rdn, nsAString& finalString, nsINSSComponent* nssComponent)
+ProcessRDN(CERTRDN* rdn, nsAString& finalString)
 {
   nsresult rv;
   CERTAVA** avas;
@@ -820,7 +846,7 @@ ProcessRDN(CERTRDN* rdn, nsAString& finalString, nsINSSComponent* nssComponent)
 
   avas = rdn->avas;
   while ((ava = *avas++) != 0) {
-    rv = GetOIDText(&ava->type, nssComponent, type);
+    rv = GetOIDText(&ava->type, type);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -848,14 +874,14 @@ ProcessRDN(CERTRDN* rdn, nsAString& finalString, nsINSSComponent* nssComponent)
 
     params[0] = type.get();
     params[1] = avavalue.get();
-    nssComponent->PIPBundleFormatStringFromName("AVATemplate", params, 2, temp);
+    PIPBundleFormatStringFromName("AVATemplate", params, 2, temp);
     finalString += temp + NS_LITERAL_STRING("\n");
   }
   return NS_OK;
 }
 
 static nsresult
-ProcessName(CERTName* name, nsINSSComponent* nssComponent, char16_t** value)
+ProcessName(CERTName* name, char16_t** value)
 {
   CERTRDN** rdns;
   CERTRDN** rdn;
@@ -886,7 +912,7 @@ ProcessName(CERTName* name, nsINSSComponent* nssComponent, char16_t** value)
    * value portion of the AVA and could cause trouble when parsing.
    */
   for (rdn = lastRdn; rdn >= rdns; rdn--) {
-    rv = ProcessRDN(*rdn, finalString, nssComponent);
+    rv = ProcessRDN(*rdn, finalString);
     if (NS_FAILED(rv))
       return rv;
   }
@@ -952,10 +978,8 @@ ProcessBMPString(SECItem* extData, nsAString& text)
 }
 
 static nsresult
-ProcessGeneralName(const UniquePLArenaPool& arena,
-                   CERTGeneralName* current,
-                   nsAString& text,
-                   nsINSSComponent* nssComponent)
+ProcessGeneralName(const UniquePLArenaPool& arena, CERTGeneralName* current,
+                   nsAString& text)
 {
   NS_ENSURE_ARG_POINTER(current);
 
@@ -972,7 +996,7 @@ ProcessGeneralName(const UniquePLArenaPool& arena,
          UTF-8. So try to decode this as UTF-8; if that fails, dump the
          raw data. */
         SECItem decoded;
-        nssComponent->GetPIPNSSBundleString("CertDumpMSNTPrincipal", key);
+        GetPIPNSSBundleString("CertDumpMSNTPrincipal", key);
         if (SEC_ASN1DecodeItem(arena.get(),
                                &decoded,
                                SEC_ASN1_GET(SEC_UTF8StringTemplate),
@@ -980,13 +1004,13 @@ ProcessGeneralName(const UniquePLArenaPool& arena,
           AppendUTF8toUTF16(nsAutoCString((char*)decoded.data, decoded.len),
                             value);
         } else {
-          ProcessRawBytes(nssComponent, &current->name.OthName.name, value);
+          ProcessRawBytes(&current->name.OthName.name, value);
         }
         break;
       } else if (oidTag == SEC_OID(MS_NTDS_REPLICATION)) {
         /* This should be a 16-byte GUID */
         SECItem guid;
-        nssComponent->GetPIPNSSBundleString("CertDumpMSDomainGUID", key);
+        GetPIPNSSBundleString("CertDumpMSDomainGUID", key);
         if (SEC_ASN1DecodeItem(arena.get(),
                                &guid,
                                SEC_ASN1_GET(SEC_OctetStringTemplate),
@@ -1015,46 +1039,46 @@ ProcessGeneralName(const UniquePLArenaPool& arena,
                          d[15]);
           value.AssignASCII(buf);
         } else {
-          ProcessRawBytes(nssComponent, &current->name.OthName.name, value);
+          ProcessRawBytes(&current->name.OthName.name, value);
         }
       } else {
         rv = GetDefaultOIDFormat(
-          &current->name.OthName.oid, nssComponent, key, ' ');
+          &current->name.OthName.oid, key, ' ');
         if (NS_FAILED(rv)) {
           return rv;
         }
-        ProcessRawBytes(nssComponent, &current->name.OthName.name, value);
+        ProcessRawBytes(&current->name.OthName.name, value);
       }
       break;
     }
     case certRFC822Name:
-      nssComponent->GetPIPNSSBundleString("CertDumpRFC822Name", key);
+      GetPIPNSSBundleString("CertDumpRFC822Name", key);
       value.AssignASCII((char*)current->name.other.data,
                         current->name.other.len);
       break;
     case certDNSName:
-      nssComponent->GetPIPNSSBundleString("CertDumpDNSName", key);
+      GetPIPNSSBundleString("CertDumpDNSName", key);
       value.AssignASCII((char*)current->name.other.data,
                         current->name.other.len);
       break;
     case certX400Address:
-      nssComponent->GetPIPNSSBundleString("CertDumpX400Address", key);
-      ProcessRawBytes(nssComponent, &current->name.other, value);
+      GetPIPNSSBundleString("CertDumpX400Address", key);
+      ProcessRawBytes(&current->name.other, value);
       break;
     case certDirectoryName:
-      nssComponent->GetPIPNSSBundleString("CertDumpDirectoryName", key);
+      GetPIPNSSBundleString("CertDumpDirectoryName", key);
       rv = ProcessName(
-        &current->name.directoryName, nssComponent, getter_Copies(value));
+        &current->name.directoryName, getter_Copies(value));
       if (NS_FAILED(rv)) {
         return rv;
       }
       break;
     case certEDIPartyName:
-      nssComponent->GetPIPNSSBundleString("CertDumpEDIPartyName", key);
-      ProcessRawBytes(nssComponent, &current->name.other, value);
+      GetPIPNSSBundleString("CertDumpEDIPartyName", key);
+      ProcessRawBytes(&current->name.other, value);
       break;
     case certURI:
-      nssComponent->GetPIPNSSBundleString("CertDumpURI", key);
+      GetPIPNSSBundleString("CertDumpURI", key);
       value.AssignASCII((char*)current->name.other.data,
                         current->name.other.len);
       break;
@@ -1063,7 +1087,7 @@ ProcessGeneralName(const UniquePLArenaPool& arena,
       PRStatus status = PR_FAILURE;
       PRNetAddr addr;
       memset(&addr, 0, sizeof(addr));
-      nssComponent->GetPIPNSSBundleString("CertDumpIPAddress", key);
+      GetPIPNSSBundleString("CertDumpIPAddress", key);
       if (current->name.other.len == 4) {
         addr.inet.family = PR_AF_INET;
         memcpy(
@@ -1079,13 +1103,13 @@ ProcessGeneralName(const UniquePLArenaPool& arena,
         value.AssignASCII(buf);
       } else {
         /* invalid IP address */
-        ProcessRawBytes(nssComponent, &current->name.other, value);
+        ProcessRawBytes(&current->name.other, value);
       }
       break;
     }
     case certRegisterID:
-      nssComponent->GetPIPNSSBundleString("CertDumpRegisterID", key);
-      rv = GetDefaultOIDFormat(&current->name.other, nssComponent, value, '.');
+      GetPIPNSSBundleString("CertDumpRegisterID", key);
+      rv = GetDefaultOIDFormat(&current->name.other, value, '.');
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1100,16 +1124,14 @@ ProcessGeneralName(const UniquePLArenaPool& arena,
 }
 
 static nsresult
-ProcessGeneralNames(const UniquePLArenaPool& arena,
-                    CERTGeneralName* nameList,
-                    nsAString& text,
-                    nsINSSComponent* nssComponent)
+ProcessGeneralNames(const UniquePLArenaPool& arena, CERTGeneralName* nameList,
+                    nsAString& text)
 {
   CERTGeneralName* current = nameList;
   nsresult rv;
 
   do {
-    rv = ProcessGeneralName(arena, current, text, nssComponent);
+    rv = ProcessGeneralName(arena, current, text);
     if (NS_FAILED(rv)) {
       break;
     }
@@ -1119,7 +1141,7 @@ ProcessGeneralNames(const UniquePLArenaPool& arena,
 }
 
 static nsresult
-ProcessAltName(SECItem* extData, nsAString& text, nsINSSComponent* nssComponent)
+ProcessAltName(SECItem* extData, nsAString& text)
 {
   UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
   if (!arena) {
@@ -1131,13 +1153,11 @@ ProcessAltName(SECItem* extData, nsAString& text, nsINSSComponent* nssComponent)
     return NS_OK;
   }
 
-  return ProcessGeneralNames(arena, nameList, text, nssComponent);
+  return ProcessGeneralNames(arena, nameList, text);
 }
 
 static nsresult
-ProcessSubjectKeyId(SECItem* extData,
-                    nsAString& text,
-                    nsINSSComponent* nssComponent)
+ProcessSubjectKeyId(SECItem* extData, nsAString& text)
 {
   SECItem decoded;
   nsAutoString local;
@@ -1154,18 +1174,16 @@ ProcessSubjectKeyId(SECItem* extData,
     return NS_ERROR_FAILURE;
   }
 
-  nssComponent->GetPIPNSSBundleString("CertDumpKeyID", local);
+  GetPIPNSSBundleString("CertDumpKeyID", local);
   text.Append(local);
   text.AppendLiteral(": ");
-  ProcessRawBytes(nssComponent, &decoded, text);
+  ProcessRawBytes(&decoded, text);
 
   return NS_OK;
 }
 
 static nsresult
-ProcessAuthKeyId(SECItem* extData,
-                 nsAString& text,
-                 nsINSSComponent* nssComponent)
+ProcessAuthKeyId(SECItem* extData, nsAString& text)
 {
   nsresult rv = NS_OK;
   nsAutoString local;
@@ -1181,37 +1199,35 @@ ProcessAuthKeyId(SECItem* extData,
   }
 
   if (ret->keyID.len > 0) {
-    nssComponent->GetPIPNSSBundleString("CertDumpKeyID", local);
+    GetPIPNSSBundleString("CertDumpKeyID", local);
     text.Append(local);
     text.AppendLiteral(": ");
-    ProcessRawBytes(nssComponent, &ret->keyID, text);
+    ProcessRawBytes(&ret->keyID, text);
     text.AppendLiteral(SEPARATOR);
   }
 
   if (ret->authCertIssuer) {
-    nssComponent->GetPIPNSSBundleString("CertDumpIssuer", local);
+    GetPIPNSSBundleString("CertDumpIssuer", local);
     text.Append(local);
     text.AppendLiteral(": ");
-    rv = ProcessGeneralNames(arena, ret->authCertIssuer, text, nssComponent);
+    rv = ProcessGeneralNames(arena, ret->authCertIssuer, text);
     if (NS_FAILED(rv)) {
       return rv;
     }
   }
 
   if (ret->authCertSerialNumber.len > 0) {
-    nssComponent->GetPIPNSSBundleString("CertDumpSerialNo", local);
+    GetPIPNSSBundleString("CertDumpSerialNo", local);
     text.Append(local);
     text.AppendLiteral(": ");
-    ProcessRawBytes(nssComponent, &ret->authCertSerialNumber, text);
+    ProcessRawBytes(&ret->authCertSerialNumber, text);
   }
 
   return rv;
 }
 
 static nsresult
-ProcessUserNotice(SECItem* derNotice,
-                  nsAString& text,
-                  nsINSSComponent* nssComponent)
+ProcessUserNotice(SECItem* derNotice, nsAString& text)
 {
   UniquePLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
   if (!arena) {
@@ -1220,7 +1236,7 @@ ProcessUserNotice(SECItem* derNotice,
 
   UniqueCERTUserNotice notice(CERT_DecodeUserNotice(derNotice));
   if (!notice) {
-    ProcessRawBytes(nssComponent, derNotice, text);
+    ProcessRawBytes(derNotice, text);
     return NS_OK;
   }
 
@@ -1279,9 +1295,7 @@ ProcessUserNotice(SECItem* derNotice,
 }
 
 static nsresult
-ProcessCertificatePolicies(SECItem* extData,
-                           nsAString& text,
-                           nsINSSComponent* nssComponent)
+ProcessCertificatePolicies(SECItem* extData, nsAString& text)
 {
   CERTPolicyInfo **policyInfos, *policyInfo;
   CERTPolicyQualifier **policyQualifiers, *policyQualifier;
@@ -1299,11 +1313,11 @@ ProcessCertificatePolicies(SECItem* extData,
     policyInfo = *policyInfos++;
     switch (policyInfo->oid) {
       case SEC_OID_VERISIGN_USER_NOTICES:
-        nssComponent->GetPIPNSSBundleString("CertDumpVerisignNotices", local);
+        GetPIPNSSBundleString("CertDumpVerisignNotices", local);
         text.Append(local);
         break;
       default:
-        GetDefaultOIDFormat(&policyInfo->policyID, nssComponent, local, '.');
+        GetDefaultOIDFormat(&policyInfo->policyID, local, '.');
         text.Append(local);
     }
 
@@ -1317,7 +1331,7 @@ ProcessCertificatePolicies(SECItem* extData,
         policyQualifier = *policyQualifiers++;
         switch (policyQualifier->oid) {
           case SEC_OID_PKIX_CPS_POINTER_QUALIFIER:
-            nssComponent->GetPIPNSSBundleString("CertDumpCPSPointer", local);
+            GetPIPNSSBundleString("CertDumpCPSPointer", local);
             text.Append(local);
             text.Append(':');
             text.AppendLiteral(SEPARATOR);
@@ -1330,19 +1344,16 @@ ProcessCertificatePolicies(SECItem* extData,
             }
             break;
           case SEC_OID_PKIX_USER_NOTICE_QUALIFIER:
-            nssComponent->GetPIPNSSBundleString("CertDumpUserNotice", local);
+            GetPIPNSSBundleString("CertDumpUserNotice", local);
             text.Append(local);
             text.AppendLiteral(": ");
-            rv = ProcessUserNotice(
-              &policyQualifier->qualifierValue, text, nssComponent);
+            rv = ProcessUserNotice(&policyQualifier->qualifierValue, text);
             break;
           default:
-            GetDefaultOIDFormat(
-              &policyQualifier->qualifierID, nssComponent, local, '.');
+            GetDefaultOIDFormat(&policyQualifier->qualifierID, local, '.');
             text.Append(local);
             text.AppendLiteral(": ");
-            ProcessRawBytes(
-              nssComponent, &policyQualifier->qualifierValue, text);
+            ProcessRawBytes(&policyQualifier->qualifierValue, text);
         }
         text.AppendLiteral(SEPARATOR);
       } /* while policyQualifiers */
@@ -1354,9 +1365,7 @@ ProcessCertificatePolicies(SECItem* extData,
 }
 
 static nsresult
-ProcessCrlDistPoints(SECItem* extData,
-                     nsAString& text,
-                     nsINSSComponent* nssComponent)
+ProcessCrlDistPoints(SECItem* extData, nsAString& text)
 {
   nsresult rv = NS_OK;
   nsAutoString local;
@@ -1377,13 +1386,13 @@ ProcessCrlDistPoints(SECItem* extData,
     switch (point->distPointType) {
       case generalName:
         rv = ProcessGeneralName(
-          arena, point->distPoint.fullName, text, nssComponent);
+          arena, point->distPoint.fullName, text);
         if (NS_FAILED(rv)) {
           return rv;
         }
         break;
       case relativeDistinguishedName:
-        rv = ProcessRDN(&point->distPoint.relativeName, text, nssComponent);
+        rv = ProcessRDN(&point->distPoint.relativeName, text);
         if (NS_FAILED(rv)) {
           return rv;
         }
@@ -1394,60 +1403,59 @@ ProcessCrlDistPoints(SECItem* extData,
       text.Append(' ');
       bool comma = false;
       if (reasons & RF_UNUSED) {
-        nssComponent->GetPIPNSSBundleString("CertDumpUnused", local);
+        GetPIPNSSBundleString("CertDumpUnused", local);
         text.Append(local);
         comma = true;
       }
       if (reasons & RF_KEY_COMPROMISE) {
         if (comma)
           text.AppendLiteral(", ");
-        nssComponent->GetPIPNSSBundleString("CertDumpKeyCompromise", local);
+        GetPIPNSSBundleString("CertDumpKeyCompromise", local);
         text.Append(local);
         comma = true;
       }
       if (reasons & RF_CA_COMPROMISE) {
         if (comma)
           text.AppendLiteral(", ");
-        nssComponent->GetPIPNSSBundleString("CertDumpCACompromise", local);
+        GetPIPNSSBundleString("CertDumpCACompromise", local);
         text.Append(local);
         comma = true;
       }
       if (reasons & RF_AFFILIATION_CHANGED) {
         if (comma)
           text.AppendLiteral(", ");
-        nssComponent->GetPIPNSSBundleString("CertDumpAffiliationChanged",
-                                            local);
+        GetPIPNSSBundleString("CertDumpAffiliationChanged", local);
         text.Append(local);
         comma = true;
       }
       if (reasons & RF_SUPERSEDED) {
         if (comma)
           text.AppendLiteral(", ");
-        nssComponent->GetPIPNSSBundleString("CertDumpSuperseded", local);
+        GetPIPNSSBundleString("CertDumpSuperseded", local);
         text.Append(local);
         comma = true;
       }
       if (reasons & RF_CESSATION_OF_OPERATION) {
         if (comma)
           text.AppendLiteral(", ");
-        nssComponent->GetPIPNSSBundleString("CertDumpCessation", local);
+        GetPIPNSSBundleString("CertDumpCessation", local);
         text.Append(local);
         comma = true;
       }
       if (reasons & RF_CERTIFICATE_HOLD) {
         if (comma)
           text.AppendLiteral(", ");
-        nssComponent->GetPIPNSSBundleString("CertDumpHold", local);
+        GetPIPNSSBundleString("CertDumpHold", local);
         text.Append(local);
         comma = true;
       }
       text.AppendLiteral(SEPARATOR);
     }
     if (point->crlIssuer) {
-      nssComponent->GetPIPNSSBundleString("CertDumpIssuer", local);
+      GetPIPNSSBundleString("CertDumpIssuer", local);
       text.Append(local);
       text.AppendLiteral(": ");
-      rv = ProcessGeneralNames(arena, point->crlIssuer, text, nssComponent);
+      rv = ProcessGeneralNames(arena, point->crlIssuer, text);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -1458,9 +1466,7 @@ ProcessCrlDistPoints(SECItem* extData,
 }
 
 static nsresult
-ProcessAuthInfoAccess(SECItem* extData,
-                      nsAString& text,
-                      nsINSSComponent* nssComponent)
+ProcessAuthInfoAccess(SECItem* extData, nsAString& text)
 {
   nsresult rv = NS_OK;
   nsAutoString local;
@@ -1480,20 +1486,20 @@ ProcessAuthInfoAccess(SECItem* extData,
     CERTAuthInfoAccess* desc = *aia++;
     switch (SECOID_FindOIDTag(&desc->method)) {
       case SEC_OID_PKIX_OCSP:
-        nssComponent->GetPIPNSSBundleString("CertDumpOCSPResponder", local);
+        GetPIPNSSBundleString("CertDumpOCSPResponder", local);
         break;
       case SEC_OID_PKIX_CA_ISSUERS:
-        nssComponent->GetPIPNSSBundleString("CertDumpCAIssuers", local);
+        GetPIPNSSBundleString("CertDumpCAIssuers", local);
         break;
       default:
-        rv = GetDefaultOIDFormat(&desc->method, nssComponent, local, '.');
+        rv = GetDefaultOIDFormat(&desc->method, local, '.');
         if (NS_FAILED(rv)) {
           return rv;
         }
     }
     text.Append(local);
     text.AppendLiteral(": ");
-    rv = ProcessGeneralName(arena, desc->location, text, nssComponent);
+    rv = ProcessGeneralName(arena, desc->location, text);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1503,9 +1509,7 @@ ProcessAuthInfoAccess(SECItem* extData,
 }
 
 static nsresult
-ProcessMSCAVersion(SECItem* extData,
-                   nsAString& text,
-                   nsINSSComponent* nssComponent)
+ProcessMSCAVersion(SECItem* extData, nsAString& text)
 {
   MOZ_ASSERT(extData);
   NS_ENSURE_ARG(extData);
@@ -1517,13 +1521,13 @@ ProcessMSCAVersion(SECItem* extData,
     /* This extension used to be an Integer when this code
        was written, but apparently isn't anymore. Display
        the raw bytes instead. */
-    return ProcessRawBytes(nssComponent, extData, text);
+    return ProcessRawBytes(extData, text);
   }
 
   unsigned long version;
   if (SEC_ASN1DecodeInteger(&decoded, &version) != SECSuccess) {
     /* Value out of range, display raw bytes */
-    return ProcessRawBytes(nssComponent, extData, text);
+    return ProcessRawBytes(extData, text);
   }
 
   /* Apparently, the encoding is <minor><major>, with 16 bits each */
@@ -1537,40 +1541,37 @@ ProcessMSCAVersion(SECItem* extData,
 }
 
 static nsresult
-ProcessExtensionData(SECOidTag oidTag,
-                     SECItem* extData,
-                     nsAString& text,
-                     nsINSSComponent* nssComponent)
+ProcessExtensionData(SECOidTag oidTag, SECItem* extData, nsAString& text)
 {
   nsresult rv;
   switch (oidTag) {
     case SEC_OID_X509_KEY_USAGE:
-      rv = ProcessKeyUsageExtension(extData, text, nssComponent);
+      rv = ProcessKeyUsageExtension(extData, text);
       break;
     case SEC_OID_X509_BASIC_CONSTRAINTS:
-      rv = ProcessBasicConstraints(extData, text, nssComponent);
+      rv = ProcessBasicConstraints(extData, text);
       break;
     case SEC_OID_X509_EXT_KEY_USAGE:
-      rv = ProcessExtKeyUsage(extData, text, nssComponent);
+      rv = ProcessExtKeyUsage(extData, text);
       break;
     case SEC_OID_X509_ISSUER_ALT_NAME:
     case SEC_OID_X509_SUBJECT_ALT_NAME:
-      rv = ProcessAltName(extData, text, nssComponent);
+      rv = ProcessAltName(extData, text);
       break;
     case SEC_OID_X509_SUBJECT_KEY_ID:
-      rv = ProcessSubjectKeyId(extData, text, nssComponent);
+      rv = ProcessSubjectKeyId(extData, text);
       break;
     case SEC_OID_X509_AUTH_KEY_ID:
-      rv = ProcessAuthKeyId(extData, text, nssComponent);
+      rv = ProcessAuthKeyId(extData, text);
       break;
     case SEC_OID_X509_CERTIFICATE_POLICIES:
-      rv = ProcessCertificatePolicies(extData, text, nssComponent);
+      rv = ProcessCertificatePolicies(extData, text);
       break;
     case SEC_OID_X509_CRL_DIST_POINTS:
-      rv = ProcessCrlDistPoints(extData, text, nssComponent);
+      rv = ProcessCrlDistPoints(extData, text);
       break;
     case SEC_OID_X509_AUTH_INFO_ACCESS:
-      rv = ProcessAuthInfoAccess(extData, text, nssComponent);
+      rv = ProcessAuthInfoAccess(extData, text);
       break;
     default:
       if (oidTag == SEC_OID(MS_CERT_EXT_CERTTYPE)) {
@@ -1578,10 +1579,10 @@ ProcessExtensionData(SECOidTag oidTag,
         break;
       }
       if (oidTag == SEC_OID(MS_CERTSERV_CA_VERSION)) {
-        rv = ProcessMSCAVersion(extData, text, nssComponent);
+        rv = ProcessMSCAVersion(extData, text);
         break;
       }
-      rv = ProcessRawBytes(nssComponent, extData, text);
+      rv = ProcessRawBytes(extData, text);
       break;
   }
   return rv;
@@ -1589,11 +1590,10 @@ ProcessExtensionData(SECOidTag oidTag,
 
 static nsresult
 ProcessSingleExtension(CERTCertExtension* extension,
-                       nsINSSComponent* nssComponent,
                        nsIASN1PrintableItem** retExtension)
 {
   nsAutoString text, extvalue;
-  GetOIDText(&extension->id, nssComponent, text);
+  GetOIDText(&extension->id, text);
   nsCOMPtr<nsIASN1PrintableItem> extensionItem = new nsNSSASN1PrintableItem();
 
   extensionItem->SetDisplayName(text);
@@ -1601,19 +1601,19 @@ ProcessSingleExtension(CERTCertExtension* extension,
   text.Truncate();
   if (extension->critical.data) {
     if (extension->critical.data[0]) {
-      nssComponent->GetPIPNSSBundleString("CertDumpCritical", text);
+      GetPIPNSSBundleString("CertDumpCritical", text);
     } else {
-      nssComponent->GetPIPNSSBundleString("CertDumpNonCritical", text);
+      GetPIPNSSBundleString("CertDumpNonCritical", text);
     }
   } else {
-    nssComponent->GetPIPNSSBundleString("CertDumpNonCritical", text);
+    GetPIPNSSBundleString("CertDumpNonCritical", text);
   }
   text.AppendLiteral(SEPARATOR);
   nsresult rv =
-    ProcessExtensionData(oidTag, &extension->value, extvalue, nssComponent);
+    ProcessExtensionData(oidTag, &extension->value, extvalue);
   if (NS_FAILED(rv)) {
     extvalue.Truncate();
-    rv = ProcessRawBytes(nssComponent, &extension->value, extvalue, false);
+    rv = ProcessRawBytes(&extension->value, extvalue, false);
   }
   text.Append(extvalue);
 
@@ -1623,9 +1623,7 @@ ProcessSingleExtension(CERTCertExtension* extension,
 }
 
 static nsresult
-ProcessSECAlgorithmID(SECAlgorithmID* algID,
-                      nsINSSComponent* nssComponent,
-                      nsIASN1Sequence** retSequence)
+ProcessSECAlgorithmID(SECAlgorithmID* algID, nsIASN1Sequence** retSequence)
 {
   SECOidTag algOIDTag = SECOID_FindOIDTag(&algID->algorithm);
   SECItem paramsOID = { siBuffer, nullptr, 0 };
@@ -1633,7 +1631,7 @@ ProcessSECAlgorithmID(SECAlgorithmID* algID,
 
   *retSequence = nullptr;
   nsString text;
-  GetOIDText(&algID->algorithm, nssComponent, text);
+  GetOIDText(&algID->algorithm, text);
   if (!algID->parameters.len ||
       algID->parameters.data[0] == nsIASN1Object::ASN1_NULL) {
     sequence->SetDisplayValue(text);
@@ -1645,22 +1643,22 @@ ProcessSECAlgorithmID(SECAlgorithmID* algID,
     nsCOMPtr<nsIMutableArray> asn1Objects;
     sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
     asn1Objects->AppendElement(printableItem, false);
-    nssComponent->GetPIPNSSBundleString("CertDumpAlgID", text);
+    GetPIPNSSBundleString("CertDumpAlgID", text);
     printableItem->SetDisplayName(text);
 
     printableItem = new nsNSSASN1PrintableItem();
 
     asn1Objects->AppendElement(printableItem, false);
-    nssComponent->GetPIPNSSBundleString("CertDumpParams", text);
+    GetPIPNSSBundleString("CertDumpParams", text);
     printableItem->SetDisplayName(text);
     if ((algOIDTag == SEC_OID_ANSIX962_EC_PUBLIC_KEY) &&
         (algID->parameters.len > 2) &&
         (algID->parameters.data[0] == nsIASN1Object::ASN1_OBJECT_ID)) {
       paramsOID.len = algID->parameters.len - 2;
       paramsOID.data = algID->parameters.data + 2;
-      GetOIDText(&paramsOID, nssComponent, text);
+      GetOIDText(&paramsOID, text);
     } else {
-      ProcessRawBytes(nssComponent, &algID->parameters, text);
+      ProcessRawBytes(&algID->parameters, text);
     }
     printableItem->SetDisplayValue(text);
   }
@@ -1706,19 +1704,18 @@ ProcessTime(PRTime dispTime,
 
 static nsresult
 ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo* spki,
-                            nsIASN1Sequence* parentSequence,
-                            nsINSSComponent* nssComponent)
+                            nsIASN1Sequence* parentSequence)
 {
   nsCOMPtr<nsIASN1Sequence> spkiSequence = new nsNSSASN1Sequence();
 
   nsString text;
-  nssComponent->GetPIPNSSBundleString("CertDumpSPKI", text);
+  GetPIPNSSBundleString("CertDumpSPKI", text);
   spkiSequence->SetDisplayName(text);
 
-  nssComponent->GetPIPNSSBundleString("CertDumpSPKIAlg", text);
+  GetPIPNSSBundleString("CertDumpSPKIAlg", text);
   nsCOMPtr<nsIASN1Sequence> sequenceItem;
   nsresult rv = ProcessSECAlgorithmID(
-    &spki->algorithm, nssComponent, getter_AddRefs(sequenceItem));
+    &spki->algorithm, getter_AddRefs(sequenceItem));
   if (NS_FAILED(rv))
     return rv;
   sequenceItem->SetDisplayName(text);
@@ -1739,13 +1736,12 @@ ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo* spki,
         nsAutoString length1, length2, data1, data2;
         length1.AppendInt(key->u.rsa.modulus.len * 8);
         length2.AppendInt(key->u.rsa.publicExponent.len * 8);
-        ProcessRawBytes(nssComponent, &key->u.rsa.modulus, data1, false);
-        ProcessRawBytes(nssComponent, &key->u.rsa.publicExponent, data2, false);
+        ProcessRawBytes(&key->u.rsa.modulus, data1, false);
+        ProcessRawBytes(&key->u.rsa.publicExponent, data2, false);
         const char16_t* params[4] = {
           length1.get(), data1.get(), length2.get(), data2.get()
         };
-        nssComponent->PIPBundleFormatStringFromName(
-          "CertDumpRSATemplate", params, 4, text);
+        PIPBundleFormatStringFromName("CertDumpRSATemplate", params, 4, text);
         break;
       }
       case ecKey: {
@@ -1760,14 +1756,13 @@ ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo* spki,
         s_bpol.AppendInt(basePointOrderLenAsBits);
 
         if (ecpk.publicValue.len > 4) {
-          ProcessRawBytes(nssComponent, &ecpk.publicValue, s_pv, false);
+          ProcessRawBytes(&ecpk.publicValue, s_pv, false);
         } else {
           int i_pv = DER_GetInteger(&ecpk.publicValue);
           s_pv.AppendInt(i_pv);
         }
         const char16_t* params[] = { s_fsl.get(), s_bpol.get(), s_pv.get() };
-        nssComponent->PIPBundleFormatStringFromName(
-          "CertDumpECTemplate", params, 3, text);
+        PIPBundleFormatStringFromName("CertDumpECTemplate", params, 3, text);
         break;
       }
       default:
@@ -1783,11 +1778,11 @@ ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo* spki,
     SECItem data;
     data.data = spki->subjectPublicKey.data;
     data.len = spki->subjectPublicKey.len / 8;
-    ProcessRawBytes(nssComponent, &data, text);
+    ProcessRawBytes(&data, text);
   }
 
   printableItem->SetDisplayValue(text);
-  nssComponent->GetPIPNSSBundleString("CertDumpSubjPubKey", text);
+  GetPIPNSSBundleString("CertDumpSubjPubKey", text);
   printableItem->SetDisplayName(text);
   asn1Objects->AppendElement(printableItem, false);
 
@@ -1798,13 +1793,12 @@ ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo* spki,
 
 static nsresult
 ProcessExtensions(CERTCertExtension** extensions,
-                  nsIASN1Sequence* parentSequence,
-                  nsINSSComponent* nssComponent)
+                  nsIASN1Sequence* parentSequence)
 {
   nsCOMPtr<nsIASN1Sequence> extensionSequence = new nsNSSASN1Sequence;
 
   nsString text;
-  nssComponent->GetPIPNSSBundleString("CertDumpExtensions", text);
+  GetPIPNSSBundleString("CertDumpExtensions", text);
   extensionSequence->SetDisplayName(text);
   int32_t i;
   nsresult rv;
@@ -1813,7 +1807,7 @@ ProcessExtensions(CERTCertExtension** extensions,
   extensionSequence->GetASN1Objects(getter_AddRefs(asn1Objects));
   for (i = 0; extensions[i] != nullptr; i++) {
     rv = ProcessSingleExtension(
-      extensions[i], nssComponent, getter_AddRefs(newExtension));
+      extensions[i], getter_AddRefs(newExtension));
     if (NS_FAILED(rv))
       return rv;
 
@@ -1847,12 +1841,8 @@ RegisterDynamicOids()
 }
 
 nsresult
-nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence,
-                                                 nsINSSComponent* nssComponent)
+nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence)
 {
-  MOZ_ASSERT(nssComponent);
-  NS_ENSURE_ARG(nssComponent);
-
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -1883,51 +1873,48 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence,
   nsCOMPtr<nsIASN1Sequence> sequence = new nsNSSASN1Sequence();
 
   nsString text;
-  nssComponent->GetPIPNSSBundleString("CertDumpCertificate", text);
+  GetPIPNSSBundleString("CertDumpCertificate", text);
   sequence->SetDisplayName(text);
   nsCOMPtr<nsIASN1PrintableItem> printableItem;
 
   nsCOMPtr<nsIMutableArray> asn1Objects;
   sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
 
-  nsresult rv = ProcessVersion(
-    &mCert->version, nssComponent, getter_AddRefs(printableItem));
+  nsresult rv = ProcessVersion(&mCert->version, getter_AddRefs(printableItem));
   if (NS_FAILED(rv))
     return rv;
 
   asn1Objects->AppendElement(printableItem, false);
 
-  rv = ProcessSerialNumberDER(
-    mCert->serialNumber, WrapNotNull(nssComponent), printableItem);
+  rv = ProcessSerialNumberDER(mCert->serialNumber, printableItem);
   if (NS_FAILED(rv))
     return rv;
   asn1Objects->AppendElement(printableItem, false);
 
   nsCOMPtr<nsIASN1Sequence> algID;
-  rv = ProcessSECAlgorithmID(
-    &mCert->signature, nssComponent, getter_AddRefs(algID));
+  rv = ProcessSECAlgorithmID(&mCert->signature, getter_AddRefs(algID));
   if (NS_FAILED(rv))
     return rv;
 
-  nssComponent->GetPIPNSSBundleString("CertDumpSigAlg", text);
+  GetPIPNSSBundleString("CertDumpSigAlg", text);
   algID->SetDisplayName(text);
   asn1Objects->AppendElement(algID, false);
 
   nsXPIDLString value;
-  ProcessName(&mCert->issuer, nssComponent, getter_Copies(value));
+  ProcessName(&mCert->issuer, getter_Copies(value));
 
   printableItem = new nsNSSASN1PrintableItem();
 
   printableItem->SetDisplayValue(value);
-  nssComponent->GetPIPNSSBundleString("CertDumpIssuer", text);
+  GetPIPNSSBundleString("CertDumpIssuer", text);
   printableItem->SetDisplayName(text);
   asn1Objects->AppendElement(printableItem, false);
 
   nsCOMPtr<nsIASN1Sequence> validitySequence = new nsNSSASN1Sequence();
-  nssComponent->GetPIPNSSBundleString("CertDumpValidity", text);
+  GetPIPNSSBundleString("CertDumpValidity", text);
   validitySequence->SetDisplayName(text);
   asn1Objects->AppendElement(validitySequence, false);
-  nssComponent->GetPIPNSSBundleString("CertDumpNotBefore", text);
+  GetPIPNSSBundleString("CertDumpNotBefore", text);
   nsCOMPtr<nsIX509CertValidity> validityData;
   GetValidity(getter_AddRefs(validityData));
   PRTime notBefore, notAfter;
@@ -1939,22 +1926,21 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence,
   if (NS_FAILED(rv))
     return rv;
 
-  nssComponent->GetPIPNSSBundleString("CertDumpNotAfter", text);
+  GetPIPNSSBundleString("CertDumpNotAfter", text);
   rv = ProcessTime(notAfter, text.get(), validitySequence);
   if (NS_FAILED(rv))
     return rv;
 
-  nssComponent->GetPIPNSSBundleString("CertDumpSubject", text);
+  GetPIPNSSBundleString("CertDumpSubject", text);
 
   printableItem = new nsNSSASN1PrintableItem();
 
   printableItem->SetDisplayName(text);
-  ProcessName(&mCert->subject, nssComponent, getter_Copies(value));
+  ProcessName(&mCert->subject, getter_Copies(value));
   printableItem->SetDisplayValue(value);
   asn1Objects->AppendElement(printableItem, false);
 
-  rv = ProcessSubjectPublicKeyInfo(
-    &mCert->subjectPublicKeyInfo, sequence, nssComponent);
+  rv = ProcessSubjectPublicKeyInfo(&mCert->subjectPublicKeyInfo, sequence);
   if (NS_FAILED(rv))
     return rv;
 
@@ -1968,11 +1954,11 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence,
     data.data = mCert->issuerID.data;
     data.len = (mCert->issuerID.len + 7) / 8;
 
-    ProcessRawBytes(nssComponent, &data, text);
+    ProcessRawBytes(&data, text);
     printableItem = new nsNSSASN1PrintableItem();
 
     printableItem->SetDisplayValue(text);
-    nssComponent->GetPIPNSSBundleString("CertDumpIssuerUniqueID", text);
+    GetPIPNSSBundleString("CertDumpIssuerUniqueID", text);
     printableItem->SetDisplayName(text);
     asn1Objects->AppendElement(printableItem, false);
   }
@@ -1985,16 +1971,16 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence,
     data.data = mCert->subjectID.data;
     data.len = (mCert->subjectID.len + 7) / 8;
 
-    ProcessRawBytes(nssComponent, &data, text);
+    ProcessRawBytes(&data, text);
     printableItem = new nsNSSASN1PrintableItem();
 
     printableItem->SetDisplayValue(text);
-    nssComponent->GetPIPNSSBundleString("CertDumpSubjectUniqueID", text);
+    GetPIPNSSBundleString("CertDumpSubjectUniqueID", text);
     printableItem->SetDisplayName(text);
     asn1Objects->AppendElement(printableItem, false);
   }
   if (mCert->extensions) {
-    rv = ProcessExtensions(mCert->extensions, sequence, nssComponent);
+    rv = ProcessExtensions(mCert->extensions, sequence);
     if (NS_FAILED(rv))
       return rv;
   }
@@ -2005,8 +1991,6 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence** retSequence,
 nsresult
 nsNSSCertificate::CreateASN1Struct(nsIASN1Object** aRetVal)
 {
-  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -2030,11 +2014,7 @@ nsNSSCertificate::CreateASN1Struct(nsIASN1Object** aRetVal)
 
   // This sequence will be contain the tbsCertificate, signatureAlgorithm,
   // and signatureValue.
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = CreateTBSCertificateASN1Struct(getter_AddRefs(sequence), nssComponent);
+  rv = CreateTBSCertificateASN1Struct(getter_AddRefs(sequence));
   if (NS_FAILED(rv))
     return rv;
 
@@ -2042,16 +2022,15 @@ nsNSSCertificate::CreateASN1Struct(nsIASN1Object** aRetVal)
   nsCOMPtr<nsIASN1Sequence> algID;
 
   rv = ProcessSECAlgorithmID(&mCert->signatureWrap.signatureAlgorithm,
-                             nssComponent,
                              getter_AddRefs(algID));
   if (NS_FAILED(rv))
     return rv;
   nsString text;
-  nssComponent->GetPIPNSSBundleString("CertDumpSigAlg", text);
+  GetPIPNSSBundleString("CertDumpSigAlg", text);
   algID->SetDisplayName(text);
   asn1Objects->AppendElement(algID, false);
   nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
-  nssComponent->GetPIPNSSBundleString("CertDumpCertSig", text);
+  GetPIPNSSBundleString("CertDumpCertSig", text);
   printableItem->SetDisplayName(text);
   // The signatureWrap is encoded as a bit string.
   // The function ProcessRawBytes expects the
@@ -2061,7 +2040,7 @@ nsNSSCertificate::CreateASN1Struct(nsIASN1Object** aRetVal)
   temp.data = mCert->signatureWrap.signature.data;
   temp.len = mCert->signatureWrap.signature.len / 8;
   text.Truncate();
-  ProcessRawBytes(nssComponent, &temp, text);
+  ProcessRawBytes(&temp, text);
   printableItem->SetDisplayValue(text);
   asn1Objects->AppendElement(printableItem, false);
   return NS_OK;
