@@ -86,8 +86,7 @@ public:
       mWasCompiledOMT(false),
       mIsTracking(false),
       mOffThreadToken(nullptr),
-      mScriptTextBuf(nullptr),
-      mScriptTextLength(0),
+      mScriptText(),
       mJSVersion(aVersion),
       mLineNo(1),
       mCORSMode(aCORSMode),
@@ -181,8 +180,9 @@ public:
   bool mIsTracking;       // True if the script comes from a source on our tracking protection list.
   void* mOffThreadToken;  // Off-thread parsing token.
   nsString mSourceMapURL; // Holds source map url for loaded scripts
-  char16_t* mScriptTextBuf; // Holds script text for non-inline scripts. Don't
-  size_t mScriptTextLength; // use nsString so we can give ownership to jsapi.
+  // Holds script text for non-inline scripts. Don't use nsString so we can give
+  // ownership to jsapi.
+  mozilla::Vector<char16_t> mScriptText;
   uint32_t mJSVersion;
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIPrincipal> mOriginPrincipal;
@@ -410,13 +410,13 @@ public:
   /**
    * Handle the completion of a stream.  This is called by the
    * nsScriptLoadHandler object which observes the IncrementalStreamLoader
-   * loading the script.
+   * loading the script. The streamed content is expected to be stored on the
+   * aContext argument.
    */
   nsresult OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
                             nsISupports* aContext,
                             nsresult aChannelStatus,
                             nsresult aSRIStatus,
-                            mozilla::Vector<char16_t> &aString,
                             mozilla::dom::SRICheckDataVerifier* aSRIDataVerifier);
 
   /**
@@ -575,8 +575,7 @@ private:
   uint32_t NumberOfProcessors();
   nsresult PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
                                 nsIIncrementalStreamLoader* aLoader,
-                                nsresult aStatus,
-                                mozilla::Vector<char16_t> &aString);
+                                nsresult aStatus);
 
   void AddDeferRequest(nsScriptLoadRequest* aRequest);
   bool MaybeRemovedDeferRequests();
@@ -692,7 +691,7 @@ private:
   // ScriptLoader which will handle the parsed script.
   RefPtr<nsScriptLoader>        mScriptLoader;
 
-  // The nsScriptLoadRequest for this load.
+  // The nsScriptLoadRequest for this load. Decoded data are accumulated on it.
   RefPtr<nsScriptLoadRequest>   mRequest;
 
   // SRI data verifier.
@@ -703,9 +702,6 @@ private:
 
   // Unicode decoder for charset.
   nsCOMPtr<nsIUnicodeDecoder>   mDecoder;
-
-  // Accumulated decoded char buffer.
-  mozilla::Vector<char16_t>     mBuffer;
 };
 
 class nsAutoScriptLoaderDisabler
