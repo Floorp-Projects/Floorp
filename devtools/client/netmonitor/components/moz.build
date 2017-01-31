@@ -9,5 +9,6 @@ DevToolsModules(
     'request-list-item.js',
     'request-list-tooltip.js',
     'request-list.js',
+    'statistics-panel.js',
     'toolbar.js',
 )

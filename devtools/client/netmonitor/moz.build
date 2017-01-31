@@ -28,7 +28,6 @@ DevToolsModules(
     'requests-menu-view.js',
     'sidebar-view.js',
     'sort-predicates.js',
-    'statistics-view.js',
     'store.js',
     'waterfall-background.js',
 )
