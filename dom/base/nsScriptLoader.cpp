@@ -1030,7 +1030,7 @@ nsScriptLoader::StartFetchingModuleAndDependencies(nsModuleLoadRequest* aRequest
 
   RefPtr<GenericPromise> ready = childRequest->mReady.Ensure(__func__);
 
-  nsresult rv = StartLoad(childRequest, NS_LITERAL_STRING("module"), false);
+  nsresult rv = StartLoad(childRequest, false);
   if (NS_FAILED(rv)) {
     childRequest->mReady.Reject(rv, __func__);
     return ready;
@@ -1178,8 +1178,7 @@ nsScriptLoader::InstantiateModuleTree(nsModuleLoadRequest* aRequest)
 }
 
 nsresult
-nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
-                          bool aScriptFromHead)
+nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, bool aScriptFromHead)
 {
   MOZ_ASSERT(aRequest->IsLoading());
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NULL_POINTER);
@@ -1539,7 +1538,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
       // set aScriptFromHead to false so we don't treat non preloaded scripts as
       // blockers for full page load. See bug 792438.
-      rv = StartLoad(request, type, false);
+      rv = StartLoad(request, false);
       if (NS_FAILED(rv)) {
         // Asynchronously report the load failure
         NS_DispatchToCurrentThread(
@@ -2807,7 +2806,7 @@ nsScriptLoader::PreloadURI(nsIURI *aURI, const nsAString &aCharset,
   request->mIsInline = false;
   request->mReferrerPolicy = aReferrerPolicy;
 
-  nsresult rv = StartLoad(request, aType, aScriptFromHead);
+  nsresult rv = StartLoad(request, aScriptFromHead);
   if (NS_FAILED(rv)) {
     return;
   }

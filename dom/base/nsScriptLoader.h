@@ -519,8 +519,7 @@ private:
   /**
    * Start a load for aRequest's URI.
    */
-  nsresult StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
-                     bool aScriptFromHead);
+  nsresult StartLoad(nsScriptLoadRequest *aRequest, bool aScriptFromHead);
 
   /**
    * Process any pending requests asynchronously (i.e. off an event) if there
