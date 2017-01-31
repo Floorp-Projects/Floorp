@@ -380,7 +380,7 @@ class GypProcessor(object):
             depth = chrome_src
             # Files that gyp_chromium always includes
             includes = [encode(mozpath.join(script_dir, 'common.gypi'))]
-            finder = FileFinder(chrome_src, find_executables=False)
+            finder = FileFinder(chrome_src)
             includes.extend(encode(mozpath.join(chrome_src, name))
                             for name, _ in finder.find('*/supplement.gypi'))
 

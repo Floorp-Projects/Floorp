@@ -82,7 +82,7 @@ class SphinxManager(object):
         for p in sorted(self._python_package_dirs):
             full = os.path.join(self._topsrcdir, p)
 
-            finder = FileFinder(full, find_executables=False)
+            finder = FileFinder(full)
             dirs = {os.path.dirname(f[0]) for f in finder.find('**')}
 
             excludes = {d for d in dirs if d.endswith('test')}
