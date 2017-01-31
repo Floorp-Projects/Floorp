@@ -451,7 +451,7 @@ asserts(4-6) asserts-if(Android&&!asyncPan,2) load 898913.html # bug 847368
 pref(layers.acceleration.disabled,true) pref(layers.force-active,true) load 919434.html
 load 926728.html
 load 930381.html
-asserts-if(stylo,1) load 931450.html # bug 1324647
+load 931450.html
 load 931460-1.html
 load 931464.html
 load 935765-1.html
@@ -460,7 +460,7 @@ load 942690.html
 load 973390-1.html
 load 1001237.html
 load 1009036.html
-asserts-if(stylo,1) load 1043163-1.html # bug 1324647
+load 1043163-1.html
 load 1061028.html
 load 1107508-1.html
 load 1116104.html
