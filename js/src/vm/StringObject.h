@@ -56,7 +56,7 @@ class StringObject : public NativeObject
     }
 
   private:
-    inline bool init(JSContext* cx, HandleString str);
+    static inline bool init(JSContext* cx, Handle<StringObject*> obj, HandleString str);
 
     void setStringThis(JSString* str) {
         MOZ_ASSERT(getReservedSlot(PRIMITIVE_VALUE_SLOT).isUndefined());
