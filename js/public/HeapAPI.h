@@ -323,13 +323,8 @@ CellIsMarkedGray(const Cell* cell)
     return *word & mask;
 }
 
-static MOZ_ALWAYS_INLINE bool
-CellIsMarkedGrayIfKnown(const Cell* cell)
-{
-    MOZ_ASSERT(cell);
-    auto rt = js::gc::detail::GetCellRuntime(cell);
-    return rt->areGCGrayBitsValid() && CellIsMarkedGray(cell);
-}
+extern JS_PUBLIC_API(bool)
+CellIsMarkedGrayIfKnown(const Cell* cell);
 
 } /* namespace detail */
 
