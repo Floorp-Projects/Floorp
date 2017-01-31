@@ -580,7 +580,7 @@ ResolvePromise(JSContext* cx, Handle<PromiseObject*> promise, HandleValue valueO
 
     // Now that everything else is done, do the things the debugger needs.
     // Step 7 of RejectPromise implemented in onSettled.
-    promise->onSettled(cx);
+    PromiseObject::onSettled(cx, promise);
 
     // Step 7 of FulfillPromise.
     // Step 8 of RejectPromise.
@@ -2618,10 +2618,9 @@ PromiseObject::reject(JSContext* cx, Handle<PromiseObject*> promise, HandleValue
     return Call(cx, funVal, UndefinedHandleValue, args, &dummy);
 }
 
-void
-PromiseObject::onSettled(JSContext* cx)
+/* static */ void
+PromiseObject::onSettled(JSContext* cx, Handle<PromiseObject*> promise)
 {
-    Rooted<PromiseObject*> promise(cx, this);
     RootedObject stack(cx);
     if (cx->options().asyncStack() || cx->compartment()->isDebuggee()) {
         if (!JS::CaptureCurrentStack(cx, &stack, JS::StackCapture(JS::AllFrames()))) {
