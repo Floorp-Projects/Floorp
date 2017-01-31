@@ -129,10 +129,16 @@ const EXPECTED_REQUESTS = [
 ];
 
 add_task(function* () {
-  let Actions = require("devtools/client/netmonitor/actions/index");
-
   let { monitor } = yield initNetMonitor(FILTERING_URL);
-  let { gStore } = monitor.panelWin;
+  let { document, gStore, windowRequire } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let {
+    getDisplayedRequests,
+    getSelectedRequest,
+    getSortedRequests,
+  } = windowRequire("devtools/client/netmonitor/selectors/index");
+
+  gStore.dispatch(Actions.batchEnable(false));
 
   function setFreetextFilter(value) {
     gStore.dispatch(Actions.setRequestFilterText(value));
@@ -140,25 +146,20 @@ add_task(function* () {
 
   info("Starting test... ");
 
-  let { document, NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
-
-  RequestsMenu.lazyUpdate = false;
-
   let wait = waitForNetworkEvents(monitor, 9);
   loadCommonFrameScript();
   yield performRequestsInContent(REQUESTS_WITH_MEDIA_AND_FLASH_AND_WS);
   yield wait;
 
   EventUtils.sendMouseEvent({ type: "mousedown" },
-    document.querySelector(".network-details-panel-toggle"));
+    document.querySelectorAll(".request-list-item")[0]);
 
-  isnot(RequestsMenu.selectedItem, null,
+  isnot(getSelectedRequest(gStore.getState()), null,
     "There should be a selected item in the requests menu.");
-  is(RequestsMenu.selectedIndex, 0,
+  is(getSelectedIndex(gStore.getState()), 0,
     "The first item should be selected in the requests menu.");
   is(!!document.querySelector(".network-details-panel"), true,
-      "The network details panel should render correctly.");
+    "The network details panel should render correctly.");
 
   // First test with single filters...
   testFilterButtons(monitor, "all");
@@ -306,16 +307,21 @@ add_task(function* () {
 
   yield teardown(monitor);
 
-  function testContents(visibility) {
-    isnot(RequestsMenu.selectedItem, null,
-      "There should still be a selected item after filtering.");
-    is(RequestsMenu.selectedIndex, 0,
-      "The first item should be still selected after filtering.");
-    is(!!document.querySelector(".network-details-panel"), true,
-      "The network details panel should render correctly.");
+  function getSelectedIndex(state) {
+    if (!state.requests.selectedId) {
+      return -1;
+    }
+    return getSortedRequests(state).findIndex(r => r.id === state.requests.selectedId);
+  }
 
-    const items = RequestsMenu.items;
-    const visibleItems = RequestsMenu.visibleItems;
+  function testContents(visibility) {
+    isnot(getSelectedRequest(gStore.getState()), undefined,
+      "There should still be a selected item after filtering.");
+    is(getSelectedIndex(gStore.getState()), 0,
+      "The first item should be still selected after filtering.");
+
+    const items = getSortedRequests(gStore.getState());
+    const visibleItems = getDisplayedRequests(gStore.getState());
 
     is(items.size, visibility.length,
       "There should be a specific amount of items in the requests menu.");
@@ -331,7 +337,14 @@ add_task(function* () {
 
       if (shouldBeVisible) {
         let { method, url, data } = EXPECTED_REQUESTS[i];
-        verifyRequestItemTarget(RequestsMenu, items.get(i), method, url, data);
+        verifyRequestItemTarget(
+          document,
+          getDisplayedRequests(gStore.getState()),
+          getSortedRequests(gStore.getState()).get(i),
+          method,
+          url,
+          data
+        );
       }
     }
   }

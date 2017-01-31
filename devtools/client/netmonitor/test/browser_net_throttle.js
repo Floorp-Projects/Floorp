@@ -14,7 +14,13 @@ function* throttleTest(actuallyThrottle) {
   requestLongerTimeout(2);
 
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
-  const {ACTIVITY_TYPE, EVENTS, NetMonitorController, NetMonitorView} = monitor.panelWin;
+  let { document, gStore, windowRequire, NetMonitorController } = monitor.panelWin;
+  let Actions = windowRequire("devtools/client/netmonitor/actions/index");
+  let { ACTIVITY_TYPE } = windowRequire("devtools/client/netmonitor/constants");
+  let { EVENTS } = windowRequire("devtools/client/netmonitor/events");
+  let {
+    getSortedRequests,
+  } = windowRequire("devtools/client/netmonitor/selectors/index");
 
   info("Starting test... (actuallyThrottle = " + actuallyThrottle + ")");
 
@@ -45,7 +51,7 @@ function* throttleTest(actuallyThrottle) {
   yield NetMonitorController.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DISABLED);
   yield eventPromise;
 
-  let requestItem = NetMonitorView.RequestsMenu.getItemAtIndex(0);
+  let requestItem = getSortedRequests(gStore.getState()).get(0);
   const reportedOneSecond = requestItem.eventTimings.timings.receive > 1000;
   if (actuallyThrottle) {
     ok(reportedOneSecond, "download reported as taking more than one second");

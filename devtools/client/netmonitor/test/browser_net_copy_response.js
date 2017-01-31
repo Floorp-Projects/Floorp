@@ -13,10 +13,7 @@ add_task(function* () {
 
   const EXPECTED_RESULT = '{ "greeting": "Hello JSON!" }';
 
-  let { NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu } = NetMonitorView;
-
-  RequestsMenu.lazyUpdate = false;
+  let { document } = monitor.panelWin;
 
   let wait = waitForNetworkEvents(monitor, CONTENT_TYPE_WITHOUT_CACHE_REQUESTS);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
@@ -24,11 +21,16 @@ add_task(function* () {
   });
   yield wait;
 
-  let requestItem = RequestsMenu.getItemAtIndex(3);
-  RequestsMenu.selectedItem = requestItem;
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelectorAll(".request-list-item")[3]);
+  EventUtils.sendMouseEvent({ type: "contextmenu" },
+    document.querySelectorAll(".request-list-item")[3]);
 
   yield waitForClipboardPromise(function setup() {
-    RequestsMenu.contextMenu.copyResponse();
+    // Context menu is appending in XUL document, we must select it from
+    // _toolbox.doc
+    monitor._toolbox.doc
+      .querySelector("#request-menu-context-copy-response").click();
   }, EXPECTED_RESULT);
 
   yield teardown(monitor);
