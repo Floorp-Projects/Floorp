@@ -554,10 +554,10 @@ QueueOffThreadParseTask(JSContext* cx, ParseTask* task)
     return true;
 }
 
+template <typename TaskFunctor>
 bool
-js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& options,
-                              const char16_t* chars, size_t length,
-                              JS::OffThreadCompileCallback callback, void* callbackData)
+StartOffThreadParseTask(JSContext* cx, const ReadOnlyCompileOptions& options,
+                        ParseTaskKind kind, TaskFunctor& taskFunctor)
 {
     // Suppress GC so that calls below do not trigger a new incremental GC
     // which could require barriers on the atoms compartment.
@@ -565,7 +565,7 @@ js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& optio
     gc::AutoAssertNoNurseryAlloc noNurseryAlloc(cx->runtime());
     AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
 
-    JSObject* global = CreateGlobalForOffThreadParse(cx, ParseTaskKind::Script, nogc);
+    JSObject* global = CreateGlobalForOffThreadParse(cx, kind, nogc);
     if (!global)
         return false;
 
@@ -575,9 +575,7 @@ js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& optio
     if (!helpercx)
         return false;
 
-    ScopedJSDeletePtr<ParseTask> task(
-        cx->new_<ScriptParseTask>(helpercx.get(), global, cx, chars, length,
-                                  callback, callbackData));
+    ScopedJSDeletePtr<ParseTask> task(taskFunctor(helpercx.get(), global));
     if (!task)
         return false;
 
@@ -591,41 +589,29 @@ js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& optio
     return true;
 }
 
+
+bool
+js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& options,
+                              const char16_t* chars, size_t length,
+                              JS::OffThreadCompileCallback callback, void* callbackData)
+{
+    auto functor = [&](ExclusiveContext* helpercx, JSObject* global) -> ScriptParseTask* {
+        return cx->new_<ScriptParseTask>(helpercx, global, cx, chars, length,
+                                         callback, callbackData);
+    };
+    return StartOffThreadParseTask(cx, options, ParseTaskKind::Script, functor);
+}
+
 bool
 js::StartOffThreadParseModule(JSContext* cx, const ReadOnlyCompileOptions& options,
                               const char16_t* chars, size_t length,
                               JS::OffThreadCompileCallback callback, void* callbackData)
 {
-    // Suppress GC so that calls below do not trigger a new incremental GC
-    // which could require barriers on the atoms compartment.
-    gc::AutoSuppressGC nogc(cx);
-    gc::AutoAssertNoNurseryAlloc noNurseryAlloc(cx->runtime());
-    AutoSuppressAllocationMetadataBuilder suppressMetadata(cx);
-
-    JSObject* global = CreateGlobalForOffThreadParse(cx, ParseTaskKind::Module, nogc);
-    if (!global)
-        return false;
-
-    ScopedJSDeletePtr<ExclusiveContext> helpercx(
-        cx->new_<ExclusiveContext>(cx->runtime(), (PerThreadData*) nullptr,
-                                   ExclusiveContext::Context_Exclusive, cx->options()));
-    if (!helpercx)
-        return false;
-
-    ScopedJSDeletePtr<ParseTask> task(
-        cx->new_<ModuleParseTask>(helpercx.get(), global, cx, chars, length,
-                                  callback, callbackData));
-    if (!task)
-        return false;
-
-    helpercx.forget();
-
-    if (!task->init(cx, options) || !QueueOffThreadParseTask(cx, task))
-        return false;
-
-    task.forget();
-
-    return true;
+    auto functor = [&](ExclusiveContext* helpercx, JSObject* global) -> ModuleParseTask* {
+        return cx->new_<ModuleParseTask>(helpercx, global, cx, chars, length,
+                                         callback, callbackData);
+    };
+    return StartOffThreadParseTask(cx, options, ParseTaskKind::Module, functor);
 }
 
 void
