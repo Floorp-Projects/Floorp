@@ -1598,14 +1598,20 @@ WebrtcVideoConduit::ReconfigureSendCodec(unsigned short width,
       static_cast<unsigned int>(video_stream.height), mSendingFramerate,
       video_stream.min_bitrate_bps, video_stream.max_bitrate_bps);
   });
-  if (!mSendStream->ReconfigureVideoEncoder(mEncoderConfig.GenerateConfig())) {
-    CSFLogError(logTag, "%s: ReconfigureVideoEncoder failed", __FUNCTION__);
-    return NS_ERROR_FAILURE;
-  }
-  if (frame) {
-    // XXX I really don't like doing this from MainThread...
-    mSendStream->Input()->IncomingCapturedFrame(*frame);
-    CSFLogDebug(logTag, "%s Inserted a frame from reconfig lambda", __FUNCTION__);
+  // Test in case the stream hasn't started yet!  We could get a frame in
+  // before we get around to StartTransmitting(), and that would dispatch a
+  // runnable to call this.
+  if (mSendStream) {
+    if (!mSendStream->ReconfigureVideoEncoder(mEncoderConfig.GenerateConfig())) {
+      CSFLogError(logTag, "%s: ReconfigureVideoEncoder failed", __FUNCTION__);
+      return NS_ERROR_FAILURE;
+    }
+
+    if (frame) {
+      // XXX I really don't like doing this from MainThread...
+      mSendStream->Input()->IncomingCapturedFrame(*frame);
+      CSFLogDebug(logTag, "%s Inserted a frame from reconfig lambda", __FUNCTION__);
+    }
   }
   return NS_OK;
 }
@@ -1690,7 +1696,9 @@ WebrtcVideoConduit::SendVideoFrame(webrtc::VideoFrame& frame)
       }
     }
 
-    mSendStream->Input()->IncomingCapturedFrame(frame);
+    if (mSendStream) { // can happen before StartTransmitting()
+      mSendStream->Input()->IncomingCapturedFrame(frame);
+    }
   }
 
   mSendStreamStats.SentFrame();

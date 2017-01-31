@@ -81,7 +81,7 @@ function runDirectorRegistryActorTest() {
       module.exports = function({port}) {
         port.onmessage = function(evt) {
           // echo messages
-          evt.source.postMessage(evt.data);
+          evt.target.postMessage(evt.data);
         };
       };
     }).toString() + ")();",
