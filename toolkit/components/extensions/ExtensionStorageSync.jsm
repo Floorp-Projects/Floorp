@@ -272,7 +272,26 @@ if (AppConstants.platform != "android") {
      * @param {string} extensionId The extension ID to obfuscate.
      * @returns {Promise<bytestring>} A collection ID suitable for use to sync to.
      */
-    extensionIdToCollectionId: Task.async(function* (extensionId) {
+    extensionIdToCollectionId(extensionId) {
+      return this.hashWithExtensionSalt(CommonUtils.encodeUTF8(extensionId), extensionId)
+        .then(hash => `ext-${hash}`);
+    },
+
+    /**
+     * Hash some value with the salt for the given extension.
+     *
+     * The value should be a "bytestring", i.e. a string whose
+     * "characters" are values, each within [0, 255]. You can produce
+     * such a bytestring using e.g. CommonUtils.encodeUTF8.
+     *
+     * The returned value is a base64url-encoded string of the hash.
+     *
+     * @param {bytestring} value The value to be hashed.
+     * @param {string} extensionId The ID of the extension whose salt
+     *                             we should use.
+     * @returns {Promise<bytestring>} The hashed value.
+     */
+    hashWithExtensionSalt: Task.async(function* (value, extensionId) {
       const salts = yield this.getSalts();
       const saltBase64 = salts && salts[extensionId];
       if (!saltBase64) {
@@ -286,9 +305,9 @@ if (AppConstants.platform != "android") {
       hasher.init(hasher.SHA256);
 
       const salt = atob(saltBase64);
-      const message = `${salt}\x00${CommonUtils.encodeUTF8(extensionId)}`;
+      const message = `${salt}\x00${value}`;
       const hash = CryptoUtils.digestBytes(message, hasher);
-      return `ext-${CommonUtils.encodeBase64URL(hash, false)}`;
+      return CommonUtils.encodeBase64URL(hash, false);
     }),
 
     /**
@@ -347,8 +366,14 @@ if (AppConstants.platform != "android") {
   };
 
   /**
-   * An EncryptionRemoteTransformer that uses the special "keys" record
-   * to find a key for a given extension.
+   * An EncryptionRemoteTransformer for extension records.
+   *
+   * It uses the special "keys" record to find a key for a given
+   * extension, thus its name
+   * CollectionKeyEncryptionRemoteTransformer.
+   *
+   * Also, during encryption, it will replace the ID of the new record
+   * with a hashed ID, using the salt for this collection.
    *
    * @param {string} extensionId The extension ID for which to find a key.
    */
@@ -370,6 +395,18 @@ if (AppConstants.platform != "android") {
         }
         return collectionKeys.keyForCollection(self.extensionId);
       });
+    }
+
+    getEncodedRecordId(record) {
+      // It isn't really clear whether kinto.js record IDs are
+      // bytestrings or strings that happen to only contain ASCII
+      // characters, so encode them to be sure.
+      const id = CommonUtils.encodeUTF8(record.id);
+      // Like extensionIdToCollectionId, the rules about Kinto record
+      // IDs preclude equals signs or strings starting with a
+      // non-alphanumeric, so prefix all IDs with a constant "id-".
+      return cryptoCollection.hashWithExtensionSalt(id, this.extensionId)
+        .then(hash => `id-${hash}`);
     }
   };
   global.CollectionKeyEncryptionRemoteTransformer = CollectionKeyEncryptionRemoteTransformer;
