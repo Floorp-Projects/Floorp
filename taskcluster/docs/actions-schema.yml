@@ -1,0 +1,204 @@
+$schema: http://json-schema.org/draft-04/schema#
+id: https://hg.mozilla.org/mozilla-central/raw-file/tip/taskcluster/docs/actions-schema.yml
+title: Schema for Exposing Actions
+description: |
+  This document specifies the schema for the `public/actions.json` used by
+  _decision tasks_ to expose actions that can be triggered by end-users.
+
+  For the purpose of this document the _consumer_ is the user-interface that
+  displays task results to the end-user and allows end-users to trigger actions
+  defined by `public/actions.json`. A _consumer_ might be Treeherder.
+  The _end-user_ is a developer who is inspecting the results, and wish to
+  trigger actions.
+type: object
+properties:
+  version:
+    enum: [1]
+    type: integer
+  variables:
+    type: object
+    description: |
+      Mapping from variable name to constants that can be referenced using
+      `{$eval: '<variable>'}` within the task templates defined for each action.
+
+      This is useful for commonly used constants that are used in many task
+      templates. Whether it's to reduce the size of the `public/actions.json`
+      artifact by reuseing large constants, or simply to make it easier to
+      write task templates by exposing additional variables.
+
+      These will overwrite any builtin variables, such as `taskGroupId`,
+      `input`, `taskId`, `task`, and any further variables that future
+      backwards compatible iterations of this specifcation adds. Hence, you
+      should avoid declaring variables such as `input`, as it will shadow the
+      builtin `input` variable.
+    additionalProperties: true
+  actions:
+    type: array
+    description: |
+      List of actions that can be triggered.
+    items:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          description: |
+            Title text to be displayed on the button or link triggering the action.
+        description:
+          type: string
+          maxLength: 4096
+          description: |
+            Human readable description of the action in markdown.
+            Can be displayed in tooltip, popup and/or dialog when triggering
+            the action.
+        kind:
+          enum:
+            - task
+          description: |
+            Specifies the kind of action this is.
+
+            The `task` _action kind_ is triggered by creating a task, following
+            a task template.
+
+            Other kinds might be added in the future. Consumers should ignore
+            all entries featuring a `kind` property they don't recognize.
+        context:
+          type: array
+          default: []
+          items:
+            type: object
+            additionalProperties:
+              type: string
+              maxLength: 4096
+            title: tag-set
+            description: |
+              A set of key-value pairs specifying a _tag-set_.
+          description: |
+            The `context` property determines in what context the action is
+            relevant. Thus, what context the action should be presented to the
+            end-user.
+
+            The `context` property contains a set of tag-sets. A _tag-set_ is a
+            set of key-value pairs. A task is said satisfy a tag-set if
+            `task.tags` is a super-set of the given tag-set. An action is
+            relevant for a task if the task satisfies at-least one of
+            the tag-sets.
+
+            Hence, an action with `context: [{a: '1'}, {b: '2'}]` is relevant
+            for any task with `task.tags.a = '1'` or `task.tags.b = '2'`.
+            An action with `context: [{a: '1', b: '2'}]` is only relevant for
+            tasks with `task.tags.a = '1'` and `task.tags.b = '2'`.
+
+            This allows restrictions of what tasks an action is relevant for.
+            For example some tasks might not support running under a debugger.
+
+            The keen reader observes that actions with `context: [{}]` are
+            relevant for all tasks. Conversely, we have that tasks with
+            `context: []` are irrelevant for all tasks. We abuse this property
+            and define actions with `context: []` to be relevant for the
+            _task-group_ only.
+
+            That is an action with `context: []` should not be display in the
+            context-sensitive menu for a task, rather it should be display when
+            selecting the entire task-group. Presentation details are left for
+            consumer to decide.
+
+            Notice that the `context` property is optional, but defined to have
+            a default value `context: []`. Hence, if the `context` is not
+            specified consumer should take this to mean `context: []` implying
+            that the action is relevant to the task-group, rather than any
+            subset of tasks.
+        schema:
+          $ref: http://json-schema.org/schema
+          description: |
+            JSON schema for input parameters to the `task` template property.
+            Consumers shall offer a user-interface where end-users can enter
+            values that satisfy this schema. Furthermore, consumers **must**
+            validate enter values against the given schema before parameterizing
+            the `task` template property and triggering the action.
+
+            In practice it's encourage that consumers employ a facility that
+            can generate HTML forms from JSON schemas. However, if certain
+            schemas are particularly complicated or common, consumers may also
+            hand-write a user-interface for collecting the input. In this case
+            the consumer **must** do a deep comparison between the schema given
+            in the action, and the schema for which a custom user-interface have
+            been written, and fall-back to an auto-generated form if the schema
+            doesn't match.
+
+            It is assumed that the JSON schema `description` property will be
+            rendered as markdown when displayed as documentation for end-users.
+            Producers of `public/actions.json` is encouraged to provide a
+            detailed explanation of the input parameters using these
+            `description` properties. And consumers are *strongly* encouraged
+            to render `description` values as markdown.
+
+            The `schema` property is optional, and if not given the input for
+            `task` template parameterization shall be `null`.
+        task:
+          type: object
+          title: task template
+          description: |
+            Task template for triggering the action.
+
+            When an action have been selected in the appropriate context and
+            input satisfying the `schema` (if any) has been collected. The
+            action is triggered by parameterizing the task template given in
+            this property, and creating the resulting task.
+
+            The template is parameterized with the following variables:
+              * `taskGroupId`
+              * `taskId` (taskId, `null` if not triggered for a given task)
+              * `task` (task definition, `null` if not triggered for a given task)
+              * `input` (input matching `schema`, `null` if no schema is given)
+              * Property defined in the `variables` property.
+
+            The template is an object that is parameterized by:
+              1. Replacing substrings `'${variable}'` in strings and object keys
+                 with the value of the given `variable`.
+              2. Replacing objects on the form `{$eval: 'variable'}` with the
+                 value of of the given `variable`.
+              3. Replacing objects on the form {$fromNow: 'timespan'} with a
+                 timestamp of `timespan` from now. Where `timespan` is on the
+                 form: `([0-9]+ *d(ays?)?)? *([0-9]+ *h(ours?)?)? *([0-9]+ *m(in(utes?)?)?)?`
+              4. Replacing any object on the form `{$json: value}` with the
+                 value of `JSON.stringify(result)` where `result` is the result
+                 of recursive application of rules 1-4 on `value`.
+
+            This template language is still incomplete and additional features
+            will be added in the future. This statment will be changed when the
+            features of the template language is locked, until then consumption
+            of the `public/actions.json` artifact is experimental.
+            # TODO: Freeze the template language with a specification of json-e
+
+            This allows for dumping `input` and `taskId` into environment
+            variables for the task to be created. The following task template
+            injects `input` and `taskId` as environment variables:
+            ```json
+            {
+              "workerType": "my-worker",
+              "payload": {
+                "created": {"$fromNow": ""},
+                "deadline": {"$fromNow": "1 hour 15 minutes"},
+                "expiration": {"$fromNow": "14 days"},
+                "image": "my-docker-image",
+                "env": {
+                  "TASKID_TRIGGERED_FOR": "${taskId}",
+                  "INPUT_JSON": {"$json": {"$eval": "input"}}
+                },
+                ...
+              },
+              ...
+            }
+            ```
+      additionalProperties: false
+      required:
+        - title
+        - description
+        - kind
+        - task
+additionalProperties: false
+required:
+  - version
+  - actions
+  - variables
