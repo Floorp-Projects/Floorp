@@ -14,6 +14,7 @@ function synthesizeKeyAndWaitForFocus(element, keyCode, options) {
 // Checks that the identity block is the next element after the urlbar
 // to be focused if there are no active notification anchors.
 add_task(function* testWithoutNotifications() {
+  yield SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
   yield BrowserTestUtils.withNewTab("https://example.com", function*() {
     yield synthesizeKeyAndWaitForFocus(gURLBar, "l", {accelKey: true})
     is(document.activeElement, gURLBar.inputField, "urlbar should be focused");
@@ -26,7 +27,7 @@ add_task(function* testWithoutNotifications() {
 // Checks that when there is a notification anchor, it will receive
 // focus before the identity block.
 add_task(function* testWithoutNotifications() {
-
+  yield SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
   yield BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, function*(browser) {
     let popupshown = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
     // Request a permission;
@@ -46,6 +47,7 @@ add_task(function* testWithoutNotifications() {
 
 // Checks that with invalid pageproxystate the identity block is ignored.
 add_task(function* testInvalidPageProxyState() {
+  yield SpecialPowers.pushPrefEnv({"set": [["accessibility.tabfocus", 7]]});
   yield BrowserTestUtils.withNewTab("about:blank", function*(browser) {
     // Loading about:blank will automatically focus the urlbar, which, however, can
     // race with the test code. So we only send the shortcut if the urlbar isn't focused yet.
