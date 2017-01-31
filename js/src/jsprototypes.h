@@ -61,6 +61,12 @@
 #define IF_SAB(real,imaginary) imaginary
 #endif
 
+#ifdef ENABLE_STREAMS
+#define IF_STREAMS(real,imaginary) real
+#else
+#define IF_STREAMS(real,imaginary) imaginary
+#endif
+
 #define JS_FOR_PROTOTYPES(real,imaginary) \
     imaginary(Null,              0,     InitNullClass,          dummy) \
     real(Object,                 1,     InitViaClassSpec,       OCLASP(Plain)) \
@@ -112,12 +118,23 @@ IF_SIMD(real,imaginary)(SIMD,                   45,     InitSimdClass, OCLASP(Si
     real(TypedArray,            47,     InitViaClassSpec,       &js::TypedArrayObject::sharedTypedArrayPrototypeClass) \
 IF_SAB(real,imaginary)(Atomics, 48,     InitAtomicsClass, OCLASP(Atomics)) \
     real(SavedFrame,            49,     InitViaClassSpec,       &js::SavedFrame::class_) \
-    real(WebAssembly,           50,     InitWebAssemblyClass,   CLASP(WebAssembly)) \
-    imaginary(WasmModule,       51,     dummy,                  dummy) \
-    imaginary(WasmInstance,     52,     dummy,                  dummy) \
-    imaginary(WasmMemory,       53,     dummy,                  dummy) \
-    imaginary(WasmTable,        54,     dummy,                  dummy) \
-    real(Promise,               55,     InitViaClassSpec,       OCLASP(Promise)) \
+    real(Promise,               50,     InitViaClassSpec,       OCLASP(Promise)) \
+    IF_STREAMS(real,imaginary) (ReadableStream,        51,     InitViaClassSpec,       &js::ReadableStream::class_) \
+    IF_STREAMS(real,imaginary) (ReadableStreamDefaultReader,           52,     InitViaClassSpec, &js::ReadableStreamDefaultReader::class_) \
+    IF_STREAMS(real,imaginary) (ReadableStreamBYOBReader,              53,     InitViaClassSpec, &js::ReadableStreamBYOBReader::class_) \
+    IF_STREAMS(real,imaginary) (ReadableStreamDefaultController,       54,     InitViaClassSpec, &js::ReadableStreamDefaultController::class_) \
+    IF_STREAMS(real,imaginary) (ReadableByteStreamController,          55,     InitViaClassSpec, &js::ReadableByteStreamController::class_) \
+    IF_STREAMS(real,imaginary) (ReadableStreamBYOBRequest,             56,     InitViaClassSpec, &js::ReadableStreamBYOBRequest::class_) \
+    imaginary(WritableStream,   57,     dummy,                  dummy) \
+    imaginary(WritableStreamDefaultWriter,      58,     dummy,  dummy) \
+    imaginary(WritableStreamDefaultController,  59,     dummy,  dummy) \
+    real(ByteLengthQueuingStrategy,             60,     InitViaClassSpec, &js::ByteLengthQueuingStrategy::class_) \
+    real(CountQueuingStrategy,  61,      InitViaClassSpec,      &js::CountQueuingStrategy::class_) \
+    real(WebAssembly,           62,     InitWebAssemblyClass,   CLASP(WebAssembly)) \
+    imaginary(WasmModule,       63,     dummy,                  dummy) \
+    imaginary(WasmInstance,     64,     dummy,                  dummy) \
+    imaginary(WasmMemory,       65,     dummy,                  dummy) \
+    imaginary(WasmTable,        66,     dummy,                  dummy) \
 
 #define JS_FOR_EACH_PROTOTYPE(macro) JS_FOR_PROTOTYPES(macro,macro)
 
