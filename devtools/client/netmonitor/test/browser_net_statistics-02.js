@@ -13,31 +13,38 @@ add_task(function* () {
   info("Starting test... ");
 
   let panel = monitor.panelWin;
-  let { $, $all, EVENTS, NetMonitorView, gStore, windowRequire } = panel;
+  let { document, gStore, windowRequire } = panel;
   let Actions = windowRequire("devtools/client/netmonitor/actions/index");
 
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-html-button"));
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-css-button"));
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-js-button"));
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-ws-button"));
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-other-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-filter-html-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-filter-css-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-filter-js-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-filter-ws-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-filter-other-button"));
   testFilterButtonsCustom(monitor, [0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1]);
   info("The correct filtering predicates are used before entering perf. analysis mode.");
 
-  let onEvents = promise.all([
-    panel.once(EVENTS.PRIMED_CACHE_CHART_DISPLAYED),
-    panel.once(EVENTS.EMPTY_CACHE_CHART_DISPLAYED)
-  ]);
   gStore.dispatch(Actions.openStatistics(true));
-  yield onEvents;
 
-  is(NetMonitorView.currentFrontendMode, "network-statistics-view",
-    "The frontend mode is switched to the statistics view.");
+  let body = document.querySelector("#body");
 
-  EventUtils.sendMouseEvent({ type: "click" }, $(".pie-chart-slice"));
+  is(body.selectedPanel.id, "statistics-panel",
+    "The main panel is switched to the statistics panel.");
 
-  is(NetMonitorView.currentFrontendMode, "network-inspector-view",
-    "The frontend mode is switched back to the inspector view.");
+  yield waitUntil(
+    () => document.querySelectorAll(".pie-chart-container:not([placeholder=true])").length == 2);
+  ok(true, "Two real pie charts appear to be rendered correctly.");
+
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector(".pie-chart-slice"));
+
+  is(body.selectedPanel.id, "inspector-panel",
+    "The main panel is switched back to the inspector panel.");
 
   testFilterButtons(monitor, "html");
   info("The correct filtering predicate is used when exiting perf. analysis mode.");

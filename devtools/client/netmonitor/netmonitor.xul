@@ -19,7 +19,7 @@
         flex="1"
         data-localization-bundle="devtools/client/locales/netmonitor.properties">
 
-    <vbox id="network-inspector-view" flex="1">
+    <vbox id="inspector-panel" flex="1">
       <html:div xmlns="http://www.w3.org/1999/xhtml"
                 id="react-toolbar-hook"/>
       <hbox id="network-table-and-sidebar"
@@ -101,19 +101,8 @@
 
     </vbox>
 
-    <html:div id="network-statistics-view">
-      <html:div id="network-statistics-toolbar"
-                class="devtools-toolbar">
-        <html:div xmlns="http://www.w3.org/1999/xhtml"
-                  id="react-statistics-back-hook"/>
-      </html:div>
-      <html:div id="network-statistics-charts"
-                class="devtools-responsive-container">
-        <html:div id="primed-cache-chart"/>
-        <html:div id="network-statistics-view-splitter"
-                  class="split-box devtools-side-splitter"/>
-        <html:div id="empty-cache-chart"/>
-      </html:div>
+    <html:div xmlns="http://www.w3.org/1999/xhtml"
+              id="statistics-panel">
     </html:div>
   </deck>
 
